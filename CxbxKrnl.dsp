@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /O2 /I "Include" /I "Include/Core/" /I "Include/Win32/" /I "Include/Win32/Cxbx" /I "Include/Win32/CxbxKrnl" /I "Include/Win32/CxbxKrnl/HLEDataBase" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /I "Include" /I "Include/Core/" /I "Include/Win32/" /I "Include/Win32/Cxbx" /I "Include/Win32/CxbxKrnl" /I "Include/Win32/CxbxKrnl/HLEDataBase" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -347,6 +347,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\HLEIntercept.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\Mutex.h
 # End Source File
 # Begin Source File
@@ -619,6 +623,10 @@ SOURCE=.\Source\Core\Error.cpp
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\HLEIntercept.cpp
 # End Source File
 # Begin Source File
 

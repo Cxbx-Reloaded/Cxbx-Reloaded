@@ -1156,6 +1156,8 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
 
     if(szBuffer != NULL)
     {
+        //printf("Orig : %s\n", szBuffer);
+
         // trim this off
         if(szBuffer[0] == '\\' && szBuffer[1] == '?' && szBuffer[2] == '?' && szBuffer[3] == '\\')
         {
@@ -1181,7 +1183,7 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
 
 		    DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
 		    DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-		    DbgPrintf("  New:\"$CxbxPath\\TDATA\\%s\"\n", szBuffer);
+		    DbgPrintf("  New:\"$CxbxPath\\EmuDisk\\T\\%s\"\n", szBuffer);
 	    }
 	    else if( (szBuffer[0] == 'U' || szBuffer[0] == 'u') && szBuffer[1] == ':' && szBuffer[2] == '\\')
 	    {
@@ -1191,7 +1193,7 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
 
 		    DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
 		    DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-		    DbgPrintf("  New:\"$CxbxPath\\UDATA\\%s\"\n", szBuffer);
+		    DbgPrintf("  New:\"$CxbxPath\\EmuDisk\\U\\%s\"\n", szBuffer);
 	    }
 	    else if( (szBuffer[0] == 'Z' || szBuffer[0] == 'z') && szBuffer[1] == ':' && szBuffer[2] == '\\')
 	    {
@@ -1201,29 +1203,32 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
 
 		    DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
 		    DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-		    DbgPrintf("  New:\"$CxbxPath\\CxbxCache\\%s\"\n", szBuffer);
+		    DbgPrintf("  New:\"$CxbxPath\\EmuDisk\\Z\\%s\"\n", szBuffer);
 	    }
 
+        //
         // TODO: Wildcards are not allowed??
+        //
+
         {
             for(int v=0;szBuffer[v] != '\0';v++)
             {
                 if(szBuffer[v] == '*')
                 {
-                    if(v > 0)
-                        ReplaceIndex = v-1;
-                    else
-                        ReplaceIndex = v;
+                    if(v > 0) { ReplaceIndex = v-1; }
+                    else { ReplaceIndex = v; }
                 }
             }
-
-            // Note: Hack: Not thread safe (if problems occur, create a temp buffer)
-            if(ReplaceIndex != -1)
-            {
-                ReplaceChar = szBuffer[ReplaceIndex];
-                szBuffer[ReplaceIndex] = '\0';
-            }
         }
+
+        // Note: Hack: Not thread safe (if problems occur, create a temp buffer)
+        if(ReplaceIndex != -1)
+        {
+            ReplaceChar = szBuffer[ReplaceIndex];
+            szBuffer[ReplaceIndex] = '\0';
+        }
+
+        //printf("Aftr : %s\n", szBuffer);
     }
 
     wchar_t wszObjectName[160];

@@ -19,6 +19,8 @@ version: 0.8.0 (??/??/??)
 
 - Toggle Wireframe/Dots/Normal with F11
 
+- HLE caching (so very very nice and speedy!)
+
 - Tons of new debug support, including integrated debug console
 
 - DirectSound support! Turok and Stella (Atari 2600 emulator)

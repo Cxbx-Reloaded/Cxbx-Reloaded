@@ -81,8 +81,8 @@ extern int EmuException(LPEXCEPTION_POINTERS e);
 extern int EmuCheckAllocationSize(LPVOID pBase, bool largeBound);
 
 // global flags specifying current emulation state
-extern volatile BOOL g_bEmuException;
-extern volatile BOOL g_bEmuSuspended;
+extern volatile bool g_bEmuException;
+extern volatile bool g_bEmuSuspended;
 
 // global exception patching address
 extern uint32 g_HaloHack[4];
