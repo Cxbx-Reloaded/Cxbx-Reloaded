@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D8PushBuffer.h
+// *   Cxbx->Win32->CxbxKrnl->EmuD3D8VertexShader.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,14 +31,30 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUD3D8PUSHBUFFER_H
-#define EMUD3D8PUSHBUFFER_H
+#define _CXBXKRNL_INTERNAL
+#define _XBOXKRNL_LOCAL_
 
-// emulate the execution of an xbox d3d pushbuffer
-extern void EmuExecutePushBuffer
+// prevent name collisions
+namespace xboxkrnl
+{
+    #include <xboxkrnl/xboxkrnl.h>
+};
+
+#include "Emu.h"
+#include "EmuFS.h"
+#include "EmuShared.h"
+
+// prevent name collisions
+namespace XTL
+{
+    #include "EmuXTL.h"
+};
+
+extern XTL::LPDIRECT3DDEVICE8 g_pD3DDevice8;  // Direct3D8 Device
+
+void XTL::EmuRecompileVertexShader
 (
-    X_D3DPushBuffer       *pPushBuffer,
-    PVOID                  pFixup
-);
-
-#endif
+    // TODO: Params
+)
+{
+}

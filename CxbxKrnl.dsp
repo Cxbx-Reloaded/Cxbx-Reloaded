@@ -234,6 +234,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8PushBuffer.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8VertexShader.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\EmuDInput.h
 # End Source File
 # Begin Source File
@@ -556,6 +560,10 @@ SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8Conv.cpp
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8PushBuffer.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8VertexShader.cpp
 # End Source File
 # Begin Source File
 

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D8PushBuffer.h
+// *   Cxbx->Win32->CxbxKrnl->EmuD3D8VertexShader.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,14 +31,13 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUD3D8PUSHBUFFER_H
-#define EMUD3D8PUSHBUFFER_H
+#ifndef EMUD3D8VERTEXSHADER_H
+#define EMUD3D8VERTEXSHADER_H
 
-// emulate the execution of an xbox d3d pushbuffer
-extern void EmuExecutePushBuffer
+// recompile from Xbox VertexShader to PC VertexShader
+extern void EmuRecompileVertexShader
 (
-    X_D3DPushBuffer       *pPushBuffer,
-    PVOID                  pFixup
+    // TODO: Params
 );
 
 #endif
