@@ -97,7 +97,7 @@ BEGIN
         POPUP "&Patch", GRAYED
         BEGIN
             MENUITEM "&Allow >64 MB",               ID_EDIT_PATCH_ALLOW64MB
-            MENUITEM "Debug Mode",                  ID_EDIT_PATCH_DEBUGMODE
+            MENUITEM "&Debug Mode",                 ID_EDIT_PATCH_DEBUGMODE
         END
         MENUITEM SEPARATOR
         MENUITEM "Extract &Xbe Info...",        ID_EDIT_EXTRACTXBEINFO
@@ -112,7 +112,7 @@ BEGIN
             MENUITEM "&File...",                    ID_VIEW_DEBUGOUTPUTGUI_FILE
 
         END
-        POPUP "Debug Output (Kernel)"
+        POPUP "Debug Output (&Kernel)"
         BEGIN
             MENUITEM "&Console",                    ID_VIEW_DEBUGOUTPUTKERNEL_CONSOLE
 

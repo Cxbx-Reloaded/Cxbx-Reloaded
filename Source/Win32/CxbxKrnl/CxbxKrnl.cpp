@@ -84,13 +84,17 @@ inline void EmuXSwapFS()
 // ******************************************************************
 void EmuXGenerateFS()
 {
-    uint16 OrgFS = 0;
+    NT_TIB         *OrgNtTib;
+    xboxkrnl::KPCR *NewPcr;
 
-    uint32 dwSize = sizeof(EMUX_KPCR);
+    uint16 NewFS=0;
+    uint16 OrgFS=0;
 
-    uint32 pNewFS = (uint32)new char[dwSize];
+    uint32 dwSize = sizeof(xboxkrnl::KPCR);
 
-    uint16 NewFS = LDTAllocate(pNewFS, pNewFS + dwSize);
+    NewPcr = (xboxkrnl::KPCR*)new char[dwSize];
+
+    NewFS = LDTAllocate((uint32)NewPcr, (uint32)NewPcr + dwSize);
 
     // ******************************************************************
     // * Obtain "OrgFS"
@@ -102,12 +106,30 @@ void EmuXGenerateFS()
     }
 
     // ******************************************************************
+    // * Obtain "OrgNtTib"
+    // ******************************************************************
+    __asm
+    {
+        mov eax, fs:[0x18]
+        mov OrgNtTib, eax
+    }
+
+    // ******************************************************************
     // * Save "NewFS" inside OrgFS.ArbitraryUserPointer
     // ******************************************************************
     __asm
     {
         mov ax, NewFS
-        mov fs:[0x14], ax   // FS.ArbitraryUserPointer
+        mov fs:[0x14], ax   // OrgFS.ArbitraryUserPointer
+    }
+
+    // ******************************************************************
+    // * Generate TIB
+    // ******************************************************************
+    {
+        memcpy(&NewPcr->NtTib, OrgNtTib, sizeof(NT_TIB));
+
+        NewPcr->NtTib.Self = &NewPcr->NtTib;
     }
 
     // ******************************************************************
@@ -121,7 +143,7 @@ void EmuXGenerateFS()
     __asm
     {
         mov ax, OrgFS
-        mov fs:[0x14], ax   // FS.ArbitraryUserPointer
+        mov fs:[0x14], ax   // NewFS.ArbitraryUserPointer
     }
 
     // ******************************************************************
