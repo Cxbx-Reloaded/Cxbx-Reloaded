@@ -509,10 +509,10 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
     }
 
     // ******************************************************************
-    // * I guess we have to call this
+    // * Begin Scene
     // ******************************************************************
-    if(!FAILED(hRet))
-        g_pD3DDevice8->BeginScene();
+    g_pD3DDevice8->BeginScene();
+
 
     EmuSwapFS();   // XBox FS
 
@@ -2035,9 +2035,10 @@ static void EmuUpdateDeferredStates()
     // Certain D3DTS values need to be checked on each Draw[Indexed]Vertices
     if(xd3d8::EmuD3DDeferredTextureState != 0)
     {
-        for(int v=0;v<4;v++)
+        // TODO: HACK: Handle more than just stage 1 !!!! Make sure pCur is calculated right!
+        for(int v=0;v</*4*/1;v++)
         {
-            DWORD *pCur = (xd3d8::EmuD3DDeferredTextureState+v*32);
+            DWORD *pCur = xd3d8::EmuD3DDeferredTextureState+v;
 
             g_pD3DDevice8->SetTextureStageState(v, D3DTSS_TEXTURETRANSFORMFLAGS, pCur[21]);
 
