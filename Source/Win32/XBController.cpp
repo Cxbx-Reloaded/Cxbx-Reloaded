@@ -328,14 +328,32 @@ bool XBController::ConfigPoll(char *szStatus)
                 dwFlags |= (JoyState.lRz > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
             }
             else 
+            {
                 for(int b=0;b<2;b++)
+                {
                     if(abs(JoyState.rglSlider[b]) > DETECT_SENSITIVITY_JOYSTICK)
+                    {
                         dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, rglSlider[b]);
-            else 
+                        dwFlags |= (JoyState.rglSlider[b] > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
+                    }
+                }
+            }
+
+            /* temporarily disabled
+            if(dwHow == -1)
+            {
                 for(int b=0;b<4;b++)
+                {
                     if(abs(JoyState.rgdwPOV[b]) > DETECT_SENSITIVITY_POV)
+                    {
                         dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, rgdwPOV[b]);
-            else
+                    }
+                }
+            }
+            //*/
+
+            if(dwHow == -1)
+            {
                 for(int b=0;b<32;b++)
                 {
                     if(JoyState.rgbButtons[b] > DETECT_SENSITIVITY_BUTTON)
@@ -344,6 +362,7 @@ bool XBController::ConfigPoll(char *szStatus)
                         dwFlags |= DEVICE_FLAG_BUTTON;
                     }
                 }
+            }
 
             // ******************************************************************
             // * Retrieve Object Info
@@ -951,6 +970,12 @@ void XBController::DInputInit(HWND hwnd)
     }
 
     // ******************************************************************
+    // * Enumerate Controller objects
+    // ******************************************************************
+    for(m_dwCurObject=0;m_dwCurObject<m_dwInputDeviceCount;m_dwCurObject++)
+        m_InputDevice[m_dwCurObject].m_Device->EnumObjects(WrapEnumObjectsCallback, this, DIDFT_ALL);
+
+    // ******************************************************************
     // * Set cooperative level and acquire
     // ******************************************************************
     {
@@ -973,12 +998,6 @@ void XBController::DInputInit(HWND hwnd)
             }
         }
     }
-
-    // ******************************************************************
-    // * Enumerate Controller objects
-    // ******************************************************************
-    for(m_dwCurObject=0;m_dwCurObject<m_dwInputDeviceCount;m_dwCurObject++)
-        m_InputDevice[m_dwCurObject].m_Device->EnumObjects(WrapEnumObjectsCallback, this, DIDFT_ALL);
 }
 
 // ******************************************************************
@@ -1014,7 +1033,7 @@ void XBController::Map(XBCtrlObject object, const char *szDeviceName, int dwInfo
     m_ObjectConfig[object].dwInfo   = dwInfo;
     m_ObjectConfig[object].dwFlags  = dwFlags;
 
-    // Purse unused device slots
+    // Purge unused device slots
     for(int v=0;v<XBCTRL_MAX_DEVICES;v++)
     {
         bool inuse = false;
@@ -1136,7 +1155,12 @@ BOOL XBController::EnumObjectsCallback(XTL::LPCDIDEVICEOBJECTINSTANCE lpddoi)
         HRESULT hRet = m_InputDevice[m_dwCurObject].m_Device->SetProperty(DIPROP_RANGE, &diprg.diph);
 
         if(FAILED(hRet))
-            return DIENUM_STOP;
+        {
+            if(hRet == E_NOTIMPL)
+                return DIENUM_CONTINUE;
+            else
+                return DIENUM_STOP;
+        }
     }
     else if(lpddoi->dwType & DIDFT_BUTTON)
     {
@@ -1152,7 +1176,12 @@ BOOL XBController::EnumObjectsCallback(XTL::LPCDIDEVICEOBJECTINSTANCE lpddoi)
         HRESULT hRet = m_InputDevice[m_dwCurObject].m_Device->SetProperty(DIPROP_RANGE, &diprg.diph);
 
         if(FAILED(hRet))
-            return DIENUM_STOP;
+        {
+            if(hRet == E_NOTIMPL)
+                return DIENUM_CONTINUE;
+            else
+                return DIENUM_STOP;
+        }
     }
 
     return DIENUM_CONTINUE;

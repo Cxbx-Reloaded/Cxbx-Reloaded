@@ -8,6 +8,9 @@ version: 0.7.9 (??/??/??)
 
 - Added auto-pause functionality when window loses focus
 
+- Fixes to slider device input, some more robust error handling
+  in input configuration (thanks Zomby!)
+
 - Fixed start/back mapping problem :)
 
 - Fixed a glitch in EmuExe that was outputting some bad Exes
