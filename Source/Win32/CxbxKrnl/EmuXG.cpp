@@ -121,9 +121,36 @@ VOID WINAPI XTL::EmuXGSwizzleRect
     #endif
 
     if(pRect == NULL && pPoint == NULL && Pitch == 0)
+    {
         memcpy(pDest, pSource, Width*Height*BytesPerPixel);
+    }
     else
-        EmuCleanup("Unhandled swizzle (temporarily)");
+    {
+        if(pPoint != NULL && (pPoint->x != 0 || pPoint->y != 0))
+            EmuCleanup("Temporarily unsupported swizzle (very easy fix)");
+
+        DWORD dwMaxY = Height;
+        DWORD dwChunkSize = Width;
+
+        uint08 *pSrc = (uint08*)pSource;
+        uint08 *pDst = (uint08*)pDest;
+
+        if(pRect != 0)
+        {
+            pSrc += pRect->top*Pitch;
+            pSrc += pRect->left;
+
+            dwMaxY = pRect->bottom - pRect->top;
+            dwChunkSize = pRect->right - pRect->left;
+        }
+
+        for(DWORD y=0;y<dwMaxY;y++)
+        {
+            memcpy(pSrc, pDst, dwChunkSize);
+            pSrc += Pitch;
+            pDst += Pitch;
+        }
+    }
 
     EmuSwapFS();   // Xbox FS
 

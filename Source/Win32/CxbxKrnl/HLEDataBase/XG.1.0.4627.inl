@@ -47,6 +47,16 @@ OOVPATable XG_1_0_4627[] =
         "XGIsSwizzledFormat"
         #endif
     },
+    // XGSwizzleRect (* unchanged since 4361 *)
+    {
+        (OOVPA*)&XGSwizzleRect_1_0_4361,
+
+        XTL::EmuXGSwizzleRect,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXGSwizzleRect"
+        #endif
+    },
 };
 
 // ******************************************************************

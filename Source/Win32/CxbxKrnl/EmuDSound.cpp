@@ -594,6 +594,34 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetMixBinHeadroom
 }
 
 // ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetMixBins
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMixBins
+(
+    LPDIRECTSOUND8          pThis,
+    PVOID                   pMixBins
+)
+{
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        EmuSwapFS();   // Win2k/XP FS
+        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetMixBins\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   pMixBins                  : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, pMixBins);
+        EmuSwapFS();   // XBox FS
+    }
+    #endif
+
+    // TODO: Actually do something
+
+    return DS_OK;
+}
+
+// ******************************************************************
 // * func: EmuIDirectSoundBuffer8_SetMixBinVolumes
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMixBinVolumes
@@ -808,6 +836,12 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
 
                 pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = pDSBufferDesc->lpwfxFormat->nSamplesPerSec*pDSBufferDesc->lpwfxFormat->nBlockAlign;
                 pDSBufferDesc->lpwfxFormat->wBitsPerSample = 8;
+
+                /* TODO: Get ADPCM working!
+                pDSBufferDesc->lpwfxFormat->cbSize = 32;
+                #define WAVE_FORMAT_ADPCM 2
+                pDSBufferDesc->lpwfxFormat->wFormatTag = WAVE_FORMAT_ADPCM;
+                */
             }
         }
 
