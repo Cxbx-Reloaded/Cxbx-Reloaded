@@ -43,6 +43,8 @@ Exe::Exe(const char *x_szFilename)
 {
     ConstructorInit();
 
+    printf("Exe::Exe: Opening %s...\n", x_szFilename);
+
     FILE *ExeFile = fopen(x_szFilename, "rb");
 
     // ******************************************************************
@@ -53,6 +55,8 @@ Exe::Exe(const char *x_szFilename)
         SetError("could not open .exe file.", true);
         return;
     }
+
+    printf("Exe::Exe: %s was opened...\n", x_szFilename);
 
     // ******************************************************************
     // * ignore dos stub (if it exists)
@@ -66,13 +70,15 @@ Exe::Exe(const char *x_szFilename)
 
         if(m_DOSHeader.m_magic == *(uint16*)"MZ")
         {
+            printf("Exe::Exe: Ignoring DOS stub...\n");
+
             if(fread(&m_DOSHeader.m_cblp, sizeof(m_DOSHeader)-2, 1, ExeFile) != 1)
             {
                 SetError("unexpected read error while reading dos header", true);
                 goto cleanup;
             }
 
-	    fseek(ExeFile, m_DOSHeader.m_lfanew, SEEK_SET);
+            fseek(ExeFile, m_DOSHeader.m_lfanew, SEEK_SET);
         }
     }
 
@@ -80,6 +86,8 @@ Exe::Exe(const char *x_szFilename)
     // * read pe header
     // ******************************************************************
     {
+        printf("Exe::Exe: Reading PE header...\n");
+
         if(fread(&m_Header, sizeof(m_Header), 1, ExeFile) != 1)
         {
             SetError("unexpected read error while reading pe header", true);
@@ -91,12 +99,16 @@ Exe::Exe(const char *x_szFilename)
             SetError("invalid file,  could not locate PE header", true);
             goto cleanup;
         }
+
+        printf("Exe::Exe: PE header \"magic number\" was OK...\n");
     }
 
     // ******************************************************************
     // * read optional header
     // ******************************************************************
     {
+        printf("Exe::Exe: Reading Optional Header...\n");
+
         if(fread(&m_OptionalHeader, sizeof(m_OptionalHeader), 1, ExeFile) != 1)
         {
             SetError("unexpected read error while reading optional header", true);
@@ -108,6 +120,8 @@ Exe::Exe(const char *x_szFilename)
             SetError("invalid file, could not locate optional header", true);
             goto cleanup;
         }
+
+        printf("Exe::Exe: Optional Header \"magic number\" was OK...\n");
     }
 
     // ******************************************************************
@@ -116,15 +130,23 @@ Exe::Exe(const char *x_szFilename)
     {
         m_SectionHeader = new SectionHeader[m_Header.m_sections];
 
+        printf("Exe::Exe: Reading Section Headers...\n");
+
         for(uint32 v=0;v<m_Header.m_sections;v++)
         {
+            printf("Exe::Exe: Reading Section Header 0x%.04X...", v);
+
             if(fread(&m_SectionHeader[v], sizeof(SectionHeader), 1, ExeFile) != 1)
             {
+                printf("FAILED!\n", v);
+
                 char buffer[255];
                 sprintf(buffer, "could not read pe section header %d (%Xh)", v, v);
                 SetError(buffer, true);
                 goto cleanup;
             }
+
+            printf("OK\n", v);
         }
     }
 
@@ -132,10 +154,14 @@ Exe::Exe(const char *x_szFilename)
     // * read sections
     // ******************************************************************
     {
+        printf("Exe::Exe: Reading Sections...\n");
+
         m_bzSection = new uint08*[m_Header.m_sections];
 
         for(uint32 v=0;v<m_Header.m_sections;v++)
         {
+            printf("Exe::Exe: Reading Section 0x%.04X...", v);
+
             uint32 raw_size = m_SectionHeader[v].m_sizeof_raw;
             uint32 raw_addr = m_SectionHeader[v].m_raw_addr;
 
@@ -144,24 +170,33 @@ Exe::Exe(const char *x_szFilename)
             memset(m_bzSection[v], 0, raw_size);
 
             if(raw_size == 0)
+            {
+                printf("OK\n");
                 continue;
+            }
 
             // ******************************************************************
             // * read current section from file (if raw_size > 0)
             // ******************************************************************
             {
-	        fseek(ExeFile, raw_addr, SEEK_SET);
+                fseek(ExeFile, raw_addr, SEEK_SET);
 
                 if(fread(m_bzSection[v], raw_size, 1, ExeFile) != 1)
                 {
+                    printf("FAILED!\n");
+
                     char buffer[255];
                     sprintf(buffer, "could not read pe section %d (%Xh)", v, v);
                     SetError(buffer, true);
                     goto cleanup;
                 }
             }
+
+            printf("OK\n");
         }
     }
+
+    printf("Exe::Exe: %s was successfully opened.\n", x_szFilename);
 
 cleanup:
 
@@ -270,7 +305,7 @@ void Exe::Export(const char *x_szExeFilename)
             uint32 RawSize = m_SectionHeader[v].m_sizeof_raw;
             uint32 RawAddr = m_SectionHeader[v].m_raw_addr;
 
-	    fseek(ExeFile, RawAddr, SEEK_SET);
+        fseek(ExeFile, RawAddr, SEEK_SET);
 
             if(RawSize == 0)
                 continue;

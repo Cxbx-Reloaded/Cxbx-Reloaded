@@ -2,6 +2,8 @@ Cxbx Todo:
 
   General Code Cleanup [caustik]
 
+  General debug output in Exe.cpp, Xbe.cpp, etc. Very slick :)
+
   High Level Emulation. Detect entry points to routines such as 
   XapiVerifyMediaInDrive, and install a vector to an emulation
   routine.
