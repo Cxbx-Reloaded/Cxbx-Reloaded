@@ -2758,7 +2758,7 @@ static void EmuUpdateDeferredStates()
         if(xd3d8::EmuD3DDeferredRenderState[23] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_AMBIENT,               xd3d8::EmuD3DDeferredRenderState[23]);
 
-        /** To check for unhandled RenderStates
+        //** To check for unhandled RenderStates
         for(int v=0;v<117-82;v++)
         {
             if(xd3d8::EmuD3DDeferredRenderState[v] != X_D3DRS_UNK)
@@ -2767,7 +2767,7 @@ static void EmuUpdateDeferredStates()
                     printf("*Warning* Unhandled RenderState Change @ %d (%d)\n", v, v + 82);
             }
         }
-        **/
+        //**/
     }
 
     // Certain D3DTS values need to be checked on each Draw[Indexed]Vertices
@@ -2983,10 +2983,9 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
                 g_SlideCache[e].pVertexBuffer8 = 0;
             }
 
-            g_SlideCache[e].pOrigPtr = pOrigVertexBuffer8;
-
             g_pD3DDevice8->CreateVertexBuffer(PrimitiveCount*nStride*6, 0, 0, D3DPOOL_DEFAULT, &pHackVertexBuffer8);
 
+            g_SlideCache[e].pOrigPtr = pOrigVertexBuffer8;
             g_SlideCache[e].pVertexBuffer8 = pHackVertexBuffer8;
 
             BOOL bPatch = FALSE;
