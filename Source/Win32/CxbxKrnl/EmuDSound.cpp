@@ -473,7 +473,72 @@ HRESULT WINAPI XTL::EmuIDirectSound8_DownloadEffectsImage
     #endif
 
     // TODO: Actually implement this
-    printf("*Note* EmuIDirectSound8_DownloadEffectsImage is being ignored\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSoundStream_SetHeadroom
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundStream_SetHeadroom
+(
+    PVOID   pThis,
+    DWORD   dwHeadroom
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSoundStream_SetHeadroom\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   dwHeadroom                : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, dwHeadroom);
+    }
+    #endif
+
+    // TODO: Actually implement this
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSoundStream_SetI3DL2Source
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundStream_SetI3DL2Source
+(
+    PVOID   pThis,
+    PVOID   pds3db,
+    DWORD   dwApply
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSoundStream_SetI3DL2Source\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   pds3db                    : 0x%.08X\n"
+               "   dwApply                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, pds3db, dwApply);
+    }
+    #endif
+
+    // TODO: Actually implement this
 
     EmuSwapFS();   // XBox FS
 

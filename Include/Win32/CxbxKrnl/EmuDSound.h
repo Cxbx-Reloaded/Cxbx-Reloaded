@@ -230,6 +230,25 @@ HRESULT WINAPI EmuIDirectSound8_DownloadEffectsImage
 );
 
 // ******************************************************************
+// * func: EmuIDirectSoundStream_SetHeadroom
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundStream_SetHeadroom
+(
+    PVOID   pThis,
+    DWORD   dwHeadroom
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundStream_SetI3DL2Source
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundStream_SetI3DL2Source
+(
+    PVOID   pThis,
+    PVOID   pds3db,
+    DWORD   dwApply
+);
+
+// ******************************************************************
 // * func: EmuIDirectSound8_SetOrientation
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSound8_SetOrientation
