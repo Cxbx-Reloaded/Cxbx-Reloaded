@@ -172,6 +172,9 @@
 				RelativePath="Include\Win32\CxbxKrnl\EmuXxapi.h">
 			</File>
 			<File
+				RelativePath="Include\Win32\CxbxKrnl\OOVPA.h">
+			</File>
+			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\xntdll.h">
 			</File>
 		</Filter>
@@ -199,6 +202,9 @@
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\KernelThunk.cpp">
+			</File>
+			<File
+				RelativePath="Source\Win32\CxbxKrnl\OOVPA.cpp">
 			</File>
 		</Filter>
 	</Files>

@@ -289,13 +289,13 @@ void EmuXInstallWrappers(void (*Entry)(), Xbe::Header *XbeHeader)
 
                         if(v == count)
                         {
-                            char buffer[255];
-
-                            sprintf(buffer, "Located %s @ 0x%.08X", XAPI_1_0_4361[a].szFuncName, cur);
-
-                            MessageBox(NULL, buffer, "EmuX", MB_OK);
+                            #ifdef _DEBUG_TRACE
+                            printf("EmuXInstallWrappers: 0x%.08X -> %s\n", cur, XAPI_1_0_4361[a].szFuncName);
+                            #endif
 
                             EmuXInstallWrapper((void*)cur, XAPI_1_0_4361[a].lpRedirect);
+
+                            break;
                         }
                     }
                 }
