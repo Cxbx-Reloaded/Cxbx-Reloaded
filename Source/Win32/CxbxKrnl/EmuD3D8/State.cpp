@@ -296,4 +296,13 @@ void XTL::EmuUpdateDeferredStates()
             } 
         }
     }
+
+    if(g_bFakePixelShaderLoaded)
+    {
+        for(int r=0;r<4;r++)
+        {
+            g_pD3DDevice8->SetTextureStageState(r, D3DTSS_COLOROP, D3DTOP_DISABLE);
+            g_pD3DDevice8->SetTextureStageState(r, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+        }
+    }
 }

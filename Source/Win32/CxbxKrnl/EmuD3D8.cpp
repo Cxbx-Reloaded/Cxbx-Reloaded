@@ -60,6 +60,7 @@ XTL::LPDIRECTDRAWSURFACE7    g_pDDSPrimary  = NULL; // DirectDraw7 Primary Surfa
 XTL::LPDIRECTDRAWSURFACE7    g_pDDSOverlay7 = NULL; // DirectDraw7 Overlay Surface
 XTL::LPDIRECTDRAWCLIPPER     g_pDDClipper   = NULL; // DirectDraw7 Clipper
 DWORD                        g_CurrentVertexShader = 0;
+BOOL                         g_bFakePixelShaderLoaded = FALSE;
 
 // Static Function(s)
 static BOOL WINAPI                  EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescription, LPSTR lpDriverName, LPVOID lpContext, HMONITOR hm);
@@ -2390,6 +2391,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreatePixelShader
 
     if(FAILED(hRet))
     {
+        *pHandle = X_PIXELSHADER_FAKE_HANDLE;
+
         EmuWarning("We're lying about the creation of a pixel shader!");
 
         hRet = D3D_OK;
@@ -2419,26 +2422,48 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetPixelShader
     // redirect to windows d3d
     HRESULT hRet = D3D_OK;
 
-    // TODO: Pixel Shader emulation
-    /*
-    // simplest possible pixel shader (diffuse only)
-    static const char szDiffusePixelShader[] =
-        "// Diffuse only         \n"\
-        "ps.1.1                  \n"\
-        "mov r0, v0              \n";// c0
+    // Fake Programmable Pipeline
+    if(Handle == X_PIXELSHADER_FAKE_HANDLE)
+    {
+        static DWORD dwHandle = 0;
 
-    LPD3DXBUFFER pShader = 0;
-    LPD3DXBUFFER pErrors = 0;
+        if(dwHandle == 0)
+        {
+            // simplest possible pixel shader (diffuse only)
+            static const char szDiffusePixelShader[] =
+                "ps.1.1                         \n"
+                "def c0, 5.0f, 5.0f, 5.0f, 1.0f \n"
+                "tex t0                         \n" // use texture 0
+                "tex t1                         \n" // use texture 1
+                "mul r1, t0, t1                 \n" // r0 = c0*t0
+                "mul r0, r1, c0                 \n";
 
-    // assemble the shader
-    D3DXAssembleShader(szDiffusePixelShader, strlen(szDiffusePixelShader) - 1, 0, NULL, &pShader, &pErrors);
+            LPD3DXBUFFER pShader = 0;
+            LPD3DXBUFFER pErrors = 0;
 
-    DWORD dwHandle = 0;
+            // assemble the shader
+            D3DXAssembleShader(szDiffusePixelShader, strlen(szDiffusePixelShader) - 1, 0, NULL, &pShader, &pErrors);
 
-    // create the shader device handle
-    g_pD3DDevice8->CreatePixelShader((DWORD*)pShader->GetBufferPointer(), &dwHandle);
-    g_pD3DDevice8->SetPixelShader(dwHandle);
-    */
+            // create the shader device handle
+            hRet = g_pD3DDevice8->CreatePixelShader((DWORD*)pShader->GetBufferPointer(), &dwHandle);
+
+            if(FAILED(hRet))
+                EmuCleanup("Could not create pixel shader");
+        }
+
+        hRet = g_pD3DDevice8->SetPixelShader(dwHandle);
+
+        if(FAILED(hRet))
+            EmuCleanup("Could not set pixel shader!");
+
+        g_bFakePixelShaderLoaded = TRUE;
+    }
+    // Fixed Pipeline, or Recompiled Programmable Pipeline
+    else if(Handle == NULL)
+    {
+        g_bFakePixelShaderLoaded = FALSE;
+        g_pD3DDevice8->SetPixelShader(Handle);
+    }
 
     if(FAILED(hRet))
     {

@@ -102,6 +102,8 @@ typedef struct _X_D3DGAMMARAMP
 }
 X_D3DGAMMARAMP;
 
+#define X_PIXELSHADER_FAKE_HANDLE 0xDEADBEEF
+
 struct X_D3DVertexShader
 {
     union
