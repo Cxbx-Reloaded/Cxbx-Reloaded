@@ -43,7 +43,7 @@
 // ******************************************************************
 // * constructor
 // ******************************************************************
-WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m_xbe(0), m_exe(0), m_exe_changed(false), m_xbe_changed(false), m_KrnlDebug(DM_NONE), m_CxbxDebug(DM_NONE)
+WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m_Xbe(0), m_Exe(0), m_bExeChanged(false), m_bXbeChanged(false), m_KrnlDebug(DM_NONE), m_CxbxDebug(DM_NONE)
 {
     m_classname = "WndMain";
     m_wndname   = "Cxbx : Xbox Emulator";
@@ -127,8 +127,8 @@ WndMain::~WndMain()
         }
     }
 
-    delete m_xbe;
-    delete m_exe;
+    delete m_Xbe;
+    delete m_Exe;
 
     delete[] m_XbeFilename;
     delete[] m_ExeFilename;
@@ -177,14 +177,14 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			{
                 HDC hDC = GetDC(hwnd);
 
-                m_back_bmp  = (HBITMAP)LoadImage(m_hInstance, MAKEINTRESOURCE(IDB_SPLASH), IMAGE_BITMAP, 0, 0, 0);
-                m_logo_bmp  = (HBITMAP)LoadImage(m_hInstance, MAKEINTRESOURCE(IDB_LOGO), IMAGE_BITMAP, 0, 0, 0);
+                m_BackBmp  = (HBITMAP)LoadImage(m_hInstance, MAKEINTRESOURCE(IDB_SPLASH), IMAGE_BITMAP, 0, 0, 0);
+                m_LogoBmp  = (HBITMAP)LoadImage(m_hInstance, MAKEINTRESOURCE(IDB_LOGO), IMAGE_BITMAP, 0, 0, 0);
                 
-                m_back_dc   = CreateCompatibleDC(hDC);
-                m_logo_dc   = CreateCompatibleDC(hDC);
+                m_BackDC   = CreateCompatibleDC(hDC);
+                m_LogoDC   = CreateCompatibleDC(hDC);
 
-                m_orig_bmp  = (HBITMAP)SelectObject(m_back_dc, m_back_bmp);
-                m_orig_logo = (HBITMAP)SelectObject(m_logo_dc, m_logo_bmp);
+                m_OrigBmp  = (HBITMAP)SelectObject(m_BackDC, m_BackBmp);
+                m_OrigLogo = (HBITMAP)SelectObject(m_LogoDC, m_LogoBmp);
 
                 if(hDC != NULL)
                     ReleaseDC(hwnd, hDC);
@@ -214,8 +214,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			// * draw splash/logo/status
 			// ******************************************************************
 			{
-				BitBlt(hDC, 0, (m_xbe == 0) ? 0 : 10, 320, 160, m_back_dc, 0, 0, SRCCOPY);
-				BitBlt(hDC, 220, 168, 100, 17, m_logo_dc, 0, 0, SRCCOPY);
+				BitBlt(hDC, 0, (m_Xbe == 0) ? 0 : 10, 320, 160, m_BackDC, 0, 0, SRCCOPY);
+				BitBlt(hDC, 220, 168, 100, 17, m_LogoDC, 0, 0, SRCCOPY);
 
 				int nHeight = -MulDiv(8, GetDeviceCaps(hDC, LOGPIXELSY), 72);
 
@@ -229,8 +229,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 char buffer[255];
 
-                if(m_xbe != 0 && m_xbe->GetError() == 0)
-                    sprintf(buffer, "%s Loaded!", m_xbe->m_szAsciiTitle);
+                if(m_Xbe != 0 && m_Xbe->GetError() == 0)
+                    sprintf(buffer, "%s Loaded!", m_Xbe->m_szAsciiTitle);
                 else
     				sprintf(buffer, "%s", "Disclaimer: CXBX has no affiliation with Microsoft");
 
@@ -327,20 +327,20 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                             break;
                         }
 
-                        m_xbe = new Xbe(i_exe, "Untitled", true);
+                        m_Xbe = new Xbe(i_exe, "Untitled", true);
 
-                        if(m_xbe->GetError() != 0)
+                        if(m_Xbe->GetError() != 0)
                         {
-                            MessageBox(m_hwnd, m_xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
+                            MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
 
-                            delete m_xbe; m_xbe = 0;
+                            delete m_Xbe; m_Xbe = 0;
 
                             break;
                         }
 
                         XbeLoaded();
 
-                        m_exe_changed = true;
+                        m_bExeChanged = true;
                     }
                 }
                 break;
@@ -389,9 +389,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					    {
                             uint08 i_gray[100*17];
 
-							m_xbe->ExportLogoBitmap(i_gray);
+							m_Xbe->ExportLogoBitmap(i_gray);
 
-							if(m_xbe->GetError() == 0)
+							if(m_Xbe->GetError() == 0)
 							{
 								FILE *LogoBitmap = fopen(ofn.lpstrFile, "wb");
 
@@ -459,13 +459,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 								fclose(LogoBitmap);
 							}
 
-							if(m_xbe->GetError() != 0)
-							    MessageBox(m_hwnd, m_xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
+							if(m_Xbe->GetError() != 0)
+							    MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
                             else
                             {
                                 char buffer[255];
 
-                                sprintf(buffer, "%s's logo bitmap was successfully exported.", m_xbe->m_szAsciiTitle);
+                                sprintf(buffer, "%s's logo bitmap was successfully exported.", m_Xbe->m_szAsciiTitle);
 
                                 MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
 
@@ -497,17 +497,23 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 					if(GetOpenFileName(&ofn) == TRUE)
                     {
-					    // import logo bitmap
+						// ******************************************************************
+						// * import logo bitmap
+						// ******************************************************************
 					    {
                             uint08 i_gray[100*17];
 
-                            // read bitmap file
+							// ******************************************************************
+							// * read bitmap file
+							// ******************************************************************
                             {
 								FILE *logo = fopen(ofn.lpstrFile, "rb");
 
                                 char *bmp_err = 0;
 
-                                // read bitmap header
+                                // ******************************************************************
+							    // * read bitmap header
+							    // ******************************************************************
                                 if(!bmp_err)
                                 {
                                     BITMAPFILEHEADER bmfh;
@@ -520,7 +526,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                                         bmp_err = "Invalid bitmap file...\n\nonly allows 24 bit bitmaps (100 by 17 pixels) with row order swapped";
                                 }
 
-                                // read bitmap info
+							    // ******************************************************************
+							    // * read bitmap info
+							    // ******************************************************************
                                 if(!bmp_err)
                                 {
                                     BITMAPINFO bmi;
@@ -531,7 +539,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                                         bmp_err = "Invalid bitmap file...\n\nonly allows 24 bit bitmaps (100 by 17 pixels) with row order swapped";
                                 }
 
-                                // read bitmap data
+							    // ******************************************************************
+							    // * read bitmap data
+							    // ******************************************************************
                                 if(!bmp_err)
                                 {
                                     RGBTRIPLE bmp_data[100*17];
@@ -551,27 +561,27 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                                 }
                             }
 
-							m_xbe->ImportLogoBitmap(i_gray);
+							m_Xbe->ImportLogoBitmap(i_gray);
 
-							if(m_xbe->GetError() != 0)
+							if(m_Xbe->GetError() != 0)
                             {
-							    MessageBox(m_hwnd, m_xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
+							    MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
 
-                                if(m_xbe->IsFatal())
+                                if(m_Xbe->IsFatal())
                                     CloseXbe();
                                 else
-                                    m_xbe->ClearError();
+                                    m_Xbe->ClearError();
                             }
                             else
                             {
-                                m_exe_changed = true;
-                                m_xbe_changed = true;
+                                m_bExeChanged = true;
+                                m_bXbeChanged = true;
 
                                 LoadLogo();
 
                                 char buffer[255];
 
-                                sprintf(buffer, "%s's logo bitmap was successfully updated.", m_xbe->m_szAsciiTitle);
+                                sprintf(buffer, "%s's logo bitmap was successfully updated.", m_Xbe->m_szAsciiTitle);
 
                                 printf("WndMain: %s\n", buffer);
 
@@ -584,25 +594,27 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 case ID_EDIT_PATCH_ALLOW64MB:
                 {
-                    m_exe_changed = true;
-                    m_xbe_changed = true;
+                    m_bExeChanged = true;
+                    m_bXbeChanged = true;
 
-                    m_xbe->m_Header.dwInitFlags.bLimit64MB = !m_xbe->m_Header.dwInitFlags.bLimit64MB;
+                    m_Xbe->m_Header.dwInitFlags.bLimit64MB = !m_Xbe->m_Header.dwInitFlags.bLimit64MB;
 
                     HMENU menu = GetMenu(m_hwnd);
                     HMENU edit_menu = GetSubMenu(menu, 1);
                     HMENU pach_menu = GetSubMenu(edit_menu, 1);
 
-                    // check "allow >64 MB" if appropriate
+					// ******************************************************************
+					// * check "allow >64MB" if appropriate
+					// ******************************************************************
                     {
-                        bool res = m_xbe->m_Header.dwInitFlags.bLimit64MB;
+                        bool res = m_Xbe->m_Header.dwInitFlags.bLimit64MB;
 
                         UINT chk_flag = (res) ? MF_UNCHECKED : MF_CHECKED;
 
                         if(res)
-                            printf("WndMain: %s was patched to limit to 64MB of memory usage.\n", m_xbe->m_szAsciiTitle);
+                            printf("WndMain: %s was patched to limit to 64MB of memory usage.\n", m_Xbe->m_szAsciiTitle);
                         else
-                            printf("WndMain: %s was patched to allow >64MB of memory usage.\n", m_xbe->m_szAsciiTitle);
+                            printf("WndMain: %s was patched to allow >64MB of memory usage.\n", m_Xbe->m_szAsciiTitle);
                         
                         CheckMenuItem(pach_menu, ID_EDIT_PATCH_ALLOW64MB, chk_flag);
                     }
@@ -611,27 +623,29 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 case ID_EDIT_PATCH_DEBUGMODE:
                 {
-                    m_exe_changed = true;
-                    m_xbe_changed = true;
+                    m_bExeChanged = true;
+                    m_bXbeChanged = true;
 
-                    // patch to/from debug mode
-                    if((m_xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL) > 0x01000000)
+					// ******************************************************************
+					// * patch to/from debug mode
+					// ******************************************************************
+                    if((m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL) > 0x01000000)
                     {
                         // we're in debug mode, so switch over to retail
-                        uint32 ep = m_xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL;            // decode from debug mode
-                        uint32 kt = m_xbe->m_Header.dwKernelImageThunkAddr ^ XOR_KT_DEBUG;  // decode from debug mode
+                        uint32 ep = m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL;            // decode from debug mode
+                        uint32 kt = m_Xbe->m_Header.dwKernelImageThunkAddr ^ XOR_KT_DEBUG;  // decode from debug mode
 
-                        m_xbe->m_Header.dwEntryAddr = ep ^ XOR_EP_DEBUG;                    // encode to retail mode
-                        m_xbe->m_Header.dwKernelImageThunkAddr = kt ^ XOR_KT_RETAIL;        // encode to retail mode
+                        m_Xbe->m_Header.dwEntryAddr = ep ^ XOR_EP_DEBUG;                    // encode to retail mode
+                        m_Xbe->m_Header.dwKernelImageThunkAddr = kt ^ XOR_KT_RETAIL;        // encode to retail mode
                     }
                     else
                     {
                         // we're in retail mode, so switch to debug
-                        uint32 ep = m_xbe->m_Header.dwEntryAddr ^ XOR_EP_DEBUG;             // decode from retail mode
-                        uint32 kt = m_xbe->m_Header.dwKernelImageThunkAddr ^ XOR_KT_RETAIL; // decode from retail mode
+                        uint32 ep = m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_DEBUG;             // decode from retail mode
+                        uint32 kt = m_Xbe->m_Header.dwKernelImageThunkAddr ^ XOR_KT_RETAIL; // decode from retail mode
 
-                        m_xbe->m_Header.dwEntryAddr = ep ^ XOR_EP_RETAIL;                   // encode to debug mode
-                        m_xbe->m_Header.dwKernelImageThunkAddr = kt ^ XOR_KT_DEBUG;         // encode to debug mode
+                        m_Xbe->m_Header.dwEntryAddr = ep ^ XOR_EP_RETAIL;                   // encode to debug mode
+                        m_Xbe->m_Header.dwKernelImageThunkAddr = kt ^ XOR_KT_DEBUG;         // encode to debug mode
                     }
 
                     HMENU menu = GetMenu(m_hwnd);
@@ -639,16 +653,18 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                     HMENU pach_menu = GetSubMenu(edit_menu, 1);
 
-                    // check "debug mode" if appropriate
+					// ******************************************************************
+					// * check "debug mode" if appropriate
+					// ******************************************************************
                     {
-                        bool res = (m_xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL) > 0x01000000;
+                        bool res = (m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL) > 0x01000000;
 
                         UINT chk_flag = (res) ? MF_CHECKED : MF_UNCHECKED;
 
                         if(res)
-                            printf("WndMain: %s was converted to debug mode.\n", m_xbe->m_szAsciiTitle);
+                            printf("WndMain: %s was converted to debug mode.\n", m_Xbe->m_szAsciiTitle);
                         else
-                            printf("WndMain: %s was converted to retail mode.\n", m_xbe->m_szAsciiTitle);
+                            printf("WndMain: %s was converted to retail mode.\n", m_Xbe->m_szAsciiTitle);
 
                         CheckMenuItem(pach_menu, ID_EDIT_PATCH_DEBUGMODE, chk_flag);
                     }
@@ -688,15 +704,15 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						// * dump xbe information
 						// ******************************************************************
 					    {
-                            m_xbe->DumpInformation(ofn.lpstrFile);
+                            m_Xbe->DumpInformation(ofn.lpstrFile);
 
-						    if(m_xbe->GetError() != 0)
-							    MessageBox(m_hwnd, m_xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
+						    if(m_Xbe->GetError() != 0)
+							    MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
                             else
                             {
                                 char buffer[255];
 
-                                sprintf(buffer, "%s's .xbe info was successfully exported.", m_xbe->m_szAsciiTitle);
+                                sprintf(buffer, "%s's .xbe info was successfully exported.", m_Xbe->m_szAsciiTitle);
 
                                 printf("WndMain: %s\n", buffer);
 
@@ -716,7 +732,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                     MessageBox(m_hwnd, "This will not take effect until emulation is (re)started.\n", "Cxbx", MB_OK);
 
-                    m_exe_changed = true;
+                    m_bExeChanged = true;
 
                     UpdateDebugConsoles();
                 }
@@ -754,7 +770,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                             strncpy(m_KrnlDebugFilename, ofn.lpstrFile, 259);
 
-                            m_exe_changed = true;
+                            m_bExeChanged = true;
 
                             m_KrnlDebug = DM_FILE;
 
@@ -815,10 +831,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 break;
 
                 case ID_EMULATION_START:
-                {
                     StartEmulation(false);
-                }
-                break;
+                    break;
 
                 case ID_HELP_ABOUT:
                 {
@@ -835,24 +849,26 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 break;
 
                 case ID_HELP_HOMEPAGE:
-                {
                     ShellExecute(NULL, "open", "http://www.caustik.com/xbox/", NULL, NULL, SW_SHOWNORMAL);
-                }
-                break;
+                    break;
             }
 
             break;
         }
 
         case WM_CLOSE:
-            if(m_xbe_changed)
+            if(m_bXbeChanged)
             {
                 int ret = MessageBox(m_hwnd, "Changes have been made, do you wish to save?", "Cxbx", MB_ICONQUESTION | MB_YESNOCANCEL);
 
-                if(ret == IDYES)
-                    SaveXbeAs();
-                else if(ret == IDCANCEL)
-                    break;
+                switch(ret)
+                {
+                    case IDYES:
+                        SaveXbeAs();
+                        break;
+                    case IDCANCEL:
+                        break;
+                }
             }
             DestroyWindow(hwnd);
             break;
@@ -863,25 +879,23 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
             HDC hDC = GetDC(hwnd);
 
-            SelectObject(m_logo_dc, m_orig_logo);
+            SelectObject(m_LogoDC, m_OrigLogo);
 
-            SelectObject(m_back_dc, m_orig_bmp);
+            SelectObject(m_BackDC, m_OrigBmp);
 
-            DeleteObject(m_logo_dc);
+            DeleteObject(m_LogoDC);
 
-            DeleteObject(m_back_dc);
+            DeleteObject(m_BackDC);
 
-            DeleteObject(m_logo_bmp);
+            DeleteObject(m_LogoBmp);
 
-            DeleteObject(m_back_bmp);
+            DeleteObject(m_BackBmp);
 
 			ReleaseDC(hwnd, hDC);
 
-            if(m_xbe != 0)
-            {
-                delete m_xbe;
-                m_xbe = 0;
-            }
+            delete m_Xbe;
+
+            m_Xbe = 0;
 
             PostQuitMessage(0);
         }
@@ -911,7 +925,6 @@ void WndMain::SuggestFilename(const char *x_orig_filename, char *x_filename, cha
 
     if(found != 0)
     {
-//        strcpy(x_filename, x_orig_filename + found + 1);
         strcpy(x_filename, x_orig_filename);
 
         uint32 loc = 0;
@@ -936,11 +949,15 @@ void WndMain::XbeLoaded()
 {
     LoadLogo();
 
-    // disable / enable appropriate menus
+    // ******************************************************************
+	// * disable/enable appropriate menus
+	// ******************************************************************
     {
         HMENU menu = GetMenu(m_hwnd);
 
-        // file menu
+        // ******************************************************************
+	    // * file menu
+	    // ******************************************************************
         {
 			HMENU file_menu = GetSubMenu(menu, 0);
 
@@ -963,7 +980,9 @@ void WndMain::XbeLoaded()
             EnableMenuItem(file_menu, ID_FILE_EXPORTTOEXE, MF_BYCOMMAND | MF_ENABLED);
         }
 
-        // edit menu
+        // ******************************************************************
+	    // * edit menu
+	    // ******************************************************************
         {
             HMENU edit_menu = GetSubMenu(menu, 1);
             HMENU logo_menu = GetSubMenu(edit_menu, 0);
@@ -978,32 +997,39 @@ void WndMain::XbeLoaded()
             // enable patch menu
             EnableMenuItem(edit_menu, 1, MF_BYPOSITION | MF_ENABLED);
 
-            // patch menu
+            // ******************************************************************
+	        // * patch menu
+	        // ******************************************************************
             {
                 // check "allow >64 MB" if appropriate
                 {
-                    UINT chk_flag = (m_xbe->m_Header.dwInitFlags.bLimit64MB) ? MF_UNCHECKED : MF_CHECKED;
+                    UINT chk_flag = (m_Xbe->m_Header.dwInitFlags.bLimit64MB) ? MF_UNCHECKED : MF_CHECKED;
 
                     CheckMenuItem(pach_menu, ID_EDIT_PATCH_ALLOW64MB, chk_flag);
                 }
 
                 // check "debug mode" if appropriate
                 {
-                    UINT chk_flag = ((m_xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL) > 0x01000000) ? MF_CHECKED : MF_UNCHECKED;
+                    UINT chk_flag = ((m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL) > 0x01000000) ? MF_CHECKED : MF_UNCHECKED;
 
                     CheckMenuItem(pach_menu, ID_EDIT_PATCH_DEBUGMODE, chk_flag);
                 }
             }
         }
 
-        // view menu
+        // ******************************************************************
+	    // * view menu
+	    // ******************************************************************
         {
             HMENU view_menu = GetSubMenu(menu, 2);
         }
 
-        // emulation menu
+        // ******************************************************************
+	    // * emulation menu
+	    // ******************************************************************
         {
             HMENU emul_menu = GetSubMenu(menu, 3);
+
             // enable emulation start
             EnableMenuItem(emul_menu, ID_EMULATION_START, MF_BYCOMMAND | MF_ENABLED);
         }
@@ -1011,7 +1037,7 @@ void WndMain::XbeLoaded()
 
     InvalidateRgn(m_hwnd, NULL, TRUE);
 
-    printf("WndMain: %s loaded.\n", m_xbe->m_szAsciiTitle);    
+    printf("WndMain: %s loaded.\n", m_Xbe->m_szAsciiTitle);    
 }
 
 // ******************************************************************
@@ -1021,13 +1047,13 @@ void WndMain::LoadLogo()
 {
     uint08 i_gray[100*17];
 
-    m_xbe->ExportLogoBitmap(i_gray);
+    m_Xbe->ExportLogoBitmap(i_gray);
 
-    if(m_xbe->GetError() != 0)
+    if(m_Xbe->GetError() != 0)
     {
-        MessageBox(m_hwnd, m_xbe->GetError(), "Cxbx", MB_ICONEXCLAMATION | MB_OK);
+        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONEXCLAMATION | MB_OK);
 
-        if(m_xbe->IsFatal())
+        if(m_Xbe->IsFatal())
             CloseXbe();
 
         return;
@@ -1038,7 +1064,7 @@ void WndMain::LoadLogo()
     {
         for(uint32 x=0;x<100;x++)
         {
-            SetPixel(m_logo_dc, x, y, RGB(i_gray[v], i_gray[v], i_gray[v]));
+            SetPixel(m_LogoDC, x, y, RGB(i_gray[v], i_gray[v], i_gray[v]));
             v++;
         }
     }
@@ -1161,7 +1187,7 @@ bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists)
 	// * convert file
 	// ******************************************************************
 	{
-		EmuExe i_EmuExe(m_xbe, m_KrnlDebug, m_KrnlDebugFilename);
+		EmuExe i_EmuExe(m_Xbe, m_KrnlDebug, m_KrnlDebugFilename);
 
 		i_EmuExe.Export(filename);
 
@@ -1174,13 +1200,181 @@ bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists)
         {
             strcpy(m_ExeFilename, filename);
 
-            printf("WndMain: %s was converted to .exe.\n", m_xbe->m_szAsciiTitle);
+            printf("WndMain: %s was converted to .exe.\n", m_Xbe->m_szAsciiTitle);
 
-            m_exe_changed = false;
+            m_bExeChanged = false;
         }
 	}
 
     return true;
+}
+
+
+// ******************************************************************
+// * OpenXbe
+// ******************************************************************
+void WndMain::OpenXbe(const char *x_filename)
+{
+    if(m_Xbe != 0)
+        return;
+
+    m_ExeFilename[0] = '\0';
+
+    strcpy(m_XbeFilename, x_filename);
+
+    m_Xbe = new Xbe(m_XbeFilename);
+
+    if(m_Xbe->GetError() != 0)
+    {
+        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
+
+        delete m_Xbe; m_Xbe = 0;
+
+        return;
+    }
+
+    XbeLoaded();
+}
+
+// ******************************************************************
+// * CloseXbe
+// ******************************************************************
+void WndMain::CloseXbe()
+{
+    if(m_bXbeChanged)
+    {
+        int ret = MessageBox(m_hwnd, "Changes have been made, do you wish to save?", "Cxbx", MB_ICONQUESTION | MB_YESNOCANCEL);
+
+        if(ret == IDYES)
+            SaveXbeAs();
+        else if(ret == IDCANCEL)
+            return;
+    }
+
+    printf("WndMain: %s unloaded.\n", m_Xbe->m_szAsciiTitle);
+    
+    m_bXbeChanged = false;
+
+    delete m_Xbe; m_Xbe = 0;
+
+    // ******************************************************************
+	// * disable/enable appropriate menus
+	// ******************************************************************
+    {
+        HMENU menu = GetMenu(m_hwnd);
+
+        // ******************************************************************
+	    // * file menu
+	    // ******************************************************************
+        {
+		    HMENU file_menu = GetSubMenu(menu, 0);
+
+            // enable open .xbe file
+            EnableMenuItem(file_menu, ID_FILE_OPEN_XBE, MF_BYCOMMAND | MF_ENABLED);
+
+            // disable close .xbe file
+            EnableMenuItem(file_menu, ID_FILE_CLOSE_XBE, MF_BYCOMMAND | MF_GRAYED);
+
+		    // disable save .xbe file
+		    EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILE, MF_BYCOMMAND | MF_GRAYED);
+
+		    // disable save .xbe file as
+		    EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILEAS, MF_BYCOMMAND | MF_GRAYED);
+
+            // enable import from .exe
+            EnableMenuItem(file_menu, ID_FILE_IMPORTFROMEXE, MF_BYCOMMAND | MF_ENABLED);
+
+            // disable convert to .exe
+            EnableMenuItem(file_menu, ID_FILE_EXPORTTOEXE, MF_BYCOMMAND | MF_GRAYED);
+        }
+
+        // ******************************************************************
+	    // * edit menu
+	    // ******************************************************************
+        {
+            HMENU edit_menu = GetSubMenu(menu, 1);
+
+            // disable export .xbe info
+            EnableMenuItem(edit_menu, ID_EDIT_EXTRACTXBEINFO, MF_BYCOMMAND | MF_GRAYED);
+
+            // disable logo bitmap menu
+            EnableMenuItem(edit_menu, 0, MF_BYPOSITION | MF_GRAYED);
+
+            // disable patch menu
+            EnableMenuItem(edit_menu, 1, MF_BYPOSITION | MF_GRAYED);
+        }
+
+        // ******************************************************************
+	    // * view menu
+	    // ******************************************************************
+        {
+            HMENU view_menu = GetSubMenu(menu, 2);
+        }
+
+        // ******************************************************************
+	    // * emulation menu
+	    // ******************************************************************
+        {
+            HMENU emul_menu = GetSubMenu(menu, 3);
+
+            // disable emulation start
+            EnableMenuItem(emul_menu, ID_EMULATION_START, MF_BYCOMMAND | MF_GRAYED);                            
+        }
+    }
+
+    // ******************************************************************
+	// * clear logo bitmap
+	// ******************************************************************
+    {
+        uint32 v=0;
+        for(uint32 y=0;y<17;y++)
+        {
+            for(uint32 x=0;x<100;x++)
+            {
+                SetPixel(m_LogoDC, x, y, RGB(0, 0, 0));
+                v++;
+            }
+        }
+    }
+
+    RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
+}
+
+// ******************************************************************
+// * SaveXbe
+// ******************************************************************
+void WndMain::SaveXbe(const char *x_filename)
+{
+	// ******************************************************************
+	// * ask permission to overwrite if file exists
+	// ******************************************************************
+	if(_access(x_filename, 0) != -1)
+	{
+		if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx", MB_ICONQUESTION | MB_YESNO) != IDYES)
+			return;
+	}
+
+	// ******************************************************************
+	// * export xbe file
+	// ******************************************************************
+	{
+        m_Xbe->Export(x_filename);
+
+		if(m_Xbe->GetError() != 0)
+			MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
+        else
+        {
+            char buffer[255];
+
+            sprintf(buffer, "%s was successfully saved.", m_Xbe->m_szAsciiTitle);
+
+            printf("WndMain: %s was successfully saved.\n", m_Xbe->m_szAsciiTitle);
+
+            MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
+
+            m_bXbeChanged = false;
+		}
+	}
 }
 
 // ******************************************************************
@@ -1212,166 +1406,11 @@ void WndMain::SaveXbeAs()
 }
 
 // ******************************************************************
-// * SaveXbe
-// ******************************************************************
-void WndMain::SaveXbe(const char *x_filename)
-{
-	// ******************************************************************
-	// * ask permission to overwrite if file exists
-	// ******************************************************************
-	if(_access(x_filename, 0) != -1)
-	{
-		if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx", MB_ICONQUESTION | MB_YESNO) != IDYES)
-			return;
-	}
-
-	// ******************************************************************
-	// * export xbe file
-	// ******************************************************************
-	{
-        m_xbe->Export(x_filename);
-
-		if(m_xbe->GetError() != 0)
-			MessageBox(m_hwnd, m_xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
-        else
-        {
-            char buffer[255];
-
-            sprintf(buffer, "%s was successfully saved.", m_xbe->m_szAsciiTitle);
-
-            printf("WndMain: %s was successfully saved.\n", m_xbe->m_szAsciiTitle);
-
-            MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
-
-            m_xbe_changed = false;
-		}
-	}
-}
-
-// ******************************************************************
-// * OpenXbe
-// ******************************************************************
-void WndMain::OpenXbe(const char *x_filename)
-{
-    if(m_xbe != 0)
-        return;
-
-    m_ExeFilename[0] = '\0';
-
-    strcpy(m_XbeFilename, x_filename);
-
-    m_xbe = new Xbe(m_XbeFilename);
-
-    if(m_xbe->GetError() != 0)
-    {
-        MessageBox(m_hwnd, m_xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
-
-        delete m_xbe; m_xbe = 0;
-
-        return;
-    }
-
-    XbeLoaded();
-}
-
-// ******************************************************************
-// * CloseXbe
-// ******************************************************************
-void WndMain::CloseXbe()
-{
-    if(m_xbe_changed)
-    {
-        int ret = MessageBox(m_hwnd, "Changes have been made, do you wish to save?", "Cxbx", MB_ICONQUESTION | MB_YESNOCANCEL);
-
-        if(ret == IDYES)
-            SaveXbeAs();
-        else if(ret == IDCANCEL)
-            return;
-    }
-
-    printf("WndMain: %s unloaded.\n", m_xbe->m_szAsciiTitle);
-    
-    m_xbe_changed = false;
-
-    delete m_xbe; m_xbe = 0;
-
-    // disable / enable appropriate menus
-    {
-        HMENU menu = GetMenu(m_hwnd);
-
-        // file menu
-        {
-		    HMENU file_menu = GetSubMenu(menu, 0);
-
-            // enable open .xbe file
-            EnableMenuItem(file_menu, ID_FILE_OPEN_XBE, MF_BYCOMMAND | MF_ENABLED);
-
-            // disable close .xbe file
-            EnableMenuItem(file_menu, ID_FILE_CLOSE_XBE, MF_BYCOMMAND | MF_GRAYED);
-
-		    // disable save .xbe file
-		    EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILE, MF_BYCOMMAND | MF_GRAYED);
-
-		    // disable save .xbe file as
-		    EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILEAS, MF_BYCOMMAND | MF_GRAYED);
-
-            // enable import from .exe
-            EnableMenuItem(file_menu, ID_FILE_IMPORTFROMEXE, MF_BYCOMMAND | MF_ENABLED);
-
-            // disable convert to .exe
-            EnableMenuItem(file_menu, ID_FILE_EXPORTTOEXE, MF_BYCOMMAND | MF_GRAYED);
-        }
-
-        // edit menu
-        {
-            HMENU edit_menu = GetSubMenu(menu, 1);
-
-            // disable export .xbe info
-            EnableMenuItem(edit_menu, ID_EDIT_EXTRACTXBEINFO, MF_BYCOMMAND | MF_GRAYED);
-
-            // disable logo bitmap menu
-            EnableMenuItem(edit_menu, 0, MF_BYPOSITION | MF_GRAYED);
-
-            // disable patch menu
-            EnableMenuItem(edit_menu, 1, MF_BYPOSITION | MF_GRAYED);
-        }
-
-        // view menu
-        {
-            HMENU view_menu = GetSubMenu(menu, 2);
-        }
-
-        // emulation menu
-        {
-            HMENU emul_menu = GetSubMenu(menu, 3);
-
-            // disable emulation start
-            EnableMenuItem(emul_menu, ID_EMULATION_START, MF_BYCOMMAND | MF_GRAYED);                            
-        }
-    }
-
-    // clear logo bitmap
-    {
-        uint32 v=0;
-        for(uint32 y=0;y<17;y++)
-        {
-            for(uint32 x=0;x<100;x++)
-            {
-                SetPixel(m_logo_dc, x, y, RGB(0, 0, 0));
-                v++;
-            }
-        }
-    }
-
-    RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
-}
-
-// ******************************************************************
 // * StartEmulation
 // ******************************************************************
 void WndMain::StartEmulation(bool x_bAutoConvert)
 {
-    if(m_ExeFilename[0] == '\0' || m_exe_changed)
+    if(m_ExeFilename[0] == '\0' || m_bExeChanged)
     {
         if(x_bAutoConvert)
         {
@@ -1388,7 +1427,9 @@ void WndMain::StartEmulation(bool x_bAutoConvert)
         }
     }
 
-    // shell .exe
+    // ******************************************************************
+	// * shell exe
+	// ******************************************************************
     {
         char dir[260];
 
@@ -1410,11 +1451,11 @@ void WndMain::StartEmulation(bool x_bAutoConvert)
         {
             MessageBox(m_hwnd, "Shell failed. (try converting .exe again)", "Cxbx", MB_ICONSTOP | MB_OK);
 
-            printf("WndMain: %s shell failed.\n", m_xbe->m_szAsciiTitle);
+            printf("WndMain: %s shell failed.\n", m_Xbe->m_szAsciiTitle);
         }
         else
         {
-            printf("WndMain: %s emulation started.\n", m_xbe->m_szAsciiTitle);
+            printf("WndMain: %s emulation started.\n", m_Xbe->m_szAsciiTitle);
         }
     }
 

@@ -42,57 +42,96 @@
 class WndMain : public Wnd
 {
     public:
-
         WndMain(HINSTANCE x_hInstance);
        ~WndMain();
 
+        // ******************************************************************
+        // * window message procedure
+        // ******************************************************************
         LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-        void SaveXbe(const char *x_filename);
-        void SaveXbeAs();
-
+        // ******************************************************************
+        // * Xbe operations
+        // ******************************************************************
         void OpenXbe(const char *x_filename);
         void CloseXbe();
-
+        void SaveXbe(const char *x_filename);
+        void SaveXbeAs();
         bool ConvertToExe(const char *x_filename, bool x_bVerifyIfExists);
 
+        // ******************************************************************
+        // * start emulation (converting to .exe if not done already)
+        // ******************************************************************
         void StartEmulation(bool x_bAutoConvert);
 
+        // ******************************************************************
+        // * accessor
+        // ******************************************************************
         bool isCreated() { return m_bCreated; }
 
+        // ******************************************************************
+        // * suggest appropriate filename based on input
+        // ******************************************************************
         static void SuggestFilename(const char *x_orig_filename, char *x_filename, char x_extension[4]);
 
     private:
+        // ******************************************************************
+        // * after an xbe is loaded, some things must be updated
+        // ******************************************************************
+        void XbeLoaded();
 
-        void XbeLoaded();           // after an xbe is loaded, some stuff needs to update
+        // ******************************************************************
+        // * refresh the logo in the main window
+        // ******************************************************************
+        void LoadLogo();
 
-        void LoadLogo();            // refresh the logo in the main window
+        // ******************************************************************
+        // * allocate / deallocate debug consoles
+        // ******************************************************************
+        void UpdateDebugConsoles();
 
-        void UpdateDebugConsoles(); // allocate / deallocate debug consoles as per configuration
+        // ******************************************************************
+        // * drawing information
+        // ******************************************************************
+        HDC         m_BackDC;
+        HDC         m_LogoDC;
+        HBITMAP     m_OrigBmp;
+        HBITMAP     m_OrigLogo;
+        HBITMAP     m_BackBmp;
+        HBITMAP     m_LogoBmp;
 
-        HDC         m_back_dc;
-        HDC         m_logo_dc;
+        // ******************************************************************
+        // * Xbe/Exe objects
+        // ******************************************************************
+        Xbe        *m_Xbe;
+        Exe        *m_Exe;
 
-        HBITMAP     m_orig_bmp;
-        HBITMAP     m_orig_logo;
+        // ******************************************************************
+        // * changes remembered for internal purposes
+        // ******************************************************************
+        bool        m_bXbeChanged;
+        bool        m_bExeChanged;
 
-        HBITMAP     m_back_bmp;
-        HBITMAP     m_logo_bmp;
-
-        Xbe        *m_xbe;
-        Exe        *m_exe;
-
+        // ******************************************************************
+        // * cached filenames
+        // ******************************************************************
         char       *m_XbeFilename;
         char       *m_ExeFilename;
 
-        bool        m_xbe_changed;
-        bool        m_exe_changed;
-
+        // ******************************************************************
+        // * is this window fully initialized?
+        // ******************************************************************
         bool        m_bCreated;
 
-        enum DebugMode m_CxbxDebug;
-        enum DebugMode m_KrnlDebug;
+        // ******************************************************************
+        // * current debug mode type
+        // ******************************************************************
+        DebugMode   m_CxbxDebug;
+        DebugMode   m_KrnlDebug;
 
+        // ******************************************************************
+        // * debug output filenames
+        // ******************************************************************
         char       *m_CxbxDebugFilename;
         char       *m_KrnlDebugFilename;
 };

@@ -178,13 +178,20 @@ LRESULT WINAPI EmuXMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             switch(LOWORD(wParam))
             {
                 case ID_FILE_EXIT:
-                {
                     SendMessage(hWnd, WM_CLOSE, 0, 0);
-                }
-                break;
+                    break;
             }
         }
         break;
+
+		case WM_KEYDOWN:
+			switch (wParam)
+			{
+				case VK_ESCAPE:
+					PostMessage(hWnd, WM_CLOSE, 0, 0);
+					break;
+			}
+			break;
 
         case WM_CLOSE:
             DestroyWindow(hWnd);
