@@ -112,7 +112,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuNoFunc()
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    printf("EmuMain (0x%X): EmuNoFunc()\n", GetCurrentThreadId());
+    DbgPrintf("EmuMain (0x%X): EmuNoFunc()\n", GetCurrentThreadId());
 
     EmuSwapFS();   // XBox FS
 }
@@ -291,7 +291,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
             if(g_hTDrive == INVALID_HANDLE_VALUE)
                 EmuCleanup("Could not map T:\\\n");
 
-            printf("EmuMain (0x%X): T Data := %s\n", GetCurrentThreadId(), szBuffer);
+            DbgPrintf("EmuMain (0x%X): T Data := %s\n", GetCurrentThreadId(), szBuffer);
         }
 
         // Create UData Directory
@@ -309,7 +309,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
             if(g_hUDrive == INVALID_HANDLE_VALUE)
                 EmuCleanup("Could not map U:\\\n");
 
-            printf("EmuMain (0x%X): U Data := %s\n", GetCurrentThreadId(), szBuffer);
+            DbgPrintf("EmuMain (0x%X): U Data := %s\n", GetCurrentThreadId(), szBuffer);
         }
 
         // Create ZData Directory
@@ -329,7 +329,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
             if(g_hUDrive == INVALID_HANDLE_VALUE)
                 EmuCleanup("Could not map Z:\\\n");
 
-            printf("EmuMain (0x%X): Z Data := %s\n", GetCurrentThreadId(), szBuffer);
+            DbgPrintf("EmuMain (0x%X): Z Data := %s\n", GetCurrentThreadId(), szBuffer);
         }
     }
 
@@ -350,7 +350,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
         for(int p=0;UnResolvedXRefs < LastUnResolvedXRefs;p++)
         {
-            printf("EmuMain (0x%X): Beginning HLE Pass %d...\n", GetCurrentThreadId(), p);
+            DbgPrintf("EmuMain (0x%X): Beginning HLE Pass %d...\n", GetCurrentThreadId(), p);
 
             LastUnResolvedXRefs = UnResolvedXRefs;
 
@@ -374,7 +374,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                 {
                     if(bFoundD3D)
                     {
-                        printf("Redundant\n");
+                        DbgPrintf("Redundant\n");
                         continue;
                     }
 
@@ -404,8 +404,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 						        XTL::g_pRtlCreateHeap = *(XTL::pfRtlCreateHeap*)((uint32)pFunc + 0x37);
 						        XTL::g_pRtlCreateHeap = (XTL::pfRtlCreateHeap)((uint32)pFunc + (uint32)XTL::g_pRtlCreateHeap + 0x37 + 0x04);
 
-						        printf("EmuMain (0x%X): 0x%.08X -> EmuXapiProcessHeap\n", GetCurrentThreadId(), XTL::EmuXapiProcessHeap);
-						        printf("EmuMain (0x%X): 0x%.08X -> g_pRtlCreateHeap\n", GetCurrentThreadId(), XTL::g_pRtlCreateHeap);
+						        DbgPrintf("EmuMain (0x%X): 0x%.08X -> EmuXapiProcessHeap\n", GetCurrentThreadId(), XTL::EmuXapiProcessHeap);
+						        DbgPrintf("EmuMain (0x%X): 0x%.08X -> g_pRtlCreateHeap\n", GetCurrentThreadId(), XTL::g_pRtlCreateHeap);
 					        }
 				        }
                     }
@@ -424,37 +424,45 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                         // locate D3DDeferredRenderState
                         if(pFunc != 0)
                         {
+                            // offset for stencil cull enable render state in the deferred render state buffer
+                            int patchOffset = 0;
+
                             if(BuildVersion == 3925)
                             {
                                 // NOTE: HACK: This is preliminary. If render states have a problem, maybe this is wrong!
                                 XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x25) - 0x1FC + 82*4);  // TODO: Verify
-                                XRefDataBase[XREF_D3DRS_STENCILCULLENABLE] = (uint32)XTL::EmuD3DDeferredRenderState + 142*4 - 82*4;
+                                patchOffset = 142*4 - 82*4;
                             }
                             else if(BuildVersion == 4134)
                             {
                                 XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x248 + 82*4);  // TODO: Verify
-                                XRefDataBase[XREF_D3DRS_STENCILCULLENABLE] = (uint32)XTL::EmuD3DDeferredRenderState + 142*4 - 82*4;
+                                patchOffset = 142*4 - 82*4;
                             }
                             else if(BuildVersion == 4361)
                             {
 						        XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x200 + 82*4);
-                                XRefDataBase[XREF_D3DRS_STENCILCULLENABLE] = (uint32)XTL::EmuD3DDeferredRenderState + 142*4 - 82*4;
+                                patchOffset = 142*4 - 82*4;
                             }
                             else if(BuildVersion == 4432)
                             {
 						        XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x204 + 83*4);
-                                XRefDataBase[XREF_D3DRS_STENCILCULLENABLE] = (uint32)XTL::EmuD3DDeferredRenderState + 143*4 - 83*4;
+                                patchOffset = 143*4 - 83*4;
                             }
                             else if(BuildVersion == 4627)
                             {
 						        XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x24C + 92*4);
-                                XRefDataBase[XREF_D3DRS_STENCILCULLENABLE] = (uint32)XTL::EmuD3DDeferredRenderState + 162*4 - 92*4;
+                                patchOffset = 162*4 - 92*4;
                             }
+
+                            XRefDataBase[XREF_D3DRS_STENCILCULLENABLE]     = (uint32)XTL::EmuD3DDeferredRenderState + patchOffset + 0*4;
+                            XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD]     = (uint32)XTL::EmuD3DDeferredRenderState + patchOffset + 1*4;
+                            XRefDataBase[XREF_D3DRS_ROPZREAD]              = (uint32)XTL::EmuD3DDeferredRenderState + patchOffset + 2*4;
+                            XRefDataBase[XREF_D3DRS_DONOTCULLUNCOMPRESSED] = (uint32)XTL::EmuD3DDeferredRenderState + patchOffset + 3*4;
 
                             for(int v=0;v<146;v++)
                                 XTL::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
 
-                            printf("EmuMain (0x%X): 0x%.08X -> EmuD3DDeferredRenderState\n", GetCurrentThreadId(), XTL::EmuD3DDeferredRenderState);
+                            DbgPrintf("EmuMain (0x%X): 0x%.08X -> EmuD3DDeferredRenderState\n", GetCurrentThreadId(), XTL::EmuD3DDeferredRenderState);
                         }
                         else
                         {
@@ -485,7 +493,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                                 for(int v=0;v<32*4;v++)
                                     XTL::EmuD3DDeferredTextureState[v] = X_D3DTSS_UNK;
 
-                                printf("EmuMain (0x%X): 0x%.08X -> EmuD3DDeferredTextureState\n", GetCurrentThreadId(), XTL::EmuD3DDeferredTextureState);
+                                DbgPrintf("EmuMain (0x%X): 0x%.08X -> EmuD3DDeferredTextureState\n", GetCurrentThreadId(), XTL::EmuD3DDeferredTextureState);
                             }
                             else
                             {
@@ -496,7 +504,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 			        }
                 }
 
-                printf("EmuMain (0x%X): Locating HLE Information for %s %d.%d.%d...", GetCurrentThreadId(), pLibraryVersion[v].szName, MajorVersion, MinorVersion, BuildVersion);
+                DbgPrintf("EmuMain (0x%X): Locating HLE Information for %s %d.%d.%d...", GetCurrentThreadId(), pLibraryVersion[v].szName, MajorVersion, MinorVersion, BuildVersion);
 
                 bool found=false;
 
@@ -507,20 +515,20 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
                     found = true;
 
-                    printf("Found\n");
+                    DbgPrintf("Found\n");
 
                     EmuInstallWrappers(HLEDataBase[d].OovpaTable, HLEDataBase[d].OovpaTableSize, Entry, pXbeHeader);
                 }
 
                 if(!found)
-                    printf("Skipped\n");
+                    DbgPrintf("Skipped\n");
             }
 
             bXRefFirstPass = false;
         }
 
         // display Xref summary
-        printf("EmuMain (0x%X): Resolved %d cross reference(s)\n", GetCurrentThreadId(), OrigUnResolvedXRefs - UnResolvedXRefs);
+        DbgPrintf("EmuMain (0x%X): Resolved %d cross reference(s)\n", GetCurrentThreadId(), OrigUnResolvedXRefs - UnResolvedXRefs);
     }
 
     // initialize FS segment selector emulation
@@ -539,11 +547,11 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         EmuRegisterThread(hDupHandle);
     }
 
-    printf("EmuMain (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
+    DbgPrintf("EmuMain (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
 
     XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
 
-    printf("EmuMain (0x%X): Initial thread starting.\n", GetCurrentThreadId());
+    DbgPrintf("EmuMain (0x%X): Initial thread starting.\n", GetCurrentThreadId());
 
     // Xbe entry point
     __try
@@ -553,7 +561,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         // _USE_XGMATH Disabled in mesh :[
         // halo : dword_0_2E2D18
         // halo : 1744F0 (bink)
-        //_asm int 3
+        _asm int 3
 
         Entry();
 
@@ -808,9 +816,7 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
                         *(DWORD*)0x39CE24 = g_HaloHack[1] + (dwValue - 0x803A6000);
                     }
 
-                    #ifdef _DEBUG_TRACE
-                    printf("EmuMain (0x%X): Halo Access Adjust 1 was applied!\n", GetCurrentThreadId());
-                    #endif
+                    DbgPrintf("EmuMain (0x%X): Halo Access Adjust 1 was applied!\n", GetCurrentThreadId());
 
                     g_bEmuException = FALSE;
 
@@ -843,9 +849,7 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
                         }
                     }
 
-                    #ifdef _DEBUG_TRACE
-                    printf("EmuMain (0x%X): Halo Access Adjust 2 was applied!\n", GetCurrentThreadId());
-                    #endif
+                    DbgPrintf("EmuMain (0x%X): Halo Access Adjust 2 was applied!\n", GetCurrentThreadId());
 
                     g_bEmuException = FALSE;
 
@@ -1117,9 +1121,7 @@ static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, vo
 
         if(pFunc != 0)
         {
-            #ifdef _DEBUG_TRACE
-            printf("EmuMain (0x%X): 0x%.08X -> %s\n", GetCurrentThreadId(), pFunc, OovpaTable[a].szFuncName);
-            #endif
+            DbgPrintf("EmuMain (0x%X): 0x%.08X -> %s\n", GetCurrentThreadId(), pFunc, OovpaTable[a].szFuncName);
 
             if(OovpaTable[a].lpRedirect == 0)
                 EmuInstallWrapper(pFunc, EmuXRefFailure);

@@ -60,6 +60,7 @@ extern HWND                         g_hEmuWindow   = NULL; // rendering window
 extern XTL::LPDIRECT3DDEVICE8       g_pD3DDevice8  = NULL; // Direct3D8 Device
 extern XTL::LPDIRECTDRAWSURFACE7    g_pDDSPrimary  = NULL; // DirectDraw7 Primary Surface
 extern XTL::LPDIRECTDRAWSURFACE7    g_pDDSOverlay7 = NULL; // DirectDraw7 Overlay Surface
+extern XTL::LPDIRECTDRAWCLIPPER     g_pDDClipper   = NULL; // DirectDraw7 Clipper
 
 // Static Function(s)
 static BOOL WINAPI                  EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescription, LPSTR lpDriverName, LPVOID lpContext, HMONITOR hm);
@@ -405,25 +406,33 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
         }
         break;
 
-        case WM_SETFOCUS:
+        case WM_SIZE:
         {
-            if(bAutoPaused)
+            switch(wParam)
             {
-                bAutoPaused = false;
-			    EmuResume();
-            }
-        }
-        break;
+                case SIZE_RESTORED:
+                case SIZE_MAXIMIZED:
+                {
+                    if(bAutoPaused)
+                    {
+                        bAutoPaused = false;
+			            EmuResume();
+                    }
+                }
+                break;
 
-        case WM_KILLFOCUS:
-        {
-            if(g_XBVideo.GetFullscreen())
-                EmuCleanup(NULL);
+                case SIZE_MINIMIZED:
+                {
+                    if(g_XBVideo.GetFullscreen())
+                        EmuCleanup(NULL);
 
-            if(!g_bEmuSuspended)
-            {
-                bAutoPaused = true;
-			    EmuSuspend();
+                    if(!g_bEmuSuspended)
+                    {
+                        bAutoPaused = true;
+			            EmuSuspend();
+                    }
+                }
+                break;
             }
         }
         break;
@@ -4540,6 +4549,13 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_EnableOverlay
     {
         g_pDDSOverlay7->UpdateOverlay(NULL, g_pDDSPrimary, NULL, DDOVER_HIDE, 0);
 
+        // cleanup overlay clipper
+        if(g_pDDClipper != 0)
+        {
+            g_pDDClipper->Release();
+            g_pDDClipper = 0;
+        }
+
         // cleanup overlay surface
         if(g_pDDSOverlay7 != 0)
         {
@@ -4569,6 +4585,13 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_EnableOverlay
 
             if(FAILED(hRet))
                 EmuCleanup("Could not create overlay surface");
+
+            hRet = g_pDD7->CreateClipper(0, &g_pDDClipper, NULL);
+
+            if(FAILED(hRet))
+                EmuCleanup("Could not create overlay clipper");
+
+            hRet = g_pDDClipper->SetHWnd(0, g_hEmuWindow);
         }
     }
 
@@ -4668,7 +4691,15 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
         DestRect.top    -= MonitorInfo.rcMonitor.top;
         DestRect.bottom -= MonitorInfo.rcMonitor.top;
 
-        HRESULT hRet = g_pDDSOverlay7->UpdateOverlay(&SourRect, g_pDDSPrimary, &DestRect, DDOVER_SHOW, 0);
+        DDOVERLAYFX ddofx;
+
+        ZeroMemory(&ddofx, sizeof(ddofx));
+
+        ddofx.dwSize = sizeof(DDOVERLAYFX);
+        ddofx.dckDestColorkey.dwColorSpaceLowValue = 0;
+        ddofx.dckDestColorkey.dwColorSpaceHighValue = 0;
+
+        HRESULT hRet = g_pDDSOverlay7->UpdateOverlay(&SourRect, g_pDDSPrimary, &DestRect, /*DDOVER_KEYDESTOVERRIDE | */DDOVER_SHOW, /*&ddofx*/0);
     }
     else
     {
@@ -5572,6 +5603,90 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_StencilCullEnable
     #endif
 
     EmuWarning("SetRenderState_StencilCullEnable not supported!");
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+    EmuWarning("SetRenderState_RopZCmpAlwaysRead not supported!");
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_RopZRead
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_RopZRead
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_RopZRead\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+    EmuWarning("SetRenderState_RopZRead not supported!");
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+    EmuWarning("SetRenderState_DoNotCullUncompressed not supported!");
 
     EmuSwapFS();   // XBox FS
 

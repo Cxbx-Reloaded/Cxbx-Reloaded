@@ -922,6 +922,30 @@ VOID WINAPI EmuIDirect3DDevice8_SetRenderState_StencilCullEnable
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_RopZRead
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_RopZRead
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed
+(
+    DWORD Value
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_ZEnable
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_SetRenderState_ZEnable

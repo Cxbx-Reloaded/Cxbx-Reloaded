@@ -6,6 +6,12 @@ HLE :
     when Xiggen is stabilized! For now, safe to ignore it. Also, this
     function is located @ 0x184CC0 in halo.
 
+  * Create library of working demos/games/emulators (various XDK versions)
+
+  * Add Pause hotkey
+
+  * Add FPS counter
+
 ETC :
 
   * Use SetAllParameters to reverse engineer 3911 DSound functions
