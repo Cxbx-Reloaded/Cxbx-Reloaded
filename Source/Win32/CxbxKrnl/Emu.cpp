@@ -665,7 +665,10 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage, ...)
     if(g_hEmuParent != NULL)
         SendMessage(g_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
-    TerminateProcess(GetCurrentProcess(), 0);
+    exit(0);
+
+    // Much less friendly :]
+    //    TerminateProcess(GetCurrentProcess(), 0);
 
     return;
 }

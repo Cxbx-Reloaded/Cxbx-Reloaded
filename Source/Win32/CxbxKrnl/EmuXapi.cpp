@@ -72,7 +72,7 @@ PVOID WINAPI XTL::EmuRtlCreateHeap
     IN PVOID   Base OPTIONAL,
     IN ULONG   Reserve OPTIONAL,
     IN ULONG   Commit,
-    IN BOOLEAN Lock OPTIONAL,
+    IN PVOID   Lock OPTIONAL,
     IN PVOID   RtlHeapParams OPTIONAL
 )
 {
@@ -744,9 +744,7 @@ VOID WINAPI XTL::EmuXapiInitProcess()
 
     DbgPrintf("EmuXapi (0x%X): EmuXapiInitProcess();\n", GetCurrentThreadId());
 
-    // ******************************************************************
-	// * Call RtlCreateHeap
-    // ******************************************************************
+	// call RtlCreateHeap
 	{
         RTL_HEAP_PARAMETERS HeapParameters;
 
@@ -763,7 +761,7 @@ VOID WINAPI XTL::EmuXapiInitProcess()
 
         #define HEAP_GROWABLE 0x00000002
 
-        *XTL::EmuXapiProcessHeap = XTL::g_pRtlCreateHeap(HEAP_GROWABLE, 0, dwPeHeapReserve, dwPeHeapCommit, 0, &HeapParameters);
+        *XTL::EmuXapiProcessHeap = XTL::g_pRtlCreateHeap(HEAP_GROWABLE, 0, dwPeHeapReserve, dwPeHeapCommit, NULL, &HeapParameters);
 	}
 
     return;

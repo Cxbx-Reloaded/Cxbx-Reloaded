@@ -114,40 +114,151 @@ void DbgConsole::Reset()
     m_szInput[0] = '\0';
 }
 
+#ifdef _DEBUG_TRACK_VB
+static void EnableVB(int n, bool enable)
+{
+    using namespace XTL;
+
+    int v=0;
+
+    VBNode *cur = g_VBTrackTotal.getHead();
+
+    for(v=0;v<n;v++)
+    {
+        if(cur == NULL || (cur->next == NULL))
+            break;
+
+        cur = cur->next;
+    }
+
+    if(n == v && (cur != NULL) && (cur->next != NULL))
+    {
+        if(enable)
+        {
+            g_VBTrackDisable.remove(cur->vb);
+        }
+        else
+        {
+            g_VBTrackDisable.insert(cur->vb);
+        }
+
+        printf("CxbxDbg: %.02d (0x%.08X) %s\n", n, cur->vb, enable ? "enabled" : "disabled");
+    }
+    else
+    {
+        printf("CxbxDbg: # out of range\n");
+    }
+
+    return;
+}
+#endif
+
 void DbgConsole::ParseCommand()
 {
     printf("\n");
 
+    char szCmd[32];
+
+    sscanf(m_szInput, "%s", szCmd);
+
     // TODO: as command list grows, turn into static string/ptr lookup
 
-    if(stricmp(m_szInput, "h") == 0 || stricmp(m_szInput, "help") == 0)
+    if(stricmp(szCmd, "h") == 0 || stricmp(szCmd, "help") == 0)
     {
         printf("CxbxDbg: \n");
         printf("CxbxDbg: Cxbx Debug Command List:\n");
         printf("CxbxDbg: \n");
-        printf("CxbxDbg:  HELP  (H)\n");
-        printf("CxbxDbg:  QUIT  (Q or EXIT)\n");
-        printf("CxbxDbg:  TRACE (T)\n");
+        printf("CxbxDbg:  HELP        (H)\n");
+        printf("CxbxDbg:  QUIT        (Q or EXIT)\n");
+        printf("CxbxDbg:  TRACE       (T)\n");
+        printf("CxbxDbg:  ListVB      (LVB)\n");
+        printf("CxbxDbg:  DisableVB # (DVB #)\n");
+        printf("CxbxDbg:  EnableVB #  (EVB #)\n");
         printf("CxbxDbg:  CLS\n");
         printf("CxbxDbg: \n");
     }
-    else if(stricmp(m_szInput, "cls") == 0)
-    {
-        // clear screen using system call
-        system("cls");
-    }
-    else if(stricmp(m_szInput, "q") == 0 || stricmp(m_szInput, "quit") == 0 || stricmp(m_szInput, "exit") == 0)
+    else if(stricmp(szCmd, "q") == 0 || stricmp(szCmd, "quit") == 0 || stricmp(szCmd, "exit") == 0)
     {
         printf("CxbxDbg: Goodbye...\n");
         EmuCleanup(NULL);
     }
-    else if(stricmp(m_szInput, "t") == 0 || stricmp(m_szInput, "trace") == 0)
+    else if(stricmp(szCmd, "t") == 0 || stricmp(szCmd, "trace") == 0)
     {
         g_bPrintfOn = !g_bPrintfOn;
         printf("CxbxDbg: Trace is now %s\n", g_bPrintfOn ? "ON" : "OFF");
 	}
+    else if(stricmp(szCmd, "lvb") == 0 || stricmp(szCmd, "ListVB") == 0)
+    {
+        #ifdef _DEBUG_TRACK_VB
+        {
+            using namespace XTL;
+
+            int v=0;
+            
+            VBNode *cur = g_VBTrackTotal.getHead();
+
+            while(cur != NULL && cur->next != NULL)
+            {
+                bool enabled = !g_VBTrackDisable.exists(cur->vb);
+
+                printf("CxbxDbg: %.02d : 0x%.08X (%s)\n", v++, cur->vb, enabled ? "enabled" : "disabled");
+
+                cur = cur->next;
+            }
+        }
+        #else
+        printf("CxbxDbg: _DEBUG_TRACK_VB is not defined!\n");
+        #endif
+    }
+    else if(stricmp(szCmd, "dvb") == 0 || stricmp(szCmd, "DisableVB") == 0)
+    {
+        #ifdef _DEBUG_TRACK_VB
+        {
+            using namespace XTL;
+
+            int n=0;
+
+            if(sscanf(m_szInput, "%*s %d", &n) == 1)
+            {
+                EnableVB(n, false);
+            }
+            else
+            {
+                printf("CxbxDbg: Syntax Incorrect (dvb #)\n");
+            }
+        }
+        #else
+        printf("CxbxDbg: _DEBUG_TRACK_VB is not defined!\n");
+        #endif
+    }
+    else if(stricmp(szCmd, "evb") == 0 || stricmp(szCmd, "EnableVB") == 0)
+    {
+        #ifdef _DEBUG_TRACK_VB
+        {
+            using namespace XTL;
+
+            int n=0;
+
+            if(sscanf(m_szInput, "%*s %d", &n) == 1)
+            {
+                EnableVB(n, true);
+            }
+            else
+            {
+                printf("CxbxDbg: Syntax Incorrect (dvb #)\n");
+            }
+        }
+        #else
+        printf("CxbxDbg: _DEBUG_TRACK_VB is not defined!\n");
+        #endif
+    }
+    else if(stricmp(szCmd, "cls") == 0)
+    {
+        // clear screen using system call
+        system("cls");
+    }
     else
     {
-        printf("CxbxDbg: Cmd \"%s\" not recognized!\n", m_szInput);
+        printf("CxbxDbg: Cmd \"%s\" not recognized!\n", szCmd);
     }
 }

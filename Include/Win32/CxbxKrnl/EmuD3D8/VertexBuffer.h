@@ -44,6 +44,8 @@ struct VBNode
 	VBNode						*next;
 };
 
+extern bool g_bVBSkipStream;
+
 extern class VBTracker
 {
 	public:
@@ -59,7 +61,10 @@ extern class VBTracker
 		// check for existance of ptr
 		bool exists(XTL::IDirect3DVertexBuffer8 *pVB);
 
-	private:
+        // for traversal
+        VBNode *getHead() { return m_head; }
+
+    private:
 		// list of "live" vertex buffers for debugging purposes
 		VBNode *m_head;
 		VBNode *m_tail;

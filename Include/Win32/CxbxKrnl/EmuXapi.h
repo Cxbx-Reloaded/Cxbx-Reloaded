@@ -119,7 +119,7 @@ typedef PVOID (WINAPI *pfRtlCreateHeap)
     IN PVOID   Base OPTIONAL,
     IN ULONG   Reserve OPTIONAL,
     IN ULONG   Commit,
-    IN BOOLEAN Lock OPTIONAL,
+    IN PVOID   Lock OPTIONAL,
     IN PVOID   RtlHeapParams OPTIONAL
 );
 
@@ -289,7 +289,7 @@ PVOID WINAPI EmuRtlCreateHeap
     IN PVOID   Base OPTIONAL,
     IN ULONG   Reserve OPTIONAL,
     IN ULONG   Commit,
-    IN BOOLEAN Lock OPTIONAL,
+    IN PVOID   Lock OPTIONAL,
     IN PVOID   RtlHeapParams OPTIONAL
 );
 

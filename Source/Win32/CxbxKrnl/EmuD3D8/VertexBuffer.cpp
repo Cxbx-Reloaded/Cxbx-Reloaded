@@ -47,7 +47,9 @@ extern XTL::LPDIRECT3DDEVICE8 g_pD3DDevice8;  // Direct3D8 Device
 
 #ifdef _DEBUG_TRACK_VB
 
-extern XTL::VBTracker g_VBTrack;
+bool XTL::g_bVBSkipStream = false;
+
+XTL::VBTracker XTL::g_VBTrackTotal, XTL::g_VBTrackDisable;
 
 XTL::VBTracker::~VBTracker()
 {
@@ -55,15 +57,20 @@ XTL::VBTracker::~VBTracker()
 
 	while(cur != NULL)
 	{
-		free(cur);
+        VBNode *tmp = cur->next;
 
-		cur = cur->next;
+        delete cur;
+
+		cur = tmp;
 	}
 }
 
 void XTL::VBTracker::insert(IDirect3DVertexBuffer8 *pVB)
 {
-	if(m_head == 0)
+    if(exists(pVB))
+        return;
+
+    if(m_head == 0)
 	{
 		m_tail = m_head = new VBNode();
 		m_tail->vb = 0;
@@ -73,20 +80,66 @@ void XTL::VBTracker::insert(IDirect3DVertexBuffer8 *pVB)
 	m_tail->vb = pVB;
 
 	m_tail->next = new VBNode();
-	m_tail->next->vb = 0;
-	m_tail->next->next = 0;
+
+    m_tail = m_tail->next;
+
+    m_tail->vb = 0;
+	m_tail->next = 0;
 
 	return;
 }
 
 void XTL::VBTracker::remove(IDirect3DVertexBuffer8 *pVB)
 {
+    VBNode *pre = 0;
+    VBNode *cur = m_head;
+
+    while(cur != NULL)
+    {
+        if(cur->vb == pVB)
+        {
+            if(pre != 0)
+            {
+                pre->next = cur->next;
+            }
+            else
+            {
+                m_head = cur->next;
+
+                if(m_head->next == 0)
+                {
+                    delete m_head;
+
+                    m_head = 0;
+                    m_tail = 0;
+                }
+            }
+
+            delete cur;
+
+            return;
+        }
+
+        pre = cur;
+        cur = cur->next;
+    }
+
 	return;
 }
 
 bool XTL::VBTracker::exists(IDirect3DVertexBuffer8 *pVB)
 {
-	return false;
+    VBNode *cur = m_head;
+
+    while(cur != NULL)
+    {
+        if(cur->vb == pVB)
+            return true;
+
+        cur = cur->next;
+    }
+
+    return false;
 }
 
 #endif // _DEBUG_TRACK_VB

@@ -509,7 +509,7 @@ typedef PVOID (NTAPI *FPTR_RtlCreateHeap)
     IN PVOID   Base OPTIONAL,
     IN ULONG   Reserve OPTIONAL,
     IN ULONG   Commit,
-    IN BOOLEAN Lock OPTIONAL,
+    IN PVOID   Lock OPTIONAL,
     IN PVOID   RtlHeapParams OPTIONAL
 );
 

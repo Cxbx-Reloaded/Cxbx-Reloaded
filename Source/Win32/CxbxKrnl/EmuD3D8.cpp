@@ -3093,7 +3093,18 @@ static void EmuFlushD3DIVB()
         
         g_pD3DDevice8->SetVertexShader(dwFVF);
 
-        HRESULT hRet = g_pD3DDevice8->DrawPrimitiveUP(XTL::EmuPrimitiveType(g_dwD3DIVBPrim), XTL::EmuD3DVertex2PrimitiveCount(g_dwD3DIVBPrim, g_dwD3DIVBInd), pStreamData, i/g_dwD3DIVBInd);
+        HRESULT hRet = S_OK;
+
+        #ifdef _DEBUG_TRACK_VB
+        if(!XTL::g_bVBSkipStream)
+        {
+        #endif
+
+        hRet = g_pD3DDevice8->DrawPrimitiveUP(XTL::EmuPrimitiveType(g_dwD3DIVBPrim), XTL::EmuD3DVertex2PrimitiveCount(g_dwD3DIVBPrim, g_dwD3DIVBInd), pStreamData, i/g_dwD3DIVBInd);
+
+        #ifdef _DEBUG_TRACK_VB
+        }
+        #endif
 
         // HACK: TODO: probably unnecessary!!!
         //g_pD3DDevice8->Present(0,0,0,0);
@@ -3578,6 +3589,10 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                     &pResource->EmuVertexBuffer8
                 );
 
+                #ifdef _DEBUG_TRACK_VB
+                g_VBTrackTotal.insert(pResource->EmuVertexBuffer8);
+                #endif
+
                 BYTE *pData = 0;
 
                 hRet = pResource->EmuVertexBuffer8->Lock(0, 0, &pData, 0);
@@ -3780,6 +3795,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                     EmuCleanup("CreateImageSurface Failed!");
 
                 DbgPrintf("EmuIDirect3DResource8_Register (0x%X) : Successfully Created ImageSurface (0x%.08X, 0x%.08X)\n", GetCurrentThreadId(), pResource, pResource->EmuSurface8);
+                DbgPrintf("EmuIDirect3DResource8_Register (0x%X) : Width : %d, Height : %d, Format : %d\n", GetCurrentThreadId(), dwWidth, dwHeight, Format);
             }
             else
             {
@@ -4126,9 +4142,13 @@ VOID WINAPI XTL::EmuGet2DSurfaceDesc
     HRESULT hRet;
 
     if(dwLevel == 0xFEFEFEFE)
+    {
         hRet = pPixelContainer->EmuSurface8->GetDesc(&SurfaceDesc);
+    }
     else
+    {
         hRet = pPixelContainer->EmuTexture8->GetLevelDesc(dwLevel, &SurfaceDesc);
+    }
 
     // rearrange into windows format (remove D3DPOOL)
     {
@@ -4636,6 +4656,10 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EmuIDirect3DDevice8_CreateVertexBuffer2
 
     if(FAILED(hRet))
         EmuWarning("CreateVertexBuffer Failed!");
+
+    #ifdef _DEBUG_TRACK_VB
+    g_VBTrackTotal.insert(pD3DVertexBuffer->EmuVertexBuffer8);
+    #endif
 
     EmuSwapFS();   // XBox FS
 
@@ -6057,6 +6081,13 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetStreamSource
         pVertexBuffer8->Unlock();
     }
 
+    #ifdef _DEBUG_TRACK_VB
+    if(pStreamData != NULL)
+    {
+        g_bVBSkipStream = g_VBTrackDisable.exists(pStreamData->EmuVertexBuffer8);
+    }
+    #endif
+
     HRESULT hRet = g_pD3DDevice8->SetStreamSource(StreamNumber, pVertexBuffer8, Stride);
 
     if(FAILED(hRet))
@@ -6151,12 +6182,21 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVertices
 
     uint32 nStride = EmuFixupVerticesA(PrimitiveType, PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, StartVertex, 0, 0, 0);
 
+    #ifdef _DEBUG_TRACK_VB
+    if(!g_bVBSkipStream)
+    {
+    #endif
+
     g_pD3DDevice8->DrawPrimitive
     (
         PCPrimitiveType,
         StartVertex,
         PrimitiveCount
     );
+
+    #ifdef _DEBUG_TRACK_VB
+    }
+    #endif
 
     // TODO: use original stride here (duh!)
     if(nStride != -1)
@@ -6207,6 +6247,11 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVerticesUP
 
     uint32 nStride = EmuFixupVerticesA(PrimitiveType, PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, 0, pVertexStreamZeroData, VertexStreamZeroStride, &pNewVertexStreamZeroData);
 
+    #ifdef _DEBUG_TRACK_VB
+    if(!g_bVBSkipStream)
+    {
+    #endif
+
     g_pD3DDevice8->DrawPrimitiveUP
     (
         PCPrimitiveType,
@@ -6214,6 +6259,10 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVerticesUP
         pNewVertexStreamZeroData,
         VertexStreamZeroStride
     );
+
+    #ifdef _DEBUG_TRACK_VB
+    }
+    #endif
 
     if(nStride != -1)
     {
@@ -6296,10 +6345,19 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
 
     uint32 nStride = EmuFixupVerticesA(PrimitiveType, PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, 0, 0, 0, 0);
 
+    #ifdef _DEBUG_TRACK_VB
+    if(!g_bVBSkipStream)
+    {
+    #endif
+
     g_pD3DDevice8->DrawIndexedPrimitive
     (
         PCPrimitiveType, 0, VertexCount, ((DWORD)pIndexData)/2, PrimitiveCount
     );
+
+    #ifdef _DEBUG_TRACK_VB
+    }
+    #endif
 
     if(nStride != -1)
         EmuFixupVerticesB(nStride, pOrigVertexBuffer8, pHackVertexBuffer8);
@@ -6354,10 +6412,19 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVerticesUP
 
     uint32 nStride = EmuFixupVerticesA(PrimitiveType, PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, 0, pVertexStreamZeroData, VertexStreamZeroStride, &pNewVertexStreamZeroData);
 
+    #ifdef _DEBUG_TRACK_VB
+    if(!g_bVBSkipStream)
+    {
+    #endif
+
     g_pD3DDevice8->DrawIndexedPrimitiveUP
     (
         PCPrimitiveType, 0, VertexCount, PrimitiveCount, pIndexData, D3DFMT_INDEX16, pNewVertexStreamZeroData, VertexStreamZeroStride
     );
+
+    #ifdef _DEBUG_TRACK_VB
+    }
+    #endif
 
     if(nStride != -1)
     {
