@@ -46,7 +46,8 @@ extern void ShowControllerConfig(HWND hwnd);
 // * Joystick detection sensitivity
 // ******************************************************************
 #define JOYSTICK_DETECT_SENSITIVITY 25000
-#define POV_DETECT_SENSITIVITY      50000
 #define BUTTON_DETECT_SENSITIVITY   0
+#define MOUSE_DETECT_SENSITIVITY    20
+#define POV_DETECT_SENSITIVITY      50000
 
 #endif

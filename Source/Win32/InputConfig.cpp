@@ -35,44 +35,98 @@
 
 #include <windows.h>
 #include <string.h>
+#include <stdio.h>
+
+const char *g_InputDeviceTitle[INPUT_DEVICE_COMPONENT_COUNT]=
+{
+    // ******************************************************************
+    // * Analog Axis
+    // ******************************************************************
+    "LThumbX",
+    "LThumbY",
+    "RThumbX",
+    "RThumbY",
+    // ******************************************************************
+    // * Analog Buttons
+    // ******************************************************************
+    "X",
+    "Y",
+    "A",
+    "B",
+    "White",
+    "Black",
+    "LTrigger",
+    "RTrigger",
+    // ******************************************************************
+    // * Digital Buttons
+    // ******************************************************************
+    "DPadUp",
+    "DPadDown",
+    "DPadLeft",
+    "DPadRight",
+    "Back",
+    "Start",
+    "LThumb",
+    "RThumb",
+};
 
 // ******************************************************************
-// * Constructor
+// * Init
 // ******************************************************************
-InputConfig::InputConfig()
+void InputConfig::Init()
 {
     for(int v=0;v<MAX_INPUT_DEVICES;v++)
         m_DeviceName[v][0] = '\0';
+
+    for(int r=0;r<INPUT_DEVICE_COMPONENT_COUNT;r++)
+    {
+        m_InputMapping[r].dwDevice = -1;
+        m_InputMapping[r].dwInfo   = -1;
+        m_InputMapping[r].dwFlags  = 0;
+    }
 }
 
 // ******************************************************************
 // * Map a given input control mapping
 // ******************************************************************
-void InputConfig::Map(InputMapping &IM, const char *DeviceName, int dwInfo, int dwFlags)
+void InputConfig::Map(InputDeviceComponent idc, const char *DeviceName, int dwInfo, int dwFlags)
 {
     // Initialize InputMapping instance
-    IM.dwDevice = Insert(DeviceName);
-    IM.dwInfo   = dwInfo;
-    IM.dwFlags  = dwFlags;
+    m_InputMapping[idc].dwDevice = Insert(DeviceName);
+    m_InputMapping[idc].dwInfo   = dwInfo;
+    m_InputMapping[idc].dwFlags  = dwFlags;
+
+    printf("m_InputMapping[%d].dwDevice = %d\n", idc, m_InputMapping[idc].dwDevice);
 
     // Purse unused device slots
-	// TODO: Make this more efficient (the current check technique is ridiculous)
     for(int v=0;v<MAX_INPUT_DEVICES;v++)
     {
-        if(m_LThumbX.dwDevice   != v && m_LThumbY.dwDevice   != v &&
-           m_RThumbX.dwDevice   != v && m_RThumbY.dwDevice   != v &&
-           m_X.dwDevice         != v && m_Y.dwDevice         != v &&
-           m_A.dwDevice         != v && m_B.dwDevice         != v &&
-           m_White.dwDevice     != v && m_Black.dwDevice     != v &&
-           m_LTrigger.dwDevice  != v && m_RTrigger.dwDevice  != v &&
-           m_DPadUp.dwDevice    != v && m_DPadDown.dwDevice  != v && 
-           m_DPadLeft.dwDevice  != v && m_DPadRight.dwDevice != v &&
-           m_Back.dwDevice      != v && m_Start.dwDevice     != v &&
-           m_LThumb.dwDevice    != v && m_RThumb.dwDevice    != v)
+        bool inuse = false;
+
+        for(int r=0;r<INPUT_DEVICE_COMPONENT_COUNT;r++)
         {
-            m_DeviceName[v][0] = '\0';
+            if(m_InputMapping[r].dwDevice == v)
+            {
+                printf("> m_InputMapping[%d].dwDevice = %d\n", r, v);
+                inuse=true;
+            }
         }
+
+        if(!inuse)
+            m_DeviceName[v][0] = '\0';
     }
+
+    return;
+}
+
+// ******************************************************************
+// * Map a given input control mapping
+// ******************************************************************
+void InputConfig::Get(InputDeviceComponent idc, int *dwDevice, int *dwInfo, int *dwFlags)
+{
+    *dwDevice = m_InputMapping[idc].dwDevice;
+    *dwInfo   = m_InputMapping[idc].dwInfo;
+    *dwFlags  = m_InputMapping[idc].dwFlags;
 
     return;
 }
@@ -85,7 +139,7 @@ int InputConfig::Insert(const char *DeviceName)
     int v=0;
 
     for(v=0;v<MAX_INPUT_DEVICES;v++)
-        if(m_DeviceName[v][0] != '\0' && strcmp(DeviceName, m_DeviceName[v]) == 0)
+        if(strcmp(DeviceName, m_DeviceName[v]) == 0)
             return v;
 
     for(v=0;v<MAX_INPUT_DEVICES;v++)

@@ -34,6 +34,7 @@
 #include "WndMain.h"
 #include "WndAbout.h"
 #include "DlgControllerConfig.h"
+#include "EmuShared.h"
 #include "ResCxbx.h"
 #include "EmuExe.h"
 
@@ -209,6 +210,8 @@ WndMain::~WndMain()
 
             RegCloseKey(hKey);
         }
+
+        g_EmuShared->SaveInputConfiguration();
     }
 
     // ******************************************************************

@@ -41,48 +41,37 @@
 #include <memory.h>
 
 // ******************************************************************
-// * func: EmuSharedInit
-// ******************************************************************
-CXBXKRNL_API void EmuSharedInit();
-
-// ******************************************************************
-// * func: EmuSharedCleanup
-// ******************************************************************
-CXBXKRNL_API void EmuSharedCleanup();
-
-// ******************************************************************
 // * EmuShared : Shared memory
 // ******************************************************************
 extern CXBXKRNL_API class EmuShared : public Mutex
 {
     public:
-        EmuShared() : m_dwChangeID(0) {}
+        // ******************************************************************
+        // * Each process needs to call this to initialize shared memory
+        // ******************************************************************
+        CXBXKRNL_API static void Init();
 
         // ******************************************************************
-        // * UpdateInputConfiguration
+        // * Each process needs to call this to cleanup shared memory
         // ******************************************************************
-        void UpdateInputConfiguration(InputConfig *x_InputConfig)
-        {
-            Lock();
-
-            memcpy(&m_InputConfig, x_InputConfig, sizeof(InputConfig));
-
-            m_dwChangeID++;
-
-            Unlock();
-        }
+        CXBXKRNL_API static void Cleanup();
 
         // ******************************************************************
-        // * RetrieveInputConfiguration
+        // * Input Configuration Initialization
         // ******************************************************************
-        void RetrieveInputConfiguration(InputConfig *x_InputConfig)
-		{
-			Lock();
+        CXBXKRNL_API void InitInputConfiguration() { m_InputConfig.Init(); }
 
-			memcpy(x_InputConfig, &m_InputConfig, sizeof(InputConfig));
+        // ******************************************************************
+        // * Input Configuration Accessors
+        // ******************************************************************
+        CXBXKRNL_API void SetInputConfiguration(InputConfig *x_InputConfig);
+        CXBXKRNL_API void GetInputConfiguration(InputConfig *x_InputConfig);
 
-			Unlock();
-		}
+        // ******************************************************************
+        // * Input Configuration Load/Save From Registry
+        // ******************************************************************
+        CXBXKRNL_API void LoadInputConfiguration();
+        CXBXKRNL_API void SaveInputConfiguration();
 
         // ******************************************************************
         // * Check the current Change ID

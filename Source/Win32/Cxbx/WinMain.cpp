@@ -40,7 +40,7 @@
 // ******************************************************************
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    EmuSharedInit();
+    EmuShared::Init();
 
     WndMain *MainWindow = new WndMain(hInstance);
 
@@ -62,7 +62,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     delete MainWindow;
 
-    EmuSharedCleanup();
+    EmuShared::Cleanup();
 
     return 0;
 }

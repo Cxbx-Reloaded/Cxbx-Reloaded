@@ -50,7 +50,7 @@ InputConfig g_InputConfig;
 static INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL    CALLBACK EnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi, LPVOID pvRef);
 static BOOL    CALLBACK EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOID pvRef);
-static void             ConfigureInput(HWND hWndDlg, HWND hWndButton, void (InputConfig::*MapFunc)(const char *, int, int));
+static void             ConfigureInput(HWND hWndDlg, HWND hWndButton, InputDeviceComponent idc);
 
 // ******************************************************************
 // * Static Variable(s)
@@ -66,7 +66,7 @@ static bool                 g_bConfigDone                       = true;
 // ******************************************************************
 void ShowControllerConfig(HWND hwnd)
 {
-    g_EmuShared->RetrieveInputConfiguration(&g_InputConfig);
+    g_EmuShared->GetInputConfiguration(&g_InputConfig);
 
     DialogBox
     (
@@ -82,6 +82,7 @@ void ShowControllerConfig(HWND hwnd)
 // ******************************************************************
 INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+
     switch(uMsg)
     {
         case WM_INITDIALOG:
@@ -101,68 +102,68 @@ INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam,
                     EndDialog(hWndDlg, wParam); 
                     break;
                 case IDC_INPUT_CONFIG_ACCEPT:
-                    g_EmuShared->UpdateInputConfiguration(&g_InputConfig);
+                    g_EmuShared->SetInputConfiguration(&g_InputConfig);
                     EndDialog(hWndDlg, wParam);
                     break;
                 case IDC_SET_LEFT_X:
-                    ConfigureInput(hWndDlg, hWndButton, InputConfig::MapLThumbX);
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_LTHUMBX);
                     break;
                 case IDC_SET_LEFT_Y:
-                    ConfigureInput(hWndDlg, hWndButton, InputConfig::MapLThumbY);
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_LTHUMBY);
                     break;
                 case IDC_SET_RIGHT_X:
-                    ConfigureInput(hWndDlg, hWndButton, InputConfig::MapRThumbX);
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_RTHUMBX);
                     break;
                 case IDC_SET_RIGHT_Y:
-                    ConfigureInput(hWndDlg, hWndButton, InputConfig::MapRThumbY);
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_RTHUMBY);
                     break;
                 case IDC_SET_X:
-                    ConfigureInput(hWndDlg, hWndButton, InputConfig::MapX);
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_X);
                     break;
                 case IDC_SET_Y:
-                    ConfigureInput(hWndDlg, hWndButton, InputConfig::MapY);
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_Y);
                     break;
                 case IDC_SET_A:
-                    ConfigureInput(hWndDlg, hWndButton, InputConfig::MapA);
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_A);
                     break;
                 case IDC_SET_B:
-                    ConfigureInput(hWndDlg, hWndButton, InputConfig::MapB);
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_B);
                     break;
                 case IDC_SET_WHITE:
-                    ConfigureInput(hWndDlg, hWndButton, InputConfig::MapWhite);
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_WHITE);
                     break;
                 case IDC_SET_BLACK:
-                    ConfigureInput(hWndDlg, hWndButton, InputConfig::MapBlack);
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_BLACK);
                     break;
                 case IDC_SET_LTRIGGER:
-                    ConfigureInput(hWndDlg, hWndButton, InputConfig::MapLTrigger);
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_LTRIGGER);
                     break;
                 case IDC_SET_RTRIGGER:
-                    ConfigureInput(hWndDlg, hWndButton, InputConfig::MapRTrigger);
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_RTRIGGER);
                     break;
                 case IDC_SET_DPAD_UP:
-                    ConfigureInput(hWndDlg, hWndButton, InputConfig::MapDPadUp);
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_DPADUP);
                     break;
                 case IDC_SET_DPAD_DOWN:
-                    ConfigureInput(hWndDlg, hWndButton, InputConfig::MapDPadDown);
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_DPADDOWN);
                     break;
                 case IDC_SET_DPAD_LEFT:
-                    ConfigureInput(hWndDlg, hWndButton, InputConfig::MapDPadLeft);
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_DPADLEFT);
                     break;
                 case IDC_SET_DPAD_RIGHT:
-                    ConfigureInput(hWndDlg, hWndButton, InputConfig::MapDPadRight);
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_DPADRIGHT);
                     break;
                 case IDC_SET_BACK:
-                    ConfigureInput(hWndDlg, hWndButton, InputConfig::MapBack);
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_BACK);
                     break;
                 case IDC_SET_START:
-                    ConfigureInput(hWndDlg, hWndButton, InputConfig::MapStart);
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_START);
                     break;
                 case IDC_SET_LTHUMB:
-                    ConfigureInput(hWndDlg, hWndButton, InputConfig::MapLThumb);
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_LTHUMB);
                     break;
                 case IDC_SET_RTHUMB:
-                    ConfigureInput(hWndDlg, hWndButton, InputConfig::MapRThumb);
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_RTHUMB);
                     break;
             } 
         }
@@ -181,6 +182,7 @@ BOOL CALLBACK EnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi, LPVOID pvRef)
     if(!FAILED(hRet))
 	{
 		g_pInputDevFlags[g_pInputCur] = INPUT_MAPPING_JOYSTICK;
+
         g_pInputDev[g_pInputCur++]->SetDataFormat(&c_dfDIJoystick);
 	}
 
@@ -216,7 +218,7 @@ BOOL CALLBACK EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOID pvRef
 // ******************************************************************
 // * ConfigureInput
 // ******************************************************************
-void ConfigureInput(HWND hWndDlg, HWND hWndButton, void (InputConfig::*MapFunc)(const char *, int, int))
+void ConfigureInput(HWND hWndDlg, HWND hWndButton, InputDeviceComponent idc)
 {
     if(!g_bConfigDone)
         return;
@@ -260,21 +262,24 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, void (InputConfig::*MapFunc)(
         );
 
         hRet = g_pDirectInput8->CreateDevice(GUID_SysKeyboard, &g_pInputDev[g_pInputCur], NULL);
-    
+
         if(!FAILED(hRet))
 		{
 			g_pInputDevFlags[g_pInputCur] = INPUT_MAPPING_KEYBOARD;
+
             g_pInputDev[g_pInputCur++]->SetDataFormat(&c_dfDIKeyboard);
 		}
 
         hRet = g_pDirectInput8->CreateDevice(GUID_SysMouse, &g_pInputDev[g_pInputCur], NULL);
-    
+
         if(!FAILED(hRet))
 		{
 			g_pInputDevFlags[g_pInputCur] = INPUT_MAPPING_MOUSE;
+
             g_pInputDev[g_pInputCur++]->SetDataFormat(&c_dfDIMouse2);
 		}
     }
+
 
     // ******************************************************************
     // * Set cooperative level and acquire
@@ -307,6 +312,13 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, void (InputConfig::*MapFunc)(
         for(int v=0;v<g_pInputCur;v++)
             g_pInputDev[v]->EnumObjects(EnumObjectsCallback, (LPVOID)v, DIDFT_ALL);
     }
+
+    // ******************************************************************
+    // * Initialize mouse input
+    // ******************************************************************
+    LONG LastMouse_lX = -1;
+    LONG LastMouse_lY = -1;
+    LONG LastMouse_lZ = -1;
 
     // ******************************************************************
     // * Wait for input, or 5 second timeout
@@ -361,7 +373,7 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, void (InputConfig::*MapFunc)(
 
 					g_pInputDev[v]->GetDeviceState(sizeof(DIJOYSTATE), &InputState);
 
-                    int v=0;
+                    int b=0;
 
                     if(abs(InputState.lX) > JOYSTICK_DETECT_SENSITIVITY)
                     {
@@ -393,15 +405,15 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, void (InputConfig::*MapFunc)(
                         dwHow = FIELD_OFFSET(DIJOYSTATE, lRz);
                         dwFlags |= (InputState.lRz > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
                     }
-                    else for(v=0;v<2;v++)
-                            if(abs(InputState.rglSlider[v]) > JOYSTICK_DETECT_SENSITIVITY)
-                                dwHow = FIELD_OFFSET(DIJOYSTATE, rglSlider[v]);
-                    else for(v=0;v<4;v++)
-                            if(abs(InputState.rgdwPOV[v]) > POV_DETECT_SENSITIVITY)
-                                dwHow = FIELD_OFFSET(DIJOYSTATE, rgdwPOV[v]);
-                    else for(v=0;v<32;v++)
-                            if(InputState.rgbButtons[v] > BUTTON_DETECT_SENSITIVITY)
-                                dwHow = FIELD_OFFSET(DIJOYSTATE, rgbButtons[v]);
+                    else for(b=0;b<2;b++)
+                            if(abs(InputState.rglSlider[b]) > JOYSTICK_DETECT_SENSITIVITY)
+                                dwHow = FIELD_OFFSET(DIJOYSTATE, rglSlider[b]);
+                    else for(b=0;b<4;b++)
+                            if(abs(InputState.rgdwPOV[b]) > POV_DETECT_SENSITIVITY)
+                                dwHow = FIELD_OFFSET(DIJOYSTATE, rgdwPOV[b]);
+                    else for(b=0;b<32;b++)
+                            if(InputState.rgbButtons[b] > BUTTON_DETECT_SENSITIVITY)
+                                dwHow = FIELD_OFFSET(DIJOYSTATE, rgbButtons[b]);
 
 					// ******************************************************************
 					// * Retrieve Object Info
@@ -411,14 +423,13 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, void (InputConfig::*MapFunc)(
 						g_pInputDev[v]->GetDeviceInfo(&DeviceInstance);
 
 						g_pInputDev[v]->GetObjectInfo(&ObjectInstance, dwHow, DIPH_BYOFFSET);
- 
-						(g_InputConfig.*MapFunc)(DeviceInstance.tszInstanceName, ObjectInstance.dwType, dwFlags);
+
+                        g_InputConfig.Map(idc, DeviceInstance.tszInstanceName, ObjectInstance.dwType, dwFlags);
 
 						printf("Cxbx: Detected %s on %s (dwType : %.08X)\n", ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType);
 
 						sprintf(szNewText, "%s Successfully Mapped To %s On %s!", szOrgText, ObjectInstance.tszName, DeviceInstance.tszInstanceName);
 					}
-
                 }
                 // ******************************************************************
                 // * Detect Keyboard Input
@@ -440,8 +451,8 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, void (InputConfig::*MapFunc)(
 
 					if(dwHow != -1)
 					{
-						(g_InputConfig.*MapFunc)("SysKeyboard", dwHow, dwFlags);
-						
+                        g_InputConfig.Map(idc, "SysKeyboard", dwHow, dwFlags);
+
 						printf("Cxbx: Detected Key %d on SysKeyboard\n", dwHow);
 
 						sprintf(szNewText, "%s Successfully Mapped To Key %d On %s!", szOrgText, dwHow, "SysKeyboard");
@@ -456,24 +467,83 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, void (InputConfig::*MapFunc)(
 
 					g_pInputDev[v]->GetDeviceState(sizeof(DIMOUSESTATE2), &InputState);
 
-					for(int v=0;v<8;v++)
+                    // detect button changes
+					for(int b=0;b<8;b++)
 					{
-						if(InputState.rgbButtons[v] & 0x80)
+						if(InputState.rgbButtons[b] & 0x80)
 						{
-							dwHow = v;
+							dwHow = b;
 							dwFlags &= INPUT_MAPPING_MOUSE_CLICK;
 							break;
 						}
 					}
 
-					if(dwHow != -1)
+                    // found a button change
+                    if(dwHow != -1)
 					{
-						(g_InputConfig.*MapFunc)("SysMouse", dwHow, dwFlags);
-						
+                        g_InputConfig.Map(idc, "SysMouse", dwHow, dwFlags);
+
 						printf("Cxbx: Detected Button %d on SysMouse\n", dwHow);
 
 						sprintf(szNewText, "%s Successfully Mapped To Button %d On %s!", szOrgText, dwHow, "SysMouse");
 					}
+                    // no button changes
+                    else
+                    {
+                        LONG delta_lX=0, delta_lY=0, delta_lZ=0;
+                        LONG absd_lX=0, absd_lY=0, absd_lZ=0;
+
+                        if(InputState.lX == -1 || InputState.lY == -1 || InputState.lZ == -1)
+                            delta_lX = delta_lY = delta_lZ = 0;
+                        else
+                        {
+                            delta_lX = InputState.lX - LastMouse_lX;
+                            delta_lY = InputState.lY - LastMouse_lY;
+                            delta_lZ = InputState.lZ - LastMouse_lZ;
+
+                            absd_lX  = abs(delta_lX);
+                            absd_lY  = abs(delta_lY);
+                            absd_lZ  = abs(delta_lZ);
+                        }
+
+                        int max = (absd_lX > absd_lY) ? absd_lX : absd_lY;
+
+                        max = (max > absd_lZ) ? max : absd_lZ;
+
+                        if(max > MOUSE_DETECT_SENSITIVITY)
+                        {
+                            if(max == absd_lX && absd_lX > MOUSE_DETECT_SENSITIVITY)
+                            {
+                                dwHow = FIELD_OFFSET(DIMOUSESTATE2, lX);
+                                dwFlags |= (delta_lX > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
+                            }
+                            else if(max == absd_lY && absd_lY > MOUSE_DETECT_SENSITIVITY)
+                            {
+                                dwHow = FIELD_OFFSET(DIMOUSESTATE2, lY);
+                                dwFlags |= (delta_lY > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
+                            }
+                            else if(max == absd_lZ && absd_lZ > MOUSE_DETECT_SENSITIVITY)
+                            {
+                                dwHow = FIELD_OFFSET(DIMOUSESTATE2, lZ);
+                                dwFlags |= (delta_lZ > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
+                            }
+
+                            LastMouse_lX = InputState.lX;
+                            LastMouse_lY = InputState.lY;
+                            LastMouse_lZ = InputState.lZ;
+
+                            if(dwHow != -1)
+					        {
+						        g_pInputDev[v]->GetObjectInfo(&ObjectInstance, dwHow, DIPH_BYOFFSET);
+
+                                g_InputConfig.Map(idc, "SysMouse", dwHow, dwFlags);
+
+                                printf("Cxbx: Detected Movement on the %s %s on SysMouse\n", (dwFlags & INPUT_MAPPING_AXIS_POSITIVE) ? "Positive" : "Negative", ObjectInstance.tszName);
+
+						        sprintf(szNewText, "%s Successfully Mapped To %s %s On %s!", szOrgText, (dwFlags & INPUT_MAPPING_AXIS_POSITIVE) ? "Positive" : "Negative", ObjectInstance.tszName, "SysMouse");
+                            }                    
+                        }
+                    }
 				}
 
 				if(dwHow != -1)
@@ -515,7 +585,8 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, void (InputConfig::*MapFunc)(
 		MSG Msg;
 
 		while(PeekMessage(&Msg, hWndDlg, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE));
-		while(PeekMessage(&Msg, hWndDlg, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE));
+		while(PeekMessage(&Msg, hWndDlg, WM_KEYFIRST,   WM_KEYLAST,   PM_REMOVE));
+
 	}
 
     g_bConfigDone = true;

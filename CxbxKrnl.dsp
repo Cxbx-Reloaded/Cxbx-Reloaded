@@ -277,7 +277,7 @@ SOURCE=.\Source\Win32\CxbxKrnl\EmuLDT.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuShared.cpp
+SOURCE=.\Source\Win32\EmuShared.cpp
 # End Source File
 # Begin Source File
 
@@ -289,7 +289,15 @@ SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Source\Win32\InputConfig.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\Win32\CxbxKrnl\KernelThunk.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\Mutex.cpp
 # End Source File
 # Begin Source File
 

@@ -35,9 +35,56 @@
 #define INPUTCONFIG_H
 
 // ******************************************************************
-// * 32 Input Devices Maximum
+// * Device Components
 // ******************************************************************
-#define MAX_INPUT_DEVICES 0x20
+enum InputDeviceComponent
+{
+    // ******************************************************************
+    // * Analog Axis
+    // ******************************************************************
+    INPUT_DEVICE_COMPONENT_LTHUMBX = 0,
+    INPUT_DEVICE_COMPONENT_LTHUMBY,
+    INPUT_DEVICE_COMPONENT_RTHUMBX,
+    INPUT_DEVICE_COMPONENT_RTHUMBY,
+    // ******************************************************************
+    // * Analog Buttons
+    // ******************************************************************
+    INPUT_DEVICE_COMPONENT_X,
+    INPUT_DEVICE_COMPONENT_Y,
+    INPUT_DEVICE_COMPONENT_A,
+    INPUT_DEVICE_COMPONENT_B,
+    INPUT_DEVICE_COMPONENT_WHITE,
+    INPUT_DEVICE_COMPONENT_BLACK,
+    INPUT_DEVICE_COMPONENT_LTRIGGER,
+    INPUT_DEVICE_COMPONENT_RTRIGGER,
+    // ******************************************************************
+    // * Digital Buttons
+    // ******************************************************************
+    INPUT_DEVICE_COMPONENT_DPADUP,
+    INPUT_DEVICE_COMPONENT_DPADDOWN,
+    INPUT_DEVICE_COMPONENT_DPADLEFT,
+    INPUT_DEVICE_COMPONENT_DPADRIGHT,
+    INPUT_DEVICE_COMPONENT_BACK,
+    INPUT_DEVICE_COMPONENT_START,
+    INPUT_DEVICE_COMPONENT_LTHUMB,
+    INPUT_DEVICE_COMPONENT_RTHUMB,
+    // ******************************************************************
+    // * Total number of components
+    // ******************************************************************
+    INPUT_DEVICE_COMPONENT_COUNT
+};
+
+extern const char *g_InputDeviceTitle[INPUT_DEVICE_COMPONENT_COUNT];
+
+// ******************************************************************
+// * Input mapping information
+// ******************************************************************
+struct InputMapping
+{
+    int dwDevice;   // Offset into m_Devices
+    int dwInfo;     // Extended information, depending on dwFlags
+    int dwFlags;    // Flags explaining the data format
+};
 
 // ******************************************************************
 // * InputMapping Flags
@@ -48,18 +95,14 @@
 #define INPUT_MAPPING_AXIS_POSITIVE (1 << 3)
 #define INPUT_MAPPING_AXIS_NEGATIVE (1 << 4)
 #define INPUT_MAPPING_MOUSE_CLICK   (1 << 5)
+#define INPUT_MAPPING_MOUSE_LX      (1 << 6)
+#define INPUT_MAPPING_MOUSE_LY      (1 << 7)
+#define INPUT_MAPPING_MOUSE_LZ      (1 << 8)
 
 // ******************************************************************
-// * Input mapping information
+// * Maximum number of input devices is limited by # of components
 // ******************************************************************
-struct InputMapping
-{
-    InputMapping() : dwDevice(-1), dwInfo(-1), dwFlags(0) {}
-
-    int dwDevice;   // Offset into m_Devices
-    int dwInfo;     // Extended information, depending on dwFlags
-    int dwFlags;    // Flags explaining the data format
-};
+#define MAX_INPUT_DEVICES INPUT_DEVICE_COMPONENT_COUNT
 
 // ******************************************************************
 // * Input Configuration
@@ -70,7 +113,7 @@ class InputConfig
         // ******************************************************************
         // * Constructor
         // ******************************************************************
-        InputConfig();
+        InputConfig() {};
 
         // ******************************************************************
         // * Deconstructor
@@ -78,35 +121,22 @@ class InputConfig
        ~InputConfig() {}
 
         // ******************************************************************
+        // * Init
+        // ******************************************************************
+        void Init();
+
+        // ******************************************************************
         // * Mapping Accessors
         // ******************************************************************
-        void MapLThumbX(const char *DeviceName, int dwInfo, int dwFlags) { Map(m_LThumbX, DeviceName, dwInfo, dwFlags); }
-        void MapLThumbY(const char *DeviceName, int dwInfo, int dwFlags) { Map(m_LThumbY, DeviceName, dwInfo, dwFlags); }
-        void MapRThumbX(const char *DeviceName, int dwInfo, int dwFlags) { Map(m_RThumbX, DeviceName, dwInfo, dwFlags); }
-        void MapRThumbY(const char *DeviceName, int dwInfo, int dwFlags) { Map(m_RThumbY, DeviceName, dwInfo, dwFlags); }
-        void MapX(const char *DeviceName, int dwInfo, int dwFlags) { Map(m_X, DeviceName, dwInfo, dwFlags); }
-        void MapY(const char *DeviceName, int dwInfo, int dwFlags) { Map(m_Y, DeviceName, dwInfo, dwFlags); }
-        void MapA(const char *DeviceName, int dwInfo, int dwFlags) { Map(m_A, DeviceName, dwInfo, dwFlags); }
-        void MapB(const char *DeviceName, int dwInfo, int dwFlags) { Map(m_B, DeviceName, dwInfo, dwFlags); }
-        void MapWhite(const char *DeviceName, int dwInfo, int dwFlags) { Map(m_White, DeviceName, dwInfo, dwFlags); }
-        void MapBlack(const char *DeviceName, int dwInfo, int dwFlags) { Map(m_Black, DeviceName, dwInfo, dwFlags); }
-        void MapLTrigger(const char *DeviceName, int dwInfo, int dwFlags) { Map(m_LTrigger, DeviceName, dwInfo, dwFlags); }
-        void MapRTrigger(const char *DeviceName, int dwInfo, int dwFlags) { Map(m_RTrigger, DeviceName, dwInfo, dwFlags); }
-        void MapDPadUp(const char *DeviceName, int dwInfo, int dwFlags) { Map(m_DPadUp, DeviceName, dwInfo, dwFlags); }
-        void MapDPadDown(const char *DeviceName, int dwInfo, int dwFlags) { Map(m_DPadDown, DeviceName, dwInfo, dwFlags); }
-        void MapDPadLeft(const char *DeviceName, int dwInfo, int dwFlags) { Map(m_DPadLeft, DeviceName, dwInfo, dwFlags); }
-        void MapDPadRight(const char *DeviceName, int dwInfo, int dwFlags) { Map(m_DPadRight, DeviceName, dwInfo, dwFlags); }
-        void MapBack(const char *DeviceName, int dwInfo, int dwFlags) { Map(m_Back, DeviceName, dwInfo, dwFlags); }
-        void MapStart(const char *DeviceName, int dwInfo, int dwFlags) { Map(m_Start, DeviceName, dwInfo, dwFlags); }
-        void MapLThumb(const char *DeviceName, int dwInfo, int dwFlags) { Map(m_LThumb, DeviceName, dwInfo, dwFlags); }
-        void MapRThumb(const char *DeviceName, int dwInfo, int dwFlags) { Map(m_RThumb, DeviceName, dwInfo, dwFlags); }
+        void Map(InputDeviceComponent idc, const char *DeviceName, int dwInfo, int dwFlags);
+        void Get(InputDeviceComponent idc, int *dwDevice, int *dwInfo, int *dwFlags);
+
+        // ******************************************************************
+        // * To enumerate device names
+        // ******************************************************************
+        const char *GetDeviceName(int offset) { return (const char*)m_DeviceName[offset]; }
 
     private:
-        // ******************************************************************
-        // * Map a given input control mapping
-        // ******************************************************************
-        void Map(InputMapping &IM, const char *DeviceName, int dwInfo, int dwFlags);
-
         // ******************************************************************
         // * Find the look-up value for a DeviceName (creates if needed)
         // ******************************************************************
@@ -118,25 +148,9 @@ class InputConfig
         char m_DeviceName[260][MAX_INPUT_DEVICES];
 
         // ******************************************************************
-        // * Analog Axis
+        // * Input Device Components
         // ******************************************************************
-        InputMapping m_LThumbX, m_LThumbY;
-        InputMapping m_RThumbX, m_RThumbY;
-
-        // ******************************************************************
-        // * Analog Buttons
-        // ******************************************************************
-        InputMapping m_X, m_Y;
-        InputMapping m_A, m_B;
-        InputMapping m_White, m_Black;
-        InputMapping m_LTrigger, m_RTrigger;
-
-        // ******************************************************************
-        // * Digital Buttons
-        // ******************************************************************
-        InputMapping m_DPadUp, m_DPadDown, m_DPadLeft, m_DPadRight;
-        InputMapping m_Back, m_Start;
-        InputMapping m_LThumb, m_RThumb;
+        InputMapping m_InputMapping[INPUT_DEVICE_COMPONENT_COUNT];
 };
 
 #endif

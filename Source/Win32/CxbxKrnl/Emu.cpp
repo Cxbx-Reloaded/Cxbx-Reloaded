@@ -59,10 +59,10 @@ static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, vo
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     if(fdwReason == DLL_PROCESS_ATTACH)
-        EmuSharedInit();
+        EmuShared::Init();
     
     if(fdwReason == DLL_PROCESS_DETACH)
-        EmuSharedCleanup();
+        EmuShared::Cleanup();
 
     return TRUE;
 }
