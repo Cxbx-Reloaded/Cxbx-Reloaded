@@ -100,18 +100,13 @@ static unsigned int WINAPI PCSTProxy
 
     delete iPCSTProxyParam;
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): PCSTProxy\n"
-               "(\n"
-               "   StartContext1       : 0x%.08X\n"
-               "   StartContext2       : 0x%.08X\n"
-               "   StartRoutine        : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), StartContext1, StartContext2, StartRoutine);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): PCSTProxy\n"
+           "(\n"
+           "   StartContext1       : 0x%.08X\n"
+           "   StartContext2       : 0x%.08X\n"
+           "   StartRoutine        : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), StartContext1, StartContext2, StartRoutine);
 
     if(StartSuspended == TRUE)
         SuspendThread(GetCurrentThread());
@@ -184,16 +179,11 @@ XBSYSAPI EXPORTNUM(14) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePool
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): ExAllocatePool\n"
-               "(\n"
-               "   NumberOfBytes       : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), NumberOfBytes);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): ExAllocatePool\n"
+           "(\n"
+           "   NumberOfBytes       : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), NumberOfBytes);
 
     PVOID pRet = malloc(NumberOfBytes);
 
@@ -216,20 +206,15 @@ XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): ExQueryNonVolatileSetting\n"
-               "(\n"
-               "   ValueIndex          : 0x%.08X\n"
-               "   Type                : 0x%.08X\n"
-               "   Value               : 0x%.08X\n"
-               "   ValueLength         : 0x%.08X\n"
-               "   ResultLength        : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), ValueIndex, Type, Value, ValueLength, ResultLength);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): ExQueryNonVolatileSetting\n"
+           "(\n"
+           "   ValueIndex          : 0x%.08X\n"
+           "   Type                : 0x%.08X\n"
+           "   Value               : 0x%.08X\n"
+           "   ValueLength         : 0x%.08X\n"
+           "   ResultLength        : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), ValueIndex, Type, Value, ValueLength, ResultLength);
 
     // handle eeprom read
     switch(ValueIndex)
@@ -337,16 +322,11 @@ XBSYSAPI EXPORTNUM(37) xboxkrnl::LONG NTAPI xboxkrnl::FscSetCacheSize(ULONG uCac
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): FscSetCacheSize\n"
-               "(\n"
-               "   uCachePages         : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), uCachePages);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): FscSetCacheSize\n"
+           "(\n"
+           "   uCachePages         : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), uCachePages);
 
     EmuWarning("FscSetCacheSize is being ignored");
 
@@ -365,16 +345,11 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): HalReturnToFirmware\n"
-               "(\n"
-               "   Routine             : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), Routine);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): HalReturnToFirmware\n"
+           "(\n"
+           "   Routine             : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), Routine);
 
     EmuCleanup("Xbe has rebooted : HalReturnToFirmware(%d)", Routine);
 }
@@ -398,26 +373,21 @@ XBSYSAPI EXPORTNUM(66) NTSTATUS NTAPI xboxkrnl::IoCreateFile
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): IoCreateFile\n"
-               "(\n"
-               "   FileHandle          : 0x%.08X\n"
-               "   DesiredAccess       : 0x%.08X\n"
-               "   ObjectAttributes    : 0x%.08X (%s)\n"
-               "   IoStatusBlock       : 0x%.08X\n"
-               "   AllocationSize      : 0x%.08X\n"
-               "   FileAttributes      : 0x%.08X\n"
-               "   ShareAccess         : 0x%.08X\n"
-               "   Disposition         : 0x%.08X\n"
-               "   CreateOptions       : 0x%.08X\n"
-               "   Options             : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes->ObjectName->Buffer,
-               IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, Disposition, CreateOptions, Options);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): IoCreateFile\n"
+           "(\n"
+           "   FileHandle          : 0x%.08X\n"
+           "   DesiredAccess       : 0x%.08X\n"
+           "   ObjectAttributes    : 0x%.08X (%s)\n"
+           "   IoStatusBlock       : 0x%.08X\n"
+           "   AllocationSize      : 0x%.08X\n"
+           "   FileAttributes      : 0x%.08X\n"
+           "   ShareAccess         : 0x%.08X\n"
+           "   Disposition         : 0x%.08X\n"
+           "   CreateOptions       : 0x%.08X\n"
+           "   Options             : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes->ObjectName->Buffer,
+           IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, Disposition, CreateOptions, Options);
 
     NTSTATUS ret = STATUS_SUCCESS;
 
@@ -440,18 +410,13 @@ XBSYSAPI EXPORTNUM(67) NTSTATUS NTAPI xboxkrnl::IoCreateSymbolicLink
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): IoCreateSymbolicLink\n"
-               "(\n"
-               "   SymbolicLinkName    : 0x%.08X (%s)\n"
-               "   DeviceName          : 0x%.08X (%s)\n"
-               ");\n",
-               GetCurrentThreadId(), SymbolicLinkName, SymbolicLinkName->Buffer,
-               DeviceName, DeviceName->Buffer);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): IoCreateSymbolicLink\n"
+           "(\n"
+           "   SymbolicLinkName    : 0x%.08X (%s)\n"
+           "   DeviceName          : 0x%.08X (%s)\n"
+           ");\n",
+           GetCurrentThreadId(), SymbolicLinkName, SymbolicLinkName->Buffer,
+           DeviceName, DeviceName->Buffer);
 
     // TODO: Actually um...implement this function
     NTSTATUS ret = STATUS_OBJECT_NAME_COLLISION;
@@ -471,16 +436,11 @@ XBSYSAPI EXPORTNUM(69) NTSTATUS NTAPI xboxkrnl::IoDeleteSymbolicLink
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): IoDeleteSymbolicLink\n"
-               "(\n"
-               "   SymbolicLinkName    : 0x%.08X (%s)\n"
-               ");\n",
-               GetCurrentThreadId(), SymbolicLinkName, SymbolicLinkName->Buffer);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): IoDeleteSymbolicLink\n"
+           "(\n"
+           "   SymbolicLinkName    : 0x%.08X (%s)\n"
+           ");\n",
+           GetCurrentThreadId(), SymbolicLinkName, SymbolicLinkName->Buffer);
 
     // TODO: Actually um...implement this function
     NTSTATUS ret = STATUS_OBJECT_NAME_NOT_FOUND;
@@ -502,18 +462,13 @@ XBSYSAPI EXPORTNUM(99) NTSTATUS NTAPI xboxkrnl::KeDelayExecutionThread
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): KeDelayExecutionThread\n"
-               "(\n"
-               "   WaitMode            : 0x%.08X\n"
-               "   Alertable           : 0x%.08X\n"
-               "   Interval            : 0x%.08X (%d)\n"
-               ");\n",
-               GetCurrentThreadId(), WaitMode, Alertable, Interval, Interval == 0 ? 0 : Interval->QuadPart);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): KeDelayExecutionThread\n"
+           "(\n"
+           "   WaitMode            : 0x%.08X\n"
+           "   Alertable           : 0x%.08X\n"
+           "   Interval            : 0x%.08X (%d)\n"
+           ");\n",
+           GetCurrentThreadId(), WaitMode, Alertable, Interval, Interval == 0 ? 0 : Interval->QuadPart);
 
     NTSTATUS ret = NtDll::NtDelayExecution(Alertable, (NtDll::LARGE_INTEGER*)Interval);
 
@@ -534,18 +489,13 @@ XBSYSAPI EXPORTNUM(107) VOID NTAPI xboxkrnl::KeInitializeDpc
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): KeInitializeDpc\n"
-               "(\n"
-               "   Dpc                 : 0x%.08X\n"
-               "   DeferredRoutine     : 0x%.08X\n"
-               "   DeferredContext     : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), Dpc, DeferredRoutine, DeferredContext);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): KeInitializeDpc\n"
+           "(\n"
+           "   Dpc                 : 0x%.08X\n"
+           "   DeferredRoutine     : 0x%.08X\n"
+           "   DeferredContext     : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), Dpc, DeferredRoutine, DeferredContext);
 
     // inialize Dpc field values
     Dpc->Number = 0;
@@ -569,17 +519,12 @@ XBSYSAPI EXPORTNUM(113) VOID NTAPI xboxkrnl::KeInitializeTimerEx
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): KeInitializeTimerEx\n"
-               "(\n"
-               "   Timer               : 0x%.08X\n"
-               "   Type                : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), Timer, Type);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): KeInitializeTimerEx\n"
+           "(\n"
+           "   Timer               : 0x%.08X\n"
+           "   Type                : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), Timer, Type);
     
     Timer->Header.Type               = Type + 8;
     Timer->Header.Inserted           = 0;
@@ -604,12 +549,7 @@ XBSYSAPI EXPORTNUM(126) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceCo
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): KeQueryPerformanceCounter();\n", GetCurrentThreadId());
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): KeQueryPerformanceCounter();\n", GetCurrentThreadId());
 
     ::LARGE_INTEGER Counter;
 
@@ -627,12 +567,7 @@ XBSYSAPI EXPORTNUM(127) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceFr
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): KeQueryPerformanceFrequency();\n", GetCurrentThreadId());
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): KeQueryPerformanceFrequency();\n", GetCurrentThreadId());
 
     // Xbox Performance Counter Frequency := 337F98h
     ::LARGE_INTEGER Frequency;
@@ -654,16 +589,11 @@ XBSYSAPI EXPORTNUM(128) VOID NTAPI xboxkrnl::KeQuerySystemTime
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): KeQuerySystemTime\n"
-               "(\n"
-               "   CurrentTime         : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), CurrentTime);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): KeQuerySystemTime\n"
+           "(\n"
+           "   CurrentTime         : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), CurrentTime);
 
     // TODO: optimize for WinXP if speed ever becomes important here
 
@@ -690,18 +620,13 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): KeSetTimer\n"
-               "(\n"
-               "   Timer               : 0x%.08X\n"
-               "   DueTime             : 0x%I64X\n"
-               "   Dpc                 : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), Timer, DueTime, Dpc);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): KeSetTimer\n"
+           "(\n"
+           "   Timer               : 0x%.08X\n"
+           "   DueTime             : 0x%I64X\n"
+           "   Dpc                 : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), Timer, DueTime, Dpc);
 
     EmuCleanup("KeSetTimer is not implemented");
 
@@ -743,16 +668,11 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): MmAllocateContiguousMemory\n"
-               "(\n"
-               "   NumberOfBytes            : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), NumberOfBytes);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): MmAllocateContiguousMemory\n"
+           "(\n"
+           "   NumberOfBytes            : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), NumberOfBytes);
 
     DWORD dwAlignIndex = -1;
 
@@ -791,9 +711,7 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
         g_pAlignCache[dwAlignIndex].pAligPtr = pRet;
     }
 
-    #ifdef _DEBUG_TRACE
-    printf("EmuKrnl (0x%X): MmAllocateContiguous returned 0x%.08X\n", GetCurrentThreadId(), pRet);
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): MmAllocateContiguous returned 0x%.08X\n", GetCurrentThreadId(), pRet);
 
     EmuSwapFS();   // Xbox FS
 
@@ -814,21 +732,16 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): MmAllocateContiguousMemoryEx\n"
-               "(\n"
-               "   NumberOfBytes            : 0x%.08X\n"
-               "   LowestAcceptableAddress  : 0x%.08X\n"
-               "   HighestAcceptableAddress : 0x%.08X\n"
-               "   Alignment                : 0x%.08X\n"
-               "   ProtectionType           : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress,
-               Alignment, ProtectionType);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): MmAllocateContiguousMemoryEx\n"
+           "(\n"
+           "   NumberOfBytes            : 0x%.08X\n"
+           "   LowestAcceptableAddress  : 0x%.08X\n"
+           "   HighestAcceptableAddress : 0x%.08X\n"
+           "   Alignment                : 0x%.08X\n"
+           "   ProtectionType           : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress,
+           Alignment, ProtectionType);
 
     DWORD dwAlignIndex = -1;
 
@@ -872,9 +785,7 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
     if(count++ < 4)
         g_HaloHack[count-1] = (uint32)pRet;
 
-    #ifdef _DEBUG_TRACE
-    printf("EmuKrnl (0x%X): MmAllocateContiguousEx returned 0x%.08X\n", GetCurrentThreadId(), pRet);
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): MmAllocateContiguousEx returned 0x%.08X\n", GetCurrentThreadId(), pRet);
 
     EmuSwapFS();   // Xbox FS
 
@@ -892,19 +803,12 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): MmAllocateContiguousMemoryEx\n"
-               "(\n"
-               "   NumberOfBytes            : 0x%.08X\n"
-               "   Protect                  : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), NumberOfBytes, Protect);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): MmAllocateContiguousMemoryEx\n"
+           "(\n"
+           "   NumberOfBytes            : 0x%.08X\n"
+           "   Protect                  : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), NumberOfBytes, Protect);
 
     // TODO: should this be aligned?
     PVOID pRet = malloc(NumberOfBytes);
@@ -924,16 +828,11 @@ XBSYSAPI EXPORTNUM(171) VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): MmFreeContiguousMemory\n"
-               "(\n"
-               "   BaseAddress              : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), BaseAddress);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): MmFreeContiguousMemory\n"
+           "(\n"
+           "   BaseAddress              : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), BaseAddress);
 
     // retrieve correct allocation base address (since MmAllocContiguousMemory[Ex] aligns upward)
     {
@@ -969,17 +868,12 @@ XBSYSAPI EXPORTNUM(172) NTSTATUS NTAPI xboxkrnl::MmFreeSystemMemory
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): MmFreeSystemMemory\n"
-               "(\n"
-               "   BaseAddress              : 0x%.08X\n"
-               "   NumberOfBytes            : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), BaseAddress, NumberOfBytes);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): MmFreeSystemMemory\n"
+           "(\n"
+           "   BaseAddress              : 0x%.08X\n"
+           "   NumberOfBytes            : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), BaseAddress, NumberOfBytes);
 
     free(BaseAddress);
 
@@ -1000,18 +894,13 @@ XBSYSAPI EXPORTNUM(178) VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): MmPersistContiguousMemory\n"
-               "(\n"
-               "   BaseAddress              : 0x%.08X\n"
-               "   NumberOfBytes            : 0x%.08X\n"
-               "   Persist                  : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), BaseAddress, NumberOfBytes, Persist);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): MmPersistContiguousMemory\n"
+           "(\n"
+           "   BaseAddress              : 0x%.08X\n"
+           "   NumberOfBytes            : 0x%.08X\n"
+           "   Persist                  : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), BaseAddress, NumberOfBytes, Persist);
 
     // TODO: Actually set this up to be remember across a "reboot"
     EmuWarning("MmPersistContiguousMemory is being ignored\n");
@@ -1029,16 +918,11 @@ XBSYSAPI EXPORTNUM(181) NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): MmQueryStatistics\n"
-               "(\n"
-               "   MemoryStatistics         : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), MemoryStatistics);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): MmQueryStatistics\n"
+           "(\n"
+           "   MemoryStatistics         : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), MemoryStatistics);
 
     MEMORYSTATUS MemoryStatus;
 
@@ -1072,27 +956,20 @@ XBSYSAPI EXPORTNUM(182) VOID NTAPI xboxkrnl::MmSetAddressProtect
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): MmSetAddressProtect\n"
-               "(\n"
-               "   BaseAddress              : 0x%.08X\n"
-               "   NumberOfBytes            : 0x%.08X\n"
-               "   NewProtect               : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), BaseAddress, NumberOfBytes, NewProtect);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): MmSetAddressProtect\n"
+           "(\n"
+           "   BaseAddress              : 0x%.08X\n"
+           "   NumberOfBytes            : 0x%.08X\n"
+           "   NewProtect               : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), BaseAddress, NumberOfBytes, NewProtect);
 
     // Halo Hack
     if(BaseAddress == (PVOID)0x80366000)
     {
         BaseAddress = (PVOID)(g_HaloHack[0] + (0x80366000 - 0x80061000));
 
-        #ifdef _DEBUG_TRACE
-        printf("EmuKrnl (0x%X): Halo Access Adjust 3 was applied! (0x%.08X)\n", GetCurrentThreadId(), BaseAddress);
-        #endif
+        DbgPrintf("EmuKrnl (0x%X): Halo Access Adjust 3 was applied! (0x%.08X)\n", GetCurrentThreadId(), BaseAddress);
     }
 
     DWORD dwOldProtect;
@@ -1100,9 +977,7 @@ XBSYSAPI EXPORTNUM(182) VOID NTAPI xboxkrnl::MmSetAddressProtect
     if(!VirtualProtect(BaseAddress, NumberOfBytes, NewProtect & (~PAGE_WRITECOMBINE), &dwOldProtect))
         EmuWarning("VirtualProtect Failed!");
 
-    #ifdef _DEBUG_TRACE
-    printf("EmuKrnl (0x%X): VirtualProtect was 0x%.08X -> 0x%.08X\n", GetCurrentThreadId(), dwOldProtect, NewProtect & (~PAGE_WRITECOMBINE));
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): VirtualProtect was 0x%.08X -> 0x%.08X\n", GetCurrentThreadId(), dwOldProtect, NewProtect & (~PAGE_WRITECOMBINE));
 
     EmuSwapFS();   // Xbox FS
 
@@ -1123,20 +998,15 @@ XBSYSAPI EXPORTNUM(184) NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemory
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtAllocateVirtualMemory\n"
-               "(\n"
-               "   BaseAddress         : 0x%.08X (0x%.08X)\n"
-               "   ZeroBits            : 0x%.08X\n"
-               "   AllocationSize      : 0x%.08X (0x%.08X)\n"
-               "   AllocationType      : 0x%.08X\n"
-               "   Protect             : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), BaseAddress, *BaseAddress, ZeroBits, AllocationSize, *AllocationSize, AllocationType, Protect);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtAllocateVirtualMemory\n"
+           "(\n"
+           "   BaseAddress         : 0x%.08X (0x%.08X)\n"
+           "   ZeroBits            : 0x%.08X\n"
+           "   AllocationSize      : 0x%.08X (0x%.08X)\n"
+           "   AllocationType      : 0x%.08X\n"
+           "   Protect             : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), BaseAddress, *BaseAddress, ZeroBits, AllocationSize, *AllocationSize, AllocationType, Protect);
 
     NTSTATUS ret = NtDll::NtAllocateVirtualMemory(GetCurrentProcess(), BaseAddress, ZeroBits, AllocationSize, AllocationType, Protect);
 
@@ -1155,16 +1025,11 @@ XBSYSAPI EXPORTNUM(186) NTSTATUS NTAPI xboxkrnl::NtClearEvent
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtClearEvent\n"
-               "(\n"
-               "   EventHandle         : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), EventHandle);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtClearEvent\n"
+           "(\n"
+           "   EventHandle         : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), EventHandle);
 
     NTSTATUS ret = NtDll::NtClearEvent(EventHandle);
 
@@ -1186,16 +1051,11 @@ XBSYSAPI EXPORTNUM(187) NTSTATUS NTAPI xboxkrnl::NtClose
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtClose\n"
-               "(\n"
-               "   Handle              : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), Handle);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtClose\n"
+           "(\n"
+           "   Handle              : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), Handle);
 
     NTSTATUS ret = STATUS_SUCCESS;
     
@@ -1234,20 +1094,15 @@ XBSYSAPI EXPORTNUM(189) NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 
     char *szBuffer = (ObjectAttributes != 0) ? ObjectAttributes->ObjectName->Buffer : 0;
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtCreateEvent\n"
-               "(\n"
-               "   EventHandle         : 0x%.08X\n"
-               "   ObjectAttributes    : 0x%.08X (\"%s\")\n"
-               "   EventType           : 0x%.08X\n"
-               "   InitialState        : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), EventHandle, ObjectAttributes, szBuffer,
-               EventType, InitialState);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtCreateEvent\n"
+           "(\n"
+           "   EventHandle         : 0x%.08X\n"
+           "   ObjectAttributes    : 0x%.08X (\"%s\")\n"
+           "   EventType           : 0x%.08X\n"
+           "   InitialState        : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), EventHandle, ObjectAttributes, szBuffer,
+           EventType, InitialState);
 
     wchar_t wszObjectName[160];
 
@@ -1273,9 +1128,7 @@ XBSYSAPI EXPORTNUM(189) NTSTATUS NTAPI xboxkrnl::NtCreateEvent
     if(FAILED(ret))
         EmuWarning("NtCreateEvent Failed!");
 
-    #ifdef _DEBUG_TRACE
-    printf("EmuKrnl (0x%X): NtCreateEvent EventHandle = 0x%.08X\n", GetCurrentThreadId(), *EventHandle);
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtCreateEvent EventHandle = 0x%.08X\n", GetCurrentThreadId(), *EventHandle);
 
     EmuSwapFS();   // Xbox FS
 
@@ -1300,25 +1153,20 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtCreateFile\n"
-               "(\n"
-               "   FileHandle          : 0x%.08X\n"
-               "   DesiredAccess       : 0x%.08X\n"
-               "   ObjectAttributes    : 0x%.08X (\"%s\")\n"
-               "   IoStatusBlock       : 0x%.08X\n"
-               "   AllocationSize      : 0x%.08X\n"
-               "   FileAttributes      : 0x%.08X\n"
-               "   ShareAccess         : 0x%.08X\n"
-               "   CreateDisposition   : 0x%.08X\n"
-               "   CreateOptions       : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes->ObjectName->Buffer,
-               IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtCreateFile\n"
+           "(\n"
+           "   FileHandle          : 0x%.08X\n"
+           "   DesiredAccess       : 0x%.08X\n"
+           "   ObjectAttributes    : 0x%.08X (\"%s\")\n"
+           "   IoStatusBlock       : 0x%.08X\n"
+           "   AllocationSize      : 0x%.08X\n"
+           "   FileAttributes      : 0x%.08X\n"
+           "   ShareAccess         : 0x%.08X\n"
+           "   CreateDisposition   : 0x%.08X\n"
+           "   CreateOptions       : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes->ObjectName->Buffer,
+           IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions);
 
     char ReplaceChar  = '\0';
     int  ReplaceIndex = -1;
@@ -1332,11 +1180,9 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
 
 		ObjectAttributes->RootDirectory = g_hCurDir;
 
-		#ifdef _DEBUG_TRACE
-		printf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-		printf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-		printf("  New:\"$XbePath\\%s\"\n", szBuffer);
-		#endif
+		DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+		DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+		DbgPrintf("  New:\"$XbePath\\%s\"\n", szBuffer);
 	}
 	else if( (szBuffer[0] == 'T' || szBuffer[0] == 't') && szBuffer[1] == ':' && szBuffer[2] == '\\')
 	{
@@ -1344,11 +1190,9 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
 
 		ObjectAttributes->RootDirectory = g_hTDrive;
 
-		#ifdef _DEBUG_TRACE
-		printf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-		printf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-		printf("  New:\"$CxbxPath\\TDATA\\%s\"\n", szBuffer);
-		#endif
+		DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+		DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+		DbgPrintf("  New:\"$CxbxPath\\TDATA\\%s\"\n", szBuffer);
 	}
 	else if( (szBuffer[0] == 'U' || szBuffer[0] == 'u') && szBuffer[1] == ':' && szBuffer[2] == '\\')
 	{
@@ -1356,11 +1200,9 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
 
 		ObjectAttributes->RootDirectory = g_hUDrive;
 
-		#ifdef _DEBUG_TRACE
-		printf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-		printf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-		printf("  New:\"$CxbxPath\\UDATA\\%s\"\n", szBuffer);
-		#endif
+		DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+		DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+		DbgPrintf("  New:\"$CxbxPath\\UDATA\\%s\"\n", szBuffer);
 	}
 	else if( (szBuffer[0] == 'Z' || szBuffer[0] == 'z') && szBuffer[1] == ':' && szBuffer[2] == '\\')
 	{
@@ -1368,11 +1210,9 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
 
 		ObjectAttributes->RootDirectory = g_hZDrive;
 
-		#ifdef _DEBUG_TRACE
-		printf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-		printf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-		printf("  New:\"$CxbxPath\\CxbxCache\\%s\"\n", szBuffer);
-		#endif
+		DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+		DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+		DbgPrintf("  New:\"$CxbxPath\\CxbxCache\\%s\"\n", szBuffer);
 	}
 
     // TODO: Wildcards are not allowed??
@@ -1417,12 +1257,10 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
         (NtDll::LARGE_INTEGER*)AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, NULL
     );
 
-    #ifdef _DEBUG_TRACE
     if(FAILED(ret))
-        printf("EmuKrnl (0x%X): NtCreateFile Failed! (0x%.08X)\n", GetCurrentThreadId(), ret);
+        DbgPrintf("EmuKrnl (0x%X): NtCreateFile Failed! (0x%.08X)\n", GetCurrentThreadId(), ret);
     else
-        printf("EmuKrnl (0x%X): NtCreateFile = 0x%.08X\n", GetCurrentThreadId(), *FileHandle);
-    #endif
+        DbgPrintf("EmuKrnl (0x%X): NtCreateFile = 0x%.08X\n", GetCurrentThreadId(), *FileHandle);
 
     // restore original buffer
     if(ReplaceIndex != -1)
@@ -1450,18 +1288,13 @@ XBSYSAPI EXPORTNUM(192) NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 
     char *szBuffer = (ObjectAttributes != 0) ? ObjectAttributes->ObjectName->Buffer : 0;
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtCreateMutant\n"
-               "(\n"
-               "   MutantHandle        : 0x%.08X\n"
-               "   ObjectAttributes    : 0x%.08X (\"%s\")\n"
-               "   InitialOwner        : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), MutantHandle, ObjectAttributes, szBuffer, InitialOwner);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtCreateMutant\n"
+           "(\n"
+           "   MutantHandle        : 0x%.08X\n"
+           "   ObjectAttributes    : 0x%.08X (\"%s\")\n"
+           "   InitialOwner        : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), MutantHandle, ObjectAttributes, szBuffer, InitialOwner);
 
     wchar_t wszObjectName[160];
 
@@ -1487,9 +1320,7 @@ XBSYSAPI EXPORTNUM(192) NTSTATUS NTAPI xboxkrnl::NtCreateMutant
     if(FAILED(ret))
         EmuWarning("NtCreateMutant Failed!");
 
-    #ifdef _DEBUG_TRACE
-    printf("EmuKrnl (0x%X): NtCreateMutant MutantHandle = 0x%.08X\n", GetCurrentThreadId(), *MutantHandle);
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtCreateMutant MutantHandle = 0x%.08X\n", GetCurrentThreadId(), *MutantHandle);
 
     EmuSwapFS();   // Xbox FS
 
@@ -1508,18 +1339,13 @@ XBSYSAPI EXPORTNUM(197) NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtDuplicateObject\n"
-               "(\n"
-               "   SourceHandle        : 0x%.08X\n"
-               "   TargetHandle        : 0x%.08X\n"
-               "   Options             : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), SourceHandle, TargetHandle, Options);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtDuplicateObject\n"
+           "(\n"
+           "   SourceHandle        : 0x%.08X\n"
+           "   TargetHandle        : 0x%.08X\n"
+           "   Options             : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), SourceHandle, TargetHandle, Options);
 
     // redirect to Win2k/XP
     NTSTATUS ret = NtDll::NtDuplicateObject
@@ -1551,18 +1377,13 @@ XBSYSAPI EXPORTNUM(199) NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtFreeVirtualMemory\n"
-               "(\n"
-               "   BaseAddress         : 0x%.08X\n"
-               "   FreeSize            : 0x%.08X\n"
-               "   FreeType            : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), BaseAddress, FreeSize, FreeType);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtFreeVirtualMemory\n"
+           "(\n"
+           "   BaseAddress         : 0x%.08X\n"
+           "   FreeSize            : 0x%.08X\n"
+           "   FreeType            : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), BaseAddress, FreeSize, FreeType);
 
     NTSTATUS ret = NtDll::NtFreeVirtualMemory(GetCurrentProcess(), BaseAddress, FreeSize, FreeType);
 
@@ -1589,7 +1410,7 @@ XBSYSAPI EXPORTNUM(202) NTSTATUS NTAPI xboxkrnl::NtOpenFile
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuKrnl (0x%X): NtOpenFile\n"
+        DbgPrintf("EmuKrnl (0x%X): NtOpenFile\n"
                "(\n"
                "   FileHandle          : 0x%.08X\n"
                "   DesiredAccess       : 0x%.08X\n"
@@ -1627,27 +1448,22 @@ XBSYSAPI EXPORTNUM(207) NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtQueryDirectoryFile\n"
-               "(\n"
-               "   FileHandle           : 0x%.08X\n"
-               "   Event                : 0x%.08X\n"
-               "   ApcRoutine           : 0x%.08X\n"
-               "   ApcContext           : 0x%.08X\n"
-               "   IoStatusBlock        : 0x%.08X\n"
-               "   FileInformation      : 0x%.08X\n"
-               "   Length               : 0x%.08X\n"
-               "   FileInformationClass : 0x%.08X\n"
-               "   FileMask             : 0x%.08X (%s)\n"
-               "   RestartScan          : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock,
-               FileInformation, Length, FileInformationClass, FileMask,
-               (FileMask != 0) ? FileMask->Buffer : "", RestartScan);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtQueryDirectoryFile\n"
+           "(\n"
+           "   FileHandle           : 0x%.08X\n"
+           "   Event                : 0x%.08X\n"
+           "   ApcRoutine           : 0x%.08X\n"
+           "   ApcContext           : 0x%.08X\n"
+           "   IoStatusBlock        : 0x%.08X\n"
+           "   FileInformation      : 0x%.08X\n"
+           "   Length               : 0x%.08X\n"
+           "   FileInformationClass : 0x%.08X\n"
+           "   FileMask             : 0x%.08X (%s)\n"
+           "   RestartScan          : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock,
+           FileInformation, Length, FileInformationClass, FileMask,
+           (FileMask != 0) ? FileMask->Buffer : "", RestartScan);
 
     NTSTATUS ret;
 
@@ -1713,17 +1529,12 @@ XBSYSAPI EXPORTNUM(210) NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributesFile
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtQueryFullAttributesFile\n"
-               "(\n"
-               "   ObjectAttributes    : 0x%.08X (%s)\n"
-               "   Attributes          : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), ObjectAttributes, ObjectAttributes->ObjectName->Buffer, Attributes);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtQueryFullAttributesFile\n"
+           "(\n"
+           "   ObjectAttributes    : 0x%.08X (%s)\n"
+           "   Attributes          : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), ObjectAttributes, ObjectAttributes->ObjectName->Buffer, Attributes);
 
     char *szBuffer = ObjectAttributes->ObjectName->Buffer;
 
@@ -1762,21 +1573,16 @@ XBSYSAPI EXPORTNUM(211) NTSTATUS NTAPI xboxkrnl::NtQueryInformationFile
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtQueryInformationFile\n"
-               "(\n"
-               "   FileHandle          : 0x%.08X\n"
-               "   IoStatusBlock       : 0x%.08X\n"
-               "   FileInformation     : 0x%.08X\n"
-               "   Length              : 0x%.08X\n"
-               "   FileInformationClass: 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation, 
-               Length, FileInfo);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtQueryInformationFile\n"
+           "(\n"
+           "   FileHandle          : 0x%.08X\n"
+           "   IoStatusBlock       : 0x%.08X\n"
+           "   FileInformation     : 0x%.08X\n"
+           "   Length              : 0x%.08X\n"
+           "   FileInformationClass: 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation, 
+           Length, FileInfo);
 
 	if(FileInfo != FilePositionInformation && FileInfo != FileNetworkOpenInformation)
 		EmuCleanup("Unknown FILE_INFORMATION_CLASS 0x%.08X", FileInfo);
@@ -1809,21 +1615,16 @@ XBSYSAPI EXPORTNUM(218) NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformationFile
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtQueryVolumeInformationFile\n"
-               "(\n"
-               "   FileHandle          : 0x%.08X\n"
-               "   IoStatusBlock       : 0x%.08X\n"
-               "   FileInformation     : 0x%.08X\n"
-               "   Length              : 0x%.08X\n"
-               "   FileInformationClass: 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation, 
-               Length, FileInformationClass);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtQueryVolumeInformationFile\n"
+           "(\n"
+           "   FileHandle          : 0x%.08X\n"
+           "   IoStatusBlock       : 0x%.08X\n"
+           "   FileInformation     : 0x%.08X\n"
+           "   Length              : 0x%.08X\n"
+           "   FileInformationClass: 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation, 
+           Length, FileInformationClass);
 
     // Safety/Sanity Check
     if(FileInformationClass != FileFsSizeInformation && FileInformationClass != FileDirectoryInformation)
@@ -1870,24 +1671,19 @@ XBSYSAPI EXPORTNUM(219) NTSTATUS NTAPI xboxkrnl::NtReadFile
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtReadFile\n"
-               "(\n"
-               "   FileHandle          : 0x%.08X\n"
-               "   Event               : 0x%.08X\n"
-               "   ApcRoutine          : 0x%.08X\n"
-               "   ApcContext          : 0x%.08X\n"
-               "   IoStatusBlock       : 0x%.08X\n"
-               "   Buffer              : 0x%.08X\n"
-               "   Length              : 0x%.08X\n"
-               "   ByteOffset          : 0x%.08X (0x%.08X)\n"
-               ");\n",
-               GetCurrentThreadId(), FileHandle, Event, ApcRoutine, 
-               ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, ByteOffset == 0 ? 0 : ByteOffset->QuadPart);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtReadFile\n"
+           "(\n"
+           "   FileHandle          : 0x%.08X\n"
+           "   Event               : 0x%.08X\n"
+           "   ApcRoutine          : 0x%.08X\n"
+           "   ApcContext          : 0x%.08X\n"
+           "   IoStatusBlock       : 0x%.08X\n"
+           "   Buffer              : 0x%.08X\n"
+           "   Length              : 0x%.08X\n"
+           "   ByteOffset          : 0x%.08X (0x%.08X)\n"
+           ");\n",
+           GetCurrentThreadId(), FileHandle, Event, ApcRoutine, 
+           ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, ByteOffset == 0 ? 0 : ByteOffset->QuadPart);
 
 // Halo...
 //    if(ByteOffset != 0 && ByteOffset->QuadPart == 0x00120800)
@@ -1914,17 +1710,12 @@ XBSYSAPI EXPORTNUM(221) NTSTATUS NTAPI xboxkrnl::NtReleaseMutant
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtReleaseMutant\n"
-               "(\n"
-               "   MutantHandle         : 0x%.08X\n"
-               "   PreviousCount        : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), MutantHandle, PreviousCount);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtReleaseMutant\n"
+           "(\n"
+           "   MutantHandle         : 0x%.08X\n"
+           "   PreviousCount        : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), MutantHandle, PreviousCount);
 
     // redirect to NtCreateMutant
     NTSTATUS ret = NtDll::NtReleaseMutant(MutantHandle, PreviousCount);
@@ -1948,17 +1739,12 @@ XBSYSAPI EXPORTNUM(224) NTSTATUS NTAPI xboxkrnl::NtResumeThread
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtResumeThread\n"
-               "(\n"
-               "   ThreadHandle         : 0x%.08X\n"
-               "   PreviousSuspendCount : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), ThreadHandle, PreviousSuspendCount);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtResumeThread\n"
+           "(\n"
+           "   ThreadHandle         : 0x%.08X\n"
+           "   PreviousSuspendCount : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), ThreadHandle, PreviousSuspendCount);
 
     NTSTATUS ret = NtDll::NtResumeThread(ThreadHandle, PreviousSuspendCount);
 
@@ -1980,17 +1766,12 @@ XBSYSAPI EXPORTNUM(225) NTSTATUS NTAPI xboxkrnl::NtSetEvent
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtSetEvent\n"
-               "(\n"
-               "   EventHandle          : 0x%.08X\n"
-               "   PreviousState        : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), EventHandle, PreviousState);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtSetEvent\n"
+           "(\n"
+           "   EventHandle          : 0x%.08X\n"
+           "   PreviousState        : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), EventHandle, PreviousState);
 
     NTSTATUS ret = NtDll::NtSetEvent(EventHandle, PreviousState);
 
@@ -2016,21 +1797,16 @@ XBSYSAPI EXPORTNUM(226) NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtSetInformationFile\n"
-               "(\n"
-               "   FileHandle           : 0x%.08X\n"
-               "   IoStatusBlock        : 0x%.08X\n"
-               "   FileInformation      : 0x%.08X\n"
-               "   Length               : 0x%.08X\n"
-               "   FileInformationClass : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation, 
-               Length, FileInformationClass);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtSetInformationFile\n"
+           "(\n"
+           "   FileHandle           : 0x%.08X\n"
+           "   IoStatusBlock        : 0x%.08X\n"
+           "   FileInformation      : 0x%.08X\n"
+           "   Length               : 0x%.08X\n"
+           "   FileInformationClass : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation, 
+           Length, FileInformationClass);
 
     NTSTATUS ret = NtDll::NtSetInformationFile(FileHandle, IoStatusBlock, FileInformation, Length, FileInformationClass);
 
@@ -2050,17 +1826,12 @@ XBSYSAPI EXPORTNUM(231) NTSTATUS NTAPI xboxkrnl::NtSuspendThread
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtSuspendThread\n"
-               "(\n"
-               "   ThreadHandle         : 0x%.08X\n"
-               "   PreviousSuspendCount : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), ThreadHandle, PreviousSuspendCount);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtSuspendThread\n"
+           "(\n"
+           "   ThreadHandle         : 0x%.08X\n"
+           "   PreviousSuspendCount : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), ThreadHandle, PreviousSuspendCount);
 
     NTSTATUS ret = NtDll::NtSuspendThread(ThreadHandle, PreviousSuspendCount);
 
@@ -2081,18 +1852,13 @@ XBSYSAPI EXPORTNUM(232) VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
 {
     // Note: This function is called within Win2k/XP context, so no EmuSwapFS here
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtUserIoApcDispatcher\n"
-               "(\n"
-               "   ApcContext           : 0x%.08X\n"
-               "   IoStatusBlock        : 0x%.08X\n"
-               "   Reserved             : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), ApcContext, IoStatusBlock, Reserved);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtUserIoApcDispatcher\n"
+           "(\n"
+           "   ApcContext           : 0x%.08X\n"
+           "   IoStatusBlock        : 0x%.08X\n"
+           "   Reserved             : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), ApcContext, IoStatusBlock, Reserved);
 
     EmuSwapFS();   // Xbox FS
 
@@ -2158,9 +1924,7 @@ XBSYSAPI EXPORTNUM(232) VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
 
     EmuSwapFS();   // Win2k/XP FS
 
-    #ifdef _DEBUG_TRACE
-    printf("EmuKrnl (0x%X): NtUserIoApcDispatcher Completed\n", GetCurrentThreadId());
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtUserIoApcDispatcher Completed\n", GetCurrentThreadId());
 
     return;
 }
@@ -2178,19 +1942,14 @@ XBSYSAPI EXPORTNUM(234) NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObjectEx
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtWaitForSingleObjectEx\n"
-               "(\n"
-               "   Handle               : 0x%.08X\n"
-               "   WaitMode             : 0x%.08X\n"
-               "   Alertable            : 0x%.08X\n"
-               "   Timeout              : 0x%.08X (%d)\n"
-               ");\n",
-               GetCurrentThreadId(), Handle, WaitMode, Alertable, Timeout, Timeout == 0 ? 0 : Timeout->QuadPart);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtWaitForSingleObjectEx\n"
+           "(\n"
+           "   Handle               : 0x%.08X\n"
+           "   WaitMode             : 0x%.08X\n"
+           "   Alertable            : 0x%.08X\n"
+           "   Timeout              : 0x%.08X (%d)\n"
+           ");\n",
+           GetCurrentThreadId(), Handle, WaitMode, Alertable, Timeout, Timeout == 0 ? 0 : Timeout->QuadPart);
 
     NTSTATUS ret = NtDll::NtWaitForSingleObject(Handle, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
 
@@ -2214,22 +1973,17 @@ XBSYSAPI EXPORTNUM(235) NTSTATUS NTAPI xboxkrnl::NtWaitForMultipleObjectsEx
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtWaitForMultipleObjectsEx\n"
-               "(\n"
-               "   Count                : 0x%.08X\n"
-               "   Handles              : 0x%.08X\n"
-               "   WaitType             : 0x%.08X\n"
-               "   WaitMode             : 0x%.08X\n"
-               "   Alertable            : 0x%.08X\n"
-               "   Timeout              : 0x%.08X (%d)\n"
-               ");\n",
-               GetCurrentThreadId(), Count, Handles, WaitType, WaitMode, Alertable,
-               Timeout, Timeout == 0 ? 0 : Timeout->QuadPart);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtWaitForMultipleObjectsEx\n"
+           "(\n"
+           "   Count                : 0x%.08X\n"
+           "   Handles              : 0x%.08X\n"
+           "   WaitType             : 0x%.08X\n"
+           "   WaitMode             : 0x%.08X\n"
+           "   Alertable            : 0x%.08X\n"
+           "   Timeout              : 0x%.08X (%d)\n"
+           ");\n",
+           GetCurrentThreadId(), Count, Handles, WaitType, WaitMode, Alertable,
+           Timeout, Timeout == 0 ? 0 : Timeout->QuadPart);
 
     NTSTATUS ret = NtDll::NtWaitForMultipleObjects(Count, Handles, (NtDll::OBJECT_WAIT_TYPE)WaitType, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
 
@@ -2255,24 +2009,19 @@ XBSYSAPI EXPORTNUM(236) NTSTATUS NTAPI xboxkrnl::NtWriteFile
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): NtWriteFile\n"
-               "(\n"
-               "   FileHandle          : 0x%.08X\n"
-               "   Event               : 0x%.08X\n"
-               "   ApcRoutine          : 0x%.08X\n"
-               "   ApcContext          : 0x%.08X\n"
-               "   IoStatusBlock       : 0x%.08X\n"
-               "   Buffer              : 0x%.08X\n"
-               "   Length              : 0x%.08X\n"
-               "   ByteOffset          : 0x%.08X (0x%.08X)\n"
-               ");\n",
-               GetCurrentThreadId(), FileHandle, Event, ApcRoutine, 
-               ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, ByteOffset == 0 ? 0 : ByteOffset->QuadPart);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): NtWriteFile\n"
+           "(\n"
+           "   FileHandle          : 0x%.08X\n"
+           "   Event               : 0x%.08X\n"
+           "   ApcRoutine          : 0x%.08X\n"
+           "   ApcContext          : 0x%.08X\n"
+           "   IoStatusBlock       : 0x%.08X\n"
+           "   Buffer              : 0x%.08X\n"
+           "   Length              : 0x%.08X\n"
+           "   ByteOffset          : 0x%.08X (0x%.08X)\n"
+           ");\n",
+           GetCurrentThreadId(), FileHandle, Event, ApcRoutine, 
+           ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, ByteOffset == 0 ? 0 : ByteOffset->QuadPart);
 
 // Halo..
 //    if(ByteOffset != 0 && ByteOffset->QuadPart == 0x01C00800)
@@ -2295,13 +2044,8 @@ XBSYSAPI EXPORTNUM(238) VOID NTAPI xboxkrnl::NtYieldExecution()
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        // NOTE: this eats up the debug log far too quickly
-        //printf("EmuKrnl (0x%X): NtYieldExecution();\n", GetCurrentThreadId());
-    }
-    #endif
+    // NOTE: this eats up the debug log far too quickly
+    //DbgPrintf("EmuKrnl (0x%X): NtYieldExecution();\n", GetCurrentThreadId());
 
     NtDll::NtYieldExecution();
 
@@ -2329,26 +2073,21 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): PsCreateSystemThreadEx\n"
-               "(\n"
-               "   ThreadHandle        : 0x%.08X\n"
-               "   ThreadExtraSize     : 0x%.08X\n"
-               "   KernelStackSize     : 0x%.08X\n"
-               "   TlsDataSize         : 0x%.08X\n"
-               "   ThreadId            : 0x%.08X\n"
-               "   StartContext1       : 0x%.08X\n"
-               "   StartContext2       : 0x%.08X\n"
-               "   CreateSuspended     : 0x%.08X\n"
-               "   DebugStack          : 0x%.08X\n"
-               "   StartRoutine        : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), ThreadHandle, ThreadExtraSize, KernelStackSize, TlsDataSize, ThreadId,
-               StartContext1, StartContext2, CreateSuspended, DebugStack, StartRoutine);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): PsCreateSystemThreadEx\n"
+           "(\n"
+           "   ThreadHandle        : 0x%.08X\n"
+           "   ThreadExtraSize     : 0x%.08X\n"
+           "   KernelStackSize     : 0x%.08X\n"
+           "   TlsDataSize         : 0x%.08X\n"
+           "   ThreadId            : 0x%.08X\n"
+           "   StartContext1       : 0x%.08X\n"
+           "   StartContext2       : 0x%.08X\n"
+           "   CreateSuspended     : 0x%.08X\n"
+           "   DebugStack          : 0x%.08X\n"
+           "   StartRoutine        : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), ThreadHandle, ThreadExtraSize, KernelStackSize, TlsDataSize, ThreadId,
+           StartContext1, StartContext2, CreateSuspended, DebugStack, StartRoutine);
 
     // create thread, using our special proxy technique
     {
@@ -2365,9 +2104,7 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
         *ThreadHandle = (HANDLE)_beginthreadex(NULL, NULL, PCSTProxy, iPCSTProxyParam, NULL, (uint*)&dwThreadId);
 //        *ThreadHandle = CreateThread(NULL, NULL, PCSTProxy, iPCSTProxyParam, NULL, &dwThreadId);
 
-        #ifdef _DEBUG_TRACE
-        printf("EmuKrnl (0x%X): ThreadHandle : 0x%X, ThreadId : 0x%.08X\n", GetCurrentThreadId(), *ThreadHandle, dwThreadId);
-        #endif
+        DbgPrintf("EmuKrnl (0x%X): ThreadHandle : 0x%X, ThreadId : 0x%.08X\n", GetCurrentThreadId(), *ThreadHandle, dwThreadId);
 
         // we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
         {
@@ -2394,16 +2131,11 @@ XBSYSAPI EXPORTNUM(258) VOID NTAPI xboxkrnl::PsTerminateSystemThread(IN NTSTATUS
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): PsTerminateSystemThread\n"
-               "(\n"
-               "   ExitStatus          : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), ExitStatus);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): PsTerminateSystemThread\n"
+           "(\n"
+           "   ExitStatus          : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), ExitStatus);
 
     // call thread notification routine(s)
     if(g_pfnThreadNotification != 0)
@@ -2439,18 +2171,13 @@ XBSYSAPI EXPORTNUM(260) NTSTATUS NTAPI xboxkrnl::RtlAnsiStringToUnicodeString
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): RtlAnsiStringToUnicodeString\n"
-               "(\n"
-               "   DestinationString         : 0x%.08X\n"
-               "   SourceString              : 0x%.08X\n"
-               "   AllocateDestinationString : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), DestinationString, SourceString, AllocateDestinationString);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): RtlAnsiStringToUnicodeString\n"
+           "(\n"
+           "   DestinationString         : 0x%.08X\n"
+           "   SourceString              : 0x%.08X\n"
+           "   AllocateDestinationString : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), DestinationString, SourceString, AllocateDestinationString);
 
     NTSTATUS ret = NtDll::RtlAnsiStringToUnicodeString((NtDll::UNICODE_STRING*)DestinationString, (NtDll::STRING*)SourceString, AllocateDestinationString);
 
@@ -2469,18 +2196,13 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        /** sorta pointless
-        printf("EmuKrnl (0x%X): RtlEnterCriticalSection\n"
-               "(\n"
-               "   CriticalSection     : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), CriticalSection);
-        //*/
-    }
-    #endif
+    /** sorta pointless
+    DbgPrintf("EmuKrnl (0x%X): RtlEnterCriticalSection\n"
+           "(\n"
+           "   CriticalSection     : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), CriticalSection);
+    //*/
 
     //printf("CriticalSection->LockCount : %d\n", CriticalSection->LockCount);
 
@@ -2506,17 +2228,12 @@ XBSYSAPI EXPORTNUM(289) VOID NTAPI xboxkrnl::RtlInitAnsiString
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): RtlInitAnsiString\n"
-               "(\n"
-               "   DestinationString   : 0x%.08X\n"
-               "   SourceString        : 0x%.08X (\"%s\")\n"
-               ");\n",
-               GetCurrentThreadId(), DestinationString, SourceString, SourceString);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): RtlInitAnsiString\n"
+           "(\n"
+           "   DestinationString   : 0x%.08X\n"
+           "   SourceString        : 0x%.08X (\"%s\")\n"
+           ");\n",
+           GetCurrentThreadId(), DestinationString, SourceString, SourceString);
 
     NtDll::RtlInitAnsiString((NtDll::PANSI_STRING)DestinationString, (NtDll::PCSZ)SourceString);
 
@@ -2535,18 +2252,13 @@ XBSYSAPI EXPORTNUM(291) VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        /*
-        printf("EmuKrnl (0x%X): RtlInitializeCriticalSection\n"
-               "(\n"
-               "   CriticalSection     : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), CriticalSection);
-       //*/
-    }
-    #endif
+    /*
+    DbgPrintf("EmuKrnl (0x%X): RtlInitializeCriticalSection\n"
+           "(\n"
+           "   CriticalSection     : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), CriticalSection);
+    //*/
 
     NtDll::RtlInitializeCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
 
@@ -2568,18 +2280,13 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
     // Note: We need to execute this before debug output to avoid trouble
     NtDll::RtlLeaveCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        /* sorta pointless
-        printf("EmuKrnl (0x%X): RtlLeaveCriticalSection\n"
-               "(\n"
-               "   CriticalSection     : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), CriticalSection);
-        //*/
-    }
-    #endif
+    /* sorta pointless
+    DbgPrintf("EmuKrnl (0x%X): RtlLeaveCriticalSection\n"
+           "(\n"
+           "   CriticalSection     : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), CriticalSection);
+    //*/
 
     EmuSwapFS();   // Xbox FS
 
@@ -2596,16 +2303,11 @@ XBSYSAPI EXPORTNUM(301) xboxkrnl::ULONG NTAPI xboxkrnl::RtlNtStatusToDosError
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): RtlNtStatusToDosError\n"
-               "(\n"
-               "   Status              : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), Status);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): RtlNtStatusToDosError\n"
+           "(\n"
+           "   Status              : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), Status);
 
     ULONG ret = NtDll::RtlNtStatusToDosError(Status);
 
@@ -2625,17 +2327,12 @@ XBSYSAPI EXPORTNUM(304) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTimeFieldsToTime
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): RtlTimeFieldsToTime\n"
-               "(\n"
-               "   TimeFields          : 0x%.08X\n"
-               "   Time                : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), TimeFields, Time);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): RtlTimeFieldsToTime\n"
+           "(\n"
+           "   TimeFields          : 0x%.08X\n"
+           "   Time                : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), TimeFields, Time);
 
     BOOLEAN bRet = NtDll::RtlTimeFieldsToTime((NtDll::TIME_FIELDS*)TimeFields, (NtDll::LARGE_INTEGER*)Time);
 
@@ -2655,17 +2352,12 @@ XBSYSAPI EXPORTNUM(305) VOID NTAPI xboxkrnl::RtlTimeToTimeFields
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): RtlTimeToTimeFields\n"
-               "(\n"
-               "   Time                : 0x%.08X\n"
-               "   TimeFields          : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), Time, TimeFields);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): RtlTimeToTimeFields\n"
+           "(\n"
+           "   Time                : 0x%.08X\n"
+           "   TimeFields          : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), Time, TimeFields);
 
     NtDll::RtlTimeToTimeFields((NtDll::LARGE_INTEGER*)Time, (NtDll::TIME_FIELDS*)TimeFields);
 
@@ -2686,18 +2378,13 @@ XBSYSAPI EXPORTNUM(308) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToAns
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): RtlUnicodeStringToAnsiString\n"
-               "(\n"
-               "   DestinationString         : 0x%.08X\n"
-               "   SourceString              : 0x%.08X\n"
-               "   AllocateDestinationString : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), DestinationString, SourceString, AllocateDestinationString);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): RtlUnicodeStringToAnsiString\n"
+           "(\n"
+           "   DestinationString         : 0x%.08X\n"
+           "   SourceString              : 0x%.08X\n"
+           "   AllocateDestinationString : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), DestinationString, SourceString, AllocateDestinationString);
 
     NTSTATUS ret = NtDll::RtlUnicodeStringToAnsiString((NtDll::STRING*)DestinationString, (NtDll::UNICODE_STRING*)SourceString, AllocateDestinationString);
 
@@ -2743,16 +2430,11 @@ XBSYSAPI EXPORTNUM(335) VOID NTAPI xboxkrnl::XcSHAInit(UCHAR *pbSHAContext)
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): XcSHAInit\n"
-               "(\n"
-               "   pbSHAContext        : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pbSHAContext);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): XcSHAInit\n"
+           "(\n"
+           "   pbSHAContext        : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pbSHAContext);
 
     EmuSwapFS();   // Xbox FS
 
@@ -2766,18 +2448,13 @@ XBSYSAPI EXPORTNUM(336) VOID NTAPI xboxkrnl::XcSHAUpdate(UCHAR *pbSHAContext, UC
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): XcSHAUpdate\n"
-               "(\n"
-               "   pbSHAContext        : 0x%.08X\n"
-               "   pbInput             : 0x%.08X\n"
-               "   dwInputLength       : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pbSHAContext, pbInput, dwInputLength);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): XcSHAUpdate\n"
+           "(\n"
+           "   pbSHAContext        : 0x%.08X\n"
+           "   pbInput             : 0x%.08X\n"
+           "   dwInputLength       : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pbSHAContext, pbInput, dwInputLength);
 
     EmuSwapFS();   // Xbox FS
 
@@ -2791,17 +2468,12 @@ XBSYSAPI EXPORTNUM(337) VOID NTAPI xboxkrnl::XcSHAFinal(UCHAR *pbSHAContext, UCH
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuKrnl (0x%X): XcSHAFinal\n"
-               "(\n"
-               "   pbSHAContext        : 0x%.08X\n"
-               "   pbDigest            : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pbSHAContext, pbDigest);
-    }
-    #endif
+    DbgPrintf("EmuKrnl (0x%X): XcSHAFinal\n"
+           "(\n"
+           "   pbSHAContext        : 0x%.08X\n"
+           "   pbDigest            : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pbSHAContext, pbDigest);
 
     // for now, we dont care about the digest
     for(int v=0;v<16;v++)

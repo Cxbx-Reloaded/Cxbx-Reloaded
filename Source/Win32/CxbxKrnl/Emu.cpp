@@ -75,6 +75,7 @@ extern HANDLE           g_hUDrive    = NULL;
 extern HANDLE           g_hZDrive    = NULL;
 extern volatile BOOL	g_bEmuSuspended = FALSE;
 extern volatile BOOL    g_bEmuException = FALSE;
+extern volatile bool    g_bPrintfOn = true;
 
 // global exception patching address
 extern uint32 g_HaloHack[4] = {0};
@@ -166,6 +167,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         if(AllocConsole())
         {
             freopen("CONOUT$", "wt", stdout);
+            freopen("CONIN$", "rt", stdin);
 
             SetConsoleTitle("Cxbx : Kernel Debug Console");
 
@@ -253,7 +255,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         if(g_hCurDir == INVALID_HANDLE_VALUE)
 			EmuCleanup("Could not map D:\\\n");
 
-        printf("EmuMain (0x%X): CurDir := %s\n", GetCurrentThreadId(), szBuffer);
+        DbgPrintf("EmuMain (0x%X): CurDir := %s\n", GetCurrentThreadId(), szBuffer);
 	}
 
     // initialize T:\ and U:\ directories
@@ -339,12 +341,12 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
     // initialize OpenXDK emulation (non-existant for now at least)
     if(pLibraryVersion == 0)
-        printf("EmuMain (0x%X): Detected OpenXDK application...\n", GetCurrentThreadId());
+        DbgPrintf("EmuMain (0x%X): Detected OpenXDK application...\n", GetCurrentThreadId());
 
     // initialize Microsoft XDK emulation
     if(pLibraryVersion != 0)
     {
-        printf("EmuMain (0x%X): Detected Microsoft XDK application...\n", GetCurrentThreadId());
+        DbgPrintf("EmuMain (0x%X): Detected Microsoft XDK application...\n", GetCurrentThreadId());
 
         uint32 dwLibraryVersions = pXbeHeader->dwLibraryVersions;
         uint32 dwHLEEntries      = HLEDataBaseSize/sizeof(HLEData);
@@ -574,7 +576,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         printf("Emu: WARNING!! Problem with ExceptionFilter\n");
     }
 
-    printf("EmuMain (0x%X): Initial thread ended.\n", GetCurrentThreadId());
+    DbgPrintf("EmuMain (0x%X): Initial thread ended.\n", GetCurrentThreadId());
 
     fflush(stdout);
 
@@ -671,7 +673,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuPanic()
     if(EmuIsXboxFS())
         EmuSwapFS();   // Win2k/XP FS
 
-    printf("EmuMain (0x%X): EmuPanic()\n", GetCurrentThreadId());
+    DbgPrintf("EmuMain (0x%X): EmuPanic()\n", GetCurrentThreadId());
 
     EmuCleanup("Kernel Panic!");
 
@@ -1143,9 +1145,13 @@ static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, vo
             #endif
 
             if(OovpaTable[a].lpRedirect == 0)
+            {
                 EmuInstallWrapper(pFunc, EmuXRefFailure);
+            }
             else
+            {
                 EmuInstallWrapper(pFunc, OovpaTable[a].lpRedirect);
+            }
         }
     }
 }

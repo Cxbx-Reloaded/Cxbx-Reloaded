@@ -55,10 +55,10 @@ typedef signed short   sint16;
 typedef signed long    sint32;
 
 // define this to trace intercepted function calls
-#define _DEBUG_TRACE
+//#define _DEBUG_TRACE
 
 // define this to trace warnings
-#define _DEBUG_WARNINGS
+//#define _DEBUG_WARNINGS
 
 // version information
 #ifndef _DEBUG_TRACE
@@ -87,9 +87,11 @@ enum DebugMode
 // maximum number of threads cxbx can handle
 #define MAXIMUM_XBOX_THREADS 256
 
+extern volatile bool g_bPrintfOn;
+
 // convienance debug output macros
 #ifdef _DEBUG_TRACE
-#define DbgPrintf printf
+#define DbgPrintf if(g_bPrintfOn) printf
 #else
 inline void null_func(...) { }
 #define DbgPrintf null_func

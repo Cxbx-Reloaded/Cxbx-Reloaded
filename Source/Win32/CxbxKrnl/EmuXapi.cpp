@@ -78,23 +78,16 @@ PVOID WINAPI XTL::EmuRtlCreateHeap
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuRtlCreateHeap\n"
-               "(\n"
-               "   Flags               : 0x%.08X\n"
-               "   Base                : 0x%.08X\n"
-               "   Reserve             : 0x%.08X\n"
-               "   Commit              : 0x%.08X\n"
-               "   Lock                : 0x%.08X\n"
-               "   RtlHeapParams       : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), Flags, Base, Reserve, Commit, Lock, RtlHeapParams);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuRtlCreateHeap\n"
+           "(\n"
+           "   Flags               : 0x%.08X\n"
+           "   Base                : 0x%.08X\n"
+           "   Reserve             : 0x%.08X\n"
+           "   Commit              : 0x%.08X\n"
+           "   Lock                : 0x%.08X\n"
+           "   RtlHeapParams       : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), Flags, Base, Reserve, Commit, Lock, RtlHeapParams);
 
     NtDll::RTL_HEAP_DEFINITION RtlHeapDefinition;
 
@@ -121,22 +114,15 @@ PVOID WINAPI XTL::EmuRtlAllocateHeap
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        /* too much debug output
-        printf("EmuXapi (0x%X): EmuRtlAllocateHeap\n"
-               "(\n"
-               "   hHeap               : 0x%.08X\n"
-               "   dwFlags             : 0x%.08X\n"
-               "   dwBytes             : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), hHeap, dwFlags, dwBytes);
-        //*/
-    }
-    #endif
+    /* too much debug output
+    DbgPrintf("EmuXapi (0x%X): EmuRtlAllocateHeap\n"
+           "(\n"
+           "   hHeap               : 0x%.08X\n"
+           "   dwFlags             : 0x%.08X\n"
+           "   dwBytes             : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), hHeap, dwFlags, dwBytes);
+    //*/
 
     PVOID pRet = NtDll::RtlAllocateHeap(hHeap, dwFlags, dwBytes);
 
@@ -157,22 +143,15 @@ BOOL WINAPI XTL::EmuRtlFreeHeap
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        /* too much debug output
-        printf("EmuXapi (0x%X): EmuRtlFreeHeap\n"
-               "(\n"
-               "   hHeap               : 0x%.08X\n"
-               "   dwFlags             : 0x%.08X\n"
-               "   lpMem               : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), hHeap, dwFlags, lpMem);
-       //*/
-    }
-    #endif
+    /* too much debug output
+    DbgPrintf("EmuXapi (0x%X): EmuRtlFreeHeap\n"
+           "(\n"
+           "   hHeap               : 0x%.08X\n"
+           "   dwFlags             : 0x%.08X\n"
+           "   lpMem               : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), hHeap, dwFlags, lpMem);
+    //*/
 
     BOOL bRet = NtDll::RtlFreeHeap(hHeap, dwFlags, lpMem);
 
@@ -194,23 +173,16 @@ PVOID WINAPI XTL::EmuRtlReAllocateHeap
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        //* too much debug output
-        printf("EmuXapi (0x%X): EmuRtlReAllocateHeap\n"
-               "(\n"
-               "   hHeap               : 0x%.08X\n"
-               "   dwFlags             : 0x%.08X\n"
-               "   lpMem               : 0x%.08X\n"
-               "   dwBytes             : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), hHeap, dwFlags, lpMem, dwBytes);
-       //*/
-    }
-    #endif
+    /* too much debug output
+    DbgPrintf("EmuXapi (0x%X): EmuRtlReAllocateHeap\n"
+           "(\n"
+           "   hHeap               : 0x%.08X\n"
+           "   dwFlags             : 0x%.08X\n"
+           "   lpMem               : 0x%.08X\n"
+           "   dwBytes             : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), hHeap, dwFlags, lpMem, dwBytes);
+   //*/
 
     PVOID pRet = NtDll::RtlReAllocateHeap(hHeap, dwFlags, lpMem, dwBytes);
 
@@ -231,22 +203,15 @@ SIZE_T WINAPI XTL::EmuRtlSizeHeap
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        /* too much debug output
-        printf("EmuXapi (0x%X): EmuRtlSizeHeap\n"
-               "(\n"
-               "   hHeap               : 0x%.08X\n"
-               "   dwFlags             : 0x%.08X\n"
-               "   lpMem               : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), hHeap, dwFlags, lpMem);
-        //*/
-    }
-    #endif
+    /* too much debug output
+    DbgPrintf("EmuXapi (0x%X): EmuRtlSizeHeap\n"
+           "(\n"
+           "   hHeap               : 0x%.08X\n"
+           "   dwFlags             : 0x%.08X\n"
+           "   lpMem               : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), hHeap, dwFlags, lpMem);
+    //*/
 
     SIZE_T ret = NtDll::RtlSizeHeap(hHeap, dwFlags, lpMem);
 
@@ -265,18 +230,11 @@ BOOL WINAPI XTL::EmuQueryPerformanceCounter
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuQueryPerformanceCounter\n"
-               "(\n"
-               "   lpPerformanceCount  : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), lpPerformanceCount);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuQueryPerformanceCounter\n"
+           "(\n"
+           "   lpPerformanceCount  : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), lpPerformanceCount);
 
     BOOL bRet = QueryPerformanceCounter(lpPerformanceCount);
 
@@ -295,18 +253,11 @@ BOOL WINAPI XTL::EmuQueryPerformanceFrequency
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuQueryPerformanceFrequency\n"
-               "(\n"
-               "   lpFrequency         : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), lpFrequency);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuQueryPerformanceFrequency\n"
+           "(\n"
+           "   lpFrequency         : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), lpFrequency);
 
     BOOL bRet = QueryPerformanceFrequency(lpFrequency);
 
@@ -323,13 +274,10 @@ BOOL WINAPI XTL::EmuXMountUtilityDrive
     BOOL    fFormatClean
 )
 {
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuXapi (0x%X): EmuXMountUtilityDrive\n"
+        DbgPrintf("EmuXapi (0x%X): EmuXMountUtilityDrive\n"
                "(\n"
                "   fFormatClean        : 0x%.08X\n"
                ");\n",
@@ -352,19 +300,12 @@ VOID WINAPI XTL::EmuXInitDevices
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuXInitDevices\n"
-               "(\n"
-               "   Unknown1            : 0x%.08X\n"
-               "   Unknown2            : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), Unknown1, Unknown2);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuXInitDevices\n"
+           "(\n"
+           "   Unknown1            : 0x%.08X\n"
+           "   Unknown2            : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), Unknown1, Unknown2);
 
     // TODO: Initialize devices if/when necessary
 
@@ -383,18 +324,11 @@ DWORD WINAPI XTL::EmuXGetDevices
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuXGetDevices\n"
-               "(\n"
-               "   DeviceType          : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), DeviceType);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuXGetDevices\n"
+           "(\n"
+           "   DeviceType          : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), DeviceType);
 
     DWORD ret = 0;
 
@@ -420,20 +354,13 @@ BOOL WINAPI XTL::EmuXGetDeviceChanges
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuXGetDeviceChanges\n"
-               "(\n"
-               "   DeviceType          : 0x%.08X\n"
-               "   pdwInsertions       : 0x%.08X\n"
-               "   pdwRemovals         : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), DeviceType, pdwInsertions, pdwRemovals);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuXGetDeviceChanges\n"
+           "(\n"
+           "   DeviceType          : 0x%.08X\n"
+           "   pdwInsertions       : 0x%.08X\n"
+           "   pdwRemovals         : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), DeviceType, pdwInsertions, pdwRemovals);
 
     BOOL bRet = FALSE;
     BOOL bFirst = TRUE;
@@ -469,21 +396,14 @@ HANDLE WINAPI XTL::EmuXInputOpen
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuXInputOpen\n"
-               "(\n"
-               "   DeviceType          : 0x%.08X\n"
-               "   dwPort              : 0x%.08X\n"
-               "   dwSlot              : 0x%.08X\n"
-               "   pPollingParameters  : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), DeviceType, dwPort, dwSlot, pPollingParameters);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuXInputOpen\n"
+           "(\n"
+           "   DeviceType          : 0x%.08X\n"
+           "   dwPort              : 0x%.08X\n"
+           "   dwSlot              : 0x%.08X\n"
+           "   pPollingParameters  : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), DeviceType, dwPort, dwSlot, pPollingParameters);
 
     HANDLE ret = NULL;
 
@@ -506,18 +426,11 @@ VOID WINAPI XTL::EmuXInputClose
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuXInputClose\n"
-               "(\n"
-               "   hDevice             : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), hDevice);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuXInputClose\n"
+           "(\n"
+           "   hDevice             : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), hDevice);
 
     // TODO: Actually clean up the device when/if necessary
 
@@ -537,19 +450,12 @@ DWORD WINAPI XTL::EmuXInputGetCapabilities
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuXInputGetCapabilities\n"
-               "(\n"
-               "   hDevice             : 0x%.08X\n"
-               "   pCapabilities       : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), hDevice, pCapabilities);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuXInputGetCapabilities\n"
+           "(\n"
+           "   hDevice             : 0x%.08X\n"
+           "   pCapabilities       : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), hDevice, pCapabilities);
 
     DWORD ret = ERROR_INVALID_HANDLE;
 
@@ -579,19 +485,12 @@ DWORD WINAPI XTL::EmuXInputGetState
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuXInputGetState\n"
-               "(\n"
-               "   hDevice             : 0x%.08X\n"
-               "   pState              : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), hDevice, pState);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuXInputGetState\n"
+           "(\n"
+           "   hDevice             : 0x%.08X\n"
+           "   pState              : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), hDevice, pState);
 
     DWORD ret = ERROR_INVALID_HANDLE;
 
@@ -622,19 +521,12 @@ DWORD WINAPI XTL::EmuXInputSetState
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuXInputSetState\n"
-               "(\n"
-               "   hDevice             : 0x%.08X\n"
-               "   pFeedback           : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), hDevice, pFeedback);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuXInputSetState\n"
+           "(\n"
+           "   hDevice             : 0x%.08X\n"
+           "   pFeedback           : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), hDevice, pFeedback);
 
     pFeedback->Header.dwStatus = ERROR_IO_PENDING;
 
@@ -697,20 +589,13 @@ HANDLE WINAPI XTL::EmuCreateMutex
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuCreateMutex\n"
-               "(\n"
-               "   lpMutexAttributes   : 0x%.08X\n"
-               "   bInitialOwner       : 0x%.08X\n"
-               "   lpName              : 0x%.08X (%s)\n"
-               ");\n",
-               GetCurrentThreadId(), lpMutexAttributes, bInitialOwner, lpName, lpName);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuCreateMutex\n"
+           "(\n"
+           "   lpMutexAttributes   : 0x%.08X\n"
+           "   bInitialOwner       : 0x%.08X\n"
+           "   lpName              : 0x%.08X (%s)\n"
+           ");\n",
+           GetCurrentThreadId(), lpMutexAttributes, bInitialOwner, lpName, lpName);
 
     HANDLE hRet = CreateMutex((SECURITY_ATTRIBUTES *)lpMutexAttributes, bInitialOwner, lpName);
 
@@ -729,18 +614,11 @@ BOOL WINAPI XTL::EmuCloseHandle
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuCloseHandle\n"
-               "(\n"
-               "   hObject             : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), hObject);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuCloseHandle\n"
+           "(\n"
+           "   hObject             : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), hObject);
 
     BOOL bRet = CloseHandle(hObject);
 
@@ -760,19 +638,12 @@ BOOL WINAPI XTL::EmuSetThreadPriorityBoost
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuSetThreadPriorityBoost\n"
-               "(\n"
-               "   hThread             : 0x%.08X\n"
-               "   DisablePriorityBoost: 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), hThread, DisablePriorityBoost);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuSetThreadPriorityBoost\n"
+           "(\n"
+           "   hThread             : 0x%.08X\n"
+           "   DisablePriorityBoost: 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), hThread, DisablePriorityBoost);
 
     BOOL bRet = SetThreadPriorityBoost(hThread, DisablePriorityBoost);
 
@@ -795,19 +666,12 @@ BOOL WINAPI XTL::EmuSetThreadPriority
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuSetThreadPriority\n"
-               "(\n"
-               "   hThread             : 0x%.08X\n"
-               "   nPriority           : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), hThread, nPriority);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuSetThreadPriority\n"
+           "(\n"
+           "   hThread             : 0x%.08X\n"
+           "   nPriority           : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), hThread, nPriority);
 
     BOOL bRet = SetThreadPriority(hThread, nPriority);
 
@@ -830,18 +694,11 @@ int WINAPI XTL::EmuGetThreadPriority
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuGetThreadPriority\n"
-               "(\n"
-               "   hThread             : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), hThread);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuGetThreadPriority\n"
+           "(\n"
+           "   hThread             : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), hThread);
 
     int iRet = GetThreadPriority(hThread);
 
@@ -864,19 +721,12 @@ BOOL WINAPI XTL::EmuGetExitCodeThread
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuGetExitCodeThread\n"
-               "(\n"
-               "   hThread             : 0x%.08X\n"
-               "   lpExitCode          : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), hThread, lpExitCode);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuGetExitCodeThread\n"
+           "(\n"
+           "   hThread             : 0x%.08X\n"
+           "   lpExitCode          : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), hThread, lpExitCode);
 
     BOOL bRet = GetExitCodeThread(hThread, lpExitCode);
 
@@ -892,14 +742,7 @@ VOID WINAPI XTL::EmuXapiInitProcess()
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuXapiInitProcess();\n", GetCurrentThreadId());
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuXapiInitProcess();\n", GetCurrentThreadId());
 
     // ******************************************************************
 	// * Call RtlCreateHeap
@@ -947,19 +790,12 @@ VOID WINAPI XTL::EmuXapiThreadStartup
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuXapiThreadStartup\n"
-               "(\n"
-               "   dwDummy1            : 0x%.08X\n"
-               "   dwDummy2            : 0x%.08X\n"
-               ");\n",
-                GetCurrentThreadId(), dwDummy1, dwDummy2);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuXapiThreadStartup\n"
+           "(\n"
+           "   dwDummy1            : 0x%.08X\n"
+           "   dwDummy2            : 0x%.08X\n"
+           ");\n",
+            GetCurrentThreadId(), dwDummy1, dwDummy2);
 
     EmuSwapFS();   // XBox FS
 
@@ -982,19 +818,12 @@ XTL::NTSTATUS CDECL XTL::XapiSetupPerTitleDriveLetters(DWORD dwTitleId, LPCWSTR 
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): XapiSetupPerTitleDriveLetters\n"
-               "(\n"
-               "   dwTitleId           : 0x%.08X\n"
-               "   wszTitleName        : 0x%.08X\n"
-               ");\n",
-                GetCurrentThreadId(), dwTitleId, wszTitleName);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): XapiSetupPerTitleDriveLetters\n"
+           "(\n"
+           "   dwTitleId           : 0x%.08X\n"
+           "   wszTitleName        : 0x%.08X\n"
+           ");\n",
+            GetCurrentThreadId(), dwTitleId, wszTitleName);
 
     NTSTATUS ret = STATUS_SUCCESS;
 
@@ -1010,20 +839,13 @@ VOID WINAPI XTL::EmuXapiBootDash(DWORD UnknownA, DWORD UnknownB, DWORD UnknownC)
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuXapiBootDash\n"
-               "(\n"
-               "   UnknownA            : 0x%.08X\n"
-               "   UnknownB            : 0x%.08X\n"
-               "   UnknownC            : 0x%.08X\n"
-               ");\n",
-                GetCurrentThreadId(), UnknownA, UnknownB, UnknownC);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuXapiBootDash\n"
+           "(\n"
+           "   UnknownA            : 0x%.08X\n"
+           "   UnknownB            : 0x%.08X\n"
+           "   UnknownC            : 0x%.08X\n"
+           ");\n",
+            GetCurrentThreadId(), UnknownA, UnknownB, UnknownC);
 
     EmuCleanup("Emulation Terminated (XapiBootDash)");
 
@@ -1043,19 +865,12 @@ VOID WINAPI XTL::EmuXRegisterThreadNotifyRoutine
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuXRegisterThreadNotifyRoutine\n"
-               "(\n"
-               "   pThreadNotification : 0x%.08X (0x%.08X)\n"
-               "   fRegister           : 0x%.08X\n"
-               ");\n",
-                GetCurrentThreadId(), pThreadNotification, pThreadNotification->pfnNotifyRoutine, fRegister);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuXRegisterThreadNotifyRoutine\n"
+           "(\n"
+           "   pThreadNotification : 0x%.08X (0x%.08X)\n"
+           "   fRegister           : 0x%.08X\n"
+           ");\n",
+            GetCurrentThreadId(), pThreadNotification, pThreadNotification->pfnNotifyRoutine, fRegister);
 
     if(fRegister)
     {
@@ -1084,18 +899,11 @@ HANDLE WINAPI XTL::EmuXCalculateSignatureBegin
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): XCalculateSignatureBegin\n"
-               "(\n"
-               "   dwFlags             : 0x%.08X\n"
-               ");\n",
-                GetCurrentThreadId(), dwFlags);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): XCalculateSignatureBegin\n"
+           "(\n"
+           "   dwFlags             : 0x%.08X\n"
+           ");\n",
+            GetCurrentThreadId(), dwFlags);
 
     EmuSwapFS();   // XBox FS
 
@@ -1114,19 +922,12 @@ HANDLE WINAPI XTL::EmuXCalculateSignatureBeginEx
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): XCalculateSignatureBeginEx\n"
-               "(\n"
-               "   dwFlags             : 0x%.08X\n",
-               "   dwAltTitleId        : 0x%.08X\n",
-               ");\n",
-                GetCurrentThreadId(), dwFlags, dwAltTitleId);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): XCalculateSignatureBeginEx\n"
+           "(\n"
+           "   dwFlags             : 0x%.08X\n",
+           "   dwAltTitleId        : 0x%.08X\n",
+           ");\n",
+            GetCurrentThreadId(), dwFlags, dwAltTitleId);
 
     EmuSwapFS();   // XBox FS
 
@@ -1146,20 +947,13 @@ DWORD WINAPI XTL::EmuXCalculateSignatureUpdate
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): XCalculateSignatureUpdate\n"
-               "(\n"
-               "   hCalcSig            : 0x%.08X\n",
-               "   pbData              : 0x%.08X\n",
-               "   cbData              : 0x%.08X\n",
-               ");\n",
-                GetCurrentThreadId(), hCalcSig, pbData, cbData);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): XCalculateSignatureUpdate\n"
+           "(\n"
+           "   hCalcSig            : 0x%.08X\n",
+           "   pbData              : 0x%.08X\n",
+           "   cbData              : 0x%.08X\n",
+           ");\n",
+            GetCurrentThreadId(), hCalcSig, pbData, cbData);
 
     EmuSwapFS();   // XBox FS
 
@@ -1177,19 +971,12 @@ DWORD WINAPI XTL::EmuXCalculateSignatureEnd
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): XCalculateSignatureEnd\n"
-               "(\n"
-               "   hCalcSig            : 0x%.08X\n",
-               "   pSignature          : 0x%.08X\n",
-               ");\n",
-                GetCurrentThreadId(), hCalcSig, pSignature);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): XCalculateSignatureEnd\n"
+           "(\n"
+           "   hCalcSig            : 0x%.08X\n",
+           "   pSignature          : 0x%.08X\n",
+           ");\n",
+            GetCurrentThreadId(), hCalcSig, pSignature);
 
     EmuSwapFS();   // XBox FS
 

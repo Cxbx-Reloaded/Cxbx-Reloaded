@@ -254,6 +254,10 @@ SOURCE=.\Include\Cxbx.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\DbgConsole.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\Emu.h
 # End Source File
 # Begin Source File
@@ -486,7 +490,20 @@ SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8\VertexShader.cpp
 # End Group
 # Begin Source File
 
+SOURCE=.\Source\Win32\CxbxKrnl\DbgConsole.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\Win32\CxbxKrnl\Emu.cpp
+
+!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
+
+# ADD CPP /Od
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 

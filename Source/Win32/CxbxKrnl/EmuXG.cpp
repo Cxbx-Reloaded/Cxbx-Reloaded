@@ -70,7 +70,7 @@ PVOID WINAPI XTL::EmuXGIsSwizzledFormat
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuXapi (0x%X): EmuXGIsSwizzledFormat\n"
+        DbgPrintf("EmuXapi (0x%X): EmuXGIsSwizzledFormat\n"
                "(\n"
                "   Format              : 0x%.08X\n"
                ");\n",
@@ -99,26 +99,19 @@ VOID WINAPI XTL::EmuXGSwizzleRect
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuXGSwizzleRect\n"
-               "(\n"
-               "   pSource             : 0x%.08X\n"
-               "   Pitch               : 0x%.08X\n"
-               "   pRect               : 0x%.08X\n"
-               "   pDest               : 0x%.08X\n"
-               "   Width               : 0x%.08X\n"
-               "   Height              : 0x%.08X\n"
-               "   pPoint              : 0x%.08X\n"
-               "   BytesPerPixel       : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pSource, Pitch, pRect, pDest, Width, Height,
-               pPoint, BytesPerPixel);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuXGSwizzleRect\n"
+           "(\n"
+           "   pSource             : 0x%.08X\n"
+           "   Pitch               : 0x%.08X\n"
+           "   pRect               : 0x%.08X\n"
+           "   pDest               : 0x%.08X\n"
+           "   Width               : 0x%.08X\n"
+           "   Height              : 0x%.08X\n"
+           "   pPoint              : 0x%.08X\n"
+           "   BytesPerPixel       : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pSource, Pitch, pRect, pDest, Width, Height,
+           pPoint, BytesPerPixel);
 
     if(pRect == NULL && pPoint == NULL && Pitch == 0)
     {
@@ -176,28 +169,21 @@ VOID WINAPI XTL::EmuXGSwizzleBox
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuXGSwizzleBox\n"
-               "(\n"
-               "   pSource             : 0x%.08X\n"
-               "   RowPitch            : 0x%.08X\n"
-               "   SlicePitch          : 0x%.08X\n"
-               "   pBox                : 0x%.08X\n"
-               "   pDest               : 0x%.08X\n"
-               "   Width               : 0x%.08X\n"
-               "   Height              : 0x%.08X\n"
-               "   Depth               : 0x%.08X\n"
-               "   pPoint              : 0x%.08X\n"
-               "   BytesPerPixel       : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pSource, RowPitch, SlicePitch, pBox, pDest, Width, Height,
-               Depth, pPoint, BytesPerPixel);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuXGSwizzleBox\n"
+           "(\n"
+           "   pSource             : 0x%.08X\n"
+           "   RowPitch            : 0x%.08X\n"
+           "   SlicePitch          : 0x%.08X\n"
+           "   pBox                : 0x%.08X\n"
+           "   pDest               : 0x%.08X\n"
+           "   Width               : 0x%.08X\n"
+           "   Height              : 0x%.08X\n"
+           "   Depth               : 0x%.08X\n"
+           "   pPoint              : 0x%.08X\n"
+           "   BytesPerPixel       : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pSource, RowPitch, SlicePitch, pBox, pDest, Width, Height,
+           Depth, pPoint, BytesPerPixel);
 
     if(pBox == NULL && pPoint == NULL && RowPitch == 0 && SlicePitch == 0)
     {

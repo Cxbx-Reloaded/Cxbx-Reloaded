@@ -64,19 +64,12 @@ int WINAPI XTL::EmuWSAStartup
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuWSAStartup\n"
-               "(\n"
-               "   wVersionRequested   : 0x%.08X\n"
-               "   lpWSAData           : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), wVersionRequested, lpWSAData);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuWSAStartup\n"
+           "(\n"
+           "   wVersionRequested   : 0x%.08X\n"
+           "   lpWSAData           : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), wVersionRequested, lpWSAData);
 
     int ret = XTL::WSAStartup(wVersionRequested, lpWSAData);
 
@@ -95,18 +88,11 @@ INT WINAPI XTL::EmuXNetStartup
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuXNetStartup\n"
-               "(\n"
-               "   pDummy              : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pDummy);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuXNetStartup\n"
+           "(\n"
+           "   pDummy              : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pDummy);
 
     EmuSwapFS();   // XBox FS
 
@@ -121,14 +107,7 @@ DWORD WINAPI XTL::EmuXNetGetEthernetLinkStatus()
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuXNetGetEthernetLinkStatus();\n", GetCurrentThreadId());
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuXNetGetEthernetLinkStatus();\n", GetCurrentThreadId());
 
     EmuSwapFS();   // XBox FS
 
@@ -148,21 +127,14 @@ SOCKET XTL::EmuThis::Emusocket
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuThis::Emusocket\n"
-               "(\n"
-               "   this                : 0x%.08X\n"
-               "   af                  : 0x%.08X\n"
-               "   type                : 0x%.08X\n"
-               "   protocol            : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), this, af, type, protocol);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuThis::Emusocket\n"
+           "(\n"
+           "   this                : 0x%.08X\n"
+           "   af                  : 0x%.08X\n"
+           "   type                : 0x%.08X\n"
+           "   protocol            : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), this, af, type, protocol);
 
     SOCKET ret = socket(af, type, protocol);
 
@@ -178,21 +150,14 @@ int XTL::EmuThis::Emubind(SOCKET s, const struct sockaddr FAR *name, int namelen
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuThis::Emubind\n"
-               "(\n"
-               "   this                : 0x%.08X\n"
-               "   s                   : 0x%.08X\n"
-               "   name                : 0x%.08X\n"
-               "   namelen             : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), this, s, name, namelen);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuThis::Emubind\n"
+           "(\n"
+           "   this                : 0x%.08X\n"
+           "   s                   : 0x%.08X\n"
+           "   name                : 0x%.08X\n"
+           "   namelen             : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), this, s, name, namelen);
 
     // TODO: Host-To-Network order if necessary (probably not?)
 
@@ -210,20 +175,13 @@ int XTL::EmuThis::Emulisten(SOCKET s, int backlog)
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuThis::Emulisten\n"
-               "(\n"
-               "   this                : 0x%.08X\n"
-               "   s                   : 0x%.08X\n"
-               "   listen              : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), this, s, backlog);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuThis::Emulisten\n"
+           "(\n"
+           "   this                : 0x%.08X\n"
+           "   s                   : 0x%.08X\n"
+           "   listen              : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), this, s, backlog);
 
     // TODO: Host-To-Network order if necessary (probably not?)
 
@@ -241,21 +199,14 @@ int XTL::EmuThis::Emuioctlsocket(SOCKET s, long cmd, u_long FAR *argp)
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuThis::Emuioctlsocket\n"
-               "(\n"
-               "   this                : 0x%.08X\n"
-               "   s                   : 0x%.08X\n"
-               "   cmd                 : 0x%.08X\n"
-               "   argp                : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), this, s, cmd, argp);
-    }
-    #endif
+    DbgPrintf("EmuXapi (0x%X): EmuThis::Emuioctlsocket\n"
+           "(\n"
+           "   this                : 0x%.08X\n"
+           "   s                   : 0x%.08X\n"
+           "   cmd                 : 0x%.08X\n"
+           "   argp                : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), this, s, cmd, argp);
 
     int ret = ioctlsocket(s, cmd, argp);
 

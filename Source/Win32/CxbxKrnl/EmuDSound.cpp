@@ -148,9 +148,7 @@ static void EmuResizeIDirectSoundBuffer8(XTL::X_CDirectSoundBuffer *pThis, DWORD
     if(dwBytes == pThis->EmuBufferDesc->dwBufferBytes || dwBytes == 0)
         return;
 
-    #ifdef _DEBUG_TRACE
-    printf("EmuResizeIDirectSoundBuffer8 : Resizing! (0x%.08X->0x%.08X)\n", pThis->EmuBufferDesc->dwBufferBytes, dwBytes);
-    #endif
+    DbgPrintf("EmuResizeIDirectSoundBuffer8 : Resizing! (0x%.08X->0x%.08X)\n", pThis->EmuBufferDesc->dwBufferBytes, dwBytes);
 
     DWORD dwPlayCursor, dwWriteCursor, dwStatus;
 
@@ -226,18 +224,13 @@ HRESULT WINAPI XTL::EmuDirectSoundCreate
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuDirectSoundCreate\n"
-               "(\n"
-               "   pguidDeviceId             : 0x%.08X\n"
-               "   ppDirectSound             : 0x%.08X\n"
-               "   pUnknown                  : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pguidDeviceId, ppDirectSound, pUnknown);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuDirectSoundCreate\n"
+           "(\n"
+           "   pguidDeviceId             : 0x%.08X\n"
+           "   ppDirectSound             : 0x%.08X\n"
+           "   pUnknown                  : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pguidDeviceId, ppDirectSound, pUnknown);
 
     static bool initialized = false;
 
@@ -286,16 +279,11 @@ ULONG WINAPI XTL::EmuIDirectSound8_AddRef
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSound8_AddRef\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_AddRef\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis);
 
     ULONG uRet = g_pDSound8RefCount++;
 
@@ -314,16 +302,11 @@ ULONG WINAPI XTL::EmuIDirectSound8_Release
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSound8_Release\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_Release\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis);
 
     ULONG uRet = g_pDSound8RefCount--;
 
@@ -351,20 +334,15 @@ HRESULT WINAPI XTL::EmuIDirectSound8_DownloadEffectsImage
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSound8_DownloadEffectsImage\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   pvImageBuffer             : 0x%.08X\n"
-               "   dwImageSize               : 0x%.08X\n"
-               "   pImageLoc                 : 0x%.08X\n"
-               "   ppImageDesc               : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, pvImageBuffer, dwImageSize, pImageLoc, ppImageDesc);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_DownloadEffectsImage\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   pvImageBuffer             : 0x%.08X\n"
+           "   dwImageSize               : 0x%.08X\n"
+           "   pImageLoc                 : 0x%.08X\n"
+           "   ppImageDesc               : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, pvImageBuffer, dwImageSize, pImageLoc, ppImageDesc);
 
     // TODO: Actually implement this
 
@@ -380,12 +358,7 @@ VOID WINAPI XTL::EmuDirectSoundDoWork()
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuDirectSoundDoWork();\n", GetCurrentThreadId());
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuDirectSoundDoWork();\n", GetCurrentThreadId());
 
     HackUpdateSoundBuffers();
     HackUpdateSoundStreams();
@@ -412,23 +385,18 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetOrientation
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSound8_SetOrientation\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   xFront                    : %f\n"
-               "   yFront                    : %f\n"
-               "   zFront                    : %f\n"
-               "   xTop                      : %f\n"
-               "   yTop                      : %f\n"
-               "   zTop                      : %f\n"
-               "   dwApply                   : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, xFront, yFront, zFront, xTop, yTop, zTop, dwApply);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetOrientation\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   xFront                    : %f\n"
+           "   yFront                    : %f\n"
+           "   zFront                    : %f\n"
+           "   xTop                      : %f\n"
+           "   yTop                      : %f\n"
+           "   zTop                      : %f\n"
+           "   dwApply                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, xFront, yFront, zFront, xTop, yTop, zTop, dwApply);
 
     // TODO: Actually implement this
 
@@ -449,18 +417,13 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetDistanceFactor
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSound8_SetDistanceFactor\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   fDistanceFactor           : %f\n"
-               "   dwApply                   : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, fDistanceFactor, dwApply);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetDistanceFactor\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   fDistanceFactor           : %f\n"
+           "   dwApply                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, fDistanceFactor, dwApply);
 
     // TODO: Actually implement this
 
@@ -481,18 +444,13 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetRolloffFactor
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSound8_SetRolloffFactor\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   fRolloffFactor            : %f\n"
-               "   dwApply                   : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, fRolloffFactor, dwApply);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetRolloffFactor\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   fRolloffFactor            : %f\n"
+           "   dwApply                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, fRolloffFactor, dwApply);
 
     // TODO: Actually implement this
 
@@ -513,18 +471,13 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetDopplerFactor
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSound8_SetDopplerFactor\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   fDopplerFactor            : %f\n"
-               "   dwApply                   : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, fDopplerFactor, dwApply);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetDopplerFactor\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   fDopplerFactor            : %f\n"
+           "   dwApply                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, fDopplerFactor, dwApply);
 
     // TODO: Actually implement this
 
@@ -547,7 +500,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetI3DL2Listener
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuDSound (0x%X): EmuIDirectSound8_SetI3DL2Listener\n"
+        DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetI3DL2Listener\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   pDummy                    : 0x%.08X\n"
@@ -577,7 +530,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetMixBinHeadroom
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuDSound (0x%X): EmuIDirectSound8_SetMixBinHeadroom\n"
+        DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetMixBinHeadroom\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   dwMixBinMask              : 0x%.08X\n"
@@ -606,7 +559,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMixBins
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetMixBins\n"
+        DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetMixBins\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   pMixBins                  : 0x%.08X\n"
@@ -634,7 +587,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMixBinVolumes
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetMixBinVolumes\n"
+        DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetMixBinVolumes\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   pMixBins                  : 0x%.08X\n"
@@ -665,7 +618,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetPosition
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuDSound (0x%X): EmuIDirectSound8_SetPosition\n"
+        DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetPosition\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   x                         : %f\n"
@@ -699,7 +652,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetVelocity
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuDSound (0x%X): EmuIDirectSound8_SetVelocity\n"
+        DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetVelocity\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   x                         : %f\n"
@@ -731,7 +684,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetAllParameters
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuDSound (0x%X): EmuIDirectSound8_SetAllParameters\n"
+        DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetAllParameters\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   pTodo                     : 0x%.08X\n"
@@ -757,16 +710,11 @@ HRESULT WINAPI XTL::EmuCDirectSound_CommitDeferredSettings
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuCDirectSound_CommitDeferredSettings\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSound_CommitDeferredSettings\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis);
 
     // TODO: Translate params, then make the PC DirectSound call
 
@@ -786,17 +734,12 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuDirectSoundCreateBuffer\n"
-               "(\n"
-               "   pdsbd                     : 0x%.08X\n"
-               "   ppBuffer                  : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pdsbd, ppBuffer);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuDirectSoundCreateBuffer\n"
+           "(\n"
+           "   pdsbd                     : 0x%.08X\n"
+           "   ppBuffer                  : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pdsbd, ppBuffer);
 
     DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)malloc(sizeof(DSBUFFERDESC));
     
@@ -866,9 +809,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
     (*ppBuffer)->EmuLockPtr2 = 0;
     (*ppBuffer)->EmuLockBytes2 = 0;
 
-    #ifdef _DEBUG_TRACE
-    printf("EmuDSound (0x%X): EmuDirectSoundCreateBuffer, *ppBuffer := 0x%.08X, bytes := 0x%.08X\n", GetCurrentThreadId(), *ppBuffer, pDSBufferDesc->dwBufferBytes);
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuDirectSoundCreateBuffer, *ppBuffer := 0x%.08X, bytes := 0x%.08X\n", GetCurrentThreadId(), *ppBuffer, pDSBufferDesc->dwBufferBytes);
 
     HRESULT hRet = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &((*ppBuffer)->EmuDirectSoundBuffer8), NULL);
 
@@ -911,7 +852,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateBuffer
     #ifdef _DEBUG_TRACE
     {
        EmuSwapFS();   // Win2k/XP FS
-       printf("EmuDSound (0x%X): EmuIDirectSound8_CreateBuffer\n"
+       DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_CreateBuffer\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   pdssd                     : 0x%.08X\n"
@@ -943,7 +884,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateSoundBuffer
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuDSound (0x%X): EmuIDirectSound8_CreateSoundBuffer\n"
+        DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_CreateSoundBuffer\n"
                "(\n"
                "   pdsbd                     : 0x%.08X\n"
                "   ppBuffer                  : 0x%.08X\n"
@@ -969,18 +910,13 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetBufferData
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetBufferData\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   pvBufferData              : 0x%.08X\n"
-               "   dwBufferBytes             : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, pvBufferData, dwBufferBytes);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetBufferData\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   pvBufferData              : 0x%.08X\n"
+           "   dwBufferBytes             : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, pvBufferData, dwBufferBytes);
 
     // update buffer data cache
     pThis->EmuBuffer = pvBufferData;
@@ -1004,18 +940,13 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPlayRegion
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetPlayRegion\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   dwPlayStart               : 0x%.08X\n"
-               "   dwPlayLength              : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, dwPlayStart, dwPlayLength);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetPlayRegion\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   dwPlayStart               : 0x%.08X\n"
+           "   dwPlayLength              : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, dwPlayStart, dwPlayLength);
 
     // TODO: Translate params, then make the PC DirectSound call
 
@@ -1044,24 +975,19 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Lock
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_Lock\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   dwOffset                  : 0x%.08X\n"
-               "   dwBytes                   : 0x%.08X\n"
-               "   ppvAudioPtr1              : 0x%.08X\n"
-               "   pdwAudioBytes1            : 0x%.08X\n"
-               "   ppvAudioPtr2              : 0x%.08X\n"
-               "   pdwAudioBytes2            : 0x%.08X\n"
-               "   dwFlags                   : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, dwOffset, dwBytes, ppvAudioPtr1, pdwAudioBytes1,
-               ppvAudioPtr2, pdwAudioBytes2, dwFlags);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_Lock\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   dwOffset                  : 0x%.08X\n"
+           "   dwBytes                   : 0x%.08X\n"
+           "   ppvAudioPtr1              : 0x%.08X\n"
+           "   pdwAudioBytes1            : 0x%.08X\n"
+           "   ppvAudioPtr2              : 0x%.08X\n"
+           "   pdwAudioBytes2            : 0x%.08X\n"
+           "   dwFlags                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, dwOffset, dwBytes, ppvAudioPtr1, pdwAudioBytes1,
+           ppvAudioPtr2, pdwAudioBytes2, dwFlags);
 
     HRESULT hRet = D3D_OK;
 
@@ -1106,17 +1032,12 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetHeadroom
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetHeadroom\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   dwHeadroom                : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, dwHeadroom);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetHeadroom\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   dwHeadroom                : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, dwHeadroom);
 
     // TODO: Actually implement this
 
@@ -1137,18 +1058,13 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetLoopRegion
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetLoopRegion\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   dwLoopStart               : 0x%.08X\n"
-               "   dwLoopLength              : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, dwLoopStart, dwLoopLength);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetLoopRegion\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   dwLoopStart               : 0x%.08X\n"
+           "   dwLoopLength              : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, dwLoopStart, dwLoopLength);
 
     // TODO: Ensure that 4627 & 4361 are intercepting far enough back
     // (otherwise pThis is manipulated!)
@@ -1170,16 +1086,11 @@ ULONG WINAPI XTL::EmuIDirectSoundBuffer8_Release
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_Release\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_Release\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis);
 
     ULONG uRet = 0;
 
@@ -1221,17 +1132,12 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPitch
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetPitch\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   lPitch                    : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, lPitch);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetPitch\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   lPitch                    : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, lPitch);
 
     // TODO: Translate params, then make the PC DirectSound call
 
@@ -1251,17 +1157,12 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_GetStatus
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_GetStatus\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   pdwStatus                 : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, pdwStatus);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_GetStatus\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   pdwStatus                 : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, pdwStatus);
 
     HRESULT hRet = DS_OK;
 
@@ -1290,17 +1191,12 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetCurrentPosition
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetCurrentPosition\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   dwNewPosition             : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, dwNewPosition);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetCurrentPosition\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   dwNewPosition             : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, dwNewPosition);
 
     // NOTE: TODO: This call *will* (by MSDN) fail on primary buffers!
     HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwNewPosition);
@@ -1325,18 +1221,13 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_GetCurrentPosition
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_GetCurrentPosition\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   pdwCurrentPlayCursor      : 0x%.08X\n"
-               "   pdwCurrentWriteCursor     : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, pdwCurrentPlayCursor, pdwCurrentWriteCursor);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_GetCurrentPosition\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   pdwCurrentPlayCursor      : 0x%.08X\n"
+           "   pdwCurrentWriteCursor     : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, pdwCurrentPlayCursor, pdwCurrentWriteCursor);
 
     HackUpdateSoundBuffers();
     HackUpdateSoundStreams();
@@ -1347,12 +1238,10 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_GetCurrentPosition
     if(FAILED(hRet))
         EmuWarning("GetCurrentPosition Failed!");
 
-    #ifdef _DEBUG_TRACE
     if(pdwCurrentPlayCursor != 0 && pdwCurrentWriteCursor != 0)
     {
-        printf("*pdwCurrentPlayCursor := %d, *pdwCurrentWriteCursor := %d\n", *pdwCurrentPlayCursor, *pdwCurrentWriteCursor);
+        DbgPrintf("*pdwCurrentPlayCursor := %d, *pdwCurrentWriteCursor := %d\n", *pdwCurrentPlayCursor, *pdwCurrentWriteCursor);
     }
-    #endif
 
     EmuSwapFS();   // XBox FS
 
@@ -1372,19 +1261,14 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Play
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_Play\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   dwReserved1               : 0x%.08X\n"
-               "   dwReserved2               : 0x%.08X\n"
-               "   dwFlags                   : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, dwReserved1, dwReserved2, dwFlags);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_Play\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   dwReserved1               : 0x%.08X\n"
+           "   dwReserved2               : 0x%.08X\n"
+           "   dwFlags                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, dwReserved1, dwReserved2, dwFlags);
 
     if(dwFlags & (~DSBPLAY_LOOPING))
         EmuCleanup("Unsupported Playing Flags");
@@ -1424,16 +1308,11 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Stop
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_Stop\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_Stop\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis);
 
     HRESULT hRet = pThis->EmuDirectSoundBuffer8->Stop();
 
@@ -1453,17 +1332,12 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetVolume
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetVolume\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   lVolume                   : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, lVolume);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetVolume\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   lVolume                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, lVolume);
 
     // TODO: Ensure that 4627 & 4361 are intercepting far enough back
     // (otherwise pThis is manipulated!)
@@ -1487,17 +1361,12 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetFrequency
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetFrequency\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   dwFrequency               : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, dwFrequency);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetFrequency\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   dwFrequency               : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, dwFrequency);
 
 //    HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetFrequency(dwFrequency);
 
@@ -1518,17 +1387,12 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuDirectSoundCreateStream\n"
-               "(\n"
-               "   pdssd                     : 0x%.08X\n"
-               "   ppStream                  : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pdssd, ppStream);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuDirectSoundCreateStream\n"
+           "(\n"
+           "   pdssd                     : 0x%.08X\n"
+           "   ppStream                  : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pdssd, ppStream);
 
     // TODO: Garbage Collection
     *ppStream = new X_CDirectSoundStream();
@@ -1584,9 +1448,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
     (*ppStream)->EmuLockPtr2 = 0;
     (*ppStream)->EmuLockBytes2 = 0;
 
-    #ifdef _DEBUG_TRACE
-    printf("EmuDSound (0x%X): EmuDirectSoundCreateStream, *ppStream := 0x%.08X\n", GetCurrentThreadId(), *ppStream);
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuDirectSoundCreateStream, *ppStream := 0x%.08X\n", GetCurrentThreadId(), *ppStream);
 
     HRESULT hRet = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &(*ppStream)->EmuDirectSoundBuffer8, NULL);
 
@@ -1629,7 +1491,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateStream
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuDSound (0x%X): EmuIDirectSound8_CreateStream\n"
+        DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_CreateStream\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   pdssd                     : 0x%.08X\n"
@@ -1653,17 +1515,12 @@ ULONG WINAPI XTL::EmuCDirectSoundStream_SetVolume(X_CDirectSoundStream *pThis, L
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetVolume\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   lVolume                   : %d\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, lVolume);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetVolume\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   lVolume                   : %d\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, lVolume);
 
     // TODO: Actually SetVolume
 
@@ -1684,18 +1541,13 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetRolloffFactor
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetRolloffFactor\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   fRolloffFactor            : %f\n"
-               "   dwApply                   : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, fRolloffFactor, dwApply);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetRolloffFactor\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   fRolloffFactor            : %f\n"
+           "   dwApply                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, fRolloffFactor, dwApply);
 
     // TODO: Actually SetRolloffFactor
 
@@ -1711,16 +1563,11 @@ ULONG WINAPI XTL::EmuCDirectSoundStream_AddRef(X_CDirectSoundStream *pThis)
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuCDirectSoundStream_AddRef\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_AddRef\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis);
 
     if(pThis != 0)
         pThis->EmuDirectSoundBuffer8->AddRef();
@@ -1737,16 +1584,11 @@ ULONG WINAPI XTL::EmuCDirectSoundStream_Release(X_CDirectSoundStream *pThis)
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuCDirectSoundStream_Release\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_Release\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis);
 
     ULONG uRet = 0;
 
@@ -1789,18 +1631,13 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Process
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuCDirectSoundStream_Process\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   pInputBuffer              : 0x%.08X\n"
-               "   pOutputBuffer             : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, pInputBuffer, pOutputBuffer);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_Process\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   pInputBuffer              : 0x%.08X\n"
+           "   pOutputBuffer             : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, pInputBuffer, pOutputBuffer);
 
     // update buffer data cache
     pThis->EmuBuffer = pInputBuffer->pvBuffer;
@@ -1823,16 +1660,11 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Discontinuity(X_CDirectSoundStream *pT
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuCDirectSoundStream_Discontinuity\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_Discontinuity\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis);
 
     // TODO: Actually Process
 
@@ -1852,17 +1684,12 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Pause
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuCDirectSoundStream_Pause\n"
-               "(\n"
-               "   pStream                   : 0x%.08X\n"
-               "   dwPause                   : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pStream, dwPause);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_Pause\n"
+           "(\n"
+           "   pStream                   : 0x%.08X\n"
+           "   dwPause                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pStream, dwPause);
 
     EmuSwapFS();   // XBox FS
 
@@ -1880,17 +1707,12 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_SetHeadroom
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSoundStream_SetHeadroom\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   dwHeadroom                : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, dwHeadroom);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundStream_SetHeadroom\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   dwHeadroom                : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, dwHeadroom);
 
     // TODO: Actually implement this
 
@@ -1912,19 +1734,14 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetConeAngles
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetConeAngles\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   dwInsideConeAngle         : 0x%.08X\n"
-               "   dwOutsideConeAngle        : 0x%.08X\n"
-               "   dwApply                   : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, dwInsideConeAngle, dwOutsideConeAngle, dwApply);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetConeAngles\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   dwInsideConeAngle         : 0x%.08X\n"
+           "   dwOutsideConeAngle        : 0x%.08X\n"
+           "   dwApply                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, dwInsideConeAngle, dwOutsideConeAngle, dwApply);
 
     // TODO: Actually implement this
 
@@ -1945,18 +1762,13 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetConeOutsideVolume
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetConeOutsideVolume\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   lConeOutsideVolume        : %d\n"
-               "   dwApply                   : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, lConeOutsideVolume, dwApply);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetConeOutsideVolume\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   lConeOutsideVolume        : %d\n"
+           "   dwApply                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, lConeOutsideVolume, dwApply);
 
     // TODO: Actually implement this
 
@@ -1977,18 +1789,13 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetAllParameters
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetAllParameters\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   pUnknown                  : %f\n"
-               "   dwApply                   : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, pUnknown, dwApply);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetAllParameters\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   pUnknown                  : %f\n"
+           "   dwApply                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, pUnknown, dwApply);
 
     // TODO: Actually implement this
 
@@ -2009,18 +1816,13 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMaxDistance
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetMaxDistance\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   fMaxDistance              : %f\n"
-               "   dwApply                   : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, fMaxDistance, dwApply);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetMaxDistance\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   fMaxDistance              : %f\n"
+           "   dwApply                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, fMaxDistance, dwApply);
 
     // TODO: Actually implement this
 
@@ -2041,18 +1843,13 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMinDistance
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetMinDistance\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   fMinDistance              : %f\n"
-               "   dwApply                   : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, fMinDistance, dwApply);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetMinDistance\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   fMinDistance              : %f\n"
+           "   dwApply                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, fMinDistance, dwApply);
 
     // TODO: Actually implement this
 
@@ -2075,20 +1872,15 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetVelocity
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetVelocity\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   x                         : %f\n"
-               "   y                         : %f\n"
-               "   z                         : %f\n"
-               "   dwApply                   : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, x, y, z, dwApply);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetVelocity\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   x                         : %f\n"
+           "   y                         : %f\n"
+           "   z                         : %f\n"
+           "   dwApply                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, x, y, z, dwApply);
 
     // TODO: Actually implement this
 
@@ -2111,20 +1903,15 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetConeOrientation
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetConeOrientation\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   x                         : %f\n"
-               "   y                         : %f\n"
-               "   z                         : %f\n"
-               "   dwApply                   : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, x, y, z, dwApply);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetConeOrientation\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   x                         : %f\n"
+           "   y                         : %f\n"
+           "   z                         : %f\n"
+           "   dwApply                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, x, y, z, dwApply);
 
     // TODO: Actually implement this
 
@@ -2147,20 +1934,15 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetPosition
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetPosition\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   x                         : %f\n"
-               "   y                         : %f\n"
-               "   z                         : %f\n"
-               "   dwApply                   : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, x, y, z, dwApply);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetPosition\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   x                         : %f\n"
+           "   y                         : %f\n"
+           "   z                         : %f\n"
+           "   dwApply                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, x, y, z, dwApply);
 
     // TODO: Actually implement this
 
@@ -2180,17 +1962,12 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetFrequency
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetFrequency\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   dwFrequency               : %d\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, dwFrequency);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetFrequency\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   dwFrequency               : %d\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, dwFrequency);
 
     // TODO: Actually implement this
 
@@ -2211,18 +1988,13 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_SetI3DL2Source
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSoundStream_SetI3DL2Source\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   pds3db                    : 0x%.08X\n"
-               "   dwApply                   : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, pds3db, dwApply);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundStream_SetI3DL2Source\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   pds3db                    : 0x%.08X\n"
+           "   dwApply                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, pds3db, dwApply);
 
     // TODO: Actually implement this
 
@@ -2242,17 +2014,12 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_Unknown1
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSoundStream_Unknown1\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   dwUnknown1                : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, dwUnknown1);
-    }
-    #endif
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundStream_Unknown1\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   dwUnknown1                : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, dwUnknown1);
 
     // TODO: Actually implement this
 
@@ -2276,7 +2043,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMaxDistance
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetMaxDistance\n"
+        DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetMaxDistance\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   flMaxDistance             : %f\n"
@@ -2306,7 +2073,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMinDistance
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetMinDistance\n"
+        DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetMinDistance\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   flMinDistance             : %f\n"
@@ -2336,7 +2103,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetRolloffFactor
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetRolloffFactor\n"
+        DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetRolloffFactor\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   flRolloffFactor           : %f\n"
@@ -2366,7 +2133,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetDistanceFactor
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetDistanceFactor\n"
+        DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetDistanceFactor\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   flDistanceFactor          : %f\n"
@@ -2397,7 +2164,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetConeAngles
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetConeAngles\n"
+        DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetConeAngles\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   dwInsideConeAngle         : 0x%.08X\n"
@@ -2431,7 +2198,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetConeOrientation
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetConeOrientation\n"
+        DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetConeOrientation\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   x                         : %f\n"
@@ -2463,7 +2230,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetConeOutsideVolume
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetConeOutsideVolume\n"
+        DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetConeOutsideVolume\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   lConeOutsideVolume        : 0x%.08X\n"
@@ -2495,7 +2262,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPosition
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetPosition\n"
+        DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetPosition\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   x                         : %f\n"
@@ -2529,7 +2296,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetVelocity
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetVelocity\n"
+        DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetVelocity\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   x                         : %f\n"
@@ -2561,7 +2328,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetDopplerFactor
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetConeOutsideVolume\n"
+        DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetConeOutsideVolume\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   flDopplerFactor           : %f\n"
@@ -2591,7 +2358,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetI3DL2Source
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetI3DL2Source\n"
+        DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetI3DL2Source\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   pds3db                    : 0x%.08X\n"
