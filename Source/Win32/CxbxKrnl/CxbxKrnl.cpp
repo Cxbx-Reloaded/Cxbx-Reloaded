@@ -209,11 +209,13 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, ui
         // we sure hope we aren't corrupting anything necessary for an .exe to survive :]
         uint32 dwSizeofHeaders   = *(uint32*)&XBEHeader[0x0108];
         uint32 dwCertificateAddr = *(uint32*)&XBEHeader[0x0118];
+        uint32 dwInitFlags       = *(uint32*)&XBEHeader[0x0124];
         uint32 dwPeHeapReserve   = *(uint32*)&XBEHeader[0x0134];
         uint32 dwPeHeapCommit    = *(uint32*)&XBEHeader[0x0138];
 
         *(uint32 *)0x00010108 = dwSizeofHeaders;
         *(uint32 *)0x00010118 = dwCertificateAddr;
+        *(uint32 *)0x00010124 = dwInitFlags;
         *(uint32 *)0x00010134 = dwPeHeapReserve;
         *(uint32 *)0x00010138 = dwPeHeapCommit;
 

@@ -51,6 +51,11 @@ extern "C"
 #define NTSYSAPI     DECLSPEC_IMPORT
 
 // ******************************************************************
+// * CONST
+// ******************************************************************
+#define CONST               const
+
+// ******************************************************************
 // * Basic types
 // ******************************************************************
 typedef char                CHAR;
@@ -78,6 +83,7 @@ typedef BOOLEAN            *PBOOLEAN;
 typedef UCHAR              *PUCHAR;
 typedef USHORT             *PUSHORT;
 typedef ULONG              *PULONG;
+typedef ULONG              *ULONG_PTR;
 typedef ACCESS_MASK        *PACCESS_MASK;
 typedef LONG               *LONG_PTR;
 typedef INT_PTR            *PINT_PTR;
@@ -85,6 +91,12 @@ typedef void                VOID;
 typedef VOID               *PVOID;
 typedef void               *HANDLE;
 typedef HANDLE             *PHANDLE;
+typedef wchar_t             WCHAR, *PWCHAR;
+typedef WCHAR              *LPWCH, *PWCH;
+typedef CONST WCHAR        *LPCWCH, *PCWCH;
+typedef WCHAR              *NWPSTR;
+typedef WCHAR              *LPWSTR, *PWSTR;
+typedef CONST WCHAR        *LPCWSTR, *PCWSTR;
 
 // ******************************************************************
 // * NTSTATUS
@@ -159,6 +171,102 @@ NTSYSAPI NTSTATUS NTAPI NtSetLdtEntries
     IN LDT_ENTRY    Descriptor1,
     IN USHORT       Selector2,
     IN LDT_ENTRY    Descriptor2
+);
+
+// ******************************************************************
+// * Valid values for the Attributes field
+// ******************************************************************
+#define OBJ_INHERIT             0x00000002L
+#define OBJ_PERMANENT           0x00000010L
+#define OBJ_EXCLUSIVE           0x00000020L
+#define OBJ_CASE_INSENSITIVE    0x00000040L
+#define OBJ_OPENIF              0x00000080L
+#define OBJ_OPENLINK            0x00000100L
+#define OBJ_KERNEL_HANDLE       0x00000200L
+#define OBJ_VALID_ATTRIBUTES    0x000003F2L
+
+// ******************************************************************
+// * UNICODE_STRING
+// ******************************************************************
+typedef struct _UNICODE_STRING
+{
+    USHORT Length;
+    USHORT MaximumLength;
+#ifdef MIDL_PASS
+    [size_is(MaximumLength / 2), length_is((Length) / 2) ] USHORT * Buffer;
+#else // MIDL_PASS
+    PWSTR  Buffer;
+#endif // MIDL_PASS
+}
+UNICODE_STRING, *PUNICODE_STRING;
+
+typedef const UNICODE_STRING *PCUNICODE_STRING;
+
+#define UNICODE_NULL ((WCHAR)0) // winnt
+
+// ******************************************************************
+// * OBJECT_ATTRIBUTES
+// ******************************************************************
+typedef struct _OBJECT_ATTRIBUTES
+{
+    ULONG           Length;
+    HANDLE          RootDirectory;
+    PUNICODE_STRING ObjectName;
+    ULONG           Attributes;
+    PVOID           SecurityDescriptor;        // Points to type SECURITY_DESCRIPTOR
+    PVOID           SecurityQualityOfService;  // Points to type SECURITY_QUALITY_OF_SERVICE
+}
+OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
+
+// ******************************************************************
+// * InitializeObjectAttributes
+// * 
+// * VOID
+// * InitializeObjectAttributes(
+// *     OUT POBJECT_ATTRIBUTES p,
+// *     IN PUNICODE_STRING n,
+// *     IN ULONG a,
+// *     IN HANDLE r,
+// *     IN PSECURITY_DESCRIPTOR s
+// *     )
+// * 
+// ******************************************************************
+#define InitializeObjectAttributes( p, n, a, r, s )     \
+{                                                       \
+    (p)->Length = sizeof( OBJECT_ATTRIBUTES );          \
+    (p)->RootDirectory = r;                             \
+    (p)->Attributes = a;                                \
+    (p)->ObjectName = n;                                \
+    (p)->SecurityDescriptor = s;                        \
+    (p)->SecurityQualityOfService = NULL;               \
+}
+
+// ******************************************************************
+// * IO_STATUS_BLOCK
+// ******************************************************************
+typedef struct _IO_STATUS_BLOCK
+{
+    union
+    {
+        NTSTATUS Status;
+        PVOID    Pointer;
+    };
+
+    ULONG_PTR Information;
+}
+IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
+
+// ******************************************************************
+// * NtSetLdtEntries
+// ******************************************************************
+NTSYSAPI NTSTATUS NTAPI ZwOpenFile
+(
+    OUT PHANDLE             FileHandle,
+    IN  ACCESS_MASK         DesiredAccess,
+    IN  POBJECT_ATTRIBUTES  ObjectAttributes,
+    OUT PIO_STATUS_BLOCK    IoStatusBlock,
+    IN  ULONG               ShareAccess,
+    IN  ULONG               OpenOptions
 );
 
 #if defined(__cplusplus)
