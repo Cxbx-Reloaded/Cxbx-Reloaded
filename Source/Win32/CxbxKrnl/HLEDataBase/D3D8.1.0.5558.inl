@@ -1048,9 +1048,9 @@ OOVPATable D3D8_1_0_5558[] =
        "D3DDevice_RunVertexStateShader"
        #endif
     },
-    // D3DDevice_GetVertexShaderSize (* unchanged since 4627 *)
+    // D3DDevice_GetVertexShaderSize (* unchanged since 3925 *)
     {
-        (OOVPA*)&X_D3DDevice_GetVertexShaderSize_1_0_4627,
+        (OOVPA*)&X_D3DDevice_GetVertexShaderSize_1_0_3925,
 
         XTL::EmuIDirect3DDevice8_GetVertexShaderSize,
 

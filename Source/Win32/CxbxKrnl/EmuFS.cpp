@@ -72,9 +72,9 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		uint32 dwCopySize = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr;
         uint32 dwZeroSize = pTLS->dwSizeofZeroFill;
 
-        pNewTLS = (uint08*)CxbxMalloc(dwCopySize + dwZeroSize/* + TODO: HACK, extra safety padding  0x100*/);
+        pNewTLS = (uint08*)CxbxMalloc(dwCopySize + dwZeroSize + 0x100 /* + HACK: extra safety padding 0x100*/);
 
-        memset(pNewTLS, 0, dwCopySize + dwZeroSize/* + 0x100*/);
+        memset(pNewTLS, 0, dwCopySize + dwZeroSize + 0x100);
         memcpy(pNewTLS, pTLSData, dwCopySize);
     }
 

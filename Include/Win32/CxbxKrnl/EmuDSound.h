@@ -124,13 +124,52 @@ struct X_CDirectSoundBuffer
 #define DSB_FLAG_ADPCM 0x00000001
 
 // ******************************************************************
+// * X_CMcpxStream
+// ******************************************************************
+class X_CMcpxStream
+{
+    public:
+        // construct vtable (or grab ptr to existing)
+        X_CMcpxStream(class X_CDirectSoundStream *pParentStream) : pVtbl(&vtbl), pParentStream(pParentStream) {};
+
+    private:
+        // vtable (cached by each instance, via constructor)
+        struct _vtbl
+        {
+            DWORD Unknown1;                                                 // 0x00 - ???
+            DWORD Unknown2;                                                 // 0x04 - ???
+            DWORD Unknown3;                                                 // 0x08 - ???
+            DWORD Unknown4;                                                 // 0x0C - ???
+
+            //
+            // TODO: Function needs X_CMcpxStream "this" pointer (ecx!)
+            //
+ 
+            VOID (WINAPI *Dummy_0x10)(DWORD dwDummy1, DWORD dwDummy2);   // 0x10
+        }
+        *pVtbl;
+
+        // global vtbl for this class
+        static _vtbl vtbl;
+
+        // debug mode guard for detecting naughty data accesses
+        #ifdef _DEBUG
+        DWORD DebugGuard[256];
+        #endif
+
+    public:
+
+        class X_CDirectSoundStream *pParentStream;
+};
+
+// ******************************************************************
 // * X_CDirectSoundStream
 // ******************************************************************
 class X_CDirectSoundStream
 {
     public:
         // construct vtable (or grab ptr to existing)
-        X_CDirectSoundStream() : pVtbl(&vtbl) {};
+        X_CDirectSoundStream() : pVtbl(&vtbl) { pMcpxStream = new X_CMcpxStream(this); };
 
     private:
         // vtable (cached by each instance, via constructor)
@@ -154,11 +193,25 @@ class X_CDirectSoundStream
             );
 
             HRESULT (WINAPI *Discontinuity)(X_CDirectSoundStream *pThis);   // 0x14
+
+            HRESULT (WINAPI *Flush)(X_CDirectSoundStream *pThis);           // 0x18
+
+            DWORD Unknown2;                                                 // 0x1C - ???
+            DWORD Unknown3;                                                 // 0x20 - ???
+            DWORD Unknown4;                                                 // 0x24 - ???
+            DWORD Unknown5;                                                 // 0x28 - ???
+            DWORD Unknown6;                                                 // 0x2C - ???
+            DWORD Unknown7;                                                 // 0x30 - ???
+            DWORD Unknown8;                                                 // 0x34 - ???
+            DWORD Unknown9;                                                 // 0x38 - ???
         }
         *pVtbl;
 
         // global vtbl for this class
         static _vtbl vtbl;
+
+        DWORD Spacer[8];
+        PVOID pMcpxStream;
 
         // debug mode guard for detecting naughty data accesses
         #ifdef _DEBUG
@@ -552,6 +605,11 @@ HRESULT WINAPI EmuIDirectSound8_CreateStream
 );
 
 // ******************************************************************
+// * func: EmuCMcpxStream_Dummy_0x10
+// ******************************************************************
+VOID WINAPI EmuCMcpxStream_Dummy_0x10(DWORD dwDummy1, DWORD dwDummy2);
+
+// ******************************************************************
 // * func: EmuCDirectSoundStream_SetVolume
 // ******************************************************************
 ULONG WINAPI EmuCDirectSoundStream_SetVolume(X_CDirectSoundStream *pThis, LONG lVolume);
@@ -599,6 +657,11 @@ HRESULT WINAPI EmuCDirectSoundStream_Process
 // * func: EmuCDirectSoundStream_Discontinuity
 // ******************************************************************
 HRESULT WINAPI EmuCDirectSoundStream_Discontinuity(X_CDirectSoundStream *pThis);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_Flush
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_Flush(X_CDirectSoundStream *pThis);
 
 // ******************************************************************
 // * func: EmuCDirectSound_SynchPlayback

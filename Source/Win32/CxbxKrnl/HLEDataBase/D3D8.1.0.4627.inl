@@ -157,37 +157,6 @@ SOOVPA<13> IDirect3DDevice8_EndVisibilityTest_1_0_4627 =
 };
 
 // ******************************************************************
-// * IDirect3DDevice8_GetVisibilityTestResult
-// ******************************************************************
-SOOVPA<11> IDirect3DDevice8_GetVisibilityTestResult_1_0_4627 =
-{
-    0,  // Large == 0
-    11, // Count == 11
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        // IDirect3DDevice8_GetVisibilityTestResult+0x0C : shr ecx, 8
-        { 0x0C, 0xC1 }, // (Offset,Value)-Pair #1
-        { 0x0D, 0xE9 }, // (Offset,Value)-Pair #2
-        { 0x0E, 0x08 }, // (Offset,Value)-Pair #3
-
-        // IDirect3DDevice8_GetVisibilityTestResult+0x0F : and eax, 0xFF
-        { 0x0F, 0x25 }, // (Offset,Value)-Pair #4
-        { 0x10, 0xFF }, // (Offset,Value)-Pair #5
-        { 0x11, 0x00 }, // (Offset,Value)-Pair #6
-
-        // IDirect3DDevice8_GetVisibilityTestResult+0x2B : mov eax, 0x88760828
-        { 0x2B, 0xB8 }, // (Offset,Value)-Pair #7
-        { 0x2C, 0x28 }, // (Offset,Value)-Pair #8
-        { 0x2D, 0x08 }, // (Offset,Value)-Pair #9
-        { 0x2E, 0x76 }, // (Offset,Value)-Pair #10
-        { 0x2F, 0x88 }, // (Offset,Value)-Pair #11
-    }
-};
-
-// ******************************************************************
 // * IDirect3D8_GetAdapterDisplayMode
 // ******************************************************************
 SOOVPA<13> IDirect3D8_GetAdapterDisplayMode_1_0_4627 =
@@ -2496,28 +2465,6 @@ SOOVPA<8> X_D3DDevice_GetViewportOffsetAndScale_1_0_4627 =
 };
 
 // ******************************************************************
-// * D3DDevice_GetVertexShaderSize
-// ******************************************************************
-SOOVPA<7> X_D3DDevice_GetVertexShaderSize_1_0_4627 =
-{
-    0,  // Large == 0
-    7,  // Count == 7
-
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
-
-    {
-        { 0x01, 0x44 },
-        { 0x04, 0x85 },
-        { 0x07, 0x09 },
-        { 0x0A, 0x24 },
-        { 0x0D, 0x51 },
-        { 0x10, 0x10 },
-        { 0x13, 0x00 },
-    }
-};
-
-// ******************************************************************
 // * D3DDevice_DeleteVertexShader
 // ******************************************************************
 SOOVPA<6> X_D3DDevice_DeleteVertexShader_1_0_4627 =
@@ -2976,9 +2923,9 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_EndVisibilityTest"
         #endif
     },
-    // IDirect3DDevice8::GetVisibilityTestResult
+    // IDirect3DDevice8::GetVisibilityTestResult (* unchanged since 3925 *)
     {
-        (OOVPA*)&IDirect3DDevice8_GetVisibilityTestResult_1_0_4627,
+        (OOVPA*)&IDirect3DDevice8_GetVisibilityTestResult_1_0_3925,
 
         XTL::EmuIDirect3DDevice8_GetVisibilityTestResult,
 
@@ -4059,15 +4006,6 @@ OOVPATable D3D8_1_0_4627[] =
         "D3DDevice_GetViewportOffsetAndScale"
         #endif
     },
-    // D3DDevice_GetVertexShaderSize
-    {
-        (OOVPA*)&X_D3DDevice_GetVertexShaderSize_1_0_4627,
-        XTL::EmuIDirect3DDevice8_GetVertexShaderSize,
-
-        #ifdef _DEBUG_TRACE
-        "D3DDevice_GetVertexShaderSize"
-        #endif
-    },
     // D3DDevice_DeleteVertexShader
     {
         (OOVPA*)&X_D3DDevice_DeleteVertexShader_1_0_4627,
@@ -4167,9 +4105,9 @@ OOVPATable D3D8_1_0_4627[] =
         "D3DDevice_SelectVertexShader"
         #endif
     },
-    // D3DDevice_GetVertexShaderSize
+    // D3DDevice_GetVertexShaderSize (* unchanged since 3925 *)
     {
-        (OOVPA*)&X_D3DDevice_GetVertexShaderSize_1_0_4627,
+        (OOVPA*)&X_D3DDevice_GetVertexShaderSize_1_0_3925,
         XTL::EmuIDirect3DDevice8_GetVertexShaderSize,
 
         #ifdef _DEBUG_TRACE

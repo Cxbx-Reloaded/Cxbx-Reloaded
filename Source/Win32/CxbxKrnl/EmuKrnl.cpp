@@ -59,10 +59,11 @@ namespace NtDll
 // PsCreateSystemThread proxy parameters
 typedef struct _PCSTProxyParam
 {
-    IN PVOID StartContext1;
-    IN PVOID StartContext2;
-    IN PVOID StartRoutine;
-    IN BOOL  StartSuspended;
+    IN PVOID  StartContext1;
+    IN PVOID  StartContext2;
+    IN PVOID  StartRoutine;
+    IN BOOL   StartSuspended;
+    IN HANDLE hStartedEvent;
 }
 PCSTProxyParam;
 
@@ -114,6 +115,8 @@ static unsigned int WINAPI PCSTProxy
     {
         XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification;
 
+        DbgPrintf("EmKrnl (0x%X): Calling pfnNotificationRoutine (0x%.08X)\n", GetCurrentThreadId(), pfnNotificationRoutine);
+
         EmuSwapFS();   // Xbox FS
 
         pfnNotificationRoutine(TRUE);
@@ -124,6 +127,8 @@ static unsigned int WINAPI PCSTProxy
     // use the special calling convention
     __try
     {
+        SetEvent(iPCSTProxyParam->hStartedEvent);
+
         EmuSwapFS();   // Xbox FS
 
         __asm
@@ -2111,8 +2116,12 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
         iPCSTProxyParam->StartContext2 = StartContext2;
         iPCSTProxyParam->StartRoutine  = StartRoutine;
         iPCSTProxyParam->StartSuspended = CreateSuspended;
+        iPCSTProxyParam->hStartedEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
         *ThreadHandle = (HANDLE)_beginthreadex(NULL, NULL, PCSTProxy, iPCSTProxyParam, NULL, (uint*)&dwThreadId);
+
+        WaitForSingleObject(iPCSTProxyParam->hStartedEvent, 1000);
+
 //        *ThreadHandle = CreateThread(NULL, NULL, PCSTProxy, iPCSTProxyParam, NULL, &dwThreadId);
 
         DbgPrintf("EmuKrnl (0x%X): ThreadHandle : 0x%X, ThreadId : 0x%.08X\n", GetCurrentThreadId(), *ThreadHandle, dwThreadId);

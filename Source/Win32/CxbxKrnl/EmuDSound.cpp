@@ -51,17 +51,35 @@ namespace xboxkrnl
 #include <process.h>
 #include <locale.h>
 
+XTL::X_CMcpxStream::_vtbl XTL::X_CMcpxStream::vtbl = 
+{
+    0xBEEFC001,                     // 0x00
+    0xBEEFC002,                     // 0x04
+    0xBEEFC003,                     // 0x08
+    0xBEEFC004,                     // 0x0C
+    &XTL::EmuCMcpxStream_Dummy_0x10,// 0x10
+};
+
 XTL::X_CDirectSoundStream::_vtbl XTL::X_CDirectSoundStream::vtbl = 
 {
-    &XTL::EmuCDirectSoundStream_AddRef,         // 0x00 - AddRef
-    &XTL::EmuCDirectSoundStream_Release,        // 0x04 - Release
+    &XTL::EmuCDirectSoundStream_AddRef,         // 0x00
+    &XTL::EmuCDirectSoundStream_Release,        // 0x04
 /*
     STDMETHOD(GetInfo)(THIS_ LPXMEDIAINFO pInfo) PURE;
 */
-    0xBEEFB001,                                 // 0x08 - Unknown
-    &XTL::EmuCDirectSoundStream_GetStatus,      // 0x0C - GetStatus
-    &XTL::EmuCDirectSoundStream_Process,        // 0x10 - Process
-    &XTL::EmuCDirectSoundStream_Discontinuity   // 0x14 - Discontinuity
+    0xBEEFB001,                                 // 0x08
+    &XTL::EmuCDirectSoundStream_GetStatus,      // 0x0C
+    &XTL::EmuCDirectSoundStream_Process,        // 0x10
+    &XTL::EmuCDirectSoundStream_Discontinuity,  // 0x14
+    &XTL::EmuCDirectSoundStream_Flush,          // 0x18
+    0xBEEFB003,                                 // 0x1C
+    0xBEEFB004,                                 // 0x20
+    0xBEEFB005,                                 // 0x24
+    0xBEEFB006,                                 // 0x28
+    0xBEEFB007,                                 // 0x2C
+    0xBEEFB008,                                 // 0x30
+    0xBEEFB009,                                 // 0x34
+    0xBEEFB00A,                                 // 0x38
 };
 
 // size of sound buffer cache (used for periodic sound buffer updates)
@@ -1550,6 +1568,15 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateStream
 }
 
 // ******************************************************************
+// * func: EmuCMcpxStream_Dummy_0x10
+// ******************************************************************
+VOID WINAPI XTL::EmuCMcpxStream_Dummy_0x10(DWORD dwDummy1, DWORD dwDummy2)
+{
+    EmuWarning("EmuCMcpxStream_Dummy_0x10 is ignored!");
+    return;
+}
+
+// ******************************************************************
 // * func: EmuCDirectSoundStream_SetVolume
 // ******************************************************************
 ULONG WINAPI XTL::EmuCDirectSoundStream_SetVolume(X_CDirectSoundStream *pThis, LONG lVolume)
@@ -1714,13 +1741,15 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Process
 
         EmuResizeIDirectSoundStream8(pThis, pInputBuffer->dwMaxSize);
 
-        *pInputBuffer->pdwStatus = S_OK;
+        if(pInputBuffer->pdwStatus != 0)
+            *pInputBuffer->pdwStatus = S_OK;
 
         HackUpdateSoundStreams();
     }
     else
     {
-        *pInputBuffer->pdwStatus = S_OK;
+        if(pInputBuffer->pdwStatus != 0)
+            *pInputBuffer->pdwStatus = S_OK;
     }
 
     EmuSwapFS();   // XBox FS
@@ -1742,6 +1771,23 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Discontinuity(X_CDirectSoundStream *pT
            GetCurrentThreadId(), pThis);
 
     // TODO: Actually Process
+
+    EmuSwapFS();   // XBox FS
+
+    return DS_OK;
+}
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_Flush
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSoundStream_Flush(X_CDirectSoundStream *pThis)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_Flush();\n",
+           GetCurrentThreadId(), pThis);
+
+    // TODO: Actually Flush
 
     EmuSwapFS();   // XBox FS
 

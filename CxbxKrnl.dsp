@@ -187,13 +187,6 @@ SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.4627.h
 # Begin Source File
 
 SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.5558.h
-
-!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 

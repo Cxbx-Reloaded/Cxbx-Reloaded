@@ -485,9 +485,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
                             if(BuildVersion == 3925)
                             {
-                                // NOTE: HACK: This is preliminary. If render states have a problem, maybe this is wrong!
-                                XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x25) - 0x1FC + 82*4);  // TODO: Verify
-                                patchOffset = 142*4 - 82*4;
+                                XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x25) - 0x19F + 72*4);  // TODO: Clean up (?)
+                                patchOffset = 142*4 - 72*4; // TODO: Verify
                             }
                             else if(BuildVersion == 4134)
                             {
@@ -548,8 +547,10 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
                             if(pFunc != 0)
                             {
-                                if(BuildVersion == 3925 || BuildVersion == 4134)
-					                XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x18) - 0x70);
+                                if(BuildVersion == 3925) // 0x18F180
+					                XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x11) - 0x70); // TODO: Verify
+                                else if(BuildVersion == 4134)
+					                XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x18) - 0x70); // TODO: Verify
                                 else
 					                XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x19) - 0x70);
 
@@ -607,7 +608,27 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         // _USE_XGMATH Disabled in mesh :[
         // halo : dword_0_2E2D18
         // halo : 1744F0 (bink)
-        _asm int 3
+        //_asm int 3;
+
+        /*
+        for(int v=0;v<sizeof(funcAddr)/sizeof(uint32);v++)
+        {
+            bool bExclude = false;
+            for(int r=0;r<sizeof(funcExclude)/sizeof(uint32);r++)
+            {
+                if(funcAddr[v] == funcExclude[r])
+                {
+                    bExclude = true;
+                    break;
+                }
+            }
+
+            if(!bExclude)
+            {
+                *(uint08*)(funcAddr[v]) = 0xCC;
+            }
+        }
+        //*/
 
         Entry();
 
@@ -840,6 +861,16 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
             {
                 if(e->ContextRecord->Ecx == 0x803BD800)
                 {
+                    // Halo BINK skip
+                    {
+                        // nop sled over bink calls
+                        /*
+                        memset((void*)0x2CBA4, 0x90, 0x2CBAF - 0x2CBA4);
+                        memset((void*)0x2CBBD, 0x90, 0x2CBD5 - 0x2CBBD);
+                        //*/
+                        memset((void*)0x2CAE0, 0x90, 0x2CE1E - 0x2CAE0);
+                    }
+
                     uint32 fix = g_HaloHack[1] + (e->ContextRecord->Eax - 0x803A6000);
 
                     e->ContextRecord->Eax = e->ContextRecord->Ecx = fix;

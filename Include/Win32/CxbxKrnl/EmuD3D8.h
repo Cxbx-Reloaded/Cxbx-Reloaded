@@ -51,6 +51,9 @@ extern VOID EmuD3DCleanup();
 // EmuD3DTileCache (8 tiles maximum)
 extern X_D3DTILE EmuD3DTileCache[0x08];
 
+// EmuD3DActiveTexture
+extern X_D3DResource *EmuD3DActiveTexture;
+
 // ******************************************************************
 // * func: EmuIDirect3D8_CreateDevice
 // ******************************************************************
@@ -63,6 +66,11 @@ HRESULT WINAPI EmuIDirect3D8_CreateDevice
     X_D3DPRESENT_PARAMETERS    *pPresentationParameters,
     IDirect3DDevice8          **ppReturnedDeviceInterface
 );
+
+// ******************************************************************
+// * func: EmuIDirect3DResource8_IsBusy
+// ******************************************************************
+BOOL WINAPI EmuIDirect3DDevice8_IsBusy();
 
 // ******************************************************************
 // * func: EmuIDirect3D8_CheckDeviceFormat
@@ -555,6 +563,16 @@ HRESULT WINAPI EmuIDirect3DDevice8_SetVertexData2f
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetVertexData2s
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetVertexData2s
+(
+    int     Register,
+    SHORT   a,
+    SHORT   b
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexData4f
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_SetVertexData4f
@@ -652,6 +670,19 @@ ULONG WINAPI EmuIDirect3DResource8_AddRef
 BOOL WINAPI EmuIDirect3DResource8_IsBusy
 (
     X_D3DResource      *pThis
+);
+
+// ******************************************************************
+// * func: EmuLock2DSurface
+// ******************************************************************
+VOID WINAPI EmuLock2DSurface
+(
+    X_D3DPixelContainer *pPixelContainer,
+    D3DCUBEMAP_FACES     FaceType,
+    UINT                 Level,
+    D3DLOCKED_RECT      *pLockedRect,
+    RECT                *pRect,
+    DWORD                Flags
 );
 
 // ******************************************************************
