@@ -1,15 +1,25 @@
-cxbx website: http://www.caustik.com/xbox/
+Cxbx Home Page: http://www.caustik.com/cxbx/
 
 version: 0.8.0 (??/??/??)
 --------------------------------
 
-- Turok playable in wireframe mode!
+- Turok is playable!
 
-- GUI changes
+- Major GUI changes, new logo + about screens
 
-- Faux Fullscreen (ALT+ENTER)
+- Single window emulation!
+
+- Faux Fullscreen (Alt + Enter)!
+
+- Preliminary pixel shader support!
+
+- Vertex Shader support!
+
+- Push Buffer support!
 
 - Toggle Wireframe/Dots/Normal with F11
+
+- Tons of new debug support, including integrated debug console
 
 - DirectSound support! Turok and Stella (Atari 2600 emulator)
   are both able to play sound+music, works great!
@@ -37,6 +47,8 @@ version: 0.8.0 (??/??/??)
 - Overlay support detection improved (again)
 
 - Absurd amounts of new code, including general code cleanup
+
+- Much much more that we dont even remember!
 
 version: 0.7.8c (09/02/03)
 --------------------------------
