@@ -70,6 +70,7 @@ xntdll::FPTR_RtlNtStatusToDosError        NT_RtlNtStatusToDosError        = (xnt
 xntdll::FPTR_NtAllocateVirtualMemory      NT_NtAllocateVirtualMemory      = (xntdll::FPTR_NtAllocateVirtualMemory)GetProcAddress(hNtDll, "NtAllocateVirtualMemory");
 xntdll::FPTR_NtClose                      NT_NtClose                      = (xntdll::FPTR_NtClose)GetProcAddress(hNtDll, "NtClose");
 xntdll::FPTR_NtDelayExecution             NT_NtDelayExecution             = (xntdll::FPTR_NtDelayExecution)GetProcAddress(hNtDll, "NtDelayExecution");
+xntdll::FPTR_NtQueryInformationFile       NT_NtQueryInformationFile       = (xntdll::FPTR_NtQueryInformationFile)GetProcAddress(hNtDll, "NtQueryInformationFile");
 xntdll::FPTR_RtlInitializeCriticalSection NT_RtlInitializeCriticalSection = (xntdll::FPTR_RtlInitializeCriticalSection)GetProcAddress(hNtDll, "RtlInitializeCriticalSection");
 xntdll::FPTR_RtlEnterCriticalSection      NT_RtlEnterCriticalSection      = (xntdll::FPTR_RtlEnterCriticalSection)GetProcAddress(hNtDll, "RtlEnterCriticalSection");
 xntdll::FPTR_RtlLeaveCriticalSection      NT_RtlLeaveCriticalSection      = (xntdll::FPTR_RtlLeaveCriticalSection)GetProcAddress(hNtDll, "RtlLeaveCriticalSection");
@@ -763,11 +764,18 @@ XBSYSAPI EXPORTNUM(211) NTSTATUS NTAPI xboxkrnl::NtQueryInformationFile
     }
     #endif
 
-    EmuCleanup("NtQueryInformationFile (TODO)");
+	NTSTATUS ret = NT_NtQueryInformationFile
+	(
+		FileHandle,
+        (xntdll::PIO_STATUS_BLOCK)IoStatusBlock,
+		FileInformation,
+		Length,
+        (xntdll::FILE_INFORMATION_CLASS)FileInfo
+	);
 
     EmuSwapFS();   // Xbox FS
 
-    return STATUS_SUCCESS;
+    return ret;
 }
 
 // ******************************************************************

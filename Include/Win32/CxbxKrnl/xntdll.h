@@ -319,6 +319,55 @@ typedef enum _CREATE_FILE_TYPE
 CREATE_FILE_TYPE;
 
 // ******************************************************************
+// * FILE_INFORMATION_CLASS
+// ******************************************************************
+typedef enum _FILE_INFORMATION_CLASS
+{
+    FileDirectoryInformation=1,
+    FileFullDirectoryInformation,
+    FileBothDirectoryInformation,
+    FileBasicInformation,
+    FileStandardInformation,
+    FileInternalInformation,
+    FileEaInformation,
+    FileAccessInformation,
+    FileNameInformation,
+    FileRenameInformation,
+    FileLinkInformation,
+    FileNamesInformation,
+    FileDispositionInformation,
+    FilePositionInformation,
+    FileFullEaInformation,
+    FileModeInformation,
+    FileAlignmentInformation,
+    FileAllInformation,
+    FileAllocationInformation,
+    FileEndOfFileInformation,
+    FileAlternateNameInformation,
+    FileStreamInformation,
+    FilePipeInformation,
+    FilePipeLocalInformation,
+    FilePipeRemoteInformation,
+    FileMailslotQueryInformation,
+    FileMailslotSetInformation,
+    FileCompressionInformation,
+    FileCopyOnWriteInformation,
+    FileCompletionInformation,
+    FileMoveClusterInformation,
+    FileQuotaInformation,
+    FileReparsePointInformation,
+    FileNetworkOpenInformation,
+    FileObjectIdInformation,
+    FileTrackingInformation,
+    FileOleDirectoryInformation,
+    FileContentIndexInformation,
+    FileInheritContentIndexInformation,
+    FileOleInformation,
+    FileMaximumInformation
+}
+FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
+
+// ******************************************************************
 // * ZwOpenFile
 // ******************************************************************
 NTSYSAPI NTSTATUS NTAPI ZwOpenFile
@@ -430,7 +479,7 @@ typedef VOID (NTAPI *FPTR_RtlLeaveCriticalSection)
 );
 
 // ******************************************************************
-// * ZwCreateFile
+// * NtCreateFile
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtCreateFile)
 (
@@ -445,6 +494,18 @@ typedef NTSTATUS (NTAPI *FPTR_NtCreateFile)
     IN  ULONG				CreateOptions,
 	IN  PVOID				EaBuffer OPTIONAL,
 	IN  ULONG				EaLength
+);
+
+// ******************************************************************
+// * NtQueryInformationFile
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtQueryInformationFile)
+(
+	IN  HANDLE                  FileHandle,
+	OUT PIO_STATUS_BLOCK        IoStatusBlock,
+	OUT PVOID                   FileInformation, 
+	IN  ULONG                   Length, 
+	IN  FILE_INFORMATION_CLASS  FileInfo
 );
 
 // ******************************************************************
