@@ -4797,6 +4797,55 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetTextureState_BorderColor
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetTextureState_BumpEnv
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetTextureState_BumpEnv
+(
+    DWORD                      Stage,
+    X_D3DTEXTURESTAGESTATETYPE Type,
+    DWORD                      Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetTextureState_BumpEnv\n"
+               "(\n"
+               "   Stage               : 0x%.08X\n"
+               "   Type                : 0x%.08X\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Stage, Type, Value);
+    }
+    #endif
+
+    switch(Type)
+    {
+        case 22:    // X_D3DTSS_BUMPENVMAT00
+            g_pD3DDevice8->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT00, Value);
+            break;
+        case 23:    // X_D3DTSS_BUMPENVMAT01
+            g_pD3DDevice8->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT01, Value);
+            break;
+        case 24:    // X_D3DTSS_BUMPENVMAT11
+            g_pD3DDevice8->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT11, Value);
+            break;
+        case 25:    // X_D3DTSS_BUMPENVMAT10
+            g_pD3DDevice8->SetTextureStageState(Stage, D3DTSS_BUMPENVMAT10, Value);
+            break;
+        case 26:    // X_D3DTSS_BUMPENVLSCALE
+            g_pD3DDevice8->SetTextureStageState(Stage, D3DTSS_BUMPENVLSCALE, Value);
+            break;
+    }
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_NormalizeNormals
 // ******************************************************************
 VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_NormalizeNormals

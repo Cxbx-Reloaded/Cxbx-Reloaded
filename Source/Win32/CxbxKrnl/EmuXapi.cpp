@@ -960,6 +960,7 @@ VOID WINAPI XTL::EmuXRegisterThreadNotifyRoutine
     EmuSwapFS();   // XBox FS
 }
 
+/* not necessary?
 // ******************************************************************
 // * func: EmuXCalculateSignatureBegin
 // ******************************************************************
@@ -1081,3 +1082,4 @@ DWORD WINAPI XTL::EmuXCalculateSignatureEnd
 
     return ERROR_SUCCESS;
 }
+*/

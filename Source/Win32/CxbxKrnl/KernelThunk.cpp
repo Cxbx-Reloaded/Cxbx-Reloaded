@@ -380,7 +380,7 @@ extern "C" CXBXKRNL_API uint32 KernelThunkTable[367] =
     (uint32)PANIC(0x0140),                          // 0x0140 (320)
     (uint32)PANIC(0x0141),                          // 0x0141 (321)
     (uint32)&xboxkrnl::XboxHardwareInfo,            // 0x0142 (322)
-    (uint32)PANIC(0x0143),                          // 0x0143 (323)
+    (uint32)&xboxkrnl::XboxHDKey,                   // 0x0143 (323)
     (uint32)PANIC(0x0144),                          // 0x0144 (324)
     (uint32)&xboxkrnl::XboxSignatureKey,            // 0x0145 (325)
     (uint32)PANIC(0x0146),                          // 0x0146 (326)

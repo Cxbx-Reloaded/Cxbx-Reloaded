@@ -205,7 +205,9 @@ enum XRefDataBaseOffset
     XREF_DSBUFFERSETDOPPLERFACTOR,
     XREF_DSBUFFERSETI3DL2SOURCE,
     // XAPI
+    /* not necessary?
     XREF_XAPIXCALCULATESIGNATUREBEGINEX
+    */
     // +s
 };
 

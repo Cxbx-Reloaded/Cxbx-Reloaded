@@ -515,6 +515,7 @@ VOID WINAPI EmuXRegisterThreadNotifyRoutine
 );
 
 // s+
+/* not necessary?
 // ******************************************************************
 // * func: EmuXCalculateSignatureBegin
 // ******************************************************************
@@ -550,6 +551,7 @@ DWORD WINAPI EmuXCalculateSignatureEnd
   HANDLE                hCalcSig,
   PXCALCSIG_SIGNATURE   pSignature
 );
+*/
 // +s
 
 #endif

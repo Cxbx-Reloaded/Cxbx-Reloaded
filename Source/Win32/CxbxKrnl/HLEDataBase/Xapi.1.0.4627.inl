@@ -127,6 +127,7 @@ SOOVPA<8> XMountUtilityDrive_1_0_4627 =
 };
 
 // s+
+/* not necessary?
 // ******************************************************************
 // * XCalculateSignatureBeginEx
 // ******************************************************************
@@ -245,6 +246,7 @@ SOOVPA<8> XCalculateSignatureEnd_1_0_4627 =
         { 0x39, 0xEC },
     }
 };
+*/
 // +s
 
 // ******************************************************************
@@ -395,6 +397,7 @@ OOVPATable XAPI_1_0_4627[] =
         #endif
     },
     // +s
+    /* not necessary?
     // XCalculateSignatureBeginEx
     {
         (OOVPA*)&XCalculateSignatureBeginEx_1_0_4627,
@@ -435,6 +438,7 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXCalculateSignatureEnd"
         #endif
     },
+    */
     // s+
 };
 

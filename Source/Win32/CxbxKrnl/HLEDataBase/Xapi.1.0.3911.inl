@@ -390,7 +390,7 @@ SOOVPA<11> XRegisterThreadNotifyRoutine_1_0_3911 =
         { 0x47, 0x08 }, // (Offset,Value)-Pair #11
     }
 };
-
+/* not necessary?
 // ******************************************************************
 // * XCalculateSignatureBegin
 // ******************************************************************
@@ -422,6 +422,7 @@ SOOVPA<10> XCalculateSignatureBegin_1_0_3911 =
         { 0x3C, 0x04 }, // (Offset,Value)-Pair #10
     }
 };
+*/
 
 // ******************************************************************
 // * XGetDeviceChanges

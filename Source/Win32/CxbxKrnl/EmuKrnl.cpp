@@ -2634,12 +2634,23 @@ XBSYSAPI EXPORTNUM(308) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToAns
 }
 
 // ******************************************************************
-// * 0x0141 - XboxHardwareInfo
+// * 0x0142 - XboxHardwareInfo
 // ******************************************************************
 XBSYSAPI EXPORTNUM(322) XBOX_HARDWARE_INFO xboxkrnl::XboxHardwareInfo = 
 {
     0xC0000035,
     0,0,0,0
+};
+
+// ******************************************************************
+// * 0x0143 - XboxHDKey
+// ******************************************************************
+XBSYSAPI EXPORTNUM(323) xboxkrnl::UCHAR xboxkrnl::XboxHDKey[16] = 
+{
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
 };
 
 // ******************************************************************

@@ -848,6 +848,13 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
         pDSBufferDesc->guid3DAlgorithm = DS3DALG_DEFAULT;
     }
 
+    // sanity check
+    if(pDSBufferDesc->lpwfxFormat->nBlockAlign != (pDSBufferDesc->lpwfxFormat->nChannels*pDSBufferDesc->lpwfxFormat->wBitsPerSample)/8)
+    {
+        pDSBufferDesc->lpwfxFormat->nBlockAlign = (2*pDSBufferDesc->lpwfxFormat->wBitsPerSample)/8;
+        pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = pDSBufferDesc->lpwfxFormat->nSamplesPerSec * pDSBufferDesc->lpwfxFormat->nBlockAlign;
+    }
+
     // TODO: Garbage Collection
     *ppBuffer = new X_CDirectSoundBuffer();
 

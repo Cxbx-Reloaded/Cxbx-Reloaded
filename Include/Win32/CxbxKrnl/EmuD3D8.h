@@ -65,6 +65,7 @@ typedef DWORD X_D3DBLEND;
 typedef DWORD X_D3DCMPFUNC;
 typedef DWORD X_D3DFILLMODE;
 typedef DWORD X_D3DPRIMITIVETYPE;
+typedef DWORD X_D3DTEXTURESTAGESTATETYPE;
 
 // NOTE: HACK: These enumerations are not equivalent when > 7!
 typedef D3DRESOURCETYPE X_D3DRESOURCETYPE;
@@ -1044,6 +1045,16 @@ VOID WINAPI EmuIDirect3DDevice8_SetTextureState_BorderColor
 (
     DWORD Stage,
     DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetTextureState_BumpEnv
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetTextureState_BumpEnv
+(
+    DWORD                      Stage,
+    X_D3DTEXTURESTAGESTATETYPE Type,
+    DWORD                      Value
 );
 
 // ******************************************************************

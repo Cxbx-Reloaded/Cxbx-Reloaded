@@ -1166,6 +1166,40 @@ SOOVPA<10> IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4627 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetTextureState_BumpEnv
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_SetTextureState_BumpEnv_1_0_4627 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetTextureState_BumpEnv+0x18 : jnz +0x03
+        { 0x18, 0x75 }, // (Offset,Value)-Pair #1
+        { 0x19, 0x03 }, // (Offset,Value)-Pair #2
+
+        // IDirect3DDevice8_SetTextureState_BumpEnv+0x1D : test bl, 3
+        { 0x1D, 0xF6 }, // (Offset,Value)-Pair #3
+        { 0x1E, 0xC3 }, // (Offset,Value)-Pair #4
+        { 0x1F, 0x03 }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_SetTextureState_BumpEnv+0x32 : mov ecx, [esp+0x14]
+        { 0x32, 0x8B }, // (Offset,Value)-Pair #6
+        { 0x33, 0x4C }, // (Offset,Value)-Pair #7
+        { 0x34, 0x24 }, // (Offset,Value)-Pair #8
+        { 0x35, 0x18 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DDevice8_SetTextureState_BumpEnv+0x50 : shl esi, 5
+        { 0x50, 0xC1 }, // (Offset,Value)-Pair #10
+        { 0x51, 0xE6 }, // (Offset,Value)-Pair #11
+        { 0x52, 0x05 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetTextureState_BorderColor
 // ******************************************************************
 SOOVPA<15> IDirect3DDevice8_SetTextureState_BorderColor_1_0_4627 =
@@ -2112,6 +2146,16 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetTextureState_TexCoordIndex" 
+        #endif
+    },
+    // IDirect3DDevice8::SetTextureState_BumpEnv
+    {
+        (OOVPA*)&IDirect3DDevice8_SetTextureState_BumpEnv_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_SetTextureState_BumpEnv,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetTextureState_BumpEnv" 
         #endif
     },
     // IDirect3DDevice8::SetTextureState_BorderColor

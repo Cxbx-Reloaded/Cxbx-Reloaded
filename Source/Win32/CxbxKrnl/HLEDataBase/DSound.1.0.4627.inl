@@ -480,6 +480,37 @@ SOOVPA<12> IDirectSoundBuffer8_SetMixBinVolumes_1_0_4627 =
 };
 
 // ******************************************************************
+// * CDirectSound::SetPositionA
+// ******************************************************************
+SOOVPA<11> CDirectSound_SetPositionA_1_0_4627 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    XREF_DSSETPOSITIONA,    // XRef Is  Saved
+    0,                      // XRef Not Used
+
+    {
+        // CDirectSound_SetPositionA+0x2B : mov ecx, [ebp+0x08]
+        { 0x2B, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x2C, 0x4D }, // (Offset,Value)-Pair #2
+        { 0x2D, 0x08 }, // (Offset,Value)-Pair #3
+
+        // CDirectSound_SetPositionA+0x3F : mov [edx+0x3C], edi
+        { 0x3F, 0x89 }, // (Offset,Value)-Pair #4
+        { 0x40, 0x7A }, // (Offset,Value)-Pair #5
+        { 0x41, 0x3C }, // (Offset,Value)-Pair #6
+
+        // CDirectSound_SetPositionA+0x4C : or word ptr [eax+0xA4], 0x01FF
+        { 0x4C, 0x66 }, // (Offset,Value)-Pair #7
+        { 0x4D, 0x81 }, // (Offset,Value)-Pair #8
+        { 0x4E, 0x88 }, // (Offset,Value)-Pair #9
+        { 0x4F, 0xA4 }, // (Offset,Value)-Pair #10
+        { 0x53, 0xFF }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
 // * DirectSoundCreateBuffer
 // ******************************************************************
 SOOVPA<12> DirectSoundCreateBuffer_1_0_4627 =
@@ -762,6 +793,39 @@ SOOVPA<11> CDirectSoundStream_SetVolume_1_0_4361 =
         { 0x11, 0x8B }, // (Offset,Value)-Pair #9
         { 0x12, 0x49 }, // (Offset,Value)-Pair #10
         { 0x13, 0x0C }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
+// * IDirectSoundBuffer8_LockA
+// ******************************************************************
+SOOVPA<13> IDirectSoundBuffer8_LockA_1_0_4627 =
+{
+    0, // Large == 0
+    13,// Count == 10
+
+    XREF_DSBUFFERLOCKA, // XRef Is  Saved
+    0,                  // XRef Not Used
+
+    {
+        // IDirectSoundBuffer8_LockA+0x37 : test [ebp+0x24], 1
+        { 0x37, 0xF6 }, // (Offset,Value)-Pair #1
+        { 0x38, 0x45 }, // (Offset,Value)-Pair #2
+        { 0x39, 0x24 }, // (Offset,Value)-Pair #3
+        { 0x3A, 0x01 }, // (Offset,Value)-Pair #4
+
+        // IDirectSoundBuffer8_LockA+0x5C : mov eax, [eax+0xBC]
+        { 0x5C, 0x8B }, // (Offset,Value)-Pair #5
+        { 0x5D, 0x80 }, // (Offset,Value)-Pair #6
+        { 0x5E, 0xBC }, // (Offset,Value)-Pair #7
+        { 0x5F, 0x00 }, // (Offset,Value)-Pair #8
+
+        // IDirectSoundBuffer8_LockA+0xA4 : jnb +0x11; mov esi, [esi+0x1C]
+        { 0xA2, 0x73 }, // (Offset,Value)-Pair #9
+        { 0xA3, 0x11 }, // (Offset,Value)-Pair #10
+        { 0xA4, 0x8B }, // (Offset,Value)-Pair #11
+        { 0xA5, 0x76 }, // (Offset,Value)-Pair #12
+        { 0xA6, 0x1C }, // (Offset,Value)-Pair #13
     }
 };
 
@@ -2287,6 +2351,24 @@ OOVPATable DSound_1_0_4627[] =
         "EmuIDirectSoundBuffer8_SetMixBinVolumes"
         #endif
     },
+    // CDirectSound::SetPositionA (XREF)
+    {
+        (OOVPA*)&CDirectSound_SetPositionA_1_0_4627, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSound_SetPositionA (XRef)"
+        #endif
+    },
+    // IDirectSound8::SetPosition
+    {
+        (OOVPA*)&IDirectSound8_SetPosition_1_0_3936,
+
+        XTL::EmuIDirectSound8_SetPosition,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSound8_SetPosition" 
+        #endif
+    },
     // DirectSoundCreateBuffer
     {
         (OOVPA*)&DirectSoundCreateBuffer_1_0_4627,
@@ -2359,6 +2441,24 @@ OOVPATable DSound_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuCDirectSoundStream_SetVolume" 
+        #endif
+    },
+    // IDirectSoundBuffer8::LockA (XREF)
+    {
+        (OOVPA*)&IDirectSoundBuffer8_LockA_1_0_4627, 0,
+
+        #ifdef _DEBUG_TRACE
+        "IDirectSoundBuffer8_LockA (XRef)"
+        #endif
+    },
+    // IDirectSoundBuffer8::Lock
+    {
+        (OOVPA*)&IDirectSoundBuffer8_Lock_1_0_3936,
+
+        XTL::EmuIDirectSoundBuffer8_Lock,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSoundBuffer8_Lock" 
         #endif
     },
     // CDirectSound_CreateSoundStream (* unchanged since 4361 *)
