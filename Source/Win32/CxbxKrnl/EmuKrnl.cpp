@@ -528,13 +528,13 @@ XBSYSAPI EXPORTNUM(184) NTSTATUS xboxkrnl::NtAllocateVirtualMemory
     {
         printf("EmuKrnl (%d): NtAllocateVirtualMemory\n"
                "(\n"
-               "   BaseAddress         : 0x%.08X\n"
+               "   BaseAddress         : 0x%.08X (0x%.08X)\n"
                "   ZeroBits            : 0x%.08X\n"
-               "   AllocationSize      : 0x%.08X\n"
+               "   AllocationSize      : 0x%.08X (0x%.08X)\n"
                "   AllocationType      : 0x%.08X\n"
                "   Protect             : 0x%.08X\n"
                ");\n",
-               GetCurrentThreadId(), BaseAddress, ZeroBits, AllocationSize, AllocationType, Protect);
+               GetCurrentThreadId(), BaseAddress, *BaseAddress, ZeroBits, AllocationSize, *AllocationSize, AllocationType, Protect);
     }
     #endif
 

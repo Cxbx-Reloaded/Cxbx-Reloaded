@@ -284,7 +284,7 @@ VOID WINAPI EmuXapiInitProcess();
 // ******************************************************************
 // * data: EmuXapiProcessHeap
 // ******************************************************************
-extern PVOID EmuXapiProcessHeap;
+extern PVOID* EmuXapiProcessHeap;
 
 // ******************************************************************
 // * func: g_pRtlCreateHeap

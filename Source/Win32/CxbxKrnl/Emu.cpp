@@ -296,12 +296,12 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
 					if(pFunc != 0)
 					{
-						xapi::EmuXapiProcessHeap = *(PVOID*)((uint32)pFunc + 0x3E);
+						xapi::EmuXapiProcessHeap = *(PVOID**)((uint32)pFunc + 0x3E);
 
 						xapi::g_pRtlCreateHeap = *(xapi::pfRtlCreateHeap*)((uint32)pFunc + 0x37);
 						xapi::g_pRtlCreateHeap = (xapi::pfRtlCreateHeap)((uint32)pFunc + (uint32)xapi::g_pRtlCreateHeap + 0x37 + 0x04);
 
-						printf("Emu (%d): 0x%.08X -> &XapiProcessHeap\n", GetCurrentThreadId(), xapi::EmuXapiProcessHeap);
+						printf("Emu (%d): 0x%.08X -> EmuXapiProcessHeap\n", GetCurrentThreadId(), xapi::EmuXapiProcessHeap);
 						printf("Emu (%d): 0x%.08X -> RtlCreateHeap\n", GetCurrentThreadId(), xapi::g_pRtlCreateHeap);
 					}
 				}
@@ -544,9 +544,9 @@ int EmuException(LPEXCEPTION_POINTERS e)
 	// * Debugging Information
 	// ******************************************************************
 	{
-		printf("\n");
+		printf("Emu (%d): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
 		printf("Emu (%d): Recieved Exception : 0x%.08X\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
-		printf("\n");
+		printf("Emu (%d): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
 	}
 
 	// ******************************************************************
@@ -557,7 +557,7 @@ int EmuException(LPEXCEPTION_POINTERS e)
 
 		sprintf(buffer, "Recieved Exception [0x%.08X]\n\nPress 'OK' to terminate emulation.\nPress 'Cancel' to debug.", e->ExceptionRecord->ExceptionCode);
 
-		if(MessageBox(NULL, buffer, "Cxbx", MB_ICONSTOP | MB_OKCANCEL) == IDOK)
+		if(MessageBox(g_hEmuWindow, buffer, "Cxbx", MB_ICONSTOP | MB_OKCANCEL) == IDOK)
 			ExitProcess(1);
 	}
 
@@ -576,18 +576,18 @@ int ExitException(LPEXCEPTION_POINTERS e)
 	// * Debugging Information
 	// ******************************************************************
 	{
-		printf("\n");
+		printf("Emu (%d): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
 		printf("Emu (%d): Recieved Exit Exception : 0x%.08X\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
-		printf("\n");
+		printf("Emu (%d): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
 	}
 
-    MessageBox(NULL, "Warning: Could not safely terminate process!", "Cxbx", MB_OK);
+    MessageBox(g_hEmuWindow, "Warning: Could not safely terminate process!", "Cxbx", MB_OK);
 
     count++;
 
     if(count > 1)
     {
-        MessageBox(NULL, "Warning: Multiple Problems!", "Cxbx", MB_OK);
+        MessageBox(g_hEmuWindow, "Warning: Multiple Problems!", "Cxbx", MB_OK);
         return EXCEPTION_CONTINUE_SEARCH;
     }
 

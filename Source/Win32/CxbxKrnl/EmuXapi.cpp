@@ -298,7 +298,27 @@ VOID WINAPI xapi::EmuXapiInitProcess()
 
 		EmuSwapFS();   // XBox FS
 
-		xapi::EmuXapiProcessHeap = g_pRtlCreateHeap(2, 0, g_pXbeHeader->dwPeHeapReserve, g_pXbeHeader->dwPeHeapCommit, 0, (uint32)SomeStruct);
+		uint32 pSomeStruct = (uint32)SomeStruct;
+		uint32 dwPeHeapReserve = g_pXbeHeader->dwPeHeapReserve;
+		uint32 dwPeHeapCommit  = g_pXbeHeader->dwPeHeapCommit;
+
+		PVOID dwResult = 0;
+
+		__asm
+		{
+			xor ecx, ecx
+
+			push pSomeStruct
+			push ecx
+			push dwPeHeapCommit
+			push dwPeHeapReserve
+			push ecx
+			push 2
+			call g_pRtlCreateHeap
+			mov dwResult, eax
+		}
+
+		*xapi::EmuXapiProcessHeap = dwResult;
 	}
 
     return;
@@ -307,7 +327,7 @@ VOID WINAPI xapi::EmuXapiInitProcess()
 // ******************************************************************
 // * data: EmuXapiProcessHeap
 // ******************************************************************
-PVOID xapi::EmuXapiProcessHeap;
+PVOID* xapi::EmuXapiProcessHeap;
 
 // ******************************************************************
 // * func: g_pRtlCreateHeap
@@ -340,6 +360,8 @@ VOID WINAPI xapi::EmuXapiThreadStartup
     #endif
 
     EmuSwapFS();   // XBox FS
+
+	// TODO: Call thread notify routines ?
 
     __asm
     {
