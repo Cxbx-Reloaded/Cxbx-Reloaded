@@ -270,6 +270,26 @@ HRESULT WINAPI EmuCDirectSoundStream_SetAllParameters
 );
 
 // ******************************************************************
+// * func: EmuCDirectSoundStream_SetMaxDistance
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetMaxDistance
+(
+    PVOID    pThis,
+    D3DVALUE fMaxDistance,
+    DWORD    dwApply
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetMinDistance
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetMinDistance
+(
+    PVOID    pThis,
+    D3DVALUE fMinDistance,
+    DWORD    dwApply
+);
+
+// ******************************************************************
 // * func: EmuCDirectSoundStream_SetVelocity
 // ******************************************************************
 HRESULT WINAPI EmuCDirectSoundStream_SetVelocity

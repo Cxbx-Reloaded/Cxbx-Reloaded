@@ -616,6 +616,74 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetAllParameters
 }
 
 // ******************************************************************
+// * func: EmuCDirectSoundStream_SetMaxDistance
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMaxDistance
+(
+    PVOID    pThis,
+    D3DVALUE fMaxDistance,
+    DWORD    dwApply
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetMaxDistance\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   fMaxDistance              : %f\n"
+               "   dwApply                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, fMaxDistance, dwApply);
+    }
+    #endif
+
+    // TODO: Actually implement this
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetMinDistance
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMinDistance
+(
+    PVOID    pThis,
+    D3DVALUE fMinDistance,
+    DWORD    dwApply
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetMinDistance\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   fMinDistance              : %f\n"
+               "   dwApply                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, fMinDistance, dwApply);
+    }
+    #endif
+
+    // TODO: Actually implement this
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
 // * func: EmuCDirectSoundStream_SetVelocity
 // ******************************************************************
 HRESULT WINAPI XTL::EmuCDirectSoundStream_SetVelocity

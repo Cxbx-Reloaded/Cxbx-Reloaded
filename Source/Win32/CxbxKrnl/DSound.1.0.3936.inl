@@ -303,6 +303,294 @@ SOOVPA<10> CDirectSoundStream_SetAllParameters_1_0_3936 =
 };
 
 // ******************************************************************
+// * CDirectSoundStream_SetMaxDistanceC
+// ******************************************************************
+SOOVPA<12> CDirectSoundStream_SetMaxDistanceC_1_0_3936 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    XREF_DSSTREAMSETMAXDISTANCE1C, // XRef Is  Saved
+    0,                             // XRef Not Used
+
+    // TODO: re-use for CDirectSoundBuffer_SetMaxDistanceC!?
+
+    {
+        // CDirectSoundStream_SetMaxDistanceC+0x04 : or byte ptr [ecx+0x80], 0x04
+        { 0x04, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x05, 0x89 }, // (Offset,Value)-Pair #2
+        { 0x06, 0x80 }, // (Offset,Value)-Pair #3
+        { 0x07, 0x00 }, // (Offset,Value)-Pair #4
+        { 0x08, 0x00 }, // (Offset,Value)-Pair #5
+        { 0x09, 0x00 }, // (Offset,Value)-Pair #6
+        { 0x0A, 0x04 }, // (Offset,Value)-Pair #7
+
+        // CDirectSoundStream_SetMaxDistanceC+0x10 : mov [ecx+0x54], eax
+        { 0x10, 0x89 }, // (Offset,Value)-Pair #8
+        { 0x11, 0x41 }, // (Offset,Value)-Pair #9
+        { 0x12, 0x54 }, // (Offset,Value)-Pair #10
+
+        // CDirectSoundStream_SetMaxDistanceC+0x1E : retn 0x08
+        { 0x1E, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x1F, 0x08 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundStream_SetMaxDistanceB
+// ******************************************************************
+SOOVPA<15> CDirectSoundStream_SetMaxDistanceB_1_0_3936 =
+{
+    0,  // Large == 0
+    15, // Count == 15
+
+    XREF_DSSTREAMSETMAXDISTANCE1B, // XRef Is Saved
+    1,                                 // XRef Is Used
+
+    // TODO: re-use for CDirectSoundBuffer_SetMaxDistanceB!?
+
+    {
+        // CDirectSoundStream_SetMaxDistanceB+0x23 : call [IDirectSoundStream::SetMaxDistanceC]
+        { 0x23, XREF_DSSTREAMSETMAXDISTANCE1C }, // (Offset,Value)-Pair #1
+
+        // CDirectSoundStream_SetMaxDistanceB+0x0D : mov eax, [esp+0x14]
+        { 0x0D, 0x8B }, // (Offset,Value)-Pair #2
+        { 0x0E, 0x44 }, // (Offset,Value)-Pair #3
+        { 0x0F, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x10, 0x14 }, // (Offset,Value)-Pair #5
+
+        // CDirectSoundStream_SetMaxDistanceB+0x11 : not eax
+        { 0x11, 0xF7 }, // (Offset,Value)-Pair #6
+        { 0x12, 0xD0 }, // (Offset,Value)-Pair #7
+
+        // CDirectSoundStream_SetMaxDistanceB+0x13 : and eax, 1
+        { 0x13, 0x83 }, // (Offset,Value)-Pair #8
+        { 0x14, 0xE0 }, // (Offset,Value)-Pair #9
+        { 0x15, 0x01 }, // (Offset,Value)-Pair #10
+
+        // CDirectSoundStream_SetMaxDistanceB+0x1C : mov ecx, [eax+0x14]
+        { 0x1C, 0x8B }, // (Offset,Value)-Pair #11
+        { 0x1D, 0x48 }, // (Offset,Value)-Pair #12
+        { 0x1E, 0x14 }, // (Offset,Value)-Pair #13
+
+        // CDirectSoundStream_SetMaxDistanceB+0x3C : retn 0x0C
+        { 0x3C, 0xC2 }, // (Offset,Value)-Pair #14
+        { 0x3D, 0x0C }, // (Offset,Value)-Pair #15
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundStream_SetMaxDistanceA
+// ******************************************************************
+SOOVPA<10> CDirectSoundStream_SetMaxDistanceA_1_0_3936 =
+{
+    0, // Large == 0
+    10,// Count == 10
+
+    XREF_DSSTREAMSETMAXDISTANCE1A, // XRef Is Saved
+    1,                             // XRef Is Used
+
+    // TODO: re-use for CDirectSoundBuffer_SetMaxDistanceA!?
+
+    {
+        // CDirectSoundStream_SetMaxDistanceA+0x15 : call [IDirectSoundStream::SetMaxDistanceB]
+        { 0x15, XREF_DSSTREAMSETMAXDISTANCE1B }, // (Offset,Value)-Pair #1
+
+        // CDirectSoundStream_SetMaxDistanceA+0x04 : fld [esp+0x0C]
+        { 0x04, 0xD9 }, // (Offset,Value)-Pair #2
+        { 0x05, 0x44 }, // (Offset,Value)-Pair #3
+        { 0x06, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x07, 0x0C }, // (Offset,Value)-Pair #5
+
+        // CDirectSoundStream_SetMaxDistanceA+0x0D : add eax, 0x04
+        { 0x0D, 0x83 }, // (Offset,Value)-Pair #6
+        { 0x0E, 0xC0 }, // (Offset,Value)-Pair #7
+        { 0x0F, 0x04 }, // (Offset,Value)-Pair #8
+
+        // CDirectSoundStream_SetMaxDistanceA+0x19 : retn 0x0C
+        { 0x19, 0xC2 }, // (Offset,Value)-Pair #9
+        { 0x1A, 0x0C }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundStream_SetMaxDistance
+// ******************************************************************
+SOOVPA<11> CDirectSoundStream_SetMaxDistance_1_0_3936 =
+{
+    0, // Large == 0
+    11,// Count == 11
+
+    -1, // XRef Not Saved
+    1,  // XRef Is  Used
+
+    {
+        // CDirectSoundStream_SetMaxDistance+0x11 : call [IDirectSoundStream::SetMaxDistanceA]
+        { 0x11, XREF_DSSTREAMSETMAXDISTANCE1A }, // (Offset,Value)-Pair #1
+
+        // CDirectSoundStream_SetMaxDistance+0x04 : fld [esp+0x0C]
+        { 0x04, 0xD9 }, // (Offset,Value)-Pair #2
+        { 0x05, 0x44 }, // (Offset,Value)-Pair #3
+        { 0x06, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x07, 0x0C }, // (Offset,Value)-Pair #5
+
+        // CDirectSoundStream_SetMaxDistance+0x0C : push [esp+0x0C]
+        { 0x0C, 0xFF }, // (Offset,Value)-Pair #6
+        { 0x0D, 0x74 }, // (Offset,Value)-Pair #7
+        { 0x0E, 0x24 }, // (Offset,Value)-Pair #8
+        { 0x0F, 0x0C }, // (Offset,Value)-Pair #9
+
+        // CDirectSoundStream_SetMaxDistance+0x15 : retn 0x0C
+        { 0x15, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x16, 0x0C }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundStream_SetMinDistanceC
+// ******************************************************************
+SOOVPA<12> CDirectSoundStream_SetMinDistanceC_1_0_3936 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    XREF_DSSTREAMSETMINDISTANCE1C, // XRef Is  Saved
+    0,                             // XRef Not Used
+
+    // TODO: re-use for CDirectSoundBuffer_SetMinDistanceC!?
+
+    {
+        // CDirectSoundStream_SetMinDistanceC+0x04 : or byte ptr [ecx+0x80], 0x04
+        { 0x04, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x05, 0x89 }, // (Offset,Value)-Pair #2
+        { 0x06, 0x80 }, // (Offset,Value)-Pair #3
+        { 0x07, 0x00 }, // (Offset,Value)-Pair #4
+        { 0x08, 0x00 }, // (Offset,Value)-Pair #5
+        { 0x09, 0x00 }, // (Offset,Value)-Pair #6
+        { 0x0A, 0x04 }, // (Offset,Value)-Pair #7
+
+        // CDirectSoundStream_SetMinDistanceC+0x10 : mov [ecx+0x50], eax
+        { 0x10, 0x89 }, // (Offset,Value)-Pair #8
+        { 0x11, 0x41 }, // (Offset,Value)-Pair #9
+        { 0x12, 0x50 }, // (Offset,Value)-Pair #10
+
+        // CDirectSoundStream_SetMinDistanceC+0x1E : retn 0x08
+        { 0x1E, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x1F, 0x08 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundStream_SetMinDistanceB
+// ******************************************************************
+SOOVPA<15> CDirectSoundStream_SetMinDistanceB_1_0_3936 =
+{
+    0,  // Large == 0
+    15, // Count == 15
+
+    XREF_DSSTREAMSETMINDISTANCE1B, // XRef Is Saved
+    1,                                 // XRef Is Used
+
+    // TODO: re-use for CDirectSoundBuffer_SetMinDistanceB!?
+
+    {
+        // CDirectSoundStream_SetMinDistanceB+0x23 : call [IDirectSoundStream::SetMinDistanceC]
+        { 0x23, XREF_DSSTREAMSETMINDISTANCE1C }, // (Offset,Value)-Pair #1
+
+        // CDirectSoundStream_SetMinDistanceB+0x0D : mov eax, [esp+0x14]
+        { 0x0D, 0x8B }, // (Offset,Value)-Pair #2
+        { 0x0E, 0x44 }, // (Offset,Value)-Pair #3
+        { 0x0F, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x10, 0x14 }, // (Offset,Value)-Pair #5
+
+        // CDirectSoundStream_SetMinDistanceB+0x11 : not eax
+        { 0x11, 0xF7 }, // (Offset,Value)-Pair #6
+        { 0x12, 0xD0 }, // (Offset,Value)-Pair #7
+
+        // CDirectSoundStream_SetMinDistanceB+0x13 : and eax, 1
+        { 0x13, 0x83 }, // (Offset,Value)-Pair #8
+        { 0x14, 0xE0 }, // (Offset,Value)-Pair #9
+        { 0x15, 0x01 }, // (Offset,Value)-Pair #10
+
+        // CDirectSoundStream_SetMinDistanceB+0x1C : mov ecx, [eax+0x14]
+        { 0x1C, 0x8B }, // (Offset,Value)-Pair #11
+        { 0x1D, 0x48 }, // (Offset,Value)-Pair #12
+        { 0x1E, 0x14 }, // (Offset,Value)-Pair #13
+
+        // CDirectSoundStream_SetMinDistanceB+0x3C : retn 0x0C
+        { 0x3C, 0xC2 }, // (Offset,Value)-Pair #14
+        { 0x3D, 0x0C }, // (Offset,Value)-Pair #15
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundStream_SetMinDistanceA
+// ******************************************************************
+SOOVPA<10> CDirectSoundStream_SetMinDistanceA_1_0_3936 =
+{
+    0, // Large == 0
+    10,// Count == 10
+
+    XREF_DSSTREAMSETMINDISTANCE1A, // XRef Is Saved
+    1,                             // XRef Is Used
+
+    // TODO: re-use for CDirectSoundBuffer_SetMinDistanceA!?
+
+    {
+        // CDirectSoundStream_SetMinDistanceA+0x15 : call [IDirectSoundStream::SetMinDistanceB]
+        { 0x15, XREF_DSSTREAMSETMINDISTANCE1B }, // (Offset,Value)-Pair #1
+
+        // CDirectSoundStream_SetMinDistanceA+0x04 : fld [esp+0x0C]
+        { 0x04, 0xD9 }, // (Offset,Value)-Pair #2
+        { 0x05, 0x44 }, // (Offset,Value)-Pair #3
+        { 0x06, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x07, 0x0C }, // (Offset,Value)-Pair #5
+
+        // CDirectSoundStream_SetMinDistanceA+0x0D : add eax, 0x04
+        { 0x0D, 0x83 }, // (Offset,Value)-Pair #6
+        { 0x0E, 0xC0 }, // (Offset,Value)-Pair #7
+        { 0x0F, 0x04 }, // (Offset,Value)-Pair #8
+
+        // CDirectSoundStream_SetMinDistanceA+0x19 : retn 0x0C
+        { 0x19, 0xC2 }, // (Offset,Value)-Pair #9
+        { 0x1A, 0x0C }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundStream_SetMinDistance
+// ******************************************************************
+SOOVPA<11> CDirectSoundStream_SetMinDistance_1_0_3936 =
+{
+    0, // Large == 0
+    11,// Count == 11
+
+    -1, // XRef Not Saved
+    1,  // XRef Is  Used
+
+    {
+        // CDirectSoundStream_SetMinDistance+0x11 : call [IDirectSoundStream::SetMinDistanceA]
+        { 0x11, XREF_DSSTREAMSETMINDISTANCE1A }, // (Offset,Value)-Pair #1
+
+        // CDirectSoundStream_SetMinDistance+0x04 : fld [esp+0x0C]
+        { 0x04, 0xD9 }, // (Offset,Value)-Pair #2
+        { 0x05, 0x44 }, // (Offset,Value)-Pair #3
+        { 0x06, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x07, 0x0C }, // (Offset,Value)-Pair #5
+
+        // CDirectSoundStream_SetMinDistance+0x0C : push [esp+0x0C]
+        { 0x0C, 0xFF }, // (Offset,Value)-Pair #6
+        { 0x0D, 0x74 }, // (Offset,Value)-Pair #7
+        { 0x0E, 0x24 }, // (Offset,Value)-Pair #8
+        { 0x0F, 0x0C }, // (Offset,Value)-Pair #9
+
+        // CDirectSoundStream_SetMinDistance+0x15 : retn 0x0C
+        { 0x15, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x16, 0x0C }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
 // * CDirectSoundStream_SetVelocityC
 // ******************************************************************
 SOOVPA<11> CDirectSoundStream_SetVelocityC_1_0_3936 =
@@ -1807,6 +2095,74 @@ OOVPATable DSound_1_0_3936[] =
 
         #ifdef _DEBUG_TRACE
         "EmuCDirectSoundStream8_SetAllParameters" 
+        #endif
+    },
+    // CDirectSoundStream::SetMaxDistanceC (XREF)
+    {
+        (OOVPA*)&CDirectSoundStream_SetMaxDistanceC_1_0_3936, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundStream_SetMaxDistanceC (XRef)"
+        #endif
+    },
+    // CDirectSoundStream::SetMaxDistanceB (XREF)
+    {
+        (OOVPA*)&CDirectSoundStream_SetMaxDistanceB_1_0_3936, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundStream_SetMaxDistanceB (XRef)"
+        #endif
+    },
+    // CDirectSoundStream::SetMaxDistanceA (XREF)
+    {
+        (OOVPA*)&CDirectSoundStream_SetMaxDistanceA_1_0_3936, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundStream_SetMaxDistanceA (XRef)"
+        #endif
+    },
+    // CDirectSoundStream::SetMaxDistance
+    {
+        (OOVPA*)&CDirectSoundStream_SetMaxDistance_1_0_3936,
+
+        XTL::EmuCDirectSoundStream_SetMaxDistance,
+
+        #ifdef _DEBUG_TRACE
+        "EmuCDirectSoundStream8_SetMaxDistance" 
+        #endif
+    },
+    // CDirectSoundStream::SetMinDistanceC (XREF)
+    {
+        (OOVPA*)&CDirectSoundStream_SetMinDistanceC_1_0_3936, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundStream_SetMinDistanceC (XRef)"
+        #endif
+    },
+    // CDirectSoundStream::SetMinDistanceB (XREF)
+    {
+        (OOVPA*)&CDirectSoundStream_SetMinDistanceB_1_0_3936, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundStream_SetMinDistanceB (XRef)"
+        #endif
+    },
+    // CDirectSoundStream::SetMinDistanceA (XREF)
+    {
+        (OOVPA*)&CDirectSoundStream_SetMinDistanceA_1_0_3936, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundStream_SetMinDistanceA (XRef)"
+        #endif
+    },
+    // CDirectSoundStream::SetMinDistance
+    {
+        (OOVPA*)&CDirectSoundStream_SetMinDistance_1_0_3936,
+
+        XTL::EmuCDirectSoundStream_SetMinDistance,
+
+        #ifdef _DEBUG_TRACE
+        "EmuCDirectSoundStream8_SetMinDistance" 
         #endif
     },
     // CDirectSoundStream::SetVelocityC (XREF)
