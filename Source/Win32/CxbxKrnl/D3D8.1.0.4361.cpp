@@ -88,6 +88,36 @@ LOOVPA<9> IDirect3DDevice8_Clear_1_0_4361 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_Swap
+// ******************************************************************
+SOOVPA<11> IDirect3DDevice8_Swap_1_0_4361 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    {
+        // IDirect3DDevice8_Swap+0x10 : mov ebx, 5
+        { 0x10, 0xBB }, // (Offset,Value)-Pair #1
+        { 0x11, 0x05 }, // (Offset,Value)-Pair #2
+
+        // IDirect3DDevice8_Swap+0x1D : test bl, 3
+        { 0x1D, 0xF6 }, // (Offset,Value)-Pair #3
+        { 0x1E, 0xC3 }, // (Offset,Value)-Pair #4
+        { 0x1F, 0x03 }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_Swap+0x46 : inc dword ptr [esi+0x2AC4]
+        { 0x46, 0xFF }, // (Offset,Value)-Pair #6
+        { 0x47, 0x86 }, // (Offset,Value)-Pair #7
+        { 0x48, 0xC4 }, // (Offset,Value)-Pair #8
+        { 0x49, 0x2A }, // (Offset,Value)-Pair #9
+
+        // IDirect3DDevice8_Swap+0xAE : retn 4
+        { 0xAE, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0xAF, 0x04 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
 // * D3D8_1_0_4361
 // ******************************************************************
 OOVPATable D3D8_1_0_4361[] =
@@ -110,6 +140,16 @@ OOVPATable D3D8_1_0_4361[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXIDirect3DDevice8_Clear" 
+        #endif
+    },
+    // IDirect3DDevice8_Swap_1_0_4361
+    {
+        (OOVPA*)&IDirect3DDevice8_Swap_1_0_4361,
+
+        xboxkrnl::EmuXIDirect3DDevice8_Swap,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXIDirect3DDevice8_Swap" 
         #endif
     },
 };

@@ -67,4 +67,12 @@ win32::HRESULT WINAPI EmuXIDirect3DDevice8_Clear
     win32::DWORD                  Stencil
 );
 
+// ******************************************************************
+// * func: EmuXIDirect3DDevice8_Swap
+// ******************************************************************
+win32::HRESULT WINAPI EmuXIDirect3DDevice8_Swap
+(
+    win32::DWORD Flags
+);
+
 #endif

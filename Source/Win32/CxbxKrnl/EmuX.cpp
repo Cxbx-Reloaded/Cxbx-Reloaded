@@ -58,12 +58,6 @@ static void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, v
 CXBXKRNL_API void NTAPI EmuXInit(Xbe::LibraryVersion *LibraryVersion, DebugMode DebugConsole, char *DebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)())
 {
     // ******************************************************************
-    // * we're gonna need this :-) (Floating Point)
-    // ******************************************************************
-    {
-    }
-
-    // ******************************************************************
     // * debug console allocation (if configured)
     // ******************************************************************
     if(DebugConsole == DM_CONSOLE)
@@ -221,8 +215,12 @@ CXBXKRNL_API void NTAPI EmuXPanic()
 
     printf("EmuX (0x%.08X): EmuXPanic()\n", GetCurrentThreadId());
 
+#ifdef _DEBUG_TRACE
+    MessageBox(NULL, "Kernel Panic! Process will now terminate.\n\n"
+                     "Check debug traces for hints on the cause of this crash.", "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
+#else
     MessageBox(NULL, "Kernel Panic! Process will now terminate.", "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
-
+#endif
     EmuXSwapFS();   // XBox FS
 }
 

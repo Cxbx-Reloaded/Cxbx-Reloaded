@@ -31,8 +31,14 @@
 // *  All rights reserved
 // *
 // ******************************************************************
+#define CXBXKRNL_INTERNAL
 #include "Cxbx.h"
 #include "EmuX.h"
+
+namespace win32
+{
+    #include <process.h>
+}
 
 using namespace win32;
 
@@ -47,11 +53,51 @@ HWND              g_EmuXWindow  = NULL;  // Rendering Window
 // * static
 // ******************************************************************
 static LRESULT WINAPI EmuXMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+static void EmuXProcessMessages(PVOID);
 
 // ******************************************************************
 // * func: EmuXInitD3D
 // ******************************************************************
 VOID xboxkrnl::EmuXInitD3D()
+{
+    // ******************************************************************
+    // * spark up a new thread to handle window message processing
+    // ******************************************************************
+    {
+        _beginthread(EmuXProcessMessages, 0, NULL);
+
+        while(g_EmuXWindow == NULL)
+            Sleep(10);
+    }
+
+    // ******************************************************************
+    // * create Direct3D8
+    // ******************************************************************
+    {
+        // xbox Direct3DCreate8 returns "1" always, so we need our own ptr
+        g_pD3D8 = Direct3DCreate8(D3D_SDK_VERSION);
+    }
+}
+
+// ******************************************************************
+// * func: EmuXMsgProc
+// ******************************************************************
+LRESULT WINAPI EmuXMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch(msg)
+    {
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            return 0;
+    }
+
+    return DefWindowProc(hWnd, msg, wParam, lParam);
+}
+
+// ******************************************************************
+// * func: EmuXProcessMessages
+// ******************************************************************
+void EmuXProcessMessages(PVOID)
 {
     // ******************************************************************
     // * register window class
@@ -91,28 +137,22 @@ VOID xboxkrnl::EmuXInitD3D()
         UpdateWindow(g_EmuXWindow);
     }
 
-    // ******************************************************************
-    // * create Direct3D8
-    // ******************************************************************
-    {
-        // xbox Direct3DCreate8 returns "1" always, so we need our own ptr
-        g_pD3D8 = Direct3DCreate8(D3D_SDK_VERSION);
-    }
-}
+    MSG msg;
 
-// ******************************************************************
-// * func: EmuXMsgProc
-// ******************************************************************
-LRESULT WINAPI EmuXMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    switch(msg)
+    ZeroMemory(&msg, sizeof(msg));
+
+    while(msg.message != WM_QUIT)
     {
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            return 0;
+        if(PeekMessage( &msg, NULL, 0U, 0U, PM_REMOVE ))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+        else
+            Sleep(10);
     }
 
-    return DefWindowProc(hWnd, msg, wParam, lParam);
+    ExitProcess(0);
 }
 
 // ******************************************************************
@@ -201,7 +241,7 @@ HRESULT WINAPI xboxkrnl::EmuXIDirect3D8_CreateDevice
 }
 
 // ******************************************************************
-// * func: EmuXIDirect3D8_CreateDevice
+// * func: EmuXIDirect3DDevice8_Clear
 // ******************************************************************
 HRESULT WINAPI xboxkrnl::EmuXIDirect3DDevice8_Clear
 (
@@ -231,8 +271,6 @@ HRESULT WINAPI xboxkrnl::EmuXIDirect3DDevice8_Clear
                ");\n",
                GetCurrentThreadId(), Count, pRects, Flags,
                Color, Z, Stencil);
-
-        fflush(stdout);
     }
     #endif
 
@@ -258,6 +296,41 @@ HRESULT WINAPI xboxkrnl::EmuXIDirect3DDevice8_Clear
     }
 
     HRESULT ret = g_pD3D8Device->Clear(Count, pRects, Flags, Color, Z, Stencil);
+
+    EmuXSwapFS();   // XBox FS
+
+    return ret;
+}
+
+// ******************************************************************
+// * func: EmuXIDirect3DDevice8_Swap
+// ******************************************************************
+HRESULT WINAPI xboxkrnl::EmuXIDirect3DDevice8_Swap
+(
+    DWORD Flags
+)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXD3D8 (0x%.08X): EmuXIDirect3DDevice8_Swap\n"
+               "(\n"
+               "   Flags               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Flags);
+    }
+    #endif
+
+    // TODO: Ensure this flag is always the same across library versions
+    if(Flags != 0)
+        EmuXPanic();
+
+    // Swap(0) is equivalent to present(0,0,0,0)
+    HRESULT ret = g_pD3D8Device->Present(0, 0, 0, 0);
 
     EmuXSwapFS();   // XBox FS
 
