@@ -492,30 +492,6 @@ OOVPATable XAPI_1_0_4361[] =
         "EmuXInputGetState"
         #endif
     },
-    /* Too High Level
-    // CreateThread
-    {
-        (OOVPA*)&CreateThread_1_0_4361,
-
-        xapi::EmuCreateThread,
-
-        #ifdef _DEBUG_TRACE
-        "EmuCreateThread" 
-        #endif
-    },
-    */
-    /* Too High Level
-    // CloseHandle
-    {
-        (OOVPA*)&CloseHandle_1_0_4361,
-
-        xapi::EmuCloseHandle,
-
-        #ifdef _DEBUG_TRACE
-        "EmuCloseHandle" 
-        #endif
-    },
-    */
     //* Too High Level
     // XapiInitProcess
     {
@@ -538,18 +514,6 @@ OOVPATable XAPI_1_0_4361[] =
         "XapiThreadStartup"
         #endif
     },
-    /* Too High Level
-    // XapiSetupPerTitleDriveLetters
-    {
-        (OOVPA*)&XapiSetupPerTitleDriveLetters_1_0_4361,
-
-        xapi::XapiSetupPerTitleDriveLetters,
-
-        #ifdef _DEBUG_TRACE
-        "XapiSetupPerTitleDriveLetters"
-        #endif
-    },
-    //*/
     // XapiBootToDash (* unchanged since 1.0.3911 *)
     {
         (OOVPA*)&XapiBootDash_1_0_3911,

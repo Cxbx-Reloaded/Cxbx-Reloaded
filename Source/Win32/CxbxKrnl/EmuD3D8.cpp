@@ -657,6 +657,29 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreatePixelShader
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_CreateTexture2
+// ******************************************************************
+xd3d8::IDirect3DTexture8 * WINAPI xd3d8::EmuIDirect3DDevice8_CreateTexture2
+(
+    UINT                Width,
+    UINT                Height,
+    UINT                Depth,
+    UINT                Levels,
+    DWORD               Usage,
+    D3DFORMAT           Format,
+    D3DRESOURCETYPE     D3DResource
+)
+{
+    // TODO: Verify this function's parameters ^
+
+    IDirect3DTexture8 *pTexture;
+
+    EmuIDirect3DDevice8_CreateTexture(Width, Height, Levels, Usage, Format, D3DPOOL_MANAGED, &pTexture);
+
+    return pTexture;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateTexture
 // ******************************************************************
 HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreateTexture
@@ -1083,6 +1106,22 @@ HRESULT WINAPI xd3d8::EmuIDirect3DBaseTexture8_GetLevelCount
     EmuSwapFS();   // XBox FS
 
     return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DTexture8_GetSurfaceLevel
+// ******************************************************************
+xd3d8::IDirect3DSurface8 * WINAPI xd3d8::EmuIDirect3DTexture8_GetSurfaceLevel2
+(
+    PVOID               pThis,
+    UINT                Level
+)
+{
+    IDirect3DSurface8 *pSurfaceLevel;
+
+    EmuIDirect3DTexture8_GetSurfaceLevel(pThis, Level, &pSurfaceLevel);
+
+    return pSurfaceLevel;
 }
 
 // ******************************************************************

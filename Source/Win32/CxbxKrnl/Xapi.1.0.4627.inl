@@ -37,6 +37,36 @@
 // ******************************************************************
 OOVPATable XAPI_1_0_4627[] =
 {
+    // RtlCreateHeap (* unchanged since 1.0.4361 *) (* OR FARTHER *)
+    {
+        (OOVPA*)&RtlCreateHeap_1_0_4361,
+
+        xapi::EmuRtlCreateHeap,
+
+        #ifdef _DEBUG_TRACE
+        "RtlCreateHeap"
+        #endif
+    },
+    // RtlAllocateHeap (* unchanged since 1.0.4361 *) (* OR FARTHER *)
+    {
+        (OOVPA*)&RtlAllocateHeap_1_0_4361,
+
+        xapi::EmuRtlAllocateHeap,
+
+        #ifdef _DEBUG_TRACE
+        "RtlAllocateHeap"
+        #endif
+    },
+    // RtlFreeHeap (* unchanged since 1.0.4361 *) (* OR FARTHER, AND VERIFY THIS ONE *)
+    {
+        (OOVPA*)&RtlFreeHeap_1_0_4361,
+
+        xapi::EmuRtlFreeHeap,
+
+        #ifdef _DEBUG_TRACE
+        "RtlFreeHeap"
+        #endif
+    },
     // XInitDevices (* unchanged since 1.0.4034 *)
     {
         (OOVPA*)&XInitDevices_1_0_4034,
@@ -87,30 +117,6 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXInputGetState"
         #endif
     },
-    /* Too High Level
-    // CreateThread (* unchanged since 1.0.4361 *)
-    {
-        (OOVPA*)&CreateThread_1_0_4361,
-
-        xapi::EmuCreateThread,
-
-        #ifdef _DEBUG_TRACE
-        "EmuCreateThread" 
-        #endif
-    },
-    //*/
-    /* Too High Level
-    // CloseHandle (* unchanged since 1.0.4361 *)
-    {
-        (OOVPA*)&CloseHandle_1_0_4361,
-
-        xapi::EmuCloseHandle,
-
-        #ifdef _DEBUG_TRACE
-        "EmuCloseHandle" 
-        #endif
-    },
-    //*/
     // XapiThreadStartup (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&XapiThreadStartup_1_0_4361,
@@ -130,17 +136,6 @@ OOVPATable XAPI_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXapiInitProcess" 
-        #endif
-    },
-    //*/
-    /* XapiSetupPerTitleDriveLetters (* unchanged since 1.0.4361 *)
-    {
-        (OOVPA*)&XapiSetupPerTitleDriveLetters_1_0_4361,
-
-        xapi::XapiSetupPerTitleDriveLetters,
-
-        #ifdef _DEBUG_TRACE
-        "XapiSetupPerTitleDriveLetters"
         #endif
     },
     //*/

@@ -240,6 +240,20 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreatePixelShader
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_CreateTexture2
+// ******************************************************************
+IDirect3DTexture8 * WINAPI EmuIDirect3DDevice8_CreateTexture2
+(
+    UINT                Width,
+    UINT                Height,
+    UINT                Depth,
+    UINT                Levels,
+    DWORD               Usage,
+    D3DFORMAT           Format,
+    D3DRESOURCETYPE     D3DResource
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateTexture
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_CreateTexture
@@ -336,6 +350,15 @@ HRESULT WINAPI EmuIDirect3DSurface8_LockRect
 HRESULT WINAPI EmuIDirect3DBaseTexture8_GetLevelCount
 (
     PVOID               pThis
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DTexture8_GetSurfaceLevel
+// ******************************************************************
+IDirect3DSurface8 * WINAPI EmuIDirect3DTexture8_GetSurfaceLevel2
+(
+    PVOID               pThis,
+    UINT                Level
 );
 
 // ******************************************************************
