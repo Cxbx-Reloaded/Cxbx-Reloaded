@@ -86,11 +86,36 @@ extern "C" CXBXKRNL_API void NTAPI EmuNoFunc()
 }
 
 // ******************************************************************
+// * func: EmuCleanThread
+// ******************************************************************
+static void EmuCleanThread()
+{
+    if(EmuIsXboxFS())
+        EmuSwapFS();    // Win2k/XP FS
+
+    EmuCleanupFS();
+
+    ExitThread(0);
+}
+
+// ******************************************************************
 // * func: EmuInit
 // ******************************************************************
 extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)())
 {
     g_dwTlsAdjust = TlsAdjust;
+
+    // ******************************************************************
+    // * Store this thread handle
+    // ******************************************************************
+    {
+        HANDLE hThread = NULL;
+        DWORD  hThreadId = GetCurrentThreadId();
+
+        DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hThread, 0, FALSE, DUPLICATE_SAME_ACCESS);
+
+        ThreadList::Insert(hThread, hThreadId);
+    }
 
     // ******************************************************************
     // * debug console allocation (if configured)
@@ -249,20 +274,9 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion
 
     fflush(stdout);
 
+    EmuCleanThread();
+
     return;
-}
-
-// ******************************************************************
-// * func: EmuCleanThread
-// ******************************************************************
-static void EmuCleanThread()
-{
-    if(EmuIsXboxFS())
-        EmuSwapFS();    // Win2k/XP FS
-
-    EmuCleanupFS();
-
-    ExitThread(0);
 }
 
 // ******************************************************************
@@ -340,9 +354,11 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage)
     printf("CxbxKrnl: Terminating Process\n");
     fflush(stdout);
 
+    EmuD3DCleanup();
+
     EmuCleanupFS();
 
-    ExitProcess(0);
+    ExitThread(0);
 
     return;
 }

@@ -39,6 +39,20 @@
 // ******************************************************************
 struct ThreadList
 {
+    static void Insert(HANDLE hThread, DWORD hThreadId)
+    {
+        ThreadList *tl = ThreadList::pHead;
+
+        tl->hThread = hThread;
+        tl->dwThreadId = GetCurrentThreadId();
+        tl->pNext = new ThreadList;
+        tl->pNext->hThread = NULL;
+        tl->pNext->dwThreadId = 0;
+        tl->pNext->pNext = NULL;
+
+        ThreadList::pHead = tl->pNext;
+    }
+
     static ThreadList *pHead;
     static ThreadList *pFirst;
 

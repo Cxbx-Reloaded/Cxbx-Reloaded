@@ -35,6 +35,17 @@
 #define EMUFS_H
 
 // ******************************************************************
+// * TLSExData
+// ******************************************************************
+struct TLSExData
+{
+    unsigned short wSwapFS;
+    bool           bIsXboxFS;
+    unsigned long  dwSizeOfOrgTLS;
+    void          *pOrgTLS;
+};
+
+// ******************************************************************
 // * func: EmuSwapFS
 // ******************************************************************
 // *
@@ -48,8 +59,8 @@ static inline void EmuSwapFS()
 {
     __asm
     {
-        mov bx, fs:[0x14]   // FS.ArbitraryUserPointer
-        mov fs, bx
+        mov eax, fs:[0x14]
+        mov fs, [eax]
     }
 }
 
@@ -64,11 +75,12 @@ static inline void EmuSwapFS()
 // ******************************************************************
 static inline bool EmuIsXboxFS()
 {
-    unsigned char chk = 0;
+    unsigned char chk;
 
     __asm
     {
-        mov ah, fs:[0x16]
+        mov eax, fs:[0x14]
+        mov ah, [eax+2]
         mov chk, ah
     }
 

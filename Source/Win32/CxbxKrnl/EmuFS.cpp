@@ -70,6 +70,24 @@ void EmuGenerateFS(int TlsAdjust)
     void *TLSPtr = 0;
 
     // ******************************************************************
+    // * Obtain "OrgFS"
+    // ******************************************************************
+    __asm
+    {
+        // Obtain "OrgFS"
+        mov ax, fs
+        mov OrgFS, ax
+
+        // Obtain "OrgNtTib"
+        mov eax, fs:[0x18]
+        mov OrgNtTib, eax
+
+        // Obtain "TLSPtr"
+        mov eax, fs:[0x2C]
+        mov TLSPtr, eax
+    }
+
+    // ******************************************************************
     // * Allocate LDT entry
     // ******************************************************************
     {
@@ -83,25 +101,23 @@ void EmuGenerateFS(int TlsAdjust)
     }
 
     // ******************************************************************
-    // * Obtain "OrgFS"
+    // * Allocate OrgFS.ArbitraryUserPointer
     // ******************************************************************
-    __asm
     {
-        // Obtain "OrgFS"
-        mov ax, fs
-        mov OrgFS, ax
+        TLSExData *tlsExData = new TLSExData;
 
-        // Obtain "OrgNtTib"
-        mov eax, fs:[0x18]
-        mov OrgNtTib, eax
+        tlsExData->wSwapFS   = NewFS;
+        tlsExData->bIsXboxFS = false;
+        tlsExData->dwSizeOfOrgTLS = (TlsAdjust == -1) ? -1 : 0x18 + TlsAdjust;
+        tlsExData->pOrgTLS   = (void*)new char[tlsExData->dwSizeOfOrgTLS];
 
-        // Save "NewFS" inside OrgFS.ArbitraryUserPointer.SwapFS
-        mov ax, NewFS
-        mov fs:[0x14], ax
+        memcpy(tlsExData->pOrgTLS, TLSPtr, tlsExData->dwSizeOfOrgTLS);
 
-		// Save "False" inside OrgFS.ArbitraryUserPointer.isXboxFS
-		mov ah, 0
-		mov fs:[0x16], ah
+        __asm
+        {
+            mov ebx, tlsExData
+            mov fs:[0x14], ebx   // FS.ArbitraryUserPointer
+        }
     }
 
     // ******************************************************************
@@ -117,13 +133,6 @@ void EmuGenerateFS(int TlsAdjust)
         NewPcr->PrcbData.CurrentThread = KThread;
 
         NewPcr->Prcb = &NewPcr->PrcbData;
-
-        // Retrieve Win2k/XP TEB.ThreadLocalStoragePointer
-        __asm
-        {
-            mov eax, fs:[0x2C]
-            mov TLSPtr, eax
-        }
 
         // HACK: This converts from XBE stack form to Windows form (I guess?!)
         TLSPtr = (void*)((uint32)TLSPtr + TlsAdjust);
@@ -144,15 +153,19 @@ void EmuGenerateFS(int TlsAdjust)
     EmuSwapFS();
 
     // ******************************************************************
-    // * Save "OrgFS" inside NewFS.ArbitraryUserPointer
+    // * Allocate NewFS.ArbitraryUserPointer
     // ******************************************************************
-    __asm
     {
-        mov ax, OrgFS
-        mov fs:[0x14], ax   // NewFS.ArbitraryUserPointer
+        TLSExData *tlsExData = new TLSExData;
 
-		mov ah, 1
-		mov fs:[0x16], ah	// NewFS.ArbitraryUserPointer.isXboxFS
+        tlsExData->wSwapFS   = OrgFS;
+        tlsExData->bIsXboxFS = true;
+
+        __asm
+        {
+            mov ebx, tlsExData
+            mov fs:[0x14], ebx
+        }
     }
 
     // ******************************************************************
@@ -180,13 +193,33 @@ void EmuGenerateFS(int TlsAdjust)
 // ******************************************************************
 void EmuCleanupFS()
 {
-    WORD wSelector;
+    TLSExData *tlsExData;
 
     __asm
     {
-        mov ax, fs
-        mov wSelector, ax
+        mov ebx, fs:[0x14]   // FS.ArbitraryUserPointer
+        mov tlsExData, ebx
     }
 
-    EmuDeallocateLDT(wSelector);
+    if(tlsExData == 0)
+        return;
+
+    // Restore original TLS data
+    if(tlsExData->dwSizeOfOrgTLS != -1)
+    {
+        void *TLSPtr = 0;
+
+        __asm
+        {
+            // Obtain "TLSPtr"
+            mov eax, fs:[0x2C]
+            mov TLSPtr, eax
+        }
+
+        memcpy(TLSPtr, tlsExData->pOrgTLS, tlsExData->dwSizeOfOrgTLS);
+
+    }
+
+    if(tlsExData->wSwapFS != 0)
+        EmuDeallocateLDT(tlsExData->wSwapFS);
 }

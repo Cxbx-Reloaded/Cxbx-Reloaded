@@ -98,20 +98,17 @@ static DWORD WINAPI PCSTProxy
     IN PVOID Parameter
 )
 {
-    ThreadList *tl = ThreadList::pHead;
+    // ******************************************************************
+    // * Store this thread handle
+    // ******************************************************************
+    {
+        HANDLE hThread = NULL;
+        DWORD  hThreadId = GetCurrentThreadId();
 
-    HANDLE hThread = NULL;
+        DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hThread, 0, FALSE, DUPLICATE_SAME_ACCESS);
 
-    DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hThread, 0, FALSE, DUPLICATE_SAME_ACCESS);
-
-    tl->hThread = hThread;
-    tl->dwThreadId = GetCurrentThreadId();
-    tl->pNext = new ThreadList;
-    tl->pNext->hThread = NULL;
-    tl->pNext->dwThreadId = 0;
-    tl->pNext->pNext = NULL;
-
-    ThreadList::pHead = tl->pNext;
+        ThreadList::Insert(hThread, hThreadId);
+    }
 
     PCSTProxyParam *iPCSTProxyParam = (PCSTProxyParam*)Parameter;
 
@@ -120,8 +117,6 @@ static DWORD WINAPI PCSTProxy
     uint32 StartRoutine  = (uint32)iPCSTProxyParam->StartRoutine;
 
     delete iPCSTProxyParam;
-
-    EmuGenerateFS(g_dwTlsAdjust);
 
     // ******************************************************************
     // * debug trace
@@ -138,13 +133,15 @@ static DWORD WINAPI PCSTProxy
     }
     #endif
 
-    EmuSwapFS();   // Xbox FS
+    EmuGenerateFS(g_dwTlsAdjust);
 
     // ******************************************************************
     // * use the special calling convention
     // ******************************************************************
     __try
     {
+        EmuSwapFS();   // Xbox FS
+
         __asm
         {
             mov         esi, StartRoutine

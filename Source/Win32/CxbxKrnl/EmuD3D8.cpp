@@ -44,6 +44,7 @@ namespace xboxkrnl
 
 #include "Emu.h"
 #include "EmuFS.h"
+#include "EmuKrnl.h"
 #include "EmuDInput.h"
 
 // ******************************************************************

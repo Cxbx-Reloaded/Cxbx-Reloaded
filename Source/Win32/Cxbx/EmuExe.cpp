@@ -565,11 +565,6 @@ EmuExe::EmuExe(Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename) : Exe
                 // ******************************************************************
                 // * necessary tls adjustment values
                 // ******************************************************************
-/*
-                uint32 TlsZF = OrigTLS.dwSizeofZeroFill;
-                uint32 TlsEA = OrigTLS.dwDataEndAddr;
-                uint32 TlsSA = OrigTLS.dwDataStartAddr;
-*/
                 uint32 TlsZF = OrigTLS.dwSizeofZeroFill;
                 uint32 TlsEA = OrigTLS.dwDataEndAddr;
                 uint32 TlsSA = OrigTLS.dwDataStartAddr;
