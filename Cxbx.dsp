@@ -23,8 +23,8 @@ CFG=Cxbx - Win32 Release
 
 # Begin Project
 # PROP AllowPerConfigDependencies 0
-# PROP Scc_ProjName ""
-# PROP Scc_LocalPath ""
+# PROP Scc_ProjName "Cxbx"
+# PROP Scc_LocalPath "."
 CPP=cl.exe
 MTL=midl.exe
 RSC=rc.exe
@@ -74,7 +74,8 @@ PostBuild_Cmds=cd PostBuild	upxCxbx.bat
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /Zi /Od /I "Include" /I "Include/Core/" /I "Include/Win32/" /I "Include/Win32/Cxbxkrnl" /I "Include/Win32/Cxbx" /I "Include/Win32/Cxbx/jpegdec" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /Fr /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /Zi /Od /I "Include" /I "Include/Core/" /I "Include/Win32/" /I "Include/Win32/Cxbxkrnl" /I "Include/Win32/Cxbx" /I "Include/Win32/Cxbx/jpegdec" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /YX /FD /GZ /c
+# SUBTRACT CPP /Fr
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"

@@ -77,6 +77,77 @@ SOOVPA<11> IDirect3DDevice8_SelectVertexShader_1_0_5558 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetVertexShaderConstant1
+// ******************************************************************
+SOOVPA<11> IDirect3DDevice8_SetVertexShaderConstant1_1_0_5558 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetVertexShaderConstant1+0x05 : add eax, 0x1C
+        { 0x05, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x06, 0xC0 }, // (Offset,Value)-Pair #2
+        { 0x07, 0x1C }, // (Offset,Value)-Pair #3
+
+        // IDirect3DDevice8_SetVertexShaderConstant1+0x0E : jnb +0x2E
+        { 0x0E, 0x73 }, // (Offset,Value)-Pair #4
+        { 0x0F, 0x2E }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_SetVertexShaderConstant1+0x28 : mov [eax-0x10], ecx
+        { 0x28, 0x89 }, // (Offset,Value)-Pair #6
+        { 0x29, 0x48 }, // (Offset,Value)-Pair #7
+        { 0x2A, 0xF0 }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_SetVertexShaderConstant1+0x3D : retn
+        { 0x3D, 0xC3 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DDevice8_SetVertexShaderConstant1+0x47 : jmp +0xB7
+        { 0x47, 0xEB }, // (Offset,Value)-Pair #10
+        { 0x48, 0xB7 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetVertexShaderConstantNotInlineFast
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_SetVertexShaderConstantNotInlineFast_1_0_5558 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetVertexShaderConstantNotInlineFast+0x26 : cmp eax, 0x10
+        { 0x26, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x27, 0xF8 }, // (Offset,Value)-Pair #2
+        { 0x28, 0x10 }, // (Offset,Value)-Pair #3
+
+        // IDirect3DDevice8_SetVertexShaderConstantNotInlineFast+0x29 : jnb +0x1F
+        { 0x29, 0x73 }, // (Offset,Value)-Pair #4
+        { 0x2A, 0x1F }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_SetVertexShaderConstantNotInlineFast+0x33 : or eax, 0x0B80
+        { 0x33, 0x0D }, // (Offset,Value)-Pair #6
+        { 0x34, 0x80 }, // (Offset,Value)-Pair #7
+        { 0x35, 0x0B }, // (Offset,Value)-Pair #8
+        { 0x36, 0x00 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DDevice8_SetVertexShaderConstantNotInlineFast+0x3B : rep movsd
+        { 0x3B, 0xF3 }, // (Offset,Value)-Pair #10
+        { 0x3C, 0xA5 }, // (Offset,Value)-Pair #11
+
+        // IDirect3DDevice8_SetVertexShaderConstantNotInlineFast+0x43 : emms
+        { 0x43, 0x0F }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetViewport
 // ******************************************************************
 SOOVPA<9> IDirect3DDevice8_SetViewport_1_0_5558 =
@@ -599,6 +670,15 @@ OOVPATable D3D8_1_0_5558[] =
         "EmuIDirect3D8_CreateDevice"
         #endif
     },
+    // D3DDevice_RunVertexStateShader (* unchanged since 4627 *)
+    {
+        (OOVPA*)&X_D3DDevice_RunVertexStateShader_1_0_4627,
+        XTL::EmuIDirect3DDevice8_RunVertexStateShader,
+
+       #ifdef _DEBUG_TRACE
+       "D3DDevice_RunVertexStateShader"
+       #endif
+    },
     // IDirect3DDevice8::LoadVertexShader
     {
         (OOVPA*)&IDirect3DDevice8_LoadVertexShader_1_0_5558,
@@ -617,6 +697,26 @@ OOVPATable D3D8_1_0_5558[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SelectVertexShader"
+        #endif
+    },
+    // IDirect3DDevice8::SetVertexShaderConstant1
+    {
+        (OOVPA*)&IDirect3DDevice8_SetVertexShaderConstant1_1_0_5558,
+
+        XTL::EmuIDirect3DDevice8_SetVertexShaderConstant1,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetVertexShaderConstant1"
+        #endif
+    },
+    // IDirect3DDevice8::SetVertexShaderConstantNotInlineFast
+    {
+        (OOVPA*)&IDirect3DDevice8_SetVertexShaderConstantNotInlineFast_1_0_5558,
+
+        XTL::EmuIDirect3DDevice8_SetVertexShaderConstantNotInline,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetVertexShaderConstantNotInlineFast"
         #endif
     },
     // IDirect3DDevice8::Clear

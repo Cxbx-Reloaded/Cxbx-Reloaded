@@ -7,6 +7,10 @@ Project: "Cxbe"=.\Cxbe.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
+    begin source code control
+    Cxbe
+    .
+    end source code control
 }}}
 
 Package=<4>
@@ -19,6 +23,10 @@ Project: "Cxbx"=.\Cxbx.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
+    begin source code control
+    Cxbx
+    .
+    end source code control
 }}}
 
 Package=<4>
@@ -34,6 +42,10 @@ Project: "CxbxKrnl"=.\CxbxKrnl.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
+    begin source code control
+    CxbxKrnl
+    .
+    end source code control
 }}}
 
 Package=<4>

@@ -2317,8 +2317,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShaderConstant
 {
     EmuSwapFS();   // Win2k/XP FS
 
-#ifdef _DEBUG_TRACK_VS_CONST
-    printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexShaderConstant\n"
+    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexShaderConstant\n"
            "(\n"
            "   Register            : 0x%.08X\n"
            "   pConstantData       : 0x%.08X\n"
@@ -2326,6 +2325,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShaderConstant
            ");\n",
            GetCurrentThreadId(), Register, pConstantData, ConstantCount);
 
+#ifdef _DEBUG_TRACK_VS_CONST
     for (uint32 i = 0; i < ConstantCount; i++)
     {
         printf("SetVertexShaderConstant, c%d (c%d) = { %f, %f, %f, %f }\n",
