@@ -3556,6 +3556,16 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DResource8_Register"
         #endif
     },
+    // IDirect3DResource8::AddRef (* unchanged since 3925 *)
+    {
+        (OOVPA*)&IDirect3DResource8_AddRef_1_0_3925,
+
+        XTL::EmuIDirect3DResource8_AddRef,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DResource8_AddRef"
+        #endif
+    },
     // IDirect3DResource8::Release (* unchanged since 3925 *)
     {
         (OOVPA*)&IDirect3DResource8_Release_1_0_3925,
