@@ -2439,8 +2439,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
         (*ppTexture)->Format = 0x24;
 
         (*ppTexture)->Size  = (g_dwOverlayW & X_D3DSIZE_WIDTH_MASK);
-        (*ppTexture)->Size &= (g_dwOverlayH << X_D3DSIZE_HEIGHT_SHIFT);
-        (*ppTexture)->Size &= (g_dwOverlayP << X_D3DSIZE_PITCH_SHIFT);
+        (*ppTexture)->Size |= (g_dwOverlayH << X_D3DSIZE_HEIGHT_SHIFT);
+        (*ppTexture)->Size |= (g_dwOverlayP << X_D3DSIZE_PITCH_SHIFT);
 
         hRet = D3D_OK;
     }
@@ -2546,8 +2546,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVolumeTexture
         (*ppVolumeTexture)->Format = 0x24;
 
         (*ppVolumeTexture)->Size  = (g_dwOverlayW & X_D3DSIZE_WIDTH_MASK);
-        (*ppVolumeTexture)->Size &= (g_dwOverlayH << X_D3DSIZE_HEIGHT_SHIFT);
-        (*ppVolumeTexture)->Size &= (g_dwOverlayP << X_D3DSIZE_PITCH_SHIFT);
+        (*ppVolumeTexture)->Size |= (g_dwOverlayH << X_D3DSIZE_HEIGHT_SHIFT);
+        (*ppVolumeTexture)->Size |= (g_dwOverlayP << X_D3DSIZE_PITCH_SHIFT);
 
         hRet = D3D_OK;
     }
@@ -4840,9 +4840,9 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
             int h = g_dwOverlayH;
 
             // TODO: sucker the game into rendering directly to the overlay (speed boost)
-//            if(ddsd2.lPitch == w*2)
-//                memcpy(pDest, pSour, h*w*2);
-//            else
+            if(ddsd2.lPitch == w*2 && g_dwOverlayP == w*2)
+                memcpy(pDest, pSour, h*w*2);
+            else
             {
                 for(int y=0;y<h;y++)
                 {
