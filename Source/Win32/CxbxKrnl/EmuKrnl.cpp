@@ -766,12 +766,29 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
     }
     #endif
 
-    // TODO: Make this much more efficient and correct if necessary!
-    // HACK: Should be aligned!!
-    PVOID pRet = (PVOID)new unsigned char[NumberOfBytes];
+    PVOID pRet = 0;
 
-    _asm int 3
-    pRet = (PVOID)0xBAADBEEF;
+    if(LowestAcceptableAddress != 0)
+    {
+        DWORD dwDummy;
+
+        if(VirtualProtect((PVOID)LowestAcceptableAddress, NumberOfBytes, PAGE_EXECUTE_READWRITE, &dwDummy) == TRUE)
+            pRet = (PVOID)LowestAcceptableAddress;
+        else
+            pRet = VirtualAlloc((PVOID)LowestAcceptableAddress, NumberOfBytes, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    }
+
+    if(pRet == 0)
+    {
+        if(LowestAcceptableAddress != 0)
+            EmuWarning("Unable to allocate proper virtual memory region");
+
+        pRet = malloc(NumberOfBytes);
+    }
+
+    #ifdef _DEBUG_TRACE
+    printf("EmuKrnl (0x%X): MmAllocateContiguous returned 0x%.08X\n", GetCurrentThreadId(), pRet);
+    #endif
 
     EmuSwapFS();   // Xbox FS
 
