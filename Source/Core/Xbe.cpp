@@ -106,13 +106,13 @@ Xbe::Xbe(const char *x_szFilename)
 
         uint32 ExSize = RoundUp(m_Header.dwSizeofHeaders, 0x1000) - sizeof(m_Header);
 
-		m_HeaderEx = new char[ExSize];
+        m_HeaderEx = new char[ExSize];
 
-		if(fread(m_HeaderEx, ExSize, 1, XbeFile) != 1)
-		{
-			SetError("Unexpected end of file while reading Xbe Image Header (Ex)", true);
-			goto cleanup;
-		}
+        if(fread(m_HeaderEx, ExSize, 1, XbeFile) != 1)
+        {
+            SetError("Unexpected end of file while reading Xbe Image Header (Ex)", true);
+            goto cleanup;
+        }
 
         printf("OK\n");
     }
@@ -784,12 +784,28 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
 
         // locate kernel thunk table
         {
-            uint32 kt = x_Exe->m_OptionalHeader.m_image_data_directory[12].m_virtual_addr + m_Header.dwPeBaseAddr;
+            // unfortunately, GCC doesn't populate the IAT entry in the data directory
+            // so if the value is 0, then it could mean there are no imports, or it
+            // could mean the EXE was compiled by GCC
+            uint32 ktRVA = x_Exe->m_OptionalHeader.m_image_data_directory[12].m_virtual_addr;
 
-            if(x_bRetail)
-                kt ^= XOR_KT_RETAIL;
-            else
-                kt ^= XOR_KT_DEBUG;
+            if(ktRVA == 0)
+            {
+                // lets check to see if there is an import section. if so, look at offset 16
+                // for the RVA of the Import Address Table
+                uint32 importRVA = x_Exe->m_OptionalHeader.m_image_data_directory[1].m_virtual_addr;
+
+                if(importRVA != 0)
+                {
+                    uint08 *importSection = GetAddr(importRVA + m_Header.dwPeBaseAddr);
+
+                    ktRVA = *(uint32 *)&importSection[16];
+                }
+            }
+
+            uint32 kt = ktRVA + m_Header.dwPeBaseAddr;
+
+            kt ^= (x_bRetail ? XOR_KT_RETAIL : XOR_KT_DEBUG );
 
             m_Header.dwKernelImageThunkAddr = kt;
         }
@@ -823,7 +839,7 @@ Xbe::~Xbe()
     delete   m_TLS;
     delete[] m_szSectionName;
     delete[] m_SectionHeader;
-	delete[] m_HeaderEx;
+    delete[] m_HeaderEx;
 }
 
 // export to Xbe file
@@ -852,7 +868,7 @@ void Xbe::Export(const char *x_szXbeFilename)
         printf("Xbe::Export: Writing Image Header...");
 
         if(fwrite(&m_Header, sizeof(m_Header), 1, XbeFile) != 1)
-		{
+        {
             SetError("Unexpected write error while writing Xbe Image Header", false);
             goto cleanup;
         }
@@ -861,32 +877,32 @@ void Xbe::Export(const char *x_szXbeFilename)
 
         printf("Xbe::Export: Writing Image Header Extra Bytes...");
 
-		if(fwrite(m_HeaderEx, m_Header.dwSizeofHeaders, 1, XbeFile) != 1)
-		{
-			SetError("Unexpected write error while writing Xbe Image Header (Ex)", false);
-			goto cleanup;
-		}
+        if(fwrite(m_HeaderEx, m_Header.dwSizeofHeaders, 1, XbeFile) != 1)
+        {
+            SetError("Unexpected write error while writing Xbe Image Header (Ex)", false);
+            goto cleanup;
+        }
 
         printf("OK\n");
     }
 
     // write Xbe certificate
-	{
+    {
         printf("Xbe::Export: Writing Certificate...");
 
         fseek(XbeFile, m_Header.dwCertificateAddr - m_Header.dwBaseAddr, SEEK_SET);
 
-		if(fwrite(&m_Certificate, sizeof(m_Certificate), 1, XbeFile) != 1)
-		{
-			SetError("Unexpected write error while writing Xbe Certificate", false);
-			goto cleanup;
-		}
+        if(fwrite(&m_Certificate, sizeof(m_Certificate), 1, XbeFile) != 1)
+        {
+            SetError("Unexpected write error while writing Xbe Certificate", false);
+            goto cleanup;
+        }
 
         printf("OK\n");
-	}
+    }
 
     // write Xbe section headers
-	{
+    {
         printf("Xbe::Export: Writing Section Headers...\n");
 
         fseek(XbeFile, m_Header.dwSectionHeadersAddr - m_Header.dwBaseAddr, SEEK_SET);
@@ -904,14 +920,14 @@ void Xbe::Export(const char *x_szXbeFilename)
 
             printf("OK\n");
         }
-	}
+    }
 
     // write Xbe sections
-	{
+    {
         printf("Xbe::Export: Writing Sections...\n");
 
         for(uint32 v=0;v<m_Header.dwSections;v++)
-		{
+        {
             printf("Xbe::Export: Writing Section 0x%.04X (%s)...", v, m_szSectionName[v]);
 
             uint32 RawSize = m_SectionHeader[v].dwSizeofRaw;
@@ -925,43 +941,43 @@ void Xbe::Export(const char *x_szXbeFilename)
                 continue;
             }
 
-			if(fwrite(m_bzSection[v], RawSize, 1, XbeFile) != 1)
-			{
-				sprintf(szBuffer, "Unexpected write error while writing Xbe Section %d (%Xh) (%s)", v, v, m_szSectionName[v]);
-				SetError(szBuffer, false);
-				goto cleanup;
-			}
+            if(fwrite(m_bzSection[v], RawSize, 1, XbeFile) != 1)
+            {
+                sprintf(szBuffer, "Unexpected write error while writing Xbe Section %d (%Xh) (%s)", v, v, m_szSectionName[v]);
+                SetError(szBuffer, false);
+                goto cleanup;
+            }
 
             printf("OK\n");
-		}
-	}
+        }
+    }
 
     // zero pad
-	{
+    {
         printf("Xbe::Export: Writing Zero Padding...");
 
         fpos_t pos;
 
-		uint32 remaining = 0;
+        uint32 remaining = 0;
 
-		fgetpos(XbeFile, &pos);
+        fgetpos(XbeFile, &pos);
 
-		remaining = (uint32)(0x1000 - ftell(XbeFile)%0x1000);
+        remaining = (uint32)(0x1000 - ftell(XbeFile)%0x1000);
 
         // write remaining bytes
-		{
-			char *szBuffer = new char[remaining];
+        {
+            char *szBuffer = new char[remaining];
 
-			for(uint32 v=0;v<remaining;v++)
-				szBuffer[v] = 0;
+            for(uint32 v=0;v<remaining;v++)
+                szBuffer[v] = 0;
 
-			fwrite(szBuffer, remaining, 1, XbeFile);
+            fwrite(szBuffer, remaining, 1, XbeFile);
 
-			delete[] szBuffer;
-		}
+            delete[] szBuffer;
+        }
 
         printf("OK\n");
-	}
+    }
 
 cleanup:
 
@@ -1349,7 +1365,7 @@ void Xbe::ImportLogoBitmap(const uint08 x_Gray[100*17])
 // ******************************************************************
 void Xbe::ExportLogoBitmap(uint08 x_Gray[100*17])
 {
-	memset(x_Gray, 0, 100*17);
+    memset(x_Gray, 0, 100*17);
 
     uint32 dwLength = m_Header.dwSizeofLogoBitmap;
 
@@ -1402,7 +1418,7 @@ uint08 *Xbe::GetAddr(uint32 x_dwVirtualAddress)
 
     // offset into image header extra bytes
     if(dwOffs < m_Header.dwSizeofHeaders)
- 		return (uint08*)&m_HeaderEx[dwOffs - sizeof(m_Header)];
+        return (uint08*)&m_HeaderEx[dwOffs - sizeof(m_Header)];
 
     // offset into some random section
     {
@@ -1425,8 +1441,8 @@ uint08 *Xbe::GetLogoBitmap(uint32 x_dwSize)
     uint32 dwOffs = m_Header.dwLogoBitmapAddr - m_Header.dwBaseAddr;
     uint32 dwLength = m_Header.dwSizeofLogoBitmap;
 
-	if(dwOffs == 0 || dwLength == 0)
-		return 0;
+    if(dwOffs == 0 || dwLength == 0)
+        return 0;
 
     // if this bitmap will fit inside the already existing one, we don't need to resize, just return pointer
     if(dwLength >= x_dwSize)
