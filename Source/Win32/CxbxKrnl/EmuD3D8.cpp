@@ -1000,17 +1000,6 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetLight
     }
     #endif
 
-    D3DMATERIAL8 Material;
-
-    ZeroMemory(&Material, sizeof(D3DMATERIAL8));
-
-    Material.Diffuse.r = Material.Ambient.r = 1.0f;
-    Material.Diffuse.g = Material.Ambient.g = 1.0f;
-    Material.Diffuse.b = Material.Ambient.b = 0.0f;
-    Material.Diffuse.a = Material.Ambient.a = 1.0f;
-
-    g_pD3D8Device->SetMaterial(&Material);
-
     HRESULT hRet = g_pD3D8Device->SetLight(Index, pLight);
 
     EmuSwapFS();   // XBox FS
