@@ -1115,6 +1115,22 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CheckDeviceFormat
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_BeginPush
+// ******************************************************************
+PDWORD WINAPI XTL::EmuIDirect3DDevice8_BeginPush(DWORD Count)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_BeginPush(%d);\n", GetCurrentThreadId(), Count);
+
+    EmuCleanup("_BeginPush(...) is not yet implemented\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return NULL;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_BeginVisibilityTest
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirect3DDevice8_BeginVisibilityTest()

@@ -33,6 +33,65 @@
 // ******************************************************************
 
 // ******************************************************************
+// * LazySetStateVB
+// ******************************************************************
+SOOVPA<12> LazySetStateVB_1_0_5558 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    XREF_LAZYSETSTATEVB, // Xref Is  Saved
+    0,                   // Xref Not Used
+
+    {
+        { 0x00, 0x83 }, // 1
+        { 0x01, 0xEC }, // 2
+        { 0x02, 0x0C }, // 3
+
+        { 0x34, 0xF6 }, // 4
+        { 0x35, 0xC3 }, // 5
+        { 0x36, 0x40 }, // 6
+
+        { 0x57, 0x83 }, // 7
+        { 0x58, 0xE5 }, // 8
+        { 0x59, 0x10 }, // 9
+
+        { 0x79, 0x17 }, // 10
+        { 0x7A, 0x40 }, // 11
+        { 0x7B, 0x00 }, // 12
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_BeginPush
+// ******************************************************************
+SOOVPA<10> IDirect3DDevice8_BeginPush_1_0_5558 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    -1, // Xref Not Saved
+    1,  // Xref Is  Used
+
+    {
+        { 0x09, XREF_LAZYSETSTATEVB }, // 1
+
+        { 0x00, 0x8B }, // 2
+        { 0x01, 0x0D }, // 3
+
+        { 0x06, 0x6A }, // 4
+        { 0x07, 0x00 }, // 5
+
+        { 0x11, 0x40 }, // 6
+
+        { 0x12, 0x89 }, // 7
+        { 0x13, 0x44 }, // 8
+        { 0x14, 0x24 }, // 9
+        { 0x15, 0x04 }, // 10
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_LoadVertexShader
 // ******************************************************************
 SOOVPA<10> IDirect3DDevice8_LoadVertexShader_1_0_5558 =
@@ -660,6 +719,15 @@ SOOVPA<17> IDirect3DTexture8_LockRect_1_0_5558 =
 // ******************************************************************
 OOVPATable D3D8_1_0_5558[] =
 {
+    // LazySetStateVB
+    {
+        (OOVPA*)&LazySetStateVB_1_0_5558, 0,
+
+        #ifdef _DEBUG_TRACE
+        "LazySetStateVB"
+        #endif
+    },
+
     // IDirect3D8::CreateDevice (* unchanged since 4627 *)
     {
         (OOVPA*)&IDirect3D8_CreateDevice_1_0_4627,
@@ -668,6 +736,16 @@ OOVPATable D3D8_1_0_5558[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3D8_CreateDevice"
+        #endif
+    },
+    // IDirect3DDevice8::BeginPush
+    {
+        (OOVPA*)&IDirect3DDevice8_BeginPush_1_0_5558,
+
+        XTL::EmuIDirect3DDevice8_BeginPush,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_BeginPush"
         #endif
     },
     // D3DDevice_RunVertexStateShader (* unchanged since 4627 *)
