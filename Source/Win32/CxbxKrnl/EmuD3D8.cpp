@@ -2697,6 +2697,7 @@ static void EmuFlushD3DIVB()
 
         HRESULT hRet = g_pD3DDevice8->DrawPrimitiveUP(XTL::EmuPrimitiveType(g_dwD3DIVBPrim), XTL::EmuD3DVertex2PrimitiveCount(g_dwD3DIVBPrim, g_dwD3DIVBInd), pStreamData, i/g_dwD3DIVBInd);
 
+        // HACK: TODO: probably unnecessary!!!
         g_pD3DDevice8->Present(0,0,0,0);
 
         free(pStreamData);

@@ -589,7 +589,7 @@ XBSYSAPI EXPORTNUM(126) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceCo
 
     ::LARGE_INTEGER Counter;
 
-    QueryPerformanceFrequency(&Counter);
+    QueryPerformanceCounter(&Counter);
 
     EmuSwapFS();   // Xbox FS
 
@@ -610,6 +610,7 @@ XBSYSAPI EXPORTNUM(127) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceFr
     }
     #endif
 
+    // Xbox Performance Counter Frequency := 337F98h
     ::LARGE_INTEGER Frequency;
 
     QueryPerformanceFrequency(&Frequency);
