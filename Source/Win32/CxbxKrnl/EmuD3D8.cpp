@@ -2467,6 +2467,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetPixelShader
                 "tex t1                         \n"
                 "                               \n"
                 "mul r0, t0, t1                 \n";
+//                "mov r0, v0                     \n";
 
             LPD3DXBUFFER pShader = 0;
             LPD3DXBUFFER pErrors = 0;

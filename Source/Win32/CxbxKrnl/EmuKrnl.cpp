@@ -1175,7 +1175,13 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
 
     char *szBuffer = ObjectAttributes->ObjectName->Buffer;
 
-	// D:\ should map to current directory
+    // trim this off
+    if(szBuffer[0] == '\\' && szBuffer[1] == '?' && szBuffer[2] == '?' && szBuffer[3] == '\\')
+    {
+        szBuffer += 4;
+    }
+
+    // D:\ should map to current directory
 	if( (szBuffer[0] == 'D' || szBuffer[0] == 'd') && szBuffer[1] == ':' && szBuffer[2] == '\\')
 	{
 		szBuffer += 3;
@@ -1509,7 +1515,10 @@ XBSYSAPI EXPORTNUM(207) NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 
             FileInformation->FileNameLength /= 2;
         }
-    } // Xbox does not return . and ..
+
+        RestartScan = FALSE;
+    }
+    // Xbox does not return . and ..
     while(strcmp(mbstr, ".") == 0 || strcmp(mbstr, "..") == 0);
 
     // TODO: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
@@ -1629,7 +1638,7 @@ XBSYSAPI EXPORTNUM(218) NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformationFile
            Length, FileInformationClass);
 
     // Safety/Sanity Check
-    if(FileInformationClass != FileFsSizeInformation && FileInformationClass != FileDirectoryInformation)
+    if((FileInformationClass != FileFsSizeInformation) && (FileInformationClass != FileDirectoryInformation))
         EmuCleanup("NtQueryVolumeInformationFile: Unsupported FileInformationClass");
 
     NTSTATUS ret = NtDll::NtQueryVolumeInformationFile
