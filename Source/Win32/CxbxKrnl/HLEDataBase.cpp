@@ -60,6 +60,7 @@
 #include "HLEDataBase/DSound.1.0.4361.inl"
 #include "HLEDataBase/DSound.1.0.4432.inl"
 #include "HLEDataBase/DSound.1.0.4627.inl"
+#include "HLEDataBase/DSound.1.0.5558.inl"
 #include "HLEDataBase/DSound.1.0.5849.inl"
 #include "HLEDataBase/XG.1.0.4361.inl"
 #include "HLEDataBase/XG.1.0.4627.inl"
@@ -210,6 +211,13 @@ HLEData HLEDataBase[] =
         1, 0, 4627,
         DSound_1_0_4627,
         DSound_1_0_4627_SIZE
+    },
+    // DSound Version 1.0.5558
+    {
+        "DSOUND",
+        1, 0, 5558,
+        DSound_1_0_5558,
+        DSound_1_0_5558_SIZE
     },
     // DSound Version 1.0.5849
     {
