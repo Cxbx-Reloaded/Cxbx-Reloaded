@@ -60,7 +60,7 @@ extern HWND                         g_hEmuWindow  = NULL; // rendering window
 extern XTL::LPDIRECT3DDEVICE8       g_pD3DDevice8 = NULL; // Direct3D8 Device
 
 // Static Function(s)
-static BOOL WINAPI                  EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescription, LPSTR lpDriverName, LPVOID lpContext, XTL::HMONITOR hm);
+static BOOL WINAPI                  EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescription, LPSTR lpDriverName, LPVOID lpContext, HMONITOR hm);
 static DWORD WINAPI                 EmuRenderWindow(LPVOID);
 static DWORD WINAPI                 EmuCreateDeviceProxy(LPVOID);
 static LRESULT WINAPI               EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -69,13 +69,13 @@ static inline void                  EmuVerifyResourceIsRegistered(XTL::X_D3DReso
 static void                         EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight);
 static void                         EmuUpdateDeferredStates();
 
-typedef BOOL (WINAPI *pfGetMonitorInfo)(XTL::HMONITOR hMonitor, LPMONITORINFO lpmi);
-static pfGetMonitorInfo GetMonitorInfo = (pfGetMonitorInfo)GetProcAddress(LoadLibrary("user32.dll"), "GetMonitorInfoA");
+//typedef BOOL (WINAPI *pfGetMonitorInfo)(HMONITOR hMonitor, LPMONITORINFO lpmi);
+//static pfGetMonitorInfo GetMonitorInfo = (pfGetMonitorInfo)GetProcAddress(LoadLibrary("user32.dll"), "GetMonitorInfoA");
 
 // Static Variable(s)
 static GUID                         g_ddguid;               // DirectDraw driver GUID
-static XTL::HMONITOR                g_hMonitor      = NULL; // Handle to DirectDraw monitor
-static XTL::LPDIRECT3D8             g_pD3D8         = NULL; // Direct3D8
+static HMONITOR						g_hMonitor      = NULL; // Handle to DirectDraw monitor
+static XTL::LPDIRECT3D8				g_pD3D8         = NULL; // Direct3D8
 static BOOL                         g_bSupportsYUY2 = FALSE;// Does device support YUY2 overlays?
 static XTL::LPDIRECTDRAW7           g_pDD7          = NULL; // DirectDraw7
 static XTL::LPDIRECTDRAWSURFACE7    g_pDDSPrimary   = NULL; // DirectDraw7 Primary Surface
@@ -244,7 +244,7 @@ VOID XTL::EmuD3DCleanup()
 }
 
 // enumeration procedure for locating display device GUIDs
-static BOOL WINAPI EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescription, LPSTR lpDriverName, LPVOID lpContext, XTL::HMONITOR hm)
+static BOOL WINAPI EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescription, LPSTR lpDriverName, LPVOID lpContext, HMONITOR hm)
 {
     static DWORD dwEnumCount = 0;
 

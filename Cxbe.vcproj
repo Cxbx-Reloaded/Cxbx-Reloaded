@@ -21,7 +21,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="Include,Include/Core/,Include/Standard,Include/Standard/Cxbe,Include/Win32/"
+				AdditionalIncludeDirectories="Include,Include/Core/,Include/Standard,Include/Standard/Cxbe,Include/Win32/,Include/Win32/CxbxKrnl/"
 				PreprocessorDefinitions="WIN32,NDEBUG,_CONSOLE"
 				StringPooling="TRUE"
 				RuntimeLibrary="4"
@@ -74,7 +74,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="Include,Include/Core/,Include/Standard,Include/Standard/Cxbe,Include/Win32/"
+				AdditionalIncludeDirectories="Include,Include/Core/,Include/Standard,Include/Standard/Cxbe,Include/Win32/,Include/Win32/CxbxKrnl/"
 				PreprocessorDefinitions="WIN32,_DEBUG,_CONSOLE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="5"
@@ -86,7 +86,7 @@
 				BrowseInformation="1"
 				WarningLevel="3"
 				SuppressStartupBanner="TRUE"
-				DebugInformationFormat="4"
+				DebugInformationFormat="3"
 				CompileAs="0"/>
 			<Tool
 				Name="VCCustomBuildTool"/>

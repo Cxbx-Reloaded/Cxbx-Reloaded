@@ -38,6 +38,7 @@
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
+#include <multimon.h>
 
 // pointless function
 extern "C" CXBXKRNL_API void NTAPI EmuNoFunc();
@@ -115,7 +116,7 @@ extern struct XInputSetStateStatus
     PVOID   pFeedback;
 }
 g_pXInputSetStateStatus[8];
-
+/*
 // extra stuff for multimonitors (win95+)
 typedef struct _MONITORINFO
 {
@@ -125,5 +126,5 @@ typedef struct _MONITORINFO
   DWORD  dwFlags; 
 }
 MONITORINFO, *LPMONITORINFO; 
-
+*/
 #endif

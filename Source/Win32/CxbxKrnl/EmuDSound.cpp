@@ -1189,37 +1189,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_GetStatus
     return hRet;
 }
 
-
-// ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetVolume
-// ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetVolume
-(
-    X_CDirectSoundBuffer   *pThis,
-    LONG                    lVolume
-)
-{
-    EmuSwapFS();   // Win2k/XP FS
-
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetVolume\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   lVolume                   : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, lVolume);
-    }
-    #endif
-
-    // TODO: Translate params, then make the PC DirectSound call
-
-    EmuSwapFS();   // XBox FS
-
-    return DS_OK;
-}
-
 // ******************************************************************
 // * func: EmuIDirectSoundBuffer8_SetCurrentPosition
 // ******************************************************************
