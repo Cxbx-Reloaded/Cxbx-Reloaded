@@ -48,23 +48,9 @@ namespace xntdll
 using namespace win32;
 
 // ******************************************************************
-// * globals
-// ******************************************************************
-static HANDLE g_hMapObject = NULL;
-
-// ******************************************************************
-// * statics
+// * global / static
 // ******************************************************************
 static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *XbeHeader);
-
-// ******************************************************************
-// * shared memory
-// ******************************************************************
-struct EmuShared
-{
-    uint32 dwRandomData;
-}
-*g_EmuShared;
 
 // ******************************************************************
 // * func: DllMain
@@ -76,7 +62,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     // ******************************************************************
     if(fdwReason == DLL_PROCESS_ATTACH)
     {
-        bool init = false;
+        bool init = true;
 
         g_hMapObject = CreateFileMapping
         ( 
@@ -91,8 +77,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         if(g_hMapObject == NULL)
             return FALSE;
 
-        if(GetLastError() != ERROR_ALREADY_EXISTS)
-            init = true;
+        if(GetLastError() == ERROR_ALREADY_EXISTS)
+            init = false;
 
         g_EmuShared = (EmuShared*)MapViewOfFile
         (

@@ -165,6 +165,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\EmuLDT.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\EmuShared.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\EmuXapi.h
 # End Source File
 # Begin Source File
@@ -246,6 +250,10 @@ SOURCE=.\Source\Win32\CxbxKrnl\EmuKrnl.cpp
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\EmuLDT.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuShared.cpp
 # End Source File
 # Begin Source File
 
