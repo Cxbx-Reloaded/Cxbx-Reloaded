@@ -123,6 +123,11 @@ void EmuXGenerateFS()
         mov ax, OrgFS
         mov fs:[0x14], ax   // FS.ArbitraryUserPointer
     }
+
+    // ******************************************************************
+    // * Swap back into the "OrgFS"
+    // ******************************************************************
+    EmuXSwapFS();
 }
 
 // ******************************************************************
@@ -158,7 +163,7 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, ui
         printf("CxbxKrnl [0x%.08X]: EmuXInit\n"
                "          (\n"
                "             DebugConsole        : 0x%.08X\n"
-               "             DebugFilename       : %s"
+               "             DebugFilename       : \"%s\"\n"
                "             XBEHeader           : 0x%.08X\n"
                "             XBEHeaderSize       : 0x%.08X\n"
                "             Entry               : 0x%.08X\n"
@@ -195,8 +200,6 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, ui
     // ******************************************************************
     {
         EmuXGenerateFS();
-
-        EmuXSwapFS();
 
         // TODO: Initialize "new" FS structure
     }

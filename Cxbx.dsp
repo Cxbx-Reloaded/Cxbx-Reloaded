@@ -69,6 +69,7 @@ PostBuild_Cmds=cd PostBuild	upxCxbx.bat
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Bin\Debug"
 # PROP Intermediate_Dir "Bin\Debug"
+# PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /YX /FD /GZ /c
 # ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "Include" /I "Include/Win32/" /I "Include/Win32/Cxbxkrnl" /I "Include/Win32/Cxbx" /I "Resource" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /FR /YX /FD /GZ /c
@@ -82,6 +83,7 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
 

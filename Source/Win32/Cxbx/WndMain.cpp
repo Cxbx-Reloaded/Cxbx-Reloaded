@@ -728,43 +728,51 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                     MessageBox(m_hwnd, "This will not take effect until emulation is (re)started.\n", "Cxbx", MB_OK);
 
+                    m_exe_changed = true;
+
                     UpdateDebugConsoles();
                 }
                 break;
 
                 case ID_VIEW_DEBUGOUTPUTKERNEL_FILE:
                 {
-                    if(m_KrnlDebug == DM_NONE || m_KrnlDebug == DM_CONSOLE)
-                        m_KrnlDebug = DM_FILE;
-                    else
+                    if(m_KrnlDebug == DM_FILE)
                     {
                         m_KrnlDebug = DM_NONE;
+
                         UpdateDebugConsoles();
-                        break;
                     }
+                    else
+                    {
+                        OPENFILENAME ofn = {0};
 
-                    OPENFILENAME ofn = {0};
+	                    char filename[260] = "KrnlDebug.txt";
 
-	                char filename[260] = "KrnlDebug.txt";
+                        ofn.lStructSize     = sizeof(OPENFILENAME);
+	                    ofn.hwndOwner       = m_hwnd;
+	                    ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
+	                    ofn.lpstrFile       = filename;
+	                    ofn.nMaxFile        = 260;
+	                    ofn.nFilterIndex    = 1;
+	                    ofn.lpstrFileTitle  = NULL;
+	                    ofn.nMaxFileTitle   = 0;
+	                    ofn.lpstrInitialDir = NULL;
+                        ofn.lpstrDefExt     = "txt";
+	                    ofn.Flags           = OFN_PATHMUSTEXIST;
 
-                    ofn.lStructSize     = sizeof(OPENFILENAME);
-	                ofn.hwndOwner       = m_hwnd;
-	                ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
-	                ofn.lpstrFile       = filename;
-	                ofn.nMaxFile        = 260;
-	                ofn.nFilterIndex    = 1;
-	                ofn.lpstrFileTitle  = NULL;
-	                ofn.nMaxFileTitle   = 0;
-	                ofn.lpstrInitialDir = NULL;
-                    ofn.lpstrDefExt     = "txt";
-	                ofn.Flags           = OFN_PATHMUSTEXIST;
+	                    if(GetSaveFileName(&ofn) != FALSE)
+                        {
+                            MessageBox(m_hwnd, "This will not take effect until emulation is (re)started.\n", "Cxbx", MB_OK);
 
-	                if(GetSaveFileName(&ofn) == FALSE)
-                        return false;
+                            strncpy(m_KrnlDebugFilename, ofn.lpstrFile, 259);
 
-                    strncpy(m_KrnlDebugFilename, ofn.lpstrFile, 259);
+                            m_exe_changed = true;
 
-                    UpdateDebugConsoles();
+                            m_KrnlDebug = DM_FILE;
+
+                            UpdateDebugConsoles();
+                        }
+                    }
                 }
                 break;
 
@@ -781,37 +789,40 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 case ID_VIEW_DEBUGOUTPUTGUI_FILE:
                 {
-                    if(m_CxbxDebug == DM_NONE || m_CxbxDebug == DM_CONSOLE)
-                        m_CxbxDebug = DM_FILE;
-                    else
+                    if(m_CxbxDebug == DM_FILE)
                     {
                         m_CxbxDebug = DM_NONE;
+
                         UpdateDebugConsoles();
-                        break;
                     }
+                    else
+                    {
+                        OPENFILENAME ofn = {0};
 
-                    OPENFILENAME ofn = {0};
+	                    char filename[260] = "CxbxDebug.txt";
 
-	                char filename[260] = "CxbxDebug.txt";
+                        ofn.lStructSize     = sizeof(OPENFILENAME);
+	                    ofn.hwndOwner       = m_hwnd;
+	                    ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
+	                    ofn.lpstrFile       = filename;
+	                    ofn.nMaxFile        = 260;
+	                    ofn.nFilterIndex    = 1;
+	                    ofn.lpstrFileTitle  = NULL;
+	                    ofn.nMaxFileTitle   = 0;
+	                    ofn.lpstrInitialDir = NULL;
+                        ofn.lpstrDefExt     = "txt";
+	                    ofn.Flags           = OFN_PATHMUSTEXIST;
 
-                    ofn.lStructSize     = sizeof(OPENFILENAME);
-	                ofn.hwndOwner       = m_hwnd;
-	                ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
-	                ofn.lpstrFile       = filename;
-	                ofn.nMaxFile        = 260;
-	                ofn.nFilterIndex    = 1;
-	                ofn.lpstrFileTitle  = NULL;
-	                ofn.nMaxFileTitle   = 0;
-	                ofn.lpstrInitialDir = NULL;
-                    ofn.lpstrDefExt     = "txt";
-	                ofn.Flags           = OFN_PATHMUSTEXIST;
+	                    if(GetSaveFileName(&ofn) != FALSE)
+                        {
+                            strncpy(m_CxbxDebugFilename, ofn.lpstrFile, 259);
 
-	                if(GetSaveFileName(&ofn) == FALSE)
-                        return false;
+                            m_CxbxDebug = DM_FILE;
 
-                    strncpy(m_CxbxDebugFilename, ofn.lpstrFile, 259);
+                            UpdateDebugConsoles();
+                        }
 
-                    UpdateDebugConsoles();
+                    }
                 }
                 break;
 
