@@ -383,6 +383,37 @@ static DWORD WINAPI EmuRenderWindow(LPVOID)
     return 0;
 }
 
+// simple helper function
+void ToggleFauxFullscreen(HWND hWnd)
+{
+    if(g_XBVideo.GetFullscreen())
+        return;
+
+    static bool bIsNormal = true;
+    static LONG lRestore = 0, lRestoreEx = 0;
+    static RECT Rect;
+
+    if(bIsNormal)
+    {
+        lRestore = GetWindowLong(hWnd, GWL_STYLE);
+        lRestoreEx = GetWindowLong(hWnd, GWL_EXSTYLE);
+
+        SetWindowLong(hWnd, GWL_STYLE, WS_POPUP);
+        SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+        GetWindowRect(hWnd, &Rect);
+        ShowWindow(hWnd, SW_MAXIMIZE);
+    }
+    else
+    {
+        SetWindowLong(hWnd, GWL_STYLE, lRestore);
+        SetWindowLong(hWnd, GWL_EXSTYLE, lRestoreEx);
+        ShowWindow(hWnd, SW_RESTORE);
+        SetWindowPos(hWnd, HWND_NOTOPMOST, Rect.left, Rect.top, Rect.right - Rect.left, Rect.bottom - Rect.top, 0);
+    }
+
+    bIsNormal = !bIsNormal;
+}
+
 // rendering window message procedure
 static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -398,13 +429,30 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
         }
         break;
 
+        case WM_SYSKEYDOWN:
+        {
+            if(wParam == VK_RETURN)
+            {
+                ToggleFauxFullscreen(hWnd);
+            }
+            else if(wParam == VK_F4)
+            {
+                PostMessage(hWnd, WM_CLOSE, 0, 0);
+            }
+        }
+        break;
+
         case WM_KEYDOWN:
         {
             if(wParam == VK_ESCAPE)
                 PostMessage(hWnd, WM_CLOSE, 0, 0);
-            else if(wParam == VK_F10)
+            else if(wParam == VK_F9)
             {
                 XTL::g_bBrkPush = TRUE;
+            }
+            else if(wParam == VK_F10)
+            {
+                ToggleFauxFullscreen(hWnd);
             }
             else if(wParam == VK_F11)
             {
