@@ -1975,9 +1975,9 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_SetTextureState_TexCoordIndex" 
         #endif
     },
-    // IDirect3DDevice8::SetTextureState_BumpEnv (* unchanged since 4432 *)
+    // IDirect3DDevice8::SetTextureState_BumpEnv (* unchanged since 4361 *)
     {
-        (OOVPA*)&IDirect3DDevice8_SetTextureState_BumpEnv_1_0_4432,
+        (OOVPA*)&IDirect3DDevice8_SetTextureState_BumpEnv_1_0_4361,
 
         XTL::EmuIDirect3DDevice8_SetTextureState_BumpEnv,
 
@@ -1985,9 +1985,9 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_SetTextureState_BumpEnv" 
         #endif
     },
-    // IDirect3DDevice8::SetTextureState_BorderColor (* unchanged since 4432 *)
+    // IDirect3DDevice8::SetTextureState_BorderColor (* unchanged since 4361 *)
     {
-        (OOVPA*)&IDirect3DDevice8_SetTextureState_BorderColor_1_0_4432,
+        (OOVPA*)&IDirect3DDevice8_SetTextureState_BorderColor_1_0_4361,
 
         XTL::EmuIDirect3DDevice8_SetTextureState_BorderColor,
 

@@ -293,6 +293,19 @@ XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
         }
         break;
 
+        // Audio Flags
+        case 0x009:
+        {
+            if(Type != 0)
+                *Type = 0x04;
+
+            if(Value != 0)
+                *Value = 0;
+
+            if(ResultLength != 0)
+                *ResultLength = 0x04;
+        }
+
         case EEPROM_MISC:
         {
             if(Type != 0)

@@ -122,6 +122,12 @@ XTL::X_D3DFORMAT XTL::EmuPC2XB_D3DFormat(D3DFORMAT Format)
             return 0x05;
         case D3DFMT_D24S8:
             return 0x2A;
+        case D3DFMT_DXT3:
+            return 0x0F;
+        case D3DFMT_DXT2:
+            return 0x0E;
+        case D3DFMT_DXT1:
+            return 0x0C;
         case D3DFMT_X8R8G8B8:
 //            return 0x1E;    // Linear (X_D3DFMT_LIN_X8R8G8B8)
             return 0x07;

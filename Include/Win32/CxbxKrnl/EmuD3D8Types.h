@@ -94,6 +94,14 @@ typedef struct _X_D3DPRESENT_PARAMETERS
 }
 X_D3DPRESENT_PARAMETERS;
 
+typedef struct _X_D3DGAMMARAMP
+{
+    BYTE    red[256];
+    BYTE    green[256];
+    BYTE    blue[256];
+}
+X_D3DGAMMARAMP;
+
 struct X_D3DVertexShader
 {
     union

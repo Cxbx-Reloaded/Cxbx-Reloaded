@@ -155,6 +155,15 @@ HRESULT WINAPI EmuIDirect3D8_EnumAdapterModes
 VOID WINAPI EmuIDirect3D8_KickOffAndWaitForIdle();
 
 // ******************************************************************
+// * func: EmuIDirect3D8_SetGammaRamp
+// ******************************************************************
+VOID WINAPI EmuIDirect3D8_SetGammaRamp
+(
+    DWORD                   dwFlags,
+    CONST X_D3DGAMMARAMP   *pRamp
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_AddRef
 // ******************************************************************
 ULONG WINAPI EmuIDirect3DDevice8_AddRef();
@@ -226,6 +235,14 @@ VOID WINAPI EmuIDirect3DDevice8_GetBackBuffer
 HRESULT WINAPI EmuIDirect3DDevice8_SetViewport
 (
     CONST D3DVIEWPORT8 *pViewport
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetViewport
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_GetViewport
+(
+    D3DVIEWPORT8 *pViewport
 );
 
 // ******************************************************************

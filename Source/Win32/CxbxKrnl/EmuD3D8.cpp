@@ -1281,6 +1281,47 @@ VOID WINAPI XTL::EmuIDirect3D8_KickOffAndWaitForIdle()
 }
 
 // ******************************************************************
+// * func: EmuIDirect3D8_SetGammaRamp
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3D8_SetGammaRamp
+(
+    DWORD                   dwFlags,
+    CONST X_D3DGAMMARAMP   *pRamp
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3D8_SetGammaRamp\n"
+               "(\n"
+               "   dwFlags             : 0x%.08X\n"
+               "   pRamp               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), dwFlags, pRamp);
+    }
+    #endif
+
+    // remove D3DSGR_IMMEDIATE
+    DWORD dwPCFlags = dwFlags & (~0x00000002);
+    D3DGAMMARAMP PCRamp;
+
+    for(int v=0;v<255;v++)
+    {
+        PCRamp.red[v]   = pRamp->red[v];
+        PCRamp.green[v] = pRamp->green[v];
+        PCRamp.blue[v]  = pRamp->blue[v];
+    }
+
+    g_pD3DDevice8->SetGammaRamp(dwPCFlags, &PCRamp);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_AddRef
 // ******************************************************************
 ULONG WINAPI XTL::EmuIDirect3DDevice8_AddRef()
@@ -1612,6 +1653,40 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetViewport
     if(FAILED(hRet))
     {
         EmuWarning("Unable to set viewport!");
+        hRet = D3D_OK;
+    }
+
+    EmuSwapFS();   // Xbox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetViewport
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetViewport
+(
+    D3DVIEWPORT8 *pViewport
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetViewport\n"
+               "(\n"
+               "   pViewport           : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pViewport);
+    }
+    #endif
+
+    HRESULT hRet = g_pD3DDevice8->GetViewport(pViewport);
+
+    if(FAILED(hRet))
+    {
+        EmuWarning("Unable to get viewport!");
         hRet = D3D_OK;
     }
 
