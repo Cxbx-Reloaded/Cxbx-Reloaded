@@ -90,10 +90,13 @@ static volatile bool                g_bRenderWindowActive = false;
 static XBVideo                      g_XBVideo;
 static XTL::D3DVBLANKCALLBACK       g_pVBCallback   = NULL; // Vertical-Blank callback routine
 
+// wireframe toggle
+static bool                         g_bWireframe    = false;
+
 // resource caching for _Register
 static XTL::X_D3DResource pCache[16] = {0};
 
-// Direct3D inline vertex buffer (Begin()/End())
+// direct3d inline vertex buffer (Begin()/End())
 static DWORD                       *g_pD3DIVBData   = NULL; // data cache
 static DWORD                        g_dwD3DIVBInd   = NULL; // index
 static DWORD                        g_dwD3DIVBPrim;         // primitive type (Xbox)
@@ -394,6 +397,8 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
         {
             if(wParam == VK_ESCAPE)
                 PostMessage(hWnd, WM_CLOSE, 0, 0);
+            else if(wParam == VK_F11)
+                g_bWireframe = !g_bWireframe;
         }
         break;
 
@@ -1043,6 +1048,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_LoadVertexShader
     #endif
 
     // TODO: load vertex shader...
+    EmuWarning("VertexShader not loaded!\n");
 
     EmuSwapFS();   // XBox FS
 
@@ -2555,11 +2561,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetTexture
         pBaseTexture8 = pTexture->EmuBaseTexture8;
     }
 
-#ifdef _DEBUG_WIREFRAME
-    HRESULT hRet = g_pD3DDevice8->SetTexture(Stage, 0);
-#else
-    HRESULT hRet = g_pD3DDevice8->SetTexture(Stage, pBaseTexture8);
-#endif
+    HRESULT hRet = g_pD3DDevice8->SetTexture(Stage, g_bWireframe ? 0 : pBaseTexture8);
+
     EmuSwapFS();   // XBox FS
 
     return hRet;
@@ -5050,11 +5053,8 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_FillMode
     }
     #endif
 
-#ifdef _DEBUG_WIREFRAME
-    g_pD3DDevice8->SetRenderState(D3DRS_FILLMODE, D3DFILL_WIREFRAME);
-#else
-    g_pD3DDevice8->SetRenderState(D3DRS_FILLMODE, EmuXB2PC_D3DFILLMODE(Value));
-#endif
+    g_pD3DDevice8->SetRenderState(D3DRS_FILLMODE, g_bWireframe ? D3DFILL_WIREFRAME : EmuXB2PC_D3DFILLMODE(Value));
+
     EmuSwapFS();   // XBox FS
 
     return;
