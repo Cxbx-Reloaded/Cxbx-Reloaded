@@ -219,9 +219,15 @@ inline D3DFILLMODE EmuXB2PC_D3DFILLMODE(X_D3DFILLMODE Value)
 }
 
 // convert from vertex count to primitive count (Xbox)
-inline EmuD3DVertex2PrimitiveCount(int PrimitiveType, int VertexCount)
+inline int EmuD3DVertex2PrimitiveCount(int PrimitiveType, int VertexCount)
 {
     return (VertexCount - EmuD3DVertexToPrimitive[PrimitiveType][1]) / EmuD3DVertexToPrimitive[PrimitiveType][0];
+}
+
+// convert from primitive count to vertex count (Xbox)
+inline int EmuD3DPrimitive2VertexCount(int PrimitiveType, int PrimitiveCount)
+{
+    return (((PrimitiveCount)*EmuD3DVertexToPrimitive[PrimitiveType][0])+EmuD3DVertexToPrimitive[PrimitiveType][1]);
 }
 
 // convert from xbox to d3d primitive type

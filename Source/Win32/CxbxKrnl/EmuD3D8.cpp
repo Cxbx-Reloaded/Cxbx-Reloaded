@@ -93,10 +93,23 @@ static XTL::D3DVBLANKCALLBACK       g_pVBCallback   = NULL; // Vertical-Blank ca
 static XTL::X_D3DResource pCache[16] = {0};
 
 // Direct3D inline vertex buffer (Begin()/End())
-static XTL::LPDIRECT3DVERTEXBUFFER8 g_pD3DIVB       = NULL; // vertex buffer resource
-static BYTE                        *g_pD3DIVBData   = NULL; // data cache
-static DWORD                        g_pD3DIVBInd    = NULL; // index
-static DWORD                        g_pD3DIVBPrim   = NULL; // primitive type
+static DWORD                       *g_pD3DIVBData   = NULL; // data cache
+static DWORD                        g_dwD3DIVBInd   = NULL; // index
+static DWORD                        g_dwD3DIVBPrim;         // primitive type (Xbox)
+static DWORD                        g_dwD3DIVBFVF   = 0;    // FVF
+
+static struct _D3DIVB
+{
+    XTL::D3DXVECTOR3 Position;   // Position
+    XTL::DWORD       dwSpecular; // Specular
+    XTL::DWORD       dwDiffuse;  // Diffuse
+    XTL::D3DXVECTOR3 Normal;     // Normal
+    XTL::D3DXVECTOR2 TexCoord1;  // TexCoord1
+    XTL::D3DXVECTOR2 TexCoord2;  // TexCoord2
+    XTL::D3DXVECTOR2 TexCoord3;  // TexCoord3
+    XTL::D3DXVECTOR2 TexCoord4;  // TexCoord4
+}
+*g_D3DIVB;
 
 // current active index buffer
 static XTL::X_D3DIndexBuffer       *g_pIndexBuffer  = NULL; // current active index buffer
@@ -108,19 +121,10 @@ static XTL::X_D3DVertexBuffer      *g_pVertexBuffer = NULL; // current active ve
 // current vertical blank information
 static XTL::D3DVBLANKDATA           g_VBData = {0};
 
-typedef struct _D3DINLINE_VERTEX
-{
-    FLOAT x, y, z, rhw; // The transformed position for the vertex
-    DWORD color;        // The vertex color
-}
-D3DINLINE_VERTEX;
-
-#define D3DFVF_INLINEVERTEX (D3DFVF_XYZRHW|D3DFVF_DIFFUSE)
-
 // cached Direct3D state variable(s)
-static XTL::X_D3DSurface      *g_pCachedRenderTarget = NULL;
-static XTL::X_D3DSurface      *g_pCachedZStencilSurface = NULL;
-static DWORD                   g_dwVertexShaderUsage = 0;
+static XTL::X_D3DSurface           *g_pCachedRenderTarget = NULL;
+static XTL::X_D3DSurface           *g_pCachedZStencilSurface = NULL;
+static DWORD                        g_dwVertexShaderUsage = 0;
 
 // cached Direct3D tiles
 XTL::X_D3DTILE XTL::EmuD3DTileCache[0x08] = {0};
@@ -701,14 +705,6 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 // update z-stencil surface cache
                 g_pCachedZStencilSurface = new XTL::X_D3DSurface();
                 g_pD3DDevice8->GetDepthStencilSurface(&g_pCachedZStencilSurface->EmuSurface8);
-
-                // update inline vertex buffer for Begin()/End()
-                {
-                    HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer(0x100, 0, D3DFVF_INLINEVERTEX, XTL::D3DPOOL_MANAGED, &g_pD3DIVB);
-
-                    if(FAILED(hRet))
-                        EmuCleanup("Unable to create Begin()/End() vertex buffer cache!");
-                }
 
                 // begin scene
                 g_pD3DDevice8->BeginScene();
@@ -2489,6 +2485,194 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetDisplayMode
     return hRet;
 }
 
+static inline DWORD FtoDW(FLOAT f) { return *((DWORD*)&f); }
+static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
+
+// ******************************************************************
+// * func: EmuFlushD3DIVB
+// ******************************************************************
+static void EmuFlushD3DIVB()
+{
+    if(g_dwD3DIVBPrim != 7)
+        EmuCleanup("Unsupported primitive type %d for D3DIVB", g_dwD3DIVBPrim);
+
+    if(g_dwD3DIVBInd < 3)
+        return;
+
+    // generate stream data
+    {
+        DWORD dwFVF = g_dwD3DIVBFVF;
+        BYTE *pStreamData = (BYTE*)malloc(g_dwD3DIVBInd*sizeof(struct _D3DIVB));
+
+        ZeroMemory(pStreamData, g_dwD3DIVBInd*sizeof(struct _D3DIVB));
+
+        int i=0;
+
+        for(uint32 r=0;r<g_dwD3DIVBInd;r++)
+        {
+            // append position (x,y,z)
+            if(dwFVF & D3DFVF_XYZ)
+            {
+                memcpy(&pStreamData[i], &g_D3DIVB[r].Position.x, sizeof(XTL::D3DXVECTOR3));
+                i += sizeof(XTL::D3DXVECTOR3);
+
+                #ifdef _DEBUG_TRACE
+                printf("D3DIVB[%.03d]->Position := {%f,%f,%f}\n", r, g_D3DIVB[r].Position.x, g_D3DIVB[r].Position.y, g_D3DIVB[r].Position.z);
+                #endif
+            }
+
+            // append specular (D3DCOLOR)
+            if(dwFVF & D3DFVF_SPECULAR)
+            {
+                memcpy(&pStreamData[i], &g_D3DIVB[r].dwSpecular, sizeof(DWORD));
+                i += sizeof(DWORD);
+
+                #ifdef _DEBUG_TRACE
+                printf("D3DIVB[%.03d]->dwSpecular := 0x%.08X\n", r, g_D3DIVB[r].dwSpecular);
+                #endif
+            }
+
+            // append diffuse (D3DCOLOR)
+            if(dwFVF & D3DFVF_DIFFUSE)
+            {
+                memcpy(&pStreamData[i], &g_D3DIVB[r].dwDiffuse, sizeof(DWORD));
+                i += sizeof(DWORD);
+
+                #ifdef _DEBUG_TRACE
+                printf("D3DIVB[%.03d]->dwDiffuse := 0x%.08X\n", r, g_D3DIVB[r].dwDiffuse);
+                #endif
+            }
+
+            // append normal (nx,ny,nz)
+            if(dwFVF & D3DFVF_NORMAL)
+            {
+                memcpy(&pStreamData[i], &g_D3DIVB[r].Normal.x, sizeof(XTL::D3DXVECTOR3));
+                i += sizeof(XTL::D3DXVECTOR3);
+
+                #ifdef _DEBUG_TRACE
+                printf("D3DIVB[%.03d]->Normal := {%f,%f,%f}\n", r, g_D3DIVB[r].Normal.x, g_D3DIVB[r].Normal.y, g_D3DIVB[r].Normal.z);
+                #endif
+            }
+
+            // append texcoord
+            switch(dwFVF & D3DFVF_TEXCOUNT_MASK)
+            {
+                case D3DFVF_TEX1:
+                    memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord1.x, sizeof(XTL::D3DXVECTOR2));
+                    i += sizeof(XTL::D3DXVECTOR2);
+
+                    #ifdef _DEBUG_TRACE
+                    printf("D3DIVB[%.03d]->Tex1 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord1.x, g_D3DIVB[r].TexCoord1.y);
+                    #endif
+
+                    break;
+				case D3DFVF_TEX2:
+                    memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord1.x, sizeof(XTL::D3DXVECTOR2));
+                    i += sizeof(XTL::D3DXVECTOR2);
+                    memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord2.x, sizeof(XTL::D3DXVECTOR2));
+                    i += sizeof(XTL::D3DXVECTOR2);
+
+                    #ifdef _DEBUG_TRACE
+                    printf("D3DIVB[%.03d]->Tex1 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord1.x, g_D3DIVB[r].TexCoord1.y);
+                    printf("D3DIVB[%.03d]->Tex2 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord2.x, g_D3DIVB[r].TexCoord2.y);
+                    #endif
+
+                    break;
+				case D3DFVF_TEX3:
+                    memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord1.x, sizeof(XTL::D3DXVECTOR2));
+                    i += sizeof(XTL::D3DXVECTOR2);
+                    memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord2.x, sizeof(XTL::D3DXVECTOR2));
+                    i += sizeof(XTL::D3DXVECTOR2);
+                    memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord3.x, sizeof(XTL::D3DXVECTOR2));
+                    i += sizeof(XTL::D3DXVECTOR2);
+                    
+                    #ifdef _DEBUG_TRACE
+                    printf("D3DIVB[%.03d]->Tex1 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord1.x, g_D3DIVB[r].TexCoord1.y);
+                    printf("D3DIVB[%.03d]->Tex2 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord2.x, g_D3DIVB[r].TexCoord2.y);
+                    printf("D3DIVB[%.03d]->Tex3 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord3.x, g_D3DIVB[r].TexCoord3.y);
+                    #endif
+
+                    break;
+				case D3DFVF_TEX4:
+                    memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord1.x, sizeof(XTL::D3DXVECTOR2));
+                    i += sizeof(XTL::D3DXVECTOR2);
+                    memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord2.x, sizeof(XTL::D3DXVECTOR2));
+                    i += sizeof(XTL::D3DXVECTOR2);
+                    memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord3.x, sizeof(XTL::D3DXVECTOR2));
+                    i += sizeof(XTL::D3DXVECTOR2);
+                    memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord4.x, sizeof(XTL::D3DXVECTOR2));
+                    i += sizeof(XTL::D3DXVECTOR2);
+
+                    #ifdef _DEBUG_TRACE
+                    printf("D3DIVB[%.03d]->Tex1 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord1.x, g_D3DIVB[r].TexCoord1.y);
+                    printf("D3DIVB[%.03d]->Tex2 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord2.x, g_D3DIVB[r].TexCoord2.y);
+                    printf("D3DIVB[%.03d]->Tex3 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord3.x, g_D3DIVB[r].TexCoord3.y);
+                    printf("D3DIVB[%.03d]->Tex4 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord4.x, g_D3DIVB[r].TexCoord4.y);
+                    #endif
+
+                    break;
+			}
+        }
+
+        // close any outstanding locks
+        {
+            XTL::IDirect3DTexture8 *pTexture8 = NULL;
+
+            if(g_pD3DDevice8->GetTexture(0, (XTL::IDirect3DBaseTexture8**)&pTexture8) == D3D_OK && pTexture8 != NULL)
+            {
+                pTexture8->UnlockRect(0);
+
+                pTexture8->Release();
+            }
+        }
+
+        //*
+        {
+            static int dwDumpTex = 0;
+
+            char szBuffer[255];
+
+            sprintf(szBuffer, "C:\\Aaron\\Textures\\Flush%.03d.bmp", dwDumpTex++);
+
+            XTL::IDirect3DBaseTexture8 *pBaseTexture8 = NULL;
+
+            if(g_pD3DDevice8->GetTexture(0, &pBaseTexture8) == D3D_OK)
+            {
+                if(pBaseTexture8 != NULL)
+                {
+                    XTL::IDirect3DTexture8 *pTexture8 = (XTL::IDirect3DTexture8*)pBaseTexture8;
+
+                    pTexture8->UnlockRect(0);
+
+                    XTL::D3DXSaveTextureToFile(szBuffer, XTL::D3DXIFF_BMP, pTexture8, NULL);
+
+                    pBaseTexture8->Release();
+                }
+            }
+        }
+        //*/
+
+        // HACK!!
+        g_pD3DDevice8->SetTextureStageState(0, XTL::D3DTSS_COLOROP,   XTL::D3DTOP_MODULATE);
+        g_pD3DDevice8->SetTextureStageState(0, XTL::D3DTSS_COLORARG1, D3DTA_TEXTURE);
+        g_pD3DDevice8->SetTextureStageState(0, XTL::D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+        g_pD3DDevice8->SetTextureStageState(0, XTL::D3DTSS_ALPHAOP,   XTL::D3DTOP_DISABLE);
+
+        g_pD3DDevice8->SetVertexShader(dwFVF);
+
+        HRESULT hRet = g_pD3DDevice8->DrawPrimitiveUP(XTL::EmuPrimitiveType(g_dwD3DIVBPrim), XTL::EmuD3DVertex2PrimitiveCount(g_dwD3DIVBPrim, g_dwD3DIVBInd), pStreamData, i/g_dwD3DIVBInd);
+
+        g_pD3DDevice8->Present(0,0,0,0);
+        free(pStreamData);
+
+        if(FAILED(hRet))
+            EmuCleanup("Inline Vertex DrawPrimitiveUP Failed!");
+    }
+
+    g_dwD3DIVBInd = 0;
+    g_dwD3DIVBFVF = 0;
+}
+
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_Begin
 // ******************************************************************
@@ -2510,17 +2694,20 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Begin
     }
     #endif
 
-    HRESULT hRet = g_pD3DIVB->Lock(0, 0, &g_pD3DIVBData, D3DLOCK_DISCARD);
+    if(PrimitiveType != 7)
+        EmuCleanup("EmuIDirect3DDevice8_End does not support primitive : %d", g_dwD3DIVBPrim);
 
-    if(FAILED(hRet))
-        EmuCleanup("Unable to lock Begin()/End() vertex buffer cache!");
+    g_dwD3DIVBInd  = 0;
+    g_dwD3DIVBPrim = PrimitiveType;
+    g_dwD3DIVBFVF  = 0;
 
-    g_pD3DIVBPrim = PrimitiveType;
-    g_pD3DIVBInd  = 0;
+    g_D3DIVB = (struct _D3DIVB*)malloc(sizeof(*g_D3DIVB)*32);
+
+    ZeroMemory(g_D3DIVB, sizeof(*g_D3DIVB)*32);
 
     EmuSwapFS();   // XBox FS
 
-    return hRet;
+    return D3D_OK;
 }
 
 // ******************************************************************
@@ -2533,48 +2720,22 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData2f
     FLOAT   b
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
-
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexData2f\n"
+        EmuSwapFS();   // Win2k/XP FS
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexData2f >>\n"
                "(\n"
                "   Register            : 0x%.08X\n"
                "   a                   : %f\n"
                "   b                   : %f\n"
                ");\n",
                GetCurrentThreadId(), Register, a, b);
+        EmuSwapFS();   // XBox FS
     }
     #endif
 
-    HRESULT hRet = S_OK;
-
-    D3DINLINE_VERTEX *pD3DInlineVertex = (D3DINLINE_VERTEX*)&g_pD3DIVBData[g_pD3DIVBInd*sizeof(D3DINLINE_VERTEX)];
-
-    switch(Register)
-    {
-        case 0:             // D3DVSDE_POSITION
-        {
-            pD3DInlineVertex->x = a*640.0f;
-            pD3DInlineVertex->y = b*480.0f;
-            pD3DInlineVertex->z = 0.0f;
-            pD3DInlineVertex->rhw = 1.0f;
-
-            g_pD3DIVBInd++;
-        }
-        break;
-
-        case 4:             // D3DVSDE_SPECULAR
-        {
-            // TODO: hehe
-        }
-        break;
-    }
-
-    EmuSwapFS();   // XBox FS
-
-    return hRet;
+    return EmuIDirect3DDevice8_SetVertexData4f(Register, a, b, 0.0f, 1.0f);
 }
 
 // ******************************************************************
@@ -2608,30 +2769,126 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
 
     HRESULT hRet = S_OK;
 
-    D3DINLINE_VERTEX *pD3DInlineVertex = (D3DINLINE_VERTEX*)&g_pD3DIVBData[g_pD3DIVBInd*sizeof(D3DINLINE_VERTEX)];
-
     switch(Register)
     {
+        case 0:             // D3DVSDE_POSITION
+        {
+            g_D3DIVB[g_dwD3DIVBInd].Position.x = a;//*640.0f;
+            g_D3DIVB[g_dwD3DIVBInd].Position.y = b;//*480.0f;
+            g_D3DIVB[g_dwD3DIVBInd].Position.z = c;
+
+            g_dwD3DIVBFVF |= D3DFVF_XYZ;
+
+            g_dwD3DIVBInd++;
+        }
+        break;
+
+        case 9: // HALO HACK!
         case 3:             // D3DVSDE_DIFFUSE
-        {            
-            pD3DInlineVertex->color = 0;
-            pD3DInlineVertex->color |= ((DWORD)(BYTE)(a*255.0)) << 16;
-            pD3DInlineVertex->color |= ((DWORD)(BYTE)(b*255.0)) << 8;
-            pD3DInlineVertex->color |= ((DWORD)(BYTE)(c*255.0)) << 0;
-            pD3DInlineVertex->color |= ((DWORD)(BYTE)(d*255.0)) << 24;
+        {
+            DWORD ca = FtoDW(d) << 24;
+            DWORD cr = FtoDW(a) << 16;
+            DWORD cg = FtoDW(b) << 8;
+            DWORD cb = FtoDW(c) << 0;
+
+            g_D3DIVB[g_dwD3DIVBInd].dwDiffuse = ca | cr | cg | cb;
+
+            g_dwD3DIVBFVF |= D3DFVF_DIFFUSE;
+        }
+        break;
+
+        case 4:             // D3DVSDE_SPECULAR
+        {
+            if(a > 1.0f) a /= 640.0f;
+            if(b > 1.0f) b /= 480.0f;
+
+            g_D3DIVB[g_dwD3DIVBInd].TexCoord1.x = a;
+            g_D3DIVB[g_dwD3DIVBInd].TexCoord1.y = b;
+
+            g_dwD3DIVBFVF &= ~D3DFVF_TEXCOUNT_MASK;  // clear tex mask
+            g_dwD3DIVBFVF |= D3DFVF_TEX1;
+
+            /* HALO HACK!
+            DWORD ca = FtoDW(d) << 24;
+            DWORD cr = FtoDW(a) << 16;
+            DWORD cg = FtoDW(b) << 8;
+            DWORD cb = FtoDW(c) << 0;
+
+            g_D3DIVB[g_dwD3DIVBInd].dwSpecular = ca | cr | cg | cb;
+
+            g_dwD3DIVBFVF |= D3DFVF_SPECULAR;*/
+        }
+        break;
+/*
+        case 9:             // D3DVSDE_TEXCOORD0
+        {
+            if(a > 1.0f) a /= 640.0f;
+            if(b > 1.0f) b /= 480.0f;
+
+            g_D3DIVB[g_dwD3DIVBInd].fU1 = a;
+            g_D3DIVB[g_dwD3DIVBInd].fV1 = b;
+
+            g_dwD3DIVBFVF &= ~D3DFVF_TEXCOUNT_MASK;  // clear tex mask
+            g_dwD3DIVBFVF |= D3DFVF_TEX1;
+        }
+        break;
+*/
+        case 10:            // D3DVSDE_TEXCOORD1
+        {
+            if(a > 1.0f) a /= 640.0f;
+            if(b > 1.0f) b /= 480.0f;
+
+            g_D3DIVB[g_dwD3DIVBInd].TexCoord2.x = a;
+            g_D3DIVB[g_dwD3DIVBInd].TexCoord2.y = b;
+
+            g_dwD3DIVBFVF &= ~D3DFVF_TEXCOUNT_MASK;  // clear tex mask
+            g_dwD3DIVBFVF |= D3DFVF_TEX2;
+        }
+        break;
+
+        case 11:            // D3DVSDE_TEXCOORD2
+        {
+            if(a > 1.0f) a /= 640.0f;
+            if(b > 1.0f) b /= 480.0f;
+
+            g_D3DIVB[g_dwD3DIVBInd].TexCoord3.x = a;
+            g_D3DIVB[g_dwD3DIVBInd].TexCoord3.y = b;
+
+            g_dwD3DIVBFVF &= ~D3DFVF_TEXCOUNT_MASK;  // clear tex mask
+            g_dwD3DIVBFVF |= D3DFVF_TEX3;
+        }
+        break;
+
+        case 12:            // D3DVSDE_TEXCOORD3
+        {
+            if(a > 1.0f) a /= 640.0f;
+            if(b > 1.0f) b /= 480.0f;
+
+            g_D3DIVB[g_dwD3DIVBInd].TexCoord4.x = a;
+            g_D3DIVB[g_dwD3DIVBInd].TexCoord4.y = b;
+
+            g_dwD3DIVBFVF &= ~D3DFVF_TEXCOUNT_MASK;  // clear tex mask
+            g_dwD3DIVBFVF |= D3DFVF_TEX4;
         }
         break;
 
         case 0xFFFFFFFF:    // D3DVSDE_VERTEX
         {
-            pD3DInlineVertex->x = a*640.0f;
-            pD3DInlineVertex->y = b*480.0f;
-            pD3DInlineVertex->z = c*1.0f;
-            pD3DInlineVertex->rhw = 1.0f;
+            g_D3DIVB[g_dwD3DIVBInd].Position.x = a*640.0f;
+            g_D3DIVB[g_dwD3DIVBInd].Position.y = b*480.0f;
+            g_D3DIVB[g_dwD3DIVBInd].Position.z = c*1.0f;
 
-            g_pD3DIVBInd++;
+            g_dwD3DIVBFVF |= D3DFVF_XYZ;
+
+            g_dwD3DIVBInd++;
+
+            EmuFlushD3DIVB();
         }
         break;
+
+        default:
+            EmuCleanup("Unknown Register (4f) : %d", Register);
+            break;
     }
 
     EmuSwapFS();   // XBox FS
@@ -2648,34 +2905,26 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexDataColor
     D3DCOLOR    Color
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
-
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexDataColor\n"
+        EmuSwapFS();   // Win2k/XP FS
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexDataColor >>\n"
                "(\n"
                "   Register            : 0x%.08X\n"
-               "   Color               : %f\n"
+               "   Color               : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), Register, Color);
+        EmuSwapFS();   // XBox FS
     }
     #endif
 
-    HRESULT hRet = S_OK;
+    FLOAT a = DWtoF((Color & 0xFF000000) >> 24);
+    FLOAT r = DWtoF((Color & 0x00FF0000) >> 16);
+    FLOAT g = DWtoF((Color & 0x0000FF00) >> 8);
+    FLOAT b = DWtoF((Color & 0x000000FF) >> 0);
 
-    D3DINLINE_VERTEX *pD3DInlineVertex = (D3DINLINE_VERTEX*)&g_pD3DIVBData[g_pD3DIVBInd*sizeof(D3DINLINE_VERTEX)];
-
-    switch(Register)
-    {
-        case 9:             // D3DVSDE_TEXCOORD0
-            pD3DInlineVertex->color = Color;
-            break;
-    }
-
-    EmuSwapFS();   // XBox FS
-
-    return hRet;
+    return EmuIDirect3DDevice8_SetVertexData4f(Register, a, g, b, a);
 }
 
 // ******************************************************************
@@ -2692,48 +2941,14 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_End()
     }
     #endif
 
-    HRESULT hRet = g_pD3DIVB->Unlock();
+    if(g_dwD3DIVBInd != 0)
+        EmuFlushD3DIVB();
 
-    if(FAILED(hRet))
-        EmuCleanup("Unable to unlock Begin()/End() vertex buffer cache!");
-
-    /*
-    {
-        static int dwDumpTex = 0;
-
-        char szBuffer[255];
-
-        sprintf(szBuffer, "C:\\Aaron\\Textures\\End%.03d.bmp", dwDumpTex++);
-
-        IDirect3DBaseTexture8 *pBaseTexture8 = NULL;
-
-        if(g_pD3DDevice8->GetTexture(0, &pBaseTexture8) == D3D_OK)
-        {
-            if(pBaseTexture8 != NULL)
-            {
-                IDirect3DTexture8 *pTexture8 = (IDirect3DTexture8*)pBaseTexture8;
-
-                pTexture8->UnlockRect(0);
-
-                D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture8, NULL);
-
-                pBaseTexture8->Release();
-            }
-        }
-    }
-    //*/
-
-    hRet = g_pD3DDevice8->SetStreamSource(0, g_pD3DIVB, sizeof(D3DINLINE_VERTEX));
-    hRet = g_pD3DDevice8->SetVertexShader(D3DFVF_INLINEVERTEX);
-
-    hRet = g_pD3DDevice8->DrawPrimitive(EmuPrimitiveType(g_pD3DIVBPrim), 0, EmuD3DVertex2PrimitiveCount(g_pD3DIVBPrim, g_pD3DIVBInd));
-
-    if(FAILED(hRet))
-        EmuCleanup("Unable to draw Begin()/End() vertex buffer primitives!");
+    free(g_D3DIVB);
 
     EmuSwapFS();   // XBox FS
 
-    return hRet;
+    return D3D_OK;
 }
 
 // ******************************************************************
