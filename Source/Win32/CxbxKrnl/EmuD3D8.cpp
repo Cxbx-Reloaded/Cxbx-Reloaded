@@ -435,7 +435,7 @@ static inline void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
     if(pResource->Lock == 0)
     {
         EmuSwapFS();    // XBox FS;
-        XTL::EmuIDirect3DResource8_Register(pResource, (PVOID)pResource->Data);
+        XTL::EmuIDirect3DResource8_Register(pResource, 0/*(PVOID)pResource->Data*/);
         EmuSwapFS();    // Win2k/XP FS
     }
 }
@@ -2117,6 +2117,9 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
     DWORD dwCommonType = pResource->Common & X_D3DCOMMON_TYPE_MASK;
 
+	// Add the offset of the current texture to the base
+	pBase = (PVOID)((DWORD)pBase+pThis->Data);
+
     // ******************************************************************
     // * Determine the resource type, and initialize
     // ******************************************************************
@@ -2127,9 +2130,6 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
             #ifdef _DEBUG_TRACE
             printf("EmuIDirect3DResource8_Register :-> VertexBuffer...\n");
             #endif
-
-            if(((DWORD)pBase) != pThis->Data)
-                pBase = (PVOID)(((DWORD)pBase) + pThis->Data);
 
             X_D3DVertexBuffer *pVertexBuffer = (X_D3DVertexBuffer*)pResource;
 
@@ -2166,9 +2166,6 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
             #ifdef _DEBUG_TRACE
             printf("EmuIDirect3DResource8_Register :-> IndexBuffer...\n");
             #endif
-
-            if(((DWORD)pBase) != pThis->Data)
-                pBase = (PVOID)(((DWORD)pBase) + pThis->Data);
 
             X_D3DIndexBuffer *pIndexBuffer = (X_D3DIndexBuffer*)pResource;
 
@@ -2214,9 +2211,6 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
         case X_D3DCOMMON_TYPE_SURFACE:
         case X_D3DCOMMON_TYPE_TEXTURE:
         {
-            // TODO: Find out why this only seems to be safe with textures (for now)
-            pBase = (PVOID)((DWORD)pBase + (DWORD)pThis->Data);
-
             #ifdef _DEBUG_TRACE
             if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
                 printf("EmuIDirect3DResource8_Register :-> Surface...\n");
@@ -4361,9 +4355,9 @@ static void EmuUpdateDeferredStates()
 // ******************************************************************
 // * func: EmuQuadHackA
 // ******************************************************************
-uint32 EmuQuadHackA(uint32 PrimitiveCount, XTL::IDirect3DVertexBuffer8 *&pOrigVertexBuffer8, XTL::IDirect3DVertexBuffer8 *&pHackVertexBuffer8)
+uint32 EmuQuadHackA(uint32 PrimitiveCount, XTL::IDirect3DVertexBuffer8 *&pOrigVertexBuffer8, XTL::IDirect3DVertexBuffer8 *&pHackVertexBuffer8, UINT dwOffset, PVOID pVertexStreamZeroData, UINT VertexStreamZeroStride)
 {
-    UINT uiStride = 0;
+    UINT uiStride = VertexStreamZeroStride;
 
     // These are the sizes of our part in the vertex buffer
     DWORD dwOriginalSize    = 0;
@@ -4373,66 +4367,80 @@ uint32 EmuQuadHackA(uint32 PrimitiveCount, XTL::IDirect3DVertexBuffer8 *&pOrigVe
     DWORD dwOriginalSizeWR  = 0; // the size of the original vertex buffer
     DWORD dwNewSizeWR       = 0; // the size of the new buffer!!!
 
-    g_pD3DDevice8->GetStreamSource(0, &pOrigVertexBuffer8, &uiStride);
+    BYTE *pOrigVertexData = 0;
+    BYTE *pHackVertexData = 0;
 
     // This is a list of sqares/rectangles, so we convert it to a list of triangles
     dwOriginalSize  = PrimitiveCount*uiStride*2;
     dwNewSize       = PrimitiveCount*uiStride*3;
 
-    // Retrieve the original buffer size
+    if(pVertexStreamZeroData == 0)
     {
-        XTL::D3DVERTEXBUFFER_DESC Desc;
+        g_pD3DDevice8->GetStreamSource(0, &pOrigVertexBuffer8, &uiStride);
 
-        if(FAILED(pOrigVertexBuffer8->GetDesc(&Desc))) 
-            EmuCleanup("Could not retrieve buffer size");
-
-        // Here we save the full buffer size
-        dwOriginalSizeWR = Desc.Size;
-
-        // So we can now calculate the size of the rest (dwOriginalSizeWR - dwOriginalSize) and
-        // add it to our new calculated size of the patched buffer
-        dwNewSizeWR = dwNewSize + dwOriginalSizeWR - dwOriginalSize;
-    }
-
-    g_pD3DDevice8->CreateVertexBuffer(dwNewSizeWR, 0, 0, XTL::D3DPOOL_MANAGED, &pHackVertexBuffer8);
-
-    if(pOrigVertexBuffer8 != 0 && pHackVertexBuffer8 != 0)
-    {
-        BYTE *pOrigVertexData = 0;
-        BYTE *pHackVertexData = 0;
-
-        DWORD dwVertexShader = NULL;
-
-        g_pD3DDevice8->GetVertexShader(&dwVertexShader);
-
-        pOrigVertexBuffer8->Lock(0, 0, &pOrigVertexData, 0);
-        pHackVertexBuffer8->Lock(0, 0, &pHackVertexData, 0);
-
-        // Copy the nonmodified data
-//      memcpy(pHackVertexData, pOrigVertexData, dwOffset);
-        memcpy(&pHackVertexData[dwNewSize], &pOrigVertexData[dwOriginalSize], dwOriginalSizeWR-dwOriginalSize);
-
-        for(DWORD i=0;i<(PrimitiveCount/2);i++)
+        // Retrieve the original buffer size
         {
-            memcpy(&pHackVertexData[i*uiStride*6+0*uiStride], &pOrigVertexData[i*uiStride*4+0*uiStride], uiStride);
-            memcpy(&pHackVertexData[i*uiStride*6+1*uiStride], &pOrigVertexData[i*uiStride*4+1*uiStride], uiStride);
-            memcpy(&pHackVertexData[i*uiStride*6+2*uiStride], &pOrigVertexData[i*uiStride*4+2*uiStride], uiStride);
-            memcpy(&pHackVertexData[i*uiStride*6+3*uiStride], &pOrigVertexData[i*uiStride*4+2*uiStride], uiStride);
-            memcpy(&pHackVertexData[i*uiStride*6+4*uiStride], &pOrigVertexData[i*uiStride*4+3*uiStride], uiStride);
-            memcpy(&pHackVertexData[i*uiStride*6+5*uiStride], &pOrigVertexData[i*uiStride*4+0*uiStride], uiStride);
+            XTL::D3DVERTEXBUFFER_DESC Desc;
 
-            if(dwVertexShader & D3DFVF_XYZRHW)
-            {
-                for(int z=0;z<6;z++)
-                {
-                    if(((FLOAT*)&pHackVertexData[i*uiStride*6+z*uiStride])[2] == 0.0f)
-                        ((FLOAT*)&pHackVertexData[i*uiStride*6+z*uiStride])[2] = 1.0f;
-                    if(((FLOAT*)&pHackVertexData[i*uiStride*6+z*uiStride])[3] == 0.0f)
-                        ((FLOAT*)&pHackVertexData[i*uiStride*6+z*uiStride])[3] = 1.0f;
-                }
-            }
+            if(FAILED(pOrigVertexBuffer8->GetDesc(&Desc))) 
+                EmuCleanup("Could not retrieve buffer size");
+
+            // Here we save the full buffer size
+            dwOriginalSizeWR = Desc.Size;
+
+            // So we can now calculate the size of the rest (dwOriginalSizeWR - dwOriginalSize) and
+            // add it to our new calculated size of the patched buffer
+            dwNewSizeWR = dwNewSize + dwOriginalSizeWR - dwOriginalSize;
         }
 
+        g_pD3DDevice8->CreateVertexBuffer(dwNewSizeWR, 0, 0, XTL::D3DPOOL_MANAGED, &pHackVertexBuffer8);
+
+        if(pOrigVertexBuffer8 != 0 && pHackVertexBuffer8 != 0)
+        {
+            pOrigVertexBuffer8->Lock(0, 0, &pOrigVertexData, 0);
+            pHackVertexBuffer8->Lock(0, 0, &pHackVertexData, 0);
+        }
+    }
+    else
+    {
+        dwOriginalSizeWR = dwOriginalSize;
+        dwNewSizeWR = dwNewSize;
+
+        pHackVertexData = (uint08*)malloc(dwNewSizeWR);
+        pOrigVertexData = (uint08*)pVertexStreamZeroData;
+    }
+
+    DWORD dwVertexShader = NULL;
+
+    g_pD3DDevice8->GetVertexShader(&dwVertexShader);
+
+    // Copy the nonmodified data
+    memcpy(pHackVertexData, pOrigVertexData, dwOffset * uiStride);
+    memcpy(&pHackVertexData[dwOffset+dwNewSize], &pOrigVertexData[dwOffset+dwOriginalSize], dwOriginalSizeWR-dwOffset-dwOriginalSize);
+
+    for(DWORD i=0;i<(PrimitiveCount/2);i++)
+    {
+        memcpy(&pHackVertexData[dwOffset+i*uiStride*6+0*uiStride], &pOrigVertexData[dwOffset+i*uiStride*4+0*uiStride], uiStride);
+        memcpy(&pHackVertexData[dwOffset+i*uiStride*6+1*uiStride], &pOrigVertexData[dwOffset+i*uiStride*4+1*uiStride], uiStride);
+        memcpy(&pHackVertexData[dwOffset+i*uiStride*6+2*uiStride], &pOrigVertexData[dwOffset+i*uiStride*4+2*uiStride], uiStride);
+        memcpy(&pHackVertexData[dwOffset+i*uiStride*6+3*uiStride], &pOrigVertexData[dwOffset+i*uiStride*4+2*uiStride], uiStride);
+        memcpy(&pHackVertexData[dwOffset+i*uiStride*6+4*uiStride], &pOrigVertexData[dwOffset+i*uiStride*4+3*uiStride], uiStride);
+        memcpy(&pHackVertexData[dwOffset+i*uiStride*6+5*uiStride], &pOrigVertexData[dwOffset+i*uiStride*4+0*uiStride], uiStride);
+
+        if(dwVertexShader & D3DFVF_XYZRHW)
+        {
+            for(int z=0;z<6;z++)
+            {
+                if(((FLOAT*)&pHackVertexData[dwOffset+i*uiStride*6+z*uiStride])[2] == 0.0f)
+                    ((FLOAT*)&pHackVertexData[dwOffset+i*uiStride*6+z*uiStride])[2] = 1.0f;
+                if(((FLOAT*)&pHackVertexData[dwOffset+i*uiStride*6+z*uiStride])[3] == 0.0f)
+                    ((FLOAT*)&pHackVertexData[dwOffset+i*uiStride*6+z*uiStride])[3] = 1.0f;
+            }
+        }
+    }
+
+    if(pVertexStreamZeroData == 0)
+    {
         pOrigVertexBuffer8->Unlock();
         pHackVertexBuffer8->Unlock();
 
@@ -4501,7 +4509,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVertices
     if(PrimitiveType == 8)  // Quad List
     {
         PrimitiveCount *= 2;
-        nStride = EmuQuadHackA(PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8);
+        nStride = EmuQuadHackA(PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, StartVertex, 0, 0);
     }
 
     g_pD3DDevice8->DrawPrimitive
@@ -4567,7 +4575,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVerticesUP
     if(PrimitiveType == 8)  // Quad List
     {
         PrimitiveCount *= 2;
-        nStride = EmuQuadHackA(PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8);
+        nStride = EmuQuadHackA(PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, 0, pVertexStreamZeroData, VertexStreamZeroStride);
     }
 
     g_pD3DDevice8->DrawPrimitiveUP
@@ -4632,7 +4640,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
     if(PrimitiveType == 8)  // Quad List
     {
         PrimitiveCount *= 2;
-        nStride = EmuQuadHackA(PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8);
+        nStride = EmuQuadHackA(PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, 0, 0, 0);
     }
 
     g_pD3DDevice8->DrawIndexedPrimitive
