@@ -571,7 +571,7 @@ XBSYSAPI EXPORTNUM(113) VOID NTAPI xboxkrnl::KeInitializeTimerEx
 // ******************************************************************
 // * KeQueryPerformanceCounter
 // ******************************************************************
-XBSYSAPI EXPORTNUM(126) VOID __cdecl xboxkrnl::KeQueryPerformanceCounter()
+XBSYSAPI EXPORTNUM(126) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceCounter()
 {
     EmuSwapFS();   // Win2k/XP FS
 
@@ -588,16 +588,13 @@ XBSYSAPI EXPORTNUM(126) VOID __cdecl xboxkrnl::KeQueryPerformanceCounter()
 
     EmuSwapFS();   // Xbox FS
 
-    __asm mov eax, Counter.u.LowPart
-    __asm mov edx, Counter.u.HighPart
-
-    return;
+    return Counter.QuadPart;
 }
 
 // ******************************************************************
 // * KeQueryPerformanceFrequency
 // ******************************************************************
-XBSYSAPI EXPORTNUM(127) VOID __cdecl xboxkrnl::KeQueryPerformanceFrequency()
+XBSYSAPI EXPORTNUM(127) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceFrequency()
 {
     EmuSwapFS();   // Win2k/XP FS
 
@@ -614,10 +611,7 @@ XBSYSAPI EXPORTNUM(127) VOID __cdecl xboxkrnl::KeQueryPerformanceFrequency()
 
     EmuSwapFS();   // Xbox FS
 
-    __asm mov eax, Frequency.u.LowPart
-    __asm mov edx, Frequency.u.HighPart
-
-    return;
+    return Frequency.QuadPart;
 }
 
 // ******************************************************************
