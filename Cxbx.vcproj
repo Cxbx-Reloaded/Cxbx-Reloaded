@@ -24,18 +24,15 @@
 				AdditionalIncludeDirectories="Include,Include/Core/,Include/Win32/,Include/Win32/Cxbxkrnl,Include/Win32/Cxbx"
 				PreprocessorDefinitions="WIN32,NDEBUG,_WINDOWS"
 				StringPooling="TRUE"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="TRUE"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\Bin/Cxbx.pch"
-				AssemblerOutput="2"
 				AssemblerListingLocation=".\Bin/"
 				ObjectFile=".\Bin/"
 				ProgramDataBaseFileName=".\Bin/"
-				BrowseInformation="1"
 				WarningLevel="3"
 				SuppressStartupBanner="TRUE"
-				DebugInformationFormat="3"
 				CompileAs="0"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
@@ -46,9 +43,6 @@
 				OutputFile=".\Bin/Cxbx.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
-				IgnoreDefaultLibraryNames="libc"
-				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile=".\Bin/Cxbx.pdb"
 				GenerateMapFile="TRUE"
 				MapFileName=".\Bin/Cxbx.map"
 				SubSystem="2"/>
@@ -92,7 +86,7 @@ upxCxbx.bat
 				AdditionalIncludeDirectories="Include,Include/Core/,Include/Win32/,Include/Win32/Cxbxkrnl,Include/Win32/Cxbx"
 				PreprocessorDefinitions="WIN32,_DEBUG,_WINDOWS"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\Bin\Debug/Cxbx.pch"
 				AssemblerListingLocation=".\Bin\Debug/"
@@ -112,7 +106,6 @@ upxCxbx.bat
 				OutputFile=".\Bin\Debug/Cxbx.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
-				IgnoreDefaultLibraryNames="libcd"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Bin\Debug/Cxbx.pdb"
 				SubSystem="2"/>
