@@ -351,12 +351,11 @@ LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_CLOSE:
             DestroyWindow(hWnd);
             break;
-
-        /*
+/*
         case WM_SETCURSOR:
             SetCursor(NULL);
             return 0;
-        */
+*/
         default:
             return DefWindowProc(hWnd, msg, wParam, lParam);
     }
@@ -404,8 +403,8 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
     {
         Adapter = D3DADAPTER_DEFAULT;
 
-        //pPresentationParameters->Windowed = TRUE;
-        pPresentationParameters->SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
+        pPresentationParameters->Windowed = TRUE;
+        //pPresentationParameters->SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
 
         hFocusWindow = g_hEmuWindow;
 
@@ -423,13 +422,37 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
             else if(pPresentationParameters->AutoDepthStencilFormat == 0x2C)
                 pPresentationParameters->AutoDepthStencilFormat = D3DFMT_D16;
         }
+
+        // ******************************************************************
+        // * For Windowed mode, force use of the current mode
+        // ******************************************************************
+        if(pPresentationParameters->Windowed)
+        {
+            D3DDISPLAYMODE D3DDisplayMode;
+
+            g_pD3D8->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &D3DDisplayMode);
+
+            pPresentationParameters->BackBufferFormat = D3DDisplayMode.Format;
+        }
     }
 
     // ******************************************************************
-    // * TODO: Query for Software Vertex Processing abilities!!
+    // * Detect vertex processing capabilities
     // ******************************************************************
-//    BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
-    BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+    if(g_D3DCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT)
+    {
+        #ifdef _DEBUG_TRACE
+        printf("EmuD3D8 (0x%X): Using hardware vertex processing\n", GetCurrentThreadId());
+        #endif
+        BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+    }
+    else
+    {
+        #ifdef _DEBUG_TRACE
+        printf("EmuD3D8 (0x%X): Using software vertex processing\n", GetCurrentThreadId());
+        #endif
+        BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+    }
 
     // ******************************************************************
     // * redirect to windows d3d
@@ -930,8 +953,10 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
     }
     #endif
 
-	// Certain D3DRS values need to be checked on each Draw[Indexed]Vertices
-	g_pD3D8Device->SetRenderState(D3DRS_LIGHTING, xd3d8::EmuD3DDefferedRenderState[10]);
+    // Certain D3DRS values need to be checked on each Draw[Indexed]Vertices
+	g_pD3D8Device->SetRenderState(D3DRS_LIGHTING,              xd3d8::EmuD3DDefferedRenderState[10]);
+	g_pD3D8Device->SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, xd3d8::EmuD3DDefferedRenderState[20]);
+    g_pD3D8Device->SetRenderState(D3DRS_AMBIENT,               xd3d8::EmuD3DDefferedRenderState[23]);
 
     UINT PrimitiveCount = D3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
 
