@@ -158,6 +158,64 @@ SOOVPA<10> IDirect3DDevice8_GetDepthStencilSurface2_1_0_4627 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_GetTile
+// ******************************************************************
+SOOVPA<11> IDirect3DDevice8_GetTile_1_0_4627 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    {
+        // IDirect3DDevice8_GetTile+0x13 : lea esi, [ecx+eax*8+0x2260]
+        { 0x13, 0x8D }, // (Offset,Value)-Pair #1
+        { 0x14, 0xB4 }, // (Offset,Value)-Pair #2
+        { 0x15, 0xC1 }, // (Offset,Value)-Pair #3
+        { 0x16, 0x60 }, // (Offset,Value)-Pair #4
+        { 0x17, 0x22 }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_GetTile+0x1A : mov ecx, 0x06
+        { 0x1A, 0xB9 }, // (Offset,Value)-Pair #6
+        { 0x1B, 0x06 }, // (Offset,Value)-Pair #7
+
+        // IDirect3DDevice8_GetTile+0x5F : pop edi; pop esi
+        { 0x21, 0x5F }, // (Offset,Value)-Pair #8
+        { 0x22, 0x5E }, // (Offset,Value)-Pair #9
+
+        // IDirect3DDevice8_GetTile+0x23 : retn 0x08
+        { 0x23, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x24, 0x08 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetTileNoWait
+// ******************************************************************
+SOOVPA<11> IDirect3DDevice8_SetTileNoWait_1_0_4627 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    {
+        // IDirect3DDevice8_SetTileNoWait+0x06 : sub esp, 0x18
+        { 0x06, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x07, 0xEC }, // (Offset,Value)-Pair #2
+        { 0x08, 0x18 }, // (Offset,Value)-Pair #3
+
+        // IDirect3DDevice8_SetTileNoWait+0x15 : cmp [esi+4], eax
+        { 0x15, 0x39 }, // (Offset,Value)-Pair #4
+        { 0x16, 0x46 }, // (Offset,Value)-Pair #5
+        { 0x17, 0x04 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_SetTileNoWait+0x3D : lea edi, [edx+ecx*8+0x2260]
+        { 0x3D, 0x8D }, // (Offset,Value)-Pair #7
+        { 0x3E, 0xBC }, // (Offset,Value)-Pair #8
+        { 0x3F, 0xCA }, // (Offset,Value)-Pair #9
+        { 0x40, 0x60 }, // (Offset,Value)-Pair #10
+        { 0x41, 0x22 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetVertexShaderConstant
 // ******************************************************************
 SOOVPA<11> IDirect3DDevice8_SetVertexShaderConstant_1_0_4627 =
@@ -846,6 +904,26 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_GetDepthStencilSurface2"
+        #endif
+    },
+    // IDirect3DDevice8::GetTile
+    {
+        (OOVPA*)&IDirect3DDevice8_GetTile_1_0_4627,
+
+        xd3d8::EmuIDirect3DDevice8_GetTile,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetTile"
+        #endif
+    },
+    // IDirect3DDevice8::SetTileNoWait
+    {
+        (OOVPA*)&IDirect3DDevice8_SetTileNoWait_1_0_4627,
+
+        xd3d8::EmuIDirect3DDevice8_SetTileNoWait,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetTileNoWait"
         #endif
     },
     // IDirect3DDevice8::CreateVertexShader (* unchanged since 4361 *)

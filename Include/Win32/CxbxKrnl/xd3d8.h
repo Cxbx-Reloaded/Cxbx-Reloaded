@@ -246,6 +246,19 @@ struct X_D3DSurface : public X_D3DPixelContainer
 };
 
 // ******************************************************************
+// * X_D3DTILE
+// ******************************************************************
+struct X_D3DTILE
+{
+    DWORD   Flags;
+    PVOID   pMemory;
+    DWORD   Size;
+    DWORD   Pitch;
+    DWORD   ZStartTag;
+    DWORD   ZOffset;
+};
+
+// ******************************************************************
 // * D3DVertexToPrimitive
 // ******************************************************************
 extern UINT D3DVertexToPrimitive[11][2];
@@ -362,6 +375,24 @@ HRESULT WINAPI EmuIDirect3DDevice8_GetDepthStencilSurface
 // * func: EmuIDirect3DDevice8_GetDepthStencilSurface
 // ******************************************************************
 X_D3DSurface * WINAPI EmuIDirect3DDevice8_GetDepthStencilSurface2();
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetTile
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_GetTile
+(
+    DWORD           Index,
+    X_D3DTILE      *pTile
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetTileNoWait
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetTileNoWait
+(
+    DWORD               Index,
+    CONST X_D3DTILE    *pTile
+);
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateVertexShader

@@ -796,19 +796,19 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_GetDepthStencilSurface
 }
 
 // ******************************************************************
-// * func: EmuIDirect3DDevice8_GetDepthStencilSurface
+// * func: EmuIDirect3DDevice8_GetDepthStencilSurface2
 // ******************************************************************
 xd3d8::X_D3DSurface * WINAPI xd3d8::EmuIDirect3DDevice8_GetDepthStencilSurface2()
 {
+    EmuSwapFS();   // Win2k/XP FS
+
     // ******************************************************************
     // * debug trace
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetDepthStencilSurface2()\n",
                GetCurrentThreadId());
-        EmuSwapFS();   // Xbox FS
     }
     #endif
 
@@ -816,7 +816,73 @@ xd3d8::X_D3DSurface * WINAPI xd3d8::EmuIDirect3DDevice8_GetDepthStencilSurface2(
 
     pSurface8->AddRef();
 
+    EmuSwapFS();   // Xbox FS
+
     return g_pCachedZStencilSurface;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetTile
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_GetTile
+(
+    DWORD           Index,
+    X_D3DTILE      *pTile
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetTile\n"
+               "(\n"
+               "   Index               : 0x%.08X\n"
+               "   pTile               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Index, pTile);
+    }
+    #endif
+
+    printf("*Warning* we are ignoring IDirect3DDevice8::GetTile\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return D3D_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetTileNoWait
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetTileNoWait
+(
+    DWORD               Index,
+    CONST X_D3DTILE    *pTile
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetTileNoWait\n"
+               "(\n"
+               "   Index               : 0x%.08X\n"
+               "   pTile               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Index, pTile);
+    }
+    #endif
+
+    printf("*Warning* we are ignoring IDirect3DDevice8::SetTileNoWait\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return D3D_OK;
 }
 
 // ******************************************************************
@@ -858,6 +924,9 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreateVertexShader
         pHandle,
         g_dwVertexShaderUsage // TODO: HACK: Xbox has extensions!
     );
+
+    if(FAILED(hRet))
+        printf("*Warning* we're lying about the creation of a vertex shader!");
 
     // hey look, we lied
     hRet = D3D_OK;
