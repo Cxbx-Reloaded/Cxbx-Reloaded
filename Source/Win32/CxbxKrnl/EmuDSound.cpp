@@ -62,7 +62,7 @@ namespace XTL
 // ******************************************************************
 // * Static Variable(s)
 // ******************************************************************
-static XTL::LPDIRECTSOUND8 g_pD3D8 = NULL;
+static XTL::LPDIRECTSOUND8 g_pDSound8 = NULL;
 
 // ******************************************************************
 // * func: EmuDirectSoundCreate
@@ -92,6 +92,72 @@ HRESULT WINAPI XTL::EmuDirectSoundCreate
     #endif
 
     HRESULT hRet = DirectSoundCreate8(NULL, ppDirectSound, NULL);
+
+    g_pDSound8 = *ppDirectSound;
+
+    hRet = g_pDSound8->SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuDirectSoundCreateBuffer
+// ******************************************************************
+HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
+(
+    X_DSBUFFERDESC         *pdsbd,
+    X_CDirectSoundBuffer  **ppBuffer
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuDirectSoundCreateBuffer\n"
+               "(\n"
+               "   pdsbd                     : 0x%.08X\n"
+               "   ppBuffer                  : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pdsbd, ppBuffer);
+    }
+    #endif
+
+    DSBUFFERDESC DSBufferDesc;
+
+    // ******************************************************************
+    // * Convert from Xbox to PC DSound
+    // ******************************************************************
+    {
+        DWORD dwAcceptableMask = 0x00000010 | 0x00000020 | 0x00000080 | 0x00000100 | 0x00002000 | 0x00040000 | 0x00080000;
+
+        if(pdsbd->dwFlags & (~dwAcceptableMask))
+            printf("*Warning* use of unsupported pdsbd->dwFlags mask(s) (0x%.08X)", pdsbd->dwFlags & (~dwAcceptableMask));
+
+        DSBufferDesc.dwSize = sizeof(DSBufferDesc);
+        DSBufferDesc.dwFlags = pdsbd->dwFlags & dwAcceptableMask | DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY;
+
+        if(pdsbd->dwBufferBytes < DSBSIZE_MIN)
+            DSBufferDesc.dwBufferBytes = 16384; // NOTE: HACK: TEMPORARY FOR STELLA
+        else
+            DSBufferDesc.dwBufferBytes = pdsbd->dwBufferBytes;
+
+        DSBufferDesc.dwReserved = 0;
+        DSBufferDesc.lpwfxFormat = pdsbd->lpwfxFormat;              // TODO: Make sure this is the same as PC
+        DSBufferDesc.guid3DAlgorithm = DS3DALG_DEFAULT;
+    }
+
+    // Todo: Garbage Collection
+    *ppBuffer = new X_CDirectSoundBuffer();
+
+    HRESULT hRet = g_pDSound8->CreateSoundBuffer(&DSBufferDesc, &((*ppBuffer)->EmuDirectSoundBuffer8), NULL);
+
+    if(FAILED(hRet))
+        printf("*Warning* CreateSoundBuffer FAILED\n");
 
     EmuSwapFS();   // XBox FS
 
@@ -323,18 +389,17 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetDopplerFactor
 HRESULT WINAPI XTL::EmuIDirectSound8_CreateSoundBuffer
 (
     LPDIRECTSOUND8          pThis,
-    LPCDSBUFFERDESC         pdsbd,
+    X_DSBUFFERDESC         *pdsbd,
     X_CDirectSoundBuffer  **ppBuffer,
     LPUNKNOWN               pUnkOuter
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
-
     // ******************************************************************
     // * debug trace
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
+        EmuSwapFS();   // Win2k/XP FS
         printf("EmuDSound (0x%X): EmuIDirectSound8_CreateSoundBuffer\n"
                "(\n"
                "   pdsbd                     : 0x%.08X\n"
@@ -342,22 +407,11 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateSoundBuffer
                "   pUnkOuter                 : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pdsbd, ppBuffer, pUnkOuter);
+        EmuSwapFS();   // XBox FS
     }
     #endif
 
-    // Todo: Garbage Collection
-    *ppBuffer = new X_CDirectSoundBuffer();
-
-    (*ppBuffer)->EmuDirectSoundBuffer8 = 0;
-
-    // Todo: Translate params, then make the PC DirectSound call
-//    HRESULT hRet = pThis->CreateSoundBuffer(pdsbd, ppBuffer, pUnkOuter);
-
-    printf("*Note* EmuIDirectSound8_CreateSoundBuffer is being ignored\n");
-
-    EmuSwapFS();   // XBox FS
-
-    return STATUS_SUCCESS;
+    return EmuDirectSoundCreateBuffer(pdsbd, ppBuffer);
 }
 
 // ******************************************************************
@@ -386,13 +440,19 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetBufferData
                GetCurrentThreadId(), pThis, pvBufferData, dwBufferBytes);
     }
     #endif
+/*
+    char szBuffer[266];
 
+    sprintf(szBuffer, "Yea 0x%.08X - %d", pvBufferData, dwBufferBytes);
+
+    MessageBox(g_hEmuWindow, szBuffer, "Cxbx", MB_OK);
+*/
     // Todo: Translate params, then make the PC DirectSound call
     printf("*Note* EmuIDirectSoundBuffer8_SetBufferData is being ignored\n");
 
     EmuSwapFS();   // XBox FS
 
-    return STATUS_SUCCESS;
+    return DS_OK;
 }
 
 // ******************************************************************
@@ -427,7 +487,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPlayRegion
 
     EmuSwapFS();   // XBox FS
 
-    return STATUS_SUCCESS;
+    return DS_OK;
 }
 
 // ******************************************************************
@@ -462,7 +522,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetLoopRegion
 
     EmuSwapFS();   // XBox FS
 
-    return STATUS_SUCCESS;
+    return DS_OK;
 }
 
 // ******************************************************************
@@ -495,7 +555,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetVolume
 
     EmuSwapFS();   // XBox FS
 
-    return STATUS_SUCCESS;
+    return DS_OK;
 }
 
 // ******************************************************************
@@ -503,6 +563,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetVolume
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetCurrentPosition
 (
+    X_CDirectSoundBuffer   *pThis,
     DWORD                   dwNewPosition
 )
 {
@@ -515,18 +576,60 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetCurrentPosition
     {
         printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetCurrentPosition\n"
                "(\n"
+               "   pThis                     : 0x%.08X\n"
                "   dwNewPosition             : 0x%.08X\n"
                ");\n",
-               GetCurrentThreadId(), dwNewPosition);
+               GetCurrentThreadId(), pThis, dwNewPosition);
     }
     #endif
 
-    // Todo: Translate params, then make the PC DirectSound call
-    printf("*Note* EmuIDirectSoundBuffer8_SetCurrentPosition is being ignored\n");
+    // NOTE: TODO: This call *will* (by MSDN) fail on primary buffers!
+    HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwNewPosition);
+
+    if(FAILED(hRet))
+        printf("*Warning* SetCurrentPosition FAILED\n");
 
     EmuSwapFS();   // XBox FS
 
-    return STATUS_SUCCESS;
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_GetCurrentPosition
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_GetCurrentPosition
+(
+    X_CDirectSoundBuffer   *pThis,
+    PDWORD                  pdwCurrentPlayCursor,
+    PDWORD                  pdwCurrentWriteCursor
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_GetCurrentPosition\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   pdwCurrentPlayCursor      : 0x%.08X\n"
+               "   pdwCurrentWriteCursor     : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, pdwCurrentPlayCursor, pdwCurrentWriteCursor);
+    }
+    #endif
+
+    // NOTE: TODO: This call always seems to fail on primary buffers!
+    HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetCurrentPosition(pdwCurrentPlayCursor, pdwCurrentWriteCursor);
+
+    if(FAILED(hRet))
+        printf("*Warning* GetCurrentPosition FAILED\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
 }
 
 // ******************************************************************
@@ -557,7 +660,46 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Stop
 
     EmuSwapFS();   // XBox FS
 
-    return STATUS_SUCCESS;
+    return DS_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_Play
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Play
+(
+    X_CDirectSoundBuffer   *pThis,
+    DWORD                   dwReserved1,
+    DWORD                   dwReserved2,
+    DWORD                   dwFlags
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_Play\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   dwReserved1               : 0x%.08X\n"
+               "   dwReserved2               : 0x%.08X\n"
+               "   dwFlags                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, dwReserved1, dwReserved2, dwFlags);
+    }
+    #endif
+
+    if(dwFlags & (~DSBPLAY_LOOPING))
+        EmuCleanup("Unsupported Playing Flags");
+
+    pThis->EmuDirectSoundBuffer8->Play(0, 0, dwFlags);
+
+    EmuSwapFS();   // XBox FS
+
+    return DS_OK;
 }
 
 // ******************************************************************
@@ -588,5 +730,5 @@ HRESULT WINAPI XTL::EmuCDirectSound_CommitDeferredSettings
 
     EmuSwapFS();   // XBox FS
 
-    return STATUS_SUCCESS;
+    return DS_OK;
 }

@@ -682,6 +682,8 @@ void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
         {
             uint32 v;
 
+//            if( (cur == 0x0006A6C6) && (Soovpa->Sovp[v].Value == XREF_SETCURRENTPOSITION2) )
+//                _asm int 3
             // ******************************************************************
             // * check all cross references
             // ******************************************************************

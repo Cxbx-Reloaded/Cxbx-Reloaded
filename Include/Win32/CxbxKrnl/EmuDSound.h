@@ -58,11 +58,24 @@ struct X_CDirectSoundBuffer
 
     union                       // Offset: 0x20
     {
-        PVOID                   pMpcxBuffer;
-        IDirectSoundBuffer8    *EmuDirectSoundBuffer8;
+        PVOID                pMpcxBuffer;
+        IDirectSoundBuffer  *EmuDirectSoundBuffer8;
     };
 
     BYTE    UnknownB[0x0C];     // Offset: 0x24
+};
+
+// ******************************************************************
+// * X_DSBUFFERDESC
+// ******************************************************************
+struct X_DSBUFFERDESC
+{
+    DWORD           dwSize; 
+    DWORD           dwFlags; 
+    DWORD           dwBufferBytes; 
+    LPWAVEFORMATEX  lpwfxFormat; 
+    LPVOID          lpMixBins;      // TODO: Implement
+    DWORD           dwInputMixBin;
 };
 
 // ******************************************************************
@@ -73,6 +86,15 @@ HRESULT WINAPI EmuDirectSoundCreate
     LPVOID          pguidDeviceId,
     LPDIRECTSOUND8 *ppDirectSound,
     LPUNKNOWN       pUnknown
+);
+
+// ******************************************************************
+// * func: EmuDirectSoundCreateBuffer
+// ******************************************************************
+HRESULT WINAPI EmuDirectSoundCreateBuffer
+(
+    X_DSBUFFERDESC         *pdsbd,
+    X_CDirectSoundBuffer  **ppBuffer
 );
 
 // ******************************************************************
@@ -146,7 +168,7 @@ HRESULT WINAPI EmuIDirectSound8_SetDopplerFactor
 HRESULT WINAPI EmuIDirectSound8_CreateSoundBuffer
 (
     LPDIRECTSOUND8          pThis,
-    LPCDSBUFFERDESC         pdsbd,
+    X_DSBUFFERDESC         *pdsbd,
     X_CDirectSoundBuffer  **ppBuffer,
     LPUNKNOWN               pUnkOuter
 );
@@ -195,7 +217,18 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_SetVolume
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSoundBuffer8_SetCurrentPosition
 (
-    DWORD   dwNewPosition
+    X_CDirectSoundBuffer   *pThis,
+    DWORD                   dwNewPosition
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_GetCurrentPosition
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_GetCurrentPosition
+(
+    X_CDirectSoundBuffer   *pThis,
+    PDWORD                  pdwCurrentPlayCursor,
+    PDWORD                  pdwCurrentWriteCursor
 );
 
 // ******************************************************************
@@ -204,6 +237,17 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_SetCurrentPosition
 HRESULT WINAPI EmuIDirectSoundBuffer8_Stop
 (
     X_CDirectSoundBuffer   *pThis
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_Play
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_Play
+(
+    X_CDirectSoundBuffer   *pThis,
+    DWORD                   dwReserved1,
+    DWORD                   dwReserved2,
+    DWORD                   dwFlags
 );
 
 // ******************************************************************

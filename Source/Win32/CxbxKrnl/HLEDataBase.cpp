@@ -178,6 +178,13 @@ extern uint32 XRefDataBase[] =
     -1, // XREF_SETDISTANCEFACTOR
     -1, // XREF_SETROLLOFFFACTOR
     -1, // XREF_SETDOPPLERFACTOR
+    -1, // XREF_SETBUFFERDATA
+    -1, // XREF_SETCURRENTPOSITION
+    -1, // XREF_SETCURRENTPOSITION2
+    -1, // XREF_GETCURRENTPOSITION
+    -1, // XREF_GETCURRENTPOSITION2
+    -1, // XREF_DSOUNDPLAY
+    -1, // XREF_DSOUNDPLAY2
 };
 
 // ******************************************************************

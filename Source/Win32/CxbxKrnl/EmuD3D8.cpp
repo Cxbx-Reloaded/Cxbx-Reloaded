@@ -1601,17 +1601,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
 
     if(FAILED(hRet))
         printf("*Warning* CreateTexture FAILED\n");
-/*
-    {
-        static int dwDumpTex = 0;
 
-        char szBuffer[255];
-
-        sprintf(szBuffer, "C:\\Aaron\\Textures\\CreateTexture%.03d.bmp", dwDumpTex++);
-
-        D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, (*ppTexture)->EmuTexture8, NULL);
-    }
-*/
     EmuSwapFS();   // XBox FS
 
     return hRet;
@@ -2454,11 +2444,11 @@ HRESULT WINAPI XTL::EmuIDirect3DSurface8_LockRect
                "   Flags               : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, pLockedRect, pRect, Flags);
-        
-        if(Flags & 0x40)
-            printf("*Warning* D3DLOCK_TILED ignored!\n");
-    }
+            }
     #endif
+
+    if(Flags & 0x40)
+        printf("*Warning* D3DLOCK_TILED ignored!\n");
 
     EmuVerifyResourceIsRegistered(pThis);
 
@@ -3434,6 +3424,17 @@ static void EmuUpdateDeferredStates()
         if(XTL::EmuD3DDeferredRenderState[1] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_FOGTABLEMODE,          XTL::EmuD3DDeferredRenderState[1]);
 
+        if(XTL::EmuD3DDeferredRenderState[6] != X_D3DRS_UNK)
+        {
+            ::DWORD dwConv = 0;
+            
+            dwConv |= (XTL::EmuD3DDeferredRenderState[6] & 0x00000010) ? D3DWRAP_U : 0;
+            dwConv |= (XTL::EmuD3DDeferredRenderState[6] & 0x00001000) ? D3DWRAP_V : 0;
+            dwConv |= (XTL::EmuD3DDeferredRenderState[6] & 0x00100000) ? D3DWRAP_W : 0;
+
+            g_pD3DDevice8->SetRenderState(D3DRS_WRAP0, dwConv);
+        }
+
         if(XTL::EmuD3DDeferredRenderState[10] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_LIGHTING,              XTL::EmuD3DDeferredRenderState[10]);
 
@@ -3467,14 +3468,17 @@ static void EmuUpdateDeferredStates()
         if(XTL::EmuD3DDeferredRenderState[30] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALE_C,          XTL::EmuD3DDeferredRenderState[30]);
 
+        if(XTL::EmuD3DDeferredRenderState[33] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_PATCHSEGMENTS,         XTL::EmuD3DDeferredRenderState[33]);
+
         /** To check for unhandled RenderStates
         for(int v=0;v<117-82;v++)
         {
             if(XTL::EmuD3DDeferredRenderState[v] != X_D3DRS_UNK)
             {
-                if(v != 0  && v != 1  && v != 10 && v != 11 && v != 20 && v != 23
-                && v != 24 && v != 25 && v != 26 && v != 27 && v != 28 && v != 29
-                && v != 30)
+                if(v != 0  && v != 1  && v != 6  && v != 10 && v != 11 && v != 20 && v != 23
+                && v != 24 && v != 25 && v != 26 && v != 27 && v != 28 && v != 29 && v != 30
+                && v != 33)
                     printf("*Warning* Unhandled RenderState Change @ %d (%d)\n", v, v + 82);
             }
         }

@@ -33,6 +33,39 @@
 // ******************************************************************
 
 // ******************************************************************
+// * DirectSoundCreateBuffer
+// ******************************************************************
+SOOVPA<11> DirectSoundCreateBuffer_1_0_4627 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // DirectSoundCreateBuffer+0x04 : and [ebp-0x04], 0
+        { 0x04, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x05, 0x65 }, // (Offset,Value)-Pair #2
+        { 0x06, 0xFC }, // (Offset,Value)-Pair #3
+
+        // DirectSoundCreateBuffer+0x08 : push ebx; push esi; push edi
+        { 0x08, 0x53 }, // (Offset,Value)-Pair #4
+        { 0x09, 0x56 }, // (Offset,Value)-Pair #5
+        { 0x0A, 0x57 }, // (Offset,Value)-Pair #6
+
+        // DirectSoundCreateBuffer+0x3C : call dword ptr [eax+8]
+        { 0x3C, 0xFF }, // (Offset,Value)-Pair #7
+        { 0x3D, 0x50 }, // (Offset,Value)-Pair #8
+        { 0x3E, 0x08 }, // (Offset,Value)-Pair #9
+
+        // DirectSoundCreateBuffer+0x54 : retn 0x08
+        { 0x54, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x55, 0x08 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
 // * IDirectSound8_Release
 // ******************************************************************
 SOOVPA<10> IDirectSound8_Release_1_0_4627 =
@@ -266,7 +299,6 @@ SOOVPA<11> IDirectSound8_SetRolloffFactor_1_0_4627 =
     }
 };
 
-
 // ******************************************************************
 // * CDirectSound::SetDopplerFactor
 // ******************************************************************
@@ -384,6 +416,26 @@ OOVPATable DSound_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuDirectSoundCreate" 
+        #endif
+    },
+    // DirectSoundCreateBuffer
+    {
+        (OOVPA*)&DirectSoundCreateBuffer_1_0_4627,
+
+        XTL::EmuDirectSoundCreateBuffer,
+
+        #ifdef _DEBUG_TRACE
+        "EmuDirectSoundCreateBuffer" 
+        #endif
+    },
+    // IDirectSoundBuffer8::SetBufferData (* unchanged since 4361 *)
+    {
+        (OOVPA*)&IDirectSoundBuffer8_SetBufferData_1_0_4361,
+
+        XTL::EmuIDirectSoundBuffer8_SetBufferData,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSoundBuffer8_SetBufferData" 
         #endif
     },
     // IDirectSound8::Release
