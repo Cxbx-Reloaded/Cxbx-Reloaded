@@ -63,6 +63,87 @@ void XTL::EmuExecutePushBuffer
     return;
 }
 
+static void EmuUnswizzleActiveTexture()
+{
+    // for current usages, we're always on stage 0
+    XTL::X_D3DPixelContainer *pPixelContainer = (XTL::X_D3DPixelContainer*)XTL::EmuD3DActiveTexture[0];
+
+    if(pPixelContainer == NULL || !(pPixelContainer->Common & X_D3DCOMMON_ISLOCKED))
+        return;
+
+    DWORD XBFormat = (pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT;
+    DWORD dwBPP = 0;
+
+    if(!XTL::EmuXBFormatIsSwizzled(XBFormat, &dwBPP))
+        return;
+
+    // remove lock
+    pPixelContainer->EmuTexture8->UnlockRect(0);
+    pPixelContainer->Common &= ~X_D3DCOMMON_ISLOCKED;
+
+    // TODO: potentially CRC to see if this surface was actually modified..
+
+    //
+    // unswizzle texture
+    //
+
+    {
+        XTL::IDirect3DTexture8 *pTexture = pPixelContainer->EmuTexture8;
+
+        DWORD dwLevelCount = pTexture->GetLevelCount();
+
+        for(uint32 v=0;v<dwLevelCount;v++)
+        {
+            XTL::D3DSURFACE_DESC SurfaceDesc;
+
+            HRESULT hRet = pTexture->GetLevelDesc(v, &SurfaceDesc);
+
+            if(FAILED(hRet))
+                continue;
+
+            //
+            // perform unswizzle
+            //
+
+            {
+                XTL::D3DLOCKED_RECT LockedRect;
+
+                //if(SurfaceDesc.Format != XTL::D3DFMT_A8R8G8B8)
+                //    break;
+                //EmuCleanup("Temporarily unsupported format for active texture unswizzle (0x%.08X)", SurfaceDesc.Format);
+
+                hRet = pTexture->LockRect(v, &LockedRect, NULL, NULL);
+
+                if(FAILED(hRet))
+                    continue;
+
+                DWORD dwWidth = SurfaceDesc.Width;
+                DWORD dwHeight = SurfaceDesc.Height;
+                DWORD dwDepth = 1;
+                DWORD dwPitch = LockedRect.Pitch;
+                RECT  iRect = {0,0,0,0};
+                POINT iPoint = {0,0};
+
+                void *pTemp = malloc(dwHeight*dwPitch);
+
+                XTL::EmuXGUnswizzleRect
+                (
+                    LockedRect.pBits, dwWidth, dwHeight, dwDepth,
+                    pTemp, dwPitch, iRect, iPoint, dwBPP
+                );
+
+                memcpy(LockedRect.pBits, pTemp, dwPitch*dwHeight);
+
+                pTexture->UnlockRect(0);
+
+                free(pTemp);
+            }
+        }
+
+        DbgPrintf("Active texture was unswizzled\n");
+    }
+}
+
 extern void XTL::EmuExecutePushBufferRaw
 (
     DWORD                 *pdwPushData
@@ -227,6 +308,8 @@ extern void XTL::EmuExecutePushBufferRaw
                 printf("  dwVertexShader : 0x%08X\n", dwVertexShader);
             }
             #endif
+
+            EmuUnswizzleActiveTexture();
 
             // render vertices
             if(dwVertexShader != -1)

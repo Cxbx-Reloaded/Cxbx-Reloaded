@@ -38,6 +38,9 @@
 #define X_D3DRSSE_UNK 0x7fffffff
 extern CONST DWORD EmuD3DRenderStateSimpleEncoded[174];
 
+// is this format swizzled, and if so - how many BPP?
+extern BOOL EmuXBFormatIsSwizzled(X_D3DFORMAT Format, DWORD *pBPP);
+
 // convert from xbox to pc color formats
 extern D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format);
 

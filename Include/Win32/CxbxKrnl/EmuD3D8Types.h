@@ -215,15 +215,25 @@ struct X_D3DResource
 #define X_D3DCOMMON_INTREFCOUNT_MASK   0x00780000
 #define X_D3DCOMMON_INTREFCOUNT_SHIFT  19
 #define X_D3DCOMMON_D3DCREATED         0x01000000
+#define X_D3DCOMMON_ISLOCKED           0x02000010 // Surface is currently locked (potential unswizzle candidate)
 #define X_D3DCOMMON_UNUSED_MASK        0xFE000000
 #define X_D3DCOMMON_UNUSED_SHIFT       25
 
-// special resource data flags
+// special resource data flags (must set _SPECIAL *AND* specific flag(s))
+#define X_D3DRESOURCE_DATA_FLAG_SPECIAL 0xFFFF0000
+#define X_D3DRESOURCE_DATA_FLAG_SURFACE 0x00000001 // Backbuffer surface, etc
+#define X_D3DRESOURCE_DATA_FLAG_YUVSURF 0x00000002 // YUV memory surface
+#define X_D3DRESOURCE_DATA_FLAG_D3DREND 0x00000004 // D3D Render Target
+#define X_D3DRESOURCE_DATA_FLAG_D3DSTEN 0x00000008 // D3D Stencil Surface
+
+#define IsSpecialResource(x) ( ((DWORD)(x) & X_D3DRESOURCE_DATA_FLAG_SPECIAL) == X_D3DRESOURCE_DATA_FLAG_SPECIAL)
+
+/*
 #define X_D3DRESOURCE_DATA_FLAG_SURFACE 0xEFFFFFFF
 #define X_D3DRESOURCE_DATA_FLAG_YUVSURF 0xDFFFFFFF
-#define X_D3DRESOURCE_DATA_FLAG_D3DREND 0xCFFFFFFF // D3D Render Target
-#define X_D3DRESOURCE_DATA_FLAG_D3DSTEN 0xBFFFFFFF // D3D Stencil Surface
-
+#define X_D3DRESOURCE_DATA_FLAG_D3DREND 0xCFFFFFFF
+#define X_D3DRESOURCE_DATA_FLAG_D3DSTEN 0xBFFFFFFF
+*/
 // special resource lock flags
 #define X_D3DRESOURCE_LOCK_FLAG_NOSIZE  0xEFFFFFFF
 

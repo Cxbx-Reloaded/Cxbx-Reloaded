@@ -871,13 +871,13 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 // update render target cache
                 g_pCachedRenderTarget = new XTL::X_D3DSurface();
                 g_pCachedRenderTarget->Common = 0;
-                g_pCachedRenderTarget->Data = X_D3DRESOURCE_DATA_FLAG_D3DREND;
+                g_pCachedRenderTarget->Data = X_D3DRESOURCE_DATA_FLAG_SPECIAL | X_D3DRESOURCE_DATA_FLAG_D3DREND;
                 g_pD3DDevice8->GetRenderTarget(&g_pCachedRenderTarget->EmuSurface8);
 
                 // update z-stencil surface cache
                 g_pCachedZStencilSurface = new XTL::X_D3DSurface();
                 g_pCachedZStencilSurface->Common = 0;
-                g_pCachedZStencilSurface->Data = X_D3DRESOURCE_DATA_FLAG_D3DSTEN;
+                g_pCachedZStencilSurface->Data = X_D3DRESOURCE_DATA_FLAG_SPECIAL | X_D3DRESOURCE_DATA_FLAG_D3DSTEN;
                 g_pD3DDevice8->GetDepthStencilSurface(&g_pCachedZStencilSurface->EmuSurface8);
 
 
@@ -953,7 +953,7 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
         return;
 
     // Already "Registered" implicitly
-    if((pResource->Data == X_D3DRESOURCE_DATA_FLAG_D3DREND) || (pResource->Data == X_D3DRESOURCE_DATA_FLAG_D3DSTEN)
+    if((IsSpecialResource(pResource->Data) && ((pResource->Data & X_D3DRESOURCE_DATA_FLAG_D3DREND) || (pResource->Data & X_D3DRESOURCE_DATA_FLAG_D3DSTEN)))
      ||(pResource->Data == 0xB00BBABE))
         return;
 
@@ -1904,7 +1904,7 @@ XTL::X_D3DSurface* WINAPI XTL::EmuIDirect3DDevice8_GetBackBuffer2
         EmuCleanup("Unable to retrieve back buffer");
 
     // update data pointer
-    pBackBuffer->Data = X_D3DRESOURCE_DATA_FLAG_SURFACE;
+    pBackBuffer->Data = X_D3DRESOURCE_DATA_FLAG_SPECIAL | X_D3DRESOURCE_DATA_FLAG_SURFACE;
 
     EmuSwapFS();   // Xbox FS
 
@@ -2872,6 +2872,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
             (*ppTexture)->EmuTexture8->LockRect(0, &LockedRect, NULL, NULL);
 
             (*ppTexture)->Data = (DWORD)LockedRect.pBits;
+            (*ppTexture)->Format = Format << X_D3DFORMAT_FORMAT_SHIFT;
 
             g_DataToTexture.insert((*ppTexture)->Data, *ppTexture);
 
@@ -2893,7 +2894,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
         // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
         *ppTexture = new X_D3DTexture();
         
-        (*ppTexture)->Data = X_D3DRESOURCE_DATA_FLAG_YUVSURF;
+        (*ppTexture)->Data = X_D3DRESOURCE_DATA_FLAG_SPECIAL | X_D3DRESOURCE_DATA_FLAG_YUVSURF;
         (*ppTexture)->Lock = dwPtr;
         (*ppTexture)->Format = 0x24;
 
@@ -2997,7 +2998,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVolumeTexture
         *pRefCount = 1;
 
         // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
-        (*ppVolumeTexture)->Data = X_D3DRESOURCE_DATA_FLAG_YUVSURF;
+        (*ppVolumeTexture)->Data = X_D3DRESOURCE_DATA_FLAG_SPECIAL | X_D3DRESOURCE_DATA_FLAG_YUVSURF;
         (*ppVolumeTexture)->Lock = dwPtr;
         (*ppVolumeTexture)->Format = 0x24;
 
@@ -3209,7 +3210,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetTexture
     {        
         EmuVerifyResourceIsRegistered(pTexture);
 
-        if(pTexture->Data == X_D3DRESOURCE_DATA_FLAG_YUVSURF)
+        if(IsSpecialResource(pTexture->Data) && (pTexture->Data & X_D3DRESOURCE_DATA_FLAG_YUVSURF))
         {
             //
             // NOTE: TODO: This is almost a hack! :)
@@ -4182,7 +4183,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 *pRefCount = 1;
 
                 // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
-                pPixelContainer->Data = X_D3DRESOURCE_DATA_FLAG_YUVSURF;
+                pPixelContainer->Data = X_D3DRESOURCE_DATA_FLAG_SPECIAL | X_D3DRESOURCE_DATA_FLAG_YUVSURF;
                 pPixelContainer->Lock = dwPtr;
                 pPixelContainer->Format = 0x24;
 
@@ -4311,7 +4312,8 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
                         pThis->Data = (DWORD)pSrc;
 
-                        if( (pResource->Data == X_D3DRESOURCE_DATA_FLAG_SURFACE) || ((DWORD)pBase == X_D3DRESOURCE_DATA_FLAG_SURFACE) )
+                        if(( IsSpecialResource(pResource->Data) && (pResource->Data & X_D3DRESOURCE_DATA_FLAG_SURFACE))
+                         ||( IsSpecialResource(pBase) && ((DWORD)pBase & X_D3DRESOURCE_DATA_FLAG_SURFACE)))
                         {
                             EmuWarning("Attempt to registered to another resource's data (eww!)");
 
@@ -4506,7 +4508,7 @@ ULONG WINAPI XTL::EmuIDirect3DResource8_Release
 
     ULONG uRet = 0;
 
-    if(pThis->Data == X_D3DRESOURCE_DATA_FLAG_YUVSURF)
+    if(IsSpecialResource(pThis->Data) && (pThis->Data & X_D3DRESOURCE_DATA_FLAG_YUVSURF))
     {
         DWORD  dwPtr = (DWORD)pThis->Lock;
         DWORD *pRefCount = (DWORD*)(dwPtr + g_dwOverlayP*g_dwOverlayH);
@@ -4787,7 +4789,7 @@ HRESULT WINAPI XTL::EmuIDirect3DSurface8_GetDesc
 
     EmuVerifyResourceIsRegistered(pThis);
 
-    if(pThis->Data == X_D3DRESOURCE_DATA_FLAG_YUVSURF)
+    if(IsSpecialResource(pThis->Data) && (pThis->Data & X_D3DRESOURCE_DATA_FLAG_YUVSURF))
     {
         pDesc->Format = EmuPC2XB_D3DFormat(D3DFMT_YUY2);
         pDesc->Height = g_dwOverlayH;
@@ -4861,7 +4863,7 @@ HRESULT WINAPI XTL::EmuIDirect3DSurface8_LockRect
 
     EmuVerifyResourceIsRegistered(pThis);
 
-    if(pThis->Data == X_D3DRESOURCE_DATA_FLAG_YUVSURF)
+    if(IsSpecialResource(pThis->Data) && (pThis->Data & X_D3DRESOURCE_DATA_FLAG_YUVSURF))
     {
         pLockedRect->Pitch = g_dwOverlayP;
         pLockedRect->pBits = (PVOID)pThis->Lock;
@@ -4936,7 +4938,7 @@ XTL::X_D3DResource * WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel2
     X_D3DSurface *pSurfaceLevel;
 
     // In a special situation, we are actually returning a memory ptr with high bit set
-    if(pThis->Data == X_D3DRESOURCE_DATA_FLAG_YUVSURF)
+    if(IsSpecialResource(pThis->Data) && (pThis->Data & X_D3DRESOURCE_DATA_FLAG_YUVSURF))
     {
         DWORD dwSize = g_dwOverlayP*g_dwOverlayH;
 
@@ -4982,7 +4984,7 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_LockRect
     EmuVerifyResourceIsRegistered(pThis);
 
     // check if we have an unregistered YUV2 resource
-    if( pThis != 0 && pThis->Data == X_D3DRESOURCE_DATA_FLAG_YUVSURF)
+    if( (pThis != 0) && IsSpecialResource(pThis->Data) && (pThis->Data & X_D3DRESOURCE_DATA_FLAG_YUVSURF))
     {
         pLockedRect->Pitch = g_dwOverlayP;
         pLockedRect->pBits = (PVOID)pThis->Lock;
@@ -5005,6 +5007,8 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_LockRect
         pTexture8->UnlockRect(Level);
 
         hRet = pTexture8->LockRect(Level, pLockedRect, pRect, NewFlags);
+
+        pThis->Common |= X_D3DCOMMON_ISLOCKED;
     }
 
     EmuSwapFS();   // XBox FS
@@ -5037,7 +5041,7 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel
     EmuVerifyResourceIsRegistered(pThis);
 
     // if highest bit is set, this is actually a raw memory pointer (for YUY2 simulation)
-    if(pThis->Data == X_D3DRESOURCE_DATA_FLAG_YUVSURF)
+    if(IsSpecialResource(pThis->Data) && (pThis->Data & X_D3DRESOURCE_DATA_FLAG_YUVSURF))
     {
         DWORD dwSize = g_dwOverlayP*g_dwOverlayH;
 

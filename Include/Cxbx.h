@@ -63,10 +63,10 @@ typedef signed long    sint32;
 //#define _DEBUG_ALLOC
 
 // define this to trace intercepted function calls
-#define _DEBUG_TRACE
+//#define _DEBUG_TRACE
 
 // define this to trace warnings
-#define _DEBUG_WARNINGS
+//#define _DEBUG_WARNINGS
 
 // define these to dump textures
 //#define _DEBUG_DUMP_TEXTURE_SETTEXTURE "C:\\Aaron\\Textures\\"

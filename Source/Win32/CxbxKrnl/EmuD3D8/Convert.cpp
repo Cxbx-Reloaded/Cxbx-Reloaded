@@ -38,7 +38,31 @@
 #include "Emu.h"
 #include "EmuXTL.h"
 
-// convert from xbox to pc color formats
+BOOL XTL::EmuXBFormatIsSwizzled(X_D3DFORMAT Format, DWORD *pBPP)
+{
+    switch(Format)
+    {
+        case 0x00:
+        case 0x01:
+        case 0x0B:
+            *pBPP = 1;
+            return TRUE;
+        case 0x02:
+        case 0x03:
+        case 0x04:
+        case 0x05:
+        case 0x1A:
+            *pBPP = 2;
+            return TRUE;
+        case 0x06:
+        case 0x07:
+            *pBPP = 4;
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
 XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 {
     switch(Format)
@@ -135,7 +159,6 @@ XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
     return (D3DFORMAT)Format;
 }
 
-// convert from pc to xbox color formats
 XTL::X_D3DFORMAT XTL::EmuPC2XB_D3DFormat(D3DFORMAT Format)
 {
     switch(Format)
