@@ -308,9 +308,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 else
     				sprintf(buffer, "%s", "Disclaimer: Cxbx has no affiliation with Microsoft");
 
-                RECT rect = {0, 480-15-4, 640-100-4-69, 480-4};
+                RECT rect = {0, 480-15-5, 640-100-4-69, 480-5};
 
-                ExtTextOut(hDC, 4, 480-15-4, ETO_OPAQUE, &rect, buffer, strlen(buffer), 0);
+                ExtTextOut(hDC, 4, 480-15-5, ETO_OPAQUE, &rect, buffer, strlen(buffer), 0);
 
                 SelectObject(hDC, tmpObj);
 

@@ -34,20 +34,15 @@
 #include "WndAbout.h"
 #include "ResCxbx.h"
 
-// ******************************************************************
-// * constructor
-// ******************************************************************
 WndAbout::WndAbout(HINSTANCE x_hInstance, HWND x_parent) : Wnd(x_hInstance)
 {
     m_classname = "WndAbout";
     m_wndname   = "Cxbx : About";
 
-    m_w         = 285;
-    m_h         = 180;
+    m_w         = 400;
+    m_h         = 300;
 
-	// ******************************************************************
-	// * center to parent
-	// ******************************************************************
+    // center to parent
     {
         RECT rect;
 
@@ -63,29 +58,38 @@ WndAbout::WndAbout(HINSTANCE x_hInstance, HWND x_parent) : Wnd(x_hInstance)
     return;
 }
 
-// ******************************************************************
-// * deconstructor
-// ******************************************************************
 WndAbout::~WndAbout()
 {
 }
 
-// ******************************************************************
-// * WndProc
-// ******************************************************************
+// window message processing procedure
 LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch(uMsg)
 	{
         case WM_CREATE:
         {
+            // resize window so that client area := 400x300
+            {
+                RECT cRect;
+                RECT wRect;
+
+                GetClientRect(hwnd, &cRect);
+                GetWindowRect(hwnd, &wRect);
+
+                uint32 difW = (wRect.right  - wRect.left) - (cRect.right);
+                uint32 difH = (wRect.bottom - wRect.top)  - (cRect.bottom);
+
+                MoveWindow(hwnd, wRect.left, wRect.top, difW + 400, difH + 300, TRUE);
+            }
+
             EnableWindow(m_parent, FALSE);
 
             HDC hDC = GetDC(hwnd);
 
             int nHeight = -MulDiv(8, GetDeviceCaps(hDC, LOGPIXELSY), 72);
 
-			m_hFont = CreateFont(nHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, FF_ROMAN, "Verdana");
+			m_hFont = CreateFont(nHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_ROMAN, "Verdana");
 
             m_BackBmp = (HBITMAP)LoadImage(m_hInstance, MAKEINTRESOURCE(IDB_ABOUT), IMAGE_BITMAP, 0, 0, 0);
 
@@ -109,27 +113,8 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
             HGDIOBJ OrgObj = SelectObject(hDC, m_hFont);
 
-			// ******************************************************************
-			// * draw bottom URL bar
-			// ******************************************************************
-            {
-                SetBkColor(hDC, GetSysColor(COLOR_3DFACE));
-
-				SetTextColor(hDC, GetSysColor(COLOR_BTNTEXT));
-
-                char buffer[] = " Contact the author : caustik@caustik.com";
-
-                RECT rect = {0, 134, 280, 148};
-
-                ExtTextOut(hDC, 0, 134, ETO_OPAQUE, &rect, buffer, strlen(buffer), 0);
-            }
-
-			// ******************************************************************
-			// * draw bitmap
-			// ******************************************************************
-            {
-                BitBlt(hDC, 2, 4, 275, 125, m_BackDC, 0, 0, SRCCOPY);
-            }
+            // draw bitmap
+            BitBlt(hDC, 0, 0, 400, 300, m_BackDC, 0, 0, SRCCOPY);
 
             SelectObject(hDC, OrgObj);
 

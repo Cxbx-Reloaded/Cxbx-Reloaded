@@ -174,7 +174,7 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&Goto Cxbx Home Page...",     ID_HELP_HOMEPAGE
+        MENUITEM "&Go To The Official Cxbx Web Site...", ID_HELP_HOMEPAGE
         MENUITEM SEPARATOR
         MENUITEM "&About",                      ID_HELP_ABOUT
     END
