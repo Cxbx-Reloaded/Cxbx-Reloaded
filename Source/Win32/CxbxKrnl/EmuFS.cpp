@@ -71,11 +71,10 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		uint32 dwCopySize = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr;
         uint32 dwZeroSize = pTLS->dwSizeofZeroFill;
 
-        pNewTLS = new uint08[dwCopySize + dwZeroSize];
+        pNewTLS = (uint08*)malloc(dwCopySize + dwZeroSize + /* TODO: HACK, extra safety padding */ 0x100);
 
+        memset(pNewTLS, 0, dwCopySize + dwZeroSize + 0x100);
         memcpy(pNewTLS, pTLSData, dwCopySize);
-
-		ZeroMemory(pNewTLS + dwCopySize, dwZeroSize);
     }
 
     // dump raw TLS data
@@ -121,7 +120,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
     {
         uint32 dwSize = sizeof(xboxkrnl::KPCR);
 
-        NewPcr = (xboxkrnl::KPCR*)new char[dwSize];
+        NewPcr = (xboxkrnl::KPCR*)malloc(dwSize);
 
         memset(NewPcr, 0, sizeof(*NewPcr));
 
@@ -140,7 +139,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 
     // generate TIB
     {
-        xboxkrnl::ETHREAD *EThread = new xboxkrnl::ETHREAD();
+        xboxkrnl::ETHREAD *EThread = (xboxkrnl::ETHREAD*)malloc(sizeof(xboxkrnl::ETHREAD));
 
         EThread->Tcb.TlsData  = (void*)pNewTLS;
         EThread->UniqueThread = GetCurrentThreadId();
@@ -221,7 +220,7 @@ void EmuCleanupFS()
     EmuSwapFS(); // Win2k/XP FS
 
     if(pTLSData != 0)
-        delete[] pTLSData;
+        free(pTLSData);
 
     EmuDeallocateLDT(wSwapFS);
 }

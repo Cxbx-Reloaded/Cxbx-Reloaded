@@ -419,6 +419,15 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_SetPitch
 );
 
 // ******************************************************************
+// * func: EmuIDirectSoundBuffer8_GetStatus
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_GetStatus
+(
+    X_CDirectSoundBuffer   *pThis,
+    LPDWORD                 pdwStatus
+);
+
+// ******************************************************************
 // * func: EmuIDirectSoundBuffer8_SetVolume
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSoundBuffer8_SetVolume

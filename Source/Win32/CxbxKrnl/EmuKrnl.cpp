@@ -2260,6 +2260,8 @@ XBSYSAPI EXPORTNUM(258) VOID NTAPI xboxkrnl::PsTerminateSystemThread(IN NTSTATUS
         EmuSwapFS();   // Win2k/XP FS
     }
 
+//    EmuCleanThread();
+
     EmuCleanupFS();
 
     ExitThread(ExitStatus);

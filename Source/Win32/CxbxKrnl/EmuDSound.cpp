@@ -774,6 +774,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
     // TODO: Garbage Collection
     *ppBuffer = new X_CDirectSoundBuffer();
 
+    (*ppBuffer)->EmuDirectSoundBuffer8 = 0;
     (*ppBuffer)->EmuBuffer = 0;
     (*ppBuffer)->EmuBufferDesc = pDSBufferDesc;
     (*ppBuffer)->EmuLockPtr1 = 0;
@@ -1148,6 +1149,46 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPitch
 
     return DS_OK;
 }
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_GetStatus
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_GetStatus
+(
+    X_CDirectSoundBuffer   *pThis,
+    LPDWORD                 pdwStatus
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_GetStatus\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   pdwStatus                 : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, pdwStatus);
+    }
+    #endif
+
+    HRESULT hRet = DS_OK;
+
+    if(pThis != 0 && pThis->EmuBuffer == 0)
+    {
+        hRet = pThis->EmuDirectSoundBuffer8->GetStatus(pdwStatus);
+    }
+    else
+    {
+        *pdwStatus = 0;
+    }
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
 
 // ******************************************************************
 // * func: EmuIDirectSoundBuffer8_SetVolume

@@ -472,17 +472,8 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 
                 pFeedback->Header.dwStatus = STATUS_SUCCESS;
 
-                #ifdef _DEBUG_TRACE
-                printf("EmuUpdateTickCount() : Updated pFeedback (hDevice : 0x%.08X, pFeedback : 0x%.08X) to STATUS_SUCCESS\n", hDevice, pFeedback);
-                #endif
-
                 if(pFeedback->Header.hEvent != NULL)
-                {
-                    #ifdef _DEBUG_TRACE
-                    printf("Triggering XINPUT_FEEDBACK Event (hDevice : 0x%X, pFeedback : )\n", hDevice, pFeedback);
-                    #endif
                     SetEvent(pFeedback->Header.hEvent);
-                }
 
                 g_pXInputSetStateStatus[v].hDevice = 0;
                 g_pXInputSetStateStatus[v].dwLatency = 0;
@@ -493,13 +484,11 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
         // trigger vblank callback
         {
             g_VBData.Flags = 1; // D3DVBLANK_SWAPDONE
+            g_VBData.Swap++;
+            g_VBData.VBlank++;
 
             if(g_pVBCallback != NULL)
             {
-                #ifdef _DEBUG_TRACE
-                printf("EmuD3D8 (0x%X): Vertical Blank Triggered.\n", GetCurrentThreadId());
-                #endif
-
                 EmuSwapFS();    // Xbox FS
                 g_pVBCallback(&g_VBData);
                 EmuSwapFS();    // Win2k/XP FS
@@ -3078,8 +3067,9 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Present
 
     HRESULT hRet = g_pD3DDevice8->Present(pSourceRect, pDestRect, (HWND)pDummy1, (CONST RGNDATA*)pDummy2);
 
-    g_VBData.Swap++;
-    g_VBData.VBlank++;
+    // not really accurate because you definately dont always present on every vblank
+    //g_VBData.Swap++;
+    //g_VBData.VBlank++;
 
     EmuSwapFS();   // XBox FS
 
