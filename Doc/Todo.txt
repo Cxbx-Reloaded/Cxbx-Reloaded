@@ -2,6 +2,9 @@ Cxbx Todo:
 
   Multimonitor support (of course!) Direct3D9::EnumAdapterModes iteration
 
+  Closing console should toggle it, not close the entire app. I'm sure
+  this can be intercepted somehow.
+
   Everything that is initialized within the context of the converted
   Exe and CxbxKrnl should be cleaned up at some point before final
   process termination.

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXLDT.h
+// *   Cxbx->Win32->CxbxKrnl->EmuLDT.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,22 +31,22 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUXLDT_H
-#define EMUXLDT_H
+#ifndef EMULDT_H
+#define EMULDT_H
 
 // ******************************************************************
-// * func: EmuXInitLDT
+// * func: EmuInitLDT
 // ******************************************************************
-void EmuXInitLDT();
+void EmuInitLDT();
 
 // ******************************************************************
-// * func: EmuXAllocateLDT
+// * func: EmuAllocateLDT
 // ******************************************************************
-uint16 EmuXAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit);
+uint16 EmuAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit);
 
 // ******************************************************************
-// * func: EmuXDeallocateLDT
+// * func: EmuDeallocateLDT
 // ******************************************************************
-void EmuXDeallocateLDT(uint16 wSelector);
+void EmuDeallocateLDT(uint16 wSelector);
 
 #endif

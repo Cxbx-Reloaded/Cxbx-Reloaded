@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXDInput.cpp
+// *   Cxbx->Win32->CxbxKrnl->EmuDInput.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -33,7 +33,7 @@
 // ******************************************************************
 #define _CXBXKRNL_INTERNAL
 #include "Cxbx.h"
-#include "EmuX.h"
+#include "Emu.h"
 
 using namespace win32;
 
@@ -42,7 +42,7 @@ using namespace win32;
 // ******************************************************************
 LPDIRECTINPUT8          g_pDI       = NULL;         
 LPDIRECTINPUTDEVICE8    g_pGameCtrl = NULL;
-xboxkrnl::XINPUT_STATE  g_EmuXController1 = {0};
+xboxkrnl::XINPUT_STATE  g_EmuController1 = {0};
 
 // ******************************************************************
 // * statics
@@ -51,9 +51,9 @@ static BOOL CALLBACK EnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi, LPVOID pvRe
 static BOOL CALLBACK EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOID pvRef);
 
 // ******************************************************************
-// * func: EmuXInitDInput
+// * func: EmuInitDInput
 // ******************************************************************
-VOID xboxkrnl::EmuXInitDInput()
+VOID xboxkrnl::EmuInitDInput()
 {
     // ******************************************************************
     // * Create DirectInput object
@@ -69,7 +69,7 @@ VOID xboxkrnl::EmuXInitDInput()
         );
 
         if(hRet != DI_OK)
-            EmuXPanic();
+            EmuPanic();
     }
 
     // ******************************************************************
@@ -85,7 +85,7 @@ VOID xboxkrnl::EmuXInitDInput()
         );
 
         if(hRet != DI_OK)
-            EmuXPanic();
+            EmuPanic();
 
         if(g_pGameCtrl == NULL)
             return;
@@ -98,17 +98,17 @@ VOID xboxkrnl::EmuXInitDInput()
         HRESULT hRet = g_pGameCtrl->SetDataFormat(&c_dfDIJoystick2);
 
         if(FAILED(hRet))
-            EmuXPanic();
+            EmuPanic();
     }
 
     // ******************************************************************
     // * Set cooperative level
     // ******************************************************************
     {
-        HRESULT hRet = g_pGameCtrl->SetCooperativeLevel(g_EmuXWindow, DISCL_EXCLUSIVE | DISCL_FOREGROUND);
+        HRESULT hRet = g_pGameCtrl->SetCooperativeLevel(g_EmuWindow, DISCL_EXCLUSIVE | DISCL_FOREGROUND);
 
         if(FAILED(hRet))
-            EmuXPanic();
+            EmuPanic();
     }
 
     // ******************************************************************
@@ -118,7 +118,7 @@ VOID xboxkrnl::EmuXInitDInput()
         HRESULT hRet = g_pGameCtrl->EnumObjects(EnumObjectsCallback, NULL, DIDFT_ALL);
 
         if(FAILED(hRet))
-            EmuXPanic();
+            EmuPanic();
     }
 }
 
@@ -164,9 +164,9 @@ static BOOL CALLBACK EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOI
 }
 
 // ******************************************************************
-// * func: EmuXPollController
+// * func: EmuPollController
 // ******************************************************************
-VOID xboxkrnl::EmuXPollController()
+VOID xboxkrnl::EmuPollController()
 {
     DIJOYSTATE2 ControllerState;
 
@@ -190,11 +190,11 @@ VOID xboxkrnl::EmuXPollController()
     if(FAILED(hRet))
         return;
 
-    g_EmuXController1.dwPacketNumber++;
-    g_EmuXController1.Gamepad.sThumbRX = (short)ControllerState.lX;
-    g_EmuXController1.Gamepad.sThumbRY = (short)(-1 - ControllerState.lY);
-    g_EmuXController1.Gamepad.sThumbLX = (short)ControllerState.lRx;
-    g_EmuXController1.Gamepad.sThumbLY = (short)(-1 - ControllerState.lRy);
+    g_EmuController1.dwPacketNumber++;
+    g_EmuController1.Gamepad.sThumbRX = (short)ControllerState.lX;
+    g_EmuController1.Gamepad.sThumbRY = (short)(-1 - ControllerState.lY);
+    g_EmuController1.Gamepad.sThumbLX = (short)ControllerState.lRx;
+    g_EmuController1.Gamepad.sThumbLY = (short)(-1 - ControllerState.lRy);
 
     return;
 }

@@ -32,7 +32,7 @@
 // *
 // ******************************************************************
 #include "Cxbx.h"
-#include "EmuX.h"
+#include "Emu.h"
 
 #include "Xapi.1.0.3911.inl"
 #include "Xapi.1.0.4361.inl"

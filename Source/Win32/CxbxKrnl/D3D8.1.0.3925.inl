@@ -32,7 +32,7 @@
 // *
 // ******************************************************************
 #include "Cxbx.h"
-#include "EmuX.h"
+#include "Emu.h"
 
 // ******************************************************************
 // * IDirect3D8_CreateDevice
@@ -70,10 +70,10 @@ OOVPATable D3D8_1_0_3925[] =
     {
         (OOVPA*)&IDirect3D8_CreateDevice_1_0_3925,
 
-        xboxkrnl::EmuXIDirect3D8_CreateDevice,
+        xboxkrnl::EmuIDirect3D8_CreateDevice,
 
         #ifdef _DEBUG_TRACE
-        "EmuXIDirect3D8_CreateDevice" 
+        "EmuIDirect3D8_CreateDevice" 
         #endif
     },
 };

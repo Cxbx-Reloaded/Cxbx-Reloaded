@@ -41,70 +41,70 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&XInitDevices_1_0_4361,
 
-        xboxkrnl::EmuXXInitDevices,
+        xboxkrnl::EmuXInitDevices,
 
         #ifdef _DEBUG_TRACE
-        "EmuXXInitDevices"
+        "EmuXInitDevices"
         #endif
     },
     // XGetDevices (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&XGetDevices_1_0_4361,
 
-        xboxkrnl::EmuXXGetDevices,
+        xboxkrnl::EmuXGetDevices,
 
         #ifdef _DEBUG_TRACE
-        "EmuXXGetDevices" 
+        "EmuXGetDevices" 
         #endif
     },
     // XInputOpen (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&XInputOpen_1_0_4361,
 
-        xboxkrnl::EmuXXInputOpen,
+        xboxkrnl::EmuXInputOpen,
 
         #ifdef _DEBUG_TRACE
-        "EmuXXInputOpen"
+        "EmuXInputOpen"
         #endif
     },
     // XInputGetCapabilities (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&XInputGetCapabilities_1_0_4361,
 
-        xboxkrnl::EmuXXInputGetCapabilities,
+        xboxkrnl::EmuXInputGetCapabilities,
 
         #ifdef _DEBUG_TRACE
-        "EmuXXInputGetCapabilities"
+        "EmuXInputGetCapabilities"
         #endif
     },
     // XInputGetState (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&XInputGetState_1_0_4361,
 
-        xboxkrnl::EmuXXInputGetState,
+        xboxkrnl::EmuXInputGetState,
 
         #ifdef _DEBUG_TRACE
-        "EmuXXInputGetState"
+        "EmuXInputGetState"
         #endif
     },
     // CreateThread (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&CreateThread_1_0_4361,
 
-        xboxkrnl::EmuXCreateThread,
+        xboxkrnl::EmuCreateThread,
 
         #ifdef _DEBUG_TRACE
-        "EmuXCreateThread" 
+        "EmuCreateThread" 
         #endif
     },
     // CloseHandle (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&CloseHandle_1_0_4361,
 
-        xboxkrnl::EmuXCloseHandle,
+        xboxkrnl::EmuCloseHandle,
 
         #ifdef _DEBUG_TRACE
-        "EmuXCloseHandle" 
+        "EmuCloseHandle" 
         #endif
     },
     // XapiInitProcess (* unchanged since 1.0.4361 *)
@@ -131,20 +131,20 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&__rtinit_1_0_3911,
 
-        xboxkrnl::EmuX__rtinit,
+        xboxkrnl::Emu__rtinit,
 
         #ifdef _DEBUG_TRACE
-        "EmuX__rtinit",
+        "Emu__rtinit",
         #endif
     },
     // __cinit (* unchanged since 1.0.3911 *)
     {
         (OOVPA*)&__cinit_1_0_3911,
 
-        xboxkrnl::EmuX__cinit,
+        xboxkrnl::Emu__cinit,
 
         #ifdef _DEBUG_TRACE
-        "EmuX__cinit",
+        "Emu__cinit",
         #endif
     },
 };

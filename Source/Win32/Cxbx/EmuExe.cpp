@@ -35,7 +35,7 @@
 #include "EmuExe.h"
 #include "Prolog.h"
 
-#include "EmuX.h"
+#include "Emu.h"
 
 using namespace win32;
 
@@ -457,8 +457,8 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
             *(uint32*)&m_bzSection[i][0x30] = dwVirtAddr + 0x38;
             *(uint32*)&m_bzSection[i][0x34] = 0;
             *(uint16*)&m_bzSection[i][0x38] = 0x0001;
-
-            memcpy(&m_bzSection[i][0x3A], "_EmuXDummy@0\0\0cxbx.dll\0\0\0\0\0\0", 28);
+            
+            memcpy(&m_bzSection[i][0x3A], "_EmuNoFunc@0\0\0cxbx.dll\0\0\0\0\0\0", 28);
 
             printf("OK\n");
         }
@@ -510,7 +510,7 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
             // ******************************************************************
             // * patch prolog function parameters
             // ******************************************************************
-            *(uint32 *)((uint32)m_bzSection[i] + 1)  = (uint32)EmuXInit;
+            *(uint32 *)((uint32)m_bzSection[i] + 1)  = (uint32)EmuInit;
             *(uint32 *)((uint32)m_bzSection[i] + 6)  = (uint32)ep;
             *(uint32 *)((uint32)m_bzSection[i] + 11) = (uint32)x_Xbe->m_Header.dwSizeofHeaders;
             *(uint32 *)((uint32)m_bzSection[i] + 16) = m_SectionHeader[i].m_virtual_addr + m_OptionalHeader.m_image_base + 0x100;

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXFS.cpp
+// *   Cxbx->Win32->CxbxKrnl->EmuFS.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -32,22 +32,22 @@
 // *
 // ******************************************************************
 #include "Cxbx.h"
-#include "EmuX.h"
+#include "Emu.h"
 
 using namespace win32;
 
 // ******************************************************************
-// * func: EmuXInitFS
+// * func: EmuInitFS
 // ******************************************************************
-void EmuXInitFS()
+void EmuInitFS()
 {
-    EmuXInitLDT();
+    EmuInitLDT();
 }
 
 // ******************************************************************
-// * func: EmuXGenerateFS
+// * func: EmuGenerateFS
 // ******************************************************************
-void EmuXGenerateFS()
+void EmuGenerateFS()
 {
     NT_TIB         *OrgNtTib;
     xboxkrnl::KPCR *NewPcr;
@@ -61,7 +61,7 @@ void EmuXGenerateFS()
 
     memset(NewPcr, 0, sizeof(*NewPcr));
 
-    NewFS = EmuXAllocateLDT((uint32)NewPcr, (uint32)NewPcr + dwSize);
+    NewFS = EmuAllocateLDT((uint32)NewPcr, (uint32)NewPcr + dwSize);
 
     // ******************************************************************
     // * Obtain "OrgFS"
@@ -110,7 +110,7 @@ void EmuXGenerateFS()
     // ******************************************************************
     // * Swap into the "NewFS"
     // ******************************************************************
-    EmuXSwapFS();
+    EmuSwapFS();
 
     // ******************************************************************
     // * Save "OrgFS" inside NewFS.ArbitraryUserPointer
@@ -124,5 +124,5 @@ void EmuXGenerateFS()
     // ******************************************************************
     // * Swap back into the "OrgFS"
     // ******************************************************************
-    EmuXSwapFS();
+    EmuSwapFS();
 }

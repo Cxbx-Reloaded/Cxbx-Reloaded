@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuX.cpp
+// *   Cxbx->Win32->CxbxKrnl->Emu.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -35,7 +35,7 @@
 #define _XBOXKRNL_LOCAL_
 
 #include "Cxbx.h"
-#include "EmuX.h"
+#include "Emu.h"
 
 // ******************************************************************
 // * prevent name collisions
@@ -55,16 +55,16 @@ static HANDLE g_hMapObject = NULL;
 // ******************************************************************
 // * statics
 // ******************************************************************
-static void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *XbeHeader);
+static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *XbeHeader);
 
 // ******************************************************************
 // * shared memory
 // ******************************************************************
-struct EmuXShared
+struct EmuShared
 {
     uint32 dwRandomData;
 }
-*g_EmuXShared;
+*g_EmuShared;
 
 // ******************************************************************
 // * func: DllMain
@@ -84,8 +84,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             NULL,                   // default security attributes
             PAGE_READWRITE,         // read/write access
             0,                      // size: high 32 bits
-            sizeof(EmuXShared),     // size: low 32 bits
-            "EmuXShared"            // name of map object
+            sizeof(EmuShared),     // size: low 32 bits
+            "EmuShared"            // name of map object
         );
 
         if(g_hMapObject == NULL)
@@ -94,7 +94,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         if(GetLastError() != ERROR_ALREADY_EXISTS)
             init = true;
 
-        g_EmuXShared = (EmuXShared*)MapViewOfFile
+        g_EmuShared = (EmuShared*)MapViewOfFile
         (
             g_hMapObject,   // object to map view of
             FILE_MAP_WRITE, // read/write access
@@ -103,13 +103,13 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             0               // default: map entire file
         );
 
-        if(g_EmuXShared == NULL) 
+        if(g_EmuShared == NULL) 
             return FALSE; 
 
         if(init)
         {
             // initialization of shared data
-            g_EmuXShared->dwRandomData = 0;
+            g_EmuShared->dwRandomData = 0;
         }
     }
     
@@ -118,7 +118,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     // ******************************************************************
     if(fdwReason == DLL_PROCESS_DETACH)
     {
-        UnmapViewOfFile(g_EmuXShared);
+        UnmapViewOfFile(g_EmuShared);
 
         CloseHandle(g_hMapObject);
     }
@@ -127,9 +127,21 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 }
 
 // ******************************************************************
-// * func: EmuXInit
+// * func: EmuNoFunc
 // ******************************************************************
-CXBXKRNL_API void NTAPI EmuXInit(Xbe::LibraryVersion *LibraryVersion, DebugMode DebugConsole, char *DebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)())
+CXBXKRNL_API void NTAPI EmuNoFunc()
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    printf("Emu (0x%.08X): EmuNoFunc()\n", GetCurrentThreadId());
+
+    EmuSwapFS();   // XBox FS
+}
+
+// ******************************************************************
+// * func: EmuInit
+// ******************************************************************
+CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, DebugMode DebugConsole, char *DebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)())
 {
     // ******************************************************************
     // * debug console allocation (if configured)
@@ -153,14 +165,14 @@ CXBXKRNL_API void NTAPI EmuXInit(Xbe::LibraryVersion *LibraryVersion, DebugMode 
 
         freopen(DebugFilename, "wt", stdout);
 
-        printf("EmuX (0x%.08X): Debug console allocated.\n", GetCurrentThreadId());
+        printf("Emu (0x%.08X): Debug console allocated.\n", GetCurrentThreadId());
     }
 
     // ******************************************************************
     // * debug trace
     // ******************************************************************
     {
-        printf("EmuX: EmuXInit\n"
+        printf("Emu: EmuInit\n"
                "(\n"
                "   LibraryVersion      : 0x%.08X\n"
                "   DebugConsole        : 0x%.08X\n"
@@ -190,7 +202,7 @@ CXBXKRNL_API void NTAPI EmuXInit(Xbe::LibraryVersion *LibraryVersion, DebugMode 
             for(uint32 c=0;c<8;c++)
                 szLibraryName[c] = LibraryVersion[v].szName[c];
 
-            printf("EmuX: Locating HLE Information for %s %d.%d.%d...", szLibraryName, MajorVersion, MinorVersion, BuildVersion);
+            printf("Emu: Locating HLE Information for %s %d.%d.%d...", szLibraryName, MajorVersion, MinorVersion, BuildVersion);
 
             bool found=false;
 
@@ -209,7 +221,7 @@ CXBXKRNL_API void NTAPI EmuXInit(Xbe::LibraryVersion *LibraryVersion, DebugMode 
 
                 printf("Found\n");
 
-                EmuXInstallWrappers(HLEDataBase[d].OovpaTable, HLEDataBase[d].OovpaTableSize, Entry, XbeHeader);
+                EmuInstallWrappers(HLEDataBase[d].OovpaTable, HLEDataBase[d].OovpaTableSize, Entry, XbeHeader);
             }
 
             if(!found)
@@ -242,24 +254,24 @@ CXBXKRNL_API void NTAPI EmuXInit(Xbe::LibraryVersion *LibraryVersion, DebugMode 
     // * Initialize all components
     // ******************************************************************
     {
-        EmuXInitFS();
-        EmuXGenerateFS();
+        EmuInitFS();
+        EmuGenerateFS();
 
-        xboxkrnl::EmuXInitD3D(XbeHeader, XbeHeaderSize);
+        xboxkrnl::EmuInitD3D(XbeHeader, XbeHeaderSize);
     }
 
-    printf("EmuX (0x%.08X): Initial thread starting.\n", GetCurrentThreadId());
+    printf("Emu (0x%.08X): Initial thread starting.\n", GetCurrentThreadId());
 
     // This must be enabled or the debugger may crash (sigh)
     // __asm _emit 0xF1
 
-    EmuXSwapFS();   // XBox FS
+    EmuSwapFS();   // XBox FS
 
     Entry();
 
-    EmuXSwapFS();   // Win2k/XP FS
+    EmuSwapFS();   // Win2k/XP FS
 
-    printf("EmuX (0x%.08X): Initial thread ended.\n", GetCurrentThreadId());
+    printf("Emu (0x%.08X): Initial thread ended.\n", GetCurrentThreadId());
 
     fflush(stdout);
 
@@ -270,25 +282,13 @@ CXBXKRNL_API void NTAPI EmuXInit(Xbe::LibraryVersion *LibraryVersion, DebugMode 
 }
 
 // ******************************************************************
-// * func: EmuXDummy
+// * func: EmuPanic
 // ******************************************************************
-CXBXKRNL_API void NTAPI EmuXDummy()
+CXBXKRNL_API void NTAPI EmuPanic()
 {
-    EmuXSwapFS();   // Win2k/XP FS
+    EmuSwapFS();   // Win2k/XP FS
 
-    printf("EmuX (0x%.08X): EmuXDummy()\n", GetCurrentThreadId());
-
-    EmuXSwapFS();   // XBox FS
-}
-
-// ******************************************************************
-// * func: EmuXPanic
-// ******************************************************************
-CXBXKRNL_API void NTAPI EmuXPanic()
-{
-    EmuXSwapFS();   // Win2k/XP FS
-
-    printf("EmuX (0x%.08X): EmuXPanic()\n", GetCurrentThreadId());
+    printf("Emu (0x%.08X): EmuPanic()\n", GetCurrentThreadId());
 
 #ifdef _DEBUG_TRACE
     MessageBox(NULL, "Kernel Panic! Process will now terminate.\n\n"
@@ -296,13 +296,13 @@ CXBXKRNL_API void NTAPI EmuXPanic()
 #else
     MessageBox(NULL, "Kernel Panic! Process will now terminate.", "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
 #endif
-    EmuXSwapFS();   // XBox FS
+    EmuSwapFS();   // XBox FS
 }
 
 // ******************************************************************
-// * func: EmuXInstallWrapper
+// * func: EmuInstallWrapper
 // ******************************************************************
-inline void EmuXInstallWrapper(void *FunctionAddr, void *WrapperAddr)
+inline void EmuInstallWrapper(void *FunctionAddr, void *WrapperAddr)
 {
     uint08 *FuncBytes = (uint08*)FunctionAddr;
 
@@ -311,9 +311,9 @@ inline void EmuXInstallWrapper(void *FunctionAddr, void *WrapperAddr)
 }
 
 // ******************************************************************
-// * func: EmuXInstallWrappers
+// * func: EmuInstallWrappers
 // ******************************************************************
-void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *XbeHeader)
+void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *XbeHeader)
 {
     // ******************************************************************
     // * traverse the full OOVPA table
@@ -321,7 +321,7 @@ void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*E
     for(uint32 a=0;a<OovpaTableSize/sizeof(OOVPATable);a++)
     {
         #ifdef _DEBUG_TRACE
-        printf("EmuXInstallWrappers: Searching for %s...", OovpaTable[a].szFuncName);
+        printf("EmuInstallWrappers: Searching for %s...", OovpaTable[a].szFuncName);
         #endif
 
         OOVPA *Oovpa = OovpaTable[a].Oovpa;
@@ -371,7 +371,7 @@ void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*E
                     printf("Found! (0x%.08X)\n", cur);
                     #endif
 
-                    EmuXInstallWrapper((void*)cur, OovpaTable[a].lpRedirect);
+                    EmuInstallWrapper((void*)cur, OovpaTable[a].lpRedirect);
 
                     found = true;
 
@@ -430,7 +430,7 @@ void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*E
                     printf("Found! (0x%.08X)\n", cur);
                     #endif
 
-                    EmuXInstallWrapper((void*)cur, OovpaTable[a].lpRedirect);
+                    EmuInstallWrapper((void*)cur, OovpaTable[a].lpRedirect);
 
                     found = true;
 

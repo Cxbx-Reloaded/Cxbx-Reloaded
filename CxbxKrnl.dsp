@@ -141,31 +141,31 @@ SOURCE=.\Include\Win32\CxbxKrnl\D3D8.1.0.4627.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Win32\CxbxKrnl\EmuX.h
+SOURCE=.\Include\Win32\CxbxKrnl\Emu.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Win32\CxbxKrnl\EmuXD3D.h
+SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Win32\CxbxKrnl\EmuXDInput.h
+SOURCE=.\Include\Win32\CxbxKrnl\EmuDInput.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Win32\CxbxKrnl\EmuXFS.h
+SOURCE=.\Include\Win32\CxbxKrnl\EmuFS.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Win32\CxbxKrnl\EmuXKrnl.h
+SOURCE=.\Include\Win32\CxbxKrnl\EmuKrnl.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Win32\CxbxKrnl\EmuXLDT.h
+SOURCE=.\Include\Win32\CxbxKrnl\EmuLDT.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Win32\CxbxKrnl\EmuXxapi.h
+SOURCE=.\Include\Win32\CxbxKrnl\EmuXapi.h
 # End Source File
 # Begin Source File
 
@@ -225,31 +225,31 @@ SOURCE=.\Source\Win32\CxbxKrnl\D3D8.1.0.4627.inl
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuX.cpp
+SOURCE=.\Source\Win32\CxbxKrnl\Emu.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuXD3D.cpp
+SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuXDInput.cpp
+SOURCE=.\Source\Win32\CxbxKrnl\EmuDInput.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuXFS.cpp
+SOURCE=.\Source\Win32\CxbxKrnl\EmuFS.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuXKrnl.cpp
+SOURCE=.\Source\Win32\CxbxKrnl\EmuKrnl.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuXLDT.cpp
+SOURCE=.\Source\Win32\CxbxKrnl\EmuLDT.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuXxapi.cpp
+SOURCE=.\Source\Win32\CxbxKrnl\EmuXapi.cpp
 # End Source File
 # Begin Source File
 

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuX.h
+// *   Cxbx->Win32->CxbxKrnl->Emu.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,8 +31,8 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUX_H
-#define EMUX_H
+#ifndef EMU_H
+#define EMU_H
 
 // ******************************************************************
 // * prevent name collisions
@@ -40,7 +40,7 @@
 namespace xboxkrnl
 {
     #include <xboxkrnl/xboxkrnl.h>
-    #include "EmuXxapi.h"
+    #include "Emuxapi.h"
 };
 
 // ******************************************************************
@@ -62,21 +62,21 @@ namespace win32
 // ******************************************************************
 namespace xboxkrnl
 {
-    #include "EmuXD3D.h"
-    #include "EmuXDInput.h"
+    #include "EmuD3D.h"
+    #include "EmuDInput.h"
 };
 
 // ******************************************************************
 // * globals
 // ******************************************************************
-extern win32::HWND              g_EmuXWindow;       // Rendering Window
-extern xboxkrnl::XINPUT_STATE   g_EmuXController1;
+extern win32::HWND              g_EmuWindow;       // Rendering Window
+extern xboxkrnl::XINPUT_STATE   g_EmuController1;
 
 #include "OOVPA.h"
 #include "HLEDataBase.h"
-#include "EmuXKrnl.h"
-#include "EmuXLDT.h"
-#include "EmuXFS.h"
+#include "EmuKrnl.h"
+#include "EmuLDT.h"
+#include "EmuFS.h"
 
 #if defined(__cplusplus)
 extern "C"
@@ -93,19 +93,19 @@ extern "C"
 #endif
 
 // ******************************************************************
-// * func: EmuXInit
+// * func: EmuNoFunc
 // ******************************************************************
-CXBXKRNL_API void NTAPI EmuXInit(Xbe::LibraryVersion *LibraryVersion, DebugMode DebugConsole, char *DebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
+CXBXKRNL_API void NTAPI EmuNoFunc();
 
 // ******************************************************************
-// * func: EmuXDummy
+// * func: EmuInit
 // ******************************************************************
-CXBXKRNL_API void NTAPI EmuXDummy();
+CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, DebugMode DebugConsole, char *DebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
 
 // ******************************************************************
-// * func: EmuXPanic
+// * func: EmuPanic
 // ******************************************************************
-CXBXKRNL_API void NTAPI EmuXPanic();
+CXBXKRNL_API void NTAPI EmuPanic();
 
 // ******************************************************************
 // * data: KernelThunkTable

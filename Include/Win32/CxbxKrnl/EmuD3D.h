@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXD3D.h
+// *   Cxbx->Win32->CxbxKrnl->EmuD3D.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,20 +31,20 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUXD3D_H
-#define EMUXD3D_H
+#ifndef EMUD3D_H
+#define EMUD3D_H
 
-#include "EmuX.h"
-
-// ******************************************************************
-// * func: EmuXInitD3D
-// ******************************************************************
-VOID EmuXInitD3D(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
+#include "Emu.h"
 
 // ******************************************************************
-// * func: EmuXIDirect3D8_CreateDevice
+// * func: EmuInitD3D
 // ******************************************************************
-win32::HRESULT WINAPI EmuXIDirect3D8_CreateDevice
+VOID EmuInitD3D(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
+
+// ******************************************************************
+// * func: EmuIDirect3D8_CreateDevice
+// ******************************************************************
+win32::HRESULT WINAPI EmuIDirect3D8_CreateDevice
 (
     win32::UINT                    Adapter,
     win32::D3DDEVTYPE              DeviceType,
@@ -55,9 +55,9 @@ win32::HRESULT WINAPI EmuXIDirect3D8_CreateDevice
 );
 
 // ******************************************************************
-// * func: EmuXIDirect3DDevice8_Clear
+// * func: EmuIDirect3DDevice8_Clear
 // ******************************************************************
-win32::HRESULT WINAPI EmuXIDirect3DDevice8_Clear
+win32::HRESULT WINAPI EmuIDirect3DDevice8_Clear
 (
     win32::DWORD                  Count,
     CONST win32::D3DRECT         *pRects,
@@ -68,9 +68,9 @@ win32::HRESULT WINAPI EmuXIDirect3DDevice8_Clear
 );
 
 // ******************************************************************
-// * func: EmuXIDirect3DDevice8_Swap
+// * func: EmuIDirect3DDevice8_Swap
 // ******************************************************************
-win32::HRESULT WINAPI EmuXIDirect3DDevice8_Swap
+win32::HRESULT WINAPI EmuIDirect3DDevice8_Swap
 (
     win32::DWORD Flags
 );

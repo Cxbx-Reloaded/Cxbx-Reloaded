@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXLDT.cpp
+// *   Cxbx->Win32->CxbxKrnl->EmuLDT.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -32,7 +32,7 @@
 // *
 // ******************************************************************
 #include "Cxbx.h"
-#include "EmuX.h"
+#include "Emu.h"
 
 // ******************************************************************
 // * prevent name collisions
@@ -57,29 +57,29 @@ static uint16 FreeLDTEntries[MAXIMUM_XBOX_THREADS];
 // ******************************************************************
 // * Critical section lock
 // ******************************************************************
-static CRITICAL_SECTION EmuXLDTLock;
+static CRITICAL_SECTION EmuLDTLock;
 
 // ******************************************************************
-// * func: EmuXInitLDT
+// * func: EmuInitLDT
 // ******************************************************************
-void EmuXInitLDT()
+void EmuInitLDT()
 {
-    InitializeCriticalSection(&EmuXLDTLock);
+    InitializeCriticalSection(&EmuLDTLock);
 
     for(uint32 v=0;v<MAXIMUM_XBOX_THREADS;v++)
         FreeLDTEntries[v] = (uint16)((v*8) + 7 + 8);
 }
 
 // ******************************************************************
-// * func: EmuXAllocateLDT
+// * func: EmuAllocateLDT
 // ******************************************************************
-uint16 EmuXAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit)
+uint16 EmuAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit)
 {
     xntdll::LDT_ENTRY LDTEntry;
 
     int x=0;
 
-    EnterCriticalSection(&EmuXLDTLock);
+    EnterCriticalSection(&EmuLDTLock);
 
     // ******************************************************************
     // * Locate a free LDT entry
@@ -91,7 +91,7 @@ uint16 EmuXAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit)
 
         if(x == MAXIMUM_XBOX_THREADS)
         {
-            LeaveCriticalSection(&EmuXLDTLock);
+            LeaveCriticalSection(&EmuLDTLock);
 
             // TODO: cleaner error handling
             MessageBox(NULL, "Very strange error: Could not locate free LDT entry!", "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
@@ -130,7 +130,7 @@ uint16 EmuXAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit)
 
         if(!NT_SUCCESS(NtSetLdtEntries((x*8)+7+8, LDTEntry, 0, LDTEntry)))
         {
-            LeaveCriticalSection(&EmuXLDTLock);
+            LeaveCriticalSection(&EmuLDTLock);
 
             // TODO: cleaner error handling
             MessageBox(NULL, "Very strange error: Could not set LDT entry!", "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
@@ -139,7 +139,7 @@ uint16 EmuXAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit)
         }
     }
 
-    LeaveCriticalSection(&EmuXLDTLock);
+    LeaveCriticalSection(&EmuLDTLock);
 
     FreeLDTEntries[x] = 0;
 
@@ -147,13 +147,13 @@ uint16 EmuXAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit)
 }
 
 // ******************************************************************
-// * func: EmuXDeallocateLDT
+// * func: EmuDeallocateLDT
 // ******************************************************************
-void EmuXDeallocateLDT(uint16 wSelector)
+void EmuDeallocateLDT(uint16 wSelector)
 {
     xntdll::LDT_ENTRY LDTEntry;
 
-    EnterCriticalSection(&EmuXLDTLock);
+    EnterCriticalSection(&EmuLDTLock);
 
     ZeroMemory(&LDTEntry, sizeof(LDTEntry));
 
@@ -161,7 +161,7 @@ void EmuXDeallocateLDT(uint16 wSelector)
 
     FreeLDTEntries[(wSelector >> 3)-1] = wSelector;
 
-    LeaveCriticalSection(&EmuXLDTLock);
+    LeaveCriticalSection(&EmuLDTLock);
 
     return;
 }

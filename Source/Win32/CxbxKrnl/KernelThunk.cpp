@@ -35,7 +35,7 @@
 
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_LOCAL_
-#include "EmuX.h"
+#include "Emu.h"
 
 // ******************************************************************
 // * NOTE:
@@ -49,7 +49,7 @@
 // * option "#define PANIC(numb) cxbx_panic"
 // *
 // ******************************************************************
-//#define PANIC(numb) EmuXPanic
+//#define PANIC(numb) EmuPanic
 #define PANIC(numb) numb
 
 // ******************************************************************

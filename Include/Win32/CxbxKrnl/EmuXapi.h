@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXxapi.h
+// *   Cxbx->Win32->CxbxKrnl->EmuXapi.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,10 +31,10 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUXXAPI_H
-#define EMUXXAPI_H
+#ifndef EMUXAPI_H
+#define EMUXAPI_H
 
-#include "EmuX.h"
+#include "Emu.h"
 
 // ******************************************************************
 // * calling conventions
@@ -154,26 +154,26 @@ typedef struct _XINPUT_STATE
 XINPUT_STATE, *PXINPUT_STATE;
 
 // ******************************************************************
-// * func: EmuXXInitDevices
+// * func: EmuXInitDevices
 // ******************************************************************
-VOID WINAPI EmuXXInitDevices
+VOID WINAPI EmuXInitDevices
 (
     DWORD   Unknown1,
     PVOID   Unknown2
 );
 
 // ******************************************************************
-// * func: EmuXXGetDevices
+// * func: EmuXGetDevices
 // ******************************************************************
-DWORD WINAPI EmuXXGetDevices
+DWORD WINAPI EmuXGetDevices
 (
     XPP_DEVICE_TYPE *DeviceType
 );
 
 // ******************************************************************
-// * func: EmuXXInputOpen
+// * func: EmuXInputOpen
 // ******************************************************************
-HANDLE WINAPI EmuXXInputOpen
+HANDLE WINAPI EmuXInputOpen
 (
     IN PXPP_DEVICE_TYPE             DeviceType,
     IN DWORD                        dwPort,
@@ -182,27 +182,27 @@ HANDLE WINAPI EmuXXInputOpen
 );
 
 // ******************************************************************
-// * func: EmuXXInputGetCapabilities
+// * func: EmuXInputGetCapabilities
 // ******************************************************************
-DWORD WINAPI EmuXXInputGetCapabilities
+DWORD WINAPI EmuXInputGetCapabilities
 (
     IN  HANDLE               hDevice,
     OUT PXINPUT_CAPABILITIES pCapabilities
 );
 
 // ******************************************************************
-// * func: EmuXInputGetState
+// * func: EmuInputGetState
 // ******************************************************************
-DWORD WINAPI EmuXXInputGetState
+DWORD WINAPI EmuXInputGetState
 (
     IN  HANDLE         hDevice,
     OUT PXINPUT_STATE  pState
 );
 
 // ******************************************************************
-// * func: EmuXCreateThread
+// * func: EmuCreateThread
 // ******************************************************************
-HANDLE WINAPI EmuXCreateThread
+HANDLE WINAPI EmuCreateThread
 (
     LPSECURITY_ATTRIBUTES   lpThreadAttributes,
     DWORD                   dwStackSize,
@@ -213,9 +213,9 @@ HANDLE WINAPI EmuXCreateThread
 );
 
 // ******************************************************************
-// * func: EmuXCloseHandle
+// * func: EmuCloseHandle
 // ******************************************************************
-BOOL WINAPI EmuXCloseHandle
+BOOL WINAPI EmuCloseHandle
 (
     HANDLE hObject
 );
@@ -231,13 +231,13 @@ VOID WINAPI EmuXapiInitProcess();
 VOID WINAPI EmuXapiBootDash(uint32 UnknownA, uint32 UnknownB, uint32 UnknownC);
 
 // ******************************************************************
-// * func: EmuX__rtinit
+// * func: Emu__rtinit
 // ******************************************************************
-VOID EmuX__rtinit();
+VOID Emu__rtinit();
 
 // ******************************************************************
-// * func: EmuX__cinit
+// * func: Emu__cinit
 // ******************************************************************
-VOID EmuX__cinit();
+VOID Emu__cinit();
 
 #endif

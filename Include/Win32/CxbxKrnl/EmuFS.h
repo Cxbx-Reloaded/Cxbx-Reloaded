@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXFS.h
+// *   Cxbx->Win32->CxbxKrnl->EmuFS.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,20 +31,20 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUXFS_H
-#define EMUXFS_H
+#ifndef EMUFS_H
+#define EMUFS_H
 
 // ******************************************************************
-// * func: EmuXSwapFS
+// * func: EmuSwapFS
 // ******************************************************************
 // *
 // * This function is used to swap between the native Win2k/XP FS:
-// * structure, and the EmuX FS: structure. Before running Windows
+// * structure, and the Emu FS: structure. Before running Windows
 // * code, you *must* swap over to Win2k/XP FS. Similarly, before
-// * running Xbox code, you *must* swap back over to EmuX FS.
+// * running Xbox code, you *must* swap back over to Emu FS.
 // *
 // ******************************************************************
-static inline void EmuXSwapFS()
+static inline void EmuSwapFS()
 {
     __asm
     {
@@ -54,13 +54,13 @@ static inline void EmuXSwapFS()
 }
 
 // ******************************************************************
-// * func: EmuXGenerateFS
+// * func: EmuGenerateFS
 // ******************************************************************
-void EmuXGenerateFS();
+void EmuGenerateFS();
 
 // ******************************************************************
-// * func: EmuXInitFS
+// * func: EmuInitFS
 // ******************************************************************
-void EmuXInitFS();
+void EmuInitFS();
 
 #endif

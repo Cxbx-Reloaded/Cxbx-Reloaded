@@ -175,9 +175,6 @@ upxCxbx.bat
 				RelativePath=".\Include\Cxbx.h">
 			</File>
 			<File
-				RelativePath=".\Resource\CxbxRes.h">
-			</File>
-			<File
 				RelativePath=".\Include\Win32\Cxbx\EmuExe.h">
 			</File>
 			<File
