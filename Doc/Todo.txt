@@ -1,6 +1,10 @@
 Cxbx Todo (* denotes high priority)
 
-  * Maybe catch swizzle/unswizzle and ignore both, setting swizzle to = false?
+  * Register() probably needn't re-unswizzle each time. cache a copy of
+    the address it was registered to (or a global table) and simply update
+	the data pointer to that IDirect3DTexture8 instance.
+
+  * Support cards that just plain dont have 32 bit color?
 
   * GetDisplayMode / GetAdapterDisplayMode should not return real display
     mode when windowed!

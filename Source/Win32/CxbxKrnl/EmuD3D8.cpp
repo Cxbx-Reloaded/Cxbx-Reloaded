@@ -472,6 +472,12 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
     // ******************************************************************
     g_pD3DDevice8 = *ppReturnedDeviceInterface;
 
+    // ******************************************************************
+    // * I guess we have to call this
+    // ******************************************************************
+    if(!FAILED(hRet))
+        g_pD3DDevice8->BeginScene();
+
     EmuSwapFS();   // XBox FS
 
     return hRet;
@@ -1082,7 +1088,9 @@ ULONG WINAPI xd3d8::EmuIDirect3DResource8_Release
 
     if(uRet == 0)
     {
-        printf("Cleaned up a Resource!\n");
+        #ifdef _DEBUG_TRACE
+        printf("EmuIDirect3DResource8_Release (0x%X): Cleaned up a Resource!\n", GetCurrentThreadId());
+        #endif
         delete pThis;
     }
 
