@@ -35,9 +35,9 @@
 #define EMUD3D8VERTEXSHADER_H
 
 // recompile from Xbox VertexShader to PC VertexShader
-extern void EmuRecompileVertexShader
+extern void EmuRecompileVSHDeclaration
 (
-    // TODO: Params
+    DWORD    *pDeclaration
 );
 
 #endif

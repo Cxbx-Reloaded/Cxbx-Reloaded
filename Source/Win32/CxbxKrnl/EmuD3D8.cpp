@@ -1851,6 +1851,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
     // TODO: Intelligently fill out these fields as necessary
     ZeroMemory(pD3DVertexShader, sizeof(X_D3DVertexShader));
 
+    XTL::EmuRecompileVSHDeclaration((DWORD*)pDeclaration);
+
     HRESULT hRet = D3D_OK;
 
     /*

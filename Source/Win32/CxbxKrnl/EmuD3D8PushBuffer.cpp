@@ -52,6 +52,7 @@ namespace XTL
 
 extern XTL::LPDIRECT3DDEVICE8 g_pD3DDevice8;  // Direct3D8 Device
 
+// pushbuffer execution emulation
 void XTL::EmuExecutePushBuffer
 (
     X_D3DPushBuffer       *pPushBuffer,
