@@ -785,6 +785,8 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
         Sleep(1);
     }
+
+    return 0;
 }
 
 // check if a resource has been registered yet (if not, register it)

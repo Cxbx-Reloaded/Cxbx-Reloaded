@@ -729,7 +729,27 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
     }
     #endif
 
-    PVOID pRet = VirtualAlloc(NULL, NumberOfBytes, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    //
+    // NOTE: Kludgey (but necessary) solution:
+    // 
+    // Since this memory must be aligned on a page boundary, we must allocate an extra page
+    // so that we can return a valid page aligned pointer
+    //
+
+    PVOID pRet = malloc(NumberOfBytes + 0x1000);
+
+    // align to page boundary
+    {
+        DWORD dwRet = (DWORD)pRet;
+
+        dwRet += 0x1000 - dwRet%0x1000;
+
+        pRet = (PVOID)dwRet;
+    }
+
+    #ifdef _DEBUG_TRACE
+    printf("EmuKrnl (0x%X): MmAllocateContiguous returned 0x%.08X\n", GetCurrentThreadId(), pRet);
+    #endif
 
     EmuSwapFS();   // Xbox FS
 
@@ -766,7 +786,23 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
     }
     #endif
 
-    PVOID pRet = malloc(NumberOfBytes);
+    //
+    // NOTE: Kludgey (but necessary) solution:
+    // 
+    // Since this memory must be aligned on a page boundary, we must allocate an extra page
+    // so that we can return a valid page aligned pointer
+    //
+
+    PVOID pRet = malloc(NumberOfBytes + 0x1000);
+
+    // align to page boundary
+    {
+        DWORD dwRet = (DWORD)pRet;
+
+        dwRet += 0x1000 - dwRet%0x1000;
+
+        pRet = (PVOID)dwRet;
+    }
 
     static int count = 0;
 
@@ -774,7 +810,7 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
         g_HaloHack[count-1] = (uint32)pRet;
 
     #ifdef _DEBUG_TRACE
-    printf("EmuKrnl (0x%X): MmAllocateContiguous returned 0x%.08X\n", GetCurrentThreadId(), pRet);
+    printf("EmuKrnl (0x%X): MmAllocateContiguousEx returned 0x%.08X\n", GetCurrentThreadId(), pRet);
     #endif
 
     EmuSwapFS();   // Xbox FS
