@@ -78,9 +78,9 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 static void EmuRenderWindow(PVOID);
 
 // ******************************************************************
-// * func: EmuInitD3D
+// * func: EmuD3DInit
 // ******************************************************************
-VOID EmuInitD3D(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
+VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 {
     // ******************************************************************
     // * store XbeHeader and XbeHeaderSize for further use
@@ -89,6 +89,8 @@ VOID EmuInitD3D(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         g_XbeHeader     = XbeHeader;
         g_XbeHeaderSize = XbeHeaderSize;
     }
+
+    g_ThreadInitialized = false;
 
     // ******************************************************************
     // * spark up a new thread to handle window message processing
@@ -111,6 +113,16 @@ VOID EmuInitD3D(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 
         g_pD3D8->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, &g_D3DCaps);
     }
+}
+
+// ******************************************************************
+// * func: EmuD3DCleanup
+// ******************************************************************
+VOID EmuD3DCleanup()
+{
+    EmuDInputCleanup();
+
+    return;
 }
 
 // ******************************************************************
@@ -187,7 +199,7 @@ void EmuRenderWindow(PVOID)
     // ******************************************************************
     // * initialize direct input
     // ******************************************************************
-    EmuInitDInput();
+    EmuDInputInit();
 
     // ******************************************************************
     // * the other thread can continue now
@@ -213,7 +225,7 @@ void EmuRenderWindow(PVOID)
                 Sleep(10);
         }
 
-        ExitProcess(0);
+        EmuCleanup();
     }
 }
 
@@ -228,50 +240,24 @@ LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             PostQuitMessage(0);
             return 0;
 
-        case WM_CREATE:
-        {
-            /* We aren't using a menu anymore
-            HMODULE hCxbxDll = GetModuleHandle("Cxbx.dll");
-
-            HMENU hMenu = LoadMenu(hCxbxDll, MAKEINTRESOURCE(IDR_RENDERMENU));
-
-            SetMenu(hWnd, hMenu);
-            */
-        }
-        break;
-
-        /*
-        case WM_COMMAND:
-        {
-            switch(LOWORD(wParam))
-            {
-                case ID_EMULATION_EXIT:
-                    SendMessage(hWnd, WM_CLOSE, 0, 0);
-                    break;
-            }
-        }
-        break;
-        */
-
 		case WM_KEYDOWN:
-			switch (wParam)
-			{
-				case VK_ESCAPE:
-					PostMessage(hWnd, WM_CLOSE, 0, 0);
-					break;
-			}
+            if(wParam == VK_ESCAPE)
+				PostMessage(hWnd, WM_CLOSE, 0, 0);
 			break;
 
         case WM_CLOSE:
             DestroyWindow(hWnd);
             break;
-
+/*
         case WM_SETCURSOR:
             SetCursor(NULL);
             break;
+*/
+        default:
+            return DefWindowProc(hWnd, msg, wParam, lParam);
     }
 
-    return DefWindowProc(hWnd, msg, wParam, lParam);
+    return 0;
 }
 
 // ******************************************************************

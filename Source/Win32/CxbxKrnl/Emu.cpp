@@ -229,7 +229,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion
                 printf("Skipped\n");
         }
 
-        EmuInitD3D(XbeHeader, XbeHeaderSize);
+        EmuD3DInit(XbeHeader, XbeHeaderSize);
     }
 
     printf("Emu (0x%.08X): Initial thread starting.\n", GetCurrentThreadId());
@@ -261,6 +261,21 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion
 }
 
 // ******************************************************************
+// * func: EmuCleanup
+// ******************************************************************
+extern "C" CXBXKRNL_API void NTAPI EmuCleanup()
+{
+    if(EmuIsXboxFS())
+        EmuSwapFS();    // Win2k/XP FS
+
+    EmuD3DCleanup();
+
+    ExitProcess(0);
+
+    return;
+}
+
+// ******************************************************************
 // * func: EmuPanic
 // ******************************************************************
 extern "C" CXBXKRNL_API void NTAPI EmuPanic()
@@ -277,7 +292,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuPanic()
     MessageBox(NULL, "Kernel Panic! Process will now terminate.", "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
 #endif
 
-    ExitProcess(1);
+    EmuCleanup();
 
     EmuSwapFS();   // XBox FS
 }
@@ -439,16 +454,7 @@ void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*En
 // ******************************************************************
 int EmuException(LPEXCEPTION_POINTERS e)
 {
-    static int count = 0;
-
-    count++;
-
-    if(count < 20000)
-        return EXCEPTION_CONTINUE_EXECUTION;
-    else
-        count = 0;
-
-    int ret = MessageBox(NULL, "ERROR: Maximum exception count reached.\n\nPress 'OK' to terminate emulation.\nPress 'Cancel' to debug.", "Cxbx", MB_ICONSTOP | MB_OKCANCEL);
+    int ret = MessageBox(NULL, "ERROR: Recieved Exception.\n\nPress 'OK' to terminate emulation.\nPress 'Cancel' to debug.", "Cxbx", MB_ICONSTOP | MB_OKCANCEL);
 
     if(ret == IDOK)
         ExitProcess(1);

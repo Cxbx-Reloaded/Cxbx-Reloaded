@@ -1,7 +1,5 @@
 Cxbx Todo:
 
-  Encapsulate XBController. Remove all relevent old implementation modules.
-
   Batch config all buttons (should be very easy..just click one by one)
 
   Encapsulate RecentFiles into a nice little class
@@ -11,8 +9,6 @@ Cxbx Todo:
   Multimonitor support via Direct3D9::EnumAdapterModes enumeration.
 
   Closing a console should not terminate the entire process.
-
-  Everything that is initialized should be cleaned up before termination.
 
   If possible, Direct3D Rendering window should inherit from Wnd.
 

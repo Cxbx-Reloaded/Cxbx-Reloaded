@@ -165,6 +165,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\EmuShared.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\EmuXapi.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Core\Error.h
 # End Source File
 # Begin Source File

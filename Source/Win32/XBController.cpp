@@ -40,10 +40,17 @@
 // ******************************************************************
 XBController::XBController()
 {
+    m_CurrentState = XBCTRL_STATE_NONE;
+
     int v=0;
 
     for(v=0;v<XBCTRL_MAX_DEVICES;v++)
+    {
         m_DeviceName[v][0] = '\0';
+
+        m_InputDevice[v].m_Device = NULL;
+        m_InputDevice[v].m_Flags  = 0;
+    }
 
     for(v=0;v<XBCTRL_OBJECT_COUNT;v++)
     {
@@ -51,6 +58,21 @@ XBController::XBController()
         m_ObjectConfig[v].dwInfo   = -1;
         m_ObjectConfig[v].dwFlags  = 0;
     }
+
+    m_pDirectInput8 = NULL;
+
+    m_dwInputDeviceCount = 0;
+}
+
+// ******************************************************************
+// * func: XBController::~XBController
+// ******************************************************************
+XBController::~XBController()
+{
+    if(m_CurrentState == XBCTRL_STATE_CONFIG)
+        ConfigEnd();
+    else if(m_CurrentState == XBCTRL_STATE_LISTEN)
+        ListenEnd();
 }
 
 // ******************************************************************
@@ -58,7 +80,11 @@ XBController::XBController()
 // ******************************************************************
 void XBController::Load(const char *szRegistryKey)
 {
-    Lock();
+    if(m_CurrentState != XBCTRL_STATE_NONE)
+    {
+        SetError("Invalid State", false);
+        return;
+    }
 
     // ******************************************************************
     // * Load Configuration from Registry
@@ -112,8 +138,6 @@ void XBController::Load(const char *szRegistryKey)
             RegCloseKey(hKey);
         }
     }
-
-    Unlock();
 }
 
 // ******************************************************************
@@ -121,7 +145,11 @@ void XBController::Load(const char *szRegistryKey)
 // ******************************************************************
 void XBController::Save(const char *szRegistryKey)
 {
-    Lock();
+    if(m_CurrentState != XBCTRL_STATE_NONE)
+    {
+        SetError("Invalid State", false);
+        return;
+    }
 
     // ******************************************************************
     // * Save Configuration to Registry
@@ -146,7 +174,9 @@ void XBController::Save(const char *szRegistryKey)
 
                     dwType = REG_SZ; dwSize = 260;
 
-                    if(m_DeviceName[v][0] != '\0')
+                    if(m_DeviceName[v][0] == '\0')
+                        RegDeleteValue(hKey, szValueName);
+                    else
                         RegSetValueEx(hKey, szValueName, NULL, dwType, (PBYTE)m_DeviceName[v], dwSize);
                 }
             }
@@ -171,8 +201,6 @@ void XBController::Save(const char *szRegistryKey)
             RegCloseKey(hKey);
         }
     }
-
-    Unlock();
 }
 
 // ******************************************************************
@@ -180,100 +208,24 @@ void XBController::Save(const char *szRegistryKey)
 // ******************************************************************
 void XBController::ConfigBegin(HWND hwnd, XBCtrlObject object)
 {
-    // ******************************************************************
-    // * Create DirectInput Object
-    // ******************************************************************
+    if(m_CurrentState != XBCTRL_STATE_NONE)
     {
-        HRESULT hRet = DirectInput8Create
-        (
-            GetModuleHandle(NULL),
-            DIRECTINPUT_VERSION,
-            IID_IDirectInput8,
-            (void**)&m_pDirectInput8,
-            NULL
-        );
-
-        if(FAILED(hRet))
-        {
-            SetError("Could not initialized DirectInput8", true);
-            goto cleanup;
-        }
+        SetError("Invalid State", false);
+        return;
     }
 
-    // ******************************************************************
-    // * Create all the devices available (well...most of them)
-    // ******************************************************************
-    if(m_pDirectInput8 != 0)
-    {
-        HRESULT hRet = m_pDirectInput8->EnumDevices
-        (
-            DI8DEVCLASS_GAMECTRL,
-            WrapEnumGameCtrlCallback,
-            this,
-            DIEDFL_ATTACHEDONLY
-        );
+    m_CurrentState = XBCTRL_STATE_CONFIG;
 
-        hRet = m_pDirectInput8->CreateDevice(GUID_SysKeyboard, &m_InputDevice[m_dwInputDeviceCount].m_Device, NULL);
+    DInputInit(hwnd);
 
-        if(!FAILED(hRet))
-		{
-			m_InputDevice[m_dwInputDeviceCount].m_Flags = DEVICE_FLAG_KEYBOARD;
+    if(GetError() != 0)
+        return;
 
-            m_InputDevice[m_dwInputDeviceCount++].m_Device->SetDataFormat(&c_dfDIKeyboard);
-		}
-
-        hRet = m_pDirectInput8->CreateDevice(GUID_SysMouse, &m_InputDevice[m_dwInputDeviceCount].m_Device, NULL);
-
-        if(!FAILED(hRet))
-		{
-			m_InputDevice[m_dwInputDeviceCount].m_Flags = DEVICE_FLAG_MOUSE;
-
-            m_InputDevice[m_dwInputDeviceCount++].m_Device->SetDataFormat(&c_dfDIMouse2);
-		}
-    }
-
-    // ******************************************************************
-    // * Set cooperative level and acquire
-    // ******************************************************************
-    {
-        for(int v=m_dwInputDeviceCount-1;v>=0;v--)
-        {
-            m_InputDevice[v].m_Device->SetCooperativeLevel(hwnd, DISCL_NONEXCLUSIVE | DISCL_FOREGROUND);
-            m_InputDevice[v].m_Device->Acquire();
-
-            HRESULT hRet = m_InputDevice[v].m_Device->Poll();
-
-            if(FAILED(hRet))
-            {
-                hRet = m_InputDevice[v].m_Device->Acquire();
-
-                while(hRet == DIERR_INPUTLOST)
-                    hRet = m_InputDevice[v].m_Device->Acquire();
-
-                if(hRet != DIERR_INPUTLOST)
-                    break;
-            }
-        }
-    }
-
-    // ******************************************************************
-    // * Enumerate Controller objects
-    // ******************************************************************
-    {
-        for(m_dwCurObject=0;m_dwCurObject<m_dwInputDeviceCount;m_dwCurObject++)
-            m_InputDevice[m_dwCurObject].m_Device->EnumObjects(WrapEnumObjectsCallback, this, DIDFT_ALL);
-    }
-
-    // ******************************************************************
-    // * Last Mouse Input for Delta Calculations
-    // ******************************************************************
-    LastMouse_lX = -1;
-    LastMouse_lY = -1;
-    LastMouse_lZ = -1;
+    lPrevMouseX = -1;
+    lPrevMouseY = -1;
+    lPrevMouseZ = -1;
 
     CurConfigObject = object;
-
-cleanup:
 
     return;
 }
@@ -283,6 +235,12 @@ cleanup:
 // ******************************************************************
 bool XBController::ConfigPoll(char *szStatus)
 {
+    if(m_CurrentState != XBCTRL_STATE_CONFIG)
+    {
+        SetError("Invalid State", false);
+        return false;
+    }
+
     DIDEVICEINSTANCE        DeviceInstance;
     DIDEVICEOBJECTINSTANCE  ObjectInstance;
 
@@ -392,7 +350,154 @@ bool XBController::ConfigPoll(char *szStatus)
 
                 return true;
 			}
+        }
+        // ******************************************************************
+        // * Detect Keyboard Input
+        // ******************************************************************
+        else if(m_InputDevice[v].m_Flags & DEVICE_FLAG_KEYBOARD)
+        {
+            BYTE KeyState[256];
 
+            m_InputDevice[v].m_Device->GetDeviceState(256, KeyState);
+
+            dwFlags = DEVICE_FLAG_KEYBOARD;
+
+            // ******************************************************************
+            // * Check for Mouse Key State Change
+            // ******************************************************************
+            for(int r=0;r<256;r++)
+            {
+                if(KeyState[r] != 0)
+                {
+                    dwHow = r;
+                    break;
+                }
+            }
+
+            // ******************************************************************
+            // * Check for Success
+            // ******************************************************************
+            if(dwHow != -1)
+            {
+                Map(CurConfigObject, "SysKeyboard", dwHow, dwFlags);
+
+                printf("Cxbx: Detected Key %d on SysKeyboard\n", dwHow);
+
+                sprintf(szStatus, "Success: %s Mapped to Key %d on SysKeyboard", m_DeviceNameLookup[CurConfigObject], dwHow);
+
+                return true;
+            }
+        }
+        // ******************************************************************
+        // * Detect Mouse Input
+        // ******************************************************************
+        else if(m_InputDevice[v].m_Flags & DEVICE_FLAG_MOUSE)
+        {
+            DIMOUSESTATE2 MouseState;
+
+            m_InputDevice[v].m_Device->GetDeviceState(sizeof(MouseState), &MouseState);
+
+            dwFlags = DEVICE_FLAG_MOUSE;
+
+            // ******************************************************************
+            // * Detect Button State Change
+            // ******************************************************************
+            for(int r=0;r<8;r++)
+            {
+                // 0x80 is the mask for button push
+                if(MouseState.rgbButtons[r] & 0x80)
+                {
+                    dwHow = r;
+                    dwFlags |= DEVICE_FLAG_MOUSE_CLICK;
+                    break;
+                }
+            }
+            // ******************************************************************
+            // * Check for Success
+            // ******************************************************************
+            if(dwHow != -1)
+            {
+                Map(CurConfigObject, "SysMouse", dwHow, dwFlags);
+
+                printf("Cxbx: Detected Button %d on SysMouse\n", dwHow);
+
+                sprintf(szStatus, "Success: %s Mapped to Button %d on SysMouse", m_DeviceNameLookup[CurConfigObject], dwHow);
+
+                return true;
+            }
+            // ******************************************************************
+            // * Check for Mouse Movement
+            // ******************************************************************
+            else
+            {
+                LONG lAbsDeltaX=0, lAbsDeltaY=0, lAbsDeltaZ=0;
+                LONG lDeltaX=0, lDeltaY=0, lDeltaZ=0;
+
+                if(lPrevMouseX == -1 || lPrevMouseY == -1 || lPrevMouseZ == -1)
+                    lDeltaX = lDeltaY = lDeltaZ = 0;
+                else
+                {
+                    lDeltaX = MouseState.lX - lPrevMouseX;
+                    lDeltaY = MouseState.lY - lPrevMouseY;
+                    lDeltaZ = MouseState.lZ - lPrevMouseZ;
+
+                    lAbsDeltaX = abs(lDeltaX);
+                    lAbsDeltaY = abs(lDeltaY);
+                    lAbsDeltaZ = abs(lDeltaZ);
+                }
+
+                LONG lMax = (lAbsDeltaX > lAbsDeltaY) ? lAbsDeltaX : lAbsDeltaY;
+
+                if(lAbsDeltaZ > lMax)
+                    lMax = lAbsDeltaZ;
+
+                lPrevMouseX = MouseState.lX;
+                lPrevMouseY = MouseState.lY;
+                lPrevMouseZ = MouseState.lZ;
+
+                if(lMax > DETECT_SENSITIVITY_MOUSE)
+                {
+                    dwFlags |= DEVICE_FLAG_AXIS;
+
+                    if(lMax == lAbsDeltaX)
+                    {
+                        dwHow = DIMOFS_X;
+                        dwFlags |= (lDeltaX > 0) ? DEVICE_FLAG_POSITIVE : DEVICE_FLAG_NEGATIVE;
+                    }
+                    else if(lMax == lAbsDeltaY)
+                    {
+                        dwHow = DIMOFS_Y;
+                        dwFlags |= (lDeltaY > 0) ? DEVICE_FLAG_POSITIVE : DEVICE_FLAG_NEGATIVE;
+                    }
+                    else if(lMax == lAbsDeltaZ)
+                    {
+                        dwHow = DIMOFS_Z;
+                        dwFlags |= (lDeltaZ > 0) ? DEVICE_FLAG_POSITIVE : DEVICE_FLAG_NEGATIVE;
+                    }
+                }
+
+                // ******************************************************************
+                // * Check for Success
+                // ******************************************************************
+                if(dwHow != -1)
+                {
+                    char *szDirection = (dwFlags & DEVICE_FLAG_POSITIVE) ? "Positive" : "Negative";
+                    char *szObjName = "Unknown";
+
+                    ObjectInstance.dwSize = sizeof(ObjectInstance);
+
+                    if(m_InputDevice[v].m_Device->GetObjectInfo(&ObjectInstance, dwHow, DIPH_BYOFFSET) == DI_OK)
+                        szObjName = ObjectInstance.tszName;
+
+                    Map(CurConfigObject, "SysMouse", dwHow, dwFlags);
+
+                    printf("Cxbx: Detected Movement on the %s %s on SysMouse\n", szDirection, szObjName);
+
+                    sprintf(szStatus, "Success: %s Mapped to %s %s on SysMouse", m_DeviceNameLookup[CurConfigObject], szDirection, szObjName);
+
+                    return true;
+                }
+            }
         }
     }
 
@@ -404,24 +509,204 @@ bool XBController::ConfigPoll(char *szStatus)
 // ******************************************************************
 void XBController::ConfigEnd()
 {
+    if(m_CurrentState != XBCTRL_STATE_CONFIG)
+    {
+        SetError("Invalid State", false);
+        return;
+    }
+
+    DInputCleanup();
+
+    m_CurrentState = XBCTRL_STATE_NONE;
+
+    return;
+}
+
+// ******************************************************************
+// * func: XBController::ListenBegin
+// ******************************************************************
+void XBController::ListenBegin(HWND hwnd)
+{
+    if(m_CurrentState != XBCTRL_STATE_NONE)
+    {
+        SetError("Invalid State", false);
+        return;
+    }
+
+    m_CurrentState = XBCTRL_STATE_LISTEN;
+
+    DInputInit(hwnd);
+
+    return;
+}
+
+// ******************************************************************
+// * func: XBController::ListenPoll
+// ******************************************************************
+void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
+{
+    // TODO: For each device with a configured input device, update changes
+    static int step = 500;
+
+    Controller->Gamepad.sThumbLX += step;
+
+    if(Controller->Gamepad.sThumbLX < 0 - 32768 - 2*step ||
+       Controller->Gamepad.sThumbLX > 0 + 32767 - 2*step)
+    {
+        step = -step;
+        Controller->Gamepad.sThumbLX += step;
+    }
+
+    return;
+}
+
+// ******************************************************************
+// * func: XBController::ListenEnd
+// ******************************************************************
+void XBController::ListenEnd()
+{
+    if(m_CurrentState != XBCTRL_STATE_LISTEN)
+    {
+        SetError("Invalid State", false);
+        return;
+    }
+
+    DInputCleanup();
+
+    m_CurrentState = XBCTRL_STATE_NONE;
+
+    return;
+}
+
+// ******************************************************************
+// * func: XBController::DeviceIsUsed
+// ******************************************************************
+bool XBController::DeviceIsUsed(const char *szDeviceName)
+{
+    for(int v=0;v<XBCTRL_MAX_DEVICES;v++)
+    {
+        if(m_DeviceName[v][0] != '\0')
+        {
+            if(strncmp(m_DeviceName[v], szDeviceName, 255) == 0)
+                return true;
+        }
+    }
+
+    return false;
+}
+
+// ******************************************************************
+// * func: XBController::DInputInit
+// ******************************************************************
+void XBController::DInputInit(HWND hwnd)
+{
     // ******************************************************************
-    // * Cleanup DirectInput
+    // * Create DirectInput Object
+    // ******************************************************************
+    {
+        HRESULT hRet = DirectInput8Create
+        (
+            GetModuleHandle(NULL),
+            DIRECTINPUT_VERSION,
+            IID_IDirectInput8,
+            (void**)&m_pDirectInput8,
+            NULL
+        );
+
+        if(FAILED(hRet))
+        {
+            SetError("Could not initialized DirectInput8", true);
+            return;
+        }
+    }
+
+    // ******************************************************************
+    // * Create all the devices available (well...most of them)
+    // ******************************************************************
+    if(m_pDirectInput8 != 0)
+    {
+        HRESULT hRet = m_pDirectInput8->EnumDevices
+        (
+            DI8DEVCLASS_GAMECTRL,
+            WrapEnumGameCtrlCallback,
+            this,
+            DIEDFL_ATTACHEDONLY
+        );
+
+        if(m_CurrentState == XBCTRL_STATE_CONFIG || DeviceIsUsed("SysKeyboard"))
+        {
+            hRet = m_pDirectInput8->CreateDevice(GUID_SysKeyboard, &m_InputDevice[m_dwInputDeviceCount].m_Device, NULL);
+
+            if(!FAILED(hRet))
+		    {
+			    m_InputDevice[m_dwInputDeviceCount].m_Flags = DEVICE_FLAG_KEYBOARD;
+
+                m_InputDevice[m_dwInputDeviceCount++].m_Device->SetDataFormat(&c_dfDIKeyboard);
+		    }
+        }
+
+        if(m_CurrentState == XBCTRL_STATE_CONFIG || DeviceIsUsed("SysMouse"))
+        {
+            hRet = m_pDirectInput8->CreateDevice(GUID_SysMouse, &m_InputDevice[m_dwInputDeviceCount].m_Device, NULL);
+
+            if(!FAILED(hRet))
+		    {
+			    m_InputDevice[m_dwInputDeviceCount].m_Flags = DEVICE_FLAG_MOUSE;
+
+                m_InputDevice[m_dwInputDeviceCount++].m_Device->SetDataFormat(&c_dfDIMouse2);
+		    }
+        }
+    }
+
+    // ******************************************************************
+    // * Set cooperative level and acquire
     // ******************************************************************
     {
         for(int v=m_dwInputDeviceCount-1;v>=0;v--)
         {
-            m_InputDevice[v].m_Device->Unacquire();
-            m_InputDevice[v].m_Device->Release();
-            m_InputDevice[v].m_Device = 0;
-        }
+            m_InputDevice[v].m_Device->SetCooperativeLevel(hwnd, DISCL_NONEXCLUSIVE | DISCL_FOREGROUND);
+            m_InputDevice[v].m_Device->Acquire();
 
-        m_dwInputDeviceCount = 0;
+            HRESULT hRet = m_InputDevice[v].m_Device->Poll();
 
-        if(m_pDirectInput8 != 0)
-        {
-            m_pDirectInput8->Release();
-            m_pDirectInput8 = 0;
+            if(FAILED(hRet))
+            {
+                hRet = m_InputDevice[v].m_Device->Acquire();
+
+                while(hRet == DIERR_INPUTLOST)
+                    hRet = m_InputDevice[v].m_Device->Acquire();
+
+                if(hRet != DIERR_INPUTLOST)
+                    break;
+            }
         }
+    }
+
+    // ******************************************************************
+    // * Enumerate Controller objects
+    // ******************************************************************
+    for(m_dwCurObject=0;m_dwCurObject<m_dwInputDeviceCount;m_dwCurObject++)
+        m_InputDevice[m_dwCurObject].m_Device->EnumObjects(WrapEnumObjectsCallback, this, DIDFT_ALL);
+}
+
+// ******************************************************************
+// * func: XBController::DInputCleanup
+// ******************************************************************
+void XBController::DInputCleanup()
+{
+    for(int v=m_dwInputDeviceCount-1;v>=0;v--)
+    {
+        m_InputDevice[v].m_Device->Unacquire();
+        m_InputDevice[v].m_Device->Release();
+        m_InputDevice[v].m_Device = 0;
+    }
+
+    m_dwInputDeviceCount = 0;
+
+    if(m_pDirectInput8 != 0)
+    {
+        m_pDirectInput8->Release();
+        m_pDirectInput8 = 0;
     }
 
     return;
@@ -443,8 +728,10 @@ void XBController::Map(XBCtrlObject object, const char *szDeviceName, int dwInfo
         bool inuse = false;
 
         for(int r=0;r<XBCTRL_OBJECT_COUNT;r++)
+        {
             if(m_ObjectConfig[r].dwDevice == v)
                 inuse=true;
+        }
 
         if(!inuse)
             m_DeviceName[v][0] = '\0';
@@ -459,8 +746,10 @@ int XBController::Insert(const char *szDeviceName)
     int v=0;
 
     for(v=0;v<XBCTRL_MAX_DEVICES;v++)
+    {
         if(strcmp(m_DeviceName[v], szDeviceName) == 0)
             return v;
+    }
 
     for(v=0;v<XBCTRL_MAX_DEVICES;v++)
     {
@@ -484,6 +773,9 @@ int XBController::Insert(const char *szDeviceName)
 // ******************************************************************
 BOOL XBController::EnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi)
 {
+    if(m_CurrentState == XBCTRL_STATE_LISTEN && DeviceIsUsed(lpddi->tszInstanceName))
+        return DIENUM_CONTINUE;
+
     HRESULT hRet = m_pDirectInput8->CreateDevice(lpddi->guidInstance, &m_InputDevice[m_dwInputDeviceCount].m_Device, NULL);
     
     if(!FAILED(hRet))
@@ -492,6 +784,8 @@ BOOL XBController::EnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi)
 
         m_InputDevice[m_dwInputDeviceCount++].m_Device->SetDataFormat(&c_dfDIJoystick);
 	}
+
+    printf("Emu: Monitoring Device %s\n", lpddi->tszInstanceName);
 
     return DIENUM_CONTINUE;
 }

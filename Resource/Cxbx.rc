@@ -235,9 +235,10 @@ BEGIN
     GROUPBOX        "Digital Buttons",IDC_STATIC,2,51,220,46
     GROUPBOX        "Analog Thumbstick (Left)",IDC_STATIC,226,1,115,47
     GROUPBOX        "Analog Thumbstick (Right)",IDC_STATIC,227,51,114,46
-    PUSHBUTTON      "Load Configuration...",IDC_BUTTON1,6,102,104,14,BS_FLAT
+    PUSHBUTTON      "Load Configuration...",IDC_BUTTON1,6,102,104,14,BS_FLAT | 
+                    WS_DISABLED
     PUSHBUTTON      "Save Configuration...",IDC_BUTTON2,113,102,104,14,
-                    BS_FLAT
+                    BS_FLAT | WS_DISABLED
     CTEXT           "Please choose one of the controller components from above...",
                     IDC_CONFIG_STATUS,6,121,329,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE

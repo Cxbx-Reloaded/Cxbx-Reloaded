@@ -45,6 +45,7 @@
 // * exported globals
 // ******************************************************************
 xapi::XINPUT_STATE g_EmuController1;
+XBController       g_XBController;
 
 // ******************************************************************
 // * prevent name collisions
@@ -55,17 +56,30 @@ namespace xapi
 };
 
 // ******************************************************************
-// * func: EmuInitDInput
+// * func: EmuDInputInit
 // ******************************************************************
-void EmuInitDInput()
+void EmuDInputInit()
 {
+    g_EmuShared->GetXBController(&g_XBController);
+
+    g_XBController.ListenBegin(g_EmuWindow);
+
     return;
+}
+
+// ******************************************************************
+// * func: EmuDInputCleanup
+// ******************************************************************
+void EmuDInputCleanup()
+{
+    g_XBController.ListenEnd();
 }
 
 // ******************************************************************
 // * func: EmuPollController
 // ******************************************************************
-void EmuPollController()
+void EmuDInputPoll()
 {
+    g_XBController.ListenPoll(&g_EmuController1);
     return;
 }

@@ -230,7 +230,7 @@ cleanup:
     // ******************************************************************
 	{
         if(g_XBController.GetError())
-            strcpy(szNewText, g_XBController.GetError());
+            sprintf(szNewText, "%s", g_XBController.GetError());
 
         SetWindowText(hWndButton, szOrgText);
 

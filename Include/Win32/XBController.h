@@ -94,6 +94,16 @@ enum XBCtrlObject
 };
 
 // ******************************************************************
+// * DirectInput Enumeration Types
+// ******************************************************************
+enum XBCtrlState
+{
+    XBCTRL_STATE_NONE = 0,
+    XBCTRL_STATE_CONFIG,
+    XBCTRL_STATE_LISTEN
+};
+
+// ******************************************************************
 // * Maximum number of devices allowed
 // ******************************************************************
 #define XBCTRL_MAX_DEVICES XBCTRL_OBJECT_COUNT
@@ -111,14 +121,14 @@ struct XBCtrlObjectCfg
 // ******************************************************************
 // * class: XBController
 // ******************************************************************
-class XBController : public Error, Mutex
+class XBController : public Error
 {
     public:
         // ******************************************************************
         // * Initialization
         // ******************************************************************
         XBController();
-       ~XBController() {};
+       ~XBController();
 
         // ******************************************************************
         // * Registry Load/Save
@@ -136,9 +146,20 @@ class XBController : public Error, Mutex
         // ******************************************************************
         // * Listening
         // ******************************************************************
-        void ListeningBegin(HWND hwnd);
-        void ListeningPoll(xapi::XINPUT_STATE &Controller);
-        void ListeningEnd();
+        void ListenBegin(HWND hwnd);
+        void ListenPoll(xapi::XINPUT_STATE *Controller);
+        void ListenEnd();
+
+        // ******************************************************************
+        // * DirectInput Init / Cleanup
+        // ******************************************************************
+        void DInputInit(HWND hwnd);
+        void DInputCleanup();
+
+        // ******************************************************************
+        // * Check if a device is currently in the configuration
+        // ******************************************************************
+        bool DeviceIsUsed(const char *szDeviceName);
 
         // ******************************************************************
         // * Input Device Name Lookup Table
@@ -194,9 +215,14 @@ class XBController : public Error, Mutex
         m_InputDevice[XBCTRL_MAX_DEVICES];
 
         // ******************************************************************
+        // * Current State
+        // ******************************************************************
+        XBCtrlState m_CurrentState;
+
+        // ******************************************************************
         // * Config State Variables
         // ******************************************************************
-        LONG LastMouse_lX, LastMouse_lY, LastMouse_lZ;
+        LONG lPrevMouseX, lPrevMouseY, lPrevMouseZ;
         XBCtrlObject CurConfigObject;
 
         // ******************************************************************
