@@ -398,6 +398,37 @@ SOOVPA<10> IDirect3DDevice8_SetTexture_1_0_4361 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SwitchTexture
+// ******************************************************************
+SOOVPA<10> IDirect3DDevice8_SwitchTexture_1_0_4361 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    {
+        // IDirect3DDevice8_SwitchTexture+0x00 : mov eax, [addr]
+        { 0x00, 0xA1 }, // (Offset,Value)-Pair #1
+
+        // IDirect3DDevice8_SwitchTexture+0x05 : add eax, 0x0C
+        { 0x05, 0x83 }, // (Offset,Value)-Pair #2
+        { 0x06, 0xC0 }, // (Offset,Value)-Pair #3
+        { 0x07, 0x0C }, // (Offset,Value)-Pair #4
+
+        // IDirect3DDevice8_SwitchTexture+0x0E : jnb +0x15
+        { 0x0E, 0x73 }, // (Offset,Value)-Pair #5
+        { 0x0F, 0x15 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_SwitchTexture+0x22 : retn 0x04
+        { 0x22, 0xC2 }, // (Offset,Value)-Pair #7
+        { 0x23, 0x04 }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_SwitchTexture+0x2E : jmp +0xD0
+        { 0x2E, 0xEB }, // (Offset,Value)-Pair #9
+        { 0x2F, 0xD0 }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_GetDisplayMode
 // ******************************************************************
 SOOVPA<13> IDirect3DDevice8_GetDisplayMode_1_0_4361 =
@@ -772,6 +803,33 @@ SOOVPA<12> IDirect3DDevice8_DrawVertices_1_0_4361 =
         // IDirect3DDevice8_DrawVertices+0x9C : retn 0x0C
         { 0x9C, 0xC2 }, // (Offset,Value)-Pair #11
         { 0x9D, 0x0C }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_DrawVerticesUP
+// ******************************************************************
+SOOVPA<10> IDirect3DDevice8_DrawVerticesUP_1_0_4361 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    {
+        // IDirect3DDevice8_DrawVerticesUP+0x03 : sub esp, 0x14
+        { 0x03, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x04, 0xEC }, // (Offset,Value)-Pair #2
+        { 0x05, 0x14 }, // (Offset,Value)-Pair #3
+
+        // IDirect3DDevice8_DrawVerticesUP+0x2F : mov edx, [edi+0x744]
+        { 0x2F, 0x8B }, // (Offset,Value)-Pair #4
+        { 0x30, 0x97 }, // (Offset,Value)-Pair #5
+        { 0x31, 0x44 }, // (Offset,Value)-Pair #6
+        { 0x32, 0x07 }, // (Offset,Value)-Pair #7
+
+        // IDirect3DDevice8_DrawVerticesUP+0xC1 : cmp esi, 0x80
+        { 0xC1, 0x81 }, // (Offset,Value)-Pair #8
+        { 0xC2, 0xFE }, // (Offset,Value)-Pair #9
+        { 0xC3, 0x80 }, // (Offset,Value)-Pair #10
     }
 };
 
@@ -1260,6 +1318,16 @@ OOVPATable D3D8_1_0_4361[] =
         "EmuIDirect3DDevice8_SetTexture"
         #endif
     },
+    // IDirect3DDevice8::SwitchTexture
+    {
+        (OOVPA*)&IDirect3DDevice8_SwitchTexture_1_0_4361,
+
+        xd3d8::EmuIDirect3DDevice8_SwitchTexture,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SwitchTexture"
+        #endif
+    },
     // IDirect3DDevice8::GetDisplayMode
     {
         (OOVPA*)&IDirect3DDevice8_GetDisplayMode_1_0_4361,
@@ -1378,6 +1446,16 @@ OOVPATable D3D8_1_0_4361[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_DrawVertices"
+        #endif
+    },
+    // IDirect3DDevice8::DrawVerticesUP
+    {
+        (OOVPA*)&IDirect3DDevice8_DrawVerticesUP_1_0_4361,
+
+        xd3d8::EmuIDirect3DDevice8_DrawVerticesUP,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_DrawVerticesUP"
         #endif
     },
     // IDirect3DDevice8::SetLight

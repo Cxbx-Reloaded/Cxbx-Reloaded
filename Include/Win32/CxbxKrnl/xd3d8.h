@@ -431,6 +431,16 @@ HRESULT WINAPI EmuIDirect3DDevice8_SetTexture
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SwitchTexture
+// ******************************************************************
+VOID __fastcall EmuIDirect3DDevice8_SwitchTexture
+(
+    DWORD           Method,
+    DWORD           Data,
+    DWORD           Format
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_GetDisplayMode
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_GetDisplayMode
@@ -643,6 +653,17 @@ HRESULT WINAPI EmuIDirect3DDevice8_DrawVertices
     D3DPRIMITIVETYPE PrimitiveType,
     UINT             StartVertex,
     UINT             VertexCount
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_DrawVerticesUP
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_DrawVerticesUP
+(
+    D3DPRIMITIVETYPE PrimitiveType,
+    UINT             VertexCount,
+    CONST PVOID      pVertexStreamZeroData,
+    UINT             VertexStreamZeroStride
 );
 
 // ******************************************************************

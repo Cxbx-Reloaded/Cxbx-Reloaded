@@ -1,9 +1,9 @@
 cxbx website: http://www.caustik.com/xbox/
 
-version: 0.7.2 (??/??/03)
+version: 0.7.2 (06/13/03)
 --------------------------------
 
-- Textures (bmp, jpg, png, etc)
+- Textures (bmp, jpg, png, partial .xpr, etc)
 
 - rtinit/cinit run on lower level
 
