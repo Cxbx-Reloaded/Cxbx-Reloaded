@@ -92,4 +92,9 @@ INT WINAPI EmuXNetStartup
     const PVOID pDummy
 );
 
+// ******************************************************************
+// * func: EmuXNetGetEthernetLinkStatus
+// ******************************************************************
+DWORD WINAPI EmuXNetGetEthernetLinkStatus();
+
 #endif

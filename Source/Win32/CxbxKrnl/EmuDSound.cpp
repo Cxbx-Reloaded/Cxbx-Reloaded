@@ -169,7 +169,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
     HRESULT hRet = g_pDSound8->CreateSoundBuffer(&DSBufferDesc, &((*ppBuffer)->EmuDirectSoundBuffer8), NULL);
 
     if(FAILED(hRet))
-        printf("*Warning* CreateSoundBuffer FAILED\n");
+        EmuWarning("CreateSoundBuffer FAILED");
 
     EmuSwapFS();   // XBox FS
 
@@ -1006,7 +1006,6 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetOrientation
     #endif
 
     // TODO: Actually implement this
-    printf("*Note* EmuIDirectSound8_SetOrientation is being ignored\n");
 
     EmuSwapFS();   // XBox FS
 
@@ -1041,7 +1040,6 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetDistanceFactor
     #endif
 
     // TODO: Actually implement this
-    printf("*Note* EmuIDirectSound8_SetDistanceFactor is being ignored\n");
 
     EmuSwapFS();   // XBox FS
 
@@ -1076,7 +1074,6 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetRolloffFactor
     #endif
 
     // TODO: Actually implement this
-    printf("*Note* EmuIDirectSound8_SetRolloffFactor is being ignored\n");
 
     EmuSwapFS();   // XBox FS
 
@@ -1111,7 +1108,6 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetDopplerFactor
     #endif
 
     // TODO: Actually implement this
-    printf("*Note* EmuIDirectSound8_SetDopplerFactor is being ignored\n");
 
     EmuSwapFS();   // XBox FS
 
@@ -1391,7 +1387,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPlayRegion
     #endif
 
     // Todo: Translate params, then make the PC DirectSound call
-    printf("*Note* EmuIDirectSoundBuffer8_SetPlayRegion is being ignored\n");
 
     EmuSwapFS();   // XBox FS
 
@@ -1426,7 +1421,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetLoopRegion
     #endif
 
     // Todo: Translate params, then make the PC DirectSound call
-    printf("*Note* EmuIDirectSoundBuffer8_SetLoopRegion is being ignored\n");
 
     EmuSwapFS();   // XBox FS
 
@@ -1459,7 +1453,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetVolume
     #endif
 
     // Todo: Translate params, then make the PC DirectSound call
-    printf("*Note* EmuIDirectSoundBuffer8_SetVolume is being ignored\n");
 
     EmuSwapFS();   // XBox FS
 
@@ -1495,7 +1488,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetCurrentPosition
     HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwNewPosition);
 
     if(FAILED(hRet))
-        printf("*Warning* SetCurrentPosition FAILED\n");
+        EmuWarning("SetCurrentPosition FAILED");
 
     EmuSwapFS();   // XBox FS
 
@@ -1533,7 +1526,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_GetCurrentPosition
     HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetCurrentPosition(pdwCurrentPlayCursor, pdwCurrentWriteCursor);
 
     if(FAILED(hRet))
-        printf("*Warning* GetCurrentPosition FAILED\n");
+        EmuWarning("GetCurrentPosition FAILED");
 
     EmuSwapFS();   // XBox FS
 
@@ -1633,7 +1626,6 @@ HRESULT WINAPI XTL::EmuCDirectSound_CommitDeferredSettings
     #endif
 
     // Todo: Translate params, then make the PC DirectSound call
-    printf("*Note* EmuCDirectSound_CommitDeferredSettings is being ignored\n");
 
     EmuSwapFS();   // XBox FS
 

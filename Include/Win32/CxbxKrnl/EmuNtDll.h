@@ -668,6 +668,17 @@ typedef NTSTATUS (NTAPI *FPTR_NtCreateEvent)
 );
 
 // ******************************************************************
+// * NtCreateEvent
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtCreateMutant)
+(
+    OUT PHANDLE             MutantHandle,
+    IN  ACCESS_MASK         DesiredAccess,
+    IN  POBJECT_ATTRIBUTES  ObjectAttributes OPTIONAL,
+    IN  BOOLEAN             InitialOwner
+);
+
+// ******************************************************************
 // * NtCreateFile
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtCreateFile)
@@ -857,6 +868,7 @@ extern FPTR_NtQueryDirectoryFile           NtQueryDirectoryFile;
 extern FPTR_NtQueryFullAttributesFile      NtQueryFullAttributesFile;
 extern FPTR_NtQueryVolumeInformationFile   NtQueryVolumeInformationFile;
 extern FPTR_NtCreateEvent                  NtCreateEvent;
+extern FPTR_NtCreateMutant                 NtCreateMutant;
 extern FPTR_NtCreateFile                   NtCreateFile;
 extern FPTR_NtReadFile                     NtReadFile;
 extern FPTR_NtWriteFile                    NtWriteFile;

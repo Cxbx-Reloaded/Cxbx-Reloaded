@@ -64,6 +64,7 @@ namespace XTL
 #include "DSound.1.0.4627.inl"
 #include "XG.1.0.4361.inl"
 #include "XG.1.0.4627.inl"
+#include "XNet.1.0.3911.inl"
 #include "XOnline.1.0.4361.inl"
 
 // ******************************************************************
@@ -176,6 +177,13 @@ HLEData HLEDataBase[] =
         XG_1_0_4627,
         XG_1_0_4627_SIZE
     },
+    // XNet Version 1.0.3911
+    {
+        "XNETS",
+        1, 0, 3911,
+        XNet_1_0_3911,
+        XNet_1_0_3911_SIZE
+    },
     // XOnline Version 1.0.4361
     {
         "XONLINE",
@@ -231,6 +239,7 @@ extern uint32 XRefDataBase[] =
     -1, // XREF_DSSETHEADROOMA
     -1, // XREF_DSSETI3DL2SOURCE1A (Stream)
     -1, // XREF_DSSETI3DL2SOURCE2A (Buffer)
+    -1, // XREF_DSBUFFERSETLOOPREGIONA (Buffer)
     -1, // XREF_DSSTREAMSETMAXDISTANCE1A (Stream)
     -1, // XREF_DSSTREAMSETMAXDISTANCE1B
     -1, // XREF_DSSTREAMSETMAXDISTANCE1C

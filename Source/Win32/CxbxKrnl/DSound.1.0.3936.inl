@@ -209,6 +209,100 @@ SOOVPA<10> IDirectSound8_CreateBuffer_1_0_3936 =
 };
 
 // ******************************************************************
+// * IDirectSoundBuffer8_SetLoopRegionA
+// ******************************************************************
+SOOVPA<9> IDirectSoundBuffer8_SetLoopRegionA_1_0_3936 =
+{
+    0, // Large == 0
+    9, // Count == 9
+
+    XREF_DSBUFFERSETLOOPREGIONA,// XRef Is  Saved
+    0,                          // XRef Not Used
+
+    {
+        // IDirectSoundBuffer8_SetLoopRegionA+0x22 : cmp ecx, [eax+0x4C]
+        { 0x22, 0x3B }, // (Offset,Value)-Pair #1
+        { 0x23, 0x48 }, // (Offset,Value)-Pair #2
+        { 0x24, 0x4C }, // (Offset,Value)-Pair #3
+        
+        // IDirectSoundBuffer8_SetLoopRegionA+0x38 : mov ecx, [esi+0x1C]
+        { 0x38, 0x8B }, // (Offset,Value)-Pair #4
+        { 0x39, 0x4E }, // (Offset,Value)-Pair #5
+        { 0x3A, 0x1C }, // (Offset,Value)-Pair #6
+
+        // IDirectSoundBuffer8_SetLoopRegionA+0x71 : leave; retn 0x0C
+        { 0x71, 0xC9 }, // (Offset,Value)-Pair #7
+        { 0x72, 0xC2 }, // (Offset,Value)-Pair #8
+        { 0x73, 0x0C }, // (Offset,Value)-Pair #9
+    }
+};
+
+// ******************************************************************
+// * IDirectSoundBuffer8_SetLoopRegion
+// ******************************************************************
+SOOVPA<10> IDirectSoundBuffer8_SetLoopRegion_1_0_3936 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    -1, // XRef Not Saved
+    1,  // XRef Is  Used
+
+    {
+        // IDirectSoundBuffer8_SetLoopRegion+0x19 : call [IDirectSoundBuffer8_SetLoopRegionA]
+        { 0x19, XREF_DSBUFFERSETLOOPREGIONA }, // (Offset,Value)-Pair #1
+
+        // IDirectSoundBuffer8_SetLoopRegion+0x04 : push [esp+0x0C]
+        { 0x04, 0xFF }, // (Offset,Value)-Pair #2
+        { 0x05, 0x74 }, // (Offset,Value)-Pair #3
+        { 0x06, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x07, 0x0C }, // (Offset,Value)-Pair #5
+
+        // IDirectSoundBuffer8_SetLoopRegion+0x0E : add eax, 0xFFFFFFE4
+        { 0x0E, 0x83 }, // (Offset,Value)-Pair #6
+        { 0x0F, 0xC0 }, // (Offset,Value)-Pair #7
+        { 0x10, 0xE4 }, // (Offset,Value)-Pair #8
+
+        // IDirectSoundBuffer8_SetLoopRegion+0x1D : retn 0x0C
+        { 0x1D, 0xC2 }, // (Offset,Value)-Pair #9
+        { 0x1E, 0x0C }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
+// * IDirectSoundBuffer8_Play
+// ******************************************************************
+SOOVPA<11> IDirectSoundBuffer8_Play_1_0_3936 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirectSoundBuffer8_Play+0x00 : push [esp+0x10]
+        { 0x00, 0xFF }, // (Offset,Value)-Pair #1
+        { 0x01, 0x74 }, // (Offset,Value)-Pair #2
+        { 0x02, 0x24 }, // (Offset,Value)-Pair #3
+        { 0x03, 0x10 }, // (Offset,Value)-Pair #4
+
+        // IDirectSoundBuffer8_Play+0x12 : and eax, [0xFFFFFFE4]
+        { 0x12, 0x83 }, // (Offset,Value)-Pair #5
+        { 0x13, 0xC0 }, // (Offset,Value)-Pair #6
+        { 0x14, 0xE4 }, // (Offset,Value)-Pair #7
+
+        // IDirectSoundBuffer8_Play+0x17 : sbb ecx, ecx
+        { 0x17, 0x1B }, // (Offset,Value)-Pair #8
+        { 0x18, 0xC9 }, // (Offset,Value)-Pair #9
+
+        // IDirectSoundBuffer8_Play+0x21 : retn 0x10
+        { 0x21, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x22, 0x10 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
 // * CMcpxVoiceClient_SetVolume
 // ******************************************************************
 SOOVPA<10> CMcpxVoiceClient_SetVolume_1_0_3936 =
@@ -2347,6 +2441,34 @@ OOVPATable DSound_1_0_3936[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirectSound8_CreateBuffer" 
+        #endif
+    },
+    // IDirectSoundBuffer8::SetLoopRegion (XREF)
+    {
+        (OOVPA*)&IDirectSoundBuffer8_SetLoopRegionA_1_0_3936, 0,
+
+        #ifdef _DEBUG_TRACE
+        "IDirectSoundBuffer8_SetLoopRegionA (XRef)"
+        #endif
+    },
+    // IDirectSoundBuffer8::SetLoopRegion
+    {
+        (OOVPA*)&IDirectSoundBuffer8_SetLoopRegion_1_0_3936,
+
+        XTL::EmuIDirectSoundBuffer8_SetLoopRegion,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSoundBuffer8_SetLoopRegion" 
+        #endif
+    },
+    // IDirectSoundBuffer8::Play
+    {
+        (OOVPA*)&IDirectSoundBuffer8_Play_1_0_3936,
+
+        XTL::EmuIDirectSoundBuffer8_Play,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSoundBuffer8_Play" 
         #endif
     },
     // CMcpxVoiceClient_SetVolume

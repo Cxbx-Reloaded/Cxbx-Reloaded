@@ -1066,7 +1066,7 @@ XBSYSAPI EXPORTNUM(189) NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 
     EmuSwapFS();   // Xbox FS
 
-    return STATUS_SUCCESS;
+    return ret;
 }
 
 // ******************************************************************
@@ -1225,6 +1225,66 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
 
     // NOTE: We can map this to IoCreateFile once implemented (if ever necessary)
     //       xboxkrnl::IoCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, 0);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
+}
+
+// ******************************************************************
+// * 0x00C0 - NtCreateMutant
+// ******************************************************************
+XBSYSAPI EXPORTNUM(192) NTSTATUS NTAPI xboxkrnl::NtCreateMutant
+(
+    OUT PHANDLE             MutantHandle,
+    IN  POBJECT_ATTRIBUTES  ObjectAttributes,
+    IN  BOOLEAN             InitialOwner
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): NtCreateMutant\n"
+               "(\n"
+               "   MutantHandle        : 0x%.08X\n"
+               "   ObjectAttributes    : 0x%.08X\n"
+               "   InitialOwner        : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), MutantHandle, ObjectAttributes, InitialOwner);
+    }
+    #endif
+
+    char *szBuffer = (ObjectAttributes != 0) ? ObjectAttributes->ObjectName->Buffer : 0;
+
+    wchar_t wszObjectName[160];
+
+    NtDll::UNICODE_STRING    NtUnicodeString;
+    NtDll::OBJECT_ATTRIBUTES NtObjAttr;
+
+    // ******************************************************************
+    // * Initialize Object Attributes
+    // ******************************************************************
+    if(szBuffer != 0)
+    {
+        mbstowcs(wszObjectName, szBuffer, 160);
+
+        NtDll::RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
+
+        InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, g_hBaseNamedObjects, NULL);
+    }
+
+    _asm int 3
+
+    NTSTATUS ret = NtDll::NtCreateMutant(MutantHandle, MUTANT_ALL_ACCESS, (szBuffer != 0) ? &NtObjAttr : 0, InitialOwner);
+
+    if(FAILED(ret))
+        EmuCleanup("NtCreateMutant Failed (0x%.08X)!", ret);
+    else
+        EmuCleanup("NtCreateMutant Success");
 
     EmuSwapFS();   // Xbox FS
 

@@ -115,6 +115,28 @@ INT WINAPI XTL::EmuXNetStartup
 }
 
 // ******************************************************************
+// * func: EmuXNetGetEthernetLinkStatus
+// ******************************************************************
+DWORD WINAPI XTL::EmuXNetGetEthernetLinkStatus()
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuXNetGetEthernetLinkStatus();\n", GetCurrentThreadId());
+    }
+    #endif
+
+    EmuSwapFS();   // XBox FS
+
+    // for now, no ethernet connection is available
+    return 0;
+}
+
+// ******************************************************************
 // * func: EmuThis::Emusocket
 // ******************************************************************
 SOCKET XTL::EmuThis::Emusocket

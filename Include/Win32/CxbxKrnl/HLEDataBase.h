@@ -48,6 +48,7 @@
 #include "DSound.1.0.4627.h"
 #include "XG.1.0.4361.h"
 #include "XG.1.0.4627.h"
+#include "XNet.1.0.3911.h"
 #include "XOnline.1.0.4361.h"
 
 // ******************************************************************
@@ -127,6 +128,7 @@ enum XRefDataBaseOffset
     XREF_DSSETHEADROOMA,
     XREF_DSSETI3DL2SOURCE1A,
     XREF_DSSETI3DL2SOURCE2A,
+    XREF_DSBUFFERSETLOOPREGIONA,
     XREF_DSSTREAMSETMAXDISTANCE1A,
     XREF_DSSTREAMSETMAXDISTANCE1B,
     XREF_DSSTREAMSETMAXDISTANCE1C,
