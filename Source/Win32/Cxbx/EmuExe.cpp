@@ -362,7 +362,7 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console) : Exe()
             // * decode kernel thunk address
             // ******************************************************************
             {
-                if(kt ^ XOR_KT_DEBUG > 0x01000000)
+                if((kt ^ XOR_KT_DEBUG) > 0x01000000)
                     kt ^= XOR_KT_RETAIL;
                 else
                     kt ^= XOR_KT_DEBUG;
