@@ -214,7 +214,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			// * draw splash/logo/status
 			// ******************************************************************
 			{
-				BitBlt(hDC, 0, (m_Xbe == 0) ? 0 : 10, 320, 160, m_BackDC, 0, 0, SRCCOPY);
+				BitBlt(hDC, 0, (m_Xbe != 0) ? 0 : 10, 320, 160, m_BackDC, 0, 0, SRCCOPY);
 				BitBlt(hDC, 220, 168, 100, 17, m_LogoDC, 0, 0, SRCCOPY);
 
 				int nHeight = -MulDiv(8, GetDeviceCaps(hDC, LOGPIXELSY), 72);
@@ -730,7 +730,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     else
                         m_KrnlDebug = DM_NONE;
 
-                    MessageBox(m_hwnd, "This will not take effect until emulation is (re)started.\n", "Cxbx", MB_OK);
+                    MessageBox(m_hwnd, "This will not take effect until the next time emulation is started.\n", "Cxbx", MB_OK);
 
                     m_bExeChanged = true;
 

@@ -59,7 +59,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         Sleep(10);
 
     if(MainWindow->GetError() != 0)
-        MessageBox(NULL, MainWindow->GetError(), "Cxbx", MB_OK);
+        MessageBox(NULL, MainWindow->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
 
     delete MainWindow;
 
