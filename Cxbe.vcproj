@@ -43,7 +43,6 @@
 				OutputFile=".\Bin/Cxbe.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
-				IgnoreDefaultLibraryNames="libc"
 				ProgramDatabaseFile=".\Bin/Cxbe.pdb"
 				SubSystem="1"/>
 			<Tool
@@ -98,7 +97,6 @@
 				OutputFile=".\Bin/Debug/Cxbe.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
-				IgnoreDefaultLibraryNames="libc"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Bin/Debug/Cxbe.pdb"
 				SubSystem="1"/>

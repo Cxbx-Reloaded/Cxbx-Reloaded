@@ -41,14 +41,14 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="d3d8.lib dinput8.lib dxguid.lib ntdll.lib odbc32.lib odbccp32.lib"
-				OutputFile="Bin\Debug/Cxbx.dll"
+				OutputFile=".\Bin\Debug/CxbxKrnl.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="Lib"
 				IgnoreDefaultLibraryNames="libc"
 				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile=".\Bin\Debug/Cxbx.pdb"
-				ImportLibrary=".\Bin\Debug/Cxbx.lib"/>
+				ProgramDatabaseFile=".\Bin\Debug/CxbxKrnl.pdb"
+				ImportLibrary=".\Bin\Debug/CxbxKrnl.lib"/>
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="_DEBUG"
@@ -182,6 +182,9 @@
 				RelativePath=".\Include\Win32\CxbxKrnl\D3D8.1.0.3925.h">
 			</File>
 			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\D3D8.1.0.4034.h">
+			</File>
+			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\D3D8.1.0.4361.h">
 			</File>
 			<File
@@ -227,6 +230,9 @@
 				RelativePath=".\Include\Win32\CxbxKrnl\Xapi.1.0.3911.h">
 			</File>
 			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\Xapi.1.0.4034.h">
+			</File>
+			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\Xapi.1.0.4361.h">
 			</File>
 			<File
@@ -268,6 +274,9 @@
 				RelativePath=".\Source\Win32\CxbxKrnl\D3D8.1.0.3925.inl">
 			</File>
 			<File
+				RelativePath=".\Source\Win32\CxbxKrnl\D3D8.1.0.4034.inl">
+			</File>
+			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\D3D8.1.0.4361.inl">
 			</File>
 			<File
@@ -292,7 +301,7 @@
 				RelativePath=".\Source\Win32\CxbxKrnl\EmuLDT.cpp">
 			</File>
 			<File
-				RelativePath=".\Source\Win32\CxbxKrnl\EmuShared.cpp">
+				RelativePath=".\Source\Win32\EmuShared.cpp">
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\EmuXapi.cpp">
@@ -301,10 +310,19 @@
 				RelativePath=".\Source\Win32\CxbxKrnl\HLEDataBase.cpp">
 			</File>
 			<File
+				RelativePath=".\Source\Win32\InputConfig.cpp">
+			</File>
+			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\KernelThunk.cpp">
 			</File>
 			<File
+				RelativePath=".\Source\Win32\Mutex.cpp">
+			</File>
+			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\Xapi.1.0.3911.inl">
+			</File>
+			<File
+				RelativePath=".\Source\Win32\CxbxKrnl\Xapi.1.0.4034.inl">
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\Xapi.1.0.4361.inl">

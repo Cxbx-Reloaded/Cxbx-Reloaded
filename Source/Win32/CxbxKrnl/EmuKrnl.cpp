@@ -271,6 +271,8 @@ XBSYSAPI EXPORTNUM(66) NTSTATUS NTAPI xboxkrnl::IoCreateFile
     }
     #endif
 
+    _asm int 3
+
     EmuSwapFS();   // Xbox FS
 
     return STATUS_SUCCESS;

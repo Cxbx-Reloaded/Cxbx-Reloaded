@@ -106,7 +106,7 @@ upxCxbx.bat
 				OutputFile=".\Bin\Debug/Cxbx.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
-				IgnoreDefaultLibraryNames="libc"
+				IgnoreDefaultLibraryNames="libcd"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Bin\Debug/Cxbx.pdb"
 				SubSystem="2"/>
