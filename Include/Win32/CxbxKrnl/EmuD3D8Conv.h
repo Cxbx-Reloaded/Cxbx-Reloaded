@@ -70,8 +70,15 @@ inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 {
     switch(Format)
     {
-        case 0:
-            return (D3DFORMAT)NULL;
+        case 0x00: // Swizzled   (X_D3DFMT_L8)
+        case 0x01: // Swizzled   (X_D3DFMT_AL8) // NOTE: Hack: Alpha ignored, basically
+            return D3DFMT_L8;
+
+        case 0x02: // Swizzled   (X_D3DFMT_A1R5G5B5)
+            return D3DFMT_A1R5G5B5;
+
+        case 0x1A: // Swizzled   (X_D3DFMT_A8L8)
+            return D3DFMT_R5G6B5;   // NOTE: HACK: Totally and utterly wrong :)
 
         case 0x04: // Swizzled   (X_D3DFMT_A4R4G4B4)
             return D3DFMT_A4R4G4B4;

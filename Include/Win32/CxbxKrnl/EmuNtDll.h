@@ -350,6 +350,16 @@ typedef enum _EVENT_TYPE
 EVENT_TYPE;
 
 // ******************************************************************
+// * OBJECT_WAIT_TYPE
+// ******************************************************************
+typedef enum _OBJECT_WAIT_TYPE
+{
+    WaitAllObject,
+    WaitAnyObject
+}
+OBJECT_WAIT_TYPE;
+
+// ******************************************************************
 // * CREATE_FILE_TYPE
 // ******************************************************************
 typedef enum _CREATE_FILE_TYPE
@@ -690,6 +700,18 @@ typedef NTSTATUS (NTAPI *FPTR_NtWaitForSingleObject)
 );
 
 // ******************************************************************
+// * NtWaitForMultipleObjects
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtWaitForMultipleObjects)
+(
+    IN ULONG                ObjectCount,
+    IN PHANDLE              ObjectsArray,
+    IN OBJECT_WAIT_TYPE     WaitType,
+    IN BOOLEAN              Alertable,
+    IN PLARGE_INTEGER       TimeOut OPTIONAL
+);
+
+// ******************************************************************
 // * NtCreateEvent
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtCreateEvent)
@@ -921,6 +943,7 @@ extern FPTR_RtlInitializeCriticalSection   RtlInitializeCriticalSection;
 extern FPTR_RtlEnterCriticalSection        RtlEnterCriticalSection;
 extern FPTR_RtlLeaveCriticalSection        RtlLeaveCriticalSection;
 extern FPTR_NtWaitForSingleObject          NtWaitForSingleObject;
+extern FPTR_NtWaitForMultipleObjects       NtWaitForMultipleObjects;
 extern FPTR_RtlCreateHeap                  RtlCreateHeap;
 extern FPTR_RtlAllocateHeap                RtlAllocateHeap;
 extern FPTR_RtlFreeHeap                    RtlFreeHeap;

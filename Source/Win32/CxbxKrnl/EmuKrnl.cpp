@@ -1957,7 +1957,7 @@ XBSYSAPI EXPORTNUM(232) VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
 XBSYSAPI EXPORTNUM(234) NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObjectEx
 (
     IN  HANDLE          Handle,
-    IN  DWORD           WaitMode,
+    IN  CHAR            WaitMode,
     IN  BOOLEAN         Alertable,
     IN  PLARGE_INTEGER  Timeout
 )
@@ -1979,6 +1979,45 @@ XBSYSAPI EXPORTNUM(234) NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObjectEx
     #endif
 
     NTSTATUS ret = NtDll::NtWaitForSingleObject(Handle, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
+}
+
+// ******************************************************************
+// * NtWaitForMultipleObjectsEx
+// ******************************************************************
+XBSYSAPI EXPORTNUM(235) NTSTATUS NTAPI xboxkrnl::NtWaitForMultipleObjectsEx
+(
+    IN  ULONG           Count,
+    IN  HANDLE         *Handles,
+    IN  WAIT_TYPE       WaitType,
+    IN  CHAR            WaitMode,
+    IN  BOOLEAN         Alertable,
+    IN  PLARGE_INTEGER  Timeout
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): NtWaitForMultipleObjectsEx\n"
+               "(\n"
+               "   Count                : 0x%.08X\n"
+               "   Handles              : 0x%.08X\n"
+               "   WaitType             : 0x%.08X\n"
+               "   WaitMode             : 0x%.08X\n"
+               "   Alertable            : 0x%.08X\n"
+               "   Timeout              : 0x%.08X (%d)\n"
+               ");\n",
+               GetCurrentThreadId(), Count, Handles, WaitType, WaitMode, Alertable,
+               Timeout, Timeout == 0 ? 0 : Timeout->QuadPart);
+    }
+    #endif
+
+    NTSTATUS ret = NtDll::NtWaitForMultipleObjects(Count, Handles, (NtDll::OBJECT_WAIT_TYPE)WaitType, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
 
     EmuSwapFS();   // Xbox FS
 

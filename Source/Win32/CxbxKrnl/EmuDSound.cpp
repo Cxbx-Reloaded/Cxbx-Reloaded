@@ -209,7 +209,8 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
 
     DSBUFFERDESC DSBufferDesc;
 
-    DWORD dwBytes = 16384; // NOTE: HACK: TEMPORARY FOR STELLA/HALO
+//    DWORD dwBytes = 16384; // NOTE: HACK: TEMPORARY FOR STELLA/HALO
+    DWORD dwBytes = 131072; // NOTE: HACK: TEMPORARY FOR STELLA/HALO
 
     if(dwBytes < pdsbd->dwBufferBytes)
         dwBytes = pdsbd->dwBufferBytes;

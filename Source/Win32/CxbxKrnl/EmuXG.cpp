@@ -153,7 +153,8 @@ VOID WINAPI XTL::EmuXGUnswizzleRect
 	DWORD i = 1;
 	DWORD j = 1;
 
-	while( (i >= dwWidth) || (i >= dwHeight) || (i >= dwDepth) )
+//	while( (i >= dwWidth) || (i >= dwHeight) || (i >= dwDepth) )
+    while( (i <= dwWidth) || (i <= dwHeight) || (i <= dwDepth) )
     {
         if(i < dwWidth)
         {

@@ -2709,6 +2709,8 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
             X_D3DFORMAT X_Format = (X_D3DFORMAT)((pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
             D3DFORMAT   Format   = EmuXB2PC_D3DFormat(X_Format);
 
+            // TODO: check for dimensions
+
             // TODO: HACK: Temporary?
             if(X_Format == 0x2E)
             {
@@ -2720,9 +2722,6 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
             BOOL  bSwizzled = FALSE, bCompressed = FALSE, dwCompressedSize = 0;
             BOOL  bCubemap = pPixelContainer->Format & X_D3DFORMAT_CUBEMAP;
 
-            if(bCubemap)
-                EmuCleanup("Cubemaps are temporarily unsupported");
-
             // Interpret Width/Height/BPP
             if(X_Format == 0x07 /* X_D3DFMT_X8R8G8B8 */ || X_Format == 0x06 /* X_D3DFMT_A8R8G8B8 */)
             {
@@ -2731,20 +2730,31 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 // Swizzled 32 Bit
                 dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
                 dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
-                dwDepth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
+                dwDepth  = 1;// HACK? 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
                 dwPitch  = dwWidth*4;
                 dwBPP = 4;
             }
-            else if(X_Format == 0x05 /* X_D3DFMT_R5G6B5 */ || X_Format == 0x04 /* X_D3DFMT_A4R4G4B4 */)
+            else if(X_Format == 0x05 /* X_D3DFMT_R5G6B5 */ || X_Format == 0x04 /* X_D3DFMT_A4R4G4B4 */ || X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */)
             {
                 bSwizzled = TRUE;
 
                 // Swizzled 16 Bit
                 dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
                 dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
-                dwDepth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
+                dwDepth  = 1;// HACK? 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
                 dwPitch  = dwWidth*2;
                 dwBPP = 2;
+            }
+            else if(X_Format == 0x00 /* X_D3DFMT_L8 */ || X_Format == 0x01 /* X_D3DFMT_AL8 */ || X_Format == 0x1A /* X_D3DFMT_A8L8 */)
+            {
+                bSwizzled = TRUE;
+
+                // Swizzled 8 Bit
+                dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
+                dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
+                dwDepth  = 1;// HACK? 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
+                dwPitch  = dwWidth;
+                dwBPP = 1;
             }
             else if(X_Format == 0x1E /* X_D3DFMT_LIN_X8R8G8B8 */ || X_Format == 0x12 /* X_D3DFORMAT_A8R8G8B8 */ || X_Format == 0x2E /* D3DFMT_LIN_D24S8 */)
             {
@@ -2809,85 +2819,119 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                     dwMipMapLevels = 3;
                 }
 
-                #ifdef _DEBUG_TRACE
-                printf("CreateTexture(%d, %d, %d, 0, %d, D3DPOOL_MANAGED, 0x%.08X)\n", dwWidth, dwHeight,
-                    dwMipMapLevels, Format, &pResource->EmuTexture8);
-                #endif
-
-                hRet = g_pD3DDevice8->CreateTexture
-                (
-                    dwWidth, dwHeight, dwMipMapLevels, 0, Format,
-                    D3DPOOL_MANAGED, &pResource->EmuTexture8
-                );
-
-                if(FAILED(hRet))
-                    EmuCleanup("CreateTexture Failed!");
-            }
-
-            D3DLOCKED_RECT LockedRect;
-
-            // copy over data (deswizzle if necessary)
-            if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
-                hRet = pResource->EmuSurface8->LockRect(&LockedRect, NULL, 0);
-            else
-                hRet = pResource->EmuTexture8->LockRect(0, &LockedRect, NULL, 0);
-
-            RECT  iRect  = {0,0,0,0};
-            POINT iPoint = {0,0};
-
-            BYTE *pSrc = (BYTE*)pBase;
-
-            if(pResource->Data == X_D3DRESOURCE_DATA_FLAG_SURFACE)
-            {
-                EmuWarning("Attempt to registered to another resource's data (eww!)");
-
-                // TODO: handle this horrible situation
-                BYTE *pDest = (BYTE*)LockedRect.pBits;
-                for(DWORD v=0;v<dwHeight;v++)
+                if(bCubemap)
                 {
-                    memset(pDest, 0, dwWidth*dwBPP);
+                    #ifdef _DEBUG_TRACE
+                    printf("CreateCubeTexture(%d, %d, 0, %d, D3DPOOL_MANAGED, 0x%.08X)\n", dwWidth,
+                        dwMipMapLevels, Format, &pResource->EmuTexture8);
+                    #endif
 
-                    pDest += LockedRect.Pitch;
-                    pSrc  += dwPitch;
-                }
-            }
-            else
-            {
-                if(bSwizzled)
-                {
-                    XTL::EmuXGUnswizzleRect
+                    hRet = g_pD3DDevice8->CreateCubeTexture
                     (
-                        pSrc, dwWidth, dwHeight, dwDepth, LockedRect.pBits, 
-                        LockedRect.Pitch, iRect, iPoint, dwBPP
+                        dwWidth, dwMipMapLevels, 0, Format,
+                        D3DPOOL_MANAGED, &pResource->EmuCubeTexture8
                     );
-                }
-                else if(bCompressed)
-                {
-                    memcpy(LockedRect.pBits, pSrc, dwCompressedSize);
+
+                    if(FAILED(hRet))
+                        EmuCleanup("CreateCubeTexture Failed!");
                 }
                 else
                 {
-                    BYTE *pDest = (BYTE*)LockedRect.pBits;
+                    #ifdef _DEBUG_TRACE
+                    printf("CreateTexture(%d, %d, %d, 0, %d, D3DPOOL_MANAGED, 0x%.08X)\n", dwWidth, dwHeight,
+                        dwMipMapLevels, Format, &pResource->EmuTexture8);
+                    #endif
 
-                    if((DWORD)LockedRect.Pitch == dwPitch && dwPitch == dwWidth*dwBPP)
-                        memcpy(pDest, pSrc, dwWidth*dwHeight*dwBPP);
-                    else
-                    {
-                        for(DWORD v=0;v<dwHeight;v++)
-                        {
-                            memcpy(pDest, pSrc, dwWidth*dwBPP);
+                    hRet = g_pD3DDevice8->CreateTexture
+                    (
+                        dwWidth, dwHeight, dwMipMapLevels, 0, Format,
+                        D3DPOOL_MANAGED, &pResource->EmuTexture8
+                    );
 
-                            pDest += LockedRect.Pitch;
-                            pSrc  += dwPitch;
-                        }
-                    }
+                    if(FAILED(hRet))
+                        EmuCleanup("CreateTexture Failed!");
                 }
             }
 
-            if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
-                pResource->EmuSurface8->UnlockRect();
-            else
-                pResource->EmuTexture8->UnlockRect(0);
+            uint32 stop = bCubemap ? 6 : 1;
+
+            for(uint32 r=0;r<stop;r++)
+            {
+                D3DLOCKED_RECT LockedRect;
+
+                // copy over data (deswizzle if necessary)
+                if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
+                    hRet = pResource->EmuSurface8->LockRect(&LockedRect, NULL, 0);
+                else
+                {
+                    if(bCubemap)
+                        hRet = pResource->EmuCubeTexture8->LockRect((D3DCUBEMAP_FACES)r, 0, &LockedRect, NULL, 0);
+                    else
+                        hRet = pResource->EmuTexture8->LockRect(0, &LockedRect, NULL, 0);
+                }
+
+                RECT  iRect  = {0,0,0,0};
+                POINT iPoint = {0,0};
+
+                BYTE *pSrc = (BYTE*)pBase;
+
+                if(pResource->Data == X_D3DRESOURCE_DATA_FLAG_SURFACE)
+                {
+                    EmuWarning("Attempt to registered to another resource's data (eww!)");
+
+                    // TODO: handle this horrible situation
+                    BYTE *pDest = (BYTE*)LockedRect.pBits;
+                    for(DWORD v=0;v<dwHeight;v++)
+                    {
+                        memset(pDest, 0, dwWidth*dwBPP);
+
+                        pDest += LockedRect.Pitch;
+                        pSrc  += dwPitch;
+                    }
+                }
+                else
+                {
+                    if(bSwizzled)
+                    {
+                        XTL::EmuXGUnswizzleRect
+                        (
+                            pSrc, dwWidth, dwHeight, dwDepth, LockedRect.pBits, 
+                            LockedRect.Pitch, iRect, iPoint, dwBPP
+                        );
+                    }
+                    else if(bCompressed)
+                    {
+                        memcpy(LockedRect.pBits, pSrc, dwCompressedSize);
+                    }
+                    else
+                    {
+                        BYTE *pDest = (BYTE*)LockedRect.pBits;
+
+                        if((DWORD)LockedRect.Pitch == dwPitch && dwPitch == dwWidth*dwBPP)
+                            memcpy(pDest, pSrc, dwWidth*dwHeight*dwBPP);
+                        else
+                        {
+                            for(DWORD v=0;v<dwHeight;v++)
+                            {
+                                memcpy(pDest, pSrc, dwWidth*dwBPP);
+
+                                pDest += LockedRect.Pitch;
+                                pSrc  += dwPitch;
+                            }
+                        }
+                    }
+                }
+
+                if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
+                    pResource->EmuSurface8->UnlockRect();
+                else
+                {
+                    if(bCubemap)
+                        pResource->EmuCubeTexture8->UnlockRect((D3DCUBEMAP_FACES)r, 0);
+                    else
+                        pResource->EmuTexture8->UnlockRect(0);
+                }
+            }
 
             // Debug Texture Dumping
             /*
@@ -2903,13 +2947,33 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
             }
             else
             {
-                static int dwDumpTex = 0;
+                if(bCubemap)
+                {
+                    static int dwDumpCube = 0;
 
-                char szBuffer[255];
+                    char szBuffer[255];
 
-                sprintf(szBuffer, "C:\\Aaron\\Textures\\Texture%.03d.bmp", dwDumpTex++);
+                    for(int v=0;v<6;v++)
+                    {
+                        IDirect3DSurface8 *pSurface=0;
 
-                D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pResource->EmuTexture8, NULL);
+                        sprintf(szBuffer, "C:\\Aaron\\Textures\\CubeTex%.03d-%d.bmp", dwDumpCube++, v);
+
+                        pResource->EmuCubeTexture8->GetCubeMapSurface((D3DCUBEMAP_FACES)v, 0, &pSurface);
+
+                        D3DXSaveSurfaceToFile(szBuffer, D3DXIFF_BMP, pSurface, NULL, NULL);
+                    }
+                }
+                else
+                {
+                    static int dwDumpTex = 0;
+
+                    char szBuffer[255];
+
+                    sprintf(szBuffer, "C:\\Aaron\\Textures\\Texture%.03d.bmp", dwDumpTex++);
+
+                    D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pResource->EmuTexture8, NULL);
+                }
             }
             //*/
         }

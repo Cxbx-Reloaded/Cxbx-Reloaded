@@ -620,36 +620,6 @@ SOOVPA<10> CDirectSoundBuffer_GetCurrentPosition_1_0_4361 =
 };
 
 // ******************************************************************
-// * IDirectSoundBuffer8_GetCurrentPosition
-// ******************************************************************
-SOOVPA<8> IDirectSoundBuffer8_GetCurrentPosition_1_0_4361 =
-{
-    0,  // Large == 0
-    8,  // Count == 8
-
-    -1, // XRef Not Saved
-    1,  // XRef Is  Used
-
-    {
-        // IDirectSoundBuffer8_GetCurrentPosition+0x19 : call [CDirectSoundBuffer::GetCurrentPosition]
-        { 0x19, XREF_GETCURRENTPOSITION2 },  // (Offset,Value)-Pair #1
-
-        // IDirectSoundBuffer8_GetCurrentPosition+0x0E : add eax, 0xFFFFFFE4
-        { 0x0E, 0x83 }, // (Offset,Value)-Pair #2
-        { 0x0F, 0xC0 }, // (Offset,Value)-Pair #3
-        { 0x10, 0xE4 }, // (Offset,Value)-Pair #4
-
-        // IDirectSoundBuffer8_GetCurrentPosition+0x13 : sbb ecx, ecx
-        { 0x13, 0x1B }, // (Offset,Value)-Pair #5
-        { 0x14, 0xC9 }, // (Offset,Value)-Pair #6
-
-        // IDirectSoundBuffer8_GetCurrentPosition+0x15 : and ecx, eax
-        { 0x15, 0x23 }, // (Offset,Value)-Pair #7
-        { 0x16, 0xC8 }, // (Offset,Value)-Pair #8
-    }
-};
-
-// ******************************************************************
 // * CMcpxBuffer_Play
 // ******************************************************************
 SOOVPA<11> CMcpxBuffer_Play_1_0_4361 =
@@ -1005,9 +975,9 @@ OOVPATable DSound_1_0_4361[] =
         "CDirectSoundBuffer_GetCurrentPosition (XREF)"
         #endif
     },
-    // IDirectSoundBuffer8::GetCurrentPosition
+    // IDirectSoundBuffer8::GetCurrentPosition (* unchanged since 3936 *)
     {
-        (OOVPA*)&IDirectSoundBuffer8_GetCurrentPosition_1_0_4361, 
+        (OOVPA*)&IDirectSoundBuffer8_GetCurrentPosition_1_0_3936, 
             
         XTL::EmuIDirectSoundBuffer8_GetCurrentPosition,
 

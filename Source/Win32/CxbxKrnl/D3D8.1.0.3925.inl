@@ -1625,6 +1625,39 @@ SOOVPA<10> IDirect3DResource8_AddRef_1_0_3925 =
 };
 
 // ******************************************************************
+// * IDirect3DResource8_IsBusy
+// ******************************************************************
+SOOVPA<11> IDirect3DResource8_IsBusy_1_0_3925 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DResource8_IsBusy+0x24 : test eax, 0x780000
+        { 0x24, 0xA9 }, // (Offset,Value)-Pair #1
+        { 0x25, 0x00 }, // (Offset,Value)-Pair #2
+        { 0x26, 0x00 }, // (Offset,Value)-Pair #3
+        { 0x27, 0x78 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DResource8_IsBusy+0x35 : jnz +0x44
+        { 0x35, 0x75 }, // (Offset,Value)-Pair #5
+        { 0x36, 0x44 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DResource8_IsBusy+0x4E : mov eax, [ecx+0x14]
+        { 0x4E, 0x8B }, // (Offset,Value)-Pair #7
+        { 0x4F, 0x41 }, // (Offset,Value)-Pair #8
+        { 0x50, 0x14 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DResource8_IsBusy+0x79 : jnb +0x09
+        { 0x79, 0x73 }, // (Offset,Value)-Pair #10
+        { 0x7A, 0x09 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
 // * IDirect3DPalette8_Lock
 // ******************************************************************
 SOOVPA<13> IDirect3DPalette8_Lock_1_0_3925 =
@@ -2310,6 +2343,16 @@ OOVPATable D3D8_1_0_3925[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DResource8_AddRef"
+        #endif
+    },
+    // IDirect3DResource8::IsBusy
+    {
+        (OOVPA*)&IDirect3DResource8_IsBusy_1_0_3925,
+
+        XTL::EmuIDirect3DResource8_IsBusy,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DResource8_IsBusy"
         #endif
     },
     // IDirect3DPalette8::Lock

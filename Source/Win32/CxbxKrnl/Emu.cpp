@@ -492,7 +492,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         // _USE_XGMATH Disabled in mesh :[
         // halo : dword_0_2E2D18
         // halo : 1744F0 (bink)
-        _asm int 3
+        //_asm int 3
 
         Entry();
 
@@ -687,93 +687,6 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
                     return EXCEPTION_CONTINUE_EXECUTION;
                 }
             }
-
-            /* obsolete
-            // Halo Access Adjust 1
-            if(e->ContextRecord->Eip == 0x0003394C)
-            {
-                if(e->ContextRecord->Ecx == 0x803BD800)
-                {
-                    uint32 fix = g_HaloHack[1] + (e->ContextRecord->Eax - 0x803A6000);
-
-                    e->ContextRecord->Eax = e->ContextRecord->Ecx = fix;
-
-                    *(uint32*)e->ContextRecord->Esp = fix;
-
-                    ((XTL::X_D3DResource*)fix)->Data = g_HaloHack[1] + (((XTL::X_D3DResource*)fix)->Data - 0x803A6000);
-
-                    #ifdef _DEBUG_TRACE
-                    printf("EmuMain (0x%X): Halo Access Adjust 1 was applied!\n", GetCurrentThreadId());
-                    #endif
-
-                    return EXCEPTION_CONTINUE_EXECUTION;
-                }
-            }
-            // Halo Access Adjust 2
-            else if(e->ContextRecord->Eip == 0x00033977)
-            {
-                if(e->ContextRecord->Eax == 0x803DA660)
-                {
-                    uint32 fix = g_HaloHack[1] + (e->ContextRecord->Eax - 0x803A6000);
-
-                    e->ContextRecord->Eax = fix;
-
-                    #ifdef _DEBUG_TRACE
-                    printf("EmuMain (0x%X): Halo Access Adjust 2 was applied!\n", GetCurrentThreadId());
-                    #endif
-
-                    return EXCEPTION_CONTINUE_EXECUTION;
-                }
-            }
-            // Halo Access Adjust 3
-            else if(e->ContextRecord->Eip == 0x00058DF1)
-            {
-                if(e->ContextRecord->Ecx == 0x803A6024)
-                {
-                    uint32 fix = g_HaloHack[1] + (e->ContextRecord->Ecx - 0x803A6000);
-
-                    e->ContextRecord->Ecx = fix;
-
-                    #ifdef _DEBUG_TRACE
-                    printf("EmuMain (0x%X): Halo Access Adjust 3 was applied!\n", GetCurrentThreadId());
-                    #endif
-
-                    return EXCEPTION_CONTINUE_EXECUTION;
-                }
-            }
-            // Halo Access Adjust 4
-            else if(e->ContextRecord->Eip == 0x00058DF5)
-            {
-                if(e->ContextRecord->Eax == 0x803DDA20)
-                {
-                    uint32 fix = g_HaloHack[1] + (e->ContextRecord->Eax - 0x803A6000);
-
-                    e->ContextRecord->Eax = fix;
-
-                    #ifdef _DEBUG_TRACE
-                    printf("EmuMain (0x%X): Halo Access Adjust 4 was applied!\n", GetCurrentThreadId());
-                    #endif
-
-                    return EXCEPTION_CONTINUE_EXECUTION;
-                }
-            }
-            // Halo Access Adjust 5
-            else if(e->ContextRecord->Eip == 0x0003523E)
-            {
-                if(e->ContextRecord->Ecx == 0x803A6024)
-                {
-                    uint32 fix = g_HaloHack[1] + (e->ContextRecord->Eax - 0x803A6000);
-
-                    e->ContextRecord->Eax = fix;
-
-                    #ifdef _DEBUG_TRACE
-                    printf("EmuMain (0x%X): Halo Access Adjust 5 was applied!\n", GetCurrentThreadId());
-                    #endif
-
-                    return EXCEPTION_CONTINUE_EXECUTION;
-                }
-            }
-            //*/
         }
     }
 
@@ -1047,8 +960,6 @@ static void EmuXRefFailure()
 {
     EmuSwapFS();    // Win2k/XP FS
     
-    _asm int 3
-
     EmuCleanup("XRef-only function body reached. Fatal Error.");
 }
 
