@@ -254,11 +254,52 @@ void EmuXInstallWrappers(void (*Entry)(), Xbe::Header *XbeHeader)
         // * install CreateThread vector
         // ******************************************************************
         {
-            void *RealCreateThread = EmuXFindFuncByIndirectCall(Entry, 0x54);
+            for(uint32 a=0;a<sizeof(*XAPI_1_0_4361)/sizeof(OOVPATable);a++)
+            {
+                OOVPA *Oovpa = XAPI_1_0_4361[a].Oovpa;
 
-            printf("EmuXInstallWrappers: CreateThread    -> 0x%.08X\n", RealCreateThread);
+                uint32 count = Oovpa->Count;
+                uint32 lower = XbeHeader->dwBaseAddr;
+                uint32 upper = XbeHeader->dwBaseAddr + XbeHeader->dwSizeofImage;
 
-            EmuXInstallWrapper(RealCreateThread, xboxkrnl::EmuXCreateThread);
+                if(Oovpa->Large == 1)
+                {
+                    LOOVPA<1> *Loovpa = (LOOVPA<1>*)Oovpa;
+                }
+                else
+                {
+                    SOOVPA<1> *Soovpa = (SOOVPA<1>*)Oovpa;
+
+                    upper -= Soovpa->Sovp[count-1].Offset;
+
+                    for(uint32 cur=lower;cur<upper;cur++)
+                    {
+                        uint32  v=0;
+
+                        for(v=0;v<count;v++)
+                        {
+                            uint32 Offset = Soovpa->Sovp[v].Offset;
+                            uint32 Value  = Soovpa->Sovp[v].Value;
+
+                            uint08 RealValue = *(uint08*)(cur + Offset);
+
+                            if(RealValue != Value)
+                                break;
+                        }
+
+                        if(v == count)
+                        {
+                            char buffer[255];
+
+                            sprintf(buffer, "Located %s @ 0x%.08X", XAPI_1_0_4361[a].szFuncName, cur);
+
+                            MessageBox(NULL, buffer, "EmuX", MB_OK);
+
+                            EmuXInstallWrapper((void*)cur, XAPI_1_0_4361[a].lpRedirect);
+                        }
+                    }
+                }
+            }
         }
 
         // ******************************************************************

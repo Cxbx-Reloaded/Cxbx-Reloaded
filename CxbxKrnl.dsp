@@ -186,6 +186,10 @@ SOURCE=.\Source\Win32\CxbxKrnl\EmuXxapi.cpp
 
 SOURCE=.\Source\Win32\CxbxKrnl\KernelThunk.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\OOVPA.cpp
+# End Source File
 # End Group
 # End Target
 # End Project

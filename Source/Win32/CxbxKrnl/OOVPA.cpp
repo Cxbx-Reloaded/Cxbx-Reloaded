@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->OOVPA.h
+// *   Cxbx->Win32->CxbxKrnl->OOVPA.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,72 +31,47 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef OOVPA_H
-#define OOVPA_H
-
-// TODO: Create Copy-Constructor or whatever to convert between OOVP
-// Large, Small, and Generic Versions (maybe)
-
-#pragma pack(1)
+#include "Cxbx.h"
+#include "EmuX.h"
 
 // ******************************************************************
-// * Optimized (Order,Value)-Pair Array
+// * CreateThread (Size : 16 bytes)
 // ******************************************************************
-struct OOVPA
+SOOVPA<8> CreateThread_1_0_4361 =
 {
-    uint16 Large : 1;
-    uint16 Count : 15;
-};
+    0,  // Large == 0
+    8,  // Count == 3
 
-// ******************************************************************
-// * Large Optimized (Order,Value)-Pair Array
-// ******************************************************************
-template <uint16 COUNT> struct LOOVPA
-{
-    uint16 Large : 1;
-    uint16 Count : 15;
-
-    // Large (Order,Value)-Pair(s)
-    struct LOVP
     {
-        uint16 Offset;
-        uint08 Value;
+        // CreateThread+0x0A : mov eax, ds:10130h
+        { 0x0A, 0xA1 }, // (Offset,Value)-Pair #1
+        { 0x0B, 0x30 }, // (Offset,Value)-Pair #2
+        { 0x0C, 0x01 }, // (Offset,Value)-Pair #3
+
+        // CreateThread+0x1C : and ecx, 0xFFFFFF01
+        { 0x1C, 0x81 }, // (Offset,Value)-Pair #4
+        { 0x1D, 0xE1 }, // (Offset,Value)-Pair #5
+        { 0x1E, 0x01 }, // (Offset,Value)-Pair #6
+
+        // CreateThread+0x6B : retn 4
+        { 0x6B, 0xC2 }, // (Offset,Value)-Pair #7
+        { 0x6C, 0x18 }  // (Offset,Value)-Pair #8
     }
-    Lovp[COUNT];
 };
 
 // ******************************************************************
-// * Small Optimized (Order,Value)-Pair Array
+// * XAPI_1_0_4361
 // ******************************************************************
-template <uint16 COUNT> struct SOOVPA
+OOVPATable XAPI_1_0_4361[] =
 {
-    uint16 Large : 1;
-    uint16 Count : 15;
-
-    // Small (Order,Value)-Pair(s)
-    struct SOVP
+    // CreateThread
     {
-        uint08 Offset;
-        uint08 Value;
+        (OOVPA*)&CreateThread_1_0_4361,
+
+        xboxkrnl::EmuXCreateThread,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXCreateThread" 
+        #endif
     }
-    Sovp[COUNT];
 };
-
-// ******************************************************************
-// * OOVPATable
-// ******************************************************************
-struct OOVPATable
-{
-    OOVPA *Oovpa;
-    void  *lpRedirect;
-
-    #ifdef _DEBUG_TRACE
-    char  *szFuncName;
-    #endif
-};
-
-#pragma pack()
-
-extern OOVPATable XAPI_1_0_4361[];
-
-#endif
