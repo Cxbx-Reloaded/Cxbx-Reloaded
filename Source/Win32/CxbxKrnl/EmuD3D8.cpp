@@ -3163,7 +3163,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
     }
     #endif
 
-    HRESULT hRet;
+    HRESULT hRet = S_OK;
 
     X_D3DResource *pResource = (X_D3DResource*)pThis;
 
