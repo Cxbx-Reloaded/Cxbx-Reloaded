@@ -907,6 +907,28 @@ SOOVPA<12> IDirect3DDevice8_SetVertexShaderConstantNotInline_1_0_4627 =
 };
 
 // ******************************************************************
+// * D3DDevice_DeletePixelShader@4
+// ******************************************************************
+SOOVPA<7> IDirect3DDevice8_DeletePixelShader_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x02, 0x24 },
+        { 0x06, 0x75 },
+        { 0x0A, 0x04 },
+        { 0x0E, 0x09 },
+        { 0x12, 0x04 },
+        { 0x18, 0xC2 },
+        { 0x1A, 0x00 },
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetPixelShader
 // ******************************************************************
 SOOVPA<10> IDirect3DDevice8_SetPixelShader_1_0_4627 =
@@ -3175,6 +3197,16 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetVertexShaderConstantNotInline"
+        #endif
+    },
+    // IDirect3DDevice8::DeletePixelShader
+    {
+        (OOVPA*)&IDirect3DDevice8_DeletePixelShader_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_DeletePixelShader,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_DeletePixelShader"
         #endif
     },
     // IDirect3DDevice8::CreatePixelShader (* unchanged since 4361 *)

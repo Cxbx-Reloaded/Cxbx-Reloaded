@@ -386,6 +386,14 @@ VOID __fastcall EmuIDirect3DDevice8_SetVertexShaderConstantNotInline
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_DeletePixelShader
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_DeletePixelShader
+(
+    DWORD          Handle
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_CreatePixelShader
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_CreatePixelShader

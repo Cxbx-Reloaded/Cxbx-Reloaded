@@ -2365,6 +2365,36 @@ VOID __fastcall XTL::EmuIDirect3DDevice8_SetVertexShaderConstantNotInline
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_DeletePixelShader
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_DeletePixelShader
+(
+    DWORD          Handle
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_DeletePixelShader\n"
+           "(\n"
+           "   Handle              : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), Handle);
+
+    if(Handle == X_PIXELSHADER_FAKE_HANDLE)
+    {
+        // Do Nothing!
+    }
+    else
+    {
+        g_pD3DDevice8->DeletePixelShader(Handle);
+    }
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_CreatePixelShader
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreatePixelShader
@@ -2432,11 +2462,9 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetPixelShader
             // simplest possible pixel shader (diffuse only)
             static const char szDiffusePixelShader[] =
                 "ps.1.1                         \n"
-                "def c0, 5.0f, 5.0f, 5.0f, 1.0f \n"
                 "tex t0                         \n" // use texture 0
                 "tex t1                         \n" // use texture 1
-                "mul r1, t0, t1                 \n" // r0 = c0*t0
-                "mul r0, r1, c0                 \n";
+                "mul r0, t0, t1                 \n";// r0 = c0*t0
 
             LPD3DXBUFFER pShader = 0;
             LPD3DXBUFFER pErrors = 0;
