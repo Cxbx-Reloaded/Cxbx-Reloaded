@@ -60,6 +60,9 @@ typedef signed long    sint32;
 // define this to trace warnings
 #define _DEBUG_WARNINGS
 
+// define this to enable wireframe mode
+#define _DEBUG_WIREFRAME
+
 // version information
 #ifndef _DEBUG_TRACE
 #define _CXBX_VERSION "0.7.9-Pre7"

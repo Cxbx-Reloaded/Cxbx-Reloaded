@@ -2552,8 +2552,11 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetTexture
         pBaseTexture8 = pTexture->EmuBaseTexture8;
     }
 
+#ifdef _DEBUG_WIREFRAME
+    HRESULT hRet = g_pD3DDevice8->SetTexture(Stage, 0);
+#else
     HRESULT hRet = g_pD3DDevice8->SetTexture(Stage, pBaseTexture8);
-
+#endif
     EmuSwapFS();   // XBox FS
 
     return hRet;
@@ -5044,8 +5047,11 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_FillMode
     }
     #endif
 
+#ifdef _DEBUG_WIREFRAME
+    g_pD3DDevice8->SetRenderState(D3DRS_FILLMODE, D3DFILL_WIREFRAME);
+#else
     g_pD3DDevice8->SetRenderState(D3DRS_FILLMODE, EmuXB2PC_D3DFILLMODE(Value));
-
+#endif
     EmuSwapFS();   // XBox FS
 
     return;
