@@ -2758,12 +2758,35 @@ static void EmuUpdateDeferredStates()
         if(xd3d8::EmuD3DDeferredRenderState[23] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_AMBIENT,               xd3d8::EmuD3DDeferredRenderState[23]);
 
-        //** To check for unhandled RenderStates
+        if(xd3d8::EmuD3DDeferredRenderState[24] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSIZE,             xd3d8::EmuD3DDeferredRenderState[24]);
+                                                                       
+        if(xd3d8::EmuD3DDeferredRenderState[25] != X_D3DRS_UNK)        
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSIZE_MIN,         xd3d8::EmuD3DDeferredRenderState[25]);
+                                                                       
+        if(xd3d8::EmuD3DDeferredRenderState[26] != X_D3DRS_UNK)        
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSPRITEENABLE,     xd3d8::EmuD3DDeferredRenderState[26]);
+
+        if(xd3d8::EmuD3DDeferredRenderState[27] != X_D3DRS_UNK)        
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALEENABLE,      xd3d8::EmuD3DDeferredRenderState[27]);
+
+        if(xd3d8::EmuD3DDeferredRenderState[28] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALE_A,          xd3d8::EmuD3DDeferredRenderState[28]);
+
+        if(xd3d8::EmuD3DDeferredRenderState[29] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALE_B,          xd3d8::EmuD3DDeferredRenderState[29]);
+
+        if(xd3d8::EmuD3DDeferredRenderState[30] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALE_C,          xd3d8::EmuD3DDeferredRenderState[30]);
+
+        /** To check for unhandled RenderStates
         for(int v=0;v<117-82;v++)
         {
             if(xd3d8::EmuD3DDeferredRenderState[v] != X_D3DRS_UNK)
             {
-                if(v != 0 && v != 1 && v != 10 && v != 11 && v != 20 && v != 23)
+                if(v != 0  && v != 1  && v != 10 && v != 11 && v != 20 && v != 23
+                && v != 24 && v != 25 && v != 26 && v != 27 && v != 28 && v != 29
+                && v != 30)
                     printf("*Warning* Unhandled RenderState Change @ %d (%d)\n", v, v + 82);
             }
         }
@@ -2895,7 +2918,7 @@ static void EmuUpdateDeferredStates()
                         printf("*Warning* Unhandled TextureState Change @ %d->%d\n", v, r);
                 }
             }
-            **/
+            //**/
         }
     }
 }
