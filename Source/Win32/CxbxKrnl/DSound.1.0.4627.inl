@@ -352,38 +352,6 @@ SOOVPA<11> CDirectSoundStream_SetVolume_1_0_4361 =
 };
 
 // ******************************************************************
-// * IDirectSound8_Release
-// ******************************************************************
-SOOVPA<10> IDirectSound8_Release_1_0_4627 =
-{
-    0,  // Large == 0
-    10, // Count == 10
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        // IDirectSound8_Release+0x04 : lea ecx, [eax-8]
-        { 0x04, 0x8D }, // (Offset,Value)-Pair #1
-        { 0x05, 0x48 }, // (Offset,Value)-Pair #2
-        { 0x06, 0xF8 }, // (Offset,Value)-Pair #3
-
-        // IDirectSound8_Release+0x07 : neg eax
-        { 0x07, 0xF7 }, // (Offset,Value)-Pair #4
-        { 0x08, 0xD8 }, // (Offset,Value)-Pair #5
-
-        // IDirectSound8_Release+0x10 : call dword ptr [ecx+8]
-        { 0x10, 0xFF }, // (Offset,Value)-Pair #6
-        { 0x11, 0x51 }, // (Offset,Value)-Pair #7
-        { 0x12, 0x08 }, // (Offset,Value)-Pair #8
-
-        // IDirectSound8_Release+0x13 : retn 0x04
-        { 0x13, 0xC2 }, // (Offset,Value)-Pair #9
-        { 0x14, 0x04 }, // (Offset,Value)-Pair #10
-    }
-};
-
-// ******************************************************************
 // * CDirectSound::SetDistanceFactorA
 // ******************************************************************
 SOOVPA<11> CDirectSound_SetDistanceFactorA_1_0_4627 =
@@ -760,9 +728,9 @@ OOVPATable DSound_1_0_4627[] =
         "IDirectSoundBuffer8_SetBufferData"
         #endif
     },
-    // IDirectSound8::Release
+    // IDirectSound8::Release (* unchanged since 3936 *)
     {
-        (OOVPA*)&IDirectSound8_Release_1_0_4627,
+        (OOVPA*)&IDirectSound8_Release_1_0_3936,
 
         XTL::EmuIDirectSound8_Release,
 

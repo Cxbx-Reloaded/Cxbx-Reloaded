@@ -676,6 +676,43 @@ SOOVPA<11> IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_3925 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetRenderState_CullMode
+// ******************************************************************
+SOOVPA<15> IDirect3DDevice8_SetRenderState_CullMode_1_0_3925 =
+{
+    0,  // Large == 0
+    15, // Count == 15
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetRenderState_CullMode+0x42 : mov dword ptr [eax+8], 0x4039C
+        { 0x42, 0xC7 }, // (Offset,Value)-Pair #1
+        { 0x43, 0x40 }, // (Offset,Value)-Pair #2
+        { 0x44, 0x08 }, // (Offset,Value)-Pair #3
+        { 0x45, 0x9C }, // (Offset,Value)-Pair #4
+        { 0x46, 0x03 }, // (Offset,Value)-Pair #5
+        { 0x47, 0x04 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_SetRenderState_CullMode+0x49 : add eax, 0x10
+        { 0x49, 0x83 }, // (Offset,Value)-Pair #7
+        { 0x4A, 0xC0 }, // (Offset,Value)-Pair #8
+        { 0x4B, 0x10 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DDevice8_SetRenderState_CullMode+0x5F : retn 4
+        { 0x5F, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x60, 0x04 }, // (Offset,Value)-Pair #11
+
+        // IDirect3DDevice8_SetRenderState_CullMode+0x4D : add edx, 0x404
+        { 0x4D, 0x81 }, // (Offset,Value)-Pair #12
+        { 0x4E, 0xC2 }, // (Offset,Value)-Pair #13
+        { 0x4F, 0x04 }, // (Offset,Value)-Pair #14
+        { 0x50, 0x04 }, // (Offset,Value)-Pair #15
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetRenderState_Simple
 // ******************************************************************
 SOOVPA<13> IDirect3DDevice8_SetRenderState_Simple_1_0_3925 =
@@ -1436,6 +1473,36 @@ SOOVPA<11> IDirect3DTexture8_GetSurfaceLevel_1_0_3925 =
 };
 
 // ******************************************************************
+// * Get2DSurfaceDesc
+// ******************************************************************
+SOOVPA<10> Get2DSurfaceDesc_1_0_3925 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // Get2DSurfaceDesc+0x2B : movzx edx, byte ptr [edi+0x0D]
+        { 0x2B, 0x0F }, // (Offset,Value)-Pair #1
+        { 0x2C, 0xB6 }, // (Offset,Value)-Pair #2
+        { 0x2D, 0x57 }, // (Offset,Value)-Pair #3
+        { 0x2E, 0x0D }, // (Offset,Value)-Pair #4
+
+        // Get2DSurfaceDesc+0x56 : cmp eax, [edx+0x2154]
+        { 0x56, 0x3B }, // (Offset,Value)-Pair #5
+        { 0x57, 0x82 }, // (Offset,Value)-Pair #6
+        { 0x58, 0x54 }, // (Offset,Value)-Pair #7
+        { 0x59, 0x21 }, // (Offset,Value)-Pair #8
+
+        // Get2DSurfaceDesc+0xAE : retn 0x0C
+        { 0xAE, 0xC2 }, // (Offset,Value)-Pair #9
+        { 0xAF, 0x0C }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
 // * D3D8_1_0_3925
 // ******************************************************************
 OOVPATable D3D8_1_0_3925[] =
@@ -1638,6 +1705,16 @@ OOVPATable D3D8_1_0_3925[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetTextureState_TexCoordIndex" 
+        #endif
+    },
+    // IDirect3DDevice8::SetRenderState_CullMode
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_CullMode,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_CullMode" 
         #endif
     },
     // IDirect3DDevice8::SetRenderState_Simple
@@ -1848,6 +1925,16 @@ OOVPATable D3D8_1_0_3925[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DTexture8_GetSurfaceLevel" 
+        #endif
+    },
+    // Get2DSurfacDesc
+    {
+        (OOVPA*)&Get2DSurfaceDesc_1_0_3925,
+
+        XTL::EmuGet2DSurfaceDesc,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGet2DSurfaceDesc" 
         #endif
     },
 };

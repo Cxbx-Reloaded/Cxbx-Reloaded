@@ -63,6 +63,7 @@ namespace XTL
 // * Static Variable(s)
 // ******************************************************************
 static XTL::LPDIRECTSOUND8 g_pDSound8 = NULL;
+static int                 g_pDSound8RefCount = 0;
 
 // ******************************************************************
 // * EmuStatic Variable(s)
@@ -108,6 +109,9 @@ HRESULT WINAPI XTL::EmuDirectSoundCreate
     g_pDSound8 = *ppDirectSound;
 
     hRet = g_pDSound8->SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
+
+    // we need to use our own internal reference count
+    g_pDSound8RefCount++;
 
     EmuSwapFS();   // XBox FS
 
@@ -558,7 +562,10 @@ ULONG WINAPI XTL::EmuIDirectSound8_Release
     }
     #endif
 
-    ULONG uRet = pThis->Release();
+    ULONG uRet = g_pDSound8RefCount--;
+
+    if(uRet == 1)
+        pThis->Release();
 
     EmuSwapFS();   // XBox FS
 

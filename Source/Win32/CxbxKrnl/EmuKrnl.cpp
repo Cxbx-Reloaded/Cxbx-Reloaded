@@ -1786,7 +1786,7 @@ XBSYSAPI EXPORTNUM(219) NTSTATUS NTAPI xboxkrnl::NtReadFile
                "   IoStatusBlock       : 0x%.08X\n"
                "   Buffer              : 0x%.08X\n"
                "   Length              : 0x%.08X\n"
-               "   ByteOffset          : 0x%.08X (%d)\n"
+               "   ByteOffset          : 0x%.08X (0x%.08X)\n"
                ");\n",
                GetCurrentThreadId(), FileHandle, Event, ApcRoutine, 
                ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, ByteOffset == 0 ? 0 : ByteOffset->QuadPart);
@@ -1940,13 +1940,18 @@ XBSYSAPI EXPORTNUM(232) VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
 
     EmuSwapFS();   // Xbox FS
 
+    uint32 status = 0xC0000000;
+
+    if(0xC0000000 != (IoStatusBlock->u1.Status & 0xC0000000)) 
+        status = 0;
+
     __asm
     {
         pushad
 
         mov esi, IoStatusBlock
         mov ecx, [esi]
-        mov eax, 0x0C0000000
+        mov eax, status
 
         push esi
         push ecx
@@ -2032,7 +2037,7 @@ XBSYSAPI EXPORTNUM(236) NTSTATUS NTAPI xboxkrnl::NtWriteFile
                "   IoStatusBlock       : 0x%.08X\n"
                "   Buffer              : 0x%.08X\n"
                "   Length              : 0x%.08X\n"
-               "   ByteOffset          : 0x%.08X (%d)\n"
+               "   ByteOffset          : 0x%.08X (0x%.08X)\n"
                ");\n",
                GetCurrentThreadId(), FileHandle, Event, ApcRoutine, 
                ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, ByteOffset == 0 ? 0 : ByteOffset->QuadPart);
@@ -2229,13 +2234,11 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        /*
         printf("EmuKrnl (0x%X): RtlEnterCriticalSection\n"
                "(\n"
                "   CriticalSection     : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), CriticalSection);
-       //*/
     }
     #endif
 
@@ -2299,13 +2302,11 @@ XBSYSAPI EXPORTNUM(291) VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        /*
         printf("EmuKrnl (0x%X): RtlInitializeCriticalSection\n"
                "(\n"
                "   CriticalSection     : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), CriticalSection);
-        //*/
     }
     #endif
 
@@ -2334,13 +2335,11 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        /*
         printf("EmuKrnl (0x%X): RtlLeaveCriticalSection\n"
                "(\n"
                "   CriticalSection     : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), CriticalSection);
-        //*/
     }
     #endif
 
