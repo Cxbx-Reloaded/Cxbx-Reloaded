@@ -75,7 +75,7 @@ extern volatile BOOL	g_bEmuSuspended = FALSE;
 extern volatile BOOL    g_bEmuException = FALSE;
 
 // global exception patching address
-extern uint32       g_HaloHack[4] = {0};
+extern uint32 g_HaloHack[4] = {0};
 
 // Static Function(s)
 static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper);
