@@ -121,6 +121,7 @@ static XTL::X_D3DVertexBuffer      *g_pVertexBuffer = NULL; // current active ve
 
 // current vertical blank information
 static XTL::D3DVBLANKDATA           g_VBData = {0};
+static DWORD                        g_VBLastSwap = 0;
 
 // cached Direct3D state variable(s)
 static XTL::X_D3DSurface           *g_pCachedRenderTarget = NULL;
@@ -483,8 +484,6 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 
         // trigger vblank callback
         {
-            g_VBData.Flags = 1; // D3DVBLANK_SWAPDONE
-            g_VBData.Swap = g_VBData.VBlank;
             g_VBData.VBlank++;
 
             if(g_pVBCallback != NULL)
@@ -493,6 +492,8 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
                 g_pVBCallback(&g_VBData);
                 EmuSwapFS();    // Win2k/XP FS
             }
+
+            g_VBData.Swap = 0;
         }
     }
 
@@ -2650,7 +2651,7 @@ static void EmuFlushD3DIVB()
             }
         }
 
-        //*
+        /*
         {
             static int dwDumpTex = 0;
 
@@ -3079,8 +3080,12 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Present
     HRESULT hRet = g_pD3DDevice8->Present(pSourceRect, pDestRect, (HWND)pDummy1, (CONST RGNDATA*)pDummy2);
 
     // not really accurate because you definately dont always present on every vblank
-    //g_VBData.Swap++;
-    //g_VBData.VBlank++;
+    g_VBData.Swap = g_VBData.VBlank;
+
+    if(g_VBData.VBlank == g_VBLastSwap + 1)
+        g_VBData.Flags = 1; // D3DVBLANK_SWAPDONE
+    else
+        g_VBData.Flags = 2; // D3DVBLANK_SWAPMISSED
 
     EmuSwapFS();   // XBox FS
 

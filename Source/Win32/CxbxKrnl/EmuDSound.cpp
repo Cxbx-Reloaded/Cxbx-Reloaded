@@ -1247,7 +1247,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetCurrentPosition
     HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwNewPosition);
 
     if(FAILED(hRet))
-        EmuWarning("SetCurrentPosition FAILED");
+        EmuWarning("SetCurrentPosition Failed!");
 
     EmuSwapFS();   // XBox FS
 
@@ -1279,24 +1279,18 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_GetCurrentPosition
     }
     #endif
 
+    HackUpdateSoundBuffers();
+    HackUpdateSoundStreams();
+
     // NOTE: TODO: This call always seems to fail on primary buffers!
     HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetCurrentPosition(pdwCurrentPlayCursor, pdwCurrentWriteCursor);
 
     if(FAILED(hRet))
-        EmuWarning("GetCurrentPosition FAILED");
+        EmuWarning("GetCurrentPosition Failed!");
 
     #ifdef _DEBUG_TRACE
-    /*
-    static int chk = 0;
-
-    if(chk++ == 700)
-        _asm int 3
-    //*/
     printf("*pdwCurrentPlayCursor := %d, *pdwCurrentWriteCursor := %d\n", *pdwCurrentPlayCursor, *pdwCurrentWriteCursor);
     #endif
-
-    HackUpdateSoundBuffers();
-    HackUpdateSoundStreams();
 
     EmuSwapFS();   // XBox FS
 
