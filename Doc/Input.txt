@@ -1,4 +1,4 @@
-Gamepad Input is configured using a dialog inside
+Controller Input is configured using a dialog inside
 EmuDInput.cpp/.h
 
 Configuration is actually saved into both the registry

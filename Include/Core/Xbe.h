@@ -37,7 +37,7 @@
 #include <stdlib.h>
 
 // ******************************************************************
-// * class : Xbe
+// * Xbe (Xbox Executable) file object
 // ******************************************************************
 class Xbe : public Error
 {
@@ -217,7 +217,7 @@ class Xbe : public Error
         *m_LibraryVersion, *m_KernelLibraryVersion, *m_XAPILibraryVersion;
 
         // ******************************************************************
-        // * XBE thread local storage
+        // * XBE Thread Local Storage
         // ******************************************************************
         #include "AlignPrefix1.h"
         struct TLS
@@ -249,7 +249,7 @@ class Xbe : public Error
 
     private:
         // ******************************************************************
-        // * constructor initialization
+        // * Constructor Initialization
         // ******************************************************************
         void ConstructorInit();
 

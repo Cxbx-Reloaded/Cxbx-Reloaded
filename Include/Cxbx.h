@@ -50,9 +50,9 @@ typedef signed short   sint16;
 typedef signed long    sint32;
 
 // ******************************************************************
-// * Version Information
+// * Version information
 // ******************************************************************
-#define CXBX_VERSION "0.6.1-pre1"
+#define _CXBX_VERSION "0.6.1-pre1"
 
 // ******************************************************************
 // * Define this to trace intercepted function calls
@@ -60,18 +60,19 @@ typedef signed long    sint32;
 #define _DEBUG_TRACE
 
 // ******************************************************************
-// * func : RoundUp
+// * Round up dwValue to nearest multiple of dwMult
 // ******************************************************************
-static uint32 RoundUp(uint32 x_dwValue, uint32 x_dwMult)
+static uint32 RoundUp(uint32 dwValue, uint32 dwMult)
 {
-    if(x_dwMult == 0)
-        return x_dwValue;
+    if(dwMult == 0)
+        return dwValue;
 
-    return x_dwValue - (x_dwValue-1)%x_dwMult + (x_dwMult - 1);
+    return dwValue - (dwValue-1)%dwMult + (dwMult - 1);
 }
 
 // ******************************************************************
-// * enum : DebugMode
+// * Different debug mode types. Debug information is directed to
+// * Either a visible console screen, or to an external file
 // ******************************************************************
 enum DebugMode
 {

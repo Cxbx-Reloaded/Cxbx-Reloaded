@@ -35,7 +35,7 @@
 #define ERROR_H
 
 // ******************************************************************
-// * class : Error
+// * Inherited from this class for easy Error detection
 // ******************************************************************
 class Error
 {
@@ -46,14 +46,12 @@ class Error
         const char *GetError() const { return m_szError; }
 
         // ******************************************************************
-        // * True  : Error is fatal (class should be dead)
-        // * False : Error can safely be cleared and class can continue
+        // * Is the current error fatal? (if so, class should be 'dead')
         // ******************************************************************
         bool IsFatal() const { return m_bFatal; }
 
         // ******************************************************************
-        // * True  : Error was cleared
-        // * False : Error is fatal (class should be dead)
+        // * Clear current error (returns false if error was fatal)
         // ******************************************************************
         bool ClearError();
 

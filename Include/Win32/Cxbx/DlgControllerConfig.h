@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->Cxbx->DlgGamepadConfig.h
+// *   Cxbx->Win32->Cxbx->DlgControllerConfig.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,14 +31,23 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef DLGGAMEPADCONFIG_H
-#define DLGGAMEPADCONFIG_H
+#ifndef DLGCONTROLLERCONFIG_H
+#define DLGCONTROLLERCONFIG_H
+
+#include "InputConfig.h"
 
 #include <windows.h>
 
 // ******************************************************************
 // * Show Dialog
 // ******************************************************************
-extern void ShowGamepadConfig(HWND hwnd);
+extern void ShowControllerConfig(HWND hwnd);
+
+// ******************************************************************
+// * Joystick detection sensitivity
+// ******************************************************************
+#define JOYSTICK_DETECT_SENSITIVITY 25000
+#define POV_DETECT_SENSITIVITY      50000
+#define BUTTON_DETECT_SENSITIVITY   0
 
 #endif

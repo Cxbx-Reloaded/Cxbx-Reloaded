@@ -724,8 +724,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
                 break;
 
-                case ID_SETTINGS_CONFIG_GAMEPAD:
-                    ShowGamepadConfig(hwnd);
+                case ID_SETTINGS_CONFIG_CONTROLLER:
+                    ShowControllerConfig(hwnd);
                     break;
 
                 case ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE:

@@ -81,7 +81,7 @@ namespace xboxkrnl
 // * globals
 // ******************************************************************
 extern win32::HWND              g_EmuWindow;       // Rendering Window
-extern xboxkrnl::XINPUT_STATE   g_EmuGamepad1;
+extern xboxkrnl::XINPUT_STATE   g_EmuController1;
 
 #include "OOVPA.h"
 #include "HLEDataBase.h"

@@ -37,21 +37,9 @@
 #include "Emu.h"
 
 // ******************************************************************
-// * GamepadConfiguration
+// * func: EmuPollInput
 // ******************************************************************
-class GamepadConfiguration
-{
-    public:
-        GamepadConfiguration() {}
-       ~GamepadConfiguration() {}
-
-    private:
-};
-
-// ******************************************************************
-// * func: EmuPollGamepad
-// ******************************************************************
-extern void EmuPollGamepad();
+extern void EmuPollController();
 
 // ******************************************************************
 // * func: EmuInitDInput

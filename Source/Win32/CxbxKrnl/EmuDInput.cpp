@@ -40,9 +40,9 @@ using namespace win32;
 // ******************************************************************
 // * globals
 // ******************************************************************
-LPDIRECTINPUT8          g_pDI       = NULL;         
-LPDIRECTINPUTDEVICE8    g_pGameCtrl = NULL;
-xboxkrnl::XINPUT_STATE  g_EmuGamepad1 = {0};
+LPDIRECTINPUT8          g_pDirectInput8 = NULL;         
+LPDIRECTINPUTDEVICE8    g_pGameCtrl     = NULL;
+xboxkrnl::XINPUT_STATE  g_EmuController1   = {0};
 
 // ******************************************************************
 // * statics
@@ -64,7 +64,7 @@ void xboxkrnl::EmuInitDInput()
             GetModuleHandle(NULL),
             DIRECTINPUT_VERSION,
             IID_IDirectInput8,
-            (void**)&g_pDI,
+            (void**)&g_pDirectInput8,
             NULL
         );
 
@@ -73,10 +73,10 @@ void xboxkrnl::EmuInitDInput()
     }
 
     // ******************************************************************
-    // * Enumerate Gamepad(s)
+    // * Enumerate Controller(s)
     // ******************************************************************
     {
-        HRESULT hRet = g_pDI->EnumDevices
+        HRESULT hRet = g_pDirectInput8->EnumDevices
         (
             DI8DEVCLASS_GAMECTRL,
             EnumGameCtrlCallback,
@@ -92,10 +92,10 @@ void xboxkrnl::EmuInitDInput()
     }
 
     // ******************************************************************
-    // * Set Gamepad data format
+    // * Set Controller data format
     // ******************************************************************
     {
-        HRESULT hRet = g_pGameCtrl->SetDataFormat(&c_dfDIJoystick2);
+        HRESULT hRet = g_pGameCtrl->SetDataFormat(&c_dfDIJoystick);
 
         if(FAILED(hRet))
             EmuPanic();
@@ -112,7 +112,7 @@ void xboxkrnl::EmuInitDInput()
     }
 
     // ******************************************************************
-    // * Enumerate Gamepad objects
+    // * Enumerate Controller objects
     // ******************************************************************
     {
         HRESULT hRet = g_pGameCtrl->EnumObjects(EnumObjectsCallback, NULL, DIDFT_ALL);
@@ -127,7 +127,7 @@ void xboxkrnl::EmuInitDInput()
 // ******************************************************************
 static BOOL CALLBACK EnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi, LPVOID pvRef)
 {
-    HRESULT hRet = g_pDI->CreateDevice(lpddi->guidInstance, &g_pGameCtrl, NULL);
+    HRESULT hRet = g_pDirectInput8->CreateDevice(lpddi->guidInstance, &g_pGameCtrl, NULL);
 
     // keep on enumerating if this device could not be created
     if(FAILED(hRet))
@@ -164,11 +164,11 @@ static BOOL CALLBACK EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOI
 }
 
 // ******************************************************************
-// * func: EmuPollGamepad
+// * func: EmuPollController
 // ******************************************************************
-void xboxkrnl::EmuPollGamepad()
+void xboxkrnl::EmuPollController()
 {
-    DIJOYSTATE2 GamepadState;
+    DIJOYSTATE ControllerState;
 
     if(g_pGameCtrl == NULL)
         return;
@@ -185,16 +185,16 @@ void xboxkrnl::EmuPollGamepad()
         return;
     }
 
-    hRet = g_pGameCtrl->GetDeviceState(sizeof(DIJOYSTATE2), &GamepadState);
+    hRet = g_pGameCtrl->GetDeviceState(sizeof(DIJOYSTATE2), &ControllerState);
     
     if(FAILED(hRet))
         return;
 
-    g_EmuGamepad1.dwPacketNumber++;
-    g_EmuGamepad1.Gamepad.sThumbRX = (short)GamepadState.lX;
-    g_EmuGamepad1.Gamepad.sThumbRY = (short)(-1 - GamepadState.lY);
-    g_EmuGamepad1.Gamepad.sThumbLX = (short)GamepadState.lRx;
-    g_EmuGamepad1.Gamepad.sThumbLY = (short)(-1 - GamepadState.lRy);
+    g_EmuController1.dwPacketNumber++;
+    g_EmuController1.Gamepad.sThumbRX = (short)ControllerState.lX;
+    g_EmuController1.Gamepad.sThumbRY = (short)(-1 - ControllerState.lY);
+    g_EmuController1.Gamepad.sThumbLX = (short)ControllerState.lRx;
+    g_EmuController1.Gamepad.sThumbLY = (short)(-1 - ControllerState.lRy);
 
     return;
 }

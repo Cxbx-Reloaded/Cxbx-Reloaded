@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
+# ADD LINK32 dinput8.lib dxguid.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
 PostBuild_Cmds=cd PostBuild	upxCxbx.bat
@@ -83,7 +83,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 dinput8.lib dxguid.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 # SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
@@ -149,7 +149,7 @@ SOURCE=.\Include\Cxbx.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Win32\Cxbx\DlgGamepadConfig.h
+SOURCE=.\Include\Win32\Cxbx\DlgControllerConfig.h
 # End Source File
 # Begin Source File
 
@@ -162,6 +162,10 @@ SOURCE=.\Include\Core\Error.h
 # Begin Source File
 
 SOURCE=.\Include\Core\Exe.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\InputConfig.h
 # End Source File
 # Begin Source File
 
@@ -217,7 +221,7 @@ SOURCE=.\Resource\Splash.bmp
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Win32\Cxbx\DlgGamepadConfig.cpp
+SOURCE=.\Source\Win32\Cxbx\DlgControllerConfig.cpp
 # End Source File
 # Begin Source File
 
@@ -230,6 +234,10 @@ SOURCE=.\Source\Core\Error.cpp
 # Begin Source File
 
 SOURCE=.\Source\Core\Exe.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\InputConfig.cpp
 # End Source File
 # Begin Source File
 

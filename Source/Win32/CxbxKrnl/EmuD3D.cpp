@@ -143,7 +143,7 @@ void EmuRenderWindow(PVOID)
                 wcstombs(tAsciiTitle, XbeCert->wszTitleName, 40);
             }
 
-            sprintf(AsciiTitle, "%s - Cxbx Version " CXBX_VERSION, tAsciiTitle);
+            sprintf(AsciiTitle, "%s - Cxbx Version " _CXBX_VERSION, tAsciiTitle);
         }
 
         g_EmuWindow = CreateWindow

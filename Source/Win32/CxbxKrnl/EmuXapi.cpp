@@ -140,7 +140,7 @@ DWORD WINAPI xboxkrnl::EmuXGetDevices
 
     EmuSwapFS();   // XBox FS
 
-    // TODO: Temporarily just return 1 Gamepad, even if the user didn't ask about Gamepads
+    // TODO: Temporarily just return 1 Controller, even if the user didn't ask about Controllers
     return (1 << 0);
 }
 
@@ -211,8 +211,8 @@ DWORD WINAPI xboxkrnl::EmuXInputGetCapabilities
 
     DWORD ret = ERROR_INVALID_HANDLE;
 
-    // TODO: For now, the only valid handles are Gamepad 1 through 4,
-    //       and they are always normal Gamepads
+    // TODO: For now, the only valid handles are Controller 1 through 4,
+    //       and they are always normal Controllers
     if((int)hDevice >= 1 && (int)hDevice <= 4)
     {
         pCapabilities->SubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD;
@@ -254,14 +254,14 @@ DWORD WINAPI xboxkrnl::EmuXInputGetState
 
     DWORD ret = ERROR_INVALID_HANDLE;
 
-    // TODO: For now, the only valid handles are Gamepad 1 through 4,
-    //       and they are always normal Gamepads
+    // TODO: For now, the only valid handles are Controller 1 through 4,
+    //       and they are always normal Controllers
     if((int)hDevice >= 1 && (int)hDevice <= 4)
     {
-        EmuPollGamepad();
+        EmuPollController();
 
         if((int)hDevice == 1)
-            memcpy(pState, &g_EmuGamepad1, sizeof(XINPUT_STATE));
+            memcpy(pState, &g_EmuController1, sizeof(XINPUT_STATE));
 
         ret = ERROR_SUCCESS;
     }
