@@ -14,10 +14,6 @@ Cxbx Todo:
   emulation. This used with the progress meter, etc, will make the
   emulation extremely fluid.
 
-  Exe->Xbe should use an "OpenXDK" logo bitmap by default. This can be done
-  by having a debug version of Cxbx output the necessary raw data. Then, you
-  just inline it into the code.
-
   Allow a logo bitmap to be added if one does not exist. This may require that
   the size of headers be increased. (sizeof_headers).
 
