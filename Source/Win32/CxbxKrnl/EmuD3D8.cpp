@@ -2327,7 +2327,20 @@ XTL::X_D3DResource * WINAPI XTL::EmuIDirect3DDevice8_CreateTexture2
 {
     X_D3DTexture *pTexture;
 
-    EmuIDirect3DDevice8_CreateTexture(Width, Height, Levels, Usage, Format, D3DPOOL_MANAGED, &pTexture);
+    switch(D3DResource)
+    {
+        case 3: /*D3DRTYPE_TEXTURE*/
+            EmuIDirect3DDevice8_CreateTexture(Width, Height, Levels, Usage, Format, D3DPOOL_MANAGED, &pTexture);
+            break;
+        case 4: /*D3DRTYPE_VOLUMETEXTURE*/
+            EmuIDirect3DDevice8_CreateVolumeTexture(Width, Height, Depth, Levels, Usage, Format, D3DPOOL_MANAGED, (X_D3DVolumeTexture**)&pTexture);
+            break;
+        case 5: /*D3DRTYPE_CUBETEXTURE*/
+            EmuCleanup("Cube textures temporarily not supported!");
+            break;
+        default:
+            EmuCleanup("D3DResource = %d is not supported!", D3DResource);
+    }
 
     return pTexture;
 }

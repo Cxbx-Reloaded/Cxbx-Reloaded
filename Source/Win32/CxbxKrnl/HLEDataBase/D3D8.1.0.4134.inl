@@ -67,35 +67,38 @@ SOOVPA<10> IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4134 =
 // ******************************************************************
 // * IDirect3DDevice8_SetRenderState_CullMode
 // ******************************************************************
-SOOVPA<13> IDirect3DDevice8_SetRenderState_CullMode_1_0_4134 =
+SOOVPA<14> IDirect3DDevice8_SetRenderState_CullMode_1_0_4134 =
 {
     0,  // Large == 0
-    13, // Count == 13
+    14, // Count == 14
 
     XREF_DXSRSCULLMODE, // XRef Is Saved
     0,                  // XRef Not Used
 
     {
+        // IDirect3DDevice8_SetRenderState_CullMode+0x00 : push esi
+        { 0x00, 0x56 }, // (Offset,Value)-Pair #1
+
         // IDirect3DDevice8_SetRenderState_CullMode+0x19 : mov dword ptr [eax], 0x40308
-        { 0x19, 0xC7 }, // (Offset,Value)-Pair #1
-        { 0x1B, 0x08 }, // (Offset,Value)-Pair #2
-        { 0x1C, 0x03 }, // (Offset,Value)-Pair #3
-        { 0x1D, 0x04 }, // (Offset,Value)-Pair #4
+        { 0x19, 0xC7 }, // (Offset,Value)-Pair #2
+        { 0x1B, 0x08 }, // (Offset,Value)-Pair #3
+        { 0x1C, 0x03 }, // (Offset,Value)-Pair #4
+        { 0x1D, 0x04 }, // (Offset,Value)-Pair #5
 
         // IDirect3DDevice8_SetRenderState_CullMode+0x24 : add eax, 8
-        { 0x24, 0x83 }, // (Offset,Value)-Pair #5
-        { 0x25, 0xC0 }, // (Offset,Value)-Pair #6
-        { 0x26, 0x08 }, // (Offset,Value)-Pair #7
+        { 0x24, 0x83 }, // (Offset,Value)-Pair #6
+        { 0x25, 0xC0 }, // (Offset,Value)-Pair #7
+        { 0x26, 0x08 }, // (Offset,Value)-Pair #8
 
         // IDirect3DDevice8_SetRenderState_CullMode+0x30 : retn 4
-        { 0x30, 0xC2 }, // (Offset,Value)-Pair #8
-        { 0x31, 0x04 }, // (Offset,Value)-Pair #9
+        { 0x30, 0xC2 }, // (Offset,Value)-Pair #9
+        { 0x31, 0x04 }, // (Offset,Value)-Pair #10
 
         // IDirect3DDevice8_SetRenderState_CullMode+0x53 : add edx, 0x404
-        { 0x53, 0x81 }, // (Offset,Value)-Pair #10
-        { 0x54, 0xC2 }, // (Offset,Value)-Pair #11
-        { 0x55, 0x04 }, // (Offset,Value)-Pair #12
-        { 0x56, 0x04 }, // (Offset,Value)-Pair #13
+        { 0x53, 0x81 }, // (Offset,Value)-Pair #11
+        { 0x54, 0xC2 }, // (Offset,Value)-Pair #12
+        { 0x55, 0x04 }, // (Offset,Value)-Pair #13
+        { 0x56, 0x04 }, // (Offset,Value)-Pair #14
     }
 };
 

@@ -1236,6 +1236,41 @@ SOOVPA<10> IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4627 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetRenderState_CullModeB
+// ******************************************************************
+SOOVPA<13> IDirect3DDevice8_SetRenderState_CullModeB_1_0_4627 =
+{
+    0,  // Large == 0
+    13, // Count == 13
+
+    XREF_DXSRSCULLMODE, // XRef Is Saved
+    0,                  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetRenderState_CullModeB+0x22 : mov dword ptr [eax], 0x40308
+        { 0x22, 0xC7 }, // (Offset,Value)-Pair #1
+        { 0x24, 0x08 }, // (Offset,Value)-Pair #2
+        { 0x25, 0x03 }, // (Offset,Value)-Pair #3
+        { 0x26, 0x04 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DDevice8_SetRenderState_CullModeB+0x2D : add eax, 8
+        { 0x2D, 0x83 }, // (Offset,Value)-Pair #5
+        { 0x2E, 0xC0 }, // (Offset,Value)-Pair #6
+        { 0x2F, 0x08 }, // (Offset,Value)-Pair #7
+
+        // IDirect3DDevice8_SetRenderState_CullModeB+0x39 : retn 4
+        { 0x39, 0xC2 }, // (Offset,Value)-Pair #8
+        { 0x3A, 0x04 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DDevice8_SetRenderState_CullModeB+0x5C : add edx, 0x404
+        { 0x5C, 0x81 }, // (Offset,Value)-Pair #10
+        { 0x5D, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x5E, 0x04 }, // (Offset,Value)-Pair #12
+        { 0x5F, 0x04 }, // (Offset,Value)-Pair #13
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetRenderState_NormalizeNormalsB
 // ******************************************************************
 SOOVPA<8> IDirect3DDevice8_SetRenderState_NormalizeNormalsB_1_0_4627 =
@@ -1595,6 +1630,47 @@ SOOVPA<11> IDirect3DResource8_ReleaseB_1_0_4627 =
         // IDirect3DResource8_ReleaseB+0x4A : retn 0x04
         { 0x4A, 0xC2 }, // (Offset,Value)-Pair #10
         { 0x4B, 0x04 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
+// * IDirect3DTexture8_LockRectB
+// ******************************************************************
+SOOVPA<15> IDirect3DTexture8_LockRectB_1_0_4627 =
+{
+    0,  // Large == 0
+    15, // Count == 15
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DTexture8_LockRectB+0x00 : mov eax, [esp+0x14]
+        { 0x00, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x01, 0x44 }, // (Offset,Value)-Pair #2
+        { 0x02, 0x24 }, // (Offset,Value)-Pair #3
+        { 0x03, 0x14 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DTexture8_LockRectB+0x04 : mov ecx, [esp+0x10]
+        { 0x04, 0x8B }, // (Offset,Value)-Pair #5
+        { 0x05, 0x4C }, // (Offset,Value)-Pair #6
+        { 0x06, 0x24 }, // (Offset,Value)-Pair #7
+        { 0x07, 0x0C }, // (Offset,Value)-Pair #8
+
+        // IDirect3DTexture8_LockRectB+0x0C : push eax
+        { 0x0C, 0x50 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DTexture8_LockRectB+0x11 : push ecx; push edx; push eax
+        { 0x11, 0x51 }, // (Offset,Value)-Pair #10
+        { 0x12, 0x52 }, // (Offset,Value)-Pair #11
+        { 0x13, 0x50 }, // (Offset,Value)-Pair #12
+
+        // IDirect3DTexture8_LockRectB+0x18 : call [addr]
+        { 0x18, 0xE8 }, // (Offset,Value)-Pair #13
+
+        // IDirect3DTexture8_LockRectB+0x1D : retn 0x14
+        { 0x1D, 0xC2 }, // (Offset,Value)-Pair #14
+        { 0x1E, 0x14 }, // (Offset,Value)-Pair #15
     }
 };
 
@@ -2299,6 +2375,16 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_SetTextureState_BorderColor" 
         #endif
     },
+    // IDirect3DDevice8::SetRenderState_CullModeB
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_CullModeB_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_CullMode,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_CullModeB" 
+        #endif
+    },
     // IDirect3DDevice8::SetRenderState_CullMode (* unchanged since 4134 *)
     {
         (OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4134,
@@ -2735,6 +2821,16 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DTexture8_LockRect" 
+        #endif
+    },
+    // IDirect3DTexture8::LockRectB
+    {
+        (OOVPA*)&IDirect3DTexture8_LockRectB_1_0_4627,
+
+        XTL::EmuIDirect3DTexture8_LockRect,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DTexture8_LockRectB" 
         #endif
     },
 };
