@@ -71,9 +71,6 @@ static DWORD WINAPI                 EmuUpdateTickCount(LPVOID);
 static inline void                  EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource);
 static void                         EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight);
 
-//typedef BOOL (WINAPI *pfGetMonitorInfo)(HMONITOR hMonitor, LPMONITORINFO lpmi);
-//static pfGetMonitorInfo GetMonitorInfo = (pfGetMonitorInfo)GetProcAddress(LoadLibrary("user32.dll"), "GetMonitorInfoA");
-
 // Static Variable(s)
 static GUID                         g_ddguid;               // DirectDraw driver GUID
 static HMONITOR                     g_hMonitor      = NULL; // Handle to DirectDraw monitor

@@ -2,6 +2,8 @@ Cxbx Todo (* denotes high priority, + denotes medium priority)
 
 HLE :
 
+  * Modularize inline vertex buffers (Begin()/End())
+
   * Direct3D_SetPushBufferSize for Antz Extreme Racing (4361). Do this
     when Xiggen is stabilized! For now, safe to ignore it. Also, this
     function is located @ 0x184CC0 in halo.
@@ -11,9 +13,6 @@ HLE :
   * Add Pause hotkey
 
   * Add FPS counter
-
-  * Fake fullscreen mode (allows dynamical full/windowed switches without
-    having to restore resources)
 
 ETC :
 

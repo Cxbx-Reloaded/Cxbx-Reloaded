@@ -62,7 +62,7 @@ namespace XTL
 #include "HLEDataBase.h"
 
 // Ugly Global Pull-In
-extern HWND                         g_hEmuWindow; // rendering window
+extern HWND				g_hEmuWindow; // rendering window
 
 // Global Variable(s)
 extern Xbe::TLS        *g_pTLS       = NULL;
