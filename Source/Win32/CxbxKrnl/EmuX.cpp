@@ -143,7 +143,7 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, Xb
     printf("EmuX (0x%.08X): Initial thread starting.\n", GetCurrentThreadId());
 
     // This must be enabled or the debugger may crash (sigh)
-    // __asm _emit 0xF1
+    //__asm _emit 0xF1
 
     EmuXSwapFS();   // XBox FS
 
@@ -247,7 +247,7 @@ void EmuXInstallWrappers(void (*Entry)(), Xbe::Header *XbeHeader)
 
         printf("EmuXInstallWrappers: mainXapiStartup -> 0x%.08X\n", RealmainXapiStartup);
 
-        // Known to work on : XAPILIB Version 1.0.4627
+        // Known to work on : XAPILIB Version 1.0.4361
 
         // ******************************************************************
         // * install CreateThread vector
@@ -288,7 +288,7 @@ void EmuXInstallWrappers(void (*Entry)(), Xbe::Header *XbeHeader)
         {
             void *RealXapiBootDash = EmuXFindFuncByIndirectCall(RealmainXapiStartup, 0x65);
 
-            printf("EmuXInstallWrappers: XapiBootDash -> 0x%.08X\n", RealXapiBootDash);
+            printf("EmuXInstallWrappers: XapiBootDash    -> 0x%.08X\n", RealXapiBootDash);
 
             EmuXInstallWrapper(RealXapiBootDash, xboxkrnl::EmuXapiBootDash);
         }
@@ -299,7 +299,7 @@ void EmuXInstallWrappers(void (*Entry)(), Xbe::Header *XbeHeader)
         {
             void *Real__rcinit = EmuXFindFuncByIndirectCall(RealmainXapiStartup, 0x47);
 
-            printf("EmuXInstallWrappers: __rcinit -> 0x%.08X\n", Real__rcinit);
+            printf("EmuXInstallWrappers: __rcinit        -> 0x%.08X\n", Real__rcinit);
 
             EmuXInstallWrapper(Real__rcinit, xboxkrnl::EmuX__rcinit);
         }
@@ -310,7 +310,7 @@ void EmuXInstallWrappers(void (*Entry)(), Xbe::Header *XbeHeader)
         {
             void *Real__cinit = EmuXFindFuncByIndirectCall(RealmainXapiStartup, 0x4C);
 
-            printf("EmuXInstallWrappers: __cinit -> 0x%.08X\n", Real__cinit);
+            printf("EmuXInstallWrappers: __cinit         -> 0x%.08X\n", Real__cinit);
 
             EmuXInstallWrapper(Real__cinit, xboxkrnl::EmuX__cinit);
         }

@@ -134,6 +134,9 @@ WndMain::~WndMain()
         }
     }
 
+    delete m_xbe;
+    delete m_exe;
+
     delete[] m_XbeFilename;
     delete[] m_ExeFilename;
 
