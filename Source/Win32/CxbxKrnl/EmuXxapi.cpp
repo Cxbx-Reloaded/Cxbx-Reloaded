@@ -258,17 +258,8 @@ DWORD WINAPI xboxkrnl::EmuXXInputGetState
     //       and they are always normal controllers
     if((int)hDevice >= 1 && (int)hDevice <= 4)
     {
-        ZeroMemory(&pState->Gamepad, sizeof(pState->Gamepad));
-
-        static int cur  = -20000;
-        static int curs = 500;
-
-        cur += curs;
-
-        if(cur > 20000 || cur < -20000)
-            curs = -curs;
-
-        pState->Gamepad.sThumbLX = cur;
+        if((int)hDevice == 1)
+            memcpy(pState, &g_EmuXController1, sizeof(XINPUT_STATE));
 
         ret = ERROR_SUCCESS;
     }

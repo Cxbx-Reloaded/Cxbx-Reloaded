@@ -48,7 +48,7 @@ namespace xntdll
 using namespace win32;
 
 // ******************************************************************
-// * static functions
+// * statics
 // ******************************************************************
 static void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *XbeHeader);
 
@@ -165,23 +165,12 @@ CXBXKRNL_API void NTAPI EmuXInit(Xbe::LibraryVersion *LibraryVersion, DebugMode 
     }
 
     // ******************************************************************
-    // * Initialize FS system
+    // * Initialize all components
     // ******************************************************************
     {
         EmuXInitFS();
-    }
-
-    // ******************************************************************
-    // * Initialize FS:* structure
-    // ******************************************************************
-    {
         EmuXGenerateFS();
-    }
 
-    // ******************************************************************
-    // * Initialize Direct3D8
-    // ******************************************************************
-    {
         xboxkrnl::EmuXInitD3D(XbeHeader, XbeHeaderSize);
     }
 

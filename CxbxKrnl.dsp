@@ -79,7 +79,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 d3d8.lib ntdll.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /out:"Bin\Debug/Cxbx.dll" /pdbtype:sept /libpath:"Lib"
+# ADD LINK32 d3d8.lib dinput8.lib dxguid.lib ntdll.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /out:"Bin\Debug/Cxbx.dll" /pdbtype:sept /libpath:"Lib"
 
 !ENDIF 
 
@@ -141,6 +141,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\EmuX.h
 # Begin Source File
 
 SOURCE=.\Include\Win32\CxbxKrnl\EmuXD3D.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\EmuXDInput.h
 # End Source File
 # Begin Source File
 
@@ -213,6 +217,10 @@ SOURCE=.\Source\Win32\CxbxKrnl\EmuX.cpp
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\EmuXD3D.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuXDInput.cpp
 # End Source File
 # Begin Source File
 

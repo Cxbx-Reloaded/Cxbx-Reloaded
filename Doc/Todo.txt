@@ -1,5 +1,9 @@
 Cxbx Todo:
 
+  Everything that is initialized within the context of the converted
+  Exe and CxbxKrnl should be cleaned up at some point before final
+  process termination.
+
   Responsibility for Kernel Debug output should be moved entirely to
   the Exe (actually CxbxKrnl.dll) menu. This means you dont have to
   pass around the console configuration between GUI and Krnl.

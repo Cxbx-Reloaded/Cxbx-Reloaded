@@ -53,12 +53,12 @@ using namespace win32;
 // ******************************************************************
 LPDIRECT3D8       g_pD3D8         = NULL;  // Direct3D8
 LPDIRECT3DDEVICE8 g_pD3D8Device   = NULL;  // Direct3D8 Device
-HWND              g_EmuXWindow    = NULL;  // Rendering Window
 Xbe::Header      *g_XbeHeader     = NULL;  // XbeHeader
 uint32            g_XbeHeaderSize = 0;     // XbeHeaderSize
+HWND              g_EmuXWindow    = NULL;  // Rendering Window
 
 // ******************************************************************
-// * static
+// * statics
 // ******************************************************************
 static LRESULT WINAPI EmuXMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static void EmuXRenderWindow(PVOID);
@@ -112,7 +112,7 @@ void EmuXRenderWindow(PVOID)
             CS_CLASSDC,
             EmuXMsgProc,
             0, 0, GetModuleHandle(NULL),
-            LoadIcon(hCxbxDll, MAKEINTRESOURCE(IDI_CXBX)), LoadCursor(NULL, IDC_ARROW), (HBRUSH)(COLOR_APPWORKSPACE + 1), NULL,
+            LoadIcon(hCxbxDll, MAKEINTRESOURCE(IDI_CXBX)), NULL, (HBRUSH)(COLOR_APPWORKSPACE + 1), NULL,
             "CxbxRender",
             NULL
         };
@@ -163,6 +163,11 @@ void EmuXRenderWindow(PVOID)
     }
 
     // ******************************************************************
+    // * initialize direct input
+    // ******************************************************************
+    xboxkrnl::EmuXInitDInput();
+
+    // ******************************************************************
     // * message processing loop
     // ******************************************************************
     {
@@ -178,7 +183,10 @@ void EmuXRenderWindow(PVOID)
                 DispatchMessage(&msg);
             }
             else
+            {
+                xboxkrnl::EmuXPollController();
                 Sleep(10);
+            }
         }
 
         ExitProcess(0);
@@ -229,6 +237,10 @@ LRESULT WINAPI EmuXMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_CLOSE:
             DestroyWindow(hWnd);
             break;
+
+        case WM_SETCURSOR:
+            SetCursor(NULL);
+            break;
     }
 
     return DefWindowProc(hWnd, msg, wParam, lParam);
@@ -274,7 +286,7 @@ HRESULT WINAPI xboxkrnl::EmuXIDirect3D8_CreateDevice
     {
         Adapter = D3DADAPTER_DEFAULT;
 
-        pPresentationParameters->Windowed = TRUE;
+//        pPresentationParameters->Windowed = TRUE;
 
         // TODO: More intelligently set this only when the game wants it
         pPresentationParameters->SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;

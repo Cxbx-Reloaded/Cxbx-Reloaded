@@ -52,6 +52,9 @@ namespace win32
     #include <windows.h>
     #include <stdio.h>
     #include <d3d8.h>
+
+    #define DIRECTINPUT_VERSION 0x0800
+    #include <dinput.h>
 };
 
 // ******************************************************************
@@ -60,7 +63,14 @@ namespace win32
 namespace xboxkrnl
 {
     #include "EmuXD3D.h"
+    #include "EmuXDInput.h"
 };
+
+// ******************************************************************
+// * globals
+// ******************************************************************
+extern win32::HWND              g_EmuXWindow;       // Rendering Window
+extern xboxkrnl::XINPUT_STATE   g_EmuXController1;
 
 #include "OOVPA.h"
 #include "HLEDataBase.h"
