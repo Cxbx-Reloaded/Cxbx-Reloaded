@@ -660,6 +660,10 @@ XBSYSAPI EXPORTNUM(184) NTSTATUS xboxkrnl::NtAllocateVirtualMemory
     }
     #endif
 
+    // TODO: HACK: WARNING: Temporary!
+    if(*AllocationSize == (ULONG)0x01800000)
+        __asm int 3
+
     NTSTATUS ret = NT_NtAllocateVirtualMemory(GetCurrentProcess(), BaseAddress, ZeroBits, AllocationSize, AllocationType, Protect);
 
     EmuSwapFS();   // Xbox FS

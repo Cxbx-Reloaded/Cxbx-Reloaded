@@ -1105,6 +1105,8 @@ xd3d8::X_D3DResource * WINAPI xd3d8::EmuIDirect3DDevice8_CreateTexture2
 {
     // TODO: Verify this function's parameters ^
 
+    EmuCleanup("EmuIDirect3DDevice8_CreateTexture2 is unverified!");
+
     X_D3DResource *pTexture;
 
     EmuIDirect3DDevice8_CreateTexture(Width, Height, Levels, Usage, Format, D3DPOOL_MANAGED, &pTexture);
@@ -2237,7 +2239,7 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetRenderState_FillMode
     }
     #endif
 
-    printf("*Warning* SetRenderState_FillMode not implemented!\n");
+    g_pD3DDevice8->SetRenderState(D3DRS_FILLMODE, EmuXB2PC_D3DFILLMODE(Value));
 
     EmuSwapFS();   // XBox FS
 
@@ -2344,12 +2346,20 @@ VOID __fastcall xd3d8::EmuIDirect3DDevice8_SetRenderState_Simple
     if(State == -1)
     {
         printf("RenderState_Simple(0x%.08X, 0x%.08X) is unsupported\n", Method, Value);
-//        EmuCleanup("RenderState_Simple(0x%.08X, 0x%.08X) is unsupported", Method, Value);
+        EmuCleanup("RenderState_Simple(0x%.08X, 0x%.08X) is unsupported", Method, Value);
     }
     else
     {
-        if((D3DRENDERSTATETYPE)State == D3DRS_SRCBLEND || (D3DRENDERSTATETYPE)State == D3DRS_DESTBLEND)
-            Value = EmuXB2PC_D3DBLEND(Value);
+        switch(State)
+        {
+            case D3DRS_SRCBLEND:
+            case D3DRS_DESTBLEND:
+                Value = EmuXB2PC_D3DBLEND(Value);
+                break;
+            case D3DRS_ALPHAFUNC:
+                Value = EmuXB2PC_D3DCMPFUNC(Value);
+                break;
+        };
 
         // Todo: Verify these params as you add support for them!
         g_pD3DDevice8->SetRenderState((D3DRENDERSTATETYPE)State, Value);

@@ -94,6 +94,28 @@ inline D3DBLEND EmuXB2PC_D3DBLEND(X_D3DBLEND Value)
     return (D3DBLEND)Value;
 }
 
+// Todo: Fill out this enumeration table for convienance
+typedef DWORD X_D3DCMPFUNC;
+
+// ******************************************************************
+// * func: EmuXB2PC_D3DCMPFUNC
+// ******************************************************************
+inline D3DCMPFUNC EmuXB2PC_D3DCMPFUNC(X_D3DCMPFUNC Value)
+{
+    return (D3DCMPFUNC)((Value & 0xF) + 1);
+}
+
+// Todo: Fill out this enumeration table for convienance
+typedef DWORD X_D3DFILLMODE;
+
+// ******************************************************************
+// * func: EmuXB2PC_D3DFILLMODE
+// ******************************************************************
+inline D3DFILLMODE EmuXB2PC_D3DFILLMODE(X_D3DFILLMODE Value)
+{
+    return (D3DFILLMODE)((Value & 0xF) + 1);
+}
+
 // ******************************************************************
 // * func: EmuXB2PC_D3DFormat
 // ******************************************************************
