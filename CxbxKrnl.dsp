@@ -173,6 +173,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\EmuDInput.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\EmuFile.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\EmuFS.h
 # End Source File
 # Begin Source File
@@ -274,6 +278,10 @@ SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8.cpp
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\EmuDInput.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuFile.cpp
 # End Source File
 # Begin Source File
 

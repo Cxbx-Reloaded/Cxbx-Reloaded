@@ -54,11 +54,13 @@ namespace xntdll
 
 #include "Emu.h"
 #include "EmuFS.h"
+#include "EmuFile.h"
 
 // ******************************************************************
 // * Loaded at run-time to avoid linker conflicts
 // ******************************************************************
 HMODULE hNtDll = GetModuleHandle("ntdll");
+
 xntdll::FPTR_RtlInitAnsiString            NT_RtlInitAnsiString            = (xntdll::FPTR_RtlInitAnsiString)GetProcAddress(hNtDll, "RtlInitAnsiString");
 xntdll::FPTR_RtlNtStatusToDosError        NT_RtlNtStatusToDosError        = (xntdll::FPTR_RtlNtStatusToDosError)GetProcAddress(hNtDll, "RtlNtStatusToDosError");
 xntdll::FPTR_NtAllocateVirtualMemory      NT_NtAllocateVirtualMemory      = (xntdll::FPTR_NtAllocateVirtualMemory)GetProcAddress(hNtDll, "NtAllocateVirtualMemory");
@@ -66,6 +68,11 @@ xntdll::FPTR_NtClose                      NT_NtClose                      = (xnt
 xntdll::FPTR_RtlInitializeCriticalSection NT_RtlInitializeCriticalSection = (xntdll::FPTR_RtlInitializeCriticalSection)GetProcAddress(hNtDll, "RtlInitializeCriticalSection");
 xntdll::FPTR_RtlEnterCriticalSection      NT_RtlEnterCriticalSection      = (xntdll::FPTR_RtlEnterCriticalSection)GetProcAddress(hNtDll, "RtlEnterCriticalSection");
 xntdll::FPTR_RtlLeaveCriticalSection      NT_RtlLeaveCriticalSection      = (xntdll::FPTR_RtlLeaveCriticalSection)GetProcAddress(hNtDll, "RtlLeaveCriticalSection");
+
+// ******************************************************************
+// * Special macros for our "special" file handles
+// ******************************************************************
+#define IS_EMU_HANDLE(x) (!(((uint32)x) & 0x80000000))
 
 // ******************************************************************
 // * (Helper) PCSTProxyParam
@@ -281,11 +288,30 @@ XBSYSAPI EXPORTNUM(66) NTSTATUS NTAPI xboxkrnl::IoCreateFile
     }
     #endif
 
-    _asm int 3
+    NTSTATUS ret = STATUS_SUCCESS;
+
+    // TODO: HACK: We are just handling specific cases for now
+    if(strcmp(ObjectAttributes->ObjectName->Buffer, "\\Device\\Harddisk0\\partition1\\") == 0)
+    {
+        // TODO: return a 'special' file handle for partition1
+    }
+    else
+    {
+        EmuPanic();
+
+        /* TODO: In the future, this will look something like...
+        ret = xntdll::ZwCreateFile
+        (
+            FileHandle, DesiredAccess, (xntdll::_OBJECT_ATTRIBUTES*)ObjectAttributes, (xntdll::_IO_STATUS_BLOCK *)IoStatusBlock,
+            (xntdll::_LARGE_INTEGER *)AllocationSize, FileAttributes, ShareAccess, Disposition, 
+            CreateOptions, 0, 0
+        );
+        */
+    }
 
     EmuSwapFS();   // Xbox FS
 
-    return STATUS_SUCCESS;
+    return ret;
 }
 
 // ******************************************************************

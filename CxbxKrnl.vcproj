@@ -203,6 +203,9 @@
 				RelativePath=".\Include\Win32\CxbxKrnl\EmuFS.h">
 			</File>
 			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuFile.h">
+			</File>
+			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\EmuKrnl.h">
 			</File>
 			<File
@@ -293,6 +296,9 @@
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\EmuFS.cpp">
+			</File>
+			<File
+				RelativePath=".\Source\Win32\CxbxKrnl\EmuFile.cpp">
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\EmuKrnl.cpp">
