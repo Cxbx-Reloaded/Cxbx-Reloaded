@@ -92,6 +92,62 @@ SOOVPA<13> IDirect3D8_GetAdapterDisplayMode_1_0_4361 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_GetRenderTarget
+// ******************************************************************
+SOOVPA<9> IDirect3DDevice8_GetRenderTarget_1_0_4361 =
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    {
+        // IDirect3DDevice8_GetRenderTarget+0x00 : mov eax, [addr]
+        { 0x00, 0xA1 }, // (Offset,Value)-Pair #1
+
+        // IDirect3DDevice8_GetRenderTarget+0x05 : mov eax, [eax + 0x2070]
+        { 0x05, 0x8B }, // (Offset,Value)-Pair #2
+        { 0x06, 0x80 }, // (Offset,Value)-Pair #3
+        { 0x07, 0x70 }, // (Offset,Value)-Pair #4
+        { 0x08, 0x20 }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_GetRenderTarget+0x11 : mov [ecx], eax
+        { 0x11, 0x89 }, // (Offset,Value)-Pair #6
+        { 0x12, 0x01 }, // (Offset,Value)-Pair #7
+
+        // IDirect3DDevice8_GetRenderTarget+0x1D : retn 0x04
+        { 0x1D, 0xC2 }, // (Offset,Value)-Pair #8
+        { 0x1E, 0x04 }, // (Offset,Value)-Pair #9
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_GetDepthStencilSurface
+// ******************************************************************
+SOOVPA<9> IDirect3DDevice8_GetDepthStencilSurface_1_0_4361 =
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    {
+        // IDirect3DDevice8_GetDepthStencilSurface+0x00 : mov eax, [addr]
+        { 0x00, 0xA1 }, // (Offset,Value)-Pair #1
+
+        // IDirect3DDevice8_GetDepthStencilSurface+0x05 : mov eax, [eax + 0x2074]
+        { 0x05, 0x8B }, // (Offset,Value)-Pair #2
+        { 0x06, 0x80 }, // (Offset,Value)-Pair #3
+        { 0x07, 0x74 }, // (Offset,Value)-Pair #4
+        { 0x08, 0x20 }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_GetDepthStencilSurface+0x11 : mov [ecx], eax
+        { 0x11, 0x89 }, // (Offset,Value)-Pair #6
+        { 0x12, 0x01 }, // (Offset,Value)-Pair #7
+
+        // IDirect3DDevice8_GetDepthStencilSurface+0x1D : retn 0x04
+        { 0x1D, 0xC2 }, // (Offset,Value)-Pair #8
+        { 0x1E, 0x04 }, // (Offset,Value)-Pair #9
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_CreateVertexShader
 // ******************************************************************
 SOOVPA<12> IDirect3DDevice8_CreateVertexShader_1_0_4361 =
@@ -987,6 +1043,26 @@ OOVPATable D3D8_1_0_4361[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3D8_GetAdapterDisplayMode" 
+        #endif
+    },
+    // IDirect3DDevice8::GetRenderTarget
+    {
+        (OOVPA*)&IDirect3DDevice8_GetRenderTarget_1_0_4361,
+
+        xd3d8::EmuIDirect3DDevice8_GetRenderTarget,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetRenderTarget"
+        #endif
+    },
+    // IDirect3DDevice8::GetDepthStencilSurface
+    {
+        (OOVPA*)&IDirect3DDevice8_GetDepthStencilSurface_1_0_4361,
+
+        xd3d8::EmuIDirect3DDevice8_GetDepthStencilSurface,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetDepthStencilSurface"
         #endif
     },
     // IDirect3DDevice8::CreateVertexShader

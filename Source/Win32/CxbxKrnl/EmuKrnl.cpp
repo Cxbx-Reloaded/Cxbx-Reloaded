@@ -80,6 +80,7 @@ xntdll::FPTR_NtCreateEvent                  NT_NtCreateEvent                = (x
 xntdll::FPTR_NtCreateFile                   NT_NtCreateFile                 = (xntdll::FPTR_NtCreateFile)GetProcAddress(hNtDll, "NtCreateFile");
 xntdll::FPTR_NtReadFile                     NT_NtReadFile                   = (xntdll::FPTR_NtReadFile)GetProcAddress(hNtDll, "NtReadFile");
 xntdll::FPTR_NtWriteFile                    NT_NtWriteFile                  = (xntdll::FPTR_NtWriteFile)GetProcAddress(hNtDll, "NtWriteFile");
+xntdll::FPTR_NtSetInformationFile           NT_NtSetInformationFile         = (xntdll::FPTR_NtSetInformationFile)GetProcAddress(hNtDll, "NtSetInformationFile");
 
 // ******************************************************************
 // * (Helper) PCSTProxyParam
@@ -1020,6 +1021,43 @@ XBSYSAPI EXPORTNUM(219) NTSTATUS NTAPI xboxkrnl::NtReadFile
 }
 
 // ******************************************************************
+// * 0x00E2 - NtSetInformationFile
+// ******************************************************************
+XBSYSAPI EXPORTNUM(226) NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
+(	
+	IN  HANDLE  FileHandle,            // TODO: correct paramters
+	OUT	PVOID	IoStatusBlock,
+	IN	PVOID	FileInformation,
+	IN	ULONG	Length,
+	IN	ULONG	FileInformationClass
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): NtSetInformationFile\n"
+               "(\n"
+               "   FileHandle           : 0x%.08X\n"
+               "   IoStatusBlock        : 0x%.08X\n"
+               "   FileInformation      : 0x%.08X\n"
+               "   Length               : 0x%.08X\n"
+               "   FileInformationClass : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation, 
+               Length, FileInformationClass);
+    }
+    #endif
+
+    NTSTATUS ret = NT_NtSetInformationFile(FileHandle, IoStatusBlock, FileInformation, Length, FileInformationClass);
+
+    return ret;
+}
+
+// ******************************************************************
 // * 0x00DA - NtWriteFile
 // ******************************************************************
 XBSYSAPI EXPORTNUM(236) NTSTATUS NTAPI xboxkrnl::NtWriteFile
@@ -1180,7 +1218,8 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
     #endif
 
     // This seems redundant, but xbox software doesn't always do it
-    NT_RtlInitializeCriticalSection((xntdll::_RTL_CRITICAL_SECTION*)CriticalSection);
+    if(CriticalSection->LockCount == -1)
+        NT_RtlInitializeCriticalSection((xntdll::_RTL_CRITICAL_SECTION*)CriticalSection);
 
     NT_RtlEnterCriticalSection((xntdll::_RTL_CRITICAL_SECTION*)CriticalSection);
 

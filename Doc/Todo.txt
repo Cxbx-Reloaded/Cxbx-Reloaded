@@ -1,5 +1,13 @@
 Cxbx Todo (* denotes high priority)
 
+  * When in critical section, do not print debug trace
+
+  * Functions like GetRenderTarget need to return a special temporary
+    X_D3DSurface that will somehow be cleaned up along with the "real"
+	X_D3DSurface pointer. Perhaps maintain a cache of all the current
+	temporary buffers, and whenever a resource has it's final Release(),
+	go through and check if any other handles reference that resource.
+
   * Register() probably needn't re-unswizzle each time. cache a copy of
     the address it was registered to (or a global table) and simply update
 	the data pointer to that IDirect3DTexture8 instance.

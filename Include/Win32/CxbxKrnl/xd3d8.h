@@ -166,18 +166,17 @@ X_D3DPRESENT_PARAMETERS;
 struct X_D3DResource
 {
     DWORD Common;
+    DWORD Data;
 
     union
     {
-        DWORD                   Data;
+        DWORD                   Lock;
         IDirect3DResource8     *EmuResource8;
         IDirect3DBaseTexture8  *EmuBaseTexture8;
         IDirect3DTexture8      *EmuTexture8;
         IDirect3DSurface8      *EmuSurface8;
         IDirect3DVertexBuffer8 *EmuVertexBuffer8;
     };
-
-    DWORD Lock;
 };
 
 // ******************************************************************
@@ -297,6 +296,32 @@ HRESULT WINAPI EmuIDirect3D8_GetAdapterDisplayMode
     UINT                        Adapter,
     X_D3DDISPLAYMODE           *pMode
 );
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetRenderTarget
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_GetRenderTarget
+(
+    X_D3DSurface  **ppRenderTarget
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetRenderTarget
+// ******************************************************************
+X_D3DSurface * WINAPI EmuIDirect3DDevice8_GetRenderTarget2();
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetDepthStencilSurface
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_GetDepthStencilSurface
+(
+    X_D3DSurface  **ppZStencilSurface
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetDepthStencilSurface
+// ******************************************************************
+X_D3DSurface * WINAPI EmuIDirect3DDevice8_GetDepthStencilSurface2();
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateVertexShader

@@ -643,6 +643,18 @@ typedef NTSTATUS (NTAPI *FPTR_NtWriteFile)
 );
 
 // ******************************************************************
+// * NtSetInformationFile
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtSetInformationFile)
+(	
+	IN  HANDLE  FileHandle,            // TODO: correct paramters
+	OUT	PVOID	IoStatusBlock,
+	IN	PVOID	FileInformation,
+	IN	ULONG	Length,
+	IN	ULONG	FileInformationClass
+);
+
+// ******************************************************************
 // * NtQueryInformationFile
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtQueryInformationFile)

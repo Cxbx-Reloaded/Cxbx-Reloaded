@@ -92,6 +92,72 @@ SOOVPA<13> IDirect3D8_GetAdapterDisplayMode_1_0_4627 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_GetRenderTarget2
+// ******************************************************************
+SOOVPA<10> IDirect3DDevice8_GetRenderTarget2_1_0_4627 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    {
+        // IDirect3DDevice8_GetRenderTarget2+0x00 : mov eax, [addr]
+        { 0x00, 0xA1 }, // (Offset,Value)-Pair #1
+
+        // IDirect3DDevice8_GetRenderTarget2+0x05 : push esi
+        { 0x05, 0x56 }, // (Offset,Value)-Pair #2
+
+        // IDirect3DDevice8_GetRenderTarget2+0x06 : mov esi, [eax + 0x21B4]
+        { 0x06, 0x8B }, // (Offset,Value)-Pair #3
+        { 0x07, 0xB0 }, // (Offset,Value)-Pair #4
+        { 0x08, 0xB4 }, // (Offset,Value)-Pair #5
+        { 0x09, 0x21 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_GetRenderTarget2+0x0E : jz + 0x06
+        { 0x0E, 0x74 }, // (Offset,Value)-Pair #7
+        { 0x0F, 0x06 }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_GetRenderTarget2+0x11 : call [addr]
+        { 0x11, 0xE8 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DDevice8_GetRenderTarget2+0x19 : retn
+        { 0x19, 0xC3 }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_GetDepthStencilSurface2
+// ******************************************************************
+SOOVPA<10> IDirect3DDevice8_GetDepthStencilSurface2_1_0_4627 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    {
+        // IDirect3DDevice8_GetDepthStencilSurface2+0x00 : mov eax, [addr]
+        { 0x00, 0xA1 }, // (Offset,Value)-Pair #1
+
+        // IDirect3DDevice8_GetDepthStencilSurface2+0x05 : push esi
+        { 0x05, 0x56 }, // (Offset,Value)-Pair #2
+
+        // IDirect3DDevice8_GetDepthStencilSurface2+0x06 : mov esi, [eax + 0x21B8]
+        { 0x06, 0x8B }, // (Offset,Value)-Pair #3
+        { 0x07, 0xB0 }, // (Offset,Value)-Pair #4
+        { 0x08, 0xB8 }, // (Offset,Value)-Pair #5
+        { 0x09, 0x21 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_GetDepthStencilSurface2+0x0E : jnz +0x04
+        { 0x0E, 0x75 }, // (Offset,Value)-Pair #7
+        { 0x0F, 0x04 }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_GetDepthStencilSurface2+0x15 : call [addr]
+        { 0x15, 0xE8 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DDevice8_GetDepthStencilSurface2+0x1D : retn
+        { 0x1D, 0xC3 }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetVertexShaderConstant
 // ******************************************************************
 SOOVPA<11> IDirect3DDevice8_SetVertexShaderConstant_1_0_4627 =
@@ -502,6 +568,26 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3D8_GetAdapterDisplayMode" 
+        #endif
+    },
+    // IDirect3DDevice8::GetRenderTarget2
+    {
+        (OOVPA*)&IDirect3DDevice8_GetRenderTarget2_1_0_4627,
+
+        xd3d8::EmuIDirect3DDevice8_GetRenderTarget2,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetRenderTarget2"
+        #endif
+    },
+    // IDirect3DDevice8::GetDepthStencilSurface2
+    {
+        (OOVPA*)&IDirect3DDevice8_GetDepthStencilSurface2_1_0_4627,
+
+        xd3d8::EmuIDirect3DDevice8_GetDepthStencilSurface2,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetDepthStencilSurface2"
         #endif
     },
     // IDirect3DDevice8::CreateVertexShader (* unchanged since 4361 *)
