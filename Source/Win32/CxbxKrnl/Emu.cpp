@@ -64,9 +64,13 @@ Xbe::TLS        *g_pTLS       = NULL;
 void            *g_pTLSData   = NULL;
 Xbe::Header     *g_pXbeHeader = NULL;
 HANDLE           g_hCurDir    = NULL;
+CHAR            *g_strCurDrive= NULL;
 HANDLE           g_hTDrive    = NULL;
+CHAR            *g_strTDrive  = NULL;
 HANDLE           g_hUDrive    = NULL;
+CHAR            *g_strUDrive  = NULL;
 HANDLE           g_hZDrive    = NULL;
+CHAR            *g_strZDrive  = NULL;
 volatile bool    g_bEmuException = false;
 volatile bool    g_bEmuSuspended = false;
 volatile bool    g_bPrintfOn = true;
@@ -250,6 +254,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         else
             GetCurrentDirectory(260, szBuffer);
 
+        g_strCurDrive = strdup(szBuffer);
+
         g_hCurDir = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
         if(g_hCurDir == INVALID_HANDLE_VALUE)
@@ -304,6 +310,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
             CreateDirectory(szBuffer, NULL);
 
+            g_strTDrive = strdup(szBuffer);
+
             g_hTDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
             if(g_hTDrive == INVALID_HANDLE_VALUE)
@@ -324,6 +332,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
             sprintf(&szBuffer[spot+10], "\\%08x", pCertificate->dwTitleId);
 
             CreateDirectory(szBuffer, NULL);
+
+            g_strUDrive = strdup(szBuffer);
 
             g_hUDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
@@ -347,6 +357,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
             CreateDirectory(szBuffer, NULL);
             //*/
+
+            g_strZDrive = strdup(szBuffer);
 
             g_hZDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 

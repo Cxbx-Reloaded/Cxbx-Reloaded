@@ -101,9 +101,13 @@ extern Xbe::Header *g_pXbeHeader;
 
 // partition emulation directory handles
 extern HANDLE g_hCurDir;
+extern CHAR  *g_strCurDrive;
 extern HANDLE g_hTDrive;
+extern CHAR  *g_strTDrive;
 extern HANDLE g_hUDrive;
+extern CHAR  *g_strUDrive;
 extern HANDLE g_hZDrive;
+extern CHAR  *g_strZDrive;
 extern HWND   g_hEmuWindow;
 extern HWND   g_hEmuParent;
 

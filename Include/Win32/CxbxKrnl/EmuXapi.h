@@ -302,6 +302,24 @@ VOID WINAPI EmuXapiApplyKernelPatches();
 BOOL WINAPI EmuXFormatUtilityDrive();
 
 // ******************************************************************
+// * func: EmuFindFirstFileA
+// ******************************************************************
+HANDLE WINAPI EmuFindFirstFileA
+(
+    IN  LPCSTR              lpFileName,
+    OUT LPWIN32_FIND_DATA   lpFindFileData
+);
+
+// ******************************************************************
+// * func: EmuFindNextFileA
+// ******************************************************************
+BOOL WINAPI EmuFindNextFileA
+(
+    IN  HANDLE              hFindFile,
+    OUT LPWIN32_FIND_DATA   lpFindFileData
+);
+
+// ******************************************************************
 // * func: EmuRtlCreateHeap
 // ******************************************************************
 PVOID WINAPI EmuRtlCreateHeap

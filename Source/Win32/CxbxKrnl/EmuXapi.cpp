@@ -89,6 +89,146 @@ BOOL WINAPI XTL::EmuXFormatUtilityDrive()
     return TRUE;
 }
 
+/* ended up not fixing anything in panzer dragoon!
+// ******************************************************************
+// * func: EmuFindFirstFileA
+// ******************************************************************
+HANDLE WINAPI XTL::EmuFindFirstFileA
+(
+    IN  LPCSTR              lpFileName,
+    OUT LPWIN32_FIND_DATA   lpFindFileData
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuXapi (0x%X): EmuFindFirstFileA\n"
+           "(\n"
+           "   lpFileName          : 0x%.08X (%s)\n"
+           "   lpFindFileData      : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), lpFileName, lpFileName, lpFindFileData);
+
+    //
+    // TODO: this code is replicated in NtCreateFile. make this a function
+    //
+
+    //
+    // TODO: replace full directories with their shorthand (D:\, etc)
+    //
+
+    char *szBuffer = (char*)lpFileName;
+    char *szRoot = g_strCurDrive;
+
+    //printf("bef : %s\n", lpFileName);
+
+    if(szBuffer != NULL)
+    {
+        // trim this off
+        if(szBuffer[0] == '\\' && szBuffer[1] == '?' && szBuffer[2] == '?' && szBuffer[3] == '\\')
+        {
+            szBuffer += 4;
+        }
+
+        // D:\ should map to current directory
+	    if( (szBuffer[0] == 'D' || szBuffer[0] == 'd') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+	    {
+		    szBuffer += 3;
+	    }
+	    else if( (szBuffer[0] == 'T' || szBuffer[0] == 't') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+	    {
+		    szBuffer += 3;
+
+            szRoot = g_strTDrive;
+	    }
+	    else if( (szBuffer[0] == 'U' || szBuffer[0] == 'u') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+	    {
+		    szBuffer += 3;
+
+            szRoot = g_strUDrive;
+	    }
+	    else if( (szBuffer[0] == 'Z' || szBuffer[0] == 'z') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+	    {
+		    szBuffer += 3;
+
+            szRoot = g_strZDrive;
+	    }
+    }
+
+    //printf("af1 : %s\n", szRoot);
+    //printf("af2 : %s\n", szBuffer);
+
+    //char szOldDir[MAX_PATH];
+    
+    //GetCurrentDirectory(MAX_PATH, szOldDir);
+
+    SetCurrentDirectory(szRoot);
+
+    HANDLE hRet = FindFirstFile(szBuffer, lpFindFileData);
+    
+    if(!FAILED(hRet))
+    {
+        do
+        {
+            BOOL bRet = FindNextFile(hRet, lpFindFileData);
+
+            if(!bRet) { hRet = INVALID_HANDLE_VALUE; break; }
+
+            if( (strcmp(lpFindFileData->cFileName, ".") != 0) && (strcmp(lpFindFileData->cFileName, "..") != 0) )
+                break;
+        }
+        while(true);
+    }
+
+    //SetCurrentDirectory(szOldDir);
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuFindNextFileA
+// ******************************************************************
+BOOL WINAPI XTL::EmuFindNextFileA
+(
+    IN  HANDLE              hFindFile,
+    OUT LPWIN32_FIND_DATA   lpFindFileData
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuXapi (0x%X): EmuFindNextFileA\n"
+           "(\n"
+           "   hFindFile           : 0x%.08X\n"
+           "   lpFindFileData      : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), hFindFile, lpFindFileData);
+
+    //
+    // TODO: replace full directories with their shorthand (D:\, etc)
+    //
+
+    BOOL bRet;
+
+    do
+    {
+        bRet = FindNextFile(hFindFile, lpFindFileData);
+
+        if(!bRet) { break; }
+
+        if( (strcmp(lpFindFileData->cFileName, ".") != 0) && (strcmp(lpFindFileData->cFileName, "..") != 0) )
+            break;
+    }
+    while(true);
+
+    //printf("Found : %s\n", lpFindFileData->cFileName);
+
+    EmuSwapFS();   // XBox FS
+
+    return bRet;
+}
+//*/
+
 // ******************************************************************
 // * func: EmuRtlCreateHeap
 // ******************************************************************
