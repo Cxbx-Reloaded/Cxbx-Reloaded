@@ -9,6 +9,8 @@
 #define IDB_ABOUT                       108
 #define IDD_CONTROLLER_CFG              111
 #define IDD_VIDEO_CFG                   113
+#define IDR_JPEG_ABOUT                  116
+#define IDR_JPEG_SPLASH                 118
 #define IDC_SET_X                       1000
 #define IDC_SET_Y                       1001
 #define IDC_SET_A                       1002
@@ -91,13 +93,12 @@
 #define ID_SETTINGS_GENXP               40078
 #define ID_SETTINGS_GENWT               40079
 #define ID_SETTINGS_GENMA               40080
-#define ID_HELP_CXBXSOURCEFORGEHTTPCXBXSOURCEFORGENET 40081
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        116
+#define _APS_NEXT_RESOURCE_VALUE        119
 #define _APS_NEXT_COMMAND_VALUE         40082
 #define _APS_NEXT_CONTROL_VALUE         1050
 #define _APS_NEXT_SYMED_VALUE           104

@@ -33,6 +33,9 @@
 // ******************************************************************
 #include "WndAbout.h"
 #include "ResCxbx.h"
+#include "jpegdec.h"
+
+#include <stdio.h>
 
 WndAbout::WndAbout(HINSTANCE x_hInstance, HWND x_parent) : Wnd(x_hInstance)
 {
@@ -91,7 +94,41 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 			m_hFont = CreateFont(nHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_ROMAN, "Verdana");
 
-            m_BackBmp = (HBITMAP)LoadImage(m_hInstance, MAKEINTRESOURCE(IDB_ABOUT), IMAGE_BITMAP, 0, 0, 0);
+            m_BackBmp = CreateCompatibleBitmap(hDC, 400, 300);
+
+            // decompress jpeg, convert to bitmap resource
+            {
+                HGLOBAL hRes = LoadResource(NULL, FindResource(NULL, MAKEINTRESOURCE(IDR_JPEG_ABOUT), "JPEG"));
+                uint08 *jpgData = (uint08*)LockResource(hRes);
+
+                uint32 jpgFileSize = 0xC4F0 - 3;
+                uint32 bmpFileSize = 0;
+
+                uint08 *bmpBuff = 0;
+
+                bmpBuff = jpeg2bmp(jpgData, jpgFileSize, bmpFileSize);
+
+                // create bitmap
+                {
+                    BITMAPINFO BmpInfo;
+
+                    BmpInfo.bmiHeader.biSize          = sizeof(BITMAPINFO) - sizeof(RGBQUAD);
+                    BmpInfo.bmiHeader.biWidth         = 400;
+                    BmpInfo.bmiHeader.biHeight        = -300;
+                    BmpInfo.bmiHeader.biPlanes        = 1;
+                    BmpInfo.bmiHeader.biBitCount      = 24;
+                    BmpInfo.bmiHeader.biCompression   = BI_RGB;
+                    BmpInfo.bmiHeader.biSizeImage     = 0;
+                    BmpInfo.bmiHeader.biXPelsPerMeter = 0;
+                    BmpInfo.bmiHeader.biYPelsPerMeter = 0;
+                    BmpInfo.bmiHeader.biClrUsed       = 0;
+                    BmpInfo.bmiHeader.biClrImportant  = 0;
+
+                    SetDIBits(hDC, m_BackBmp, 0, 300, bmpBuff, &BmpInfo, DIB_RGB_COLORS);
+                }
+
+                UnlockResource(hRes);
+            }
 
             m_BackDC  = CreateCompatibleDC(hDC);
 

@@ -38,6 +38,7 @@
 #include "EmuShared.h"
 #include "ResCxbx.h"
 #include "EmuExe.h"
+#include "jpegdec.h"
 
 #include <io.h>
 
@@ -242,7 +243,42 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			{
                 HDC hDC = GetDC(hwnd);
 
-                m_BackBmp  = (HBITMAP)LoadImage(m_hInstance, MAKEINTRESOURCE(IDB_SPLASH), IMAGE_BITMAP, 0, 0, 0);
+                m_BackBmp = CreateCompatibleBitmap(hDC, 640, 480);
+
+                // decompress jpeg, convert to bitmap resource
+                {
+                    HGLOBAL hRes = LoadResource(NULL, FindResource(NULL, MAKEINTRESOURCE(IDR_JPEG_SPLASH), "JPEG"));
+                    uint08 *jpgData = (uint08*)LockResource(hRes);
+
+                    uint32 jpgFileSize = 0xB8C0 - 4;
+                    uint32 bmpFileSize = 0;
+
+                    uint08 *bmpBuff = 0;
+
+                    bmpBuff = jpeg2bmp(jpgData, jpgFileSize, bmpFileSize);
+
+                    // create bitmap
+                    {
+                        BITMAPINFO BmpInfo;
+
+                        BmpInfo.bmiHeader.biSize          = sizeof(BITMAPINFO) - sizeof(RGBQUAD);
+                        BmpInfo.bmiHeader.biWidth         = 640;
+                        BmpInfo.bmiHeader.biHeight        = -480;
+                        BmpInfo.bmiHeader.biPlanes        = 1;
+                        BmpInfo.bmiHeader.biBitCount      = 24;
+                        BmpInfo.bmiHeader.biCompression   = BI_RGB;
+                        BmpInfo.bmiHeader.biSizeImage     = 0;
+                        BmpInfo.bmiHeader.biXPelsPerMeter = 0;
+                        BmpInfo.bmiHeader.biYPelsPerMeter = 0;
+                        BmpInfo.bmiHeader.biClrUsed       = 0;
+                        BmpInfo.bmiHeader.biClrImportant  = 0;
+
+                        SetDIBits(hDC, m_BackBmp, 0, 480, bmpBuff, &BmpInfo, DIB_RGB_COLORS);
+                    }
+
+                    UnlockResource(hRes);
+                }
+
                 m_LogoBmp  = (HBITMAP)LoadImage(m_hInstance, MAKEINTRESOURCE(IDB_LOGO), IMAGE_BITMAP, 0, 0, 0);
                 
                 m_BackDC   = CreateCompatibleDC(hDC);

@@ -5,6 +5,10 @@ version: 0.8.0 (??/??/??)
 
 - Turok playable in wireframe mode!
 
+- GUI changes
+
+- Faux Fullscreen (ALT+ENTER)
+
 - Toggle Wireframe/Dots/Normal with F11
 
 - DirectSound support! Turok and Stella (Atari 2600 emulator)
