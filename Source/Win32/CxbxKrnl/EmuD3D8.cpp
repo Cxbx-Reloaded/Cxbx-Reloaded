@@ -5686,7 +5686,19 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetVertexShader
     }
     #endif
  
-    HRESULT hRet = g_pD3DDevice8->SetVertexShader(Handle);
+    HRESULT hRet = D3D_OK;
+
+    if(Handle > 0xFFFF)
+    {
+        // create emulated shader struct
+        X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader*)Handle;
+        
+        hRet = g_pD3DDevice8->SetVertexShader(0);
+    }
+    else
+    {
+        hRet = g_pD3DDevice8->SetVertexShader(Handle);
+    }
 
     EmuSwapFS();   // XBox FS
 
