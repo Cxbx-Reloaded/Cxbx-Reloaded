@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /O2 /I "Include" /I "Include/Core/" /I "Include/Win32/" /I "Include/Win32/Cxbx" /I "Include/Win32/CxbxKrnl" /I "Include/Win32/CxbxKrnl/HLEDataBase" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /I "Include" /I "Include/Core/" /I "Include/Win32/" /I "Include/Win32/Cxbx" /I "Include/Win32/CxbxKrnl" /I "Include/Win32/CxbxKrnl/HLEDataBase" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -70,7 +70,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /Zi /Od /I "Include" /I "Include/Core/" /I "Include/Win32/" /I "Include/Win32/Cxbx" /I "Include/Win32/CxbxKrnl" /I "Include/Win32/CxbxKrnl/HLEDataBase" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "Include" /I "Include/Core/" /I "Include/Win32/" /I "Include/Win32/Cxbx" /I "Include/Win32/CxbxKrnl" /I "Include/Win32/CxbxKrnl/HLEDataBase" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /FR /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -150,6 +150,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4134.h
 # Begin Source File
 
 SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4361.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4432.h
 # End Source File
 # Begin Source File
 
@@ -365,6 +369,19 @@ SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4134.inl
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4361.inl
+
+!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
+
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4432.inl
 
 !IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
 

@@ -58,6 +58,7 @@ namespace XTL
 #include "HLEDataBase/D3D8.1.0.4034.inl"
 #include "HLEDataBase/D3D8.1.0.4134.inl"
 #include "HLEDataBase/D3D8.1.0.4361.inl"
+#include "HLEDataBase/D3D8.1.0.4432.inl"
 #include "HLEDataBase/D3D8.1.0.4627.inl"
 #include "HLEDataBase/DSound.1.0.3936.inl"
 #include "HLEDataBase/DSound.1.0.4361.inl"
@@ -134,6 +135,13 @@ HLEData HLEDataBase[] =
         1, 0, 4361,
         D3D8_1_0_4361,
         D3D8_1_0_4361_SIZE
+    },
+    // D3D8 Version 1.0.4432
+    {
+        "D3D8",
+        1, 0, 4432,
+        D3D8_1_0_4432,
+        D3D8_1_0_4432_SIZE
     },
     // D3D8 Version 1.0.4627
     {

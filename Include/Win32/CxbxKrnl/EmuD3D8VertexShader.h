@@ -34,10 +34,33 @@
 #ifndef EMUD3D8VERTEXSHADER_H
 #define EMUD3D8VERTEXSHADER_H
 
-// recompile from Xbox VertexShader to PC VertexShader
+// nv2a microcode header
+typedef struct _NV2A_HEADER
+{
+    BYTE Type;
+    BYTE Version;
+    BYTE NumInst;
+    BYTE Unknown;
+}
+NV2A_HEADER;
+
+#define NV2A_MICROCODE_DEF_TYPE		0x78 // x
+#define NV2A_MICROCODE_DEF_VS_XVS	0x20 // for vs, xvs
+#define NV2A_MICROCODE_DEF_XVSS		0x73 // for xvss
+#define NV2A_MICROCODE_DEF_XVSW		0x77 // for xvsw
+
+// recompile xbox vertex shader declaration
 extern void EmuRecompileVSHDeclaration
 (
-    DWORD    *pDeclaration
+    DWORD  *pDeclaration,
+    DWORD   Handle
+);
+
+// recompile xbox vertex shader function
+extern void EmuRecompileVSHFunction
+(
+    DWORD  *pFunction,
+    DWORD **pRecompiled
 );
 
 #endif

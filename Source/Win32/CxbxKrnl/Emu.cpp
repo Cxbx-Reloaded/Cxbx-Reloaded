@@ -402,7 +402,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
                 if(bXRefFirstPass)
                 {
-                    if(strcmp("XAPILIB", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && (BuildVersion == 3911 || BuildVersion == 4034 || BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4627))
+                    if(strcmp("XAPILIB", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && (BuildVersion == 3911 || BuildVersion == 4034 || BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4432 || BuildVersion == 4627))
                     {
                         uint32 lower = pXbeHeader->dwBaseAddr;
                         uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
@@ -536,7 +536,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         // _USE_XGMATH Disabled in mesh :[
         // halo : dword_0_2E2D18
         // halo : 1744F0 (bink)
-        _asm int 3
+        //_asm int 3
 
         Entry();
 

@@ -1209,11 +1209,13 @@ HRESULT WINAPI XTL::EmuIDirect3D8_EnumAdapterModes
     if(Mode == 0)
         ModeAdder = 0;
 
+    D3DDISPLAYMODE PCMode;
+
     do
     {
-        hRet = g_pD3D8->EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), Mode+ModeAdder, (D3DDISPLAYMODE*)pMode);
+        hRet = g_pD3D8->EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), Mode+ModeAdder, (D3DDISPLAYMODE*)&PCMode);
 
-        if(hRet != D3D_OK || (pMode->Width == 640 && pMode->Height == 480))
+        if(hRet != D3D_OK || (PCMode.Width == 640 && PCMode.Height == 480))
             break;
 
         ModeAdder++;
@@ -1221,15 +1223,26 @@ HRESULT WINAPI XTL::EmuIDirect3D8_EnumAdapterModes
     while(true);
 
     // make adjustments to parameters to make sense with windows direct3d
+    if(hRet == D3D_OK)
     {
-        D3DDISPLAYMODE *pPCMode = (D3DDISPLAYMODE*)pMode;
+        //
+        // NOTE: WARNING: PC D3DDISPLAYMODE is different than Xbox D3DDISPLAYMODE!
+        //
 
         // Convert Format (PC->Xbox)
-        pMode->Format = EmuPC2XB_D3DFormat(pPCMode->Format);
+        pMode->Width  = PCMode.Width;
+        pMode->Height = PCMode.Height;
+        pMode->RefreshRate = PCMode.RefreshRate;
 
         // TODO: Make this configurable in the future?
         // D3DPRESENTFLAG_FIELD | D3DPRESENTFLAG_INTERLACED | D3DPRESENTFLAG_LOCKABLE_BACKBUFFER
         pMode->Flags  = 0x000000A1;
+
+        pMode->Format = EmuPC2XB_D3DFormat(PCMode.Format);
+    }
+    else
+    {
+        hRet = D3DERR_INVALIDCALL;
     }
 
     EmuSwapFS();   // XBox FS
@@ -1654,7 +1667,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetRenderTarget
     *ppRenderTarget = g_pCachedRenderTarget;
 
     #ifdef _DEBUG_TRACE
-    printf("EmuD3D8 (0x%X): RenderTarget := 0x%.08X\n", pSurface8);
+    printf("EmuD3D8 (0x%X): RenderTarget := 0x%.08X\n", GetCurrentThreadId(), pSurface8);
     #endif
 
     EmuSwapFS();   // Xbox FS
@@ -1851,9 +1864,14 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
     // TODO: Intelligently fill out these fields as necessary
     ZeroMemory(pD3DVertexShader, sizeof(X_D3DVertexShader));
 
-    XTL::EmuRecompileVSHDeclaration((DWORD*)pDeclaration);
+    DWORD *pRecompiled=0;
+
+    //XTL::EmuRecompileVSHDeclaration((DWORD*)pDeclaration, (DWORD)pD3DVertexShader);
+    //XTL::EmuRecompileVSHFunction((DWORD*)pFunction, &pRecompiled);
 
     HRESULT hRet = D3D_OK;
+
+    *pHandle = (DWORD)pD3DVertexShader;
 
     /*
     HRESULT hRet = g_pD3DDevice8->CreateVertexShader
@@ -1864,13 +1882,9 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
         g_dwVertexShaderUsage   // TODO: HACK: Xbox has extensions!
     );*/
 
-    *pHandle = (DWORD)pD3DVertexShader;
-
 //    if(FAILED(hRet))
     {
-        pD3DVertexShader->Handle = 0;
-
-        EmuWarning("VertexShader was not really created!");
+        DbgPrintf("pD3DVertexShader : 0x%.08X\n", pD3DVertexShader);
 
         hRet = D3D_OK;
     }
@@ -2185,21 +2199,24 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
     D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
 
     // TODO: HACK: Devices that don't support this should somehow emulate it!
+    //* This is OK on my GeForce FX 5600
     if(PCFormat == D3DFMT_D16)
     {
-        EmuWarning("D3DFMT_16 is an unsupported texture format!");
+        EmuWarning("D3DFMT_D16 is an unsupported texture format!");
         PCFormat = D3DFMT_X8R8G8B8;
     }
-    else if(PCFormat == D3DFMT_P8)
+    else //*/
+    if(PCFormat == D3DFMT_P8)
     {
         EmuWarning("D3DFMT_P8 is an unsupported texture format!");
         PCFormat = D3DFMT_X8R8G8B8;
     }
+    //* This is OK on my GeForce FX 5600
     else if(PCFormat == D3DFMT_D24S8)
     {
         EmuWarning("D3DFMT_D24S8 is an unsupported texture format!");
         PCFormat = D3DFMT_X8R8G8B8;
-    }
+    }//*/
     else if(PCFormat == D3DFMT_YUY2)
     {
         // cache the overlay size
@@ -2211,15 +2228,23 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
 
     if(PCFormat != D3DFMT_YUY2)
     {
+        DWORD   PCUsage = 0;// disabled along with D3DFMT_D16 above
+        //DWORD   PCUsage = Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL);
+        D3DPOOL PCPool  = D3DPOOL_MANAGED;
+
         EmuAdjustPower2(&Width, &Height);
 
         *ppTexture = new X_D3DTexture();
 
+        // disabled along with D3DFMT_D16 above
+        //if(Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL))
+        //    PCPool = D3DPOOL_DEFAULT;
+
         hRet = g_pD3DDevice8->CreateTexture
         (
             Width, Height, Levels, 
-            0,  // TODO: Xbox Allows a border to be drawn (maybe hack this in software ;[)
-            PCFormat, D3DPOOL_MANAGED, &((*ppTexture)->EmuTexture8)
+            PCUsage,  // TODO: Xbox Allows a border to be drawn (maybe hack this in software ;[)
+            PCFormat, PCPool, &((*ppTexture)->EmuTexture8)
         );
 
         if(FAILED(hRet))
@@ -5707,10 +5732,10 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetVertexShader
 
     if(Handle > 0xFFFF)
     {
-        // create emulated shader struct
         X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader*)Handle;
         
-        hRet = g_pD3DDevice8->SetVertexShader(D3DFVF_XYZ|D3DFVF_TEX0);
+//        hRet = g_pD3DDevice8->SetVertexShader(pD3DVertexShader->Handle);
+        hRet = g_pD3DDevice8->SetVertexShader(D3DFVF_XYZ | D3DFVF_TEX0);
     }
     else
     {
@@ -6308,10 +6333,11 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetRenderTarget
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderTarget\n"
                "(\n"
-               "   pRenderTarget       : 0x%.08X\n"
-               "   pNewZStencil        : 0x%.08X\n"
+               "   pRenderTarget       : 0x%.08X (0x%.08X)\n"
+               "   pNewZStencil        : 0x%.08X (0x%.08X)\n"
                ");\n",
-               GetCurrentThreadId(), pRenderTarget, pNewZStencil);
+               GetCurrentThreadId(), pRenderTarget, (pRenderTarget != 0) ? pRenderTarget->EmuSurface8 : 0, pNewZStencil,
+               (pNewZStencil != 0) ? pNewZStencil->EmuSurface8 : 0);
     }
     #endif
 
@@ -6330,6 +6356,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetRenderTarget
         pPCNewZStencil  = pNewZStencil->EmuSurface8;
     }
 
+    // TODO: Follow that stencil!
     HRESULT hRet = g_pD3DDevice8->SetRenderTarget(pPCRenderTarget, pPCNewZStencil);
 
     if(FAILED(hRet))

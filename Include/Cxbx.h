@@ -87,4 +87,12 @@ enum DebugMode
 // maximum number of threads cxbx can handle
 #define MAXIMUM_XBOX_THREADS 256
 
+// convienance debug output macros
+#ifdef _DEBUG_TRACE
+#define DbgPrintf printf
+#else
+inline void null_func(...) { }
+#define DbgPrintf null_func
+#endif
+
 #endif

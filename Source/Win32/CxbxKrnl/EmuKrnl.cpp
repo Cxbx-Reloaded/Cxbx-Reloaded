@@ -362,6 +362,8 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
     }
     #endif
 
+    _asm int 3
+
     EmuCleanup("Xbe has rebooted : HalReturnToFirmware(%d)", Routine);
 }
 
