@@ -48,7 +48,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         Sleep(10);
 
     if(caustik->GetError() != 0)
-        MessageBox(NULL, caustik->GetError(), "cxbx", MB_OK);
+        MessageBox(NULL, caustik->GetError(), "Cxbx", MB_OK);
 
     delete caustik;
 

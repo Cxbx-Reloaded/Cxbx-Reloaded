@@ -258,7 +258,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                     ofn.lStructSize     = sizeof(OPENFILENAME);
                     ofn.hwndOwner       = m_hwnd;
-                    ofn.lpstrFilter     = ".xbe file (*.xbe)\0*.xbe\0";
+                    ofn.lpstrFilter     = "Xbox Executables (*.xbe)\0*.xbe\0";
                     ofn.lpstrFile       = filename;
                     ofn.nMaxFile        = 260;
                     ofn.nFilterIndex    = 1;
@@ -319,7 +319,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                     ofn.lStructSize     = sizeof(OPENFILENAME);
                     ofn.hwndOwner       = m_hwnd;
-                    ofn.lpstrFilter     = "Win32 Executable file (*.exe)\0*.exe\0";
+                    ofn.lpstrFilter     = "Windows Executables (*.exe)\0*.exe\0";
                     ofn.lpstrFile       = filename;
                     ofn.nMaxFile        = 260;
                     ofn.nFilterIndex    = 1;
@@ -377,7 +377,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 					ofn.lStructSize     = sizeof(OPENFILENAME);
 					ofn.hwndOwner       = m_hwnd;
-					ofn.lpstrFilter     = "Bitmap file (*.bmp)\0*.bmp\0";
+					ofn.lpstrFilter     = "Bitmap Image Files (*.bmp)\0*.bmp\0";
 					ofn.lpstrFile       = filename;
 					ofn.nMaxFile        = 260;
 					ofn.nFilterIndex    = 1;
@@ -398,7 +398,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						    {
 							    fclose(tmp);
 
-                                if(MessageBox(m_hwnd, "overwrite existing file?", "Cxbx", MB_ICONQUESTION | MB_YESNO) != IDYES)
+                                if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx", MB_ICONQUESTION | MB_YESNO) != IDYES)
 								    return TRUE;
 						    }
 					    }
@@ -494,7 +494,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 					ofn.lStructSize     = sizeof(OPENFILENAME);
 					ofn.hwndOwner       = m_hwnd;
-					ofn.lpstrFilter     = "Bitmap file (*.bmp)\0*.bmp\0";
+					ofn.lpstrFilter     = "Bitmap Image Files (*.bmp)\0*.bmp\0";
 					ofn.lpstrFile       = filename;
 					ofn.nMaxFile        = 260;
 					ofn.nFilterIndex    = 1;
@@ -673,7 +673,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 					ofn.lStructSize     = sizeof(OPENFILENAME);
 					ofn.hwndOwner       = m_hwnd;
-					ofn.lpstrFilter     = "text file (*.txt)\0*.txt\0";
+					ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
 					ofn.lpstrFile       = filename;
 					ofn.nMaxFile        = 260;
 					ofn.nFilterIndex    = 1;
@@ -1164,7 +1164,7 @@ bool WndMain::ConvertToExe()
 
 	ofn.lStructSize     = sizeof(OPENFILENAME);
 	ofn.hwndOwner       = m_hwnd;
-	ofn.lpstrFilter     = "Win32 Executable file (*.exe)\0*.exe\0";
+	ofn.lpstrFilter     = "Windows Executables (*.exe)\0*.exe\0";
 	ofn.lpstrFile       = filename;
 	ofn.nMaxFile        = 260;
 	ofn.nFilterIndex    = 1;
@@ -1233,7 +1233,7 @@ void WndMain::SaveXbeAs()
 
 	ofn.lStructSize     = sizeof(OPENFILENAME);
 	ofn.hwndOwner       = m_hwnd;
-	ofn.lpstrFilter     = ".xbe file (*.xbe)\0*.xbe\0";
+	ofn.lpstrFilter     = "Xbox Executables (*.xbe)\0*.xbe\0";
 	ofn.lpstrFile       = filename;
 	ofn.nMaxFile        = 260;
 	ofn.nFilterIndex    = 1;
