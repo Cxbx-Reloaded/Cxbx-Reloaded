@@ -43,6 +43,7 @@ namespace xboxkrnl
 #include "Emu.h"
 #include "EmuFS.h"
 #include "EmuShared.h"
+#include "EmuAlloc.h"
 
 // prevent name collisions
 namespace XTL
@@ -741,7 +742,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
            ");\n",
            GetCurrentThreadId(), pdsbd, ppBuffer);
 
-    DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)malloc(sizeof(DSBUFFERDESC));
+    DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)CxbxMalloc(sizeof(DSBUFFERDESC));
     
     // convert from Xbox to PC DSound
     {
@@ -763,7 +764,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
 
         if(pdsbd->lpwfxFormat != NULL)
         {
-            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX)+pdsbd->lpwfxFormat->cbSize);
+            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)CxbxMalloc(sizeof(WAVEFORMATEX)+pdsbd->lpwfxFormat->cbSize);
             memcpy(pDSBufferDesc->lpwfxFormat, pdsbd->lpwfxFormat, sizeof(WAVEFORMATEX));
 
             if(pDSBufferDesc->lpwfxFormat->wFormatTag == /*WAVE_FORMAT_XBOX_ADPCM*/0x0069)
@@ -1108,9 +1109,9 @@ ULONG WINAPI XTL::EmuIDirectSoundBuffer8_Release
             }
 
             if(pThis->EmuBufferDesc->lpwfxFormat != NULL)
-                free(pThis->EmuBufferDesc->lpwfxFormat);
+                CxbxFree(pThis->EmuBufferDesc->lpwfxFormat);
 
-            free(pThis->EmuBufferDesc);
+            CxbxFree(pThis->EmuBufferDesc);
 
             delete pThis;
         }
@@ -1397,7 +1398,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
     // TODO: Garbage Collection
     *ppStream = new X_CDirectSoundStream();
     
-    DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)malloc(sizeof(DSBUFFERDESC));
+    DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)CxbxMalloc(sizeof(DSBUFFERDESC));
     
     // convert from Xbox to PC DSound
     {
@@ -1415,7 +1416,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
 
         if(pdssd->lpwfxFormat != NULL)
         {
-            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX));
+            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)CxbxMalloc(sizeof(WAVEFORMATEX));
             memcpy(pDSBufferDesc->lpwfxFormat, pdssd->lpwfxFormat, sizeof(WAVEFORMATEX));
         }
 
@@ -1606,9 +1607,9 @@ ULONG WINAPI XTL::EmuCDirectSoundStream_Release(X_CDirectSoundStream *pThis)
             }
 
             if(pThis->EmuBufferDesc->lpwfxFormat != NULL)
-                free(pThis->EmuBufferDesc->lpwfxFormat);
+                CxbxFree(pThis->EmuBufferDesc->lpwfxFormat);
 
-            free(pThis->EmuBufferDesc);
+            CxbxFree(pThis->EmuBufferDesc);
 
             delete pThis;
         }

@@ -36,6 +36,7 @@
 #define _XBOXKRNL_DEFEXTRN_
 
 #include "Emu.h"
+#include "EmuAlloc.h"
 
 // prevent name collisions
 namespace XTL
@@ -145,7 +146,7 @@ UINT XTL::EmuFixupVerticesA
         dwOriginalSizeWR = dwOriginalSize;
         dwNewSizeWR = dwNewSize;
 
-        pHackVertexData = (uint08*)malloc(dwNewSizeWR);
+        pHackVertexData = (uint08*)CxbxMalloc(dwNewSizeWR);
         pOrigVertexData = (uint08*)pVertexStreamZeroData;
 
         *ppNewVertexStreamZeroData = pHackVertexData;

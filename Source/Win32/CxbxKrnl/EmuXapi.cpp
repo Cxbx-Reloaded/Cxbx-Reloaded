@@ -39,6 +39,7 @@
 
 #include "Emu.h"
 #include "EmuFS.h"
+#include "EmuAlloc.h"
 
 // XInputSetState status waiters
 extern XInputSetStateStatus g_pXInputSetStateStatus[8] = 
@@ -124,7 +125,7 @@ PVOID WINAPI XTL::EmuRtlAllocateHeap
            GetCurrentThreadId(), hHeap, dwFlags, dwBytes);
     //*/
 
-    PVOID pRet = NtDll::RtlAllocateHeap(hHeap, dwFlags, dwBytes);
+    PVOID pRet = CxbxRtlAlloc(hHeap, dwFlags, dwBytes);
 
     EmuSwapFS();   // XBox FS
 
@@ -153,7 +154,7 @@ BOOL WINAPI XTL::EmuRtlFreeHeap
            GetCurrentThreadId(), hHeap, dwFlags, lpMem);
     //*/
 
-    BOOL bRet = NtDll::RtlFreeHeap(hHeap, dwFlags, lpMem);
+    BOOL bRet = CxbxRtlFree(hHeap, dwFlags, lpMem);
 
     EmuSwapFS();   // XBox FS
 
@@ -184,7 +185,7 @@ PVOID WINAPI XTL::EmuRtlReAllocateHeap
            GetCurrentThreadId(), hHeap, dwFlags, lpMem, dwBytes);
    //*/
 
-    PVOID pRet = NtDll::RtlReAllocateHeap(hHeap, dwFlags, lpMem, dwBytes);
+    PVOID pRet = CxbxRtlRealloc(hHeap, dwFlags, lpMem, dwBytes);
 
     EmuSwapFS();   // XBox FS
 

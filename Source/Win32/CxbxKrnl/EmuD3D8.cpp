@@ -45,6 +45,7 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "DbgConsole.h"
 #include "ResourceTracker.h"
+#include "EmuAlloc.h"
 
 // prevent name collisions
 namespace XTL
@@ -829,7 +830,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
                     g_pDD7->GetFourCCCodes(&dwCodes, lpCodes);
 
-                    lpCodes = (DWORD*)malloc(dwCodes*sizeof(DWORD));
+                    lpCodes = (DWORD*)CxbxMalloc(dwCodes*sizeof(DWORD));
 
                     g_pDD7->GetFourCCCodes(&dwCodes, lpCodes);
 
@@ -843,7 +844,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                         }
                     }
 
-                    free(lpCodes);
+                    CxbxFree(lpCodes);
 
                     if(!g_bSupportsYUY2)
                         EmuWarning("YUY2 overlays are not supported in hardware, could be slow!");
@@ -2077,8 +2078,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
            GetCurrentThreadId(), pDeclaration, pFunction, pHandle, Usage);
 
     // create emulated shader struct
-    X_D3DVertexShader *pD3DVertexShader = new X_D3DVertexShader();
-    VERTEX_SHADER     *pVertexShader = (VERTEX_SHADER*)malloc(sizeof(VERTEX_SHADER));
+    X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader*)CxbxMalloc(sizeof(X_D3DVertexShader));
+    VERTEX_SHADER     *pVertexShader = (VERTEX_SHADER*)CxbxMalloc(sizeof(VERTEX_SHADER));
 
     // TODO: Intelligently fill out these fields as necessary
     ZeroMemory(pD3DVertexShader, sizeof(X_D3DVertexShader));
@@ -2133,9 +2134,9 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
         }
     }
 
-    free(pRecompiledDeclaration);
+    CxbxFree(pRecompiledDeclaration);
 
-    pVertexShader->pDeclaration = (DWORD*)malloc(DeclarationSize);
+    pVertexShader->pDeclaration = (DWORD*)CxbxMalloc(DeclarationSize);
     memcpy(pVertexShader->pDeclaration, pDeclaration, DeclarationSize);
 
     pVertexShader->FunctionSize = 0;
@@ -2148,7 +2149,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
     {
         if(pFunction != NULL)
         {
-            pVertexShader->pFunction = (DWORD*)malloc(VertexShaderSize);
+            pVertexShader->pFunction = (DWORD*)CxbxMalloc(VertexShaderSize);
             memcpy(pVertexShader->pFunction, pFunction, VertexShaderSize);
             pVertexShader->FunctionSize = VertexShaderSize;
         }
@@ -2543,7 +2544,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
     else
     {
         DWORD dwSize = g_dwOverlayP*g_dwOverlayH;
-        DWORD dwPtr = (DWORD)malloc(dwSize + sizeof(DWORD));
+        DWORD dwPtr = (DWORD)CxbxMalloc(dwSize + sizeof(DWORD));
 
         DWORD *pRefCount = (DWORD*)(dwPtr + dwSize);
 
@@ -2649,7 +2650,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVolumeTexture
     else
     {
         DWORD dwSize = g_dwOverlayP*g_dwOverlayH;
-        DWORD dwPtr = (DWORD)malloc(dwSize + sizeof(DWORD));
+        DWORD dwPtr = (DWORD)CxbxMalloc(dwSize + sizeof(DWORD));
 
         DWORD *pRefCount = (DWORD*)(dwPtr + dwSize);
 
@@ -2967,7 +2968,7 @@ static void EmuFlushD3DIVB()
     // generate stream data
     {
         DWORD dwFVF = g_dwD3DIVBFVF;
-        BYTE *pStreamData = (BYTE*)malloc(g_dwD3DIVBInd*sizeof(struct _D3DIVB));
+        BYTE *pStreamData = (BYTE*)CxbxMalloc(g_dwD3DIVBInd*sizeof(struct _D3DIVB));
 
         ZeroMemory(pStreamData, g_dwD3DIVBInd*sizeof(struct _D3DIVB));
 
@@ -3128,7 +3129,7 @@ static void EmuFlushD3DIVB()
         // HACK: TODO: probably unnecessary!!!
         //g_pD3DDevice8->Present(0,0,0,0);
 
-        free(pStreamData);
+        CxbxFree(pStreamData);
 
         if(FAILED(hRet))
             EmuCleanup("Inline Vertex DrawPrimitiveUP Failed!");
@@ -3161,7 +3162,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Begin
     g_dwD3DIVBPrim = PrimitiveType;
     g_dwD3DIVBFVF  = 0;
 
-    g_D3DIVB = (struct _D3DIVB*)malloc(sizeof(*g_D3DIVB)*32);
+    g_D3DIVB = (struct _D3DIVB*)CxbxMalloc(sizeof(*g_D3DIVB)*32);
 
     ZeroMemory(g_D3DIVB, sizeof(*g_D3DIVB)*32);
 
@@ -3404,7 +3405,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_End()
     if(g_dwD3DIVBInd != 0)
         EmuFlushD3DIVB();
 
-    free(g_D3DIVB);
+    CxbxFree(g_D3DIVB);
 
     EmuSwapFS();   // XBox FS
 
@@ -4068,7 +4069,7 @@ ULONG WINAPI XTL::EmuIDirect3DResource8_Release
         if(--(*pRefCount) == 0)
         {
             // free memory associated with this special resource handle
-            free((PVOID)dwPtr);
+            CxbxFree((PVOID)dwPtr);
         }
     }
     else
@@ -4109,7 +4110,7 @@ ULONG WINAPI XTL::EmuIDirect3DResource8_Release
                 }
                 #endif
 
-                delete pThis;
+                //delete pThis;
             }
         }
     }
@@ -4629,16 +4630,26 @@ ULONG WINAPI XTL::EmuIDirect3DDevice8_Release()
 
     DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_Release();\n", GetCurrentThreadId());
 
-    // Signal proxy thread, and wait for completion
-    g_EmuCDPD.bReady = true;
-    g_EmuCDPD.bCreate = false;
+    g_pD3DDevice8->AddRef();
+    DWORD RefCount = g_pD3DDevice8->Release();
+    if (RefCount == 1)
+    {
+        // Signal proxy thread, and wait for completion
+        g_EmuCDPD.bReady = true;
+        g_EmuCDPD.bCreate = false;
 
-    while(g_EmuCDPD.bReady)
-        Sleep(10);
+        while(g_EmuCDPD.bReady)
+            Sleep(10);
+        RefCount = g_EmuCDPD.hRet;
+    }
+    else
+    {
+        RefCount = g_pD3DDevice8->Release();
+    }
 
     EmuSwapFS();   // XBox FS
 
-    return g_EmuCDPD.hRet;
+    return RefCount;
 }
 
 // ******************************************************************
@@ -6334,7 +6345,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVerticesUP
         EmuFixupVerticesB(nStride, pOrigVertexBuffer8, pHackVertexBuffer8);
 
         if(pNewVertexStreamZeroData != 0)
-            free(pNewVertexStreamZeroData);
+            CxbxFree(pNewVertexStreamZeroData);
     }
 
     EmuSwapFS();   // XBox FS
@@ -6496,7 +6507,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVerticesUP
         EmuFixupVerticesB(nStride, pOrigVertexBuffer8, pHackVertexBuffer8);
 
         if(pNewVertexStreamZeroData != 0)
-            free(pNewVertexStreamZeroData);
+            CxbxFree(pNewVertexStreamZeroData);
     }
 
     EmuSwapFS();   // XBox FS
@@ -6828,17 +6839,17 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DeleteVertexShader
         VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)pD3DVertexShader->Handle;
 
         RealHandle = pVertexShader->Handle;
-        free(pVertexShader->pDeclaration);
+        CxbxFree(pVertexShader->pDeclaration);
 
         if(pVertexShader->pFunction)
         {
-            free(pVertexShader->pFunction);
+            CxbxFree(pVertexShader->pFunction);
         }
 
         FreeVertexDynamicPatch(pVertexShader);
 
-        free(pVertexShader);
-        free(pD3DVertexShader);
+        CxbxFree(pVertexShader);
+        CxbxFree(pD3DVertexShader);
     }
 
     HRESULT hRet = g_pD3DDevice8->DeleteVertexShader(RealHandle);

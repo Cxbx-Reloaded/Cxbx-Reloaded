@@ -53,6 +53,7 @@ namespace NtDll
 #include "Emu.h"
 #include "EmuFS.h"
 #include "EmuFile.h"
+#include "EmuAlloc.h"
 
 // prevent name collisions
 namespace XTL
@@ -185,7 +186,7 @@ XBSYSAPI EXPORTNUM(14) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePool
            ");\n",
            GetCurrentThreadId(), NumberOfBytes);
 
-    PVOID pRet = malloc(NumberOfBytes);
+    PVOID pRet = CxbxMalloc(NumberOfBytes);
 
     EmuSwapFS();   // Xbox FS
 
@@ -696,7 +697,7 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
     // so that we can return a valid page aligned pointer
     //
 
-    PVOID pRet = malloc(NumberOfBytes + 0x1000);
+    PVOID pRet = CxbxMalloc(NumberOfBytes + 0x1000);
 
     g_pAlignCache[dwAlignIndex].pOrigPtr = pRet;
 
@@ -765,7 +766,7 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
     // so that we can return a valid page aligned pointer
     //
 
-    PVOID pRet = malloc(NumberOfBytes + 0x1000);
+    PVOID pRet = CxbxMalloc(NumberOfBytes + 0x1000);
     
     g_pAlignCache[dwAlignIndex].pOrigPtr = pRet;
 
@@ -811,7 +812,7 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
            GetCurrentThreadId(), NumberOfBytes, Protect);
 
     // TODO: should this be aligned?
-    PVOID pRet = malloc(NumberOfBytes);
+    PVOID pRet = CxbxMalloc(NumberOfBytes);
 
     EmuSwapFS();   // Xbox FS
 
@@ -851,7 +852,7 @@ XBSYSAPI EXPORTNUM(171) VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 
     if(BaseAddress != &xLaunchDataPage)
     {
-        free(BaseAddress);
+        CxbxFree(BaseAddress);
     }
     else
     {
@@ -881,7 +882,7 @@ XBSYSAPI EXPORTNUM(172) NTSTATUS NTAPI xboxkrnl::MmFreeSystemMemory
            ");\n",
            GetCurrentThreadId(), BaseAddress, NumberOfBytes);
 
-    free(BaseAddress);
+    CxbxFree(BaseAddress);
 
     EmuSwapFS();   // Xbox FS
 
@@ -1490,7 +1491,7 @@ XBSYSAPI EXPORTNUM(207) NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
         NtDll::RtlInitUnicodeString(&NtFileMask, wszObjectName);
     }
 
-    NtDll::FILE_DIRECTORY_INFORMATION *FileDirInfo = (NtDll::FILE_DIRECTORY_INFORMATION*)malloc(0x40 + 160*2);
+    NtDll::FILE_DIRECTORY_INFORMATION *FileDirInfo = (NtDll::FILE_DIRECTORY_INFORMATION*)CxbxMalloc(0x40 + 160*2);
 
     char    *mbstr = FileInformation->FileName;
     wchar_t *wcstr = FileDirInfo->FileName;
@@ -1517,7 +1518,7 @@ XBSYSAPI EXPORTNUM(207) NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
     while(strcmp(mbstr, ".") == 0 || strcmp(mbstr, "..") == 0);
 
     // TODO: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
-    free(FileDirInfo);
+    CxbxFree(FileDirInfo);
 
     EmuSwapFS();   // Xbox FS
 

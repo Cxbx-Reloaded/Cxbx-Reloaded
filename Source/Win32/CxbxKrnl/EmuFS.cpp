@@ -42,6 +42,7 @@ namespace xboxkrnl
 
 #include "EmuFS.h"
 #include "EmuLDT.h"
+#include "EmuAlloc.h"
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
@@ -71,7 +72,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		uint32 dwCopySize = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr;
         uint32 dwZeroSize = pTLS->dwSizeofZeroFill;
 
-        pNewTLS = (uint08*)malloc(dwCopySize + dwZeroSize/* + TODO: HACK, extra safety padding  0x100*/);
+        pNewTLS = (uint08*)CxbxMalloc(dwCopySize + dwZeroSize/* + TODO: HACK, extra safety padding  0x100*/);
 
         memset(pNewTLS, 0, dwCopySize + dwZeroSize/* + 0x100*/);
         memcpy(pNewTLS, pTLSData, dwCopySize);
@@ -121,7 +122,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
     {
         uint32 dwSize = sizeof(xboxkrnl::KPCR);
 
-        NewPcr = (xboxkrnl::KPCR*)malloc(dwSize);
+        NewPcr = (xboxkrnl::KPCR*)CxbxMalloc(dwSize);
 
         memset(NewPcr, 0, sizeof(*NewPcr));
 
@@ -140,7 +141,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 
     // generate TIB
     {
-        xboxkrnl::ETHREAD *EThread = (xboxkrnl::ETHREAD*)malloc(sizeof(xboxkrnl::ETHREAD));
+        xboxkrnl::ETHREAD *EThread = (xboxkrnl::ETHREAD*)CxbxMalloc(sizeof(xboxkrnl::ETHREAD));
 
         EThread->Tcb.TlsData  = (void*)pNewTLS;
         EThread->UniqueThread = GetCurrentThreadId();
@@ -218,7 +219,7 @@ void EmuCleanupFS()
     EmuSwapFS(); // Win2k/XP FS
 
     if(pTLSData != 0)
-        free(pTLSData);
+        CxbxFree(pTLSData);
 
     EmuDeallocateLDT(wSwapFS);
 }

@@ -36,6 +36,7 @@
 #define _XBOXKRNL_DEFEXTRN_
 
 #include "Emu.h"
+#include "EmuAlloc.h"
 
 // prevent name collisions
 namespace XTL
@@ -1544,7 +1545,7 @@ static boolean VshAddStreamPatch(VSH_PATCH_DATA *pPatchData)
         pStreamPatch->ConversionStride = pPatchData->ConversionStride;
         pStreamPatch->NbrTypes = pPatchData->TypePatchData.NbrTypes;
         pStreamPatch->NeedPatch = pPatchData->NeedPatching;
-        pStreamPatch->pTypes = (UINT *)malloc(pPatchData->TypePatchData.NbrTypes * sizeof(VSH_TYPE_PATCH_DATA));
+        pStreamPatch->pTypes = (UINT *)CxbxMalloc(pPatchData->TypePatchData.NbrTypes * sizeof(VSH_TYPE_PATCH_DATA));
         memcpy(pStreamPatch->pTypes, pPatchData->TypePatchData.Types, pPatchData->TypePatchData.NbrTypes * sizeof(VSH_TYPE_PATCH_DATA));
 
         return TRUE;
@@ -1841,7 +1842,7 @@ DWORD XTL::EmuRecompileVshDeclaration
 
     // Calculate size of declaration
     DWORD DeclarationSize = VshGetDeclarationSize(pDeclaration);
-    *ppRecompiledDeclaration = (DWORD *)malloc(DeclarationSize);
+    *ppRecompiledDeclaration = (DWORD *)CxbxMalloc(DeclarationSize);
     DWORD *pRecompiled = *ppRecompiledDeclaration;
     memcpy(pRecompiled, pDeclaration, DeclarationSize);
     *pDeclarationSize = DeclarationSize;
@@ -1865,7 +1866,7 @@ DWORD XTL::EmuRecompileVshDeclaration
     // Copy the patches to the vertex shader struct
     DWORD StreamsSize = PatchData.StreamPatchData.NbrStreams * sizeof(STREAM_DYNAMIC_PATCH);
     pVertexDynamicPatch->NbrStreams = PatchData.StreamPatchData.NbrStreams;
-    pVertexDynamicPatch->pStreamPatches = (STREAM_DYNAMIC_PATCH *)malloc(StreamsSize);
+    pVertexDynamicPatch->pStreamPatches = (STREAM_DYNAMIC_PATCH *)CxbxMalloc(StreamsSize);
     memcpy(pVertexDynamicPatch->pStreamPatches,
            PatchData.StreamPatchData.pStreamPatches,
            StreamsSize);
@@ -1885,7 +1886,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
     VSH_SHADER_HEADER   *pShaderHeader = (VSH_SHADER_HEADER*)pFunction;
     DWORD               *pToken;
     boolean             EOI = false;
-    VSH_XBOX_SHADER     *pShader = (VSH_XBOX_SHADER*)malloc(sizeof(VSH_XBOX_SHADER));
+    VSH_XBOX_SHADER     *pShader = (VSH_XBOX_SHADER*)CxbxMalloc(sizeof(VSH_XBOX_SHADER));
     HRESULT             hRet = 0;
 
     // TODO: support this situation..
@@ -1934,7 +1935,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
         // The size of the shader is
         *pOriginalSize = (DWORD)pToken - (DWORD)pFunction;
 
-        char* pShaderDisassembly = (char*)malloc(pShader->IntermediateCount * 50); // Should be plenty
+        char* pShaderDisassembly = (char*)CxbxMalloc(pShader->IntermediateCount * 50); // Should be plenty
         DbgVshPrintf("-- Before conversion --\n");
         VshWriteShader(pShader, pShaderDisassembly);
         DbgVshPrintf("%s", pShaderDisassembly);
@@ -1959,9 +1960,9 @@ extern HRESULT XTL::EmuRecompileVshFunction
             EmuWarning("Couldn't assemble recompiled vertex shader\n");
         }
 
-        free(pShaderDisassembly);
+        CxbxFree(pShaderDisassembly);
     }
-    free(pShader);
+    CxbxFree(pShader);
 
     return hRet;
 }
@@ -1970,9 +1971,9 @@ extern void XTL::FreeVertexDynamicPatch(VERTEX_SHADER *pVertexShader)
 {
     for (DWORD i = 0; i < pVertexShader->VertexDynamicPatch.NbrStreams; i++)
     {
-        free(pVertexShader->VertexDynamicPatch.pStreamPatches[i].pTypes);
+        CxbxFree(pVertexShader->VertexDynamicPatch.pStreamPatches[i].pTypes);
     }
-    free(pVertexShader->VertexDynamicPatch.pStreamPatches);
+    CxbxFree(pVertexShader->VertexDynamicPatch.pStreamPatches);
     pVertexShader->VertexDynamicPatch.pStreamPatches = NULL;
     pVertexShader->VertexDynamicPatch.NbrStreams = 0;
 }

@@ -58,6 +58,9 @@ typedef signed long    sint32;
 //#define _DEBUG_TRACK_VB // Vertex Buffers
 //#define _DEBUG_TRACK_PB // Push Buffers
 
+// define this to track memory allocations
+//#define _DEBUG_ALLOC
+
 // define this to trace intercepted function calls
 //#define _DEBUG_TRACE
 

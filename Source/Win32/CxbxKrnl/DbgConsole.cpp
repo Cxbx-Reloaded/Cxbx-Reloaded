@@ -36,6 +36,7 @@
 #define _XBOXKRNL_DEFEXTRN_
 
 #include "Emu.h"
+#include "EmuAlloc.h"
 #include "DbgConsole.h"
 #include "ResourceTracker.h"
 
@@ -190,6 +191,9 @@ void DbgConsole::ParseCommand()
         printf("CxbxDbg:  ListPB    [LPB]   : List Active Push Buffers\n");
         printf("CxbxDbg:  DisablePB [DPB #] : Disable Active Push Buffer(s)\n");
         printf("CxbxDbg:  EnablePB  [EPB #] : Enable Active Push Buffer(s)\n");
+        #ifdef _DEBUG_ALLOC
+        printf("CxbxDbg:  DumpMem   [DMEM]  : Dump the heap allocation tracking table\n");
+        #endif // _DEBUG_ALLOCC
         printf("CxbxDbg:  CLS\n");
         printf("CxbxDbg: \n");
         printf("CxbxDbg: # denotes parameter of form [#] or [#-#]\n");
@@ -360,6 +364,14 @@ void DbgConsole::ParseCommand()
         // clear screen using system call
         system("cls");
     }
+    #ifdef _DEBUG_ALLOC
+    else if(stricmp(szCmd, "dmem") == 0 || stricmp(szCmd, "DumpMem") == 0)
+    {
+        int Full;
+        int c = sscanf(m_szInput, "%*s %d", &Full);
+        CxbxAllocDump(Full != 0);
+    }
+    #endif // _DEBUG_ALLOC
     else
     {
         printf("CxbxDbg: Cmd \"%s\" not recognized!\n", szCmd);
