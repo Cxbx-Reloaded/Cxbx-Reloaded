@@ -284,9 +284,6 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion
 // ******************************************************************
 extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage)
 {
-    if(EmuIsXboxFS())
-        EmuSwapFS();    // Win2k/XP FS
-
     // ******************************************************************
     // * Print out ErrorMessage (if exists)
     // ******************************************************************
