@@ -31,7 +31,7 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define CXBXKRNL_INTERNAL
+#define _CXBXKRNL_INTERNAL
 #include "Cxbx.h"
 #include "EmuX.h"
 

@@ -31,7 +31,7 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define CXBXKRNL_INTERNAL
+#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_LOCAL_
 
 #include "Cxbx.h"

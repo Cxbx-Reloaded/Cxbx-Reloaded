@@ -33,7 +33,7 @@
 // ******************************************************************
 #include "Cxbx.h"
 
-#define CXBXKRNL_INTERNAL
+#define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_LOCAL_
 #include "EmuX.h"
 

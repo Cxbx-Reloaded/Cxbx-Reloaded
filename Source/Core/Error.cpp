@@ -41,11 +41,12 @@
 bool Error::ClearError()
 {
     if(m_bFatal)
-        return false;
+		return false;
 
     delete[] m_szError;
 
     m_szError = 0;
+
     m_bFatal  = false;
 
     return true;
@@ -59,7 +60,7 @@ void Error::SetError(const char *x_szError, bool x_bFatal)
     if(m_szError == 0)
         m_szError = new char[256];
 
-    strcpy(m_szError, x_szError);
+    strncpy(m_szError, x_szError, 255);
 
     m_bFatal = x_bFatal;
 

@@ -76,7 +76,7 @@ extern "C"
 // ******************************************************************
 // * cxbxkrnl exports, others import
 // ******************************************************************
-#ifndef CXBXKRNL_INTERNAL
+#ifndef _CXBXKRNL_INTERNAL
 #define CXBXKRNL_API DECLSPEC_IMPORT
 #else
 #define CXBXKRNL_API DECLSPEC_EXPORT
