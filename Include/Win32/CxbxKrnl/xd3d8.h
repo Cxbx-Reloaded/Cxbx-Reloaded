@@ -191,6 +191,15 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreateTexture
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetTexture
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetTexture
+(
+    DWORD                   Stage,
+    IDirect3DBaseTexture8  *pTexture
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_GetDisplayMode
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_GetDisplayMode
@@ -231,6 +240,14 @@ HRESULT WINAPI EmuIDirect3DDevice8_Swap
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DResource8_Release
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DResource8_Release
+(
+    PVOID               pThis
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DSurface8_GetDesc
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DSurface8_GetDesc
@@ -248,6 +265,14 @@ HRESULT WINAPI EmuIDirect3DSurface8_LockRect
     D3DLOCKED_RECT     *pLockedRect,
     CONST RECT         *pRect,
     DWORD               Flags
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DBaseTexture8_GetLevelCount
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DBaseTexture8_GetLevelCount
+(
+    PVOID               pThis
 );
 
 // ******************************************************************

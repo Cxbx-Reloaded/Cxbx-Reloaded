@@ -509,8 +509,40 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreateTexture
     (
         Width, Height, Levels, 
         0,   // TODO: Xbox Allows a border to be drawn (maybe hack this in software ;[)
-        Format, D3DPOOL_DEFAULT, ppTexture        
+        Format, D3DPOOL_MANAGED, ppTexture        
     );
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetTexture
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetTexture
+(
+    DWORD                   Stage,
+    IDirect3DBaseTexture8  *pTexture
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetTexture\n"
+               "(\n"
+               "   Stage               : 0x%.08X\n"
+               "   pTexture            : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Stage, pTexture);
+    }
+    #endif
+
+    HRESULT hRet = g_pD3D8Device->SetTexture(Stage, pTexture);
 
     EmuSwapFS();   // XBox FS
 
@@ -694,6 +726,36 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_Swap
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DResource8_Release
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DResource8_Release
+(
+    PVOID               pThis
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DResource8_Release\n"
+               "(\n"
+               "   pThis               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis);
+    }
+    #endif
+
+	HRESULT hRet = ((IDirect3DResource8*)pThis)->Release();
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DSurface8_GetDesc
 // ******************************************************************
 HRESULT WINAPI xd3d8::EmuIDirect3DSurface8_GetDesc
@@ -718,33 +780,32 @@ HRESULT WINAPI xd3d8::EmuIDirect3DSurface8_GetDesc
     }
     #endif
 
-    HRESULT hRet = ((IDirect3DSurface8*)pThis)->GetDesc((D3DSURFACE_DESC*)pDesc);
+	D3DSURFACE_DESC SurfaceDesc;
+
+	HRESULT hRet = ((IDirect3DSurface8*)pThis)->GetDesc(&SurfaceDesc);
 
     // ******************************************************************
     // * Rearrange into windows format (remove D3DPool)
     // ******************************************************************
     {
-        D3DSURFACE_DESC *pPCDesc = (D3DSURFACE_DESC*)pDesc;
-
         // Convert Format (PC->Xbox)
-        pDesc->Format = EmuPC2XB_D3DFormat(pPCDesc->Format);
-
-        pDesc->Type   = pPCDesc->Type;
+        pDesc->Format = EmuPC2XB_D3DFormat(SurfaceDesc.Format);
+        pDesc->Type   = SurfaceDesc.Type;
 
         if(pDesc->Type > 7)
             EmuCleanup("EmuIDirect3DSurface8_GetDesc: pDesc->Type > 7");
 
-        pDesc->Usage  = pPCDesc->Usage;
-        pDesc->Size   = pPCDesc->Size;
+        pDesc->Usage  = SurfaceDesc.Usage;
+        pDesc->Size   = SurfaceDesc.Size;
 
         // TODO: Convert from Xbox to PC!!
-        if(pPCDesc->MultiSampleType == D3DMULTISAMPLE_NONE)
+        if(SurfaceDesc.MultiSampleType == D3DMULTISAMPLE_NONE)
             pDesc->MultiSampleType = (xd3d8::D3DMULTISAMPLE_TYPE)0x0011;
         else
             EmuCleanup("EmuIDirect3DSurface8_GetDesc Unknown Multisample format!");
 
-        pDesc->Width  = pPCDesc->Width;
-        pDesc->Height = pPCDesc->Height;
+        pDesc->Width  = SurfaceDesc.Width;
+        pDesc->Height = SurfaceDesc.Height;
     }
 
     EmuSwapFS();   // XBox FS
@@ -781,15 +842,48 @@ HRESULT WINAPI xd3d8::EmuIDirect3DSurface8_LockRect
     }
     #endif
 
-    if(Flags == 0x40)
-    {
-        printf("EmuIDirect3DSurface8_LockRect: WARNING, TILE LOCK!\n");
-        Flags = 0;
-    }
-    else if(Flags != 0)
+    DWORD NewFlags = 0;
+
+    if(Flags & 0x40)
+        printf("EmuIDirect3DSurface8_LockRect: *Warning* D3DLOCK_TILED ignored!\n");
+
+    if(Flags & 0x80)
+        NewFlags |= D3DLOCK_READONLY;
+
+    if(Flags & !(0x80 | 0x40))
         EmuCleanup("EmuIDirect3DSurface8_LockRect: Unknown Flags!");
 
-    HRESULT hRet = ((IDirect3DSurface8*)pThis)->LockRect(pLockedRect, pRect, Flags);
+    HRESULT hRet = ((IDirect3DSurface8*)pThis)->LockRect(pLockedRect, pRect, NewFlags);
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DBaseTexture8_GetLevelCount
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DBaseTexture8_GetLevelCount
+(
+    PVOID               pThis
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DBaseTexture8_GetLevelCount\n"
+               "(\n"
+               "   pThis               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis);
+    }
+    #endif
+
+    HRESULT hRet = ((IDirect3DBaseTexture8*)pThis)->GetLevelCount();
 
     EmuSwapFS();   // XBox FS
 
