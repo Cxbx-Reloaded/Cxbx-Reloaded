@@ -46,7 +46,7 @@
 
 // inline vertex buffer emulation
 XTL::DWORD                  *XTL::g_pIVBVertexBuffer = 0;
-XTL::X_D3DPRIMITIVETYPE      XTL::g_IVBPrimitiveType = 0;
+XTL::X_D3DPRIMITIVETYPE      XTL::g_IVBPrimitiveType = XTL::X_D3DPT_INVALID;
 UINT                         XTL::g_IVBTblOffs = 0;
 struct XTL::_D3DIVB         *XTL::g_IVBTable = 0;
 
@@ -689,7 +689,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
 {
     PATCHEDSTREAM *pStream = &m_pStreams[uiStream];
     // only quad and listloop are currently supported
-    if((pPatchDesc->PrimitiveType != 8) && (pPatchDesc->PrimitiveType != 3))
+    if((pPatchDesc->PrimitiveType != X_D3DPT_QUADLIST) && (pPatchDesc->PrimitiveType != X_D3DPT_LINELOOP))
         return false;
 
     if(pPatchDesc->pVertexStreamZeroData && uiStream > 0)
@@ -716,8 +716,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
         g_pD3DDevice8->GetStreamSource(0, &pStream->pOriginalStream, &pStream->uiOrigStride);
         pStream->uiNewStride = pStream->uiOrigStride; // The stride is still the same
 
-        // Quad
-        if(pPatchDesc->PrimitiveType == 8)
+        if(pPatchDesc->PrimitiveType == X_D3DPT_QUADLIST)
         {
             pPatchDesc->dwPrimitiveCount *= 2;
 
@@ -726,7 +725,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
             dwNewSize       = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride * 3;
         }
         // LineLoop
-        else if(pPatchDesc->PrimitiveType == 3)
+        else if(pPatchDesc->PrimitiveType == X_D3DPT_LINELOOP)
         {
             pPatchDesc->dwPrimitiveCount += 1;
 
@@ -768,7 +767,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
     {
         pStream->uiOrigStride = pPatchDesc->uiVertexStreamZeroStride;
 
-        if(pPatchDesc->PrimitiveType == 8)      // Quad
+        if(pPatchDesc->PrimitiveType == X_D3DPT_QUADLIST)
         {
             pPatchDesc->dwPrimitiveCount *= 2;
 
@@ -776,7 +775,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
             dwOriginalSize  = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride * 2;
             dwNewSize       = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride * 3;
         }
-        else if(pPatchDesc->PrimitiveType == 3) // LineLoop
+        else if(pPatchDesc->PrimitiveType == X_D3DPT_LINELOOP) // LineLoop
         {
             pPatchDesc->dwPrimitiveCount += 1;
 
@@ -804,7 +803,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
            dwOriginalSizeWR - pPatchDesc->dwOffset - dwOriginalSize);
 
     // Quad
-    if(pPatchDesc->PrimitiveType == 8)
+    if(pPatchDesc->PrimitiveType == X_D3DPT_QUADLIST)
     {
         uint08 *pPatch1 = &pPatchedVertexData[pPatchDesc->dwOffset     * pStream->uiOrigStride];
         uint08 *pPatch2 = &pPatchedVertexData[pPatchDesc->dwOffset + 3 * pStream->uiOrigStride];
@@ -844,7 +843,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
         }
     }
     // LineLoop
-    else if(pPatchDesc->PrimitiveType == 3)
+    else if(pPatchDesc->PrimitiveType == X_D3DPT_LINELOOP)
     {
         memcpy(&pPatchedVertexData[pPatchDesc->dwOffset], &pOrigVertexData[pPatchDesc->dwOffset], dwOriginalSize);
         memcpy(&pPatchedVertexData[pPatchDesc->dwOffset + dwOriginalSize], &pOrigVertexData[pPatchDesc->dwOffset], pStream->uiOrigStride);
@@ -938,7 +937,7 @@ bool XTL::VertexPatcher::Restore()
 
 VOID XTL::EmuFlushIVB()
 {
-    if(g_IVBPrimitiveType == 9 && g_IVBTblOffs == 4)
+    if((g_IVBPrimitiveType == X_D3DPT_QUADSTRIP) && (g_IVBTblOffs == 4))
     {
         DWORD  dwShader = -1;
         DWORD *pdwVB = g_pIVBVertexBuffer;

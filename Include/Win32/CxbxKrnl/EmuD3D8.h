@@ -117,6 +117,11 @@ HRESULT WINAPI EmuIDirect3DDevice8_GetVisibilityTestResult
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetBackBufferScale
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetBackBufferScale(FLOAT x, FLOAT y);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_LoadVertexShader
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_LoadVertexShader

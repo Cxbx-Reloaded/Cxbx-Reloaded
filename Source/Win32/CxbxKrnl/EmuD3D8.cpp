@@ -1149,6 +1149,27 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_EndVisibilityTest
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetBackBufferScale
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetBackBufferScale(FLOAT x, FLOAT y)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetBackBufferScale\n"
+           "(\n"
+           "   x                         : %f\n"
+           "   y                         : %f\n"
+           ");\n",
+           GetCurrentThreadId(), x, y);
+
+    EmuWarning("SetBackBufferScale ignored");
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_GetVisibilityTestResult
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetVisibilityTestResult
@@ -3108,7 +3129,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Begin
            ");\n",
            GetCurrentThreadId(), PrimitiveType);
 
-    if((PrimitiveType != 7) && (PrimitiveType != 9))
+    if((PrimitiveType != X_D3DPT_TRIANGLEFAN) && (PrimitiveType != X_D3DPT_QUADSTRIP) && (PrimitiveType != X_D3DPT_QUADLIST))
         EmuCleanup("EmuIDirect3DDevice8_Begin does not support primitive : %d", PrimitiveType);
 
     g_IVBPrimitiveType = PrimitiveType;
@@ -3628,6 +3649,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 // Swizzled 32 Bit
                 dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
                 dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
+                dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
                 dwDepth  = 1;// HACK? 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
                 dwPitch  = dwWidth*4;
                 dwBPP = 4;
@@ -3641,6 +3663,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 // Swizzled 16 Bit
                 dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
                 dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
+                dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
                 dwDepth  = 1;// HACK? 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
                 dwPitch  = dwWidth*2;
                 dwBPP = 2;
@@ -3652,6 +3675,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 // Swizzled 8 Bit
                 dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
                 dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
+                dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
                 dwDepth  = 1;// HACK? 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
                 dwPitch  = dwWidth;
                 dwBPP = 1;
@@ -3680,18 +3704,32 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
                 dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
                 dwDepth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
+                dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
 
-                // D3DFMT_DXT2->D3DFMT_DXT5 : 128bits per block/per 16 texels
+                // D3DFMT_DXT2...D3DFMT_DXT5 : 128bits per block/per 16 texels
                 dwCompressedSize = dwWidth*dwHeight;
 
                 if(X_Format == 0x0C)    // D3DFMT_DXT1 : 64bits per block/per 16 texels
                     dwCompressedSize /= 2;
-
-                dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
             }
             else
             {
                 EmuCleanup("0x%.08X is not a supported format!\n", X_Format);
+            }
+
+            if(bSwizzled || bCompressed)
+            {
+                uint32 w = dwWidth;
+                uint32 h = dwHeight;
+
+                for(uint32 v=0;v<dwMipMapLevels;v++)
+                {
+                    if( ((1u << v) >= w) || ((1u << v) >= h))
+                    {
+                        dwMipMapLevels = v + 1;
+                        break;
+                    }
+                }
             }
 
             // create the happy little texture
@@ -3766,6 +3804,11 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 // as we iterate through mipmap levels, we'll adjust the source resource offset
                 DWORD dwCompressedOffset = 0;
 
+                DWORD dwMipOffs = 0;
+                DWORD dwMipWidth = dwWidth;
+                DWORD dwMipHeight = dwHeight;
+                DWORD dwMipPitch = dwPitch;
+
                 // iterate through the number of mipmap levels
                 for(uint level=0;level<dwMipMapLevels;level++)
                 {
@@ -3797,21 +3840,18 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
                         // TODO: handle this horrible situation
                         BYTE *pDest = (BYTE*)LockedRect.pBits;
-                        for(DWORD v=0;v<dwHeight;v++)
+                        for(DWORD v=0;v<dwMipHeight;v++)
                         {
-                            memset(pDest, 0, dwWidth*dwBPP);
+                            memset(pDest, 0, dwMipWidth*dwBPP);
 
                             pDest += LockedRect.Pitch;
-                            pSrc  += dwPitch;
+                            pSrc  += dwMipPitch;
                         }
                     }
                     else
                     {
                         if(bSwizzled)
                         {
-                            // for now, we have no logic for uncompressed mip map levels
-                            if(level == 0)
-                            {
                                 if((DWORD)pSrc == 0x80000000)
                                 {
                                     // TODO: Fix or handle this situation..?
@@ -3820,12 +3860,11 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                                 {
                                     XTL::EmuXGUnswizzleRect
                                     (
-                                        pSrc, dwWidth, dwHeight, dwDepth, LockedRect.pBits, 
+                                    pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits, 
                                         LockedRect.Pitch, iRect, iPoint, dwBPP
                                     );
                                 }
                             }
-                        }
                         else if(bCompressed)
                         {
                             // NOTE: compressed size is (dwWidth/2)*(dwHeight/2)/2, so each level divides by 4
@@ -3836,22 +3875,18 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                         }
                         else
                         {
-                            // for now, we have no logic for uncompressed mipmap levels
-                            if(level == 0)
-                            {
                                 BYTE *pDest = (BYTE*)LockedRect.pBits;
 
-                                if((DWORD)LockedRect.Pitch == dwPitch && dwPitch == dwWidth*dwBPP)
-                                    memcpy(pDest, pSrc, dwWidth*dwHeight*dwBPP);
+                            if((DWORD)LockedRect.Pitch == dwMipPitch && dwMipPitch == dwMipWidth*dwBPP)
+                                memcpy(pDest, pSrc + dwMipOffs, dwMipWidth*dwMipHeight*dwBPP);
                                 else
                                 {
-                                    for(DWORD v=0;v<dwHeight;v++)
+                                for(DWORD v=0;v<dwMipHeight;v++)
                                     {
-                                        memcpy(pDest, pSrc, dwWidth*dwBPP);
+                                    memcpy(pDest, pSrc + dwMipOffs, dwMipWidth*dwBPP);
 
                                         pDest += LockedRect.Pitch;
-                                        pSrc  += dwPitch;
-                                    }
+                                    pSrc  += dwMipPitch;
                                 }
                             }
                         }
@@ -3866,6 +3901,12 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                         else
                             pResource->EmuTexture8->UnlockRect(level);
                     }
+
+                    dwMipOffs += dwMipWidth*dwMipHeight*dwBPP;
+
+                    dwMipWidth /= 2;
+                    dwMipHeight /= 2;
+                    dwMipPitch /= 2;
                 }
             }
 
@@ -6184,7 +6225,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVertices
 
     EmuUpdateDeferredStates();
 
-    if((DWORD)PrimitiveType == 0x09 || (DWORD)PrimitiveType == 0x10)
+    if( (PrimitiveType == X_D3DPT_QUADSTRIP) || (PrimitiveType == X_D3DPT_POLYGON) )
         EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
 
     UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
@@ -6264,7 +6305,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVerticesUP
 
     EmuUpdateDeferredStates();
 
-    if((DWORD)PrimitiveType == 0x09 || (DWORD)PrimitiveType == 0x10)
+    if( (PrimitiveType == X_D3DPT_QUADSTRIP) || (PrimitiveType == X_D3DPT_POLYGON) )
         EmuCleanup("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
 
     /*
@@ -6428,7 +6469,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
 
     EmuUpdateDeferredStates();
 
-    if((DWORD)PrimitiveType == 0x08 || (DWORD)PrimitiveType == 0x09 || (DWORD)PrimitiveType == 0x10)
+    if( (PrimitiveType == X_D3DPT_QUADLIST) || (PrimitiveType == X_D3DPT_QUADSTRIP) || (PrimitiveType == X_D3DPT_POLYGON) )
         EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
 
     UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
@@ -6560,7 +6601,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVerticesUP
 
     EmuUpdateDeferredStates();
 
-    if((DWORD)PrimitiveType == 0x08 || (DWORD)PrimitiveType == 0x09 || (DWORD)PrimitiveType == 0x10)
+    if( (PrimitiveType == X_D3DPT_QUADLIST) || (PrimitiveType == X_D3DPT_QUADSTRIP) || (PrimitiveType == X_D3DPT_POLYGON) )
         EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
 
     UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);

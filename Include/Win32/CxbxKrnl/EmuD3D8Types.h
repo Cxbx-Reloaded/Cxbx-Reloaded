@@ -46,11 +46,29 @@ typedef DWORD X_D3DBLENDOP;
 typedef DWORD X_D3DBLEND;
 typedef DWORD X_D3DCMPFUNC;
 typedef DWORD X_D3DFILLMODE;
-typedef DWORD X_D3DPRIMITIVETYPE;
 typedef DWORD X_D3DTEXTURESTAGESTATETYPE;
 
 // TODO: these enumerations are not equivalent when > 7!
 typedef D3DRESOURCETYPE X_D3DRESOURCETYPE;
+
+// Primitives supported by draw-primitive API
+typedef enum _X_D3DPRIMITIVETYPE
+{
+    X_D3DPT_POINTLIST             = 1,
+    X_D3DPT_LINELIST              = 2,
+    X_D3DPT_LINELOOP              = 3,    // Xbox only
+    X_D3DPT_LINESTRIP             = 4,
+    X_D3DPT_TRIANGLELIST          = 5,
+    X_D3DPT_TRIANGLESTRIP         = 6,
+    X_D3DPT_TRIANGLEFAN           = 7,
+    X_D3DPT_QUADLIST              = 8,    // Xbox only
+    X_D3DPT_QUADSTRIP             = 9,    // Xbox only
+    X_D3DPT_POLYGON               = 10,   // Xbox only
+
+    X_D3DPT_MAX                   = 11,
+    X_D3DPT_INVALID               = 0x7fffffff, /* force 32-bit size enum */
+}
+X_D3DPRIMITIVETYPE;
 
 typedef struct _X_D3DDISPLAYMODE
 {

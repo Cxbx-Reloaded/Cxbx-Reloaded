@@ -60,7 +60,7 @@ void XTL::EmuExecutePushBuffer
     DWORD *pdwPushData = (DWORD*)pPushBuffer->Data;
 
     D3DPRIMITIVETYPE    PCPrimitiveType = (D3DPRIMITIVETYPE)-1;
-    X_D3DPRIMITIVETYPE  XBPrimitiveType = -1;
+    X_D3DPRIMITIVETYPE  XBPrimitiveType = X_D3DPT_INVALID;
 
     // TODO: This technically should be enabled
     XTL::EmuUpdateDeferredStates();
@@ -125,7 +125,7 @@ void XTL::EmuExecutePushBuffer
                 }
                 #endif
 
-                XBPrimitiveType = *pdwPushData;
+                XBPrimitiveType = (X_D3DPRIMITIVETYPE)*pdwPushData;
                 PCPrimitiveType = EmuPrimitiveType(XBPrimitiveType);
             }
         }
@@ -157,7 +157,7 @@ void XTL::EmuExecutePushBuffer
 
                 WORD *pwVal = (WORD*)pIndexData;
 
-                for(uint s=0;s<dwCount/2;s++)
+                for(uint s=0;s<dwCount;s++)
                 {
                     if(s%8 == 0) printf("\n  ");
 
@@ -228,7 +228,7 @@ void XTL::EmuExecutePushBuffer
                 }
 
                 if(FAILED(hRet))
-                    EmuCleanup("Unable to create index buffer for PushBuffer emulation (dwCount : %d)");
+                    EmuCleanup("Unable to create index buffer for PushBuffer emulation (0x1800, dwCount : %d)", dwCount);
 
                 // copy index data
                 {
