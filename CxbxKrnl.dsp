@@ -132,7 +132,7 @@ SOURCE=.\Doc\Todo.txt
 # Begin Group "Include"
 
 # PROP Default_Filter ""
-# Begin Group "HLEDataBase.h"
+# Begin Group "HLEDataBase (h)"
 
 # PROP Default_Filter ""
 # Begin Source File
@@ -212,6 +212,26 @@ SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\XNet.1.0.3911.h
 SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\XOnline.1.0.4361.h
 # End Source File
 # End Group
+# Begin Group "EmuD3D8 (h)"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8\Convert.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8\PushBuffer.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8\VertexBuffer.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8\VertexShader.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\Include\Win32\AlignPosfix1.h
@@ -234,15 +254,7 @@ SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8Conv.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8PushBuffer.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8VertexShader.h
+SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8Types.h
 # End Source File
 # Begin Source File
 
@@ -328,7 +340,7 @@ SOURCE=.\Resource\CxbxDll.rc
 # Begin Group "Source"
 
 # PROP Default_Filter ""
-# Begin Group "HLEDataBase.inl"
+# Begin Group "HLEDataBase (inl)"
 
 # PROP Default_Filter ""
 # Begin Source File
@@ -427,6 +439,26 @@ SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\XOnline.1.0.4361.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # End Group
+# Begin Group "EmuD3D8 (cpp)"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuDirect3D\Convert.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8\PushBuffer.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8\VertexBuffer.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8\VertexShader.cpp
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\Emu.cpp
@@ -434,18 +466,6 @@ SOURCE=.\Source\Win32\CxbxKrnl\Emu.cpp
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8Conv.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8PushBuffer.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8VertexShader.cpp
 # End Source File
 # Begin Source File
 

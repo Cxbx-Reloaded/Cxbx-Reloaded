@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D8Conv.cpp
+// *   Cxbx->Win32->CxbxKrnl->EmuD3D8->Convert.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -32,7 +32,7 @@
 // *
 // ******************************************************************
 #define _CXBXKRNL_INTERNAL
-#define _XBOXKRNL_LOCAL_
+#define _XBOXKRNL_DEFEXTRN_
 
 // prevent name collisions
 namespace xboxkrnl

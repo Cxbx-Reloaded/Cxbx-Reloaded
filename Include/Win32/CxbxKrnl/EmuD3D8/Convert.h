@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D8Conv.h
+// *   Cxbx->Win32->CxbxKrnl->EmuD3D8->Convert.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,132 +31,18 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUD3D8CONV_H
-#define EMUD3D8CONV_H
-
-// fixup xbox extensions to be compatible with PC direct3d
-extern UINT EmuFixupVerticesA
-(
-    DWORD                           PrimitiveType,
-    UINT                           &PrimitiveCount,
-    XTL::IDirect3DVertexBuffer8   *&pOrigVertexBuffer8,
-    XTL::IDirect3DVertexBuffer8   *&pHackVertexBuffer8,
-    UINT                            dwOffset,
-    PVOID                           pVertexStreamZeroData,
-    UINT                            uiVertexStreamZeroStride, 
-    PVOID                          *ppNewVertexStreamZeroData
-);
-
-// fixup xbox extensions to be compatible with PC direct3d
-extern VOID EmuFixupVerticesB
-(
-    UINT                            nStride,
-    XTL::IDirect3DVertexBuffer8   *&pOrigVertexBuffer8,
-    XTL::IDirect3DVertexBuffer8   *&pHackVertexBuffer8
-);
-
-// table used to vertex->primitive count conversion
-extern UINT EmuD3DVertexToPrimitive[11][2];
-
-// conversion table for xbox->pc primitive types
-extern D3DPRIMITIVETYPE EmuPrimitiveTypeLookup[];
+#ifndef CONVERT_H
+#define CONVERT_H
 
 // simple render state encoding lookup table
 #define X_D3DRSSE_UNK 0x7fffffff
 extern CONST DWORD EmuD3DRenderStateSimpleEncoded[174];
 
 // convert from xbox to pc color formats
-inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
-{
-    switch(Format)
-    {
-        case 0x00: // Swizzled   (X_D3DFMT_L8)
-        case 0x01: // Swizzled   (X_D3DFMT_AL8) // NOTE: Hack: Alpha ignored, basically
-            return D3DFMT_L8;
-
-        case 0x02: // Swizzled   (X_D3DFMT_A1R5G5B5)
-            return D3DFMT_A1R5G5B5;
-
-        case 0x1A: // Swizzled   (X_D3DFMT_A8L8)
-            return D3DFMT_R5G6B5;   // NOTE: HACK: Totally and utterly wrong :)
-
-        case 0x1D: // Linear     (X_D3DFMT_LIN_A4R4G4B4)
-        case 0x04: // Swizzled   (X_D3DFMT_A4R4G4B4)
-            return D3DFMT_A4R4G4B4;
-
-        case 0x11: // Linear     (X_D3DFMT_LIN_R5G6B5)
-        case 0x05: // Swizzled   (X_D3DFMT_R5G6B5)
-            return D3DFMT_R5G6B5;
-
-        case 0x12: // Linear     (X_D3DFMT_LIN_A8R8G8B8)
-        case 0x06: // Swizzled   (X_D3DFMT_A8R8G8B8)
-            return D3DFMT_A8R8G8B8;
-
-        case 0x3F: // Linear     (X_D3DFMT_LIN_A8B8G8R8)
-            return D3DFMT_A8R8G8B8; // NOTE: HACK: R<->B Swapped!
-
-        case 0x1E: // Linear     (X_D3DFMT_LIN_X8R8G8B8)
-        case 0x07: // Swizzled   (X_D3DFMT_X8R8G8B8)
-            return D3DFMT_X8R8G8B8;
-
-        case 0x0B: // Swizzled   (X_D3DFMT_P8)
-            return D3DFMT_P8;
-
-        case 0x0C: // Compressed (X_D3DFMT_DXT1)
-            return D3DFMT_DXT1;
-
-        case 0x0E: // Compressed (X_D3DFMT_DXT2)
-            return D3DFMT_DXT2;
-
-        case 0x0F: // Compressed (X_D3DFMT_DXT3)
-            return D3DFMT_DXT3;
-
-        case 0x24: // Swizzled   (X_D3DFMT_YUV2)
-            return D3DFMT_YUY2;
-
-        case 0x2E: // Linear     (X_D3DFMT_LIN_D24S8)
-        case 0x2A: // Swizzled   (X_D3DFMT_D24S8)
-            return D3DFMT_D24S8;
-
-        case 0x2B: // Swizzled   (X_D3DFMT_F24S8)
-            return D3DFMT_D24S8;    // NOTE: Hack!! PC does not have D3DFMT_F24S8 (Float vs Int)
-
-        case 0x30: // Linear     (X_D3DFMT_LIN_D16)
-        case 0x2C: // Swizzled   (X_D3DFMT_D16)
-            return D3DFMT_D16;
-
-        case 0x28: // Swizzled   (X_D3DFMT_V8U8)
-            return D3DFMT_V8U8;
-    }
-
-    EmuCleanup("EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)", Format);
-
-    return (D3DFORMAT)Format;
-}
+extern D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format);
 
 // convert from pc to xbox color formats
-inline X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format)
-{
-    switch(Format)
-    {
-        case D3DFMT_YUY2:
-            return 0x24;
-        case D3DFMT_R5G6B5:
-            return 0x05;
-        case D3DFMT_D24S8:
-            return 0x2A;
-        case D3DFMT_X8R8G8B8:
-//            return 0x1E;    // Linear (X_D3DFMT_LIN_X8R8G8B8)
-            return 0x07;
-        case D3DFMT_A8R8G8B8:
-//            return 0x12;    // Linear (X_D3DFMT_LIN_A8R8G8B8)
-            return 0x06;
-    }
-
-    EmuCleanup("EmuPC2XB_D3DFormat: Unknown Format (%d)", Format);
-
-    return Format;
-}
+extern X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format);
 
 /**
 // convert from pc to xbox texture transform state types (unnecessary so far)
@@ -224,6 +110,9 @@ inline D3DFILLMODE EmuXB2PC_D3DFILLMODE(X_D3DFILLMODE Value)
     return (D3DFILLMODE)((Value & 0xF) + 1);
 }
 
+// table used for vertex->primitive count conversion
+extern UINT EmuD3DVertexToPrimitive[11][2];
+
 // convert from vertex count to primitive count (Xbox)
 inline int EmuD3DVertex2PrimitiveCount(int PrimitiveType, int VertexCount)
 {
@@ -236,7 +125,10 @@ inline int EmuD3DPrimitive2VertexCount(int PrimitiveType, int PrimitiveCount)
     return (((PrimitiveCount)*EmuD3DVertexToPrimitive[PrimitiveType][0])+EmuD3DVertexToPrimitive[PrimitiveType][1]);
 }
 
-// convert from xbox to d3d primitive type
+// conversion table for xbox->pc primitive types
+extern D3DPRIMITIVETYPE EmuPrimitiveTypeLookup[];
+
+// convert xbox->pc primitive type
 inline D3DPRIMITIVETYPE EmuPrimitiveType(X_D3DPRIMITIVETYPE PrimitiveType)
 {
     if((DWORD)PrimitiveType == 0x7FFFFFFF)

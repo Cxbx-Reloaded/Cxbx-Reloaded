@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D8VertexShader.h
+// *   Cxbx->Win32->CxbxKrnl->EmuD3D8->PushBuffer.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,36 +31,14 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUD3D8VERTEXSHADER_H
-#define EMUD3D8VERTEXSHADER_H
+#ifndef PUSHBUFFER_H
+#define PUSHBUFFER_H
 
-// nv2a microcode header
-typedef struct _NV2A_HEADER
-{
-    BYTE Type;
-    BYTE Version;
-    BYTE NumInst;
-    BYTE Unknown;
-}
-NV2A_HEADER;
-
-#define NV2A_MICROCODE_DEF_TYPE		0x78 // x
-#define NV2A_MICROCODE_DEF_VS_XVS	0x20 // for vs, xvs
-#define NV2A_MICROCODE_DEF_XVSS		0x73 // for xvss
-#define NV2A_MICROCODE_DEF_XVSW		0x77 // for xvsw
-
-// recompile xbox vertex shader declaration
-extern void EmuRecompileVSHDeclaration
+// emulate the execution of an xbox d3d pushbuffer
+extern void EmuExecutePushBuffer
 (
-    DWORD  *pDeclaration,
-    DWORD   Handle
-);
-
-// recompile xbox vertex shader function
-extern void EmuRecompileVSHFunction
-(
-    DWORD  *pFunction,
-    DWORD **pRecompiled
+    X_D3DPushBuffer       *pPushBuffer,
+    PVOID                  pFixup
 );
 
 #endif

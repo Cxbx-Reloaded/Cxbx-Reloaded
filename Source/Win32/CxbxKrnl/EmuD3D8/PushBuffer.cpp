@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D8PushBuffer.cpp
+// *   Cxbx->Win32->CxbxKrnl->EmuD3D->PushBuffer.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -32,17 +32,9 @@
 // *
 // ******************************************************************
 #define _CXBXKRNL_INTERNAL
-#define _XBOXKRNL_LOCAL_
-
-// prevent name collisions
-namespace xboxkrnl
-{
-    #include <xboxkrnl/xboxkrnl.h>
-};
+#define _XBOXKRNL_DEFEXTRN_
 
 #include "Emu.h"
-#include "EmuFS.h"
-#include "EmuShared.h"
 
 // prevent name collisions
 namespace XTL

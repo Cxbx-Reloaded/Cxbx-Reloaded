@@ -32,7 +32,7 @@
 // *
 // ******************************************************************
 #define _CXBXKRNL_INTERNAL
-#define _XBOXKRNL_LOCAL_
+#define _XBOXKRNL_DEFEXTRN_
 
 #include "EmuFile.h"
 

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXTL.h
+// *   Cxbx->Win32->CxbxKrnl->EmuD3D8->VertexBuffer.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,18 +31,28 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUXTL_H
-#define EMUXTL_H
+#ifndef VERTEXBUFFER_H
+#define VERTEXBUFFER_H
 
-#include "EmuXapi.h"
-#include "EmuD3D8.h"
-#include "EmuD3D8\Convert.h"
-#include "EmuD3D8\VertexBuffer.h"
-#include "EmuD3D8\PushBuffer.h"
-#include "EmuD3D8\VertexShader.h"
-#include "EmuDInput.h"
-#include "EmuDSound.h"
-#include "EmuXOnline.h"
-#include "EmuXG.h"
+// fixup xbox extensions to be compatible with PC direct3d
+extern UINT EmuFixupVerticesA
+(
+    DWORD                           PrimitiveType,
+    UINT                           &PrimitiveCount,
+    XTL::IDirect3DVertexBuffer8   *&pOrigVertexBuffer8,
+    XTL::IDirect3DVertexBuffer8   *&pHackVertexBuffer8,
+    UINT                            dwOffset,
+    PVOID                           pVertexStreamZeroData,
+    UINT                            uiVertexStreamZeroStride, 
+    PVOID                          *ppNewVertexStreamZeroData
+);
+
+// fixup xbox extensions to be compatible with PC direct3d
+extern VOID EmuFixupVerticesB
+(
+    UINT                            nStride,
+    XTL::IDirect3DVertexBuffer8   *&pOrigVertexBuffer8,
+    XTL::IDirect3DVertexBuffer8   *&pHackVertexBuffer8
+);
 
 #endif
