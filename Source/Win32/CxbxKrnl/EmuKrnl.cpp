@@ -437,7 +437,7 @@ XBSYSAPI EXPORTNUM(66) NTSTATUS NTAPI xboxkrnl::IoCreateFile
 // ******************************************************************
 // * 0x0043 IoCreateSymbolicLink
 // ******************************************************************
-XBSYSAPI EXPORTNUM(67) NTSTATUS xboxkrnl::IoCreateSymbolicLink
+XBSYSAPI EXPORTNUM(67) NTSTATUS NTAPI xboxkrnl::IoCreateSymbolicLink
 (
     IN PSTRING SymbolicLinkName,
     IN PSTRING DeviceName
@@ -471,7 +471,7 @@ XBSYSAPI EXPORTNUM(67) NTSTATUS xboxkrnl::IoCreateSymbolicLink
 // ******************************************************************
 // * 0x0045 - IoDeleteSymbolicLink
 // ******************************************************************
-XBSYSAPI EXPORTNUM(69) NTSTATUS xboxkrnl::IoDeleteSymbolicLink
+XBSYSAPI EXPORTNUM(69) NTSTATUS NTAPI xboxkrnl::IoDeleteSymbolicLink
 (
     IN PSTRING SymbolicLinkName
 )
@@ -1775,10 +1775,9 @@ XBSYSAPI EXPORTNUM(219) NTSTATUS NTAPI xboxkrnl::NtReadFile
     }
     #endif
 
-    // Halo NTSC, Buffer == 0x09740040
-    // Possibly grabbing the vram cache from Xeon
-    //if(Buffer == (PVOID)0x09740040)
-    //    _asm int 3
+// Halo...
+//    if(ByteOffset != 0 && ByteOffset->QuadPart == 0x00120800)
+//        _asm int 3
 
     NTSTATUS ret = NtDll::NtReadFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, (NtDll::LARGE_INTEGER*)ByteOffset, 0);
 
@@ -2026,8 +2025,9 @@ XBSYSAPI EXPORTNUM(236) NTSTATUS NTAPI xboxkrnl::NtWriteFile
     }
     #endif
 
-    if(ByteOffset != 0 && ByteOffset->QuadPart == 0x01C00800)
-        _asm int 3
+// Halo..
+//    if(ByteOffset != 0 && ByteOffset->QuadPart == 0x01C00800)
+//        _asm int 3
 
     NTSTATUS ret = NtDll::NtWriteFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, (NtDll::LARGE_INTEGER*)ByteOffset, 0);
 

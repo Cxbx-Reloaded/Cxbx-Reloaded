@@ -5,6 +5,11 @@ version: 0.7.9 (??/??/??)
 
 - Fixed start/back mapping problem :)
 
+- Absurd amounts of new code, including general code cleanup
+
+- Fixed a glitch in EmuExe that was outputting some bad Exes
+  in situations such as the msdashboard. (thanks sop skrutt!)
+
 version: 0.7.8c (09/02/03)
 --------------------------------
 

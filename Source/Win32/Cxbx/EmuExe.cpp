@@ -158,7 +158,7 @@ EmuExe::EmuExe(Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename) : Exe
         // ******************************************************************
         // * start appending section headers at this point
         // ******************************************************************
-        uint32 dwSectionCursor = RoundUp(m_OptionalHeader.m_sizeof_headers, 0x1000);
+        uint32 dwSectionCursor = x_Xbe->m_SectionHeader[0].dwRawAddr;
 
         // ******************************************************************
         // * generate xbe section headers

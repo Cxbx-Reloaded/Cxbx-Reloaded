@@ -62,7 +62,7 @@ Xbe::Xbe(const char *x_szFilename)
 
     // remember the Xbe path
     {
-        printf("Xbe::Xbe Storing Xbe Path...");
+        printf("Xbe::Xbe: Storing Xbe Path...");
 
         strcpy(m_szPath, x_szFilename);
 

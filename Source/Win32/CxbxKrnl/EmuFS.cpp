@@ -34,9 +34,7 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_LOCAL_
 
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
+// prevent name collisions
 namespace xboxkrnl
 {
     #include <xboxkrnl/xboxkrnl.h>
@@ -49,22 +47,16 @@ namespace xboxkrnl
 #include <windows.h>
 #include <stdio.h>
 
-// ******************************************************************
-// * data: EmuAutoSleepRate
-// ******************************************************************
+// automatically insert after this many EmuFS() swaps
 uint32 EmuAutoSleepRate = -1;
 
-// ******************************************************************
-// * func: EmuInitFS
-// ******************************************************************
+// initialize fs segment selector emulation
 void EmuInitFS()
 {
     EmuInitLDT();
 }
 
-// ******************************************************************
-// * func: EmuGenerateFS
-// ******************************************************************
+// generate fs segment selector
 void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 {
     NT_TIB         *OrgNtTib;
@@ -74,9 +66,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 
     uint16 NewFS = -1, OrgFS = -1;
 
-    // ******************************************************************
-    // * Copy Global TLS to Local
-    // ******************************************************************
+    // copy global TLS to the current thread
     {
 		uint32 dwCopySize = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr;
         uint32 dwZeroSize = pTLS->dwSizeofZeroFill;
@@ -88,9 +78,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		ZeroMemory(pNewTLS + dwCopySize, dwZeroSize);
     }
 
-    // ******************************************************************
-    // * Dump Raw TLS data
-    // ******************************************************************
+    // dump raw TLS data
     {
         #ifdef _DEBUG_TRACE
 		if(pNewTLS == 0)
@@ -99,7 +87,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		}
 		else
 		{
-			printf("EmuFS (0x%X): TLS Data Dump... \nEmuFS (0x%X):   0x%.08X: ", GetCurrentThreadId(), GetCurrentThreadId(), pNewTLS);
+			printf("EmuFS (0x%X): TLS Data Dump... \nEmuFS (0x%X): 0x%.08X: ", GetCurrentThreadId(), GetCurrentThreadId(), pNewTLS);
 
 			uint32 stop = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr + pTLS->dwSizeofZeroFill;
 
@@ -109,8 +97,8 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 
 				printf("%.01X", (uint32)*bByte);
 
-				if((v+1) % 0x10 == 0)
-					printf("\nEmuFS (0x%X):   0x%.08X: ", GetCurrentThreadId(), ((uint32)pNewTLS + v));
+				if((v+1) % 0x10 == 0 && v+1<stop)
+					printf("\nEmuFS (0x%X): 0x%.08X: ", GetCurrentThreadId(), ((uint32)pNewTLS + v));
 			}
 
 			printf("\n");
@@ -118,9 +106,6 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
         #endif
     }
 
-    // ******************************************************************
-    // * Obtain "OrgFS"
-    // ******************************************************************
     __asm
     {
         // Obtain "OrgFS"
@@ -132,9 +117,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
         mov OrgNtTib, eax
     }
 
-    // ******************************************************************
-    // * Allocate LDT entry
-    // ******************************************************************
+    // allocate LDT entry
     {
         uint32 dwSize = sizeof(xboxkrnl::KPCR);
 
@@ -145,23 +128,17 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
         NewFS = EmuAllocateLDT((uint32)NewPcr, (uint32)NewPcr + dwSize);
     }
 
-    // ******************************************************************
-    // * Update "OrgFS" with NewFS and (bIsBoxFs = false)
-    // ******************************************************************
+    // update "OrgFS" with NewFS and (bIsXboxFS = false)
+    __asm
     {
-        __asm
-        {
-            mov ax, NewFS
-            mov bh, 0
+        mov ax, NewFS
+        mov bh, 0
 
-            mov fs:[0x14], ax
-            mov fs:[0x16], bh
-        }
+        mov fs:[0x14], ax
+        mov fs:[0x16], bh
     }
 
-    // ******************************************************************
-    // * Generate TIB
-    // ******************************************************************
+    // generate TIB
     {
         xboxkrnl::ETHREAD *EThread = new xboxkrnl::ETHREAD();
 
@@ -177,9 +154,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
         NewPcr->Prcb = &NewPcr->PrcbData;
     }
 
-    // ******************************************************************
-    // * Prepare TLS
-    // ******************************************************************
+    // prepare TLS
     {
         // TLS Index Address := 0
         *(uint32*)pTLS->dwTLSIndexAddr = 0;
@@ -189,52 +164,36 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
             *(void**)pNewTLS = pNewTLS;
     }
 
-    // ******************************************************************
-    // * Swap into the "NewFS"
-    // ******************************************************************
+    // swap into "NewFS"
     EmuSwapFS();
 
-    // ******************************************************************
-    // * Update "NewFS" with OrgFS and (bIsBoxFs = true)
-    // ******************************************************************
+    // update "NewFS" with OrgFS and (bIsXboxFS = true)
+    __asm
     {
-        __asm
-        {
-            mov ax, OrgFS
-            mov bh, 1
+        mov ax, OrgFS
+        mov bh, 1
 
-            mov fs:[0x14], ax
-            mov fs:[0x16], bh
-        }
+        mov fs:[0x14], ax
+        mov fs:[0x16], bh
     }
 
-    // ******************************************************************
-    // * Save "TLSPtr" inside NewFS.StackBase
-    // ******************************************************************
+    // save "TLSPtr" inside NewFS.StackBase
+    __asm
     {
-        __asm
-        {
-            mov eax, pNewTLS
-            mov fs:[0x04], eax
-        }
+        mov eax, pNewTLS
+        mov fs:[0x04], eax
     }
 
-    // ******************************************************************
-    // * Swap back into the "OrgFS"
-    // ******************************************************************
+    // swap back into the "OrgFS"
     EmuSwapFS();
 
-    // ******************************************************************
-    // * Debug output
-    // ******************************************************************
+    // debug output
 	#ifdef _DEBUG_TRACE
     printf("EmuFS (0x%X): OrgFS=%d NewFS=%d pTLS=0x%.08X\n", GetCurrentThreadId(), OrgFS, NewFS, pTLS);
 	#endif
 }
 
-// ******************************************************************
-// * func: EmuCleanupFS
-// ******************************************************************
+// cleanup fs segment selector emulation
 void EmuCleanupFS()
 {
     uint16 wSwapFS = 0;

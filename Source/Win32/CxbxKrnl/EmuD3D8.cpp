@@ -34,9 +34,7 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_LOCAL_
 
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
+// prevent name collisions
 namespace xboxkrnl
 {
     #include <xboxkrnl/xboxkrnl.h>
@@ -46,9 +44,7 @@ namespace xboxkrnl
 #include "EmuFS.h"
 #include "EmuShared.h"
 
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
+// prevent name collisions
 namespace XTL
 {
     #include "EmuXTL.h"
@@ -59,14 +55,10 @@ namespace XTL
 #include <process.h>
 #include <locale.h>
 
-// ******************************************************************
-// * Global(s)
-// ******************************************************************
+// Global(s)
 HWND XTL::g_hEmuWindow = NULL;   // Rendering Window
 
-// ******************************************************************
-// * Static Function(s)
-// ******************************************************************
+// Static Function(s)
 static DWORD WINAPI   EmuRenderWindow(LPVOID);
 static DWORD WINAPI   EmuCreateDeviceProxy(LPVOID);
 static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -75,9 +67,7 @@ static DWORD          EmuCheckAllocationSize(LPVOID);
 static inline void    EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource);
 static void           EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight);
 
-// ******************************************************************
-// * Static Variable(s)
-// ******************************************************************
+// Static Variable(s)
 static XTL::LPDIRECT3D8             g_pD3D8         = NULL; // Direct3D8
 static XTL::LPDIRECT3DDEVICE8       g_pD3DDevice8   = NULL; // Direct3D8 Device
 static BOOL                         g_bSupportsYUY2 = FALSE;// Does device support YUY2 overlays?
@@ -108,32 +98,19 @@ D3DINLINE_VERTEX;
 
 #define D3DFVF_INLINEVERTEX (D3DFVF_XYZRHW|D3DFVF_DIFFUSE)
 
-
-// ******************************************************************
-// * Cached Direct3D State Variable(s)
-// ******************************************************************
+// cached Direct3D state variable(s)
 static XTL::X_D3DSurface      *g_pCachedRenderTarget = NULL;
 static XTL::X_D3DSurface      *g_pCachedZStencilSurface = NULL;
 static DWORD                   g_dwVertexShaderUsage = 0;
 
-// ******************************************************************
-// * EmuD3DTiles (8 Tiles Max)
-// ******************************************************************
+// cached Direct3D tiles
 XTL::X_D3DTILE XTL::EmuD3DTileCache[0x08] = {0};
 
-// ******************************************************************
-// * EmuD3DDeferredRenderState
-// ******************************************************************
+// deferred state lookup tables
 DWORD *XTL::EmuD3DDeferredRenderState;
-
-// ******************************************************************
-// * EmuD3DDeferredTextureState
-// ******************************************************************
 DWORD *XTL::EmuD3DDeferredTextureState;
 
-// ******************************************************************
-// * EmuD3D8CreateDeviceProxyData
-// ******************************************************************
+// information passed to the create device proxy thread
 struct EmuD3D8CreateDeviceProxyData
 {
     XTL::UINT                        Adapter;
@@ -150,42 +127,32 @@ struct EmuD3D8CreateDeviceProxyData
         volatile bool     bCreate;   // false : release
     };
 }
-g_EmuD3D8CreateDeviceProxyData = {0};
+g_EmuCDPD = {0};
 
-// ******************************************************************
-// * func: XTL::EmuD3DInit
-// ******************************************************************
+// Direct3D initialization (called before emulation begins)
 VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 {
     g_EmuShared->GetXBVideo(&g_XBVideo);
 
-    // ******************************************************************
-    // * store XbeHeader and XbeHeaderSize for further use
-    // ******************************************************************
+    // cache XbeHeader and size of XbeHeader
     g_XbeHeader     = XbeHeader;
     g_XbeHeaderSize = XbeHeaderSize;
 
-    // ******************************************************************
-    // * create a thread dedicated to timing
-    // ******************************************************************
+    // create timing thread
     {
         DWORD dwThreadId;
 
         CreateThread(NULL, NULL, EmuUpdateTickCount, NULL, NULL, &dwThreadId);
     }
 
-    // ******************************************************************
-    // * create a thread dedicated to creating devices
-    // ******************************************************************
+    // create the create device proxy thread
     {
         DWORD dwThreadId;
 
         CreateThread(NULL, NULL, EmuCreateDeviceProxy, NULL, NULL, &dwThreadId);
     }
 
-    // ******************************************************************
-    // * spark up a new thread to handle window message processing
-    // ******************************************************************
+    // create window message processing thread
     {
         DWORD dwThreadId;
 
@@ -199,9 +166,7 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         Sleep(50);
     }
 
-    // ******************************************************************
-    // * create Direct3D8 and retrieve caps
-    // ******************************************************************
+    // create Direct3D8 and retrieve caps
     {
         using namespace XTL;
 
@@ -216,9 +181,7 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         g_pD3D8->GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), DevType, &g_D3DCaps);
     }
 
-    // ******************************************************************
-    // * create DirectDraw7
-    // ******************************************************************
+    // create DirectDraw7
     {
         using namespace XTL;
 
@@ -233,9 +196,7 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
             EmuCleanup("Could not set cooperative level");
     }
 
-    // ******************************************************************
-    // * create default device
-    // ******************************************************************
+    // create default device
     {
         XTL::X_D3DPRESENT_PARAMETERS PresParam;
 
@@ -255,9 +216,7 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
     }
 }
 
-// ******************************************************************
-// * func: XTL::EmuD3DCleanup
-// ******************************************************************
+// cleanup Direct3D
 VOID XTL::EmuD3DCleanup()
 {
     XTL::EmuDInputCleanup();
@@ -265,14 +224,12 @@ VOID XTL::EmuD3DCleanup()
     return;
 }
 
-// ******************************************************************
-// * func: EmuRenderWindow
-// ******************************************************************
+// window message processing thread
 static DWORD WINAPI EmuRenderWindow(LPVOID)
 {
-    // ******************************************************************
-    // * register window class
-    // ******************************************************************
+    char AsciiTitle[50];
+
+    // register window class
     {
         #ifdef _DEBUG
         HMODULE hCxbxDll = GetModuleHandle("CxbxKrnl.dll");
@@ -300,78 +257,63 @@ static DWORD WINAPI EmuRenderWindow(LPVOID)
         RegisterClassEx(&wc);
     }
 
-    // ******************************************************************
-    // * create the window
-    // ******************************************************************
+    // retrieve Xbe title (if possible)
     {
-        char AsciiTitle[50];
+        char tAsciiTitle[40] = "Unknown";
 
-        // ******************************************************************
-        // * retrieve xbe title (if possible)
-        // ******************************************************************
+        uint32 CertAddr = g_XbeHeader->dwCertificateAddr - g_XbeHeader->dwBaseAddr;
+
+        if(CertAddr + 0x0C + 40 < g_XbeHeaderSize)
         {
-            char tAsciiTitle[40] = "Unknown";
+            Xbe::Certificate *XbeCert = (Xbe::Certificate*)((uint32)g_XbeHeader + CertAddr);
 
-            uint32 CertAddr = g_XbeHeader->dwCertificateAddr - g_XbeHeader->dwBaseAddr;
+            setlocale( LC_ALL, "English" );
 
-            if(CertAddr + 0x0C + 40 < g_XbeHeaderSize)
-            {
-                Xbe::Certificate *XbeCert = (Xbe::Certificate*)((uint32)g_XbeHeader + CertAddr);
-
-                setlocale( LC_ALL, "English" );
-
-                wcstombs(tAsciiTitle, XbeCert->wszTitleName, 40);
-            }
-
-            sprintf(AsciiTitle, "Cxbx : Emulating %s", tAsciiTitle);
+            wcstombs(tAsciiTitle, XbeCert->wszTitleName, 40);
         }
 
-        // ******************************************************************
-        // * Create Window
-        // ******************************************************************
+        sprintf(AsciiTitle, "Cxbx : Emulating %s", tAsciiTitle);
+    }
+
+    // create the window
+    {
+        DWORD dwStyle = WS_OVERLAPPEDWINDOW;
+
+        int nTitleHeight  = GetSystemMetrics(SM_CYCAPTION);
+        int nBorderWidth  = GetSystemMetrics(SM_CXSIZEFRAME);
+        int nBorderHeight = GetSystemMetrics(SM_CYSIZEFRAME);
+
+        int x = 100, y = 100, nWidth = 640, nHeight = 480;
+
+        nWidth  += nBorderWidth*2;
+        nHeight += nBorderHeight*2 + nTitleHeight;
+
+        sscanf(g_XBVideo.GetVideoResolution(), "%d x %d", &nWidth, &nHeight);
+
+        if(g_XBVideo.GetFullscreen())
         {
-            DWORD dwStyle = WS_OVERLAPPEDWINDOW;
-
-            int nTitleHeight  = GetSystemMetrics(SM_CYCAPTION);
-            int nBorderWidth  = GetSystemMetrics(SM_CXSIZEFRAME);
-            int nBorderHeight = GetSystemMetrics(SM_CYSIZEFRAME);
-
-            int x = 100, y = 100, nWidth = 640, nHeight = 480;
-
-            nWidth  += nBorderWidth*2;
-            nHeight += nBorderHeight*2 + nTitleHeight;
-
-            sscanf(g_XBVideo.GetVideoResolution(), "%d x %d", &nWidth, &nHeight);
-
-            if(g_XBVideo.GetFullscreen())
-            {
-                x = y = nWidth = nHeight = 0;
-                dwStyle = WS_POPUP;
-            }
-
-            XTL::g_hEmuWindow = CreateWindow
-            (
-                "CxbxRender", AsciiTitle,
-                dwStyle, x, y, nWidth, nHeight,
-                GetDesktopWindow(), NULL, GetModuleHandle(NULL), NULL
-            );
+            x = y = nWidth = nHeight = 0;
+            dwStyle = WS_POPUP;
         }
+
+        XTL::g_hEmuWindow = CreateWindow
+        (
+            "CxbxRender", AsciiTitle,
+            dwStyle, x, y, nWidth, nHeight,
+            GetDesktopWindow(), NULL, GetModuleHandle(NULL), NULL
+        );
     }
 
     ShowWindow(XTL::g_hEmuWindow, SW_SHOWDEFAULT);
     UpdateWindow(XTL::g_hEmuWindow);
 
-    // ******************************************************************
-    // * initialize direct input
-    // ******************************************************************
+    // initialize direct input
     if(!XTL::EmuDInputInit())
         EmuCleanup("Could not initialize DirectInput!");
 
     printf("EmuD3D8 (0x%X): Message-Pump thread is running.\n", GetCurrentThreadId());
 
-    // ******************************************************************
-    // * message processing loop
-    // ******************************************************************
+    // message processing loop
     {
         MSG msg;
 
@@ -398,9 +340,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID)
     return 0;
 }
 
-// ******************************************************************
-// * func: EmuMsgProc
-// ******************************************************************
+// rendering window message procedure
 static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     static DWORD dwRestoreSleepRate = EmuAutoSleepRate;
@@ -445,9 +385,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
     return 0;
 }
 
-// ******************************************************************
-// * func: EmuUpdateTickCount
-// ******************************************************************
+// timing thread procedure
 static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 {
     printf("EmuD3D8 (0x%X): Timing thread is running.\n", GetCurrentThreadId());
@@ -463,9 +401,7 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
     timeEndPeriod(0);
 }
 
-// ******************************************************************
-// * func: EmuCreateDeviceProxy
-// ******************************************************************
+// thread dedicated to create devices
 static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 {
     printf("EmuD3D8 (0x%X): CreateDevice proxy thread is running.\n", GetCurrentThreadId());
@@ -473,11 +409,11 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
     while(true)
     {
         // if we have been signalled, create the device with cached parameters
-        if(g_EmuD3D8CreateDeviceProxyData.bReady)
+        if(g_EmuCDPD.bReady)
         {
             printf("EmuD3D8 (0x%X): CreateDevice proxy thread recieved request.\n", GetCurrentThreadId());
 
-            if(g_EmuD3D8CreateDeviceProxyData.bCreate)
+            if(g_EmuCDPD.bCreate)
             {
                 // only one device should be created at once
                 // TODO: ensure all surfaces are somehow cleaned up?
@@ -492,45 +428,43 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     g_pD3DDevice8 = 0;
                 }
 
-                // ******************************************************************
-                // * verify no ugly circumstances
-                // ******************************************************************
-                if(g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BufferSurfaces[0] != NULL || g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->DepthStencilSurface != NULL)
-                    EmuWarning("BufferSurfaces[0] : 0x%.08X,  DepthStencilSurface : 0x%.08X", g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BufferSurfaces[0], g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->DepthStencilSurface);
+                if(g_EmuCDPD.pPresentationParameters->BufferSurfaces[0] != NULL)
+                    EmuWarning("BufferSurfaces[0] : 0x%.08X", g_EmuCDPD.pPresentationParameters->BufferSurfaces[0]);
 
-                // ******************************************************************
-                // * make adjustments to parameters to make sense with windows d3d
-                // ******************************************************************
+                if(g_EmuCDPD.pPresentationParameters->DepthStencilSurface != NULL)
+                    EmuWarning("DepthStencilSurface : 0x%.08X", g_EmuCDPD.pPresentationParameters->DepthStencilSurface);
+
+                // make adjustments to parameters to make sense with windows Direct3D
                 {
-                    g_EmuD3D8CreateDeviceProxyData.DeviceType =(g_XBVideo.GetDirect3DDevice() == 0) ? XTL::D3DDEVTYPE_HAL : XTL::D3DDEVTYPE_REF;
-                    g_EmuD3D8CreateDeviceProxyData.Adapter    = g_XBVideo.GetDisplayAdapter();
+                    g_EmuCDPD.DeviceType =(g_XBVideo.GetDirect3DDevice() == 0) ? XTL::D3DDEVTYPE_HAL : XTL::D3DDEVTYPE_REF;
+                    g_EmuCDPD.Adapter    = g_XBVideo.GetDisplayAdapter();
 
-                    g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->Windowed = !g_XBVideo.GetFullscreen();
+                    g_EmuCDPD.pPresentationParameters->Windowed = !g_XBVideo.GetFullscreen();
 
                     if(g_XBVideo.GetVSync())
-                        g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->SwapEffect = XTL::D3DSWAPEFFECT_COPY_VSYNC;
+                        g_EmuCDPD.pPresentationParameters->SwapEffect = XTL::D3DSWAPEFFECT_COPY_VSYNC;
 
-                    g_EmuD3D8CreateDeviceProxyData.hFocusWindow = XTL::g_hEmuWindow;
+                    g_EmuCDPD.hFocusWindow = XTL::g_hEmuWindow;
 
-                    g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferFormat       = XTL::EmuXB2PC_D3DFormat(g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferFormat);
-                    g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->AutoDepthStencilFormat = XTL::EmuXB2PC_D3DFormat(g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->AutoDepthStencilFormat);
+                    g_EmuCDPD.pPresentationParameters->BackBufferFormat       = XTL::EmuXB2PC_D3DFormat(g_EmuCDPD.pPresentationParameters->BackBufferFormat);
+                    g_EmuCDPD.pPresentationParameters->AutoDepthStencilFormat = XTL::EmuXB2PC_D3DFormat(g_EmuCDPD.pPresentationParameters->AutoDepthStencilFormat);
 
                     if(!g_XBVideo.GetVSync() && (g_D3DCaps.PresentationIntervals & D3DPRESENT_INTERVAL_IMMEDIATE) && g_XBVideo.GetFullscreen())
-                        g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+                        g_EmuCDPD.pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
                     else
                     {
                         if(g_D3DCaps.PresentationIntervals & D3DPRESENT_INTERVAL_ONE && g_XBVideo.GetFullscreen())
-                            g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+                            g_EmuCDPD.pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_ONE;
                         else
-                            g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+                            g_EmuCDPD.pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
                     }
 
                     // TODO: Support Xbox extensions if possible
-                    if(g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->MultiSampleType != 0)
+                    if(g_EmuCDPD.pPresentationParameters->MultiSampleType != 0)
                     {
-                        EmuWarning("MultiSampleType 0x%.08X is not supported!", g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->MultiSampleType);
+                        EmuWarning("MultiSampleType 0x%.08X is not supported!", g_EmuCDPD.pPresentationParameters->MultiSampleType);
 
-                        g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->MultiSampleType = XTL::D3DMULTISAMPLE_NONE;
+                        g_EmuCDPD.pPresentationParameters->MultiSampleType = XTL::D3DMULTISAMPLE_NONE;
 
                         // TODO: Check card for multisampling abilities
             //            if(pPresentationParameters->MultiSampleType == 0x00001121)
@@ -539,52 +473,48 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
             //                EmuCleanup("Unknown MultiSampleType (0x%.08X)", pPresentationParameters->MultiSampleType);
                     }
 
-                    g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+                    g_EmuCDPD.pPresentationParameters->Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
         
-                    // ******************************************************************
-                    // * Retrieve Resolution from Configuration
-                    // ******************************************************************
-                    if(g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->Windowed)
+                    // retrieve resolution from configuration
+                    if(g_EmuCDPD.pPresentationParameters->Windowed)
                     {
-                        sscanf(g_XBVideo.GetVideoResolution(), "%d x %d", &g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferWidth, &g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferHeight);
+                        sscanf(g_XBVideo.GetVideoResolution(), "%d x %d", &g_EmuCDPD.pPresentationParameters->BackBufferWidth, &g_EmuCDPD.pPresentationParameters->BackBufferHeight);
 
                         XTL::D3DDISPLAYMODE D3DDisplayMode;
 
                         g_pD3D8->GetAdapterDisplayMode(g_XBVideo.GetDisplayAdapter(), &D3DDisplayMode);
 
-                        g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferFormat = D3DDisplayMode.Format;
-                        g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->FullScreen_RefreshRateInHz = 0;
+                        g_EmuCDPD.pPresentationParameters->BackBufferFormat = D3DDisplayMode.Format;
+                        g_EmuCDPD.pPresentationParameters->FullScreen_RefreshRateInHz = 0;
                     }
                     else
                     {
                         char szBackBufferFormat[16];
 
                         sscanf(g_XBVideo.GetVideoResolution(), "%d x %d %*dbit %s (%d hz)", 
-                            &g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferWidth, 
-                            &g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferHeight,
+                            &g_EmuCDPD.pPresentationParameters->BackBufferWidth, 
+                            &g_EmuCDPD.pPresentationParameters->BackBufferHeight,
                             szBackBufferFormat,
-                            &g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->FullScreen_RefreshRateInHz);
+                            &g_EmuCDPD.pPresentationParameters->FullScreen_RefreshRateInHz);
 
                         if(strcmp(szBackBufferFormat, "x1r5g5b5") == 0)
-                            g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferFormat = XTL::D3DFMT_X1R5G5B5;
+                            g_EmuCDPD.pPresentationParameters->BackBufferFormat = XTL::D3DFMT_X1R5G5B5;
                         else if(strcmp(szBackBufferFormat, "r5g6r5") == 0)
-                            g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferFormat = XTL::D3DFMT_R5G6B5;
+                            g_EmuCDPD.pPresentationParameters->BackBufferFormat = XTL::D3DFMT_R5G6B5;
                         else if(strcmp(szBackBufferFormat, "x8r8g8b8") == 0)
-                            g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferFormat = XTL::D3DFMT_X8R8G8B8;
+                            g_EmuCDPD.pPresentationParameters->BackBufferFormat = XTL::D3DFMT_X8R8G8B8;
                         else if(strcmp(szBackBufferFormat, "a8r8g8b8") == 0)
-                            g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferFormat = XTL::D3DFMT_A8R8G8B8;
+                            g_EmuCDPD.pPresentationParameters->BackBufferFormat = XTL::D3DFMT_A8R8G8B8;
                     }
                 }
 
-                // ******************************************************************
-                // * Detect vertex processing capabilities
-                // ******************************************************************
-                if((g_D3DCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) && g_EmuD3D8CreateDeviceProxyData.DeviceType == XTL::D3DDEVTYPE_HAL)
+                // detect vertex processing capabilities
+                if((g_D3DCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) && g_EmuCDPD.DeviceType == XTL::D3DDEVTYPE_HAL)
                 {
                     #ifdef _DEBUG_TRACE
                     printf("EmuD3D8 (0x%X): Using hardware vertex processing\n", GetCurrentThreadId());
                     #endif
-                    g_EmuD3D8CreateDeviceProxyData.BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+                    g_EmuCDPD.BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
                     g_dwVertexShaderUsage = 0;
                 }
                 else
@@ -592,46 +522,38 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     #ifdef _DEBUG_TRACE
                     printf("EmuD3D8 (0x%X): Using software vertex processing\n", GetCurrentThreadId());
                     #endif
-                    g_EmuD3D8CreateDeviceProxyData.BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+                    g_EmuCDPD.BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
                     g_dwVertexShaderUsage = D3DUSAGE_SOFTWAREPROCESSING;
                 }
 
-                // ******************************************************************
-                // * redirect to windows d3d
-                // ******************************************************************
-                g_EmuD3D8CreateDeviceProxyData.hRet = g_pD3D8->CreateDevice
+                // redirect to windows Direct3D
+                g_EmuCDPD.hRet = g_pD3D8->CreateDevice
                 (
-                    g_EmuD3D8CreateDeviceProxyData.Adapter,
-                    g_EmuD3D8CreateDeviceProxyData.DeviceType,
-                    g_EmuD3D8CreateDeviceProxyData.hFocusWindow,
-                    g_EmuD3D8CreateDeviceProxyData.BehaviorFlags,
-                    (XTL::D3DPRESENT_PARAMETERS*)g_EmuD3D8CreateDeviceProxyData.pPresentationParameters,
-                    g_EmuD3D8CreateDeviceProxyData.ppReturnedDeviceInterface
+                    g_EmuCDPD.Adapter,
+                    g_EmuCDPD.DeviceType,
+                    g_EmuCDPD.hFocusWindow,
+                    g_EmuCDPD.BehaviorFlags,
+                    (XTL::D3DPRESENT_PARAMETERS*)g_EmuCDPD.pPresentationParameters,
+                    g_EmuCDPD.ppReturnedDeviceInterface
                 );
 
-                // ******************************************************************
-                // * report error
-                // ******************************************************************
-                if(FAILED(g_EmuD3D8CreateDeviceProxyData.hRet))
+                // report error
+                if(FAILED(g_EmuCDPD.hRet))
                 {
-                    if(g_EmuD3D8CreateDeviceProxyData.hRet == D3DERR_INVALIDCALL)
+                    if(g_EmuCDPD.hRet == D3DERR_INVALIDCALL)
                         EmuCleanup("IDirect3D8::CreateDevice failed (Invalid Call)");
-                    else if(g_EmuD3D8CreateDeviceProxyData.hRet == D3DERR_NOTAVAILABLE)
+                    else if(g_EmuCDPD.hRet == D3DERR_NOTAVAILABLE)
                         EmuCleanup("IDirect3D8::CreateDevice failed (Not Available)");
-                    else if(g_EmuD3D8CreateDeviceProxyData.hRet == D3DERR_OUTOFVIDEOMEMORY)
+                    else if(g_EmuCDPD.hRet == D3DERR_OUTOFVIDEOMEMORY)
                         EmuCleanup("IDirect3D8::CreateDevice failed (Out of Video Memory)");
 
                     EmuCleanup("IDirect3D8::CreateDevice failed (Unknown)");
                 }
 
-                // ******************************************************************
-                // * it is necessary to store this pointer globally for emulation
-                // ******************************************************************
-                g_pD3DDevice8 = *g_EmuD3D8CreateDeviceProxyData.ppReturnedDeviceInterface;
+                // cache device pointer
+                g_pD3DDevice8 = *g_EmuCDPD.ppReturnedDeviceInterface;
 
-                // ******************************************************************
-                // * check for YUY2 overlay support
-                // ******************************************************************
+                // check for YUY2 overlay support TODO: accept other overlay types
                 {
                     XTL::D3DDISPLAYMODE DisplayMode;
 
@@ -641,7 +563,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     {
                         ::HRESULT hRet = g_pD3D8->CheckDeviceFormat
                         (
-                            g_EmuD3D8CreateDeviceProxyData.Adapter, g_EmuD3D8CreateDeviceProxyData.DeviceType,
+                            g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
                             (XTL::D3DFORMAT)DisplayMode.Format, 0, XTL::D3DRTYPE_TEXTURE, XTL::D3DFMT_YUY2
                         );
 
@@ -652,10 +574,11 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     }
                 }
 
-                // update caches
+                // update render target cache
                 g_pCachedRenderTarget = new XTL::X_D3DSurface();
                 g_pD3DDevice8->GetRenderTarget(&g_pCachedRenderTarget->EmuSurface8);
 
+                // update z-stencil surface cache
                 g_pCachedZStencilSurface = new XTL::X_D3DSurface();
                 g_pD3DDevice8->GetDepthStencilSurface(&g_pCachedZStencilSurface->EmuSurface8);
 
@@ -675,7 +598,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 g_pD3DDevice8->Present(0, 0, 0, 0);
 
                 // signal completion
-                g_EmuD3D8CreateDeviceProxyData.bReady = false;
+                g_EmuCDPD.bReady = false;
             }
             else
             {
@@ -686,14 +609,14 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
                     g_pD3DDevice8->EndScene();
 
-                    g_EmuD3D8CreateDeviceProxyData.hRet = g_pD3DDevice8->Release();
+                    g_EmuCDPD.hRet = g_pD3DDevice8->Release();
                     
-                    if(g_EmuD3D8CreateDeviceProxyData.hRet == 0)
+                    if(g_EmuCDPD.hRet == 0)
                         g_pD3DDevice8 = 0;
                 }
 
                 // signal completion
-                g_EmuD3D8CreateDeviceProxyData.bReady = false;
+                g_EmuCDPD.bReady = false;
             }
         }
 
@@ -701,9 +624,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
     }
 }
 
-// ******************************************************************
-// * func: EmuCheckAllocationSize
-// ******************************************************************
+// check how many bytes were allocated for a structure
 static DWORD EmuCheckAllocationSize(PVOID pBase)
 {
     MEMORY_BASIC_INFORMATION MemoryBasicInfo;
@@ -719,9 +640,7 @@ static DWORD EmuCheckAllocationSize(PVOID pBase)
     return MemoryBasicInfo.RegionSize - ((DWORD)pBase - (DWORD)MemoryBasicInfo.BaseAddress);
 }
 
-// ******************************************************************
-// * func: EmuVerifyResourceIsRegistered
-// ******************************************************************
+// check if a resource has been registered yet (if not, register it)
 static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
 {
     static XTL::X_D3DResource pCache[16] = {0};
@@ -750,9 +669,7 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
     }
 }
 
-// ******************************************************************
-// * func: EmuAdjustPower2
-// ******************************************************************
+// ensure a given width/height are powers of 2
 static void EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight)
 {
     UINT NewWidth=0, NewHeight=0;
@@ -821,22 +738,22 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
     #endif
 
     // Cache parameters
-    g_EmuD3D8CreateDeviceProxyData.Adapter = Adapter;
-    g_EmuD3D8CreateDeviceProxyData.DeviceType = DeviceType;
-    g_EmuD3D8CreateDeviceProxyData.hFocusWindow = hFocusWindow;
-    g_EmuD3D8CreateDeviceProxyData.pPresentationParameters = pPresentationParameters;
-    g_EmuD3D8CreateDeviceProxyData.ppReturnedDeviceInterface = ppReturnedDeviceInterface;
+    g_EmuCDPD.Adapter = Adapter;
+    g_EmuCDPD.DeviceType = DeviceType;
+    g_EmuCDPD.hFocusWindow = hFocusWindow;
+    g_EmuCDPD.pPresentationParameters = pPresentationParameters;
+    g_EmuCDPD.ppReturnedDeviceInterface = ppReturnedDeviceInterface;
 
     // Signal proxy thread, and wait for completion
-    g_EmuD3D8CreateDeviceProxyData.bReady = true;
-    g_EmuD3D8CreateDeviceProxyData.bCreate = true;
+    g_EmuCDPD.bReady = true;
+    g_EmuCDPD.bCreate = true;
 
-    while(g_EmuD3D8CreateDeviceProxyData.bReady)
+    while(g_EmuCDPD.bReady)
         Sleep(10);
 
     EmuSwapFS();   // XBox FS
 
-    return g_EmuD3D8CreateDeviceProxyData.hRet;
+    return g_EmuCDPD.hRet;
 }
 
 // ******************************************************************
@@ -3676,15 +3593,15 @@ ULONG WINAPI XTL::EmuIDirect3DDevice8_Release()
     #endif
 
     // Signal proxy thread, and wait for completion
-    g_EmuD3D8CreateDeviceProxyData.bReady = true;
-    g_EmuD3D8CreateDeviceProxyData.bCreate = false;
+    g_EmuCDPD.bReady = true;
+    g_EmuCDPD.bCreate = false;
 
-    while(g_EmuD3D8CreateDeviceProxyData.bReady)
+    while(g_EmuCDPD.bReady)
         Sleep(10);
 
     EmuSwapFS();   // XBox FS
 
-    return g_EmuD3D8CreateDeviceProxyData.hRet;
+    return g_EmuCDPD.hRet;
 }
 
 // ******************************************************************

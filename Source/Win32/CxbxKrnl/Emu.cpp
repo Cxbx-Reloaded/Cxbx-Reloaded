@@ -34,9 +34,7 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_LOCAL_
 
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
+// prevent name collisions
 namespace xboxkrnl
 {
     #include <xboxkrnl/xboxkrnl.h>
@@ -45,9 +43,7 @@ namespace xboxkrnl
 #include "Emu.h"
 #include "EmuFS.h"
 
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
+// prevent name collisions
 namespace XTL
 {
     #include "EmuXTL.h"
@@ -58,28 +54,22 @@ namespace XTL
 #include "EmuShared.h"
 #include "HLEDataBase.h"
 
-// ******************************************************************
-// * global / static
-// ******************************************************************
-Xbe::TLS    *g_pTLS       = NULL;
-void        *g_pTLSData   = NULL;
-Xbe::Header *g_pXbeHeader = NULL;
-HANDLE		 g_hCurDir    = NULL;
-HANDLE       g_hTDrive    = NULL;
-HANDLE       g_hUDrive    = NULL;
-HANDLE       g_hZDrive    = NULL;
+// Global Variable(s)
+extern Xbe::TLS    *g_pTLS       = NULL;
+extern void        *g_pTLSData   = NULL;
+extern Xbe::Header *g_pXbeHeader = NULL;
+extern HANDLE		g_hCurDir    = NULL;
+extern HANDLE       g_hTDrive    = NULL;
+extern HANDLE       g_hUDrive    = NULL;
+extern HANDLE       g_hZDrive    = NULL;
 
-// ******************************************************************
-// * static
-// ******************************************************************
+// Static Function(s)
 static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper);
 static void  EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *pXbeHeader);
 static void  EmuXRefFailure();
 static int   ExitException(LPEXCEPTION_POINTERS e);
 
-// ******************************************************************
-// * func: DllMain
-// ******************************************************************
+// Dll entry point, exit point, ...
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     if(fdwReason == DLL_PROCESS_ATTACH)
@@ -91,9 +81,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     return TRUE;
 }
 
-// ******************************************************************
-// * func: EmuNoFunc
-// ******************************************************************
+// pointless function
 extern "C" CXBXKRNL_API void NTAPI EmuNoFunc()
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -103,9 +91,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuNoFunc()
     EmuSwapFS();   // XBox FS
 }
 
-// ******************************************************************
-// * func: EmuVerifyVersion
-// ******************************************************************
+// verify szVersion matches the current build version
 extern "C" CXBXKRNL_API bool NTAPI EmuVerifyVersion(const char *szVersion)
 {
     if(strcmp(szVersion, _CXBX_VERSION) != 0)
@@ -114,9 +100,7 @@ extern "C" CXBXKRNL_API bool NTAPI EmuVerifyVersion(const char *szVersion)
     return true;
 }
 
-// ******************************************************************
-// * func: EmuCleanThread
-// ******************************************************************
+// cleanup and terminate the current thread
 extern "C" CXBXKRNL_API void NTAPI EmuCleanThread()
 {
     if(EmuIsXboxFS())
@@ -127,9 +111,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanThread()
     TerminateThread(GetCurrentThread(), 0);
 }
 
-// ******************************************************************
-// * func: EmuInit
-// ******************************************************************
+// initialize emulation
 extern "C" CXBXKRNL_API void NTAPI EmuInit
 (
     void                   *pTLSData, 
@@ -141,6 +123,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     uint32                  dwXbeHeaderSize,
     void                  (*Entry)())
 {
+    // update caches
     g_pTLS       = pTLS;
     g_pTLSData   = pTLSData;
 	g_pXbeHeader = pXbeHeader;
@@ -148,9 +131,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 	// For Unicode Conversions
 	setlocale(LC_ALL, "English");
 
-    // ******************************************************************
-    // * debug console allocation (if configured)
-    // ******************************************************************
+    // debug console allocation (if configured)
     if(DbgMode == DM_CONSOLE)
     {
         if(AllocConsole())
@@ -184,9 +165,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
             freopen("nul", "w", stdout);
     }
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     {
         #ifdef _DEBUG_TRACE
         printf("EmuMain (0x%X): Debug Trace Enabled.\n", GetCurrentThreadId());
@@ -209,9 +188,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         #endif
     }
 
-    // ******************************************************************
-    // * Load the necessary pieces of XBEHeader
-    // ******************************************************************
+    // load the necessary pieces of XbeHeader
     {
         Xbe::Header *MemXbeHeader = (Xbe::Header*)0x00010000;
 
@@ -230,9 +207,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         memcpy((void*)pXbeHeader->dwCertificateAddr, &((uint08*)pXbeHeader)[pXbeHeader->dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
     }
 
-    // ******************************************************************
-	// * Initialize current directory
-    // ******************************************************************
+    // initialize current directory
 	{
 		char szBuffer[260];
 
@@ -246,9 +221,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 			EmuCleanup("Could not map D:\\\n");
 	}
 
-    // ******************************************************************
-	// * Initialize T:\ and U:\ directories
-    // ******************************************************************
+    // initialize T:\ and U:\ directories
     {
 		char szBuffer[260];
 
@@ -286,6 +259,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
             if(g_hTDrive == INVALID_HANDLE_VALUE)
                 EmuCleanup("Could not map T:\\\n");
+
+            printf("EmuMain (0x%X): TData := %s\n", GetCurrentThreadId(), szBuffer);
         }
 
         // Create UData Directory
@@ -302,6 +277,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
             if(g_hUDrive == INVALID_HANDLE_VALUE)
                 EmuCleanup("Could not map U:\\\n");
+
+            printf("EmuMain (0x%X): UData := %s\n", GetCurrentThreadId(), szBuffer);
         }
 
         // Create ZData Directory
@@ -320,18 +297,16 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
             if(g_hUDrive == INVALID_HANDLE_VALUE)
                 EmuCleanup("Could not map Z:\\\n");
+
+            printf("EmuMain (0x%X): ZData := %s\n", GetCurrentThreadId(), szBuffer);
         }
     }
 
-    // ******************************************************************
-    // * Initialize OpenXDK emulation
-    // ******************************************************************
+    // initialize OpenXDK emulation (non-existant for now at least)
     if(pLibraryVersion == 0)
         printf("EmuMain (0x%X): Detected OpenXDK application...\n", GetCurrentThreadId());
 
-    // ******************************************************************
-    // * Initialize Microsoft XDK emulation
-    // ******************************************************************
+    // initialize Microsoft XDK emulation
     if(pLibraryVersion != 0)
     {
         printf("EmuMain (0x%X): Detected Microsoft XDK application...\n", GetCurrentThreadId());
@@ -401,9 +376,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                         uint32 lower = pXbeHeader->dwBaseAddr;
                         uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
 
-				        // ******************************************************************
-				        // * Locate XapiProcessHeap
-				        // ******************************************************************
+                        // locate XapiProcessHeap
                         {
                             void *pFunc = 0;
 
@@ -431,9 +404,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
 				        void *pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4134, lower, upper);
 
-                        // ******************************************************************
-				        // * Locate D3DDeferredRenderState
-				        // ******************************************************************
+                        // locate D3DDeferredRenderState
                         if(pFunc != 0 && (BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4627))
                         {
                             if(BuildVersion == 4134)
@@ -454,9 +425,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                             EmuWarning("EmuD3DDeferredRenderState was not found!");
                         }
 
-                        // ******************************************************************
-				        // * Locate D3DDeferredTextureState
-				        // ******************************************************************
+                        // locate D3DDeferredTextureState
                         {
                             if(BuildVersion == 4134)
                                 pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4134, lower, upper);
@@ -490,15 +459,11 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
             bXRefFirstPass = false;
         }
 
-        // ******************************************************************
-        // * Display XRef Summary
-        // ******************************************************************
+        // display Xref summary
         printf("EmuMain (0x%X): Resolved %d cross reference(s)\n", GetCurrentThreadId(), OrigUnResolvedXRefs - UnResolvedXRefs);
     }
 
-    // ******************************************************************
-    // * Initialize FS Emulation
-    // ******************************************************************
+    // initialize FS segment selector emulation
     {
         EmuInitFS();
 
@@ -511,9 +476,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
     printf("EmuMain (0x%X): Initial thread starting.\n", GetCurrentThreadId());
 
-    // ******************************************************************
-    // * Entry Point
-    // ******************************************************************
+    // Xbe entry point
     __try
     {
         EmuSwapFS();   // XBox FS
@@ -521,12 +484,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         // _USE_XGMATH Disabled in mesh :[
         // halo : dword_0_2E2D18
         // halo : 1744F0 (bink)
-        
-        // ***** Remember to check SetLastError/GetLastError, this is very potential!
-        // ***** Hint: BP@GetLastError and see if it matches up with Xeon's SetLastError?
-        // ***** Note: SetLastError could be expected as implicit from some calls!
         _asm int 3
-        // ***** Problem could be GetLastError() after cache 
 
         Entry();
 
@@ -546,9 +504,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     return;
 }
 
-// ******************************************************************
-// * func: EmuWarning
-// ******************************************************************
+// print out a warning message to the kernel debug log file
 #ifdef _DEBUG_WARNINGS
 extern "C" CXBXKRNL_API void NTAPI EmuWarning(const char *szWarningMessage, ...)
 {
@@ -578,14 +534,10 @@ extern "C" CXBXKRNL_API void NTAPI EmuWarning(const char *szWarningMessage, ...)
 }
 #endif
 
-// ******************************************************************
-// * func: EmuCleanup
-// ******************************************************************
+// cleanup emulation
 extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage, ...)
 {
-    // ******************************************************************
-    // * Print out ErrorMessage (if exists)
-    // ******************************************************************
+    // print out error message (if exists)
     if(szErrorMessage != NULL)
     {
         char szBuffer1[255];
@@ -611,9 +563,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage, ...)
     printf("CxbxKrnl: Terminating Process\n");
     fflush(stdout);
 
-    // ******************************************************************
-    // * Cleanup debug output
-    // ******************************************************************
+    // cleanup debug output
     {
         FreeConsole();
 
@@ -628,9 +578,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage, ...)
     return;
 }
 
-// ******************************************************************
-// * func: EmuPanic
-// ******************************************************************
+// kernel function not implemented, panic
 extern "C" CXBXKRNL_API void NTAPI EmuPanic()
 {
     if(EmuIsXboxFS())
@@ -643,9 +591,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuPanic()
     EmuSwapFS();   // XBox FS
 }
 
-// ******************************************************************
-// * func: EmuInstallWrapper
-// ******************************************************************
+// install function interception wrapper
 inline void EmuInstallWrapper(void *FunctionAddr, void *WrapperAddr)
 {
     uint08 *FuncBytes = (uint08*)FunctionAddr;
@@ -654,9 +600,7 @@ inline void EmuInstallWrapper(void *FunctionAddr, void *WrapperAddr)
     *(uint32*)&FuncBytes[1] = (uint32)WrapperAddr - (uint32)FunctionAddr - 5;
 }
 
-// ******************************************************************
-// * func: EmuLocateFunction
-// ******************************************************************
+// locate the given function, searching within lower and upper bounds
 void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
 {
     uint32 count = Oovpa->Count;
@@ -665,25 +609,19 @@ void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
     if(!bXRefFirstPass && Oovpa->XRefCount == 0 && Oovpa->XRefSaveIndex == (uint08)-1)
         return 0;
 
-    // ******************************************************************
-    // * Large
-    // ******************************************************************
+    // large
     if(Oovpa->Large == 1)
     {
         LOOVPA<1> *Loovpa = (LOOVPA<1>*)Oovpa;
 
         upper -= Loovpa->Lovp[count-1].Offset;
 
-        // ******************************************************************
-        // * Search all of the image memory
-        // ******************************************************************
+        // search all of the image memory
         for(uint32 cur=lower;cur<upper;cur++)
         {
             uint32 v;
 
-            // ******************************************************************
-            // * check all cross references
-            // ******************************************************************
+            // check all cross references
             for(v=0;v<Loovpa->XRefCount;v++)
             {
                 uint32 Offset = Loovpa->Lovp[v].Offset;
@@ -692,15 +630,13 @@ void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
                 uint32 RealValue = *(uint32*)(cur + Offset);
 
                 if(XRefDataBase[Value] == -1)
-                    goto skipout_L;   // Unsatisfied XRef is not acceptable
+                    goto skipout_L;   // unsatisfied Xref is not acceptable
 
                 if(RealValue + cur + Offset+4 != XRefDataBase[Value])
                     break;
             }
 
-            // ******************************************************************
-            // * check all pairs, moving on if any do not match
-            // ******************************************************************
+            // check all pairs, moving on if any do not match
             for(v=0;v<count;v++)
             {
                 uint32 Offset = Loovpa->Lovp[v].Offset;
@@ -712,9 +648,7 @@ void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
                     break;
             }
 
-            // ******************************************************************
-            // * success if we found all pairs
-            // ******************************************************************
+            // success if we found all pairs
             if(v == count)
             {
                 if(Loovpa->XRefSaveIndex != (uint08)-1)
@@ -727,7 +661,7 @@ void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
                         return (void*)cur;
                     }
                     else
-                        return 0;   // Already Found, no bother patching again
+                        return 0;   // already Found, no bother patching again
                 }
 
                 return (void*)cur;
@@ -736,27 +670,21 @@ void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
             skipout_L:;
         }
     }
-    // ******************************************************************
-    // * Small
-    // ******************************************************************
+    // small
     else
     {
         SOOVPA<1> *Soovpa = (SOOVPA<1>*)Oovpa;
 
         upper -= Soovpa->Sovp[count-1].Offset;
 
-        // ******************************************************************
-        // * Search all of the image memory
-        // ******************************************************************
+        // search all of the image memory
         for(uint32 cur=lower;cur<upper;cur++)
         {
             uint32 v;
 
 //            if( (cur == 0x0006A6C6) && (Soovpa->Sovp[v].Value == XREF_SETCURRENTPOSITION2) )
 //                _asm int 3
-            // ******************************************************************
-            // * check all cross references
-            // ******************************************************************
+            // check all cross references
             for(v=0;v<Soovpa->XRefCount;v++)
             {
                 uint32 Offset = Soovpa->Sovp[v].Offset;
@@ -774,9 +702,7 @@ void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
             // check OV pairs if all xrefs matched
             if(v == Soovpa->XRefCount)
             {
-                // ******************************************************************
-                // * check all pairs, moving on if any do not match
-                // ******************************************************************
+                // check all pairs, moving on if any do not match
                 for(;v<count;v++)
                 {
                     uint32 Offset = Soovpa->Sovp[v].Offset;
@@ -789,9 +715,7 @@ void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
                 }
             }
 
-            // ******************************************************************
-            // * success if we found all pairs
-            // ******************************************************************
+            // success if we found all pairs
             if(v == count)
             {
                 if(Soovpa->XRefSaveIndex != (uint08)-1)
@@ -804,7 +728,7 @@ void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
                         return (void*)cur;
                     }
                     else
-                        return 0;   // Already Found, no bother patching again
+                        return 0;   // already Found, no bother patching again
                 }
 
                 return (void*)cur;
@@ -817,17 +741,13 @@ void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
     return 0;
 }
 
-// ******************************************************************
-// * func: EmuInstallWrappers
-// ******************************************************************
+// install function interception wrappers
 void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *pXbeHeader)
 {
     uint32 lower = pXbeHeader->dwBaseAddr;
     uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
 
-    // ******************************************************************
-    // * traverse the full OOVPA table
-    // ******************************************************************
+    // traverse the full OOVPA table
     for(uint32 a=0;a<OovpaTableSize/sizeof(OOVPATable);a++)
     {
         OOVPA *Oovpa = OovpaTable[a].Oovpa;
@@ -848,9 +768,7 @@ void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*En
     }
 }
 
-// ******************************************************************
-// * func: EmuXRefFailure
-// ******************************************************************
+// alert for the situation where an Xref function body is hit
 void EmuXRefFailure()
 {
     EmuSwapFS();    // Win2k/XP FS
@@ -858,35 +776,77 @@ void EmuXRefFailure()
     EmuCleanup("XRef-only function body reached. Fatal Error.");
 }
 
-// ******************************************************************
-// * func: EmuException
-// ******************************************************************
+// exception handler
 int EmuException(LPEXCEPTION_POINTERS e)
 {
     if(EmuIsXboxFS())
         EmuSwapFS();
 
-    // ******************************************************************
-	// * Debugging Information
-	// ******************************************************************
+    // print debug information
 	{
-		printf("EmuMain (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
-		printf("EmuMain (0x%X): Recieved Exception [0x%.08X]@0x%.08X\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip);
-		printf("EmuMain (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
+        if(e->ExceptionRecord->ExceptionCode == 0x80000003)
+            printf("EmuMain (0x%X): Recieved Breakpoint Exception (int 3)\n", GetCurrentThreadId());
+        else
+            printf("EmuMain (0x%X): Recieved Exception (Code := 0x%.08X)\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
+
+        printf("\n"
+            " EIP := 0x%.08X EFL := 0x%.08X\n"
+            " EAX := 0x%.08X EBX := 0x%.08X ECX := 0x%.08X EDX := 0x%.08X\n"
+            " ESI := 0x%.08X EDI := 0x%.08X ESP := 0x%.08X EBP := 0x%.08X\n"
+            "\n",
+            e->ContextRecord->Eip, e->ContextRecord->EFlags,
+            e->ContextRecord->Eax, e->ContextRecord->Ebx, e->ContextRecord->Ecx, e->ContextRecord->Edx,
+            e->ContextRecord->Esi, e->ContextRecord->Edi, e->ContextRecord->Esp, e->ContextRecord->Ebp);
 	}
 
     fflush(stdout);
 
-	// ******************************************************************
-	// * Notify User
-	// ******************************************************************
+    // notify user
 	{
 		char buffer[256];
 
-		sprintf(buffer, "Recieved Exception [0x%.08X]@0x%.08X\n\nPress 'OK' to terminate emulation.\nPress 'Cancel' to debug.", e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip);
+        if(e->ExceptionRecord->ExceptionCode == 0x80000003)
+        {
+		    sprintf(buffer, 
+                "Recieved Breakpoint Exception (int 3) @ EIP := 0x%.08X\n"
+                "\n"
+                "  Press \"Abort\" to terminate emulation.\n"
+                "  Press \"Retry\" to debug.\n"
+                "  Press \"Ignore\" to continue emulation.",
+                e->ContextRecord->Eip, e->ContextRecord->EFlags);
 
-        if(MessageBox(XTL::g_hEmuWindow, buffer, "Cxbx", MB_ICONSTOP | MB_OKCANCEL) == IDOK)
-			ExitProcess(1);
+            e->ContextRecord->Eip += 1;
+
+            int ret = MessageBox(XTL::g_hEmuWindow, buffer, "Cxbx", MB_ICONSTOP | MB_ABORTRETRYIGNORE);
+
+            if(ret == IDABORT)
+            {
+                printf("EmuMain (0x%X): Aborting Emulation\n", GetCurrentThreadId());
+                fflush(stdout);
+                ExitProcess(1);
+            }
+            else if(ret == IDIGNORE)
+            {
+                printf("EmuMain (0x%X): Ignored Breakpoint Exception\n", GetCurrentThreadId());
+                return EXCEPTION_CONTINUE_EXECUTION;
+            }
+        }
+        else
+        {
+		    sprintf(buffer, 
+                "Recieved Exception Code 0x%.08X @ EIP := 0x%.08X\n"
+                "\n"
+                "  Press \"OK\" to terminate emulation.\n"
+                "  Press \"Cancel\" to debug.",
+                e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip, e->ContextRecord->EFlags);
+
+            if(MessageBox(XTL::g_hEmuWindow, buffer, "Cxbx", MB_ICONSTOP | MB_OKCANCEL) == IDOK)
+            {
+                printf("EmuMain (0x%X): Aborting Emulation\n", GetCurrentThreadId());
+                fflush(stdout);
+                ExitProcess(1);
+            }
+        }
 	}
 
     return EXCEPTION_CONTINUE_SEARCH;

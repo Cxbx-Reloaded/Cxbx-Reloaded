@@ -42,30 +42,16 @@
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
-// ******************************************************************
-// * func: EmuGenerateFS
-// ******************************************************************
-extern void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData);
-
-// ******************************************************************
-// * func: EmuCleanupFS
-// ******************************************************************
-extern void EmuCleanupFS();
-
-// ******************************************************************
-// * func: EmuInitFS
-// ******************************************************************
+// initialize fs segment selector emulation
 extern void EmuInitFS();
 
-// ******************************************************************
-// * func: EmuIsXboxFS
-// ******************************************************************
-// *
-// * This function will return true if the current FS register is
-// * the Xbox emulation variety. Alternatively, false means the
-// * Win2k/XP FS register is currently loaded.
-// *
-// ******************************************************************
+// generate fs segment selector
+extern void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData);
+
+// cleanup fs segment selector emulation
+extern void EmuCleanupFS();
+
+// is the current fs register the xbox emulation variety?
 static inline bool EmuIsXboxFS()
 {
     unsigned char chk;
@@ -79,32 +65,24 @@ static inline bool EmuIsXboxFS()
     return (chk == 1);
 }
 
-// ******************************************************************
-// * data: EmuAutoSleepRate
-// ******************************************************************
-// *
-// * Xbox is a single process system, and because of this fact, demos
-// * and games are likely to suffer from Xbox-Never-Sleeps syndrome.
-// *
-// * Basically, there are situations where the Xbe will have no
-// * reason to bother yielding to other threads. One solution to this
-// * problem is to keep track of the number of function intercepts,
-// * and every so often, force a sleep. This is the rate at which
-// * those forced sleeps occur.
-// *
-// ******************************************************************
+//
+// Xbox is a single process system, and because of this fact, demos
+// and games are likely to suffer from Xbox-Never-Sleeps syndrome.
+// 
+// Basically, there are situations where the Xbe will have no
+// reason to bother yielding to other threads. One solution to this
+// problem is to keep track of the number of function intercepts,
+// and every so often, force a sleep. This is the rate at which
+// those forced sleeps occur.
+// 
 extern uint32 EmuAutoSleepRate;
 
-// ******************************************************************
-// * func: EmuSwapFS
-// ******************************************************************
-// *
-// * This function is used to swap between the native Win2k/XP FS:
-// * structure, and the Emu FS: structure. Before running Windows
-// * code, you *must* swap over to Win2k/XP FS. Similarly, before
-// * running Xbox code, you *must* swap back over to Emu FS.
-// *
-// ******************************************************************
+//
+// This function is used to swap between the native Win2k/XP FS:
+// structure, and the Emu FS: structure. Before running Windows
+// code, you *must* swap over to Win2k/XP FS. Similarly, before
+// running Xbox code, you *must* swap back over to Emu FS.
+//
 static inline void EmuSwapFS()
 {
     // Note that this is only the *approximate* interception count,
@@ -118,9 +96,7 @@ static inline void EmuSwapFS()
         mov fs, ax
     }
 
-    // ******************************************************************
-    // * Every "N" interceptions, perform various periodic services
-    // ******************************************************************
+    // every 'N' interceptions, perform various periodic services
     if(dwInterceptionCount++ >= EmuAutoSleepRate)
     {
         // If we're in the Xbox FS, wait until the next swap
