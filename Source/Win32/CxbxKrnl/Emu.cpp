@@ -492,7 +492,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         // _USE_XGMATH Disabled in mesh :[
         // halo : dword_0_2E2D18
         // halo : 1744F0 (bink)
-        // _asm int 3
+        _asm int 3
 
         Entry();
 
@@ -610,7 +610,8 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
     {
         if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
         {
-            if(e->ContextRecord->Eip == 0x3394C)
+            // Halo Access Adjust 1
+            if(e->ContextRecord->Eip == 0x0003394C)
             {
                 if(e->ContextRecord->Ecx == 0x803BD800)
                 {
@@ -622,9 +623,157 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
 
                     ((XTL::X_D3DResource*)fix)->Data = g_HaloHack[1] + (((XTL::X_D3DResource*)fix)->Data - 0x803A6000);
 
+                    // go through and fix any other pointers in the ESI allocation chunk
+                    {
+                        DWORD dwESI = e->ContextRecord->Esi;
+                        DWORD dwSize = EmuCheckAllocationSize((PVOID)dwESI, false);
+
+                        // dword aligned
+                        dwSize -= 4 - dwSize%4;
+
+                        for(DWORD v=0;v<dwSize;v+=4)
+                        {
+                            DWORD dwCur = *(DWORD*)(dwESI+v);
+
+                            if(dwCur >= 0x803A6000 && dwCur < 0x819A6000)
+                                *(DWORD*)(dwESI+v) = g_HaloHack[1] + (dwCur - 0x803A6000);
+                        }
+                    }
+
+                    // fix this global pointer
+                    {
+                        DWORD dwValue = *(DWORD*)0x39CE24;
+
+                        *(DWORD*)0x39CE24 = g_HaloHack[1] + (dwValue - 0x803A6000);
+                    }
+
+                    #ifdef _DEBUG_TRACE
+                    printf("EmuMain (0x%X): Halo Access Adjust 1 was applied!\n", GetCurrentThreadId());
+                    #endif
+
                     return EXCEPTION_CONTINUE_EXECUTION;
                 }
             }
+            // Halo Access Adjust 2
+            else if(e->ContextRecord->Eip == 0x00058D8C)
+            {
+                if(e->ContextRecord->Eax == 0x819A5818)
+                {
+                    uint32 fix = g_HaloHack[1] + (e->ContextRecord->Eax - 0x803A6000);
+
+                    *(DWORD*)0x0039BE58 = e->ContextRecord->Eax = fix;
+
+                    // go through and fix any other pointers in the 0x2DF1C8 allocation chunk
+                    {
+                        DWORD dwPtr = *(DWORD*)0x2DF1C8;
+                        DWORD dwSize = EmuCheckAllocationSize((PVOID)dwPtr, false);
+
+                        // dword aligned
+                        dwSize -= 4 - dwSize%4;
+
+                        for(DWORD v=0;v<dwSize;v+=4)
+                        {
+                            DWORD dwCur = *(DWORD*)(dwPtr+v);
+
+                            if(dwCur >= 0x803A6000 && dwCur < 0x819A6000)
+                                *(DWORD*)(dwPtr+v) = g_HaloHack[1] + (dwCur - 0x803A6000);
+                        }
+                    }
+
+                    #ifdef _DEBUG_TRACE
+                    printf("EmuMain (0x%X): Halo Access Adjust 2 was applied!\n", GetCurrentThreadId());
+                    #endif
+
+                    return EXCEPTION_CONTINUE_EXECUTION;
+                }
+            }
+
+            /* obsolete
+            // Halo Access Adjust 1
+            if(e->ContextRecord->Eip == 0x0003394C)
+            {
+                if(e->ContextRecord->Ecx == 0x803BD800)
+                {
+                    uint32 fix = g_HaloHack[1] + (e->ContextRecord->Eax - 0x803A6000);
+
+                    e->ContextRecord->Eax = e->ContextRecord->Ecx = fix;
+
+                    *(uint32*)e->ContextRecord->Esp = fix;
+
+                    ((XTL::X_D3DResource*)fix)->Data = g_HaloHack[1] + (((XTL::X_D3DResource*)fix)->Data - 0x803A6000);
+
+                    #ifdef _DEBUG_TRACE
+                    printf("EmuMain (0x%X): Halo Access Adjust 1 was applied!\n", GetCurrentThreadId());
+                    #endif
+
+                    return EXCEPTION_CONTINUE_EXECUTION;
+                }
+            }
+            // Halo Access Adjust 2
+            else if(e->ContextRecord->Eip == 0x00033977)
+            {
+                if(e->ContextRecord->Eax == 0x803DA660)
+                {
+                    uint32 fix = g_HaloHack[1] + (e->ContextRecord->Eax - 0x803A6000);
+
+                    e->ContextRecord->Eax = fix;
+
+                    #ifdef _DEBUG_TRACE
+                    printf("EmuMain (0x%X): Halo Access Adjust 2 was applied!\n", GetCurrentThreadId());
+                    #endif
+
+                    return EXCEPTION_CONTINUE_EXECUTION;
+                }
+            }
+            // Halo Access Adjust 3
+            else if(e->ContextRecord->Eip == 0x00058DF1)
+            {
+                if(e->ContextRecord->Ecx == 0x803A6024)
+                {
+                    uint32 fix = g_HaloHack[1] + (e->ContextRecord->Ecx - 0x803A6000);
+
+                    e->ContextRecord->Ecx = fix;
+
+                    #ifdef _DEBUG_TRACE
+                    printf("EmuMain (0x%X): Halo Access Adjust 3 was applied!\n", GetCurrentThreadId());
+                    #endif
+
+                    return EXCEPTION_CONTINUE_EXECUTION;
+                }
+            }
+            // Halo Access Adjust 4
+            else if(e->ContextRecord->Eip == 0x00058DF5)
+            {
+                if(e->ContextRecord->Eax == 0x803DDA20)
+                {
+                    uint32 fix = g_HaloHack[1] + (e->ContextRecord->Eax - 0x803A6000);
+
+                    e->ContextRecord->Eax = fix;
+
+                    #ifdef _DEBUG_TRACE
+                    printf("EmuMain (0x%X): Halo Access Adjust 4 was applied!\n", GetCurrentThreadId());
+                    #endif
+
+                    return EXCEPTION_CONTINUE_EXECUTION;
+                }
+            }
+            // Halo Access Adjust 5
+            else if(e->ContextRecord->Eip == 0x0003523E)
+            {
+                if(e->ContextRecord->Ecx == 0x803A6024)
+                {
+                    uint32 fix = g_HaloHack[1] + (e->ContextRecord->Eax - 0x803A6000);
+
+                    e->ContextRecord->Eax = fix;
+
+                    #ifdef _DEBUG_TRACE
+                    printf("EmuMain (0x%X): Halo Access Adjust 5 was applied!\n", GetCurrentThreadId());
+                    #endif
+
+                    return EXCEPTION_CONTINUE_EXECUTION;
+                }
+            }
+            //*/
         }
     }
 
@@ -696,6 +845,26 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
 	}
 
     return EXCEPTION_CONTINUE_SEARCH;
+}
+
+// check how many bytes were allocated for a structure
+extern int EmuCheckAllocationSize(LPVOID pBase, bool largeBound)
+{
+    MEMORY_BASIC_INFORMATION MemoryBasicInfo;
+
+    DWORD dwRet = VirtualQuery(pBase, &MemoryBasicInfo, sizeof(MemoryBasicInfo));
+
+    if(dwRet == 0)
+        return 0;
+
+    if(MemoryBasicInfo.State != MEM_COMMIT)
+        return 0;
+
+    // this is a hack in order to determine when pointers come from a large write-combined database
+    if(largeBound && MemoryBasicInfo.RegionSize > 5*1024*1024)
+        return -1;
+
+    return MemoryBasicInfo.RegionSize - ((DWORD)pBase - (DWORD)MemoryBasicInfo.BaseAddress);
 }
 
 // install function interception wrapper

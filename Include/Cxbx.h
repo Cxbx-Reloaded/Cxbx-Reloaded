@@ -62,9 +62,9 @@ typedef signed long    sint32;
 
 // version information
 #ifndef _DEBUG_TRACE
-#define _CXBX_VERSION "0.7.9-Pre2"
+#define _CXBX_VERSION "0.7.9-Pre3"
 #else
-#define _CXBX_VERSION "0.7.9-Pre2-Trace"
+#define _CXBX_VERSION "0.7.9-Pre3-Trace"
 #endif
 
 // round dwValue to the nearest multiple of dwMult

@@ -569,6 +569,58 @@ XBSYSAPI EXPORTNUM(113) VOID NTAPI xboxkrnl::KeInitializeTimerEx
 }
 
 // ******************************************************************
+// * KeQueryPerformanceCounter
+// ******************************************************************
+XBSYSAPI EXPORTNUM(126) VOID __cdecl xboxkrnl::KeQueryPerformanceCounter()
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): KeQueryPerformanceCounter();\n", GetCurrentThreadId());
+    }
+    #endif
+
+    ::LARGE_INTEGER Counter;
+
+    QueryPerformanceFrequency(&Counter);
+
+    EmuSwapFS();   // Xbox FS
+
+    __asm mov eax, Counter.u.LowPart
+    __asm mov edx, Counter.u.HighPart
+
+    return;
+}
+
+// ******************************************************************
+// * KeQueryPerformanceFrequency
+// ******************************************************************
+XBSYSAPI EXPORTNUM(127) VOID __cdecl xboxkrnl::KeQueryPerformanceFrequency()
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): KeQueryPerformanceFrequency();\n", GetCurrentThreadId());
+    }
+    #endif
+
+    ::LARGE_INTEGER Frequency;
+
+    QueryPerformanceFrequency(&Frequency);
+
+    EmuSwapFS();   // Xbox FS
+
+    __asm mov eax, Frequency.u.LowPart
+    __asm mov edx, Frequency.u.HighPart
+
+    return;
+}
+
+// ******************************************************************
 // * 0x0080 - KeQuerySystemTime
 // ******************************************************************
 XBSYSAPI EXPORTNUM(128) VOID NTAPI xboxkrnl::KeQuerySystemTime
@@ -852,6 +904,47 @@ XBSYSAPI EXPORTNUM(178) VOID NTAPI xboxkrnl::MmPersistContiguousMemory
     EmuWarning("MmPersistContiguousMemory is being ignored\n");
 
     EmuSwapFS();   // Xbox FS
+}
+
+// ******************************************************************
+// * 0x00B5 - MmQueryStatistics
+// ******************************************************************
+XBSYSAPI EXPORTNUM(181) NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
+(
+    OUT PMM_STATISTICS MemoryStatistics
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): MmQueryStatistics\n"
+               "(\n"
+               "   MemoryStatistics         : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), MemoryStatistics);
+    }
+    #endif
+
+    MEMORYSTATUS MemoryStatus;
+
+    GlobalMemoryStatus(&MemoryStatus);
+
+    ZeroMemory(MemoryStatistics, sizeof(MM_STATISTICS));
+
+    MemoryStatistics->Length = sizeof(MM_STATISTICS);
+    MemoryStatistics->TotalPhysicalPages = MemoryStatus.dwTotalVirtual / 4096;
+    MemoryStatistics->AvailablePages = MemoryStatus.dwAvailVirtual / 4096;
+
+    // HACK (does this matter?)
+    MemoryStatistics->VirtualMemoryBytesReserved = MemoryStatus.dwTotalPhys - MemoryStatus.dwAvailPhys;
+
+    // the rest arent really used from what i've seen
+
+    EmuSwapFS();   // Xbox FS
+
+    return STATUS_SUCCESS;
 }
 
 // ******************************************************************

@@ -67,6 +67,9 @@ extern "C" CXBXKRNL_API void NTAPI EmuPanic();
 // exception handler
 extern int EmuException(LPEXCEPTION_POINTERS e);
 
+// check the allocation size of a given virtual address
+extern int EmuCheckAllocationSize(LPVOID pBase, bool largeBound);
+
 // global exception patching address
 extern uint32 g_HaloHack[4];
 

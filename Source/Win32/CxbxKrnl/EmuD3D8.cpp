@@ -65,7 +65,6 @@ static DWORD WINAPI                 EmuRenderWindow(LPVOID);
 static DWORD WINAPI                 EmuCreateDeviceProxy(LPVOID);
 static LRESULT WINAPI               EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static DWORD WINAPI                 EmuUpdateTickCount(LPVOID);
-static DWORD                        EmuCheckAllocationSize(LPVOID);
 static inline void                  EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource);
 static void                         EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight);
 
@@ -691,26 +690,6 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
         Sleep(1);
     }
-}
-
-// check how many bytes were allocated for a structure
-static DWORD EmuCheckAllocationSize(PVOID pBase)
-{
-    MEMORY_BASIC_INFORMATION MemoryBasicInfo;
-
-    DWORD dwRet = VirtualQuery(pBase, &MemoryBasicInfo, sizeof(MemoryBasicInfo));
-
-    if(dwRet == 0)
-        return 0;
-
-    if(MemoryBasicInfo.State != MEM_COMMIT)
-        return 0;
-
-    // this is a hack in order to determine when pointers come from a large write-combined database
-    if(MemoryBasicInfo.RegionSize > 5*1024*1024)
-        return -1;
-
-    return MemoryBasicInfo.RegionSize - ((DWORD)pBase - (DWORD)MemoryBasicInfo.BaseAddress);
 }
 
 // check if a resource has been registered yet (if not, register it)
@@ -1654,12 +1633,15 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShaderConstant
     }
     #endif
 
+    HRESULT hRet = D3D_OK;
+    /*
     HRESULT hRet = g_pD3DDevice8->SetVertexShaderConstant
     (
         Register,
         pConstantData,
         ConstantCount
     );
+    */
 
     if(FAILED(hRet))
     {
@@ -2629,10 +2611,14 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
             // create vertex buffer
             {
-                DWORD dwSize = EmuCheckAllocationSize(pBase);
+                DWORD dwSize = EmuCheckAllocationSize(pBase, true);
 
                 if(dwSize == -1)
-                    EmuCleanup("Detected dangerous allocation techniques. This will be fixed soon!");
+                {
+                    // TODO: once this is known to be working, remove the warning
+                    EmuWarning("Vertex buffer allocation size unknown");
+                    dwSize = 0x20;  // temporarily assign a small buffer, which will be increased later
+                }
 
                 hRet = g_pD3DDevice8->CreateVertexBuffer
                 (
@@ -2670,7 +2656,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
             // create index buffer
             {
-                DWORD dwSize = EmuCheckAllocationSize(pBase);
+                DWORD dwSize = EmuCheckAllocationSize(pBase, true);
 
                 if(dwSize == -1)
                     EmuCleanup("Detected dangerous allocation techniques. This will be fixed soon!");

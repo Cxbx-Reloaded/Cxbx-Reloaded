@@ -226,6 +226,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8Conv.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\EmuDInput.h
 # End Source File
 # Begin Source File
