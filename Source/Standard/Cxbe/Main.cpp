@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
         // ******************************************************************
         if(argv[v][0] != '-')
         {
-            strcpy(szExeFilename, argv[v]);
+            strncpy(szExeFilename, argv[v], 265);
             continue;
         }
 
@@ -106,8 +106,8 @@ int main(int argc, char *argv[])
         // * interpret the current switch
         // ******************************************************************
         {
-            char szOptionU[266];
-            char szParamU[266];
+            char szOptionU[266] = {0};
+            char szParamU[266] = {0};
 
             strncpy(szOptionU, szOption, 265);
             strncpy(szParamU, szParam, 265);
