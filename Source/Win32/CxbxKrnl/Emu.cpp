@@ -78,11 +78,19 @@ static int   ExitException(LPEXCEPTION_POINTERS e);
 // Dll entry point, exit point, ...
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
+    static HINSTANCE hInitInstance = NULL;
+
     if(fdwReason == DLL_PROCESS_ATTACH)
+    {
         EmuShared::Init();
-    
+        hInitInstance = hinstDLL;
+    }
+
     if(fdwReason == DLL_PROCESS_DETACH)
-        EmuShared::Cleanup();
+    {
+        if(hInitInstance == hinstDLL)
+            EmuShared::Cleanup();
+    }
 
     return TRUE;
 }

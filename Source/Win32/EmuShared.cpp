@@ -123,9 +123,11 @@ CXBXKRNL_API void EmuShared::Cleanup()
     g_EmuSharedRefCount--;
 
     if(g_EmuSharedRefCount == 0)
+    {
         g_EmuShared->EmuShared::~EmuShared();
 
-    UnmapViewOfFile(g_EmuShared);
+        UnmapViewOfFile(g_EmuShared);
+    }
 }
 
 // ******************************************************************

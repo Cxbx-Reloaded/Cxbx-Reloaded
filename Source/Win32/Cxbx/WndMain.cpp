@@ -160,27 +160,6 @@ WndMain::~WndMain()
 
         if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
         {
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "CxbxDebug", 0, dwType, (PBYTE)&m_CxbxDebug, dwSize);
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "KrnlDebug", 0, dwType, (PBYTE)&m_KrnlDebug, dwSize);
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "RecentXbe", 0, dwType, (PBYTE)&m_dwRecentXbe, dwSize);
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "RecentExe", 0, dwType, (PBYTE)&m_dwRecentExe, dwSize);
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "AutoConvertToExe", 0, dwType, (PBYTE)&m_AutoConvertToExe, dwSize);
-
-            dwType = REG_SZ; dwSize = 260;
-            RegSetValueEx(hKey, "CxbxDebugFilename", 0, dwType, (PBYTE)m_CxbxDebugFilename, dwSize);
-
-            dwType = REG_SZ; dwSize = 260;
-            RegSetValueEx(hKey, "KrnlDebugFilename", 0, dwType, (PBYTE)m_KrnlDebugFilename, dwSize);
-
             int v=0;
 
             for(v=0;v<m_dwRecentXbe;v++)
@@ -209,7 +188,26 @@ WndMain::~WndMain()
                 free(m_szRecentExe[v]);
             }
 
-            RegCloseKey(hKey);
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            RegSetValueEx(hKey, "CxbxDebug", 0, dwType, (PBYTE)&m_CxbxDebug, dwSize);
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            RegSetValueEx(hKey, "KrnlDebug", 0, dwType, (PBYTE)&m_KrnlDebug, dwSize);
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            RegSetValueEx(hKey, "RecentXbe", 0, dwType, (PBYTE)&m_dwRecentXbe, dwSize);
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            RegSetValueEx(hKey, "RecentExe", 0, dwType, (PBYTE)&m_dwRecentExe, dwSize);
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            RegSetValueEx(hKey, "AutoConvertToExe", 0, dwType, (PBYTE)&m_AutoConvertToExe, dwSize);
+
+            dwType = REG_SZ; dwSize = 260;
+            RegSetValueEx(hKey, "CxbxDebugFilename", 0, dwType, (PBYTE)m_CxbxDebugFilename, dwSize);
+
+            dwType = REG_SZ; dwSize = 260;
+            RegSetValueEx(hKey, "KrnlDebugFilename", 0, dwType, (PBYTE)m_KrnlDebugFilename, dwSize);
         }
     }
 
@@ -1511,9 +1509,14 @@ void WndMain::OpenXbe(const char *x_filename)
             if(r != c)
             {
                 if(m_szRecentXbe[r] == 0 || r > m_dwRecentXbe - 1)
+                {
+                    free(m_szRecentXbe[c]);
                     m_szRecentXbe[c] = 0;
+                }
                 else
+                {
                     strncpy(m_szRecentXbe[c], m_szRecentXbe[r], 259);
+                }
             }
         }
 
@@ -1524,7 +1527,10 @@ void WndMain::OpenXbe(const char *x_filename)
         for(int v=RECENT_XBE_SIZE-1;v>0;v--)
         {
             if(m_szRecentXbe[v-1] == 0)
+            {
+                free(m_szRecentXbe[v]);
                 m_szRecentXbe[v] = 0;
+            }
             else
             {
                 if(m_szRecentXbe[v] == 0)
