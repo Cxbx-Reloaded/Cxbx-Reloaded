@@ -914,10 +914,10 @@ VOID WINAPI XTL::EmuXRegisterThreadNotifyRoutine
     {
         printf("EmuXapi (0x%X): EmuXRegisterThreadNotifyRoutine\n"
                "(\n"
-               "   pThreadNotification : 0x%.08X\n"
+               "   pThreadNotification : 0x%.08X (0x%.08X)\n"
                "   fRegister           : 0x%.08X\n"
                ");\n",
-                GetCurrentThreadId(), pThreadNotification, fRegister);
+                GetCurrentThreadId(), pThreadNotification, pThreadNotification->pfnNotifyRoutine, fRegister);
     }
     #endif
 

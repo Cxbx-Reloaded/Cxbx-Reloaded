@@ -300,14 +300,14 @@ SOURCE=.\Resource\Cxbx.ico
 
 SOURCE=.\Resource\CxbxDll.rc
 # End Source File
-# Begin Source File
-
-SOURCE=.\Source\Win32\CxbxKrnl\D3D8.1.0.3925.inl
-# End Source File
 # End Group
 # Begin Group "Source"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\D3D8.1.0.3925.inl
+# End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\D3D8.1.0.4034.inl

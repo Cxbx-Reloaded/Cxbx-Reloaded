@@ -615,14 +615,19 @@ EmuExe::EmuExe(Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename) : Exe
             // ******************************************************************
             if(kt >= virt_addr + imag_base && kt < virt_addr + virt_size + imag_base)
             {
-                printf("EmuExe::EmuExe: Located Thunk Table in Section 0x%.04X (0x%.08X)...", v, kt);
+                printf("EmuExe::EmuExe: Located Thunk Table in Section 0x%.04X (0x%.08X)...\n", v, kt);
 
                 uint32 *kt_tbl = (uint32*)&m_bzSection[v][kt - virt_addr - imag_base];
 
-                while(*kt_tbl != 0)
-                    *kt_tbl++ = KernelThunkTable[*kt_tbl & 0x7FFFFFFF];
+                for(int k=0;kt_tbl[k] != 0;k++)
+                {
+                    int t = kt_tbl[k] & 0x7FFFFFFF;
 
-                printf("OK\n");
+                    kt_tbl[k] = KernelThunkTable[t];
+
+                    if(t != -1)
+                        printf("EmuExe::EmuExe: Thunk %.03d : *0x%.08X := 0x%.08X\n", t, kt + k*4, kt_tbl[k]);
+                }
 
                 break;
             }

@@ -4111,7 +4111,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable
     }
     #endif
 
-    printf("*Warning* SetRenderState_Dxt1NoiseEnable not implemented!\n");
+    EmuWarning("SetRenderState_Dxt1NoiseEnable not implemented!");
 
     EmuSwapFS();   // XBox FS
 
