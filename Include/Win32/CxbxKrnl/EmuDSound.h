@@ -111,6 +111,8 @@ struct X_CDirectSoundBuffer
     };
 
     BYTE    UnknownB[0x0C];     // Offset: 0x24
+    PVOID   EmuBuffer;          // Offset: 0x28
+    PVOID   EmuBufferAlloc;     // Offset: 0x2C
 };
 
 // ******************************************************************

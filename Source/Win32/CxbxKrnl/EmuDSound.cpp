@@ -62,38 +62,43 @@ XTL::X_CDirectSoundStream::_vtbl XTL::X_CDirectSoundStream::vtbl =
 {
     &XTL::EmuCDirectSoundStream_AddRef,         // 0x00 - AddRef
     &XTL::EmuCDirectSoundStream_Release,        // 0x04
-    {0xCDCDCDCD, 0xCDCDCDCD},                   // 0x08 - Unknown
+    {0xBEEFB00B, 0xBEEFB00B},                   // 0x08 - Unknown
     &XTL::EmuCDirectSoundStream_Process,        // 0x10 - Process
     &XTL::EmuCDirectSoundStream_Discontinuity   // 0x14 - Discontinuity
 };
 
+// size of sound buffer cache (used for periodic sound buffer updates)
+#define SOUNDBUFFER_CACHE_SIZE 0x10
+
 // Static Variable(s)
 static XTL::LPDIRECTSOUND8          g_pDSound8 = NULL;
 static int                          g_pDSound8RefCount = 0;
-static XTL::IDirectSoundBuffer     *g_pDSoundBuffer8 = NULL;
-static PVOID                        g_pvBufferData = NULL;
+static XTL::X_CDirectSoundBuffer   *g_pDSoundBufferCache[SOUNDBUFFER_CACHE_SIZE];
 static XTL::IDirectSoundBuffer     *g_pDSoundStream8 = NULL;
 static PVOID                        g_pvStreamData = NULL;
 static DWORD                        g_dwStreamSize = 0;
 
-// HACK HACK HACK! Make this smarter! update modified directsound buffer
+// periodically update sound buffers
 void HackUpdateSoundBuffers()
 {
-    if(g_pvBufferData == NULL || g_pDSoundBuffer8 == NULL)
-        return;
-
-    // TODO: HACK: This should dynamically recreate the buffer when necessary (size change)
-    PVOID pAudioPtr, pAudioPtr2;
-    DWORD dwAudioBytes, dwAudioBytes2;
-
-    HRESULT hRet = g_pDSoundBuffer8->Lock(0, 16384, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
-
-    if(SUCCEEDED(hRet))
+    for(int v=0;v<SOUNDBUFFER_CACHE_SIZE;v++)
     {
-        memcpy(pAudioPtr,  g_pvBufferData, dwAudioBytes);
-        memcpy(pAudioPtr2, (PVOID)((DWORD)g_pvBufferData+dwAudioBytes), dwAudioBytes2);
+        if(g_pDSoundBufferCache[v] == 0)
+            continue;
 
-        g_pDSoundBuffer8->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
+        // TODO: HACK: This should dynamically recreate the buffer when necessary (size change)
+        PVOID pAudioPtr, pAudioPtr2;
+        DWORD dwAudioBytes, dwAudioBytes2;
+
+        HRESULT hRet = g_pDSoundBufferCache[v]->EmuDirectSoundBuffer8->Lock(0, 16384, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
+
+        if(SUCCEEDED(hRet))
+        {
+            memcpy(pAudioPtr,  g_pDSoundBufferCache[v]->EmuBuffer, dwAudioBytes);
+            memcpy(pAudioPtr2, (PVOID)((DWORD)g_pDSoundBufferCache[v]->EmuBuffer+dwAudioBytes), dwAudioBytes2);
+
+            g_pDSoundBufferCache[v]->EmuDirectSoundBuffer8->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
+        }
     }
 }
 
@@ -156,6 +161,10 @@ HRESULT WINAPI XTL::EmuDirectSoundCreate
 
     // we need to use our own internal reference count
     g_pDSound8RefCount++;
+
+    // clear sound buffer cache
+    for(int v=0;v<SOUNDBUFFER_CACHE_SIZE;v++)
+        g_pDSoundBufferCache[v] = 0;
 
     EmuSwapFS();   // XBox FS
 
@@ -233,21 +242,33 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
 
     HRESULT hRet = g_pDSound8->CreateSoundBuffer(&DSBufferDesc, &((*ppBuffer)->EmuDirectSoundBuffer8), NULL);
 
-    g_pDSoundBuffer8 = (*ppBuffer)->EmuDirectSoundBuffer8;
+    // cache this sound buffer
+    {
+        int v=0;
+        for(v=0;v<SOUNDBUFFER_CACHE_SIZE;v++)
+        {
+            if(g_pDSoundBufferCache[v] == 0)
+            {
+                g_pDSoundBufferCache[v] = *ppBuffer;
+                break;
+            }
+        }
+
+        if(v == SOUNDBUFFER_CACHE_SIZE)
+            EmuCleanup("SoundBuffer cache out of slots!");
+    }
 
     if(FAILED(hRet))
         EmuWarning("CreateSoundBuffer FAILED");
     else
     {
-        /*
-        PVOID pData2;
-        DWORD dwBytes1, dwBytes2;
+        // TODO: move this to _Lock, only allocate if SetData hasnt been called !smart!
+        (*ppBuffer)->EmuBuffer = malloc(131072);// NOTE: HACK: TEMPORARY FOR STELLA/HALO
 
-        g_pDSoundBuffer8->Lock(0, 16384, &g_pvBufferData, &dwBytes1, &pData2, &dwBytes2, 0);
-        g_pDSoundBuffer8->Unlock(g_pvBufferData, dwBytes1, pData2, dwBytes2);
-        */
-        // TODO: HACK: fix this somehow..?
-        g_pvBufferData = malloc(131072);// NOTE: HACK: TEMPORARY FOR STELLA/HALO
+        ZeroMemory((*ppBuffer)->EmuBuffer, 131072);
+
+        // remember which pointer we allocated, so we can clean it up later
+        (*ppBuffer)->EmuBufferAlloc = (*ppBuffer)->EmuBuffer;
     }
 
     EmuSwapFS();   // XBox FS
@@ -1431,8 +1452,11 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetBufferData
     }
     #endif
 
+    if(pThis->EmuBuffer == pThis->EmuBufferAlloc)
+        free(pThis->EmuBufferAlloc);
+
     // update buffer data cache
-    g_pvBufferData = pvBufferData;
+    pThis->EmuBuffer = pvBufferData;
 
     EmuSwapFS();   // XBox FS
 
@@ -1507,7 +1531,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Lock
     }
     #endif
 
-    *ppvAudioPtr1 = g_pvBufferData;
+    *ppvAudioPtr1 = pThis->EmuBuffer;
     *pdwAudioBytes1 = dwBytes;
 
     EmuSwapFS();   // XBox FS
@@ -1606,8 +1630,17 @@ ULONG WINAPI XTL::EmuIDirectSoundBuffer8_Release
 
         if(uRet == 0)
         {
-            if(g_pDSoundBuffer8 == pThis->EmuDirectSoundBuffer8)
-                g_pDSoundBuffer8 = 0;
+            // remove cache entry
+            for(int v=0;v<SOUNDBUFFER_CACHE_SIZE;v++)
+            {
+                if(g_pDSoundBufferCache[v] == pThis)
+                {
+                    if(g_pDSoundBufferCache[v]->EmuBuffer == g_pDSoundBufferCache[v]->EmuBufferAlloc)
+                        free(g_pDSoundBufferCache[v]->EmuBufferAlloc);
+
+                    g_pDSoundBufferCache[v] = 0;
+                }
+            }
 
             delete pThis;
         }
@@ -1780,6 +1813,8 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Play
 
     if(dwFlags & (~DSBPLAY_LOOPING))
         EmuCleanup("Unsupported Playing Flags");
+
+    HackUpdateSoundBuffers();
 
     HRESULT hRet = pThis->EmuDirectSoundBuffer8->Play(0, 0, dwFlags);
 

@@ -3315,8 +3315,6 @@ BOOL WINAPI XTL::EmuIDirect3DResource8_IsBusy
 
     IDirect3DResource8 *pResource8 = pThis->EmuResource8;
 
-    // we'll just pretend nothing is ever busy (for now?)
-
     EmuSwapFS();   // XBox FS
 
     return FALSE;
@@ -5398,7 +5396,6 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVerticesUP
 
     return;
 }
-
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_DrawIndexedVertices
