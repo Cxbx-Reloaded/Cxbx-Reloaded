@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->HLEDataBase.cpp
+// *   Cxbx->Win32->CxbxKrnl->EmuXG.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -40,12 +40,21 @@
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
+namespace xntdll
+{
+    #include "xntdll.h"
+};
+
+// ******************************************************************
+// * prevent name collisions
+// ******************************************************************
 namespace xapi
 {
     #include "EmuXapi.h"
 };
 
-#include "HLEDataBase.h"
+#include "Emu.h"
+#include "EmuFS.h"
 
 // ******************************************************************
 // * prevent name collisions
@@ -63,87 +72,28 @@ namespace xg
     #include "EmuXG.h"
 };
 
-#include "Xapi.1.0.3911.inl"
-#include "Xapi.1.0.4034.inl"
-#include "Xapi.1.0.4361.inl"
-#include "Xapi.1.0.4627.inl"
-#include "D3D8.1.0.3925.inl"
-#include "D3D8.1.0.4034.inl"
-#include "D3D8.1.0.4361.inl"
-#include "D3D8.1.0.4627.inl"
-#include "XG.1.0.4361.inl"
-
 // ******************************************************************
-// * HLEDataBase
+// * func: EmuXGIsSwizzledFormat
 // ******************************************************************
-HLEData HLEDataBase[] =
+PVOID WINAPI xg::EmuXGIsSwizzledFormat
+(
+    xd3d8::D3DFORMAT Format
+)
 {
-    // Xapilib Version 1.0.3911
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
     {
-        "XAPILIB",
-        1, 0, 3911,
-        XAPI_1_0_3911,
-        XAPI_1_0_3911_SIZE
-    },
-    // Xapilib Version 1.0.4361
-    {
-        "XAPILIB",
-        1, 0, 4361,
-        XAPI_1_0_4361,
-        XAPI_1_0_4361_SIZE
-    },
-    // Xapilib Version 1.0.4034
-    {
-        "XAPILIB",
-        1, 0, 4034,
-        XAPI_1_0_4034,
-        XAPI_1_0_4034_SIZE
-    },
-    // Xapilib Version 1.0.4627
-    {
-        "XAPILIB",
-        1, 0, 4627,
-        XAPI_1_0_4627,
-        XAPI_1_0_4627_SIZE
-    },
-    // D3D8 Version 1.0.3925
-    {
-        "D3D8",
-        1, 0, 3925,
-        D3D8_1_0_3925,
-        D3D8_1_0_3925_SIZE
-    },
-    // D3D8 Version 1.0.4034
-    {
-        "D3D8",
-        1, 0, 4034,
-        D3D8_1_0_4034,
-        D3D8_1_0_4034_SIZE
-    },
-    // D3D8 Version 1.0.4361
-    {
-        "D3D8",
-        1, 0, 4361,
-        D3D8_1_0_4361,
-        D3D8_1_0_4361_SIZE
-    },
-    // D3D8 Version 1.0.4627
-    {
-        "D3D8",
-        1, 0, 4627,
-        D3D8_1_0_4627,
-        D3D8_1_0_4627_SIZE
-    },
-    // XG Version 1.0.4361
-    {
-        "XGRAPHC",
-        1, 0, 4361,
-        XG_1_0_4361,
-        XG_1_0_4361_SIZE
-    },
-};
+        EmuSwapFS();   // Win2k/XP FS
+        printf("EmuXapi (0x%X): EmuXGIsSwizzledFormat\n"
+               "(\n"
+               "   Format              : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Format);
+        EmuSwapFS();   // Xbox FS
+    }
+    #endif
 
-// ******************************************************************
-// * HLEDataBaseSize
-// ******************************************************************
-extern uint32 HLEDataBaseSize = sizeof(HLEDataBase);
+    return FALSE;
+}

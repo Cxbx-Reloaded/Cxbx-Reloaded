@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->HLEDataBase.h
+// *   Cxbx->Win32->CxbxKrnl->EmuXG.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,38 +31,15 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef HLEDATABASE_H
-#define HLEDATABASE_H
-
-#include "Xapi.1.0.3911.h"
-#include "Xapi.1.0.4034.h"
-#include "Xapi.1.0.4361.h"
-#include "Xapi.1.0.4627.h"
-#include "D3D8.1.0.3925.h"
-#include "D3D8.1.0.4034.h"
-#include "D3D8.1.0.4361.h"
-#include "D3D8.1.0.4627.h"
-#include "XG.1.0.4361.h"
+#ifndef EMUXG_H
+#define EMUXG_H
 
 // ******************************************************************
-// * HLEDataBase
+// * func: EmuXGIsSwizzledFormat
 // ******************************************************************
-extern struct HLEData
-{
-    char       *Library;
-
-    uint16      MajorVersion;
-    uint16      MinorVersion;
-    uint16      BuildVersion;
-
-    OOVPATable *OovpaTable;
-    uint32      OovpaTableSize;
-}
-HLEDataBase[];
-
-// ******************************************************************
-// * HLEDataBaseSize
-// ******************************************************************
-extern uint32 HLEDataBaseSize;
+PVOID WINAPI EmuXGIsSwizzledFormat
+(
+    xd3d8::D3DFORMAT Format
+);
 
 #endif

@@ -568,6 +568,22 @@ typedef NTSTATUS (NTAPI *FPTR_NtReadFile)
 );
 
 // ******************************************************************
+// * NtWriteFile
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtWriteFile)
+(
+	IN  HANDLE          FileHandle,            // TODO: correct paramters
+	IN  HANDLE          Event OPTIONAL,
+	IN  PVOID           ApcRoutine OPTIONAL,
+	IN  PVOID           ApcContext,
+	OUT PVOID           IoStatusBlock,
+	OUT PVOID           Buffer,
+	IN  ULONG           Length,
+	IN  PLARGE_INTEGER  ByteOffset OPTIONAL,
+    IN  PULONG          Key OPTIONAL
+);
+
+// ******************************************************************
 // * NtQueryInformationFile
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtQueryInformationFile)

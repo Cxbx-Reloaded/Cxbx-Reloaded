@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->HLEDataBase.h
+// *   Cxbx->Win32->CxbxKrnl->XG.1.0.4361.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,38 +31,12 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef HLEDATABASE_H
-#define HLEDATABASE_H
+#ifndef XG_1_0_4361_H
+#define XG_1_0_4361_H
 
-#include "Xapi.1.0.3911.h"
-#include "Xapi.1.0.4034.h"
-#include "Xapi.1.0.4361.h"
-#include "Xapi.1.0.4627.h"
-#include "D3D8.1.0.3925.h"
-#include "D3D8.1.0.4034.h"
-#include "D3D8.1.0.4361.h"
-#include "D3D8.1.0.4627.h"
-#include "XG.1.0.4361.h"
+#include "OOVPA.h"
 
-// ******************************************************************
-// * HLEDataBase
-// ******************************************************************
-extern struct HLEData
-{
-    char       *Library;
-
-    uint16      MajorVersion;
-    uint16      MinorVersion;
-    uint16      BuildVersion;
-
-    OOVPATable *OovpaTable;
-    uint32      OovpaTableSize;
-}
-HLEDataBase[];
-
-// ******************************************************************
-// * HLEDataBaseSize
-// ******************************************************************
-extern uint32 HLEDataBaseSize;
+extern OOVPATable XG_1_0_4361[];
+extern uint32     XG_1_0_4361_SIZE;
 
 #endif

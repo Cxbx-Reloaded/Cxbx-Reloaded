@@ -1,5 +1,5 @@
 # Microsoft Developer Studio Project File - Name="CxbxKrnl" - Package Owner=<4>
-# Microsoft Developer Studio Generated Build File, Format Version 6.00
+# Microsoft Developer Studio Generated Build File, Format Version 60000
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102
@@ -198,6 +198,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\EmuXapi.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\EmuXG.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase.h
 # End Source File
 # Begin Source File
@@ -243,6 +247,10 @@ SOURCE=.\Include\Win32\XBVideo.h
 # Begin Source File
 
 SOURCE=.\Include\Win32\CxbxKrnl\xd3d8.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\XG.1.0.4361.h
 # End Source File
 # Begin Source File
 
@@ -322,6 +330,10 @@ SOURCE=.\Source\Win32\CxbxKrnl\EmuXapi.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Source\Win32\CxbxKrnl\EmuXG.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\Core\Error.cpp
 # End Source File
 # Begin Source File
@@ -359,6 +371,10 @@ SOURCE=.\Source\Win32\XBController.cpp
 # Begin Source File
 
 SOURCE=.\Source\Win32\XBVideo.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\XG.1.0.4361.inl
 # End Source File
 # End Group
 # End Target

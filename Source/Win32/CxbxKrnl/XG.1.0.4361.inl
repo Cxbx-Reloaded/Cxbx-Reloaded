@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Cxbx.h
+// *   Cxbx->Win32->CxbxKrnl->XG.1.0.4361.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,63 +31,58 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef CXBX_H
-#define CXBX_H
 
 // ******************************************************************
-// * cxbxkrnl exports, others import
+// * XGIsSwizzledFormat
 // ******************************************************************
-#ifndef _CXBXKRNL_INTERNAL
-#define CXBXKRNL_API __declspec(dllimport)
-#else
-#define CXBXKRNL_API __declspec(dllexport)
-#endif
-
-// ******************************************************************
-// * Caustik's favorite typedefs
-// ******************************************************************
-typedef signed int     sint;
-typedef unsigned int   uint;
-typedef char           int08;
-typedef short          int16;
-typedef long           int32;
-typedef unsigned char  uint08;
-typedef unsigned short uint16;
-typedef unsigned long  uint32;
-typedef signed char    sint08;
-typedef signed short   sint16;
-typedef signed long    sint32;
-
-// ******************************************************************
-// * Version information
-// ******************************************************************
-#define _CXBX_VERSION "0.7.2-pre1"
-
-// ******************************************************************
-// * Define this to trace intercepted function calls
-// ******************************************************************
-//#define _DEBUG_TRACE
-
-// ******************************************************************
-// * Round up dwValue to nearest multiple of dwMult
-// ******************************************************************
-static uint32 RoundUp(uint32 dwValue, uint32 dwMult)
+SOOVPA<12> XGIsSwizzledFormat_1_0_4361 =
 {
-    if(dwMult == 0)
-        return dwValue;
+    0,  // Large == 0
+    12, // Count == 12
 
-    return dwValue - (dwValue-1)%dwMult + (dwMult - 1);
-}
+    {
+        // RtlCreateHeap+0x04 : cmp eax, 0x2D
+        { 0x04, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x05, 0xF8 }, // (Offset,Value)-Pair #2
+        { 0x06, 0x2D }, // (Offset,Value)-Pair #3
 
-// ******************************************************************
-// * Different debug mode types. Debug information is directed to
-// * Either a visible console screen, or to an external file
-// ******************************************************************
-enum DebugMode
-{
-    DM_NONE,
-    DM_CONSOLE,
-    DM_FILE
+        // RtlCreateHeap+0x0C : jge +0x31
+        { 0x0C, 0x7D }, // (Offset,Value)-Pair #4
+        { 0x0D, 0x31 }, // (Offset,Value)-Pair #5
+
+        // RtlCreateHeap+0x17 : cmp eax, 0x0B
+        { 0x17, 0x83 }, // (Offset,Value)-Pair #6
+        { 0x18, 0xF8 }, // (Offset,Value)-Pair #7
+        { 0x19, 0x0B }, // (Offset,Value)-Pair #8
+
+        // RtlCreateHeap+0x1A : jz +0x23
+        { 0x1A, 0x74 }, // (Offset,Value)-Pair #9
+        { 0x1B, 0x23 }, // (Offset,Value)-Pair #10
+
+        // RtlCreateHeap+0x42 : jmp +0xE4
+        { 0x42, 0xEB }, // (Offset,Value)-Pair #11
+        { 0x43, 0xE4 }, // (Offset,Value)-Pair #12
+    }
 };
 
-#endif
+// ******************************************************************
+// * XG_1_0_4361
+// ******************************************************************
+OOVPATable XG_1_0_4361[] =
+{
+    // XGIsSwizzledFormat
+    {
+        (OOVPA*)&XGIsSwizzledFormat_1_0_4361,
+
+        xg::EmuXGIsSwizzledFormat,
+
+        #ifdef _DEBUG_TRACE
+        "XGIsSwizzledFormat"
+        #endif
+    },
+};
+
+// ******************************************************************
+// * XG_1_0_4361_SIZE
+// ******************************************************************
+uint32 XG_1_0_4361_SIZE = sizeof(XG_1_0_4361);

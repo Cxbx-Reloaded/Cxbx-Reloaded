@@ -76,6 +76,7 @@ xntdll::FPTR_RtlEnterCriticalSection        NT_RtlEnterCriticalSection      = (x
 xntdll::FPTR_RtlLeaveCriticalSection        NT_RtlLeaveCriticalSection      = (xntdll::FPTR_RtlLeaveCriticalSection)GetProcAddress(hNtDll, "RtlLeaveCriticalSection");
 xntdll::FPTR_NtCreateFile                   NT_NtCreateFile                 = (xntdll::FPTR_NtCreateFile)GetProcAddress(hNtDll, "NtCreateFile");
 xntdll::FPTR_NtReadFile                     NT_NtReadFile                   = (xntdll::FPTR_NtReadFile)GetProcAddress(hNtDll, "NtReadFile");
+xntdll::FPTR_NtWriteFile                    NT_NtWriteFile                  = (xntdll::FPTR_NtWriteFile)GetProcAddress(hNtDll, "NtWriteFile");
 
 // ******************************************************************
 // * (Helper) PCSTProxyParam
@@ -935,6 +936,50 @@ XBSYSAPI EXPORTNUM(219) NTSTATUS NTAPI xboxkrnl::NtReadFile
     return ret;
 }
 
+// ******************************************************************
+// * 0x00DA - NtWriteFile
+// ******************************************************************
+XBSYSAPI EXPORTNUM(236) NTSTATUS NTAPI xboxkrnl::NtWriteFile
+(	
+	IN  HANDLE  FileHandle,            // TODO: correct paramters
+	IN	PVOID	Event,
+	IN	PVOID	ApcRoutine,
+	IN	PVOID	ApcContext,
+	OUT	PVOID	IoStatusBlock,
+	IN	PVOID	Buffer,
+	IN	ULONG	Length,
+	IN	PVOID	ByteOffset
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): NtWriteFile\n"
+               "(\n"
+               "   FileHandle          : 0x%.08X\n"
+               "   Event               : 0x%.08X\n"
+               "   ApcRoutine          : 0x%.08X\n"
+               "   ApcContext          : 0x%.08X\n"
+               "   IoStatusBlock       : 0x%.08X\n"
+               "   Buffer              : 0x%.08X\n"
+               "   Length              : 0x%.08X\n"
+               "   ByteOffset          : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), FileHandle, Event, ApcRoutine, 
+               ApcContext, IoStatusBlock, Buffer, Length, ByteOffset);
+    }
+    #endif
+
+    NTSTATUS ret = NT_NtWriteFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, (xntdll::LARGE_INTEGER*)ByteOffset, 0);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
+}
 // ******************************************************************
 // * 0x00FF - PsCreateSystemThreadEx
 // ******************************************************************
