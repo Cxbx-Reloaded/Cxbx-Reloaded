@@ -47,6 +47,7 @@ namespace xboxkrnl
 #include "EmuD3D8.h"
 #include "EmuKrnl.h"
 #include "EmuShared.h"
+#include "ThreadList.h"
 #include "HLEDataBase.h"
 
 // ******************************************************************
@@ -401,13 +402,6 @@ extern "C" CXBXKRNL_API void NTAPI EmuPanic()
 
     printf("Emu (0x%.08X): EmuPanic()\n", GetCurrentThreadId());
 
-#ifdef _DEBUG_TRACE
-    MessageBox(NULL, "Kernel Panic! Process will now terminate.\n\n"
-                     "Check debug traces for hints on the cause of this crash.", "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
-#else
-    MessageBox(NULL, "Kernel Panic! Process will now terminate.", "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
-#endif
-
     EmuCleanup("Kernel Panic!");
 
     EmuSwapFS();   // XBox FS
@@ -611,11 +605,13 @@ int ExitException(LPEXCEPTION_POINTERS e)
 		printf("\n");
 	}
 
+    MessageBox(NULL, "Warning: Could not safely terminate process!", "Cxbx", MB_OK);
+
     count++;
 
     if(count > 1)
     {
-        MessageBox(NULL, "Warning: Could not safely terminate process!", "Cxbx", MB_OK);
+        MessageBox(NULL, "Warning: Multiple Problems!", "Cxbx", MB_OK);
         return EXCEPTION_CONTINUE_SEARCH;
     }
 

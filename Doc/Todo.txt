@@ -1,5 +1,7 @@
 Cxbx Todo:
 
+  Phase out EmuPanic() (EmuCleanup is good)
+
   Some sort of delete-after-emulation type of functionality?
 
   Use SetDataFormat instead of parsing device input by hand?

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuKrnl.h
+// *   Cxbx->Win32->CxbxKrnl->ThreadList.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,7 +31,35 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUKRNL_H
-#define EMUKRNL_H
+#include "ThreadList.h"
 
-#endif
+// ******************************************************************
+// * Static
+// ******************************************************************
+ThreadList *ThreadList::pFirst = new ThreadList;
+ThreadList *ThreadList::pHead  = ThreadList::pFirst;
+
+// ******************************************************************
+// * ThreadList::Insert
+// ******************************************************************
+void ThreadList::Insert(HANDLE hThread, DWORD hThreadId)
+{
+    ThreadList *tl = ThreadList::pHead;
+
+    tl->hThread = hThread;
+    tl->dwThreadId = GetCurrentThreadId();
+    tl->pNext = new ThreadList;
+    tl->pNext->hThread = NULL;
+    tl->pNext->dwThreadId = 0;
+    tl->pNext->pNext = NULL;
+
+    ThreadList::pHead = tl->pNext;
+}
+
+// ******************************************************************
+// * ThreadList::Remove
+// ******************************************************************
+void ThreadList::Remove(DWORD hThreadId)
+{
+    // TODO! (Make this a mutex though!)
+}

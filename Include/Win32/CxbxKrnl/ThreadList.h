@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuKrnl.h
+// *   Cxbx->Win32->CxbxKrnl->ThreadList.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,7 +31,26 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUKRNL_H
-#define EMUKRNL_H
+#ifndef THREADLIST_H
+#define THREADLIST_H
+
+#include <windows.h>
+
+// ******************************************************************
+// * Linked list of threads
+// ******************************************************************
+struct ThreadList
+{
+    static void Insert(HANDLE hThread, DWORD hThreadId);
+    static void Remove(DWORD hThreadId);
+
+    static ThreadList *pHead;
+    static ThreadList *pFirst;
+
+    HANDLE      hThread;
+    DWORD       dwThreadId;
+
+    ThreadList *pNext;
+};
 
 #endif

@@ -108,7 +108,7 @@ void EmuGenerateFS(int TlsAdjust)
 
         tlsExData->wSwapFS   = NewFS;
         tlsExData->bIsXboxFS = false;
-        tlsExData->dwSizeOfOrgTLS = (TlsAdjust == -1) ? -1 : 0x18 + TlsAdjust;
+        tlsExData->dwSizeOfOrgTLS = (TlsAdjust == -1) ? 0 : 0x18 + TlsAdjust;
         tlsExData->pOrgTLS   = (void*)new char[tlsExData->dwSizeOfOrgTLS];
 
         memcpy(tlsExData->pOrgTLS, TLSPtr, tlsExData->dwSizeOfOrgTLS);
@@ -217,7 +217,6 @@ void EmuCleanupFS()
         }
 
         memcpy(TLSPtr, tlsExData->pOrgTLS, tlsExData->dwSizeOfOrgTLS);
-
     }
 
     if(tlsExData->wSwapFS != 0)

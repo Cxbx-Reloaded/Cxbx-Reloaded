@@ -56,12 +56,7 @@ namespace xntdll
 #include "EmuFS.h"
 #include "EmuFile.h"
 #include "EmuKrnl.h"
-
-// ******************************************************************
-// * Globals
-// ******************************************************************
-ThreadList *ThreadList::pFirst = new ThreadList;
-ThreadList *ThreadList::pHead  = ThreadList::pFirst;
+#include "ThreadList.h"
 
 // ******************************************************************
 // * Loaded at run-time to avoid linker conflicts
@@ -158,6 +153,10 @@ static DWORD WINAPI PCSTProxy
     }
 
 callComplete:
+
+    EmuSwapFS();    // Win2k/XP FS
+
+    MessageBox(NULL, "Thread is all done.", "Cxbx", MB_OK);
 
     EmuCleanupFS();
 
@@ -809,6 +808,42 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
     EmuSwapFS();   // Xbox FS
 
     return STATUS_SUCCESS;
+}
+
+// ******************************************************************
+// * PsTerminateSystemThread
+// ******************************************************************
+XBSYSAPI EXPORTNUM(258) VOID NTAPI xboxkrnl::PsTerminateSystemThread(IN NTSTATUS ExitStatus)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%.08X): PsTerminateSystemThread\n"
+               "(\n"
+               "   ExitStatus          : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), ExitStatus);
+    }
+    #endif
+
+    // ******************************************************************
+    // * Remove this thread handle
+    // ******************************************************************
+    {
+        DWORD  hThreadId = GetCurrentThreadId();
+
+        ThreadList::Remove(hThreadId);
+    }
+
+    ExitThread(ExitStatus);
+
+    EmuSwapFS();   // Xbox FS
+
+    return;
 }
 
 // ******************************************************************

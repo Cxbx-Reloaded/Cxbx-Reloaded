@@ -43,6 +43,7 @@ namespace xboxkrnl
 };
 
 #include "Cxbx.h"
+#include "Emu.h"
 
 // ******************************************************************
 // * NOTE:
@@ -56,8 +57,8 @@ namespace xboxkrnl
 // * option "#define PANIC(numb) cxbx_panic"
 // *
 // ******************************************************************
-//#define PANIC(numb) EmuPanic
-#define PANIC(numb) numb
+#define PANIC(numb) EmuPanic
+//#define PANIC(numb) numb
 
 // ******************************************************************
 // * KernelThunkTable
@@ -322,7 +323,7 @@ extern "C" CXBXKRNL_API uint32 KernelThunkTable[367] =
     (uint32)&xboxkrnl::PsCreateSystemThreadEx,      // 0x00FF (255)
     (uint32)PANIC(0x0100),                          // 0x0100 (256)
     (uint32)PANIC(0x0101),                          // 0x0101 (257)
-    (uint32)PANIC(0x0102),                          // 0x0102 (258)
+    (uint32)&xboxkrnl::PsTerminateSystemThread,     // 0x0102 (258)
     (uint32)PANIC(0x0103),                          // 0x0103 (259)
     (uint32)PANIC(0x0104),                          // 0x0104 (260)
     (uint32)PANIC(0x0105),                          // 0x0105 (261)
