@@ -44,8 +44,8 @@ WndAbout::WndAbout(HINSTANCE x_hInstance, HWND x_parent) : Wnd(x_hInstance)
     m_classname = "WndAbout";
     m_wndname   = "Cxbx - About";
 
-    m_w         = 200;
-    m_h         = 120;
+    m_w         = 285;
+    m_h         = 180;
 
 	// center to parent
     {
@@ -87,6 +87,12 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 			m_hFont = CreateFont(nHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, FF_ROMAN, "verdana");
 
+            m_back_bmp = (HBITMAP)LoadImage(m_hInstance, MAKEINTRESOURCE(IDB_ABOUT), IMAGE_BITMAP, 0, 0, 0);
+
+            m_back_dc  = CreateCompatibleDC(hDC);
+
+            m_orig_bmp  = (HBITMAP)SelectObject(m_back_dc, m_back_bmp);
+
             ReleaseDC(hwnd, hDC);
         }
         break;
@@ -109,42 +115,38 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 				    SetTextColor(hDC, GetSysColor(COLOR_HIGHLIGHTTEXT));
 
-                    // top version bar
-                    {
-				        char buffer[] = " Cxbx Version " CXBX_VERSION;
-
-                        RECT rect = {0, 0, 200, 14};
-                        ExtTextOut(hDC, 0, 0, ETO_OPAQUE, &rect, buffer, strlen(buffer), 0);
-                    }
-
                     // bottom url bar
                     {
-				        char buffer[] = " http://www.caustik.com/xbox/";
+				        char buffer[] = " official homepage : www.caustik.com/xbox/";
 
-                        RECT rect = {0, 74, 200, 88};
-                        ExtTextOut(hDC, 0, 74, ETO_OPAQUE, &rect, buffer, strlen(buffer), 0);
+                        RECT rect = {0, 134, 280, 148};
+                        ExtTextOut(hDC, 0, 134, ETO_OPAQUE, &rect, buffer, strlen(buffer), 0);
                     }
                 }
 
+                // draw bitmap
+                BitBlt(hDC, 2, 2, 275, 125, m_back_dc, 0, 0, SRCCOPY);
+
+                /*
                 // draw credits
                 {
                     SetBkColor(hDC, RGB(0,0,0));
 
 				    SetTextColor(hDC, RGB(0xFF,0xFF,0xFF));
 
-                    char bufferA[] = " The First XBox Emulator";
-                    char bufferB[] = " Designed and Coded by Caustik";
-                    char bufferC[] = " (Click Window to Close)";
+                    char bufferA[] = " Cxbx Version " CXBX_VERSION;
+                    char bufferB[] = " Cxbx is an open source, free, legal program.";
+                    char bufferC[] = " If you wish to contribute in any way, please";
 
-                    RECT rectA = {0, 22, 200, 37};
-                    ExtTextOut(hDC, 0, 22, ETO_OPAQUE, &rectA, bufferA, strlen(bufferA), 0);
+                    RECT rectA = {0, 5, 200, 19};
+                    ExtTextOut(hDC, 0, 4, ETO_OPAQUE, &rectA, bufferA, strlen(bufferA), 0);
 
-                    RECT rectB = {0, 37, 200, 51};
-                    ExtTextOut(hDC, 0, 37, ETO_OPAQUE, &rectB, bufferB, strlen(bufferB), 0);
+                    RECT rectB = {0, 20, 200, 34};
+                    ExtTextOut(hDC, 0, 20, ETO_OPAQUE, &rectB, bufferB, strlen(bufferB), 0);
 
-                    RECT rectC = {22, 53, 70, 67};
-                    ExtTextOut(hDC, 22, 53, ETO_OPAQUE, &rectC, bufferC, strlen(bufferC), 0);
-                }
+                    RECT rectC = {0, 35, 200, 49};
+                    ExtTextOut(hDC, 0, 35, ETO_OPAQUE, &rectC, bufferC, strlen(bufferC), 0);
+                }*/
 
                 SelectObject(hDC, tmpObj);
             }

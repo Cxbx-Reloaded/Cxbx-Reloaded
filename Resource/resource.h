@@ -6,6 +6,7 @@
 #define IDB_SPLASH                      102
 #define IDR_MAINMENU                    103
 #define IDB_LOGO                        106
+#define IDB_ABOUT                       108
 #define ID_FILE_EXIT                    40005
 #define ID_VIEW_DEBUGCONSOLE            40007
 #define ID_HELP_ABOUT                   40008
@@ -32,7 +33,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        107
+#define _APS_NEXT_RESOURCE_VALUE        109
 #define _APS_NEXT_COMMAND_VALUE         40039
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           103

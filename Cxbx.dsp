@@ -188,6 +188,10 @@ SOURCE=.\Include\Core\Xbe.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\Resource\About.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Resource\Cxbx.ico
 # End Source File
 # Begin Source File
