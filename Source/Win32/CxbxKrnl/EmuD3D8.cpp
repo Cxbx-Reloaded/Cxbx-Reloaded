@@ -2371,12 +2371,13 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
         EmuWarning("D3DFMT_D16 is an unsupported texture format!");
         PCFormat = D3DFMT_X8R8G8B8;
     }
-    else //*/
-    if(PCFormat == D3DFMT_P8)
+    //*
+    else if(PCFormat == D3DFMT_P8)
     {
         EmuWarning("D3DFMT_P8 is an unsupported texture format!");
         PCFormat = D3DFMT_X8R8G8B8;
     }
+    //*/
     //* This is OK on my GeForce FX 5600
     else if(PCFormat == D3DFMT_D24S8)
     {
@@ -3872,7 +3873,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
                 BYTE *pSrc = (BYTE*)pBase;
 
-                if(pResource->Data == X_D3DRESOURCE_DATA_FLAG_SURFACE)
+                if( (pResource->Data == X_D3DRESOURCE_DATA_FLAG_SURFACE) || ((DWORD)pBase == X_D3DRESOURCE_DATA_FLAG_SURFACE) )
                 {
                     EmuWarning("Attempt to registered to another resource's data (eww!)");
 
@@ -4814,11 +4815,6 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
                GetCurrentThreadId(), pSurface, SrcRect, DstRect, EnableColorKey, ColorKey);
     }
     #endif
-
-    if(SrcRect != NULL)
-        printf("SrcRect : {%d, %d, %d, %d}\n", SrcRect->left, SrcRect->top, SrcRect->right, SrcRect->bottom);
-    if(DstRect != NULL)
-        printf("DstRect : {%d, %d, %d, %d}\n", DstRect->left, DstRect->top, DstRect->right, DstRect->bottom);
 
     // manually copy data over to overlay
     if(g_bSupportsYUY2)
@@ -6175,6 +6171,27 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetTransform
     }
     #endif
 
+    /*
+    printf("pMatrix (%d)\n", State);
+    printf("{\n");
+    printf("    %.08f,%.08f,%.08f,%.08f\n", pMatrix->_11, pMatrix->_12, pMatrix->_13, pMatrix->_14);
+    printf("    %.08f,%.08f,%.08f,%.08f\n", pMatrix->_21, pMatrix->_22, pMatrix->_23, pMatrix->_24);
+    printf("    %.08f,%.08f,%.08f,%.08f\n", pMatrix->_31, pMatrix->_32, pMatrix->_33, pMatrix->_34);
+    printf("    %.08f,%.08f,%.08f,%.08f\n", pMatrix->_41, pMatrix->_42, pMatrix->_43, pMatrix->_44);
+    printf("}\n");
+
+    if(State == 6 && (pMatrix->_11 == 1.0f) && (pMatrix->_22 == 1.0f) && (pMatrix->_33 == 1.0f) && (pMatrix->_44 == 1.0f))
+    {
+        g_bSkipPush = TRUE;
+        printf("SkipPush ON\n");
+    }
+    else
+    {
+        g_bSkipPush = FALSE;
+        printf("SkipPush OFF\n");
+    }
+    */
+
     State = EmuXB2PC_D3DTS(State);
 
     g_pD3DDevice8->SetTransform(State, pMatrix);
@@ -6367,7 +6384,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetVertexShader
         X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader*)Handle;
         
 //        hRet = g_pD3DDevice8->SetVertexShader(pD3DVertexShader->Handle);
-        hRet = g_pD3DDevice8->SetVertexShader(D3DFVF_XYZ | D3DFVF_TEX0);
+        hRet = g_pD3DDevice8->SetVertexShader(D3DFVF_XYZ);
     }
     else
     {
@@ -6875,6 +6892,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetPalette
                GetCurrentThreadId(), Stage, pPalette);
     }
     #endif
+
+//    g_pD3DDevice8->SetPaletteEntries(0, (PALETTEENTRY*)pPalette->Data);
 
     EmuWarning("Not setting palette");
 

@@ -45,6 +45,7 @@ namespace XTL
 extern XTL::LPDIRECT3DDEVICE8 g_pD3DDevice8;  // Direct3D8 Device
 
 bool XTL::g_bStepPush = FALSE;
+bool XTL::g_bSkipPush = FALSE;
 
 // pushbuffer execution emulation
 void XTL::EmuExecutePushBuffer
@@ -53,6 +54,9 @@ void XTL::EmuExecutePushBuffer
     PVOID                  pFixup
 )
 {
+    if(g_bSkipPush)
+        return;
+
     DWORD *pdwPushData = (DWORD*)pPushBuffer->Data;
 
     D3DPRIMITIVETYPE    PCPrimitiveType = (D3DPRIMITIVETYPE)-1;
@@ -134,13 +138,6 @@ void XTL::EmuExecutePushBuffer
                     (
                         PCPrimitiveType, 0, dwCount*2, 0, EmuD3DVertex2PrimitiveCount(XBPrimitiveType, dwCount*2)
                     );
-
-                    if(g_bStepPush)
-                    {
-                        printf("dwCount := 0x%.08X\n", dwCount);
-                        Sleep(100);
-                        g_pD3DDevice8->Present(0,0,0,0);
-                    }
                 }
 
                 // cleanup
@@ -149,5 +146,11 @@ void XTL::EmuExecutePushBuffer
         }
 
         pdwPushData++;
+    }
+
+    if(g_bStepPush)
+    {
+        Sleep(500);
+        g_pD3DDevice8->Present(0,0,0,0);
     }
 }
