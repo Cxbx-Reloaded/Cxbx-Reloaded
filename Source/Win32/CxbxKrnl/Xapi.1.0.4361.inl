@@ -358,7 +358,7 @@ OOVPATable XAPI_1_0_4361[] =
         #endif
     },
     */
-    /* Too High Level
+    //* Too High Level
     // XapiInitProcess
     {
         (OOVPA*)&XapiInitProcess_1_0_4361,
@@ -392,7 +392,7 @@ OOVPATable XAPI_1_0_4361[] =
         "EmuXapiBootDash"
         #endif
     },
-    /* Too High Level
+    //* Too High Level
     // __rtinit (* unchanged since 1.0.3911 *)
     {
         (OOVPA*)&__rtinit_1_0_3911,
@@ -404,7 +404,7 @@ OOVPATable XAPI_1_0_4361[] =
         #endif
     },
     //*/
-    /* Too High Level
+    //* Too High Level
     // __cinit (* unchanged since 1.0.3911 *)
     {
         (OOVPA*)&__cinit_1_0_3911,
@@ -414,7 +414,8 @@ OOVPATable XAPI_1_0_4361[] =
         #ifdef _DEBUG_TRACE
         "Emu__cinit",
         #endif
-    },*/
+    },
+    //*/
 };
 
 // ******************************************************************
