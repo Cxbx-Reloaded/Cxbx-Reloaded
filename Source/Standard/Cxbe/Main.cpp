@@ -224,7 +224,9 @@ int main(int argc, char *argv[])
 
         if(szDumpFilename[0] != 0)
         {
-            XbeFile->DumpInformation(szDumpFilename);
+            FILE *outfile = fopen(szDumpFilename, "wt");
+            XbeFile->DumpInformation(outfile);
+            fclose(outfile);
 
             if(XbeFile->GetError() != 0)
             {
