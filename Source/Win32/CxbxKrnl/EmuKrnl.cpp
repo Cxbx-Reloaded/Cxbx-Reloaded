@@ -284,7 +284,7 @@ XBSYSAPI EXPORTNUM(37) xboxkrnl::LONG NTAPI xboxkrnl::FscSetCacheSize(ULONG uCac
     }
     #endif
 
-    printf("*Warning* FscSetCacheSize is being ignored\n");
+    EmuWarning("FscSetCacheSize is being ignored");
 
     EmuSwapFS();   // Xbox FS
 
@@ -1148,6 +1148,9 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
         FileHandle, DesiredAccess, &NtObjAttr, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock,
         (NtDll::LARGE_INTEGER*)AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, NULL
     );
+
+    if(FAILED(ret))
+        EmuWarning("NtCreateFile Failed (0x%.08X)", ret);
 
     // ******************************************************************
     // * Restore original buffer

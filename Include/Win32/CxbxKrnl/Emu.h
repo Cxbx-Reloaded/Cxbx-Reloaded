@@ -55,6 +55,15 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(void *pTLSData, Xbe::TLS *pTLS, Xbe::
 extern "C" CXBXKRNL_API void NTAPI EmuCleanThread();
 
 // ******************************************************************
+// * func: EmuWarning
+// ******************************************************************
+#ifdef _DEBUG_WARNINGS
+extern "C" CXBXKRNL_API void NTAPI EmuWarning(const char *szWarningMessage, ...);
+#else
+inline void NTAPI EmuWarning(const char *szWarningMessage, ...) { }
+#endif
+
+// ******************************************************************
 // * func: EmuCleanup
 // ******************************************************************
 extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage, ...);

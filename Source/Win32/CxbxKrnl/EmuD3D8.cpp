@@ -485,7 +485,7 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
     // * verify no ugly circumstances
     // ******************************************************************
     if(pPresentationParameters->BufferSurfaces[0] != NULL || pPresentationParameters->DepthStencilSurface != NULL)
-        printf("*Warning* DepthStencilSurface != NULL and/or BufferSurfaces[0] != NULL\n");
+        EmuWarning("DepthStencilSurface != NULL and/or BufferSurfaces[0] != NULL");
 
     // ******************************************************************
     // * make adjustments to parameters to make sense with windows d3d
@@ -517,7 +517,7 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
         // TODO: Support Xbox extensions if possible
         if(pPresentationParameters->MultiSampleType != 0)
         {
-            printf("*Warning* MultiSampleType (0x%.08X) Not Supported!\n", pPresentationParameters->MultiSampleType);
+            EmuWarning("MultiSampleType 0x%.08X is not supported!", pPresentationParameters->MultiSampleType);
 
             pPresentationParameters->MultiSampleType = D3DMULTISAMPLE_NONE;
 
@@ -1056,7 +1056,7 @@ XTL::X_D3DSurface* WINAPI XTL::EmuIDirect3DDevice8_GetBackBuffer2
 
         if(FAILED(hRet))
         {
-            printf("*Warning* Could not retrieve primary surface, using backbuffer\n");
+            EmuWarning("Could not retrieve primary surface, using backbuffer");
             pBackBuffer->EmuSurface8->Release();
             pBackBuffer->EmuSurface8 = 0;
             BackBuffer = 0;
@@ -1415,7 +1415,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
 
     if(FAILED(hRet))
     {
-        printf("*Warning* we're lying about the creation of a vertex shader!\n");
+        EmuWarning("VertexShader was not really created!\n");
 
         hRet = D3D_OK;
     }

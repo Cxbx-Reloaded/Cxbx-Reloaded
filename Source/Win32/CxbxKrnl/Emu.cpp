@@ -448,7 +448,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                         else
                         {
                             XTL::EmuD3DDeferredRenderState = 0;
-                            printf("Emu (0x%X): *Warning* EmuD3DDeferredRenderState not found!\n", GetCurrentThreadId());
+                            EmuWarning("EmuD3DDeferredRenderState was not found!");
                         }
 
                         // ******************************************************************
@@ -477,7 +477,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                             else
                             {
                                 XTL::EmuD3DDeferredTextureState = 0;
-                                printf("Emu (0x%X): *Warning* EmuD3DDeferredTextureState not found!\n", GetCurrentThreadId());
+                                EmuWarning("EmuD3DDeferredTextureState was not found!");
                             }
                         }
 			        }
@@ -535,6 +535,38 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
     return;
 }
+
+// ******************************************************************
+// * func: EmuWarning
+// ******************************************************************
+#ifdef _DEBUG_WARNINGS
+extern "C" CXBXKRNL_API void NTAPI EmuWarning(const char *szWarningMessage, ...)
+{
+    if(szWarningMessage == NULL)
+        return;
+
+    char szBuffer1[255];
+    char szBuffer2[255];
+
+    va_list argp;
+
+    sprintf(szBuffer1, "Emu (0x%X): *WARNING* -> ", GetCurrentThreadId());
+
+    va_start(argp, szWarningMessage);
+
+    vsprintf(szBuffer2, szWarningMessage, argp);
+
+    va_end(argp);
+
+    strcat(szBuffer1, szBuffer2);
+
+    printf("%s\n", szBuffer1);
+
+    fflush(stdout);
+
+    return;
+}
+#endif
 
 // ******************************************************************
 // * func: EmuCleanup
