@@ -2116,7 +2116,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVolumeTexture
         );
 
         if(FAILED(hRet))
-            EmuWarning("CreateVolumeTexture Failed!");
+            EmuWarning("CreateVolumeTexture Failed! (0x%.08X)", hRet);
     }
     else
     {
