@@ -46,6 +46,8 @@ Xbe::Xbe(const char *x_szFilename)
 {
     ConstructorInit();
 
+    printf("Xbe::Xbe: Reading Xbe file...");
+
     FILE *XbeFile = fopen(x_szFilename, "rb");
 
     // ******************************************************************
@@ -57,10 +59,14 @@ Xbe::Xbe(const char *x_szFilename)
         return;
     }
 
+    printf("OK\n");
+
     // ******************************************************************
     // * read xbe image header
     // ******************************************************************
     {
+        printf("Xbe::Xbe: Reading Image Header...");
+
         if(fread(&m_Header, sizeof(m_Header), 1, XbeFile) != 1)
         {
             SetError("unexpected end of file while reading .xbe image header", true);
@@ -72,6 +78,8 @@ Xbe::Xbe(const char *x_szFilename)
             SetError("invalid magic number in .xbe file", true);
             goto cleanup;
         }
+
+        printf("OK\n");
     }
 
     // ******************************************************************
@@ -79,6 +87,8 @@ Xbe::Xbe(const char *x_szFilename)
     // ******************************************************************
     if(m_Header.dwSizeofHeaders > sizeof(m_Header))
     {
+        printf("Xbe::Xbe: Reading Image Header Extra Bytes...");
+
         uint32 ExSize = RoundUp(m_Header.dwSizeofHeaders, 0x1000) - sizeof(m_Header);
 
 		m_HeaderEx = new char[ExSize];
@@ -88,12 +98,16 @@ Xbe::Xbe(const char *x_szFilename)
 			SetError("unexpected end of file while reading .xbe image header (ex)", true);
 			goto cleanup;
 		}
+
+        printf("OK\n");
     }
 
     // ******************************************************************
     // * read xbe certificate
     // ******************************************************************
     {
+        printf("Xbe::Xbe: Reading Certificate...");
+
         fseek(XbeFile, m_Header.dwCertificateAddr - m_Header.dwBaseAddr, SEEK_SET);
 
         if(fread(&m_Certificate, sizeof(m_Certificate), 1, XbeFile) != 1)
@@ -105,18 +119,24 @@ Xbe::Xbe(const char *x_szFilename)
         setlocale( LC_ALL, "English" );
 
         wcstombs(m_szAsciiTitle, m_Certificate.wszTitleName, 40);
+
+        printf("OK\n");
     }
 
     // ******************************************************************
     // * read xbe section headers
     // ******************************************************************
     {
+        printf("Xbe::Xbe: Reading Section Headers...\n");
+
         fseek(XbeFile, m_Header.dwSectionHeadersAddr - m_Header.dwBaseAddr, SEEK_SET);
 
         m_SectionHeader = new SectionHeader[m_Header.dwSections];
 
         for(uint32 v=0;v<m_Header.dwSections;v++)
         {
+            printf("Xbe::Xbe: Reading Section Header 0x%.04X...", v);
+
             if(fread(&m_SectionHeader[v], sizeof(*m_SectionHeader), 1, XbeFile) != 1)
             {
                 char buffer[255];
@@ -124,6 +144,8 @@ Xbe::Xbe(const char *x_szFilename)
                 SetError(buffer, true);
                 goto cleanup;
             }
+
+            printf("OK\n");
         }
     }
 
@@ -131,9 +153,13 @@ Xbe::Xbe(const char *x_szFilename)
     // * read xbe section names
     // ******************************************************************
     {
+        printf("Xbe::Xbe: Reading Section Names...\n");
+
         m_szSectionName = new char[m_Header.dwSections][9];
         for(uint32 v=0;v<m_Header.dwSections;v++)
         {
+            printf("Xbe::Xbe: Reading Section Name 0x%.04X...", v);
+
             uint08 *sn = GetAddr(m_SectionHeader[v].dwSectionNameAddr);
 
             memset(m_szSectionName[v], 0, 9);
@@ -145,6 +171,8 @@ Xbe::Xbe(const char *x_szFilename)
                 if(m_szSectionName[v][b] == '\0')
                     break;
             }
+
+            printf("OK [%s]\n", m_szSectionName[v]);
         }
     }
 
@@ -153,11 +181,16 @@ Xbe::Xbe(const char *x_szFilename)
     // ******************************************************************
     if(m_Header.dwLibraryVersionsAddr != 0)
     {
+        printf("Xbe::Xbe: Reading Library Versions...\n");
+
         fseek(XbeFile, m_Header.dwLibraryVersionsAddr - m_Header.dwBaseAddr, SEEK_SET);
 
         m_LibraryVersion = new LibraryVersion[m_Header.dwLibraryVersions];
+
         for(uint32 v=0;v<m_Header.dwLibraryVersions;v++)
         {
+            printf("Xbe::Xbe: Reading Library Version 0x%.04X...", v);
+
             if(fread(&m_LibraryVersion[v], sizeof(*m_LibraryVersion), 1, XbeFile) != 1)
             {
                 char buffer[255];
@@ -165,19 +198,23 @@ Xbe::Xbe(const char *x_szFilename)
                 SetError(buffer, true);
                 goto cleanup;
             }
+
+            printf("OK\n");
         }
 
         // ******************************************************************
         // * read xbe kernel library version
         // ******************************************************************
         {
+            printf("Xbe::Xbe: Reading Kernel Library Version...");
+
             if(m_Header.dwKernelLibraryVersionAddr == 0)
             {
                 SetError("could not locate kernel library version", true);
                 goto cleanup;
             }
 
-	    fseek(XbeFile, m_Header.dwKernelLibraryVersionAddr - m_Header.dwBaseAddr, SEEK_SET);
+            fseek(XbeFile, m_Header.dwKernelLibraryVersionAddr - m_Header.dwBaseAddr, SEEK_SET);
 
             m_KernelLibraryVersion = new LibraryVersion;
 
@@ -186,19 +223,23 @@ Xbe::Xbe(const char *x_szFilename)
                 SetError("unexpected end of file while reading .xbe kernel version", true);
                 goto cleanup;
             }
+
+            printf("OK\n");
         }
 
         // ******************************************************************
         // * read xbe xapi library version
         // ******************************************************************
         {
+            printf("Xbe::Xbe: Reading XAPI Library Version...");
+
             if(m_Header.dwXAPILibraryVersionAddr == 0)
             {
                 SetError("could not locate xapi library version", true);
                 goto cleanup;
             }
 
-	    fseek(XbeFile, m_Header.dwXAPILibraryVersionAddr - m_Header.dwBaseAddr, SEEK_SET);
+            fseek(XbeFile, m_Header.dwXAPILibraryVersionAddr - m_Header.dwBaseAddr, SEEK_SET);
 
             m_XAPILibraryVersion = new LibraryVersion;
 
@@ -207,6 +248,8 @@ Xbe::Xbe(const char *x_szFilename)
                 SetError("unexpected end of file while reading .xbe xapi version", true);
                 goto cleanup;
             }
+
+            printf("OK\n");
         }
     }
 
@@ -214,21 +257,28 @@ Xbe::Xbe(const char *x_szFilename)
     // * read xbe sections
     // ******************************************************************
     {
+        printf("Xbe::Xbe: Reading Sections...\n");
+
         m_bzSection = new uint08*[m_Header.dwSections];
 
         memset(m_bzSection, 0, m_Header.dwSections);
 
         for(uint32 v=0;v<m_Header.dwSections;v++)
         {
+            printf("Xbe::Xbe: Reading Section 0x%.04X...", v);
+
             uint32 RawSize = m_SectionHeader[v].dwSizeofRaw;
             uint32 RawAddr = m_SectionHeader[v].dwRawAddr;
 
             m_bzSection[v] = new uint08[RawSize];
 
-	    fseek(XbeFile, RawAddr, SEEK_SET);
+            fseek(XbeFile, RawAddr, SEEK_SET);
 
             if(RawSize == 0)
+            {
+                printf("OK\n");
                 continue;
+            }
 
             if(fread(m_bzSection[v], RawSize, 1, XbeFile) != 1)
             {
@@ -237,6 +287,8 @@ Xbe::Xbe(const char *x_szFilename)
                 SetError(buffer, true);
                 goto cleanup;
             }
+
+            printf("OK\n");
         }
     }
 
@@ -245,6 +297,8 @@ Xbe::Xbe(const char *x_szFilename)
     // ******************************************************************
     if(m_Header.dwTLSAddr != 0)
     {
+        printf("Xbe::Xbe: Reading Thread Local Storage...");
+
         void *Addr = GetAddr(m_Header.dwTLSAddr);
 
         if(Addr == 0)
@@ -256,9 +310,14 @@ Xbe::Xbe(const char *x_szFilename)
         m_TLS = new TLS;
 
         memcpy(m_TLS, Addr, sizeof(*m_TLS));
+
+        printf("OK\n");
     }
 
 cleanup:
+
+    if(GetError() != 0)
+        printf("FAILED!\n");
 
     fclose(XbeFile);
 
@@ -275,6 +334,8 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
     time_t CurrentTime;
 
     time(&CurrentTime);
+
+    printf("Xbe::Xbe: Pass 1...");
 
     // ******************************************************************
     // * Pass 1
@@ -346,6 +407,10 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
         m_Header.dwKernelLibraryVersionAddr = 0;
         m_Header.dwXAPILibraryVersionAddr = 0;
     }
+
+    printf("OK\n");
+
+    printf("Xbe::Xbe: Pass 2...");
 
     // ******************************************************************
     // * Pass 2
@@ -428,6 +493,10 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
         // ******************************************************************
         m_Header.dwSizeofHeaders = mrc - m_Header.dwBaseAddr;
     }
+
+    printf("OK\n");
+
+    printf("Xbe::Xbe: Pass 3...");
 
     // ******************************************************************
     // * Pass 3
@@ -726,6 +795,10 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
         }
     }
 
+    printf("OK\n");
+
+    printf("Xbe::Xbe: Pass 4...\n");
+
     // ******************************************************************
     // * Pass 4
     // ******************************************************************
@@ -750,6 +823,8 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
             // ******************************************************************
             if(reloc != 0)
             {
+                printf("Xbe::Xbe: Relocating...");
+
                 uint32 v = 0;
 
                 // ******************************************************************
@@ -798,6 +873,8 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
                         v+=2;
                     }
                 }
+
+                printf("OK\n");
             }
         }
 
@@ -817,6 +894,9 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
     }
 
 cleanup:
+
+    if(GetError() != 0)
+        printf("FAILED!\n");
 
     return;
 }
@@ -849,6 +929,11 @@ Xbe::~Xbe()
 // ******************************************************************
 void Xbe::Export(const char *x_szXbeFilename)
 {
+    if(GetError() != 0)
+        return;
+
+    printf("Xbe::Export: Writing Xbe file...");
+
     FILE *XbeFile = fopen(x_szXbeFilename, "wb");
 
     // ******************************************************************
@@ -860,51 +945,71 @@ void Xbe::Export(const char *x_szXbeFilename)
         return;
     }
 
+    printf("OK\n");
+
     // ******************************************************************
     // * write xbe image header
     // ******************************************************************
     {
-		if(fwrite(&m_Header, sizeof(m_Header), 1, XbeFile) != 1)
+        printf("Xbe::Export: Writing Image Header...");
+
+        if(fwrite(&m_Header, sizeof(m_Header), 1, XbeFile) != 1)
 		{
             SetError("recieved error while writing .xbe image header", false);
             goto cleanup;
         }
+
+        printf("OK\n");
+
+        printf("Xbe::Export: Writing Image Header Extra Bytes...");
 
 		if(fwrite(m_HeaderEx, m_Header.dwSizeofHeaders, 1, XbeFile) != 1)
 		{
 			SetError("recieved error while writing .xbe image header (ex)", false);
 			goto cleanup;
 		}
+
+        printf("OK\n");
     }
 
     // ******************************************************************
     // * write xbe certificate
     // ******************************************************************
 	{
-		fseek(XbeFile, m_Header.dwCertificateAddr - m_Header.dwBaseAddr, SEEK_SET);
+        printf("Xbe::Export: Writing Certificate...");
+
+        fseek(XbeFile, m_Header.dwCertificateAddr - m_Header.dwBaseAddr, SEEK_SET);
 
 		if(fwrite(&m_Certificate, sizeof(m_Certificate), 1, XbeFile) != 1)
 		{
 			SetError("recieved error while writing .xbe certificate", false);
 			goto cleanup;
 		}
+
+        printf("OK\n");
 	}
 
     // ******************************************************************
     // * write xbe section headers
     // ******************************************************************
 	{
+        printf("Xbe::Export: Writing Section Headers...\n");
+
         fseek(XbeFile, m_Header.dwSectionHeadersAddr - m_Header.dwBaseAddr, SEEK_SET);
 
         for(uint32 v=0;v<m_Header.dwSections;v++)
         {
-			if(fwrite(&m_SectionHeader[v], sizeof(*m_SectionHeader), 1, XbeFile) != 1)
+            printf("Xbe::Export: Writing Section Header 0x%.04X...", v);
+
+            if(fwrite(&m_SectionHeader[v], sizeof(*m_SectionHeader), 1, XbeFile) != 1)
             {
                 char Buffer[255];
                 sprintf(Buffer, "recieved error while writing .xbe section %d (%Xh)", v, v);
                 SetError(Buffer, false);
                 goto cleanup;
             }
+
+            printf("OK\n");
         }
 	}
 
@@ -912,15 +1017,22 @@ void Xbe::Export(const char *x_szXbeFilename)
     // * write xbe sections
     // ******************************************************************
 	{
-		for(uint32 v=0;v<m_Header.dwSections;v++)
+        printf("Xbe::Export: Writing Sections...\n");
+
+        for(uint32 v=0;v<m_Header.dwSections;v++)
 		{
+            printf("Xbe::Export: Writing Section 0x%.04X [%s]...", v, m_szSectionName[v]);
+
             uint32 RawSize = m_SectionHeader[v].dwSizeofRaw;
             uint32 RawAddr = m_SectionHeader[v].dwRawAddr;
 
             fseek(XbeFile, RawAddr, SEEK_SET);
 
             if(RawSize == 0)
+            {
+                printf("OK\n");
                 continue;
+            }
 
 			if(fwrite(m_bzSection[v], RawSize, 1, XbeFile) != 1)
 			{
@@ -929,6 +1041,8 @@ void Xbe::Export(const char *x_szXbeFilename)
 				SetError(Buffer, false);
 				goto cleanup;
 			}
+
+            printf("OK\n");
 		}
 	}
 
@@ -936,7 +1050,9 @@ void Xbe::Export(const char *x_szXbeFilename)
     // * zero pad
     // ******************************************************************
 	{
-		fpos_t pos;
+        printf("Xbe::Export: Writing Zero Padding...");
+
+        fpos_t pos;
 
 		uint32 remaining = 0;
 
@@ -957,6 +1073,8 @@ void Xbe::Export(const char *x_szXbeFilename)
 
 			delete[] Buffer;
 		}
+
+        printf("OK\n");
 	}
 
 cleanup:

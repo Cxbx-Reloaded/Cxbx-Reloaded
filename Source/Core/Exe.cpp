@@ -43,7 +43,7 @@ Exe::Exe(const char *x_szFilename)
 {
     ConstructorInit();
 
-    printf("Exe::Exe: Opening %s...\n", x_szFilename);
+    printf("Exe::Exe: Reading Exe file...");
 
     FILE *ExeFile = fopen(x_szFilename, "rb");
 
@@ -56,12 +56,14 @@ Exe::Exe(const char *x_szFilename)
         return;
     }
 
-    printf("Exe::Exe: %s was opened...\n", x_szFilename);
+    printf("OK\n");
 
     // ******************************************************************
     // * ignore dos stub (if it exists)
     // ******************************************************************
     {
+        printf("Exe::Exe: Reading DOS stub...");
+
         if(fread(&m_DOSHeader.m_magic, sizeof(m_DOSHeader.m_magic), 1, ExeFile) != 1)
         {
             SetError("unexpected read error while reading magic number", true);
@@ -70,7 +72,7 @@ Exe::Exe(const char *x_szFilename)
 
         if(m_DOSHeader.m_magic == *(uint16*)"MZ")
         {
-            printf("Exe::Exe: Ignoring DOS stub...\n");
+            printf("Found, Ignoring...");
 
             if(fread(&m_DOSHeader.m_cblp, sizeof(m_DOSHeader)-2, 1, ExeFile) != 1)
             {
@@ -79,6 +81,12 @@ Exe::Exe(const char *x_szFilename)
             }
 
             fseek(ExeFile, m_DOSHeader.m_lfanew, SEEK_SET);
+
+            printf("OK\n");
+        }
+        else
+        {
+            printf("None (OK)\n");
         }
     }
 
@@ -86,7 +94,7 @@ Exe::Exe(const char *x_szFilename)
     // * read pe header
     // ******************************************************************
     {
-        printf("Exe::Exe: Reading PE header...\n");
+        printf("Exe::Exe: Reading PE header...");
 
         if(fread(&m_Header, sizeof(m_Header), 1, ExeFile) != 1)
         {
@@ -100,14 +108,14 @@ Exe::Exe(const char *x_szFilename)
             goto cleanup;
         }
 
-        printf("Exe::Exe: PE header \"magic number\" was OK...\n");
+        printf("OK\n");
     }
 
     // ******************************************************************
     // * read optional header
     // ******************************************************************
     {
-        printf("Exe::Exe: Reading Optional Header...\n");
+        printf("Exe::Exe: Reading Optional Header...");
 
         if(fread(&m_OptionalHeader, sizeof(m_OptionalHeader), 1, ExeFile) != 1)
         {
@@ -115,13 +123,13 @@ Exe::Exe(const char *x_szFilename)
             goto cleanup;
         }
 
-         if(m_OptionalHeader.m_magic != 0x010B)
+        if(m_OptionalHeader.m_magic != 0x010B)
         {
             SetError("invalid file, could not locate optional header", true);
             goto cleanup;
         }
 
-        printf("Exe::Exe: Optional Header \"magic number\" was OK...\n");
+         printf("OK\n");
     }
 
     // ******************************************************************
@@ -138,8 +146,6 @@ Exe::Exe(const char *x_szFilename)
 
             if(fread(&m_SectionHeader[v], sizeof(SectionHeader), 1, ExeFile) != 1)
             {
-                printf("FAILED!\n", v);
-
                 char buffer[255];
                 sprintf(buffer, "could not read pe section header %d (%Xh)", v, v);
                 SetError(buffer, true);
@@ -183,8 +189,6 @@ Exe::Exe(const char *x_szFilename)
 
                 if(fread(m_bzSection[v], raw_size, 1, ExeFile) != 1)
                 {
-                    printf("FAILED!\n");
-
                     char buffer[255];
                     sprintf(buffer, "could not read pe section %d (%Xh)", v, v);
                     SetError(buffer, true);
@@ -196,9 +200,12 @@ Exe::Exe(const char *x_szFilename)
         }
     }
 
-    printf("Exe::Exe: %s was successfully opened.\n", x_szFilename);
+    printf("Exe::Exe: .Exe was successfully opened.\n", x_szFilename);
 
 cleanup:
+
+    if(GetError() != 0)
+        printf("FAILED!\n");
 
     fclose(ExeFile);
 }
@@ -236,6 +243,8 @@ void Exe::Export(const char *x_szExeFilename)
     if(GetError() != 0)
         return;
 
+    printf("Exe::Export: Writing Exe file...");
+
     FILE *ExeFile = fopen(x_szExeFilename, "wb");
 
     // ******************************************************************
@@ -247,45 +256,63 @@ void Exe::Export(const char *x_szExeFilename)
         return;
     }
 
+    printf("OK\n");
+
     // ******************************************************************
     // * write dos stub
     // ******************************************************************
     {
+        printf("Exe::Export: Writing DOS stub...");
+
         if(fwrite(bzDOSStub, sizeof(bzDOSStub), 1, ExeFile) != 1)
         {
             SetError("could not write dos stub", false);
             goto cleanup;
         }
+
+        printf("OK\n");
     }
 
     // ******************************************************************
     // * write pe header
     // ******************************************************************
     {
+        printf("Exe::Export: Writing PE Header...");
+
         if(fwrite(&m_Header, sizeof(Header), 1, ExeFile) != 1)
         {
             SetError("could not write pe header", false);
             goto cleanup;
         }
+
+        printf("OK\n");
     }
 
     // ******************************************************************
     // * write optional header
     // ******************************************************************
     {
+        printf("Exe::Export: Writing Optional Header...");
+
         if(fwrite(&m_OptionalHeader, sizeof(OptionalHeader), 1, ExeFile) != 1)
         {
             SetError("could not write pe optional header", false);
             goto cleanup;
         }
+
+        printf("OK\n");
     }
 
     // ******************************************************************
     // * write section headers
     // ******************************************************************
     {
+        printf("Exe::Export: Writing Section Headers...\n");
+
         for(uint32 v=0;v<m_Header.m_sections;v++)
         {
+            printf("Exe::Export: Writing Section Header 0x%.04X...", v);
+
             if(fwrite(&m_SectionHeader[v], sizeof(SectionHeader), 1, ExeFile) != 1)
             {
                 char buffer[255];
@@ -293,6 +320,8 @@ void Exe::Export(const char *x_szExeFilename)
                 SetError(buffer, false);
                 goto cleanup;
             }
+
+            printf("OK\n");
         }
     }
 
@@ -300,15 +329,22 @@ void Exe::Export(const char *x_szExeFilename)
     // * write sections
     // ******************************************************************
     {
+        printf("Exe::Export: Writing Sections...\n");
+
         for(uint32 v=0;v<m_Header.m_sections;v++)
         {
+            printf("Exe::Export: Writing Section 0x%.04X...", v);
+
             uint32 RawSize = m_SectionHeader[v].m_sizeof_raw;
             uint32 RawAddr = m_SectionHeader[v].m_raw_addr;
 
-        fseek(ExeFile, RawAddr, SEEK_SET);
+            fseek(ExeFile, RawAddr, SEEK_SET);
 
             if(RawSize == 0)
+            {
+                printf("OK\n");
                 continue;
+            }
 
             if(fwrite(m_bzSection[v], RawSize, 1, ExeFile) != 1)
             {
@@ -317,10 +353,17 @@ void Exe::Export(const char *x_szExeFilename)
                 SetError(Buffer, false);
                 goto cleanup;
             }
+
+            fflush(ExeFile);
+
+            printf("OK\n");
         }
     }
 
 cleanup:
+
+    if(GetError() != 0)
+        printf("FAILED!\n");
 
     fclose(ExeFile);
 

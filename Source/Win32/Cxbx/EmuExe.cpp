@@ -40,6 +40,7 @@
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
+#include <stdio.h>
 #include <memory.h>
 
 // ******************************************************************
@@ -49,10 +50,14 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
 {
     ConstructorInit();
 
+    printf("EmuExe::EmuExe: Generating Exe file...\n");
+
     // ******************************************************************
     // * generate pe header
     // ******************************************************************
     {
+        printf("EmuExe::EmuExe: Generating PE header...");
+
         m_Header.m_magic                    = *(uint32 *)"PE\0\0";                      // magic number : "PE\0\0"
         m_Header.m_machine                  = IMAGE_FILE_MACHINE_I386;                  // machine type : i386
         m_Header.m_sections                 = (uint16)(x_Xbe->m_Header.dwSections + 2); // xbe sections + .cxbximp + .cxbxplg
@@ -61,12 +66,16 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
         m_Header.m_symbols                  = 0;                                        // unused
         m_Header.m_sizeof_optional_header   = sizeof(OptionalHeader);                   // size of optional header
         m_Header.m_characteristics          = 0x010F;                                   // should be fine..
+
+        printf("OK\n");
     }
 
     // ******************************************************************
     // * generate optional header
     // ******************************************************************
     {
+        printf("EmuExe::EmuExe: Generating Optional Header...");
+
         m_OptionalHeader.m_magic = 0x010B;         // magic number : 0x010B
 
         // ******************************************************************
@@ -140,12 +149,16 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
             m_OptionalHeader.m_image_data_directory[d].m_virtual_addr = 0;
             m_OptionalHeader.m_image_data_directory[d].m_size = 0;
         }
+
+        printf("OK\n");
     }
 
     // ******************************************************************
     // * generate section headers
     // ******************************************************************
     {
+        printf("EmuExe::EmuExe: Generating Section Headers...\n");
+
         m_SectionHeader = new SectionHeader[m_Header.m_sections];
 
         // ******************************************************************
@@ -159,6 +172,8 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
         {
             for(uint32 v=0;v<x_Xbe->m_Header.dwSections;v++)
             {
+                printf("EmuExe::EmuExe: Generating Section Header 0x%.04X...", v);
+
                 // ******************************************************************
                 // * generate xbe section name
                 // ******************************************************************
@@ -231,6 +246,8 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
 
                     m_SectionHeader[v].m_characteristics = flags;
                 }
+
+                printf("OK\n");
             }
         }
 
@@ -239,6 +256,8 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
         // ******************************************************************
         {
             uint32 i = m_Header.m_sections - 2;
+
+            printf("EmuExe::EmuExe: Generating Section Header 0x%.04X (.cxbximp)...", i);
 
             memcpy(m_SectionHeader[i].m_name, ".cxbximp", 8);
 
@@ -301,6 +320,8 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
                 m_OptionalHeader.m_image_data_directory[IMAGE_DIRECTORY_ENTRY_TLS].m_virtual_addr = x_Xbe->m_Header.dwTLSAddr - m_OptionalHeader.m_image_base;
                 m_OptionalHeader.m_image_data_directory[IMAGE_DIRECTORY_ENTRY_TLS].m_size = 0x28;
             }
+
+            printf("OK\n");
         }
 
         // ******************************************************************
@@ -308,6 +329,8 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
         // ******************************************************************
         {
             uint32 i = m_Header.m_sections - 1;
+
+            printf("EmuExe::EmuExe: Generating Section Header 0x%.04X (.cxbxplg)...", i);
 
             memcpy(m_SectionHeader[i].m_name, ".cxbxplg", 8);
 
@@ -352,6 +375,8 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
             // * make this section readable and executable
             // ******************************************************************
             m_SectionHeader[i].m_characteristics = IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_EXECUTE | IMAGE_SCN_CNT_CODE;
+
+            printf("OK\n");
         }
     }
 
@@ -359,6 +384,8 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
     // * generate sections
     // ******************************************************************
     {
+        printf("EmuExe::EmuExe: Generating Sections...\n");
+
         m_bzSection = new uint08*[m_Header.m_sections];
 
         // ******************************************************************
@@ -382,6 +409,8 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
             // ******************************************************************
             for(uint32 v=0;v<x_Xbe->m_Header.dwSections;v++)
             {
+                printf("EmuExe::EmuExe: Generating Section 0x%.04X...", v);
+
                 uint32 SectionSize = m_SectionHeader[v].m_sizeof_raw;
 
                 m_bzSection[v] = new uint08[SectionSize];
@@ -389,6 +418,8 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
                 memset(m_bzSection[v], 0, SectionSize);
 
                 memcpy(m_bzSection[v], x_Xbe->m_bzSection[v], x_Xbe->m_SectionHeader[v].dwSizeofRaw);
+
+                printf("OK\n");
             }
 
         }
@@ -401,6 +432,8 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
             // * TODO: fix up this entire chunk of code, it is a total hack
             // ******************************************************************
             uint32 i = m_Header.m_sections - 2;
+
+            printf("EmuExe::EmuExe: Generating Section 0x%.04X (.cxbximp)...", i);
 
             uint32 dwVirtAddr = m_SectionHeader[i].m_virtual_addr;
 
@@ -430,6 +463,8 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
             *(uint16*)&m_bzSection[i][0x38] = 0x0001;
 
             memcpy(&m_bzSection[i][0x3A], "_EmuXDummy@0\0\0cxbx.dll\0\0\0\0\0\0", 28);
+
+            printf("OK\n");
         }
 
         // ******************************************************************
@@ -438,6 +473,8 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
         {
             uint32 ep = x_Xbe->m_Header.dwEntryAddr;
             uint32 i  = m_Header.m_sections - 1;
+
+            printf("EmuExe::EmuExe: Generating Section 0x%.04X (.cxbxplg)...", i);
 
             // ******************************************************************
             // * decode entry point
@@ -478,6 +515,8 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
             *(uint32 *)((uint32)m_bzSection[i] + 16) = m_SectionHeader[i].m_virtual_addr + m_OptionalHeader.m_image_base + 0x100;
             *(uint32 *)((uint32)m_bzSection[i] + 21) = m_SectionHeader[i].m_virtual_addr + m_OptionalHeader.m_image_base + 0x100 + x_Xbe->m_Header.dwSizeofHeaders;
             *(uint32 *)((uint32)m_bzSection[i] + 26) = x_debug_console;
+
+            printf("OK\n");
         }
     }
 
@@ -485,6 +524,8 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
     // * patch kernel thunk table
     // ******************************************************************
     {
+        printf("EmuExe::EmuExe: Hijacking Kernel Imports...\n");
+
         uint32 kt = x_Xbe->m_Header.dwKernelImageThunkAddr;
 
         // ******************************************************************
@@ -512,10 +553,14 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
             // ******************************************************************
             if(kt >= virt_addr + imag_base && kt < virt_addr + virt_size + imag_base)
             {
+                printf("EmuExe::EmuExe: Located Thunk Table in Section 0x%.04X...", v);
+
                 uint32 *kt_tbl = (uint32*)&m_bzSection[v][kt - virt_addr - imag_base];
 
                 while(*kt_tbl != 0)
                     *kt_tbl++ = KernelThunkTable[*kt_tbl & 0x7FFFFFFF];
+
+                printf("OK\n");
 
                 break;
             }
@@ -526,6 +571,8 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
     // * update imcomplete header fields
     // ******************************************************************
     {
+        printf("EmuExe::EmuExe: Finalizing Exe file...");
+
         // ******************************************************************
         // * calculate size of code / data / image
         // ******************************************************************
@@ -580,5 +627,7 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
                 break;
             }
         }
+
+        printf("OK\n");
     }
 }
