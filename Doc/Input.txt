@@ -14,6 +14,6 @@ immediately see the changes take affect.
 It is important to note that all access to this shared
 memory, as with all shared memory, should be protected
 with a mutual exclusion mechanism. Win32 provides such
-a mechanism and will be used.
+a mechanism and it will be used.
 
 -caustik

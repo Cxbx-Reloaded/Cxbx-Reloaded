@@ -34,7 +34,6 @@
 #ifndef DLGCONTROLLERCONFIG_H
 #define DLGCONTROLLERCONFIG_H
 
-#undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
 // ******************************************************************
@@ -43,7 +42,7 @@
 extern void ShowControllerConfig(HWND hwnd);
 
 // ******************************************************************
-// * Joystick detection sensitivity
+// * Detection Sensitivity
 // ******************************************************************
 #define JOYSTICK_DETECT_SENSITIVITY 25000
 #define BUTTON_DETECT_SENSITIVITY   0

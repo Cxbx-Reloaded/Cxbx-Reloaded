@@ -37,7 +37,7 @@
 #include <string.h>
 
 // ******************************************************************
-// * statics
+// * Static Global(s)
 // ******************************************************************
 static void ShowUsage();
 static void MakeUpper(char *str);
@@ -126,24 +126,16 @@ int main(int argc, char *argv[])
             else if(strcmp(szOptionU, "TITLE") == 0)
             {
                 if(dwParamSize > 256)
-                {
                     printf("WARNING: Title too long, using default title\n");
-                }
                 else
-                {
                     strcpy(szXbeTitle, szParam);
-                }
             }
             else if(strcmp(szOptionU, "MODE") == 0)
             {
                 if(strcmp(szParamU, "RETAIL") == 0)
-                {
                     bRetail = true;
-                }
                 else if(strcmp(szParamU, "DEBUG") == 0)
-                {
                     bRetail = false;
-                }
                 else
                 {
                     strcpy(szErrorMessage, "invalid MODE");
@@ -183,10 +175,8 @@ int main(int argc, char *argv[])
         // ******************************************************************
         {
             for(int c=0;szXbeFilename[c] != 0;c++)
-            {
                 if(szXbeFilename[c] == '\\' || szXbeFilename[c] == '/')
                     szFilename = &szXbeFilename[c+1];
-            }
         }
 
         // ******************************************************************
@@ -200,21 +190,15 @@ int main(int argc, char *argv[])
             strncpy(szWorkingU, szWorking, 265);
 
             for(int c=0;szFilename[c] != 0;c++)
-            {
                 if(szFilename[c] == '.')
                     szWorking = &szFilename[c];
-            }
 
             MakeUpper(szWorking);
 
             if(strcmp(szWorkingU, ".exe") == 0)
-            {
                 strcpy(szWorking, ".xbe");
-            }
             else
-            {
                 strcat(szXbeFilename, ".xbe");
-            }
         }
     }
 
@@ -228,7 +212,6 @@ int main(int argc, char *argv[])
         {
             strcpy(szErrorMessage, ExeFile->GetError());
             goto cleanup;
-
         }
 
         Xbe *XbeFile = new Xbe(ExeFile, szXbeTitle, bRetail);

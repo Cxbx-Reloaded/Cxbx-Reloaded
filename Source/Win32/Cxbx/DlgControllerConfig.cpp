@@ -82,7 +82,6 @@ void ShowControllerConfig(HWND hwnd)
 // ******************************************************************
 INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-
     switch(uMsg)
     {
         case WM_INITDIALOG:
@@ -205,7 +204,6 @@ BOOL CALLBACK EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOID pvRef
         diprg.lMin              = 0 - 32768; 
         diprg.lMax              = 0 + 32767; 
 
-        // set axis range
         HRESULT hRet = g_pInputDev[(int)pvRef]->SetProperty(DIPROP_RANGE, &diprg.diph);
 
         if(FAILED(hRet))
@@ -229,7 +227,6 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, InputDeviceComponent idc)
     char szNewText[255] = "Recieved no user input, try again...";
 
     SetWindowText(GetDlgItem(hWndDlg, IDC_CONFIG_STATUS), "Waiting for your input...");
-
     GetWindowText(hWndButton, szOrgText, 32);
 
     // ******************************************************************
@@ -280,7 +277,6 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, InputDeviceComponent idc)
 		}
     }
 
-
     // ******************************************************************
     // * Set cooperative level and acquire
     // ******************************************************************
@@ -314,7 +310,7 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, InputDeviceComponent idc)
     }
 
     // ******************************************************************
-    // * Initialize mouse input
+    // * Last Mouse Input for Delta Calculations
     // ******************************************************************
     LONG LastMouse_lX = -1;
     LONG LastMouse_lY = -1;
@@ -405,13 +401,16 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, InputDeviceComponent idc)
                         dwHow = FIELD_OFFSET(DIJOYSTATE, lRz);
                         dwFlags |= (InputState.lRz > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
                     }
-                    else for(b=0;b<2;b++)
+                    else 
+                        for(b=0;b<2;b++)
                             if(abs(InputState.rglSlider[b]) > JOYSTICK_DETECT_SENSITIVITY)
                                 dwHow = FIELD_OFFSET(DIJOYSTATE, rglSlider[b]);
-                    else for(b=0;b<4;b++)
+                    else 
+                        for(b=0;b<4;b++)
                             if(abs(InputState.rgdwPOV[b]) > POV_DETECT_SENSITIVITY)
                                 dwHow = FIELD_OFFSET(DIJOYSTATE, rgdwPOV[b]);
-                    else for(b=0;b<32;b++)
+                    else
+                        for(b=0;b<32;b++)
                             if(InputState.rgbButtons[b] > BUTTON_DETECT_SENSITIVITY)
                                 dwHow = FIELD_OFFSET(DIJOYSTATE, rgbButtons[b]);
 

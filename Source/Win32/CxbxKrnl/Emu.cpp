@@ -82,12 +82,12 @@ extern "C" CXBXKRNL_API void NTAPI EmuNoFunc()
 // ******************************************************************
 // * func: EmuInit
 // ******************************************************************
-extern "C" CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, DebugMode DebugConsole, char *DebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)())
+extern "C" CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)())
 {
     // ******************************************************************
     // * debug console allocation (if configured)
     // ******************************************************************
-    if(DebugConsole == DM_CONSOLE)
+    if(DbgMode == DM_CONSOLE)
     {
         if(AllocConsole())
         {
@@ -100,11 +100,11 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, 
             printf("CxbxKrnl (0x%.08X): Debug console allocated (DM_CONSOLE).\n", GetCurrentThreadId());
         }
     }
-    else if(DebugConsole == DM_FILE)
+    else if(DbgMode == DM_FILE)
     {
         FreeConsole();
 
-        freopen(DebugFilename, "wt", stdout);
+        freopen(szDebugFilename, "wt", stdout);
 
         printf("Emu (0x%.08X): Debug console allocated (DM_FILE).\n", GetCurrentThreadId());
     }
@@ -125,7 +125,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, 
                "   XBEHeaderSize       : 0x%.08X\n"
                "   Entry               : 0x%.08X\n"
                ");\n",
-               LibraryVersion, DebugConsole, DebugFilename, XbeHeader, XbeHeaderSize, Entry);
+               LibraryVersion, DbgMode, szDebugFilename, XbeHeader, XbeHeaderSize, Entry);
 
         #else
         printf("CxbxKrnl (0x%.08X): _DEBUG_TRACE disabled.\n", GetCurrentThreadId());

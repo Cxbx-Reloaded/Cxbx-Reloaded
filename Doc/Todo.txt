@@ -12,8 +12,6 @@ Cxbx Todo:
 
   If possible, Direct3D Rendering window should inherit from Wnd.
 
-  Recent files (Exe and Xbe) in Cxbx main window. (Registry)
-
   Try to add compatibility with Windows ME using LLDT assembly.
 
   Xbe file associations via user configuration. This could include an

@@ -36,54 +36,6 @@
 
 #include "Xbe.h"
 
-/*
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace xboxkrnl
-{
-    #include <xboxkrnl/xboxkrnl.h>
-    #include "Emuxapi.h"
-};
-
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace win32
-{
-    #undef FIELD_OFFSET     // prevent macro redefinition warnings
-    #include <windows.h>
-    #include <stdio.h>
-
-    #define DIRECT3D_VERSION 0x0800
-    #include <d3d8.h>
-
-    #define DIRECTINPUT_VERSION 0x0800
-    #include <dinput.h>
-};
-
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace xboxkrnl
-{
-    #include "EmuD3D.h"
-    #include "EmuDInput.h"
-};
-
-// ******************************************************************
-// * globals
-// ******************************************************************
-extern win32::HWND              g_EmuWindow;       // Rendering Window
-extern xboxkrnl::XINPUT_STATE   g_EmuController1;
-
-#include "OOVPA.h"
-#include "HLEDataBase.h"
-#include "EmuKrnl.h"
-#include "EmuLDT.h"
-#include "EmuFS.h"
-*/
-
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
@@ -95,7 +47,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuNoFunc();
 // ******************************************************************
 // * func: EmuInit
 // ******************************************************************
-extern "C" CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, DebugMode DebugConsole, char *DebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
+extern "C" CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
 
 // ******************************************************************
 // * func: EmuPanic

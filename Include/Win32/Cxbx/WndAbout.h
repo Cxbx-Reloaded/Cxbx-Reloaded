@@ -42,14 +42,12 @@
 class WndAbout : public Wnd
 {
     public:
-
         WndAbout(HINSTANCE x_hInstance, HWND x_parent);
        ~WndAbout();
 
         LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     private:
-
         HDC         m_BackDC;
         HBITMAP     m_OrigBmp;
         HBITMAP     m_BackBmp;

@@ -35,7 +35,7 @@
 #define INPUTCONFIG_H
 
 // ******************************************************************
-// * Device Components
+// * Input Device Component IDs
 // ******************************************************************
 enum InputDeviceComponent
 {
@@ -74,17 +74,10 @@ enum InputDeviceComponent
     INPUT_DEVICE_COMPONENT_COUNT
 };
 
+// ******************************************************************
+// * Input Device Title Lookup Table
+// ******************************************************************
 extern const char *g_InputDeviceTitle[INPUT_DEVICE_COMPONENT_COUNT];
-
-// ******************************************************************
-// * Input mapping information
-// ******************************************************************
-struct InputMapping
-{
-    int dwDevice;   // Offset into m_Devices
-    int dwInfo;     // Extended information, depending on dwFlags
-    int dwFlags;    // Flags explaining the data format
-};
 
 // ******************************************************************
 // * InputMapping Flags
@@ -105,21 +98,21 @@ struct InputMapping
 #define MAX_INPUT_DEVICES INPUT_DEVICE_COMPONENT_COUNT
 
 // ******************************************************************
+// * Input mapping information
+// ******************************************************************
+struct InputMapping
+{
+    int dwDevice;   // Offset into m_Devices
+    int dwInfo;     // Extended information, depending on dwFlags
+    int dwFlags;    // Flags explaining the data format
+};
+
+// ******************************************************************
 // * Input Configuration
 // ******************************************************************
 class InputConfig
 {
     public:
-        // ******************************************************************
-        // * Constructor
-        // ******************************************************************
-        InputConfig() {};
-
-        // ******************************************************************
-        // * Deconstructor
-        // ******************************************************************
-       ~InputConfig() {}
-
         // ******************************************************************
         // * Init
         // ******************************************************************

@@ -44,6 +44,8 @@
 // ******************************************************************
 Xbe::Xbe(const char *x_szFilename)
 {
+    char szBuffer[255];
+
     ConstructorInit();
 
     printf("Xbe::Xbe: Opening Xbe file...");
@@ -141,9 +143,8 @@ Xbe::Xbe(const char *x_szFilename)
 
             if(fread(&m_SectionHeader[v], sizeof(*m_SectionHeader), 1, XbeFile) != 1)
             {
-                char buffer[255];
-                sprintf(buffer, "Unexpected end of file while reading Xbe Section Header %d (%Xh)", v, v);
-                SetError(buffer, true);
+                sprintf(szBuffer, "Unexpected end of file while reading Xbe Section Header %d (%Xh)", v, v);
+                SetError(szBuffer, true);
                 goto cleanup;
             }
 
@@ -198,9 +199,8 @@ Xbe::Xbe(const char *x_szFilename)
 
             if(fread(&m_LibraryVersion[v], sizeof(*m_LibraryVersion), 1, XbeFile) != 1)
             {
-                char buffer[255];
-                sprintf(buffer, "Unexpected end of file while reading Xbe Library Version %d (%Xh)", v, v);
-                SetError(buffer, true);
+                sprintf(szBuffer, "Unexpected end of file while reading Xbe Library Version %d (%Xh)", v, v);
+                SetError(szBuffer, true);
                 goto cleanup;
             }
 
@@ -287,9 +287,8 @@ Xbe::Xbe(const char *x_szFilename)
 
             if(fread(m_bzSection[v], RawSize, 1, XbeFile) != 1)
             {
-                char buffer[255];
-                sprintf(buffer, "Unexpected end of file while reading Xbe Section %d (%Xh) (%s)", v, v, m_szSectionName[v]);
-                SetError(buffer, true);
+                sprintf(szBuffer, "Unexpected end of file while reading Xbe Section %d (%Xh) (%s)", v, v, m_szSectionName[v]);
+                SetError(szBuffer, true);
                 goto cleanup;
             }
 
@@ -552,7 +551,7 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
         // ******************************************************************
         // * start a write buffer inside header_ex
         // ******************************************************************
-        char *Buffer = m_HeaderEx;
+        char *szBuffer = m_HeaderEx;
 
         // ******************************************************************
         // * write certificate
@@ -629,9 +628,9 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
             // * write certificate
             // ******************************************************************
             {
-                memcpy(Buffer, &m_Certificate, sizeof(m_Certificate));
+                memcpy(szBuffer, &m_Certificate, sizeof(m_Certificate));
 
-                Buffer += sizeof(m_Certificate);
+                szBuffer += sizeof(m_Certificate);
 
                 hwc += sizeof(m_Certificate);
             }
@@ -659,10 +658,10 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
             // ******************************************************************
             // * head / tail reference count write buffer
             // ******************************************************************
-            uint16 *htrc = (uint16*)(Buffer + m_Header.dwSections*sizeof(*m_SectionHeader));
+            uint16 *htrc = (uint16*)(szBuffer + m_Header.dwSections*sizeof(*m_SectionHeader));
 
             // ******************************************************************
-            // * section write Buffer
+            // * section write buffer
             // ******************************************************************
             char *secn = (char*)((uint32)htrc + (m_Header.dwSections+1)*2);
 
@@ -765,9 +764,9 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
                 // ******************************************************************
                 // * write section header
                 // ******************************************************************
-                memcpy(Buffer, &m_SectionHeader[v], sizeof(*m_SectionHeader));
+                memcpy(szBuffer, &m_SectionHeader[v], sizeof(*m_SectionHeader));
 
-                Buffer += sizeof(*m_SectionHeader);
+                szBuffer += sizeof(*m_SectionHeader);
 
                 printf("OK\n");
             }
@@ -779,10 +778,10 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
         // * write debug path / debug file names
         // ******************************************************************
         {
-            *(uint16*)Buffer = 0x0000;
+            *(uint16*)szBuffer = 0x0000;
 
-            Buffer += 2;
-            hwc    += 2;
+            szBuffer += 2;
+            hwc      += 2;
         }
 
         // ******************************************************************
@@ -969,6 +968,8 @@ void Xbe::Export(const char *x_szXbeFilename)
     if(GetError() != 0)
         return;
 
+    char szBuffer[255];
+
     printf("Xbe::Export: Writing Xbe file...");
 
     FILE *XbeFile = fopen(x_szXbeFilename, "wb");
@@ -1040,9 +1041,8 @@ void Xbe::Export(const char *x_szXbeFilename)
 
             if(fwrite(&m_SectionHeader[v], sizeof(*m_SectionHeader), 1, XbeFile) != 1)
             {
-                char Buffer[255];
-                sprintf(Buffer, "Unexpected write error while writing Xbe Section %d (%Xh)", v, v);
-                SetError(Buffer, false);
+                sprintf(szBuffer, "Unexpected write error while writing Xbe Section %d (%Xh)", v, v);
+                SetError(szBuffer, false);
                 goto cleanup;
             }
 
@@ -1073,9 +1073,8 @@ void Xbe::Export(const char *x_szXbeFilename)
 
 			if(fwrite(m_bzSection[v], RawSize, 1, XbeFile) != 1)
 			{
-				char Buffer[255];
-				sprintf(Buffer, "Unexpected write error while writing Xbe Section %d (%Xh) (%s)", v, v, m_szSectionName[v]);
-				SetError(Buffer, false);
+				sprintf(szBuffer, "Unexpected write error while writing Xbe Section %d (%Xh) (%s)", v, v, m_szSectionName[v]);
+				SetError(szBuffer, false);
 				goto cleanup;
 			}
 
@@ -1101,14 +1100,14 @@ void Xbe::Export(const char *x_szXbeFilename)
         // * write remaining bytes
         // ******************************************************************
 		{
-			char *Buffer = new char[remaining];
+			char *szBuffer = new char[remaining];
 
 			for(uint32 v=0;v<remaining;v++)
-				Buffer[v] = 0;
+				szBuffer[v] = 0;
 
-			fwrite(Buffer, remaining, 1, XbeFile);
+			fwrite(szBuffer, remaining, 1, XbeFile);
 
-			delete[] Buffer;
+			delete[] szBuffer;
 		}
 
         printf("OK\n");
@@ -1639,9 +1638,7 @@ uint08 *Xbe::GetLogoBitmap(uint32 x_dwSize)
     uint32 dwLength = m_Header.dwSizeofLogoBitmap;
 
 	if(dwOffs == 0 || dwLength == 0)
-    {
 		return 0;
-    }
 
     // ******************************************************************
     // * if this bitmap will fit inside the already existing one, we
@@ -1655,9 +1652,7 @@ uint08 *Xbe::GetLogoBitmap(uint32 x_dwSize)
         if(dwOffs < m_Header.dwSizeofHeaders)
         {
             m_Header.dwSizeofHeaders -= dwLength;
-
             m_Header.dwSizeofHeaders += x_dwSize;
-
             m_Header.dwSizeofLogoBitmap = x_dwSize;
 
             return GetAddr(m_Header.dwLogoBitmapAddr);

@@ -43,9 +43,11 @@
 // ******************************************************************
 // * EmuShared : Shared memory
 // ******************************************************************
-extern CXBXKRNL_API class EmuShared : public Mutex
+class EmuShared : public Mutex
 {
     public:
+        // WARNING: Contructor Will Not Be Called (Do Not Add One)
+
         // ******************************************************************
         // * Each process needs to call this to initialize shared memory
         // ******************************************************************
@@ -57,7 +59,7 @@ extern CXBXKRNL_API class EmuShared : public Mutex
         CXBXKRNL_API static void Cleanup();
 
         // ******************************************************************
-        // * Input Configuration Initialization
+        // * Initialize Input Configuration
         // ******************************************************************
         CXBXKRNL_API void InitInputConfiguration() { m_InputConfig.Init(); }
 
@@ -88,7 +90,11 @@ extern CXBXKRNL_API class EmuShared : public Mutex
         // * Used to see if there has been a change
         // ******************************************************************
         uint32 m_dwChangeID;
-}
-*g_EmuShared;
+};
+
+// ******************************************************************
+// * Exported Global Shared Memory Pointer
+// ******************************************************************
+extern CXBXKRNL_API EmuShared *g_EmuShared;
 
 #endif
