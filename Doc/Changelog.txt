@@ -1,5 +1,16 @@
 cxbx website: http://www.caustik.com/xbox/
 
+version: 0.6.0-pre11 (02/09/03)
+--------------------------------
+
+- HLE has begun. Cxbx is capable of emulating a
+  blank XDK project. That is, if you had the XDK
+  and created an Xbox "game" that did absolutely
+  nothing, Cxbx could run it :P. Sounds pointless,
+  but it is actually very significant
+
+- New icon! Pending approval for use by the author
+
 version: 0.6.0-pre10 (02/07/03)
 --------------------------------
 
