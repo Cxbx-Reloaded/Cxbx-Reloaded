@@ -133,6 +133,27 @@ upxCxbx.bat
 	</Configurations>
 	<Files>
 		<Filter
+			Name="Bin"
+			Filter="">
+			<Filter
+				Name="Debug"
+				Filter="">
+			</Filter>
+		</Filter>
+		<Filter
+			Name="Doc"
+			Filter="">
+			<File
+				RelativePath="Doc\Changelog.txt">
+			</File>
+			<File
+				RelativePath="Doc\Thanks.txt">
+			</File>
+			<File
+				RelativePath="Doc\Todo.txt">
+			</File>
+		</Filter>
+		<Filter
 			Name="Include"
 			Filter="">
 			<File
@@ -145,6 +166,9 @@ upxCxbx.bat
 				RelativePath=".\Include\Cxbx.h">
 			</File>
 			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\CxbxKrnl.h">
+			</File>
+			<File
 				RelativePath=".\Include\Win32\Cxbx\EmuExe.h">
 			</File>
 			<File
@@ -152,9 +176,6 @@ upxCxbx.bat
 			</File>
 			<File
 				RelativePath=".\Include\Core\Exe.h">
-			</File>
-			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\CxbxKrnl.h">
 			</File>
 			<File
 				RelativePath=".\Include\Win32\Cxbx\Prolog.h">
@@ -233,18 +254,6 @@ upxCxbx.bat
 			<File
 				RelativePath=".\Source\Core\Xbe.cpp">
 			</File>
-		</Filter>
-		<Filter
-			Name="Bin"
-			Filter="">
-			<Filter
-				Name="Debug"
-				Filter="">
-			</Filter>
-		</Filter>
-		<Filter
-			Name="Doc"
-			Filter="">
 		</Filter>
 	</Files>
 	<Globals>

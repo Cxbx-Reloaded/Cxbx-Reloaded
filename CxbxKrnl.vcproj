@@ -130,6 +130,27 @@
 	</Configurations>
 	<Files>
 		<Filter
+			Name="Bin"
+			Filter="">
+			<Filter
+				Name="Debug"
+				Filter="">
+			</Filter>
+		</Filter>
+		<Filter
+			Name="Doc"
+			Filter="">
+			<File
+				RelativePath="Doc\Changelog.txt">
+			</File>
+			<File
+				RelativePath="Doc\Thanks.txt">
+			</File>
+			<File
+				RelativePath="Doc\Todo.txt">
+			</File>
+		</Filter>
+		<Filter
 			Name="Include"
 			Filter="">
 			<File
@@ -143,6 +164,10 @@
 			</File>
 		</Filter>
 		<Filter
+			Name="Resource"
+			Filter="">
+		</Filter>
+		<Filter
 			Name="Source"
 			Filter="">
 			<File
@@ -154,22 +179,6 @@
 			<File
 				RelativePath="Source\Win32\CxbxKrnl\LDT.cpp">
 			</File>
-		</Filter>
-		<Filter
-			Name="Bin"
-			Filter="">
-			<Filter
-				Name="Debug"
-				Filter="">
-			</Filter>
-		</Filter>
-		<Filter
-			Name="Doc"
-			Filter="">
-		</Filter>
-		<Filter
-			Name="Resource"
-			Filter="">
 		</Filter>
 	</Files>
 	<Globals>

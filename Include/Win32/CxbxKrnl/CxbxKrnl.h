@@ -76,6 +76,21 @@ CXBXKRNL_API void NTAPI EmuXDummy();
 // ******************************************************************
 CXBXKRNL_API void NTAPI EmuXPanic();
 
+// ******************************************************************
+// * _EMUX_KPCR
+// ******************************************************************
+// *
+// * Emulated Xbox KPCR. Includes special field(s) for emulation
+// * purposes.
+// *
+// ******************************************************************
+typedef struct _EMUX_KPCR
+{
+    struct xboxkrnl::_KPCR  Pcr;
+    uint16                  OriginalFS;     // 0x025C (our cached FS register from win2k/XP)
+}
+EMUX_KPCR, *PEMUX_KPCR;
+
 #if defined(__cplusplus)
 }
 #endif

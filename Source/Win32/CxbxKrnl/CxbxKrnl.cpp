@@ -65,36 +65,33 @@ using namespace win32;
 // ******************************************************************
 void EmuXGenerateFS()
 {
-    NT_TIB *OrgFS = 0;
+    uint16 OrgFS = 0;
 
-    uint32 dwFSSize = sizeof(NT_TIB);
+    uint32 dwSize = sizeof(EMUX_KPCR);
+
+    uint32 pNewFS = (uint32)new char[dwSize];
+
+    uint16 NewFS = LDTAllocate(pNewFS, pNewFS + dwSize);
 
     // ******************************************************************
-    // * Retrieve the "old" FS
+    // * Save the "old" FS  : [OrgFS = FS]
     // ******************************************************************
     __asm
     {
-        mov esi,    fs:[18h]
-        mov OrgFS,  esi
+        mov ax, fs
+        mov OrgFS, ax
     }
 
     // ******************************************************************
-    // * Allocate and update the new FS
+    // * Update "new" FS    : [FS = NewFS, FS:[0x025C] = OrgFS]
     // ******************************************************************
+    __asm
     {
-        uint32 AllocFS = (uint32)new char[dwFSSize];
+        mov ax, NewFS
+        mov fs, ax
 
-        memcpy((void*)AllocFS, OrgFS, dwFSSize);
-
-        uint16 SelectorFS = LDTAllocate(AllocFS, AllocFS+dwFSSize);
-
-        __asm
-        {
-            mov ax, SelectorFS
-
-            push    ax
-            pop     fs
-        }
+        mov ax, OrgFS
+        mov fs:[0x025C], ax
     }
 }
 
@@ -157,13 +154,16 @@ CXBXKRNL_API void NTAPI EmuXInit(uint32 DebugConsole, uint08 *XBEHeader, uint32 
     // * Initialize FS:* structure
     // ******************************************************************
     {
-        // Calling this function will overwrite the Win2k/XP FS: structure,
-        // which will cause an immediate or eventual crash. In order to avoid
-        // this, it is going to be necessary to store the Win2k/XP FS: in a
-        // special un-used slot in the XBox FS:* structure, and bring it back
-        // in whenever we need to use Win2k/XP functions
+        EmuXGenerateFS();
 
-        // EmuXGenerateFS();
+        // ******************************************************************
+        // * Restore "old" FS   : [FS = FS:[0x025C]]
+        // ******************************************************************
+        __asm
+        {
+            mov     ax, fs:[0x025C]
+            mov     fs, ax
+        }
 
         NT_TIB *dbgTIB = 0;
 
