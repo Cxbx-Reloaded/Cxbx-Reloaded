@@ -31,10 +31,6 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef ALIGNPOSFIX1_H
-#define ALIGNPOSFIX1_H
 
 // turn off 1-byte structure alignment
 #pragma pack()
-
-#endif
