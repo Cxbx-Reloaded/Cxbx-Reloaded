@@ -517,6 +517,11 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreateIndexBuffer
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_CreateIndexBuffer2
+// ******************************************************************
+X_D3DIndexBuffer * WINAPI EmuIDirect3DDevice8_CreateIndexBuffer2(UINT Length);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetIndices
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_SetIndices

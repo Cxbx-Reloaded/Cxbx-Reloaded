@@ -832,6 +832,28 @@ SOOVPA<11> IDirect3DDevice8_SetTileNoWait_1_0_4627 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_CreateIndexBuffer2
+// ******************************************************************
+SOOVPA<7> IDirect3DDevice8_CreateIndexBuffer2_1_0_4627 =
+{
+    0, // Large == 0
+    7, // Count == 7
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        { 0x05, 0xC0 },
+        { 0x0F, 0x85 },
+        { 0x13, 0xC2 },
+        { 0x1A, 0x89 },
+        { 0x21, 0x08 },
+        { 0x28, 0x00 },
+        { 0x2F, 0x04 },
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetPixelShaderConstant
 // ******************************************************************
 SOOVPA<10> IDirect3DDevice8_SetPixelShaderConstant_1_0_4627 =
@@ -3396,6 +3418,16 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetTileNoWait"
+        #endif
+    },
+    // IDirect3DDevice8::CreateIndexBuffer2
+    {
+        (OOVPA*)&IDirect3DDevice8_CreateIndexBuffer2_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_CreateIndexBuffer2,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_CreateIndexBuffer2"
         #endif
     },
     // IDirect3DDevice8::CreateVertexShader (* unchanged since 3925 *)

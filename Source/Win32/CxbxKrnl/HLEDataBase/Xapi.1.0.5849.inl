@@ -210,6 +210,7 @@ OOVPATable XAPI_1_0_5849[] =
         "EmuXInputGetState"
         #endif
     },
+    /* obsolete?
     // XapiThreadStartup (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&XapiThreadStartup_1_0_4361,
@@ -220,6 +221,7 @@ OOVPATable XAPI_1_0_5849[] =
         "EmuXapiThreadStartup"
         #endif
     },
+    //*/
     // XapiInitProcess
     {
         (OOVPA*)&XapiInitProcess_1_0_5849,

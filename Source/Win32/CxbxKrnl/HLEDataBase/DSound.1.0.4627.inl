@@ -33,6 +33,28 @@
 // ******************************************************************
 
 // ******************************************************************
+// * DirectSoundDoWork
+// ******************************************************************
+SOOVPA<7> DirectSoundDoWork_1_0_4627 =
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x06, 0x0F },
+        { 0x0E, 0x85 },
+        { 0x10, 0x74 },
+        { 0x18, 0x85 },
+        { 0x1C, 0x0B },
+        { 0x22, 0xFF },
+        { 0x28, 0xC3 },
+    }
+};
+
+// ******************************************************************
 // * CDirectSound::CreateSoundBuffer
 // ******************************************************************
 SOOVPA<14> CDirectSound_CreateSoundBuffer_1_0_4627 =
@@ -2014,6 +2036,16 @@ OOVPATable DSound_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuDirectSoundCreate" 
+        #endif
+    },
+    // DirectSoundDoWork
+    {
+        (OOVPA*)&DirectSoundDoWork_1_0_4627,
+
+        XTL::EmuDirectSoundDoWork,
+
+        #ifdef _DEBUG_TRACE
+        "EmuDirectSoundDoWork" 
         #endif
     },
     // CDirectSound_CreateSoundBuffer

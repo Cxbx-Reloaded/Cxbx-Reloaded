@@ -666,6 +666,7 @@ OOVPATable XAPI_1_0_4361[] =
         #endif
     },
     //*/
+    /*
     // XapiThreadStartup
     {
         (OOVPA*)&XapiThreadStartup_1_0_4361,
@@ -676,6 +677,7 @@ OOVPATable XAPI_1_0_4361[] =
         "XapiThreadStartup"
         #endif
     },
+    //*/
     // XapiBootToDash (* unchanged since 1.0.3911 *)
     {
         (OOVPA*)&XapiBootDash_1_0_3911,

@@ -3119,9 +3119,40 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateIndexBuffer
     if(FAILED(hRet))
         EmuWarning("CreateIndexBuffer Failed! (0x%.08X)", hRet);
 
+    //
+    // update data ptr
+    //
+
+    {
+        BYTE *pData = NULL;
+    
+        (*ppIndexBuffer)->EmuIndexBuffer8->Lock(0, Length, &pData, NULL);
+
+        (*ppIndexBuffer)->Data = (DWORD)pData;
+    }
+
     EmuSwapFS();   // XBox FS
 
     return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_CreateIndexBuffer2
+// ******************************************************************
+XTL::X_D3DIndexBuffer * WINAPI XTL::EmuIDirect3DDevice8_CreateIndexBuffer2(UINT Length)
+{
+    X_D3DIndexBuffer *pIndexBuffer = NULL;
+    
+    EmuIDirect3DDevice8_CreateIndexBuffer
+    (
+        Length,
+        NULL,
+        D3DFMT_INDEX16,
+        D3DPOOL_MANAGED,
+        &pIndexBuffer
+    );
+
+    return pIndexBuffer;
 }
 
 // ******************************************************************

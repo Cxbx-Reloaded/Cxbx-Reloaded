@@ -915,13 +915,13 @@ BOOL WINAPI XTL::EmuSetThreadPriority
            ");\n",
            GetCurrentThreadId(), hThread, nPriority);
 
-    BOOL bRet = SetThreadPriority(hThread, nPriority);
+    BOOL bRet = TRUE;//SetThreadPriority(hThread, nPriority);
 
     if(bRet == FALSE)
         EmuWarning("SetThreadPriority Failed!");
 
     // HACK!
-    Sleep(10);
+    //Sleep(10);
 
     EmuSwapFS();   // XBox FS
 
@@ -1042,13 +1042,23 @@ VOID WINAPI XTL::EmuXapiThreadStartup
 
     EmuSwapFS();   // XBox FS
 
-	// TODO: Call thread notify routines ?
+    typedef (__stdcall *pfDummyFunc)(DWORD dwDummy);
 
+    pfDummyFunc func = (pfDummyFunc)dwDummy1;
+
+    func(dwDummy2);
+
+    // TODO: Call thread notify routines ?
+
+    /*
     __asm
     {
         push dwDummy2
         call dwDummy1
     }
+    */
+
+    _asm int 3;
 
     return;
 }

@@ -1154,72 +1154,75 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
 
     char *szBuffer = ObjectAttributes->ObjectName->Buffer;
 
-    // trim this off
-    if(szBuffer[0] == '\\' && szBuffer[1] == '?' && szBuffer[2] == '?' && szBuffer[3] == '\\')
+    if(szBuffer != NULL)
     {
-        szBuffer += 4;
-    }
-
-    // D:\ should map to current directory
-	if( (szBuffer[0] == 'D' || szBuffer[0] == 'd') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-	{
-		szBuffer += 3;
-
-		ObjectAttributes->RootDirectory = g_hCurDir;
-
-		DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-		DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-		DbgPrintf("  New:\"$XbePath\\%s\"\n", szBuffer);
-	}
-	else if( (szBuffer[0] == 'T' || szBuffer[0] == 't') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-	{
-		szBuffer += 3;
-
-		ObjectAttributes->RootDirectory = g_hTDrive;
-
-		DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-		DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-		DbgPrintf("  New:\"$CxbxPath\\TDATA\\%s\"\n", szBuffer);
-	}
-	else if( (szBuffer[0] == 'U' || szBuffer[0] == 'u') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-	{
-		szBuffer += 3;
-
-		ObjectAttributes->RootDirectory = g_hUDrive;
-
-		DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-		DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-		DbgPrintf("  New:\"$CxbxPath\\UDATA\\%s\"\n", szBuffer);
-	}
-	else if( (szBuffer[0] == 'Z' || szBuffer[0] == 'z') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-	{
-		szBuffer += 3;
-
-		ObjectAttributes->RootDirectory = g_hZDrive;
-
-		DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-		DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-		DbgPrintf("  New:\"$CxbxPath\\CxbxCache\\%s\"\n", szBuffer);
-	}
-
-    // TODO: Wildcards are not allowed??
-    {
-        for(int v=0;szBuffer[v] != '\0';v++)
+        // trim this off
+        if(szBuffer[0] == '\\' && szBuffer[1] == '?' && szBuffer[2] == '?' && szBuffer[3] == '\\')
         {
-            if(szBuffer[v] == '*')
-            {
-                if(v > 0)
-                    ReplaceIndex = v-1;
-                else
-                    ReplaceIndex = v;
-            }
+            szBuffer += 4;
         }
 
-        // Note: Hack: Not thread safe (if problems occur, create a temp buffer)
-        if(ReplaceIndex != -1)
+        // D:\ should map to current directory
+	    if( (szBuffer[0] == 'D' || szBuffer[0] == 'd') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+	    {
+		    szBuffer += 3;
+
+		    ObjectAttributes->RootDirectory = g_hCurDir;
+
+		    DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+		    DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+		    DbgPrintf("  New:\"$XbePath\\%s\"\n", szBuffer);
+	    }
+	    else if( (szBuffer[0] == 'T' || szBuffer[0] == 't') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+	    {
+		    szBuffer += 3;
+
+		    ObjectAttributes->RootDirectory = g_hTDrive;
+
+		    DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+		    DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+		    DbgPrintf("  New:\"$CxbxPath\\TDATA\\%s\"\n", szBuffer);
+	    }
+	    else if( (szBuffer[0] == 'U' || szBuffer[0] == 'u') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+	    {
+		    szBuffer += 3;
+
+		    ObjectAttributes->RootDirectory = g_hUDrive;
+
+		    DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+		    DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+		    DbgPrintf("  New:\"$CxbxPath\\UDATA\\%s\"\n", szBuffer);
+	    }
+	    else if( (szBuffer[0] == 'Z' || szBuffer[0] == 'z') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+	    {
+		    szBuffer += 3;
+
+		    ObjectAttributes->RootDirectory = g_hZDrive;
+
+		    DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+		    DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+		    DbgPrintf("  New:\"$CxbxPath\\CxbxCache\\%s\"\n", szBuffer);
+	    }
+
+        // TODO: Wildcards are not allowed??
         {
-            ReplaceChar = szBuffer[ReplaceIndex];
-            szBuffer[ReplaceIndex] = '\0';
+            for(int v=0;szBuffer[v] != '\0';v++)
+            {
+                if(szBuffer[v] == '*')
+                {
+                    if(v > 0)
+                        ReplaceIndex = v-1;
+                    else
+                        ReplaceIndex = v;
+                }
+            }
+
+            // Note: Hack: Not thread safe (if problems occur, create a temp buffer)
+            if(ReplaceIndex != -1)
+            {
+                ReplaceChar = szBuffer[ReplaceIndex];
+                szBuffer[ReplaceIndex] = '\0';
+            }
         }
     }
 
@@ -1229,13 +1232,18 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
     NtDll::OBJECT_ATTRIBUTES NtObjAttr;
 
     // initialize object attributes
+    if(szBuffer != NULL)
     {
         mbstowcs(wszObjectName, szBuffer, 160);
-
-        NtDll::RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
-
-        InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
     }
+    else
+    {
+        wszObjectName[0] = L'\0';
+    }
+
+    NtDll::RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
+
+    InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
 
     // redirect to NtCreateFile
     NTSTATUS ret = NtDll::NtCreateFile
@@ -1245,13 +1253,19 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
     );
 
     if(FAILED(ret))
+    {
         DbgPrintf("EmuKrnl (0x%X): NtCreateFile Failed! (0x%.08X)\n", GetCurrentThreadId(), ret);
+    }
     else
+    {
         DbgPrintf("EmuKrnl (0x%X): NtCreateFile = 0x%.08X\n", GetCurrentThreadId(), *FileHandle);
+    }
 
     // restore original buffer
     if(ReplaceIndex != -1)
+    {
         szBuffer[ReplaceIndex] = ReplaceChar;
+    }
 
     // NOTE: We can map this to IoCreateFile once implemented (if ever necessary)
     //       xboxkrnl::IoCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, 0);

@@ -3485,7 +3485,7 @@ OOVPATable DSound_1_0_3936[] =
         "DirectSoundDoWorkA (XRef)"
         #endif
     },
-    // CDirectSoundStream::SetAllParameters
+    // DirectSoundDoWork
     {
         (OOVPA*)&DirectSoundDoWork_1_0_3936,
 
