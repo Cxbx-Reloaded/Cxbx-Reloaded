@@ -35,6 +35,8 @@
 
 #include <stdio.h>
 
+#include "EmuDInput.h"
+
 // ******************************************************************
 // * func: XBController::XBController
 // ******************************************************************
@@ -661,7 +663,7 @@ void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
         // ******************************************************************
         // * Map Xbox Joystick Input
         // ******************************************************************
-        if(v >= XBCTRL_OBJECT_LTHUMBPOSX && v <= XBCTRL_OBJECT_RTHUMBNEGY)
+        if(v >= XBCTRL_OBJECT_LTHUMBPOSX && v <= XBCTRL_OBJECT_RTRIGGER)
         {
             switch(v)
             {
@@ -688,6 +690,30 @@ void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
                     break;
                 case XBCTRL_OBJECT_RTHUMBNEGX:
                     Controller->Gamepad.sThumbRX -= wValue;
+                    break;
+                case XBCTRL_OBJECT_A:
+                    Controller->Gamepad.bAnalogButtons[XINPUT_GAMEPAD_A] = (wValue / 128);
+                    break;
+                case XBCTRL_OBJECT_B:
+                    Controller->Gamepad.bAnalogButtons[XINPUT_GAMEPAD_B] = (wValue / 128);
+                    break;
+                case XBCTRL_OBJECT_X:
+                    Controller->Gamepad.bAnalogButtons[XINPUT_GAMEPAD_X] = (wValue / 128);
+                    break;
+                case XBCTRL_OBJECT_Y:
+                    Controller->Gamepad.bAnalogButtons[XINPUT_GAMEPAD_Y] = (wValue / 128);
+                    break;
+                case XBCTRL_OBJECT_WHITE:
+                    Controller->Gamepad.bAnalogButtons[XINPUT_GAMEPAD_WHITE] = (wValue / 128);
+                    break;
+                case XBCTRL_OBJECT_BLACK:
+                    Controller->Gamepad.bAnalogButtons[XINPUT_GAMEPAD_BLACK] = (wValue / 128);
+                    break;
+                case XBCTRL_OBJECT_LTRIGGER:
+                    Controller->Gamepad.bAnalogButtons[XINPUT_GAMEPAD_LEFT_TRIGGER] = (wValue / 128);
+                    break;
+                case XBCTRL_OBJECT_RTRIGGER:
+                    Controller->Gamepad.bAnalogButtons[XINPUT_GAMEPAD_RIGHT_TRIGGER] = (wValue / 128);
                     break;
             }
         }

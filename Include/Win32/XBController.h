@@ -68,12 +68,12 @@ enum XBCtrlObject
     // ******************************************************************
     // * Analog Buttons
     // ******************************************************************
-    XBCTRL_OBJECT_X,
-    XBCTRL_OBJECT_Y,
     XBCTRL_OBJECT_A,
     XBCTRL_OBJECT_B,
-    XBCTRL_OBJECT_WHITE,
+    XBCTRL_OBJECT_X,
+    XBCTRL_OBJECT_Y,
     XBCTRL_OBJECT_BLACK,
+    XBCTRL_OBJECT_WHITE,
     XBCTRL_OBJECT_LTRIGGER,
     XBCTRL_OBJECT_RTRIGGER,
     // ******************************************************************
