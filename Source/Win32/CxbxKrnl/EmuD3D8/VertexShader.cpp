@@ -36,6 +36,7 @@
 #define _XBOXKRNL_DEFEXTRN_
 
 #include "Emu.h"
+#include "EmuFS.h"
 #include "EmuAlloc.h"
 #include "EmuXTL.h"
 
@@ -1975,7 +1976,9 @@ extern boolean XTL::IsValidCurrentShader(void)
 {
     DWORD Handle;
 
+    EmuSwapFS();
     EmuIDirect3DDevice8_GetVertexShader(&Handle);
+    EmuSwapFS();
     if (VshHandleIsVertexShader(Handle))
     {
         X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader *)(Handle & 0x7FFFFFFF);
