@@ -393,7 +393,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             if(bAutoPaused)
             {
                 bAutoPaused = false;
-			    //EmuResume();
+			    EmuResume();
             }
         }
         break;
@@ -406,7 +406,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             if(!g_bEmuSuspended)
             {
                 bAutoPaused = true;
-			    //EmuSuspend();
+			    EmuSuspend();
             }
         }
         break;

@@ -113,6 +113,7 @@ struct X_CDirectSoundBuffer
     BYTE    UnknownB[0x0C];     // Offset: 0x24
     PVOID   EmuBuffer;          // Offset: 0x28
     PVOID   EmuBufferAlloc;     // Offset: 0x2C
+    PVOID   EmuBufferDesc;      // Offset: 0x30
 };
 
 // ******************************************************************
@@ -173,95 +174,6 @@ HRESULT WINAPI EmuDirectSoundCreate
 VOID WINAPI EmuDirectSoundDoWork();
 
 // ******************************************************************
-// * func: EmuDirectSoundCreateBuffer
-// ******************************************************************
-HRESULT WINAPI EmuDirectSoundCreateBuffer
-(
-    X_DSBUFFERDESC         *pdsbd,
-    X_CDirectSoundBuffer  **ppBuffer
-);
-
-// ******************************************************************
-// * func: EmuDirectSoundCreateStream
-// ******************************************************************
-HRESULT WINAPI EmuDirectSoundCreateStream
-(
-    X_DSSTREAMDESC         *pdssd,
-    X_CDirectSoundStream  **ppStream
-);
-
-// ******************************************************************
-// * func: EmuIDirectSound8_CreateStream
-// ******************************************************************
-HRESULT WINAPI EmuIDirectSound8_CreateStream
-(
-    LPDIRECTSOUND8          pThis,
-    X_DSSTREAMDESC         *pdssd,
-    X_CDirectSoundStream  **ppStream,
-    PVOID                   pUnknown
-);
-
-// ******************************************************************
-// * func: EmuIDirectSound8_CreateBuffer
-// ******************************************************************
-HRESULT WINAPI EmuIDirectSound8_CreateBuffer
-(
-    LPDIRECTSOUND8          pThis,
-    X_DSBUFFERDESC         *pdssd,
-    X_CDirectSoundBuffer  **ppBuffer,
-    PVOID                   pUnknown
-);
-
-// ******************************************************************
-// * func: EmuCDirectSoundStream_SetVolume
-// ******************************************************************
-ULONG WINAPI EmuCDirectSoundStream_SetVolume(X_CDirectSoundStream *pThis, LONG lVolume);
-
-// ******************************************************************
-// * func: EmuCDirectSoundStream_SetRolloffFactor
-// ******************************************************************
-HRESULT WINAPI EmuCDirectSoundStream_SetRolloffFactor
-(
-    X_CDirectSoundStream *pThis,
-    FLOAT                 fRolloffFactor,
-    DWORD                 dwApply
-);
-
-// ******************************************************************
-// * func: EmuCDirectSoundStream_AddRef
-// ******************************************************************
-ULONG WINAPI EmuCDirectSoundStream_AddRef(X_CDirectSoundStream *pThis);
-
-// ******************************************************************
-// * func: EmuCDirectSoundStream_Release
-// ******************************************************************
-ULONG WINAPI EmuCDirectSoundStream_Release(X_CDirectSoundStream *pThis);
-
-// ******************************************************************
-// * func: EmuCDirectSoundStream_Process
-// ******************************************************************
-HRESULT WINAPI EmuCDirectSoundStream_Process
-(
-    X_CDirectSoundStream   *pThis,
-    PXMEDIAPACKET           pInputBuffer,
-    PXMEDIAPACKET           pOutputBuffer
-);
-
-// ******************************************************************
-// * func: EmuCDirectSoundStream_Discontinuity
-// ******************************************************************
-HRESULT WINAPI EmuCDirectSoundStream_Discontinuity(X_CDirectSoundStream *pThis);
-
-// ******************************************************************
-// * func: EmuCDirectSoundStream_Pause
-// ******************************************************************
-HRESULT WINAPI EmuCDirectSoundStream_Pause
-(
-    PVOID   pStream,
-    DWORD   dwPause
-);
-
-// ******************************************************************
 // * func: EmuIDirectSound8_AddRef
 // ******************************************************************
 ULONG WINAPI EmuIDirectSound8_AddRef
@@ -287,130 +199,6 @@ HRESULT WINAPI EmuIDirectSound8_DownloadEffectsImage
     DWORD                   dwImageSize,
     PVOID                   pImageLoc,      // TODO: Use this param
     PVOID                  *ppImageDesc     // TODO: Use this param
-);
-
-// ******************************************************************
-// * func: EmuIDirectSoundStream_SetHeadroom
-// ******************************************************************
-HRESULT WINAPI EmuIDirectSoundStream_SetHeadroom
-(
-    PVOID   pThis,
-    DWORD   dwHeadroom
-);
-
-// ******************************************************************
-// * func: EmuCDirectSoundStream_SetAllParameters
-// ******************************************************************
-HRESULT WINAPI EmuCDirectSoundStream_SetAllParameters
-(
-    PVOID   pThis,
-    PVOID   pUnknown,
-    DWORD   dwApply
-);
-
-// ******************************************************************
-// * func: EmuCDirectSoundStream_SetConeAngles
-// ******************************************************************
-HRESULT WINAPI EmuCDirectSoundStream_SetConeAngles
-(
-    PVOID   pThis,
-    DWORD   dwInsideConeAngle,
-    DWORD   dwOutsideConeAngle,
-    DWORD   dwApply
-);
-
-// ******************************************************************
-// * func: EmuCDirectSoundStream_SetConeOutsideVolume
-// ******************************************************************
-HRESULT WINAPI EmuCDirectSoundStream_SetConeOutsideVolume
-(
-    PVOID   pThis,
-    LONG    lConeOutsideVolume,
-    DWORD   dwApply
-);
-
-// ******************************************************************
-// * func: EmuCDirectSoundStream_SetMaxDistance
-// ******************************************************************
-HRESULT WINAPI EmuCDirectSoundStream_SetMaxDistance
-(
-    PVOID    pThis,
-    D3DVALUE fMaxDistance,
-    DWORD    dwApply
-);
-
-// ******************************************************************
-// * func: EmuCDirectSoundStream_SetMinDistance
-// ******************************************************************
-HRESULT WINAPI EmuCDirectSoundStream_SetMinDistance
-(
-    PVOID    pThis,
-    D3DVALUE fMinDistance,
-    DWORD    dwApply
-);
-
-// ******************************************************************
-// * func: EmuCDirectSoundStream_SetVelocity
-// ******************************************************************
-HRESULT WINAPI EmuCDirectSoundStream_SetVelocity
-(
-    PVOID    pThis,
-    D3DVALUE x,
-    D3DVALUE y,
-    D3DVALUE z,
-    DWORD    dwApply
-);
-
-// ******************************************************************
-// * func: EmuCDirectSoundStream_SetConeOrientation
-// ******************************************************************
-HRESULT WINAPI EmuCDirectSoundStream_SetConeOrientation
-(
-    PVOID    pThis,
-    D3DVALUE x,
-    D3DVALUE y,
-    D3DVALUE z,
-    DWORD    dwApply
-);
-
-// ******************************************************************
-// * func: EmuCDirectSoundStream_SetPosition
-// ******************************************************************
-HRESULT WINAPI EmuCDirectSoundStream_SetPosition
-(
-    PVOID    pThis,
-    D3DVALUE x,
-    D3DVALUE y,
-    D3DVALUE z,
-    DWORD    dwApply
-);
-
-// ******************************************************************
-// * func: EmuCDirectSoundStream_SetFrequency
-// ******************************************************************
-HRESULT WINAPI EmuCDirectSoundStream_SetFrequency
-(
-    PVOID   pThis,
-    DWORD   dwFrequency
-);
-
-// ******************************************************************
-// * func: EmuIDirectSoundStream_SetI3DL2Source
-// ******************************************************************
-HRESULT WINAPI EmuIDirectSoundStream_SetI3DL2Source
-(
-    PVOID   pThis,
-    PVOID   pds3db,
-    DWORD   dwApply
-);
-
-// ******************************************************************
-// * func: EmuIDirectSoundStream_Unknown1
-// ******************************************************************
-HRESULT WINAPI EmuIDirectSoundStream_Unknown1
-(
-    PVOID   pThis,
-    DWORD   dwUnknown1
 );
 
 // ******************************************************************
@@ -513,6 +301,14 @@ HRESULT WINAPI EmuIDirectSound8_SetAllParameters
 );
 
 // ******************************************************************
+// * func: EmuCDirectSound_CommitDeferredSettings
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSound_CommitDeferredSettings
+(
+    X_CDirectSound         *pThis
+);
+
+// ******************************************************************
 // * func: EmuIDirectSound8_CreateSoundBuffer
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSound8_CreateSoundBuffer
@@ -523,6 +319,25 @@ HRESULT WINAPI EmuIDirectSound8_CreateSoundBuffer
     LPUNKNOWN               pUnkOuter
 );
 
+// ******************************************************************
+// * func: EmuDirectSoundCreateBuffer
+// ******************************************************************
+HRESULT WINAPI EmuDirectSoundCreateBuffer
+(
+    X_DSBUFFERDESC         *pdsbd,
+    X_CDirectSoundBuffer  **ppBuffer
+);
+
+// ******************************************************************
+// * func: EmuIDirectSound8_CreateBuffer
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSound8_CreateBuffer
+(
+    LPDIRECTSOUND8          pThis,
+    X_DSBUFFERDESC         *pdssd,
+    X_CDirectSoundBuffer  **ppBuffer,
+    PVOID                   pUnknown
+);
 
 // ******************************************************************
 // * func: EmuIDirectSoundBuffer8_SetBufferData
@@ -661,11 +476,196 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_SetFrequency
 );
 
 // ******************************************************************
-// * func: EmuCDirectSound_CommitDeferredSettings
+// * func: EmuDirectSoundCreateStream
 // ******************************************************************
-HRESULT WINAPI EmuCDirectSound_CommitDeferredSettings
+HRESULT WINAPI EmuDirectSoundCreateStream
 (
-    X_CDirectSound         *pThis
+    X_DSSTREAMDESC         *pdssd,
+    X_CDirectSoundStream  **ppStream
+);
+
+// ******************************************************************
+// * func: EmuIDirectSound8_CreateStream
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSound8_CreateStream
+(
+    LPDIRECTSOUND8          pThis,
+    X_DSSTREAMDESC         *pdssd,
+    X_CDirectSoundStream  **ppStream,
+    PVOID                   pUnknown
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetVolume
+// ******************************************************************
+ULONG WINAPI EmuCDirectSoundStream_SetVolume(X_CDirectSoundStream *pThis, LONG lVolume);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetRolloffFactor
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetRolloffFactor
+(
+    X_CDirectSoundStream *pThis,
+    FLOAT                 fRolloffFactor,
+    DWORD                 dwApply
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_AddRef
+// ******************************************************************
+ULONG WINAPI EmuCDirectSoundStream_AddRef(X_CDirectSoundStream *pThis);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_Release
+// ******************************************************************
+ULONG WINAPI EmuCDirectSoundStream_Release(X_CDirectSoundStream *pThis);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_Process
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_Process
+(
+    X_CDirectSoundStream   *pThis,
+    PXMEDIAPACKET           pInputBuffer,
+    PXMEDIAPACKET           pOutputBuffer
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_Discontinuity
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_Discontinuity(X_CDirectSoundStream *pThis);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_Pause
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_Pause
+(
+    PVOID   pStream,
+    DWORD   dwPause
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundStream_SetHeadroom
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundStream_SetHeadroom
+(
+    PVOID   pThis,
+    DWORD   dwHeadroom
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetAllParameters
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetAllParameters
+(
+    PVOID   pThis,
+    PVOID   pUnknown,
+    DWORD   dwApply
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetConeAngles
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetConeAngles
+(
+    PVOID   pThis,
+    DWORD   dwInsideConeAngle,
+    DWORD   dwOutsideConeAngle,
+    DWORD   dwApply
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetConeOutsideVolume
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetConeOutsideVolume
+(
+    PVOID   pThis,
+    LONG    lConeOutsideVolume,
+    DWORD   dwApply
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetMaxDistance
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetMaxDistance
+(
+    PVOID    pThis,
+    D3DVALUE fMaxDistance,
+    DWORD    dwApply
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetMinDistance
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetMinDistance
+(
+    PVOID    pThis,
+    D3DVALUE fMinDistance,
+    DWORD    dwApply
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetVelocity
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetVelocity
+(
+    PVOID    pThis,
+    D3DVALUE x,
+    D3DVALUE y,
+    D3DVALUE z,
+    DWORD    dwApply
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetConeOrientation
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetConeOrientation
+(
+    PVOID    pThis,
+    D3DVALUE x,
+    D3DVALUE y,
+    D3DVALUE z,
+    DWORD    dwApply
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetPosition
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetPosition
+(
+    PVOID    pThis,
+    D3DVALUE x,
+    D3DVALUE y,
+    D3DVALUE z,
+    DWORD    dwApply
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetFrequency
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetFrequency
+(
+    PVOID   pThis,
+    DWORD   dwFrequency
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundStream_SetI3DL2Source
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundStream_SetI3DL2Source
+(
+    PVOID   pThis,
+    PVOID   pds3db,
+    DWORD   dwApply
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundStream_Unknown1
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundStream_Unknown1
+(
+    PVOID   pThis,
+    DWORD   dwUnknown1
 );
 
 #endif
