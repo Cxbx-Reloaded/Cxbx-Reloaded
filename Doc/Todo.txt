@@ -9,6 +9,9 @@ Cxbx Todo:
 
   Debug outputs should be configurable to STDOUT (console) or text file.
 
+      - Passing a ptr to CxbxKrnl is not enough (seperate process) pass the
+        full DebugFilename.
+
   Exe->Xbe should use an "OpenXDK" logo bitmap by default. This can be done
   by having a debug version of Cxbx output the necessary raw data. Then, you
   just inline it into the code.

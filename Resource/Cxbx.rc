@@ -105,8 +105,20 @@ BEGIN
     END
     POPUP "&View"
     BEGIN
-        MENUITEM "&Debug Console (GUI)",        ID_VIEW_DEBUGCONSOLE
-        MENUITEM "Debug Console (Kernel)",      ID_VIEW_KERNELDEBUGCONSOLE
+        POPUP "&Debug Output (GUI)"
+        BEGIN
+            MENUITEM "&Console",                    ID_VIEW_DEBUGOUTPUTGUI_CONSOLE
+
+            MENUITEM "&File...",                    ID_VIEW_DEBUGOUTPUTGUI_FILE
+
+        END
+        POPUP "Debug Output (Kernel)"
+        BEGIN
+            MENUITEM "&Console",                    ID_VIEW_DEBUGOUTPUTKERNEL_CONSOLE
+
+            MENUITEM "&File...",                    ID_VIEW_DEBUGOUTPUTKERNEL_FILE
+
+        END
     END
     POPUP "E&mulation"
     BEGIN

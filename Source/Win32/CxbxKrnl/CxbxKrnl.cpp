@@ -74,7 +74,7 @@ inline void EmuXSwapFS()
 {
     __asm
     {
-        mov ax, fs:[0x14]
+        mov ax, fs:[0x14]   // FS.ArbitraryUserPointer
         mov fs, ax
     }
 }
@@ -107,7 +107,7 @@ void EmuXGenerateFS()
     __asm
     {
         mov ax, NewFS
-        mov fs:[0x14], ax
+        mov fs:[0x14], ax   // FS.ArbitraryUserPointer
     }
 
     // ******************************************************************
@@ -121,23 +121,32 @@ void EmuXGenerateFS()
     __asm
     {
         mov ax, OrgFS
-        mov fs:[0x14], ax
+        mov fs:[0x14], ax   // FS.ArbitraryUserPointer
     }
 }
 
 // ******************************************************************
 // * func: EmuXInit
 // ******************************************************************
-CXBXKRNL_API void NTAPI EmuXInit(uint32 DebugConsole, uint08 *XBEHeader, uint32 XBEHeaderSize, void (*Entry)())
+CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, uint08 *XBEHeader, uint32 XBEHeaderSize, void (*Entry)())
 {
     // ******************************************************************
     // * debug console allocation (if configured)
     // ******************************************************************
-    if(DebugConsole)
+    if(DebugConsole == DM_CONSOLE)
     {
-        AllocConsole();
+        if(AllocConsole())
+        {
+            freopen("CONOUT$", "wt", stdout);
 
-        freopen("CONOUT$", "wt", stdout);
+            printf("CxbxKrnl [0x%.08X]: Debug console allocated.\n", GetCurrentThreadId());
+        }
+    }
+    else if(DebugConsole == DM_FILE)
+    {
+        FreeConsole();
+
+        freopen(DebugFilename, "wt", stdout);
 
         printf("CxbxKrnl [0x%.08X]: Debug console allocated.\n", GetCurrentThreadId());
     }
@@ -149,11 +158,12 @@ CXBXKRNL_API void NTAPI EmuXInit(uint32 DebugConsole, uint08 *XBEHeader, uint32 
         printf("CxbxKrnl [0x%.08X]: EmuXInit\n"
                "          (\n"
                "             DebugConsole        : 0x%.08X\n"
+               "             DebugFilename       : %s"
                "             XBEHeader           : 0x%.08X\n"
                "             XBEHeaderSize       : 0x%.08X\n"
                "             Entry               : 0x%.08X\n"
                "          );\n",
-               GetCurrentThreadId(), DebugConsole, XBEHeader, XBEHeaderSize, Entry);
+               GetCurrentThreadId(), DebugConsole, DebugFilename, XBEHeader, XBEHeaderSize, Entry);
     }
 
     // ******************************************************************
@@ -188,16 +198,7 @@ CXBXKRNL_API void NTAPI EmuXInit(uint32 DebugConsole, uint08 *XBEHeader, uint32 
 
         EmuXSwapFS();
 
-        NT_TIB *dbgTIB = 0;
-
-        // TODO: Store EmuX FS structure within the user data offset of Win2k/XP FS: struct
-        __asm
-        {
-            mov esi, fs:[18h]
-            mov dbgTIB, esi
-        }
-
-        printf("CxbxKrnl [0x%.08X]: NT_TIB.Self=0x%.08X\n", GetCurrentThreadId(), dbgTIB->Self);
+        // TODO: Initialize "new" FS structure
     }
 
     printf("CxbxKrnl [0x%.08X]: Initial thread starting.\n", GetCurrentThreadId());

@@ -44,7 +44,7 @@
 // ******************************************************************
 // * constructor
 // ******************************************************************
-WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_xbe(0), m_exe(0), m_exe_changed(false), m_xbe_changed(false), m_krnl_debug(0), m_cxbx_debug(0)
+WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_xbe(0), m_exe(0), m_exe_changed(false), m_xbe_changed(false), m_KrnlDebug(DM_NONE), m_CxbxDebug(DM_NONE)
 {
     m_classname = "WndMain";
     m_wndname   = "Cxbx: Version " CXBX_VERSION;
@@ -64,11 +64,17 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_xbe(0), m_exe(0), 
         m_y = rect.top + (rect.bottom - rect.top)/2 - m_h/2;
     }
 
-    m_exe_filename = new char[260];
-    m_exe_filename[0] = '\0';
+    m_ExeFilename = new char[260];
+    m_ExeFilename[0] = '\0';
 
-    m_xbe_filename = new char[260];
-    m_xbe_filename[0] = '\0';
+    m_XbeFilename = new char[260];
+    m_XbeFilename[0] = '\0';
+
+    m_CxbxDebugFilename = new char[260];
+    m_CxbxDebugFilename[0] = '\0';
+
+    m_KrnlDebugFilename = new char[260];
+    m_KrnlDebugFilename[0] = '\0';
 
     // ******************************************************************
     // * Load configuration from registry
@@ -82,8 +88,14 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_xbe(0), m_exe(0), 
             dwType = REG_DWORD;
             dwSize = sizeof(DWORD);
 
-            RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_cxbx_debug, &dwSize);
-            RegQueryValueEx(hKey, "KrnlDebug", NULL, &dwType, (PBYTE)&m_krnl_debug, &dwSize);
+            RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_CxbxDebug, &dwSize);
+            RegQueryValueEx(hKey, "KrnlDebug", NULL, &dwType, (PBYTE)&m_KrnlDebug, &dwSize);
+
+            dwType = REG_SZ;
+            dwSize = 260;
+
+            RegQueryValueEx(hKey, "CxbxDebugFilename", NULL, &dwType, (PBYTE)m_CxbxDebugFilename, &dwSize);
+            RegQueryValueEx(hKey, "KrnlDebugFilename", NULL, &dwType, (PBYTE)m_KrnlDebugFilename, &dwSize);
 
             RegCloseKey(hKey);
         }
@@ -109,15 +121,24 @@ WndMain::~WndMain()
             dwType = REG_DWORD;
             dwSize = sizeof(DWORD);
 
-            RegSetValueEx(hKey, "CxbxDebug", 0, dwType, (PBYTE)&m_cxbx_debug, dwSize);
-            RegSetValueEx(hKey, "KrnlDebug", 0, dwType, (PBYTE)&m_krnl_debug, dwSize);
+            RegSetValueEx(hKey, "CxbxDebug", 0, dwType, (PBYTE)&m_CxbxDebug, dwSize);
+            RegSetValueEx(hKey, "KrnlDebug", 0, dwType, (PBYTE)&m_KrnlDebug, dwSize);
+
+            dwType = REG_SZ;
+            dwSize = 260;
+
+            RegSetValueEx(hKey, "CxbxDebugFilename", 0, dwType, (PBYTE)m_CxbxDebugFilename, dwSize);
+            RegSetValueEx(hKey, "KrnlDebugFilename", 0, dwType, (PBYTE)m_KrnlDebugFilename, dwSize);
 
             RegCloseKey(hKey);
         }
     }
 
-    delete[] m_xbe_filename;
-    delete[] m_exe_filename;
+    delete[] m_XbeFilename;
+    delete[] m_ExeFilename;
+
+    delete[] m_CxbxDebugFilename;
+    delete[] m_KrnlDebugFilename;
 }
 
 // ******************************************************************
@@ -229,7 +250,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 case ID_FILE_OPEN_XBE:
                 {
-                    m_exe_filename[0] = '\0';
+                    m_ExeFilename[0] = '\0';
 
                     OPENFILENAME ofn = {0};
 
@@ -248,7 +269,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                     if(GetOpenFileName(&ofn) == TRUE)
                     {
-                        strcpy(m_xbe_filename, ofn.lpstrFile);
+                        strcpy(m_XbeFilename, ofn.lpstrFile);
 
                         m_xbe = new Xbe(ofn.lpstrFile);
 
@@ -275,10 +296,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 				case ID_FILE_SAVEXBEFILE:
 				{
-                    if(m_xbe_filename[0] == '\0')
+                    if(m_XbeFilename[0] == '\0')
                         SaveXbeAs();
                     else
-					    SaveXbe(m_xbe_filename);
+					    SaveXbe(m_XbeFilename);
 				}
 				break;
 
@@ -290,7 +311,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 case ID_FILE_IMPORTFROMEXE:
                 {
-                    m_exe_filename[0] = '\0';
+                    m_ExeFilename[0] = '\0';
 
                     OPENFILENAME ofn = {0};
 
@@ -309,7 +330,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                     if(GetOpenFileName(&ofn) == TRUE)
                     {
-                        m_xbe_filename[0] = '\0';
+                        m_XbeFilename[0] = '\0';
 
                         Exe *tmp = new Exe(ofn.lpstrFile);
 
@@ -698,12 +719,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
                 break;
 
-                case ID_VIEW_KERNELDEBUGCONSOLE:
+                case ID_VIEW_DEBUGOUTPUTKERNEL_CONSOLE:
                 {
-                    if(m_krnl_debug == 0)
-                        m_krnl_debug = 1;
+                    if(m_KrnlDebug == DM_NONE || m_KrnlDebug == DM_FILE)
+                        m_KrnlDebug = DM_CONSOLE;
                     else
-                        m_krnl_debug = 0;
+                        m_KrnlDebug = DM_NONE;
 
                     MessageBox(m_hwnd, "This will not take effect until emulation is (re)started.\n", "Cxbx", MB_OK);
 
@@ -711,20 +732,92 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
                 break;
 
-                case ID_VIEW_DEBUGCONSOLE:
-				{
-                    if(m_cxbx_debug == 0)
-                        m_cxbx_debug = 1;
+                case ID_VIEW_DEBUGOUTPUTKERNEL_FILE:
+                {
+                    if(m_KrnlDebug == DM_NONE || m_KrnlDebug == DM_CONSOLE)
+                        m_KrnlDebug = DM_FILE;
                     else
-                        m_cxbx_debug = 0;
+                    {
+                        m_KrnlDebug = DM_NONE;
+                        UpdateDebugConsoles();
+                        break;
+                    }
+
+                    OPENFILENAME ofn = {0};
+
+	                char filename[260] = "KrnlDebug.txt";
+
+                    ofn.lStructSize     = sizeof(OPENFILENAME);
+	                ofn.hwndOwner       = m_hwnd;
+	                ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
+	                ofn.lpstrFile       = filename;
+	                ofn.nMaxFile        = 260;
+	                ofn.nFilterIndex    = 1;
+	                ofn.lpstrFileTitle  = NULL;
+	                ofn.nMaxFileTitle   = 0;
+	                ofn.lpstrInitialDir = NULL;
+                    ofn.lpstrDefExt     = "txt";
+	                ofn.Flags           = OFN_PATHMUSTEXIST;
+
+	                if(GetSaveFileName(&ofn) == FALSE)
+                        return false;
+
+                    strncpy(m_KrnlDebugFilename, ofn.lpstrFile, 259);
+
+                    UpdateDebugConsoles();
+                }
+                break;
+
+                case ID_VIEW_DEBUGOUTPUTGUI_CONSOLE:
+				{
+                    if(m_CxbxDebug == DM_NONE || m_CxbxDebug == DM_FILE)
+                        m_CxbxDebug = DM_CONSOLE;
+                    else
+                        m_CxbxDebug = DM_NONE;
 
                     UpdateDebugConsoles();
 				}
 				break;
 
+                case ID_VIEW_DEBUGOUTPUTGUI_FILE:
+                {
+                    if(m_CxbxDebug == DM_NONE || m_CxbxDebug == DM_CONSOLE)
+                        m_CxbxDebug = DM_FILE;
+                    else
+                    {
+                        m_CxbxDebug = DM_NONE;
+                        UpdateDebugConsoles();
+                        break;
+                    }
+
+                    OPENFILENAME ofn = {0};
+
+	                char filename[260] = "CxbxDebug.txt";
+
+                    ofn.lStructSize     = sizeof(OPENFILENAME);
+	                ofn.hwndOwner       = m_hwnd;
+	                ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
+	                ofn.lpstrFile       = filename;
+	                ofn.nMaxFile        = 260;
+	                ofn.nFilterIndex    = 1;
+	                ofn.lpstrFileTitle  = NULL;
+	                ofn.nMaxFileTitle   = 0;
+	                ofn.lpstrInitialDir = NULL;
+                    ofn.lpstrDefExt     = "txt";
+	                ofn.Flags           = OFN_PATHMUSTEXIST;
+
+	                if(GetSaveFileName(&ofn) == FALSE)
+                        return false;
+
+                    strncpy(m_CxbxDebugFilename, ofn.lpstrFile, 259);
+
+                    UpdateDebugConsoles();
+                }
+                break;
+
                 case ID_EMULATION_START:
                 {
-                    if(m_exe_filename[0] == '\0' || m_exe_changed)
+                    if(m_ExeFilename[0] == '\0' || m_exe_changed)
                         if(!ConvertToExe())
                             break;
 
@@ -746,7 +839,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                         if(spot != -1)
                             dir[spot] = '\0';
 
-                        if((int)ShellExecute(NULL, "open", m_exe_filename, NULL, dir, SW_SHOWDEFAULT) <= 32)
+                        if((int)ShellExecute(NULL, "open", m_ExeFilename, NULL, dir, SW_SHOWDEFAULT) <= 32)
                         {
                             MessageBox(m_hwnd, "Shell failed. (try converting .exe again)", "Cxbx", MB_ICONSTOP | MB_OK);
 
@@ -990,13 +1083,26 @@ void WndMain::UpdateDebugConsoles()
 {
     HMENU menu = GetMenu(m_hwnd);
     HMENU view_menu = GetSubMenu(menu, 2);
+    HMENU view_debg = GetSubMenu(view_menu, 0);
+    HMENU view_krnl = GetSubMenu(view_menu, 1);
 
-    if(m_krnl_debug == 1)
-        CheckMenuItem(view_menu, ID_VIEW_KERNELDEBUGCONSOLE, MF_CHECKED);
+    if(m_KrnlDebug == DM_CONSOLE)
+    {
+        CheckMenuItem(view_krnl, ID_VIEW_DEBUGOUTPUTKERNEL_CONSOLE, MF_CHECKED);
+        CheckMenuItem(view_krnl, ID_VIEW_DEBUGOUTPUTKERNEL_FILE, MF_UNCHECKED);
+    }
+    else if(m_KrnlDebug == DM_FILE)
+    {
+        CheckMenuItem(view_krnl, ID_VIEW_DEBUGOUTPUTKERNEL_CONSOLE, MF_UNCHECKED);
+        CheckMenuItem(view_krnl, ID_VIEW_DEBUGOUTPUTKERNEL_FILE, MF_CHECKED);
+    }
     else
-        CheckMenuItem(view_menu, ID_VIEW_KERNELDEBUGCONSOLE, MF_UNCHECKED);
+    {
+        CheckMenuItem(view_krnl, ID_VIEW_DEBUGOUTPUTKERNEL_CONSOLE, MF_UNCHECKED);
+        CheckMenuItem(view_krnl, ID_VIEW_DEBUGOUTPUTKERNEL_FILE, MF_UNCHECKED);
+    }
 
-    if(m_cxbx_debug == 1)
+    if(m_CxbxDebug == DM_CONSOLE)
     {
         if(AllocConsole())
         {
@@ -1004,14 +1110,27 @@ void WndMain::UpdateDebugConsoles()
 
             printf("%s", "Cxbx: Debug console allocated.\n");
 
-            CheckMenuItem(view_menu, ID_VIEW_DEBUGCONSOLE, MF_CHECKED);
+            CheckMenuItem(view_debg, ID_VIEW_DEBUGOUTPUTGUI_CONSOLE, MF_CHECKED);
+            CheckMenuItem(view_debg, ID_VIEW_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
         }
+    }
+    else if(m_CxbxDebug == DM_FILE)
+    {
+        FreeConsole();
+
+        freopen(m_CxbxDebugFilename, "wt", stdout);
+
+        printf("%s", "Cxbx: Debug console allocated.\n");
+
+        CheckMenuItem(view_debg, ID_VIEW_DEBUGOUTPUTGUI_CONSOLE, MF_UNCHECKED);
+        CheckMenuItem(view_debg, ID_VIEW_DEBUGOUTPUTGUI_FILE, MF_CHECKED);
     }
     else
     {
         FreeConsole();
 
-        CheckMenuItem(view_menu, ID_VIEW_DEBUGCONSOLE, MF_UNCHECKED);
+        CheckMenuItem(view_debg, ID_VIEW_DEBUGOUTPUTGUI_CONSOLE, MF_UNCHECKED);
+        CheckMenuItem(view_debg, ID_VIEW_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
     }
 }
 
@@ -1024,7 +1143,7 @@ bool WndMain::ConvertToExe()
 
 	char filename[260] = "default.exe";
 
-    SuggestFilename(m_xbe_filename, filename, ".exe");
+    SuggestFilename(m_XbeFilename, filename, ".exe");
 
 	ofn.lStructSize     = sizeof(OPENFILENAME);
 	ofn.hwndOwner       = m_hwnd;
@@ -1056,7 +1175,7 @@ bool WndMain::ConvertToExe()
 
 	// convert file
 	{
-		EmuExe i_EmuExe(m_xbe, m_krnl_debug);
+		EmuExe i_EmuExe(m_xbe, m_KrnlDebug, m_KrnlDebugFilename);
 
 		i_EmuExe.Export(ofn.lpstrFile);
 
@@ -1067,7 +1186,7 @@ bool WndMain::ConvertToExe()
         }
         else
         {
-            strcpy(m_exe_filename, ofn.lpstrFile);
+            strcpy(m_ExeFilename, ofn.lpstrFile);
 
             char buffer[255];
 
@@ -1093,7 +1212,7 @@ void WndMain::SaveXbeAs()
 
 	char filename[260] = "default.xbe";
 
-    SuggestFilename(m_xbe_filename, filename, ".xbe");
+    SuggestFilename(m_XbeFilename, filename, ".xbe");
 
 	ofn.lStructSize     = sizeof(OPENFILENAME);
 	ofn.hwndOwner       = m_hwnd;

@@ -77,14 +77,17 @@ class WndMain : public Wnd
         Xbe        *m_xbe;
         Exe        *m_exe;
 
-        char       *m_xbe_filename;
-        char       *m_exe_filename;
+        char       *m_XbeFilename;
+        char       *m_ExeFilename;
 
         bool        m_xbe_changed;
         bool        m_exe_changed;
 
-        uint32      m_cxbx_debug;
-        uint32      m_krnl_debug;
+        enum DebugMode m_CxbxDebug;
+        enum DebugMode m_KrnlDebug;
+
+        char       *m_CxbxDebugFilename;
+        char       *m_KrnlDebugFilename;
 };
 
 #endif

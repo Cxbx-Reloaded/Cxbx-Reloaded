@@ -95,7 +95,15 @@ LINK32=link.exe
 # Begin Group "Debug"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Bin\Debug\Cxbx.exe
+# End Source File
 # End Group
+# Begin Source File
+
+SOURCE=.\Bin\Cxbx.exe
+# End Source File
 # End Group
 # Begin Group "Doc"
 

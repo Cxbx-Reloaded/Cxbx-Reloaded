@@ -45,7 +45,7 @@ class EmuExe : public Exe
         // ******************************************************************
         // * Construct via Xbe file object
         // ******************************************************************
-        EmuExe(class Xbe *x_Xbe, uint32 x_debug_console);
+        EmuExe(class Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename);
 };
 
 #endif
