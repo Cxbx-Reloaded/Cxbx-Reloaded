@@ -1121,12 +1121,14 @@ void WndMain::UpdateDebugConsoles()
 
             SetConsoleTitle("Cxbx " CXBX_VERSION " Debug Console");
 
-            SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY);
+            SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
 
             printf("%s", "WndMain: Debug console allocated.\n");
 
             CheckMenuItem(view_debg, ID_VIEW_DEBUGOUTPUTGUI_CONSOLE, MF_CHECKED);
             CheckMenuItem(view_debg, ID_VIEW_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
+
+            SetForegroundWindow(m_hwnd);
         }
     }
     else if(m_CxbxDebug == DM_FILE)
