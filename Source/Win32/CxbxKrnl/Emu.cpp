@@ -47,7 +47,6 @@ namespace xboxkrnl
 #include "EmuD3D8.h"
 #include "EmuKrnl.h"
 #include "EmuShared.h"
-#include "ThreadList.h"
 #include "HLEDataBase.h"
 
 // ******************************************************************
@@ -106,18 +105,6 @@ static void EmuCleanThread()
 extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)())
 {
     g_dwTlsAdjust = TlsAdjust;
-
-    // ******************************************************************
-    // * Store this thread handle
-    // ******************************************************************
-    {
-        HANDLE hThread = NULL;
-        DWORD  hThreadId = GetCurrentThreadId();
-
-        DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hThread, 0, FALSE, DUPLICATE_SAME_ACCESS);
-
-        ThreadList::Insert(hThread, hThreadId);
-    }
 
     // ******************************************************************
     // * debug console allocation (if configured)
@@ -300,6 +287,9 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage)
         MessageBox(NULL, buffer, "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
     }
 
+    printf("CxbxKrnl: Terminating Process\n");
+    fflush(stdout);
+
     // ******************************************************************
     // * Cleanup debug output
     // ******************************************************************
@@ -310,92 +300,15 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage)
     }
 
     // ******************************************************************
-    // * Suspend and Redirect all Threads
+    // * We're outta here...
     // ******************************************************************
-    {
-        ThreadList *tl = 0;
-
-        for(tl = ThreadList::pFirst;tl != NULL;tl = tl->pNext)
-        {
-            // ignore current thread
-            DWORD cur = GetCurrentThreadId();
-            DWORD cmp = tl->dwThreadId;
-
-            if(cmp == 0)
-                break;
-
-            if(cmp == cur)
-                continue;
-
-            SuspendThread(tl->hThread);
-
-            CONTEXT Context;
-
-            Context.ContextFlags = CONTEXT_CONTROL;
-
-            GetThreadContext(tl->hThread, &Context);
-            
-            Context.Eip = (DWORD)EmuCleanThread;
-
-            Context.ContextFlags = CONTEXT_CONTROL;
-
-            SetThreadContext(tl->hThread, &Context);
-        }
-    }
-
-    // ******************************************************************
-    // * Resume all Threads
-    // ******************************************************************
-    {
-        ThreadList *tl = ThreadList::pFirst;
-
-        while(tl != NULL)
-        {
-            // ignore current thread
-            DWORD cur = GetCurrentThreadId();
-            DWORD cmp = tl->dwThreadId;
-
-            if(cmp == 0)
-                break;
-
-            if(cmp != cur)
-            {
-                ResumeThread(tl->hThread);
-
-                DWORD dwTerm = 0;
-                GetExitCodeThread(tl->hThread, &dwTerm);
-
-                while(dwTerm == STILL_ACTIVE)
-                {
-                    Sleep(50);
-                    GetExitCodeThread(tl->hThread, &dwTerm);
-                }
-
-                printf("Cxbx: Thread 0x%.08X Terminated\n", tl->hThread);
-            }
-
-            ThreadList *pTmpDel = tl;
-
-            tl = tl->pNext;
-
-            delete pTmpDel;
-        }
-    }
-
-    printf("CxbxKrnl: Terminating Process\n");
-    fflush(stdout);
-
-    EmuD3DCleanup();
-
-    EmuCleanupFS();
-
     __try
     {
         ExitProcess(0);
     }
-    __except(ExitException(GetExceptionInformation()))
+    __except(EXCEPTION_EXECUTE_HANDLER)
     {
-        printf("Emu: WARNING!! Problem with ExitExceptionFilter\n");
+
     }
 
     return;

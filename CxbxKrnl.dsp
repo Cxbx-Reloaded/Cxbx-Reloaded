@@ -214,10 +214,6 @@ SOURCE=.\Include\Win32\CxbxKrnl\ResCxbxDll.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Win32\CxbxKrnl\ThreadList.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.3911.h
 # End Source File
 # Begin Source File
@@ -327,10 +323,6 @@ SOURCE=.\Source\Win32\CxbxKrnl\KernelThunk.cpp
 # Begin Source File
 
 SOURCE=.\Source\Win32\Mutex.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Win32\CxbxKrnl\ThreadList.cpp
 # End Source File
 # Begin Source File
 

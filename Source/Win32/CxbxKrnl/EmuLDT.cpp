@@ -51,7 +51,7 @@ namespace xntdll
 // ******************************************************************
 // * Maximum number of threads this LDT system will handle
 // ******************************************************************
-#define MAXIMUM_XBOX_THREADS 32
+#define MAXIMUM_XBOX_THREADS 128
 
 // ******************************************************************
 // * Table of free LDT entries

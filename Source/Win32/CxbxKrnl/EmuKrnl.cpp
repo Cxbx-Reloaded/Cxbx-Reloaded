@@ -56,7 +56,6 @@ namespace xntdll
 #include "EmuFS.h"
 #include "EmuFile.h"
 #include "EmuKrnl.h"
-#include "ThreadList.h"
 
 // ******************************************************************
 // * Loaded at run-time to avoid linker conflicts
@@ -93,18 +92,6 @@ static DWORD WINAPI PCSTProxy
     IN PVOID Parameter
 )
 {
-    // ******************************************************************
-    // * Store this thread handle
-    // ******************************************************************
-    {
-        HANDLE hThread = NULL;
-        DWORD  hThreadId = GetCurrentThreadId();
-
-        DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hThread, 0, FALSE, DUPLICATE_SAME_ACCESS);
-
-        ThreadList::Insert(hThread, hThreadId);
-    }
-
     PCSTProxyParam *iPCSTProxyParam = (PCSTProxyParam*)Parameter;
 
     uint32 StartContext1 = (uint32)iPCSTProxyParam->StartContext1;
@@ -829,15 +816,6 @@ XBSYSAPI EXPORTNUM(258) VOID NTAPI xboxkrnl::PsTerminateSystemThread(IN NTSTATUS
                GetCurrentThreadId(), ExitStatus);
     }
     #endif
-
-    // ******************************************************************
-    // * Remove this thread handle
-    // ******************************************************************
-    {
-        DWORD  hThreadId = GetCurrentThreadId();
-
-        ThreadList::Remove(hThreadId);
-    }
 
     ExitThread(ExitStatus);
 
