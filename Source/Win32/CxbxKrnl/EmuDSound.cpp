@@ -792,8 +792,23 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
 
         if(pdsbd->lpwfxFormat != NULL)
         {
-            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX));
+            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX)+pdsbd->lpwfxFormat->cbSize);
             memcpy(pDSBufferDesc->lpwfxFormat, pdsbd->lpwfxFormat, sizeof(WAVEFORMATEX));
+
+            if(pDSBufferDesc->lpwfxFormat->wFormatTag == /*WAVE_FORMAT_XBOX_ADPCM*/0x0069)
+            {
+                EmuWarning("WAVE_FORMAT_XBOX_ADPCM Unsupported!");
+
+                pDSBufferDesc->lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
+                pDSBufferDesc->lpwfxFormat->nBlockAlign = (pDSBufferDesc->lpwfxFormat->nChannels*pDSBufferDesc->lpwfxFormat->wBitsPerSample)/8;
+
+                // the above calculation can yield zero for wBitsPerSample < 8, so we'll bound it to 1 byte minimum
+                if(pDSBufferDesc->lpwfxFormat->nBlockAlign == 0)
+                    pDSBufferDesc->lpwfxFormat->nBlockAlign = 1;
+
+                pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = pDSBufferDesc->lpwfxFormat->nSamplesPerSec*pDSBufferDesc->lpwfxFormat->nBlockAlign;
+                pDSBufferDesc->lpwfxFormat->wBitsPerSample = 8;
+            }
         }
 
         pDSBufferDesc->guid3DAlgorithm = DS3DALG_DEFAULT;
