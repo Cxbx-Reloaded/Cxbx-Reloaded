@@ -66,7 +66,7 @@ typedef signed long    sint32;
 //#define _DEBUG_TRACE
 
 // define this to trace warnings
-#define _DEBUG_WARNINGS
+//#define _DEBUG_WARNINGS
 
 // version information
 #ifndef _DEBUG_TRACE

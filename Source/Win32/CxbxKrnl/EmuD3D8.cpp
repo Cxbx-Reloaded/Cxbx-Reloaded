@@ -2574,7 +2574,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
     D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
 
     // TODO: HACK: Devices that don't support this should somehow emulate it!
-    /* This is OK on my GeForce FX 5600
+    //* This is OK on my GeForce FX 5600
     if(PCFormat == D3DFMT_D16)
     {
         EmuWarning("D3DFMT_D16 is an unsupported texture format!");
@@ -2587,13 +2587,13 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
         PCFormat = D3DFMT_X8R8G8B8;
     }
     //*/
-    /* This is OK on my GeForce FX 5600
+    //* This is OK on my GeForce FX 5600
     else if(PCFormat == D3DFMT_D24S8)
     {
         EmuWarning("D3DFMT_D24S8 is an unsupported texture format!");
         PCFormat = D3DFMT_X8R8G8B8;
     }//*/
-    if(PCFormat == D3DFMT_YUY2)
+    else if(PCFormat == D3DFMT_YUY2)
     {
         // cache the overlay size
         g_dwOverlayW = Width;
@@ -2605,14 +2605,16 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
 
     if(PCFormat != D3DFMT_YUY2)
     {
-        DWORD   PCUsage = Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL);
+        DWORD   PCUsage = Usage & (D3DUSAGE_RENDERTARGET);
+//        DWORD   PCUsage = Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL);
         D3DPOOL PCPool  = D3DPOOL_MANAGED;
 
         EmuAdjustPower2(&Width, &Height);
 
         *ppTexture = new X_D3DTexture();
 
-        if(Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL))
+//        if(Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL))
+        if(Usage & (D3DUSAGE_RENDERTARGET))
             PCPool = D3DPOOL_DEFAULT;
 
         hRet = g_pD3DDevice8->CreateTexture

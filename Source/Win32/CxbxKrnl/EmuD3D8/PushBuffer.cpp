@@ -239,6 +239,7 @@ void XTL::EmuExecutePushBuffer
                             //g_pD3DDevice8->SetVertexShader(D3DFVF_XYZ | D3DFVF_TEX0);
 
                             /* these don't help the turok lighting problems :[
+                            g_pD3DDevice8->SetRenderState(D3DRS_LIGHTING, FALSE);
                             g_pD3DDevice8->SetRenderState(D3DRS_FOGENABLE, FALSE);
                             g_pD3DDevice8->SetRenderState(D3DRS_FOGTABLEMODE, D3DFOG_NONE);
                             g_pD3DDevice8->SetRenderState(D3DRS_SPECULARENABLE, FALSE);
