@@ -500,6 +500,11 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
 }
 
 // ******************************************************************
+// * 0x009C - KeTickCount
+// ******************************************************************
+XBSYSAPI EXPORTNUM(156) xboxkrnl::DWORD xboxkrnl::KeTickCount = 0;
+
+// ******************************************************************
 // * 0x00A4 - LaunchDataPage (actually a pointer)
 // ******************************************************************
 XBSYSAPI EXPORTNUM(164) xboxkrnl::DWORD xboxkrnl::LaunchDataPage = 0;

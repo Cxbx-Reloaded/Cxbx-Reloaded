@@ -221,7 +221,7 @@ extern "C" CXBXKRNL_API uint32 KernelThunkTable[367] =
     (uint32)PANIC(0x0099),                          // 0x0099 (153)
     (uint32)PANIC(0x009A),                          // 0x009A (154)
     (uint32)PANIC(0x009B),                          // 0x009B (155)
-    (uint32)PANIC(0x009C),                          // 0x009C (156)
+    (uint32)&xboxkrnl::KeTickCount,                 // 0x009C (156)
     (uint32)PANIC(0x009D),                          // 0x009D (157)
     (uint32)PANIC(0x009E),                          // 0x009E (158)
     (uint32)PANIC(0x009F),                          // 0x009F (159)

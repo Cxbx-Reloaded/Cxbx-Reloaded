@@ -71,14 +71,14 @@ uint32                   g_XbeHeaderSize = 0;      // XbeHeaderSize
 HWND                     g_hEmuWindow    = NULL;   // Rendering Window
 xd3d8::D3DCAPS8          g_D3DCaps;                // Direct3D8 Caps
 HBRUSH                   g_hBgBrush      = NULL;   // Background Brush
-
 volatile bool            g_ThreadInitialized = false;
 
 // ******************************************************************
 // * statics
 // ******************************************************************
 static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-static DWORD WINAPI EmuRenderWindow(LPVOID);
+static DWORD WINAPI   EmuRenderWindow(LPVOID);
+static DWORD WINAPI   EmuUpdateTickCount(LPVOID);
 
 // ******************************************************************
 // * D3DVertexToPrimitive
@@ -119,6 +119,7 @@ VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
     {
         DWORD dwThreadId;
 
+        CreateThread(NULL, NULL, EmuUpdateTickCount, NULL, NULL, &dwThreadId);
         CreateThread(NULL, NULL, EmuRenderWindow, NULL, NULL, &dwThreadId);
 
         while(!g_ThreadInitialized)
@@ -151,6 +152,23 @@ VOID EmuD3DCleanup()
     EmuDInputCleanup();
 
     return;
+}
+
+// ******************************************************************
+// * func: EmuUpdateTickCount
+// ******************************************************************
+DWORD WINAPI EmuUpdateTickCount(LPVOID)
+{
+    while(true)
+    {
+        LARGE_INTEGER PerformanceCount;
+
+        QueryPerformanceCounter(&PerformanceCount);
+
+        xboxkrnl::KeTickCount = PerformanceCount.LowPart / 1300;
+
+        Sleep(10);
+    }
 }
 
 // ******************************************************************
@@ -391,6 +409,10 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
     // ******************************************************************
     g_pD3D8Device = *ppReturnedDeviceInterface;
 
+    // TODO: HACK: This needs to be auto-updated from Xbox D3D global variable(s)
+    if(g_pD3D8Device != 0)
+        g_pD3D8Device->SetRenderState( D3DRS_LIGHTING, FALSE );
+
     EmuSwapFS();   // XBox FS
 
     return hRet;
@@ -452,6 +474,42 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_Clear
     }
 
     HRESULT ret = g_pD3D8Device->Clear(Count, pRects, Flags, Color, Z, Stencil);
+
+    EmuSwapFS();   // XBox FS
+
+    return ret;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_Present
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_Present
+(
+    CONST RECT* pSourceRect,
+    CONST RECT* pDestRect,
+    PVOID       pDummy1,
+    PVOID       pDummy2
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_Present\n"
+               "(\n"
+               "   pSourceRect         : 0x%.08X\n"
+               "   pDestRect           : 0x%.08X\n"
+               "   pDummy1             : 0x%.08X\n"
+               "   pDummy2             : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pSourceRect, pDestRect, pDummy1, pDummy2);
+    }
+    #endif
+
+    HRESULT ret = g_pD3D8Device->Present(pSourceRect, pDestRect, (HWND)pDummy1, (CONST RGNDATA*)pDummy2);
 
     EmuSwapFS();   // XBox FS
 
@@ -530,6 +588,97 @@ xd3d8::D3DVertexBuffer* WINAPI xd3d8::EmuIDirect3DDevice8_CreateVertexBuffer2
     EmuSwapFS();   // XBox FS
 
     return (xd3d8::D3DVertexBuffer*)ppVertexBuffer;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_CullMode
+// ******************************************************************
+VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetRenderState_CullMode
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_SetRenderState_CullMode\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+    // ******************************************************************
+    // * Convert from Xbox D3D to PC D3D enumeration
+    // ******************************************************************
+    // TODO: XDK-Specific Tables? So far they are the same
+
+    switch(Value)
+    {
+        case 0:
+            Value = D3DCULL_NONE;
+            break;
+        case 0x900:
+            Value = D3DCULL_CW;
+            break;
+        case 0x901:
+            Value = D3DCULL_CCW;
+            break;
+    }
+
+    g_pD3D8Device->SetRenderState(D3DRS_CULLMODE, Value);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetTransform
+// ******************************************************************
+VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetTransform
+(
+    D3DTRANSFORMSTATETYPE State,
+    CONST D3DMATRIX      *pMatrix
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_SetTransform\n"
+               "(\n"
+               "   State               : 0x%.08X\n"
+               "   pMatrix             : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), State, pMatrix);
+    }
+    #endif
+
+    // ******************************************************************
+    // * Convert from Xbox D3D to PC D3D enumeration
+    // ******************************************************************
+    // TODO: XDK-Specific Tables? So far they are the same
+    if((uint32)State < 2)
+        State = (D3DTRANSFORMSTATETYPE)(State + 2);
+    else if((uint32)State < 6)
+        State = (D3DTRANSFORMSTATETYPE)(State + 14);
+    else if((uint32)State < 9)
+        State = D3DTS_WORLDMATRIX(State-6);
+
+    g_pD3D8Device->SetTransform(State, pMatrix);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
 }
 
 // ******************************************************************

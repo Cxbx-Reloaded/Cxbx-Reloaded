@@ -148,6 +148,69 @@ SOOVPA<13> IDirect3DDevice8_CreateVertexBuffer2_1_0_4627 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetRenderState_CullMode
+// ******************************************************************
+SOOVPA<13> IDirect3DDevice8_SetRenderState_CullMode_1_0_4627 =
+{
+    0,  // Large == 0
+    13, // Count == 13
+
+    {
+        // IDirect3DDevice8_SetRenderState_CullMode+0x19 : mov dword ptr [eax], 0x40308
+        { 0x19, 0xC7 }, // (Offset,Value)-Pair #1
+        { 0x1B, 0x08 }, // (Offset,Value)-Pair #2
+        { 0x1C, 0x03 }, // (Offset,Value)-Pair #3
+        { 0x1D, 0x04 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DDevice8_SetRenderState_CullMode+0x24 : add eax, 8
+        { 0x24, 0x83 }, // (Offset,Value)-Pair #5
+        { 0x25, 0xC0 }, // (Offset,Value)-Pair #6
+        { 0x26, 0x08 }, // (Offset,Value)-Pair #7
+
+        // IDirect3DDevice8_SetRenderState_CullMode+0x30 : retn 4
+        { 0x30, 0xC2 }, // (Offset,Value)-Pair #8
+        { 0x31, 0x04 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DDevice8_SetRenderState_CullMode+0x53 : add edx, 0x404
+        { 0x53, 0x81 }, // (Offset,Value)-Pair #10
+        { 0x54, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x55, 0x04 }, // (Offset,Value)-Pair #12
+        { 0x56, 0x04 }, // (Offset,Value)-Pair #13
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetTransform
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_SetTransform_1_0_4627 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    {
+        // IDirect3DDevice8_SetTransform+0x16 : lea edi, [ecx+ebx+0x810]
+        { 0x16, 0x8D }, // (Offset,Value)-Pair #1
+        { 0x17, 0xBC }, // (Offset,Value)-Pair #2
+        { 0x18, 0x19 }, // (Offset,Value)-Pair #3
+        { 0x19, 0x10 }, // (Offset,Value)-Pair #4
+        { 0x1A, 0x08 }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_SetTransform+0x24 : repe movsd
+        { 0x24, 0xF3 }, // (Offset,Value)-Pair #6
+        { 0x25, 0xA5 }, // (Offset,Value)-Pair #7
+
+        // IDirect3DDevice8_SetTransform+0x78 : fld [edx+0x3C]
+        { 0x78, 0xD9 }, // (Offset,Value)-Pair #8
+        { 0x79, 0x42 }, // (Offset,Value)-Pair #9
+        { 0x7A, 0x3C }, // (Offset,Value)-Pair #10
+
+        // IDirect3DDevice8_SetTransform+0x92 : jmp +0x10
+        { 0x92, 0xEB }, // (Offset,Value)-Pair #11
+        { 0x93, 0x10 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
 // * IDirect3DVertexBuffer8_Lock
 // ******************************************************************
 SOOVPA<11> IDirect3DVertexBuffer8_Lock_1_0_4627 =
@@ -319,6 +382,26 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_CreateVertexBuffer2" 
+        #endif
+    },
+    // IDirect3DDevice8::SetRenderState_CullMode
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4627,
+
+        xd3d8::EmuIDirect3DDevice8_SetRenderState_CullMode,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_CullMode" 
+        #endif
+    },
+    // IDirect3DDevice8::SetTransform
+    {
+        (OOVPA*)&IDirect3DDevice8_SetTransform_1_0_4627,
+
+        xd3d8::EmuIDirect3DDevice8_SetTransform,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetTransform" 
         #endif
     },
     // IDirect3DVertexBuffer8::Lock

@@ -60,6 +60,37 @@ SOOVPA<8> IDirect3D8_CreateDevice_1_0_3925 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_Present
+// ******************************************************************
+SOOVPA<10> IDirect3DDevice8_Present_1_0_3925 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    // TENTATIVE!
+
+    {
+        // IDirect3DDevice8_Present+0x0A : push 2
+        { 0x0A, 0x6A }, // (Offset,Value)-Pair #1
+        { 0x0B, 0x02 }, // (Offset,Value)-Pair #2
+
+        // IDirect3DDevice8_Present+0x11 : mov eax, [esi+2518]
+        { 0x11, 0x8B }, // (Offset,Value)-Pair #3
+        { 0x12, 0x86 }, // (Offset,Value)-Pair #4
+        { 0x13, 0x18 }, // (Offset,Value)-Pair #5
+        { 0x14, 0x25 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_Present+0xBE : shr ebx, 1
+        { 0xBE, 0xD1 }, // (Offset,Value)-Pair #7
+        { 0xBF, 0xEB }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_Present+0xC0 : xor edi, edi
+        { 0xC0, 0x33 }, // (Offset,Value)-Pair #9
+        { 0xC1, 0xFF }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
 // * D3D8_1_0_3925
 // ******************************************************************
 OOVPATable D3D8_1_0_3925[] =
@@ -72,6 +103,16 @@ OOVPATable D3D8_1_0_3925[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3D8_CreateDevice" 
+        #endif
+    },
+    // IDirect3DDevice8::Present
+    {
+        (OOVPA*)&IDirect3DDevice8_Present_1_0_3925,
+
+        xd3d8::EmuIDirect3DDevice8_Present,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_Present"
         #endif
     },
 };

@@ -78,9 +78,9 @@ static D3DPRIMITIVETYPE EmuPrimitiveTypeLookup[] =
     /* D3DPT_TRIANGLELIST   = 5,        */ D3DPT_TRIANGLELIST,
     /* D3DPT_TRIANGLESTRIP  = 6,        */ D3DPT_TRIANGLESTRIP,
     /* D3DPT_TRIANGLEFAN    = 7,        */ D3DPT_TRIANGLEFAN,
-    /* D3DPT_QUADLIST       = 8,  Xbox  */ D3DPT_TRIANGLEFAN,
-    /* D3DPT_QUADSTRIP      = 9,  Xbox  */ D3DPT_TRIANGLEFAN,
-    /* D3DPT_POLYGON        = 10, Xbox  */ D3DPT_TRIANGLEFAN,
+    /* D3DPT_QUADLIST       = 8,  Xbox  */ D3DPT_TRIANGLELIST,
+    /* D3DPT_QUADSTRIP      = 9,  Xbox  */ D3DPT_TRIANGLELIST,
+    /* D3DPT_POLYGON        = 10, Xbox  */ D3DPT_TRIANGLELIST,
     /* D3DPT_MAX            = 11,       */ (D3DPRIMITIVETYPE)11
 };
 
@@ -122,6 +122,17 @@ HRESULT WINAPI EmuIDirect3DDevice8_Clear
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_Present
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_Present
+(
+    CONST RECT* pSourceRect,
+    CONST RECT* pDestRect,
+    PVOID       pDummy1,
+    PVOID       pDummy2
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_Swap
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_Swap
@@ -135,6 +146,23 @@ HRESULT WINAPI EmuIDirect3DDevice8_Swap
 D3DVertexBuffer* WINAPI EmuIDirect3DDevice8_CreateVertexBuffer2
 (
     UINT Length
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_CullMode
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_CullMode
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetTransform
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetTransform
+(
+    D3DTRANSFORMSTATETYPE State,
+    CONST D3DMATRIX      *pMatrix
 );
 
 // ******************************************************************
