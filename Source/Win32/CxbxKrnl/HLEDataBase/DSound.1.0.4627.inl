@@ -141,7 +141,6 @@ SOOVPA<12> IDirectSound8_SetMixBinHeadroom_1_0_4627 =
     }
 };
 
-
 // ******************************************************************
 // * CDirectSound::SetVelocity
 // ******************************************************************
@@ -176,6 +175,33 @@ SOOVPA<15> CDirectSound_SetVelocity_1_0_4627 =
         // CDirectSound_SetVelocity+0x73 : retn 0x14
         { 0x73, 0xC2 }, // (Offset,Value)-Pair #14
         { 0x74, 0x14 }, // (Offset,Value)-Pair #15
+    }
+};
+
+// ******************************************************************
+// * CDirectSound::SetAllParametersA
+// ******************************************************************
+SOOVPA<10> CDirectSound_SetAllParametersA_1_0_4627 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    XREF_DSSETALLPARAMETERSA,   // XRef Is  Saved
+    0,                          // XRef Not Used
+
+    {
+        { 0x16, 0x68 }, // (Offset,Value)-Pair #1
+        { 0x17, 0xE8 }, // (Offset,Value)-Pair #2
+        { 0x18, 0xF7 }, // (Offset,Value)-Pair #3
+        { 0x19, 0x2D }, // (Offset,Value)-Pair #4
+
+        { 0x2F, 0xD9 }, // (Offset,Value)-Pair #5
+        { 0x30, 0x41 }, // (Offset,Value)-Pair #6
+        { 0x31, 0x04 }, // (Offset,Value)-Pair #7
+
+        { 0x87, 0x8B }, // (Offset,Value)-Pair #8
+        { 0x88, 0x50 }, // (Offset,Value)-Pair #9
+        { 0x89, 0x08 }, // (Offset,Value)-Pair #10
     }
 };
 
@@ -1941,6 +1967,24 @@ OOVPATable DSound_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirectSound8_SetVelocity" 
+        #endif
+    },
+    // CDirectSound::SetAllParametersA (XREF)
+    {
+        (OOVPA*)&CDirectSound_SetAllParametersA_1_0_4627, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSound_SetAllParametersA (XRef)"
+        #endif
+    },
+    // IDirectSound8::SetAllParameters (* unchanged since 3936 *)
+    {
+        (OOVPA*)&IDirectSound8_SetAllParameters_1_0_3936,
+
+        XTL::EmuIDirectSound8_SetAllParameters,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSound8_SetAllParameters" 
         #endif
     },
     // CDirectSoundVoiceSettings_SetMixBins (* unchanged since 4432 *)

@@ -4128,6 +4128,7 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DResource8_IsBusy"
         #endif
     },
+    /* I forget why I had this in here...
     // IDirect3DResource8::GetType
     {
         (OOVPA*)&IDirect3DResource8_GetType_1_0_4627,
@@ -4137,7 +4138,7 @@ OOVPATable D3D8_1_0_4627[] =
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DResource8_GetType"
         #endif
-    },
+    },*/
     // Get2DSurfaceDesc
     {
         (OOVPA*)&Get2DSurfaceDesc_1_0_4627,
