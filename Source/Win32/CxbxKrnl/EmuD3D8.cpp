@@ -4357,7 +4357,7 @@ static void EmuUpdateDeferredStates()
 // ******************************************************************
 uint32 EmuQuadHackA(uint32 PrimitiveCount, XTL::IDirect3DVertexBuffer8 *&pOrigVertexBuffer8, XTL::IDirect3DVertexBuffer8 *&pHackVertexBuffer8, UINT dwOffset, PVOID pVertexStreamZeroData, UINT VertexStreamZeroStride, PVOID *ppNewVertexStreamZeroData)
 {
-    UINT uiStride = VertexStreamZeroStride;
+    UINT uiStride = 0;
 
     // These are the sizes of our part in the vertex buffer
     DWORD dwOriginalSize    = 0;
@@ -4370,16 +4370,16 @@ uint32 EmuQuadHackA(uint32 PrimitiveCount, XTL::IDirect3DVertexBuffer8 *&pOrigVe
     BYTE *pOrigVertexData = 0;
     BYTE *pHackVertexData = 0;
 
-    // This is a list of sqares/rectangles, so we convert it to a list of triangles
-    dwOriginalSize  = PrimitiveCount*uiStride*2;
-    dwNewSize       = PrimitiveCount*uiStride*3;
-
     if(ppNewVertexStreamZeroData != 0)
         *ppNewVertexStreamZeroData = pVertexStreamZeroData;
 
     if(pVertexStreamZeroData == 0)
     {
         g_pD3DDevice8->GetStreamSource(0, &pOrigVertexBuffer8, &uiStride);
+
+        // This is a list of sqares/rectangles, so we convert it to a list of triangles
+        dwOriginalSize  = PrimitiveCount*uiStride*2;
+        dwNewSize       = PrimitiveCount*uiStride*3;
 
         // Retrieve the original buffer size
         {
@@ -4398,14 +4398,20 @@ uint32 EmuQuadHackA(uint32 PrimitiveCount, XTL::IDirect3DVertexBuffer8 *&pOrigVe
 
         g_pD3DDevice8->CreateVertexBuffer(dwNewSizeWR, 0, 0, XTL::D3DPOOL_MANAGED, &pHackVertexBuffer8);
 
-        if(pOrigVertexBuffer8 != 0 && pHackVertexBuffer8 != 0)
-        {
+        if(pOrigVertexBuffer8 != 0)
             pOrigVertexBuffer8->Lock(0, 0, &pOrigVertexData, 0);
+
+        if(pHackVertexBuffer8 != 0)
             pHackVertexBuffer8->Lock(0, 0, &pHackVertexData, 0);
-        }
     }
     else
     {
+        uiStride = VertexStreamZeroStride;
+
+        // This is a list of sqares/rectangles, so we convert it to a list of triangles
+        dwOriginalSize  = PrimitiveCount*uiStride*2;
+        dwNewSize       = PrimitiveCount*uiStride*3;
+
         dwOriginalSizeWR = dwOriginalSize;
         dwNewSizeWR = dwNewSize;
 
@@ -4422,7 +4428,7 @@ uint32 EmuQuadHackA(uint32 PrimitiveCount, XTL::IDirect3DVertexBuffer8 *&pOrigVe
     // Copy the nonmodified data
     memcpy(pHackVertexData, pOrigVertexData, dwOffset);
     memcpy(&pHackVertexData[dwOffset+dwNewSize], &pOrigVertexData[dwOffset+dwOriginalSize], dwOriginalSizeWR-dwOffset-dwOriginalSize);
-    
+
     for(DWORD i=0;i<(PrimitiveCount/2);i++)
     {
         memcpy(&pHackVertexData[dwOffset+i*uiStride*6+0*uiStride], &pOrigVertexData[dwOffset+i*uiStride*4+0*uiStride], uiStride);
@@ -4465,6 +4471,7 @@ VOID EmuQuadHackB(uint32 nStride, XTL::IDirect3DVertexBuffer8 *&pOrigVertexBuffe
 
     if(pOrigVertexBuffer8 != 0)
         pOrigVertexBuffer8->Release();
+
     if(pHackVertexBuffer8 != 0)
         pHackVertexBuffer8->Release();
 }
@@ -4524,6 +4531,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVertices
         PrimitiveCount
     );
 
+    // TODO: use original stride here (duh!)
     if(PrimitiveType == 8)  // Quad List
         EmuQuadHackB(nStride, pOrigVertexBuffer8, pHackVertexBuffer8);
 
