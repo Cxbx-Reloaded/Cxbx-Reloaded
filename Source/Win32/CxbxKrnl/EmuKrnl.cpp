@@ -1838,6 +1838,9 @@ XBSYSAPI EXPORTNUM(225) NTSTATUS NTAPI xboxkrnl::NtSetEvent
 
     NTSTATUS ret = NtDll::NtSetEvent(EventHandle, PreviousState);
 
+    if(FAILED(ret))
+        EmuWarning("NtSetEvent Failed!");
+
     EmuSwapFS();   // Xbox FS
 
     return ret;
@@ -2470,9 +2473,9 @@ XBSYSAPI EXPORTNUM(337) VOID NTAPI xboxkrnl::XcSHAFinal(UCHAR *pbSHAContext, UCH
     }
     #endif
 
-    // for now, the digest is always zeros (we dont care!)
+    // for now, we dont care about the digest
     for(int v=0;v<16;v++)
-        pbDigest[v] = 0;
+        pbDigest[v] = v;
 
     EmuSwapFS();   // Xbox FS
 

@@ -562,6 +562,14 @@ HRESULT WINAPI EmuIDirect3D8_CreateDevice
 );
 
 // ******************************************************************
+// * func: EmuIDirect3D8_GetDeviceCaps
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3D8_GetDeviceCaps
+(
+    D3DCAPS8                   *pCaps
+);
+
+// ******************************************************************
 // * func: EmuIDirect3D8_GetAdapterModeCount
 // ******************************************************************
 UINT WINAPI EmuIDirect3D8_GetAdapterModeCount

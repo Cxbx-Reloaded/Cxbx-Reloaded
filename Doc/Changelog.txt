@@ -3,7 +3,7 @@ cxbx website: http://www.caustik.com/xbox/
 version: 0.7.9 (??/??/??)
 --------------------------------
 
-- 
+- Fixed start/back mapping problem :)
 
 version: 0.7.8c (09/02/03)
 --------------------------------

@@ -63,6 +63,39 @@ SOOVPA<8> IDirect3D8_CreateDevice_1_0_3925 =
 };
 
 // ******************************************************************
+// * IDirect3D8_GetDeviceCaps
+// ******************************************************************
+SOOVPA<11> IDirect3D8_GetDeviceCaps_1_0_3925 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3D8_GetDeviceCaps+0x00 : push esi; push edi
+        { 0x00, 0x56 }, // (Offset,Value)-Pair #1
+        { 0x01, 0x57 }, // (Offset,Value)-Pair #2
+
+        // IDirect3D8_GetDeviceCaps+0x06 : mov ecx, 0x35
+        { 0x06, 0xB9 }, // (Offset,Value)-Pair #3
+        { 0x07, 0x35 }, // (Offset,Value)-Pair #4
+        { 0x08, 0x00 }, // (Offset,Value)-Pair #5
+        { 0x09, 0x00 }, // (Offset,Value)-Pair #6
+        { 0x0A, 0x00 }, // (Offset,Value)-Pair #7
+
+        // IDirect3D8_GetDeviceCaps+0x10 : rep movsd
+        { 0x10, 0xF3 }, // (Offset,Value)-Pair #8
+        { 0x11, 0xA5 }, // (Offset,Value)-Pair #9
+
+        // IDirect3D8_GetDeviceCaps+0x14 : retn 0x04
+        { 0x14, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x15, 0x04 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetRenderTarget
 // ******************************************************************
 SOOVPA<11> IDirect3DDevice8_SetRenderTarget_1_0_3925 =
@@ -1383,6 +1416,16 @@ OOVPATable D3D8_1_0_3925[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3D8_CreateDevice" 
+        #endif
+    },
+    // IDirect3D8::GetDeviceCaps
+    {
+        (OOVPA*)&IDirect3D8_GetDeviceCaps_1_0_3925,
+
+        XTL::EmuIDirect3D8_GetDeviceCaps,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3D8_GetDeviceCaps" 
         #endif
     },
     // IDirect3DDevice8::Release

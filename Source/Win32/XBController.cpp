@@ -815,15 +815,15 @@ void XBController::ListenPoll(XTL::XINPUT_STATE *Controller)
                     break;
                 case XBCTRL_OBJECT_BACK:
                     if(wValue > 0)
-                        Controller->Gamepad.wButtons |= XINPUT_GAMEPAD_START;
-                    else
-                        Controller->Gamepad.wButtons &= ~XINPUT_GAMEPAD_START;
-                    break;
-                case XBCTRL_OBJECT_START:
-                    if(wValue > 0)
                         Controller->Gamepad.wButtons |= XINPUT_GAMEPAD_BACK;
                     else
                         Controller->Gamepad.wButtons &= ~XINPUT_GAMEPAD_BACK;
+                    break;
+                case XBCTRL_OBJECT_START:
+                    if(wValue > 0)
+                        Controller->Gamepad.wButtons |= XINPUT_GAMEPAD_START;
+                    else
+                        Controller->Gamepad.wButtons &= ~XINPUT_GAMEPAD_START;
                     break;
                 case XBCTRL_OBJECT_LTHUMB:
                     if(wValue > 0)

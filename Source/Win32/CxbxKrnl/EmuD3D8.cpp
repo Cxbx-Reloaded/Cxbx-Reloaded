@@ -806,6 +806,36 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
 }
 
 // ******************************************************************
+// * func: EmuIDirect3D8_GetDeviceCaps
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3D8_GetDeviceCaps
+(
+    D3DCAPS8                   *pCaps
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3D8_GetDeviceCaps\n"
+               "(\n"
+               "   pCaps                     : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pCaps);
+    }
+    #endif
+
+    HRESULT hRet = g_pD3D8->GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), (g_XBVideo.GetDirect3DDevice() == 0) ? XTL::D3DDEVTYPE_HAL : XTL::D3DDEVTYPE_REF, pCaps);
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3D8_GetAdapterModeCount
 // ******************************************************************
 UINT WINAPI XTL::EmuIDirect3D8_GetAdapterModeCount
