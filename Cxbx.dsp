@@ -144,10 +144,6 @@ SOURCE=.\Include\Cxbx.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Win32\CxbxKrnl\CxbxKrnl.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Include\Win32\Cxbx\EmuExe.h
 # End Source File
 # Begin Source File

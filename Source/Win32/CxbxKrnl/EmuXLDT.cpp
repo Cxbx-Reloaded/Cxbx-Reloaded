@@ -42,8 +42,7 @@ namespace xntdll
     #include "xntdll.h"
 };
 
-#undef FIELD_OFFSET     // prevent macro redefinition warnings
-#include <windows.h>
+using namespace win32;
 
 // ******************************************************************
 // * Maximum number of threads this LDT system will handle

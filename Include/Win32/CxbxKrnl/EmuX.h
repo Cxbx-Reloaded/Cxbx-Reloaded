@@ -43,6 +43,25 @@ namespace xboxkrnl
     #include "EmuXxapi.h"
 };
 
+// ******************************************************************
+// * namespace used to avoid collisions with ntdll and win32
+// ******************************************************************
+namespace win32
+{
+    #undef FIELD_OFFSET     // prevent macro redefinition warnings
+    #include <windows.h>
+    #include <stdio.h>
+    #include <d3d8.h>
+};
+
+// ******************************************************************
+// * namespace used to avoid collisions with ntdll and win32
+// ******************************************************************
+namespace xboxkrnl
+{
+    #include "EmuXD3D.h"
+};
+
 #include "OOVPA.h"
 #include "EmuXKrnl.h"
 #include "EmuXLDT.h"

@@ -45,14 +45,12 @@ namespace xntdll
     #include "xntdll.h"
 };
 
-#undef FIELD_OFFSET     // prevent macro redefinition warnings
-#include <windows.h>
-#include <stdio.h>
+using namespace win32;
 
 // ******************************************************************
 // * static functions
 // ******************************************************************
-static void EmuXInstallWrappers(void (*Entry)(), Xbe::Header *XbeHeader);
+static void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *XbeHeader);
 
 // ******************************************************************
 // * func: EmuXInit
@@ -103,7 +101,7 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, Xb
     // * Locate functions and install wrapper vectors
     // ******************************************************************
     {
-        EmuXInstallWrappers(Entry, XbeHeader);
+        EmuXInstallWrappers(XAPI_1_0_4361, XAPI_1_0_4361_SIZE, Entry, XbeHeader);
     }
 
     // ******************************************************************
@@ -139,6 +137,13 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, Xb
     // ******************************************************************
     {
         EmuXGenerateFS();
+    }
+
+    // ******************************************************************
+    // * Initialize Direct3D8
+    // ******************************************************************
+    {
+        xboxkrnl::EmuXInitD3D();
     }
 
     printf("EmuX (0x%.08X): Initial thread starting.\n", GetCurrentThreadId());
@@ -186,34 +191,6 @@ CXBXKRNL_API void NTAPI EmuXPanic()
 }
 
 // ******************************************************************
-// * func: EmuXFindFuncByIndirectCall
-// ******************************************************************
-inline void *EmuXFindFuncByIndirectCall(void *Function, uint32 CallOffset)
-{
-    uint32 RelCallAddr = (uint32)Function + CallOffset;
-
-    uint32 RelFunc = *(uint32*)(RelCallAddr + 1);
-
-    void  *Func = (void*)(RelCallAddr + RelFunc + 5);
-
-    return Func;
-}
-
-// ******************************************************************
-// * func: EmuXFindFuncByPush32
-// ******************************************************************
-inline void *EmuXFindFuncByPush32(void *Function, uint32 PushOffset)
-{
-    uint32 AbsPushAddr = (uint32)Function + PushOffset;
-
-    uint32 AbsFunc = *(uint32*)(AbsPushAddr + 1);
-
-    void  *Func = (void*)(AbsFunc);
-
-    return Func;
-}
-
-// ******************************************************************
 // * func: EmuXInstallWrapper
 // ******************************************************************
 inline void EmuXInstallWrapper(void *FunctionAddr, void *WrapperAddr)
@@ -227,7 +204,7 @@ inline void EmuXInstallWrapper(void *FunctionAddr, void *WrapperAddr)
 // ******************************************************************
 // * func: EmuXInstallWrappers
 // ******************************************************************
-void EmuXInstallWrappers(void (*Entry)(), Xbe::Header *XbeHeader)
+void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *XbeHeader)
 {
     // ******************************************************************
     // * debug trace
@@ -241,60 +218,68 @@ void EmuXInstallWrappers(void (*Entry)(), Xbe::Header *XbeHeader)
     }
 
     // ******************************************************************
-    // * locate and patch functions
+    // * traverse the full OOVPA table
     // ******************************************************************
+    for(uint32 a=0;a<OovpaTableSize/sizeof(OOVPATable);a++)
     {
-        void *RealmainXapiStartup = EmuXFindFuncByPush32(Entry, 0x4B);
+        OOVPA *Oovpa = OovpaTable[a].Oovpa;
 
-        printf("EmuXInstallWrappers: mainXapiStartup -> 0x%.08X\n", RealmainXapiStartup);
+        uint32 count = Oovpa->Count;
+        uint32 lower = XbeHeader->dwBaseAddr;
+        uint32 upper = XbeHeader->dwBaseAddr + XbeHeader->dwSizeofImage;
 
-        // Known to work on : XAPILIB Version 1.0.4361
-
-        for(uint32 a=0;a<XAPI_1_0_4361_SIZE/sizeof(OOVPATable);a++)
+        // ******************************************************************
+        // * Large
+        // ******************************************************************
+        if(Oovpa->Large == 1)
         {
-            OOVPA *Oovpa = XAPI_1_0_4361[a].Oovpa;
+            LOOVPA<1> *Loovpa = (LOOVPA<1>*)Oovpa;
+        }
+        // ******************************************************************
+        // * Small
+        // ******************************************************************
+        else
+        {
+            SOOVPA<1> *Soovpa = (SOOVPA<1>*)Oovpa;
 
-            uint32 count = Oovpa->Count;
-            uint32 lower = XbeHeader->dwBaseAddr;
-            uint32 upper = XbeHeader->dwBaseAddr + XbeHeader->dwSizeofImage;
+            upper -= Soovpa->Sovp[count-1].Offset;
 
-            if(Oovpa->Large == 1)
+            // ******************************************************************
+            // * Search all of the image memory
+            // ******************************************************************
+            for(uint32 cur=lower;cur<upper;cur++)
             {
-                LOOVPA<1> *Loovpa = (LOOVPA<1>*)Oovpa;
-            }
-            else
-            {
-                SOOVPA<1> *Soovpa = (SOOVPA<1>*)Oovpa;
+                uint32  v=0;
 
-                upper -= Soovpa->Sovp[count-1].Offset;
-
-                for(uint32 cur=lower;cur<upper;cur++)
+                // ******************************************************************
+                // * check all pairs, moving on if any do not match
+                // ******************************************************************
+                for(v=0;v<count;v++)
                 {
-                    uint32  v=0;
+                    uint32 Offset = Soovpa->Sovp[v].Offset;
+                    uint32 Value  = Soovpa->Sovp[v].Value;
 
-                    for(v=0;v<count;v++)
-                    {
-                        uint32 Offset = Soovpa->Sovp[v].Offset;
-                        uint32 Value  = Soovpa->Sovp[v].Value;
+                    uint08 RealValue = *(uint08*)(cur + Offset);
 
-                        uint08 RealValue = *(uint08*)(cur + Offset);
-
-                        if(RealValue != Value)
-                            break;
-                    }
-
-                    if(v == count)
-                    {
-                        #ifdef _DEBUG_TRACE
-                        printf("EmuXInstallWrappers: 0x%.08X -> %s\n", cur, XAPI_1_0_4361[a].szFuncName);
-                        #endif
-
-                        EmuXInstallWrapper((void*)cur, XAPI_1_0_4361[a].lpRedirect);
-
+                    if(RealValue != Value)
                         break;
-                    }
+                }
+
+                // ******************************************************************
+                // * success if we found all pairs
+                // ******************************************************************
+                if(v == count)
+                {
+                    #ifdef _DEBUG_TRACE
+                    printf("EmuXInstallWrappers: 0x%.08X -> %s\n", cur, XAPI_1_0_4361[a].szFuncName);
+                    #endif
+
+                    EmuXInstallWrapper((void*)cur, XAPI_1_0_4361[a].lpRedirect);
+
+                    break;
                 }
             }
         }
     }
+
 }

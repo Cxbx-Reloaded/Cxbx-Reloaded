@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXFS.cpp
+// *   Cxbx->Win32->CxbxKrnl->EmuXD3D.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -37,92 +37,87 @@
 using namespace win32;
 
 // ******************************************************************
-// * func: EmuXInitFS
+// * globals
 // ******************************************************************
-void EmuXInitFS()
+HWND EmuXWindow = NULL;
+
+// ******************************************************************
+// * static
+// ******************************************************************
+static LRESULT WINAPI EmuXMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+// ******************************************************************
+// * func: EmuXInitD3D
+// ******************************************************************
+VOID xboxkrnl::EmuXInitD3D()
 {
-    EmuXInitLDT();
+    // ******************************************************************
+    // * register window class
+    // ******************************************************************
+    {
+        WNDCLASSEX wc =
+        {
+            sizeof(WNDCLASSEX),
+            CS_CLASSDC,
+            EmuXMsgProc,
+            0, 0, GetModuleHandle(NULL),
+            NULL, NULL, NULL, NULL,
+            "CxbxRender",
+            NULL
+        };
+
+        RegisterClassEx(&wc);
+    }
+
+    // ******************************************************************
+    // * create the window
+    // ******************************************************************
+    {
+        EmuXWindow = CreateWindow
+        (
+            "CxbxRender", "Cxbx : Rendering Window",
+            WS_OVERLAPPEDWINDOW, 100, 100, 640, 480,
+            GetDesktopWindow(), NULL, GetModuleHandle(NULL), NULL
+        );
+    }
+
+    // ******************************************************************
+    // * display the window
+    // ******************************************************************
+    {
+        ShowWindow(EmuXWindow, SW_SHOWDEFAULT);
+        UpdateWindow(EmuXWindow);
+    }
 }
 
 // ******************************************************************
-// * func: EmuXGenerateFS
+// * func: EmuXMsgProc
 // ******************************************************************
-void EmuXGenerateFS()
+LRESULT WINAPI EmuXMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    NT_TIB         *OrgNtTib;
-    xboxkrnl::KPCR *NewPcr;
-
-    uint16 NewFS=0;
-    uint16 OrgFS=0;
-
-    uint32 dwSize = sizeof(xboxkrnl::KPCR);
-
-    NewPcr = (xboxkrnl::KPCR*)new char[dwSize];
-
-    memset(NewPcr, 0, sizeof(*NewPcr));
-
-    NewFS = EmuXAllocateLDT((uint32)NewPcr, (uint32)NewPcr + dwSize);
-
-    // ******************************************************************
-    // * Obtain "OrgFS"
-    // ******************************************************************
-    __asm
+    switch(msg)
     {
-        // Obtain "OrgFS"
-        mov ax, fs
-        mov OrgFS, ax
-
-        // Obtain "OrgNtTib"
-        mov eax, fs:[0x18]
-        mov OrgNtTib, eax
-
-        // Save "NewFS" inside OrgFS.ArbitraryUserPointer
-        mov ax, NewFS
-        mov fs:[0x14], ax
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            return 0;
     }
 
-    // ******************************************************************
-    // * Generate TIB
-    // ******************************************************************
-    {
-        void *TLSPtr = 0;
+    return DefWindowProc(hWnd, msg, wParam, lParam);
+}
 
-        xboxkrnl::KTHREAD *KThread = new xboxkrnl::KTHREAD();
-
-        memcpy(&NewPcr->NtTib, OrgNtTib, sizeof(NT_TIB));
-
-        NewPcr->NtTib.Self = &NewPcr->NtTib;
-
-        NewPcr->PrcbData.CurrentThread = KThread;
-
-        NewPcr->Prcb = &NewPcr->PrcbData;
-
-        // Retrieve Win2k/XP TEB.ThreadLocalStoragePointer
-        __asm
-        {
-            mov eax, fs:[0x2C]
-            mov TLSPtr, eax
-        }
-
-        KThread->TlsData = (void*)TLSPtr;
-    }
-
-    // ******************************************************************
-    // * Swap into the "NewFS"
-    // ******************************************************************
-    EmuXSwapFS();
-
-    // ******************************************************************
-    // * Save "OrgFS" inside NewFS.ArbitraryUserPointer
-    // ******************************************************************
-    __asm
-    {
-        mov ax, OrgFS
-        mov fs:[0x14], ax   // NewFS.ArbitraryUserPointer
-    }
-
-    // ******************************************************************
-    // * Swap back into the "OrgFS"
-    // ******************************************************************
-    EmuXSwapFS();
+// ******************************************************************
+// * func: EmuXIDirect3D8_CreateDevice
+// ******************************************************************
+HRESULT xboxkrnl::EmuXIDirect3D8_CreateDevice
+(
+    UINT                    Adapter,
+    D3DDEVTYPE              DeviceType,
+    HWND                    hFocusWindow,
+    DWORD                   BehaviorFlags,
+    D3DPRESENT_PARAMETERS  *pPresentationParameters,
+    IDirect3DDevice8      **ppReturnedDeviceInterface
+)
+{
+    MessageBox(NULL, "EmuXIDirect3D8_CreateDevice", "EmuXD3D", MB_OK);
+    return 0;
 }

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->OOVPA.h
+// *   Cxbx->Win32->CxbxKrnl->EmuXD3D.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,70 +31,27 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef OOVPA_H
-#define OOVPA_H
+#ifndef EMUXD3D_H
+#define EMUXD3D_H
 
-#pragma pack(1)
-
-// ******************************************************************
-// * Optimized (Order,Value)-Pair Array
-// ******************************************************************
-struct OOVPA
-{
-    uint16 Large : 1;
-    uint16 Count : 15;
-};
+#include "EmuX.h"
 
 // ******************************************************************
-// * Large Optimized (Order,Value)-Pair Array
+// * func: EmuXInitD3D
 // ******************************************************************
-template <uint16 COUNT> struct LOOVPA
-{
-    uint16 Large : 1;
-    uint16 Count : 15;
-
-    // Large (Order,Value)-Pair(s)
-    struct LOVP
-    {
-        uint16 Offset;
-        uint08 Value;
-    }
-    Lovp[COUNT];
-};
+VOID EmuXInitD3D();
 
 // ******************************************************************
-// * Small Optimized (Order,Value)-Pair Array
+// * func: EmuXIDirect3D8_CreateDevice
 // ******************************************************************
-template <uint16 COUNT> struct SOOVPA
-{
-    uint16 Large : 1;
-    uint16 Count : 15;
-
-    // Small (Order,Value)-Pair(s)
-    struct SOVP
-    {
-        uint08 Offset;
-        uint08 Value;
-    }
-    Sovp[COUNT];
-};
-
-// ******************************************************************
-// * OOVPATable
-// ******************************************************************
-struct OOVPATable
-{
-    OOVPA *Oovpa;
-    void  *lpRedirect;
-
-    #ifdef _DEBUG_TRACE
-    char  *szFuncName;
-    #endif
-};
-
-#pragma pack()
-
-extern OOVPATable XAPI_1_0_4361[];
-extern uint32     XAPI_1_0_4361_SIZE;
+win32::HRESULT EmuXIDirect3D8_CreateDevice
+(
+    win32::UINT                    Adapter,
+    win32::D3DDEVTYPE              DeviceType,
+    win32::HWND                    hFocusWindow,
+    win32::DWORD                   BehaviorFlags,
+    win32::D3DPRESENT_PARAMETERS  *pPresentationParameters,
+    win32::IDirect3DDevice8      **ppReturnedDeviceInterface
+);
 
 #endif

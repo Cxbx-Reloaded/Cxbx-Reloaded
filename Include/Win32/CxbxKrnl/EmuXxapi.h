@@ -31,8 +31,8 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUXAPI_H
-#define EMUXAPI_H
+#ifndef EMUXXAPI_H
+#define EMUXXAPI_H
 
 #include "EmuX.h"
 
@@ -45,6 +45,10 @@
 // * basic types
 // ******************************************************************
 typedef int                 BOOL;
+typedef int                 INT;
+typedef unsigned int        UINT;
+typedef unsigned int        *PUINT;
+typedef LONG                HRESULT;
 
 // ******************************************************************
 // * PTHREAD_START_ROUTINE / LPTHREAD_START_ROUTINE

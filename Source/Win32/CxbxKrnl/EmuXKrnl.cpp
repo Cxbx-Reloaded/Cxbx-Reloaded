@@ -37,23 +37,12 @@
 #include "Cxbx.h"
 #include "EmuX.h"
 
-#include <stdio.h>
-
 // ******************************************************************
 // * ntdll wrapped in namespace to avoid collisions
 // ******************************************************************
 namespace xntdll
 {
     #include "xntdll.h"
-};
-
-// ******************************************************************
-// * win32 wrapped in namespace to avoid collisions
-// ******************************************************************
-namespace win32
-{
-    #undef FIELD_OFFSET     // prevent macro redefinition warnings
-    #include <windows.h>
 };
 
 using namespace win32;

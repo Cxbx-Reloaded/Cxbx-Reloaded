@@ -35,13 +35,17 @@
 
 #include "EmuExe.h"
 #include "Prolog.h"
+
 #include "EmuX.h"
+using namespace win32;
 
-#undef FIELD_OFFSET     // prevent macro redefinition warnings
-#include <windows.h>
-
-#include <stdio.h>
-#include <memory.h>
+// ******************************************************************
+// * namespace used to avoid collisions with ntdll and xboxkrnl
+// ******************************************************************
+namespace win32
+{
+    #include <memory.h>
+}
 
 // ******************************************************************
 // * constructor

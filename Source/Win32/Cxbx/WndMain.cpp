@@ -32,11 +32,9 @@
 // *
 // ******************************************************************
 #include "Cxbx.h"
-#include "EmuX.h"
 #include "EmuExe.h"
 #include "WndMain.h"
 #include "WndAbout.h"
-
 #include "resource.h"
 
 #include <stdio.h>

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXapi.cpp
+// *   Cxbx->Win32->CxbxKrnl->EmuXxapi.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -33,17 +33,6 @@
 // ******************************************************************
 #include "Cxbx.h"
 #include "EmuX.h"
-
-#include <stdio.h>
-
-// ******************************************************************
-// * win32 wrapped in namespace to avoid collisions
-// ******************************************************************
-namespace win32
-{
-    #undef FIELD_OFFSET     // prevent macro redefinition warnings
-    #include <windows.h>
-}
 
 using namespace win32;
 
