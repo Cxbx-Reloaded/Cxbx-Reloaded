@@ -570,6 +570,16 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreateVertexShader
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetPixelShaderConstant
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetPixelShaderConstant
+(
+    DWORD       Register,
+    CONST PVOID pConstantData,
+    DWORD       ConstantCount
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexShaderConstant
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_SetVertexShaderConstant
@@ -771,6 +781,16 @@ HRESULT WINAPI EmuIDirect3DDevice8_SetVertexDataColor
 // * func: EmuIDirect3DDevice8_End
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_End();
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_RunPushBuffer
+// ******************************************************************
+// TODO: D3DPushBuffer and D3DFixup
+VOID WINAPI EmuIDirect3DDevice8_RunPushBuffer
+(
+    PVOID                  pPushBuffer,
+    PVOID                  pFixup
+);
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_Clear

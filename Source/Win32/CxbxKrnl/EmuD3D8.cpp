@@ -1808,6 +1808,36 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetPixelShaderConstant
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetPixelShaderConstant
+(
+    DWORD       Register,
+    CONST PVOID pConstantData,
+    DWORD       ConstantCount
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetPixelShaderConstant\n"
+               "(\n"
+               "   Register            : 0x%.08X\n"
+               "   pConstantData       : 0x%.08X\n"
+               "   ConstantCount       : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Register, pConstantData, ConstantCount);
+    }
+    #endif
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexShaderConstant
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShaderConstant
@@ -3035,6 +3065,37 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_End()
     EmuSwapFS();   // XBox FS
 
     return D3D_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_RunPushBuffer
+// ******************************************************************
+// TODO: D3DPushBuffer and D3DFixup
+VOID WINAPI XTL::EmuIDirect3DDevice8_RunPushBuffer
+(
+    PVOID                  pPushBuffer,
+    PVOID                  pFixup
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_RunPushBuffer\n"
+               "(\n"
+               "   pPushBuffer         : 0x%.08X\n"
+               "   pFixup              : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pPushBuffer, pFixup);
+    }
+    #endif
+
+    EmuWarning("PushBuffer ignored!");
+
+    EmuSwapFS();   // XBox FS
+
+    return;
 }
 
 // ******************************************************************
