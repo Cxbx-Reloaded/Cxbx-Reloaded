@@ -1373,6 +1373,7 @@ XBSYSAPI EXPORTNUM(207) NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
     } // Xbox does not return . and ..
     while(strcmp(mbstr, ".") == 0 || strcmp(mbstr, "..") == 0);
 
+    // TODO: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
     free(FileDirInfo);
 
     EmuSwapFS();   // Xbox FS

@@ -182,7 +182,7 @@ class EmuNtFile : public EmuNtObject
 // ******************************************************************
 static inline bool IsEmuHandle(xboxkrnl::HANDLE hFile)
 {
-    bool ret = ((uint32)hFile) > 0x80000000;
+    bool ret = ((uint32)hFile > 0x80000000) && ((uint32)hFile != -1);
 
     return ret;
 }
