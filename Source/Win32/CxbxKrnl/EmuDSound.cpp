@@ -726,6 +726,110 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetMixBinHeadroom
 }
 
 // ******************************************************************
+// * func: EmuIDirectSound8_SetPosition
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSound8_SetPosition
+(
+    LPDIRECTSOUND8          pThis,
+    FLOAT                   x,
+    FLOAT                   y,
+    FLOAT                   z,
+    DWORD                   dwApply
+)
+{
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        EmuSwapFS();   // Win2k/XP FS
+        printf("EmuDSound (0x%X): EmuIDirectSound8_SetPosition\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   x                         : 0x%.08X\n"
+               "   y                         : 0x%.08X\n"
+               "   z                         : 0x%.08X\n"
+               "   dwApply                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, x, y, z, dwApply);
+        EmuSwapFS();   // XBox FS
+    }
+    #endif
+
+    // TODO: Actually do something
+
+    return DS_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSound8_SetPosition
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSound8_SetVelocity
+(
+    LPDIRECTSOUND8          pThis,
+    FLOAT                   x,
+    FLOAT                   y,
+    FLOAT                   z,
+    DWORD                   dwApply
+)
+{
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        EmuSwapFS();   // Win2k/XP FS
+        printf("EmuDSound (0x%X): EmuIDirectSound8_SetVelocity\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   x                         : 0x%.08X\n"
+               "   y                         : 0x%.08X\n"
+               "   z                         : 0x%.08X\n"
+               "   dwApply                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, x, y, z, dwApply);
+        EmuSwapFS();   // XBox FS
+    }
+    #endif
+
+    // TODO: Actually do something
+
+    return DS_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSound8_SetAllParameters
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSound8_SetAllParameters
+(
+    LPDIRECTSOUND8          pThis,
+    LPVOID                  pTodo,  // TODO: LPCDS3DLISTENER
+    DWORD                   dwApply
+)
+{
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        EmuSwapFS();   // Win2k/XP FS
+        printf("EmuDSound (0x%X): EmuIDirectSound8_SetAllParameters\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   pTodo                     : 0x%.08X\n"
+               "   dwApply                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, pTodo, dwApply);
+        EmuSwapFS();   // XBox FS
+    }
+    #endif
+
+    // TODO: Actually do something
+
+    return DS_OK;
+}
+
+// ******************************************************************
 // * func: EmuIDirectSoundBuffer8_SetBufferData
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetBufferData

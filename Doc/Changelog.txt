@@ -1,9 +1,11 @@
 cxbx website: http://www.caustik.com/xbox/
 
-version: 0.7.8 (08/02/03)
+version: 0.7.8 (??/??/??)
 --------------------------------
 
 - Overlays simulated on PCs that do not support them in hardware.
+
+- YUY2 overlay capabilities detection improved significantly
 
 - Fixes to mesh rendering (thanks kingofc!). The "XRay" XDK demo is
   extremely impressive now (and runs very efficiently), as well as

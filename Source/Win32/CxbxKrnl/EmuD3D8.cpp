@@ -89,7 +89,7 @@ static Xbe::Header                 *g_XbeHeader     = NULL; // XbeHeader
 static uint32                       g_XbeHeaderSize = 0;    // XbeHeaderSize
 static XTL::D3DCAPS8                g_D3DCaps;              // Direct3D8 Caps
 static HBRUSH                       g_hBgBrush      = NULL; // Background Brush
-static volatile bool                g_bThreadInitialized = false;
+static volatile bool                g_bRenderWindowActive = false;
 static XBVideo                      g_XBVideo;
 
 // ******************************************************************
@@ -127,8 +127,6 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
     g_XbeHeader     = XbeHeader;
     g_XbeHeaderSize = XbeHeaderSize;
 
-    g_bThreadInitialized = false;
-
     // ******************************************************************
     // * create a thread dedicated to timing
     // ******************************************************************
@@ -144,9 +142,11 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
     {
         DWORD dwThreadId;
 
+        g_bRenderWindowActive = false;
+
         CreateThread(NULL, NULL, EmuRenderWindow, NULL, NULL, &dwThreadId);
 
-        while(!g_bThreadInitialized)
+        while(!g_bRenderWindowActive)
             Sleep(10);
 
         Sleep(50);
@@ -320,6 +320,8 @@ static DWORD WINAPI EmuRenderWindow(LPVOID)
     if(!XTL::EmuDInputInit())
         EmuCleanup("Could not initialize DirectInput!");
 
+    printf("EmuD3D8 (0x%X): Message-Pump thread is running.\n", GetCurrentThreadId());
+
     // ******************************************************************
     // * message processing loop
     // ******************************************************************
@@ -332,7 +334,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID)
         {
             if(PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
             {
-                g_bThreadInitialized = true;
+                g_bRenderWindowActive = true;
 
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);
@@ -340,6 +342,8 @@ static DWORD WINAPI EmuRenderWindow(LPVOID)
             else
                 Sleep(10);
         }
+
+        g_bRenderWindowActive = false;
 
         EmuCleanup(NULL);
     }
@@ -399,6 +403,8 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 // ******************************************************************
 static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 {
+    printf("EmuD3D8 (0x%X): Timing thread is running.\n", GetCurrentThreadId());
+
     timeBeginPeriod(0);
 
     while(true)
@@ -604,18 +610,6 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
     }
 
     // ******************************************************************
-    // * check for YUY2 overlay support
-    // ******************************************************************
-    {
-        HRESULT hRet = g_pD3D8->CheckDeviceFormat(Adapter, DeviceType, (XTL::D3DFORMAT)pPresentationParameters->BackBufferFormat, 0, D3DRTYPE_TEXTURE, D3DFMT_YUY2);
-
-        g_bSupportsYUY2 = SUCCEEDED(hRet);
-
-        if(!g_bSupportsYUY2)
-            EmuWarning("YUY2 overlays are not supported in hardware, could be slow!");
-    }
-
-    // ******************************************************************
     // * Detect vertex processing capabilities
     // ******************************************************************
     if((g_D3DCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) && DeviceType == D3DDEVTYPE_HAL)
@@ -655,6 +649,28 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
     // * it is necessary to store this pointer globally for emulation
     // ******************************************************************
     g_pD3DDevice8 = *ppReturnedDeviceInterface;
+
+    // ******************************************************************
+    // * check for YUY2 overlay support
+    // ******************************************************************
+    {
+        D3DDISPLAYMODE DisplayMode;
+
+        if(g_pD3DDevice8->GetDisplayMode(&DisplayMode) != D3D_OK)
+            g_bSupportsYUY2 = FALSE;
+        else
+        {
+            HRESULT hRet = g_pD3D8->CheckDeviceFormat(Adapter, DeviceType, (XTL::D3DFORMAT)DisplayMode.Format, 0, D3DRTYPE_TEXTURE, D3DFMT_YUY2);
+
+            g_bSupportsYUY2 = SUCCEEDED(hRet);
+
+            if(!g_bSupportsYUY2)
+                EmuCleanup("Nigga 0x%.08X", pPresentationParameters->BackBufferFormat);
+
+            if(!g_bSupportsYUY2)
+                EmuWarning("YUY2 overlays are not supported in hardware, could be slow!");
+        }
+    }
 
     // ******************************************************************
     // * Update Caches

@@ -295,6 +295,40 @@ HRESULT WINAPI EmuIDirectSound8_SetMixBinHeadroom
 );
 
 // ******************************************************************
+// * func: EmuIDirectSound8_SetPosition
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSound8_SetPosition
+(
+    LPDIRECTSOUND8          pThis,
+    FLOAT                   x,
+    FLOAT                   y,
+    FLOAT                   z,
+    DWORD                   dwApply
+);
+
+// ******************************************************************
+// * func: EmuIDirectSound8_SetVelocity
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSound8_SetVelocity
+(
+    LPDIRECTSOUND8          pThis,
+    FLOAT                   x,
+    FLOAT                   y,
+    FLOAT                   z,
+    DWORD                   dwApply
+);
+
+// ******************************************************************
+// * func: EmuIDirectSound8_SetAllParameters
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSound8_SetAllParameters
+(
+    LPDIRECTSOUND8          pThis,
+    LPVOID                  pTodo,  // TODO: LPCDS3DLISTENER
+    DWORD                   dwApply
+);
+
+// ******************************************************************
 // * func: EmuIDirectSound8_CreateSoundBuffer
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSound8_CreateSoundBuffer
