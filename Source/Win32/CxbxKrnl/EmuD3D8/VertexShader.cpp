@@ -737,7 +737,7 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
         default:
             break;
     }
-    for (int i = 0; i < pShader->IntermediateCount; i++)
+    for (int i = 0; i < pShader->IntermediateCount && i < 128; i++)
     {
         VSH_INTERMEDIATE_FORMAT *pIntermediate = &pShader->Intermediate[i];
 
