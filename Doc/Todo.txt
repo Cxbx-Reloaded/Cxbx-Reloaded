@@ -1,4 +1,9 @@
-Cxbx Todo (* denotes high priority)
+Cxbx Todo (* denotes high priority, + denotes medium priority)
+
+  * As a solution to the Xbox-Never-Sleeps problem, EmuSwapFS can increment
+    and check a global variable, and Sleep(1) after N number of function
+	interceptions. This could be included in the core configuration options.
+	Be careful that these sleeps dont take place inside of a critical section.
 
   * Perhaps for global variable detection, have some sort of array of
 	function + offset pairs to check. That way if an Xbe happens to not
@@ -7,13 +12,9 @@ Cxbx Todo (* denotes high priority)
 	should be set to NULL, and any references to it should not assume it
 	will not be NULL.
 
-  * When in critical section, do not print debug trace?
-
-  * Functions like GetRenderTarget need to return a special temporary
-    X_D3DSurface that will somehow be cleaned up along with the "real"
-	X_D3DSurface pointer. Perhaps maintain a cache of all the current
-	temporary buffers, and whenever a resource has it's final Release(),
-	go through and check if any other handles reference that resource.
+  * Special temporarily X_D3DResource handles need to be kept track of and
+    periodically garbage collected. Garbage collection frequency can be a
+	core configuration option.
 
   * Register() probably needn't re-unswizzle each time. cache a copy of
     the address it was registered to (or a global table) and simply update
@@ -24,40 +25,40 @@ Cxbx Todo (* denotes high priority)
   * GetDisplayMode / GetAdapterDisplayMode should not return real display
     mode when windowed!
 
-  * Stabilize Heap Allocation (i.e. operator new) -> Crashes after initial commit is full
+  * The notorious Heap Allocation crash still needs to be solved on a low
+    level. It is strongly preferable to debug this instead of having to 
+	intercept the entire Rtl heap set of functions.
 
   * Stabilize TLS (it's close...)
 
-  What does SetLastError check Irql for? Should this be emulated?
+  + Closing a console should not terminate the entire process.
 
-  Perfect the timing on KeTickCount
+  + Perfect the timing on KeTickCount. This could be updated periodically,
+    similar to the Xbox-Never-Sleeps problem.
 
-  Some sort of delete-after-emulation type of functionality?
+  + Some sort of delete-after-emulation type of functionality?
 
-  Use SetDataFormat instead of parsing device input by hand?
+  + Use SetDataFormat instead of parsing device input by hand?
 
-  Batch config all buttons (should be very easy..just click one by one)
+  + Batch config all buttons (should be very easy..just click one by one)
 
-  Encapsulate RecentFiles into a nice little class
+  + Configuration screens may not necessarily need to be modal windows.
 
-  Configuration screens may not necessarily need to be modal windows.
-
-  Closing a console should not terminate the entire process.
-
-  If possible, Direct3D Rendering window should inherit from Wnd.
-
-  Xbe file associations via user configuration. This could include an
-  option to either automatically execute the Xbe, or simply open it up
-  in Cxbx's main window. For this purpose, Cxbx.dll should also be
-  registered in the system so that a converted Exe can run from anywhere.
+  + Xbe file associations via user configuration. This could include an
+    option to either automatically execute the Xbe, or simply open it up
+    in Cxbx's main window. For this purpose, Cxbx.dll should also be
+    registered in the system so that a converted Exe can run from anywhere.
 
   Converted Exe files should use the Cxbx icon
-
-  Allow a logo bitmap to be added if one does not exist. This may require that
-  the size of headers be increased. (sizeof_headers).
 
   When loading a file, menus and WM_CLOSE should be disabled and an update
   progress should be sent via callback from core.
 
-  Xbe::m_Header should be allocated dynamically to make room for huge headers.
+  Encapsulate RecentFiles into a nice little class
 
+  If possible, Direct3D Rendering window should inherit from Wnd.
+
+  Allow a logo bitmap to be added if one does not exist. This may require that
+  the size of headers be increased. (sizeof_headers).
+
+  Xbe::m_Header should be allocated dynamically to make room for huge headers.

@@ -39,24 +39,23 @@
 // word @ FS:[0x14] := wSwapFS
 // byte @ FS:[0x16] := bIsXboxFS
 
+#undef FIELD_OFFSET     // prevent macro redefinition warnings
+#include <windows.h>
+
 // ******************************************************************
-// * func: EmuSwapFS
+// * func: EmuGenerateFS
 // ******************************************************************
-// *
-// * This function is used to swap between the native Win2k/XP FS:
-// * structure, and the Emu FS: structure. Before running Windows
-// * code, you *must* swap over to Win2k/XP FS. Similarly, before
-// * running Xbox code, you *must* swap back over to Emu FS.
-// *
+extern void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData);
+
 // ******************************************************************
-static inline void EmuSwapFS()
-{
-    __asm
-    {
-        mov ax, fs:[0x14]
-        mov fs, ax
-    }
-}
+// * func: EmuCleanupFS
+// ******************************************************************
+extern void EmuCleanupFS();
+
+// ******************************************************************
+// * func: EmuInitFS
+// ******************************************************************
+extern void EmuInitFS();
 
 // ******************************************************************
 // * func: EmuIsXboxFS
@@ -81,18 +80,62 @@ static inline bool EmuIsXboxFS()
 }
 
 // ******************************************************************
-// * func: EmuGenerateFS
+// * data: EmuAutoSleepRate
 // ******************************************************************
-extern void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData);
+// *
+// * Xbox is a single process system, and because of this fact, demos
+// * and games are likely to suffer from Xbox-Never-Sleeps syndrome.
+// *
+// * Basically, there are situations where the Xbe will have no
+// * reason to bother yielding to other threads. One solution to this
+// * problem is to keep track of the number of function intercepts,
+// * and every so often, force a sleep. This is the rate at which
+// * those forced sleeps occur.
+// *
+// ******************************************************************
+extern uint32 EmuAutoSleepRate;
 
 // ******************************************************************
-// * func: EmuCleanupFS
+// * func: EmuSwapFS
 // ******************************************************************
-extern void EmuCleanupFS();
+// *
+// * This function is used to swap between the native Win2k/XP FS:
+// * structure, and the Emu FS: structure. Before running Windows
+// * code, you *must* swap over to Win2k/XP FS. Similarly, before
+// * running Xbox code, you *must* swap back over to Emu FS.
+// *
+// ******************************************************************
+static inline void EmuSwapFS()
+{
+    // Note that this is only the *approximate* interception count,
+    // because not all interceptions swap the FS register, and some
+    // non-interception code uses it
+    static uint32 dwInterceptionCount = 0;
 
-// ******************************************************************
-// * func: EmuInitFS
-// ******************************************************************
-extern void EmuInitFS();
+    __asm
+    {
+        mov ax, fs:[0x14]
+        mov fs, ax
+    }
+
+    // ******************************************************************
+    // * Every "N" interceptions, perform various periodic services
+    // ******************************************************************
+    if(dwInterceptionCount++ == EmuAutoSleepRate)
+    {
+        // If we're in the Xbox FS, wait until the next swap
+        if(EmuIsXboxFS())
+        {
+            dwInterceptionCount--;
+            return;
+        }
+
+        // Yield!
+        Sleep(1);
+
+        // Back to Zero!
+        dwInterceptionCount = 0;
+    }
+}
 
 #endif
