@@ -963,7 +963,10 @@ VOID WINAPI XTL::EmuXRegisterThreadNotifyRoutine
 // ******************************************************************
 // * func: EmuXCalculateSignatureBegin
 // ******************************************************************
-HANDLE WINAPI XTL::EmuXCalculateSignatureBegin(DWORD dwFlags)
+HANDLE WINAPI XTL::EmuXCalculateSignatureBegin
+(
+    DWORD dwFlags
+)
 {
     EmuSwapFS();   // Win2k/XP FS
 
@@ -984,4 +987,97 @@ HANDLE WINAPI XTL::EmuXCalculateSignatureBegin(DWORD dwFlags)
 
     // return a fake handle value for now
     return (PVOID)0xAAAAAAAA;
+}
+
+// ******************************************************************
+// * func: EmuXCalculateSignatureBeginEx
+// ******************************************************************
+HANDLE WINAPI XTL::EmuXCalculateSignatureBeginEx
+(
+    DWORD dwFlags,
+    DWORD dwAltTitleId
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): XCalculateSignatureBeginEx\n"
+               "(\n"
+               "   dwFlags             : 0x%.08X\n",
+               "   dwAltTitleId        : 0x%.08X\n",
+               ");\n",
+                GetCurrentThreadId(), dwFlags, dwAltTitleId);
+    }
+    #endif
+
+    EmuSwapFS();   // XBox FS
+
+    // return a fake handle value for now
+    return (PVOID)0xAAAAAAAA;
+}
+
+// ******************************************************************
+// * func: EmuXCalculateSignatureUpdate
+// ******************************************************************
+DWORD WINAPI XTL::EmuXCalculateSignatureUpdate
+(
+  HANDLE        hCalcSig,
+  const BYTE    *pbData,
+  ULONG         cbData
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): XCalculateSignatureUpdate\n"
+               "(\n"
+               "   hCalcSig            : 0x%.08X\n",
+               "   pbData              : 0x%.08X\n",
+               "   cbData              : 0x%.08X\n",
+               ");\n",
+                GetCurrentThreadId(), hCalcSig, pbData, cbData);
+    }
+    #endif
+
+    EmuSwapFS();   // XBox FS
+
+    return ERROR_SUCCESS;
+}
+
+// ******************************************************************
+// * func: EmuXCalculateSignatureEnd
+// ******************************************************************
+DWORD WINAPI XTL::EmuXCalculateSignatureEnd
+(
+  HANDLE                hCalcSig,
+  PXCALCSIG_SIGNATURE   pSignature
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): XCalculateSignatureEnd\n"
+               "(\n"
+               "   hCalcSig            : 0x%.08X\n",
+               "   pSignature          : 0x%.08X\n",
+               ");\n",
+                GetCurrentThreadId(), hCalcSig, pSignature);
+    }
+    #endif
+
+    EmuSwapFS();   // XBox FS
+
+    return ERROR_SUCCESS;
 }

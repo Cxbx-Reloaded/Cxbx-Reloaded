@@ -126,6 +126,127 @@ SOOVPA<8> XMountUtilityDrive_1_0_4627 =
     }
 };
 
+// s+
+// ******************************************************************
+// * XCalculateSignatureBeginEx
+// ******************************************************************
+SOOVPA<8> XCalculateSignatureBeginEx_1_0_4627 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    XREF_XAPIXCALCULATESIGNATUREBEGINEX, // XRef Is Saved
+    0,                                   // XRef Not Used
+
+    {
+        // XCalculateSignatureBeginEx+0x09 : push 7Ch
+        { 0x09, 0x6A },
+        { 0x0A, 0x7C },
+
+        // XCalculateSignatureBeginEx+0x2D : lea eax, [esi+5Ch]
+        { 0x2D, 0x8D },
+        { 0x2E, 0x46 },
+        { 0x2F, 0x5C },
+
+        // XCalculateSignatureBeginEx+0xE8 : cmp edx, 40h ; '@'
+        { 0x43, 0x83 },
+        { 0x44, 0xFA },
+        { 0x45, 0x40 },
+    }
+};
+
+// ******************************************************************
+// * XCalculateSignatureBegin
+// ******************************************************************
+SOOVPA<12> XCalculateSignatureBegin_1_0_4627 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    1,  // XRef Is Used
+
+    {
+        // XCalculateSignatureBegin+0x0C : call [XCalculateSignatureBeginEx]
+        { 0x0D, XREF_XAPIXCALCULATESIGNATUREBEGINEX },
+
+        // XCalculateSignatureBegin+0x00 : mov eax, ds:10118h
+        { 0x00, 0xA1 },
+        { 0x01, 0x18 },
+        { 0x02, 0x01 },
+        { 0x03, 0x01 },
+        { 0x04, 0x00 },
+
+        // XCalculateSignatureBegin+0x08 : push [esp+4+arg_0]
+        { 0x08, 0xFF },
+        { 0x09, 0x74 },
+        { 0x0A, 0x24 },
+        { 0x0B, 0x08 },
+
+        // XCalculateSignatureBegin+0x11 : retn 4
+        { 0x12, 0x04 },
+        { 0x13, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * XCalculateSignatureUpdate
+// ******************************************************************
+SOOVPA<9> XCalculateSignatureUpdate_1_0_4627 =
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // XCalculateSignatureUpdate+0x04 : mov eax, [esp+4+arg_0]
+        { 0x04, 0x8B },
+        { 0x05, 0x44 },
+        { 0x06, 0x24 },
+        { 0x07, 0x08 },
+
+        // XCalculateSignatureUpdate+0x0C : add eax, 8
+        { 0x0C, 0x83 },
+        { 0x0D, 0xC0 },
+        { 0x0E, 0x08 },
+
+        // XCalculateSignatureUpdate+0x11 : xor eax, eax
+        { 0x15, 0x33 },
+        { 0x16, 0xC0 },
+    }
+};
+
+// ******************************************************************
+// * XCalculateSignatureEnd
+// ******************************************************************
+SOOVPA<8> XCalculateSignatureEnd_1_0_4627 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // XCalculateSignatureEnd+0x03 : sub esp, 14h
+        { 0x03, 0x83 },
+        { 0x04, 0xEC },
+        { 0x05, 0x14 },
+
+        // XCalculateSignatureEnd+0x22 : push 10h
+        { 0x22, 0x6A },
+        { 0x23, 0x10 },
+
+        // XCalculateSignatureEnd+0x37 : lea eax, [ebp+var_14]
+        { 0x37, 0x8D },
+        { 0x38, 0x45 },
+        { 0x39, 0xEC },
+    }
+};
+// +s
+
 // ******************************************************************
 // * XAPI_1_0_4627
 // ******************************************************************
@@ -273,6 +394,48 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXapiBootDash"
         #endif
     },
+    // +s
+    // XCalculateSignatureBeginEx
+    {
+        (OOVPA*)&XCalculateSignatureBeginEx_1_0_4627,
+
+        XTL::EmuXCalculateSignatureBeginEx,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXCalculateSignatureBeginEx (XREF&FUNC)"
+        #endif
+    },
+    // XCalculateSignatureBegin
+    {
+        (OOVPA*)&XCalculateSignatureBegin_1_0_4627,
+
+        XTL::EmuXCalculateSignatureBegin,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXCalculateSignatureBegin"
+        #endif
+    },
+    // XCalculateSignatureUpdate
+    {
+        (OOVPA*)&XCalculateSignatureUpdate_1_0_4627,
+
+        XTL::EmuXCalculateSignatureUpdate,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXCalculateSignatureUpdate"
+        #endif
+    },
+    // XCalculateSignatureEnd
+    {
+        (OOVPA*)&XCalculateSignatureEnd_1_0_4627,
+
+        XTL::EmuXCalculateSignatureEnd,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXCalculateSignatureEnd"
+        #endif
+    },
+    // s+
 };
 
 // ******************************************************************

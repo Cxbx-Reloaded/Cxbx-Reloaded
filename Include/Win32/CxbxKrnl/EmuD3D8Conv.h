@@ -121,6 +121,9 @@ inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
         case 0x30: // Linear     (X_D3DFMT_LIN_D16)
         case 0x2C: // Swizzled   (X_D3DFMT_D16)
             return D3DFMT_D16;
+
+        case 0x28: // Swizzled   (X_D3DFMT_V8U8)
+            return D3DFMT_V8U8;
     }
 
     EmuCleanup("EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)", Format);

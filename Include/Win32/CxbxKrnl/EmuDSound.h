@@ -703,4 +703,125 @@ HRESULT WINAPI EmuIDirectSoundStream_Unknown1
     DWORD   dwUnknown1
 );
 
+// s+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetMaxDistance
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetMaxDistance
+(
+    LPDIRECTSOUNDBUFFER8    pThis,
+    FLOAT                   flMaxDistance,
+    DWORD                   dwApply
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetMinDistance
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetMinDistance
+(
+    LPDIRECTSOUNDBUFFER8    pThis,
+    FLOAT                   flMaxDistance,
+    DWORD                   dwApply
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetRolloffFactor
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetRolloffFactor
+(
+    LPDIRECTSOUNDBUFFER8    pThis,
+    FLOAT                   flRolloffFactor,
+    DWORD                   dwApply
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetDistanceFactor
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetDistanceFactor
+(
+    LPDIRECTSOUNDBUFFER8    pThis,
+    FLOAT                   flDistanceFactor,
+    DWORD                   dwApply
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetConeAngles
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetConeAngles
+(
+    LPDIRECTSOUNDBUFFER8    pThis,
+    DWORD                   dwInsideConeAngle,
+    DWORD                   dwOutsideConeAngle,
+    DWORD                   dwApply
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetConeOrientation
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetConeOrientation
+(
+    LPDIRECTSOUNDBUFFER8    pThis,
+    FLOAT                   x,
+    FLOAT                   y,
+    FLOAT                   z,
+    DWORD                   dwApply
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetConeOutsideVolume
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetConeOutsideVolume
+(
+    LPDIRECTSOUNDBUFFER8    pThis,
+    LONG                    lConeOutsideVolume,
+    DWORD                   dwApply
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetPosition
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetPosition
+(
+    LPDIRECTSOUNDBUFFER8    pThis,
+    FLOAT                   x,
+    FLOAT                   y,
+    FLOAT                   z,
+    DWORD                   dwApply
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetVelocity
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetVelocity
+(
+    LPDIRECTSOUNDBUFFER8    pThis,
+    FLOAT                   x,
+    FLOAT                   y,
+    FLOAT                   z,
+    DWORD                   dwApply
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetDopplerFactor
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetDopplerFactor
+(
+    LPDIRECTSOUNDBUFFER8    pThis,
+    FLOAT                   flDopplerFactor,
+    DWORD                   dwApply
+);
+
+typedef void* LPCDSI3DL2BUFFER;
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetI3DL2Source
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetI3DL2Source
+(
+    LPDIRECTSOUNDBUFFER8    pThis,
+    LPCDSI3DL2BUFFER        pds3db,
+    DWORD                   dwApply
+);
+// +s
+
 #endif

@@ -239,7 +239,10 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
         g_EmuShared->GetXbePath(szBuffer);
 
-        SetCurrentDirectory(szBuffer);
+        if(szBuffer && *szBuffer)
+            SetCurrentDirectory(szBuffer);
+        else
+            GetCurrentDirectory(260, szBuffer);
 
 		g_hCurDir = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 

@@ -268,6 +268,19 @@ typedef struct _XTHREAD_NOTIFICATION
 XTHREAD_NOTIFICATION, *PXTHREAD_NOTIFICATION;
 
 // ******************************************************************
+// * XCALCSIG_SIGNATURE
+// ******************************************************************
+#define XCALCSIG_SIGNATURE_SIZE         20
+
+typedef struct _XCALCSIG_SIGNATURE
+{
+    BYTE    Signature[XCALCSIG_SIGNATURE_SIZE];
+}
+XCALCSIG_SIGNATURE, *PXCALCSIG_SIGNATURE;
+
+#define XCALCSIG_FLAG_NON_ROAMABLE  (0x00000001)
+
+// ******************************************************************
 // * func: EmuRtlCreateHeap
 // ******************************************************************
 PVOID WINAPI EmuRtlCreateHeap
@@ -501,9 +514,42 @@ VOID WINAPI EmuXRegisterThreadNotifyRoutine
     BOOL                    fRegister
 );
 
+// s+
 // ******************************************************************
 // * func: EmuXCalculateSignatureBegin
 // ******************************************************************
-HANDLE WINAPI EmuXCalculateSignatureBegin(DWORD dwFlags);
+HANDLE WINAPI EmuXCalculateSignatureBegin
+(
+    DWORD dwFlags
+);
+
+// ******************************************************************
+// * func: EmuXCalculateSignatureBegin
+// ******************************************************************
+HANDLE WINAPI EmuXCalculateSignatureBeginEx
+(
+    DWORD dwFlags,
+    DWORD dwAltTitleId
+);
+
+// ******************************************************************
+// * func: EmuXCalculateSignatureUpdate
+// ******************************************************************
+DWORD WINAPI EmuXCalculateSignatureUpdate
+(
+  HANDLE        hCalcSig,
+  const BYTE    *pbData,
+  ULONG         cbData
+);
+
+// ******************************************************************
+// * func: EmuXCalculateSignatureEnd
+// ******************************************************************
+DWORD WINAPI EmuXCalculateSignatureEnd
+(
+  HANDLE                hCalcSig,
+  PXCALCSIG_SIGNATURE   pSignature
+);
+// +s
 
 #endif
