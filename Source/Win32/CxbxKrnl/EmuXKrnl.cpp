@@ -241,7 +241,6 @@ XBSYSAPI EXPORTNUM(99) NTSTATUS NTAPI xboxkrnl::KeDelayExecutionThread
                "   Interval            : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), WaitMode, Alertable, Interval);
-        printf("%.08X <-> %.08X\n", Interval->HighPart, Interval->LowPart);
     }
     #endif
 

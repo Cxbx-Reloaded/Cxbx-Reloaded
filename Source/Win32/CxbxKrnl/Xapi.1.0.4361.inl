@@ -33,12 +33,44 @@
 // ******************************************************************
 
 // ******************************************************************
+// * XInitDevices
+// ******************************************************************
+// * NOTE: We are actually intercepting USBD_Init, because XInitDevices
+// *       Simply redirects to that function
+// ******************************************************************
+SOOVPA<10> XInitDevices_1_0_4361 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    {
+        // XInitDevices+0x03 : push 0xB4
+        { 0x03, 0x68 }, // (Offset,Value)-Pair #1
+        { 0x04, 0xB4 }, // (Offset,Value)-Pair #2
+
+        // XInitDevices+0x10 : jmp +0x13
+        { 0x10, 0x74 }, // (Offset,Value)-Pair #3
+        { 0x11, 0x13 }, // (Offset,Value)-Pair #4
+
+        // XInitDevices+0x5B : movzx eax, byte ptr [esi+0xA1]
+        { 0x5B, 0x0F }, // (Offset,Value)-Pair #5
+        { 0x5C, 0xB6 }, // (Offset,Value)-Pair #6
+        { 0x5D, 0x86 }, // (Offset,Value)-Pair #7
+        { 0x5E, 0xA1 }, // (Offset,Value)-Pair #8
+
+        // XInitDevices+0x8B : retn 8
+        { 0x8B, 0xC2 }, // (Offset,Value)-Pair #9
+        { 0x8C, 0x08 }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
 // * XGetDevices
 // ******************************************************************
 SOOVPA<14> XGetDevices_1_0_4361 =
 {
     0,  // Large == 0
-    14,  // Count == 14
+    14, // Count == 14
 
     {
         // XGetDevices+0x07 : mov edx, [esp+arg_0]
@@ -64,6 +96,41 @@ SOOVPA<14> XGetDevices_1_0_4361 =
         // XGetDevices+0x1F : retn 4
         { 0x1F, 0xC2 }, // (Offset,Value)-Pair #13
         { 0x20, 0x04 }, // (Offset,Value)-Pair #14
+    }
+};
+
+// ******************************************************************
+// * XInputOpen
+// ******************************************************************
+SOOVPA<12> XInputOpen_1_0_4361 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    {
+        // XInputOpen+0x14 : push 0x57
+        { 0x14, 0x6A }, // (Offset,Value)-Pair #1
+        { 0x15, 0x57 }, // (Offset,Value)-Pair #2
+
+        // XInputOpen+0x1D : jmp +0x33
+        { 0x1D, 0xEB }, // (Offset,Value)-Pair #3
+        { 0x1E, 0x33 }, // (Offset,Value)-Pair #4
+
+        // XInputOpen+0x33 : add edx, 0x10
+        { 0x33, 0x83 }, // (Offset,Value)-Pair #5
+        { 0x34, 0xC2 }, // (Offset,Value)-Pair #6
+        { 0x35, 0x10 }, // (Offset,Value)-Pair #7
+
+        // XInputOpen+0x47 : jmp +0x06
+        { 0x47, 0x75 }, // (Offset,Value)-Pair #8
+        { 0x48, 0x06 }, // (Offset,Value)-Pair #9
+
+        // XInputOpen+0x52 : leave
+        { 0x52, 0xC9 }, // (Offset,Value)-Pair #10
+
+        // XInputOpen+0x53 : retn 0x10
+        { 0x53, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x54, 0x10 }, // (Offset,Value)-Pair #12
     }
 };
 
@@ -237,6 +304,26 @@ SOOVPA<9> __cinit_1_0_4361 =
 // ******************************************************************
 OOVPATable XAPI_1_0_4361[] =
 {
+    // XInputOpen
+    {
+        (OOVPA*)&XInputOpen_1_0_4361,
+
+        xboxkrnl::EmuXXInputOpen,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXXInputOpen"
+        #endif
+    },
+    // XInitDevices
+    {
+        (OOVPA*)&XInitDevices_1_0_4361,
+
+        xboxkrnl::EmuXXInitDevices,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXXInitDevices"
+        #endif
+    },
     // XGetDevices
     {
         (OOVPA*)&XGetDevices_1_0_4361,

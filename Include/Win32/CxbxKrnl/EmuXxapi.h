@@ -60,6 +60,20 @@ typedef DWORD (WINAPI *PTHREAD_START_ROUTINE)
 typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
 
 // ******************************************************************
+// * XINPUT_POLLING_PARAMETERS
+// ******************************************************************
+typedef struct _XINPUT_POLLING_PARAMETERS
+{
+    BYTE       fAutoPoll        : 1;
+    BYTE       fInterruptOut    : 1;
+    BYTE       ReservedMBZ1     : 6;
+    BYTE       bInputInterval;
+    BYTE       bOutputInterval;
+    BYTE       ReservedMBZ2;
+}
+XINPUT_POLLING_PARAMETERS, *PXINPUT_POLLING_PARAMETERS;
+
+// ******************************************************************
 // * XPP_DEVICE_TYPE
 // ******************************************************************
 typedef struct _XPP_DEVICE_TYPE
@@ -69,11 +83,31 @@ typedef struct _XPP_DEVICE_TYPE
 XPP_DEVICE_TYPE, *PXPP_DEVICE_TYPE;
 
 // ******************************************************************
+// * func: EmuXXInitDevices
+// ******************************************************************
+VOID WINAPI EmuXXInitDevices
+(
+    DWORD   Unknown1,
+    PVOID   Unknown2
+);
+
+// ******************************************************************
 // * func: EmuXXGetDevices
 // ******************************************************************
 DWORD WINAPI EmuXXGetDevices
 (
     XPP_DEVICE_TYPE *DeviceType
+);
+
+// ******************************************************************
+// * func: EmuXXInputOpen
+// ******************************************************************
+HANDLE WINAPI EmuXXInputOpen
+(
+    IN PXPP_DEVICE_TYPE             DeviceType,
+    IN DWORD                        dwPort,
+    IN DWORD                        dwSlot,
+    IN PXINPUT_POLLING_PARAMETERS   pPollingParameters OPTIONAL
 );
 
 // ******************************************************************

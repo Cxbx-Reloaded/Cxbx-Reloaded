@@ -83,6 +83,39 @@ static DWORD WINAPI EmuXCreateThreadProxy
 }
 
 // ******************************************************************
+// * func: EmuXXInitDevices
+// ******************************************************************
+VOID WINAPI xboxkrnl::EmuXXInitDevices
+(
+    DWORD   Unknown1,
+    PVOID   Unknown2
+)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXxapi (0x%.08X): EmuXXInitDevices\n"
+               "(\n"
+               "   Unknown1            : 0x%.08X\n"
+               "   Unknown2            : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Unknown1, Unknown2);
+    }
+    #endif
+
+    // TODO: For now, we don't need to init devices, we merely intercept
+    //       this function to prevent hardware access code from executing
+
+    EmuXSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
 // * func: EmuXXGetDevices
 // ******************************************************************
 DWORD WINAPI xboxkrnl::EmuXXGetDevices
@@ -107,9 +140,48 @@ DWORD WINAPI xboxkrnl::EmuXXGetDevices
 
     EmuXSwapFS();   // XBox FS
 
-    // TODO: HACK: Temporarily just return 1 controller, even
-    // if the user didn't ask about controllers specifically
+    // TODO: Temporarily just return 1 controller, even if the user didn't ask about controllers
     return (1 << 0);
+}
+
+// ******************************************************************
+// * func: EmuXXInputOpen
+// ******************************************************************
+HANDLE WINAPI xboxkrnl::EmuXXInputOpen
+(
+    IN PXPP_DEVICE_TYPE             DeviceType,
+    IN DWORD                        dwPort,
+    IN DWORD                        dwSlot,
+    IN PXINPUT_POLLING_PARAMETERS   pPollingParameters OPTIONAL
+)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXxapi (0x%.08X): EmuXXInputOpen\n"
+               "(\n"
+               "   DeviceType          : 0x%.08X\n"
+               "   dwPort              : 0x%.08X\n"
+               "   dwSlot              : 0x%.08X\n"
+               "   pPollingParameters  : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), DeviceType, dwPort, dwSlot, pPollingParameters);
+    }
+    #endif
+
+    HANDLE ret = NULL;
+
+    // TODO: We simply return dwPort+1 to represent the input device (lame!)
+    if(dwPort <= 4)
+        ret = (HANDLE)(dwPort+1);
+
+    EmuXSwapFS();   // XBox FS
+
+    return ret;
 }
 
 // ******************************************************************

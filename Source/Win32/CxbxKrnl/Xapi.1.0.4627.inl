@@ -37,6 +37,26 @@
 // ******************************************************************
 OOVPATable XAPI_1_0_4627[] =
 {
+    // XInputOpen (* unchanged since 1.0.4361 *)
+    {
+        (OOVPA*)&XInputOpen_1_0_4361,
+
+        xboxkrnl::EmuXXInputOpen,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXXInputOpen"
+        #endif
+    },
+    // XInitDevices (* unchanged since 1.0.4361 *)
+    {
+        (OOVPA*)&XInitDevices_1_0_4361,
+
+        xboxkrnl::EmuXXInitDevices,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXXInitDevices"
+        #endif
+    },
     // XGetDevices (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&XGetDevices_1_0_4361,
