@@ -73,6 +73,18 @@ extern CXBXKRNL_API class EmuShared : public Mutex
         }
 
         // ******************************************************************
+        // * RetrieveInputConfiguration
+        // ******************************************************************
+        void RetrieveInputConfiguration(InputConfig *x_InputConfig)
+		{
+			Lock();
+
+			memcpy(x_InputConfig, &m_InputConfig, sizeof(InputConfig));
+
+			Unlock();
+		}
+
+        // ******************************************************************
         // * Check the current Change ID
         // ******************************************************************
         uint32 GetChangeID() { return m_dwChangeID; }

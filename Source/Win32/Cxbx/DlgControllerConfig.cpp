@@ -40,12 +40,12 @@
 #include <stdio.h>
 
 // ******************************************************************
-// * exported globals
+// * Exported Global(s)
 // ******************************************************************
 InputConfig g_InputConfig;
 
 // ******************************************************************
-// * static functions
+// * Static Function(s)
 // ******************************************************************
 static INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL    CALLBACK EnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi, LPVOID pvRef);
@@ -53,18 +53,21 @@ static BOOL    CALLBACK EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi, LP
 static void             ConfigureInput(HWND hWndDlg, HWND hWndButton, void (InputConfig::*MapFunc)(const char *, int, int));
 
 // ******************************************************************
-// * static variables
+// * Static Variable(s)
 // ******************************************************************
-static LPDIRECTINPUT8       g_pDirectInput8                  = NULL;
-static LPDIRECTINPUTDEVICE8 g_pInputDev[MAX_INPUT_DEVICES]   = {0};
-static int                  g_pInputCur                      = 0;
-static bool                 g_bConfigDone                    = true;
+static LPDIRECTINPUT8       g_pDirectInput8                     = NULL;
+static LPDIRECTINPUTDEVICE8 g_pInputDev[MAX_INPUT_DEVICES]      = {0};
+static DWORD                g_pInputDevFlags[MAX_INPUT_DEVICES] = {0};
+static int                  g_pInputCur                         = 0;
+static bool                 g_bConfigDone                       = true;
 
 // ******************************************************************
-// * Show Controller configuration dialog window
+// * Show Controller Configuration Dialog Window
 // ******************************************************************
 void ShowControllerConfig(HWND hwnd)
 {
+    g_EmuShared->RetrieveInputConfiguration(&g_InputConfig);
+
     DialogBox
     (
         GetModuleHandle(NULL),
@@ -75,7 +78,7 @@ void ShowControllerConfig(HWND hwnd)
 }
 
 // ******************************************************************
-// * Controller configuration dialog procedure
+// * Controller Configuration Dialog Procedure
 // ******************************************************************
 INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -169,22 +172,23 @@ INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam,
 }
 
 // ******************************************************************
-// * Enumerate all game controllers
+// * Enumerate Game Controller(s)
 // ******************************************************************
 BOOL CALLBACK EnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi, LPVOID pvRef)
 {
     HRESULT hRet = g_pDirectInput8->CreateDevice(lpddi->guidInstance, &g_pInputDev[g_pInputCur], NULL);
     
-    if(FAILED(hRet))
-        return DIENUM_CONTINUE;
-
-    g_pInputDev[g_pInputCur++]->SetDataFormat(&c_dfDIJoystick);
+    if(!FAILED(hRet))
+	{
+		g_pInputDevFlags[g_pInputCur] = INPUT_MAPPING_JOYSTICK;
+        g_pInputDev[g_pInputCur++]->SetDataFormat(&c_dfDIJoystick);
+	}
 
     return DIENUM_CONTINUE;
 }
 
 // ******************************************************************
-// * Enumerate all game controller objects
+// * Enumerate Game Controller Object(s)
 // ******************************************************************
 BOOL CALLBACK EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOID pvRef)
 {
@@ -196,9 +200,9 @@ BOOL CALLBACK EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOID pvRef
         diprg.diph.dwHeaderSize = sizeof(DIPROPHEADER); 
         diprg.diph.dwHow        = DIPH_BYID; 
         diprg.diph.dwObj        = lpddoi->dwType;
-        diprg.lMin              = -32768; 
-        diprg.lMax              = 32767; 
-    
+        diprg.lMin              = 0 - 32768; 
+        diprg.lMax              = 0 + 32767; 
+
         // set axis range
         HRESULT hRet = g_pInputDev[(int)pvRef]->SetProperty(DIPROP_RANGE, &diprg.diph);
 
@@ -241,17 +245,35 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, void (InputConfig::*MapFunc)(
     }
 
     // ******************************************************************
-    // * Enumerate Controller(s)
+    // * Create all the devices available (well...most of them)
     // ******************************************************************
     if(g_pDirectInput8 != 0)
     {
-        g_pDirectInput8->EnumDevices
+        HRESULT hRet;
+
+        hRet = g_pDirectInput8->EnumDevices
         (
             DI8DEVCLASS_GAMECTRL,
             EnumGameCtrlCallback,
             NULL,
             DIEDFL_ATTACHEDONLY
         );
+
+        hRet = g_pDirectInput8->CreateDevice(GUID_SysKeyboard, &g_pInputDev[g_pInputCur], NULL);
+    
+        if(!FAILED(hRet))
+		{
+			g_pInputDevFlags[g_pInputCur] = INPUT_MAPPING_KEYBOARD;
+            g_pInputDev[g_pInputCur++]->SetDataFormat(&c_dfDIKeyboard);
+		}
+
+        hRet = g_pDirectInput8->CreateDevice(GUID_SysMouse, &g_pInputDev[g_pInputCur], NULL);
+    
+        if(!FAILED(hRet))
+		{
+			g_pInputDevFlags[g_pInputCur] = INPUT_MAPPING_MOUSE;
+            g_pInputDev[g_pInputCur++]->SetDataFormat(&c_dfDIMouse2);
+		}
     }
 
     // ******************************************************************
@@ -260,7 +282,7 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, void (InputConfig::*MapFunc)(
     {
         for(int v=g_pInputCur-1;v>=0;v--)
         {
-            g_pInputDev[v]->SetCooperativeLevel(hWndDlg, DISCL_EXCLUSIVE | DISCL_FOREGROUND);
+            g_pInputDev[v]->SetCooperativeLevel(hWndDlg, DISCL_NONEXCLUSIVE | DISCL_FOREGROUND);
             g_pInputDev[v]->Acquire();
 
             HRESULT hRet = g_pInputDev[v]->Poll();
@@ -290,23 +312,22 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, void (InputConfig::*MapFunc)(
     // * Wait for input, or 5 second timeout
     // ******************************************************************
     {
-        DIJOYSTATE              tInputState = {0};
         DIDEVICEINSTANCE        DeviceInstance;
         DIDEVICEOBJECTINSTANCE  ObjectInstance;
 
         DeviceInstance.dwSize = sizeof(DIDEVICEINSTANCE);
         ObjectInstance.dwSize = sizeof(DIDEVICEOBJECTINSTANCE);
 
-        for(int v=500;v>0 && !g_bConfigDone;v--)
+        for(int v=100;v>0 && !g_bConfigDone;v--)
         {
             // ******************************************************************
             // * Update the button text every second
             // ******************************************************************
-            if(v%100 == 0)
+            if(v%20 == 0)
             {
                 char szBuffer[255];
 
-                sprintf(szBuffer, "%d", (v+99)/100);
+                sprintf(szBuffer, "%d", (v+19)/20);
 
                 SetWindowText(hWndButton, szBuffer);
             }
@@ -329,82 +350,142 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, void (InputConfig::*MapFunc)(
                 }
 
                 DWORD dwHow = -1;
-                DWORD dwFlags = 0;
-
-                g_pInputDev[v]->GetDeviceState(sizeof(DIJOYSTATE), &tInputState);
+                DWORD dwFlags = g_pInputDevFlags[v];
 
                 // ******************************************************************
-                // * Determinate where (if anywhere) there was a state change
+                // * Detect Joystick Input
                 // ******************************************************************
+				if(g_pInputDevFlags[v] & INPUT_MAPPING_JOYSTICK)
                 {
+					DIJOYSTATE InputState = {0};
+
+					g_pInputDev[v]->GetDeviceState(sizeof(DIJOYSTATE), &InputState);
+
                     int v=0;
 
-                    if(abs(tInputState.lX) > JOYSTICK_DETECT_SENSITIVITY)
+                    if(abs(InputState.lX) > JOYSTICK_DETECT_SENSITIVITY)
                     {
                         dwHow   = FIELD_OFFSET(DIJOYSTATE, lX);
-                        dwFlags = (tInputState.lX > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
+                        dwFlags |= (InputState.lX > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
                     }
-                    else if(abs(tInputState.lY) > JOYSTICK_DETECT_SENSITIVITY)
+                    else if(abs(InputState.lY) > JOYSTICK_DETECT_SENSITIVITY)
                     {
                         dwHow = FIELD_OFFSET(DIJOYSTATE, lY);
-                        dwFlags = (tInputState.lY > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
+                        dwFlags |= (InputState.lY > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
                     }
-                    else if(abs(tInputState.lZ) > JOYSTICK_DETECT_SENSITIVITY)
+                    else if(abs(InputState.lZ) > JOYSTICK_DETECT_SENSITIVITY)
                     {
                         dwHow = FIELD_OFFSET(DIJOYSTATE, lZ);
-                        dwFlags = (tInputState.lZ > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
+                        dwFlags |= (InputState.lZ > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
                     }
-                    else if(abs(tInputState.lRx) > JOYSTICK_DETECT_SENSITIVITY)
+                    else if(abs(InputState.lRx) > JOYSTICK_DETECT_SENSITIVITY)
                     {
                         dwHow = FIELD_OFFSET(DIJOYSTATE, lRx);
-                        dwFlags = (tInputState.lRx > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
+                        dwFlags |= (InputState.lRx > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
                     }
-                    else if(abs(tInputState.lRy) > JOYSTICK_DETECT_SENSITIVITY)
+                    else if(abs(InputState.lRy) > JOYSTICK_DETECT_SENSITIVITY)
                     {
                         dwHow = FIELD_OFFSET(DIJOYSTATE, lRy);
-                        dwFlags = (tInputState.lRy > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
+                        dwFlags |= (InputState.lRy > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
                     }
-                    else if(abs(tInputState.lRz) > JOYSTICK_DETECT_SENSITIVITY)
+                    else if(abs(InputState.lRz) > JOYSTICK_DETECT_SENSITIVITY)
                     {
                         dwHow = FIELD_OFFSET(DIJOYSTATE, lRz);
-                        dwFlags = (tInputState.lRz > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
+                        dwFlags |= (InputState.lRz > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
                     }
                     else for(v=0;v<2;v++)
-                            if(abs(tInputState.rglSlider[v]) > JOYSTICK_DETECT_SENSITIVITY)
+                            if(abs(InputState.rglSlider[v]) > JOYSTICK_DETECT_SENSITIVITY)
                                 dwHow = FIELD_OFFSET(DIJOYSTATE, rglSlider[v]);
                     else for(v=0;v<4;v++)
-                            if(abs(tInputState.rgdwPOV[v]) > POV_DETECT_SENSITIVITY)
+                            if(abs(InputState.rgdwPOV[v]) > POV_DETECT_SENSITIVITY)
                                 dwHow = FIELD_OFFSET(DIJOYSTATE, rgdwPOV[v]);
                     else for(v=0;v<32;v++)
-                            if(tInputState.rgbButtons[v] > BUTTON_DETECT_SENSITIVITY)
+                            if(InputState.rgbButtons[v] > BUTTON_DETECT_SENSITIVITY)
                                 dwHow = FIELD_OFFSET(DIJOYSTATE, rgbButtons[v]);
-                }
 
-                // ******************************************************************
-                // * Retrieve Object Info
-                // ******************************************************************
-                if(dwHow != -1)
-                {
-                    g_pInputDev[v]->GetDeviceInfo(&DeviceInstance);
+					// ******************************************************************
+					// * Retrieve Object Info
+					// ******************************************************************
+					if(dwHow != -1)
+					{
+						g_pInputDev[v]->GetDeviceInfo(&DeviceInstance);
 
-                    g_pInputDev[v]->GetObjectInfo(&ObjectInstance, dwHow, DIPH_BYOFFSET);
+						g_pInputDev[v]->GetObjectInfo(&ObjectInstance, dwHow, DIPH_BYOFFSET);
  
-                    (g_InputConfig.*MapFunc)(DeviceInstance.tszInstanceName, ObjectInstance.dwType, dwFlags);
+						(g_InputConfig.*MapFunc)(DeviceInstance.tszInstanceName, ObjectInstance.dwType, dwFlags);
 
-                    printf("Cxbx: Detected %s on %s (dwType : %.08X)\n", ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType);
+						printf("Cxbx: Detected %s on %s (dwType : %.08X)\n", ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType);
 
-                    sprintf(szNewText, "%s Successfully Mapped To %s On %s!", szOrgText, ObjectInstance.tszName, DeviceInstance.tszInstanceName);
+						sprintf(szNewText, "%s Successfully Mapped To %s On %s!", szOrgText, ObjectInstance.tszName, DeviceInstance.tszInstanceName);
+					}
 
-                    g_bConfigDone = true;
                 }
+                // ******************************************************************
+                // * Detect Keyboard Input
+                // ******************************************************************
+				else if(g_pInputDevFlags[v] & INPUT_MAPPING_KEYBOARD)
+				{
+					BYTE InputState[256];
+
+					g_pInputDev[v]->GetDeviceState(256, InputState);
+
+					for(int v=0;v<256;v++)
+					{
+						if(InputState[v] != 0)
+						{
+							dwHow = v;
+							break;
+						}
+					}
+
+					if(dwHow != -1)
+					{
+						(g_InputConfig.*MapFunc)("SysKeyboard", dwHow, dwFlags);
+						
+						printf("Cxbx: Detected Key %d on SysKeyboard\n", dwHow);
+
+						sprintf(szNewText, "%s Successfully Mapped To Key %d On %s!", szOrgText, dwHow, "SysKeyboard");
+					}
+				}
+                // ******************************************************************
+                // * Detect Mouse Input
+                // ******************************************************************
+				else if(g_pInputDevFlags[v] & INPUT_MAPPING_MOUSE)
+				{
+					DIMOUSESTATE2 InputState = {0};
+
+					g_pInputDev[v]->GetDeviceState(sizeof(DIMOUSESTATE2), &InputState);
+
+					for(int v=0;v<8;v++)
+					{
+						if(InputState.rgbButtons[v] & 0x80)
+						{
+							dwHow = v;
+							dwFlags &= INPUT_MAPPING_MOUSE_CLICK;
+							break;
+						}
+					}
+
+					if(dwHow != -1)
+					{
+						(g_InputConfig.*MapFunc)("SysMouse", dwHow, dwFlags);
+						
+						printf("Cxbx: Detected Button %d on SysMouse\n", dwHow);
+
+						sprintf(szNewText, "%s Successfully Mapped To Button %d On %s!", szOrgText, dwHow, "SysMouse");
+					}
+				}
+
+				if(dwHow != -1)
+					g_bConfigDone = true;
             }
 
-            Sleep(20);
+            Sleep(50);
         }
     }
 
     // ******************************************************************
-    // * Cleanup devices
+    // * Cleanup Devices
     // ******************************************************************
     {
         for(int v=g_pInputCur-1;v>=0;v--)
@@ -423,9 +504,19 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, void (InputConfig::*MapFunc)(
         }
     }
 
-    SetWindowText(hWndButton, szOrgText);
+    // ******************************************************************
+    // * Update Window
+    // ******************************************************************
+	{
+		SetWindowText(hWndButton, szOrgText);
 
-    SetWindowText(GetDlgItem(hWndDlg, IDC_CONFIG_STATUS), szNewText);
+		SetWindowText(GetDlgItem(hWndDlg, IDC_CONFIG_STATUS), szNewText);
+
+		MSG Msg;
+
+		while(PeekMessage(&Msg, hWndDlg, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE));
+		while(PeekMessage(&Msg, hWndDlg, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE));
+	}
 
     g_bConfigDone = true;
 }

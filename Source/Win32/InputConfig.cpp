@@ -33,7 +33,6 @@
 // ******************************************************************
 #include "InputConfig.h"
 
-#undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 #include <string.h>
 
@@ -47,23 +46,17 @@ InputConfig::InputConfig()
 }
 
 // ******************************************************************
-// * Deconstructor
-// ******************************************************************
-InputConfig::~InputConfig()
-{
-}
-
-// ******************************************************************
 // * Map a given input control mapping
 // ******************************************************************
-void InputConfig::Map(InputMapping &IM, const char *DeviceName, int dwType, int dwFlags)
+void InputConfig::Map(InputMapping &IM, const char *DeviceName, int dwInfo, int dwFlags)
 {
-    // initialize IM
+    // Initialize InputMapping instance
     IM.dwDevice = Insert(DeviceName);
-    IM.dwType   = dwType;
+    IM.dwInfo   = dwInfo;
     IM.dwFlags  = dwFlags;
 
-    // purge unused slots
+    // Purse unused device slots
+	// TODO: Make this more efficient (the current check technique is ridiculous)
     for(int v=0;v<MAX_INPUT_DEVICES;v++)
     {
         if(m_LThumbX.dwDevice   != v && m_LThumbY.dwDevice   != v &&
@@ -90,6 +83,7 @@ void InputConfig::Map(InputMapping &IM, const char *DeviceName, int dwType, int 
 int InputConfig::Insert(const char *DeviceName)
 {
     int v=0;
+
     for(v=0;v<MAX_INPUT_DEVICES;v++)
         if(m_DeviceName[v][0] != '\0' && strcmp(DeviceName, m_DeviceName[v]) == 0)
             return v;
