@@ -253,18 +253,19 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                     uint32 jpgFileSize = SizeofResource(NULL, hSrc);
                     uint32 bmpFileSize = 0;
+                    uint32 bmpWidth, bmpHeight;
 
                     uint08 *bmpBuff = 0;
 
-                    bmpBuff = jpeg2bmp(jpgData, jpgFileSize, bmpFileSize);
+                    bmpBuff = jpeg2bmp(jpgData, jpgFileSize, &bmpFileSize, &bmpWidth, &bmpHeight);
 
                     // create bitmap
                     {
                         BITMAPINFO BmpInfo;
 
                         BmpInfo.bmiHeader.biSize          = sizeof(BITMAPINFO) - sizeof(RGBQUAD);
-                        BmpInfo.bmiHeader.biWidth         = 640;
-                        BmpInfo.bmiHeader.biHeight        = -480;
+                        BmpInfo.bmiHeader.biWidth         = bmpWidth;
+                        BmpInfo.bmiHeader.biHeight        = 0 - (int)bmpHeight;
                         BmpInfo.bmiHeader.biPlanes        = 1;
                         BmpInfo.bmiHeader.biBitCount      = 24;
                         BmpInfo.bmiHeader.biCompression   = BI_RGB;

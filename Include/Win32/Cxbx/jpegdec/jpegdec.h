@@ -37,6 +37,6 @@
 #include "Cxbx.h"
 
 // convert in memory jpeg to bmp
-uint08 *jpeg2bmp(uint08 *jpeg, uint32 jpegSize, uint32 &bmpSize);
+uint08 *jpeg2bmp(uint08 *jpeg, uint32 jpegSize, uint32 *bmpSize, uint32 *bmpWidth, uint32 *bmpHeight);
 
 #endif

@@ -137,7 +137,7 @@ void jpeg_memory_src(j_decompress_ptr cinfo, uint08 *buffer, uint32 bufferSize)
 }
 
 // convert in memory jpeg to bmp
-uint08 *jpeg2bmp(uint08 *jpeg, uint32 jpegSize, uint32 &bmpSize)
+uint08 *jpeg2bmp(uint08 *jpeg, uint32 jpegSize, uint32 *bmpSize, uint32 *bmpWidth, uint32 *bmpHeight)
 {
     jpeg_decompress_struct cinfo;
     jpeg_error_mgr         jerr;
@@ -164,11 +164,15 @@ uint08 *jpeg2bmp(uint08 *jpeg, uint32 jpegSize, uint32 &bmpSize)
     // update row_stride
     row_stride = cinfo.output_width * cinfo.output_components;
 
+    // save these for caller
+    *bmpWidth = cinfo.output_width;
+    *bmpHeight = cinfo.output_height;
+
     // calculate bitmap size
-    bmpSize = row_stride*cinfo.output_height;
+    *bmpSize = row_stride*cinfo.output_height;
 
     // allocate bitmap data
-    buffer = (uint08*)malloc(bmpSize);
+    buffer = (uint08*)malloc(*bmpSize);
 
     bufcur = buffer;
     for(y=0;y<cinfo.output_height;y++)
@@ -199,7 +203,7 @@ uint08 *jpeg2bmp(uint08 *jpeg, uint32 jpegSize, uint32 &bmpSize)
 
     jpeg_destroy_decompress(&cinfo);
 
-    bmpSize = row_stride*cinfo.output_height;
+    *bmpSize = row_stride*cinfo.output_height;
 
     return (uint08*)buffer;
 }
