@@ -64,15 +64,15 @@ namespace XTL
 extern HWND         g_hEmuWindow; // rendering window
 
 // Global Variable(s)
-extern Xbe::TLS    *g_pTLS       = NULL;
-extern void        *g_pTLSData   = NULL;
-extern Xbe::Header *g_pXbeHeader = NULL;
-extern HANDLE		g_hCurDir    = NULL;
-extern HANDLE       g_hTDrive    = NULL;
-extern HANDLE       g_hUDrive    = NULL;
-extern HANDLE       g_hZDrive    = NULL;
-extern BOOL			g_bEmuSuspended = FALSE;
-extern BOOL         g_bEmuException = FALSE;
+extern Xbe::TLS        *g_pTLS       = NULL;
+extern void            *g_pTLSData   = NULL;
+extern Xbe::Header     *g_pXbeHeader = NULL;
+extern HANDLE		    g_hCurDir    = NULL;
+extern HANDLE           g_hTDrive    = NULL;
+extern HANDLE           g_hUDrive    = NULL;
+extern HANDLE           g_hZDrive    = NULL;
+extern volatile BOOL	g_bEmuSuspended = FALSE;
+extern volatile BOOL    g_bEmuException = FALSE;
 
 // global exception patching address
 extern uint32       g_HaloHack[4] = {0};
@@ -497,6 +497,15 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         EmuGenerateFS(pTLS, pTLSData);
     }
 
+    // we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
+    {
+        HANDLE hDupHandle = NULL;
+
+        DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
+
+        EmuRegisterThread(hDupHandle);
+    }
+
     printf("EmuMain (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
 
     XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
@@ -511,7 +520,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         // _USE_XGMATH Disabled in mesh :[
         // halo : dword_0_2E2D18
         // halo : 1744F0 (bink)
-        _asm int 3
+        // _asm int 3
 
         Entry();
 
@@ -638,19 +647,30 @@ extern "C" CXBXKRNL_API void NTAPI EmuRegisterThread(HANDLE hThread)
 		EmuCleanup("There are too many active threads!");
 }
 
+    // WARNING!!! THIS FUNCTION IS BAD!!
+
 // suspend all threads that have been created with PsCreateSystemThreadEx
 extern "C" CXBXKRNL_API void NTAPI EmuSuspend()
 {
     if(g_bEmuSuspended || g_bEmuException)
         return;
 
-    g_bEmuSuspended = TRUE;
-
-	for(int v=0;v<MAXIMUM_XBOX_THREADS;v++)
+    for(int v=0;v<MAXIMUM_XBOX_THREADS;v++)
 	{
 		if(g_hThreads[v] != NULL)
 		{
-            SuspendThread(g_hThreads[v]);
+            DWORD dwExitCode;
+
+            if(GetExitCodeThread(g_hThreads[v], &dwExitCode) && dwExitCode == STILL_ACTIVE)
+            {
+                // suspend thread if it is active
+                SuspendThread(g_hThreads[v]);
+            }
+            else
+            {
+                // remove thread from thread list if it is dead
+                g_hThreads[v] = 0;
+            }
 		}
 	}
 
@@ -663,7 +683,11 @@ extern "C" CXBXKRNL_API void NTAPI EmuSuspend()
         strcat(szBuffer, " (paused)");
         SetWindowText(g_hEmuWindow, szBuffer);
     }
+
+    g_bEmuSuspended = TRUE;
 }
+
+    // WARNING!!! THIS FUNCTION IS BAD!!
 
 // resume all threads that have been created with PsCreateSystemThreadEx
 extern "C" CXBXKRNL_API void NTAPI EmuResume()
@@ -686,20 +710,31 @@ extern "C" CXBXKRNL_API void NTAPI EmuResume()
 	{
 		if(g_hThreads[v] != NULL)
 		{
-			ResumeThread(g_hThreads[v]);
+            DWORD dwExitCode;
+
+            if(GetExitCodeThread(g_hThreads[v], &dwExitCode) && dwExitCode == STILL_ACTIVE)
+            {
+                // resume thread if it is active
+                ResumeThread(g_hThreads[v]);
+            }
+            else
+            {
+                // remove thread from thread list if it is dead
+                g_hThreads[v] = 0;
+            }
 		}
 	}
 
-	g_bEmuSuspended = FALSE;
+    g_bEmuSuspended = FALSE;
 }
 
 // exception handler
 extern int EmuException(LPEXCEPTION_POINTERS e)
 {
-    g_bEmuException = TRUE;
-
     if(EmuIsXboxFS())
         EmuSwapFS();
+
+    g_bEmuException = TRUE;
 
     // check for Halo hack
     {

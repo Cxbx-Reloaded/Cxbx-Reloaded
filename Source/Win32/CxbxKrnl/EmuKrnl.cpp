@@ -65,6 +65,7 @@ typedef struct _PCSTProxyParam
     IN PVOID StartContext1;
     IN PVOID StartContext2;
     IN PVOID StartRoutine;
+    IN BOOL  StartSuspended;
 }
 PCSTProxyParam;
 
@@ -84,6 +85,7 @@ static DWORD WINAPI PCSTProxy
     uint32 StartContext1 = (uint32)iPCSTProxyParam->StartContext1;
     uint32 StartContext2 = (uint32)iPCSTProxyParam->StartContext2;
     uint32 StartRoutine  = (uint32)iPCSTProxyParam->StartRoutine;
+    BOOL   StartSuspended = (BOOL)iPCSTProxyParam->StartSuspended;
 
     delete iPCSTProxyParam;
 
@@ -113,6 +115,9 @@ static DWORD WINAPI PCSTProxy
 
         EmuSwapFS();   // Win2k/XP FS
     }
+
+    if(StartSuspended == TRUE)
+        SuspendThread(GetCurrentThread());
 
     // use the special calling convention
     __try
@@ -2066,10 +2071,10 @@ XBSYSAPI EXPORTNUM(236) NTSTATUS NTAPI xboxkrnl::NtWriteFile
 
     NTSTATUS ret = NtDll::NtWriteFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, (NtDll::LARGE_INTEGER*)ByteOffset, 0);
 
-    EmuSwapFS();   // Xbox FS
-
     if(FAILED(ret))
         EmuWarning("NtWriteFile Failed! (0x%.08X)", ret);
+
+    EmuSwapFS();   // Xbox FS
 
     return ret;
 }
@@ -2146,8 +2151,9 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
         iPCSTProxyParam->StartContext1 = StartContext1;
         iPCSTProxyParam->StartContext2 = StartContext2;
         iPCSTProxyParam->StartRoutine  = StartRoutine;
+        iPCSTProxyParam->StartSuspended = CreateSuspended;
 
-        *ThreadHandle = CreateThread(NULL, NULL, &PCSTProxy, iPCSTProxyParam, CreateSuspended ? CREATE_SUSPENDED : NULL, &dwThreadId);
+        *ThreadHandle = CreateThread(NULL, NULL, &PCSTProxy, iPCSTProxyParam, NULL, &dwThreadId);
 
         #ifdef _DEBUG_TRACE
         printf("EmuKrnl (0x%X): ThreadHandle : 0x%X\n", GetCurrentThreadId(), *ThreadHandle);
@@ -2201,9 +2207,9 @@ XBSYSAPI EXPORTNUM(258) VOID NTAPI xboxkrnl::PsTerminateSystemThread(IN NTSTATUS
         EmuSwapFS();   // Win2k/XP FS
     }
 
-    ExitThread(ExitStatus);
+    EmuCleanupFS();
 
-    EmuSwapFS();   // Xbox FS
+    ExitThread(ExitStatus);
 
     return;
 }
@@ -2319,11 +2325,13 @@ XBSYSAPI EXPORTNUM(291) VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
     // debug trace
     #ifdef _DEBUG_TRACE
     {
+        /*
         printf("EmuKrnl (0x%X): RtlInitializeCriticalSection\n"
                "(\n"
                "   CriticalSection     : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), CriticalSection);
+       //*/
     }
     #endif
 
@@ -2356,7 +2364,7 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
                "   CriticalSection     : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), CriticalSection);
-        **/
+        //*/
     }
     #endif
 

@@ -80,8 +80,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuSuspend();
 extern "C" CXBXKRNL_API void NTAPI EmuResume();
 
 // global flags specifying current emulation state
-extern BOOL g_bEmuException;
-extern BOOL g_bEmuSuspended;
+extern volatile BOOL g_bEmuException;
+extern volatile BOOL g_bEmuSuspended;
 
 // global exception patching address
 extern uint32 g_HaloHack[4];

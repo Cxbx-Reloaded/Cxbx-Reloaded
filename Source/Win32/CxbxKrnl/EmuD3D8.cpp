@@ -160,7 +160,14 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 
         HANDLE hThread = CreateThread(NULL, NULL, EmuUpdateTickCount, NULL, NULL, &dwThreadId);
 
-		EmuRegisterThread(hThread);
+        // we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
+        {
+            HANDLE hDupHandle = NULL;
+
+            DuplicateHandle(GetCurrentProcess(), hThread, GetCurrentProcess(), &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
+
+            EmuRegisterThread(hDupHandle);
+        }
     }
 
     // create the create device proxy thread
@@ -386,7 +393,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             if(bAutoPaused)
             {
                 bAutoPaused = false;
-			    EmuResume();
+			    //EmuResume();
             }
         }
         break;
@@ -399,7 +406,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             if(!g_bEmuSuspended)
             {
                 bAutoPaused = true;
-			    EmuSuspend();
+			    //EmuSuspend();
             }
         }
         break;
@@ -2310,12 +2317,12 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetIndices
     }
     #endif
 
-    //*
+    /*
     fflush(stdout);
     if(pIndexData != 0)
     {
         static int chk = 0;
-        if(chk++ >= 0)
+        if(chk++ == 0)
         {
             _asm int 3
         }
@@ -2331,10 +2338,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetIndices
 
         // HACK: Halo Hack
         if(pIndexData->Lock == 0x00840863)
-        {
-            _asm int 3
             pIndexData->Lock = 0;
-        }
 
         EmuVerifyResourceIsRegistered(pIndexData);
 
@@ -5074,6 +5078,9 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetStreamSource
 
     HRESULT hRet = g_pD3DDevice8->SetStreamSource(StreamNumber, pVertexBuffer8, Stride);
 
+    if(FAILED(hRet))
+        EmuCleanup("SetStreamSource Failed!");
+
     EmuSwapFS();   // XBox FS
 
     return hRet;
@@ -5100,7 +5107,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetVertexShader
     }
     #endif
  
-    g_pD3DDevice8->SetVertexShader(Handle);
+    HRESULT hRet = g_pD3DDevice8->SetVertexShader(Handle);
 
     EmuSwapFS();   // XBox FS
 
@@ -5547,12 +5554,9 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
 
     uint32 nStride = EmuFixupVerticesA(PrimitiveType, PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, 0, 0, 0, 0);
 
-    if(pIndexData != 0)
-        EmuCleanup("Unsupported?");
-
     g_pD3DDevice8->DrawIndexedPrimitive
     (
-        PCPrimitiveType, 0, VertexCount, /*((DWORD)pIndexData)/2*/0, PrimitiveCount
+        PCPrimitiveType, 0, VertexCount, ((DWORD)pIndexData)/2, PrimitiveCount
     );
 
     if(nStride != -1)

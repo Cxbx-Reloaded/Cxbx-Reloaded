@@ -61,8 +61,8 @@ extern HWND                g_hEmuWindow; // rendering window
 XTL::X_CDirectSoundStream::_vtbl XTL::X_CDirectSoundStream::vtbl = 
 {
     &XTL::EmuCDirectSoundStream_AddRef,         // 0x00 - AddRef
-    &XTL::EmuCDirectSoundStream_Release,        // 0x04
-    {0xBEEFB00B, 0xBEEFB00B},                   // 0x08 - Unknown
+    &XTL::EmuCDirectSoundStream_Release,        // 0x04 - Release
+    {0xBEEFB001, 0xBEEFB002},                   // 0x08 - Unknown
     &XTL::EmuCDirectSoundStream_Process,        // 0x10 - Process
     &XTL::EmuCDirectSoundStream_Discontinuity   // 0x14 - Discontinuity
 };
