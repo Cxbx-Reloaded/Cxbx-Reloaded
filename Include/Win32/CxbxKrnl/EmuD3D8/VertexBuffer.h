@@ -34,6 +34,40 @@
 #ifndef VERTEXBUFFER_H
 #define VERTEXBUFFER_H
 
+#include "Cxbx.h"
+
+#ifdef _DEBUG_TRACK_VB
+
+struct VBNode
+{
+	XTL::IDirect3DVertexBuffer8 *vb;
+	VBNode						*next;
+};
+
+extern class VBTracker
+{
+	public:
+		VBTracker() : m_head(0), m_tail(0) {}
+	   ~VBTracker();
+
+	    // insert a ptr
+		void insert(XTL::IDirect3DVertexBuffer8 *pVB);
+
+		// remove a ptr
+		void remove(XTL::IDirect3DVertexBuffer8 *pVB);
+
+		// check for existance of ptr
+		bool exists(XTL::IDirect3DVertexBuffer8 *pVB);
+
+	private:
+		// list of "live" vertex buffers for debugging purposes
+		VBNode *m_head;
+		VBNode *m_tail;
+}
+g_VBTrackTotal, g_VBTrackDisable;
+
+#endif
+
 // fixup xbox extensions to be compatible with PC direct3d
 extern UINT EmuFixupVerticesA
 (

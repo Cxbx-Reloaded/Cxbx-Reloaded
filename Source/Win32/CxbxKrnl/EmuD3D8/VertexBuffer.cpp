@@ -45,6 +45,52 @@ namespace XTL
 
 extern XTL::LPDIRECT3DDEVICE8 g_pD3DDevice8;  // Direct3D8 Device
 
+#ifdef _DEBUG_TRACK_VB
+
+extern XTL::VBTracker g_VBTrack;
+
+XTL::VBTracker::~VBTracker()
+{
+	VBNode *cur = m_head;
+
+	while(cur != NULL)
+	{
+		free(cur);
+
+		cur = cur->next;
+	}
+}
+
+void XTL::VBTracker::insert(IDirect3DVertexBuffer8 *pVB)
+{
+	if(m_head == 0)
+	{
+		m_tail = m_head = new VBNode();
+		m_tail->vb = 0;
+		m_tail->next = 0;
+	}
+
+	m_tail->vb = pVB;
+
+	m_tail->next = new VBNode();
+	m_tail->next->vb = 0;
+	m_tail->next->next = 0;
+
+	return;
+}
+
+void XTL::VBTracker::remove(IDirect3DVertexBuffer8 *pVB)
+{
+	return;
+}
+
+bool XTL::VBTracker::exists(IDirect3DVertexBuffer8 *pVB)
+{
+	return false;
+}
+
+#endif // _DEBUG_TRACK_VB
+
 // fixup xbox extensions to be compatible with PC direct3d
 UINT XTL::EmuFixupVerticesA
 (

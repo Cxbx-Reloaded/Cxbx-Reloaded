@@ -54,6 +54,9 @@ typedef signed char    sint08;
 typedef signed short   sint16;
 typedef signed long    sint32;
 
+// define this to track vertex buffers for debugging purposes
+#define _DEBUG_TRACK_VB
+
 // define this to trace intercepted function calls
 #define _DEBUG_TRACE
 
