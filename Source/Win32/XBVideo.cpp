@@ -40,6 +40,7 @@
 // ******************************************************************
 XBVideo::XBVideo() : m_bVSync(false), m_bFullscreen(false)
 {
+    strcpy(m_szVideoResolution, "640 x 480 32bit x8r8g8b8 (60 hz)");
 }
 
 // ******************************************************************
@@ -64,6 +65,9 @@ void XBVideo::Load(const char *szRegistryKey)
         if(RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
         {
             int v=0;
+
+            dwType = REG_SZ; dwSize = 100;
+            RegQueryValueEx(hKey, "VideoResolution", NULL, &dwType, (PBYTE)m_szVideoResolution, &dwSize);
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegQueryValueEx(hKey, "DisplayAdapter", NULL, &dwType, (PBYTE)&m_dwDisplayAdapter, &dwSize);
@@ -97,6 +101,9 @@ void XBVideo::Save(const char *szRegistryKey)
         if(RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
         {
             int v=0;
+
+            dwType = REG_SZ; dwSize = 100;
+            RegSetValueEx(hKey, "VideoResolution", 0, dwType, (PBYTE)m_szVideoResolution, dwSize);
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegSetValueEx(hKey, "DisplayAdapter", 0, dwType, (PBYTE)&m_dwDisplayAdapter, dwSize);

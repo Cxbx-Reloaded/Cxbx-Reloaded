@@ -8,12 +8,6 @@ Cxbx Todo (* denotes high priority)
 
   * Retail Games (esp. XDK 4361)
 
-  * Video Configuration ->
-
-      * Multimonitor support via Direct3D9::EnumAdapterModes enumeration.
-
-	  * Verify that D3DADAPTER_DEFAULT isnt being used anywhere
-
   What does SetLastError check Irql for? Should this be emulated?
 
   Perfect the timing on KeTickCount

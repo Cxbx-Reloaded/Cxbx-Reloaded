@@ -69,6 +69,12 @@ class XBVideo : public Error
         DWORD GetDisplayAdapter() { return m_dwDisplayAdapter; }
 
         // ******************************************************************
+        // * SetVideoResolution
+        // ******************************************************************
+        void  SetVideoResolution(const char *szBuffer) { strcpy(m_szVideoResolution, szBuffer); }
+        const char *GetVideoResolution(){ return m_szVideoResolution; }
+
+        // ******************************************************************
         // * Fullscreen Toggling
         // ******************************************************************
         void SetFullscreen(BOOL bFullscreen) { m_bFullscreen = bFullscreen; }
@@ -84,6 +90,7 @@ class XBVideo : public Error
         // ******************************************************************
         // * Configuration
         // ******************************************************************
+        char  m_szVideoResolution[100];
         DWORD m_dwDisplayAdapter;
         DWORD m_dwDirect3DDevice;
         BOOL  m_bFullscreen;

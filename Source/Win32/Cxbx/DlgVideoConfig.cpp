@@ -153,15 +153,35 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
                 
                 case IDC_VC_ACCEPT:
                 {
-                    LRESULT lRet;
+                    // ******************************************************************
+                    // * Store Video Resolution
+                    // ******************************************************************
+                    {
+                        HWND hVideoResolution = GetDlgItem(hWndDlg, IDC_VC_VIDEO_RESOLUTION);
 
-                    lRet = SendMessage(GetDlgItem(hWndDlg, IDC_CV_FULLSCREEN), BM_GETCHECK, 0, 0);
+                        LRESULT lRet = SendMessage(hVideoResolution, CB_GETCURSEL, 0, 0);
 
-                    g_XBVideo.SetFullscreen(lRet == BST_CHECKED);
+                        char szBuffer[128];
 
-                    lRet = SendMessage(GetDlgItem(hWndDlg, IDC_CV_VSYNC), BM_GETCHECK, 0, 0);
+                        lRet = SendMessage(hVideoResolution, CB_GETLBTEXT, (WPARAM)lRet, (LPARAM)szBuffer);
 
-                    g_XBVideo.SetVSync(lRet == BST_CHECKED);
+                        g_XBVideo.SetVideoResolution(szBuffer);
+                    }
+
+                    // ******************************************************************
+                    // * Store Fullscreen/VSync Configuration
+                    // ******************************************************************
+                    {
+                        LRESULT lRet;
+
+                        lRet = SendMessage(GetDlgItem(hWndDlg, IDC_CV_FULLSCREEN), BM_GETCHECK, 0, 0);
+
+                        g_XBVideo.SetFullscreen(lRet == BST_CHECKED);
+
+                        lRet = SendMessage(GetDlgItem(hWndDlg, IDC_CV_VSYNC), BM_GETCHECK, 0, 0);
+
+                        g_XBVideo.SetVSync(lRet == BST_CHECKED);
+                    }
 
                     g_EmuShared->SetXBVideo(&g_XBVideo);
 
@@ -259,6 +279,8 @@ VOID RefreshDirect3DDevice()
 
     SendMessage(g_hVideoResolution, CB_RESETCONTENT, 0, 0);
 
+    g_dwVideoResolution = 0;
+
     // ******************************************************************
     // * Enumerate Video Modes
     // ******************************************************************
@@ -300,6 +322,9 @@ VOID RefreshDirect3DDevice()
                 sprintf(szBuffer, "%d x %d %s", DisplayMode.Width, DisplayMode.Height, szFormat);
             else
                 sprintf(szBuffer, "%d x %d %s (%d hz)", DisplayMode.Width, DisplayMode.Height, szFormat, DisplayMode.RefreshRate);
+
+            if(strcmp(szBuffer, g_XBVideo.GetVideoResolution()) == 0)
+                g_dwVideoResolution = v+1;
 
             SendMessage(g_hVideoResolution, CB_ADDSTRING, 0, (LPARAM)szBuffer);
         }

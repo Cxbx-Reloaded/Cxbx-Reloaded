@@ -3,6 +3,8 @@ cxbx website: http://www.caustik.com/xbox/
 version: 0.7.1 (05/30/03)
 --------------------------------
 
+- Video Configuration!
+
 - Fixed some Xbe change detection logic
 
 - Open Xbe and Import Exe can be done when a file
@@ -10,8 +12,6 @@ version: 0.7.1 (05/30/03)
   you made changes first).
 
 - Direct3D Lighting is working!
-
-- Video Configuration!
 
 version: 0.7.0 (05/27/03)
 --------------------------------

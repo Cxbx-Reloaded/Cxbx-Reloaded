@@ -274,7 +274,10 @@ DWORD WINAPI EmuRenderWindow(LPVOID)
         // ******************************************************************
         {
             DWORD dwStyle = WS_OVERLAPPEDWINDOW;
+
             int x = 100, y = 100, nWidth = 640, nHeight = 480;
+
+            sscanf(g_XBVideo.GetVideoResolution(), "%d x %d", &nWidth, &nHeight);
 
             if(g_XBVideo.GetFullscreen())
             {
@@ -358,7 +361,7 @@ LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 SetCursor(NULL);
                 return 0;
             }
-            // WM_SETCURSOR Fall through
+            return DefWindowProc(hWnd, msg, wParam, lParam);
         default:
             return DefWindowProc(hWnd, msg, wParam, lParam);
     }
@@ -430,15 +433,39 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
         }
 
         // ******************************************************************
-        // * For Windowed mode, force use of the current mode
+        // * Retrieve Resolution from Configuration
         // ******************************************************************
         if(pPresentationParameters->Windowed)
         {
+            sscanf(g_XBVideo.GetVideoResolution(), "%d x %d", 
+                &pPresentationParameters->BackBufferWidth,  
+                &pPresentationParameters->BackBufferHeight);
+
             D3DDISPLAYMODE D3DDisplayMode;
 
             g_pD3D8->GetAdapterDisplayMode(g_XBVideo.GetDisplayAdapter(), &D3DDisplayMode);
 
             pPresentationParameters->BackBufferFormat = D3DDisplayMode.Format;
+            pPresentationParameters->FullScreen_RefreshRateInHz = 0;
+        }
+        else
+        {
+            char szBackBufferFormat[16];
+
+            sscanf(g_XBVideo.GetVideoResolution(), "%d x %d %*dbit %s (%d hz)", 
+                &pPresentationParameters->BackBufferWidth, 
+                &pPresentationParameters->BackBufferHeight,
+                szBackBufferFormat,
+                &pPresentationParameters->FullScreen_RefreshRateInHz);
+
+            if(strcmp(szBackBufferFormat, "x1r5g5b5") == 0)
+                pPresentationParameters->BackBufferFormat = D3DFMT_X1R5G5B5;
+            if(strcmp(szBackBufferFormat, "r5g6r5") == 0)
+                pPresentationParameters->BackBufferFormat = D3DFMT_R5G6B5;
+            if(strcmp(szBackBufferFormat, "x8r8g8b8") == 0)
+                pPresentationParameters->BackBufferFormat = D3DFMT_X8R8G8B8;
+            if(strcmp(szBackBufferFormat, "a8r8g8b8") == 0)
+                pPresentationParameters->BackBufferFormat = D3DFMT_A8R8G8B8;
         }
     }
 
