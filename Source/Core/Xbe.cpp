@@ -1049,7 +1049,7 @@ void Xbe::DumpInformation(const char *x_szTxtFilename)
     // * print init flags
     // ******************************************************************
     {
-        fprintf(TxtFile, "Init Flags                       : 0x%.08X ");
+        fprintf(TxtFile, "Init Flags                       : 0x%.08X ", m_Header.dwInitFlags);
 
         if(m_Header.dwInitFlags.bMountUtilityDrive)
             fprintf(TxtFile, "[Mount Utility Drive] ");
