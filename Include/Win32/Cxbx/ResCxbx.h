@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Developer Studio generated include file.
-// Used by D:\OpenXDK\cxbx\Resource\Cxbx.rc
+// Used by C:\Aaron\Projects\OpenXDK\cxbx\Resource\Cxbx.rc
 //
 #define IDI_CXBX                        101
 #define IDB_SPLASH                      102
@@ -39,7 +39,6 @@
 #define ID_FILE_EXPORTTOEXE             40011
 #define ID_FILE_OPEN_XBE                40013
 #define ID_FILE_CLOSE_XBE               40014
-#define ID_EDIT_EXTRACTXBEINFO          40017
 #define ID_HELP_HOMEPAGE                40019
 #define ID_FILE_SAVEXBEFILE             40021
 #define ID_FILE_SAVEXBEFILEAS           40022
@@ -76,13 +75,15 @@
 #define ID_FILE_REXE_7                  40067
 #define ID_FILE_REXE_8                  40068
 #define ID_FILE_REXE_9                  40069
+#define ID_EDIT_DUMPXBEINFOTO_FILE      40071
+#define ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE 40072
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        112
-#define _APS_NEXT_COMMAND_VALUE         40071
+#define _APS_NEXT_COMMAND_VALUE         40073
 #define _APS_NEXT_CONTROL_VALUE         1026
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

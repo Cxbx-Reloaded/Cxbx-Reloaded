@@ -782,7 +782,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
                 break;
 
-                case ID_EDIT_EXTRACTXBEINFO:
+                case ID_EDIT_DUMPXBEINFOTO_FILE:
                 {
                     OPENFILENAME ofn = {0};
 
@@ -809,21 +809,55 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 								return TRUE;
 						}
 
-                        // dump xbe information
-                        m_Xbe->DumpInformation(ofn.lpstrFile);
-
-						if(m_Xbe->GetError() != 0)
-							MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
-                        else
+                        // dump xbe information to file
                         {
-                            char buffer[255];
+                            FILE *TxtFile = fopen(ofn.lpstrFile, "wt");
 
-                            sprintf(buffer, "%s's .xbe info was successfully exported.", m_Xbe->m_szAsciiTitle);
+                            // verify file was opened
+                            if(TxtFile == 0)
+                                MessageBox(m_hwnd, "Could not open text file.", "Cxbx", MB_ICONSTOP | MB_OK);
+                            else
+                            {
+                                m_Xbe->DumpInformation(TxtFile);
 
-                            printf("WndMain: %s\n", buffer);
+                                fclose(TxtFile);
 
-                            MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
-						}
+                                if(m_Xbe->GetError())
+                                {
+                                    MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
+                                }
+                                else
+                                {
+                                    char buffer[255];
+
+                                    sprintf(buffer, "%s's .xbe info was successfully dumped.", m_Xbe->m_szAsciiTitle);
+
+                                    printf("WndMain: %s\n", buffer);
+
+                                    MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+
+                case ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE:
+                {
+                    // dump xbe information to debug console
+                    m_Xbe->DumpInformation(stdout);
+
+                    if(m_Xbe->GetError())
+                    {
+                        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
+                    }
+                    else
+                    {
+                        char buffer[255];
+
+                        sprintf(buffer, "%s's .xbe info was successfully dumped.", m_Xbe->m_szAsciiTitle);
+
+                        printf("WndMain: %s\n", buffer);
                     }
                 }
                 break;
@@ -1189,7 +1223,8 @@ void WndMain::RefreshMenus()
             HMENU pach_menu = GetSubMenu(edit_menu, 1);
 
             // enable export .xbe info
-            EnableMenuItem(edit_menu, ID_EDIT_EXTRACTXBEINFO, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
+            EnableMenuItem(edit_menu, ID_EDIT_DUMPXBEINFOTO_FILE, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
+            EnableMenuItem(edit_menu, ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
 
             // enable logo bitmap menu
             EnableMenuItem(edit_menu, 0, MF_BYPOSITION | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
@@ -1220,22 +1255,12 @@ void WndMain::RefreshMenus()
         }
 
         // ******************************************************************
-	    // * settings menu
+	    // * view menu
 	    // ******************************************************************
         {
-            HMENU sett_menu = GetSubMenu(menu, 2);
-
-	        // check "Generate Exe Automatically" if appropriate
-            CheckMenuItem(sett_menu, ID_SETTINGS_AUTOGEN, MF_BYCOMMAND | ((m_bAutoConvertToExe == TRUE) ? MF_CHECKED : MF_UNCHECKED) );
-        }
-
-        // ******************************************************************
-	    // * emulation menu
-	    // ******************************************************************
-        {
-            HMENU emul_menu = GetSubMenu(menu, 3);
-            HMENU emul_debg = GetSubMenu(emul_menu, 2);
-            HMENU emul_krnl = GetSubMenu(emul_menu, 3);
+            HMENU view_menu = GetSubMenu(menu, 2);
+            HMENU emul_debg = GetSubMenu(view_menu, 0);
+            HMENU emul_krnl = GetSubMenu(view_menu, 1);
 
             if(m_KrnlDebug == DM_CONSOLE)
             {
@@ -1268,6 +1293,23 @@ void WndMain::RefreshMenus()
                 CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_UNCHECKED);
                 CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
             }
+        }
+
+        // ******************************************************************
+	    // * settings menu
+	    // ******************************************************************
+        {
+            HMENU sett_menu = GetSubMenu(menu, 3);
+
+	        // check "Generate Exe Automatically" if appropriate
+            CheckMenuItem(sett_menu, ID_SETTINGS_AUTOGEN, MF_BYCOMMAND | ((m_bAutoConvertToExe == TRUE) ? MF_CHECKED : MF_UNCHECKED) );
+        }
+
+        // ******************************************************************
+	    // * emulation menu
+	    // ******************************************************************
+        {
+            HMENU emul_menu = GetSubMenu(menu, 4);
 
             // enable emulation start
             EnableMenuItem(emul_menu, ID_EMULATION_START, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);

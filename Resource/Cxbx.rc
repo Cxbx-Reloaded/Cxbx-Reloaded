@@ -128,23 +128,16 @@ BEGIN
             MENUITEM "&Debug Mode",                 ID_EDIT_PATCH_DEBUGMODE
         END
         MENUITEM SEPARATOR
-        MENUITEM "Extract &Xbe Info...",        ID_EDIT_EXTRACTXBEINFO
-        , GRAYED
-    END
-    POPUP "&Settings"
-    BEGIN
-        MENUITEM "Config &Controller...",       ID_SETTINGS_CONFIG_CONTROLLER
+        POPUP "Dump &Xbe Info To..."
+        BEGIN
+            MENUITEM "&File...",                    ID_EDIT_DUMPXBEINFOTO_FILE
 
-        MENUITEM "Config &Audio...",            ID_SETTINGS_CONFIGURESOUND
-        MENUITEM "Config &Video...",            ID_SETTINGS_CONFIGUREGRAPHICS
+            MENUITEM "&Debug Console",              ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE
 
-        MENUITEM "",                            1
-        MENUITEM "Generate &Exe Automatically", ID_SETTINGS_AUTOGEN
+        END
     END
-    POPUP "E&mulation"
+    POPUP "&View"
     BEGIN
-        MENUITEM "&Start\tF5",                  ID_EMULATION_START, GRAYED
-        MENUITEM SEPARATOR
         POPUP "&Debug Output (GUI)"
         BEGIN
             MENUITEM "&Console",                    ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE
@@ -159,6 +152,20 @@ BEGIN
             MENUITEM "&File...",                    ID_EMULATION_DEBUGOUTPUTKERNEL_FILE
 
         END
+    END
+    POPUP "&Settings"
+    BEGIN
+        MENUITEM "Config &Controller...",       ID_SETTINGS_CONFIG_CONTROLLER
+
+        MENUITEM "Config &Audio...",            ID_SETTINGS_CONFIGURESOUND
+        MENUITEM "Config &Video...",            ID_SETTINGS_CONFIGUREGRAPHICS
+
+        MENUITEM "",                            1
+        MENUITEM "Generate &Exe Automatically", ID_SETTINGS_AUTOGEN
+    END
+    POPUP "E&mulation"
+    BEGIN
+        MENUITEM "&Start\tF5",                  ID_EMULATION_START, GRAYED
     END
     POPUP "&Help"
     BEGIN
