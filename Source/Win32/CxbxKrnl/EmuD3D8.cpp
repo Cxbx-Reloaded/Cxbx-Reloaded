@@ -60,6 +60,7 @@ extern HWND                         g_hEmuWindow  = NULL; // rendering window
 extern XTL::LPDIRECT3DDEVICE8       g_pD3DDevice8 = NULL; // Direct3D8 Device
 
 // Static Function(s)
+static BOOL WINAPI                  EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescription, LPSTR lpDriverName, LPVOID lpContext, XTL::HMONITOR hm);
 static DWORD WINAPI                 EmuRenderWindow(LPVOID);
 static DWORD WINAPI                 EmuCreateDeviceProxy(LPVOID);
 static LRESULT WINAPI               EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -68,7 +69,12 @@ static DWORD                        EmuCheckAllocationSize(LPVOID);
 static inline void                  EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource);
 static void                         EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight);
 
+typedef BOOL (WINAPI *pfGetMonitorInfo)(XTL::HMONITOR hMonitor, LPMONITORINFO lpmi);
+static pfGetMonitorInfo GetMonitorInfo = (pfGetMonitorInfo)GetProcAddress(LoadLibrary("user32.dll"), "GetMonitorInfoA");
+
 // Static Variable(s)
+static GUID                         g_ddguid;               // DirectDraw driver GUID
+static XTL::HMONITOR                g_hMonitor      = NULL; // Handle to DirectDraw monitor
 static XTL::LPDIRECT3D8             g_pD3D8         = NULL; // Direct3D8
 static BOOL                         g_bSupportsYUY2 = FALSE;// Does device support YUY2 overlays?
 static XTL::LPDIRECTDRAW7           g_pDD7          = NULL; // DirectDraw7
@@ -184,21 +190,6 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         g_pD3D8->GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), DevType, &g_D3DCaps);
     }
 
-    // create DirectDraw7
-    {
-        using namespace XTL;
-
-        HRESULT hRet = DirectDrawCreateEx(NULL, (void**)&g_pDD7, IID_IDirectDraw7, NULL);
-
-        if(FAILED(hRet))
-            EmuCleanup("Could not initialize DirectDraw7");
-
-        hRet = g_pDD7->SetCooperativeLevel(0, DDSCL_NORMAL);
-
-        if(FAILED(hRet))
-            EmuCleanup("Could not set cooperative level");
-    }
-
     // create default device
     {
         XTL::X_D3DPRESENT_PARAMETERS PresParam;
@@ -225,6 +216,22 @@ VOID XTL::EmuD3DCleanup()
     XTL::EmuDInputCleanup();
 
     return;
+}
+
+// enumeration procedure for locating display device GUIDs
+static BOOL WINAPI EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescription, LPSTR lpDriverName, LPVOID lpContext, XTL::HMONITOR hm)
+{
+    static DWORD dwEnumCount = 0;
+
+    if(dwEnumCount++ == g_XBVideo.GetDisplayAdapter()+1)
+    {
+        g_hMonitor = hm;
+        dwEnumCount = 0;
+        memcpy(&g_ddguid, lpGUID, sizeof(GUID));
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 // window message processing thread
@@ -577,6 +584,45 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     }
                 }
 
+                // default NULL guid
+                ZeroMemory(&g_ddguid, sizeof(GUID));
+
+                // enumerate device guid for this monitor, for directdraw
+                HRESULT hRet = XTL::DirectDrawEnumerateExA(EmuEnumDisplayDevices, NULL, DDENUM_ATTACHEDSECONDARYDEVICES);
+
+                // create DirectDraw7
+                {
+                    if(FAILED(hRet))
+                        hRet = XTL::DirectDrawCreateEx(NULL, (void**)&g_pDD7, XTL::IID_IDirectDraw7, NULL);
+                    else
+                        hRet = XTL::DirectDrawCreateEx(&g_ddguid, (void**)&g_pDD7, XTL::IID_IDirectDraw7, NULL);
+
+                    if(FAILED(hRet))
+                        EmuCleanup("Could not initialize DirectDraw7");
+
+                    hRet = g_pDD7->SetCooperativeLevel(0, DDSCL_NORMAL);
+
+                    if(FAILED(hRet))
+                        EmuCleanup("Could not set cooperative level");
+                }
+
+                // initialize primary surface
+                if(g_bSupportsYUY2)
+                {
+                    XTL::DDSURFACEDESC2 ddsd2;
+
+                    ZeroMemory(&ddsd2, sizeof(ddsd2));
+
+                    ddsd2.dwSize = sizeof(ddsd2);
+                    ddsd2.dwFlags = DDSD_CAPS;
+                    ddsd2.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
+		                
+	                HRESULT hRet = g_pDD7->CreateSurface(&ddsd2, &g_pDDSPrimary, 0);
+
+                    if(FAILED(hRet))
+                        EmuCleanup("Could not create primary surface (0x%.08X)", hRet);
+                }
+
                 // update render target cache
                 g_pCachedRenderTarget = new XTL::X_D3DSurface();
                 g_pD3DDevice8->GetRenderTarget(&g_pCachedRenderTarget->EmuSurface8);
@@ -605,7 +651,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
             }
             else
             {
-                // release
+                // release direct3d
                 if(g_pD3DDevice8 != 0)
                 {
                     printf("EmuD3D8 (0x%X): CreateDevice proxy thread releasing old Device.\n", GetCurrentThreadId());
@@ -616,6 +662,23 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     
                     if(g_EmuCDPD.hRet == 0)
                         g_pD3DDevice8 = 0;
+                }
+
+                if(g_bSupportsYUY2)
+                {
+                    // cleanup directdraw surface
+                    if(g_pDDSPrimary != 0)
+                    {
+                        g_pDDSPrimary->Release();
+                        g_pDDSPrimary = 0;
+                    }
+                }
+
+                // cleanup directdraw
+                if(g_pDD7 != 0)
+                {
+                    g_pDD7->Release();
+                    g_pDD7 = 0;
                 }
 
                 // signal completion
@@ -3532,61 +3595,39 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_EnableOverlay
     }
     #endif
 
-    if(g_bSupportsYUY2)
+    if(Enable == FALSE && g_pDDSOverlay7 != NULL)
     {
-        if(Enable)
+        g_pDDSOverlay7->UpdateOverlay(NULL, g_pDDSPrimary, NULL, DDOVER_HIDE, 0);
+
+        // cleanup overlay surface
+        if(g_pDDSOverlay7 != 0)
         {
-            // initialize primary surface
-            {
-                DDSURFACEDESC2 ddsd2;
-
-                ZeroMemory(&ddsd2, sizeof(ddsd2));
-
-                ddsd2.dwSize = sizeof(ddsd2);
-                ddsd2.dwFlags = DDSD_CAPS;
-                ddsd2.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE | DDSCAPS_VIDEOMEMORY;
-		            
-	            HRESULT hRet = g_pDD7->CreateSurface(&ddsd2, &g_pDDSPrimary, 0);
-
-                if(FAILED(hRet))
-                    EmuCleanup("Could not create primary surface");
-            }
-
-            // initialize overlay surface
-            {
-                DDSURFACEDESC2 ddsd2;
-
-                ZeroMemory(&ddsd2, sizeof(ddsd2));
-
-                ddsd2.dwSize = sizeof(ddsd2);
-                ddsd2.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PIXELFORMAT;
-                ddsd2.ddsCaps.dwCaps = DDSCAPS_OVERLAY;
-                ddsd2.dwWidth = g_dwOverlayW;
-                ddsd2.dwHeight = g_dwOverlayH; 
-                ddsd2.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
-                ddsd2.ddpfPixelFormat.dwFlags = DDPF_FOURCC;
-                ddsd2.ddpfPixelFormat.dwFourCC = MAKEFOURCC('Y','U','Y','2');
-
-                HRESULT hRet = g_pDD7->CreateSurface(&ddsd2, &g_pDDSOverlay7, NULL);
-
-                if(FAILED(hRet))
-                    EmuCleanup("Could not create overlay surface");
-            }
+            g_pDDSOverlay7->Release();
+            g_pDDSOverlay7 = 0;
         }
-        else
+    }
+    else
+    {
+        // initialize overlay surface
+        if(g_bSupportsYUY2)
         {
-            // Cleanup Primary/Overlay Surfaces
-            if(g_pDDSOverlay7 != 0)
-            {
-                g_pDDSOverlay7->Release();
-                g_pDDSOverlay7 = 0;
-            }
-        
-            if(g_pDDSPrimary != 0)
-            {
-                g_pDDSPrimary->Release();
-                g_pDDSPrimary = 0;
-            }
+            XTL::DDSURFACEDESC2 ddsd2;
+
+            ZeroMemory(&ddsd2, sizeof(ddsd2));
+
+            ddsd2.dwSize = sizeof(ddsd2);
+            ddsd2.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PIXELFORMAT;
+            ddsd2.ddsCaps.dwCaps = DDSCAPS_OVERLAY;
+            ddsd2.dwWidth = g_dwOverlayW;
+            ddsd2.dwHeight = g_dwOverlayH; 
+            ddsd2.ddpfPixelFormat.dwSize = sizeof(XTL::DDPIXELFORMAT);
+            ddsd2.ddpfPixelFormat.dwFlags = DDPF_FOURCC;
+            ddsd2.ddpfPixelFormat.dwFourCC = MAKEFOURCC('Y','U','Y','2');
+
+            HRESULT hRet = g_pDD7->CreateSurface(&ddsd2, &g_pDDSOverlay7, NULL);
+
+            if(FAILED(hRet))
+                EmuCleanup("Could not create overlay surface");
         }
     }
 
@@ -3667,10 +3708,14 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
     if(g_bSupportsYUY2)
     {
         RECT SourRect = {0, 0, g_dwOverlayW, g_dwOverlayH}, DestRect;
+        MONITORINFO MonitorInfo = {0};
 
         int nTitleHeight  = GetSystemMetrics(SM_CYCAPTION);
         int nBorderWidth  = GetSystemMetrics(SM_CXSIZEFRAME);
         int nBorderHeight = GetSystemMetrics(SM_CYSIZEFRAME);
+
+        MonitorInfo.cbSize = sizeof(MONITORINFO);
+        GetMonitorInfo(g_hMonitor, &MonitorInfo);
 
         GetWindowRect(g_hEmuWindow, &DestRect);
 
@@ -3678,6 +3723,11 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
         DestRect.right  -= nBorderWidth;
         DestRect.top    += nTitleHeight + nBorderHeight;
         DestRect.bottom -= nBorderHeight;
+
+        DestRect.left   -= MonitorInfo.rcMonitor.left;
+        DestRect.right  -= MonitorInfo.rcMonitor.left;
+        DestRect.top    -= MonitorInfo.rcMonitor.top;
+        DestRect.bottom -= MonitorInfo.rcMonitor.top;
 
         HRESULT hRet = g_pDDSOverlay7->UpdateOverlay(&SourRect, g_pDDSPrimary, &DestRect, DDOVER_SHOW, 0);
     }

@@ -14,6 +14,12 @@ version: 0.7.9 (??/??/??)
 
 - Some speed optimizations for vertice translation
 
+- CreateDevice via proxy thread caused some issues with the
+  interplay between directdraw & direct3d. I resolved this new
+  issue and things are good again.
+
+- Overlay support now should work with multimonitors
+
 version: 0.7.8c (09/02/03)
 --------------------------------
 

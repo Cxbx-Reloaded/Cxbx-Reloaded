@@ -88,4 +88,14 @@ extern HANDLE g_hZDrive;
 // thread notification routine
 extern PVOID g_pfnThreadNotification;
 
+// extra stuff for multimonitors (win95+)
+typedef struct _MONITORINFO
+{
+  DWORD  cbSize; 
+  RECT   rcMonitor; 
+  RECT   rcWork; 
+  DWORD  dwFlags; 
+}
+MONITORINFO, *LPMONITORINFO; 
+
 #endif
