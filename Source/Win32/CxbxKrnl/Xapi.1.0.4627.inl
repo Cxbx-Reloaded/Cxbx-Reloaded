@@ -37,7 +37,7 @@
 // ******************************************************************
 OOVPATable XAPI_1_0_4627[] =
 {
-    // CreateThread (unchanged since 4361)
+    // CreateThread (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&CreateThread_1_0_4361,
 
@@ -47,7 +47,7 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXCreateThread" 
         #endif
     },
-    // CloseHandle (unchanged since 4361)
+    // CloseHandle (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&CloseHandle_1_0_4361,
 
@@ -57,7 +57,7 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXCloseHandle" 
         #endif
     },
-    // XapiInitProcess (unchanged since 4361)
+    // XapiInitProcess (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&XapiInitProcess_1_0_4361,
 
@@ -67,7 +67,7 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXapiInitProcess" 
         #endif
     },
-    // XapiBootToDash (unchanged since 4361)
+    // XapiBootToDash (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&XapiBootDash_1_0_4361,
 
@@ -77,7 +77,7 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXapiBootDash"
         #endif
     },
-    // __rtinit (unchanged since 4361)
+    // __rtinit (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&__rtinit_1_0_4361,
 
@@ -87,7 +87,7 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuX__rtinit",
         #endif
     },
-    // __cinit (unchanged since 4361)
+    // __cinit (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&__cinit_1_0_4361,
 

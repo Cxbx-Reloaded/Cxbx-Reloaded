@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->HLEDataBase.cpp
+// *   Cxbx->Win32->CxbxKrnl->D3D8.1.0.4627.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,50 +31,10 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Cxbx.h"
-#include "EmuX.h"
+#ifndef D3D8_1_0_4627_H
+#define D3D8_1_0_4627_H
 
-#include "Xapi.1.0.4361.inl"
-#include "Xapi.1.0.4627.inl"
-#include "D3D8.1.0.4361.inl"
-#include "D3D8.1.0.4627.inl"
+extern OOVPATable D3D8_1_0_4627[];
+extern uint32     D3D8_1_0_4627_SIZE;
 
-// ******************************************************************
-// * HLEDataBase
-// ******************************************************************
-HLEData HLEDataBase[] =
-{
-    // Xapilib Version 1.0.4361
-    {
-        "XAPILIB",
-        1, 0, 4361,
-        XAPI_1_0_4361,
-        XAPI_1_0_4361_SIZE
-    },
-    // Xapilib Version 1.0.4627
-    {
-        "XAPILIB",
-        1, 0, 4627,
-        XAPI_1_0_4627,
-        XAPI_1_0_4627_SIZE
-    },
-    // D3D8 Version 1.0.4361
-    {
-        "D3D8",
-        1, 0, 4361,
-        D3D8_1_0_4361,
-        D3D8_1_0_4361_SIZE
-    },
-    // D3D8 Version 1.0.4627
-    {
-        "D3D8",
-        1, 0, 4627,
-        D3D8_1_0_4627,
-        D3D8_1_0_4627_SIZE
-    },
-};
-
-// ******************************************************************
-// * HLEDataBaseSize
-// ******************************************************************
-extern uint32 HLEDataBaseSize = sizeof(HLEDataBase);
+#endif
