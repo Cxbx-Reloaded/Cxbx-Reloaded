@@ -492,7 +492,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         // _USE_XGMATH Disabled in mesh :[
         // halo : dword_0_2E2D18
         // halo : 1744F0 (bink)
-        //_asm int 3
+        _asm int 3
 
         Entry();
 

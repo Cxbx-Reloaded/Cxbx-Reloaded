@@ -130,6 +130,38 @@ SOOVPA<14> IDirect3DDevice8_BlockUntilVerticalBlank_1_0_3925 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetVerticalBlankCallback
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_SetVerticalBlankCallback_1_0_3925 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetVerticalBlankCallback+0x00 : mov eax, [esp+0x04]
+        { 0x00, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x01, 0x44 }, // (Offset,Value)-Pair #2
+        { 0x02, 0x24 }, // (Offset,Value)-Pair #3
+        { 0x03, 0x04 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DDevice8_SetVerticalBlankCallback+0x0A : mov [ecx+0x24EC], eax
+        { 0x0A, 0x89 }, // (Offset,Value)-Pair #5
+        { 0x0B, 0x81 }, // (Offset,Value)-Pair #6
+        { 0x0C, 0xEC }, // (Offset,Value)-Pair #7
+        { 0x0D, 0x24 }, // (Offset,Value)-Pair #8
+        { 0x0E, 0x00 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DDevice8_SetVerticalBlankCallback+0x10 : retn 0x04
+        { 0x10, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x11, 0x04 }, // (Offset,Value)-Pair #11
+        { 0x12, 0x00 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetRenderTarget
 // ******************************************************************
 SOOVPA<11> IDirect3DDevice8_SetRenderTarget_1_0_3925 =
@@ -486,6 +518,43 @@ SOOVPA<11> IDirect3DDevice8_SetVertexData4f_1_0_3925 =
         // IDirect3DDevice8_SetVertexData4f+0x50 : retn 0x14
         { 0x50, 0xC2 }, // (Offset,Value)-Pair #10
         { 0x51, 0x14 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetVertexDataColor
+// ******************************************************************
+SOOVPA<17> IDirect3DDevice8_SetVertexDataColor_1_0_3925 =
+{
+    0,  // Large == 0
+    17, // Count == 17
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetVertexDataColor+0x1F : mov byte ptr [esp+?]
+        { 0x1F, 0x0F }, // (Offset,Value)-Pair #1
+        { 0x20, 0xB6 }, // (Offset,Value)-Pair #2
+        { 0x21, 0x54 }, // (Offset,Value)-Pair #3
+        { 0x22, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x23, 0x12 }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_SetVertexDataColor+0x26 : add edi, 0xFF; shl edi, 0x10
+        { 0x26, 0x81 }, // (Offset,Value)-Pair #6
+        { 0x27, 0xE7 }, // (Offset,Value)-Pair #7
+        { 0x28, 0xFF }, // (Offset,Value)-Pair #8
+        { 0x2C, 0xC1 }, // (Offset,Value)-Pair #9
+        { 0x2D, 0xE7 }, // (Offset,Value)-Pair #10
+        { 0x2E, 0x10 }, // (Offset,Value)-Pair #11
+
+        // IDirect3DDevice8_SetVertexDataColor+0x31 : and ecx, 0xFF00FF00
+        { 0x31, 0x81 }, // (Offset,Value)-Pair #12
+        { 0x32, 0xE1 }, // (Offset,Value)-Pair #13
+        { 0x33, 0x00 }, // (Offset,Value)-Pair #14
+        { 0x34, 0xFF }, // (Offset,Value)-Pair #15
+        { 0x35, 0x00 }, // (Offset,Value)-Pair #16
+        { 0x36, 0xFF }, // (Offset,Value)-Pair #17
     }
 };
 
@@ -975,6 +1044,37 @@ SOOVPA<13> IDirect3DDevice8_SetTextureState_BorderColor_1_0_3925 =
         // IDirect3DDevice8_SetTextureState_BorderColor+0x34 : retn 0x08
         { 0x34, 0xC2 }, // (Offset,Value)-Pair #12
         { 0x35, 0x08 }, // (Offset,Value)-Pair #13
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetRenderState_PSTextureModes
+// ******************************************************************
+SOOVPA<11> IDirect3DDevice8_SetRenderState_PSTextureModes_1_0_3925 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetRenderState_PSTextureModes+0x0C : or edx, 0x400
+        { 0x0C, 0x81 }, // (Offset,Value)-Pair #1
+        { 0x0D, 0xCA }, // (Offset,Value)-Pair #2
+        { 0x0E, 0x00 }, // (Offset,Value)-Pair #3
+        { 0x0F, 0x04 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DDevice8_SetRenderState_PSTextureModes+0x12 : mov [eax+0x420], ecx
+        { 0x12, 0x89 }, // (Offset,Value)-Pair #5
+        { 0x13, 0x88 }, // (Offset,Value)-Pair #6
+        { 0x14, 0x20 }, // (Offset,Value)-Pair #7
+        { 0x15, 0x04 }, // (Offset,Value)-Pair #8
+        { 0x16, 0x00 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DDevice8_SetRenderState_PSTextureModes+0x21 : retn 4
+        { 0x21, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x22, 0x04 }, // (Offset,Value)-Pair #11
     }
 };
 
@@ -1915,6 +2015,16 @@ OOVPATable D3D8_1_0_3925[] =
         "EmuIDirect3DDevice8_BlockUntilVerticalBlank" 
         #endif
     },
+    // IDirect3DDevice8::SetVerticalBlankCallback
+    {
+        (OOVPA*)&IDirect3DDevice8_SetVerticalBlankCallback_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_SetVerticalBlankCallback,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetVerticalBlankCallback" 
+        #endif
+    },
     // IDirect3DDevice8::SetRenderTarget
     {
         (OOVPA*)&IDirect3DDevice8_SetRenderTarget_1_0_3925,
@@ -2023,6 +2133,16 @@ OOVPATable D3D8_1_0_3925[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetVertexData4f" 
+        #endif
+    },
+    // IDirect3DDevice8::SetVertexDataColor
+    {
+        (OOVPA*)&IDirect3DDevice8_SetVertexDataColor_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_SetVertexDataColor,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetVertexDataColor" 
         #endif
     },
     // IDirect3DDevice8::End
@@ -2163,6 +2283,16 @@ OOVPATable D3D8_1_0_3925[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetTextureState_BorderColor" 
+        #endif
+    },
+    // IDirect3DDevice8::SetRenderState_PSTextureModes
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_PSTextureModes_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_PSTextureModes,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_PSTextureModes" 
         #endif
     },
     // IDirect3DDevice8::SetRenderState_CullMode

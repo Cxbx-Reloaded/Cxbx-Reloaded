@@ -87,6 +87,7 @@ static XTL::D3DCAPS8                g_D3DCaps;              // Direct3D8 Caps
 static HBRUSH                       g_hBgBrush      = NULL; // Background Brush
 static volatile bool                g_bRenderWindowActive = false;
 static XBVideo                      g_XBVideo;
+static XTL::D3DVBLANKCALLBACK       g_pVBCallback   = NULL; // Vertical-Blank callback routine
 
 // resource caching for _Register
 static XTL::X_D3DResource pCache[16] = {0};
@@ -400,14 +401,36 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 // timing thread procedure
 static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 {
+    // since callbacks come from here
+    EmuGenerateFS(g_pTLS, g_pTLSData);
+
     printf("EmuD3D8 (0x%X): Timing thread is running.\n", GetCurrentThreadId());
 
     timeBeginPeriod(0);
+
+    // current vertical blank count
+    int curvb = 0;
 
     while(true)
     {
         xboxkrnl::KeTickCount = timeGetTime();
         Sleep(1);
+
+        // trigger vblank callback
+        {
+            XTL::D3DVBLANKDATA VBData;
+
+            VBData.Flags = 1; // D3DVBLANK_SWAPDONE
+            VBData.Swap = curvb;
+            VBData.VBlank = curvb++;
+
+            if(g_pVBCallback != NULL)
+            {
+                EmuSwapFS();    // Xbox FS
+                g_pVBCallback(&VBData);
+                EmuSwapFS();    // Win2k/XP FS
+            }
+        }
     }
 
     timeEndPeriod(0);
@@ -1272,7 +1295,7 @@ XTL::X_D3DSurface* WINAPI XTL::EmuIDirect3DDevice8_GetBackBuffer2
         hRet = g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &(pBackBuffer->EmuSurface8));
     //*/
 
-    X_D3DSurface *pBackBuffer = new X_D3DSurface();
+    static X_D3DSurface *pBackBuffer = new X_D3DSurface();
 
     if(BackBuffer == -1)
         BackBuffer = 0;
@@ -2410,6 +2433,45 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetVertexDataColor
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexDataColor
+(
+    int         Register,
+    D3DCOLOR    Color
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexDataColor\n"
+               "(\n"
+               "   Register            : 0x%.08X\n"
+               "   Color               : %f\n"
+               ");\n",
+               GetCurrentThreadId(), Register, Color);
+    }
+    #endif
+
+    HRESULT hRet = S_OK;
+
+    D3DINLINE_VERTEX *pD3DInlineVertex = (D3DINLINE_VERTEX*)&g_pD3DIVBData[g_pD3DIVBInd*sizeof(D3DINLINE_VERTEX)];
+
+    switch(Register)
+    {
+        case 9:             // D3DVSDE_TEXCOORD0
+            pD3DInlineVertex->color = Color;
+            break;
+    }
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_End
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirect3DDevice8_End()
@@ -2734,7 +2796,8 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 dwPitch  = dwWidth*4;
                 dwBPP = 4;
             }
-            else if(X_Format == 0x05 /* X_D3DFMT_R5G6B5 */ || X_Format == 0x04 /* X_D3DFMT_A4R4G4B4 */ || X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */)
+            else if(X_Format == 0x05 /* X_D3DFMT_R5G6B5 */ || X_Format == 0x04 /* X_D3DFMT_A4R4G4B4 */
+                 || X_Format == 0x1D /* X_D3DFMT_LIN_A4R4G4B4 */ || X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */)
             {
                 bSwizzled = TRUE;
 
@@ -3959,7 +4022,10 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_BlockUntilVerticalBlank()
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVerticalBlankCallback
 // ******************************************************************
-VOID WINAPI XTL::EmuIDirect3DDevice8_SetVerticalBlankCallback(PVOID pCallback)
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetVerticalBlankCallback
+(
+    D3DVBLANKCALLBACK pCallback
+)
 {
     EmuSwapFS();   // Win2k/XP FS
 
@@ -3974,7 +4040,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetVerticalBlankCallback(PVOID pCallback)
     }
     #endif
 
-    EmuCleanup("EmuIDirect3DDevice8_SetVerticalBlankCallback is not implemented!");
+    g_pVBCallback = pCallback;
 
     EmuSwapFS();   // XBox FS
 
@@ -4361,6 +4427,34 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_VertexBlend
         EmuCleanup("Unsupported D3DVERTEXBLENDFLAGS (%d)", Value);
 
     g_pD3DDevice8->SetRenderState(D3DRS_VERTEXBLEND, Value);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_PSTextureModes
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_PSTextureModes
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_PSTextureModes\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+    // TODO: do something..
 
     EmuSwapFS();   // XBox FS
 

@@ -80,6 +80,7 @@ inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
         case 0x1A: // Swizzled   (X_D3DFMT_A8L8)
             return D3DFMT_R5G6B5;   // NOTE: HACK: Totally and utterly wrong :)
 
+        case 0x1D: // Linear     (X_D3DFMT_LIN_A4R4G4B4)
         case 0x04: // Swizzled   (X_D3DFMT_A4R4G4B4)
             return D3DFMT_A4R4G4B4;
 

@@ -33,6 +33,39 @@
 // ******************************************************************
 
 // ******************************************************************
+// * GetExitCodeThread
+// ******************************************************************
+SOOVPA<11> GetExitCodeThread_1_0_3911 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // GetExitCodeThread+0x03 : lea eax, [ebp+0x08]
+        { 0x03, 0x8D }, // (Offset,Value)-Pair #1
+        { 0x04, 0x45 }, // (Offset,Value)-Pair #2
+        { 0x05, 0x08 }, // (Offset,Value)-Pair #3
+
+        // GetExitCodeThread+0x1A : mov ecx, dword ptr [ebp+0x08]
+        { 0x1A, 0x8B }, // (Offset,Value)-Pair #4
+        { 0x1B, 0x4D }, // (Offset,Value)-Pair #5
+        { 0x1C, 0x08 }, // (Offset,Value)-Pair #6
+
+        // GetExitCodeThread+0x2B : mov eax, 0x0103
+        { 0x2B, 0xB8 }, // (Offset,Value)-Pair #7
+        { 0x2C, 0x03 }, // (Offset,Value)-Pair #8
+        { 0x2D, 0x01 }, // (Offset,Value)-Pair #9
+
+        // GetExitCodeThread+0x49 : retn 0x08
+        { 0x49, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x4A, 0x08 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
 // * RtlCreateHeap
 // ******************************************************************
 SOOVPA<10> RtlCreateHeap_1_0_3911 =
@@ -493,10 +526,56 @@ SOOVPA<13> XInputGetState_1_0_3911 =
 };
 
 // ******************************************************************
+// * XInputSetState
+// ******************************************************************
+SOOVPA<12> XInputSetState_1_0_3911 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // XInputSetState+0x04 : lea eax, [ecx+0x0A3]
+        { 0x04, 0x8D }, // (Offset,Value)-Pair #1
+        { 0x05, 0x81 }, // (Offset,Value)-Pair #2
+        { 0x06, 0xA3 }, // (Offset,Value)-Pair #3
+
+        // XInputSetState+0x0F : push 0x57
+        { 0x0F, 0x6A }, // (Offset,Value)-Pair #4
+        { 0x10, 0x57 }, // (Offset,Value)-Pair #5
+
+        // XInputSetState+0x12 : jmp +0x21
+        { 0x12, 0xEB }, // (Offset,Value)-Pair #6
+        { 0x13, 0x21 }, // (Offset,Value)-Pair #7
+
+        // XInputSetState+0x2D : mov [edx+0x41], al
+        { 0x2D, 0x88 }, // (Offset,Value)-Pair #8
+        { 0x2E, 0x42 }, // (Offset,Value)-Pair #9
+        { 0x2F, 0x41 }, // (Offset,Value)-Pair #10
+
+        // XInputSetState+0x35 : retn 0x08
+        { 0x35, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x36, 0x08 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_3911
 // ******************************************************************
 OOVPATable XAPI_1_0_3911[] =
 {
+    // GetExitCodeThread
+    {
+        (OOVPA*)&GetExitCodeThread_1_0_3911,
+
+        XTL::EmuGetExitCodeThread,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGetExitCodeThread"
+        #endif
+    },
     // RtlCreateHeap
     {
         (OOVPA*)&RtlCreateHeap_1_0_3911,
@@ -643,6 +722,16 @@ OOVPATable XAPI_1_0_3911[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXInputGetState"
+        #endif
+    },
+    // XInputSetState
+    {
+        (OOVPA*)&XInputSetState_1_0_3911,
+
+        XTL::EmuXInputSetState,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputSetState"
         #endif
     },
 };

@@ -310,6 +310,22 @@ struct X_D3DTILE
 };
 
 // ******************************************************************
+// * D3DVBLANKDATA
+// ******************************************************************
+typedef struct _D3DVBLANKDATA
+{
+    DWORD           VBlank;
+    DWORD           Swap;
+    DWORD           Flags;
+}
+D3DVBLANKDATA;
+
+// ******************************************************************
+// * D3DVBLANKCALLBACK
+// ******************************************************************
+typedef void (__cdecl * D3DVBLANKCALLBACK)(D3DVBLANKDATA *pData);
+
+// ******************************************************************
 // * EmuD3DTileCache (8 Tiles Max)
 // ******************************************************************
 extern X_D3DTILE EmuD3DTileCache[0x08];
@@ -696,6 +712,15 @@ HRESULT WINAPI EmuIDirect3DDevice8_SetVertexData4f
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetVertexDataColor
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetVertexDataColor
+(
+    int         Register,
+    D3DCOLOR    Color
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_End
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_End();
@@ -921,7 +946,10 @@ VOID WINAPI EmuIDirect3DDevice8_BlockUntilVerticalBlank();
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVerticalBlankCallback
 // ******************************************************************
-VOID WINAPI EmuIDirect3DDevice8_SetVerticalBlankCallback(PVOID pCallback);
+VOID WINAPI EmuIDirect3DDevice8_SetVerticalBlankCallback
+(
+    D3DVBLANKCALLBACK pCallback
+);
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
@@ -1010,6 +1038,14 @@ VOID __fastcall EmuIDirect3DDevice8_SetRenderState_Simple
 // * func: EmuIDirect3DDevice8_SetRenderState_VertexBlend
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_SetRenderState_VertexBlend
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_PSTextureModes
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_PSTextureModes
 (
     DWORD Value
 );

@@ -209,12 +209,6 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
 
     DSBUFFERDESC DSBufferDesc;
 
-//    DWORD dwBytes = 16384; // NOTE: HACK: TEMPORARY FOR STELLA/HALO
-    DWORD dwBytes = 131072; // NOTE: HACK: TEMPORARY FOR STELLA/HALO
-
-    if(dwBytes < pdsbd->dwBufferBytes)
-        dwBytes = pdsbd->dwBufferBytes;
-
     // convert from Xbox to PC DSound
     {
         DWORD dwAcceptableMask = 0x00000010 | 0x00000020 | 0x00000080 | 0x00000100 | 0x00002000 | 0x00040000 | 0x00080000;
@@ -224,7 +218,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
 
         DSBufferDesc.dwSize = sizeof(DSBufferDesc);
         DSBufferDesc.dwFlags = pdsbd->dwFlags & dwAcceptableMask;
-        DSBufferDesc.dwBufferBytes = dwBytes;
+        DSBufferDesc.dwBufferBytes = 16384;// NOTE: HACK: TEMPORARY FOR STELLA/HALO
         DSBufferDesc.dwReserved = 0;
         DSBufferDesc.lpwfxFormat = pdsbd->lpwfxFormat;              // TODO: Make sure this is the same as PC
         DSBufferDesc.guid3DAlgorithm = DS3DALG_DEFAULT;
@@ -253,7 +247,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
         g_pDSoundBuffer8->Unlock(g_pvBufferData, dwBytes1, pData2, dwBytes2);
         */
         // TODO: HACK: fix this somehow..?
-        g_pvBufferData = malloc(dwBytes);
+        g_pvBufferData = malloc(131072);// NOTE: HACK: TEMPORARY FOR STELLA/HALO
     }
 
     EmuSwapFS();   // XBox FS
@@ -492,12 +486,24 @@ ULONG WINAPI XTL::EmuCDirectSoundStream_Release(X_CDirectSoundStream *pThis)
     }
     #endif
 
-    if(pThis != 0 && pThis->GetSoundBuffer()->Release() == 0)
-        delete pThis;
+    ULONG uRet = 0;
+
+    if(pThis != 0)
+    {
+        uRet = pThis->GetSoundBuffer()->Release();
+
+        if(uRet == 0)
+        {
+            if(g_pDSoundStream8 == pThis->GetSoundBuffer())
+                g_pDSoundStream8 = 0;
+
+            delete pThis;
+        }
+    }
 
     EmuSwapFS();   // XBox FS
 
-    return DS_OK;
+    return uRet;
 }
 
 // ******************************************************************
@@ -1569,6 +1575,47 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetLoopRegion
     EmuSwapFS();   // XBox FS
 
     return DS_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_Release
+// ******************************************************************
+ULONG WINAPI XTL::EmuIDirectSoundBuffer8_Release
+(
+    X_CDirectSoundBuffer   *pThis
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_Release\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis);
+    }
+    #endif
+
+    ULONG uRet = 0;
+
+    if(pThis != 0)
+    {
+        uRet = pThis->EmuDirectSoundBuffer8->Release();
+
+        if(uRet == 0)
+        {
+            if(g_pDSoundBuffer8 == pThis->EmuDirectSoundBuffer8)
+                g_pDSoundBuffer8 = 0;
+
+            delete pThis;
+        }
+    }
+
+    EmuSwapFS();   // XBox FS
+
+    return uRet;
 }
 
 // ******************************************************************
