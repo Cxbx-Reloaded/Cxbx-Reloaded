@@ -437,7 +437,6 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
 
             pPresentationParameters->BackBufferFormat = D3DDisplayMode.Format;
             pPresentationParameters->FullScreen_RefreshRateInHz = 0;
-            pPresentationParameters->hDeviceWindow = hFocusWindow;
         }
         else
         {
@@ -1066,6 +1065,53 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetTexture
     EmuSwapFS();   // XBox FS
 
     return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SwitchTexture
+// ******************************************************************
+VOID __fastcall xd3d8::EmuIDirect3DDevice8_SwitchTexture
+(
+    DWORD           Method,
+    DWORD           Data,
+    DWORD           Format
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SwitchTexture\n"
+               "(\n"
+               "   Method              : 0x%.08X\n"
+               "   Data                : 0x%.08X\n"
+               "   Format              : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Method, Data, Format);
+    }
+    #endif
+
+    EmuCleanup("EmuIDirect3DDevice8_SwitchTexture is not implemented!");
+/*** 
+    IDirect3DBaseTexture8 *pBaseTexture8 = pTexture->EmuBaseTexture8;
+    IDirect3DBaseTexture8 *pPrevTexture8 = NULL;
+    
+    // Xbox SwitchTexture does not decrement the reference count on the
+    // old texture, but SetTexture does, so we need to pre-increment
+    g_pD3DDevice8->GetTexture(Stage, &pPrevTexture8);
+
+    HRESULT hRet = g_pD3DDevice8->SetTexture(Stage, pBaseTexture8);
+
+    // Xbox SwitchTexture does not increment reference count, but the
+    // above SetTexture does, so we need to remove it.
+    pBaseTexture8->Release();
+***/
+    EmuSwapFS();   // XBox FS
+
+    return;
 }
 
 // ******************************************************************
@@ -1972,31 +2018,11 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetVertexShader
 }
 
 // ******************************************************************
-// * func: EmuIDirect3DDevice8_DrawVertices
+// * func: EmuUpdateDeferredStates
 // ******************************************************************
-HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
-(
-    D3DPRIMITIVETYPE PrimitiveType,
-    UINT             StartVertex,
-    UINT             VertexCount
-)
+static void EmuUpdateDeferredStates()
 {
-    EmuSwapFS();   // Win2k/XP FS
-
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_DrawVertices\n"
-               "(\n"
-               "   PrimitiveType       : 0x%.08X\n"
-               "   StartVertex         : 0x%.08X\n"
-               "   VertexCount         : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), PrimitiveType, StartVertex, VertexCount);
-    }
-    #endif
+    using namespace xd3d8;
 
     // Certain D3DRS values need to be checked on each Draw[Indexed]Vertices
     if(xd3d8::EmuD3DDeferredRenderState != 0)
@@ -2026,6 +2052,36 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
             g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ALPHAOP, pCur[16]);
         }
     }
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_DrawVertices
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
+(
+    D3DPRIMITIVETYPE PrimitiveType,
+    UINT             StartVertex,
+    UINT             VertexCount
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_DrawVertices\n"
+               "(\n"
+               "   PrimitiveType       : 0x%.08X\n"
+               "   StartVertex         : 0x%.08X\n"
+               "   VertexCount         : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), PrimitiveType, StartVertex, VertexCount);
+    }
+    #endif
+
+    EmuUpdateDeferredStates();
 
     UINT PrimitiveCount = D3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
 
@@ -2037,6 +2093,56 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
         PrimitiveType,
         StartVertex,
         PrimitiveCount
+    );
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_DrawVerticesUP
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_DrawVerticesUP
+(
+    D3DPRIMITIVETYPE PrimitiveType,
+    UINT             VertexCount,
+    CONST PVOID      pVertexStreamZeroData,
+    UINT             VertexStreamZeroStride
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_DrawVerticesUP\n"
+               "(\n"
+               "   PrimitiveType            : 0x%.08X\n"
+               "   VertexCount              : 0x%.08X\n"
+               "   pVertexStreamZeroData    : 0x%.08X\n"
+               "   VertexStreamZeroStride   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), PrimitiveType, VertexCount, pVertexStreamZeroData,
+               VertexStreamZeroStride);
+    }
+    #endif
+
+    EmuUpdateDeferredStates();
+
+    UINT PrimitiveCount = D3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
+
+    // Convert from Xbox to PC enumeration
+    PrimitiveType = EmuPrimitiveType(PrimitiveType);
+
+    HRESULT hRet = g_pD3DDevice8->DrawPrimitiveUP
+    (
+        PrimitiveType,
+        PrimitiveCount,
+        pVertexStreamZeroData,
+        VertexStreamZeroStride
     );
 
     EmuSwapFS();   // XBox FS
