@@ -91,7 +91,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuNoFunc()
 // ******************************************************************
 // * func: EmuCleanThread
 // ******************************************************************
-static void EmuCleanThread()
+extern "C" CXBXKRNL_API void NTAPI EmuCleanThread()
 {
     if(EmuIsXboxFS())
         EmuSwapFS();    // Win2k/XP FS

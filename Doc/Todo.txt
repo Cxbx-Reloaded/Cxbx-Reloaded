@@ -1,10 +1,14 @@
-Cxbx Todo:
+Cxbx Todo (* denotes high priority)
 
-  Retail Games!
+  * Verify TLS stability and correctness
+
+  * 3D Textured Demo
+
+  * Retail Games (esp. XDK 4361)
+
+  * Certain SetRenderState's simply update a global..have Cxbx use these
 
   Perfect the timing on KeTickCount
-
-  Certain SetRenderState's simply update a global..have Cxbx use these
 
   Some sort of delete-after-emulation type of functionality?
 

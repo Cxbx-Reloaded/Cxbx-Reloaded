@@ -161,13 +161,8 @@ DWORD WINAPI EmuUpdateTickCount(LPVOID)
 {
     while(true)
     {
-        LARGE_INTEGER PerformanceCount;
-
-        QueryPerformanceCounter(&PerformanceCount);
-
-        xboxkrnl::KeTickCount = PerformanceCount.LowPart / 3000;
-
-        Sleep(10);
+        xboxkrnl::KeTickCount = GetTickCount();
+        Sleep(1);
     }
 }
 

@@ -65,25 +65,41 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
     NT_TIB         *OrgNtTib;
     xboxkrnl::KPCR *NewPcr;
 
-	uint16 NewFS = -1, OrgFS = -1;
+    uint08 *pNewTLS = NULL;
+
+    uint16 NewFS = -1, OrgFS = -1;
+
+    // ******************************************************************
+    // * Copy Global TLS to Local
+    // ******************************************************************
+    {
+        uint32 dwSize = RoundUp(pTLS->dwDataEndAddr - pTLS->dwDataStartAddr, 0x04);
+
+        if(dwSize == 0)
+            pNewTLS = 0;
+        else
+            pNewTLS = new uint08[dwSize];
+
+        memcpy(pNewTLS, pTLSData, dwSize);
+    }
 
     // ******************************************************************
     // * Dump Raw TLS data
     // ******************************************************************
     {
         #ifdef _DEBUG_TRACE
-        printf("CxbxKrnl (0x%.08X) : Dumping TLS Raw Data... \n  0x%.08X: ", GetCurrentThreadId(), pTLSData);
+        printf("CxbxKrnl (0x%.08X) : Dumping TLS Raw Data... \n  0x%.08X: ", GetCurrentThreadId(), pNewTLS);
 
-        uint32 stop = (pTLS->dwDataEndAddr - pTLS->dwDataStartAddr);
+        uint32 stop = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr;
 
         for(uint32 v=0;v<stop;v++)
         {
-            uint08 *bByte = (uint08*)pTLSData + v;
+            uint08 *bByte = (uint08*)pNewTLS + v;
 
             printf("%.01X", (uint32)*bByte);
 
             if((v+1) % 0x10 == 0)
-                printf("\n  0x%.08X: ", ((uint32)pTLSData + v));
+                printf("\n  0x%.08X: ", ((uint32)pNewTLS + v));
         }
 
         printf("\n");
@@ -145,7 +161,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 
         NewPcr->Prcb = &NewPcr->PrcbData;
 
-        NewPcr->PrcbData.CurrentThread->TlsData = (void*)pTLSData;
+        NewPcr->PrcbData.CurrentThread->TlsData = (void*)pNewTLS;
     }
 
     // ******************************************************************
@@ -156,7 +172,8 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
         *(uint32*)pTLS->dwTLSIndexAddr = 0;
 
         // dword @ pTLSData := pTLSData
-        *(void**)pTLSData = pTLSData;
+        if(pNewTLS != 0)
+            *(void**)pNewTLS = pNewTLS;
     }
 
     // ******************************************************************
@@ -184,7 +201,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
     {
         __asm
         {
-            mov eax, pTLSData
+            mov eax, pNewTLS
             mov fs:[0x04], eax
         }
     }
@@ -216,7 +233,21 @@ void EmuCleanupFS()
     if(wSwapFS == 0)
         return;
 
-    // TODO: Cleanup TLS data (after it's implemented)
+    if(!EmuIsXboxFS())
+        EmuSwapFS();    // Xbox FS
+
+    uint08 *pTLSData = NULL;
+
+    __asm
+    {
+        mov eax, fs:[0x04]
+        mov pTLSData, eax
+    }
+
+    EmuSwapFS(); // Win2k/XP FS
+
+    if(pTLSData != 0)
+        delete[] pTLSData;
 
     EmuDeallocateLDT(wSwapFS);
 }

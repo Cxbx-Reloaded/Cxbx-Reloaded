@@ -143,9 +143,7 @@ callComplete:
 
     EmuSwapFS();    // Win2k/XP FS
 
-    MessageBox(NULL, "Thread is all done.", "Cxbx", MB_OK);
-
-    EmuCleanupFS();
+    EmuCleanThread();
 
     return 0;
 }

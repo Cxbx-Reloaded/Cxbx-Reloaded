@@ -50,6 +50,11 @@ extern "C" CXBXKRNL_API void NTAPI EmuNoFunc();
 extern "C" CXBXKRNL_API void NTAPI EmuInit(void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
 
 // ******************************************************************
+// * func: EmuCleanThread
+// ******************************************************************
+extern "C" CXBXKRNL_API void NTAPI EmuCleanThread();
+
+// ******************************************************************
 // * func: EmuCleanup
 // ******************************************************************
 extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage);
