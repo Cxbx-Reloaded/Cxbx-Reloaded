@@ -1,5 +1,14 @@
 cxbx website: http://www.caustik.com/xbox/
 
+version: 0.7.5b (06/04/03)
+--------------------------------
+
+- Many more homebrew apps show some graphics
+
+- DirectInput bugs fixed
+
+- Lots of code cleanup
+
 version: 0.7.5 (05/30/03)
 --------------------------------
 

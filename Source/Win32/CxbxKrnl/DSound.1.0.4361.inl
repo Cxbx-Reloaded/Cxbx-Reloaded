@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->DSound.1.0.4627.cpp
+// *   Cxbx->Win32->CxbxKrnl->DSound.1.0.4361.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -262,6 +262,39 @@ SOOVPA<9> IDirectSoundBuffer8_SetCurrentPosition_1_0_4361 =
 };
 
 // ******************************************************************
+// * IDirectSoundBuffer8_Stop
+// ******************************************************************
+SOOVPA<11> IDirectSoundBuffer8_Stop_1_0_4361 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    // NOTE: This is actually intercepting CMcpxBuffer::Stop(ULONG)
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirectSoundBuffer8_Stop+0x28 : cmp ax, 0x0203
+        { 0x28, 0x66 }, // (Offset,Value)-Pair #1
+        { 0x29, 0x3D }, // (Offset,Value)-Pair #2
+        { 0x2A, 0x03 }, // (Offset,Value)-Pair #3
+        { 0x2B, 0x02 }, // (Offset,Value)-Pair #4
+
+        // IDirectSoundBuffer8_Stop+0x43 : mov eax, [esi+0x90]
+        { 0x43, 0x8B }, // (Offset,Value)-Pair #5
+        { 0x44, 0x86 }, // (Offset,Value)-Pair #6
+        { 0x45, 0x90 }, // (Offset,Value)-Pair #7
+
+        // IDirectSoundBuffer8_Stop+0x76 : test byte ptr[eax+0x0A], 4
+        { 0x76, 0xF6 }, // (Offset,Value)-Pair #8
+        { 0x77, 0x40 }, // (Offset,Value)-Pair #9
+        { 0x78, 0x0A }, // (Offset,Value)-Pair #10
+        { 0x79, 0x04 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
 // * DirectSoundCreate_1_0_4361
 // ******************************************************************
 OOVPATable DSound_1_0_4361[] =
@@ -334,6 +367,16 @@ OOVPATable DSound_1_0_4361[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirectSoundBuffer8_SetCurrentPosition"
+        #endif
+    },
+    // IDirectSoundBuffer8::Stop
+    {
+        (OOVPA*)&IDirectSoundBuffer8_Stop_1_0_4361,
+
+        XTL::EmuIDirectSoundBuffer8_Stop,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSoundBuffer8_Stop"
         #endif
     },
 };

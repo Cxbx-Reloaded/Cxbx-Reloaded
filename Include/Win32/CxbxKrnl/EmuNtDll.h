@@ -439,6 +439,25 @@ typedef enum _FS_INFORMATION_CLASS
 FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
 
 // ******************************************************************
+// * FILE_DIRECTORY_INFORMATION
+// ******************************************************************
+typedef struct _FILE_DIRECTORY_INFORMATION 
+{
+    ULONG           NextEntryOffset;
+    ULONG           FileIndex;
+    LARGE_INTEGER   CreationTime;
+    LARGE_INTEGER   LastAccessTime;
+    LARGE_INTEGER   LastWriteTime;
+    LARGE_INTEGER   ChangeTime;
+    LARGE_INTEGER   EndOfFile;
+    LARGE_INTEGER   AllocationSize;
+    ULONG           FileAttributes;
+    ULONG           FileNameLength;
+    WCHAR           FileName[1];        // Offset: 0x40
+}
+FILE_DIRECTORY_INFORMATION;
+
+// ******************************************************************
 // * KeDelayExecutionThread
 // ******************************************************************
 typedef NTSTATUS (NTAPI *KeDelayExecutionThread)

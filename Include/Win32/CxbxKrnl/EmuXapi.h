@@ -314,7 +314,7 @@ DWORD WINAPI EmuXGetDevices
 // ******************************************************************
 // * func: EmuXGetDeviceChanges
 // ******************************************************************
-DWORD WINAPI EmuXGetDeviceChanges
+BOOL WINAPI EmuXGetDeviceChanges
 (
     PXPP_DEVICE_TYPE DeviceType,
     PDWORD           pdwInsertions,                  

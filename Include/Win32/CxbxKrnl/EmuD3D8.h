@@ -180,6 +180,9 @@ inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
         case 0x07: // Swizzled   (X_D3DFMT_X8R8G8B8)
             return D3DFMT_X8R8G8B8;
 
+        case 0x0B: // Swizzled   (X_D3DFMT_P8)
+            return D3DFMT_P8;
+
         case 0x0C: // Compressed (X_D3DFMT_DXT1)
             return D3DFMT_DXT1;
 

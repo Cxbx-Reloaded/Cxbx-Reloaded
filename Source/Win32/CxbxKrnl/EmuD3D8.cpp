@@ -987,6 +987,7 @@ XTL::X_D3DSurface* WINAPI XTL::EmuIDirect3DDevice8_GetBackBuffer2
     }
     #endif
 
+    /* Temporarily? removed
     X_D3DSurface *pBackBuffer = new X_D3DSurface();
 
     if(BackBuffer == -1)
@@ -1018,6 +1019,14 @@ XTL::X_D3DSurface* WINAPI XTL::EmuIDirect3DDevice8_GetBackBuffer2
 
     if(BackBuffer != -1)
         g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &(pBackBuffer->EmuSurface8));
+    */
+
+    X_D3DSurface *pBackBuffer = new X_D3DSurface();
+
+    if(BackBuffer == -1)
+        BackBuffer = 0;
+
+    g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &(pBackBuffer->EmuSurface8));
 
     EmuSwapFS();   // Xbox FS
 
@@ -1507,6 +1516,11 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
     if(PCFormat == D3DFMT_D16)
     {
         printf("*Warning* D3DFMT_16 is an unsupported texture format!\n");
+        PCFormat = D3DFMT_X8R8G8B8;
+    }
+    else if(PCFormat == D3DFMT_P8)
+    {
+        printf("*Warning* D3DFMT_P8 is an unsupported texture format!\n");
         PCFormat = D3DFMT_X8R8G8B8;
     }
 

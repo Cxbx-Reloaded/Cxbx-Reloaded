@@ -918,6 +918,9 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
     }
     #endif
 
+    char ReplaceChar  = '\0';
+    int  ReplaceIndex = -1;
+
     char *szBuffer = ObjectAttributes->ObjectName->Buffer;
 
     // ******************************************************************
@@ -967,11 +970,17 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
             if(szBuffer[v] == '*')
             {
                 if(v > 0)
-                    szBuffer[v-1] = '\0';
+                    ReplaceIndex = v-1;
                 else
-                    szBuffer[v] = '\0';
-                break;
+                    ReplaceIndex = v;
             }
+        }
+
+        // Note: Hack: Not thread safe (if problems occur, create a temp buffer)
+        if(ReplaceIndex != -1)
+        {
+            ReplaceChar = szBuffer[ReplaceIndex];
+            szBuffer[ReplaceIndex] = '\0';
         }
     }
 
@@ -999,6 +1008,12 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
         FileHandle, DesiredAccess, &NtObjAttr, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock,
         (NtDll::LARGE_INTEGER*)AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, NULL
     );
+
+    // ******************************************************************
+    // * Restore original buffer
+    // ******************************************************************
+    if(ReplaceIndex != -1)
+        szBuffer[ReplaceIndex] = ReplaceChar;
 
     // NOTE: We can map this to IoCreateFile once implemented (if ever necessary)
     //       xboxkrnl::IoCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, 0);
@@ -1097,16 +1112,16 @@ XBSYSAPI EXPORTNUM(202) NTSTATUS NTAPI xboxkrnl::NtOpenFile
 // ******************************************************************
 XBSYSAPI EXPORTNUM(207) NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 (
-    IN  HANDLE                  FileHandle,
-    IN  HANDLE                  Event OPTIONAL,
-    IN  PVOID                   ApcRoutine, // Todo: define this routine's prototype
-    IN  PVOID                   ApcContext,
-    OUT PIO_STATUS_BLOCK        IoStatusBlock,
-    OUT PVOID                   FileInformation,
-    IN  ULONG                   Length,
-    IN  FILE_INFORMATION_CLASS  FileInformationClass,
-    IN  PSTRING                 FileMask,
-    IN  BOOLEAN                 RestartScan
+    IN  HANDLE                      FileHandle,
+    IN  HANDLE                      Event OPTIONAL,
+    IN  PVOID                       ApcRoutine, // Todo: define this routine's prototype
+    IN  PVOID                       ApcContext,
+    OUT PIO_STATUS_BLOCK            IoStatusBlock,
+    OUT FILE_DIRECTORY_INFORMATION *FileInformation,
+    IN  ULONG                       Length,
+    IN  FILE_INFORMATION_CLASS      FileInformationClass,
+    IN  PSTRING                     FileMask,
+    IN  BOOLEAN                     RestartScan
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -1135,9 +1150,14 @@ XBSYSAPI EXPORTNUM(207) NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
     }
     #endif
 
-    wchar_t wszObjectName[160];
+    NTSTATUS ret;
+
+    if(FileInformationClass != 1)   // Due to unicode->string conversion
+        EmuCleanup("Unsupported FileInformationClass");
 
     NtDll::UNICODE_STRING NtFileMask;
+
+    wchar_t wszObjectName[160];
 
     // ******************************************************************
     // * Initialize FileMask
@@ -1151,11 +1171,35 @@ XBSYSAPI EXPORTNUM(207) NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
         NtDll::RtlInitUnicodeString(&NtFileMask, wszObjectName);
     }
 
-    NTSTATUS ret = NtDll::NtQueryDirectoryFile
-    (
-        FileHandle, Event, (NtDll::PIO_APC_ROUTINE)ApcRoutine, ApcContext, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock, FileInformation,
-        Length, (NtDll::FILE_INFORMATION_CLASS)FileInformationClass, FALSE, &NtFileMask, RestartScan
-    );
+    NtDll::FILE_DIRECTORY_INFORMATION *FileDirInfo = (NtDll::FILE_DIRECTORY_INFORMATION*)malloc(0x40 + 160*2);
+
+    char    *mbstr = FileInformation->FileName;
+    wchar_t *wcstr = FileDirInfo->FileName;
+
+    do
+    {
+        ZeroMemory(wcstr, 160*2);
+
+        ret = NtDll::NtQueryDirectoryFile
+        (
+            FileHandle, Event, (NtDll::PIO_APC_ROUTINE)ApcRoutine, ApcContext, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock, FileDirInfo,
+            0x40+160*2, (NtDll::FILE_INFORMATION_CLASS)FileInformationClass, TRUE, &NtFileMask, RestartScan
+        );
+
+        // ******************************************************************
+        // * Convert from PC to Xbox
+        // ******************************************************************
+        {
+            memcpy(FileInformation, FileDirInfo, 0x40);
+
+            wcstombs(mbstr, wcstr, 160);
+
+            FileInformation->FileNameLength /= 2;
+        }
+    } // Xbox does not return . and ..
+    while(strcmp(mbstr, ".") == 0 || strcmp(mbstr, "..") == 0);
+
+    free(FileDirInfo);
 
     EmuSwapFS();   // Xbox FS
 

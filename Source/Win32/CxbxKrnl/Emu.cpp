@@ -319,7 +319,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         uint32 dwLibraryVersions = pXbeHeader->dwLibraryVersions;
         uint32 dwHLEEntries      = HLEDataBaseSize/sizeof(HLEData);
 
-        uint32 LastUnResolvedXRefs;
+        uint32 LastUnResolvedXRefs = UnResolvedXRefs+1;
         uint32 OrigUnResolvedXRefs = UnResolvedXRefs;
 
         for(int p=0;UnResolvedXRefs < LastUnResolvedXRefs;p++)
@@ -488,7 +488,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         EmuSwapFS();   // XBox FS
 
         // _USE_XGMATH Disabled in mesh :[
-        _asm int 3
+        //_asm int 3
 
         Entry();
 

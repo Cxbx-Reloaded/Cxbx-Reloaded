@@ -224,8 +224,7 @@ VOID WINAPI XTL::EmuXInitDevices
     }
     #endif
 
-    // TODO: For now, we don't need to init devices, we merely intercept
-    //       this function to prevent hardware access code from executing
+    // TODO: Initialize devices if/when necessary
 
     EmuSwapFS();   // XBox FS
 
@@ -255,16 +254,22 @@ DWORD WINAPI XTL::EmuXGetDevices
     }
     #endif
 
+    DWORD ret = NULL;
+
+    if(DeviceType->Reserved[0] == 0 && DeviceType->Reserved[1] == 0 && DeviceType->Reserved[2] == 0 && DeviceType->Reserved[3] == 0)
+        ret = (1 << 0);    // Return 1 Controller
+    else
+        EmuCleanup("Unknown DeviceType");
+
     EmuSwapFS();   // XBox FS
 
-    // TODO: Temporarily just return 1 Controller, even if the user didn't ask about Controllers
-    return (1 << 0);
+    return ret;
 }
 
 // ******************************************************************
 // * func: EmuXGetDeviceChanges
 // ******************************************************************
-DWORD WINAPI XTL::EmuXGetDeviceChanges
+BOOL WINAPI XTL::EmuXGetDeviceChanges
 (
     PXPP_DEVICE_TYPE DeviceType,
     PDWORD           pdwInsertions,                  
@@ -288,10 +293,25 @@ DWORD WINAPI XTL::EmuXGetDeviceChanges
     }
     #endif
 
+    BOOL bRet = FALSE;
+    BOOL bFirst = TRUE;
+
+    // Return 1 Controller Inserted initially, then no changes forever
+    if(bFirst)
+    {
+        *pdwInsertions = (1<<0);
+        *pdwRemovals   = 0;
+        bRet = TRUE;
+    }
+    else
+    {
+        *pdwInsertions = 0;
+        *pdwRemovals   = 0;
+    }
+
     EmuSwapFS();   // XBox FS
 
-    // TODO: Temporarily, we just claim no changes
-    return FALSE;
+    return bRet;
 }
 
 // ******************************************************************
@@ -391,8 +411,7 @@ DWORD WINAPI XTL::EmuXInputGetCapabilities
 
     DWORD ret = ERROR_INVALID_HANDLE;
 
-    // TODO: For now, the only valid handles are Controller 1 through 4,
-    //       and they are always normal Controllers
+    // TODO: For now, we are only allowing 1 controller
     if((int)hDevice >= 1 && (int)hDevice <= 4)
     {
         pCapabilities->SubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD;
@@ -423,7 +442,7 @@ DWORD WINAPI XTL::EmuXInputGetState
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXapi (0x%X): XInputGetState\n"
+        printf("EmuXapi (0x%X): EmuXInputGetState\n"
                "(\n"
                "   hDevice             : 0x%.08X\n"
                "   pState              : 0x%.08X\n"
@@ -439,9 +458,10 @@ DWORD WINAPI XTL::EmuXInputGetState
     if((int)hDevice >= 1 && (int)hDevice <= 4)
     {
         if((int)hDevice == 1)
+        {
             EmuDInputPoll(pState);
-
-        ret = ERROR_SUCCESS;
+            ret = ERROR_SUCCESS;
+        }
     }
 
     EmuSwapFS();   // XBox FS

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->HLEDataBase.h
+// *   Cxbx->Win32->CxbxKrnl->DSound.1.0.4627.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,68 +31,67 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef HLEDATABASE_H
-#define HLEDATABASE_H
-
-#include "Xapi.1.0.3911.h"
-#include "Xapi.1.0.4034.h"
-#include "Xapi.1.0.4361.h"
-#include "Xapi.1.0.4627.h"
-#include "D3D8.1.0.3925.h"
-#include "D3D8.1.0.4034.h"
-#include "D3D8.1.0.4361.h"
-#include "D3D8.1.0.4627.h"
-#include "DSound.1.0.4361.h"
-#include "DSound.1.0.4627.h"
-#include "XG.1.0.4361.h"
-#include "XG.1.0.4627.h"
-#include "XOnline.1.0.4361.h"
 
 // ******************************************************************
-// * HLEDataBase
+// * IDirectSound8_Release
 // ******************************************************************
-extern struct HLEData
+SOOVPA<10> IDirectSound8_Release_1_0_4627 =
 {
-    char       *Library;
+    0,  // Large == 0
+    10, // Count == 10
 
-    uint16      MajorVersion;
-    uint16      MinorVersion;
-    uint16      BuildVersion;
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
 
-    OOVPATable *OovpaTable;
-    uint32      OovpaTableSize;
-}
-HLEDataBase[];
+    {
+        // IDirectSound8_Release+0x04 : lea ecx, [eax-8]
+        { 0x04, 0x8D }, // (Offset,Value)-Pair #1
+        { 0x05, 0x48 }, // (Offset,Value)-Pair #2
+        { 0x06, 0xF8 }, // (Offset,Value)-Pair #3
 
-// ******************************************************************
-// * HLEDataBaseSize
-// ******************************************************************
-extern uint32 HLEDataBaseSize;
+        // IDirectSound8_Release+0x07 : neg eax
+        { 0x07, 0xF7 }, // (Offset,Value)-Pair #4
+        { 0x08, 0xD8 }, // (Offset,Value)-Pair #5
 
-// ******************************************************************
-// * XRefDataBase
-// ******************************************************************
-extern uint32 XRefDataBase[];
+        // IDirectSound8_Release+0x10 : call dword ptr [ecx+8]
+        { 0x10, 0xFF }, // (Offset,Value)-Pair #6
+        { 0x11, 0x51 }, // (Offset,Value)-Pair #7
+        { 0x12, 0x08 }, // (Offset,Value)-Pair #8
 
-// ******************************************************************
-// * UnResolvedXRefs
-// ******************************************************************
-extern uint32 UnResolvedXRefs;
-
-// ******************************************************************
-// * bXRefFirstPass
-// ******************************************************************
-extern bool bXRefFirstPass;
-
-// ******************************************************************
-// * XRefDataBaseOffset
-// ******************************************************************
-enum XRefDataBaseOffset
-{
-    XREF_XNINIT                 = 0,
-    XREF_FCLOSEDEVICE           = 1,
-    XREF_CLEARSTATEBLOCKFLAGS   = 2,
-    XREF_RECORDSTATEBLOCK       = 3
+        // IDirectSound8_Release+0x13 : retn 0x04
+        { 0x13, 0xC2 }, // (Offset,Value)-Pair #9
+        { 0x14, 0x04 }, // (Offset,Value)-Pair #10
+    }
 };
 
-#endif
+// ******************************************************************
+// * DirectSoundCreate_1_0_4627
+// ******************************************************************
+OOVPATable DSound_1_0_4627[] =
+{
+    // DirectSoundCreate (* unchanged since 4361 *)
+    {
+        (OOVPA*)&DirectSoundCreate_1_0_4361,
+
+        XTL::EmuDirectSoundCreate,
+
+        #ifdef _DEBUG_TRACE
+        "EmuDirectSoundCreate" 
+        #endif
+    },
+    // IDirectSound8::Release
+    {
+        (OOVPA*)&IDirectSound8_Release_1_0_4627,
+
+        XTL::EmuIDirectSound8_Release,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSound8_Release" 
+        #endif
+    },
+};
+
+// ******************************************************************
+// * DSound_1_0_4627_SIZE
+// ******************************************************************
+uint32 DSound_1_0_4627_SIZE = sizeof(DSound_1_0_4627);

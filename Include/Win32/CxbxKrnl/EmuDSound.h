@@ -68,6 +68,14 @@ HRESULT WINAPI EmuDirectSoundCreate
 );
 
 // ******************************************************************
+// * func: EmuIDirectSound8_Release
+// ******************************************************************
+ULONG WINAPI EmuIDirectSound8_Release
+(
+    LPDIRECTSOUND8          pThis
+);
+
+// ******************************************************************
 // * func: EmuIDirectSound8_CreateSoundBuffer
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSound8_CreateSoundBuffer
@@ -123,6 +131,14 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_SetVolume
 HRESULT WINAPI EmuIDirectSoundBuffer8_SetCurrentPosition
 (
     DWORD   dwNewPosition
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_Stop
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_Stop
+(
+    X_CDirectSoundBuffer   *pThis
 );
 
 #endif
