@@ -865,6 +865,11 @@ VOID WINAPI EmuGet2DSurfaceDesc
 );
 
 // ******************************************************************
+// * func: EmuGet2DSurfaceDescB
+// ******************************************************************
+void EmuGet2DSurfaceDescB();
+
+// ******************************************************************
 // * func: EmuIDirect3DSurface8_GetDesc
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DSurface8_GetDesc
@@ -972,6 +977,11 @@ BOOL WINAPI EmuIDirect3DDevice8_GetOverlayUpdateStatus();
 // * func: EmuIDirect3DDevice8_BlockUntilVerticalBlank
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_BlockUntilVerticalBlank();
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetVerticalBlankCallback
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetVerticalBlankCallback(PVOID pCallback);
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTextureState_TexCoordIndex

@@ -2242,23 +2242,35 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
             else
             {
                 // TODO: HACK: Figure out why this is necessary!
-                if(dwWidth < 16)
+                if(dwWidth < 4)
                 {
-                    printf("*Warning* expanding texture width (%d->16)\n", dwWidth);
-                    dwWidth = 16;
+                    printf("*Warning* expanding texture width (%d->4)\n", dwWidth);
+                    dwWidth = 4;
+                    
+                    dwMipMapLevels = 3;
                 }
 
-                if(dwHeight < 16)
+                if(dwHeight < 4)
                 {
-                    printf("*Warning* expanding texture height (%d->16)\n", dwHeight);
-                    dwHeight = 16;
+                    printf("*Warning* expanding texture height (%d->4)\n", dwHeight);
+                    dwHeight = 4;
+
+                    dwMipMapLevels = 3;
                 }
+
+                #ifdef _DEBUG_TRACE
+                printf("CreateTexture(%d, %d, %d, 0, %d, D3DPOOL_MANAGED, 0x%.08X)\n", dwWidth, dwHeight,
+                    dwMipMapLevels, Format, &pResource->EmuTexture8);
+                #endif
 
                 hRet = g_pD3DDevice8->CreateTexture
                 (
                     dwWidth, dwHeight, dwMipMapLevels, 0, Format,
                     D3DPOOL_MANAGED, &pResource->EmuTexture8
                 );
+
+                if(FAILED(hRet))
+                    EmuCleanup("CreateTexture failed");
             }
 
             D3DLOCKED_RECT LockedRect;
@@ -2483,6 +2495,56 @@ VOID WINAPI XTL::EmuGet2DSurfaceDesc
     EmuSwapFS();   // XBox FS
 
     return;
+}
+
+// ******************************************************************
+// * func: EmuGet2DSurfaceDescB
+// ******************************************************************
+__declspec(naked) void XTL::EmuGet2DSurfaceDescB()
+{
+#ifdef _DEBUG
+    /* Stupid Ass Debug Mode Prolog
+    1000A1E0 55                   push        ebp
+    1000A1E1 8B EC                mov         ebp,esp
+    1000A1E3 83 EC 40             sub         esp,40h
+    1000A1E6 53                   push        ebx
+    1000A1E7 56                   push        esi
+    1000A1E8 57                   push        edi
+    1000A1E9 8D 7D C0             lea         edi,[ebp-40h]
+    1000A1EC B9 10 00 00 00       mov         ecx,10h
+    1000A1F1 B8 CC CC CC CC       mov         eax,0CCCCCCCCh
+    1000A1F6 F3 AB                rep stos    dword ptr [edi]
+    */
+    __asm
+    {
+        int 3
+
+        pop  edi
+        pop  esi
+        pop  ebx
+
+        push ebx
+        push esi
+        push edi
+
+        push ebx
+        push esi
+        push edi
+
+        call EmuGet2DSurfaceDesc
+    }
+#else
+    __asm
+    {
+        push ebx
+        push esi
+        push edi
+
+        call EmuGet2DSurfaceDesc
+
+        retn
+    }
+#endif
 }
 
 // ******************************************************************
@@ -2913,6 +2975,33 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_BlockUntilVerticalBlank()
     #endif
 
     printf("*Warning* EmuIDirect3DDevice8_BlockUntilVerticalBlank is not implemented\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetVerticalBlankCallback
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetVerticalBlankCallback(PVOID pCallback)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVerticalBlankCallback\n"
+               "(\n"
+               "   pCallback           : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pCallback);
+    }
+    #endif
+
+    printf("*Warning* EmuIDirect3DDevice8_SetVerticalBlankCallback is not implemented\n");
 
     EmuSwapFS();   // XBox FS
 

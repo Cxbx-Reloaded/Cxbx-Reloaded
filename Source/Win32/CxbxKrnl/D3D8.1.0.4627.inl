@@ -833,6 +833,39 @@ SOOVPA<11> IDirect3DDevice8_BlockUntilVerticalBlank_1_0_4627 =
     }
 };
 
+// ******************************************************************
+// * IDirect3DDevice8_SetVerticalBlankCallback
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_SetVerticalBlankCallback_1_0_4627 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetVerticalBlankCallback+0x00 : mov eax, [esp+0x04]
+        { 0x00, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x01, 0x44 }, // (Offset,Value)-Pair #2
+        { 0x02, 0x24 }, // (Offset,Value)-Pair #3
+        { 0x03, 0x04 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DDevice8_SetVerticalBlankCallback+0x04 : mov ecx, [addr]
+        { 0x04, 0x8B }, // (Offset,Value)-Pair #5
+        { 0x05, 0x0D }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_SetVerticalBlankCallback+0x0A : mov [ecx+0x2550], eax
+        { 0x0A, 0x89 }, // (Offset,Value)-Pair #7
+        { 0x0B, 0x81 }, // (Offset,Value)-Pair #8
+        { 0x0C, 0x50 }, // (Offset,Value)-Pair #9
+        { 0x0D, 0x25 }, // (Offset,Value)-Pair #10
+
+        // IDirect3DDevice8_SetVerticalBlankCallback+0x10 : retn 0x04
+        { 0x10, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x11, 0x04 }, // (Offset,Value)-Pair #12
+    }
+};
 
 // ******************************************************************
 // * IDirect3DDevice8_SetTextureState_TexCoordIndex
@@ -1330,6 +1363,35 @@ SOOVPA<10> Get2DSurfaceDesc_1_0_4627 =
 };
 
 // ******************************************************************
+// * Get2DSurfaceDescB
+// ******************************************************************
+SOOVPA<9> Get2DSurfaceDescB_1_0_4627 =
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // Get2DSurfaceDescB+0x1D : movzx ecx, byte ptr [edi+0x0D]
+        { 0x1D, 0x0F }, // (Offset,Value)-Pair #1
+        { 0x1E, 0xB6 }, // (Offset,Value)-Pair #2
+        { 0x1F, 0x4F }, // (Offset,Value)-Pair #3
+        { 0x20, 0x0D }, // (Offset,Value)-Pair #4
+
+        // Get2DSurfaceDescB+0x44 : mov edx, [eax+0x21C0]
+        { 0x44, 0x8B }, // (Offset,Value)-Pair #5
+        { 0x45, 0x90 }, // (Offset,Value)-Pair #6
+        { 0x46, 0xC0 }, // (Offset,Value)-Pair #7
+        { 0x47, 0x21 }, // (Offset,Value)-Pair #8
+
+        // Get2DSurfaceDescB+0x9E : retn
+        { 0x9E, 0xC3 }, // (Offset,Value)-Pair #9
+    }
+};
+
+// ******************************************************************
 // * IDirect3DTexture8_GetSurfaceLevel2
 // ******************************************************************
 SOOVPA<14> IDirect3DTexture8_GetSurfaceLevel2_1_0_4627 =
@@ -1666,6 +1728,16 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_BlockUntilVerticalBlank" 
         #endif
     },
+    // IDirect3DDevice8::SetVerticalBlankCallback
+    {
+        (OOVPA*)&IDirect3DDevice8_SetVerticalBlankCallback_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_SetVerticalBlankCallback,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetVerticalBlankCallback" 
+        #endif
+    },
     // IDirect3DDevice8::SetTextureState_TexCoordIndex
     {
         (OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4627,
@@ -1956,7 +2028,7 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DResource8_IsBusy"
         #endif
     },
-    // Get2DSurfacDesc
+    // Get2DSurfaceDesc
     {
         (OOVPA*)&Get2DSurfaceDesc_1_0_4627,
 
@@ -1964,6 +2036,16 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuGet2DSurfaceDesc" 
+        #endif
+    },
+    // Get2DSurfaceDescB
+    {
+        (OOVPA*)&Get2DSurfaceDescB_1_0_4627,
+
+        XTL::EmuGet2DSurfaceDescB,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGet2DSurfaceDescB" 
         #endif
     },
     // IDirect3DSurface8::GetDesc (* unchanged since 4361 *)

@@ -275,6 +275,26 @@ HRESULT WINAPI EmuIDirectSound8_SetDopplerFactor
 );
 
 // ******************************************************************
+// * func: EmuIDirectSound8_SetI3DL2Listener
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSound8_SetI3DL2Listener
+(
+    LPDIRECTSOUND8          pThis,
+    PVOID                   pDummy, // TODO: fill this out
+    DWORD                   dwApply
+);
+
+// ******************************************************************
+// * func: EmuIDirectSound8_SetMixBinHeadroom
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSound8_SetMixBinHeadroom
+(
+    LPDIRECTSOUND8          pThis,
+    DWORD                   dwMixBinMask,
+    DWORD                   dwHeadroom
+);
+
+// ******************************************************************
 // * func: EmuIDirectSound8_CreateSoundBuffer
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSound8_CreateSoundBuffer
@@ -284,6 +304,7 @@ HRESULT WINAPI EmuIDirectSound8_CreateSoundBuffer
     X_CDirectSoundBuffer  **ppBuffer,
     LPUNKNOWN               pUnkOuter
 );
+
 
 // ******************************************************************
 // * func: EmuIDirectSoundBuffer8_SetBufferData

@@ -662,6 +662,70 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateSoundBuffer
 }
 
 // ******************************************************************
+// * func: EmuIDirectSound8_SetI3DL2Listener
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSound8_SetI3DL2Listener
+(
+    LPDIRECTSOUND8          pThis,
+    PVOID                   pDummy, // TODO: fill this out
+    DWORD                   dwApply
+)
+{
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        EmuSwapFS();   // Win2k/XP FS
+        printf("EmuDSound (0x%X): EmuIDirectSound8_SetI3DL2Listener\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   pDummy                    : 0x%.08X\n"
+               "   dwApply                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, pDummy, dwApply);
+        EmuSwapFS();   // XBox FS
+    }
+    #endif
+
+    // TODO: Actually do something
+
+    return DS_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSound8_SetMixBinHeadroom
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSound8_SetMixBinHeadroom
+(
+    LPDIRECTSOUND8          pThis,
+    DWORD                   dwMixBinMask,
+    DWORD                   dwHeadroom
+)
+{
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        EmuSwapFS();   // Win2k/XP FS
+        printf("EmuDSound (0x%X): EmuIDirectSound8_SetMixBinHeadroom\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   dwMixBinMask              : 0x%.08X\n"
+               "   dwHeadroom                : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, dwMixBinMask, dwHeadroom);
+        EmuSwapFS();   // XBox FS
+    }
+    #endif
+
+    // TODO: Actually do something
+
+    return DS_OK;
+}
+
+// ******************************************************************
 // * func: EmuIDirectSoundBuffer8_SetBufferData
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetBufferData
