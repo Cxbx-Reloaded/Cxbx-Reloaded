@@ -52,6 +52,8 @@ namespace xntdll
 // ******************************************************************
 namespace win32
 {
+    // this macro will cause warnings if not undef'd
+    #undef FIELD_OFFSET
     #include <windows.h>
 };
 

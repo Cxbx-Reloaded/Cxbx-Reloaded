@@ -34,6 +34,8 @@
 #ifndef WND_H
 #define WND_H
 
+// this macro will cause warnings if not undef'd
+#undef FIELD_OFFSET
 #include <windows.h>
 
 // ******************************************************************
