@@ -866,14 +866,6 @@ VOID WINAPI EmuIDirect3DDevice8_SetRenderState_PSTextureModes
 );
 
 // ******************************************************************
-// * func: EmuIDirect3DDevice8_SetRenderState_StencilFail
-// ******************************************************************
-VOID WINAPI EmuIDirect3DDevice8_SetRenderState_StencilFail
-(
-    DWORD Value
-);
-
-// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_CullMode
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_SetRenderState_CullMode

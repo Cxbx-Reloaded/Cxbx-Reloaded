@@ -188,7 +188,7 @@
 				RelativePath=".\Include\Win32\CxbxKrnl\EmuD3D8.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\EmuD3D8Conv.h">
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuD3D8Types.h">
 			</File>
 			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\EmuDInput.h">
@@ -242,7 +242,7 @@
 				RelativePath=".\Include\Core\Xbe.h">
 			</File>
 			<Filter
-				Name="HLEDataBase.h"
+				Name="HLEDataBase (h)"
 				Filter="">
 				<File
 					RelativePath=".\Include\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.3925.h">
@@ -255,6 +255,9 @@
 				</File>
 				<File
 					RelativePath=".\Include\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4361.h">
+				</File>
+				<File
+					RelativePath=".\Include\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4432.h">
 				</File>
 				<File
 					RelativePath=".\Include\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.h">
@@ -293,7 +296,26 @@
 					RelativePath=".\Include\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4361.h">
 				</File>
 				<File
+					RelativePath=".\Include\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4432.h">
+				</File>
+				<File
 					RelativePath=".\Include\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.h">
+				</File>
+			</Filter>
+			<Filter
+				Name="EmuD3D8 (h)"
+				Filter="">
+				<File
+					RelativePath=".\Include\Win32\CxbxKrnl\EmuD3D8\Convert.h">
+				</File>
+				<File
+					RelativePath=".\Include\Win32\CxbxKrnl\EmuD3D8\PushBuffer.h">
+				</File>
+				<File
+					RelativePath=".\Include\Win32\CxbxKrnl\EmuD3D8\VertexBuffer.h">
+				</File>
+				<File
+					RelativePath=".\Include\Win32\CxbxKrnl\EmuD3D8\VertexShader.h">
 				</File>
 			</Filter>
 		</Filter>
@@ -327,9 +349,6 @@
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\EmuD3D8.cpp">
-			</File>
-			<File
-				RelativePath=".\Source\Win32\CxbxKrnl\EmuD3D8Conv.cpp">
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\EmuDInput.cpp">
@@ -383,7 +402,7 @@
 				RelativePath=".\Source\Win32\XBVideo.cpp">
 			</File>
 			<Filter
-				Name="HLEDataBase.inl"
+				Name="HLEDataBase (inl)"
 				Filter="">
 				<File
 					RelativePath=".\Source\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.3925.inl">
@@ -396,6 +415,9 @@
 				</File>
 				<File
 					RelativePath=".\Source\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4361.inl">
+				</File>
+				<File
+					RelativePath=".\Source\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4432.inl">
 				</File>
 				<File
 					RelativePath=".\Source\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.inl">
@@ -434,7 +456,26 @@
 					RelativePath=".\Source\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4361.inl">
 				</File>
 				<File
+					RelativePath=".\Source\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4432.inl">
+				</File>
+				<File
 					RelativePath=".\Source\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.inl">
+				</File>
+			</Filter>
+			<Filter
+				Name="EmuD3D8 (cpp)"
+				Filter="">
+				<File
+					RelativePath=".\Source\Win32\CxbxKrnl\EmuD3D8\Convert.cpp">
+				</File>
+				<File
+					RelativePath=".\Source\Win32\CxbxKrnl\EmuD3D8\PushBuffer.cpp">
+				</File>
+				<File
+					RelativePath=".\Source\Win32\CxbxKrnl\EmuD3D8\VertexBuffer.cpp">
+				</File>
+				<File
+					RelativePath=".\Source\Win32\CxbxKrnl\EmuD3D8\VertexShader.cpp">
 				</File>
 			</Filter>
 		</Filter>

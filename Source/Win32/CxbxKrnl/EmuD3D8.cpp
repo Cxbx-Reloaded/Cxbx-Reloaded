@@ -5364,34 +5364,6 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_PSTextureModes
 }
 
 // ******************************************************************
-// * func: EmuIDirect3DDevice8_SetRenderState_StencilFail
-// ******************************************************************
-VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_StencilFail
-(
-    DWORD Value
-)
-{
-    EmuSwapFS();   // Win2k/XP FS
-
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_StencilFail\n"
-               "(\n"
-               "   Value               : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), Value);
-    }
-    #endif
-
-    // TODO: do something..
-
-    EmuSwapFS();   // XBox FS
-
-    return;
-}
-
-// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_CullMode
 // ******************************************************************
 VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_CullMode

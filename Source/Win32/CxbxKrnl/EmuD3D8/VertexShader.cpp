@@ -815,7 +815,7 @@ extern void XTL::EmuRecompileVSHFunction
 
             // start at 2nd param
             {
-                for(int i=1;i<dwMaxParams;i++)
+                for(DWORD i=1;i<dwMaxParams;i++)
                 {
                     strcat(mac_parm_str, ", ");
 
