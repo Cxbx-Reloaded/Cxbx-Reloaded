@@ -114,34 +114,6 @@ SOOVPA<10> IDirect3DDevice8_BeginPush_1_0_5558 =
 };
 
 // ******************************************************************
-// * IDirect3DDevice8_EndPush
-// ******************************************************************
-SOOVPA<12> IDirect3DDevice8_EndPush_1_0_5558 =
-{
-    0,  // Large == 0
-    12, // Count == 10
-
-    -1, // Xref Not Saved
-    1,  // Xref Is  Used
-
-    {
-        { 0x06, XREF_D3DDEVICE }, // 1
-
-        { 0x00, 0x8B }, // 2
-        { 0x01, 0x44 }, // 3
-        { 0x02, 0x24 }, // 4
-        { 0x03, 0x04 }, // 5
-        { 0x04, 0x8B }, // 6
-        { 0x05, 0x0D }, // 7
-        { 0x0A, 0x89 }, // 8
-        { 0x0B, 0x01 }, // 9
-        { 0x0C, 0xC2 }, // 10
-        { 0x0D, 0x04 }, // 11
-        { 0x0E, 0x00 }, // 12
-    }
-};
-
-// ******************************************************************
 // * IDirect3DDevice8_LoadVertexShader
 // ******************************************************************
 SOOVPA<10> IDirect3DDevice8_LoadVertexShader_1_0_5558 =
@@ -1028,9 +1000,9 @@ OOVPATable D3D8_1_0_5558[] =
         "EmuIDirect3DDevice8_BeginPush"
         #endif
     },
-    // IDirect3DDevice8::EndPush
+    // IDirect3DDevice8::EndPush (* unchanged since 4627 *)
     {
-        (OOVPA*)&IDirect3DDevice8_EndPush_1_0_5558,
+        (OOVPA*)&IDirect3DDevice8_EndPush_1_0_4627,
 
         XTL::EmuIDirect3DDevice8_EndPush,
 

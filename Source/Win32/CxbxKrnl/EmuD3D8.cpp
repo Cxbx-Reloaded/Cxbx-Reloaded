@@ -3224,7 +3224,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetTexture
         {
             pBaseTexture8 = pTexture->EmuBaseTexture8;
 
-            /*
+            #ifdef _DEBUG_DUMP_TEXTURE_SETTEXTURE
             if(pTexture != NULL && (pTexture->EmuTexture8 != NULL))
             {
                 static int dwDumpTexture = 0;
@@ -3234,24 +3234,30 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetTexture
                 switch(pTexture->EmuResource8->GetType())
                 {
                     case D3DRTYPE_TEXTURE:
-                        sprintf(szBuffer, "C:\\Aaron\\Textures\\SetTextureNorm - %.03d (0x%.08X).bmp", dwDumpTexture++, pTexture->EmuTexture8);
+                    {
+                        sprintf(szBuffer, _DEBUG_DUMP_TEXTURE_SETTEXTURE "SetTextureNorm - %.03d (0x%.08X).bmp", dwDumpTexture++, pTexture->EmuTexture8);
+
                         pTexture->EmuTexture8->UnlockRect(0);
+
                         D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture->EmuTexture8, NULL);
-                        break;
+                    }
+                    break;
 
                     case D3DRTYPE_CUBETEXTURE:
+                    {
                         for(int face=0;face<6;face++)
                         {
-                            sprintf(szBuffer, "C:\\Aaron\\Textures\\SetTextureCube%d - %.03d (0x%.08X).bmp", face, dwDumpTexture++, pTexture->EmuTexture8);
+                            sprintf(szBuffer, _DEBUG_DUMP_TEXTURE_SETTEXTURE "SetTextureCube%d - %.03d (0x%.08X).bmp", face, dwDumpTexture++, pTexture->EmuTexture8);
 
                             pTexture->EmuCubeTexture8->UnlockRect((D3DCUBEMAP_FACES)face, 0);
                             
                             D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture->EmuTexture8, NULL);
                         }
-                        break;
+                    }
+                    break;
                 }
             } 
-            //*/
+            #endif
         }
     }
 
@@ -4384,14 +4390,14 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 }
 
                 // Debug Texture Dumping
-                /*
+                #ifdef _DEBUG_DUMP_TEXTURE_REGISTER
                 if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
                 {
                     static int dwDumpSurface = 0;
 
                     char szBuffer[255];
 
-                    sprintf(szBuffer, "C:\\Aaron\\Textures\\%.03d-RegSurface%.03d.bmp", X_Format, dwDumpSurface++);
+                    sprintf(szBuffer, _DEBUG_DUMP_TEXTURE_REGISTER "%.03d-RegSurface%.03d.bmp", X_Format, dwDumpSurface++);
 
                     D3DXSaveSurfaceToFile(szBuffer, D3DXIFF_BMP, pResource->EmuSurface8, NULL, NULL);
                 }
@@ -4407,7 +4413,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                         {
                             IDirect3DSurface8 *pSurface=0;
 
-                            sprintf(szBuffer, "C:\\Aaron\\Textures\\%.03d-RegCubeTex%.03d-%d.bmp", X_Format, dwDumpCube++, v);
+                            sprintf(szBuffer, _DEBUG_DUMP_TEXTURE_REGISTER "%.03d-RegCubeTex%.03d-%d.bmp", X_Format, dwDumpCube++, v);
 
                             pResource->EmuCubeTexture8->GetCubeMapSurface((D3DCUBEMAP_FACES)v, 0, &pSurface);
 
@@ -4420,12 +4426,12 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
                         char szBuffer[255];
 
-                        sprintf(szBuffer, "C:\\Aaron\\Textures\\%.03d-RegTexture%.03d.bmp", X_Format, dwDumpTex++);
+                        sprintf(szBuffer, _DEBUG_DUMP_TEXTURE_REGISTER "%.03d-RegTexture%.03d.bmp", X_Format, dwDumpTex++);
 
                         D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pResource->EmuTexture8, NULL);
                     }
                 }
-                //*/
+                #endif
             }
         }
         break;

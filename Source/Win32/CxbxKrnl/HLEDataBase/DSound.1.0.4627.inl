@@ -705,6 +705,36 @@ SOOVPA<11> CMcpxBuffer_GetStatus_1_0_4627 =
 };
 
 // ******************************************************************
+// * CMcpxBuffer_GetStatusB
+// ******************************************************************
+SOOVPA<12> CMcpxBuffer_GetStatusB_1_0_4627 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    XREF_DSBUFFERGETSTATUSA,    // XRef Is  Saved
+    0,                          // XRef Not Used
+
+    {
+        { 0x16, 0x6A }, // (Offset,Value)-Pair #1
+        { 0x17, 0x00 }, // (Offset,Value)-Pair #2
+        { 0x18, 0x5A }, // (Offset,Value)-Pair #3
+
+        { 0x1C, 0x42 }, // (Offset,Value)-Pair #4
+        { 0x1D, 0xF6 }, // (Offset,Value)-Pair #5
+        { 0x1E, 0xC4 }, // (Offset,Value)-Pair #6
+        { 0x1F, 0x02 }, // (Offset,Value)-Pair #7
+
+        { 0x29, 0xB9 }, // (Offset,Value)-Pair #8
+        { 0x2A, 0x01 }, // (Offset,Value)-Pair #9
+        { 0x2B, 0x80 }, // (Offset,Value)-Pair #10
+
+        { 0x3F, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x40, 0x04 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
 // * CDirectSoundBuffer_GetStatus
 // ******************************************************************
 SOOVPA<10> CDirectSoundBuffer_GetStatus_1_0_4627 =
@@ -2233,6 +2263,14 @@ OOVPATable DSound_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "CMcpxBuffer_GetStatus (XREF)"
+        #endif
+    },
+    // CMcpxBuffer::GetStatusB
+    {
+        (OOVPA*)&CMcpxBuffer_GetStatusB_1_0_4627, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CMcpxBuffer_GetStatusB (XREF)"
         #endif
     },
     // CDirectSoundBuffer::GetStatus

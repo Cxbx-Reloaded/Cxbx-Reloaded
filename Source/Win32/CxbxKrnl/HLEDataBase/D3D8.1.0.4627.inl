@@ -266,6 +266,28 @@ SOOVPA<11> IDirect3D8_KickOffAndWaitForIdle2_1_0_4627 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_BeginPush
+// ******************************************************************
+SOOVPA<7> IDirect3DDevice8_BeginPush_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x08, 0x00 },
+        { 0x12, 0x8B },
+        { 0x1C, 0x02 },
+        { 0x26, 0x72 },
+        { 0x30, 0xE8 },
+        { 0x3A, 0x76 },
+        { 0x44, 0x52 },
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetViewport
 // ******************************************************************
 SOOVPA<9> IDirect3DDevice8_SetViewport_1_0_4627 =
@@ -2777,6 +2799,34 @@ SOOVPA<7> X_D3DDevice_RunVertexStateShader_1_0_4627 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_EndPush
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_EndPush_1_0_4627 =
+{
+    0,  // Large == 0
+    12, // Count == 10
+
+    -1, // Xref Not Saved
+    1,  // Xref Is  Used
+
+    {
+        { 0x06, XREF_D3DDEVICE }, // 1
+
+        { 0x00, 0x8B }, // 2
+        { 0x01, 0x44 }, // 3
+        { 0x02, 0x24 }, // 4
+        { 0x03, 0x04 }, // 5
+        { 0x04, 0x8B }, // 6
+        { 0x05, 0x0D }, // 7
+        { 0x0A, 0x89 }, // 8
+        { 0x0B, 0x01 }, // 9
+        { 0x0C, 0xC2 }, // 10
+        { 0x0D, 0x04 }, // 11
+        { 0x0E, 0x00 }, // 12
+    }
+};
+
+// ******************************************************************
 // * D3DDevice_LoadVertexShader
 // ******************************************************************
 SOOVPA<7> X_D3DDevice_LoadVertexShader_1_0_4627 =
@@ -3160,6 +3210,26 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3D8_KickOffAndWaitForIdle2"
+        #endif
+    },
+    // IDirect3DDevice8::BeginPush
+    {
+        (OOVPA*)&IDirect3DDevice8_BeginPush_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_BeginPush,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_BeginPush"
+        #endif
+    },
+    // IDirect3DDevice8::EndPush
+    {
+        (OOVPA*)&IDirect3DDevice8_EndPush_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_EndPush,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_EndPush"
         #endif
     },
     // IDirect3DDevice8::CopyRects

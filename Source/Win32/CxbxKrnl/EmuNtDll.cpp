@@ -56,6 +56,7 @@ NtDll::FPTR_RtlUnicodeStringToAnsiString   NtDll::RtlUnicodeStringToAnsiString =
 NtDll::FPTR_RtlNtStatusToDosError          NtDll::RtlNtStatusToDosError        = (NtDll::FPTR_RtlNtStatusToDosError)GetProcAddress(hNtDll, "RtlNtStatusToDosError");
 NtDll::FPTR_RtlTimeFieldsToTime            NtDll::RtlTimeFieldsToTime          = (NtDll::FPTR_RtlTimeFieldsToTime)GetProcAddress(hNtDll, "RtlTimeFieldsToTime");
 NtDll::FPTR_RtlTimeToTimeFields            NtDll::RtlTimeToTimeFields          = (NtDll::FPTR_RtlTimeToTimeFields)GetProcAddress(hNtDll, "RtlTimeToTimeFields");
+NtDll::FPTR_RtlTryEnterCriticalSection     NtDll::RtlTryEnterCriticalSection   = (NtDll::FPTR_RtlTryEnterCriticalSection)GetProcAddress(hNtDll, "RtlTryEnterCriticalSection");
 NtDll::FPTR_RtlInitializeCriticalSection   NtDll::RtlInitializeCriticalSection = (NtDll::FPTR_RtlInitializeCriticalSection)GetProcAddress(hNtDll, "RtlInitializeCriticalSection");
 NtDll::FPTR_RtlEnterCriticalSection        NtDll::RtlEnterCriticalSection      = (NtDll::FPTR_RtlEnterCriticalSection)GetProcAddress(hNtDll, "RtlEnterCriticalSection");
 NtDll::FPTR_RtlLeaveCriticalSection        NtDll::RtlLeaveCriticalSection      = (NtDll::FPTR_RtlLeaveCriticalSection)GetProcAddress(hNtDll, "RtlLeaveCriticalSection");

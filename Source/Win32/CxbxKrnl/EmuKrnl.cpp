@@ -1826,7 +1826,7 @@ XBSYSAPI EXPORTNUM(225) NTSTATUS NTAPI xboxkrnl::NtSetEvent
 // * 0x00E2 - NtSetInformationFile
 // ******************************************************************
 XBSYSAPI EXPORTNUM(226) NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
-(	
+(
 	IN  HANDLE  FileHandle,            // TODO: correct paramters
 	OUT	PVOID	IoStatusBlock,
 	IN	PVOID	FileInformation,
@@ -2336,6 +2336,22 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
 }
 
 // ******************************************************************
+// * RtlLowerChar
+// ******************************************************************
+XBSYSAPI EXPORTNUM(296) xboxkrnl::CHAR NTAPI xboxkrnl::RtlLowerChar(CHAR Character)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): RtlLowerChar(%c)\n", GetCurrentThreadId(), Character);
+
+    CHAR ret = tolower(Character);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
+}
+
+// ******************************************************************
 // * 0x012D - RtlNtStatusToDosError
 // ******************************************************************
 XBSYSAPI EXPORTNUM(301) xboxkrnl::ULONG NTAPI xboxkrnl::RtlNtStatusToDosError
@@ -2406,6 +2422,29 @@ XBSYSAPI EXPORTNUM(305) VOID NTAPI xboxkrnl::RtlTimeToTimeFields
     EmuSwapFS();   // Xbox FS
 
     return;
+}
+
+// ******************************************************************
+// * RtlTryEnterCriticalSection
+// ******************************************************************
+XBSYSAPI EXPORTNUM(306) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTryEnterCriticalSection
+(
+    IN PRTL_CRITICAL_SECTION CriticalSection
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): RtlTryEnterCriticalSection\n"
+           "(\n"
+           "   CriticalSection     : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), CriticalSection);
+
+    BOOL bRet = NtDll::RtlTryEnterCriticalSection((NtDll::PRTL_CRITICAL_SECTION)CriticalSection);
+
+    EmuSwapFS();   // Xbox FS
+
+    return bRet;
 }
 
 // ******************************************************************

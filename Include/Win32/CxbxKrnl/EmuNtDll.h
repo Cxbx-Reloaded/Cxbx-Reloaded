@@ -580,8 +580,8 @@ typedef ULONG (NTAPI *FPTR_RtlNtStatusToDosError)(NTSTATUS Status);
 // ******************************************************************
 typedef BOOLEAN (NTAPI *FPTR_RtlTimeFieldsToTime)
 (
-  IN  PTIME_FIELDS    TimeFields,
-  OUT PLARGE_INTEGER  Time
+    IN  PTIME_FIELDS    TimeFields,
+    OUT PLARGE_INTEGER  Time
 );
 
 // ******************************************************************
@@ -589,8 +589,16 @@ typedef BOOLEAN (NTAPI *FPTR_RtlTimeFieldsToTime)
 // ******************************************************************
 typedef VOID (NTAPI *FPTR_RtlTimeToTimeFields)
 (
-  IN  PLARGE_INTEGER  Time,
-  OUT PTIME_FIELDS    TimeFields 
+    IN  PLARGE_INTEGER  Time,
+    OUT PTIME_FIELDS    TimeFields 
+);
+
+// ******************************************************************
+// * RtlTryEnterCriticalSection
+// ******************************************************************
+typedef BOOL (NTAPI *FPTR_RtlTryEnterCriticalSection)
+(
+    IN PRTL_CRITICAL_SECTION CriticalSection
 );
 
 // ******************************************************************
@@ -983,6 +991,7 @@ extern FPTR_RtlUnicodeStringToAnsiString   RtlUnicodeStringToAnsiString;
 extern FPTR_RtlNtStatusToDosError          RtlNtStatusToDosError;
 extern FPTR_RtlTimeFieldsToTime            RtlTimeFieldsToTime;
 extern FPTR_RtlTimeToTimeFields            RtlTimeToTimeFields;
+extern FPTR_RtlTryEnterCriticalSection     RtlTryEnterCriticalSection;
 extern FPTR_RtlInitializeCriticalSection   RtlInitializeCriticalSection;
 extern FPTR_RtlEnterCriticalSection        RtlEnterCriticalSection;
 extern FPTR_RtlLeaveCriticalSection        RtlLeaveCriticalSection;
