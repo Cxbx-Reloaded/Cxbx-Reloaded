@@ -2966,7 +2966,7 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
         }
 
         // if we haven't already converted this buffer to triangles, do it now
-        if(dwCached == -1)
+//        if(dwCached == -1)
         {
             int e=0;
 
@@ -2974,6 +2974,14 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
             for(e=0;e<32;e++)
                 if(g_SlideCache[e].pOrigPtr == 0)
                     break;
+
+            if(e == 32)
+            {
+                e = 0;
+                g_SlideCache[e].pOrigPtr = 0;
+                g_SlideCache[e].pVertexBuffer8->Release();
+                g_SlideCache[e].pVertexBuffer8 = 0;
+            }
 
             g_SlideCache[e].pOrigPtr = pOrigVertexBuffer8;
 
@@ -3031,7 +3039,7 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
     g_pD3DDevice8->DrawPrimitive
     (
         PCPrimitiveType,
-        StartVertex*2,
+        StartVertex,
         PrimitiveCount
     );
 
