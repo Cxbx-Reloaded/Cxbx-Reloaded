@@ -369,6 +369,38 @@ DWORD WINAPI xapi::EmuXInputGetState
 }
 
 // ******************************************************************
+// * func: EmuInputGetState
+// ******************************************************************
+DWORD WINAPI xapi::EmuXInputSetState
+(
+    IN     HANDLE           hDevice,
+    IN OUT PXINPUT_FEEDBACK pFeedback
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuXInputSetState\n"
+               "(\n"
+               "   hDevice             : 0x%.08X\n"
+               "   pFeedback           : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), hDevice, pFeedback);
+    }
+    #endif
+
+    printf("*Warning* Ignoring EmuXInputSetState!\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return ERROR_SUCCESS;
+}
+
+// ******************************************************************
 // * func: EmuCloseHandle
 // ******************************************************************
 BOOL WINAPI xapi::EmuCloseHandle

@@ -89,23 +89,26 @@ inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
         case 0:
             return (D3DFORMAT)NULL;
 
-        case 0x05: // Swizzled
+        case 0x04: // Swizzled   (X_D3DFMT_A4R4G4B4)
+            return D3DFMT_A4R4G4B4;
+
+        case 0x05: // Swizzled   (X_D3DFMT_R5G6B5)
             return D3DFMT_R5G6B5;
 
-        case 0x12: // Linear (X_D3DFMT_LIN_A8R8G8B8)
-        case 0x06: // Swizzled
+        case 0x12: // Linear     (X_D3DFMT_LIN_A8R8G8B8)
+        case 0x06: // Swizzled   (X_D3DFMT_LIN_A8R8G8B8)
             return D3DFMT_A8R8G8B8;
 
-        case 0x07:
+        case 0x07: // Swizzled   (X_D3DFMT_X8R8G8B8)
             return D3DFMT_X8R8G8B8;
 
-        case 0x0E:
+        case 0x0E: // Compressed (X_D3DFMT_DXT2)
             return D3DFMT_DXT2;
 
-        case 0x2A:
+        case 0x2A: // Swizzled   (X_D3DFMT_D24S8)
             return D3DFMT_D24S8;
 
-        case 0x2C:
+        case 0x2C: // Swizzled   (X_D3DFMT_D16)
             return D3DFMT_D16;
     }
 
@@ -500,6 +503,14 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreatePixelShader
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetPixelShader
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetPixelShader
+(
+    DWORD           Handle
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateTexture2
 // ******************************************************************
 X_D3DResource * WINAPI EmuIDirect3DDevice8_CreateTexture2
@@ -608,6 +619,14 @@ HRESULT WINAPI EmuIDirect3DResource8_Register
 // * func: EmuIDirect3DResource8_Release
 // ******************************************************************
 ULONG WINAPI EmuIDirect3DResource8_Release
+(
+    X_D3DResource      *pThis
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DResource8_IsBusy
+// ******************************************************************
+BOOL WINAPI EmuIDirect3DResource8_IsBusy
 (
     X_D3DResource      *pThis
 );
@@ -765,6 +784,14 @@ VOID WINAPI EmuIDirect3DDevice8_SetRenderState_CullMode
 // * func: EmuIDirect3DDevice8_SetRenderState_ZEnable
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_SetRenderState_ZEnable
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_StencilEnable
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_StencilEnable
 (
     DWORD Value
 );

@@ -490,34 +490,6 @@ SOOVPA<8> IDirect3DDevice8_SetRenderState_NormalizeNormals_1_0_4627 =
 };
 
 // ******************************************************************
-// * IDirect3DDevice8_SetRenderState_TextureFactor
-// ******************************************************************
-SOOVPA<9> IDirect3DDevice8_SetRenderState_TextureFactor_1_0_4627 =
-{
-    0,  // Large == 0
-    9,  // Count == 9
-
-    {
-        // IDirect3DDevice8_SetRenderState_TextureFactor+0x07 : mov eax, [esi+0x0370]
-        { 0x07, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x08, 0x86 }, // (Offset,Value)-Pair #2
-        { 0x09, 0x70 }, // (Offset,Value)-Pair #3
-        { 0x0A, 0x03 }, // (Offset,Value)-Pair #4
-
-        // IDirect3DDevice8_SetRenderState_TextureFactor+0x2F : nop
-        { 0x2F, 0x90 }, // (Offset,Value)-Pair #5
-
-        // IDirect3DDevice8_SetRenderState_TextureFactor+0x41 : retn 0x04
-        { 0x41, 0xC2 }, // (Offset,Value)-Pair #6
-        { 0x42, 0x04 }, // (Offset,Value)-Pair #7
-
-        // IDirect3DDevice8_SetRenderState_TextureFactor+0x4E : retn 0x04
-        { 0x4E, 0xC2 }, // (Offset,Value)-Pair #8
-        { 0x4F, 0x04 }, // (Offset,Value)-Pair #9
-    }
-};
-
-// ******************************************************************
 // * IDirect3DDevice8_SetRenderState_ZBias
 // ******************************************************************
 SOOVPA<10> IDirect3DDevice8_SetRenderState_ZBias_1_0_4627 =
@@ -543,65 +515,6 @@ SOOVPA<10> IDirect3DDevice8_SetRenderState_ZBias_1_0_4627 =
         // IDirect3DDevice8_SetRenderState_ZBias+0x45 : retn 0x04
         { 0x71, 0xC2 }, // (Offset,Value)-Pair #9
         { 0x72, 0x04 }, // (Offset,Value)-Pair #10
-    }
-};
-
-// ******************************************************************
-// * IDirect3DDevice8_SetRenderState_EdgeAntiAlias
-// ******************************************************************
-SOOVPA<10> IDirect3DDevice8_SetRenderState_EdgeAntiAlias_1_0_4627 =
-{
-    0,  // Large == 0
-    10, // Count == 10
-
-    {
-        // IDirect3DDevice8_SetRenderState_EdgeAntiAlias+0x07 : mov eax, [esi]
-        { 0x07, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x08, 0x06 }, // (Offset,Value)-Pair #2
-
-        // IDirect3DDevice8_SetRenderState_EdgeAntiAlias+0x0C : jb +0x05
-        { 0x0C, 0x72 }, // (Offset,Value)-Pair #3
-        { 0x0D, 0x05 }, // (Offset,Value)-Pair #4
-
-        // IDirect3DDevice8_SetRenderState_EdgeAntiAlias+0x13 : mov ecx, [esp+0x08]
-        { 0x13, 0x8B }, // (Offset,Value)-Pair #5
-        { 0x14, 0x4C }, // (Offset,Value)-Pair #6
-        { 0x15, 0x24 }, // (Offset,Value)-Pair #7
-        { 0x16, 0x08 }, // (Offset,Value)-Pair #8
-
-        // IDirect3DDevice8_SetRenderState_EdgeAntiAlias+0x2F : retn 0x04
-        { 0x2F, 0xC2 }, // (Offset,Value)-Pair #9
-        { 0x30, 0x04 }, // (Offset,Value)-Pair #10
-    }
-};
-
-// ******************************************************************
-// * IDirect3DDevice8_SetRenderState_FillMode
-// ******************************************************************
-SOOVPA<11> IDirect3DDevice8_SetRenderState_FillMode_1_0_4627 =
-{
-    0,  // Large == 0
-    11, // Count == 11
-
-    {
-        // IDirect3DDevice8_SetRenderState_FillMode+0x07 : mov eax, [esi]
-        { 0x07, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x08, 0x06 }, // (Offset,Value)-Pair #2
-
-        // IDirect3DDevice8_SetRenderState_FillMode+0x21 : mov ecx, [esp+0x08]
-        { 0x21, 0x8B }, // (Offset,Value)-Pair #3
-        { 0x22, 0x4C }, // (Offset,Value)-Pair #4
-        { 0x23, 0x24 }, // (Offset,Value)-Pair #5
-        { 0x24, 0x08 }, // (Offset,Value)-Pair #6
-
-        // IDirect3DDevice8_SetRenderState_FillMode+0x25 : jnz +0x02
-        { 0x25, 0x75 }, // (Offset,Value)-Pair #7
-        { 0x26, 0x02 }, // (Offset,Value)-Pair #8
-
-        // IDirect3DDevice8_SetRenderState_FillMode+0x35 : add eax, 0x0C
-        { 0x35, 0x83 }, // (Offset,Value)-Pair #9
-        { 0x36, 0xC0 }, // (Offset,Value)-Pair #10
-        { 0x37, 0x0C }, // (Offset,Value)-Pair #11
     }
 };
 
@@ -657,40 +570,6 @@ SOOVPA<9> IDirect3DDevice8_SetRenderState_Dxt1NoiseEnable_1_0_4627 =
         // IDirect3DDevice8_SetRenderState_Dxt1NoiseEnable+0x74 : retn 0x04
         { 0x74, 0xC2 }, // (Offset,Value)-Pair #8
         { 0x75, 0x04 }, // (Offset,Value)-Pair #9
-    }
-};
-
-// ******************************************************************
-// * IDirect3DDevice8_SetRenderState_Simple
-// ******************************************************************
-SOOVPA<13> IDirect3DDevice8_SetRenderState_Simple_1_0_4627 =
-{
-    0,  // Large == 0
-    13, // Count == 13
-
-    {
-        // IDirect3DDevice8_SetRenderState_Simple+0x05 : add eax, 0x08
-        { 0x05, 0x83 }, // (Offset,Value)-Pair #1
-        { 0x06, 0xC0 }, // (Offset,Value)-Pair #2
-        { 0x07, 0x08 }, // (Offset,Value)-Pair #3
-
-        // IDirect3DDevice8_SetRenderState_Simple+0x0E : jnb +0x0C
-        { 0x0E, 0x73 }, // (Offset,Value)-Pair #4
-        { 0x0F, 0x0C }, // (Offset,Value)-Pair #5
-
-        // IDirect3DDevice8_SetRenderState_Simple+0x15 : mov [eax-8], ecx
-        { 0x15, 0x89 }, // (Offset,Value)-Pair #6
-        { 0x16, 0x48 }, // (Offset,Value)-Pair #7
-        { 0x17, 0xF8 }, // (Offset,Value)-Pair #8
-
-        // IDirect3DDevice8_SetRenderState_Simple+0x18 : mov [eax-4], ecx
-        { 0x18, 0x89 }, // (Offset,Value)-Pair #9
-        { 0x19, 0x50 }, // (Offset,Value)-Pair #10
-        { 0x1A, 0xFC }, // (Offset,Value)-Pair #11
-
-        // IDirect3DDevice8_SetRenderState_Simple+0x25 : jmp +0xD9
-        { 0x25, 0xEB }, // (Offset,Value)-Pair #12
-        { 0x26, 0xD9 }, // (Offset,Value)-Pair #13
     }
 };
 
@@ -1088,9 +967,9 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_SetRenderState_NormalizeNormals" 
         #endif
     },
-    // IDirect3DDevice8::SetRenderState_TextureFactor
+    // IDirect3DDevice8::SetRenderState_TextureFactor (* unchanged since 4361 *)
     {
-        (OOVPA*)&IDirect3DDevice8_SetRenderState_TextureFactor_1_0_4627,
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_TextureFactor_1_0_4361,
 
         xd3d8::EmuIDirect3DDevice8_SetRenderState_TextureFactor,
 
@@ -1108,9 +987,9 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_SetRenderState_ZBias" 
         #endif
     },
-    // IDirect3DDevice8::SetRenderState_EdgeAntiAlias
+    // IDirect3DDevice8::SetRenderState_EdgeAntiAlias (* unchanged since 4361 *)
     {
-        (OOVPA*)&IDirect3DDevice8_SetRenderState_EdgeAntiAlias_1_0_4627,
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_EdgeAntiAlias_1_0_4361,
 
         xd3d8::EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias,
 
@@ -1118,9 +997,9 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias" 
         #endif
     },
-    // IDirect3DDevice8::SetRenderState_FillMode
+    // IDirect3DDevice8::SetRenderState_FillMode (* unchanged since 4361 *)
     {
-        (OOVPA*)&IDirect3DDevice8_SetRenderState_FillMode_1_0_4627,
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_FillMode_1_0_4361,
 
         xd3d8::EmuIDirect3DDevice8_SetRenderState_FillMode,
 
@@ -1148,9 +1027,9 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable" 
         #endif
     },
-    // IDirect3DDevice8::SetRenderState_Simple
+    // IDirect3DDevice8::SetRenderState_Simple (* unchanged since 4361 *)
     {
-        (OOVPA*)&IDirect3DDevice8_SetRenderState_Simple_1_0_4627,
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_Simple_1_0_4361,
 
         xd3d8::EmuIDirect3DDevice8_SetRenderState_Simple,
 

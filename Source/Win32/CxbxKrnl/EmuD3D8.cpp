@@ -953,7 +953,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreateVertexShader
     );
 
     if(FAILED(hRet))
-        printf("*Warning* we're lying about the creation of a vertex shader!");
+        printf("*Warning* we're lying about the creation of a vertex shader!\n");
 
     // hey look, we lied
     hRet = D3D_OK;
@@ -1040,6 +1040,45 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreatePixelShader
     (
         pFunction,
         pHandle
+    );
+
+    // hey look, we lied
+    hRet = D3D_OK;
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetPixelShader
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetPixelShader
+(
+    DWORD           Handle
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetPixelShader\n"
+               "(\n"
+               "   Handle             : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Handle);
+    }
+    #endif
+
+    // ******************************************************************
+    // * redirect to windows d3d
+    // ******************************************************************
+    HRESULT hRet = g_pD3DDevice8->SetPixelShader
+    (
+        Handle
     );
 
     // hey look, we lied
@@ -1201,9 +1240,16 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetTexture
     }
     #endif
 
-    IDirect3DBaseTexture8 *pBaseTexture8 = pTexture->EmuBaseTexture8;
+    HRESULT hRet;
 
-    HRESULT hRet = g_pD3DDevice8->SetTexture(Stage, pBaseTexture8);
+    if(pTexture == NULL)
+        hRet = g_pD3DDevice8->SetTexture(Stage, NULL);
+    else
+    {
+        IDirect3DBaseTexture8 *pBaseTexture8 = pTexture->EmuBaseTexture8;
+
+        hRet = g_pD3DDevice8->SetTexture(Stage, pBaseTexture8);
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -1501,7 +1547,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DResource8_Register
         case X_D3DCOMMON_TYPE_VERTEXBUFFER:
         {
             #ifdef _DEBUG_TRACE
-            printf("( Registering VertexBuffer... )\n");
+            printf("EmuIDirect3DResource8_Register :-> VertexBuffer...\n");
             #endif
 
             X_D3DVertexBuffer *pVertexBuffer = (X_D3DVertexBuffer*)pResource;
@@ -1537,7 +1583,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DResource8_Register
         case X_D3DCOMMON_TYPE_INDEXBUFFER:
         {
             #ifdef _DEBUG_TRACE
-            printf("( Registering IndexBuffer... )\n");
+            printf("EmuIDirect3DResource8_Register :-> IndexBuffer...\n");
             #endif
 
             X_D3DIndexBuffer *pIndexBuffer = (X_D3DIndexBuffer*)pResource;
@@ -1573,7 +1619,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DResource8_Register
         case X_D3DCOMMON_TYPE_TEXTURE:
         {
             #ifdef _DEBUG_TRACE
-            printf("( Registering Texture... )\n");
+            printf("EmuIDirect3DResource8_Register :-> Texture...\n");
             #endif
 
             X_D3DPixelContainer *pPixelContainer = (X_D3DPixelContainer*)pResource;
@@ -1598,7 +1644,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DResource8_Register
                 dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
                 dwBPP = 4;
             }
-            else if(X_Format == 0x05 /* X_D3DFMT_R5G6B5 */)
+            else if(X_Format == 0x05 /* X_D3DFMT_R5G6B5 */ || X_Format == 0x04 /* X_D3DFMT_A4R4G4B4 */)
             {
                 bSwizzled = TRUE;
 
@@ -1719,6 +1765,38 @@ ULONG WINAPI xd3d8::EmuIDirect3DResource8_Release
     EmuSwapFS();   // XBox FS
 
     return uRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DResource8_IsBusy
+// ******************************************************************
+BOOL WINAPI xd3d8::EmuIDirect3DResource8_IsBusy
+(
+    X_D3DResource      *pThis
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DResource8_IsBusy\n"
+               "(\n"
+               "   pThis               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis);
+    }
+    #endif
+
+    IDirect3DResource8 *pResource8 = pThis->EmuResource8;
+
+    // I guess we arent doing anything, just return false..
+
+    EmuSwapFS();   // XBox FS
+
+    return FALSE;
 }
 
 // ******************************************************************
@@ -2336,6 +2414,37 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetRenderState_ZEnable
 
     return;
 }
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_StencilEnable
+// ******************************************************************
+VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetRenderState_StencilEnable
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_StencilEnable\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+    g_pD3DDevice8->SetRenderState(D3DRS_STENCILENABLE, Value);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias
 // ******************************************************************

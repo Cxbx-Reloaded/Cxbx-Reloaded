@@ -267,6 +267,39 @@ SOOVPA<12> XInputGetState_1_0_4361 =
 };
 
 // ******************************************************************
+// * XInputSetState
+// ******************************************************************
+SOOVPA<12> XInputSetState_1_0_4361 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    {
+        // XInputSetState+0x04 : lea eax, [ecx+0x0A3]
+        { 0x04, 0x8D }, // (Offset,Value)-Pair #1
+        { 0x05, 0x81 }, // (Offset,Value)-Pair #2
+        { 0x06, 0xA3 }, // (Offset,Value)-Pair #3
+
+        // XInputSetState+0x15 : push 0x57
+        { 0x15, 0x6A }, // (Offset,Value)-Pair #4
+        { 0x16, 0x57 }, // (Offset,Value)-Pair #5
+
+        // XInputSetState+0x18 : jmp +0x19
+        { 0x18, 0xEB }, // (Offset,Value)-Pair #6
+        { 0x19, 0x19 }, // (Offset,Value)-Pair #7
+
+        // XInputSetState+0x2B : mov [edx+0x41], al
+        { 0x2B, 0x88 }, // (Offset,Value)-Pair #8
+        { 0x2C, 0x42 }, // (Offset,Value)-Pair #9
+        { 0x2D, 0x41 }, // (Offset,Value)-Pair #10
+
+        // XInputSetState+0x33 : retn 0x08
+        { 0x33, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x34, 0x08 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
 // * CreateThread
 // ******************************************************************
 SOOVPA<8> CreateThread_1_0_4361 =
@@ -490,6 +523,16 @@ OOVPATable XAPI_1_0_4361[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXInputGetState"
+        #endif
+    },
+    // XInputSetState
+    {
+        (OOVPA*)&XInputSetState_1_0_4361,
+
+        xapi::EmuXInputSetState,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputSetState"
         #endif
     },
     //* Too High Level

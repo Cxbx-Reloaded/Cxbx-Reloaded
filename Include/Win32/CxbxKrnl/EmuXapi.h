@@ -218,6 +218,31 @@ typedef struct _XINPUT_STATE
 XINPUT_STATE, *PXINPUT_STATE;
 
 // ******************************************************************
+// * XINPUT_FEEDBACK_HEADER
+// ******************************************************************
+typedef struct _XINPUT_FEEDBACK_HEADER
+{
+    DWORD           dwStatus;
+    HANDLE OPTIONAL hEvent;
+    BYTE            Reserved[58];
+}
+XINPUT_FEEDBACK_HEADER, *PXINPUT_FEEDBACK_HEADER;
+
+// ******************************************************************
+// * XINPUT_FEEDBACK
+// ******************************************************************
+typedef struct _XINPUT_FEEDBACK
+{
+    XINPUT_FEEDBACK_HEADER Header;
+
+    union
+    {
+        XINPUT_RUMBLE Rumble;
+    };
+}
+XINPUT_FEEDBACK, *PXINPUT_FEEDBACK;
+
+// ******************************************************************
 // * RTL_HEAP_PARAMETERS
 // ******************************************************************
 typedef struct _RTL_HEAP_PARAMETERS
@@ -298,12 +323,21 @@ DWORD WINAPI EmuXInputGetCapabilities
 );
 
 // ******************************************************************
-// * func: EmuInputGetState
+// * func: EmuXInputGetState
 // ******************************************************************
 DWORD WINAPI EmuXInputGetState
 (
     IN  HANDLE         hDevice,
     OUT PXINPUT_STATE  pState
+);
+
+// ******************************************************************
+// * func: EmuXInputGetState
+// ******************************************************************
+DWORD WINAPI EmuXInputSetState
+(
+    IN     HANDLE           hDevice,
+    IN OUT PXINPUT_FEEDBACK pFeedback
 );
 
 // ******************************************************************

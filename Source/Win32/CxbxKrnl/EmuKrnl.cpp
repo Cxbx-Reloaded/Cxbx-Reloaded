@@ -600,6 +600,36 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 }
 
 // ******************************************************************
+// * 0x00AB - MmFreeContiguousMemory
+// ******************************************************************
+XBSYSAPI EXPORTNUM(171) VOID NTAPI xboxkrnl::MmFreeContiguousMemory
+(
+	IN PVOID BaseAddress
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): MmFreeContiguousMemory\n"
+               "(\n"
+               "   BaseAddress              : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), BaseAddress);
+    }
+    #endif
+
+    delete BaseAddress;
+
+    EmuSwapFS();   // Xbox FS
+
+    return;
+}
+
+// ******************************************************************
 // * 0x00B8 - NtAllocateVirtualMemory
 // ******************************************************************
 XBSYSAPI EXPORTNUM(184) NTSTATUS xboxkrnl::NtAllocateVirtualMemory
