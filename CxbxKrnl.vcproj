@@ -44,9 +44,7 @@
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="Lib"
-				ProgramDatabaseFile=".\Bin/Cxbx.pdb"
-				GenerateMapFile="TRUE"
-				MapFileName=".\Bin/Cxbx.map"
+				IgnoreDefaultLibraryNames="libci.lib"
 				ImportLibrary=".\Bin/Cxbx.lib"
 				TargetMachine="1"/>
 			<Tool
@@ -113,6 +111,7 @@
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="Lib"
+				IgnoreDefaultLibraryNames="libci.lib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Bin\Debug/CxbxKrnl.pdb"
 				GenerateMapFile="TRUE"
@@ -199,7 +198,13 @@
 				RelativePath="Include\Cxbx.h">
 			</File>
 			<File
+				RelativePath="Include\Win32\CxbxKrnl\DbgConsole.h">
+			</File>
+			<File
 				RelativePath="Include\Win32\CxbxKrnl\Emu.h">
+			</File>
+			<File
+				RelativePath="Include\Win32\CxbxKrnl\EmuAlloc.h">
 			</File>
 			<File
 				RelativePath="Include\Win32\CxbxKrnl\EmuD3D8.h">
@@ -248,6 +253,9 @@
 			</File>
 			<File
 				RelativePath="Include\Win32\CxbxKrnl\OOVPA.h">
+			</File>
+			<File
+				RelativePath="Include\Win32\CxbxKrnl\ResourceTracker.h">
 			</File>
 			<File
 				RelativePath="Include\Win32\XBController.h">
@@ -370,7 +378,49 @@
 			Name="Source"
 			Filter="">
 			<File
+				RelativePath="Source\Win32\CxbxKrnl\DbgConsole.cpp">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;CXBXKRNL_EXPORTS;$(NoInherit)"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;CXBXKRNL_EXPORTS;$(NoInherit)"
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="Source\Win32\CxbxKrnl\Emu.cpp">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;CXBXKRNL_EXPORTS;$(NoInherit)"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;CXBXKRNL_EXPORTS;$(NoInherit)"
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="Source\Win32\CxbxKrnl\EmuAlloc.cpp">
 				<FileConfiguration
 					Name="Release|Win32">
 					<Tool
@@ -707,6 +757,27 @@
 			</File>
 			<File
 				RelativePath="Source\Win32\Mutex.cpp">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;CXBXKRNL_EXPORTS;$(NoInherit)"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_MBCS;_USRDLL;CXBXKRNL_EXPORTS;$(NoInherit)"
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="Source\Win32\CxbxKrnl\ResourceTracker.cpp">
 				<FileConfiguration
 					Name="Release|Win32">
 					<Tool
