@@ -98,25 +98,6 @@ static int                          g_iWireframe    = 0;
 // resource caching for _Register
 static XTL::X_D3DResource pCache[16] = {0};
 
-// direct3d inline vertex buffer (Begin()/End())
-static DWORD                       *g_pD3DIVBData   = NULL; // data cache
-static DWORD                        g_dwD3DIVBInd   = NULL; // index
-static DWORD                        g_dwD3DIVBPrim;         // primitive type (Xbox)
-static DWORD                        g_dwD3DIVBFVF   = 0;    // FVF
-
-static struct _D3DIVB
-{
-    XTL::D3DXVECTOR3 Position;   // Position
-    XTL::DWORD       dwSpecular; // Specular
-    XTL::DWORD       dwDiffuse;  // Diffuse
-    XTL::D3DXVECTOR3 Normal;     // Normal
-    XTL::D3DXVECTOR2 TexCoord1;  // TexCoord1
-    XTL::D3DXVECTOR2 TexCoord2;  // TexCoord2
-    XTL::D3DXVECTOR2 TexCoord3;  // TexCoord3
-    XTL::D3DXVECTOR2 TexCoord4;  // TexCoord4
-}
-*g_D3DIVB;
-
 // current active index buffer
 static XTL::X_D3DIndexBuffer       *g_pIndexBuffer  = NULL; // current active index buffer
 static DWORD                        g_dwBaseVertexIndex = 0;// current active index buffer base index
@@ -2978,194 +2959,6 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetDisplayMode
     return hRet;
 }
 
-static inline DWORD FtoDW(FLOAT f) { return *((DWORD*)&f); }
-static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
-
-// ******************************************************************
-// * func: EmuFlushD3DIVB
-// ******************************************************************
-static void EmuFlushD3DIVB()
-{
-    if(g_dwD3DIVBPrim != 7)
-        EmuCleanup("Unsupported primitive type %d for D3DIVB", g_dwD3DIVBPrim);
-
-    if(g_dwD3DIVBInd < 3)
-        return;
-
-    // generate stream data
-    {
-        DWORD dwFVF = g_dwD3DIVBFVF;
-        BYTE *pStreamData = (BYTE*)CxbxMalloc(g_dwD3DIVBInd*sizeof(struct _D3DIVB));
-
-        ZeroMemory(pStreamData, g_dwD3DIVBInd*sizeof(struct _D3DIVB));
-
-        int i=0;
-
-        for(uint32 r=0;r<g_dwD3DIVBInd;r++)
-        {
-            // append position (x,y,z)
-            if(dwFVF & D3DFVF_XYZ)
-            {
-                memcpy(&pStreamData[i], &g_D3DIVB[r].Position.x, sizeof(XTL::D3DXVECTOR3));
-                i += sizeof(XTL::D3DXVECTOR3);
-
-                DbgPrintf("D3DIVB[%.02d]->Position := {%f,%f,%f}\n", r, g_D3DIVB[r].Position.x, g_D3DIVB[r].Position.y, g_D3DIVB[r].Position.z);
-            }
-
-            // append specular (D3DCOLOR)
-            if(dwFVF & D3DFVF_SPECULAR)
-            {
-                memcpy(&pStreamData[i], &g_D3DIVB[r].dwSpecular, sizeof(DWORD));
-                i += sizeof(DWORD);
-
-                DbgPrintf("D3DIVB[%.02d]->dwSpecular := 0x%.08X\n", r, g_D3DIVB[r].dwSpecular);
-            }
-
-            // append diffuse (D3DCOLOR)
-            if(dwFVF & D3DFVF_DIFFUSE)
-            {
-                memcpy(&pStreamData[i], &g_D3DIVB[r].dwDiffuse, sizeof(DWORD));
-                i += sizeof(DWORD);
-
-                DbgPrintf("D3DIVB[%.02d]->dwDiffuse := 0x%.08X\n", r, g_D3DIVB[r].dwDiffuse);
-            }
-
-            // append normal (nx,ny,nz)
-            if(dwFVF & D3DFVF_NORMAL)
-            {
-                memcpy(&pStreamData[i], &g_D3DIVB[r].Normal.x, sizeof(XTL::D3DXVECTOR3));
-                i += sizeof(XTL::D3DXVECTOR3);
-
-                DbgPrintf("D3DIVB[%.02d]->Normal := {%f,%f,%f}\n", r, g_D3DIVB[r].Normal.x, g_D3DIVB[r].Normal.y, g_D3DIVB[r].Normal.z);
-            }
-
-            // append texcoord
-            switch(dwFVF & D3DFVF_TEXCOUNT_MASK)
-            {
-                case D3DFVF_TEX1:
-                    memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord1.x, sizeof(XTL::D3DXVECTOR2));
-                    i += sizeof(XTL::D3DXVECTOR2);
-
-                    DbgPrintf("D3DIVB[%.02d]->Tex1 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord1.x, g_D3DIVB[r].TexCoord1.y);
-
-                    break;
-                case D3DFVF_TEX2:
-                    memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord1.x, sizeof(XTL::D3DXVECTOR2));
-                    i += sizeof(XTL::D3DXVECTOR2);
-                    memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord2.x, sizeof(XTL::D3DXVECTOR2));
-                    i += sizeof(XTL::D3DXVECTOR2);
-
-                    DbgPrintf("D3DIVB[%.02d]->Tex1 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord1.x, g_D3DIVB[r].TexCoord1.y);
-                    DbgPrintf("D3DIVB[%.02d]->Tex2 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord2.x, g_D3DIVB[r].TexCoord2.y);
-
-                    break;
-                case D3DFVF_TEX3:
-                    memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord1.x, sizeof(XTL::D3DXVECTOR2));
-                    i += sizeof(XTL::D3DXVECTOR2);
-                    memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord2.x, sizeof(XTL::D3DXVECTOR2));
-                    i += sizeof(XTL::D3DXVECTOR2);
-                    memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord3.x, sizeof(XTL::D3DXVECTOR2));
-                    i += sizeof(XTL::D3DXVECTOR2);
-                    
-                    DbgPrintf("D3DIVB[%.02d]->Tex1 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord1.x, g_D3DIVB[r].TexCoord1.y);
-                    DbgPrintf("D3DIVB[%.02d]->Tex2 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord2.x, g_D3DIVB[r].TexCoord2.y);
-                    DbgPrintf("D3DIVB[%.02d]->Tex3 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord3.x, g_D3DIVB[r].TexCoord3.y);
-
-                    break;
-                case D3DFVF_TEX4:
-                    memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord1.x, sizeof(XTL::D3DXVECTOR2));
-                    i += sizeof(XTL::D3DXVECTOR2);
-                    memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord2.x, sizeof(XTL::D3DXVECTOR2));
-                    i += sizeof(XTL::D3DXVECTOR2);
-                    memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord3.x, sizeof(XTL::D3DXVECTOR2));
-                    i += sizeof(XTL::D3DXVECTOR2);
-                    memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord4.x, sizeof(XTL::D3DXVECTOR2));
-                    i += sizeof(XTL::D3DXVECTOR2);
-
-                    DbgPrintf("D3DIVB[%.02d]->Tex1 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord1.x, g_D3DIVB[r].TexCoord1.y);
-                    DbgPrintf("D3DIVB[%.02d]->Tex2 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord2.x, g_D3DIVB[r].TexCoord2.y);
-                    DbgPrintf("D3DIVB[%.02d]->Tex3 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord3.x, g_D3DIVB[r].TexCoord3.y);
-                    DbgPrintf("D3DIVB[%.02d]->Tex4 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord4.x, g_D3DIVB[r].TexCoord4.y);
-
-                    break;
-            }
-        }
-
-        // close any outstanding locks
-        {
-            XTL::IDirect3DTexture8 *pTexture8 = NULL;
-
-            if(g_pD3DDevice8->GetTexture(0, (XTL::IDirect3DBaseTexture8**)&pTexture8) == D3D_OK && pTexture8 != NULL)
-            {
-                pTexture8->UnlockRect(0);
-
-                pTexture8->Release();
-            }
-        }
-
-        /*
-        {
-            static int dwDumpTex = 0;
-
-            char szBuffer[255];
-
-            sprintf(szBuffer, "C:\\Aaron\\Textures\\Flush%.03d.bmp", dwDumpTex++);
-
-            XTL::IDirect3DBaseTexture8 *pBaseTexture8 = NULL;
-
-            if(g_pD3DDevice8->GetTexture(0, &pBaseTexture8) == D3D_OK)
-            {
-                if(pBaseTexture8 != NULL)
-                {
-                    XTL::IDirect3DTexture8 *pTexture8 = (XTL::IDirect3DTexture8*)pBaseTexture8;
-
-                    pTexture8->UnlockRect(0);
-
-                    XTL::D3DXSaveTextureToFile(szBuffer, XTL::D3DXIFF_BMP, pTexture8, NULL);
-
-                    pBaseTexture8->Release();
-                }
-            }
-        }
-        //*/
-
-        XTL::EmuUpdateDeferredStates();
-
-        // XTL::EmuD3DDeferredRenderState
-        // HACK: TODO: Halo apparently has different values for D3DCULL_CW...i believe
-        g_pD3DDevice8->SetRenderState(XTL::D3DRS_CULLMODE, XTL::D3DCULL_CW );
-        g_pD3DDevice8->SetRenderState(XTL::D3DRS_FOGENABLE, FALSE );
-        //g_pD3DDevice8->SetRenderState(XTL::D3DRS_LIGHTING, FALSE );
-        //g_pD3DDevice8->SetRenderState(XTL::D3DRS_ZENABLE, TRUE );
-        
-        g_pD3DDevice8->SetVertexShader(dwFVF);
-
-        HRESULT hRet = S_OK;
-
-        #ifdef _DEBUG_TRACK_VB
-        if(!g_bVBSkipStream)
-        {
-        #endif
-
-        hRet = g_pD3DDevice8->DrawPrimitiveUP(XTL::EmuPrimitiveType(g_dwD3DIVBPrim), XTL::EmuD3DVertex2PrimitiveCount(g_dwD3DIVBPrim, g_dwD3DIVBInd), pStreamData, i/g_dwD3DIVBInd);
-
-        #ifdef _DEBUG_TRACK_VB
-        }
-        #endif
-
-        // HACK: TODO: probably unnecessary!!!
-        //g_pD3DDevice8->Present(0,0,0,0);
-
-        CxbxFree(pStreamData);
-
-        if(FAILED(hRet))
-            EmuCleanup("Inline Vertex DrawPrimitiveUP Failed!");
-    }
-
-    g_dwD3DIVBInd = 0;
-    g_dwD3DIVBFVF = 0;
-}
-
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_Begin
 // ******************************************************************
@@ -3182,16 +2975,41 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Begin
            ");\n",
            GetCurrentThreadId(), PrimitiveType);
 
-    if(PrimitiveType != 7)
+    if((PrimitiveType != 7) && (PrimitiveType != 9))
         EmuCleanup("EmuIDirect3DDevice8_Begin does not support primitive : %d", PrimitiveType);
 
-    g_dwD3DIVBInd  = 0;
-    g_dwD3DIVBPrim = PrimitiveType;
-    g_dwD3DIVBFVF  = 0;
+    g_IVBPrimitiveType = PrimitiveType;
 
-    g_D3DIVB = (struct _D3DIVB*)CxbxMalloc(sizeof(*g_D3DIVB)*32);
+    // allocate a max of 32 entries
+    g_IVBTable = (struct XTL::_D3DIVB*)CxbxMalloc(sizeof(XTL::_D3DIVB)*32);
+    g_IVBTblOffs = 0;
 
-    ZeroMemory(g_D3DIVB, sizeof(*g_D3DIVB)*32);
+    // default values
+    for(int v=0;v<32;v++)
+    {
+        g_IVBTable[v].Position.x = 0;
+        g_IVBTable[v].Position.y = 0;
+        g_IVBTable[v].Position.z = 0;
+        g_IVBTable[v].dwSpecular = 0x00000000;
+        g_IVBTable[v].dwDiffuse = 0x00000000;
+        g_IVBTable[v].Normal.x = 0;
+        g_IVBTable[v].Normal.y = 0;
+        g_IVBTable[v].Normal.z = 0;
+        g_IVBTable[v].TexCoord1.x = 0;
+        g_IVBTable[v].TexCoord1.y = 0;
+        g_IVBTable[v].TexCoord2.x = 0;
+        g_IVBTable[v].TexCoord2.y = 0;
+        g_IVBTable[v].TexCoord3.x = 0;
+        g_IVBTable[v].TexCoord3.y = 0;
+        g_IVBTable[v].TexCoord4.x = 0;
+        g_IVBTable[v].TexCoord4.y = 0;
+    }
+
+    DWORD dwShader = -1;
+
+    g_pD3DDevice8->GetVertexShader(&dwShader);
+
+    g_pIVBVertexBuffer = (DWORD*)CxbxMalloc(sizeof(struct XTL::_D3DIVB)*32);
 
     EmuSwapFS();   // XBox FS
 
@@ -3254,140 +3072,48 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
 
     switch(Register)
     {
-        case 0:             // D3DVSDE_POSITION
+        case 9:
         {
-            g_D3DIVB[g_dwD3DIVBInd].Position.x = (a/320.0f) - 1.0f;
-            g_D3DIVB[g_dwD3DIVBInd].Position.y = (b/240.0f) - 1.0f;
-            g_D3DIVB[g_dwD3DIVBInd].Position.z = c;
+            int o = g_IVBTblOffs;
 
-            g_dwD3DIVBFVF |= D3DFVF_XYZ;
+//            if(a > 640) a = 640;
+//            if(b > 480) b = 480;
 
-            g_dwD3DIVBInd++;
+//            if(a > 1.0f) a /= 640.0f;
+//            if(b > 1.0f) b /= 480.0f;
+
+            g_IVBTable[o].TexCoord1.x = a;
+            g_IVBTable[o].TexCoord1.y = b;
         }
         break;
 
-        case 9: // HALO HACK!
-        case 3:             // D3DVSDE_DIFFUSE
+        case 0xFFFFFFFF:
         {
-            DWORD ca = FtoDW(d) << 24;
-            DWORD cr = FtoDW(a) << 16;
-            DWORD cg = FtoDW(b) << 8;
-            DWORD cb = FtoDW(c) << 0;
+            int o = g_IVBTblOffs;
 
-            g_D3DIVB[g_dwD3DIVBInd].dwDiffuse = ca | cr | cg | cb;
+//            g_IVBTable[o].Position.x = (a/320.0f) - 1.0f;
+//            g_IVBTable[o].Position.y = (b/240.0f) - 1.0f;
+            g_IVBTable[o].Position.x = a;
+            g_IVBTable[o].Position.y = b;
+            g_IVBTable[o].Position.z = c;
 
-            g_dwD3DIVBFVF |= D3DFVF_DIFFUSE;
+            g_IVBTblOffs++;
+
+            EmuFlushIVB();
         }
         break;
-
-        case 4:             // D3DVSDE_SPECULAR
-        {
-            // TODO: use size of texture in this calculation
-            a /= 640.0f;
-            b  = 480.0f - b;
-            b /= 480.0f;
-
-            g_D3DIVB[g_dwD3DIVBInd].TexCoord1.x = a;
-            g_D3DIVB[g_dwD3DIVBInd].TexCoord1.y = b;
-
-            g_dwD3DIVBFVF &= ~D3DFVF_TEXCOUNT_MASK;  // clear tex mask
-            g_dwD3DIVBFVF |= D3DFVF_TEX1;
-
-            /* HALO HACK!
-            DWORD ca = FtoDW(d) << 24;
-            DWORD cr = FtoDW(a) << 16;
-            DWORD cg = FtoDW(b) << 8;
-            DWORD cb = FtoDW(c) << 0;
-
-            g_D3DIVB[g_dwD3DIVBInd].dwSpecular = ca | cr | cg | cb;
-
-            g_dwD3DIVBFVF |= D3DFVF_SPECULAR;*/
-        }
-        break;
-/*
-        case 9:             // D3DVSDE_TEXCOORD0
-        {
-            if(a > 1.0f) a /= 640.0f;
-            if(b > 1.0f) b /= 480.0f;
-
-            g_D3DIVB[g_dwD3DIVBInd].fU1 = a;
-            g_D3DIVB[g_dwD3DIVBInd].fV1 = b;
-
-            g_dwD3DIVBFVF &= ~D3DFVF_TEXCOUNT_MASK;  // clear tex mask
-            g_dwD3DIVBFVF |= D3DFVF_TEX1;
-        }
-        break;
-*/
-        case 10:            // D3DVSDE_TEXCOORD1
-        {
-            //if(a > 1.0f || a < -1.0f) a = 0.0f - ((a/320.0f) - 1.0f);
-            //if(b > 1.0f || b < -1.0f) b = 0.0f - ((b/240.0f) - 1.0f);
-            // TODO: use size of texture in this calculation
-            a /= 640.0f;
-            b  = 480.0f - b;
-            b /= 480.0f;
-
-            g_D3DIVB[g_dwD3DIVBInd].TexCoord2.x = a;
-            g_D3DIVB[g_dwD3DIVBInd].TexCoord2.y = b;
-
-            g_dwD3DIVBFVF &= ~D3DFVF_TEXCOUNT_MASK;  // clear tex mask
-            g_dwD3DIVBFVF |= D3DFVF_TEX2;
-        }
-        break;
-
-        case 11:            // D3DVSDE_TEXCOORD2
-        {
-            // TODO: use size of texture in this calculation
-            a /= 640.0f;
-            b  = 480.0f - b;
-            b /= 480.0f;
-
-            g_D3DIVB[g_dwD3DIVBInd].TexCoord3.x = a;
-            g_D3DIVB[g_dwD3DIVBInd].TexCoord3.y = b;
-
-            g_dwD3DIVBFVF &= ~D3DFVF_TEXCOUNT_MASK;  // clear tex mask
-            g_dwD3DIVBFVF |= D3DFVF_TEX3;
-        }
-        break;
-
-        case 12:            // D3DVSDE_TEXCOORD3
-        {
-            // TODO: use size of texture in this calculation
-            a /= 640.0f;
-            b  = 480.0f - b;
-            b /= 480.0f;
-
-            g_D3DIVB[g_dwD3DIVBInd].TexCoord4.x = a;
-            g_D3DIVB[g_dwD3DIVBInd].TexCoord4.y = b;
-
-            g_dwD3DIVBFVF &= ~D3DFVF_TEXCOUNT_MASK;  // clear tex mask
-            g_dwD3DIVBFVF |= D3DFVF_TEX4;
-        }
-        break;
-
-        case 0xFFFFFFFF:    // D3DVSDE_VERTEX
-        {
-            g_D3DIVB[g_dwD3DIVBInd].Position.x = (a/320.0f) - 1.0f;
-            g_D3DIVB[g_dwD3DIVBInd].Position.y = (b/240.0f) - 1.0f;
-            g_D3DIVB[g_dwD3DIVBInd].Position.z = c;
-
-            g_dwD3DIVBFVF |= D3DFVF_XYZ;
-
-            g_dwD3DIVBInd++;
-
-            EmuFlushD3DIVB();
-        }
-        break;
-
+        
         default:
-            EmuCleanup("Unknown Register (4f) : %d", Register);
-            break;
+            EmuCleanup("Unknown IVB Register : %d", Register);
     }
 
     EmuSwapFS();   // XBox FS
 
     return hRet;
 }
+
+static inline DWORD FtoDW(FLOAT f) { return *((DWORD*)&f); }
+static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexDataColor
@@ -3429,10 +3155,12 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_End()
 
     DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_End();\n", GetCurrentThreadId());
 
-    if(g_dwD3DIVBInd != 0)
-        EmuFlushD3DIVB();
+    if(g_IVBTblOffs != 0)
+        EmuFlushIVB();
 
-    CxbxFree(g_D3DIVB);
+    CxbxFree(g_pIVBVertexBuffer);
+
+    CxbxFree(g_IVBTable);
 
     EmuSwapFS();   // XBox FS
 
@@ -4203,13 +3931,33 @@ VOID WINAPI XTL::EmuGet2DSurfaceDesc
     if(dwLevel == 0xFEFEFEFE)
     {
         hRet = pPixelContainer->EmuSurface8->GetDesc(&SurfaceDesc);
+
+        /*
+        static int dwDumpSurface = 0;
+
+        char szBuffer[255];
+
+        sprintf(szBuffer, "C:\\Aaron\\Textures\\Surface%.03d.bmp", dwDumpSurface++);
+
+        D3DXSaveSurfaceToFile(szBuffer, D3DXIFF_BMP, pPixelContainer->EmuSurface8, NULL, NULL);
+        */
     }
     else
     {
         hRet = pPixelContainer->EmuTexture8->GetLevelDesc(dwLevel, &SurfaceDesc);
+
+        /*
+        static int dwDumpTexture = 0;
+
+        char szBuffer[255];
+
+        sprintf(szBuffer, "C:\\Aaron\\Textures\\Texture%.03d.bmp", dwDumpTexture++);
+
+        D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pPixelContainer->EmuTexture8, NULL);
+        */
     }
 
-    // rearrange into windows format (remove D3DPOOL)
+    // rearrange into xbox format (remove D3DPOOL)
     {
         // Convert Format (PC->Xbox)
         pDesc->Format = EmuPC2XB_D3DFormat(SurfaceDesc.Format);
@@ -6453,10 +6201,63 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
     {
     #endif
 
-	g_pD3DDevice8->DrawIndexedPrimitive
+    bool bActiveIB = false;
+
+    IDirect3DIndexBuffer8 *pIndexBuffer = 0;
+
+    // check if there is an active index buffer
+    {
+        UINT BaseIndex = 0;
+
+        g_pD3DDevice8->GetIndices(&pIndexBuffer, &BaseIndex);
+
+        if(pIndexBuffer != 0)
+            bActiveIB = true;
+    }
+
+    UINT uiNumVertices = 0;
+    UINT uiStartIndex = 0;
+
+    // TODO: Caching (if it becomes noticably slow to recreate the buffer each time)
+    if(!bActiveIB)
+    {
+        g_pD3DDevice8->CreateIndexBuffer(VertexCount*2, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer);
+
+        if(pIndexBuffer == 0)
+            EmuCleanup("Could not create index buffer! (%d bytes)", VertexCount*2);
+
+        BYTE *pbData = 0;
+
+        pIndexBuffer->Lock(0, 0, &pbData, 0);
+
+        if(pbData == 0)
+            EmuCleanup("Could not lock index buffer!");
+
+        memcpy(pbData, pIndexData, VertexCount*2);
+
+        pIndexBuffer->Unlock();
+
+        g_pD3DDevice8->SetIndices(pIndexBuffer, 0);
+
+        uiNumVertices = VertexCount;
+        uiStartIndex = 0;
+    }
+    else
+    {
+        uiNumVertices = ((DWORD)pIndexData)/2 + VertexCount;
+        uiStartIndex = ((DWORD)pIndexData)/2;
+    }
+
+    g_pD3DDevice8->DrawIndexedPrimitive
 	(
-		PCPrimitiveType, 0, ((DWORD)pIndexData)/2 + VertexCount, ((DWORD)pIndexData)/2, PrimitiveCount
+		PCPrimitiveType, 0, uiNumVertices, uiStartIndex, PrimitiveCount
 	);
+
+    if(!bActiveIB)
+    {
+        g_pD3DDevice8->SetIndices(0, 0);
+        pIndexBuffer->Release();
+    }
 
     #ifdef _DEBUG_TRACK_VB
     }

@@ -339,6 +339,26 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         }
     }
 
+    // initialize FS segment selector emulation
+    {
+        EmuInitFS();
+
+        EmuGenerateFS(pTLS, pTLSData);
+    }
+
+    // we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
+    {
+        HANDLE hDupHandle = NULL;
+
+        DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
+
+        EmuRegisterThread(hDupHandle);
+    }
+
+    DbgPrintf("EmuMain (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
+
+    XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
+
     // initialize OpenXDK emulation (non-existant for now at least)
     if(pLibraryVersion == 0)
         DbgPrintf("EmuMain (0x%X): Detected OpenXDK application...\n", GetCurrentThreadId());
@@ -535,26 +555,6 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         DbgPrintf("EmuMain (0x%X): Resolved %d cross reference(s)\n", GetCurrentThreadId(), OrigUnResolvedXRefs - UnResolvedXRefs);
     }
 
-    // initialize FS segment selector emulation
-    {
-        EmuInitFS();
-
-        EmuGenerateFS(pTLS, pTLSData);
-    }
-
-    // we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
-    {
-        HANDLE hDupHandle = NULL;
-
-        DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
-
-        EmuRegisterThread(hDupHandle);
-    }
-
-    DbgPrintf("EmuMain (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
-
-    XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
-
     DbgPrintf("EmuMain (0x%X): Initial thread starting.\n", GetCurrentThreadId());
 
     // Xbe entry point
@@ -665,10 +665,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage, ...)
     if(g_hEmuParent != NULL)
         SendMessage(g_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
-    exit(0);
-
-    // Much less friendly :]
-    //    TerminateProcess(GetCurrentProcess(), 0);
+    TerminateProcess(GetCurrentProcess(), 0);
 
     return;
 }

@@ -55,18 +55,18 @@ typedef signed short   sint16;
 typedef signed long    sint32;
 
 // define this to track resources for debugging purposes
-#define _DEBUG_TRACK_VB // Vertex Buffers
-#define _DEBUG_TRACK_VS // Vertex Shaders
-#define _DEBUG_TRACK_PB // Push Buffers
+//#define _DEBUG_TRACK_VB // Vertex Buffers
+//#define _DEBUG_TRACK_VS // Vertex Shaders
+//#define _DEBUG_TRACK_PB // Push Buffers
 
 // define this to track memory allocations
-#define _DEBUG_ALLOC
+//#define _DEBUG_ALLOC
 
 // define this to trace intercepted function calls
-#define _DEBUG_TRACE
+//#define _DEBUG_TRACE
 
 // define this to trace warnings
-#define _DEBUG_WARNINGS
+//#define _DEBUG_WARNINGS
 
 // version information
 #ifndef _DEBUG_TRACE

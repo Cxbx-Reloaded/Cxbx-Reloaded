@@ -46,6 +46,12 @@ namespace XTL
 
 extern XTL::LPDIRECT3DDEVICE8 g_pD3DDevice8;  // Direct3D8 Device
 
+// inline vertex buffer emulation
+XTL::DWORD                  *XTL::g_pIVBVertexBuffer = 0;
+XTL::X_D3DPRIMITIVETYPE      XTL::g_IVBPrimitiveType = 0;
+UINT                         XTL::g_IVBTblOffs = 0;
+struct XTL::_D3DIVB         *XTL::g_IVBTable = 0;
+
 // fixup xbox extensions to be compatible with PC direct3d
 UINT XTL::EmuFixupVerticesA
 (
@@ -232,4 +238,133 @@ VOID XTL::EmuFixupVerticesB
 
     if(pHackVertexBuffer8 != 0)
         pHackVertexBuffer8->Release();
+}
+
+VOID XTL::EmuFlushIVB()
+{
+    if(g_IVBPrimitiveType == 9 && g_IVBTblOffs == 4)
+    {
+        DWORD  dwShader = -1;
+        DWORD *pdwVB = g_pIVBVertexBuffer;
+
+        g_pD3DDevice8->GetVertexShader(&dwShader);
+
+        UINT uiStride = 0;
+
+        for(int v=0;v<4;v++)
+        {
+            DWORD dwPos = dwShader & D3DFVF_POSITION_MASK;
+
+            if(dwPos == D3DFVF_XYZRHW)
+            {
+                *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.x;
+                *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.y;
+                *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.z;
+
+                uiStride += (sizeof(FLOAT)*3);
+
+                DbgPrintf("IVB Position := {%f, %f, %f}\n", g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z);
+            }
+            else
+            {
+                EmuCleanup("Unsupported Position Mask (FVF := 0x%.08X)", dwShader);
+            }
+            
+            if(dwShader & D3DFVF_SPECULAR)
+            {
+                *(DWORD*)pdwVB++ = g_IVBTable[v].dwSpecular;
+                
+                uiStride += sizeof(DWORD);
+
+                DbgPrintf("IVB Specular := 0x%.08X\n", g_IVBTable[v].dwSpecular);
+            }
+
+            if(dwShader & D3DFVF_DIFFUSE)
+            {
+                *(DWORD*)pdwVB++ = g_IVBTable[v].dwDiffuse;
+                
+                DbgPrintf("IVB Diffuse := 0x%.08X\n", g_IVBTable[v].dwDiffuse);
+            }
+
+            if(dwShader & D3DFVF_NORMAL)
+            {
+                *(FLOAT*)pdwVB++ = g_IVBTable[v].Normal.x;
+                *(FLOAT*)pdwVB++ = g_IVBTable[v].Normal.y;
+                *(FLOAT*)pdwVB++ = g_IVBTable[v].Normal.z;
+
+                uiStride += sizeof(FLOAT)*3;
+
+                DbgPrintf("IVB Normal := {%f, %f, %f}\n", g_IVBTable[v].Normal.x, g_IVBTable[v].Normal.y, g_IVBTable[v].Normal.z);
+            }
+
+            DWORD dwTexN = (dwShader & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
+
+            if(dwTexN >= 1)
+            {
+                *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord1.x;
+                *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord1.y;
+
+                uiStride += sizeof(FLOAT)*2;
+
+                DbgPrintf("IVB TexCoord1 := {%f, %f}\n", g_IVBTable[v].TexCoord1.x, g_IVBTable[v].TexCoord1.y);
+            }
+
+            if(dwTexN >= 2)
+            {
+                *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord2.x;
+                *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord2.y;
+
+                uiStride += sizeof(FLOAT)*2;
+
+                DbgPrintf("IVB TexCoord2 := {%f, %f}\n", g_IVBTable[v].TexCoord2.x, g_IVBTable[v].TexCoord2.y);
+            }
+
+            if(dwTexN >= 3)
+            {
+                *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord3.x;
+                *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord3.y;
+
+                uiStride += sizeof(FLOAT)*2;
+
+                DbgPrintf("IVB TexCoord3 := {%f, %f}\n", g_IVBTable[v].TexCoord3.x, g_IVBTable[v].TexCoord3.y);
+            }
+
+            if(dwTexN >= 4)
+            {
+                *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord4.x;
+                *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord4.y;
+
+                uiStride += sizeof(FLOAT)*2;
+
+                DbgPrintf("IVB TexCoord4 := {%f, %f}\n", g_IVBTable[v].TexCoord4.x, g_IVBTable[v].TexCoord4.y);
+            }
+        }
+
+        //*
+        IDirect3DBaseTexture8 *pTexture = 0;
+
+        g_pD3DDevice8->GetTexture(0, &pTexture);
+        
+        if(pTexture != NULL)
+        {
+            static int dwDumpTexture = 0;
+
+            char szBuffer[255];
+
+            sprintf(szBuffer, "C:\\Aaron\\Textures\\Texture%.03d.bmp", dwDumpTexture++);
+
+            D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture, NULL);
+        }
+        //*/
+
+        XTL::EmuUpdateDeferredStates();
+
+        g_pD3DDevice8->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, g_pIVBVertexBuffer, uiStride);
+        
+        g_pD3DDevice8->Present(0,0,0,0);
+
+        g_IVBTblOffs = 0;
+    }
+
+    return;
 }

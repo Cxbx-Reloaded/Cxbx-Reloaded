@@ -57,4 +57,25 @@ extern VOID EmuFixupVerticesB
     XTL::IDirect3DVertexBuffer8   *&pHackVertexBuffer8
 );
 
+// inline vertex buffer emulation
+extern DWORD                  *g_pIVBVertexBuffer;
+extern X_D3DPRIMITIVETYPE      g_IVBPrimitiveType;
+
+extern struct _D3DIVB
+{
+    XTL::D3DXVECTOR3 Position;   // Position
+    XTL::DWORD       dwSpecular; // Specular
+    XTL::DWORD       dwDiffuse;  // Diffuse
+    XTL::D3DXVECTOR3 Normal;     // Normal
+    XTL::D3DXVECTOR2 TexCoord1;  // TexCoord1
+    XTL::D3DXVECTOR2 TexCoord2;  // TexCoord2
+    XTL::D3DXVECTOR2 TexCoord3;  // TexCoord3
+    XTL::D3DXVECTOR2 TexCoord4;  // TexCoord4
+}
+*g_IVBTable;
+
+extern UINT g_IVBTblOffs;
+
+extern VOID EmuFlushIVB();
+
 #endif
