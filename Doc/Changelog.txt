@@ -1,5 +1,13 @@
 cxbx website: http://www.caustik.com/xbox/
 
+version: 0.6.0-pre10 (02/07/03)
+--------------------------------
+
+- Tons of debug console output when opening, or
+  converting, or saving xbe and exe files. This
+  was very easy to add because of the flexible
+  new debug console technique.
+
 version: 0.6.0-pre9 (02/06/03)
 --------------------------------
 
