@@ -241,10 +241,13 @@ void XTL::EmuExecutePushBuffer
 
                     if(!g_bPBSkipPusher)
                     {
-                        g_pD3DDevice8->DrawIndexedPrimitive
-                        (
-                            PCPrimitiveType, 0, dwCount*2, 0, EmuD3DVertex2PrimitiveCount(XBPrimitiveType, dwCount*2)
-                        );
+                        if (IsValidCurrentShader())
+                        {
+                            g_pD3DDevice8->DrawIndexedPrimitive
+                            (
+                                PCPrimitiveType, 0, dwCount*2, 0, EmuD3DVertex2PrimitiveCount(XBPrimitiveType, dwCount*2)
+                            );
+                        }
                     }
 
                     #ifdef _DEBUG_TRACK_PB

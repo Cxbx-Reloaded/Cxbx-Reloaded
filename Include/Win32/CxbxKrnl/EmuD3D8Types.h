@@ -141,6 +141,7 @@ typedef struct _VERTEX_SHADER
     DWORD                *pFunction;
     DWORD                 FunctionSize;
     DWORD                 Type;
+    DWORD                 Status;
 
     // Needed for dynamic stream patching
     VERTEX_DYNAMIC_PATCH  VertexDynamicPatch;

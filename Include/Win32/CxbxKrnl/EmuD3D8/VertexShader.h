@@ -70,6 +70,9 @@ extern HRESULT EmuRecompileVshFunction
 
 extern void FreeVertexDynamicPatch(VERTEX_SHADER *pVertexShader);
 
+// Checks for failed vertex shaders, and shaders that would need patching
+extern boolean IsValidCurrentShader(void);
+
 inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle & 0x80000000) ? TRUE : FALSE; }
 inline X_D3DVertexShader *VshHandleGetVertexShader(DWORD Handle) { return (X_D3DVertexShader *)(Handle & 0x7FFFFFFF); }
 

@@ -1977,3 +1977,29 @@ extern void XTL::FreeVertexDynamicPatch(VERTEX_SHADER *pVertexShader)
     pVertexShader->VertexDynamicPatch.pStreamPatches = NULL;
     pVertexShader->VertexDynamicPatch.NbrStreams = 0;
 }
+
+extern boolean XTL::IsValidCurrentShader(void)
+{
+    DWORD Handle;
+
+    EmuIDirect3DDevice8_GetVertexShader(&Handle);
+    if (VshHandleIsVertexShader(Handle))
+    {
+        X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader *)(Handle & 0x7FFFFFFF);
+        VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)pD3DVertexShader->Handle;
+        if (pVertexShader->Status != 0)
+        {
+            return FALSE;
+        }
+        for (uint32 i = 0; i < pVertexShader->VertexDynamicPatch.NbrStreams; i++)
+        {
+            if (pVertexShader->VertexDynamicPatch.pStreamPatches[i].NeedPatch)
+            {
+                // Just for caching purposes
+                pVertexShader->Status = 0x80000001;
+                return FALSE;
+            }
+        }
+    }
+    return TRUE;
+}

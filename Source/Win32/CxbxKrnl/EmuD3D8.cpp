@@ -2141,6 +2141,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
             pRecompiledBuffer = NULL;
         }
     }
+    // Save the status, to remove things later
+    pVertexShader->Status = hRet;
 
     CxbxFree(pRecompiledDeclaration);
 
@@ -6026,28 +6028,31 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVertices
 
     uint32 nStride = EmuFixupVerticesA(PrimitiveType, PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, StartVertex, 0, 0, 0);
 
-    #ifdef _DEBUG_TRACK_VB
-    if(g_bVBSkipStream)
+    if (IsValidCurrentShader())
     {
-        g_pD3DDevice8->DrawPrimitive
-        (
-            PCPrimitiveType,
-            StartVertex,
-            0
-        );
+        #ifdef _DEBUG_TRACK_VB
+        if(g_bVBSkipStream)
+        {
+            g_pD3DDevice8->DrawPrimitive
+            (
+                PCPrimitiveType,
+                StartVertex,
+                0
+            );
+        }
+        else
+        {
+        #endif
+            g_pD3DDevice8->DrawPrimitive
+            (
+                PCPrimitiveType,
+                StartVertex,
+                PrimitiveCount
+            );
+        #ifdef _DEBUG_TRACK_VB
+        }
+        #endif
     }
-    else
-    {
-    #endif
-        g_pD3DDevice8->DrawPrimitive
-        (
-            PCPrimitiveType,
-            StartVertex,
-            PrimitiveCount
-        );
-    #ifdef _DEBUG_TRACK_VB
-    }
-    #endif
 
     // TODO: use original stride here (duh!)
     if(nStride != -1)
@@ -6098,22 +6103,25 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVerticesUP
 
     uint32 nStride = EmuFixupVerticesA(PrimitiveType, PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, 0, pVertexStreamZeroData, VertexStreamZeroStride, &pNewVertexStreamZeroData);
 
-    #ifdef _DEBUG_TRACK_VB
-    if(!g_bVBSkipStream)
+    if (IsValidCurrentShader())
     {
-    #endif
+        #ifdef _DEBUG_TRACK_VB
+        if(!g_bVBSkipStream)
+        {
+        #endif
 
-    g_pD3DDevice8->DrawPrimitiveUP
-    (
-        PCPrimitiveType,
-        PrimitiveCount,
-        pNewVertexStreamZeroData,
-        VertexStreamZeroStride
-    );
+        g_pD3DDevice8->DrawPrimitiveUP
+        (
+            PCPrimitiveType,
+            PrimitiveCount,
+            pNewVertexStreamZeroData,
+            VertexStreamZeroStride
+        );
 
-    #ifdef _DEBUG_TRACK_VB
+        #ifdef _DEBUG_TRACK_VB
+        }
+        #endif
     }
-    #endif
 
     if(nStride != -1)
     {
@@ -6248,10 +6256,13 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
         uiStartIndex = ((DWORD)pIndexData)/2;
     }
 
-    g_pD3DDevice8->DrawIndexedPrimitive
-	(
-		PCPrimitiveType, 0, uiNumVertices, uiStartIndex, PrimitiveCount
-	);
+    if (IsValidCurrentShader())
+    {
+        g_pD3DDevice8->DrawIndexedPrimitive
+        (
+            PCPrimitiveType, 0, uiNumVertices, uiStartIndex, PrimitiveCount
+        );
+    }
 
     if(!bActiveIB)
     {
@@ -6321,10 +6332,13 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVerticesUP
     {
     #endif
 
-    g_pD3DDevice8->DrawIndexedPrimitiveUP
-    (
-        PCPrimitiveType, 0, VertexCount, PrimitiveCount, pIndexData, D3DFMT_INDEX16, pNewVertexStreamZeroData, VertexStreamZeroStride
-    );
+    if (IsValidCurrentShader())
+    {
+        g_pD3DDevice8->DrawIndexedPrimitiveUP
+        (
+            PCPrimitiveType, 0, VertexCount, PrimitiveCount, pIndexData, D3DFMT_INDEX16, pNewVertexStreamZeroData, VertexStreamZeroStride
+        );
+    }
 
     #ifdef _DEBUG_TRACK_VB
     }
