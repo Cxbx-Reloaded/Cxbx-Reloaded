@@ -36,10 +36,12 @@
 
 #include "Xapi.1.0.3911.h"
 #include "Xapi.1.0.4034.h"
+#include "Xapi.1.0.4134.h"
 #include "Xapi.1.0.4361.h"
 #include "Xapi.1.0.4627.h"
 #include "D3D8.1.0.3925.h"
 #include "D3D8.1.0.4034.h"
+#include "D3D8.1.0.4134.h"
 #include "D3D8.1.0.4361.h"
 #include "D3D8.1.0.4627.h"
 #include "DSound.1.0.4361.h"

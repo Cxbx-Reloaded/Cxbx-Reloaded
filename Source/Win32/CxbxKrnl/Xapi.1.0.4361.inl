@@ -565,7 +565,7 @@ SOOVPA<7> XapiInitProcess_1_0_4361 =
     0,  // XRef Not Used
 
     {
-        // XapiInitProcess+0x00 : sub esp, 30h
+        // XapiInitProcess+0x03 : sub esp, 30h
         { 0x05, 0x30 }, // (Offset,Value)-Pair #1
 
         // XapiInitProcess+0x0F : push 0x0C

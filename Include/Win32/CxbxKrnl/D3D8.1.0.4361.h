@@ -36,7 +36,6 @@
 
 #include "OOVPA.h"
 
-extern SOOVPA<13> IDirect3DDevice8_SetRenderState_CullMode_1_0_4361;
 extern SOOVPA<10> IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361;
 
 extern OOVPATable D3D8_1_0_4361[];

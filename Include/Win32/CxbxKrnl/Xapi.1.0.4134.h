@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->Xapi.1.0.4034.h
+// *   Cxbx->Win32->CxbxKrnl->Xapi.1.0.4134.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,12 +31,12 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef XAPI_1_0_4034_H
-#define XAPI_1_0_4034_H
+#ifndef XAPI_1_0_4134_H
+#define XAPI_1_0_4134_H
 
 #include "OOVPA.h"
 
-extern OOVPATable XAPI_1_0_4034[];
-extern uint32     XAPI_1_0_4034_SIZE;
+extern OOVPATable XAPI_1_0_4134[];
+extern uint32     XAPI_1_0_4134_SIZE;
 
 #endif

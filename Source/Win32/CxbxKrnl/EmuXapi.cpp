@@ -294,6 +294,32 @@ BOOL WINAPI XTL::EmuQueryPerformanceFrequency
 }
 
 // ******************************************************************
+// * func: EmuXMountUtilityDrive
+// ******************************************************************
+BOOL WINAPI XTL::EmuXMountUtilityDrive
+(
+    BOOL    fFormatClean
+)
+{
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        EmuSwapFS();   // Win2k/XP FS
+        printf("EmuXapi (0x%X): EmuXMountUtilityDrive\n"
+               "(\n"
+               "   fFormatClean        : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), fFormatClean);
+        EmuSwapFS();   // XBox FS
+    }
+    #endif
+
+    return TRUE;
+}
+
+// ******************************************************************
 // * func: EmuXInitDevices
 // ******************************************************************
 VOID WINAPI XTL::EmuXInitDevices
@@ -618,11 +644,43 @@ BOOL WINAPI XTL::EmuCloseHandle
     }
     #endif
 
-    BOOL Ret = CloseHandle(hObject);
+    BOOL bRet = CloseHandle(hObject);
 
     EmuSwapFS();   // XBox FS
 
-    return Ret;
+    return bRet;
+}
+
+// ******************************************************************
+// * func: EmuSetThreadPriority
+// ******************************************************************
+BOOL WINAPI XTL::EmuSetThreadPriority
+(
+    HANDLE  hThread,
+    int     nPriority
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuSetThreadPriority\n"
+               "(\n"
+               "   hThread             : 0x%.08X\n"
+               "   nPriority           : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), hThread, nPriority);
+    }
+    #endif
+
+    BOOL bRet = SetThreadPriority(hThread, nPriority);
+
+    EmuSwapFS();   // XBox FS
+
+    return bRet;
 }
 
 // ******************************************************************

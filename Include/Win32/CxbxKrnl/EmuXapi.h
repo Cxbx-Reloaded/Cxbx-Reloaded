@@ -321,6 +321,14 @@ BOOL WINAPI EmuQueryPerformanceFrequency
 );
 
 // ******************************************************************
+// * func: EmuXMountUtilityDrive
+// ******************************************************************
+BOOL WINAPI EmuXMountUtilityDrive
+(
+    BOOL    fFormatClean
+);
+
+// ******************************************************************
 // * func: EmuXInitDevices
 // ******************************************************************
 VOID WINAPI EmuXInitDevices
@@ -412,6 +420,15 @@ HANDLE WINAPI EmuCreateThread
 BOOL WINAPI EmuCloseHandle
 (
     HANDLE hObject
+);
+
+// ******************************************************************
+// * func: EmuSetThreadPriority
+// ******************************************************************
+BOOL WINAPI EmuSetThreadPriority
+(
+    HANDLE  hThread,
+    int     nPriority
 );
 
 // ******************************************************************

@@ -619,7 +619,7 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
 // ******************************************************************
 // * 0x009C - KeTickCount
 // ******************************************************************
-XBSYSAPI EXPORTNUM(156) xboxkrnl::DWORD xboxkrnl::KeTickCount = 0;
+XBSYSAPI EXPORTNUM(156) volatile xboxkrnl::DWORD xboxkrnl::KeTickCount = 0;
 
 // ******************************************************************
 // * 0x00A4 - LaunchDataPage (actually a pointer)
@@ -700,6 +700,40 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 }
 
 // ******************************************************************
+// * 0x00A7 - MmAllocateSystemMemory
+// ******************************************************************
+XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
+(
+    ULONG NumberOfBytes,
+    ULONG Protect
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): MmAllocateContiguousMemoryEx\n"
+               "(\n"
+               "   NumberOfBytes            : 0x%.08X\n"
+               "   Protect                  : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), NumberOfBytes, Protect);
+    }
+    #endif
+
+    // TODO: Make this much more efficient and correct if necessary!
+    // HACK: Should be aligned!!
+    PVOID pRet = (PVOID)new unsigned char[NumberOfBytes];
+
+    EmuSwapFS();   // Xbox FS
+
+    return pRet;
+}
+
+// ******************************************************************
 // * 0x00AB - MmFreeContiguousMemory
 // ******************************************************************
 XBSYSAPI EXPORTNUM(171) VOID NTAPI xboxkrnl::MmFreeContiguousMemory
@@ -727,6 +761,38 @@ XBSYSAPI EXPORTNUM(171) VOID NTAPI xboxkrnl::MmFreeContiguousMemory
     EmuSwapFS();   // Xbox FS
 
     return;
+}
+
+// ******************************************************************
+// * 0x00AC - MmFreeSystemMemory
+// ******************************************************************
+XBSYSAPI EXPORTNUM(172) NTSTATUS NTAPI xboxkrnl::MmFreeSystemMemory
+(
+    PVOID BaseAddress,
+    ULONG NumberOfBytes
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): MmFreeSystemMemory\n"
+               "(\n"
+               "   BaseAddress              : 0x%.08X\n"
+               "   NumberOfBytes            : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), BaseAddress, NumberOfBytes);
+    }
+    #endif
+
+    delete[] BaseAddress;
+
+    EmuSwapFS();   // Xbox FS
+
+    return STATUS_SUCCESS;
 }
 
 // ******************************************************************
@@ -1003,10 +1069,11 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
         szBuffer += 3;
 
         ObjectAttributes->RootDirectory = g_hTDrive;
+
         #ifdef _DEBUG_TRACE
         printf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
         printf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-        printf("  New:\"$CxbxPath\\%s\"\n", szBuffer);
+        printf("  New:\"$CxbxPath\\TDATA\\%s\"\n", szBuffer);
         #endif
     }
     else if( (szBuffer[0] == 'U' || szBuffer[0] == 'u') && szBuffer[1] == ':' && szBuffer[2] == '\\')
@@ -1014,10 +1081,23 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
         szBuffer += 3;
 
         ObjectAttributes->RootDirectory = g_hUDrive;
+
         #ifdef _DEBUG_TRACE
         printf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
         printf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-        printf("  New:\"$CxbxPath\\%s\"\n", szBuffer);
+        printf("  New:\"$CxbxPath\\UDATA\\%s\"\n", szBuffer);
+        #endif
+    }
+    else if( (szBuffer[0] == 'Z' || szBuffer[0] == 'z') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+    {
+        szBuffer += 3;
+
+        ObjectAttributes->RootDirectory = g_hZDrive;
+
+        #ifdef _DEBUG_TRACE
+        printf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+        printf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+        printf("  New:\"$CxbxPath\\CxbxCache\\%s\"\n", szBuffer);
         #endif
     }
 

@@ -1812,9 +1812,9 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_SetTextureState_TexCoordIndex" 
         #endif
     },
-    // IDirect3DDevice8::SetRenderState_CullMode (* unchanged since 4361 *)
+    // IDirect3DDevice8::SetRenderState_CullMode (* unchanged since 4134 *)
     {
-        (OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4361,
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4134,
 
         XTL::EmuIDirect3DDevice8_SetRenderState_CullMode,
 

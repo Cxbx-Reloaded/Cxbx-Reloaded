@@ -1,5 +1,5 @@
 # Microsoft Developer Studio Project File - Name="CxbxKrnl" - Package Owner=<4>
-# Microsoft Developer Studio Generated Build File, Format Version 6.00
+# Microsoft Developer Studio Generated Build File, Format Version 60000
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102
@@ -154,6 +154,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\D3D8.1.0.4034.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\D3D8.1.0.4134.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\D3D8.1.0.4361.h
 # End Source File
 # Begin Source File
@@ -242,6 +246,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.4034.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.4134.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.4361.h
 # End Source File
 # Begin Source File
@@ -295,6 +303,10 @@ SOURCE=.\Source\Win32\CxbxKrnl\D3D8.1.0.3925.inl
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\D3D8.1.0.4034.inl
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\D3D8.1.0.4134.inl
 # End Source File
 # Begin Source File
 
@@ -391,6 +403,10 @@ SOURCE=.\Source\Win32\CxbxKrnl\Xapi.1.0.3911.inl
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\Xapi.1.0.4034.inl
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\Xapi.1.0.4134.inl
 # End Source File
 # Begin Source File
 

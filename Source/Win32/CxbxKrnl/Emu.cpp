@@ -67,6 +67,7 @@ Xbe::Header *g_pXbeHeader = NULL;
 HANDLE		 g_hCurDir    = NULL;
 HANDLE       g_hTDrive    = NULL;
 HANDLE       g_hUDrive    = NULL;
+HANDLE       g_hZDrive    = NULL;
 
 // ******************************************************************
 // * static
@@ -301,6 +302,22 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
             if(g_hUDrive == INVALID_HANDLE_VALUE)
                 EmuCleanup("Could not map U:\\\n");
         }
+
+        // Create ZData Directory
+        {
+            strcpy(&szBuffer[spot], "\\CxbxCache");
+
+            CreateDirectory(szBuffer, NULL);
+
+            sprintf(&szBuffer[spot+6], "\\%08x", pCertificate->dwTitleId);
+
+            CreateDirectory(szBuffer, NULL);
+
+            g_hZDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+
+            if(g_hUDrive == INVALID_HANDLE_VALUE)
+                EmuCleanup("Could not map Z:\\\n");
+        }
     }
 
     // ******************************************************************
@@ -376,7 +393,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
                 if(bXRefFirstPass)
                 {
-                    if(strcmp("XAPILIB", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && (BuildVersion == 4627 || BuildVersion == 4361 || BuildVersion == 4034 || BuildVersion == 3911))
+                    if(strcmp("XAPILIB", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && (BuildVersion == 3911 || BuildVersion == 4034 || BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4627))
                     {
                         uint32 lower = pXbeHeader->dwBaseAddr;
                         uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
@@ -384,9 +401,13 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 				        // ******************************************************************
 				        // * Locate XapiProcessHeap
 				        // ******************************************************************
-				        if(BuildVersion == 4361 || BuildVersion == 4627)
-				        {
-					        void *pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_4361, lower, upper);
+                        {
+                            void *pFunc = 0;
+
+                            if(BuildVersion >= 4361)
+					            pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_4361, lower, upper);
+                            else // 3911, 4034, 4134
+                                pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_3911, lower, upper);
 
 					        if(pFunc != 0)
 					        {
@@ -400,19 +421,21 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 					        }
 				        }
                     }
-			        else if(strcmp("D3D8", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && (BuildVersion == 4361 || BuildVersion == 4627))
+			        else if(strcmp("D3D8", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && (BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4627))
 			        {
                         uint32 lower = pXbeHeader->dwBaseAddr;
                         uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
 
-				        void *pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4361, lower, upper);
+				        void *pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4134, lower, upper);
 
                         // ******************************************************************
 				        // * Locate D3DDeferredRenderState
 				        // ******************************************************************
-                        if(pFunc != 0 && (BuildVersion == 4361 || BuildVersion == 4627))
+                        if(pFunc != 0 && (BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4627))
                         {
-                            if(BuildVersion == 4361)
+                            if(BuildVersion == 4134)
+                                XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x248 + 82*4);  // TODO: Verify
+                            else if(BuildVersion == 4361)
 						        XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x200 + 82*4);
                             else if(BuildVersion == 4627)
 						        XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x24C + 92*4);
@@ -432,7 +455,9 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 				        // * Locate D3DDeferredTextureState
 				        // ******************************************************************
                         {
-                            if(BuildVersion == 4361)
+                            if(BuildVersion == 4134)
+                                EmuCleanup("Oops, I didnt do this part yet either");
+                            else if(BuildVersion == 4361)
                                 pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361, lower, upper);
                             else if(BuildVersion == 4627)
                                 pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4627, lower, upper);
