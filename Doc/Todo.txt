@@ -1,5 +1,7 @@
 Cxbx Todo (* denotes high priority, + denotes medium priority)
 
+  * Push Buffer Size is stored in a global. This may be important (hard to tell)
+
   * PointSprite demo mip mapping has some bug (maybe related to the Register()
     base address?)
 

@@ -121,7 +121,7 @@ EmuExe::EmuExe(Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename) : Exe
         // * TODO: for each of these, check for bad values and correct them
         // ******************************************************************
         m_OptionalHeader.m_sizeof_stack_reserve = 0x00100000;
-        m_OptionalHeader.m_sizeof_stack_commit  = 0x00001000;
+        m_OptionalHeader.m_sizeof_stack_commit  = x_Xbe->m_Header.dwPeStackCommit;
         m_OptionalHeader.m_sizeof_heap_reserve  = x_Xbe->m_Header.dwPeHeapReserve;
         m_OptionalHeader.m_sizeof_heap_commit   = x_Xbe->m_Header.dwPeHeapCommit;
 

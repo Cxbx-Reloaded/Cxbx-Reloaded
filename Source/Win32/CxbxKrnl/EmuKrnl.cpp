@@ -75,6 +75,7 @@ xntdll::FPTR_RtlLeaveCriticalSection        NT_RtlLeaveCriticalSection      = (x
 xntdll::FPTR_NtAllocateVirtualMemory        NT_NtAllocateVirtualMemory      = (xntdll::FPTR_NtAllocateVirtualMemory)GetProcAddress(hNtDll, "NtAllocateVirtualMemory");
 xntdll::FPTR_NtClose                        NT_NtClose                      = (xntdll::FPTR_NtClose)GetProcAddress(hNtDll, "NtClose");
 xntdll::FPTR_NtDelayExecution               NT_NtDelayExecution             = (xntdll::FPTR_NtDelayExecution)GetProcAddress(hNtDll, "NtDelayExecution");
+xntdll::FPTR_NtDuplicateObject              NT_NtDuplicateObject            = (xntdll::FPTR_NtDuplicateObject)GetProcAddress(hNtDll, "NtDuplicateObject");
 xntdll::FPTR_NtQueryInformationFile         NT_NtQueryInformationFile       = (xntdll::FPTR_NtQueryInformationFile)GetProcAddress(hNtDll, "NtQueryInformationFile");
 xntdll::FPTR_NtQueryVolumeInformationFile   NT_NtQueryVolumeInformationFile = (xntdll::FPTR_NtQueryVolumeInformationFile)GetProcAddress(hNtDll, "NtQueryVolumeInformationFile");
 xntdll::FPTR_NtCreateEvent                  NT_NtCreateEvent                = (xntdll::FPTR_NtCreateEvent)GetProcAddress(hNtDll, "NtCreateEvent");
@@ -199,24 +200,76 @@ XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
     // ******************************************************************
     switch(ValueIndex)
     {
+        // Factory Game Region
+        case 0x104:
+        {
+            // TODO: configurable region or autodetect of some sort
+            if(Type != 0)
+                *Type = 0x04;
+
+            if(Value != 0)
+                *Value = 0x01;  // North America
+
+            if(ResultLength != 0)
+                *ResultLength = 0x04;
+        }
+        break;
+
         // Factory AC Region
         case 0x103:
         {
             // TODO: configurable region or autodetect of some sort
-            if(Type != 0) *Type = 0x04;
+            if(Type != 0)
+                *Type = 0x04;
 
-            if(Value != 0) *Value = 0x01; // NTSC_M
+            if(Value != 0)
+                *Value = 0x01; // NTSC_M
 
-            if(ResultLength != 0) *ResultLength = 0x04;
+            if(ResultLength != 0)
+                *ResultLength = 0x04;
         }
         break;
+
+        // Language
+        case 0x007:
+        {
+            // TODO: configurable language or autodetect of some sort
+            if(Type != 0)
+                *Type = 0x04;
+
+            if(Value != 0)
+                *Value = 0x01;  // English
+
+            if(ResultLength != 0)
+                *ResultLength = 0x04;
+        }
+        break;
+
+        // Video Flags
+        case 0x008:
+        {
+            // TODO: configurable video flags or autodetect of some sort
+            if(Type != 0)
+                *Type = 0x04;
+
+            if(Value != 0)
+                *Value = 0x10;  // Letterbox
+
+            if(ResultLength != 0)
+                *ResultLength = 0x04;
+        }
+        break;
+
         case EEPROM_MISC:
         {
-            if(Type != 0) *Type  = 0x04;
+            if(Type != 0)
+                *Type  = 0x04;
 
-            if(Value != 0) *Value = 0;
+            if(Value != 0)
+                *Value = 0;
 
-            if(ResultLength != 0) *ResultLength = 0x04;
+            if(ResultLength != 0)
+                *ResultLength = 0x04;
         }
         break;
 
@@ -872,6 +925,53 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
 }
 
 // ******************************************************************
+// * 0x00C5 - NtDuplicateObject
+// ******************************************************************
+XBSYSAPI EXPORTNUM(197) NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
+(
+    HANDLE  SourceHandle,
+    HANDLE *TargetHandle,
+    DWORD   Options
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): NtDuplicateObject\n"
+               "(\n"
+               "   SourceHandle        : 0x%.08X\n"
+               "   TargetHandle        : 0x%.08X\n"
+               "   Options             : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), SourceHandle, TargetHandle, Options);
+    }
+    #endif
+
+    // ******************************************************************
+    // * redirect to Win2k/XP
+    // ******************************************************************
+    NTSTATUS ret = NT_NtDuplicateObject
+    (
+        GetCurrentProcess(),
+        &SourceHandle,
+        GetCurrentProcess(),
+        TargetHandle,
+        0, 0, DUPLICATE_SAME_ACCESS | DUPLICATE_SAME_ATTRIBUTES
+    );
+
+    if(ret != STATUS_SUCCESS)
+        printf("*Warning* Object was not duplicated\n");
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
+}
+
+// ******************************************************************
 // * 0x00CA - NtOpenFile
 // ******************************************************************
 XBSYSAPI EXPORTNUM(202) NTSTATUS xboxkrnl::NtOpenFile
@@ -1432,3 +1532,9 @@ XBSYSAPI EXPORTNUM(322) XBOX_HARDWARE_INFO xboxkrnl::XboxHardwareInfo =
     0xC0000035,
     0,0,0,0
 };
+
+// ******************************************************************
+// * HalBootSMCVideoMode
+// ******************************************************************
+// TODO: Verify this!
+XBSYSAPI EXPORTNUM(356) xboxkrnl::DWORD xboxkrnl::HalBootSMCVideoMode = 1;

@@ -1555,20 +1555,11 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
                GetCurrentThreadId(), pThis, pBase);
     }
     #endif
-/** i don't know about this
-    static DWORD dwStaticBase = -1, dwTrueBase = -1, dwBaseIncrement;
 
-    if((DWORD)pBase == dwStaticBase)
-    {
-        dwTrueBase += dwBaseIncrement;
-        pBase = (PVOID)dwTrueBase;
-    }
-    else
-    {
-        dwStaticBase = dwTrueBase = (DWORD)pBase;
-        dwBaseIncrement = 0;
-    }
-//*/
+    _asm int 3
+
+    pBase = (PVOID)((DWORD)pBase + (DWORD)pThis->Data);
+
     HRESULT hRet;
 
     X_D3DResource *pResource = (X_D3DResource*)pThis;
@@ -1665,10 +1656,9 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
             X_D3DFORMAT X_Format = (X_D3DFORMAT)((pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
             D3DFORMAT   Format   = EmuXB2PC_D3DFormat(X_Format);
 
-            DWORD       dwWidth, dwHeight, dwBPP, dwMipMap;
-            BOOL        bSwizzled;
-
-            dwMipMap = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
+            DWORD       dwWidth, dwHeight, dwBPP, dwDepth = 1, dwMipMapLevels = 1;
+            DWORD       dwPitch = 0;
+            BOOL        bSwizzled = FALSE, bCompressed = FALSE;
 
             // ******************************************************************
             // * Interpret Width/Height/BPP
@@ -1680,6 +1670,8 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
                 // Swizzled 32 Bit
                 dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
                 dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
+                dwDepth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
+                dwPitch  = dwWidth*4;
                 dwBPP = 4;
             }
             else if(X_Format == 0x05 /* X_D3DFMT_R5G6B5 */ || X_Format == 0x04 /* X_D3DFMT_A4R4G4B4 */)
@@ -1689,20 +1681,41 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
                 // Swizzled 16 Bit
                 dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
                 dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
+                dwDepth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
+                dwPitch  = dwWidth*2;
                 dwBPP = 2;
             }
             else if(X_Format == 0x12 /* X_D3DFORMAT_A8R8G8B8 */)
             {
-                bSwizzled = FALSE;
-
                 // Linear 32 Bit
-                dwWidth  = (pPixelContainer->Size & D3DSIZE_WIDTH_MASK) + 1;
-                dwHeight = ((pPixelContainer->Size & D3DSIZE_HEIGHT_MASK) >> D3DSIZE_HEIGHT_SHIFT) + 1;
+                dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
+                dwHeight = ((pPixelContainer->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
+                dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)*64)+1;
                 dwBPP = 4;
+            }
+            else if(X_Format == 0x11 /* D3DFMT_LIN_R5G6B5 */)
+            {
+                // Linear 16 Bit
+                dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
+                dwHeight = ((pPixelContainer->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
+                dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)*64)+1;
+
+                dwBPP = 2;
+            }
+            else if(X_Format == 0x0C /* D3DFMT_DXT1 */ || X_Format == 0x0E /* D3DFMT_DXT2 */ || X_Format == 0x0F /* D3DFMT_DXT3 */)
+            {
+                bCompressed = TRUE;
+
+                // Compressed
+                dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
+                dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
+                dwDepth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
+                
+                dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
             }
             else
             {
-                EmuCleanup("Temporarily Unrecognized Format (0x%.08X)", Format);
+                EmuCleanup("0x%.08X is not a supported format!\n", X_Format);
             }
 
             // ******************************************************************
@@ -1716,7 +1729,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
             {
                 hRet = g_pD3DDevice8->CreateTexture
                 (
-                    dwWidth, dwHeight, dwMipMap, 0, Format,
+                    dwWidth, dwHeight, dwMipMapLevels, 0, Format,
                     D3DPOOL_MANAGED, &pResource->EmuTexture8
                 );
             }
@@ -1729,7 +1742,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
                 EmuCleanup("X_D3DCOMMON_TYPE_SURFACE temporarily unsupported");
             }
             else
-            {
+            { 
                 D3DLOCKED_RECT LockedRect;
 
                 pResource->EmuTexture8->LockRect(0, &LockedRect, NULL, 0);
@@ -1739,13 +1752,15 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
 
                 if(bSwizzled)
                 {
-                    DWORD dwDepth = 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
-
                     xg::EmuXGUnswizzleRect
                     (
                         pBase, dwWidth, dwHeight, dwDepth, LockedRect.pBits, 
                         LockedRect.Pitch, iRect, iPoint, dwBPP
                     );
+                }
+                else if(bCompressed)
+                {
+                    // Unsupported!
                 }
                 else
                 {
@@ -1758,7 +1773,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
                         memcpy(pDest, pSrc, dwWidth*dwBPP);
 
                         pDest += LockedRect.Pitch;
-                        pSrc  += dwWidth*dwBPP;
+                        pSrc  += dwPitch;
                     }
                 }
 
@@ -2383,7 +2398,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias
 //  TODO: Analyze performance and compatibility (undefined behavior on PC with triangles or points)
 //  g_pD3DDevice8->SetRenderState(D3DRS_EDGEANTIALIAS, Value);
 
-    printf("*Warning* SetRenderState_EdgeAntiAlias not implemented!\n");
+//    printf("*Warning* SetRenderState_EdgeAntiAlias not implemented!\n");
 
     EmuSwapFS();   // XBox FS
 
@@ -3007,7 +3022,8 @@ static void EmuUpdateDeferredStates()
                 if(pCur[5] == 4)
                     EmuCleanup("QuinCunx is unsupported (temporarily)");
 
-                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_MIPFILTER, pCur[5]);
+                // TODO: Figure out wtf is wrong with this!
+//                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_MIPFILTER, pCur[5]);
             }
 
             // TODO: Use a lookup table, this is not always a 1:1 map

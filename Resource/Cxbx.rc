@@ -161,8 +161,6 @@ BEGIN
         , GRAYED
         MENUITEM "Config &Video...",            ID_SETTINGS_CONFIG_VIDEO
         MENUITEM SEPARATOR
-        MENUITEM "&Directory Settings...",      ID_SETTINGS_DIR
-        MENUITEM SEPARATOR
         MENUITEM "Generate &Exe Automatically", ID_SETTINGS_AUTOGEN
     END
     POPUP "E&mulation"

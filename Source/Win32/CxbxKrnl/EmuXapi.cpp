@@ -68,6 +68,36 @@ xntdll::FPTR_RtlAllocateHeap                NT_RtlAllocateHeap              = (x
 xntdll::FPTR_RtlFreeHeap                    NT_RtlFreeHeap                  = (xntdll::FPTR_RtlFreeHeap)GetProcAddress(hNtDll, "RtlFreeHeap");
 
 // ******************************************************************
+// * func: Emu__chkstk
+// ******************************************************************
+void __cdecl xapi::Emu__chkstk
+(
+    DWORD dwDummy1,
+    DWORD dwDummy2,
+    DWORD dwDummy3
+)
+{
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        EmuSwapFS();   // Win2k/XP FS
+        printf("EmuXapi (0x%X): Emu__chkstk\n"
+               "(\n"
+               "   dwDummy1            : 0x%.08X\n"
+               "   dwDummy2            : 0x%.08X\n"
+               "   dwDummy3            : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), dwDummy1, dwDummy2, dwDummy3);
+        EmuSwapFS();   // XBox FS
+    }
+    #endif
+
+    return;
+}
+
+// ******************************************************************
 // * func: EmuRtlCreateHeap
 // ******************************************************************
 PVOID WINAPI xapi::EmuRtlCreateHeap
@@ -179,6 +209,36 @@ BOOL WINAPI xapi::EmuRtlFreeHeap
     EmuSwapFS();   // XBox FS
 
     return bRet;
+}
+
+// ******************************************************************
+// * func: EmuXapiValidateDiskPartition
+// ******************************************************************
+// TODO: Tentative
+BOOL WINAPI xapi::EmuXapiValidateDiskPartition
+(
+    IN DWORD dwPartition
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuXapiValidateDiskPartition\n"
+               "(\n"
+               "   dwPartition         : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), dwPartition);
+    }
+    #endif
+
+    EmuCleanup("EmuXapiValidateDiskPartition could be dangerous!");
+    EmuSwapFS();   // XBox FS
+
+    return TRUE;
 }
 
 // ******************************************************************

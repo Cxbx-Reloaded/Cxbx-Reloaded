@@ -120,6 +120,67 @@ SOOVPA<10> IDirectSoundBuffer8_SetBufferData_1_0_4361 =
 };
 
 // ******************************************************************
+// * IDirectSoundBuffer8_SetPlayRegion
+// ******************************************************************
+SOOVPA<10> IDirectSoundBuffer8_SetPlayRegion_1_0_4361 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    // NOTE: This is actually intercepting CDirectSoundBuffer::SetPlayRegion(ULONG, ULONG)
+
+    {
+        // IDirectSoundBuffer8_SetPlayRegion+0x10 : movzx edi, al
+        { 0x10, 0x0F }, // (Offset,Value)-Pair #1
+        { 0x11, 0xB6 }, // (Offset,Value)-Pair #2
+        { 0x12, 0xF8 }, // (Offset,Value)-Pair #3
+
+        // IDirectSoundBuffer8_SetPlayRegion+0x17 : jz +0x0B
+        { 0x17, 0x74 }, // (Offset,Value)-Pair #4
+        { 0x18, 0x0B }, // (Offset,Value)-Pair #5
+
+        // IDirectSoundBuffer8_SetPlayRegion+0x46 : mov esi, 0x88780032
+        { 0x46, 0xBE }, // (Offset,Value)-Pair #6
+        { 0x47, 0x32 }, // (Offset,Value)-Pair #7
+        { 0x48, 0x00 }, // (Offset,Value)-Pair #8
+        { 0x49, 0x78 }, // (Offset,Value)-Pair #9
+        { 0x4A, 0x88 }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
+// * IDirectSoundBuffer8_SetLoopRegion
+// ******************************************************************
+SOOVPA<11> IDirectSoundBuffer8_SetLoopRegion_1_0_4361 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    // NOTE: This is actually intercepting CDirectSoundBuffer::SetLoopRegion(ULONG, ULONG)
+
+    {
+        // IDirectSoundBuffer8_SetLoopRegion+0x24 : mov eax, 0x80004005
+        { 0x24, 0xB8 }, // (Offset,Value)-Pair #1
+        { 0x25, 0x05 }, // (Offset,Value)-Pair #2
+        { 0x26, 0x40 }, // (Offset,Value)-Pair #3
+        { 0x27, 0x00 }, // (Offset,Value)-Pair #4
+        { 0x28, 0x80 }, // (Offset,Value)-Pair #5
+
+        // IDirectSoundBuffer8_SetLoopRegion+0x29 : jmp +0x55
+        { 0x29, 0xEB }, // (Offset,Value)-Pair #6
+        { 0x2A, 0x55 }, // (Offset,Value)-Pair #7
+
+        // IDirectSoundBuffer8_SetLoopRegion+0x56 : sub ecx, esi
+        { 0x56, 0x2B }, // (Offset,Value)-Pair #8
+        { 0x57, 0xCE }, // (Offset,Value)-Pair #9
+
+        // IDirectSoundBuffer8_SetLoopRegion+0x82 : retn 0x0C
+        { 0x82, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x83, 0x0C }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
 // * DirectSoundCreate_1_0_4361
 // ******************************************************************
 OOVPATable DSound_1_0_4361[] =
@@ -152,6 +213,26 @@ OOVPATable DSound_1_0_4361[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirectSoundBuffer8_SetBufferData" 
+        #endif
+    },
+    // IDirectSoundBuffer8::SetPlayRegion
+    {
+        (OOVPA*)&IDirectSoundBuffer8_SetPlayRegion_1_0_4361,
+
+        xdirectx::EmuIDirectSoundBuffer8_SetPlayRegion,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSoundBuffer8_SetPlayRegion" 
+        #endif
+    },
+    // IDirectSoundBuffer8::SetLoopRegion
+    {
+        (OOVPA*)&IDirectSoundBuffer8_SetLoopRegion_1_0_4361,
+
+        xdirectx::EmuIDirectSoundBuffer8_SetLoopRegion,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSoundBuffer8_SetLoopRegion" 
         #endif
     },
 };

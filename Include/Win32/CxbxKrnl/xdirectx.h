@@ -135,14 +135,20 @@ inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
             return D3DFMT_R5G6B5;
 
         case 0x12: // Linear     (X_D3DFMT_LIN_A8R8G8B8)
-        case 0x06: // Swizzled   (X_D3DFMT_LIN_A8R8G8B8)
+        case 0x06: // Swizzled   (X_D3DFMT_A8R8G8B8)
             return D3DFMT_A8R8G8B8;
 
         case 0x07: // Swizzled   (X_D3DFMT_X8R8G8B8)
             return D3DFMT_X8R8G8B8;
 
+        case 0x0C: // Compressed (X_D3DFMT_DXT1)
+            return D3DFMT_DXT1;
+
         case 0x0E: // Compressed (X_D3DFMT_DXT2)
             return D3DFMT_DXT2;
+
+        case 0x0F: // Compressed (X_D3DFMT_DXT3)
+            return D3DFMT_DXT3;
 
         case 0x2A: // Swizzled   (X_D3DFMT_D24S8)
             return D3DFMT_D24S8;
@@ -152,7 +158,7 @@ inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
             return D3DFMT_D16;
     }
 
-    EmuCleanup("EmuXB2PC_D3DFormat: Unknown Format (%d)", Format);
+    EmuCleanup("EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)", Format);
 
     return (D3DFORMAT)Format;
 }
@@ -276,11 +282,11 @@ struct X_D3DVertexShader
 // ******************************************************************
 // * D3DTexture "Size" Masks
 // ******************************************************************
-#define D3DSIZE_WIDTH_MASK              0x00000FFF   // Width  (Texels - 1)
-#define D3DSIZE_HEIGHT_MASK             0x00FFF000   // Height (Texels - 1)
-#define D3DSIZE_HEIGHT_SHIFT            12
-#define D3DSIZE_PITCH_MASK              0xFF000000   // Pitch / 64 - 1
-#define D3DSIZE_PITCH_SHIFT             24
+#define X_D3DSIZE_WIDTH_MASK              0x00000FFF   // Width  (Texels - 1)
+#define X_D3DSIZE_HEIGHT_MASK             0x00FFF000   // Height (Texels - 1)
+#define X_D3DSIZE_HEIGHT_SHIFT            12
+#define X_D3DSIZE_PITCH_MASK              0xFF000000   // Pitch / 64 - 1
+#define X_D3DSIZE_PITCH_SHIFT             24
 
 // ******************************************************************
 // * X_D3DResource
@@ -1041,6 +1047,26 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_SetBufferData
     LPDIRECTSOUNDBUFFER8    pThis,
     LPVOID                  pvBufferData,
     DWORD                   dwBufferBytes
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetPlayRegion
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetPlayRegion
+(
+    LPDIRECTSOUNDBUFFER8    pThis,
+    DWORD                   dwPlayStart,
+    DWORD                   dwPlayLength
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetLoopRegion
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetLoopRegion
+(
+    LPDIRECTSOUNDBUFFER8    pThis,
+    DWORD                   dwLoopStart,
+    DWORD                   dwLoopLength
 );
 
 #endif

@@ -61,6 +61,36 @@ SOOVPA<9> RtlFreeHeap_1_0_4627 =
 };
 
 // ******************************************************************
+// * XapiValidateDiskPartition
+// ******************************************************************
+SOOVPA<11> XapiValidateDiskPartition_1_0_4627 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    {
+        // XapiValidateDiskPartition+0x20 : push 0x00100001
+        { 0x20, 0x68 }, // (Offset,Value)-Pair #1
+        { 0x21, 0x01 }, // (Offset,Value)-Pair #2
+        { 0x22, 0x00 }, // (Offset,Value)-Pair #3
+        { 0x23, 0x10 }, // (Offset,Value)-Pair #4
+
+        // XapiValidateDiskPartition+0x29 : mov ebp, [ebp-0x0C], 0x40
+        { 0x29, 0xC7 }, // (Offset,Value)-Pair #5
+        { 0x2A, 0x45 }, // (Offset,Value)-Pair #6
+        { 0x2B, 0xF4 }, // (Offset,Value)-Pair #7
+        { 0x2C, 0x40 }, // (Offset,Value)-Pair #8
+
+        // XapiValidateDiskPartition+0x3A : jl +0x35
+        { 0x3A, 0x7C }, // (Offset,Value)-Pair #9
+        { 0x3B, 0x35 }, // (Offset,Value)-Pair #10
+
+        // XapiValidateDiskPartition+0x74 : leave
+        { 0x74, 0xC9 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_4627
 // ******************************************************************
 OOVPATable XAPI_1_0_4627[] =
@@ -72,7 +102,7 @@ OOVPATable XAPI_1_0_4627[] =
         xapi::EmuRtlCreateHeap,
 
         #ifdef _DEBUG_TRACE
-        "RtlCreateHeap"
+        "EmuRtlCreateHeap"
         #endif
     },
     // RtlAllocateHeap (* unchanged since 1.0.4361 *) (* OR FARTHER *)
@@ -82,7 +112,7 @@ OOVPATable XAPI_1_0_4627[] =
         xapi::EmuRtlAllocateHeap,
 
         #ifdef _DEBUG_TRACE
-        "RtlAllocateHeap"
+        "EmuRtlAllocateHeap"
         #endif
     },
     // RtlFreeHeap
@@ -92,7 +122,17 @@ OOVPATable XAPI_1_0_4627[] =
         xapi::EmuRtlFreeHeap,
 
         #ifdef _DEBUG_TRACE
-        "RtlFreeHeap"
+        "EmuRtlFreeHeap"
+        #endif
+    },
+    // EmuXapiValidateDiskPartition
+    {
+        (OOVPA*)&XapiValidateDiskPartition_1_0_4627,
+
+        xapi::EmuXapiValidateDiskPartition,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXapiValidateDiskPartition"
         #endif
     },
     // XInitDevices (* unchanged since 1.0.4034 *)
@@ -152,7 +192,7 @@ OOVPATable XAPI_1_0_4627[] =
         xapi::EmuXapiThreadStartup,
 
         #ifdef _DEBUG_TRACE
-        "XapiThreadStartup"
+        "EmuXapiThreadStartup"
         #endif
     },
     //* Too High Level

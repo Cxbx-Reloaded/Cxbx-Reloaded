@@ -1251,6 +1251,16 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DVertexBuffer8_Lock2" 
         #endif
     },
+    // IDirect3DResource8::Register (* unchanged since 4361 *)
+    {
+        (OOVPA*)&IDirect3DResource8_Register_1_0_4361,
+
+        xdirectx::EmuIDirect3DResource8_Register,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DResource8_Register" 
+        #endif
+    },
     // IDirect3DResource8::Release
     {
         (OOVPA*)&IDirect3DResource8_Release_1_0_4627,

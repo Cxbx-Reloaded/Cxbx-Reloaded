@@ -325,6 +325,10 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
             printf("Emu (0x%X): Locating HLE Information for %s %d.%d.%d...", GetCurrentThreadId(), szLibraryName, MajorVersion, MinorVersion, BuildVersion);
 
+            // TODO: HACK: These libraries are packed into one database
+            if(strcmp(szLibraryName, "D3DX8") == 0)
+                strcpy(szLibraryName, "D3D8");
+
             bool found=false;
 
             for(uint32 d=0;d<dwHLEEntries;d++)
@@ -438,7 +442,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         EmuSwapFS();   // XBox FS
 
         // _USE_XGMATH Disabled in mesh :[
-        _asm int 3
+        //_asm int 3
 
         Entry();
 
