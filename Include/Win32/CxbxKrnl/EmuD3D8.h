@@ -175,6 +175,9 @@ struct X_D3DResource
 // special resource data flags
 #define X_D3DRESOURCE_DATA_FLAG_SURFACE 0xEFFFFFFF
 
+// special resource lock flags
+#define X_D3DRESOURCE_LOCK_FLAG_NOSIZE  0xEFFFFFFF
+
 // ******************************************************************
 // * X_D3DVertexBuffer
 // ******************************************************************

@@ -318,7 +318,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
 
         if(DSBufferDesc.lpwfxFormat->wFormatTag != WAVE_FORMAT_PCM)
         {
-            EmuWarning("Invalid WAVE_FORMAT!\n");
+            EmuWarning("Invalid WAVE_FORMAT!");
 
             *(*ppStream)->GetSoundBufferRef() = 0;
 
