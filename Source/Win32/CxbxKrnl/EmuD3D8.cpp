@@ -2923,12 +2923,76 @@ static void EmuUpdateDeferredStates()
     }
 }
 
-static struct SlideCache
+// ******************************************************************
+// * func: EmuQuadHackA
+// ******************************************************************
+uint32 EmuQuadHackA(uint32 PrimitiveCount, xd3d8::IDirect3DVertexBuffer8 *&pOrigVertexBuffer8, xd3d8::IDirect3DVertexBuffer8 *&pHackVertexBuffer8)
 {
-    PVOID pOrigPtr;
-    xd3d8::IDirect3DVertexBuffer8 *pVertexBuffer8;
+    using namespace xd3d8;
+
+    UINT nStride = 0;
+
+    g_pD3DDevice8->GetStreamSource(0, &pOrigVertexBuffer8, &nStride);
+
+    g_pD3DDevice8->CreateVertexBuffer(PrimitiveCount*nStride*6, 0, 0, D3DPOOL_DEFAULT, &pHackVertexBuffer8);
+
+    BOOL bPatch = FALSE;
+
+    // Determine if we need to patch the buffer (?)
+    {
+        DWORD dwVertexShader = NULL;
+
+        g_pD3DDevice8->GetVertexShader(&dwVertexShader);
+
+        if(dwVertexShader & D3DFVF_XYZRHW)
+			bPatch=TRUE;
+    }
+
+    BYTE *pOrigVertexData = 0;
+    BYTE *pHackVertexData = 0;
+
+    pOrigVertexBuffer8->Lock(0, 0, &pOrigVertexData, 0);
+    pHackVertexBuffer8->Lock(0, 0, &pHackVertexData, 0);
+
+	for(DWORD i=0;i<PrimitiveCount;i++)
+    {
+		memcpy(&pHackVertexData[i*nStride*6+0*nStride], &pOrigVertexData[i*nStride*4+2*nStride], nStride);
+		memcpy(&pHackVertexData[i*nStride*6+1*nStride], &pOrigVertexData[i*nStride*4+0*nStride], nStride);
+		memcpy(&pHackVertexData[i*nStride*6+2*nStride], &pOrigVertexData[i*nStride*4+1*nStride], nStride);
+		memcpy(&pHackVertexData[i*nStride*6+3*nStride], &pOrigVertexData[i*nStride*4+2*nStride], nStride);
+		memcpy(&pHackVertexData[i*nStride*6+4*nStride], &pOrigVertexData[i*nStride*4+3*nStride], nStride);
+		memcpy(&pHackVertexData[i*nStride*6+5*nStride], &pOrigVertexData[i*nStride*4+0*nStride], nStride);
+
+        if(bPatch)
+        {
+			for(int z=0; z<6; z++)
+            {
+				if(((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[2] == 0.0f)
+					((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[2] = 1.0f;
+				if(((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[3] == 0.0f)
+					((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[3] = 1.0f;
+			}
+        }
+	}
+
+	pOrigVertexBuffer8->Unlock();
+    pHackVertexBuffer8->Unlock();
+
+    g_pD3DDevice8->SetStreamSource(0, pHackVertexBuffer8, nStride);
+
+    return nStride;
 }
-g_SlideCache[32] = {0};
+
+// ******************************************************************
+// * func: EmuQuadHackB
+// ******************************************************************
+VOID EmuQuadHackB(uint32 nStride, xd3d8::IDirect3DVertexBuffer8 *&pOrigVertexBuffer8, xd3d8::IDirect3DVertexBuffer8 *&pHackVertexBuffer8)
+{
+    g_pD3DDevice8->SetStreamSource(0, pOrigVertexBuffer8, nStride);
+
+    pOrigVertexBuffer8->Release();
+    pHackVertexBuffer8->Release();
+}
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_DrawVertices
@@ -2967,95 +3031,15 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
     // Convert from Xbox to PC enumeration
     D3DPRIMITIVETYPE PCPrimitiveType = EmuPrimitiveType(PrimitiveType);
 
-    // Todo: Strongly optimize and modularize this routine
+    IDirect3DVertexBuffer8 *pOrigVertexBuffer8 = 0;
+    IDirect3DVertexBuffer8 *pHackVertexBuffer8 = 0;
+
+    uint32 nStride = 0;
+
     if(PrimitiveType == 8)  // Quad List
     {
-        UINT nStride = 0;
-
-        IDirect3DVertexBuffer8 *pOrigVertexBuffer8 = 0;
-        IDirect3DVertexBuffer8 *pHackVertexBuffer8 = 0;
-
-        g_pD3DDevice8->GetStreamSource(0, &pOrigVertexBuffer8, &nStride);
-
-        DWORD dwCached = -1;
-        for(int v=0;v<32;v++)
-        {
-            if(g_SlideCache[v].pOrigPtr == pOrigVertexBuffer8)
-            {
-                pHackVertexBuffer8 = g_SlideCache[v].pVertexBuffer8;
-                dwCached = v;
-                break;
-            }
-        }
-
-        // if we haven't already converted this buffer to triangles, do it now
-//        if(dwCached == -1)
-        {
-            int e=0;
-
-            // Find an empty cache
-            for(e=0;e<32;e++)
-                if(g_SlideCache[e].pOrigPtr == 0)
-                    break;
-
-            if(e == 32)
-            {
-                e = 0;
-                g_SlideCache[e].pOrigPtr = 0;
-                g_SlideCache[e].pVertexBuffer8->Release();
-                g_SlideCache[e].pVertexBuffer8 = 0;
-            }
-
-            g_pD3DDevice8->CreateVertexBuffer(PrimitiveCount*nStride*6, 0, 0, D3DPOOL_DEFAULT, &pHackVertexBuffer8);
-
-            g_SlideCache[e].pOrigPtr = pOrigVertexBuffer8;
-            g_SlideCache[e].pVertexBuffer8 = pHackVertexBuffer8;
-
-            BOOL bPatch = FALSE;
-
-            DWORD dwVertexShader = NULL;
-
-            g_pD3DDevice8->GetVertexShader(&dwVertexShader);
-
-            if(dwVertexShader & D3DFVF_XYZRHW)
-				bPatch=TRUE;
-
-            BYTE *pOrigVertexData = 0;
-            BYTE *pHackVertexData = 0;
-
-            pOrigVertexBuffer8->Lock(0, 0, &pOrigVertexData, 0);
-            pHackVertexBuffer8->Lock(0, 0, &pHackVertexData, 0);
-
-			for(DWORD i=0;i<PrimitiveCount;i++)
-            {
-				memcpy(&pHackVertexData[i*nStride*6+0*nStride], &pOrigVertexData[i*nStride*4+2*nStride], nStride);
-				memcpy(&pHackVertexData[i*nStride*6+1*nStride], &pOrigVertexData[i*nStride*4+0*nStride], nStride);
-				memcpy(&pHackVertexData[i*nStride*6+2*nStride], &pOrigVertexData[i*nStride*4+1*nStride], nStride);
-				memcpy(&pHackVertexData[i*nStride*6+3*nStride], &pOrigVertexData[i*nStride*4+2*nStride], nStride);
-				memcpy(&pHackVertexData[i*nStride*6+4*nStride], &pOrigVertexData[i*nStride*4+3*nStride], nStride);
-				memcpy(&pHackVertexData[i*nStride*6+5*nStride], &pOrigVertexData[i*nStride*4+0*nStride], nStride);
-
-                if(bPatch)
-                {
-				    for(int z=0; z<6; z++)
-                    {
-				        if(((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[2] == 0.0f)
-					        ((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[2] = 1.0f;
-				        if(((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[3] == 0.0f)
-					        ((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[3] = 1.0f;
-				    }
-                }
-			}
-
-			pOrigVertexBuffer8->Unlock();
-            pHackVertexBuffer8->Unlock();
-        }
-
         PrimitiveCount *= 2;
-
-        g_pD3DDevice8->SetStreamSource(0, pHackVertexBuffer8, nStride);
-
-        pOrigVertexBuffer8->Release();
+        nStride = EmuQuadHackA(PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8);
     }
 
     g_pD3DDevice8->DrawPrimitive
@@ -3064,6 +3048,9 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
         StartVertex,
         PrimitiveCount
     );
+
+    if(PrimitiveType == 8)  // Quad List
+        EmuQuadHackB(nStride, pOrigVertexBuffer8, pHackVertexBuffer8);
 
     EmuSwapFS();   // XBox FS
 
@@ -3110,6 +3097,17 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawVerticesUP
     // Convert from Xbox to PC enumeration
     D3DPRIMITIVETYPE PCPrimitiveType = EmuPrimitiveType(PrimitiveType);
 
+    IDirect3DVertexBuffer8 *pOrigVertexBuffer8 = 0;
+    IDirect3DVertexBuffer8 *pHackVertexBuffer8 = 0;
+
+    uint32 nStride = 0;
+
+    if(PrimitiveType == 8)  // Quad List
+    {
+        PrimitiveCount *= 2;
+        nStride = EmuQuadHackA(PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8);
+    }
+
     g_pD3DDevice8->DrawPrimitiveUP
     (
         PCPrimitiveType,
@@ -3117,6 +3115,9 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawVerticesUP
         pVertexStreamZeroData,
         VertexStreamZeroStride
     );
+
+    if(PrimitiveType == 8)  // Quad List
+        EmuQuadHackB(nStride, pOrigVertexBuffer8, pHackVertexBuffer8);
 
     EmuSwapFS();   // XBox FS
 
@@ -3150,6 +3151,9 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawIndexedVertices
                GetCurrentThreadId(), PrimitiveType, VertexCount, pIndexData);
     }
     #endif
+
+    if(PrimitiveType == 8)  // Quad List
+        EmuCleanup("DrawIndexVertices does not handle Quad->Tri yet!");
 
     EmuUpdateDeferredStates();
 
