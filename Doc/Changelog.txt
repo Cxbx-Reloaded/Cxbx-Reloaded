@@ -1,11 +1,9 @@
 cxbx website: http://www.caustik.com/xbox/
 
-version: 0.6.0 (??/??/03)
+version: 0.6.0-pre9 (02/06/03)
 --------------------------------
 
 - Released source code under GNU license.
-
-- Beginning HLE process.
 
 - Debugging interface changed. Much cleaner.
 

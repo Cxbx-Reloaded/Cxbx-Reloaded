@@ -241,7 +241,7 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, ui
     EmuXSwapFS();   // XBox FS
 
     // This must be enabled or the debugger may crash (sigh)
-    _asm _emit 0xF1
+    //_asm _emit 0xF1
 
     Entry();
 
@@ -314,7 +314,7 @@ DWORD WINAPI PsCreateSystemThreadExProxy
     // ******************************************************************
     // * debug trace
     // ******************************************************************
-    #ifdef _DEBUG
+    #ifdef _DEBUG_TRACE
     {
         printf("CxbxKrnl [0x%.08X]: PsCreateSystemThreadExProxy\n"
                "          (\n"
@@ -367,7 +367,7 @@ XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
     // ******************************************************************
     // * debug trace
     // ******************************************************************
-    #ifdef _DEBUG
+    #ifdef _DEBUG_TRACE
     {
         printf("CxbxKrnl [0x%.08X]: ExQueryNonVolatileSetting\n"
                "          (\n"
@@ -451,7 +451,7 @@ XBSYSAPI EXPORTNUM(107) VOID NTAPI xboxkrnl::KeInitializeDpc
     // ******************************************************************
     // * debug trace
     // ******************************************************************
-    #ifdef _DEBUG
+    #ifdef _DEBUG_TRACE
     {
         printf("CxbxKrnl [0x%.08X]: KeInitializeDpc\n"
                "          (\n"
@@ -487,7 +487,7 @@ XBSYSAPI EXPORTNUM(113) VOID NTAPI xboxkrnl::KeInitializeTimerEx
     // ******************************************************************
     // * debug trace
     // ******************************************************************
-    #ifdef _DEBUG
+    #ifdef _DEBUG_TRACE
     {
         printf("CxbxKrnl [0x%.08X]: KeInitializeTimerEx\n"
                "          (\n"
@@ -529,7 +529,7 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
     // ******************************************************************
     // * debug trace
     // ******************************************************************
-    #ifdef _DEBUG
+    #ifdef _DEBUG_TRACE
     {
         printf("CxbxKrnl [0x%.08X]: KeSetTimer\n"
                "          (\n"
@@ -563,7 +563,7 @@ XBSYSAPI EXPORTNUM(184) NTSTATUS xboxkrnl::NtAllocateVirtualMemory
     // ******************************************************************
     // * debug trace
     // ******************************************************************
-    #ifdef _DEBUG
+    #ifdef _DEBUG_TRACE
     {
         printf("CxbxKrnl [0x%.08X]: NtAllocateVirtualMemory\n"
                "          (\n"
@@ -597,7 +597,7 @@ XBSYSAPI EXPORTNUM(187) NTSTATUS NTAPI xboxkrnl::NtClose
     // ******************************************************************
     // * debug trace
     // ******************************************************************
-    #ifdef _DEBUG
+    #ifdef _DEBUG_TRACE
     {
         printf("CxbxKrnl [0x%.08X]: NtClose\n"
                "          (\n"
@@ -633,7 +633,7 @@ XBSYSAPI EXPORTNUM(202) NTSTATUS xboxkrnl::NtOpenFile
     // ******************************************************************
     // * debug trace
     // ******************************************************************
-    #ifdef _DEBUG
+    #ifdef _DEBUG_TRACE
     {
         printf("CxbxKrnl [0x%.08X]: NtOpenFile\n"
                "          (\n"
@@ -671,7 +671,7 @@ XBSYSAPI EXPORTNUM(218) NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformationFile
     // ******************************************************************
     // * debug trace
     // ******************************************************************
-    #ifdef _DEBUG
+    #ifdef _DEBUG_TRACE
     {
         printf("CxbxKrnl [0x%.08X]: NtQueryVolumeInformationFile\n"
                "          (\n"
@@ -713,7 +713,7 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
     // ******************************************************************
     // * debug trace
     // ******************************************************************
-    #ifdef _DEBUG
+    #ifdef _DEBUG_TRACE
     {
         printf("CxbxKrnl [0x%.08X]: PsCreateSystemThreadEx\n"
                "          (\n"
@@ -765,7 +765,7 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
     // ******************************************************************
     // * debug trace
     // ******************************************************************
-    #ifdef _DEBUG
+    #ifdef _DEBUG_TRACE
     {
         printf("CxbxKrnl [0x%.08X]: RtlEnterCriticalSection\n"
                "          (\n"
@@ -797,7 +797,7 @@ XBSYSAPI EXPORTNUM(291) VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
     // ******************************************************************
     // * debug trace
     // ******************************************************************
-    #ifdef _DEBUG
+    #ifdef _DEBUG_TRACE
     {
         printf("CxbxKrnl [0x%.08X]: RtlInitializeCriticalSection\n"
                "          (\n"
@@ -827,7 +827,7 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
     // ******************************************************************
     // * debug trace
     // ******************************************************************
-    #ifdef _DEBUG
+    #ifdef _DEBUG_TRACE
     {
         printf("CxbxKrnl [0x%.08X]: RtlLeaveCriticalSection\n"
                "          (\n"
@@ -855,7 +855,7 @@ XBSYSAPI EXPORTNUM(301) xboxkrnl::ULONG NTAPI xboxkrnl::RtlNtStatusToDosError
     // ******************************************************************
     // * debug trace
     // ******************************************************************
-    #ifdef _DEBUG
+    #ifdef _DEBUG_TRACE
     {
         printf("CxbxKrnl [0x%.08X]: RtlNtStatusToDosError\n"
                "          (\n"

@@ -45,8 +45,8 @@
 // * not implemented yet (no prototype exists). otherwise, enable
 // * "#define PANIC(numb) cxbx_panic"
 // ******************************************************************
-//#define PANIC(numb) EmuXPanic
-#define PANIC(numb) numb
+#define PANIC(numb) EmuXPanic
+//#define PANIC(numb) numb
 
 CXBXKRNL_API uint32 KernelThunkTable[367] =
 {
