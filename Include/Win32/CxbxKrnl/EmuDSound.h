@@ -264,9 +264,30 @@ HRESULT WINAPI EmuIDirectSoundStream_SetHeadroom
 // ******************************************************************
 HRESULT WINAPI EmuCDirectSoundStream_SetAllParameters
 (
-    PVOID    pThis,
-    PVOID    pUnknown,
-    DWORD    dwApply
+    PVOID   pThis,
+    PVOID   pUnknown,
+    DWORD   dwApply
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetConeAngles
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetConeAngles
+(
+    PVOID   pThis,
+    DWORD   dwInsideConeAngle,
+    DWORD   dwOutsideConeAngle,
+    DWORD   dwApply
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetConeOutsideVolume
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetConeOutsideVolume
+(
+    PVOID   pThis,
+    LONG    lConeOutsideVolume,
+    DWORD   dwApply
 );
 
 // ******************************************************************

@@ -582,6 +582,76 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_SetHeadroom
 }
 
 // ******************************************************************
+// * func: EmuCDirectSoundStream_SetConeAngles
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSoundStream_SetConeAngles
+(
+    PVOID   pThis,
+    DWORD   dwInsideConeAngle,
+    DWORD   dwOutsideConeAngle,
+    DWORD   dwApply
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetConeAngles\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   dwInsideConeAngle         : 0x%.08X\n"
+               "   dwOutsideConeAngle        : 0x%.08X\n"
+               "   dwApply                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, dwInsideConeAngle, dwOutsideConeAngle, dwApply);
+    }
+    #endif
+
+    // TODO: Actually implement this
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetConeOutsideVolume
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSoundStream_SetConeOutsideVolume
+(
+    PVOID   pThis,
+    LONG    lConeOutsideVolume,
+    DWORD   dwApply
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetConeOutsideVolume\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   lConeOutsideVolume        : %d\n"
+               "   dwApply                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, lConeOutsideVolume, dwApply);
+    }
+    #endif
+
+    // TODO: Actually implement this
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
 // * func: EmuCDirectSoundStream_SetAllParameters
 // ******************************************************************
 HRESULT WINAPI XTL::EmuCDirectSoundStream_SetAllParameters

@@ -761,18 +761,22 @@ void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
                     break;
             }
 
-            // ******************************************************************
-            // * check all pairs, moving on if any do not match
-            // ******************************************************************
-            for(;v<count;v++)
+            // check OV pairs if all xrefs matched
+            if(v == Soovpa->XRefCount)
             {
-                uint32 Offset = Soovpa->Sovp[v].Offset;
-                uint32 Value  = Soovpa->Sovp[v].Value;
+                // ******************************************************************
+                // * check all pairs, moving on if any do not match
+                // ******************************************************************
+                for(;v<count;v++)
+                {
+                    uint32 Offset = Soovpa->Sovp[v].Offset;
+                    uint32 Value  = Soovpa->Sovp[v].Value;
 
-                uint08 RealValue = *(uint08*)(cur + Offset);
+                    uint08 RealValue = *(uint08*)(cur + Offset);
 
-                if(RealValue != Value)
-                    break;
+                    if(RealValue != Value)
+                        break;
+                }
             }
 
             // ******************************************************************
