@@ -3031,7 +3031,7 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
     g_pD3DDevice8->DrawPrimitive
     (
         PCPrimitiveType,
-        StartVertex,
+        StartVertex*2,
         PrimitiveCount
     );
 
