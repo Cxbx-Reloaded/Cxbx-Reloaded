@@ -135,6 +135,79 @@ SOOVPA<10> IDirectSound8_CreateStream_1_0_3936 =
     }
 };
 
+
+// ******************************************************************
+// * CDirectSound::CreateSoundBuffer
+// ******************************************************************
+SOOVPA<16> CDirectSound_CreateSoundBuffer_1_0_3936 =
+{
+    0,  // Large == 0
+    16, // Count == 16
+
+    XREF_DSCREATESOUNDBUFFER,   // XRef Is  Saved
+    0,                          // XRef Not Used
+
+    {
+        // CDirectSound_CreateSoundBuffer+0x2D : and esi, 0x7FF8FFF2
+        { 0x2D, 0x81 }, // (Offset,Value)-Pair #1
+        { 0x2E, 0xE6 }, // (Offset,Value)-Pair #2
+        { 0x2F, 0xF2 }, // (Offset,Value)-Pair #3
+        { 0x30, 0xFF }, // (Offset,Value)-Pair #4
+        { 0x31, 0xF8 }, // (Offset,Value)-Pair #5
+        { 0x32, 0x7F }, // (Offset,Value)-Pair #6
+
+        // CDirectSound_CreateSoundBuffer+0x33 : add esi, 0x8007000E
+        { 0x33, 0x81 }, // (Offset,Value)-Pair #7
+        { 0x34, 0xC6 }, // (Offset,Value)-Pair #8
+        { 0x35, 0x0E }, // (Offset,Value)-Pair #9
+        { 0x36, 0x00 }, // (Offset,Value)-Pair #10
+        { 0x37, 0x07 }, // (Offset,Value)-Pair #11
+        { 0x38, 0x80 }, // (Offset,Value)-Pair #12
+
+        // CDirectSound_CreateSoundBuffer+0x3C : js +0x21
+        { 0x3C, 0x78 }, // (Offset,Value)-Pair #13
+        { 0x3D, 0x21 }, // (Offset,Value)-Pair #14
+
+        // CDirectSound_CreateSoundBuffer+0x7D : retn 0x10
+        { 0x7D, 0xC2 }, // (Offset,Value)-Pair #15
+        { 0x7E, 0x10 }, // (Offset,Value)-Pair #16
+    }
+};
+
+// ******************************************************************
+// * IDirectSound8_CreateBuffer
+// ******************************************************************
+SOOVPA<10> IDirectSound8_CreateBuffer_1_0_3936 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    -1, // XRef Not Saved
+    1,  // XRef Is  Used
+
+    // TODO: tidy up the xref names (are probably not accurate)
+
+    {
+        // IDirectSound8_CreateBuffer+0x1D : call [CDirectSound::CreateSoundStream]
+        { 0x1D, XREF_DSCREATESOUNDBUFFER }, // (Offset,Value)-Pair #1
+
+        // IDirectSound8_CreateBuffer+0x04 : mov eax, [esp+0x08]
+        { 0x04, 0x8B }, // (Offset,Value)-Pair #2
+        { 0x05, 0x44 }, // (Offset,Value)-Pair #3
+        { 0x06, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x07, 0x08 }, // (Offset,Value)-Pair #5
+
+        // IDirectSound8_CreateBuffer+0x12 : and eax, 0xFFFFFFF8
+        { 0x12, 0x83 }, // (Offset,Value)-Pair #6
+        { 0x13, 0xC0 }, // (Offset,Value)-Pair #7
+        { 0x14, 0xF8 }, // (Offset,Value)-Pair #8
+
+        // IDirectSound8_CreateBuffer+0x21 : retn 0x10
+        { 0x21, 0xC2 }, // (Offset,Value)-Pair #9
+        { 0x22, 0x10 }, // (Offset,Value)-Pair #10
+    }
+};
+
 // ******************************************************************
 // * CMcpxVoiceClient_SetVolume
 // ******************************************************************
@@ -2256,6 +2329,24 @@ OOVPATable DSound_1_0_3936[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirectSound8_CreateStream" 
+        #endif
+    },
+    // CDirectSound_CreateSoundBuffer
+    {
+        (OOVPA*)&CDirectSound_CreateSoundBuffer_1_0_3936, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSound::CreateSoundBuffer (XREF)" 
+        #endif
+    },
+    // IDirectSound8_CreateBuffer
+    {
+        (OOVPA*)&IDirectSound8_CreateBuffer_1_0_3936,
+
+        XTL::EmuIDirectSound8_CreateBuffer,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSound8_CreateBuffer" 
         #endif
     },
     // CMcpxVoiceClient_SetVolume

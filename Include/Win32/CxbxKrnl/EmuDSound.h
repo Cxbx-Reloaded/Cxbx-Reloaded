@@ -174,6 +174,17 @@ HRESULT WINAPI EmuIDirectSound8_CreateStream
 );
 
 // ******************************************************************
+// * func: EmuIDirectSound8_CreateBuffer
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSound8_CreateBuffer
+(
+    LPDIRECTSOUND8          pThis,
+    X_DSBUFFERDESC         *pdssd,
+    X_CDirectSoundBuffer  **ppBuffer,
+    PVOID                   pUnknown
+);
+
+// ******************************************************************
 // * func: EmuCDirectSoundStream_SetVolume
 // ******************************************************************
 ULONG WINAPI EmuCDirectSoundStream_SetVolume(X_CDirectSoundStream *pThis, LONG lVolume);

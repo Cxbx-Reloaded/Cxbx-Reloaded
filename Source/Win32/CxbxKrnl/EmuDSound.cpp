@@ -244,6 +244,41 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateStream
     return DS_OK;
 }
 
+
+// ******************************************************************
+// * func: EmuIDirectSound8_CreateBuffer
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSound8_CreateBuffer
+(
+    LPDIRECTSOUND8          pThis,
+    X_DSBUFFERDESC         *pdssd,
+    X_CDirectSoundBuffer  **ppBuffer,
+    PVOID                   pUnknown
+)
+{
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+       EmuSwapFS();   // Win2k/XP FS
+       printf("EmuDSound (0x%X): EmuIDirectSound8_CreateBuffer\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   pdssd                     : 0x%.08X\n"
+               "   ppBuffer                  : 0x%.08X\n"
+               "   pUnknown                  : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, pdssd, ppBuffer, pUnknown);
+       EmuSwapFS();   // XBox FS
+    }
+    #endif
+
+    EmuDirectSoundCreateBuffer(pdssd, ppBuffer);
+
+    return DS_OK;
+}
+
 // ******************************************************************
 // * func: EmuCDirectSoundStream_SetVolume
 // ******************************************************************
