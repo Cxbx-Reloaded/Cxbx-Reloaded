@@ -459,7 +459,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                             XRefDataBase[XREF_D3DRS_ROPZREAD]              = (uint32)XTL::EmuD3DDeferredRenderState + patchOffset + 2*4;
                             XRefDataBase[XREF_D3DRS_DONOTCULLUNCOMPRESSED] = (uint32)XTL::EmuD3DDeferredRenderState + patchOffset + 3*4;
 
-                            for(int v=0;v<146;v++)
+                            for(int v=0;v<44;v++)
                                 XTL::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
 
                             DbgPrintf("EmuMain (0x%X): 0x%.08X -> EmuD3DDeferredRenderState\n", GetCurrentThreadId(), XTL::EmuD3DDeferredRenderState);
@@ -1135,7 +1135,7 @@ static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, vo
 static void EmuXRefFailure()
 {
     EmuSwapFS();    // Win2k/XP FS
-    
+
     EmuCleanup("XRef-only function body reached. Fatal Error.");
 }
 
