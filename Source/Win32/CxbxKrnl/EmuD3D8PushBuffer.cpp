@@ -66,92 +66,123 @@ void XTL::EmuExecutePushBuffer
     D3DPRIMITIVETYPE    PCPrimitiveType = (D3DPRIMITIVETYPE)-1;
     X_D3DPRIMITIVETYPE  XBPrimitiveType = -1;
 
+    // TODO: keep track of which # crashes
+    //_asm int 3
     while((DWORD)pdwPushData < ((DWORD)pPushBuffer->Data + pPushBuffer->Size))
     {
-        // NVPB_DrawVertices
-        if(*pdwPushData++ == 0x000417FC)
+        // Interpret GPU Instruction
+        switch(*pdwPushData++)
         {
-            // Render Indexed Vertices
-            if(*pdwPushData == 0)
+            // NVPB_Unknown
+            default:
             {
-                pdwPushData++;
-
-                if( (*pdwPushData & 0x40000100) == 0x40000100)
-                {
-                    DWORD dwSkipBytes = (*pdwPushData & 0x0FFF0000) >> 16;
-
-                    // advance to argument
-                    pdwPushData++;
-
-                    // argument doesnt matter
-                    pdwPushData++;
-
-                    // skip over given data
-                    pdwPushData += dwSkipBytes/4;
-                }
-
-                LPDIRECT3DINDEXBUFFER8 pIndexBuffer=0;
-
-                HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer(dwBytes, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer);
-
-                if(FAILED(hRet))
-                    EmuCleanup("Unable to create index buffer for PushBuffer emulation\n");
-
-                // copy index data
-                {
-                    WORD *pData=0;
-
-                    pIndexBuffer->Lock(0, dwBytes, (UCHAR**)&pData, NULL);
-
-                    memcpy(pData, pIndexData, dwBytes);
-
-                    pIndexBuffer->Unlock();
-                }
-
-                // render indexed vertices
-                {
-                    g_pD3DDevice8->SetIndices(pIndexBuffer, 0);
-
-                    g_pD3DDevice8->DrawIndexedPrimitive
-                    (
-                        PCPrimitiveType, 0, dwIndices, 0, EmuD3DVertex2PrimitiveCount(XBPrimitiveType, dwIndices)
-                    );
-                }
-
-                // cleanup
-                pIndexBuffer->Release();
+//                return;
+                EmuCleanup("GPU Instruction Mask 0x%.08X Unhandled", *(pdwPushData-1));
             }
-            // Set Indexed Vertices
-            else
+            break;
+
+            // NVPB_Unknown
+            case 0x00041808:
             {
-                XBPrimitiveType = *pdwPushData++;
-                PCPrimitiveType = EmuPrimitiveType(XBPrimitiveType);
+                //_asm int 3
+                WORD wUnknown = (WORD)*pdwPushData++;
 
-                // Parse Index Data
-                if( (*pdwPushData & 0x40001800) == 0x40001800)
+                // !?
+
+//                EmuCleanup("GPU Instruction Mask 0x00041808 Unhandled (D3DDevice_DrawIndexedVertices)");
+            }
+            break;
+
+            // NVPB_DrawVertices
+            case 0x000417FC:
+            {
+                // Render Indexed Vertices
+                if(*pdwPushData == 0)
                 {
-                    dwBytes = ((*pdwPushData & 0x0FFF0000) >> 16) - 4;
-
-                    if(PCPrimitiveType == D3DPT_TRIANGLESTRIP)
-                        dwIndices = dwBytes/2;
-
-                    // advance to argument
                     pdwPushData++;
 
-                    // argument doesnt matter
-                    pdwPushData++;
+                    // Null instruction
+                    if( (*pdwPushData) == 0x00000000)
+                    {
+                        pdwPushData++;
+                    }
+                    else
+                    // Skip Bytes
+                    if( (*pdwPushData & 0x40000100) == 0x40000100)
+                    {
+                        DWORD dwSkipBytes = (*pdwPushData & 0x0FFF0000) >> 16;
 
-                    // assign index data buffer
-                    pIndexData = (PVOID)pdwPushData;
+                        // advance to argument
+                        pdwPushData++;
+
+                        // argument doesnt matter
+                        pdwPushData++;
+
+                        // skip over given data
+                        pdwPushData += dwSkipBytes/4;
+                    }
+
+                    LPDIRECT3DINDEXBUFFER8 pIndexBuffer=0;
+
+                    HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer(dwBytes, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer);
+
+                    if(FAILED(hRet))
+                        EmuCleanup("Unable to create index buffer for PushBuffer emulation\n");
+
+                    // copy index data
+                    {
+                        WORD *pData=0;
+
+                        pIndexBuffer->Lock(0, dwBytes, (UCHAR**)&pData, NULL);
+
+                        memcpy(pData, pIndexData, dwBytes);
+
+                        pIndexBuffer->Unlock();
+                    }
+
+                    // render indexed vertices
+                    {
+                        g_pD3DDevice8->SetIndices(pIndexBuffer, 0);
+
+                        g_pD3DDevice8->DrawIndexedPrimitive
+                        (
+                            PCPrimitiveType, 0, dwIndices, 0, EmuD3DVertex2PrimitiveCount(XBPrimitiveType, dwIndices)
+                        );
+                    }
+
+                    // cleanup
+                    pIndexBuffer->Release();
                 }
+                // Set Indexed Vertices
                 else
                 {
-                    EmuCleanup("Error in PushBuffer interpretter");
-                }
+                    XBPrimitiveType = *pdwPushData++;
+                    PCPrimitiveType = EmuPrimitiveType(XBPrimitiveType);
 
-                // advance past index data
-                pdwPushData += dwBytes/4;
+                    // Parse Index Data
+                    if( (*pdwPushData & 0x40001800) == 0x40001800)
+                    {
+                        dwBytes = ((*pdwPushData & 0x0FFF0000) >> 16);
+
+                        if(PCPrimitiveType == D3DPT_TRIANGLESTRIP)
+                            dwIndices = dwBytes/2;
+
+                        // argument doesnt matter
+                        pdwPushData++;
+
+                        // assign index data buffer
+                        pIndexData = (PVOID)pdwPushData;
+
+                        // advance past index data
+                        pdwPushData += dwBytes/4;
+                    }
+                    else
+                    {
+                        EmuCleanup("Error in PushBuffer interpretter");
+                    }
+                }
             }
+            break;
         }
     }
 }
