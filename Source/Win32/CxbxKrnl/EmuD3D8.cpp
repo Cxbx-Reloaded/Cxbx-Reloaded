@@ -559,6 +559,23 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_Swap
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateVertexBuffer
 // ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreateVertexBuffer
+(
+    UINT              Length,
+    DWORD             Usage,
+    DWORD             FVF,
+    D3DPOOL           Pool,
+    D3DVertexBuffer **ppVertexBuffer
+)
+{
+    *ppVertexBuffer = EmuIDirect3DDevice8_CreateVertexBuffer2(Length);
+
+    return D3D_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_CreateVertexBuffer2
+// ******************************************************************
 xd3d8::D3DVertexBuffer* WINAPI xd3d8::EmuIDirect3DDevice8_CreateVertexBuffer2
 (
     UINT Length
@@ -689,7 +706,45 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetTransform
 // ******************************************************************
 // * func: EmuIDirect3DVertexBuffer8_Lock
 // ******************************************************************
-BYTE* WINAPI xd3d8::EmuIDirect3DVertexBuffer8_Lock
+VOID WINAPI xd3d8::EmuIDirect3DVertexBuffer8_Lock
+(
+    D3DVertexBuffer *ppVertexBuffer,
+    UINT             OffsetToLock,
+    UINT             SizeToLock,
+    BYTE           **ppbData,
+    DWORD            Flags
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%.08X): EmuIDirect3DVertexBuffer8_Lock\n"
+               "(\n"
+               "   ppVertexBuffer      : 0x%.08X\n"
+               "   OffsetToLock        : 0x%.08X\n"
+               "   SizeToLock          : 0x%.08X\n"
+               "   ppbData             : 0x%.08X\n"
+               "   Flags               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), ppVertexBuffer, OffsetToLock, SizeToLock, ppbData, Flags);
+    }
+    #endif
+
+    HRESULT hRet = ((IDirect3DVertexBuffer8*)ppVertexBuffer)->Lock(OffsetToLock, SizeToLock, ppbData, Flags);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DVertexBuffer8_Lock2
+// ******************************************************************
+BYTE* WINAPI xd3d8::EmuIDirect3DVertexBuffer8_Lock2
 (
     D3DVertexBuffer *ppVertexBuffer,
     DWORD            Flags
@@ -702,7 +757,7 @@ BYTE* WINAPI xd3d8::EmuIDirect3DVertexBuffer8_Lock
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (0x%.08X): EmuIDirect3DVertexBuffer8_Lock\n"
+        printf("EmuD3D8 (0x%.08X): EmuIDirect3DVertexBuffer8_Lock2\n"
                "(\n"
                "   ppVertexBuffer      : 0x%.08X\n"
                "   Flags               : 0x%.08X\n"
@@ -723,7 +778,7 @@ BYTE* WINAPI xd3d8::EmuIDirect3DVertexBuffer8_Lock
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetStreamSource
 // ******************************************************************
-void WINAPI xd3d8::EmuIDirect3DDevice8_SetStreamSource
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetStreamSource
 (
     UINT             StreamNumber,
     D3DVertexBuffer *pStreamData,
@@ -749,17 +804,17 @@ void WINAPI xd3d8::EmuIDirect3DDevice8_SetStreamSource
 
     ((IDirect3DVertexBuffer8*)pStreamData)->Unlock();
 
-	HRESULT ret = g_pD3D8Device->SetStreamSource(StreamNumber, (IDirect3DVertexBuffer8*)pStreamData, Stride);
+	HRESULT hRet = g_pD3D8Device->SetStreamSource(StreamNumber, (IDirect3DVertexBuffer8*)pStreamData, Stride);
 
     EmuSwapFS();   // XBox FS
 
-    return;
+    return hRet;
 }
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexShader
 // ******************************************************************
-void WINAPI xd3d8::EmuIDirect3DDevice8_SetVertexShader
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetVertexShader
 (
     DWORD Handle
 )
@@ -779,17 +834,17 @@ void WINAPI xd3d8::EmuIDirect3DDevice8_SetVertexShader
     }
     #endif
 
-	HRESULT ret = g_pD3D8Device->SetVertexShader(Handle);
+	HRESULT hRet = g_pD3D8Device->SetVertexShader(Handle);
 
     EmuSwapFS();   // XBox FS
 
-    return;
+    return hRet;
 }
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_DrawVertices
 // ******************************************************************
-void WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
 (
     D3DPRIMITIVETYPE PrimitiveType,
     UINT             StartVertex,
@@ -827,5 +882,5 @@ void WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
 
     EmuSwapFS();   // XBox FS
 
-    return;
+    return hRet;
 }
