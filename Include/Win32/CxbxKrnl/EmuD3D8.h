@@ -694,6 +694,15 @@ HRESULT WINAPI EmuIDirect3DDevice8_SetVertexShaderConstant
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetVertexShaderConstant1
+// ******************************************************************
+VOID __fastcall EmuIDirect3DDevice8_SetVertexShaderConstant1
+(
+    INT         Register,
+    CONST PVOID pConstantData
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_CreatePixelShader
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_CreatePixelShader
@@ -1030,6 +1039,14 @@ VOID WINAPI EmuIDirect3DDevice8_SetRenderState_StencilEnable
 // * func: EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_ShadowFunc
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_ShadowFunc
 (
     DWORD Value
 );

@@ -341,7 +341,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
         case WM_KILLFOCUS:
             dwRestoreSleepRate = EmuAutoSleepRate;
-            EmuAutoSleepRate = 1;
+            EmuAutoSleepRate = 0;
             break;
 
         case WM_CLOSE:
@@ -1413,9 +1413,12 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShaderConstant
     }
     #endif
 
+    HRESULT hRet;
+
     // ******************************************************************
     // * redirect to windows d3d
     // ******************************************************************
+    /*
     HRESULT hRet = g_pD3DDevice8->SetVertexShaderConstant
     (
         Register,
@@ -1424,6 +1427,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShaderConstant
     );
 
     if(FAILED(hRet))
+    */
     {
         printf("*Warning* we're lying about setting a vertex shader constant!\n");
 
@@ -1433,6 +1437,36 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShaderConstant
     EmuSwapFS();   // XBox FS
 
     return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetVertexShaderConstant1
+// ******************************************************************
+VOID __fastcall XTL::EmuIDirect3DDevice8_SetVertexShaderConstant1
+(
+    INT         Register,
+    CONST PVOID pConstantData
+)
+{
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        EmuSwapFS();   // Win2k/XP FS
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexShaderConstant1\n"
+               "(\n"
+               "   Register            : 0x%.08X\n"
+               "   pConstantData       : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Register, pConstantData);
+        EmuSwapFS();   // XBox FS
+    }
+    #endif
+
+    XTL::EmuIDirect3DDevice8_SetVertexShaderConstant(Register - 96, pConstantData, 1);
+
+    return;
 }
 
 // ******************************************************************
@@ -3197,6 +3231,36 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias
     #endif
 
     g_pD3DDevice8->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Value);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_ShadowFunc
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_ShadowFunc
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_ShadowFunc\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+    printf("*Warning* ShadowFunc not implemented\n");
 
     EmuSwapFS();   // XBox FS
 

@@ -464,9 +464,9 @@ SOOVPA<11> IDirect3DDevice8_SetTileNoWait_1_0_4627 =
 };
 
 // ******************************************************************
-// * IDirect3DDevice8_SetVertexShaderConstant
+// * IDirect3DDevice8_SetVertexShaderConstant1
 // ******************************************************************
-SOOVPA<11> IDirect3DDevice8_SetVertexShaderConstant_1_0_4627 =
+SOOVPA<11> IDirect3DDevice8_SetVertexShaderConstant1_1_0_4627 =
 {
     0,  // Large == 0
     11, // Count == 11
@@ -928,6 +928,43 @@ SOOVPA<12> IDirect3DDevice8_SetRenderState_MultiSampleAntiAlias_1_0_4627 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetRenderState_ShadowFunc
+// ******************************************************************
+SOOVPA<13> IDirect3DDevice8_SetRenderState_ShadowFunc_1_0_4627 =
+{
+    0,  // Large == 0
+    13, // Count == 13
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetRenderState_ShadowFunc+0x00 : push esi
+        { 0x00, 0x56 }, // (Offset,Value)-Pair #1
+
+        // IDirect3DDevice8_SetRenderState_ShadowFunc+0x09 : cmp eax, [esi+4]
+        { 0x09, 0x3B }, // (Offset,Value)-Pair #2
+        { 0x0A, 0x46 }, // (Offset,Value)-Pair #3
+        { 0x0B, 0x04 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DDevice8_SetRenderState_ShadowFunc+0x0C : jb +0x05
+        { 0x0C, 0x72 }, // (Offset,Value)-Pair #5
+        { 0x0D, 0x05 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_SetRenderState_ShadowFunc+0x1D : lea edx, [ecx-0x0200]
+        { 0x1D, 0x8D }, // (Offset,Value)-Pair #7
+        { 0x1E, 0x91 }, // (Offset,Value)-Pair #8
+        { 0x1F, 0x00 }, // (Offset,Value)-Pair #9
+        { 0x20, 0xFE }, // (Offset,Value)-Pair #10
+
+        // IDirect3DDevice8_SetRenderState_ShadowFunc+0x26 : add eax, 0x08
+        { 0x26, 0x83 }, // (Offset,Value)-Pair #11
+        { 0x27, 0xC0 }, // (Offset,Value)-Pair #12
+        { 0x28, 0x08 }, // (Offset,Value)-Pair #13
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_DrawVerticesUP
 // ******************************************************************
 SOOVPA<10> IDirect3DDevice8_DrawVerticesUP_1_0_4627 =
@@ -1309,14 +1346,14 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_CreateVertexShader"
         #endif
     },
-    // IDirect3DDevice8::SetVertexShaderConstant
+    // IDirect3DDevice8::SetVertexShaderConstant1
     {
-        (OOVPA*)&IDirect3DDevice8_SetVertexShaderConstant_1_0_4627,
+        (OOVPA*)&IDirect3DDevice8_SetVertexShaderConstant1_1_0_4627,
 
-        XTL::EmuIDirect3DDevice8_SetVertexShaderConstant,
+        XTL::EmuIDirect3DDevice8_SetVertexShaderConstant1,
 
         #ifdef _DEBUG_TRACE
-        "EmuIDirect3DDevice8_SetVertexShaderConstant"
+        "EmuIDirect3DDevice8_SetVertexShaderConstant1"
         #endif
     },
     // IDirect3DDevice8::CreatePixelShader (* unchanged since 4361 *)
@@ -1537,6 +1574,16 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias" 
+        #endif
+    },
+    // IDirect3DDevice8::SetRenderState_ShadowFunc
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_ShadowFunc_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_ShadowFunc,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_ShadowFunc" 
         #endif
     },
     // IDirect3DDevice8::SetTransform (* unchanged since 4361 *)
