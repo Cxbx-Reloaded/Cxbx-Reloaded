@@ -652,50 +652,6 @@ SOOVPA<10> IDirect3DDevice8_SetPixelShader_1_0_4361 =
 };
 
 // ******************************************************************
-// * IDirect3DDevice8_CreateTexture
-// ******************************************************************
-SOOVPA<14> IDirect3DDevice8_CreateTexture_1_0_4361 =
-{
-    0,  // Large == 0
-    14, // Count == 14
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        // IDirect3DDevice8_CreateTexture+0x00 : mov eax, [esp+0x1C]
-        { 0x00, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x01, 0x44 }, // (Offset,Value)-Pair #2
-        { 0x02, 0x24 }, // (Offset,Value)-Pair #3
-        { 0x03, 0x1C }, // (Offset,Value)-Pair #4
-
-        // IDirect3DDevice8_CreateTexture+0x0C : push eax
-        { 0x0C, 0x50 }, // (Offset,Value)-Pair #5
-
-        // IDirect3DDevice8_CreateTexture+0x11 : push 0
-        { 0x11, 0x6A }, // (Offset,Value)-Pair #6
-        { 0x12, 0x00 }, // (Offset,Value)-Pair #7
-
-        // IDirect3DDevice8_CreateTexture+0x13 : push 0
-        { 0x13, 0x6A }, // (Offset,Value)-Pair #8
-        { 0x14, 0x00 }, // (Offset,Value)-Pair #9
-
-        // IDirect3DDevice8_CreateTexture+0x15 : push ecx
-        { 0x15, 0x51 }, // (Offset,Value)-Pair #10
-
-        // IDirect3DDevice8_CreateTexture+0x22 : push ecx
-        { 0x22, 0x51 }, // (Offset,Value)-Pair #11
-
-        // IDirect3DDevice8_CreateTexture+0x23 : push edx
-        { 0x23, 0x52 }, // (Offset,Value)-Pair #12
-
-        // IDirect3DDevice8_CreateTexture+0x29 : retn 0x1C
-        { 0x29, 0xC2 }, // (Offset,Value)-Pair #13
-        { 0x2A, 0x1C }, // (Offset,Value)-Pair #14
-    }
-};
-
-// ******************************************************************
 // * IDirect3DDevice8_SetIndices
 // ******************************************************************
 SOOVPA<11> IDirect3DDevice8_SetIndices_1_0_4361 =
@@ -1854,7 +1810,6 @@ SOOVPA<16> IDirect3DSurface8_LockRect_1_0_4361 =
     }
 };
 
-
 // ******************************************************************
 // * IDirect3DBaseTexture8_GetLevelCount
 // ******************************************************************
@@ -1958,47 +1913,6 @@ SOOVPA<11> IDirect3DTexture8_GetSurfaceLevel_1_0_4361 =
         // IDirect3DTexture8_GetSurfaceLevel+0x4C : retn 0x0C
         { 0x4C, 0xC2 }, // (Offset,Value)-Pair #10
         { 0x4D, 0x0C }, // (Offset,Value)-Pair #11
-    }
-};
-
-// ******************************************************************
-// * IDirect3DTexture8_LockRect
-// ******************************************************************
-SOOVPA<17> IDirect3DTexture8_LockRect_1_0_4361 =
-{
-    0,  // Large == 0
-    17, // Count == 17
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        // IDirect3DTexture8_LockRect+0x00 : mov eax, [esp+0x14]
-        { 0x00, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x01, 0x44 }, // (Offset,Value)-Pair #2
-        { 0x02, 0x24 }, // (Offset,Value)-Pair #3
-        { 0x03, 0x14 }, // (Offset,Value)-Pair #4
-
-        // IDirect3DTexture8_LockRect+0x04 : mov ecx, [esp+0x10]
-        { 0x04, 0x8B }, // (Offset,Value)-Pair #5
-        { 0x05, 0x4C }, // (Offset,Value)-Pair #6
-        { 0x06, 0x24 }, // (Offset,Value)-Pair #7
-        { 0x07, 0x10 }, // (Offset,Value)-Pair #8
-
-        // IDirect3DTexture8_LockRect+0x0C : push eax, push ecx, push edx, push eax, push 0
-        { 0x0C, 0x50 }, // (Offset,Value)-Pair #9
-        { 0x11, 0x51 }, // (Offset,Value)-Pair #10
-        { 0x16, 0x52 }, // (Offset,Value)-Pair #11
-        { 0x17, 0x50 }, // (Offset,Value)-Pair #12
-        { 0x18, 0x6A }, // (Offset,Value)-Pair #13
-        { 0x19, 0x00 }, // (Offset,Value)-Pair #14
-
-        // IDirect3DTexture8_LockRect+0x1B : call [addr]
-        { 0x1B, 0xE8 }, // (Offset,Value)-Pair #15
-
-        // IDirect3DTexture8_LockRect+0x1B : retn 0x14
-        { 0x20, 0xC2 }, // (Offset,Value)-Pair #16
-        { 0x21, 0x14 }, // (Offset,Value)-Pair #17
     }
 };
 
@@ -2203,9 +2117,9 @@ OOVPATable D3D8_1_0_4361[] =
         "EmuIDirect3DDevice8_SetPixelShader"
         #endif
     },
-    // IDirect3DDevice8::CreateTexture
+    // IDirect3DDevice8::CreateTexture (* unchanged since 3925 *)
     {
-        (OOVPA*)&IDirect3DDevice8_CreateTexture_1_0_4361,
+        (OOVPA*)&IDirect3DDevice8_CreateTexture_1_0_3925,
 
         XTL::EmuIDirect3DDevice8_CreateTexture,
 
@@ -2613,9 +2527,9 @@ OOVPATable D3D8_1_0_4361[] =
         "EmuIDirect3DTexture8_GetSurfaceLevel" 
         #endif
     },
-    // IDirect3DTexture8::LockRect
+    // IDirect3DTexture8::LockRect (* unchanged since 3925 *)
     {
-        (OOVPA*)&IDirect3DTexture8_LockRect_1_0_4361,
+        (OOVPA*)&IDirect3DTexture8_LockRect_1_0_3925,
 
         XTL::EmuIDirect3DTexture8_LockRect,
 

@@ -353,13 +353,15 @@ struct X_D3DResource
 
     union
     {
-        DWORD                   Lock;
-        IDirect3DResource8     *EmuResource8;
-        IDirect3DBaseTexture8  *EmuBaseTexture8;
-        IDirect3DTexture8      *EmuTexture8;
-        IDirect3DSurface8      *EmuSurface8;
-        IDirect3DVertexBuffer8 *EmuVertexBuffer8;
-        IDirect3DIndexBuffer8  *EmuIndexBuffer8;
+        DWORD                    Lock;
+        IDirect3DResource8      *EmuResource8;
+        IDirect3DBaseTexture8   *EmuBaseTexture8;
+        IDirect3DTexture8       *EmuTexture8;
+        IDirect3DVolumeTexture8 *EmuVolumeTexture8;
+        IDirect3DCubeTexture8   *EmuCubeTexture8;
+        IDirect3DSurface8       *EmuSurface8;
+        IDirect3DVertexBuffer8  *EmuVertexBuffer8;
+        IDirect3DIndexBuffer8   *EmuIndexBuffer8;
     };
 };
 
@@ -386,6 +388,27 @@ struct X_D3DPushBuffer : public X_D3DResource
 {
     ULONG AllocationSize;
 };
+
+// ******************************************************************
+// * X_D3DPalette
+// ******************************************************************
+struct X_D3DPalette : public X_D3DResource
+{
+};
+
+// ******************************************************************
+// * X_D3DPALETTESIZE
+// ******************************************************************
+typedef enum _X_D3DPALETTESIZE
+{
+    D3DPALETTE_256              = 0,
+    D3DPALETTE_128              = 1,
+    D3DPALETTE_64               = 2,
+    D3DPALETTE_32               = 3,
+    D3DPALETTE_MAX              = 4,
+    D3DPALETTE_FORCE_DWORD      = 0x7fffffff, /* force 32-bit size enum */
+}
+X_D3DPALETTESIZE;
 
 // ******************************************************************
 // * X_D3DPixelContainer "Format" Masks
@@ -431,6 +454,22 @@ struct X_D3DBaseTexture : public X_D3DPixelContainer
 // * X_D3DTexture
 // ******************************************************************
 struct X_D3DTexture : public X_D3DBaseTexture
+{
+
+};
+
+// ******************************************************************
+// * X_D3DVolumeTexture
+// ******************************************************************
+struct X_D3DVolumeTexture : public X_D3DBaseTexture
+{
+
+};
+
+// ******************************************************************
+// * X_D3DCubeTexture
+// ******************************************************************
+struct X_D3DCubeTexture : public X_D3DBaseTexture
 {
 
 };
@@ -761,7 +800,35 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreateTexture
     DWORD               Usage,
     D3DFORMAT           Format,
     D3DPOOL             Pool,
-    X_D3DResource     **ppTexture
+    X_D3DTexture      **ppTexture
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_CreateVolumeTexture
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_CreateVolumeTexture
+(
+    UINT                 Width,
+    UINT                 Height,
+    UINT                 Depth,
+    UINT                 Levels,
+    DWORD                Usage,
+    D3DFORMAT            Format,
+    D3DPOOL              Pool,
+    X_D3DVolumeTexture **ppVolumeTexture
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_CreateCubeTexture
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_CreateCubeTexture
+(
+    UINT                 EdgeLength,
+    UINT                 Levels,
+    DWORD                Usage,
+    D3DFORMAT            Format,
+    D3DPOOL              Pool,
+    X_D3DCubeTexture  **ppCubeTexture
 );
 
 // ******************************************************************
@@ -845,6 +912,14 @@ HRESULT WINAPI EmuIDirect3DResource8_Register
 // * func: EmuIDirect3DResource8_Release
 // ******************************************************************
 ULONG WINAPI EmuIDirect3DResource8_Release
+(
+    X_D3DResource      *pThis
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DResource8_AddRef
+// ******************************************************************
+ULONG WINAPI EmuIDirect3DResource8_AddRef
 (
     X_D3DResource      *pThis
 );
@@ -1232,6 +1307,55 @@ HRESULT WINAPI EmuIDirect3DDevice8_LightEnable
 (
     DWORD            Index,
     BOOL             bEnable
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_Release
+// ******************************************************************
+ULONG WINAPI EmuIDirect3DDevice8_Release();
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_CreatePalette
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_CreatePalette
+(
+    X_D3DPALETTESIZE    Size,
+    X_D3DPalette      **ppPalette
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetPalette
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetPalette
+(
+    DWORD         Stage,
+    X_D3DPalette *pPalette
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetFlickerFilter
+// ******************************************************************
+void WINAPI EmuIDirect3DDevice8_SetFlickerFilter
+(
+    DWORD         Filter
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetSoftDisplayFilter
+// ******************************************************************
+void WINAPI EmuIDirect3DDevice8_SetSoftDisplayFilter
+(
+    BOOL Enable
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DPalette8_Lock
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DPalette8_Lock
+(
+    X_D3DPalette   *pThis,
+    D3DCOLOR      **ppColors,
+    DWORD           Flags
 );
 
 #endif

@@ -72,6 +72,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 static DWORD WINAPI   EmuUpdateTickCount(LPVOID);
 static DWORD          EmuCheckAllocationSize(LPVOID);
 static inline void    EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource);
+static void           EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight);
 
 // ******************************************************************
 // * Static Variable(s)
@@ -441,6 +442,42 @@ static inline void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
 }
 
 // ******************************************************************
+// * func: EmuAdjustPower2
+// ******************************************************************
+static void EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight)
+{
+    UINT NewWidth=0, NewHeight=0;
+
+    int v;
+
+    for(v=0;v<32;v++)
+    {
+        int mask = 1 << v;
+
+        if(*dwWidth & mask)
+            NewWidth = mask;
+
+        if(*dwHeight & mask)
+            NewHeight = mask;
+    }
+
+    if(*dwWidth != NewWidth)
+    {
+        NewWidth <<= 1;
+        printf("*Warning* needed to resize width (%d->%d)\n", *dwWidth, NewWidth);
+    }
+
+    if(*dwHeight != NewHeight)
+    {
+        NewHeight <<= 1;
+        printf("*Warning* needed to resize height (%d->%d)\n", *dwHeight, NewHeight);
+    }
+
+    *dwWidth = NewWidth;
+    *dwHeight = NewHeight;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3D8_CreateDevice
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
@@ -634,6 +671,12 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
     // * Begin Scene
     // ******************************************************************
     g_pD3DDevice8->BeginScene();
+
+    // ******************************************************************
+    // * Initially, show a black screen
+    // ******************************************************************
+    g_pD3DDevice8->Clear(0, 0, D3DCLEAR_TARGET, 0, 0, 0);
+    g_pD3DDevice8->Present(0, 0, 0, 0);
 
     EmuSwapFS();   // XBox FS
 
@@ -1653,7 +1696,7 @@ XTL::X_D3DResource * WINAPI XTL::EmuIDirect3DDevice8_CreateTexture2
     D3DRESOURCETYPE     D3DResource
 )
 {
-    X_D3DResource *pTexture;
+    X_D3DTexture *pTexture;
 
     EmuIDirect3DDevice8_CreateTexture(Width, Height, Levels, Usage, Format, D3DPOOL_MANAGED, &pTexture);
 
@@ -1671,7 +1714,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
     DWORD           Usage,
     D3DFORMAT       Format,
     D3DPOOL         Pool,
-    X_D3DResource **ppTexture
+    X_D3DTexture  **ppTexture
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -1725,42 +1768,9 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
 
     if(PCFormat != D3DFMT_YUY2 || g_bSupportsYUY2)
     {
-        // ******************************************************************
-        // * adjust width/height to power of 2
-        // ******************************************************************
-        {
-            UINT NewWidth=0, NewHeight=0;
+        EmuAdjustPower2(&Width, &Height);
 
-            int v;
-
-            for(v=0;v<32;v++)
-            {
-                int mask = 1 << v;
-
-                if(Width & mask)
-                    NewWidth = mask;
-
-                if(Height & mask)
-                    NewHeight = mask;
-            }
-
-            if(Width != NewWidth)
-            {
-                NewWidth <<= 1;
-                printf("*Warning* needed to resize width (%d->%d)\n", Width, NewWidth);
-            }
-
-            if(Height != NewHeight)
-            {
-                NewHeight <<= 1;
-                printf("*Warning* needed to resize height (%d->%d)\n", Height, NewHeight);
-            }
-
-            Width = NewWidth;
-            Height = NewHeight;
-        }
-
-        *ppTexture = new X_D3DResource();
+        *ppTexture = new X_D3DTexture();
 
         // ******************************************************************
         // * redirect to windows d3d
@@ -1778,10 +1788,184 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
     else
     {
         // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
-        *ppTexture = (X_D3DResource*)((uint32)(new uint08[g_dwOverlayW*g_dwOverlayH*2]) | 0x80000000);
+        *ppTexture = (X_D3DTexture*)((uint32)(new uint08[g_dwOverlayW*g_dwOverlayH*2]) | 0x80000000);
 
         hRet = D3D_OK;
     }
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_CreateVolumeTexture
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVolumeTexture
+(
+    UINT                 Width,
+    UINT                 Height,
+    UINT                 Depth,
+    UINT                 Levels,
+    DWORD                Usage,
+    D3DFORMAT            Format,
+    D3DPOOL              Pool,
+    X_D3DVolumeTexture **ppVolumeTexture
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreateVolumeTexture\n"
+               "(\n"
+               "   Width               : 0x%.08X\n"
+               "   Height              : 0x%.08X\n"
+               "   Depth               : 0x%.08X\n"
+               "   Levels              : 0x%.08X\n"
+               "   Usage               : 0x%.08X\n"
+               "   Format              : 0x%.08X\n"
+               "   Pool                : 0x%.08X\n"
+               "   ppVolumeTexture     : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Width, Height, Depth, Levels, Usage, Format, Pool, ppVolumeTexture);
+    }
+    #endif
+
+    // Convert Format (Xbox->PC)
+    D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
+
+    // TODO: HACK: Devices that don't support this should somehow emulate it!
+    if(PCFormat == D3DFMT_D16)
+    {
+        printf("*Warning* D3DFMT_16 is an unsupported texture format!\n");
+        PCFormat = D3DFMT_X8R8G8B8;
+    }
+    else if(PCFormat == D3DFMT_P8)
+    {
+        printf("*Warning* D3DFMT_P8 is an unsupported texture format!\n");
+        PCFormat = D3DFMT_X8R8G8B8;
+    }
+    else if(PCFormat == D3DFMT_D24S8)
+    {
+        printf("*Warning* D3DFMT_D24S8 is an unsupported texture format!\n");
+        PCFormat = D3DFMT_X8R8G8B8;
+    }
+    else if(PCFormat == D3DFMT_YUY2)
+    {
+        // cache the overlay size
+        g_dwOverlayW = Width;
+        g_dwOverlayH = Height;
+    }
+
+    HRESULT hRet;
+
+    if(PCFormat != D3DFMT_YUY2 || g_bSupportsYUY2)
+    {
+        EmuAdjustPower2(&Width, &Height);
+
+        *ppVolumeTexture = new X_D3DVolumeTexture();
+
+        // ******************************************************************
+        // * redirect to windows d3d
+        // ******************************************************************
+        hRet = g_pD3DDevice8->CreateVolumeTexture
+        (
+            Width, Height, Depth, Levels, 
+            0,  // TODO: Xbox Allows a border to be drawn (maybe hack this in software ;[)
+            PCFormat, D3DPOOL_MANAGED, &((*ppVolumeTexture)->EmuVolumeTexture8)
+        );
+
+        if(FAILED(hRet))
+            printf("*Warning* CreateVolumeTexture FAILED\n");
+    }
+    else
+    {
+        // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
+        *ppVolumeTexture = (X_D3DVolumeTexture*)((uint32)(new uint08[g_dwOverlayW*g_dwOverlayH*2]) | 0x80000000);
+
+        hRet = D3D_OK;
+    }
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_CreateCubeTexture
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateCubeTexture
+(
+    UINT                 EdgeLength,
+    UINT                 Levels,
+    DWORD                Usage,
+    D3DFORMAT            Format,
+    D3DPOOL              Pool,
+    X_D3DCubeTexture  **ppCubeTexture
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreateCubeTexture\n"
+               "(\n"
+               "   EdgeLength          : 0x%.08X\n"
+               "   Levels              : 0x%.08X\n"
+               "   Usage               : 0x%.08X\n"
+               "   Format              : 0x%.08X\n"
+               "   Pool                : 0x%.08X\n"
+               "   ppCubeTexture       : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), EdgeLength, Levels, Usage, Format, Pool, ppCubeTexture);
+    }
+    #endif
+
+    // Convert Format (Xbox->PC)
+    D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
+
+    // TODO: HACK: Devices that don't support this should somehow emulate it!
+    if(PCFormat == D3DFMT_D16)
+    {
+        printf("*Warning* D3DFMT_16 is an unsupported texture format!\n");
+        PCFormat = D3DFMT_X8R8G8B8;
+    }
+    else if(PCFormat == D3DFMT_P8)
+    {
+        printf("*Warning* D3DFMT_P8 is an unsupported texture format!\n");
+        PCFormat = D3DFMT_X8R8G8B8;
+    }
+    else if(PCFormat == D3DFMT_D24S8)
+    {
+        printf("*Warning* D3DFMT_D24S8 is an unsupported texture format!\n");
+        PCFormat = D3DFMT_X8R8G8B8;
+    }
+    else if(PCFormat == D3DFMT_YUY2)
+    {
+        EmuCleanup("YUV not supported for cube textures");
+    }
+
+    *ppCubeTexture = new X_D3DCubeTexture();
+
+    // ******************************************************************
+    // * redirect to windows d3d
+    // ******************************************************************
+    HRESULT hRet = g_pD3DDevice8->CreateCubeTexture
+    (
+        EdgeLength, Levels, 
+        0,  // TODO: Xbox Allows a border to be drawn (maybe hack this in software ;[)
+        PCFormat, D3DPOOL_MANAGED, &((*ppCubeTexture)->EmuCubeTexture8)
+    );
+
+    if(FAILED(hRet))
+        printf("*Warning* CreateCubeTexture FAILED\n");
 
     EmuSwapFS();   // XBox FS
 
@@ -2428,6 +2612,43 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DResource8_AddRef
+// ******************************************************************
+ULONG WINAPI XTL::EmuIDirect3DResource8_AddRef
+(
+    X_D3DResource      *pThis
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DResource8_AddRef\n"
+               "(\n"
+               "   pThis               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis);
+    }
+    #endif
+
+    ULONG uRet = 0;
+
+    IDirect3DResource8 *pResource8 = pThis->EmuResource8;
+
+    if(pThis->Common & X_D3DCOMMON_TYPE_PALETTE)
+        uRet = ++pThis->Lock;
+    else if(pResource8 != 0)
+        uRet = pResource8->AddRef();
+
+    EmuSwapFS();   // XBox FS
+
+    return uRet;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DResource8_Release
 // ******************************************************************
 ULONG WINAPI XTL::EmuIDirect3DResource8_Release
@@ -2450,16 +2671,26 @@ ULONG WINAPI XTL::EmuIDirect3DResource8_Release
     }
     #endif
 
+    ULONG uRet = 0;
+
     IDirect3DResource8 *pResource8 = pThis->EmuResource8;
 
-    ULONG uRet = pResource8->Release();
-
-    if(uRet == 0)
+    if(pThis->Common & X_D3DCOMMON_TYPE_PALETTE)
     {
-        #ifdef _DEBUG_TRACE
-        printf("EmuIDirect3DResource8_Release (0x%X): Cleaned up a Resource!\n", GetCurrentThreadId());
-        #endif
-        delete pThis;
+        delete[] (PVOID)pThis->Data;
+        uRet = --pThis->Lock;
+    }
+    else if(pResource8 != 0)
+    {
+        uRet = pResource8->Release();
+
+        if(uRet == 0)
+        {
+            #ifdef _DEBUG_TRACE
+            printf("EmuIDirect3DResource8_Release (0x%X): Cleaned up a Resource!\n", GetCurrentThreadId());
+            #endif
+            delete pThis;
+        }
     }
 
     EmuSwapFS();   // XBox FS
@@ -2902,6 +3133,29 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel
     EmuSwapFS();   // XBox FS
 
     return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_Release
+// ******************************************************************
+ULONG WINAPI XTL::EmuIDirect3DDevice8_Release()
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_Release();\n", GetCurrentThreadId());
+    }
+    #endif
+
+    ULONG uRet = g_pD3DDevice8->Release();
+
+    EmuSwapFS();   // XBox FS
+
+    return uRet;
 }
 
 // ******************************************************************
@@ -4768,4 +5022,174 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_LightEnable
     EmuSwapFS();   // XBox FS
     
     return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_CreatePalette
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreatePalette
+(
+    X_D3DPALETTESIZE    Size,
+    X_D3DPalette      **ppPalette
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreatePalette\n"
+               "(\n"
+               "   Size                : 0x%.08X\n"
+               "   ppPalette           : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Size, ppPalette);
+    }
+    #endif
+
+    *ppPalette = new X_D3DPalette();
+
+    static int lk[4] =
+    {
+        256*sizeof(D3DCOLOR),    // D3DPALETTE_256
+        128*sizeof(D3DCOLOR),    // D3DPALETTE_128
+        64*sizeof(D3DCOLOR),     // D3DPALETTE_64
+        32*sizeof(D3DCOLOR)      // D3DPALETTE_32
+    };
+
+    (*ppPalette)->Common = X_D3DCOMMON_TYPE_PALETTE;
+    (*ppPalette)->Lock = 1; // emulated reference count for palettes
+    (*ppPalette)->Data = (DWORD)new uint08[lk[Size]];
+
+    EmuSwapFS();   // XBox FS
+    
+    return D3D_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetPalette
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetPalette
+(
+    DWORD         Stage,
+    X_D3DPalette *pPalette
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetPalette\n"
+               "(\n"
+               "   Stage               : 0x%.08X\n"
+               "   pPalette            : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Stage, pPalette);
+    }
+    #endif
+
+    EmuWarning("Not setting palette");
+
+    EmuSwapFS();   // XBox FS
+    
+    return D3D_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetFlickerFilter
+// ******************************************************************
+void WINAPI XTL::EmuIDirect3DDevice8_SetFlickerFilter
+(
+    DWORD         Filter
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetFlickerFilter\n"
+               "(\n"
+               "   Filter              : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Filter);
+    }
+    #endif
+
+    EmuWarning("Not setting flicker filter");
+
+    EmuSwapFS();   // XBox FS
+    
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetSoftDisplayFilter
+// ******************************************************************
+void WINAPI XTL::EmuIDirect3DDevice8_SetSoftDisplayFilter
+(
+    BOOL Enable
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetSoftDisplayFilter\n"
+               "(\n"
+               "   Enable              : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Enable);
+    }
+    #endif
+
+    EmuWarning("Not setting soft display filter");
+
+    EmuSwapFS();   // XBox FS
+    
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DPalette8_Lock
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DPalette8_Lock
+(
+    X_D3DPalette   *pThis,
+    D3DCOLOR      **ppColors,
+    DWORD           Flags
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DPalette8_Lock\n"
+               "(\n"
+               "   pThis               : 0x%.08X\n"
+               "   ppColors            : 0x%.08X\n"
+               "   Flags               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), ppColors, Flags);
+    }
+    #endif
+
+    *ppColors = (D3DCOLOR*)pThis->Data;
+
+    EmuSwapFS();   // XBox FS
+    
+    return D3D_OK;
 }

@@ -1,5 +1,9 @@
 Cxbx Todo (* denotes high priority, + denotes medium priority)
 
+  * Palette needs to actually be used, not just allowed to execute.
+
+  * Check if 4361 Resource8_Release is the same as 4627 & 3925 (3911)
+
   * When focus is lost, enumerate and pause all threads, aside from the
     user input thread (and any other critical threads). alternatively,
 	stash all of the thread handles into a list and suspend them all when

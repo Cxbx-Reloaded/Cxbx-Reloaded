@@ -823,9 +823,44 @@ XBSYSAPI EXPORTNUM(178) VOID NTAPI xboxkrnl::MmPersistContiguousMemory
     #endif
 
     // TODO: Actually set this up to be remember across a "reboot"
-    printf("*Warning* MmPersistContiguousMemory is being ignored\n");
+    EmuWarning("MmPersistContiguousMemory is being ignored\n");
 
     EmuSwapFS();   // Xbox FS
+}
+
+// ******************************************************************
+// * 0x00B6 - MmSetAddressProtect
+// ******************************************************************
+XBSYSAPI EXPORTNUM(182) VOID NTAPI xboxkrnl::MmSetAddressProtect
+(
+    IN PVOID BaseAddress,
+    IN ULONG NumberOfBytes,
+    IN ULONG NewProtect
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): MmSetAddressProtect\n"
+               "(\n"
+               "   BaseAddress              : 0x%.08X\n"
+               "   NumberOfBytes            : 0x%.08X\n"
+               "   Persist                  : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), BaseAddress, NumberOfBytes, NewProtect);
+    }
+    #endif
+
+    // TODO: Actually set protection
+    EmuWarning("MmSetAddressProtect is being ignored\n");
+
+    EmuSwapFS();   // Xbox FS
+
+    return;
 }
 
 // ******************************************************************
