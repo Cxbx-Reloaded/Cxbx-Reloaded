@@ -55,6 +55,9 @@ extern VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
 // cleanup direct3d
 extern VOID EmuD3DCleanup();
 
+// is this texture linear?
+extern GUID hRefGUID_bTexIsLinear;
+
 // TODO: Fill out these enumeration tables for convienance
 typedef DWORD X_D3DFORMAT;
 typedef DWORD X_D3DBLENDOP;
