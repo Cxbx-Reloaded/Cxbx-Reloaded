@@ -611,9 +611,11 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
     // ******************************************************************
     {
         g_pCachedRenderTarget = new X_D3DSurface();
+        printf("g_pCachedRenderTarget : 0x%.08X\n", g_pCachedRenderTarget);
         g_pD3DDevice8->GetRenderTarget(&g_pCachedRenderTarget->EmuSurface8);
 
         g_pCachedZStencilSurface = new X_D3DSurface();
+        printf("g_pCachedZStencilSurface : 0x%.08X\n", g_pCachedZStencilSurface);
         g_pD3DDevice8->GetDepthStencilSurface(&g_pCachedZStencilSurface->EmuSurface8);
     }
 
@@ -1004,6 +1006,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateImageSurface
 
     *ppBackBuffer = new X_D3DSurface();
 
+    printf("New X_D3DSurface : 0x%.08X\n", *ppBackBuffer);
+
     D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
 
     HRESULT hRet = g_pD3DDevice8->CreateImageSurface(Width, Height, PCFormat, &((*ppBackBuffer)->EmuSurface8));
@@ -1072,10 +1076,15 @@ XTL::X_D3DSurface* WINAPI XTL::EmuIDirect3DDevice8_GetBackBuffer2
 
     X_D3DSurface *pBackBuffer = new X_D3DSurface();
 
+    printf("New X_D3DSurface : 0x%.08X\n", pBackBuffer);
+
     if(BackBuffer == -1)
         BackBuffer = 0;
 
-    g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &(pBackBuffer->EmuSurface8));
+    HRESULT hRet = g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &(pBackBuffer->EmuSurface8));
+
+    if(FAILED(hRet))
+        EmuCleanup("Unable to retrieve back buffer");
 
     EmuSwapFS();   // Xbox FS
 
@@ -2825,6 +2834,8 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel
     IDirect3DTexture8 *pTexture8 = pThis->EmuTexture8;
 
     *ppSurfaceLevel = new X_D3DSurface();
+
+    printf("New X_D3DSurface : 0x%.08X\n", *ppSurfaceLevel);
 
     HRESULT hRet = pTexture8->GetSurfaceLevel(Level, &((*ppSurfaceLevel)->EmuSurface8));
 
