@@ -1,0 +1,41 @@
+xboxkrnl::NtOpenFile : 
+
+    /*
+    char * checkString = "\\Device\\Harddisk0\\partition1\\";
+
+    if
+    (
+       CompareString
+       (
+           LOCALE_USER_DEFAULT,
+           NORM_IGNORECASE,
+           ObjectAttributes->ObjectName->Buffer,
+           ObjectAttributes->ObjectName->Length,
+           checkString,
+           strlen(checkString)
+       )
+       == CSTR_EQUAL
+    )
+    {
+        xntdll::OBJECT_ATTRIBUTES iObjectAttributes;
+        xntdll::UNICODE_STRING    iUnicodeString = 
+        {
+            30,
+            32,
+            L"C:\\Aaron\\XBoxHD"
+        };
+
+        InitializeObjectAttributes
+        (
+            &iObjectAttributes,
+            &iUnicodeString,
+            ObjectAttributes->Attributes,
+            ObjectAttributes->RootDirectory,
+            NULL
+        );
+
+        if(xntdll::ZwOpenFile(FileHandle, DesiredAccess, &iObjectAttributes, (xntdll::_IO_STATUS_BLOCK*)IoStatusBlock, ShareAccess, OpenOptions) == STATUS_SUCCESS)
+            MessageBox(NULL, (char*)ObjectAttributes->ObjectName->Buffer, "CxbxKrnl", MB_OK);
+    }
+    */
+
