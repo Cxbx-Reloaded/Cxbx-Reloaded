@@ -2462,9 +2462,12 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetPixelShader
             // simplest possible pixel shader (diffuse only)
             static const char szDiffusePixelShader[] =
                 "ps.1.1                         \n"
-                "tex t0                         \n" // use texture 0
-                "tex t1                         \n" // use texture 1
-                "mul r0, t0, t1                 \n";// r0 = c0*t0
+                "                               \n"
+                "tex t0                         \n"
+                "tex t1                         \n"
+                "                               \n"
+//                "mov r0, v0                     \n";
+                "mul r0, t0, t1                 \n";
 
             LPD3DXBUFFER pShader = 0;
             LPD3DXBUFFER pErrors = 0;
@@ -2476,13 +2479,14 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetPixelShader
             hRet = g_pD3DDevice8->CreatePixelShader((DWORD*)pShader->GetBufferPointer(), &dwHandle);
 
             if(FAILED(hRet))
-                EmuCleanup("Could not create pixel shader");
+                EmuWarning("Could not create pixel shader");
         }
 
-        hRet = g_pD3DDevice8->SetPixelShader(dwHandle);
+        if(!FAILED(hRet))
+            hRet = g_pD3DDevice8->SetPixelShader(dwHandle);
 
         if(FAILED(hRet))
-            EmuCleanup("Could not set pixel shader!");
+            EmuWarning("Could not set pixel shader!");
 
         g_bFakePixelShaderLoaded = TRUE;
     }
