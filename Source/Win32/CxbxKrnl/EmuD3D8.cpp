@@ -541,7 +541,7 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
 //                EmuCleanup("Unknown MultiSampleType (0x%.08X)", pPresentationParameters->MultiSampleType);
         }
 
-        pPresentationParameters->Flags &= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+        pPresentationParameters->Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
         
         // ******************************************************************
         // * Retrieve Resolution from Configuration
