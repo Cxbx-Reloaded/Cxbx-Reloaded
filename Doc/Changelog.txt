@@ -1,5 +1,12 @@
 cxbx website: http://www.caustik.com/xbox/
 
+version: 0.6.0-pre12 (02/??/03)
+--------------------------------
+
+- HLE has advanced to intercepting Direct3D and
+  Xapilib calls. A simple Xbox app built with a
+  1.0.4361 XDK has been shown to work.
+
 version: 0.6.0-pre11 (02/09/03)
 --------------------------------
 

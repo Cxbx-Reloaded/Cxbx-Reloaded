@@ -1,8 +1,5 @@
 Cxbx Todo:
 
-  Direct3DCreate returns 1, so Direct3DCreate must be called before
-  an xbe has a chance to attempt to use this IDirect3D8 interface.
-
   Recent files (for .exe and .xbe) in menu. (Use registry)
 
   Attempt to add compatibility with ME by using LLDT assembly. This

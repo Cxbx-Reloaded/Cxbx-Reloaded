@@ -108,7 +108,7 @@ void EmuXRenderWindow(PVOID)
     {
         g_EmuXWindow = CreateWindow
         (
-            "CxbxRender", "Cxbx : Rendering Window",
+            "CxbxRender", "Cxbx : Xbox Emulator",
             WS_OVERLAPPEDWINDOW, 100, 100, 640, 480,
             GetDesktopWindow(), NULL, GetModuleHandle(NULL), NULL
         );
@@ -278,6 +278,8 @@ HRESULT WINAPI xboxkrnl::EmuXIDirect3DDevice8_Clear
     // * make adjustments to parameters to make sense with windows d3d
     // ******************************************************************
     {
+        // TODO: D3DCLEAR_TARGET_A, *R, *G, *B don't exist on windows
+
         // Tricky MS randomizing .h #defines :[
         {
             DWORD newFlags = 0;
