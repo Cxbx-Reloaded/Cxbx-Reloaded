@@ -351,7 +351,7 @@ bool XBController::ConfigPoll(char *szStatus)
 
                 Map(CurConfigObject, DeviceInstance.tszInstanceName, dwHow, dwFlags);
 
-                printf("Cxbx: Detected %s %s on %s\n", szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType);
+                printf("Cxbx: Detected %s%s on %s\n", szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType);
 
                 sprintf(szStatus, "Success: %s Mapped to '%s%s' on '%s'!", m_DeviceNameLookup[CurConfigObject], szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName);
 
@@ -437,7 +437,6 @@ bool XBController::ConfigPoll(char *szStatus)
             // ******************************************************************
             else
             {
-                printf("MouseState.lX : %d\n", MouseState.lX);
                 LONG lAbsDeltaX=0, lAbsDeltaY=0, lAbsDeltaZ=0;
                 LONG lDeltaX=0, lDeltaY=0, lDeltaZ=0;
 
@@ -499,9 +498,9 @@ bool XBController::ConfigPoll(char *szStatus)
 
                     Map(CurConfigObject, "SysMouse", dwHow, dwFlags);
 
-                    printf("Cxbx: Detected Movement on the %s %s on SysMouse\n", szDirection, szObjName);
+                    printf("Cxbx: Detected Movement on the %s%s on SysMouse\n", szDirection, szObjName);
 
-                    sprintf(szStatus, "Success: %s Mapped to %s %s on SysMouse", m_DeviceNameLookup[CurConfigObject], szDirection, szObjName);
+                    sprintf(szStatus, "Success: %s Mapped to %s%s on SysMouse", m_DeviceNameLookup[CurConfigObject], szDirection, szObjName);
 
                     return true;
                 }
