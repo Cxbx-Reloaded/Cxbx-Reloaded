@@ -1778,6 +1778,34 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetShaderConstantMode
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_Reset
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_Reset
+(
+    X_D3DPRESENT_PARAMETERS *pPresentationParameters
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_Reset\n"
+               "(\n"
+               "   pPresentationParameters  : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pPresentationParameters);
+    }
+    #endif
+
+    EmuWarning("Device Reset is being utterly ignored");
+
+    EmuSwapFS();   // Xbox FS
+
+    return D3D_OK;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_GetRenderTarget
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetRenderTarget

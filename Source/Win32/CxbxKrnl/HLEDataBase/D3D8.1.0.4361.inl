@@ -783,7 +783,7 @@ SOOVPA<10> IDirect3DDevice8_SetViewport_1_0_4361 =
         { 0x01, 0xEC }, // (Offset,Value)-Pair #2
         { 0x02, 0x08 }, // (Offset,Value)-Pair #3
 
-        // IDirect3DDevice8_SetViewport+0x2F : mov ebx, [esp+0x14]
+        // IDirect3DDevice8_SetViewport+0x2D : mov ebx, [esp+0x14]
         { 0x2D, 0x8B }, // (Offset,Value)-Pair #4
         { 0x2E, 0x5C }, // (Offset,Value)-Pair #5
         { 0x2F, 0x24 }, // (Offset,Value)-Pair #6

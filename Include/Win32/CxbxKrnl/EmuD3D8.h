@@ -261,6 +261,14 @@ HRESULT WINAPI EmuIDirect3DDevice8_SetShaderConstantMode
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_Reset
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_Reset
+(
+    X_D3DPRESENT_PARAMETERS *pPresentationParameters
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_GetRenderTarget
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_GetRenderTarget
