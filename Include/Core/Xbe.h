@@ -67,7 +67,7 @@ class Xbe : public Error
         // ******************************************************************
         // * Dump XBE information to text file
         // ******************************************************************
-        void DumpInformation(const char *x_szTxtFilename);
+        void DumpInformation(FILE *x_file);
 
         // ******************************************************************
         // * Import logo bitmap from raw monochrome data

@@ -96,21 +96,14 @@ void InputConfig::Map(InputDeviceComponent idc, const char *DeviceName, int dwIn
     m_InputMapping[idc].dwInfo   = dwInfo;
     m_InputMapping[idc].dwFlags  = dwFlags;
 
-    printf("m_InputMapping[%d].dwDevice = %d\n", idc, m_InputMapping[idc].dwDevice);
-
     // Purse unused device slots
     for(int v=0;v<MAX_INPUT_DEVICES;v++)
     {
         bool inuse = false;
 
         for(int r=0;r<INPUT_DEVICE_COMPONENT_COUNT;r++)
-        {
             if(m_InputMapping[r].dwDevice == v)
-            {
-                printf("> m_InputMapping[%d].dwDevice = %d\n", r, v);
                 inuse=true;
-            }
-        }
 
         if(!inuse)
             m_DeviceName[v][0] = '\0';
