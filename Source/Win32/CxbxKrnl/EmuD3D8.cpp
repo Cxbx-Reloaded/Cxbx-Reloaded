@@ -1028,6 +1028,9 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreateTexture
         Format, D3DPOOL_MANAGED, &((*ppTexture)->EmuTexture8)
     );
 
+    if(FAILED(hRet))
+        EmuCleanup("Could not create texture!");
+
     EmuSwapFS();   // XBox FS
 
     return hRet;
