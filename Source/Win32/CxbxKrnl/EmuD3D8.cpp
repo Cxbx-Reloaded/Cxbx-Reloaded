@@ -4355,7 +4355,7 @@ static void EmuUpdateDeferredStates()
 // ******************************************************************
 // * func: EmuQuadHackA
 // ******************************************************************
-uint32 EmuQuadHackA(uint32 PrimitiveCount, XTL::IDirect3DVertexBuffer8 *&pOrigVertexBuffer8, XTL::IDirect3DVertexBuffer8 *&pHackVertexBuffer8, UINT dwOffset, PVOID pVertexStreamZeroData, UINT VertexStreamZeroStride)
+uint32 EmuQuadHackA(uint32 PrimitiveCount, XTL::IDirect3DVertexBuffer8 *&pOrigVertexBuffer8, XTL::IDirect3DVertexBuffer8 *&pHackVertexBuffer8, UINT dwOffset, PVOID pVertexStreamZeroData, UINT VertexStreamZeroStride, PVOID *ppNewVertexStreamZeroData)
 {
     UINT uiStride = VertexStreamZeroStride;
 
@@ -4373,6 +4373,9 @@ uint32 EmuQuadHackA(uint32 PrimitiveCount, XTL::IDirect3DVertexBuffer8 *&pOrigVe
     // This is a list of sqares/rectangles, so we convert it to a list of triangles
     dwOriginalSize  = PrimitiveCount*uiStride*2;
     dwNewSize       = PrimitiveCount*uiStride*3;
+
+    if(ppNewVertexStreamZeroData != 0)
+        *ppNewVertexStreamZeroData = pVertexStreamZeroData;
 
     if(pVertexStreamZeroData == 0)
     {
@@ -4408,6 +4411,8 @@ uint32 EmuQuadHackA(uint32 PrimitiveCount, XTL::IDirect3DVertexBuffer8 *&pOrigVe
 
         pHackVertexData = (uint08*)malloc(dwNewSizeWR);
         pOrigVertexData = (uint08*)pVertexStreamZeroData;
+
+        *ppNewVertexStreamZeroData = pHackVertexData;
     }
 
     DWORD dwVertexShader = NULL;
@@ -4415,9 +4420,9 @@ uint32 EmuQuadHackA(uint32 PrimitiveCount, XTL::IDirect3DVertexBuffer8 *&pOrigVe
     g_pD3DDevice8->GetVertexShader(&dwVertexShader);
 
     // Copy the nonmodified data
-    memcpy(pHackVertexData, pOrigVertexData, dwOffset * uiStride);
+    memcpy(pHackVertexData, pOrigVertexData, dwOffset);
     memcpy(&pHackVertexData[dwOffset+dwNewSize], &pOrigVertexData[dwOffset+dwOriginalSize], dwOriginalSizeWR-dwOffset-dwOriginalSize);
-
+    
     for(DWORD i=0;i<(PrimitiveCount/2);i++)
     {
         memcpy(&pHackVertexData[dwOffset+i*uiStride*6+0*uiStride], &pOrigVertexData[dwOffset+i*uiStride*4+0*uiStride], uiStride);
@@ -4509,7 +4514,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVertices
     if(PrimitiveType == 8)  // Quad List
     {
         PrimitiveCount *= 2;
-        nStride = EmuQuadHackA(PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, StartVertex, 0, 0);
+        nStride = EmuQuadHackA(PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, StartVertex, 0, 0, 0);
     }
 
     g_pD3DDevice8->DrawPrimitive
@@ -4572,22 +4577,29 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVerticesUP
 
     uint32 nStride = 0;
 
+    PVOID pNewVertexStreamZeroData = pVertexStreamZeroData;
+
     if(PrimitiveType == 8)  // Quad List
     {
         PrimitiveCount *= 2;
-        nStride = EmuQuadHackA(PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, 0, pVertexStreamZeroData, VertexStreamZeroStride);
+        nStride = EmuQuadHackA(PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, 0, pVertexStreamZeroData, VertexStreamZeroStride, &pNewVertexStreamZeroData);
     }
 
     g_pD3DDevice8->DrawPrimitiveUP
     (
         PCPrimitiveType,
         PrimitiveCount,
-        pVertexStreamZeroData,
+        pNewVertexStreamZeroData,
         VertexStreamZeroStride
     );
 
     if(PrimitiveType == 8)  // Quad List
+    {
         EmuQuadHackB(nStride, pOrigVertexBuffer8, pHackVertexBuffer8);
+
+        if(pNewVertexStreamZeroData != 0)
+            free(pNewVertexStreamZeroData);
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -4640,7 +4652,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
     if(PrimitiveType == 8)  // Quad List
     {
         PrimitiveCount *= 2;
-        nStride = EmuQuadHackA(PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, 0, 0, 0);
+        nStride = EmuQuadHackA(PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, 0, 0, 0, 0);
     }
 
     g_pD3DDevice8->DrawIndexedPrimitive
