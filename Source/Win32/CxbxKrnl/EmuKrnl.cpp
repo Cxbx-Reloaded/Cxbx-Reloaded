@@ -1274,13 +1274,11 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
         (NtDll::LARGE_INTEGER*)AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, NULL
     );
 
-    if(FAILED(ret))
-        EmuWarning("NtCreateFile Failed (0x%.08X)", ret);
     #ifdef _DEBUG_TRACE
+    if(FAILED(ret))
+        printf("EmuKrnl (0x%X): NtCreateFile Failed! (0x%.08X)", GetCurrentThreadId(), ret);
     else
-    {
         printf("EmuKrnl (0x%X): NtCreateFile = 0x%.08X\n", GetCurrentThreadId(), *FileHandle);
-    }
     #endif
 
     // ******************************************************************

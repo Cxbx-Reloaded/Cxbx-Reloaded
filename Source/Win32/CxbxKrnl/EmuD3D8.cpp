@@ -753,10 +753,15 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
     g_EmuCDPD.pPresentationParameters = pPresentationParameters;
     g_EmuCDPD.ppReturnedDeviceInterface = ppReturnedDeviceInterface;
 
+    // Wait until proxy is done with an existing call (i highly doubt this situation will come up)
+    while(g_EmuCDPD.bReady)
+        Sleep(10);
+
     // Signal proxy thread, and wait for completion
     g_EmuCDPD.bReady = true;
     g_EmuCDPD.bCreate = true;
 
+    // Wait until proxy is completed
     while(g_EmuCDPD.bReady)
         Sleep(10);
 
@@ -766,9 +771,9 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
 }
 
 // ******************************************************************
-// * func: EmuIDirect3D8_GetDeviceCaps
+// * func: EmuIDirect3DDevice8_GetDeviceCaps
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirect3D8_GetDeviceCaps
+VOID WINAPI XTL::EmuIDirect3DDevice8_GetDeviceCaps
 (
     D3DCAPS8                   *pCaps
 )
@@ -780,7 +785,7 @@ HRESULT WINAPI XTL::EmuIDirect3D8_GetDeviceCaps
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (0x%X): EmuIDirect3D8_GetDeviceCaps\n"
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetDeviceCaps\n"
                "(\n"
                "   pCaps                     : 0x%.08X\n"
                ");\n",
@@ -788,11 +793,11 @@ HRESULT WINAPI XTL::EmuIDirect3D8_GetDeviceCaps
     }
     #endif
 
-    HRESULT hRet = g_pD3D8->GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), (g_XBVideo.GetDirect3DDevice() == 0) ? XTL::D3DDEVTYPE_HAL : XTL::D3DDEVTYPE_REF, pCaps);
+    g_pD3D8->GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), (g_XBVideo.GetDirect3DDevice() == 0) ? XTL::D3DDEVTYPE_HAL : XTL::D3DDEVTYPE_REF, pCaps);
 
     EmuSwapFS();   // XBox FS
 
-    return hRet;
+    return;
 }
 
 // ******************************************************************
@@ -4214,7 +4219,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias
 //  TODO: Analyze performance and compatibility (undefined behavior on PC with triangles or points)
 //  g_pD3DDevice8->SetRenderState(D3DRS_EDGEANTIALIAS, Value);
 
-    EmuWarning("SetRenderState_EdgeAntiAlias not implemented!");
+//    EmuWarning("SetRenderState_EdgeAntiAlias not implemented!");
 
     EmuSwapFS();   // XBox FS
 
@@ -4872,10 +4877,10 @@ static void EmuUpdateDeferredStates()
     if(EmuD3DDeferredRenderState != 0)
     {
         if(XTL::EmuD3DDeferredRenderState[0] != X_D3DRS_UNK)
-            g_pD3DDevice8->SetRenderState(D3DRS_FOGENABLE,             XTL::EmuD3DDeferredRenderState[0]);
+            g_pD3DDevice8->SetRenderState(D3DRS_FOGENABLE, XTL::EmuD3DDeferredRenderState[0]);
 
         if(XTL::EmuD3DDeferredRenderState[1] != X_D3DRS_UNK)
-            g_pD3DDevice8->SetRenderState(D3DRS_FOGTABLEMODE,          XTL::EmuD3DDeferredRenderState[1]);
+            g_pD3DDevice8->SetRenderState(D3DRS_FOGTABLEMODE, XTL::EmuD3DDeferredRenderState[1]);
 
         if(XTL::EmuD3DDeferredRenderState[6] != X_D3DRS_UNK)
         {
@@ -4889,40 +4894,40 @@ static void EmuUpdateDeferredStates()
         }
 
         if(XTL::EmuD3DDeferredRenderState[10] != X_D3DRS_UNK)
-            g_pD3DDevice8->SetRenderState(D3DRS_LIGHTING,              XTL::EmuD3DDeferredRenderState[10]);
+            g_pD3DDevice8->SetRenderState(D3DRS_LIGHTING, XTL::EmuD3DDeferredRenderState[10]);
 
         if(XTL::EmuD3DDeferredRenderState[11] != X_D3DRS_UNK)
-            g_pD3DDevice8->SetRenderState(D3DRS_SPECULARENABLE,        XTL::EmuD3DDeferredRenderState[11]);
+            g_pD3DDevice8->SetRenderState(D3DRS_SPECULARENABLE, XTL::EmuD3DDeferredRenderState[11]);
 
         if(XTL::EmuD3DDeferredRenderState[20] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, XTL::EmuD3DDeferredRenderState[20]);
 
         if(XTL::EmuD3DDeferredRenderState[23] != X_D3DRS_UNK)
-            g_pD3DDevice8->SetRenderState(D3DRS_AMBIENT,               XTL::EmuD3DDeferredRenderState[23]);
+            g_pD3DDevice8->SetRenderState(D3DRS_AMBIENT, XTL::EmuD3DDeferredRenderState[23]);
 
         if(XTL::EmuD3DDeferredRenderState[24] != X_D3DRS_UNK)
-            g_pD3DDevice8->SetRenderState(D3DRS_POINTSIZE,             XTL::EmuD3DDeferredRenderState[24]);
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSIZE, XTL::EmuD3DDeferredRenderState[24]);
                                                                        
         if(XTL::EmuD3DDeferredRenderState[25] != X_D3DRS_UNK)        
-            g_pD3DDevice8->SetRenderState(D3DRS_POINTSIZE_MIN,         XTL::EmuD3DDeferredRenderState[25]);
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSIZE_MIN, XTL::EmuD3DDeferredRenderState[25]);
                                                                        
         if(XTL::EmuD3DDeferredRenderState[26] != X_D3DRS_UNK)        
-            g_pD3DDevice8->SetRenderState(D3DRS_POINTSPRITEENABLE,     XTL::EmuD3DDeferredRenderState[26]);
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSPRITEENABLE, XTL::EmuD3DDeferredRenderState[26]);
 
         if(XTL::EmuD3DDeferredRenderState[27] != X_D3DRS_UNK)        
-            g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALEENABLE,      XTL::EmuD3DDeferredRenderState[27]);
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALEENABLE, XTL::EmuD3DDeferredRenderState[27]);
 
         if(XTL::EmuD3DDeferredRenderState[28] != X_D3DRS_UNK)
-            g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALE_A,          XTL::EmuD3DDeferredRenderState[28]);
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALE_A, XTL::EmuD3DDeferredRenderState[28]);
 
         if(XTL::EmuD3DDeferredRenderState[29] != X_D3DRS_UNK)
-            g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALE_B,          XTL::EmuD3DDeferredRenderState[29]);
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALE_B, XTL::EmuD3DDeferredRenderState[29]);
 
         if(XTL::EmuD3DDeferredRenderState[30] != X_D3DRS_UNK)
-            g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALE_C,          XTL::EmuD3DDeferredRenderState[30]);
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALE_C, XTL::EmuD3DDeferredRenderState[30]);
 
         if(XTL::EmuD3DDeferredRenderState[33] != X_D3DRS_UNK)
-            g_pD3DDevice8->SetRenderState(D3DRS_PATCHSEGMENTS,         XTL::EmuD3DDeferredRenderState[33]);
+            g_pD3DDevice8->SetRenderState(D3DRS_PATCHSEGMENTS, XTL::EmuD3DDeferredRenderState[33]);
 
         /** To check for unhandled RenderStates
         for(int v=0;v<117-82;v++)
@@ -5135,7 +5140,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVertices
 
     EmuUpdateDeferredStates();
 
-    if((DWORD)PrimitiveType == 0x03 || (DWORD)PrimitiveType == 0x09 || (DWORD)PrimitiveType == 0x10)
+    if((DWORD)PrimitiveType == 0x09 || (DWORD)PrimitiveType == 0x10)
         EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
 
     UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
@@ -5196,7 +5201,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVerticesUP
 
     EmuUpdateDeferredStates();
 
-    if((DWORD)PrimitiveType == 0x03 || (DWORD)PrimitiveType == 0x09 || (DWORD)PrimitiveType == 0x10)
+    if((DWORD)PrimitiveType == 0x09 || (DWORD)PrimitiveType == 0x10)
         EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
 
     UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
@@ -5262,7 +5267,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
 
     EmuUpdateDeferredStates();
 
-    if((DWORD)PrimitiveType == 0x03 || (DWORD)PrimitiveType == 0x08 || (DWORD)PrimitiveType == 0x09 || (DWORD)PrimitiveType == 0x10)
+    if((DWORD)PrimitiveType == 0x08 || (DWORD)PrimitiveType == 0x09 || (DWORD)PrimitiveType == 0x10)
         EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
 
     UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);

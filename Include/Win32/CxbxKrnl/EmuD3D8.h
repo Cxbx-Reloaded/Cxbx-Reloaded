@@ -566,9 +566,9 @@ HRESULT WINAPI EmuIDirect3D8_CreateDevice
 );
 
 // ******************************************************************
-// * func: EmuIDirect3D8_GetDeviceCaps
+// * func: EmuIDirect3DDevice8_GetDeviceCaps
 // ******************************************************************
-HRESULT WINAPI EmuIDirect3D8_GetDeviceCaps
+VOID WINAPI EmuIDirect3DDevice8_GetDeviceCaps
 (
     D3DCAPS8                   *pCaps
 );
