@@ -112,7 +112,7 @@ static bool CheckIntegrity(CXBX_MEMORY_BLOCK *pBlock)
         Integrity = false;
     }
 
-	return Integrity;
+    return Integrity;
 }
 
 // ******************************************************************
@@ -123,6 +123,16 @@ static inline bool IsThisMemoryBlock(void              *pMem,
 {
     return (pBlock && pMem == pBlock->pMem);
 }
+
+// ******************************************************************
+// * InThisMemoryBlock - Simple block matching function
+// ******************************************************************
+static inline bool InThisMemoryBlock(const void        *pMem,
+                                     CXBX_MEMORY_BLOCK *pBlock)
+{
+    return (pBlock && pMem >= pBlock->pMem && pMem <= GetMemEnd(pBlock));
+}
+
 
 // ******************************************************************
 // * InsertMemoryBlock - Inserts a new memory block in the tracker
@@ -207,6 +217,24 @@ static CXBX_MEMORY_BLOCK *FindMemoryBlock(void *pMem)
     for(pCur = g_pFirstBlock; pCur; pCur = pCur->pNext)
     {
         if(IsThisMemoryBlock(pMem, pCur))
+        {
+            return pCur;
+        }
+    }
+
+    return NULL;
+}
+
+// ******************************************************************
+// * FindMemoryBlockIn - Finds a memory block in the tracker
+// ******************************************************************
+static CXBX_MEMORY_BLOCK *FindMemoryBlockIn(const void *pMem)
+{
+    CXBX_MEMORY_BLOCK *pCur;
+
+    for(pCur = g_pFirstBlock; pCur; pCur = pCur->pNext)
+    {
+        if(InThisMemoryBlock(pMem, pCur))
         {
             return pCur;
         }
@@ -550,4 +578,29 @@ SIZE_T CxbxRtlSizeHeapDebug(HANDLE Heap,
     g_MemoryMutex.Unlock();
     return Size;
 }
+
+// ******************************************************************
+// * CxbxVirtualQueryDebug - Debug virtual query
+// ******************************************************************
+DWORD CxbxVirtualQueryDebug(LPCVOID                   lpAddress,
+                            PMEMORY_BASIC_INFORMATION lpBuffer,
+                            DWORD                     dwLength)
+{
+    DWORD Size = 0;
+    g_MemoryMutex.Lock();
+
+    lpBuffer->State = MEM_COMMIT;
+
+    CXBX_MEMORY_BLOCK *pBlock = FindMemoryBlockIn(lpAddress);
+
+    if (pBlock)
+    {
+        Size = dwLength;
+        lpBuffer->RegionSize = pBlock->Size;
+        lpBuffer->BaseAddress = pBlock->pMem;
+    }
+    g_MemoryMutex.Unlock();
+    return Size;
+}
+
 #endif // _DEBUG_ALLOC

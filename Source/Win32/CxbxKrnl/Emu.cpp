@@ -43,6 +43,7 @@ namespace xboxkrnl
 #define COMPILE_MULTIMON_STUBS
 #include "Emu.h"
 #include "EmuFS.h"
+#include "EmuAlloc.h"
 
 // prevent name collisions
 namespace NtDll
@@ -955,7 +956,12 @@ extern int EmuCheckAllocationSize(LPVOID pBase, bool largeBound)
 {
     MEMORY_BASIC_INFORMATION MemoryBasicInfo;
 
-    DWORD dwRet = VirtualQuery(pBase, &MemoryBasicInfo, sizeof(MemoryBasicInfo));
+    DWORD dwRet;
+#ifdef _DEBUG_ALLOC
+    dwRet = CxbxVirtualQueryDebug(pBase, &MemoryBasicInfo, sizeof(MemoryBasicInfo));
+    if (dwRet == -1)
+#endif
+    dwRet = VirtualQuery(pBase, &MemoryBasicInfo, sizeof(MemoryBasicInfo));
 
     if(dwRet == 0)
         return 0;

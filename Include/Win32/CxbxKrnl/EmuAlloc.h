@@ -103,6 +103,13 @@ SIZE_T CxbxRtlSizeHeapDebug(HANDLE Heap,
                             int    Line);
 
 // ******************************************************************
+// * CxbxVirtualQueryDebug - Debug virtual query
+// ******************************************************************
+DWORD CxbxVirtualQueryDebug(LPCVOID                   lpAddress,
+                            PMEMORY_BASIC_INFORMATION lpBuffer,
+                            DWORD                     dwLength);
+
+// ******************************************************************
 // * CxbxAllocDump - Dump the memory allocations
 // ******************************************************************
 void CxbxAllocDump(bool DumpData);
