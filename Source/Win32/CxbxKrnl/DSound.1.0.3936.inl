@@ -825,28 +825,28 @@ SOOVPA<10> IDirectSoundBuffer8_SetHeadroom_1_0_3936 =
 };
 
 // ******************************************************************
-// * IDirectSoundBuffer8_SetLoopRegionA
+// * IDirectSoundBuffer8_SetBufferDataA
 // ******************************************************************
-SOOVPA<9> IDirectSoundBuffer8_SetLoopRegionA_1_0_3936 =
+SOOVPA<9> IDirectSoundBuffer8_SetBufferDataA_1_0_3936 =
 {
     0, // Large == 0
     9, // Count == 9
 
-    XREF_DSBUFFERSETLOOPREGIONA,// XRef Is  Saved
-    0,                          // XRef Not Used
+    XREF_DSSETBUFFERDATA, // XRef Is  Saved
+    0,                    // XRef Not Used
 
     {
-        // IDirectSoundBuffer8_SetLoopRegionA+0x22 : cmp ecx, [eax+0x4C]
+        // IDirectSoundBuffer8_SetBufferDataA+0x22 : cmp ecx, [eax+0x4C]
         { 0x22, 0x3B }, // (Offset,Value)-Pair #1
         { 0x23, 0x48 }, // (Offset,Value)-Pair #2
         { 0x24, 0x4C }, // (Offset,Value)-Pair #3
         
-        // IDirectSoundBuffer8_SetLoopRegionA+0x38 : mov ecx, [esi+0x1C]
+        // IDirectSoundBuffer8_SetBufferDataA+0x38 : mov ecx, [esi+0x1C]
         { 0x38, 0x8B }, // (Offset,Value)-Pair #4
         { 0x39, 0x4E }, // (Offset,Value)-Pair #5
         { 0x3A, 0x1C }, // (Offset,Value)-Pair #6
 
-        // IDirectSoundBuffer8_SetLoopRegionA+0x71 : leave; retn 0x0C
+        // IDirectSoundBuffer8_SetBufferDataA+0x71 : leave; retn 0x0C
         { 0x71, 0xC9 }, // (Offset,Value)-Pair #7
         { 0x72, 0xC2 }, // (Offset,Value)-Pair #8
         { 0x73, 0x0C }, // (Offset,Value)-Pair #9
@@ -854,9 +854,9 @@ SOOVPA<9> IDirectSoundBuffer8_SetLoopRegionA_1_0_3936 =
 };
 
 // ******************************************************************
-// * IDirectSoundBuffer8_SetLoopRegion
+// * IDirectSoundBuffer8_SetBufferData
 // ******************************************************************
-SOOVPA<10> IDirectSoundBuffer8_SetLoopRegion_1_0_3936 =
+SOOVPA<10> IDirectSoundBuffer8_SetBufferData_1_0_3936 =
 {
     0,  // Large == 0
     10, // Count == 10
@@ -865,21 +865,21 @@ SOOVPA<10> IDirectSoundBuffer8_SetLoopRegion_1_0_3936 =
     1,  // XRef Is  Used
 
     {
-        // IDirectSoundBuffer8_SetLoopRegion+0x19 : call [IDirectSoundBuffer8_SetLoopRegionA]
-        { 0x19, XREF_DSBUFFERSETLOOPREGIONA }, // (Offset,Value)-Pair #1
+        // IDirectSoundBuffer8_SetBufferData+0x19 : call [IDirectSoundBuffer8_SetBufferDataA]
+        { 0x19, XREF_DSSETBUFFERDATA }, // (Offset,Value)-Pair #1
 
-        // IDirectSoundBuffer8_SetLoopRegion+0x04 : push [esp+0x0C]
+        // IDirectSoundBuffer8_SetBufferData+0x04 : push [esp+0x0C]
         { 0x04, 0xFF }, // (Offset,Value)-Pair #2
         { 0x05, 0x74 }, // (Offset,Value)-Pair #3
         { 0x06, 0x24 }, // (Offset,Value)-Pair #4
         { 0x07, 0x0C }, // (Offset,Value)-Pair #5
 
-        // IDirectSoundBuffer8_SetLoopRegion+0x0E : add eax, 0xFFFFFFE4
+        // IDirectSoundBuffer8_SetBufferData+0x0E : add eax, 0xFFFFFFE4
         { 0x0E, 0x83 }, // (Offset,Value)-Pair #6
         { 0x0F, 0xC0 }, // (Offset,Value)-Pair #7
         { 0x10, 0xE4 }, // (Offset,Value)-Pair #8
 
-        // IDirectSoundBuffer8_SetLoopRegion+0x1D : retn 0x0C
+        // IDirectSoundBuffer8_SetBufferData+0x1D : retn 0x0C
         { 0x1D, 0xC2 }, // (Offset,Value)-Pair #9
         { 0x1E, 0x0C }, // (Offset,Value)-Pair #10
     }
@@ -3574,22 +3574,22 @@ OOVPATable DSound_1_0_3936[] =
         "EmuIDirectSoundBuffer8_SetHeadroom" 
         #endif
     },
-    // IDirectSoundBuffer8::SetLoopRegionA (XREF)
+    // IDirectSoundBuffer8::SetBufferDataA (XREF)
     {
-        (OOVPA*)&IDirectSoundBuffer8_SetLoopRegionA_1_0_3936, 0,
+        (OOVPA*)&IDirectSoundBuffer8_SetBufferDataA_1_0_3936, 0,
 
         #ifdef _DEBUG_TRACE
-        "IDirectSoundBuffer8_SetLoopRegionA (XRef)"
+        "IDirectSoundBuffer8_SetBufferDataA (XRef)"
         #endif
     },
-    // IDirectSoundBuffer8::SetLoopRegion
+    // IDirectSoundBuffer8::SetBufferData
     {
-        (OOVPA*)&IDirectSoundBuffer8_SetLoopRegion_1_0_3936,
+        (OOVPA*)&IDirectSoundBuffer8_SetBufferData_1_0_3936,
 
-        XTL::EmuIDirectSoundBuffer8_SetLoopRegion,
+        XTL::EmuIDirectSoundBuffer8_SetBufferData,
 
         #ifdef _DEBUG_TRACE
-        "EmuIDirectSoundBuffer8_SetLoopRegion" 
+        "EmuIDirectSoundBuffer8_SetBufferData" 
         #endif
     },
     // CMcpxBuffer::GetCurrentPosition

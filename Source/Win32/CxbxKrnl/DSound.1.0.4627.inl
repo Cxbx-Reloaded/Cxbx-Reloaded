@@ -330,21 +330,21 @@ SOOVPA<11> CDirectSoundStream_SetVolume_1_0_4361 =
     1,  // XRef Is  Used
 
     {
-        // CDirectSoundBuffer_SetBufferData+0x15 : call [CMcpxVoiceClient::SetVolume]
+        // CDirectSoundStream_SetVolume+0x15 : call [CMcpxVoiceClient::SetVolume]
         { 0x15, XREF_DSSTREAMSETVOLUME },  // (Offset,Value)-Pair #1
 
-        // CDirectSoundBuffer_SetBufferData+0x00 : mov ecx, [esp+0x04]
+        // CDirectSoundStream_SetVolume+0x00 : mov ecx, [esp+0x04]
         { 0x00, 0x8B }, // (Offset,Value)-Pair #2
         { 0x01, 0x4C }, // (Offset,Value)-Pair #3
         { 0x02, 0x24 }, // (Offset,Value)-Pair #4
         { 0x03, 0x04 }, // (Offset,Value)-Pair #5
 
-        // CDirectSoundBuffer_SetBufferData+0x0B : sub edx, [eax+0x20]
+        // CDirectSoundStream_SetVolume+0x0B : sub edx, [eax+0x20]
         { 0x0B, 0x2B }, // (Offset,Value)-Pair #6
         { 0x0C, 0x50 }, // (Offset,Value)-Pair #7
         { 0x0D, 0x20 }, // (Offset,Value)-Pair #8
 
-        // CDirectSoundBuffer_SetBufferData+0x11 : mov ecx, [ecx+0x0C]
+        // CDirectSoundStream_SetVolume+0x11 : mov ecx, [ecx+0x0C]
         { 0x11, 0x8B }, // (Offset,Value)-Pair #9
         { 0x12, 0x49 }, // (Offset,Value)-Pair #10
         { 0x13, 0x0C }, // (Offset,Value)-Pair #11

@@ -2518,7 +2518,7 @@ static void EmuFlushD3DIVB()
                 i += sizeof(XTL::D3DXVECTOR3);
 
                 #ifdef _DEBUG_TRACE
-                printf("D3DIVB[%.03d]->Position := {%f,%f,%f}\n", r, g_D3DIVB[r].Position.x, g_D3DIVB[r].Position.y, g_D3DIVB[r].Position.z);
+                printf("D3DIVB[%.02d]->Position := {%f,%f,%f}\n", r, g_D3DIVB[r].Position.x, g_D3DIVB[r].Position.y, g_D3DIVB[r].Position.z);
                 #endif
             }
 
@@ -2529,7 +2529,7 @@ static void EmuFlushD3DIVB()
                 i += sizeof(DWORD);
 
                 #ifdef _DEBUG_TRACE
-                printf("D3DIVB[%.03d]->dwSpecular := 0x%.08X\n", r, g_D3DIVB[r].dwSpecular);
+                printf("D3DIVB[%.02d]->dwSpecular := 0x%.08X\n", r, g_D3DIVB[r].dwSpecular);
                 #endif
             }
 
@@ -2540,7 +2540,7 @@ static void EmuFlushD3DIVB()
                 i += sizeof(DWORD);
 
                 #ifdef _DEBUG_TRACE
-                printf("D3DIVB[%.03d]->dwDiffuse := 0x%.08X\n", r, g_D3DIVB[r].dwDiffuse);
+                printf("D3DIVB[%.02d]->dwDiffuse := 0x%.08X\n", r, g_D3DIVB[r].dwDiffuse);
                 #endif
             }
 
@@ -2551,7 +2551,7 @@ static void EmuFlushD3DIVB()
                 i += sizeof(XTL::D3DXVECTOR3);
 
                 #ifdef _DEBUG_TRACE
-                printf("D3DIVB[%.03d]->Normal := {%f,%f,%f}\n", r, g_D3DIVB[r].Normal.x, g_D3DIVB[r].Normal.y, g_D3DIVB[r].Normal.z);
+                printf("D3DIVB[%.02d]->Normal := {%f,%f,%f}\n", r, g_D3DIVB[r].Normal.x, g_D3DIVB[r].Normal.y, g_D3DIVB[r].Normal.z);
                 #endif
             }
 
@@ -2563,7 +2563,7 @@ static void EmuFlushD3DIVB()
                     i += sizeof(XTL::D3DXVECTOR2);
 
                     #ifdef _DEBUG_TRACE
-                    printf("D3DIVB[%.03d]->Tex1 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord1.x, g_D3DIVB[r].TexCoord1.y);
+                    printf("D3DIVB[%.02d]->Tex1 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord1.x, g_D3DIVB[r].TexCoord1.y);
                     #endif
 
                     break;
@@ -2574,8 +2574,8 @@ static void EmuFlushD3DIVB()
                     i += sizeof(XTL::D3DXVECTOR2);
 
                     #ifdef _DEBUG_TRACE
-                    printf("D3DIVB[%.03d]->Tex1 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord1.x, g_D3DIVB[r].TexCoord1.y);
-                    printf("D3DIVB[%.03d]->Tex2 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord2.x, g_D3DIVB[r].TexCoord2.y);
+                    printf("D3DIVB[%.02d]->Tex1 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord1.x, g_D3DIVB[r].TexCoord1.y);
+                    printf("D3DIVB[%.02d]->Tex2 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord2.x, g_D3DIVB[r].TexCoord2.y);
                     #endif
 
                     break;
@@ -2588,9 +2588,9 @@ static void EmuFlushD3DIVB()
                     i += sizeof(XTL::D3DXVECTOR2);
                     
                     #ifdef _DEBUG_TRACE
-                    printf("D3DIVB[%.03d]->Tex1 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord1.x, g_D3DIVB[r].TexCoord1.y);
-                    printf("D3DIVB[%.03d]->Tex2 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord2.x, g_D3DIVB[r].TexCoord2.y);
-                    printf("D3DIVB[%.03d]->Tex3 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord3.x, g_D3DIVB[r].TexCoord3.y);
+                    printf("D3DIVB[%.02d]->Tex1 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord1.x, g_D3DIVB[r].TexCoord1.y);
+                    printf("D3DIVB[%.02d]->Tex2 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord2.x, g_D3DIVB[r].TexCoord2.y);
+                    printf("D3DIVB[%.02d]->Tex3 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord3.x, g_D3DIVB[r].TexCoord3.y);
                     #endif
 
                     break;
@@ -2605,10 +2605,10 @@ static void EmuFlushD3DIVB()
                     i += sizeof(XTL::D3DXVECTOR2);
 
                     #ifdef _DEBUG_TRACE
-                    printf("D3DIVB[%.03d]->Tex1 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord1.x, g_D3DIVB[r].TexCoord1.y);
-                    printf("D3DIVB[%.03d]->Tex2 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord2.x, g_D3DIVB[r].TexCoord2.y);
-                    printf("D3DIVB[%.03d]->Tex3 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord3.x, g_D3DIVB[r].TexCoord3.y);
-                    printf("D3DIVB[%.03d]->Tex4 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord4.x, g_D3DIVB[r].TexCoord4.y);
+                    printf("D3DIVB[%.02d]->Tex1 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord1.x, g_D3DIVB[r].TexCoord1.y);
+                    printf("D3DIVB[%.02d]->Tex2 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord2.x, g_D3DIVB[r].TexCoord2.y);
+                    printf("D3DIVB[%.02d]->Tex3 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord3.x, g_D3DIVB[r].TexCoord3.y);
+                    printf("D3DIVB[%.02d]->Tex4 := {%f,%f}\n", r, g_D3DIVB[r].TexCoord4.x, g_D3DIVB[r].TexCoord4.y);
                     #endif
 
                     break;
