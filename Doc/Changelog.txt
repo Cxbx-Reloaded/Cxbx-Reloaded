@@ -3,6 +3,8 @@ cxbx website: http://www.caustik.com/xbox/
 version: 0.7.0 (??/??/??)
 --------------------------------
 
+- Magically shrunk cxbx.dll/cxbx.exe file sizes enormously!
+
 - Added Controller Input and Configuration!
 
 - Added Recent Xbe/Exe file menus
