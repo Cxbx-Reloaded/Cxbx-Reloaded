@@ -234,6 +234,10 @@ SOURCE=.\Include\Win32\XBController.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\XBVideo.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\xd3d8.h
 # End Source File
 # Begin Source File
@@ -343,6 +347,10 @@ SOURCE=.\Source\Win32\CxbxKrnl\Xapi.1.0.4627.inl
 # Begin Source File
 
 SOURCE=.\Source\Win32\XBController.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\XBVideo.cpp
 # End Source File
 # End Group
 # End Target

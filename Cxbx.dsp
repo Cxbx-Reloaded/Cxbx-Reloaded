@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=xilink6.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 dinput8.lib dxguid.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /pdb:none /map /machine:I386
+# ADD LINK32 d3d8.lib dinput8.lib dxguid.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /pdb:none /map /machine:I386
 # SUBTRACT LINK32 /debug
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
@@ -213,6 +213,10 @@ SOURCE=.\Include\Win32\XBController.h
 
 SOURCE=.\Include\Core\Xbe.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\XBVideo.h
+# End Source File
 # End Group
 # Begin Group "Resource"
 
@@ -296,6 +300,10 @@ SOURCE=.\Source\Win32\XBController.cpp
 # Begin Source File
 
 SOURCE=.\Source\Core\Xbe.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\XBVideo.cpp
 # End Source File
 # End Group
 # End Target

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuShared.h
+// *   Cxbx->Win32->Cxbx->XBVideo.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,61 +31,49 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUSHARED_H
-#define EMUSHARED_H
+#ifndef XBVIDEO_H
+#define XBVIDEO_H
 
 #include "Cxbx.h"
-#include "XBController.h"
-#include "XBVideo.h"
-
-#include <memory.h>
+#include "Error.h"
+#include "Mutex.h"
 
 // ******************************************************************
-// * EmuShared : Shared memory
+// * class: XBVideo
 // ******************************************************************
-class EmuShared : public Mutex
+class XBVideo : public Error
 {
     public:
         // ******************************************************************
-        // * Constructor / Deconstructor
+        // * Initialization
         // ******************************************************************
-        CXBXKRNL_API  EmuShared();
-        CXBXKRNL_API ~EmuShared();
+        XBVideo();
+       ~XBVideo();
 
         // ******************************************************************
-        // * Each process needs to call this to initialize shared memory
+        // * Registry Load/Save
         // ******************************************************************
-        CXBXKRNL_API static void Init();
+        void Load(const char *szRegistryKey);
+        void Save(const char *szRegistryKey);
 
         // ******************************************************************
-        // * Each process needs to call this to cleanup shared memory
+        // * Fullscreen Toggling
         // ******************************************************************
-        CXBXKRNL_API static void Cleanup();
+        void SetFullscreen(BOOL bFullscreen) { m_bFullscreen = bFullscreen; }
+        BOOL GetFullscreen() { return m_bFullscreen; }
 
         // ******************************************************************
-        // * Xbox Video Accessor
+        // * VSync Toggling
         // ******************************************************************
-        CXBXKRNL_API void GetXBVideo(XBVideo *video) { Lock(); memcpy(video, &m_XBVideo, sizeof(XBVideo)); Unlock(); }
-        CXBXKRNL_API void SetXBVideo(XBVideo *video) { Lock(); memcpy(&m_XBVideo, video, sizeof(XBVideo)); Unlock(); }
-
-        // ******************************************************************
-        // * Xbox Controller Accessor
-        // ******************************************************************
-        CXBXKRNL_API void GetXBController(XBController *ctrl) { Lock(); memcpy(ctrl, &m_XBController, sizeof(XBController)); Unlock();}
-        CXBXKRNL_API void SetXBController(XBController *ctrl) { Lock(); memcpy(&m_XBController, ctrl, sizeof(XBController)); Unlock();}
+        void SetVSync(BOOL bVSync) { m_bVSync = bVSync; }
+        BOOL GetVSync() { return m_bVSync; }
 
     private:
         // ******************************************************************
-        // * Shared configuration
+        // * Configuration
         // ******************************************************************
-        XBController m_XBController;
-        XBVideo      m_XBVideo;
+        BOOL m_bFullscreen;
+        BOOL m_bVSync;
 };
-
-// ******************************************************************
-// * Exported Global Shared Memory Pointer
-// ******************************************************************
-extern CXBXKRNL_API EmuShared *g_EmuShared;
-extern CXBXKRNL_API int        g_EmuSharedRefCount;
 
 #endif

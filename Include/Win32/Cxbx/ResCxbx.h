@@ -41,10 +41,11 @@
 #define IDC_CV_FULLSCREEN               1034
 #define IDC_VC_DISPLAY_ADAPTER          1037
 #define IDC_VC_D3D_DEVICE               1038
-#define IDC_VC_DISPLAY_RESOLUTION       1039
 #define IDC_VC_ACCEPT                   1040
 #define IDC_VC_CANCEL                   1041
 #define IDC_CHECK1                      1042
+#define IDC_CV_VSYNC                    1042
+#define IDC_VC_VIDEO_RESOLUTION         1047
 #define ID_FILE_EXIT                    40005
 #define ID_HELP_ABOUT                   40008
 #define ID_EMULATION_START              40009
@@ -65,7 +66,6 @@
 #define ID_EMULATION_DEBUGOUTPUTKERNEL_FILE 40038
 #define ID_SETTINGS_AUTOGEN             40045
 #define ID_SETTINGS_CONFIG_CONTROLLER   40046
-#define ID_SETTINGS_CONFIGUREGRAPHICS   40047
 #define ID_SETTINGS_CONFIG_VIDEO        40047
 #define ID_SETTINGS_CONFIGURESOUND      40048
 #define ID_FILE_RXBE_0                  40050
@@ -97,7 +97,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        115
 #define _APS_NEXT_COMMAND_VALUE         40073
-#define _APS_NEXT_CONTROL_VALUE         1043
+#define _APS_NEXT_CONTROL_VALUE         1048
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -42,14 +42,14 @@
 // ******************************************************************
 // * Static Function(s)
 // ******************************************************************
-INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object);
+static INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object);
 
 // ******************************************************************
 // * Static Variable(s)
 // ******************************************************************
-XBController g_XBController;
-BOOL         g_bHasChanges;
+static XBController g_XBController;
+static BOOL         g_bHasChanges;
 
 // ******************************************************************
 // * Show Controller Configuration Dialog Window
