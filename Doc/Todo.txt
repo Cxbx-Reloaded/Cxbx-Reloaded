@@ -2,6 +2,8 @@ Cxbx Todo:
 
   General Code Cleanup [caustik]
 
+  FS: structure construction (EmuXInit)
+
   Debug outputs should be configurable to STDOUT (console) or text file.
 
   Exe->Xbe should use an "OpenXDK" logo bitmap by default. This can be done

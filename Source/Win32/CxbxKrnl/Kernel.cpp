@@ -72,21 +72,21 @@ CXBXKRNL_API void NTAPI EmuXInit(uint32 DebugConsole, uint08 *XBEHeader, uint32 
 
         freopen("CONOUT$", "wt", stdout);
 
-        printf("%s", "CxbxKrnl: Debug console allocated.\n");
+        printf("CxbxKrnl [0x%.08X]: Debug console allocated.\n", GetCurrentThreadId());
     }
 
     // ******************************************************************
     // * debug trace
     // ******************************************************************
     {
-        printf("CxbxKrnl: EmuXInit\n"
+        printf("CxbxKrnl [0x%.08X]: EmuXInit\n"
                "          (\n"
                "             DebugConsole        : 0x%.08X\n"
                "             XBEHeader           : 0x%.08X\n"
                "             XBEHeaderSize       : 0x%.08X\n"
                "             Entry               : 0x%.08X\n"
                "          );\n",
-               DebugConsole, XBEHeader, XBEHeaderSize, Entry);
+               GetCurrentThreadId(), DebugConsole, XBEHeader, XBEHeaderSize, Entry);
     }
 
     // ******************************************************************
@@ -106,11 +106,15 @@ CXBXKRNL_API void NTAPI EmuXInit(uint32 DebugConsole, uint08 *XBEHeader, uint32 
         memcpy((void*)dwCertificateAddr, &XBEHeader[dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
     }
 
-    printf("CxbxKrnl: Execution starting.\n");
+    printf("CxbxKrnl [0x%.08X]: Initial thread starting.\n", GetCurrentThreadId());
 
     Entry();
 
-    printf("CxbxKrnl: Execution ended.\n");
+    printf("CxbxKrnl [0x%.08X]: Initial thread ended.\n", GetCurrentThreadId());
+
+    // just spin forever (for now...)
+    while(true)
+        Sleep(1000);
 
     return;
 }
@@ -128,12 +132,55 @@ CXBXKRNL_API void NTAPI EmuXDummy()
 // ******************************************************************
 CXBXKRNL_API void NTAPI EmuXPanic()
 {
-    printf("CxbxKrnl: EmuXPanic()\n");
+    printf("CxbxKrnl [0x%.08X]: EmuXPanic()\n", GetCurrentThreadId());
 
     MessageBox(NULL, "Kernel Panic! Process will now terminate.", "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
 
     exit(1);
 }
+
+// ******************************************************************
+// * (HELPER) PsCreateSystemThreadExProxyParam
+// ******************************************************************
+typedef struct _PsCreateSystemThreadExProxyParam
+{
+    IN PVOID StartContext1;
+    IN PVOID StartContext2;
+    IN PVOID StartRoutine;
+}
+PsCreateSystemThreadExProxyParam;
+
+// ******************************************************************
+// * PsCreateSystemThreadExProxy
+// ******************************************************************
+#pragma warning(push)
+#pragma warning(disable: 4731)  // disable ebp modification warning
+DWORD WINAPI PsCreateSystemThreadExProxy
+(
+    IN PVOID Parameter
+)
+{
+    PsCreateSystemThreadExProxyParam *iPsCreateSystemThreadExProxyParam = (PsCreateSystemThreadExProxyParam*)Parameter;
+
+    uint32 StartContext1 = (uint32)iPsCreateSystemThreadExProxyParam->StartContext1;
+    uint32 StartContext2 = (uint32)iPsCreateSystemThreadExProxyParam->StartContext2;
+    uint32 StartRoutine  = (uint32)iPsCreateSystemThreadExProxyParam->StartRoutine;
+
+    delete iPsCreateSystemThreadExProxyParam;
+
+    __asm
+    {
+        mov         esi, StartRoutine
+        push        StartContext2
+        push        StartContext1
+        lea         ebp, [esp-4]
+        int 3
+        jmp near    esi
+    }
+
+    return 0;
+}
+#pragma warning(pop)
 
 using namespace xboxkrnl;
 
@@ -145,7 +192,22 @@ XBSYSAPI EXPORTNUM(187) NTSTATUS NTAPI xboxkrnl::NtClose
 	IN HANDLE Handle
 )
 {
-    MessageBox(NULL, "NtClose()", "CxbxKrnl", MB_OK);
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG
+    {
+        printf("CxbxKrnl [0x%.08X]: NtClose\n"
+               "          (\n"
+               "             Handle              : 0x%.08X\n"
+               "          );\n",
+               GetCurrentThreadId(), Handle);
+    }
+    #endif
+
+    if(CloseHandle(Handle) != TRUE)
+        return STATUS_UNSUCCESSFUL;
+
     return STATUS_SUCCESS;
 }
 
@@ -171,7 +233,7 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
     // ******************************************************************
     #ifdef _DEBUG
     {
-        printf("CxbxKrnl: PsCreateSystemThreadEx\n"
+        printf("CxbxKrnl [0x%.08X]: PsCreateSystemThreadEx\n"
                "          (\n"
                "             ThreadHandle        : 0x%.08X\n"
                "             ThreadExtraSize     : 0x%.08X\n"
@@ -184,12 +246,24 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
                "             DebugStack          : 0x%.08X\n"
                "             StartRoutine        : 0x%.08X\n"
                "          );\n",
-               ThreadHandle, ThreadExtraSize, KernelStackSize, TlsDataSize, ThreadId,
+               GetCurrentThreadId(), ThreadHandle, ThreadExtraSize, KernelStackSize, TlsDataSize, ThreadId,
                StartContext1, StartContext2, CreateSuspended, DebugStack, StartRoutine);
     }
     #endif
 
-    EmuXPanic();
+    DWORD dwThreadId = NULL;
+
+    // PsCreateSystemThreadExProxy is responsible for cleaning up this pointer
+    ::PsCreateSystemThreadExProxyParam *iPsCreateSystemThreadProxyParam = new ::PsCreateSystemThreadExProxyParam();
+
+    iPsCreateSystemThreadProxyParam->StartContext1 = StartContext1;
+    iPsCreateSystemThreadProxyParam->StartContext2 = StartContext2;
+    iPsCreateSystemThreadProxyParam->StartRoutine  = StartRoutine;
+
+    *ThreadHandle = CreateThread(NULL, NULL, &PsCreateSystemThreadExProxy, iPsCreateSystemThreadProxyParam, NULL, &dwThreadId);
+
+    if(ThreadId != NULL)
+        *ThreadId = dwThreadId;
 
     return STATUS_SUCCESS;
 }
