@@ -161,6 +161,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.h
 # End Source File
 # Begin Source File
@@ -206,6 +210,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4432.h
 # Begin Source File
 
 SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.5558.h
 # End Source File
 # Begin Source File
 
@@ -407,6 +415,11 @@ SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.inl
 # End Source File
 # Begin Source File
 
+SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.inl
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.inl
 # PROP Exclude_From_Build 1
 # End Source File
@@ -463,6 +476,11 @@ SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4432.inl
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.inl
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.5558.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File

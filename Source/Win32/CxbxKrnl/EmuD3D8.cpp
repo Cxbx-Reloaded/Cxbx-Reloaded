@@ -929,7 +929,8 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
         return;
 
     // Already "Registered" implicitly
-    if((pResource->Data == X_D3DRESOURCE_DATA_FLAG_D3DREND) || (pResource->Data == X_D3DRESOURCE_DATA_FLAG_D3DSTEN))
+    if((pResource->Data == X_D3DRESOURCE_DATA_FLAG_D3DREND) || (pResource->Data == X_D3DRESOURCE_DATA_FLAG_D3DSTEN)
+     ||(pResource->Data == 0xB00BBABE))
         return;
 
     int v=0;
@@ -4533,7 +4534,11 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel
 
         hRet = pTexture8->GetSurfaceLevel(Level, &((*ppSurfaceLevel)->EmuSurface8));
 
-        if(!FAILED(hRet))
+        if(FAILED(hRet))
+        {
+            EmuWarning("EmuIDirect3DTexture8_GetSurfaceLevel Failed!\n");
+        }
+        else
         {
             DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DTexture8_GetSurfaceLevel := 0x%.08X\n", GetCurrentThreadId(), (*ppSurfaceLevel)->EmuSurface8);
         }

@@ -46,6 +46,7 @@
 #include "HLEDataBase/Xapi.1.0.4361.inl"
 #include "HLEDataBase/Xapi.1.0.4432.inl"
 #include "HLEDataBase/Xapi.1.0.4627.inl"
+#include "HLEDataBase/Xapi.1.0.5558.inl"
 #include "HLEDataBase/Xapi.1.0.5849.inl"
 #include "HLEDataBase/D3D8.1.0.3925.inl"
 #include "HLEDataBase/D3D8.1.0.4034.inl"
@@ -53,6 +54,7 @@
 #include "HLEDataBase/D3D8.1.0.4361.inl"
 #include "HLEDataBase/D3D8.1.0.4432.inl"
 #include "HLEDataBase/D3D8.1.0.4627.inl"
+#include "HLEDataBase/D3D8.1.0.5558.inl"
 #include "HLEDataBase/D3D8.1.0.5849.inl"
 #include "HLEDataBase/DSound.1.0.3936.inl"
 #include "HLEDataBase/DSound.1.0.4361.inl"
@@ -118,6 +120,13 @@ HLEData HLEDataBase[] =
         XAPI_1_0_5849,
         XAPI_1_0_5849_SIZE
     },
+    // Xapilib Version 1.0.5558
+    {
+        "XAPILIB",
+        1, 0, 5558,
+        XAPI_1_0_5558,
+        XAPI_1_0_5558_SIZE
+    },
     // D3D8 Version 1.0.3925
     {
         "D3D8",
@@ -159,6 +168,13 @@ HLEData HLEDataBase[] =
         1, 0, 4627,
         D3D8_1_0_4627,
         D3D8_1_0_4627_SIZE
+    },
+    // D3D8 Version 1.0.5558
+    {
+        "D3D8",
+        1, 0, 5558,
+        D3D8_1_0_5558,
+        D3D8_1_0_5558_SIZE
     },
     // D3D8 Version 1.0.5849
     {
