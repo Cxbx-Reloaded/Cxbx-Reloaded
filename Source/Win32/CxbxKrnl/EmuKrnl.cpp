@@ -1812,6 +1812,50 @@ XBSYSAPI EXPORTNUM(226) NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
 }
 
 // ******************************************************************
+// * 0x00E8 - NtUserIoApcDispatcher
+// ******************************************************************
+XBSYSAPI EXPORTNUM(232) VOID xboxkrnl::NtUserIoApcDispatcher
+(
+    PVOID            ApcContext,
+    PIO_STATUS_BLOCK IoStatusBlock,
+    ULONG            Reserved
+)
+{
+    // Note: This function is called within Win2k/XP context, so no EmuSwapFS here
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): NtUserIoApcDispatcher\n"
+               "(\n"
+               "   ApcContext           : 0x%.08X\n"
+               "   IoStatusBlock        : 0x%.08X\n"
+               "   Reserved             : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), ApcContext, IoStatusBlock, Reserved);
+    }
+    #endif
+
+    EmuSwapFS();   // Xbox FS
+
+    __asm
+    {
+        mov esi, IoStatusBlock
+        mov ecx, [esi]
+        mov eax, 0x0C0000000
+
+        push esi
+        push ecx
+        push eax
+        call ApcContext
+    }
+
+    return;
+}
+
+// ******************************************************************
 // * 0x00EA - NtWaitForSingleObjectEx
 // ******************************************************************
 XBSYSAPI EXPORTNUM(234) NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObjectEx

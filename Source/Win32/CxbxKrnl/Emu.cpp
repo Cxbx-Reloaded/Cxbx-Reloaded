@@ -309,9 +309,11 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
             CreateDirectory(szBuffer, NULL);
 
+            /* is it necessary to make this directory title unique?
             sprintf(&szBuffer[spot+6], "\\%08x", pCertificate->dwTitleId);
 
             CreateDirectory(szBuffer, NULL);
+            */
 
             g_hZDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 

@@ -297,7 +297,7 @@ extern "C" CXBXKRNL_API uint32 KernelThunkTable[367] =
     (uint32)PANIC(0x00E5),                          // 0x00E5 (229)
     (uint32)PANIC(0x00E6),                          // 0x00E6 (230)
     (uint32)PANIC(0x00E7),                          // 0x00E7 (231)
-    (uint32)PANIC(0x00E8),                          // 0x00E8 (232)
+    (uint32)&xboxkrnl::NtUserIoApcDispatcher,       // 0x00E8 (232)
     (uint32)PANIC(0x00E9),                          // 0x00E9 (233)
     (uint32)&xboxkrnl::NtWaitForSingleObjectEx,     // 0x00EA (234)
     (uint32)PANIC(0x00EB),                          // 0x00EB (235)
