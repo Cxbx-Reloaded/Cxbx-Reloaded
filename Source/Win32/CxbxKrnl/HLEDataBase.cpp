@@ -56,9 +56,11 @@ namespace xd3d8
 };
 
 #include "Xapi.1.0.3911.inl"
+#include "Xapi.1.0.4034.inl"
 #include "Xapi.1.0.4361.inl"
 #include "Xapi.1.0.4627.inl"
 #include "D3D8.1.0.3925.inl"
+#include "D3D8.1.0.4034.inl"
 #include "D3D8.1.0.4361.inl"
 #include "D3D8.1.0.4627.inl"
 
@@ -81,6 +83,13 @@ HLEData HLEDataBase[] =
         XAPI_1_0_4361,
         XAPI_1_0_4361_SIZE
     },
+    // Xapilib Version 1.0.4034
+    {
+        "XAPILIB",
+        1, 0, 4034,
+        XAPI_1_0_4034,
+        XAPI_1_0_4034_SIZE
+    },
     // Xapilib Version 1.0.4627
     {
         "XAPILIB",
@@ -94,6 +103,13 @@ HLEData HLEDataBase[] =
         1, 0, 3925,
         D3D8_1_0_3925,
         D3D8_1_0_3925_SIZE
+    },
+    // D3D8 Version 1.0.4034
+    {
+        "D3D8",
+        1, 0, 4034,
+        D3D8_1_0_4034,
+        D3D8_1_0_4034_SIZE
     },
     // D3D8 Version 1.0.4361
     {

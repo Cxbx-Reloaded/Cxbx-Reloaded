@@ -149,6 +149,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\D3D8.1.0.3925.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\D3D8.1.0.4034.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\D3D8.1.0.4361.h
 # End Source File
 # Begin Source File
@@ -209,6 +213,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.3911.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.4034.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.4361.h
 # End Source File
 # Begin Source File
@@ -242,6 +250,10 @@ SOURCE=.\Resource\CxbxDll.rc
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\D3D8.1.0.3925.inl
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\D3D8.1.0.4034.inl
 # End Source File
 # Begin Source File
 
@@ -302,6 +314,10 @@ SOURCE=.\Source\Win32\Mutex.cpp
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\Xapi.1.0.3911.inl
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\Xapi.1.0.4034.inl
 # End Source File
 # Begin Source File
 

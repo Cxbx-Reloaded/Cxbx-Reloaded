@@ -120,7 +120,7 @@ SOOVPA<11> IDirect3DDevice8_Swap_1_0_4361 =
 // ******************************************************************
 OOVPATable D3D8_1_0_4361[] =
 {
-    // IDirect3D8_CreateDevice_1_0_4361
+    // IDirect3D8::CreateDevice
     {
         (OOVPA*)&IDirect3D8_CreateDevice_1_0_4361,
 
@@ -130,7 +130,7 @@ OOVPATable D3D8_1_0_4361[] =
         "EmuIDirect3D8_CreateDevice" 
         #endif
     },
-    // IDirect3DDevice8_Clear_1_0_4361
+    // IDirect3DDevice8::Clear
     {
         (OOVPA*)&IDirect3DDevice8_Clear_1_0_4361,
 
@@ -140,7 +140,7 @@ OOVPATable D3D8_1_0_4361[] =
         "EmuIDirect3DDevice8_Clear" 
         #endif
     },
-    // IDirect3DDevice8_Swap_1_0_4361
+    // IDirect3DDevice8::Swap
     {
         (OOVPA*)&IDirect3DDevice8_Swap_1_0_4361,
 
