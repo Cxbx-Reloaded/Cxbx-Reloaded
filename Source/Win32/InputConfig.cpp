@@ -33,6 +33,7 @@
 // ******************************************************************
 #include "InputConfig.h"
 
+#undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 #include <string.h>
 

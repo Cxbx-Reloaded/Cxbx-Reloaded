@@ -34,6 +34,7 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_LOCAL_
 
+#undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
 // ******************************************************************

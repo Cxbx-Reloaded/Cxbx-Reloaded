@@ -34,6 +34,8 @@
 #ifndef MUTEX_H
 #define MUTEX_H
 
+#include <windows.h>
+
 // ******************************************************************
 // * Mutex object (intended to be inherited from)
 // ******************************************************************
@@ -64,10 +66,10 @@ class Mutex
         // ******************************************************************
         // * Critical section
         // ******************************************************************
-        volatile long m_MutexLock;      // Mutex lock
-        volatile long m_OwnerProcess;   // Current owner process (or zero)
-        volatile long m_OwnerThread;    // Current owner thread
-        volatile long m_LockCount;      // Lock count within this thread
+        LONG m_MutexLock;      // Mutex lock
+        LONG m_OwnerProcess;   // Current owner process (or zero)
+        LONG m_OwnerThread;    // Current owner thread
+        LONG m_LockCount;      // Lock count within this thread
 };
 
 #endif

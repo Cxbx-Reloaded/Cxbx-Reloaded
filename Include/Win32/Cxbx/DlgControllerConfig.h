@@ -34,6 +34,7 @@
 #ifndef DLGCONTROLLERCONFIG_H
 #define DLGCONTROLLERCONFIG_H
 
+#undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
 // ******************************************************************

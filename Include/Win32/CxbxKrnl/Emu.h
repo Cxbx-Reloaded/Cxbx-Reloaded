@@ -84,6 +84,7 @@ extern xboxkrnl::XINPUT_STATE   g_EmuController1;
 #include "EmuFS.h"
 */
 
+#undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
 // ******************************************************************

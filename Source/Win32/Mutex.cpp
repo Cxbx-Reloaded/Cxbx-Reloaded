@@ -33,8 +33,6 @@
 // ******************************************************************
 #include "Mutex.h"
 
-#include <windows.h>
-
 // ******************************************************************
 // * Constructor
 // ******************************************************************
@@ -54,7 +52,7 @@ void Mutex::Lock()
     while(true)
     {
 		// Grab the lock, letting us look at the variables
-		while(InterlockedCompareExchange(&m_MutexLock, 1, 0))
+		while(InterlockedCompareExchange((void**)&m_MutexLock, (void*)1, 0))
 			Sleep(1);
 
 		// Are we the the new owner?
@@ -100,7 +98,7 @@ void Mutex::Lock()
 void Mutex::Unlock()
 {
 	// Grab the lock, letting us look at the variables
-	while (InterlockedCompareExchange(&m_MutexLock, 1, 0))
+	while (InterlockedCompareExchange((void**)&m_MutexLock, (void*)1, 0))
 		Sleep(1);
 
 	// Decrement the lock count
