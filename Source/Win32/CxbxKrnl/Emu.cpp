@@ -269,7 +269,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup()
     if(EmuIsXboxFS())
         EmuSwapFS();    // Win2k/XP FS
 
-    EmuD3DCleanup();
+//    EmuD3DCleanup();
 
     ExitProcess(0);
 
