@@ -1902,6 +1902,13 @@ void WndMain::StartEmulation(EnumAutoConvert x_AutoConvert, HWND hwndParent)
 // stop emulation
 void WndMain::StopEmulation()
 {
+    if(!IsWindow(m_hwndChild))
+    {
+        m_hwndChild = NULL;
+        SetWindowText(m_hwnd, "Cxbx " _CXBX_VERSION);
+        RefreshMenus();
+    }
+
     SendMessage(m_hwndChild, WM_CLOSE, 0, 0);
     m_bCanStart = true;
 }
