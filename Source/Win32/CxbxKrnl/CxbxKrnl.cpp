@@ -37,6 +37,8 @@
 #define _XBOXKRNL_LOCAL_
 #include "CxbxKrnl.h"
 
+#include "LDT.h"
+
 #include <stdio.h>
 
 // ******************************************************************
@@ -57,6 +59,44 @@ namespace win32
 };
 
 using namespace win32;
+
+// ******************************************************************
+// * func: EmuXGenerateFS
+// ******************************************************************
+void EmuXGenerateFS()
+{
+    NT_TIB *OrgFS = 0;
+
+    uint32 dwFSSize = sizeof(NT_TIB);
+
+    // ******************************************************************
+    // * Retrieve the "old" FS
+    // ******************************************************************
+    __asm
+    {
+        mov esi,    fs:[18h]
+        mov OrgFS,  esi
+    }
+
+    // ******************************************************************
+    // * Allocate and update the new FS
+    // ******************************************************************
+    {
+        uint32 AllocFS = (uint32)new char[dwFSSize];
+
+        memcpy((void*)AllocFS, OrgFS, dwFSSize);
+
+        uint16 SelectorFS = LDTAllocate(AllocFS, AllocFS+dwFSSize);
+
+        __asm
+        {
+            mov ax, SelectorFS
+
+            push    ax
+            pop     fs
+        }
+    }
+}
 
 // ******************************************************************
 // * func: EmuXInit
@@ -107,19 +147,34 @@ CXBXKRNL_API void NTAPI EmuXInit(uint32 DebugConsole, uint08 *XBEHeader, uint32 
     }
 
     // ******************************************************************
+    // * Initialize LDT system
+    // ******************************************************************
+    {
+        LDTSystemInit();
+    }
+
+    // ******************************************************************
     // * Initialize FS:* structure
     // ******************************************************************
     {
-        NT_TIB *OriginalTIB = 0;
+        // Calling this function will overwrite the Win2k/XP FS: structure,
+        // which will cause an immediate or eventual crash. In order to avoid
+        // this, it is going to be necessary to store the Win2k/XP FS: in a
+        // special un-used slot in the XBox FS:* structure, and bring it back
+        // in whenever we need to use Win2k/XP functions
+
+        // EmuXGenerateFS();
+
+        NT_TIB *dbgTIB = 0;
 
         __asm
         {
             mov esi, fs:[18h]
-            mov OriginalTIB, esi
+            mov dbgTIB, esi
         }
 
         // TODO: Allocate new FS: within LDT, copy OriginalTIB to KPCR.NtTib, load new FS
-        printf("CxbxKrnl [0x%.08X]: NT_TIB.Self=0x%.08X\n", GetCurrentThreadId(), OriginalTIB->Self);
+        printf("CxbxKrnl [0x%.08X]: NT_TIB.Self=0x%.08X\n", GetCurrentThreadId(), dbgTIB->Self);
     }
 
     printf("CxbxKrnl [0x%.08X]: Initial thread starting.\n", GetCurrentThreadId());

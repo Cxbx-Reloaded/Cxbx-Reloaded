@@ -39,10 +39,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="odbc32.lib odbccp32.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib ntdll.lib"
 				OutputFile="Bin\Debug/Cxbx.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="Lib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Bin\Debug/Cxbx.pdb"
 				ImportLibrary=".\Bin\Debug/Cxbx.lib"/>
@@ -97,10 +98,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="odbc32.lib odbccp32.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib ntdll.lib"
 				OutputFile="Bin/Cxbx.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="Lib"
 				ProgramDatabaseFile=".\Bin/Cxbx.pdb"
 				ImportLibrary=".\Bin/Cxbx.lib"/>
 			<Tool
@@ -134,6 +136,9 @@
 				RelativePath=".\Include\Win32\CxbxKrnl\CxbxKrnl.h">
 			</File>
 			<File
+				RelativePath="Include\Win32\CxbxKrnl\LDT.h">
+			</File>
+			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\xntdll.h">
 			</File>
 		</Filter>
@@ -145,6 +150,9 @@
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\KernelThunk.cpp">
+			</File>
+			<File
+				RelativePath="Source\Win32\CxbxKrnl\LDT.cpp">
 			</File>
 		</Filter>
 		<Filter

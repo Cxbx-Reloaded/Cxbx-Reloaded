@@ -92,6 +92,25 @@ typedef HANDLE             *PHANDLE;
 typedef long                            NTSTATUS;
 typedef unsigned __int64                ULONGLONG;
 
+#define NT_SUCCESS(Status)              ((NTSTATUS) (Status) >= 0)
+
+// ******************************************************************
+// * calling conventions
+// ******************************************************************
+#define NTAPI               __stdcall
+#define CDECL               __cdecl
+#define INLINE              __inline
+#define DECLSPEC_NORETURN   __declspec(noreturn)
+
+// ******************************************************************
+// * documentation purposes only
+// ******************************************************************
+#define EXPORTNUM(a)
+#define UNALIGNED
+#define OPTIONAL
+#define IN
+#define OUT
+
 // ******************************************************************
 // * LDT_ENTRY
 // ******************************************************************
