@@ -364,6 +364,37 @@ VOID WINAPI EmuIDirect3DDevice8_GetDeviceCaps
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_BeginVisibilityTest
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_BeginVisibilityTest();
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_EndVisibilityTest
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_EndVisibilityTest
+(
+    DWORD                       Index
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_LoadVertexShader
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_LoadVertexShader
+(
+    DWORD                       Handle,
+    DWORD                       Address
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SelectVertexShader
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SelectVertexShader
+(
+    DWORD                       Handle,
+    DWORD                       Address
+);
+
+// ******************************************************************
 // * func: EmuIDirect3D8_GetAdapterModeCount
 // ******************************************************************
 UINT WINAPI EmuIDirect3D8_GetAdapterModeCount
@@ -1046,6 +1077,14 @@ VOID WINAPI EmuIDirect3DDevice8_SetRenderState_VertexBlend
 // * func: EmuIDirect3DDevice8_SetRenderState_PSTextureModes
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_SetRenderState_PSTextureModes
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_StencilFail
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_StencilFail
 (
     DWORD Value
 );

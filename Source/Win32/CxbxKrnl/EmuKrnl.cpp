@@ -2149,6 +2149,10 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
 
         *ThreadHandle = CreateThread(NULL, NULL, &PCSTProxy, iPCSTProxyParam, CreateSuspended ? CREATE_SUSPENDED : NULL, &dwThreadId);
 
+        #ifdef _DEBUG_TRACE
+        printf("EmuKrnl (0x%X): ThreadHandle : 0x%X\n", GetCurrentThreadId(), *ThreadHandle);
+        #endif
+
         if(ThreadId != NULL)
             *ThreadId = dwThreadId;
     }

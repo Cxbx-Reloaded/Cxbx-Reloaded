@@ -718,7 +718,8 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 // check if a resource has been registered yet (if not, register it)
 static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
 {
-    if(pResource->Lock != 0)
+    // 0xEEEEEEEE and 0xFFFFFFFF are somehow set in Halo :(
+    if(pResource->Lock != 0 && pResource->Lock != 0xEEEEEEEE && pResource->Lock != 0xFFFFFFFF)
         return;
 
     int v=0;
@@ -841,6 +842,51 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_BeginVisibilityTest
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_BeginVisibilityTest()
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_BeginVisibilityTest();\n", GetCurrentThreadId());
+    }
+    #endif
+
+    EmuSwapFS();   // XBox FS
+
+    return D3D_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_EndVisibilityTest
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_EndVisibilityTest
+(
+    DWORD                       Index
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_EndVisibilityTest\n"
+               "(\n"
+               "   Index                     : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Index);
+    }
+    #endif
+
+    EmuSwapFS();   // XBox FS
+
+    return D3D_OK;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_GetDeviceCaps
 // ******************************************************************
 VOID WINAPI XTL::EmuIDirect3DDevice8_GetDeviceCaps
@@ -866,6 +912,66 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_GetDeviceCaps
     EmuSwapFS();   // XBox FS
 
     return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_LoadVertexShader
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_LoadVertexShader
+(
+    DWORD                       Handle,
+    DWORD                       Address
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_LoadVertexShader\n"
+               "(\n"
+               "   Handle                    : 0x%.08X\n"
+               "   Address                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Handle, Address);
+    }
+    #endif
+
+    // TODO: load vertex shader...
+
+    EmuSwapFS();   // XBox FS
+
+    return D3D_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SelectVertexShader
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SelectVertexShader
+(
+    DWORD                       Handle,
+    DWORD                       Address
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SelectVertexShader\n"
+               "(\n"
+               "   Handle                    : 0x%.08X\n"
+               "   Address                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Handle, Address);
+    }
+    #endif
+
+    // TODO: load vertex shader...
+
+    EmuSwapFS();   // XBox FS
+
+    return D3D_OK;
 }
 
 // ******************************************************************
@@ -2133,6 +2239,10 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateIndexBuffer
         Length, NULL, D3DFMT_INDEX16, D3DPOOL_MANAGED, &((*ppIndexBuffer)->EmuIndexBuffer8)
     );
 
+    #ifdef _DEBUG_TRACE
+    printf("EmuD3D8 (0x%X): EmuIndexBuffer8 := 0x%.08X\n", GetCurrentThreadId(), (*ppIndexBuffer)->EmuIndexBuffer8);
+    #endif
+
     if(FAILED(hRet))
         EmuWarning("CreateIndexBuffer Failed! (0x%.08X)", hRet);
 
@@ -2163,6 +2273,15 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetIndices
                GetCurrentThreadId(), pIndexData, BaseVertexIndex);
     }
     #endif
+
+    // HACK: Halo Hack
+    if(pIndexData != 0 && pIndexData->Lock == 0x00840863)
+        pIndexData->Lock = 0;
+    /*
+    fflush(stdout);
+    if(pIndexData != 0)
+        _asm int 3
+    //*/
 
     IDirect3DIndexBuffer8 *pIndexBuffer = 0;
 
@@ -2701,7 +2820,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 {
                     // TODO: once this is known to be working, remove the warning
                     EmuWarning("Vertex buffer allocation size unknown");
-                    dwSize = 0x20;  // temporarily assign a small buffer, which will be increased later
+                    dwSize = 0x200;  // temporarily assign a small buffer, which will be increased later
                 }
 
                 hRet = g_pD3DDevice8->CreateVertexBuffer
@@ -2725,7 +2844,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
             }
 
             #ifdef _DEBUG_TRACE
-            printf("EmuIDirect3DResource8_Register (0x%X) : Successfully Created VertexBuffer\n", GetCurrentThreadId());
+            printf("EmuIDirect3DResource8_Register (0x%X) : Successfully Created VertexBuffer (0x%.08X)\n", GetCurrentThreadId(), pResource->EmuVertexBuffer8);
             #endif
         }
         break;
@@ -2743,7 +2862,11 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 DWORD dwSize = EmuCheckAllocationSize(pBase, true);
 
                 if(dwSize == -1)
-                    EmuCleanup("Detected dangerous allocation techniques. This will be fixed soon!");
+                {
+                    // TODO: once this is known to be working, remove the warning
+                    EmuWarning("Vertex buffer allocation size unknown");
+                    dwSize = 0x200;  // temporarily assign a small buffer, which will be increased later
+                }
 
                 HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer
                 (
@@ -2767,6 +2890,10 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
                 pResource->Data = (ULONG)pData;
             }
+
+            #ifdef _DEBUG_TRACE
+            printf("EmuIDirect3DResource8_Register (0x%X) : Successfully Created IndexBuffer (0x%.08X)\n", GetCurrentThreadId(), pResource->EmuIndexBuffer8);
+            #endif
         }
         break;
 
@@ -4469,6 +4596,34 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_PSTextureModes
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_PSTextureModes\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+    // TODO: do something..
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_StencilFail
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_StencilFail
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_StencilFail\n"
                "(\n"
                "   Value               : 0x%.08X\n"
                ");\n",
