@@ -77,12 +77,12 @@ BEGIN
         MENUITEM "&Open Xbe...",                ID_FILE_OPEN_XBE
         MENUITEM "&Close xbe",                  ID_FILE_CLOSE_XBE, GRAYED
         MENUITEM SEPARATOR
+        MENUITEM "&Import Exe...",              ID_FILE_IMPORTFROMEXE
+        MENUITEM "&Export Exe...",              ID_FILE_EXPORTTOEXE, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "&Save Xbe",                   ID_FILE_SAVEXBEFILE, GRAYED
         MENUITEM "Save Xbe &As...",             ID_FILE_SAVEXBEFILEAS
         , GRAYED
-        MENUITEM SEPARATOR
-        MENUITEM "&Import Exe...",              ID_FILE_IMPORTFROMEXE
-        MENUITEM "&Export Exe...",              ID_FILE_EXPORTTOEXE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_FILE_EXIT
     END

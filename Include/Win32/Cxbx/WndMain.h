@@ -48,22 +48,27 @@ class WndMain : public Wnd
 
         LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-    private:
+        void SaveXbe(const char *x_filename);
+        void SaveXbeAs();
 
-        void SuggestFilename(const char *x_orig_filename, char *x_filename, char x_extension[4]);
+        void OpenXbe(const char *x_filename);
+        void CloseXbe();
+
+        bool ConvertToExe(const char *x_filename, bool x_bVerifyIfExists);
+
+        void StartEmulation(bool x_bAutoConvert);
+
+        bool isCreated() { return m_bCreated; }
+
+        static void SuggestFilename(const char *x_orig_filename, char *x_filename, char x_extension[4]);
+
+    private:
 
         void XbeLoaded();           // after an xbe is loaded, some stuff needs to update
 
         void LoadLogo();            // refresh the logo in the main window
 
         void UpdateDebugConsoles(); // Allocate / Deallocate debug consoles as per configuration
-
-        bool ConvertToExe();
-
-        void SaveXbe(const char *x_filename);
-        void SaveXbeAs();
-
-        void CloseXbe();
 
         HDC         m_back_dc;
         HDC         m_logo_dc;
@@ -82,6 +87,8 @@ class WndMain : public Wnd
 
         bool        m_xbe_changed;
         bool        m_exe_changed;
+
+        bool        m_bCreated;
 
         enum DebugMode m_CxbxDebug;
         enum DebugMode m_KrnlDebug;

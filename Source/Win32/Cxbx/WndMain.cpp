@@ -42,7 +42,7 @@
 // ******************************************************************
 // * constructor
 // ******************************************************************
-WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_xbe(0), m_exe(0), m_exe_changed(false), m_xbe_changed(false), m_KrnlDebug(DM_NONE), m_CxbxDebug(DM_NONE)
+WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m_xbe(0), m_exe(0), m_exe_changed(false), m_xbe_changed(false), m_KrnlDebug(DM_NONE), m_CxbxDebug(DM_NONE)
 {
     m_classname = "WndMain";
     m_wndname   = "Cxbx : Xbox Emulator";
@@ -188,6 +188,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 if(hDC != NULL)
                     ReleaseDC(hwnd, hDC);
             }
+
+            m_bCreated = true;
         }
         break;
 
@@ -263,8 +265,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 case ID_FILE_OPEN_XBE:
                 {
-                    m_ExeFilename[0] = '\0';
-
                     OPENFILENAME ofn = {0};
 
                     char filename[260] = {0};
@@ -281,23 +281,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     ofn.Flags           = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
                     if(GetOpenFileName(&ofn) == TRUE)
-                    {
-                        strcpy(m_XbeFilename, ofn.lpstrFile);
-
-                        m_xbe = new Xbe(ofn.lpstrFile);
-
-                        if(m_xbe->GetError() != 0)
-                        {
-                            MessageBox(m_hwnd, m_xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
-
-                            delete m_xbe; m_xbe = 0;
-
-                            break;
-                        }
-
-                        XbeLoaded();
-                    }
-
+                        OpenXbe(ofn.lpstrFile);
                 }
                 break;
 
@@ -375,7 +359,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 break;
 
                 case ID_FILE_EXPORTTOEXE:
-                    ConvertToExe();
+                    ConvertToExe(NULL, true);
                     break;
 
                 case ID_FILE_EXIT:
@@ -841,39 +825,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 case ID_EMULATION_START:
                 {
-                    if(m_ExeFilename[0] == '\0' || m_exe_changed)
-                        if(!ConvertToExe())
-                            break;
-
-                    // shell .exe
-                    {
-                        char dir[260];
-
-                        GetModuleFileName(NULL, dir, 260);
-
-                        sint32 spot=-1;
-                        for(int v=0;v<260;v++)
-                        {
-                            if(dir[v] == '\\')
-                                spot = v;
-                            else if(dir[v] == '\0')
-                                break;
-                        }
-
-                        if(spot != -1)
-                            dir[spot] = '\0';
-
-                        if((int)ShellExecute(NULL, "open", m_ExeFilename, NULL, dir, SW_SHOWDEFAULT) <= 32)
-                        {
-                            MessageBox(m_hwnd, "Shell failed. (try converting .exe again)", "Cxbx", MB_ICONSTOP | MB_OK);
-
-                            printf("WndMain: %s shell failed.\n", m_xbe->m_szAsciiTitle);
-                        }
-                        else
-                        {
-                            printf("WndMain: %s emulation started.\n", m_xbe->m_szAsciiTitle);
-                        }
-                    }
+                    StartEmulation(false);
                 }
                 break;
 
@@ -968,7 +920,8 @@ void WndMain::SuggestFilename(const char *x_orig_filename, char *x_filename, cha
 
     if(found != 0)
     {
-        strcpy(x_filename, x_orig_filename + found + 1);
+//        strcpy(x_filename, x_orig_filename + found + 1);
+        strcpy(x_filename, x_orig_filename);
 
         uint32 loc = 0;
         uint32 c = 0;
@@ -1169,47 +1122,57 @@ void WndMain::UpdateDebugConsoles()
 // ******************************************************************
 // * ConvertToExe
 // ******************************************************************
-bool WndMain::ConvertToExe()
+bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists)
 {
-    OPENFILENAME ofn = {0};
-
 	char filename[260] = "default.exe";
 
-    SuggestFilename(m_XbeFilename, filename, ".exe");
+    if(x_filename == NULL)
+    {
+        OPENFILENAME ofn = {0};
 
-	ofn.lStructSize     = sizeof(OPENFILENAME);
-	ofn.hwndOwner       = m_hwnd;
-	ofn.lpstrFilter     = "Windows Executables (*.exe)\0*.exe\0";
-	ofn.lpstrFile       = filename;
-	ofn.nMaxFile        = 260;
-	ofn.nFilterIndex    = 1;
-	ofn.lpstrFileTitle  = NULL;
-	ofn.nMaxFileTitle   = 0;
-	ofn.lpstrInitialDir = NULL;
-    ofn.lpstrDefExt     = "exe";
-	ofn.Flags           = OFN_PATHMUSTEXIST;
+        SuggestFilename(m_XbeFilename, filename, ".exe");
 
-	if(GetSaveFileName(&ofn) == FALSE)
-        return false;
+        ofn.lStructSize     = sizeof(OPENFILENAME);
+	    ofn.hwndOwner       = m_hwnd;
+	    ofn.lpstrFilter     = "Windows Executables (*.exe)\0*.exe\0";
+	    ofn.lpstrFile       = filename;
+	    ofn.nMaxFile        = 260;
+	    ofn.nFilterIndex    = 1;
+	    ofn.lpstrFileTitle  = NULL;
+	    ofn.nMaxFileTitle   = 0;
+	    ofn.lpstrInitialDir = NULL;
+        ofn.lpstrDefExt     = "exe";
+	    ofn.Flags           = OFN_PATHMUSTEXIST;
+
+	    if(GetSaveFileName(&ofn) == FALSE)
+            return false;
+
+        strcpy(filename, ofn.lpstrFile);
+    }
+    else
+    {
+        strcpy(filename, x_filename);
+    }
 
 	// check if file exists
+    if(x_bVerifyIfExists)
 	{
-		FILE *tmp = fopen(ofn.lpstrFile, "r");
+		FILE *chkExists = fopen(filename, "r");
 
-		if(tmp != 0)
+		if(chkExists != 0)
 		{
-			fclose(tmp);
+			fclose(chkExists);
 
             if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx", MB_ICONQUESTION | MB_YESNO) != IDYES)
 				return false;
 		}
 	}
 
-	// convert file
+    // convert file
 	{
 		EmuExe i_EmuExe(m_xbe, m_KrnlDebug, m_KrnlDebugFilename);
 
-		i_EmuExe.Export(ofn.lpstrFile);
+		i_EmuExe.Export(filename);
 
 		if(i_EmuExe.GetError() != 0)
         {
@@ -1218,15 +1181,9 @@ bool WndMain::ConvertToExe()
         }
         else
         {
-            strcpy(m_ExeFilename, ofn.lpstrFile);
-
-            char buffer[255];
-
-            sprintf(buffer, "%s was successfully converted to .exe.", m_xbe->m_szAsciiTitle);
+            strcpy(m_ExeFilename, filename);
 
             printf("WndMain: %s was converted to .exe.\n", m_xbe->m_szAsciiTitle);
-
-            MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
 
             m_exe_changed = false;
         }
@@ -1300,6 +1257,32 @@ void WndMain::SaveXbe(const char *x_filename)
             m_xbe_changed = false;
 		}
 	}
+}
+
+// ******************************************************************
+// * OpenXbe
+// ******************************************************************
+void WndMain::OpenXbe(const char *x_filename)
+{
+    if(m_xbe != 0)
+        return;
+
+    m_ExeFilename[0] = '\0';
+
+    strcpy(m_XbeFilename, x_filename);
+
+    m_xbe = new Xbe(m_XbeFilename);
+
+    if(m_xbe->GetError() != 0)
+    {
+        MessageBox(m_hwnd, m_xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
+
+        delete m_xbe; m_xbe = 0;
+
+        return;
+    }
+
+    XbeLoaded();
 }
 
 // ******************************************************************
@@ -1392,4 +1375,58 @@ void WndMain::CloseXbe()
     }
 
     RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
+}
+
+// ******************************************************************
+// * StartEmulation
+// ******************************************************************
+void WndMain::StartEmulation(bool x_bAutoConvert)
+{
+    if(m_ExeFilename[0] == '\0' || m_exe_changed)
+    {
+        if(x_bAutoConvert)
+        {
+            char filename[260];
+
+            SuggestFilename(m_XbeFilename, filename, ".exe");
+
+            ConvertToExe(filename, false);
+        }
+        else
+        {
+            if(!ConvertToExe(NULL, true))
+                return;
+        }
+    }
+
+    // shell .exe
+    {
+        char dir[260];
+
+        GetModuleFileName(NULL, dir, 260);
+
+        sint32 spot=-1;
+        for(int v=0;v<260;v++)
+        {
+            if(dir[v] == '\\')
+                spot = v;
+            else if(dir[v] == '\0')
+                break;
+        }
+
+        if(spot != -1)
+            dir[spot] = '\0';
+
+        if((int)ShellExecute(NULL, "open", m_ExeFilename, NULL, dir, SW_SHOWDEFAULT) <= 32)
+        {
+            MessageBox(m_hwnd, "Shell failed. (try converting .exe again)", "Cxbx", MB_ICONSTOP | MB_OK);
+
+            printf("WndMain: %s shell failed.\n", m_xbe->m_szAsciiTitle);
+        }
+        else
+        {
+            printf("WndMain: %s emulation started.\n", m_xbe->m_szAsciiTitle);
+        }
+    }
+
 }

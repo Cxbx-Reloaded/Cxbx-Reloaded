@@ -45,6 +45,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 {
     WndMain *caustik = new WndMain(hInstance);
 
+    if(__argc > 1)
+    {
+        while(!caustik->isCreated() && caustik->ProcessMessages())
+            Sleep(10);
+
+        if(caustik->GetError() == 0)
+        {
+            caustik->OpenXbe(__argv[1]);
+
+            caustik->StartEmulation(true);
+        }
+    }
+
     while(caustik->GetError() == 0 && caustik->ProcessMessages())
         Sleep(10);
 
