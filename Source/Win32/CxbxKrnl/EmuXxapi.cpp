@@ -258,6 +258,8 @@ DWORD WINAPI xboxkrnl::EmuXXInputGetState
     //       and they are always normal controllers
     if((int)hDevice >= 1 && (int)hDevice <= 4)
     {
+        EmuXPollController();
+
         if((int)hDevice == 1)
             memcpy(pState, &g_EmuXController1, sizeof(XINPUT_STATE));
 

@@ -183,10 +183,7 @@ void EmuXRenderWindow(PVOID)
                 DispatchMessage(&msg);
             }
             else
-            {
-                xboxkrnl::EmuXPollController();
                 Sleep(10);
-            }
         }
 
         ExitProcess(0);
@@ -286,7 +283,7 @@ HRESULT WINAPI xboxkrnl::EmuXIDirect3D8_CreateDevice
     {
         Adapter = D3DADAPTER_DEFAULT;
 
-//        pPresentationParameters->Windowed = TRUE;
+        pPresentationParameters->Windowed = TRUE;
 
         // TODO: More intelligently set this only when the game wants it
         pPresentationParameters->SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;

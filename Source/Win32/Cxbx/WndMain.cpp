@@ -230,9 +230,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 HGDIOBJ tmpObj = SelectObject(hDC, hFont);
 
-                SetBkColor(hDC, GetSysColor(COLOR_HIGHLIGHT));
+                SetBkColor(hDC, GetSysColor(COLOR_BTNFACE));
 
-				SetTextColor(hDC, GetSysColor(COLOR_HIGHLIGHTTEXT));
+				SetTextColor(hDC, GetSysColor(COLOR_BTNTEXT));
 
                 char buffer[255];
 
