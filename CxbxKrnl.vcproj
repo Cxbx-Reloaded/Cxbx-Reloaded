@@ -21,7 +21,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="Include,Include/Win32/,Include/Win32/Cxbxkrnl"
+				AdditionalIncludeDirectories="Include,Include/Win32/,Include/Win32/Cxbx,Include/Win32/Cxbxkrnl,Resource"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;CXBXKRNL_EXPORTS"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -30,6 +30,7 @@
 				AssemblerListingLocation=".\Bin\Debug/"
 				ObjectFile=".\Bin\Debug/"
 				ProgramDataBaseFileName=".\Bin\Debug/"
+				BrowseInformation="1"
 				WarningLevel="3"
 				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="4"
@@ -39,7 +40,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="odbc32.lib odbccp32.lib ntdll.lib"
+				AdditionalDependencies="d3d8.lib ntdll.lib odbc32.lib odbccp32.lib"
 				OutputFile="Bin\Debug/Cxbx.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
@@ -80,7 +81,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="Include,Include/Win32/,Include/Win32/Cxbxkrnl"
+				AdditionalIncludeDirectories="Include,Include/Win32/,Include/Win32/Cxbxkrnl,Resource"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;CXBXKRNL_EXPORTS"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
@@ -98,7 +99,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="odbc32.lib odbccp32.lib ntdll.lib"
+				AdditionalDependencies="d3d8.lib ntdll.lib odbc32.lib odbccp32.lib"
 				OutputFile="Bin/Cxbx.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
@@ -132,47 +133,74 @@
 		<Filter
 			Name="Bin"
 			Filter="">
+			<File
+				RelativePath=".\Bin\Cxbx.dll">
+			</File>
 			<Filter
 				Name="Debug"
 				Filter="">
+				<File
+					RelativePath=".\Bin\Debug\Cxbx.dll">
+				</File>
 			</Filter>
 		</Filter>
 		<Filter
 			Name="Doc"
 			Filter="">
 			<File
-				RelativePath="Doc\Changelog.txt">
+				RelativePath=".\Doc\Changelog.txt">
 			</File>
 			<File
-				RelativePath="Doc\RemovedCode.txt">
+				RelativePath=".\Doc\RemovedCode.txt">
 			</File>
 			<File
-				RelativePath="Doc\Thanks.txt">
+				RelativePath=".\Doc\Thanks.txt">
 			</File>
 			<File
-				RelativePath="Doc\Todo.txt">
+				RelativePath=".\Doc\Todo.txt">
 			</File>
 		</Filter>
 		<Filter
 			Name="Include"
 			Filter="">
 			<File
-				RelativePath="Include\Win32\CxbxKrnl\EmuX.h">
+				RelativePath=".\Include\Win32\CxbxKrnl\D3D8.1.0.4361.h">
 			</File>
 			<File
-				RelativePath="Include\Win32\CxbxKrnl\EmuXFS.h">
+				RelativePath=".\Include\Win32\CxbxKrnl\D3D8.1.0.4627.h">
 			</File>
 			<File
-				RelativePath="Include\Win32\CxbxKrnl\EmuXKrnl.h">
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuX.h">
 			</File>
 			<File
-				RelativePath="Include\Win32\CxbxKrnl\EmuXLDT.h">
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuXD3D.h">
 			</File>
 			<File
-				RelativePath="Include\Win32\CxbxKrnl\EmuXxapi.h">
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuXFS.h">
 			</File>
 			<File
-				RelativePath="Include\Win32\CxbxKrnl\OOVPA.h">
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuXKrnl.h">
+			</File>
+			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuXLDT.h">
+			</File>
+			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuXxapi.h">
+			</File>
+			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\HLEDataBase.h">
+			</File>
+			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\OOVPA.h">
+			</File>
+			<File
+				RelativePath=".\Resource\ResCxbxKrnl.h">
+			</File>
+			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\Xapi.1.0.4361.h">
+			</File>
+			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\Xapi.1.0.4627.h">
 			</File>
 			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\xntdll.h">
@@ -181,30 +209,63 @@
 		<Filter
 			Name="Resource"
 			Filter="">
+			<File
+				RelativePath=".\Resource\Cxbx.ico">
+			</File>
+			<File
+				RelativePath=".\Resource\CxbxDll.rc">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCResourceCompilerTool"
+						AdditionalIncludeDirectories="Resource;$(NoInherit)"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCResourceCompilerTool"
+						AdditionalIncludeDirectories="Resource;$(NoInherit)"/>
+				</FileConfiguration>
+			</File>
 		</Filter>
 		<Filter
 			Name="Source"
 			Filter="">
 			<File
-				RelativePath="Source\Win32\CxbxKrnl\EmuX.cpp">
+				RelativePath=".\Source\Win32\CxbxKrnl\D3D8.1.0.4361.inl">
 			</File>
 			<File
-				RelativePath="Source\Win32\CxbxKrnl\EmuXFS.cpp">
+				RelativePath=".\Source\Win32\CxbxKrnl\D3D8.1.0.4627.inl">
 			</File>
 			<File
-				RelativePath="Source\Win32\CxbxKrnl\EmuXKrnl.cpp">
+				RelativePath=".\Source\Win32\CxbxKrnl\EmuX.cpp">
 			</File>
 			<File
-				RelativePath="Source\Win32\CxbxKrnl\EmuXLDT.cpp">
+				RelativePath=".\Source\Win32\CxbxKrnl\EmuXD3D.cpp">
 			</File>
 			<File
-				RelativePath="Source\Win32\CxbxKrnl\EmuXxapi.cpp">
+				RelativePath=".\Source\Win32\CxbxKrnl\EmuXFS.cpp">
+			</File>
+			<File
+				RelativePath=".\Source\Win32\CxbxKrnl\EmuXKrnl.cpp">
+			</File>
+			<File
+				RelativePath=".\Source\Win32\CxbxKrnl\EmuXLDT.cpp">
+			</File>
+			<File
+				RelativePath=".\Source\Win32\CxbxKrnl\EmuXxapi.cpp">
+			</File>
+			<File
+				RelativePath=".\Source\Win32\CxbxKrnl\HLEDataBase.cpp">
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\KernelThunk.cpp">
 			</File>
 			<File
-				RelativePath="Source\Win32\CxbxKrnl\OOVPA.cpp">
+				RelativePath=".\Source\Win32\CxbxKrnl\Xapi.1.0.4361.inl">
+			</File>
+			<File
+				RelativePath=".\Source\Win32\CxbxKrnl\Xapi.1.0.4627.inl">
 			</File>
 		</Filter>
 	</Files>

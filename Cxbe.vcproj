@@ -138,16 +138,16 @@
 			Name="Doc"
 			Filter="">
 			<File
-				RelativePath="Doc\Changelog.txt">
+				RelativePath=".\Doc\Changelog.txt">
 			</File>
 			<File
-				RelativePath="Doc\RemovedCode.txt">
+				RelativePath=".\Doc\RemovedCode.txt">
 			</File>
 			<File
-				RelativePath="Doc\Thanks.txt">
+				RelativePath=".\Doc\Thanks.txt">
 			</File>
 			<File
-				RelativePath="Doc\Todo.txt">
+				RelativePath=".\Doc\Todo.txt">
 			</File>
 		</Filter>
 		<Filter
@@ -173,10 +173,6 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="Resource"
-			Filter="">
-		</Filter>
-		<Filter
 			Name="Source"
 			Filter="">
 			<File
@@ -189,11 +185,15 @@
 				RelativePath=".\Source\Standard\Cxbe\Main.cpp">
 			</File>
 			<File
-				RelativePath="Source\Core\OpenXDK.cpp">
+				RelativePath=".\Source\Core\OpenXDK.cpp">
 			</File>
 			<File
 				RelativePath=".\Source\Core\Xbe.cpp">
 			</File>
+		</Filter>
+		<Filter
+			Name="Resource"
+			Filter="">
 		</Filter>
 	</Files>
 	<Globals>

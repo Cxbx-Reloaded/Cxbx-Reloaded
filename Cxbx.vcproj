@@ -31,6 +31,7 @@
 				AssemblerListingLocation=".\Bin/"
 				ObjectFile=".\Bin/"
 				ProgramDataBaseFileName=".\Bin/"
+				BrowseInformation="1"
 				WarningLevel="3"
 				SuppressStartupBanner="TRUE"
 				CompileAs="0"/>
@@ -44,7 +45,6 @@
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				ProgramDatabaseFile=".\Bin/Cxbx.pdb"
-				GenerateMapFile="FALSE"
 				SubSystem="2"/>
 			<Tool
 				Name="VCMIDLTool"
@@ -91,6 +91,7 @@ upxCxbx.bat
 				AssemblerListingLocation=".\Bin\Debug/"
 				ObjectFile=".\Bin\Debug/"
 				ProgramDataBaseFileName=".\Bin\Debug/"
+				BrowseInformation="1"
 				WarningLevel="3"
 				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="4"
@@ -104,7 +105,6 @@ upxCxbx.bat
 				OutputFile=".\Bin\Debug/Cxbx.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Bin\Debug/Cxbx.pdb"
 				SubSystem="2"/>
@@ -135,25 +135,31 @@ upxCxbx.bat
 		<Filter
 			Name="Bin"
 			Filter="">
+			<File
+				RelativePath=".\Bin\Cxbx.exe">
+			</File>
 			<Filter
 				Name="Debug"
 				Filter="">
+				<File
+					RelativePath=".\Bin\Debug\Cxbx.exe">
+				</File>
 			</Filter>
 		</Filter>
 		<Filter
 			Name="Doc"
 			Filter="">
 			<File
-				RelativePath="Doc\Changelog.txt">
+				RelativePath=".\Doc\Changelog.txt">
 			</File>
 			<File
-				RelativePath="Doc\RemovedCode.txt">
+				RelativePath=".\Doc\RemovedCode.txt">
 			</File>
 			<File
-				RelativePath="Doc\Thanks.txt">
+				RelativePath=".\Doc\Thanks.txt">
 			</File>
 			<File
-				RelativePath="Doc\Todo.txt">
+				RelativePath=".\Doc\Todo.txt">
 			</File>
 		</Filter>
 		<Filter
@@ -169,7 +175,7 @@ upxCxbx.bat
 				RelativePath=".\Include\Cxbx.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\CxbxKrnl.h">
+				RelativePath=".\Resource\CxbxRes.h">
 			</File>
 			<File
 				RelativePath=".\Include\Win32\Cxbx\EmuExe.h">
@@ -184,6 +190,9 @@ upxCxbx.bat
 				RelativePath=".\Include\Win32\Cxbx\Prolog.h">
 			</File>
 			<File
+				RelativePath=".\Resource\ResCxbx.h">
+			</File>
+			<File
 				RelativePath=".\Include\Win32\Cxbx\Wnd.h">
 			</File>
 			<File
@@ -195,15 +204,12 @@ upxCxbx.bat
 			<File
 				RelativePath=".\Include\Core\Xbe.h">
 			</File>
-			<File
-				RelativePath=".\Resource\CxbxRes.h">
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource"
 			Filter="">
 			<File
-				RelativePath="Resource\About.bmp">
+				RelativePath=".\Resource\About.bmp">
 			</File>
 			<File
 				RelativePath=".\Resource\Cxbx.ico">
@@ -243,7 +249,7 @@ upxCxbx.bat
 				RelativePath=".\Source\Core\Exe.cpp">
 			</File>
 			<File
-				RelativePath="Source\Core\OpenXDK.cpp">
+				RelativePath=".\Source\Core\OpenXDK.cpp">
 			</File>
 			<File
 				RelativePath=".\Source\Win32\Cxbx\Prolog.cpp">
