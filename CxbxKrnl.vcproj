@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="d3d8.lib dinput8.lib dxguid.lib ntdll.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="d3d8.lib dinput8.lib dxguid.lib odbc32.lib odbccp32.lib"
 				OutputFile=".\Bin\Debug/CxbxKrnl.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
@@ -101,12 +101,12 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="d3d8.lib dinput8.lib dxguid.lib ntdll.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="d3d8.lib dinput8.lib dxguid.lib odbc32.lib odbccp32.lib"
 				OutputFile="Bin/Cxbx.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="Lib"
-				IgnoreDefaultLibraryNames="libc"
+				IgnoreDefaultLibraryNames="lbc"
 				ProgramDatabaseFile=".\Bin/Cxbx.pdb"
 				ImportLibrary=".\Bin/Cxbx.lib"/>
 			<Tool
@@ -315,6 +315,9 @@
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\EmuXapi.cpp">
+			</File>
+			<File
+				RelativePath=".\Source\Core\Error.cpp">
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\HLEDataBase.cpp">

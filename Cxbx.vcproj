@@ -194,6 +194,9 @@ upxCxbx.bat
 				RelativePath=".\Include\Win32\CxbxKrnl\EmuShared.h">
 			</File>
 			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuXapi.h">
+			</File>
+			<File
 				RelativePath=".\Include\Core\Error.h">
 			</File>
 			<File
