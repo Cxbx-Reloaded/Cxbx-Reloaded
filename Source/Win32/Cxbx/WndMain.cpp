@@ -293,11 +293,11 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			// ******************************************************************
             if(s_bInitMenu)
             {
+                UpdateRecentFiles();
+
                 RefreshMenus();
 
                 UpdateDebugConsoles();
-
-                UpdateRecentFiles();
 
                 s_bInitMenu = false;
             }
@@ -425,81 +425,63 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     ofn.Flags           = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
                     if(GetOpenFileName(&ofn) == TRUE)
-                    {
-                        m_XbeFilename[0] = '\0';
-
-                        Exe *i_exe = new Exe(ofn.lpstrFile);
-
-                        if(i_exe->GetError() != 0)
-                        {
-                            MessageBox(m_hwnd, i_exe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
-
-                            delete i_exe;
-
-                            break;
-                        }
-
-                        m_Xbe = new Xbe(i_exe, "Untitled", true);
-
-                        if(m_Xbe->GetError() != 0)
-                        {
-                            MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
-
-                            delete m_Xbe; m_Xbe = 0;
-
-                            break;
-                        }
-
-                        // ******************************************************************
-	                    // * save this Exe to the list of recent files
-	                    // ******************************************************************
-                        {
-                            bool exists = false;
-
-                            // check if this filename already exists
-                            for(int c=0;c<m_dwRecentExe;c++)
-                                if(strcmp(m_szRecentExe[c], ofn.lpstrFile) == 0)
-                                    exists = true;
-
-                            if(!exists)
-                            {
-                                // move all items down one, removing the last one if necessary
-                                for(int v=RECENT_EXE_SIZE;v>0;v--)
-                                {
-                                    if(m_szRecentExe[v-1] == 0)
-                                        m_szRecentExe[v] = 0;
-                                    else
-                                    {
-                                        if(m_szRecentExe[v] == 0)
-                                            m_szRecentExe[v] = (char*)calloc(1, 260);
-                                        strncpy(m_szRecentExe[v], m_szRecentExe[v-1], 259);
-                                    }
-                                }
-
-                                // add new item as first index
-                                {
-                                    if(m_szRecentExe[0] == 0)
-                                        m_szRecentExe[0] = (char*)calloc(1, 260);
-
-                                    strcpy(m_szRecentExe[0], ofn.lpstrFile);
-
-                                    m_dwRecentExe++;
-                                }
-                            }
-                        }
-
-                        XbeLoaded();
-
-                        UpdateRecentFiles();
-
-                        m_bExeChanged = true;
-                    }
+                        ImportExe(ofn.lpstrFile);
                 }
                 break;
 
                 case ID_FILE_EXPORTTOEXE:
                     ConvertToExe(NULL, true);
                     break;
+
+                case ID_FILE_RXBE_0:
+                case ID_FILE_RXBE_1:
+                case ID_FILE_RXBE_2:
+                case ID_FILE_RXBE_3:
+                case ID_FILE_RXBE_4:
+                case ID_FILE_RXBE_5:
+                case ID_FILE_RXBE_6:
+                case ID_FILE_RXBE_7:
+                case ID_FILE_RXBE_8:
+                case ID_FILE_RXBE_9:
+                {
+                    HMENU menu = GetMenu(m_hwnd);
+                    HMENU file_menu = GetSubMenu(menu, 0);
+                    HMENU rxbe_menu = GetSubMenu(file_menu, 9);
+
+                    char szBuffer[270];
+
+                    GetMenuString(rxbe_menu, LOWORD(wParam), szBuffer, 269, MF_BYCOMMAND);
+
+                    char *szFilename = (char*)((uint32)szBuffer + 5);
+
+                    OpenXbe(szFilename);
+                }
+                break;
+
+                case ID_FILE_REXE_0:
+                case ID_FILE_REXE_1:
+                case ID_FILE_REXE_2:
+                case ID_FILE_REXE_3:
+                case ID_FILE_REXE_4:
+                case ID_FILE_REXE_5:
+                case ID_FILE_REXE_6:
+                case ID_FILE_REXE_7:
+                case ID_FILE_REXE_8:
+                case ID_FILE_REXE_9:
+                {
+                    HMENU menu = GetMenu(m_hwnd);
+                    HMENU file_menu = GetSubMenu(menu, 0);
+                    HMENU rexe_menu = GetSubMenu(file_menu, 10);
+
+                    char szBuffer[270];
+
+                    GetMenuString(rexe_menu, LOWORD(wParam), szBuffer, 269, MF_BYCOMMAND);
+
+                    char *szFilename = (char*)((uint32)szBuffer + 5);
+
+                    ImportExe(szFilename);
+                }
+                break;
 
                 case ID_FILE_EXIT:
                     SendMessage(hwnd, WM_CLOSE, 0, 0);
@@ -1156,20 +1138,42 @@ void WndMain::RefreshMenus()
             // enable/disable open .xbe file
             EnableMenuItem(file_menu, ID_FILE_OPEN_XBE, MF_BYCOMMAND | (m_Xbe != 0) ? MF_GRAYED : MF_ENABLED);
 
-            // enable close .xbe file
+            // enable/disable close .xbe file
             EnableMenuItem(file_menu, ID_FILE_CLOSE_XBE, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
 
-			// enable save .xbe file
+			// enable/disable save .xbe file
 			EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILE, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
 
-			// enable save .xbe file as
+			// enable/disable save .xbe file as
 			EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILEAS, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
 
-            // disable import from .exe
+            // enable/disable import from .exe
             EnableMenuItem(file_menu, ID_FILE_IMPORTFROMEXE, MF_BYCOMMAND | (m_Xbe != 0) ? MF_GRAYED : MF_ENABLED);
 
-            // enable export to .exe
+            // enable/disable export to .exe
             EnableMenuItem(file_menu, ID_FILE_EXPORTTOEXE, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
+
+            // ******************************************************************
+	        // * recent xbe files menu
+	        // ******************************************************************
+            {
+                HMENU rxbe_menu = GetSubMenu(file_menu, 9);
+
+                int max = m_dwRecentXbe;
+                for(int v=0;v<max;v++)
+                    EnableMenuItem(rxbe_menu, ID_FILE_RXBE_0 + v, MF_BYCOMMAND | (m_Xbe == 0) ? MF_ENABLED : MF_GRAYED);
+            }
+
+            // ******************************************************************
+	        // * recent xbe files menu
+	        // ******************************************************************
+            {
+                HMENU rexe_menu = GetSubMenu(file_menu, 10);
+
+                int max = m_dwRecentExe;
+                for(int v=0;v<max;v++)
+                    EnableMenuItem(rexe_menu, ID_FILE_REXE_0 + v, MF_BYCOMMAND | (m_Xbe == 0) ? MF_ENABLED : MF_GRAYED);
+            }
         }
 
         // ******************************************************************
@@ -1367,80 +1371,6 @@ void WndMain::UpdateRecentFiles()
 }
 
 // ******************************************************************
-// * ConvertToExe
-// ******************************************************************
-bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists)
-{
-	char filename[260] = "default.exe";
-
-    if(x_filename == NULL)
-    {
-        OPENFILENAME ofn = {0};
-
-        SuggestFilename(m_XbeFilename, filename, ".exe");
-
-        ofn.lStructSize     = sizeof(OPENFILENAME);
-	    ofn.hwndOwner       = m_hwnd;
-	    ofn.lpstrFilter     = "Windows Executables (*.exe)\0*.exe\0";
-	    ofn.lpstrFile       = filename;
-	    ofn.nMaxFile        = 260;
-	    ofn.nFilterIndex    = 1;
-	    ofn.lpstrFileTitle  = NULL;
-	    ofn.nMaxFileTitle   = 0;
-	    ofn.lpstrInitialDir = NULL;
-        ofn.lpstrDefExt     = "exe";
-	    ofn.Flags           = OFN_PATHMUSTEXIST;
-
-	    if(GetSaveFileName(&ofn) == FALSE)
-            return false;
-
-        strcpy(filename, ofn.lpstrFile);
-    }
-    else
-    {
-        strcpy(filename, x_filename);
-    }
-
-	// ******************************************************************
-	// * ask permission to overwrite if file exists
-	// ******************************************************************
-	if(x_bVerifyIfExists)
-	{
-		if(_access(filename, 0) != -1)
-		{
-			if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx", MB_ICONQUESTION | MB_YESNO) != IDYES)
-				return false;
-		}
-	}
-
-	// ******************************************************************
-	// * convert file
-	// ******************************************************************
-	{
-		EmuExe i_EmuExe(m_Xbe, m_KrnlDebug, m_KrnlDebugFilename);
-
-		i_EmuExe.Export(filename);
-
-		if(i_EmuExe.GetError() != 0)
-        {
-			MessageBox(m_hwnd, i_EmuExe.GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
-            return false;
-        }
-        else
-        {
-            strcpy(m_ExeFilename, filename);
-
-            printf("WndMain: %s was converted to .exe.\n", m_Xbe->m_szAsciiTitle);
-
-            m_bExeChanged = false;
-        }
-	}
-
-    return true;
-}
-
-
-// ******************************************************************
 // * OpenXbe
 // ******************************************************************
 void WndMain::OpenXbe(const char *x_filename)
@@ -1502,9 +1432,9 @@ void WndMain::OpenXbe(const char *x_filename)
         }
     }
 
-    XbeLoaded();
-
     UpdateRecentFiles();
+
+    XbeLoaded();
 }
 
 // ******************************************************************
@@ -1610,6 +1540,153 @@ void WndMain::SaveXbeAs()
 
 	if(GetSaveFileName(&ofn) == TRUE)
 		SaveXbe(ofn.lpstrFile);
+}
+
+// ******************************************************************
+// * ImportExe
+// ******************************************************************
+void WndMain::ImportExe(const char *x_filename)
+{
+    m_XbeFilename[0] = '\0';
+
+    Exe *i_exe = new Exe(x_filename);
+
+    if(i_exe->GetError() != 0)
+    {
+        MessageBox(m_hwnd, i_exe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
+
+        delete i_exe;
+
+        return;
+    }
+
+    m_Xbe = new Xbe(i_exe, "Untitled", true);
+
+    if(m_Xbe->GetError() != 0)
+    {
+        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
+
+        delete m_Xbe; m_Xbe = 0;
+
+        return;
+    }
+
+    // ******************************************************************
+	// * save this Exe to the list of recent files
+	// ******************************************************************
+    {
+        bool exists = false;
+
+        // check if this filename already exists
+        for(int c=0;c<m_dwRecentExe;c++)
+            if(strcmp(m_szRecentExe[c], x_filename) == 0)
+                exists = true;
+
+        if(!exists)
+        {
+            // move all items down one, removing the last one if necessary
+            for(int v=RECENT_EXE_SIZE;v>0;v--)
+            {
+                if(m_szRecentExe[v-1] == 0)
+                    m_szRecentExe[v] = 0;
+                else
+                {
+                    if(m_szRecentExe[v] == 0)
+                        m_szRecentExe[v] = (char*)calloc(1, 260);
+                    strncpy(m_szRecentExe[v], m_szRecentExe[v-1], 259);
+                }
+            }
+
+            // add new item as first index
+            {
+                if(m_szRecentExe[0] == 0)
+                    m_szRecentExe[0] = (char*)calloc(1, 260);
+
+                strcpy(m_szRecentExe[0], x_filename);
+
+                m_dwRecentExe++;
+            }
+        }
+    }
+
+    UpdateRecentFiles();
+
+    XbeLoaded();
+
+    m_bExeChanged = true;
+}
+
+// ******************************************************************
+// * ConvertToExe
+// ******************************************************************
+bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists)
+{
+	char filename[260] = "default.exe";
+
+    if(x_filename == NULL)
+    {
+        OPENFILENAME ofn = {0};
+
+        SuggestFilename(m_XbeFilename, filename, ".exe");
+
+        ofn.lStructSize     = sizeof(OPENFILENAME);
+	    ofn.hwndOwner       = m_hwnd;
+	    ofn.lpstrFilter     = "Windows Executables (*.exe)\0*.exe\0";
+	    ofn.lpstrFile       = filename;
+	    ofn.nMaxFile        = 260;
+	    ofn.nFilterIndex    = 1;
+	    ofn.lpstrFileTitle  = NULL;
+	    ofn.nMaxFileTitle   = 0;
+	    ofn.lpstrInitialDir = NULL;
+        ofn.lpstrDefExt     = "exe";
+	    ofn.Flags           = OFN_PATHMUSTEXIST;
+
+	    if(GetSaveFileName(&ofn) == FALSE)
+            return false;
+
+        strcpy(filename, ofn.lpstrFile);
+    }
+    else
+    {
+        strcpy(filename, x_filename);
+    }
+
+	// ******************************************************************
+	// * ask permission to overwrite if file exists
+	// ******************************************************************
+	if(x_bVerifyIfExists)
+	{
+		if(_access(filename, 0) != -1)
+		{
+			if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx", MB_ICONQUESTION | MB_YESNO) != IDYES)
+				return false;
+		}
+	}
+
+	// ******************************************************************
+	// * convert file
+	// ******************************************************************
+	{
+		EmuExe i_EmuExe(m_Xbe, m_KrnlDebug, m_KrnlDebugFilename);
+
+		i_EmuExe.Export(filename);
+
+		if(i_EmuExe.GetError() != 0)
+        {
+			MessageBox(m_hwnd, i_EmuExe.GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
+            return false;
+        }
+        else
+        {
+            strcpy(m_ExeFilename, filename);
+
+            printf("WndMain: %s was converted to .exe.\n", m_Xbe->m_szAsciiTitle);
+
+            m_bExeChanged = false;
+        }
+	}
+
+    return true;
 }
 
 // ******************************************************************

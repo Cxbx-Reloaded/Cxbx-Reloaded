@@ -1,17 +1,19 @@
 cxbx website: http://www.caustik.com/xbox/
 
-version: 0.6.1 (??/??/??)
+version: 0.7.0 (??/??/??)
 --------------------------------
 
-- Controller input is working
+- Added Controller Input and Configuration!
 
-- Some GUI color issues were resolved
+- Added Recent Xbe/Exe file menus
+
+- Fixed GUI color issues
 
 - Some Xbe parsing and debug output fixes.
   You should now be able to deal with the
   slightly odd Linux Xbe files.
 
-- __declspec(thread)-style TLS is working!!
+- __declspec(thread) style TLS is working!!
 
 - Lots of random optimizations
 

@@ -289,7 +289,7 @@ static void ShowUsage()
 {
     printf
     (
-        "CXBE XBE->EXE (XBox->Win32) Relinker (CXBX Core Version " CXBX_VERSION ")\n"
+        "CXBE XBE->EXE (XBox->Win32) Relinker (CXBX Core Version " _CXBX_VERSION ")\n"
         "Copyright (C) Aaron Robinson 2002-2003. All rights reserved.\n"
         "\n" 
         "Usage : cxbe [options] [exefile]\n"

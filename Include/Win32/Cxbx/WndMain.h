@@ -64,6 +64,11 @@ class WndMain : public Wnd
         void CloseXbe();
         void SaveXbe(const char *x_filename);
         void SaveXbeAs();
+
+        // ******************************************************************
+        // * Exe operations
+        // ******************************************************************
+        void ImportExe(const char *x_filename);
         bool ConvertToExe(const char *x_filename, bool x_bVerifyIfExists);
 
         // ******************************************************************
