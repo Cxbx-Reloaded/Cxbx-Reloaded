@@ -146,7 +146,9 @@ void EmuRenderWindow(PVOID)
             CS_CLASSDC,
             EmuMsgProc,
             0, 0, GetModuleHandle(NULL),
-            LoadIcon(hCxbxDll, MAKEINTRESOURCE(IDI_CXBX)), NULL, (HBRUSH)(COLOR_APPWORKSPACE + 1), NULL,
+            LoadIcon(hCxbxDll, MAKEINTRESOURCE(IDI_CXBX)),
+            LoadCursor(NULL, IDC_ARROW), 
+            (HBRUSH)(COLOR_APPWORKSPACE + 1), NULL,
             "CxbxRender",
             NULL
         };

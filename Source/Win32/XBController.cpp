@@ -537,6 +537,9 @@ void XBController::ListenBegin(HWND hwnd)
 
     DInputInit(hwnd);
 
+    for(int v=XBCTRL_MAX_DEVICES-1;v>=m_dwInputDeviceCount;v--)
+        m_DeviceName[v][0] = '\0';
+
     return;
 }
 
@@ -545,16 +548,39 @@ void XBController::ListenBegin(HWND hwnd)
 // ******************************************************************
 void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
 {
-    // TODO: For each device with a configured input device, update changes
-    static int step = 500;
+    LPDIRECTINPUTDEVICE8 pDevice=NULL;
+    HRESULT hRet=0;
+    DWORD dwFlags=0;
 
-    Controller->Gamepad.sThumbLX += step;
-
-    if(Controller->Gamepad.sThumbLX < 0 - 32768 - 2*step ||
-       Controller->Gamepad.sThumbLX > 0 + 32767 - 2*step)
+    // ******************************************************************
+    // * Poll all devices
+    // ******************************************************************
+    for(int v=0;v<XBCTRL_OBJECT_COUNT;v++)
     {
-        step = -step;
-        Controller->Gamepad.sThumbLX += step;
+        int dwDevice = m_ObjectConfig[v].dwDevice;
+
+        if(dwDevice == -1)
+            continue;
+
+        pDevice = m_InputDevice[dwDevice].m_Device;
+        dwFlags = m_InputDevice[dwDevice].m_Flags;
+
+        hRet = pDevice->Poll();
+
+        if(FAILED(hRet))
+        {
+            hRet = pDevice->Acquire();
+
+            while(hRet == DIERR_INPUTLOST)
+                hRet = pDevice->Acquire();
+        }
+
+        // ******************************************************************
+        // * Map Joystick Input
+        // ******************************************************************
+        if(dwFlags & DEVICE_FLAG_JOYSTICK)
+        {
+        }
     }
 
     return;
@@ -643,6 +669,8 @@ void XBController::DInputInit(HWND hwnd)
 
                 m_InputDevice[m_dwInputDeviceCount++].m_Device->SetDataFormat(&c_dfDIKeyboard);
 		    }
+
+            ReorderObjects("SysKeyboard", m_dwInputDeviceCount - 1);
         }
 
         if(m_CurrentState == XBCTRL_STATE_CONFIG || DeviceIsUsed("SysMouse"))
@@ -655,6 +683,8 @@ void XBController::DInputInit(HWND hwnd)
 
                 m_InputDevice[m_dwInputDeviceCount++].m_Device->SetDataFormat(&c_dfDIMouse2);
 		    }
+
+            ReorderObjects("SysMouse", m_dwInputDeviceCount - 1);
         }
     }
 
@@ -769,11 +799,28 @@ int XBController::Insert(const char *szDeviceName)
 }
 
 // ******************************************************************
+// * func: XBController::ReorderObjects
+// ******************************************************************
+void XBController::ReorderObjects(const char *szDeviceName, int pos)
+{
+    for(int v=0;v<XBCTRL_OBJECT_COUNT;v++)
+    {
+        if(strcmp(m_DeviceName[m_ObjectConfig[v].dwDevice], szDeviceName) == 0)
+        {
+            m_ObjectConfig[v].dwDevice = pos;
+            strcpy(m_DeviceName[pos], szDeviceName);
+        }
+    }
+
+    return;
+}
+
+// ******************************************************************
 // * func: XBController::EnumGameCtrlCallback
 // ******************************************************************
 BOOL XBController::EnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi)
 {
-    if(m_CurrentState == XBCTRL_STATE_LISTEN && DeviceIsUsed(lpddi->tszInstanceName))
+    if(m_CurrentState == XBCTRL_STATE_LISTEN && !DeviceIsUsed(lpddi->tszInstanceName))
         return DIENUM_CONTINUE;
 
     HRESULT hRet = m_pDirectInput8->CreateDevice(lpddi->guidInstance, &m_InputDevice[m_dwInputDeviceCount].m_Device, NULL);
@@ -783,9 +830,12 @@ BOOL XBController::EnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi)
 		m_InputDevice[m_dwInputDeviceCount].m_Flags = DEVICE_FLAG_JOYSTICK;
 
         m_InputDevice[m_dwInputDeviceCount++].m_Device->SetDataFormat(&c_dfDIJoystick);
-	}
 
-    printf("Emu: Monitoring Device %s\n", lpddi->tszInstanceName);
+        if(m_CurrentState == XBCTRL_STATE_LISTEN)
+            ReorderObjects(lpddi->tszInstanceName, m_dwInputDeviceCount - 1);
+
+        printf("Emu: Monitoring Device %s\n", lpddi->tszInstanceName);
+	}
 
     return DIENUM_CONTINUE;
 }

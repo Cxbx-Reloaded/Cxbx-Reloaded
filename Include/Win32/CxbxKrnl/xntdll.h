@@ -349,9 +349,18 @@ NTSYSAPI NTSTATUS NTAPI KeDelayExecutionThread
 );
 
 // ******************************************************************
+// * NtDelayExecution
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtDelayExecution)
+(
+    IN BOOLEAN          Alertable,
+    IN PLARGE_INTEGER   DelayInterval
+);
+
+// ******************************************************************
 // * NtSetLdtEntries
 // ******************************************************************
-NTSYSAPI NTSTATUS NTAPI NtSetLdtEntries
+typedef NTSTATUS (NTAPI *FPTR_NtSetLdtEntries)
 (
     IN USHORT       Selector1,
     IN LDT_ENTRY    Descriptor1,

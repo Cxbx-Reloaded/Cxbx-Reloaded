@@ -113,7 +113,7 @@ enum XBCtrlState
 // ******************************************************************
 struct XBCtrlObjectCfg
 {
-    int dwDevice;   // offset into m_Devices
+    int dwDevice;   // offset into m_InputDevice
     int dwInfo;     // extended information, depending on dwFlags
     int dwFlags;    // flags explaining the data format
 };
@@ -176,6 +176,11 @@ class XBController : public Error
         // * Find the look-up value for a DeviceName (creating if needed)
         // ******************************************************************
         int Insert(const char *szDeviceName);
+
+        // ******************************************************************
+        // * Update the object lookup offsets for a device
+        // ******************************************************************
+        void ReorderObjects(const char *szDeviceName, int pos);
 
         // ******************************************************************
         // * Controller and Objects Enumeration

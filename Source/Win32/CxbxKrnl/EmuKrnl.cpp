@@ -59,12 +59,13 @@ namespace xntdll
 // ******************************************************************
 // * Loaded at run-time to avoid linker conflicts
 // ******************************************************************
-HMODULE hNtDll = GetModuleHandle("ntdll");
+static HMODULE hNtDll = GetModuleHandle("ntdll");
 
 xntdll::FPTR_RtlInitAnsiString            NT_RtlInitAnsiString            = (xntdll::FPTR_RtlInitAnsiString)GetProcAddress(hNtDll, "RtlInitAnsiString");
 xntdll::FPTR_RtlNtStatusToDosError        NT_RtlNtStatusToDosError        = (xntdll::FPTR_RtlNtStatusToDosError)GetProcAddress(hNtDll, "RtlNtStatusToDosError");
 xntdll::FPTR_NtAllocateVirtualMemory      NT_NtAllocateVirtualMemory      = (xntdll::FPTR_NtAllocateVirtualMemory)GetProcAddress(hNtDll, "NtAllocateVirtualMemory");
 xntdll::FPTR_NtClose                      NT_NtClose                      = (xntdll::FPTR_NtClose)GetProcAddress(hNtDll, "NtClose");
+xntdll::FPTR_NtDelayExecution             NT_NtDelayExecution             = (xntdll::FPTR_NtDelayExecution)GetProcAddress(hNtDll, "NtDelayExecution");
 xntdll::FPTR_RtlInitializeCriticalSection NT_RtlInitializeCriticalSection = (xntdll::FPTR_RtlInitializeCriticalSection)GetProcAddress(hNtDll, "RtlInitializeCriticalSection");
 xntdll::FPTR_RtlEnterCriticalSection      NT_RtlEnterCriticalSection      = (xntdll::FPTR_RtlEnterCriticalSection)GetProcAddress(hNtDll, "RtlEnterCriticalSection");
 xntdll::FPTR_RtlLeaveCriticalSection      NT_RtlLeaveCriticalSection      = (xntdll::FPTR_RtlLeaveCriticalSection)GetProcAddress(hNtDll, "RtlLeaveCriticalSection");
@@ -85,7 +86,7 @@ PCSTProxyParam;
 // ******************************************************************
 #pragma warning(push)
 #pragma warning(disable: 4731)  // disable ebp modification warning
-DWORD WINAPI PCSTProxy
+static DWORD WINAPI PCSTProxy
 (
     IN PVOID Parameter
 )
@@ -374,15 +375,11 @@ XBSYSAPI EXPORTNUM(99) NTSTATUS NTAPI xboxkrnl::KeDelayExecutionThread
     }
     #endif
 
-    // TODO: Worry about Interval.LargePart if necessary
-    if((sint32)Interval->u.LowPart < 0)
-        Sleep(-(sint32)Interval->u.LowPart/10000);
-    else
-        EmuPanic();
+    NTSTATUS ret = NT_NtDelayExecution(Alertable, (xntdll::LARGE_INTEGER*)Interval);
 
     EmuSwapFS();   // Xbox FS
 
-    return STATUS_SUCCESS;
+    return ret;
 }
 
 // ******************************************************************
