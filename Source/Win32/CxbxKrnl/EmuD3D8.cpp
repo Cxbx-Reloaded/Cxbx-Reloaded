@@ -57,6 +57,7 @@ namespace XTL
 
 // Global(s)
 extern HWND                         g_hEmuWindow   = NULL; // rendering window
+extern HWND                         g_hEmuParent   = NULL; // rendering window parent
 extern XTL::LPDIRECT3DDEVICE8       g_pD3DDevice8  = NULL; // Direct3D8 Device
 extern XTL::LPDIRECTDRAWSURFACE7    g_pDDSPrimary  = NULL; // DirectDraw7 Primary Surface
 extern XTL::LPDIRECTDRAWSURFACE7    g_pDDSOverlay7 = NULL; // DirectDraw7 Overlay Surface
@@ -155,6 +156,9 @@ g_EmuCDPD = {0};
 VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 {
     g_EmuShared->GetXBVideo(&g_XBVideo);
+
+    if(g_XBVideo.GetFullscreen())
+        g_hEmuParent = NULL;
 
     // cache XbeHeader and size of XbeHeader
     g_XbeHeader     = XbeHeader;
@@ -265,7 +269,7 @@ static BOOL WINAPI EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescrip
 }
 
 // window message processing thread
-static DWORD WINAPI EmuRenderWindow(LPVOID)
+static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 {
     char AsciiTitle[50];
 
@@ -317,7 +321,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID)
 
     // create the window
     {
-        DWORD dwStyle = WS_OVERLAPPEDWINDOW;
+        DWORD dwStyle = g_XBVideo.GetFullscreen() ? WS_OVERLAPPEDWINDOW : WS_CHILD;
 
         int nTitleHeight  = GetSystemMetrics(SM_CYCAPTION);
         int nBorderWidth  = GetSystemMetrics(SM_CXSIZEFRAME);
@@ -336,16 +340,28 @@ static DWORD WINAPI EmuRenderWindow(LPVOID)
             dwStyle = WS_POPUP;
         }
 
+        HWND hwndParent = GetDesktopWindow();
+
+        if(!g_XBVideo.GetFullscreen())
+        {
+            hwndParent = g_hEmuParent;
+        }
+
         g_hEmuWindow = CreateWindow
         (
             "CxbxRender", AsciiTitle,
             dwStyle, x, y, nWidth, nHeight,
-            GetDesktopWindow(), NULL, GetModuleHandle(NULL), NULL
+            hwndParent, NULL, GetModuleHandle(NULL), NULL
         );
     }
 
-    ShowWindow(g_hEmuWindow, SW_SHOWDEFAULT);
+    ShowWindow(g_hEmuWindow, g_XBVideo.GetFullscreen() ? SW_SHOWDEFAULT : SW_SHOWMAXIMIZED);
     UpdateWindow(g_hEmuWindow);
+
+    if(!g_XBVideo.GetFullscreen())
+    {
+        SetFocus(g_hEmuParent);
+    }
 
     // initialize direct input
     if(!XTL::EmuDInputInit())
@@ -387,25 +403,20 @@ void ToggleFauxFullscreen(HWND hWnd)
         return;
 
     static bool bIsNormal = true;
-    static LONG lRestore = 0, lRestoreEx = 0;
-    static RECT Rect;
 
     if(bIsNormal)
     {
-        lRestore = GetWindowLong(hWnd, GWL_STYLE);
-        lRestoreEx = GetWindowLong(hWnd, GWL_EXSTYLE);
-
+        SetParent(hWnd, NULL);
         SetWindowLong(hWnd, GWL_STYLE, WS_POPUP);
         SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
-        GetWindowRect(hWnd, &Rect);
         ShowWindow(hWnd, SW_MAXIMIZE);
     }
     else
     {
-        SetWindowLong(hWnd, GWL_STYLE, lRestore);
-        SetWindowLong(hWnd, GWL_EXSTYLE, lRestoreEx);
-        ShowWindow(hWnd, SW_RESTORE);
-        SetWindowPos(hWnd, HWND_NOTOPMOST, Rect.left, Rect.top, Rect.right - Rect.left, Rect.bottom - Rect.top, 0);
+        SetParent(hWnd, g_hEmuParent);
+        SetWindowLong(hWnd, GWL_STYLE, WS_CHILD);
+        ShowWindow(hWnd, SW_MAXIMIZE);
+        SetFocus(g_hEmuParent);
     }
 
     bIsNormal = !bIsNormal;
@@ -497,6 +508,15 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
         case WM_CLOSE:
             DestroyWindow(hWnd);
             break;
+
+        case WM_SETFOCUS:
+        {
+            if(g_hEmuParent != NULL)
+            {
+                SetFocus(g_hEmuParent);
+            }
+        }
+        break;
 
         case WM_SETCURSOR:
         {
@@ -4928,9 +4948,9 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
         RECT SourRect = {0, 0, g_dwOverlayW, g_dwOverlayH}, DestRect;
         MONITORINFO MonitorInfo = {0};
 
-        int nTitleHeight  = GetSystemMetrics(SM_CYCAPTION);
-        int nBorderWidth  = GetSystemMetrics(SM_CXSIZEFRAME);
-        int nBorderHeight = GetSystemMetrics(SM_CYSIZEFRAME);
+        int nTitleHeight  = 0;//GetSystemMetrics(SM_CYCAPTION);
+        int nBorderWidth  = 0;//GetSystemMetrics(SM_CXSIZEFRAME);
+        int nBorderHeight = 0;//GetSystemMetrics(SM_CYSIZEFRAME);
 
         MonitorInfo.cbSize = sizeof(MONITORINFO);
         GetMonitorInfo(g_hMonitor, &MonitorInfo);

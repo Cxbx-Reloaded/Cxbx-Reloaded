@@ -63,6 +63,7 @@ namespace XTL
 
 // Ugly Global Pull-In
 extern HWND				g_hEmuWindow; // rendering window
+extern HWND				g_hEmuParent; // rendering window parent
 
 // Global Variable(s)
 extern Xbe::TLS        *g_pTLS       = NULL;
@@ -140,6 +141,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanThread()
 // initialize emulation
 extern "C" CXBXKRNL_API void NTAPI EmuInit
 (
+    HWND                    hwndParent,
     void                   *pTLSData, 
     Xbe::TLS               *pTLS,
     Xbe::LibraryVersion    *pLibraryVersion,
@@ -153,8 +155,9 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     g_pTLS       = pTLS;
     g_pTLSData   = pTLSData;
 	g_pXbeHeader = pXbeHeader;
+    g_hEmuParent = hwndParent;
 
-	// For Unicode Conversions
+    // For Unicode Conversions
 	setlocale(LC_ALL, "English");
 
     // debug console allocation (if configured)
@@ -198,6 +201,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
         printf("EmuMain (0x%X): EmuInit\n"
                "(\n"
+               "   hwndParent          : 0x%.08X\n"
                "   pTLSData            : 0x%.08X\n"
                "   pTLS                : 0x%.08X\n"
                "   pLibraryVersion     : 0x%.08X\n"
@@ -207,7 +211,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                "   pXBEHeaderSize      : 0x%.08X\n"
                "   Entry               : 0x%.08X\n"
                ");\n",
-               GetCurrentThreadId(), pTLSData, pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
+               GetCurrentThreadId(), hwndParent, pTLSData, pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
 
         #else
         printf("EmuMain (0x%X): Debug Trace Disabled.\n", GetCurrentThreadId());
@@ -559,7 +563,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         // _USE_XGMATH Disabled in mesh :[
         // halo : dword_0_2E2D18
         // halo : 1744F0 (bink)
-        _asm int 3
+        //_asm int 3
 
         Entry();
 
@@ -653,6 +657,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage, ...)
             freopen("nul", "w", stdout);
     }
 
+    SendMessage(g_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
+
     TerminateProcess(GetCurrentProcess(), 0);
 
     return;
@@ -717,10 +723,10 @@ extern "C" CXBXKRNL_API void NTAPI EmuSuspend()
     {
         char szBuffer[256];
 
-        GetWindowText(g_hEmuWindow, szBuffer, 255 - 10);
+        GetWindowText(g_hEmuParent, szBuffer, 255 - 10);
 
         strcat(szBuffer, " (paused)");
-        SetWindowText(g_hEmuWindow, szBuffer);
+        SetWindowText(g_hEmuParent, szBuffer);
     }
 
     g_bEmuSuspended = TRUE;
@@ -736,11 +742,11 @@ extern "C" CXBXKRNL_API void NTAPI EmuResume()
     {
         char szBuffer[256];
 
-        GetWindowText(g_hEmuWindow, szBuffer, 255);
+        GetWindowText(g_hEmuParent, szBuffer, 255);
 
         szBuffer[strlen(szBuffer)-9] = '\0';
 
-        SetWindowText(g_hEmuWindow, szBuffer);
+        SetWindowText(g_hEmuParent, szBuffer);
     }
 
     for(int v=0;v<MAXIMUM_XBOX_THREADS;v++)
@@ -898,6 +904,9 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
             {
                 printf("EmuMain (0x%X): Aborting Emulation\n", GetCurrentThreadId());
                 fflush(stdout);
+
+                SendMessage(g_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
+
                 ExitProcess(1);
             }
             else if(ret == IDIGNORE)
@@ -922,6 +931,9 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
             {
                 printf("EmuMain (0x%X): Aborting Emulation\n", GetCurrentThreadId());
                 fflush(stdout);
+                
+                SendMessage(g_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
+
                 ExitProcess(1);
             }
         }
@@ -1163,6 +1175,8 @@ int ExitException(LPEXCEPTION_POINTERS e)
         MessageBox(g_hEmuWindow, "Warning: Multiple Problems!", "Cxbx", MB_OK);
         return EXCEPTION_CONTINUE_SEARCH;
     }
+
+    SendMessage(g_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
     ExitProcess(1);
 

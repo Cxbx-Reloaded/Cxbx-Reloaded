@@ -2,6 +2,8 @@ Cxbx Todo (* denotes high priority, + denotes medium priority)
 
 HLE :
 
+  * NSIS installer. Option to clear UDATA/TDATA/CxbxCache
+
   * Modularize inline vertex buffers (Begin()/End())
 
   * Direct3D_SetPushBufferSize for Antz Extreme Racing (4361). Do this

@@ -42,7 +42,7 @@
 
 #include <io.h>
 
-WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m_Xbe(0), m_Exe(0), m_bExeChanged(false), m_bXbeChanged(false), m_AutoConvertToExe(AUTO_CONVERT_WINDOWS_TEMP), m_KrnlDebug(DM_NONE), m_CxbxDebug(DM_NONE), m_dwRecentXbe(0), m_dwRecentExe(0)
+WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m_Xbe(0), m_Exe(0), m_bExeChanged(false), m_bXbeChanged(false), m_bCanStart(true), m_hwndChild(NULL), m_AutoConvertToExe(AUTO_CONVERT_WINDOWS_TEMP), m_KrnlDebug(DM_NONE), m_CxbxDebug(DM_NONE), m_dwRecentXbe(0), m_dwRecentExe(0)
 {
     // initialize members
     {
@@ -297,6 +297,42 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
         }
         break;
 
+        case WM_PARENTNOTIFY:
+        {
+            switch(LOWORD(wParam))
+            {
+                case WM_CREATE:
+                {
+                    m_hwndChild = GetWindow(hwnd, GW_CHILD);
+
+                    char AsciiTitle[255];
+
+                    sprintf(AsciiTitle, "Cxbx : Emulating %s...", m_Xbe->m_szAsciiTitle);
+
+                    SetWindowText(m_hwnd, AsciiTitle);
+
+                    RefreshMenus();
+                }
+                break;
+
+                case WM_DESTROY:
+                {
+                    m_hwndChild = NULL;
+                    SetWindowText(m_hwnd, "Cxbx " _CXBX_VERSION);
+                    RefreshMenus();
+                }
+                break;
+            }
+        };
+
+        case WM_SYSKEYDOWN:
+        {
+            if(m_hwndChild != 0)
+            {
+                SendMessage(m_hwndChild, uMsg, wParam, lParam);
+            }
+        };
+
         case WM_PAINT:
         {
             static bool s_bInitMenu = true;
@@ -366,10 +402,30 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 case VK_F5:
                 {
-                    if(m_Xbe != 0)
-                        StartEmulation(m_AutoConvertToExe);
+                    if(m_Xbe != 0 && (m_hwndChild == NULL) && m_bCanStart)
+                    {
+                        m_bCanStart = false;
+                        StartEmulation(m_AutoConvertToExe, hwnd);
+                    }
                 }
                 break;
+
+                case VK_F6:
+                {
+                    if(m_hwndChild != NULL && !m_bCanStart)
+                    {
+                        StopEmulation();
+                    }
+                }
+                break;
+
+                default:
+                {
+                    if(m_hwndChild != 0)
+                    {
+                        SendMessage(m_hwndChild, uMsg, wParam, lParam);
+                    }
+                }
             }
         }
         break;
@@ -458,7 +514,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 break;
 
                 case ID_FILE_EXPORTTOEXE:
-                    ConvertToExe(NULL, true);
+                    ConvertToExe(NULL, true, hwnd);
                     break;
 
                 case ID_FILE_RXBE_0:
@@ -1004,7 +1060,11 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 break;
 
                 case ID_EMULATION_START:
-                    StartEmulation(m_AutoConvertToExe);
+                    StartEmulation(m_AutoConvertToExe, hwnd);
+                    break;
+
+                case ID_EMULATION_STOP:
+                    StopEmulation();
                     break;
 
                 case ID_SETTINGS_GENWT:
@@ -1320,7 +1380,10 @@ void WndMain::RefreshMenus()
             HMENU emul_menu = GetSubMenu(menu, 4);
 
             // enable emulation start
-            EnableMenuItem(emul_menu, ID_EMULATION_START, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
+            EnableMenuItem(emul_menu, ID_EMULATION_START, MF_BYCOMMAND | (m_Xbe == 0 || (m_hwndChild != NULL)) ? MF_GRAYED : MF_ENABLED);
+
+            // enable emulation stop
+            EnableMenuItem(emul_menu, ID_EMULATION_STOP, MF_BYCOMMAND | (m_hwndChild == NULL) ? MF_GRAYED : MF_ENABLED);
         }
     }
 }
@@ -1513,6 +1576,8 @@ void WndMain::OpenXbe(const char *x_filename)
 // close xbe file
 void WndMain::CloseXbe()
 {
+    StopEmulation();
+
     if(m_bXbeChanged)
     {
         int ret = MessageBox(m_hwnd, "Changes have been made, do you wish to save?", "Cxbx", MB_ICONQUESTION | MB_YESNOCANCEL);
@@ -1689,7 +1754,7 @@ void WndMain::ImportExe(const char *x_filename)
 }
 
 // convert to exe file
-bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists)
+bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists, HWND hwndParent)
 {
 	char filename[260] = "default.exe";
 
@@ -1733,7 +1798,7 @@ bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists)
 
     // convert file
 	{
-		EmuExe i_EmuExe(m_Xbe, m_KrnlDebug, m_KrnlDebugFilename);
+		EmuExe i_EmuExe(m_Xbe, m_KrnlDebug, m_KrnlDebugFilename, hwndParent);
 
 		i_EmuExe.Export(filename);
 
@@ -1756,7 +1821,7 @@ bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists)
 }
 
 // start emulation
-void WndMain::StartEmulation(EnumAutoConvert x_AutoConvert)
+void WndMain::StartEmulation(EnumAutoConvert x_AutoConvert, HWND hwndParent)
 {
     char szBuffer[260];
 
@@ -1782,19 +1847,19 @@ void WndMain::StartEmulation(EnumAutoConvert x_AutoConvert)
 
             strcat(szTempPath, &szBuffer[c]);
 
-            if(!ConvertToExe(szTempPath, false))
+            if(!ConvertToExe(szTempPath, false, hwndParent))
                 return;
         }
         else if(x_AutoConvert == AUTO_CONVERT_XBE_PATH)
         {
             SuggestFilename(m_XbeFilename, szBuffer, ".exe");
 
-            if(!ConvertToExe(szBuffer, false))
+            if(!ConvertToExe(szBuffer, false, hwndParent))
                 return;
         }
         else
         {
-            if(!ConvertToExe(NULL, true))
+            if(!ConvertToExe(NULL, true, hwndParent))
                 return;
         }
     }
@@ -1820,6 +1885,7 @@ void WndMain::StartEmulation(EnumAutoConvert x_AutoConvert)
 
         if((int)ShellExecute(NULL, "open", m_ExeFilename, NULL, szBuffer, SW_SHOWDEFAULT) <= 32)
         {
+            m_bCanStart = true;
             MessageBox(m_hwnd, "Emulation failed.\n\nTry converting again. If this message repeats, the Xbe is not supported.", "Cxbx", MB_ICONSTOP | MB_OK);
 
             printf("WndMain: %s shell failed.\n", m_Xbe->m_szAsciiTitle);
@@ -1829,4 +1895,11 @@ void WndMain::StartEmulation(EnumAutoConvert x_AutoConvert)
             printf("WndMain: %s emulation started.\n", m_Xbe->m_szAsciiTitle);
         }
     }
+}
+
+// stop emulation
+void WndMain::StopEmulation()
+{
+    SendMessage(m_hwndChild, WM_CLOSE, 0, 0);
+    m_bCanStart = true;
 }

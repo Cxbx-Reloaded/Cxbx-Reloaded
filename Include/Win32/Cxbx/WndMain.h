@@ -80,12 +80,17 @@ class WndMain : public Wnd
         // * Exe operations
         // ******************************************************************
         void ImportExe(const char *x_filename);
-        bool ConvertToExe(const char *x_filename, bool x_bVerifyIfExists);
+        bool ConvertToExe(const char *x_filename, bool x_bVerifyIfExists, HWND hwndParent);
 
         // ******************************************************************
         // * start emulation (converting to .exe if not done already)
         // ******************************************************************
-        void StartEmulation(EnumAutoConvert x_bAutoConvert);
+        void StartEmulation(EnumAutoConvert x_bAutoConvert, HWND hwndParent);
+
+        // ******************************************************************
+        // * stop emulation (close existing child window)
+        // ******************************************************************
+        void StopEmulation();
 
         // ******************************************************************
         // * accessor
@@ -144,12 +149,18 @@ class WndMain : public Wnd
         // ******************************************************************
         bool        m_bXbeChanged;
         bool        m_bExeChanged;
+        bool        m_bCanStart;
 
         // ******************************************************************
         // * cached filenames
         // ******************************************************************
         char       *m_XbeFilename;
         char       *m_ExeFilename;
+
+        // ******************************************************************
+        // * cached child window handle
+        // ******************************************************************
+        HWND        m_hwndChild;
 
         // ******************************************************************
         // * should emulation always auto-create the .exe?

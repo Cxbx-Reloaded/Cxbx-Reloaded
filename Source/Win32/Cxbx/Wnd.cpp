@@ -47,7 +47,7 @@ Wnd::Wnd(HINSTANCE x_hInstance) : m_hInstance(x_hInstance)
     m_h           = 240;
     m_parent      = NULL;
     m_clsstyle    = CS_HREDRAW | CS_VREDRAW;
-    m_wndstyle    = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE;
+    m_wndstyle    = WS_CLIPCHILDREN | WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE;
     m_background  = (HBRUSH)GetStockObject(BLACK_BRUSH);
     m_initialized = false;
 

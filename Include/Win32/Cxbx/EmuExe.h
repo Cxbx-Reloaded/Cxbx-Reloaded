@@ -35,6 +35,7 @@
 #define EMUEXE_H
 
 #include "Exe.h"
+#include <windows.h>
 
 // ******************************************************************
 // * class : EmuExe
@@ -45,7 +46,7 @@ class EmuExe : public Exe
         // ******************************************************************
         // * Construct via Xbe file object
         // ******************************************************************
-        EmuExe(class Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename);
+        EmuExe(class Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename, HWND hwndParent = NULL);
 };
 
 #endif

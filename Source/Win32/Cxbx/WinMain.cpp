@@ -58,7 +58,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     {
         MainWindow->OpenXbe(__argv[1]);
 
-        MainWindow->StartEmulation(AUTO_CONVERT_WINDOWS_TEMP);
+        MainWindow->StartEmulation(AUTO_CONVERT_WINDOWS_TEMP, MainWindow->GetHwnd());
     }
 
     while(MainWindow->GetError() == 0 && MainWindow->ProcessMessages())

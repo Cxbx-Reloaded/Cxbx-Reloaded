@@ -50,7 +50,7 @@ extern "C" CXBXKRNL_API bool NTAPI EmuVerifyVersion(const char *szVersion);
 extern "C" CXBXKRNL_API void NTAPI EmuCleanThread();
 
 // initialize emulation
-extern "C" CXBXKRNL_API void NTAPI EmuInit(void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
+extern "C" CXBXKRNL_API void NTAPI EmuInit(HWND hwndParent, void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
 
 // print out a warning message to the kernel debug log file
 #ifdef _DEBUG_WARNINGS

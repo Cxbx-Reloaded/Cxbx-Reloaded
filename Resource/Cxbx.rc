@@ -169,6 +169,7 @@ BEGIN
     POPUP "E&mulation"
     BEGIN
         MENUITEM "&Start\tF5",                  ID_EMULATION_START, GRAYED
+        MENUITEM "S&top\tF6",                   ID_EMULATION_STOP, GRAYED
     END
     POPUP "&Help"
     BEGIN
@@ -266,10 +267,10 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
     COMBOBOX        IDC_VC_VIDEO_RESOLUTION,76,49,173,100,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Start in Fullscreen",IDC_CV_FULLSCREEN,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,76,71,73,10
+    CONTROL         "Use Hardware Video Mode",IDC_CV_FULLSCREEN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,76,71,98,10
     CONTROL         "Force VSync",IDC_CV_VSYNC,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,154,71,65,10
+                    WS_TABSTOP,182,71,65,10
     PUSHBUTTON      "Cancel",IDC_VC_CANCEL,146,92,50,14,BS_FLAT
     PUSHBUTTON      "Accept",IDC_VC_ACCEPT,203,92,50,14,BS_FLAT
     GROUPBOX        "Direct3D Configuration",IDC_STATIC,4,1,250,87,BS_CENTER

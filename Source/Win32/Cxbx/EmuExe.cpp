@@ -40,7 +40,7 @@
 // ******************************************************************
 // * constructor
 // ******************************************************************
-EmuExe::EmuExe(Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename) : Exe()
+EmuExe::EmuExe(Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename, HWND hwndParent) : Exe()
 {
     ConstructorInit();
 
@@ -577,6 +577,9 @@ EmuExe::EmuExe(Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename) : Exe
             {
                 *(uint32 *)((uint32)m_bzSection[i] + 41) = 0;
             }
+
+            // Param 0 : hwndParent
+            *(uint32 *)((uint32)m_bzSection[i] + 46) = (uint32)hwndParent;
 
             printf("OK\n");
         }
