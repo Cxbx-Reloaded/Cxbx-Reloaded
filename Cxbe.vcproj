@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding = "Windows-1252"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.00"
+	Version="7.10"
 	Name="Cxbe"
 	SccProjectName=""
 	SccLocalPath="">
@@ -20,9 +20,10 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="Include,Include/Core/,Include/Standard,Include/Standard/Cxbe,Include/Win32/,Include/Win32/CxbxKrnl/"
-				PreprocessorDefinitions="WIN32,NDEBUG,_CONSOLE"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				StringPooling="TRUE"
 				RuntimeLibrary="4"
 				EnableFunctionLevelLinking="TRUE"
@@ -38,16 +39,16 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="odbc32.lib odbccp32.lib"
 				OutputFile=".\Bin/Cxbe.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				ProgramDatabaseFile=".\Bin/Cxbe.pdb"
-				SubSystem="1"/>
+				SubSystem="1"
+				TargetMachine="1"/>
 			<Tool
 				Name="VCMIDLTool"
-				TypeLibraryName=".\Bin/Cxbe.tlb"/>
+				TypeLibraryName=".\Bin/Cxbe.tlb"
+				HeaderFileName=""/>
 			<Tool
 				Name="VCPostBuildEventTool"/>
 			<Tool
@@ -61,7 +62,13 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
@@ -75,7 +82,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="Include,Include/Core/,Include/Standard,Include/Standard/Cxbe,Include/Win32/,Include/Win32/CxbxKrnl/"
-				PreprocessorDefinitions="WIN32,_DEBUG,_CONSOLE"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="5"
 				UsePrecompiledHeader="2"
@@ -92,19 +99,19 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="odbc32.lib odbccp32.lib"
 				OutputFile=".\Bin/Debug/Cxbe.exe"
-				LinkIncremental="2"
+				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Bin/Debug/Cxbe.pdb"
 				GenerateMapFile="TRUE"
 				MapFileName=".\Bin/Debug/Cxbe.map"
-				SubSystem="1"/>
+				SubSystem="1"
+				TargetMachine="1"/>
 			<Tool
 				Name="VCMIDLTool"
-				TypeLibraryName=".\Bin/Debug/Cxbe.tlb"/>
+				TypeLibraryName=".\Bin/Debug/Cxbe.tlb"
+				HeaderFileName=""/>
 			<Tool
 				Name="VCPostBuildEventTool"/>
 			<Tool
@@ -118,21 +125,29 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 	</Configurations>
+	<References>
+	</References>
 	<Files>
 		<Filter
 			Name="Bin"
 			Filter="">
 			<File
-				RelativePath=".\Bin\Cxbe.exe">
+				RelativePath="Bin\Cxbe.exe">
 			</File>
 			<Filter
 				Name="Debug"
 				Filter="">
 				<File
-					RelativePath=".\Bin\Debug\Cxbe.exe">
+					RelativePath="Bin\Debug\Cxbe.exe">
 				</File>
 			</Filter>
 		</Filter>
@@ -140,60 +155,150 @@
 			Name="Doc"
 			Filter="">
 			<File
-				RelativePath=".\Doc\Changelog.txt">
+				RelativePath="Doc\Changelog.txt">
 			</File>
 			<File
-				RelativePath=".\Doc\Input.txt">
+				RelativePath="Doc\Input.txt">
 			</File>
 			<File
-				RelativePath=".\Doc\RemovedCode.txt">
+				RelativePath="Doc\RemovedCode.txt">
 			</File>
 			<File
-				RelativePath=".\Doc\Thanks.txt">
+				RelativePath="Doc\Thanks.txt">
 			</File>
 			<File
-				RelativePath=".\Doc\Todo.txt">
+				RelativePath="Doc\Todo.txt">
 			</File>
 		</Filter>
 		<Filter
 			Name="Include"
 			Filter="">
 			<File
-				RelativePath=".\Include\Win32\AlignPosfix1.h">
+				RelativePath="Include\Win32\AlignPosfix1.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\AlignPrefix1.h">
+				RelativePath="Include\Win32\AlignPrefix1.h">
 			</File>
 			<File
-				RelativePath=".\Include\Cxbx.h">
+				RelativePath="Include\Cxbx.h">
 			</File>
 			<File
-				RelativePath=".\Include\Core\Error.h">
+				RelativePath="Include\Core\Error.h">
 			</File>
 			<File
-				RelativePath=".\Include\Core\Exe.h">
+				RelativePath="Include\Core\Exe.h">
 			</File>
 			<File
-				RelativePath=".\Include\Core\Xbe.h">
+				RelativePath="Include\Core\Xbe.h">
 			</File>
 		</Filter>
 		<Filter
 			Name="Source"
 			Filter="">
 			<File
-				RelativePath=".\Source\Core\Error.cpp">
+				RelativePath="Source\Core\Error.cpp">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Source\Core\Exe.cpp">
+				RelativePath="Source\Core\Exe.cpp">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Source\Standard\Cxbe\Main.cpp">
+				RelativePath="Source\Standard\Cxbe\Main.cpp">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Source\Core\OpenXDK.cpp">
+				RelativePath="Source\Core\OpenXDK.cpp">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Source\Core\Xbe.cpp">
+				RelativePath="Source\Core\Xbe.cpp">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter

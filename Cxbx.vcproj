@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding = "Windows-1252"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.00"
+	Version="7.10"
 	Name="Cxbx"
 	SccProjectName=""
 	SccLocalPath="">
@@ -10,6 +10,75 @@
 			Name="Win32"/>
 	</Platforms>
 	<Configurations>
+		<Configuration
+			Name="Debug|Win32"
+			OutputDirectory=".\Bin\Debug"
+			IntermediateDirectory=".\Bin\Debug"
+			ConfigurationType="1"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="2">
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="Include,Include/Core/,Include/Win32/,Include/Win32/Cxbxkrnl,Include/Win32/Cxbx"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderFile=".\Bin\Debug/Cxbx.pch"
+				AssemblerListingLocation=".\Bin\Debug/"
+				ObjectFile=".\Bin\Debug/"
+				ProgramDataBaseFileName=".\Bin\Debug/"
+				BrowseInformation="1"
+				WarningLevel="3"
+				SuppressStartupBanner="TRUE"
+				DebugInformationFormat="3"
+				CompileAs="0"/>
+			<Tool
+				Name="VCCustomBuildTool"/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="d3d8.lib dinput8.lib dxguid.lib odbc32.lib odbccp32.lib"
+				OutputFile=".\Bin\Debug/Cxbx.exe"
+				LinkIncremental="1"
+				SuppressStartupBanner="TRUE"
+				GenerateDebugInformation="TRUE"
+				ProgramDatabaseFile=".\Bin\Debug/Cxbx.pdb"
+				GenerateMapFile="TRUE"
+				MapFileName=".\Bin\Debug/Cxbx.map"
+				SubSystem="2"
+				TargetMachine="1"/>
+			<Tool
+				Name="VCMIDLTool"
+				PreprocessorDefinitions="_DEBUG"
+				MkTypLibCompatible="TRUE"
+				SuppressStartupBanner="TRUE"
+				TargetEnvironment="1"
+				TypeLibraryName=".\Bin\Debug/Cxbx.tlb"
+				HeaderFileName=""/>
+			<Tool
+				Name="VCPostBuildEventTool"/>
+			<Tool
+				Name="VCPreBuildEventTool"/>
+			<Tool
+				Name="VCPreLinkEventTool"/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_DEBUG"
+				Culture="1033"
+				AdditionalIncludeDirectories="Include\Win32\Cxbx"/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
+		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory=".\Bin"
@@ -20,9 +89,10 @@
 			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="Include,Include/Core/,Include/Win32/,Include/Win32/Cxbxkrnl,Include/Win32/Cxbx"
-				PreprocessorDefinitions="WIN32,NDEBUG,_WINDOWS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="TRUE"
@@ -32,6 +102,7 @@
 				ObjectFile=".\Bin/"
 				ProgramDataBaseFileName=".\Bin/"
 				BrowseInformation="1"
+				BrowseInformationFile=".\Bin/"
 				WarningLevel="3"
 				SuppressStartupBanner="TRUE"
 				CompileAs="0"/>
@@ -39,21 +110,22 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="d3d8.lib dinput8.lib dxguid.lib odbc32.lib odbccp32.lib"
 				OutputFile=".\Bin/Cxbx.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				GenerateMapFile="TRUE"
 				MapFileName=".\Bin/Cxbx.map"
-				SubSystem="2"/>
+				SubSystem="2"
+				TargetMachine="1"/>
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="NDEBUG"
 				MkTypLibCompatible="TRUE"
 				SuppressStartupBanner="TRUE"
 				TargetEnvironment="1"
-				TypeLibraryName=".\Bin/Cxbx.tlb"/>
+				TypeLibraryName=".\Bin/Cxbx.tlb"
+				HeaderFileName=""/>
 			<Tool
 				Name="VCPostBuildEventTool"
 				CommandLine="cd PostBuild
@@ -71,83 +143,29 @@ upxCxbx.bat
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
-				Name="VCWebDeploymentTool"/>
-		</Configuration>
-		<Configuration
-			Name="Debug|Win32"
-			OutputDirectory=".\Bin\Debug"
-			IntermediateDirectory=".\Bin\Debug"
-			ConfigurationType="1"
-			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="FALSE"
-			CharacterSet="2">
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="Include,Include/Core/,Include/Win32/,Include/Win32/Cxbxkrnl,Include/Win32/Cxbx"
-				PreprocessorDefinitions="WIN32,_DEBUG,_WINDOWS"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				UsePrecompiledHeader="2"
-				PrecompiledHeaderFile=".\Bin\Debug/Cxbx.pch"
-				AssemblerListingLocation=".\Bin\Debug/"
-				ObjectFile=".\Bin\Debug/"
-				ProgramDataBaseFileName=".\Bin\Debug/"
-				BrowseInformation="1"
-				WarningLevel="3"
-				SuppressStartupBanner="TRUE"
-				DebugInformationFormat="3"
-				CompileAs="0"/>
-			<Tool
-				Name="VCCustomBuildTool"/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="d3d8.lib dinput8.lib dxguid.lib odbc32.lib odbccp32.lib"
-				OutputFile=".\Bin\Debug/Cxbx.exe"
-				LinkIncremental="2"
-				SuppressStartupBanner="TRUE"
-				GenerateDebugInformation="TRUE"
-				ProgramDatabaseFile=".\Bin\Debug/Cxbx.pdb"
-				GenerateMapFile="TRUE"
-				MapFileName=".\Bin\Debug/Cxbx.map"
-				SubSystem="2"/>
-			<Tool
-				Name="VCMIDLTool"
-				PreprocessorDefinitions="_DEBUG"
-				MkTypLibCompatible="TRUE"
-				SuppressStartupBanner="TRUE"
-				TargetEnvironment="1"
-				TypeLibraryName=".\Bin\Debug/Cxbx.tlb"/>
-			<Tool
-				Name="VCPostBuildEventTool"/>
-			<Tool
-				Name="VCPreBuildEventTool"/>
-			<Tool
-				Name="VCPreLinkEventTool"/>
-			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG"
-				Culture="1033"
-				AdditionalIncludeDirectories="Include\Win32\Cxbx"/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"/>
+				Name="VCXMLDataGeneratorTool"/>
 			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 	</Configurations>
+	<References>
+	</References>
 	<Files>
 		<Filter
 			Name="Bin"
 			Filter="">
 			<File
-				RelativePath=".\Bin\Cxbx.exe">
+				RelativePath="Bin\Cxbx.exe">
 			</File>
 			<Filter
 				Name="Debug"
 				Filter="">
 				<File
-					RelativePath=".\Bin\Debug\Cxbx.exe">
+					RelativePath="Bin\Debug\Cxbx.exe">
 				</File>
 			</Filter>
 		</Filter>
@@ -155,175 +173,462 @@ upxCxbx.bat
 			Name="Doc"
 			Filter="">
 			<File
-				RelativePath=".\Doc\Changelog.txt">
+				RelativePath="Doc\Changelog.txt">
 			</File>
 			<File
-				RelativePath=".\Doc\Input.txt">
+				RelativePath="Doc\Input.txt">
 			</File>
 			<File
-				RelativePath=".\Doc\RemovedCode.txt">
+				RelativePath="Doc\RemovedCode.txt">
 			</File>
 			<File
-				RelativePath=".\Doc\Thanks.txt">
+				RelativePath="Doc\Thanks.txt">
 			</File>
 			<File
-				RelativePath=".\Doc\Todo.txt">
+				RelativePath="Doc\Todo.txt">
 			</File>
 		</Filter>
 		<Filter
 			Name="Include"
 			Filter="">
 			<File
-				RelativePath=".\Include\Win32\AlignPosfix1.h">
+				RelativePath="Include\Win32\AlignPosfix1.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\AlignPrefix1.h">
+				RelativePath="Include\Win32\AlignPrefix1.h">
 			</File>
 			<File
-				RelativePath=".\Include\Cxbx.h">
+				RelativePath="Include\Cxbx.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\Cxbx\DlgControllerConfig.h">
+				RelativePath="Include\Win32\Cxbx\DlgControllerConfig.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\Cxbx\DlgVideoConfig.h">
+				RelativePath="Include\Win32\Cxbx\DlgVideoConfig.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\Emu.h">
+				RelativePath="Include\Win32\CxbxKrnl\Emu.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\EmuD3D8.h">
+				RelativePath="Include\Win32\CxbxKrnl\EmuD3D8.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\EmuDInput.h">
+				RelativePath="Include\Win32\CxbxKrnl\EmuDInput.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\EmuDSound.h">
+				RelativePath="Include\Win32\CxbxKrnl\EmuDSound.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\Cxbx\EmuExe.h">
+				RelativePath="Include\Win32\Cxbx\EmuExe.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\EmuShared.h">
+				RelativePath="Include\Win32\CxbxKrnl\EmuShared.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\EmuXG.h">
+				RelativePath="Include\Win32\CxbxKrnl\EmuXapi.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\EmuXOnline.h">
+				RelativePath="Include\Win32\CxbxKrnl\EmuXG.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\EmuXTL.h">
+				RelativePath="Include\Win32\CxbxKrnl\EmuXOnline.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\EmuXapi.h">
+				RelativePath="Include\Win32\CxbxKrnl\EmuXTL.h">
 			</File>
 			<File
-				RelativePath=".\Include\Core\Exe.h">
+				RelativePath="Include\Core\Exe.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\Mutex.h">
+				RelativePath="Include\Win32\Mutex.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\Cxbx\Prolog.h">
+				RelativePath="Include\Win32\Cxbx\Prolog.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\Cxbx\Wnd.h">
+				RelativePath="Include\Win32\Cxbx\Wnd.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\Cxbx\WndAbout.h">
+				RelativePath="Include\Win32\Cxbx\WndAbout.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\Cxbx\WndMain.h">
+				RelativePath="Include\Win32\Cxbx\WndMain.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\XBController.h">
+				RelativePath="Include\Win32\XBController.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\XBVideo.h">
+				RelativePath="Include\Core\Xbe.h">
 			</File>
 			<File
-				RelativePath=".\Include\Core\Xbe.h">
+				RelativePath="Include\Win32\XBVideo.h">
 			</File>
 		</Filter>
 		<Filter
 			Name="Resource"
 			Filter="">
 			<File
-				RelativePath=".\Resource\About.bmp">
+				RelativePath="Resource\About.bmp">
 			</File>
 			<File
-				RelativePath=".\Resource\Cxbx.ico">
+				RelativePath="Resource\Cxbx.ico">
 			</File>
 			<File
-				RelativePath=".\Resource\Cxbx.rc">
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCResourceCompilerTool"
-						AdditionalIncludeDirectories="Include\Win32\Cxbx;Resource;$(NoInherit)"/>
-				</FileConfiguration>
+				RelativePath="Resource\Cxbx.rc">
 				<FileConfiguration
 					Name="Debug|Win32">
 					<Tool
 						Name="VCResourceCompilerTool"
-						AdditionalIncludeDirectories="Include\Win32\Cxbx;Resource;$(NoInherit)"/>
+						PreprocessorDefinitions=""
+						AdditionalIncludeDirectories="Resource"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCResourceCompilerTool"
+						PreprocessorDefinitions=""
+						AdditionalIncludeDirectories="Resource"/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Resource\Logo.bmp">
+				RelativePath="Resource\Logo.bmp">
 			</File>
 			<File
-				RelativePath=".\Resource\Splash.bmp">
+				RelativePath="Resource\Splash.bmp">
 			</File>
 		</Filter>
 		<Filter
 			Name="Source"
 			Filter="">
 			<File
-				RelativePath=".\Source\Win32\Cxbx\DlgControllerConfig.cpp">
+				RelativePath="Source\Win32\Cxbx\DlgControllerConfig.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BrowseInformation="1"/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Source\Win32\Cxbx\DlgVideoConfig.cpp">
+				RelativePath="Source\Win32\Cxbx\DlgVideoConfig.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BrowseInformation="1"/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Source\Win32\Cxbx\EmuExe.cpp">
+				RelativePath="Source\Win32\Cxbx\EmuExe.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BrowseInformation="1"/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Source\Core\Error.cpp">
+				RelativePath="Source\Core\Error.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BrowseInformation="1"/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Source\Core\Exe.cpp">
+				RelativePath="Source\Core\Exe.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BrowseInformation="1"/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Source\Win32\Mutex.cpp">
+				RelativePath="Source\Win32\Mutex.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BrowseInformation="1"/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Source\Core\OpenXDK.cpp">
+				RelativePath="Source\Core\OpenXDK.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BrowseInformation="1"/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Source\Win32\Cxbx\Prolog.cpp">
+				RelativePath="Source\Win32\Cxbx\Prolog.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BrowseInformation="1"/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Source\Win32\Cxbx\WinMain.cpp">
+				RelativePath="Source\Win32\Cxbx\WinMain.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BrowseInformation="1"/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Source\Win32\Cxbx\Wnd.cpp">
+				RelativePath="Source\Win32\Cxbx\Wnd.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BrowseInformation="1"/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Source\Win32\Cxbx\WndAbout.cpp">
+				RelativePath="Source\Win32\Cxbx\WndAbout.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BrowseInformation="1"/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Source\Win32\Cxbx\WndMain.cpp">
+				RelativePath="Source\Win32\Cxbx\WndMain.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BrowseInformation="1"/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Source\Win32\XBController.cpp">
+				RelativePath="Source\Win32\XBController.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BrowseInformation="1"/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Source\Win32\XBVideo.cpp">
+				RelativePath="Source\Core\Xbe.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BrowseInformation="1"/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Source\Core\Xbe.cpp">
+				RelativePath="Source\Win32\XBVideo.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BrowseInformation="1"/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 	</Files>
