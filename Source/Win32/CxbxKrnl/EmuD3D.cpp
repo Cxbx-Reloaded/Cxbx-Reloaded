@@ -51,11 +51,12 @@ using namespace win32;
 // ******************************************************************
 // * globals
 // ******************************************************************
-LPDIRECT3D8       g_pD3D8         = NULL;  // Direct3D8
-LPDIRECT3DDEVICE8 g_pD3D8Device   = NULL;  // Direct3D8 Device
-Xbe::Header      *g_XbeHeader     = NULL;  // XbeHeader
-uint32            g_XbeHeaderSize = 0;     // XbeHeaderSize
-HWND              g_EmuWindow    = NULL;  // Rendering Window
+LPDIRECT3D8       g_pD3D8         = NULL;   // Direct3D8
+LPDIRECT3DDEVICE8 g_pD3D8Device   = NULL;   // Direct3D8 Device
+Xbe::Header      *g_XbeHeader     = NULL;   // XbeHeader
+uint32            g_XbeHeaderSize = 0;      // XbeHeaderSize
+HWND              g_EmuWindow     = NULL;   // Rendering Window
+D3DCAPS8          g_D3DCaps;                // Direct3D8 Caps
 
 // ******************************************************************
 // * statics
@@ -87,11 +88,13 @@ VOID xboxkrnl::EmuInitD3D(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
     }
 
     // ******************************************************************
-    // * create Direct3D8
+    // * create Direct3D8 and retrieve caps
     // ******************************************************************
     {
         // xbox Direct3DCreate8 returns "1" always, so we need our own ptr
         g_pD3D8 = Direct3DCreate8(D3D_SDK_VERSION);
+
+        g_pD3D8->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, &g_D3DCaps);
     }
 }
 
@@ -306,13 +309,13 @@ HRESULT WINAPI xboxkrnl::EmuIDirect3D8_CreateDevice
 
         // TODO: Use lookup table that is dependant on library version
         {
-            // Tricky MS randomizing .h #defines :[
+            // Xbox DirectX #defines are different from Win32 DirectX
             if(pPresentationParameters->BackBufferFormat == 0x07)
                 pPresentationParameters->BackBufferFormat = D3DFMT_X8R8G8B8;
             else if(pPresentationParameters->BackBufferFormat == 0x06)
                 pPresentationParameters->BackBufferFormat = D3DFMT_A8R8G8B8;
 
-            // Tricky MS randomizing .h #defines :[
+            // Xbox DirectX #defines are different from Win32 DirectX
             if(pPresentationParameters->AutoDepthStencilFormat == 0x2A)
                 pPresentationParameters->AutoDepthStencilFormat = D3DFMT_D24S8;
         }

@@ -60,6 +60,8 @@ namespace win32
     #undef FIELD_OFFSET     // prevent macro redefinition warnings
     #include <windows.h>
     #include <stdio.h>
+
+    #define DIRECT3D_VERSION 0x0800
     #include <d3d8.h>
 
     #define DIRECTINPUT_VERSION 0x0800

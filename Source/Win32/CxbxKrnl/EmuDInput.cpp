@@ -185,7 +185,7 @@ void xboxkrnl::EmuPollController()
         return;
     }
 
-    hRet = g_pGameCtrl->GetDeviceState(sizeof(DIJOYSTATE2), &ControllerState);
+    hRet = g_pGameCtrl->GetDeviceState(sizeof(DIJOYSTATE), &ControllerState);
     
     if(FAILED(hRet))
         return;
