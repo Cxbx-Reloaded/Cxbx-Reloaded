@@ -64,7 +64,7 @@ static inline void EmuSwapFS()
 // ******************************************************************
 static inline bool EmuIsXboxFS()
 {
-    bool chk = 0;
+    unsigned char chk = 0;
 
     __asm
     {
@@ -72,7 +72,7 @@ static inline bool EmuIsXboxFS()
         mov chk, ah
     }
 
-    return chk;
+    return (chk == 1);
 }
 
 // ******************************************************************

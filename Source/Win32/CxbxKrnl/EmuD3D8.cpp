@@ -67,7 +67,7 @@ xd3d8::LPDIRECT3D8       g_pD3D8         = NULL;   // Direct3D8
 xd3d8::LPDIRECT3DDEVICE8 g_pD3D8Device   = NULL;   // Direct3D8 Device
 Xbe::Header             *g_XbeHeader     = NULL;   // XbeHeader
 uint32                   g_XbeHeaderSize = 0;      // XbeHeaderSize
-HWND                     g_EmuWindow     = NULL;   // Rendering Window
+HWND                     g_hEmuWindow    = NULL;   // Rendering Window
 xd3d8::D3DCAPS8          g_D3DCaps;                // Direct3D8 Caps
 bool                     g_ThreadInitialized = false;
 HBRUSH                   g_hBgBrush      = NULL;   // Background Brush
@@ -190,7 +190,7 @@ void EmuRenderWindow(PVOID)
             sprintf(AsciiTitle, "Cxbx : Emulating %s", tAsciiTitle);
         }
 
-        g_EmuWindow = CreateWindow
+        g_hEmuWindow = CreateWindow
         (
             "CxbxRender", AsciiTitle,
             WS_OVERLAPPEDWINDOW, 100, 100, 640, 480,
@@ -202,8 +202,8 @@ void EmuRenderWindow(PVOID)
     // * display the window
     // ******************************************************************
     {
-        ShowWindow(g_EmuWindow, SW_SHOWDEFAULT);
-        UpdateWindow(g_EmuWindow);
+        ShowWindow(g_hEmuWindow, SW_SHOWDEFAULT);
+        UpdateWindow(g_hEmuWindow);
     }
 
     // ******************************************************************
@@ -324,7 +324,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
         // TODO: More intelligently set this only when the game wants it
         //pPresentationParameters->SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
 
-        hFocusWindow = g_EmuWindow;
+        hFocusWindow = g_hEmuWindow;
 
         // TODO: Use lookup table that is dependant on library version
         {

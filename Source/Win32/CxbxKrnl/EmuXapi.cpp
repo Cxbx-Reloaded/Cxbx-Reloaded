@@ -75,7 +75,7 @@ static DWORD WINAPI EmuCreateThreadProxy
 
     delete iEmuCreateThreadProxyParam;
 
-    EmuGenerateFS(g_TlsAdjust);
+    EmuGenerateFS(g_dwTlsAdjust);
 
     // ******************************************************************
     // * debug trace

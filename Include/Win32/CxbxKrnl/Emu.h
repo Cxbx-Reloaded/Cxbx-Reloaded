@@ -70,8 +70,8 @@ extern int EmuException(LPEXCEPTION_POINTERS e);
 extern "C" CXBXKRNL_API uint32 KernelThunkTable[367];
 
 // ******************************************************************
-// * data: g_TlsAdjust
+// * data: g_dwTlsAdjust
 // ******************************************************************
-extern uint32 g_TlsAdjust;
+extern DWORD g_dwTlsAdjust;
 
 #endif

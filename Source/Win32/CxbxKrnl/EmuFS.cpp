@@ -98,8 +98,8 @@ void EmuGenerateFS(int TlsAdjust)
         mov ax, NewFS
         mov fs:[0x14], ax
 
-		// Save "True" inside OrgFS.ArbitraryUserPointer.isOrgFS
-		mov ah, 1
+		// Save "False" inside OrgFS.ArbitraryUserPointer.isXboxFS
+		mov ah, 0
 		mov fs:[0x16], ah
     }
 
@@ -150,8 +150,8 @@ void EmuGenerateFS(int TlsAdjust)
         mov ax, OrgFS
         mov fs:[0x14], ax   // NewFS.ArbitraryUserPointer
 
-		mov ah, 0
-		mov fs:[0x16], ah	// NewFS.ArbitraryUserPointer.isOrgFS
+		mov ah, 1
+		mov fs:[0x16], ah	// NewFS.ArbitraryUserPointer.isXboxFS
     }
 
     // ******************************************************************

@@ -105,8 +105,10 @@ static DWORD WINAPI PCSTProxy
     DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hThread, 0, FALSE, DUPLICATE_SAME_ACCESS);
 
     tl->hThread = hThread;
-    tl->pNext   = new ThreadList;
+    tl->dwThreadId = GetCurrentThreadId();
+    tl->pNext = new ThreadList;
     tl->pNext->hThread = NULL;
+    tl->pNext->dwThreadId = 0;
     tl->pNext->pNext = NULL;
 
     ThreadList::pHead = tl->pNext;
@@ -119,7 +121,7 @@ static DWORD WINAPI PCSTProxy
 
     delete iPCSTProxyParam;
 
-    EmuGenerateFS(g_TlsAdjust);
+    EmuGenerateFS(g_dwTlsAdjust);
 
     // ******************************************************************
     // * debug trace

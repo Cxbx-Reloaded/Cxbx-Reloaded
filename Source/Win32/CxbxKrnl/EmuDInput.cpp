@@ -61,7 +61,7 @@ bool EmuDInputInit()
 {
     g_EmuShared->GetXBController(&g_XBController);
 
-    g_XBController.ListenBegin(g_EmuWindow);
+    g_XBController.ListenBegin(g_hEmuWindow);
 
     if(g_XBController.GetError())
         return false;

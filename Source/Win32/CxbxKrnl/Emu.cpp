@@ -49,13 +49,15 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "HLEDataBase.h"
 
-#include <math.h>
-
 // ******************************************************************
 // * global / static
 // ******************************************************************
+extern DWORD g_dwTlsAdjust = 0;
+
+// ******************************************************************
+// * static
+// ******************************************************************
 static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *XbeHeader);
-extern uint32 g_TlsAdjust = 0;
 
 // ******************************************************************
 // * func: DllMain
@@ -88,7 +90,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuNoFunc()
 // ******************************************************************
 extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)())
 {
-    g_TlsAdjust = TlsAdjust;
+    g_dwTlsAdjust = TlsAdjust;
 
     // ******************************************************************
     // * debug console allocation (if configured)
@@ -179,9 +181,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion
     // * Initialize OpenXDK emulation
     // ******************************************************************
     if(LibraryVersion == 0)
-    {
         printf("Emu: Detected OpenXDK application...\n");
-    }
 
     // ******************************************************************
     // * Initialize Microsoft XDK emulation
@@ -210,14 +210,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion
 
             for(uint32 d=0;d<dwHLEEntries;d++)
             {
-                if
-                (
-                    BuildVersion != HLEDataBase[d].BuildVersion ||
-                    MinorVersion != HLEDataBase[d].MinorVersion ||
-                    MajorVersion != HLEDataBase[d].MajorVersion ||
-                    strcmp(szLibraryName, HLEDataBase[d].Library) != 0
-                )
-                continue;
+                if(BuildVersion != HLEDataBase[d].BuildVersion || MinorVersion != HLEDataBase[d].MinorVersion || MajorVersion != HLEDataBase[d].MajorVersion || strcmp(szLibraryName, HLEDataBase[d].Library) != 0)
+                    continue;
 
                 found = true;
 
@@ -280,37 +274,6 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage)
         EmuSwapFS();    // Win2k/XP FS
 
     // ******************************************************************
-    // * Suspend all Threads
-    // ******************************************************************
-    while(true)
-    {
-        ThreadList *tl = ThreadList::pFirst;
-
-        if(tl == NULL)
-            break;
-
-        SuspendThread(tl->hThread);
-
-        CONTEXT Context;
-
-        Context.ContextFlags = CONTEXT_CONTROL;
-
-        Context.Eip = (DWORD)EmuCleanThread;
-
-        SetThreadContext(tl->hThread, &Context);
-
-        ResumeThread(tl->hThread);
-
-        DWORD dwTerm = 0;
-        while(GetExitCodeThread(tl->hThread, &dwTerm) == 0)
-            Sleep(50);
-
-        ThreadList::pFirst = tl->pNext;
-
-        delete tl;
-    }
-
-    // ******************************************************************
     // * Print out ErrorMessage (if exists)
     // ******************************************************************
     if(szErrorMessage != NULL)
@@ -324,7 +287,50 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage)
         MessageBox(NULL, buffer, "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
     }
 
+    // ******************************************************************
+    // * Suspend all Threads
+    // ******************************************************************
+    while(true)
+    {
+        ThreadList *tl = ThreadList::pFirst;
+
+        if(tl == NULL)
+            break;
+
+        // ignore current thread
+        if(tl->dwThreadId != GetCurrentThreadId())
+        {
+            SuspendThread(tl->hThread);
+
+            CONTEXT Context;
+
+            Context.ContextFlags = CONTEXT_CONTROL;
+
+            Context.Eip = (DWORD)EmuCleanThread;
+
+            SetThreadContext(tl->hThread, &Context);
+
+            ResumeThread(tl->hThread);
+
+            DWORD dwTerm = 0;
+            GetExitCodeThread(tl->hThread, &dwTerm);
+
+            while(dwTerm == STILL_ACTIVE)
+            {
+                Sleep(50);
+                GetExitCodeThread(tl->hThread, &dwTerm);
+            }
+
+            printf("Cxbx: Thread 0x%.08X Terminated\n", tl->hThread);
+        }
+
+        ThreadList::pFirst = tl->pNext;
+
+        delete tl;
+    }
+
     printf("CxbxKrnl: Terminating Process\n");
+    fflush(stdout);
 
     EmuCleanThread();
 

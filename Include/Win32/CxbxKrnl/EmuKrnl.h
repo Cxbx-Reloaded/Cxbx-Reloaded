@@ -43,6 +43,8 @@ struct ThreadList
     static ThreadList *pFirst;
 
     HANDLE      hThread;
+    DWORD       dwThreadId;
+
     ThreadList *pNext;
 };
 
