@@ -364,7 +364,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
 
         Adapter = D3DADAPTER_DEFAULT;
 
-//        pPresentationParameters->Windowed = TRUE;
+        pPresentationParameters->Windowed = TRUE;
 
         // TODO: More intelligently set this only when the game wants it
 //        pPresentationParameters->SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;

@@ -250,6 +250,38 @@ SOOVPA<7> XapiInitProcess_1_0_4361 =
     }
 };
 
+
+// ******************************************************************
+// * XapiThreadStartup
+// ******************************************************************
+SOOVPA<10> XapiThreadStartup_1_0_4361 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    {
+        // XapiThreadStartup+0x00 : push 0x18
+        { 0x00, 0x6A }, // (Offset,Value)-Pair #1
+        { 0x01, 0x18 }, // (Offset,Value)-Pair #2
+
+        // XapiThreadStartup+0x10 : mov eax, fs:[0x28]
+        { 0x10, 0x64 }, // (Offset,Value)-Pair #3
+        { 0x11, 0xA1 }, // (Offset,Value)-Pair #4
+        { 0x12, 0x28 }, // (Offset,Value)-Pair #5
+
+        // XapiThreadStartup+0x3F : repe movsd
+        { 0x3F, 0xF3 }, // (Offset,Value)-Pair #6
+        { 0x40, 0xA5 }, // (Offset,Value)-Pair #7
+
+        // XapiThreadStartup+0x7C : jmp +0x0C
+        { 0x7C, 0xEB }, // (Offset,Value)-Pair #8
+        { 0x7D, 0x0C }, // (Offset,Value)-Pair #9
+
+        // XapiThreadStartup+0x86 : retn
+        { 0x86, 0xC3 }, // (Offset,Value)-Pair #10
+    }
+};
+
 // ******************************************************************
 // * XapiSetupPerTitleDriveLetters
 // ******************************************************************
@@ -370,6 +402,16 @@ OOVPATable XAPI_1_0_4361[] =
         #endif
     },
     //*/
+    // XapiThreadStartup
+    {
+        (OOVPA*)&XapiThreadStartup_1_0_4361,
+
+        xapi::EmuXapiThreadStartup,
+
+        #ifdef _DEBUG_TRACE
+        "XapiThreadStartup"
+        #endif
+    },
     /* Too High Level
     // XapiSetupPerTitleDriveLetters
     {

@@ -149,6 +149,17 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
     }
 
     // ******************************************************************
+    // * Prepare TLS
+    // ******************************************************************
+    {
+        // TLS Index Address := 0
+        *(uint32*)pTLS->dwTLSIndexAddr = 0;
+
+        // dword @ pTLSData := pTLSData
+        *(void**)pTLSData = pTLSData;
+    }
+
+    // ******************************************************************
     // * Swap into the "NewFS"
     // ******************************************************************
     EmuSwapFS();

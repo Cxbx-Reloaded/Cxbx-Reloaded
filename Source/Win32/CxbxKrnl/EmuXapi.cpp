@@ -290,6 +290,43 @@ VOID WINAPI xapi::EmuXapiInitProcess()
 
     return;
 }
+
+// ******************************************************************
+// * func: EmuXapiThreadStartup
+// ******************************************************************
+VOID WINAPI xapi::EmuXapiThreadStartup
+(
+    DWORD dwDummy1,
+    DWORD dwDummy2
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%.08X): EmuXapiThreadStartup\n"
+               "(\n"
+               "   dwDummy1            : 0x%.08X\n"
+               "   dwDummy2            : 0x%.08X\n"
+               ");\n",
+                GetCurrentThreadId(), dwDummy1, dwDummy2);
+    }
+    #endif
+
+    EmuSwapFS();   // XBox FS
+
+    __asm
+    {
+        push dwDummy2
+        call dwDummy1
+    }
+
+    return;
+}
+
 /* Too High Level!
 // ******************************************************************
 // * func: XapiSetupPerTitleDriveLetters

@@ -276,6 +276,15 @@ BOOL WINAPI EmuCloseHandle
 // ******************************************************************
 VOID WINAPI EmuXapiInitProcess();
 
+// ******************************************************************
+// * func: EmuXapiThreadStartup
+// ******************************************************************
+VOID WINAPI EmuXapiThreadStartup
+(
+    DWORD dwDummy1,
+    DWORD dwDummy2
+);
+
 /* Too High Level!
 // ******************************************************************
 // * func: XapiSetupPerTitleDriveLetters
