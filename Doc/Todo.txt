@@ -1,6 +1,8 @@
 Cxbx Todo (* denotes high priority)
 
-  * Verify TLS stability and correctness
+  * Stabilize Heap Allocation (i.e. new) -> Crashes after initial commit is full
+
+  * Stabilize TLS (it's close...)
 
   * 3D Textured Demo
 
