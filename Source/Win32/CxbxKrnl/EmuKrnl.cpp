@@ -886,7 +886,7 @@ XBSYSAPI EXPORTNUM(182) VOID NTAPI xboxkrnl::MmSetAddressProtect
     #endif
 
     // TODO: Actually set protection
-    EmuWarning("MmSetAddressProtect is being ignored\n");
+    EmuWarning("MmSetAddressProtect is being ignored");
 
     EmuSwapFS();   // Xbox FS
 
@@ -1063,6 +1063,10 @@ XBSYSAPI EXPORTNUM(189) NTSTATUS NTAPI xboxkrnl::NtCreateEvent
     // * Redirect to NtCreateEvent
     // ******************************************************************
     NTSTATUS ret = NtDll::NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, (szBuffer != 0) ? &NtObjAttr : 0, (NtDll::EVENT_TYPE)EventType, InitialState);
+
+    #ifdef _DEBUG_TRACE
+    printf("EmuKrnl (0x%X): NtCreateEvent EventHandle = 0x%.08X\n", GetCurrentThreadId(), *EventHandle);
+    #endif
 
     EmuSwapFS();   // Xbox FS
 
@@ -1945,9 +1949,6 @@ XBSYSAPI EXPORTNUM(236) NTSTATUS NTAPI xboxkrnl::NtWriteFile
     NTSTATUS ret = NtDll::NtWriteFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, (NtDll::LARGE_INTEGER*)ByteOffset, 0);
 
     EmuSwapFS();   // Xbox FS
-
-    if(ApcRoutine != NULL)
-        EmuWarning("NtWriteFile has an ApcRoutine that is ignored!");
 
     if(FAILED(ret))
         EmuWarning("NtWriteFile Failed! (0x%.08X)", ret);

@@ -127,7 +127,12 @@ struct EmuD3D8CreateDeviceProxyData
     XTL::X_D3DPRESENT_PARAMETERS    *pPresentationParameters;
     XTL::IDirect3DDevice8          **ppReturnedDeviceInterface;
     volatile bool                    bReady;
-    volatile HRESULT                 hRet;
+
+    union
+    {
+        volatile HRESULT  hRet;
+        volatile bool     bCreate;   // false : release
+    };
 }
 g_EmuD3D8CreateDeviceProxyData = {0};
 
@@ -456,203 +461,224 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
         {
             printf("EmuD3D8 (0x%X): CreateDevice proxy thread recieved request.\n", GetCurrentThreadId());
 
-            // only one device should be created at once
-            // TODO: ensure all surfaces are somehow cleaned up?
-            if(g_pD3DDevice8 != 0)
+            if(g_EmuD3D8CreateDeviceProxyData.bCreate)
             {
-                printf("EmuD3D8 (0x%X): CreateDevice proxy thread releasing old Device.\n", GetCurrentThreadId());
-
-                g_pD3DDevice8->EndScene();
-
-                while(g_pD3DDevice8->Release() != 0);
-
-                g_pD3DDevice8 = 0;
-            }
-
-            // ******************************************************************
-            // * verify no ugly circumstances
-            // ******************************************************************
-            if(g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BufferSurfaces[0] != NULL || g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->DepthStencilSurface != NULL)
-                EmuWarning("DepthStencilSurface != NULL and/or BufferSurfaces[0] != NULL");
-
-            // ******************************************************************
-            // * make adjustments to parameters to make sense with windows d3d
-            // ******************************************************************
-            {
-                g_EmuD3D8CreateDeviceProxyData.DeviceType =(g_XBVideo.GetDirect3DDevice() == 0) ? XTL::D3DDEVTYPE_HAL : XTL::D3DDEVTYPE_REF;
-                g_EmuD3D8CreateDeviceProxyData.Adapter    = g_XBVideo.GetDisplayAdapter();
-
-                g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->Windowed = !g_XBVideo.GetFullscreen();
-
-                if(g_XBVideo.GetVSync())
-                    g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->SwapEffect = XTL::D3DSWAPEFFECT_COPY_VSYNC;
-
-                g_EmuD3D8CreateDeviceProxyData.hFocusWindow = XTL::g_hEmuWindow;
-
-                g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferFormat       = XTL::EmuXB2PC_D3DFormat(g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferFormat);
-                g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->AutoDepthStencilFormat = XTL::EmuXB2PC_D3DFormat(g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->AutoDepthStencilFormat);
-
-                if(!g_XBVideo.GetVSync() && (g_D3DCaps.PresentationIntervals & D3DPRESENT_INTERVAL_IMMEDIATE) && g_XBVideo.GetFullscreen())
-                    g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
-                else
+                // only one device should be created at once
+                // TODO: ensure all surfaces are somehow cleaned up?
+                if(g_pD3DDevice8 != 0)
                 {
-                    if(g_D3DCaps.PresentationIntervals & D3DPRESENT_INTERVAL_ONE && g_XBVideo.GetFullscreen())
-                        g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+                    printf("EmuD3D8 (0x%X): CreateDevice proxy thread releasing old Device.\n", GetCurrentThreadId());
+
+                    g_pD3DDevice8->EndScene();
+
+                    while(g_pD3DDevice8->Release() != 0);
+
+                    g_pD3DDevice8 = 0;
+                }
+
+                // ******************************************************************
+                // * verify no ugly circumstances
+                // ******************************************************************
+                if(g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BufferSurfaces[0] != NULL || g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->DepthStencilSurface != NULL)
+                    EmuWarning("DepthStencilSurface != NULL and/or BufferSurfaces[0] != NULL");
+
+                // ******************************************************************
+                // * make adjustments to parameters to make sense with windows d3d
+                // ******************************************************************
+                {
+                    g_EmuD3D8CreateDeviceProxyData.DeviceType =(g_XBVideo.GetDirect3DDevice() == 0) ? XTL::D3DDEVTYPE_HAL : XTL::D3DDEVTYPE_REF;
+                    g_EmuD3D8CreateDeviceProxyData.Adapter    = g_XBVideo.GetDisplayAdapter();
+
+                    g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->Windowed = !g_XBVideo.GetFullscreen();
+
+                    if(g_XBVideo.GetVSync())
+                        g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->SwapEffect = XTL::D3DSWAPEFFECT_COPY_VSYNC;
+
+                    g_EmuD3D8CreateDeviceProxyData.hFocusWindow = XTL::g_hEmuWindow;
+
+                    g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferFormat       = XTL::EmuXB2PC_D3DFormat(g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferFormat);
+                    g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->AutoDepthStencilFormat = XTL::EmuXB2PC_D3DFormat(g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->AutoDepthStencilFormat);
+
+                    if(!g_XBVideo.GetVSync() && (g_D3DCaps.PresentationIntervals & D3DPRESENT_INTERVAL_IMMEDIATE) && g_XBVideo.GetFullscreen())
+                        g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
                     else
-                        g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
-                }
+                    {
+                        if(g_D3DCaps.PresentationIntervals & D3DPRESENT_INTERVAL_ONE && g_XBVideo.GetFullscreen())
+                            g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+                        else
+                            g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+                    }
 
-                // TODO: Support Xbox extensions if possible
-                if(g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->MultiSampleType != 0)
-                {
-                    EmuWarning("MultiSampleType 0x%.08X is not supported!", g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->MultiSampleType);
+                    // TODO: Support Xbox extensions if possible
+                    if(g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->MultiSampleType != 0)
+                    {
+                        EmuWarning("MultiSampleType 0x%.08X is not supported!", g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->MultiSampleType);
 
-                    g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->MultiSampleType = XTL::D3DMULTISAMPLE_NONE;
+                        g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->MultiSampleType = XTL::D3DMULTISAMPLE_NONE;
 
-                    // TODO: Check card for multisampling abilities
-        //            if(pPresentationParameters->MultiSampleType == 0x00001121)
-        //                pPresentationParameters->MultiSampleType = D3DMULTISAMPLE_2_SAMPLES;
-        //            else
-        //                EmuCleanup("Unknown MultiSampleType (0x%.08X)", pPresentationParameters->MultiSampleType);
-                }
+                        // TODO: Check card for multisampling abilities
+            //            if(pPresentationParameters->MultiSampleType == 0x00001121)
+            //                pPresentationParameters->MultiSampleType = D3DMULTISAMPLE_2_SAMPLES;
+            //            else
+            //                EmuCleanup("Unknown MultiSampleType (0x%.08X)", pPresentationParameters->MultiSampleType);
+                    }
 
-                g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+                    g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
         
+                    // ******************************************************************
+                    // * Retrieve Resolution from Configuration
+                    // ******************************************************************
+                    if(g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->Windowed)
+                    {
+                        sscanf(g_XBVideo.GetVideoResolution(), "%d x %d", &g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferWidth, &g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferHeight);
+
+                        XTL::D3DDISPLAYMODE D3DDisplayMode;
+
+                        g_pD3D8->GetAdapterDisplayMode(g_XBVideo.GetDisplayAdapter(), &D3DDisplayMode);
+
+                        g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferFormat = D3DDisplayMode.Format;
+                        g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->FullScreen_RefreshRateInHz = 0;
+                    }
+                    else
+                    {
+                        char szBackBufferFormat[16];
+
+                        sscanf(g_XBVideo.GetVideoResolution(), "%d x %d %*dbit %s (%d hz)", 
+                            &g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferWidth, 
+                            &g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferHeight,
+                            szBackBufferFormat,
+                            &g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->FullScreen_RefreshRateInHz);
+
+                        if(strcmp(szBackBufferFormat, "x1r5g5b5") == 0)
+                            g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferFormat = XTL::D3DFMT_X1R5G5B5;
+                        else if(strcmp(szBackBufferFormat, "r5g6r5") == 0)
+                            g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferFormat = XTL::D3DFMT_R5G6B5;
+                        else if(strcmp(szBackBufferFormat, "x8r8g8b8") == 0)
+                            g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferFormat = XTL::D3DFMT_X8R8G8B8;
+                        else if(strcmp(szBackBufferFormat, "a8r8g8b8") == 0)
+                            g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferFormat = XTL::D3DFMT_A8R8G8B8;
+                    }
+                }
+
                 // ******************************************************************
-                // * Retrieve Resolution from Configuration
+                // * Detect vertex processing capabilities
                 // ******************************************************************
-                if(g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->Windowed)
+                if((g_D3DCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) && g_EmuD3D8CreateDeviceProxyData.DeviceType == XTL::D3DDEVTYPE_HAL)
                 {
-                    sscanf(g_XBVideo.GetVideoResolution(), "%d x %d", &g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferWidth, &g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferHeight);
-
-                    XTL::D3DDISPLAYMODE D3DDisplayMode;
-
-                    g_pD3D8->GetAdapterDisplayMode(g_XBVideo.GetDisplayAdapter(), &D3DDisplayMode);
-
-                    g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferFormat = D3DDisplayMode.Format;
-                    g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->FullScreen_RefreshRateInHz = 0;
+                    #ifdef _DEBUG_TRACE
+                    printf("EmuD3D8 (0x%X): Using hardware vertex processing\n", GetCurrentThreadId());
+                    #endif
+                    g_EmuD3D8CreateDeviceProxyData.BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+                    g_dwVertexShaderUsage = 0;
                 }
                 else
                 {
-                    char szBackBufferFormat[16];
-
-                    sscanf(g_XBVideo.GetVideoResolution(), "%d x %d %*dbit %s (%d hz)", 
-                        &g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferWidth, 
-                        &g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferHeight,
-                        szBackBufferFormat,
-                        &g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->FullScreen_RefreshRateInHz);
-
-                    if(strcmp(szBackBufferFormat, "x1r5g5b5") == 0)
-                        g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferFormat = XTL::D3DFMT_X1R5G5B5;
-                    else if(strcmp(szBackBufferFormat, "r5g6r5") == 0)
-                        g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferFormat = XTL::D3DFMT_R5G6B5;
-                    else if(strcmp(szBackBufferFormat, "x8r8g8b8") == 0)
-                        g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferFormat = XTL::D3DFMT_X8R8G8B8;
-                    else if(strcmp(szBackBufferFormat, "a8r8g8b8") == 0)
-                        g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BackBufferFormat = XTL::D3DFMT_A8R8G8B8;
+                    #ifdef _DEBUG_TRACE
+                    printf("EmuD3D8 (0x%X): Using software vertex processing\n", GetCurrentThreadId());
+                    #endif
+                    g_EmuD3D8CreateDeviceProxyData.BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+                    g_dwVertexShaderUsage = D3DUSAGE_SOFTWAREPROCESSING;
                 }
-            }
 
-            // ******************************************************************
-            // * Detect vertex processing capabilities
-            // ******************************************************************
-            if((g_D3DCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) && g_EmuD3D8CreateDeviceProxyData.DeviceType == XTL::D3DDEVTYPE_HAL)
-            {
-                #ifdef _DEBUG_TRACE
-                printf("EmuD3D8 (0x%X): Using hardware vertex processing\n", GetCurrentThreadId());
-                #endif
-                g_EmuD3D8CreateDeviceProxyData.BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
-                g_dwVertexShaderUsage = 0;
+                // ******************************************************************
+                // * redirect to windows d3d
+                // ******************************************************************
+                g_EmuD3D8CreateDeviceProxyData.hRet = g_pD3D8->CreateDevice
+                (
+                    g_EmuD3D8CreateDeviceProxyData.Adapter,
+                    g_EmuD3D8CreateDeviceProxyData.DeviceType,
+                    g_EmuD3D8CreateDeviceProxyData.hFocusWindow,
+                    g_EmuD3D8CreateDeviceProxyData.BehaviorFlags,
+                    (XTL::D3DPRESENT_PARAMETERS*)g_EmuD3D8CreateDeviceProxyData.pPresentationParameters,
+                    g_EmuD3D8CreateDeviceProxyData.ppReturnedDeviceInterface
+                );
+
+                // ******************************************************************
+                // * report error
+                // ******************************************************************
+                if(FAILED(g_EmuD3D8CreateDeviceProxyData.hRet))
+                {
+                    if(g_EmuD3D8CreateDeviceProxyData.hRet == D3DERR_INVALIDCALL)
+                        EmuCleanup("IDirect3D8::CreateDevice failed (Invalid Call)");
+                    else if(g_EmuD3D8CreateDeviceProxyData.hRet == D3DERR_NOTAVAILABLE)
+                        EmuCleanup("IDirect3D8::CreateDevice failed (Not Available)");
+                    else if(g_EmuD3D8CreateDeviceProxyData.hRet == D3DERR_OUTOFVIDEOMEMORY)
+                        EmuCleanup("IDirect3D8::CreateDevice failed (Out of Video Memory)");
+
+                    EmuCleanup("IDirect3D8::CreateDevice failed (Unknown)");
+                }
+
+                // ******************************************************************
+                // * it is necessary to store this pointer globally for emulation
+                // ******************************************************************
+                g_pD3DDevice8 = *g_EmuD3D8CreateDeviceProxyData.ppReturnedDeviceInterface;
+
+                // ******************************************************************
+                // * check for YUY2 overlay support
+                // ******************************************************************
+                {
+                    XTL::D3DDISPLAYMODE DisplayMode;
+
+                    if(g_pD3DDevice8->GetDisplayMode(&DisplayMode) != D3D_OK)
+                        g_bSupportsYUY2 = FALSE;
+                    else
+                    {
+                        ::HRESULT hRet = g_pD3D8->CheckDeviceFormat
+                        (
+                            g_EmuD3D8CreateDeviceProxyData.Adapter, g_EmuD3D8CreateDeviceProxyData.DeviceType,
+                            (XTL::D3DFORMAT)DisplayMode.Format, 0, XTL::D3DRTYPE_TEXTURE, XTL::D3DFMT_YUY2
+                        );
+
+                        g_bSupportsYUY2 = SUCCEEDED(hRet);
+
+                        if(!g_bSupportsYUY2)
+                            EmuWarning("YUY2 overlays are not supported in hardware, could be slow!");
+                    }
+                }
+
+                // ******************************************************************
+                // * Update Caches
+                // ******************************************************************
+                {
+                    g_pCachedRenderTarget = new XTL::X_D3DSurface();
+                    g_pD3DDevice8->GetRenderTarget(&g_pCachedRenderTarget->EmuSurface8);
+
+                    g_pCachedZStencilSurface = new XTL::X_D3DSurface();
+                    g_pD3DDevice8->GetDepthStencilSurface(&g_pCachedZStencilSurface->EmuSurface8);
+                }
+
+                // ******************************************************************
+                // * Begin Scene
+                // ******************************************************************
+                g_pD3DDevice8->BeginScene();
+
+                // ******************************************************************
+                // * Initially, show a black screen
+                // ******************************************************************
+                g_pD3DDevice8->Clear(0, 0, D3DCLEAR_TARGET, 0, 0, 0);
+                g_pD3DDevice8->Present(0, 0, 0, 0);
+
+                // signal completion
+                g_EmuD3D8CreateDeviceProxyData.bReady = false;
             }
             else
             {
-                #ifdef _DEBUG_TRACE
-                printf("EmuD3D8 (0x%X): Using software vertex processing\n", GetCurrentThreadId());
-                #endif
-                g_EmuD3D8CreateDeviceProxyData.BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
-                g_dwVertexShaderUsage = D3DUSAGE_SOFTWAREPROCESSING;
-            }
-
-            // ******************************************************************
-            // * redirect to windows d3d
-            // ******************************************************************
-            g_EmuD3D8CreateDeviceProxyData.hRet = g_pD3D8->CreateDevice
-            (
-                g_EmuD3D8CreateDeviceProxyData.Adapter,
-                g_EmuD3D8CreateDeviceProxyData.DeviceType,
-                g_EmuD3D8CreateDeviceProxyData.hFocusWindow,
-                g_EmuD3D8CreateDeviceProxyData.BehaviorFlags,
-                (XTL::D3DPRESENT_PARAMETERS*)g_EmuD3D8CreateDeviceProxyData.pPresentationParameters,
-                g_EmuD3D8CreateDeviceProxyData.ppReturnedDeviceInterface
-            );
-
-            // ******************************************************************
-            // * report error
-            // ******************************************************************
-            if(FAILED(g_EmuD3D8CreateDeviceProxyData.hRet))
-            {
-                if(g_EmuD3D8CreateDeviceProxyData.hRet == D3DERR_INVALIDCALL)
-                    EmuCleanup("IDirect3D8::CreateDevice failed (Invalid Call)");
-                else if(g_EmuD3D8CreateDeviceProxyData.hRet == D3DERR_NOTAVAILABLE)
-                    EmuCleanup("IDirect3D8::CreateDevice failed (Not Available)");
-                else if(g_EmuD3D8CreateDeviceProxyData.hRet == D3DERR_OUTOFVIDEOMEMORY)
-                    EmuCleanup("IDirect3D8::CreateDevice failed (Out of Video Memory)");
-
-                EmuCleanup("IDirect3D8::CreateDevice failed (Unknown)");
-            }
-
-            // ******************************************************************
-            // * it is necessary to store this pointer globally for emulation
-            // ******************************************************************
-            g_pD3DDevice8 = *g_EmuD3D8CreateDeviceProxyData.ppReturnedDeviceInterface;
-
-            // ******************************************************************
-            // * check for YUY2 overlay support
-            // ******************************************************************
-            {
-                XTL::D3DDISPLAYMODE DisplayMode;
-
-                if(g_pD3DDevice8->GetDisplayMode(&DisplayMode) != D3D_OK)
-                    g_bSupportsYUY2 = FALSE;
-                else
+                // release
+                if(g_pD3DDevice8 != 0)
                 {
-                    ::HRESULT hRet = g_pD3D8->CheckDeviceFormat
-                    (
-                        g_EmuD3D8CreateDeviceProxyData.Adapter, g_EmuD3D8CreateDeviceProxyData.DeviceType,
-                        (XTL::D3DFORMAT)DisplayMode.Format, 0, XTL::D3DRTYPE_TEXTURE, XTL::D3DFMT_YUY2
-                    );
+                    printf("EmuD3D8 (0x%X): CreateDevice proxy thread releasing old Device.\n", GetCurrentThreadId());
 
-                    g_bSupportsYUY2 = SUCCEEDED(hRet);
+                    g_pD3DDevice8->EndScene();
 
-                    if(!g_bSupportsYUY2)
-                        EmuWarning("YUY2 overlays are not supported in hardware, could be slow!");
+                    g_EmuD3D8CreateDeviceProxyData.hRet = g_pD3DDevice8->Release();
+                    
+                    if(g_EmuD3D8CreateDeviceProxyData.hRet == 0)
+                        g_pD3DDevice8 = 0;
                 }
+
+                // signal completion
+                g_EmuD3D8CreateDeviceProxyData.bReady = false;
             }
-
-            // ******************************************************************
-            // * Update Caches
-            // ******************************************************************
-            {
-                g_pCachedRenderTarget = new XTL::X_D3DSurface();
-                g_pD3DDevice8->GetRenderTarget(&g_pCachedRenderTarget->EmuSurface8);
-
-                g_pCachedZStencilSurface = new XTL::X_D3DSurface();
-                g_pD3DDevice8->GetDepthStencilSurface(&g_pCachedZStencilSurface->EmuSurface8);
-            }
-
-            // ******************************************************************
-            // * Begin Scene
-            // ******************************************************************
-            g_pD3DDevice8->BeginScene();
-
-            // ******************************************************************
-            // * Initially, show a black screen
-            // ******************************************************************
-            g_pD3DDevice8->Clear(0, 0, D3DCLEAR_TARGET, 0, 0, 0);
-            g_pD3DDevice8->Present(0, 0, 0, 0);
-
-            // signal completion
-            g_EmuD3D8CreateDeviceProxyData.bReady = false;
         }
 
         Sleep(1);
@@ -769,6 +795,7 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
 
     // Signal proxy thread, and wait for completion
     g_EmuD3D8CreateDeviceProxyData.bReady = true;
+    g_EmuD3D8CreateDeviceProxyData.bCreate = true;
 
     while(g_EmuD3D8CreateDeviceProxyData.bReady)
         Sleep(10);
@@ -1880,7 +1907,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
         );
 
         if(FAILED(hRet))
-            printf("*Warning* CreateTexture FAILED\n");
+            EmuWarning("CreateTexture FAILED");
     }
     else
     {
@@ -1977,7 +2004,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVolumeTexture
         );
 
         if(FAILED(hRet))
-            printf("*Warning* CreateVolumeTexture FAILED\n");
+            EmuWarning("CreateVolumeTexture FAILED");
     }
     else
     {
@@ -2062,7 +2089,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateCubeTexture
     );
 
     if(FAILED(hRet))
-        printf("*Warning* CreateCubeTexture FAILED\n");
+        EmuWarning("CreateCubeTexture FAILED");
 
     EmuSwapFS();   // XBox FS
 
@@ -3392,12 +3419,16 @@ ULONG WINAPI XTL::EmuIDirect3DDevice8_Release()
     }
     #endif
 
-    EmuCleanup("Release should use proxy...");
-    ULONG uRet = g_pD3DDevice8->Release();
+    // Signal proxy thread, and wait for completion
+    g_EmuD3D8CreateDeviceProxyData.bReady = true;
+    g_EmuD3D8CreateDeviceProxyData.bCreate = false;
+
+    while(g_EmuD3D8CreateDeviceProxyData.bReady)
+        Sleep(10);
 
     EmuSwapFS();   // XBox FS
 
-    return uRet;
+    return g_EmuD3D8CreateDeviceProxyData.hRet;
 }
 
 // ******************************************************************

@@ -61,16 +61,16 @@ typedef signed long    sint32;
 // ******************************************************************
 // * Define this to trace intercepted function calls
 // ******************************************************************
-//#define _DEBUG_TRACE
-//#define _DEBUG_WARNINGS
+#define _DEBUG_TRACE
+#define _DEBUG_WARNINGS
 
 // ******************************************************************
 // * Version information
 // ******************************************************************
 #ifndef _DEBUG_TRACE
-#define _CXBX_VERSION "0.7.8c"
+#define _CXBX_VERSION "0.7.9-Pre1"
 #else
-#define _CXBX_VERSION "0.7.8c-Trace"
+#define _CXBX_VERSION "0.7.9-Pre1-Trace"
 #endif
 
 // ******************************************************************
