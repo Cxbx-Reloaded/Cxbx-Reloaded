@@ -681,9 +681,9 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreateImageSurface
 
     *ppBackBuffer = new X_D3DSurface();
 
-    Format = EmuXB2PC_D3DFormat(Format);
+    D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
 
-    HRESULT hRet = g_pD3DDevice8->CreateImageSurface(Width, Height, Format, &((*ppBackBuffer)->EmuSurface8));
+    HRESULT hRet = g_pD3DDevice8->CreateImageSurface(Width, Height, PCFormat, &((*ppBackBuffer)->EmuSurface8));
 
     EmuSwapFS();   // Xbox FS
 
@@ -2329,7 +2329,31 @@ VOID __fastcall xd3d8::EmuIDirect3DDevice8_SetRenderState_Simple
     }
     #endif
 
-    printf("*Warning* SetRenderState_Simple not implemented!\n");
+    int State = -1;
+
+    // Todo: make this faster and more elegant
+    for(int v=0;v<82;v++)
+    {
+        if(EmuD3DRenderStateSimpleEncoded[v] == Method)
+        {
+            State = v;
+            break;
+        }
+    }
+
+    if(State == -1)
+    {
+        printf("RenderState_Simple(0x%.08X, 0x%.08X) is unsupported\n", Method, Value);
+//        EmuCleanup("RenderState_Simple(0x%.08X, 0x%.08X) is unsupported", Method, Value);
+    }
+    else
+    {
+        if((D3DRENDERSTATETYPE)State == D3DRS_SRCBLEND || (D3DRENDERSTATETYPE)State == D3DRS_DESTBLEND)
+            Value = EmuXB2PC_D3DBLEND(Value);
+
+        // Todo: Verify these params as you add support for them!
+        g_pD3DDevice8->SetRenderState((D3DRENDERSTATETYPE)State, Value);
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -2697,9 +2721,14 @@ static void EmuUpdateDeferredStates()
     // Certain D3DRS values need to be checked on each Draw[Indexed]Vertices
     if(xd3d8::EmuD3DDeferredRenderState != 0)
     {
-        g_pD3DDevice8->SetRenderState(D3DRS_LIGHTING,              xd3d8::EmuD3DDeferredRenderState[10]);
-        g_pD3DDevice8->SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, xd3d8::EmuD3DDeferredRenderState[20]);
-        g_pD3DDevice8->SetRenderState(D3DRS_AMBIENT,               xd3d8::EmuD3DDeferredRenderState[23]);
+        if(xd3d8::EmuD3DDeferredRenderState[10] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_LIGHTING,              xd3d8::EmuD3DDeferredRenderState[10]);
+
+        if(xd3d8::EmuD3DDeferredRenderState[20] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, xd3d8::EmuD3DDeferredRenderState[20]);
+
+        if(xd3d8::EmuD3DDeferredRenderState[23] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_AMBIENT,               xd3d8::EmuD3DDeferredRenderState[23]);
     }
 
     // Certain D3DTS values need to be checked on each Draw[Indexed]Vertices
@@ -2710,21 +2739,22 @@ static void EmuUpdateDeferredStates()
         {
             DWORD *pCur = xd3d8::EmuD3DDeferredTextureState+v;
 
-            g_pD3DDevice8->SetTextureStageState(v, D3DTSS_TEXTURETRANSFORMFLAGS, pCur[21]);
+            if(pCur[21] != X_D3DTSS_UNK)
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_TEXTURETRANSFORMFLAGS, pCur[21]);
 
             // TODO: Use a lookup table, this is not always a 1:1 map
-            // HACK: Dirty states should take care of this null-check
-            if(pCur[12] != 0)
+            if(pCur[12] != X_D3DTSS_UNK)
                 g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, pCur[12]);
 
             // TODO: I think these are OK, but verify this eventually
-            // HACK: Dirty states should take care of this null-check
-            if(pCur[14] != 0)
+            if(pCur[14] != X_D3DTSS_UNK)
                 g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLORARG1, pCur[14]);
-            g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLORARG2, pCur[15]);
+            if(pCur[15] != X_D3DTSS_UNK)
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLORARG2, pCur[15]);
 
             // TODO: Use a lookup table, this is not always a 1:1 map (same as D3DTSS_COLOROP)
-            g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ALPHAOP, pCur[16]);
+            if(pCur[16] != X_D3DTSS_UNK)
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ALPHAOP, pCur[16]);
         }
     }
 }
@@ -2758,7 +2788,7 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
 
     EmuUpdateDeferredStates();
 
-    UINT PrimitiveCount = D3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
+    UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
 
     // Convert from Xbox to PC enumeration
     PrimitiveType = EmuPrimitiveType(PrimitiveType);
@@ -2807,7 +2837,7 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawVerticesUP
 
     EmuUpdateDeferredStates();
 
-    UINT PrimitiveCount = D3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
+    UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
 
     // Convert from Xbox to PC enumeration
     PrimitiveType = EmuPrimitiveType(PrimitiveType);
@@ -2855,7 +2885,7 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawIndexedVertices
 
     EmuUpdateDeferredStates();
 
-    UINT PrimitiveCount = D3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
+    UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
 
     // Convert from Xbox to PC enumeration
     PrimitiveType = EmuPrimitiveType(PrimitiveType);

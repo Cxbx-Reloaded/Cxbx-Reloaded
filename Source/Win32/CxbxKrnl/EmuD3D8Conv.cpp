@@ -47,9 +47,9 @@ namespace xd3d8
 #include "EmuD3D8.h"
 
 // ******************************************************************
-// * D3DVertexToPrimitive
+// * EmuD3DVertexToPrimitive
 // ******************************************************************
-UINT xd3d8::D3DVertexToPrimitive[11][2] =
+UINT xd3d8::EmuD3DVertexToPrimitive[11][2] =
 {
     {0, 0},
     {1, 0},
@@ -81,4 +81,55 @@ xd3d8::D3DPRIMITIVETYPE xd3d8::EmuPrimitiveTypeLookup[] =
     /* D3DPT_QUADSTRIP      = 9,  Xbox  */ xd3d8::D3DPT_TRIANGLELIST,
     /* D3DPT_POLYGON        = 10, Xbox  */ xd3d8::D3DPT_TRIANGLELIST,
     /* D3DPT_MAX            = 11,       */ (xd3d8::D3DPRIMITIVETYPE)11
+};
+
+// ******************************************************************
+// * EmuD3DRenderStateSimpleEncoded
+// ******************************************************************
+CONST DWORD xd3d8::EmuD3DRenderStateSimpleEncoded[82] =
+{
+    // WARNING: This lookup table strongly binds us to an SDK with these
+    // specific #define values for D3DRS_*. Make VERY sure that you have
+    // the correct lookup values;
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 0
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 2
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 4
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 6
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 8
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 10
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 12
+    0x0004035c,     0x00040300,     // 14 - D3DRS_ZWRITEENABLE, D3DRS_ALPHATESTENABLE
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 16
+    X_D3DRSSE_UNK,  0x00040344,     // 18
+    0x00040348,     X_D3DRSSE_UNK,  // 20
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 22
+    0x00040340,     X_D3DRSSE_UNK,  // 24
+    0x00040310,     0x00040304,     // 26 - D3DRS_DITHERENABLE, D3DRS_ALPHABLENDENABLE
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 28
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 30
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 32
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 34 
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 36
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 38
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 40
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 42
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 44
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 46
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 48
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 50
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 52
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 54
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 56
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 58
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 60
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 62
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 64
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 66
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 68
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 70
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 72
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 74
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 76
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 78
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 80
 };

@@ -338,7 +338,10 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                     else if(BuildVersion == 4627)
 						xd3d8::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x24C + 92*4);
 
-					printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredRenderState\n", GetCurrentThreadId(), xd3d8::EmuD3DDeferredRenderState);
+                    for(int v=0;v<146;v++)
+                        xd3d8::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
+
+                    printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredRenderState\n", GetCurrentThreadId(), xd3d8::EmuD3DDeferredRenderState);
                 }
                 else
                 {
@@ -354,7 +357,11 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                 if(pFunc != 0 && (BuildVersion == 4361))
                 {
 					xd3d8::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x19) - 0x70);
-					printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredTextureState\n", GetCurrentThreadId(), xd3d8::EmuD3DDeferredTextureState);
+
+                    for(int v=0;v<32;v++)
+                        xd3d8::EmuD3DDeferredTextureState[v] = X_D3DTSS_UNK;
+
+                    printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredTextureState\n", GetCurrentThreadId(), xd3d8::EmuD3DDeferredTextureState);
                 }
                 else
                 {

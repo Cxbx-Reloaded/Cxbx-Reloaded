@@ -40,11 +40,8 @@
 
 #include "Emu.h"
 
-// ******************************************************************
-// * X_D3DFORMAT
-// ******************************************************************
-// NOTE: HACK: These enumerations are not equivalent!
-typedef D3DFORMAT X_D3DFORMAT;
+// Todo: Fill out this enumeration table for convienance
+typedef DWORD X_D3DFORMAT;
 
 /**
 // Oops: Well, heres PC->Xbox if you ever need it... :]
@@ -77,6 +74,24 @@ inline D3DTRANSFORMSTATETYPE EmuXB2PC_D3DTS(D3DTRANSFORMSTATETYPE State)
     EmuCleanup("Unknown Transform State Type (%d)", State);
 
     return State;
+}
+
+// Todo: Fill out this enumeration table for convienance
+typedef DWORD X_D3DBLEND;
+
+// ******************************************************************
+// * func: EmuXB2PC_D3DBLEND
+// ******************************************************************
+inline D3DBLEND EmuXB2PC_D3DBLEND(X_D3DBLEND Value)
+{
+    if(Value < 2)
+        return (D3DBLEND)(Value + 1);
+    else if(Value < 0x309)
+        return (D3DBLEND)((Value & 0xF) + 3);
+
+    EmuCleanup("Unknown Xbox D3DBLEND Extension (0x%.08X)", Value);
+
+    return (D3DBLEND)Value;
 }
 
 // ******************************************************************
@@ -114,7 +129,7 @@ inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 
     EmuCleanup("EmuXB2PC_D3DFormat: Unknown Format (%d)", Format);
 
-    return Format;
+    return (D3DFORMAT)Format;
 }
 
 // ******************************************************************
@@ -327,15 +342,21 @@ struct X_D3DTILE
 };
 
 // ******************************************************************
-// * D3DVertexToPrimitive
+// * EmuD3DVertexToPrimitive
 // ******************************************************************
-extern UINT D3DVertexToPrimitive[11][2];
+extern UINT EmuD3DVertexToPrimitive[11][2];
 
 // ******************************************************************
 // * D3DVertexToPrimitiveCount
 // ******************************************************************
-#define D3DVertex2PrimitiveCount(PrimitiveType, VertexCount)    \
-	(((VertexCount)-D3DVertexToPrimitive[PrimitiveType][1])/D3DVertexToPrimitive[PrimitiveType][0])
+#define EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount)    \
+	(((VertexCount)-EmuD3DVertexToPrimitive[PrimitiveType][1])/EmuD3DVertexToPrimitive[PrimitiveType][0])
+
+// ******************************************************************
+// * EmuD3DRenderStateSimpleEncoded
+// ******************************************************************
+#define X_D3DRSSE_UNK 0x7fffffff
+extern CONST DWORD EmuD3DRenderStateSimpleEncoded[82];
 
 // ******************************************************************
 // * EmuD3DTileCache (8 Tiles Max)
@@ -345,11 +366,13 @@ extern X_D3DTILE EmuD3DTileCache[0x08];
 // ******************************************************************
 // * EmuD3DDeferredRenderState
 // ******************************************************************
+#define X_D3DRS_UNK 0x7fffffff
 extern DWORD *EmuD3DDeferredRenderState;
 
 // ******************************************************************
 // * EmuD3DDeferredTextureState
 // ******************************************************************
+#define X_D3DTSS_UNK 0x7fffffff
 extern DWORD *EmuD3DDeferredTextureState;
 
 // ******************************************************************
