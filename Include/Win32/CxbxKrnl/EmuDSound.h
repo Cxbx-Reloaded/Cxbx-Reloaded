@@ -129,10 +129,6 @@ class X_CDirectSoundStream
         // construct vtable (or grab ptr to existing)
         X_CDirectSoundStream() : pVtbl(&vtbl) {};
 
-        // retrieve sound buffer cache reference
-        IDirectSoundBuffer **GetSoundBufferRef() { return &pEmuDirectSoundBuffer; }
-        IDirectSoundBuffer  *GetSoundBuffer() { return pEmuDirectSoundBuffer; }
-
     private:
         // vtable (cached by each instance, via constructor)
         struct _vtbl
@@ -158,8 +154,16 @@ class X_CDirectSoundStream
         DWORD DebugGuard[256];
         #endif
 
-        // cached directsound buffer
-        XTL::IDirectSoundBuffer *pEmuDirectSoundBuffer;
+    public:
+        // cached data
+        XTL::IDirectSoundBuffer *EmuDirectSoundBuffer8;
+        PVOID                    EmuBuffer;
+        DSBUFFERDESC            *EmuBufferDesc;
+        PVOID                    EmuLockPtr1;
+        DWORD                    EmuLockBytes1;
+        PVOID                    EmuLockPtr2;
+        DWORD                    EmuLockBytes2;
+        DWORD                    EmuPlayFlags;
 };
 
 // ******************************************************************

@@ -639,7 +639,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                         ::HRESULT hRet = g_pD3D8->CheckDeviceFormat
                         (
                             g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-                            (XTL::D3DFORMAT)DisplayMode.Format, 0, XTL::D3DRTYPE_TEXTURE, XTL::D3DFMT_YUY2
+                            (XTL::D3DFORMAT)DisplayMode.Format, 0, XTL::D3DRTYPE_SURFACE, XTL::D3DFMT_YUY2
                         );
 
                         g_bSupportsYUY2 = SUCCEEDED(hRet);
@@ -2049,7 +2049,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
 
     HRESULT hRet;
 
-    if(PCFormat != D3DFMT_YUY2 || g_bSupportsYUY2)
+    if(PCFormat != D3DFMT_YUY2)
     {
         EmuAdjustPower2(&Width, &Height);
 
@@ -2145,7 +2145,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVolumeTexture
 
     HRESULT hRet;
 
-    if(PCFormat != D3DFMT_YUY2 || g_bSupportsYUY2)
+    if(PCFormat != D3DFMT_YUY2)
     {
         EmuAdjustPower2(&Width, &Height);
 
@@ -4045,36 +4045,34 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
     // manually copy data over to overlay
     if(g_bSupportsYUY2)
     {
-        D3DSURFACE_DESC SurfaceDesc;
         DDSURFACEDESC2  ddsd2;
-        D3DLOCKED_RECT  LockedRect;
-
-        pSurface->EmuSurface8->GetDesc(&SurfaceDesc);
 
         ZeroMemory(&ddsd2, sizeof(ddsd2));
 
         ddsd2.dwSize = sizeof(ddsd2);
 
         g_pDDSOverlay7->Lock(NULL, &ddsd2, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
-        pSurface->EmuSurface8->UnlockRect();
-
-        pSurface->EmuSurface8->LockRect(&LockedRect, NULL, NULL);
 
         // copy data
         {
             char *pDest = (char*)ddsd2.lpSurface;
-            char *pSour = (char*)LockedRect.pBits;
+            char *pSour = (char*)((uint32)pSurface & 0x7FFFFFFF);
 
-            int w = SurfaceDesc.Width;
-            int h = SurfaceDesc.Height;
+            int w = g_dwOverlayW;
+            int h = g_dwOverlayH;
 
             // TODO: sucker the game into rendering directly to the overlay (speed boost)
-            for(int y=0;y<h;y++)
+            if(ddsd2.lPitch == w*2)
+                memcpy(pDest, pSour, h*w*2);
+            else
             {
-                memcpy(pDest, pSour, w*2);
+                for(int y=0;y<h;y++)
+                {
+                    memcpy(pDest, pSour, w*2);
 
-                pDest += ddsd2.lPitch;
-                pSour += LockedRect.Pitch;
+                    pDest += ddsd2.lPitch;
+                    pSour += w*2;
+                }
             }
         }
 

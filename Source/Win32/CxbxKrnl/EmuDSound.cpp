@@ -70,13 +70,14 @@ XTL::X_CDirectSoundStream::_vtbl XTL::X_CDirectSoundStream::vtbl =
 // size of sound buffer cache (used for periodic sound buffer updates)
 #define SOUNDBUFFER_CACHE_SIZE 0x10
 
+// size of sound stream cache (used for periodic sound stream updates)
+#define SOUNDSTREAM_CACHE_SIZE 0x10
+
 // Static Variable(s)
 static XTL::LPDIRECTSOUND8          g_pDSound8 = NULL;
 static int                          g_pDSound8RefCount = 0;
 static XTL::X_CDirectSoundBuffer   *g_pDSoundBufferCache[SOUNDBUFFER_CACHE_SIZE];
-static XTL::IDirectSoundBuffer     *g_pDSoundStream8 = NULL;
-static PVOID                        g_pvStreamData = NULL;
-static DWORD                        g_dwStreamSize = 0;
+static XTL::X_CDirectSoundStream   *g_pDSoundStreamCache[SOUNDSTREAM_CACHE_SIZE];
 
 // periodically update sound buffers
 static void HackUpdateSoundBuffers()
@@ -93,42 +94,84 @@ static void HackUpdateSoundBuffers()
 
         if(SUCCEEDED(hRet))
         {
-            memcpy(pAudioPtr,  g_pDSoundBufferCache[v]->EmuBuffer, dwAudioBytes);
-            memcpy(pAudioPtr2, (PVOID)((DWORD)g_pDSoundBufferCache[v]->EmuBuffer+dwAudioBytes), dwAudioBytes2);
+            if(pAudioPtr != 0)
+                memcpy(pAudioPtr,  g_pDSoundBufferCache[v]->EmuBuffer, dwAudioBytes);
+
+            if(pAudioPtr2 != 0)
+                memcpy(pAudioPtr2, (PVOID)((DWORD)g_pDSoundBufferCache[v]->EmuBuffer+dwAudioBytes), dwAudioBytes2);
 
             g_pDSoundBufferCache[v]->EmuDirectSoundBuffer8->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
         }
     }
 }
 
-// HACK HACK HACK! Make this smarter! update modified directsound stream
+// periodically update sound streams
 static void HackUpdateSoundStreams()
 {
-    if(g_pvStreamData == NULL || g_pDSoundStream8 == NULL)
-        return;
-
-    // TODO: HACK: This should dynamically recreate the buffer when necessary (size change)
-    PVOID pAudioPtr, pAudioPtr2;
-    DWORD dwAudioBytes, dwAudioBytes2;
-
-    HRESULT hRet = g_pDSoundStream8->Lock(0, g_dwStreamSize, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
-
-    if(SUCCEEDED(hRet))
+    for(int v=0;v<SOUNDSTREAM_CACHE_SIZE;v++)
     {
-        memcpy(pAudioPtr,  g_pvStreamData, dwAudioBytes);
-        memcpy(pAudioPtr2, (PVOID)((DWORD)g_pvStreamData+dwAudioBytes), dwAudioBytes2);
+        if(g_pDSoundStreamCache[v] == 0 || g_pDSoundStreamCache[v]->EmuBuffer == NULL)
+            continue;
 
-        g_pDSoundStream8->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
+        PVOID pAudioPtr, pAudioPtr2;
+        DWORD dwAudioBytes, dwAudioBytes2;
+
+        HRESULT hRet = g_pDSoundStreamCache[v]->EmuDirectSoundBuffer8->Lock(0, g_pDSoundStreamCache[v]->EmuBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
+
+        if(SUCCEEDED(hRet))
+        {
+            if(pAudioPtr != 0)
+                memcpy(pAudioPtr,  g_pDSoundStreamCache[v]->EmuBuffer, dwAudioBytes);
+
+            if(pAudioPtr2 != 0)
+                memcpy(pAudioPtr2, (PVOID)((DWORD)g_pDSoundStreamCache[v]->EmuBuffer+dwAudioBytes), dwAudioBytes2);
+
+            g_pDSoundStreamCache[v]->EmuDirectSoundBuffer8->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
+        }
+
+        g_pDSoundStreamCache[v]->EmuDirectSoundBuffer8->SetCurrentPosition(0);
+        g_pDSoundStreamCache[v]->EmuDirectSoundBuffer8->Play(0, 0, 0);
     }
-
-    g_pDSoundStream8->SetCurrentPosition(0);
-    g_pDSoundStream8->Play(0, 0, 0);
 
     return;
 }
 
 // resize an emulated directsound buffer, if necessary
 static void EmuResizeIDirectSoundBuffer8(XTL::X_CDirectSoundBuffer *pThis, DWORD dwBytes)
+{
+    if(dwBytes == pThis->EmuBufferDesc->dwBufferBytes)
+        return;
+
+    DWORD dwPlayCursor, dwWriteCursor, dwStatus;
+
+    HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetCurrentPosition(&dwPlayCursor, &dwWriteCursor);
+
+    if(FAILED(hRet))
+        EmuCleanup("Unable to retrieve current position for resize reallocation!");
+
+    hRet = pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
+
+    if(FAILED(hRet))
+        EmuCleanup("Unable to retrieve current status for resize reallocation!");
+
+    // release old buffer
+    while(pThis->EmuDirectSoundBuffer8->Release() > 0) { }
+
+    pThis->EmuBufferDesc->dwBufferBytes = dwBytes;
+
+    hRet = g_pDSound8->CreateSoundBuffer(pThis->EmuBufferDesc, &pThis->EmuDirectSoundBuffer8, NULL);
+
+    if(FAILED(hRet))
+        EmuCleanup("IDirectSoundBuffer8 resize Failed!");
+
+    pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwPlayCursor);
+
+    if(dwStatus & DSBSTATUS_PLAYING)
+        pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
+}
+
+// resize an emulated directsound stream, if necessary
+static void EmuResizeIDirectSoundStream8(XTL::X_CDirectSoundStream *pThis, DWORD dwBytes)
 {
     if(dwBytes == pThis->EmuBufferDesc->dwBufferBytes)
         return;
@@ -195,9 +238,14 @@ HRESULT WINAPI XTL::EmuDirectSoundCreate
     // we need to use our own internal reference count
     g_pDSound8RefCount++;
 
+    int v=0;
     // clear sound buffer cache
-    for(int v=0;v<SOUNDBUFFER_CACHE_SIZE;v++)
+    for(v=0;v<SOUNDBUFFER_CACHE_SIZE;v++)
         g_pDSoundBufferCache[v] = 0;
+
+    // clear sound stream cache
+    for(v=0;v<SOUNDSTREAM_CACHE_SIZE;v++)
+        g_pDSoundStreamCache[v] = 0;
 
     EmuSwapFS();   // XBox FS
 
@@ -1331,23 +1379,30 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
     #ifdef _DEBUG_TRACE
     printf("EmuDSound (0x%X): EmuDirectSoundCreateStream, *ppStream := 0x%.08X\n", GetCurrentThreadId(), *ppStream);
     #endif
-
-    DSBUFFERDESC DSBufferDesc;
+    
+    DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)malloc(sizeof(DSBUFFERDESC));
+    
+    pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX));
 
     // convert from Xbox to PC DSound
     {
-        DSBufferDesc.dwSize = sizeof(DSBufferDesc);
-        DSBufferDesc.dwFlags = 0;
-        DSBufferDesc.dwBufferBytes = 176400; // NOTE: HACK: TEMPORARY FOR TUROK
-        DSBufferDesc.dwReserved = 0;
-        DSBufferDesc.lpwfxFormat = pdssd->lpwfxFormat;  // TODO: Make sure this is the same as PC
-        DSBufferDesc.guid3DAlgorithm = DS3DALG_DEFAULT;
+        DWORD dwAcceptableMask = 0x00000010 | 0x00000020 | 0x00000080 | 0x00000100 | 0x00002000 | 0x00040000 | 0x00080000;
 
-        if(DSBufferDesc.lpwfxFormat->wFormatTag != WAVE_FORMAT_PCM)
+        if(pdssd->dwFlags & (~dwAcceptableMask))
+            EmuWarning("Use of unsupported pdssd->dwFlags mask(s) (0x%.08X)", pdssd->dwFlags & (~dwAcceptableMask));
+
+        pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
+        pDSBufferDesc->dwFlags = 0;
+        pDSBufferDesc->dwBufferBytes = 176400;
+        pDSBufferDesc->dwReserved = 0;
+        memcpy(pDSBufferDesc->lpwfxFormat, pdssd->lpwfxFormat, sizeof(WAVEFORMATEX));
+        pDSBufferDesc->guid3DAlgorithm = DS3DALG_DEFAULT;
+
+        if(pDSBufferDesc->lpwfxFormat->wFormatTag != WAVE_FORMAT_PCM)
         {
             EmuWarning("Invalid WAVE_FORMAT!");
 
-            *(*ppStream)->GetSoundBufferRef() = 0;
+            (*ppStream)->EmuDirectSoundBuffer8 = 0;
 
             EmuSwapFS();   // XBox FS
 
@@ -1355,12 +1410,40 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
         }
     }
 
-    HRESULT hRet = g_pDSound8->CreateSoundBuffer(&DSBufferDesc, (*ppStream)->GetSoundBufferRef(), NULL);
+    // TODO: Garbage Collection
+    *ppStream = new X_CDirectSoundStream();
 
-    g_pDSoundStream8 = *(*ppStream)->GetSoundBufferRef();
+    (*ppStream)->EmuBuffer = 0;
+    (*ppStream)->EmuBufferDesc = pDSBufferDesc;
+    (*ppStream)->EmuLockPtr1 = 0;
+    (*ppStream)->EmuLockBytes1 = 0;
+    (*ppStream)->EmuLockPtr2 = 0;
+    (*ppStream)->EmuLockBytes2 = 0;
+
+    #ifdef _DEBUG_TRACE
+    printf("EmuDSound (0x%X): EmuDirectSoundCreateStream, *ppStream := 0x%.08X\n", GetCurrentThreadId(), *ppStream);
+    #endif
+
+    HRESULT hRet = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &(*ppStream)->EmuDirectSoundBuffer8, NULL);
 
     if(FAILED(hRet))
-        EmuWarning("CreateSoundStream FAILED");
+        EmuWarning("CreateSoundBuffer Failed!");
+
+    // cache this sound stream
+    {
+        int v=0;
+        for(v=0;v<SOUNDSTREAM_CACHE_SIZE;v++)
+        {
+            if(g_pDSoundStreamCache[v] == 0)
+            {
+                g_pDSoundStreamCache[v] = *ppStream;
+                break;
+            }
+        }
+
+        if(v == SOUNDSTREAM_CACHE_SIZE)
+            EmuCleanup("SoundStream cache out of slots!");
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -1476,7 +1559,7 @@ ULONG WINAPI XTL::EmuCDirectSoundStream_AddRef(X_CDirectSoundStream *pThis)
     #endif
 
     if(pThis != 0)
-        pThis->GetSoundBuffer()->AddRef();
+        pThis->EmuDirectSoundBuffer8->AddRef();
 
     EmuSwapFS();   // XBox FS
 
@@ -1505,12 +1588,19 @@ ULONG WINAPI XTL::EmuCDirectSoundStream_Release(X_CDirectSoundStream *pThis)
 
     if(pThis != 0)
     {
-        uRet = pThis->GetSoundBuffer()->Release();
+        uRet = pThis->EmuDirectSoundBuffer8->Release();
 
         if(uRet == 0)
         {
-            if(g_pDSoundStream8 == pThis->GetSoundBuffer())
-                g_pDSoundStream8 = 0;
+            // remove cache entry
+            for(int v=0;v<SOUNDSTREAM_CACHE_SIZE;v++)
+            {
+                if(g_pDSoundStreamCache[v] == pThis)
+                    g_pDSoundStreamCache[v] = 0;
+            }
+
+            free(pThis->EmuBufferDesc->lpwfxFormat);
+            free(pThis->EmuBufferDesc);
 
             delete pThis;
         }
@@ -1546,8 +1636,10 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Process
     }
     #endif
 
-    g_pvStreamData = pInputBuffer->pvBuffer;
-    g_dwStreamSize = pInputBuffer->dwMaxSize;
+    // update buffer data cache
+    pThis->EmuBuffer = pInputBuffer->pvBuffer;
+
+    EmuResizeIDirectSoundStream8(pThis, pInputBuffer->dwMaxSize);
 
     HackUpdateSoundStreams();
     
