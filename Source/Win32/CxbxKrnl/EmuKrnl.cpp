@@ -801,6 +801,36 @@ XBSYSAPI EXPORTNUM(184) NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemory
 }
 
 // ******************************************************************
+// * 0x00BA - NtClearEvent
+// ******************************************************************
+XBSYSAPI EXPORTNUM(186) NTSTATUS NTAPI xboxkrnl::NtClearEvent
+(
+    IN HANDLE EventHandle
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): NtClearEvent\n"
+               "(\n"
+               "   EventHandle         : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), EventHandle);
+    }
+    #endif
+
+    NTSTATUS ret = NtDll::NtClearEvent(EventHandle);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
+}
+
+// ******************************************************************
 // * 0x00BB - NtClose
 // ******************************************************************
 XBSYSAPI EXPORTNUM(187) NTSTATUS NTAPI xboxkrnl::NtClose
@@ -862,6 +892,8 @@ XBSYSAPI EXPORTNUM(189) NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 {
     EmuSwapFS();   // Win2k/XP FS
 
+    char *szBuffer = (ObjectAttributes != 0) ? ObjectAttributes->ObjectName->Buffer : 0;
+
     // ******************************************************************
     // * debug trace
     // ******************************************************************
@@ -874,12 +906,10 @@ XBSYSAPI EXPORTNUM(189) NTSTATUS NTAPI xboxkrnl::NtCreateEvent
                "   EventType           : 0x%.08X\n"
                "   InitialState        : 0x%.08X\n"
                ");\n",
-               GetCurrentThreadId(), EventHandle, ObjectAttributes, ObjectAttributes->ObjectName->Buffer,
+               GetCurrentThreadId(), EventHandle, ObjectAttributes, szBuffer,
                EventType, InitialState);
     }
     #endif
-
-    char *szBuffer = ObjectAttributes->ObjectName->Buffer;
 
     wchar_t wszObjectName[160];
 
@@ -889,6 +919,7 @@ XBSYSAPI EXPORTNUM(189) NTSTATUS NTAPI xboxkrnl::NtCreateEvent
     // ******************************************************************
     // * Initialize Object Attributes
     // ******************************************************************
+    if(szBuffer != 0)
     {
         mbstowcs(wszObjectName, szBuffer, 160);
 
@@ -900,7 +931,7 @@ XBSYSAPI EXPORTNUM(189) NTSTATUS NTAPI xboxkrnl::NtCreateEvent
     // ******************************************************************
     // * Redirect to NtCreateEvent
     // ******************************************************************
-    NTSTATUS ret = NtDll::NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, &NtObjAttr, (NtDll::EVENT_TYPE)EventType, InitialState);
+    NTSTATUS ret = NtDll::NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, (szBuffer != 0) ? &NtObjAttr : 0, (NtDll::EVENT_TYPE)EventType, InitialState);
 
     EmuSwapFS();   // Xbox FS
 

@@ -475,8 +475,10 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
         pPresentationParameters->BackBufferFormat       = EmuXB2PC_D3DFormat(pPresentationParameters->BackBufferFormat);
         pPresentationParameters->AutoDepthStencilFormat = EmuXB2PC_D3DFormat(pPresentationParameters->AutoDepthStencilFormat);
 
-        // TODO: This should be detected from D3DCAPS8 ? (FrameSkip?)
-        pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+        if(!g_XBVideo.GetVSync() && (g_D3DCaps.PresentationIntervals & D3DPRESENT_INTERVAL_IMMEDIATE) && g_XBVideo.GetFullscreen())
+            pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+        else
+            pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
 
         // TODO: Support Xbox extensions if possible
         if(pPresentationParameters->MultiSampleType != 0)
@@ -1664,6 +1666,13 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
         PCFormat = D3DFMT_X8R8G8B8;
     }
 
+    // HACK HACK HACK!!!
+    // TODO: Make sure texture is the correct dimensions
+    if(Width == 320)
+        Width = 512;
+    if(Height == 240)
+        Height = 512;
+
     *ppTexture = new X_D3DResource();
 
     // ******************************************************************
@@ -2751,6 +2760,98 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EmuIDirect3DDevice8_CreateVertexBuffer2
     EmuSwapFS();   // XBox FS
 
     return pD3DVertexBuffer;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_EnableOverlay
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_EnableOverlay
+(
+    BOOL Enable
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_EnableOverlay\n"
+               "(\n"
+               "   Enable              : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Enable);
+    }
+    #endif
+
+    printf("*Warning* EnableOverlay is not implemented\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_UpdateOverlay
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
+(
+    X_D3DSurface *pSurface,
+    CONST RECT   *SrcRect,
+    CONST RECT   *DstRect,
+    BOOL          EnableColorKey,
+    D3DCOLOR      ColorKey
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_UpdateOverlay\n"
+               "(\n"
+               "   pSurface            : 0x%.08X\n"
+               "   SrcRect             : 0x%.08X\n"
+               "   DstRect             : 0x%.08X\n"
+               "   EnableColorKey      : 0x%.08X\n"
+               "   ColorKey            : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pSurface, SrcRect, DstRect, EnableColorKey, ColorKey);
+    }
+    #endif
+
+    printf("*Warning* EmuIDirect3DDevice8_UpdateOverlay is not implemented\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_BlockUntilVerticalBlank
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_BlockUntilVerticalBlank()
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_BlockUntilVerticalBlank();\n",
+               GetCurrentThreadId());
+    }
+    #endif
+
+    printf("*Warning* EmuIDirect3DDevice8_BlockUntilVerticalBlank is not implemented\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return;
 }
 
 // ******************************************************************

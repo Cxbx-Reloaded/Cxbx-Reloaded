@@ -65,6 +65,18 @@ namespace XTL
 static XTL::LPDIRECTSOUND8 g_pDSound8 = NULL;
 
 // ******************************************************************
+// * EmuStatic Variable(s)
+// ******************************************************************
+XTL::X_CDirectSoundStream::_vtbl XTL::X_CDirectSoundStream::vtbl = 
+{
+    &XTL::EmuCDirectSoundStream_AddRef,         // 0x00 - AddRef
+    &XTL::EmuCDirectSoundStream_Release,        // 0x04
+    {0xCDCDCDCD, 0xCDCDCDCD},                   // 0x08 - Unknown
+    &XTL::EmuCDirectSoundStream_Process,        // 0x10 - Process
+    &XTL::EmuCDirectSoundStream_Discontinuity   // 0x14 - Discontinuity
+};
+
+// ******************************************************************
 // * func: EmuDirectSoundCreate
 // ******************************************************************
 HRESULT WINAPI XTL::EmuDirectSoundCreate
@@ -170,7 +182,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
 HRESULT WINAPI XTL::EmuDirectSoundCreateStream
 (
     X_DSSTREAMDESC         *pdssd,
-    PVOID                 **ppStream
+    X_CDirectSoundStream  **ppStream
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -189,9 +201,186 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
     }
     #endif
 
+    *ppStream = new X_CDirectSoundStream();
+
     EmuSwapFS();   // XBox FS
 
     return DS_OK;
+}
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_AddRef
+// ******************************************************************
+ULONG WINAPI XTL::EmuCDirectSoundStream_AddRef(X_CDirectSoundStream *pThis)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuCDirectSoundStream_AddRef\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis);
+    }
+    #endif
+
+    // TODO: Actually AddRef
+
+    EmuSwapFS();   // XBox FS
+
+    return DS_OK;
+}
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_Release
+// ******************************************************************
+ULONG WINAPI XTL::EmuCDirectSoundStream_Release(X_CDirectSoundStream *pThis)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuCDirectSoundStream_Release\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis);
+    }
+    #endif
+
+    // TODO: Actually Release
+
+    EmuSwapFS();   // XBox FS
+
+    return DS_OK;
+}
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_Process
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSoundStream_Process
+(
+    X_CDirectSoundStream   *pThis,
+    PVOID                   pInputBuffer,   // TODO: Fillout params
+    PVOID                   pOutputBuffer   // TODO: Fillout params
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuCDirectSoundStream_Process\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   pInputBuffer              : 0x%.08X\n"
+               "   pOutputBuffer             : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, pInputBuffer, pOutputBuffer);
+    }
+    #endif
+
+    // TODO: Actually Process
+
+    EmuSwapFS();   // XBox FS
+
+    return DS_OK;
+}
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_Discontinuity
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSoundStream_Discontinuity(X_CDirectSoundStream *pThis)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuCDirectSoundStream_Discontinuity\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis);
+    }
+    #endif
+
+    // TODO: Actually Process
+
+    EmuSwapFS();   // XBox FS
+
+    return DS_OK;
+}
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_Pause
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSoundStream_Pause
+(
+    PVOID   pStream,
+    DWORD   dwPause
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuCDirectSoundStream_Pause\n"
+               "(\n"
+               "   pStream                   : 0x%.08X\n"
+               "   dwPause                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pStream, dwPause);
+    }
+    #endif
+
+    EmuSwapFS();   // XBox FS
+
+    return DS_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSound8_AddRef
+// ******************************************************************
+ULONG WINAPI XTL::EmuIDirectSound8_AddRef
+(
+    LPDIRECTSOUND8          pThis
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSound8_AddRef\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis);
+    }
+    #endif
+
+    ULONG uRet = pThis->AddRef();
+
+    EmuSwapFS();   // XBox FS
+
+    return uRet;
 }
 
 // ******************************************************************

@@ -3,9 +3,16 @@ cxbx website: http://www.caustik.com/xbox/
 version: 0.7.7 (07/??/03)
 --------------------------------
 
+- Turok Evolution displays startup graphics!
+
 - Stella and a few other homebrew games are now playable :]
   This means you can play all your atari games on Cxbx, which
   is a great novelty.
+
+- Finally low level emulation of the heap, which is a very
+  very nice thing and fixed some glitches/bugs.
+
+- Fixed timing (FPS is much higher now! it is unbelievable)
 
 version: 0.7.6 (07/07/03)
 --------------------------------

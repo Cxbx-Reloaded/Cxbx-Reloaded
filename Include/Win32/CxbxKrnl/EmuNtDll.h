@@ -676,11 +676,19 @@ typedef NTSTATUS (NTAPI *FPTR_NtCreateFile)
 );
 
 // ******************************************************************
+// * NtClearEvent
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtClearEvent)
+(
+    IN HANDLE               EventHandle
+);
+
+// ******************************************************************
 // * NtClose
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtClose)
 (
-  IN HANDLE               Handle
+    IN HANDLE               Handle
 );
 
 // ******************************************************************
@@ -829,6 +837,7 @@ extern FPTR_RtlAllocateHeap                RtlAllocateHeap;
 extern FPTR_RtlFreeHeap                    RtlFreeHeap;
 extern FPTR_NtAllocateVirtualMemory        NtAllocateVirtualMemory;
 extern FPTR_NtFreeVirtualMemory            NtFreeVirtualMemory;
+extern FPTR_NtClearEvent                   NtClearEvent;
 extern FPTR_NtClose                        NtClose;
 extern FPTR_NtDelayExecution               NtDelayExecution;
 extern FPTR_NtDuplicateObject              NtDuplicateObject;

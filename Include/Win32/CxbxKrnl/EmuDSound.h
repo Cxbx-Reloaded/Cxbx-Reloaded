@@ -66,6 +66,49 @@ struct X_CDirectSoundBuffer
 };
 
 // ******************************************************************
+// * X_CDirectSoundStream
+// ******************************************************************
+class X_CDirectSoundStream
+{
+    public:
+        // ******************************************************************
+        // * Construct VTable (or grab ptr to existing)
+        // ******************************************************************
+        X_CDirectSoundStream() : pVtbl(&vtbl) {};
+
+    private:
+        // ******************************************************************
+        // * VTable (cached by each instance, via constructor)
+        // ******************************************************************
+        struct _vtbl
+        {
+            ULONG (WINAPI *AddRef)(X_CDirectSoundStream *pThis);            // 0x00
+            ULONG (WINAPI *Release)(X_CDirectSoundStream *pThis);           // 0x04
+            DWORD Unknown[0x02];                                            // 0x08
+            HRESULT (WINAPI *Process)                                       // 0x10
+            (
+                X_CDirectSoundStream   *pThis,
+                PVOID                   pInputBuffer,                       // TODO: Fillout params
+                PVOID                   pOutputBuffer                       // TODO: Fillout params
+            );
+            HRESULT (WINAPI *Discontinuity)(X_CDirectSoundStream *pThis);   // 0x14
+        }
+        *pVtbl;
+
+        // ******************************************************************
+        // * Global Vtbl for this class
+        // ******************************************************************
+        static _vtbl vtbl;
+
+        // ******************************************************************
+        // * Debug Mode guard for detecting naughty data accesses
+        // ******************************************************************
+        #ifdef _DEBUG
+        DWORD DebugGuard[256];
+        #endif
+};
+
+// ******************************************************************
 // * X_DSBUFFERDESC
 // ******************************************************************
 struct X_DSBUFFERDESC
@@ -116,7 +159,49 @@ HRESULT WINAPI EmuDirectSoundCreateBuffer
 HRESULT WINAPI EmuDirectSoundCreateStream
 (
     X_DSSTREAMDESC         *pdssd,
-    PVOID                 **ppStream
+    X_CDirectSoundStream  **ppStream
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_AddRef
+// ******************************************************************
+ULONG WINAPI EmuCDirectSoundStream_AddRef(X_CDirectSoundStream *pThis);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_Release
+// ******************************************************************
+ULONG WINAPI EmuCDirectSoundStream_Release(X_CDirectSoundStream *pThis);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_Process
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_Process
+(
+    X_CDirectSoundStream   *pThis,
+    PVOID                   pInputBuffer,   // TODO: Fillout params
+    PVOID                   pOutputBuffer   // TODO: Fillout params
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_Discontinuity
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_Discontinuity(X_CDirectSoundStream *pThis);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_Pause
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_Pause
+(
+    PVOID   pStream,
+    DWORD   dwPause
+);
+
+// ******************************************************************
+// * func: EmuIDirectSound8_AddRef
+// ******************************************************************
+ULONG WINAPI EmuIDirectSound8_AddRef
+(
+    LPDIRECTSOUND8          pThis
 );
 
 // ******************************************************************

@@ -63,6 +63,7 @@ NtDll::FPTR_RtlFreeHeap                    NtDll::RtlFreeHeap                  =
 NtDll::FPTR_NtWaitForSingleObject          NtDll::NtWaitForSingleObject        = (NtDll::FPTR_NtWaitForSingleObject)GetProcAddress(hNtDll, "NtWaitForSingleObject");
 NtDll::FPTR_NtAllocateVirtualMemory        NtDll::NtAllocateVirtualMemory      = (NtDll::FPTR_NtAllocateVirtualMemory)GetProcAddress(hNtDll, "NtAllocateVirtualMemory");
 NtDll::FPTR_NtFreeVirtualMemory            NtDll::NtFreeVirtualMemory          = (NtDll::FPTR_NtFreeVirtualMemory)GetProcAddress(hNtDll, "NtFreeVirtualMemory");
+NtDll::FPTR_NtClearEvent                   NtDll::NtClearEvent                 = (NtDll::FPTR_NtClearEvent)GetProcAddress(hNtDll, "NtClearEvent");
 NtDll::FPTR_NtClose                        NtDll::NtClose                      = (NtDll::FPTR_NtClose)GetProcAddress(hNtDll, "NtClose");
 NtDll::FPTR_NtDelayExecution               NtDll::NtDelayExecution             = (NtDll::FPTR_NtDelayExecution)GetProcAddress(hNtDll, "NtDelayExecution");
 NtDll::FPTR_NtDuplicateObject              NtDll::NtDuplicateObject            = (NtDll::FPTR_NtDuplicateObject)GetProcAddress(hNtDll, "NtDuplicateObject");

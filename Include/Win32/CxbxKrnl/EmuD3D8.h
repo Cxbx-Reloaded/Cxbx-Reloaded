@@ -192,6 +192,9 @@ inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
         case 0x0F: // Compressed (X_D3DFMT_DXT3)
             return D3DFMT_DXT3;
 
+        case 0x24: // Swizzled   (X_D3DFMT_YUV2)
+            return D3DFMT_YUY2;
+
         case 0x2E: // Linear     (X_D3DFMT_LIN_D24S8)
         case 0x2A: // Swizzled   (X_D3DFMT_D24S8)
             return D3DFMT_D24S8;
@@ -931,12 +934,37 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreateVertexBuffer
 );
 
 // ******************************************************************
-// * func: EmuIDirect3DDevice8_CreateVertexBuffer
+// * func: EmuIDirect3DDevice8_CreateVertexBuffer2
 // ******************************************************************
 X_D3DVertexBuffer* WINAPI EmuIDirect3DDevice8_CreateVertexBuffer2
 (
     UINT Length
 );
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_EnableOverlay
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_EnableOverlay
+(
+    BOOL Enable
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_UpdateOverlay
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_UpdateOverlay
+(
+    X_D3DSurface *pSurface,
+    CONST RECT   *SrcRect,
+    CONST RECT   *DstRect,
+    BOOL          EnableColorKey,
+    D3DCOLOR      ColorKey
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_BlockUntilVerticalBlank
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_BlockUntilVerticalBlank();
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
