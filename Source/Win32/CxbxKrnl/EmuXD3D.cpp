@@ -39,8 +39,9 @@ using namespace win32;
 // ******************************************************************
 // * globals
 // ******************************************************************
-LPDIRECT3D8       g_pD3D       = NULL;  // Direct3D8
-HWND              g_EmuXWindow = NULL;  // Rendering Window
+LPDIRECT3D8       g_pD3D8       = NULL;  // Direct3D8
+LPDIRECT3DDEVICE8 g_pD3D8Device = NULL;  // Direct3D8 Device
+HWND              g_EmuXWindow  = NULL;  // Rendering Window
 
 // ******************************************************************
 // * static
@@ -95,7 +96,7 @@ VOID xboxkrnl::EmuXInitD3D()
     // ******************************************************************
     {
         // xbox Direct3DCreate8 returns "1" always, so we need our own ptr
-        g_pD3D = Direct3DCreate8(D3D_SDK_VERSION);
+        g_pD3D8 = Direct3DCreate8(D3D_SDK_VERSION);
     }
 }
 
@@ -158,19 +159,26 @@ HRESULT WINAPI xboxkrnl::EmuXIDirect3D8_CreateDevice
 
         hFocusWindow = g_EmuXWindow;
 
-        // Weird swizzled b.s.
+        // Tricky MS randomizing .h #defines :[
         if(pPresentationParameters->BackBufferFormat == 0x07)
             pPresentationParameters->BackBufferFormat = D3DFMT_X8R8G8B8;
 
-        // hrnm this is different too
+        // Tricky MS randomizing .h #defines :[
         if(pPresentationParameters->AutoDepthStencilFormat == 0x2A)
             pPresentationParameters->AutoDepthStencilFormat = D3DFMT_D24S8;
     }
 
     // ******************************************************************
+    // * TODO: Query for Software Vertex Processing abilities!!
+    // ******************************************************************
+    {
+        BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+    }
+
+    // ******************************************************************
     // * redirect to windows d3d
     // ******************************************************************
-    HRESULT ret = g_pD3D->CreateDevice
+    HRESULT ret = g_pD3D8->CreateDevice
     (
         Adapter,
         DeviceType,
@@ -179,6 +187,13 @@ HRESULT WINAPI xboxkrnl::EmuXIDirect3D8_CreateDevice
         pPresentationParameters,
         ppReturnedDeviceInterface
     );
+
+    // ******************************************************************
+    // * it is necessary to store this pointer globally for emulation
+    // ******************************************************************
+    {
+        g_pD3D8Device = *ppReturnedDeviceInterface;
+    }
 
     EmuXSwapFS();   // XBox FS
 
@@ -216,6 +231,8 @@ HRESULT WINAPI xboxkrnl::EmuXIDirect3DDevice8_Clear
                ");\n",
                GetCurrentThreadId(), Count, pRects, Flags,
                Color, Z, Stencil);
+
+        fflush(stdout);
     }
     #endif
 
@@ -223,10 +240,21 @@ HRESULT WINAPI xboxkrnl::EmuXIDirect3DDevice8_Clear
     // * make adjustments to parameters to make sense with windows d3d
     // ******************************************************************
     {
+        DWORD newFlags = 0;
+
+        if(Flags & 0x000000f0l)
+            newFlags |= D3DCLEAR_TARGET;
+
+        if(Flags & 0x00000001l)
+            newFlags |= D3DCLEAR_ZBUFFER;
+
+        if(Flags & 0x00000002l)
+            newFlags |= D3DCLEAR_STENCIL;
+
+        Flags = newFlags;
     }
 
-    HRESULT ret = NULL;
-    // TODO: Retrieve "this" parameter somehow, and use it as a ptr
+    HRESULT ret = g_pD3D8Device->Clear(Count, pRects, Flags, Color, Z, Stencil);
 
     EmuXSwapFS();   // XBox FS
 

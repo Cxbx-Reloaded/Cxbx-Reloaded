@@ -67,7 +67,7 @@ SOOVPA<8> IDirect3D8_CreateDevice_1_0_4361 =
 LOOVPA<9> IDirect3DDevice8_Clear_1_0_4361 =
 {
     1,  // Large == 1
-    9,  // Count == 8
+    9,  // Count == 9
 
     {
         // IDirect3DDevice8_Clear+0x0000 : sub esp, 38h
@@ -101,7 +101,7 @@ OOVPATable D3D8_1_0_4361[] =
         #ifdef _DEBUG_TRACE
         "EmuXIDirect3D8_CreateDevice" 
         #endif
-    }/*,
+    },
     // IDirect3DDevice8_Clear_1_0_4361
     {
         (OOVPA*)&IDirect3DDevice8_Clear_1_0_4361,
@@ -111,7 +111,7 @@ OOVPATable D3D8_1_0_4361[] =
         #ifdef _DEBUG_TRACE
         "EmuXIDirect3DDevice8_Clear" 
         #endif
-    },*/
+    },
 };
 
 // ******************************************************************

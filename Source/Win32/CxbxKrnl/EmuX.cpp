@@ -58,6 +58,12 @@ static void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, v
 CXBXKRNL_API void NTAPI EmuXInit(Xbe::LibraryVersion *LibraryVersion, DebugMode DebugConsole, char *DebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)())
 {
     // ******************************************************************
+    // * we're gonna need this :-) (Floating Point)
+    // ******************************************************************
+    {
+    }
+
+    // ******************************************************************
     // * debug console allocation (if configured)
     // ******************************************************************
     if(DebugConsole == DM_CONSOLE)
@@ -237,17 +243,6 @@ inline void EmuXInstallWrapper(void *FunctionAddr, void *WrapperAddr)
 void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *XbeHeader)
 {
     // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    {
-        printf("EmuX: EmuXInstallWrappers\n"
-               "(\n"
-               "   Entry               : 0x%.08X\n"
-               ");\n",
-            Entry);
-    }
-
-    // ******************************************************************
     // * traverse the full OOVPA table
     // ******************************************************************
     for(uint32 a=0;a<OovpaTableSize/sizeof(OOVPATable);a++)
@@ -264,6 +259,44 @@ void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*E
         if(Oovpa->Large == 1)
         {
             LOOVPA<1> *Loovpa = (LOOVPA<1>*)Oovpa;
+
+            upper -= Loovpa->Lovp[count-1].Offset;
+
+            // ******************************************************************
+            // * Search all of the image memory
+            // ******************************************************************
+            for(uint32 cur=lower;cur<upper;cur++)
+            {
+                uint32  v=0;
+
+                // ******************************************************************
+                // * check all pairs, moving on if any do not match
+                // ******************************************************************
+                for(v=0;v<count;v++)
+                {
+                    uint32 Offset = Loovpa->Lovp[v].Offset;
+                    uint32 Value  = Loovpa->Lovp[v].Value;
+
+                    uint08 RealValue = *(uint08*)(cur + Offset);
+
+                    if(RealValue != Value)
+                        break;
+                }
+
+                // ******************************************************************
+                // * success if we found all pairs
+                // ******************************************************************
+                if(v == count)
+                {
+                    #ifdef _DEBUG_TRACE
+                    printf("EmuXInstallWrappers: 0x%.08X -> %s\n", cur, OovpaTable[a].szFuncName);
+                    #endif
+
+                    EmuXInstallWrapper((void*)cur, OovpaTable[a].lpRedirect);
+
+                    break;
+                }
+            }
         }
         // ******************************************************************
         // * Small
