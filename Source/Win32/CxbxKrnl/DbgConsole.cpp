@@ -120,14 +120,14 @@ void DbgConsole::ParseCommand()
 
     // TODO: as command list grows, turn into static string/ptr lookup
 
-    if(stricmp(m_szInput, "help") == 0)
+    if(stricmp(m_szInput, "h") == 0 || stricmp(m_szInput, "help") == 0)
     {
         printf("CxbxDbg: \n");
         printf("CxbxDbg: Cxbx Debug Command List:\n");
         printf("CxbxDbg: \n");
-        printf("CxbxDbg:  HELP, H\n");
-        printf("CxbxDbg:  QUIT, Q, EXIT\n");
-        printf("CxbxDbg:  TRACE, T\n");
+        printf("CxbxDbg:  HELP  (H)\n");
+        printf("CxbxDbg:  QUIT  (Q or EXIT)\n");
+        printf("CxbxDbg:  TRACE (T)\n");
         printf("CxbxDbg:  CLS\n");
         printf("CxbxDbg: \n");
     }

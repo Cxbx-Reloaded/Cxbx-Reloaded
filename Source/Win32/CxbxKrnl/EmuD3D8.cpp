@@ -220,6 +220,8 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         g_pD3D8->GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), DevType, &g_D3DCaps);
     }
 
+	SetFocus(g_hEmuWindow);
+
     // create default device
     {
         XTL::X_D3DPRESENT_PARAMETERS PresParam;

@@ -2,8 +2,6 @@ Cxbx Todo (* denotes high priority, + denotes medium priority)
 
 HLE :
 
-  * Fix hardware video mode
-
   * NSIS installer. Option to clear UDATA/TDATA/CxbxCache
 
   * Modularize inline vertex buffers (Begin()/End())
