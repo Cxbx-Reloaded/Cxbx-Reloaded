@@ -770,6 +770,9 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
     // HACK: Should be aligned!!
     PVOID pRet = (PVOID)new unsigned char[NumberOfBytes];
 
+    _asm int 3
+    pRet = (PVOID)0xBAADBEEF;
+
     EmuSwapFS();   // Xbox FS
 
     return pRet;
@@ -2203,11 +2206,13 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
+        /*
         printf("EmuKrnl (0x%X): RtlEnterCriticalSection\n"
                "(\n"
                "   CriticalSection     : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), CriticalSection);
+       //*/
     }
     #endif
 
@@ -2271,11 +2276,13 @@ XBSYSAPI EXPORTNUM(291) VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
+        /*
         printf("EmuKrnl (0x%X): RtlInitializeCriticalSection\n"
                "(\n"
                "   CriticalSection     : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), CriticalSection);
+        //*/
     }
     #endif
 
@@ -2304,11 +2311,13 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
+        /*
         printf("EmuKrnl (0x%X): RtlLeaveCriticalSection\n"
                "(\n"
                "   CriticalSection     : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), CriticalSection);
+        //*/
     }
     #endif
 

@@ -494,7 +494,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         printf("Emu (0x%X): Resolved %d cross reference(s)\n", GetCurrentThreadId(), OrigUnResolvedXRefs - UnResolvedXRefs);
     }
 
-	// ******************************************************************
+    // ******************************************************************
     // * Initialize FS Emulation
     // ******************************************************************
     {

@@ -480,7 +480,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 // * verify no ugly circumstances
                 // ******************************************************************
                 if(g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BufferSurfaces[0] != NULL || g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->DepthStencilSurface != NULL)
-                    EmuWarning("DepthStencilSurface != NULL and/or BufferSurfaces[0] != NULL");
+                    EmuWarning("BufferSurfaces[0] : 0x%.08X,  DepthStencilSurface : 0x%.08X", g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->BufferSurfaces[0], g_EmuD3D8CreateDeviceProxyData.pPresentationParameters->DepthStencilSurface);
 
                 // ******************************************************************
                 // * make adjustments to parameters to make sense with windows d3d
