@@ -129,7 +129,7 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
     g_bThreadInitialized = false;
 
     // ******************************************************************
-    // * Create a thread dedicated to timing
+    // * create a thread dedicated to timing
     // ******************************************************************
     {
         DWORD dwThreadId;
@@ -1716,63 +1716,72 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
     }
     else if(PCFormat == D3DFMT_YUY2)
     {
-        if(!g_bSupportsYUY2)
-            EmuCleanup("Sorry, YUY2 must be supported in hardware (temporarily)");
-
         // cache the overlay size
         g_dwOverlayW = Width;
         g_dwOverlayH = Height;
     }
 
-    // ******************************************************************
-    // * adjust width/height to power of 2
-    // ******************************************************************
+    HRESULT hRet;
+
+    if(PCFormat != D3DFMT_YUY2 || g_bSupportsYUY2)
     {
-        UINT NewWidth=0, NewHeight=0;
-
-        int v;
-
-        for(v=0;v<32;v++)
+        // ******************************************************************
+        // * adjust width/height to power of 2
+        // ******************************************************************
         {
-            int mask = 1 << v;
+            UINT NewWidth=0, NewHeight=0;
 
-            if(Width & mask)
-                NewWidth = mask;
+            int v;
 
-            if(Height & mask)
-                NewHeight = mask;
+            for(v=0;v<32;v++)
+            {
+                int mask = 1 << v;
+
+                if(Width & mask)
+                    NewWidth = mask;
+
+                if(Height & mask)
+                    NewHeight = mask;
+            }
+
+            if(Width != NewWidth)
+            {
+                NewWidth <<= 1;
+                printf("*Warning* needed to resize width (%d->%d)\n", Width, NewWidth);
+            }
+
+            if(Height != NewHeight)
+            {
+                NewHeight <<= 1;
+                printf("*Warning* needed to resize height (%d->%d)\n", Height, NewHeight);
+            }
+
+            Width = NewWidth;
+            Height = NewHeight;
         }
 
-        if(Width != NewWidth)
-        {
-            NewWidth <<= 1;
-            printf("*Warning* needed to resize width (%d->%d)\n", Width, NewWidth);
-        }
+        *ppTexture = new X_D3DResource();
 
-        if(Height != NewHeight)
-        {
-            NewHeight <<= 1;
-            printf("*Warning* needed to resize height (%d->%d)\n", Height, NewHeight);
-        }
+        // ******************************************************************
+        // * redirect to windows d3d
+        // ******************************************************************
+        hRet = g_pD3DDevice8->CreateTexture
+        (
+            Width, Height, Levels, 
+            0,  // TODO: Xbox Allows a border to be drawn (maybe hack this in software ;[)
+            PCFormat, D3DPOOL_MANAGED, &((*ppTexture)->EmuTexture8)
+        );
 
-        Width = NewWidth;
-        Height = NewHeight;
+        if(FAILED(hRet))
+            printf("*Warning* CreateTexture FAILED\n");
     }
+    else
+    {
+        // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
+        *ppTexture = (X_D3DResource*)((uint32)(new uint08[g_dwOverlayW*g_dwOverlayH*2]) | 0x80000000);
 
-    *ppTexture = new X_D3DResource();
-
-    // ******************************************************************
-    // * redirect to windows d3d
-    // ******************************************************************
-    HRESULT hRet = g_pD3DDevice8->CreateTexture
-    (
-        Width, Height, Levels, 
-        0,  // TODO: Xbox Allows a border to be drawn (maybe hack this in software ;[)
-        PCFormat, D3DPOOL_MANAGED, &((*ppTexture)->EmuTexture8)
-    );
-
-    if(FAILED(hRet))
-        printf("*Warning* CreateTexture FAILED\n");
+        hRet = D3D_OK;
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -2614,36 +2623,53 @@ HRESULT WINAPI XTL::EmuIDirect3DSurface8_GetDesc
     }
     #endif
 
-    EmuVerifyResourceIsRegistered(pThis);
+    HRESULT hRet;
 
-    IDirect3DSurface8 *pSurface8 = pThis->EmuSurface8;
-
-    D3DSURFACE_DESC SurfaceDesc;
-
-    HRESULT hRet = pSurface8->GetDesc(&SurfaceDesc);
-
-    // ******************************************************************
-    // * Rearrange into windows format (remove D3DPool)
-    // ******************************************************************
+    if((uint32)pThis & 0x80000000)
     {
-        // Convert Format (PC->Xbox)
-        pDesc->Format = EmuPC2XB_D3DFormat(SurfaceDesc.Format);
-        pDesc->Type   = SurfaceDesc.Type;
+        pDesc->Format = EmuPC2XB_D3DFormat(D3DFMT_YUY2);
+        pDesc->Height = g_dwOverlayH;
+        pDesc->Width  = g_dwOverlayW;
+        pDesc->MultiSampleType = (D3DMULTISAMPLE_TYPE)0;
+        pDesc->Size   = g_dwOverlayW*g_dwOverlayH*2;
+        pDesc->Type   = D3DRTYPE_SURFACE;
+        pDesc->Usage  = 0;
 
-        if(pDesc->Type > 7)
-            EmuCleanup("EmuIDirect3DSurface8_GetDesc: pDesc->Type > 7");
+        hRet = D3D_OK;
+    }
+    else
+    {
+        EmuVerifyResourceIsRegistered(pThis);
 
-        pDesc->Usage  = SurfaceDesc.Usage;
-        pDesc->Size   = SurfaceDesc.Size;
+        IDirect3DSurface8 *pSurface8 = pThis->EmuSurface8;
 
-        // TODO: Convert from Xbox to PC!!
-        if(SurfaceDesc.MultiSampleType == D3DMULTISAMPLE_NONE)
-            pDesc->MultiSampleType = (XTL::D3DMULTISAMPLE_TYPE)0x0011;
-        else
-            EmuCleanup("EmuIDirect3DSurface8_GetDesc Unknown Multisample format! (%d)", SurfaceDesc.MultiSampleType);
+        D3DSURFACE_DESC SurfaceDesc;
 
-        pDesc->Width  = SurfaceDesc.Width;
-        pDesc->Height = SurfaceDesc.Height;
+        hRet = pSurface8->GetDesc(&SurfaceDesc);
+
+        // ******************************************************************
+        // * Rearrange into windows format (remove D3DPool)
+        // ******************************************************************
+        {
+            // Convert Format (PC->Xbox)
+            pDesc->Format = EmuPC2XB_D3DFormat(SurfaceDesc.Format);
+            pDesc->Type   = SurfaceDesc.Type;
+
+            if(pDesc->Type > 7)
+                EmuCleanup("EmuIDirect3DSurface8_GetDesc: pDesc->Type > 7");
+
+            pDesc->Usage  = SurfaceDesc.Usage;
+            pDesc->Size   = SurfaceDesc.Size;
+
+            // TODO: Convert from Xbox to PC!!
+            if(SurfaceDesc.MultiSampleType == D3DMULTISAMPLE_NONE)
+                pDesc->MultiSampleType = (XTL::D3DMULTISAMPLE_TYPE)0x0011;
+            else
+                EmuCleanup("EmuIDirect3DSurface8_GetDesc Unknown Multisample format! (%d)", SurfaceDesc.MultiSampleType);
+
+            pDesc->Width  = SurfaceDesc.Width;
+            pDesc->Height = SurfaceDesc.Height;
+        }
     }
 
     EmuSwapFS();   // XBox FS
@@ -2680,28 +2706,40 @@ HRESULT WINAPI XTL::EmuIDirect3DSurface8_LockRect
             }
     #endif
 
-    if(Flags & 0x40)
-        printf("*Warning* D3DLOCK_TILED ignored!\n");
+    HRESULT hRet;
 
-    EmuVerifyResourceIsRegistered(pThis);
+    if((uint32)pThis & 0x80000000)
+    {
+        pLockedRect->Pitch = g_dwOverlayW*2;
+        pLockedRect->pBits = (void*)((uint32)pThis & 0x7FFFFFFF);
 
-    IDirect3DSurface8 *pSurface8 = pThis->EmuSurface8;
+        hRet = D3D_OK;
+    }
+    else
+    {
+        if(Flags & 0x40)
+            printf("*Warning* D3DLOCK_TILED ignored!\n");
 
-    DWORD NewFlags = 0;
+        EmuVerifyResourceIsRegistered(pThis);
 
-    if(Flags & 0x80)
-        NewFlags |= D3DLOCK_READONLY;
+        IDirect3DSurface8 *pSurface8 = pThis->EmuSurface8;
 
-    if(Flags & !(0x80 | 0x40))
-        EmuCleanup("EmuIDirect3DSurface8_LockRect: Unknown Flags! (0x%.08X)", Flags);
+        DWORD NewFlags = 0;
 
-    // Remove old lock(s)
-    pSurface8->UnlockRect();
+        if(Flags & 0x80)
+            NewFlags |= D3DLOCK_READONLY;
 
-    HRESULT hRet = pSurface8->LockRect(pLockedRect, pRect, NewFlags);
+        if(Flags & !(0x80 | 0x40))
+            EmuCleanup("EmuIDirect3DSurface8_LockRect: Unknown Flags! (0x%.08X)", Flags);
 
-    if(FAILED(hRet))
-        printf("*Warning* LockRect failed\n");
+        // Remove old lock(s)
+        pSurface8->UnlockRect();
+
+        hRet = pSurface8->LockRect(pLockedRect, pRect, NewFlags);
+
+        if(FAILED(hRet))
+            printf("*Warning* LockRect failed\n");
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -2752,6 +2790,10 @@ XTL::X_D3DResource * WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel2
 )
 {
     X_D3DSurface *pSurfaceLevel;
+
+    // In a special situation, we are actually returning a memory ptr with high bit set
+    if((uint32)pThis & 0x80000000)
+        return pThis;
 
     EmuIDirect3DTexture8_GetSurfaceLevel(pThis, Level, &pSurfaceLevel);
 
@@ -2838,13 +2880,24 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel
     }
     #endif
 
-    EmuVerifyResourceIsRegistered(pThis);
+    HRESULT hRet;
 
-    IDirect3DTexture8 *pTexture8 = pThis->EmuTexture8;
+    // if highest bit is set, this is actually a raw memory pointer (for YUY2 simulation)
+    if((uint32)pThis & 0x80000000)
+    {
+        *ppSurfaceLevel = (X_D3DSurface*)pThis;
+        hRet = D3D_OK;
+    }
+    else
+    {
+        EmuVerifyResourceIsRegistered(pThis);
 
-    *ppSurfaceLevel = new X_D3DSurface();
+        IDirect3DTexture8 *pTexture8 = pThis->EmuTexture8;
 
-    HRESULT hRet = pTexture8->GetSurfaceLevel(Level, &((*ppSurfaceLevel)->EmuSurface8));
+        *ppSurfaceLevel = new X_D3DSurface();
+
+        hRet = pTexture8->GetSurfaceLevel(Level, &((*ppSurfaceLevel)->EmuSurface8));
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -3058,6 +3111,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
             int w = SurfaceDesc.Width;
             int h = SurfaceDesc.Height;
 
+            // TODO: sucker the game into rendering directly to the overlay :]
             for(int y=0;y<h;y++)
             {
                 memcpy(pDest, pSour, w*2);
@@ -3094,7 +3148,6 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
     {
         // TODO: dont assume X8R8G8B8 ?
         D3DLOCKED_RECT LockedRectDest;
-        D3DLOCKED_RECT LockedRectSour;
 
         IDirect3DSurface8 *pBackBuffer=0;
 
@@ -3103,67 +3156,71 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
         // if we obtained the backbuffer, manually translate the YUY2 into the backbuffer format
         if(hRet == D3D_OK && pBackBuffer->LockRect(&LockedRectDest, NULL, NULL) == D3D_OK)
         {
-            // remove any stale locks
-            pSurface->EmuSurface8->UnlockRect();
+            uint08 *pCurByte = (uint08*)((uint32)pSurface & 0x7FFFFFFF);
 
-            hRet = pSurface->EmuSurface8->LockRect(&LockedRectSour, NULL, D3DLOCK_READONLY);
+            uint08 *pDest = (uint08*)LockedRectDest.pBits;
 
-            if(hRet == D3D_OK)
+            uint32 dx=0, dy=0;
+
+            uint32 dwImageSize = (g_dwOverlayW * g_dwOverlayH) * 2;
+
+            if(true)
             {
-                uint08 *pCurByteY = (uint08*)LockedRectSour.pBits;
-                uint08 *pCurByteV = (uint08*)LockedRectSour.pBits +  g_dwOverlayW * g_dwOverlayH;
-                uint08 *pCurByteU = (uint08*)LockedRectSour.pBits + (g_dwOverlayW * g_dwOverlayH) + ((g_dwOverlayW * g_dwOverlayH) / 4);
-
-                uint08 *pDest = (uint08*)LockedRectDest.pBits;
-
-                uint32 dx=0, dy=0;
-
-                uint32 dwImageSize = (g_dwOverlayW * g_dwOverlayH) * 3 / 2;
-
-                uint32 dwYUY2W = g_dwOverlayW * 3 / 2;
-                uint32 dwYUY2C = 0;
-
-                for(uint32 v=0;v<dwImageSize;v+=6)
+                for(uint32 y=0;y<g_dwOverlayH;y++)
                 {
-                    double Y[4];
+                    for(uint32 x=0;x<g_dwOverlayW*4;x+=4)
+                    {
+                        uint08 Y = *pCurByte;
 
-                    Y[0] = *pCurByteY++;
-                    Y[1] = *pCurByteY++;
-                    Y[2] = *pCurByteY++;
-                    Y[3] = *pCurByteY++;
+                        pDest[x+0] = Y;
+                        pDest[x+1] = Y;
+                        pDest[x+2] = Y;
+                        pDest[x+3] = 0xFF;
 
-                    double V = *pCurByteV++;
-                    double U = *pCurByteU++;
+                        pCurByte+=2;
+                    }
+
+                    pDest += LockedRectDest.Pitch;
+                }
+            }
+            else
+            {
+                for(uint32 v=0;v<dwImageSize;v+=4)
+                {
+                    float Y[2], U, V;
+
+                    Y[0] = *pCurByte++;
+                    U    = *pCurByte++;
+                    Y[1] = *pCurByte++;
+                    V    = *pCurByte++;
 
                     int a=0;
-                    for(int y=0;y<2;y++)
+                    for(int x=0;x<2;x++)
                     {
-                        for(int x=0;x<2;x++)
-                        {
-                            double R = Y[a] + 1.402*(V-128);
-                            double G = Y[a] - 0.344*(U-128) - 0.714*(V-128);
-                            double B = Y[a] + 1.772*(U-128);
+                        float R = Y[a] + 1.402f*(V-128);
+                        float G = Y[a] - 0.344f*(U-128) - 0.714f*(V-128);
+                        float B = Y[a] + 1.772f*(U-128);
 
-                            R = (R < 0) ? 0 : ((R > 255) ? 255 : R);
-                            G = (G < 0) ? 0 : ((G > 255) ? 255 : G);
-                            B = (B < 0) ? 0 : ((B > 255) ? 255 : B);
+                        R = (R < 0) ? 0 : ((R > 255) ? 255 : R);
+                        G = (G < 0) ? 0 : ((G > 255) ? 255 : G);
+                        B = (B < 0) ? 0 : ((B > 255) ? 255 : B);
 
-                            uint32 v = (dy*LockedRectDest.Pitch+dx*4);
+                        uint32 i = (dy*LockedRectDest.Pitch+(dx+x)*4);
 
-                            pDest[v+0] = (uint08)R;
-                            pDest[v+1] = (uint08)G;
-                            pDest[v+2] = (uint08)B;
-                            pDest[v+3] = 0xFF;
+                        pDest[i+0] = (uint08)B;
+                        pDest[i+1] = (uint08)G;
+                        pDest[i+2] = (uint08)R;
+                        pDest[i+3] = 0xFF;
 
-                            a++;
-                            dx++;
+                        a++;
+                    }
 
-                            if(dx % g_dwOverlayW == 0)
-                            {
-                                dy++;
-                                dx=0;
-                            }
-                        }
+                    dx+=2;
+
+                    if((dx % g_dwOverlayW) == 0)
+                    {
+                        dy++;
+                        dx=0;
                     }
 
                 }
