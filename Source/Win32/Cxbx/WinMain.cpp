@@ -35,6 +35,7 @@
 #include "EmuExe.h"
 #include "WndMain.h"
 
+#undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
 // ******************************************************************

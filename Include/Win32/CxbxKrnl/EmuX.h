@@ -43,6 +43,7 @@ namespace xboxkrnl
     #include "EmuXxapi.h"
 };
 
+#include "OOVPA.h"
 #include "EmuXKrnl.h"
 #include "EmuXLDT.h"
 #include "EmuXFS.h"

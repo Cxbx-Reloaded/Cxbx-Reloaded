@@ -148,6 +148,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\EmuXxapi.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\OOVPA.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\xntdll.h
 # End Source File
 # End Group

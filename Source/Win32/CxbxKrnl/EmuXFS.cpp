@@ -34,6 +34,7 @@
 #include "Cxbx.h"
 #include "EmuX.h"
 
+#undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 #include <stdio.h>
 

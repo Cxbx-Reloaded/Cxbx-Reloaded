@@ -41,6 +41,7 @@
 // ******************************************************************
 namespace win32
 {
+    #undef FIELD_OFFSET     // prevent macro redefinition warnings
     #include <windows.h>
 }
 
