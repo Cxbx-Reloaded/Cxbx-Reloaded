@@ -78,6 +78,7 @@ static inline void    EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResourc
 // ******************************************************************
 static XTL::LPDIRECT3D8             g_pD3D8         = NULL; // Direct3D8
 static XTL::LPDIRECT3DDEVICE8       g_pD3DDevice8   = NULL; // Direct3D8 Device
+static BOOL                         g_bSupportsYUY2 = FALSE;// Does device support YUY2 overlays?
 static XTL::LPDIRECTDRAW7           g_pDD7          = NULL; // DirectDraw7
 static XTL::LPDIRECTDRAWSURFACE7    g_pDDSPrimary   = NULL; // DirectDraw7 Primary Surface
 static XTL::LPDIRECTDRAWSURFACE7    g_pDDSOverlay7  = NULL; // DirectDraw7 Overlay Surface
@@ -482,6 +483,18 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
     }
 
     // ******************************************************************
+    // * check for YUY2 overlay support
+    // ******************************************************************
+    {
+        HRESULT hRet = g_pD3D8->CheckDeviceFormat(Adapter, DeviceType, (XTL::D3DFORMAT)pPresentationParameters->BackBufferFormat, 0, D3DRTYPE_TEXTURE, D3DFMT_YUY2);
+
+        g_bSupportsYUY2 = SUCCEEDED(hRet);
+
+        if(!g_bSupportsYUY2)
+            EmuWarning("YUY2 overlays are not supported in hardware, could be slow!");
+    }
+
+    // ******************************************************************
     // * verify no ugly circumstances
     // ******************************************************************
     if(pPresentationParameters->BufferSurfaces[0] != NULL || pPresentationParameters->DepthStencilSurface != NULL)
@@ -529,15 +542,15 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
         }
 
         pPresentationParameters->Flags &= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
-
+        
         // ******************************************************************
         // * Retrieve Resolution from Configuration
         // ******************************************************************
         if(pPresentationParameters->Windowed)
         {
-            D3DDISPLAYMODE D3DDisplayMode;
-
             sscanf(g_XBVideo.GetVideoResolution(), "%d x %d", &pPresentationParameters->BackBufferWidth, &pPresentationParameters->BackBufferHeight);
+
+            D3DDISPLAYMODE D3DDisplayMode;
 
             g_pD3D8->GetAdapterDisplayMode(g_XBVideo.GetDisplayAdapter(), &D3DDisplayMode);
 
@@ -621,7 +634,6 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
     // * Begin Scene
     // ******************************************************************
     g_pD3DDevice8->BeginScene();
-
 
     EmuSwapFS();   // XBox FS
 
@@ -1702,9 +1714,14 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
         printf("*Warning* D3DFMT_D24S8 is an unsupported texture format!\n");
         PCFormat = D3DFMT_X8R8G8B8;
     }
-
-    if(PCFormat == D3DFMT_YUY2)
+    else if(PCFormat == D3DFMT_YUY2)
     {
+        if(!g_bSupportsYUY2)
+        {
+            EmuWarning("*Warning* YUY2 not supported, using X8R8G8B8");
+            PCFormat = D3DFMT_X8R8G8B8;
+        }
+
         // cache the overlay size
         g_dwOverlayW = Width;
         g_dwOverlayH = Height;
@@ -1720,14 +1737,13 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
 
         for(v=0;v<32;v++)
         {
-            if(Width & (1 << v))
-                NewWidth = 1 << v;
-        }
+            int mask = 1 << v;
 
-        for(v=0;v<32;v++)
-        {
-            if(Height & (1 << v))
-                NewHeight = 1 << v;
+            if(Width & mask)
+                NewWidth = mask;
+
+            if(Height & mask)
+                NewHeight = mask;
         }
 
         if(Width != NewWidth)
