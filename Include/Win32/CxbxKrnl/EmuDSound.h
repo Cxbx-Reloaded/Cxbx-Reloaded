@@ -260,6 +260,40 @@ HRESULT WINAPI EmuIDirectSoundStream_SetHeadroom
 );
 
 // ******************************************************************
+// * func: EmuCDirectSoundStream_SetAllParameters
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetAllParameters
+(
+    PVOID    pThis,
+    PVOID    pUnknown,
+    DWORD    dwApply
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetVelocity
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetVelocity
+(
+    PVOID    pThis,
+    D3DVALUE x,
+    D3DVALUE y,
+    D3DVALUE z,
+    DWORD    dwApply
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetConeOrientation
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetConeOrientation
+(
+    PVOID    pThis,
+    D3DVALUE x,
+    D3DVALUE y,
+    D3DVALUE z,
+    DWORD    dwApply
+);
+
+// ******************************************************************
 // * func: EmuCDirectSoundStream_SetPosition
 // ******************************************************************
 HRESULT WINAPI EmuCDirectSoundStream_SetPosition

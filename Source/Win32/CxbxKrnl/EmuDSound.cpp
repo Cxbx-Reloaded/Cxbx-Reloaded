@@ -582,6 +582,116 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_SetHeadroom
 }
 
 // ******************************************************************
+// * func: EmuCDirectSoundStream_SetAllParameters
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSoundStream_SetAllParameters
+(
+    PVOID    pThis,
+    PVOID    pUnknown,
+    DWORD    dwApply
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetAllParameters\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   pUnknown                  : %f\n"
+               "   dwApply                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, pUnknown, dwApply);
+    }
+    #endif
+
+    // TODO: Actually implement this
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetVelocity
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSoundStream_SetVelocity
+(
+    PVOID    pThis,
+    D3DVALUE x,
+    D3DVALUE y,
+    D3DVALUE z,
+    DWORD    dwApply
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetVelocity\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   x                         : %f\n"
+               "   y                         : %f\n"
+               "   z                         : %f\n"
+               "   dwApply                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, x, y, z, dwApply);
+    }
+    #endif
+
+    // TODO: Actually implement this
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetConeOrientation
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSoundStream_SetConeOrientation
+(
+    PVOID    pThis,
+    D3DVALUE x,
+    D3DVALUE y,
+    D3DVALUE z,
+    DWORD    dwApply
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetConeOrientation\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   x                         : %f\n"
+               "   y                         : %f\n"
+               "   z                         : %f\n"
+               "   dwApply                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, x, y, z, dwApply);
+    }
+    #endif
+
+    // TODO: Actually implement this
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
 // * func: EmuCDirectSoundStream_SetPosition
 // ******************************************************************
 HRESULT WINAPI XTL::EmuCDirectSoundStream_SetPosition
@@ -603,9 +713,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetPosition
         printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetPosition\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
-               "   x                         : 0x%.08X\n"
-               "   y                         : 0x%.08X\n"
-               "   z                         : 0x%.08X\n"
+               "   x                         : %f\n"
+               "   y                         : %f\n"
+               "   z                         : %f\n"
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, x, y, z, dwApply);
@@ -951,9 +1061,9 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetPosition
         printf("EmuDSound (0x%X): EmuIDirectSound8_SetPosition\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
-               "   x                         : 0x%.08X\n"
-               "   y                         : 0x%.08X\n"
-               "   z                         : 0x%.08X\n"
+               "   x                         : %f\n"
+               "   y                         : %f\n"
+               "   z                         : %f\n"
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, x, y, z, dwApply);
@@ -987,9 +1097,9 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetVelocity
         printf("EmuDSound (0x%X): EmuIDirectSound8_SetVelocity\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
-               "   x                         : 0x%.08X\n"
-               "   y                         : 0x%.08X\n"
-               "   z                         : 0x%.08X\n"
+               "   x                         : %f\n"
+               "   y                         : %f\n"
+               "   z                         : %f\n"
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, x, y, z, dwApply);

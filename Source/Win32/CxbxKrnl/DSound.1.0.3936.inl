@@ -202,6 +202,385 @@ SOOVPA<10> CDirectSoundStream_SetVolume_1_0_3936 =
 };
 
 // ******************************************************************
+// * CDirectSoundStream_SetAllParametersB
+// ******************************************************************
+SOOVPA<11> CDirectSoundStream_SetAllParametersB_1_0_3936 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    XREF_DSSTREAMSETALLPARAMETERS1B,  // XRef Is  Saved
+    0,                                // XRef Not Used
+
+    // TODO: re-use for CDirectSoundBuffer_SetAllParametersB!?
+
+    {
+        // CDirectSoundStream_SetAllParametersB+0x10 : or byte ptr [eax+0x80], 0x80
+        { 0x10, 0x80 }, // (Offset,Value)-Pair #1
+        { 0x11, 0x88 }, // (Offset,Value)-Pair #2
+        { 0x12, 0x80 }, // (Offset,Value)-Pair #3
+        { 0x13, 0x00 }, // (Offset,Value)-Pair #4
+        { 0x14, 0x00 }, // (Offset,Value)-Pair #5
+        { 0x15, 0x00 }, // (Offset,Value)-Pair #6
+        { 0x16, 0x80 }, // (Offset,Value)-Pair #7
+
+        // CDirectSoundStream_SetAllParametersB+0x20 : push 0
+        { 0x20, 0x6A }, // (Offset,Value)-Pair #8
+        { 0x21, 0x00 }, // (Offset,Value)-Pair #9
+
+        // CDirectSoundStream_SetAllParametersB+0x2B : retn 0x08
+        { 0x2B, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x2C, 0x08 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundStream_SetAllParametersA
+// ******************************************************************
+SOOVPA<12> CDirectSoundStream_SetAllParametersA_1_0_3936 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    XREF_DSSTREAMSETALLPARAMETERS1A, // XRef Is Saved
+    1,                               // XRef Is Used
+
+    // TODO: re-use for CDirectSoundBuffer_SetAllParametersA!?
+
+    {
+        // CDirectSoundStream_SetAllParametersA+0x25 : call [IDirectSoundStream::SetAllParametersB]
+        { 0x1F, XREF_DSSTREAMSETALLPARAMETERS1B }, // (Offset,Value)-Pair #1
+
+        // CDirectSoundStream_SetAllParametersA+0x09 : mov eax, [esp+0x14]
+        { 0x09, 0x8B }, // (Offset,Value)-Pair #2
+        { 0x0A, 0x44 }, // (Offset,Value)-Pair #3
+        { 0x0B, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x0C, 0x14 }, // (Offset,Value)-Pair #5
+
+        // CDirectSoundStream_SetAllParametersA+0x0D : not eax; and eax, 1
+        { 0x0D, 0xF7 }, // (Offset,Value)-Pair #6
+        { 0x0E, 0xD0 }, // (Offset,Value)-Pair #7
+        { 0x0F, 0x83 }, // (Offset,Value)-Pair #8
+        { 0x10, 0xE0 }, // (Offset,Value)-Pair #9
+        { 0x11, 0x01 }, // (Offset,Value)-Pair #10
+
+        // CDirectSoundStream_SetAllParametersA+0x38 : retn 0x0C
+        { 0x38, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x39, 0x0C }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundStream_SetAllParameters
+// ******************************************************************
+SOOVPA<10> CDirectSoundStream_SetAllParameters_1_0_3936 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    -1, // XRef Not Saved
+    1,  // XRef Is  Used
+
+    {
+        // CDirectSoundStream_SetAllParameters+0x11 : call [IDirectSoundStream::SetAllParametersA]
+        { 0x11, XREF_DSSTREAMSETALLPARAMETERS1A }, // (Offset,Value)-Pair #1
+
+        // CDirectSoundStream_SetAllParameters+0x04 : push eax, [esp+0x08]
+        { 0x04, 0x8B }, // (Offset,Value)-Pair #2
+        { 0x05, 0x44 }, // (Offset,Value)-Pair #3
+        { 0x06, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x07, 0x08 }, // (Offset,Value)-Pair #5
+
+        // CDirectSoundStream_SetAllParameters+0x0C : add eax, 0x04
+        { 0x0C, 0x83 }, // (Offset,Value)-Pair #6
+        { 0x0D, 0xC0 }, // (Offset,Value)-Pair #7
+        { 0x0E, 0x04 }, // (Offset,Value)-Pair #8
+
+        // CDirectSoundStream_SetAllParameters+0x15 : retn 0x0C
+        { 0x15, 0xC2 }, // (Offset,Value)-Pair #9
+        { 0x16, 0x0C }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundStream_SetVelocityC
+// ******************************************************************
+SOOVPA<11> CDirectSoundStream_SetVelocityC_1_0_3936 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    XREF_DSSTREAMSETVELOCITY1C, // XRef Is  Saved
+    0,                                 // XRef Not Used
+
+    // TODO: re-use for CDirectSoundBuffer_SetVelocityC!?
+
+    {
+        // CDirectSoundStream_SetVelocityC+0x0C : or byte ptr [ecx+0x80], 0x40
+        { 0x0C, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x0D, 0x89 }, // (Offset,Value)-Pair #2
+        { 0x0E, 0x80 }, // (Offset,Value)-Pair #3
+        { 0x0F, 0x00 }, // (Offset,Value)-Pair #4
+        { 0x10, 0x00 }, // (Offset,Value)-Pair #5
+        { 0x11, 0x00 }, // (Offset,Value)-Pair #6
+        { 0x12, 0x40 }, // (Offset,Value)-Pair #7
+
+        // CDirectSoundStream_SetVelocityC+0x1A : jz +0x07
+        { 0x1A, 0x74 }, // (Offset,Value)-Pair #8
+        { 0x1B, 0x07 }, // (Offset,Value)-Pair #9
+
+        // CDirectSoundStream_SetVelocityC+0x25 : retn 0x08
+        { 0x25, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x26, 0x08 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundStream_SetVelocityB
+// ******************************************************************
+SOOVPA<14> CDirectSoundStream_SetVelocityB_1_0_3936 =
+{
+    0,  // Large == 0
+    14, // Count == 14
+
+    XREF_DSSTREAMSETVELOCITY1B, // XRef Is Saved
+    1,                                 // XRef Is Used
+
+    // TODO: re-use for CDirectSoundBuffer_SetVelocityB!?
+
+    {
+        // CDirectSoundStream_SetVelocityB+0x35 : call [IDirectSoundStream::SetVelocityC]
+        { 0x35, XREF_DSSTREAMSETVELOCITY1C }, // (Offset,Value)-Pair #1
+
+        // CDirectSoundStream_SetVelocityB+0x21 : mov eax, [ebp+0x18]
+        { 0x21, 0x8B }, // (Offset,Value)-Pair #2
+        { 0x22, 0x45 }, // (Offset,Value)-Pair #3
+        { 0x23, 0x18 }, // (Offset,Value)-Pair #4
+
+        // CDirectSoundStream_SetVelocityB+0x24 : not eax
+        { 0x24, 0xF7 }, // (Offset,Value)-Pair #5
+        { 0x25, 0xD0 }, // (Offset,Value)-Pair #6
+
+        // CDirectSoundStream_SetVelocityB+0x26 : and eax, 1
+        { 0x26, 0x83 }, // (Offset,Value)-Pair #7
+        { 0x27, 0xE0 }, // (Offset,Value)-Pair #8
+        { 0x28, 0x01 }, // (Offset,Value)-Pair #9
+
+        // CDirectSoundStream_SetVelocityB+0x31 : mov ecx, [eax+0x14]
+        { 0x31, 0x8B }, // (Offset,Value)-Pair #10
+        { 0x32, 0x48 }, // (Offset,Value)-Pair #11
+        { 0x33, 0x14 }, // (Offset,Value)-Pair #12
+
+        // CDirectSoundStream_SetVelocityB+0x4F : retn 0x14
+        { 0x4F, 0xC2 }, // (Offset,Value)-Pair #13
+        { 0x50, 0x14 }, // (Offset,Value)-Pair #14
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundStream_SetVelocityA
+// ******************************************************************
+SOOVPA<9> CDirectSoundStream_SetVelocityA_1_0_3936 =
+{
+    0, // Large == 0
+    9, // Count == 9
+
+    XREF_DSSTREAMSETVELOCITY1A, // XRef Is Saved
+    1,                          // XRef Is Used
+
+    // TODO: re-use for CDirectSoundBuffer_SetVelocityA!?
+
+    {
+        // CDirectSoundStream_SetVelocityA+0x25 : call [IDirectSoundStream::SetVelocityB]
+        { 0x25, XREF_DSSTREAMSETVELOCITY1B }, // (Offset,Value)-Pair #1
+
+        // CDirectSoundStream_SetVelocityA+0x06 : fld [ebp+0x14]
+        { 0x06, 0xD9 }, // (Offset,Value)-Pair #2
+        { 0x07, 0x45 }, // (Offset,Value)-Pair #3
+        { 0x08, 0x14 }, // (Offset,Value)-Pair #4
+
+        // CDirectSoundStream_SetVelocityA+0x0C : sub esp, 0x0C
+        { 0x0C, 0x83 }, // (Offset,Value)-Pair #5
+        { 0x0D, 0xEC }, // (Offset,Value)-Pair #6
+        { 0x0E, 0x0C }, // (Offset,Value)-Pair #7
+
+        // CDirectSoundStream_SetVelocityA+0x2A : retn 0x14
+        { 0x2A, 0xC2 }, // (Offset,Value)-Pair #8
+        { 0x2B, 0x14 }, // (Offset,Value)-Pair #9
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundStream_SetVelocity
+// ******************************************************************
+SOOVPA<9> CDirectSoundStream_SetVelocity_1_0_3936 =
+{
+    0, // Large == 0
+    9, // Count == 9
+
+    -1, // XRef Not Saved
+    1,  // XRef Is  Used
+
+    {
+        // CDirectSoundStream_SetVelocity+0x21 : call [IDirectSoundStream::SetVelocityA]
+        { 0x21, XREF_DSSTREAMSETVELOCITY1A }, // (Offset,Value)-Pair #1
+
+        // CDirectSoundStream_SetVelocity+0x06 : fld [ebp+0x14]
+        { 0x06, 0xD9 }, // (Offset,Value)-Pair #2
+        { 0x07, 0x45 }, // (Offset,Value)-Pair #3
+        { 0x08, 0x14 }, // (Offset,Value)-Pair #4
+
+        // CDirectSoundStream_SetVelocity+0x1A : fstp [esp]
+        { 0x1A, 0xD9 }, // (Offset,Value)-Pair #5
+        { 0x1B, 0x1C }, // (Offset,Value)-Pair #6
+        { 0x1C, 0x24 }, // (Offset,Value)-Pair #7
+
+        // CDirectSoundStream_SetVelocity+0x26 : retn 0x14
+        { 0x26, 0xC2 }, // (Offset,Value)-Pair #8
+        { 0x27, 0x14 }, // (Offset,Value)-Pair #9
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundStream_SetConeOrientationC
+// ******************************************************************
+SOOVPA<11> CDirectSoundStream_SetConeOrientationC_1_0_3936 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    XREF_DSSTREAMSETCONEORIENTATION1C, // XRef Is  Saved
+    0,                                 // XRef Not Used
+
+    // TODO: re-use for CDirectSoundBuffer_SetConeOrientationC!?
+
+    {
+        // CDirectSoundStream_SetConeOrientationC+0x0C : or byte ptr [ecx+0x80], 0x18
+        { 0x0C, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x0D, 0x89 }, // (Offset,Value)-Pair #2
+        { 0x0E, 0x80 }, // (Offset,Value)-Pair #3
+        { 0x0F, 0x00 }, // (Offset,Value)-Pair #4
+        { 0x10, 0x00 }, // (Offset,Value)-Pair #5
+        { 0x11, 0x00 }, // (Offset,Value)-Pair #6
+        { 0x12, 0x18 }, // (Offset,Value)-Pair #7
+
+        // CDirectSoundStream_SetConeOrientationC+0x1A : jz +0x07
+        { 0x1A, 0x74 }, // (Offset,Value)-Pair #8
+        { 0x1B, 0x07 }, // (Offset,Value)-Pair #9
+
+        // CDirectSoundStream_SetConeOrientationC+0x25 : retn 0x08
+        { 0x25, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x26, 0x08 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundStream_SetConeOrientationB
+// ******************************************************************
+SOOVPA<14> CDirectSoundStream_SetConeOrientationB_1_0_3936 =
+{
+    0,  // Large == 0
+    14, // Count == 14
+
+    XREF_DSSTREAMSETCONEORIENTATION1B, // XRef Is Saved
+    1,                                 // XRef Is Used
+
+    // TODO: re-use for CDirectSoundBuffer_SetConeOrientationB!?
+
+    {
+        // CDirectSoundStream_SetConeOrientationB+0x35 : call [IDirectSoundStream::SetConeOrientationC]
+        { 0x35, XREF_DSSTREAMSETCONEORIENTATION1C }, // (Offset,Value)-Pair #1
+
+        // CDirectSoundStream_SetConeOrientationB+0x21 : mov eax, [ebp+0x18]
+        { 0x21, 0x8B }, // (Offset,Value)-Pair #2
+        { 0x22, 0x45 }, // (Offset,Value)-Pair #3
+        { 0x23, 0x18 }, // (Offset,Value)-Pair #4
+
+        // CDirectSoundStream_SetConeOrientationB+0x24 : not eax
+        { 0x24, 0xF7 }, // (Offset,Value)-Pair #5
+        { 0x25, 0xD0 }, // (Offset,Value)-Pair #6
+
+        // CDirectSoundStream_SetConeOrientationB+0x26 : and eax, 1
+        { 0x26, 0x83 }, // (Offset,Value)-Pair #7
+        { 0x27, 0xE0 }, // (Offset,Value)-Pair #8
+        { 0x28, 0x01 }, // (Offset,Value)-Pair #9
+
+        // CDirectSoundStream_SetConeOrientationB+0x31 : mov ecx, [eax+0x14]
+        { 0x31, 0x8B }, // (Offset,Value)-Pair #10
+        { 0x32, 0x48 }, // (Offset,Value)-Pair #11
+        { 0x33, 0x14 }, // (Offset,Value)-Pair #12
+
+        // CDirectSoundStream_SetConeOrientationB+0x4F : retn 0x14
+        { 0x4F, 0xC2 }, // (Offset,Value)-Pair #13
+        { 0x50, 0x14 }, // (Offset,Value)-Pair #14
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundStream_SetConeOrientationA
+// ******************************************************************
+SOOVPA<9> CDirectSoundStream_SetConeOrientationA_1_0_3936 =
+{
+    0, // Large == 0
+    9, // Count == 9
+
+    XREF_DSSTREAMSETCONEORIENTATION1A, // XRef Is Saved
+    1,                          // XRef Is Used
+
+    // TODO: re-use for CDirectSoundBuffer_SetConeOrientationA!?
+
+    {
+        // CDirectSoundStream_SetConeOrientationA+0x25 : call [IDirectSoundStream::SetConeOrientationB]
+        { 0x25, XREF_DSSTREAMSETCONEORIENTATION1B }, // (Offset,Value)-Pair #1
+
+        // CDirectSoundStream_SetConeOrientationA+0x06 : fld [ebp+0x14]
+        { 0x06, 0xD9 }, // (Offset,Value)-Pair #2
+        { 0x07, 0x45 }, // (Offset,Value)-Pair #3
+        { 0x08, 0x14 }, // (Offset,Value)-Pair #4
+
+        // CDirectSoundStream_SetConeOrientationA+0x0C : sub esp, 0x0C
+        { 0x0C, 0x83 }, // (Offset,Value)-Pair #5
+        { 0x0D, 0xEC }, // (Offset,Value)-Pair #6
+        { 0x0E, 0x0C }, // (Offset,Value)-Pair #7
+
+        // CDirectSoundStream_SetConeOrientationA+0x2A : retn 0x14
+        { 0x2A, 0xC2 }, // (Offset,Value)-Pair #8
+        { 0x2B, 0x14 }, // (Offset,Value)-Pair #9
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundStream_SetConeOrientation
+// ******************************************************************
+SOOVPA<9> CDirectSoundStream_SetConeOrientation_1_0_3936 =
+{
+    0, // Large == 0
+    9, // Count == 9
+
+    -1, // XRef Not Saved
+    1,  // XRef Is  Used
+
+    {
+        // CDirectSoundStream_SetConeOrientation+0x21 : call [IDirectSoundStream::SetConeOrientationA]
+        { 0x21, XREF_DSSTREAMSETCONEORIENTATION1A }, // (Offset,Value)-Pair #1
+
+        // CDirectSoundStream_SetConeOrientation+0x06 : fld [ebp+0x14]
+        { 0x06, 0xD9 }, // (Offset,Value)-Pair #2
+        { 0x07, 0x45 }, // (Offset,Value)-Pair #3
+        { 0x08, 0x14 }, // (Offset,Value)-Pair #4
+
+        // CDirectSoundStream_SetConeOrientation+0x1A : fstp [esp]
+        { 0x1A, 0xD9 }, // (Offset,Value)-Pair #5
+        { 0x1B, 0x1C }, // (Offset,Value)-Pair #6
+        { 0x1C, 0x24 }, // (Offset,Value)-Pair #7
+
+        // CDirectSoundStream_SetConeOrientation+0x26 : retn 0x14
+        { 0x26, 0xC2 }, // (Offset,Value)-Pair #8
+        { 0x27, 0x14 }, // (Offset,Value)-Pair #9
+    }
+};
+
+// ******************************************************************
 // * CDirectSoundStream_SetPositionC
 // ******************************************************************
 SOOVPA<11> CDirectSoundStream_SetPositionC_1_0_3936 =
@@ -1402,6 +1781,100 @@ OOVPATable DSound_1_0_3936[] =
 
         #ifdef _DEBUG_TRACE
         "EmuCDirectSoundStream_SetVolume" 
+        #endif
+    },
+    // CDirectSoundStream::SetAllParametersB (XREF)
+    {
+        (OOVPA*)&CDirectSoundStream_SetAllParametersB_1_0_3936, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundStream_SetAllParametersB (XRef)"
+        #endif
+    },
+    // CDirectSoundStream::SetAllParametersA (XREF)
+    {
+        (OOVPA*)&CDirectSoundStream_SetAllParametersA_1_0_3936, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundStream_SetAllParametersA (XRef)"
+        #endif
+    },
+    // CDirectSoundStream::SetAllParameters
+    {
+        (OOVPA*)&CDirectSoundStream_SetAllParameters_1_0_3936,
+
+        XTL::EmuCDirectSoundStream_SetAllParameters,
+
+        #ifdef _DEBUG_TRACE
+        "EmuCDirectSoundStream8_SetAllParameters" 
+        #endif
+    },
+    // CDirectSoundStream::SetVelocityC (XREF)
+    {
+        (OOVPA*)&CDirectSoundStream_SetVelocityC_1_0_3936, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundStream_SetVelocityC (XRef)"
+        #endif
+    },
+    // CDirectSoundStream::SetVelocityB (XREF)
+    {
+        (OOVPA*)&CDirectSoundStream_SetVelocityB_1_0_3936, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundStream_SetVelocityB (XRef)"
+        #endif
+    },
+    // CDirectSoundStream::SetVelocityA (XREF)
+    {
+        (OOVPA*)&CDirectSoundStream_SetVelocityA_1_0_3936, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundStream_SetVelocityA (XRef)"
+        #endif
+    },
+    // CDirectSoundStream::SetVelocity
+    {
+        (OOVPA*)&CDirectSoundStream_SetVelocity_1_0_3936,
+
+        XTL::EmuCDirectSoundStream_SetVelocity,
+
+        #ifdef _DEBUG_TRACE
+        "EmuCDirectSoundStream8_SetVelocity" 
+        #endif
+    },
+    // CDirectSoundStream::SetConeOrientationC (XREF)
+    {
+        (OOVPA*)&CDirectSoundStream_SetConeOrientationC_1_0_3936, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundStream_SetConeOrientationC (XRef)"
+        #endif
+    },
+    // CDirectSoundStream::SetConeOrientationB (XREF)
+    {
+        (OOVPA*)&CDirectSoundStream_SetConeOrientationB_1_0_3936, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundStream_SetConeOrientationB (XRef)"
+        #endif
+    },
+    // CDirectSoundStream::SetConeOrientationA (XREF)
+    {
+        (OOVPA*)&CDirectSoundStream_SetConeOrientationA_1_0_3936, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundStream_SetConeOrientationA (XRef)"
+        #endif
+    },
+    // CDirectSoundStream::SetConeOrientation
+    {
+        (OOVPA*)&CDirectSoundStream_SetConeOrientation_1_0_3936,
+
+        XTL::EmuCDirectSoundStream_SetConeOrientation,
+
+        #ifdef _DEBUG_TRACE
+        "EmuCDirectSoundStream8_SetConeOrientation" 
         #endif
     },
     // CDirectSoundStream::SetPositionC (XREF)
