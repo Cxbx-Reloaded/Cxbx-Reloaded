@@ -43,7 +43,7 @@
 // ******************************************************************
 // * constructor
 // ******************************************************************
-WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m_Xbe(0), m_Exe(0), m_bExeChanged(false), m_bXbeChanged(false), m_bAutoConvertToExe(TRUE), m_KrnlDebug(DM_NONE), m_CxbxDebug(DM_NONE)
+WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m_Xbe(0), m_Exe(0), m_bExeChanged(false), m_bXbeChanged(false), m_bAutoConvertToExe(TRUE), m_KrnlDebug(DM_NONE), m_CxbxDebug(DM_NONE), m_dwRecentXbe(0), m_dwRecentExe(0)
 {
     // ******************************************************************
     // * Initialize members
@@ -60,6 +60,14 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m
 
         m_CxbxDebugFilename = (char*)calloc(1, 260);
         m_KrnlDebugFilename = (char*)calloc(1, 260);
+
+        int v=0;
+
+        for(v=0;v<RECENT_XBE_SIZE;v++)
+            m_szRecentXbe[v] = 0;
+
+        for(v=0;v<RECENT_EXE_SIZE;v++)
+            m_szRecentExe[v] = 0;
     }
 
     // ******************************************************************
@@ -83,19 +91,52 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m
 
         if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
         {
-            dwType = REG_DWORD;
-            dwSize = sizeof(DWORD);
-
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_CxbxDebug, &dwSize);
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegQueryValueEx(hKey, "KrnlDebug", NULL, &dwType, (PBYTE)&m_KrnlDebug, &dwSize);
 
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            RegQueryValueEx(hKey, "RecentXbe", NULL, &dwType, (PBYTE)&m_dwRecentXbe, &dwSize);
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            RegQueryValueEx(hKey, "RecentExe", NULL, &dwType, (PBYTE)&m_dwRecentExe, &dwSize);
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegQueryValueEx(hKey, "AutoConvertToExe", NULL, &dwType, (PBYTE)&m_bAutoConvertToExe, &dwSize);
 
-            dwType = REG_SZ;
-            dwSize = 260;
-
+            dwType = REG_SZ; dwSize = 260;
             RegQueryValueEx(hKey, "CxbxDebugFilename", NULL, &dwType, (PBYTE)m_CxbxDebugFilename, &dwSize);
+
+            dwType = REG_SZ; dwSize = 260;
             RegQueryValueEx(hKey, "KrnlDebugFilename", NULL, &dwType, (PBYTE)m_KrnlDebugFilename, &dwSize);
+
+            int v=0;
+
+            for(v=0;v<m_dwRecentXbe;v++)
+            {
+                char buffer[32];
+
+                sprintf(buffer, "RecentXbe%d", v);
+
+                m_szRecentXbe[v] = (char*)calloc(1, 260);
+
+                dwType = REG_SZ; dwSize = 260;
+                RegQueryValueEx(hKey, buffer, NULL, &dwType, (PBYTE)m_szRecentXbe[v], &dwSize);
+            }
+
+            for(v=0;v<m_dwRecentExe;v++)
+            {
+                char buffer[32];
+
+                sprintf(buffer, "RecentExe%d", v);
+
+                m_szRecentExe[v] = (char*)calloc(1, 260);
+
+                dwType = REG_SZ; dwSize = 260;
+                RegQueryValueEx(hKey, buffer, NULL, &dwType, (PBYTE)m_szRecentExe[v], &dwSize);
+            }
 
             RegCloseKey(hKey);
         }
@@ -118,19 +159,54 @@ WndMain::~WndMain()
 
         if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
         {
-            dwType = REG_DWORD;
-            dwSize = sizeof(DWORD);
-
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegSetValueEx(hKey, "CxbxDebug", 0, dwType, (PBYTE)&m_CxbxDebug, dwSize);
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegSetValueEx(hKey, "KrnlDebug", 0, dwType, (PBYTE)&m_KrnlDebug, dwSize);
 
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            RegSetValueEx(hKey, "RecentXbe", 0, dwType, (PBYTE)&m_dwRecentXbe, dwSize);
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            RegSetValueEx(hKey, "RecentExe", 0, dwType, (PBYTE)&m_dwRecentExe, dwSize);
+
+            dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegSetValueEx(hKey, "AutoConvertToExe", 0, dwType, (PBYTE)&m_bAutoConvertToExe, dwSize);
 
-            dwType = REG_SZ;
-            dwSize = 260;
-
+            dwType = REG_SZ; dwSize = 260;
             RegSetValueEx(hKey, "CxbxDebugFilename", 0, dwType, (PBYTE)m_CxbxDebugFilename, dwSize);
+
+            dwType = REG_SZ; dwSize = 260;
             RegSetValueEx(hKey, "KrnlDebugFilename", 0, dwType, (PBYTE)m_KrnlDebugFilename, dwSize);
+
+            int v=0;
+
+            for(v=0;v<m_dwRecentXbe;v++)
+            {
+                char buffer[32];
+
+                sprintf(buffer, "RecentXbe%d", v);
+
+                dwType = REG_SZ; dwSize = 260;
+
+                RegSetValueEx(hKey, buffer, 0, dwType, (PBYTE)m_szRecentXbe[v], dwSize);
+
+                free(m_szRecentXbe[v]);
+            }
+
+            for(v=0;v<m_dwRecentExe;v++)
+            {
+                char buffer[32];
+
+                sprintf(buffer, "RecentExe%d", v);
+
+                dwType = REG_SZ; dwSize = 260;
+
+                RegSetValueEx(hKey, buffer, 0, dwType, (PBYTE)m_szRecentExe[v], dwSize);
+
+                free(m_szRecentExe[v]);
+            }
 
             RegCloseKey(hKey);
         }
@@ -143,11 +219,11 @@ WndMain::~WndMain()
         delete m_Xbe;
         delete m_Exe;
 
-        delete[] m_XbeFilename;
-        delete[] m_ExeFilename;
+        free(m_XbeFilename);
+        free(m_ExeFilename);
 
-        delete[] m_CxbxDebugFilename;
-        delete[] m_KrnlDebugFilename;
+        free(m_CxbxDebugFilename);
+        free(m_KrnlDebugFilename);
     }
 }
 
@@ -220,6 +296,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 RefreshMenus();
 
                 UpdateDebugConsoles();
+
+                UpdateRecentFiles();
 
                 s_bInitMenu = false;
             }
@@ -372,7 +450,47 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                             break;
                         }
 
+                        // ******************************************************************
+	                    // * save this Exe to the list of recent files
+	                    // ******************************************************************
+                        {
+                            bool exists = false;
+
+                            // check if this filename already exists
+                            for(int c=0;c<m_dwRecentExe;c++)
+                                if(strcmp(m_szRecentExe[c], ofn.lpstrFile) == 0)
+                                    exists = true;
+
+                            if(!exists)
+                            {
+                                // move all items down one, removing the last one if necessary
+                                for(int v=RECENT_EXE_SIZE;v>0;v--)
+                                {
+                                    if(m_szRecentExe[v-1] == 0)
+                                        m_szRecentExe[v] = 0;
+                                    else
+                                    {
+                                        if(m_szRecentExe[v] == 0)
+                                            m_szRecentExe[v] = (char*)calloc(1, 260);
+                                        strncpy(m_szRecentExe[v], m_szRecentExe[v-1], 259);
+                                    }
+                                }
+
+                                // add new item as first index
+                                {
+                                    if(m_szRecentExe[0] == 0)
+                                        m_szRecentExe[0] = (char*)calloc(1, 260);
+
+                                    strcpy(m_szRecentExe[0], ofn.lpstrFile);
+
+                                    m_dwRecentExe++;
+                                }
+                            }
+                        }
+
                         XbeLoaded();
+
+                        UpdateRecentFiles();
 
                         m_bExeChanged = true;
                     }
@@ -895,7 +1013,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                         break;
                 }
             }
+            
+            if(m_Xbe != 0)
+                CloseXbe();
+
             DestroyWindow(hwnd);
+
             break;
 
         case WM_DESTROY:
@@ -1179,6 +1302,71 @@ void WndMain::UpdateDebugConsoles()
 }
 
 // ******************************************************************
+// * UpdateRecentFiles
+// ******************************************************************
+void WndMain::UpdateRecentFiles()
+{
+    HMENU FileMenu = GetSubMenu(GetMenu(m_hwnd), 0);
+    HMENU RXbeMenu = GetSubMenu(FileMenu, 9);
+    HMENU RExeMenu = GetSubMenu(FileMenu, 10);
+
+    // clear existing menu items
+    {
+        int v, max;
+        
+        max = GetMenuItemCount(RXbeMenu);
+        for(v=0;v<max;v++)
+            RemoveMenu(RXbeMenu, 0, MF_BYPOSITION);
+
+        max = GetMenuItemCount(RExeMenu);
+        for(v=0;v<max;v++)
+            RemoveMenu(RExeMenu, 0, MF_BYPOSITION);
+    }
+
+    // insert recent xbe files
+    {
+        char szBuffer[270];
+
+        int max = m_dwRecentXbe;
+
+        // if there are no recent files, throw in a disabled "(none)"
+        if(max == 0)
+        {
+            AppendMenu(RXbeMenu, MF_STRING, ID_FILE_RXBE_0, "(none)");
+            EnableMenuItem(RXbeMenu, ID_FILE_RXBE_0, MF_BYCOMMAND | MF_GRAYED);
+        }
+
+        // NOTE: Resource defines ID_FILE_RXBE_0 through ID_FILE_RXBE_9 must be in order
+        for(int v=0;v<max;v++)
+        {
+            sprintf(szBuffer, "&%d : %s", v, m_szRecentXbe[v]);
+            AppendMenu(RXbeMenu, MF_STRING, ID_FILE_RXBE_0 + v, szBuffer);
+        }
+    }
+
+    // insert recent exe files
+    {
+        char szBuffer[270];
+
+        int max = m_dwRecentExe;
+
+        // if there are no recent files, throw in a disabled "(none)"
+        if(max == 0)
+        {
+            AppendMenu(RExeMenu, MF_STRING, ID_FILE_REXE_0, "(none)");
+            EnableMenuItem(RExeMenu, ID_FILE_REXE_0, MF_BYCOMMAND | MF_GRAYED);
+        }
+
+        // NOTE: Resource defines ID_FILE_REXE_0 through ID_FILE_REXE_9 must be in order
+        for(int v=0;v<max;v++)
+        {
+            sprintf(szBuffer, "&%d : %s", v, m_szRecentExe[v]);
+            AppendMenu(RExeMenu, MF_STRING, ID_FILE_REXE_0 + v, szBuffer);
+        }
+    }
+}
+
+// ******************************************************************
 // * ConvertToExe
 // ******************************************************************
 bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists)
@@ -1275,7 +1463,48 @@ void WndMain::OpenXbe(const char *x_filename)
         return;
     }
 
+    // ******************************************************************
+	// * save this Xbe to the list of recent files
+	// ******************************************************************
+    if(m_XbeFilename[0] != '\0')
+    {
+        bool exists = false;
+
+        // check if this filename already exists
+        for(int c=0;c<m_dwRecentXbe;c++)
+            if(strcmp(m_szRecentXbe[c], m_XbeFilename) == 0)
+                exists = true;
+
+        if(!exists)
+        {
+            // move all items down one, removing the last one if necessary
+            for(int v=RECENT_XBE_SIZE;v>0;v--)
+            {
+                if(m_szRecentXbe[v-1] == 0)
+                    m_szRecentXbe[v] = 0;
+                else
+                {
+                    if(m_szRecentXbe[v] == 0)
+                        m_szRecentXbe[v] = (char*)calloc(1, 260);
+                    strncpy(m_szRecentXbe[v], m_szRecentXbe[v-1], 259);
+                }
+            }
+
+            // add new item as first index
+            {
+                if(m_szRecentXbe[0] == 0)
+                    m_szRecentXbe[0] = (char*)calloc(1, 260);
+
+                strcpy(m_szRecentXbe[0], m_XbeFilename);
+
+                m_dwRecentXbe++;
+            }
+        }
+    }
+
     XbeLoaded();
+
+    UpdateRecentFiles();
 }
 
 // ******************************************************************
@@ -1294,7 +1523,7 @@ void WndMain::CloseXbe()
     }
 
     printf("WndMain: %s unloaded.\n", m_Xbe->m_szAsciiTitle);
-    
+
     m_bXbeChanged = false;
 
     delete m_Xbe; m_Xbe = 0;
@@ -1381,7 +1610,6 @@ void WndMain::SaveXbeAs()
 
 	if(GetSaveFileName(&ofn) == TRUE)
 		SaveXbe(ofn.lpstrFile);
-
 }
 
 // ******************************************************************
@@ -1389,15 +1617,18 @@ void WndMain::SaveXbeAs()
 // ******************************************************************
 void WndMain::StartEmulation(bool x_bAutoConvert)
 {
+    char szBuffer[260];
+
+    // ******************************************************************
+	// * convert Xbe to Exe, if necessary
+	// ******************************************************************
     if(m_ExeFilename[0] == '\0' || m_bExeChanged)
     {
         if(x_bAutoConvert)
         {
-            char filename[260];
+            SuggestFilename(m_XbeFilename, szBuffer, ".exe");
 
-            SuggestFilename(m_XbeFilename, filename, ".exe");
-
-            if(!ConvertToExe(filename, false))
+            if(!ConvertToExe(szBuffer, false))
                 return;
         }
         else
@@ -1411,25 +1642,23 @@ void WndMain::StartEmulation(bool x_bAutoConvert)
 	// * shell exe
 	// ******************************************************************
     {
-        char dir[260];
-
-        GetModuleFileName(NULL, dir, 260);
+        GetModuleFileName(NULL, szBuffer, 260);
 
         sint32 spot=-1;
         for(int v=0;v<260;v++)
         {
-            if(dir[v] == '\\')
+            if(szBuffer[v] == '\\')
                 spot = v;
-            else if(dir[v] == '\0')
+            else if(szBuffer[v] == '\0')
                 break;
         }
 
         if(spot != -1)
-            dir[spot] = '\0';
+            szBuffer[spot] = '\0';
 
-        if((int)ShellExecute(NULL, "open", m_ExeFilename, NULL, dir, SW_SHOWDEFAULT) <= 32)
+        if((int)ShellExecute(NULL, "open", m_ExeFilename, NULL, szBuffer, SW_SHOWDEFAULT) <= 32)
         {
-            MessageBox(m_hwnd, "Shell failed. (try converting .exe again)", "Cxbx", MB_ICONSTOP | MB_OK);
+            MessageBox(m_hwnd, "Emulation failed.\n\nTry converting again. If this message repeats, the Xbe is not supported.", "Cxbx", MB_ICONSTOP | MB_OK);
 
             printf("WndMain: %s shell failed.\n", m_Xbe->m_szAsciiTitle);
         }

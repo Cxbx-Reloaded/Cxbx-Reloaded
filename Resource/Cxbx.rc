@@ -84,6 +84,33 @@ BEGIN
         MENUITEM "Save Xbe &As...",             ID_FILE_SAVEXBEFILEAS
         , GRAYED
         MENUITEM SEPARATOR
+        POPUP "&Recent Xbe Files"
+        BEGIN
+            MENUITEM "&0 : Recent Placeholder",     ID_FILE_RXBE_0
+            MENUITEM "&1 : Recent Placeholder",     ID_FILE_RXBE_1
+            MENUITEM "&2 : Recent Placeholder",     ID_FILE_RXBE_2
+            MENUITEM "&3 : Recent Placeholder",     ID_FILE_RXBE_3
+            MENUITEM "&4 : Recent Placeholder",     ID_FILE_RXBE_4
+            MENUITEM "&5 : Recent Placeholder",     ID_FILE_RXBE_5
+            MENUITEM "&6 : Recent Placeholder",     ID_FILE_RXBE_6
+            MENUITEM "&7 : Recent Placeholder",     ID_FILE_RXBE_7
+            MENUITEM "&8 : Recent Placeholder",     ID_FILE_RXBE_8
+            MENUITEM "&9 : Recent Placeholder",     ID_FILE_RXBE_9
+        END
+        POPUP "Recent Exe &Files"
+        BEGIN
+            MENUITEM "&0 : Recent Placeholder",     ID_FILE_REXE_0
+            MENUITEM "&1 : Recent Placeholder",     ID_FILE_REXE_1
+            MENUITEM "&2 : Recent Placeholder",     ID_FILE_REXE_2
+            MENUITEM "&3 : Recent Placeholder",     ID_FILE_REXE_3
+            MENUITEM "&4 : Recent Placeholder",     ID_FILE_REXE_4
+            MENUITEM "&5 : Recent Placeholder",     ID_FILE_REXE_5
+            MENUITEM "&6 : Recent Placeholder",     ID_FILE_REXE_6
+            MENUITEM "&7 : Recent Placeholder",     ID_FILE_REXE_7
+            MENUITEM "&8 : Recent Placeholder",     ID_FILE_REXE_8
+            MENUITEM "&9 : Recent Placeholder",     ID_FILE_REXE_9
+        END
+        MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_FILE_EXIT
     END
     POPUP "&Edit"

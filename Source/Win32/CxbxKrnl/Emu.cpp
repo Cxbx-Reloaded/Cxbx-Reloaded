@@ -195,7 +195,6 @@ CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, DebugMode D
         memcpy(&MemXbeHeader->dwInitFlags, &XbeHeader->dwInitFlags, sizeof(XbeHeader->dwInitFlags));
 
         memcpy((void*)XbeHeader->dwCertificateAddr, &((uint08*)XbeHeader)[XbeHeader->dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
-        memcpy((void*)(XbeHeader->dwBaseAddr + 0x1B0), (void*)&((uint08*)XbeHeader)[0x01B0], XbeHeader->dwSizeofHeaders - 0x1B0);
     }
 
     // ******************************************************************

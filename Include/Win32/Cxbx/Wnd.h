@@ -43,7 +43,6 @@
 class Wnd : public Error
 {
     public:
-
         Wnd(HINSTANCE x_hInstance);
        ~Wnd();
 

@@ -1,35 +1,25 @@
 Cxbx Todo:
 
-  Cleanup TLS emulation.
+  Encapsulate RecentFiles into a nice little class
 
-  Configuration may not need to be a modal. Spark off a seperate thread
-  to process messages, allow only one open at a time.
+  Configuration screens may not necessarily need to be modal windows.
 
-  Multimonitor support (of course!) Direct3D9::EnumAdapterModes iteration
+  Multimonitor support via Direct3D9::EnumAdapterModes enumeration.
 
-  Closing console should toggle it, not close the entire app. I'm sure
-  this can be intercepted somehow.
+  Closing a console should not terminate the entire process.
 
-  Everything that is initialized within the context of the converted
-  Exe and CxbxKrnl should be cleaned up at some point before final
-  process termination.
+  Everything that is initialized should be cleaned up before termination.
 
-  D3D Rendering window should inherit from Wnd class. The title should
-  also somehow be updated with information on the playing game.
+  If possible, Direct3D Rendering window should inherit from Wnd.
 
-  Recent files (for .exe and .xbe) in menu. (Use registry)
+  Recent files (Exe and Xbe) in Cxbx main window. (Registry)
 
-  Attempt to add compatibility with ME by using LLDT assembly. This
-  may not even work, but might as well try it.
+  Try to add compatibility with Windows ME using LLDT assembly.
 
-  Xbe files should associate with Cxbx (by user configuration). There
-  should be configuration allowing the Xbe to execute automatically
-  without a GUI at all, or for the Xbe to open in the Cxbx GUI. This
-  can easily be done by sending different command line options to
-  Cxbx.
-
-  Cxbx.dll should be registered in the system so that a converted .exe
-  can be run from anywhere, once converted.
+  Xbe file associations via user configuration. This could include an
+  option to either automatically execute the Xbe, or simply open it up
+  in Cxbx's main window. For this purpose, Cxbx.dll should also be
+  registered in the system so that a converted Exe can run from anywhere.
 
   Converted Exe files should use the Cxbx icon
 
