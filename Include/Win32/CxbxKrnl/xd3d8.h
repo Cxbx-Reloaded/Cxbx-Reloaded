@@ -201,6 +201,45 @@ HRESULT WINAPI EmuIDirect3D8_CreateDevice
 );
 
 // ******************************************************************
+// * func: EmuIDirect3D8_GetAdapterDisplayMode
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3D8_GetAdapterDisplayMode
+(
+    UINT                        Adapter,
+    X_D3DDISPLAYMODE           *pMode
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_CreateVertexShader
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_CreateVertexShader
+(
+    CONST DWORD    *pDeclaration,
+    CONST DWORD    *pFunction,
+    DWORD          *pHandle,
+    DWORD           Usage
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetVertexShaderConstant
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetVertexShaderConstant
+(
+    INT         Register,
+    CONST PVOID pConstantData,
+    DWORD       ConstantCount
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_CreatePixelShader
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_CreatePixelShader
+(
+    CONST DWORD    *pFunction,
+    DWORD          *pHandle
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateTexture
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_CreateTexture
@@ -341,6 +380,14 @@ VOID WINAPI EmuIDirect3DDevice8_SetRenderState_CullMode
 // * func: EmuIDirect3DDevice8_SetRenderState_ZEnable
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_SetRenderState_ZEnable
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias
 (
     DWORD Value
 );

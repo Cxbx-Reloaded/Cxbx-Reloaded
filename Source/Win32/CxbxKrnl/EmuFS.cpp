@@ -158,17 +158,18 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
     // * Generate TIB
     // ******************************************************************
     {
-        xboxkrnl::KTHREAD *KThread = new xboxkrnl::KTHREAD();
+        xboxkrnl::ETHREAD *EThread = new xboxkrnl::ETHREAD();
+
+        EThread->Tcb.TlsData  = (void*)pNewTLS;
+        EThread->UniqueThread = GetCurrentThreadId();
 
         memcpy(&NewPcr->NtTib, OrgNtTib, sizeof(NT_TIB));
 
         NewPcr->NtTib.Self = &NewPcr->NtTib;
 
-        NewPcr->PrcbData.CurrentThread = KThread;
+        NewPcr->PrcbData.CurrentThread = (xboxkrnl::KTHREAD*)EThread;
 
         NewPcr->Prcb = &NewPcr->PrcbData;
-
-        NewPcr->PrcbData.CurrentThread->TlsData = (void*)pNewTLS;
     }
 
     // ******************************************************************

@@ -553,7 +553,7 @@ VOID WINAPI xapi::EmuXapiBootDash(DWORD UnknownA, DWORD UnknownB, DWORD UnknownC
     }
     #endif
 
-    EmuCleanup("EmuXapiBootDash");
+    EmuCleanup("Emulation Terminated (XapiBootDash)");
 
     EmuSwapFS();   // XBox FS
 

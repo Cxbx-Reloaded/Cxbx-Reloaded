@@ -5,10 +5,9 @@ version: 0.7.2 (??/??/03)
 
 - Textures (bmp, jpg, png, etc)
 
-- rtinit/cinit HLE and pre-entry execution was
-  totally removed and occurs naturally on a low
-  level now! (this is great!). This means stdio
-  and other c libs are initialized correctly.
+- rtinit/cinit run on lower level
+
+- stdio seems to be working great :]
 
 version: 0.7.1 (05/30/03)
 --------------------------------

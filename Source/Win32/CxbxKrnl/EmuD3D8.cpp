@@ -80,6 +80,7 @@ static DWORD WINAPI   EmuUpdateTickCount(LPVOID);
 // ******************************************************************
 static xd3d8::LPDIRECT3D8       g_pD3D8         = NULL;   // Direct3D8
 static xd3d8::LPDIRECT3DDEVICE8 g_pD3D8Device   = NULL;   // Direct3D8 Device
+static DWORD                    g_VertexShaderUsage = 0;  // Vertex Shader Usage Param
 static Xbe::Header             *g_XbeHeader     = NULL;   // XbeHeader
 static uint32                   g_XbeHeaderSize = 0;      // XbeHeaderSize
 static xd3d8::D3DCAPS8          g_D3DCaps;                // Direct3D8 Caps
@@ -140,7 +141,7 @@ VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         g_pD3D8 = Direct3DCreate8(D3D_SDK_VERSION);
 
         if(g_pD3D8 == NULL)
-            EmuCleanup("Could not initialize Direct3D!");
+            EmuCleanup("Could not initialize Direct3D8!");
 
         D3DDEVTYPE DevType = (g_XBVideo.GetDirect3DDevice() == 0) ? D3DDEVTYPE_HAL : D3DDEVTYPE_REF;
 
@@ -387,6 +388,9 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
         pPresentationParameters->BackBufferFormat       = EmuXB2PC_D3DFormat(pPresentationParameters->BackBufferFormat);
         pPresentationParameters->AutoDepthStencilFormat = EmuXB2PC_D3DFormat(pPresentationParameters->AutoDepthStencilFormat);
 
+        // TODO: This should be detected from D3DCAPS8 ? (FrameSkip?)
+        pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+
         // ******************************************************************
         // * Retrieve Resolution from Configuration
         // ******************************************************************
@@ -431,6 +435,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
         printf("EmuD3D8 (0x%X): Using hardware vertex processing\n", GetCurrentThreadId());
         #endif
         BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+        g_VertexShaderUsage = 0;
     }
     else
     {
@@ -438,6 +443,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
         printf("EmuD3D8 (0x%X): Using software vertex processing\n", GetCurrentThreadId());
         #endif
         BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+        g_VertexShaderUsage = D3DUSAGE_SOFTWAREPROCESSING;
     }
 
     // ******************************************************************
@@ -457,6 +463,193 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
     // * it is necessary to store this pointer globally for emulation
     // ******************************************************************
     g_pD3D8Device = *ppReturnedDeviceInterface;
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3D8_GetAdapterDisplayMode
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3D8_GetAdapterDisplayMode
+(
+    UINT                        Adapter,
+    X_D3DDISPLAYMODE           *pMode
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3D8_GetAdapterDisplayMode\n"
+               "(\n"
+               "   Adapter                   : 0x%.08X\n"
+               "   pMode                     : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Adapter, pMode);
+    }
+    #endif
+
+    // ******************************************************************
+    // * redirect to windows d3d
+    // ******************************************************************
+    HRESULT hRet = g_pD3D8->GetAdapterDisplayMode
+    (
+        g_XBVideo.GetDisplayAdapter(),
+        (D3DDISPLAYMODE*)pMode
+    );
+
+    // ******************************************************************
+    // * make adjustments to parameters to make sense with windows d3d
+    // ******************************************************************
+    {
+        D3DDISPLAYMODE *pPCMode = (D3DDISPLAYMODE*)pMode;
+
+        // Convert Format (PC->Xbox)
+        pMode->Format = EmuPC2XB_D3DFormat(pPCMode->Format);
+
+        // TODO: Make this configurable in the future?
+        pMode->Flags  = 0x000000A1; // D3DPRESENTFLAG_FIELD | D3DPRESENTFLAG_INTERLACED | D3DPRESENTFLAG_LOCKABLE_BACKBUFFER
+    }
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_CreateVertexShader
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreateVertexShader
+(
+    CONST DWORD    *pDeclaration,
+    CONST DWORD    *pFunction,
+    DWORD          *pHandle,
+    DWORD           Usage
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreateVertexShader\n"
+               "(\n"
+               "   pDeclaration        : 0x%.08X\n"
+               "   pFunction           : 0x%.08X\n"
+               "   pHandle             : 0x%.08X\n"
+               "   Usage               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pDeclaration, pFunction, pHandle, Usage);
+    }
+    #endif
+
+    // ******************************************************************
+    // * redirect to windows d3d
+    // ******************************************************************
+    HRESULT hRet = g_pD3D8Device->CreateVertexShader
+    (
+        pDeclaration,
+        pFunction,
+        pHandle,
+        g_VertexShaderUsage // TODO: HACK: Xbox has extensions!
+    );
+
+    // hey look, we lied
+    hRet = D3D_OK;
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetVertexShaderConstant
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetVertexShaderConstant
+(
+    INT         Register,
+    CONST PVOID pConstantData,
+    DWORD       ConstantCount
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexShaderConstant\n"
+               "(\n"
+               "   Register            : 0x%.08X\n"
+               "   pConstantData       : 0x%.08X\n"
+               "   ConstantCount       : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Register, pConstantData, ConstantCount);
+    }
+    #endif
+
+    // ******************************************************************
+    // * redirect to windows d3d
+    // ******************************************************************
+    HRESULT hRet = g_pD3D8Device->SetVertexShaderConstant
+    (
+        Register,
+        pConstantData,
+        ConstantCount
+    );
+
+    // hey look, we lied
+    hRet = D3D_OK;
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_CreatePixelShader
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreatePixelShader
+(
+    CONST DWORD    *pFunction,
+    DWORD          *pHandle
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreatePixelShader\n"
+               "(\n"
+               "   pFunction           : 0x%.08X\n"
+               "   pHandle             : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pFunction, pHandle);
+    }
+    #endif
+
+    // ******************************************************************
+    // * redirect to windows d3d
+    // ******************************************************************
+    HRESULT hRet = g_pD3D8Device->CreatePixelShader
+    (
+        pFunction,
+        pHandle
+    );
+
+    // hey look, we lied
+    hRet = D3D_OK;
 
     EmuSwapFS();   // XBox FS
 
@@ -1031,7 +1224,6 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetRenderState_CullMode
     return;
 }
 
-
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_ZEnable
 // ******************************************************************
@@ -1056,6 +1248,35 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetRenderState_ZEnable
     #endif
 
     g_pD3D8Device->SetRenderState(D3DRS_ZENABLE, Value);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias
+// ******************************************************************
+VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+    g_pD3D8Device->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Value);
 
     EmuSwapFS();   // XBox FS
 

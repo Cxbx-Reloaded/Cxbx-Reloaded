@@ -1,5 +1,8 @@
 Cxbx Todo (* denotes high priority)
 
+  * GetDisplayMode / GetAdapterDisplayMode should not return real display
+    mode when windowed!
+
   * Why is CreateDevice failing for NBA2NIGHT 2002?
 
   * Stabilize Heap Allocation (i.e. operator new) -> Crashes after initial commit is full
