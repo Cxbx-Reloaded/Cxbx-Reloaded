@@ -21,4 +21,6 @@ inside of the buffer allocated by Data. This could work, as
 long as Xbox Games do not access the resource Data after the
 initial Register function is called.
 
-I am currently using the first idea until we run into trouble.
+The currently used method is to tuck the pointer away inside
+of the Lock member, and hijack any functions that attempt to
+access the Lock member variable.

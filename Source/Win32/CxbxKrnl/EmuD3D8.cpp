@@ -1470,6 +1470,36 @@ VOID __fastcall XTL::EmuIDirect3DDevice8_SetVertexShaderConstant1
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetVertexShaderConstant4
+// ******************************************************************
+VOID __fastcall XTL::EmuIDirect3DDevice8_SetVertexShaderConstant4
+(
+    INT         Register,
+    CONST PVOID pConstantData
+)
+{
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        EmuSwapFS();   // Win2k/XP FS
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexShaderConstant4\n"
+               "(\n"
+               "   Register            : 0x%.08X\n"
+               "   pConstantData       : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Register, pConstantData);
+        EmuSwapFS();   // XBox FS
+    }
+    #endif
+
+    XTL::EmuIDirect3DDevice8_SetVertexShaderConstant(Register - 96, pConstantData, 4);
+
+    return;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_CreatePixelShader
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreatePixelShader
@@ -2065,7 +2095,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
         case X_D3DCOMMON_TYPE_PUSHBUFFER:
         {
-            printf("*Warning: X_D3DCOMMON_TYPE_PUSHBUFFER is not yet implemented");
+            printf("*Warning: X_D3DCOMMON_TYPE_PUSHBUFFER is not yet implemented\n");
 
             X_D3DPushBuffer *pPushBuffer = (X_D3DPushBuffer*)pResource;
         }

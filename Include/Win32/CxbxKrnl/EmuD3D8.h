@@ -703,6 +703,15 @@ VOID __fastcall EmuIDirect3DDevice8_SetVertexShaderConstant1
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetVertexShaderConstant4
+// ******************************************************************
+VOID __fastcall EmuIDirect3DDevice8_SetVertexShaderConstant4
+(
+    INT         Register,
+    CONST PVOID pConstantData
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_CreatePixelShader
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_CreatePixelShader

@@ -189,6 +189,8 @@ extern uint32 XRefDataBase[] =
     -1, // XREF_DSOUNDSTOP2
     -1, // XREF_DSSETBUFFERDATA
     -1, // XREF_DSSETBUFFERDATA2
+    -1, // XREF_DSCREATESOUNDBUFFER
+    -1, // XREF_DSCREATESOUNDSTREAM
 };
 
 // ******************************************************************

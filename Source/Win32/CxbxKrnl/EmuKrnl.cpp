@@ -397,10 +397,39 @@ XBSYSAPI EXPORTNUM(67) NTSTATUS xboxkrnl::IoCreateSymbolicLink
     }
     #endif
 
-    EmuCleanup("IoCreateSymbolicLink not implemented");
-
     // TODO: Actually um...implement this function
     NTSTATUS ret = STATUS_OBJECT_NAME_COLLISION;
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
+}
+
+// ******************************************************************
+// * 0x0045 - IoDeleteSymbolicLink
+// ******************************************************************
+XBSYSAPI EXPORTNUM(69) NTSTATUS xboxkrnl::IoDeleteSymbolicLink
+(
+    IN PSTRING SymbolicLinkName
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): IoDeleteSymbolicLink\n"
+               "(\n"
+               "   SymbolicLinkName    : 0x%.08X (%s)\n"
+               ");\n",
+               GetCurrentThreadId(), SymbolicLinkName, SymbolicLinkName->Buffer);
+    }
+    #endif
+
+    // TODO: Actually um...implement this function
+    NTSTATUS ret = STATUS_OBJECT_NAME_NOT_FOUND;
 
     EmuSwapFS();   // Xbox FS
 
@@ -693,7 +722,7 @@ XBSYSAPI EXPORTNUM(171) VOID NTAPI xboxkrnl::MmFreeContiguousMemory
     }
     #endif
 
-    delete BaseAddress;
+    delete[] BaseAddress;
 
     EmuSwapFS();   // Xbox FS
 
@@ -1071,6 +1100,40 @@ XBSYSAPI EXPORTNUM(197) NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
 }
 
 // ******************************************************************
+// * 0x00C7 - NtFreeVirtualMemory
+// ******************************************************************
+XBSYSAPI EXPORTNUM(199) NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
+(
+    IN OUT PVOID *BaseAddress,
+    IN OUT PULONG FreeSize,
+    IN ULONG      FreeType
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): NtFreeVirtualMemory\n"
+               "(\n"
+               "   BaseAddress         : 0x%.08X\n"
+               "   FreeSize            : 0x%.08X\n"
+               "   FreeType            : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), BaseAddress, FreeSize, FreeType);
+    }
+    #endif
+
+    NTSTATUS ret = NtDll::NtFreeVirtualMemory(GetCurrentProcess(), BaseAddress, FreeSize, FreeType);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
+}
+
+// ******************************************************************
 // * 0x00CA - NtOpenFile
 // ******************************************************************
 XBSYSAPI EXPORTNUM(202) NTSTATUS NTAPI xboxkrnl::NtOpenFile
@@ -1263,7 +1326,7 @@ XBSYSAPI EXPORTNUM(211) NTSTATUS NTAPI xboxkrnl::NtQueryInformationFile
 (   
     IN  HANDLE                      FileHandle,
     OUT PIO_STATUS_BLOCK            IoStatusBlock,
-    OUT PFILE_FS_SIZE_INFORMATION   FileInformation, 
+    OUT PVOID                       FileInformation, 
     IN  ULONG                       Length, 
     IN  FILE_INFORMATION_CLASS      FileInfo
 )
@@ -1438,6 +1501,42 @@ XBSYSAPI EXPORTNUM(226) NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
     #endif
 
     NTSTATUS ret = NtDll::NtSetInformationFile(FileHandle, IoStatusBlock, FileInformation, Length, FileInformationClass);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
+}
+
+// ******************************************************************
+// * 0x00EA - NtWaitForSingleObjectEx
+// ******************************************************************
+XBSYSAPI EXPORTNUM(234) NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObjectEx
+(
+    IN  HANDLE          Handle,
+    IN  DWORD           WaitMode,
+    IN  BOOLEAN         Alertable,
+    IN  PLARGE_INTEGER  Timeout
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): NtWaitForSingleObjectEx\n"
+               "(\n"
+               "   Handle               : 0x%.08X\n"
+               "   WaitMode             : 0x%.08X\n"
+               "   Alertable            : 0x%.08X\n"
+               "   Timeout              : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Handle, WaitMode, Alertable, Timeout);
+    }
+    #endif
+
+    NTSTATUS ret = NtDll::NtWaitForSingleObject(Handle, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
 
     EmuSwapFS();   // Xbox FS
 

@@ -475,26 +475,60 @@ SOOVPA<11> IDirect3DDevice8_SetVertexShaderConstant1_1_0_4627 =
     0,  // XRef Not Used
 
     {
-        // IDirect3DDevice8_SetVertexShaderConstant+0x06 : add eax, 0x1C
+        // IDirect3DDevice8_SetVertexShaderConstant1+0x06 : add eax, 0x1C
         { 0x06, 0x83 }, // (Offset,Value)-Pair #1
         { 0x07, 0xC0 }, // (Offset,Value)-Pair #2
         { 0x08, 0x1C }, // (Offset,Value)-Pair #3
 
-        // IDirect3DDevice8_SetVertexShaderConstant+0x0F : jnb +0x43
+        // IDirect3DDevice8_SetVertexShaderConstant1+0x0F : jnb +0x43
         { 0x0F, 0x73 }, // (Offset,Value)-Pair #4
         { 0x10, 0x43 }, // (Offset,Value)-Pair #5
 
-        // IDirect3DDevice8_SetVertexShaderConstant+0x27 : shl ecx, 0x04
+        // IDirect3DDevice8_SetVertexShaderConstant1+0x27 : shl ecx, 0x04
         { 0x27, 0xC1 }, // (Offset,Value)-Pair #6
         { 0x28, 0xE1 }, // (Offset,Value)-Pair #7
         { 0x29, 0x04 }, // (Offset,Value)-Pair #8
 
-        // IDirect3DDevice8_SetVertexShaderConstant+0x53 : retn
+        // IDirect3DDevice8_SetVertexShaderConstant1+0x53 : retn
         { 0x53, 0xC3 }, // (Offset,Value)-Pair #9
 
-        // IDirect3DDevice8_SetVertexShaderConstant+0x5D : jmp +0xA2
+        // IDirect3DDevice8_SetVertexShaderConstant1+0x5D : jmp +0xA2
         { 0x5D, 0xEB }, // (Offset,Value)-Pair #10
         { 0x5E, 0xA2 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetVertexShaderConstant4
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_SetVertexShaderConstant4_1_0_4627 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetVertexShaderConstant4+0x05 : add eax, 0x4C
+        { 0x05, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x06, 0xC0 }, // (Offset,Value)-Pair #2
+        { 0x07, 0x4C }, // (Offset,Value)-Pair #3
+
+        // IDirect3DDevice8_SetVertexShaderConstant4+0x34 : movq mm7, qword ptr [edx+0x38]
+        { 0x34, 0x0F }, // (Offset,Value)-Pair #4
+        { 0x35, 0x6F }, // (Offset,Value)-Pair #5
+        { 0x36, 0x7A }, // (Offset,Value)-Pair #6
+        { 0x37, 0x38 }, // (Offset,Value)-Pair #7
+
+        // IDirect3DDevice8_SetVertexShaderConstant4+0x42 : shl ecx, 0x04
+        { 0x42, 0xC1 }, // (Offset,Value)-Pair #8
+        { 0x43, 0xE1 }, // (Offset,Value)-Pair #9
+        { 0x44, 0x04 }, // (Offset,Value)-Pair #10
+
+        // IDirect3DDevice8_SetVertexShaderConstant4+0x91 : emms
+        { 0x91, 0x0F }, // (Offset,Value)-Pair #11
+        { 0x92, 0x77 }, // (Offset,Value)-Pair #12
     }
 };
 
@@ -1354,6 +1388,16 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetVertexShaderConstant1"
+        #endif
+    },
+    // IDirect3DDevice8::SetVertexShaderConstant4
+    {
+        (OOVPA*)&IDirect3DDevice8_SetVertexShaderConstant4_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_SetVertexShaderConstant4,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetVertexShaderConstant4"
         #endif
     },
     // IDirect3DDevice8::CreatePixelShader (* unchanged since 4361 *)

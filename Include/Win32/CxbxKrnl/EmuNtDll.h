@@ -592,12 +592,23 @@ typedef NTSTATUS (NTAPI *FPTR_NtSetLdtEntries)
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtAllocateVirtualMemory)
 (
-  IN HANDLE               ProcessHandle,
-  IN OUT PVOID            *BaseAddress,
-  IN ULONG                ZeroBits,
-  IN OUT PULONG           RegionSize,
-  IN ULONG                AllocationType,
-  IN ULONG                Protect
+    IN HANDLE               ProcessHandle,
+    IN OUT PVOID            *BaseAddress,
+    IN ULONG                ZeroBits,
+    IN OUT PULONG           RegionSize,
+    IN ULONG                AllocationType,
+    IN ULONG                Protect
+);
+
+// ******************************************************************
+// * NtFreeVirtualMemory
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtFreeVirtualMemory)
+(
+    IN HANDLE               ProcessHandle,
+    IN PVOID               *BaseAddress,
+    IN OUT PULONG           RegionSize,
+    IN ULONG                FreeType
 );
 
 // ******************************************************************
@@ -605,7 +616,7 @@ typedef NTSTATUS (NTAPI *FPTR_NtAllocateVirtualMemory)
 // ******************************************************************
 typedef VOID (NTAPI *FPTR_RtlInitializeCriticalSection)
 (
-  IN PRTL_CRITICAL_SECTION CriticalSection
+    IN PRTL_CRITICAL_SECTION CriticalSection
 );
 
 // ******************************************************************
@@ -613,7 +624,7 @@ typedef VOID (NTAPI *FPTR_RtlInitializeCriticalSection)
 // ******************************************************************
 typedef VOID (NTAPI *FPTR_RtlEnterCriticalSection)
 (
-  IN PRTL_CRITICAL_SECTION CriticalSection
+    IN PRTL_CRITICAL_SECTION CriticalSection
 );
 
 // ******************************************************************
@@ -621,7 +632,17 @@ typedef VOID (NTAPI *FPTR_RtlEnterCriticalSection)
 // ******************************************************************
 typedef VOID (NTAPI *FPTR_RtlLeaveCriticalSection)
 (
-  IN PRTL_CRITICAL_SECTION CriticalSection
+    IN PRTL_CRITICAL_SECTION CriticalSection
+);
+
+// ******************************************************************
+// * NtWaitForSingleObject
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtWaitForSingleObject)
+(
+    IN HANDLE               ObjectHandle,
+    IN BOOLEAN              Alertable,
+    IN PLARGE_INTEGER       TimeOut
 );
 
 // ******************************************************************
@@ -802,10 +823,12 @@ extern FPTR_RtlNtStatusToDosError          RtlNtStatusToDosError;
 extern FPTR_RtlInitializeCriticalSection   RtlInitializeCriticalSection;
 extern FPTR_RtlEnterCriticalSection        RtlEnterCriticalSection;
 extern FPTR_RtlLeaveCriticalSection        RtlLeaveCriticalSection;
+extern FPTR_NtWaitForSingleObject          NtWaitForSingleObject;
 extern FPTR_RtlCreateHeap                  RtlCreateHeap;
 extern FPTR_RtlAllocateHeap                RtlAllocateHeap;
 extern FPTR_RtlFreeHeap                    RtlFreeHeap;
 extern FPTR_NtAllocateVirtualMemory        NtAllocateVirtualMemory;
+extern FPTR_NtFreeVirtualMemory            NtFreeVirtualMemory;
 extern FPTR_NtClose                        NtClose;
 extern FPTR_NtDelayExecution               NtDelayExecution;
 extern FPTR_NtDuplicateObject              NtDuplicateObject;

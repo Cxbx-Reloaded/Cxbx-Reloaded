@@ -79,6 +79,19 @@ struct X_DSBUFFERDESC
 };
 
 // ******************************************************************
+// * X_DSSTREAMDESC
+// ******************************************************************
+struct X_DSSTREAMDESC
+{
+    DWORD                       dwFlags;
+    DWORD                       dwMaxAttachedPackets;
+    LPWAVEFORMATEX              lpwfxFormat;
+    PVOID                       lpfnCallback;   // TODO: Correct Parameter
+    LPVOID                      lpvContext;
+    PVOID                       lpMixBins;      // TODO: Correct Parameter
+}; 
+
+// ******************************************************************
 // * func: EmuDirectSoundCreate
 // ******************************************************************
 HRESULT WINAPI EmuDirectSoundCreate
@@ -95,6 +108,15 @@ HRESULT WINAPI EmuDirectSoundCreateBuffer
 (
     X_DSBUFFERDESC         *pdsbd,
     X_CDirectSoundBuffer  **ppBuffer
+);
+
+// ******************************************************************
+// * func: EmuDirectSoundCreateStream
+// ******************************************************************
+HRESULT WINAPI EmuDirectSoundCreateStream
+(
+    X_DSSTREAMDESC         *pdssd,
+    PVOID                 **ppStream
 );
 
 // ******************************************************************

@@ -1,5 +1,12 @@
 cxbx website: http://www.caustik.com/xbox/
 
+version: 0.7.7 (07/??/03)
+--------------------------------
+
+- Stella and a few other homebrew games are now playable :]
+  This means you can play all your atari games on Cxbx, which
+  is a great novelty.
+
 version: 0.7.6 (07/07/03)
 --------------------------------
 

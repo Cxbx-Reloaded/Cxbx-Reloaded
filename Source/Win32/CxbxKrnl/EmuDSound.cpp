@@ -136,7 +136,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
         DWORD dwAcceptableMask = 0x00000010 | 0x00000020 | 0x00000080 | 0x00000100 | 0x00002000 | 0x00040000 | 0x00080000;
 
         if(pdsbd->dwFlags & (~dwAcceptableMask))
-            printf("*Warning* use of unsupported pdsbd->dwFlags mask(s) (0x%.08X)", pdsbd->dwFlags & (~dwAcceptableMask));
+            printf("*Warning* use of unsupported pdsbd->dwFlags mask(s) (0x%.08X)\n", pdsbd->dwFlags & (~dwAcceptableMask));
 
         DSBufferDesc.dwSize = sizeof(DSBufferDesc);
         DSBufferDesc.dwFlags = pdsbd->dwFlags & dwAcceptableMask;
@@ -162,6 +162,36 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
     EmuSwapFS();   // XBox FS
 
     return hRet;
+}
+
+// ******************************************************************
+// * func: EmuDirectSoundCreateStream
+// ******************************************************************
+HRESULT WINAPI XTL::EmuDirectSoundCreateStream
+(
+    X_DSSTREAMDESC         *pdssd,
+    PVOID                 **ppStream
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuDirectSoundCreateStream\n"
+               "(\n"
+               "   pdssd                     : 0x%.08X\n"
+               "   ppStream                  : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pdssd, ppStream);
+    }
+    #endif
+
+    EmuSwapFS();   // XBox FS
+
+    return DS_OK;
 }
 
 // ******************************************************************

@@ -98,6 +98,7 @@ SOOVPA<8> XapiUnknownBad1_1_0_4627 =
 // ******************************************************************
 OOVPATable XAPI_1_0_4627[] =
 {
+    /*
     // RtlCreateHeap (* unchanged since 1.0.4361 *) (* OR FARTHER *)
     {
         (OOVPA*)&RtlCreateHeap_1_0_4361,
@@ -127,7 +128,7 @@ OOVPATable XAPI_1_0_4627[] =
         #ifdef _DEBUG_TRACE
         "EmuRtlFreeHeap"
         #endif
-    },
+    },*/
     // XapiUnknownBad1
     {
         (OOVPA*)&XapiUnknownBad1_1_0_4627,

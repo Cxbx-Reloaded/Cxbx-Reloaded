@@ -106,7 +106,9 @@ enum XRefDataBaseOffset
     XREF_DSOUNDSTOP             = 14,
     XREF_DSOUNDSTOP2            = 15,
     XREF_DSSETBUFFERDATA        = 16,
-    XREF_DSSETBUFFERDATA2       = 17
+    XREF_DSSETBUFFERDATA2       = 17,
+    XREF_DSCREATESOUNDBUFFER    = 18,
+    XREF_DSCREATESOUNDSTREAM    = 19
 };
 
 #endif
