@@ -214,7 +214,7 @@ SIZE_T WINAPI XTL::EmuRtlSizeHeap
            GetCurrentThreadId(), hHeap, dwFlags, lpMem);
     //*/
 
-    SIZE_T ret = NtDll::RtlSizeHeap(hHeap, dwFlags, lpMem);
+    SIZE_T ret = CxbxRtlSizeHeap(hHeap, dwFlags, lpMem);
 
     EmuSwapFS();   // XBox FS
 

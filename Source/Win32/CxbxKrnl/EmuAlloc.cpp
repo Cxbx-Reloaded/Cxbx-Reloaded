@@ -400,8 +400,8 @@ void *CxbxRtlAllocDebug(HANDLE  Heap,
 BOOL  CxbxRtlFreeDebug(HANDLE Heap,
                        DWORD  Flags,
                        PVOID  pMem,
-                       char *pFile,
-                       int   Line)
+                       char  *pFile,
+                       int    Line)
 {
     BOOL Ret = FALSE;
     if (pMem == NULL)
@@ -443,14 +443,14 @@ BOOL  CxbxRtlFreeDebug(HANDLE Heap,
 }
 
 // ******************************************************************
-// * CxbxRtlReallocDEbug - Debug track RTL realloc
+// * CxbxRtlReallocDebug - Debug track RTL realloc
 // ******************************************************************
 void *CxbxRtlReallocDebug(HANDLE Heap,
                           DWORD  Flags,
                           PVOID  pMem,
                           SIZE_T Bytes,
-                          char *pFile,
-                          int   Line)
+                          char  *pFile,
+                          int    Line)
 {
     void *pRetMem = NULL;
     g_MemoryMutex.Lock();
@@ -481,7 +481,7 @@ void *CxbxRtlReallocDebug(HANDLE Heap,
                    pRealloc->pFile, pRealloc->Size, pRealloc->Line,
                    Bytes, pFile, Line);
         }
-        void *pNewMem = NtDll::RtlReAllocateHeap(Heap, Flags, pMem, Bytes + 2 * sizeof(MEMORY_GUARD));
+        void *pNewMem = NtDll::RtlReAllocateHeap(Heap, Flags, GetMemStart(pRealloc), Bytes + 2 * sizeof(MEMORY_GUARD));
         free(pRealloc->pFile);
         free(pRealloc);
         if(!pNewMem)
@@ -510,4 +510,44 @@ void *CxbxRtlReallocDebug(HANDLE Heap,
     return pRetMem;
 }
 
+// ******************************************************************
+// * CxbxRtlSizeHeapDebug - Debug track RTL heap size
+// ******************************************************************
+SIZE_T CxbxRtlSizeHeapDebug(HANDLE Heap,
+                            DWORD  Flags,
+                            PVOID  pMem,
+                            char  *pFile,
+                            int    Line)
+{
+    SIZE_T Size = 0;
+    g_MemoryMutex.Lock();
+
+    CXBX_MEMORY_BLOCK *pBlock = FindMemoryBlock(pMem);
+    if(pBlock == NULL)
+    {
+        printf("CxbxRtlSizeHeap: size heap on non-existent block: 0x%.08X! "
+               "    File: %s\n"
+               "    Line: %d\n",
+               pMem, pFile, Line);
+    }
+    else
+    {
+        SIZE_T ActualSize = NtDll::RtlSizeHeap(Heap, Flags, GetMemStart(pBlock))
+                            - 2 * sizeof(MEMORY_GUARD);
+        if(ActualSize != pBlock->Size)
+        {
+            printf("CxbxRtlSizeHeap: heap size mismatch, RtlSizeHeap: %d Tracker: %d\n"
+                   "    File  : %s\n"
+                   "    Line  : %d\n",
+                   ActualSize,
+                   pBlock->Size,
+                   pFile,
+                   Line);
+        }
+        Size = ActualSize;
+    }
+
+    g_MemoryMutex.Unlock();
+    return Size;
+}
 #endif // _DEBUG_ALLOC
