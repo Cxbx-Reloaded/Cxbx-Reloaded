@@ -286,6 +286,33 @@ XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
 }
 
 // ******************************************************************
+// * 0x0025 - FscSetCacheSize
+// ******************************************************************
+XBSYSAPI EXPORTNUM(37) xboxkrnl::LONG NTAPI xboxkrnl::FscSetCacheSize(ULONG uCachePages)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): FscSetCacheSize\n"
+               "(\n"
+               "   uCachePages         : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), uCachePages);
+    }
+    #endif
+
+    printf("*Warning* FscSetCacheSize is being ignored\n");
+
+    EmuSwapFS();   // Xbox FS
+
+    return 0;
+}
+
+// ******************************************************************
 // * 0x0031 - HalReturnToFirmware
 // ******************************************************************
 XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
