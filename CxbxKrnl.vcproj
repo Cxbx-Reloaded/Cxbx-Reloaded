@@ -90,11 +90,13 @@
 				EnableFunctionLevelLinking="TRUE"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\Bin/CxbxKrnl.pch"
+				AssemblerOutput="2"
 				AssemblerListingLocation=".\Bin/"
 				ObjectFile=".\Bin/"
 				ProgramDataBaseFileName=".\Bin/"
 				WarningLevel="3"
 				SuppressStartupBanner="TRUE"
+				DebugInformationFormat="3"
 				CompileAs="0"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
@@ -107,7 +109,10 @@
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="Lib"
 				IgnoreDefaultLibraryNames="lbc"
+				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Bin/Cxbx.pdb"
+				GenerateMapFile="TRUE"
+				MapFileName=".\Bin/Cxbx.map"
 				ImportLibrary=".\Bin/Cxbx.lib"/>
 			<Tool
 				Name="VCMIDLTool"

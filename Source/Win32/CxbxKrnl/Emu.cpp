@@ -302,13 +302,20 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage)
     // ******************************************************************
     // * We're outta here...
     // ******************************************************************
-    __try
+    while(true)
     {
-        ExitProcess(0);
-    }
-    __except(EXCEPTION_EXECUTE_HANDLER)
-    {
+        // Hilariously, window's will just stop sending exceptions
+        // If we insist that we don't care about TLS failure.
+        __try
+        {
+            ExitProcess(0);
+        }
+        __except(EXCEPTION_EXECUTE_HANDLER)
+        {
 
+        }
+
+        Sleep(10);
     }
 
     return;

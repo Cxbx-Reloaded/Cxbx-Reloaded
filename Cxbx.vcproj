@@ -28,12 +28,14 @@
 				EnableFunctionLevelLinking="TRUE"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\Bin/Cxbx.pch"
+				AssemblerOutput="2"
 				AssemblerListingLocation=".\Bin/"
 				ObjectFile=".\Bin/"
 				ProgramDataBaseFileName=".\Bin/"
 				BrowseInformation="1"
 				WarningLevel="3"
 				SuppressStartupBanner="TRUE"
+				DebugInformationFormat="3"
 				CompileAs="0"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
@@ -45,7 +47,10 @@
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				IgnoreDefaultLibraryNames="libc"
+				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Bin/Cxbx.pdb"
+				GenerateMapFile="TRUE"
+				MapFileName=".\Bin/Cxbx.map"
 				SubSystem="2"/>
 			<Tool
 				Name="VCMIDLTool"

@@ -1,9 +1,9 @@
 Microsoft Visual Studio Solution File, Format Version 7.00
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cxbe", "Cxbe.vcproj", "{2BEF8939-0056-4B8E-96EB-06BA582345F0}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cxbe", "Cxbe.vcproj", "{D549237B-D557-44C3-8CD9-808DEBFE66C4}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cxbx", "Cxbx.vcproj", "{A0663801-ED2D-4DB0-A282-00407B2270AD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cxbx", "Cxbx.vcproj", "{835B2FB6-F435-4206-B8A6-F86C750A9C3B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CxbxKrnl", "CxbxKrnl.vcproj", "{75779893-83CE-407E-900B-8CAE51E19618}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CxbxKrnl", "CxbxKrnl.vcproj", "{E22132CE-EEB0-4067-B011-838388DA1AD0}"
 EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
@@ -11,21 +11,21 @@ Global
 		ConfigName.1 = Release
 	EndGlobalSection
 	GlobalSection(ProjectDependencies) = postSolution
-		{A0663801-ED2D-4DB0-A282-00407B2270AD}.0 = {75779893-83CE-407E-900B-8CAE51E19618}
+		{835B2FB6-F435-4206-B8A6-F86C750A9C3B}.0 = {E22132CE-EEB0-4067-B011-838388DA1AD0}
 	EndGlobalSection
 	GlobalSection(ProjectConfiguration) = postSolution
-		{2BEF8939-0056-4B8E-96EB-06BA582345F0}.Debug.ActiveCfg = Debug|Win32
-		{2BEF8939-0056-4B8E-96EB-06BA582345F0}.Debug.Build.0 = Debug|Win32
-		{2BEF8939-0056-4B8E-96EB-06BA582345F0}.Release.ActiveCfg = Release|Win32
-		{2BEF8939-0056-4B8E-96EB-06BA582345F0}.Release.Build.0 = Release|Win32
-		{A0663801-ED2D-4DB0-A282-00407B2270AD}.Debug.ActiveCfg = Debug|Win32
-		{A0663801-ED2D-4DB0-A282-00407B2270AD}.Debug.Build.0 = Debug|Win32
-		{A0663801-ED2D-4DB0-A282-00407B2270AD}.Release.ActiveCfg = Release|Win32
-		{A0663801-ED2D-4DB0-A282-00407B2270AD}.Release.Build.0 = Release|Win32
-		{75779893-83CE-407E-900B-8CAE51E19618}.Debug.ActiveCfg = Debug|Win32
-		{75779893-83CE-407E-900B-8CAE51E19618}.Debug.Build.0 = Debug|Win32
-		{75779893-83CE-407E-900B-8CAE51E19618}.Release.ActiveCfg = Release|Win32
-		{75779893-83CE-407E-900B-8CAE51E19618}.Release.Build.0 = Release|Win32
+		{D549237B-D557-44C3-8CD9-808DEBFE66C4}.Debug.ActiveCfg = Debug|Win32
+		{D549237B-D557-44C3-8CD9-808DEBFE66C4}.Debug.Build.0 = Debug|Win32
+		{D549237B-D557-44C3-8CD9-808DEBFE66C4}.Release.ActiveCfg = Release|Win32
+		{D549237B-D557-44C3-8CD9-808DEBFE66C4}.Release.Build.0 = Release|Win32
+		{835B2FB6-F435-4206-B8A6-F86C750A9C3B}.Debug.ActiveCfg = Debug|Win32
+		{835B2FB6-F435-4206-B8A6-F86C750A9C3B}.Debug.Build.0 = Debug|Win32
+		{835B2FB6-F435-4206-B8A6-F86C750A9C3B}.Release.ActiveCfg = Release|Win32
+		{835B2FB6-F435-4206-B8A6-F86C750A9C3B}.Release.Build.0 = Release|Win32
+		{E22132CE-EEB0-4067-B011-838388DA1AD0}.Debug.ActiveCfg = Debug|Win32
+		{E22132CE-EEB0-4067-B011-838388DA1AD0}.Debug.Build.0 = Debug|Win32
+		{E22132CE-EEB0-4067-B011-838388DA1AD0}.Release.ActiveCfg = Release|Win32
+		{E22132CE-EEB0-4067-B011-838388DA1AD0}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection

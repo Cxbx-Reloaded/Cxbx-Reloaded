@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D.cpp
+// *   Cxbx->Win32->CxbxKrnl->EmuD3D8.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -70,8 +70,9 @@ Xbe::Header             *g_XbeHeader     = NULL;   // XbeHeader
 uint32                   g_XbeHeaderSize = 0;      // XbeHeaderSize
 HWND                     g_hEmuWindow    = NULL;   // Rendering Window
 xd3d8::D3DCAPS8          g_D3DCaps;                // Direct3D8 Caps
-volatile bool            g_ThreadInitialized = false;
 HBRUSH                   g_hBgBrush      = NULL;   // Background Brush
+
+volatile bool            g_ThreadInitialized = false;
 
 // ******************************************************************
 // * statics
@@ -344,7 +345,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
         pPresentationParameters->Windowed = TRUE;
 
         // TODO: More intelligently set this only when the game wants it
-        //pPresentationParameters->SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
+//        pPresentationParameters->SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
 
         hFocusWindow = g_hEmuWindow;
 
@@ -366,6 +367,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
     // * TODO: Query for Software Vertex Processing abilities!!
     // ******************************************************************
     BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+//    BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
 
     // ******************************************************************
     // * redirect to windows d3d
