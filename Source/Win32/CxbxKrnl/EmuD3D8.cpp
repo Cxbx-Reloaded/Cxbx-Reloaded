@@ -98,6 +98,7 @@ static DWORD                        g_dwBaseVertexIndex = 0;// current active in
 
 // current active vertex stream
 static XTL::X_D3DVertexBuffer      *g_pVertexBuffer = NULL; // current active vertex buffer
+static XTL::IDirect3DVertexBuffer8 *g_pDummyBuffer = NULL;  // Dummy buffer, used to set unused stream sources with
 
 // current vertical blank information
 static XTL::D3DVBLANKDATA           g_VBData = {0};
@@ -853,6 +854,18 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 g_pCachedZStencilSurface->Common = 0;
                 g_pCachedZStencilSurface->Data = X_D3DRESOURCE_DATA_FLAG_D3DSTEN;
                 g_pD3DDevice8->GetDepthStencilSurface(&g_pCachedZStencilSurface->EmuSurface8);
+
+
+                (void)g_pD3DDevice8->CreateVertexBuffer
+                (
+                    1, 0, 0, XTL::D3DPOOL_MANAGED,
+                    &g_pDummyBuffer
+                );
+
+                for(int Streams = 0; Streams < 16; Streams++)
+                {
+                    g_pD3DDevice8->SetStreamSource(Streams, g_pDummyBuffer, 1);
+                }
 
                 // begin scene
                 g_pD3DDevice8->BeginScene();
