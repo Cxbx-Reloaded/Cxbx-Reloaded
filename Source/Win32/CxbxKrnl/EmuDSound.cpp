@@ -44,27 +44,15 @@ namespace xboxkrnl
 
 #include "Emu.h"
 #include "EmuFS.h"
-#include "EmuKrnl.h"
-#include "EmuDInput.h"
 #include "EmuShared.h"
 
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
-namespace xdirectx
+namespace XTL
 {
-    #include "xdirectx.h"
+    #include "EmuXTL.h"
 };
-
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace xg
-{
-    #include "EmuXG.h"
-};
-
-#include "EmuD3D8.h"
 
 #include "ResCxbxDll.h"
 
@@ -74,12 +62,12 @@ namespace xg
 // ******************************************************************
 // * Static Variable(s)
 // ******************************************************************
-static xdirectx::LPDIRECTSOUND8 g_pD3D8 = NULL;
+static XTL::LPDIRECTSOUND8 g_pD3D8 = NULL;
 
 // ******************************************************************
 // * func: EmuDirectSoundCreate
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuDirectSoundCreate
+HRESULT WINAPI XTL::EmuDirectSoundCreate
 (
     LPVOID          pguidDeviceId,
     LPDIRECTSOUND8 *ppDirectSound,
@@ -113,7 +101,7 @@ HRESULT WINAPI xdirectx::EmuDirectSoundCreate
 // ******************************************************************
 // * func: EmuIDirectSound8_CreateSoundBuffer
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirectSound8_CreateSoundBuffer
+HRESULT WINAPI XTL::EmuIDirectSound8_CreateSoundBuffer
 (
     LPDIRECTSOUND8          pThis,
     LPCDSBUFFERDESC         pdsbd,
@@ -156,7 +144,7 @@ HRESULT WINAPI xdirectx::EmuIDirectSound8_CreateSoundBuffer
 // ******************************************************************
 // * func: EmuIDirectSoundBuffer8_SetBufferData
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirectSoundBuffer8_SetBufferData
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetBufferData
 (
     X_CDirectSoundBuffer   *pThis,
     LPVOID                  pvBufferData,
@@ -191,7 +179,7 @@ HRESULT WINAPI xdirectx::EmuIDirectSoundBuffer8_SetBufferData
 // ******************************************************************
 // * func: EmuIDirectSoundBuffer8_SetPlayRegion
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirectSoundBuffer8_SetPlayRegion
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPlayRegion
 (
     X_CDirectSoundBuffer   *pThis,
     DWORD                   dwPlayStart,
@@ -226,7 +214,7 @@ HRESULT WINAPI xdirectx::EmuIDirectSoundBuffer8_SetPlayRegion
 // ******************************************************************
 // * func: EmuIDirectSoundBuffer8_SetLoopRegion
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirectSoundBuffer8_SetLoopRegion
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetLoopRegion
 (
     X_CDirectSoundBuffer   *pThis,
     DWORD                   dwLoopStart,
@@ -261,7 +249,7 @@ HRESULT WINAPI xdirectx::EmuIDirectSoundBuffer8_SetLoopRegion
 // ******************************************************************
 // * func: EmuIDirectSoundBuffer8_SetVolume
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirectSoundBuffer8_SetVolume
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetVolume
 (
     X_CDirectSoundBuffer   *pThis,
     LONG                    lVolume
@@ -294,7 +282,7 @@ HRESULT WINAPI xdirectx::EmuIDirectSoundBuffer8_SetVolume
 // ******************************************************************
 // * func: EmuIDirectSoundBuffer8_SetCurrentPosition
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirectSoundBuffer8_SetCurrentPosition
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetCurrentPosition
 (
     DWORD                   dwNewPosition
 )

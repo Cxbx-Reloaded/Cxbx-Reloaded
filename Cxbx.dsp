@@ -162,7 +162,15 @@ SOURCE=.\Include\Win32\CxbxKrnl\Emu.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\EmuDInput.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\EmuDSound.h
 # End Source File
 # Begin Source File
 
@@ -178,7 +186,15 @@ SOURCE=.\Include\Win32\CxbxKrnl\EmuXapi.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Core\Error.h
+SOURCE=.\Include\Win32\CxbxKrnl\EmuXG.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\EmuXOnline.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\EmuXTL.h
 # End Source File
 # Begin Source File
 

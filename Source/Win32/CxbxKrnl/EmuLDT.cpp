@@ -45,9 +45,9 @@
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
-namespace xntdll
+namespace NtDll
 {
-    #include "xntdll.h"
+    #include "EmuNtDll.h"
 };
 
 // ******************************************************************
@@ -70,7 +70,7 @@ static CRITICAL_SECTION EmuLDTLock;
 // ******************************************************************
 static HMODULE hNtDll = GetModuleHandle("ntdll");
 
-static xntdll::FPTR_NtSetLdtEntries NT_NtSetLdtEntries = (xntdll::FPTR_NtSetLdtEntries)GetProcAddress(hNtDll, "NtSetLdtEntries");
+static NtDll::FPTR_NtSetLdtEntries NT_NtSetLdtEntries = (NtDll::FPTR_NtSetLdtEntries)GetProcAddress(hNtDll, "NtSetLdtEntries");
 
 // ******************************************************************
 // * func: EmuInitLDT
@@ -88,7 +88,7 @@ void EmuInitLDT()
 // ******************************************************************
 uint16 EmuAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit)
 {
-    xntdll::LDT_ENTRY LDTEntry;
+    NtDll::LDT_ENTRY LDTEntry;
 
     int x=0;
 
@@ -138,7 +138,7 @@ uint16 EmuAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit)
     // * Allocate selector
     // ******************************************************************
     {
-        using namespace xntdll;
+        using namespace NtDll;
 
         if(!NT_SUCCESS(NT_NtSetLdtEntries((x*8)+7+8, LDTEntry, 0, LDTEntry)))
         {
@@ -162,7 +162,7 @@ uint16 EmuAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit)
 // ******************************************************************
 void EmuDeallocateLDT(uint16 wSelector)
 {
-    xntdll::LDT_ENTRY LDTEntry;
+    NtDll::LDT_ENTRY LDTEntry;
 
     EnterCriticalSection(&EmuLDTLock);
 

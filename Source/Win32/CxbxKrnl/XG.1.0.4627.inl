@@ -41,7 +41,7 @@ OOVPATable XG_1_0_4627[] =
     {
         (OOVPA*)&XGIsSwizzledFormat_1_0_4361,
 
-        xg::EmuXGIsSwizzledFormat,
+        XTL::EmuXGIsSwizzledFormat,
 
         #ifdef _DEBUG_TRACE
         "XGIsSwizzledFormat"

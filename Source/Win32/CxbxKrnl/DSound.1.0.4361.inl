@@ -270,7 +270,7 @@ OOVPATable DSound_1_0_4361[] =
     {
         (OOVPA*)&DirectSoundCreate_1_0_4361,
 
-        xdirectx::EmuDirectSoundCreate,
+        XTL::EmuDirectSoundCreate,
 
         #ifdef _DEBUG_TRACE
         "EmuDirectSoundCreate" 
@@ -280,7 +280,7 @@ OOVPATable DSound_1_0_4361[] =
     {
         (OOVPA*)&IDirectSound8_CreateSoundBuffer_1_0_4361,
 
-        xdirectx::EmuIDirectSound8_CreateSoundBuffer,
+        XTL::EmuIDirectSound8_CreateSoundBuffer,
 
         #ifdef _DEBUG_TRACE
         "EmuIDirectSound8_CreateSoundBuffer" 
@@ -290,7 +290,7 @@ OOVPATable DSound_1_0_4361[] =
     {
         (OOVPA*)&IDirectSoundBuffer8_SetBufferData_1_0_4361,
 
-        xdirectx::EmuIDirectSoundBuffer8_SetBufferData,
+        XTL::EmuIDirectSoundBuffer8_SetBufferData,
 
         #ifdef _DEBUG_TRACE
         "EmuIDirectSoundBuffer8_SetBufferData" 
@@ -300,7 +300,7 @@ OOVPATable DSound_1_0_4361[] =
     {
         (OOVPA*)&IDirectSoundBuffer8_SetPlayRegion_1_0_4361,
 
-        xdirectx::EmuIDirectSoundBuffer8_SetPlayRegion,
+        XTL::EmuIDirectSoundBuffer8_SetPlayRegion,
 
         #ifdef _DEBUG_TRACE
         "EmuIDirectSoundBuffer8_SetPlayRegion" 
@@ -310,7 +310,7 @@ OOVPATable DSound_1_0_4361[] =
     {
         (OOVPA*)&IDirectSoundBuffer8_SetLoopRegion_1_0_4361,
 
-        xdirectx::EmuIDirectSoundBuffer8_SetLoopRegion,
+        XTL::EmuIDirectSoundBuffer8_SetLoopRegion,
 
         #ifdef _DEBUG_TRACE
         "EmuIDirectSoundBuffer8_SetLoopRegion" 
@@ -320,7 +320,7 @@ OOVPATable DSound_1_0_4361[] =
     {
         (OOVPA*)&IDirectSoundBuffer8_SetVolume_1_0_4361,
 
-        xdirectx::EmuIDirectSoundBuffer8_SetVolume,
+        XTL::EmuIDirectSoundBuffer8_SetVolume,
 
         #ifdef _DEBUG_TRACE
         "EmuIDirectSoundBuffer8_SetVolume" 
@@ -330,7 +330,7 @@ OOVPATable DSound_1_0_4361[] =
     {
         (OOVPA*)&IDirectSoundBuffer8_SetCurrentPosition_1_0_4361,
 
-        xdirectx::EmuIDirectSoundBuffer8_SetCurrentPosition,
+        XTL::EmuIDirectSoundBuffer8_SetCurrentPosition,
 
         #ifdef _DEBUG_TRACE
         "EmuIDirectSoundBuffer8_SetCurrentPosition"

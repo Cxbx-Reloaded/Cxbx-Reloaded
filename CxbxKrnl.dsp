@@ -178,15 +178,15 @@ SOURCE=.\Include\Win32\CxbxKrnl\EmuDInput.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\EmuDSound.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\EmuFile.h
 # End Source File
 # Begin Source File
 
 SOURCE=.\Include\Win32\CxbxKrnl\EmuFS.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuKrnl.h
 # End Source File
 # Begin Source File
 
@@ -206,6 +206,14 @@ SOURCE=.\Include\Win32\CxbxKrnl\EmuXG.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\EmuXOnline.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\EmuXTL.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase.h
 # End Source File
 # Begin Source File
@@ -215,10 +223,6 @@ SOURCE=.\Include\Win32\Mutex.h
 # Begin Source File
 
 SOURCE=.\Include\Win32\CxbxKrnl\OOVPA.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\ResCxbxDll.h
 # End Source File
 # Begin Source File
 
@@ -250,10 +254,6 @@ SOURCE=.\Include\Win32\XBVideo.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Win32\CxbxKrnl\xdirectx.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Include\Win32\CxbxKrnl\XG.1.0.4361.h
 # End Source File
 # Begin Source File
@@ -267,10 +267,6 @@ SOURCE=.\Include\Win32\CxbxKrnl\xntdll.h
 # Begin Source File
 
 SOURCE=.\Include\Win32\CxbxKrnl\XOnline.1.0.4361.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\xonline.h
 # End Source File
 # End Group
 # Begin Group "Resource"

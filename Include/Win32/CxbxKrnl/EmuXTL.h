@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->xonline.h
+// *   Cxbx->Win32->CxbxKrnl->EmuXTL.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,24 +31,14 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef XONLINE_H
-#define XONLINE_H
+#ifndef EMUXTL_H
+#define EMUXTL_H
 
-// ******************************************************************
-// * func: EmuWSAStartup
-// ******************************************************************
-int WINAPI EmuWSAStartup
-(
-    WORD        wVersionRequested,
-    LPVOID      lpWSAData   // todo: use correct type
-);
-
-// ******************************************************************
-// * func: EmuXNetStartup
-// ******************************************************************
-INT WINAPI EmuXNetStartup
-(
-    const PVOID pDummy
-);
+#include "EmuXapi.h"
+#include "EmuD3D8.h"
+#include "EmuDInput.h"
+#include "EmuDSound.h"
+#include "EmuXOnline.h"
+#include "EmuXG.h"
 
 #endif

@@ -34,13 +34,8 @@
 #ifndef EMUDINPUT_H
 #define EMUDINPUT_H
 
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace xapi
-{
-    #include <EmuXapi.h>
-};
+#define DIRECTINPUT_VERSION 0x0800
+#include <dinput.h>
 
 // ******************************************************************
 // * func: EmuDInputInit
@@ -55,7 +50,7 @@ extern void EmuDInputCleanup();
 // ******************************************************************
 // * func: EmuDInputPoll
 // ******************************************************************
-extern void EmuDInputPoll(xapi::PXINPUT_STATE Controller);
+extern void EmuDInputPoll(PXINPUT_STATE Controller);
 
 // ******************************************************************
 // * offsets into analog button array

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->xntdll.h
+// *   Cxbx->Win32->CxbxKrnl->EmuNtDll.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,8 +31,8 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef XNTDLL_H
-#define XNTDLL_H
+#ifndef EMUNTDLL_H
+#define EMUNTDLL_H
 
 #if defined(__cplusplus)
 extern "C"
@@ -306,7 +306,7 @@ OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 // ******************************************************************
 #define InitializeObjectAttributes( p, n, a, r, s )     \
 {                                                       \
-    (p)->Length = sizeof( xntdll::OBJECT_ATTRIBUTES );  \
+    (p)->Length = sizeof( NtDll::OBJECT_ATTRIBUTES );   \
     (p)->RootDirectory = r;                             \
     (p)->Attributes = a;                                \
     (p)->ObjectName = n;                                \

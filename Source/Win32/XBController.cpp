@@ -33,9 +33,16 @@
 // ******************************************************************
 #include "XBController.h"
 
-#include <stdio.h>
+// ******************************************************************
+// * prevent name collisions
+// ******************************************************************
+namespace XTL
+{
+    #include "EmuXTL.h"
+};
 
-#include "EmuDInput.h"
+// This is ridiculous
+#define FIELD_OFFSET(type,field)  ((ULONG)&(((type *)0)->field))
 
 // ******************************************************************
 // * func: XBController::XBController
@@ -243,11 +250,11 @@ bool XBController::ConfigPoll(char *szStatus)
         return false;
     }
 
-    DIDEVICEINSTANCE        DeviceInstance;
-    DIDEVICEOBJECTINSTANCE  ObjectInstance;
+    XTL::DIDEVICEINSTANCE        DeviceInstance;
+    XTL::DIDEVICEOBJECTINSTANCE  ObjectInstance;
 
-    DeviceInstance.dwSize = sizeof(DIDEVICEINSTANCE);
-    ObjectInstance.dwSize = sizeof(DIDEVICEOBJECTINSTANCE);
+    DeviceInstance.dwSize = sizeof(XTL::DIDEVICEINSTANCE);
+    ObjectInstance.dwSize = sizeof(XTL::DIDEVICEOBJECTINSTANCE);
 
     // ******************************************************************
     // * Monitor for significant device state changes
@@ -276,13 +283,13 @@ bool XBController::ConfigPoll(char *szStatus)
         // ******************************************************************
         if(m_InputDevice[v].m_Flags & DEVICE_FLAG_JOYSTICK)
         {
-            DIJOYSTATE JoyState;
+            XTL::DIJOYSTATE JoyState;
 
             // ******************************************************************
             // * Get Joystick State
             // ******************************************************************
             {
-                HRESULT hRet = m_InputDevice[v].m_Device->GetDeviceState(sizeof(DIJOYSTATE), &JoyState);
+                HRESULT hRet = m_InputDevice[v].m_Device->GetDeviceState(sizeof(XTL::DIJOYSTATE), &JoyState);
 
                 if(FAILED(hRet))
                     continue;
@@ -292,48 +299,48 @@ bool XBController::ConfigPoll(char *szStatus)
 
             if(abs(JoyState.lX) > DETECT_SENSITIVITY_JOYSTICK)
             {
-                dwHow   = FIELD_OFFSET(DIJOYSTATE, lX);
+                dwHow   = FIELD_OFFSET(XTL::DIJOYSTATE, lX);
                 dwFlags |= (JoyState.lX > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
             }
             else if(abs(JoyState.lY) > DETECT_SENSITIVITY_JOYSTICK)
             {
-                dwHow = FIELD_OFFSET(DIJOYSTATE, lY);
+                dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, lY);
                 dwFlags |= (JoyState.lY > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
             }
             else if(abs(JoyState.lZ) > DETECT_SENSITIVITY_JOYSTICK)
             {
-                dwHow = FIELD_OFFSET(DIJOYSTATE, lZ);
+                dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, lZ);
                 dwFlags |= (JoyState.lZ > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
             }
             else if(abs(JoyState.lRx) > DETECT_SENSITIVITY_JOYSTICK)
             {
-                dwHow = FIELD_OFFSET(DIJOYSTATE, lRx);
+                dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, lRx);
                 dwFlags |= (JoyState.lRx > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
             }
             else if(abs(JoyState.lRy) > DETECT_SENSITIVITY_JOYSTICK)
             {
-                dwHow = FIELD_OFFSET(DIJOYSTATE, lRy);
+                dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, lRy);
                 dwFlags |= (JoyState.lRy > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
             }
             else if(abs(JoyState.lRz) > DETECT_SENSITIVITY_JOYSTICK)
             {
-                dwHow = FIELD_OFFSET(DIJOYSTATE, lRz);
+                dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, lRz);
                 dwFlags |= (JoyState.lRz > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
             }
             else 
                 for(int b=0;b<2;b++)
                     if(abs(JoyState.rglSlider[b]) > DETECT_SENSITIVITY_JOYSTICK)
-                        dwHow = FIELD_OFFSET(DIJOYSTATE, rglSlider[b]);
+                        dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, rglSlider[b]);
             else 
                 for(int b=0;b<4;b++)
                     if(abs(JoyState.rgdwPOV[b]) > DETECT_SENSITIVITY_POV)
-                        dwHow = FIELD_OFFSET(DIJOYSTATE, rgdwPOV[b]);
+                        dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, rgdwPOV[b]);
             else
                 for(int b=0;b<32;b++)
                 {
                     if(JoyState.rgbButtons[b] > DETECT_SENSITIVITY_BUTTON)
                     {
-                        dwHow = FIELD_OFFSET(DIJOYSTATE, rgbButtons[b]);
+                        dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, rgbButtons[b]);
                         dwFlags |= DEVICE_FLAG_BUTTON;
                     }
                 }
@@ -400,7 +407,7 @@ bool XBController::ConfigPoll(char *szStatus)
         // ******************************************************************
         else if(m_InputDevice[v].m_Flags & DEVICE_FLAG_MOUSE)
         {
-            DIMOUSESTATE2 MouseState;
+            XTL::DIMOUSESTATE2 MouseState;
 
             m_InputDevice[v].m_Device->GetDeviceState(sizeof(MouseState), &MouseState);
 
@@ -468,17 +475,17 @@ bool XBController::ConfigPoll(char *szStatus)
 
                     if(lMax == lAbsDeltaX)
                     {
-                        dwHow = DIMOFS_X;
+                        dwHow = FIELD_OFFSET(XTL::DIMOUSESTATE, lX);
                         dwFlags |= (lDeltaX > 0) ? DEVICE_FLAG_POSITIVE : DEVICE_FLAG_NEGATIVE;
                     }
                     else if(lMax == lAbsDeltaY)
                     {
-                        dwHow = DIMOFS_Y;
+                        dwHow = FIELD_OFFSET(XTL::DIMOUSESTATE, lY);
                         dwFlags |= (lDeltaY > 0) ? DEVICE_FLAG_POSITIVE : DEVICE_FLAG_NEGATIVE;
                     }
                     else if(lMax == lAbsDeltaZ)
                     {
-                        dwHow = DIMOFS_Z;
+                        dwHow = FIELD_OFFSET(XTL::DIMOUSESTATE, lZ);
                         dwFlags |= (lDeltaZ > 0) ? DEVICE_FLAG_POSITIVE : DEVICE_FLAG_NEGATIVE;
                     }
                 }
@@ -564,12 +571,13 @@ void XBController::ListenBegin(HWND hwnd)
 // ******************************************************************
 // * func: XBController::ListenPoll
 // ******************************************************************
-void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
+void XBController::ListenPoll(XTL::XINPUT_STATE *Controller)
 {
     if(Controller == NULL)
         return;
 
-    LPDIRECTINPUTDEVICE8 pDevice=NULL;
+    XTL::LPDIRECTINPUTDEVICE8 pDevice=NULL;
+
     HRESULT hRet=0;
     DWORD dwFlags=0;
 
@@ -612,7 +620,7 @@ void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
         // ******************************************************************
         if(dwFlags & DEVICE_FLAG_JOYSTICK)
         {
-            DIJOYSTATE JoyState = {0};
+            XTL::DIJOYSTATE JoyState = {0};
 
             if(pDevice->GetDeviceState(sizeof(JoyState), &JoyState) != DI_OK)
                 continue;
@@ -667,7 +675,7 @@ void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
         // ******************************************************************
         else if(dwFlags & DEVICE_FLAG_MOUSE)
         {
-            DIMOUSESTATE2 MouseState = {0};
+            XTL::DIMOUSESTATE2 MouseState = {0};
 
             if(pDevice->GetDeviceState(sizeof(MouseState), &MouseState) != DI_OK)
                 continue;
@@ -704,11 +712,11 @@ void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
                 else if(lAccumZ < -32768)
                     lAccumZ = -32768;
 
-                if(dwInfo == DIMOFS_X)
+                if(dwInfo == FIELD_OFFSET(XTL::DIMOUSESTATE, lX))
                     wValue = (WORD)lAccumX;
-                else if(dwInfo == DIMOFS_Y)
+                else if(dwInfo == FIELD_OFFSET(XTL::DIMOUSESTATE, lY))
                     wValue = (WORD)lAccumY;
-                else if(dwInfo == DIMOFS_Z)
+                else if(dwInfo == FIELD_OFFSET(XTL::DIMOUSESTATE, lZ))
                     wValue = (WORD)lAccumZ;
 
                 if(dwFlags & DEVICE_FLAG_NEGATIVE)
@@ -882,11 +890,11 @@ void XBController::DInputInit(HWND hwnd)
     // * Create DirectInput Object
     // ******************************************************************
     {
-        HRESULT hRet = DirectInput8Create
+        HRESULT hRet = XTL::DirectInput8Create
         (
             GetModuleHandle(NULL),
             DIRECTINPUT_VERSION,
-            IID_IDirectInput8,
+            XTL::IID_IDirectInput8,
             (void**)&m_pDirectInput8,
             NULL
         );
@@ -913,13 +921,13 @@ void XBController::DInputInit(HWND hwnd)
 
         if(m_CurrentState == XBCTRL_STATE_CONFIG || DeviceIsUsed("SysKeyboard"))
         {
-            hRet = m_pDirectInput8->CreateDevice(GUID_SysKeyboard, &m_InputDevice[m_dwInputDeviceCount].m_Device, NULL);
+            hRet = m_pDirectInput8->CreateDevice(XTL::GUID_SysKeyboard, &m_InputDevice[m_dwInputDeviceCount].m_Device, NULL);
 
             if(!FAILED(hRet))
             {
                 m_InputDevice[m_dwInputDeviceCount].m_Flags = DEVICE_FLAG_KEYBOARD;
 
-                m_InputDevice[m_dwInputDeviceCount++].m_Device->SetDataFormat(&c_dfDIKeyboard);
+                m_InputDevice[m_dwInputDeviceCount++].m_Device->SetDataFormat(&XTL::c_dfDIKeyboard);
             }
 
             if(m_CurrentState == XBCTRL_STATE_LISTEN)
@@ -928,13 +936,13 @@ void XBController::DInputInit(HWND hwnd)
 
         if(m_CurrentState == XBCTRL_STATE_CONFIG || DeviceIsUsed("SysMouse"))
         {
-            hRet = m_pDirectInput8->CreateDevice(GUID_SysMouse, &m_InputDevice[m_dwInputDeviceCount].m_Device, NULL);
+            hRet = m_pDirectInput8->CreateDevice(XTL::GUID_SysMouse, &m_InputDevice[m_dwInputDeviceCount].m_Device, NULL);
 
             if(!FAILED(hRet))
             {
                 m_InputDevice[m_dwInputDeviceCount].m_Flags = DEVICE_FLAG_MOUSE;
 
-                m_InputDevice[m_dwInputDeviceCount++].m_Device->SetDataFormat(&c_dfDIMouse2);
+                m_InputDevice[m_dwInputDeviceCount++].m_Device->SetDataFormat(&XTL::c_dfDIMouse2);
             }
 
             if(m_CurrentState == XBCTRL_STATE_LISTEN)
@@ -1089,7 +1097,7 @@ void XBController::ReorderObjects(const char *szDeviceName, int pos)
 // ******************************************************************
 // * func: XBController::EnumGameCtrlCallback
 // ******************************************************************
-BOOL XBController::EnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi)
+BOOL XBController::EnumGameCtrlCallback(XTL::LPCDIDEVICEINSTANCE lpddi)
 {
     if(m_CurrentState == XBCTRL_STATE_LISTEN && !DeviceIsUsed(lpddi->tszInstanceName))
         return DIENUM_CONTINUE;
@@ -1100,7 +1108,7 @@ BOOL XBController::EnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi)
     {
         m_InputDevice[m_dwInputDeviceCount].m_Flags = DEVICE_FLAG_JOYSTICK;
 
-        m_InputDevice[m_dwInputDeviceCount++].m_Device->SetDataFormat(&c_dfDIJoystick);
+        m_InputDevice[m_dwInputDeviceCount++].m_Device->SetDataFormat(&XTL::c_dfDIJoystick);
 
         if(m_CurrentState == XBCTRL_STATE_LISTEN)
             ReorderObjects(lpddi->tszInstanceName, m_dwInputDeviceCount - 1);
@@ -1112,14 +1120,14 @@ BOOL XBController::EnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi)
 // ******************************************************************
 // * func: XBController::EnumObjectsCallback
 // ******************************************************************
-BOOL XBController::EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi)
+BOOL XBController::EnumObjectsCallback(XTL::LPCDIDEVICEOBJECTINSTANCE lpddoi)
 {
     if(lpddoi->dwType & DIDFT_AXIS)
     {
-        DIPROPRANGE diprg; 
+        XTL::DIPROPRANGE diprg; 
 
-        diprg.diph.dwSize       = sizeof(DIPROPRANGE); 
-        diprg.diph.dwHeaderSize = sizeof(DIPROPHEADER); 
+        diprg.diph.dwSize       = sizeof(XTL::DIPROPRANGE); 
+        diprg.diph.dwHeaderSize = sizeof(XTL::DIPROPHEADER); 
         diprg.diph.dwHow        = DIPH_BYID; 
         diprg.diph.dwObj        = lpddoi->dwType;
         diprg.lMin              = 0 - 32768; 
@@ -1132,10 +1140,10 @@ BOOL XBController::EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi)
     }
     else if(lpddoi->dwType & DIDFT_BUTTON)
     {
-        DIPROPRANGE diprg; 
+        XTL::DIPROPRANGE diprg; 
 
-        diprg.diph.dwSize       = sizeof(DIPROPRANGE); 
-        diprg.diph.dwHeaderSize = sizeof(DIPROPHEADER); 
+        diprg.diph.dwSize       = sizeof(XTL::DIPROPRANGE); 
+        diprg.diph.dwHeaderSize = sizeof(XTL::DIPROPHEADER); 
         diprg.diph.dwHow        = DIPH_BYID; 
         diprg.diph.dwObj        = lpddoi->dwType;
         diprg.lMin              = 0; 
@@ -1153,7 +1161,7 @@ BOOL XBController::EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi)
 // ******************************************************************
 // * func: WrapEnumGameCtrlCallback
 // ******************************************************************
-BOOL CALLBACK WrapEnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi, LPVOID pvRef)
+BOOL CALLBACK WrapEnumGameCtrlCallback(XTL::LPCDIDEVICEINSTANCE lpddi, LPVOID pvRef)
 {
     XBController *context = (XBController*)pvRef;
 
@@ -1163,7 +1171,7 @@ BOOL CALLBACK WrapEnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi, LPVOID pvRef)
 // ******************************************************************
 // * func: WrapEnumObjectsCallback
 // ******************************************************************
-BOOL CALLBACK WrapEnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOID pvRef)
+BOOL CALLBACK WrapEnumObjectsCallback(XTL::LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOID pvRef)
 {
     XBController *context = (XBController*)pvRef;
 

@@ -47,9 +47,9 @@ namespace xboxkrnl
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
-namespace xntdll
+namespace NtDll
 {
-    #include "xntdll.h"
+    #include "EmuNtDll.h"
 };
 
 #include "Emu.h"
@@ -79,7 +79,7 @@ class EmuHandle
 	    };
 
         // Close this handle
-	    xntdll::NTSTATUS Close(void);
+	    NtDll::NTSTATUS Close(void);
 
 	    // Initialize the EmuHandle system
         static bool Initialize();

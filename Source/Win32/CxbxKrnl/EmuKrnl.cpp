@@ -48,43 +48,49 @@ namespace xboxkrnl
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
-namespace xntdll
+namespace NtDll
 {
-    #include "xntdll.h"
+    #include "EmuNtDll.h"
 };
 
 #include "Emu.h"
 #include "EmuFS.h"
 #include "EmuFile.h"
-#include "EmuKrnl.h"
-#include "EmuD3D8.h"
+
+// ******************************************************************
+// * prevent name collisions
+// ******************************************************************
+namespace XTL
+{
+    #include "EmuXTL.h"
+};
 
 // ******************************************************************
 // * Loaded at run-time to avoid linker conflicts
 // ******************************************************************
 static HMODULE hNtDll = GetModuleHandle("ntdll");
 
-xntdll::FPTR_RtlInitAnsiString              NT_RtlInitAnsiString            = (xntdll::FPTR_RtlInitAnsiString)GetProcAddress(hNtDll, "RtlInitAnsiString");
-xntdll::FPTR_RtlInitUnicodeString           NT_RtlInitUnicodeString         = (xntdll::FPTR_RtlInitUnicodeString)GetProcAddress(hNtDll, "RtlInitUnicodeString");
-xntdll::FPTR_RtlAnsiStringToUnicodeString   NT_RtlAnsiStringToUnicodeString = (xntdll::FPTR_RtlAnsiStringToUnicodeString)GetProcAddress(hNtDll, "RtlAnsiStringToUnicodeString");
-xntdll::FPTR_RtlUnicodeStringToAnsiString   NT_RtlUnicodeStringToAnsiString = (xntdll::FPTR_RtlUnicodeStringToAnsiString)GetProcAddress(hNtDll, "RtlUnicodeStringToAnsiString");
-xntdll::FPTR_RtlNtStatusToDosError          NT_RtlNtStatusToDosError        = (xntdll::FPTR_RtlNtStatusToDosError)GetProcAddress(hNtDll, "RtlNtStatusToDosError");
-xntdll::FPTR_RtlInitializeCriticalSection   NT_RtlInitializeCriticalSection = (xntdll::FPTR_RtlInitializeCriticalSection)GetProcAddress(hNtDll, "RtlInitializeCriticalSection");
-xntdll::FPTR_RtlEnterCriticalSection        NT_RtlEnterCriticalSection      = (xntdll::FPTR_RtlEnterCriticalSection)GetProcAddress(hNtDll, "RtlEnterCriticalSection");
-xntdll::FPTR_RtlLeaveCriticalSection        NT_RtlLeaveCriticalSection      = (xntdll::FPTR_RtlLeaveCriticalSection)GetProcAddress(hNtDll, "RtlLeaveCriticalSection");
+NtDll::FPTR_RtlInitAnsiString              NT_RtlInitAnsiString            = (NtDll::FPTR_RtlInitAnsiString)GetProcAddress(hNtDll, "RtlInitAnsiString");
+NtDll::FPTR_RtlInitUnicodeString           NT_RtlInitUnicodeString         = (NtDll::FPTR_RtlInitUnicodeString)GetProcAddress(hNtDll, "RtlInitUnicodeString");
+NtDll::FPTR_RtlAnsiStringToUnicodeString   NT_RtlAnsiStringToUnicodeString = (NtDll::FPTR_RtlAnsiStringToUnicodeString)GetProcAddress(hNtDll, "RtlAnsiStringToUnicodeString");
+NtDll::FPTR_RtlUnicodeStringToAnsiString   NT_RtlUnicodeStringToAnsiString = (NtDll::FPTR_RtlUnicodeStringToAnsiString)GetProcAddress(hNtDll, "RtlUnicodeStringToAnsiString");
+NtDll::FPTR_RtlNtStatusToDosError          NT_RtlNtStatusToDosError        = (NtDll::FPTR_RtlNtStatusToDosError)GetProcAddress(hNtDll, "RtlNtStatusToDosError");
+NtDll::FPTR_RtlInitializeCriticalSection   NT_RtlInitializeCriticalSection = (NtDll::FPTR_RtlInitializeCriticalSection)GetProcAddress(hNtDll, "RtlInitializeCriticalSection");
+NtDll::FPTR_RtlEnterCriticalSection        NT_RtlEnterCriticalSection      = (NtDll::FPTR_RtlEnterCriticalSection)GetProcAddress(hNtDll, "RtlEnterCriticalSection");
+NtDll::FPTR_RtlLeaveCriticalSection        NT_RtlLeaveCriticalSection      = (NtDll::FPTR_RtlLeaveCriticalSection)GetProcAddress(hNtDll, "RtlLeaveCriticalSection");
 
-xntdll::FPTR_NtAllocateVirtualMemory        NT_NtAllocateVirtualMemory      = (xntdll::FPTR_NtAllocateVirtualMemory)GetProcAddress(hNtDll, "NtAllocateVirtualMemory");
-xntdll::FPTR_NtClose                        NT_NtClose                      = (xntdll::FPTR_NtClose)GetProcAddress(hNtDll, "NtClose");
-xntdll::FPTR_NtDelayExecution               NT_NtDelayExecution             = (xntdll::FPTR_NtDelayExecution)GetProcAddress(hNtDll, "NtDelayExecution");
-xntdll::FPTR_NtDuplicateObject              NT_NtDuplicateObject            = (xntdll::FPTR_NtDuplicateObject)GetProcAddress(hNtDll, "NtDuplicateObject");
-xntdll::FPTR_NtQueryInformationFile         NT_NtQueryInformationFile       = (xntdll::FPTR_NtQueryInformationFile)GetProcAddress(hNtDll, "NtQueryInformationFile");
-xntdll::FPTR_NtQueryFullAttributesFile      NT_NtQueryFullAttributesFile    = (xntdll::FPTR_NtQueryFullAttributesFile)GetProcAddress(hNtDll, "NtQueryFullAttributesFile");
-xntdll::FPTR_NtQueryVolumeInformationFile   NT_NtQueryVolumeInformationFile = (xntdll::FPTR_NtQueryVolumeInformationFile)GetProcAddress(hNtDll, "NtQueryVolumeInformationFile");
-xntdll::FPTR_NtCreateEvent                  NT_NtCreateEvent                = (xntdll::FPTR_NtCreateEvent)GetProcAddress(hNtDll, "NtCreateEvent");
-xntdll::FPTR_NtCreateFile                   NT_NtCreateFile                 = (xntdll::FPTR_NtCreateFile)GetProcAddress(hNtDll, "NtCreateFile");
-xntdll::FPTR_NtReadFile                     NT_NtReadFile                   = (xntdll::FPTR_NtReadFile)GetProcAddress(hNtDll, "NtReadFile");
-xntdll::FPTR_NtWriteFile                    NT_NtWriteFile                  = (xntdll::FPTR_NtWriteFile)GetProcAddress(hNtDll, "NtWriteFile");
-xntdll::FPTR_NtSetInformationFile           NT_NtSetInformationFile         = (xntdll::FPTR_NtSetInformationFile)GetProcAddress(hNtDll, "NtSetInformationFile");
+NtDll::FPTR_NtAllocateVirtualMemory        NT_NtAllocateVirtualMemory      = (NtDll::FPTR_NtAllocateVirtualMemory)GetProcAddress(hNtDll, "NtAllocateVirtualMemory");
+NtDll::FPTR_NtClose                        NT_NtClose                      = (NtDll::FPTR_NtClose)GetProcAddress(hNtDll, "NtClose");
+NtDll::FPTR_NtDelayExecution               NT_NtDelayExecution             = (NtDll::FPTR_NtDelayExecution)GetProcAddress(hNtDll, "NtDelayExecution");
+NtDll::FPTR_NtDuplicateObject              NT_NtDuplicateObject            = (NtDll::FPTR_NtDuplicateObject)GetProcAddress(hNtDll, "NtDuplicateObject");
+NtDll::FPTR_NtQueryInformationFile         NT_NtQueryInformationFile       = (NtDll::FPTR_NtQueryInformationFile)GetProcAddress(hNtDll, "NtQueryInformationFile");
+NtDll::FPTR_NtQueryFullAttributesFile      NT_NtQueryFullAttributesFile    = (NtDll::FPTR_NtQueryFullAttributesFile)GetProcAddress(hNtDll, "NtQueryFullAttributesFile");
+NtDll::FPTR_NtQueryVolumeInformationFile   NT_NtQueryVolumeInformationFile = (NtDll::FPTR_NtQueryVolumeInformationFile)GetProcAddress(hNtDll, "NtQueryVolumeInformationFile");
+NtDll::FPTR_NtCreateEvent                  NT_NtCreateEvent                = (NtDll::FPTR_NtCreateEvent)GetProcAddress(hNtDll, "NtCreateEvent");
+NtDll::FPTR_NtCreateFile                   NT_NtCreateFile                 = (NtDll::FPTR_NtCreateFile)GetProcAddress(hNtDll, "NtCreateFile");
+NtDll::FPTR_NtReadFile                     NT_NtReadFile                   = (NtDll::FPTR_NtReadFile)GetProcAddress(hNtDll, "NtReadFile");
+NtDll::FPTR_NtWriteFile                    NT_NtWriteFile                  = (NtDll::FPTR_NtWriteFile)GetProcAddress(hNtDll, "NtWriteFile");
+NtDll::FPTR_NtSetInformationFile           NT_NtSetInformationFile         = (NtDll::FPTR_NtSetInformationFile)GetProcAddress(hNtDll, "NtSetInformationFile");
 
 // ******************************************************************
 // * (Helper) PCSTProxyParam
@@ -455,7 +461,7 @@ XBSYSAPI EXPORTNUM(99) NTSTATUS NTAPI xboxkrnl::KeDelayExecutionThread
     }
     #endif
 
-    NTSTATUS ret = NT_NtDelayExecution(Alertable, (xntdll::LARGE_INTEGER*)Interval);
+    NTSTATUS ret = NT_NtDelayExecution(Alertable, (NtDll::LARGE_INTEGER*)Interval);
 
     EmuSwapFS();   // Xbox FS
 
@@ -875,8 +881,8 @@ XBSYSAPI EXPORTNUM(189) NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 
     wchar_t wszObjectName[160];
 
-    xntdll::UNICODE_STRING    NtUnicodeString;
-    xntdll::OBJECT_ATTRIBUTES NtObjAttr;
+    NtDll::UNICODE_STRING    NtUnicodeString;
+    NtDll::OBJECT_ATTRIBUTES NtObjAttr;
 
     // ******************************************************************
     // * Initialize Object Attributes
@@ -892,7 +898,7 @@ XBSYSAPI EXPORTNUM(189) NTSTATUS NTAPI xboxkrnl::NtCreateEvent
     // ******************************************************************
     // * Redirect to NtCreateEvent
     // ******************************************************************
-    NTSTATUS ret = NT_NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, &NtObjAttr, (xntdll::EVENT_TYPE)EventType, InitialState);
+    NTSTATUS ret = NT_NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, &NtObjAttr, (NtDll::EVENT_TYPE)EventType, InitialState);
 
     EmuSwapFS();   // Xbox FS
 
@@ -981,8 +987,8 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
 
     wchar_t wszObjectName[160];
 
-    xntdll::UNICODE_STRING    NtUnicodeString;
-    xntdll::OBJECT_ATTRIBUTES NtObjAttr;
+    NtDll::UNICODE_STRING    NtUnicodeString;
+    NtDll::OBJECT_ATTRIBUTES NtObjAttr;
 
     // ******************************************************************
     // * Initialize Object Attributes
@@ -1000,8 +1006,8 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
     // ******************************************************************
     NTSTATUS ret = NT_NtCreateFile
     (
-        FileHandle, DesiredAccess, &NtObjAttr, (xntdll::IO_STATUS_BLOCK*)IoStatusBlock,
-        (xntdll::LARGE_INTEGER*)AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, NULL
+        FileHandle, DesiredAccess, &NtObjAttr, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock,
+        (NtDll::LARGE_INTEGER*)AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, NULL
     );
 
     // NOTE: We can map this to IoCreateFile once implemented (if ever necessary)
@@ -1125,8 +1131,8 @@ XBSYSAPI EXPORTNUM(210) NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributesFile
 
     wchar_t wszObjectName[160];
 
-    xntdll::UNICODE_STRING    NtUnicodeString;
-    xntdll::OBJECT_ATTRIBUTES NtObjAttr;
+    NtDll::UNICODE_STRING    NtUnicodeString;
+    NtDll::OBJECT_ATTRIBUTES NtObjAttr;
 
     // ******************************************************************
     // * Initialize Object Attributes
@@ -1181,10 +1187,10 @@ XBSYSAPI EXPORTNUM(211) NTSTATUS NTAPI xboxkrnl::NtQueryInformationFile
 	NTSTATUS ret = NT_NtQueryInformationFile
 	(
 		FileHandle,
-        (xntdll::PIO_STATUS_BLOCK)IoStatusBlock,
-        (xntdll::PFILE_FS_SIZE_INFORMATION)FileInformation,
+        (NtDll::PIO_STATUS_BLOCK)IoStatusBlock,
+        (NtDll::PFILE_FS_SIZE_INFORMATION)FileInformation,
 		Length,
-        (xntdll::FILE_INFORMATION_CLASS)FileInfo
+        (NtDll::FILE_INFORMATION_CLASS)FileInfo
 	);
 
     EmuSwapFS();   // Xbox FS
@@ -1231,9 +1237,9 @@ XBSYSAPI EXPORTNUM(218) NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformationFile
     NTSTATUS ret = NT_NtQueryVolumeInformationFile
     (
         FileHandle,
-        (xntdll::PIO_STATUS_BLOCK)IoStatusBlock,
-        (xntdll::PFILE_FS_SIZE_INFORMATION)FileInformation, Length,
-        (xntdll::FS_INFORMATION_CLASS)FileInformationClass
+        (NtDll::PIO_STATUS_BLOCK)IoStatusBlock,
+        (NtDll::PFILE_FS_SIZE_INFORMATION)FileInformation, Length,
+        (NtDll::FS_INFORMATION_CLASS)FileInformationClass
     );
 /*
     {
@@ -1288,7 +1294,7 @@ XBSYSAPI EXPORTNUM(219) NTSTATUS NTAPI xboxkrnl::NtReadFile
     }
     #endif
 
-    NTSTATUS ret = NT_NtReadFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, (xntdll::LARGE_INTEGER*)ByteOffset, 0);
+    NTSTATUS ret = NT_NtReadFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, (NtDll::LARGE_INTEGER*)ByteOffset, 0);
 
     EmuSwapFS();   // Xbox FS
 
@@ -1372,7 +1378,7 @@ XBSYSAPI EXPORTNUM(236) NTSTATUS NTAPI xboxkrnl::NtWriteFile
     }
     #endif
 
-    NTSTATUS ret = NT_NtWriteFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, (xntdll::LARGE_INTEGER*)ByteOffset, 0);
+    NTSTATUS ret = NT_NtWriteFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, (NtDll::LARGE_INTEGER*)ByteOffset, 0);
 
     EmuSwapFS();   // Xbox FS
 
@@ -1498,7 +1504,7 @@ XBSYSAPI EXPORTNUM(260) NTSTATUS NTAPI xboxkrnl::RtlAnsiStringToUnicodeString
     }
     #endif
 
-    NTSTATUS ret = NT_RtlAnsiStringToUnicodeString((xntdll::UNICODE_STRING*)DestinationString, (xntdll::STRING*)SourceString, AllocateDestinationString);
+    NTSTATUS ret = NT_RtlAnsiStringToUnicodeString((NtDll::UNICODE_STRING*)DestinationString, (NtDll::STRING*)SourceString, AllocateDestinationString);
 
     EmuSwapFS();   // Xbox FS
 
@@ -1530,9 +1536,9 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
 
     // This seems redundant, but xbox software doesn't always do it
     if(CriticalSection->LockCount == -1)
-        NT_RtlInitializeCriticalSection((xntdll::_RTL_CRITICAL_SECTION*)CriticalSection);
+        NT_RtlInitializeCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
 
-    NT_RtlEnterCriticalSection((xntdll::_RTL_CRITICAL_SECTION*)CriticalSection);
+    NT_RtlEnterCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
 
     EmuSwapFS();   // Xbox FS
 
@@ -1564,7 +1570,7 @@ XBSYSAPI EXPORTNUM(289) VOID NTAPI xboxkrnl::RtlInitAnsiString
     }
     #endif
 
-    NT_RtlInitAnsiString((xntdll::PANSI_STRING)DestinationString, (xntdll::PCSZ)SourceString);
+    NT_RtlInitAnsiString((NtDll::PANSI_STRING)DestinationString, (NtDll::PCSZ)SourceString);
 
     EmuSwapFS();   // Xbox FS
 
@@ -1594,7 +1600,7 @@ XBSYSAPI EXPORTNUM(291) VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
     }
     #endif
 
-    NT_RtlInitializeCriticalSection((xntdll::_RTL_CRITICAL_SECTION*)CriticalSection);
+    NT_RtlInitializeCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
 
     EmuSwapFS();   // Xbox FS
 
@@ -1612,7 +1618,7 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
     EmuSwapFS();   // Win2k/XP FS
 
     // Note: We need to execute this before debug output to avoid trouble
-    NT_RtlLeaveCriticalSection((xntdll::_RTL_CRITICAL_SECTION*)CriticalSection);
+    NT_RtlLeaveCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
 
     // ******************************************************************
     // * debug trace
@@ -1689,7 +1695,7 @@ XBSYSAPI EXPORTNUM(308) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToAns
     }
     #endif
 
-    NTSTATUS ret = NT_RtlUnicodeStringToAnsiString((xntdll::STRING*)DestinationString, (xntdll::UNICODE_STRING*)SourceString, AllocateDestinationString);
+    NTSTATUS ret = NT_RtlUnicodeStringToAnsiString((NtDll::STRING*)DestinationString, (NtDll::UNICODE_STRING*)SourceString, AllocateDestinationString);
 
     EmuSwapFS();   // Xbox FS
 

@@ -44,27 +44,17 @@ namespace xboxkrnl
 
 #include "Emu.h"
 #include "EmuFS.h"
-#include "EmuD3D8.h"
 
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
-namespace xapi
+namespace XTL
 {
-    #include "EmuXapi.h"
-};
-
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace xdirectx
-{
-    #include "xdirectx.h"
+    #include "EmuXTL.h"
 };
 
 #include <locale.h>
 
-#include "EmuKrnl.h"
 #include "EmuShared.h"
 #include "HLEDataBase.h"
 
@@ -395,13 +385,13 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
 					    if(pFunc != 0)
 					    {
-						    xapi::EmuXapiProcessHeap = *(PVOID**)((uint32)pFunc + 0x3E);
+						    XTL::EmuXapiProcessHeap = *(PVOID**)((uint32)pFunc + 0x3E);
 
-						    xapi::g_pRtlCreateHeap = *(xapi::pfRtlCreateHeap*)((uint32)pFunc + 0x37);
-						    xapi::g_pRtlCreateHeap = (xapi::pfRtlCreateHeap)((uint32)pFunc + (uint32)xapi::g_pRtlCreateHeap + 0x37 + 0x04);
+						    XTL::g_pRtlCreateHeap = *(XTL::pfRtlCreateHeap*)((uint32)pFunc + 0x37);
+						    XTL::g_pRtlCreateHeap = (XTL::pfRtlCreateHeap)((uint32)pFunc + (uint32)XTL::g_pRtlCreateHeap + 0x37 + 0x04);
 
-						    printf("Emu (0x%X): 0x%.08X -> EmuXapiProcessHeap\n", GetCurrentThreadId(), xapi::EmuXapiProcessHeap);
-						    printf("Emu (0x%X): 0x%.08X -> RtlCreateHeap\n", GetCurrentThreadId(), xapi::g_pRtlCreateHeap);
+						    printf("Emu (0x%X): 0x%.08X -> EmuXapiProcessHeap\n", GetCurrentThreadId(), XTL::EmuXapiProcessHeap);
+						    printf("Emu (0x%X): 0x%.08X -> RtlCreateHeap\n", GetCurrentThreadId(), XTL::g_pRtlCreateHeap);
 					    }
 				    }
                 }
@@ -418,18 +408,18 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                     if(pFunc != 0 && (BuildVersion == 4361 || BuildVersion == 4627))
                     {
                         if(BuildVersion == 4361)
-						    xdirectx::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x200 + 82*4);
+						    XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x200 + 82*4);
                         else if(BuildVersion == 4627)
-						    xdirectx::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x24C + 92*4);
+						    XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x24C + 92*4);
 
                         for(int v=0;v<146;v++)
-                            xdirectx::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
+                            XTL::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
 
-                        printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredRenderState\n", GetCurrentThreadId(), xdirectx::EmuD3DDeferredRenderState);
+                        printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredRenderState\n", GetCurrentThreadId(), XTL::EmuD3DDeferredRenderState);
                     }
                     else
                     {
-                        xdirectx::EmuD3DDeferredRenderState = 0;
+                        XTL::EmuD3DDeferredRenderState = 0;
                         printf("Emu (0x%X): *Warning* EmuD3DDeferredRenderState not found!\n", GetCurrentThreadId());
                     }
 
@@ -444,16 +434,16 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
                         if(pFunc != 0)
                         {
-					        xdirectx::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x19) - 0x70);
+					        XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x19) - 0x70);
 
                             for(int v=0;v<32*4;v++)
-                                xdirectx::EmuD3DDeferredTextureState[v] = X_D3DTSS_UNK;
+                                XTL::EmuD3DDeferredTextureState[v] = X_D3DTSS_UNK;
 
-                            printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredTextureState\n", GetCurrentThreadId(), xdirectx::EmuD3DDeferredTextureState);
+                            printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredTextureState\n", GetCurrentThreadId(), XTL::EmuD3DDeferredTextureState);
                         }
                         else
                         {
-                            xdirectx::EmuD3DDeferredTextureState = 0;
+                            XTL::EmuD3DDeferredTextureState = 0;
                             printf("Emu (0x%X): *Warning* EmuD3DDeferredTextureState not found!\n", GetCurrentThreadId());
                         }
                     }
@@ -481,7 +471,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
     printf("Emu (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
 
-    EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
+    XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
 
     printf("Emu (0x%X): Initial thread starting.\n", GetCurrentThreadId());
 
@@ -796,7 +786,7 @@ int EmuException(LPEXCEPTION_POINTERS e)
 
 		sprintf(buffer, "Recieved Exception [0x%.08X]@0x%.08X\n\nPress 'OK' to terminate emulation.\nPress 'Cancel' to debug.", e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip);
 
-		if(MessageBox(g_hEmuWindow, buffer, "Cxbx", MB_ICONSTOP | MB_OKCANCEL) == IDOK)
+        if(MessageBox(XTL::g_hEmuWindow, buffer, "Cxbx", MB_ICONSTOP | MB_OKCANCEL) == IDOK)
 			ExitProcess(1);
 	}
 
@@ -825,13 +815,13 @@ int ExitException(LPEXCEPTION_POINTERS e)
 
     fflush(stdout);
 
-    MessageBox(g_hEmuWindow, "Warning: Could not safely terminate process!", "Cxbx", MB_OK);
+    MessageBox(XTL::g_hEmuWindow, "Warning: Could not safely terminate process!", "Cxbx", MB_OK);
 
     count++;
 
     if(count > 1)
     {
-        MessageBox(g_hEmuWindow, "Warning: Multiple Problems!", "Cxbx", MB_OK);
+        MessageBox(XTL::g_hEmuWindow, "Warning: Multiple Problems!", "Cxbx", MB_OK);
         return EXCEPTION_CONTINUE_SEARCH;
     }
 

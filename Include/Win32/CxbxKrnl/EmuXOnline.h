@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuDInput.cpp
+// *   Cxbx->Win32->CxbxKrnl->EmuXOnline.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,58 +31,34 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
-#define _XBOXKRNL_LOCAL_
-
-#include "Emu.h"
+#ifndef EMUXONLINE_H
+#define EMUXONLINE_H
 
 // ******************************************************************
-// * prevent name collisions
+// * func: EmuWSAStartup
 // ******************************************************************
-namespace XTL
-{
-    #include "EmuXTL.h"
-};
-
-#include "EmuShared.h"
-
-// ******************************************************************
-// * Static Variable(s)
-// ******************************************************************
-static XBController g_XBController;
+int WINAPI EmuWSAStartup
+(
+    WORD        wVersionRequested,
+    LPVOID      lpWSAData   // todo: use correct type
+);
 
 // ******************************************************************
-// * func: XTL::EmuDInputInit
+// * func: EmuXNetStartup
 // ******************************************************************
-bool XTL::EmuDInputInit()
-{
-    g_EmuShared->GetXBController(&g_XBController);
-
-    g_XBController.ListenBegin(XTL::g_hEmuWindow);
-
-    if(g_XBController.GetError())
-        return false;
-
-    return true;
-}
+INT WINAPI EmuXNetStartup
+(
+    const PVOID pDummy
+);
 
 // ******************************************************************
-// * func: XTL::EmuDInputCleanup
+// * func: Emusocket
 // ******************************************************************
-void XTL::EmuDInputCleanup()
-{
-    g_XBController.ListenEnd();
-}
+SOCKET socket
+(
+    int af,
+    int type,
+    int protocol
+);
 
-// ******************************************************************
-// * func: XTL::EmuPollController
-// ******************************************************************
-void XTL::EmuDInputPoll(XTL::PXINPUT_STATE Controller)
-{
-    g_XBController.ListenPoll(Controller);
-
-    if(g_XBController.GetError())
-        MessageBox(NULL, g_XBController.GetError(), "Cxbx [*UNHANDLED!*]", MB_OK);  // TODO: Handle this!
-
-    return;
-}
+#endif

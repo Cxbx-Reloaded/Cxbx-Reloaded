@@ -37,39 +37,17 @@
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
+#include "Emu.h"
+
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
-namespace xapi
+namespace XTL
 {
-    #include "EmuXapi.h"
+    #include "EmuXTL.h"
 };
 
 #include "HLEDataBase.h"
-
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace xdirectx
-{
-    #include "xdirectx.h"
-};
-
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace xonline
-{
-    #include "xonline.h"
-};
-
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace xg
-{
-    #include "EmuXG.h"
-};
 
 #include "Xapi.1.0.3911.inl"
 #include "Xapi.1.0.4034.inl"

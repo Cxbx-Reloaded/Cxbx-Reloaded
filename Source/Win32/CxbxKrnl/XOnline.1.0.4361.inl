@@ -134,7 +134,7 @@ OOVPATable XOnline_1_0_4361[] =
     {
         (OOVPA*)&XNetStartup_1_0_4361,
             
-        xonline::EmuXNetStartup,
+        XTL::EmuXNetStartup,
 
         #ifdef _DEBUG_TRACE
         "EmuXNetStartup"
@@ -144,7 +144,7 @@ OOVPATable XOnline_1_0_4361[] =
     {
         (OOVPA*)&WSAStartup_1_0_4361,
             
-        xonline::EmuWSAStartup,
+        XTL::EmuWSAStartup,
 
         #ifdef _DEBUG_TRACE
         "EmuWSAStartup"

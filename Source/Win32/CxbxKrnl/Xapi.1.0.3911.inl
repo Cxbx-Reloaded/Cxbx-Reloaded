@@ -132,7 +132,7 @@ OOVPATable XAPI_1_0_3911[] =
     {
         (OOVPA*)&CreateThread_1_0_3911,
 
-        xapi::EmuCreateThread,
+        XTL::EmuCreateThread,
 
         #ifdef _DEBUG_TRACE
         "EmuCreateThread" 
@@ -144,7 +144,7 @@ OOVPATable XAPI_1_0_3911[] =
     {
         (OOVPA*)&XapiInitProcess_1_0_3911,
 
-        xapi::EmuXapiInitProcess,
+        XTL::EmuXapiInitProcess,
 
         #ifdef _DEBUG_TRACE
         "EmuXapiInitProcess" 
@@ -155,7 +155,7 @@ OOVPATable XAPI_1_0_3911[] =
     {
         (OOVPA*)&XapiBootDash_1_0_3911,
 
-        xapi::EmuXapiBootDash,
+        XTL::EmuXapiBootDash,
 
         #ifdef _DEBUG_TRACE
         "EmuXapiBootDash"

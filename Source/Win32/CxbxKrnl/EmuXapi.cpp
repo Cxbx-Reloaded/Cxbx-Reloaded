@@ -37,40 +37,38 @@
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace xntdll
-{
-    #include "xntdll.h"
-};
-
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace xapi
-{
-    #include "EmuXapi.h"
-};
-
 #include "Emu.h"
 #include "EmuFS.h"
-#include "EmuD3D8.h"
-#include "EmuDInput.h"
+
+// ******************************************************************
+// * prevent name collisions
+// ******************************************************************
+namespace NtDll
+{
+    #include "EmuNtDll.h"
+};
+
+// ******************************************************************
+// * prevent name collisions
+// ******************************************************************
+namespace XTL
+{
+    #include "EmuXTL.h"
+};
 
 // ******************************************************************
 // * Loaded at run-time to avoid linker conflicts
 // ******************************************************************
 static HMODULE hNtDll = GetModuleHandle("ntdll");
 
-xntdll::FPTR_RtlCreateHeap                  NT_RtlCreateHeap                = (xntdll::FPTR_RtlCreateHeap)GetProcAddress(hNtDll, "RtlCreateHeap");
-xntdll::FPTR_RtlAllocateHeap                NT_RtlAllocateHeap              = (xntdll::FPTR_RtlAllocateHeap)GetProcAddress(hNtDll, "RtlAllocateHeap");
-xntdll::FPTR_RtlFreeHeap                    NT_RtlFreeHeap                  = (xntdll::FPTR_RtlFreeHeap)GetProcAddress(hNtDll, "RtlFreeHeap");
+NtDll::FPTR_RtlCreateHeap                  NT_RtlCreateHeap                = (NtDll::FPTR_RtlCreateHeap)GetProcAddress(hNtDll, "RtlCreateHeap");
+NtDll::FPTR_RtlAllocateHeap                NT_RtlAllocateHeap              = (NtDll::FPTR_RtlAllocateHeap)GetProcAddress(hNtDll, "RtlAllocateHeap");
+NtDll::FPTR_RtlFreeHeap                    NT_RtlFreeHeap                  = (NtDll::FPTR_RtlFreeHeap)GetProcAddress(hNtDll, "RtlFreeHeap");
 
 // ******************************************************************
 // * func: EmuRtlCreateHeap
 // ******************************************************************
-PVOID WINAPI xapi::EmuRtlCreateHeap
+PVOID WINAPI XTL::EmuRtlCreateHeap
 (
     IN ULONG   Flags,
     IN PVOID   Base OPTIONAL,
@@ -100,7 +98,7 @@ PVOID WINAPI xapi::EmuRtlCreateHeap
     }
     #endif
 
-    xntdll::RTL_HEAP_DEFINITION RtlHeapDefinition;
+    NtDll::RTL_HEAP_DEFINITION RtlHeapDefinition;
 
     ZeroMemory(&RtlHeapDefinition, sizeof(RtlHeapDefinition));
 
@@ -116,7 +114,7 @@ PVOID WINAPI xapi::EmuRtlCreateHeap
 // ******************************************************************
 // * func: EmuRtlAllocateHeap
 // ******************************************************************
-PVOID WINAPI xapi::EmuRtlAllocateHeap
+PVOID WINAPI XTL::EmuRtlAllocateHeap
 (
     IN HANDLE hHeap,
     IN DWORD  dwFlags,
@@ -150,7 +148,7 @@ PVOID WINAPI xapi::EmuRtlAllocateHeap
 // ******************************************************************
 // * func: EmuRtlFreeHeap
 // ******************************************************************
-BOOL WINAPI xapi::EmuRtlFreeHeap
+BOOL WINAPI XTL::EmuRtlFreeHeap
 (
     IN HANDLE hHeap,
     IN DWORD  dwFlags,
@@ -185,7 +183,7 @@ BOOL WINAPI xapi::EmuRtlFreeHeap
 // * func: XapiUnknownBad1
 // ******************************************************************
 // NOTE: This does some hard disk verification and other things
-VOID WINAPI xapi::EmuXapiUnknownBad1
+VOID WINAPI XTL::EmuXapiUnknownBad1
 (
     IN DWORD dwUnknown
 )
@@ -213,7 +211,7 @@ VOID WINAPI xapi::EmuXapiUnknownBad1
 // ******************************************************************
 // * func: EmuXInitDevices
 // ******************************************************************
-VOID WINAPI xapi::EmuXInitDevices
+VOID WINAPI XTL::EmuXInitDevices
 (
     DWORD   Unknown1,
     PVOID   Unknown2
@@ -246,7 +244,7 @@ VOID WINAPI xapi::EmuXInitDevices
 // ******************************************************************
 // * func: EmuXGetDevices
 // ******************************************************************
-DWORD WINAPI xapi::EmuXGetDevices
+DWORD WINAPI XTL::EmuXGetDevices
 (
     PXPP_DEVICE_TYPE DeviceType
 )
@@ -273,9 +271,42 @@ DWORD WINAPI xapi::EmuXGetDevices
 }
 
 // ******************************************************************
+// * func: EmuXGetDeviceChanges
+// ******************************************************************
+DWORD WINAPI XTL::EmuXGetDeviceChanges
+(
+    PXPP_DEVICE_TYPE DeviceType,
+    PDWORD           pdwInsertions,                  
+    PDWORD           pdwRemovals                     
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuXGetDeviceChanges\n"
+               "(\n"
+               "   DeviceType          : 0x%.08X\n"
+               "   pdwInsertions       : 0x%.08X\n"
+               "   pdwRemovals         : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), DeviceType, pdwInsertions, pdwRemovals);
+    }
+    #endif
+
+    EmuSwapFS();   // XBox FS
+
+    // TODO: Temporarily, we just claim no changes
+    return FALSE;
+}
+
+// ******************************************************************
 // * func: EmuXInputOpen
 // ******************************************************************
-HANDLE WINAPI xapi::EmuXInputOpen
+HANDLE WINAPI XTL::EmuXInputOpen
 (
     IN PXPP_DEVICE_TYPE             DeviceType,
     IN DWORD                        dwPort,
@@ -315,7 +346,7 @@ HANDLE WINAPI xapi::EmuXInputOpen
 // ******************************************************************
 // * func: EmuXInputGetCapabilities
 // ******************************************************************
-DWORD WINAPI xapi::EmuXInputGetCapabilities
+DWORD WINAPI XTL::EmuXInputGetCapabilities
 (
     IN  HANDLE               hDevice,
     OUT PXINPUT_CAPABILITIES pCapabilities
@@ -358,7 +389,7 @@ DWORD WINAPI xapi::EmuXInputGetCapabilities
 // ******************************************************************
 // * func: EmuInputGetState
 // ******************************************************************
-DWORD WINAPI xapi::EmuXInputGetState
+DWORD WINAPI XTL::EmuXInputGetState
 (
     IN  HANDLE         hDevice,
     OUT PXINPUT_STATE  pState
@@ -400,7 +431,7 @@ DWORD WINAPI xapi::EmuXInputGetState
 // ******************************************************************
 // * func: EmuInputGetState
 // ******************************************************************
-DWORD WINAPI xapi::EmuXInputSetState
+DWORD WINAPI XTL::EmuXInputSetState
 (
     IN     HANDLE           hDevice,
     IN OUT PXINPUT_FEEDBACK pFeedback
@@ -432,7 +463,7 @@ DWORD WINAPI xapi::EmuXInputSetState
 // ******************************************************************
 // * func: EmuCloseHandle
 // ******************************************************************
-BOOL WINAPI xapi::EmuCloseHandle
+BOOL WINAPI XTL::EmuCloseHandle
 (
     HANDLE hObject
 )
@@ -462,7 +493,7 @@ BOOL WINAPI xapi::EmuCloseHandle
 // ******************************************************************
 // * func: EmuXapiInitProcess
 // ******************************************************************
-VOID WINAPI xapi::EmuXapiInitProcess()
+VOID WINAPI XTL::EmuXapiInitProcess()
 {
     EmuSwapFS();   // Win2k/XP FS
 
@@ -494,7 +525,7 @@ VOID WINAPI xapi::EmuXapiInitProcess()
 
         #define HEAP_GROWABLE 0x00000002
 
-        *xapi::EmuXapiProcessHeap = xapi::g_pRtlCreateHeap(HEAP_GROWABLE, 0, dwPeHeapReserve, dwPeHeapCommit, 0, &HeapParameters);
+        *XTL::EmuXapiProcessHeap = XTL::g_pRtlCreateHeap(HEAP_GROWABLE, 0, dwPeHeapReserve, dwPeHeapCommit, 0, &HeapParameters);
 	}
 
     return;
@@ -503,17 +534,17 @@ VOID WINAPI xapi::EmuXapiInitProcess()
 // ******************************************************************
 // * data: EmuXapiProcessHeap
 // ******************************************************************
-PVOID* xapi::EmuXapiProcessHeap;
+PVOID* XTL::EmuXapiProcessHeap;
 
 // ******************************************************************
 // * func: g_pRtlCreateHeap
 // ******************************************************************
-xapi::pfRtlCreateHeap xapi::g_pRtlCreateHeap;
+XTL::pfRtlCreateHeap XTL::g_pRtlCreateHeap;
 
 // ******************************************************************
 // * func: EmuXapiThreadStartup
 // ******************************************************************
-VOID WINAPI xapi::EmuXapiThreadStartup
+VOID WINAPI XTL::EmuXapiThreadStartup
 (
     DWORD dwDummy1,
     DWORD dwDummy2
@@ -552,7 +583,7 @@ VOID WINAPI xapi::EmuXapiThreadStartup
 // ******************************************************************
 // * func: XapiSetupPerTitleDriveLetters
 // ******************************************************************
-xapi::NTSTATUS CDECL xapi::XapiSetupPerTitleDriveLetters(DWORD dwTitleId, LPCWSTR wszTitleName)
+XTL::NTSTATUS CDECL XTL::XapiSetupPerTitleDriveLetters(DWORD dwTitleId, LPCWSTR wszTitleName)
 {
     EmuSwapFS();   // Win2k/XP FS
 
@@ -580,7 +611,7 @@ xapi::NTSTATUS CDECL xapi::XapiSetupPerTitleDriveLetters(DWORD dwTitleId, LPCWST
 // ******************************************************************
 // * func: EmuXapiBootDash
 // ******************************************************************
-VOID WINAPI xapi::EmuXapiBootDash(DWORD UnknownA, DWORD UnknownB, DWORD UnknownC)
+VOID WINAPI XTL::EmuXapiBootDash(DWORD UnknownA, DWORD UnknownB, DWORD UnknownC)
 {
     EmuSwapFS();   // Win2k/XP FS
 

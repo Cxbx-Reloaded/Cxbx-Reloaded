@@ -37,31 +37,29 @@
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace xntdll
-{
-    #include "xntdll.h"
-};
-
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace xonline
-{
-    #include "xonline.h"
-};
-
 #include "Emu.h"
 #include "EmuFS.h"
-#include "EmuD3D8.h"
-#include "EmuDInput.h"
+
+// ******************************************************************
+// * prevent name collisions
+// ******************************************************************
+namespace NtDll
+{
+    #include "EmuNtDll.h"
+};
+
+// ******************************************************************
+// * prevent name collisions
+// ******************************************************************
+namespace XTL
+{
+    #include "EmuXTL.h"
+};
 
 // ******************************************************************
 // * func: EmuWSAStartup
 // ******************************************************************
-int WINAPI xonline::EmuWSAStartup
+int WINAPI XTL::EmuWSAStartup
 (
     WORD        wVersionRequested,
     LPVOID      lpWSAData   // todo: use correct type
@@ -92,7 +90,7 @@ int WINAPI xonline::EmuWSAStartup
 // ******************************************************************
 // * func: EmuXNetStartup
 // ******************************************************************
-INT WINAPI xonline::EmuXNetStartup
+INT WINAPI XTL::EmuXNetStartup
 (
     const PVOID pDummy
 )

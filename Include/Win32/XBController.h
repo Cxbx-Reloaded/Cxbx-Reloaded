@@ -38,15 +38,16 @@
 #include "Error.h"
 #include "Mutex.h"
 
-#define DIRECTINPUT_VERSION 0x0800
-#include <dinput.h>
+#include <stdio.h>
+#include <string.h>
+#include <windows.h>
 
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
-namespace xapi
+namespace XTL
 {
-    #include "EmuXapi.h"
+    #include "EmuXTL.h"
 };
 
 // ******************************************************************
@@ -137,7 +138,7 @@ class XBController : public Error
         // * Listening
         // ******************************************************************
         void ListenBegin(HWND hwnd);
-        void ListenPoll(xapi::XINPUT_STATE *Controller);
+        void ListenPoll(XTL::XINPUT_STATE *Controller);
         void ListenEnd();
 
         // ******************************************************************
@@ -175,14 +176,14 @@ class XBController : public Error
         // ******************************************************************
         // * Controller and Objects Enumeration
         // ******************************************************************
-        BOOL EnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi);
-        BOOL EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi);
+        BOOL EnumGameCtrlCallback(XTL::LPCDIDEVICEINSTANCE lpddi);
+        BOOL EnumObjectsCallback(XTL::LPCDIDEVICEOBJECTINSTANCE lpddoi);
 
         // ******************************************************************
         // * Wrapper Function for Enumeration
         // ******************************************************************
-        friend BOOL CALLBACK WrapEnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi, LPVOID pvRef);
-        friend BOOL CALLBACK WrapEnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOID pvRef);
+        friend BOOL CALLBACK WrapEnumGameCtrlCallback(XTL::LPCDIDEVICEINSTANCE lpddi, LPVOID pvRef);
+        friend BOOL CALLBACK WrapEnumObjectsCallback(XTL::LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOID pvRef);
 
         // ******************************************************************
         // * Device Names
@@ -197,15 +198,15 @@ class XBController : public Error
         // ******************************************************************
         // * DirectInput
         // ******************************************************************
-        LPDIRECTINPUT8 m_pDirectInput8;
+        XTL::LPDIRECTINPUT8 m_pDirectInput8;
 
         // ******************************************************************
         // * DirectInput Devices
         // ******************************************************************
         struct InputDevice
         {
-            LPDIRECTINPUTDEVICE8 m_Device;
-            int                  m_Flags;
+            XTL::LPDIRECTINPUTDEVICE8 m_Device;
+            int                       m_Flags;
         }
         m_InputDevice[XBCTRL_MAX_DEVICES];
 

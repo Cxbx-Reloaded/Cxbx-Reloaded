@@ -42,8 +42,8 @@
 // ******************************************************************
 // * Global(s)
 // ******************************************************************
-D3DDEVTYPE g_DevType[2] = {D3DDEVTYPE_HAL, D3DDEVTYPE_REF};
-char      *g_szDevType[2] = {"Direct3D HAL (Hardware Accelerated)", "Direct3D REF (Software)"};
+XTL::D3DDEVTYPE  g_DevType[2] = {XTL::D3DDEVTYPE_HAL, XTL::D3DDEVTYPE_REF};
+char            *g_szDevType[2] = {"Direct3D HAL (Hardware Accelerated)", "Direct3D REF (Software)"};
 
 // ******************************************************************
 // * Static Function(s)
@@ -55,15 +55,15 @@ static VOID RefreshDirect3DDevice();
 // ******************************************************************
 // * Static Variable(s)
 // ******************************************************************
-static LPDIRECT3D8          g_pD3D8         = NULL;   // Direct3D8
-static LPDIRECT3DDEVICE8    g_pD3D8Device   = NULL;   // Direct3D8 Device
-static XBVideo              g_XBVideo;
-static BOOL                 g_bHasChanges;
-static DWORD                g_dwAdapterCount = 0;
-static DWORD                g_dwVideoResolution = 0;
-static HWND                 g_hDisplayAdapter  = NULL;
-static HWND                 g_hDirect3DDevice  = NULL;
-static HWND                 g_hVideoResolution = NULL;
+static XTL::LPDIRECT3D8        g_pD3D8         = NULL;   // Direct3D8
+static XTL::LPDIRECT3DDEVICE8  g_pD3D8Device   = NULL;   // Direct3D8 Device
+static XBVideo                 g_XBVideo;
+static BOOL                    g_bHasChanges;
+static DWORD                   g_dwAdapterCount = 0;
+static DWORD                   g_dwVideoResolution = 0;
+static HWND                    g_hDisplayAdapter  = NULL;
+static HWND                    g_hDirect3DDevice  = NULL;
+static HWND                    g_hVideoResolution = NULL;
 
 // ******************************************************************
 // * func: ShowVideoConfig
@@ -105,7 +105,7 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
             // * Create Direct3D
             // ******************************************************************
             {
-                g_pD3D8 = Direct3DCreate8(D3D_SDK_VERSION);
+                g_pD3D8 = XTL::Direct3DCreate8(D3D_SDK_VERSION);
 
                 if(g_pD3D8 == NULL)
                     break;
@@ -117,7 +117,7 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
             {
                 SendMessage(g_hDisplayAdapter, CB_RESETCONTENT, 0, 0);
 
-                D3DADAPTER_IDENTIFIER8 AdapterIdentifier;
+                XTL::D3DADAPTER_IDENTIFIER8 AdapterIdentifier;
 
                 g_dwAdapterCount = g_pD3D8->GetAdapterCount();
 
@@ -259,7 +259,7 @@ VOID RefreshDisplayAdapter()
     // * Enumerate Direct3D Devices
     // ******************************************************************
     {
-        D3DCAPS8   Caps;
+        XTL::D3DCAPS8 Caps;
 
         for(uint32 d=0;d<2;d++)
             if(g_pD3D8->GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), g_DevType[d], &Caps) == D3D_OK)
@@ -288,7 +288,7 @@ VOID RefreshDirect3DDevice()
     // * Enumerate Video Modes
     // ******************************************************************
     {
-        D3DDISPLAYMODE DisplayMode;
+        XTL::D3DDISPLAYMODE DisplayMode;
 
         uint32 dwAdapterModeCount = g_pD3D8->GetAdapterModeCount(g_XBVideo.GetDisplayAdapter());
 
@@ -304,16 +304,16 @@ VOID RefreshDirect3DDevice()
 
             switch(DisplayMode.Format)
             {
-                case D3DFMT_X1R5G5B5:
+                case XTL::D3DFMT_X1R5G5B5:
                     szFormat = "16bit x1r5g5b5";
                     break;
-                case D3DFMT_R5G6B5:
+                case XTL::D3DFMT_R5G6B5:
                     szFormat = "16bit r5g6r5";
                     break;
-                case D3DFMT_X8R8G8B8:
+                case XTL::D3DFMT_X8R8G8B8:
                     szFormat = "32bit x8r8g8b8";
                     break;
-                case D3DFMT_A8R8G8B8:
+                case XTL::D3DFMT_A8R8G8B8:
                     szFormat = "32bit a8r8g8b8";
                     break;
                 default:

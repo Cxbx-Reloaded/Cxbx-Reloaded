@@ -37,47 +37,31 @@
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace xntdll
-{
-    #include "xntdll.h"
-};
-
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace xapi
-{
-    #include "EmuXapi.h"
-};
-
 #include "Emu.h"
 #include "EmuFS.h"
 
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
-namespace xdirectx
+namespace NtDll
 {
-    #include "xdirectx.h"
+    #include "EmuNtDll.h"
 };
 
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
-namespace xg
+namespace XTL
 {
-    #include "EmuXG.h"
+    #include "EmuXTL.h"
 };
 
 // ******************************************************************
 // * func: EmuXGIsSwizzledFormat
 // ******************************************************************
-PVOID WINAPI xg::EmuXGIsSwizzledFormat
+PVOID WINAPI XTL::EmuXGIsSwizzledFormat
 (
-    xdirectx::D3DFORMAT Format
+    XTL::D3DFORMAT Format
 )
 {
     // ******************************************************************
@@ -101,7 +85,7 @@ PVOID WINAPI xg::EmuXGIsSwizzledFormat
 // ******************************************************************
 // * func: EmuXGUnswizzleRect
 // ******************************************************************
-VOID WINAPI xg::EmuXGUnswizzleRect
+VOID WINAPI XTL::EmuXGUnswizzleRect
 (
     PVOID           pSrcBuff,
     DWORD           dwWidth,

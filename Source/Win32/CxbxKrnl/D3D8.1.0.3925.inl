@@ -105,7 +105,7 @@ OOVPATable D3D8_1_0_3925[] =
     {
         (OOVPA*)&IDirect3D8_CreateDevice_1_0_3925,
 
-        xdirectx::EmuIDirect3D8_CreateDevice,
+        XTL::EmuIDirect3D8_CreateDevice,
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3D8_CreateDevice" 
@@ -115,7 +115,7 @@ OOVPATable D3D8_1_0_3925[] =
     {
         (OOVPA*)&IDirect3DDevice8_Present_1_0_3925,
 
-        xdirectx::EmuIDirect3DDevice8_Present,
+        XTL::EmuIDirect3DDevice8_Present,
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_Present"

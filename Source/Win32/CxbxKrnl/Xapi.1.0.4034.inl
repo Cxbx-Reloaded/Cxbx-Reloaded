@@ -315,7 +315,7 @@ OOVPATable XAPI_1_0_4034[] =
     {
         (OOVPA*)&XInitDevices_1_0_4034,
 
-        xapi::EmuXInitDevices,
+        XTL::EmuXInitDevices,
 
         #ifdef _DEBUG_TRACE
         "EmuXInitDevices"
@@ -325,7 +325,7 @@ OOVPATable XAPI_1_0_4034[] =
     {
         (OOVPA*)&XGetDevices_1_0_4034,
 
-        xapi::EmuXGetDevices,
+        XTL::EmuXGetDevices,
 
         #ifdef _DEBUG_TRACE
         "EmuXGetDevices"
@@ -336,7 +336,7 @@ OOVPATable XAPI_1_0_4034[] =
     {
         (OOVPA*)&XInputOpen_1_0_4034,
 
-        xapi::EmuXInputOpen,
+        XTL::EmuXInputOpen,
 
         #ifdef _DEBUG_TRACE
         "EmuXInputOpen"
@@ -346,7 +346,7 @@ OOVPATable XAPI_1_0_4034[] =
     {
         (OOVPA*)&XInputGetCapabilities_1_0_4361,
 
-        xapi::EmuXInputGetCapabilities,
+        XTL::EmuXInputGetCapabilities,
 
         #ifdef _DEBUG_TRACE
         "EmuXInputGetCapabilities"
@@ -356,7 +356,7 @@ OOVPATable XAPI_1_0_4034[] =
     {
         (OOVPA*)&XInputGetState_1_0_4361,
 
-        xapi::EmuXInputGetState,
+        XTL::EmuXInputGetState,
 
         #ifdef _DEBUG_TRACE
         "EmuXInputGetState"
@@ -368,7 +368,7 @@ OOVPATable XAPI_1_0_4034[] =
     {
         (OOVPA*)&CreateThread_1_0_3911,
 
-        xapi::EmuCreateThread,
+        XTL::EmuCreateThread,
 
         #ifdef _DEBUG_TRACE
         "EmuCreateThread" 
@@ -380,7 +380,7 @@ OOVPATable XAPI_1_0_4034[] =
     {
         (OOVPA*)&CloseHandle_1_0_(???),
 
-        xapi::EmuCloseHandle,
+        XTL::EmuCloseHandle,
 
         #ifdef _DEBUG_TRACE
         "EmuCloseHandle" 
@@ -392,7 +392,7 @@ OOVPATable XAPI_1_0_4034[] =
     {
         (OOVPA*)&XapiInitProcess_1_0_3911,
 
-        xapi::EmuXapiInitProcess,
+        XTL::EmuXapiInitProcess,
 
         #ifdef _DEBUG_TRACE
         "EmuXapiInitProcess" 
@@ -403,7 +403,7 @@ OOVPATable XAPI_1_0_4034[] =
     {
         (OOVPA*)&XapiBootDash_1_0_3911,
 
-        xapi::EmuXapiBootDash,
+        XTL::EmuXapiBootDash,
 
         #ifdef _DEBUG_TRACE
         "EmuXapiBootDash"

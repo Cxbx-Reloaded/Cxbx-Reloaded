@@ -102,7 +102,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&RtlCreateHeap_1_0_4361,
 
-        xapi::EmuRtlCreateHeap,
+        XTL::EmuRtlCreateHeap,
 
         #ifdef _DEBUG_TRACE
         "EmuRtlCreateHeap"
@@ -112,7 +112,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&RtlAllocateHeap_1_0_4361,
 
-        xapi::EmuRtlAllocateHeap,
+        XTL::EmuRtlAllocateHeap,
 
         #ifdef _DEBUG_TRACE
         "EmuRtlAllocateHeap"
@@ -122,7 +122,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&RtlFreeHeap_1_0_4627,
 
-        xapi::EmuRtlFreeHeap,
+        XTL::EmuRtlFreeHeap,
 
         #ifdef _DEBUG_TRACE
         "EmuRtlFreeHeap"
@@ -132,7 +132,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&XapiUnknownBad1_1_0_4627,
 
-        xapi::EmuXapiUnknownBad1,
+        XTL::EmuXapiUnknownBad1,
 
         #ifdef _DEBUG_TRACE
         "EmuXapiUnknownBad1"
@@ -142,7 +142,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&XInitDevices_1_0_4034,
 
-        xapi::EmuXInitDevices,
+        XTL::EmuXInitDevices,
 
         #ifdef _DEBUG_TRACE
         "EmuXInitDevices"
@@ -152,7 +152,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&XGetDevices_1_0_4361,
 
-        xapi::EmuXGetDevices,
+        XTL::EmuXGetDevices,
 
         #ifdef _DEBUG_TRACE
         "EmuXGetDevices" 
@@ -162,7 +162,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&XInputOpen_1_0_4361,
 
-        xapi::EmuXInputOpen,
+        XTL::EmuXInputOpen,
 
         #ifdef _DEBUG_TRACE
         "EmuXInputOpen"
@@ -172,7 +172,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&XInputGetCapabilities_1_0_4361,
 
-        xapi::EmuXInputGetCapabilities,
+        XTL::EmuXInputGetCapabilities,
 
         #ifdef _DEBUG_TRACE
         "EmuXInputGetCapabilities"
@@ -182,7 +182,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&XInputGetState_1_0_4361,
 
-        xapi::EmuXInputGetState,
+        XTL::EmuXInputGetState,
 
         #ifdef _DEBUG_TRACE
         "EmuXInputGetState"
@@ -192,7 +192,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&XInputSetState_1_0_4361,
 
-        xapi::EmuXInputSetState,
+        XTL::EmuXInputSetState,
 
         #ifdef _DEBUG_TRACE
         "EmuXInputSetState"
@@ -202,7 +202,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&XapiThreadStartup_1_0_4361,
 
-        xapi::EmuXapiThreadStartup,
+        XTL::EmuXapiThreadStartup,
 
         #ifdef _DEBUG_TRACE
         "EmuXapiThreadStartup"
@@ -213,7 +213,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&XapiInitProcess_1_0_4361,
 
-        xapi::EmuXapiInitProcess,
+        XTL::EmuXapiInitProcess,
 
         #ifdef _DEBUG_TRACE
         "EmuXapiInitProcess" 
@@ -224,7 +224,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&XapiBootDash_1_0_3911,
 
-        xapi::EmuXapiBootDash,
+        XTL::EmuXapiBootDash,
 
         #ifdef _DEBUG_TRACE
         "EmuXapiBootDash"

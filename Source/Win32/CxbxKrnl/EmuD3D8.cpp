@@ -44,27 +44,15 @@ namespace xboxkrnl
 
 #include "Emu.h"
 #include "EmuFS.h"
-#include "EmuKrnl.h"
-#include "EmuDInput.h"
 #include "EmuShared.h"
 
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
-namespace xdirectx
+namespace XTL
 {
-    #include "xdirectx.h"
+    #include "EmuXTL.h"
 };
-
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace xg
-{
-    #include "EmuXG.h"
-};
-
-#include "EmuD3D8.h"
 
 #include "ResCxbxDll.h"
 
@@ -74,7 +62,7 @@ namespace xg
 // ******************************************************************
 // * Global(s)
 // ******************************************************************
-HWND g_hEmuWindow = NULL;   // Rendering Window
+HWND XTL::g_hEmuWindow = NULL;   // Rendering Window
 
 // ******************************************************************
 // * Static Function(s)
@@ -83,46 +71,46 @@ static DWORD WINAPI   EmuRenderWindow(LPVOID);
 static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static DWORD WINAPI   EmuUpdateTickCount(LPVOID);
 static DWORD          EmuCheckAllocationSize(LPVOID);
-static inline void    EmuVerifyResourceIsRegistered(xdirectx::X_D3DResource *pResource);
+static inline void    EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource);
 
 // ******************************************************************
 // * Static Variable(s)
 // ******************************************************************
-static xdirectx::LPDIRECT3D8        g_pD3D8         = NULL;   // Direct3D8
-static xdirectx::LPDIRECT3DDEVICE8  g_pD3DDevice8   = NULL;   // Direct3D8 Device
-static Xbe::Header                 *g_XbeHeader     = NULL;   // XbeHeader
-static uint32                       g_XbeHeaderSize = 0;      // XbeHeaderSize
-static xdirectx::D3DCAPS8           g_D3DCaps;                // Direct3D8 Caps
-static HBRUSH                       g_hBgBrush      = NULL;   // Background Brush
-static volatile bool                g_bThreadInitialized = false;
-static XBVideo                      g_XBVideo;
+static XTL::LPDIRECT3D8        g_pD3D8         = NULL;   // Direct3D8
+static XTL::LPDIRECT3DDEVICE8  g_pD3DDevice8   = NULL;   // Direct3D8 Device
+static Xbe::Header            *g_XbeHeader     = NULL;   // XbeHeader
+static uint32                  g_XbeHeaderSize = 0;      // XbeHeaderSize
+static XTL::D3DCAPS8           g_D3DCaps;                // Direct3D8 Caps
+static HBRUSH                  g_hBgBrush      = NULL;   // Background Brush
+static volatile bool           g_bThreadInitialized = false;
+static XBVideo                 g_XBVideo;
 
 // ******************************************************************
 // * Cached Direct3D State Variable(s)
 // ******************************************************************
-static xdirectx::X_D3DSurface      *g_pCachedRenderTarget = NULL;
-static xdirectx::X_D3DSurface      *g_pCachedZStencilSurface = NULL;
-static DWORD                        g_dwVertexShaderUsage = 0;
+static XTL::X_D3DSurface      *g_pCachedRenderTarget = NULL;
+static XTL::X_D3DSurface      *g_pCachedZStencilSurface = NULL;
+static DWORD                   g_dwVertexShaderUsage = 0;
 
 // ******************************************************************
 // * EmuD3DTiles (8 Tiles Max)
 // ******************************************************************
-xdirectx::X_D3DTILE xdirectx::EmuD3DTileCache[0x08] = {0};
+XTL::X_D3DTILE XTL::EmuD3DTileCache[0x08] = {0};
 
 // ******************************************************************
 // * EmuD3DDeferredRenderState
 // ******************************************************************
-DWORD *xdirectx::EmuD3DDeferredRenderState;
+DWORD *XTL::EmuD3DDeferredRenderState;
 
 // ******************************************************************
 // * EmuD3DDeferredTextureState
 // ******************************************************************
-DWORD *xdirectx::EmuD3DDeferredTextureState;
+DWORD *XTL::EmuD3DDeferredTextureState;
 
 // ******************************************************************
-// * func: EmuD3DInit
+// * func: XTL::EmuD3DInit
 // ******************************************************************
-VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
+VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 {
     g_EmuShared->GetXBVideo(&g_XBVideo);
 
@@ -161,7 +149,7 @@ VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
     // * create Direct3D8 and retrieve caps
     // ******************************************************************
     {
-        using namespace xdirectx;
+        using namespace XTL;
 
         // xbox Direct3DCreate8 returns "1" always, so we need our own ptr
         g_pD3D8 = Direct3DCreate8(D3D_SDK_VERSION);
@@ -178,7 +166,7 @@ VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
     // * create default device
     // ******************************************************************
     {
-        xdirectx::X_D3DPRESENT_PARAMETERS PresParam;
+        XTL::X_D3DPRESENT_PARAMETERS PresParam;
 
         ZeroMemory(&PresParam, sizeof(PresParam));
 
@@ -188,20 +176,20 @@ VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         PresParam.BackBufferCount  = 1;
         PresParam.EnableAutoDepthStencil = TRUE;
         PresParam.AutoDepthStencilFormat = 0x2A; /* X_D3DFMT_D24S8 */
-        PresParam.SwapEffect = xdirectx::D3DSWAPEFFECT_DISCARD;
+        PresParam.SwapEffect = XTL::D3DSWAPEFFECT_DISCARD;
 
         EmuSwapFS();    // XBox FS
-        xdirectx::EmuIDirect3D8_CreateDevice(0, xdirectx::D3DDEVTYPE_HAL, 0, 0x00000040, &PresParam, &g_pD3DDevice8);
+        XTL::EmuIDirect3D8_CreateDevice(0, XTL::D3DDEVTYPE_HAL, 0, 0x00000040, &PresParam, &g_pD3DDevice8);
         EmuSwapFS();    // Win2k/XP FS
     }
 }
 
 // ******************************************************************
-// * func: EmuD3DCleanup
+// * func: XTL::EmuD3DCleanup
 // ******************************************************************
-VOID EmuD3DCleanup()
+VOID XTL::EmuD3DCleanup()
 {
-    EmuDInputCleanup();
+    XTL::EmuDInputCleanup();
 
     return;
 }
@@ -283,7 +271,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID)
                 dwStyle = WS_POPUP;
             }
 
-            g_hEmuWindow = CreateWindow
+            XTL::g_hEmuWindow = CreateWindow
             (
                 "CxbxRender", AsciiTitle,
                 dwStyle, x, y, nWidth, nHeight,
@@ -292,13 +280,13 @@ static DWORD WINAPI EmuRenderWindow(LPVOID)
         }
     }
 
-    ShowWindow(g_hEmuWindow, SW_SHOWDEFAULT);
-    UpdateWindow(g_hEmuWindow);
+    ShowWindow(XTL::g_hEmuWindow, SW_SHOWDEFAULT);
+    UpdateWindow(XTL::g_hEmuWindow);
 
     // ******************************************************************
     // * initialize direct input
     // ******************************************************************
-    if(!EmuDInputInit())
+    if(!XTL::EmuDInputInit())
         EmuCleanup("Could not initialize DirectInput!");
 
     // ******************************************************************
@@ -399,12 +387,12 @@ static DWORD EmuCheckAllocationSize(PVOID pBase)
 // ******************************************************************
 // * func: EmuVerifyResourceIsRegistered
 // ******************************************************************
-static inline void EmuVerifyResourceIsRegistered(xdirectx::X_D3DResource *pResource)
+static inline void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
 {
     if(pResource->Lock == 0)
     {
         EmuSwapFS();    // XBox FS;
-        xdirectx::EmuIDirect3DResource8_Register(pResource, (PVOID)pResource->Data);
+        XTL::EmuIDirect3DResource8_Register(pResource, (PVOID)pResource->Data);
         EmuSwapFS();    // Win2k/XP FS
     }
 }
@@ -412,7 +400,7 @@ static inline void EmuVerifyResourceIsRegistered(xdirectx::X_D3DResource *pResou
 // ******************************************************************
 // * func: EmuIDirect3D8_CreateDevice
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3D8_CreateDevice
+HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
 (
     UINT                        Adapter,
     D3DDEVTYPE                  DeviceType,
@@ -557,7 +545,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3D8_CreateDevice
         DeviceType,
         hFocusWindow,
         BehaviorFlags,
-        (xdirectx::D3DPRESENT_PARAMETERS*)pPresentationParameters,
+        (XTL::D3DPRESENT_PARAMETERS*)pPresentationParameters,
         ppReturnedDeviceInterface
     );
 
@@ -594,7 +582,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3D8_CreateDevice
 // ******************************************************************
 // * func: EmuIDirect3D8_GetAdapterModeCount
 // ******************************************************************
-UINT WINAPI xdirectx::EmuIDirect3D8_GetAdapterModeCount
+UINT WINAPI XTL::EmuIDirect3D8_GetAdapterModeCount
 (
     UINT                        Adapter
 )
@@ -630,7 +618,7 @@ UINT WINAPI xdirectx::EmuIDirect3D8_GetAdapterModeCount
 // ******************************************************************
 // * func: EmuIDirect3D8_GetAdapterDisplayMode
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3D8_GetAdapterDisplayMode
+HRESULT WINAPI XTL::EmuIDirect3D8_GetAdapterDisplayMode
 (
     UINT                        Adapter,
     X_D3DDISPLAYMODE           *pMode
@@ -686,7 +674,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3D8_GetAdapterDisplayMode
 // ******************************************************************
 // * func: EmuIDirect3D8_EnumAdapterModes
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3D8_EnumAdapterModes
+HRESULT WINAPI XTL::EmuIDirect3D8_EnumAdapterModes
 (
     UINT                        Adapter,
     UINT                        Mode,
@@ -740,7 +728,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3D8_EnumAdapterModes
 // ******************************************************************
 // * func: EmuIDirect3D8_KickOffAndWaitForIdle
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3D8_KickOffAndWaitForIdle()
+VOID WINAPI XTL::EmuIDirect3D8_KickOffAndWaitForIdle()
 {
     EmuSwapFS();   // Win2k/XP FS
 
@@ -763,7 +751,7 @@ VOID WINAPI xdirectx::EmuIDirect3D8_KickOffAndWaitForIdle()
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CopyRects
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_CopyRects
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_CopyRects
 (
     X_D3DSurface       *pSourceSurface,
     CONST RECT         *pSourceRectsArray,
@@ -812,7 +800,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_CopyRects
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateImageSurface
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_CreateImageSurface
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateImageSurface
 (
     UINT                Width,
     UINT                Height,
@@ -852,7 +840,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_CreateImageSurface
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetBackBuffer2
 // ******************************************************************
-xdirectx::X_D3DSurface* WINAPI xdirectx::EmuIDirect3DDevice8_GetBackBuffer2
+XTL::X_D3DSurface* WINAPI XTL::EmuIDirect3DDevice8_GetBackBuffer2
 (
     INT                 BackBuffer
 )
@@ -912,7 +900,7 @@ xdirectx::X_D3DSurface* WINAPI xdirectx::EmuIDirect3DDevice8_GetBackBuffer2
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetBackBuffer
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3DDevice8_GetBackBuffer
+VOID WINAPI XTL::EmuIDirect3DDevice8_GetBackBuffer
 (
     INT                 BackBuffer,
     D3DBACKBUFFER_TYPE  Type,
@@ -944,7 +932,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_GetBackBuffer
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetRenderTarget
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_GetRenderTarget
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetRenderTarget
 (
     X_D3DSurface  **ppRenderTarget
 )
@@ -980,7 +968,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_GetRenderTarget
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetRenderTarget2
 // ******************************************************************
-xdirectx::X_D3DSurface * WINAPI xdirectx::EmuIDirect3DDevice8_GetRenderTarget2()
+XTL::X_D3DSurface * WINAPI XTL::EmuIDirect3DDevice8_GetRenderTarget2()
 {
     EmuSwapFS();   // Win2k/XP FS
 
@@ -1006,7 +994,7 @@ xdirectx::X_D3DSurface * WINAPI xdirectx::EmuIDirect3DDevice8_GetRenderTarget2()
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetDepthStencilSurface
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_GetDepthStencilSurface
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetDepthStencilSurface
 (
     X_D3DSurface  **ppZStencilSurface
 )
@@ -1039,7 +1027,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_GetDepthStencilSurface
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetDepthStencilSurface2
 // ******************************************************************
-xdirectx::X_D3DSurface * WINAPI xdirectx::EmuIDirect3DDevice8_GetDepthStencilSurface2()
+XTL::X_D3DSurface * WINAPI XTL::EmuIDirect3DDevice8_GetDepthStencilSurface2()
 {
     EmuSwapFS();   // Win2k/XP FS
 
@@ -1066,7 +1054,7 @@ xdirectx::X_D3DSurface * WINAPI xdirectx::EmuIDirect3DDevice8_GetDepthStencilSur
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetTile
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_GetTile
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetTile
 (
     DWORD           Index,
     X_D3DTILE      *pTile
@@ -1099,7 +1087,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_GetTile
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTileNoWait
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_SetTileNoWait
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetTileNoWait
 (
     DWORD               Index,
     CONST X_D3DTILE    *pTile
@@ -1132,7 +1120,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_SetTileNoWait
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateVertexShader
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_CreateVertexShader
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
 (
     CONST DWORD    *pDeclaration,
     CONST DWORD    *pFunction,
@@ -1194,7 +1182,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_CreateVertexShader
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexShaderConstant
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_SetVertexShaderConstant
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShaderConstant
 (
     INT         Register,
     CONST PVOID pConstantData,
@@ -1243,7 +1231,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_SetVertexShaderConstant
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreatePixelShader
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_CreatePixelShader
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreatePixelShader
 (
     CONST DWORD    *pFunction,
     DWORD          *pHandle
@@ -1289,7 +1277,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_CreatePixelShader
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetPixelShader
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_SetPixelShader
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetPixelShader
 (
     DWORD           Handle
 )
@@ -1332,7 +1320,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_SetPixelShader
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateTexture2
 // ******************************************************************
-xdirectx::X_D3DResource * WINAPI xdirectx::EmuIDirect3DDevice8_CreateTexture2
+XTL::X_D3DResource * WINAPI XTL::EmuIDirect3DDevice8_CreateTexture2
 (
     UINT                Width,
     UINT                Height,
@@ -1353,7 +1341,7 @@ xdirectx::X_D3DResource * WINAPI xdirectx::EmuIDirect3DDevice8_CreateTexture2
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateTexture
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_CreateTexture
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
 (
     UINT            Width,
     UINT            Height,
@@ -1428,7 +1416,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_CreateTexture
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetIndices
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetIndices
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetIndices
 (
     X_D3DIndexBuffer   *pIndexData,
     UINT                BaseVertexIndex
@@ -1464,7 +1452,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetIndices
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTexture
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_SetTexture
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetTexture
 (
     DWORD           Stage,
     X_D3DResource  *pTexture
@@ -1504,7 +1492,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_SetTexture
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SwitchTexture
 // ******************************************************************
-VOID __fastcall xdirectx::EmuIDirect3DDevice8_SwitchTexture
+VOID __fastcall XTL::EmuIDirect3DDevice8_SwitchTexture
 (
     DWORD           Method,
     DWORD           Data,
@@ -1551,7 +1539,7 @@ VOID __fastcall xdirectx::EmuIDirect3DDevice8_SwitchTexture
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetDisplayMode
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_GetDisplayMode
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetDisplayMode
 (
     X_D3DDISPLAYMODE         *pMode
 )
@@ -1596,7 +1584,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_GetDisplayMode
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_Clear
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_Clear
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_Clear
 (
     DWORD           Count,
     CONST D3DRECT  *pRects,
@@ -1656,7 +1644,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_Clear
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_Present
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_Present
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_Present
 (
     CONST RECT* pSourceRect,
     CONST RECT* pDestRect,
@@ -1692,7 +1680,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_Present
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_Swap
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_Swap
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_Swap
 (
     DWORD Flags
 )
@@ -1714,7 +1702,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_Swap
 
     // TODO: Ensure this flag is always the same across library versions
     if(Flags != 0)
-        EmuCleanup("xdirectx::EmuIDirect3DDevice8_Swap: Flags != 0");
+        EmuCleanup("XTL::EmuIDirect3DDevice8_Swap: Flags != 0");
 
     HRESULT hRet = g_pD3DDevice8->Present(0, 0, 0, 0);
 
@@ -1726,7 +1714,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_Swap
 // ******************************************************************
 // * func: EmuIDirect3DResource8_Register
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
+HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 (
     X_D3DResource      *pThis,
     PVOID               pBase
@@ -1957,7 +1945,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
 
             if(bSwizzled)
             {
-                xg::EmuXGUnswizzleRect
+                XTL::EmuXGUnswizzleRect
                 (
                     pBase, dwWidth, dwHeight, dwDepth, LockedRect.pBits, 
                     LockedRect.Pitch, iRect, iPoint, dwBPP
@@ -2030,7 +2018,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
 // ******************************************************************
 // * func: EmuIDirect3DResource8_Release
 // ******************************************************************
-ULONG WINAPI xdirectx::EmuIDirect3DResource8_Release
+ULONG WINAPI XTL::EmuIDirect3DResource8_Release
 (
     X_D3DResource      *pThis
 )
@@ -2070,7 +2058,7 @@ ULONG WINAPI xdirectx::EmuIDirect3DResource8_Release
 // ******************************************************************
 // * func: EmuIDirect3DResource8_IsBusy
 // ******************************************************************
-BOOL WINAPI xdirectx::EmuIDirect3DResource8_IsBusy
+BOOL WINAPI XTL::EmuIDirect3DResource8_IsBusy
 (
     X_D3DResource      *pThis
 )
@@ -2102,7 +2090,7 @@ BOOL WINAPI xdirectx::EmuIDirect3DResource8_IsBusy
 // ******************************************************************
 // * func: EmuGet2DSurfaceDesc
 // ******************************************************************
-VOID WINAPI xdirectx::EmuGet2DSurfaceDesc
+VOID WINAPI XTL::EmuGet2DSurfaceDesc
 (
     X_D3DPixelContainer *pPixelContainer,
     DWORD                dwLevel,
@@ -2153,7 +2141,7 @@ VOID WINAPI xdirectx::EmuGet2DSurfaceDesc
 
         // TODO: Convert from Xbox to PC!!
         if(SurfaceDesc.MultiSampleType == D3DMULTISAMPLE_NONE)
-            pDesc->MultiSampleType = (xdirectx::D3DMULTISAMPLE_TYPE)0x0011;
+            pDesc->MultiSampleType = (XTL::D3DMULTISAMPLE_TYPE)0x0011;
         else
             EmuCleanup("EmuGet2DSurfaceDesc Unknown Multisample format! (%d)", SurfaceDesc.MultiSampleType);
 
@@ -2169,7 +2157,7 @@ VOID WINAPI xdirectx::EmuGet2DSurfaceDesc
 // ******************************************************************
 // * func: EmuIDirect3DSurface8_GetDesc
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DSurface8_GetDesc
+HRESULT WINAPI XTL::EmuIDirect3DSurface8_GetDesc
 (
     X_D3DResource      *pThis,
     X_D3DSURFACE_DESC  *pDesc
@@ -2215,7 +2203,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DSurface8_GetDesc
 
         // TODO: Convert from Xbox to PC!!
         if(SurfaceDesc.MultiSampleType == D3DMULTISAMPLE_NONE)
-            pDesc->MultiSampleType = (xdirectx::D3DMULTISAMPLE_TYPE)0x0011;
+            pDesc->MultiSampleType = (XTL::D3DMULTISAMPLE_TYPE)0x0011;
         else
             EmuCleanup("EmuIDirect3DSurface8_GetDesc Unknown Multisample format! (%d)", SurfaceDesc.MultiSampleType);
 
@@ -2231,7 +2219,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DSurface8_GetDesc
 // ******************************************************************
 // * func: EmuIDirect3DSurface8_LockRect
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DSurface8_LockRect
+HRESULT WINAPI XTL::EmuIDirect3DSurface8_LockRect
 (
     X_D3DResource      *pThis,
     D3DLOCKED_RECT     *pLockedRect,
@@ -2285,7 +2273,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DSurface8_LockRect
 // ******************************************************************
 // * func: EmuIDirect3DBaseTexture8_GetLevelCount
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DBaseTexture8_GetLevelCount
+HRESULT WINAPI XTL::EmuIDirect3DBaseTexture8_GetLevelCount
 (
     X_D3DBaseTexture   *pThis
 )
@@ -2319,7 +2307,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DBaseTexture8_GetLevelCount
 // ******************************************************************
 // * func: EmuIDirect3DTexture8_GetSurfaceLevel2
 // ******************************************************************
-xdirectx::X_D3DResource * WINAPI xdirectx::EmuIDirect3DTexture8_GetSurfaceLevel2
+XTL::X_D3DResource * WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel2
 (
     X_D3DTexture   *pThis,
     UINT            Level
@@ -2335,7 +2323,7 @@ xdirectx::X_D3DResource * WINAPI xdirectx::EmuIDirect3DTexture8_GetSurfaceLevel2
 // ******************************************************************
 // * func: EmuIDirect3DTexture8_LockRect
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DTexture8_LockRect
+HRESULT WINAPI XTL::EmuIDirect3DTexture8_LockRect
 (
     X_D3DTexture   *pThis,
     UINT            Level,
@@ -2388,7 +2376,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DTexture8_LockRect
 // ******************************************************************
 // * func: EmuIDirect3DTexture8_GetSurfaceLevel
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DTexture8_GetSurfaceLevel
+HRESULT WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel
 (
     X_D3DTexture       *pThis,
     UINT                Level,
@@ -2428,7 +2416,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DTexture8_GetSurfaceLevel
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateVertexBuffer
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_CreateVertexBuffer
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexBuffer
 (
     UINT                Length,
     DWORD               Usage,
@@ -2445,7 +2433,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_CreateVertexBuffer
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateVertexBuffer2
 // ******************************************************************
-xdirectx::X_D3DVertexBuffer* WINAPI xdirectx::EmuIDirect3DDevice8_CreateVertexBuffer2
+XTL::X_D3DVertexBuffer* WINAPI XTL::EmuIDirect3DDevice8_CreateVertexBuffer2
 (
     UINT Length
 )
@@ -2486,7 +2474,7 @@ xdirectx::X_D3DVertexBuffer* WINAPI xdirectx::EmuIDirect3DDevice8_CreateVertexBu
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
 (
     DWORD Stage,
     DWORD Value
@@ -2521,7 +2509,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_NormalizeNormals
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_NormalizeNormals
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_NormalizeNormals
 (
     DWORD Value
 )
@@ -2551,7 +2539,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_NormalizeNormals
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_TextureFactor
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_TextureFactor
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_TextureFactor
 (
     DWORD Value
 )
@@ -2581,7 +2569,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_TextureFactor
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_ZBias
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_ZBias
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_ZBias
 (
     DWORD Value
 )
@@ -2611,7 +2599,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_ZBias
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias
 (
     DWORD Value
 )
@@ -2644,7 +2632,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_FillMode
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_FillMode
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_FillMode
 (
     DWORD Value
 )
@@ -2674,7 +2662,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_FillMode
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_FogColor
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_FogColor
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_FogColor
 (
     DWORD Value
 )
@@ -2704,7 +2692,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_FogColor
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable
 (
     DWORD Value
 )
@@ -2734,7 +2722,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_Simple
 // ******************************************************************
-VOID __fastcall xdirectx::EmuIDirect3DDevice8_SetRenderState_Simple
+VOID __fastcall XTL::EmuIDirect3DDevice8_SetRenderState_Simple
 (
     DWORD Method,
     DWORD Value
@@ -2822,7 +2810,7 @@ VOID __fastcall xdirectx::EmuIDirect3DDevice8_SetRenderState_Simple
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_CullMode
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_CullMode
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_CullMode
 (
     DWORD Value
 )
@@ -2871,7 +2859,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_CullMode
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_ZEnable
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_ZEnable
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_ZEnable
 (
     DWORD Value
 )
@@ -2901,7 +2889,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_ZEnable
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_StencilEnable
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_StencilEnable
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_StencilEnable
 (
     DWORD Value
 )
@@ -2931,7 +2919,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_StencilEnable
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias
 (
     DWORD Value
 )
@@ -2961,7 +2949,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTransform
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetTransform
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetTransform
 (
     D3DTRANSFORMSTATETYPE State,
     CONST D3DMATRIX      *pMatrix
@@ -2995,7 +2983,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetTransform
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetTransform
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3DDevice8_GetTransform
+VOID WINAPI XTL::EmuIDirect3DDevice8_GetTransform
 (
     D3DTRANSFORMSTATETYPE State,
     D3DMATRIX            *pMatrix
@@ -3029,7 +3017,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_GetTransform
 // ******************************************************************
 // * func: EmuIDirect3DVertexBuffer8_Lock
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3DVertexBuffer8_Lock
+VOID WINAPI XTL::EmuIDirect3DVertexBuffer8_Lock
 (
     X_D3DVertexBuffer  *ppVertexBuffer,
     UINT                OffsetToLock,
@@ -3069,7 +3057,7 @@ VOID WINAPI xdirectx::EmuIDirect3DVertexBuffer8_Lock
 // ******************************************************************
 // * func: EmuIDirect3DVertexBuffer8_Lock2
 // ******************************************************************
-BYTE* WINAPI xdirectx::EmuIDirect3DVertexBuffer8_Lock2
+BYTE* WINAPI XTL::EmuIDirect3DVertexBuffer8_Lock2
 (
     X_D3DVertexBuffer  *ppVertexBuffer,
     DWORD               Flags
@@ -3105,7 +3093,7 @@ BYTE* WINAPI xdirectx::EmuIDirect3DVertexBuffer8_Lock2
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetStreamSource
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_SetStreamSource
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetStreamSource
 (
     UINT                StreamNumber,
     X_D3DVertexBuffer  *pStreamData,
@@ -3143,7 +3131,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_SetStreamSource
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexShader
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_SetVertexShader
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShader
 (
     DWORD Handle
 )
@@ -3175,54 +3163,54 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_SetVertexShader
 // ******************************************************************
 static void EmuUpdateDeferredStates()
 {
-    using namespace xdirectx;
+    using namespace XTL;
 
     // Certain D3DRS values need to be checked on each Draw[Indexed]Vertices
-    if(xdirectx::EmuD3DDeferredRenderState != 0)
+    if(XTL::EmuD3DDeferredRenderState != 0)
     {
-        if(xdirectx::EmuD3DDeferredRenderState[0] != X_D3DRS_UNK)
-            g_pD3DDevice8->SetRenderState(D3DRS_FOGENABLE,             xdirectx::EmuD3DDeferredRenderState[0]);
+        if(XTL::EmuD3DDeferredRenderState[0] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_FOGENABLE,             XTL::EmuD3DDeferredRenderState[0]);
 
-        if(xdirectx::EmuD3DDeferredRenderState[1] != X_D3DRS_UNK)
-            g_pD3DDevice8->SetRenderState(D3DRS_FOGTABLEMODE,          xdirectx::EmuD3DDeferredRenderState[1]);
+        if(XTL::EmuD3DDeferredRenderState[1] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_FOGTABLEMODE,          XTL::EmuD3DDeferredRenderState[1]);
 
-        if(xdirectx::EmuD3DDeferredRenderState[10] != X_D3DRS_UNK)
-            g_pD3DDevice8->SetRenderState(D3DRS_LIGHTING,              xdirectx::EmuD3DDeferredRenderState[10]);
+        if(XTL::EmuD3DDeferredRenderState[10] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_LIGHTING,              XTL::EmuD3DDeferredRenderState[10]);
 
-        if(xdirectx::EmuD3DDeferredRenderState[11] != X_D3DRS_UNK)
-            g_pD3DDevice8->SetRenderState(D3DRS_SPECULARENABLE,        xdirectx::EmuD3DDeferredRenderState[11]);
+        if(XTL::EmuD3DDeferredRenderState[11] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_SPECULARENABLE,        XTL::EmuD3DDeferredRenderState[11]);
 
-        if(xdirectx::EmuD3DDeferredRenderState[20] != X_D3DRS_UNK)
-            g_pD3DDevice8->SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, xdirectx::EmuD3DDeferredRenderState[20]);
+        if(XTL::EmuD3DDeferredRenderState[20] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, XTL::EmuD3DDeferredRenderState[20]);
 
-        if(xdirectx::EmuD3DDeferredRenderState[23] != X_D3DRS_UNK)
-            g_pD3DDevice8->SetRenderState(D3DRS_AMBIENT,               xdirectx::EmuD3DDeferredRenderState[23]);
+        if(XTL::EmuD3DDeferredRenderState[23] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_AMBIENT,               XTL::EmuD3DDeferredRenderState[23]);
 
-        if(xdirectx::EmuD3DDeferredRenderState[24] != X_D3DRS_UNK)
-            g_pD3DDevice8->SetRenderState(D3DRS_POINTSIZE,             xdirectx::EmuD3DDeferredRenderState[24]);
+        if(XTL::EmuD3DDeferredRenderState[24] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSIZE,             XTL::EmuD3DDeferredRenderState[24]);
                                                                        
-        if(xdirectx::EmuD3DDeferredRenderState[25] != X_D3DRS_UNK)        
-            g_pD3DDevice8->SetRenderState(D3DRS_POINTSIZE_MIN,         xdirectx::EmuD3DDeferredRenderState[25]);
+        if(XTL::EmuD3DDeferredRenderState[25] != X_D3DRS_UNK)        
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSIZE_MIN,         XTL::EmuD3DDeferredRenderState[25]);
                                                                        
-        if(xdirectx::EmuD3DDeferredRenderState[26] != X_D3DRS_UNK)        
-            g_pD3DDevice8->SetRenderState(D3DRS_POINTSPRITEENABLE,     xdirectx::EmuD3DDeferredRenderState[26]);
+        if(XTL::EmuD3DDeferredRenderState[26] != X_D3DRS_UNK)        
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSPRITEENABLE,     XTL::EmuD3DDeferredRenderState[26]);
 
-        if(xdirectx::EmuD3DDeferredRenderState[27] != X_D3DRS_UNK)        
-            g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALEENABLE,      xdirectx::EmuD3DDeferredRenderState[27]);
+        if(XTL::EmuD3DDeferredRenderState[27] != X_D3DRS_UNK)        
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALEENABLE,      XTL::EmuD3DDeferredRenderState[27]);
 
-        if(xdirectx::EmuD3DDeferredRenderState[28] != X_D3DRS_UNK)
-            g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALE_A,          xdirectx::EmuD3DDeferredRenderState[28]);
+        if(XTL::EmuD3DDeferredRenderState[28] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALE_A,          XTL::EmuD3DDeferredRenderState[28]);
 
-        if(xdirectx::EmuD3DDeferredRenderState[29] != X_D3DRS_UNK)
-            g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALE_B,          xdirectx::EmuD3DDeferredRenderState[29]);
+        if(XTL::EmuD3DDeferredRenderState[29] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALE_B,          XTL::EmuD3DDeferredRenderState[29]);
 
-        if(xdirectx::EmuD3DDeferredRenderState[30] != X_D3DRS_UNK)
-            g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALE_C,          xdirectx::EmuD3DDeferredRenderState[30]);
+        if(XTL::EmuD3DDeferredRenderState[30] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALE_C,          XTL::EmuD3DDeferredRenderState[30]);
 
         /** To check for unhandled RenderStates
         for(int v=0;v<117-82;v++)
         {
-            if(xdirectx::EmuD3DDeferredRenderState[v] != X_D3DRS_UNK)
+            if(XTL::EmuD3DDeferredRenderState[v] != X_D3DRS_UNK)
             {
                 if(v != 0  && v != 1  && v != 10 && v != 11 && v != 20 && v != 23
                 && v != 24 && v != 25 && v != 26 && v != 27 && v != 28 && v != 29
@@ -3234,11 +3222,11 @@ static void EmuUpdateDeferredStates()
     }
 
     // Certain D3DTS values need to be checked on each Draw[Indexed]Vertices
-    if(xdirectx::EmuD3DDeferredTextureState != 0)
+    if(EmuD3DDeferredTextureState != 0)
     {
         for(int v=0;v<4;v++)
         {
-            DWORD *pCur = &xdirectx::EmuD3DDeferredTextureState[v*32];
+            ::DWORD *pCur = &EmuD3DDeferredTextureState[v*32];
 
             if(pCur[0] != X_D3DTSS_UNK)
             {
@@ -3375,15 +3363,13 @@ static void EmuUpdateDeferredStates()
 // ******************************************************************
 // * func: EmuQuadHackA
 // ******************************************************************
-uint32 EmuQuadHackA(uint32 PrimitiveCount, xdirectx::IDirect3DVertexBuffer8 *&pOrigVertexBuffer8, xdirectx::IDirect3DVertexBuffer8 *&pHackVertexBuffer8)
+uint32 EmuQuadHackA(uint32 PrimitiveCount, XTL::IDirect3DVertexBuffer8 *&pOrigVertexBuffer8, XTL::IDirect3DVertexBuffer8 *&pHackVertexBuffer8)
 {
-    using namespace xdirectx;
-
     UINT nStride = 0;
 
     g_pD3DDevice8->GetStreamSource(0, &pOrigVertexBuffer8, &nStride);
 
-    g_pD3DDevice8->CreateVertexBuffer(PrimitiveCount*nStride*6, 0, 0, D3DPOOL_DEFAULT, &pHackVertexBuffer8);
+    g_pD3DDevice8->CreateVertexBuffer(PrimitiveCount*nStride*6, 0, 0, XTL::D3DPOOL_DEFAULT, &pHackVertexBuffer8);
 
     BOOL bPatch = FALSE;
 
@@ -3438,7 +3424,7 @@ uint32 EmuQuadHackA(uint32 PrimitiveCount, xdirectx::IDirect3DVertexBuffer8 *&pO
 // ******************************************************************
 // * func: EmuQuadHackB
 // ******************************************************************
-VOID EmuQuadHackB(uint32 nStride, xdirectx::IDirect3DVertexBuffer8 *&pOrigVertexBuffer8, xdirectx::IDirect3DVertexBuffer8 *&pHackVertexBuffer8)
+VOID EmuQuadHackB(uint32 nStride, XTL::IDirect3DVertexBuffer8 *&pOrigVertexBuffer8, XTL::IDirect3DVertexBuffer8 *&pHackVertexBuffer8)
 {
     if(pOrigVertexBuffer8 != 0 && pHackVertexBuffer8 != 0)
         g_pD3DDevice8->SetStreamSource(0, pOrigVertexBuffer8, nStride);
@@ -3452,7 +3438,7 @@ VOID EmuQuadHackB(uint32 nStride, xdirectx::IDirect3DVertexBuffer8 *&pOrigVertex
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_DrawVertices
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3DDevice8_DrawVertices
+VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVertices
 (
     X_D3DPRIMITIVETYPE PrimitiveType,
     UINT               StartVertex,
@@ -3515,7 +3501,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_DrawVertices
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_DrawVerticesUP
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3DDevice8_DrawVerticesUP
+VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVerticesUP
 (
     X_D3DPRIMITIVETYPE  PrimitiveType,
     UINT                VertexCount,
@@ -3583,7 +3569,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_DrawVerticesUP
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_DrawIndexedVertices
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3DDevice8_DrawIndexedVertices
+VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
 (
     X_D3DPRIMITIVETYPE  PrimitiveType,
     UINT                VertexCount,
@@ -3644,7 +3630,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_DrawIndexedVertices
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetLight
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_SetLight
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetLight
 (
     DWORD            Index,
     CONST D3DLIGHT8 *pLight
@@ -3676,7 +3662,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_SetLight
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetMaterial
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_SetMaterial
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetMaterial
 (
     CONST D3DMATERIAL8 *pMaterial
 )
@@ -3706,7 +3692,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_SetMaterial
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_LightEnable
 // ******************************************************************
-HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_LightEnable
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_LightEnable
 (
     DWORD            Index,
     BOOL             bEnable
