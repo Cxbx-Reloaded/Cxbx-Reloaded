@@ -189,6 +189,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4361.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4432.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.h
 # End Source File
 # Begin Source File
@@ -330,236 +334,97 @@ SOURCE=.\Resource\CxbxDll.rc
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.3925.inl
-
-!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4034.inl
-
-!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4134.inl
-
-!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4361.inl
-
-!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4432.inl
-
-!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.inl
-
-!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.3936.inl
-
-!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.4361.inl
-
-!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.4627.inl
-
-!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.inl
-
-!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4034.inl
-
-!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4134.inl
-
-!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4361.inl
-
-!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
-
 # PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
 
-!ENDIF 
-
+SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4432.inl
+# PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.inl
-
-!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\XG.1.0.4361.inl
-
-!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\XG.1.0.4627.inl
-
-!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\XNet.1.0.3911.inl
-
-!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\XOnline.1.0.4361.inl
-
-!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # End Group
 # Begin Source File

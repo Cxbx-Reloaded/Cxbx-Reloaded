@@ -1732,7 +1732,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetDepthStencilSurface
     *ppZStencilSurface = g_pCachedZStencilSurface;
 
     #ifdef _DEBUG_TRACE
-    printf("EmuD3D8 (0x%X): DepthStencilSurface := 0x%.08X\n", pSurface8);
+    printf("EmuD3D8 (0x%X): DepthStencilSurface := 0x%.08X\n", GetCurrentThreadId(), pSurface8);
     #endif
 
     EmuSwapFS();   // Xbox FS
@@ -4862,6 +4862,34 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
         EmuCleanup("EmuIDirect3DDevice8_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)", Value);
 
     g_pD3DDevice8->SetTextureStageState(Stage, D3DTSS_TEXCOORDINDEX, Value);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetTextureState_BackFillMode
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetTextureState_BackFillMode
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetTextureState_BackFillMode\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+    EmuWarning("BackFillMode is not supported!");
 
     EmuSwapFS();   // XBox FS
 

@@ -1040,6 +1040,14 @@ VOID WINAPI EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetTextureState_BackFillMode
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetTextureState_BackFillMode
+(
+    DWORD Value
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTextureState_BorderColor
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_SetTextureState_BorderColor

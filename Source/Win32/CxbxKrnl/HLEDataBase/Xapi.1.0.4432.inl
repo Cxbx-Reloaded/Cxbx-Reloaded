@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->Xapi.1.0.4627.cpp
+// *   Cxbx->Win32->CxbxKrnl->Xapi.1.0.4432.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -35,7 +35,7 @@
 // ******************************************************************
 // * RtlFreeHeap
 // ******************************************************************
-SOOVPA<9> RtlFreeHeap_1_0_4627 =
+SOOVPA<9> RtlFreeHeap_1_0_4432 =
 {
     0,  // Large == 0
     9,  // Count == 9
@@ -44,29 +44,92 @@ SOOVPA<9> RtlFreeHeap_1_0_4627 =
     0,  // XRef Not Used
 
     {
-        // RtlFreeHeap+0x1F : test edi, edi
+        // RtlFreeHeap+0x1F : test ecx, ecx
         { 0x1F, 0x85 }, // (Offset,Value)-Pair #1
-        { 0x20, 0xFF }, // (Offset,Value)-Pair #2
+        { 0x20, 0xC9 }, // (Offset,Value)-Pair #2
 
         // RtlFreeHeap+0x23 : mov al, 1
         { 0x23, 0xB0 }, // (Offset,Value)-Pair #3
         { 0x24, 0x01 }, // (Offset,Value)-Pair #4
 
-        // RtlFreeHeap+0x35 : mov eax, fs:[0x20]
-        { 0x35, 0x64 }, // (Offset,Value)-Pair #5
-        { 0x36, 0xA1 }, // (Offset,Value)-Pair #6
-        { 0x37, 0x20 }, // (Offset,Value)-Pair #7
+        // RtlFreeHeap+0x4B : test byte ptr [edi+5], 8
+        { 0x4B, 0xF6 }, // (Offset,Value)-Pair #5
+        { 0x4C, 0x47 }, // (Offset,Value)-Pair #6
+        { 0x4D, 0x05 }, // (Offset,Value)-Pair #7
 
-        // RtlFreeHeap+0x49 : push 0x0B
-        { 0x49, 0x6A }, // (Offset,Value)-Pair #8
-        { 0x4A, 0x0B }, // (Offset,Value)-Pair #9
+        // RtlFreeHeap+0x6E : cmp ecx, 0x80
+        { 0x6E, 0x81 }, // (Offset,Value)-Pair #8
+        { 0x6F, 0xF9 }, // (Offset,Value)-Pair #9
     }
 };
 
 // ******************************************************************
-// * XAPI_1_0_4627
+// * RtlSizeHeap
 // ******************************************************************
-OOVPATable XAPI_1_0_4627[] =
+SOOVPA<11> RtlSizeHeap_1_0_4432 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // RtlSizeHeap+0x04 : mov al, [ecx-0x0B]
+        { 0x04, 0x8A }, // (Offset,Value)-Pair #1
+        { 0x05, 0x41 }, // (Offset,Value)-Pair #2
+        { 0x06, 0xF5 }, // (Offset,Value)-Pair #3
+
+        // RtlSizeHeap+0x07 : test al, 1
+        { 0x07, 0xA8 }, // (Offset,Value)-Pair #4
+        { 0x08, 0x01 }, // (Offset,Value)-Pair #5
+
+        // RtlSizeHeap+0x14 : movzx edx, word ptr [ecx-0x10]
+        { 0x14, 0x0F }, // (Offset,Value)-Pair #6
+        { 0x15, 0xB7 }, // (Offset,Value)-Pair #7
+        { 0x16, 0x51 }, // (Offset,Value)-Pair #8
+        { 0x17, 0xF0 }, // (Offset,Value)-Pair #9
+
+        // RtlSizeHeap+0x2A : sub eax, ecx
+        { 0x2A, 0x2B }, // (Offset,Value)-Pair #10
+        { 0x2B, 0xC1 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
+// * XMountUtilityDrive
+// ******************************************************************
+SOOVPA<8> XMountUtilityDrive_1_0_4432 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // XapiUnknownBad1+0x51 : push 0x0104
+        { 0x51, 0x68 }, // (Offset,Value)-Pair #1
+        { 0x52, 0x04 }, // (Offset,Value)-Pair #2
+        { 0x53, 0x01 }, // (Offset,Value)-Pair #3
+
+        // XapiUnknownBad1+0xB3 : jnz +0x1A
+        { 0xB3, 0x75 }, // (Offset,Value)-Pair #4
+        { 0xB4, 0x1A }, // (Offset,Value)-Pair #5
+
+        // XapiUnknownBad1+0xE8 : setnl al
+        { 0xE8, 0x0F }, // (Offset,Value)-Pair #6
+        { 0xE9, 0x9D }, // (Offset,Value)-Pair #7
+        { 0xEA, 0xC0 }, // (Offset,Value)-Pair #8
+
+        // TODO: Finish signature, toss out function call basically
+    }
+};
+
+// ******************************************************************
+// * XAPI_1_0_4432
+// ******************************************************************
+OOVPATable XAPI_1_0_4432[] =
 {
     // RtlCreateHeap (* unchanged since 1.0.4361 *) (* OR FARTHER *)
     {
@@ -90,7 +153,7 @@ OOVPATable XAPI_1_0_4627[] =
     },
     // RtlFreeHeap
     {
-        (OOVPA*)&RtlFreeHeap_1_0_4627,
+        (OOVPA*)&RtlFreeHeap_1_0_4432,
 
         XTL::EmuRtlFreeHeap,
 
@@ -98,7 +161,7 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuRtlFreeHeap"
         #endif
     },
-    // RtlSizeHeap (* unchanged since 4432 *)
+    // RtlSizeHeap
     {
         (OOVPA*)&RtlSizeHeap_1_0_4432,
 
@@ -108,7 +171,7 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuRtlSizeHeap"
         #endif
     },
-    // XMountUtilityDrive (* unchanged since 4432 *)
+    // XMountUtilityDrive
     {
         (OOVPA*)&XMountUtilityDrive_1_0_4432,
 
@@ -210,53 +273,9 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXapiBootDash"
         #endif
     },
-    // +s
-    /* not necessary?
-    // XCalculateSignatureBeginEx
-    {
-        (OOVPA*)&XCalculateSignatureBeginEx_1_0_4627,
-
-        XTL::EmuXCalculateSignatureBeginEx,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXCalculateSignatureBeginEx (XREF&FUNC)"
-        #endif
-    },
-    // XCalculateSignatureBegin
-    {
-        (OOVPA*)&XCalculateSignatureBegin_1_0_4627,
-
-        XTL::EmuXCalculateSignatureBegin,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXCalculateSignatureBegin"
-        #endif
-    },
-    // XCalculateSignatureUpdate
-    {
-        (OOVPA*)&XCalculateSignatureUpdate_1_0_4627,
-
-        XTL::EmuXCalculateSignatureUpdate,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXCalculateSignatureUpdate"
-        #endif
-    },
-    // XCalculateSignatureEnd
-    {
-        (OOVPA*)&XCalculateSignatureEnd_1_0_4627,
-
-        XTL::EmuXCalculateSignatureEnd,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXCalculateSignatureEnd"
-        #endif
-    },
-    //*/
-    // s+
 };
 
 // ******************************************************************
-// * XAPI_1_0_4627_SIZE
+// * XAPI_1_0_4432_SIZE
 // ******************************************************************
-uint32 XAPI_1_0_4627_SIZE = sizeof(XAPI_1_0_4627);
+uint32 XAPI_1_0_4432_SIZE = sizeof(XAPI_1_0_4432);

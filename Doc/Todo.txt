@@ -1,5 +1,12 @@
 Cxbx Todo (* denotes high priority, + denotes medium priority)
 
+HLE :
+
+  * Direct3D_SetPushBufferSize for Antz Extreme Racing (4361). Do this
+    when Xiggen is stabilized! For now, safe to ignore it.
+
+ETC :
+
   * Use SetAllParameters to reverse engineer 3911 DSound functions
 
   * Stella has a memory leak in the game's list screen..
