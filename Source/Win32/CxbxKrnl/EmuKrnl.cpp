@@ -1707,6 +1707,40 @@ XBSYSAPI EXPORTNUM(219) NTSTATUS NTAPI xboxkrnl::NtReadFile
 }
 
 // ******************************************************************
+// * 0x00E0 - NtResumeThread
+// ******************************************************************
+XBSYSAPI EXPORTNUM(224) NTSTATUS NTAPI xboxkrnl::NtResumeThread
+(
+    IN  HANDLE ThreadHandle,
+    OUT PULONG PreviousSuspendCount
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): NtResumeThread\n"
+               "(\n"
+               "   ThreadHandle         : 0x%.08X\n"
+               "   PreviousSuspendCount : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), ThreadHandle, PreviousSuspendCount);
+    }
+    #endif
+
+    EmuCleanup("Todo: Implement NtDll::NtResumeThread");
+//    NTSTATUS ret = NtDll::NtResumeThread(ThreadHandle, PreviousSuspendCount);
+
+    EmuSwapFS();   // Xbox FS
+
+//    return ret;
+    return STATUS_SUCCESS;
+}
+
+// ******************************************************************
 // * 0x00E1 - NtSetEvent
 // ******************************************************************
 XBSYSAPI EXPORTNUM(225) NTSTATUS NTAPI xboxkrnl::NtSetEvent
