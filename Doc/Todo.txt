@@ -1,5 +1,7 @@
 Cxbx Todo (* denotes high priority, + denotes medium priority)
 
+  * Stella has a memory leak in the game's list screen..
+
   * SetPushBufferSize -> 0x184CC0 (Halo)..too small to detect?
 
   * DirectSoundUseFullHRTF -> 0x192D8C (Halo)..too small to detect?

@@ -212,9 +212,6 @@ UINT XTL::EmuFixupVerticesA
     BYTE *pOrigVertexData = 0;
     BYTE *pHackVertexData = 0;
 
-    if(ppNewVertexStreamZeroData != 0)
-        *ppNewVertexStreamZeroData = pVertexStreamZeroData;
-
     if(pVertexStreamZeroData == 0)
     {
         g_pD3DDevice8->GetStreamSource(0, &pOrigVertexBuffer8, &uiStride);

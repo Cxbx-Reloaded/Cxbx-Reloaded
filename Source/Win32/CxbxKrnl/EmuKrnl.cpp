@@ -1197,7 +1197,7 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
 
     #ifdef _DEBUG_TRACE
     if(FAILED(ret))
-        printf("EmuKrnl (0x%X): NtCreateFile Failed! (0x%.08X)", GetCurrentThreadId(), ret);
+        printf("EmuKrnl (0x%X): NtCreateFile Failed! (0x%.08X)\n", GetCurrentThreadId(), ret);
     else
         printf("EmuKrnl (0x%X): NtCreateFile = 0x%.08X\n", GetCurrentThreadId(), *FileHandle);
     #endif
@@ -2080,11 +2080,13 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
     // debug trace
     #ifdef _DEBUG_TRACE
     {
+        /** sorta pointless
         printf("EmuKrnl (0x%X): RtlEnterCriticalSection\n"
                "(\n"
                "   CriticalSection     : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), CriticalSection);
+        //*/
     }
     #endif
 
@@ -2175,11 +2177,13 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
     // debug trace
     #ifdef _DEBUG_TRACE
     {
+        /* sorta pointless
         printf("EmuKrnl (0x%X): RtlLeaveCriticalSection\n"
                "(\n"
                "   CriticalSection     : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), CriticalSection);
+        **/
     }
     #endif
 

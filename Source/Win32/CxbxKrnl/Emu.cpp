@@ -612,15 +612,15 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
         {
             if(e->ContextRecord->Eip == 0x3394C)
             {
-                if(e->ContextRecord->Eax == 0x803BD800 && e->ContextRecord->Ecx == 0x803BD800)
+                if(e->ContextRecord->Ecx == 0x803BD800)
                 {
-                    uint32 fix = g_HaloHack[1] + (0x803BD800 - 0x803A6000);
+                    uint32 fix = g_HaloHack[1] + (e->ContextRecord->Eax - 0x803A6000);
 
                     e->ContextRecord->Eax = e->ContextRecord->Ecx = fix;
 
                     *(uint32*)e->ContextRecord->Esp = fix;
 
-                    ((XTL::X_D3DResource*)fix)->Data = g_HaloHack[1] + (0x803BD9A0 - 0x803A6000);
+                    ((XTL::X_D3DResource*)fix)->Data = g_HaloHack[1] + (((XTL::X_D3DResource*)fix)->Data - 0x803A6000);
 
                     return EXCEPTION_CONTINUE_EXECUTION;
                 }
