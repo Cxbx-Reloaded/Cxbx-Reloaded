@@ -1003,6 +1003,9 @@ XBSYSAPI EXPORTNUM(186) NTSTATUS NTAPI xboxkrnl::NtClearEvent
 
     NTSTATUS ret = NtDll::NtClearEvent(EventHandle);
 
+    if(FAILED(ret))
+        EmuWarning("NtClearEvent Failed!");
+
     EmuSwapFS();   // Xbox FS
 
     return ret;
@@ -1099,12 +1102,15 @@ XBSYSAPI EXPORTNUM(189) NTSTATUS NTAPI xboxkrnl::NtCreateEvent
     // ******************************************************************
     if(szBuffer != 0)
     {
-        mbstowcs(wszObjectName, szBuffer, 160);
+        mbstowcs(wszObjectName, "\\??\\", 4);
+        mbstowcs(wszObjectName+4, szBuffer, 160);
 
         NtDll::RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
 
         InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
     }
+
+    NtObjAttr.RootDirectory = 0;
 
     // ******************************************************************
     // * Redirect to NtCreateEvent
@@ -1297,6 +1303,8 @@ XBSYSAPI EXPORTNUM(192) NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 {
     EmuSwapFS();   // Win2k/XP FS
 
+    char *szBuffer = (ObjectAttributes != 0) ? ObjectAttributes->ObjectName->Buffer : 0;
+
     // ******************************************************************
     // * debug trace
     // ******************************************************************
@@ -1305,14 +1313,12 @@ XBSYSAPI EXPORTNUM(192) NTSTATUS NTAPI xboxkrnl::NtCreateMutant
         printf("EmuKrnl (0x%X): NtCreateMutant\n"
                "(\n"
                "   MutantHandle        : 0x%.08X\n"
-               "   ObjectAttributes    : 0x%.08X\n"
+               "   ObjectAttributes    : 0x%.08X (\"%s\")\n"
                "   InitialOwner        : 0x%.08X\n"
                ");\n",
-               GetCurrentThreadId(), MutantHandle, ObjectAttributes, InitialOwner);
+               GetCurrentThreadId(), MutantHandle, ObjectAttributes, szBuffer, InitialOwner);
     }
     #endif
-
-    char *szBuffer = (ObjectAttributes != 0) ? ObjectAttributes->ObjectName->Buffer : 0;
 
     wchar_t wszObjectName[160];
 
@@ -1334,10 +1340,17 @@ XBSYSAPI EXPORTNUM(192) NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 
     NtObjAttr.RootDirectory = 0;
 
+    // ******************************************************************
+    // * Redirect to NtCreateMutant
+    // ******************************************************************
     NTSTATUS ret = NtDll::NtCreateMutant(MutantHandle, MUTANT_ALL_ACCESS, (szBuffer != 0) ? &NtObjAttr : 0, InitialOwner);
 
     if(FAILED(ret))
         EmuWarning("NtCreateMutant Failed!");
+
+    #ifdef _DEBUG_TRACE
+    printf("EmuKrnl (0x%X): NtCreateMutant MutantHandle = 0x%.08X\n", GetCurrentThreadId(), *MutantHandle);
+    #endif
 
     EmuSwapFS();   // Xbox FS
 
