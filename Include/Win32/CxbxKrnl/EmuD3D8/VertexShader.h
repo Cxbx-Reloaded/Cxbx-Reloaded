@@ -34,7 +34,7 @@
 #ifndef VERTEXSHADER_H
 #define VERTEXSHADER_H
 
-#define _DEBUG_VSH
+//#define _DEBUG_VSH
 
 // nv2a microcode header
 typedef struct

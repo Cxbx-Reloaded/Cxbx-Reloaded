@@ -34,6 +34,14 @@
 #ifndef EMUXG_H
 #define EMUXG_H
 
+typedef struct _XGPOINT3D
+{
+    DWORD u;
+    DWORD v;
+    DWORD w;
+}
+XGPOINT3D;
+
 // ******************************************************************
 // * func: EmuXGIsSwizzledFormat
 // ******************************************************************
@@ -55,6 +63,23 @@ VOID WINAPI EmuXGSwizzleRect
     DWORD         Height,
     CONST LPPOINT pPoint,
     DWORD         BytesPerPixel
+);
+
+// ******************************************************************
+// * func: EmuXGSwizzleBox
+// ******************************************************************
+VOID WINAPI EmuXGSwizzleBox
+(
+    LPCVOID          pSource, 
+    DWORD            RowPitch,
+    DWORD            SlicePitch,
+    CONST D3DBOX    *pBox,
+    LPVOID           pDest,
+    DWORD            Width,
+    DWORD            Height,
+    DWORD            Depth,
+    CONST XGPOINT3D *pPoint,
+    DWORD            BytesPerPixel
 );
 
 // ******************************************************************

@@ -33,6 +33,38 @@
 // ******************************************************************
 
 // ******************************************************************
+// * XGSwizzleBox
+// ******************************************************************
+SOOVPA<10> XGSwizzleBox_1_0_4627 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // XGSwizzleBox+0x60 : sub ecx, [eax]
+        { 0x60, 0x2B }, // (Offset,Value)-Pair #1
+        { 0x61, 0x08 }, // (Offset,Value)-Pair #2
+
+        // XGSwizzleBox+0x8E : lea ecx, [ebp+0xD8]
+        { 0x8E, 0x8D }, // (Offset,Value)-Pair #3
+        { 0x8F, 0x4D }, // (Offset,Value)-Pair #4
+        { 0x90, 0xD8 }, // (Offset,Value)-Pair #5
+
+        // XGSwizzleBox+0xD5 : shl eax, 2
+        { 0xD5, 0xC1 }, // (Offset,Value)-Pair #6
+        { 0xD6, 0xE0 }, // (Offset,Value)-Pair #7
+        { 0xD7, 0x02 }, // (Offset,Value)-Pair #8
+
+        // XGSwizzleBox+0xE2 : test ebx, ebx
+        { 0xE2, 0x85 }, // (Offset,Value)-Pair #9
+        { 0xE3, 0xDB }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
 // * XG_1_0_4627
 // ******************************************************************
 OOVPATable XG_1_0_4627[] =
@@ -55,6 +87,16 @@ OOVPATable XG_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXGSwizzleRect"
+        #endif
+    },
+    // XGSwizzleBox
+    {
+        (OOVPA*)&XGSwizzleBox_1_0_4627,
+
+        XTL::EmuXGSwizzleBox,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXGSwizzleBox"
         #endif
     },
 };

@@ -324,7 +324,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 
     // create the window
     {
-        DWORD dwStyle = g_XBVideo.GetFullscreen() ? WS_OVERLAPPEDWINDOW : WS_CHILD;
+        DWORD dwStyle = (g_XBVideo.GetFullscreen() || (g_hEmuParent == 0))? WS_OVERLAPPEDWINDOW : WS_CHILD;
 
         int nTitleHeight  = GetSystemMetrics(SM_CYCAPTION);
         int nBorderWidth  = GetSystemMetrics(SM_CXSIZEFRAME);
@@ -358,10 +358,10 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
         );
     }
 
-    ShowWindow(g_hEmuWindow, g_XBVideo.GetFullscreen() ? SW_SHOWDEFAULT : SW_SHOWMAXIMIZED);
+    ShowWindow(g_hEmuWindow, (g_XBVideo.GetFullscreen() || (g_hEmuParent == 0) ) ? SW_SHOWDEFAULT : SW_SHOWMAXIMIZED);
     UpdateWindow(g_hEmuWindow);
 
-    if(!g_XBVideo.GetFullscreen())
+    if(!g_XBVideo.GetFullscreen() && (g_hEmuParent != NULL))
     {
         SetFocus(g_hEmuParent);
     }
@@ -409,19 +409,44 @@ void ToggleFauxFullscreen(HWND hWnd)
 
     static bool bIsNormal = true;
 
+    static LONG lRestore = 0, lRestoreEx = 0;
+    static RECT lRect = {0};
+
     if(bIsNormal)
     {
-        SetParent(hWnd, NULL);
+        if(g_hEmuParent != NULL)
+        {
+            SetParent(hWnd, NULL);
+        }
+        else
+        {
+            lRestore = GetWindowLong(hWnd, GWL_STYLE);
+            lRestoreEx = GetWindowLong(hWnd, GWL_EXSTYLE);
+
+            GetWindowRect(hWnd, &lRect);
+        }
+
         SetWindowLong(hWnd, GWL_STYLE, WS_POPUP);
         SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
         ShowWindow(hWnd, SW_MAXIMIZE);
     }
     else
     {
-        SetParent(hWnd, g_hEmuParent);
-        SetWindowLong(hWnd, GWL_STYLE, WS_CHILD);
-        ShowWindow(hWnd, SW_MAXIMIZE);
-        SetFocus(g_hEmuParent);
+        if(g_hEmuParent != NULL)
+        {
+            SetParent(hWnd, g_hEmuParent);
+            SetWindowLong(hWnd, GWL_STYLE, WS_CHILD);
+            ShowWindow(hWnd, SW_MAXIMIZE);
+            SetFocus(g_hEmuParent);
+        }
+        else
+        {
+            SetWindowLong(hWnd, GWL_STYLE, lRestore);
+            SetWindowLong(hWnd, GWL_EXSTYLE, lRestoreEx);
+            ShowWindow(hWnd, SW_RESTORE);
+            SetWindowPos(hWnd, HWND_NOTOPMOST, lRect.left, lRect.top, lRect.right - lRect.left, lRect.bottom - lRect.top, 0);
+            SetFocus(hWnd);
+        }
     }
 
     bIsNormal = !bIsNormal;
@@ -819,6 +844,8 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
                 // update render target cache
                 g_pCachedRenderTarget = new XTL::X_D3DSurface();
+                g_pCachedRenderTarget->Common = 0;
+                g_pCachedRenderTarget->Data = X_D3DRESOURCE_DATA_FLAG_D3DREND;
                 g_pD3DDevice8->GetRenderTarget(&g_pCachedRenderTarget->EmuSurface8);
 
                 // update z-stencil surface cache
@@ -883,6 +910,10 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
 {
     // 0xEEEEEEEE and 0xFFFFFFFF are somehow set in Halo :(
     if(pResource->Lock != 0 && pResource->Lock != 0xEEEEEEEE && pResource->Lock != 0xFFFFFFFF)
+        return;
+
+    // Already "Registered" implicitly
+    if(pResource->Data == X_D3DRESOURCE_DATA_FLAG_D3DREND)
         return;
 
     int v=0;
@@ -1408,6 +1439,32 @@ VOID WINAPI XTL::EmuIDirect3D8_KickOffAndWaitForIdle()
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3D8_KickOffAndWaitForIdle()\n", GetCurrentThreadId());
+    }
+    #endif
+
+    // TODO: Actually do something here?
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3D8_KickOffAndWaitForIdle2
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3D8_KickOffAndWaitForIdle2(DWORD dwDummy1, DWORD dwDummy2)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3D8_KickOffAndWaitForIdle\n"
+               "(\n"
+               "   dwDummy1            : 0x%.08X\n"
+               "   dwDummy2            : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), dwDummy1, dwDummy2);
     }
     #endif
 
@@ -2004,7 +2061,7 @@ XTL::X_D3DSurface * WINAPI XTL::EmuIDirect3DDevice8_GetRenderTarget2()
     pSurface8->AddRef();
 
     #ifdef _DEBUG_TRACE
-    printf("EmuD3D8 (0x%X): RenderTarget := 0x%.08X\n", pSurface8);
+    printf("EmuD3D8 (0x%X): RenderTarget := 0x%.08X\n", GetCurrentThreadId(), pSurface8);
     #endif
 
     EmuSwapFS();   // Xbox FS
@@ -4112,11 +4169,18 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 {
                     if(bSwizzled)
                     {
-                        XTL::EmuXGUnswizzleRect
-                        (
-                            pSrc, dwWidth, dwHeight, dwDepth, LockedRect.pBits, 
-                            LockedRect.Pitch, iRect, iPoint, dwBPP
-                        );
+                        if((DWORD)pSrc == 0x80000000)
+                        {
+                            // TODO: Fix or handle this situation..?
+                        }
+                        else
+                        {
+                            XTL::EmuXGUnswizzleRect
+                            (
+                                pSrc, dwWidth, dwHeight, dwDepth, LockedRect.pBits, 
+                                LockedRect.Pitch, iRect, iPoint, dwBPP
+                            );
+                        }
                     }
                     else if(bCompressed)
                     {
@@ -4753,6 +4817,9 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel
         *ppSurfaceLevel = new X_D3DSurface();
 
         (*ppSurfaceLevel)->Data = 0xB00BBABE;
+        (*ppSurfaceLevel)->Common = 0;
+        (*ppSurfaceLevel)->Format = 0;
+        (*ppSurfaceLevel)->Size = 0;
 
         hRet = pTexture8->GetSurfaceLevel(Level, &((*ppSurfaceLevel)->EmuSurface8));
 
@@ -7048,6 +7115,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetRenderTarget
     if(pRenderTarget != 0)
     {
         EmuVerifyResourceIsRegistered(pRenderTarget);
+
         pPCRenderTarget = pRenderTarget->EmuSurface8;
     }
 

@@ -155,7 +155,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     g_pTLS       = pTLS;
     g_pTLSData   = pTLSData;
 	g_pXbeHeader = pXbeHeader;
-    g_hEmuParent = hwndParent;
+    g_hEmuParent = IsWindow(hwndParent) ? hwndParent : NULL;
 
     // For Unicode Conversions
 	setlocale(LC_ALL, "English");
@@ -563,7 +563,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         // _USE_XGMATH Disabled in mesh :[
         // halo : dword_0_2E2D18
         // halo : 1744F0 (bink)
-        _asm int 3
+        //_asm int 3
 
         Entry();
 
@@ -657,7 +657,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage, ...)
             freopen("nul", "w", stdout);
     }
 
-    SendMessage(g_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
+    if(g_hEmuParent != NULL)
+        SendMessage(g_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
     TerminateProcess(GetCurrentProcess(), 0);
 
@@ -723,10 +724,12 @@ extern "C" CXBXKRNL_API void NTAPI EmuSuspend()
     {
         char szBuffer[256];
 
-        GetWindowText(g_hEmuParent, szBuffer, 255 - 10);
+        HWND hWnd = (g_hEmuParent != NULL) ? g_hEmuParent : g_hEmuWindow;
+
+        GetWindowText(hWnd, szBuffer, 255 - 10);
 
         strcat(szBuffer, " (paused)");
-        SetWindowText(g_hEmuParent, szBuffer);
+        SetWindowText(hWnd, szBuffer);
     }
 
     g_bEmuSuspended = TRUE;
@@ -742,11 +745,13 @@ extern "C" CXBXKRNL_API void NTAPI EmuResume()
     {
         char szBuffer[256];
 
-        GetWindowText(g_hEmuParent, szBuffer, 255);
+        HWND hWnd = (g_hEmuParent != NULL) ? g_hEmuParent : g_hEmuWindow;
+
+        GetWindowText(hWnd, szBuffer, 255);
 
         szBuffer[strlen(szBuffer)-9] = '\0';
 
-        SetWindowText(g_hEmuParent, szBuffer);
+        SetWindowText(hWnd, szBuffer);
     }
 
     for(int v=0;v<MAXIMUM_XBOX_THREADS;v++)
@@ -905,7 +910,8 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
                 printf("EmuMain (0x%X): Aborting Emulation\n", GetCurrentThreadId());
                 fflush(stdout);
 
-                SendMessage(g_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
+                if(g_hEmuParent != NULL)
+                    SendMessage(g_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
                 ExitProcess(1);
             }
@@ -931,8 +937,9 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
             {
                 printf("EmuMain (0x%X): Aborting Emulation\n", GetCurrentThreadId());
                 fflush(stdout);
-                
-                SendMessage(g_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
+
+                if(g_hEmuParent != NULL)
+                    SendMessage(g_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
                 ExitProcess(1);
             }
@@ -1176,7 +1183,8 @@ int ExitException(LPEXCEPTION_POINTERS e)
         return EXCEPTION_CONTINUE_SEARCH;
     }
 
-    SendMessage(g_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
+    if(g_hEmuParent != NULL)
+        SendMessage(g_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
     ExitProcess(1);
 

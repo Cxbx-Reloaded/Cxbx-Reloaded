@@ -162,6 +162,11 @@ HRESULT WINAPI EmuIDirect3D8_EnumAdapterModes
 VOID WINAPI EmuIDirect3D8_KickOffAndWaitForIdle();
 
 // ******************************************************************
+// * func: EmuIDirect3D8_KickOffAndWaitForIdle
+// ******************************************************************
+VOID WINAPI EmuIDirect3D8_KickOffAndWaitForIdle2(DWORD dwDummy1, DWORD dwDummy2);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetGammaRamp
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_SetGammaRamp

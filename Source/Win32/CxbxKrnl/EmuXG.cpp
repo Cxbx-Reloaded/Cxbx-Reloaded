@@ -158,6 +158,62 @@ VOID WINAPI XTL::EmuXGSwizzleRect
 }
 
 // ******************************************************************
+// * func: EmuXGSwizzleBox
+// ******************************************************************
+VOID WINAPI XTL::EmuXGSwizzleBox
+(
+    LPCVOID          pSource, 
+    DWORD            RowPitch,
+    DWORD            SlicePitch,
+    CONST D3DBOX    *pBox,
+    LPVOID           pDest,
+    DWORD            Width,
+    DWORD            Height,
+    DWORD            Depth,
+    CONST XGPOINT3D *pPoint,
+    DWORD            BytesPerPixel
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuXGSwizzleBox\n"
+               "(\n"
+               "   pSource             : 0x%.08X\n"
+               "   RowPitch            : 0x%.08X\n"
+               "   SlicePitch          : 0x%.08X\n"
+               "   pBox                : 0x%.08X\n"
+               "   pDest               : 0x%.08X\n"
+               "   Width               : 0x%.08X\n"
+               "   Height              : 0x%.08X\n"
+               "   Depth               : 0x%.08X\n"
+               "   pPoint              : 0x%.08X\n"
+               "   BytesPerPixel       : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pSource, RowPitch, SlicePitch, pBox, pDest, Width, Height,
+               Depth, pPoint, BytesPerPixel);
+    }
+    #endif
+
+    if(pBox == NULL && pPoint == NULL && RowPitch == 0 && SlicePitch == 0)
+    {
+        memcpy(pDest, pSource, Width*Height*Depth*BytesPerPixel);
+    }
+    else
+    {
+        EmuCleanup("Temporarily unsupported swizzle (easy fix)");
+    }
+
+    EmuSwapFS();   // Xbox FS
+
+    return;
+}
+
+// ******************************************************************
 // * func: EmuXGUnswizzleRect
 // ******************************************************************
 VOID WINAPI XTL::EmuXGUnswizzleRect

@@ -165,7 +165,7 @@ uint08 *jpeg2bmp(uint08 *jpeg, uint32 jpegSize, uint32 &bmpSize)
     row_stride = cinfo.output_width * cinfo.output_components;
 
     // calculate bitmap size
-    bmpSize = row_stride*(cinfo.output_width*cinfo.output_height);
+    bmpSize = row_stride*cinfo.output_height;
 
     // allocate bitmap data
     buffer = (uint08*)malloc(bmpSize);

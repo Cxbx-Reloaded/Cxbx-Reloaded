@@ -185,6 +185,7 @@ struct X_D3DResource
 // special resource data flags
 #define X_D3DRESOURCE_DATA_FLAG_SURFACE 0xEFFFFFFF
 #define X_D3DRESOURCE_DATA_FLAG_YUVSURF 0xDFFFFFFF
+#define X_D3DRESOURCE_DATA_FLAG_D3DREND 0xCFFFFFFF // D3D Render Target
 
 // special resource lock flags
 #define X_D3DRESOURCE_LOCK_FLAG_NOSIZE  0xEFFFFFFF

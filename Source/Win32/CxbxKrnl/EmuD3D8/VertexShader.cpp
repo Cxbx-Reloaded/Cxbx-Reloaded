@@ -1868,6 +1868,10 @@ extern HRESULT XTL::EmuRecompileVshFunction
     VSH_XBOX_SHADER     *pShader = (VSH_XBOX_SHADER*)malloc(sizeof(VSH_XBOX_SHADER));
     HRESULT             hRet = 0;
 
+    // TODO: support this situation..
+    if(pFunction == NULL)
+        return E_FAIL;
+
     *ppRecompiled = NULL;
     *pOriginalSize = 0;
     if(!pShader)
