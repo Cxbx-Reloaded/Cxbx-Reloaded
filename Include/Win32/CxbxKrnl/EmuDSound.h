@@ -138,13 +138,21 @@ class X_CDirectSoundStream
         {
             ULONG (WINAPI *AddRef)(X_CDirectSoundStream *pThis);            // 0x00
             ULONG (WINAPI *Release)(X_CDirectSoundStream *pThis);           // 0x04
-            DWORD Unknown[0x02];                                            // 0x08
+            DWORD Unknown;                                                  // 0x08
+
+            HRESULT (WINAPI *GetStatus)                                     // 0x0C
+            (
+                X_CDirectSoundStream   *pThis,
+                DWORD                  *pdwStatus
+            );
+
             HRESULT (WINAPI *Process)                                       // 0x10
             (
                 X_CDirectSoundStream   *pThis,
                 PXMEDIAPACKET           pInputBuffer,
                 PXMEDIAPACKET           pOutputBuffer
             );
+
             HRESULT (WINAPI *Discontinuity)(X_CDirectSoundStream *pThis);   // 0x14
         }
         *pVtbl;
@@ -485,6 +493,16 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_Stop
 );
 
 // ******************************************************************
+// * func: EmuIDirectSoundBuffer8_StopEx
+// ******************************************************************
+extern "C" HRESULT __stdcall EmuIDirectSoundBuffer8_StopEx
+(
+    X_CDirectSoundBuffer *pBuffer,
+    REFERENCE_TIME        rtTimeStamp,
+    DWORD                 dwFlags
+);
+
+// ******************************************************************
 // * func: EmuIDirectSoundBuffer8_Play
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSoundBuffer8_Play
@@ -557,6 +575,15 @@ ULONG WINAPI EmuCDirectSoundStream_AddRef(X_CDirectSoundStream *pThis);
 // * func: EmuCDirectSoundStream_Release
 // ******************************************************************
 ULONG WINAPI EmuCDirectSoundStream_Release(X_CDirectSoundStream *pThis);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_GetStatus
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_GetStatus
+(
+    X_CDirectSoundStream   *pThis,
+    DWORD                  *pdwStatus
+);
 
 // ******************************************************************
 // * func: EmuCDirectSoundStream_Process

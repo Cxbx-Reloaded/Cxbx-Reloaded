@@ -219,6 +219,63 @@ SOOVPA<14> CDirectSound_SetDopplerFactor_1_0_5558 =
 };
 
 // ******************************************************************
+// * CDirectSoundStream_FlushEx
+// ******************************************************************
+SOOVPA<11> CDirectSoundStream_FlushEx_1_0_5558 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    XREF_DSFLUSHEX2,  // XRef Is  Saved
+    0,                // XRef Not Used
+
+    {
+        { 0x24, 0xB8 }, // (Offset,Value)-Pair #1
+        { 0x25, 0x05 }, // (Offset,Value)-Pair #2
+        { 0x26, 0x40 }, // (Offset,Value)-Pair #3
+        { 0x27, 0x00 }, // (Offset,Value)-Pair #4
+        { 0x28, 0x80 }, // (Offset,Value)-Pair #5
+
+        { 0x36, 0x74 }, // (Offset,Value)-Pair #6
+        { 0x37, 0x12 }, // (Offset,Value)-Pair #7
+
+        { 0x3E, 0xFF }, // (Offset,Value)-Pair #8
+        { 0x40, 0x0C }, // (Offset,Value)-Pair #9
+
+        { 0x67, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x68, 0x10 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
+// * IDirectSoundBuffer8_StopEx
+// ******************************************************************
+SOOVPA<9> IDirectSoundBuffer8_StopEx_1_0_5558 =
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    -1, // XRef Not Saved
+    1,  // XRef Is  Used
+
+    {
+        { 0x11, XREF_DSFLUSHEX2 },  // (Offset,Value)-Pair #1
+
+        { 0x00, 0xFF }, // (Offset,Value)-Pair #2
+        { 0x03, 0x10 }, // (Offset,Value)-Pair #3
+
+        { 0x04, 0xFF }, // (Offset,Value)-Pair #4
+        { 0x07, 0x10 }, // (Offset,Value)-Pair #5
+        
+        { 0x08, 0xFF }, // (Offset,Value)-Pair #6
+        { 0x0B, 0x10 }, // (Offset,Value)-Pair #7
+
+        { 0x15, 0xC2 }, // (Offset,Value)-Pair #8
+        { 0x16, 0x10 }, // (Offset,Value)-Pair #9
+    }
+};
+
+// ******************************************************************
 // * Direct_1_0_5558
 // ******************************************************************
 OOVPATable DSound_1_0_5558[] =
@@ -365,6 +422,24 @@ OOVPATable DSound_1_0_5558[] =
 
         #ifdef _DEBUG_TRACE
         "CDirectSound_SetDopplerFactor (XRef)"
+        #endif
+    },
+    // CDirectSoundStream_FlushEx
+    {
+        (OOVPA*)&CDirectSoundStream_FlushEx_1_0_5558, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundStream::FlushEx (XREF)" 
+        #endif
+    },
+    // IDirectSoundBuffer8::StopEx
+    {
+        (OOVPA*)&IDirectSoundBuffer8_StopEx_1_0_5558,
+
+        XTL::EmuIDirectSoundBuffer8_StopEx,
+
+        #ifdef _DEBUG_TRACE
+        "IDirectSoundBuffer8_StopEx"
         #endif
     },
     // IDirectSound8::SetDopplerFactor (* unchanged since 4627 *)

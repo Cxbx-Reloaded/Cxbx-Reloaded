@@ -1146,6 +1146,9 @@ PDWORD WINAPI XTL::EmuIDirect3DDevice8_BeginPush(DWORD Count)
 
     DWORD *pRet = new DWORD[Count];
 
+    g_dwPrimaryPBCount = Count;
+    g_pPrimaryPB = pRet;
+
     EmuSwapFS();   // XBox FS
 
     return pRet;
@@ -1160,17 +1163,16 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_EndPush(DWORD *pPush)
 
     DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_EndPush(0x%.08X);\n", GetCurrentThreadId(), pPush);
 
-    // TODO: Delete push buffer??
+    EmuExecutePushBufferRaw(g_pPrimaryPB);
+
+    delete[] g_pPrimaryPB;
+
+    g_pPrimaryPB = 0;
 
     EmuSwapFS();   // XBox FS
 
     return;
 }
-
-// ******************************************************************
-// * func: EmuIDirect3DDevice8_EndPush
-// ******************************************************************
-VOID WINAPI EmuIDirect3DDevice8_EndPush(DWORD *pPush);
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_BeginVisibilityTest
@@ -3152,11 +3154,18 @@ VOID __fastcall XTL::EmuIDirect3DDevice8_SwitchTexture
            ");\n",
            GetCurrentThreadId(), Method, Data, Format);
 
-    EmuCleanup("EmuIDirect3DDevice8_SwitchTexture is not implemented!");
-/*** 
+    EmuWarning("EmuIDirect3DDevice8_SwitchTexture is not implemented!");
+
+    //
+    // TODO: Crawl list of active X_D3DTexture's, searching for Data..
+    //       we're basically screwed in the event that the texture is
+    //       not _Register'd (should never happen though)
+    //
+
+    /* 
     IDirect3DBaseTexture8 *pBaseTexture8 = pTexture->EmuBaseTexture8;
     IDirect3DBaseTexture8 *pPrevTexture8 = NULL;
-    
+
     // Xbox SwitchTexture does not decrement the reference count on the
     // old texture, but SetTexture does, so we need to pre-increment
     g_pD3DDevice8->GetTexture(Stage, &pPrevTexture8);
@@ -3166,7 +3175,8 @@ VOID __fastcall XTL::EmuIDirect3DDevice8_SwitchTexture
     // Xbox SwitchTexture does not increment reference count, but the
     // above SetTexture does, so we need to remove it.
     pBaseTexture8->Release();
-***/
+    //*/
+
     EmuSwapFS();   // XBox FS
 
     return;
@@ -3519,7 +3529,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Present
            ");\n",
            GetCurrentThreadId(), pSourceRect, pDestRect, pDummy1, pDummy2);
 
-    // release back buffer(s)
+    // release back buffer lock
     {
         IDirect3DSurface8 *pBackBuffer;
 
@@ -3563,7 +3573,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Swap
     if(Flags != 0)
         EmuWarning("XTL::EmuIDirect3DDevice8_Swap: Flags != 0");
 
-    // release back buffer(s)
+    // release back buffer lock
     {
         IDirect3DSurface8 *pBackBuffer;
 
@@ -3571,6 +3581,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Swap
 
         pBackBuffer->UnlockRect();
     }
+
+    EmuWarning("Swap is not completely supported");
 
     HRESULT hRet = g_pD3DDevice8->Present(0, 0, 0, 0);
 
@@ -4196,6 +4208,10 @@ ULONG WINAPI XTL::EmuIDirect3DResource8_Release
             // free memory associated with this special resource handle
             CxbxFree((PVOID)dwPtr);
         }
+
+        EmuSwapFS();
+        EmuIDirect3DDevice8_EnableOverlay(FALSE);
+        EmuSwapFS();
     }
     else
     {
@@ -4873,7 +4889,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_EnableOverlay
            ");\n",
            GetCurrentThreadId(), Enable);
 
-    if(Enable == FALSE && g_pDDSOverlay7 != NULL)
+    if(Enable == FALSE && (g_pDDSOverlay7 != NULL))
     {
         g_pDDSOverlay7->UpdateOverlay(NULL, g_pDDSPrimary, NULL, DDOVER_HIDE, 0);
 
@@ -7144,7 +7160,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_GetVertexShaderSize
                "   Handle               : 0x%.08X\n"
                "   pSize                : 0x%.08X\n"
                ");\n",
-               GetCurrentThreadId(), Handle,pSize);
+               GetCurrentThreadId(), Handle, pSize);
 
     if(pSize  && VshHandleIsVertexShader(Handle))
     {

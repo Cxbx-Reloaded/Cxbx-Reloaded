@@ -38,6 +38,9 @@
 #include "EmuXTL.h"
 #include "ResourceTracker.h"
 
+uint32  XTL::g_dwPrimaryPBCount = 0;
+uint32 *XTL::g_pPrimaryPB = 0;
+
 bool XTL::g_bStepPush = false;
 bool XTL::g_bSkipPush = false;
 bool XTL::g_bBrkPush  = false;
@@ -46,21 +49,35 @@ bool g_bPBSkipPusher = false;
 
 static void DbgDumpMesh(WORD *pIndexData, DWORD dwCount);
 
-// pushbuffer execution emulation
 void XTL::EmuExecutePushBuffer
 (
     X_D3DPushBuffer       *pPushBuffer,
     X_D3DFixup            *pFixup
 )
 {
-    if(g_bSkipPush)
-        return;
-
     if(pFixup != NULL)
         EmuCleanup("PushBuffer has fixups\n");
 
-    DWORD *pdwPushData = (DWORD*)pPushBuffer->Data;
+    EmuExecutePushBufferRaw((DWORD*)pPushBuffer->Data);
+
+    return;
+}
+
+extern void XTL::EmuExecutePushBufferRaw
+(
+    DWORD                 *pdwPushData
+)
+{
+    if(g_bSkipPush)
+        return;
+
+    DWORD *pdwOrigPushData = pdwPushData;
+
     PVOID pIndexData = 0;
+    PVOID pVertexData = 0;
+
+    DWORD dwVertexShader = -1;
+    DWORD dwStride = -1;
 
     // cache of last 4 indices
     WORD pIBMem[4] = {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF};
@@ -89,7 +106,9 @@ void XTL::EmuExecutePushBuffer
     }
     #endif
 
-    static LPDIRECT3DINDEXBUFFER8 pIndexBuffer=0;
+    static LPDIRECT3DINDEXBUFFER8  pIndexBuffer=0;
+    static LPDIRECT3DVERTEXBUFFER8 pVertexBuffer=0;
+
     static uint maxIBSize = 0;
 
     while(true)
@@ -131,6 +150,71 @@ void XTL::EmuExecutePushBuffer
                 XBPrimitiveType = (X_D3DPRIMITIVETYPE)*pdwPushData;
                 PCPrimitiveType = EmuPrimitiveType(XBPrimitiveType);
             }
+        }
+        else if(dwMethod == 0x1818) // NVPB_InlineVertexArray
+        {
+            BOOL bInc = *pdwPushData & 0x40000000;
+
+            if(bInc)
+            {
+                dwCount = (*pdwPushData - (0x40000000 | 0x00001818)) >> 18;
+            }
+
+            pVertexData = ++pdwPushData;
+
+            // TODO: debug print out of vertex data
+
+            pdwPushData += dwCount;
+
+            // retrieve vertex shader
+            g_pD3DDevice8->GetVertexShader(&dwVertexShader);
+
+            if(dwVertexShader > 0xFFFF)
+            {
+                EmuCleanup("Non-FVF Vertex Shaders not yet supported for PushBuffer emulation!");
+                dwVertexShader = 0;
+            }
+            else if(dwVertexShader == 0)
+            {
+                EmuWarning("FVF Vertex Shader is null");
+                dwVertexShader = -1;
+            }
+
+            // calculate stride
+
+            /*
+            // create cached vertex buffer only once, with maxed out size
+            if(pVertexBuffer == 0)
+            {
+                HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer(2047*sizeof(DWORD), D3DUSAGE_WRITEONLY, dwVertexShader, D3DPOOL_MANAGED, &pVertexBuffer);
+
+                if(FAILED(hRet))
+                    EmuCleanup("Unable to create vertex buffer cache for PushBuffer emulation (0x1818, dwCount : %d)", dwCount);
+
+            }
+
+            // copy vertex data
+            {
+                uint08 *pData = 0;
+
+                HRESULT hRet = pVertexBuffer->Lock(0, dwCount*4, &pData, 0);
+
+                if(FAILED(hRet))
+                    EmuCleanup("Unable to lock vertex buffer cache for PushBuffer emulation (0x1818, dwCount : %d)", dwCount);
+
+                memcpy(pData, pVertexData, dwCount*4);
+
+                pVertexBuffer->Unlock();
+            }
+            */
+
+            // render vertices
+            if(dwVertexShader != -1)
+            {
+                g_pD3DDevice8->DrawPrimitiveUP(PCPrimitiveType, dwCount / dwStride, pVertexData, dwStride);
+            }
+
+            pdwPushData--;
         }
         else if(dwMethod == 0x1808) // NVPB_FixLoop
         {
@@ -218,7 +302,7 @@ void XTL::EmuExecutePushBuffer
                     g_pD3DDevice8->SetIndices(pIndexBuffer, 0);
 
                     #ifdef _DEBUG_TRACK_PB
-                    if(!g_PBTrackDisable.exists((PVOID)pPushBuffer->Data))
+                    if(!g_PBTrackDisable.exists(pdwOrigPushData))
                     {
                     #endif
 
@@ -246,7 +330,7 @@ void XTL::EmuExecutePushBuffer
 
             pdwPushData += dwCount;
         }
-        else if(dwMethod == 0x1800) // NVPB_InlineArray
+        else if(dwMethod == 0x1800) // NVPB_InlineIndexArray
         {
             BOOL bInc = *pdwPushData & 0x40000000;
 
@@ -260,7 +344,7 @@ void XTL::EmuExecutePushBuffer
             #ifdef _DEBUG_TRACK_PB
             if(bShowPB)
             {
-                printf("  NVPB_InlineArray(0x%.08X, %d)...\n", pIndexData, dwCount);
+                printf("  NVPB_InlineIndexArray(0x%.08X, %d)...\n", pIndexData, dwCount);
                 printf("\n");
                 printf("  Index Array Data...\n");
 
@@ -308,7 +392,7 @@ void XTL::EmuExecutePushBuffer
                 // release ptr
                 pActiveVB->Unlock();
 
-                DbgDumpMesh(pIndexData, dwCount);
+                DbgDumpMesh((WORD*)pIndexData, dwCount);
             }
             #endif
           
@@ -381,7 +465,7 @@ void XTL::EmuExecutePushBuffer
                     g_pD3DDevice8->SetIndices(pIndexBuffer, 0);
 
                     #ifdef _DEBUG_TRACK_PB
-                    if(!g_PBTrackDisable.exists((PVOID)pPushBuffer->Data))
+                    if(!g_PBTrackDisable.exists(pdwOrigPushData))
                     {
                     #endif
 
@@ -407,7 +491,8 @@ void XTL::EmuExecutePushBuffer
         }
         else
         {
-            EmuCleanup("Unknown PushBuffer Operation (0x%.04X, %d)", dwMethod, dwCount);
+            EmuWarning("Unknown PushBuffer Operation (0x%.04X, %d)", dwMethod, dwCount);
+            return;
         }
 
         pdwPushData++;
@@ -446,7 +531,7 @@ void DbgDumpMesh(WORD *pIndexData, DWORD dwCount)
     g_pD3DDevice8->GetStreamSource(0, &pActiveVB, &uiStride);
 
     char szFileName[128];
-    sprintf(szFileName, "C:\\TurokMesh-0x%.08X.x", pIndexData);
+    sprintf(szFileName, "C:\\CxbxMesh-0x%.08X.x", pIndexData);
     FILE *dbgVertices = fopen(szFileName, "wt");
 
     // retrieve stream desc

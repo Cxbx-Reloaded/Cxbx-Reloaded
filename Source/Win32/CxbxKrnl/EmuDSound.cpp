@@ -55,7 +55,11 @@ XTL::X_CDirectSoundStream::_vtbl XTL::X_CDirectSoundStream::vtbl =
 {
     &XTL::EmuCDirectSoundStream_AddRef,         // 0x00 - AddRef
     &XTL::EmuCDirectSoundStream_Release,        // 0x04 - Release
-    {0xBEEFB001, 0xBEEFB002},                   // 0x08 - Unknown
+/*
+    STDMETHOD(GetInfo)(THIS_ LPXMEDIAINFO pInfo) PURE;
+*/
+    0xBEEFB001,                                 // 0x08 - Unknown
+    &XTL::EmuCDirectSoundStream_GetStatus,      // 0x0C - GetStatus
     &XTL::EmuCDirectSoundStream_Process,        // 0x10 - Process
     &XTL::EmuCDirectSoundStream_Discontinuity   // 0x14 - Discontinuity
 };
@@ -1329,6 +1333,36 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Stop
 }
 
 // ******************************************************************
+// * func: EmuIDirectSoundBuffer8_StopEx
+// ******************************************************************
+extern "C" HRESULT __stdcall XTL::EmuIDirectSoundBuffer8_StopEx
+(
+    X_CDirectSoundBuffer *pBuffer,
+    REFERENCE_TIME        rtTimeStamp,
+    DWORD                 dwFlags
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_StopEx\n"
+           "(\n"
+           "   pBuffer                   : 0x%.08X\n"
+           "   rtTimeStamp               : 0x%.08X\n"
+           "   dwFlags                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pBuffer, rtTimeStamp, dwFlags);
+
+    if(pBuffer->EmuDirectSoundBuffer8 == 0)
+        EmuWarning("pBuffer->EmuDirectSoundBuffer8 == 0");
+
+    EmuWarning("StopEx not yet implemented!");
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
 // * func: EmuIDirectSoundBuffer8_SetVolume
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetVolume
@@ -1599,7 +1633,7 @@ ULONG WINAPI XTL::EmuCDirectSoundStream_Release(X_CDirectSoundStream *pThis)
 
     ULONG uRet = 0;
 
-    if(pThis != 0)
+    if(pThis != 0 && (pThis->EmuDirectSoundBuffer8 != 0))
     {
         uRet = pThis->EmuDirectSoundBuffer8->Release();
 
@@ -1624,6 +1658,33 @@ ULONG WINAPI XTL::EmuCDirectSoundStream_Release(X_CDirectSoundStream *pThis)
     EmuSwapFS();   // XBox FS
 
     return uRet;
+}
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_GetStatus
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSoundStream_GetStatus
+(
+    X_CDirectSoundStream   *pThis,
+    DWORD                  *pdwStatus
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_GetStatus\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   pdwStatus                 : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, pdwStatus);
+
+    EmuWarning("EmuCDirectSoundStream_GetStatus is not yet implemented");
+
+    *pdwStatus = DSBSTATUS_PLAYING;
+
+    EmuSwapFS();   // XBox FS
+
+    return DS_OK;
 }
 
 // ******************************************************************

@@ -34,12 +34,20 @@
 #ifndef PUSHBUFFER_H
 #define PUSHBUFFER_H
 
-// emulate the execution of an xbox d3d pushbuffer
 extern void EmuExecutePushBuffer
 (
     X_D3DPushBuffer       *pPushBuffer,
     X_D3DFixup            *pFixup
 );
+
+extern void EmuExecutePushBufferRaw
+(
+    DWORD                 *pdwPushData
+);
+
+// primary push buffer
+extern uint32  g_dwPrimaryPBCount;
+extern uint32 *g_pPrimaryPB;
 
 // push buffer debugging
 extern bool g_bStepPush;
