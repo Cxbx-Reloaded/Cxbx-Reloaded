@@ -203,6 +203,9 @@ upxCxbx.bat
 			Name="Resource"
 			Filter="">
 			<File
+				RelativePath="Resource\About.bmp">
+			</File>
+			<File
 				RelativePath=".\Resource\Cxbx.ico">
 			</File>
 			<File

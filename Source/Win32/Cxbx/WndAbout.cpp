@@ -117,7 +117,7 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
                     // bottom url bar
                     {
-				        char buffer[] = " official homepage : www.caustik.com/xbox/";
+                        char buffer[] = " Contact the Author : Caustik@Caustik.com";
 
                         RECT rect = {0, 134, 280, 148};
                         ExtTextOut(hDC, 0, 134, ETO_OPAQUE, &rect, buffer, strlen(buffer), 0);
@@ -125,7 +125,7 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
                 }
 
                 // draw bitmap
-                BitBlt(hDC, 2, 2, 275, 125, m_back_dc, 0, 0, SRCCOPY);
+                BitBlt(hDC, 2, 4, 275, 125, m_back_dc, 0, 0, SRCCOPY);
 
                 /*
                 // draw credits
