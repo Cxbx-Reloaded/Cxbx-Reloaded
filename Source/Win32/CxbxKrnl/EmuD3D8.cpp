@@ -111,8 +111,9 @@ static DWORD                        g_VBLastSwap = 0;
 static XTL::X_D3DSurface           *g_pCachedRenderTarget = NULL;
 static XTL::X_D3DSurface           *g_pCachedZStencilSurface = NULL;
 static DWORD                        g_dwVertexShaderUsage = 0;
-static XTL::X_D3DSHADERCONSTANTMODE g_VertexShaderConstantMode = X_D3DSCM_192CONSTANTS;
 static DWORD                        g_VertexShaderSlots[136];
+
+static XTL::X_VERTEXSHADERCONSTANTMODE g_VertexShaderConstantMode = X_VSCM_192;
 
 // cached Direct3D tiles
 XTL::X_D3DTILE XTL::EmuD3DTileCache[0x08] = {0};
@@ -1900,7 +1901,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_GetViewportOffsetAndScale
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetShaderConstantMode
 (
-    XTL::X_D3DSHADERCONSTANTMODE Mode
+    XTL::X_VERTEXSHADERCONSTANTMODE Mode
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -2141,7 +2142,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
         hRet = XTL::EmuRecompileVshFunction((DWORD*)pFunction,
                                             &pRecompiledBuffer,
                                             &VertexShaderSize,
-                                            g_VertexShaderConstantMode == X_D3DSCM_NORESERVEDCONSTANTS);
+                                            g_VertexShaderConstantMode == X_VSCM_NONERESERVED);
         if(SUCCEEDED(hRet))
         {
             pRecompiledFunction = (DWORD*)pRecompiledBuffer->GetBufferPointer();
@@ -2181,7 +2182,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
 
     pVertexShader->FunctionSize = 0;
     pVertexShader->pFunction = NULL;
-    pVertexShader->Type = X_D3DSMT_VERTEXSHADER;
+    pVertexShader->Type = X_VST_NORMAL;
     pVertexShader->Size = (VertexShaderSize - sizeof(VSH_SHADER_HEADER)) / VSH_INSTRUCTION_SIZE_BYTES;
     pVertexShader->DeclarationSize = DeclarationSize;
 
@@ -6139,7 +6140,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetVertexShader
     EmuIDirect3DDevice8_GetViewportOffsetAndScale(&vOffset, &vScale);
     EmuSwapFS();
 
-    if(g_VertexShaderConstantMode != X_D3DSCM_NORESERVEDCONSTANTS)
+    if(g_VertexShaderConstantMode != X_VSCM_NONERESERVED)
     {
         //g_pD3DDevice8->SetVertexShaderConstant( 58, &vScale, 1 );
         //g_pD3DDevice8->SetVertexShaderConstant( 59, &vOffset, 1 );
@@ -6952,8 +6953,8 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DeleteVertexShader
 // ******************************************************************
 VOID WINAPI XTL::EmuIDirect3DDevice8_SelectVertexShaderDirect
 (
-    X_D3DVERTEXATTRIBUTEFORMAT *pVAF,
-    DWORD                      Address
+    X_VERTEXATTRIBUTEFORMAT *pVAF,
+    DWORD                    Address
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -7058,9 +7059,9 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_GetVertexShaderConstant
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShaderInputDirect
 (
-    X_D3DVERTEXATTRIBUTEFORMAT *pVAF,
-    UINT                       StreamCount,
-    X_D3DSTREAM_INPUT          pStreamInputs
+    X_VERTEXATTRIBUTEFORMAT *pVAF,
+    UINT                     StreamCount,
+    X_STREAMINPUT           *pStreamInputs
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -7088,7 +7089,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetVertexShaderInput
 (
     DWORD              *pHandle,
     UINT               *pStreamCount,
-    X_D3DSTREAM_INPUT  *pStreamInputs
+    X_STREAMINPUT      *pStreamInputs
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -7116,7 +7117,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShaderInput
 (
     DWORD              Handle,
     UINT               StreamCount,
-    X_D3DSTREAM_INPUT *pStreamInputs
+    X_STREAMINPUT     *pStreamInputs
 )
 {
     EmuSwapFS();   // Win2k/XP FS

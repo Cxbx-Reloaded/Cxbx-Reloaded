@@ -316,48 +316,48 @@ typedef void (__cdecl * D3DVBLANKCALLBACK)(D3DVBLANKDATA *pData);
 // deferred texture stage state "unknown" flag
 #define X_D3DTSS_UNK 0x7fffffff
 
-typedef DWORD X_D3DSHADERCONSTANTMODE;
+typedef DWORD X_VERTEXSHADERCONSTANTMODE;
 
-#define X_D3DSCM_96CONSTANTS                     0
-#define X_D3DSCM_192CONSTANTS                    1
-#define X_D3DSCM_192CONSTANTSANDFIXEDPIPELINE    2
-#define X_D3DSCM_NORESERVEDCONSTANTS            16
+#define X_VSCM_96                     0
+#define X_VSCM_192                    1
+#define X_VSCM_192FIXEDPIPELINE       2
+#define X_VSCM_NONERESERVED          16
 
 // Vertex shader types
-#define X_D3DSMT_VERTEXSHADER           1
-#define X_D3DSMT_READWRITE_VERTEXSHADER 2
-#define X_D3DSMT_VERTEXSTATESHADER      3
+#define X_VST_NORMAL                  1
+#define X_VST_READWRITE               2
+#define X_VST_STATE                   3
 
 // ******************************************************************
-// * X_D3DVERTEXSHADERINPUT
+// * X_VERTEXSHADERINPUT
 // ******************************************************************
-typedef struct _X_D3DVERTEXSHADERINPUT
+typedef struct _X_VERTEXSHADERINPUT
 {
-    DWORD StreamIndex;
+    DWORD IndexOfStream;
     DWORD Offset;
     DWORD Format;
-    BYTE  TessType;
-    BYTE  TessSource;
+    BYTE  TesselationType;
+    BYTE  TesselationSource;
 }
-X_D3DVERTEXSHADERINPUT;
+X_VERTEXSHADERINPUT;
 
 // ******************************************************************
-// * X_D3DVERTEXATTRIBUTEFORMAT
+// * X_VERTEXATTRIBUTEFORMAT
 // ******************************************************************
-typedef struct _X_D3DVERTEXATTRIBUTEFORMAT
+typedef struct _X_VERTEXATTRIBUTEFORMAT
 {
-    X_D3DVERTEXSHADERINPUT Input[16];
+    X_VERTEXSHADERINPUT pVertexShaderInput[16];
 }
-X_D3DVERTEXATTRIBUTEFORMAT;
+X_VERTEXATTRIBUTEFORMAT;
 
 // ******************************************************************
-// * X_D3DSTREAM_INPUT
+// * X_STREAMINPUT
 // ******************************************************************
-typedef struct _X_D3DSTREAM_INPUT
+typedef struct _X_STREAMINPUT
 {
     X_D3DVertexBuffer  *VertexBuffer;
     UINT                Stride;
     UINT                Offset;
-} X_D3DSTREAM_INPUT;
+} X_STREAMINPUT;
 
 #endif

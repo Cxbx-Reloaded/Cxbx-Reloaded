@@ -276,7 +276,7 @@ VOID WINAPI EmuIDirect3DDevice8_GetViewportOffsetAndScale
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_SetShaderConstantMode
 (
-    XTL::X_D3DSHADERCONSTANTMODE Mode
+    XTL::X_VERTEXSHADERCONSTANTMODE Mode
 );
 
 // ******************************************************************
@@ -1296,8 +1296,8 @@ VOID WINAPI EmuIDirect3DDevice8_DeleteVertexShader
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_SelectVertexShaderDirect
 (
-    X_D3DVERTEXATTRIBUTEFORMAT *pVAF,
-    DWORD                      Address
+    X_VERTEXATTRIBUTEFORMAT *pVAF,
+    DWORD                    Address
 );
 
 // ******************************************************************
@@ -1331,9 +1331,9 @@ VOID WINAPI EmuIDirect3DDevice8_GetVertexShaderConstant
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_SetVertexShaderInputDirect
 (
-    X_D3DVERTEXATTRIBUTEFORMAT *pVAF,
-    UINT                       StreamCount,
-    X_D3DSTREAM_INPUT          pStreamInputs
+    X_VERTEXATTRIBUTEFORMAT *pVAF,
+    UINT                     StreamCount,
+    X_STREAMINPUT           *pStreamInputs
 );
 
 // ******************************************************************
@@ -1343,7 +1343,7 @@ HRESULT WINAPI EmuIDirect3DDevice8_GetVertexShaderInput
 (
     DWORD              *pHandle,
     UINT               *pStreamCount,
-    X_D3DSTREAM_INPUT  *pStreamInputs
+    X_STREAMINPUT      *pStreamInputs
 );
 
 // ******************************************************************
@@ -1353,7 +1353,7 @@ HRESULT WINAPI EmuIDirect3DDevice8_SetVertexShaderInput
 (
     DWORD              Handle,
     UINT               StreamCount,
-    X_D3DSTREAM_INPUT *pStreamInputs
+    X_STREAMINPUT     *pStreamInputs
 );
 
 // ******************************************************************
