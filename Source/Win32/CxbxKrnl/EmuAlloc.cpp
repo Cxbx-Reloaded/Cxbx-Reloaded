@@ -55,7 +55,8 @@ typedef enum
 {
     CXBX_ALLOC_NORMAL,
     CXBX_ALLOC_RTL
-} CXBX_ALLOC_TYPE;
+}
+CXBX_ALLOC_TYPE;
 
 typedef struct _CXBX_MEMORY_BLOCK
 {
@@ -65,7 +66,8 @@ typedef struct _CXBX_MEMORY_BLOCK
     uint32                     Line;
     CXBX_ALLOC_TYPE            Type;
     struct _CXBX_MEMORY_BLOCK *pNext;
-} CXBX_MEMORY_BLOCK;
+}
+CXBX_MEMORY_BLOCK;
 
 static CXBX_MEMORY_BLOCK *g_pFirstBlock = NULL;
 static CXBX_MEMORY_BLOCK *g_pLastBlock  = NULL;
@@ -95,19 +97,22 @@ static inline void *GetMemEnd(CXBX_MEMORY_BLOCK *pBlock)
 static bool CheckIntegrity(CXBX_MEMORY_BLOCK *pBlock)
 {
     bool Integrity = true;
+
     if(*(uint32*)GetMemStart(pBlock) != MEMORY_GUARD)
     {
         printf("    Memory block corrupted at start, overwrite: 0x%.04X\n",
                *(uint32*)GetMemStart(pBlock));
         Integrity = false;
     }
+
     if(*(uint32*)GetMemEnd(pBlock) != MEMORY_GUARD)
     {
         printf("    Memory block corrupted at end, overwrite: 0x.04X\n",
                *(uint32*)GetMemEnd(pBlock));
         Integrity = false;
     }
-    return Integrity;
+
+	return Integrity;
 }
 
 // ******************************************************************
@@ -198,6 +203,7 @@ static CXBX_MEMORY_BLOCK *RemoveMemoryBlock(void *pMem)
 static CXBX_MEMORY_BLOCK *FindMemoryBlock(void *pMem)
 {
     CXBX_MEMORY_BLOCK *pCur;
+
     for(pCur = g_pFirstBlock; pCur; pCur = pCur->pNext)
     {
         if(IsThisMemoryBlock(pMem, pCur))
@@ -205,6 +211,7 @@ static CXBX_MEMORY_BLOCK *FindMemoryBlock(void *pMem)
             return pCur;
         }
     }
+
     return NULL;
 }
 

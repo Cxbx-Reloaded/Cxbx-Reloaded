@@ -2171,7 +2171,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
 
     if(FAILED(hRet))
     {
-#ifdef _DEBUG_VSH
+#ifdef _DEBUG_TRACK_VS
         if (pFunction)
         {
             char pFileName[30];
@@ -2187,7 +2187,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
             }
             FailedShaderCount++;
         }
-#endif // _DEBUG_VSH
+#endif // _DEBUG_TRACK_VS
         //hRet = D3D_OK;
     }
 
