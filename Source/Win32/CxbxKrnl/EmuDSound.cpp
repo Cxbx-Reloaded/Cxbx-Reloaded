@@ -73,25 +73,23 @@ XTL::X_CDirectSoundStream::_vtbl XTL::X_CDirectSoundStream::vtbl =
 // Static Variable(s)
 static XTL::LPDIRECTSOUND8          g_pDSound8 = NULL;
 static int                          g_pDSound8RefCount = 0;
-//static XTL::X_CDirectSoundBuffer   *g_pDSoundBufferCache[SOUNDBUFFER_CACHE_SIZE];
+static XTL::X_CDirectSoundBuffer   *g_pDSoundBufferCache[SOUNDBUFFER_CACHE_SIZE];
 static XTL::IDirectSoundBuffer     *g_pDSoundStream8 = NULL;
 static PVOID                        g_pvStreamData = NULL;
 static DWORD                        g_dwStreamSize = 0;
 
 // periodically update sound buffers
-/*
-void HackUpdateSoundBuffers()
+static void HackUpdateSoundBuffers()
 {
     for(int v=0;v<SOUNDBUFFER_CACHE_SIZE;v++)
     {
-        if(g_pDSoundBufferCache[v] == 0)
+        if(g_pDSoundBufferCache[v] == 0 || g_pDSoundBufferCache[v]->EmuBuffer == 0)
             continue;
 
-        // TODO: HACK: This should dynamically recreate the buffer when necessary (size change)
         PVOID pAudioPtr, pAudioPtr2;
         DWORD dwAudioBytes, dwAudioBytes2;
 
-        HRESULT hRet = g_pDSoundBufferCache[v]->EmuDirectSoundBuffer8->Lock(0, 16384, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
+        HRESULT hRet = g_pDSoundBufferCache[v]->EmuDirectSoundBuffer8->Lock(0, g_pDSoundBufferCache[v]->EmuBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
 
         if(SUCCEEDED(hRet))
         {
@@ -102,10 +100,9 @@ void HackUpdateSoundBuffers()
         }
     }
 }
-*/
 
 // HACK HACK HACK! Make this smarter! update modified directsound stream
-void HackUpdateSoundStreams()
+static void HackUpdateSoundStreams()
 {
     if(g_pvStreamData == NULL || g_pDSoundStream8 == NULL)
         return;
@@ -128,6 +125,40 @@ void HackUpdateSoundStreams()
     g_pDSoundStream8->Play(0, 0, 0);
 
     return;
+}
+
+// resize an emulated directsound buffer, if necessary
+static void EmuResizeIDirectSoundBuffer8(XTL::X_CDirectSoundBuffer *pThis, DWORD dwBytes)
+{
+    if(dwBytes == pThis->EmuBufferDesc->dwBufferBytes)
+        return;
+
+    DWORD dwPlayCursor, dwWriteCursor, dwStatus;
+
+    HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetCurrentPosition(&dwPlayCursor, &dwWriteCursor);
+
+    if(FAILED(hRet))
+        EmuCleanup("Unable to retrieve current position for resize reallocation!");
+
+    hRet = pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
+
+    if(FAILED(hRet))
+        EmuCleanup("Unable to retrieve current status for resize reallocation!");
+
+    // release old buffer
+    while(pThis->EmuDirectSoundBuffer8->Release() > 0) { }
+
+    pThis->EmuBufferDesc->dwBufferBytes = dwBytes;
+
+    hRet = g_pDSound8->CreateSoundBuffer(pThis->EmuBufferDesc, &pThis->EmuDirectSoundBuffer8, NULL);
+
+    if(FAILED(hRet))
+        EmuCleanup("IDirectSoundBuffer8 resize Failed!");
+
+    pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwPlayCursor);
+
+    if(dwStatus & DSBSTATUS_PLAYING)
+        pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
 }
 
 // ******************************************************************
@@ -165,8 +196,8 @@ HRESULT WINAPI XTL::EmuDirectSoundCreate
     g_pDSound8RefCount++;
 
     // clear sound buffer cache
-    //for(int v=0;v<SOUNDBUFFER_CACHE_SIZE;v++)
-    //    g_pDSoundBufferCache[v] = 0;
+    for(int v=0;v<SOUNDBUFFER_CACHE_SIZE;v++)
+        g_pDSoundBufferCache[v] = 0;
 
     EmuSwapFS();   // XBox FS
 
@@ -282,8 +313,8 @@ VOID WINAPI XTL::EmuDirectSoundDoWork()
     }
     #endif
 
-    // HackUpdateSoundBuffers();
-    // HackUpdateSoundStreams();
+    HackUpdateSoundBuffers();
+    HackUpdateSoundStreams();
 
     EmuSwapFS();   // XBox FS
 
@@ -607,7 +638,7 @@ HRESULT WINAPI XTL::EmuCDirectSound_CommitDeferredSettings
     }
     #endif
 
-    // Todo: Translate params, then make the PC DirectSound call
+    // TODO: Translate params, then make the PC DirectSound call
 
     EmuSwapFS();   // XBox FS
 
@@ -660,8 +691,11 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
     *ppBuffer = new X_CDirectSoundBuffer();
 
     (*ppBuffer)->EmuBuffer = 0;
-    (*ppBuffer)->EmuBufferAlloc = 0;
     (*ppBuffer)->EmuBufferDesc = pDSBufferDesc;
+    (*ppBuffer)->EmuLockPtr1 = 0;
+    (*ppBuffer)->EmuLockBytes1 = 0;
+    (*ppBuffer)->EmuLockPtr2 = 0;
+    (*ppBuffer)->EmuLockBytes2 = 0;
 
     #ifdef _DEBUG_TRACE
     printf("EmuDSound (0x%X): EmuDirectSoundCreateBuffer, *ppBuffer := 0x%.08X\n", GetCurrentThreadId(), *ppBuffer);
@@ -669,7 +703,9 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
 
     HRESULT hRet = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &((*ppBuffer)->EmuDirectSoundBuffer8), NULL);
 
-    /*
+    if(FAILED(hRet))
+        EmuWarning("CreateSoundBuffer Failed!");
+
     // cache this sound buffer
     {
         int v=0;
@@ -685,21 +721,6 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
         if(v == SOUNDBUFFER_CACHE_SIZE)
             EmuCleanup("SoundBuffer cache out of slots!");
     }
-    */
-
-    if(FAILED(hRet))
-        EmuWarning("CreateSoundBuffer FAILED");
-    /*
-    else
-    {
-        // TODO: move this to _Lock, only allocate if SetData hasnt been called !smart!
-        (*ppBuffer)->EmuBuffer = malloc(131072);// NOTE: HACK: TEMPORARY FOR STELLA/HALO
-
-        ZeroMemory((*ppBuffer)->EmuBuffer, 131072);
-
-        // remember which pointer we allocated, so we can clean it up later
-        (*ppBuffer)->EmuBufferAlloc = (*ppBuffer)->EmuBuffer;
-    }*/
 
     EmuSwapFS();   // XBox FS
 
@@ -767,7 +788,6 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateSoundBuffer
     return EmuDirectSoundCreateBuffer(pdsbd, ppBuffer);
 }
 
-
 // ******************************************************************
 // * func: EmuIDirectSoundBuffer8_SetBufferData
 // ******************************************************************
@@ -793,11 +813,10 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetBufferData
     }
     #endif
 
-    if(pThis->EmuBuffer != 0 && pThis->EmuBuffer == pThis->EmuBufferAlloc)
-        free(pThis->EmuBufferAlloc);
-
     // update buffer data cache
     pThis->EmuBuffer = pvBufferData;
+
+    EmuResizeIDirectSoundBuffer8(pThis, dwBufferBytes);
 
     EmuSwapFS();   // XBox FS
 
@@ -829,7 +848,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPlayRegion
     }
     #endif
 
-    // Todo: Translate params, then make the PC DirectSound call
+    // TODO: Translate params, then make the PC DirectSound call
 
     EmuSwapFS();   // XBox FS
 
@@ -872,12 +891,30 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Lock
     }
     #endif
 
-    *ppvAudioPtr1 = pThis->EmuBuffer;
-    *pdwAudioBytes1 = dwBytes;
+    HRESULT hRet = D3D_OK;
+
+    if(pThis->EmuBuffer != 0)
+    {
+        *ppvAudioPtr1 = pThis->EmuBuffer;
+        *pdwAudioBytes1 = dwBytes;
+    }
+    else
+    {
+        if(dwBytes > pThis->EmuBufferDesc->dwBufferBytes)
+            EmuResizeIDirectSoundBuffer8(pThis, dwBytes);
+
+        // TODO: Verify dwFlags is the same as windows
+        hRet = pThis->EmuDirectSoundBuffer8->Lock(dwOffset, dwBytes, ppvAudioPtr1, pdwAudioBytes1, ppvAudioPtr2, pdwAudioBytes2, dwFlags);
+
+        pThis->EmuLockPtr1 = *ppvAudioPtr1;
+        pThis->EmuLockBytes1 = *pdwAudioBytes1;
+        pThis->EmuLockPtr2 = *ppvAudioPtr2;
+        pThis->EmuLockBytes2 = *pdwAudioBytes2;
+    }
 
     EmuSwapFS();   // XBox FS
 
-    return DS_OK;
+    return hRet;
 }
 
 // ******************************************************************
@@ -975,13 +1012,11 @@ ULONG WINAPI XTL::EmuIDirectSoundBuffer8_Release
             for(int v=0;v<SOUNDBUFFER_CACHE_SIZE;v++)
             {
                 if(g_pDSoundBufferCache[v] == pThis)
-                {
-                    if(g_pDSoundBufferCache[v]->EmuBuffer == g_pDSoundBufferCache[v]->EmuBufferAlloc)
-                        free(g_pDSoundBufferCache[v]->EmuBufferAlloc);
-
                     g_pDSoundBufferCache[v] = 0;
-                }
             }
+
+            free(pThis->EmuBufferDesc->lpwfxFormat);
+            free(pThis->EmuBufferDesc);
 
             delete pThis;
         }
@@ -1015,7 +1050,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPitch
     }
     #endif
 
-    // Todo: Translate params, then make the PC DirectSound call
+    // TODO: Translate params, then make the PC DirectSound call
 
     EmuSwapFS();   // XBox FS
 
@@ -1045,7 +1080,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetVolume
     }
     #endif
 
-    // Todo: Translate params, then make the PC DirectSound call
+    // TODO: Translate params, then make the PC DirectSound call
 
     EmuSwapFS();   // XBox FS
 
@@ -1157,7 +1192,23 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Play
 
     HackUpdateSoundBuffers();
 
+    // close any existing locks
+    if(pThis->EmuLockPtr1 != 0)
+    {
+        pThis->EmuDirectSoundBuffer8->Unlock
+        (
+            pThis->EmuLockPtr1,
+            pThis->EmuLockBytes1,
+            pThis->EmuLockPtr2,
+            pThis->EmuLockBytes2
+        );
+
+        pThis->EmuLockPtr1 = 0;
+    }
+
     HRESULT hRet = pThis->EmuDirectSoundBuffer8->Play(0, 0, dwFlags);
+
+    pThis->EmuPlayFlags = dwFlags;
 
     EmuSwapFS();   // XBox FS
 
