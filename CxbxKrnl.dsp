@@ -132,6 +132,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\CxbxKrnl.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\EmuXapi.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\LDT.h
 # End Source File
 # Begin Source File
@@ -149,6 +153,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\xntdll.h
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\CxbxKrnl.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuXapi.cpp
 # End Source File
 # Begin Source File
 

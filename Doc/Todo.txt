@@ -2,9 +2,9 @@ Cxbx Todo:
 
   General Code Cleanup [caustik]
 
-  High Level Emulation. Detect entry points to routines such as 
-  XapiVerifyMediaInDrive, and install a vector to an emulation
-  routine.
+  Continue HLE. CreateThread/CloseHandle are done. The most important
+  thing at this point is the HLE design. One candidate for HLE is the
+  function XapiVerifyMediaInDrive.
 
   Recent files (for .exe and .xbe) in menu. (Use registry)
 

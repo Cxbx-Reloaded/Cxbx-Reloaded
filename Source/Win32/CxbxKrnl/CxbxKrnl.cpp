@@ -61,21 +61,51 @@ namespace win32
 using namespace win32;
 
 // ******************************************************************
-// * func: EmuXSwapFS
+// * func: EmuXInstallWrappers
 // ******************************************************************
-// *
-// * This function is used to swap between the native Win2k/XP FS:
-// * structure, and the EmuX FS: structure. Before running Windows
-// * code, you *must* swap over to Win2k/XP FS. Similarly, before
-// * running Xbox code, you *must* swap back over to EmuX FS.
-// *
-// ******************************************************************
-inline void EmuXSwapFS()
+void EmuXInstallWrappers(void (*Entry)())
 {
-    __asm
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
     {
-        mov ax, fs:[0x14]   // FS.ArbitraryUserPointer
-        mov fs, ax
+        printf("CxbxKrnl [0x%.08X]: EmuXInstallWrappers()\n"
+               "          (\n"
+               "             Entry               : 0x%.08X\n"
+               "          );\n",
+            GetCurrentThreadId(), Entry);
+    }
+
+    // ******************************************************************
+    // * install CreateThread vector
+    // ******************************************************************
+    {
+        // ******************************************************************
+        // * CreateThread is easily located using an offset from the standard
+        // * xbe entry point
+        // ******************************************************************
+        uint32  RelCallAddr         = (uint32)Entry + 0x54;
+        uint32  RelRealCreateThread = *(uint32*)(RelCallAddr + 1);
+        uint08 *RealCreateThread    = (uint08*)(RelCallAddr + RelRealCreateThread + 5);
+
+        *(uint08*)&RealCreateThread[0] = 0xE9;
+        *(uint32*)&RealCreateThread[1] = (uint32)xboxkrnl::EmuCreateThread - (uint32)RealCreateThread - 5;
+    }
+
+    // ******************************************************************
+    // * install CloseHandle vector
+    // ******************************************************************
+    {
+        // ******************************************************************
+        // * CloseHandle is easily located using an offset from the standard
+        // * xbe entry point
+        // ******************************************************************
+        uint32  RelCallAddr         = (uint32)Entry + 0x6A;
+        uint32  RelRealCloseHandle  = *(uint32*)(RelCallAddr + 1);
+        uint08 *RealCloseHandle     = (uint08*)(RelCallAddr + RelRealCloseHandle + 5);
+
+        *(uint08*)&RealCloseHandle[0] = 0xE9;
+        *(uint32*)&RealCloseHandle[1] = (uint32)xboxkrnl::EmuCloseHandle - (uint32)RealCloseHandle - 5;
     }
 }
 
@@ -196,6 +226,13 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, ui
                "             Entry               : 0x%.08X\n"
                "          );\n",
                GetCurrentThreadId(), DebugConsole, DebugFilename, XBEHeader, XBEHeaderSize, Entry);
+    }
+
+    // ******************************************************************
+    // * Locate functions and install wrapper vectors
+    // ******************************************************************
+    {
+        EmuXInstallWrappers(Entry);
     }
 
     // ******************************************************************
@@ -342,7 +379,7 @@ callComplete:
         nop
     }
 
-    EmuXSwapFS();
+    // EmuXSwapFS();
 
     return 0;
 }
