@@ -1103,7 +1103,7 @@ SOOVPA<13> IDirect3DDevice8_SetRenderState_ZEnable_1_0_4361 =
         { 0x1D, 0x74 }, // (Offset,Value)-Pair #5
         { 0x1E, 0x20 }, // (Offset,Value)-Pair #6
 
-        // IDirect3DDevice8_SetRenderState_ZEnable+0x31 : mov dword ptr [eax], 0x4030
+        // IDirect3DDevice8_SetRenderState_ZEnable+0x31 : mov dword ptr [eax], 0x4030C
         { 0x31, 0xC7 }, // (Offset,Value)-Pair #7
         { 0x32, 0x00 }, // (Offset,Value)-Pair #8
         { 0x33, 0x0C }, // (Offset,Value)-Pair #9

@@ -750,6 +750,14 @@ VOID WINAPI EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetTextureState_TwoSidedLighting
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetTextureState_TwoSidedLighting
+(
+    DWORD Value
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTextureState_BackFillMode
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_SetTextureState_BackFillMode
@@ -869,6 +877,14 @@ VOID WINAPI EmuIDirect3DDevice8_SetRenderState_StencilFail
 // * func: EmuIDirect3DDevice8_SetRenderState_CullMode
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_SetRenderState_CullMode
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_StencilFail
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_StencilFail
 (
     DWORD Value
 );

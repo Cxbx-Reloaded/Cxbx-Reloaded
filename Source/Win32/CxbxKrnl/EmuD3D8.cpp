@@ -4869,6 +4869,34 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetTextureState_TwoSidedLighting
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetTextureState_TwoSidedLighting
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetTextureState_TwoSidedLighting\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+    EmuWarning("TwoSidedLighting is not supported!");
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTextureState_BackFillMode
 // ******************************************************************
 VOID WINAPI XTL::EmuIDirect3DDevice8_SetTextureState_BackFillMode
@@ -5402,6 +5430,34 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_CullMode
     }
 
     g_pD3DDevice8->SetRenderState(D3DRS_CULLMODE, Value);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_StencilFail
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_StencilFail
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_StencilFail\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+    g_pD3DDevice8->SetRenderState(D3DRS_STENCILFAIL, Value);
 
     EmuSwapFS();   // XBox FS
 

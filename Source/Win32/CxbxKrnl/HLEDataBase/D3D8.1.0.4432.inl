@@ -203,6 +203,41 @@ SOOVPA<12> IDirect3DDevice8_SetTextureState_BumpEnv_1_0_4432 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetTextureState_TwoSidedLighting
+// ******************************************************************
+SOOVPA<13> IDirect3DDevice8_SetTextureState_TwoSidedLighting_1_0_4432 =
+{
+    0,  // Large == 0
+    13, // Count == 13
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetTextureState_TwoSidedLighting+0x11 : or edx, 0x1000
+        { 0x11, 0x81 }, // (Offset,Value)-Pair #1
+        { 0x12, 0xCA }, // (Offset,Value)-Pair #2
+        { 0x13, 0x00 }, // (Offset,Value)-Pair #3
+        { 0x14, 0x10 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DDevice8_SetTextureState_TwoSidedLighting+0x24 : cmp eax, [esi+4]; push edi
+        { 0x24, 0x3B }, // (Offset,Value)-Pair #5
+        { 0x25, 0x46 }, // (Offset,Value)-Pair #6
+        { 0x26, 0x04 }, // (Offset,Value)-Pair #7
+        { 0x27, 0x57 }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_SetTextureState_TwoSidedLighting+0x53 : add eax, 0x0C
+        { 0x53, 0x83 }, // (Offset,Value)-Pair #9
+        { 0x54, 0xC0 }, // (Offset,Value)-Pair #10
+        { 0x55, 0x0C }, // (Offset,Value)-Pair #11
+
+        // IDirect3DDevice8_SetTextureState_TwoSidedLighting+0x60 : retn 0x04
+        { 0x60, 0xC2 }, // (Offset,Value)-Pair #12
+        { 0x61, 0x04 }, // (Offset,Value)-Pair #13
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetTextureState_BackFillMode
 // ******************************************************************
 SOOVPA<13> IDirect3DDevice8_SetTextureState_BackFillMode_1_0_4432 =
@@ -299,6 +334,75 @@ SOOVPA<8> IDirect3DDevice8_SetRenderState_NormalizeNormals_1_0_4432 =
         // IDirect3DDevice8_SetRenderState_NormalizeNormals+0x36 : retn 0x04
         { 0x36, 0xC2 }, // (Offset,Value)-Pair #7
         { 0x37, 0x04 }, // (Offset,Value)-Pair #8
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetRenderState_ZEnable
+// ******************************************************************
+SOOVPA<13> IDirect3DDevice8_SetRenderState_ZEnable_1_0_4432 =
+{
+    0,  // Large == 0
+    13, // Count == 13
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetRenderState_ZEnable+0x0C : jb +0x05
+        { 0x0C, 0x72 }, // (Offset,Value)-Pair #1
+        { 0x0D, 0x05 }, // (Offset,Value)-Pair #2
+
+        // IDirect3DDevice8_SetRenderState_ZEnable+0x1B : mov ecx, [esi+0x2074]
+        { 0x1B, 0x8B }, // (Offset,Value)-Pair #3
+        { 0x1C, 0x8E }, // (Offset,Value)-Pair #4
+        { 0x1D, 0x74 }, // (Offset,Value)-Pair #5
+        { 0x1E, 0x20 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_SetRenderState_ZEnable+0x2E : mov dword ptr [eax], 0x4030C
+        { 0x2E, 0xC7 }, // (Offset,Value)-Pair #7
+        { 0x2F, 0x00 }, // (Offset,Value)-Pair #8
+        { 0x30, 0x0C }, // (Offset,Value)-Pair #9
+        { 0x31, 0x03 }, // (Offset,Value)-Pair #10
+        { 0x32, 0x04 }, // (Offset,Value)-Pair #11
+
+        // IDirect3DDevice8_SetRenderState_ZEnable+0x8C : retn 0x04
+        { 0x8C, 0xC2 }, // (Offset,Value)-Pair #12
+        { 0x8D, 0x04 }, // (Offset,Value)-Pair #13
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetRenderState_StencilFail
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_SetRenderState_StencilFail_1_0_4432 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetRenderState_StencilFail+0x0C : jb +0x05
+        { 0x0C, 0x72 }, // (Offset,Value)-Pair #1
+        { 0x0D, 0x05 }, // (Offset,Value)-Pair #2
+
+        // IDirect3DDevice8_SetRenderState_StencilFail+0x38 : cmp [abs], 0x1E00
+        { 0x38, 0x81 }, // (Offset,Value)-Pair #3
+        { 0x3E, 0x00 }, // (Offset,Value)-Pair #4
+        { 0x3F, 0x1E }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_SetRenderState_StencilFail+0x47 : mov dword ptr [eax], 0x41D84
+        { 0x47, 0xC7 }, // (Offset,Value)-Pair #6
+        { 0x48, 0x00 }, // (Offset,Value)-Pair #7
+        { 0x49, 0x84 }, // (Offset,Value)-Pair #8
+        { 0x4A, 0x1D }, // (Offset,Value)-Pair #9
+        { 0x4B, 0x04 }, // (Offset,Value)-Pair #10
+
+        // IDirect3DDevice8_SetRenderState_StencilFail+0x6A : retn 0x04
+        { 0x6A, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x6B, 0x04 }, // (Offset,Value)-Pair #12
     }
 };
 
@@ -481,6 +585,16 @@ OOVPATable D3D8_1_0_4432[] =
         "EmuIDirect3DDevice8_SetTextureState_BumpEnv" 
         #endif
     },
+    // IDirect3DDevice8::SetTextureState_TwoSidedLighting
+    {
+        (OOVPA*)&IDirect3DDevice8_SetTextureState_TwoSidedLighting_1_0_4432,
+
+        XTL::EmuIDirect3DDevice8_SetTextureState_TwoSidedLighting,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetTextureState_TwoSidedLighting" 
+        #endif
+    },
     // IDirect3DDevice8::SetTextureState_BackFillMode
     {
         (OOVPA*)&IDirect3DDevice8_SetTextureState_BackFillMode_1_0_4432,
@@ -599,6 +713,26 @@ OOVPATable D3D8_1_0_4432[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetRenderState_StencilEnable" 
+        #endif
+    },
+    // IDirect3DDevice8::SetRenderState_StencilFail
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_StencilFail_1_0_4432,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_StencilFail,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_StencilFail" 
+        #endif
+    },
+    // IDirect3DDevice8::SetRenderState_ZEnable
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_ZEnable_1_0_4432,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_ZEnable,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_ZEnable" 
         #endif
     },
     // IDirect3DDevice8::SetRenderState_ShadowFunc
