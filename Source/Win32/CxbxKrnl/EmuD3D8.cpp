@@ -1123,12 +1123,33 @@ PDWORD WINAPI XTL::EmuIDirect3DDevice8_BeginPush(DWORD Count)
 
     DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_BeginPush(%d);\n", GetCurrentThreadId(), Count);
 
-    EmuCleanup("_BeginPush(...) is not yet implemented\n");
+    DWORD *pRet = new DWORD[Count];
 
     EmuSwapFS();   // XBox FS
 
-    return NULL;
+    return pRet;
 }
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_EndPush
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_EndPush(DWORD *pPush)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_EndPush(0x%.08X);\n", GetCurrentThreadId(), pPush);
+
+    // TODO: Delete push buffer??
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_EndPush
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_EndPush(DWORD *pPush);
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_BeginVisibilityTest

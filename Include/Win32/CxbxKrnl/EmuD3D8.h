@@ -99,6 +99,11 @@ VOID WINAPI EmuIDirect3DDevice8_GetDeviceCaps
 PDWORD WINAPI EmuIDirect3DDevice8_BeginPush(DWORD Count);
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_EndPush
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_EndPush(DWORD *pPush);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_BeginVisibilityTest
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_BeginVisibilityTest();

@@ -258,6 +258,7 @@ extern uint32 HLEDataBaseSize = sizeof(HLEDataBase);
 // ******************************************************************
 extern uint32 XRefDataBase[] = 
 {
+    -1, // XREF_D3DDEVICE
     -1, // XREF_DXSRSCULLMODE
     -1, // XREF_D3DRS_ROPZCMPALWAYSREAD
     -1, // XREF_D3DRS_ROPZREAD

@@ -101,7 +101,8 @@ extern bool bXRefFirstPass;
 // ******************************************************************
 enum XRefDataBaseOffset
 {
-    XREF_DXSRSCULLMODE=0,
+    XREF_D3DDEVICE=0,
+    XREF_DXSRSCULLMODE,
     XREF_D3DRS_ROPZCMPALWAYSREAD,
     XREF_D3DRS_ROPZREAD,
     XREF_D3DRS_DONOTCULLUNCOMPRESSED,
