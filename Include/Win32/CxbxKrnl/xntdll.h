@@ -503,6 +503,16 @@ typedef VOID (NTAPI *FPTR_RtlInitUnicodeString)
 );
 
 // ******************************************************************
+// * RtlUnicodeStringToAnsiString
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeStringToAnsiString)
+(
+    IN OUT PANSI_STRING    DestinationString,
+    IN     PUNICODE_STRING SourceString,
+    IN     BOOLEAN         AllocateDestinationString
+);
+
+// ******************************************************************
 // * NtDelayExecution
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtDelayExecution)

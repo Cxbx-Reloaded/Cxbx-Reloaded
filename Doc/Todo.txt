@@ -1,5 +1,8 @@
 Cxbx Todo (* denotes high priority, + denotes medium priority)
 
+  * PointSprite demo mip mapping has some bug (maybe related to the Register()
+    base address?)
+
   * As a solution to the Xbox-Never-Sleeps problem, EmuSwapFS can increment
     and check a global variable, and Sleep(1) after N number of function
 	interceptions. This could be included in the core configuration options.
@@ -21,9 +24,6 @@ Cxbx Todo (* denotes high priority, + denotes medium priority)
 	the data pointer to that IDirect3DTexture8 instance.
 
   * Support cards that just plain dont have 32 bit color?
-
-  * GetDisplayMode / GetAdapterDisplayMode should not return real display
-    mode when windowed!
 
   * The notorious Heap Allocation crash still needs to be solved on a low
     level. It is strongly preferable to debug this instead of having to 
@@ -55,8 +55,6 @@ Cxbx Todo (* denotes high priority, + denotes medium priority)
   progress should be sent via callback from core.
 
   Encapsulate RecentFiles into a nice little class
-
-  If possible, Direct3D Rendering window should inherit from Wnd.
 
   Allow a logo bitmap to be added if one does not exist. This may require that
   the size of headers be increased. (sizeof_headers).

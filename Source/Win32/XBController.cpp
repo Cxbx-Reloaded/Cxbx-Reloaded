@@ -729,7 +729,7 @@ void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
         // ******************************************************************
         // * Map Xbox Joystick Input
         // ******************************************************************
-        if(v >= XBCTRL_OBJECT_LTHUMBPOSX && v <= XBCTRL_OBJECT_RTRIGGER)
+        if(v >= XBCTRL_OBJECT_LTHUMBPOSX && v <= XBCTRL_OBJECT_RTHUMB)
         {
             switch(v)
             {
@@ -780,6 +780,54 @@ void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
                     break;
                 case XBCTRL_OBJECT_RTRIGGER:
                     Controller->Gamepad.bAnalogButtons[XINPUT_GAMEPAD_RIGHT_TRIGGER] = (wValue / 128);
+                    break;
+                case XBCTRL_OBJECT_DPADUP:
+                    if(wValue > 0)
+                        Controller->Gamepad.wButtons |= XINPUT_GAMEPAD_DPAD_UP;
+                    else
+                        Controller->Gamepad.wButtons &= ~XINPUT_GAMEPAD_DPAD_UP;
+                    break;
+                case XBCTRL_OBJECT_DPADDOWN:
+                    if(wValue > 0)
+                        Controller->Gamepad.wButtons |= XINPUT_GAMEPAD_DPAD_DOWN;
+                    else
+                        Controller->Gamepad.wButtons &= ~XINPUT_GAMEPAD_DPAD_DOWN;
+                    break;
+                case XBCTRL_OBJECT_DPADLEFT:
+                    if(wValue > 0)
+                        Controller->Gamepad.wButtons |= XINPUT_GAMEPAD_DPAD_LEFT;
+                    else
+                        Controller->Gamepad.wButtons &= ~XINPUT_GAMEPAD_DPAD_LEFT;
+                    break;
+                case XBCTRL_OBJECT_DPADRIGHT:
+                    if(wValue > 0)
+                        Controller->Gamepad.wButtons |= XINPUT_GAMEPAD_DPAD_RIGHT;
+                    else
+                        Controller->Gamepad.wButtons &= ~XINPUT_GAMEPAD_DPAD_RIGHT;
+                    break;
+                case XBCTRL_OBJECT_BACK:
+                    if(wValue > 0)
+                        Controller->Gamepad.wButtons |= XINPUT_GAMEPAD_START;
+                    else
+                        Controller->Gamepad.wButtons &= ~XINPUT_GAMEPAD_START;
+                    break;
+                case XBCTRL_OBJECT_START:
+                    if(wValue > 0)
+                        Controller->Gamepad.wButtons |= XINPUT_GAMEPAD_BACK;
+                    else
+                        Controller->Gamepad.wButtons &= ~XINPUT_GAMEPAD_BACK;
+                    break;
+                case XBCTRL_OBJECT_LTHUMB:
+                    if(wValue > 0)
+                        Controller->Gamepad.wButtons |= XINPUT_GAMEPAD_LEFT_THUMB;
+                    else
+                        Controller->Gamepad.wButtons &= ~XINPUT_GAMEPAD_LEFT_THUMB;
+                    break;
+                case XBCTRL_OBJECT_RTHUMB:
+                    if(wValue > 0)
+                        Controller->Gamepad.wButtons |= XINPUT_GAMEPAD_RIGHT_THUMB;
+                    else
+                        Controller->Gamepad.wButtons &= ~XINPUT_GAMEPAD_RIGHT_THUMB;
                     break;
             }
         }

@@ -69,4 +69,16 @@ extern void EmuDInputPoll(xapi::PXINPUT_STATE Controller);
 #define XINPUT_GAMEPAD_LEFT_TRIGGER		6
 #define XINPUT_GAMEPAD_RIGHT_TRIGGER	7
 
+// ******************************************************************
+// * masks for digital buttons
+// ******************************************************************
+#define XINPUT_GAMEPAD_DPAD_UP          0x00000001
+#define XINPUT_GAMEPAD_DPAD_DOWN        0x00000002
+#define XINPUT_GAMEPAD_DPAD_LEFT        0x00000004
+#define XINPUT_GAMEPAD_DPAD_RIGHT       0x00000008
+#define XINPUT_GAMEPAD_START            0x00000010
+#define XINPUT_GAMEPAD_BACK             0x00000020
+#define XINPUT_GAMEPAD_LEFT_THUMB       0x00000040
+#define XINPUT_GAMEPAD_RIGHT_THUMB      0x00000080
+
 #endif
