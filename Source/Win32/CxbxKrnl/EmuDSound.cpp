@@ -1523,24 +1523,23 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
     }
     #endif
 
+    // TODO: Garbage Collection
     *ppStream = new X_CDirectSoundStream();
-
-    #ifdef _DEBUG_TRACE
-    printf("EmuDSound (0x%X): EmuDirectSoundCreateStream, *ppStream := 0x%.08X\n", GetCurrentThreadId(), *ppStream);
-    #endif
     
     DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)malloc(sizeof(DSBUFFERDESC));
     
     // convert from Xbox to PC DSound
     {
-        DWORD dwAcceptableMask = 0x00000010 | 0x00000020 | 0x00000080 | 0x00000100 | 0x00002000 | 0x00040000 | 0x00080000;
+        DWORD dwAcceptableMask = 0x00000010; // TODO: Note 0x00040000 is being ignored (DSSTREAMCAPS_LOCDEFER)
 
         if(pdssd->dwFlags & (~dwAcceptableMask))
             EmuWarning("Use of unsupported pdssd->dwFlags mask(s) (0x%.08X)", pdssd->dwFlags & (~dwAcceptableMask));
 
         pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
+//        pDSBufferDesc->dwFlags = (pdssd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
         pDSBufferDesc->dwFlags = DSBCAPS_CTRLVOLUME;
         pDSBufferDesc->dwBufferBytes = DSBSIZE_MIN;
+
         pDSBufferDesc->dwReserved = 0;
 
         if(pdssd->lpwfxFormat != NULL)
@@ -1561,10 +1560,15 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
 
             return DS_OK;
         }
-    }
 
-    // TODO: Garbage Collection
-    *ppStream = new X_CDirectSoundStream();
+        // we only support 2 channels right now
+        if(pDSBufferDesc->lpwfxFormat->nChannels > 2)
+        {
+            pDSBufferDesc->lpwfxFormat->nChannels = 2;
+            pDSBufferDesc->lpwfxFormat->nBlockAlign = (2*pDSBufferDesc->lpwfxFormat->wBitsPerSample)/8;
+            pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = pDSBufferDesc->lpwfxFormat->nSamplesPerSec * pDSBufferDesc->lpwfxFormat->nBlockAlign;
+        }
+    }
 
     (*ppStream)->EmuBuffer = 0;
     (*ppStream)->EmuBufferDesc = pDSBufferDesc;

@@ -3,9 +3,7 @@ cxbx website: http://www.caustik.com/xbox/
 version: 0.7.9 (??/??/??)
 --------------------------------
 
-- Turok loading screen displays temporarily
-
-- Halo BINK movie begins to play
+- Turok loading screen+menu display
 
 - DirectSound support! Turok and Stella (Atari 2600 emulator)
   are both able to play sound+music, works great!
