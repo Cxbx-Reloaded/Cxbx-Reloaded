@@ -58,6 +58,7 @@ extern DWORD g_dwTlsAdjust = 0;
 // * static
 // ******************************************************************
 static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *XbeHeader);
+static int ExitException(LPEXCEPTION_POINTERS e);
 
 // ******************************************************************
 // * func: DllMain
@@ -299,24 +300,23 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage)
     }
 
     // ******************************************************************
-    // * Suspend all Threads
+    // * Suspend and Redirect all Threads
     // ******************************************************************
-    while(true)
     {
-        ThreadList *tl = ThreadList::pFirst;
+        ThreadList *tl = 0;
 
-        if(tl == NULL)
-            break;
-
-        // ignore current thread
-        DWORD cur = GetCurrentThreadId();
-        DWORD cmp = tl->dwThreadId;
-
-        if(cmp == 0)
-            break;
-
-        if(cmp != cur)
+        for(tl = ThreadList::pFirst;tl != NULL;tl = tl->pNext)
         {
+            // ignore current thread
+            DWORD cur = GetCurrentThreadId();
+            DWORD cmp = tl->dwThreadId;
+
+            if(cmp == 0)
+                break;
+
+            if(cmp == cur)
+                continue;
+
             SuspendThread(tl->hThread);
 
             CONTEXT Context;
@@ -324,28 +324,52 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage)
             Context.ContextFlags = CONTEXT_CONTROL;
 
             GetThreadContext(tl->hThread, &Context);
-
+            
             Context.Eip = (DWORD)EmuCleanThread;
 
+            Context.ContextFlags = CONTEXT_CONTROL;
+
             SetThreadContext(tl->hThread, &Context);
+        }
+    }
 
-            ResumeThread(tl->hThread);
+    // ******************************************************************
+    // * Resume all Threads
+    // ******************************************************************
+    {
+        ThreadList *tl = ThreadList::pFirst;
 
-            DWORD dwTerm = 0;
-            GetExitCodeThread(tl->hThread, &dwTerm);
+        while(tl != NULL)
+        {
+            // ignore current thread
+            DWORD cur = GetCurrentThreadId();
+            DWORD cmp = tl->dwThreadId;
 
-            while(dwTerm == STILL_ACTIVE)
+            if(cmp == 0)
+                break;
+
+            if(cmp != cur)
             {
-                Sleep(50);
+                ResumeThread(tl->hThread);
+
+                DWORD dwTerm = 0;
                 GetExitCodeThread(tl->hThread, &dwTerm);
+
+                while(dwTerm == STILL_ACTIVE)
+                {
+                    Sleep(50);
+                    GetExitCodeThread(tl->hThread, &dwTerm);
+                }
+
+                printf("Cxbx: Thread 0x%.08X Terminated\n", tl->hThread);
             }
 
-            printf("Cxbx: Thread 0x%.08X Terminated\n", tl->hThread);
+            ThreadList *pTmpDel = tl;
+
+            tl = tl->pNext;
+
+            delete pTmpDel;
         }
-
-        ThreadList::pFirst = tl->pNext;
-
-        delete tl;
     }
 
     printf("CxbxKrnl: Terminating Process\n");
@@ -355,7 +379,14 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage)
 
     EmuCleanupFS();
 
-    ExitThread(0);
+    __try
+    {
+        ExitProcess(0);
+    }
+    __except(ExitException(GetExceptionInformation()))
+    {
+        printf("Emu: WARNING!! Problem with ExitExceptionFilter\n");
+    }
 
     return;
 }
@@ -559,6 +590,36 @@ int EmuException(LPEXCEPTION_POINTERS e)
 		if(MessageBox(NULL, buffer, "Cxbx", MB_ICONSTOP | MB_OKCANCEL) == IDOK)
 			ExitProcess(1);
 	}
+
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
+
+// ******************************************************************
+// * func: ExitException
+// ******************************************************************
+int ExitException(LPEXCEPTION_POINTERS e)
+{
+    static int count = 0;
+
+    // ******************************************************************
+	// * Debugging Information
+	// ******************************************************************
+	{
+		printf("\n");
+		printf("Recieved Exit Exception : 0x%.08X\n", e->ExceptionRecord->ExceptionCode);
+		printf("\n");
+	}
+
+    count++;
+
+    if(count > 1)
+    {
+        MessageBox(NULL, "Warning: Could not safely terminate process!", "Cxbx", MB_OK);
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+
+    ExitProcess(1);
 
     return EXCEPTION_CONTINUE_SEARCH;
 }
