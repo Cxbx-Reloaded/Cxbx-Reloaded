@@ -112,7 +112,7 @@ void EmuXRenderWindow(PVOID)
     {
         g_EmuXWindow = CreateWindow
         (
-            "CxbxRender", "Cxbx : Xbox Emulator",
+            "CxbxRender", "Cxbx : Running...",
             WS_OVERLAPPEDWINDOW, 100, 100, 640, 480,
             GetDesktopWindow(), NULL, GetModuleHandle(NULL), NULL
         );
@@ -159,6 +159,34 @@ LRESULT WINAPI EmuXMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_DESTROY:
             PostQuitMessage(0);
             return 0;
+
+        case WM_CREATE:
+        // initialize menu
+        {
+            HMODULE hCxbxDll = GetModuleHandle("Cxbx.dll");
+
+            HMENU hMenu = LoadMenu(hCxbxDll, MAKEINTRESOURCE(IDR_RENDERMENU));
+
+            SetMenu(hWnd, hMenu);
+        }
+        break;
+
+        case WM_COMMAND:
+        {
+            switch(LOWORD(wParam))
+            {
+                case ID_FILE_EXIT:
+                {
+                    SendMessage(hWnd, WM_CLOSE, 0, 0);
+                }
+                break;
+            }
+        }
+        break;
+
+        case WM_CLOSE:
+            DestroyWindow(hWnd);
+            break;
     }
 
     return DefWindowProc(hWnd, msg, wParam, lParam);

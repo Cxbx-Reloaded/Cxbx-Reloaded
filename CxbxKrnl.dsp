@@ -188,6 +188,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\xntdll.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\Resource\Cxbx.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\Resource\CxbxDll.rc
 # End Source File
 # End Group
@@ -243,9 +247,5 @@ SOURCE=.\Source\Win32\CxbxKrnl\Xapi.1.0.4361.inl
 SOURCE=.\Source\Win32\CxbxKrnl\Xapi.1.0.4627.inl
 # End Source File
 # End Group
-# Begin Source File
-
-SOURCE=.\Resource\Cxbx.ico
-# End Source File
 # End Target
 # End Project
