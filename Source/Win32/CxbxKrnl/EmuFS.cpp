@@ -88,21 +88,28 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
     // ******************************************************************
     {
         #ifdef _DEBUG_TRACE
-        printf("CxbxKrnl (0x%.08X) : Dumping TLS Raw Data... \n  0x%.08X: ", GetCurrentThreadId(), pNewTLS);
+		if(pNewTLS == 0)
+		{
+			printf("EmuFS (%d): TLS Non-Existant (OK)\n", GetCurrentThreadId());
+		}
+		else
+		{
+			printf("EmuFS (%d): TLS Data Dump... \n  0x%.08X: ", GetCurrentThreadId(), pNewTLS);
 
-        uint32 stop = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr;
+			uint32 stop = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr;
 
-        for(uint32 v=0;v<stop;v++)
-        {
-            uint08 *bByte = (uint08*)pNewTLS + v;
+			for(uint32 v=0;v<stop;v++)
+			{
+				uint08 *bByte = (uint08*)pNewTLS + v;
 
-            printf("%.01X", (uint32)*bByte);
+				printf("%.01X", (uint32)*bByte);
 
-            if((v+1) % 0x10 == 0)
-                printf("\n  0x%.08X: ", ((uint32)pNewTLS + v));
-        }
+				if((v+1) % 0x10 == 0)
+					printf("\n  0x%.08X: ", ((uint32)pNewTLS + v));
+			}
 
-        printf("\n");
+			printf("\n");
+		}
         #endif
     }
 
@@ -214,7 +221,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
     // ******************************************************************
     // * Debug output
     // ******************************************************************
-    printf("EmuFS (0x%.08X): OrgFS=%d NewFS=%d pTLS=%d\n", GetCurrentThreadId(), OrgFS, NewFS, pTLS);
+    printf("EmuFS (%d): OrgFS=%d NewFS=%d pTLS=0x%.08X\n", GetCurrentThreadId(), OrgFS, NewFS, pTLS);
 }
 
 // ******************************************************************

@@ -75,13 +75,18 @@ extern int EmuException(LPEXCEPTION_POINTERS e);
 extern "C" CXBXKRNL_API uint32 KernelThunkTable[367];
 
 // ******************************************************************
-// * data: pTLS
+// * data: g_pTLS
 // ******************************************************************
 extern Xbe::TLS *g_pTLS;
 
 // ******************************************************************
-// * data: pTLSData
+// * data: g_pTLSData
 // ******************************************************************
-extern void     *g_pTLSData;
+extern void *g_pTLSData;
+
+// ******************************************************************
+// * data: g_pXbeHeader
+// ******************************************************************
+extern Xbe::Header *g_pXbeHeader;
 
 #endif

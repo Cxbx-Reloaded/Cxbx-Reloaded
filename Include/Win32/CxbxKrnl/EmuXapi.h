@@ -111,6 +111,11 @@ typedef DWORD (WINAPI *PTHREAD_START_ROUTINE)
 typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
 
 // ******************************************************************
+// * pfRtlCreateHeap
+// ******************************************************************
+typedef PVOID (WINAPI *pfRtlCreateHeap)(DWORD, DWORD, DWORD, DWORD, DWORD, DWORD);
+
+// ******************************************************************
 // * XINPUT_POLLING_PARAMETERS
 // ******************************************************************
 typedef struct _XINPUT_POLLING_PARAMETERS
@@ -275,6 +280,16 @@ BOOL WINAPI EmuCloseHandle
 // * func: EmuXapiInitProcess
 // ******************************************************************
 VOID WINAPI EmuXapiInitProcess();
+
+// ******************************************************************
+// * data: EmuXapiProcessHeap
+// ******************************************************************
+extern PVOID EmuXapiProcessHeap;
+
+// ******************************************************************
+// * func: g_pRtlCreateHeap
+// ******************************************************************
+extern pfRtlCreateHeap g_pRtlCreateHeap;
 
 // ******************************************************************
 // * func: EmuXapiThreadStartup

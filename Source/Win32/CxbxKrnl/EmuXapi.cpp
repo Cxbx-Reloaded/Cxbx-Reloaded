@@ -66,7 +66,7 @@ VOID WINAPI xapi::EmuXInitDevices
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXapi (0x%.08X): EmuXInitDevices\n"
+        printf("EmuXapi (%d): EmuXInitDevices\n"
                "(\n"
                "   Unknown1            : 0x%.08X\n"
                "   Unknown2            : 0x%.08X\n"
@@ -98,7 +98,7 @@ DWORD WINAPI xapi::EmuXGetDevices
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXapi (0x%.08X): EmuXGetDevices\n"
+        printf("EmuXapi (%d): EmuXGetDevices\n"
                "(\n"
                "   DeviceType          : 0x%.08X\n"
                ");\n",
@@ -130,7 +130,7 @@ HANDLE WINAPI xapi::EmuXInputOpen
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXapi (0x%.08X): EmuXInputOpen\n"
+        printf("EmuXapi (%d): EmuXInputOpen\n"
                "(\n"
                "   DeviceType          : 0x%.08X\n"
                "   dwPort              : 0x%.08X\n"
@@ -168,7 +168,7 @@ DWORD WINAPI xapi::EmuXInputGetCapabilities
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXapi (0x%.08X): EmuXInputGetCapabilities\n"
+        printf("EmuXapi (%d): EmuXInputGetCapabilities\n"
                "(\n"
                "   hDevice             : 0x%.08X\n"
                "   pCapabilities       : 0x%.08X\n"
@@ -211,7 +211,7 @@ DWORD WINAPI xapi::EmuXInputGetState
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXapi (0x%.08X): XInputGetState\n"
+        printf("EmuXapi (%d): XInputGetState\n"
                "(\n"
                "   hDevice             : 0x%.08X\n"
                "   pState              : 0x%.08X\n"
@@ -252,7 +252,7 @@ BOOL WINAPI xapi::EmuCloseHandle
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXapi (0x%.08X): EmuCloseHandle\n"
+        printf("EmuXapi (%d): EmuCloseHandle\n"
                "(\n"
                "   hObject             : 0x%.08X\n"
                ");\n",
@@ -279,17 +279,40 @@ VOID WINAPI xapi::EmuXapiInitProcess()
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXapi (0x%.08X): EmuXapiInitProcess();\n", GetCurrentThreadId());
+        printf("EmuXapi (%d): EmuXapiInitProcess();\n", GetCurrentThreadId());
     }
     #endif
 
-    // TODO: Process initialization (if necessary)
-	// TODO: Somehow initialize floating point
+    // ******************************************************************
+	// * Call RtlCreateHeap
+    // ******************************************************************
+	{
+		BYTE SomeStruct[0x30];
 
-    EmuSwapFS();   // XBox FS
+		ZeroMemory(SomeStruct, sizeof(SomeStruct));
+
+		*(DWORD*)SomeStruct = sizeof(SomeStruct);
+
+		// TODO: Process initialization (if necessary)
+		// TODO: Somehow initialize floating point
+
+		EmuSwapFS();   // XBox FS
+
+		xapi::EmuXapiProcessHeap = g_pRtlCreateHeap(2, 0, g_pXbeHeader->dwPeHeapReserve, g_pXbeHeader->dwPeHeapCommit, 0, (uint32)SomeStruct);
+	}
 
     return;
 }
+
+// ******************************************************************
+// * data: EmuXapiProcessHeap
+// ******************************************************************
+PVOID xapi::EmuXapiProcessHeap;
+
+// ******************************************************************
+// * func: g_pRtlCreateHeap
+// ******************************************************************
+xapi::pfRtlCreateHeap xapi::g_pRtlCreateHeap;
 
 // ******************************************************************
 // * func: EmuXapiThreadStartup
@@ -307,7 +330,7 @@ VOID WINAPI xapi::EmuXapiThreadStartup
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXapi (0x%.08X): EmuXapiThreadStartup\n"
+        printf("EmuXapi (%d): EmuXapiThreadStartup\n"
                "(\n"
                "   dwDummy1            : 0x%.08X\n"
                "   dwDummy2            : 0x%.08X\n"
@@ -340,7 +363,7 @@ xapi::NTSTATUS CDECL xapi::XapiSetupPerTitleDriveLetters(DWORD dwTitleId, LPCWST
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXapi (0x%.08X): XapiSetupPerTitleDriveLetters\n"
+        printf("EmuXapi (%d): XapiSetupPerTitleDriveLetters\n"
                "(\n"
                "   dwTitleId           : 0x%.08X\n"
                "   wszTitleName        : 0x%.08X\n"
@@ -368,7 +391,7 @@ VOID WINAPI xapi::EmuXapiBootDash(DWORD UnknownA, DWORD UnknownB, DWORD UnknownC
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXapi (0x%.08X): EmuXapiBootDash\n"
+        printf("EmuXapi (%d): EmuXapiBootDash\n"
                "(\n"
                "   UnknownA            : 0x%.08X\n"
                "   UnknownB            : 0x%.08X\n"
@@ -397,7 +420,7 @@ VOID xapi::Emu__rtinit()
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXapi (0x%.08X): Emu__rtinit();\n", GetCurrentThreadId());
+        printf("EmuXapi (%d): Emu__rtinit();\n", GetCurrentThreadId());
     }
     #endif
 
@@ -416,7 +439,7 @@ VOID xapi::Emu__cinit()
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXapi (0x%.08X): Emu__cinit();\n", GetCurrentThreadId());
+        printf("EmuXapi (%d): Emu__cinit();\n", GetCurrentThreadId());
     }
     #endif
 

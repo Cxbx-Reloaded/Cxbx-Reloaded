@@ -329,7 +329,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (0x%.08X): EmuIDirect3D8_CreateDevice\n"
+        printf("EmuD3D8 (%d): EmuIDirect3D8_CreateDevice\n"
                "(\n"
                "   Adapter                   : 0x%.08X\n"
                "   DeviceType                : 0x%.08X\n"
@@ -438,7 +438,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_Clear
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_Clear\n"
+        printf("EmuD3D8 (%d): EmuIDirect3DDevice8_Clear\n"
                "(\n"
                "   Count               : 0x%.08X\n"
                "   pRects              : 0x%.08X\n"
@@ -498,7 +498,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_Present
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_Present\n"
+        printf("EmuD3D8 (%d): EmuIDirect3DDevice8_Present\n"
                "(\n"
                "   pSourceRect         : 0x%.08X\n"
                "   pDestRect           : 0x%.08X\n"
@@ -531,7 +531,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_Swap
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_Swap\n"
+        printf("EmuD3D8 (%d): EmuIDirect3DDevice8_Swap\n"
                "(\n"
                "   Flags               : 0x%.08X\n"
                ");\n",
@@ -583,7 +583,7 @@ xd3d8::D3DVertexBuffer* WINAPI xd3d8::EmuIDirect3DDevice8_CreateVertexBuffer2
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_CreateVertexBuffer2\n"
+        printf("EmuD3D8 (%d): EmuIDirect3DDevice8_CreateVertexBuffer2\n"
                "(\n"
                "   Length              : 0x%.08X\n"
                ");\n",
@@ -622,7 +622,7 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetRenderState_CullMode
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_SetRenderState_CullMode\n"
+        printf("EmuD3D8 (%d): EmuIDirect3DDevice8_SetRenderState_CullMode\n"
                "(\n"
                "   Value               : 0x%.08X\n"
                ");\n",
@@ -671,7 +671,7 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetTransform
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_SetTransform\n"
+        printf("EmuD3D8 (%d): EmuIDirect3DDevice8_SetTransform\n"
                "(\n"
                "   State               : 0x%.08X\n"
                "   pMatrix             : 0x%.08X\n"
@@ -717,7 +717,7 @@ VOID WINAPI xd3d8::EmuIDirect3DVertexBuffer8_Lock
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (0x%.08X): EmuIDirect3DVertexBuffer8_Lock\n"
+        printf("EmuD3D8 (%d): EmuIDirect3DVertexBuffer8_Lock\n"
                "(\n"
                "   ppVertexBuffer      : 0x%.08X\n"
                "   OffsetToLock        : 0x%.08X\n"
@@ -752,7 +752,7 @@ BYTE* WINAPI xd3d8::EmuIDirect3DVertexBuffer8_Lock2
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (0x%.08X): EmuIDirect3DVertexBuffer8_Lock2\n"
+        printf("EmuD3D8 (%d): EmuIDirect3DVertexBuffer8_Lock2\n"
                "(\n"
                "   ppVertexBuffer      : 0x%.08X\n"
                "   Flags               : 0x%.08X\n"
@@ -787,7 +787,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetStreamSource
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_SetStreamSource\n"
+        printf("EmuD3D8 (%d): EmuIDirect3DDevice8_SetStreamSource\n"
                "(\n"
                "   StreamNumber        : 0x%.08X\n"
                "   pStreamData         : 0x%.08X\n"
@@ -821,7 +821,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetVertexShader
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_SetVertexShader\n"
+        printf("EmuD3D8 (%d): EmuIDirect3DDevice8_SetVertexShader\n"
                "(\n"
                "   Handle              : 0x%.08X\n"
                ");\n",
@@ -853,7 +853,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_DrawVertices\n"
+        printf("EmuD3D8 (%d): EmuIDirect3DDevice8_DrawVertices\n"
                "(\n"
                "   PrimitiveType       : 0x%.08X\n"
                "   StartVertex         : 0x%.08X\n"
