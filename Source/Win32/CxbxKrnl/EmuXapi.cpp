@@ -89,7 +89,7 @@ BOOL WINAPI XTL::EmuXFormatUtilityDrive()
     return TRUE;
 }
 
-/* ended up not fixing anything in panzer dragoon!
+//* ended up not fixing anything in panzer dragoon!
 // ******************************************************************
 // * func: EmuFindFirstFileA
 // ******************************************************************
