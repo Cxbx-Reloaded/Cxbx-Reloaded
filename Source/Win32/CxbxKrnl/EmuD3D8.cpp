@@ -3095,8 +3095,48 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
     }
     else
     {
-        // TODO: copy over to back buffer
-        EmuWarning("Overlay is not being displayed");
+        // TODO: dont assume X8R8G8B8 ?
+        D3DLOCKED_RECT LockedRectDest;
+        D3DLOCKED_RECT LockedRectSour;
+
+        IDirect3DSurface8 *pBackBuffer=0;
+
+        HRESULT hRet = g_pD3DDevice8->GetBackBuffer(0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
+
+        // if we obtained the backbuffer, manually translate the YUY2 into the backbuffer format
+        if(hRet == D3D_OK && pBackBuffer->LockRect(&LockedRectDest, NULL, NULL) == D3D_OK)
+        {
+            // remove any stale locks
+            pSurface->EmuSurface8->UnlockRect();
+
+            hRet = pSurface->EmuSurface8->LockRect(&LockedRectSour, NULL, D3DLOCK_READONLY);
+
+            if(hRet == D3D_OK)
+            {
+                uint08 *pDest = (uint08*)LockedRectDest.pBits;
+                uint08 *pSour = (uint08*)LockedRectSour.pBits;
+
+                for(uint y=0;y<g_dwOverlayH;y++)
+                {
+                    for(uint x=0;x<g_dwOverlayW*4;x+=4)
+                    {
+                        pDest[x+0] = 0xFF;
+                        pDest[x+1] = 0xFF;
+                        pDest[x+2] = 0xFF;
+                        pDest[x+3] = 0xFF;
+                    }
+
+//                    memcpy(pDest, pSour, LockedRectDest.Pitch);
+
+                    pDest += LockedRectDest.Pitch;
+                    pSour += LockedRectSour.Pitch;
+                }
+
+                pSurface->EmuSurface8->UnlockRect();
+            }
+
+            pBackBuffer->UnlockRect();
+        }
     }
 
     EmuSwapFS();   // XBox FS
