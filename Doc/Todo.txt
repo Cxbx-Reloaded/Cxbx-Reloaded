@@ -12,6 +12,9 @@ HLE :
 
   * Add FPS counter
 
+  * Fake fullscreen mode (allows dynamical full/windowed switches without
+    having to restore resources)
+
 ETC :
 
   * Use SetAllParameters to reverse engineer 3911 DSound functions

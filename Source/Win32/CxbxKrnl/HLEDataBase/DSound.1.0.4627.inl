@@ -995,41 +995,6 @@ SOOVPA<11> CDirectSound_SetDistanceFactorA_1_0_4627 =
 };
 
 // ******************************************************************
-// * IDirectSound8_SetDistanceFactor
-// ******************************************************************
-SOOVPA<11> IDirectSound8_SetDistanceFactor_1_0_4627 =
-{
-    0,  // Large == 0
-    11, // Count == 11
-
-    -1, // XRef Not Saved
-    1,  // XRef Is  Used
-
-    {
-        // IDirectSound8_SetDistanceFactor+0x1D : call [CDirectSound::SetDistanceFactor]
-        { 0x1D, XREF_SETDISTANCEFACTORA },  // (Offset,Value)-Pair #1
-
-        // IDirectSound8_SetDistanceFactor+0x04 : fld [esp+0x0C]
-        { 0x04, 0xD9 }, // (Offset,Value)-Pair #2
-        { 0x05, 0x44 }, // (Offset,Value)-Pair #3
-        { 0x06, 0x24 }, // (Offset,Value)-Pair #4
-        { 0x07, 0x0C }, // (Offset,Value)-Pair #5
-
-        // IDirectSound8_SetDistanceFactor+0x0C : push ecx
-        { 0x0C, 0x51 }, // (Offset,Value)-Pair #6
-
-        // IDirectSound8_SetDistanceFactor+0x12 : add eax, 0xFFFFFFF8
-        { 0x12, 0x83 }, // (Offset,Value)-Pair #7
-        { 0x13, 0xC0 }, // (Offset,Value)-Pair #8
-        { 0x14, 0xF8 }, // (Offset,Value)-Pair #9
-
-        // IDirectSound8_SetDistanceFactor+0x21 : retn 0x0C
-        { 0x21, 0xC2 }, // (Offset,Value)-Pair #10
-        { 0x22, 0x0C }, // (Offset,Value)-Pair #11
-    }
-};
-
-// ******************************************************************
 // * CDirectSound::SetRolloffFactor
 // ******************************************************************
 SOOVPA<11> CDirectSound_SetRolloffFactor_1_0_4627 =
@@ -2677,9 +2642,9 @@ OOVPATable DSound_1_0_4627[] =
         "CDirectSound_SetDistanceFactorA (XRef)"
         #endif
     },
-    // IDirectSound8::SetDistanceFactor
+    // IDirectSound8::SetDistanceFactor (* unchanged since 4432 *)
     {
-        (OOVPA*)&IDirectSound8_SetDistanceFactor_1_0_4627,
+        (OOVPA*)&IDirectSound8_SetDistanceFactor_1_0_4432,
 
         XTL::EmuIDirectSound8_SetDistanceFactor,
 

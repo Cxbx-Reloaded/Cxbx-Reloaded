@@ -3449,7 +3449,7 @@ SOOVPA<11> IDirectSound8_DownloadEffectsImage_1_0_3936 =
         { 0x12, 0xC0 }, // (Offset,Value)-Pair #8
         { 0x13, 0xF8 }, // (Offset,Value)-Pair #9
 
-        // IDirectSound8_DownloadEffectsImage+0x24 : retn 0x14
+        // IDirectSound8_DownloadEffectsImage+0x24 : retn 0x14  
         { 0x24, 0xC2 }, // (Offset,Value)-Pair #10
         { 0x25, 0x14 }, // (Offset,Value)-Pair #11
     }
