@@ -106,6 +106,22 @@ CXBXKRNL_API void NTAPI EmuXInit(uint32 DebugConsole, uint08 *XBEHeader, uint32 
         memcpy((void*)dwCertificateAddr, &XBEHeader[dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
     }
 
+    // ******************************************************************
+    // * Initialize FS:* structure
+    // ******************************************************************
+    {
+        NT_TIB *OriginalTIB = 0;
+
+        __asm
+        {
+            mov esi, fs:[18h]
+            mov OriginalTIB, esi
+        }
+
+        // TODO: Allocate new FS: within LDT, copy OriginalTIB to KPCR.NtTib, load new FS
+        printf("CxbxKrnl [0x%.08X]: NT_TIB.Self=0x%.08X\n", GetCurrentThreadId(), OriginalTIB->Self);
+    }
+
     printf("CxbxKrnl [0x%.08X]: Initial thread starting.\n", GetCurrentThreadId());
 
     Entry();
