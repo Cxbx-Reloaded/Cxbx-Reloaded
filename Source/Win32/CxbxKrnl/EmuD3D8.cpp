@@ -954,6 +954,44 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_EndVisibilityTest
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_GetVisibilityTestResult
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetVisibilityTestResult
+(
+    DWORD                       Index,
+    UINT                       *pResult,
+    ULONGLONG                  *pTimeStamp
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetVisibilityTestResult\n"
+               "(\n"
+               "   Index                     : 0x%.08X\n"
+               "   pResult                   : 0x%.08X\n"
+               "   pTimeStamp                : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Index, pResult, pTimeStamp);
+    }
+    #endif
+
+    // TODO: actually emulate this!?
+
+    if(pResult != 0)
+        *pResult = 0;
+
+    if(pTimeStamp != 0)
+        *pTimeStamp = 0;
+
+    EmuSwapFS();   // XBox FS
+
+    return D3D_OK;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_GetDeviceCaps
 // ******************************************************************
 VOID WINAPI XTL::EmuIDirect3DDevice8_GetDeviceCaps

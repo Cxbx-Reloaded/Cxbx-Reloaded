@@ -383,6 +383,16 @@ HRESULT WINAPI EmuIDirect3DDevice8_EndVisibilityTest
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_GetVisibilityTestResult
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_GetVisibilityTestResult
+(
+    DWORD                       Index,
+    UINT                       *pResult,
+    ULONGLONG                  *pTimeStamp
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_LoadVertexShader
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_LoadVertexShader

@@ -157,6 +157,37 @@ SOOVPA<13> IDirect3DDevice8_EndVisibilityTest_1_0_4627 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_GetVisibilityTestResult
+// ******************************************************************
+SOOVPA<11> IDirect3DDevice8_GetVisibilityTestResult_1_0_4627 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_GetVisibilityTestResult+0x0C : shr ecx, 8
+        { 0x0C, 0xC1 }, // (Offset,Value)-Pair #1
+        { 0x0D, 0xE9 }, // (Offset,Value)-Pair #2
+        { 0x0E, 0x08 }, // (Offset,Value)-Pair #3
+
+        // IDirect3DDevice8_GetVisibilityTestResult+0x0F : and eax, 0xFF
+        { 0x0F, 0x25 }, // (Offset,Value)-Pair #4
+        { 0x10, 0xFF }, // (Offset,Value)-Pair #5
+        { 0x11, 0x00 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_GetVisibilityTestResult+0x2B : mov eax, 0x88760828
+        { 0x2B, 0xB8 }, // (Offset,Value)-Pair #7
+        { 0x2C, 0x28 }, // (Offset,Value)-Pair #8
+        { 0x2D, 0x08 }, // (Offset,Value)-Pair #9
+        { 0x2E, 0x76 }, // (Offset,Value)-Pair #10
+        { 0x2F, 0x88 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
 // * IDirect3D8_GetAdapterDisplayMode
 // ******************************************************************
 SOOVPA<13> IDirect3D8_GetAdapterDisplayMode_1_0_4627 =
@@ -1713,6 +1744,16 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_EndVisibilityTest" 
+        #endif
+    },
+    // IDirect3DDevice8::GetVisibilityTestResult
+    {
+        (OOVPA*)&IDirect3DDevice8_GetVisibilityTestResult_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_GetVisibilityTestResult,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetVisibilityTestResult" 
         #endif
     },
     // IDirect3D8::GetAdapterModeCount (* unchanged since 4361 *)
