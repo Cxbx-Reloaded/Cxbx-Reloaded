@@ -181,13 +181,24 @@ CONST DWORD XTL::EmuD3DRenderStateSimpleEncoded[174] =
 };
 
 // fixup xbox extensions to be compatible with PC direct3d
-uint32 XTL::EmuFixupVerticesA(uint32 PrimitiveType, UINT &PrimitiveCount, XTL::IDirect3DVertexBuffer8 *&pOrigVertexBuffer8, XTL::IDirect3DVertexBuffer8 *&pHackVertexBuffer8, UINT dwOffset, PVOID pVertexStreamZeroData, UINT VertexStreamZeroStride, PVOID *ppNewVertexStreamZeroData)
+UINT XTL::EmuFixupVerticesA
+(
+    DWORD                           PrimitiveType,
+    UINT                           &PrimitiveCount,
+    XTL::IDirect3DVertexBuffer8   *&pOrigVertexBuffer8,
+    XTL::IDirect3DVertexBuffer8   *&pHackVertexBuffer8,
+    UINT                            dwOffset,
+    PVOID                           pVertexStreamZeroData,
+    UINT                            uiVertexStreamZeroStride, 
+    PVOID                          *ppNewVertexStreamZeroData
+)
 {
-    UINT uiStride = 0;
-
     // only quad and listloop are supported right now
     if(PrimitiveType != 8 && PrimitiveType != 3)
         return -1;
+
+    // stride of this stream source
+    UINT uiStride = 0;
 
     // sizes of our part in the vertex buffer
     DWORD dwOriginalSize    = 0;
@@ -250,7 +261,7 @@ uint32 XTL::EmuFixupVerticesA(uint32 PrimitiveType, UINT &PrimitiveCount, XTL::I
     }
     else
     {
-        uiStride = VertexStreamZeroStride;
+        uiStride = uiVertexStreamZeroStride;
 
         if(PrimitiveType == 8)      // Quad
         {
@@ -288,22 +299,30 @@ uint32 XTL::EmuFixupVerticesA(uint32 PrimitiveType, UINT &PrimitiveCount, XTL::I
 
     if(PrimitiveType == 8)      // Quad
     {
-        int end = PrimitiveCount/2;
-        int i = 0;
+        uint08 *pHack1 = &pHackVertexData[dwOffset+0*uiStride];
+        uint08 *pHack2 = &pHackVertexData[dwOffset+3*uiStride];
+        uint08 *pHack3 = &pHackVertexData[dwOffset+4*uiStride];
+        uint08 *pHack4 = &pHackVertexData[dwOffset+5*uiStride];
 
-        for(i=0;i<end;i++)
+        uint08 *pOrig1 = &pOrigVertexData[dwOffset+0*uiStride];
+        uint08 *pOrig2 = &pOrigVertexData[dwOffset+2*uiStride];
+        uint08 *pOrig3 = &pOrigVertexData[dwOffset+3*uiStride];
+
+        for(uint32 i=0;i<PrimitiveCount/2;i++)
         {
-            /* condensed below
-            memcpy(&pHackVertexData[dwOffset+i*uiStride*6+0*uiStride], &pOrigVertexData[dwOffset+i*uiStride*4+0*uiStride], uiStride);
-            memcpy(&pHackVertexData[dwOffset+i*uiStride*6+1*uiStride], &pOrigVertexData[dwOffset+i*uiStride*4+1*uiStride], uiStride);
-            memcpy(&pHackVertexData[dwOffset+i*uiStride*6+2*uiStride], &pOrigVertexData[dwOffset+i*uiStride*4+2*uiStride], uiStride);
-            //*/
+            memcpy(pHack1, pOrig1, uiStride*3); // Vertex 0,1,2 := Vertex 0,1,2
+            memcpy(pHack2, pOrig2, uiStride);   // Vertex 3     := Vertex 2
+            memcpy(pHack3, pOrig3, uiStride);   // Vertex 4     := Vertex 3
+            memcpy(pHack4, pOrig1, uiStride);   // Vertex 5     := Vertex 0
 
-            memcpy(&pHackVertexData[dwOffset+i*uiStride*6+0*uiStride], &pOrigVertexData[dwOffset+i*uiStride*4+0*uiStride], uiStride*3);
+            pHack1 += uiStride*6;
+            pHack2 += uiStride*6;
+            pHack3 += uiStride*6;
+            pHack4 += uiStride*6;
 
-            memcpy(&pHackVertexData[dwOffset+i*uiStride*6+3*uiStride], &pOrigVertexData[dwOffset+i*uiStride*4+2*uiStride], uiStride);
-            memcpy(&pHackVertexData[dwOffset+i*uiStride*6+4*uiStride], &pOrigVertexData[dwOffset+i*uiStride*4+3*uiStride], uiStride);
-            memcpy(&pHackVertexData[dwOffset+i*uiStride*6+5*uiStride], &pOrigVertexData[dwOffset+i*uiStride*4+0*uiStride], uiStride);
+            pOrig1 += uiStride*4;
+            pOrig2 += uiStride*4;
+            pOrig3 += uiStride*4;
 
             if(dwVertexShader & D3DFVF_XYZRHW)
             {
@@ -335,7 +354,12 @@ uint32 XTL::EmuFixupVerticesA(uint32 PrimitiveType, UINT &PrimitiveCount, XTL::I
 }
 
 // fixup xbox extensions to be compatible with PC direct3d
-void XTL::EmuFixupVerticesB(uint32 nStride, XTL::IDirect3DVertexBuffer8 *&pOrigVertexBuffer8, XTL::IDirect3DVertexBuffer8 *&pHackVertexBuffer8)
+VOID XTL::EmuFixupVerticesB
+(
+    UINT                            nStride,
+    XTL::IDirect3DVertexBuffer8   *&pOrigVertexBuffer8,
+    XTL::IDirect3DVertexBuffer8   *&pHackVertexBuffer8
+)
 {
     if(pOrigVertexBuffer8 != 0 && pHackVertexBuffer8 != 0)
         g_pD3DDevice8->SetStreamSource(0, pOrigVertexBuffer8, nStride);

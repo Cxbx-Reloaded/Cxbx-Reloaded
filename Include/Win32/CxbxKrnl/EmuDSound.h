@@ -42,6 +42,54 @@
 #include <dsound.h>
 
 // ******************************************************************
+// * X_DSBUFFERDESC
+// ******************************************************************
+struct X_DSBUFFERDESC
+{
+    DWORD           dwSize; 
+    DWORD           dwFlags; 
+    DWORD           dwBufferBytes; 
+    LPWAVEFORMATEX  lpwfxFormat; 
+    LPVOID          lpMixBins;      // TODO: Implement
+    DWORD           dwInputMixBin;
+};
+
+// ******************************************************************
+// * X_DSSTREAMDESC
+// ******************************************************************
+struct X_DSSTREAMDESC
+{
+    DWORD                       dwFlags;
+    DWORD                       dwMaxAttachedPackets;
+    LPWAVEFORMATEX              lpwfxFormat;
+    PVOID                       lpfnCallback;   // TODO: Correct Parameter
+    LPVOID                      lpvContext;
+    PVOID                       lpMixBins;      // TODO: Correct Parameter
+}; 
+
+// ******************************************************************
+// * REFERENCE_TIME
+// ******************************************************************
+typedef LONGLONG REFERENCE_TIME, *PREFERENCE_TIME, *LPREFERENCE_TIME;
+
+// ******************************************************************
+// * XMEDIAPACKET
+// ******************************************************************
+typedef struct _XMEDIAPACKET
+{
+    LPVOID pvBuffer;
+    DWORD dwMaxSize;
+    PDWORD pdwCompletedSize;
+    PDWORD pdwStatus;
+    union {
+        HANDLE  hCompletionEvent;
+        PVOID  pContext;
+    };
+    PREFERENCE_TIME prtTimestamp;
+}
+XMEDIAPACKET, *PXMEDIAPACKET, *LPXMEDIAPACKET;
+
+// ******************************************************************
 // * X_CDirectSound
 // ******************************************************************
 struct X_CDirectSound
@@ -71,15 +119,15 @@ struct X_CDirectSoundBuffer
 class X_CDirectSoundStream
 {
     public:
-        // ******************************************************************
-        // * Construct VTable (or grab ptr to existing)
-        // ******************************************************************
+        // construct vtable (or grab ptr to existing)
         X_CDirectSoundStream() : pVtbl(&vtbl) {};
 
+        // retrieve sound buffer cache reference
+        IDirectSoundBuffer **GetSoundBufferRef() { return &pEmuDirectSoundBuffer; }
+        IDirectSoundBuffer  *GetSoundBuffer() { return pEmuDirectSoundBuffer; }
+
     private:
-        // ******************************************************************
-        // * VTable (cached by each instance, via constructor)
-        // ******************************************************************
+        // vtable (cached by each instance, via constructor)
         struct _vtbl
         {
             ULONG (WINAPI *AddRef)(X_CDirectSoundStream *pThis);            // 0x00
@@ -88,51 +136,24 @@ class X_CDirectSoundStream
             HRESULT (WINAPI *Process)                                       // 0x10
             (
                 X_CDirectSoundStream   *pThis,
-                PVOID                   pInputBuffer,                       // TODO: Fillout params
-                PVOID                   pOutputBuffer                       // TODO: Fillout params
+                PXMEDIAPACKET           pInputBuffer,
+                PXMEDIAPACKET           pOutputBuffer
             );
             HRESULT (WINAPI *Discontinuity)(X_CDirectSoundStream *pThis);   // 0x14
         }
         *pVtbl;
 
-        // ******************************************************************
-        // * Global Vtbl for this class
-        // ******************************************************************
+        // global vtbl for this class
         static _vtbl vtbl;
 
-        // ******************************************************************
-        // * Debug Mode guard for detecting naughty data accesses
-        // ******************************************************************
+        // debug mode guard for detecting naughty data accesses
         #ifdef _DEBUG
         DWORD DebugGuard[256];
         #endif
-};
 
-// ******************************************************************
-// * X_DSBUFFERDESC
-// ******************************************************************
-struct X_DSBUFFERDESC
-{
-    DWORD           dwSize; 
-    DWORD           dwFlags; 
-    DWORD           dwBufferBytes; 
-    LPWAVEFORMATEX  lpwfxFormat; 
-    LPVOID          lpMixBins;      // TODO: Implement
-    DWORD           dwInputMixBin;
+        // cached directsound buffer
+        XTL::IDirectSoundBuffer *pEmuDirectSoundBuffer;
 };
-
-// ******************************************************************
-// * X_DSSTREAMDESC
-// ******************************************************************
-struct X_DSSTREAMDESC
-{
-    DWORD                       dwFlags;
-    DWORD                       dwMaxAttachedPackets;
-    LPWAVEFORMATEX              lpwfxFormat;
-    PVOID                       lpfnCallback;   // TODO: Correct Parameter
-    LPVOID                      lpvContext;
-    PVOID                       lpMixBins;      // TODO: Correct Parameter
-}; 
 
 // ******************************************************************
 // * func: EmuDirectSoundCreate
@@ -220,8 +241,8 @@ ULONG WINAPI EmuCDirectSoundStream_Release(X_CDirectSoundStream *pThis);
 HRESULT WINAPI EmuCDirectSoundStream_Process
 (
     X_CDirectSoundStream   *pThis,
-    PVOID                   pInputBuffer,   // TODO: Fillout params
-    PVOID                   pOutputBuffer   // TODO: Fillout params
+    PXMEDIAPACKET           pInputBuffer,
+    PXMEDIAPACKET           pOutputBuffer
 );
 
 // ******************************************************************

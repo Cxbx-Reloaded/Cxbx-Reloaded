@@ -56,10 +56,25 @@ extern void EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
 extern void EmuD3DCleanup();
 
 // fixup xbox extensions to be compatible with PC direct3d
-extern uint32 EmuFixupVerticesA(uint32 PrimitiveType, UINT &PrimitiveCount, XTL::IDirect3DVertexBuffer8 *&pOrigVertexBuffer8, XTL::IDirect3DVertexBuffer8 *&pHackVertexBuffer8, UINT dwOffset, PVOID pVertexStreamZeroData, UINT VertexStreamZeroStride, PVOID *ppNewVertexStreamZeroData);
+extern UINT EmuFixupVerticesA
+(
+    DWORD                           PrimitiveType,
+    UINT                           &PrimitiveCount,
+    XTL::IDirect3DVertexBuffer8   *&pOrigVertexBuffer8,
+    XTL::IDirect3DVertexBuffer8   *&pHackVertexBuffer8,
+    UINT                            dwOffset,
+    PVOID                           pVertexStreamZeroData,
+    UINT                            uiVertexStreamZeroStride, 
+    PVOID                          *ppNewVertexStreamZeroData
+);
 
 // fixup xbox extensions to be compatible with PC direct3d
-extern void   EmuFixupVerticesB(uint32 nStride, XTL::IDirect3DVertexBuffer8 *&pOrigVertexBuffer8, XTL::IDirect3DVertexBuffer8 *&pHackVertexBuffer8);
+extern VOID EmuFixupVerticesB
+(
+    UINT                            nStride,
+    XTL::IDirect3DVertexBuffer8   *&pOrigVertexBuffer8,
+    XTL::IDirect3DVertexBuffer8   *&pHackVertexBuffer8
+);
 
 // special resource data flags
 #define X_D3DRESOURCE_DATA_FLAG_BASE    (0xEFFFFFFE)
