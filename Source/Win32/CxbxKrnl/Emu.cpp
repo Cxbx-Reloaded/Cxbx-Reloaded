@@ -146,7 +146,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion
     {
         FreeConsole();
 
-        freopen("NUL", "wt", stdout);
+        freopen("nul", "wt", stdout);
     }
 
     // ******************************************************************
