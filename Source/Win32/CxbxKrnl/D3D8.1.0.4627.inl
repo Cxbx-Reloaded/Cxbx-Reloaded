@@ -163,6 +163,67 @@ SOOVPA<9> IDirect3D8_KickOffAndWaitForIdle_1_0_4627 =
 };
 
 // ******************************************************************
+// * IDirect3D8_SetViewport
+// ******************************************************************
+SOOVPA<9> IDirect3D8_SetViewport_1_0_4627 =
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3D8_SetViewport+0x0A : mov eax, [esi+0x21B4]
+        { 0x0A, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x0B, 0x86 }, // (Offset,Value)-Pair #2
+        { 0x0C, 0xB4 }, // (Offset,Value)-Pair #3
+        { 0x0D, 0x21 }, // (Offset,Value)-Pair #4
+
+        // IDirect3D8_SetViewport+0x63 : shl edi, cl
+        { 0x63, 0xD3 }, // (Offset,Value)-Pair #5
+        { 0x64, 0xE7 }, // (Offset,Value)-Pair #6
+
+        // IDirect3D8_SetViewport+0xDF : and ecx, 0x0F
+        { 0xDF, 0x83 }, // (Offset,Value)-Pair #7
+        { 0xE0, 0xE1 }, // (Offset,Value)-Pair #8
+        { 0xE1, 0x0F }, // (Offset,Value)-Pair #9
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetShaderConstantMode
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_SetShaderConstantMode_1_0_4627 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetShaderConstantMode+0x26 : mov [ebx+0x20D8], eax
+        { 0x26, 0x89 }, // (Offset,Value)-Pair #1
+        { 0x27, 0x83 }, // (Offset,Value)-Pair #2
+        { 0x28, 0xD8 }, // (Offset,Value)-Pair #3
+        { 0x29, 0x20 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DDevice8_SetShaderConstantMode+0x50 : mov dword ptr [eax+0x04], 0x3C
+        { 0x50, 0xC7 }, // (Offset,Value)-Pair #5
+        { 0x51, 0x40 }, // (Offset,Value)-Pair #6
+        { 0x52, 0x04 }, // (Offset,Value)-Pair #7
+        { 0x53, 0x3C }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_SetShaderConstantMode+0xE7 : add esi, 0x0124
+        { 0xE7, 0x81 }, // (Offset,Value)-Pair #9
+        { 0xE8, 0xC6 }, // (Offset,Value)-Pair #10
+        { 0xE9, 0x24 }, // (Offset,Value)-Pair #11
+        { 0xEA, 0x01 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_GetBackBuffer2
 // ******************************************************************
 SOOVPA<12> IDirect3DDevice8_GetBackBuffer2_1_0_4627 =
@@ -1166,6 +1227,26 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_GetBackBuffer2B"
+        #endif
+    },
+    // IDirect3DDevice8::SetViewport
+    {
+        (OOVPA*)&IDirect3D8_SetViewport_1_0_4627,
+
+        XTL::EmuIDirect3D8_SetViewport,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3D8_SetViewport"
+        #endif
+    },
+    // IDirect3DDevice8::SetShaderConstantMode
+    {
+        (OOVPA*)&IDirect3DDevice8_SetShaderConstantMode_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_SetShaderConstantMode,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetShaderConstantMode"
         #endif
     },
     // IDirect3DDevice8::GetRenderTarget2

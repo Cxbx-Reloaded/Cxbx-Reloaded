@@ -42,6 +42,14 @@
 #include <dsound.h>
 
 // ******************************************************************
+// * X_CDirectSound
+// ******************************************************************
+struct X_CDirectSound
+{
+    // TODO: Fill this in?
+};
+
+// ******************************************************************
 // * X_CDirectSoundBuffer
 // ******************************************************************
 struct X_CDirectSoundBuffer
@@ -85,6 +93,51 @@ HRESULT WINAPI EmuIDirectSound8_DownloadEffectsImage
     DWORD                   dwImageSize,
     PVOID                   pImageLoc,      // TODO: Use this param
     PVOID                  *ppImageDesc     // TODO: Use this param
+);
+
+// ******************************************************************
+// * func: EmuIDirectSound8_SetOrientation
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSound8_SetOrientation
+(
+    LPDIRECTSOUND8  pThis,
+    FLOAT           xFront,
+    FLOAT           yFront,
+    FLOAT           zFront,
+    FLOAT           xTop,
+    FLOAT           yTop,
+    FLOAT           zTop,
+    DWORD           dwApply
+);
+
+// ******************************************************************
+// * func: EmuIDirectSound8_SetDistanceFactor
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSound8_SetDistanceFactor
+(
+    LPDIRECTSOUND8  pThis,
+    FLOAT           fDistanceFactor,
+    DWORD           dwApply
+);
+
+// ******************************************************************
+// * func: EmuIDirectSound8_SetRolloffFactor
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSound8_SetRolloffFactor
+(
+    LPDIRECTSOUND8  pThis,
+    FLOAT           fRolloffFactor,
+    DWORD           dwApply
+);
+
+// ******************************************************************
+// * func: EmuIDirectSound8_SetDopplerFactor
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSound8_SetDopplerFactor
+(
+    LPDIRECTSOUND8  pThis,
+    FLOAT           fDopplerFactor,
+    DWORD           dwApply
 );
 
 // ******************************************************************
@@ -151,6 +204,14 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_SetCurrentPosition
 HRESULT WINAPI EmuIDirectSoundBuffer8_Stop
 (
     X_CDirectSoundBuffer   *pThis
+);
+
+// ******************************************************************
+// * func: EmuCDirectSound_CommitDeferredSettings
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSound_CommitDeferredSettings
+(
+    X_CDirectSound         *pThis
 );
 
 #endif

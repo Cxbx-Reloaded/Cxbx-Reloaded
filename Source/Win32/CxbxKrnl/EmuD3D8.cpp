@@ -1066,6 +1066,66 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_GetBackBuffer
 }
 
 // ******************************************************************
+// * func: EmuIDirect3D8_SetViewport
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3D8_SetViewport
+(
+    CONST D3DVIEWPORT8 *pViewport
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3D8_SetViewport\n"
+               "(\n"
+               "   pViewport           : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pViewport);
+    }
+    #endif
+
+    HRESULT hRet = g_pD3DDevice8->SetViewport(pViewport);
+
+    EmuSwapFS();   // Xbox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetShaderConstantMode
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetShaderConstantMode
+(
+    DWORD               dwMode    // TODO: Fill out enumeration
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetShaderConstantMode\n"
+               "(\n"
+               "   dwMode              : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), dwMode);
+    }
+    #endif
+
+    // TODO: Actually implement this
+
+    EmuSwapFS();   // Xbox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_GetRenderTarget
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetRenderTarget
@@ -1080,13 +1140,11 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetRenderTarget
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetRenderTarget\n"
                "(\n"
                "   ppRenderTarget      : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), ppRenderTarget);
-        EmuSwapFS();   // Xbox FS
     }
     #endif
 
@@ -1523,6 +1581,11 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
         printf("*Warning* D3DFMT_P8 is an unsupported texture format!\n");
         PCFormat = D3DFMT_X8R8G8B8;
     }
+    else if(PCFormat == D3DFMT_D24S8)
+    {
+        printf("*Warning* D3DFMT_D24S8 is an unsupported texture format!\n");
+        PCFormat = D3DFMT_X8R8G8B8;
+    }
 
     *ppTexture = new X_D3DResource();
 
@@ -1748,7 +1811,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Clear
                "   pRects              : 0x%.08X\n"
                "   Flags               : 0x%.08X\n"
                "   Color               : 0x%.08X\n"
-               "   Z                   : 0x%.08X\n"
+               "   Z                   : %f\n"
                "   Stencil             : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), Count, pRects, Flags,
@@ -1960,6 +2023,14 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
         }
         break;
 
+        case X_D3DCOMMON_TYPE_PUSHBUFFER:
+        {
+            printf("*Warning: X_D3DCOMMON_TYPE_PUSHBUFFER is not yet implemented");
+
+            X_D3DPushBuffer *pPushBuffer = (X_D3DPushBuffer*)pResource;
+        }
+        break;
+
         case X_D3DCOMMON_TYPE_SURFACE:
         case X_D3DCOMMON_TYPE_TEXTURE:
         {
@@ -2143,7 +2214,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
                 D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pResource->EmuTexture8, NULL);
             }
-            */
+            //*/
         }
         break;
 

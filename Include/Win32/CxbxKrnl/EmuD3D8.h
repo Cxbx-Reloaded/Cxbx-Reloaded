@@ -370,6 +370,14 @@ struct X_D3DIndexBuffer : public X_D3DResource
 };
 
 // ******************************************************************
+// * X_D3DPushBuffer
+// ******************************************************************
+struct X_D3DPushBuffer : public X_D3DResource
+{
+    ULONG AllocationSize;
+};
+
+// ******************************************************************
 // * X_D3DPixelContainer "Format" Masks
 // ******************************************************************
 #define X_D3DFORMAT_RESERVED1_MASK        0x00000003      // Must be zero
@@ -600,6 +608,22 @@ VOID WINAPI EmuIDirect3DDevice8_GetBackBuffer
     INT                 BackBuffer,
     D3DBACKBUFFER_TYPE  Type,
     X_D3DSurface      **ppBackBuffer
+);
+
+// ******************************************************************
+// * func: EmuIDirect3D8_SetViewport
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3D8_SetViewport
+(
+    CONST D3DVIEWPORT8 *pViewport
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetShaderConstantMode
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetShaderConstantMode
+(
+    DWORD               Mode    // TODO: Fill out enumeration
 );
 
 // ******************************************************************

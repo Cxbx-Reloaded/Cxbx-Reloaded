@@ -175,6 +175,9 @@ extern uint32 XRefDataBase[] =
     -1, // XREF_FCLOSEDEVICE
     -1, // XREF_CLEARSTATEBLOCKFLAGS
     -1, // XREF_RECORDSTATEBLOCK
+    -1, // XREF_SETDISTANCEFACTOR
+    -1, // XREF_SETROLLOFFFACTOR
+    -1, // XREF_SETDOPPLERFACTOR
 };
 
 // ******************************************************************

@@ -149,17 +149,168 @@ HRESULT WINAPI XTL::EmuIDirectSound8_DownloadEffectsImage
     {
         printf("EmuDSound (0x%X): EmuIDirectSound8_DownloadEffectsImage\n"
                "(\n"
+               "   pThis                     : 0x%.08X\n"
                "   pvImageBuffer             : 0x%.08X\n"
                "   dwImageSize               : 0x%.08X\n"
                "   pImageLoc                 : 0x%.08X\n"
                "   ppImageDesc               : 0x%.08X\n"
                ");\n",
-               GetCurrentThreadId(), pvImageBuffer, dwImageSize, pImageLoc, ppImageDesc);
+               GetCurrentThreadId(), pThis, pvImageBuffer, dwImageSize, pImageLoc, ppImageDesc);
     }
     #endif
 
     // TODO: Actually implement this
     printf("*Note* EmuIDirectSound8_DownloadEffectsImage is being ignored\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSound8_SetOrientation
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSound8_SetOrientation
+(
+    LPDIRECTSOUND8  pThis,
+    FLOAT           xFront,
+    FLOAT           yFront,
+    FLOAT           zFront,
+    FLOAT           xTop,
+    FLOAT           yTop,
+    FLOAT           zTop,
+    DWORD           dwApply
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSound8_SetOrientation\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   xFront                    : %f\n"
+               "   yFront                    : %f\n"
+               "   zFront                    : %f\n"
+               "   xTop                      : %f\n"
+               "   yTop                      : %f\n"
+               "   zTop                      : %f\n"
+               "   dwApply                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, xFront, yFront, zFront, xTop, yTop, zTop, dwApply);
+    }
+    #endif
+
+    // TODO: Actually implement this
+    printf("*Note* EmuIDirectSound8_SetOrientation is being ignored\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSound8_SetDistanceFactor
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSound8_SetDistanceFactor
+(
+    LPDIRECTSOUND8  pThis,
+    FLOAT           fDistanceFactor,
+    DWORD           dwApply
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSound8_SetDistanceFactor\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   fDistanceFactor           : %f\n"
+               "   dwApply                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, fDistanceFactor, dwApply);
+    }
+    #endif
+
+    // TODO: Actually implement this
+    printf("*Note* EmuIDirectSound8_SetDistanceFactor is being ignored\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSound8_SetRolloffFactor
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSound8_SetRolloffFactor
+(
+    LPDIRECTSOUND8  pThis,
+    FLOAT           fRolloffFactor,
+    DWORD           dwApply
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSound8_SetRolloffFactor\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   fRolloffFactor            : %f\n"
+               "   dwApply                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, fRolloffFactor, dwApply);
+    }
+    #endif
+
+    // TODO: Actually implement this
+    printf("*Note* EmuIDirectSound8_SetRolloffFactor is being ignored\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSound8_SetDopplerFactor
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSound8_SetDopplerFactor
+(
+    LPDIRECTSOUND8  pThis,
+    FLOAT           fDopplerFactor,
+    DWORD           dwApply
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSound8_SetDopplerFactor\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   fDopplerFactor            : %f\n"
+               "   dwApply                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, fDopplerFactor, dwApply);
+    }
+    #endif
+
+    // TODO: Actually implement this
+    printf("*Note* EmuIDirectSound8_SetDopplerFactor is being ignored\n");
 
     EmuSwapFS();   // XBox FS
 
@@ -403,6 +554,37 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Stop
 
     // Todo: Translate params, then make the PC DirectSound call
     printf("*Note* EmuIDirectSoundBuffer8_Stop is being ignored\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return STATUS_SUCCESS;
+}
+
+// ******************************************************************
+// * func: EmuCDirectSound_CommitDeferredSettings
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSound_CommitDeferredSettings
+(
+    X_CDirectSound         *pThis
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuCDirectSound_CommitDeferredSettings\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis);
+    }
+    #endif
+
+    // Todo: Translate params, then make the PC DirectSound call
+    printf("*Note* EmuCDirectSound_CommitDeferredSettings is being ignored\n");
 
     EmuSwapFS();   // XBox FS
 

@@ -92,7 +92,10 @@ enum XRefDataBaseOffset
     XREF_XNINIT                 = 0,
     XREF_FCLOSEDEVICE           = 1,
     XREF_CLEARSTATEBLOCKFLAGS   = 2,
-    XREF_RECORDSTATEBLOCK       = 3
+    XREF_RECORDSTATEBLOCK       = 3,
+    XREF_SETDISTANCEFACTOR      = 4,
+    XREF_SETROLLOFFFACTOR       = 5,
+    XREF_SETDOPPLERFACTOR       = 6
 };
 
 #endif
