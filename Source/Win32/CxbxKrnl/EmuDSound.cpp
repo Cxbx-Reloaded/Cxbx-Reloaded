@@ -229,23 +229,37 @@ HRESULT WINAPI XTL::EmuDirectSoundCreate
     }
     #endif
 
-    HRESULT hRet = DirectSoundCreate8(NULL, ppDirectSound, NULL);
+    static bool initialized = false;
 
-    g_pDSound8 = *ppDirectSound;
+    HRESULT hRet = DS_OK;
 
-    hRet = g_pDSound8->SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
+    if(!initialized)
+    {
+        hRet = DirectSoundCreate8(NULL, ppDirectSound, NULL);
 
-    // we need to use our own internal reference count
-    g_pDSound8RefCount++;
+        if(FAILED(hRet))
+            EmuCleanup("DirectSoundCreate8 Failed!");
 
-    int v=0;
-    // clear sound buffer cache
-    for(v=0;v<SOUNDBUFFER_CACHE_SIZE;v++)
-        g_pDSoundBufferCache[v] = 0;
+        g_pDSound8 = *ppDirectSound;
 
-    // clear sound stream cache
-    for(v=0;v<SOUNDSTREAM_CACHE_SIZE;v++)
-        g_pDSoundStreamCache[v] = 0;
+        hRet = g_pDSound8->SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
+
+        if(FAILED(hRet))
+            EmuCleanup("g_pDSound8->SetCooperativeLevel Failed!");
+
+        int v=0;
+        // clear sound buffer cache
+        for(v=0;v<SOUNDBUFFER_CACHE_SIZE;v++)
+            g_pDSoundBufferCache[v] = 0;
+
+        // clear sound stream cache
+        for(v=0;v<SOUNDSTREAM_CACHE_SIZE;v++)
+            g_pDSoundStreamCache[v] = 0;
+
+        initialized = true;
+    }
+
+    g_pDSound8RefCount = 1;
 
     EmuSwapFS();   // XBox FS
 
@@ -303,8 +317,10 @@ ULONG WINAPI XTL::EmuIDirectSound8_Release
 
     ULONG uRet = g_pDSound8RefCount--;
 
+    /* temporarily (?) disabled
     if(uRet == 1)
         pThis->Release();
+    //*/
 
     EmuSwapFS();   // XBox FS
 
@@ -718,8 +734,6 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
 
     DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)malloc(sizeof(DSBUFFERDESC));
     
-    pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX));
-
     // convert from Xbox to PC DSound
     {
         DWORD dwAcceptableMask = 0x00000010 | 0x00000020 | 0x00000080 | 0x00000100 | 0x00002000 | 0x00040000 | 0x00080000;
@@ -728,10 +742,22 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
             EmuWarning("Use of unsupported pdsbd->dwFlags mask(s) (0x%.08X)", pdsbd->dwFlags & (~dwAcceptableMask));
 
         pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
-        pDSBufferDesc->dwFlags = pdsbd->dwFlags & dwAcceptableMask;
-        pDSBufferDesc->dwBufferBytes = 16384;
+        pDSBufferDesc->dwFlags = (pdsbd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME;
+        pDSBufferDesc->dwBufferBytes = pdsbd->dwBufferBytes;
+
+        if(pDSBufferDesc->dwBufferBytes < DSBSIZE_MIN)
+            pDSBufferDesc->dwBufferBytes = DSBSIZE_MIN;
+        else if(pDSBufferDesc->dwBufferBytes > DSBSIZE_MAX) 
+            pDSBufferDesc->dwBufferBytes = DSBSIZE_MAX;
+
         pDSBufferDesc->dwReserved = 0;
-        memcpy(pDSBufferDesc->lpwfxFormat, pdsbd->lpwfxFormat, sizeof(WAVEFORMATEX));
+
+        if(pdsbd->lpwfxFormat != NULL)
+        {
+            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX));
+            memcpy(pDSBufferDesc->lpwfxFormat, pdsbd->lpwfxFormat, sizeof(WAVEFORMATEX));
+        }
+
         pDSBufferDesc->guid3DAlgorithm = DS3DALG_DEFAULT;
     }
 
@@ -951,8 +977,14 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Lock
         if(dwBytes > pThis->EmuBufferDesc->dwBufferBytes)
             EmuResizeIDirectSoundBuffer8(pThis, dwBytes);
 
+        if(pThis->EmuLockPtr1 != 0)
+            pThis->EmuDirectSoundBuffer8->Unlock(pThis->EmuLockPtr1, pThis->EmuLockBytes1, pThis->EmuLockPtr2, pThis->EmuLockBytes2);
+
         // TODO: Verify dwFlags is the same as windows
         hRet = pThis->EmuDirectSoundBuffer8->Lock(dwOffset, dwBytes, ppvAudioPtr1, pdwAudioBytes1, ppvAudioPtr2, pdwAudioBytes2, dwFlags);
+
+        if(FAILED(hRet))
+            EmuCleanup("DirectSoundBuffer Lock Failed!");
 
         pThis->EmuLockPtr1 = *ppvAudioPtr1;
         pThis->EmuLockBytes1 = *pdwAudioBytes1;
@@ -1063,7 +1095,9 @@ ULONG WINAPI XTL::EmuIDirectSoundBuffer8_Release
                     g_pDSoundBufferCache[v] = 0;
             }
 
-            free(pThis->EmuBufferDesc->lpwfxFormat);
+            if(pThis->EmuBufferDesc->lpwfxFormat != NULL)
+                free(pThis->EmuBufferDesc->lpwfxFormat);
+
             free(pThis->EmuBufferDesc);
 
             delete pThis;
@@ -1382,8 +1416,6 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
     
     DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)malloc(sizeof(DSBUFFERDESC));
     
-    pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX));
-
     // convert from Xbox to PC DSound
     {
         DWORD dwAcceptableMask = 0x00000010 | 0x00000020 | 0x00000080 | 0x00000100 | 0x00002000 | 0x00040000 | 0x00080000;
@@ -1392,13 +1424,19 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
             EmuWarning("Use of unsupported pdssd->dwFlags mask(s) (0x%.08X)", pdssd->dwFlags & (~dwAcceptableMask));
 
         pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
-        pDSBufferDesc->dwFlags = 0;
-        pDSBufferDesc->dwBufferBytes = 176400;
+        pDSBufferDesc->dwFlags = DSBCAPS_CTRLVOLUME;
+        pDSBufferDesc->dwBufferBytes = DSBSIZE_MIN;
         pDSBufferDesc->dwReserved = 0;
-        memcpy(pDSBufferDesc->lpwfxFormat, pdssd->lpwfxFormat, sizeof(WAVEFORMATEX));
+
+        if(pdssd->lpwfxFormat != NULL)
+        {
+            pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)malloc(sizeof(WAVEFORMATEX));
+            memcpy(pDSBufferDesc->lpwfxFormat, pdssd->lpwfxFormat, sizeof(WAVEFORMATEX));
+        }
+
         pDSBufferDesc->guid3DAlgorithm = DS3DALG_DEFAULT;
 
-        if(pDSBufferDesc->lpwfxFormat->wFormatTag != WAVE_FORMAT_PCM)
+        if(pDSBufferDesc->lpwfxFormat != NULL && pDSBufferDesc->lpwfxFormat->wFormatTag != WAVE_FORMAT_PCM)
         {
             EmuWarning("Invalid WAVE_FORMAT!");
 
@@ -1599,7 +1637,9 @@ ULONG WINAPI XTL::EmuCDirectSoundStream_Release(X_CDirectSoundStream *pThis)
                     g_pDSoundStreamCache[v] = 0;
             }
 
-            free(pThis->EmuBufferDesc->lpwfxFormat);
+            if(pThis->EmuBufferDesc->lpwfxFormat != NULL)
+                free(pThis->EmuBufferDesc->lpwfxFormat);
+
             free(pThis->EmuBufferDesc);
 
             delete pThis;
@@ -1640,6 +1680,8 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Process
     pThis->EmuBuffer = pInputBuffer->pvBuffer;
 
     EmuResizeIDirectSoundStream8(pThis, pInputBuffer->dwMaxSize);
+
+    *pInputBuffer->pdwStatus = S_OK;
 
     HackUpdateSoundStreams();
     

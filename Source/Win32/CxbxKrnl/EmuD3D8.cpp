@@ -105,6 +105,9 @@ static DWORD                        g_dwBaseVertexIndex = 0;// current active in
 // current active vertex stream
 static XTL::X_D3DVertexBuffer      *g_pVertexBuffer = NULL; // current active vertex buffer
 
+// current vertical blank information
+static XTL::D3DVBLANKDATA           g_VBData = {0};
+
 typedef struct _D3DINLINE_VERTEX
 {
     FLOAT x, y, z, rhw; // The transformed position for the vertex
@@ -454,11 +457,8 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 
         // trigger vblank callback
         {
-            XTL::D3DVBLANKDATA VBData;
-
-            VBData.Flags = 1; // D3DVBLANK_SWAPDONE
-            VBData.Swap = curvb;
-            VBData.VBlank = curvb++;
+            g_VBData.VBlank++;
+            g_VBData.Flags = 1; // D3DVBLANK_SWAPDONE
 
             if(g_pVBCallback != NULL)
             {
@@ -467,7 +467,7 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
                 #endif
 
                 EmuSwapFS();    // Xbox FS
-                g_pVBCallback(&VBData);
+                g_pVBCallback(&g_VBData);
                 EmuSwapFS();    // Win2k/XP FS
             }
         }
@@ -2398,19 +2398,6 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetTexture
 
     HRESULT hRet = g_pD3DDevice8->SetTexture(Stage, pBaseTexture8);
 
-    /*
-    {
-        static int dwDumpTex = 0;
-
-        char szBuffer[255];
-
-        sprintf(szBuffer, "C:\\Aaron\\Textures\\SetTexture%.03d.bmp", dwDumpTex++);
-
-        if(pTexture != 0 && pTexture->EmuTexture8 != 0)
-            D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture->EmuTexture8, NULL);
-    }
-    //*/
-
     EmuSwapFS();   // XBox FS
 
     return hRet;
@@ -2710,6 +2697,32 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_End()
     if(FAILED(hRet))
         EmuCleanup("Unable to unlock Begin()/End() vertex buffer cache!");
 
+    /*
+    {
+        static int dwDumpTex = 0;
+
+        char szBuffer[255];
+
+        sprintf(szBuffer, "C:\\Aaron\\Textures\\End%.03d.bmp", dwDumpTex++);
+
+        IDirect3DBaseTexture8 *pBaseTexture8 = NULL;
+
+        if(g_pD3DDevice8->GetTexture(0, &pBaseTexture8) == D3D_OK)
+        {
+            if(pBaseTexture8 != NULL)
+            {
+                IDirect3DTexture8 *pTexture8 = (IDirect3DTexture8*)pBaseTexture8;
+
+                pTexture8->UnlockRect(0);
+
+                D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture8, NULL);
+
+                pBaseTexture8->Release();
+            }
+        }
+    }
+    //*/
+
     hRet = g_pD3DDevice8->SetStreamSource(0, g_pD3DIVB, sizeof(D3DINLINE_VERTEX));
     hRet = g_pD3DDevice8->SetVertexShader(D3DFVF_INLINEVERTEX);
 
@@ -2810,6 +2823,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Present
     #endif
 
     HRESULT hRet = g_pD3DDevice8->Present(pSourceRect, pDestRect, (HWND)pDummy1, (CONST RGNDATA*)pDummy2);
+
+    g_VBData.Swap++;
 
     EmuSwapFS();   // XBox FS
 
@@ -5716,11 +5731,11 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetRenderTarget
 
     HRESULT hRet = g_pD3DDevice8->SetRenderTarget(pPCRenderTarget, pPCNewZStencil);
 
-    EmuSwapFS();   // XBox FS
-    
     if(FAILED(hRet))
         EmuWarning("SetRenderTarget Failed! (0x%.08X)", hRet);
 
+    EmuSwapFS();   // XBox FS
+    
     return hRet;
 }
 

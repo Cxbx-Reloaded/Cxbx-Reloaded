@@ -26,6 +26,8 @@ version: 0.7.9 (??/??/??)
 
 - Overlay support now should work with multimonitors
 
+- Overlay support detection improved (again)
+
 - Absurd amounts of new code, including general code cleanup
 
 version: 0.7.8c (09/02/03)

@@ -614,11 +614,19 @@ DWORD WINAPI XTL::EmuXInputSetState
     }
     #endif
 
-//    EmuWarning("Ignoring EmuXInputSetState!");
+    pFeedback->Header.dwStatus = ERROR_SUCCESS;
+
+    if(pFeedback->Header.hEvent != NULL)
+    {
+        #ifdef _DEBUG_TRACE
+        printf("Triggering XINPUT_FEEDBACK Event (0x%X)\n", pFeedback->Header.hEvent);
+        #endif
+        SetEvent(pFeedback->Header.hEvent);
+    }
 
     EmuSwapFS();   // XBox FS
 
-    return ERROR_SUCCESS;
+    return ERROR_IO_PENDING;
 }
 
 // ******************************************************************

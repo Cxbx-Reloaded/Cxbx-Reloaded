@@ -520,7 +520,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         // _USE_XGMATH Disabled in mesh :[
         // halo : dword_0_2E2D18
         // halo : 1744F0 (bink)
-        // _asm int 3
+        _asm int 3
 
         Entry();
 
@@ -574,6 +574,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuWarning(const char *szWarningMessage, ...)
 extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage, ...)
 {
     g_bEmuException = TRUE;
+
+    EmuResume();
 
     // print out error message (if exists)
     if(szErrorMessage != NULL)
@@ -647,8 +649,6 @@ extern "C" CXBXKRNL_API void NTAPI EmuRegisterThread(HANDLE hThread)
 		EmuCleanup("There are too many active threads!");
 }
 
-    // WARNING!!! THIS FUNCTION IS BAD!!
-
 // suspend all threads that have been created with PsCreateSystemThreadEx
 extern "C" CXBXKRNL_API void NTAPI EmuSuspend()
 {
@@ -686,8 +686,6 @@ extern "C" CXBXKRNL_API void NTAPI EmuSuspend()
 
     g_bEmuSuspended = TRUE;
 }
-
-    // WARNING!!! THIS FUNCTION IS BAD!!
 
 // resume all threads that have been created with PsCreateSystemThreadEx
 extern "C" CXBXKRNL_API void NTAPI EmuResume()
