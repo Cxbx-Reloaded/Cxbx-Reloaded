@@ -582,6 +582,44 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_SetHeadroom
 }
 
 // ******************************************************************
+// * func: EmuCDirectSoundStream_SetPosition
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSoundStream_SetPosition
+(
+    PVOID    pThis,
+    D3DVALUE x,
+    D3DVALUE y,
+    D3DVALUE z,
+    DWORD    dwApply
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetPosition\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   x                         : 0x%.08X\n"
+               "   y                         : 0x%.08X\n"
+               "   z                         : 0x%.08X\n"
+               "   dwApply                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, x, y, z, dwApply);
+    }
+    #endif
+
+    // TODO: Actually implement this
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
 // * func: EmuCDirectSoundStream_SetFrequency
 // ******************************************************************
 HRESULT WINAPI XTL::EmuCDirectSoundStream_SetFrequency

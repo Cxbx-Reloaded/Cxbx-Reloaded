@@ -260,6 +260,18 @@ HRESULT WINAPI EmuIDirectSoundStream_SetHeadroom
 );
 
 // ******************************************************************
+// * func: EmuCDirectSoundStream_SetPosition
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetPosition
+(
+    PVOID    pThis,
+    D3DVALUE x,
+    D3DVALUE y,
+    D3DVALUE z,
+    DWORD    dwApply
+);
+
+// ******************************************************************
 // * func: EmuCDirectSoundStream_SetFrequency
 // ******************************************************************
 HRESULT WINAPI EmuCDirectSoundStream_SetFrequency
