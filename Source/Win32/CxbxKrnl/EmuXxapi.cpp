@@ -68,7 +68,7 @@ static DWORD WINAPI EmuXCreateThreadProxy
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXxapi [0x%.08X]: EmuXCreateThreadProxy\n"
+        printf("EmuXxapi (0x%.08X): EmuXCreateThreadProxy\n"
                "(\n"
                "   lpParameter         : 0x%.08X\n"
                ");\n",
@@ -102,7 +102,7 @@ HANDLE WINAPI xboxkrnl::EmuXCreateThread
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXxapi [0x%.08X]: EmuXCreateThread\n"
+        printf("EmuXxapi (0x%.08X): EmuXCreateThread\n"
                "(\n"
                "   lpThreadAttributes  : 0x%.08X\n"
                "   dwStackSize         : 0x%.08X\n"
@@ -151,7 +151,7 @@ BOOL WINAPI xboxkrnl::EmuXCloseHandle
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXxapi [0x%.08X]: EmuXCloseHandle\n"
+        printf("EmuXxapi (0x%.08X): EmuXCloseHandle\n"
                "(\n"
                "   hObject             : 0x%.08X\n"
                ");\n",
@@ -178,7 +178,7 @@ VOID WINAPI xboxkrnl::EmuXapiInitProcess()
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXxapi [0x%.08X]: EmuXapiInitProcess();\n", GetCurrentThreadId());
+        printf("EmuXxapi (0x%.08X): EmuXapiInitProcess();\n", GetCurrentThreadId());
     }
     #endif
 
@@ -201,7 +201,7 @@ VOID WINAPI xboxkrnl::EmuXapiBootDash(uint32 UnknownA, uint32 UnknownB, uint32 U
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXxapi [0x%.08X]: EmuXapiBootDash\n"
+        printf("EmuXxapi (0x%.08X): EmuXapiBootDash\n"
                "(\n"
                "   UnknownA            : 0x%.08X\n"
                "   UnknownB            : 0x%.08X\n"
@@ -231,7 +231,7 @@ VOID xboxkrnl::EmuX__rtinit()
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXxapi [0x%.08X]: EmuX__rtinit();\n", GetCurrentThreadId());
+        printf("EmuXxapi (0x%.08X): EmuX__rtinit();\n", GetCurrentThreadId());
     }
     #endif
 
@@ -250,7 +250,7 @@ VOID xboxkrnl::EmuX__cinit()
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXxapi [0x%.08X]: EmuX__cinit();\n", GetCurrentThreadId());
+        printf("EmuXxapi (0x%.08X): EmuX__cinit();\n", GetCurrentThreadId());
     }
     #endif
 

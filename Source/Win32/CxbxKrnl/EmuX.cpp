@@ -55,7 +55,7 @@ static void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, v
 // ******************************************************************
 // * func: EmuXInit
 // ******************************************************************
-CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)())
+CXBXKRNL_API void NTAPI EmuXInit(Xbe::LibraryVersion *LibraryVersion, DebugMode DebugConsole, char *DebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)())
 {
     // ******************************************************************
     // * debug console allocation (if configured)
@@ -70,7 +70,7 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, Xb
 
             SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
             
-            printf("CxbxKrnl [0x%.08X]: Debug console allocated.\n", GetCurrentThreadId());
+            printf("CxbxKrnl (0x%.08X): Debug console allocated.\n", GetCurrentThreadId());
         }
     }
     else if(DebugConsole == DM_FILE)
@@ -88,26 +88,47 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, Xb
     {
         printf("EmuX: EmuXInit\n"
                "(\n"
+               "   LibraryVersion      : 0x%.08X\n"
                "   DebugConsole        : 0x%.08X\n"
                "   DebugFilename       : \"%s\"\n"
                "   XBEHeader           : 0x%.08X\n"
                "   XBEHeaderSize       : 0x%.08X\n"
                "   Entry               : 0x%.08X\n"
                ");\n",
-               DebugConsole, DebugFilename, XbeHeader, XbeHeaderSize, Entry);
+               LibraryVersion, DebugConsole, DebugFilename, XbeHeader, XbeHeaderSize, Entry);
     }
 
     // ******************************************************************
     // * Locate functions and install wrapper vectors
     // ******************************************************************
     {
-        // Install XAPI wrappers
-        for(uint32 v=0;v<HLEDataBaseSize/sizeof(HLEData);v++)
-            printf("EmuX: Installing Wrappers for %s %s...\n", HLEDataBase[v].Library, HLEDataBase[v].Version);
+        uint32 dwLibraryVersions = XbeHeader->dwLibraryVersions;
+        uint32 dwHLEEntries      = HLEDataBaseSize/sizeof(HLEData);
 
-        exit(1);
+        for(uint32 v=0;v<dwLibraryVersions;v++)
+        {
+            char szLibraryName[9] = {0};
 
-        //EmuXInstallWrappers(XAPI_1_0_4361, XAPI_1_0_4361_SIZE, Entry, XbeHeader);
+            for(uint32 c=0;c<8;c++)
+                szLibraryName[c] = LibraryVersion[v].szName[c];
+
+            printf("EmuX: Locating HLE Information for %s...", szLibraryName);
+
+            bool found=false;
+            for(uint32 d=0;d<dwHLEEntries;d++)
+            {
+                if(strcmp(szLibraryName, HLEDataBase[d].Library) != 0)
+                    continue;
+
+                found = true;
+                printf("Found\n");
+
+                EmuXInstallWrappers(HLEDataBase[d].OovpaTable, HLEDataBase[d].OovpaTableSize, Entry, XbeHeader);
+            }
+
+            if(!found)
+                printf("Skipped\n");
+        }
     }
 
     // ******************************************************************
@@ -155,7 +176,7 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, Xb
     printf("EmuX (0x%.08X): Initial thread starting.\n", GetCurrentThreadId());
 
     // This must be enabled or the debugger may crash (sigh)
-    //__asm _emit 0xF1
+    // __asm _emit 0xF1
 
     EmuXSwapFS();   // XBox FS
 
@@ -166,6 +187,9 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, Xb
     printf("EmuX (0x%.08X): Initial thread ended.\n", GetCurrentThreadId());
 
     fflush(stdout);
+
+    while(true)
+        Sleep(1000);
 
     return;
 }

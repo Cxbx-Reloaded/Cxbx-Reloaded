@@ -79,7 +79,7 @@ static DWORD WINAPI EmuCreateThreadProxy
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("CxbxKrnl [0x%.08X]: EmuCreateThreadProxy\n"
+        printf("CxbxKrnl (0x%.08X): EmuCreateThreadProxy\n"
                "          (\n"
                "             lpParameter         : 0x%.08X\n"
                "          );\n",
@@ -113,7 +113,7 @@ HANDLE WINAPI xboxkrnl::EmuCreateThread
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("CxbxKrnl [0x%.08X]: EmuCreateThread\n"
+        printf("CxbxKrnl (0x%.08X): EmuCreateThread\n"
                "          (\n"
                "             lpThreadAttributes  : 0x%.08X\n"
                "             dwStackSize         : 0x%.08X\n"
@@ -162,7 +162,7 @@ BOOL WINAPI xboxkrnl::EmuCloseHandle
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("CxbxKrnl [0x%.08X]: EmuCloseHandle\n"
+        printf("CxbxKrnl (0x%.08X): EmuCloseHandle\n"
                "          (\n"
                "             hObject             : 0x%.08X\n"
                "          );\n",

@@ -39,7 +39,8 @@ using namespace win32;
 // ******************************************************************
 // * globals
 // ******************************************************************
-HWND EmuXWindow = NULL;
+LPDIRECT3D8       g_pD3D       = NULL;  // Direct3D8
+HWND              g_EmuXWindow = NULL;  // Rendering Window
 
 // ******************************************************************
 // * static
@@ -73,7 +74,7 @@ VOID xboxkrnl::EmuXInitD3D()
     // * create the window
     // ******************************************************************
     {
-        EmuXWindow = CreateWindow
+        g_EmuXWindow = CreateWindow
         (
             "CxbxRender", "Cxbx : Rendering Window",
             WS_OVERLAPPEDWINDOW, 100, 100, 640, 480,
@@ -85,8 +86,16 @@ VOID xboxkrnl::EmuXInitD3D()
     // * display the window
     // ******************************************************************
     {
-        ShowWindow(EmuXWindow, SW_SHOWDEFAULT);
-        UpdateWindow(EmuXWindow);
+        ShowWindow(g_EmuXWindow, SW_SHOWDEFAULT);
+        UpdateWindow(g_EmuXWindow);
+    }
+
+    // ******************************************************************
+    // * create Direct3D8
+    // ******************************************************************
+    {
+        // xbox Direct3DCreate8 returns "1" always, so we need our own ptr
+        g_pD3D = Direct3DCreate8(D3D_SDK_VERSION);
     }
 }
 
@@ -108,7 +117,7 @@ LRESULT WINAPI EmuXMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 // ******************************************************************
 // * func: EmuXIDirect3D8_CreateDevice
 // ******************************************************************
-HRESULT xboxkrnl::EmuXIDirect3D8_CreateDevice
+HRESULT WINAPI xboxkrnl::EmuXIDirect3D8_CreateDevice
 (
     UINT                    Adapter,
     D3DDEVTYPE              DeviceType,
@@ -118,6 +127,108 @@ HRESULT xboxkrnl::EmuXIDirect3D8_CreateDevice
     IDirect3DDevice8      **ppReturnedDeviceInterface
 )
 {
-    MessageBox(NULL, "EmuXIDirect3D8_CreateDevice", "EmuXD3D", MB_OK);
-    return 0;
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXD3D8 (0x%.08X): EmuXIDirect3D8_CreateDevice\n"
+               "(\n"
+               "   Adapter                   : 0x%.08X\n"
+               "   DeviceType                : 0x%.08X\n"
+               "   hFocusWindow              : 0x%.08X\n"
+               "   BehaviorFlags             : 0x%.08X\n"
+               "   pPresentationParameters   : 0x%.08X\n"
+               "   ppReturnedDeviceInterface : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Adapter, DeviceType, hFocusWindow,
+               BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
+    }
+    #endif
+
+    // ******************************************************************
+    // * make adjustments to parameters to make sense with windows d3d
+    // ******************************************************************
+    {
+        Adapter = D3DADAPTER_DEFAULT;
+
+        pPresentationParameters->Windowed = TRUE;
+
+        hFocusWindow = g_EmuXWindow;
+
+        // Weird swizzled b.s.
+        if(pPresentationParameters->BackBufferFormat == 0x07)
+            pPresentationParameters->BackBufferFormat = D3DFMT_X8R8G8B8;
+
+        // hrnm this is different too
+        if(pPresentationParameters->AutoDepthStencilFormat == 0x2A)
+            pPresentationParameters->AutoDepthStencilFormat = D3DFMT_D24S8;
+    }
+
+    // ******************************************************************
+    // * redirect to windows d3d
+    // ******************************************************************
+    HRESULT ret = g_pD3D->CreateDevice
+    (
+        Adapter,
+        DeviceType,
+        hFocusWindow,
+        BehaviorFlags,          // TODO: perhaps allow software vertex processing
+        pPresentationParameters,
+        ppReturnedDeviceInterface
+    );
+
+    EmuXSwapFS();   // XBox FS
+
+    return ret;
+}
+
+// ******************************************************************
+// * func: EmuXIDirect3D8_CreateDevice
+// ******************************************************************
+HRESULT WINAPI xboxkrnl::EmuXIDirect3DDevice8_Clear
+(
+    DWORD           Count,
+    CONST D3DRECT  *pRects,
+    DWORD           Flags,
+    D3DCOLOR        Color,
+    float           Z,
+    DWORD           Stencil
+)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXD3D8 (0x%.08X): EmuXIDirect3DDevice8_Clear\n"
+               "(\n"
+               "   Count               : 0x%.08X\n"
+               "   pRects              : 0x%.08X\n"
+               "   Flags               : 0x%.08X\n"
+               "   Color               : 0x%.08X\n"
+               "   Z                   : 0x%.08X\n"
+               "   Stencil             : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Count, pRects, Flags,
+               Color, Z, Stencil);
+    }
+    #endif
+
+    // ******************************************************************
+    // * make adjustments to parameters to make sense with windows d3d
+    // ******************************************************************
+    {
+    }
+
+    HRESULT ret = NULL;
+    // TODO: Retrieve "this" parameter somehow, and use it as a ptr
+
+    EmuXSwapFS();   // XBox FS
+
+    return ret;
 }

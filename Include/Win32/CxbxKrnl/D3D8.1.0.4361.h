@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXD3D.h
+// *   Cxbx->Win32->CxbxKrnl->D3D8.1.0.4361.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,40 +31,10 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUXD3D_H
-#define EMUXD3D_H
+#ifndef D3D8_1_0_4361_H
+#define D3D8_1_0_4361_H
 
-#include "EmuX.h"
-
-// ******************************************************************
-// * func: EmuXInitD3D
-// ******************************************************************
-VOID EmuXInitD3D();
-
-// ******************************************************************
-// * func: EmuXIDirect3D8_CreateDevice
-// ******************************************************************
-win32::HRESULT WINAPI EmuXIDirect3D8_CreateDevice
-(
-    win32::UINT                    Adapter,
-    win32::D3DDEVTYPE              DeviceType,
-    win32::HWND                    hFocusWindow,
-    win32::DWORD                   BehaviorFlags,
-    win32::D3DPRESENT_PARAMETERS  *pPresentationParameters,
-    win32::IDirect3DDevice8      **ppReturnedDeviceInterface
-);
-
-// ******************************************************************
-// * func: EmuXIDirect3DDevice8_Clear
-// ******************************************************************
-win32::HRESULT WINAPI EmuXIDirect3DDevice8_Clear
-(
-    win32::DWORD                  Count,
-    CONST win32::D3DRECT         *pRects,
-    win32::DWORD                  Flags,
-    win32::D3DCOLOR               Color,
-    float                         Z,
-    win32::DWORD                  Stencil
-);
+extern OOVPATable D3D8_1_0_4361[];
+extern uint32     D3D8_1_0_4361_SIZE;
 
 #endif

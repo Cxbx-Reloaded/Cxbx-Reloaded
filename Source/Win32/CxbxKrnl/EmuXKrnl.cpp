@@ -83,7 +83,7 @@ DWORD WINAPI PsCreateSystemThreadExProxy
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXKrnl [0x%.08X]: PsCreateSystemThreadExProxy\n"
+        printf("EmuXKrnl (0x%.08X): PsCreateSystemThreadExProxy\n"
                "(\n"
                "   StartContext1       : 0x%.08X\n"
                "   StartContext2       : 0x%.08X\n"
@@ -136,7 +136,7 @@ XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXKrnl [0x%.08X]: ExQueryNonVolatileSetting\n"
+        printf("EmuXKrnl (0x%.08X): ExQueryNonVolatileSetting\n"
                "(\n"
                "   ValueIndex          : 0x%.08X\n"
                "   Type                : 0x%.08X\n"
@@ -168,7 +168,7 @@ XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
 
         default:
         {
-            printf("EmuXKrnl [0x%.08X]: ExQueryNonVolatileSetting unknown ValueIndex : %.08X\n", ValueIndex);
+            printf("EmuXKrnl (0x%.08X): ExQueryNonVolatileSetting unknown ValueIndex : %.08X\n", ValueIndex);
         }
         break;
     }
@@ -220,7 +220,7 @@ XBSYSAPI EXPORTNUM(107) VOID NTAPI xboxkrnl::KeInitializeDpc
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXKrnl [0x%.08X]: KeInitializeDpc\n"
+        printf("EmuXKrnl (0x%.08X): KeInitializeDpc\n"
                "(\n"
                "   Dpc                 : 0x%.08X\n"
                "   DeferredRoutine     : 0x%.08X\n"
@@ -256,7 +256,7 @@ XBSYSAPI EXPORTNUM(113) VOID NTAPI xboxkrnl::KeInitializeTimerEx
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXKrnl [0x%.08X]: KeInitializeTimerEx\n"
+        printf("EmuXKrnl (0x%.08X): KeInitializeTimerEx\n"
                "(\n"
                "   Timer               : 0x%.08X\n"
                "   Type                : 0x%.08X\n"
@@ -298,7 +298,7 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXKrnl [0x%.08X]: KeSetTimer\n"
+        printf("EmuXKrnl (0x%.08X): KeSetTimer\n"
                "(\n"
                "   Timer               : 0x%.08X\n"
                "   DueTime             : 0x%I64X\n"
@@ -332,7 +332,7 @@ XBSYSAPI EXPORTNUM(184) NTSTATUS xboxkrnl::NtAllocateVirtualMemory
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXKrnl [0x%.08X]: NtAllocateVirtualMemory\n"
+        printf("EmuXKrnl (0x%.08X): NtAllocateVirtualMemory\n"
                "(\n"
                "   BaseAddress         : 0x%.08X\n"
                "   ZeroBits            : 0x%.08X\n"
@@ -366,7 +366,7 @@ XBSYSAPI EXPORTNUM(187) NTSTATUS NTAPI xboxkrnl::NtClose
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXKrnl [0x%.08X]: NtClose\n"
+        printf("EmuXKrnl (0x%.08X): NtClose\n"
                "(\n"
                "   Handle              : 0x%.08X\n"
                ");\n",
@@ -402,7 +402,7 @@ XBSYSAPI EXPORTNUM(202) NTSTATUS xboxkrnl::NtOpenFile
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXKrnl [0x%.08X]: NtOpenFile\n"
+        printf("EmuXKrnl (0x%.08X): NtOpenFile\n"
                "(\n"
                "   FileHandle          : 0x%.08X\n"
                "   DesiredAccess       : 0x%.08X\n"
@@ -440,7 +440,7 @@ XBSYSAPI EXPORTNUM(218) NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformationFile
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXKrnl [0x%.08X]: NtQueryVolumeInformationFile\n"
+        printf("EmuXKrnl (0x%.08X): NtQueryVolumeInformationFile\n"
                "(\n"
                "   FileHandle          : 0x%.08X\n"
                "   IoStatusBlock       : 0x%.08X\n"
@@ -482,7 +482,7 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXKrnl [0x%.08X]: PsCreateSystemThreadEx\n"
+        printf("EmuXKrnl (0x%.08X): PsCreateSystemThreadEx\n"
                "(\n"
                "   ThreadHandle        : 0x%.08X\n"
                "   ThreadExtraSize     : 0x%.08X\n"
@@ -534,7 +534,7 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXKrnl [0x%.08X]: RtlEnterCriticalSection\n"
+        printf("EmuXKrnl (0x%.08X): RtlEnterCriticalSection\n"
                "(\n"
                "   CriticalSection     : 0x%.08X\n"
                ");\n",
@@ -566,7 +566,7 @@ XBSYSAPI EXPORTNUM(291) VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXKrnl [0x%.08X]: RtlInitializeCriticalSection\n"
+        printf("EmuXKrnl (0x%.08X): RtlInitializeCriticalSection\n"
                "(\n"
                "   CriticalSection     : 0x%.08X\n"
                ");\n",
@@ -596,7 +596,7 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXKrnl [0x%.08X]: RtlLeaveCriticalSection\n"
+        printf("EmuXKrnl (0x%.08X): RtlLeaveCriticalSection\n"
                "(\n"
                "   CriticalSection     : 0x%.08X\n"
                ");\n",
@@ -624,7 +624,7 @@ XBSYSAPI EXPORTNUM(301) xboxkrnl::ULONG NTAPI xboxkrnl::RtlNtStatusToDosError
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXKrnl [0x%.08X]: RtlNtStatusToDosError\n"
+        printf("EmuXKrnl (0x%.08X): RtlNtStatusToDosError\n"
                "(\n"
                "   Status              : 0x%.08X\n"
                ");\n",

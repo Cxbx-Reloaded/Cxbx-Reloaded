@@ -35,6 +35,7 @@
 #include "EmuX.h"
 
 #include "Xapi.1.0.4361.h"
+#include "D3D8.1.0.4361.h"
 
 // ******************************************************************
 // * HLEDataBase
@@ -47,10 +48,17 @@ HLEData HLEDataBase[] =
         "1.0.4361",
         XAPI_1_0_4361,
         XAPI_1_0_4361_SIZE
+    },
+    // D3D8 Version 1.0.4361
+    {
+        "D3D8",
+        "1.0.4361",
+        D3D8_1_0_4361,
+        D3D8_1_0_4361_SIZE
     }
 };
 
 // ******************************************************************
 // * HLEDataBaseSize
 // ******************************************************************
-extern uint32 HLEDataBaseSize = sizeof(*HLEDataBase);
+extern uint32 HLEDataBaseSize = sizeof(HLEDataBase);

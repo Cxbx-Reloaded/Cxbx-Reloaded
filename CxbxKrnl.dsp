@@ -69,7 +69,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "Include" /I "Include/Win32/" /I "Include/Win32/Cxbx" /I "Include/Win32/Cxbxkrnl" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "Include" /I "Include/Win32/" /I "Include/Win32/Cxbx" /I "Include/Win32/Cxbxkrnl" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /FR /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -128,6 +128,10 @@ SOURCE=.\Doc\Todo.txt
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\D3D8.1.0.4361.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\EmuX.h
 # End Source File
 # Begin Source File
@@ -152,7 +156,15 @@ SOURCE=.\Include\Win32\CxbxKrnl\EmuXxapi.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\OOVPA.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.4361.h
 # End Source File
 # Begin Source File
 
@@ -166,6 +178,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\xntdll.h
 # Begin Group "Source"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\D3D8.1.0.4361.cpp
+# End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\EmuX.cpp
@@ -192,11 +208,15 @@ SOURCE=.\Source\Win32\CxbxKrnl\EmuXxapi.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\Win32\CxbxKrnl\KernelThunk.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\OOVPA.cpp
+SOURCE=.\Source\Win32\CxbxKrnl\Xapi.1.0.4361.cpp
 # End Source File
 # End Group
 # End Target
