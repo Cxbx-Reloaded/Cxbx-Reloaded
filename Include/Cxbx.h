@@ -61,7 +61,7 @@ typedef signed long    sint32;
 // ******************************************************************
 // * Define this to trace intercepted function calls
 // ******************************************************************
-#define _DEBUG_TRACE
+//#define _DEBUG_TRACE
 
 // ******************************************************************
 // * Version information

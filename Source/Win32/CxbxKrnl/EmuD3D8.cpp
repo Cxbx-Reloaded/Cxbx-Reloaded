@@ -530,6 +530,9 @@ HRESULT WINAPI xdirectx::EmuIDirect3D8_CreateDevice
         ppReturnedDeviceInterface
     );
 
+    if(FAILED(hRet))
+        EmuCleanup("IDirect3D8::CreateDevice failed (Invalid Display Settings?)");
+
     // ******************************************************************
     // * it is necessary to store this pointer globally for emulation
     // ******************************************************************
@@ -753,6 +756,15 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_GetBackBuffer
     #endif
 
     *ppBackBuffer = new X_D3DSurface();
+
+    if(BackBuffer == -1)
+    {
+        // NOTE: TODO: HACK: This is just a cheap way of avoiding returning the real front buffer
+        BackBuffer = 0;
+
+        printf("*Warning* Returning BackBuffer 0 instead of FrontBuffer\n");
+        //g_pD3DDevice8->GetFrontBuffer((*ppBackBuffer)->EmuSurface8);
+    }
 
     g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &((*ppBackBuffer)->EmuSurface8));
 
@@ -1640,7 +1652,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
         break;
 
         case X_D3DCOMMON_TYPE_SURFACE:
-            EmuCleanup("X_D3DCOMMON_TYPE_SURFACE temporarily unsupported");
+            EmuCleanup("Register X_D3DCOMMON_TYPE_SURFACE is not yet implemented");
         case X_D3DCOMMON_TYPE_TEXTURE:
         {
             // TODO: Find out why this only seems to be safe with textures (for now)
@@ -1655,9 +1667,13 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
             X_D3DFORMAT X_Format = (X_D3DFORMAT)((pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
             D3DFORMAT   Format   = EmuXB2PC_D3DFormat(X_Format);
 
-            DWORD       dwWidth, dwHeight, dwBPP, dwDepth = 1, dwMipMapLevels = 1;
-            DWORD       dwPitch = 0;
-            BOOL        bSwizzled = FALSE, bCompressed = FALSE;
+            DWORD dwWidth, dwHeight, dwBPP, dwDepth = 1, dwMipMapLevels = 1;
+            DWORD dwPitch = 0;
+            BOOL  bSwizzled = FALSE, bCompressed = FALSE;
+            BOOL  bCubemap = pPixelContainer->Format & X_D3DFORMAT_CUBEMAP;
+
+            if(bCubemap)
+                EmuCleanup("Cubemaps are temporarily unsupported");
 
             // ******************************************************************
             // * Interpret Width/Height/BPP
@@ -1689,7 +1705,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
                 // Linear 32 Bit
                 dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
                 dwHeight = ((pPixelContainer->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
-                dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)*64)+1;
+                dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)+1)*64;
                 dwBPP = 4;
             }
             else if(X_Format == 0x11 /* D3DFMT_LIN_R5G6B5 */)
@@ -1697,8 +1713,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
                 // Linear 16 Bit
                 dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
                 dwHeight = ((pPixelContainer->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
-                dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)*64)+1;
-
+                dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)+1)*64;
                 dwBPP = 2;
             }
             else if(X_Format == 0x0C /* D3DFMT_DXT1 */ || X_Format == 0x0E /* D3DFMT_DXT2 */ || X_Format == 0x0F /* D3DFMT_DXT3 */)
@@ -1744,7 +1759,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
             { 
                 D3DLOCKED_RECT LockedRect;
 
-                pResource->EmuTexture8->LockRect(0, &LockedRect, NULL, 0);
+                hRet = pResource->EmuTexture8->LockRect(0, &LockedRect, NULL, 0);
 
                 RECT  iRect  = {0,0,0,0};
                 POINT iPoint = {0,0};
@@ -1766,18 +1781,36 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
                     BYTE *pDest = (BYTE*)LockedRect.pBits;
                     BYTE *pSrc  = (BYTE*)pBase;
 
-                    // TODO: Faster copy (maybe unnecessary)
-                    for(DWORD v=0;v<dwHeight;v++)
+                    if((DWORD)LockedRect.Pitch == dwPitch && dwPitch == dwWidth*dwBPP)
+                        memcpy(pDest, pSrc, dwWidth*dwHeight*dwBPP);
+                    else
                     {
-                        memcpy(pDest, pSrc, dwWidth*dwBPP);
+                        // TODO: Faster copy (maybe unnecessary)
+                        for(DWORD v=0;v<dwHeight;v++)
+                        {
+                            memcpy(pDest, pSrc, dwWidth*dwBPP);
 
-                        pDest += LockedRect.Pitch;
-                        pSrc  += dwPitch;
+                            pDest += LockedRect.Pitch;
+                            pSrc  += dwPitch;
+                        }
                     }
                 }
 
                 pResource->EmuTexture8->UnlockRect(0);
             }
+
+            /**
+            // Debug Texture Dumping
+            {
+                static int dwDumpTex = 0;
+
+                char szBuffer[255];
+
+                sprintf(szBuffer, "C:\\Aaron\\Textures\\Texture%.03d.bmp", dwDumpTex++);
+
+                D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pResource->EmuTexture8, NULL);
+            }
+            //*/
         }
         break;
 
@@ -2974,7 +3007,7 @@ static void EmuUpdateDeferredStates()
     {
         for(int v=0;v<4;v++)
         {
-            DWORD *pCur = xdirectx::EmuD3DDeferredTextureState+v;
+            DWORD *pCur = &xdirectx::EmuD3DDeferredTextureState[v*32];
 
             if(pCur[0] != X_D3DTSS_UNK)
             {
@@ -3021,9 +3054,17 @@ static void EmuUpdateDeferredStates()
                 if(pCur[5] == 4)
                     EmuCleanup("QuinCunx is unsupported (temporarily)");
 
-                // TODO: Figure out wtf is wrong with this!
                 g_pD3DDevice8->SetTextureStageState(v, D3DTSS_MIPFILTER, pCur[5]);
             }
+
+            if(pCur[6] != X_D3DTSS_UNK)
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_MIPMAPLODBIAS, pCur[6]);
+
+            if(pCur[7] != X_D3DTSS_UNK)
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_MAXMIPLEVEL, pCur[7]);
+
+            if(pCur[8] != X_D3DTSS_UNK)
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_MAXANISOTROPY, pCur[8]);
 
             // TODO: Use a lookup table, this is not always a 1:1 map
             if(pCur[12] != X_D3DTSS_UNK)
@@ -3075,7 +3116,7 @@ static void EmuUpdateDeferredStates()
             {
                 static const int unchecked[] = 
                 {
-                    0, 1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 29, 30, 31
+                    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 29, 30, 31
                 };
 
                 if(pCur[r] != X_D3DTSS_UNK)

@@ -277,23 +277,29 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         if(spot != -1)
             szBuffer[spot] = '\0';
 
-        strcpy(&szBuffer[spot], "\\TDATA");
+        // Create TData Directory
+        {
+            strcpy(&szBuffer[spot], "\\TDATA");
 
-        CreateDirectory(szBuffer, NULL);
+            CreateDirectory(szBuffer, NULL);
 
-        g_hTDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+            g_hTDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
-        if(g_hUDrive == INVALID_HANDLE_VALUE)
-            EmuCleanup("Could not map T:\\\n");
+            if(g_hTDrive == INVALID_HANDLE_VALUE)
+                EmuCleanup("Could not map T:\\\n");
+        }
 
-        strcpy(&szBuffer[spot], "\\UDATA");
+        // Create UData Directory
+        {
+            strcpy(&szBuffer[spot], "\\UDATA");
 
-        CreateDirectory(szBuffer, NULL);
+            CreateDirectory(szBuffer, NULL);
 
-        g_hUDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+            g_hUDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
-        if(g_hUDrive == INVALID_HANDLE_VALUE)
-            EmuCleanup("Could not map U:\\\n");
+            if(g_hUDrive == INVALID_HANDLE_VALUE)
+                EmuCleanup("Could not map U:\\\n");
+        }
     }
 
     // ******************************************************************
@@ -407,7 +413,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                 {
 					xdirectx::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x19) - 0x70);
 
-                    for(int v=0;v<32;v++)
+                    for(int v=0;v<32*4;v++)
                         xdirectx::EmuD3DDeferredTextureState[v] = X_D3DTSS_UNK;
 
                     printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredTextureState\n", GetCurrentThreadId(), xdirectx::EmuD3DDeferredTextureState);
@@ -656,6 +662,9 @@ void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*En
 // ******************************************************************
 int EmuException(LPEXCEPTION_POINTERS e)
 {
+    if(EmuIsXboxFS())
+        EmuSwapFS();
+
     // ******************************************************************
 	// * Debugging Information
 	// ******************************************************************
@@ -688,6 +697,9 @@ int EmuException(LPEXCEPTION_POINTERS e)
 // ******************************************************************
 int ExitException(LPEXCEPTION_POINTERS e)
 {
+    if(EmuIsXboxFS())
+        EmuSwapFS();
+
     static int count = 0;
 
     // ******************************************************************

@@ -4,7 +4,7 @@
 
 # TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102
 
-CFG=CxbxKrnl - Win32 Release
+CFG=CxbxKrnl - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
@@ -13,7 +13,7 @@ CFG=CxbxKrnl - Win32 Release
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "CxbxKrnl.mak" CFG="CxbxKrnl - Win32 Release"
+!MESSAGE NMAKE /f "CxbxKrnl.mak" CFG="CxbxKrnl - Win32 Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
 # ADD LINK32 dsound.lib winmm.lib d3d8.lib dinput8.lib dxguid.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /map /machine:I386 /out:"Bin/Cxbx.dll" /libpath:"Lib"
-# SUBTRACT LINK32 /pdb:none /debug
+# SUBTRACT LINK32 /profile /pdb:none /debug
 
 !ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
 
