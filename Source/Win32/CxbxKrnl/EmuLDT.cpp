@@ -66,13 +66,6 @@ static uint16 FreeLDTEntries[MAXIMUM_XBOX_THREADS];
 static CRITICAL_SECTION EmuLDTLock;
 
 // ******************************************************************
-// * Loaded at run-time to avoid linker conflicts
-// ******************************************************************
-static HMODULE hNtDll = GetModuleHandle("ntdll");
-
-static NtDll::FPTR_NtSetLdtEntries NT_NtSetLdtEntries = (NtDll::FPTR_NtSetLdtEntries)GetProcAddress(hNtDll, "NtSetLdtEntries");
-
-// ******************************************************************
 // * func: EmuInitLDT
 // ******************************************************************
 void EmuInitLDT()
@@ -140,7 +133,7 @@ uint16 EmuAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit)
     {
         using namespace NtDll;
 
-        if(!NT_SUCCESS(NT_NtSetLdtEntries((x*8)+7+8, LDTEntry, 0, LDTEntry)))
+        if(!NT_SUCCESS(NtDll::NtSetLdtEntries((x*8)+7+8, LDTEntry, 0, LDTEntry)))
         {
             LeaveCriticalSection(&EmuLDTLock);
 
@@ -168,7 +161,7 @@ void EmuDeallocateLDT(uint16 wSelector)
 
     ZeroMemory(&LDTEntry, sizeof(LDTEntry));
 
-    NT_NtSetLdtEntries(wSelector, LDTEntry, 0, LDTEntry);
+    NtDll::NtSetLdtEntries(wSelector, LDTEntry, 0, LDTEntry);
 
     FreeLDTEntries[(wSelector >> 3)-1] = wSelector;
 

@@ -744,6 +744,34 @@ typedef NTSTATUS (NTAPI *FPTR_IoCreateFile)
     IN  ULONG				Options
 );
 
+// ******************************************************************
+// * Exported API
+// ******************************************************************
+extern FPTR_RtlInitAnsiString              RtlInitAnsiString ;
+extern FPTR_RtlInitUnicodeString           RtlInitUnicodeString;
+extern FPTR_RtlAnsiStringToUnicodeString   RtlAnsiStringToUnicodeString;
+extern FPTR_RtlUnicodeStringToAnsiString   RtlUnicodeStringToAnsiString;
+extern FPTR_RtlNtStatusToDosError          RtlNtStatusToDosError;
+extern FPTR_RtlInitializeCriticalSection   RtlInitializeCriticalSection;
+extern FPTR_RtlEnterCriticalSection        RtlEnterCriticalSection;
+extern FPTR_RtlLeaveCriticalSection        RtlLeaveCriticalSection;
+extern FPTR_RtlCreateHeap                  RtlCreateHeap;
+extern FPTR_RtlAllocateHeap                RtlAllocateHeap;
+extern FPTR_RtlFreeHeap                    RtlFreeHeap;
+extern FPTR_NtAllocateVirtualMemory        NtAllocateVirtualMemory;
+extern FPTR_NtClose                        NtClose;
+extern FPTR_NtDelayExecution               NtDelayExecution;
+extern FPTR_NtDuplicateObject              NtDuplicateObject;
+extern FPTR_NtQueryInformationFile         NtQueryInformationFile;
+extern FPTR_NtQueryFullAttributesFile      NtQueryFullAttributesFile;
+extern FPTR_NtQueryVolumeInformationFile   NtQueryVolumeInformationFile;
+extern FPTR_NtCreateEvent                  NtCreateEvent;
+extern FPTR_NtCreateFile                   NtCreateFile;
+extern FPTR_NtReadFile                     NtReadFile;
+extern FPTR_NtWriteFile                    NtWriteFile;
+extern FPTR_NtSetInformationFile           NtSetInformationFile;
+extern FPTR_NtSetLdtEntries                NtSetLdtEntries;
+
 #if defined(__cplusplus)
 }
 #endif

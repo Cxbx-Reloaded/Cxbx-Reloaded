@@ -57,15 +57,6 @@ namespace XTL
 };
 
 // ******************************************************************
-// * Loaded at run-time to avoid linker conflicts
-// ******************************************************************
-static HMODULE hNtDll = GetModuleHandle("ntdll");
-
-NtDll::FPTR_RtlCreateHeap                  NT_RtlCreateHeap                = (NtDll::FPTR_RtlCreateHeap)GetProcAddress(hNtDll, "RtlCreateHeap");
-NtDll::FPTR_RtlAllocateHeap                NT_RtlAllocateHeap              = (NtDll::FPTR_RtlAllocateHeap)GetProcAddress(hNtDll, "RtlAllocateHeap");
-NtDll::FPTR_RtlFreeHeap                    NT_RtlFreeHeap                  = (NtDll::FPTR_RtlFreeHeap)GetProcAddress(hNtDll, "RtlFreeHeap");
-
-// ******************************************************************
 // * func: EmuRtlCreateHeap
 // ******************************************************************
 PVOID WINAPI XTL::EmuRtlCreateHeap
@@ -104,7 +95,7 @@ PVOID WINAPI XTL::EmuRtlCreateHeap
 
     RtlHeapDefinition.Length = sizeof(RtlHeapDefinition);
 
-    PVOID pRet = NT_RtlCreateHeap(Flags, Base, Reserve, Commit, Lock, &RtlHeapDefinition);
+    PVOID pRet = NtDll::RtlCreateHeap(Flags, Base, Reserve, Commit, Lock, &RtlHeapDefinition);
 
     EmuSwapFS();   // XBox FS
 
@@ -138,7 +129,7 @@ PVOID WINAPI XTL::EmuRtlAllocateHeap
     }
     #endif
 
-    PVOID pRet = NT_RtlAllocateHeap(hHeap, dwFlags, dwBytes);
+    PVOID pRet = NtDll::RtlAllocateHeap(hHeap, dwFlags, dwBytes);
 
     EmuSwapFS();   // XBox FS
 
@@ -172,7 +163,7 @@ BOOL WINAPI XTL::EmuRtlFreeHeap
     }
     #endif
 
-    BOOL bRet = NT_RtlFreeHeap(hHeap, dwFlags, lpMem);
+    BOOL bRet = NtDll::RtlFreeHeap(hHeap, dwFlags, lpMem);
 
     EmuSwapFS();   // XBox FS
 
