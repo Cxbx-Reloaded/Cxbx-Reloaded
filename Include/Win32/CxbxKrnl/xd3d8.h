@@ -51,16 +51,21 @@ typedef D3DFORMAT X_D3DFORMAT;
 // ******************************************************************
 inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 {
-    if(Format == 0)
-        return (D3DFORMAT)NULL;
-    else if(Format == 0x07)
-        return D3DFMT_X8R8G8B8;
-    else if(Format == 0x06)
-        return D3DFMT_A8R8G8B8;
-    else if(Format == 0x2A)
-        return D3DFMT_D24S8;
-    else if(Format == 0x2C)
-        return D3DFMT_D16;
+    switch(Format)
+    {
+        case 0:
+            return (D3DFORMAT)NULL;
+        case 0x06:
+            return D3DFMT_A8R8G8B8;
+        case 0x07:
+            return D3DFMT_X8R8G8B8;
+        case 0x0E:
+            return D3DFMT_DXT2;
+        case 0x2A:
+            return D3DFMT_D24S8;
+        case 0x2C:
+            return D3DFMT_D16;
+    }
 
     EmuCleanup("EmuXB2PC_D3DFormat: Unknown Format (%d)", Format);
 
@@ -316,6 +321,11 @@ HRESULT WINAPI EmuIDirect3D8_GetAdapterDisplayMode
     UINT                        Adapter,
     X_D3DDISPLAYMODE           *pMode
 );
+
+// ******************************************************************
+// * func: EmuIDirect3D8_KickOffAndWaitForIdle
+// ******************************************************************
+VOID WINAPI EmuIDirect3D8_KickOffAndWaitForIdle();
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CopyRects

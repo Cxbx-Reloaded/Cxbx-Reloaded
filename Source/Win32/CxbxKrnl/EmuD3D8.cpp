@@ -572,6 +572,27 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_GetAdapterDisplayMode
 }
 
 // ******************************************************************
+// * func: EmuIDirect3D8_KickOffAndWaitForIdle
+// ******************************************************************
+VOID WINAPI xd3d8::EmuIDirect3D8_KickOffAndWaitForIdle()
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3D8_KickOffAndWaitForIdle()\n", GetCurrentThreadId());
+    }
+    #endif
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_CopyRects
 // ******************************************************************
 HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CopyRects

@@ -92,6 +92,38 @@ SOOVPA<13> IDirect3D8_GetAdapterDisplayMode_1_0_4627 =
 };
 
 // ******************************************************************
+// * IDirect3D8_KickOffAndWaitForIdle
+// ******************************************************************
+SOOVPA<9> IDirect3D8_KickOffAndWaitForIdle_1_0_4627 =
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    {
+        // IDirect3D8_KickOffAndWaitForIdle+0x00 : mov eax, [addr]
+        { 0x00, 0xA1 }, // (Offset,Value)-Pair #1
+
+        // IDirect3D8_KickOffAndWaitForIdle+0x05 : mov ecx, [eax+0x30]
+        { 0x05, 0x8B }, // (Offset,Value)-Pair #2
+        { 0x06, 0x48 }, // (Offset,Value)-Pair #3
+        { 0x07, 0x30 }, // (Offset,Value)-Pair #4
+
+        // IDirect3D8_KickOffAndWaitForIdle+0x08 : push 2
+        { 0x08, 0x6A }, // (Offset,Value)-Pair #5
+        { 0x09, 0x02 }, // (Offset,Value)-Pair #6
+
+        // IDirect3D8_KickOffAndWaitForIdle+0x0A : push ecx
+        { 0x0A, 0x51 }, // (Offset,Value)-Pair #7
+
+        // IDirect3D8_KickOffAndWaitForIdle+0x0B : call [addr]
+        { 0x0B, 0xE8 }, // (Offset,Value)-Pair #8
+
+        // IDirect3D8_KickOffAndWaitForIdle+0x10 : retn
+        { 0x10, 0xC3 }, // (Offset,Value)-Pair #9
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_GetRenderTarget2
 // ******************************************************************
 SOOVPA<10> IDirect3DDevice8_GetRenderTarget2_1_0_4627 =
@@ -884,6 +916,16 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3D8_GetAdapterDisplayMode" 
+        #endif
+    },
+    // IDirect3D8::KickOffAndWaitForIdle
+    {
+        (OOVPA*)&IDirect3D8_KickOffAndWaitForIdle_1_0_4627,
+
+        xd3d8::EmuIDirect3D8_KickOffAndWaitForIdle,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3D8_KickOffAndWaitForIdle" 
         #endif
     },
     // IDirect3DDevice8::GetRenderTarget2
