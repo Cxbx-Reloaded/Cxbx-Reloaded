@@ -1,0 +1,137 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_CXBX                ICON    DISCARDABLE     "Cxbx.ico"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_SPLASH              BITMAP  DISCARDABLE     "Splash.bmp"
+IDB_LOGO                BITMAP  DISCARDABLE     "Logo.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Open Xbe...",                ID_FILE_OPEN_XBE
+        MENUITEM "&Close xbe",                  ID_FILE_CLOSE_XBE, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Save Xbe",                   ID_FILE_SAVEXBEFILE, GRAYED
+        MENUITEM "Save Xbe &As...",             ID_FILE_SAVEXBEFILEAS
+        , GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Import Exe...",              ID_FILE_IMPORTFROMEXE
+        MENUITEM "&Export Exe...",              ID_FILE_EXPORTTOEXE, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_FILE_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        POPUP "Logo &Bitmap", GRAYED
+        BEGIN
+            MENUITEM "&Import...",                  ID_EDIT_LOGOBITMAP_IMPORT
+
+            MENUITEM "&Export...",                  ID_EDIT_LOGOBITMAP_EXPORT
+
+        END
+        POPUP "&Patch", GRAYED
+        BEGIN
+            MENUITEM "&Allow >64 MB",               ID_EDIT_PATCH_ALLOW64MB
+            MENUITEM "Debug Mode",                  ID_EDIT_PATCH_DEBUGMODE
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Extract &Xbe Info...",        ID_EDIT_EXTRACTXBEINFO
+        , GRAYED
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Debug Console (GUI)",        ID_VIEW_DEBUGCONSOLE
+        MENUITEM "Debug Console (Kernel)",      ID_VIEW_KERNELDEBUGCONSOLE
+    END
+    POPUP "E&mulation"
+    BEGIN
+        MENUITEM "&Start",                      ID_EMULATION_START, GRAYED
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Caustik's XBox Hacking Page...", ID_HELP_HOMEPAGE
+        MENUITEM SEPARATOR
+        MENUITEM "&About",                      ID_HELP_ABOUT
+    END
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,17 @@
+Cxbx Todo:
+
+  General Code Cleanup [caustik]
+
+  Exe->Xbe should use an "OpenXDK" logo bitmap by default. This can be done
+  by having a debug version of Cxbx output the necessary raw data. Then, you
+  just inline it into the code.
+
+  Allow a logo bitmap to be added if one does not exist. This may require that
+  the size of headers be increased. (sizeof_headers).
+
+  When loading a file, menus and WM_CLOSE should be disabled and an update
+  progress should be sent via callback from core.
+
+  Xbe::m_Header should be allocated dynamically to make room for huge headers.
+
+  TLS needs to be implemented.

@@ -1,0 +1,140 @@
+cxbx website: http://www.caustik.com/xbox/
+
+version: 0.6.0 (??/??/03)
+--------------------------------
+
+- Released source code under GNU license.
+
+- Beginning HLE process.
+
+- Debugging interface changed. Much cleaner.
+
+version: 0.5.2 (12/14/02)
+--------------------------------
+
+- Fixed a bug in section name generation. This might
+  add some compatibility, not sure yet.
+
+version: 0.5.1 (??/??/??)
+--------------------------------
+
+- more .xbe information added to core and xbe dump
+
+version: 0.5.0 (11/16/02)
+--------------------------------
+
+- fixed a bug in displaying section digests.
+
+- added conversion from .exe to .xbe!!
+
+- more code cleanup, tiny ui improvements.
+
+version: 0.4.4 (11/01/02)
+--------------------------------
+
+- updated .xbe structure for more acccuracy
+
+- added/fixed alot of information in xbe info
+  dumps. most notably is the TLS information, 
+  which is finally completely correct.
+
+- lots and lots of new kernel function prototypes
+  and structs/enums are very accurate now.
+
+version: 0.4.3 (10/09/02)
+--------------------------------
+
+- added edit menu options to patch for allowing
+  more than 64mb of ram, and also to toggle between
+  debug mode / release mode. i also fixed a few 
+  relatively minor gui things, such as suggesting
+  an appropriate name for saving an .xbe file, instead
+  of just defaulting to "default.xbe".
+
+version: 0.4.2 (10/07/02)
+--------------------------------
+
+- finally got around to adding logo bitmap import
+  feature. this is pretty damn cool because you
+  can change that little logo that appears when
+  you boot your xbox software to whatever you want
+  it to be. for example, you can modify xbox media
+  player to display "XBMP" instead of "Microsoft"
+
+version: 0.4.1 (10/04/02)
+--------------------------------
+
+- internally alot of little things have changed,
+  code is organized pretty well now. software run
+  through the emulator typically safely terminates,
+  which is pretty damn cool from my perspective.
+
+version: 0.4.0 (BETA) (09/16/02)
+--------------------------------
+
+- total code rewrite. most the funcionality
+  has remained intact with cleaner code UI
+  and code design.
+
+- logo bitmap is now decoded and displayed
+  in the main window when you open an .xbe
+  file. debug output window traces kernel
+  calls. logo bitmap can be exported to a
+  bitmap file.
+
+- xbe_info.txt now displays the correctly
+  decoded kernel thunk table address.
+
+version: 0.3.1 (09/02/2002)
+--------------------------------
+
+- significantly decreased file sizes for cxbx.exe
+  and cxbx_krnl.dll. Also made debug output cleaner.
+
+version: 0.3.0 (08/19/2002)
+--------------------------------
+
+- various gui changes, new web site, significant
+  changes in emulation theory. kernel exports are
+  now hijacked and interpretted.
+
+version: 0.2.2 (07/24/2002)
+---------------------------
+
+- fixed various minor GUI problems
+
+- added kernel thunk address description in GUI
+
+version: 0.2.1 (07/24/2002)
+---------------------------
+
+- added "Convert To .EXE" menu option.
+
+- fixed problem where entry point wasn't being detected
+  correctly when converting to .exe
+
+version: 0.2.0 (07/24/2002)
+---------------------------
+
+- drastically changed UI, took out convert to .exe
+  feature (temporarily).
+
+version: 0.1.3b(07/18/2002)
+---------------------------
+
+-  oops..fixed an incorrect debug xor value
+
+version: 0.1.3 (07/16/2002)
+---------------------------
+
+- .xbe file information dump now shows retail/debug
+   translated addresses.
+
+version: 0.1.2 (07/16/2002)
+---------------------------
+
+- cxbx now dumps .xbe file information in a .txt file.
+
+- new icon ?
+
+- various tiny improvements
