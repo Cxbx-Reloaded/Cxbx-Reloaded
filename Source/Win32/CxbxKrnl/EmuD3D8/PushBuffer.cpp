@@ -205,12 +205,30 @@ void XTL::EmuExecutePushBuffer
 
             // perform rendering
             {
-                LPDIRECT3DINDEXBUFFER8 pIndexBuffer=0;
+                static LPDIRECT3DINDEXBUFFER8 pIndexBuffer=0;
+                static uint maxSize = 0;
 
-                HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer(dwCount*4, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer);
+                HRESULT hRet;
+
+                // TODO: depreciate maxSize after N milliseconds..then N milliseconds later drop down to new highest
+                if(dwCount*4 > maxSize)
+                {
+                    if(pIndexBuffer != 0)
+                    {
+                        pIndexBuffer->Release();
+                    }
+
+                    hRet = g_pD3DDevice8->CreateIndexBuffer(dwCount*4, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer);
+
+                    maxSize = dwCount*4;
+                }
+                else
+                {
+                    hRet = D3D_OK;
+                }
 
                 if(FAILED(hRet))
-                    EmuCleanup("Unable to create index buffer for PushBuffer emulation\n");
+                    EmuCleanup("Unable to create index buffer for PushBuffer emulation (dwCount : %d)");
 
                 // copy index data
                 {
@@ -273,8 +291,6 @@ void XTL::EmuExecutePushBuffer
 
                     g_pD3DDevice8->SetIndices(0, 0);
                 }
-
-                pIndexBuffer->Release();
             }
         }
 

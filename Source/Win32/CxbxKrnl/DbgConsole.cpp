@@ -109,7 +109,7 @@ void DbgConsole::Reset()
     m_szInput[0] = '\0';
 }
 
-#ifdef _DEBUG_TRACK_VB
+#if defined(_DEBUG_TRACK_VB) || defined(_DEBUG_TRACK_PB)
 typedef enum _ETAction
 {
     ETA_ENABLE  = 0,
