@@ -209,6 +209,42 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
 }
 
 // ******************************************************************
+// * func: EmuIDirectSound8_CreateStream
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSound8_CreateStream
+(
+    LPDIRECTSOUND8          pThis,
+    X_DSSTREAMDESC         *pdssd,
+    X_CDirectSoundStream  **ppStream,
+    PVOID                   pUnknown
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSound8_CreateStream\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   pdssd                     : 0x%.08X\n"
+               "   ppStream                  : 0x%.08X\n"
+               "   pUnknown                  : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, pdssd, ppStream, pUnknown);
+    }
+    #endif
+
+    *ppStream = new X_CDirectSoundStream();
+
+    EmuSwapFS();   // XBox FS
+
+    return DS_OK;
+}
+
+// ******************************************************************
 // * func: EmuCDirectSoundStream_SetVolume
 // ******************************************************************
 ULONG WINAPI XTL::EmuCDirectSoundStream_SetVolume(X_CDirectSoundStream *pThis, LONG lVolume)
@@ -223,13 +259,47 @@ ULONG WINAPI XTL::EmuCDirectSoundStream_SetVolume(X_CDirectSoundStream *pThis, L
         printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetVolume\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
-               "   lVolume                   : 0x%.08X\n"
+               "   lVolume                   : %d\n"
                ");\n",
                GetCurrentThreadId(), pThis, lVolume);
     }
     #endif
 
     // TODO: Actually SetVolume
+
+    EmuSwapFS();   // XBox FS
+
+    return DS_OK;
+}
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetRolloffFactor
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSoundStream_SetRolloffFactor
+(
+    X_CDirectSoundStream *pThis,
+    FLOAT                 fRolloffFactor,
+    DWORD                 dwApply
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetRolloffFactor\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   fRolloffFactor            : %f\n"
+               "   dwApply                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, fRolloffFactor, dwApply);
+    }
+    #endif
+
+    // TODO: Actually SetRolloffFactor
 
     EmuSwapFS();   // XBox FS
 
@@ -501,6 +571,38 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_SetHeadroom
                "   dwHeadroom                : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, dwHeadroom);
+    }
+    #endif
+
+    // TODO: Actually implement this
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetFrequency
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSoundStream_SetFrequency
+(
+    PVOID   pThis,
+    DWORD   dwFrequency
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetFrequency\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   dwFrequency               : %d\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, dwFrequency);
     }
     #endif
 

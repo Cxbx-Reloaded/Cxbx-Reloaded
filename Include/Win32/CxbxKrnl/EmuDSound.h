@@ -163,9 +163,30 @@ HRESULT WINAPI EmuDirectSoundCreateStream
 );
 
 // ******************************************************************
+// * func: EmuIDirectSound8_CreateStream
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSound8_CreateStream
+(
+    LPDIRECTSOUND8          pThis,
+    X_DSSTREAMDESC         *pdssd,
+    X_CDirectSoundStream  **ppStream,
+    PVOID                   pUnknown
+);
+
+// ******************************************************************
 // * func: EmuCDirectSoundStream_SetVolume
 // ******************************************************************
 ULONG WINAPI EmuCDirectSoundStream_SetVolume(X_CDirectSoundStream *pThis, LONG lVolume);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetRolloffFactor
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetRolloffFactor
+(
+    X_CDirectSoundStream *pThis,
+    FLOAT                 fRolloffFactor,
+    DWORD                 dwApply
+);
 
 // ******************************************************************
 // * func: EmuCDirectSoundStream_AddRef
@@ -236,6 +257,15 @@ HRESULT WINAPI EmuIDirectSoundStream_SetHeadroom
 (
     PVOID   pThis,
     DWORD   dwHeadroom
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetFrequency
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetFrequency
+(
+    PVOID   pThis,
+    DWORD   dwFrequency
 );
 
 // ******************************************************************
