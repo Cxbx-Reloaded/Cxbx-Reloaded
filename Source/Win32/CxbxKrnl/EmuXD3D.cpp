@@ -122,22 +122,27 @@ void EmuXRenderWindow(PVOID)
         UpdateWindow(g_EmuXWindow);
     }
 
-    MSG msg;
-
-    ZeroMemory(&msg, sizeof(msg));
-
-    while(msg.message != WM_QUIT)
+    // ******************************************************************
+    // * message processing loop
+    // ******************************************************************
     {
-        if(PeekMessage( &msg, NULL, 0U, 0U, PM_REMOVE ))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-        else
-            Sleep(10);
-    }
+        MSG msg;
 
-    ExitProcess(0);
+        ZeroMemory(&msg, sizeof(msg));
+
+        while(msg.message != WM_QUIT)
+        {
+            if(PeekMessage( &msg, NULL, 0U, 0U, PM_REMOVE ))
+            {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+            else
+                Sleep(10);
+        }
+
+        ExitProcess(0);
+    }
 }
 
 // ******************************************************************
@@ -199,21 +204,22 @@ HRESULT WINAPI xboxkrnl::EmuXIDirect3D8_CreateDevice
 
         hFocusWindow = g_EmuXWindow;
 
-        // Tricky MS randomizing .h #defines :[
-        if(pPresentationParameters->BackBufferFormat == 0x07)
-            pPresentationParameters->BackBufferFormat = D3DFMT_X8R8G8B8;
+        // TODO: Use lookup table that is dependant on library version
+        {
+            // Tricky MS randomizing .h #defines :[
+            if(pPresentationParameters->BackBufferFormat == 0x07)
+                pPresentationParameters->BackBufferFormat = D3DFMT_X8R8G8B8;
 
-        // Tricky MS randomizing .h #defines :[
-        if(pPresentationParameters->AutoDepthStencilFormat == 0x2A)
-            pPresentationParameters->AutoDepthStencilFormat = D3DFMT_D24S8;
+            // Tricky MS randomizing .h #defines :[
+            if(pPresentationParameters->AutoDepthStencilFormat == 0x2A)
+                pPresentationParameters->AutoDepthStencilFormat = D3DFMT_D24S8;
+        }
     }
 
     // ******************************************************************
     // * TODO: Query for Software Vertex Processing abilities!!
     // ******************************************************************
-    {
-        BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
-    }
+    BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
 
     // ******************************************************************
     // * redirect to windows d3d
@@ -223,7 +229,7 @@ HRESULT WINAPI xboxkrnl::EmuXIDirect3D8_CreateDevice
         Adapter,
         DeviceType,
         hFocusWindow,
-        BehaviorFlags,          // TODO: perhaps allow software vertex processing
+        BehaviorFlags,
         pPresentationParameters,
         ppReturnedDeviceInterface
     );
@@ -231,9 +237,7 @@ HRESULT WINAPI xboxkrnl::EmuXIDirect3D8_CreateDevice
     // ******************************************************************
     // * it is necessary to store this pointer globally for emulation
     // ******************************************************************
-    {
-        g_pD3D8Device = *ppReturnedDeviceInterface;
-    }
+    g_pD3D8Device = *ppReturnedDeviceInterface;
 
     EmuXSwapFS();   // XBox FS
 
@@ -279,22 +283,20 @@ HRESULT WINAPI xboxkrnl::EmuXIDirect3DDevice8_Clear
     // ******************************************************************
     {
         // TODO: D3DCLEAR_TARGET_A, *R, *G, *B don't exist on windows
-
+        // TODO: Use lookup table that is dependant on library version
         // Tricky MS randomizing .h #defines :[
-        {
-            DWORD newFlags = 0;
+        DWORD newFlags = 0;
 
-            if(Flags & 0x000000f0l)
-                newFlags |= D3DCLEAR_TARGET;
+        if(Flags & 0x000000f0l)
+            newFlags |= D3DCLEAR_TARGET;
 
-            if(Flags & 0x00000001l)
-                newFlags |= D3DCLEAR_ZBUFFER;
+        if(Flags & 0x00000001l)
+            newFlags |= D3DCLEAR_ZBUFFER;
 
-            if(Flags & 0x00000002l)
-                newFlags |= D3DCLEAR_STENCIL;
+        if(Flags & 0x00000002l)
+            newFlags |= D3DCLEAR_STENCIL;
 
-            Flags = newFlags;
-        }
+        Flags = newFlags;
     }
 
     HRESULT ret = g_pD3D8Device->Clear(Count, pRects, Flags, Color, Z, Stencil);

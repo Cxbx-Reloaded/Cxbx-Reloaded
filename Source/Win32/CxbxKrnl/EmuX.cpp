@@ -107,20 +107,32 @@ CXBXKRNL_API void NTAPI EmuXInit(Xbe::LibraryVersion *LibraryVersion, DebugMode 
 
         for(uint32 v=0;v<dwLibraryVersions;v++)
         {
+            uint16 MajorVersion = LibraryVersion[v].wMajorVersion;
+            uint16 MinorVersion = LibraryVersion[v].wMinorVersion;
+            uint16 BuildVersion = LibraryVersion[v].wBuildVersion;
+
             char szLibraryName[9] = {0};
 
             for(uint32 c=0;c<8;c++)
                 szLibraryName[c] = LibraryVersion[v].szName[c];
 
-            printf("EmuX: Locating HLE Information for %s...", szLibraryName);
+            printf("EmuX: Locating HLE Information for %s %d.%d.%d...", szLibraryName, MajorVersion, MinorVersion, BuildVersion);
 
             bool found=false;
+
             for(uint32 d=0;d<dwHLEEntries;d++)
             {
-                if(strcmp(szLibraryName, HLEDataBase[d].Library) != 0)
-                    continue;
+                if
+                (
+                    BuildVersion != HLEDataBase[d].BuildVersion ||
+                    MinorVersion != HLEDataBase[d].MinorVersion ||
+                    MajorVersion != HLEDataBase[d].MajorVersion ||
+                    strcmp(szLibraryName, HLEDataBase[d].Library) != 0
+                )
+                continue;
 
                 found = true;
+
                 printf("Found\n");
 
                 EmuXInstallWrappers(HLEDataBase[d].OovpaTable, HLEDataBase[d].OovpaTableSize, Entry, XbeHeader);
@@ -264,6 +276,8 @@ void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*E
 
             upper -= Loovpa->Lovp[count-1].Offset;
 
+            bool found = false;
+
             // ******************************************************************
             // * Search all of the image memory
             // ******************************************************************
@@ -296,18 +310,20 @@ void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*E
 
                     EmuXInstallWrapper((void*)cur, OovpaTable[a].lpRedirect);
 
+                    found = true;
+
                     break;
                 }
+            }
 
-                // ******************************************************************
-                // * not found
-                // ******************************************************************
-                if(cur == upper && v != count)
-                {
-                    #ifdef _DEBUG_TRACE
-                    printf("None (OK)\n");
-                    #endif
-                }
+            // ******************************************************************
+            // * not found
+            // ******************************************************************
+            if(!found)
+            {
+                #ifdef _DEBUG_TRACE
+                printf("None (OK)\n");
+                #endif
             }
         }
         // ******************************************************************
@@ -318,6 +334,8 @@ void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*E
             SOOVPA<1> *Soovpa = (SOOVPA<1>*)Oovpa;
 
             upper -= Soovpa->Sovp[count-1].Offset;
+
+            bool found = false;
 
             // ******************************************************************
             // * Search all of the image memory
@@ -351,18 +369,20 @@ void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*E
 
                     EmuXInstallWrapper((void*)cur, OovpaTable[a].lpRedirect);
 
+                    found = true;
+
                     break;
                 }
+            }
 
-                // ******************************************************************
-                // * not found
-                // ******************************************************************
-                if(cur == upper && v != count)
-                {
-                    #ifdef _DEBUG_TRACE
-                    printf("None (OK)\n");
-                    #endif
-                }
+            // ******************************************************************
+            // * not found
+            // ******************************************************************
+            if(!found)
+            {
+                #ifdef _DEBUG_TRACE
+                printf("None (OK)\n");
+                #endif
             }
         }
     }

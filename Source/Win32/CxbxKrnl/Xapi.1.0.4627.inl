@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->HLEDataBase.h
+// *   Cxbx->Win32->CxbxKrnl->Xapi.1.0.4627.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,32 +31,75 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef HLEDATABASE_H
-#define HLEDATABASE_H
-
-#include "Xapi.1.0.4361.h"
-#include "Xapi.1.0.4627.h"
-#include "D3D8.1.0.4361.h"
 
 // ******************************************************************
-// * HLEDataBase
+// * XAPI_1_0_4627
 // ******************************************************************
-extern struct HLEData
+OOVPATable XAPI_1_0_4627[] =
 {
-    char       *Library;
+    // CreateThread (unchanged since 4361)
+    {
+        (OOVPA*)&CreateThread_1_0_4361,
 
-    uint16      MajorVersion;
-    uint16      MinorVersion;
-    uint16      BuildVersion;
+        xboxkrnl::EmuXCreateThread,
 
-    OOVPATable *OovpaTable;
-    uint32      OovpaTableSize;
-}
-HLEDataBase[];
+        #ifdef _DEBUG_TRACE
+        "EmuXCreateThread" 
+        #endif
+    },
+    // CloseHandle (unchanged since 4361)
+    {
+        (OOVPA*)&CloseHandle_1_0_4361,
+
+        xboxkrnl::EmuXCloseHandle,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXCloseHandle" 
+        #endif
+    },
+    // XapiInitProcess (unchanged since 4361)
+    {
+        (OOVPA*)&XapiInitProcess_1_0_4361,
+
+        xboxkrnl::EmuXapiInitProcess,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXapiInitProcess" 
+        #endif
+    },
+    // XapiBootToDash (unchanged since 4361)
+    {
+        (OOVPA*)&XapiBootDash_1_0_4361,
+
+        xboxkrnl::EmuXapiBootDash,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXapiBootDash"
+        #endif
+    },
+    // __rtinit (unchanged since 4361)
+    {
+        (OOVPA*)&__rtinit_1_0_4361,
+
+        xboxkrnl::EmuX__rtinit,
+
+        #ifdef _DEBUG_TRACE
+        "EmuX__rtinit",
+        #endif
+    },
+    // __cinit (unchanged since 4361)
+    {
+        (OOVPA*)&__cinit_1_0_4361,
+
+        xboxkrnl::EmuX__cinit,
+
+        #ifdef _DEBUG_TRACE
+        "EmuX__cinit",
+        #endif
+    },
+};
 
 // ******************************************************************
-// * HLEDataBaseSize
+// * XAPI_1_0_4627_SIZE
 // ******************************************************************
-extern uint32 HLEDataBaseSize;
-
-#endif
+uint32 XAPI_1_0_4627_SIZE = sizeof(XAPI_1_0_4627);
