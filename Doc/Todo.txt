@@ -2,7 +2,10 @@ Cxbx Todo:
 
   General Code Cleanup [caustik]
 
-  FS: structure construction (EmuXInit)
+  - FS: structure construction (EmuXInit)
+
+      - Initialize necessary components of EmuXFS
+      - SwapFS before *all* Win32/NT calls.
 
   Debug outputs should be configurable to STDOUT (console) or text file.
 

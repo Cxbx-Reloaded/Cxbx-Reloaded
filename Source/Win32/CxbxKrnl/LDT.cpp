@@ -76,8 +76,6 @@ void LDTSystemInit()
 // ******************************************************************
 uint16 LDTAllocate(uint32 dwBaseAddr, uint32 dwLimit)
 {
-    ULONG_PTR uBase = (ULONG_PTR)dwBaseAddr;
-
     xntdll::LDT_ENTRY LDTEntry;
 
     int x=0;
@@ -107,9 +105,9 @@ uint16 LDTAllocate(uint32 dwBaseAddr, uint32 dwLimit)
     // * Set up selector information
     // ******************************************************************
     {
-        LDTEntry.BaseLow                    = (WORD)(uBase & 0xFFFF);
-        LDTEntry.HighWord.Bits.BaseMid      = (uBase >> 16) & 0xFF;
-        LDTEntry.HighWord.Bits.BaseHi       = (uBase >> 24) & 0xFF;
+        LDTEntry.BaseLow                    = (WORD)(dwBaseAddr & 0xFFFF);
+        LDTEntry.HighWord.Bits.BaseMid      = (dwBaseAddr >> 16) & 0xFF;
+        LDTEntry.HighWord.Bits.BaseHi       = (dwBaseAddr >> 24) & 0xFF;
 	    LDTEntry.HighWord.Bits.Type         = 0x13; // RW data segment
 	    LDTEntry.HighWord.Bits.Dpl          = 3;    // user segment
 	    LDTEntry.HighWord.Bits.Pres         = 1;    // present

@@ -61,6 +61,25 @@ namespace win32
 using namespace win32;
 
 // ******************************************************************
+// * func: EmuXSwapFS
+// ******************************************************************
+// *
+// * This function is used to swap between the native Win2k/XP FS:
+// * structure, and the EmuX FS: structure. Before running Windows
+// * code, you *must* swap over to Win2k/XP FS. Similarly, before
+// * running Xbox code, you *must* swap back over to EmuX FS.
+// *
+// ******************************************************************
+inline void EmuXSwapFS()
+{
+    __asm
+    {
+        mov ax, fs:[0x14]
+        mov fs, ax
+    }
+}
+
+// ******************************************************************
 // * func: EmuXGenerateFS
 // ******************************************************************
 void EmuXGenerateFS()
@@ -74,7 +93,7 @@ void EmuXGenerateFS()
     uint16 NewFS = LDTAllocate(pNewFS, pNewFS + dwSize);
 
     // ******************************************************************
-    // * Save the "old" FS  : [OrgFS = FS]
+    // * Obtain "OrgFS"
     // ******************************************************************
     __asm
     {
@@ -83,15 +102,26 @@ void EmuXGenerateFS()
     }
 
     // ******************************************************************
-    // * Update "new" FS    : [FS = NewFS, FS:[0x025C] = OrgFS]
+    // * Save "NewFS" inside OrgFS.ArbitraryUserPointer
     // ******************************************************************
     __asm
     {
         mov ax, NewFS
-        mov fs, ax
+        mov fs:[0x14], ax
+    }
 
+    // ******************************************************************
+    // * Swap into the "NewFS"
+    // ******************************************************************
+    EmuXSwapFS();
+
+    // ******************************************************************
+    // * Save "OrgFS" inside NewFS.ArbitraryUserPointer
+    // ******************************************************************
+    __asm
+    {
         mov ax, OrgFS
-        mov fs:[0x025C], ax
+        mov fs:[0x14], ax
     }
 }
 
@@ -156,24 +186,17 @@ CXBXKRNL_API void NTAPI EmuXInit(uint32 DebugConsole, uint08 *XBEHeader, uint32 
     {
         EmuXGenerateFS();
 
-        // ******************************************************************
-        // * Restore "old" FS   : [FS = FS:[0x025C]]
-        // ******************************************************************
-        __asm
-        {
-            mov     ax, fs:[0x025C]
-            mov     fs, ax
-        }
+        EmuXSwapFS();
 
         NT_TIB *dbgTIB = 0;
 
+        // TODO: Store EmuX FS structure within the user data offset of Win2k/XP FS: struct
         __asm
         {
             mov esi, fs:[18h]
             mov dbgTIB, esi
         }
 
-        // TODO: Allocate new FS: within LDT, copy OriginalTIB to KPCR.NtTib, load new FS
         printf("CxbxKrnl [0x%.08X]: NT_TIB.Self=0x%.08X\n", GetCurrentThreadId(), dbgTIB->Self);
     }
 
