@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->OOVPA.h
+// *   Cxbx->Win32->CxbxKrnl->Xapi.1.0.4361.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,67 +31,10 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef OOVPA_H
-#define OOVPA_H
+#ifndef XAPI_1_0_4361_H
+#define XAPI_1_0_4361_H
 
-#pragma pack(1)
-
-// ******************************************************************
-// * Optimized (Order,Value)-Pair Array
-// ******************************************************************
-struct OOVPA
-{
-    uint16 Large : 1;
-    uint16 Count : 15;
-};
-
-// ******************************************************************
-// * Large Optimized (Order,Value)-Pair Array
-// ******************************************************************
-template <uint16 COUNT> struct LOOVPA
-{
-    uint16 Large : 1;
-    uint16 Count : 15;
-
-    // Large (Order,Value)-Pair(s)
-    struct LOVP
-    {
-        uint16 Offset;
-        uint08 Value;
-    }
-    Lovp[COUNT];
-};
-
-// ******************************************************************
-// * Small Optimized (Order,Value)-Pair Array
-// ******************************************************************
-template <uint16 COUNT> struct SOOVPA
-{
-    uint16 Large : 1;
-    uint16 Count : 15;
-
-    // Small (Order,Value)-Pair(s)
-    struct SOVP
-    {
-        uint08 Offset;
-        uint08 Value;
-    }
-    Sovp[COUNT];
-};
-
-// ******************************************************************
-// * OOVPATable
-// ******************************************************************
-struct OOVPATable
-{
-    OOVPA *Oovpa;
-    void  *lpRedirect;
-
-    #ifdef _DEBUG_TRACE
-    char  *szFuncName;
-    #endif
-};
-
-#pragma pack()
+extern OOVPATable XAPI_1_0_4361[];
+extern uint32     XAPI_1_0_4361_SIZE;
 
 #endif

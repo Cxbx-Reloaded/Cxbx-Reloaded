@@ -101,7 +101,13 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, Xb
     // * Locate functions and install wrapper vectors
     // ******************************************************************
     {
-        EmuXInstallWrappers(XAPI_1_0_4361, XAPI_1_0_4361_SIZE, Entry, XbeHeader);
+        // Install XAPI wrappers
+        for(uint32 v=0;v<HLEDataBaseSize/sizeof(HLEData);v++)
+            printf("EmuX: Installing Wrappers for %s %s...\n", HLEDataBase[v].Library, HLEDataBase[v].Version);
+
+        exit(1);
+
+        //EmuXInstallWrappers(XAPI_1_0_4361, XAPI_1_0_4361_SIZE, Entry, XbeHeader);
     }
 
     // ******************************************************************
@@ -271,10 +277,10 @@ void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*E
                 if(v == count)
                 {
                     #ifdef _DEBUG_TRACE
-                    printf("EmuXInstallWrappers: 0x%.08X -> %s\n", cur, XAPI_1_0_4361[a].szFuncName);
+                    printf("EmuXInstallWrappers: 0x%.08X -> %s\n", cur, OovpaTable[a].szFuncName);
                     #endif
 
-                    EmuXInstallWrapper((void*)cur, XAPI_1_0_4361[a].lpRedirect);
+                    EmuXInstallWrapper((void*)cur, OovpaTable[a].lpRedirect);
 
                     break;
                 }

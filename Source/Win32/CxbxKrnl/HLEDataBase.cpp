@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->OOVPA.h
+// *   Cxbx->Win32->CxbxKrnl->HLEDataBase.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,67 +31,26 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef OOVPA_H
-#define OOVPA_H
+#include "Cxbx.h"
+#include "EmuX.h"
 
-#pragma pack(1)
+#include "Xapi.1.0.4361.h"
 
 // ******************************************************************
-// * Optimized (Order,Value)-Pair Array
+// * HLEDataBase
 // ******************************************************************
-struct OOVPA
+HLEData HLEDataBase[] =
 {
-    uint16 Large : 1;
-    uint16 Count : 15;
-};
-
-// ******************************************************************
-// * Large Optimized (Order,Value)-Pair Array
-// ******************************************************************
-template <uint16 COUNT> struct LOOVPA
-{
-    uint16 Large : 1;
-    uint16 Count : 15;
-
-    // Large (Order,Value)-Pair(s)
-    struct LOVP
+    // Xapilib Version 1.0.4361
     {
-        uint16 Offset;
-        uint08 Value;
+        "XAPILIB",
+        "1.0.4361",
+        XAPI_1_0_4361,
+        XAPI_1_0_4361_SIZE
     }
-    Lovp[COUNT];
 };
 
 // ******************************************************************
-// * Small Optimized (Order,Value)-Pair Array
+// * HLEDataBaseSize
 // ******************************************************************
-template <uint16 COUNT> struct SOOVPA
-{
-    uint16 Large : 1;
-    uint16 Count : 15;
-
-    // Small (Order,Value)-Pair(s)
-    struct SOVP
-    {
-        uint08 Offset;
-        uint08 Value;
-    }
-    Sovp[COUNT];
-};
-
-// ******************************************************************
-// * OOVPATable
-// ******************************************************************
-struct OOVPATable
-{
-    OOVPA *Oovpa;
-    void  *lpRedirect;
-
-    #ifdef _DEBUG_TRACE
-    char  *szFuncName;
-    #endif
-};
-
-#pragma pack()
-
-#endif
+extern uint32 HLEDataBaseSize = sizeof(*HLEDataBase);
