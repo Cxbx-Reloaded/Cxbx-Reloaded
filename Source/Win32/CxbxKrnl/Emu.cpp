@@ -50,7 +50,6 @@ namespace xboxkrnl
 #include "HLEDataBase.h"
 
 #include <math.h>
-#include <Tlhelp32.h>
 
 // ******************************************************************
 // * global / static
@@ -260,6 +259,19 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion
 }
 
 // ******************************************************************
+// * func: EmuCleanThread
+// ******************************************************************
+static __declspec(naked) void EmuCleanThread()
+{
+    if(EmuIsXboxFS())
+        EmuSwapFS();    // Win2k/XP FS
+
+    EmuCleanupFS();
+
+    ExitThread(0);
+}
+
+// ******************************************************************
 // * func: EmuCleanup
 // ******************************************************************
 extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage)
@@ -272,14 +284,28 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage)
     // ******************************************************************
     while(true)
     {
-        ThreadList *tl = ThreadList::pHead;
+        ThreadList *tl = ThreadList::pFirst;
 
         if(tl == NULL)
             break;
 
         SuspendThread(tl->hThread);
 
-        ThreadList::pHead = tl->pNext;
+        CONTEXT Context;
+
+        Context.ContextFlags = CONTEXT_CONTROL;
+
+        Context.Eip = (DWORD)EmuCleanThread;
+
+        SetThreadContext(tl->hThread, &Context);
+
+        ResumeThread(tl->hThread);
+
+        DWORD dwTerm = 0;
+        while(GetExitCodeThread(tl->hThread, &dwTerm) == 0)
+            Sleep(50);
+
+        ThreadList::pFirst = tl->pNext;
 
         delete tl;
     }
@@ -298,11 +324,9 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage)
         MessageBox(NULL, buffer, "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
     }
 
-//    EmuD3DCleanup();
-
     printf("CxbxKrnl: Terminating Process\n");
 
-    ExitProcess(0);
+    EmuCleanThread();
 
     return;
 }

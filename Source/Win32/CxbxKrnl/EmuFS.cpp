@@ -170,17 +170,17 @@ void EmuGenerateFS(int TlsAdjust)
 }
 
 // ******************************************************************
-// * func: EmuIsXboxFS
+// * func: EmuCleanupFS
 // ******************************************************************
-bool EmuIsXboxFS()
+void EmuCleanupFS()
 {
-    bool chk = 0;
+    WORD wSelector;
 
     __asm
     {
-        mov ah, fs:[0x16]
-        mov chk, ah
+        mov ax, fs
+        mov wSelector, ax
     }
 
-    return chk;
+    EmuDeallocateLDT(wSelector);
 }

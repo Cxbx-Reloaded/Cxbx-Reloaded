@@ -62,12 +62,28 @@ static inline void EmuSwapFS()
 // * Win2k/XP FS register is currently loaded.
 // *
 // ******************************************************************
-bool EmuIsXboxFS();
+static inline bool EmuIsXboxFS()
+{
+    bool chk = 0;
+
+    __asm
+    {
+        mov ah, fs:[0x16]
+        mov chk, ah
+    }
+
+    return chk;
+}
 
 // ******************************************************************
 // * func: EmuGenerateFS
 // ******************************************************************
 void EmuGenerateFS(int TlsAdjust);
+
+// ******************************************************************
+// * func: EmuCleanupFS
+// ******************************************************************
+void EmuCleanupFS();
 
 // ******************************************************************
 // * func: EmuInitFS

@@ -40,6 +40,7 @@
 struct ThreadList
 {
     static ThreadList *pHead;
+    static ThreadList *pFirst;
 
     HANDLE      hThread;
     ThreadList *pNext;

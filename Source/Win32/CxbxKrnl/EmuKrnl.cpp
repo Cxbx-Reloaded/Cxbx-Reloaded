@@ -60,7 +60,8 @@ namespace xntdll
 // ******************************************************************
 // * Globals
 // ******************************************************************
-ThreadList *ThreadList::pHead = new ThreadList;
+ThreadList *ThreadList::pFirst = new ThreadList;
+ThreadList *ThreadList::pHead  = ThreadList::pFirst;
 
 // ******************************************************************
 // * Loaded at run-time to avoid linker conflicts
@@ -99,10 +100,16 @@ static DWORD WINAPI PCSTProxy
 {
     ThreadList *tl = ThreadList::pHead;
 
-    tl->hThread = GetCurrentThread();
+    HANDLE hThread = NULL;
+
+    DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hThread, 0, FALSE, DUPLICATE_SAME_ACCESS);
+
+    tl->hThread = hThread;
     tl->pNext   = new ThreadList;
+    tl->pNext->hThread = NULL;
     tl->pNext->pNext = NULL;
-    tl->pHead   = tl->pNext;
+
+    ThreadList::pHead = tl->pNext;
 
     PCSTProxyParam *iPCSTProxyParam = (PCSTProxyParam*)Parameter;
 
@@ -152,6 +159,8 @@ static DWORD WINAPI PCSTProxy
     }
 
 callComplete:
+
+    EmuCleanupFS();
 
     return 0;
 }
