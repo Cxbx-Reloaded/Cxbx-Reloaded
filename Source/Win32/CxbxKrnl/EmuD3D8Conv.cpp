@@ -65,7 +65,7 @@ UINT xd3d8::D3DVertexToPrimitive[11][2] =
 };
 
 // ******************************************************************
-// * EmuPrimitiveType
+// * EmuPrimitiveTypeLookup
 // ******************************************************************
 xd3d8::D3DPRIMITIVETYPE xd3d8::EmuPrimitiveTypeLookup[] = 
 {

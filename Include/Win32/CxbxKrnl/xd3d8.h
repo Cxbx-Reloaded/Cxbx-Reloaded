@@ -216,6 +216,7 @@ struct X_D3DResource
         IDirect3DTexture8      *EmuTexture8;
         IDirect3DSurface8      *EmuSurface8;
         IDirect3DVertexBuffer8 *EmuVertexBuffer8;
+        IDirect3DIndexBuffer8  *EmuIndexBuffer8;
     };
 };
 
@@ -223,6 +224,14 @@ struct X_D3DResource
 // * X_D3DVertexBuffer
 // ******************************************************************
 struct X_D3DVertexBuffer : public X_D3DResource
+{
+
+};
+
+// ******************************************************************
+// * X_D3DIndexBuffer
+// ******************************************************************
+struct X_D3DIndexBuffer : public X_D3DResource
 {
 
 };
@@ -498,6 +507,15 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreateTexture
     D3DFORMAT           Format,
     D3DPOOL             Pool,
     X_D3DResource     **ppTexture
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetIndices
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetIndices
+(
+    X_D3DIndexBuffer   *pIndexData,
+    UINT                BaseVertexIndex
 );
 
 // ******************************************************************
@@ -801,7 +819,7 @@ HRESULT WINAPI EmuIDirect3DDevice8_SetVertexShader
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_DrawVertices
 // ******************************************************************
-HRESULT WINAPI EmuIDirect3DDevice8_DrawVertices
+VOID WINAPI EmuIDirect3DDevice8_DrawVertices
 (
     D3DPRIMITIVETYPE PrimitiveType,
     UINT             StartVertex,
@@ -811,12 +829,22 @@ HRESULT WINAPI EmuIDirect3DDevice8_DrawVertices
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_DrawVerticesUP
 // ******************************************************************
-HRESULT WINAPI EmuIDirect3DDevice8_DrawVerticesUP
+VOID WINAPI EmuIDirect3DDevice8_DrawVerticesUP
 (
     D3DPRIMITIVETYPE PrimitiveType,
     UINT             VertexCount,
     CONST PVOID      pVertexStreamZeroData,
     UINT             VertexStreamZeroStride
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_DrawIndexedVertices
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_DrawIndexedVertices
+(
+    D3DPRIMITIVETYPE PrimitiveType,
+    UINT             VertexCount,
+    CONST PWORD      pIndexData
 );
 
 // ******************************************************************

@@ -257,23 +257,23 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Cxbx : Video Configuration"
 FONT 8, "Verdana"
 BEGIN
-    CONTROL         "Start in Fullscreen",IDC_CV_FULLSCREEN,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,76,71,73,10
-    GROUPBOX        "Direct3D Configuration",IDC_STATIC,4,1,250,87,BS_CENTER
-    LTEXT           "Display Adapter:",IDC_STATIC,13,14,57,8,0,WS_EX_RIGHT
-    LTEXT           "Direct3D Device:",IDC_STATIC,13,33,57,8,0,WS_EX_RIGHT
-    LTEXT           "Video Resolution:",IDC_STATIC,12,52,58,8,0,WS_EX_RIGHT
-    PUSHBUTTON      "Cancel",IDC_VC_CANCEL,146,92,50,14,BS_FLAT
-    PUSHBUTTON      "Accept",IDC_VC_ACCEPT,203,92,50,14,BS_FLAT
-    LTEXT           "Other Options:",IDC_STATIC,21,71,49,8,0,WS_EX_RIGHT
-    CONTROL         "Force VSync",IDC_CV_VSYNC,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,154,71,65,10
     COMBOBOX        IDC_VC_DISPLAY_ADAPTER,76,12,173,100,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     COMBOBOX        IDC_VC_D3D_DEVICE,76,31,173,100,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     COMBOBOX        IDC_VC_VIDEO_RESOLUTION,76,49,173,100,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Start in Fullscreen",IDC_CV_FULLSCREEN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,76,71,73,10
+    CONTROL         "Force VSync",IDC_CV_VSYNC,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,154,71,65,10
+    PUSHBUTTON      "Cancel",IDC_VC_CANCEL,146,92,50,14,BS_FLAT
+    PUSHBUTTON      "Accept",IDC_VC_ACCEPT,203,92,50,14,BS_FLAT
+    GROUPBOX        "Direct3D Configuration",IDC_STATIC,4,1,250,87,BS_CENTER
+    LTEXT           "Display Adapter:",IDC_STATIC,13,14,57,8,0,WS_EX_RIGHT
+    LTEXT           "Direct3D Device:",IDC_STATIC,13,33,57,8,0,WS_EX_RIGHT
+    LTEXT           "Video Resolution:",IDC_STATIC,12,52,58,8,0,WS_EX_RIGHT
+    LTEXT           "Other Options:",IDC_STATIC,21,71,49,8,0,WS_EX_RIGHT
 END
 
 #endif    // English (U.S.) resources

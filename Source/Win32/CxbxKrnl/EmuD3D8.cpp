@@ -1135,6 +1135,50 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreateTexture
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetIndices
+// ******************************************************************
+VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetIndices
+(
+    X_D3DIndexBuffer   *pIndexData,
+    UINT                BaseVertexIndex
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetIndices\n"
+               "(\n"
+               "   pIndexData          : 0x%.08X\n"
+               "   BaseVertexIndex     : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pIndexData, BaseVertexIndex);
+    }
+    #endif
+
+    IDirect3DIndexBuffer8 *pIndexBuffer = pIndexData->EmuIndexBuffer8;
+
+    if(pIndexBuffer == 0)
+    {
+        EmuSwapFS();   // XBox FS
+        EmuIDirect3DResource8_Register(pIndexData, (PVOID)pIndexData->Data);
+        EmuSwapFS();   // Win2k/XP FS
+
+        // Now we should have an index buffer
+        pIndexBuffer = pIndexData->EmuIndexBuffer8;
+    }
+
+    g_pD3DDevice8->SetIndices(pIndexBuffer, BaseVertexIndex);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTexture
 // ******************************************************************
 HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetTexture
@@ -1475,6 +1519,38 @@ HRESULT WINAPI xd3d8::EmuIDirect3DResource8_Register
         }
         break;
 
+        case X_D3DCOMMON_TYPE_INDEXBUFFER:
+        {
+            X_D3DIndexBuffer *pIndexBuffer = (X_D3DIndexBuffer*)pResource;
+
+            // ******************************************************************
+            // * Create the index buffer
+            // ******************************************************************
+            {
+                DWORD dwSize = EmuCheckAllocationSize(pBase);
+
+                HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer
+                (
+                    dwSize, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED,
+                    &pIndexBuffer->EmuIndexBuffer8
+                );
+
+                BYTE *pData = 0;
+
+                hRet = pResource->EmuIndexBuffer8->Lock(0, 0, &pData, 0);
+
+                if(FAILED(hRet))
+                    EmuCleanup("IndexBuffer Lock failed");
+
+                memcpy(pData, (void*)pBase, dwSize);
+
+                pResource->EmuIndexBuffer8->Unlock();
+
+                pResource->Data = (ULONG)pData;
+            }
+        }
+        break;
+
         case X_D3DCOMMON_TYPE_TEXTURE:
         {
             X_D3DPixelContainer *pPixelContainer = (X_D3DPixelContainer*)pResource;
@@ -1533,7 +1609,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DResource8_Register
         break;
 
         default:
-            EmuCleanup("IDirect3DResource8::Register Unknown Common Type (%d)", pResource->Common & X_D3DCOMMON_TYPE_MASK);
+            EmuCleanup("IDirect3DResource8::Register Unknown Common Type (0x%.08X)", pResource->Common & X_D3DCOMMON_TYPE_MASK);
     }
 
     EmuSwapFS();   // XBox FS
@@ -2457,17 +2533,21 @@ static void EmuUpdateDeferredStates()
     if(xd3d8::EmuD3DDeferredTextureState != 0)
     {
         // TODO: HACK: Handle more than just stage 1 !!!! Make sure pCur is calculated right!
-        for(int v=0;v</*4*/1;v++)
+        for(int v=0;v<4;v++)
         {
             DWORD *pCur = xd3d8::EmuD3DDeferredTextureState+v;
 
             g_pD3DDevice8->SetTextureStageState(v, D3DTSS_TEXTURETRANSFORMFLAGS, pCur[21]);
 
             // TODO: Use a lookup table, this is not always a 1:1 map
-            g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, pCur[12]);
+            // HACK: Dirty states should take care of this null-check
+            if(pCur[12] != 0)
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, pCur[12]);
 
             // TODO: I think these are OK, but verify this eventually
-            g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLORARG1, pCur[14]);
+            // HACK: Dirty states should take care of this null-check
+            if(pCur[14] != 0)
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLORARG1, pCur[14]);
             g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLORARG2, pCur[15]);
 
             // TODO: Use a lookup table, this is not always a 1:1 map (same as D3DTSS_COLOROP)
@@ -2479,7 +2559,7 @@ static void EmuUpdateDeferredStates()
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_DrawVertices
 // ******************************************************************
-HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
+VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
 (
     D3DPRIMITIVETYPE PrimitiveType,
     UINT             StartVertex,
@@ -2510,7 +2590,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
     // Convert from Xbox to PC enumeration
     PrimitiveType = EmuPrimitiveType(PrimitiveType);
 
-    HRESULT hRet = g_pD3DDevice8->DrawPrimitive
+    g_pD3DDevice8->DrawPrimitive
     (
         PrimitiveType,
         StartVertex,
@@ -2519,13 +2599,13 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
 
     EmuSwapFS();   // XBox FS
 
-    return hRet;
+    return;
 }
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_DrawVerticesUP
 // ******************************************************************
-HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_DrawVerticesUP
+VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawVerticesUP
 (
     D3DPRIMITIVETYPE PrimitiveType,
     UINT             VertexCount,
@@ -2559,7 +2639,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_DrawVerticesUP
     // Convert from Xbox to PC enumeration
     PrimitiveType = EmuPrimitiveType(PrimitiveType);
 
-    HRESULT hRet = g_pD3DDevice8->DrawPrimitiveUP
+    g_pD3DDevice8->DrawPrimitiveUP
     (
         PrimitiveType,
         PrimitiveCount,
@@ -2569,7 +2649,53 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_DrawVerticesUP
 
     EmuSwapFS();   // XBox FS
 
-    return hRet;
+    return;
+}
+
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_DrawIndexedVertices
+// ******************************************************************
+VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawIndexedVertices
+(
+    D3DPRIMITIVETYPE PrimitiveType,
+    UINT             VertexCount,
+    CONST PWORD      pIndexData
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_DrawIndexedVertices\n"
+               "(\n"
+               "   PrimitiveType       : 0x%.08X\n"
+               "   VertexCount         : 0x%.08X\n"
+               "   pIndexData          : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), PrimitiveType, VertexCount, pIndexData);
+    }
+    #endif
+
+    EmuUpdateDeferredStates();
+
+    UINT PrimitiveCount = D3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
+
+    // Convert from Xbox to PC enumeration
+    PrimitiveType = EmuPrimitiveType(PrimitiveType);
+
+    g_pD3DDevice8->DrawIndexedPrimitive
+    (
+        PrimitiveType, 0, PrimitiveCount,
+        0, PrimitiveCount
+    );
+
+    EmuSwapFS();   // XBox FS
+
+    return;
 }
 
 // ******************************************************************
