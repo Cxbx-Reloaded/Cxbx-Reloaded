@@ -44,6 +44,9 @@
 #include <d3dx8tex.h>
 #include <d3d8types.h>
 
+#define DIRECTDRAW_VERSION 0x0700
+#include <ddraw.h>
+
 #include "Emu.h"
 
 // ******************************************************************

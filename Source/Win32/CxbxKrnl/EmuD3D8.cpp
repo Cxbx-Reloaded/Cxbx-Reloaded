@@ -76,14 +76,19 @@ static inline void    EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResourc
 // ******************************************************************
 // * Static Variable(s)
 // ******************************************************************
-static XTL::LPDIRECT3D8        g_pD3D8         = NULL;   // Direct3D8
-static XTL::LPDIRECT3DDEVICE8  g_pD3DDevice8   = NULL;   // Direct3D8 Device
-static Xbe::Header            *g_XbeHeader     = NULL;   // XbeHeader
-static uint32                  g_XbeHeaderSize = 0;      // XbeHeaderSize
-static XTL::D3DCAPS8           g_D3DCaps;                // Direct3D8 Caps
-static HBRUSH                  g_hBgBrush      = NULL;   // Background Brush
-static volatile bool           g_bThreadInitialized = false;
-static XBVideo                 g_XBVideo;
+static XTL::LPDIRECT3D8             g_pD3D8         = NULL; // Direct3D8
+static XTL::LPDIRECT3DDEVICE8       g_pD3DDevice8   = NULL; // Direct3D8 Device
+static XTL::LPDIRECTDRAW7           g_pDD7          = NULL; // DirectDraw7
+static XTL::LPDIRECTDRAWSURFACE7    g_pDDSPrimary   = NULL; // DirectDraw7 Primary Surface
+static XTL::LPDIRECTDRAWSURFACE7    g_pDDSOverlay7  = NULL; // DirectDraw7 Overlay Surface
+static DWORD                        g_dwOverlayW    = 640;  // Cached Overlay Width
+static DWORD                        g_dwOverlayH    = 480;  // Cached Overlay Height
+static Xbe::Header                 *g_XbeHeader     = NULL; // XbeHeader
+static uint32                       g_XbeHeaderSize = 0;    // XbeHeaderSize
+static XTL::D3DCAPS8                g_D3DCaps;              // Direct3D8 Caps
+static HBRUSH                       g_hBgBrush      = NULL; // Background Brush
+static volatile bool                g_bThreadInitialized = false;
+static XBVideo                      g_XBVideo;
 
 // ******************************************************************
 // * Cached Direct3D State Variable(s)
@@ -160,6 +165,23 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         D3DDEVTYPE DevType = (g_XBVideo.GetDirect3DDevice() == 0) ? D3DDEVTYPE_HAL : D3DDEVTYPE_REF;
 
         g_pD3D8->GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), DevType, &g_D3DCaps);
+    }
+
+    // ******************************************************************
+    // * create DirectDraw7
+    // ******************************************************************
+    {
+        using namespace XTL;
+
+        HRESULT hRet = DirectDrawCreateEx(NULL, (void**)&g_pDD7, IID_IDirectDraw7, NULL);
+
+        if(FAILED(hRet))
+            EmuCleanup("Could not initialize DirectDraw7");
+
+        hRet = g_pDD7->SetCooperativeLevel(0, DDSCL_NORMAL);
+
+        if(FAILED(hRet))
+            EmuCleanup("Could not set cooperative level");
     }
 
     // ******************************************************************
@@ -1666,6 +1688,13 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
         PCFormat = D3DFMT_X8R8G8B8;
     }
 
+    if(PCFormat == D3DFMT_YUY2)
+    {
+        // cache the overlay size
+        g_dwOverlayW = Width;
+        g_dwOverlayH = Height;
+    }
+
     // HACK HACK HACK!!! TODO: Make sure texture is the correct dimensions
     {
         UINT NewWidth=0, NewHeight=0;
@@ -2890,7 +2919,64 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_EnableOverlay
     }
     #endif
 
-    printf("*Warning* EnableOverlay is not implemented\n");
+    if(Enable)
+    {
+        // ******************************************************************
+        // * Initialize Primary Surface
+        // ******************************************************************
+        {
+            DDSURFACEDESC2 ddsd2;
+
+            ZeroMemory(&ddsd2, sizeof(ddsd2));
+
+            ddsd2.dwSize = sizeof(ddsd2);
+            ddsd2.dwFlags = DDSD_CAPS;
+            ddsd2.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE | DDSCAPS_VIDEOMEMORY;
+		        
+	        HRESULT hRet = g_pDD7->CreateSurface(&ddsd2, &g_pDDSPrimary, 0);
+
+            if(FAILED(hRet))
+                EmuCleanup("Could not create primary surface");
+        }
+
+        // ******************************************************************
+        // * Initialize Overlay Surface
+        // ******************************************************************
+        {
+            DDSURFACEDESC2 ddsd2;
+
+            ZeroMemory(&ddsd2, sizeof(ddsd2));
+
+            ddsd2.dwSize = sizeof(ddsd2);
+            ddsd2.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PIXELFORMAT;
+            ddsd2.ddsCaps.dwCaps = DDSCAPS_OVERLAY;
+            ddsd2.dwWidth = g_dwOverlayW;
+            ddsd2.dwHeight = g_dwOverlayH; 
+            ddsd2.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
+            ddsd2.ddpfPixelFormat.dwFlags = DDPF_FOURCC;
+            ddsd2.ddpfPixelFormat.dwFourCC = MAKEFOURCC('Y','U','Y','2');
+
+            HRESULT hRet = g_pDD7->CreateSurface(&ddsd2, &g_pDDSOverlay7, NULL);
+
+            if(FAILED(hRet))
+                EmuCleanup("Could not create overlay surface");
+        }
+    }
+    else
+    {
+        // Cleanup Primary/Overlay Surfaces
+        if(g_pDDSOverlay7 != 0)
+        {
+            g_pDDSOverlay7->Release();
+            g_pDDSOverlay7 = 0;
+        }
+        
+        if(g_pDDSPrimary != 0)
+        {
+            g_pDDSPrimary->Release();
+            g_pDDSPrimary = 0;
+        }
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -2928,7 +3014,80 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
     }
     #endif
 
-    printf("*Warning* EmuIDirect3DDevice8_UpdateOverlay is not implemented\n");
+    // ******************************************************************
+    // * manually copy data over to overlay
+    // ******************************************************************
+    {
+        D3DSURFACE_DESC SurfaceDesc;
+        DDSURFACEDESC2  ddsd2;
+        D3DLOCKED_RECT  LockedRect;
+
+        pSurface->EmuSurface8->GetDesc(&SurfaceDesc);
+
+        ZeroMemory(&ddsd2, sizeof(ddsd2));
+
+        ddsd2.dwSize = sizeof(ddsd2);
+
+        g_pDDSOverlay7->Lock(NULL, &ddsd2, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
+        pSurface->EmuSurface8->UnlockRect();
+
+        /*
+        {
+            static int dwDumpSurface = 0;
+
+            char szBuffer[255];
+
+            sprintf(szBuffer, "C:\\Aaron\\Textures\\Surface%.03d.bmp", dwDumpSurface++);
+
+            if(dwDumpSurface == 705)
+                D3DXSaveSurfaceToFile(szBuffer, D3DXIFF_BMP, pSurface->EmuSurface8, NULL, NULL);
+        }
+        //*/
+
+        pSurface->EmuSurface8->LockRect(&LockedRect, NULL, NULL);
+
+        // Copy Data
+        {
+            char *pDest = (char*)ddsd2.lpSurface;
+            char *pSour = (char*)LockedRect.pBits;
+
+            int w = SurfaceDesc.Width;
+            int h = SurfaceDesc.Height;
+
+            for(int y=0;y<h;y++)
+            {
+                memcpy(pDest, pSour, w*2);
+
+                pDest += ddsd2.lPitch;
+                pSour += LockedRect.Pitch;
+            }
+        }
+
+        g_pDDSOverlay7->Unlock(NULL);
+    }
+
+    // ******************************************************************
+    // * update overlay!
+    // ******************************************************************
+    {
+        RECT SourRect = {0, 0, g_dwOverlayW, g_dwOverlayH}, DestRect;
+
+        int nTitleHeight  = GetSystemMetrics(SM_CYCAPTION);
+        int nBorderWidth  = GetSystemMetrics(SM_CXSIZEFRAME);
+        int nBorderHeight = GetSystemMetrics(SM_CYSIZEFRAME);
+
+        GetWindowRect(g_hEmuWindow, &DestRect);
+
+        DestRect.left   += nBorderWidth;
+        DestRect.right  -= nBorderWidth;
+        DestRect.top    += nTitleHeight + nBorderHeight;
+        DestRect.bottom -= nBorderHeight;
+
+        HRESULT hRet = g_pDDSOverlay7->UpdateOverlay(&SourRect, g_pDDSPrimary, &DestRect, DDOVER_SHOW, 0);
+
+        if(FAILED(hRet))
+            EmuCleanup("Could not update overlay");
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -2974,7 +3133,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_BlockUntilVerticalBlank()
     }
     #endif
 
-    printf("*Warning* EmuIDirect3DDevice8_BlockUntilVerticalBlank is not implemented\n");
+    g_pDD7->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
 
     EmuSwapFS();   // XBox FS
 
