@@ -185,6 +185,16 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXInputGetState"
         #endif
     },
+    // XInputSetState (* unchanged since 1.0.4361 *)
+    {
+        (OOVPA*)&XInputSetState_1_0_4361,
+
+        xapi::EmuXInputSetState,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputSetState"
+        #endif
+    },
     // XapiThreadStartup (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&XapiThreadStartup_1_0_4361,

@@ -40,13 +40,15 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="d3d8.lib dinput8.lib dxguid.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="dsound.lib winmm.lib d3dx8.lib d3d8.lib dinput8.lib dxguid.lib odbc32.lib odbccp32.lib"
 				OutputFile=".\Bin\Debug/CxbxKrnl.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="Lib"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Bin\Debug/CxbxKrnl.pdb"
+				GenerateMapFile="TRUE"
+				MapFileName=".\Bin\Debug/CxbxKrnl.map"
 				ImportLibrary=".\Bin\Debug/CxbxKrnl.lib"/>
 			<Tool
 				Name="VCMIDLTool"
@@ -100,7 +102,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="d3d8.lib dinput8.lib dxguid.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="dsound.lib winmm.lib d3d8.lib dinput8.lib dxguid.lib odbc32.lib odbccp32.lib"
 				OutputFile="Bin/Cxbx.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
@@ -192,6 +194,9 @@
 				RelativePath=".\Include\Win32\CxbxKrnl\D3D8.1.0.4627.h">
 			</File>
 			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\DSound.1.0.4361.h">
+			</File>
+			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\Emu.h">
 			</File>
 			<File
@@ -216,6 +221,9 @@
 				RelativePath=".\Include\Win32\CxbxKrnl\EmuShared.h">
 			</File>
 			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuXG.h">
+			</File>
+			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\EmuXapi.h">
 			</File>
 			<File
@@ -234,6 +242,15 @@
 				RelativePath=".\Include\Win32\XBController.h">
 			</File>
 			<File
+				RelativePath=".\Include\Win32\XBVideo.h">
+			</File>
+			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\XG.1.0.4361.h">
+			</File>
+			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\XG.1.0.4627.h">
+			</File>
+			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\Xapi.1.0.3911.h">
 			</File>
 			<File
@@ -246,7 +263,10 @@
 				RelativePath=".\Include\Win32\CxbxKrnl\Xapi.1.0.4627.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\xd3d8.h">
+				RelativePath=".\Include\Core\Xbe.h">
+			</File>
+			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\xdirectx.h">
 			</File>
 			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\xntdll.h">
@@ -290,13 +310,22 @@
 				RelativePath=".\Source\Win32\CxbxKrnl\D3D8.1.0.4627.inl">
 			</File>
 			<File
+				RelativePath=".\Source\Win32\CxbxKrnl\DSound.1.0.4361.inl">
+			</File>
+			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\Emu.cpp">
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\EmuD3D8.cpp">
 			</File>
 			<File
+				RelativePath=".\Source\Win32\CxbxKrnl\EmuD3D8Conv.cpp">
+			</File>
+			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\EmuDInput.cpp">
+			</File>
+			<File
+				RelativePath=".\Source\Win32\CxbxKrnl\EmuDSound.cpp">
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\EmuFS.cpp">
@@ -312,6 +341,9 @@
 			</File>
 			<File
 				RelativePath=".\Source\Win32\EmuShared.cpp">
+			</File>
+			<File
+				RelativePath=".\Source\Win32\CxbxKrnl\EmuXG.cpp">
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\EmuXapi.cpp">
@@ -330,6 +362,15 @@
 			</File>
 			<File
 				RelativePath=".\Source\Win32\XBController.cpp">
+			</File>
+			<File
+				RelativePath=".\Source\Win32\XBVideo.cpp">
+			</File>
+			<File
+				RelativePath=".\Source\Win32\CxbxKrnl\XG.1.0.4361.inl">
+			</File>
+			<File
+				RelativePath=".\Source\Win32\CxbxKrnl\XG.1.0.4627.inl">
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\Xapi.1.0.3911.inl">

@@ -1,11 +1,10 @@
 Cxbx Todo (* denotes high priority, + denotes medium priority)
 
-  * XPR MipMap levels are likely inline, causing graphical glitches
-
   * Push Buffer Size is stored in a global. This may be important (hard to tell)
 
-  * PointSprite demo mip mapping has some bug (maybe related to the Register()
-    base address?)
+  * PointSprite demo glitch is caused by incorrect textures being assigned.
+    Hacking the demo's code to re-set the texture before rendering the air
+    particles causes it to run perfectly. This should be fixed.
 
   * As a solution to the Xbox-Never-Sleeps problem, EmuSwapFS can increment
     and check a global variable, and Sleep(1) after N number of function

@@ -729,13 +729,11 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_CreateImageSurface
 }
 
 // ******************************************************************
-// * func: EmuIDirect3DDevice8_GetBackBuffer
+// * func: EmuIDirect3DDevice8_GetBackBuffer2
 // ******************************************************************
-VOID WINAPI xdirectx::EmuIDirect3DDevice8_GetBackBuffer
+xdirectx::X_D3DSurface* WINAPI xdirectx::EmuIDirect3DDevice8_GetBackBuffer2
 (
-    INT                 BackBuffer,
-    D3DBACKBUFFER_TYPE  Type,
-    X_D3DSurface      **ppBackBuffer
+    INT                 BackBuffer
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -745,17 +743,15 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_GetBackBuffer
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetBackBuffer\n"
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetBackBuffer2\n"
                "(\n"
                "   BackBuffer          : 0x%.08X\n"
-               "   Type                : 0x%.08X\n"
-               "   ppBackBuffer        : 0x%.08X\n"
                ");\n",
-               GetCurrentThreadId(), BackBuffer, Type, ppBackBuffer);
+               GetCurrentThreadId(), BackBuffer);
     }
     #endif
 
-    *ppBackBuffer = new X_D3DSurface();
+    X_D3DSurface *ppBackBuffer = new X_D3DSurface();
 
     if(BackBuffer == -1)
     {
@@ -766,9 +762,41 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_GetBackBuffer
         //g_pD3DDevice8->GetFrontBuffer((*ppBackBuffer)->EmuSurface8);
     }
 
-    g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &((*ppBackBuffer)->EmuSurface8));
+    g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &(ppBackBuffer->EmuSurface8));
 
     EmuSwapFS();   // Xbox FS
+
+    return ppBackBuffer;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetBackBuffer
+// ******************************************************************
+VOID WINAPI xdirectx::EmuIDirect3DDevice8_GetBackBuffer
+(
+    INT                 BackBuffer,
+    D3DBACKBUFFER_TYPE  Type,
+    X_D3DSurface      **ppBackBuffer
+)
+{
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        EmuSwapFS();   // Win2k/XP FS
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetBackBuffer\n"
+               "(\n"
+               "   BackBuffer          : 0x%.08X\n"
+               "   Type                : 0x%.08X\n"
+               "   ppBackBuffer        : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), BackBuffer, Type, ppBackBuffer);
+        EmuSwapFS();   // Xbox FS
+    }
+    #endif
+
+    *ppBackBuffer = EmuIDirect3DDevice8_GetBackBuffer2(BackBuffer);
 
     return;
 }

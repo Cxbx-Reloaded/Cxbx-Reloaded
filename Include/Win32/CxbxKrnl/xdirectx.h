@@ -497,6 +497,14 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreateImageSurface
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_GetBackBuffer2
+// ******************************************************************
+X_D3DSurface* WINAPI EmuIDirect3DDevice8_GetBackBuffer2
+(
+    INT                 BackBuffer
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_GetBackBuffer
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_GetBackBuffer

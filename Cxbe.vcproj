@@ -99,6 +99,8 @@
 				SuppressStartupBanner="TRUE"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Bin/Debug/Cxbe.pdb"
+				GenerateMapFile="TRUE"
+				MapFileName=".\Bin/Debug/Cxbe.map"
 				SubSystem="1"/>
 			<Tool
 				Name="VCMIDLTool"

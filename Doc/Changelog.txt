@@ -11,6 +11,11 @@ version: 0.7.5 (??/??/??)
   not being able to attach, that has been around for
   way way too long.
 
+- Caught up 4627 pretty far.
+
+- PointSprites and Gamepad demos, and some other new
+  XDK samples run better.
+
 version: 0.7.4 (06/23/03)
 --------------------------------
 
