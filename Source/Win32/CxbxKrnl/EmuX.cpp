@@ -48,9 +48,83 @@ namespace xntdll
 using namespace win32;
 
 // ******************************************************************
+// * globals
+// ******************************************************************
+static HANDLE g_hMapObject = NULL;
+
+// ******************************************************************
 // * statics
 // ******************************************************************
 static void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *XbeHeader);
+
+// ******************************************************************
+// * shared memory
+// ******************************************************************
+struct EmuXShared
+{
+    uint32 dwRandomData;
+}
+*g_EmuXShared;
+
+// ******************************************************************
+// * func: DllMain
+// ******************************************************************
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+    // ******************************************************************
+    // * Initialize shared memory
+    // ******************************************************************
+    if(fdwReason == DLL_PROCESS_ATTACH)
+    {
+        bool init = false;
+
+        g_hMapObject = CreateFileMapping
+        ( 
+            INVALID_HANDLE_VALUE,   // Paging file
+            NULL,                   // default security attributes
+            PAGE_READWRITE,         // read/write access
+            0,                      // size: high 32 bits
+            sizeof(EmuXShared),     // size: low 32 bits
+            "EmuXShared"            // name of map object
+        );
+
+        if(g_hMapObject == NULL)
+            return FALSE;
+
+        if(GetLastError() != ERROR_ALREADY_EXISTS)
+            init = true;
+
+        g_EmuXShared = (EmuXShared*)MapViewOfFile
+        (
+            g_hMapObject,   // object to map view of
+            FILE_MAP_WRITE, // read/write access
+            0,              // high offset:  map from
+            0,              // low offset:   beginning
+            0               // default: map entire file
+        );
+
+        if(g_EmuXShared == NULL) 
+            return FALSE; 
+
+        if(init)
+        {
+            // initialization of shared data
+            g_EmuXShared->dwRandomData = 0;
+        }
+    }
+    
+    // ******************************************************************
+    // * Release shared memory
+    // ******************************************************************
+    if(fdwReason == DLL_PROCESS_DETACH)
+    {
+        UnmapViewOfFile(g_EmuXShared);
+
+        CloseHandle(g_hMapObject);
+    }
+
+    return TRUE;
+}
 
 // ******************************************************************
 // * func: EmuXInit

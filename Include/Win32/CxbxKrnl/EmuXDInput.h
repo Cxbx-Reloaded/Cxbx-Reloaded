@@ -46,4 +46,16 @@ extern VOID EmuXPollController();
 // ******************************************************************
 VOID EmuXInitDInput();
 
+// ******************************************************************
+// * offsets into analog button array
+// ******************************************************************
+#define XINPUT_GAMEPAD_A			    0
+#define XINPUT_GAMEPAD_B			    1
+#define XINPUT_GAMEPAD_X			    2
+#define XINPUT_GAMEPAD_Y			    3
+#define XINPUT_GAMEPAD_BLACK		    4
+#define XINPUT_GAMEPAD_WHITE		    5
+#define XINPUT_GAMEPAD_LEFT_TRIGGER		6
+#define XINPUT_GAMEPAD_RIGHT_TRIGGER	7
+
 #endif

@@ -296,7 +296,7 @@ HRESULT WINAPI xboxkrnl::EmuXIDirect3D8_CreateDevice
         pPresentationParameters->Windowed = TRUE;
 
         // TODO: More intelligently set this only when the game wants it
-        pPresentationParameters->SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
+        //pPresentationParameters->SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
 
         hFocusWindow = g_EmuXWindow;
 
