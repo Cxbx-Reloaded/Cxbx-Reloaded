@@ -43,28 +43,25 @@
 // ******************************************************************
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    WndMain *caustik = new WndMain(hInstance);
+    WndMain *MainWindow = new WndMain(hInstance);
 
-    if(__argc > 1)
-    {
-        while(!caustik->isCreated() && caustik->ProcessMessages())
-            Sleep(10);
-
-        if(caustik->GetError() == 0)
-        {
-            caustik->OpenXbe(__argv[1]);
-
-            caustik->StartEmulation(true);
-        }
-    }
-
-    while(caustik->GetError() == 0 && caustik->ProcessMessages())
+    while(!MainWindow->isCreated() && MainWindow->ProcessMessages())
         Sleep(10);
 
-    if(caustik->GetError() != 0)
-        MessageBox(NULL, caustik->GetError(), "Cxbx", MB_OK);
+    if(__argc > 1 && MainWindow->GetError() == 0)
+    {
+        MainWindow->OpenXbe(__argv[1]);
 
-    delete caustik;
+        MainWindow->StartEmulation(true);
+    }
+
+    while(MainWindow->GetError() == 0 && MainWindow->ProcessMessages())
+        Sleep(10);
+
+    if(MainWindow->GetError() != 0)
+        MessageBox(NULL, MainWindow->GetError(), "Cxbx", MB_OK);
+
+    delete MainWindow;
 
     return 0;
 }

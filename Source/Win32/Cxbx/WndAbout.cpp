@@ -107,34 +107,31 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
             HDC hDC = GetDC(hwnd);
 
+            HGDIOBJ OrgObj = SelectObject(hDC, m_hFont);
+
 			// ******************************************************************
-			// * draw window
+			// * draw bottom URL bar
 			// ******************************************************************
             {
-                HGDIOBJ OrgObj = SelectObject(hDC, m_hFont);
+                SetBkColor(hDC, GetSysColor(COLOR_HIGHLIGHT));
 
-				// ******************************************************************
-				// * draw bottom URL bar
-				// ******************************************************************
-                {
-                    SetBkColor(hDC, GetSysColor(COLOR_HIGHLIGHT));
+				SetTextColor(hDC, GetSysColor(COLOR_HIGHLIGHTTEXT));
 
-				    SetTextColor(hDC, GetSysColor(COLOR_HIGHLIGHTTEXT));
+                char buffer[] = " Contact the author : caustik@caustik.com";
 
-                    char buffer[] = " Contact the author : caustik@caustik.com";
+                RECT rect = {0, 134, 280, 148};
 
-                    RECT rect = {0, 134, 280, 148};
-
-                    ExtTextOut(hDC, 0, 134, ETO_OPAQUE, &rect, buffer, strlen(buffer), 0);
-                }
-
-				// ******************************************************************
-				// * draw bitmap
-				// ******************************************************************
-                BitBlt(hDC, 2, 4, 275, 125, m_BackDC, 0, 0, SRCCOPY);
-
-                SelectObject(hDC, OrgObj);
+                ExtTextOut(hDC, 0, 134, ETO_OPAQUE, &rect, buffer, strlen(buffer), 0);
             }
+
+			// ******************************************************************
+			// * draw bitmap
+			// ******************************************************************
+            {
+                BitBlt(hDC, 2, 4, 275, 125, m_BackDC, 0, 0, SRCCOPY);
+            }
+
+            SelectObject(hDC, OrgObj);
 
             if(hDC != NULL)
                 ReleaseDC(hwnd, hDC);

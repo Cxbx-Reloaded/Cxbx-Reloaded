@@ -145,10 +145,6 @@ SOURCE=.\Include\Cxbx.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Resource\CxbxRes.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Include\Win32\Cxbx\EmuExe.h
 # End Source File
 # Begin Source File
