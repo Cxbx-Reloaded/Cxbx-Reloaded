@@ -209,6 +209,11 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
 
     DSBUFFERDESC DSBufferDesc;
 
+    DWORD dwBytes = 16384; // NOTE: HACK: TEMPORARY FOR STELLA/HALO
+
+    if(dwBytes < pdsbd->dwBufferBytes)
+        dwBytes = pdsbd->dwBufferBytes;
+
     // convert from Xbox to PC DSound
     {
         DWORD dwAcceptableMask = 0x00000010 | 0x00000020 | 0x00000080 | 0x00000100 | 0x00002000 | 0x00040000 | 0x00080000;
@@ -218,7 +223,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
 
         DSBufferDesc.dwSize = sizeof(DSBufferDesc);
         DSBufferDesc.dwFlags = pdsbd->dwFlags & dwAcceptableMask;
-        DSBufferDesc.dwBufferBytes = 16384; // NOTE: HACK: TEMPORARY FOR STELLA/HALO
+        DSBufferDesc.dwBufferBytes = dwBytes;
         DSBufferDesc.dwReserved = 0;
         DSBufferDesc.lpwfxFormat = pdsbd->lpwfxFormat;              // TODO: Make sure this is the same as PC
         DSBufferDesc.guid3DAlgorithm = DS3DALG_DEFAULT;
@@ -227,12 +232,28 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
     // TODO: Garbage Collection
     *ppBuffer = new X_CDirectSoundBuffer();
 
+    #ifdef _DEBUG_TRACE
+    printf("EmuDSound (0x%X): EmuDirectSoundCreateBuffer, *ppBuffer := 0x%.08X\n", GetCurrentThreadId(), *ppBuffer);
+    #endif
+
     HRESULT hRet = g_pDSound8->CreateSoundBuffer(&DSBufferDesc, &((*ppBuffer)->EmuDirectSoundBuffer8), NULL);
 
     g_pDSoundBuffer8 = (*ppBuffer)->EmuDirectSoundBuffer8;
 
     if(FAILED(hRet))
         EmuWarning("CreateSoundBuffer FAILED");
+    else
+    {
+        /*
+        PVOID pData2;
+        DWORD dwBytes1, dwBytes2;
+
+        g_pDSoundBuffer8->Lock(0, 16384, &g_pvBufferData, &dwBytes1, &pData2, &dwBytes2, 0);
+        g_pDSoundBuffer8->Unlock(g_pvBufferData, dwBytes1, pData2, dwBytes2);
+        */
+        // TODO: HACK: fix this somehow..?
+        g_pvBufferData = malloc(dwBytes);
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -263,6 +284,10 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
     #endif
 
     *ppStream = new X_CDirectSoundStream();
+
+    #ifdef _DEBUG_TRACE
+    printf("EmuDSound (0x%X): EmuDirectSoundCreateStream, *ppStream := 0x%.08X\n", GetCurrentThreadId(), *ppStream);
+    #endif
 
     DSBUFFERDESC DSBufferDesc;
 
@@ -1020,6 +1045,36 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_SetI3DL2Source
 }
 
 // ******************************************************************
+// * func: EmuIDirectSoundStream_Unknown1
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundStream_Unknown1
+(
+    PVOID   pThis,
+    DWORD   dwUnknown1
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSoundStream_Unknown1\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   dwUnknown1                : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, dwUnknown1);
+    }
+    #endif
+
+    // TODO: Actually implement this
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
 // * func: EmuIDirectSound8_SetOrientation
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirectSound8_SetOrientation
@@ -1410,6 +1465,80 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPlayRegion
 }
 
 // ******************************************************************
+// * func: EmuIDirectSoundBuffer8_Lock
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Lock
+(
+    X_CDirectSoundBuffer   *pThis,
+    DWORD                   dwOffset, 
+    DWORD                   dwBytes, 
+    LPVOID                 *ppvAudioPtr1, 
+    LPDWORD                 pdwAudioBytes1, 
+    LPVOID                 *ppvAudioPtr2, 
+    LPDWORD                 pdwAudioBytes2, 
+    DWORD                   dwFlags 
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_Lock\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   dwOffset                  : 0x%.08X\n"
+               "   dwBytes                   : 0x%.08X\n"
+               "   ppvAudioPtr1              : 0x%.08X\n"
+               "   pdwAudioBytes1            : 0x%.08X\n"
+               "   ppvAudioPtr2              : 0x%.08X\n"
+               "   pdwAudioBytes2            : 0x%.08X\n"
+               "   dwFlags                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, dwOffset, dwBytes, ppvAudioPtr1, pdwAudioBytes1,
+               ppvAudioPtr2, pdwAudioBytes2, dwFlags);
+    }
+    #endif
+
+    *ppvAudioPtr1 = g_pvBufferData;
+    *pdwAudioBytes1 = dwBytes;
+
+    EmuSwapFS();   // XBox FS
+
+    return DS_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetHeadroom
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetHeadroom
+(
+    X_CDirectSoundBuffer  *pThis,
+    DWORD                  dwHeadroom
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetHeadroom\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   dwHeadroom                : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, dwHeadroom);
+    }
+    #endif
+
+    // TODO: Actually implement this
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
 // * func: EmuIDirectSoundBuffer8_SetLoopRegion
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetLoopRegion
@@ -1633,6 +1762,66 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Stop
     #endif
 
     HRESULT hRet = pThis->EmuDirectSoundBuffer8->Stop();
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetVolume
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetVolume
+(
+    X_CDirectSoundBuffer   *pThis,
+    LONG                    lVolume
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetVolume\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   lVolume                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, lVolume);
+    }
+    #endif
+
+    HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetVolume(lVolume);
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetFrequency
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetFrequency
+(
+    X_CDirectSoundBuffer   *pThis,
+    DWORD                   dwFrequency
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetFrequency\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   dwFrequency               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, dwFrequency);
+    }
+    #endif
+
+    HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetFrequency(dwFrequency);
 
     EmuSwapFS();   // XBox FS
 

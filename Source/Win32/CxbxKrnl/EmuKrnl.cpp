@@ -1761,6 +1761,40 @@ XBSYSAPI EXPORTNUM(219) NTSTATUS NTAPI xboxkrnl::NtReadFile
 }
 
 // ******************************************************************
+// * 0x00DD - NtReleaseMutant
+// ******************************************************************
+XBSYSAPI EXPORTNUM(221) NTSTATUS NTAPI xboxkrnl::NtReleaseMutant
+(
+    IN  HANDLE  MutantHandle,
+    OUT PLONG   PreviousCount
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): NtReleaseMutant\n"
+               "(\n"
+               "   MutantHandle         : 0x%.08X\n"
+               "   PreviousCount        : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), MutantHandle, PreviousCount);
+    }
+    #endif
+
+    // redirect to NtCreateMutant
+    NTSTATUS ret = NtDll::NtReleaseMutant(MutantHandle, PreviousCount);
+
+    if(FAILED(ret))
+        EmuWarning("NtReleaseMutant Failed!");
+
+    EmuSwapFS();   // Xbox FS
+
+    return STATUS_SUCCESS;
+}
+
+// ******************************************************************
 // * 0x00E0 - NtResumeThread
 // ******************************************************************
 XBSYSAPI EXPORTNUM(224) NTSTATUS NTAPI xboxkrnl::NtResumeThread

@@ -403,6 +403,15 @@ HRESULT WINAPI EmuIDirectSoundStream_SetI3DL2Source
 );
 
 // ******************************************************************
+// * func: EmuIDirectSoundStream_Unknown1
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundStream_Unknown1
+(
+    PVOID   pThis,
+    DWORD   dwUnknown1
+);
+
+// ******************************************************************
 // * func: EmuIDirectSound8_SetOrientation
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSound8_SetOrientation
@@ -534,6 +543,30 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_SetPlayRegion
 );
 
 // ******************************************************************
+// * func: EmuIDirectSoundBuffer8_Lock
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_Lock
+(
+    X_CDirectSoundBuffer   *pThis,
+    DWORD                   dwOffset, 
+    DWORD                   dwBytes, 
+    LPVOID                 *ppvAudioPtr1, 
+    LPDWORD                 pdwAudioBytes1, 
+    LPVOID                 *ppvAudioPtr2, 
+    LPDWORD                 pdwAudioBytes2, 
+    DWORD                   dwFlags 
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetHeadroom
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetHeadroom
+(
+    X_CDirectSoundBuffer   *pThis,
+    DWORD                   dwHeadroom
+);
+
+// ******************************************************************
 // * func: EmuIDirectSoundBuffer8_SetLoopRegion
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSoundBuffer8_SetLoopRegion
@@ -597,6 +630,24 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_Play
     DWORD                   dwReserved1,
     DWORD                   dwReserved2,
     DWORD                   dwFlags
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetVolume
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetVolume
+(
+    X_CDirectSoundBuffer   *pThis,
+    LONG                    lVolume
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetFrequency
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetFrequency
+(
+    X_CDirectSoundBuffer   *pThis,
+    DWORD                   dwFrequency
 );
 
 // ******************************************************************

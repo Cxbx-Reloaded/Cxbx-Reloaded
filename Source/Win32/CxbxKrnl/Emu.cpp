@@ -1047,6 +1047,8 @@ static void EmuXRefFailure()
 {
     EmuSwapFS();    // Win2k/XP FS
     
+    _asm int 3
+
     EmuCleanup("XRef-only function body reached. Fatal Error.");
 }
 
