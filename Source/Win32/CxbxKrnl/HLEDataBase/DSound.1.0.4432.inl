@@ -653,6 +653,16 @@ OOVPATable DSound_1_0_4432[] =
         "EmuIDirectSound8_CreateSoundBuffer" 
         #endif
     },
+    // IDirectSoundBuffer8::Release (* unchanged since 3936 *)
+    {
+        (OOVPA*)&IDirectSoundBuffer8_Release_1_0_3936,
+
+        XTL::EmuIDirectSoundBuffer8_Release,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSoundBuffer8_Release" 
+        #endif
+    },
     // IDirectSoundBuffer8::SetLoopRegion (* unchanged since 4361 *)
     {
         (OOVPA*)&IDirectSoundBuffer8_SetLoopRegion_1_0_4361,
