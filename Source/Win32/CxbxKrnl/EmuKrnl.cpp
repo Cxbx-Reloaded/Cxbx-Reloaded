@@ -645,7 +645,7 @@ XBSYSAPI EXPORTNUM(156) volatile xboxkrnl::DWORD xboxkrnl::KeTickCount = 0;
 LAUNCH_DATA_PAGE xLaunchDataPage =
 {
     {   // header
-        2,
+        2,  // 2: dashboard, 0: title
         0,
         "D:\\default.xbe",
         0
@@ -716,6 +716,11 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
     #endif
 
     PVOID pRet = malloc(NumberOfBytes);
+
+    static int count = 0;
+
+    if(count++ < 4)
+        g_HaloHack[count-1] = (uint32)pRet;
 
     #ifdef _DEBUG_TRACE
     printf("EmuKrnl (0x%X): MmAllocateContiguous returned 0x%.08X\n", GetCurrentThreadId(), pRet);

@@ -67,6 +67,9 @@ extern "C" CXBXKRNL_API void NTAPI EmuPanic();
 // exception handler
 extern int EmuException(LPEXCEPTION_POINTERS e);
 
+// global exception patching address
+extern uint32 g_HaloHack[4];
+
 // global kernel thunk table
 extern "C" CXBXKRNL_API uint32 KernelThunkTable[367];
 

@@ -66,6 +66,9 @@ extern HANDLE       g_hTDrive    = NULL;
 extern HANDLE       g_hUDrive    = NULL;
 extern HANDLE       g_hZDrive    = NULL;
 
+// global exception patching address
+extern uint32       g_HaloHack[4] = {0};
+
 // Static Function(s)
 static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper);
 static void  EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *pXbeHeader);
@@ -489,7 +492,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         // _USE_XGMATH Disabled in mesh :[
         // halo : dword_0_2E2D18
         // halo : 1744F0 (bink)
-        //_asm int 3
+        _asm int 3
 
         Entry();
 
@@ -602,6 +605,28 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
 {
     if(EmuIsXboxFS())
         EmuSwapFS();
+
+    // check for Halo hack
+    {
+        if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
+        {
+            if(e->ContextRecord->Eip == 0x3394C)
+            {
+                if(e->ContextRecord->Eax == 0x803BD800 && e->ContextRecord->Ecx == 0x803BD800)
+                {
+                    uint32 fix = g_HaloHack[1] + (0x803BD800 - 0x803A6000);
+
+                    e->ContextRecord->Eax = e->ContextRecord->Ecx = fix;
+
+                    *(uint32*)e->ContextRecord->Esp = fix;
+
+                    ((XTL::X_D3DResource*)fix)->Data = g_HaloHack[1] + (0x803BD9A0 - 0x803A6000);
+
+                    return EXCEPTION_CONTINUE_EXECUTION;
+                }
+            }
+        }
+    }
 
     // print debug information
 	{
