@@ -1776,6 +1776,77 @@ SOOVPA<11> IDirectSoundBuffer_Stop_1_0_4627 =
 // +s
 
 // ******************************************************************
+// * DirectSound::CDirectSoundVoice::SetFormat
+// ******************************************************************
+SOOVPA<8> X_DirectSound_CDirectSoundVoice_SetFormat_1_0_4627 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    XREF_DirectSound_CDirectSoundVoice_SetFormat,  // Xref Is Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x07, 0x4E },
+        { 0x10, 0xE8 },
+        { 0x19, 0xD8 },
+        { 0x22, 0xFF },
+        { 0x2B, 0x0C },
+        { 0x34, 0xFF },
+        { 0x3F, 0x8B },
+        { 0x46, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * DirectSound::CDirectSoundBuffer::SetFormat
+// ******************************************************************
+SOOVPA<8> X_DirectSound_CDirectSoundBuffer_SetFormat_1_0_4627 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    XREF_DirectSound_CDirectSoundBuffer_SetFormat,  // Xref Is Saved
+    1,  // Xref Is Used
+
+    {
+        { 0x32, XREF_DirectSound_CDirectSoundVoice_SetFormat },
+
+        { 0x0C, 0x00 },
+        { 0x12, 0x85 },
+        { 0x1C, 0x15 },
+        { 0x26, 0xEB },
+        { 0x30, 0x10 },
+        { 0x3A, 0x74 },
+        { 0x47, 0x8B },
+    }
+};
+
+// ******************************************************************
+// * IDirectSoundBuffer_SetFormat
+// ******************************************************************
+SOOVPA<8> X_IDirectSoundBuffer_SetFormat_1_0_4627 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    1,  // Xref Is Used
+
+    {
+        { 0x15, XREF_DirectSound_CDirectSoundBuffer_SetFormat },
+
+        { 0x02, 0x24 },
+        { 0x06, 0x24 },
+        { 0x0A, 0x83 },
+        { 0x0E, 0xD9 },
+        { 0x12, 0xC8 },
+        { 0x19, 0xC2 },
+        { 0x1A, 0x08 },
+    }
+};
+
+// ******************************************************************
 // * Direct_1_0_4627
 // ******************************************************************
 OOVPATable DSound_1_0_4627[] =
@@ -2580,6 +2651,34 @@ OOVPATable DSound_1_0_4627[] =
         #endif
     },
     // +s
+    // DirectSound::CDirectSoundVoice::SetFormat (XREF)
+    {
+        (OOVPA*)&X_DirectSound_CDirectSoundVoice_SetFormat_1_0_4627,
+        0,
+
+        #ifdef _DEBUG_TRACE
+        "DirectSound::CDirectSoundVoice::SetFormat (XREF)"
+        #endif
+    },
+    // DirectSound::CDirectSoundBuffer::SetFormat (XREF)
+    {
+        (OOVPA*)&X_DirectSound_CDirectSoundBuffer_SetFormat_1_0_4627,
+        0,
+
+        #ifdef _DEBUG_TRACE
+        "DirectSound::CDirectSoundBuffer::SetFormat (XREF)"
+        #endif
+    },
+    // IDirectSoundBuffer_SetFormat
+    {
+        (OOVPA*)&X_IDirectSoundBuffer_SetFormat_1_0_4627,
+        XTL::EmuIDirectSoundBuffer8_SetFormat,
+
+        #ifdef _DEBUG_TRACE
+        "IDirectSoundBuffer_SetFormat"
+        #endif
+
+    },
 };
 
 // ******************************************************************

@@ -334,6 +334,8 @@ extern uint32 XRefDataBase[] =
     -1, // XREF_DSBUFFERSETVELOCITY
     -1, // XREF_DSBUFFERSETDOPPLERFACTOR
     -1, // XREF_DSBUFFERSETI3DL2SOURCE
+    -1, // XREF_DirectSound_CDirectSoundVoice_SetFormat
+    -1, // XREF_DirectSound_CDirectSoundBuffer_SetFormat
     /* not necessary?
     -1, //XREF_XAPIXCALCULATESIGNATUREBEGINEX
     //*/

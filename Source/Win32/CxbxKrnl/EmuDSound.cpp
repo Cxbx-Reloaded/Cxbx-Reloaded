@@ -2381,3 +2381,31 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetI3DL2Source
     return DS_OK;
 }
 // +s
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetFormat
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetFormat
+(
+    X_CDirectSoundBuffer *pBuffer, 
+    LPCWAVEFORMATEX pwfxFormat
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetFormat\n"
+               "(\n"
+               "   pBuffer                   : 0x%.08X\n"
+               "   pwfxFormat                : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pBuffer,pwfxFormat);
+    }
+    #endif
+
+    HRESULT hRet = D3D_OK;
+
+    EmuSwapFS();   // XBox FS
+    return hRet;
+}

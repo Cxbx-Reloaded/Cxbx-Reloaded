@@ -213,6 +213,8 @@ enum XRefDataBaseOffset
     XREF_DSBUFFERSETVELOCITY,
     XREF_DSBUFFERSETDOPPLERFACTOR,
     XREF_DSBUFFERSETI3DL2SOURCE,
+    XREF_DirectSound_CDirectSoundVoice_SetFormat,
+    XREF_DirectSound_CDirectSoundBuffer_SetFormat,
     // XAPI
     /* not necessary?
     XREF_XAPIXCALCULATESIGNATUREBEGINEX

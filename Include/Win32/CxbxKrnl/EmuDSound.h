@@ -827,4 +827,13 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_SetI3DL2Source
 );
 // +s
 
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetFormat
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetFormat
+(
+    X_CDirectSoundBuffer *pBuffer, 
+    LPCWAVEFORMATEX pwfxFormat
+);
+
 #endif
