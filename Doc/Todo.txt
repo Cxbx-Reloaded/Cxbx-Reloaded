@@ -17,4 +17,4 @@ Cxbx Todo:
 
   Xbe::m_Header should be allocated dynamically to make room for huge headers.
 
-  TLS needs to be implemented.
+  TLS needs work.

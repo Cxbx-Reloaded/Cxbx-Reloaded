@@ -242,6 +242,8 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, ui
 
     printf("CxbxKrnl [0x%.08X]: Initial thread ended.\n", GetCurrentThreadId());
 
+    fflush(stdout);
+
     return;
 }
 
@@ -269,8 +271,6 @@ CXBXKRNL_API void NTAPI EmuXPanic()
     MessageBox(NULL, "Kernel Panic! Process will now terminate.", "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
 
     EmuXSwapFS();   // XBox FS
-
-    exit(1);
 }
 
 // ******************************************************************
