@@ -45,7 +45,7 @@ class Mutex
         // ******************************************************************
         // * Constructor
         // ******************************************************************
-        Mutex() { m_Mutex = 0; }
+        Mutex();
 
         // ******************************************************************
         // * Deconstructor
@@ -55,18 +55,21 @@ class Mutex
         // ******************************************************************
         // * Lock critical section
         // ******************************************************************
-        void Lock() { while(InterlockedCompareExchange(&m_Mutex, 1, 0) == 1) Sleep(0); }
+        void Lock();
 
         // ******************************************************************
         // * Unlock critical section
         // ******************************************************************
-        void Unlock() { if(m_Mutex == 1)InterlockedDecrement(&m_Mutex); }
+        void Unlock();
 
     private:
         // ******************************************************************
         // * Critical section
         // ******************************************************************
-        int32 m_Mutex;
+        volatile long m_MutexLock;      // Mutex lock
+        volatile long m_OwnerProcess;   // Current owner process (or zero)
+        volatile long m_OwnerThread;    // Current owner thread
+        volatile long m_LockCount;      // Lock count within this thread
 };
 
 #endif

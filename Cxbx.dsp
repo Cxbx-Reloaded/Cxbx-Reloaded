@@ -249,6 +249,10 @@ SOURCE=.\Source\Win32\InputConfig.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Source\Win32\Mutex.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\Core\OpenXDK.cpp
 # End Source File
 # Begin Source File
