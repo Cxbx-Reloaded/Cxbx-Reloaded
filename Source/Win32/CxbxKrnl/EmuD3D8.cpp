@@ -6426,10 +6426,10 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
     {
     #endif
 
-    g_pD3DDevice8->DrawIndexedPrimitive
-    (
-        PCPrimitiveType, 0, VertexCount, ((DWORD)pIndexData)/2, PrimitiveCount
-    );
+	g_pD3DDevice8->DrawIndexedPrimitive
+	(
+		PCPrimitiveType, 0, ((DWORD)pIndexData)/2 + VertexCount, ((DWORD)pIndexData)/2, PrimitiveCount
+	);
 
     #ifdef _DEBUG_TRACK_VB
     }
