@@ -281,6 +281,16 @@ HRESULT WINAPI xboxkrnl::EmuXIDirect3D8_CreateDevice
     // * make adjustments to parameters to make sense with windows d3d
     // ******************************************************************
     {
+        /*
+        printf("BackBufferWidth  : %d\n", pPresentationParameters->BackBufferWidth);
+        printf("BackBufferHeight : %d\n", pPresentationParameters->BackBufferHeight);
+        printf("BackBufferFormat : %d\n", pPresentationParameters->BackBufferFormat);
+        printf("BackBufferCount  : %d\n", pPresentationParameters->BackBufferCount);
+        printf("EnableAutoDepthStencil : %d\n", pPresentationParameters->EnableAutoDepthStencil);
+        printf("AutoDepthStencilFormat : %d\n", pPresentationParameters->AutoDepthStencilFormat);
+        printf("SwapEffect : %d\n", pPresentationParameters->SwapEffect);
+        */
+
         Adapter = D3DADAPTER_DEFAULT;
 
         pPresentationParameters->Windowed = TRUE;
@@ -295,6 +305,8 @@ HRESULT WINAPI xboxkrnl::EmuXIDirect3D8_CreateDevice
             // Tricky MS randomizing .h #defines :[
             if(pPresentationParameters->BackBufferFormat == 0x07)
                 pPresentationParameters->BackBufferFormat = D3DFMT_X8R8G8B8;
+            else if(pPresentationParameters->BackBufferFormat == 0x06)
+                pPresentationParameters->BackBufferFormat = D3DFMT_A8R8G8B8;
 
             // Tricky MS randomizing .h #defines :[
             if(pPresentationParameters->AutoDepthStencilFormat == 0x2A)

@@ -230,9 +230,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 HGDIOBJ tmpObj = SelectObject(hDC, hFont);
 
-                SetBkColor(hDC, GetSysColor(COLOR_BTNFACE));
+                SetBkColor(hDC, GetSysColor(COLOR_MENUBAR));
 
-				SetTextColor(hDC, GetSysColor(COLOR_BTNTEXT));
+				SetTextColor(hDC, GetSysColor(COLOR_MENUTEXT));
 
                 char buffer[255];
 

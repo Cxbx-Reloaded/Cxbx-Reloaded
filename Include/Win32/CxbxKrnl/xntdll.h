@@ -196,6 +196,17 @@ typedef struct _LDT_ENTRY
 LDT_ENTRY, *PLDT_ENTRY;
 
 // ******************************************************************
+// * STRING
+// ******************************************************************
+typedef struct _STRING
+{
+    USHORT  Length;
+    USHORT  MaximumLength;
+    PCHAR   Buffer;
+}
+STRING, ANSI_STRING, *PSTRING, *PANSI_STRING;
+
+// ******************************************************************
 // * KeDelayExecutionThread
 // ******************************************************************
 NTSYSAPI NTSTATUS NTAPI KeDelayExecutionThread
@@ -214,6 +225,15 @@ NTSYSAPI NTSTATUS NTAPI NtSetLdtEntries
     IN LDT_ENTRY    Descriptor1,
     IN USHORT       Selector2,
     IN LDT_ENTRY    Descriptor2
+);
+
+// ******************************************************************
+// * 0x0121 - RtlInitAnsiString
+// ******************************************************************
+typedef VOID (NTAPI *FPTR_RtlInitAnsiString)
+(
+  IN OUT PANSI_STRING   DestinationString,
+  IN     PCSZ           SourceString
 );
 
 // ******************************************************************

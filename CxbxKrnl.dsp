@@ -80,6 +80,7 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 d3d8.lib dinput8.lib dxguid.lib ntdll.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /out:"Bin\Debug/Cxbx.dll" /pdbtype:sept /libpath:"Lib"
+# SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
 
@@ -126,6 +127,10 @@ SOURCE=.\Doc\Todo.txt
 # Begin Group "Include"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\D3D8.1.0.3925.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\Include\Win32\CxbxKrnl\D3D8.1.0.4361.h
@@ -176,6 +181,10 @@ SOURCE=.\Resource\ResCxbxKrnl.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.3911.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.4361.h
 # End Source File
 # Begin Source File
@@ -202,6 +211,10 @@ SOURCE=.\Resource\CxbxDll.rc
 # Begin Group "Source"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\D3D8.1.0.3925.inl
+# End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\D3D8.1.0.4361.inl
@@ -245,6 +258,10 @@ SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase.cpp
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\KernelThunk.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\Xapi.1.0.3911.inl
 # End Source File
 # Begin Source File
 

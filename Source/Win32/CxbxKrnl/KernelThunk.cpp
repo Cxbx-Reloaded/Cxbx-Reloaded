@@ -346,7 +346,7 @@ CXBXKRNL_API uint32 KernelThunkTable[367] =
     (uint32)PANIC(0x011E),                          // 0x011E (286)
     (uint32)PANIC(0x011F),                          // 0x011F (287)
     (uint32)PANIC(0x0120),                          // 0x0120 (288)
-    (uint32)PANIC(0x0121),                          // 0x0121 (289)
+    (uint32)xboxkrnl::RtlInitAnsiString,            // 0x0121 (289)
     (uint32)PANIC(0x0122),                          // 0x0122 (290)
     (uint32)&xboxkrnl::RtlInitializeCriticalSection,// 0x0123 (291)
     (uint32)PANIC(0x0124),                          // 0x0124 (292)

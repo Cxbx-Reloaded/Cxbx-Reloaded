@@ -48,6 +48,11 @@ namespace xntdll
 using namespace win32;
 
 // ******************************************************************
+// * Loaded at run-time to avoid linker conflicts
+// ******************************************************************
+xntdll::FPTR_RtlInitAnsiString NT_RtlInitAnsiString = (xntdll::FPTR_RtlInitAnsiString)GetProcAddress(GetModuleHandle("ntdll"), "RtlInitAnsiString");
+
+// ******************************************************************
 // * (HELPER) PsCreateSystemThreadExProxyParam
 // ******************************************************************
 typedef struct _PsCreateSystemThreadExProxyParam
@@ -601,6 +606,38 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
     EnterCriticalSection((win32::PRTL_CRITICAL_SECTION)CriticalSection);
 
     EmuXSwapFS();   // Xbox FS
+}
+
+// ******************************************************************
+// * 0x0121 - RtlInitAnsiString
+// ******************************************************************
+XBSYSAPI EXPORTNUM(289) VOID NTAPI xboxkrnl::RtlInitAnsiString 
+(
+  IN OUT PANSI_STRING DestinationString,
+  IN     PCSZ         SourceString
+)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXKrnl (0x%.08X): RtlInitAnsiString\n"
+               "(\n"
+               "   DestinationString   : 0x%.08X\n"
+               "   SourceString        : 0x%.08X (\"%s\")\n"
+               ");\n",
+               GetCurrentThreadId(), DestinationString, SourceString, SourceString);
+    }
+    #endif
+
+    NT_RtlInitAnsiString((xntdll::PANSI_STRING)DestinationString, (xntdll::PCSZ)SourceString);
+
+    EmuXSwapFS();   // Xbox FS
+
+    return;
 }
 
 // ******************************************************************

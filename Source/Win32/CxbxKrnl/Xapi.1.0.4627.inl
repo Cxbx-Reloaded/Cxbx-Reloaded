@@ -77,7 +77,7 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXXInputGetCapabilities"
         #endif
     },
-    // XInputGetState
+    // XInputGetState (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&XInputGetState_1_0_4361,
 
@@ -117,9 +117,9 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXapiInitProcess" 
         #endif
     },
-    // XapiBootToDash (* unchanged since 1.0.4361 *)
+    // XapiBootToDash (* unchanged since 1.0.3911 *)
     {
-        (OOVPA*)&XapiBootDash_1_0_4361,
+        (OOVPA*)&XapiBootDash_1_0_3911,
 
         xboxkrnl::EmuXapiBootDash,
 
@@ -127,9 +127,9 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXapiBootDash"
         #endif
     },
-    // __rtinit (* unchanged since 1.0.4361 *)
+    // __rtinit (* unchanged since 1.0.3911 *)
     {
-        (OOVPA*)&__rtinit_1_0_4361,
+        (OOVPA*)&__rtinit_1_0_3911,
 
         xboxkrnl::EmuX__rtinit,
 
@@ -137,9 +137,9 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuX__rtinit",
         #endif
     },
-    // __cinit (* unchanged since 1.0.4361 *)
+    // __cinit (* unchanged since 1.0.3911 *)
     {
-        (OOVPA*)&__cinit_1_0_4361,
+        (OOVPA*)&__cinit_1_0_3911,
 
         xboxkrnl::EmuX__cinit,
 
