@@ -51,56 +51,6 @@ namespace xapi
 #include "EmuDInput.h"
 
 // ******************************************************************
-// * EmuCreateThreadProxyParam
-// ******************************************************************
-typedef struct _EmuCreateThreadProxyParam
-{
-    LPVOID                 lpParameter;
-    LPTHREAD_START_ROUTINE lpStartAddress;
-}
-EmuCreateThreadProxyParam;
-
-// ******************************************************************
-// * func: EmuCreateThreadProxy
-// ******************************************************************
-static DWORD WINAPI EmuCreateThreadProxy
-(
-    LPVOID lpParameter
-)
-{
-    EmuCreateThreadProxyParam *iEmuCreateThreadProxyParam = (EmuCreateThreadProxyParam*)lpParameter;
-
-    LPTHREAD_START_ROUTINE  ilpStartAddress = iEmuCreateThreadProxyParam->lpStartAddress;
-    LPVOID                  ilpParam        = iEmuCreateThreadProxyParam->lpParameter;
-
-    delete iEmuCreateThreadProxyParam;
-
-    EmuGenerateFS(g_pTLS);
-
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%.08X): EmuCreateThreadProxy\n"
-               "(\n"
-               "   lpParameter         : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), lpParameter);
-
-    }
-    #endif
-
-    EmuSwapFS();   // XBox FS
-
-    DWORD ret = ilpStartAddress(ilpParam);
-
-    EmuSwapFS();   // Win2k/XP FS
-
-    return ret;
-}
-
-// ******************************************************************
 // * func: EmuXInitDevices
 // ******************************************************************
 VOID WINAPI xapi::EmuXInitDevices
@@ -285,60 +235,6 @@ DWORD WINAPI xapi::EmuXInputGetState
     EmuSwapFS();   // XBox FS
 
     return ret;
-}
-
-// ******************************************************************
-// * func: EmuCreateThread
-// ******************************************************************
-HANDLE WINAPI xapi::EmuCreateThread
-(
-    LPSECURITY_ATTRIBUTES   lpThreadAttributes,
-    DWORD                   dwStackSize,
-    LPTHREAD_START_ROUTINE  lpStartAddress,
-    LPVOID                  lpParameter,
-    DWORD                   dwCreationFlags,
-    LPDWORD                 lpThreadId
-)
-{
-    EmuSwapFS();   // Win2k/XP FS
-
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%.08X): EmuCreateThread\n"
-               "(\n"
-               "   lpThreadAttributes  : 0x%.08X\n"
-               "   dwStackSize         : 0x%.08X\n"
-               "   lpStartAddress      : 0x%.08X\n"
-               "   lpParameter         : 0x%.08X\n"
-               "   dwCreationFlags     : 0x%.08X\n"
-               "   lpThreadId          : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), lpThreadAttributes, dwStackSize, lpStartAddress,
-               lpParameter, dwCreationFlags, lpThreadId);
-    }
-    #endif
-
-    EmuCreateThreadProxyParam *iEmuCreateThreadProxyParam = new EmuCreateThreadProxyParam();
-
-    iEmuCreateThreadProxyParam->lpParameter    = lpParameter;
-    iEmuCreateThreadProxyParam->lpStartAddress = lpStartAddress;
-
-    HANDLE RetHandle = CreateThread
-    (
-       NULL,
-       dwStackSize,
-       EmuCreateThreadProxy,
-       iEmuCreateThreadProxyParam,
-       dwCreationFlags,
-       lpThreadId
-    );
-
-    EmuSwapFS();   // XBox FS
-
-    return RetHandle;
 }
 
 // ******************************************************************

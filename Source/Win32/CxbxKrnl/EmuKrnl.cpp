@@ -115,7 +115,7 @@ static DWORD WINAPI PCSTProxy
     }
     #endif
 
-    EmuGenerateFS(g_pTLS);
+    EmuGenerateFS(g_pTLS, g_pTLSData);
 
     // ******************************************************************
     // * use the special calling convention

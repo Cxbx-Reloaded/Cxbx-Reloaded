@@ -323,7 +323,9 @@ EmuExe::EmuExe(Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename) : Exe
             // * generate .cxbxplg section virtual size / addr
             // ******************************************************************
             {
-                uint32 virt_size = RoundUp(m_OptionalHeader.m_image_base + 0x100 + x_Xbe->m_Header.dwSizeofHeaders + 260 + sizeof(Xbe::LibraryVersion) * x_Xbe->m_Header.dwLibraryVersions + sizeof(Xbe::TLS), 0x1000);
+                uint32 virt_size = RoundUp(m_OptionalHeader.m_image_base + 0x100 + x_Xbe->m_Header.dwSizeofHeaders + 260
+                                        + sizeof(Xbe::LibraryVersion) * x_Xbe->m_Header.dwLibraryVersions + sizeof(Xbe::TLS)
+                                        + (x_Xbe->m_TLS->dwDataEndAddr - x_Xbe->m_TLS->dwDataStartAddr), 0x1000);
                 uint32 virt_addr = RoundUp(m_SectionHeader[i-1].m_virtual_addr + m_SectionHeader[i-1].m_virtual_size, PE_SEGM_ALIGN);
 
                 m_SectionHeader[i].m_virtual_size = virt_size;
@@ -514,6 +516,8 @@ EmuExe::EmuExe(Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename) : Exe
             {
                 memcpy(pWriteCursor, x_Xbe->m_TLS, sizeof(Xbe::TLS));
                 pWriteCursor += sizeof(Xbe::TLS);
+                memcpy(pWriteCursor, x_Xbe->GetTLSData(), (x_Xbe->m_TLS->dwDataEndAddr - x_Xbe->m_TLS->dwDataStartAddr));
+                pWriteCursor += (x_Xbe->m_TLS->dwDataEndAddr - x_Xbe->m_TLS->dwDataStartAddr);
             }
 
             // ******************************************************************
@@ -524,24 +528,24 @@ EmuExe::EmuExe(Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename) : Exe
             // Function Pointer
             *(uint32 *)((uint32)m_bzSection[i] + 1)  = (uint32)EmuInit;
 
-            // Param 7 : Entry
+            // Param 8 : Entry
             *(uint32 *)((uint32)m_bzSection[i] + 6)  = (uint32)ep;
 
-            // Param 6 : dwXbeHeaderSize
+            // Param 7 : dwXbeHeaderSize
             *(uint32 *)((uint32)m_bzSection[i] + 11) = (uint32)x_Xbe->m_Header.dwSizeofHeaders;
 
-            // Param 5 : pXbeHeader
+            // Param 6 : pXbeHeader
             *(uint32 *)((uint32)m_bzSection[i] + 16) = WriteCursor;
             WriteCursor += x_Xbe->m_Header.dwSizeofHeaders;
 
-            // Param 4 : szDebugFilename
+            // Param 5 : szDebugFilename
             *(uint32 *)((uint32)m_bzSection[i] + 21) = WriteCursor;
             WriteCursor += 260;
 
-            // Param 3 : DbgMode
+            // Param 4 : DbgMode
             *(uint32 *)((uint32)m_bzSection[i] + 26) = x_debug_mode;
 
-            // Param 2 : pLibraryVersion
+            // Param 3 : pLibraryVersion
             if(x_Xbe->m_LibraryVersion != 0)
             {
                 *(uint32 *)((uint32)m_bzSection[i] + 31) = WriteCursor;
@@ -552,7 +556,7 @@ EmuExe::EmuExe(Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename) : Exe
                 *(uint32 *)((uint32)m_bzSection[i] + 31) = 0;
             }
 
-            // Param 1 : pTLS
+            // Param 2 : pTLS
             if(x_Xbe->m_TLS != 0)
             {
                 *(uint32 *)((uint32)m_bzSection[i] + 36) = WriteCursor;
@@ -561,6 +565,17 @@ EmuExe::EmuExe(Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename) : Exe
             else
             {
                 *(uint32 *)((uint32)m_bzSection[i] + 36) = 0;
+            }
+
+            // Param 1 : pTLSData
+            if(x_Xbe->m_TLS != 0)
+            {
+                *(uint32 *)((uint32)m_bzSection[i] + 41) = WriteCursor;
+                WriteCursor += (x_Xbe->m_TLS->dwDataEndAddr - x_Xbe->m_TLS->dwDataStartAddr);
+            }
+            else
+            {
+                *(uint32 *)((uint32)m_bzSection[i] + 41) = 0;
             }
 
             printf("OK\n");

@@ -47,7 +47,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuNoFunc();
 // ******************************************************************
 // * func: EmuInit
 // ******************************************************************
-extern "C" CXBXKRNL_API void NTAPI EmuInit(Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
+extern "C" CXBXKRNL_API void NTAPI EmuInit(void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
 
 // ******************************************************************
 // * func: EmuCleanup
@@ -73,5 +73,10 @@ extern "C" CXBXKRNL_API uint32 KernelThunkTable[367];
 // * data: pTLS
 // ******************************************************************
 extern Xbe::TLS *g_pTLS;
+
+// ******************************************************************
+// * data: pTLSData
+// ******************************************************************
+extern void     *g_pTLSData;
 
 #endif

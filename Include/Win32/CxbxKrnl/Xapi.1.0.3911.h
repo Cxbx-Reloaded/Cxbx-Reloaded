@@ -36,6 +36,7 @@
 
 #include "OOVPA.h"
 
+extern SOOVPA<9>  __cinit_1_0_3911;
 extern OOVPATable XAPI_1_0_3911[];
 extern uint32     XAPI_1_0_3911_SIZE;
 

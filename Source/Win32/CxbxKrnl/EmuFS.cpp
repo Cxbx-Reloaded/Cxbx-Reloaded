@@ -60,12 +60,35 @@ void EmuInitFS()
 // ******************************************************************
 // * func: EmuGenerateFS
 // ******************************************************************
-void EmuGenerateFS(Xbe::TLS *pTLS)
+void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 {
     NT_TIB         *OrgNtTib;
     xboxkrnl::KPCR *NewPcr;
 
 	uint16 NewFS = -1, OrgFS = -1;
+
+    // ******************************************************************
+    // * Dump Raw TLS data
+    // ******************************************************************
+    {
+        #ifdef _DEBUG_TRACE
+        printf("CxbxKrnl (0x%.08X) : Dumping TLS Raw Data... \n  0x%.08X: ", GetCurrentThreadId(), pTLSData);
+
+        uint32 stop = (pTLS->dwDataEndAddr - pTLS->dwDataStartAddr);
+
+        for(uint32 v=0;v<stop;v++)
+        {
+            uint08 *bByte = (uint08*)pTLSData + v;
+
+            printf("%.01X", (uint32)*bByte);
+
+            if((v+1) % 0x10 == 0)
+                printf("\n  0x%.08X: ", ((uint32)pTLSData + v));
+        }
+
+        printf("\n");
+        #endif
+    }
 
     // ******************************************************************
     // * Obtain "OrgFS"
@@ -122,7 +145,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS)
 
         NewPcr->Prcb = &NewPcr->PrcbData;
 
-        NewPcr->PrcbData.CurrentThread->TlsData = (void*)pTLS->dwTLSIndexAddr;
+        NewPcr->PrcbData.CurrentThread->TlsData = (void*)pTLSData;
     }
 
     // ******************************************************************
@@ -148,11 +171,9 @@ void EmuGenerateFS(Xbe::TLS *pTLS)
     // * Save "TLSPtr" inside NewFS.StackBase
     // ******************************************************************
     {
-        uint32 dwTLSIndexAddr = pTLS->dwTLSIndexAddr;
-
         __asm
         {
-            mov eax, dwTLSIndexAddr
+            mov eax, pTLSData
             mov fs:[0x04], eax
         }
     }

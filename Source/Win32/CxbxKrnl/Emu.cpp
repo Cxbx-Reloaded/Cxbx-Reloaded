@@ -53,12 +53,14 @@ namespace xboxkrnl
 // * global / static
 // ******************************************************************
 extern Xbe::TLS *g_pTLS = 0;
+extern void     *g_pTLSData = 0;
 
 // ******************************************************************
 // * static
 // ******************************************************************
-static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *pXbeHeader);
-static int ExitException(LPEXCEPTION_POINTERS e);
+static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper);
+static void  EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *pXbeHeader);
+static int   ExitException(LPEXCEPTION_POINTERS e);
 
 // ******************************************************************
 // * func: DllMain
@@ -104,6 +106,7 @@ static void EmuCleanThread()
 // ******************************************************************
 extern "C" CXBXKRNL_API void NTAPI EmuInit
 (
+    void                   *pTLSData, 
     Xbe::TLS               *pTLS,
     Xbe::LibraryVersion    *pLibraryVersion,
     DebugMode               DbgMode,
@@ -113,6 +116,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     void                  (*Entry)())
 {
     g_pTLS = pTLS;
+    g_pTLSData = pTLSData;
 
     // ******************************************************************
     // * debug console allocation (if configured)
@@ -157,6 +161,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
         printf("Emu: EmuInit\n"
                "(\n"
+               "   pTLSData            : 0x%.08X\n"
                "   pTLS                : 0x%.08X\n"
                "   pLibraryVersion     : 0x%.08X\n"
                "   DebugConsole        : 0x%.08X\n"
@@ -165,7 +170,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                "   pXBEHeaderSize      : 0x%.08X\n"
                "   Entry               : 0x%.08X\n"
                ");\n",
-               pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
+               pTLSData, pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
 
         #else
         printf("CxbxKrnl (0x%.08X): _DEBUG_TRACE disabled.\n", GetCurrentThreadId());
@@ -190,8 +195,6 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
         memcpy(&MemXbeHeader->dwInitFlags, &pXbeHeader->dwInitFlags, sizeof(pXbeHeader->dwInitFlags));
 
-        printf("pXbeHeader->dwCertificateAddr : 0x%.08X -> 0x%.08X\n", pXbeHeader->dwCertificateAddr, pXbeHeader->dwCertificateAddr + sizeof(Xbe::Certificate));
-
         memcpy((void*)pXbeHeader->dwCertificateAddr, &((uint08*)pXbeHeader)[pXbeHeader->dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
     }
 
@@ -201,7 +204,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     {
         EmuInitFS();
 
-        EmuGenerateFS(pTLS);
+        EmuGenerateFS(pTLS, pTLSData);
     }
 
     // ******************************************************************
@@ -209,6 +212,9 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     // ******************************************************************
     if(pLibraryVersion == 0)
         printf("Emu: Detected OpenXDK application...\n");
+
+    uint32 xca;
+    uint32 xcz;
 
     // ******************************************************************
     // * Initialize Microsoft XDK emulation
@@ -249,9 +255,48 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
             if(!found)
                 printf("Skipped\n");
+
+            if(strcmp("XAPILIB", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && (BuildVersion == 4627 || BuildVersion == 4361 || BuildVersion == 4034 || BuildVersion == 3911))
+            {
+                printf("Emu: Locating Pre-Entry Execution...");
+
+                uint32 lower = pXbeHeader->dwBaseAddr;
+                uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
+
+                void *pFunc = EmuLocateFunction((OOVPA*)&__cinit_1_0_3911, lower, upper);
+
+                if(pFunc == 0)
+                    printf("Skipped\n");
+                else
+                {
+                    xca = *(uint32*)((uint32)pFunc + 0x32);
+                    xcz = *(uint32*)((uint32)pFunc + 0x39);
+
+                    printf("Found! @ 0x%.08X -> 0x%.08X\n", xca, xcz);
+                }
+            }
         }
 
         EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
+    }
+
+    // ******************************************************************
+    // * Static/Constructors
+    // ******************************************************************
+    for(uint32 v=xca;v<xcz; v+=4)
+    {
+        uint32 pFunc = *(uint32*)v;
+
+        if(pFunc != 0 && pFunc != -1)
+        {
+            printf("Emu (0x%.08X): Static/Constructor @ 0x%.08X\n", GetCurrentThreadId(), pFunc);
+
+            EmuSwapFS();    // Xbox FS
+
+            __asm call pFunc
+
+            EmuSwapFS();    // Win2k/XP FS
+        }
     }
 
     printf("Emu (0x%.08X): Initial thread starting.\n", GetCurrentThreadId());
@@ -347,10 +392,98 @@ inline void EmuInstallWrapper(void *FunctionAddr, void *WrapperAddr)
 }
 
 // ******************************************************************
+// * func: EmuLocateFunction
+// ******************************************************************
+void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
+{
+    uint32 count = Oovpa->Count;
+
+    // ******************************************************************
+    // * Large
+    // ******************************************************************
+    if(Oovpa->Large == 1)
+    {
+        LOOVPA<1> *Loovpa = (LOOVPA<1>*)Oovpa;
+
+        upper -= Loovpa->Lovp[count-1].Offset;
+
+        // ******************************************************************
+        // * Search all of the image memory
+        // ******************************************************************
+        for(uint32 cur=lower;cur<upper;cur++)
+        {
+            uint32  v=0;
+
+            // ******************************************************************
+            // * check all pairs, moving on if any do not match
+            // ******************************************************************
+            for(v=0;v<count;v++)
+            {
+                uint32 Offset = Loovpa->Lovp[v].Offset;
+                uint32 Value  = Loovpa->Lovp[v].Value;
+
+                uint08 RealValue = *(uint08*)(cur + Offset);
+
+                if(RealValue != Value)
+                    break;
+            }
+
+            // ******************************************************************
+            // * success if we found all pairs
+            // ******************************************************************
+            if(v == count)
+                return (void*)cur;
+        }
+    }
+    // ******************************************************************
+    // * Small
+    // ******************************************************************
+    else
+    {
+        SOOVPA<1> *Soovpa = (SOOVPA<1>*)Oovpa;
+
+        upper -= Soovpa->Sovp[count-1].Offset;
+
+        // ******************************************************************
+        // * Search all of the image memory
+        // ******************************************************************
+        for(uint32 cur=lower;cur<upper;cur++)
+        {
+            uint32  v=0;
+
+            // ******************************************************************
+            // * check all pairs, moving on if any do not match
+            // ******************************************************************
+            for(v=0;v<count;v++)
+            {
+                uint32 Offset = Soovpa->Sovp[v].Offset;
+                uint32 Value  = Soovpa->Sovp[v].Value;
+
+                uint08 RealValue = *(uint08*)(cur + Offset);
+
+                if(RealValue != Value)
+                    break;
+            }
+
+            // ******************************************************************
+            // * success if we found all pairs
+            // ******************************************************************
+            if(v == count)
+                return (void*)cur;
+        }
+    }
+
+    return 0;
+}
+
+// ******************************************************************
 // * func: EmuInstallWrappers
 // ******************************************************************
 void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *pXbeHeader)
 {
+    uint32 lower = pXbeHeader->dwBaseAddr;
+    uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
+
     // ******************************************************************
     // * traverse the full OOVPA table
     // ******************************************************************
@@ -362,127 +495,19 @@ void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*En
 
         OOVPA *Oovpa = OovpaTable[a].Oovpa;
 
-        uint32 count = Oovpa->Count;
-        uint32 lower = pXbeHeader->dwBaseAddr;
-        uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
+        void *pFunc = EmuLocateFunction(Oovpa, lower, upper);
 
-        // ******************************************************************
-        // * Large
-        // ******************************************************************
-        if(Oovpa->Large == 1)
+        if(pFunc != 0)
         {
-            LOOVPA<1> *Loovpa = (LOOVPA<1>*)Oovpa;
+            #ifdef _DEBUG_TRACE
+            printf("Found @ 0x%.08X\n", pFunc);
+            #endif
 
-            upper -= Loovpa->Lovp[count-1].Offset;
-
-            bool found = false;
-
-            // ******************************************************************
-            // * Search all of the image memory
-            // ******************************************************************
-            for(uint32 cur=lower;cur<upper;cur++)
-            {
-                uint32  v=0;
-
-                // ******************************************************************
-                // * check all pairs, moving on if any do not match
-                // ******************************************************************
-                for(v=0;v<count;v++)
-                {
-                    uint32 Offset = Loovpa->Lovp[v].Offset;
-                    uint32 Value  = Loovpa->Lovp[v].Value;
-
-                    uint08 RealValue = *(uint08*)(cur + Offset);
-
-                    if(RealValue != Value)
-                        break;
-                }
-
-                // ******************************************************************
-                // * success if we found all pairs
-                // ******************************************************************
-                if(v == count)
-                {
-                    #ifdef _DEBUG_TRACE
-                    printf("Found! (0x%.08X)\n", cur);
-                    #endif
-
-                    EmuInstallWrapper((void*)cur, OovpaTable[a].lpRedirect);
-
-                    found = true;
-
-                    break;
-                }
-            }
-
-            // ******************************************************************
-            // * not found
-            // ******************************************************************
-            if(!found)
-            {
-                #ifdef _DEBUG_TRACE
-                printf("None (OK)\n");
-                #endif
-            }
+            EmuInstallWrapper(pFunc, OovpaTable[a].lpRedirect);
         }
-        // ******************************************************************
-        // * Small
-        // ******************************************************************
         else
         {
-            SOOVPA<1> *Soovpa = (SOOVPA<1>*)Oovpa;
-
-            upper -= Soovpa->Sovp[count-1].Offset;
-
-            bool found = false;
-
-            // ******************************************************************
-            // * Search all of the image memory
-            // ******************************************************************
-            for(uint32 cur=lower;cur<upper;cur++)
-            {
-                uint32  v=0;
-
-                // ******************************************************************
-                // * check all pairs, moving on if any do not match
-                // ******************************************************************
-                for(v=0;v<count;v++)
-                {
-                    uint32 Offset = Soovpa->Sovp[v].Offset;
-                    uint32 Value  = Soovpa->Sovp[v].Value;
-
-                    uint08 RealValue = *(uint08*)(cur + Offset);
-
-                    if(RealValue != Value)
-                        break;
-                }
-
-                // ******************************************************************
-                // * success if we found all pairs
-                // ******************************************************************
-                if(v == count)
-                {
-                    #ifdef _DEBUG_TRACE
-                    printf("Found! (0x%.08X)\n", cur);
-                    #endif
-
-                    EmuInstallWrapper((void*)cur, OovpaTable[a].lpRedirect);
-
-                    found = true;
-
-                    break;
-                }
-            }
-
-            // ******************************************************************
-            // * not found
-            // ******************************************************************
-            if(!found)
-            {
-                #ifdef _DEBUG_TRACE
-                printf("None (OK)\n");
-                #endif
-            }
+            printf("None (OK)\n");
         }
     }
 }
