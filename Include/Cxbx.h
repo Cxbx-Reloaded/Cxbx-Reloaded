@@ -68,9 +68,9 @@ typedef signed long    sint32;
 // * Version information
 // ******************************************************************
 #ifndef _DEBUG_TRACE
-#define _CXBX_VERSION "0.7.8-Pre2"
+#define _CXBX_VERSION "0.7.8"
 #else
-#define _CXBX_VERSION "0.7.8-Pre2-Trace"
+#define _CXBX_VERSION "0.7.8-Trace"
 #endif
 
 // ******************************************************************

@@ -1699,6 +1699,11 @@ XBSYSAPI EXPORTNUM(219) NTSTATUS NTAPI xboxkrnl::NtReadFile
     }
     #endif
 
+    // Halo NTSC, Buffer == 0x09740040
+    // Possibly grabbing the vram cache from Xeon
+    if(Buffer == (PVOID)0x09740040)
+        _asm int 3
+
     NTSTATUS ret = NtDll::NtReadFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, (NtDll::LARGE_INTEGER*)ByteOffset, 0);
 
     EmuSwapFS();   // Xbox FS
@@ -1731,13 +1736,11 @@ XBSYSAPI EXPORTNUM(224) NTSTATUS NTAPI xboxkrnl::NtResumeThread
     }
     #endif
 
-    EmuCleanup("Todo: Implement NtDll::NtResumeThread");
-//    NTSTATUS ret = NtDll::NtResumeThread(ThreadHandle, PreviousSuspendCount);
+    NTSTATUS ret = NtDll::NtResumeThread(ThreadHandle, PreviousSuspendCount);
 
     EmuSwapFS();   // Xbox FS
 
-//    return ret;
-    return STATUS_SUCCESS;
+    return ret;
 }
 
 // ******************************************************************
@@ -1814,7 +1817,7 @@ XBSYSAPI EXPORTNUM(226) NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
 // ******************************************************************
 // * 0x00E8 - NtUserIoApcDispatcher
 // ******************************************************************
-XBSYSAPI EXPORTNUM(232) VOID xboxkrnl::NtUserIoApcDispatcher
+XBSYSAPI EXPORTNUM(232) VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
 (
     PVOID            ApcContext,
     PIO_STATUS_BLOCK IoStatusBlock,
@@ -1842,6 +1845,8 @@ XBSYSAPI EXPORTNUM(232) VOID xboxkrnl::NtUserIoApcDispatcher
 
     __asm
     {
+        pushad
+
         mov esi, IoStatusBlock
         mov ecx, [esi]
         mov eax, 0x0C0000000
@@ -1850,7 +1855,15 @@ XBSYSAPI EXPORTNUM(232) VOID xboxkrnl::NtUserIoApcDispatcher
         push ecx
         push eax
         call ApcContext
+
+        popad
     }
+
+    EmuSwapFS();   // Win2k/XP FS
+
+    #ifdef _DEBUG_TRACE
+    printf("EmuKrnl (0x%X): NtUserIoApcDispatcher Completed\n", GetCurrentThreadId());
+    #endif
 
     return;
 }
@@ -1892,7 +1905,7 @@ XBSYSAPI EXPORTNUM(234) NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObjectEx
 }
 
 // ******************************************************************
-// * 0x00DA - NtWriteFile
+// * 0x00EC - NtWriteFile
 // ******************************************************************
 XBSYSAPI EXPORTNUM(236) NTSTATUS NTAPI xboxkrnl::NtWriteFile
 (	
@@ -1941,6 +1954,31 @@ XBSYSAPI EXPORTNUM(236) NTSTATUS NTAPI xboxkrnl::NtWriteFile
 
     return ret;
 }
+
+// ******************************************************************
+// * 0x00EE - NtYieldExecution
+// ******************************************************************
+XBSYSAPI EXPORTNUM(238) VOID NTAPI xboxkrnl::NtYieldExecution()
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        // NOTE: this eats up the debug log far too quickly
+        //printf("EmuKrnl (0x%X): NtYieldExecution();\n", GetCurrentThreadId());
+    }
+    #endif
+
+    NtDll::NtYieldExecution();
+
+    EmuSwapFS();   // Xbox FS
+
+    return;
+}
+
 // ******************************************************************
 // * 0x00FF - PsCreateSystemThreadEx
 // ******************************************************************

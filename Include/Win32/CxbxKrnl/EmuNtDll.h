@@ -758,6 +758,11 @@ typedef NTSTATUS (NTAPI *FPTR_NtWriteFile)
 );
 
 // ******************************************************************
+// * NtYieldExecution
+// ******************************************************************
+typedef VOID (NTAPI *FPTR_NtYieldExecution)();
+
+// ******************************************************************
 // * NtSetInformationFile
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtSetInformationFile)
@@ -767,6 +772,15 @@ typedef NTSTATUS (NTAPI *FPTR_NtSetInformationFile)
 	IN	PVOID	FileInformation,
 	IN	ULONG	Length,
 	IN	ULONG	FileInformationClass
+);
+
+// ******************************************************************
+// * NtResumeThread
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtResumeThread)
+(	
+	IN  HANDLE  ThreadHandle,
+	OUT	PULONG	SuspendCount OPTIONAL
 );
 
 // ******************************************************************
@@ -881,8 +895,10 @@ extern FPTR_NtCreateMutant                 NtCreateMutant;
 extern FPTR_NtCreateFile                   NtCreateFile;
 extern FPTR_NtReadFile                     NtReadFile;
 extern FPTR_NtWriteFile                    NtWriteFile;
+extern FPTR_NtYieldExecution               NtYieldExecution;
 extern FPTR_NtSetInformationFile           NtSetInformationFile;
 extern FPTR_NtSetEvent                     NtSetEvent;
+extern FPTR_NtResumeThread                 NtResumeThread;
 extern FPTR_NtSetLdtEntries                NtSetLdtEntries;
 
 #if defined(__cplusplus)

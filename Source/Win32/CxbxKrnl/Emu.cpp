@@ -309,11 +309,11 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
             CreateDirectory(szBuffer, NULL);
 
-            /* is it necessary to make this directory title unique?
-            sprintf(&szBuffer[spot+6], "\\%08x", pCertificate->dwTitleId);
+            //* is it necessary to make this directory title unique?
+            sprintf(&szBuffer[spot+10], "\\%08x", pCertificate->dwTitleId);
 
             CreateDirectory(szBuffer, NULL);
-            */
+            //*/
 
             g_hZDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
@@ -518,6 +518,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         EmuSwapFS();   // XBox FS
 
         // _USE_XGMATH Disabled in mesh :[
+        // halo : dword_0_2E2D18
         //_asm int 3
 
         Entry();

@@ -2382,7 +2382,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
         case X_D3DCOMMON_TYPE_VERTEXBUFFER:
         {
             #ifdef _DEBUG_TRACE
-            printf("EmuIDirect3DResource8_Register :-> VertexBuffer...\n");
+            printf("EmuIDirect3DResource8_Register (0x%X) : Creating VertexBuffer...\n", GetCurrentThreadId());
             #endif
 
             X_D3DVertexBuffer *pVertexBuffer = (X_D3DVertexBuffer*)pResource;
@@ -2412,6 +2412,10 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
                 pResource->Data = (ULONG)pData;
             }
+
+            #ifdef _DEBUG_TRACE
+            printf("EmuIDirect3DResource8_Register (0x%X) : Successfully Created VertexBuffer\n", GetCurrentThreadId());
+            #endif
         }
         break;
 

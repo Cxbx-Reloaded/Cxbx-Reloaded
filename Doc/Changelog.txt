@@ -1,7 +1,9 @@
 cxbx website: http://www.caustik.com/xbox/
 
-version: 0.7.8 (??/??/??)
+version: 0.7.8 (08/29/03)
 --------------------------------
+
+- Halo executes (no graphics yet)
 
 - Overlays simulated on PCs that do not support them in hardware.
 
@@ -10,6 +12,8 @@ version: 0.7.8 (??/??/??)
 - Fixes to mesh rendering (thanks kingofc!). The "XRay" XDK demo is
   extremely impressive now (and runs very efficiently), as well as
   the Gamepad/Rumble demos.
+
+- Z: drive simulation repaired
 
 version: 0.7.7b (07/16/03)
 --------------------------------

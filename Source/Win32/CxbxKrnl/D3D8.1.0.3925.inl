@@ -1036,6 +1036,53 @@ SOOVPA<11> IDirect3DVertexBuffer8_Lock_1_0_3925 =
 };
 
 // ******************************************************************
+// * IDirect3DResource8_Register
+// ******************************************************************
+SOOVPA<19> IDirect3DResource8_Register_1_0_3925 =
+{
+    0,  // Large == 0
+    19, // Count == 19
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DResource8_Register+0x00 : mov ecx, [esp+0x04]
+        { 0x00, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x01, 0x4C }, // (Offset,Value)-Pair #2
+        { 0x03, 0x04 }, // (Offset,Value)-Pair #3
+
+        // IDirect3DResource8_Register+0x04 : mov edx, [esp+0x08]
+        { 0x04, 0x8B }, // (Offset,Value)-Pair #4
+        { 0x05, 0x54 }, // (Offset,Value)-Pair #5
+        { 0x07, 0x08 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DResource8_Register+0x08 : mov eax, [ecx+0x04]
+        { 0x08, 0x8B }, // (Offset,Value)-Pair #7
+        { 0x09, 0x41 }, // (Offset,Value)-Pair #8
+        { 0x0A, 0x04 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DResource8_Register+0x0F : and edx, 0x00070000
+        { 0x0F, 0x81 }, // (Offset,Value)-Pair #10
+        { 0x10, 0xE2 }, // (Offset,Value)-Pair #11
+        { 0x13, 0x07 }, // (Offset,Value)-Pair #12
+
+        // IDirect3DResource8_Register+0x15 : cmp edx, 0x00020000
+        { 0x15, 0x81 }, // (Offset,Value)-Pair #13
+        { 0x16, 0xFA }, // (Offset,Value)-Pair #14
+        { 0x19, 0x02 }, // (Offset,Value)-Pair #15
+
+        // IDirect3DResource8_Register+0x1B : jnz +0x05
+        { 0x1B, 0x74 }, // (Offset,Value)-Pair #16
+        { 0x1C, 0x05 }, // (Offset,Value)-Pair #17
+
+        // IDirect3DResource8_Register+0x25 : retn 0x08
+        { 0x25, 0xC2 }, // (Offset,Value)-Pair #18
+        { 0x26, 0x08 }, // (Offset,Value)-Pair #19
+    }
+};
+
+// ******************************************************************
 // * IDirect3DResource8_Release
 // ******************************************************************
 SOOVPA<11> IDirect3DResource8_Release_1_0_3925 =
@@ -1549,6 +1596,16 @@ OOVPATable D3D8_1_0_3925[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DVertexBuffer8_Lock" 
+        #endif
+    },
+    // IDirect3DResource8::Register
+    {
+        (OOVPA*)&IDirect3DResource8_Register_1_0_3925,
+
+        XTL::EmuIDirect3DResource8_Register,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DResource8_Register"
         #endif
     },
     // IDirect3DResource8::Release
