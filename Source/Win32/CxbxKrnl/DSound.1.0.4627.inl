@@ -454,31 +454,31 @@ SOOVPA<13> IDirectSound8_SetOrientation_1_0_4627 =
 };
 
 // ******************************************************************
-// * CDirectSound::SetDistanceFactor
+// * CDirectSound::SetDistanceFactorA
 // ******************************************************************
-SOOVPA<11> CDirectSound_SetDistanceFactor_1_0_4627 =
+SOOVPA<11> CDirectSound_SetDistanceFactorA_1_0_4627 =
 {
     0,  // Large == 0
     11, // Count == 11
 
-    XREF_SETDISTANCEFACTOR, // XRef Is Saved
+    XREF_SETDISTANCEFACTORA,// XRef Is Saved
     0,                      // XRef Not Used
 
     {
-        // CDirectSound_SetDistanceFactor+0x21 : mov eax, 0x80004005
+        // CDirectSound_SetDistanceFactorA+0x21 : mov eax, 0x80004005
         { 0x21, 0xB8 }, // (Offset,Value)-Pair #1
         { 0x22, 0x05 }, // (Offset,Value)-Pair #2
         { 0x23, 0x40 }, // (Offset,Value)-Pair #3
         { 0x24, 0x00 }, // (Offset,Value)-Pair #4
         { 0x25, 0x80 }, // (Offset,Value)-Pair #5
 
-        // CDirectSound_SetDistanceFactor+0x39 : or byte ptr[eax+0xA4], 0xE0
+        // CDirectSound_SetDistanceFactorA+0x39 : or byte ptr[eax+0xA4], 0xE0
         { 0x39, 0x80 }, // (Offset,Value)-Pair #6
         { 0x3A, 0x88 }, // (Offset,Value)-Pair #7
         { 0x3B, 0xA4 }, // (Offset,Value)-Pair #8
         { 0x3F, 0xE0 }, // (Offset,Value)-Pair #9
 
-        // CDirectSound_SetDistanceFactor+0x4F : jz +0x0B
+        // CDirectSound_SetDistanceFactorA+0x4F : jz +0x0B
         { 0x4F, 0x74 }, // (Offset,Value)-Pair #10
         { 0x50, 0x0B }, // (Offset,Value)-Pair #11
     }
@@ -497,7 +497,7 @@ SOOVPA<11> IDirectSound8_SetDistanceFactor_1_0_4627 =
 
     {
         // IDirectSound8_SetDistanceFactor+0x1D : call [CDirectSound::SetDistanceFactor]
-        { 0x1D, XREF_SETDISTANCEFACTOR },  // (Offset,Value)-Pair #1
+        { 0x1D, XREF_SETDISTANCEFACTORA },  // (Offset,Value)-Pair #1
 
         // IDirectSound8_SetDistanceFactor+0x04 : fld [esp+0x0C]
         { 0x04, 0xD9 }, // (Offset,Value)-Pair #2
@@ -860,12 +860,12 @@ OOVPATable DSound_1_0_4627[] =
         "EmuIDirectSound8_SetOrientation" 
         #endif
     },
-    // CDirectSound::SetDistanceFactor (XREF)
+    // CDirectSound::SetDistanceFactorA (XREF)
     {
-        (OOVPA*)&CDirectSound_SetDistanceFactor_1_0_4627, 0,
+        (OOVPA*)&CDirectSound_SetDistanceFactorA_1_0_4627, 0,
 
         #ifdef _DEBUG_TRACE
-        "CDirectSound_SetDistanceFactor (XRef)"
+        "CDirectSound_SetDistanceFactorA (XRef)"
         #endif
     },
     // IDirectSound8::SetDistanceFactor
