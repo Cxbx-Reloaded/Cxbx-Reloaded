@@ -42,11 +42,10 @@
 #include "EmuAlloc.h"
 
 // XInputSetState status waiters
-extern XInputSetStateStatus g_pXInputSetStateStatus[8] = 
-{
-    {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0},
-    {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}
-};
+extern XInputSetStateStatus g_pXInputSetStateStatus[XINPUT_SETSTATE_SLOTS] = {0};
+
+// XInputOpen handles
+extern HANDLE g_hInputHandle[XINPUT_HANDLE_SLOTS] = {0};
 
 // ******************************************************************
 // * prevent name collisions
@@ -141,7 +140,7 @@ PVOID WINAPI XTL::EmuRtlAllocateHeap
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    /* too much debug output
+    //* too much debug output
     DbgPrintf("EmuXapi (0x%X): EmuRtlAllocateHeap\n"
            "(\n"
            "   hHeap               : 0x%.08X\n"
@@ -166,6 +165,8 @@ PVOID WINAPI XTL::EmuRtlAllocateHeap
 
     *(BYTE*)((uint32)pRet - 1) = offs;
 
+    DbgPrintf("pRet : 0x%.08X\n", pRet);
+
     EmuSwapFS();   // XBox FS
 
     return pRet;
@@ -183,7 +184,7 @@ BOOL WINAPI XTL::EmuRtlFreeHeap
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    /* too much debug output
+    //* too much debug output
     DbgPrintf("EmuXapi (0x%X): EmuRtlFreeHeap\n"
            "(\n"
            "   hHeap               : 0x%.08X\n"
@@ -220,7 +221,7 @@ PVOID WINAPI XTL::EmuRtlReAllocateHeap
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    /* too much debug output
+    //* too much debug output
     DbgPrintf("EmuXapi (0x%X): EmuRtlReAllocateHeap\n"
            "(\n"
            "   hHeap               : 0x%.08X\n"
@@ -257,7 +258,7 @@ SIZE_T WINAPI XTL::EmuRtlSizeHeap
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    /* too much debug output
+    //* too much debug output
     DbgPrintf("EmuXapi (0x%X): EmuRtlSizeHeap\n"
            "(\n"
            "   hHeap               : 0x%.08X\n"
@@ -371,7 +372,19 @@ VOID WINAPI XTL::EmuXInitDevices
            ");\n",
            GetCurrentThreadId(), Unknown1, Unknown2);
 
-    // TODO: Initialize devices if/when necessary
+    int v;
+
+    for(v=0;v<XINPUT_SETSTATE_SLOTS;v++)
+    {
+        g_pXInputSetStateStatus[v].hDevice = 0;
+        g_pXInputSetStateStatus[v].dwLatency = 0;
+        g_pXInputSetStateStatus[v].pFeedback = 0;
+    }
+
+    for(v=0;v<XINPUT_HANDLE_SLOTS;v++)
+    {
+        g_hInputHandle[v] = 0;
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -469,15 +482,57 @@ HANDLE WINAPI XTL::EmuXInputOpen
            ");\n",
            GetCurrentThreadId(), DeviceType, dwPort, dwSlot, pPollingParameters);
 
-    HANDLE ret = NULL;
+    POLLING_PARAMETERS_HANDLE *pph = 0;
 
-    // TODO: We simply return dwPort+1 to represent the input device (lame!)
-    if(dwPort <= 3)
-        ret = (HANDLE)(dwPort+1);
+    if(dwPort >= 0 && (dwPort <= 3))
+    {
+        if(g_hInputHandle[dwPort] == 0)
+        {
+            pph = new POLLING_PARAMETERS_HANDLE();
+
+            if(pPollingParameters != NULL)
+            {
+                pph->pPollingParameters = new XINPUT_POLLING_PARAMETERS();
+
+                memcpy(&pph->pPollingParameters, pPollingParameters, sizeof(XINPUT_POLLING_PARAMETERS));
+            }
+            else
+            {
+                pph->pPollingParameters = NULL;
+            }
+
+            g_hInputHandle[dwPort] = pph;
+        }
+        else
+        {
+            pph = (POLLING_PARAMETERS_HANDLE*)g_hInputHandle[dwPort];
+
+            if(pPollingParameters != 0)
+            {
+                if(pph->pPollingParameters == 0)
+                {
+                    pph->pPollingParameters = new XINPUT_POLLING_PARAMETERS();
+                }
+
+                memcpy(&pph->pPollingParameters, pPollingParameters, sizeof(XINPUT_POLLING_PARAMETERS));
+            }
+            else
+            {
+                if(pph->pPollingParameters != 0)
+                {
+                    delete pph->pPollingParameters;
+
+                    pph->pPollingParameters = 0;
+                }
+            }
+        }
+
+        pph->dwPort = dwPort;
+    }
 
     EmuSwapFS();   // XBox FS
 
-    return ret;
+    return (HANDLE)pph;
 }
 
 // ******************************************************************
@@ -496,11 +551,96 @@ VOID WINAPI XTL::EmuXInputClose
            ");\n",
            GetCurrentThreadId(), hDevice);
 
-    // TODO: Actually clean up the device when/if necessary
+    POLLING_PARAMETERS_HANDLE *pph = (POLLING_PARAMETERS_HANDLE*)hDevice;
+
+    /* no longer necessary
+    if(pph != NULL)
+    {
+        int v;
+
+        for(v=0;v<XINPUT_SETSTATE_SLOTS;v++)
+        {
+            if(g_pXInputSetStateStatus[v].hDevice == hDevice)
+            {
+                // remove from slot
+                g_pXInputSetStateStatus[v].hDevice = NULL;
+                g_pXInputSetStateStatus[v].pFeedback = NULL;
+                g_pXInputSetStateStatus[v].dwLatency = 0;
+            }
+        }
+
+        if(pph->pPollingParameters != NULL)
+        {
+            delete pph->pPollingParameters;
+        }
+
+        delete pph;
+    }
+    //*/
 
     EmuSwapFS();   // XBox FS
 
     return;
+}
+
+// ******************************************************************
+// * func: EmuXInputPoll
+// ******************************************************************
+DWORD WINAPI XTL::EmuXInputPoll
+(
+    IN HANDLE hDevice
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuXapi (0x%X): EmuXInputPoll\n"
+           "(\n"
+           "   hDevice             : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), hDevice);
+
+    POLLING_PARAMETERS_HANDLE *pph = (POLLING_PARAMETERS_HANDLE*)hDevice;
+ 
+    //
+    // Poll input
+    //
+
+    {
+        int v;
+
+        for(v=0;v<XINPUT_SETSTATE_SLOTS;v++)
+        {
+            HANDLE hDevice = g_pXInputSetStateStatus[v].hDevice;
+
+            if(hDevice == 0)
+                continue;
+
+            g_pXInputSetStateStatus[v].dwLatency = 0;
+
+            XTL::PXINPUT_FEEDBACK pFeedback = (XTL::PXINPUT_FEEDBACK)g_pXInputSetStateStatus[v].pFeedback;
+
+            if(pFeedback == 0)
+                continue;
+
+            //
+            // Only update slot if it has not already been updated
+            //
+
+            if(pFeedback->Header.dwStatus != ERROR_SUCCESS)
+            {
+                if(pFeedback->Header.hEvent != 0)
+                {
+                    SetEvent(pFeedback->Header.hEvent);
+                }
+
+                pFeedback->Header.dwStatus = ERROR_SUCCESS;
+            }
+        }
+    }
+
+    EmuSwapFS();   // XBox FS
+
+    return ERROR_SUCCESS;
 }
 
 // ******************************************************************
@@ -523,14 +663,20 @@ DWORD WINAPI XTL::EmuXInputGetCapabilities
 
     DWORD ret = ERROR_INVALID_HANDLE;
 
-    // TODO: For now, we are only allowing 1 controller
-    if((int)hDevice >= 1 && (int)hDevice <= 4)
+    POLLING_PARAMETERS_HANDLE *pph = (POLLING_PARAMETERS_HANDLE*)hDevice;
+
+    if(pph != NULL)
     {
-        pCapabilities->SubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD;
+        DWORD dwPort = pph->dwPort;
 
-        ZeroMemory(&pCapabilities->In.Gamepad, sizeof(pCapabilities->In.Gamepad));
+        if((dwPort >= 0) && (dwPort <= 3))
+        {
+            pCapabilities->SubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD;
 
-        ret = ERROR_SUCCESS;
+            ZeroMemory(&pCapabilities->In.Gamepad, sizeof(pCapabilities->In.Gamepad));
+
+            ret = ERROR_SUCCESS;
+        }
     }
 
     EmuSwapFS();   // XBox FS
@@ -558,14 +704,31 @@ DWORD WINAPI XTL::EmuXInputGetState
 
     DWORD ret = ERROR_INVALID_HANDLE;
 
-    // TODO: For now, the only valid handles are Controller 1 through 4,
-    //       and they are always normal Controllers
-    if((int)hDevice >= 1 && (int)hDevice <= 4)
+    POLLING_PARAMETERS_HANDLE *pph = (POLLING_PARAMETERS_HANDLE*)hDevice;
+
+    if(pph != NULL)
     {
-        if((int)hDevice == 1)
+        if(pph->pPollingParameters != NULL)
         {
-            EmuDInputPoll(pState);
-            ret = ERROR_SUCCESS;
+            if(pph->pPollingParameters->fAutoPoll == FALSE)
+            {
+                //
+                // TODO: uh..
+                //
+
+                EmuWarning("EmuXInputGetState : fAutoPoll == FALSE");
+            }
+        }
+
+        DWORD dwPort = pph->dwPort;
+
+        if((dwPort >= 0) && (dwPort <= 3))
+        {
+            if(dwPort == 0)
+            {
+                EmuDInputPoll(pState);
+                ret = ERROR_SUCCESS;
+            }
         }
     }
 
@@ -592,53 +755,68 @@ DWORD WINAPI XTL::EmuXInputSetState
            ");\n",
            GetCurrentThreadId(), hDevice, pFeedback);
 
-    pFeedback->Header.dwStatus = ERROR_IO_PENDING;
+    DWORD ret = ERROR_IO_PENDING;
 
-    int v=0;
+    POLLING_PARAMETERS_HANDLE *pph = (POLLING_PARAMETERS_HANDLE*)hDevice;
 
-    bool found=false;
-    
-    // verify this device is not already queued to be set
-    for(v=0;v<8;v++)
+    if(pph != NULL)
     {
-        if(g_pXInputSetStateStatus[v].hDevice == hDevice)
+        int v;
+
+        //
+        // Check if this device is already being polled
+        //
+
+        bool found = false;
+        
+        for(v=0;v<XINPUT_SETSTATE_SLOTS;v++)
         {
-            if(g_pXInputSetStateStatus[v].pFeedback != pFeedback)
-                EmuWarning("EmuXInputSetState lost feedback pointer!");
-
-            g_pXInputSetStateStatus[v].pFeedback = pFeedback;
-            g_pXInputSetStateStatus[v].dwLatency = 0;
-
-            found=true;
-        }
-    }
-
-    v=0;
-
-    // locate a blank entry and fill
-    if(!found)
-    {
-        for(v=0;v<8;v++)
-        {
-            if(g_pXInputSetStateStatus[v].hDevice == 0)
+            if(g_pXInputSetStateStatus[v].hDevice == hDevice)
             {
-                g_pXInputSetStateStatus[v].hDevice = hDevice;
-                g_pXInputSetStateStatus[v].dwLatency = 0;
-                g_pXInputSetStateStatus[v].pFeedback = pFeedback;
-                break;
+                found = true;
+
+                if(pFeedback->Header.dwStatus == ERROR_SUCCESS)
+                {
+                    ret = ERROR_SUCCESS;
+
+                    // remove from slot
+                    g_pXInputSetStateStatus[v].hDevice = NULL;
+                    g_pXInputSetStateStatus[v].pFeedback = NULL;
+                    g_pXInputSetStateStatus[v].dwLatency = 0;
+                }
+            }
+        }
+
+        //
+        // If device was not already slotted, queue it
+        //
+
+        if(!found)
+        {
+            for(v=0;v<XINPUT_SETSTATE_SLOTS;v++)
+            {
+                if(g_pXInputSetStateStatus[v].hDevice == 0)
+                {
+                    g_pXInputSetStateStatus[v].hDevice = hDevice;
+                    g_pXInputSetStateStatus[v].dwLatency = 0;
+                    g_pXInputSetStateStatus[v].pFeedback = pFeedback;
+
+                    pFeedback->Header.dwStatus = ERROR_IO_PENDING;
+
+                    break;
+                }
+            }
+
+            if(v == XINPUT_SETSTATE_SLOTS)
+            {
+                EmuCleanup("Ran out of XInputSetStateStatus slots!");
             }
         }
     }
 
-    // verify we found a slot
-    if(v == 8)
-    {
-        EmuCleanup("Ran out of XInputSetStateStatus slots!");
-    }
-
     EmuSwapFS();   // XBox FS
 
-    return ERROR_IO_PENDING;
+    return ret;
 }
 
 // ******************************************************************

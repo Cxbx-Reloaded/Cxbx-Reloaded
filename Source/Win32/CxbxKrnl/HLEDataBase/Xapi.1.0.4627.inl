@@ -225,6 +225,153 @@ SOOVPA<10> RtlReAllocateHeap_1_0_4627 =
 };
 
 // ******************************************************************
+// * XID_fCloseDevice 
+// ******************************************************************
+SOOVPA<11> XID_fCloseDevice_1_0_4928 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    XREF_FCLOSEDEVICE,  // XRef Is  Saved
+    0,                  // XRef Not Used
+
+    {
+        { 0x13, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x14, 0x86 }, // (Offset,Value)-Pair #2
+        { 0x15, 0xA3 }, // (Offset,Value)-Pair #3
+
+        { 0x4C, 0x89 }, // (Offset,Value)-Pair #4
+        { 0x4D, 0x86 }, // (Offset,Value)-Pair #5
+        { 0x4E, 0x9E }, // (Offset,Value)-Pair #6
+
+        { 0x87, 0x89 }, // (Offset,Value)-Pair #7
+        { 0x88, 0x86 }, // (Offset,Value)-Pair #8
+        { 0x89, 0xA7 }, // (Offset,Value)-Pair #9
+
+        { 0x95, 0xC9 }, // (Offset,Value)-Pair #10
+        { 0x96, 0xC3 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
+// * XInputClose
+// ******************************************************************
+SOOVPA<8> XInputClose_1_0_4928 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // XRef Not Saved
+    1,  // XRef Is Used
+
+    {
+        // XInputClose+0x05 : call [fCloseDevice]
+        { 0x05, XREF_FCLOSEDEVICE },  // (Offset,Value)-Pair #1
+
+        // XInputClose+0x00 : mov ecx, [esp+0x04]
+        { 0x00, 0x8B }, // (Offset,Value)-Pair #2
+        { 0x01, 0x4C }, // (Offset,Value)-Pair #3
+        { 0x02, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x03, 0x04 }, // (Offset,Value)-Pair #5
+
+        // XInputClose+0x04 : call [fCloseDevice]
+        { 0x04, 0xE8 }, // (Offset,Value)-Pair #6
+
+        // XInputClose+0x09 : retn 0x04
+        { 0x09, 0xC2 }, // (Offset,Value)-Pair #7
+        { 0x0A, 0x04 }, // (Offset,Value)-Pair #8
+    }
+};
+
+// ******************************************************************
+// * XInputPoll
+// ******************************************************************
+SOOVPA<10> XInputPoll_1_0_4928 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    -1, // XRef Not Saved
+    0,  // XRef Is Used
+
+    {
+        { 0x16, 0xF6 }, // (Offset,Value)-Pair #1
+        { 0x17, 0x41 }, // (Offset,Value)-Pair #2
+        { 0x18, 0x04 }, // (Offset,Value)-Pair #3
+        { 0x19, 0x02 }, // (Offset,Value)-Pair #4
+        
+        { 0x25, 0x39 }, // (Offset,Value)-Pair #5
+        { 0x26, 0x70 }, // (Offset,Value)-Pair #6
+        { 0x27, 0x04 }, // (Offset,Value)-Pair #7
+
+        { 0x3A, 0x83 }, // (Offset,Value)-Pair #8
+        { 0x3B, 0xC0 }, // (Offset,Value)-Pair #9
+        { 0x3C, 0x52 }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
+// * XInputGetState
+// ******************************************************************
+SOOVPA<12> XInputGetState_1_0_4928 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
+        { 0x0D, 0xAC }, // (Offset,Value)-Pair #3
+
+        { 0x25, 0xF6 }, // (Offset,Value)-Pair #4
+        { 0x26, 0x46 }, // (Offset,Value)-Pair #5
+        { 0x27, 0x04 }, // (Offset,Value)-Pair #6
+        { 0x28, 0x02 }, // (Offset,Value)-Pair #7
+
+        { 0x39, 0xF3 }, // (Offset,Value)-Pair #8
+        { 0x3A, 0xAB }, // (Offset,Value)-Pair #9
+
+        { 0x90, 0xBF }, // (Offset,Value)-Pair #10
+        { 0x91, 0xE8 }, // (Offset,Value)-Pair #11
+        { 0x92, 0x7B }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
+// * XInputSetState
+// ******************************************************************
+SOOVPA<12> XInputSetState_1_0_4928 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        { 0x0E, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x0F, 0x8A }, // (Offset,Value)-Pair #2
+        { 0x10, 0xA3 }, // (Offset,Value)-Pair #3
+
+        { 0x1A, 0x6A }, // (Offset,Value)-Pair #4
+        { 0x1B, 0x57 }, // (Offset,Value)-Pair #5
+
+        { 0x1D, 0xEB }, // (Offset,Value)-Pair #6
+        { 0x1E, 0x3E }, // (Offset,Value)-Pair #7
+
+        { 0x3A, 0x8B }, // (Offset,Value)-Pair #8
+        { 0x3B, 0x8A }, // (Offset,Value)-Pair #9
+        { 0x3C, 0xA3 }, // (Offset,Value)-Pair #10
+
+        { 0x69, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x6A, 0x08 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_4627
 // ******************************************************************
 OOVPATable XAPI_1_0_4627[] =
@@ -409,6 +556,34 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXInputOpen"
         #endif
     },
+    // XInputPoll
+    {
+        (OOVPA*)&XInputPoll_1_0_4928,
+
+        XTL::EmuXInputPoll,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputPoll"
+        #endif
+    },
+    // XID_fCloseDevice
+    {
+        (OOVPA*)&XID_fCloseDevice_1_0_4928, 0,
+
+        #ifdef _DEBUG_TRACE
+        "XID_fCloseDevice (XREF)"
+        #endif
+    },
+    // XInputClose
+    {
+        (OOVPA*)&XInputClose_1_0_4928,
+
+        XTL::EmuXInputClose,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputClose"
+        #endif
+    },
     // XInputGetCapabilities (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&XInputGetCapabilities_1_0_4361,
@@ -427,6 +602,26 @@ OOVPATable XAPI_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXInputGetState"
+        #endif
+    },
+    // XInputGetState
+    {
+        (OOVPA*)&XInputGetState_1_0_4928,
+
+        XTL::EmuXInputGetState,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputGetState"
+        #endif
+    },
+    // XInputSetState
+    {
+        (OOVPA*)&XInputSetState_1_0_4928,
+
+        XTL::EmuXInputSetState,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputSetState"
         #endif
     },
     // XInputSetState (* unchanged since 1.0.4361 *)

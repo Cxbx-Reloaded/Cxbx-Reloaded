@@ -867,6 +867,29 @@ XBSYSAPI EXPORTNUM(178) VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 }
 
 // ******************************************************************
+// * MmQueryAllocationSize
+// ******************************************************************
+XBSYSAPI EXPORTNUM(180) XTL::ULONG NTAPI xboxkrnl::MmQueryAllocationSize
+(
+    IN PVOID   BaseAddress
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): MmQueryAllocationSize\n"
+           "(\n"
+           "   BaseAddress              : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), BaseAddress);
+
+    ULONG uiSize = EmuCheckAllocationSize(BaseAddress, false);
+
+    EmuSwapFS();   // Xbox FS
+
+    return uiSize;
+}
+
+// ******************************************************************
 // * 0x00B5 - MmQueryStatistics
 // ******************************************************************
 XBSYSAPI EXPORTNUM(181) NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
@@ -1330,6 +1353,31 @@ XBSYSAPI EXPORTNUM(197) NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
 }
 
 // ******************************************************************
+// * NtFlushBuffersFile
+// ******************************************************************
+XBSYSAPI EXPORTNUM(198) NTSTATUS NTAPI xboxkrnl::NtFlushBuffersFile
+(
+    PVOID                FileHandle,
+    OUT PIO_STATUS_BLOCK IoStatusBlock
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): NtFlushBuffersFile\n"
+           "(\n"
+           "   FileHandle          : 0x%.08X\n"
+           "   IoStatusBlock       : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), FileHandle, IoStatusBlock);
+
+    NTSTATUS ret = NtDll::NtFlushBuffersFile(FileHandle, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
+}
+
+// ******************************************************************
 // * 0x00C7 - NtFreeVirtualMemory
 // ******************************************************************
 XBSYSAPI EXPORTNUM(199) NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
@@ -1562,6 +1610,30 @@ XBSYSAPI EXPORTNUM(211) NTSTATUS NTAPI xboxkrnl::NtQueryInformationFile
 		Length,
         (NtDll::FILE_INFORMATION_CLASS)FileInfo
 	);
+
+    //
+    // DEBUGGING!
+    //
+    {
+        /*
+        _asm int 3;
+        NtDll::FILE_NETWORK_OPEN_INFORMATION *pInfo = (NtDll::FILE_NETWORK_OPEN_INFORMATION*)FileInformation;
+
+        if(FileInfo == FileNetworkOpenInformation && (pInfo->AllocationSize.LowPart == 57344))
+        {
+            DbgPrintf("pInfo->AllocationSize : %d\n", pInfo->AllocationSize.LowPart);
+            DbgPrintf("pInfo->EndOfFile      : %d\n", pInfo->EndOfFile.LowPart);
+
+            pInfo->EndOfFile.LowPart = 0x1000;
+            pInfo->AllocationSize.LowPart = 0x1000;
+
+            fflush(stdout);
+        }
+        */
+    }
+
+    if(FAILED(ret))
+        EmuWarning("NtQueryInformationFile failed!");
 
     EmuSwapFS();   // Xbox FS
 
@@ -1827,23 +1899,25 @@ XBSYSAPI EXPORTNUM(232) VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
            ");\n",
            GetCurrentThreadId(), ApcContext, IoStatusBlock, Reserved);
 
+    DbgPrintf("IoStatusBlock->Pointer     : 0x%.08X\n"
+              "IoStatusBlock->Information : 0x%.08X\n", IoStatusBlock->u1.Pointer, IoStatusBlock->Information);
+
     EmuSwapFS();   // Xbox FS
 
-	uint32 dwEsi, dwEax, dwEcx;
-    uint32 dw1, dw2, dw3;
+    uint32 dwEsi, dwEax, dwEcx;
 
-	if((IoStatusBlock->u1.Status & 0xC0000000) == 0xC0000000)
+    dwEsi = (uint32)IoStatusBlock;
+
+    if((IoStatusBlock->u1.Status & 0xC0000000) == 0xC0000000)
 	{
-		dw1 = 0;
-		dw3 = NtDll::RtlNtStatusToDosError(IoStatusBlock->u1.Status);
+		dwEcx = 0;
+		dwEax = NtDll::RtlNtStatusToDosError(IoStatusBlock->u1.Status);
 	}
 	else
 	{
-		dw1 = (DWORD)IoStatusBlock->u1.Pointer;
-		dw3 = 0;
+		dwEcx = (DWORD)IoStatusBlock->Information;
+		dwEax = 0;
 	}
-    
-    dw2 = (DWORD)IoStatusBlock;
 
     /*
     // ~XDK 3911??
@@ -1860,11 +1934,6 @@ XBSYSAPI EXPORTNUM(232) VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
         dwEcx = dw2;
         dwEax = dw3;
     }//*/
-
-    // hack!? (Seems to work in both above cases...sigh)
-    dwEsi = dw2;
-    dwEcx = dw2;
-    dwEax = dw3;
 
     __asm
     {
@@ -1919,6 +1988,8 @@ XBSYSAPI EXPORTNUM(234) NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObjectEx
            GetCurrentThreadId(), Handle, WaitMode, Alertable, Timeout, Timeout == 0 ? 0 : Timeout->QuadPart);
 
     NTSTATUS ret = NtDll::NtWaitForSingleObject(Handle, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
+
+    DbgPrintf("Finished waiting for 0x%.08X\n", Handle);
 
     EmuSwapFS();   // Xbox FS
 

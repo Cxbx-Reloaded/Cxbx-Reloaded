@@ -144,4 +144,6 @@ extern UINT g_IVBTblOffs;
 
 extern VOID EmuFlushIVB();
 
+extern VOID EmuUpdateActiveTexture();
+
 #endif

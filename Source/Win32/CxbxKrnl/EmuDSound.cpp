@@ -1032,8 +1032,8 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Lock
 
         pThis->EmuLockPtr1 = *ppvAudioPtr1;
         pThis->EmuLockBytes1 = *pdwAudioBytes1;
-        pThis->EmuLockPtr2 = *ppvAudioPtr2;
-        pThis->EmuLockBytes2 = *pdwAudioBytes2;
+        pThis->EmuLockPtr2 = (ppvAudioPtr2 != NULL) ? *ppvAudioPtr2 : NULL;
+        pThis->EmuLockBytes2 = (pdwAudioBytes2 != NULL) ? *pdwAudioBytes2 : NULL;
     }
 
     EmuSwapFS();   // XBox FS

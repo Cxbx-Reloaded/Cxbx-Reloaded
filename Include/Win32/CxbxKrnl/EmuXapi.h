@@ -138,6 +138,17 @@ typedef struct _XINPUT_POLLING_PARAMETERS
 XINPUT_POLLING_PARAMETERS, *PXINPUT_POLLING_PARAMETERS;
 
 // ******************************************************************
+// * POLLING_PARAMETERS_HANDLE
+// ******************************************************************
+typedef struct _POLLING_PARAMETERS_HANDLE
+{
+    XINPUT_POLLING_PARAMETERS *pPollingParameters;
+
+    DWORD dwPort;
+}
+POLLING_PARAMETERS_HANDLE, *PPOLLING_PARAMETERS_HANDLE;
+
+// ******************************************************************
 // * XPP_DEVICE_TYPE
 // ******************************************************************
 typedef struct _XPP_DEVICE_TYPE
@@ -415,6 +426,14 @@ VOID WINAPI EmuXInputClose
 );
 
 // ******************************************************************
+// * func: EmuXInputPoll
+// ******************************************************************
+DWORD WINAPI EmuXInputPoll
+(
+    IN HANDLE Device
+);
+
+// ******************************************************************
 // * func: EmuXInputGetCapabilities
 // ******************************************************************
 DWORD WINAPI EmuXInputGetCapabilities
@@ -497,7 +516,7 @@ BOOL WINAPI EmuSetThreadPriorityBoost
     HANDLE  hThread,
     BOOL    DisablePriorityBoost
 );
-
+            
 // ******************************************************************
 // * func: EmuGetExitCodeThread
 // ******************************************************************

@@ -48,9 +48,6 @@ typedef DWORD X_D3DCMPFUNC;
 typedef DWORD X_D3DFILLMODE;
 typedef DWORD X_D3DTEXTURESTAGESTATETYPE;
 
-// TODO: these enumerations are not equivalent when > 7!
-typedef D3DRESOURCETYPE X_D3DRESOURCETYPE;
-
 // Primitives supported by draw-primitive API
 typedef enum _X_D3DPRIMITIVETYPE
 {
@@ -69,6 +66,24 @@ typedef enum _X_D3DPRIMITIVETYPE
     X_D3DPT_INVALID               = 0x7fffffff, /* force 32-bit size enum */
 }
 X_D3DPRIMITIVETYPE;
+
+typedef enum _X_D3DRESOURCETYPE
+{
+    X_D3DRTYPE_NONE               =  0,
+    X_D3DRTYPE_SURFACE            =  1,
+    X_D3DRTYPE_VOLUME             =  2,
+    X_D3DRTYPE_TEXTURE            =  3,
+    X_D3DRTYPE_VOLUMETEXTURE      =  4,
+    X_D3DRTYPE_CUBETEXTURE        =  5,
+    X_D3DRTYPE_VERTEXBUFFER       =  6,
+    X_D3DRTYPE_INDEXBUFFER        =  7,
+    X_D3DRTYPE_PUSHBUFFER         =  8,
+    X_D3DRTYPE_PALETTE            =  9,
+    X_D3DRTYPE_FIXUP              =  10,
+
+    X_D3DRTYPE_FORCE_DWORD        = 0x7fffffff
+}
+X_D3DRESOURCETYPE;
 
 typedef struct _X_D3DDISPLAYMODE
 {

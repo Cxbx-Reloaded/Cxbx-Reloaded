@@ -2209,6 +2209,32 @@ OOVPATable DSound_1_0_4627[] =
         "IDirectSoundBuffer8_GetStatus"
         #endif
     },
+    // CMcpxBuffer::SetCurrentPosition (* unchanged since 4361 *)
+    {
+        (OOVPA*)&CMcpxBuffer_SetCurrentPosition_1_0_4361, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CMcpxBuffer_SetCurrentPosition (XREF)"
+        #endif
+    },
+    // CDirectSoundBuffer::SetCurrentPosition (* unchanged since 4361 *)
+    {
+        (OOVPA*)&CDirectSoundBuffer_SetCurrentPosition_1_0_4361, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundBuffer_SetCurrentPosition (XREF)"
+        #endif
+    },
+    // IDirectSoundBuffer8::SetCurrentPosition (* unchanged since 4361 *)
+    {
+        (OOVPA*)&IDirectSoundBuffer8_SetCurrentPosition_1_0_4361, 
+            
+        XTL::EmuIDirectSoundBuffer8_SetCurrentPosition,
+
+        #ifdef _DEBUG_TRACE
+        "IDirectSoundBuffer8_SetCurrentPosition"
+        #endif
+    },
     // CMcpxBuffer::GetCurrentPosition (* unchanged since 4361 *)
     {
         (OOVPA*)&CMcpxBuffer_GetCurrentPosition_1_0_4361, 0,

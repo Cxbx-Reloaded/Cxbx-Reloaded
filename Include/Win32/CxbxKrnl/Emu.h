@@ -110,6 +110,10 @@ extern HWND   g_hEmuParent;
 // thread notification routine
 extern PVOID g_pfnThreadNotification;
 
+// NOTE: this is an arbitrary latency
+#define XINPUT_SETSTATE_LATENCY 4
+#define XINPUT_SETSTATE_SLOTS 16
+
 // XInputSetState status waiters
 extern struct XInputSetStateStatus
 {
@@ -117,6 +121,11 @@ extern struct XInputSetStateStatus
     DWORD   dwLatency;
     PVOID   pFeedback;
 }
-g_pXInputSetStateStatus[8];
+g_pXInputSetStateStatus[XINPUT_SETSTATE_SLOTS];
+
+// 4 controllers
+#define XINPUT_HANDLE_SLOTS 4
+
+extern HANDLE g_hInputHandle[XINPUT_HANDLE_SLOTS];
 
 #endif

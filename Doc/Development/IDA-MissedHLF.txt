@@ -16,7 +16,13 @@ auto addr;
 auto funcEnd;
 auto count;
 
-addr = FindCode( *** D3D SECTION START VIRTUAL ADDRESS ***, SEARCH_DOWN | SEARCH_NEXT);
+auto startAddr;
+auto endAddr;
+
+startAddr = AskAddr(0, "Input Start Address");
+endAddr = AskAddr(0, "Input End Address");
+
+addr = FindCode(startAddr, SEARCH_DOWN | SEARCH_NEXT);
 count = 0;
 
 Message("uint32 funcAddr[]=\n");
@@ -30,7 +36,7 @@ while(1)
 
     addr = NextFunction(addr+1);
 
-    if(addr == BADADDR || addr > *** D3D SECTION END VIRTUAL ADDRESS ***)
+    if(addr == BADADDR || addr > endAddr)
     {
         break;
     }

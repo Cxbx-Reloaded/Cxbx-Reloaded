@@ -958,13 +958,91 @@ VOID XTL::EmuFlushIVB()
         g_IVBTable[2].TexCoord1.y = 1.0f;
         g_IVBTable[3].TexCoord1.x = 0.0f;
         g_IVBTable[3].TexCoord1.y = 1.0f;
+        g_IVBTable[0].TexCoord2.x = 0.0f;
+        g_IVBTable[0].TexCoord2.y = 0.0f;
+        g_IVBTable[1].TexCoord2.x = 1.0f;
+        g_IVBTable[1].TexCoord2.y = 0.0f;
+        g_IVBTable[2].TexCoord2.x = 1.0f;
+        g_IVBTable[2].TexCoord2.y = 1.0f;
+        g_IVBTable[3].TexCoord2.x = 0.0f;
+        g_IVBTable[3].TexCoord2.y = 1.0f;
+        g_IVBTable[0].TexCoord3.x = 0.0f;
+        g_IVBTable[0].TexCoord3.y = 0.0f;
+        g_IVBTable[1].TexCoord3.x = 1.0f;
+        g_IVBTable[1].TexCoord3.y = 0.0f;
+        g_IVBTable[2].TexCoord3.x = 1.0f;
+        g_IVBTable[2].TexCoord3.y = 1.0f;
+        g_IVBTable[3].TexCoord3.x = 0.0f;
+        g_IVBTable[3].TexCoord3.y = 1.0f;
+        g_IVBTable[0].TexCoord4.x = 0.0f;
+        g_IVBTable[0].TexCoord4.y = 0.0f;
+        g_IVBTable[1].TexCoord4.x = 1.0f;
+        g_IVBTable[1].TexCoord4.y = 0.0f;
+        g_IVBTable[2].TexCoord4.x = 1.0f;
+        g_IVBTable[2].TexCoord4.y = 1.0f;
+        g_IVBTable[3].TexCoord4.x = 0.0f;
+        g_IVBTable[3].TexCoord4.y = 1.0f;
         //*/
-        //*
+        /*
+        static IDirect3DTexture8 *pDummyTexture[4] = {0, 0, 0, 0};
+
+        for(int Stage=0;Stage<4;Stage++)
+        {
+            if(pDummyTexture[Stage] == 0)
+            {
+                if(Stage == 0)
+                {
+                    if(D3DXCreateTextureFromFile(g_pD3DDevice8, "C:\\dummy1.bmp", &pDummyTexture[Stage]) != D3D_OK)
+                        EmuCleanup("Could not create dummy texture!");
+                }
+                else if(Stage == 1)
+                {
+                    if(D3DXCreateTextureFromFile(g_pD3DDevice8, "C:\\dummy2.bmp", &pDummyTexture[Stage]) != D3D_OK)
+                        EmuCleanup("Could not create dummy texture!");
+                }
+            }
+
+            g_pD3DDevice8->SetTexture(Stage, pDummyTexture[Stage]);
+        }
+        //*/
         g_pD3DDevice8->SetTextureStageState(0, D3DTSS_COLOROP,   D3DTOP_BLENDDIFFUSEALPHA);
         g_pD3DDevice8->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
         g_pD3DDevice8->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_SPECULAR);
         g_pD3DDevice8->SetTextureStageState(0, D3DTSS_ALPHAOP,   D3DTOP_SELECTARG1);
         g_pD3DDevice8->SetTextureStageState(0, D3DTSS_ALPHAARG1,   D3DTA_TEXTURE);
+
+        /*
+        g_pD3DDevice8->SetTextureStageState(0, D3DTSS_ALPHAOP,   D3DTOP_SELECTARG1);
+        g_pD3DDevice8->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+        g_pD3DDevice8->SetTextureStageState(0, D3DTSS_COLOROP,   D3DTOP_SELECTARG1);
+        g_pD3DDevice8->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+        g_pD3DDevice8->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+
+        g_pD3DDevice8->SetTextureStageState(1, D3DTSS_ALPHAOP,   D3DTOP_DISABLE);
+        g_pD3DDevice8->SetTextureStageState(1, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+        g_pD3DDevice8->SetTextureStageState(1, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
+        g_pD3DDevice8->SetTextureStageState(1, D3DTSS_COLOROP,   D3DTOP_DISABLE);
+        g_pD3DDevice8->SetTextureStageState(1, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+        g_pD3DDevice8->SetTextureStageState(1, D3DTSS_COLORARG2, D3DTA_CURRENT);
+
+        g_pD3DDevice8->SetTextureStageState(2, D3DTSS_ALPHAOP,   D3DTOP_DISABLE);
+        g_pD3DDevice8->SetTextureStageState(2, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+        g_pD3DDevice8->SetTextureStageState(2, D3DTSS_COLOROP,   D3DTOP_DISABLE);
+        g_pD3DDevice8->SetTextureStageState(2, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+        g_pD3DDevice8->SetTextureStageState(2, D3DTSS_COLORARG2, D3DTA_CURRENT);
+
+        g_pD3DDevice8->SetTextureStageState(3, D3DTSS_ALPHAOP,   D3DTOP_DISABLE);
+        g_pD3DDevice8->SetTextureStageState(3, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+        g_pD3DDevice8->SetTextureStageState(3, D3DTSS_COLOROP,   D3DTOP_DISABLE);
+        g_pD3DDevice8->SetTextureStageState(3, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+        g_pD3DDevice8->SetTextureStageState(3, D3DTSS_COLORARG2, D3DTA_CURRENT);
+
+        g_pD3DDevice8->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
+        g_pD3DDevice8->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_SRCCOLOR);
+        g_pD3DDevice8->SetRenderState(D3DRS_AMBIENT, RGB(255,255,255));
+        g_pD3DDevice8->SetRenderState(D3DRS_LIGHTING, FALSE);
+        g_pD3DDevice8->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+        g_pD3DDevice8->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE);
         //*/
 
         for(uint v=0;v<g_IVBTblOffs;v++)
@@ -1090,199 +1168,6 @@ VOID XTL::EmuFlushIVB()
 
         bool bPatched = VertPatch.Apply(&VPDesc);
 
-        {
-            //
-            // DEBUGGING
-            //
-            
-            X_D3DResource *pTexture = EmuD3DActiveTexture;
-            //*
-            X_D3DResource       *pResource = (X_D3DResource*)pTexture;
-            X_D3DPixelContainer *pPixelContainer = (X_D3DPixelContainer*)pTexture;
-
-            X_D3DFORMAT X_Format = (X_D3DFORMAT)((pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
-
-            if(X_Format != 0xCD && (pTexture->EmuResource8->GetType() == D3DRTYPE_TEXTURE))
-            {
-                DWORD dwWidth, dwHeight, dwBPP, dwDepth = 1, dwPitch = 0, dwMipMapLevels = 1;
-                BOOL  bSwizzled = FALSE, bCompressed = FALSE, dwCompressedSize = 0;
-                BOOL  bCubemap = pPixelContainer->Format & X_D3DFORMAT_CUBEMAP;
-
-                // Interpret Width/Height/BPP
-                if(X_Format == 0x07 /* X_D3DFMT_X8R8G8B8 */ || X_Format == 0x06 /* X_D3DFMT_A8R8G8B8 */)
-                {
-                    bSwizzled = TRUE;
-
-                    // Swizzled 32 Bit
-                    dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
-                    dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
-                    dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
-                    dwDepth  = 1;// HACK? 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
-                    dwPitch  = dwWidth*4;
-                    dwBPP = 4;
-                }
-                else if(X_Format == 0x05 /* X_D3DFMT_R5G6B5 */ || X_Format == 0x04 /* X_D3DFMT_A4R4G4B4 */
-                     || X_Format == 0x1D /* X_D3DFMT_LIN_A4R4G4B4 */ || X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */
-                     || X_Format == 0x28 /* X_D3DFMT_G8B8 */)
-                {
-                    bSwizzled = TRUE;
-
-                    // Swizzled 16 Bit
-                    dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
-                    dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
-                    dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
-                    dwDepth  = 1;// HACK? 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
-                    dwPitch  = dwWidth*2;
-                    dwBPP = 2;
-                }
-                else if(X_Format == 0x00 /* X_D3DFMT_L8 */ || X_Format == 0x0B /* X_D3DFMT_P8 */ || X_Format == 0x01 /* X_D3DFMT_AL8 */ || X_Format == 0x1A /* X_D3DFMT_A8L8 */)
-                {
-                    bSwizzled = TRUE;
-
-                    // Swizzled 8 Bit
-                    dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
-                    dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
-                    dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
-                    dwDepth  = 1;// HACK? 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
-                    dwPitch  = dwWidth;
-                    dwBPP = 1;
-                }
-                else if(X_Format == 0x1E /* X_D3DFMT_LIN_X8R8G8B8 */ || X_Format == 0x12 /* X_D3DFORMAT_A8R8G8B8 */ || X_Format == 0x2E /* D3DFMT_LIN_D24S8 */)
-                {
-                    // Linear 32 Bit
-                    dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
-                    dwHeight = ((pPixelContainer->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
-                    dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)+1)*64;
-                    dwBPP = 4;
-                }
-                else if(X_Format == 0x11 /* D3DFMT_LIN_R5G6B5 */)
-                {
-                    // Linear 16 Bit
-                    dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
-                    dwHeight = ((pPixelContainer->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
-                    dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)+1)*64;
-                    dwBPP = 2;
-                }
-                else if(X_Format == 0x0C /* D3DFMT_DXT1 */ || X_Format == 0x0E /* D3DFMT_DXT2 */ || X_Format == 0x0F /* D3DFMT_DXT3 */)
-                {
-                    bCompressed = TRUE;
-
-                    // Compressed
-                    dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
-                    dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
-                    dwDepth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
-                    dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
-
-                    // D3DFMT_DXT2...D3DFMT_DXT5 : 128bits per block/per 16 texels
-                    dwCompressedSize = dwWidth*dwHeight;
-
-                    if(X_Format == 0x0C)    // D3DFMT_DXT1 : 64bits per block/per 16 texels
-                        dwCompressedSize /= 2;
-
-                    dwBPP = 1;
-                }
-                else if(X_Format == 0x24 /* D3DFMT_YUY2 */)
-                {
-                    // Linear 32 Bit
-                    dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
-                    dwHeight = ((pPixelContainer->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
-                    dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)+1)*64;
-                }
-                else
-                {
-                    EmuCleanup("0x%.08X is not a supported format!\n", X_Format);
-                }
-
-                // as we iterate through mipmap levels, we'll adjust the source resource offset
-                DWORD dwCompressedOffset = 0;
-
-                DWORD dwMipOffs = 0;
-                DWORD dwMipWidth = dwWidth;
-                DWORD dwMipHeight = dwHeight;
-                DWORD dwMipPitch = dwPitch;
-
-                if(dwMipMapLevels > 6)
-                    dwMipMapLevels = 6;
-
-                // iterate through the number of mipmap levels
-                for(uint level=0;level<dwMipMapLevels;level++)
-                {
-                    D3DLOCKED_RECT LockedRect;
-
-                    printf("pResource->EmuTexture8 : 0x%.08X (%d)\n", pResource->EmuTexture8, level);
-                    fflush(stdout);
-
-                    HRESULT hRet = pResource->EmuTexture8->LockRect(level, &LockedRect, NULL, 0);
-
-                    RECT  iRect  = {0,0,0,0};
-                    POINT iPoint = {0,0};
-
-                    BYTE *pSrc = (BYTE*)pTexture->Data;
-
-                    if(pResource->Data == X_D3DRESOURCE_DATA_FLAG_SURFACE)
-                    {
-
-                    }
-                    else
-                    {
-                        if(bSwizzled)
-                        {
-                            if((DWORD)pSrc == 0x80000000)
-                            {
-                                // TODO: Fix or handle this situation..?
-                            }
-                            else
-                            {
-                                XTL::EmuXGUnswizzleRect
-                                (
-                                    pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits, 
-                                    LockedRect.Pitch, iRect, iPoint, dwBPP
-                                );
-                            }
-                        }
-                        else if(bCompressed)
-                        {
-                            // NOTE: compressed size is (dwWidth/2)*(dwHeight/2)/2, so each level divides by 4
-
-                            memcpy(LockedRect.pBits, pSrc + dwCompressedOffset, dwCompressedSize >> (level*2));
-
-                            dwCompressedOffset += (dwCompressedSize >> (level*2));
-                        }
-                        else
-                        {
-                            BYTE *pDest = (BYTE*)LockedRect.pBits;
-
-                            if((DWORD)LockedRect.Pitch == dwMipPitch && dwMipPitch == dwMipWidth*dwBPP)
-                            {
-                                memcpy(pDest, pSrc + dwMipOffs, dwMipWidth*dwMipHeight*dwBPP);
-                            }
-                            else
-                            {
-                                for(DWORD v=0;v<dwMipHeight;v++)
-                                {
-                                    memcpy(pDest, pSrc + dwMipOffs, dwMipWidth*dwBPP);
-
-                                    pDest += LockedRect.Pitch;
-                                    pSrc  += dwMipPitch;
-                                }
-                            }
-                        }
-                    }
-
-                    pResource->EmuTexture8->UnlockRect(level);
-
-                    dwMipOffs += dwMipWidth*dwMipHeight*dwBPP;
-
-                    dwMipWidth /= 2;
-                    dwMipHeight /= 2;
-                    dwMipPitch /= 2;
-                }
-            }
-
-            g_pD3DDevice8->SetTexture(0, pTexture->EmuTexture8);
-            //*/
-        }
-
         /*
         IDirect3DBaseTexture8 *pTexture = 0;
 
@@ -1294,11 +1179,12 @@ VOID XTL::EmuFlushIVB()
 
             char szBuffer[255];
 
-            sprintf(szBuffer, "C:\\Aaron\\Textures\\Texture-Active%.03d.bmp", dwDumpTexture++);
+            sprintf(szBuffer, "C:\\Aaron\\Textures\\Texture-Active%.03d (0x%.08X).bmp", dwDumpTexture++, pTexture);
 
             D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture, NULL);
         }
         //*/
+        EmuUpdateActiveTexture();
 
         g_pD3DDevice8->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, VPDesc.dwPrimitiveCount, VPDesc.pVertexStreamZeroData, VPDesc.uiVertexStreamZeroStride);
 
@@ -1394,4 +1280,201 @@ VOID XTL::EmuFlushIVB()
     }
 
     return;
+}
+
+VOID XTL::EmuUpdateActiveTexture()
+{
+    //
+    // DEBUGGING
+    //
+    for(int Stage=0;Stage<4;Stage++)
+    {
+        X_D3DResource *pTexture = EmuD3DActiveTexture[Stage];
+
+        if(pTexture == NULL)
+            continue;
+
+        //*
+        X_D3DResource       *pResource = (X_D3DResource*)pTexture;
+        X_D3DPixelContainer *pPixelContainer = (X_D3DPixelContainer*)pTexture;
+
+        X_D3DFORMAT X_Format = (X_D3DFORMAT)((pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
+
+        if(X_Format != 0xCD && (pTexture->EmuResource8->GetType() == D3DRTYPE_TEXTURE))
+        {
+            DWORD dwWidth, dwHeight, dwBPP, dwDepth = 1, dwPitch = 0, dwMipMapLevels = 1;
+            BOOL  bSwizzled = FALSE, bCompressed = FALSE, dwCompressedSize = 0;
+            BOOL  bCubemap = pPixelContainer->Format & X_D3DFORMAT_CUBEMAP;
+
+            // Interpret Width/Height/BPP
+            if(X_Format == 0x07 /* X_D3DFMT_X8R8G8B8 */ || X_Format == 0x06 /* X_D3DFMT_A8R8G8B8 */)
+            {
+                bSwizzled = TRUE;
+
+                // Swizzled 32 Bit
+                dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
+                dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
+                dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
+                dwDepth  = 1;// HACK? 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
+                dwPitch  = dwWidth*4;
+                dwBPP = 4;
+            }
+            else if(X_Format == 0x05 /* X_D3DFMT_R5G6B5 */ || X_Format == 0x04 /* X_D3DFMT_A4R4G4B4 */
+                 || X_Format == 0x1D /* X_D3DFMT_LIN_A4R4G4B4 */ || X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */
+                 || X_Format == 0x28 /* X_D3DFMT_G8B8 */)
+            {
+                bSwizzled = TRUE;
+
+                // Swizzled 16 Bit
+                dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
+                dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
+                dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
+                dwDepth  = 1;// HACK? 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
+                dwPitch  = dwWidth*2;
+                dwBPP = 2;
+            }
+            else if(X_Format == 0x00 /* X_D3DFMT_L8 */ || X_Format == 0x0B /* X_D3DFMT_P8 */ || X_Format == 0x01 /* X_D3DFMT_AL8 */ || X_Format == 0x1A /* X_D3DFMT_A8L8 */)
+            {
+                bSwizzled = TRUE;
+
+                // Swizzled 8 Bit
+                dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
+                dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
+                dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
+                dwDepth  = 1;// HACK? 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
+                dwPitch  = dwWidth;
+                dwBPP = 1;
+            }
+            else if(X_Format == 0x1E /* X_D3DFMT_LIN_X8R8G8B8 */ || X_Format == 0x12 /* X_D3DFORMAT_A8R8G8B8 */ || X_Format == 0x2E /* D3DFMT_LIN_D24S8 */)
+            {
+                // Linear 32 Bit
+                dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
+                dwHeight = ((pPixelContainer->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
+                dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)+1)*64;
+                dwBPP = 4;
+            }
+            else if(X_Format == 0x11 /* D3DFMT_LIN_R5G6B5 */)
+            {
+                // Linear 16 Bit
+                dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
+                dwHeight = ((pPixelContainer->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
+                dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)+1)*64;
+                dwBPP = 2;
+            }
+            else if(X_Format == 0x0C /* D3DFMT_DXT1 */ || X_Format == 0x0E /* D3DFMT_DXT2 */ || X_Format == 0x0F /* D3DFMT_DXT3 */)
+            {
+                bCompressed = TRUE;
+
+                // Compressed
+                dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
+                dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
+                dwDepth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
+                dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
+
+                // D3DFMT_DXT2...D3DFMT_DXT5 : 128bits per block/per 16 texels
+                dwCompressedSize = dwWidth*dwHeight;
+
+                if(X_Format == 0x0C)    // D3DFMT_DXT1 : 64bits per block/per 16 texels
+                    dwCompressedSize /= 2;
+
+                dwBPP = 1;
+            }
+            else if(X_Format == 0x24 /* D3DFMT_YUY2 */)
+            {
+                // Linear 32 Bit
+                dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
+                dwHeight = ((pPixelContainer->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
+                dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)+1)*64;
+            }
+            else
+            {
+                EmuCleanup("0x%.08X is not a supported format!\n", X_Format);
+            }
+
+            // as we iterate through mipmap levels, we'll adjust the source resource offset
+            DWORD dwCompressedOffset = 0;
+
+            DWORD dwMipOffs = 0;
+            DWORD dwMipWidth = dwWidth;
+            DWORD dwMipHeight = dwHeight;
+            DWORD dwMipPitch = dwPitch;
+
+            if(dwMipMapLevels > 6)
+                dwMipMapLevels = 6;
+
+            // iterate through the number of mipmap levels
+            for(uint level=0;level<dwMipMapLevels;level++)
+            {
+                D3DLOCKED_RECT LockedRect;
+
+                HRESULT hRet = pResource->EmuTexture8->LockRect(level, &LockedRect, NULL, 0);
+
+                RECT  iRect  = {0,0,0,0};
+                POINT iPoint = {0,0};
+
+                BYTE *pSrc = (BYTE*)pTexture->Data;
+
+                if(pResource->Data == X_D3DRESOURCE_DATA_FLAG_SURFACE)
+                {
+
+                }
+                else
+                {
+                    if(bSwizzled)
+                    {
+                        if((DWORD)pSrc == 0x80000000)
+                        {
+                            // TODO: Fix or handle this situation..?
+                        }
+                        else
+                        {
+                            XTL::EmuXGUnswizzleRect
+                            (
+                                pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits, 
+                                LockedRect.Pitch, iRect, iPoint, dwBPP
+                            );
+                        }
+                    }
+                    else if(bCompressed)
+                    {
+                        // NOTE: compressed size is (dwWidth/2)*(dwHeight/2)/2, so each level divides by 4
+
+                        memcpy(LockedRect.pBits, pSrc + dwCompressedOffset, dwCompressedSize >> (level*2));
+
+                        dwCompressedOffset += (dwCompressedSize >> (level*2));
+                    }
+                    else
+                    {
+                        BYTE *pDest = (BYTE*)LockedRect.pBits;
+
+                        if((DWORD)LockedRect.Pitch == dwMipPitch && dwMipPitch == dwMipWidth*dwBPP)
+                        {
+                            memcpy(pDest, pSrc + dwMipOffs, dwMipWidth*dwMipHeight*dwBPP);
+                        }
+                        else
+                        {
+                            for(DWORD v=0;v<dwMipHeight;v++)
+                            {
+                                memcpy(pDest, pSrc + dwMipOffs, dwMipWidth*dwBPP);
+
+                                pDest += LockedRect.Pitch;
+                                pSrc  += dwMipPitch;
+                            }
+                        }
+                    }
+                }
+
+                pResource->EmuTexture8->UnlockRect(level);
+
+                dwMipOffs += dwMipWidth*dwMipHeight*dwBPP;
+
+                dwMipWidth /= 2;
+                dwMipHeight /= 2;
+                dwMipPitch /= 2;
+            }
+        }
+
+        g_pD3DDevice8->SetTexture(Stage, pTexture->EmuTexture8);
+        //*/
+    }
 }

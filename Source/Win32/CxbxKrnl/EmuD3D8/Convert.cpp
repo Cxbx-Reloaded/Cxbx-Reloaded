@@ -55,6 +55,9 @@ XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
         case 0x02: // Swizzled   (X_D3DFMT_A1R5G5B5)
             return D3DFMT_A1R5G5B5;
 
+        case 0x03: // Swizzled   (X_D3DFMT_X1R5G5B5)
+            return D3DFMT_X1R5G5B5;
+
         case 0x1A: // Swizzled   (X_D3DFMT_A8L8)
         {
             EmuWarning("X_D3DFMT_A8L8 -> D3DFMT_R5G6B5");
@@ -119,6 +122,12 @@ XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 
         case 0x28: // Swizzled   (X_D3DFMT_V8U8)
             return D3DFMT_V8U8;
+
+        case 0x33: // Swizzled   (X_D3DFMT_V16U16)
+            return D3DFMT_V16U16;
+
+        case 0x64:
+            return D3DFMT_VERTEXDATA;
     }
 
     EmuCleanup("EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)", Format);
@@ -134,7 +143,8 @@ XTL::X_D3DFORMAT XTL::EmuPC2XB_D3DFormat(D3DFORMAT Format)
         case D3DFMT_YUY2:
             return 0x24;
         case D3DFMT_R5G6B5:
-            return 0x05;
+            return 0x11;        // Linear
+//            return 0x05;      // Swizzled
         case D3DFMT_D24S8:
             return 0x2A;
         case D3DFMT_DXT3:
@@ -143,13 +153,13 @@ XTL::X_D3DFORMAT XTL::EmuPC2XB_D3DFormat(D3DFORMAT Format)
             return 0x0E;
         case D3DFMT_DXT1:
             return 0x0C;
-        case D3DFMT_A1R5G5B5: // Linear (X_D3DFMT_LIN_A1R5G5B5)
+        case D3DFMT_A1R5G5B5:   // Linear (X_D3DFMT_LIN_A1R5G5B5)
             return 0x10;
         case D3DFMT_X8R8G8B8:
-//            return 0x1E;    // Linear (X_D3DFMT_LIN_X8R8G8B8)
-            return 0x07;
+            return 0x1E;        // Linear (X_D3DFMT_LIN_X8R8G8B8)
+//            return 0x07;      // Swizzled
         case D3DFMT_A8R8G8B8:
-//            return 0x12;    // Linear (X_D3DFMT_LIN_A8R8G8B8)
+//            return 0x12;      // Linear (X_D3DFMT_LIN_A8R8G8B8)
             return 0x06;
     }
 

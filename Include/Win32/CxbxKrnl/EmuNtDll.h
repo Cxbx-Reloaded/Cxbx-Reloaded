@@ -322,7 +322,8 @@ typedef struct _IO_STATUS_BLOCK
     {
         NTSTATUS Status;
         PVOID    Pointer;
-    };
+    }
+    u1;
 
     ULONG_PTR Information;
 }
@@ -465,6 +466,21 @@ typedef struct _FILE_DIRECTORY_INFORMATION
     WCHAR           FileName[1];        // Offset: 0x40
 }
 FILE_DIRECTORY_INFORMATION;
+
+// ******************************************************************
+// * FILE_NETWORK_OPEN_INFORMATION
+// ******************************************************************
+typedef struct _FILE_NETWORK_OPEN_INFORMATION
+{
+    LARGE_INTEGER   CreationTime;
+    LARGE_INTEGER   LastAccessTime;
+    LARGE_INTEGER   LastWriteTime;
+    LARGE_INTEGER   ChangeTime;
+    LARGE_INTEGER   AllocationSize;
+    LARGE_INTEGER   EndOfFile;
+    ULONG           FileAttributes;
+}
+FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;
 
 // ******************************************************************
 // * TIME_FIELDS
@@ -639,6 +655,15 @@ typedef NTSTATUS (NTAPI *FPTR_NtDuplicateObject)
 );
 
 #define DUPLICATE_SAME_ATTRIBUTES   0x00000004
+
+// ******************************************************************
+// * NtFlushBuffersFile
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtFlushBuffersFile)
+(
+    IN  HANDLE              FileHandle,
+    OUT PIO_STATUS_BLOCK    IoStatusBlock
+);
 
 // ******************************************************************
 // * NtSetLdtEntries
@@ -974,6 +999,7 @@ extern FPTR_NtClearEvent                   NtClearEvent;
 extern FPTR_NtClose                        NtClose;
 extern FPTR_NtDelayExecution               NtDelayExecution;
 extern FPTR_NtDuplicateObject              NtDuplicateObject;
+extern FPTR_NtFlushBuffersFile             NtFlushBuffersFile;
 extern FPTR_NtQueryInformationFile         NtQueryInformationFile;
 extern FPTR_NtQueryDirectoryFile           NtQueryDirectoryFile;
 extern FPTR_NtQueryFullAttributesFile      NtQueryFullAttributesFile;

@@ -61,11 +61,11 @@ namespace NtDll
 Xbe::TLS        *g_pTLS       = NULL;
 void            *g_pTLSData   = NULL;
 Xbe::Header     *g_pXbeHeader = NULL;
-HANDLE		    g_hCurDir    = NULL;
+HANDLE          g_hCurDir    = NULL;
 HANDLE           g_hTDrive    = NULL;
 HANDLE           g_hUDrive    = NULL;
 HANDLE           g_hZDrive    = NULL;
-volatile BOOL	g_bEmuSuspended = FALSE;
+volatile BOOL   g_bEmuSuspended = FALSE;
 volatile BOOL    g_bEmuException = FALSE;
 volatile bool    g_bPrintfOn = true;
 
@@ -147,11 +147,11 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     // update caches
     g_pTLS       = pTLS;
     g_pTLSData   = pTLSData;
-	g_pXbeHeader = pXbeHeader;
+    g_pXbeHeader = pXbeHeader;
     g_hEmuParent = IsWindow(hwndParent) ? hwndParent : NULL;
 
     // For Unicode Conversions
-	setlocale(LC_ALL, "English");
+    setlocale(LC_ALL, "English");
 
     // debug console allocation (if configured)
     if(DbgMode == DM_CONSOLE)
@@ -232,8 +232,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     }
 
     // initialize current directory
-	{
-		char szBuffer[260];
+    {
+        char szBuffer[260];
 
         g_EmuShared->GetXbePath(szBuffer);
 
@@ -242,17 +242,17 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         else
             GetCurrentDirectory(260, szBuffer);
 
-		g_hCurDir = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+        g_hCurDir = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
         if(g_hCurDir == INVALID_HANDLE_VALUE)
-			EmuCleanup("Could not map D:\\\n");
+            EmuCleanup("Could not map D:\\\n");
 
         DbgPrintf("EmuMain (0x%X): CurDir := %s\n", GetCurrentThreadId(), szBuffer);
-	}
+    }
 
     // initialize T:\ and U:\ directories
     {
-		char szBuffer[260];
+        char szBuffer[260];
 
         #ifdef _DEBUG
         GetModuleFileName(GetModuleHandle("CxbxKrnl.dll"), szBuffer, 260);
@@ -455,10 +455,10 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                                 }
                                 else
                                 {
-					            pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_4361, lower, upper);
-                                ProcessHeapOffs = 0x3E;
-                                RtlCreateHeapOffs = 0x37;
-                            }
+					                pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_4361, lower, upper);
+                                    ProcessHeapOffs = 0x3E;
+                                    RtlCreateHeapOffs = 0x37;
+                                }
                             }
                             else // 3911, 4034, 4134
                             {
@@ -468,25 +468,25 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                             }
 
                             if(pFunc != 0)
-					        {
-						        XTL::EmuXapiProcessHeap = *(PVOID**)((uint32)pFunc + ProcessHeapOffs);
+                            {
+                                XTL::EmuXapiProcessHeap = *(PVOID**)((uint32)pFunc + ProcessHeapOffs);
 
-						        XTL::g_pRtlCreateHeap = *(XTL::pfRtlCreateHeap*)((uint32)pFunc + RtlCreateHeapOffs);
-						        XTL::g_pRtlCreateHeap = (XTL::pfRtlCreateHeap)((uint32)pFunc + (uint32)XTL::g_pRtlCreateHeap + RtlCreateHeapOffs + 0x04);
+                                XTL::g_pRtlCreateHeap = *(XTL::pfRtlCreateHeap*)((uint32)pFunc + RtlCreateHeapOffs);
+                                XTL::g_pRtlCreateHeap = (XTL::pfRtlCreateHeap)((uint32)pFunc + (uint32)XTL::g_pRtlCreateHeap + RtlCreateHeapOffs + 0x04);
 
-						        DbgPrintf("EmuMain (0x%X): 0x%.08X -> EmuXapiProcessHeap\n", GetCurrentThreadId(), XTL::EmuXapiProcessHeap);
-						        DbgPrintf("EmuMain (0x%X): 0x%.08X -> g_pRtlCreateHeap\n", GetCurrentThreadId(), XTL::g_pRtlCreateHeap);
-					        }
-				        }
+                                DbgPrintf("EmuMain (0x%X): 0x%.08X -> EmuXapiProcessHeap\n", GetCurrentThreadId(), XTL::EmuXapiProcessHeap);
+                                DbgPrintf("EmuMain (0x%X): 0x%.08X -> g_pRtlCreateHeap\n", GetCurrentThreadId(), XTL::g_pRtlCreateHeap);
+                            }
+                        }
                     }
-			        else if(strcmp("D3D8", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 &&
+                    else if(strcmp("D3D8", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 &&
                         (BuildVersion == 3925 || BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4432 
                       || BuildVersion == 4627 || BuildVersion == 5558 || BuildVersion == 5849))
-			        {
+                    {
                         uint32 lower = pXbeHeader->dwBaseAddr;
                         uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
 
-				        void *pFunc = 0;
+                        void *pFunc = 0;
                         
                         if(BuildVersion == 3925)
                             pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_3925, lower, upper);
@@ -513,23 +513,23 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                             }
                             else if(BuildVersion == 4361)
                             {
-						        XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x200 + 82*4);
+                                XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x200 + 82*4);
                                 patchOffset = 142*4 - 82*4;
                             }
                             else if(BuildVersion == 4432)
                             {
-						        XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x204 + 83*4);
+                                XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x204 + 83*4);
                                 patchOffset = 143*4 - 83*4;
                             }
                             else if(BuildVersion == 4627)
                             {
-						        XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x24C + 92*4);
+                                XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x24C + 92*4);
                                 patchOffset = 162*4 - 92*4;
                             }
                             else if(BuildVersion == 5558 || BuildVersion == 5849)
                             {
                                 // WARNING: Not thoroughly tested (just seemed very correct right away)
-						        XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x24C + 92*4);
+                                XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x24C + 92*4);
                                 patchOffset = 162*4 - 92*4;
                             }
 
@@ -566,11 +566,11 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                             if(pFunc != 0)
                             {
                                 if(BuildVersion == 3925) // 0x18F180
-					                XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x11) - 0x70); // TODO: Verify
+                                    XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x11) - 0x70); // TODO: Verify
                                 else if(BuildVersion == 4134)
-					                XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x18) - 0x70); // TODO: Verify
+                                    XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x18) - 0x70); // TODO: Verify
                                 else
-					                XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x19) - 0x70);
+                                    XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x19) - 0x70);
 
                                 for(int s=0;s<4;s++)
                                 {
@@ -586,7 +586,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                                 EmuCleanup("EmuD3DDeferredTextureState was not found!");
                             }
                         }
-			        }
+                    }
                 }
 
                 DbgPrintf("EmuMain (0x%X): Locating HLE Information for %s %d.%d.%d...", GetCurrentThreadId(), pLibraryVersion[v].szName, MajorVersion, MinorVersion, BuildVersion);
@@ -688,10 +688,10 @@ extern "C" CXBXKRNL_API void NTAPI EmuWarning(const char *szWarningMessage, ...)
 
     strcat(szBuffer1, szBuffer2);
 
-	if(g_bPrintfOn)
-	{
-		printf("%s\n", szBuffer1);
-	}
+    if(g_bPrintfOn)
+    {
+        printf("%s\n", szBuffer1);
+    }
 
     fflush(stdout);
 
@@ -767,18 +767,18 @@ extern "C" CXBXKRNL_API void NTAPI EmuPanic()
 // register a thread handle with the emulation thread management
 extern "C" CXBXKRNL_API void NTAPI EmuRegisterThread(HANDLE hThread)
 {
-	int v=0;
-	for(v=0;v<MAXIMUM_XBOX_THREADS;v++)
-	{
-		if(g_hThreads[v] == 0)
-		{
-			g_hThreads[v] = hThread;
-			break;
-		}
-	}
+    int v=0;
+    for(v=0;v<MAXIMUM_XBOX_THREADS;v++)
+    {
+        if(g_hThreads[v] == 0)
+        {
+            g_hThreads[v] = hThread;
+            break;
+        }
+    }
 
-	if(v == MAXIMUM_XBOX_THREADS)
-		EmuCleanup("There are too many active threads!");
+    if(v == MAXIMUM_XBOX_THREADS)
+        EmuCleanup("There are too many active threads!");
 }
 
 // suspend all threads that have been created with PsCreateSystemThreadEx
@@ -788,9 +788,9 @@ extern "C" CXBXKRNL_API void NTAPI EmuSuspend()
         return;
 
     for(int v=0;v<MAXIMUM_XBOX_THREADS;v++)
-	{
-		if(g_hThreads[v] != NULL)
-		{
+    {
+        if(g_hThreads[v] != NULL)
+        {
             DWORD dwExitCode;
 
             if(GetExitCodeThread(g_hThreads[v], &dwExitCode) && dwExitCode == STILL_ACTIVE)
@@ -803,8 +803,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuSuspend()
                 // remove thread from thread list if it is dead
                 g_hThreads[v] = 0;
             }
-		}
-	}
+        }
+    }
 
     // append 'paused' to rendering window caption text
     {
@@ -841,9 +841,9 @@ extern "C" CXBXKRNL_API void NTAPI EmuResume()
     }
 
     for(int v=0;v<MAXIMUM_XBOX_THREADS;v++)
-	{
-		if(g_hThreads[v] != NULL)
-		{
+    {
+        if(g_hThreads[v] != NULL)
+        {
             DWORD dwExitCode;
 
             if(GetExitCodeThread(g_hThreads[v], &dwExitCode) && dwExitCode == STILL_ACTIVE)
@@ -856,8 +856,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuResume()
                 // remove thread from thread list if it is dead
                 g_hThreads[v] = 0;
             }
-		}
-	}
+        }
+    }
 
     g_bEmuSuspended = FALSE;
 }
@@ -965,7 +965,7 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
     }
 
     // print debug information
-	{
+    {
         if(e->ExceptionRecord->ExceptionCode == 0x80000003)
             printf("EmuMain (0x%X): Recieved Breakpoint Exception (int 3)\n", GetCurrentThreadId());
         else
@@ -979,17 +979,17 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
             e->ContextRecord->Eip, e->ContextRecord->EFlags,
             e->ContextRecord->Eax, e->ContextRecord->Ebx, e->ContextRecord->Ecx, e->ContextRecord->Edx,
             e->ContextRecord->Esi, e->ContextRecord->Edi, e->ContextRecord->Esp, e->ContextRecord->Ebp);
-	}
+    }
 
     fflush(stdout);
 
     // notify user
-	{
-		char buffer[256];
+    {
+        char buffer[256];
 
         if(e->ExceptionRecord->ExceptionCode == 0x80000003)
         {
-		    sprintf(buffer, 
+            sprintf(buffer, 
                 "Recieved Breakpoint Exception (int 3) @ EIP := 0x%.08X\n"
                 "\n"
                 "  Press Abort to terminate emulation.\n"
@@ -1022,7 +1022,7 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
         }
         else
         {
-		    sprintf(buffer, 
+            sprintf(buffer, 
                 "Recieved Exception Code 0x%.08X @ EIP := 0x%.08X\n"
                 "\n"
                 "  Press \"OK\" to terminate emulation.\n"
@@ -1040,7 +1040,7 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
                 ExitProcess(1);
             }
         }
-	}
+    }
 
     g_bEmuException = FALSE;
 
@@ -1272,9 +1272,9 @@ int ExitException(LPEXCEPTION_POINTERS e)
     static int count = 0;
 
     // debug information
-	printf("EmuMain (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
-	printf("EmuMain (0x%X): Recieved Exception [0x%.08X]@0x%.08X\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip);
-	printf("EmuMain (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
+    printf("EmuMain (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
+    printf("EmuMain (0x%X): Recieved Exception [0x%.08X]@0x%.08X\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip);
+    printf("EmuMain (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
 
     fflush(stdout);
 

@@ -52,7 +52,7 @@ extern VOID EmuD3DCleanup();
 extern X_D3DTILE EmuD3DTileCache[0x08];
 
 // EmuD3DActiveTexture
-extern X_D3DResource *EmuD3DActiveTexture;
+extern X_D3DResource *EmuD3DActiveTexture[4];
 
 // ******************************************************************
 // * func: EmuIDirect3D8_CreateDevice
@@ -251,6 +251,14 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreateImageSurface
     UINT                Height,
     X_D3DFORMAT         Format,
     X_D3DSurface      **ppBackBuffer
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetGammaRamp
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_GetGammaRamp
+(
+    X_D3DGAMMARAMP     *pRamp
 );
 
 // ******************************************************************
@@ -652,6 +660,14 @@ HRESULT WINAPI EmuIDirect3DResource8_Register
 // * func: EmuIDirect3DResource8_Release
 // ******************************************************************
 ULONG WINAPI EmuIDirect3DResource8_Release
+(
+    X_D3DResource      *pThis
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DResource8_GetType
+// ******************************************************************
+X_D3DRESOURCETYPE WINAPI EmuIDirect3DResource8_GetType
 (
     X_D3DResource      *pThis
 );
