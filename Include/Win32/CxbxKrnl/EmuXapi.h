@@ -220,6 +220,39 @@ typedef struct _RTL_HEAP_PARAMETERS
 RTL_HEAP_PARAMETERS;
 
 // ******************************************************************
+// * func: EmuRtlCreateHeap
+// ******************************************************************
+PVOID WINAPI EmuRtlCreateHeap
+(
+    IN ULONG   Flags,
+    IN PVOID   Base OPTIONAL,
+    IN ULONG   Reserve OPTIONAL,
+    IN ULONG   Commit,
+    IN BOOLEAN Lock OPTIONAL,
+    IN PVOID   RtlHeapParams OPTIONAL
+);
+
+// ******************************************************************
+// * func: EmuRtlAllocateHeap
+// ******************************************************************
+PVOID WINAPI EmuRtlAllocateHeap
+(
+    IN HANDLE hHeap,
+    IN DWORD  dwFlags,
+    IN SIZE_T dwBytes
+);
+
+// ******************************************************************
+// * func: EmuRtlFreeHeap
+// ******************************************************************
+BOOL WINAPI EmuRtlFreeHeap
+(
+    IN HANDLE hHeap,
+    IN DWORD  dwFlags,
+    IN PVOID  lpMem
+);
+
+// ******************************************************************
 // * func: EmuXInitDevices
 // ******************************************************************
 VOID WINAPI EmuXInitDevices

@@ -508,7 +508,52 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
 	LPDIRECT3DTEXTURE8 pCxbxTexture;
 	D3DXCreateTextureFromFile(g_pD3D8Device, "Media\\cxbx.bmp", &pCxbxTexture);
 	g_pD3D8Device->SetTexture(0, pCxbxTexture);
-*/
+//*/
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetDisplayMode
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_GetDisplayMode
+(
+    X_D3DDISPLAYMODE         *pMode
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetDisplayMode\n"
+               "(\n"
+               "   pMode               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pMode);
+    }
+    #endif
+
+    HRESULT hRet;
+
+    // ******************************************************************
+    // * make adjustments to parameters to make sense with windows d3d
+    // ******************************************************************
+    {
+        D3DDISPLAYMODE *pPCMode = (D3DDISPLAYMODE*)pMode;
+
+        hRet = g_pD3D8Device->GetDisplayMode(pPCMode);
+
+        // TODO: Translate from XD3D to D3D
+        pMode->Format = pPCMode->Format;
+
+        // TODO: Make this configurable in the future?
+        pMode->Flags  = 0x000000A1;
+    }
+
     EmuSwapFS();   // XBox FS
 
     return hRet;

@@ -33,6 +33,102 @@
 // ******************************************************************
 
 // ******************************************************************
+// * RtlCreateHeap
+// ******************************************************************
+SOOVPA<10> RtlCreateHeap_1_0_4361 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    {
+        // RtlCreateHeap+0x13 : push 0x0C
+        { 0x13, 0x6A }, // (Offset,Value)-Pair #1
+        { 0x14, 0x0C }, // (Offset,Value)-Pair #2
+
+        // RtlCreateHeap+0x1B : rep stosd
+        { 0x1B, 0xF3 }, // (Offset,Value)-Pair #3
+        { 0x1C, 0xAB }, // (Offset,Value)-Pair #4
+
+        // RtlCreateHeap+0x4E : retn
+        { 0x4E, 0xC3 }, // (Offset,Value)-Pair #5
+
+        // RtlCreateHeap+0x8D : jnz +0x08
+        { 0x8D, 0x75 }, // (Offset,Value)-Pair #6
+        { 0x8E, 0x08 }, // (Offset,Value)-Pair #7
+
+        // RtlCreateHeap+0xA4 : cmp [ebp-38h], esi
+        { 0xA4, 0x39 }, // (Offset,Value)-Pair #8
+        { 0xA5, 0x75 }, // (Offset,Value)-Pair #9
+        { 0xA6, 0xC8 }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
+// * RtlAllocateHeap
+// ******************************************************************
+SOOVPA<11> RtlAllocateHeap_1_0_4361 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    {
+        // RtlAllocateHeap+0x1E : or ecx, [esi+0x18]
+        { 0x1E, 0x0B }, // (Offset,Value)-Pair #1
+        { 0x1F, 0x4E }, // (Offset,Value)-Pair #2
+        { 0x20, 0x18 }, // (Offset,Value)-Pair #3
+
+        // RtlAllocateHeap+0x29 : jnz +0x01
+        { 0x29, 0x75 }, // (Offset,Value)-Pair #4
+        { 0x2A, 0x01 }, // (Offset,Value)-Pair #5
+
+        // RtlAllocateHeap+0x2B : inc eax
+        { 0x2B, 0x40 }, // (Offset,Value)-Pair #6
+
+        // RtlAllocateHeap+0x73 : sub eax, 0x08
+        { 0x73, 0x83 }, // (Offset,Value)-Pair #7
+        { 0x74, 0xE8 }, // (Offset,Value)-Pair #8
+        { 0x75, 0x08 }, // (Offset,Value)-Pair #9
+
+        // RtlAllocateHeap+0xA5 : shl edi, cl
+        { 0xA5, 0xD3 }, // (Offset,Value)-Pair #10
+        { 0xA6, 0xE7 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
+// * RtlFreeHeap
+// ******************************************************************
+SOOVPA<12> RtlFreeHeap_1_0_4361 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    {
+        // RtlFreeHeap+0x1F : test ecx, ecx
+        { 0x1F, 0x85 }, // (Offset,Value)-Pair #1
+        { 0x20, 0xC9 }, // (Offset,Value)-Pair #2
+
+        // RtlFreeHeap+0x4B : test byte ptr [edi+5], 0x08
+        { 0x4B, 0xF6 }, // (Offset,Value)-Pair #3
+        { 0x4C, 0x47 }, // (Offset,Value)-Pair #4
+        { 0x4D, 0x05 }, // (Offset,Value)-Pair #5
+        { 0x4E, 0x08 }, // (Offset,Value)-Pair #6
+
+        // RtlFreeHeap+0x5B : push 0
+        { 0x5B, 0x6A }, // (Offset,Value)-Pair #7
+        { 0x5C, 0x00 }, // (Offset,Value)-Pair #8
+
+        // RtlFreeHeap+0x8F : cmp [edx], edx
+        { 0x8F, 0x39 }, // (Offset,Value)-Pair #9
+        { 0x90, 0x12 }, // (Offset,Value)-Pair #10
+
+        // RtlFreeHeap+0xA4 : shl ebx, cl
+        { 0xA4, 0xD3 }, // (Offset,Value)-Pair #11
+        { 0xA5, 0xE3 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
 // * XGetDevices
 // ******************************************************************
 SOOVPA<14> XGetDevices_1_0_4361 =
@@ -316,6 +412,36 @@ SOOVPA<10> XapiSetupPerTitleDriveLetters_1_0_4361 =
 // ******************************************************************
 OOVPATable XAPI_1_0_4361[] =
 {
+    // RtlCreateHeap
+    {
+        (OOVPA*)&RtlCreateHeap_1_0_4361,
+
+        xapi::EmuRtlCreateHeap,
+
+        #ifdef _DEBUG_TRACE
+        "RtlCreateHeap"
+        #endif
+    },
+    // RtlAllocateHeap
+    {
+        (OOVPA*)&RtlAllocateHeap_1_0_4361,
+
+        xapi::EmuRtlAllocateHeap,
+
+        #ifdef _DEBUG_TRACE
+        "RtlAllocateHeap"
+        #endif
+    },
+    // RtlFreeHeap
+    {
+        (OOVPA*)&RtlFreeHeap_1_0_4361,
+
+        xapi::EmuRtlFreeHeap,
+
+        #ifdef _DEBUG_TRACE
+        "RtlFreeHeap"
+        #endif
+    },
     // XInitDevices (* unchanged since 1.0.4034 *)
     {
         (OOVPA*)&XInitDevices_1_0_4034,

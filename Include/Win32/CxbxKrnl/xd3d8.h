@@ -38,6 +38,25 @@
 #include <d3dx8tex.h>
 
 // ******************************************************************
+// * X_D3DFORMAT
+// ******************************************************************
+// NOTE: HACK: These enumerations may not be equivalent!
+typedef D3DFORMAT X_D3DFORMAT;
+
+// ******************************************************************
+// * X_D3DDISPLAYMODE
+// ******************************************************************
+typedef struct _X_D3DDISPLAYMODE
+{
+    UINT        Width;
+    UINT        Height;
+    UINT        RefreshRate;
+    DWORD       Flags;
+    X_D3DFORMAT Format;
+}
+X_D3DDISPLAYMODE;
+
+// ******************************************************************
 // * D3DResource
 // ******************************************************************
 struct D3DResource
@@ -98,6 +117,14 @@ HRESULT WINAPI EmuIDirect3D8_CreateDevice
     DWORD                   BehaviorFlags,
     D3DPRESENT_PARAMETERS  *pPresentationParameters,
     IDirect3DDevice8      **ppReturnedDeviceInterface
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetDisplayMode
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_GetDisplayMode
+(
+    X_D3DDISPLAYMODE         *pMode
 );
 
 // ******************************************************************

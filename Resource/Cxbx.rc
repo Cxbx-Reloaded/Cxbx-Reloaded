@@ -160,7 +160,7 @@ BEGIN
         MENUITEM "Config &Audio...",            ID_SETTINGS_CONFIGURESOUND
         , GRAYED
         MENUITEM "Config &Video...",            ID_SETTINGS_CONFIG_VIDEO
-        MENUITEM "",                            1
+        MENUITEM SEPARATOR
         MENUITEM "Generate &Exe Automatically", ID_SETTINGS_AUTOGEN
     END
     POPUP "E&mulation"
@@ -255,7 +255,7 @@ END
 IDD_VIDEO_CFG DIALOGEX 0, 0, 258, 110
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Cxbx : Video Configuration"
-FONT 8, "Verdana"
+FONT 8, "Verdana", 0, 0, 0x1
 BEGIN
     CONTROL         "Start in Fullscreen",IDC_CV_FULLSCREEN,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,76,71,73,10

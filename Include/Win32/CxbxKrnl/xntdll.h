@@ -81,6 +81,7 @@ typedef unsigned long       SIZE_T, *PSIZE_T;
 typedef unsigned long       ACCESS_MASK;
 typedef unsigned long       PHYSICAL_ADDRESS;
 typedef long                INT_PTR;
+typedef int                 BOOL;
 
 // ******************************************************************
 // * Pointer types
@@ -209,6 +210,27 @@ typedef struct _STRING
     PCHAR   Buffer;
 }
 STRING, ANSI_STRING, *PSTRING, *PANSI_STRING;
+
+// ******************************************************************
+// * RTL_HEAP_DEFINITION
+// ******************************************************************
+typedef struct _RTL_HEAP_DEFINITION
+{
+    ULONG   Length;
+    ULONG   Unknown1;
+    ULONG   Unknown2;
+    ULONG   Unknown3;
+    ULONG   Unknown4;
+    ULONG   Unknown5;
+    ULONG   Unknown6;
+    ULONG   Unknown7;
+    ULONG   Unknown8;
+    ULONG   Unknown9;
+    ULONG   Unknown10;
+    ULONG   Unknown11;
+    ULONG   Unknown12;
+}
+RTL_HEAP_DEFINITION, *PRTL_HEAP_DEFINITION;
 
 // ******************************************************************
 // * RTL_CRITICAL_SECTION
@@ -391,6 +413,39 @@ NTSYSAPI NTSTATUS NTAPI KeDelayExecutionThread
 );
 
 // ******************************************************************
+// * func: FPTR_RtlCreateHeap
+// ******************************************************************
+typedef PVOID (NTAPI *FPTR_RtlCreateHeap)
+(
+    IN ULONG   Flags,
+    IN PVOID   Base OPTIONAL,
+    IN ULONG   Reserve OPTIONAL,
+    IN ULONG   Commit,
+    IN BOOLEAN Lock OPTIONAL,
+    IN PVOID   RtlHeapParams OPTIONAL
+);
+
+// ******************************************************************
+// * func: EmuRtlAllocateHeap
+// ******************************************************************
+typedef PVOID (NTAPI *FPTR_RtlAllocateHeap)
+(
+    IN HANDLE hHeap,
+    IN DWORD  dwFlags,
+    IN SIZE_T dwBytes
+);
+
+// ******************************************************************
+// * func: EmuRtlFreeHeap
+// ******************************************************************
+typedef BOOL (NTAPI *FPTR_RtlFreeHeap)
+(
+    IN HANDLE hHeap,
+    IN DWORD  dwFlags,
+    IN PVOID  lpMem
+);
+
+// ******************************************************************
 // * NtDelayExecution
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtDelayExecution)
@@ -494,6 +549,22 @@ typedef NTSTATUS (NTAPI *FPTR_NtCreateFile)
     IN  ULONG				CreateOptions,
 	IN  PVOID				EaBuffer OPTIONAL,
 	IN  ULONG				EaLength
+);
+
+// ******************************************************************
+// * NtReadFile
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtReadFile)
+(
+	IN  HANDLE          FileHandle,            // TODO: correct paramters
+	IN  HANDLE          Event OPTIONAL,
+	IN  PVOID           ApcRoutine OPTIONAL,
+	IN  PVOID           ApcContext,
+	OUT PVOID           IoStatusBlock,
+	OUT PVOID           Buffer,
+	IN  ULONG           Length,
+	IN  PLARGE_INTEGER  ByteOffset OPTIONAL,
+    IN  PULONG          Key OPTIONAL
 );
 
 // ******************************************************************
