@@ -74,7 +74,7 @@ extern PVOID g_pfnThreadNotification = NULL;
 
 // MmAllocateContiguousMemory[Ex] allocate unaligned data and then manually align the pointer,
 // returning this to the Xbe. The original pointer must be retained in order to properly free.
-#define ALIGN_CACHE_SIZE 128
+#define ALIGN_CACHE_SIZE 256
 struct _AlignCache
 {
     PVOID pOrigPtr;
