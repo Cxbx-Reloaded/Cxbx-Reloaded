@@ -1,21 +1,9 @@
 ////////////////////////////////////////////////////////////////////////
 //
-//	Note : this file is included as part of the Smaller Animals Software
-//	JpegFile package. Though this file has not been modified from it's 
-//	original IJG 6a form, it is not the responsibility on the Independent
-//	JPEG Group to answer questions regarding this code.
+//  Though this file has not been modified from it's  original IJG 6a form,
+//  it is not the responsibility on the Independent JPEG Group to answer 
+//  questions regarding this code.
 //	
-//	Any questions you have about this code should be addressed to :
-//
-//	CHRISDL@PAGESZ.NET	- the distributor of this package.
-//
-//	Remember, by including this code in the JpegFile package, Smaller 
-//	Animals Software assumes all responsibilities for answering questions
-//	about it. If we (SA Software) can't answer your questions ourselves, we 
-//	will direct you to people who can.
-//
-//	Thanks, CDL.
-//
 ////////////////////////////////////////////////////////////////////////
 
 /* jconfig.vc --- jconfig.h for Microsoft Visual C++ on Windows 95 or NT. */
