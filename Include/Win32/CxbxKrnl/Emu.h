@@ -55,6 +55,11 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion
 extern "C" CXBXKRNL_API void NTAPI EmuPanic();
 
 // ******************************************************************
+// * func: EmuException
+// ******************************************************************
+extern int EmuException(LPEXCEPTION_POINTERS e);
+
+// ******************************************************************
 // * data: KernelThunkTable
 // ******************************************************************
 extern "C" CXBXKRNL_API uint32 KernelThunkTable[367];

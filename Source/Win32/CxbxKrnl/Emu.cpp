@@ -54,8 +54,7 @@ namespace xboxkrnl
 // * global / static
 // ******************************************************************
 static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *XbeHeader);
-
-uint32 g_TlsAdjust = 0;
+extern uint32 g_TlsAdjust = 0;
 
 // ******************************************************************
 // * func: DllMain
@@ -140,9 +139,50 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion
     }
 
     // ******************************************************************
-    // * Locate functions and install wrapper vectors
+    // * Load the necessary pieces of XBEHeader
     // ******************************************************************
     {
+        Xbe::Header *MemXbeHeader = (Xbe::Header*)0x00010000;
+
+        uint32 old_protection = 0;
+
+        VirtualProtect(MemXbeHeader, 0x1000, PAGE_READWRITE, &old_protection);
+
+        // we sure hope we aren't corrupting anything necessary for an .exe to survive :]
+        MemXbeHeader->dwSizeofHeaders   = XbeHeader->dwSizeofHeaders;
+        MemXbeHeader->dwCertificateAddr = XbeHeader->dwCertificateAddr;
+        MemXbeHeader->dwPeHeapReserve   = XbeHeader->dwPeHeapReserve;
+        MemXbeHeader->dwPeHeapCommit    = XbeHeader->dwPeHeapCommit;
+
+        memcpy(&MemXbeHeader->dwInitFlags, &XbeHeader->dwInitFlags, sizeof(XbeHeader->dwInitFlags));
+
+        memcpy((void*)XbeHeader->dwCertificateAddr, &((uint08*)XbeHeader)[XbeHeader->dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
+    }
+
+    // ******************************************************************
+    // * Initialize all components
+    // ******************************************************************
+    {
+        EmuInitFS();
+
+        EmuGenerateFS(TlsAdjust);
+    }
+
+    // ******************************************************************
+    // * Initialize OpenXDK emulation
+    // ******************************************************************
+    if(LibraryVersion == 0)
+    {
+        printf("Emu: Detected OpenXDK application...\n");
+    }
+
+    // ******************************************************************
+    // * Initialize Microsoft XDK emulation
+    // ******************************************************************
+    if(LibraryVersion != 0)
+    {
+        printf("Emu: Detected Microsoft XDK application...\n");
+
         uint32 dwLibraryVersions = XbeHeader->dwLibraryVersions;
         uint32 dwHLEEntries      = HLEDataBaseSize/sizeof(HLEData);
 
@@ -182,47 +222,27 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion
             if(!found)
                 printf("Skipped\n");
         }
-    }
 
-    // ******************************************************************
-    // * Load the necessary pieces of XBEHeader
-    // ******************************************************************
-    {
-        Xbe::Header *MemXbeHeader = (Xbe::Header*)0x00010000;
-
-        uint32 old_protection = 0;
-
-        VirtualProtect(MemXbeHeader, 0x1000, PAGE_READWRITE, &old_protection);
-
-        // we sure hope we aren't corrupting anything necessary for an .exe to survive :]
-        MemXbeHeader->dwSizeofHeaders   = XbeHeader->dwSizeofHeaders;
-        MemXbeHeader->dwCertificateAddr = XbeHeader->dwCertificateAddr;
-        MemXbeHeader->dwPeHeapReserve   = XbeHeader->dwPeHeapReserve;
-        MemXbeHeader->dwPeHeapCommit    = XbeHeader->dwPeHeapCommit;
-
-        memcpy(&MemXbeHeader->dwInitFlags, &XbeHeader->dwInitFlags, sizeof(XbeHeader->dwInitFlags));
-
-        memcpy((void*)XbeHeader->dwCertificateAddr, &((uint08*)XbeHeader)[XbeHeader->dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
-    }
-
-    // ******************************************************************
-    // * Initialize all components
-    // ******************************************************************
-    {
-        EmuInitFS();
-
-        EmuGenerateFS(TlsAdjust);
-        
         EmuInitD3D(XbeHeader, XbeHeaderSize);
     }
 
     printf("Emu (0x%.08X): Initial thread starting.\n", GetCurrentThreadId());
 
-    EmuSwapFS();   // XBox FS
+    // ******************************************************************
+    // * Entry Point
+    // ******************************************************************
+    __try
+    {
+        EmuSwapFS();   // XBox FS
 
-    Entry();
+        Entry();
 
-    EmuSwapFS();   // Win2k/XP FS
+        EmuSwapFS();   // Win2k/XP FS
+    }
+    __except(EmuException(GetExceptionInformation()))
+    {
+        printf("Emu: WARNING!! Problem with ExceptionFilter\n");
+    }
 
     printf("Emu (0x%.08X): Initial thread ended.\n", GetCurrentThreadId());
 
@@ -402,5 +422,17 @@ void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*En
             }
         }
     }
+}
 
+// ******************************************************************
+// * func: EmuException
+// ******************************************************************
+int EmuException(LPEXCEPTION_POINTERS e)
+{
+    int ret = MessageBox(NULL, "WARNING: This thread has performed an illegal operation.\n\nPress 'OK' to terminate emulation.\nPress 'Cancel' to debug.", "Cxbx", MB_ICONSTOP | MB_OKCANCEL);
+
+    if(ret == IDOK)
+        ExitProcess(1);
+
+    return EXCEPTION_CONTINUE_SEARCH;
 }

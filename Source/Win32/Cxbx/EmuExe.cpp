@@ -550,7 +550,8 @@ EmuExe::EmuExe(Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename) : Exe
             // ******************************************************************
             // * append library versions
             // ******************************************************************
-            memcpy(m_bzSection[i] + 0x100 + x_Xbe->m_Header.dwSizeofHeaders + 260, x_Xbe->m_LibraryVersion, sizeof(Xbe::LibraryVersion) * x_Xbe->m_Header.dwLibraryVersions);
+            if(x_Xbe->m_LibraryVersion != 0)
+                memcpy(m_bzSection[i] + 0x100 + x_Xbe->m_Header.dwSizeofHeaders + 260, x_Xbe->m_LibraryVersion, sizeof(Xbe::LibraryVersion) * x_Xbe->m_Header.dwLibraryVersions);
 
             // ******************************************************************
             // * calculate TLS adjustment
@@ -588,7 +589,10 @@ EmuExe::EmuExe(Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename) : Exe
             *(uint32 *)((uint32)m_bzSection[i] + 16) = m_SectionHeader[i].m_virtual_addr + m_OptionalHeader.m_image_base + 0x100;
             *(uint32 *)((uint32)m_bzSection[i] + 21) = m_SectionHeader[i].m_virtual_addr + m_OptionalHeader.m_image_base + 0x100 + x_Xbe->m_Header.dwSizeofHeaders;
             *(uint32 *)((uint32)m_bzSection[i] + 26) = x_debug_mode;
-            *(uint32 *)((uint32)m_bzSection[i] + 31) = m_SectionHeader[i].m_virtual_addr + m_OptionalHeader.m_image_base + 0x100 + x_Xbe->m_Header.dwSizeofHeaders + 260;
+            if(x_Xbe->m_LibraryVersion != 0)
+                *(uint32 *)((uint32)m_bzSection[i] + 31) = m_SectionHeader[i].m_virtual_addr + m_OptionalHeader.m_image_base + 0x100 + x_Xbe->m_Header.dwSizeofHeaders + 260;
+            else
+                *(uint32 *)((uint32)m_bzSection[i] + 31) = 0;
             *(uint32 *)((uint32)m_bzSection[i] + 36) = TlsAdjust;
 
             printf("OK\n");

@@ -104,6 +104,7 @@ VOID EmuInitD3D(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
     // ******************************************************************
     {
         using namespace xd3d8;
+
         // xbox Direct3DCreate8 returns "1" always, so we need our own ptr
         g_pD3D8 = Direct3DCreate8(D3D_SDK_VERSION);
 
@@ -163,7 +164,7 @@ void EmuRenderWindow(PVOID)
                 wcstombs(tAsciiTitle, XbeCert->wszTitleName, 40);
             }
 
-            sprintf(AsciiTitle, "%s - Cxbx Version " _CXBX_VERSION, tAsciiTitle);
+            sprintf(AsciiTitle, "Cxbx : Emulating %s", tAsciiTitle);
         }
 
         g_EmuWindow = CreateWindow

@@ -1136,7 +1136,7 @@ void Xbe::ConstructorInit()
     m_HeaderEx             = 0;
     m_SectionHeader        = 0;
     m_szSectionName        = 0;
-    m_LibraryVersion      = 0;
+    m_LibraryVersion       = 0;
     m_KernelLibraryVersion = 0;
     m_XAPILibraryVersion   = 0;
     m_TLS                  = 0;
@@ -1386,7 +1386,7 @@ void Xbe::DumpInformation(FILE *x_file)
     {
         if(m_LibraryVersion == 0 || m_Header.dwLibraryVersions == 0)
         {
-            fprintf(x_file, "(This XBE contains no libraries)\n");
+            fprintf(x_file, "(This XBE contains no Library Versions)\n");
             fprintf(x_file, "\n");
         }
         else

@@ -118,18 +118,28 @@ DWORD WINAPI PCSTProxy
     // ******************************************************************
     // * use the special calling convention
     // ******************************************************************
+    __try
+    {
+        __asm
+        {
+            mov         esi, StartRoutine
+            push        StartContext2
+            push        StartContext1
+            push        offset callComplete
+            lea         ebp, [esp-4]
+            jmp near    esi
+        }
+    }
+    __except(EmuException(GetExceptionInformation()))
+    {
+        printf("Emu: WARNING!! Problem with ExceptionFilter\n");
+    }
+
     __asm
     {
-        mov         esi, StartRoutine
-        push        StartContext2
-        push        StartContext1
-        push        offset callComplete
-        lea         ebp, [esp-4]
-        jmp near    esi
 
-callComplete:
+callComplete:   nop
 
-        nop
     }
 
     return 0;
