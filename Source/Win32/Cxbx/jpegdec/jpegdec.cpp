@@ -201,6 +201,8 @@ uint08 *jpeg2bmp(uint08 *jpeg, uint32 jpegSize, uint32 *bmpSize, uint32 *bmpWidt
 
     jpeg_finish_decompress(&cinfo);
 
+    free(cinfo.src);
+
     jpeg_destroy_decompress(&cinfo);
 
     *bmpSize = row_stride*cinfo.output_height;

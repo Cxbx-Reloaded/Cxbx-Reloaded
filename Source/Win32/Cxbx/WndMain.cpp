@@ -255,9 +255,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     uint32 bmpFileSize = 0;
                     uint32 bmpWidth, bmpHeight;
 
-                    uint08 *bmpBuff = 0;
-
-                    bmpBuff = jpeg2bmp(jpgData, jpgFileSize, &bmpFileSize, &bmpWidth, &bmpHeight);
+                    uint08 *bmpBuff = jpeg2bmp(jpgData, jpgFileSize, &bmpFileSize, &bmpWidth, &bmpHeight);
 
                     // create bitmap
                     {
@@ -275,8 +273,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                         BmpInfo.bmiHeader.biClrUsed       = 0;
                         BmpInfo.bmiHeader.biClrImportant  = 0;
 
-                        SetDIBits(hDC, m_BackBmp, 0, 480, bmpBuff, &BmpInfo, DIB_RGB_COLORS);
+                        SetDIBits(hDC, m_BackBmp, 0, bmpHeight, bmpBuff, &BmpInfo, DIB_RGB_COLORS);
                     }
+
+                    free(bmpBuff);
 
                     UnlockResource(hRes);
                 }
