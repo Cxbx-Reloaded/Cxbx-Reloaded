@@ -232,7 +232,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 if(m_Xbe != 0 && m_Xbe->GetError() == 0)
                     sprintf(buffer, "%s Loaded!", m_Xbe->m_szAsciiTitle);
                 else
-    				sprintf(buffer, "%s", "Disclaimer: CXBX has no affiliation with Microsoft");
+    				sprintf(buffer, "%s", "Disclaimer: Cxbx has no affiliation with Microsoft");
 
                 RECT rect = {0, 187, 321, 201};
 

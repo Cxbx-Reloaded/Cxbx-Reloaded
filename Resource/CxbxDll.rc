@@ -63,10 +63,19 @@ IDI_CXBX                ICON    DISCARDABLE     "Cxbx.ico"
 
 IDR_RENDERMENU MENU DISCARDABLE 
 BEGIN
-    POPUP "&File"
+    POPUP "E&mulation"
     BEGIN
-        MENUITEM "E&xit",                       ID_FILE_EXIT
+        MENUITEM "&Pause\t(F2)",                ID_EMULATION_PAUSE
+        MENUITEM "&Continue",                   ID_EMULATION_CONTINUE
+        , CHECKED, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_EMULATION_EXIT
     END
+    POPUP "&Graphics"
+    BEGIN
+        MENUITEM "&Fullscreen\t(Alt+Enter)",    ID_GRAPHICS_FULLSCREEN
+    END
+    MENUITEM "&Help",                       65535
 END
 
 #endif    // English (U.S.) resources

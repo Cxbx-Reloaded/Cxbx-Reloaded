@@ -41,6 +41,7 @@
 namespace win32
 {
     #include <process.h>
+    #include <locale.h>
 }
 
 #include "ResCxbxDll.h"
@@ -50,9 +51,11 @@ using namespace win32;
 // ******************************************************************
 // * globals
 // ******************************************************************
-LPDIRECT3D8       g_pD3D8       = NULL;  // Direct3D8
-LPDIRECT3DDEVICE8 g_pD3D8Device = NULL;  // Direct3D8 Device
-HWND              g_EmuXWindow  = NULL;  // Rendering Window
+LPDIRECT3D8       g_pD3D8         = NULL;  // Direct3D8
+LPDIRECT3DDEVICE8 g_pD3D8Device   = NULL;  // Direct3D8 Device
+HWND              g_EmuXWindow    = NULL;  // Rendering Window
+Xbe::Header      *g_XbeHeader     = NULL;  // XbeHeader
+uint32            g_XbeHeaderSize = 0;     // XbeHeaderSize
 
 // ******************************************************************
 // * static
@@ -63,8 +66,16 @@ static void EmuXRenderWindow(PVOID);
 // ******************************************************************
 // * func: EmuXInitD3D
 // ******************************************************************
-VOID xboxkrnl::EmuXInitD3D()
+VOID xboxkrnl::EmuXInitD3D(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 {
+    // ******************************************************************
+    // * store XbeHeader and XbeHeaderSize for further use
+    // ******************************************************************
+    {
+        g_XbeHeader     = XbeHeader;
+        g_XbeHeaderSize = XbeHeaderSize;
+    }
+
     // ******************************************************************
     // * spark up a new thread to handle window message processing
     // ******************************************************************
@@ -113,9 +124,31 @@ void EmuXRenderWindow(PVOID)
     // * create the window
     // ******************************************************************
     {
+        char AsciiTitle[50];
+
+        // ******************************************************************
+        // * retrieve xbe title (if possible)
+        // ******************************************************************
+        {
+            char tAsciiTitle[40] = "Unknown";
+
+            uint32 CertAddr = g_XbeHeader->dwCertificateAddr - g_XbeHeader->dwBaseAddr;
+
+            if(CertAddr + 0x0C + 40 < g_XbeHeaderSize)
+            {
+                Xbe::Certificate *XbeCert = (Xbe::Certificate*)((uint32)g_XbeHeader + CertAddr);
+
+                setlocale( LC_ALL, "English" );
+
+                wcstombs(tAsciiTitle, XbeCert->wszTitleName, 40);
+            }
+
+            sprintf(AsciiTitle, "%s - Cxbx Version " CXBX_VERSION, tAsciiTitle);
+        }
+
         g_EmuXWindow = CreateWindow
         (
-            "CxbxRender", "Cxbx : Running...",
+            "CxbxRender", AsciiTitle,
             WS_OVERLAPPEDWINDOW, 100, 100, 640, 480,
             GetDesktopWindow(), NULL, GetModuleHandle(NULL), NULL
         );
@@ -177,7 +210,7 @@ LRESULT WINAPI EmuXMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
             switch(LOWORD(wParam))
             {
-                case ID_FILE_EXIT:
+                case ID_EMULATION_EXIT:
                     SendMessage(hWnd, WM_CLOSE, 0, 0);
                     break;
             }

@@ -182,7 +182,7 @@ CXBXKRNL_API void NTAPI EmuXInit(Xbe::LibraryVersion *LibraryVersion, DebugMode 
     // * Initialize Direct3D8
     // ******************************************************************
     {
-        xboxkrnl::EmuXInitD3D();
+        xboxkrnl::EmuXInitD3D(XbeHeader, XbeHeaderSize);
     }
 
     printf("EmuX (0x%.08X): Initial thread starting.\n", GetCurrentThreadId());
