@@ -231,4 +231,30 @@ HRESULT WINAPI EmuIDirect3DDevice8_DrawVertices
     UINT             VertexCount
 );
 
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetLight
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetLight
+(
+    DWORD            Index,
+    CONST D3DLIGHT8 *pLight
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetMaterial
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetMaterial
+(
+    CONST D3DMATERIAL8 *pMaterial
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_LightEnable
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_LightEnable
+(
+    DWORD            Index,
+    BOOL             bEnable
+);
+
 #endif

@@ -53,7 +53,7 @@ namespace xntdll
 // ******************************************************************
 // * Maximum number of threads this LDT system will handle
 // ******************************************************************
-#define MAXIMUM_XBOX_THREADS 128
+#define MAXIMUM_XBOX_THREADS 256
 
 // ******************************************************************
 // * Table of free LDT entries
@@ -70,7 +70,7 @@ static CRITICAL_SECTION EmuLDTLock;
 // ******************************************************************
 static HMODULE hNtDll = GetModuleHandle("ntdll");
 
-xntdll::FPTR_NtSetLdtEntries NT_NtSetLdtEntries = (xntdll::FPTR_NtSetLdtEntries)GetProcAddress(hNtDll, "NtSetLdtEntries");
+static xntdll::FPTR_NtSetLdtEntries NT_NtSetLdtEntries = (xntdll::FPTR_NtSetLdtEntries)GetProcAddress(hNtDll, "NtSetLdtEntries");
 
 // ******************************************************************
 // * func: EmuInitLDT

@@ -1,6 +1,6 @@
 cxbx website: http://www.caustik.com/xbox/
 
-version: 0.7.0 (??/??/??)
+version: 0.7.0 (05/27/03)
 --------------------------------
 
 - Magically shrunk cxbx.dll/cxbx.exe file sizes enormously!

@@ -301,9 +301,9 @@ VOID WINAPI xapi::EmuXapiInitProcess()
 
 		PVOID dwResult = 0;
 
-		__asm
+        __asm
 		{
-			xor ecx, ecx
+            xor ecx, ecx
 
 			push pSomeStruct
 			push ecx

@@ -160,7 +160,7 @@ BEGIN
         MENUITEM "Config &Audio...",            ID_SETTINGS_CONFIGURESOUND
         , GRAYED
         MENUITEM "Config &Video...",            ID_SETTINGS_CONFIGUREGRAPHICS
-
+        , GRAYED
         MENUITEM "",                            1
         MENUITEM "Generate &Exe Automatically", ID_SETTINGS_AUTOGEN
     END

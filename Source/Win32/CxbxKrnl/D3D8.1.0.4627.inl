@@ -210,6 +210,38 @@ SOOVPA<11> IDirect3DVertexBuffer8_Lock2_1_0_4627 =
     }
 };
 
+
+// ******************************************************************
+// * IDirect3DDevice8_SetMaterial
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_SetMaterial_1_0_4627 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    {
+        // IDirect3DDevice8_SetMaterial+0x0C : add edi, 0x0AB0
+        { 0x0C, 0x81 }, // (Offset,Value)-Pair #1
+        { 0x0D, 0xC7 }, // (Offset,Value)-Pair #2
+        { 0x0E, 0xB0 }, // (Offset,Value)-Pair #3
+        { 0x0F, 0x0A }, // (Offset,Value)-Pair #4
+
+        // IDirect3DDevice8_SetMaterial+0x12 : mov ecx, 0x11
+        { 0x12, 0xB9 }, // (Offset,Value)-Pair #5
+        { 0x13, 0x11 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_SetMaterial+0x1F : or ecx, 0x1000
+        { 0x1F, 0x81 }, // (Offset,Value)-Pair #7
+        { 0x20, 0xC9 }, // (Offset,Value)-Pair #8
+        { 0x21, 0x00 }, // (Offset,Value)-Pair #9
+        { 0x22, 0x10 }, // (Offset,Value)-Pair #10
+
+        // IDirect3DDevice8_SetMaterial+0x2D : retn 0x04
+        { 0x2D, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x2E, 0x04 }, // (Offset,Value)-Pair #12
+    }
+};
+
 // ******************************************************************
 // * D3D8_1_0_4627
 // ******************************************************************
@@ -323,6 +355,36 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_DrawVertices"
+        #endif
+    },
+    // IDirect3DDevice8::SetLight (* unchanged since 4361 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetLight_1_0_4361,
+
+        xd3d8::EmuIDirect3DDevice8_SetLight,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetLight"
+        #endif
+    },
+    // IDirect3DDevice8::SetMaterial
+    {
+        (OOVPA*)&IDirect3DDevice8_SetMaterial_1_0_4627,
+
+        xd3d8::EmuIDirect3DDevice8_SetMaterial,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetMaterial"
+        #endif
+    },
+    // IDirect3DDevice8::LightEnable (* unchanged since 4361 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_LightEnable_1_0_4361,
+
+        xd3d8::EmuIDirect3DDevice8_LightEnable,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_LightEnable"
         #endif
     },
 };

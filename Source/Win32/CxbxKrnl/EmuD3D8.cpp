@@ -108,7 +108,7 @@ DWORD *xd3d8::EmuD3DDefferedRenderState;
 // ******************************************************************
 xd3d8::D3DRENDERSTATETYPE D3DRenderState2PC[160] =
 {
-	// NOTE: We may not need this...
+    // NOTE: We may not need this...
     /* 0->123                           */
     (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
     (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
@@ -130,7 +130,7 @@ xd3d8::D3DRENDERSTATETYPE D3DRenderState2PC[160] =
     (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
     (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
     (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, 
-	(xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
+    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
     /* D3DRS_LIGHTING       = 124       */ xd3d8::D3DRS_LIGHTING
 };
 
@@ -510,7 +510,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_Clear
                Color, Z, Stencil);
     }
     #endif
-	
+    
     // ******************************************************************
     // * make adjustments to parameters to make sense with windows d3d
     // ******************************************************************
@@ -600,7 +600,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_Swap
 
     // TODO: Ensure this flag is always the same across library versions
     if(Flags != 0)
-		EmuCleanup("xd3d8::EmuIDirect3DDevice8_Swap: Flags != 0");
+        EmuCleanup("xd3d8::EmuIDirect3DDevice8_Swap: Flags != 0");
 
     // Swap(0) is equivalent to present(0,0,0,0)
     HRESULT ret = g_pD3D8Device->Present(0, 0, 0, 0);
@@ -954,8 +954,8 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
     #endif
 
     // Certain D3DRS values need to be checked on each Draw[Indexed]Vertices
-	g_pD3D8Device->SetRenderState(D3DRS_LIGHTING,              xd3d8::EmuD3DDefferedRenderState[10]);
-	g_pD3D8Device->SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, xd3d8::EmuD3DDefferedRenderState[20]);
+    g_pD3D8Device->SetRenderState(D3DRS_LIGHTING,              xd3d8::EmuD3DDefferedRenderState[10]);
+    g_pD3D8Device->SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, xd3d8::EmuD3DDefferedRenderState[20]);
     g_pD3D8Device->SetRenderState(D3DRS_AMBIENT,               xd3d8::EmuD3DDefferedRenderState[23]);
 
     UINT PrimitiveCount = D3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
@@ -972,5 +972,110 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
 
     EmuSwapFS();   // XBox FS
 
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetLight
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetLight
+(
+    DWORD            Index,
+    CONST D3DLIGHT8 *pLight
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetLight\n"
+               "(\n"
+               "   Index               : 0x%.08X\n"
+               "   pLight              : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Index, pLight);
+    }
+    #endif
+
+    D3DMATERIAL8 Material;
+
+    ZeroMemory(&Material, sizeof(D3DMATERIAL8));
+
+    Material.Diffuse.r = Material.Ambient.r = 1.0f;
+    Material.Diffuse.g = Material.Ambient.g = 1.0f;
+    Material.Diffuse.b = Material.Ambient.b = 0.0f;
+    Material.Diffuse.a = Material.Ambient.a = 1.0f;
+
+    g_pD3D8Device->SetMaterial(&Material);
+
+    HRESULT hRet = g_pD3D8Device->SetLight(Index, pLight);
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetMaterial
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetMaterial
+(
+    CONST D3DMATERIAL8 *pMaterial
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetMaterial\n"
+               "(\n"
+               "   pMaterial           : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pMaterial);
+    }
+    #endif
+
+    HRESULT hRet = g_pD3D8Device->SetMaterial(pMaterial);
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_LightEnable
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_LightEnable
+(
+    DWORD            Index,
+    BOOL             bEnable
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_LightEnable\n"
+               "(\n"
+               "   Index               : 0x%.08X\n"
+               "   bEnable             : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Index, bEnable);
+    }
+    #endif
+
+    HRESULT hRet = g_pD3D8Device->LightEnable(Index, bEnable);
+
+    EmuSwapFS();   // XBox FS
+    
     return hRet;
 }
