@@ -483,18 +483,6 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
     }
 
     // ******************************************************************
-    // * check for YUY2 overlay support
-    // ******************************************************************
-    {
-        HRESULT hRet = g_pD3D8->CheckDeviceFormat(Adapter, DeviceType, (XTL::D3DFORMAT)pPresentationParameters->BackBufferFormat, 0, D3DRTYPE_TEXTURE, D3DFMT_YUY2);
-
-        g_bSupportsYUY2 = SUCCEEDED(hRet);
-
-        if(!g_bSupportsYUY2)
-            EmuWarning("YUY2 overlays are not supported in hardware, could be slow!");
-    }
-
-    // ******************************************************************
     // * verify no ugly circumstances
     // ******************************************************************
     if(pPresentationParameters->BufferSurfaces[0] != NULL || pPresentationParameters->DepthStencilSurface != NULL)
@@ -576,6 +564,18 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
             else if(strcmp(szBackBufferFormat, "a8r8g8b8") == 0)
                 pPresentationParameters->BackBufferFormat = D3DFMT_A8R8G8B8;
         }
+    }
+
+    // ******************************************************************
+    // * check for YUY2 overlay support
+    // ******************************************************************
+    {
+        HRESULT hRet = g_pD3D8->CheckDeviceFormat(Adapter, DeviceType, (XTL::D3DFORMAT)pPresentationParameters->BackBufferFormat, 0, D3DRTYPE_TEXTURE, D3DFMT_YUY2);
+
+        g_bSupportsYUY2 = SUCCEEDED(hRet);
+
+        if(!g_bSupportsYUY2)
+            EmuWarning("YUY2 overlays are not supported in hardware, could be slow!");
     }
 
     // ******************************************************************
@@ -2128,6 +2128,9 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
             printf("EmuIDirect3DResource8_Register :-> VertexBuffer...\n");
             #endif
 
+            if(((DWORD)pBase) != pThis->Data)
+                pBase = (PVOID)(((DWORD)pBase) + pThis->Data);
+
             X_D3DVertexBuffer *pVertexBuffer = (X_D3DVertexBuffer*)pResource;
 
             // ******************************************************************
@@ -2163,6 +2166,9 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
             #ifdef _DEBUG_TRACE
             printf("EmuIDirect3DResource8_Register :-> IndexBuffer...\n");
             #endif
+
+            if(((DWORD)pBase) != pThis->Data)
+                pBase = (PVOID)(((DWORD)pBase) + pThis->Data);
 
             X_D3DIndexBuffer *pIndexBuffer = (X_D3DIndexBuffer*)pResource;
 
@@ -3164,11 +3170,13 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
 
             uint32 dwImageSize = (g_dwOverlayW * g_dwOverlayH) * 2;
 
-            if(true)
+            // grayscale
+            if(false)
             {
                 for(uint32 y=0;y<g_dwOverlayH;y++)
                 {
-                    for(uint32 x=0;x<g_dwOverlayW*4;x+=4)
+                    uint32 stop = g_dwOverlayW*4;
+                    for(uint32 x=0;x<stop;x+=4)
                     {
                         uint08 Y = *pCurByte;
 
@@ -3183,6 +3191,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
                     pDest += LockedRectDest.Pitch;
                 }
             }
+            // full color conversion (YUY2->XRGB)
             else
             {
                 for(uint32 v=0;v<dwImageSize;v+=4)
