@@ -1,18 +1,17 @@
 Cxbx Todo:
 
-  General Code Cleanup [caustik]
-
-  Continue HLE. CreateThread/CloseHandle are done. The most important
-  thing at this point is the HLE design. One candidate for HLE is the
-  function XapiVerifyMediaInDrive.
-
   Recent files (for .exe and .xbe) in menu. (Use registry)
 
-  Add support for .XBE file handling capabilities through shell.
-  When opening an .XBE with Cxbx, there should be an optional flag
-  which will cause it to automagically generate the .Exe and start
-  emulation. This used with the progress meter, etc, will make the
-  emulation extremely fluid.
+  Xbe files should associate with Cxbx (by user configuration). There
+  should be configuration allowing the Xbe to execute automatically
+  without a GUI at all, or for the Xbe to open in the Cxbx GUI. This
+  can easily be done by sending different command line options to
+  Cxbx.
+
+  Cxbx.dll should be registered in the system so that a converted .exe
+  can be run from anywhere, once converted.
+
+  Converted Exe files should use the Cxbx icon
 
   Allow a logo bitmap to be added if one does not exist. This may require that
   the size of headers be increased. (sizeof_headers).
