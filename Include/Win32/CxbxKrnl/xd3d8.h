@@ -298,6 +298,16 @@ HRESULT WINAPI EmuIDirect3D8_GetAdapterDisplayMode
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_GetBackBuffer
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_GetBackBuffer
+(
+    INT                 BackBuffer,
+    D3DBACKBUFFER_TYPE  Type,
+    X_D3DSurface      **ppBackBuffer
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_GetRenderTarget
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_GetRenderTarget

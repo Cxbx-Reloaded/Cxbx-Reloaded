@@ -1,4 +1,4 @@
-    // ******************************************************************
+// ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
 // *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
@@ -88,6 +88,37 @@ SOOVPA<13> IDirect3D8_GetAdapterDisplayMode_1_0_4361 =
         // IDirect3D8_GetAdapterDisplayMode+0xBD : retn 0x08
         { 0xBD, 0xC2 }, // (Offset,Value)-Pair #12
         { 0xBE, 0x08 }, // (Offset,Value)-Pair #13
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_GetBackBuffer
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_GetBackBuffer_1_0_4361 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    {
+        // IDirect3DDevice8_GetBackBuffer+0x04 : cmp eax, 0xFFFFFFFF
+        { 0x04, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x05, 0xF8 }, // (Offset,Value)-Pair #2
+        { 0x06, 0xFF }, // (Offset,Value)-Pair #3
+
+        // IDirect3DDevice8_GetBackBuffer+0x0D : jnz +0x07
+        { 0x0D, 0x75 }, // (Offset,Value)-Pair #4
+        { 0x0E, 0x07 }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_GetBackBuffer+0x18 : sbb eax, eax
+        { 0x18, 0x1B }, // (Offset,Value)-Pair #6
+        { 0x19, 0xC0 }, // (Offset,Value)-Pair #7
+
+        // IDirect3DDevice8_GetBackBuffer+0x1D : mov eax, [ecx+eax*4+0x207C]
+        { 0x1D, 0x8B }, // (Offset,Value)-Pair #8
+        { 0x1E, 0x84 }, // (Offset,Value)-Pair #9
+        { 0x1F, 0x81 }, // (Offset,Value)-Pair #10
+        { 0x20, 0x7C }, // (Offset,Value)-Pair #11
+        { 0x21, 0x20 }, // (Offset,Value)-Pair #12
     }
 };
 
@@ -1043,6 +1074,16 @@ OOVPATable D3D8_1_0_4361[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3D8_GetAdapterDisplayMode" 
+        #endif
+    },
+    // IDirect3DDevice8::GetBackBuffer
+    {
+        (OOVPA*)&IDirect3DDevice8_GetBackBuffer_1_0_4361,
+
+        xd3d8::EmuIDirect3DDevice8_GetBackBuffer,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetBackBuffer"
         #endif
     },
     // IDirect3DDevice8::GetRenderTarget

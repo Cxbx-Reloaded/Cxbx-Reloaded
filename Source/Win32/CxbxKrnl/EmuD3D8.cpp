@@ -568,6 +568,44 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_GetAdapterDisplayMode
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_GetBackBuffer
+// ******************************************************************
+VOID WINAPI xd3d8::EmuIDirect3DDevice8_GetBackBuffer
+(
+    INT                 BackBuffer,
+    D3DBACKBUFFER_TYPE  Type,
+    X_D3DSurface      **ppBackBuffer
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        EmuSwapFS();   // Win2k/XP FS
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetBackBuffer\n"
+               "(\n"
+               "   BackBuffer          : 0x%.08X\n"
+               "   Type                : 0x%.08X\n"
+               "   ppBackBuffer        : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), BackBuffer, Type, ppBackBuffer);
+        EmuSwapFS();   // Xbox FS
+    }
+    #endif
+
+    *ppBackBuffer = new X_D3DSurface();
+
+    g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &((*ppBackBuffer)->EmuSurface8));
+
+    EmuSwapFS();   // Xbox FS
+
+    return;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_GetRenderTarget
 // ******************************************************************
 HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_GetRenderTarget
@@ -575,6 +613,8 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_GetRenderTarget
     X_D3DSurface  **ppRenderTarget
 )
 {
+    EmuSwapFS();   // Win2k/XP FS
+
     // ******************************************************************
     // * debug trace
     // ******************************************************************
@@ -596,6 +636,8 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_GetRenderTarget
 
     *ppRenderTarget = g_pCachedRenderTarget;
 
+    EmuSwapFS();   // Xbox FS
+
     return D3D_OK;
 }
 
@@ -604,21 +646,23 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_GetRenderTarget
 // ******************************************************************
 xd3d8::X_D3DSurface * WINAPI xd3d8::EmuIDirect3DDevice8_GetRenderTarget2()
 {
+    EmuSwapFS();   // Win2k/XP FS
+
     // ******************************************************************
     // * debug trace
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetRenderTarget2()\n",
                GetCurrentThreadId());
-        EmuSwapFS();   // Xbox FS
     }
     #endif
 
     IDirect3DSurface8 *pSurface8 = g_pCachedRenderTarget->EmuSurface8;
 
     pSurface8->AddRef();
+
+    EmuSwapFS();   // Xbox FS
 
     return g_pCachedRenderTarget;
 }
