@@ -62,7 +62,7 @@ namespace XTL
 #include "HLEDataBase.h"
 
 // Ugly Global Pull-In
-extern HWND         g_hEmuWindow; // rendering window
+extern HWND                         g_hEmuWindow; // rendering window
 
 // Global Variable(s)
 extern Xbe::TLS        *g_pTLS       = NULL;
@@ -536,7 +536,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         // _USE_XGMATH Disabled in mesh :[
         // halo : dword_0_2E2D18
         // halo : 1744F0 (bink)
-        _asm int 3
+        //_asm int 3
 
         Entry();
 

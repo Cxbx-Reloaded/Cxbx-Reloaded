@@ -56,8 +56,10 @@ namespace XTL
 #include <locale.h>
 
 // Global(s)
-extern HWND                         g_hEmuWindow  = NULL; // rendering window
-extern XTL::LPDIRECT3DDEVICE8       g_pD3DDevice8 = NULL; // Direct3D8 Device
+extern HWND                         g_hEmuWindow   = NULL; // rendering window
+extern XTL::LPDIRECT3DDEVICE8       g_pD3DDevice8  = NULL; // Direct3D8 Device
+extern XTL::LPDIRECTDRAWSURFACE7    g_pDDSPrimary  = NULL; // DirectDraw7 Primary Surface
+extern XTL::LPDIRECTDRAWSURFACE7    g_pDDSOverlay7 = NULL; // DirectDraw7 Overlay Surface
 
 // Static Function(s)
 static BOOL WINAPI                  EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescription, LPSTR lpDriverName, LPVOID lpContext, HMONITOR hm);
@@ -78,8 +80,6 @@ static HMONITOR						g_hMonitor      = NULL; // Handle to DirectDraw monitor
 static XTL::LPDIRECT3D8				g_pD3D8         = NULL; // Direct3D8
 static BOOL                         g_bSupportsYUY2 = FALSE;// Does device support YUY2 overlays?
 static XTL::LPDIRECTDRAW7           g_pDD7          = NULL; // DirectDraw7
-static XTL::LPDIRECTDRAWSURFACE7    g_pDDSPrimary   = NULL; // DirectDraw7 Primary Surface
-static XTL::LPDIRECTDRAWSURFACE7    g_pDDSOverlay7  = NULL; // DirectDraw7 Overlay Surface
 static DWORD                        g_dwOverlayW    = 640;  // Cached Overlay Width
 static DWORD                        g_dwOverlayH    = 480;  // Cached Overlay Height
 static Xbe::Header                 *g_XbeHeader     = NULL; // XbeHeader
@@ -91,7 +91,7 @@ static XBVideo                      g_XBVideo;
 static XTL::D3DVBLANKCALLBACK       g_pVBCallback   = NULL; // Vertical-Blank callback routine
 
 // wireframe toggle
-static bool                         g_bWireframe    = false;
+static int                          g_iWireframe    = 0;
 
 // resource caching for _Register
 static XTL::X_D3DResource pCache[16] = {0};
@@ -398,7 +398,10 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             if(wParam == VK_ESCAPE)
                 PostMessage(hWnd, WM_CLOSE, 0, 0);
             else if(wParam == VK_F11)
-                g_bWireframe = !g_bWireframe;
+            {
+                if(g_iWireframe++ == 2)
+                    g_iWireframe = 0;
+            }
         }
         break;
 
@@ -2561,7 +2564,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetTexture
         pBaseTexture8 = pTexture->EmuBaseTexture8;
     }
 
-    HRESULT hRet = g_pD3DDevice8->SetTexture(Stage, g_bWireframe ? 0 : pBaseTexture8);
+    HRESULT hRet = g_pD3DDevice8->SetTexture(Stage, (g_iWireframe == 0) ? pBaseTexture8 : 0);
 
     EmuSwapFS();   // XBox FS
 
@@ -5053,7 +5056,16 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_FillMode
     }
     #endif
 
-    g_pD3DDevice8->SetRenderState(D3DRS_FILLMODE, g_bWireframe ? D3DFILL_WIREFRAME : EmuXB2PC_D3DFILLMODE(Value));
+    DWORD dwFillMode;
+
+    if(g_iWireframe == 0)
+        dwFillMode = EmuXB2PC_D3DFILLMODE(Value);
+    else if(g_iWireframe == 1)
+        dwFillMode = D3DFILL_WIREFRAME;
+    else
+        dwFillMode = D3DFILL_POINT;
+
+    g_pD3DDevice8->SetRenderState(D3DRS_FILLMODE, dwFillMode);
 
     EmuSwapFS();   // XBox FS
 
