@@ -34,6 +34,7 @@
 #include "WndMain.h"
 #include "WndAbout.h"
 #include "DlgControllerConfig.h"
+#include "DlgVideoConfig.h"
 #include "EmuShared.h"
 #include "ResCxbx.h"
 #include "EmuExe.h"
@@ -874,6 +875,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 case ID_SETTINGS_CONFIG_CONTROLLER:
                     ShowControllerConfig(hwnd);
+                    break;
+
+                case ID_SETTINGS_CONFIG_VIDEO:
+                    ShowVideoConfig(hwnd);
                     break;
 
                 case ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE:

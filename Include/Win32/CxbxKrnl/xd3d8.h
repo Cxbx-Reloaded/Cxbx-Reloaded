@@ -67,11 +67,6 @@ extern UINT D3DVertexToPrimitive[11][2];
 	(((VertexCount)-D3DVertexToPrimitive[PrimitiveType][1])/D3DVertexToPrimitive[PrimitiveType][0])
 
 // ******************************************************************
-// * D3DRenderState2PC (Convert Xbox->PC RenderState enum values)
-// ******************************************************************
-extern D3DRENDERSTATETYPE D3DRenderState2PC[160];
-
-// ******************************************************************
 // * EmuD3DDefferedRenderState
 // ******************************************************************
 extern DWORD *EmuD3DDefferedRenderState;

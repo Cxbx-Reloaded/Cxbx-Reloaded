@@ -287,25 +287,25 @@ VOID WINAPI xapi::EmuXapiInitProcess()
 	// * Call RtlCreateHeap
     // ******************************************************************
 	{
-		BYTE SomeStruct[0x30];
+        RTL_HEAP_PARAMETERS HeapParameters;
 
-		ZeroMemory(SomeStruct, sizeof(SomeStruct));
+		ZeroMemory(&HeapParameters, sizeof(HeapParameters));
 
-		*(DWORD*)SomeStruct = sizeof(SomeStruct);
+        HeapParameters.Length = sizeof(HeapParameters);
 
 		EmuSwapFS();   // XBox FS
 
-		uint32 pSomeStruct = (uint32)SomeStruct;
+		uint32 pHeapParameters = (uint32)&HeapParameters;
 		uint32 dwPeHeapReserve = g_pXbeHeader->dwPeHeapReserve;
 		uint32 dwPeHeapCommit  = g_pXbeHeader->dwPeHeapCommit;
 
-		PVOID dwResult = 0;
+        PVOID dwResult = 0;
 
         __asm
 		{
             xor ecx, ecx
 
-			push pSomeStruct
+			push pHeapParameters
 			push ecx
 			push dwPeHeapCommit
 			push dwPeHeapReserve

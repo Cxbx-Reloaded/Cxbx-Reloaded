@@ -248,7 +248,7 @@ class XBController : public Error
 // ******************************************************************
 #define DETECT_SENSITIVITY_JOYSTICK 25000
 #define DETECT_SENSITIVITY_BUTTON   0
-#define DETECT_SENSITIVITY_MOUSE    10
+#define DETECT_SENSITIVITY_MOUSE    5
 #define DETECT_SENSITIVITY_POV      50000
 
 // ******************************************************************

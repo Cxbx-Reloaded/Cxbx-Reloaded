@@ -210,6 +210,16 @@ typedef struct _XINPUT_STATE
 XINPUT_STATE, *PXINPUT_STATE;
 
 // ******************************************************************
+// * RTL_HEAP_PARAMETERS
+// ******************************************************************
+typedef struct _RTL_HEAP_PARAMETERS
+{
+    ULONG   Length;
+    BYTE    Unknown[0x2C];
+}
+RTL_HEAP_PARAMETERS;
+
+// ******************************************************************
 // * func: EmuXInitDevices
 // ******************************************************************
 VOID WINAPI EmuXInitDevices

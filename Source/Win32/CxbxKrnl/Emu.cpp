@@ -403,7 +403,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     {
         EmuSwapFS();   // XBox FS
 
-		Entry();
+        Entry();
 
         EmuSwapFS();   // Win2k/XP FS
     }
@@ -604,7 +604,7 @@ void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*En
 // ******************************************************************
 int EmuException(LPEXCEPTION_POINTERS e)
 {
-	// ******************************************************************
+    // ******************************************************************
 	// * Debugging Information
 	// ******************************************************************
 	{

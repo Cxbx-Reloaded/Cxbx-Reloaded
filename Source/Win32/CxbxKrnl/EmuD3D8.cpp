@@ -104,37 +104,6 @@ UINT xd3d8::D3DVertexToPrimitive[11][2] =
 DWORD *xd3d8::EmuD3DDefferedRenderState;
 
 // ******************************************************************
-// * D3DRenderState2PC (Convert Xbox->PC RenderState enum values)
-// ******************************************************************
-xd3d8::D3DRENDERSTATETYPE D3DRenderState2PC[160] =
-{
-    // NOTE: We may not need this...
-    /* 0->123                           */
-    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
-    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
-    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
-    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
-    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
-    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
-    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
-    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
-    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
-    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
-    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
-    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
-    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
-    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
-    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
-    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
-    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
-    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
-    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
-    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, 
-    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
-    /* D3DRS_LIGHTING       = 124       */ xd3d8::D3DRS_LIGHTING
-};
-
-// ******************************************************************
 // * EmuPrimitiveType
 // ******************************************************************
 xd3d8::D3DPRIMITIVETYPE xd3d8::EmuPrimitiveTypeLookup[] = 
@@ -161,12 +130,19 @@ VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
     // ******************************************************************
     // * store XbeHeader and XbeHeaderSize for further use
     // ******************************************************************
-    {
-        g_XbeHeader     = XbeHeader;
-        g_XbeHeaderSize = XbeHeaderSize;
-    }
+    g_XbeHeader     = XbeHeader;
+    g_XbeHeaderSize = XbeHeaderSize;
 
     g_ThreadInitialized = false;
+
+    // ******************************************************************
+    // * Create a thread dedicated to timing
+    // ******************************************************************
+    {
+        DWORD dwThreadId;
+
+        CreateThread(NULL, NULL, EmuUpdateTickCount, NULL, NULL, &dwThreadId);
+    }
 
     // ******************************************************************
     // * spark up a new thread to handle window message processing
@@ -174,7 +150,6 @@ VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
     {
         DWORD dwThreadId;
 
-        CreateThread(NULL, NULL, EmuUpdateTickCount, NULL, NULL, &dwThreadId);
         CreateThread(NULL, NULL, EmuRenderWindow, NULL, NULL, &dwThreadId);
 
         while(!g_ThreadInitialized)
@@ -214,11 +189,15 @@ VOID EmuD3DCleanup()
 // ******************************************************************
 DWORD WINAPI EmuUpdateTickCount(LPVOID)
 {
+    timeBeginPeriod(0);
+
     while(true)
     {
-        xboxkrnl::KeTickCount = GetTickCount();
+        xboxkrnl::KeTickCount = timeGetTime();
         Sleep(1);
     }
+
+    timeEndPeriod(0);
 }
 
 // ******************************************************************
@@ -404,7 +383,9 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
         Adapter = D3DADAPTER_DEFAULT;
 
         pPresentationParameters->Windowed = TRUE;
-        //pPresentationParameters->SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
+
+        // TODO: Enable this optionally (to slow games down)
+        // pPresentationParameters->SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
 
         hFocusWindow = g_hEmuWindow;
 

@@ -159,8 +159,7 @@ BEGIN
 
         MENUITEM "Config &Audio...",            ID_SETTINGS_CONFIGURESOUND
         , GRAYED
-        MENUITEM "Config &Video...",            ID_SETTINGS_CONFIGUREGRAPHICS
-        , GRAYED
+        MENUITEM "Config &Video...",            ID_SETTINGS_CONFIG_VIDEO
         MENUITEM "",                            1
         MENUITEM "Generate &Exe Automatically", ID_SETTINGS_AUTOGEN
     END
@@ -192,6 +191,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 130
     END
+
+    IDD_VIDEO_CFG, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 255
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 108
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -204,7 +211,7 @@ END
 IDD_CONTROLLER_CFG DIALOGEX 0, 0, 343, 137
 STYLE DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Cxbx : Controller Configuration"
-FONT 8, "Verdana", 0, 0, 0x1
+FONT 8, "Verdana"
 BEGIN
     PUSHBUTTON      "X",IDC_SET_X,7,11,50,14,BS_FLAT
     PUSHBUTTON      "Y",IDC_SET_Y,60,11,50,14,BS_FLAT
@@ -243,6 +250,47 @@ BEGIN
     CTEXT           "Please choose one of the controller components from above...",
                     IDC_CONFIG_STATUS,6,121,329,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
+END
+
+IDD_VIDEO_CFG DIALOGEX 0, 0, 258, 110
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Cxbx : Video Configuration"
+FONT 8, "Verdana"
+BEGIN
+    CONTROL         "Start in Fullscreen",IDC_CV_FULLSCREEN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,76,71,73,10
+    COMBOBOX        IDC_VC_DISPLAY_ADAPTER,76,12,173,30,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Direct3D Configuration",IDC_STATIC,4,1,250,87,BS_CENTER
+    LTEXT           "Display Adapter:",IDC_STATIC,13,14,57,8,0,WS_EX_RIGHT
+    COMBOBOX        IDC_VC_D3D_DEVICE,76,31,173,30,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Direct3D Device:",IDC_STATIC,13,33,57,8,0,WS_EX_RIGHT
+    LTEXT           "Video Resolution:",IDC_STATIC,12,53,58,8,0,WS_EX_RIGHT
+    COMBOBOX        IDC_VC_DISPLAY_RESOLUTION,76,50,173,30,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Cancel",IDC_VC_CANCEL,146,92,50,14,BS_FLAT
+    PUSHBUTTON      "Accept",IDC_VC_ACCEPT,203,92,50,14,BS_FLAT
+    LTEXT           "Other Options:",IDC_STATIC,21,71,49,8,0,WS_EX_RIGHT
+    CONTROL         "Sync to Refresh",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,154,71,65,10
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+IDD_VIDEO_CFG DLGINIT
+BEGIN
+    IDC_VC_DISPLAY_ADAPTER, 0x403, 16, 0
+0x6544, 0x6166, 0x6c75, 0x2074, 0x6441, 0x7061, 0x6574, 0x0072, 
+    IDC_VC_D3D_DEVICE, 0x403, 13, 0
+0x6944, 0x6572, 0x7463, 0x4433, 0x4820, 0x4c41, "\000" 
+    IDC_VC_DISPLAY_RESOLUTION, 0x403, 11, 0
+0x3436, 0x7830, 0x3834, 0x7830, 0x3631, "\000" 
+    0
 END
 
 #endif    // English (U.S.) resources

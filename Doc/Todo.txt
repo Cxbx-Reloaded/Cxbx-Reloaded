@@ -8,7 +8,13 @@ Cxbx Todo (* denotes high priority)
 
   * Retail Games (esp. XDK 4361)
 
-  * What does SetLastError check Irql for? Should this be emulated?
+  * Video Configuration ->
+
+      * Multimonitor support via Direct3D9::EnumAdapterModes enumeration.
+
+	  * Verify that D3DADAPTER_DEFAULT isnt being used anywhere
+
+  What does SetLastError check Irql for? Should this be emulated?
 
   Perfect the timing on KeTickCount
 
@@ -21,8 +27,6 @@ Cxbx Todo (* denotes high priority)
   Encapsulate RecentFiles into a nice little class
 
   Configuration screens may not necessarily need to be modal windows.
-
-  Multimonitor support via Direct3D9::EnumAdapterModes enumeration.
 
   Closing a console should not terminate the entire process.
 
