@@ -1,5 +1,8 @@
 Cxbx Todo:
 
+  D3D Rendering window should inherit from Wnd class. The title should
+  also somehow be updated with information on the playing game.
+
   Recent files (for .exe and .xbe) in menu. (Use registry)
 
   Attempt to add compatibility with ME by using LLDT assembly. This
