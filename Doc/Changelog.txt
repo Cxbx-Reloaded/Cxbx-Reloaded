@@ -5,11 +5,15 @@ version: 0.6.1 (??/??/??)
 
 - Controller input is working
 
-- Some color issues were resolved (hopefully)
+- Some GUI color issues were resolved
+
+- Some Xbe parsing and debug output fixes.
+  You should now be able to deal with the
+  slightly odd Linux Xbe files.
+
+- __declspec(thread)-style TLS is working!!
 
 - Lots of random optimizations
-
-- Some Xbe parsing and debug output fixes
 
 version: 0.6.0-pre12 (02/23/03)
 --------------------------------

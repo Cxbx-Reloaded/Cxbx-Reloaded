@@ -1,5 +1,7 @@
 Cxbx Todo:
 
+  Cleanup TLS emulation.
+
   Configuration may not need to be a modal. Spark off a seperate thread
   to process messages, allow only one open at a time.
 
@@ -39,4 +41,3 @@ Cxbx Todo:
 
   Xbe::m_Header should be allocated dynamically to make room for huge headers.
 
-  TLS needs work.

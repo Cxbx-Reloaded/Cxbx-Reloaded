@@ -187,14 +187,15 @@ CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, DebugMode D
         VirtualProtect(MemXbeHeader, 0x1000, PAGE_READWRITE, &old_protection);
 
         // we sure hope we aren't corrupting anything necessary for an .exe to survive :]
-        MemXbeHeader->dwSizeofHeaders        = XbeHeader->dwSizeofHeaders;
-        MemXbeHeader->dwCertificateAddr      = XbeHeader->dwCertificateAddr;
-        MemXbeHeader->dwPeHeapReserve        = XbeHeader->dwPeHeapReserve;
-        MemXbeHeader->dwPeHeapCommit         = XbeHeader->dwPeHeapCommit;
+        MemXbeHeader->dwSizeofHeaders   = XbeHeader->dwSizeofHeaders;
+        MemXbeHeader->dwCertificateAddr = XbeHeader->dwCertificateAddr;
+        MemXbeHeader->dwPeHeapReserve   = XbeHeader->dwPeHeapReserve;
+        MemXbeHeader->dwPeHeapCommit    = XbeHeader->dwPeHeapCommit;
 
         memcpy(&MemXbeHeader->dwInitFlags, &XbeHeader->dwInitFlags, sizeof(XbeHeader->dwInitFlags));
 
         memcpy((void*)XbeHeader->dwCertificateAddr, &((uint08*)XbeHeader)[XbeHeader->dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
+        memcpy((void*)(XbeHeader->dwBaseAddr + 0x1B0), (void*)&((uint08*)XbeHeader)[0x01B0], XbeHeader->dwSizeofHeaders - 0x1B0);
     }
 
     // ******************************************************************
@@ -202,8 +203,9 @@ CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, DebugMode D
     // ******************************************************************
     {
         EmuInitFS();
-        EmuGenerateFS();
 
+        EmuGenerateFS();
+        
         xboxkrnl::EmuInitD3D(XbeHeader, XbeHeaderSize);
     }
 
@@ -211,7 +213,6 @@ CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, DebugMode D
 
     // This must be enabled or the debugger may crash (sigh)
     // __asm _emit 0xF1
-
     EmuSwapFS();   // XBox FS
 
     Entry();

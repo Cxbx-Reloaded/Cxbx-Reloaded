@@ -55,13 +55,20 @@ void EmuGenerateFS()
     uint16 NewFS=0;
     uint16 OrgFS=0;
 
-    uint32 dwSize = sizeof(xboxkrnl::KPCR);
+    void *TLSPtr = 0;
 
-    NewPcr = (xboxkrnl::KPCR*)new char[dwSize];
+    // ******************************************************************
+    // * Allocate LDT entry
+    // ******************************************************************
+    {
+        uint32 dwSize = sizeof(xboxkrnl::KPCR);
 
-    memset(NewPcr, 0, sizeof(*NewPcr));
+        NewPcr = (xboxkrnl::KPCR*)new char[dwSize];
 
-    NewFS = EmuAllocateLDT((uint32)NewPcr, (uint32)NewPcr + dwSize);
+        memset(NewPcr, 0, sizeof(*NewPcr));
+
+        NewFS = EmuAllocateLDT((uint32)NewPcr, (uint32)NewPcr + dwSize);
+    }
 
     // ******************************************************************
     // * Obtain "OrgFS"
@@ -85,8 +92,6 @@ void EmuGenerateFS()
     // * Generate TIB
     // ******************************************************************
     {
-        void *TLSPtr = 0;
-
         xboxkrnl::KTHREAD *KThread = new xboxkrnl::KTHREAD();
 
         memcpy(&NewPcr->NtTib, OrgNtTib, sizeof(NT_TIB));
@@ -104,7 +109,8 @@ void EmuGenerateFS()
             mov TLSPtr, eax
         }
 
-        KThread->TlsData = (void*)TLSPtr;
+        // HACK: This converts from XBE stack form to Windows form (I guess?!)
+        TLSPtr = (void*)((uint32)TLSPtr+20 + (2*8));
     }
 
     // ******************************************************************
@@ -119,6 +125,15 @@ void EmuGenerateFS()
     {
         mov ax, OrgFS
         mov fs:[0x14], ax   // NewFS.ArbitraryUserPointer
+    }
+
+    // ******************************************************************
+    // * Save "TLSPtr" inside NewFS.StackBase
+    // ******************************************************************
+    __asm
+    {
+        mov eax, TLSPtr
+        mov fs:[0x04], eax
     }
 
     // ******************************************************************

@@ -79,7 +79,11 @@ static DWORD WINAPI EmuCreateThreadProxy
 
     EmuSwapFS();   // XBox FS
 
-    return ilpStartAddress(ilpParam);
+    DWORD ret = ilpStartAddress(ilpParam);
+
+    EmuSwapFS();   // Win2k/XP FS
+
+    return ret;
 }
 
 // ******************************************************************

@@ -48,6 +48,15 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
 
     printf("EmuExe::EmuExe: Generating Exe file...\n");
 
+    Xbe::TLS OrigTLS;
+
+    void *OrigTLSAddr = (void*)x_Xbe->GetTLSData();
+
+    // ******************************************************************
+    // * backup original TLS structure (it will be modified)
+    // ******************************************************************
+    memcpy(&OrigTLS, x_Xbe->m_TLS, sizeof(Xbe::TLS));
+
     // ******************************************************************
     // * generate pe header
     // ******************************************************************
@@ -261,7 +270,9 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
             // * generate .cxbximp section virtual size / addr
             // ******************************************************************
             {
-                uint32 virt_size = RoundUp(0x55, PE_SEGM_ALIGN);
+                uint32 size_null = 4;
+                uint32 data_size = x_Xbe->m_TLS->dwDataEndAddr - x_Xbe->m_TLS->dwDataStartAddr + x_Xbe->m_TLS->dwSizeofZeroFill;
+                uint32 virt_size = RoundUp(0x6E + data_size + size_null, PE_SEGM_ALIGN);
                 uint32 virt_addr = RoundUp(m_SectionHeader[i-1].m_virtual_addr + m_SectionHeader[i-1].m_virtual_size, PE_SEGM_ALIGN);
 
                 m_SectionHeader[i].m_virtual_size = virt_size;
@@ -313,8 +324,8 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
             // ******************************************************************
             if(x_Xbe->m_Header.dwTLSAddr != 0)
             {
-                m_OptionalHeader.m_image_data_directory[IMAGE_DIRECTORY_ENTRY_TLS].m_virtual_addr = x_Xbe->m_Header.dwTLSAddr - m_OptionalHeader.m_image_base;
-                m_OptionalHeader.m_image_data_directory[IMAGE_DIRECTORY_ENTRY_TLS].m_size = 0x28;
+                m_OptionalHeader.m_image_data_directory[IMAGE_DIRECTORY_ENTRY_TLS].m_virtual_addr = m_SectionHeader[i].m_virtual_addr + 0x56;
+                m_OptionalHeader.m_image_data_directory[IMAGE_DIRECTORY_ENTRY_TLS].m_size = 0x18;
             }
 
             printf("OK\n");
@@ -385,6 +396,18 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
         m_bzSection = new uint08*[m_Header.m_sections];
 
         // ******************************************************************
+        // * patch TLS for buffering to output (very important, but strange)
+        // ******************************************************************
+        {
+            uint32 i = m_Header.m_sections - 2;
+
+            uint32 tlsd_size = x_Xbe->m_TLS->dwDataEndAddr - x_Xbe->m_TLS->dwDataStartAddr;
+
+            x_Xbe->m_TLS->dwDataStartAddr = m_SectionHeader[i].m_virtual_addr + m_OptionalHeader.m_image_base + 0x6E;
+            x_Xbe->m_TLS->dwDataEndAddr   = m_SectionHeader[i].m_virtual_addr + m_OptionalHeader.m_image_base + 0x6E + tlsd_size + 8;
+        }
+
+        // ******************************************************************
         // * generate xbe sections
         // ******************************************************************
         {
@@ -424,9 +447,6 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
         // * generate .cxbximp section
         // ******************************************************************
         {
-            // ******************************************************************
-            // * TODO: fix up this entire chunk of code, it is a total hack
-            // ******************************************************************
             uint32 i = m_Header.m_sections - 2;
 
             printf("EmuExe::EmuExe: Generating Section 0x%.04X (.cxbximp)...", i);
@@ -459,6 +479,22 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
             *(uint16*)&m_bzSection[i][0x38] = 0x0001;
             
             memcpy(&m_bzSection[i][0x3A], "_EmuNoFunc@0\0\0cxbx.dll\0\0\0\0\0\0", 28);
+
+            // ******************************************************************
+            // * TLS Data
+            // ******************************************************************
+            if(x_Xbe->m_TLS != 0)
+            {
+                uint32 tlsd_size = x_Xbe->m_TLS->dwDataEndAddr - x_Xbe->m_TLS->dwDataStartAddr;
+                uint32 data_size = tlsd_size + x_Xbe->m_TLS->dwSizeofZeroFill;
+
+                memcpy(&m_bzSection[i][0x56], x_Xbe->m_TLS, sizeof(Xbe::TLS));
+                memcpy(&m_bzSection[i][0x6E], OrigTLSAddr, tlsd_size);
+
+                *(uint32*)&m_bzSection[i][0x62] = m_SectionHeader[i].m_virtual_addr + m_OptionalHeader.m_image_base + 0x6E + data_size;
+                *(uint32*)&m_bzSection[i][0x66] = 0;
+                *(uint32*)&m_bzSection[i][0x6E + data_size] = 0;
+            }
 
             printf("OK\n");
         }
@@ -632,4 +668,9 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
 
         printf("OK\n");
     }
+
+    // ******************************************************************
+    // * repair original TLS structure
+    // ******************************************************************
+    memcpy(x_Xbe->m_TLS, &OrigTLS, sizeof(Xbe::TLS));
 }
