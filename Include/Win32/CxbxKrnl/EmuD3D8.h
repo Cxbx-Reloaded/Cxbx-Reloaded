@@ -868,9 +868,13 @@ VOID WINAPI EmuGet2DSurfaceDesc
 );
 
 // ******************************************************************
-// * func: EmuGet2DSurfaceDescB
+// * func: EmuGet2DSurfaceDescD
 // ******************************************************************
-void EmuGet2DSurfaceDescB();
+VOID WINAPI EmuGet2DSurfaceDescD
+(
+    X_D3DPixelContainer *pPixelContainer,
+    X_D3DSURFACE_DESC   *pDesc
+);
 
 // ******************************************************************
 // * func: EmuIDirect3DSurface8_GetDesc

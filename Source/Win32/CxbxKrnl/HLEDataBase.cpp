@@ -195,6 +195,7 @@ extern uint32 XRefDataBase[] =
     -1, // XREF_DSSTREAMSETVOLUME
     -1, // XREF_DSSETI3DL2LISTENER
     -1, // XREF_DSSETMIXBINHEADROOM
+    -1, // XREF_GET2DSURFACEDESCB
 };
 
 // ******************************************************************

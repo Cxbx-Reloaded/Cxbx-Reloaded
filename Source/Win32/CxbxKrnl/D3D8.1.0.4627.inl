@@ -1370,8 +1370,8 @@ SOOVPA<9> Get2DSurfaceDescB_1_0_4627 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XREF_GET2DSURFACEDESCB, // XRef Is  Saved
+    0,                      // XRef Not Used
 
     {
         // Get2DSurfaceDescB+0x1D : movzx ecx, byte ptr [edi+0x0D]
@@ -1388,6 +1388,70 @@ SOOVPA<9> Get2DSurfaceDescB_1_0_4627 =
 
         // Get2DSurfaceDescB+0x9E : retn
         { 0x9E, 0xC3 }, // (Offset,Value)-Pair #9
+    }
+};
+
+// ******************************************************************
+// * Get2DSurfaceDescC
+// ******************************************************************
+SOOVPA<10> Get2DSurfaceDescC_1_0_4627 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    -1, // XRef Not Saved
+    1,  // XRef Is  Used
+
+    {
+        // Get2DSurfaceDescC+0x10 : call [Get2DSurfaceDescB]
+        { 0x10, XREF_GET2DSURFACEDESCB }, // (Offset,Value)-Pair #1
+
+        // Get2DSurfaceDescC+0x00 : push ebx; push esi; push edi
+        { 0x00, 0x53 }, // (Offset,Value)-Pair #2
+        { 0x05, 0x56 }, // (Offset,Value)-Pair #3
+        { 0x0A, 0x57 }, // (Offset,Value)-Pair #4
+
+        // Get2DSurfaceDescC+0x01 : mov ebx, [esp+0x0C]
+        { 0x01, 0x8B }, // (Offset,Value)-Pair #5
+        { 0x02, 0x5C }, // (Offset,Value)-Pair #6
+        { 0x03, 0x24 }, // (Offset,Value)-Pair #7
+        { 0x04, 0x0C }, // (Offset,Value)-Pair #8
+
+        // Get2DSurfaceDescC+0x17 : retn 0x0C
+        { 0x17, 0xC2 }, // (Offset,Value)-Pair #9
+        { 0x18, 0x0C }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
+// * Get2DSurfaceDescD
+// ******************************************************************
+SOOVPA<10> Get2DSurfaceDescD_1_0_4627 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    -1, // XRef Not Saved
+    1,  // XRef Is  Used
+
+    {
+        // Get2DSurfaceDescD+0x0E : call [Get2DSurfaceDescB]
+        { 0x0E, XREF_GET2DSURFACEDESCB }, // (Offset,Value)-Pair #1
+
+        // Get2DSurfaceDescD+0x00 : push ebx; push esi; push edi
+        { 0x00, 0x53 }, // (Offset,Value)-Pair #2
+        { 0x01, 0x56 }, // (Offset,Value)-Pair #3
+        { 0x06, 0x57 }, // (Offset,Value)-Pair #4
+
+        // Get2DSurfaceDescD+0x02 : mov esi, [esp+0x10]
+        { 0x02, 0x8B }, // (Offset,Value)-Pair #5
+        { 0x03, 0x74 }, // (Offset,Value)-Pair #6
+        { 0x04, 0x24 }, // (Offset,Value)-Pair #7
+        { 0x05, 0x10 }, // (Offset,Value)-Pair #8
+
+        // Get2DSurfaceDescD+0x15 : retn 0x08
+        { 0x15, 0xC2 }, // (Offset,Value)-Pair #9
+        { 0x16, 0x08 }, // (Offset,Value)-Pair #10
     }
 };
 
@@ -2040,12 +2104,30 @@ OOVPATable D3D8_1_0_4627[] =
     },
     // Get2DSurfaceDescB
     {
-        (OOVPA*)&Get2DSurfaceDescB_1_0_4627,
-
-        XTL::EmuGet2DSurfaceDescB,
+        (OOVPA*)&Get2DSurfaceDescB_1_0_4627, 0,
 
         #ifdef _DEBUG_TRACE
-        "EmuGet2DSurfaceDescB" 
+        "EmuGet2DSurfaceDescB (XREF)" 
+        #endif
+    },
+    // Get2DSurfaceDescC
+    {
+        (OOVPA*)&Get2DSurfaceDescC_1_0_4627,
+
+        XTL::EmuGet2DSurfaceDesc,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGet2DSurfaceDescC" 
+        #endif
+    },
+    // Get2DSurfaceDescD
+    {
+        (OOVPA*)&Get2DSurfaceDescD_1_0_4627,
+
+        XTL::EmuGet2DSurfaceDescD,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGet2DSurfaceDescD" 
         #endif
     },
     // IDirect3DSurface8::GetDesc (* unchanged since 4361 *)

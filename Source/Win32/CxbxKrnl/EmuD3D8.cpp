@@ -2542,53 +2542,33 @@ VOID WINAPI XTL::EmuGet2DSurfaceDesc
 }
 
 // ******************************************************************
-// * func: EmuGet2DSurfaceDescB
+// * func: EmuGet2DSurfaceDescD
 // ******************************************************************
-__declspec(naked) void XTL::EmuGet2DSurfaceDescB()
+VOID WINAPI XTL::EmuGet2DSurfaceDescD
+(
+    X_D3DPixelContainer *pPixelContainer,
+    X_D3DSURFACE_DESC   *pDesc
+)
 {
-#ifdef _DEBUG
-    /* Stupid Ass Debug Mode Prolog
-    1000A1E0 55                   push        ebp
-    1000A1E1 8B EC                mov         ebp,esp
-    1000A1E3 83 EC 40             sub         esp,40h
-    1000A1E6 53                   push        ebx
-    1000A1E7 56                   push        esi
-    1000A1E8 57                   push        edi
-    1000A1E9 8D 7D C0             lea         edi,[ebp-40h]
-    1000A1EC B9 10 00 00 00       mov         ecx,10h
-    1000A1F1 B8 CC CC CC CC       mov         eax,0CCCCCCCCh
-    1000A1F6 F3 AB                rep stos    dword ptr [edi]
-    */
-    __asm
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
     {
-        int 3
-
-        pop  edi
-        pop  esi
-        pop  ebx
-
-        push ebx
-        push esi
-        push edi
-
-        push ebx
-        push esi
-        push edi
-
-        call EmuGet2DSurfaceDesc
+        EmuSwapFS();   // Win2k/XP FS
+        printf("EmuD3D8 (0x%X): EmuGet2DSurfaceDescD\n"
+               "(\n"
+               "   pPixelContainer     : 0x%.08X\n"
+               "   pDesc               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pPixelContainer, pDesc);
+        EmuSwapFS();   // Xbox FS
     }
-#else
-    __asm
-    {
-        push ebx
-        push esi
-        push edi
+    #endif
 
-        call EmuGet2DSurfaceDesc
+    EmuGet2DSurfaceDesc(pPixelContainer, 0, pDesc);
 
-        retn
-    }
-#endif
+    return;
 }
 
 // ******************************************************************

@@ -1,19 +1,13 @@
 Cxbx Todo (* denotes high priority, + denotes medium priority)
 
+  * When focus is lost, enumerate and pause all threads, aside from the
+    user input thread (and any other critical threads). alternatively,
+	stash all of the thread handles into a list and suspend them all when
+	necessary.
+
   * Configurable dead zone, for touchy controllers
 
-  * For accurate timing, hijack QueryPerformanceCounter and his friends.
-
   * Push Buffer Size is stored in a global. This may be important (hard to tell)
-
-  * PointSprite demo glitch is caused by incorrect textures being assigned.
-    Hacking the demo's code to re-set the texture before rendering the air
-    particles causes it to run perfectly. This should be fixed.
-
-  * As a solution to the Xbox-Never-Sleeps problem, EmuSwapFS can increment
-    and check a global variable, and Sleep(1) after N number of function
-	interceptions. This could be included in the core configuration options.
-	Be careful that these sleeps dont take place inside of a critical section.
 
   * Perhaps for global variable detection, have some sort of array of
 	function + offset pairs to check. That way if an Xbe happens to not
@@ -40,8 +34,9 @@ Cxbx Todo (* denotes high priority, + denotes medium priority)
 
   + Closing a console should not terminate the entire process.
 
-  + Perfect the timing on KeTickCount. This could be updated periodically,
-    similar to the Xbox-Never-Sleeps problem.
+  + Perfect the timing on KeTickCount. This can be updated along with the
+    Xbox-Never-Sleeps, which would give much higher precision than the
+	current seperate-thread method.
 
   + Some sort of delete-after-emulation type of functionality?
 
