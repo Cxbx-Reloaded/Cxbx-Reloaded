@@ -1,0 +1,53 @@
+Technique for locating missed interceptions. The following IDAPro script, followed by the manual
+removal of functions that are detected by the HLE database, is excellent for detecting functions
+that should have been intercepted but were missed.
+
+I typically clear the IDAPro console window, run the below script, then copy the resulting struct
+as a static global variable in Emu.cpp. I then use the CPP code immediately before the Xbe entry
+point, which will mark all uncaught functions with a breakpoint (0xCC). Obviously this will catch
+all HLE functions too, unless you remove them first. I haven't written a script to automate this
+yet, so it takes a few minutes.
+
+-caustik
+
+<begin idapro code>
+
+auto addr;
+auto count;
+
+addr = FindCode( *** D3D SECTION START VIRTUAL ADDRESS ***, SEARCH_DOWN | SEARCH_NEXT);
+count = 0;
+
+Message("uint32 funcAddr[]=\n");
+Message("{\n");
+
+Jump(addr);
+
+while(1)
+{
+    count = count+1;
+
+    Message("    0x%.08X,\n", addr);
+
+    addr = NextFunction(addr+1);
+
+    if(addr == BADADDR || addr > *** D3D SECTION END VIRTUAL ADDRESS ***)
+    {
+        break;
+    }
+
+    Jump(addr);
+}
+
+Message("}\n");
+
+</end idapro code>
+
+<begin c code>
+
+for(int v=0;v<sizeof(funcAddr)/sizeof(uint32);v++)
+{
+    *(uint08*)(funcAddr[v]) = 0xCC;
+}
+
+</end c code>
