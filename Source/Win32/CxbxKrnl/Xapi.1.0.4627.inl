@@ -133,7 +133,7 @@ OOVPATable XAPI_1_0_4627[] =
 {
     // RtlCreateHeap (* unchanged since 1.0.4361 *) (* OR FARTHER *)
     {
-        (OOVPA*)&RtlCreateHeap_1_0_4361,
+        (OOVPA*)&RtlCreateHeap_1_0_3911,
 
         XTL::EmuRtlCreateHeap,
 
@@ -143,7 +143,7 @@ OOVPATable XAPI_1_0_4627[] =
     },
     // RtlAllocateHeap (* unchanged since 1.0.4361 *) (* OR FARTHER *)
     {
-        (OOVPA*)&RtlAllocateHeap_1_0_4361,
+        (OOVPA*)&RtlAllocateHeap_1_0_3911,
 
         XTL::EmuRtlAllocateHeap,
 

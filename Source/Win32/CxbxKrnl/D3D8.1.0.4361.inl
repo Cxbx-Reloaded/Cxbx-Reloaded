@@ -1758,47 +1758,6 @@ SOOVPA<10> Get2DSurfaceDesc_1_0_4361 =
 };
 
 // ******************************************************************
-// * IDirect3DTexture8_GetSurfaceLevel
-// ******************************************************************
-SOOVPA<11> IDirect3DTexture8_GetSurfaceLevel_1_0_4361 =
-{
-    0,  // Large == 0
-    11, // Count == 11
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        // IDirect3DTexture8_GetSurfaceLevel+0x08 : lea [esp+0x14]
-        { 0x08, 0x8D }, // (Offset,Value)-Pair #1
-        { 0x0B, 0x14 }, // (Offset,Value)-Pair #2
-
-        // IDirect3DTexture8_GetSurfaceLevel+0x17 : mov edx, [esp+0x24]
-        { 0x17, 0x8B }, // (Offset,Value)-Pair #3
-        { 0x1A, 0x24 }, // (Offset,Value)-Pair #4
-
-        // IDirect3DTexture8_GetSurfaceLevel+0x20 : lea ecx, [esp+0x28]
-        { 0x23, 0x28 }, // (Offset,Value)-Pair #4
-
-        // IDirect3DTexture8_GetSurfaceLevel+0x24 : push ecx
-        { 0x24, 0x51 }, // (Offset,Value)-Pair #6
-
-        // IDirect3DTexture8_GetSurfaceLevel+0x25 : push edx
-        { 0x25, 0x52 }, // (Offset,Value)-Pair #7
-
-        // IDirect3DTexture8_GetSurfaceLevel+0x26 : push 0
-        { 0x26, 0x6A }, // (Offset,Value)-Pair #8
-
-        // IDirect3DTexture8_GetSurfaceLevel+0x43 : call [abs]
-        { 0x43, 0xE8 }, // (Offset,Value)-Pair #9
-
-        // IDirect3DTexture8_GetSurfaceLevel+0x4C : retn 0x0C
-        { 0x4C, 0xC2 }, // (Offset,Value)-Pair #10
-        { 0x4D, 0x0C }, // (Offset,Value)-Pair #11
-    }
-};
-
-// ******************************************************************
 // * D3D8_1_0_4361
 // ******************************************************************
 OOVPATable D3D8_1_0_4361[] =
@@ -2399,16 +2358,6 @@ OOVPATable D3D8_1_0_4361[] =
         "EmuIDirect3DBaseTexture8_GetLevelCount" 
         #endif
     },
-    // IDirect3DTexture8::GetSurfaceLevel
-    {
-        (OOVPA*)&IDirect3DTexture8_GetSurfaceLevel_1_0_4361,
-
-        XTL::EmuIDirect3DTexture8_GetSurfaceLevel,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirect3DTexture8_GetSurfaceLevel" 
-        #endif
-    },
     // IDirect3DTexture8::LockRect (* unchanged since 3925 *)
     {
         (OOVPA*)&IDirect3DTexture8_LockRect_1_0_3925,
@@ -2417,6 +2366,16 @@ OOVPATable D3D8_1_0_4361[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DTexture8_LockRect" 
+        #endif
+    },
+    // IDirect3DTexture8::GetSurfaceLevel (* unchanged since 3925 *)
+    {
+        (OOVPA*)&IDirect3DTexture8_GetSurfaceLevel_1_0_3925,
+
+        XTL::EmuIDirect3DTexture8_GetSurfaceLevel,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DTexture8_GetSurfaceLevel" 
         #endif
     },
 };
