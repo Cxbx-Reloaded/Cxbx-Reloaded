@@ -622,6 +622,40 @@ DWORD WINAPI XTL::EmuXInputSetState
 }
 
 // ******************************************************************
+// * func: EmuCreateMutex
+// ******************************************************************
+HANDLE WINAPI XTL::EmuCreateMutex
+(
+    LPSECURITY_ATTRIBUTES   lpMutexAttributes,
+    BOOL                    bInitialOwner,
+    LPCSTR                  lpName
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuCreateMutex\n"
+               "(\n"
+               "   lpMutexAttributes   : 0x%.08X\n"
+               "   bInitialOwner       : 0x%.08X\n"
+               "   lpName              : 0x%.08X (%s)\n"
+               ");\n",
+               GetCurrentThreadId(), lpMutexAttributes, bInitialOwner, lpName, lpName);
+    }
+    #endif
+
+    HANDLE hRet = CreateMutex((SECURITY_ATTRIBUTES *)lpMutexAttributes, bInitialOwner, lpName);
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
 // * func: EmuCloseHandle
 // ******************************************************************
 BOOL WINAPI XTL::EmuCloseHandle
@@ -860,4 +894,30 @@ VOID WINAPI XTL::EmuXapiBootDash(DWORD UnknownA, DWORD UnknownB, DWORD UnknownC)
     EmuSwapFS();   // XBox FS
 
     return;
+}
+
+// ******************************************************************
+// * func: EmuXCalculateSignatureBegin
+// ******************************************************************
+HANDLE WINAPI XTL::EmuXCalculateSignatureBegin(DWORD dwFlags)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): XCalculateSignatureBegin\n"
+               "(\n"
+               "   dwFlags             : 0x%.08X\n"
+               ");\n",
+                GetCurrentThreadId(), dwFlags);
+    }
+    #endif
+
+    EmuSwapFS();   // XBox FS
+
+    // return a fake handle value for now
+    return (PVOID)0xAAAAAAAA;
 }

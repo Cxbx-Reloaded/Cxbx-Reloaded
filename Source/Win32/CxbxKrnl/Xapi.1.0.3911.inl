@@ -68,6 +68,41 @@ SOOVPA<10> XInitDevices_1_0_3911 =
 };
 
 // ******************************************************************
+// * CreateMutex
+// ******************************************************************
+SOOVPA<13> CreateMutex_1_0_3911 =
+{
+    0,  // Large == 0
+    13,  // Count == 13
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // CreateMutex+0x03 : sub esp, 0x14
+        { 0x03, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x04, 0xEC }, // (Offset,Value)-Pair #2
+        { 0x05, 0x14 }, // (Offset,Value)-Pair #3
+
+        // CreateMutex+0x32 : cmp eax, 0x40000000
+        { 0x32, 0x3D }, // (Offset,Value)-Pair #4
+        { 0x33, 0x00 }, // (Offset,Value)-Pair #5
+        { 0x34, 0x00 }, // (Offset,Value)-Pair #6
+        { 0x35, 0x00 }, // (Offset,Value)-Pair #7
+        { 0x36, 0x40 }, // (Offset,Value)-Pair #8
+
+        // CreateMutex+0x39 : push 0xB7
+        { 0x39, 0x68 }, // (Offset,Value)-Pair #9
+        { 0x3A, 0xB7 }, // (Offset,Value)-Pair #10
+
+        // CreateMutex+0x47 : mov eax, [ebp+0x10]
+        { 0x47, 0x8B }, // (Offset,Value)-Pair #11
+        { 0x48, 0x45 }, // (Offset,Value)-Pair #12
+        { 0x49, 0x10 }, // (Offset,Value)-Pair #13
+    }
+};
+
+// ******************************************************************
 // * CreateThread
 // ******************************************************************
 SOOVPA<8> CreateThread_1_0_3911 =
@@ -190,6 +225,38 @@ SOOVPA<11> XapiBootDash_1_0_3911 =
 };
 
 // ******************************************************************
+// * XCalculateSignatureBegin
+// ******************************************************************
+SOOVPA<10> XCalculateSignatureBegin_1_0_3911 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // XCalculateSignatureBegin+0x01 : push 0x7C; push 0
+        { 0x01, 0x6A }, // (Offset,Value)-Pair #1
+        { 0x02, 0x7C }, // (Offset,Value)-Pair #2
+        { 0x03, 0x6A }, // (Offset,Value)-Pair #3
+        { 0x04, 0x00 }, // (Offset,Value)-Pair #4
+
+        // XCalculateSignatureBegin+0x10 : push 0x08
+        { 0x10, 0x6A }, // (Offset,Value)-Pair #5
+        { 0x11, 0x08 }, // (Offset,Value)-Pair #6
+
+        // XCalculateSignatureBegin+0x2E : push 0x10
+        { 0x2E, 0x6A }, // (Offset,Value)-Pair #7
+        { 0x2F, 0x10 }, // (Offset,Value)-Pair #8
+
+        // XCalculateSignatureBegin+0x3B : retn 0x04
+        { 0x3B, 0xC2 }, // (Offset,Value)-Pair #9
+        { 0x3C, 0x04 }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_3911
 // ******************************************************************
 OOVPATable XAPI_1_0_3911[] =
@@ -202,6 +269,16 @@ OOVPATable XAPI_1_0_3911[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXInitDevices"
+        #endif
+    },
+    // CreateMutex
+    {
+        (OOVPA*)&CreateMutex_1_0_3911,
+
+        XTL::EmuCreateMutex,
+
+        #ifdef _DEBUG_TRACE
+        "EmuCreateMutex" 
         #endif
     },
     /* Too High Level
@@ -248,6 +325,18 @@ OOVPATable XAPI_1_0_3911[] =
         "EmuXapiBootDash"
         #endif
     },
+    /*
+    // XCalculateSignatureBegin
+    {
+        (OOVPA*)&XCalculateSignatureBegin_1_0_3911,
+
+        XTL::EmuXCalculateSignatureBegin,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXCalculateSignatureBegin"
+        #endif
+    },
+    */
 };
 
 // ******************************************************************

@@ -415,6 +415,16 @@ HANDLE WINAPI EmuCreateThread
 );
 
 // ******************************************************************
+// * func: EmuCreateMutex
+// ******************************************************************
+HANDLE WINAPI EmuCreateMutex
+(
+    LPSECURITY_ATTRIBUTES   lpMutexAttributes,
+    BOOL                    bInitialOwner,
+    LPCSTR                  lpName
+);
+
+// ******************************************************************
 // * func: EmuCloseHandle
 // ******************************************************************
 BOOL WINAPI EmuCloseHandle
@@ -475,5 +485,10 @@ NTSTATUS CDECL XapiSetupPerTitleDriveLetters(DWORD dwTitleId, LPCWSTR wszTitleNa
 // * func: EmuXapiBootDash
 // ******************************************************************
 VOID WINAPI EmuXapiBootDash(DWORD UnknownA, DWORD UnknownB, DWORD UnknownC);
+
+// ******************************************************************
+// * func: EmuXCalculateSignatureBegin
+// ******************************************************************
+HANDLE WINAPI EmuXCalculateSignatureBegin(DWORD dwFlags);
 
 #endif

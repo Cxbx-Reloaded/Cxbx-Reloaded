@@ -1274,15 +1274,13 @@ XBSYSAPI EXPORTNUM(192) NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 
         NtDll::RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
 
-        InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, g_hBaseNamedObjects, NULL);
+        InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
     }
-
-    _asm int 3
 
     NTSTATUS ret = NtDll::NtCreateMutant(MutantHandle, MUTANT_ALL_ACCESS, (szBuffer != 0) ? &NtObjAttr : 0, InitialOwner);
 
     if(FAILED(ret))
-        EmuCleanup("NtCreateMutant Failed (0x%.08X)!", ret);
+        EmuCleanup("NtCreateMutant Failed : FIXME!! (0x%.08X)!", ret);
     else
         EmuCleanup("NtCreateMutant Success");
 
@@ -1894,7 +1892,7 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
 }
 
 // ******************************************************************
-// * PsTerminateSystemThread
+// * 0x0102 - PsTerminateSystemThread
 // ******************************************************************
 XBSYSAPI EXPORTNUM(258) VOID NTAPI xboxkrnl::PsTerminateSystemThread(IN NTSTATUS ExitStatus)
 {
@@ -1921,7 +1919,7 @@ XBSYSAPI EXPORTNUM(258) VOID NTAPI xboxkrnl::PsTerminateSystemThread(IN NTSTATUS
 }
 
 // ******************************************************************
-// * RtlAnsiStringToUnicodeString
+// * 0x0104 - RtlAnsiStringToUnicodeString
 // ******************************************************************
 XBSYSAPI EXPORTNUM(260) NTSTATUS NTAPI xboxkrnl::RtlAnsiStringToUnicodeString
 (
@@ -2155,6 +2153,98 @@ XBSYSAPI EXPORTNUM(322) XBOX_HARDWARE_INFO xboxkrnl::XboxHardwareInfo =
     0xC0000035,
     0,0,0,0
 };
+
+// ******************************************************************
+// * XboxSignatureKey
+// ******************************************************************
+XBSYSAPI EXPORTNUM(325) xboxkrnl::BYTE xboxkrnl::XboxSignatureKey[16] =
+{
+    // cxbx default saved game key
+    0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+    0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF
+};
+
+// ******************************************************************
+// * XcSHAInit
+// ******************************************************************
+XBSYSAPI EXPORTNUM(335) VOID NTAPI xboxkrnl::XcSHAInit(UCHAR *pbSHAContext)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): XcSHAInit\n"
+               "(\n"
+               "   pbSHAContext        : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pbSHAContext);
+    }
+    #endif
+
+    EmuSwapFS();   // Xbox FS
+
+    return;
+}
+
+// ******************************************************************
+// * XcSHAUpdate
+// ******************************************************************
+XBSYSAPI EXPORTNUM(336) VOID NTAPI xboxkrnl::XcSHAUpdate(UCHAR *pbSHAContext, UCHAR *pbInput, ULONG dwInputLength)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): XcSHAUpdate\n"
+               "(\n"
+               "   pbSHAContext        : 0x%.08X\n"
+               "   pbInput             : 0x%.08X\n"
+               "   dwInputLength       : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pbSHAContext, pbInput, dwInputLength);
+    }
+    #endif
+
+    EmuSwapFS();   // Xbox FS
+
+    return;
+}
+
+// ******************************************************************
+// * XcSHAFinal
+// ******************************************************************
+XBSYSAPI EXPORTNUM(337) VOID NTAPI xboxkrnl::XcSHAFinal(UCHAR *pbSHAContext, UCHAR *pbDigest)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): XcSHAFinal\n"
+               "(\n"
+               "   pbSHAContext        : 0x%.08X\n"
+               "   pbDigest            : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pbSHAContext, pbDigest);
+    }
+    #endif
+
+    // for now, the digest is always zeros (we dont care!)
+    for(int v=0;v<16;v++)
+        pbDigest[v] = 0;
+
+    EmuSwapFS();   // Xbox FS
+
+    return;
+}
 
 // ******************************************************************
 // * HalBootSMCVideoMode
