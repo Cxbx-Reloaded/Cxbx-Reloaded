@@ -40,7 +40,7 @@
 // ******************************************************************
 XBVideo::XBVideo() : m_bVSync(false), m_bFullscreen(false)
 {
-    strcpy(m_szVideoResolution, "640 x 480 32bit x8r8g8b8 (60 hz)");
+    strcpy(m_szVideoResolution, "Automatic (Default)");
 }
 
 // ******************************************************************

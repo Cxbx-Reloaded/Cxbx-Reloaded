@@ -42,4 +42,20 @@ PVOID WINAPI EmuXGIsSwizzledFormat
     xd3d8::D3DFORMAT Format
 );
 
+// ******************************************************************
+// * func: EmuXGUnswizzleRect
+// ******************************************************************
+VOID WINAPI EmuXGUnswizzleRect
+(
+    PVOID           pSrcBuffer,
+    DWORD           dwWidth,
+    DWORD           dwHeight,
+    DWORD           dwDepth,
+    PVOID           pDstBuff,
+    DWORD           dwPitch,
+    RECT            rSrc,
+    POINT           poDst,
+    DWORD           dwBPP
+);
+
 #endif

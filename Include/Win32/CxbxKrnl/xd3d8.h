@@ -138,19 +138,108 @@ typedef struct _X_D3DPRESENT_PARAMETERS
 X_D3DPRESENT_PARAMETERS;
 
 // ******************************************************************
-// * D3DResource
+// * D3DResource "Common" Masks
 // ******************************************************************
-struct D3DResource
+#define X_D3DCOMMON_REFCOUNT_MASK      0x0000FFFF
+
+#define X_D3DCOMMON_TYPE_MASK          0x00070000
+#define X_D3DCOMMON_TYPE_SHIFT         16
+#define X_D3DCOMMON_TYPE_VERTEXBUFFER  0x00000000
+#define X_D3DCOMMON_TYPE_INDEXBUFFER   0x00010000
+#define X_D3DCOMMON_TYPE_PUSHBUFFER    0x00020000
+#define X_D3DCOMMON_TYPE_PALETTE       0x00030000
+#define X_D3DCOMMON_TYPE_TEXTURE       0x00040000
+#define X_D3DCOMMON_TYPE_SURFACE       0x00050000
+#define X_D3DCOMMON_TYPE_FIXUP         0x00060000
+
+#define X_D3DCOMMON_INTREFCOUNT_MASK   0x00780000
+#define X_D3DCOMMON_INTREFCOUNT_SHIFT  19
+
+#define X_D3DCOMMON_D3DCREATED         0x01000000
+
+#define X_D3DCOMMON_UNUSED_MASK        0xFE000000
+#define X_D3DCOMMON_UNUSED_SHIFT       25
+
+// ******************************************************************
+// * X_D3DResource
+// ******************************************************************
+struct X_D3DResource
 {
     DWORD Common;
-    DWORD Data;
+
+    union
+    {
+        DWORD                   Data;
+        IDirect3DResource8     *EmuResource8;
+        IDirect3DBaseTexture8  *EmuBaseTexture8;
+        IDirect3DTexture8      *EmuTexture8;
+        IDirect3DSurface8      *EmuSurface8;
+        IDirect3DVertexBuffer8 *EmuVertexBuffer8;
+    };
+
     DWORD Lock;
 };
 
 // ******************************************************************
-// * D3DVertexBuffer
+// * X_D3DVertexBuffer
 // ******************************************************************
-struct D3DVertexBuffer : public D3DResource
+struct X_D3DVertexBuffer : public X_D3DResource
+{
+
+};
+
+// ******************************************************************
+// * X_D3DPixelContainer "Format" Masks
+// ******************************************************************
+#define X_D3DFORMAT_RESERVED1_MASK        0x00000003      // Must be zero
+                                        
+#define X_D3DFORMAT_DMACHANNEL_MASK       0x00000003
+#define X_D3DFORMAT_DMACHANNEL_A          0x00000001      // DMA channel A - the default for all system memory
+#define X_D3DFORMAT_DMACHANNEL_B          0x00000002      // DMA channel B - unused
+#define X_D3DFORMAT_CUBEMAP               0x00000004      // Set if the texture if a cube map
+#define X_D3DFORMAT_BORDERSOURCE_COLOR    0x00000008
+#define X_D3DFORMAT_DIMENSION_MASK        0x000000F0      // # of dimensions
+#define X_D3DFORMAT_DIMENSION_SHIFT       4
+#define X_D3DFORMAT_FORMAT_MASK           0x0000FF00
+#define X_D3DFORMAT_FORMAT_SHIFT          8
+#define X_D3DFORMAT_MIPMAP_MASK           0x000F0000 
+#define X_D3DFORMAT_MIPMAP_SHIFT          16
+#define X_D3DFORMAT_USIZE_MASK            0x00F00000      // Log 2 of the U size of the base texture
+#define X_D3DFORMAT_USIZE_SHIFT           20
+#define X_D3DFORMAT_VSIZE_MASK            0x0F000000      // Log 2 of the V size of the base texture
+#define X_D3DFORMAT_VSIZE_SHIFT           24
+#define X_D3DFORMAT_PSIZE_MASK            0xF0000000      // Log 2 of the P size of the base texture
+#define X_D3DFORMAT_PSIZE_SHIFT           28
+
+// ******************************************************************
+// * X_D3DPixelContainer
+// ******************************************************************
+struct X_D3DPixelContainer : public X_D3DResource
+{
+    X_D3DFORMAT Format;
+    DWORD       Size;
+};
+
+// ******************************************************************
+// * X_D3DBaseTexture
+// ******************************************************************
+struct X_D3DBaseTexture : public X_D3DPixelContainer
+{
+
+};
+
+// ******************************************************************
+// * X_D3DTexture
+// ******************************************************************
+struct X_D3DTexture : public X_D3DBaseTexture
+{
+
+};
+
+// ******************************************************************
+// * X_D3DSurface
+// ******************************************************************
+struct X_D3DSurface : public X_D3DPixelContainer
 {
 
 };
@@ -242,7 +331,7 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreatePixelShader
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateTexture2
 // ******************************************************************
-IDirect3DTexture8 * WINAPI EmuIDirect3DDevice8_CreateTexture2
+X_D3DResource * WINAPI EmuIDirect3DDevice8_CreateTexture2
 (
     UINT                Width,
     UINT                Height,
@@ -264,7 +353,7 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreateTexture
     DWORD               Usage,
     D3DFORMAT           Format,
     D3DPOOL             Pool,
-    IDirect3DTexture8 **ppTexture
+    X_D3DResource     **ppTexture
 );
 
 // ******************************************************************
@@ -272,8 +361,8 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreateTexture
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_SetTexture
 (
-    DWORD                   Stage,
-    IDirect3DBaseTexture8  *pTexture
+    DWORD           Stage,
+    X_D3DResource  *pTexture
 );
 
 // ******************************************************************
@@ -317,11 +406,20 @@ HRESULT WINAPI EmuIDirect3DDevice8_Swap
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DResource8_Register
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DResource8_Register
+(
+    X_D3DResource      *pThis,
+    PVOID               pBase
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DResource8_Release
 // ******************************************************************
-HRESULT WINAPI EmuIDirect3DResource8_Release
+ULONG WINAPI EmuIDirect3DResource8_Release
 (
-    PVOID               pThis
+    X_D3DResource      *pThis
 );
 
 // ******************************************************************
@@ -329,7 +427,7 @@ HRESULT WINAPI EmuIDirect3DResource8_Release
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DSurface8_GetDesc
 (
-    PVOID               pThis,
+    X_D3DResource      *pThis,
     X_D3DSURFACE_DESC  *pDesc
 );
 
@@ -338,10 +436,10 @@ HRESULT WINAPI EmuIDirect3DSurface8_GetDesc
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DSurface8_LockRect
 (
-    PVOID               pThis,
-    D3DLOCKED_RECT     *pLockedRect,
-    CONST RECT         *pRect,
-    DWORD               Flags
+    X_D3DResource  *pThis,
+    D3DLOCKED_RECT *pLockedRect,
+    CONST RECT     *pRect,
+    DWORD           Flags
 );
 
 // ******************************************************************
@@ -349,16 +447,16 @@ HRESULT WINAPI EmuIDirect3DSurface8_LockRect
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DBaseTexture8_GetLevelCount
 (
-    PVOID               pThis
+    X_D3DBaseTexture   *pThis
 );
 
 // ******************************************************************
 // * func: EmuIDirect3DTexture8_GetSurfaceLevel
 // ******************************************************************
-IDirect3DSurface8 * WINAPI EmuIDirect3DTexture8_GetSurfaceLevel2
+X_D3DResource * WINAPI EmuIDirect3DTexture8_GetSurfaceLevel2
 (
-    PVOID               pThis,
-    UINT                Level
+    X_D3DTexture   *pThis,
+    UINT            Level
 );
 
 // ******************************************************************
@@ -366,9 +464,9 @@ IDirect3DSurface8 * WINAPI EmuIDirect3DTexture8_GetSurfaceLevel2
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DTexture8_GetSurfaceLevel
 (
-    PVOID               pThis,
-    UINT                Level,
-    IDirect3DSurface8 **ppSurfaceLevel
+    X_D3DTexture   *pThis,
+    UINT            Level,
+    X_D3DSurface  **ppSurfaceLevel
 );
 
 // ******************************************************************
@@ -376,17 +474,17 @@ HRESULT WINAPI EmuIDirect3DTexture8_GetSurfaceLevel
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_CreateVertexBuffer
 (
-    UINT              Length,
-    DWORD             Usage,
-    DWORD             FVF,
-    D3DPOOL           Pool,
-    D3DVertexBuffer **ppVertexBuffer
+    UINT                Length,
+    DWORD               Usage,
+    DWORD               FVF,
+    D3DPOOL             Pool,
+    X_D3DVertexBuffer **ppVertexBuffer
 );
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateVertexBuffer
 // ******************************************************************
-D3DVertexBuffer* WINAPI EmuIDirect3DDevice8_CreateVertexBuffer2
+X_D3DVertexBuffer* WINAPI EmuIDirect3DDevice8_CreateVertexBuffer2
 (
     UINT Length
 );
@@ -429,11 +527,11 @@ VOID WINAPI EmuIDirect3DDevice8_SetTransform
 // ******************************************************************
 VOID WINAPI EmuIDirect3DVertexBuffer8_Lock
 (
-    D3DVertexBuffer *ppVertexBuffer,
-    UINT             OffsetToLock,
-    UINT             SizeToLock,
-    BYTE           **ppbData,
-    DWORD            Flags
+    X_D3DVertexBuffer   *ppVertexBuffer,
+    UINT                OffsetToLock,
+    UINT                SizeToLock,
+    BYTE              **ppbData,
+    DWORD               Flags
 );
 
 // ******************************************************************
@@ -441,8 +539,8 @@ VOID WINAPI EmuIDirect3DVertexBuffer8_Lock
 // ******************************************************************
 BYTE* WINAPI EmuIDirect3DVertexBuffer8_Lock2
 (
-    D3DVertexBuffer *ppVertexBuffer,
-    DWORD            Flags
+    X_D3DVertexBuffer  *ppVertexBuffer,
+    DWORD               Flags
 );
 
 // ******************************************************************
@@ -450,9 +548,9 @@ BYTE* WINAPI EmuIDirect3DVertexBuffer8_Lock2
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_SetStreamSource
 (
-    UINT             StreamNumber,
-    D3DVertexBuffer *pStreamData,
-    UINT             Stride
+    UINT                StreamNumber,
+    X_D3DVertexBuffer  *pStreamData,
+    UINT                Stride
 );
 
 // ******************************************************************
