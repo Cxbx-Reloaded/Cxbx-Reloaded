@@ -125,7 +125,10 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
                 {
                     g_pD3D8->GetAdapterIdentifier(v, D3DENUM_NO_WHQL_LEVEL, &AdapterIdentifier);
 
-                    SendMessage(g_hDisplayAdapter, CB_ADDSTRING, 0, (LPARAM)AdapterIdentifier.Description);
+                    if(v == 0)
+                        SendMessage(g_hDisplayAdapter, CB_ADDSTRING, 0, (LPARAM)"Primary Display Adapter");
+                    else
+                        SendMessage(g_hDisplayAdapter, CB_ADDSTRING, 0, (LPARAM)AdapterIdentifier.Description);
                 }
             }
 

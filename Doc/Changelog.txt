@@ -1,5 +1,14 @@
 cxbx website: http://www.caustik.com/xbox/
 
+version: 0.7.3 (06/18/03)
+--------------------------------
+
+- Meshes
+
+- Indexed [primitive/vertex] rendering
+
+- Texture fixes (some users couldn't see them!)
+
 version: 0.7.2 (06/13/03)
 --------------------------------
 
