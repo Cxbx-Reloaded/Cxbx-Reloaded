@@ -725,9 +725,7 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
     }
     #endif
 
-    // TODO: Make this much more efficient and correct if necessary!
-    // HACK: Should be aligned!!
-    PVOID pRet = (PVOID)new unsigned char[NumberOfBytes];
+    PVOID pRet = malloc(NumberOfBytes);
 
     EmuSwapFS();   // Xbox FS
 
@@ -853,7 +851,7 @@ XBSYSAPI EXPORTNUM(171) VOID NTAPI xboxkrnl::MmFreeContiguousMemory
     #endif
 
     if(BaseAddress != &xLaunchDataPage)
-        delete[] BaseAddress;
+        free(BaseAddress);
 
     EmuSwapFS();   // Xbox FS
 
@@ -1296,6 +1294,12 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
 
     if(FAILED(ret))
         EmuWarning("NtCreateFile Failed (0x%.08X)", ret);
+    #ifdef _DEBUG_TRACE
+    else
+    {
+        printf("EmuKrnl (0x%X): NtCreateFile = 0x%.08X\n", GetCurrentThreadId(), *FileHandle);
+    }
+    #endif
 
     // ******************************************************************
     // * Restore original buffer
@@ -1474,6 +1478,7 @@ XBSYSAPI EXPORTNUM(202) NTSTATUS NTAPI xboxkrnl::NtOpenFile
     // ******************************************************************
     // * debug trace
     // ******************************************************************
+    /* Redundant
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
@@ -1491,6 +1496,7 @@ XBSYSAPI EXPORTNUM(202) NTSTATUS NTAPI xboxkrnl::NtOpenFile
         EmuSwapFS();   // Xbox FS
     }
     #endif
+    //*/
 
     return NtCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, NULL, 0, ShareAccess, FILE_OPEN, OpenOptions);
 }

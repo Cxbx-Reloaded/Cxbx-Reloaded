@@ -521,7 +521,12 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         // _USE_XGMATH Disabled in mesh :[
         // halo : dword_0_2E2D18
         // halo : 1744F0 (bink)
-        //_asm int 3
+        
+        // ***** Remember to check SetLastError/GetLastError, this is very potential!
+        // ***** Hint: BP@GetLastError and see if it matches up with Xeon's SetLastError?
+        // ***** Note: SetLastError could be expected as implicit from some calls!
+        _asm int 3
+        // ***** Problem could be GetLastError() after cache 
 
         Entry();
 
