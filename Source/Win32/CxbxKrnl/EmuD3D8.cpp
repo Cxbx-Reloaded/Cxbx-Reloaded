@@ -2638,7 +2638,7 @@ ULONG WINAPI XTL::EmuIDirect3DResource8_AddRef
 
     IDirect3DResource8 *pResource8 = pThis->EmuResource8;
 
-    if(pThis->Common & X_D3DCOMMON_TYPE_PALETTE)
+    if(pThis->Lock == 0x8000BEEF)
         uRet = ++pThis->Lock;
     else if(pResource8 != 0)
         uRet = pResource8->AddRef();
@@ -2675,7 +2675,7 @@ ULONG WINAPI XTL::EmuIDirect3DResource8_Release
 
     IDirect3DResource8 *pResource8 = pThis->EmuResource8;
 
-    if(pThis->Common & X_D3DCOMMON_TYPE_PALETTE)
+    if(pThis->Lock == 0x8000BEEF)
     {
         delete[] (PVOID)pThis->Data;
         uRet = --pThis->Lock;
@@ -5059,8 +5059,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreatePalette
         32*sizeof(D3DCOLOR)      // D3DPALETTE_32
     };
 
-    (*ppPalette)->Common = X_D3DCOMMON_TYPE_PALETTE;
-    (*ppPalette)->Lock = 1; // emulated reference count for palettes
+    (*ppPalette)->Common = 0;
+    (*ppPalette)->Lock = 0x8000BEEF; // emulated reference count for palettes
     (*ppPalette)->Data = (DWORD)new uint08[lk[Size]];
 
     EmuSwapFS();   // XBox FS
