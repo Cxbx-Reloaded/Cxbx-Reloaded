@@ -238,6 +238,72 @@ SOOVPA<7> IDirect3DDevice8_SetPixelShader_1_0_5849 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetVertexData4f
+// ******************************************************************
+SOOVPA<17> IDirect3DDevice8_SetVertexData4f_1_0_5849 =
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        { 0x0A, 0x46 },
+        { 0x16, 0x08 },
+        { 0x22, 0x09 },
+        { 0x2E, 0x24 },
+        { 0x3A, 0x24 },
+        { 0x46, 0x8B },
+        { 0x52, 0x14 },
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetVertexDataColor
+// ******************************************************************
+SOOVPA<17> IDirect3DDevice8_SetVertexDataColor_1_0_5849 =
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        { 0x08, 0x06 },
+        { 0x14, 0x8B },
+        { 0x1C, 0x19 },
+        { 0x26, 0xB6 },
+        { 0x30, 0x00 },
+        { 0x3A, 0xFF },
+        { 0x44, 0x08 },
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_End
+// ******************************************************************
+SOOVPA<17> IDirect3DDevice8_End_1_0_5849 =
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        { 0x07, 0x8B },
+        { 0x13, 0xC7 },
+        { 0x19, 0xC7 },
+        { 0x22, 0x08 },
+        { 0x2B, 0xE1 },
+        { 0x34, 0x4E },
+        { 0x40, 0xC3 },
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetRenderState_CullMode
 // ******************************************************************
 SOOVPA<13> IDirect3DDevice8_SetRenderState_CullMode_1_0_5849 =
@@ -646,14 +712,34 @@ OOVPATable D3D8_1_0_5849[] =
         "EmuIDirect3DDevice8_SetVertexData2f"
         #endif
     },
-    // IDirect3DDevice8::SetVertexData4f (* unchanged since 4627 *)
+    // IDirect3DDevice8::SetVertexData4f
     {
-        (OOVPA*)&IDirect3DDevice8_SetVertexData4f_1_0_4627,
+        (OOVPA*)&IDirect3DDevice8_SetVertexData4f_1_0_5849,
 
         XTL::EmuIDirect3DDevice8_SetVertexData4f,
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetVertexData4f"
+        #endif
+    },
+    // IDirect3DDevice8::SetVertexDataColor
+    {
+        (OOVPA*)&IDirect3DDevice8_SetVertexDataColor_1_0_5849,
+
+        XTL::EmuIDirect3DDevice8_SetVertexDataColor,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetVertexDataColor" 
+        #endif
+    },
+    // IDirect3DDevice8::End
+    {
+        (OOVPA*)&IDirect3DDevice8_End_1_0_5849,
+
+        XTL::EmuIDirect3DDevice8_End,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_End" 
         #endif
     },
     // IDirect3DDevice8::SetTextureState_TexCoordIndex (* unchanged since 4627 *)

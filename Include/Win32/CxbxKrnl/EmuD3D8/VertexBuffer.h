@@ -124,10 +124,12 @@ class VertexPatcher
 // inline vertex buffer emulation
 extern DWORD                  *g_pIVBVertexBuffer;
 extern X_D3DPRIMITIVETYPE      g_IVBPrimitiveType;
+extern DWORD                   g_IVBFVF;
 
 extern struct _D3DIVB
 {
     XTL::D3DXVECTOR3 Position;   // Position
+    FLOAT            Rhw;        // Rhw
     XTL::DWORD       dwSpecular; // Specular
     XTL::DWORD       dwDiffuse;  // Diffuse
     XTL::D3DXVECTOR3 Normal;     // Normal

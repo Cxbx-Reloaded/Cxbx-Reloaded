@@ -494,6 +494,29 @@ SOOVPA<12> IDirect3DDevice8_SetShaderConstantMode_1_0_4627 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_CopyRects
+// ******************************************************************
+SOOVPA<8> IDirect3DDevice8_CopyRects_1_0_4627 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        { 0x1E, 0x57 },
+        { 0x3E, 0xF6 },
+        { 0x5E, 0x00 },
+        { 0x7E, 0x01 },
+        { 0x9E, 0x00 },
+        { 0xBE, 0x0C },
+        { 0xDE, 0xF7 },
+        { 0xFE, 0x00 },
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_GetBackBuffer2
 // ******************************************************************
 SOOVPA<12> IDirect3DDevice8_GetBackBuffer2_1_0_4627 =
@@ -3011,6 +3034,16 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3D8_KickOffAndWaitForIdle2"
+        #endif
+    },
+    // IDirect3DDevice8::CopyRects
+    {
+        (OOVPA*)&IDirect3DDevice8_CopyRects_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_CopyRects,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_CopyRects"
         #endif
     },
     // IDirect3DDevice8::GetBackBuffer2

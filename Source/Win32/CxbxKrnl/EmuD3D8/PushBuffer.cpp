@@ -385,38 +385,12 @@ void XTL::EmuExecutePushBuffer
                     {
                     #endif
 
-                    if(!g_bPBSkipPusher)
+                    if(!g_bPBSkipPusher && IsValidCurrentShader())
                     {
-                        if(IsValidCurrentShader())
-                        {
-                            //g_pD3DDevice8->SetVertexShader(D3DFVF_XYZ | D3DFVF_TEX0);
-
-                            /* these don't help the turok lighting problems :[
-                            g_pD3DDevice8->SetRenderState(D3DRS_LIGHTING, FALSE);
-                            g_pD3DDevice8->SetRenderState(D3DRS_FOGENABLE, FALSE);
-                            g_pD3DDevice8->SetRenderState(D3DRS_FOGTABLEMODE, D3DFOG_NONE);
-                            g_pD3DDevice8->SetRenderState(D3DRS_SPECULARENABLE, FALSE);
-                            g_pD3DDevice8->SetRenderState(D3DRS_ZVISIBLE, FALSE);
-                            g_pD3DDevice8->SetRenderState(D3DRS_RANGEFOGENABLE, FALSE);
-                            g_pD3DDevice8->SetRenderState(D3DRS_AMBIENT, RGB(255,125,125));
-                            g_pD3DDevice8->SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, D3DMCS_COLOR1);
-
-                            D3DMATERIAL8 mtrl;
-
-                            ZeroMemory( &mtrl, sizeof(D3DMATERIAL8) );
-
-                            mtrl.Diffuse.r = mtrl.Ambient.r = mtrl.Specular.r = 1.0f;
-                            mtrl.Diffuse.g = mtrl.Ambient.g = mtrl.Specular.r = 0.0f;
-                            mtrl.Diffuse.b = mtrl.Ambient.b = mtrl.Specular.r = 0.0f;
-                            mtrl.Diffuse.a = mtrl.Ambient.a = mtrl.Specular.r = 1.0f;
-
-                            g_pD3DDevice8->SetMaterial(&mtrl);
-                            //*/
-                            g_pD3DDevice8->DrawIndexedPrimitive
-                            (
-                                PCPrimitiveType, 0, /*dwCount*2*/8*1024*1024, 0, PrimitiveCount
-                            );
-                        }
+                        g_pD3DDevice8->DrawIndexedPrimitive
+                        (
+                            PCPrimitiveType, 0, /*dwCount*2*/8*1024*1024, 0, PrimitiveCount
+                        );
                     }
 
                     #ifdef _DEBUG_TRACK_PB

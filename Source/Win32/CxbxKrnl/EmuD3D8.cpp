@@ -1628,6 +1628,17 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CopyRects
            GetCurrentThreadId(), pSourceSurface, pSourceRectsArray, cRects,
            pDestinationSurface, pDestPointsArray);
 
+    pSourceSurface->EmuSurface8->UnlockRect();
+
+    /*
+    static int kthx = 0;
+    char fileName[255];
+
+    sprintf(fileName, "C:\\Aaron\\Textures\\SourceSurface-%d.bmp", kthx++);
+
+    D3DXSaveSurfaceToFile(fileName, D3DXIFF_BMP, pSourceSurface->EmuSurface8, NULL, NULL);
+    //*/
+
     HRESULT hRet = g_pD3DDevice8->CopyRects
     (
         pSourceSurface->EmuSurface8, 
@@ -3137,31 +3148,10 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Begin
     // allocate a max of 32 entries
     g_IVBTable = (struct XTL::_D3DIVB*)CxbxMalloc(sizeof(XTL::_D3DIVB)*32);
     g_IVBTblOffs = 0;
+    g_IVBFVF = 0;
 
     // default values
-    for(int v=0;v<32;v++)
-    {
-        g_IVBTable[v].Position.x = 0;
-        g_IVBTable[v].Position.y = 0;
-        g_IVBTable[v].Position.z = 0;
-        g_IVBTable[v].Normal.x = 0;
-        g_IVBTable[v].Normal.y = 0;
-        g_IVBTable[v].Normal.z = 0;
-        g_IVBTable[v].dwDiffuse = 0x00000000;
-        g_IVBTable[v].dwSpecular = 0x00000000;
-        g_IVBTable[v].TexCoord1.x = 0;
-        g_IVBTable[v].TexCoord1.y = 0;
-        g_IVBTable[v].TexCoord2.x = 0;
-        g_IVBTable[v].TexCoord2.y = 0;
-        g_IVBTable[v].TexCoord3.x = 0;
-        g_IVBTable[v].TexCoord3.y = 0;
-        g_IVBTable[v].TexCoord4.x = 0;
-        g_IVBTable[v].TexCoord4.y = 0;
-    }
-
-    DWORD dwShader = -1;
-
-    g_pD3DDevice8->GetVertexShader(&dwShader);
+    ZeroMemory(g_IVBTable, sizeof(XTL::_D3DIVB)*32);
 
     g_pIVBVertexBuffer = (DWORD*)CxbxMalloc(sizeof(struct XTL::_D3DIVB)*32);
 
@@ -3198,6 +3188,9 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData2f
     return EmuIDirect3DDevice8_SetVertexData4f(Register, a, b, 0.0f, 1.0f);
 }
 
+static inline DWORD FtoDW(FLOAT f) { return *((DWORD*)&f); }
+static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
+
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexData4f
 // ******************************************************************
@@ -3226,7 +3219,22 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
 
     switch(Register)
     {
-        case 9:
+        case 3: // D3DVSDE_DIFFUSE
+        {
+            int o = g_IVBTblOffs;
+
+            DWORD ca = FtoDW(d) << 24;
+            DWORD cr = FtoDW(a) << 16;
+            DWORD cg = FtoDW(b) << 8;
+            DWORD cb = FtoDW(c) << 0;
+
+            g_IVBTable[o].dwDiffuse = ca | cr | cg | cb;
+
+            g_IVBFVF |= D3DFVF_DIFFUSE;
+        }
+        break;
+
+        case 9: // D3DVSDE_TEXCOORD0
         {
             int o = g_IVBTblOffs;
 
@@ -3238,6 +3246,11 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
 
             g_IVBTable[o].TexCoord1.x = a;
             g_IVBTable[o].TexCoord1.y = b;
+
+            if( (g_IVBFVF & D3DFVF_TEXCOUNT_MASK) < D3DFVF_TEX1)
+            {
+                g_IVBFVF |= D3DFVF_TEX1;
+            }
         }
         break;
 
@@ -3245,14 +3258,16 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
         {
             int o = g_IVBTblOffs;
 
-//            a = (a/320.0f) - 1.0f;
-//            b = (b/240.0f) - 1.0f;
+            a = (a/320.0f) - 1.0f;
+            b = (b/240.0f) - 1.0f;
 
             g_IVBTable[o].Position.x = a;
             g_IVBTable[o].Position.y = b;
             g_IVBTable[o].Position.z = c;
 
             g_IVBTblOffs++;
+
+            g_IVBFVF |= D3DFVF_XYZ;
 
             EmuFlushIVB();
         }
@@ -3266,9 +3281,6 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
 
     return hRet;
 }
-
-static inline DWORD FtoDW(FLOAT f) { return *((DWORD*)&f); }
-static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexDataColor
