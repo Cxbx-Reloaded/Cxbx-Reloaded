@@ -410,7 +410,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                                 MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
 
-                                printf("%s\n", buffer);
+                                printf("Cxbx: %s\n", buffer);
 						    }
 					    }
                     }
@@ -514,7 +514,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                                 sprintf(buffer, "%s's logo bitmap was successfully updated.", m_xbe->m_szAsciiTitle);
 
-                                printf("%s\n", buffer);
+                                printf("Cxbx: %s\n", buffer);
 
                                 MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
 						    }
@@ -641,7 +641,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                                 sprintf(buffer, "%s's .xbe info was successfully exported.", m_xbe->m_szAsciiTitle);
 
-                                printf("%s\n", buffer);
+                                printf("Cxbx: %s\n", buffer);
 
                                 MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
 						    }
@@ -679,7 +679,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                     if(AllocConsole())
                     {
-                        freopen("CONOUT$", "w", stdout);
+                        freopen("CONOUT$", "wt", stdout);
 
                         printf("%s", "Cxbx: Debug console allocated.\n");
 

@@ -37,8 +37,7 @@
 #include "Prolog.h"
 #include "Kernel.h"
 
-// this macro will cause warnings if not undef'd
-#undef FIELD_OFFSET
+#undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
 #include <memory.h>

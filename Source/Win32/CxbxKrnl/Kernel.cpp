@@ -52,8 +52,7 @@ namespace xntdll
 // ******************************************************************
 namespace win32
 {
-    // this macro will cause warnings if not undef'd
-    #undef FIELD_OFFSET
+    #undef FIELD_OFFSET     // prevent macro redefinition warnings
     #include <windows.h>
 };
 
@@ -64,18 +63,54 @@ using namespace win32;
 // ******************************************************************
 CXBXKRNL_API void NTAPI EmuXInit(uint32 DebugConsole, uint08 *XBEHeader, uint32 XBEHeaderSize, void (*Entry)())
 {
+    // ******************************************************************
+    // * debug console allocation (if configured)
+    // ******************************************************************
     if(DebugConsole)
     {
         AllocConsole();
 
-        freopen("CONOUT$", "w", stdout);
+        freopen("CONOUT$", "wt", stdout);
 
         printf("%s", "CxbxKrnl: Debug console allocated.\n");
     }
 
-    printf("CxbxKrnl: EmuXInit(0x%.08X, %d, 0x%.08X)\n", XBEHeader, XBEHeaderSize, Entry);
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    {
+        printf("CxbxKrnl: EmuXInit\n"
+               "          (\n"
+               "             DebugConsole        : 0x%.08X\n"
+               "             XBEHeader           : 0x%.08X\n"
+               "             XBEHeaderSize       : 0x%.08X\n"
+               "             Entry               : 0x%.08X\n"
+               "          );\n",
+               DebugConsole, XBEHeader, XBEHeaderSize, Entry);
+    }
+
+    // ******************************************************************
+    // * Load the necessary pieces of XBEHeader
+    // ******************************************************************
+    {
+        uint32 old_protection = 0;
+
+        VirtualProtect((void*)0x00010000, 0x1000, PAGE_READWRITE, &old_protection);
+
+        uint32 dwSizeofHeaders   = *(uint32*)&XBEHeader[0x0108];
+        uint32 dwCertificateAddr = *(uint32*)&XBEHeader[0x0118];
+
+        *(uint32 *)0x00010108 = dwSizeofHeaders;
+        *(uint32 *)0x00010118 = dwCertificateAddr;
+
+        memcpy((void*)dwCertificateAddr, &XBEHeader[dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
+    }
+
+    printf("CxbxKrnl: Execution starting.\n");
 
     Entry();
+
+    printf("CxbxKrnl: Execution ended.\n");
 
     return;
 }
@@ -85,6 +120,7 @@ CXBXKRNL_API void NTAPI EmuXInit(uint32 DebugConsole, uint08 *XBEHeader, uint32 
 // ******************************************************************
 CXBXKRNL_API void NTAPI EmuXDummy()
 {
+    MessageBox(NULL, "EmuXDummy()", "CxbxKrnl", MB_OK);
 }
 
 // ******************************************************************
@@ -109,6 +145,7 @@ XBSYSAPI EXPORTNUM(187) NTSTATUS NTAPI xboxkrnl::NtClose
 	IN HANDLE Handle
 )
 {
+    MessageBox(NULL, "NtClose()", "CxbxKrnl", MB_OK);
     return STATUS_SUCCESS;
 }
 
@@ -129,6 +166,31 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
     IN  PKSTART_ROUTINE StartRoutine
 )
 {
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG
+    {
+        printf("CxbxKrnl: PsCreateSystemThreadEx\n"
+               "          (\n"
+               "             ThreadHandle        : 0x%.08X\n"
+               "             ThreadExtraSize     : 0x%.08X\n"
+               "             KernelStackSize     : 0x%.08X\n"
+               "             TlsDataSize         : 0x%.08X\n"
+               "             ThreadId            : 0x%.08X\n"
+               "             StartContext1       : 0x%.08X\n"
+               "             StartContext2       : 0x%.08X\n"
+               "             CreateSuspended     : 0x%.08X\n"
+               "             DebugStack          : 0x%.08X\n"
+               "             StartRoutine        : 0x%.08X\n"
+               "          );\n",
+               ThreadHandle, ThreadExtraSize, KernelStackSize, TlsDataSize, ThreadId,
+               StartContext1, StartContext2, CreateSuspended, DebugStack, StartRoutine);
+    }
+    #endif
+
+    EmuXPanic();
+
     return STATUS_SUCCESS;
 }
 
@@ -140,6 +202,7 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
 	RETURN_FIRMWARE Routine
 )
 {
+    MessageBox(NULL, "HalReturnToFirmware()", "CxbxKrnl", MB_OK);
     /*
     ReturnFirmwareHalt          = 0x0,
     ReturnFirmwareReboot        = 0x1,
