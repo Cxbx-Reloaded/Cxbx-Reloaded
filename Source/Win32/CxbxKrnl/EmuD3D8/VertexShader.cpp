@@ -60,7 +60,7 @@ extern XTL::LPDIRECT3DDEVICE8 g_pD3DDevice8;  // Direct3D8 Device
 #define VSH_MAX_INTERMEDIATE_COUNT     1024 // The maximum number of intermediate format slots
 
 // Local types
-typedef enum
+typedef enum _VSH_FIELD_NAME
 {
     FLD_ILU = 0,
     FLD_MAC,
@@ -112,9 +112,10 @@ typedef enum
     FLD_A0X,
     // Final instruction
     FLD_FINAL
-} VSH_FIELD_NAME;
+}
+VSH_FIELD_NAME;
 
-typedef enum
+typedef enum _VSH_OREG_NAME
 {
     OREG_OPOS,
     OREG_UNUSED1,
@@ -132,29 +133,33 @@ typedef enum
     OREG_UNUSED3,
     OREG_UNUSED4,
     OREG_A0X
-} VSH_OREG_NAME;
+}
+VSH_OREG_NAME;
 
-typedef enum
+typedef enum _VSH_PARAMETER_TYPE
 {
     PARAM_UNKNOWN = 0,
     PARAM_R,
     PARAM_V,
     PARAM_C
-} VSH_PARAMETER_TYPE;
+}
+VSH_PARAMETER_TYPE;
 
-typedef enum
+typedef enum _VSH_OUTPUT_TYPE
 {
     OUTPUT_C = 0,
     OUTPUT_O
-} VSH_OUTPUT_TYPE;
+}
+VSH_OUTPUT_TYPE;
 
-typedef enum
+typedef enum _VSH_OUTPUT_MUX
 {
     OMUX_MAC = 0,
     OMUX_ILU
-} VSH_OUTPUT_MUX;
+}
+VSH_OUTPUT_MUX;
 
-typedef enum
+typedef enum _VSH_ILU
 {
     ILU_NOP = 0,
     ILU_MOV,
@@ -164,9 +169,10 @@ typedef enum
     ILU_EXP,
     ILU_LOG,
     ILU_LIT
-} VSH_ILU;
+}
+VSH_ILU;
 
-typedef enum
+typedef enum _VSH_MAC
 {
     MAC_NOP,
     MAC_MOV,
@@ -182,34 +188,38 @@ typedef enum
     MAC_SLT,
     MAC_SGE,
     MAC_ARL
-} VSH_MAC;
+}
+VSH_MAC;
 
-typedef struct
+typedef struct _VSH_OPCODE_PARAMS
 {
     VSH_ILU   ILU;
     VSH_MAC   MAC;
     boolean   A;
     boolean   B;
     boolean   C;
-} VSH_OPCODE_PARAMS;
+}
+VSH_OPCODE_PARAMS;
 
-typedef enum
+typedef enum _VSH_SWIZZLE
 {
     SWIZZLE_X = 0,
     SWIZZLE_Y,
     SWIZZLE_Z,
     SWIZZLE_W
-} VSH_SWIZZLE;
+}
+VSH_SWIZZLE;
 
-typedef struct
+typedef struct _VSH_PARAMETER
 {
     VSH_PARAMETER_TYPE  ParameterType;   // Parameter type, R, V or C
     boolean             Neg;             // TRUE if negated, FALSE if not
     VSH_SWIZZLE         Swizzle[4];      // The four swizzles
     int16               Address;         // Register address
-} VSH_PARAMETER;
+}
+VSH_PARAMETER;
 
-typedef struct
+typedef struct _VSH_OUTPUT
 {
     // Output register
     VSH_OUTPUT_MUX      OutputMux;       // MAC or ILU used as output
@@ -222,10 +232,11 @@ typedef struct
     // ILU output R register
     boolean             ILURMask[4];
     boolean             ILURAddress;
-} VSH_OUTPUT;
+}
+VSH_OUTPUT;
 
 // The raw, parsed shader instruction (can be many combined [paired] instructions)
-typedef struct
+typedef struct _VSH_SHADER_INSTRUCTION
 {
     VSH_ILU       ILU;
     VSH_MAC       MAC;
@@ -234,37 +245,42 @@ typedef struct
     VSH_PARAMETER B;
     VSH_PARAMETER C;
     boolean       a0x;
-} VSH_SHADER_INSTRUCTION;
+}
+VSH_SHADER_INSTRUCTION;
 
-typedef enum
+typedef enum _VSH_IMD_OUTPUT_TYPE
 {
     IMD_OUTPUT_C,
     IMD_OUTPUT_R,
     IMD_OUTPUT_O,
     IMD_OUTPUT_A0X
-} VSH_IMD_OUTPUT_TYPE;
+}
+VSH_IMD_OUTPUT_TYPE;
 
-typedef enum
+typedef enum _VSH_IMD_INSTRUCTION_TYPE
 {
     IMD_MAC,
     IMD_ILU
-} VSH_IMD_INSTRUCTION_TYPE;
+}
+VSH_IMD_INSTRUCTION_TYPE;
 
-typedef struct
+typedef struct _VSH_IMD_OUTPUT
 {
     VSH_IMD_OUTPUT_TYPE Type;
     boolean             Mask[4];
     int16               Address;
-} VSH_IMD_OUTPUT;
+}
+VSH_IMD_OUTPUT;
 
-typedef struct
+typedef struct _VSH_IMD_PARAMETER
 {
     boolean         Active;
     VSH_PARAMETER   Parameter;
     boolean         IsA0X;
-} VSH_IMD_PARAMETER;
+}
+VSH_IMD_PARAMETER;
 
-typedef struct
+typedef struct _VSH_INTERMEDIATE_FORMAT
 {
     
     boolean                  IsCombined;
@@ -273,23 +289,26 @@ typedef struct
     VSH_ILU                  ILU;
     VSH_IMD_OUTPUT           Output;
     VSH_IMD_PARAMETER        Parameters[3];
-} VSH_INTERMEDIATE_FORMAT;
+}
+VSH_INTERMEDIATE_FORMAT;
 
 // Used for xvu spec definition
-typedef struct
+typedef struct _VSH_FIELDMAPPING
 {
     VSH_FIELD_NAME  FieldName;
     uint08          SubToken;
     uint08          StartBit;
     uint08          BitLength;
-} VSH_FIELDMAPPING;
+}
+VSH_FIELDMAPPING;
 
-typedef struct
+typedef struct _VSH_XBOX_SHADER
 {
     XTL::VSH_SHADER_HEADER       ShaderHeader;
     uint16                  IntermediateCount;
     VSH_INTERMEDIATE_FORMAT Intermediate[VSH_MAX_INTERMEDIATE_COUNT];
-} VSH_XBOX_SHADER;
+}
+VSH_XBOX_SHADER;
 
 // Local constants
 static const VSH_FIELDMAPPING g_FieldMapping[] =
@@ -346,7 +365,8 @@ static const VSH_FIELDMAPPING g_FieldMapping[] =
     {  FLD_FINAL,            3,    0,     1 }
 };
 
-static const VSH_OPCODE_PARAMS g_OpCodeParams[] = {
+static const VSH_OPCODE_PARAMS g_OpCodeParams[] =
+{
     // ILU OP   MAC OP  ParamA ParamB ParamC
     { ILU_MOV, MAC_NOP, FALSE, FALSE, TRUE  },
     { ILU_RCP, MAC_NOP, FALSE, FALSE, TRUE  },
@@ -1294,13 +1314,15 @@ typedef struct _VSH_TYPE_PATCH_DATA
 {
     DWORD NbrTypes;
     UINT  Types[256];
-} VSH_TYPE_PATCH_DATA;
+}
+VSH_TYPE_PATCH_DATA;
 
 typedef struct _VSH_STREAM_PATCH_DATA
 {
     DWORD                     NbrStreams;
     XTL::STREAM_DYNAMIC_PATCH pStreamPatches[256];
-} VSH_STREAM_PATCH_DATA;
+}
+VSH_STREAM_PATCH_DATA;
 
 typedef struct _VSH_PATCH_DATA
 {
@@ -1308,8 +1330,8 @@ typedef struct _VSH_PATCH_DATA
     DWORD                ConversionStride;
     VSH_TYPE_PATCH_DATA  TypePatchData;
     VSH_STREAM_PATCH_DATA StreamPatchData;
-} VSH_PATCH_DATA;
-
+}
+VSH_PATCH_DATA;
 
 // VERTEX SHADER
 #define DEF_VSH_END 0xFFFFFFFF
@@ -1897,7 +1919,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
         VshConvertShader(pShader, bNoReservedConstants);
         VshWriteShader(pShader, pShaderDisassembly);
 
-        DbgVshPrintf("-- After conversion ----\n");
+        DbgVshPrintf("-- After conversion ---\n");
         DbgVshPrintf("%s", pShaderDisassembly);
         DbgVshPrintf("-----------------------\n");
 

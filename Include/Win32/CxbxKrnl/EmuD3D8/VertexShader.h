@@ -34,7 +34,7 @@
 #ifndef VERTEXSHADER_H
 #define VERTEXSHADER_H
 
-//#define _DEBUG_VSH
+#define _DEBUG_VSH
 
 // nv2a microcode header
 typedef struct
@@ -43,7 +43,8 @@ typedef struct
     uint08 Version;
     uint08 NumInst;
     uint08 Unknown0;
-} VSH_SHADER_HEADER;
+}
+VSH_SHADER_HEADER;
 
 #define VSH_INSTRUCTION_SIZE       4
 #define VSH_INSTRUCTION_SIZE_BYTES (VSH_INSTRUCTION_SIZE * sizeof(DWORD))
