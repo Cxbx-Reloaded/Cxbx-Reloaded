@@ -3,7 +3,7 @@ cxbx website: http://www.caustik.com/xbox/
 version: 0.6.1 (??/??/??)
 --------------------------------
 
-- Controller input is working
+- Gamepad input is working
 
 - Some color issues were resolved (hopefully)
 

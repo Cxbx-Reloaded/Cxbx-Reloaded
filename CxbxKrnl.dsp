@@ -113,6 +113,10 @@ SOURCE=.\Doc\Changelog.txt
 # End Source File
 # Begin Source File
 
+SOURCE=.\Doc\Input.txt
+# End Source File
+# Begin Source File
+
 SOURCE=.\Doc\RemovedCode.txt
 # End Source File
 # Begin Source File

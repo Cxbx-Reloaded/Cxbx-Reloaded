@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuDInput.h
+// *   Cxbx->Win32->Cxbx->DlgGamepadConfig.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,43 +31,14 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUDINPUT_H
-#define EMUDINPUT_H
+#ifndef DLGGAMEPADCONFIG_H
+#define DLGGAMEPADCONFIG_H
 
-#include "Emu.h"
-
-// ******************************************************************
-// * GamepadConfiguration
-// ******************************************************************
-class GamepadConfiguration
-{
-    public:
-        GamepadConfiguration() {}
-       ~GamepadConfiguration() {}
-
-    private:
-};
+#include <windows.h>
 
 // ******************************************************************
-// * func: EmuPollGamepad
+// * Show Dialog
 // ******************************************************************
-extern void EmuPollGamepad();
-
-// ******************************************************************
-// * func: EmuInitDInput
-// ******************************************************************
-extern void EmuInitDInput();
-
-// ******************************************************************
-// * offsets into analog button array
-// ******************************************************************
-#define XINPUT_GAMEPAD_A			    0
-#define XINPUT_GAMEPAD_B			    1
-#define XINPUT_GAMEPAD_X			    2
-#define XINPUT_GAMEPAD_Y			    3
-#define XINPUT_GAMEPAD_BLACK		    4
-#define XINPUT_GAMEPAD_WHITE		    5
-#define XINPUT_GAMEPAD_LEFT_TRIGGER		6
-#define XINPUT_GAMEPAD_RIGHT_TRIGGER	7
+extern void ShowGamepadConfig(HWND hwnd);
 
 #endif

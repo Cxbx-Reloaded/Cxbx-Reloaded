@@ -7,7 +7,7 @@
 #define IDR_MAINMENU                    103
 #define IDB_LOGO                        106
 #define IDB_ABOUT                       108
-#define IDD_CTRLCFG                     111
+#define IDD_GAMEPAD_CFG                 111
 #define IDC_SET_X                       1000
 #define IDC_SET_Y                       1001
 #define IDC_SET_A                       1002
@@ -53,6 +53,7 @@
 #define ID_EMULATION_DEBUGOUTPUTKERNEL_FILE 40038
 #define ID_SETTINGS_AUTOGEN             40045
 #define ID_SETTINGS_CONFIGURECONTROLLER 40046
+#define ID_SETTINGS_CONFIG_GAMEPAD      40046
 #define ID_SETTINGS_CONFIGUREGRAPHICS   40047
 #define ID_SETTINGS_CONFIGURESOUND      40048
 

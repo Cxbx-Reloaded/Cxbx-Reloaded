@@ -35,6 +35,7 @@
 #define WNDMAIN_H
 
 #include "Wnd.h"
+#include "DlgGamepadConfig.h"
 
 // ******************************************************************
 // * class : WndMain

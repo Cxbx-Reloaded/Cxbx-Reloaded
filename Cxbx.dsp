@@ -117,6 +117,10 @@ SOURCE=.\Doc\Changelog.txt
 # End Source File
 # Begin Source File
 
+SOURCE=.\Doc\Input.txt
+# End Source File
+# Begin Source File
+
 SOURCE=.\Doc\RemovedCode.txt
 # End Source File
 # Begin Source File
@@ -142,6 +146,10 @@ SOURCE=.\Include\Win32\AlignPrefix1.h
 # Begin Source File
 
 SOURCE=.\Include\Cxbx.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\Cxbx\DlgGamepadConfig.h
 # End Source File
 # Begin Source File
 
@@ -207,6 +215,10 @@ SOURCE=.\Resource\Splash.bmp
 # Begin Group "Source"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Source\Win32\Cxbx\DlgGamepadConfig.cpp
+# End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\Cxbx\EmuExe.cpp

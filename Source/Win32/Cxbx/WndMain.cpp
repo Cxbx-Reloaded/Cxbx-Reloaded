@@ -37,19 +37,30 @@
 #include "WndAbout.h"
 #include "ResCxbx.h"
 
-#include <io.h>
 #include <stdio.h>
+#include <io.h>
 
 // ******************************************************************
 // * constructor
 // ******************************************************************
 WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m_Xbe(0), m_Exe(0), m_bExeChanged(false), m_bXbeChanged(false), m_bAutoConvertToExe(TRUE), m_KrnlDebug(DM_NONE), m_CxbxDebug(DM_NONE)
 {
-    m_classname = "WndMain";
-    m_wndname   = "Cxbx : Xbox Emulator";
+    // ******************************************************************
+    // * Initialize members
+    // ******************************************************************
+    {
+        m_classname = "WndMain";
+        m_wndname   = "Cxbx : Xbox Emulator";
 
-    m_w         = 327;
-    m_h         = 253;
+        m_w         = 327;
+        m_h         = 253;
+
+	    m_ExeFilename = (char*)calloc(1, 260);
+	    m_XbeFilename = (char*)calloc(1, 260);
+
+        m_CxbxDebugFilename = (char*)calloc(1, 260);
+        m_KrnlDebugFilename = (char*)calloc(1, 260);
+    }
 
     // ******************************************************************
     // * Center to desktop
@@ -62,12 +73,6 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m
         m_x = rect.left + (rect.right - rect.left)/2 - m_w/2;
         m_y = rect.top + (rect.bottom - rect.top)/2 - m_h/2;
     }
-
-	m_ExeFilename = (char*)calloc(1, 260);
-	m_XbeFilename = (char*)calloc(1, 260);
-
-    m_CxbxDebugFilename = (char*)calloc(1, 260);
-    m_KrnlDebugFilename = (char*)calloc(1, 260);
 
     // ******************************************************************
     // * Load configuration from registry
@@ -131,14 +136,19 @@ WndMain::~WndMain()
         }
     }
 
-    delete m_Xbe;
-    delete m_Exe;
+    // ******************************************************************
+    // * Cleanup allocations
+    // ******************************************************************
+    {
+        delete m_Xbe;
+        delete m_Exe;
 
-    delete[] m_XbeFilename;
-    delete[] m_ExeFilename;
+        delete[] m_XbeFilename;
+        delete[] m_ExeFilename;
 
-    delete[] m_CxbxDebugFilename;
-    delete[] m_KrnlDebugFilename;
+        delete[] m_CxbxDebugFilename;
+        delete[] m_KrnlDebugFilename;
+    }
 }
 
 // ******************************************************************
@@ -202,6 +212,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
         {
             static bool s_bInitMenu = true;
 
+			// ******************************************************************
+			// * initialize menu's if they haven't been yet
+			// ******************************************************************
             if(s_bInitMenu)
             {
                 RefreshMenus();
@@ -262,11 +275,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             switch(wParam)
             {
                 case VK_F5:
+                {
                     if(m_Xbe != 0)
                         StartEmulation(m_bAutoConvertToExe == TRUE);
-                    break;
+                }
+                break;
             }
-            break;
         }
         break;
 
@@ -633,9 +647,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     m_bExeChanged = true;
                     m_bXbeChanged = true;
 
-					// ******************************************************************
-					// * patch to/from debug mode
-					// ******************************************************************
+                    // patch to/from debug mode
                     if((m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL) > 0x01000000)
                     {
                         // we're in debug mode, so switch over to retail
@@ -686,37 +698,35 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 					if(GetSaveFileName(&ofn) == TRUE)
                     {
-						// ******************************************************************
-						// * ask permission to overwrite if file exists
-						// ******************************************************************
+                        // ask permission to overwrite if file exists
 						if(_access(ofn.lpstrFile, 0) != -1)
 						{
 							if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx", MB_ICONQUESTION | MB_YESNO) != IDYES)
 								return TRUE;
 						}
 
-						// ******************************************************************
-						// * dump xbe information
-						// ******************************************************************
-					    {
-                            m_Xbe->DumpInformation(ofn.lpstrFile);
+                        // dump xbe information
+                        m_Xbe->DumpInformation(ofn.lpstrFile);
 
-						    if(m_Xbe->GetError() != 0)
-							    MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
-                            else
-                            {
-                                char buffer[255];
+						if(m_Xbe->GetError() != 0)
+							MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
+                        else
+                        {
+                            char buffer[255];
 
-                                sprintf(buffer, "%s's .xbe info was successfully exported.", m_Xbe->m_szAsciiTitle);
+                            sprintf(buffer, "%s's .xbe info was successfully exported.", m_Xbe->m_szAsciiTitle);
 
-                                printf("WndMain: %s\n", buffer);
+                            printf("WndMain: %s\n", buffer);
 
-                                MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
-						    }
-					    }
+                            MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
+						}
                     }
                 }
                 break;
+
+                case ID_SETTINGS_CONFIG_GAMEPAD:
+                    ShowGamepadConfig(hwnd);
+                    break;
 
                 case ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE:
                 {
@@ -1093,8 +1103,8 @@ void WndMain::RefreshMenus()
 	    // ******************************************************************
         {
             HMENU emul_menu = GetSubMenu(menu, 3);
-            HMENU emul_debg = GetSubMenu(emul_menu, 0);
-            HMENU emul_krnl = GetSubMenu(emul_menu, 1);
+            HMENU emul_debg = GetSubMenu(emul_menu, 2);
+            HMENU emul_krnl = GetSubMenu(emul_menu, 3);
 
             if(m_KrnlDebug == DM_CONSOLE)
             {

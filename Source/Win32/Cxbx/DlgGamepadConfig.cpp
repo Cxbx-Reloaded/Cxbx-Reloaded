@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuDInput.h
+// *   Cxbx->Win32->Cxbx->DlgGamepadConfig.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,43 +31,52 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUDINPUT_H
-#define EMUDINPUT_H
-
-#include "Emu.h"
+#include "Cxbx.h"
+#include "ResCxbx.h"
+#include "DlgGamepadConfig.h"
 
 // ******************************************************************
-// * GamepadConfiguration
+// * globals / static
 // ******************************************************************
-class GamepadConfiguration
+static INT_PTR CALLBACK DlgGamepadConfigProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+// ******************************************************************
+// * Show Dialog
+// ******************************************************************
+void ShowGamepadConfig(HWND hwnd)
 {
-    public:
-        GamepadConfiguration() {}
-       ~GamepadConfiguration() {}
-
-    private:
-};
-
-// ******************************************************************
-// * func: EmuPollGamepad
-// ******************************************************************
-extern void EmuPollGamepad();
+    DialogBox
+    (
+        GetModuleHandle(NULL),
+        MAKEINTRESOURCE(IDD_GAMEPAD_CFG),
+        hwnd,
+        DlgGamepadConfigProc
+    );
+}
 
 // ******************************************************************
-// * func: EmuInitDInput
+// * Gamepad configuration dialog procedure
 // ******************************************************************
-extern void EmuInitDInput();
-
-// ******************************************************************
-// * offsets into analog button array
-// ******************************************************************
-#define XINPUT_GAMEPAD_A			    0
-#define XINPUT_GAMEPAD_B			    1
-#define XINPUT_GAMEPAD_X			    2
-#define XINPUT_GAMEPAD_Y			    3
-#define XINPUT_GAMEPAD_BLACK		    4
-#define XINPUT_GAMEPAD_WHITE		    5
-#define XINPUT_GAMEPAD_LEFT_TRIGGER		6
-#define XINPUT_GAMEPAD_RIGHT_TRIGGER	7
-
-#endif
+INT_PTR CALLBACK DlgGamepadConfigProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch(uMsg)
+    {
+        case WM_INITDIALOG:
+            SetClassLong(hwndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
+            break;
+        case WM_CLOSE:
+            EndDialog(hwndDlg, wParam); 
+            break;
+        case WM_COMMAND:
+        {
+            switch(LOWORD(wParam))
+            { 
+                case IDC_INPUT_CONFIG_CANCEL:
+                    EndDialog(hwndDlg, wParam); 
+                    break;
+            } 
+        }
+        break;
+    } 
+    return FALSE; 
+}

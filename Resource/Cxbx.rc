@@ -106,16 +106,17 @@ BEGIN
     END
     POPUP "&Settings"
     BEGIN
-        MENUITEM "Config &Controller...",       ID_SETTINGS_CONFIGURECONTROLLER
+        MENUITEM "Config &Gamepad...",          ID_SETTINGS_CONFIG_GAMEPAD
+        MENUITEM "Config &Audio...",            ID_SETTINGS_CONFIGURESOUND
+        MENUITEM "Config &Video...",            ID_SETTINGS_CONFIGUREGRAPHICS
 
-        MENUITEM "Config &Graphics...",         ID_SETTINGS_CONFIGUREGRAPHICS
-
-        MENUITEM "Config &Sound...",            ID_SETTINGS_CONFIGURESOUND
         MENUITEM "",                            1
-        MENUITEM "&Generate Exe Automatically", ID_SETTINGS_AUTOGEN
+        MENUITEM "Generate &Exe Automatically", ID_SETTINGS_AUTOGEN
     END
     POPUP "E&mulation"
     BEGIN
+        MENUITEM "&Start\tF5",                  ID_EMULATION_START, GRAYED
+        MENUITEM SEPARATOR
         POPUP "&Debug Output (GUI)"
         BEGIN
             MENUITEM "&Console",                    ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE
@@ -130,8 +131,6 @@ BEGIN
             MENUITEM "&File...",                    ID_EMULATION_DEBUGOUTPUTKERNEL_FILE
 
         END
-        MENUITEM SEPARATOR
-        MENUITEM "&Start\tF5",                  ID_EMULATION_START, GRAYED
     END
     POPUP "&Help"
     BEGIN
@@ -150,7 +149,7 @@ END
 #ifdef APSTUDIO_INVOKED
 GUIDELINES DESIGNINFO DISCARDABLE 
 BEGIN
-    IDD_CTRLCFG, DIALOG
+    IDD_GAMEPAD_CFG, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 336
@@ -166,9 +165,9 @@ END
 // Dialog
 //
 
-IDD_CTRLCFG DIALOG DISCARDABLE  0, 0, 343, 127
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Cxbx : Controller Configuration"
+IDD_GAMEPAD_CFG DIALOG DISCARDABLE  0, 0, 343, 127
+STYLE DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Cxbx : Gamepad Configuration"
 FONT 8, "Verdana"
 BEGIN
     GROUPBOX        "Analog Buttons",IDC_STATIC,2,1,221,47
@@ -202,7 +201,7 @@ BEGIN
     PUSHBUTTON      "&Cancel",IDC_INPUT_CONFIG_CANCEL,231,106,50,14,BS_FLAT
     PUSHBUTTON      "&Accept",IDC_INPUT_CONFIG_ACCEPT,285,106,50,14,BS_FLAT
     GROUPBOX        "Status",IDC_STATIC,2,98,338,27
-    LTEXT           "Waiting for YOU to push a button for configuration...",
+    LTEXT           "Waiting for you to push any of the above buttons...",
                     IDC_STATIC,8,107,212,15,SS_CENTERIMAGE
 END
 
