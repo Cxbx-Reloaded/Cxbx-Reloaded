@@ -336,6 +336,31 @@ ULONG WINAPI XTL::EmuIDirectSound8_Release
 }
 
 // ******************************************************************
+// * func: EmuCDirectSound_GetSpeakerConfig
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSound_GetSpeakerConfig
+(
+    X_CDirectSound         *pThis,
+    PDWORD                  pdwSpeakerConfig
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSound_GetSpeakerConfig\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   pdwSpeakerConfig          : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, pdwSpeakerConfig);
+
+    *pdwSpeakerConfig = 0; // STEREO
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
 // * func: EmuIDirectSound8_DownloadEffectsImage
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirectSound8_DownloadEffectsImage

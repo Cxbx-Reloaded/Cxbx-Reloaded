@@ -262,6 +262,15 @@ ULONG WINAPI EmuIDirectSound8_Release
 );
 
 // ******************************************************************
+// * func: EmuCDirectSound_GetSpeakerConfig
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSound_GetSpeakerConfig
+(
+    X_CDirectSound         *pThis,
+    PDWORD                  pdwSpeakerConfig
+);
+
+// ******************************************************************
 // * func: EmuIDirectSound8_DownloadEffectsImage
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSound8_DownloadEffectsImage

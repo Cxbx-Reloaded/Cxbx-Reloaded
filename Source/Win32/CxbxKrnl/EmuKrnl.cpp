@@ -458,7 +458,7 @@ XBSYSAPI EXPORTNUM(99) NTSTATUS NTAPI xboxkrnl::KeDelayExecutionThread
            "(\n"
            "   WaitMode            : 0x%.08X\n"
            "   Alertable           : 0x%.08X\n"
-           "   Interval            : 0x%.08X (%d)\n"
+           "   Interval            : 0x%.08X (%I64d)\n"
            ");\n",
            GetCurrentThreadId(), WaitMode, Alertable, Interval, Interval == 0 ? 0 : Interval->QuadPart);
 
