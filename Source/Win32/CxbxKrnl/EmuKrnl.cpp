@@ -850,7 +850,13 @@ XBSYSAPI EXPORTNUM(171) VOID NTAPI xboxkrnl::MmFreeContiguousMemory
     }
 
     if(BaseAddress != &xLaunchDataPage)
+    {
         free(BaseAddress);
+    }
+    else
+    {
+        DbgPrintf("Ignored MmFreeContiguousMemory(&xLaunchDataPage)\n");
+    }
 
     EmuSwapFS();   // Xbox FS
 

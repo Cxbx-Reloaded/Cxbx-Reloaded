@@ -45,8 +45,6 @@ namespace XTL
 
 extern XTL::LPDIRECT3DDEVICE8 g_pD3DDevice8;  // Direct3D8 Device
 
-#include <string>
-
 // ****************************************************************************
 // * Vertex shader function recompiler
 // ****************************************************************************
@@ -1463,7 +1461,7 @@ static DWORD VshConvertToken_CONSTMEM(DWORD *pToken)
 
     //pToken = D3DVSD_CONST(ConstantAddress, Count);
 
-    for (int i = 0; i < Count; i++)
+    for (uint i = 0; i < Count; i++)
     {
         DbgVshPrintf("\t0x%08X,\n", pToken);
     }

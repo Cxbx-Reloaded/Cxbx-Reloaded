@@ -44,6 +44,7 @@ namespace xboxkrnl
 #include "EmuFS.h"
 #include "EmuShared.h"
 #include "DbgConsole.h"
+#include "ResourceTracker.h"
 
 // prevent name collisions
 namespace XTL
@@ -873,6 +874,8 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
                 // update z-stencil surface cache
                 g_pCachedZStencilSurface = new XTL::X_D3DSurface();
+                g_pCachedZStencilSurface->Common = 0;
+                g_pCachedZStencilSurface->Data = X_D3DRESOURCE_DATA_FLAG_D3DSTEN;
                 g_pD3DDevice8->GetDepthStencilSurface(&g_pCachedZStencilSurface->EmuSurface8);
 
                 // begin scene
@@ -936,7 +939,7 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
         return;
 
     // Already "Registered" implicitly
-    if(pResource->Data == X_D3DRESOURCE_DATA_FLAG_D3DREND)
+    if((pResource->Data == X_D3DRESOURCE_DATA_FLAG_D3DREND) || (pResource->Data == X_D3DRESOURCE_DATA_FLAG_D3DSTEN))
         return;
 
     int v=0;
@@ -1985,8 +1988,7 @@ XTL::X_D3DSurface * WINAPI XTL::EmuIDirect3DDevice8_GetDepthStencilSurface2()
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetDepthStencilSurface2()\n",
-           GetCurrentThreadId());
+    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetDepthStencilSurface2()\n", GetCurrentThreadId());
 
     IDirect3DSurface8 *pSurface8 = g_pCachedZStencilSurface->EmuSurface8;
 
@@ -3113,7 +3115,7 @@ static void EmuFlushD3DIVB()
         HRESULT hRet = S_OK;
 
         #ifdef _DEBUG_TRACK_VB
-        if(!XTL::g_bVBSkipStream)
+        if(!g_bVBSkipStream)
         {
         #endif
 
@@ -4089,11 +4091,23 @@ ULONG WINAPI XTL::EmuIDirect3DResource8_Release
                 }
             }
 
+            #ifdef _DEBUG_TRACE_VB
+            D3DRESOURCETYPE Type = pResource8->GetType();
+            #endif
+
             uRet = pResource8->Release();
 
             if(uRet == 0)
             {
                 DbgPrintf("EmuIDirect3DResource8_Release (0x%X): Cleaned up a Resource!\n", GetCurrentThreadId());
+
+                #ifdef _DEBUG_TRACE_VB
+                if(Type == D3DRTYPE_VERTEXBUFFER)
+                {
+                    g_VBTrackTotal.remove(pResource8);
+                    g_VBTrackDisable.remove(pResource8);
+                }
+                #endif
 
                 delete pThis;
             }
@@ -6227,17 +6241,24 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVertices
     uint32 nStride = EmuFixupVerticesA(PrimitiveType, PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, StartVertex, 0, 0, 0);
 
     #ifdef _DEBUG_TRACK_VB
-    if(!g_bVBSkipStream)
+    if(g_bVBSkipStream)
+    {
+        g_pD3DDevice8->DrawPrimitive
+        (
+            PCPrimitiveType,
+            StartVertex,
+            0
+        );
+    }
+    else
     {
     #endif
-
-    g_pD3DDevice8->DrawPrimitive
-    (
-        PCPrimitiveType,
-        StartVertex,
-        PrimitiveCount
-    );
-
+        g_pD3DDevice8->DrawPrimitive
+        (
+            PCPrimitiveType,
+            StartVertex,
+            PrimitiveCount
+        );
     #ifdef _DEBUG_TRACK_VB
     }
     #endif

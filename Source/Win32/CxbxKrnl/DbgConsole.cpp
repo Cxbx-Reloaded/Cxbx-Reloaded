@@ -37,6 +37,7 @@
 
 #include "Emu.h"
 #include "DbgConsole.h"
+#include "ResourceTracker.h"
 
 #include <conio.h>
 
@@ -115,39 +116,49 @@ void DbgConsole::Reset()
 }
 
 #ifdef _DEBUG_TRACK_VB
-static void EnableVB(int n, bool enable)
+static void EnableTracker(ResourceTracker &trackTotal, ResourceTracker &trackDisable, int a, int b, bool enable)
 {
-    using namespace XTL;
-
     int v=0;
 
-    VBNode *cur = g_VBTrackTotal.getHead();
+    trackTotal.Lock();
 
-    for(v=0;v<n;v++)
+    RTNode *cur = trackTotal.getHead();
+
+    for(v=0;v<a;v++)
     {
-        if(cur == NULL || (cur->next == NULL))
+        if(cur == NULL || (cur->pNext == NULL))
             break;
 
-        cur = cur->next;
+        cur = cur->pNext;
     }
 
-    if(n == v && (cur != NULL) && (cur->next != NULL))
+    if((a == v) && (cur != NULL) && (cur->pNext != NULL))
     {
-        if(enable)
+        for(;a<=b;a++)
         {
-            g_VBTrackDisable.remove(cur->vb);
-        }
-        else
-        {
-            g_VBTrackDisable.insert(cur->vb);
-        }
+            if((cur == NULL) || (cur->pNext == NULL))
+                break;
 
-        printf("CxbxDbg: %.02d (0x%.08X) %s\n", n, cur->vb, enable ? "enabled" : "disabled");
+            if(enable)
+            {
+                trackDisable.remove(cur->pResource);
+            }
+            else
+            {
+                trackDisable.insert(cur->pResource);
+            }
+
+            printf("CxbxDbg: %.02d (0x%.08X) %s\n", a, cur->pResource, enable ? "enabled" : "disabled");
+
+            cur = cur->pNext;
+        }
     }
     else
     {
         printf("CxbxDbg: # out of range\n");
     }
+
+    trackTotal.Unlock();
 
     return;
 }
@@ -159,6 +170,8 @@ void DbgConsole::ParseCommand()
 
     char szCmd[32];
 
+    szCmd[0] = '\0';
+
     sscanf(m_szInput, "%s", szCmd);
 
     // TODO: as command list grows, turn into static string/ptr lookup
@@ -168,13 +181,18 @@ void DbgConsole::ParseCommand()
         printf("CxbxDbg: \n");
         printf("CxbxDbg: Cxbx Debug Command List:\n");
         printf("CxbxDbg: \n");
-        printf("CxbxDbg:  HELP        (H)\n");
-        printf("CxbxDbg:  QUIT        (Q or EXIT)\n");
-        printf("CxbxDbg:  TRACE       (T)\n");
-        printf("CxbxDbg:  ListVB      (LVB)\n");
-        printf("CxbxDbg:  DisableVB # (DVB #)\n");
-        printf("CxbxDbg:  EnableVB #  (EVB #)\n");
+        printf("CxbxDbg:  Help      [H]     : Show Command List\n");
+        printf("CxbxDbg:  Quit/Exit [Q]     : Stop Emulation\n");
+        printf("CxbxDbg:  Trace     [T]     : Toggle Debug Trace\n");
+        printf("CxbxDbg:  ListVB    [LVB]   : List Active Vertex Buffers\n");
+        printf("CxbxDbg:  DisableVB [DVB #] : Disable Active Vertex Buffer(s)\n");
+        printf("CxbxDbg:  EnableVB  [EVB #] : Enable Active Vertex Buffer(s)\n");
+        printf("CxbxDbg:  ListPB    [LPB]   : List Active Push Buffers\n");
+        printf("CxbxDbg:  DisablePB [DPB #] : Disable Active Push Buffer(s)\n");
+        printf("CxbxDbg:  EnablePB  [EPB #] : Enable Active Push Buffer(s)\n");
         printf("CxbxDbg:  CLS\n");
+        printf("CxbxDbg: \n");
+        printf("CxbxDbg: # denotes parameter of form [#] or [#-#]\n");
         printf("CxbxDbg: \n");
     }
     else if(stricmp(szCmd, "q") == 0 || stricmp(szCmd, "quit") == 0 || stricmp(szCmd, "exit") == 0)
@@ -191,20 +209,22 @@ void DbgConsole::ParseCommand()
     {
         #ifdef _DEBUG_TRACK_VB
         {
-            using namespace XTL;
-
             int v=0;
             
-            VBNode *cur = g_VBTrackTotal.getHead();
+            g_VBTrackTotal.Lock();
 
-            while(cur != NULL && cur->next != NULL)
+            RTNode *cur = g_VBTrackTotal.getHead();
+
+            while(cur != NULL && cur->pNext != NULL)
             {
-                bool enabled = !g_VBTrackDisable.exists(cur->vb);
+                bool enabled = !g_VBTrackDisable.exists(cur->pResource);
 
-                printf("CxbxDbg: %.02d : 0x%.08X (%s)\n", v++, cur->vb, enabled ? "enabled" : "disabled");
+                printf("CxbxDbg: %.02d : 0x%.08X (%s)\n", v++, cur->pResource, enabled ? "enabled" : "disabled");
 
-                cur = cur->next;
+                cur = cur->pNext;
             }
+
+            g_VBTrackTotal.Unlock();
         }
         #else
         printf("CxbxDbg: _DEBUG_TRACK_VB is not defined!\n");
@@ -214,13 +234,17 @@ void DbgConsole::ParseCommand()
     {
         #ifdef _DEBUG_TRACK_VB
         {
-            using namespace XTL;
+            int n=0, m=0;
 
-            int n=0;
-
-            if(sscanf(m_szInput, "%*s %d", &n) == 1)
+            int c = sscanf(m_szInput, "%*s %d-%d", &n, &m);
+            
+            if(c == 1)
             {
-                EnableVB(n, false);
+                EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, n, false);
+            }
+            else if(c == 2)
+            {
+                EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, m, false);
             }
             else
             {
@@ -235,13 +259,17 @@ void DbgConsole::ParseCommand()
     {
         #ifdef _DEBUG_TRACK_VB
         {
-            using namespace XTL;
+            int n=0, m=0;
 
-            int n=0;
-
-            if(sscanf(m_szInput, "%*s %d", &n) == 1)
+            int c = sscanf(m_szInput, "%*s %d-%d", &n, &m);
+            
+            if(c == 1)
             {
-                EnableVB(n, true);
+                EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, n, true);
+            }
+            else if(c == 2)
+            {
+                EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, m, true);
             }
             else
             {
@@ -250,6 +278,81 @@ void DbgConsole::ParseCommand()
         }
         #else
         printf("CxbxDbg: _DEBUG_TRACK_VB is not defined!\n");
+        #endif
+    }
+    else if(stricmp(szCmd, "lpb") == 0 || stricmp(szCmd, "ListPB") == 0)
+    {
+        #ifdef _DEBUG_TRACK_PB
+        {
+            int v=0;
+
+            g_PBTrackTotal.Lock();
+
+            RTNode *cur = g_PBTrackTotal.getHead();
+
+            while(cur != NULL && cur->pNext != NULL)
+            {
+                bool enabled = !g_PBTrackDisable.exists(cur->pResource);
+
+                printf("CxbxDbg: %.02d : 0x%.08X (%s)\n", v++, cur->pResource, enabled ? "enabled" : "disabled");
+
+                cur = cur->pNext;
+            }
+
+            g_PBTrackTotal.Unlock();
+        }
+        #else
+        printf("CxbxDbg: _DEBUG_TRACK_PB is not defined!\n");
+        #endif
+    }
+    else if(stricmp(szCmd, "dpb") == 0 || stricmp(szCmd, "DisablePB") == 0)
+    {
+        #ifdef _DEBUG_TRACK_PB
+        {
+            int n=0, m=0;
+
+            int c = sscanf(m_szInput, "%*s %d-%d", &n, &m);
+            
+            if(c == 1)
+            {
+                EnableTracker(g_PBTrackTotal, g_PBTrackDisable, n, n, false);
+            }
+            else if(c == 2)
+            {
+                EnableTracker(g_PBTrackTotal, g_PBTrackDisable, n, m, false);
+            }
+            else
+            {
+                printf("CxbxDbg: Syntax Incorrect (dpb #)\n");
+            }
+        }
+        #else
+        printf("CxbxDbg: _DEBUG_TRACK_PB is not defined!\n");
+        #endif
+    }
+    else if(stricmp(szCmd, "epb") == 0 || stricmp(szCmd, "EnablePB") == 0)
+    {
+        #ifdef _DEBUG_TRACK_PB
+        {
+            int n=0, m=0;
+
+            int c = sscanf(m_szInput, "%*s %d-%d", &n, &m);
+
+            if(c == 1)
+            {
+                EnableTracker(g_PBTrackTotal, g_PBTrackDisable, n, n, true);
+            }
+            else if(c == 2)
+            {
+                EnableTracker(g_PBTrackTotal, g_PBTrackDisable, n, m, true);
+            }
+            else
+            {
+                printf("CxbxDbg: Syntax Incorrect (dpb #)\n");
+            }
+        }
+        #else
+        printf("CxbxDbg: _DEBUG_TRACK_PB is not defined!\n");
         #endif
     }
     else if(stricmp(szCmd, "cls") == 0)

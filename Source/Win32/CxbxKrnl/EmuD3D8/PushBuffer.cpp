@@ -35,6 +35,7 @@
 #define _XBOXKRNL_DEFEXTRN_
 
 #include "Emu.h"
+#include "ResourceTracker.h"
 
 // prevent name collisions
 namespace XTL
@@ -109,6 +110,10 @@ void XTL::EmuExecutePushBuffer
 
             pIndexData = pdwPushData;
 
+            #ifdef _DEBUG_TRACK_PB
+            g_PBTrackTotal.insert(pIndexData);
+            #endif
+
             pdwPushData += dwCount - (bInc ? 0 : 1);
 
             // perform rendering
@@ -135,10 +140,19 @@ void XTL::EmuExecutePushBuffer
                 {
                     g_pD3DDevice8->SetIndices(pIndexBuffer, 0);
 
+                    #ifdef _DEBUG_TRACK_PB
+                    if(!g_PBTrackDisable.exists(pIndexData))
+                    {
+                    #endif
+
                     g_pD3DDevice8->DrawIndexedPrimitive
                     (
                         PCPrimitiveType, 0, dwCount*2, 0, EmuD3DVertex2PrimitiveCount(XBPrimitiveType, dwCount*2)
                     );
+
+                    #ifdef _DEBUG_TRACK_PB
+                    }
+                    #endif
                 }
 
                 // cleanup

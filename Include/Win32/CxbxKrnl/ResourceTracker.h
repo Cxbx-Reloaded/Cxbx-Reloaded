@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D8->VertexBuffer.h
+// *   Cxbx->Win32->CxbxKrnl->ResourceTracker.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,30 +31,45 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef VERTEXBUFFER_H
-#define VERTEXBUFFER_H
+#ifndef RESOURCETRACKER_H
+#define RESOURCETRACKER_H
 
 #include "Cxbx.h"
+#include "Mutex.h"
 
-// fixup xbox extensions to be compatible with PC direct3d
-extern UINT EmuFixupVerticesA
-(
-    DWORD                           PrimitiveType,
-    UINT                           &PrimitiveCount,
-    XTL::IDirect3DVertexBuffer8   *&pOrigVertexBuffer8,
-    XTL::IDirect3DVertexBuffer8   *&pHackVertexBuffer8,
-    UINT                            dwOffset,
-    PVOID                           pVertexStreamZeroData,
-    UINT                            uiVertexStreamZeroStride, 
-    PVOID                          *ppNewVertexStreamZeroData
-);
+extern bool g_bVBSkipStream;
+extern bool g_bPBSkipPusher;
 
-// fixup xbox extensions to be compatible with PC direct3d
-extern VOID EmuFixupVerticesB
-(
-    UINT                            nStride,
-    XTL::IDirect3DVertexBuffer8   *&pOrigVertexBuffer8,
-    XTL::IDirect3DVertexBuffer8   *&pHackVertexBuffer8
-);
+extern class ResourceTracker : public Mutex
+{
+    public:
+		ResourceTracker() : m_head(0), m_tail(0) {};
+	   ~ResourceTracker();
+
+	    // insert a ptr
+		void insert(void *pResource);
+
+		// remove a ptr
+		void remove(void *pResource);
+
+		// check for existance of ptr
+		bool exists(void *pResource);
+
+        // for traversal
+        struct RTNode *getHead() { return m_head; }
+
+    private:
+		// list of "live" vertex buffers for debugging purposes
+		struct RTNode *m_head;
+		struct RTNode *m_tail;
+}
+g_VBTrackTotal, g_VBTrackDisable,
+g_PBTrackTotal, g_PBTrackDisable;
+
+struct RTNode
+{
+	void    *pResource;
+	RTNode  *pNext;
+};
 
 #endif
