@@ -1717,10 +1717,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
     else if(PCFormat == D3DFMT_YUY2)
     {
         if(!g_bSupportsYUY2)
-        {
-            EmuWarning("*Warning* YUY2 not supported, using X8R8G8B8");
-            PCFormat = D3DFMT_X8R8G8B8;
-        }
+            EmuCleanup("Sorry, YUY2 must be supported in hardware (temporarily)");
 
         // cache the overlay size
         g_dwOverlayW = Width;
@@ -3113,26 +3110,63 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
 
             if(hRet == D3D_OK)
             {
-                uint08 *pDest = (uint08*)LockedRectDest.pBits;
-                uint08 *pSour = (uint08*)LockedRectSour.pBits;
+                uint08 *pCurByteY = (uint08*)LockedRectSour.pBits;
+                uint08 *pCurByteV = (uint08*)LockedRectSour.pBits +  g_dwOverlayW * g_dwOverlayH;
+                uint08 *pCurByteU = (uint08*)LockedRectSour.pBits + (g_dwOverlayW * g_dwOverlayH) + ((g_dwOverlayW * g_dwOverlayH) / 4);
 
-                for(uint y=0;y<g_dwOverlayH;y++)
+                uint08 *pDest = (uint08*)LockedRectDest.pBits;
+
+                uint32 dx=0, dy=0;
+
+                uint32 dwImageSize = (g_dwOverlayW * g_dwOverlayH) * 3 / 2;
+
+                uint32 dwYUY2W = g_dwOverlayW * 3 / 2;
+                uint32 dwYUY2C = 0;
+
+                for(uint32 v=0;v<dwImageSize;v+=6)
                 {
-                    for(uint x=0;x<g_dwOverlayW*4;x+=4)
+                    double Y[4];
+
+                    Y[0] = *pCurByteY++;
+                    Y[1] = *pCurByteY++;
+                    Y[2] = *pCurByteY++;
+                    Y[3] = *pCurByteY++;
+
+                    double V = *pCurByteV++;
+                    double U = *pCurByteU++;
+
+                    int a=0;
+                    for(int y=0;y<2;y++)
                     {
-                        pDest[x+0] = 0xFF;
-                        pDest[x+1] = 0xFF;
-                        pDest[x+2] = 0xFF;
-                        pDest[x+3] = 0xFF;
+                        for(int x=0;x<2;x++)
+                        {
+                            double R = Y[a] + 1.402*(V-128);
+                            double G = Y[a] - 0.344*(U-128) - 0.714*(V-128);
+                            double B = Y[a] + 1.772*(U-128);
+
+                            R = (R < 0) ? 0 : ((R > 255) ? 255 : R);
+                            G = (G < 0) ? 0 : ((G > 255) ? 255 : G);
+                            B = (B < 0) ? 0 : ((B > 255) ? 255 : B);
+
+                            uint32 v = (dy*LockedRectDest.Pitch+dx*4);
+
+                            pDest[v+0] = (uint08)R;
+                            pDest[v+1] = (uint08)G;
+                            pDest[v+2] = (uint08)B;
+                            pDest[v+3] = 0xFF;
+
+                            a++;
+                            dx++;
+
+                            if(dx % g_dwOverlayW == 0)
+                            {
+                                dy++;
+                                dx=0;
+                            }
+                        }
                     }
 
-//                    memcpy(pDest, pSour, LockedRectDest.Pitch);
-
-                    pDest += LockedRectDest.Pitch;
-                    pSour += LockedRectSour.Pitch;
                 }
-
-                pSurface->EmuSurface8->UnlockRect();
             }
 
             pBackBuffer->UnlockRect();
