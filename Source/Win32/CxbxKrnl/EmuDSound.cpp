@@ -594,22 +594,22 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetMixBinHeadroom
 }
 
 // ******************************************************************
-// * func: EmuIDirectSound8_SetMixBinVolumes
+// * func: EmuIDirectSoundBuffer8_SetMixBinVolumes
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSound8_SetMixBinVolumes
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMixBinVolumes
 (
     LPDIRECTSOUND8          pThis,
-    PVOID					pMixBins
+    PVOID                   pMixBins
 )
 {
     // debug trace
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-        printf("EmuDSound (0x%X): EmuIDirectSound8_SetMixBinVolumes\n"
+        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetMixBinVolumes\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
-               "   pMixBins					 : 0x%.08X\n"
+               "   pMixBins                  : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, pMixBins);
         EmuSwapFS();   // XBox FS
@@ -963,8 +963,8 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPlayRegion
 
     // TODO: Translate params, then make the PC DirectSound call
 
-	// TODO: Ensure that 4627 & 4361 are intercepting far enough back
-	// (otherwise pThis is manipulated!)
+    // TODO: Ensure that 4627 & 4361 are intercepting far enough back
+    // (otherwise pThis is manipulated!)
 
     EmuSwapFS();   // XBox FS
 
@@ -1094,8 +1094,8 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetLoopRegion
     }
     #endif
 
-	// TODO: Ensure that 4627 & 4361 are intercepting far enough back
-	// (otherwise pThis is manipulated!)
+    // TODO: Ensure that 4627 & 4361 are intercepting far enough back
+    // (otherwise pThis is manipulated!)
 
     //EmuResizeIDirectSoundBuffer8(pThis, dwLoopLength);
 
@@ -1292,10 +1292,10 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_GetCurrentPosition
         EmuWarning("GetCurrentPosition Failed!");
 
     #ifdef _DEBUG_TRACE
-	if(pdwCurrentPlayCursor != 0 && pdwCurrentWriteCursor != 0)
-	{
-		printf("*pdwCurrentPlayCursor := %d, *pdwCurrentWriteCursor := %d\n", *pdwCurrentPlayCursor, *pdwCurrentWriteCursor);
-	}
+    if(pdwCurrentPlayCursor != 0 && pdwCurrentWriteCursor != 0)
+    {
+        printf("*pdwCurrentPlayCursor := %d, *pdwCurrentWriteCursor := %d\n", *pdwCurrentPlayCursor, *pdwCurrentWriteCursor);
+    }
     #endif
 
     EmuSwapFS();   // XBox FS
@@ -1409,15 +1409,15 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetVolume
     }
     #endif
 
-	// TODO: Ensure that 4627 & 4361 are intercepting far enough back
-	// (otherwise pThis is manipulated!)
+    // TODO: Ensure that 4627 & 4361 are intercepting far enough back
+    // (otherwise pThis is manipulated!)
 
 //    HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetVolume(lVolume);
 
     EmuSwapFS();   // XBox FS
 
 //    return hRet;
-	return S_OK;
+    return S_OK;
 }
 
 // ******************************************************************
@@ -1443,11 +1443,12 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetFrequency
     }
     #endif
 
-    HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetFrequency(dwFrequency);
+//    HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetFrequency(dwFrequency);
 
     EmuSwapFS();   // XBox FS
 
-    return hRet;
+//    return hRet;
+    return S_OK;
 }
 
 // ******************************************************************
