@@ -36,6 +36,7 @@
 
 #include "EmuXapi.h"
 #include "EmuD3D8.h"
+#include "EmuD3D8Conv.h"
 #include "EmuDInput.h"
 #include "EmuDSound.h"
 #include "EmuXOnline.h"

@@ -222,7 +222,10 @@ INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam,
                     };
 
                     for(int v=0;v<sizeof(order)/sizeof(tmpstruct);v++)
+                    {
+                        Sleep(500);
                         ConfigureInput(hWndDlg, order[v].hWnd, order[v].ctrl);
+                    }
 
                     break;
             } 
@@ -254,14 +257,10 @@ VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object)
 
     g_XBController.ConfigBegin(hWndDlg, object);
 
-    // ******************************************************************
-    // * Wait for input, or 5 second timeout
-    // ******************************************************************
+    // wait for input, or 5 second timeout
     for(int v=100;v>0;v--)
     {
-        // ******************************************************************
-        // * Update the button text every second
-        // ******************************************************************
+        // update the button text every second
         if(v%20 == 0)
         {
             char szBuffer[255];
@@ -287,9 +286,7 @@ VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object)
 
 cleanup:
 
-    // ******************************************************************
-    // * Update Window
-    // ******************************************************************
+    // update window
     {
         if(g_XBController.GetError())
             sprintf(szNewText, "%s", g_XBController.GetError());

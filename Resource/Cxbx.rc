@@ -246,16 +246,16 @@ BEGIN
     PUSHBUTTON      "&Accept",IDC_INPUT_CONFIG_ACCEPT,284,102,51,14,BS_FLAT
     GROUPBOX        "Analog Buttons",IDC_STATIC,2,1,220,47
     GROUPBOX        "Digital Buttons",IDC_STATIC,2,51,220,46
-    GROUPBOX        "Analog Thumbstick (Left)",IDC_STATIC,226,1,115,47
-    GROUPBOX        "Analog Thumbstick (Right)",IDC_STATIC,227,51,114,46
+    GROUPBOX        "Analog Thumbstick (Left)",IDC_STATIC,226,1,113,47
+    GROUPBOX        "Analog Thumbstick (Right)",IDC_STATIC,227,51,112,46
     PUSHBUTTON      "Load Configuration...",IDC_BUTTON1,6,102,104,14,BS_FLAT | 
                     WS_DISABLED
     PUSHBUTTON      "Save Configuration...",IDC_BUTTON2,113,102,104,14,
                     BS_FLAT | WS_DISABLED
     CTEXT           "Please choose one of the controller components from above...",
-                    IDC_CONFIG_STATUS,71,121,264,12,SS_CENTERIMAGE,
+                    IDC_CONFIG_STATUS,70,121,265,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
-    PUSHBUTTON      "[ quick config ]",IDC_QUICK_CONFIG,6,120,60,14,BS_FLAT
+    PUSHBUTTON      "[ quick config ]",IDC_QUICK_CONFIG,6,121,60,12,BS_FLAT
 END
 
 IDD_VIDEO_CFG DIALOGEX 0, 0, 258, 110
