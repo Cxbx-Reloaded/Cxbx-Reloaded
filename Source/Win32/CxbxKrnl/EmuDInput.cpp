@@ -57,7 +57,6 @@ LPDIRECTINPUTDEVICE8    g_pInputDev[MAX_INPUT_DEVICES]   = {0};
 int                     g_pInputCur                      = 0;
 xapi::XINPUT_STATE      g_EmuController1;
 
-
 // ******************************************************************
 // * statics
 // ******************************************************************

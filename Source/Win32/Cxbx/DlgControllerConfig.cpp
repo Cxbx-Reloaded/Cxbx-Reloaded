@@ -83,6 +83,7 @@ INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam,
     {
         case WM_INITDIALOG:
             SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
+            SetFocus(GetDlgItem(hWndDlg, IDC_SET_X));
             break;
         case WM_CLOSE:
             EndDialog(hWndDlg, wParam); 
