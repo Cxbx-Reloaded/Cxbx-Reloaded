@@ -47,6 +47,15 @@
 typedef int                 BOOL;
 
 // ******************************************************************
+// * PTHREAD_START_ROUTINE / LPTHREAD_START_ROUTINE
+// ******************************************************************
+typedef DWORD (WINAPI *PTHREAD_START_ROUTINE)
+(
+    LPVOID lpThreadParameter
+);
+typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
+
+// ******************************************************************
 // * func: EmuXCreateThread
 // ******************************************************************
 HANDLE WINAPI EmuXCreateThread
@@ -66,5 +75,25 @@ BOOL WINAPI EmuXCloseHandle
 (
     HANDLE hObject
 );
+
+// ******************************************************************
+// * func: EmuXapiInitProcess
+// ******************************************************************
+VOID WINAPI EmuXapiInitProcess();
+
+// ******************************************************************
+// * func: EmuXapiBootDash
+// ******************************************************************
+VOID WINAPI EmuXapiBootDash(uint32 UnknownA, uint32 UnknownB, uint32 UnknownC);
+
+// ******************************************************************
+// * func: EmuX__rcinit
+// ******************************************************************
+VOID EmuX__rcinit();
+
+// ******************************************************************
+// * func: EmuX__cinit
+// ******************************************************************
+VOID EmuX__cinit();
 
 #endif

@@ -553,7 +553,7 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
             // ******************************************************************
             if(kt >= virt_addr + imag_base && kt < virt_addr + virt_size + imag_base)
             {
-                printf("EmuExe::EmuExe: Located Thunk Table in Section 0x%.04X...", v);
+                printf("EmuExe::EmuExe: Located Thunk Table in Section 0x%.04X (0x%.08X)...", v, kt);
 
                 uint32 *kt_tbl = (uint32*)&m_bzSection[v][kt - virt_addr - imag_base];
 

@@ -93,12 +93,12 @@ DWORD WINAPI PsCreateSystemThreadExProxy
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("CxbxKrnl [0x%.08X]: PsCreateSystemThreadExProxy\n"
-               "          (\n"
-               "             StartContext1       : 0x%.08X\n"
-               "             StartContext2       : 0x%.08X\n"
-               "             StartRoutine        : 0x%.08X\n"
-               "          );\n",
+        printf("EmuXKrnl [0x%.08X]: PsCreateSystemThreadExProxy\n"
+               "(\n"
+               "   StartContext1       : 0x%.08X\n"
+               "   StartContext2       : 0x%.08X\n"
+               "   StartRoutine        : 0x%.08X\n"
+               ");\n",
                GetCurrentThreadId(), StartContext1, StartContext2, StartRoutine);
     }
     #endif
@@ -146,14 +146,14 @@ XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("CxbxKrnl [0x%.08X]: ExQueryNonVolatileSetting\n"
-               "          (\n"
-               "             ValueIndex          : 0x%.08X\n"
-               "             Type                : 0x%.08X\n"
-               "             Value               : 0x%.08X\n"
-               "             ValueLength         : 0x%.08X\n"
-               "             ResultLength        : 0x%.08X\n"
-               "          );\n",
+        printf("EmuXKrnl [0x%.08X]: ExQueryNonVolatileSetting\n"
+               "(\n"
+               "   ValueIndex          : 0x%.08X\n"
+               "   Type                : 0x%.08X\n"
+               "   Value               : 0x%.08X\n"
+               "   ValueLength         : 0x%.08X\n"
+               "   ResultLength        : 0x%.08X\n"
+               ");\n",
                GetCurrentThreadId(), ValueIndex, Type, Value, ValueLength, ResultLength);
     }
     #endif
@@ -178,7 +178,7 @@ XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
 
         default:
         {
-            printf("CxbxKrnl [0x%.08X]: ExQueryNonVolatileSetting unknown ValueIndex : %.08X\n", ValueIndex);
+            printf("EmuXKrnl [0x%.08X]: ExQueryNonVolatileSetting unknown ValueIndex : %.08X\n", ValueIndex);
         }
         break;
     }
@@ -198,7 +198,7 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
 {
     EmuXSwapFS();   // Win2k/XP FS
 
-    MessageBox(NULL, "HalReturnToFirmware()", "CxbxKrnl", MB_OK);
+    MessageBox(NULL, "HalReturnToFirmware()", "EmuXKrnl", MB_OK);
     /*
     ReturnFirmwareHalt          = 0x0,
     ReturnFirmwareReboot        = 0x1,
@@ -230,12 +230,12 @@ XBSYSAPI EXPORTNUM(107) VOID NTAPI xboxkrnl::KeInitializeDpc
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("CxbxKrnl [0x%.08X]: KeInitializeDpc\n"
-               "          (\n"
-               "             Dpc                 : 0x%.08X\n"
-               "             DeferredRoutine     : 0x%.08X\n"
-               "             DeferredContext     : 0x%.08X\n"
-               "          );\n",
+        printf("EmuXKrnl [0x%.08X]: KeInitializeDpc\n"
+               "(\n"
+               "   Dpc                 : 0x%.08X\n"
+               "   DeferredRoutine     : 0x%.08X\n"
+               "   DeferredContext     : 0x%.08X\n"
+               ");\n",
                GetCurrentThreadId(), Dpc, DeferredRoutine, DeferredContext);
     }
     #endif
@@ -266,11 +266,11 @@ XBSYSAPI EXPORTNUM(113) VOID NTAPI xboxkrnl::KeInitializeTimerEx
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("CxbxKrnl [0x%.08X]: KeInitializeTimerEx\n"
-               "          (\n"
-               "             Timer               : 0x%.08X\n"
-               "             Type                : 0x%.08X\n"
-               "          );\n",
+        printf("EmuXKrnl [0x%.08X]: KeInitializeTimerEx\n"
+               "(\n"
+               "   Timer               : 0x%.08X\n"
+               "   Type                : 0x%.08X\n"
+               ");\n",
                GetCurrentThreadId(), Timer, Type);
     }
     #endif
@@ -308,12 +308,12 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("CxbxKrnl [0x%.08X]: KeSetTimer\n"
-               "          (\n"
-               "             Timer               : 0x%.08X\n"
-               "             DueTime             : 0x%I64X\n"
-               "             Dpc                 : 0x%.08X\n"
-               "          );\n",
+        printf("EmuXKrnl [0x%.08X]: KeSetTimer\n"
+               "(\n"
+               "   Timer               : 0x%.08X\n"
+               "   DueTime             : 0x%I64X\n"
+               "   Dpc                 : 0x%.08X\n"
+               ");\n",
                GetCurrentThreadId(), Timer, DueTime, Dpc);
     }
     #endif
@@ -342,14 +342,14 @@ XBSYSAPI EXPORTNUM(184) NTSTATUS xboxkrnl::NtAllocateVirtualMemory
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("CxbxKrnl [0x%.08X]: NtAllocateVirtualMemory\n"
-               "          (\n"
-               "             BaseAddress         : 0x%.08X\n"
-               "             ZeroBits            : 0x%.08X\n"
-               "             AllocationSize      : 0x%.08X\n"
-               "             AllocationType      : 0x%.08X\n"
-               "             Protect             : 0x%.08X\n"
-               "          );\n",
+        printf("EmuXKrnl [0x%.08X]: NtAllocateVirtualMemory\n"
+               "(\n"
+               "   BaseAddress         : 0x%.08X\n"
+               "   ZeroBits            : 0x%.08X\n"
+               "   AllocationSize      : 0x%.08X\n"
+               "   AllocationType      : 0x%.08X\n"
+               "   Protect             : 0x%.08X\n"
+               ");\n",
                GetCurrentThreadId(), BaseAddress, ZeroBits, AllocationSize, AllocationType, Protect);
     }
     #endif
@@ -376,10 +376,10 @@ XBSYSAPI EXPORTNUM(187) NTSTATUS NTAPI xboxkrnl::NtClose
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("CxbxKrnl [0x%.08X]: NtClose\n"
-               "          (\n"
-               "             Handle              : 0x%.08X\n"
-               "          );\n",
+        printf("EmuXKrnl [0x%.08X]: NtClose\n"
+               "(\n"
+               "   Handle              : 0x%.08X\n"
+               ");\n",
                GetCurrentThreadId(), Handle);
     }
     #endif
@@ -412,15 +412,15 @@ XBSYSAPI EXPORTNUM(202) NTSTATUS xboxkrnl::NtOpenFile
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("CxbxKrnl [0x%.08X]: NtOpenFile\n"
-               "          (\n"
-               "             FileHandle          : 0x%.08X\n"
-               "             DesiredAccess       : 0x%.08X\n"
-               "             ObjectAttributes    : 0x%.08X\n"
-               "             IoStatusBlock       : 0x%.08X\n"
-               "             ShareAccess         : 0x%.08X\n"
-               "             OpenOptions         : 0x%.08X\n"
-               "          );\n",
+        printf("EmuXKrnl [0x%.08X]: NtOpenFile\n"
+               "(\n"
+               "   FileHandle          : 0x%.08X\n"
+               "   DesiredAccess       : 0x%.08X\n"
+               "   ObjectAttributes    : 0x%.08X\n"
+               "   IoStatusBlock       : 0x%.08X\n"
+               "   ShareAccess         : 0x%.08X\n"
+               "   OpenOptions         : 0x%.08X\n"
+               ");\n",
                GetCurrentThreadId(), FileHandle, DesiredAccess, ObjectAttributes, 
                IoStatusBlock, ShareAccess, OpenOptions);
     }
@@ -450,14 +450,14 @@ XBSYSAPI EXPORTNUM(218) NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformationFile
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("CxbxKrnl [0x%.08X]: NtQueryVolumeInformationFile\n"
-               "          (\n"
-               "             FileHandle          : 0x%.08X\n"
-               "             IoStatusBlock       : 0x%.08X\n"
-               "             FileInformation     : 0x%.08X\n"
-               "             Length              : 0x%.08X\n"
-               "             FileInformationClass: 0x%.08X\n"
-               "          );\n",
+        printf("EmuXKrnl [0x%.08X]: NtQueryVolumeInformationFile\n"
+               "(\n"
+               "   FileHandle          : 0x%.08X\n"
+               "   IoStatusBlock       : 0x%.08X\n"
+               "   FileInformation     : 0x%.08X\n"
+               "   Length              : 0x%.08X\n"
+               "   FileInformationClass: 0x%.08X\n"
+               ");\n",
                GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation, 
                Length, FileInformationClass);
     }
@@ -492,19 +492,19 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("CxbxKrnl [0x%.08X]: PsCreateSystemThreadEx\n"
-               "          (\n"
-               "             ThreadHandle        : 0x%.08X\n"
-               "             ThreadExtraSize     : 0x%.08X\n"
-               "             KernelStackSize     : 0x%.08X\n"
-               "             TlsDataSize         : 0x%.08X\n"
-               "             ThreadId            : 0x%.08X\n"
-               "             StartContext1       : 0x%.08X\n"
-               "             StartContext2       : 0x%.08X\n"
-               "             CreateSuspended     : 0x%.08X\n"
-               "             DebugStack          : 0x%.08X\n"
-               "             StartRoutine        : 0x%.08X\n"
-               "          );\n",
+        printf("EmuXKrnl [0x%.08X]: PsCreateSystemThreadEx\n"
+               "(\n"
+               "   ThreadHandle        : 0x%.08X\n"
+               "   ThreadExtraSize     : 0x%.08X\n"
+               "   KernelStackSize     : 0x%.08X\n"
+               "   TlsDataSize         : 0x%.08X\n"
+               "   ThreadId            : 0x%.08X\n"
+               "   StartContext1       : 0x%.08X\n"
+               "   StartContext2       : 0x%.08X\n"
+               "   CreateSuspended     : 0x%.08X\n"
+               "   DebugStack          : 0x%.08X\n"
+               "   StartRoutine        : 0x%.08X\n"
+               ");\n",
                GetCurrentThreadId(), ThreadHandle, ThreadExtraSize, KernelStackSize, TlsDataSize, ThreadId,
                StartContext1, StartContext2, CreateSuspended, DebugStack, StartRoutine);
     }
@@ -544,10 +544,10 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("CxbxKrnl [0x%.08X]: RtlEnterCriticalSection\n"
-               "          (\n"
-               "             CriticalSection     : 0x%.08X\n"
-               "          );\n",
+        printf("EmuXKrnl [0x%.08X]: RtlEnterCriticalSection\n"
+               "(\n"
+               "   CriticalSection     : 0x%.08X\n"
+               ");\n",
                GetCurrentThreadId(), CriticalSection);
     }
     #endif
@@ -576,10 +576,10 @@ XBSYSAPI EXPORTNUM(291) VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("CxbxKrnl [0x%.08X]: RtlInitializeCriticalSection\n"
-               "          (\n"
-               "             CriticalSection     : 0x%.08X\n"
-               "          );\n",
+        printf("EmuXKrnl [0x%.08X]: RtlInitializeCriticalSection\n"
+               "(\n"
+               "   CriticalSection     : 0x%.08X\n"
+               ");\n",
                GetCurrentThreadId(), CriticalSection);
     }
     #endif
@@ -606,10 +606,10 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("CxbxKrnl [0x%.08X]: RtlLeaveCriticalSection\n"
-               "          (\n"
-               "             CriticalSection     : 0x%.08X\n"
-               "          );\n",
+        printf("EmuXKrnl [0x%.08X]: RtlLeaveCriticalSection\n"
+               "(\n"
+               "   CriticalSection     : 0x%.08X\n"
+               ");\n",
                GetCurrentThreadId(), CriticalSection);
     }
     #endif
@@ -634,10 +634,10 @@ XBSYSAPI EXPORTNUM(301) xboxkrnl::ULONG NTAPI xboxkrnl::RtlNtStatusToDosError
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("CxbxKrnl [0x%.08X]: RtlNtStatusToDosError\n"
-               "          (\n"
-               "             Status              : 0x%.08X\n"
-               "          );\n",
+        printf("EmuXKrnl [0x%.08X]: RtlNtStatusToDosError\n"
+               "(\n"
+               "   Status              : 0x%.08X\n"
+               ");\n",
                GetCurrentThreadId(), Status);
     }
     #endif

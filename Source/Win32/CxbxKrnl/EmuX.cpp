@@ -76,22 +76,22 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, ui
 
         freopen(DebugFilename, "wt", stdout);
 
-        printf("CxbxKrnl [0x%.08X]: Debug console allocated.\n", GetCurrentThreadId());
+        printf("EmuX (0x%.08X): Debug console allocated.\n", GetCurrentThreadId());
     }
 
     // ******************************************************************
     // * debug trace
     // ******************************************************************
     {
-        printf("CxbxKrnl [0x%.08X]: EmuXInit\n"
-               "          (\n"
-               "             DebugConsole        : 0x%.08X\n"
-               "             DebugFilename       : \"%s\"\n"
-               "             XBEHeader           : 0x%.08X\n"
-               "             XBEHeaderSize       : 0x%.08X\n"
-               "             Entry               : 0x%.08X\n"
-               "          );\n",
-               GetCurrentThreadId(), DebugConsole, DebugFilename, XBEHeader, XBEHeaderSize, Entry);
+        printf("EmuX: EmuXInit\n"
+               "(\n"
+               "   DebugConsole        : 0x%.08X\n"
+               "   DebugFilename       : \"%s\"\n"
+               "   XBEHeader           : 0x%.08X\n"
+               "   XBEHeaderSize       : 0x%.08X\n"
+               "   Entry               : 0x%.08X\n"
+               ");\n",
+               DebugConsole, DebugFilename, XBEHeader, XBEHeaderSize, Entry);
     }
 
     // ******************************************************************
@@ -139,18 +139,18 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, ui
         EmuXGenerateFS();
     }
 
-    printf("CxbxKrnl [0x%.08X]: Initial thread starting.\n", GetCurrentThreadId());
-
-    EmuXSwapFS();   // XBox FS
+    printf("EmuX (0x%.08X): Initial thread starting.\n", GetCurrentThreadId());
 
     // This must be enabled or the debugger may crash (sigh)
-    //_asm _emit 0xF1
+    // __asm _emit 0xF1
+
+    EmuXSwapFS();   // XBox FS
 
     Entry();
 
     EmuXSwapFS();   // Win2k/XP FS
 
-    printf("CxbxKrnl [0x%.08X]: Initial thread ended.\n", GetCurrentThreadId());
+    printf("EmuX (0x%.08X): Initial thread ended.\n", GetCurrentThreadId());
 
     fflush(stdout);
 
@@ -164,7 +164,7 @@ CXBXKRNL_API void NTAPI EmuXDummy()
 {
     EmuXSwapFS();   // Win2k/XP FS
 
-    MessageBox(NULL, "EmuXDummy()", "CxbxKrnl", MB_OK);
+    printf("EmuX (0x%.08X): EmuXDummy()\n", GetCurrentThreadId());
 
     EmuXSwapFS();   // XBox FS
 }
@@ -176,11 +176,50 @@ CXBXKRNL_API void NTAPI EmuXPanic()
 {
     EmuXSwapFS();   // Win2k/XP FS
 
-    printf("CxbxKrnl [0x%.08X]: EmuXPanic()\n", GetCurrentThreadId());
+    printf("EmuX (0x%.08X): EmuXPanic()\n", GetCurrentThreadId());
 
     MessageBox(NULL, "Kernel Panic! Process will now terminate.", "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
 
     EmuXSwapFS();   // XBox FS
+}
+
+// ******************************************************************
+// * func: EmuXFindFuncByIndirectCall
+// ******************************************************************
+inline void *EmuXFindFuncByIndirectCall(void *Function, uint32 CallOffset)
+{
+    uint32 RelCallAddr = (uint32)Function + CallOffset;
+
+    uint32 RelFunc = *(uint32*)(RelCallAddr + 1);
+
+    void  *Func = (void*)(RelCallAddr + RelFunc + 5);
+
+    return Func;
+}
+
+// ******************************************************************
+// * func: EmuXFindFuncByPush32
+// ******************************************************************
+inline void *EmuXFindFuncByPush32(void *Function, uint32 PushOffset)
+{
+    uint32 AbsPushAddr = (uint32)Function + PushOffset;
+
+    uint32 AbsFunc = *(uint32*)(AbsPushAddr + 1);
+
+    void  *Func = (void*)(AbsFunc);
+
+    return Func;
+}
+
+// ******************************************************************
+// * func: EmuXInstallWrapper
+// ******************************************************************
+inline void EmuXInstallWrapper(void *FunctionAddr, void *WrapperAddr)
+{
+    uint08 *FuncBytes = (uint08*)FunctionAddr;
+
+    *(uint08*)&FuncBytes[0] = 0xE9;
+    *(uint32*)&FuncBytes[1] = (uint32)WrapperAddr - (uint32)FunctionAddr - 5;
 }
 
 // ******************************************************************
@@ -192,45 +231,85 @@ void EmuXInstallWrappers(void (*Entry)())
     // * debug trace
     // ******************************************************************
     {
-        printf("CxbxKrnl [0x%.08X]: EmuXInstallWrappers()\n"
-               "          (\n"
-               "             Entry               : 0x%.08X\n"
-               "          );\n",
-            GetCurrentThreadId(), Entry);
+        printf("EmuX: EmuXInstallWrappers\n"
+               "(\n"
+               "   Entry               : 0x%.08X\n"
+               ");\n",
+            Entry);
     }
 
     // ******************************************************************
-    // * install CreateThread vector
+    // * locate and patch functions
     // ******************************************************************
     {
-        // ******************************************************************
-        // * CreateThread is easily located using an offset from the standard
-        // * xbe entry point
-        // ******************************************************************
-        uint32  RelCallAddr         = (uint32)Entry + 0x54;
-        uint32  RelRealCreateThread = *(uint32*)(RelCallAddr + 1);
-        uint08 *RealCreateThread    = (uint08*)(RelCallAddr + RelRealCreateThread + 5);
+        void *RealmainXapiStartup = EmuXFindFuncByPush32(Entry, 0x4B);
 
-        printf("RealCreateThread : %.08X\n", RealCreateThread);
-        fflush(stdout);
+        printf("EmuXInstallWrappers: mainXapiStartup -> 0x%.08X\n", RealmainXapiStartup);
 
-        *(uint08*)&RealCreateThread[0] = 0xE9;
-        *(uint32*)&RealCreateThread[1] = (uint32)xboxkrnl::EmuXCreateThread - (uint32)RealCreateThread - 5;
-    }
-
-    // ******************************************************************
-    // * install CloseHandle vector
-    // ******************************************************************
-    {
         // ******************************************************************
-        // * CloseHandle is easily located using an offset from the standard
-        // * xbe entry point
+        // * install CreateThread vector
         // ******************************************************************
-        uint32  RelCallAddr         = (uint32)Entry + 0x6A;
-        uint32  RelRealCloseHandle  = *(uint32*)(RelCallAddr + 1);
-        uint08 *RealCloseHandle     = (uint08*)(RelCallAddr + RelRealCloseHandle + 5);
+        {
+            void *RealCreateThread = EmuXFindFuncByIndirectCall(Entry, 0x54);
 
-        *(uint08*)&RealCloseHandle[0] = 0xE9;
-        *(uint32*)&RealCloseHandle[1] = (uint32)xboxkrnl::EmuXCloseHandle - (uint32)RealCloseHandle - 5;
+            printf("EmuXInstallWrappers: CreateThread    -> 0x%.08X\n", RealCreateThread);
+
+            EmuXInstallWrapper(RealCreateThread, xboxkrnl::EmuXCreateThread);
+        }
+
+        // ******************************************************************
+        // * install CloseHandle vector
+        // ******************************************************************
+        {
+            void *RealCloseHandle = EmuXFindFuncByIndirectCall(Entry, 0x6A);
+
+            printf("EmuXInstallWrappers: CloseHandle     -> 0x%.08X\n", RealCloseHandle);
+
+            EmuXInstallWrapper(RealCloseHandle, xboxkrnl::EmuXCloseHandle);
+        }
+
+        // ******************************************************************
+        // * XapiInitProcess
+        // ******************************************************************
+        {
+            void *RealXapiInitProcess = EmuXFindFuncByIndirectCall(RealmainXapiStartup, 0x00);
+
+            printf("EmuXInstallWrappers: XapiInitProcess -> 0x%.08X\n", RealXapiInitProcess);
+
+            EmuXInstallWrapper(RealXapiInitProcess, xboxkrnl::EmuXapiInitProcess);
+        }
+
+        // ******************************************************************
+        // * XapiBootDash
+        // ******************************************************************
+        {
+            void *RealXapiBootDash = EmuXFindFuncByIndirectCall(RealmainXapiStartup, 0x65);
+
+            printf("EmuXInstallWrappers: XapiBootDash -> 0x%.08X\n", RealXapiBootDash);
+
+            EmuXInstallWrapper(RealXapiBootDash, xboxkrnl::EmuXapiBootDash);
+        }
+
+        // ******************************************************************
+        // * __rcinit
+        // ******************************************************************
+        {
+            void *Real__rcinit = EmuXFindFuncByIndirectCall(RealmainXapiStartup, 0x47);
+
+            printf("EmuXInstallWrappers: __rcinit -> 0x%.08X\n", Real__rcinit);
+
+            EmuXInstallWrapper(Real__rcinit, xboxkrnl::EmuX__rcinit);
+        }
+
+        // ******************************************************************
+        // * __cinit
+        // ******************************************************************
+        {
+            void *Real__cinit = EmuXFindFuncByIndirectCall(RealmainXapiStartup, 0x4C);
+
+            printf("EmuXInstallWrappers: __cinit -> 0x%.08X\n", Real__cinit);
+
+            EmuXInstallWrapper(Real__cinit, xboxkrnl::EmuX__cinit);
+        }
     }
 }

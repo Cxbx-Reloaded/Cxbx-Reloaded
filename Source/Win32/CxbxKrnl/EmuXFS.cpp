@@ -60,6 +60,8 @@ void EmuXGenerateFS()
 
     NewPcr = (xboxkrnl::KPCR*)new char[dwSize];
 
+    memset(NewPcr, 0, sizeof(*NewPcr));
+
     NewFS = EmuXAllocateLDT((uint32)NewPcr, (uint32)NewPcr + dwSize);
 
     // ******************************************************************
@@ -91,7 +93,10 @@ void EmuXGenerateFS()
         memcpy(&NewPcr->NtTib, OrgNtTib, sizeof(NT_TIB));
 
         NewPcr->NtTib.Self = &NewPcr->NtTib;
+
         NewPcr->PrcbData.CurrentThread = KThread;
+
+        NewPcr->Prcb = &NewPcr->PrcbData;
 
         // Retrieve Win2k/XP TEB.ThreadLocalStoragePointer
         __asm

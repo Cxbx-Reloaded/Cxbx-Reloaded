@@ -479,7 +479,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                                 MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
 
-                                printf("Cxbx: %s\n", buffer);
+                                printf("WndMain: %s\n", buffer);
 						    }
 					    }
                     }
@@ -583,7 +583,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                                 sprintf(buffer, "%s's logo bitmap was successfully updated.", m_xbe->m_szAsciiTitle);
 
-                                printf("Cxbx: %s\n", buffer);
+                                printf("WndMain: %s\n", buffer);
 
                                 MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
 						    }
@@ -610,9 +610,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                         UINT chk_flag = (res) ? MF_UNCHECKED : MF_CHECKED;
 
                         if(res)
-                            printf("Cxbx: %s was patched to limit to 64MB of memory usage.\n", m_xbe->m_szAsciiTitle);
+                            printf("WndMain: %s was patched to limit to 64MB of memory usage.\n", m_xbe->m_szAsciiTitle);
                         else
-                            printf("Cxbx: %s was patched to allow >64MB of memory usage.\n", m_xbe->m_szAsciiTitle);
+                            printf("WndMain: %s was patched to allow >64MB of memory usage.\n", m_xbe->m_szAsciiTitle);
                         
                         CheckMenuItem(pach_menu, ID_EDIT_PATCH_ALLOW64MB, chk_flag);
                     }
@@ -656,9 +656,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                         UINT chk_flag = (res) ? MF_CHECKED : MF_UNCHECKED;
 
                         if(res)
-                            printf("Cxbx: %s was converted to debug mode.\n", m_xbe->m_szAsciiTitle);
+                            printf("WndMain: %s was converted to debug mode.\n", m_xbe->m_szAsciiTitle);
                         else
-                            printf("Cxbx: %s was converted to retail mode.\n", m_xbe->m_szAsciiTitle);
+                            printf("WndMain: %s was converted to retail mode.\n", m_xbe->m_szAsciiTitle);
 
                         CheckMenuItem(pach_menu, ID_EDIT_PATCH_DEBUGMODE, chk_flag);
                     }
@@ -710,7 +710,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                                 sprintf(buffer, "%s's .xbe info was successfully exported.", m_xbe->m_szAsciiTitle);
 
-                                printf("Cxbx: %s\n", buffer);
+                                printf("WndMain: %s\n", buffer);
 
                                 MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
 						    }
@@ -854,11 +854,11 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                         {
                             MessageBox(m_hwnd, "Shell failed. (try converting .exe again)", "Cxbx", MB_ICONSTOP | MB_OK);
 
-                            printf("Cxbx: %s shell failed.\n", m_xbe->m_szAsciiTitle);
+                            printf("WndMain: %s shell failed.\n", m_xbe->m_szAsciiTitle);
                         }
                         else
                         {
-                            printf("Cxbx: %s emulation started.\n", m_xbe->m_szAsciiTitle);
+                            printf("WndMain: %s emulation started.\n", m_xbe->m_szAsciiTitle);
                         }
                     }
                 }
@@ -1052,7 +1052,7 @@ void WndMain::XbeLoaded()
         }
     }
 
-    printf("Cxbx: %s loaded.\n", m_xbe->m_szAsciiTitle);    
+    printf("WndMain: %s loaded.\n", m_xbe->m_szAsciiTitle);    
 }
 
 // ******************************************************************
@@ -1119,7 +1119,7 @@ void WndMain::UpdateDebugConsoles()
         {
             freopen("CONOUT$", "wt", stdout);
 
-            printf("%s", "Cxbx: Debug console allocated.\n");
+            printf("%s", "WndMain: Debug console allocated.\n");
 
             CheckMenuItem(view_debg, ID_VIEW_DEBUGOUTPUTGUI_CONSOLE, MF_CHECKED);
             CheckMenuItem(view_debg, ID_VIEW_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
@@ -1131,7 +1131,7 @@ void WndMain::UpdateDebugConsoles()
 
         freopen(m_CxbxDebugFilename, "wt", stdout);
 
-        printf("%s", "Cxbx: Debug console allocated.\n");
+        printf("%s", "WndMain: Debug console allocated.\n");
 
         CheckMenuItem(view_debg, ID_VIEW_DEBUGOUTPUTGUI_CONSOLE, MF_UNCHECKED);
         CheckMenuItem(view_debg, ID_VIEW_DEBUGOUTPUTGUI_FILE, MF_CHECKED);
@@ -1203,7 +1203,7 @@ bool WndMain::ConvertToExe()
 
             sprintf(buffer, "%s was successfully converted to .exe.", m_xbe->m_szAsciiTitle);
 
-            printf("Cxbx: %s was converted to .exe.\n", m_xbe->m_szAsciiTitle);
+            printf("WndMain: %s was converted to .exe.\n", m_xbe->m_szAsciiTitle);
 
             MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
 
@@ -1272,7 +1272,7 @@ void WndMain::SaveXbe(const char *x_filename)
 
             sprintf(buffer, "%s was successfully saved.", m_xbe->m_szAsciiTitle);
 
-            printf("Cxbx: %s was successfully saved.\n", m_xbe->m_szAsciiTitle);
+            printf("WndMain: %s was successfully saved.\n", m_xbe->m_szAsciiTitle);
 
             MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
 
@@ -1296,7 +1296,7 @@ void WndMain::CloseXbe()
             return;
     }
 
-    printf("Cxbx: %s unloaded.\n", m_xbe->m_szAsciiTitle);
+    printf("WndMain: %s unloaded.\n", m_xbe->m_szAsciiTitle);
     
     m_xbe_changed = false;
 

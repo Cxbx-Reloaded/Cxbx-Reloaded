@@ -78,10 +78,10 @@ static DWORD WINAPI EmuXCreateThreadProxy
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("CxbxKrnl [0x%.08X]: EmuXCreateThreadProxy\n"
-               "          (\n"
-               "             lpParameter         : 0x%.08X\n"
-               "          );\n",
+        printf("EmuXxapi [0x%.08X]: EmuXCreateThreadProxy\n"
+               "(\n"
+               "   lpParameter         : 0x%.08X\n"
+               ");\n",
                GetCurrentThreadId(), lpParameter);
 
     }
@@ -112,15 +112,15 @@ HANDLE WINAPI xboxkrnl::EmuXCreateThread
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("CxbxKrnl [0x%.08X]: EmuXCreateThread\n"
-               "          (\n"
-               "             lpThreadAttributes  : 0x%.08X\n"
-               "             dwStackSize         : 0x%.08X\n"
-               "             lpStartAddress      : 0x%.08X\n"
-               "             lpParameter         : 0x%.08X\n"
-               "             dwCreationFlags     : 0x%.08X\n"
-               "             lpThreadId          : 0x%.08X\n"
-               "          );\n",
+        printf("EmuXxapi [0x%.08X]: EmuXCreateThread\n"
+               "(\n"
+               "   lpThreadAttributes  : 0x%.08X\n"
+               "   dwStackSize         : 0x%.08X\n"
+               "   lpStartAddress      : 0x%.08X\n"
+               "   lpParameter         : 0x%.08X\n"
+               "   dwCreationFlags     : 0x%.08X\n"
+               "   lpThreadId          : 0x%.08X\n"
+               ");\n",
                GetCurrentThreadId(), lpThreadAttributes, dwStackSize, lpStartAddress,
                lpParameter, dwCreationFlags, lpThreadId);
     }
@@ -161,10 +161,10 @@ BOOL WINAPI xboxkrnl::EmuXCloseHandle
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("CxbxKrnl [0x%.08X]: EmuXCloseHandle\n"
-               "          (\n"
-               "             hObject             : 0x%.08X\n"
-               "          );\n",
+        printf("EmuXxapi [0x%.08X]: EmuXCloseHandle\n"
+               "(\n"
+               "   hObject             : 0x%.08X\n"
+               ");\n",
                GetCurrentThreadId(), hObject);
     }
     #endif
@@ -174,4 +174,95 @@ BOOL WINAPI xboxkrnl::EmuXCloseHandle
     EmuXSwapFS();   // XBox FS
 
     return Ret;
+}
+
+// ******************************************************************
+// * func: EmuXapiInitProcess
+// ******************************************************************
+VOID WINAPI xboxkrnl::EmuXapiInitProcess()
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXxapi [0x%.08X]: EmuXapiInitProcess();\n", GetCurrentThreadId());
+    }
+    #endif
+
+    // TODO: Process initialization (if necessary)
+
+    EmuXSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuXapiBootDash
+// ******************************************************************
+VOID WINAPI xboxkrnl::EmuXapiBootDash(uint32 UnknownA, uint32 UnknownB, uint32 UnknownC)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXxapi [0x%.08X]: EmuXapiBootDash\n"
+               "(\n"
+               "   UnknownA            : 0x%.08X\n"
+               "   UnknownB            : 0x%.08X\n"
+               "   UnknownC            : 0x%.08X\n"
+               ");\n",
+                GetCurrentThreadId(), UnknownA, UnknownB, UnknownC);
+    }
+    #endif
+
+    // TODO: Cleanly "Boot Dash" :-)
+    exit(0);
+
+    EmuXSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuX__rcinit
+// ******************************************************************
+VOID xboxkrnl::EmuX__rcinit()
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXxapi [0x%.08X]: EmuX__rcinit();\n", GetCurrentThreadId());
+    }
+    #endif
+
+    EmuXSwapFS();   // XBox FS
+}
+
+// ******************************************************************
+// * func: EmuX__cinit
+// ******************************************************************
+VOID xboxkrnl::EmuX__cinit()
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXxapi [0x%.08X]: EmuX__cinit();\n", GetCurrentThreadId());
+    }
+    #endif
+
+    EmuXSwapFS();   // XBox FS
 }
