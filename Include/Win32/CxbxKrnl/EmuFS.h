@@ -83,16 +83,16 @@ static inline bool EmuIsXboxFS()
 // ******************************************************************
 // * func: EmuGenerateFS
 // ******************************************************************
-void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData);
+extern void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData);
 
 // ******************************************************************
 // * func: EmuCleanupFS
 // ******************************************************************
-void EmuCleanupFS();
+extern void EmuCleanupFS();
 
 // ******************************************************************
 // * func: EmuInitFS
 // ******************************************************************
-void EmuInitFS();
+extern void EmuInitFS();
 
 #endif

@@ -34,6 +34,7 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_LOCAL_
 
+#include "Emu.h"
 #include "EmuShared.h"
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
@@ -82,7 +83,7 @@ CXBXKRNL_API void EmuShared::Init()
         );
 
         if(hMapObject == NULL)
-            return; // TODO: Fail gracefully
+			EmuCleanup("Could not map shared memory!");
 
         if(GetLastError() == ERROR_ALREADY_EXISTS)
             init = false;
@@ -102,7 +103,7 @@ CXBXKRNL_API void EmuShared::Init()
         );
 
         if(g_EmuShared == NULL) 
-            return; // TODO: Fail gracefully
+			EmuCleanup("Could not map view of shared memory!");
     }
 
     // ******************************************************************

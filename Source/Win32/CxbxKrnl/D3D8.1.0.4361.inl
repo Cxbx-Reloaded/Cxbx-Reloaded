@@ -119,7 +119,7 @@ SOOVPA<11> IDirect3DDevice8_Swap_1_0_4361 =
 // ******************************************************************
 // * IDirect3DDevice8_CreateVertexBuffer
 // ******************************************************************
-SOOVPA<13> IDirect3DDevice8_CreateVertexBuffer_1_0_4627 =
+SOOVPA<13> IDirect3DDevice8_CreateVertexBuffer_1_0_4361 =
 {
     0,  // Large == 0
     13, // Count == 13
@@ -177,6 +177,39 @@ SOOVPA<13> IDirect3DDevice8_SetRenderState_CullMode_1_0_4361 =
         { 0x54, 0xC2 }, // (Offset,Value)-Pair #11
         { 0x55, 0x04 }, // (Offset,Value)-Pair #12
         { 0x56, 0x04 }, // (Offset,Value)-Pair #13
+    }
+};
+
+
+// ******************************************************************
+// * IDirect3DDevice8_SetRenderState_ZEnable
+// ******************************************************************
+SOOVPA<13> IDirect3DDevice8_SetRenderState_ZEnable_1_0_4361 =
+{
+    0,  // Large == 0
+    13, // Count == 13
+
+    {
+        // IDirect3DDevice8_SetRenderState_CullMode+0x0C : jb +0x05
+        { 0x0C, 0x72 }, // (Offset,Value)-Pair #1
+        { 0x0D, 0x05 }, // (Offset,Value)-Pair #2
+
+        // IDirect3DDevice8_SetRenderState_CullMode+0x1B : mov edx, [esi+0x2074h]
+        { 0x1B, 0x8B }, // (Offset,Value)-Pair #3
+        { 0x1C, 0x96 }, // (Offset,Value)-Pair #4
+        { 0x1D, 0x74 }, // (Offset,Value)-Pair #5
+        { 0x1E, 0x20 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_SetRenderState_CullMode+0x31 : mov dword ptr [eax], 0x4030
+        { 0x31, 0xC7 }, // (Offset,Value)-Pair #7
+        { 0x32, 0x00 }, // (Offset,Value)-Pair #8
+        { 0x33, 0x0C }, // (Offset,Value)-Pair #9
+        { 0x34, 0x03 }, // (Offset,Value)-Pair #10
+        { 0x35, 0x04 }, // (Offset,Value)-Pair #11
+
+        // IDirect3DDevice8_SetRenderState_CullMode+0x98 : retn 0x04
+        { 0x98, 0xC2 }, // (Offset,Value)-Pair #12
+        { 0x99, 0x04 }, // (Offset,Value)-Pair #13
     }
 };
 
@@ -375,7 +408,7 @@ OOVPATable D3D8_1_0_4361[] =
     },
     // IDirect3DDevice8::CreateVertexBuffer
     {
-        (OOVPA*)&IDirect3DDevice8_CreateVertexBuffer_1_0_4627,
+        (OOVPA*)&IDirect3DDevice8_CreateVertexBuffer_1_0_4361,
 
         xd3d8::EmuIDirect3DDevice8_CreateVertexBuffer,
 
@@ -391,6 +424,16 @@ OOVPATable D3D8_1_0_4361[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetRenderState_CullMode" 
+        #endif
+    },
+    // IDirect3DDevice8::SetRenderState_ZEnable
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_ZEnable_1_0_4361,
+
+        xd3d8::EmuIDirect3DDevice8_SetRenderState_ZEnable,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_ZEnable" 
         #endif
     },
     // IDirect3DDevice8::SetTransform

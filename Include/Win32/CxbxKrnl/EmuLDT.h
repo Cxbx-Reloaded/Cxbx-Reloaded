@@ -39,16 +39,16 @@
 // ******************************************************************
 // * func: EmuInitLDT
 // ******************************************************************
-void EmuInitLDT();
+extern void EmuInitLDT();
 
 // ******************************************************************
 // * func: EmuAllocateLDT
 // ******************************************************************
-uint16 EmuAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit);
+extern uint16 EmuAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit);
 
 // ******************************************************************
 // * func: EmuDeallocateLDT
 // ******************************************************************
-void EmuDeallocateLDT(uint16 wSelector);
+extern void EmuDeallocateLDT(uint16 wSelector);
 
 #endif

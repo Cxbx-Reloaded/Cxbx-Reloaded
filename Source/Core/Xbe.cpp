@@ -474,8 +474,7 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
         // * make room for debug path / debug file names
         // ******************************************************************
         {
-            // TODO: allow this to be configured, right now we will
-            //       just null out these values
+            // TODO: allow this to be configured, right now we will just null out these values
             m_Header.dwDebugUnicodeFilenameAddr = mrc;
             m_Header.dwDebugPathnameAddr = mrc;
             m_Header.dwDebugFilenameAddr = mrc;

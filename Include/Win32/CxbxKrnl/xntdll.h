@@ -308,6 +308,17 @@ typedef struct _IO_STATUS_BLOCK
 IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 
 // ******************************************************************
+// * CREATE_FILE_TYPE
+// ******************************************************************
+typedef enum _CREATE_FILE_TYPE
+{
+	CreateFileTypeNone,
+	CreateFileTypeNamedPipe,
+	CreateFileTypeMailslot
+}
+CREATE_FILE_TYPE;
+
+// ******************************************************************
 // * ZwOpenFile
 // ******************************************************************
 NTSYSAPI NTSTATUS NTAPI ZwOpenFile
@@ -318,24 +329,6 @@ NTSYSAPI NTSTATUS NTAPI ZwOpenFile
     OUT PIO_STATUS_BLOCK    IoStatusBlock,
     IN  ULONG               ShareAccess,
     IN  ULONG               OpenOptions
-);
-
-// ******************************************************************
-// * ZwCreateFile
-// ******************************************************************
-NTSYSAPI NTSTATUS NTAPI ZwCreateFile
-(
-    OUT PHANDLE             FileHandle,
-    IN  ACCESS_MASK         DesiredAccess,
-    IN  POBJECT_ATTRIBUTES  ObjectAttributes,
-    OUT PIO_STATUS_BLOCK    IoStatusBlock,
-    IN  PLARGE_INTEGER      AllocationSize OPTIONAL,
-    IN  ULONG               FileAttributes,
-    IN  ULONG               ShareAccess,
-    IN  ULONG               CreateDisposition,
-    IN  ULONG               CreateOptions,
-    IN  PVOID               EaBuffer OPTIONAL,
-    IN  ULONG               EaLength
 );
 
 // ******************************************************************
@@ -383,6 +376,15 @@ typedef VOID (NTAPI *FPTR_RtlInitAnsiString)
 );
 
 // ******************************************************************
+// * RtlInitUnicodeString
+// ******************************************************************
+typedef VOID (NTAPI *FPTR_RtlInitUnicodeString)
+(
+  IN OUT PUNICODE_STRING DestinationString,
+  IN     PCWSTR          SourceString
+);
+
+// ******************************************************************
 // * NtAllocateVirtualMemory
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtAllocateVirtualMemory)
@@ -425,6 +427,45 @@ typedef VOID (NTAPI *FPTR_RtlEnterCriticalSection)
 typedef VOID (NTAPI *FPTR_RtlLeaveCriticalSection)
 (
   IN PRTL_CRITICAL_SECTION CriticalSection
+);
+
+// ******************************************************************
+// * ZwCreateFile
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtCreateFile)
+(
+	OUT PHANDLE				FileHandle,
+	IN  ACCESS_MASK			DesiredAccess,
+	IN  POBJECT_ATTRIBUTES	ObjectAttributes,
+	OUT PIO_STATUS_BLOCK	IoStatusBlock,
+	IN  PLARGE_INTEGER		AllocationSize OPTIONAL,
+    IN  ULONG				FileAttributes,
+    IN  ULONG				ShareAccess,
+    IN  ULONG				CreateDisposition,
+    IN  ULONG				CreateOptions,
+	IN  PVOID				EaBuffer OPTIONAL,
+	IN  ULONG				EaLength
+);
+
+// ******************************************************************
+// * IoCreateFile
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_IoCreateFile)
+(
+	OUT PHANDLE				FileHandle,
+	IN  ACCESS_MASK			DesiredAccess,
+	IN  POBJECT_ATTRIBUTES	ObjectAttributes,
+	OUT PIO_STATUS_BLOCK	IoStatusBlock,
+	IN  PLARGE_INTEGER		AllocationSize OPTIONAL,
+    IN  ULONG				FileAttributes,
+    IN  ULONG				ShareAccess,
+    IN  ULONG				Disposition,
+    IN  ULONG				CreateOptions,
+    IN  PVOID				EaBuffer OPTIONAL,
+    IN  ULONG				EaLength,
+    IN  CREATE_FILE_TYPE	CreateFileType,
+    IN  PVOID				ExtraCreateParameters OPTIONAL,
+    IN  ULONG				Options
 );
 
 #if defined(__cplusplus)

@@ -35,6 +35,8 @@
 #define _XBOXKRNL_LOCAL_
 
 #include "Cxbx.h"
+
+#include "Emu.h"
 #include "EmuFS.h"
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
@@ -104,8 +106,7 @@ uint16 EmuAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit)
         {
             LeaveCriticalSection(&EmuLDTLock);
 
-            // TODO: cleaner error handling
-            MessageBox(NULL, "Very strange error: Could not locate free LDT entry!", "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
+			EmuCleanup("Could not locate free LDT entry (too many threads?)");
 
             return 0;
         }
@@ -143,8 +144,7 @@ uint16 EmuAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit)
         {
             LeaveCriticalSection(&EmuLDTLock);
 
-            // TODO: cleaner error handling
-            MessageBox(NULL, "Very strange error: Could not set LDT entry!", "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
+			EmuCleanup("Could not set LDT entries");
 
             return 0;
         }

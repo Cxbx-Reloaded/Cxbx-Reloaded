@@ -1,3 +1,35 @@
+<<
+
+	__asm int 3
+	wchar_t wszObjectName[160];
+
+	xntdll::UNICODE_STRING    NtUnicodeString;
+	xntdll::OBJECT_ATTRIBUTES NtObjAttr;
+
+    setlocale(LC_ALL, "English");
+    mbstowcs(wszObjectName, ObjectAttributes->ObjectName->Buffer, 160);
+
+	NT_RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
+
+	// Initialize NtObjAttr
+	NtObjAttr.Length = sizeof(xntdll::OBJECT_ATTRIBUTES);
+
+	InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
+
+    NTSTATUS ret = NT_NtCreateFile
+    (
+        FileHandle, DesiredAccess, &NtObjAttr, (xntdll::IO_STATUS_BLOCK*)IoStatusBlock,
+        (xntdll::LARGE_INTEGER*)AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, NULL
+    );
+
+	if(FAILED(ret))
+		MessageBox(g_hEmuWindow, "Bad!", "Cxbx", MB_OK);
+	else
+		MessageBox(g_hEmuWindow, "Good!", "Cxbx", MB_OK);
+
+
+<<
+
 // ******************************************************************
 // * calculate TLS adjustment
 // ******************************************************************

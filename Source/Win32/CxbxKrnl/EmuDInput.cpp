@@ -75,10 +75,6 @@ bool EmuDInputInit()
 void EmuDInputCleanup()
 {
     g_XBController.ListenEnd();
-
-//  Perhaps we can ignore this. Hrnm.
-//    if(g_XBController.GetError())
-//        MessageBox(NULL, g_XBController.GetError(), "Cxbx [*UNHANDLED!*]", MB_OK);  // TODO: Handle this!
 }
 
 // ******************************************************************

@@ -35,6 +35,7 @@
 #define XD3D8_H
 
 #include <d3d8.h>
+#include <d3dx8tex.h>
 
 // ******************************************************************
 // * D3DResource
@@ -66,23 +67,19 @@ extern UINT D3DVertexToPrimitive[11][2];
 	(((VertexCount)-D3DVertexToPrimitive[PrimitiveType][1])/D3DVertexToPrimitive[PrimitiveType][0])
 
 // ******************************************************************
+// * D3DRenderState2PC (Convert Xbox->PC RenderState enum values)
+// ******************************************************************
+extern D3DRENDERSTATETYPE D3DRenderState2PC[160];
+
+// ******************************************************************
+// * EmuD3DRenderState
+// ******************************************************************
+extern DWORD *EmuD3DRenderState;
+
+// ******************************************************************
 // * EmuPrimitiveType
 // ******************************************************************
-static D3DPRIMITIVETYPE EmuPrimitiveTypeLookup[] = 
-{
-    /* NULL                 = 0         */ (D3DPRIMITIVETYPE)0,
-    /* D3DPT_POINTLIST      = 1,        */ D3DPT_POINTLIST,
-    /* D3DPT_LINELIST       = 2,        */ D3DPT_LINELIST,
-    /* D3DPT_LINELOOP       = 3,  Xbox  */ D3DPT_LINELIST,
-    /* D3DPT_LINESTRIP      = 4,        */ D3DPT_LINESTRIP,
-    /* D3DPT_TRIANGLELIST   = 5,        */ D3DPT_TRIANGLELIST,
-    /* D3DPT_TRIANGLESTRIP  = 6,        */ D3DPT_TRIANGLESTRIP,
-    /* D3DPT_TRIANGLEFAN    = 7,        */ D3DPT_TRIANGLEFAN,
-    /* D3DPT_QUADLIST       = 8,  Xbox  */ D3DPT_TRIANGLELIST,
-    /* D3DPT_QUADSTRIP      = 9,  Xbox  */ D3DPT_TRIANGLELIST,
-    /* D3DPT_POLYGON        = 10, Xbox  */ D3DPT_TRIANGLELIST,
-    /* D3DPT_MAX            = 11,       */ (D3DPRIMITIVETYPE)11
-};
+extern D3DPRIMITIVETYPE EmuPrimitiveTypeLookup[];
 
 // ******************************************************************
 // * EmuPrimitiveType
@@ -164,6 +161,14 @@ D3DVertexBuffer* WINAPI EmuIDirect3DDevice8_CreateVertexBuffer2
 // * func: EmuIDirect3DDevice8_SetRenderState_CullMode
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_SetRenderState_CullMode
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_ZEnable
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_ZEnable
 (
     DWORD Value
 );

@@ -54,6 +54,14 @@ namespace xapi
     #include "EmuXapi.h"
 };
 
+// ******************************************************************
+// * prevent name collisions
+// ******************************************************************
+namespace xd3d8
+{
+    #include "xd3d8.h"
+};
+
 #include "EmuKrnl.h"
 #include "EmuShared.h"
 #include "HLEDataBase.h"
@@ -93,7 +101,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuNoFunc()
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    printf("Emu (%d): EmuNoFunc()\n", GetCurrentThreadId());
+    printf("Emu (0x%X): EmuNoFunc()\n", GetCurrentThreadId());
 
     EmuSwapFS();   // XBox FS
 }
@@ -142,7 +150,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
             SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
             
-            printf("Emu (%d): Debug console allocated (DM_CONSOLE).\n", GetCurrentThreadId());
+            printf("Emu (0x%X): Debug console allocated (DM_CONSOLE).\n", GetCurrentThreadId());
         }
     }
     else if(DbgMode == DM_FILE)
@@ -151,7 +159,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
         freopen(szDebugFilename, "wt", stdout);
 
-        printf("Emu (%d): Debug console allocated (DM_FILE).\n", GetCurrentThreadId());
+        printf("Emu (0x%X): Debug console allocated (DM_FILE).\n", GetCurrentThreadId());
     }
     else
     {
@@ -168,9 +176,9 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     // ******************************************************************
     {
         #ifdef _DEBUG_TRACE
-        printf("Emu (%d): Debug Trace Enabled.\n", GetCurrentThreadId());
+        printf("Emu (0x%X): Debug Trace Enabled.\n", GetCurrentThreadId());
 
-        printf("Emu (%d): EmuInit\n"
+        printf("Emu (0x%X): EmuInit\n"
                "(\n"
                "   pTLSData            : 0x%.08X\n"
                "   pTLS                : 0x%.08X\n"
@@ -184,7 +192,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                GetCurrentThreadId(), pTLSData, pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
 
         #else
-        printf("Emu (%d): Debug Trace Disabled.\n", GetCurrentThreadId());
+        printf("Emu (0x%X): Debug Trace Disabled.\n", GetCurrentThreadId());
         #endif
     }
 
@@ -210,19 +218,33 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     }
 
     // ******************************************************************
-    // * Initialize all components
+	// * Initialize current directory
     // ******************************************************************
-    {
-        EmuInitFS();
+	{
+		char szBuffer[260];
 
-        EmuGenerateFS(pTLS, pTLSData);
-    }
+        GetModuleFileName(NULL, szBuffer, 260);
+
+        sint32 spot=-1;
+        for(int v=0;v<260;v++)
+        {
+            if(szBuffer[v] == '\\')
+                spot = v;
+            else if(szBuffer[v] == '\0')
+                break;
+        }
+
+        if(spot != -1)
+            szBuffer[spot] = '\0';
+
+		SetCurrentDirectory(szBuffer);
+	}
 
     // ******************************************************************
     // * Initialize OpenXDK emulation
     // ******************************************************************
     if(pLibraryVersion == 0)
-        printf("Emu (%d): Detected OpenXDK application...\n", GetCurrentThreadId());
+        printf("Emu (0x%X): Detected OpenXDK application...\n", GetCurrentThreadId());
 
     uint32 xca;
     uint32 xcz;
@@ -232,7 +254,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     // ******************************************************************
     if(pLibraryVersion != 0)
     {
-        printf("Emu (%d): Detected Microsoft XDK application...\n", GetCurrentThreadId());
+        printf("Emu (0x%X): Detected Microsoft XDK application...\n", GetCurrentThreadId());
 
         uint32 dwLibraryVersions = pXbeHeader->dwLibraryVersions;
         uint32 dwHLEEntries      = HLEDataBaseSize/sizeof(HLEData);
@@ -248,7 +270,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
             for(uint32 c=0;c<8;c++)
                 szLibraryName[c] = pLibraryVersion[v].szName[c];
 
-            printf("Emu (%d): Locating HLE Information for %s %d.%d.%d...", GetCurrentThreadId(), szLibraryName, MajorVersion, MinorVersion, BuildVersion);
+            printf("Emu (0x%X): Locating HLE Information for %s %d.%d.%d...", GetCurrentThreadId(), szLibraryName, MajorVersion, MinorVersion, BuildVersion);
 
             bool found=false;
 
@@ -283,7 +305,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 						xca = *(uint32*)((uint32)pFunc + 0x32);
 						xcz = *(uint32*)((uint32)pFunc + 0x39);
 
-						printf("Emu (%d): 0x%.08X -> Pre-Entry Execution Vectors (%dx)\n", GetCurrentThreadId(), xca, (xcz - xca)/4);
+						printf("Emu (0x%X): 0x%.08X -> Pre-Entry Execution Vectors (%dx)\n", GetCurrentThreadId(), xca, (xcz - xca)/4);
 					}
 				}
 
@@ -301,15 +323,45 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 						xapi::g_pRtlCreateHeap = *(xapi::pfRtlCreateHeap*)((uint32)pFunc + 0x37);
 						xapi::g_pRtlCreateHeap = (xapi::pfRtlCreateHeap)((uint32)pFunc + (uint32)xapi::g_pRtlCreateHeap + 0x37 + 0x04);
 
-						printf("Emu (%d): 0x%.08X -> EmuXapiProcessHeap\n", GetCurrentThreadId(), xapi::EmuXapiProcessHeap);
-						printf("Emu (%d): 0x%.08X -> RtlCreateHeap\n", GetCurrentThreadId(), xapi::g_pRtlCreateHeap);
+						printf("Emu (0x%X): 0x%.08X -> EmuXapiProcessHeap\n", GetCurrentThreadId(), xapi::EmuXapiProcessHeap);
+						printf("Emu (0x%X): 0x%.08X -> RtlCreateHeap\n", GetCurrentThreadId(), xapi::g_pRtlCreateHeap);
 					}
 				}
             }
+			else if(strcmp("D3D8", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && (BuildVersion == 4361))
+			{
+                uint32 lower = pXbeHeader->dwBaseAddr;
+                uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
+
+				// ******************************************************************
+				// * Locate IDirect3DDevice8_SetRenderState_CullMode
+				// ******************************************************************
+				{
+					void *pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4361, lower, upper);
+
+					if(pFunc != 0)
+					{
+						xd3d8::EmuD3DRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x200);
+
+						printf("Emu (0x%X): 0x%.08X -> EmuD3DRenderState\n", GetCurrentThreadId(), xd3d8::EmuD3DRenderState);
+					}
+				}
+			}
         }
 
         EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
     }
+
+	// ******************************************************************
+    // * Initialize FS Emulation
+    // ******************************************************************
+    {
+        EmuInitFS();
+
+        EmuGenerateFS(pTLS, pTLSData);
+    }
+
+    printf("Emu (0x%X): Pre-Entry Code Executing.\n", GetCurrentThreadId());
 
     // ******************************************************************
     // * Static/Constructors
@@ -320,7 +372,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
         if(pFunc != 0 && pFunc != -1)
         {
-            printf("Emu (%d): Static/Constructor @ 0x%.08X\n", GetCurrentThreadId(), pFunc);
+            printf("Emu (0x%X): Pre-Entry Code @ 0x%.08X\n", GetCurrentThreadId(), pFunc);
 
             EmuSwapFS();    // Xbox FS
 
@@ -330,7 +382,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         }
     }
 
-    printf("Emu (%d): Initial thread starting.\n", GetCurrentThreadId());
+    printf("Emu (0x%X): Initial thread starting.\n", GetCurrentThreadId());
 
     // ******************************************************************
     // * Entry Point
@@ -348,7 +400,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         printf("Emu: WARNING!! Problem with ExceptionFilter\n");
     }
 
-    printf("Emu (%d): Initial thread ended.\n", GetCurrentThreadId());
+    printf("Emu (0x%X): Initial thread ended.\n", GetCurrentThreadId());
 
     fflush(stdout);
 
@@ -369,7 +421,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage)
     {
         char buffer[255];
 
-        sprintf(buffer, "Emu (%d): Recieved Fatal Message!\n\n%s\n", GetCurrentThreadId(), szErrorMessage);
+        sprintf(buffer, "Emu (0x%X): Recieved Fatal Message!\n\n%s\n", GetCurrentThreadId(), szErrorMessage);
 
         printf("%s", buffer);
 
@@ -404,7 +456,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuPanic()
     if(EmuIsXboxFS())
         EmuSwapFS();   // Win2k/XP FS
 
-    printf("Emu (%d): EmuPanic()\n", GetCurrentThreadId());
+    printf("Emu (0x%X): EmuPanic()\n", GetCurrentThreadId());
 
     EmuCleanup("Kernel Panic!");
 
@@ -527,7 +579,7 @@ void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*En
         if(pFunc != 0)
         {
             #ifdef _DEBUG_TRACE
-            printf("Emu (%d): 0x%.08X -> %s\n", GetCurrentThreadId(), pFunc, OovpaTable[a].szFuncName);
+            printf("Emu (0x%X): 0x%.08X -> %s\n", GetCurrentThreadId(), pFunc, OovpaTable[a].szFuncName);
             #endif
 
             EmuInstallWrapper(pFunc, OovpaTable[a].lpRedirect);
@@ -544,9 +596,9 @@ int EmuException(LPEXCEPTION_POINTERS e)
 	// * Debugging Information
 	// ******************************************************************
 	{
-		printf("Emu (%d): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
-		printf("Emu (%d): Recieved Exception : 0x%.08X\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
-		printf("Emu (%d): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
+		printf("Emu (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
+		printf("Emu (0x%X): Recieved Exception : 0x%.08X\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
+		printf("Emu (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
 	}
 
 	// ******************************************************************
@@ -576,9 +628,9 @@ int ExitException(LPEXCEPTION_POINTERS e)
 	// * Debugging Information
 	// ******************************************************************
 	{
-		printf("Emu (%d): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
-		printf("Emu (%d): Recieved Exit Exception : 0x%.08X\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
-		printf("Emu (%d): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
+		printf("Emu (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
+		printf("Emu (0x%X): Recieved Exit Exception : 0x%.08X\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
+		printf("Emu (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
 	}
 
     MessageBox(g_hEmuWindow, "Warning: Could not safely terminate process!", "Cxbx", MB_OK);

@@ -99,6 +99,61 @@ UINT xd3d8::D3DVertexToPrimitive[11][2] =
 };
 
 // ******************************************************************
+// * EmuD3DRenderState
+// ******************************************************************
+DWORD *xd3d8::EmuD3DRenderState;
+
+// ******************************************************************
+// * D3DRenderState2PC (Convert Xbox->PC RenderState enum values)
+// ******************************************************************
+xd3d8::D3DRENDERSTATETYPE D3DRenderState2PC[160] =
+{
+	// NOTE: We may not need this...
+    /* 0->123                           */
+    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
+    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
+    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
+    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
+    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
+    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
+    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
+    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
+    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
+    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
+    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
+    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
+    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
+    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
+    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
+    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
+    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
+    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
+    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
+    (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0, 
+	(xd3d8::D3DRENDERSTATETYPE)0, (xd3d8::D3DRENDERSTATETYPE)0,
+    /* D3DRS_LIGHTING       = 124       */ xd3d8::D3DRS_LIGHTING
+};
+
+// ******************************************************************
+// * EmuPrimitiveType
+// ******************************************************************
+xd3d8::D3DPRIMITIVETYPE xd3d8::EmuPrimitiveTypeLookup[] = 
+{
+    /* NULL                 = 0         */ (xd3d8::D3DPRIMITIVETYPE)0,
+    /* D3DPT_POINTLIST      = 1,        */ xd3d8::D3DPT_POINTLIST,
+    /* D3DPT_LINELIST       = 2,        */ xd3d8::D3DPT_LINELIST,
+    /* D3DPT_LINELOOP       = 3,  Xbox  */ xd3d8::D3DPT_LINELIST,
+    /* D3DPT_LINESTRIP      = 4,        */ xd3d8::D3DPT_LINESTRIP,
+    /* D3DPT_TRIANGLELIST   = 5,        */ xd3d8::D3DPT_TRIANGLELIST,
+    /* D3DPT_TRIANGLESTRIP  = 6,        */ xd3d8::D3DPT_TRIANGLESTRIP,
+    /* D3DPT_TRIANGLEFAN    = 7,        */ xd3d8::D3DPT_TRIANGLEFAN,
+    /* D3DPT_QUADLIST       = 8,  Xbox  */ xd3d8::D3DPT_TRIANGLELIST,
+    /* D3DPT_QUADSTRIP      = 9,  Xbox  */ xd3d8::D3DPT_TRIANGLELIST,
+    /* D3DPT_POLYGON        = 10, Xbox  */ xd3d8::D3DPT_TRIANGLELIST,
+    /* D3DPT_MAX            = 11,       */ (xd3d8::D3DPRIMITIVETYPE)11
+};
+
+// ******************************************************************
 // * func: EmuD3DInit
 // ******************************************************************
 VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
@@ -288,10 +343,10 @@ LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             PostQuitMessage(0);
             return 0;
 
-		case WM_KEYDOWN:
+        case WM_KEYDOWN:
             if(wParam == VK_ESCAPE)
-				PostMessage(hWnd, WM_CLOSE, 0, 0);
-			break;
+                PostMessage(hWnd, WM_CLOSE, 0, 0);
+            break;
 
         case WM_CLOSE:
             DestroyWindow(hWnd);
@@ -329,7 +384,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (%d): EmuIDirect3D8_CreateDevice\n"
+        printf("EmuD3D8 (0x%X): EmuIDirect3D8_CreateDevice\n"
                "(\n"
                "   Adapter                   : 0x%.08X\n"
                "   DeviceType                : 0x%.08X\n"
@@ -347,34 +402,22 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
     // * make adjustments to parameters to make sense with windows d3d
     // ******************************************************************
     {
-        /*
-        printf("BackBufferWidth  : %d\n", pPresentationParameters->BackBufferWidth);
-        printf("BackBufferHeight : %d\n", pPresentationParameters->BackBufferHeight);
-        printf("BackBufferFormat : %d\n", pPresentationParameters->BackBufferFormat);
-        printf("BackBufferCount  : %d\n", pPresentationParameters->BackBufferCount);
-        printf("EnableAutoDepthStencil : %d\n", pPresentationParameters->EnableAutoDepthStencil);
-        printf("AutoDepthStencilFormat : %d\n", pPresentationParameters->AutoDepthStencilFormat);
-        printf("SwapEffect : %d\n", pPresentationParameters->SwapEffect);
-        */
-
         Adapter = D3DADAPTER_DEFAULT;
 
         pPresentationParameters->Windowed = TRUE;
-
-        // TODO: More intelligently set this only when the game wants it
-//        pPresentationParameters->SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
+        //pPresentationParameters->SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
 
         hFocusWindow = g_hEmuWindow;
 
-        // TODO: Use lookup table that is dependant on library version
+        // ******************************************************************
+        // * TODO: Use lookup table if it becomes necessary
+        // ******************************************************************
         {
-            // Xbox DirectX #defines are different from Win32 DirectX
             if(pPresentationParameters->BackBufferFormat == 0x07)
                 pPresentationParameters->BackBufferFormat = D3DFMT_X8R8G8B8;
             else if(pPresentationParameters->BackBufferFormat == 0x06)
                 pPresentationParameters->BackBufferFormat = D3DFMT_A8R8G8B8;
 
-            // Xbox DirectX #defines are different from Win32 DirectX
             if(pPresentationParameters->AutoDepthStencilFormat == 0x2A)
                 pPresentationParameters->AutoDepthStencilFormat = D3DFMT_D24S8;
             else if(pPresentationParameters->AutoDepthStencilFormat == 0x2C)
@@ -385,8 +428,8 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
     // ******************************************************************
     // * TODO: Query for Software Vertex Processing abilities!!
     // ******************************************************************
-    BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
-//    BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+//    BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+    BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
 
     // ******************************************************************
     // * redirect to windows d3d
@@ -405,14 +448,17 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
     // * it is necessary to store this pointer globally for emulation
     // ******************************************************************
     g_pD3D8Device = *ppReturnedDeviceInterface;
-
-    // TODO: HACK: This needs to be auto-updated from Xbox D3D global variable(s)
+/*
+    // TODO: HACK: This code should be intercepted and executed at a lower level
     if(g_pD3D8Device != 0)
     {
-        g_pD3D8Device->SetRenderState(D3DRS_LIGHTING, FALSE);
-        g_pD3D8Device->SetRenderState(D3DRS_ZENABLE, TRUE);
-    }
+        LPDIRECT3DTEXTURE8 pPyramideTexture = NULL;
 
+        D3DXCreateTextureFromFile(g_pD3D8Device, "cxbx.jpg",&pPyramideTexture);
+
+        g_pD3D8Device->SetTexture(0, pPyramideTexture);
+    }
+*/
     EmuSwapFS();   // XBox FS
 
     return hRet;
@@ -438,7 +484,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_Clear
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (%d): EmuIDirect3DDevice8_Clear\n"
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_Clear\n"
                "(\n"
                "   Count               : 0x%.08X\n"
                "   pRects              : 0x%.08X\n"
@@ -451,7 +497,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_Clear
                Color, Z, Stencil);
     }
     #endif
-
+	
     // ******************************************************************
     // * make adjustments to parameters to make sense with windows d3d
     // ******************************************************************
@@ -498,7 +544,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_Present
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (%d): EmuIDirect3DDevice8_Present\n"
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_Present\n"
                "(\n"
                "   pSourceRect         : 0x%.08X\n"
                "   pDestRect           : 0x%.08X\n"
@@ -531,7 +577,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_Swap
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (%d): EmuIDirect3DDevice8_Swap\n"
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_Swap\n"
                "(\n"
                "   Flags               : 0x%.08X\n"
                ");\n",
@@ -541,7 +587,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_Swap
 
     // TODO: Ensure this flag is always the same across library versions
     if(Flags != 0)
-        EmuPanic();
+		EmuCleanup("xd3d8::EmuIDirect3DDevice8_Swap: Flags != 0");
 
     // Swap(0) is equivalent to present(0,0,0,0)
     HRESULT ret = g_pD3D8Device->Present(0, 0, 0, 0);
@@ -583,7 +629,7 @@ xd3d8::D3DVertexBuffer* WINAPI xd3d8::EmuIDirect3DDevice8_CreateVertexBuffer2
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (%d): EmuIDirect3DDevice8_CreateVertexBuffer2\n"
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreateVertexBuffer2\n"
                "(\n"
                "   Length              : 0x%.08X\n"
                ");\n",
@@ -595,11 +641,11 @@ xd3d8::D3DVertexBuffer* WINAPI xd3d8::EmuIDirect3DDevice8_CreateVertexBuffer2
 
     HRESULT hRet = g_pD3D8Device->CreateVertexBuffer
     (
-		Length, 
-		D3DUSAGE_WRITEONLY,
-		0,
-		D3DPOOL_DEFAULT, 
-		&ppVertexBuffer
+        Length, 
+        D3DUSAGE_WRITEONLY,
+        0,
+        D3DPOOL_DEFAULT, 
+        &ppVertexBuffer
     );
 
     EmuSwapFS();   // XBox FS
@@ -622,7 +668,7 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetRenderState_CullMode
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (%d): EmuIDirect3DDevice8_SetRenderState_CullMode\n"
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_CullMode\n"
                "(\n"
                "   Value               : 0x%.08X\n"
                ");\n",
@@ -655,6 +701,37 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetRenderState_CullMode
     return;
 }
 
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_ZEnable
+// ******************************************************************
+VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetRenderState_ZEnable
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_ZEnable\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+    g_pD3D8Device->SetRenderState(D3DRS_ZENABLE, Value);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTransform
 // ******************************************************************
@@ -671,7 +748,7 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetTransform
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (%d): EmuIDirect3DDevice8_SetTransform\n"
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetTransform\n"
                "(\n"
                "   State               : 0x%.08X\n"
                "   pMatrix             : 0x%.08X\n"
@@ -717,7 +794,7 @@ VOID WINAPI xd3d8::EmuIDirect3DVertexBuffer8_Lock
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (%d): EmuIDirect3DVertexBuffer8_Lock\n"
+        printf("EmuD3D8 (0x%X): EmuIDirect3DVertexBuffer8_Lock\n"
                "(\n"
                "   ppVertexBuffer      : 0x%.08X\n"
                "   OffsetToLock        : 0x%.08X\n"
@@ -752,7 +829,7 @@ BYTE* WINAPI xd3d8::EmuIDirect3DVertexBuffer8_Lock2
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (%d): EmuIDirect3DVertexBuffer8_Lock2\n"
+        printf("EmuD3D8 (0x%X): EmuIDirect3DVertexBuffer8_Lock2\n"
                "(\n"
                "   ppVertexBuffer      : 0x%.08X\n"
                "   Flags               : 0x%.08X\n"
@@ -787,7 +864,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetStreamSource
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (%d): EmuIDirect3DDevice8_SetStreamSource\n"
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetStreamSource\n"
                "(\n"
                "   StreamNumber        : 0x%.08X\n"
                "   pStreamData         : 0x%.08X\n"
@@ -799,7 +876,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetStreamSource
 
     ((IDirect3DVertexBuffer8*)pStreamData)->Unlock();
 
-	HRESULT hRet = g_pD3D8Device->SetStreamSource(StreamNumber, (IDirect3DVertexBuffer8*)pStreamData, Stride);
+    HRESULT hRet = g_pD3D8Device->SetStreamSource(StreamNumber, (IDirect3DVertexBuffer8*)pStreamData, Stride);
 
     EmuSwapFS();   // XBox FS
 
@@ -821,7 +898,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetVertexShader
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (%d): EmuIDirect3DDevice8_SetVertexShader\n"
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexShader\n"
                "(\n"
                "   Handle              : 0x%.08X\n"
                ");\n",
@@ -829,7 +906,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetVertexShader
     }
     #endif
 
-	HRESULT hRet = g_pD3D8Device->SetVertexShader(Handle);
+    HRESULT hRet = g_pD3D8Device->SetVertexShader(Handle);
 
     EmuSwapFS();   // XBox FS
 
@@ -853,7 +930,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (%d): EmuIDirect3DDevice8_DrawVertices\n"
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_DrawVertices\n"
                "(\n"
                "   PrimitiveType       : 0x%.08X\n"
                "   StartVertex         : 0x%.08X\n"
@@ -862,6 +939,9 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
                GetCurrentThreadId(), PrimitiveType, StartVertex, VertexCount);
     }
     #endif
+
+	// Certain D3DRS values need to be checked on each Draw[Indexed]Vertices
+	g_pD3D8Device->SetRenderState(D3DRS_LIGHTING, xd3d8::EmuD3DRenderState[92]);
 
     UINT PrimitiveCount = D3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
 
@@ -872,7 +952,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
     (
         PrimitiveType,
         StartVertex,
-		PrimitiveCount
+        PrimitiveCount
     );
 
     EmuSwapFS();   // XBox FS

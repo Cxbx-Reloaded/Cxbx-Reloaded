@@ -50,11 +50,11 @@ extern HWND g_hEmuWindow;       // Rendering Window
 // ******************************************************************
 // * func: EmuD3DInit
 // ******************************************************************
-void EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
+extern void EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
 
 // ******************************************************************
 // * func: EmuD3DCleanup
 // ******************************************************************
-void EmuD3DCleanup();
+extern void EmuD3DCleanup();
 
 #endif
