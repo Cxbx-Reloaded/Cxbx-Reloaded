@@ -157,6 +157,10 @@ SOURCE=.\Include\Win32\Cxbx\EmuExe.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\EmuShared.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Core\Error.h
 # End Source File
 # Begin Source File
@@ -166,6 +170,10 @@ SOURCE=.\Include\Core\Exe.h
 # Begin Source File
 
 SOURCE=.\Include\Win32\InputConfig.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\Mutex.h
 # End Source File
 # Begin Source File
 

@@ -34,9 +34,17 @@
 #ifndef EMUSHARED_H
 #define EMUSHARED_H
 
-#include "Emu.h"
+#include "Mutex.h"
+#include "InputConfig.h"
 
-using namespace win32;
+// ******************************************************************
+// * cxbxkrnl exports, others import
+// ******************************************************************
+#ifndef _CXBXKRNL_INTERNAL
+#define CXBXKRNL_API DECLSPEC_IMPORT
+#else
+#define CXBXKRNL_API DECLSPEC_EXPORT
+#endif
 
 // ******************************************************************
 // * func: EmuSharedInit
@@ -51,9 +59,13 @@ CXBXKRNL_API void EmuSharedCleanup();
 // ******************************************************************
 // * shared memory
 // ******************************************************************
-extern CXBXKRNL_API struct EmuShared
+extern CXBXKRNL_API class EmuShared : public Mutex
 {
-    uint32 dwRandomData;
+    public:
+        InputConfig *GetInputConfiguration() { return &m_InputConfig; }
+
+    private:
+        InputConfig m_InputConfig;
 }
 *g_EmuShared;
 

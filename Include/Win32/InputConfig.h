@@ -40,14 +40,21 @@
 #define MAX_INPUT_DEVICES 0x20
 
 // ******************************************************************
+// * InputMapping flags
+// ******************************************************************
+#define INPUT_MAPPING_AXIS_POSITIVE (1 << 0)
+#define INPUT_MAPPING_AXIS_NEGATIVE (1 << 1)
+
+// ******************************************************************
 // * Input mapping information
 // ******************************************************************
 struct InputMapping
 {
-    InputMapping() : dwDevice(-1), dwType(-1) {}
+    InputMapping() : dwDevice(-1), dwType(-1), dwFlags(0) {}
 
-    int dwDevice;  // lookup into m_Devices
-    int dwType;    // used to locate the data inside GetDeviceState's return data
+    int dwDevice;   // lookup into m_Devices
+    int dwType;     // used to locate the data inside GetDeviceState's return data
+    int dwFlags;    // flags giving more precise information about the data format
 };
 
 // ******************************************************************
@@ -69,32 +76,32 @@ class InputConfig
         // ******************************************************************
         // * Mapping Accessors
         // ******************************************************************
-        void MapLThumbX(const char *DeviceName, int dwType) { Map(m_LThumbX, DeviceName, dwType); }
-        void MapLThumbY(const char *DeviceName, int dwType) { Map(m_LThumbY, DeviceName, dwType); }
-        void MapRThumbX(const char *DeviceName, int dwType) { Map(m_RThumbX, DeviceName, dwType); }
-        void MapRThumbY(const char *DeviceName, int dwType) { Map(m_RThumbY, DeviceName, dwType); }
-        void MapX(const char *DeviceName, int dwType) { Map(m_X, DeviceName, dwType); }
-        void MapY(const char *DeviceName, int dwType) { Map(m_Y, DeviceName, dwType); }
-        void MapA(const char *DeviceName, int dwType) { Map(m_A, DeviceName, dwType); }
-        void MapB(const char *DeviceName, int dwType) { Map(m_B, DeviceName, dwType); }
-        void MapWhite(const char *DeviceName, int dwType) { Map(m_White, DeviceName, dwType); }
-        void MapBlack(const char *DeviceName, int dwType) { Map(m_Black, DeviceName, dwType); }
-        void MapLTrigger(const char *DeviceName, int dwType) { Map(m_LTrigger, DeviceName, dwType); }
-        void MapRTrigger(const char *DeviceName, int dwType) { Map(m_RTrigger, DeviceName, dwType); }
-        void MapDPadUp(const char *DeviceName, int dwType) { Map(m_DPadUp, DeviceName, dwType); }
-        void MapDPadDown(const char *DeviceName, int dwType) { Map(m_DPadDown, DeviceName, dwType); }
-        void MapDPadLeft(const char *DeviceName, int dwType) { Map(m_DPadLeft, DeviceName, dwType); }
-        void MapDPadRight(const char *DeviceName, int dwType) { Map(m_DPadRight, DeviceName, dwType); }
-        void MapBack(const char *DeviceName, int dwType) { Map(m_Back, DeviceName, dwType); }
-        void MapStart(const char *DeviceName, int dwType) { Map(m_Start, DeviceName, dwType); }
-        void MapLThumb(const char *DeviceName, int dwType) { Map(m_LThumb, DeviceName, dwType); }
-        void MapRThumb(const char *DeviceName, int dwType) { Map(m_RThumb, DeviceName, dwType); }
+        void MapLThumbX(const char *DeviceName, int dwType, int dwFlags) { Map(m_LThumbX, DeviceName, dwType, dwFlags); }
+        void MapLThumbY(const char *DeviceName, int dwType, int dwFlags) { Map(m_LThumbY, DeviceName, dwType, dwFlags); }
+        void MapRThumbX(const char *DeviceName, int dwType, int dwFlags) { Map(m_RThumbX, DeviceName, dwType, dwFlags); }
+        void MapRThumbY(const char *DeviceName, int dwType, int dwFlags) { Map(m_RThumbY, DeviceName, dwType, dwFlags); }
+        void MapX(const char *DeviceName, int dwType, int dwFlags) { Map(m_X, DeviceName, dwType, dwFlags); }
+        void MapY(const char *DeviceName, int dwType, int dwFlags) { Map(m_Y, DeviceName, dwType, dwFlags); }
+        void MapA(const char *DeviceName, int dwType, int dwFlags) { Map(m_A, DeviceName, dwType, dwFlags); }
+        void MapB(const char *DeviceName, int dwType, int dwFlags) { Map(m_B, DeviceName, dwType, dwFlags); }
+        void MapWhite(const char *DeviceName, int dwType, int dwFlags) { Map(m_White, DeviceName, dwType, dwFlags); }
+        void MapBlack(const char *DeviceName, int dwType, int dwFlags) { Map(m_Black, DeviceName, dwType, dwFlags); }
+        void MapLTrigger(const char *DeviceName, int dwType, int dwFlags) { Map(m_LTrigger, DeviceName, dwType, dwFlags); }
+        void MapRTrigger(const char *DeviceName, int dwType, int dwFlags) { Map(m_RTrigger, DeviceName, dwType, dwFlags); }
+        void MapDPadUp(const char *DeviceName, int dwType, int dwFlags) { Map(m_DPadUp, DeviceName, dwType, dwFlags); }
+        void MapDPadDown(const char *DeviceName, int dwType, int dwFlags) { Map(m_DPadDown, DeviceName, dwType, dwFlags); }
+        void MapDPadLeft(const char *DeviceName, int dwType, int dwFlags) { Map(m_DPadLeft, DeviceName, dwType, dwFlags); }
+        void MapDPadRight(const char *DeviceName, int dwType, int dwFlags) { Map(m_DPadRight, DeviceName, dwType, dwFlags); }
+        void MapBack(const char *DeviceName, int dwType, int dwFlags) { Map(m_Back, DeviceName, dwType, dwFlags); }
+        void MapStart(const char *DeviceName, int dwType, int dwFlags) { Map(m_Start, DeviceName, dwType, dwFlags); }
+        void MapLThumb(const char *DeviceName, int dwType, int dwFlags) { Map(m_LThumb, DeviceName, dwType, dwFlags); }
+        void MapRThumb(const char *DeviceName, int dwType, int dwFlags) { Map(m_RThumb, DeviceName, dwType, dwFlags); }
 
     private:
         // ******************************************************************
         // * Map a given input control mapping
         // ******************************************************************
-        void Map(InputMapping &IM, const char *DeviceName, int dwType);
+        void Map(InputMapping &IM, const char *DeviceName, int dwType, int dwFlags);
 
         // ******************************************************************
         // * Find the look-up value for a DeviceName (creates if needed)
@@ -104,7 +111,7 @@ class InputConfig
         // ******************************************************************
         // * Devices used by one or more input mappings
         // ******************************************************************
-        char *m_DeviceName[MAX_INPUT_DEVICES];
+        char m_DeviceName[260][MAX_INPUT_DEVICES];
 
         // ******************************************************************
         // * Analog Axis

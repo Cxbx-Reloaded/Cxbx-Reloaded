@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->Cxbx->WinMain.cpp
+// *   Cxbx->Win32->Mutex.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,42 +31,42 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Cxbx.h"
-#include "EmuExe.h"
-#include "WndMain.h"
-#include "EmuShared.h"
+#ifndef MUTEX_H
+#define MUTEX_H
 
-#undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
 // ******************************************************************
-// * func : WinMain
+// * Mutex object (intended to be inherited from)
 // ******************************************************************
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+class Mutex
 {
-    EmuSharedInit();
+    public:
+        // ******************************************************************
+        // * Constructor
+        // ******************************************************************
+        Mutex() { InitializeCriticalSection(&m_CS); }
 
-    WndMain *MainWindow = new WndMain(hInstance);
+        // ******************************************************************
+        // * Deconstructor
+        // ******************************************************************
+        ~Mutex() { DeleteCriticalSection(&m_CS); }
 
-    while(!MainWindow->isCreated() && MainWindow->ProcessMessages())
-        Sleep(10);
+        // ******************************************************************
+        // * Lock critical section
+        // ******************************************************************
+        void Lock() { EnterCriticalSection(&m_CS); }
 
-    if(__argc > 1 && MainWindow->GetError() == 0)
-    {
-        MainWindow->OpenXbe(__argv[1]);
+        // ******************************************************************
+        // * Unlock critical section
+        // ******************************************************************
+        void Unlock() { LeaveCriticalSection(&m_CS); }
 
-        MainWindow->StartEmulation(true);
-    }
+    private:
+        // ******************************************************************
+        // * Critical section
+        // ******************************************************************
+        CRITICAL_SECTION m_CS;
+};
 
-    while(MainWindow->GetError() == 0 && MainWindow->ProcessMessages())
-        Sleep(10);
-
-    if(MainWindow->GetError() != 0)
-        MessageBox(NULL, MainWindow->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
-
-    delete MainWindow;
-
-    EmuSharedCleanup();
-
-    return 0;
-}
+#endif

@@ -43,7 +43,7 @@
 InputConfig::InputConfig()
 {
     for(int v=0;v<MAX_INPUT_DEVICES;v++)
-        m_DeviceName[v] = 0;
+        m_DeviceName[v][0] = '\0';
 }
 
 // ******************************************************************
@@ -51,17 +51,17 @@ InputConfig::InputConfig()
 // ******************************************************************
 InputConfig::~InputConfig()
 {
-    for(int v=0;v<MAX_INPUT_DEVICES;v++)
-        delete m_DeviceName[v];
 }
 
 // ******************************************************************
 // * Map a given input control mapping
 // ******************************************************************
-void InputConfig::Map(InputMapping &IM, const char *DeviceName, int dwType)
+void InputConfig::Map(InputMapping &IM, const char *DeviceName, int dwType, int dwFlags)
 {
+    // initialize IM
     IM.dwDevice = Insert(DeviceName);
-    IM.dwType = dwType;
+    IM.dwType   = dwType;
+    IM.dwFlags  = dwFlags;
 
     // purge unused slots
     for(int v=0;v<MAX_INPUT_DEVICES;v++)
@@ -77,8 +77,7 @@ void InputConfig::Map(InputMapping &IM, const char *DeviceName, int dwType)
            m_Back.dwDevice      != v && m_Start.dwDevice     != v &&
            m_LThumb.dwDevice    != v && m_RThumb.dwDevice    != v)
         {
-            delete[] m_DeviceName[v];
-            m_DeviceName[v] = 0;
+            m_DeviceName[v][0] = '\0';
         }
     }
 
@@ -92,15 +91,13 @@ int InputConfig::Insert(const char *DeviceName)
 {
     int v=0;
     for(v=0;v<MAX_INPUT_DEVICES;v++)
-        if(m_DeviceName[v] != 0 && strcmp(DeviceName, m_DeviceName[v]) == 0)
+        if(m_DeviceName[v][0] != '\0' && strcmp(DeviceName, m_DeviceName[v]) == 0)
             return v;
 
     for(v=0;v<MAX_INPUT_DEVICES;v++)
     {
-        if(m_DeviceName[v] == 0)
+        if(m_DeviceName[v][0] == '\0')
         {
-            m_DeviceName[v] = new char[256];
-
             strncpy(m_DeviceName[v], DeviceName, 255);
 
             return v;
