@@ -1103,7 +1103,7 @@ HRESULT WINAPI EmuIDirect3DDevice8_SetStreamSource
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexShader
 // ******************************************************************
-HRESULT WINAPI EmuIDirect3DDevice8_SetVertexShader
+VOID WINAPI EmuIDirect3DDevice8_SetVertexShader
 (
     DWORD            Handle
 );

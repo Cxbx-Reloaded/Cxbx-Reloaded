@@ -2044,9 +2044,12 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                     &pIndexBuffer->EmuIndexBuffer8
                 );
 
+                if(FAILED(hRet))
+                    EmuCleanup("CreateIndexBuffer failed");
+
                 BYTE *pData = 0;
 
-                hRet = pResource->EmuIndexBuffer8->Lock(0, 0, &pData, 0);
+                hRet = pResource->EmuIndexBuffer8->Lock(0, dwSize, &pData, 0);
 
                 if(FAILED(hRet))
                     EmuCleanup("IndexBuffer Lock failed");
@@ -2372,7 +2375,7 @@ VOID WINAPI XTL::EmuGet2DSurfaceDesc
 
     D3DSURFACE_DESC SurfaceDesc;
 
-	HRESULT hRet = pTexture8->GetLevelDesc(dwLevel, &SurfaceDesc);
+    HRESULT hRet = pTexture8->GetLevelDesc(dwLevel, &SurfaceDesc);
 
     // ******************************************************************
     // * Rearrange into windows format (remove D3DPool)
@@ -2434,7 +2437,7 @@ HRESULT WINAPI XTL::EmuIDirect3DSurface8_GetDesc
 
     D3DSURFACE_DESC SurfaceDesc;
 
-	HRESULT hRet = pSurface8->GetDesc(&SurfaceDesc);
+    HRESULT hRet = pSurface8->GetDesc(&SurfaceDesc);
 
     // ******************************************************************
     // * Rearrange into windows format (remove D3DPool)
@@ -3458,7 +3461,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetStreamSource
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexShader
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShader
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetVertexShader
 (
     DWORD Handle
 )
@@ -3477,12 +3480,12 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShader
                GetCurrentThreadId(), Handle);
     }
     #endif
-
-    HRESULT hRet = g_pD3DDevice8->SetVertexShader(Handle);
+ 
+    g_pD3DDevice8->SetVertexShader(Handle);
 
     EmuSwapFS();   // XBox FS
 
-    return hRet;
+    return;
 }
 
 // ******************************************************************
@@ -3735,60 +3738,83 @@ static void EmuUpdateDeferredStates()
 // ******************************************************************
 uint32 EmuQuadHackA(uint32 PrimitiveCount, XTL::IDirect3DVertexBuffer8 *&pOrigVertexBuffer8, XTL::IDirect3DVertexBuffer8 *&pHackVertexBuffer8)
 {
-    UINT nStride = 0;
+    UINT uiStride = 0;
 
-    g_pD3DDevice8->GetStreamSource(0, &pOrigVertexBuffer8, &nStride);
+    // These are the sizes of our part in the vertex buffer
+    DWORD dwOriginalSize    = 0;
+    DWORD dwNewSize         = 0;
 
-    g_pD3DDevice8->CreateVertexBuffer(PrimitiveCount*nStride*6, 0, 0, XTL::D3DPOOL_DEFAULT, &pHackVertexBuffer8);
+    // These are the sizes with the rest of the buffer
+    DWORD dwOriginalSizeWR  = 0; // the size of the original vertex buffer
+    DWORD dwNewSizeWR       = 0; // the size of the new buffer!!!
 
-    BOOL bPatch = FALSE;
+    g_pD3DDevice8->GetStreamSource(0, &pOrigVertexBuffer8, &uiStride);
 
-    // Determine if we need to patch the buffer (?)
+    // This is a list of sqares/rectangles, so we convert it to a list of triangles
+    dwOriginalSize  = PrimitiveCount*uiStride*2;
+    dwNewSize       = PrimitiveCount*uiStride*3;
+
+    // Retrieve the original buffer size
     {
+        XTL::D3DVERTEXBUFFER_DESC Desc;
+
+        if(FAILED(pOrigVertexBuffer8->GetDesc(&Desc))) 
+            EmuCleanup("Could not retrieve buffer size");
+
+        // Here we save the full buffer size
+        dwOriginalSizeWR = Desc.Size;
+
+        // So we can now calculate the size of the rest (dwOriginalSizeWR - dwOriginalSize) and
+        // add it to our new calculated size of the patched buffer
+        dwNewSizeWR = dwNewSize + dwOriginalSizeWR - dwOriginalSize;
+    }
+
+    g_pD3DDevice8->CreateVertexBuffer(dwNewSizeWR, 0, 0, XTL::D3DPOOL_MANAGED, &pHackVertexBuffer8);
+
+    if(pOrigVertexBuffer8 != 0 && pHackVertexBuffer8 != 0)
+    {
+        BYTE *pOrigVertexData = 0;
+        BYTE *pHackVertexData = 0;
+
         DWORD dwVertexShader = NULL;
 
         g_pD3DDevice8->GetVertexShader(&dwVertexShader);
 
-        if(dwVertexShader & D3DFVF_XYZRHW)
-			bPatch=TRUE;
-    }
-
-    BYTE *pOrigVertexData = 0;
-    BYTE *pHackVertexData = 0;
-
-    if(pOrigVertexBuffer8 != 0 && pHackVertexBuffer8 != 0)
-    {
         pOrigVertexBuffer8->Lock(0, 0, &pOrigVertexData, 0);
         pHackVertexBuffer8->Lock(0, 0, &pHackVertexData, 0);
 
-	    for(DWORD i=0;i<PrimitiveCount;i++)
+        // Copy the nonmodified data
+//      memcpy(pHackVertexData, pOrigVertexData, dwOffset);
+        memcpy(&pHackVertexData[dwNewSize], &pOrigVertexData[dwOriginalSize], dwOriginalSizeWR-dwOriginalSize);
+
+        for(DWORD i=0;i<(PrimitiveCount/2);i++)
         {
-		    memcpy(&pHackVertexData[i*nStride*6+0*nStride], &pOrigVertexData[i*nStride*4+2*nStride], nStride);
-		    memcpy(&pHackVertexData[i*nStride*6+1*nStride], &pOrigVertexData[i*nStride*4+0*nStride], nStride);
-		    memcpy(&pHackVertexData[i*nStride*6+2*nStride], &pOrigVertexData[i*nStride*4+1*nStride], nStride);
-		    memcpy(&pHackVertexData[i*nStride*6+3*nStride], &pOrigVertexData[i*nStride*4+2*nStride], nStride);
-		    memcpy(&pHackVertexData[i*nStride*6+4*nStride], &pOrigVertexData[i*nStride*4+3*nStride], nStride);
-		    memcpy(&pHackVertexData[i*nStride*6+5*nStride], &pOrigVertexData[i*nStride*4+0*nStride], nStride);
+            memcpy(&pHackVertexData[i*uiStride*6+0*uiStride], &pOrigVertexData[i*uiStride*4+0*uiStride], uiStride);
+            memcpy(&pHackVertexData[i*uiStride*6+1*uiStride], &pOrigVertexData[i*uiStride*4+1*uiStride], uiStride);
+            memcpy(&pHackVertexData[i*uiStride*6+2*uiStride], &pOrigVertexData[i*uiStride*4+2*uiStride], uiStride);
+            memcpy(&pHackVertexData[i*uiStride*6+3*uiStride], &pOrigVertexData[i*uiStride*4+2*uiStride], uiStride);
+            memcpy(&pHackVertexData[i*uiStride*6+4*uiStride], &pOrigVertexData[i*uiStride*4+3*uiStride], uiStride);
+            memcpy(&pHackVertexData[i*uiStride*6+5*uiStride], &pOrigVertexData[i*uiStride*4+0*uiStride], uiStride);
 
-            if(bPatch)
+            if(dwVertexShader & D3DFVF_XYZRHW)
             {
-			    for(int z=0; z<6; z++)
+                for(int z=0;z<6;z++)
                 {
-				    if(((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[2] == 0.0f)
-					    ((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[2] = 1.0f;
-				    if(((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[3] == 0.0f)
-					    ((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[3] = 1.0f;
-			    }
+                    if(((FLOAT*)&pHackVertexData[i*uiStride*6+z*uiStride])[2] == 0.0f)
+                        ((FLOAT*)&pHackVertexData[i*uiStride*6+z*uiStride])[2] = 1.0f;
+                    if(((FLOAT*)&pHackVertexData[i*uiStride*6+z*uiStride])[3] == 0.0f)
+                        ((FLOAT*)&pHackVertexData[i*uiStride*6+z*uiStride])[3] = 1.0f;
+                }
             }
-	    }
+        }
 
-	    pOrigVertexBuffer8->Unlock();
+        pOrigVertexBuffer8->Unlock();
         pHackVertexBuffer8->Unlock();
 
-        g_pD3DDevice8->SetStreamSource(0, pHackVertexBuffer8, nStride);
+        g_pD3DDevice8->SetStreamSource(0, pHackVertexBuffer8, uiStride);
     }
 
-    return nStride;
+    return uiStride;
 }
 
 // ******************************************************************
@@ -3986,7 +4012,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
 
     g_pD3DDevice8->DrawIndexedPrimitive
     (
-        PCPrimitiveType, 0, VertexCount, (DWORD)pIndexData/sizeof(WORD), PrimitiveCount
+        PCPrimitiveType, 0, VertexCount, ((DWORD)pIndexData)/2, PrimitiveCount
     );
 
     if(PrimitiveType == 8)  // Quad List
