@@ -278,6 +278,9 @@ XBSYSAPI EXPORTNUM(66) NTSTATUS NTAPI xboxkrnl::IoCreateFile
 
     NTSTATUS ret = STATUS_SUCCESS;
 
+    EmuPanic();
+    /* TODO: Use new handle wrapping code
+
     // ******************************************************************
     // * For now, just check for 'special' cases
     // ******************************************************************
@@ -288,8 +291,6 @@ XBSYSAPI EXPORTNUM(66) NTSTATUS NTAPI xboxkrnl::IoCreateFile
         iEmuHandle->m_Type = EMUHANDLE_TYPE_PARTITION1;
 
         *FileHandle = PtrToEmuHandle(iEmuHandle);
-
-        // TODO: Update IoStatusBlock if necessary
     }
     else if(strcmp(ObjectAttributes->ObjectName->Buffer, "\\Device\\Harddisk0\\partition1\\TDATA") == 0)
     {
@@ -304,16 +305,8 @@ XBSYSAPI EXPORTNUM(66) NTSTATUS NTAPI xboxkrnl::IoCreateFile
     else
     {
         EmuPanic();
-
-        /* TODO: In the future, this will look something like...
-        ret = xntdll::ZwCreateFile
-        (
-            FileHandle, DesiredAccess, (xntdll::_OBJECT_ATTRIBUTES*)ObjectAttributes, (xntdll::_IO_STATUS_BLOCK *)IoStatusBlock,
-            (xntdll::_LARGE_INTEGER *)AllocationSize, FileAttributes, ShareAccess, Disposition, 
-            CreateOptions, 0, 0
-        );
-        */
     }
+    */
 
     EmuSwapFS();   // Xbox FS
 
@@ -695,6 +688,10 @@ XBSYSAPI EXPORTNUM(218) NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformationFile
     }
     #endif
 
+    EmuPanic();
+
+    /* TODO: Use new handle wrapping code
+
     // ******************************************************************
     // * For now, handle 'special' case
     // ******************************************************************
@@ -723,6 +720,7 @@ XBSYSAPI EXPORTNUM(218) NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformationFile
     {
         EmuPanic();
     }
+    */
 
     EmuSwapFS();   // Xbox FS
 

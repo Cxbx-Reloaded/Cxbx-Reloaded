@@ -77,9 +77,9 @@ enum InputDeviceComponent
 };
 
 // ******************************************************************
-// * Input Device Title Lookup Table
+// * Input Device Name Lookup Table
 // ******************************************************************
-extern const char *g_InputDeviceTitle[INPUT_DEVICE_COMPONENT_COUNT];
+extern const char *g_InputDeviceName[INPUT_DEVICE_COMPONENT_COUNT];
 
 // ******************************************************************
 // * InputMapping Flags

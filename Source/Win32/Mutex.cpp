@@ -53,7 +53,7 @@ void Mutex::Lock()
     {
         // Grab the lock, letting us look at the variables
 //        while(InterlockedCompareExchange((LPVOID*)&m_MutexLock, (LPVOID)1, (LPVOID)0))
-        while(InterlockedCompareExchange((LPLONG volatile)&m_MutexLock, (LONG)1, (LONG)0))
+        while(InterlockedCompareExchange((LPLONG)&m_MutexLock, (LONG)1, (LONG)0))
             Sleep(1);
 
         // Are we the the new owner?
@@ -100,7 +100,7 @@ void Mutex::Unlock()
 {
     // Grab the lock, letting us look at the variables
 //    while(InterlockedCompareExchange((LPVOID*)&m_MutexLock, (LPVOID)1, (LPVOID)0))
-    while (InterlockedCompareExchange((LPLONG volatile)&m_MutexLock, (LONG)1, (LONG)0))
+    while (InterlockedCompareExchange((LPLONG)&m_MutexLock, (LONG)1, (LONG)0))
         Sleep(1);
 
     // Decrement the lock count

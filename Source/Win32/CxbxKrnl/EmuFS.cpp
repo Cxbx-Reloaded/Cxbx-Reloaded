@@ -48,6 +48,9 @@ namespace xboxkrnl
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
+static uint16 g_NewFS = -1;
+static uint16 g_OrgFS = -1;
+
 // ******************************************************************
 // * func: EmuInitFS
 // ******************************************************************
@@ -64,9 +67,6 @@ void EmuGenerateFS(int TlsAdjust)
     NT_TIB         *OrgNtTib;
     xboxkrnl::KPCR *NewPcr;
 
-    uint16 NewFS=0;
-    uint16 OrgFS=0;
-
     void *TLSPtr = 0;
 
     // ******************************************************************
@@ -79,7 +79,7 @@ void EmuGenerateFS(int TlsAdjust)
 
         memset(NewPcr, 0, sizeof(*NewPcr));
 
-        NewFS = EmuAllocateLDT((uint32)NewPcr, (uint32)NewPcr + dwSize);
+        g_NewFS = EmuAllocateLDT((uint32)NewPcr, (uint32)NewPcr + dwSize);
     }
 
     // ******************************************************************
@@ -89,14 +89,14 @@ void EmuGenerateFS(int TlsAdjust)
     {
         // Obtain "OrgFS"
         mov ax, fs
-        mov OrgFS, ax
+        mov g_OrgFS, ax
 
         // Obtain "OrgNtTib"
         mov eax, fs:[0x18]
         mov OrgNtTib, eax
 
         // Save "NewFS" inside OrgFS.ArbitraryUserPointer
-        mov ax, NewFS
+        mov ax, g_NewFS
         mov fs:[0x14], ax
     }
 
@@ -133,35 +133,7 @@ void EmuGenerateFS(int TlsAdjust)
 
         NewPcr->PrcbData.CurrentThread->TlsData = TLSPtr;
     }
-/*
-Data Start Address               : 0x00000000
-Data End Address                 : 0x00000000
-TLS Index Address                : 0x00030DC4
-TLS Callback Address             : 0x00000000
-Size of Zero Fill                : 0x0000000C -> 12
-Characteristics                  : 0x00000000 -> 16
 
-Data Start Address               : 0x00010494 |
-Data End Address                 : 0x000104A0 |-> 12
-TLS Index Address                : 0x00030D5C
-TLS Callback Address             : 0x00000000
-Size of Zero Fill                : 0x00000008 -> 8
-Characteristics                  : 0x00000000 -> 26
-
-Data Start Address               : 0x00010494 |
-Data End Address                 : 0x000104A4 |-> 16
-TLS Index Address                : 0x00030D5C
-TLS Callback Address             : 0x00000000
-Size of Zero Fill                : 0x00000008 -> 8
-Characteristics                  : 0x00000000 -> 36
-
-Data Start Address               : 0x00010494 |
-Data End Address                 : 0x000104A8 |-> 20
-TLS Index Address                : 0x00030D5C
-TLS Callback Address             : 0x00000000
-Size of Zero Fill                : 0x00000008 -> 8
-Characteristics                  : 0x00000000 -> 52
-*/
     // ******************************************************************
     // * Swap into the "NewFS"
     // ******************************************************************
@@ -172,7 +144,7 @@ Characteristics                  : 0x00000000 -> 52
     // ******************************************************************
     __asm
     {
-        mov ax, OrgFS
+        mov ax, g_OrgFS
         mov fs:[0x14], ax   // NewFS.ArbitraryUserPointer
     }
 
@@ -189,4 +161,20 @@ Characteristics                  : 0x00000000 -> 52
     // * Swap back into the "OrgFS"
     // ******************************************************************
     EmuSwapFS();
+}
+
+// ******************************************************************
+// * func: EmuIsXboxFS
+// ******************************************************************
+bool EmuIsXboxFS()
+{
+    uint16 chk = 0;
+
+    __asm
+    {
+        mov ax, fs:[0x04]
+        mov chk, ax
+    }
+
+    return (g_NewFS == chk);
 }

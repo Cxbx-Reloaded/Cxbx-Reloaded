@@ -37,37 +37,26 @@
 #include <string.h>
 #include <stdio.h>
 
-const char *g_InputDeviceTitle[INPUT_DEVICE_COMPONENT_COUNT]=
+// ******************************************************************
+// * Input Device Name Lookup Table
+// ******************************************************************
+const char *g_InputDeviceName[INPUT_DEVICE_COMPONENT_COUNT]=
 {
     // ******************************************************************
     // * Analog Axis
     // ******************************************************************
-    "LThumbX",
-    "LThumbY",
-    "RThumbX",
-    "RThumbY",
+    "LThumbX", "LThumbY", "RThumbX", "RThumbY",
+
     // ******************************************************************
     // * Analog Buttons
     // ******************************************************************
-    "X",
-    "Y",
-    "A",
-    "B",
-    "White",
-    "Black",
-    "LTrigger",
-    "RTrigger",
+    "X", "Y", "A", "B", "White", "Black", "LTrigger", "RTrigger",
+
     // ******************************************************************
     // * Digital Buttons
     // ******************************************************************
-    "DPadUp",
-    "DPadDown",
-    "DPadLeft",
-    "DPadRight",
-    "Back",
-    "Start",
-    "LThumb",
-    "RThumb",
+    "DPadUp", "DPadDown", "DPadLeft", "DPadRight",
+    "Back", "Start", "LThumb", "RThumb",
 };
 
 // ******************************************************************

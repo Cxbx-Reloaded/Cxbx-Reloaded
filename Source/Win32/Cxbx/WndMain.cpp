@@ -448,6 +448,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 case ID_FILE_RXBE_8:
                 case ID_FILE_RXBE_9:
                 {
+                    if(m_Xbe != 0)
+                        CloseXbe();
+
+                    if(m_Xbe != 0)
+                        break;
+
                     HMENU menu = GetMenu(m_hwnd);
                     HMENU file_menu = GetSubMenu(menu, 0);
                     HMENU rxbe_menu = GetSubMenu(file_menu, 9);
@@ -473,6 +479,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 case ID_FILE_REXE_8:
                 case ID_FILE_REXE_9:
                 {
+                    if(m_Xbe != 0)
+                        CloseXbe();
+
+                    if(m_Xbe != 0)
+                        break;
+
                     HMENU menu = GetMenu(m_hwnd);
                     HMENU file_menu = GetSubMenu(menu, 0);
                     HMENU rexe_menu = GetSubMenu(file_menu, 10);
@@ -1199,7 +1211,7 @@ void WndMain::RefreshMenus()
 
                 int max = m_dwRecentXbe;
                 for(int v=0;v<max;v++)
-                    EnableMenuItem(rxbe_menu, ID_FILE_RXBE_0 + v, MF_BYCOMMAND | (m_Xbe == 0) ? MF_ENABLED : MF_GRAYED);
+                    EnableMenuItem(rxbe_menu, ID_FILE_RXBE_0 + v, MF_BYCOMMAND | MF_ENABLED);
             }
 
             // ******************************************************************
@@ -1210,7 +1222,7 @@ void WndMain::RefreshMenus()
 
                 int max = m_dwRecentExe;
                 for(int v=0;v<max;v++)
-                    EnableMenuItem(rexe_menu, ID_FILE_REXE_0 + v, MF_BYCOMMAND | (m_Xbe == 0) ? MF_ENABLED : MF_GRAYED);
+                    EnableMenuItem(rexe_menu, ID_FILE_REXE_0 + v, MF_BYCOMMAND | MF_ENABLED);
             }
         }
 
@@ -1444,38 +1456,52 @@ void WndMain::OpenXbe(const char *x_filename)
 	// ******************************************************************
     if(m_XbeFilename[0] != '\0')
     {
-        bool exists = false;
+        bool found = false;
 
-        // check if this filename already exists
-        for(int c=0;c<m_dwRecentXbe;c++)
-            if(strcmp(m_szRecentXbe[c], m_XbeFilename) == 0)
-                exists = true;
-
-        if(!exists)
+        // if this filename already exists, temporarily remove it
+        for(int c=0, r=0;c<m_dwRecentXbe;c++, r++)
         {
-            // move all items down one, removing the last one if necessary
-            for(int v=RECENT_XBE_SIZE;v>0;v--)
+            if(strcmp(m_szRecentXbe[c], m_XbeFilename) == 0)
             {
-                if(m_szRecentXbe[v-1] == 0)
-                    m_szRecentXbe[v] = 0;
-                else
-                {
-                    if(m_szRecentXbe[v] == 0)
-                        m_szRecentXbe[v] = (char*)calloc(1, 260);
-                    strncpy(m_szRecentXbe[v], m_szRecentXbe[v-1], 259);
-                }
+                found = true;
+                r++;
             }
 
-            // add new item as first index
+            if(r != c)
             {
-                if(m_szRecentXbe[0] == 0)
-                    m_szRecentXbe[0] = (char*)calloc(1, 260);
-
-                strcpy(m_szRecentXbe[0], m_XbeFilename);
-
-                m_dwRecentXbe++;
+                if(m_szRecentXbe[r] == 0 || r > m_dwRecentXbe - 1)
+                    m_szRecentXbe[c] = 0;
+                else
+                    strncpy(m_szRecentXbe[c], m_szRecentXbe[r], 259);
             }
         }
+
+        if(found)
+            m_dwRecentXbe--;
+
+        // move all items down one, removing the last one if necessary
+        for(int v=RECENT_XBE_SIZE-1;v>0;v--)
+        {
+            if(m_szRecentXbe[v-1] == 0)
+                m_szRecentXbe[v] = 0;
+            else
+            {
+                if(m_szRecentXbe[v] == 0)
+                    m_szRecentXbe[v] = (char*)calloc(1, 260);
+                strncpy(m_szRecentXbe[v], m_szRecentXbe[v-1], 259);
+            }
+        }
+
+        // add new item as first index
+        {
+            if(m_szRecentXbe[0] == 0)
+                m_szRecentXbe[0] = (char*)calloc(1, 260);
+
+            strcpy(m_szRecentXbe[0], m_XbeFilename);
+        }
+
+        if(m_dwRecentXbe < RECENT_XBE_SIZE)
+            m_dwRecentXbe++;
     }
 
     UpdateRecentFiles();
@@ -1620,39 +1646,54 @@ void WndMain::ImportExe(const char *x_filename)
     // ******************************************************************
 	// * save this Exe to the list of recent files
 	// ******************************************************************
+    if(m_ExeFilename[0] != '\0')
     {
-        bool exists = false;
+        bool found = false;
 
-        // check if this filename already exists
-        for(int c=0;c<m_dwRecentExe;c++)
-            if(strcmp(m_szRecentExe[c], x_filename) == 0)
-                exists = true;
-
-        if(!exists)
+        // if this filename already exists, temporarily remove it
+        for(int c=0, r=0;c<m_dwRecentExe;c++, r++)
         {
-            // move all items down one, removing the last one if necessary
-            for(int v=RECENT_EXE_SIZE;v>0;v--)
+            if(strcmp(m_szRecentExe[c], m_ExeFilename) == 0)
             {
-                if(m_szRecentExe[v-1] == 0)
-                    m_szRecentExe[v] = 0;
-                else
-                {
-                    if(m_szRecentExe[v] == 0)
-                        m_szRecentExe[v] = (char*)calloc(1, 260);
-                    strncpy(m_szRecentExe[v], m_szRecentExe[v-1], 259);
-                }
+                found = true;
+                r++;
             }
 
-            // add new item as first index
+            if(r != c)
             {
-                if(m_szRecentExe[0] == 0)
-                    m_szRecentExe[0] = (char*)calloc(1, 260);
-
-                strcpy(m_szRecentExe[0], x_filename);
-
-                m_dwRecentExe++;
+                if(m_szRecentExe[r] == 0 || r > m_dwRecentExe - 1)
+                    m_szRecentExe[c] = 0;
+                else
+                    strncpy(m_szRecentExe[c], m_szRecentExe[r], 259);
             }
         }
+
+        if(found)
+            m_dwRecentExe--;
+
+        // move all items down one, removing the last one if necessary
+        for(int v=RECENT_EXE_SIZE-1;v>0;v--)
+        {
+            if(m_szRecentExe[v-1] == 0)
+                m_szRecentExe[v] = 0;
+            else
+            {
+                if(m_szRecentExe[v] == 0)
+                    m_szRecentExe[v] = (char*)calloc(1, 260);
+                strncpy(m_szRecentExe[v], m_szRecentExe[v-1], 259);
+            }
+        }
+
+        // add new item as first index
+        {
+            if(m_szRecentExe[0] == 0)
+                m_szRecentExe[0] = (char*)calloc(1, 260);
+
+            strcpy(m_szRecentExe[0], m_ExeFilename);
+        }
+
+        if(m_dwRecentExe < RECENT_EXE_SIZE)
+            m_dwRecentExe++;
     }
 
     UpdateRecentFiles();

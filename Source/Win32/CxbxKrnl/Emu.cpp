@@ -259,7 +259,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion
 // ******************************************************************
 extern "C" CXBXKRNL_API void NTAPI EmuPanic()
 {
-    EmuSwapFS();   // Win2k/XP FS
+    if(EmuIsXboxFS())
+        EmuSwapFS();   // Win2k/XP FS
 
     printf("Emu (0x%.08X): EmuPanic()\n", GetCurrentThreadId());
 
@@ -269,6 +270,9 @@ extern "C" CXBXKRNL_API void NTAPI EmuPanic()
 #else
     MessageBox(NULL, "Kernel Panic! Process will now terminate.", "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
 #endif
+
+    ExitProcess(1);
+
     EmuSwapFS();   // XBox FS
 }
 

@@ -184,7 +184,7 @@ CXBXKRNL_API void EmuShared::LoadInputConfiguration()
             {
                 int RawData[3] = {-1, -1, 0}; // dwDevice, dwInfo, dwFlags
 
-                sprintf(szBuffer, "Component : %s", g_InputDeviceTitle[c]);
+                sprintf(szBuffer, "Component : %s", g_InputDeviceName[c]);
 
                 dwType = REG_BINARY; dwSize = sizeof(RawData);
                 RegQueryValueEx(hKey, szBuffer, NULL, &dwType, (PBYTE)&RawData[0], &dwSize);
@@ -241,7 +241,7 @@ CXBXKRNL_API void EmuShared::SaveInputConfiguration()
 
                 m_InputConfig.Get((InputDeviceComponent)c, &RawData[0], &RawData[1], &RawData[2]);
 
-                sprintf(szBuffer, "Component : %s", g_InputDeviceTitle[c]);
+                sprintf(szBuffer, "Component : %s", g_InputDeviceName[c]);
 
                 dwType = REG_BINARY; dwSize = sizeof(RawData);
                 RegSetValueEx(hKey, szBuffer, 0, dwType, (PBYTE)&RawData, dwSize);

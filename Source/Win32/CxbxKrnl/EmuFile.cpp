@@ -36,3 +36,91 @@
 
 #include "EmuFile.h"
 
+// Array of EmuHandles in the system
+EmuHandle EmuHandle::Handles[EMU_MAX_HANDLES];
+
+// Pointer to first free handle in array, or NULL if none
+volatile EmuHandle *EmuHandle::FirstFree;
+
+// Pointer to last free handle in array, or NULL if none
+volatile EmuHandle *EmuHandle::LastFree;
+
+// Lock on the handle system
+CRITICAL_SECTION EmuHandle::HandleLock;
+
+// ******************************************************************
+// * Initialize the handle database
+// ******************************************************************
+bool EmuHandle::Initialize()
+{
+	size_t x;
+
+	// Initialize the critical section
+	InitializeCriticalSection(&HandleLock);
+
+	// Mark all handles as free.  We also set up the linked list of
+	// free handles here.
+	for (x = 0; x < EMU_MAX_HANDLES; x++)
+	{
+		Handles[x].m_Type = EMUHANDLE_TYPE_EMPTY;
+		Handles[x].m_NextFree = &Handles[x + 1];
+	}
+
+	// The last entry should have a NULL next entry
+	Handles[EMU_MAX_HANDLES - 1].m_NextFree = NULL;
+
+	// Set up the head and tail pointers
+	FirstFree = &Handles[0];
+	LastFree = &Handles[EMU_MAX_HANDLES];
+
+    return true;
+}
+
+// ******************************************************************
+// * func: EmuHandle::Lock
+// *    Locks the handle database
+// ******************************************************************
+inline void EmuHandle::Lock(void)
+{
+	EnterCriticalSection(&HandleLock);
+}
+
+// ******************************************************************
+// * func: EmuHandle::Unlock
+// *    Unlocks the handle database
+// ******************************************************************
+inline void EmuHandle::Unlock(void)
+{
+	LeaveCriticalSection(&HandleLock);
+}
+
+// ******************************************************************
+// * func: EmuHandle::Allocate
+// *    Allocates a new handle
+// ******************************************************************
+EmuHandle volatile *EmuHandle::Allocate(void)
+{
+	volatile EmuHandle *Handle;
+
+	// Lock the database
+	Lock();
+
+	// Get the first free entry
+	Handle = FirstFree;
+
+	// Remove it from the list
+	FirstFree = Handle->m_NextFree;
+
+	// If it was the last handle, clear LastFree
+	if (!Handle->m_NextFree)
+		LastFree = NULL;
+
+	// Initialize the handle's fields
+	Handle->m_Type = EMUHANDLE_TYPE_ALLOCATED;
+	Handle->m_Object = NULL;
+
+	// Unlock the database
+	Unlock();
+
+	return Handle;
+}

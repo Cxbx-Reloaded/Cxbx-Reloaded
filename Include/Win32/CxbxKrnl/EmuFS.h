@@ -54,6 +54,17 @@ static inline void EmuSwapFS()
 }
 
 // ******************************************************************
+// * func: EmuIsXboxFS
+// ******************************************************************
+// *
+// * This function will return true if the current FS register is
+// * the Xbox emulation variety. Alternatively, false means the
+// * Win2k/XP FS register is currently loaded.
+// *
+// ******************************************************************
+bool EmuIsXboxFS();
+
+// ******************************************************************
 // * func: EmuGenerateFS
 // ******************************************************************
 void EmuGenerateFS(int TlsAdjust);

@@ -1,1 +1,36 @@
-Flushed
+    ret = xntdll::ZwCreateFile
+    (
+        FileHandle, DesiredAccess, (xntdll::_OBJECT_ATTRIBUTES*)ObjectAttributes, (xntdll::_IO_STATUS_BLOCK *)IoStatusBlock,
+        (xntdll::_LARGE_INTEGER *)AllocationSize, FileAttributes, ShareAccess, Disposition, 
+        CreateOptions, 0, 0
+    );
+
+/*
+Data Start Address               : 0x00000000
+Data End Address                 : 0x00000000
+TLS Index Address                : 0x00030DC4
+TLS Callback Address             : 0x00000000
+Size of Zero Fill                : 0x0000000C -> 12
+Characteristics                  : 0x00000000 -> 16
+
+Data Start Address               : 0x00010494 |
+Data End Address                 : 0x000104A0 |-> 12
+TLS Index Address                : 0x00030D5C
+TLS Callback Address             : 0x00000000
+Size of Zero Fill                : 0x00000008 -> 8
+Characteristics                  : 0x00000000 -> 26
+
+Data Start Address               : 0x00010494 |
+Data End Address                 : 0x000104A4 |-> 16
+TLS Index Address                : 0x00030D5C
+TLS Callback Address             : 0x00000000
+Size of Zero Fill                : 0x00000008 -> 8
+Characteristics                  : 0x00000000 -> 36
+
+Data Start Address               : 0x00010494 |
+Data End Address                 : 0x000104A8 |-> 20
+TLS Index Address                : 0x00030D5C
+TLS Callback Address             : 0x00000000
+Size of Zero Fill                : 0x00000008 -> 8
+Characteristics                  : 0x00000000 -> 52
+*/
