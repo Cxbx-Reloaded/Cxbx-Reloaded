@@ -1239,7 +1239,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SelectVertexShader
            ");\n",
            GetCurrentThreadId(), Handle, Address);
 
-    if((Handle & 0x80000000))
+    if(VshHandleIsVertexShader(Handle))
     {
         VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)(((X_D3DVertexShader *)(Handle & 0x7FFFFFFF))->Handle);
         g_pD3DDevice8->SetVertexShader(pVertexShader->Handle);
@@ -2185,7 +2185,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
             FailedShaderCount++;
         }
 #endif // _DEBUG_VSH
-        hRet = D3D_OK;
+        //hRet = D3D_OK;
     }
 
     EmuSwapFS();   // XBox FS
@@ -6171,8 +6171,8 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetVertexShader
 
     if(g_VertexShaderConstantMode != X_D3DSCM_NORESERVEDCONSTANTS)
     {
-        g_pD3DDevice8->SetVertexShaderConstant( 58, &vScale, 1 );
-        g_pD3DDevice8->SetVertexShaderConstant( 59, &vOffset, 1 );
+        //g_pD3DDevice8->SetVertexShaderConstant( 58, &vScale, 1 );
+        //g_pD3DDevice8->SetVertexShaderConstant( 59, &vOffset, 1 );
     }
 
     DWORD RealHandle;
@@ -6769,9 +6769,15 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_GetVertexShaderSize
                ");\n",
                GetCurrentThreadId(), Handle,pSize);
 
-    if(pSize  && (Handle & 0x8000000))
+    if(pSize  && VshHandleIsVertexShader(Handle))
     {
-        *pSize = ((VERTEX_SHADER *)((X_D3DVertexShader *)(Handle & 0x7FFFFFFF))->Handle)->Size;
+        X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader *)(Handle & 0x7FFFFFFF);
+        VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)pD3DVertexShader->Handle;
+        *pSize = pVertexShader->Size;
+    }
+    else if(pSize)
+    {
+        *pSize = 0;
     }
 
     EmuSwapFS();   // Xbox FS
@@ -6795,7 +6801,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DeleteVertexShader
 
     DWORD RealHandle = 0;
 
-    if(Handle & 0x8000000)
+    if(VshHandleIsVertexShader(Handle))
     {
         X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader *)(Handle & 0x7FFFFFFF);
         VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)pD3DVertexShader->Handle;
@@ -7154,7 +7160,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetVertexShaderFunction
     if(pSizeOfData && VshHandleIsVertexShader(Handle))
     {
         VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)(VshHandleGetVertexShader(Handle))->Handle;
-        if(*pSizeOfData < pVertexShader->DeclarationSize || !pData)
+        if(*pSizeOfData < pVertexShader->FunctionSize || !pData)
         {
             *pSizeOfData = pVertexShader->FunctionSize;
 
