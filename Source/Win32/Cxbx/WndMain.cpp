@@ -43,7 +43,7 @@
 // ******************************************************************
 // * constructor
 // ******************************************************************
-WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m_Xbe(0), m_Exe(0), m_bExeChanged(false), m_bXbeChanged(false), m_KrnlDebug(DM_NONE), m_CxbxDebug(DM_NONE)
+WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m_Xbe(0), m_Exe(0), m_bExeChanged(false), m_bXbeChanged(false), m_bAutoConvertToExe(TRUE), m_KrnlDebug(DM_NONE), m_CxbxDebug(DM_NONE)
 {
     m_classname = "WndMain";
     m_wndname   = "Cxbx : Xbox Emulator";
@@ -84,6 +84,8 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m
             RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_CxbxDebug, &dwSize);
             RegQueryValueEx(hKey, "KrnlDebug", NULL, &dwType, (PBYTE)&m_KrnlDebug, &dwSize);
 
+            RegQueryValueEx(hKey, "AutoConvertToExe", NULL, &dwType, (PBYTE)&m_bAutoConvertToExe, &dwSize);
+
             dwType = REG_SZ;
             dwSize = 260;
 
@@ -116,6 +118,8 @@ WndMain::~WndMain()
 
             RegSetValueEx(hKey, "CxbxDebug", 0, dwType, (PBYTE)&m_CxbxDebug, dwSize);
             RegSetValueEx(hKey, "KrnlDebug", 0, dwType, (PBYTE)&m_KrnlDebug, dwSize);
+
+            RegSetValueEx(hKey, "AutoConvertToExe", 0, dwType, (PBYTE)&m_bAutoConvertToExe, dwSize);
 
             dwType = REG_SZ;
             dwSize = 260;
@@ -200,7 +204,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
             if(s_bInitMenu)
             {
+                RefreshMenus();
+
                 UpdateDebugConsoles();
+
                 s_bInitMenu = false;
             }
 
@@ -247,6 +254,19 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 ReleaseDC(hwnd, hDC);
 
             EndPaint(hwnd, &ps);
+        }
+        break;
+
+        case WM_KEYDOWN:
+        {
+            switch(wParam)
+            {
+                case VK_F5:
+                    if(m_Xbe != 0)
+                        StartEmulation(m_bAutoConvertToExe == TRUE);
+                    break;
+            }
+            break;
         }
         break;
 
@@ -599,25 +619,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                     m_Xbe->m_Header.dwInitFlags.bLimit64MB = !m_Xbe->m_Header.dwInitFlags.bLimit64MB;
 
-                    HMENU menu = GetMenu(m_hwnd);
-                    HMENU edit_menu = GetSubMenu(menu, 1);
-                    HMENU pach_menu = GetSubMenu(edit_menu, 1);
+                    RefreshMenus();
 
-					// ******************************************************************
-					// * check "allow >64MB" if appropriate
-					// ******************************************************************
-                    {
-                        bool res = m_Xbe->m_Header.dwInitFlags.bLimit64MB;
-
-                        UINT chk_flag = (res) ? MF_UNCHECKED : MF_CHECKED;
-
-                        if(res)
-                            printf("WndMain: %s was patched to limit to 64MB of memory usage.\n", m_Xbe->m_szAsciiTitle);
-                        else
-                            printf("WndMain: %s was patched to allow >64MB of memory usage.\n", m_Xbe->m_szAsciiTitle);
-                        
-                        CheckMenuItem(pach_menu, ID_EDIT_PATCH_ALLOW64MB, chk_flag);
-                    }
+                    if(m_Xbe->m_Header.dwInitFlags.bLimit64MB)
+                        printf("WndMain: %s was patched to limit to 64MB of memory usage.\n", m_Xbe->m_szAsciiTitle);
+                    else
+                        printf("WndMain: %s was patched to allow >64MB of memory usage.\n", m_Xbe->m_szAsciiTitle);
                 }
                 break;
 
@@ -648,26 +655,14 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                         m_Xbe->m_Header.dwKernelImageThunkAddr = kt ^ XOR_KT_DEBUG;         // encode to debug mode
                     }
 
-                    HMENU menu = GetMenu(m_hwnd);
-                    HMENU edit_menu = GetSubMenu(menu, 1);
+                    RefreshMenus();
 
-                    HMENU pach_menu = GetSubMenu(edit_menu, 1);
+                    bool res = (m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL) > 0x01000000;
 
-					// ******************************************************************
-					// * check "debug mode" if appropriate
-					// ******************************************************************
-                    {
-                        bool res = (m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL) > 0x01000000;
-
-                        UINT chk_flag = (res) ? MF_CHECKED : MF_UNCHECKED;
-
-                        if(res)
-                            printf("WndMain: %s was converted to debug mode.\n", m_Xbe->m_szAsciiTitle);
-                        else
-                            printf("WndMain: %s was converted to retail mode.\n", m_Xbe->m_szAsciiTitle);
-
-                        CheckMenuItem(pach_menu, ID_EDIT_PATCH_DEBUGMODE, chk_flag);
-                    }
+                    if(res)
+                        printf("WndMain: %s was converted to debug mode.\n", m_Xbe->m_szAsciiTitle);
+                    else
+                        printf("WndMain: %s was converted to retail mode.\n", m_Xbe->m_szAsciiTitle);
                 }
                 break;
 
@@ -723,7 +718,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
                 break;
 
-                case ID_VIEW_DEBUGOUTPUTKERNEL_CONSOLE:
+                case ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE:
                 {
                     if(m_KrnlDebug == DM_NONE || m_KrnlDebug == DM_FILE)
                         m_KrnlDebug = DM_CONSOLE;
@@ -734,15 +729,19 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                     m_bExeChanged = true;
 
+                    RefreshMenus();
+
                     UpdateDebugConsoles();
                 }
                 break;
 
-                case ID_VIEW_DEBUGOUTPUTKERNEL_FILE:
+                case ID_EMULATION_DEBUGOUTPUTKERNEL_FILE:
                 {
                     if(m_KrnlDebug == DM_FILE)
                     {
                         m_KrnlDebug = DM_NONE;
+
+                        RefreshMenus();
 
                         UpdateDebugConsoles();
                     }
@@ -774,28 +773,34 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                             m_KrnlDebug = DM_FILE;
 
+                            RefreshMenus();
+
                             UpdateDebugConsoles();
                         }
                     }
                 }
                 break;
 
-                case ID_VIEW_DEBUGOUTPUTGUI_CONSOLE:
+                case ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE:
 				{
                     if(m_CxbxDebug == DM_NONE || m_CxbxDebug == DM_FILE)
                         m_CxbxDebug = DM_CONSOLE;
                     else
                         m_CxbxDebug = DM_NONE;
 
+                    RefreshMenus();
+
                     UpdateDebugConsoles();
 				}
 				break;
 
-                case ID_VIEW_DEBUGOUTPUTGUI_FILE:
+                case ID_EMULATION_DEBUGOUTPUTGUI_FILE:
                 {
                     if(m_CxbxDebug == DM_FILE)
                     {
                         m_CxbxDebug = DM_NONE;
+
+                        RefreshMenus();
 
                         UpdateDebugConsoles();
                     }
@@ -823,6 +828,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                             m_CxbxDebug = DM_FILE;
 
+                            RefreshMenus();
+
                             UpdateDebugConsoles();
                         }
 
@@ -831,8 +838,16 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 break;
 
                 case ID_EMULATION_START:
-                    StartEmulation(false);
+                    StartEmulation(m_bAutoConvertToExe == TRUE);
                     break;
+
+                case ID_SETTINGS_AUTOGEN:
+                {
+                    m_bAutoConvertToExe = !m_bAutoConvertToExe;
+
+                    RefreshMenus();
+                }
+                break;
 
                 case ID_HELP_ABOUT:
                 {
@@ -949,91 +964,7 @@ void WndMain::XbeLoaded()
 {
     LoadLogo();
 
-    // ******************************************************************
-	// * disable/enable appropriate menus
-	// ******************************************************************
-    {
-        HMENU menu = GetMenu(m_hwnd);
-
-        // ******************************************************************
-	    // * file menu
-	    // ******************************************************************
-        {
-			HMENU file_menu = GetSubMenu(menu, 0);
-
-            // disable open .xbe file
-            EnableMenuItem(file_menu, ID_FILE_OPEN_XBE, MF_BYCOMMAND | MF_GRAYED);
-
-            // enable close .xbe file
-            EnableMenuItem(file_menu, ID_FILE_CLOSE_XBE, MF_BYCOMMAND | MF_ENABLED);
-
-			// enable save .xbe file
-			EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILE, MF_BYCOMMAND | MF_ENABLED);
-
-			// enable save .xbe file as
-			EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILEAS, MF_BYCOMMAND | MF_ENABLED);
-
-            // disable import from .exe
-            EnableMenuItem(file_menu, ID_FILE_IMPORTFROMEXE, MF_BYCOMMAND | MF_GRAYED);
-
-            // enable export to .exe
-            EnableMenuItem(file_menu, ID_FILE_EXPORTTOEXE, MF_BYCOMMAND | MF_ENABLED);
-        }
-
-        // ******************************************************************
-	    // * edit menu
-	    // ******************************************************************
-        {
-            HMENU edit_menu = GetSubMenu(menu, 1);
-            HMENU logo_menu = GetSubMenu(edit_menu, 0);
-            HMENU pach_menu = GetSubMenu(edit_menu, 1);
-
-            // enable export .xbe info
-            EnableMenuItem(edit_menu, ID_EDIT_EXTRACTXBEINFO, MF_BYCOMMAND | MF_ENABLED);
-
-            // enable logo bitmap menu
-            EnableMenuItem(edit_menu, 0, MF_BYPOSITION | MF_ENABLED);
-
-            // enable patch menu
-            EnableMenuItem(edit_menu, 1, MF_BYPOSITION | MF_ENABLED);
-
-            // ******************************************************************
-	        // * patch menu
-	        // ******************************************************************
-            {
-                // check "allow >64 MB" if appropriate
-                {
-                    UINT chk_flag = (m_Xbe->m_Header.dwInitFlags.bLimit64MB) ? MF_UNCHECKED : MF_CHECKED;
-
-                    CheckMenuItem(pach_menu, ID_EDIT_PATCH_ALLOW64MB, chk_flag);
-                }
-
-                // check "debug mode" if appropriate
-                {
-                    UINT chk_flag = ((m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL) > 0x01000000) ? MF_CHECKED : MF_UNCHECKED;
-
-                    CheckMenuItem(pach_menu, ID_EDIT_PATCH_DEBUGMODE, chk_flag);
-                }
-            }
-        }
-
-        // ******************************************************************
-	    // * view menu
-	    // ******************************************************************
-        {
-            HMENU view_menu = GetSubMenu(menu, 2);
-        }
-
-        // ******************************************************************
-	    // * emulation menu
-	    // ******************************************************************
-        {
-            HMENU emul_menu = GetSubMenu(menu, 3);
-
-            // enable emulation start
-            EnableMenuItem(emul_menu, ID_EMULATION_START, MF_BYCOMMAND | MF_ENABLED);
-        }
-    }
+    RefreshMenus();
 
     InvalidateRgn(m_hwnd, NULL, TRUE);
 
@@ -1073,31 +1004,141 @@ void WndMain::LoadLogo()
 }
 
 // ******************************************************************
+// * RefreshMenus
+// ******************************************************************
+void WndMain::RefreshMenus()
+{
+    // ******************************************************************
+	// * disable/enable appropriate menus
+	// ******************************************************************
+    {
+        HMENU menu = GetMenu(m_hwnd);
+
+        // ******************************************************************
+	    // * file menu
+	    // ******************************************************************
+        {
+			HMENU file_menu = GetSubMenu(menu, 0);
+
+            // enable/disable open .xbe file
+            EnableMenuItem(file_menu, ID_FILE_OPEN_XBE, MF_BYCOMMAND | (m_Xbe != 0) ? MF_GRAYED : MF_ENABLED);
+
+            // enable close .xbe file
+            EnableMenuItem(file_menu, ID_FILE_CLOSE_XBE, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
+
+			// enable save .xbe file
+			EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILE, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
+
+			// enable save .xbe file as
+			EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILEAS, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
+
+            // disable import from .exe
+            EnableMenuItem(file_menu, ID_FILE_IMPORTFROMEXE, MF_BYCOMMAND | (m_Xbe != 0) ? MF_GRAYED : MF_ENABLED);
+
+            // enable export to .exe
+            EnableMenuItem(file_menu, ID_FILE_EXPORTTOEXE, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
+        }
+
+        // ******************************************************************
+	    // * edit menu
+	    // ******************************************************************
+        {
+            HMENU edit_menu = GetSubMenu(menu, 1);
+            HMENU logo_menu = GetSubMenu(edit_menu, 0);
+            HMENU pach_menu = GetSubMenu(edit_menu, 1);
+
+            // enable export .xbe info
+            EnableMenuItem(edit_menu, ID_EDIT_EXTRACTXBEINFO, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
+
+            // enable logo bitmap menu
+            EnableMenuItem(edit_menu, 0, MF_BYPOSITION | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
+
+            // enable patch menu
+            EnableMenuItem(edit_menu, 1, MF_BYPOSITION | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
+
+            // ******************************************************************
+	        // * patch menu
+	        // ******************************************************************
+            {
+                // check "allow >64 MB" if appropriate
+                if(m_Xbe != 0)
+                {
+                    UINT chk_flag = (m_Xbe->m_Header.dwInitFlags.bLimit64MB) ? MF_UNCHECKED : MF_CHECKED;
+
+                    CheckMenuItem(pach_menu, ID_EDIT_PATCH_ALLOW64MB, chk_flag);
+                }
+
+                // check "debug mode" if appropriate
+                if(m_Xbe != 0)
+                {
+                    UINT chk_flag = ((m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL) > 0x01000000) ? MF_CHECKED : MF_UNCHECKED;
+
+                    CheckMenuItem(pach_menu, ID_EDIT_PATCH_DEBUGMODE, chk_flag);
+                }
+            }
+        }
+
+        // ******************************************************************
+	    // * settings menu
+	    // ******************************************************************
+        {
+            HMENU sett_menu = GetSubMenu(menu, 2);
+
+	        // check "Generate Exe Automatically" if appropriate
+            CheckMenuItem(sett_menu, ID_SETTINGS_AUTOGEN, MF_BYCOMMAND | ((m_bAutoConvertToExe == TRUE) ? MF_CHECKED : MF_UNCHECKED) );
+        }
+
+        // ******************************************************************
+	    // * emulation menu
+	    // ******************************************************************
+        {
+            HMENU emul_menu = GetSubMenu(menu, 3);
+            HMENU emul_debg = GetSubMenu(emul_menu, 2);
+            HMENU emul_krnl = GetSubMenu(emul_menu, 3);
+
+            if(m_KrnlDebug == DM_CONSOLE)
+            {
+                CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_CHECKED);
+                CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_UNCHECKED);
+            }
+            else if(m_KrnlDebug == DM_FILE)
+            {
+                CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_UNCHECKED);
+                CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_CHECKED);
+            }
+            else
+            {
+                CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_UNCHECKED);
+                CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_UNCHECKED);
+            }
+
+            if(m_CxbxDebug == DM_CONSOLE)
+            {
+                CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_CHECKED);
+                CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
+            }
+            else if(m_CxbxDebug == DM_FILE)
+            {
+                CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_UNCHECKED);
+                CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_CHECKED);
+            }
+            else
+            {
+                CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_UNCHECKED);
+                CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
+            }
+
+            // enable emulation start
+            EnableMenuItem(emul_menu, ID_EMULATION_START, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
+        }
+    }
+}
+
+// ******************************************************************
 // * UpdateDebugConsoles
 // ******************************************************************
 void WndMain::UpdateDebugConsoles()
 {
-    HMENU menu = GetMenu(m_hwnd);
-    HMENU view_menu = GetSubMenu(menu, 2);
-    HMENU view_debg = GetSubMenu(view_menu, 0);
-    HMENU view_krnl = GetSubMenu(view_menu, 1);
-
-    if(m_KrnlDebug == DM_CONSOLE)
-    {
-        CheckMenuItem(view_krnl, ID_VIEW_DEBUGOUTPUTKERNEL_CONSOLE, MF_CHECKED);
-        CheckMenuItem(view_krnl, ID_VIEW_DEBUGOUTPUTKERNEL_FILE, MF_UNCHECKED);
-    }
-    else if(m_KrnlDebug == DM_FILE)
-    {
-        CheckMenuItem(view_krnl, ID_VIEW_DEBUGOUTPUTKERNEL_CONSOLE, MF_UNCHECKED);
-        CheckMenuItem(view_krnl, ID_VIEW_DEBUGOUTPUTKERNEL_FILE, MF_CHECKED);
-    }
-    else
-    {
-        CheckMenuItem(view_krnl, ID_VIEW_DEBUGOUTPUTKERNEL_CONSOLE, MF_UNCHECKED);
-        CheckMenuItem(view_krnl, ID_VIEW_DEBUGOUTPUTKERNEL_FILE, MF_UNCHECKED);
-    }
-
     if(m_CxbxDebug == DM_CONSOLE)
     {
         if(AllocConsole())
@@ -1110,9 +1151,6 @@ void WndMain::UpdateDebugConsoles()
 
             printf("%s", "WndMain: Debug console allocated.\n");
 
-            CheckMenuItem(view_debg, ID_VIEW_DEBUGOUTPUTGUI_CONSOLE, MF_CHECKED);
-            CheckMenuItem(view_debg, ID_VIEW_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
-
             SetForegroundWindow(m_hwnd);
         }
     }
@@ -1123,16 +1161,10 @@ void WndMain::UpdateDebugConsoles()
         freopen(m_CxbxDebugFilename, "wt", stdout);
 
         printf("%s", "WndMain: Debug console allocated.\n");
-
-        CheckMenuItem(view_debg, ID_VIEW_DEBUGOUTPUTGUI_CONSOLE, MF_UNCHECKED);
-        CheckMenuItem(view_debg, ID_VIEW_DEBUGOUTPUTGUI_FILE, MF_CHECKED);
     }
     else
     {
         FreeConsole();
-
-        CheckMenuItem(view_debg, ID_VIEW_DEBUGOUTPUTGUI_CONSOLE, MF_UNCHECKED);
-        CheckMenuItem(view_debg, ID_VIEW_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
     }
 }
 
@@ -1257,70 +1289,7 @@ void WndMain::CloseXbe()
 
     delete m_Xbe; m_Xbe = 0;
 
-    // ******************************************************************
-	// * disable/enable appropriate menus
-	// ******************************************************************
-    {
-        HMENU menu = GetMenu(m_hwnd);
-
-        // ******************************************************************
-	    // * file menu
-	    // ******************************************************************
-        {
-		    HMENU file_menu = GetSubMenu(menu, 0);
-
-            // enable open .xbe file
-            EnableMenuItem(file_menu, ID_FILE_OPEN_XBE, MF_BYCOMMAND | MF_ENABLED);
-
-            // disable close .xbe file
-            EnableMenuItem(file_menu, ID_FILE_CLOSE_XBE, MF_BYCOMMAND | MF_GRAYED);
-
-		    // disable save .xbe file
-		    EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILE, MF_BYCOMMAND | MF_GRAYED);
-
-		    // disable save .xbe file as
-		    EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILEAS, MF_BYCOMMAND | MF_GRAYED);
-
-            // enable import from .exe
-            EnableMenuItem(file_menu, ID_FILE_IMPORTFROMEXE, MF_BYCOMMAND | MF_ENABLED);
-
-            // disable convert to .exe
-            EnableMenuItem(file_menu, ID_FILE_EXPORTTOEXE, MF_BYCOMMAND | MF_GRAYED);
-        }
-
-        // ******************************************************************
-	    // * edit menu
-	    // ******************************************************************
-        {
-            HMENU edit_menu = GetSubMenu(menu, 1);
-
-            // disable export .xbe info
-            EnableMenuItem(edit_menu, ID_EDIT_EXTRACTXBEINFO, MF_BYCOMMAND | MF_GRAYED);
-
-            // disable logo bitmap menu
-            EnableMenuItem(edit_menu, 0, MF_BYPOSITION | MF_GRAYED);
-
-            // disable patch menu
-            EnableMenuItem(edit_menu, 1, MF_BYPOSITION | MF_GRAYED);
-        }
-
-        // ******************************************************************
-	    // * view menu
-	    // ******************************************************************
-        {
-            HMENU view_menu = GetSubMenu(menu, 2);
-        }
-
-        // ******************************************************************
-	    // * emulation menu
-	    // ******************************************************************
-        {
-            HMENU emul_menu = GetSubMenu(menu, 3);
-
-            // disable emulation start
-            EnableMenuItem(emul_menu, ID_EMULATION_START, MF_BYCOMMAND | MF_GRAYED);                            
-        }
-    }
+    RefreshMenus();
 
     // ******************************************************************
 	// * clear logo bitmap

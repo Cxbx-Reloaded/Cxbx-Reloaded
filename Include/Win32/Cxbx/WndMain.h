@@ -86,6 +86,11 @@ class WndMain : public Wnd
         void LoadLogo();
 
         // ******************************************************************
+        // * refresh all menus (checks, enabled, disabled, etc)
+        // ******************************************************************
+        void RefreshMenus();
+
+        // ******************************************************************
         // * allocate / deallocate debug consoles
         // ******************************************************************
         void UpdateDebugConsoles();
@@ -117,6 +122,11 @@ class WndMain : public Wnd
         // ******************************************************************
         char       *m_XbeFilename;
         char       *m_ExeFilename;
+
+        // ******************************************************************
+        // * should emulation always auto-create the .exe?
+        // ******************************************************************
+        BOOL        m_bAutoConvertToExe;
 
         // ******************************************************************
         // * is this window fully initialized?

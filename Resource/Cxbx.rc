@@ -104,26 +104,34 @@ BEGIN
         MENUITEM "Extract &Xbe Info...",        ID_EDIT_EXTRACTXBEINFO
         , GRAYED
     END
-    POPUP "&View"
+    POPUP "&Settings"
     BEGIN
+        MENUITEM "Config &Controller...",       ID_SETTINGS_CONFIGURECONTROLLER
+
+        MENUITEM "Config &Graphics...",         ID_SETTINGS_CONFIGUREGRAPHICS
+
+        MENUITEM "Config &Sound...",            ID_SETTINGS_CONFIGURESOUND
+        MENUITEM "",                            1
+        MENUITEM "&Generate Exe Automatically", ID_SETTINGS_AUTOGEN
+    END
+    POPUP "E&mulation"
+    BEGIN
+        MENUITEM "&Start\tF5",                  ID_EMULATION_START, GRAYED
+        MENUITEM SEPARATOR
         POPUP "&Debug Output (GUI)"
         BEGIN
-            MENUITEM "&Console",                    ID_VIEW_DEBUGOUTPUTGUI_CONSOLE
+            MENUITEM "&Console",                    ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE
 
-            MENUITEM "&File...",                    ID_VIEW_DEBUGOUTPUTGUI_FILE
+            MENUITEM "&File...",                    ID_EMULATION_DEBUGOUTPUTGUI_FILE
 
         END
         POPUP "Debug Output (&Kernel)"
         BEGIN
-            MENUITEM "&Console",                    ID_VIEW_DEBUGOUTPUTKERNEL_CONSOLE
+            MENUITEM "&Console",                    ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE
 
-            MENUITEM "&File...",                    ID_VIEW_DEBUGOUTPUTKERNEL_FILE
+            MENUITEM "&File...",                    ID_EMULATION_DEBUGOUTPUTKERNEL_FILE
 
         END
-    END
-    POPUP "E&mulation"
-    BEGIN
-        MENUITEM "&Start",                      ID_EMULATION_START, GRAYED
     END
     POPUP "&Help"
     BEGIN
