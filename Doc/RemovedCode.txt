@@ -1,3 +1,54 @@
+disassemble
+
+    // ******************************************************************
+    // * disassemble entry point 0x50 bytes
+    // ******************************************************************
+    {
+        const int BUF_SIZE = 0x50;
+
+        disassemble_init(0, INTEL_SYNTAX);
+
+        char buf[BUF_SIZE];      /* buffer of bytes to disassemble */
+        int pos = 0;             /* current position in buffer */
+        int size = 0;            /* size of instruction */
+        struct instr i;          /* representation of the code instruction */
+
+        while(pos > BUF_SIZE)
+        {
+            disassemble_address(buf + pos, &i);
+
+            if(size)
+            {
+                printf("%.08X: %s", pos, i.mnemonic);
+
+                if(i.destType)
+                {
+                    printf("  %s", i.dest);
+                    if(i.srcType)
+                    {
+                        printf(", %s", i.src);
+                        if(i.auxType)
+                        {
+                            printf(", %s", i.aux);
+                        }
+                    }
+                }
+
+                printf("\n");
+
+                pos += size;
+            }
+            else
+            {
+                pos++;
+            }
+
+        }
+
+        disassemble_cleanup();
+    }
+
+
 xboxkrnl::NtOpenFile : 
 
     /*

@@ -64,7 +64,7 @@ extern "C"
 // ******************************************************************
 // * func: EmuXInit
 // ******************************************************************
-CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, uint08 *XBEHeader, uint32 XBEHeaderSize, void (*Entry)());
+CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
 
 // ******************************************************************
 // * func: EmuXDummy

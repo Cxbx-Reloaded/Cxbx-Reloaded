@@ -2,6 +2,9 @@ Cxbx Todo:
 
   Recent files (for .exe and .xbe) in menu. (Use registry)
 
+  Attempt to add compatibility with ME by using LLDT assembly. This
+  may not even work, but might as well try it.
+
   Xbe files should associate with Cxbx (by user configuration). There
   should be configuration allowing the Xbe to execute automatically
   without a GUI at all, or for the Xbe to open in the Cxbx GUI. This

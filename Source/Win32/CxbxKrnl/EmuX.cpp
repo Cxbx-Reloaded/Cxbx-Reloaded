@@ -51,12 +51,12 @@ namespace xntdll
 // ******************************************************************
 // * static functions
 // ******************************************************************
-static void EmuXInstallWrappers(void (*Entry)());
+static void EmuXInstallWrappers(void (*Entry)(), Xbe::Header *XbeHeader);
 
 // ******************************************************************
 // * func: EmuXInit
 // ******************************************************************
-CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, uint08 *XBEHeader, uint32 XBEHeaderSize, void (*Entry)())
+CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)())
 {
     // ******************************************************************
     // * debug console allocation (if configured)
@@ -95,38 +95,35 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, ui
                "   XBEHeaderSize       : 0x%.08X\n"
                "   Entry               : 0x%.08X\n"
                ");\n",
-               DebugConsole, DebugFilename, XBEHeader, XBEHeaderSize, Entry);
+               DebugConsole, DebugFilename, XbeHeader, XbeHeaderSize, Entry);
     }
 
     // ******************************************************************
     // * Locate functions and install wrapper vectors
     // ******************************************************************
     {
-        EmuXInstallWrappers(Entry);
+        EmuXInstallWrappers(Entry, XbeHeader);
     }
 
     // ******************************************************************
     // * Load the necessary pieces of XBEHeader
     // ******************************************************************
     {
+        Xbe::Header *MemXbeHeader = (Xbe::Header*)0x00010000;
+
         uint32 old_protection = 0;
 
-        VirtualProtect((void*)0x00010000, 0x1000, PAGE_READWRITE, &old_protection);
+        VirtualProtect(MemXbeHeader, 0x1000, PAGE_READWRITE, &old_protection);
 
         // we sure hope we aren't corrupting anything necessary for an .exe to survive :]
-        uint32 dwSizeofHeaders   = *(uint32*)&XBEHeader[0x0108];
-        uint32 dwCertificateAddr = *(uint32*)&XBEHeader[0x0118];
-        uint32 dwInitFlags       = *(uint32*)&XBEHeader[0x0124];
-        uint32 dwPeHeapReserve   = *(uint32*)&XBEHeader[0x0134];
-        uint32 dwPeHeapCommit    = *(uint32*)&XBEHeader[0x0138];
+        MemXbeHeader->dwSizeofHeaders        = XbeHeader->dwSizeofHeaders;
+        MemXbeHeader->dwCertificateAddr      = XbeHeader->dwCertificateAddr;
+        MemXbeHeader->dwPeHeapReserve        = XbeHeader->dwPeHeapReserve;
+        MemXbeHeader->dwPeHeapCommit         = XbeHeader->dwPeHeapCommit;
 
-        *(uint32 *)0x00010108 = dwSizeofHeaders;
-        *(uint32 *)0x00010118 = dwCertificateAddr;
-        *(uint32 *)0x00010124 = dwInitFlags;
-        *(uint32 *)0x00010134 = dwPeHeapReserve;
-        *(uint32 *)0x00010138 = dwPeHeapCommit;
+        memcpy(&MemXbeHeader->dwInitFlags, &XbeHeader->dwInitFlags, sizeof(XbeHeader->dwInitFlags));
 
-        memcpy((void*)dwCertificateAddr, &XBEHeader[dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
+        memcpy((void*)XbeHeader->dwCertificateAddr, &((uint08*)XbeHeader)[XbeHeader->dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
     }
 
     // ******************************************************************
@@ -229,7 +226,7 @@ inline void EmuXInstallWrapper(void *FunctionAddr, void *WrapperAddr)
 // ******************************************************************
 // * func: EmuXInstallWrappers
 // ******************************************************************
-void EmuXInstallWrappers(void (*Entry)())
+void EmuXInstallWrappers(void (*Entry)(), Xbe::Header *XbeHeader)
 {
     // ******************************************************************
     // * debug trace
@@ -249,6 +246,8 @@ void EmuXInstallWrappers(void (*Entry)())
         void *RealmainXapiStartup = EmuXFindFuncByPush32(Entry, 0x4B);
 
         printf("EmuXInstallWrappers: mainXapiStartup -> 0x%.08X\n", RealmainXapiStartup);
+
+        // Known to work on : XAPILIB Version 1.0.4627
 
         // ******************************************************************
         // * install CreateThread vector
