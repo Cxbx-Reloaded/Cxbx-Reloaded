@@ -36,6 +36,7 @@
 
 #include <d3d8.h>
 #include <d3dx8tex.h>
+#include <windows.h>
 
 #include "Emu.h"
 

@@ -142,7 +142,9 @@ VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         if(g_pD3D8 == NULL)
             EmuCleanup("Could not initialize Direct3D!");
 
-        g_pD3D8->GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), D3DDEVTYPE_HAL, &g_D3DCaps);
+        D3DDEVTYPE DevType = (g_XBVideo.GetDirect3DDevice() == 0) ? D3DDEVTYPE_HAL : D3DDEVTYPE_REF;
+
+        g_pD3D8->GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), DevType, &g_D3DCaps);
     }
 }
 
@@ -258,13 +260,8 @@ DWORD WINAPI EmuRenderWindow(LPVOID)
         }
     }
 
-    // ******************************************************************
-    // * display the window
-    // ******************************************************************
-    {
-        ShowWindow(g_hEmuWindow, SW_SHOWDEFAULT);
-        UpdateWindow(g_hEmuWindow);
-    }
+    ShowWindow(g_hEmuWindow, SW_SHOWDEFAULT);
+    UpdateWindow(g_hEmuWindow);
 
     // ******************************************************************
     // * initialize direct input

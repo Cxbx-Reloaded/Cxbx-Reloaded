@@ -518,6 +518,47 @@ XBSYSAPI EXPORTNUM(156) xboxkrnl::DWORD xboxkrnl::KeTickCount = 0;
 XBSYSAPI EXPORTNUM(164) xboxkrnl::DWORD xboxkrnl::LaunchDataPage = 0;
 
 // ******************************************************************
+// * 0x00A6 - MmAllocateContiguousMemoryEx
+// ******************************************************************
+XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemoryEx
+(
+	IN ULONG			NumberOfBytes,
+	IN PHYSICAL_ADDRESS LowestAcceptableAddress,
+	IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+	IN ULONG			Alignment OPTIONAL,
+	IN ULONG			ProtectionType
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): MmAllocateContiguousMemoryEx\n"
+               "(\n"
+               "   NumberOfBytes            : 0x%.08X\n"
+               "   LowestAcceptableAddress  : 0x%.08X\n"
+               "   HighestAcceptableAddress : 0x%.08X\n"
+               "   Alignment                : 0x%.08X\n"
+               "   ProtectionType           : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress,
+               Alignment, ProtectionType);
+    }
+    #endif
+
+    // TODO: Make this much more efficient and correct if necessary!
+    // HACK: Should be aligned!!
+    PVOID pRet = (PVOID)new unsigned char[NumberOfBytes];
+
+    EmuSwapFS();   // Xbox FS
+
+    return pRet;
+}
+
+// ******************************************************************
 // * 0x00B8 - NtAllocateVirtualMemory
 // ******************************************************************
 XBSYSAPI EXPORTNUM(184) NTSTATUS xboxkrnl::NtAllocateVirtualMemory
