@@ -2455,6 +2455,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetPixelShader
     // Fake Programmable Pipeline
     if(Handle == X_PIXELSHADER_FAKE_HANDLE)
     {
+        // programmable pipeline
+        //*
         static DWORD dwHandle = 0;
 
         if(dwHandle == 0)
@@ -2487,6 +2489,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetPixelShader
 
         if(FAILED(hRet))
             EmuWarning("Could not set pixel shader!");
+        //*/
 
         g_bFakePixelShaderLoaded = TRUE;
     }

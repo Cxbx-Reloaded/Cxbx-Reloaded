@@ -299,12 +299,33 @@ void XTL::EmuUpdateDeferredStates()
 
     if(g_bFakePixelShaderLoaded)
     {
+        g_pD3DDevice8->SetRenderState(D3DRS_FOGENABLE, FALSE);
+
+        // programmable pipeline
+        //*
         for(int v=0;v<4;v++)
         {
             g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_DISABLE);
             g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
         }
+        //*/
 
-        g_pD3DDevice8->SetRenderState(D3DRS_FOGENABLE, FALSE);
+        // fixed pipeline
+        /*
+        for(int v=0;v<4;v++)
+        {
+            g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP,   D3DTOP_MODULATE);
+            g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+            g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLORARG2, D3DTA_CURRENT);
+
+            g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ALPHAOP,   D3DTOP_MODULATE);
+            g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+            g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
+        }
+
+        g_pD3DDevice8->SetRenderState(D3DRS_NORMALIZENORMALS, TRUE);
+        g_pD3DDevice8->SetRenderState(D3DRS_LIGHTING,TRUE);
+        g_pD3DDevice8->SetRenderState(D3DRS_AMBIENT, 0xFFFFFFFF);
+        //*/
     }
 }
