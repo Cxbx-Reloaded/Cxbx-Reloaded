@@ -21,7 +21,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="Include,Include/Core/,Include/Win32/,Include/Win32/Cxbxkrnl,Include/Win32/Cxbx"
+				AdditionalIncludeDirectories="Include,Include/Core/,Include/Win32/,Include/Win32/Cxbxkrnl,Include/Win32/Cxbx,Include/Win32/Cxbx/jpegdec"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -39,10 +39,12 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3d8.lib dinput8.lib dxguid.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="libjpeg.lib d3d8.lib dinput8.lib dxguid.lib odbc32.lib odbccp32.lib"
 				OutputFile=".\Bin\Debug/Cxbx.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="Lib"
+				IgnoreDefaultLibraryNames="libc"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Bin\Debug/Cxbx.pdb"
 				GenerateMapFile="TRUE"
@@ -91,7 +93,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="Include,Include/Core/,Include/Win32/,Include/Win32/Cxbxkrnl,Include/Win32/Cxbx"
+				AdditionalIncludeDirectories="Include,Include/Core/,Include/Win32/,Include/Win32/Cxbxkrnl,Include/Win32/Cxbx,Include/Win32/Cxbx/jpegdec"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
@@ -110,10 +112,12 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3d8.lib dinput8.lib dxguid.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="libjpeg.lib d3d8.lib dinput8.lib dxguid.lib odbc32.lib odbccp32.lib"
 				OutputFile=".\Bin/Cxbx.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="lib"
+				IgnoreDefaultLibraryNames="libc"
 				GenerateMapFile="TRUE"
 				MapFileName=".\Bin/Cxbx.map"
 				SubSystem="2"
@@ -263,12 +267,28 @@ upxCxbx.bat
 			<File
 				RelativePath="Include\Win32\XBVideo.h">
 			</File>
+			<Filter
+				Name="jpegdec (h)"
+				Filter="">
+				<File
+					RelativePath="Include\Win32\Cxbx\jpegdec\jconfig.h">
+				</File>
+				<File
+					RelativePath="Include\Win32\Cxbx\jpegdec\jmorecfg.h">
+				</File>
+				<File
+					RelativePath="Include\Win32\Cxbx\jpegdec\jpegdec.h">
+				</File>
+				<File
+					RelativePath="Include\Win32\Cxbx\jpegdec\jpeglib.h">
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource"
 			Filter="">
 			<File
-				RelativePath="Resource\About.bmp">
+				RelativePath="Resource\About.jpg">
 			</File>
 			<File
 				RelativePath="Resource\Cxbx.ico">
@@ -291,10 +311,7 @@ upxCxbx.bat
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="Resource\Logo.bmp">
-			</File>
-			<File
-				RelativePath="Resource\Splash.bmp">
+				RelativePath="Resource\Splash.jpg">
 			</File>
 		</Filter>
 		<Filter
@@ -630,6 +647,32 @@ upxCxbx.bat
 						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
+			<Filter
+				Name="jpegdec (cpp)"
+				Filter="">
+				<File
+					RelativePath="Source\Win32\Cxbx\jpegdec\jpegdec.cpp">
+					<FileConfiguration
+						Name="Debug|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="0"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+							BasicRuntimeChecks="3"
+							BrowseInformation="1"/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32">
+						<Tool
+							Name="VCCLCompilerTool"
+							Optimization="2"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+							BrowseInformation="1"/>
+					</FileConfiguration>
+				</File>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>
