@@ -455,10 +455,26 @@ void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*En
 // ******************************************************************
 int EmuException(LPEXCEPTION_POINTERS e)
 {
-    int ret = MessageBox(NULL, "ERROR: Recieved Exception.\n\nPress 'OK' to terminate emulation.\nPress 'Cancel' to debug.", "Cxbx", MB_ICONSTOP | MB_OKCANCEL);
+	// ******************************************************************
+	// * Debugging Information
+	// ******************************************************************
+	{
+		printf("\n");
+		printf("Recieved Exception : 0x%.08X\n", e->ExceptionRecord->ExceptionCode);
+		printf("\n");
+	}
 
-    if(ret == IDOK)
-        ExitProcess(1);
+	// ******************************************************************
+	// * Notify User
+	// ******************************************************************
+	{
+		char buffer[256];
+
+		sprintf(buffer, "Recieved Exception [0x%.08X]\n\nPress 'OK' to terminate emulation.\nPress 'Cancel' to debug.", e->ExceptionRecord->ExceptionCode);
+
+		if(MessageBox(NULL, buffer, "Cxbx", MB_ICONSTOP | MB_OKCANCEL) == IDOK)
+			ExitProcess(1);
+	}
 
     return EXCEPTION_CONTINUE_SEARCH;
 }

@@ -48,9 +48,6 @@ namespace xboxkrnl
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
-static uint16 g_NewFS = -1;
-static uint16 g_OrgFS = -1;
-
 // ******************************************************************
 // * func: EmuInitFS
 // ******************************************************************
@@ -67,6 +64,8 @@ void EmuGenerateFS(int TlsAdjust)
     NT_TIB         *OrgNtTib;
     xboxkrnl::KPCR *NewPcr;
 
+	uint16 NewFS = -1, OrgFS = -1;
+
     void *TLSPtr = 0;
 
     // ******************************************************************
@@ -79,7 +78,7 @@ void EmuGenerateFS(int TlsAdjust)
 
         memset(NewPcr, 0, sizeof(*NewPcr));
 
-        g_NewFS = EmuAllocateLDT((uint32)NewPcr, (uint32)NewPcr + dwSize);
+        NewFS = EmuAllocateLDT((uint32)NewPcr, (uint32)NewPcr + dwSize);
     }
 
     // ******************************************************************
@@ -89,15 +88,19 @@ void EmuGenerateFS(int TlsAdjust)
     {
         // Obtain "OrgFS"
         mov ax, fs
-        mov g_OrgFS, ax
+        mov OrgFS, ax
 
         // Obtain "OrgNtTib"
         mov eax, fs:[0x18]
         mov OrgNtTib, eax
 
-        // Save "NewFS" inside OrgFS.ArbitraryUserPointer
-        mov ax, g_NewFS
+        // Save "NewFS" inside OrgFS.ArbitraryUserPointer.SwapFS
+        mov ax, NewFS
         mov fs:[0x14], ax
+
+		// Save "True" inside OrgFS.ArbitraryUserPointer.isOrgFS
+		mov ah, 1
+		mov fs:[0x16], ah
     }
 
     // ******************************************************************
@@ -144,8 +147,11 @@ void EmuGenerateFS(int TlsAdjust)
     // ******************************************************************
     __asm
     {
-        mov ax, g_OrgFS
+        mov ax, OrgFS
         mov fs:[0x14], ax   // NewFS.ArbitraryUserPointer
+
+		mov ah, 0
+		mov fs:[0x16], ah	// NewFS.ArbitraryUserPointer.isOrgFS
     }
 
     // ******************************************************************
@@ -168,13 +174,13 @@ void EmuGenerateFS(int TlsAdjust)
 // ******************************************************************
 bool EmuIsXboxFS()
 {
-    uint16 chk = 0;
+    bool chk = 0;
 
     __asm
     {
-        mov ax, fs:[0x04]
-        mov chk, ax
+        mov ah, fs:[0x16]
+        mov chk, ah
     }
 
-    return (g_NewFS == chk);
+    return chk;
 }

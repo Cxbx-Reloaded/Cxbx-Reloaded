@@ -779,7 +779,7 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
         iPCSTProxyParam->StartContext2 = StartContext2;
         iPCSTProxyParam->StartRoutine  = StartRoutine;
 
-        *ThreadHandle = CreateThread(NULL, NULL, &PCSTProxy, iPCSTProxyParam, NULL, &dwThreadId);
+        *ThreadHandle = CreateThread(NULL, NULL, &PCSTProxy, iPCSTProxyParam, CreateSuspended ? CREATE_SUSPENDED : NULL, &dwThreadId);
 
         if(ThreadId != NULL)
             *ThreadId = dwThreadId;
