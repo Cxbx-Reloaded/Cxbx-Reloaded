@@ -47,7 +47,7 @@
 WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_xbe(0), m_exe(0), m_exe_changed(false), m_xbe_changed(false), m_KrnlDebug(DM_NONE), m_CxbxDebug(DM_NONE)
 {
     m_classname = "WndMain";
-    m_wndname   = "Cxbx: Version " CXBX_VERSION;
+    m_wndname   = "Cxbx : Xbox Emulator";
 
     m_w         = 327;
     m_h         = 253;
@@ -209,8 +209,20 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
             HDC hDC = GetDC(hwnd);
 
-            BitBlt(hDC, 0, 0, 320, 160, m_back_dc, 0, 0, SRCCOPY);
-            BitBlt(hDC, 220, 168, 100, 17, m_logo_dc, 0, 0, SRCCOPY);
+            // draw xbox image
+            {
+                uint32 offy = 0;
+
+                if(m_xbe == 0)
+                    offy = 10;
+
+                BitBlt(hDC, 0, offy, 320, 160, m_back_dc, 0, 0, SRCCOPY);
+            }
+
+            // draw logo bitmap
+            {
+                BitBlt(hDC, 220, 168, 100, 17, m_logo_dc, 0, 0, SRCCOPY);
+            }
 
             // draw status bar
             {
@@ -1055,6 +1067,8 @@ void WndMain::XbeLoaded()
         }
     }
 
+    InvalidateRgn(m_hwnd, NULL, TRUE);
+
     printf("WndMain: %s loaded.\n", m_xbe->m_szAsciiTitle);    
 }
 
@@ -1122,7 +1136,7 @@ void WndMain::UpdateDebugConsoles()
         {
             freopen("CONOUT$", "wt", stdout);
 
-            SetConsoleTitle("Cxbx " CXBX_VERSION " Debug Console");
+            SetConsoleTitle("Cxbx : Debug Console");
 
             SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
 
