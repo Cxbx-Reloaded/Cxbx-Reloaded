@@ -50,10 +50,10 @@
 #include "Emu.h"
 
 // initialize direct3d
-extern void EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
+extern VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
 
 // cleanup direct3d
-extern void EmuD3DCleanup();
+extern VOID EmuD3DCleanup();
 
 // fixup xbox extensions to be compatible with PC direct3d
 extern UINT EmuFixupVerticesA
@@ -76,108 +76,18 @@ extern VOID EmuFixupVerticesB
     XTL::IDirect3DVertexBuffer8   *&pHackVertexBuffer8
 );
 
-// special resource data flags
-#define X_D3DRESOURCE_DATA_FLAG_BASE    (0xEFFFFFFE)
-#define X_D3DRESOURCE_DATA_FLAG_SURFACE (X_D3DRESOURCE_DATA_FLAG_BASE - 1)
-
-// Todo: Fill out this enumeration table for convienance
+// TODO: Fill out these enumeration tables for convienance
 typedef DWORD X_D3DFORMAT;
-
-/**
-// Oops: Well, heres PC->Xbox if you ever need it... :]
-// ******************************************************************
-// * Convert from PC D3D to Xbox D3D enumeration
-// ******************************************************************
-// TODO: XDK-Specific Tables? So far they are the same
-if((uint32)State < 4)
-    State = (D3DTRANSFORMSTATETYPE)(State - 2);
-else if((uint32)State < 20)
-    State = (D3DTRANSFORMSTATETYPE)(State - 14);
-else if((uint32)State > 255)
-    State = (D3DTRANSFORMSTATETYPE)(State - 250);
-else
-    EmuCleanup("Unknown Transform State Type (%d)", State);
-*/
-
-// ******************************************************************
-// * func: EmuXB2PC_D3DTS
-// ******************************************************************
-inline D3DTRANSFORMSTATETYPE EmuXB2PC_D3DTS(D3DTRANSFORMSTATETYPE State)
-{
-    if((uint32)State < 2)
-        return (D3DTRANSFORMSTATETYPE)(State + 2);
-    else if((uint32)State < 6)
-        return (D3DTRANSFORMSTATETYPE)(State + 14);
-    else if((uint32)State < 10)
-        return D3DTS_WORLDMATRIX(State-6);
-
-    EmuCleanup("Unknown Transform State Type (%d)", State);
-
-    return State;
-}
-
-// Todo: Fill out this enumeration tabel for convienance
 typedef DWORD X_D3DBLENDOP;
-
-// ******************************************************************
-// * func: EmuXB2PC_D3DBLENDOP
-// ******************************************************************
-inline D3DBLENDOP EmuXB2PC_D3DBLENDOP(X_D3DBLENDOP Value)
-{
-    switch(Value)
-    {
-        case 0x8006:
-            return D3DBLENDOP_ADD;
-    }
-
-    EmuCleanup("Unknown D3DBLENDOP (0x%.08X)", Value);
-
-    return (D3DBLENDOP)Value;
-}
-
-// Todo: Fill out this enumeration table for convienance
 typedef DWORD X_D3DBLEND;
-
-// ******************************************************************
-// * func: EmuXB2PC_D3DBLEND
-// ******************************************************************
-inline D3DBLEND EmuXB2PC_D3DBLEND(X_D3DBLEND Value)
-{
-    if(Value < 2)
-        return (D3DBLEND)(Value + 1);
-    else if(Value < 0x309)
-        return (D3DBLEND)((Value & 0xF) + 3);
-
-    EmuCleanup("Unknown Xbox D3DBLEND Extension (0x%.08X)", Value);
-
-    return (D3DBLEND)Value;
-}
-
-// Todo: Fill out this enumeration table for convienance
 typedef DWORD X_D3DCMPFUNC;
-
-// ******************************************************************
-// * func: EmuXB2PC_D3DCMPFUNC
-// ******************************************************************
-inline D3DCMPFUNC EmuXB2PC_D3DCMPFUNC(X_D3DCMPFUNC Value)
-{
-    return (D3DCMPFUNC)((Value & 0xF) + 1);
-}
-
-// Todo: Fill out this enumeration table for convienance
 typedef DWORD X_D3DFILLMODE;
+typedef DWORD X_D3DPRIMITIVETYPE;
 
-// ******************************************************************
-// * func: EmuXB2PC_D3DFILLMODE
-// ******************************************************************
-inline D3DFILLMODE EmuXB2PC_D3DFILLMODE(X_D3DFILLMODE Value)
-{
-    return (D3DFILLMODE)((Value & 0xF) + 1);
-}
+// NOTE: HACK: These enumerations are not equivalent when > 7!
+typedef D3DRESOURCETYPE X_D3DRESOURCETYPE;
 
-// ******************************************************************
-// * func: EmuXB2PC_D3DFormat
-// ******************************************************************
+// convert from xbox to pc color formats
 inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 {
     switch(Format)
@@ -197,7 +107,7 @@ inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
             return D3DFMT_A8R8G8B8;
 
         case 0x3F: // Linear     (X_D3DFMT_LIN_A8B8G8R8)
-            return D3DFMT_A8R8G8B8; // Note: Warning: R<->B Swapped!
+            return D3DFMT_A8R8G8B8; // NOTE: HACK: R<->B Swapped!
 
         case 0x1E: // Linear     (X_D3DFMT_LIN_X8R8G8B8)
         case 0x07: // Swizzled   (X_D3DFMT_X8R8G8B8)
@@ -232,9 +142,7 @@ inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
     return (D3DFORMAT)Format;
 }
 
-// ******************************************************************
-// * func: EmuPC2XB_D3DFormat
-// ******************************************************************
+// convert from pc to xbox color formats
 inline X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format)
 {
     switch(Format)
@@ -258,11 +166,75 @@ inline X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format)
     return Format;
 }
 
+/**
+// Oops: Well, heres PC->Xbox if you ever need it... :]
 // ******************************************************************
-// * X_D3DRESOURCETYPE
+// * Convert from PC D3D to Xbox D3D enumeration
 // ******************************************************************
-// NOTE: HACK: These enumerations are not equivalent when > 7!
-typedef D3DRESOURCETYPE X_D3DRESOURCETYPE;
+// TODO: XDK-Specific Tables? So far they are the same
+if((uint32)State < 4)
+    State = (D3DTRANSFORMSTATETYPE)(State - 2);
+else if((uint32)State < 20)
+    State = (D3DTRANSFORMSTATETYPE)(State - 14);
+else if((uint32)State > 255)
+    State = (D3DTRANSFORMSTATETYPE)(State - 250);
+else
+    EmuCleanup("Unknown Transform State Type (%d)", State);
+//*/
+
+// convert from xbox to pc texture transform state types
+inline D3DTRANSFORMSTATETYPE EmuXB2PC_D3DTS(D3DTRANSFORMSTATETYPE State)
+{
+    if((uint32)State < 2)
+        return (D3DTRANSFORMSTATETYPE)(State + 2);
+    else if((uint32)State < 6)
+        return (D3DTRANSFORMSTATETYPE)(State + 14);
+    else if((uint32)State < 10)
+        return D3DTS_WORLDMATRIX(State-6);
+
+    EmuCleanup("Unknown Transform State Type (%d)", State);
+
+    return State;
+}
+
+// convert from xbox to pc blend ops
+inline D3DBLENDOP EmuXB2PC_D3DBLENDOP(X_D3DBLENDOP Value)
+{
+    switch(Value)
+    {
+        case 0x8006:
+            return D3DBLENDOP_ADD;
+    }
+
+    EmuCleanup("Unknown D3DBLENDOP (0x%.08X)", Value);
+
+    return (D3DBLENDOP)Value;
+}
+
+// convert from xbox to pc blend types
+inline D3DBLEND EmuXB2PC_D3DBLEND(X_D3DBLEND Value)
+{
+    if(Value < 2)
+        return (D3DBLEND)(Value + 1);
+    else if(Value < 0x309)
+        return (D3DBLEND)((Value & 0xF) + 3);
+
+    EmuCleanup("Unknown Xbox D3DBLEND Extension (0x%.08X)", Value);
+
+    return (D3DBLEND)Value;
+}
+
+// convert from xbox to pc comparison functions
+inline D3DCMPFUNC EmuXB2PC_D3DCMPFUNC(X_D3DCMPFUNC Value)
+{
+    return (D3DCMPFUNC)((Value & 0xF) + 1);
+}
+
+// convert from xbox to pc fill modes
+inline D3DFILLMODE EmuXB2PC_D3DFILLMODE(X_D3DFILLMODE Value)
+{
+    return (D3DFILLMODE)((Value & 0xF) + 1);
+}
 
 // ******************************************************************
 // * X_D3DDISPLAYMODE
@@ -332,38 +304,6 @@ struct X_D3DVertexShader
 };
 
 // ******************************************************************
-// * D3DResource "Common" Masks
-// ******************************************************************
-#define X_D3DCOMMON_REFCOUNT_MASK      0x0000FFFF
-
-#define X_D3DCOMMON_TYPE_MASK          0x00070000
-#define X_D3DCOMMON_TYPE_SHIFT         16
-#define X_D3DCOMMON_TYPE_VERTEXBUFFER  0x00000000
-#define X_D3DCOMMON_TYPE_INDEXBUFFER   0x00010000
-#define X_D3DCOMMON_TYPE_PUSHBUFFER    0x00020000
-#define X_D3DCOMMON_TYPE_PALETTE       0x00030000
-#define X_D3DCOMMON_TYPE_TEXTURE       0x00040000
-#define X_D3DCOMMON_TYPE_SURFACE       0x00050000
-#define X_D3DCOMMON_TYPE_FIXUP         0x00060000
-
-#define X_D3DCOMMON_INTREFCOUNT_MASK   0x00780000
-#define X_D3DCOMMON_INTREFCOUNT_SHIFT  19
-
-#define X_D3DCOMMON_D3DCREATED         0x01000000
-
-#define X_D3DCOMMON_UNUSED_MASK        0xFE000000
-#define X_D3DCOMMON_UNUSED_SHIFT       25
-
-// ******************************************************************
-// * D3DTexture "Size" Masks
-// ******************************************************************
-#define X_D3DSIZE_WIDTH_MASK              0x00000FFF   // Width  (Texels - 1)
-#define X_D3DSIZE_HEIGHT_MASK             0x00FFF000   // Height (Texels - 1)
-#define X_D3DSIZE_HEIGHT_SHIFT            12
-#define X_D3DSIZE_PITCH_MASK              0xFF000000   // Pitch / 64 - 1
-#define X_D3DSIZE_PITCH_SHIFT             24
-
-// ******************************************************************
 // * X_D3DResource
 // ******************************************************************
 struct X_D3DResource
@@ -384,6 +324,26 @@ struct X_D3DResource
         IDirect3DIndexBuffer8   *EmuIndexBuffer8;
     };
 };
+
+// d3d resource "common" masks
+#define X_D3DCOMMON_REFCOUNT_MASK      0x0000FFFF
+#define X_D3DCOMMON_TYPE_MASK          0x00070000
+#define X_D3DCOMMON_TYPE_SHIFT         16
+#define X_D3DCOMMON_TYPE_VERTEXBUFFER  0x00000000
+#define X_D3DCOMMON_TYPE_INDEXBUFFER   0x00010000
+#define X_D3DCOMMON_TYPE_PUSHBUFFER    0x00020000
+#define X_D3DCOMMON_TYPE_PALETTE       0x00030000
+#define X_D3DCOMMON_TYPE_TEXTURE       0x00040000
+#define X_D3DCOMMON_TYPE_SURFACE       0x00050000
+#define X_D3DCOMMON_TYPE_FIXUP         0x00060000
+#define X_D3DCOMMON_INTREFCOUNT_MASK   0x00780000
+#define X_D3DCOMMON_INTREFCOUNT_SHIFT  19
+#define X_D3DCOMMON_D3DCREATED         0x01000000
+#define X_D3DCOMMON_UNUSED_MASK        0xFE000000
+#define X_D3DCOMMON_UNUSED_SHIFT       25
+
+// special resource data flags
+#define X_D3DRESOURCE_DATA_FLAG_SURFACE 0xEFFFFFFF
 
 // ******************************************************************
 // * X_D3DVertexBuffer
@@ -431,10 +391,16 @@ typedef enum _X_D3DPALETTESIZE
 X_D3DPALETTESIZE;
 
 // ******************************************************************
-// * X_D3DPixelContainer "Format" Masks
+// * X_D3DPixelContainer
 // ******************************************************************
+struct X_D3DPixelContainer : public X_D3DResource
+{
+    X_D3DFORMAT Format;
+    DWORD       Size;
+};
+
+// pixel container "format" masks
 #define X_D3DFORMAT_RESERVED1_MASK        0x00000003      // Must be zero
-                                        
 #define X_D3DFORMAT_DMACHANNEL_MASK       0x00000003
 #define X_D3DFORMAT_DMACHANNEL_A          0x00000001      // DMA channel A - the default for all system memory
 #define X_D3DFORMAT_DMACHANNEL_B          0x00000002      // DMA channel B - unused
@@ -453,14 +419,12 @@ X_D3DPALETTESIZE;
 #define X_D3DFORMAT_PSIZE_MASK            0xF0000000      // Log 2 of the P size of the base texture
 #define X_D3DFORMAT_PSIZE_SHIFT           28
 
-// ******************************************************************
-// * X_D3DPixelContainer
-// ******************************************************************
-struct X_D3DPixelContainer : public X_D3DResource
-{
-    X_D3DFORMAT Format;
-    DWORD       Size;
-};
+// pixel container "size" masks
+#define X_D3DSIZE_WIDTH_MASK              0x00000FFF   // Width  (Texels - 1)
+#define X_D3DSIZE_HEIGHT_MASK             0x00FFF000   // Height (Texels - 1)
+#define X_D3DSIZE_HEIGHT_SHIFT            12
+#define X_D3DSIZE_PITCH_MASK              0xFF000000   // Pitch / 64 - 1
+#define X_D3DSIZE_PITCH_SHIFT             24
 
 // ******************************************************************
 // * X_D3DBaseTexture
@@ -514,9 +478,6 @@ struct X_D3DTILE
     DWORD   ZStartTag;
     DWORD   ZOffset;
 };
-
-// Todo: Fill out this enumeration table for convienance
-typedef DWORD X_D3DPRIMITIVETYPE;
 
 // ******************************************************************
 // * EmuD3DVertexToPrimitive

@@ -1,9 +1,5 @@
 Cxbx Todo (* denotes high priority, + denotes medium priority)
 
-  * For Vertex buffer locks, if tesselation has occurred, the original
-    pointer should be returned, and a flag set to know that the next time
-	the vertex buffer is used it should be re-registered (retesselated)
-
   * Stella has a memory leak in the game's list screen..
 
   * SetPushBufferSize -> 0x184CC0 (Halo)..too small to detect?
