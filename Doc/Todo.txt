@@ -2,6 +2,12 @@ Cxbx Todo:
 
   General Code Cleanup [caustik]
 
+  High Level Emulation. Detect entry points to routines such as 
+  XapiVerifyMediaInDrive, and install a vector to an emulation
+  routine.
+
+  Recent files (for .exe and .xbe) in menu. (Use registry)
+
   Add support for .XBE file handling capabilities through shell.
   When opening an .XBE with Cxbx, there should be an optional flag
   which will cause it to automagically generate the .Exe and start
