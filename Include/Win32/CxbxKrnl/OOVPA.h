@@ -98,5 +98,6 @@ struct OOVPATable
 #pragma pack()
 
 extern OOVPATable XAPI_1_0_4361[];
+extern uint32     XAPI_1_0_4361_SIZE;
 
 #endif

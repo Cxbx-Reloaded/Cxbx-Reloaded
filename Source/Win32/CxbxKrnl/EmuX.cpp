@@ -250,111 +250,51 @@ void EmuXInstallWrappers(void (*Entry)(), Xbe::Header *XbeHeader)
 
         // Known to work on : XAPILIB Version 1.0.4361
 
-        // ******************************************************************
-        // * install CreateThread vector
-        // ******************************************************************
+        for(uint32 a=0;a<XAPI_1_0_4361_SIZE/sizeof(OOVPATable);a++)
         {
-            for(uint32 a=0;a<sizeof(*XAPI_1_0_4361)/sizeof(OOVPATable);a++)
+            OOVPA *Oovpa = XAPI_1_0_4361[a].Oovpa;
+
+            uint32 count = Oovpa->Count;
+            uint32 lower = XbeHeader->dwBaseAddr;
+            uint32 upper = XbeHeader->dwBaseAddr + XbeHeader->dwSizeofImage;
+
+            if(Oovpa->Large == 1)
             {
-                OOVPA *Oovpa = XAPI_1_0_4361[a].Oovpa;
+                LOOVPA<1> *Loovpa = (LOOVPA<1>*)Oovpa;
+            }
+            else
+            {
+                SOOVPA<1> *Soovpa = (SOOVPA<1>*)Oovpa;
 
-                uint32 count = Oovpa->Count;
-                uint32 lower = XbeHeader->dwBaseAddr;
-                uint32 upper = XbeHeader->dwBaseAddr + XbeHeader->dwSizeofImage;
+                upper -= Soovpa->Sovp[count-1].Offset;
 
-                if(Oovpa->Large == 1)
+                for(uint32 cur=lower;cur<upper;cur++)
                 {
-                    LOOVPA<1> *Loovpa = (LOOVPA<1>*)Oovpa;
-                }
-                else
-                {
-                    SOOVPA<1> *Soovpa = (SOOVPA<1>*)Oovpa;
+                    uint32  v=0;
 
-                    upper -= Soovpa->Sovp[count-1].Offset;
-
-                    for(uint32 cur=lower;cur<upper;cur++)
+                    for(v=0;v<count;v++)
                     {
-                        uint32  v=0;
+                        uint32 Offset = Soovpa->Sovp[v].Offset;
+                        uint32 Value  = Soovpa->Sovp[v].Value;
 
-                        for(v=0;v<count;v++)
-                        {
-                            uint32 Offset = Soovpa->Sovp[v].Offset;
-                            uint32 Value  = Soovpa->Sovp[v].Value;
+                        uint08 RealValue = *(uint08*)(cur + Offset);
 
-                            uint08 RealValue = *(uint08*)(cur + Offset);
-
-                            if(RealValue != Value)
-                                break;
-                        }
-
-                        if(v == count)
-                        {
-                            #ifdef _DEBUG_TRACE
-                            printf("EmuXInstallWrappers: 0x%.08X -> %s\n", cur, XAPI_1_0_4361[a].szFuncName);
-                            #endif
-
-                            EmuXInstallWrapper((void*)cur, XAPI_1_0_4361[a].lpRedirect);
-
+                        if(RealValue != Value)
                             break;
-                        }
+                    }
+
+                    if(v == count)
+                    {
+                        #ifdef _DEBUG_TRACE
+                        printf("EmuXInstallWrappers: 0x%.08X -> %s\n", cur, XAPI_1_0_4361[a].szFuncName);
+                        #endif
+
+                        EmuXInstallWrapper((void*)cur, XAPI_1_0_4361[a].lpRedirect);
+
+                        break;
                     }
                 }
             }
-        }
-
-        // ******************************************************************
-        // * install CloseHandle vector
-        // ******************************************************************
-        {
-            void *RealCloseHandle = EmuXFindFuncByIndirectCall(Entry, 0x6A);
-
-            printf("EmuXInstallWrappers: CloseHandle     -> 0x%.08X\n", RealCloseHandle);
-
-            EmuXInstallWrapper(RealCloseHandle, xboxkrnl::EmuXCloseHandle);
-        }
-
-        // ******************************************************************
-        // * XapiInitProcess
-        // ******************************************************************
-        {
-            void *RealXapiInitProcess = EmuXFindFuncByIndirectCall(RealmainXapiStartup, 0x00);
-
-            printf("EmuXInstallWrappers: XapiInitProcess -> 0x%.08X\n", RealXapiInitProcess);
-
-            EmuXInstallWrapper(RealXapiInitProcess, xboxkrnl::EmuXapiInitProcess);
-        }
-
-        // ******************************************************************
-        // * XapiBootDash
-        // ******************************************************************
-        {
-            void *RealXapiBootDash = EmuXFindFuncByIndirectCall(RealmainXapiStartup, 0x65);
-
-            printf("EmuXInstallWrappers: XapiBootDash    -> 0x%.08X\n", RealXapiBootDash);
-
-            EmuXInstallWrapper(RealXapiBootDash, xboxkrnl::EmuXapiBootDash);
-        }
-
-        // ******************************************************************
-        // * __rcinit
-        // ******************************************************************
-        {
-            void *Real__rcinit = EmuXFindFuncByIndirectCall(RealmainXapiStartup, 0x47);
-
-            printf("EmuXInstallWrappers: __rcinit        -> 0x%.08X\n", Real__rcinit);
-
-            EmuXInstallWrapper(Real__rcinit, xboxkrnl::EmuX__rcinit);
-        }
-
-        // ******************************************************************
-        // * __cinit
-        // ******************************************************************
-        {
-            void *Real__cinit = EmuXFindFuncByIndirectCall(RealmainXapiStartup, 0x4C);
-
-            printf("EmuXInstallWrappers: __cinit         -> 0x%.08X\n", Real__cinit);
-
-            EmuXInstallWrapper(Real__cinit, xboxkrnl::EmuX__cinit);
         }
     }
 }

@@ -87,9 +87,9 @@ VOID WINAPI EmuXapiInitProcess();
 VOID WINAPI EmuXapiBootDash(uint32 UnknownA, uint32 UnknownB, uint32 UnknownC);
 
 // ******************************************************************
-// * func: EmuX__rcinit
+// * func: EmuX__rtinit
 // ******************************************************************
-VOID EmuX__rcinit();
+VOID EmuX__rtinit();
 
 // ******************************************************************
 // * func: EmuX__cinit

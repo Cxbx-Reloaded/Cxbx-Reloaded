@@ -231,9 +231,9 @@ VOID WINAPI xboxkrnl::EmuXapiBootDash(uint32 UnknownA, uint32 UnknownB, uint32 U
 }
 
 // ******************************************************************
-// * func: EmuX__rcinit
+// * func: EmuX__rtinit
 // ******************************************************************
-VOID xboxkrnl::EmuX__rcinit()
+VOID xboxkrnl::EmuX__rtinit()
 {
     EmuXSwapFS();   // Win2k/XP FS
 
@@ -242,7 +242,7 @@ VOID xboxkrnl::EmuX__rcinit()
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXxapi [0x%.08X]: EmuX__rcinit();\n", GetCurrentThreadId());
+        printf("EmuXxapi [0x%.08X]: EmuX__rtinit();\n", GetCurrentThreadId());
     }
     #endif
 
