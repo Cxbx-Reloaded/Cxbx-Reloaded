@@ -785,6 +785,22 @@ VOID WINAPI EmuIDirect3DDevice8_SetTextureState_BumpEnv
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_FrontFace
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_FrontFace
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_LogicOp
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_LogicOp
+(
+    DWORD Value
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_NormalizeNormals
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_SetRenderState_NormalizeNormals
@@ -874,9 +890,33 @@ VOID WINAPI EmuIDirect3DDevice8_SetRenderState_CullMode
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_LineWidth
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_LineWidth
+(
+    DWORD Value
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_StencilFail
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_SetRenderState_StencilFail
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_StencilCullEnable
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_StencilCullEnable
 (
     DWORD Value
 );
@@ -893,6 +933,30 @@ VOID WINAPI EmuIDirect3DDevice8_SetRenderState_ZEnable
 // * func: EmuIDirect3DDevice8_SetRenderState_StencilEnable
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_SetRenderState_StencilEnable
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_MultiSampleMask
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_MultiSampleMask
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_MultiSampleMode
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_MultiSampleMode
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode
 (
     DWORD Value
 );

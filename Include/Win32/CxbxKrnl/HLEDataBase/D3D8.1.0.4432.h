@@ -36,6 +36,8 @@
 
 #include "OOVPA.h"
 
+extern SOOVPA<10> IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4432;
+
 extern OOVPATable D3D8_1_0_4432[];
 extern uint32     D3D8_1_0_4432_SIZE;
 

@@ -72,8 +72,8 @@ SOOVPA<13> IDirect3DDevice8_SetRenderState_CullMode_1_0_4134 =
     0,  // Large == 0
     13, // Count == 13
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XREF_DXSRSCULLMODE, // XRef Is Saved
+    0,                  // XRef Not Used
 
     {
         // IDirect3DDevice8_SetRenderState_CullMode+0x19 : mov dword ptr [eax], 0x40308

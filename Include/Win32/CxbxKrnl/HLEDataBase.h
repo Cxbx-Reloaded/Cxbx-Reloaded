@@ -94,7 +94,9 @@ extern bool bXRefFirstPass;
 // ******************************************************************
 enum XRefDataBaseOffset
 {
-    XREF_XNINIT                 = 0,
+    XREF_DXSRSCULLMODE=0,
+    XREF_D3DRS_STENCILCULLENABLE,
+    XREF_XNINIT,
     XREF_FCLOSEDEVICE,
     XREF_CLEARSTATEBLOCKFLAGS,
     XREF_RECORDSTATEBLOCK,
