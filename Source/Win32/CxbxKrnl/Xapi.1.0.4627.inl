@@ -123,6 +123,17 @@ OOVPATable XAPI_1_0_4627[] =
         #endif
     },
     //*/
+    /* XapiSetupPerTitleDriveLetters (* unchanged since 1.0.4361 *)
+    {
+        (OOVPA*)&XapiSetupPerTitleDriveLetters_1_0_4361,
+
+        xapi::XapiSetupPerTitleDriveLetters,
+
+        #ifdef _DEBUG_TRACE
+        "XapiSetupPerTitleDriveLetters"
+        #endif
+    },
+    //*/
     // XapiBootToDash (* unchanged since 1.0.3911 *)
     {
         (OOVPA*)&XapiBootDash_1_0_3911,

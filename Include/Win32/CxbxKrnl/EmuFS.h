@@ -48,8 +48,8 @@ static inline void EmuSwapFS()
 {
     __asm
     {
-        mov ax, fs:[0x14]   // FS.ArbitraryUserPointer
-        mov fs, ax
+        mov bx, fs:[0x14]   // FS.ArbitraryUserPointer
+        mov fs, bx
     }
 }
 

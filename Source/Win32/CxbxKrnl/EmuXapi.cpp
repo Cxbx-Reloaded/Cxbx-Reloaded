@@ -396,7 +396,35 @@ VOID WINAPI xapi::EmuXapiInitProcess()
 
     return;
 }
+/* Too High Level!
+// ******************************************************************
+// * func: XapiSetupPerTitleDriveLetters
+// ******************************************************************
+xapi::NTSTATUS CDECL xapi::XapiSetupPerTitleDriveLetters(DWORD dwTitleId, LPCWSTR wszTitleName)
+{
+    EmuSwapFS();   // Win2k/XP FS
 
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%.08X): XapiSetupPerTitleDriveLetters\n"
+               "(\n"
+               "   dwTitleId           : 0x%.08X\n"
+               "   wszTitleName        : 0x%.08X\n"
+               ");\n",
+                GetCurrentThreadId(), dwTitleId, wszTitleName);
+    }
+    #endif
+
+    NTSTATUS ret = STATUS_SUCCESS;
+
+    EmuSwapFS();   // XBox FS
+
+    return ret;
+}
+*/
 // ******************************************************************
 // * func: EmuXapiBootDash
 // ******************************************************************

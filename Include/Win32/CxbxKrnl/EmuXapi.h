@@ -276,6 +276,13 @@ BOOL WINAPI EmuCloseHandle
 // ******************************************************************
 VOID WINAPI EmuXapiInitProcess();
 
+/* Too High Level!
+// ******************************************************************
+// * func: XapiSetupPerTitleDriveLetters
+// ******************************************************************
+NTSTATUS CDECL XapiSetupPerTitleDriveLetters(DWORD dwTitleId, LPCWSTR wszTitleName);
+*/
+
 // ******************************************************************
 // * func: EmuXapiBootDash
 // ******************************************************************

@@ -433,7 +433,7 @@ int EmuException(LPEXCEPTION_POINTERS e)
 
     count++;
 
-    if(count < 200)
+    if(count < 20000)
         return EXCEPTION_CONTINUE_EXECUTION;
     else
         count = 0;

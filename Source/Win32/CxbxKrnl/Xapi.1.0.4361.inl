@@ -251,6 +251,35 @@ SOOVPA<7> XapiInitProcess_1_0_4361 =
 };
 
 // ******************************************************************
+// * XapiSetupPerTitleDriveLetters
+// ******************************************************************
+SOOVPA<10> XapiSetupPerTitleDriveLetters_1_0_4361 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    {
+        // XapiSetupPerTitleDriveLetters+0x09 : lea eax, [ebp-0x0C]
+        { 0x09, 0x8D }, // (Offset,Value)-Pair #1
+        { 0x0A, 0x45 }, // (Offset,Value)-Pair #2
+        { 0x0B, 0xF4 }, // (Offset,Value)-Pair #3
+
+        // XapiSetupPerTitleDriveLetters+0x17 : edd esp, 0x0C
+        { 0x17, 0x83 }, // (Offset,Value)-Pair #4
+        { 0x18, 0xC4 }, // (Offset,Value)-Pair #5
+        { 0x19, 0x0C }, // (Offset,Value)-Pair #6
+
+        // XapiSetupPerTitleDriveLetters+0x35 : jl 0x1A
+        { 0x35, 0x7C }, // (Offset,Value)-Pair #7
+        { 0x36, 0x1A }, // (Offset,Value)-Pair #8
+
+        // XapiSetupPerTitleDriveLetters+0x52 : retn 0x08
+        { 0x52, 0xC2 }, // (Offset,Value)-Pair #9
+        { 0x53, 0x08 }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_4361
 // ******************************************************************
 OOVPATable XAPI_1_0_4361[] =
@@ -340,7 +369,19 @@ OOVPATable XAPI_1_0_4361[] =
         "EmuXapiInitProcess" 
         #endif
     },
-    */
+    //*/
+    /* Too High Level
+    // XapiSetupPerTitleDriveLetters
+    {
+        (OOVPA*)&XapiSetupPerTitleDriveLetters_1_0_4361,
+
+        xapi::XapiSetupPerTitleDriveLetters,
+
+        #ifdef _DEBUG_TRACE
+        "XapiSetupPerTitleDriveLetters"
+        #endif
+    },
+    //*/
     // XapiBootToDash (* unchanged since 1.0.3911 *)
     {
         (OOVPA*)&XapiBootDash_1_0_3911,
@@ -361,7 +402,8 @@ OOVPATable XAPI_1_0_4361[] =
         #ifdef _DEBUG_TRACE
         "Emu__rtinit",
         #endif
-    },*/
+    },
+    //*/
     /* Too High Level
     // __cinit (* unchanged since 1.0.3911 *)
     {

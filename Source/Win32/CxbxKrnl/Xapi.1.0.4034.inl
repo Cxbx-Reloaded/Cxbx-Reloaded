@@ -374,7 +374,7 @@ OOVPATable XAPI_1_0_4034[] =
         "EmuXapiInitProcess" 
         #endif
     },
-    */
+    //*/
     // XapiBootToDash (* unchanged since 1.0.3911 *)
     {
         (OOVPA*)&XapiBootDash_1_0_3911,
@@ -395,7 +395,8 @@ OOVPATable XAPI_1_0_4034[] =
         #ifdef _DEBUG_TRACE
         "Emu__rtinit",
         #endif
-    },*/
+    },
+    //*/
     /* Too High Level
     // __cinit (* unchanged since 1.0.3911 *)
     {
