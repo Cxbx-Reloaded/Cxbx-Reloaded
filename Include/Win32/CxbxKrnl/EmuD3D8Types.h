@@ -115,6 +115,37 @@ struct X_D3DVertexShader
     DWORD UnknownC[0x59];
 };
 
+typedef struct _STREAM_DYNAMIC_PATCH_
+{
+    BOOL  NeedPatch;       // This is to know whether is data which must be patched
+    DWORD ConversionStride;
+    DWORD NbrTypes;        // Number of the stream data types
+    UINT  *pTypes;         // The stream data types (xbox)
+} STREAM_DYNAMIC_PATCH;
+
+typedef struct _VERTEX_DYNAMIC_PATCH_
+{
+    UINT                  NbrStreams; // The number of streams the vertex shader uses
+    STREAM_DYNAMIC_PATCH *pStreamPatches;
+} VERTEX_DYNAMIC_PATCH;
+
+typedef struct _VERTEX_SHADER 
+{
+    DWORD Handle;
+
+    // These are the parameters given by the XBE,
+    // we save them to be be able to return them when necassary.
+    UINT                  Size;
+    DWORD                *pDeclaration;
+    DWORD                 DeclarationSize;
+    DWORD                *pFunction;
+    DWORD                 FunctionSize;
+    DWORD                 Type;
+
+    // Needed for dynamic stream patching
+    VERTEX_DYNAMIC_PATCH  VertexDynamicPatch;
+} VERTEX_SHADER;
+
 struct X_D3DResource
 {
     DWORD Common;
@@ -272,5 +303,49 @@ typedef void (__cdecl * D3DVBLANKCALLBACK)(D3DVBLANKDATA *pData);
 
 // deferred texture stage state "unknown" flag
 #define X_D3DTSS_UNK 0x7fffffff
+
+typedef DWORD X_D3DSHADERCONSTANTMODE;
+
+#define X_D3DSCM_96CONSTANTS                     0
+#define X_D3DSCM_192CONSTANTS                    1
+#define X_D3DSCM_192CONSTANTSANDFIXEDPIPELINE    2
+#define X_D3DSCM_NORESERVEDCONSTANTS            16
+
+// Vertex shader types
+#define X_D3DSMT_VERTEXSHADER           1
+#define X_D3DSMT_READWRITE_VERTEXSHADER 2
+#define X_D3DSMT_VERTEXSTATESHADER      3
+
+// ******************************************************************
+// * X_D3DVERTEXSHADERINPUT
+// ******************************************************************
+typedef struct _X_D3DVERTEXSHADERINPUT
+{
+    DWORD StreamIndex;
+    DWORD Offset;
+    DWORD Format;
+    BYTE  TessType;
+    BYTE  TessSource;
+}
+X_D3DVERTEXSHADERINPUT;
+
+// ******************************************************************
+// * X_D3DVERTEXATTRIBUTEFORMAT
+// ******************************************************************
+typedef struct _X_D3DVERTEXATTRIBUTEFORMAT
+{
+    X_D3DVERTEXSHADERINPUT Input[16];
+}
+X_D3DVERTEXATTRIBUTEFORMAT;
+
+// ******************************************************************
+// * X_D3DSTREAM_INPUT
+// ******************************************************************
+typedef struct _X_D3DSTREAM_INPUT
+{
+    X_D3DVertexBuffer  *VertexBuffer;
+    UINT                Stride;
+    UINT                Offset;
+} X_D3DSTREAM_INPUT;
 
 #endif

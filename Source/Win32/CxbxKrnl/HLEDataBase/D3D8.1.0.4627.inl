@@ -1923,6 +1923,384 @@ SOOVPA<14> IDirect3DTexture8_GetSurfaceLevel2B_1_0_4627 =
 };
 
 // ******************************************************************
+// * D3DDevice_GetViewportOffsetAndScale@8
+// ******************************************************************
+SOOVPA<8> X_D3DDevice_GetViewportOffsetAndScale_1_0_4627 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0xD8 },
+        { 0x40, 0xD8 },
+        { 0x5E, 0xC9 },
+        { 0x7E, 0x05 },
+        { 0x9E, 0x0A },
+        { 0xBE, 0x00 },
+        { 0xDE, 0x14 },
+        { 0xFE, 0xE0 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_GetVertexShaderSize
+// ******************************************************************
+SOOVPA<7> X_D3DDevice_GetVertexShaderSize_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x01, 0x44 },
+        { 0x04, 0x85 },
+        { 0x07, 0x09 },
+        { 0x0A, 0x24 },
+        { 0x0D, 0x51 },
+        { 0x10, 0x10 },
+        { 0x13, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_DeleteVertexShader
+// ******************************************************************
+SOOVPA<6> X_D3DDevice_DeleteVertexShader_1_0_4627 = 
+{
+    0,  // Large == 0
+    6,  // Count == 6
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x02, 0x24 },
+        { 0x06, 0xFF },
+        { 0x0A, 0x08 },
+        { 0x0E, 0x44 },
+        { 0x16, 0xC2 },
+        { 0x17, 0x04 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_SelectVertexShaderDirect
+// ******************************************************************
+SOOVPA<7> X_D3DDevice_SelectVertexShaderDirect_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x05, 0x85 },
+        { 0x0C, 0x00 },
+        { 0x14, 0xF3 },
+        { 0x1D, 0x83 },
+        { 0x21, 0x4C },
+        { 0x29, 0x5E },
+        { 0x2F, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_GetShaderConstantMode
+// ******************************************************************
+SOOVPA<7> X_D3DDevice_GetShaderConstantMode_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x05, 0x8B },
+        { 0x06, 0x88 },
+        { 0x07, 0xD8 },
+        { 0x0A, 0x00 },
+        { 0x0D, 0x24 },
+        { 0x10, 0x0A },
+        { 0x13, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_GetVertexShader
+// ******************************************************************
+SOOVPA<7> X_D3DDevice_GetVertexShader_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x05, 0x8B },
+        { 0x06, 0x88 },
+        { 0x07, 0x84 },
+        { 0x0A, 0x00 },
+        { 0x0D, 0x24 },
+        { 0x10, 0x0A },
+        { 0x13, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_GetVertexShaderConstant
+// ******************************************************************
+SOOVPA<7> X_D3DDevice_GetVertexShaderConstant_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x05, 0x15 },
+        { 0x0C, 0x24 },
+        { 0x13, 0xE0 },
+        { 0x1A, 0x8D },
+        { 0x21, 0x8B },
+        { 0x28, 0x8B },
+        { 0x2F, 0x5F },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_SetVertexShaderInputDirect
+// ******************************************************************
+SOOVPA<7> X_D3DDevice_SetVertexShaderInputDirect_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x05, 0x85 },
+        { 0x0C, 0x00 },
+        { 0x14, 0xF3 },
+        { 0x1D, 0x83 },
+        { 0x21, 0x54 },
+        { 0x29, 0x5E },
+        { 0x2F, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_GetVertexShaderInput
+// ******************************************************************
+SOOVPA<7> X_D3DDevice_GetVertexShaderInput_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x0B, 0x74 },
+        { 0x18, 0x04 },
+        { 0x25, 0x57 },
+        { 0x32, 0x00 },
+        { 0x3F, 0x00 },
+        { 0x4C, 0x03 },
+        { 0x59, 0xD0 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_RunVertexStateShader
+// ******************************************************************
+SOOVPA<7> X_D3DDevice_RunVertexStateShader_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x09, 0x3B },
+        { 0x14, 0x4C },
+        { 0x1F, 0xC0 },
+        { 0x2A, 0x40 },
+        { 0x35, 0xF4 },
+        { 0x40, 0xC7 },
+        { 0x4B, 0x08 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_LoadVertexShader
+// ******************************************************************
+SOOVPA<7> X_D3DDevice_LoadVertexShader_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x09, 0x08 },
+        { 0x14, 0x75 },
+        { 0x21, 0x8B },
+        { 0x2A, 0xE8 },
+        { 0x35, 0x9C },
+        { 0x40, 0x14 },
+        { 0x4B, 0x8D },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_LoadVertexShaderProgram
+// ******************************************************************
+SOOVPA<7> X_D3DDevice_LoadVertexShaderProgram_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x0B, 0x2D },
+        { 0x18, 0x10 },
+        { 0x25, 0xE0 },
+        { 0x32, 0x5F },
+        { 0x3F, 0x8B },
+        { 0x4C, 0x00 },
+        { 0x59, 0xE8 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_SelectVertexShader
+// ******************************************************************
+SOOVPA<8> X_D3DDevice_SelectVertexShader_1_0_4627 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x0E, 0x49 },
+        { 0x1E, 0x00 },
+        { 0x2E, 0x72 },
+        { 0x3E, 0x1E },
+        { 0x4E, 0x8B },
+        { 0x5E, 0x05 },
+        { 0x6E, 0x89 },
+        { 0x7E, 0x08 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_GetVertexShaderType@8
+// ******************************************************************
+SOOVPA<7> X_D3DDevice_GetVertexShaderType_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x04, 0x8B },
+        { 0x0A, 0x07 },
+        { 0x10, 0xEB },
+        { 0x16, 0x00 },
+        { 0x1C, 0x40 },
+        { 0x22, 0xC9 },
+        { 0x28, 0x08 },
+    }
+};
+
+
+// ******************************************************************
+// * D3DDevice_GetVertexShaderDeclaration
+// ******************************************************************
+SOOVPA<8> X_D3DDevice_GetVertexShaderDeclaration_1_0_4627 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0xC2 },
+        { 0x3E, 0x00 },
+        { 0x5E, 0x00 },
+        { 0x7E, 0x02 },
+        { 0x9E, 0x24 },
+        { 0xBE, 0x2B },
+        { 0xDE, 0x9A },
+        { 0xFE, 0x10 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_GetVertexShaderFunction
+// ******************************************************************
+SOOVPA<7> X_D3DDevice_GetVertexShaderFunction_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x16, 0xC0 },
+        { 0x2E, 0x01 },
+        { 0x46, 0x10 },
+        { 0x5E, 0x07 },
+        { 0x76, 0xC7 },
+        { 0x8E, 0x00 },
+        { 0xA6, 0xF8 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_SetVertexShaderInput
+// ******************************************************************
+SOOVPA<8> X_D3DDevice_SetVertexShaderInput_1_0_4627 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0x83 },
+        { 0x3E, 0x10 },
+        { 0x5E, 0x00 },
+        { 0x7E, 0x24 },
+        { 0x9E, 0x89 },
+        { 0xBE, 0x81 },
+        { 0xDE, 0xC6 },
+        { 0xFE, 0x89 },
+    }
+};
+
+// ******************************************************************
 // * D3D8_1_0_4627
 // ******************************************************************
 OOVPATable D3D8_1_0_4627[] =
@@ -2833,6 +3211,168 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DVolumeTexture8_LockBox" 
         #endif
     },
+    // X_D3DDevice_GetViewportOffsetAndScale
+    {
+        (OOVPA*)&X_D3DDevice_GetViewportOffsetAndScale_1_0_4627,
+        XTL::EmuIDirect3DDevice8_GetViewportOffsetAndScale,
+
+        #ifdef _DEBUG_TRACE
+        "D3DDevice_GetViewportOffsetAndScale"
+        #endif
+    },
+    // D3DDevice_GetVertexShaderSize
+    {
+        (OOVPA*)&X_D3DDevice_GetVertexShaderSize_1_0_4627,
+        XTL::EmuIDirect3DDevice8_GetVertexShaderSize,
+
+        #ifdef _DEBUG_TRACE
+        "D3DDevice_GetVertexShaderSize"
+        #endif
+    },
+    // D3DDevice_DeleteVertexShader
+    {
+        (OOVPA*)&X_D3DDevice_DeleteVertexShader_1_0_4627,
+        XTL::EmuIDirect3DDevice8_DeleteVertexShader,
+
+        #ifdef _DEBUG_TRACE
+        "D3DDevice_DeleteVertexShader"
+        #endif
+    },
+    // D3DDevice_SelectVertexShaderDirect
+    {
+        (OOVPA*)&X_D3DDevice_SelectVertexShaderDirect_1_0_4627,
+        XTL::EmuIDirect3DDevice8_SelectVertexShaderDirect,
+
+        #ifdef _DEBUG_TRACE
+        "D3DDevice_SelectVertexShaderDirect"
+        #endif
+    },
+    // D3DDevice_GetShaderConstantMode
+    {
+        (OOVPA*)&X_D3DDevice_GetShaderConstantMode_1_0_4627,
+        XTL::EmuIDirect3DDevice8_GetShaderConstantMode,
+
+        #ifdef _DEBUG_TRACE
+        "D3DDevice_GetShaderConstantMode"
+        #endif
+    },
+    // D3DDevice_GetVertexShader
+    {
+        (OOVPA*)&X_D3DDevice_GetVertexShader_1_0_4627,
+        XTL::EmuIDirect3DDevice8_GetVertexShader,
+
+        #ifdef _DEBUG_TRACE
+        "D3DDevice_GetVertexShader"
+        #endif
+    },
+    // D3DDevice_GetVertexShaderConstant
+    {
+        (OOVPA*)&X_D3DDevice_GetVertexShaderConstant_1_0_4627,
+        XTL::EmuIDirect3DDevice8_GetVertexShaderConstant,
+
+        #ifdef _DEBUG_TRACE
+        "D3DDevice_GetVertexShaderConstant"
+        #endif
+    },
+    // D3DDevice_SetVertexShaderInputDirect
+    {
+        (OOVPA*)&X_D3DDevice_SetVertexShaderInputDirect_1_0_4627,
+        XTL::EmuIDirect3DDevice8_SetVertexShaderInputDirect,
+
+        #ifdef _DEBUG_TRACE
+        "D3DDevice_SetVertexShaderInputDirect"
+        #endif
+    },
+    // D3DDevice_GetVertexShaderInput
+    {
+        (OOVPA*)&X_D3DDevice_GetVertexShaderInput_1_0_4627,
+        XTL::EmuIDirect3DDevice8_GetVertexShaderInput,
+
+      #ifdef _DEBUG_TRACE
+      "D3DDevice_GetVertexShaderInput"
+      #endif
+    },
+    // D3DDevice_RunVertexStateShader
+    {
+        (OOVPA*)&X_D3DDevice_RunVertexStateShader_1_0_4627,
+        XTL::EmuIDirect3DDevice8_RunVertexStateShader,
+
+       #ifdef _DEBUG_TRACE
+       "D3DDevice_RunVertexStateShader"
+       #endif
+    },
+    // D3DDevice_LoadVertexShader
+    {
+        (OOVPA*)&X_D3DDevice_LoadVertexShader_1_0_4627,
+        XTL::EmuIDirect3DDevice8_LoadVertexShader,
+
+        #ifdef _DEBUG_TRACE
+        "D3DDevice_LoadVertexShader"
+        #endif
+    },
+    // D3DDevice_LoadVertexShaderProgram
+    {
+        (OOVPA*)&X_D3DDevice_LoadVertexShaderProgram_1_0_4627,
+        XTL::EmuIDirect3DDevice8_LoadVertexShaderProgram,
+
+        #ifdef _DEBUG_TRACE
+        "D3DDevice_LoadVertexShaderProgram"
+        #endif
+    },
+    // D3DDevice_SelectVertexShader
+    {
+        (OOVPA*)&X_D3DDevice_SelectVertexShader_1_0_4627,
+        XTL::EmuIDirect3DDevice8_SelectVertexShader,
+
+        #ifdef _DEBUG_TRACE
+        "D3DDevice_SelectVertexShader"
+        #endif
+    },
+    // D3DDevice_GetVertexShaderSize
+    {
+        (OOVPA*)&X_D3DDevice_GetVertexShaderSize_1_0_4627,
+        XTL::EmuIDirect3DDevice8_GetVertexShaderSize,
+
+        #ifdef _DEBUG_TRACE
+        "D3DDevice_GetVertexShaderSize"
+        #endif
+    },
+    // D3DDevice_GetVertexShaderType
+    {
+        (OOVPA*)&X_D3DDevice_GetVertexShaderType_1_0_4627,
+        XTL::EmuIDirect3DDevice8_GetVertexShaderType,
+
+        #ifdef _DEBUG_TRACE
+        "D3DDevice_GetVertexShaderType"
+        #endif
+    },
+    // D3DDevice_GetVertexShaderDeclaration
+    {
+        (OOVPA*)&X_D3DDevice_GetVertexShaderDeclaration_1_0_4627,
+        XTL::EmuIDirect3DDevice8_GetVertexShaderDeclaration,
+
+        #ifdef _DEBUG_TRACE
+        "D3DDevice_GetVertexShaderDeclaration"
+        #endif
+    },
+    // D3DDevice_GetVertexShaderFunction
+    {
+        (OOVPA*)&X_D3DDevice_GetVertexShaderFunction_1_0_4627,
+        XTL::EmuIDirect3DDevice8_GetVertexShaderFunction,
+
+        #ifdef _DEBUG_TRACE
+        "D3DDevice_GetVertexShaderFunction"
+        #endif
+    },
+    // D3DDevice_SetVertexShaderInput
+    {
+        (OOVPA*)&X_D3DDevice_SetVertexShaderInput_1_0_4627,
+        XTL::EmuIDirect3DDevice8_SetVertexShaderInput,
+
+        #ifdef _DEBUG_TRACE
+        "D3DDevice_SetVertexShaderInput"
+        #endif
+   },
 };
 
 // ******************************************************************

@@ -129,6 +129,9 @@ static DWORD                        g_VBLastSwap = 0;
 static XTL::X_D3DSurface           *g_pCachedRenderTarget = NULL;
 static XTL::X_D3DSurface           *g_pCachedZStencilSurface = NULL;
 static DWORD                        g_dwVertexShaderUsage = 0;
+static XTL::X_D3DSHADERCONSTANTMODE g_VertexShaderConstantMode = X_D3DSCM_192CONSTANTS;
+static DWORD                        g_CurrentVertexShader = 0;
+static DWORD                        g_VertexShaderSlots[136];
 
 // cached Direct3D tiles
 XTL::X_D3DTILE XTL::EmuD3DTileCache[0x08] = {0};
@@ -1173,22 +1176,24 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_LoadVertexShader
     EmuSwapFS();   // Win2k/XP FS
 
     // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_LoadVertexShader\n"
+    DbgPrintf( "EmuD3D8 (0x%X): EmuIDirect3DDevice8_LoadVertexShader\n"
                "(\n"
-               "   Handle                    : 0x%.08X\n"
-               "   Address                   : 0x%.08X\n"
+               "   Handle              : 0x%.08X\n"
+               "   Address             : 0x%.08X\n"
                ");\n",
-               GetCurrentThreadId(), Handle, Address);
+               GetCurrentThreadId(), Handle,Address);
+
+    if(Address < 136 && VshHandleIsVertexShader(Handle)) 
+    {
+        VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)(VshHandleGetVertexShader(Handle))->Handle;
+        for (DWORD i = Address; i < pVertexShader->Size; i++)
+        {
+            // TODO: This seems very fishy
+            g_VertexShaderSlots[i] = Handle;
+        }
     }
-    #endif
 
-    // TODO: load vertex shader...
-    EmuWarning("VertexShader not loaded!\n");
-
-    EmuSwapFS();   // XBox FS
-
+    EmuSwapFS();   // Xbox FS
     return D3D_OK;
 }
 
@@ -1215,7 +1220,15 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SelectVertexShader
     }
     #endif
 
-    // TODO: load vertex shader...
+    if((Handle & 0x80000000))
+    {
+        VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)(((X_D3DVertexShader *)(Handle & 0x7FFFFFFF))->Handle);
+        g_pD3DDevice8->SetVertexShader(pVertexShader->Handle);
+    }
+    else if(Address < 136)
+    {
+        g_pD3DDevice8->SetVertexShader(((VERTEX_SHADER *)((X_D3DVertexShader *)g_VertexShaderSlots[Address])->Handle)->Handle);
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -1821,11 +1834,70 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetViewport
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_GetViewportOffsetAndScale
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_GetViewportOffsetAndScale
+(
+    D3DXVECTOR4 *pOffset,
+    D3DXVECTOR4 *pScale
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetViewportOffsetAndScale\n"
+               "(\n"
+               "   pOffset             : 0x%.08X\n"
+               "   pScale              : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(),pOffset,pScale);
+    }
+    #endif // _DEBUG_TRACE
+
+    float fScaleX = 1.0f;
+    float fScaleY = 1.0f;
+    float fScaleZ = 1.0f;
+    float fOffsetX = 0.5 + 1.0/32;
+    float fOffsetY = 0.5 + 1.0/32;
+    D3DVIEWPORT8 Viewport;
+    EmuSwapFS();
+    EmuIDirect3DDevice8_GetViewport(&Viewport);
+    EmuSwapFS();
+
+
+    pScale->x = 1.0f;
+    pScale->y = 1.0f;
+    pScale->z = 1.0f;
+    pScale->w = 1.0f;
+
+    pOffset->x = 0.0f;
+    pOffset->y = 0.0f;
+    pOffset->z = 0.0f;
+    pOffset->w = 0.0f;
+
+/*
+    pScale->x = (float)Viewport.Width * 0.5f * fScaleX;
+    pScale->y = (float)Viewport.Height * -0.5f * fScaleY;
+    pScale->z = (Viewport.MaxZ - Viewport.MinZ) * fScaleZ;
+    pScale->w = 0;
+
+    pOffset->x = (float)Viewport.Width * fScaleX * 0.5f + (float)Viewport.X * fScaleX + fOffsetX;
+    pOffset->y = (float)Viewport.Height * fScaleY * 0.5f + (float)Viewport.Y * fScaleY + fOffsetY;
+    pOffset->z = Viewport.MinZ * fScaleZ;
+    pOffset->w = 0;
+*/
+
+    EmuSwapFS();   // XBox FS
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetShaderConstantMode
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetShaderConstantMode
 (
-    DWORD               dwMode    // TODO: Fill out enumeration
+    XTL::X_D3DSHADERCONSTANTMODE Mode
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -1835,13 +1907,13 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetShaderConstantMode
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetShaderConstantMode\n"
                "(\n"
-               "   dwMode              : 0x%.08X\n"
+               "   Mode              : 0x%.08X\n"
                ");\n",
-               GetCurrentThreadId(), dwMode);
+               GetCurrentThreadId(), Mode);
     }
     #endif
 
-    // TODO: Actually implement this
+    g_VertexShaderConstantMode = Mode;
 
     EmuSwapFS();   // Xbox FS
 
@@ -2097,34 +2169,100 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
 
     // create emulated shader struct
     X_D3DVertexShader *pD3DVertexShader = new X_D3DVertexShader();
+    VERTEX_SHADER     *pVertexShader = (VERTEX_SHADER*)malloc(sizeof(VERTEX_SHADER));
 
     // TODO: Intelligently fill out these fields as necessary
     ZeroMemory(pD3DVertexShader, sizeof(X_D3DVertexShader));
+    ZeroMemory(pVertexShader, sizeof(VERTEX_SHADER));
 
-    DWORD *pRecompiled=0;
+    LPD3DXBUFFER pRecompiledBuffer = NULL;
+    DWORD        *pRecompiledDeclaration;
+    DWORD        *pRecompiledFunction = NULL;
+    DWORD        VertexShaderSize;
+    DWORD        DeclarationSize;
+    DWORD        Handle = 0;
 
-    XTL::EmuRecompileVSHDeclaration((DWORD*)pDeclaration, (DWORD)pD3DVertexShader);
-    //XTL::EmuRecompileVSHFunction((DWORD*)pFunction, &pRecompiled);
+    HRESULT hRet = XTL::EmuRecompileVshDeclaration((DWORD*)pDeclaration,
+                                                   &pRecompiledDeclaration,
+                                                   &DeclarationSize,
+                                                   pFunction == NULL,
+                                                   &pVertexShader->VertexDynamicPatch);
 
-    HRESULT hRet = D3D_OK;
-
-    *pHandle = (DWORD)pD3DVertexShader;
-
-    /*
-    HRESULT hRet = g_pD3DDevice8->CreateVertexShader
-    (
-        pDeclaration,
-        pFunction,
-        &pD3DVertexShader->Handle,
-        g_dwVertexShaderUsage   // TODO: HACK: Xbox has extensions!
-    );*/
-
-//    if(FAILED(hRet))
+    if(SUCCEEDED(hRet))
     {
-        DbgPrintf("pD3DVertexShader : 0x%.08X\n", pD3DVertexShader);
-
-        hRet = D3D_OK;
+        hRet = XTL::EmuRecompileVshFunction((DWORD*)pFunction,
+                                            &pRecompiledBuffer,
+                                            &VertexShaderSize,
+                                            g_VertexShaderConstantMode == X_D3DSCM_NORESERVEDCONSTANTS);
+        if(SUCCEEDED(hRet))
+        {
+            pRecompiledFunction = (DWORD*)pRecompiledBuffer->GetBufferPointer();
+        }
     }
+
+    //DbgPrintf("MaxVertexShaderConst = %d\n", g_D3DCaps.MaxVertexShaderConst);
+
+    if(SUCCEEDED(hRet))
+    {
+        hRet = g_pD3DDevice8->CreateVertexShader
+        (
+            pRecompiledDeclaration,
+            pRecompiledFunction,
+            &Handle,
+            g_dwVertexShaderUsage   // TODO: HACK: Xbox has extensions!
+        );
+        if(pRecompiledBuffer)
+        {
+            pRecompiledBuffer->Release();
+        }
+    }
+
+    if(SUCCEEDED(hRet))
+    {
+        if(pFunction != NULL)
+        {
+            pVertexShader->pFunction = (DWORD*)malloc(VertexShaderSize);
+            memcpy(pVertexShader->pFunction, pFunction, VertexShaderSize);
+            pVertexShader->FunctionSize = VertexShaderSize;
+        }
+        else
+        {
+            pVertexShader->pFunction = NULL;
+            pVertexShader->FunctionSize = 0;
+        }
+        pVertexShader->pDeclaration = (DWORD*)malloc(DeclarationSize);
+        memcpy(pVertexShader->pDeclaration, pDeclaration, DeclarationSize);
+        pVertexShader->Type = X_D3DSMT_VERTEXSHADER;
+        pVertexShader->Handle = Handle;
+        pVertexShader->Size = (VertexShaderSize - sizeof(VSH_SHADER_HEADER)) / VSH_INSTRUCTION_SIZE_BYTES;
+        pVertexShader->DeclarationSize = DeclarationSize;
+    }
+    else
+    {
+        pVertexShader->Handle = D3DFVF_XYZ/* | D3DFVF_TEX0*/;
+    }
+    pD3DVertexShader->Handle = (DWORD)pVertexShader;
+
+    *pHandle = ((DWORD)pD3DVertexShader) | 0x80000000;
+
+#ifdef _DEBUG_VSH
+    if(FAILED(hRet))
+    {
+        char pFileName[30];
+        static int FailedShaderCount = 0;
+        VSH_SHADER_HEADER *pHeader = (VSH_SHADER_HEADER*)pFunction;
+        EmuWarning("Couldn't create vertex shader!");
+        sprintf(pFileName, "failed%05d.xvu", FailedShaderCount);
+        FILE *f = fopen(pFileName, "wb");
+        if(f)
+        {
+            fwrite(pFunction, sizeof(VSH_SHADER_HEADER) + pHeader->NumInst * 16, 1, f);
+            fclose(f);
+        }
+        FailedShaderCount++;
+        //hRet = D3D_OK;
+    }
+#endif // _DEBUG_VSH
 
     EmuSwapFS();   // XBox FS
 
@@ -2186,15 +2324,12 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShaderConstant
     }
     #endif
 
-    HRESULT hRet = D3D_OK;
-    /*
     HRESULT hRet = g_pD3DDevice8->SetVertexShaderConstant
     (
         Register,
         pConstantData,
         ConstantCount
     );
-    */
 
     if(FAILED(hRet))
     {
@@ -2231,7 +2366,7 @@ VOID __fastcall XTL::EmuIDirect3DDevice8_SetVertexShaderConstant1
     }
     #endif
 
-    XTL::EmuIDirect3DDevice8_SetVertexShaderConstant(Register - 96, pConstantData, 1);
+    XTL::EmuIDirect3DDevice8_SetVertexShaderConstant(Register, pConstantData, 1);
 
     return;
 }
@@ -2259,7 +2394,7 @@ VOID __fastcall XTL::EmuIDirect3DDevice8_SetVertexShaderConstant4
     }
     #endif
 
-    XTL::EmuIDirect3DDevice8_SetVertexShaderConstant(Register - 96, pConstantData, 4);
+    XTL::EmuIDirect3DDevice8_SetVertexShaderConstant(Register, pConstantData, 4);
 
     return;
 }
@@ -2289,7 +2424,7 @@ VOID __fastcall XTL::EmuIDirect3DDevice8_SetVertexShaderConstantNotInline
     }
     #endif
 
-    XTL::EmuIDirect3DDevice8_SetVertexShaderConstant(Register - 96, pConstantData, ConstantCount);
+    XTL::EmuIDirect3DDevice8_SetVertexShaderConstant(Register, pConstantData, ConstantCount);
 
     return;
 }
@@ -6470,17 +6605,31 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetVertexShader
  
     HRESULT hRet = D3D_OK;
 
-    if(Handle > 0xFFFF)
-    {
-        X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader*)Handle;
+    g_CurrentVertexShader = Handle;
 
-        hRet = g_pD3DDevice8->SetVertexShader(pD3DVertexShader->Handle);
-//        hRet = g_pD3DDevice8->SetVertexShader(D3DFVF_XYZ);
+    XTL::D3DXVECTOR4 vOffset;
+    XTL::D3DXVECTOR4 vScale;
+
+    EmuSwapFS();
+    EmuIDirect3DDevice8_GetViewportOffsetAndScale(&vOffset, &vScale);
+    EmuSwapFS();
+
+    if(g_VertexShaderConstantMode != X_D3DSCM_NORESERVEDCONSTANTS)
+    {
+        g_pD3DDevice8->SetVertexShaderConstant( 58, &vScale, 1 );
+        g_pD3DDevice8->SetVertexShaderConstant( 59, &vOffset, 1 );
+    }
+
+    DWORD RealHandle;
+    if(VshHandleIsVertexShader(Handle))
+    {
+        RealHandle = ((VERTEX_SHADER *)(VshHandleGetVertexShader(Handle))->Handle)->Handle;
     }
     else
     {
-        hRet = g_pD3DDevice8->SetVertexShader(Handle);
+        RealHandle = Handle;
     }
+    hRet = g_pD3DDevice8->SetVertexShader(RealHandle);
 
     EmuSwapFS();   // XBox FS
 
@@ -7079,4 +7228,431 @@ HRESULT WINAPI XTL::EmuIDirect3DPalette8_Lock
     EmuSwapFS();   // XBox FS
     
     return D3D_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetVertexShaderSize
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_GetVertexShaderSize
+(
+    DWORD Handle, 
+    UINT* pSize
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+    #ifdef _DEBUG_TRACE
+    // debug trace
+    DbgPrintf( "EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetVertexShaderSize\n"
+               "(\n"
+               "   Handle               : 0x%.08X\n"
+               "   pSize                : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Handle,pSize);
+
+    #endif
+
+    if(pSize  && (Handle & 0x8000000))
+    {
+        *pSize = ((VERTEX_SHADER *)((X_D3DVertexShader *)(Handle & 0x7FFFFFFF))->Handle)->Size;
+    }
+    EmuSwapFS();   // Xbox FS
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_DeleteVertexShader
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_DeleteVertexShader
+(
+    DWORD Handle
+)
+{
+    EmuSwapFS();
+
+    #ifdef _DEBUG_TRACE
+    // debug trace
+    DbgPrintf( "EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_DeleteVertexShader\n"
+               "(\n"
+               "   Handle                : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Handle);
+    #endif // _DEBUG_TRACE
+
+    DWORD RealHandle = 0;
+    if(Handle & 0x8000000)
+    {
+        X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader *)(Handle & 0x7FFFFFFF);
+        VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)pD3DVertexShader->Handle;
+
+        RealHandle = pVertexShader->Handle;
+        free(pVertexShader->pDeclaration);
+        if(pVertexShader->pFunction)
+        {
+            free(pVertexShader->pFunction);
+        }
+        // TODO: Also free the dynamic streams patches!
+        for (DWORD i = 0; i < pVertexShader->VertexDynamicPatch.NbrStreams; i++)
+        {
+            free(pVertexShader->VertexDynamicPatch.pStreamPatches[i].pTypes);
+        }
+        free(pVertexShader->VertexDynamicPatch.pStreamPatches);
+        free(pVertexShader);
+        free(pD3DVertexShader);
+    }
+
+    HRESULT hRet = g_pD3DDevice8->DeleteVertexShader(RealHandle);
+
+    EmuSwapFS();
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SelectVertexShaderDirect
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_SelectVertexShaderDirect
+(
+    X_D3DVERTEXATTRIBUTEFORMAT *pVAF,
+    DWORD                      Address
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    DbgPrintf( "EmuD3D8 (0x%X): EmuIDirect3DDevice8_SelectVertexShaderDirect\n"
+               "(\n"
+               "   pVAF                : 0x%.08X\n"
+               "   Address             : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pVAF,Address);
+
+    DbgPrintf("NOT YET IMPLEMENTED!\n");
+
+    EmuSwapFS();   // Xbox FS
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetShaderConstantMode
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_GetShaderConstantMode
+(
+    DWORD *pMode
+)
+{
+#ifdef _DEBUG_TRACE
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    DbgPrintf( "EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetShaderConstantMode\n"
+               "(\n"
+               "   pMode               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pMode);
+
+    EmuSwapFS();   // Xbox FS
+#endif
+
+    if(pMode)
+    {
+        *pMode = g_VertexShaderConstantMode;
+    }
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetVertexShader
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_GetVertexShader
+(
+    DWORD *pHandle
+)
+{
+    EmuSwapFS();
+
+    // debug trace
+    DbgPrintf( "EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_GetVertexShader\n"
+               "(\n"
+               "   pHandle               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pHandle);
+
+    if(pHandle)
+    {
+        (*pHandle) = g_CurrentVertexShader;
+    }
+
+    EmuSwapFS();
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetVertexShaderConstant
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_GetVertexShaderConstant
+(
+    INT   Register,
+    void  *pConstantData,
+    DWORD ConstantCount
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    DbgPrintf( "EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetVertexShaderConstant\n"
+               "(\n"
+               "   Register            : 0x%.08X\n"
+               "   pConstantData       : 0x%.08X\n"
+               "   ConstantCount       : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Register, pConstantData, ConstantCount);
+
+    HRESULT hRet = g_pD3DDevice8->GetVertexShaderConstant
+    (
+        Register + 96,
+        pConstantData,
+        ConstantCount
+    );
+
+    EmuSwapFS();   // XBox FS
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetVertexShaderInputDirect
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShaderInputDirect
+(
+    X_D3DVERTEXATTRIBUTEFORMAT *pVAF,
+    UINT                       StreamCount,
+    X_D3DSTREAM_INPUT          pStreamInputs
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    DbgPrintf( "EmuD3D8 (0x%X): EmuIDirect3DDevice8_SelectVertexShaderDirect\n"
+               "(\n"
+               "   pVAF                : 0x%.08X\n"
+               "   StreamCount         : 0x%.08X\n"
+               "   pStreamInputs       : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pVAF, StreamCount, pStreamInputs);
+
+    DbgPrintf("NOT YET IMPLEMENTED!\n");
+
+    EmuSwapFS();   // Xbox FS
+
+    return 0;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetVertexShaderInput
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetVertexShaderInput
+(
+    DWORD              *pHandle,
+    UINT               *pStreamCount,
+    X_D3DSTREAM_INPUT  *pStreamInputs
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    DbgPrintf( "EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetVertexShaderInput\n"
+               "(\n"
+               "   pHandle             : 0x%.08X\n"
+               "   pStreamCount        : 0x%.08X\n"
+               "   pStreamInputs       : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pHandle, pStreamCount, pStreamInputs);
+
+    DbgPrintf("NOT YET IMPLEMENTED!\n");
+
+    EmuSwapFS();   // Xbox FS
+
+    return 0;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetVertexShaderInput
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShaderInput
+(
+    DWORD              Handle,
+    UINT               StreamCount,
+    X_D3DSTREAM_INPUT *pStreamInputs
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    DbgPrintf( "EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexShaderInput\n"
+               "(\n"
+               "   Handle              : 0x%.08X\n"
+               "   StreamCount         : 0x%.08X\n"
+               "   pStreamInputs       : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Handle, StreamCount, pStreamInputs);
+
+    DbgPrintf("NOT YET IMPLEMENTED!\n");
+
+    EmuSwapFS();   // Xbox FS
+
+    return 0;
+}
+
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_RunVertexStateShader
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_RunVertexStateShader
+(
+    DWORD Address, 
+    CONST FLOAT *pData
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    DbgPrintf( "EmuD3D8 (0x%X): EmuIDirect3DDevice8_RunVertexStateShader\n"
+               "(\n"
+               "   Address              : 0x%.08X\n"
+               "   pData                : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Address,pData);
+
+    DbgPrintf("NOT YET IMPLEMENTED!\n");
+
+    EmuSwapFS();   // Xbox FS
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_LoadVertexShaderProgram
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_LoadVertexShaderProgram
+(
+    CONST DWORD *pFunction, 
+    DWORD        Address
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    DbgPrintf( "EmuD3D8 (0x%X): EmuIDirect3DDevice8_LoadVertexShaderProgram\n"
+               "(\n"
+               "   pFunction           : 0x%.08X\n"
+               "   Address             : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pFunction,Address);
+
+    DbgPrintf("NOT YET IMPLEMENTED!\n");
+
+    EmuSwapFS();   // Xbox FS
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetVertexShaderType
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_GetVertexShaderType
+(
+    DWORD  Handle, 
+    DWORD *pType
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    DbgPrintf( "EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetVertexShaderType\n"
+               "(\n"
+               "   Handle               : 0x%.08X\n"
+               "   pType                : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Handle,pType);
+
+    if(pType && VshHandleIsVertexShader(Handle))
+    {
+        *pType = ((VERTEX_SHADER *)(VshHandleGetVertexShader(Handle))->Handle)->Type;
+    }
+
+    EmuSwapFS();   // Xbox FS
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetVertexShaderDeclaration
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetVertexShaderDeclaration
+(
+    DWORD  Handle,
+    PVOID  pData,
+    DWORD *pSizeOfData
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    DbgPrintf( "EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetVertexShaderDeclaration\n"
+               "(\n"
+               "   Handle               : 0x%.08X\n"
+               "   pData                : 0x%.08X\n"
+               "   pSizeOfData          : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Handle,pData,pSizeOfData);
+
+    HRESULT hRet = D3DERR_INVALIDCALL;
+
+    if(pSizeOfData && VshHandleIsVertexShader(Handle))
+    {
+        VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)(VshHandleGetVertexShader(Handle))->Handle;
+        if(*pSizeOfData < pVertexShader->DeclarationSize || !pData)
+        {
+            *pSizeOfData = pVertexShader->DeclarationSize;
+
+            hRet = !pData ? D3D_OK : D3DERR_MOREDATA;
+        }
+        else
+        {
+            memcpy(pData, pVertexShader->pDeclaration, pVertexShader->DeclarationSize);
+            hRet = D3D_OK;
+        }
+    }
+
+    EmuSwapFS();   // Xbox FS
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetVertexShaderFunction
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetVertexShaderFunction
+(
+    DWORD  Handle,
+    PVOID *pData,
+    DWORD *pSizeOfData
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    DbgPrintf( "EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetVertexShaderFunction\n"
+               "(\n"
+               "   Handle               : 0x%.08X\n"
+               "   pData                : 0x%.08X\n"
+               "   pSizeOfData          : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Handle,pData,pSizeOfData);
+
+    HRESULT hRet = D3DERR_INVALIDCALL;
+
+    if(pSizeOfData && VshHandleIsVertexShader(Handle))
+    {
+        VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)(VshHandleGetVertexShader(Handle))->Handle;
+        if(*pSizeOfData < pVertexShader->DeclarationSize || !pData)
+        {
+            *pSizeOfData = pVertexShader->FunctionSize;
+
+            hRet = !pData ? D3D_OK : D3DERR_MOREDATA;
+        }
+        else
+        {
+            memcpy(pData, pVertexShader->pFunction, pVertexShader->FunctionSize);
+            hRet = D3D_OK;
+        }
+    }
+
+    EmuSwapFS();   // Xbox FS
+    return hRet;
 }

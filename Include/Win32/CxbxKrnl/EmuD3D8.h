@@ -253,11 +253,20 @@ HRESULT WINAPI EmuIDirect3DDevice8_GetViewport
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_GetViewportOffsetAndScale
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_GetViewportOffsetAndScale
+(
+    D3DXVECTOR4 *pOffset,
+    D3DXVECTOR4 *pScale
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetShaderConstantMode
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_SetShaderConstantMode
 (
-    DWORD               Mode    // TODO: Fill out enumeration
+    XTL::X_D3DSHADERCONSTANTMODE Mode
 );
 
 // ******************************************************************
@@ -1237,6 +1246,135 @@ HRESULT WINAPI EmuIDirect3DPalette8_Lock
     X_D3DPalette   *pThis,
     D3DCOLOR      **ppColors,
     DWORD           Flags
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetVertexShaderSize
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_GetVertexShaderSize
+(
+    DWORD Handle, 
+    UINT* pSize
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_DeleteVertexShader
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_DeleteVertexShader
+(
+    DWORD Handle
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SelectVertexShaderDirect
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SelectVertexShaderDirect
+(
+    X_D3DVERTEXATTRIBUTEFORMAT *pVAF,
+    DWORD                      Address
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetShaderConstantMode
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_GetShaderConstantMode
+(
+    DWORD *pMode
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetVertexShader
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_GetVertexShader
+(
+    DWORD *pHandle
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetVertexShaderConstant
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_GetVertexShaderConstant
+(
+    INT   Register,
+    void  *pConstantData,
+    DWORD ConstantCount
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetVertexShaderInputDirect
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetVertexShaderInputDirect
+(
+    X_D3DVERTEXATTRIBUTEFORMAT *pVAF,
+    UINT                       StreamCount,
+    X_D3DSTREAM_INPUT          pStreamInputs
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetVertexShaderInput
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_GetVertexShaderInput
+(
+    DWORD              *pHandle,
+    UINT               *pStreamCount,
+    X_D3DSTREAM_INPUT  *pStreamInputs
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetVertexShaderInput
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetVertexShaderInput
+(
+    DWORD              Handle,
+    UINT               StreamCount,
+    X_D3DSTREAM_INPUT *pStreamInputs
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_RunVertexStateShader
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_RunVertexStateShader
+(
+    DWORD        Address,
+    CONST FLOAT *pData
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_LoadVertexShaderProgram
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_LoadVertexShaderProgram
+(
+    CONST DWORD *pFunction, 
+    DWORD        Address
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetVertexShaderType
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_GetVertexShaderType
+(
+    DWORD  Handle, 
+    DWORD *pType
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetVertexShaderDeclaration
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_GetVertexShaderDeclaration
+(
+    DWORD  Handle,
+    PVOID  pData,
+    DWORD *pSizeOfData
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetVertexShaderFunction
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_GetVertexShaderFunction
+(
+    DWORD  Handle,
+    PVOID *pData,
+    DWORD *pSizeOfData
 );
 
 #endif

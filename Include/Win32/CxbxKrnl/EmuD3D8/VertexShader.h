@@ -34,33 +34,47 @@
 #ifndef VERTEXSHADER_H
 #define VERTEXSHADER_H
 
-// nv2a microcode header
-typedef struct _NV2A_HEADER
-{
-    BYTE Type;
-    BYTE Version;
-    BYTE NumInst;
-    BYTE Unknown;
-}
-NV2A_HEADER;
+//#define _DEBUG_VSH
 
-#define NV2A_MICROCODE_DEF_TYPE		0x78 // x
-#define NV2A_MICROCODE_DEF_VS_XVS	0x20 // for vs, xvs
-#define NV2A_MICROCODE_DEF_XVSS		0x73 // for xvss
-#define NV2A_MICROCODE_DEF_XVSW		0x77 // for xvsw
+// nv2a microcode header
+typedef struct
+{
+    uint08 Type;
+    uint08 Version;
+    uint08 NumInst;
+    uint08 Unknown0;
+} VSH_SHADER_HEADER;
+
+#define VSH_INSTRUCTION_SIZE       4
+#define VSH_INSTRUCTION_SIZE_BYTES (VSH_INSTRUCTION_SIZE * sizeof(DWORD))
 
 // recompile xbox vertex shader declaration
-extern void EmuRecompileVSHDeclaration
+extern DWORD EmuRecompileVshDeclaration
 (
-    DWORD  *pDeclaration,
-    DWORD   Handle
+    DWORD                *pDeclaration, 
+    DWORD               **ppRecompiledDeclaration,
+    DWORD                *pDeclarationSize,
+    boolean               IsFixedFunction,
+    VERTEX_DYNAMIC_PATCH *pVertexDynamicPatch
 );
 
 // recompile xbox vertex shader function
-extern void EmuRecompileVSHFunction
+extern HRESULT EmuRecompileVshFunction
 (
-    DWORD  *pFunction,
-    DWORD **pRecompiled
+    DWORD        *pFunction,
+    LPD3DXBUFFER *ppRecompiled,
+    DWORD        *pOriginalSize,
+    boolean      bNoReservedConstants
 );
+
+inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle & 0x80000000) ? TRUE : FALSE; }
+inline X_D3DVertexShader *VshHandleGetVertexShader(DWORD Handle) { return (X_D3DVertexShader *)(Handle & 0x7FFFFFFF); }
+
+#ifdef _DEBUG_VSH
+#define DbgVshPrintf printf
+#else
+inline void null_func_vsh(...) { }
+#define DbgVshPrintf XTL::null_func_vsh
+#endif
 
 #endif
