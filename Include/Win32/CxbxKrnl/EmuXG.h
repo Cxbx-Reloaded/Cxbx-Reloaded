@@ -43,6 +43,21 @@ PVOID WINAPI EmuXGIsSwizzledFormat
 );
 
 // ******************************************************************
+// * func: EmuXGSwizzleRect
+// ******************************************************************
+VOID WINAPI EmuXGSwizzleRect
+(
+    LPCVOID       pSource, 
+    DWORD         Pitch,
+    LPCRECT       pRect,
+    LPVOID        pDest,
+    DWORD         Width,
+    DWORD         Height,
+    CONST LPPOINT pPoint,
+    DWORD         BytesPerPixel
+);
+
+// ******************************************************************
 // * func: EmuXGUnswizzleRect
 // ******************************************************************
 VOID WINAPI EmuXGUnswizzleRect

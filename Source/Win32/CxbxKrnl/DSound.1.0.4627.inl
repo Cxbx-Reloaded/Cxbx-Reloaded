@@ -428,14 +428,30 @@ OOVPATable DSound_1_0_4627[] =
         "EmuDirectSoundCreateBuffer" 
         #endif
     },
+    // CMcpxBuffer::SetBufferData (* unchanged since 4361 *)
+    {
+        (OOVPA*)&CMcpxBuffer_SetBufferData_1_0_4361, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CMcpxBuffer_SetBufferData (XREF)"
+        #endif
+    },
+    // CDirectSoundBuffer::SetBufferData (* unchanged since 4361 *)
+    {
+        (OOVPA*)&CDirectSoundBuffer_SetBufferData_1_0_4361, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundBuffer_SetBufferData (XREF)"
+        #endif
+    },
     // IDirectSoundBuffer8::SetBufferData (* unchanged since 4361 *)
     {
-        (OOVPA*)&IDirectSoundBuffer8_SetBufferData_1_0_4361,
-
+        (OOVPA*)&IDirectSoundBuffer8_SetBufferData_1_0_4361, 
+            
         XTL::EmuIDirectSoundBuffer8_SetBufferData,
 
         #ifdef _DEBUG_TRACE
-        "EmuIDirectSoundBuffer8_SetBufferData" 
+        "IDirectSoundBuffer8_SetBufferData"
         #endif
     },
     // IDirectSound8::Release

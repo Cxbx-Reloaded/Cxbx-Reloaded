@@ -121,7 +121,7 @@ static inline void EmuSwapFS()
     // ******************************************************************
     // * Every "N" interceptions, perform various periodic services
     // ******************************************************************
-    if(dwInterceptionCount++ == EmuAutoSleepRate)
+    if(dwInterceptionCount++ >= EmuAutoSleepRate)
     {
         // If we're in the Xbox FS, wait until the next swap
         if(EmuIsXboxFS())

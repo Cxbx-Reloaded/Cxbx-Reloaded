@@ -103,6 +103,10 @@ enum XRefDataBaseOffset
     XREF_GETCURRENTPOSITION2    = 11,
     XREF_DSOUNDPLAY             = 12,
     XREF_DSOUNDPLAY2            = 13,
+    XREF_DSOUNDSTOP             = 14,
+    XREF_DSOUNDSTOP2            = 15,
+    XREF_DSSETBUFFERDATA        = 16,
+    XREF_DSSETBUFFERDATA2       = 17
 };
 
 #endif

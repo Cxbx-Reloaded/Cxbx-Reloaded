@@ -321,6 +321,8 @@ static DWORD WINAPI EmuRenderWindow(LPVOID)
 // ******************************************************************
 static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+    static DWORD dwRestoreSleepRate = EmuAutoSleepRate;
+
     switch(msg)
     {
         case WM_DESTROY:
@@ -333,9 +335,19 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
                 PostMessage(hWnd, WM_CLOSE, 0, 0);
             break;
 
+        case WM_SETFOCUS:
+            EmuAutoSleepRate = dwRestoreSleepRate;
+            break;
+
+        case WM_KILLFOCUS:
+            dwRestoreSleepRate = EmuAutoSleepRate;
+            EmuAutoSleepRate = 1;
+            break;
+
         case WM_CLOSE:
             DestroyWindow(hWnd);
             break;
+
         case WM_SETCURSOR:
             if(g_XBVideo.GetFullscreen())
             {
@@ -343,6 +355,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
                 return 0;
             }
             return DefWindowProc(hWnd, msg, wParam, lParam);
+
         default:
             return DefWindowProc(hWnd, msg, wParam, lParam);
     }
@@ -1816,13 +1829,13 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Clear
         // TODO: D3DCLEAR_TARGET_A, *R, *G, *B don't exist on windows
         DWORD newFlags = 0;
 
-        if(Flags & 0x000000f0l)
+        if(Flags & 0x000000f0)
             newFlags |= D3DCLEAR_TARGET;
 
-        if(Flags & 0x00000001l)
+        if(Flags & 0x00000001)
             newFlags |= D3DCLEAR_ZBUFFER;
 
-        if(Flags & 0x00000002l)
+        if(Flags & 0x00000002)
             newFlags |= D3DCLEAR_STENCIL;
 
         Flags = newFlags;

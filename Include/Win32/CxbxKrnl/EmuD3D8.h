@@ -218,8 +218,10 @@ inline X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format)
         case D3DFMT_D24S8:
             return 0x2A;
         case D3DFMT_X8R8G8B8:
+//            return 0x1E;    // Linear (X_D3DFMT_LIN_X8R8G8B8)
             return 0x07;
         case D3DFMT_A8R8G8B8:
+//            return 0x12;    // Linear (X_D3DFMT_LIN_A8R8G8B8)
             return 0x06;
     }
 

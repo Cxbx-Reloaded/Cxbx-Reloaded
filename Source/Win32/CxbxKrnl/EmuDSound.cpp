@@ -139,7 +139,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
             printf("*Warning* use of unsupported pdsbd->dwFlags mask(s) (0x%.08X)", pdsbd->dwFlags & (~dwAcceptableMask));
 
         DSBufferDesc.dwSize = sizeof(DSBufferDesc);
-        DSBufferDesc.dwFlags = pdsbd->dwFlags & dwAcceptableMask | DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY;
+        DSBufferDesc.dwFlags = pdsbd->dwFlags & dwAcceptableMask;
 
         if(pdsbd->dwBufferBytes < DSBSIZE_MIN)
             DSBufferDesc.dwBufferBytes = 16384; // NOTE: HACK: TEMPORARY FOR STELLA
@@ -440,19 +440,24 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetBufferData
                GetCurrentThreadId(), pThis, pvBufferData, dwBufferBytes);
     }
     #endif
-/*
-    char szBuffer[266];
 
-    sprintf(szBuffer, "Yea 0x%.08X - %d", pvBufferData, dwBufferBytes);
+    // TODO: HACK: This should dynamically recreate the buffer when necessary (size change)
+    PVOID pAudioPtr, pAudioPtr2;
+    DWORD dwAudioBytes, dwAudioBytes2;
 
-    MessageBox(g_hEmuWindow, szBuffer, "Cxbx", MB_OK);
-*/
-    // Todo: Translate params, then make the PC DirectSound call
-    printf("*Note* EmuIDirectSoundBuffer8_SetBufferData is being ignored\n");
+    HRESULT hRet = pThis->EmuDirectSoundBuffer8->Lock(0, dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
+
+    if(SUCCEEDED(hRet))
+    {
+//        memcpy(pAudioPtr,  pvBufferData, dwAudioBytes);
+//        memcpy(pAudioPtr2, (PVOID)((DWORD)pvBufferData+dwAudioBytes), dwAudioBytes2);
+
+        pThis->EmuDirectSoundBuffer8->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
+    }
 
     EmuSwapFS();   // XBox FS
 
-    return DS_OK;
+    return hRet;
 }
 
 // ******************************************************************
@@ -633,37 +638,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_GetCurrentPosition
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_Stop
-// ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Stop
-(
-    X_CDirectSoundBuffer   *pThis
-)
-{
-    EmuSwapFS();   // Win2k/XP FS
-
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_Stop\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis);
-    }
-    #endif
-
-    // Todo: Translate params, then make the PC DirectSound call
-    printf("*Note* EmuIDirectSoundBuffer8_Stop is being ignored\n");
-
-    EmuSwapFS();   // XBox FS
-
-    return DS_OK;
-}
-
-// ******************************************************************
 // * func: EmuIDirectSoundBuffer8_Play
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Play
@@ -695,11 +669,41 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Play
     if(dwFlags & (~DSBPLAY_LOOPING))
         EmuCleanup("Unsupported Playing Flags");
 
-    pThis->EmuDirectSoundBuffer8->Play(0, 0, dwFlags);
+    HRESULT hRet = pThis->EmuDirectSoundBuffer8->Play(0, 0, dwFlags);
 
     EmuSwapFS();   // XBox FS
 
-    return DS_OK;
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_Stop
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Stop
+(
+    X_CDirectSoundBuffer   *pThis
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_Stop\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis);
+    }
+    #endif
+
+    HRESULT hRet = pThis->EmuDirectSoundBuffer8->Stop();
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
 }
 
 // ******************************************************************

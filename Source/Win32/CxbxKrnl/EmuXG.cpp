@@ -83,6 +83,54 @@ PVOID WINAPI XTL::EmuXGIsSwizzledFormat
 }
 
 // ******************************************************************
+// * func: EmuXGSwizzleRect
+// ******************************************************************
+VOID WINAPI XTL::EmuXGSwizzleRect
+(
+    LPCVOID       pSource, 
+    DWORD         Pitch,
+    LPCRECT       pRect,
+    LPVOID        pDest,
+    DWORD         Width,
+    DWORD         Height,
+    CONST LPPOINT pPoint,
+    DWORD         BytesPerPixel
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuXGSwizzleRect\n"
+               "(\n"
+               "   pSource             : 0x%.08X\n"
+               "   Pitch               : 0x%.08X\n"
+               "   pRect               : 0x%.08X\n"
+               "   pDest               : 0x%.08X\n"
+               "   Width               : 0x%.08X\n"
+               "   Height              : 0x%.08X\n"
+               "   pPoint              : 0x%.08X\n"
+               "   BytesPerPixel       : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pSource, Pitch, pRect, pDest, Width, Height,
+               pPoint, BytesPerPixel);
+    }
+    #endif
+
+    if(pRect == NULL && pPoint == NULL && Pitch == 0)
+        memcpy(pDest, pSource, Width*Height*BytesPerPixel);
+    else
+        EmuCleanup("Unhandled swizzle (temporarily)");
+
+    EmuSwapFS();   // Xbox FS
+
+    return;
+}
+
+// ******************************************************************
 // * func: EmuXGUnswizzleRect
 // ******************************************************************
 VOID WINAPI XTL::EmuXGUnswizzleRect
