@@ -9,6 +9,8 @@ version: 0.7.2 (??/??/03)
 
 - stdio seems to be working great :]
 
+- some advanced texture stuff (TCI)
+
 version: 0.7.1 (05/30/03)
 --------------------------------
 

@@ -92,6 +92,61 @@ SOOVPA<13> IDirect3D8_GetAdapterDisplayMode_1_0_4361 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_CopyRects
+// ******************************************************************
+SOOVPA<10> IDirect3DDevice8_CopyRects_1_0_4361 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    {
+        // IDirect3DDevice8_CopyRects+0x00 : sub esp, 0x01A0
+        { 0x00, 0x81 }, // (Offset,Value)-Pair #1
+        { 0x01, 0xEC }, // (Offset,Value)-Pair #2
+        { 0x02, 0xA0 }, // (Offset,Value)-Pair #3
+        { 0x03, 0x01 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DDevice8_CopyRects+0x6E : mov esi, [eax+0x201C]
+        { 0x6E, 0x8B }, // (Offset,Value)-Pair #5
+        { 0x6F, 0xB0 }, // (Offset,Value)-Pair #6
+        { 0x70, 0x1C }, // (Offset,Value)-Pair #7
+        { 0x71, 0x20 }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_CopyRects+0xDD : jnz +0x22
+        { 0xDD, 0x75 }, // (Offset,Value)-Pair #9
+        { 0xDE, 0x22 }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_CreateImageSurface
+// ******************************************************************
+SOOVPA<9> IDirect3DDevice8_CreateImageSurface_1_0_4361 =
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    {
+        // IDirect3DDevice8_CreateImageSurface+0x2A : push 0x18
+        { 0x2A, 0x6A }, // (Offset,Value)-Pair #1
+        { 0x2B, 0x18 }, // (Offset,Value)-Pair #2
+
+        // IDirect3DDevice8_CreateImageSurface+0x2C : push 0x40
+        { 0x2C, 0x6A }, // (Offset,Value)-Pair #3
+        { 0x2D, 0x40 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DDevice8_CreateImageSurface+0x3B : push 0x0404
+        { 0x3B, 0x68 }, // (Offset,Value)-Pair #5
+        { 0x3C, 0x04 }, // (Offset,Value)-Pair #6
+        { 0x3D, 0x04 }, // (Offset,Value)-Pair #7
+
+        // IDirect3DDevice8_CreateImageSurface+0x61 : retn 0x10
+        { 0x61, 0xC2 }, // (Offset,Value)-Pair #8
+        { 0x62, 0x10 }, // (Offset,Value)-Pair #9
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_GetBackBuffer
 // ******************************************************************
 SOOVPA<12> IDirect3DDevice8_GetBackBuffer_1_0_4361 =
@@ -461,6 +516,35 @@ SOOVPA<13> IDirect3DDevice8_CreateVertexBuffer_1_0_4361 =
         // IDirect3DDevice8_CreateVertexBuffer+0x53 : retn 0x14
         { 0x53, 0xC2 }, // (Offset,Value)-Pair #12
         { 0x54, 0x14 }, // (Offset,Value)-Pair #13
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetTextureState_TexCoordIndex
+// ******************************************************************
+SOOVPA<10> IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    {
+        // IDirect3DDevice8_SetTextureState_TexCoordIndex+0x0D : shl eax, 0x07
+        { 0x0D, 0xC1 }, // (Offset,Value)-Pair #1
+        { 0x0E, 0xE0 }, // (Offset,Value)-Pair #2
+        { 0x0F, 0x07 }, // (Offset,Value)-Pair #3
+
+        // IDirect3DDevice8_SetTextureState_TexCoordIndex+0x24 : cmp eax, ecx
+        { 0x24, 0x3B }, // (Offset,Value)-Pair #4
+        { 0x25, 0xC1 }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_SetTextureState_TexCoordIndex+0x6B : mov esi, 0x2400
+        { 0x6B, 0xBE }, // (Offset,Value)-Pair #6
+        { 0x6D, 0x24 }, // (Offset,Value)-Pair #7
+
+        // IDirect3DDevice8_SetTextureState_TexCoordIndex+0xB3 : shl edx, 0x04
+        { 0xB3, 0xC1 }, // (Offset,Value)-Pair #8
+        { 0xB4, 0xE2 }, // (Offset,Value)-Pair #9
+        { 0xB5, 0x04 }, // (Offset,Value)-Pair #10
     }
 };
 
@@ -1076,6 +1160,26 @@ OOVPATable D3D8_1_0_4361[] =
         "EmuIDirect3D8_GetAdapterDisplayMode" 
         #endif
     },
+    // IDirect3DDevice8::CopyRects
+    {
+        (OOVPA*)&IDirect3DDevice8_CopyRects_1_0_4361,
+
+        xd3d8::EmuIDirect3DDevice8_CopyRects,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_CopyRects"
+        #endif
+    },
+    // IDirect3DDevice8::CreateImageSurface
+    {
+        (OOVPA*)&IDirect3DDevice8_CreateImageSurface_1_0_4361,
+
+        xd3d8::EmuIDirect3DDevice8_CreateImageSurface,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_CreateImageSurface"
+        #endif
+    },
     // IDirect3DDevice8::GetBackBuffer
     {
         (OOVPA*)&IDirect3DDevice8_GetBackBuffer_1_0_4361,
@@ -1194,6 +1298,16 @@ OOVPATable D3D8_1_0_4361[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_CreateVertexBuffer" 
+        #endif
+    },
+    // IDirect3DDevice8::SetTextureState_TexCoordIndex
+    {
+        (OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361,
+
+        xd3d8::EmuIDirect3DDevice8_SetTextureState_TexCoordIndex,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetTextureState_TexCoordIndex" 
         #endif
     },
     // IDirect3DDevice8::SetRenderState_CullMode

@@ -103,9 +103,14 @@ static xd3d8::X_D3DSurface     *g_pCachedZStencilSurface = NULL;
 static DWORD                    g_dwVertexShaderUsage = 0;
 
 // ******************************************************************
-// * EmuD3DDefferedRenderState
+// * EmuD3DDeferredRenderState
 // ******************************************************************
-DWORD *xd3d8::EmuD3DDefferedRenderState;
+DWORD *xd3d8::EmuD3DDeferredRenderState;
+
+// ******************************************************************
+// * EmuD3DDeferredTextureState
+// ******************************************************************
+DWORD *xd3d8::EmuD3DDeferredTextureState;
 
 // ******************************************************************
 // * func: EmuD3DInit
@@ -563,6 +568,98 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_GetAdapterDisplayMode
     }
 
     EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_CopyRects
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CopyRects
+(
+    X_D3DSurface       *pSourceSurface,
+    CONST RECT         *pSourceRectsArray,
+    UINT                cRects,
+    X_D3DSurface       *pDestinationSurface,
+    CONST POINT        *pDestPointsArray
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CopyRects\n"
+               "(\n"
+               "   pSourceSurface      : 0x%.08X\n"
+               "   pSourceRectsArray   : 0x%.08X\n"
+               "   cRects              : 0x%.08X\n"
+               "   pDestinationSurface : 0x%.08X\n"
+               "   pDestPointsArray    : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pSourceSurface, pSourceRectsArray, cRects,
+               pDestinationSurface, pDestPointsArray);
+    }
+    #endif
+
+    // ******************************************************************
+    // * Redirect to PC D3D
+    // ******************************************************************
+    HRESULT hRet = g_pD3DDevice8->CopyRects
+    (
+        pSourceSurface->EmuSurface8, 
+        pSourceRectsArray,
+        cRects,
+        pDestinationSurface->EmuSurface8,
+        pDestPointsArray
+    );
+
+    if(FAILED(hRet))
+        EmuCleanup("Hello");
+
+    EmuSwapFS();   // Xbox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_CreateImageSurface
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreateImageSurface
+(
+    UINT                Width,
+    UINT                Height,
+    X_D3DFORMAT         Format,
+    X_D3DSurface      **ppBackBuffer
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreateImageSurface\n"
+               "(\n"
+               "   Width               : 0x%.08X\n"
+               "   Height              : 0x%.08X\n"
+               "   Format              : 0x%.08X\n"
+               "   ppBackBuffer        : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Width, Height, Format, ppBackBuffer);
+    }
+    #endif
+
+    *ppBackBuffer = new X_D3DSurface();
+
+    Format = EmuXB2PC_D3DFormat(Format);
+
+    HRESULT hRet = g_pD3DDevice8->CreateImageSurface(Width, Height, Format, &((*ppBackBuffer)->EmuSurface8));
+
+    EmuSwapFS();   // Xbox FS
 
     return hRet;
 }
@@ -1373,15 +1470,15 @@ HRESULT WINAPI xd3d8::EmuIDirect3DSurface8_LockRect
                "   Flags               : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, pLockedRect, pRect, Flags);
+        
+        if(Flags & 0x40)
+            printf("EmuIDirect3DSurface8_LockRect: *Warning* D3DLOCK_TILED ignored!\n");
     }
     #endif
 
     IDirect3DSurface8 *pSurface8 = pThis->EmuSurface8;
 
     DWORD NewFlags = 0;
-
-    if(Flags & 0x40)
-        printf("EmuIDirect3DSurface8_LockRect: *Warning* D3DLOCK_TILED ignored!\n");
 
     if(Flags & 0x80)
         NewFlags |= D3DLOCK_READONLY;
@@ -1542,6 +1639,41 @@ xd3d8::X_D3DVertexBuffer* WINAPI xd3d8::EmuIDirect3DDevice8_CreateVertexBuffer2
     EmuSwapFS();   // XBox FS
 
     return pD3DVertexBuffer;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
+// ******************************************************************
+VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
+(
+    DWORD Stage,
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetTextureState_TexCoordIndex\n"
+               "(\n"
+               "   Stage               : 0x%.08X\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Stage, Value);
+    }
+    #endif
+
+    if(Value > 0x00030000)
+        EmuCleanup("EmuIDirect3DDevice8_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)", Value);
+
+    g_pD3DDevice8->SetTextureStageState(Stage, D3DTSS_TEXCOORDINDEX, Value);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
 }
 
 // ******************************************************************
@@ -1867,9 +1999,33 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
     #endif
 
     // Certain D3DRS values need to be checked on each Draw[Indexed]Vertices
-    g_pD3DDevice8->SetRenderState(D3DRS_LIGHTING,              xd3d8::EmuD3DDefferedRenderState[10]);
-    g_pD3DDevice8->SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, xd3d8::EmuD3DDefferedRenderState[20]);
-    g_pD3DDevice8->SetRenderState(D3DRS_AMBIENT,               xd3d8::EmuD3DDefferedRenderState[23]);
+    if(xd3d8::EmuD3DDeferredRenderState != 0)
+    {
+        g_pD3DDevice8->SetRenderState(D3DRS_LIGHTING,              xd3d8::EmuD3DDeferredRenderState[10]);
+        g_pD3DDevice8->SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, xd3d8::EmuD3DDeferredRenderState[20]);
+        g_pD3DDevice8->SetRenderState(D3DRS_AMBIENT,               xd3d8::EmuD3DDeferredRenderState[23]);
+    }
+
+    // Certain D3DTS values need to be checked on each Draw[Indexed]Vertices
+    if(xd3d8::EmuD3DDeferredTextureState != 0)
+    {
+        for(int v=0;v<4;v++)
+        {
+            DWORD *pCur = (xd3d8::EmuD3DDeferredTextureState+v*32);
+
+            g_pD3DDevice8->SetTextureStageState(v, D3DTSS_TEXTURETRANSFORMFLAGS, pCur[21]);
+
+            // TODO: Use a lookup table, this is not always a 1:1 map
+            g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, pCur[12]);
+
+            // TODO: I think these are OK, but verify this eventually
+            g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLORARG1, pCur[14]);
+            g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLORARG2, pCur[15]);
+
+            // TODO: Use a lookup table, this is not always a 1:1 map (same as D3DTSS_COLOROP)
+            g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ALPHAOP, pCur[16]);
+        }
+    }
 
     UINT PrimitiveCount = D3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
 

@@ -329,16 +329,37 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 				void *pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4361, lower, upper);
 
                 // ******************************************************************
-				// * Locate D3DRenderState
+				// * Locate D3DDeferredRenderState
 				// ******************************************************************
-                if(pFunc != 0)
+                if(pFunc != 0 && (BuildVersion == 4361 || BuildVersion == 4627))
                 {
                     if(BuildVersion == 4361)
-						xd3d8::EmuD3DDefferedRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x200 + 82*4);
+						xd3d8::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x200 + 82*4);
                     else if(BuildVersion == 4627)
-						xd3d8::EmuD3DDefferedRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x24C + 92*4);
+						xd3d8::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x24C + 92*4);
 
-					printf("Emu (0x%X): 0x%.08X -> EmuD3DDefferedRenderState\n", GetCurrentThreadId(), xd3d8::EmuD3DDefferedRenderState);
+					printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredRenderState\n", GetCurrentThreadId(), xd3d8::EmuD3DDeferredRenderState);
+                }
+                else
+                {
+                    xd3d8::EmuD3DDeferredRenderState = 0;
+                    printf("Emu (0x%X): *Warning* EmuD3DDeferredRenderState not found!\n");
+                }
+
+                pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361, lower, upper);
+
+                // ******************************************************************
+				// * Locate D3DDeferredTextureState
+				// ******************************************************************
+                if(pFunc != 0 && (BuildVersion == 4361))
+                {
+					xd3d8::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x19) - 0x70);
+					printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredTextureState\n", GetCurrentThreadId(), xd3d8::EmuD3DDeferredTextureState);
+                }
+                else
+                {
+                    xd3d8::EmuD3DDeferredTextureState = 0;
+                    printf("Emu (0x%X): *Warning* EmuD3DDeferredTextureState not found!\n");
                 }
 			}
         }
@@ -583,7 +604,7 @@ int EmuException(LPEXCEPTION_POINTERS e)
 	// ******************************************************************
 	{
 		printf("Emu (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
-		printf("Emu (0x%X): Recieved Exception : 0x%.08X\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
+		printf("Emu (0x%X): Recieved Exception [0x%.08X]@0x%.08X\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip);
 		printf("Emu (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
 	}
 
@@ -593,7 +614,7 @@ int EmuException(LPEXCEPTION_POINTERS e)
 	{
 		char buffer[256];
 
-		sprintf(buffer, "Recieved Exception [0x%.08X]\n\nPress 'OK' to terminate emulation.\nPress 'Cancel' to debug.", e->ExceptionRecord->ExceptionCode);
+		sprintf(buffer, "Recieved Exception [0x%.08X]@0x%.08X\n\nPress 'OK' to terminate emulation.\nPress 'Cancel' to debug.", e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip);
 
 		if(MessageBox(g_hEmuWindow, buffer, "Cxbx", MB_ICONSTOP | MB_OKCANCEL) == IDOK)
 			ExitProcess(1);
@@ -615,7 +636,7 @@ int ExitException(LPEXCEPTION_POINTERS e)
 	// ******************************************************************
 	{
 		printf("Emu (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
-		printf("Emu (0x%X): Recieved Exit Exception : 0x%.08X\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
+		printf("Emu (0x%X): Recieved Exception [0x%.08X]@0x%.08X\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip);
 		printf("Emu (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
 	}
 

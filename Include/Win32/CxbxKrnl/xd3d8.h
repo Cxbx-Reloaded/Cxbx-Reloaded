@@ -51,7 +51,9 @@ typedef D3DFORMAT X_D3DFORMAT;
 // ******************************************************************
 inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 {
-    if(Format == 0x07)
+    if(Format == 0)
+        return (D3DFORMAT)NULL;
+    else if(Format == 0x07)
         return D3DFMT_X8R8G8B8;
     else if(Format == 0x06)
         return D3DFMT_A8R8G8B8;
@@ -255,9 +257,14 @@ extern UINT D3DVertexToPrimitive[11][2];
 	(((VertexCount)-D3DVertexToPrimitive[PrimitiveType][1])/D3DVertexToPrimitive[PrimitiveType][0])
 
 // ******************************************************************
-// * EmuD3DDefferedRenderState
+// * EmuD3DDeferredRenderState
 // ******************************************************************
-extern DWORD *EmuD3DDefferedRenderState;
+extern DWORD *EmuD3DDeferredRenderState;
+
+// ******************************************************************
+// * EmuD3DDeferredTextureState
+// ******************************************************************
+extern DWORD *EmuD3DDeferredTextureState;
 
 // ******************************************************************
 // * EmuPrimitiveType
@@ -295,6 +302,29 @@ HRESULT WINAPI EmuIDirect3D8_GetAdapterDisplayMode
 (
     UINT                        Adapter,
     X_D3DDISPLAYMODE           *pMode
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_CopyRects
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_CopyRects
+(
+    X_D3DSurface       *pSourceSurface,
+    CONST RECT         *pSourceRectsArray,
+    UINT                cRects,
+    X_D3DSurface       *pDestinationSurface,
+    CONST POINT        *pDestPointsArray
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_CreateImageSurface
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_CreateImageSurface
+(
+    UINT                Width,
+    UINT                Height,
+    X_D3DFORMAT         Format,
+    X_D3DSurface      **ppBackBuffer
 );
 
 // ******************************************************************
@@ -522,6 +552,15 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreateVertexBuffer
 X_D3DVertexBuffer* WINAPI EmuIDirect3DDevice8_CreateVertexBuffer2
 (
     UINT Length
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
+(
+    DWORD Stage,
+    DWORD Value
 );
 
 // ******************************************************************

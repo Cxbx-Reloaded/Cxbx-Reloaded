@@ -1054,6 +1054,8 @@ XBSYSAPI EXPORTNUM(226) NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
 
     NTSTATUS ret = NT_NtSetInformationFile(FileHandle, IoStatusBlock, FileInformation, Length, FileInformationClass);
 
+    EmuSwapFS();   // Xbox FS
+
     return ret;
 }
 

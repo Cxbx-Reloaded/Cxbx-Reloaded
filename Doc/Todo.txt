@@ -1,6 +1,13 @@
 Cxbx Todo (* denotes high priority)
 
-  * When in critical section, do not print debug trace
+  * Perhaps for global variable detection, have some sort of array of
+	function + offset pairs to check. That way if an Xbe happens to not
+	use a particular function (wont get linked in), there are other chances
+	to locate the variable. In the even that none are found, the global ptr
+	should be set to NULL, and any references to it should not assume it
+	will not be NULL.
+
+  * When in critical section, do not print debug trace?
 
   * Functions like GetRenderTarget need to return a special temporary
     X_D3DSurface that will somehow be cleaned up along with the "real"
@@ -20,10 +27,6 @@ Cxbx Todo (* denotes high priority)
   * Stabilize Heap Allocation (i.e. operator new) -> Crashes after initial commit is full
 
   * Stabilize TLS (it's close...)
-
-  * 3D Textured Demo
-
-  * Retail Games (esp. XDK 4361)
 
   What does SetLastError check Irql for? Should this be emulated?
 
