@@ -589,6 +589,74 @@ SOOVPA<10> IDirect3DDevice8_GetDepthStencilSurface_1_0_3925 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_CreateVertexBuffer
+// ******************************************************************
+SOOVPA<13> IDirect3DDevice8_CreateVertexBuffer_1_0_3925 =
+{
+    0,  // Large == 0
+    13, // Count == 13
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_CreateVertexBuffer+0x03 : push 0x40
+        { 0x03, 0x6A }, // (Offset,Value)-Pair #1
+        { 0x04, 0x40 }, // (Offset,Value)-Pair #2
+
+        // IDirect3DDevice8_CreateVertexBuffer+0x10 : mov eax, [esp+8]
+        { 0x10, 0x8B }, // (Offset,Value)-Pair #3
+        { 0x11, 0x44 }, // (Offset,Value)-Pair #4
+        { 0x12, 0x24 }, // (Offset,Value)-Pair #5
+        { 0x13, 0x08 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_CreateVertexBuffer+0x48 : mov dword ptr [esi], 0x01000001
+        { 0x48, 0xC7 }, // (Offset,Value)-Pair #7
+        { 0x49, 0x06 }, // (Offset,Value)-Pair #8
+        { 0x4A, 0x01 }, // (Offset,Value)-Pair #9
+        { 0x4B, 0x00 }, // (Offset,Value)-Pair #10
+        { 0x4D, 0x01 }, // (Offset,Value)-Pair #11
+
+        // IDirect3DDevice8_CreateVertexBuffer+0x53 : retn 0x14
+        { 0x53, 0xC2 }, // (Offset,Value)-Pair #12
+        { 0x54, 0x14 }, // (Offset,Value)-Pair #13
+    }
+};
+
+// ******************************************************************
+// * IDirect3DVertexBuffer8_Lock
+// ******************************************************************
+SOOVPA<11> IDirect3DVertexBuffer8_Lock_1_0_3925 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DVertexBuffer8_Lock+0x01 : mov bl, [esp+0x18]
+        { 0x01, 0x8A }, // (Offset,Value)-Pair #1
+        { 0x02, 0x5C }, // (Offset,Value)-Pair #2
+        { 0x03, 0x24 }, // (Offset,Value)-Pair #3
+        { 0x04, 0x18 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DVertexBuffer8_Lock+0x09 : jnz +0x24
+        { 0x09, 0x75 }, // (Offset,Value)-Pair #5
+        { 0x0A, 0x1E }, // (Offset,Value)-Pair #6
+
+        // IDirect3DVertexBuffer8_Lock+0x29 : test bl, 0xA0
+        { 0x29, 0xF6 }, // (Offset,Value)-Pair #7
+        { 0x2A, 0xC3 }, // (Offset,Value)-Pair #8
+        { 0x2B, 0xA0 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DVertexBuffer8_Lock+0x4A : retn 0x14
+        { 0x4A, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x4B, 0x14 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
 // * IDirect3DResource8_Release
 // ******************************************************************
 SOOVPA<11> IDirect3DResource8_Release_1_0_3925 =
@@ -730,6 +798,72 @@ SOOVPA<17> IDirect3DTexture8_LockRect_1_0_3925 =
         // IDirect3DTexture8_LockRect+0x20 : retn 0x14
         { 0x20, 0xC2 }, // (Offset,Value)-Pair #16
         { 0x21, 0x14 }, // (Offset,Value)-Pair #17
+    }
+};
+
+// ******************************************************************
+// * IDirect3DVolumeTexture8_LockBox
+// ******************************************************************
+SOOVPA<11> IDirect3DVolumeTexture8_LockBox_1_0_3925 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DVolumeTexture8_LockBox+0x08 : test bl, 0x20
+        { 0x08, 0xF6 }, // (Offset,Value)-Pair #1
+        { 0x09, 0xC3 }, // (Offset,Value)-Pair #2
+        { 0x0A, 0x20 }, // (Offset,Value)-Pair #3
+
+        // IDirect3DVolumeTexture8_LockBox+0x40 : test bl, 0x40
+        { 0x40, 0xF6 }, // (Offset,Value)-Pair #4
+        { 0x41, 0xC3 }, // (Offset,Value)-Pair #5
+        { 0x42, 0x40 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DVolumeTexture8_LockBox+0x83 : lea ecx, [eax+edx]
+        { 0x83, 0x8D }, // (Offset,Value)-Pair #7
+        { 0x84, 0x0C }, // (Offset,Value)-Pair #8
+        { 0x85, 0x10 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DVolumeTexture8_LockBox+0x99 : retn 0x14
+        { 0x99, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x9A, 0x14 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
+// * IDirect3DCubeTexture8_LockRect
+// ******************************************************************
+SOOVPA<11> IDirect3DCubeTexture8_LockRect_1_0_3925 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DCubeTexture8_LockRect+0x06 : test bl, 0x20
+        { 0x06, 0xF6 }, // (Offset,Value)-Pair #1
+        { 0x07, 0xC3 }, // (Offset,Value)-Pair #2
+        { 0x08, 0x20 }, // (Offset,Value)-Pair #3
+
+        // IDirect3DCubeTexture8_LockRect+0x3F : test bl, 0x40
+        { 0x3F, 0xF6 }, // (Offset,Value)-Pair #4
+        { 0x40, 0xC3 }, // (Offset,Value)-Pair #5
+        { 0x41, 0x40 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DCubeTexture8_LockRect+0x71 : shr edx, 0x03
+        { 0x71, 0xC1 }, // (Offset,Value)-Pair #7
+        { 0x72, 0xEA }, // (Offset,Value)-Pair #8
+        { 0x73, 0x03 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DCubeTexture8_LockRect+0x98 : retn 0x18
+        { 0x98, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x99, 0x18 }, // (Offset,Value)-Pair #11
     }
 };
 
@@ -898,6 +1032,26 @@ OOVPATable D3D8_1_0_3925[] =
         "EmuIDirect3DDevice8_GetDepthStencilSurface"
         #endif
     },
+    // IDirect3DDevice8::CreateVertexBuffer
+    {
+        (OOVPA*)&IDirect3DDevice8_CreateVertexBuffer_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_CreateVertexBuffer,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_CreateVertexBuffer" 
+        #endif
+    },
+    // IDirect3DVertexBuffer8::Lock
+    {
+        (OOVPA*)&IDirect3DVertexBuffer8_Lock_1_0_3925,
+
+        XTL::EmuIDirect3DVertexBuffer8_Lock,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DVertexBuffer8_Lock" 
+        #endif
+    },
     // IDirect3DResource8::Release
     {
         (OOVPA*)&IDirect3DResource8_Release_1_0_3925,
@@ -936,6 +1090,26 @@ OOVPATable D3D8_1_0_3925[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DTexture8_LockRect" 
+        #endif
+    },
+    // IDirect3DVolumeTexture8::LockBox
+    {
+        (OOVPA*)&IDirect3DVolumeTexture8_LockBox_1_0_3925,
+
+        XTL::EmuIDirect3DVolumeTexture8_LockBox,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DVolumeTexture8_LockBox" 
+        #endif
+    },
+    // IDirect3DCubeTexture8::LockRect
+    {
+        (OOVPA*)&IDirect3DCubeTexture8_LockRect_1_0_3925,
+
+        XTL::EmuIDirect3DCubeTexture8_LockRect,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DCubeTexture8_LockRect" 
         #endif
     },
 };

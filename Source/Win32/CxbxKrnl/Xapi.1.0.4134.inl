@@ -33,38 +33,6 @@
 // ******************************************************************
 
 // ******************************************************************
-// * SetThreadPriority
-// ******************************************************************
-SOOVPA<10> SetThreadPriority_1_0_4134 =
-{
-    0,  // Large == 0
-    10, // Count == 10
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        // SetThreadPriority+0x0D : push [ebp+0x08]
-        { 0x0D, 0xFF }, // (Offset,Value)-Pair #1
-        { 0x0E, 0x75 }, // (Offset,Value)-Pair #2
-        { 0x0F, 0x08 }, // (Offset,Value)-Pair #3
-
-        // SetThreadPriority+0x18 : jl +0x2C
-        { 0x18, 0x7C }, // (Offset,Value)-Pair #4
-        { 0x19, 0x2C }, // (Offset,Value)-Pair #5
-
-        // SetThreadPriority+0x22 : push 0x10
-        { 0x22, 0x6A }, // (Offset,Value)-Pair #6
-        { 0x23, 0x10 }, // (Offset,Value)-Pair #7
-
-        // SetThreadPriority+0x26 : cmp eax, 0xFFFFFFF1
-        { 0x26, 0x83 }, // (Offset,Value)-Pair #8
-        { 0x27, 0xF8 }, // (Offset,Value)-Pair #9
-        { 0x28, 0xF1 }, // (Offset,Value)-Pair #10
-    }
-};
-
-// ******************************************************************
 // * GetExitCodeThread
 // ******************************************************************
 SOOVPA<11> GetExitCodeThread_1_0_4134 =
@@ -280,9 +248,9 @@ SOOVPA<10> XMountUtilityDrive_1_0_4134 =
 // ******************************************************************
 OOVPATable XAPI_1_0_4134[] =
 {
-    // XInitDevices (* unchanged since 4034 *)
+    // XInitDevices (* unchanged since 3911 *)
     {
-        (OOVPA*)&XInitDevices_1_0_4034,
+        (OOVPA*)&XInitDevices_1_0_3911,
 
         XTL::EmuXInitDevices,
 
@@ -302,9 +270,9 @@ OOVPATable XAPI_1_0_4134[] =
         #endif
     },
     //*/
-    // SetThreadPriority
+    // SetThreadPriority (* unchanged since 3911 *)
     {
-        (OOVPA*)&SetThreadPriority_1_0_4134,
+        (OOVPA*)&SetThreadPriority_1_0_3911,
 
         XTL::EmuSetThreadPriority,
 

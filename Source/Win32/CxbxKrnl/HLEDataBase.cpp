@@ -59,6 +59,7 @@ namespace XTL
 #include "D3D8.1.0.4134.inl"
 #include "D3D8.1.0.4361.inl"
 #include "D3D8.1.0.4627.inl"
+#include "DSound.1.0.3936.inl"
 #include "DSound.1.0.4361.inl"
 #include "DSound.1.0.4627.inl"
 #include "XG.1.0.4361.inl"
@@ -139,6 +140,13 @@ HLEData HLEDataBase[] =
         1, 0, 4627,
         D3D8_1_0_4627,
         D3D8_1_0_4627_SIZE
+    },
+    // DSound Version 1.0.3936
+    {
+        "DSOUND",
+        1, 0, 3936,
+        DSound_1_0_3936,
+        DSound_1_0_3936_SIZE
     },
     // DSound Version 1.0.4361
     {

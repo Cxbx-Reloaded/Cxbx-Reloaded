@@ -166,6 +166,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\D3D8.1.0.4627.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\DSound.1.0.3936.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\DSound.1.0.4361.h
 # End Source File
 # Begin Source File
@@ -315,6 +319,10 @@ SOURCE=.\Source\Win32\CxbxKrnl\D3D8.1.0.4361.inl
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\D3D8.1.0.4627.inl
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\DSound.1.0.3936.inl
 # End Source File
 # Begin Source File
 

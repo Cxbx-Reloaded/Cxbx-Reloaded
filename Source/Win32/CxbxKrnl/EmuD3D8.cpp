@@ -3136,6 +3136,92 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DVolumeTexture8_LockBox
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DVolumeTexture8_LockBox
+(
+    X_D3DVolumeTexture *pThis,
+    UINT                Level,
+    D3DLOCKED_BOX      *pLockedVolume,
+    CONST D3DBOX       *pBox,
+    DWORD               Flags
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DVolumeTexture8_LockBox\n"
+               "(\n"
+               "   pThis               : 0x%.08X\n"
+               "   Level               : 0x%.08X\n"
+               "   pLockedVolume       : 0x%.08X\n"
+               "   pBox                : 0x%.08X\n"
+               "   Flags               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, Level, pLockedVolume, pBox, Flags);
+    }
+    #endif
+
+    EmuVerifyResourceIsRegistered(pThis);
+
+    IDirect3DVolumeTexture8 *pVolumeTexture8 = pThis->EmuVolumeTexture8;
+
+    HRESULT hRet = pVolumeTexture8->LockBox(Level, pLockedVolume, pBox, Flags);
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DCubeTexture8_LockRect
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DCubeTexture8_LockRect
+(
+    X_D3DCubeTexture   *pThis,
+    D3DCUBEMAP_FACES    FaceType,
+    UINT                Level,
+    D3DLOCKED_RECT     *pLockedBox,
+    CONST RECT         *pRect,
+    DWORD               Flags
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DCubeTexture8_LockRect\n"
+               "(\n"
+               "   pThis               : 0x%.08X\n"
+               "   FaceType            : 0x%.08X\n"
+               "   Level               : 0x%.08X\n"
+               "   pLockedBox          : 0x%.08X\n"
+               "   pRect               : 0x%.08X\n"
+               "   Flags               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, FaceType, Level, pLockedBox, pRect, Flags);
+    }
+    #endif
+
+    EmuVerifyResourceIsRegistered(pThis);
+
+    IDirect3DCubeTexture8 *pCubeTexture8 = pThis->EmuCubeTexture8;
+
+    HRESULT hRet = pCubeTexture8->LockRect(FaceType, Level, pLockedBox, pRect, Flags);
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_Release
 // ******************************************************************
 ULONG WINAPI XTL::EmuIDirect3DDevice8_Release()

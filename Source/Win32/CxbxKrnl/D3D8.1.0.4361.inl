@@ -823,41 +823,6 @@ SOOVPA<11> IDirect3DDevice8_Swap_1_0_4361 =
 };
 
 // ******************************************************************
-// * IDirect3DDevice8_CreateVertexBuffer
-// ******************************************************************
-SOOVPA<13> IDirect3DDevice8_CreateVertexBuffer_1_0_4361 =
-{
-    0,  // Large == 0
-    13, // Count == 13
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        // IDirect3DDevice8_CreateVertexBuffer+0x03 : push 0x40
-        { 0x03, 0x6A }, // (Offset,Value)-Pair #1
-        { 0x04, 0x40 }, // (Offset,Value)-Pair #2
-
-        // IDirect3DDevice8_CreateVertexBuffer+0x10 : mov eax, [esp+8]
-        { 0x10, 0x8B }, // (Offset,Value)-Pair #3
-        { 0x11, 0x44 }, // (Offset,Value)-Pair #4
-        { 0x12, 0x24 }, // (Offset,Value)-Pair #5
-        { 0x13, 0x08 }, // (Offset,Value)-Pair #6
-
-        // IDirect3DDevice8_CreateVertexBuffer+0x48 : mov dword ptr [esi], 0x01000001
-        { 0x48, 0xC7 }, // (Offset,Value)-Pair #7
-        { 0x49, 0x06 }, // (Offset,Value)-Pair #8
-        { 0x4A, 0x01 }, // (Offset,Value)-Pair #9
-        { 0x4B, 0x00 }, // (Offset,Value)-Pair #10
-        { 0x4D, 0x01 }, // (Offset,Value)-Pair #11
-
-        // IDirect3DDevice8_CreateVertexBuffer+0x53 : retn 0x14
-        { 0x53, 0xC2 }, // (Offset,Value)-Pair #12
-        { 0x54, 0x14 }, // (Offset,Value)-Pair #13
-    }
-};
-
-// ******************************************************************
 // * IDirect3DDevice8_EnableOverlay
 // ******************************************************************
 SOOVPA<11> IDirect3DDevice8_EnableOverlay_1_0_4361 =
@@ -2187,9 +2152,9 @@ OOVPATable D3D8_1_0_4361[] =
         "EmuIDirect3DDevice8_Swap" 
         #endif
     },
-    // IDirect3DDevice8::CreateVertexBuffer
+    // IDirect3DDevice8::CreateVertexBuffer (* unchanged since 3925 *)
     {
-        (OOVPA*)&IDirect3DDevice8_CreateVertexBuffer_1_0_4361,
+        (OOVPA*)&IDirect3DDevice8_CreateVertexBuffer_1_0_3925,
 
         XTL::EmuIDirect3DDevice8_CreateVertexBuffer,
 

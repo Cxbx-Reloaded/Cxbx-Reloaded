@@ -666,9 +666,9 @@ OOVPATable XAPI_1_0_4361[] =
         "EmuQueryPerformanceFrequency"
         #endif
     },
-    // XInitDevices (* unchanged since 1.0.4034 *)
+    // XInitDevices (* unchanged since 1.0.3911 *)
     {
-        (OOVPA*)&XInitDevices_1_0_4034,
+        (OOVPA*)&XInitDevices_1_0_3911,
 
         XTL::EmuXInitDevices,
 

@@ -1011,6 +1011,31 @@ HRESULT WINAPI EmuIDirect3DTexture8_GetSurfaceLevel
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DVolumeTexture8_LockBox
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DVolumeTexture8_LockBox
+(
+    X_D3DVolumeTexture *pThis,
+    UINT                Level,
+    D3DLOCKED_BOX      *pLockedVolume,
+    CONST D3DBOX       *pBox,
+    DWORD               Flags
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DCubeTexture8_LockRect
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DCubeTexture8_LockRect
+(
+    X_D3DCubeTexture   *pThis,
+    D3DCUBEMAP_FACES    FaceType,
+    UINT                Level,
+    D3DLOCKED_RECT     *pLockedBox,
+    CONST RECT         *pRect,
+    DWORD               Flags
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateVertexBuffer
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_CreateVertexBuffer

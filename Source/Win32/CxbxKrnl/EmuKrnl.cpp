@@ -146,6 +146,36 @@ callComplete:
 using namespace xboxkrnl;
 
 // ******************************************************************
+// * 0x000E ExAllocatePool
+// ******************************************************************
+XBSYSAPI EXPORTNUM(14) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePool
+(
+	IN ULONG NumberOfBytes
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): ExAllocatePool\n"
+               "(\n"
+               "   NumberOfBytes       : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), NumberOfBytes);
+    }
+    #endif
+
+    PVOID pRet = malloc(NumberOfBytes);
+
+    EmuSwapFS();   // Xbox FS
+
+    return pRet;
+}
+
+// ******************************************************************
 // * 0x0018 ExQueryNonVolatileSetting
 // ******************************************************************
 XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
