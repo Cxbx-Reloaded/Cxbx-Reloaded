@@ -219,6 +219,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
         if(g_hCurDir == INVALID_HANDLE_VALUE)
 			EmuCleanup("Could not map D:\\\n");
+
+        printf("EmuMain (0x%X): CurDir := %s\n", GetCurrentThreadId(), szBuffer);
 	}
 
     // initialize T:\ and U:\ directories
@@ -260,7 +262,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
             if(g_hTDrive == INVALID_HANDLE_VALUE)
                 EmuCleanup("Could not map T:\\\n");
 
-            printf("EmuMain (0x%X): TData := %s\n", GetCurrentThreadId(), szBuffer);
+            printf("EmuMain (0x%X): T Data := %s\n", GetCurrentThreadId(), szBuffer);
         }
 
         // Create UData Directory
@@ -278,7 +280,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
             if(g_hUDrive == INVALID_HANDLE_VALUE)
                 EmuCleanup("Could not map U:\\\n");
 
-            printf("EmuMain (0x%X): UData := %s\n", GetCurrentThreadId(), szBuffer);
+            printf("EmuMain (0x%X): U Data := %s\n", GetCurrentThreadId(), szBuffer);
         }
 
         // Create ZData Directory
@@ -298,7 +300,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
             if(g_hUDrive == INVALID_HANDLE_VALUE)
                 EmuCleanup("Could not map Z:\\\n");
 
-            printf("EmuMain (0x%X): ZData := %s\n", GetCurrentThreadId(), szBuffer);
+            printf("EmuMain (0x%X): Z Data := %s\n", GetCurrentThreadId(), szBuffer);
         }
     }
 
@@ -545,7 +547,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage, ...)
 
         va_list argp;
 
-        sprintf(szBuffer1, "EmuMain (0x%X): Recieved Fatal Message -> \n\n", GetCurrentThreadId());
+        sprintf(szBuffer1, "EmuMain (0x%X): Recieved Fatal Message:\n\n* ", GetCurrentThreadId());
 
         va_start(argp, szErrorMessage);
 
@@ -554,10 +556,11 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage, ...)
         va_end(argp);
 
         strcat(szBuffer1, szBuffer2);
+        strcat(szBuffer1, "\n");
 
         printf("%s\n", szBuffer1);
 
-        MessageBox(NULL, szBuffer1, "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
+        MessageBox(NULL, szBuffer1, "CxbxKrnl", MB_OK | MB_ICONSTOP);
     }
 
     printf("CxbxKrnl: Terminating Process\n");
@@ -591,8 +594,84 @@ extern "C" CXBXKRNL_API void NTAPI EmuPanic()
     EmuSwapFS();   // XBox FS
 }
 
+// exception handler
+extern int EmuException(LPEXCEPTION_POINTERS e)
+{
+    if(EmuIsXboxFS())
+        EmuSwapFS();
+
+    // print debug information
+	{
+        if(e->ExceptionRecord->ExceptionCode == 0x80000003)
+            printf("EmuMain (0x%X): Recieved Breakpoint Exception (int 3)\n", GetCurrentThreadId());
+        else
+            printf("EmuMain (0x%X): Recieved Exception (Code := 0x%.08X)\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
+
+        printf("\n"
+            " EIP := 0x%.08X EFL := 0x%.08X\n"
+            " EAX := 0x%.08X EBX := 0x%.08X ECX := 0x%.08X EDX := 0x%.08X\n"
+            " ESI := 0x%.08X EDI := 0x%.08X ESP := 0x%.08X EBP := 0x%.08X\n"
+            "\n",
+            e->ContextRecord->Eip, e->ContextRecord->EFlags,
+            e->ContextRecord->Eax, e->ContextRecord->Ebx, e->ContextRecord->Ecx, e->ContextRecord->Edx,
+            e->ContextRecord->Esi, e->ContextRecord->Edi, e->ContextRecord->Esp, e->ContextRecord->Ebp);
+	}
+
+    fflush(stdout);
+
+    // notify user
+	{
+		char buffer[256];
+
+        if(e->ExceptionRecord->ExceptionCode == 0x80000003)
+        {
+		    sprintf(buffer, 
+                "Recieved Breakpoint Exception (int 3) @ EIP := 0x%.08X\n"
+                "\n"
+                "  Press Abort to terminate emulation.\n"
+                "  Press Retry to debug.\n"
+                "  Press Ignore to continue emulation.",
+                e->ContextRecord->Eip, e->ContextRecord->EFlags);
+
+            e->ContextRecord->Eip += 1;
+
+            int ret = MessageBox(XTL::g_hEmuWindow, buffer, "Cxbx", MB_ICONSTOP | MB_ABORTRETRYIGNORE);
+
+            if(ret == IDABORT)
+            {
+                printf("EmuMain (0x%X): Aborting Emulation\n", GetCurrentThreadId());
+                fflush(stdout);
+                ExitProcess(1);
+            }
+            else if(ret == IDIGNORE)
+            {
+                printf("EmuMain (0x%X): Ignored Breakpoint Exception\n", GetCurrentThreadId());
+                return EXCEPTION_CONTINUE_EXECUTION;
+            }
+        }
+        else
+        {
+		    sprintf(buffer, 
+                "Recieved Exception Code 0x%.08X @ EIP := 0x%.08X\n"
+                "\n"
+                "  Press \"OK\" to terminate emulation.\n"
+                "  Press \"Cancel\" to debug.",
+                e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip, e->ContextRecord->EFlags);
+
+            if(MessageBox(XTL::g_hEmuWindow, buffer, "Cxbx", MB_ICONSTOP | MB_OKCANCEL) == IDOK)
+            {
+                printf("EmuMain (0x%X): Aborting Emulation\n", GetCurrentThreadId());
+                fflush(stdout);
+                ExitProcess(1);
+            }
+        }
+	}
+
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
 // install function interception wrapper
-inline void EmuInstallWrapper(void *FunctionAddr, void *WrapperAddr)
+static inline void EmuInstallWrapper(void *FunctionAddr, void *WrapperAddr)
 {
     uint08 *FuncBytes = (uint08*)FunctionAddr;
 
@@ -601,7 +680,7 @@ inline void EmuInstallWrapper(void *FunctionAddr, void *WrapperAddr)
 }
 
 // locate the given function, searching within lower and upper bounds
-void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
+static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
 {
     uint32 count = Oovpa->Count;
 
@@ -682,8 +761,6 @@ void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
         {
             uint32 v;
 
-//            if( (cur == 0x0006A6C6) && (Soovpa->Sovp[v].Value == XREF_SETCURRENTPOSITION2) )
-//                _asm int 3
             // check all cross references
             for(v=0;v<Soovpa->XRefCount;v++)
             {
@@ -742,7 +819,7 @@ void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
 }
 
 // install function interception wrappers
-void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *pXbeHeader)
+static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *pXbeHeader)
 {
     uint32 lower = pXbeHeader->dwBaseAddr;
     uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
@@ -769,93 +846,14 @@ void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*En
 }
 
 // alert for the situation where an Xref function body is hit
-void EmuXRefFailure()
+static void EmuXRefFailure()
 {
     EmuSwapFS();    // Win2k/XP FS
     
     EmuCleanup("XRef-only function body reached. Fatal Error.");
 }
 
-// exception handler
-int EmuException(LPEXCEPTION_POINTERS e)
-{
-    if(EmuIsXboxFS())
-        EmuSwapFS();
-
-    // print debug information
-	{
-        if(e->ExceptionRecord->ExceptionCode == 0x80000003)
-            printf("EmuMain (0x%X): Recieved Breakpoint Exception (int 3)\n", GetCurrentThreadId());
-        else
-            printf("EmuMain (0x%X): Recieved Exception (Code := 0x%.08X)\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
-
-        printf("\n"
-            " EIP := 0x%.08X EFL := 0x%.08X\n"
-            " EAX := 0x%.08X EBX := 0x%.08X ECX := 0x%.08X EDX := 0x%.08X\n"
-            " ESI := 0x%.08X EDI := 0x%.08X ESP := 0x%.08X EBP := 0x%.08X\n"
-            "\n",
-            e->ContextRecord->Eip, e->ContextRecord->EFlags,
-            e->ContextRecord->Eax, e->ContextRecord->Ebx, e->ContextRecord->Ecx, e->ContextRecord->Edx,
-            e->ContextRecord->Esi, e->ContextRecord->Edi, e->ContextRecord->Esp, e->ContextRecord->Ebp);
-	}
-
-    fflush(stdout);
-
-    // notify user
-	{
-		char buffer[256];
-
-        if(e->ExceptionRecord->ExceptionCode == 0x80000003)
-        {
-		    sprintf(buffer, 
-                "Recieved Breakpoint Exception (int 3) @ EIP := 0x%.08X\n"
-                "\n"
-                "  Press \"Abort\" to terminate emulation.\n"
-                "  Press \"Retry\" to debug.\n"
-                "  Press \"Ignore\" to continue emulation.",
-                e->ContextRecord->Eip, e->ContextRecord->EFlags);
-
-            e->ContextRecord->Eip += 1;
-
-            int ret = MessageBox(XTL::g_hEmuWindow, buffer, "Cxbx", MB_ICONSTOP | MB_ABORTRETRYIGNORE);
-
-            if(ret == IDABORT)
-            {
-                printf("EmuMain (0x%X): Aborting Emulation\n", GetCurrentThreadId());
-                fflush(stdout);
-                ExitProcess(1);
-            }
-            else if(ret == IDIGNORE)
-            {
-                printf("EmuMain (0x%X): Ignored Breakpoint Exception\n", GetCurrentThreadId());
-                return EXCEPTION_CONTINUE_EXECUTION;
-            }
-        }
-        else
-        {
-		    sprintf(buffer, 
-                "Recieved Exception Code 0x%.08X @ EIP := 0x%.08X\n"
-                "\n"
-                "  Press \"OK\" to terminate emulation.\n"
-                "  Press \"Cancel\" to debug.",
-                e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip, e->ContextRecord->EFlags);
-
-            if(MessageBox(XTL::g_hEmuWindow, buffer, "Cxbx", MB_ICONSTOP | MB_OKCANCEL) == IDOK)
-            {
-                printf("EmuMain (0x%X): Aborting Emulation\n", GetCurrentThreadId());
-                fflush(stdout);
-                ExitProcess(1);
-            }
-        }
-	}
-
-    return EXCEPTION_CONTINUE_SEARCH;
-}
-
-
-// ******************************************************************
-// * func: ExitException
-// ******************************************************************
+// exception handle for that tough final exit :)
 int ExitException(LPEXCEPTION_POINTERS e)
 {
     if(EmuIsXboxFS())
@@ -863,14 +861,10 @@ int ExitException(LPEXCEPTION_POINTERS e)
 
     static int count = 0;
 
-    // ******************************************************************
-	// * Debugging Information
-	// ******************************************************************
-	{
-		printf("EmuMain (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
-		printf("EmuMain (0x%X): Recieved Exception [0x%.08X]@0x%.08X\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip);
-		printf("EmuMain (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
-	}
+    // debug information
+	printf("EmuMain (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
+	printf("EmuMain (0x%X): Recieved Exception [0x%.08X]@0x%.08X\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip);
+	printf("EmuMain (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
 
     fflush(stdout);
 

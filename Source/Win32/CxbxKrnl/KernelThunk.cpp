@@ -34,9 +34,7 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_LOCAL_
 
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
+// prevent name collisions
 namespace xboxkrnl
 {
     #include <xboxkrnl/xboxkrnl.h>
@@ -45,24 +43,18 @@ namespace xboxkrnl
 #include "Cxbx.h"
 #include "Emu.h"
 
-// ******************************************************************
-// * NOTE:
-// ******************************************************************
-// *
-// * Enable "#define PANIC(numb) numb" if you wish to find out what
-// * kernel export the application is attempting to call. The app
-// * will crash at the thunk number (i.e. PsCreateSystemThread:0xFF)
-// *
-// * For general use, you should probably just enable the other
-// * option "#define PANIC(numb) cxbx_panic"
-// *
-// ******************************************************************
+//
+// Enable "#define PANIC(numb) numb" if you wish to find out what
+// kernel export the application is attempting to call. The app
+// will crash at the thunk number (i.e. PsCreateSystemThread:0xFF)
+//
+// For general use, you should probably just enable the other
+// option "#define PANIC(numb) cxbx_panic"
+//
 //#define PANIC(numb) EmuPanic
 #define PANIC(numb) numb
 
-// ******************************************************************
-// * KernelThunkTable
-// ******************************************************************
+// kernel thunk table
 extern "C" CXBXKRNL_API uint32 KernelThunkTable[367] =
 {
     (uint32)PANIC(0x0000),                          // 0x0000 (0)

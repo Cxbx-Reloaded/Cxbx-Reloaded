@@ -39,81 +39,53 @@
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
-// ******************************************************************
-// * func: EmuNoFunc
-// ******************************************************************
+// pointless function
 extern "C" CXBXKRNL_API void NTAPI EmuNoFunc();
 
-// ******************************************************************
-// * func: EmuVerifyVersion
-// ******************************************************************
+// verify szVersion matches the current build version
 extern "C" CXBXKRNL_API bool NTAPI EmuVerifyVersion(const char *szVersion);
 
-// ******************************************************************
-// * func: EmuInit
-// ******************************************************************
-extern "C" CXBXKRNL_API void NTAPI EmuInit(void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
-
-// ******************************************************************
-// * func: EmuCleanThread
-// ******************************************************************
+// cleanup and terminate the current thread
 extern "C" CXBXKRNL_API void NTAPI EmuCleanThread();
 
-// ******************************************************************
-// * func: EmuWarning
-// ******************************************************************
+// initialize emulation
+extern "C" CXBXKRNL_API void NTAPI EmuInit(void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
+
+// print out a warning message to the kernel debug log file
 #ifdef _DEBUG_WARNINGS
 extern "C" CXBXKRNL_API void NTAPI EmuWarning(const char *szWarningMessage, ...);
 #else
 inline void NTAPI EmuWarning(const char *szWarningMessage, ...) { }
 #endif
 
-// ******************************************************************
-// * func: EmuCleanup
-// ******************************************************************
+// cleanup emulation
 extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage, ...);
 
-// ******************************************************************
-// * func: EmuPanic
-// ******************************************************************
+// kernel function not implemented, panic
 extern "C" CXBXKRNL_API void NTAPI EmuPanic();
 
-// ******************************************************************
-// * func: EmuException
-// ******************************************************************
+// exception handler
 extern int EmuException(LPEXCEPTION_POINTERS e);
 
-// ******************************************************************
-// * data: KernelThunkTable
-// ******************************************************************
+// global kernel thunk table
 extern "C" CXBXKRNL_API uint32 KernelThunkTable[367];
 
-// ******************************************************************
-// * data: g_pTLS
-// ******************************************************************
+// global thread local storage structure
 extern Xbe::TLS *g_pTLS;
 
-// ******************************************************************
-// * data: g_pTLSData
-// ******************************************************************
+// global thread local storage data
 extern void *g_pTLSData;
 
-// ******************************************************************
-// * data: g_pXbeHeader
-// ******************************************************************
+// global Xbe header cache
 extern Xbe::Header *g_pXbeHeader;
 
-// ******************************************************************
-// * data: Hard Disk Directory Handles
-// ******************************************************************
+// partition emulation directory handles
 extern HANDLE g_hCurDir;
 extern HANDLE g_hTDrive;
 extern HANDLE g_hUDrive;
 extern HANDLE g_hZDrive;
 
-// ******************************************************************
-// * data: Thread Notification Routine
-// ******************************************************************
+// thread notification routine
 extern PVOID g_pfnThreadNotification;
 
 #endif

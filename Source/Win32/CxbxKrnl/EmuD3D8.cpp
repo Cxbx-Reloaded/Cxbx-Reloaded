@@ -5309,7 +5309,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVerticesUP
     EmuUpdateDeferredStates();
 
     if((DWORD)PrimitiveType == 0x03 || (DWORD)PrimitiveType == 0x09 || (DWORD)PrimitiveType == 0x10)
-        printf("Unsupported PrimitiveType! (%d)\n", (DWORD)PrimitiveType);
+        EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
 
     UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
 
