@@ -209,6 +209,34 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
 }
 
 // ******************************************************************
+// * func: EmuCDirectSoundStream_SetVolume
+// ******************************************************************
+ULONG WINAPI XTL::EmuCDirectSoundStream_SetVolume(X_CDirectSoundStream *pThis, LONG lVolume)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuCDirectSoundStream_SetVolume\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   lVolume                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, lVolume);
+    }
+    #endif
+
+    // TODO: Actually SetVolume
+
+    EmuSwapFS();   // XBox FS
+
+    return DS_OK;
+}
+
+// ******************************************************************
 // * func: EmuCDirectSoundStream_AddRef
 // ******************************************************************
 ULONG WINAPI XTL::EmuCDirectSoundStream_AddRef(X_CDirectSoundStream *pThis)

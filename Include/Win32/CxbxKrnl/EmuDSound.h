@@ -163,6 +163,11 @@ HRESULT WINAPI EmuDirectSoundCreateStream
 );
 
 // ******************************************************************
+// * func: EmuCDirectSoundStream_SetVolume
+// ******************************************************************
+ULONG WINAPI EmuCDirectSoundStream_SetVolume(X_CDirectSoundStream *pThis, LONG lVolume);
+
+// ******************************************************************
 // * func: EmuCDirectSoundStream_AddRef
 // ******************************************************************
 ULONG WINAPI EmuCDirectSoundStream_AddRef(X_CDirectSoundStream *pThis);

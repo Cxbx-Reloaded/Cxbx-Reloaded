@@ -141,6 +141,74 @@ SOOVPA<12> IDirectSound8_CreateSoundBuffer_1_0_4627 =
 };
 
 // ******************************************************************
+// * CMcpxVoiceClient_SetVolume
+// ******************************************************************
+SOOVPA<13> CMcpxVoiceClient_SetVolume_1_0_4361 =
+{
+    0,  // Large == 0
+    13, // Count == 13
+
+    XREF_DSSTREAMSETVOLUME, // XRef Is  Saved
+    0,                      // XRef Not Used
+
+    {
+        // CMcpxVoiceClient_SetVolume+0x2A : lea eax, [ecx+ecx*2]
+        { 0x2A, 0x8D }, // (Offset,Value)-Pair #1
+        { 0x2B, 0x04 }, // (Offset,Value)-Pair #2
+        { 0x2C, 0x49 }, // (Offset,Value)-Pair #3
+
+        // CMcpxVoiceClient_SetVolume+0x45 : movzx edx, word ptr [ecx]
+        { 0x45, 0x0F }, // (Offset,Value)-Pair #4
+        { 0x46, 0xB7 }, // (Offset,Value)-Pair #5
+        { 0x47, 0x11 }, // (Offset,Value)-Pair #6
+
+        // CMcpxVoiceClient_SetVolume+0x6C : mov edx, [ebp+eax*4-0x14]
+        { 0x6C, 0x8B }, // (Offset,Value)-Pair #7
+        { 0x6D, 0x54 }, // (Offset,Value)-Pair #8
+        { 0x6E, 0x85 }, // (Offset,Value)-Pair #9
+        { 0x6F, 0xEC }, // (Offset,Value)-Pair #10
+
+        // CMcpxVoiceClient_SetVolume+0x84 : inc eax; inc ecx, inc ecx
+        { 0x84, 0x40 }, // (Offset,Value)-Pair #11
+        { 0x85, 0x41 }, // (Offset,Value)-Pair #12
+        { 0x86, 0x41 }, // (Offset,Value)-Pair #13
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundStream_SetVolume
+// ******************************************************************
+SOOVPA<11> CDirectSoundStream_SetVolume_1_0_4361 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    1,  // XRef Is  Used
+
+    {
+        // CDirectSoundBuffer_SetBufferData+0x15 : call [CMcpxVoiceClient::SetVolume]
+        { 0x15, XREF_DSSTREAMSETVOLUME },  // (Offset,Value)-Pair #1
+
+        // CDirectSoundBuffer_SetBufferData+0x00 : mov ecx, [esp+0x04]
+        { 0x00, 0x8B }, // (Offset,Value)-Pair #2
+        { 0x01, 0x4C }, // (Offset,Value)-Pair #3
+        { 0x02, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x03, 0x04 }, // (Offset,Value)-Pair #5
+
+        // CDirectSoundBuffer_SetBufferData+0x0B : sub edx, [eax+0x20]
+        { 0x0B, 0x2B }, // (Offset,Value)-Pair #6
+        { 0x0C, 0x50 }, // (Offset,Value)-Pair #7
+        { 0x0D, 0x20 }, // (Offset,Value)-Pair #8
+
+        // CDirectSoundBuffer_SetBufferData+0x11 : mov ecx, [ecx+0x0C]
+        { 0x11, 0x8B }, // (Offset,Value)-Pair #9
+        { 0x12, 0x49 }, // (Offset,Value)-Pair #10
+        { 0x13, 0x0C }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
 // * IDirectSound8_Release
 // ******************************************************************
 SOOVPA<10> IDirectSound8_Release_1_0_4627 =
@@ -519,6 +587,24 @@ OOVPATable DSound_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirectSound8_CreateSoundBuffer" 
+        #endif
+    },
+    // CMcpxVoiceClient_SetVolume
+    {
+        (OOVPA*)&CMcpxVoiceClient_SetVolume_1_0_4361, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CMcpxVoiceClient::SetVolume (XREF)" 
+        #endif
+    },
+    // CDirectSoundStream_SetVolume
+    {
+        (OOVPA*)&CDirectSoundStream_SetVolume_1_0_4361, 
+            
+        XTL::EmuCDirectSoundStream_SetVolume,
+
+        #ifdef _DEBUG_TRACE
+        "EmuCDirectSoundStream_SetVolume" 
         #endif
     },
     // CDirectSound_CreateSoundStream (* unchanged since 4361 *)

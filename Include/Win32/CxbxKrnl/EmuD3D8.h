@@ -216,6 +216,8 @@ inline X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format)
 {
     switch(Format)
     {
+        case D3DFMT_YUY2:
+            return 0x24;
         case D3DFMT_R5G6B5:
             return 0x05;
         case D3DFMT_D24S8:
@@ -885,7 +887,7 @@ HRESULT WINAPI EmuIDirect3DSurface8_LockRect
 // ******************************************************************
 // * func: EmuIDirect3DBaseTexture8_GetLevelCount
 // ******************************************************************
-HRESULT WINAPI EmuIDirect3DBaseTexture8_GetLevelCount
+DWORD WINAPI EmuIDirect3DBaseTexture8_GetLevelCount
 (
     X_D3DBaseTexture   *pThis
 );
@@ -960,6 +962,11 @@ VOID WINAPI EmuIDirect3DDevice8_UpdateOverlay
     BOOL          EnableColorKey,
     D3DCOLOR      ColorKey
 );
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetOverlayUpdateStatus
+// ******************************************************************
+BOOL WINAPI EmuIDirect3DDevice8_GetOverlayUpdateStatus();
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_BlockUntilVerticalBlank
@@ -1084,6 +1091,14 @@ VOID WINAPI EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias
 // * func: EmuIDirect3DDevice8_SetRenderState_ShadowFunc
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_SetRenderState_ShadowFunc
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_YuvEnable
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_YuvEnable
 (
     DWORD Value
 );

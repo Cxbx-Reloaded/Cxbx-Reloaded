@@ -1666,12 +1666,39 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
         PCFormat = D3DFMT_X8R8G8B8;
     }
 
-    // HACK HACK HACK!!!
-    // TODO: Make sure texture is the correct dimensions
-    if(Width == 320)
-        Width = 512;
-    if(Height == 240)
-        Height = 512;
+    // HACK HACK HACK!!! TODO: Make sure texture is the correct dimensions
+    {
+        UINT NewWidth=0, NewHeight=0;
+
+        int v;
+
+        for(v=0;v<32;v++)
+        {
+            if(Width & (1 << v))
+                NewWidth = 1 << v;
+        }
+
+        for(v=0;v<32;v++)
+        {
+            if(Height & (1 << v))
+                NewHeight = 1 << v;
+        }
+
+        if(Width != NewWidth)
+        {
+            NewWidth <<= 1;
+            printf("*Warning* needed to resize width (%d->%d)\n", Width, NewWidth);
+        }
+
+        if(Height != NewHeight)
+        {
+            NewHeight <<= 1;
+            printf("*Warning* needed to resize height (%d->%d)\n", Height, NewHeight);
+        }
+
+        Width = NewWidth;
+        Height = NewHeight;
+    }
 
     *ppTexture = new X_D3DResource();
 
@@ -2214,6 +2241,19 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
             }
             else
             {
+                // TODO: HACK: Figure out why this is necessary!
+                if(dwWidth < 16)
+                {
+                    printf("*Warning* expanding texture width (%d->16)\n", dwWidth);
+                    dwWidth = 16;
+                }
+
+                if(dwHeight < 16)
+                {
+                    printf("*Warning* expanding texture height (%d->16)\n", dwHeight);
+                    dwHeight = 16;
+                }
+
                 hRet = g_pD3DDevice8->CreateTexture
                 (
                     dwWidth, dwHeight, dwMipMapLevels, 0, Format,
@@ -2425,7 +2465,7 @@ VOID WINAPI XTL::EmuGet2DSurfaceDesc
         pDesc->Type   = SurfaceDesc.Type;
 
         if(pDesc->Type > 7)
-            EmuCleanup("EmuIDirect3DSurface8_GetDesc: pDesc->Type > 7");
+            EmuCleanup("EmuGet2DSurfaceDesc: pDesc->Type > 7");
 
         pDesc->Usage  = SurfaceDesc.Usage;
         pDesc->Size   = SurfaceDesc.Size;
@@ -2556,6 +2596,9 @@ HRESULT WINAPI XTL::EmuIDirect3DSurface8_LockRect
 
     HRESULT hRet = pSurface8->LockRect(pLockedRect, pRect, NewFlags);
 
+    if(FAILED(hRet))
+        printf("*Warning* LockRect failed\n");
+
     EmuSwapFS();   // XBox FS
 
     return hRet;
@@ -2564,7 +2607,7 @@ HRESULT WINAPI XTL::EmuIDirect3DSurface8_LockRect
 // ******************************************************************
 // * func: EmuIDirect3DBaseTexture8_GetLevelCount
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirect3DBaseTexture8_GetLevelCount
+DWORD WINAPI XTL::EmuIDirect3DBaseTexture8_GetLevelCount
 (
     X_D3DBaseTexture   *pThis
 )
@@ -2588,11 +2631,11 @@ HRESULT WINAPI XTL::EmuIDirect3DBaseTexture8_GetLevelCount
 
     IDirect3DBaseTexture8 *pBaseTexture8 = pThis->EmuBaseTexture8;
 
-    HRESULT hRet = pBaseTexture8->GetLevelCount();
+    DWORD dwRet = pBaseTexture8->GetLevelCount();
 
     EmuSwapFS();   // XBox FS
 
-    return hRet;
+    return dwRet;
 }
 
 // ******************************************************************
@@ -2828,6 +2871,28 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
     EmuSwapFS();   // XBox FS
 
     return;
+}
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetOverlayUpdateStatus
+// ******************************************************************
+BOOL WINAPI XTL::EmuIDirect3DDevice8_GetOverlayUpdateStatus()
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetOverlayUpdateStatus();\n",
+               GetCurrentThreadId());
+    }
+    #endif
+
+    EmuSwapFS();   // XBox FS
+
+    // TODO: Actually check for update status
+    return FALSE;
 }
 
 // ******************************************************************
@@ -3395,6 +3460,36 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_ShadowFunc
     #endif
 
     printf("*Warning* ShadowFunc not implemented\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_YuvEnable
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_YuvEnable
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_YuvEnable\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+    printf("*Warning* YuvEnable not implemented\n");
 
     EmuSwapFS();   // XBox FS
 
