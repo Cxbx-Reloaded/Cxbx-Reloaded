@@ -35,7 +35,7 @@
 #define EMUX_H
 
 // ******************************************************************
-// * namespace used to avoid collisions with ntdll and win32
+// * prevent name collisions
 // ******************************************************************
 namespace xboxkrnl
 {
@@ -44,7 +44,7 @@ namespace xboxkrnl
 };
 
 // ******************************************************************
-// * namespace used to avoid collisions with ntdll and win32
+// * prevent name collisions
 // ******************************************************************
 namespace win32
 {
@@ -55,7 +55,7 @@ namespace win32
 };
 
 // ******************************************************************
-// * namespace used to avoid collisions with ntdll and win32
+// * prevent name collisions
 // ******************************************************************
 namespace xboxkrnl
 {

@@ -38,7 +38,7 @@
 #include "EmuX.h"
 
 // ******************************************************************
-// * ntdll wrapped in namespace to avoid collisions
+// * prevent name collisions
 // ******************************************************************
 namespace xntdll
 {

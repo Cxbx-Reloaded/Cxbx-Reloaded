@@ -68,7 +68,7 @@ class WndMain : public Wnd
 
         void LoadLogo();            // refresh the logo in the main window
 
-        void UpdateDebugConsoles(); // Allocate / Deallocate debug consoles as per configuration
+        void UpdateDebugConsoles(); // allocate / deallocate debug consoles as per configuration
 
         HDC         m_back_dc;
         HDC         m_logo_dc;

@@ -50,11 +50,10 @@ class WndAbout : public Wnd
 
     private:
 
-        HFONT m_hFont;
-
-        HDC         m_back_dc;
-        HBITMAP     m_orig_bmp;
-        HBITMAP     m_back_bmp;
+        HDC         m_BackDC;
+        HBITMAP     m_OrigBmp;
+        HBITMAP     m_BackBmp;
+        HFONT		m_hFont;
 };
 
 #endif

@@ -37,7 +37,7 @@
 #include <stdio.h>
 
 // ******************************************************************
-// * win32 wrapped in namespace to avoid collisions
+// * prevent name collisions
 // ******************************************************************
 namespace win32
 {

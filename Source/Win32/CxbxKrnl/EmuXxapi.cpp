@@ -183,6 +183,7 @@ VOID WINAPI xboxkrnl::EmuXapiInitProcess()
     #endif
 
     // TODO: Process initialization (if necessary)
+	// TODO: Somehow initialize floating point
 
     EmuXSwapFS();   // XBox FS
 

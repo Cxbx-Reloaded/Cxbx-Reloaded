@@ -40,7 +40,7 @@
 using namespace win32;
 
 // ******************************************************************
-// * namespace used to avoid collisions with ntdll and xboxkrnl
+// * prevent name collisions
 // ******************************************************************
 namespace win32
 {

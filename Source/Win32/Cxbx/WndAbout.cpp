@@ -47,7 +47,9 @@ WndAbout::WndAbout(HINSTANCE x_hInstance, HWND x_parent) : Wnd(x_hInstance)
     m_w         = 285;
     m_h         = 180;
 
-	// center to parent
+	// ******************************************************************
+	// * center to parent
+	// ******************************************************************
     {
         RECT rect;
 
@@ -85,13 +87,13 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
             int nHeight = -MulDiv(8, GetDeviceCaps(hDC, LOGPIXELSY), 72);
 
-			m_hFont = CreateFont(nHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, FF_ROMAN, "verdana");
+			m_hFont = CreateFont(nHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY, FF_ROMAN, "Verdana");
 
-            m_back_bmp = (HBITMAP)LoadImage(m_hInstance, MAKEINTRESOURCE(IDB_ABOUT), IMAGE_BITMAP, 0, 0, 0);
+            m_BackBmp = (HBITMAP)LoadImage(m_hInstance, MAKEINTRESOURCE(IDB_ABOUT), IMAGE_BITMAP, 0, 0, 0);
 
-            m_back_dc  = CreateCompatibleDC(hDC);
+            m_BackDC  = CreateCompatibleDC(hDC);
 
-            m_orig_bmp  = (HBITMAP)SelectObject(m_back_dc, m_back_bmp);
+            m_OrigBmp  = (HBITMAP)SelectObject(m_BackDC, m_BackBmp);
 
             ReleaseDC(hwnd, hDC);
         }
@@ -105,50 +107,33 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
             HDC hDC = GetDC(hwnd);
 
-            // draw text
+			// ******************************************************************
+			// * draw window
+			// ******************************************************************
             {
-                HGDIOBJ tmpObj = SelectObject(hDC, m_hFont);
+                HGDIOBJ OrgObj = SelectObject(hDC, m_hFont);
 
-                // draw top version bar and bottom url bar
+				// ******************************************************************
+				// * draw bottom URL bar
+				// ******************************************************************
                 {
                     SetBkColor(hDC, GetSysColor(COLOR_HIGHLIGHT));
 
 				    SetTextColor(hDC, GetSysColor(COLOR_HIGHLIGHTTEXT));
 
-                    // bottom url bar
-                    {
-                        char buffer[] = " Contact the Author : Caustik@Caustik.com";
+                    char buffer[] = " Contact the author : caustik@caustik.com";
 
-                        RECT rect = {0, 134, 280, 148};
-                        ExtTextOut(hDC, 0, 134, ETO_OPAQUE, &rect, buffer, strlen(buffer), 0);
-                    }
+                    RECT rect = {0, 134, 280, 148};
+
+                    ExtTextOut(hDC, 0, 134, ETO_OPAQUE, &rect, buffer, strlen(buffer), 0);
                 }
 
-                // draw bitmap
-                BitBlt(hDC, 2, 4, 275, 125, m_back_dc, 0, 0, SRCCOPY);
+				// ******************************************************************
+				// * draw bitmap
+				// ******************************************************************
+                BitBlt(hDC, 2, 4, 275, 125, m_BackDC, 0, 0, SRCCOPY);
 
-                /*
-                // draw credits
-                {
-                    SetBkColor(hDC, RGB(0,0,0));
-
-				    SetTextColor(hDC, RGB(0xFF,0xFF,0xFF));
-
-                    char bufferA[] = " Cxbx Version " CXBX_VERSION;
-                    char bufferB[] = " Cxbx is an open source, free, legal program.";
-                    char bufferC[] = " If you wish to contribute in any way, please";
-
-                    RECT rectA = {0, 5, 200, 19};
-                    ExtTextOut(hDC, 0, 4, ETO_OPAQUE, &rectA, bufferA, strlen(bufferA), 0);
-
-                    RECT rectB = {0, 20, 200, 34};
-                    ExtTextOut(hDC, 0, 20, ETO_OPAQUE, &rectB, bufferB, strlen(bufferB), 0);
-
-                    RECT rectC = {0, 35, 200, 49};
-                    ExtTextOut(hDC, 0, 35, ETO_OPAQUE, &rectC, bufferC, strlen(bufferC), 0);
-                }*/
-
-                SelectObject(hDC, tmpObj);
+                SelectObject(hDC, OrgObj);
             }
 
             if(hDC != NULL)
@@ -159,24 +144,18 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
         break;
 
         case WM_LBUTTONUP:
-        {
             SendMessage(hwnd, WM_CLOSE, 0, 0);
-        }
-        break;
+			break;
 
         case WM_CLOSE:
-        {
             EnableWindow(m_parent, TRUE);
             DestroyWindow(hwnd);
-        }
-        break;
+			break;
 
         case WM_DESTROY:
-        {
             DeleteObject(m_hFont);
             PostQuitMessage(0);
-        }
-		break;
+			break;
 
         default:
 			return DefWindowProc(hwnd, uMsg, wParam, lParam);
