@@ -3,7 +3,9 @@ cxbx website: http://www.caustik.com/xbox/
 version: 0.7.9 (??/??/??)
 --------------------------------
 
-- Turok loading screen+menu display
+- Turok playable in wireframe mode!
+
+- Toggle Wireframe/Dots/Normal with F11
 
 - DirectSound support! Turok and Stella (Atari 2600 emulator)
   are both able to play sound+music, works great!
