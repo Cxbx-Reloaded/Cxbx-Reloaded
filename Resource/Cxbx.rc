@@ -158,6 +158,7 @@ BEGIN
         MENUITEM "Config &Controller...",       ID_SETTINGS_CONFIG_CONTROLLER
 
         MENUITEM "Config &Audio...",            ID_SETTINGS_CONFIGURESOUND
+        , GRAYED
         MENUITEM "Config &Video...",            ID_SETTINGS_CONFIGUREGRAPHICS
 
         MENUITEM "",                            1

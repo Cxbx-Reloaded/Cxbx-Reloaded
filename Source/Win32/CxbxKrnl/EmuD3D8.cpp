@@ -404,8 +404,8 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
     {
         Adapter = D3DADAPTER_DEFAULT;
 
-        pPresentationParameters->Windowed = TRUE;
-        //pPresentationParameters->SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
+        //pPresentationParameters->Windowed = TRUE;
+        pPresentationParameters->SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
 
         hFocusWindow = g_hEmuWindow;
 
@@ -428,8 +428,8 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
     // ******************************************************************
     // * TODO: Query for Software Vertex Processing abilities!!
     // ******************************************************************
-    BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
-//    BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+//    BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+    BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
 
     // ******************************************************************
     // * redirect to windows d3d

@@ -516,8 +516,8 @@ EmuExe::EmuExe(Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename) : Exe
             {
                 memcpy(pWriteCursor, x_Xbe->m_TLS, sizeof(Xbe::TLS));
                 pWriteCursor += sizeof(Xbe::TLS);
-                memcpy(pWriteCursor, x_Xbe->GetTLSData(), RoundUp(x_Xbe->m_TLS->dwDataEndAddr - x_Xbe->m_TLS->dwDataStartAddr, 0x04));
-                pWriteCursor += RoundUp(x_Xbe->m_TLS->dwDataEndAddr - x_Xbe->m_TLS->dwDataStartAddr, 0x04);
+                memcpy(pWriteCursor, x_Xbe->GetTLSData(), x_Xbe->m_TLS->dwDataEndAddr - x_Xbe->m_TLS->dwDataStartAddr);
+                pWriteCursor += x_Xbe->m_TLS->dwDataEndAddr - x_Xbe->m_TLS->dwDataStartAddr;
             }
 
             // ******************************************************************
@@ -571,7 +571,7 @@ EmuExe::EmuExe(Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename) : Exe
             if(x_Xbe->m_TLS != 0)
             {
                 *(uint32 *)((uint32)m_bzSection[i] + 41) = WriteCursor;
-                WriteCursor += RoundUp(x_Xbe->m_TLS->dwDataEndAddr - x_Xbe->m_TLS->dwDataStartAddr, 0x04);
+                WriteCursor += x_Xbe->m_TLS->dwDataEndAddr - x_Xbe->m_TLS->dwDataStartAddr;
             }
             else
             {
