@@ -35,7 +35,7 @@
 
 #define CXBXKRNL_INTERNAL
 #define _XBOXKRNL_LOCAL_
-#include "Kernel.h"
+#include "CxbxKrnl.h"
 
 // ******************************************************************
 // * NOTE:

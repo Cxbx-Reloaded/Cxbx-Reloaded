@@ -130,7 +130,7 @@ SOURCE=.\Include\Core\Exe.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Win32\CxbxKrnl\Kernel.h
+SOURCE=.\Include\Win32\CxbxKrnl\CxbxKrnl.h
 # End Source File
 # Begin Source File
 

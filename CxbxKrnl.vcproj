@@ -131,7 +131,7 @@
 			Name="Include"
 			Filter="">
 			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\Kernel.h">
+				RelativePath=".\Include\Win32\CxbxKrnl\CxbxKrnl.h">
 			</File>
 			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\xntdll.h">
@@ -141,7 +141,7 @@
 			Name="Source"
 			Filter="">
 			<File
-				RelativePath=".\Source\Win32\CxbxKrnl\Kernel.cpp">
+				RelativePath=".\Source\Win32\CxbxKrnl\CxbxKrnl.cpp">
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\KernelThunk.cpp">

@@ -33,7 +33,7 @@
 // ******************************************************************
 #include "Cxbx.h"
 #include "EmuExe.h"
-#include "Kernel.h"
+#include "CxbxKrnl.h"
 #include "WndMain.h"
 #include "WndAbout.h"
 

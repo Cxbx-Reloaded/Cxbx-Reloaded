@@ -104,7 +104,7 @@ LINK32=link.exe
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Include\Win32\CxbxKrnl\Kernel.h
+SOURCE=.\Include\Win32\CxbxKrnl\CxbxKrnl.h
 # End Source File
 # Begin Source File
 
@@ -120,7 +120,7 @@ SOURCE=.\Include\Win32\CxbxKrnl\xntdll.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\Kernel.cpp
+SOURCE=.\Source\Win32\CxbxKrnl\CxbxKrnl.cpp
 # End Source File
 # Begin Source File
 

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->Kernel.h
+// *   Cxbx->Win32->CxbxKrnl->CxbxKrnl.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,8 +31,8 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef KERNEL_H
-#define KERNEL_H
+#ifndef CXBXKRNL_H
+#define CXBXKRNL_H
 
 // ******************************************************************
 // * namespace used to avoid collisions with ntdll and win32

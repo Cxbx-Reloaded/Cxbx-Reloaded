@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->Kernel.cpp
+// *   Cxbx->Win32->CxbxKrnl->CxbxKrnl.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -35,7 +35,7 @@
 
 #define CXBXKRNL_INTERNAL
 #define _XBOXKRNL_LOCAL_
-#include "Kernel.h"
+#include "CxbxKrnl.h"
 
 #include <stdio.h>
 

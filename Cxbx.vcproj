@@ -104,6 +104,7 @@ upxCxbx.bat
 				OutputFile=".\Bin\Debug/Cxbx.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Bin\Debug/Cxbx.pdb"
 				SubSystem="2"/>
@@ -153,7 +154,7 @@ upxCxbx.bat
 				RelativePath=".\Include\Core\Exe.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\Kernel.h">
+				RelativePath=".\Include\Win32\CxbxKrnl\CxbxKrnl.h">
 			</File>
 			<File
 				RelativePath=".\Include\Win32\Cxbx\Prolog.h">
