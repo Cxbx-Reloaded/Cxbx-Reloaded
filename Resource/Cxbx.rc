@@ -161,6 +161,8 @@ BEGIN
         , GRAYED
         MENUITEM "Config &Video...",            ID_SETTINGS_CONFIG_VIDEO
         MENUITEM SEPARATOR
+        MENUITEM "&Directory Settings...",      ID_SETTINGS_DIR
+        MENUITEM SEPARATOR
         MENUITEM "Generate &Exe Automatically", ID_SETTINGS_AUTOGEN
     END
     POPUP "E&mulation"
@@ -255,7 +257,7 @@ END
 IDD_VIDEO_CFG DIALOGEX 0, 0, 258, 110
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Cxbx : Video Configuration"
-FONT 8, "Verdana"
+FONT 8, "Verdana", 0, 0, 0x1
 BEGIN
     COMBOBOX        IDC_VC_DISPLAY_ADAPTER,76,12,173,100,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP

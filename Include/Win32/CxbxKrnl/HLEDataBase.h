@@ -42,6 +42,7 @@
 #include "D3D8.1.0.4034.h"
 #include "D3D8.1.0.4361.h"
 #include "D3D8.1.0.4627.h"
+#include "DSound.1.0.4361.h"
 #include "XG.1.0.4361.h"
 #include "XG.1.0.4627.h"
 

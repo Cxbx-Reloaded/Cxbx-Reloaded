@@ -199,16 +199,24 @@ XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
     // ******************************************************************
     switch(ValueIndex)
     {
+        // Factory AC Region
+        case 0x103:
+        {
+            // TODO: configurable region or autodetect of some sort
+            if(Type != 0) *Type = 0x04;
+
+            if(Value != 0) *Value = 0x01; // NTSC_M
+
+            if(ResultLength != 0) *ResultLength = 0x04;
+        }
+        break;
         case EEPROM_MISC:
         {
-            if(Type != 0)
-                *Type  = 0x04;
+            if(Type != 0) *Type  = 0x04;
 
-            if(Value != 0)
-                *Value = 0;
+            if(Value != 0) *Value = 0;
 
-            if(ResultLength != 0)
-                *ResultLength = 0x04;
+            if(ResultLength != 0) *ResultLength = 0x04;
         }
         break;
 
@@ -804,7 +812,29 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
         #ifdef _DEBUG_TRACE
         printf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
         printf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-        printf("  New:\"%s\"\n", szBuffer);
+        printf("  New:\"$XbePath\\%s\"\n", szBuffer);
+        #endif
+    }
+    else if( (szBuffer[0] == 'T' || szBuffer[0] == 't') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+    {
+        szBuffer += 3;
+
+        ObjectAttributes->RootDirectory = g_hTDrive;
+        #ifdef _DEBUG_TRACE
+        printf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+        printf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+        printf("  New:\"$CxbxPath\\%s\"\n", szBuffer);
+        #endif
+    }
+    else if( (szBuffer[0] == 'U' || szBuffer[0] == 'u') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+    {
+        szBuffer += 3;
+
+        ObjectAttributes->RootDirectory = g_hUDrive;
+        #ifdef _DEBUG_TRACE
+        printf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+        printf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+        printf("  New:\"$CxbxPath\\%s\"\n", szBuffer);
         #endif
     }
 

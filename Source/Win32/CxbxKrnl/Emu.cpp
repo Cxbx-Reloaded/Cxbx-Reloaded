@@ -57,9 +57,9 @@ namespace xapi
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
-namespace xd3d8
+namespace xdirectx
 {
-    #include "xd3d8.h"
+    #include "xdirectx.h"
 };
 
 #include <locale.h>
@@ -75,6 +75,8 @@ Xbe::TLS    *g_pTLS       = NULL;
 void        *g_pTLSData   = NULL;
 Xbe::Header *g_pXbeHeader = NULL;
 HANDLE		 g_hCurDir    = NULL;
+HANDLE       g_hTDrive    = NULL;
+HANDLE       g_hUDrive    = NULL;
 
 // ******************************************************************
 // * static
@@ -247,9 +249,52 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
 		g_hCurDir = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
-		if(g_hCurDir == INVALID_HANDLE_VALUE)
+        if(g_hCurDir == INVALID_HANDLE_VALUE)
 			EmuCleanup("Could not map D:\\\n");
 	}
+
+    // ******************************************************************
+	// * Initialize T:\ and U:\ directories
+    // ******************************************************************
+    {
+		char szBuffer[260];
+
+        #ifdef _DEBUG
+        GetModuleFileName(GetModuleHandle("CxbxKrnl.dll"), szBuffer, 260);
+        #else
+        GetModuleFileName(GetModuleHandle("Cxbx.dll"), szBuffer, 260);
+        #endif
+
+        sint32 spot=-1;
+        for(int v=0;v<260;v++)
+        {
+            if(szBuffer[v] == '\\')
+                spot = v;
+            else if(szBuffer[v] == '\0')
+                break;
+        }
+
+        if(spot != -1)
+            szBuffer[spot] = '\0';
+
+        strcpy(&szBuffer[spot], "\\TDATA");
+
+        CreateDirectory(szBuffer, NULL);
+
+        g_hTDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+
+        if(g_hUDrive == INVALID_HANDLE_VALUE)
+            EmuCleanup("Could not map T:\\\n");
+
+        strcpy(&szBuffer[spot], "\\UDATA");
+
+        CreateDirectory(szBuffer, NULL);
+
+        g_hUDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+
+        if(g_hUDrive == INVALID_HANDLE_VALUE)
+            EmuCleanup("Could not map U:\\\n");
+    }
 
     // ******************************************************************
     // * Initialize OpenXDK emulation
@@ -334,18 +379,18 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                 if(pFunc != 0 && (BuildVersion == 4361 || BuildVersion == 4627))
                 {
                     if(BuildVersion == 4361)
-						xd3d8::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x200 + 82*4);
+						xdirectx::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x200 + 82*4);
                     else if(BuildVersion == 4627)
-						xd3d8::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x24C + 92*4);
+						xdirectx::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x24C + 92*4);
 
                     for(int v=0;v<146;v++)
-                        xd3d8::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
+                        xdirectx::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
 
-                    printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredRenderState\n", GetCurrentThreadId(), xd3d8::EmuD3DDeferredRenderState);
+                    printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredRenderState\n", GetCurrentThreadId(), xdirectx::EmuD3DDeferredRenderState);
                 }
                 else
                 {
-                    xd3d8::EmuD3DDeferredRenderState = 0;
+                    xdirectx::EmuD3DDeferredRenderState = 0;
                     printf("Emu (0x%X): *Warning* EmuD3DDeferredRenderState not found!\n");
                 }
 
@@ -356,16 +401,16 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 				// ******************************************************************
                 if(pFunc != 0 && (BuildVersion == 4361))
                 {
-					xd3d8::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x19) - 0x70);
+					xdirectx::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x19) - 0x70);
 
                     for(int v=0;v<32;v++)
-                        xd3d8::EmuD3DDeferredTextureState[v] = X_D3DTSS_UNK;
+                        xdirectx::EmuD3DDeferredTextureState[v] = X_D3DTSS_UNK;
 
-                    printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredTextureState\n", GetCurrentThreadId(), xd3d8::EmuD3DDeferredTextureState);
+                    printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredTextureState\n", GetCurrentThreadId(), xdirectx::EmuD3DDeferredTextureState);
                 }
                 else
                 {
-                    xd3d8::EmuD3DDeferredTextureState = 0;
+                    xdirectx::EmuD3DDeferredTextureState = 0;
                     printf("Emu (0x%X): *Warning* EmuD3DDeferredTextureState not found!\n");
                 }
 			}
@@ -393,7 +438,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         EmuSwapFS();   // XBox FS
 
         // _USE_XGMATH Disabled in mesh :[
-        //_asm int 3
+        _asm int 3
 
         Entry();
 

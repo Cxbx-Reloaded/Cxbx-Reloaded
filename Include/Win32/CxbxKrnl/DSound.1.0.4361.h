@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXG.h
+// *   Cxbx->Win32->CxbxKrnl->DSound.1.0.4361.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,31 +31,12 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUXG_H
-#define EMUXG_H
+#ifndef DSOUND_1_0_4361_H
+#define DSOUND_1_0_4361_H
 
-// ******************************************************************
-// * func: EmuXGIsSwizzledFormat
-// ******************************************************************
-PVOID WINAPI EmuXGIsSwizzledFormat
-(
-    xdirectx::D3DFORMAT Format
-);
+#include "OOVPA.h"
 
-// ******************************************************************
-// * func: EmuXGUnswizzleRect
-// ******************************************************************
-VOID WINAPI EmuXGUnswizzleRect
-(
-    PVOID           pSrcBuffer,
-    DWORD           dwWidth,
-    DWORD           dwHeight,
-    DWORD           dwDepth,
-    PVOID           pDstBuff,
-    DWORD           dwPitch,
-    RECT            rSrc,
-    POINT           poDst,
-    DWORD           dwBPP
-);
+extern OOVPATable DSOUND_1_0_4361[];
+extern uint32     DSOUND_1_0_4361_SIZE;
 
 #endif

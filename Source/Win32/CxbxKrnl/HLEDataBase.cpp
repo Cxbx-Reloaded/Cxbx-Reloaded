@@ -50,9 +50,9 @@ namespace xapi
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
-namespace xd3d8
+namespace xdirectx
 {
-    #include "xd3d8.h"
+    #include "xdirectx.h"
 };
 
 // ******************************************************************
@@ -71,6 +71,7 @@ namespace xg
 #include "D3D8.1.0.4034.inl"
 #include "D3D8.1.0.4361.inl"
 #include "D3D8.1.0.4627.inl"
+#include "DSound.1.0.4361.inl"
 #include "XG.1.0.4361.inl"
 #include "XG.1.0.4627.inl"
 
@@ -134,6 +135,13 @@ HLEData HLEDataBase[] =
         1, 0, 4627,
         D3D8_1_0_4627,
         D3D8_1_0_4627_SIZE
+    },
+    // DSound Version 1.0.4361
+    {
+        "DSOUND",
+        1, 0, 4361,
+        DSound_1_0_4361,
+        DSound_1_0_4361_SIZE
     },
     // XG Version 1.0.4361
     {

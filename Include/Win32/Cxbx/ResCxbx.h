@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Developer Studio generated include file.
-// Used by D:\OpenXDK\cxbx\Resource\Cxbx.rc
+// Used by C:\Aaron\Projects\OpenXDK\cxbx\Resource\Cxbx.rc
 //
 #define IDI_CXBX                        101
 #define IDB_SPLASH                      102
@@ -43,7 +43,6 @@
 #define IDC_VC_D3D_DEVICE               1038
 #define IDC_VC_ACCEPT                   1040
 #define IDC_VC_CANCEL                   1041
-#define IDC_CHECK1                      1042
 #define IDC_CV_VSYNC                    1042
 #define IDC_VC_VIDEO_RESOLUTION         1047
 #define ID_FILE_EXIT                    40005
@@ -90,14 +89,14 @@
 #define ID_FILE_REXE_9                  40069
 #define ID_EDIT_DUMPXBEINFOTO_FILE      40071
 #define ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE 40072
-#define ID_EMULATION_DEBUGGING_BREAKENTRYPOINT 40075
+#define ID_SETTINGS_DIR                 40076
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        115
-#define _APS_NEXT_COMMAND_VALUE         40076
+#define _APS_NEXT_COMMAND_VALUE         40077
 #define _APS_NEXT_CONTROL_VALUE         1048
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

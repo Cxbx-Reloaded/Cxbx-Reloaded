@@ -90,8 +90,10 @@ extern void *g_pTLSData;
 extern Xbe::Header *g_pXbeHeader;
 
 // ******************************************************************
-// * data: g_hCurDir
+// * data: Hard Disk Directory Handles
 // ******************************************************************
 extern HANDLE g_hCurDir;
+extern HANDLE g_hTDrive;
+extern HANDLE g_hUDrive;
 
 #endif

@@ -39,9 +39,9 @@
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
-namespace xd3d8
+namespace xdirectx
 {
-    #include "xd3d8.h"
+    #include "xdirectx.h"
 };
 
 #include "EmuD3D8.h"
@@ -49,7 +49,7 @@ namespace xd3d8
 // ******************************************************************
 // * EmuD3DVertexToPrimitive
 // ******************************************************************
-UINT xd3d8::EmuD3DVertexToPrimitive[11][2] =
+UINT xdirectx::EmuD3DVertexToPrimitive[11][2] =
 {
     {0, 0},
     {1, 0},
@@ -67,26 +67,26 @@ UINT xd3d8::EmuD3DVertexToPrimitive[11][2] =
 // ******************************************************************
 // * EmuPrimitiveTypeLookup
 // ******************************************************************
-xd3d8::D3DPRIMITIVETYPE xd3d8::EmuPrimitiveTypeLookup[] = 
+xdirectx::D3DPRIMITIVETYPE xdirectx::EmuPrimitiveTypeLookup[] = 
 {
-    /* NULL                 = 0         */ (xd3d8::D3DPRIMITIVETYPE)0,
-    /* D3DPT_POINTLIST      = 1,        */ xd3d8::D3DPT_POINTLIST,
-    /* D3DPT_LINELIST       = 2,        */ xd3d8::D3DPT_LINELIST,
-    /* D3DPT_LINELOOP       = 3,  Xbox  */ xd3d8::D3DPT_LINELIST,
-    /* D3DPT_LINESTRIP      = 4,        */ xd3d8::D3DPT_LINESTRIP,
-    /* D3DPT_TRIANGLELIST   = 5,        */ xd3d8::D3DPT_TRIANGLELIST,
-    /* D3DPT_TRIANGLESTRIP  = 6,        */ xd3d8::D3DPT_TRIANGLESTRIP,
-    /* D3DPT_TRIANGLEFAN    = 7,        */ xd3d8::D3DPT_TRIANGLEFAN,
-    /* D3DPT_QUADLIST       = 8,  Xbox  */ xd3d8::D3DPT_TRIANGLELIST,
-    /* D3DPT_QUADSTRIP      = 9,  Xbox  */ xd3d8::D3DPT_TRIANGLELIST,
-    /* D3DPT_POLYGON        = 10, Xbox  */ xd3d8::D3DPT_TRIANGLELIST,
-    /* D3DPT_MAX            = 11,       */ (xd3d8::D3DPRIMITIVETYPE)11
+    /* NULL                 = 0         */ (xdirectx::D3DPRIMITIVETYPE)0,
+    /* D3DPT_POINTLIST      = 1,        */ xdirectx::D3DPT_POINTLIST,
+    /* D3DPT_LINELIST       = 2,        */ xdirectx::D3DPT_LINELIST,
+    /* D3DPT_LINELOOP       = 3,  Xbox  */ xdirectx::D3DPT_LINELIST,
+    /* D3DPT_LINESTRIP      = 4,        */ xdirectx::D3DPT_LINESTRIP,
+    /* D3DPT_TRIANGLELIST   = 5,        */ xdirectx::D3DPT_TRIANGLELIST,
+    /* D3DPT_TRIANGLESTRIP  = 6,        */ xdirectx::D3DPT_TRIANGLESTRIP,
+    /* D3DPT_TRIANGLEFAN    = 7,        */ xdirectx::D3DPT_TRIANGLEFAN,
+    /* D3DPT_QUADLIST       = 8,  Xbox  */ xdirectx::D3DPT_TRIANGLELIST,
+    /* D3DPT_QUADSTRIP      = 9,  Xbox  */ xdirectx::D3DPT_TRIANGLELIST,
+    /* D3DPT_POLYGON        = 10, Xbox  */ xdirectx::D3DPT_TRIANGLELIST,
+    /* D3DPT_MAX            = 11,       */ (xdirectx::D3DPRIMITIVETYPE)11
 };
 
 // ******************************************************************
 // * EmuD3DRenderStateSimpleEncoded
 // ******************************************************************
-CONST DWORD xd3d8::EmuD3DRenderStateSimpleEncoded[82] =
+CONST DWORD xdirectx::EmuD3DRenderStateSimpleEncoded[82] =
 {
     // WARNING: This lookup table strongly binds us to an SDK with these
     // specific #define values for D3DRS_*. Make VERY sure that you have

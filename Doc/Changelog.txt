@@ -1,5 +1,10 @@
 cxbx website: http://www.caustik.com/xbox/
 
+version: 0.7.5 (??/??/??)
+--------------------------------
+
+- DirectSound emulation has begun
+
 version: 0.7.4 (06/23/03)
 --------------------------------
 
