@@ -60,7 +60,7 @@ inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
     else if(Format == 0x2C)
         return D3DFMT_D16;
 
-    EmuCleanup("EmuXB2PC_D3DFormat: Unknown Format");
+    EmuCleanup("EmuXB2PC_D3DFormat: Unknown Format (%d)", Format);
 
     return Format;
 }

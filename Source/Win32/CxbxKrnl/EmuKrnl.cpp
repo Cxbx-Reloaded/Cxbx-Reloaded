@@ -211,7 +211,7 @@ XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
         break;
 
         default:
-            printf("EmuKrnl (0x%X): ExQueryNonVolatileSetting unknown ValueIndex : %.08X\n", ValueIndex);
+            printf("ExQueryNonVolatileSetting unknown ValueIndex (%d)\n", ValueIndex);
             break;
     }
 

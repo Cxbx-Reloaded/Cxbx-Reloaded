@@ -57,7 +57,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanThread();
 // ******************************************************************
 // * func: EmuCleanup
 // ******************************************************************
-extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage);
+extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage, ...);
 
 // ******************************************************************
 // * func: EmuPanic

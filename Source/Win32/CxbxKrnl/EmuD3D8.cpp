@@ -1017,7 +1017,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DSurface8_GetDesc
         if(SurfaceDesc.MultiSampleType == D3DMULTISAMPLE_NONE)
             pDesc->MultiSampleType = (xd3d8::D3DMULTISAMPLE_TYPE)0x0011;
         else
-            EmuCleanup("EmuIDirect3DSurface8_GetDesc Unknown Multisample format!");
+            EmuCleanup("EmuIDirect3DSurface8_GetDesc Unknown Multisample format! (%d)", SurfaceDesc.MultiSampleType);
 
         pDesc->Width  = SurfaceDesc.Width;
         pDesc->Height = SurfaceDesc.Height;
@@ -1066,7 +1066,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DSurface8_LockRect
         NewFlags |= D3DLOCK_READONLY;
 
     if(Flags & !(0x80 | 0x40))
-        EmuCleanup("EmuIDirect3DSurface8_LockRect: Unknown Flags!");
+        EmuCleanup("EmuIDirect3DSurface8_LockRect: Unknown Flags! (0x%.08X)", Flags);
 
     // This is lame, but we have no choice (afaik)
     ((IDirect3DSurface8*)pThis)->UnlockRect();
@@ -1253,7 +1253,7 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetRenderState_CullMode
             Value = D3DCULL_CCW;
             break;
         default:
-            EmuCleanup("EmuIDirect3DDevice8_SetRenderState_CullMode: Unknown Cullmode");
+            EmuCleanup("EmuIDirect3DDevice8_SetRenderState_CullMode: Unknown Cullmode (%d)", Value);
     }
 
     g_pD3D8Device->SetRenderState(D3DRS_CULLMODE, Value);

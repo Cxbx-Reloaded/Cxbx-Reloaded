@@ -72,6 +72,7 @@ namespace xg
 #include "D3D8.1.0.4361.inl"
 #include "D3D8.1.0.4627.inl"
 #include "XG.1.0.4361.inl"
+#include "XG.1.0.4627.inl"
 
 // ******************************************************************
 // * HLEDataBase
@@ -140,6 +141,13 @@ HLEData HLEDataBase[] =
         1, 0, 4361,
         XG_1_0_4361,
         XG_1_0_4361_SIZE
+    },
+    // XG Version 1.0.4627
+    {
+        "XGRAPHC",
+        1, 0, 4627,
+        XG_1_0_4627,
+        XG_1_0_4627_SIZE
     },
 };
 

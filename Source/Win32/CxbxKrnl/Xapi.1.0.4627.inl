@@ -33,6 +33,34 @@
 // ******************************************************************
 
 // ******************************************************************
+// * RtlFreeHeap
+// ******************************************************************
+SOOVPA<9> RtlFreeHeap_1_0_4627 =
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    {
+        // RtlFreeHeap+0x1F : test edi, edi
+        { 0x1F, 0x85 }, // (Offset,Value)-Pair #1
+        { 0x20, 0xFF }, // (Offset,Value)-Pair #2
+
+        // RtlFreeHeap+0x23 : mov al, 1
+        { 0x23, 0xB0 }, // (Offset,Value)-Pair #3
+        { 0x24, 0x01 }, // (Offset,Value)-Pair #4
+
+        // RtlFreeHeap+0x35 : mov eax, fs:[0x20]
+        { 0x35, 0x64 }, // (Offset,Value)-Pair #5
+        { 0x36, 0xA1 }, // (Offset,Value)-Pair #6
+        { 0x37, 0x20 }, // (Offset,Value)-Pair #7
+
+        // RtlFreeHeap+0x49 : push 0x0B
+        { 0x49, 0x6A }, // (Offset,Value)-Pair #8
+        { 0x4A, 0x0B }, // (Offset,Value)-Pair #9
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_4627
 // ******************************************************************
 OOVPATable XAPI_1_0_4627[] =
@@ -57,9 +85,9 @@ OOVPATable XAPI_1_0_4627[] =
         "RtlAllocateHeap"
         #endif
     },
-    // RtlFreeHeap (* unchanged since 1.0.4361 *) (* OR FARTHER, AND VERIFY THIS ONE *)
+    // RtlFreeHeap
     {
-        (OOVPA*)&RtlFreeHeap_1_0_4361,
+        (OOVPA*)&RtlFreeHeap_1_0_4627,
 
         xapi::EmuRtlFreeHeap,
 

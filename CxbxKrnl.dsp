@@ -254,6 +254,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\XG.1.0.4361.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\XG.1.0.4627.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\xntdll.h
 # End Source File
 # End Group
@@ -375,6 +379,10 @@ SOURCE=.\Source\Win32\XBVideo.cpp
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\XG.1.0.4361.inl
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\XG.1.0.4627.inl
 # End Source File
 # End Group
 # End Target

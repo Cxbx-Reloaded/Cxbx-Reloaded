@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->HLEDataBase.h
+// *   Cxbx->Win32->CxbxKrnl->XG.1.0.4627.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,39 +31,25 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef HLEDATABASE_H
-#define HLEDATABASE_H
-
-#include "Xapi.1.0.3911.h"
-#include "Xapi.1.0.4034.h"
-#include "Xapi.1.0.4361.h"
-#include "Xapi.1.0.4627.h"
-#include "D3D8.1.0.3925.h"
-#include "D3D8.1.0.4034.h"
-#include "D3D8.1.0.4361.h"
-#include "D3D8.1.0.4627.h"
-#include "XG.1.0.4361.h"
-#include "XG.1.0.4627.h"
 
 // ******************************************************************
-// * HLEDataBase
+// * XG_1_0_4627
 // ******************************************************************
-extern struct HLEData
+OOVPATable XG_1_0_4627[] =
 {
-    char       *Library;
+    // XGIsSwizzledFormat (* unchanged since 4361 *)
+    {
+        (OOVPA*)&XGIsSwizzledFormat_1_0_4361,
 
-    uint16      MajorVersion;
-    uint16      MinorVersion;
-    uint16      BuildVersion;
+        xg::EmuXGIsSwizzledFormat,
 
-    OOVPATable *OovpaTable;
-    uint32      OovpaTableSize;
-}
-HLEDataBase[];
+        #ifdef _DEBUG_TRACE
+        "XGIsSwizzledFormat"
+        #endif
+    },
+};
 
 // ******************************************************************
-// * HLEDataBaseSize
+// * XG_1_0_4627_SIZE
 // ******************************************************************
-extern uint32 HLEDataBaseSize;
-
-#endif
+uint32 XG_1_0_4627_SIZE = sizeof(XG_1_0_4627);

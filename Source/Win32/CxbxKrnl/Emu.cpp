@@ -364,7 +364,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     {
         EmuSwapFS();   // XBox FS
 
-        _asm int 3
+//        _asm int 3
 
         Entry();
 
@@ -387,20 +387,31 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 // ******************************************************************
 // * func: EmuCleanup
 // ******************************************************************
-extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage)
+extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage, ...)
 {
     // ******************************************************************
     // * Print out ErrorMessage (if exists)
     // ******************************************************************
     if(szErrorMessage != NULL)
     {
-        char buffer[255];
+        char szBuffer1[255];
+        char szBuffer2[255];
 
-        sprintf(buffer, "Emu (0x%X): Recieved Fatal Message!\n\n%s\n", GetCurrentThreadId(), szErrorMessage);
+        va_list argp;
 
-        printf("%s", buffer);
+        sprintf(szBuffer1, "Emu (0x%X): Recieved Fatal Message -> \n\n", GetCurrentThreadId());
 
-        MessageBox(NULL, buffer, "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
+        va_start(argp, szErrorMessage);
+
+        vsprintf(szBuffer2, szErrorMessage, argp);
+
+        va_end(argp);
+
+        strcat(szBuffer1, szBuffer2);
+
+        printf("%s", szBuffer1);
+
+        MessageBox(NULL, szBuffer1, "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
     }
 
     printf("CxbxKrnl: Terminating Process\n");
