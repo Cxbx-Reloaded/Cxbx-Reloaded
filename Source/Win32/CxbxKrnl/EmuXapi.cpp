@@ -106,7 +106,7 @@ PVOID WINAPI XTL::EmuRtlCreateHeap
 
     RtlHeapDefinition.Length = sizeof(RtlHeapDefinition);
 
-    PVOID pRet = NtDll::RtlCreateHeap(HEAP_CREATE_ALIGN_16 | Flags, Base, Reserve, Commit, Lock, &RtlHeapDefinition);
+    PVOID pRet = NtDll::RtlCreateHeap(Flags, Base, Reserve, Commit, Lock, &RtlHeapDefinition);
 
     EmuSwapFS();   // XBox FS
 
@@ -135,7 +135,20 @@ PVOID WINAPI XTL::EmuRtlAllocateHeap
            GetCurrentThreadId(), hHeap, dwFlags, dwBytes);
     //*/
 
-    PVOID pRet = CxbxRtlAlloc(hHeap, dwFlags, dwBytes);
+    BYTE offs;
+
+    PVOID pRet = CxbxRtlAlloc(hHeap, dwFlags, dwBytes+0x20);
+
+    offs = (BYTE)(RoundUp((uint32)pRet, 0x20) - (uint32)pRet);
+
+    if(offs == 0)
+    {
+        offs = 0x20;
+    }
+
+    pRet = (PVOID)((uint32)pRet + offs);
+
+    *(BYTE*)((uint32)pRet - 1) = offs;
 
     EmuSwapFS();   // XBox FS
 
@@ -163,6 +176,13 @@ BOOL WINAPI XTL::EmuRtlFreeHeap
            ");\n",
            GetCurrentThreadId(), hHeap, dwFlags, lpMem);
     //*/
+
+    if(lpMem != NULL)
+    {
+        BYTE offs = *(BYTE*)((uint32)lpMem - 1);
+
+        lpMem = (PVOID)((uint32)lpMem - offs);
+    }
 
     BOOL bRet = CxbxRtlFree(hHeap, dwFlags, lpMem);
 
@@ -195,7 +215,14 @@ PVOID WINAPI XTL::EmuRtlReAllocateHeap
            GetCurrentThreadId(), hHeap, dwFlags, lpMem, dwBytes);
    //*/
 
-    PVOID pRet = CxbxRtlRealloc(hHeap, dwFlags, lpMem, dwBytes);
+    if(lpMem != NULL)
+    {
+        BYTE offs = *(BYTE*)((uint32)lpMem - 1);
+
+        lpMem = (PVOID)((uint32)lpMem - offs);
+    }
+
+    PVOID pRet = CxbxRtlRealloc(hHeap, dwFlags, lpMem, dwBytes + 0x20);
 
     EmuSwapFS();   // XBox FS
 
@@ -224,7 +251,14 @@ SIZE_T WINAPI XTL::EmuRtlSizeHeap
            GetCurrentThreadId(), hHeap, dwFlags, lpMem);
     //*/
 
-    SIZE_T ret = CxbxRtlSizeHeap(hHeap, dwFlags, lpMem);
+    if(lpMem != NULL)
+    {
+        BYTE offs = *(BYTE*)((uint32)lpMem - 1);
+
+        lpMem = (PVOID)((uint32)lpMem - offs);
+    }
+
+    SIZE_T ret = CxbxRtlSizeHeap(hHeap, dwFlags, lpMem) - 0x20;
 
     EmuSwapFS();   // XBox FS
 
