@@ -83,6 +83,36 @@ static DWORD WINAPI EmuXCreateThreadProxy
 }
 
 // ******************************************************************
+// * func: EmuXXGetDevices
+// ******************************************************************
+DWORD WINAPI xboxkrnl::EmuXXGetDevices
+(
+    PXPP_DEVICE_TYPE DeviceType
+)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXxapi (0x%.08X): EmuXXGetDevices\n"
+               "(\n"
+               "   DeviceType          : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), DeviceType);
+    }
+    #endif
+
+    EmuXSwapFS();   // XBox FS
+
+    // TODO: HACK: Temporarily just return 1 controller, even
+    // if the user didn't ask about controllers specifically
+    return (1 << 0);
+}
+
+// ******************************************************************
 // * func: EmuXCreateThread
 // ******************************************************************
 HANDLE WINAPI xboxkrnl::EmuXCreateThread

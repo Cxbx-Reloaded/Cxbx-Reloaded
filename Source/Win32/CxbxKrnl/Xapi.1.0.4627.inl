@@ -37,6 +37,16 @@
 // ******************************************************************
 OOVPATable XAPI_1_0_4627[] =
 {
+    // XGetDevices (* unchanged since 1.0.4361 *)
+    {
+        (OOVPA*)&XGetDevices_1_0_4361,
+
+        xboxkrnl::EmuXXGetDevices,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXXGetDevices" 
+        #endif
+    },
     // CreateThread (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&CreateThread_1_0_4361,

@@ -60,6 +60,23 @@ typedef DWORD (WINAPI *PTHREAD_START_ROUTINE)
 typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
 
 // ******************************************************************
+// * XPP_DEVICE_TYPE
+// ******************************************************************
+typedef struct _XPP_DEVICE_TYPE
+{
+    ULONG Reserved[3];
+}
+XPP_DEVICE_TYPE, *PXPP_DEVICE_TYPE;
+
+// ******************************************************************
+// * func: EmuXXGetDevices
+// ******************************************************************
+DWORD WINAPI EmuXXGetDevices
+(
+    XPP_DEVICE_TYPE *DeviceType
+);
+
+// ******************************************************************
 // * func: EmuXCreateThread
 // ******************************************************************
 HANDLE WINAPI EmuXCreateThread

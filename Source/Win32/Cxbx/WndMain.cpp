@@ -198,7 +198,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
         {
             static bool s_bInitMenu = true;
 
-            if(!s_bInitMenu)
+            if(s_bInitMenu)
             {
                 UpdateDebugConsoles();
                 s_bInitMenu = false;
