@@ -1,5 +1,10 @@
 cxbx website: http://www.caustik.com/xbox/
 
+version: 0.7.8b (08/30/03)
+--------------------------------
+
+- Fixed debug messages accidentally left in the previous release.
+
 version: 0.7.8 (08/29/03)
 --------------------------------
 

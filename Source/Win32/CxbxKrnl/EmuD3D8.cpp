@@ -665,9 +665,6 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
             g_bSupportsYUY2 = SUCCEEDED(hRet);
 
             if(!g_bSupportsYUY2)
-                EmuCleanup("Nigga 0x%.08X", pPresentationParameters->BackBufferFormat);
-
-            if(!g_bSupportsYUY2)
                 EmuWarning("YUY2 overlays are not supported in hardware, could be slow!");
         }
     }

@@ -1701,8 +1701,8 @@ XBSYSAPI EXPORTNUM(219) NTSTATUS NTAPI xboxkrnl::NtReadFile
 
     // Halo NTSC, Buffer == 0x09740040
     // Possibly grabbing the vram cache from Xeon
-    if(Buffer == (PVOID)0x09740040)
-        _asm int 3
+    //if(Buffer == (PVOID)0x09740040)
+    //    _asm int 3
 
     NTSTATUS ret = NtDll::NtReadFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, (NtDll::LARGE_INTEGER*)ByteOffset, 0);
 
