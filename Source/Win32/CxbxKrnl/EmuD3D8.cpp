@@ -977,15 +977,25 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreateVertexShader
     #endif
 
     // ******************************************************************
+    // * create emulated shader struct
+    // ******************************************************************
+    X_D3DVertexShader *pD3DVertexShader = new X_D3DVertexShader();
+
+    // Todo: Intelligently fill out these fields as necessary
+    ZeroMemory(pD3DVertexShader, sizeof(X_D3DVertexShader));
+
+    // ******************************************************************
     // * redirect to windows d3d
     // ******************************************************************
     HRESULT hRet = g_pD3DDevice8->CreateVertexShader
     (
         pDeclaration,
         pFunction,
-        pHandle,
-        g_dwVertexShaderUsage // TODO: HACK: Xbox has extensions!
+        &pD3DVertexShader->Handle,
+        g_dwVertexShaderUsage   // TODO: HACK: Xbox has extensions!
     );
+
+    *pHandle = (DWORD)pD3DVertexShader;
 
     if(FAILED(hRet))
     {
@@ -1199,6 +1209,13 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreateTexture
     // Convert Format (Xbox->PC)
     D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
 
+    // TODO: HACK: Devices that don't support this should somehow emulate it!
+    if(PCFormat == D3DFMT_D16)
+    {
+        printf("*Warning* D3DFMT_16 is an unsupported texture format!");
+        PCFormat = D3DFMT_X8R8G8B8;
+    }
+
     *ppTexture = new X_D3DResource();
 
     // ******************************************************************
@@ -1207,9 +1224,12 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreateTexture
     HRESULT hRet = g_pD3DDevice8->CreateTexture
     (
         Width, Height, Levels, 
-        0,   // TODO: Xbox Allows a border to be drawn (maybe hack this in software ;[)
+        Usage,   // TODO: Xbox Allows a border to be drawn (maybe hack this in software ;[)
         PCFormat, D3DPOOL_MANAGED, &((*ppTexture)->EmuTexture8)
     );
+
+    if(FAILED(hRet))
+        EmuCleanup("CreateTexture FAILED!");
 
     EmuSwapFS();   // XBox FS
 
@@ -1556,10 +1576,12 @@ HRESULT WINAPI xd3d8::EmuIDirect3DResource8_Register
 
     X_D3DResource *pResource = (X_D3DResource*)pThis;
 
+    DWORD dwCommonType = pResource->Common & X_D3DCOMMON_TYPE_MASK;
+
     // ******************************************************************
     // * Determine the resource type, and initialize
     // ******************************************************************
-    switch(pResource->Common & X_D3DCOMMON_TYPE_MASK)
+    switch(dwCommonType)
     {
         case X_D3DCOMMON_TYPE_VERTEXBUFFER:
         {
@@ -1633,6 +1655,8 @@ HRESULT WINAPI xd3d8::EmuIDirect3DResource8_Register
         }
         break;
 
+        case X_D3DCOMMON_TYPE_SURFACE:
+            EmuCleanup("X_D3DCOMMON_TYPE_SURFACE temporarily unsupported");
         case X_D3DCOMMON_TYPE_TEXTURE:
         {
             #ifdef _DEBUG_TRACE
@@ -1687,15 +1711,27 @@ HRESULT WINAPI xd3d8::EmuIDirect3DResource8_Register
             // ******************************************************************
             // * Create the happy little texture
             // ******************************************************************
-            hRet = g_pD3DDevice8->CreateTexture
-            (
-                dwWidth, dwHeight, dwMipMap, 0, Format,
-                D3DPOOL_MANAGED, &pResource->EmuTexture8
-            );
+            if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
+            {
+                EmuCleanup("X_D3DCOMMON_TYPE_SURFACE temporarily unsupported");
+            }
+            else
+            {
+                hRet = g_pD3DDevice8->CreateTexture
+                (
+                    dwWidth, dwHeight, dwMipMap, 0, Format,
+                    D3DPOOL_MANAGED, &pResource->EmuTexture8
+                );
+            }
 
             // ******************************************************************
             // * Copy over data (deswizzle if necessary)
             // ******************************************************************
+            if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
+            {
+                EmuCleanup("X_D3DCOMMON_TYPE_SURFACE temporarily unsupported");
+            }
+            else
             {
                 D3DLOCKED_RECT LockedRect;
 
@@ -1734,14 +1770,8 @@ HRESULT WINAPI xd3d8::EmuIDirect3DResource8_Register
         }
         break;
 
-        case X_D3DCOMMON_TYPE_SURFACE:
-        {
-            EmuCleanup("IDirect3DResource8::Register -> X_D3DCOMMON_TYPE_SURFACE not yet supported");
-        }
-        break;
-
         default:
-            EmuCleanup("IDirect3DResource8::Register -> Common Type 0x%.08X not yet supported", pResource->Common & X_D3DCOMMON_TYPE_MASK);
+            EmuCleanup("IDirect3DResource8::Register -> Common Type 0x%.08X not yet supported", dwCommonType);
     }
 
     EmuSwapFS();   // XBox FS
@@ -1819,6 +1849,73 @@ BOOL WINAPI xd3d8::EmuIDirect3DResource8_IsBusy
     EmuSwapFS();   // XBox FS
 
     return FALSE;
+}
+
+// ******************************************************************
+// * func: EmuGet2DSurfaceDesc
+// ******************************************************************
+VOID WINAPI xd3d8::EmuGet2DSurfaceDesc
+(
+    X_D3DPixelContainer *pPixelContainer,
+    DWORD                dwLevel,
+    X_D3DSURFACE_DESC   *pDesc
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuGet2DSurfaceDesc\n"
+               "(\n"
+               "   pPixelContainer     : 0x%.08X\n"
+               "   dwLevel             : 0x%.08X\n"
+               "   pDesc               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pPixelContainer, dwLevel, pDesc);
+    }
+    #endif
+
+    EmuVerifyResourceIsRegistered(pPixelContainer);
+
+    // TODO: HACK: notice that this is only safe to wrap a Texture Get2DSurfaceDesc,
+    // as it makes an assumption here. If there is some way to determine if this pointer
+    // is a texture or a surface, it'd be alot better!
+    IDirect3DTexture8 *pTexture8 = pPixelContainer->EmuTexture8;
+
+    D3DSURFACE_DESC SurfaceDesc;
+
+	HRESULT hRet = pTexture8->GetLevelDesc(dwLevel, &SurfaceDesc);
+
+    // ******************************************************************
+    // * Rearrange into windows format (remove D3DPool)
+    // ******************************************************************
+    {
+        // Convert Format (PC->Xbox)
+        pDesc->Format = EmuPC2XB_D3DFormat(SurfaceDesc.Format);
+        pDesc->Type   = SurfaceDesc.Type;
+
+        if(pDesc->Type > 7)
+            EmuCleanup("EmuIDirect3DSurface8_GetDesc: pDesc->Type > 7");
+
+        pDesc->Usage  = SurfaceDesc.Usage;
+        pDesc->Size   = SurfaceDesc.Size;
+
+        // TODO: Convert from Xbox to PC!!
+        if(SurfaceDesc.MultiSampleType == D3DMULTISAMPLE_NONE)
+            pDesc->MultiSampleType = (xd3d8::D3DMULTISAMPLE_TYPE)0x0011;
+        else
+            EmuCleanup("EmuGet2DSurfaceDesc Unknown Multisample format! (%d)", SurfaceDesc.MultiSampleType);
+
+        pDesc->Width  = SurfaceDesc.Width;
+        pDesc->Height = SurfaceDesc.Height;
+    }
+
+    EmuSwapFS();   // XBox FS
+
+    return;
 }
 
 // ******************************************************************
@@ -1985,6 +2082,59 @@ xd3d8::X_D3DResource * WINAPI xd3d8::EmuIDirect3DTexture8_GetSurfaceLevel2
     EmuIDirect3DTexture8_GetSurfaceLevel(pThis, Level, &pSurfaceLevel);
 
     return pSurfaceLevel;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DTexture8_LockRect
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DTexture8_LockRect
+(
+    X_D3DTexture   *pThis,
+    UINT            Level,
+    D3DLOCKED_RECT *pLockedRect,
+    CONST RECT     *pRect,
+    DWORD           Flags
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DTexture8_LockRect\n"
+               "(\n"
+               "   pThis               : 0x%.08X\n"
+               "   Level               : 0x%.08X\n"
+               "   pLockedRect         : 0x%.08X\n"
+               "   pRect               : 0x%.08X\n"
+               "   Flags               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, Level, pLockedRect, pRect, Flags);
+    }
+    #endif
+
+    EmuVerifyResourceIsRegistered(pThis);
+
+    IDirect3DTexture8 *pTexture8 = pThis->EmuTexture8;
+
+    DWORD NewFlags = 0;
+
+    if(Flags & 0x80)
+        NewFlags |= D3DLOCK_READONLY;
+
+    if(Flags & !(0x80 | 0x40))
+        EmuCleanup("EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)", Flags);
+
+    // Remove old lock(s)
+    pTexture8->UnlockRect(Level);
+
+    HRESULT hRet = pTexture8->LockRect(Level, pLockedRect, pRect, NewFlags);
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
 }
 
 // ******************************************************************
@@ -3038,8 +3188,8 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
 
     EmuUpdateDeferredStates();
 
-    if((DWORD)PrimitiveType == 0x03 || (DWORD)PrimitiveType == 0x08 || (DWORD)PrimitiveType == 0x09 || (DWORD)PrimitiveType == 0x10)
-        printf("Unsupported PrimitiveType! (%d)\n", (DWORD)PrimitiveType);
+    if((DWORD)PrimitiveType == 0x03 || (DWORD)PrimitiveType == 0x09 || (DWORD)PrimitiveType == 0x10)
+        printf("*Warning* unsupported PrimitiveType! (%d)\n", (DWORD)PrimitiveType);
 
     UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
 
@@ -3104,7 +3254,7 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawVerticesUP
 
     EmuUpdateDeferredStates();
 
-    if((DWORD)PrimitiveType == 0x03 || (DWORD)PrimitiveType == 0x08 || (DWORD)PrimitiveType == 0x09 || (DWORD)PrimitiveType == 0x10)
+    if((DWORD)PrimitiveType == 0x03 || (DWORD)PrimitiveType == 0x09 || (DWORD)PrimitiveType == 0x10)
         printf("Unsupported PrimitiveType! (%d)\n", (DWORD)PrimitiveType);
 
     UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
@@ -3180,11 +3330,25 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawIndexedVertices
     // Convert from Xbox to PC enumeration
     D3DPRIMITIVETYPE PCPrimitiveType = EmuPrimitiveType(PrimitiveType);
 
+    IDirect3DVertexBuffer8 *pOrigVertexBuffer8 = 0;
+    IDirect3DVertexBuffer8 *pHackVertexBuffer8 = 0;
+
+    uint32 nStride = 0;
+
+    if(PrimitiveType == 8)  // Quad List
+    {
+        PrimitiveCount *= 2;
+        nStride = EmuQuadHackA(PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8);
+    }
+
     g_pD3DDevice8->DrawIndexedPrimitive
     (
         PCPrimitiveType, 0, PrimitiveCount,
         0, PrimitiveCount
     );
+
+    if(PrimitiveType == 8)  // Quad List
+        EmuQuadHackB(nStride, pOrigVertexBuffer8, pHackVertexBuffer8);
 
     EmuSwapFS();   // XBox FS
 

@@ -51,7 +51,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m
     // ******************************************************************
     {
         m_classname = "WndMain";
-        m_wndname   = "Cxbx : Xbox Emulator";
+        m_wndname   = "Cxbx - Xbox Emulator";
 
         m_w         = 327;
         m_h         = 253;

@@ -129,6 +129,7 @@ inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
         case 0x04: // Swizzled   (X_D3DFMT_A4R4G4B4)
             return D3DFMT_A4R4G4B4;
 
+        case 0x11: // Linear     (X_D3DFMT_LIN_R5G6B5)
         case 0x05: // Swizzled   (X_D3DFMT_R5G6B5)
             return D3DFMT_R5G6B5;
 
@@ -145,6 +146,7 @@ inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
         case 0x2A: // Swizzled   (X_D3DFMT_D24S8)
             return D3DFMT_D24S8;
 
+        case 0x30: // Linear     (D3DFMT_LIN_D16)
         case 0x2C: // Swizzled   (X_D3DFMT_D16)
             return D3DFMT_D16;
     }
@@ -159,12 +161,17 @@ inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 // ******************************************************************
 inline X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format)
 {
-    if(Format == D3DFMT_X8R8G8B8)
-        return (D3DFORMAT)0x07;
-    else if(Format == D3DFMT_A8R8G8B8)
-        return (D3DFORMAT)0x06;
+    switch(Format)
+    {
+        case D3DFMT_D24S8:
+            return 0x2A;
+        case D3DFMT_X8R8G8B8:
+            return 0x07;
+        case D3DFMT_A8R8G8B8:
+            return 0x06;
+    }
 
-    EmuCleanup("EmuPC2XB_D3DFormat: Unknown Format");
+    EmuCleanup("EmuPC2XB_D3DFormat: Unknown Format (%d)", Format);
 
     return Format;
 }
@@ -225,6 +232,22 @@ typedef struct _X_D3DPRESENT_PARAMETERS
     IDirect3DSurface8  *DepthStencilSurface;
 }
 X_D3DPRESENT_PARAMETERS;
+
+// ******************************************************************
+// * X_D3DVertexShader
+// ******************************************************************
+struct X_D3DVertexShader
+{
+    union
+    {
+        DWORD   UnknownA;
+        DWORD   Handle;
+    };
+
+    DWORD UnknownB;
+    DWORD Flags;
+    DWORD UnknownC[0x59];
+};
 
 // ******************************************************************
 // * D3DResource "Common" Masks
@@ -680,6 +703,16 @@ BOOL WINAPI EmuIDirect3DResource8_IsBusy
 );
 
 // ******************************************************************
+// * func: EmuGet2DSurfaceDesc
+// ******************************************************************
+VOID WINAPI EmuGet2DSurfaceDesc
+(
+    X_D3DPixelContainer *pPixelContainer,
+    DWORD                dwLevel,
+    X_D3DSURFACE_DESC   *pDesc
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DSurface8_GetDesc
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DSurface8_GetDesc
@@ -714,6 +747,18 @@ X_D3DResource * WINAPI EmuIDirect3DTexture8_GetSurfaceLevel2
 (
     X_D3DTexture   *pThis,
     UINT            Level
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DTexture8_LockRect
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DTexture8_LockRect
+(
+    X_D3DTexture   *pThis,
+    UINT            Level,
+    D3DLOCKED_RECT *pLockedRect,
+    CONST RECT     *pRect,
+    DWORD           Flags
 );
 
 // ******************************************************************
