@@ -274,7 +274,7 @@ bool XBController::ConfigPoll(char *szStatus)
         // ******************************************************************
         if(m_InputDevice[v].m_Flags & DEVICE_FLAG_JOYSTICK)
         {
-			DIJOYSTATE JoyState;
+            DIJOYSTATE JoyState;
 
             // ******************************************************************
             // * Get Joystick State
@@ -332,24 +332,24 @@ bool XBController::ConfigPoll(char *szStatus)
                         dwHow = FIELD_OFFSET(DIJOYSTATE, rgbButtons[b]);
 
             // ******************************************************************
-			// * Retrieve Object Info
-			// ******************************************************************
-			if(dwHow != -1)
-			{
+            // * Retrieve Object Info
+            // ******************************************************************
+            if(dwHow != -1)
+            {
                 char *szDirection = (dwFlags & DEVICE_FLAG_AXIS) ? (dwFlags & DEVICE_FLAG_POSITIVE) ? "Positive " : "Negative " : "";
 
                 m_InputDevice[v].m_Device->GetDeviceInfo(&DeviceInstance);
 
-				m_InputDevice[v].m_Device->GetObjectInfo(&ObjectInstance, dwHow, DIPH_BYOFFSET);
+                m_InputDevice[v].m_Device->GetObjectInfo(&ObjectInstance, dwHow, DIPH_BYOFFSET);
 
                 Map(CurConfigObject, DeviceInstance.tszInstanceName, dwHow, dwFlags);
 
-				printf("Cxbx: Detected %s %s on %s\n", szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType);
+                printf("Cxbx: Detected %s %s on %s\n", szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType);
 
-				sprintf(szStatus, "Success: %s Mapped to '%s%s' on '%s'!", m_DeviceNameLookup[CurConfigObject], szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName);
+                sprintf(szStatus, "Success: %s Mapped to '%s%s' on '%s'!", m_DeviceNameLookup[CurConfigObject], szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName);
 
                 return true;
-			}
+            }
         }
         // ******************************************************************
         // * Detect Keyboard Input
@@ -527,6 +527,8 @@ void XBController::ConfigEnd()
 // ******************************************************************
 void XBController::ListenBegin(HWND hwnd)
 {
+    int v=0;
+
     if(m_CurrentState != XBCTRL_STATE_NONE)
     {
         SetError("Invalid State", false);
@@ -537,8 +539,17 @@ void XBController::ListenBegin(HWND hwnd)
 
     DInputInit(hwnd);
 
-    for(int v=XBCTRL_MAX_DEVICES-1;v>=m_dwInputDeviceCount;v--)
+    for(v=XBCTRL_MAX_DEVICES-1;v>=m_dwInputDeviceCount;v--)
         m_DeviceName[v][0] = '\0';
+
+    for(v=0;v<XBCTRL_OBJECT_COUNT;v++)
+    {
+        if(m_ObjectConfig[v].dwDevice > m_dwInputDeviceCount)
+        {
+            printf("Warning: Device Mapped to %s was not found!\n", m_DeviceNameLookup[v]);
+            m_ObjectConfig[v].dwDevice = -1;
+        }
+    }
 
     return;
 }
@@ -558,12 +569,13 @@ void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
     for(int v=0;v<XBCTRL_OBJECT_COUNT;v++)
     {
         int dwDevice = m_ObjectConfig[v].dwDevice;
+        int dwFlags  = m_ObjectConfig[v].dwFlags;
+        int dwInfo   = m_ObjectConfig[v].dwInfo;
 
         if(dwDevice == -1)
             continue;
 
         pDevice = m_InputDevice[dwDevice].m_Device;
-        dwFlags = m_InputDevice[dwDevice].m_Flags;
 
         hRet = pDevice->Poll();
 
@@ -575,11 +587,33 @@ void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
                 hRet = pDevice->Acquire();
         }
 
+        WORD wValue = 0;
+
         // ******************************************************************
-        // * Map Joystick Input
+        // * Interpret PC Joystick Input
         // ******************************************************************
         if(dwFlags & DEVICE_FLAG_JOYSTICK)
         {
+            DIJOYSTATE JoyState;
+
+            pDevice->GetDeviceState(sizeof(JoyState), &JoyState);
+
+            if(dwFlags & DEVICE_FLAG_AXIS)
+            {             
+                DWORD *pdwAxis = (DWORD*)((uint32)&JoyState + dwInfo);
+                wValue = (WORD)*pdwAxis;
+            }
+        }
+
+        // ******************************************************************
+        // * Map Xbox Joystick Input
+        // ******************************************************************
+        if(v >= XBCTRL_OBJECT_LTHUMBPOSX && v <= XBCTRL_OBJECT_RTHUMBNEGY)
+        {
+            // Map value to controller
+            WORD *pwAxis = (WORD*)((uint32)&Controller->Gamepad.sThumbLX + (v/2)*2);
+
+            *pwAxis = wValue;
         }
     }
 
@@ -664,11 +698,11 @@ void XBController::DInputInit(HWND hwnd)
             hRet = m_pDirectInput8->CreateDevice(GUID_SysKeyboard, &m_InputDevice[m_dwInputDeviceCount].m_Device, NULL);
 
             if(!FAILED(hRet))
-		    {
-			    m_InputDevice[m_dwInputDeviceCount].m_Flags = DEVICE_FLAG_KEYBOARD;
+            {
+                m_InputDevice[m_dwInputDeviceCount].m_Flags = DEVICE_FLAG_KEYBOARD;
 
                 m_InputDevice[m_dwInputDeviceCount++].m_Device->SetDataFormat(&c_dfDIKeyboard);
-		    }
+            }
 
             ReorderObjects("SysKeyboard", m_dwInputDeviceCount - 1);
         }
@@ -678,11 +712,11 @@ void XBController::DInputInit(HWND hwnd)
             hRet = m_pDirectInput8->CreateDevice(GUID_SysMouse, &m_InputDevice[m_dwInputDeviceCount].m_Device, NULL);
 
             if(!FAILED(hRet))
-		    {
-			    m_InputDevice[m_dwInputDeviceCount].m_Flags = DEVICE_FLAG_MOUSE;
+            {
+                m_InputDevice[m_dwInputDeviceCount].m_Flags = DEVICE_FLAG_MOUSE;
 
                 m_InputDevice[m_dwInputDeviceCount++].m_Device->SetDataFormat(&c_dfDIMouse2);
-		    }
+            }
 
             ReorderObjects("SysMouse", m_dwInputDeviceCount - 1);
         }
@@ -826,8 +860,8 @@ BOOL XBController::EnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi)
     HRESULT hRet = m_pDirectInput8->CreateDevice(lpddi->guidInstance, &m_InputDevice[m_dwInputDeviceCount].m_Device, NULL);
     
     if(!FAILED(hRet))
-	{
-		m_InputDevice[m_dwInputDeviceCount].m_Flags = DEVICE_FLAG_JOYSTICK;
+    {
+        m_InputDevice[m_dwInputDeviceCount].m_Flags = DEVICE_FLAG_JOYSTICK;
 
         m_InputDevice[m_dwInputDeviceCount++].m_Device->SetDataFormat(&c_dfDIJoystick);
 
@@ -835,7 +869,7 @@ BOOL XBController::EnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi)
             ReorderObjects(lpddi->tszInstanceName, m_dwInputDeviceCount - 1);
 
         printf("Emu: Monitoring Device %s\n", lpddi->tszInstanceName);
-	}
+    }
 
     return DIENUM_CONTINUE;
 }

@@ -94,16 +94,6 @@ enum XBCtrlObject
 };
 
 // ******************************************************************
-// * DirectInput Enumeration Types
-// ******************************************************************
-enum XBCtrlState
-{
-    XBCTRL_STATE_NONE = 0,
-    XBCTRL_STATE_CONFIG,
-    XBCTRL_STATE_LISTEN
-};
-
-// ******************************************************************
 // * Maximum number of devices allowed
 // ******************************************************************
 #define XBCTRL_MAX_DEVICES XBCTRL_OBJECT_COUNT
@@ -215,14 +205,14 @@ class XBController : public Error
         struct InputDevice
         {
             LPDIRECTINPUTDEVICE8 m_Device;
-            DWORD                m_Flags;
+            int                  m_Flags;
         }
         m_InputDevice[XBCTRL_MAX_DEVICES];
 
         // ******************************************************************
         // * Current State
         // ******************************************************************
-        XBCtrlState m_CurrentState;
+        enum XBCtrlState m_CurrentState;
 
         // ******************************************************************
         // * Config State Variables
@@ -259,5 +249,15 @@ class XBController : public Error
 #define DETECT_SENSITIVITY_BUTTON   0
 #define DETECT_SENSITIVITY_MOUSE    10
 #define DETECT_SENSITIVITY_POV      50000
+
+// ******************************************************************
+// * DirectInput Enumeration Types
+// ******************************************************************
+enum XBCtrlState
+{
+    XBCTRL_STATE_NONE = 0,
+    XBCTRL_STATE_CONFIG,
+    XBCTRL_STATE_LISTEN
+};
 
 #endif
