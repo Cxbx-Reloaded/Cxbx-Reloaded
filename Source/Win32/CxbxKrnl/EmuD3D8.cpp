@@ -173,6 +173,29 @@ VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 
         g_pD3D8->GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), DevType, &g_D3DCaps);
     }
+
+    // ******************************************************************
+    // * create default device
+    // ******************************************************************
+    {
+        xdirectx::X_D3DPRESENT_PARAMETERS PresParam;
+
+        ZeroMemory(&PresParam, sizeof(PresParam));
+
+        PresParam.BackBufferWidth  = 640;
+        PresParam.BackBufferHeight = 480;
+        PresParam.BackBufferFormat = 6; /* X_D3DFMT_A8R8G8B8 */
+        PresParam.BackBufferCount  = 1;
+        PresParam.EnableAutoDepthStencil = TRUE;
+        PresParam.AutoDepthStencilFormat = 0x2A; /* X_D3DFMT_D24S8 */
+        PresParam.SwapEffect = xdirectx::D3DSWAPEFFECT_DISCARD;
+
+        xdirectx::IDirect3DDevice8 *pDevice = 0;
+
+        EmuSwapFS();    // XBox FS
+        xdirectx::EmuIDirect3D8_CreateDevice(0, xdirectx::D3DDEVTYPE_HAL, 0, 0x00000040, &PresParam, &pDevice);
+        EmuSwapFS();    // Win2k/XP FS
+    }
 }
 
 // ******************************************************************
@@ -426,7 +449,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3D8_CreateDevice
     // * verify no ugly circumstances
     // ******************************************************************
     if(pPresentationParameters->BufferSurfaces[0] != NULL || pPresentationParameters->DepthStencilSurface != NULL)
-        EmuCleanup("EmuIDirect3D8_CreateDevice: BufferSurfaces or DepthStencilSurface != NULL");
+        printf("*Warning* DepthStencilSurface != NULL and/or BufferSurfaces[0] != NULL\n");
 
     // ******************************************************************
     // * make adjustments to parameters to make sense with windows d3d
@@ -461,6 +484,8 @@ HRESULT WINAPI xdirectx::EmuIDirect3D8_CreateDevice
 //            else
 //                EmuCleanup("Unknown MultiSampleType (0x%.08X)", pPresentationParameters->MultiSampleType);
         }
+
+        pPresentationParameters->Flags &= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 
         // ******************************************************************
         // * Retrieve Resolution from Configuration
@@ -561,6 +586,42 @@ HRESULT WINAPI xdirectx::EmuIDirect3D8_CreateDevice
 }
 
 // ******************************************************************
+// * func: EmuIDirect3D8_GetAdapterModeCount
+// ******************************************************************
+UINT WINAPI xdirectx::EmuIDirect3D8_GetAdapterModeCount
+(
+    UINT                        Adapter
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3D8_GetAdapterModeCount\n"
+               "(\n"
+               "   Adapter                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Adapter);
+    }
+    #endif
+
+    // NOTE: WARNING: We should return only modes that should exist on a real
+    // Xbox. This could even be configurable, if desirable.
+
+    // ******************************************************************
+    // * redirect to windows d3d
+    // ******************************************************************
+    UINT ret = g_pD3D8->GetAdapterModeCount(g_XBVideo.GetDisplayAdapter());
+
+    EmuSwapFS();   // XBox FS
+
+    return ret;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3D8_GetAdapterDisplayMode
 // ******************************************************************
 HRESULT WINAPI xdirectx::EmuIDirect3D8_GetAdapterDisplayMode
@@ -596,6 +657,60 @@ HRESULT WINAPI xdirectx::EmuIDirect3D8_GetAdapterDisplayMode
         g_XBVideo.GetDisplayAdapter(),
         (D3DDISPLAYMODE*)pMode
     );
+
+    // ******************************************************************
+    // * make adjustments to parameters to make sense with windows d3d
+    // ******************************************************************
+    {
+        D3DDISPLAYMODE *pPCMode = (D3DDISPLAYMODE*)pMode;
+
+        // Convert Format (PC->Xbox)
+        pMode->Format = EmuPC2XB_D3DFormat(pPCMode->Format);
+
+        // TODO: Make this configurable in the future?
+        // D3DPRESENTFLAG_FIELD | D3DPRESENTFLAG_INTERLACED | D3DPRESENTFLAG_LOCKABLE_BACKBUFFER
+        pMode->Flags  = 0x000000A1;
+    }
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3D8_EnumAdapterModes
+// ******************************************************************
+HRESULT WINAPI xdirectx::EmuIDirect3D8_EnumAdapterModes
+(
+    UINT                        Adapter,
+    UINT                        Mode,
+    X_D3DDISPLAYMODE           *pMode
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3D8_EnumAdapterModes\n"
+               "(\n"
+               "   Adapter                   : 0x%.08X\n"
+               "   Mode                      : 0x%.08X\n"
+               "   pMode                     : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Adapter, Mode, pMode);
+    }
+    #endif
+
+    // NOTE: WARNING: We should probably only return valid xbox display modes,
+    // this should be coordinated with GetAdapterModeCount, etc.
+
+    // ******************************************************************
+    // * redirect to windows d3d
+    // ******************************************************************
+    HRESULT hRet = g_pD3D8->EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), Mode, (D3DDISPLAYMODE*)pMode);
 
     // ******************************************************************
     // * make adjustments to parameters to make sense with windows d3d
@@ -751,22 +866,41 @@ xdirectx::X_D3DSurface* WINAPI xdirectx::EmuIDirect3DDevice8_GetBackBuffer2
     }
     #endif
 
-    X_D3DSurface *ppBackBuffer = new X_D3DSurface();
+    X_D3DSurface *pBackBuffer = new X_D3DSurface();
 
     if(BackBuffer == -1)
     {
-        // NOTE: TODO: HACK: This is just a cheap way of avoiding returning the real front buffer
-        BackBuffer = 0;
+        static IDirect3DSurface8 *pCachedPrimarySurface = 0;
 
-        printf("*Warning* Returning BackBuffer 0 instead of FrontBuffer\n");
-        //g_pD3DDevice8->GetFrontBuffer((*ppBackBuffer)->EmuSurface8);
+        if(pCachedPrimarySurface == 0)
+        {
+            // create a buffer to return
+            // TODO: Verify the surface is always 640x480
+            g_pD3DDevice8->CreateImageSurface(640, 480, D3DFMT_A8R8G8B8, &pBackBuffer->EmuSurface8);
+        } 
+        else
+            pBackBuffer->EmuSurface8 = pCachedPrimarySurface;
+
+        HRESULT hRet = g_pD3DDevice8->GetFrontBuffer(pBackBuffer->EmuSurface8);
+
+        if(FAILED(hRet))
+        {
+            printf("*Warning* Could not retrieve primary surface, using backbuffer\n");
+            pBackBuffer->EmuSurface8->Release();
+            pBackBuffer->EmuSurface8 = 0;
+            BackBuffer = 0;
+        }
+
+        // Debug: Save this image temporarily
+        //D3DXSaveSurfaceToFile("C:\\Aaron\\Textures\\FrontBuffer.bmp", D3DXIFF_BMP, pBackBuffer->EmuSurface8, NULL, NULL);
     }
 
-    g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &(ppBackBuffer->EmuSurface8));
+    if(BackBuffer != -1)
+        g_pD3DDevice8->GetBackBuffer(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &(pBackBuffer->EmuSurface8));
 
     EmuSwapFS();   // Xbox FS
 
-    return ppBackBuffer;
+    return pBackBuffer;
 }
 
 // ******************************************************************
@@ -1680,14 +1814,16 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
         break;
 
         case X_D3DCOMMON_TYPE_SURFACE:
-            EmuCleanup("Register X_D3DCOMMON_TYPE_SURFACE is not yet implemented");
         case X_D3DCOMMON_TYPE_TEXTURE:
         {
             // TODO: Find out why this only seems to be safe with textures (for now)
             pBase = (PVOID)((DWORD)pBase + (DWORD)pThis->Data);
 
             #ifdef _DEBUG_TRACE
-            printf("EmuIDirect3DResource8_Register :-> Texture...\n");
+            if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
+                printf("EmuIDirect3DResource8_Register :-> Surface...\n");
+            else
+                printf("EmuIDirect3DResource8_Register :-> Texture...\n");
             #endif
 
             X_D3DPixelContainer *pPixelContainer = (X_D3DPixelContainer*)pResource;
@@ -1695,9 +1831,15 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
             X_D3DFORMAT X_Format = (X_D3DFORMAT)((pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
             D3DFORMAT   Format   = EmuXB2PC_D3DFormat(X_Format);
 
-            DWORD dwWidth, dwHeight, dwBPP, dwDepth = 1, dwMipMapLevels = 1;
-            DWORD dwPitch = 0;
-            BOOL  bSwizzled = FALSE, bCompressed = FALSE;
+            // TODO: HACK: Temporary?
+            if(X_Format == 0x2E)
+            {
+                X_Format = 0x12;
+                Format   = D3DFMT_A8R8G8B8;
+            }
+
+            DWORD dwWidth, dwHeight, dwBPP, dwDepth = 1, dwPitch = 0, dwMipMapLevels = 1;
+            BOOL  bSwizzled = FALSE, bCompressed = FALSE, dwCompressedSize = 0;
             BOOL  bCubemap = pPixelContainer->Format & X_D3DFORMAT_CUBEMAP;
 
             if(bCubemap)
@@ -1728,7 +1870,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
                 dwPitch  = dwWidth*2;
                 dwBPP = 2;
             }
-            else if(X_Format == 0x12 /* X_D3DFORMAT_A8R8G8B8 */)
+            else if(X_Format == 0x12 /* X_D3DFORMAT_A8R8G8B8 */ || X_Format == 0x2E /* D3DFMT_LIN_D24S8 */)
             {
                 // Linear 32 Bit
                 dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
@@ -1752,7 +1894,13 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
                 dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
                 dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
                 dwDepth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
-                
+
+                // D3DFMT_DXT2->D3DFMT_DXT5 : 128bits per block/per 16 texels
+                dwCompressedSize = dwWidth*dwHeight;
+
+                if(X_Format == 0x0C)    // D3DFMT_DXT1 : 64bits per block/per 16 texels
+                    dwCompressedSize /= 2;
+
                 dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
             }
             else
@@ -1765,7 +1913,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
             // ******************************************************************
             if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
             {
-                EmuCleanup("X_D3DCOMMON_TYPE_SURFACE temporarily unsupported");
+                hRet = g_pD3DDevice8->CreateImageSurface(dwWidth, dwHeight, Format, &pResource->EmuSurface8);
             }
             else
             {
@@ -1776,59 +1924,69 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
                 );
             }
 
+            D3DLOCKED_RECT LockedRect;
+
             // ******************************************************************
             // * Copy over data (deswizzle if necessary)
             // ******************************************************************
             if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
-            {
-                EmuCleanup("X_D3DCOMMON_TYPE_SURFACE temporarily unsupported");
-            }
+                hRet = pResource->EmuSurface8->LockRect(&LockedRect, NULL, 0);
             else
-            { 
-                D3DLOCKED_RECT LockedRect;
-
                 hRet = pResource->EmuTexture8->LockRect(0, &LockedRect, NULL, 0);
 
-                RECT  iRect  = {0,0,0,0};
-                POINT iPoint = {0,0};
+            RECT  iRect  = {0,0,0,0};
+            POINT iPoint = {0,0};
 
-                if(bSwizzled)
-                {
-                    xg::EmuXGUnswizzleRect
-                    (
-                        pBase, dwWidth, dwHeight, dwDepth, LockedRect.pBits, 
-                        LockedRect.Pitch, iRect, iPoint, dwBPP
-                    );
-                }
-                else if(bCompressed)
-                {
-                    // Unsupported!
-                }
+            if(bSwizzled)
+            {
+                xg::EmuXGUnswizzleRect
+                (
+                    pBase, dwWidth, dwHeight, dwDepth, LockedRect.pBits, 
+                    LockedRect.Pitch, iRect, iPoint, dwBPP
+                );
+            }
+            else if(bCompressed)
+            {
+                memcpy(LockedRect.pBits, pBase, dwCompressedSize);
+            }
+            else
+            {
+                BYTE *pDest = (BYTE*)LockedRect.pBits;
+                BYTE *pSrc  = (BYTE*)pBase;
+
+                if((DWORD)LockedRect.Pitch == dwPitch && dwPitch == dwWidth*dwBPP)
+                    memcpy(pDest, pSrc, dwWidth*dwHeight*dwBPP);
                 else
                 {
-                    BYTE *pDest = (BYTE*)LockedRect.pBits;
-                    BYTE *pSrc  = (BYTE*)pBase;
-
-                    if((DWORD)LockedRect.Pitch == dwPitch && dwPitch == dwWidth*dwBPP)
-                        memcpy(pDest, pSrc, dwWidth*dwHeight*dwBPP);
-                    else
+                    // TODO: Faster copy (maybe unnecessary)
+                    for(DWORD v=0;v<dwHeight;v++)
                     {
-                        // TODO: Faster copy (maybe unnecessary)
-                        for(DWORD v=0;v<dwHeight;v++)
-                        {
-                            memcpy(pDest, pSrc, dwWidth*dwBPP);
+                        memcpy(pDest, pSrc, dwWidth*dwBPP);
 
-                            pDest += LockedRect.Pitch;
-                            pSrc  += dwPitch;
-                        }
+                        pDest += LockedRect.Pitch;
+                        pSrc  += dwPitch;
                     }
                 }
-
-                pResource->EmuTexture8->UnlockRect(0);
             }
 
-            /**
+            if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
+                pResource->EmuSurface8->UnlockRect();
+            else
+                pResource->EmuTexture8->UnlockRect(0);
+
             // Debug Texture Dumping
+            /*
+            if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
+            {
+                static int dwDumpSurface = 0;
+
+                char szBuffer[255];
+
+                sprintf(szBuffer, "C:\\Aaron\\Textures\\Surface%.03d.bmp", dwDumpSurface++);
+
+                D3DXSaveSurfaceToFile(szBuffer, D3DXIFF_BMP, pResource->EmuSurface8, NULL, NULL);
+            }
+            else
             {
                 static int dwDumpTex = 0;
 
@@ -1838,7 +1996,7 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
 
                 D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pResource->EmuTexture8, NULL);
             }
-            //*/
+            */
         }
         break;
 

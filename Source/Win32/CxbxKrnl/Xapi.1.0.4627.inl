@@ -61,32 +61,29 @@ SOOVPA<9> RtlFreeHeap_1_0_4627 =
 };
 
 // ******************************************************************
-// * XapiValidateDiskPartition
+// * XapiUnknownBad1
 // ******************************************************************
-SOOVPA<11> XapiValidateDiskPartition_1_0_4627 =
+SOOVPA<8> XapiUnknownBad1_1_0_4627 =
 {
     0,  // Large == 0
-    11, // Count == 11
+    8,  // Count == 8
 
     {
-        // XapiValidateDiskPartition+0x20 : push 0x00100001
-        { 0x20, 0x68 }, // (Offset,Value)-Pair #1
-        { 0x21, 0x01 }, // (Offset,Value)-Pair #2
-        { 0x22, 0x00 }, // (Offset,Value)-Pair #3
-        { 0x23, 0x10 }, // (Offset,Value)-Pair #4
+        // XapiUnknownBad1+0x51 : push 0x0104
+        { 0x51, 0x68 }, // (Offset,Value)-Pair #1
+        { 0x52, 0x04 }, // (Offset,Value)-Pair #2
+        { 0x53, 0x01 }, // (Offset,Value)-Pair #3
 
-        // XapiValidateDiskPartition+0x29 : mov ebp, [ebp-0x0C], 0x40
-        { 0x29, 0xC7 }, // (Offset,Value)-Pair #5
-        { 0x2A, 0x45 }, // (Offset,Value)-Pair #6
-        { 0x2B, 0xF4 }, // (Offset,Value)-Pair #7
-        { 0x2C, 0x40 }, // (Offset,Value)-Pair #8
+        // XapiUnknownBad1+0xB3 : jnz +0x1A
+        { 0xB3, 0x75 }, // (Offset,Value)-Pair #4
+        { 0xB4, 0x1A }, // (Offset,Value)-Pair #5
 
-        // XapiValidateDiskPartition+0x3A : jl +0x35
-        { 0x3A, 0x7C }, // (Offset,Value)-Pair #9
-        { 0x3B, 0x35 }, // (Offset,Value)-Pair #10
+        // XapiUnknownBad1+0xE8 : setnl al
+        { 0xE8, 0x0F }, // (Offset,Value)-Pair #6
+        { 0xE9, 0x9D }, // (Offset,Value)-Pair #7
+        { 0xEA, 0xC0 }, // (Offset,Value)-Pair #8
 
-        // XapiValidateDiskPartition+0x74 : leave
-        { 0x74, 0xC9 }, // (Offset,Value)-Pair #11
+        // TODO: Finish signature, toss out function call basically
     }
 };
 
@@ -125,14 +122,14 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuRtlFreeHeap"
         #endif
     },
-    // EmuXapiValidateDiskPartition
+    // XapiUnknownBad1
     {
-        (OOVPA*)&XapiValidateDiskPartition_1_0_4627,
+        (OOVPA*)&XapiUnknownBad1_1_0_4627,
 
-        xapi::EmuXapiValidateDiskPartition,
+        xapi::EmuXapiUnknownBad1,
 
         #ifdef _DEBUG_TRACE
-        "EmuXapiValidateDiskPartition"
+        "EmuXapiUnknownBad1"
         #endif
     },
     // XInitDevices (* unchanged since 1.0.4034 *)

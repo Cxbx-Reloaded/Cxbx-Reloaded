@@ -33,36 +33,6 @@
 // ******************************************************************
 
 // ******************************************************************
-// * __chkstk
-// ******************************************************************
-SOOVPA<9> __chkstk_1_0_4361 =
-{
-    0,  // Large == 0
-    9,  // Count == 9
-
-    {
-        // __chkstk+0x00 : test eax, eax
-        { 0x00, 0x85 }, // (Offset,Value)-Pair #1
-        { 0x01, 0xC0 }, // (Offset,Value)-Pair #2
-
-        // __chkstk+0x02 : jz +0x0B
-        { 0x02, 0x74 }, // (Offset,Value)-Pair #3
-        { 0x03, 0x0B }, // (Offset,Value)-Pair #4
-
-        // __chkstk+0x04 : neg eax
-        { 0x04, 0xF7 }, // (Offset,Value)-Pair #5
-        { 0x05, 0xD8 }, // (Offset,Value)-Pair #6
-
-        // __chkstk+0x06 : add eax, esp
-        { 0x06, 0x03 }, // (Offset,Value)-Pair #7
-        { 0x07, 0xC4 }, // (Offset,Value)-Pair #8
-
-        // __chkstk+0x0F : retn
-        { 0x0F, 0xC3 }, // (Offset,Value)-Pair #9
-    }
-};
-
-// ******************************************************************
 // * RtlCreateHeap
 // ******************************************************************
 SOOVPA<10> RtlCreateHeap_1_0_4361 =
@@ -475,17 +445,6 @@ SOOVPA<10> XapiSetupPerTitleDriveLetters_1_0_4361 =
 // ******************************************************************
 OOVPATable XAPI_1_0_4361[] =
 {
-    /*
-    // __chkstk
-    {
-        (OOVPA*)&__chkstk_1_0_4361,
-
-        xapi::Emu__chkstk,
-
-        #ifdef _DEBUG_TRACE
-        "Emu__chkstk"
-        #endif
-    },*/
     // RtlCreateHeap
     {
         (OOVPA*)&RtlCreateHeap_1_0_4361,

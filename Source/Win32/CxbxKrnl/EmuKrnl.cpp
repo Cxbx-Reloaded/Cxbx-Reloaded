@@ -77,6 +77,7 @@ xntdll::FPTR_NtClose                        NT_NtClose                      = (x
 xntdll::FPTR_NtDelayExecution               NT_NtDelayExecution             = (xntdll::FPTR_NtDelayExecution)GetProcAddress(hNtDll, "NtDelayExecution");
 xntdll::FPTR_NtDuplicateObject              NT_NtDuplicateObject            = (xntdll::FPTR_NtDuplicateObject)GetProcAddress(hNtDll, "NtDuplicateObject");
 xntdll::FPTR_NtQueryInformationFile         NT_NtQueryInformationFile       = (xntdll::FPTR_NtQueryInformationFile)GetProcAddress(hNtDll, "NtQueryInformationFile");
+xntdll::FPTR_NtQueryFullAttributesFile      NT_NtQueryFullAttributesFile    = (xntdll::FPTR_NtQueryFullAttributesFile)GetProcAddress(hNtDll, "NtQueryFullAttributesFile");
 xntdll::FPTR_NtQueryVolumeInformationFile   NT_NtQueryVolumeInformationFile = (xntdll::FPTR_NtQueryVolumeInformationFile)GetProcAddress(hNtDll, "NtQueryVolumeInformationFile");
 xntdll::FPTR_NtCreateEvent                  NT_NtCreateEvent                = (xntdll::FPTR_NtCreateEvent)GetProcAddress(hNtDll, "NtCreateEvent");
 xntdll::FPTR_NtCreateFile                   NT_NtCreateFile                 = (xntdll::FPTR_NtCreateFile)GetProcAddress(hNtDll, "NtCreateFile");
@@ -306,9 +307,7 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
     }
     #endif
 
-    MessageBox(g_hEmuWindow, "Warning: XBE is quitting (HalReturnToFirmware).\n\nThis process may not terminate elegantly.", "Cxbx", MB_OK);
-
-    ExitProcess(0);
+    EmuCleanup("Xbe has rebooted : HalReturnToFirmware(%d)", Routine);
 
     EmuSwapFS();   // Xbox FS
 }
@@ -592,6 +591,38 @@ XBSYSAPI EXPORTNUM(156) xboxkrnl::DWORD xboxkrnl::KeTickCount = 0;
 XBSYSAPI EXPORTNUM(164) xboxkrnl::DWORD xboxkrnl::LaunchDataPage = 0;
 
 // ******************************************************************
+// * 0x00A5 - MmAllocateContiguousMemory
+// ******************************************************************
+XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemory
+(
+	IN ULONG NumberOfBytes
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): MmAllocateContiguousMemory\n"
+               "(\n"
+               "   NumberOfBytes            : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), NumberOfBytes);
+    }
+    #endif
+
+    // TODO: Make this much more efficient and correct if necessary!
+    // HACK: Should be aligned!!
+    PVOID pRet = (PVOID)new unsigned char[NumberOfBytes];
+
+    EmuSwapFS();   // Xbox FS
+
+    return pRet;
+}
+
+// ******************************************************************
 // * 0x00A6 - MmAllocateContiguousMemoryEx
 // ******************************************************************
 XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemoryEx
@@ -663,9 +694,42 @@ XBSYSAPI EXPORTNUM(171) VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 }
 
 // ******************************************************************
+// * 0x00B2 - MmPersistContiguousMemory
+// ******************************************************************
+XBSYSAPI EXPORTNUM(178) VOID NTAPI xboxkrnl::MmPersistContiguousMemory
+(
+    IN PVOID   BaseAddress,
+    IN ULONG   NumberOfBytes,
+    IN BOOLEAN Persist
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): MmPersistContiguousMemory\n"
+               "(\n"
+               "   BaseAddress              : 0x%.08X\n"
+               "   NumberOfBytes            : 0x%.08X\n"
+               "   Persist                  : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), BaseAddress, NumberOfBytes, Persist);
+    }
+    #endif
+
+    // TODO: Actually set this up to be remember across a "reboot"
+    printf("*Warning* MmPersistContiguousMemory is being ignored\n");
+
+    EmuSwapFS();   // Xbox FS
+}
+
+// ******************************************************************
 // * 0x00B8 - NtAllocateVirtualMemory
 // ******************************************************************
-XBSYSAPI EXPORTNUM(184) NTSTATUS xboxkrnl::NtAllocateVirtualMemory
+XBSYSAPI EXPORTNUM(184) NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemory
 (
     IN OUT PVOID    *BaseAddress,
     IN ULONG         ZeroBits,
@@ -692,10 +756,6 @@ XBSYSAPI EXPORTNUM(184) NTSTATUS xboxkrnl::NtAllocateVirtualMemory
                GetCurrentThreadId(), BaseAddress, *BaseAddress, ZeroBits, AllocationSize, *AllocationSize, AllocationType, Protect);
     }
     #endif
-
-    // TODO: HACK: WARNING: Temporary!
-    if(*AllocationSize == (ULONG)0x01800000)
-        __asm int 3
 
     NTSTATUS ret = NT_NtAllocateVirtualMemory(GetCurrentProcess(), BaseAddress, ZeroBits, AllocationSize, AllocationType, Protect);
 
@@ -974,7 +1034,7 @@ XBSYSAPI EXPORTNUM(197) NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
 // ******************************************************************
 // * 0x00CA - NtOpenFile
 // ******************************************************************
-XBSYSAPI EXPORTNUM(202) NTSTATUS xboxkrnl::NtOpenFile
+XBSYSAPI EXPORTNUM(202) NTSTATUS NTAPI xboxkrnl::NtOpenFile
 (
     OUT PHANDLE             FileHandle,
     IN  ACCESS_MASK         DesiredAccess,
@@ -1006,6 +1066,56 @@ XBSYSAPI EXPORTNUM(202) NTSTATUS xboxkrnl::NtOpenFile
     #endif
 
     return NtCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, NULL, 0, ShareAccess, FILE_OPEN, OpenOptions);
+}
+
+// ******************************************************************
+// * 0x00D2 - NtQueryFullAttributesFile
+// ******************************************************************
+XBSYSAPI EXPORTNUM(210) NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributesFile
+(   
+    IN  POBJECT_ATTRIBUTES          ObjectAttributes,
+    OUT PVOID                       Attributes
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): NtQueryFullAttributesFile\n"
+               "(\n"
+               "   ObjectAttributes    : 0x%.08X (%s)\n"
+               "   Attributes          : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), ObjectAttributes, ObjectAttributes->ObjectName->Buffer, Attributes);
+    }
+    #endif
+
+    char *szBuffer = ObjectAttributes->ObjectName->Buffer;
+
+    wchar_t wszObjectName[160];
+
+    xntdll::UNICODE_STRING    NtUnicodeString;
+    xntdll::OBJECT_ATTRIBUTES NtObjAttr;
+
+    // ******************************************************************
+    // * Initialize Object Attributes
+    // ******************************************************************
+    {
+        mbstowcs(wszObjectName, szBuffer, 160);
+
+        NT_RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
+
+        InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
+    }
+
+	NTSTATUS ret = NT_NtQueryFullAttributesFile(&NtObjAttr, Attributes);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
 }
 
 // ******************************************************************

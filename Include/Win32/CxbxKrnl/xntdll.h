@@ -681,6 +681,15 @@ typedef NTSTATUS (NTAPI *FPTR_NtSetInformationFile)
 );
 
 // ******************************************************************
+// * NtQueryFullAttributesFile
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtQueryFullAttributesFile)
+(
+    IN  POBJECT_ATTRIBUTES          ObjectAttributes,
+    OUT PVOID                       Attributes
+);
+
+// ******************************************************************
 // * NtQueryInformationFile
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtQueryInformationFile)

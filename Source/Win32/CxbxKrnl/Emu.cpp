@@ -425,8 +425,6 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                 }
 			}
         }
-
-        EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
     }
 
 	// ******************************************************************
@@ -437,6 +435,10 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
         EmuGenerateFS(pTLS, pTLSData);
     }
+
+    printf("Emu (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
+
+    EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
 
     printf("Emu (0x%X): Initial thread starting.\n", GetCurrentThreadId());
 
@@ -493,7 +495,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage, ...)
 
         strcat(szBuffer1, szBuffer2);
 
-        printf("%s", szBuffer1);
+        printf("%s\n", szBuffer1);
 
         MessageBox(NULL, szBuffer1, "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
     }

@@ -54,7 +54,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m
         m_wndname   = "Cxbx - Xbox Emulator";
 
         m_w         = 327;
-        m_h         = 253;
+        m_h         = 243;
 
 	    m_ExeFilename = (char*)calloc(1, 260);
 	    m_XbeFilename = (char*)calloc(1, 260);
@@ -238,7 +238,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
         case WM_CREATE:
         {
 			// ******************************************************************
-			// * resize window so that client area == 321x201
+			// * resize window so that client area == 321x191
 			// ******************************************************************
             {
                 RECT cRect;
@@ -250,7 +250,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 uint32 difW = (wRect.right  - wRect.left) - (cRect.right);
                 uint32 difH = (wRect.bottom - wRect.top)  - (cRect.bottom);
 
-                MoveWindow(hwnd, wRect.left, wRect.top, difW + 321, difH + 221, TRUE);
+                MoveWindow(hwnd, wRect.left, wRect.top, difW + 321, difH + 211, TRUE);
             }
 
 			// ******************************************************************
@@ -315,8 +315,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			// * draw splash/logo/status
 			// ******************************************************************
 			{
-				BitBlt(hDC, 0, (m_Xbe != 0) ? 0 : 10, 320, 160, m_BackDC, 0, 0, SRCCOPY);
-				BitBlt(hDC, 220, 168, 100, 17, m_LogoDC, 0, 0, SRCCOPY);
+				BitBlt(hDC, 0, (m_Xbe != 0) ? 0 : 10, 320, 150, m_BackDC, 0, 0, SRCCOPY);
+//				BitBlt(hDC, 0, 0, 320, 150, m_BackDC, 0, 0, SRCCOPY);
+				BitBlt(hDC, 217, 157, 100, 17, m_LogoDC, 0, 0, SRCCOPY);
 
 				int nHeight = -MulDiv(8, GetDeviceCaps(hDC, LOGPIXELSY), 72);
 
@@ -335,9 +336,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 else
     				sprintf(buffer, "%s", "Disclaimer: Cxbx has no affiliation with Microsoft");
 
-                RECT rect = {0, 187, 321, 201};
+                RECT rect = {0, 177, 321, 191};
 
-                ExtTextOut(hDC, 5, 187, ETO_OPAQUE, &rect, buffer, strlen(buffer), 0);
+                ExtTextOut(hDC, 5, 177, ETO_OPAQUE, &rect, buffer, strlen(buffer), 0);
 
                 SelectObject(hDC, tmpObj);
 

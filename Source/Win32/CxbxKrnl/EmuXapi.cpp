@@ -68,36 +68,6 @@ xntdll::FPTR_RtlAllocateHeap                NT_RtlAllocateHeap              = (x
 xntdll::FPTR_RtlFreeHeap                    NT_RtlFreeHeap                  = (xntdll::FPTR_RtlFreeHeap)GetProcAddress(hNtDll, "RtlFreeHeap");
 
 // ******************************************************************
-// * func: Emu__chkstk
-// ******************************************************************
-void __cdecl xapi::Emu__chkstk
-(
-    DWORD dwDummy1,
-    DWORD dwDummy2,
-    DWORD dwDummy3
-)
-{
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        EmuSwapFS();   // Win2k/XP FS
-        printf("EmuXapi (0x%X): Emu__chkstk\n"
-               "(\n"
-               "   dwDummy1            : 0x%.08X\n"
-               "   dwDummy2            : 0x%.08X\n"
-               "   dwDummy3            : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), dwDummy1, dwDummy2, dwDummy3);
-        EmuSwapFS();   // XBox FS
-    }
-    #endif
-
-    return;
-}
-
-// ******************************************************************
 // * func: EmuRtlCreateHeap
 // ******************************************************************
 PVOID WINAPI xapi::EmuRtlCreateHeap
@@ -212,12 +182,12 @@ BOOL WINAPI xapi::EmuRtlFreeHeap
 }
 
 // ******************************************************************
-// * func: EmuXapiValidateDiskPartition
+// * func: XapiUnknownBad1
 // ******************************************************************
-// TODO: Tentative
-BOOL WINAPI xapi::EmuXapiValidateDiskPartition
+// NOTE: This does some hard disk verification and other things
+VOID WINAPI xapi::EmuXapiUnknownBad1
 (
-    IN DWORD dwPartition
+    IN DWORD dwUnknown
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -227,18 +197,17 @@ BOOL WINAPI xapi::EmuXapiValidateDiskPartition
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuXapi (0x%X): EmuXapiValidateDiskPartition\n"
+        printf("EmuXapi (0x%X): EmuXapiUnknownBad1\n"
                "(\n"
-               "   dwPartition         : 0x%.08X\n"
+               "   dwUnknown           : 0x%.08X\n"
                ");\n",
-               GetCurrentThreadId(), dwPartition);
+               GetCurrentThreadId(), dwUnknown);
     }
     #endif
 
-    EmuCleanup("EmuXapiValidateDiskPartition could be dangerous!");
     EmuSwapFS();   // XBox FS
 
-    return TRUE;
+    return;
 }
 
 // ******************************************************************

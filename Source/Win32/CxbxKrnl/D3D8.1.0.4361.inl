@@ -60,6 +60,37 @@ SOOVPA<8> IDirect3D8_CreateDevice_1_0_4361 =
 };
 
 // ******************************************************************
+// * IDirect3D8_GetAdapterModeCount
+// ******************************************************************
+SOOVPA<12> IDirect3D8_GetAdapterModeCount_1_0_4361 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    {
+        // IDirect3D8_GetAdapterModeCount+0x25 : add edx, 0xFF
+        { 0x25, 0x81 }, // (Offset,Value)-Pair #1
+        { 0x26, 0xE2 }, // (Offset,Value)-Pair #2
+        { 0x27, 0xFF }, // (Offset,Value)-Pair #3
+
+        // IDirect3D8_GetAdapterModeCount+0x47 : cmp edi, 0x04
+        { 0x47, 0x83 }, // (Offset,Value)-Pair #4
+        { 0x48, 0xFF }, // (Offset,Value)-Pair #5
+        { 0x49, 0x04 }, // (Offset,Value)-Pair #6
+
+        // IDirect3D8_GetAdapterModeCount+0x95 : shl eax, 0x02
+        { 0x95, 0xC1 }, // (Offset,Value)-Pair #7
+        { 0x96, 0xE0 }, // (Offset,Value)-Pair #8
+        { 0x97, 0x02 }, // (Offset,Value)-Pair #9
+
+        // IDirect3D8_GetAdapterModeCount+0x99 : add esp, 0x08
+        { 0x99, 0x83 }, // (Offset,Value)-Pair #10
+        { 0x9A, 0xC4 }, // (Offset,Value)-Pair #11
+        { 0x9B, 0x08 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
 // * IDirect3D8_GetAdapterDisplayMode
 // ******************************************************************
 SOOVPA<13> IDirect3D8_GetAdapterDisplayMode_1_0_4361 =
@@ -88,6 +119,33 @@ SOOVPA<13> IDirect3D8_GetAdapterDisplayMode_1_0_4361 =
         // IDirect3D8_GetAdapterDisplayMode+0xBD : retn 0x08
         { 0xBD, 0xC2 }, // (Offset,Value)-Pair #12
         { 0xBE, 0x08 }, // (Offset,Value)-Pair #13
+    }
+};
+
+// ******************************************************************
+// * IDirect3D8_EnumAdapterModes
+// ******************************************************************
+SOOVPA<10> IDirect3D8_EnumAdapterModes_1_0_4361 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    {
+        // IDirect3D8_EnumAdapterModes+0x00 : sub esp, 0x08
+        { 0x00, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x01, 0xEC }, // (Offset,Value)-Pair #2
+        { 0x02, 0x08 }, // (Offset,Value)-Pair #3
+
+        // IDirect3D8_EnumAdapterModes+0xD1 : and edx, 0x0A
+        { 0xD1, 0x83 }, // (Offset,Value)-Pair #4
+        { 0xD2, 0xE2 }, // (Offset,Value)-Pair #5
+        { 0xD3, 0x0A }, // (Offset,Value)-Pair #6
+
+        // IDirect3D8_EnumAdapterModes+0xF5 : mov dword ptr[edi+0x10], 0x1E
+        { 0xF5, 0xC7 }, // (Offset,Value)-Pair #7
+        { 0xF6, 0x47 }, // (Offset,Value)-Pair #8
+        { 0xF7, 0x10 }, // (Offset,Value)-Pair #9
+        { 0xF8, 0x1E }, // (Offset,Value)-Pair #10
     }
 };
 
@@ -1512,6 +1570,16 @@ OOVPATable D3D8_1_0_4361[] =
         "EmuIDirect3D8_CreateDevice" 
         #endif
     },
+    // IDirect3D8::GetAdapterModeCount
+    {
+        (OOVPA*)&IDirect3D8_GetAdapterModeCount_1_0_4361,
+
+        xdirectx::EmuIDirect3D8_GetAdapterModeCount,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3D8_GetAdapterModeCount" 
+        #endif
+    },
     // IDirect3D8::GetAdapterDisplayMode
     {
         (OOVPA*)&IDirect3D8_GetAdapterDisplayMode_1_0_4361,
@@ -1520,6 +1588,16 @@ OOVPATable D3D8_1_0_4361[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3D8_GetAdapterDisplayMode" 
+        #endif
+    },
+    // IDirect3D8::EnumAdapterModes
+    {
+        (OOVPA*)&IDirect3D8_EnumAdapterModes_1_0_4361,
+
+        xdirectx::EmuIDirect3D8_EnumAdapterModes,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3D8_EnumAdapterModes" 
         #endif
     },
     // IDirect3DDevice8::CopyRects

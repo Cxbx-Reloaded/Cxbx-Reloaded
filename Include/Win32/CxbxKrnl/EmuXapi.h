@@ -253,16 +253,6 @@ typedef struct _RTL_HEAP_PARAMETERS
 RTL_HEAP_PARAMETERS;
 
 // ******************************************************************
-// * func: Emu__chkstk
-// ******************************************************************
-void __cdecl Emu__chkstk
-(
-    DWORD dwDummy1,
-    DWORD dwDummy2,
-    DWORD dwDummy3
-);
-
-// ******************************************************************
 // * func: EmuRtlCreateHeap
 // ******************************************************************
 PVOID WINAPI EmuRtlCreateHeap
@@ -296,12 +286,12 @@ BOOL WINAPI EmuRtlFreeHeap
 );
 
 // ******************************************************************
-// * func: XapiValidateDiskPartition
+// * func: XapiUnknownBad1
 // ******************************************************************
-// TODO: Tentative
-BOOL WINAPI EmuXapiValidateDiskPartition
+// NOTE: This does some hard disk verification and other things
+VOID WINAPI EmuXapiUnknownBad1
 (
-    IN DWORD dwPartition
+    IN DWORD dwUnknown
 );
 
 // ******************************************************************

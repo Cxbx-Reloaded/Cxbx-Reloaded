@@ -69,7 +69,7 @@ inline D3DTRANSFORMSTATETYPE EmuXB2PC_D3DTS(D3DTRANSFORMSTATETYPE State)
         return (D3DTRANSFORMSTATETYPE)(State + 2);
     else if((uint32)State < 6)
         return (D3DTRANSFORMSTATETYPE)(State + 14);
-    else if((uint32)State < 9)
+    else if((uint32)State < 10)
         return D3DTS_WORLDMATRIX(State-6);
 
     EmuCleanup("Unknown Transform State Type (%d)", State);
@@ -150,10 +150,11 @@ inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
         case 0x0F: // Compressed (X_D3DFMT_DXT3)
             return D3DFMT_DXT3;
 
+        case 0x2E: // Linear     (X_D3DFMT_LIN_D24S8)
         case 0x2A: // Swizzled   (X_D3DFMT_D24S8)
             return D3DFMT_D24S8;
 
-        case 0x30: // Linear     (D3DFMT_LIN_D16)
+        case 0x30: // Linear     (X_D3DFMT_LIN_D16)
         case 0x2C: // Swizzled   (X_D3DFMT_D16)
             return D3DFMT_D16;
     }
@@ -170,6 +171,8 @@ inline X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format)
 {
     switch(Format)
     {
+        case D3DFMT_R5G6B5:
+            return 0x05;
         case D3DFMT_D24S8:
             return 0x2A;
         case D3DFMT_X8R8G8B8:
@@ -224,14 +227,14 @@ typedef struct _X_D3DPRESENT_PARAMETERS
 {
     UINT                BackBufferWidth;
     UINT                BackBufferHeight;
-    D3DFORMAT           BackBufferFormat;
+    X_D3DFORMAT         BackBufferFormat;
     UINT                BackBufferCount;
     D3DMULTISAMPLE_TYPE MultiSampleType;
     D3DSWAPEFFECT       SwapEffect;
     HWND                hDeviceWindow;
     BOOL                Windowed;
     BOOL                EnableAutoDepthStencil;
-    D3DFORMAT           AutoDepthStencilFormat;
+    X_D3DFORMAT         AutoDepthStencilFormat;
     DWORD               Flags;
     UINT                FullScreen_RefreshRateInHz; 
     UINT                FullScreen_PresentationInterval;
@@ -460,11 +463,29 @@ HRESULT WINAPI EmuIDirect3D8_CreateDevice
 );
 
 // ******************************************************************
+// * func: EmuIDirect3D8_GetAdapterModeCount
+// ******************************************************************
+UINT WINAPI EmuIDirect3D8_GetAdapterModeCount
+(
+    UINT                        Adapter
+);
+
+// ******************************************************************
 // * func: EmuIDirect3D8_GetAdapterDisplayMode
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3D8_GetAdapterDisplayMode
 (
     UINT                        Adapter,
+    X_D3DDISPLAYMODE           *pMode
+);
+
+// ******************************************************************
+// * func: EmuIDirect3D8_EnumAdapterModes
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3D8_EnumAdapterModes
+(
+    UINT                        Adapter,
+    UINT                        Mode,
     X_D3DDISPLAYMODE           *pMode
 );
 
