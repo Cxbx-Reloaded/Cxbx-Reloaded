@@ -67,6 +67,7 @@ static LRESULT WINAPI               EmuMsgProc(HWND hWnd, UINT msg, WPARAM wPara
 static DWORD WINAPI                 EmuUpdateTickCount(LPVOID);
 static inline void                  EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource);
 static void                         EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight);
+static void                         EmuUpdateDeferredStates();
 
 typedef BOOL (WINAPI *pfGetMonitorInfo)(XTL::HMONITOR hMonitor, LPMONITORINFO lpmi);
 static pfGetMonitorInfo GetMonitorInfo = (pfGetMonitorInfo)GetProcAddress(LoadLibrary("user32.dll"), "GetMonitorInfoA");
@@ -2652,17 +2653,21 @@ static void EmuFlushD3DIVB()
         }
         //*/
 
-        // HACK!!
-        g_pD3DDevice8->SetTextureStageState(0, XTL::D3DTSS_COLOROP,   XTL::D3DTOP_MODULATE);
-        g_pD3DDevice8->SetTextureStageState(0, XTL::D3DTSS_COLORARG1, D3DTA_TEXTURE);
-        g_pD3DDevice8->SetTextureStageState(0, XTL::D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-        g_pD3DDevice8->SetTextureStageState(0, XTL::D3DTSS_ALPHAOP,   XTL::D3DTOP_DISABLE);
+        EmuUpdateDeferredStates();
 
+        // XTL::EmuD3DDeferredRenderState
+        // HACK: TODO: Halo apparently has different values for D3DCULL_CW...i believe
+        g_pD3DDevice8->SetRenderState(XTL::D3DRS_CULLMODE, XTL::D3DCULL_CW );
+        g_pD3DDevice8->SetRenderState(XTL::D3DRS_FOGENABLE, FALSE );
+        //g_pD3DDevice8->SetRenderState(XTL::D3DRS_LIGHTING, FALSE );
+        //g_pD3DDevice8->SetRenderState(XTL::D3DRS_ZENABLE, TRUE );
+        
         g_pD3DDevice8->SetVertexShader(dwFVF);
 
         HRESULT hRet = g_pD3DDevice8->DrawPrimitiveUP(XTL::EmuPrimitiveType(g_dwD3DIVBPrim), XTL::EmuD3DVertex2PrimitiveCount(g_dwD3DIVBPrim, g_dwD3DIVBInd), pStreamData, i/g_dwD3DIVBInd);
 
         g_pD3DDevice8->Present(0,0,0,0);
+
         free(pStreamData);
 
         if(FAILED(hRet))
@@ -2773,8 +2778,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
     {
         case 0:             // D3DVSDE_POSITION
         {
-            g_D3DIVB[g_dwD3DIVBInd].Position.x = a;//*640.0f;
-            g_D3DIVB[g_dwD3DIVBInd].Position.y = b;//*480.0f;
+            g_D3DIVB[g_dwD3DIVBInd].Position.x = (a/320.0f) - 1.0f;
+            g_D3DIVB[g_dwD3DIVBInd].Position.y = (b/240.0f) - 1.0f;
             g_D3DIVB[g_dwD3DIVBInd].Position.z = c;
 
             g_dwD3DIVBFVF |= D3DFVF_XYZ;
@@ -2799,8 +2804,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
 
         case 4:             // D3DVSDE_SPECULAR
         {
-            if(a > 1.0f) a /= 640.0f;
-            if(b > 1.0f) b /= 480.0f;
+            if(a > 1.0f || a < -1.0f) a = 0.0f - ((a/320.0f) - 1.0f);
+            if(b > 1.0f || b < -1.0f) b = 0.0f - ((b/240.0f) - 1.0f);
 
             g_D3DIVB[g_dwD3DIVBInd].TexCoord1.x = a;
             g_D3DIVB[g_dwD3DIVBInd].TexCoord1.y = b;
@@ -2835,8 +2840,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
 */
         case 10:            // D3DVSDE_TEXCOORD1
         {
-            if(a > 1.0f) a /= 640.0f;
-            if(b > 1.0f) b /= 480.0f;
+            if(a > 1.0f || a < -1.0f) a = 0.0f - ((a/320.0f) - 1.0f);
+            if(b > 1.0f || b < -1.0f) b = 0.0f - ((b/240.0f) - 1.0f);
 
             g_D3DIVB[g_dwD3DIVBInd].TexCoord2.x = a;
             g_D3DIVB[g_dwD3DIVBInd].TexCoord2.y = b;
@@ -2848,8 +2853,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
 
         case 11:            // D3DVSDE_TEXCOORD2
         {
-            if(a > 1.0f) a /= 640.0f;
-            if(b > 1.0f) b /= 480.0f;
+            if(a > 1.0f || a < -1.0f) a = 0.0f - ((a/320.0f) - 1.0f);
+            if(b > 1.0f || b < -1.0f) b = 0.0f - ((b/240.0f) - 1.0f);
 
             g_D3DIVB[g_dwD3DIVBInd].TexCoord3.x = a;
             g_D3DIVB[g_dwD3DIVBInd].TexCoord3.y = b;
@@ -2861,8 +2866,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
 
         case 12:            // D3DVSDE_TEXCOORD3
         {
-            if(a > 1.0f) a /= 640.0f;
-            if(b > 1.0f) b /= 480.0f;
+            if(a > 1.0f || a < -1.0f) a = 0.0f - ((a/320.0f) - 1.0f);
+            if(b > 1.0f || b < -1.0f) b = 0.0f - ((b/240.0f) - 1.0f);
 
             g_D3DIVB[g_dwD3DIVBInd].TexCoord4.x = a;
             g_D3DIVB[g_dwD3DIVBInd].TexCoord4.y = b;
@@ -2874,9 +2879,9 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
 
         case 0xFFFFFFFF:    // D3DVSDE_VERTEX
         {
-            g_D3DIVB[g_dwD3DIVBInd].Position.x = a*640.0f;
-            g_D3DIVB[g_dwD3DIVBInd].Position.y = b*480.0f;
-            g_D3DIVB[g_dwD3DIVBInd].Position.z = c*1.0f;
+            g_D3DIVB[g_dwD3DIVBInd].Position.x = (a/320.0f) - 1.0f;
+            g_D3DIVB[g_dwD3DIVBInd].Position.y = (b/240.0f) - 1.0f;
+            g_D3DIVB[g_dwD3DIVBInd].Position.z = c;
 
             g_dwD3DIVBFVF |= D3DFVF_XYZ;
 

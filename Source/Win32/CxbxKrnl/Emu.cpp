@@ -424,17 +424,27 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 					        }
 				        }
                     }
-			        else if(strcmp("D3D8", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && (BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4627))
+			        else if(strcmp("D3D8", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && (BuildVersion == 3925 || BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4627))
 			        {
                         uint32 lower = pXbeHeader->dwBaseAddr;
                         uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
 
-				        void *pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4134, lower, upper);
+				        void *pFunc = 0;
+                        
+                        if(BuildVersion == 3925)
+                            pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_3925, lower, upper);
+                        else
+                            pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4134, lower, upper);
 
                         // locate D3DDeferredRenderState
-                        if(pFunc != 0 && (BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4627))
+                        if(pFunc != 0)
                         {
-                            if(BuildVersion == 4134)
+                            if(BuildVersion == 3925)
+                            {
+                                // NOTE: HACK: This is preliminary. If render states have a problem, maybe this is wrong!
+                                XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x25) - 0x1FC + 82*4);  // TODO: Verify
+                            }
+                            else if(BuildVersion == 4134)
                                 XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x248 + 82*4);  // TODO: Verify
                             else if(BuildVersion == 4361)
 						        XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x200 + 82*4);
@@ -454,7 +464,9 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
                         // locate D3DDeferredTextureState
                         {
-                            if(BuildVersion == 4134)
+                            if(BuildVersion == 3925)
+                                pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_3925, lower, upper);
+                            else if(BuildVersion == 4134)
                                 pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4134, lower, upper);
                             else if(BuildVersion == 4361)
                                 pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361, lower, upper);
@@ -463,7 +475,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
                             if(pFunc != 0)
                             {
-                                if(BuildVersion == 4134)
+                                if(BuildVersion == 3925 || BuildVersion == 4134)
 					                XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x18) - 0x70);
                                 else
 					                XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x19) - 0x70);
