@@ -1427,7 +1427,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
 
     if(FAILED(hRet))
     {
-        EmuWarning("VertexShader was not really created!\n");
+        EmuWarning("VertexShader was not really created!");
 
         hRet = D3D_OK;
     }
@@ -2935,62 +2935,65 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_EnableOverlay
     }
     #endif
 
-    if(Enable)
+    if(g_bSupportsYUY2)
     {
-        // ******************************************************************
-        // * Initialize Primary Surface
-        // ******************************************************************
+        if(Enable)
         {
-            DDSURFACEDESC2 ddsd2;
+            // ******************************************************************
+            // * Initialize Primary Surface
+            // ******************************************************************
+            {
+                DDSURFACEDESC2 ddsd2;
 
-            ZeroMemory(&ddsd2, sizeof(ddsd2));
+                ZeroMemory(&ddsd2, sizeof(ddsd2));
 
-            ddsd2.dwSize = sizeof(ddsd2);
-            ddsd2.dwFlags = DDSD_CAPS;
-            ddsd2.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE | DDSCAPS_VIDEOMEMORY;
-		        
-	        HRESULT hRet = g_pDD7->CreateSurface(&ddsd2, &g_pDDSPrimary, 0);
+                ddsd2.dwSize = sizeof(ddsd2);
+                ddsd2.dwFlags = DDSD_CAPS;
+                ddsd2.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE | DDSCAPS_VIDEOMEMORY;
+		            
+	            HRESULT hRet = g_pDD7->CreateSurface(&ddsd2, &g_pDDSPrimary, 0);
 
-            if(FAILED(hRet))
-                EmuCleanup("Could not create primary surface");
+                if(FAILED(hRet))
+                    EmuCleanup("Could not create primary surface");
+            }
+
+            // ******************************************************************
+            // * Initialize Overlay Surface
+            // ******************************************************************
+            {
+                DDSURFACEDESC2 ddsd2;
+
+                ZeroMemory(&ddsd2, sizeof(ddsd2));
+
+                ddsd2.dwSize = sizeof(ddsd2);
+                ddsd2.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PIXELFORMAT;
+                ddsd2.ddsCaps.dwCaps = DDSCAPS_OVERLAY;
+                ddsd2.dwWidth = g_dwOverlayW;
+                ddsd2.dwHeight = g_dwOverlayH; 
+                ddsd2.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
+                ddsd2.ddpfPixelFormat.dwFlags = DDPF_FOURCC;
+                ddsd2.ddpfPixelFormat.dwFourCC = MAKEFOURCC('Y','U','Y','2');
+
+                HRESULT hRet = g_pDD7->CreateSurface(&ddsd2, &g_pDDSOverlay7, NULL);
+
+                if(FAILED(hRet))
+                    EmuCleanup("Could not create overlay surface");
+            }
         }
-
-        // ******************************************************************
-        // * Initialize Overlay Surface
-        // ******************************************************************
+        else
         {
-            DDSURFACEDESC2 ddsd2;
-
-            ZeroMemory(&ddsd2, sizeof(ddsd2));
-
-            ddsd2.dwSize = sizeof(ddsd2);
-            ddsd2.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT | DDSD_PIXELFORMAT;
-            ddsd2.ddsCaps.dwCaps = DDSCAPS_OVERLAY;
-            ddsd2.dwWidth = g_dwOverlayW;
-            ddsd2.dwHeight = g_dwOverlayH; 
-            ddsd2.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
-            ddsd2.ddpfPixelFormat.dwFlags = DDPF_FOURCC;
-            ddsd2.ddpfPixelFormat.dwFourCC = MAKEFOURCC('Y','U','Y','2');
-
-            HRESULT hRet = g_pDD7->CreateSurface(&ddsd2, &g_pDDSOverlay7, NULL);
-
-            if(FAILED(hRet))
-                EmuCleanup("Could not create overlay surface");
-        }
-    }
-    else
-    {
-        // Cleanup Primary/Overlay Surfaces
-        if(g_pDDSOverlay7 != 0)
-        {
-            g_pDDSOverlay7->Release();
-            g_pDDSOverlay7 = 0;
-        }
+            // Cleanup Primary/Overlay Surfaces
+            if(g_pDDSOverlay7 != 0)
+            {
+                g_pDDSOverlay7->Release();
+                g_pDDSOverlay7 = 0;
+            }
         
-        if(g_pDDSPrimary != 0)
-        {
-            g_pDDSPrimary->Release();
-            g_pDDSPrimary = 0;
+            if(g_pDDSPrimary != 0)
+            {
+                g_pDDSPrimary->Release();
+                g_pDDSPrimary = 0;
+            }
         }
     }
 
@@ -3033,6 +3036,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
     // ******************************************************************
     // * manually copy data over to overlay
     // ******************************************************************
+    if(g_bSupportsYUY2)
     {
         D3DSURFACE_DESC SurfaceDesc;
         DDSURFACEDESC2  ddsd2;
@@ -3046,19 +3050,6 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
 
         g_pDDSOverlay7->Lock(NULL, &ddsd2, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
         pSurface->EmuSurface8->UnlockRect();
-
-        /*
-        {
-            static int dwDumpSurface = 0;
-
-            char szBuffer[255];
-
-            sprintf(szBuffer, "C:\\Aaron\\Textures\\Surface%.03d.bmp", dwDumpSurface++);
-
-            if(dwDumpSurface == 705)
-                D3DXSaveSurfaceToFile(szBuffer, D3DXIFF_BMP, pSurface->EmuSurface8, NULL, NULL);
-        }
-        //*/
 
         pSurface->EmuSurface8->LockRect(&LockedRect, NULL, NULL);
 
@@ -3085,6 +3076,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
     // ******************************************************************
     // * update overlay!
     // ******************************************************************
+    if(g_bSupportsYUY2)
     {
         RECT SourRect = {0, 0, g_dwOverlayW, g_dwOverlayH}, DestRect;
 
@@ -3100,6 +3092,11 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
         DestRect.bottom -= nBorderHeight;
 
         HRESULT hRet = g_pDDSOverlay7->UpdateOverlay(&SourRect, g_pDDSPrimary, &DestRect, DDOVER_SHOW, 0);
+    }
+    else
+    {
+        // TODO: copy over to back buffer
+        EmuWarning("Overlay is not being displayed");
     }
 
     EmuSwapFS();   // XBox FS
