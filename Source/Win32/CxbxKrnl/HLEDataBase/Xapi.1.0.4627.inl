@@ -252,6 +252,26 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuRtlSizeHeap"
         #endif
     },
+    // QueryPerformanceCounter (* unchanged since 4627 *)
+    {
+        (OOVPA*)&QueryPerformanceCounter_1_0_4361,
+
+        XTL::EmuQueryPerformanceCounter,
+
+        #ifdef _DEBUG_TRACE
+        "EmuQueryPerformanceCounter"
+        #endif
+    },
+    // QueryPerformanceFrequency (* unchanged since 4627 *)
+    {
+        (OOVPA*)&QueryPerformanceFrequency_1_0_4361,
+
+        XTL::EmuQueryPerformanceFrequency,
+
+        #ifdef _DEBUG_TRACE
+        "EmuQueryPerformanceFrequency"
+        #endif
+    },
     // XMountUtilityDrive (* unchanged since 4432 *)
     {
         (OOVPA*)&XMountUtilityDrive_1_0_4432,
