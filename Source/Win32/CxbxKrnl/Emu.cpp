@@ -609,6 +609,8 @@ int EmuException(LPEXCEPTION_POINTERS e)
 		printf("Emu (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
 	}
 
+    fflush(stdout);
+
 	// ******************************************************************
 	// * Notify User
 	// ******************************************************************
@@ -640,6 +642,8 @@ int ExitException(LPEXCEPTION_POINTERS e)
 		printf("Emu (0x%X): Recieved Exception [0x%.08X]@0x%.08X\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip);
 		printf("Emu (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
 	}
+
+    fflush(stdout);
 
     MessageBox(g_hEmuWindow, "Warning: Could not safely terminate process!", "Cxbx", MB_OK);
 

@@ -9,11 +9,6 @@ version: 0.7.3 (06/18/03)
 
 - Fixed *part* of the invisible texture problem
 
-- Technique for solving the Xbox-Never-Sleeps CPU
-  hogging dilema. This feature is not implemented
-  in the release, though, as it will be more harm
-  than good until configuration is available.
-
 version: 0.7.2 (06/13/03)
 --------------------------------
 

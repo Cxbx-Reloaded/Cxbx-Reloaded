@@ -88,14 +88,23 @@ inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
     {
         case 0:
             return (D3DFORMAT)NULL;
-        case 0x06:
+
+        case 0x05: // Swizzled
+            return D3DFMT_R5G6B5;
+
+        case 0x12: // Linear (X_D3DFMT_LIN_A8R8G8B8)
+        case 0x06: // Swizzled
             return D3DFMT_A8R8G8B8;
+
         case 0x07:
             return D3DFMT_X8R8G8B8;
+
         case 0x0E:
             return D3DFMT_DXT2;
+
         case 0x2A:
             return D3DFMT_D24S8;
+
         case 0x2C:
             return D3DFMT_D16;
     }
@@ -199,6 +208,15 @@ X_D3DPRESENT_PARAMETERS;
 
 #define X_D3DCOMMON_UNUSED_MASK        0xFE000000
 #define X_D3DCOMMON_UNUSED_SHIFT       25
+
+// ******************************************************************
+// * D3DTexture "Size" Masks
+// ******************************************************************
+#define D3DSIZE_WIDTH_MASK              0x00000FFF   // Width  (Texels - 1)
+#define D3DSIZE_HEIGHT_MASK             0x00FFF000   // Height (Texels - 1)
+#define D3DSIZE_HEIGHT_SHIFT            12
+#define D3DSIZE_PITCH_MASK              0xFF000000   // Pitch / 64 - 1
+#define D3DSIZE_PITCH_SHIFT             24
 
 // ******************************************************************
 // * X_D3DResource

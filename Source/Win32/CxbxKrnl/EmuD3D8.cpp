@@ -707,7 +707,6 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_GetBackBuffer
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetBackBuffer\n"
                "(\n"
                "   BackBuffer          : 0x%.08X\n"
@@ -715,7 +714,6 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_GetBackBuffer
                "   ppBackBuffer        : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), BackBuffer, Type, ppBackBuffer);
-        EmuSwapFS();   // Xbox FS
     }
     #endif
 
@@ -1477,7 +1475,20 @@ HRESULT WINAPI xd3d8::EmuIDirect3DResource8_Register
                GetCurrentThreadId(), pThis, pBase);
     }
     #endif
+/*
+    static DWORD dwStaticBase = -1, dwTrueBase = -1, dwBaseIncrement;
 
+    if((DWORD)pBase == dwStaticBase)
+    {
+        dwTrueBase += dwBaseIncrement;
+        pBase = (PVOID)dwTrueBase;
+    }
+    else
+    {
+        dwStaticBase = dwTrueBase = (DWORD)pBase;
+        dwBaseIncrement = 0;
+    }
+*/
     HRESULT hRet;
 
     X_D3DResource *pResource = (X_D3DResource*)pThis;
@@ -1489,6 +1500,10 @@ HRESULT WINAPI xd3d8::EmuIDirect3DResource8_Register
     {
         case X_D3DCOMMON_TYPE_VERTEXBUFFER:
         {
+            #ifdef _DEBUG_TRACE
+            printf("( Registering VertexBuffer... )\n");
+            #endif
+
             X_D3DVertexBuffer *pVertexBuffer = (X_D3DVertexBuffer*)pResource;
 
             // ******************************************************************
@@ -1521,6 +1536,10 @@ HRESULT WINAPI xd3d8::EmuIDirect3DResource8_Register
 
         case X_D3DCOMMON_TYPE_INDEXBUFFER:
         {
+            #ifdef _DEBUG_TRACE
+            printf("( Registering IndexBuffer... )\n");
+            #endif
+
             X_D3DIndexBuffer *pIndexBuffer = (X_D3DIndexBuffer*)pResource;
 
             // ******************************************************************
@@ -1553,27 +1572,53 @@ HRESULT WINAPI xd3d8::EmuIDirect3DResource8_Register
 
         case X_D3DCOMMON_TYPE_TEXTURE:
         {
+            #ifdef _DEBUG_TRACE
+            printf("( Registering Texture... )\n");
+            #endif
+
             X_D3DPixelContainer *pPixelContainer = (X_D3DPixelContainer*)pResource;
 
-            D3DFORMAT Format;
+            X_D3DFORMAT X_Format = (X_D3DFORMAT)((pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
+            D3DFORMAT   Format   = EmuXB2PC_D3DFormat(X_Format);
+
+            DWORD       dwWidth, dwHeight, dwBPP, dwMipMap;
+            BOOL        bSwizzled;
+
+            dwMipMap = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
 
             // ******************************************************************
-            // * Obtain PC D3D Format
+            // * Interpret Width/Height/BPP
             // ******************************************************************
+            if(X_Format == 0x07 /* X_D3DFMT_X8R8G8B8 */ || X_Format == 0x06 /* X_D3DFMT_A8R8G8B8 */)
             {
-                X_D3DFORMAT XFormat = (X_D3DFORMAT)((pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
+                bSwizzled = TRUE;
 
-                Format = EmuXB2PC_D3DFormat(XFormat);
+                // Swizzled 32 Bit
+                dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
+                dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
+                dwBPP = 4;
             }
+            else if(X_Format == 0x05 /* X_D3DFMT_R5G6B5 */)
+            {
+                bSwizzled = TRUE;
 
-            // ******************************************************************
-            // * Unswizzle texture, if necessary
-            // ******************************************************************
-            if(Format != D3DFMT_X8R8G8B8)
-                EmuCleanup("Temporarily Unrecognized Format (0x%.08X)", Format);
+                // Swizzled 16 Bit
+                dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
+                dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
+                dwBPP = 2;
+            }
+            else if(X_Format == 0x12 /* X_D3DFORMAT_A8R8G8B8 */)
+            {
+                bSwizzled = FALSE;
+
+                // Linear 32 Bit
+                dwWidth  = (pPixelContainer->Size & D3DSIZE_WIDTH_MASK) + 1;
+                dwHeight = ((pPixelContainer->Size & D3DSIZE_HEIGHT_MASK) >> D3DSIZE_HEIGHT_SHIFT) + 1;
+                dwBPP = 4;
+            }
             else
             {
-                // Deswizzle, mofo!
+                EmuCleanup("Temporarily Unrecognized Format (0x%.08X)", Format);
             }
 
             // ******************************************************************
@@ -1582,12 +1627,12 @@ HRESULT WINAPI xd3d8::EmuIDirect3DResource8_Register
             hRet = g_pD3DDevice8->CreateTexture
             (
                 // TODO: HACK: These are temporarily FIXED until we deswizzle
-                256, 256, 1, 0, Format,
+                dwWidth, dwHeight, dwMipMap, 0, Format,
                 D3DPOOL_MANAGED, &pResource->EmuTexture8
             );
 
             // ******************************************************************
-            // * Deswizzlorama
+            // * Copy over data (deswizzle if necessary)
             // ******************************************************************
             {
                 D3DLOCKED_RECT LockedRect;
@@ -1597,11 +1642,30 @@ HRESULT WINAPI xd3d8::EmuIDirect3DResource8_Register
                 RECT  iRect  = {0,0,0,0};
                 POINT iPoint = {0,0};
 
-                xg::EmuXGUnswizzleRect
-                (
-                    pBase, 256, 256, 1, LockedRect.pBits, 
-                    LockedRect.Pitch, iRect, iPoint, 4
-                );
+                if(bSwizzled)
+                {
+                    DWORD dwDepth = 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
+
+                    xg::EmuXGUnswizzleRect
+                    (
+                        pBase, dwWidth, dwHeight, dwDepth, LockedRect.pBits, 
+                        LockedRect.Pitch, iRect, iPoint, dwBPP
+                    );
+                }
+                else
+                {
+                    BYTE *pDest = (BYTE*)LockedRect.pBits;
+                    BYTE *pSrc  = (BYTE*)pBase;
+
+                    // TODO: Faster copy (maybe unnecessary)
+                    for(DWORD v=0;v<dwHeight;v++)
+                    {
+                        memcpy(pDest, pSrc, dwWidth*dwBPP);
+
+                        pDest += LockedRect.Pitch;
+                        pSrc  += dwWidth*dwBPP;
+                    }
+                }
 
                 pResource->EmuTexture8->UnlockRect(0);
             }
