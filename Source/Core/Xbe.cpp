@@ -165,12 +165,15 @@ Xbe::Xbe(const char *x_szFilename)
 
             memset(m_szSectionName[v], 0, 9);
 
-            for(int b=0;b<8;b++)
+            if(sn != 0)
             {
-                m_szSectionName[v][b] = sn[b];
+                for(int b=0;b<8;b++)
+                {
+                    m_szSectionName[v][b] = sn[b];
 
-                if(m_szSectionName[v][b] == '\0')
-                    break;
+                    if(m_szSectionName[v][b] == '\0')
+                        break;
+                }
             }
 
             printf("OK (%s)\n", m_szSectionName[v]);
@@ -1229,7 +1232,12 @@ void Xbe::DumpInformation(const char *x_szTxtFilename)
 
     setlocale( LC_ALL, "English" );
 
-    wcstombs(AsciiFilename, (const wchar_t*)GetAddr(m_Header.dwDebugUnicodeFilenameAddr), 40);
+    const wchar_t *wszFilename = (const wchar_t *)GetAddr(m_Header.dwDebugUnicodeFilenameAddr);
+
+    if(wszFilename != NULL)
+        wcstombs(AsciiFilename, wszFilename, 40);
+    else
+        AsciiFilename[0] = '\0';
 
     fprintf(TxtFile, "Entry Point                      : 0x%.08X (Retail: 0x%.08X, Debug: 0x%.08X)\n", m_Header.dwEntryAddr, m_Header.dwEntryAddr ^ XOR_EP_RETAIL, m_Header.dwEntryAddr ^ XOR_EP_DEBUG);
     fprintf(TxtFile, "TLS Address                      : 0x%.08X\n", m_Header.dwTLSAddr);

@@ -1093,8 +1093,8 @@ void WndMain::RefreshMenus()
 	    // ******************************************************************
         {
             HMENU emul_menu = GetSubMenu(menu, 3);
-            HMENU emul_debg = GetSubMenu(emul_menu, 2);
-            HMENU emul_krnl = GetSubMenu(emul_menu, 3);
+            HMENU emul_debg = GetSubMenu(emul_menu, 0);
+            HMENU emul_krnl = GetSubMenu(emul_menu, 1);
 
             if(m_KrnlDebug == DM_CONSOLE)
             {

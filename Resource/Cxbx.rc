@@ -38,7 +38,7 @@ IDI_CXBX                ICON    DISCARDABLE     "Cxbx.ico"
 
 1 TEXTINCLUDE DISCARDABLE 
 BEGIN
-    "ResCxbx.h\0"
+    "..\\Include\\Win32\\Cxbx\\ResCxbx.h\0"
 END
 
 2 TEXTINCLUDE DISCARDABLE 
@@ -116,8 +116,6 @@ BEGIN
     END
     POPUP "E&mulation"
     BEGIN
-        MENUITEM "&Start\tF5",                  ID_EMULATION_START, GRAYED
-        MENUITEM SEPARATOR
         POPUP "&Debug Output (GUI)"
         BEGIN
             MENUITEM "&Console",                    ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE
@@ -132,6 +130,8 @@ BEGIN
             MENUITEM "&File...",                    ID_EMULATION_DEBUGOUTPUTKERNEL_FILE
 
         END
+        MENUITEM SEPARATOR
+        MENUITEM "&Start\tF5",                  ID_EMULATION_START, GRAYED
     END
     POPUP "&Help"
     BEGIN
@@ -139,6 +139,71 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&About",                      ID_HELP_ABOUT
     END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_CTRLCFG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 336
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 120
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_CTRLCFG DIALOG DISCARDABLE  0, 0, 343, 127
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Cxbx : Controller Configuration"
+FONT 8, "Verdana"
+BEGIN
+    GROUPBOX        "Analog Buttons",IDC_STATIC,2,1,221,47
+    PUSHBUTTON      "X",IDC_SET_X,7,11,50,14,BS_FLAT
+    PUSHBUTTON      "Y",IDC_SET_Y,60,11,50,14,BS_FLAT
+    PUSHBUTTON      "A",IDC_SET_A,113,11,50,14,BS_FLAT
+    PUSHBUTTON      "B",IDC_SET_B,167,11,50,14,BS_FLAT
+    PUSHBUTTON      "White",IDC_SET_WHITE,7,29,50,14,BS_FLAT
+    PUSHBUTTON      "Black",IDC_SET_BLACK,60,29,50,14,BS_FLAT
+    PUSHBUTTON      "Left Trigger",IDC_SET_L,113,29,50,14,BS_FLAT
+    PUSHBUTTON      "Right Trigger",IDC_SET_R,167,29,50,14,BS_FLAT
+    GROUPBOX        "Digital Buttons",IDC_STATIC,2,51,221,46
+    PUSHBUTTON      "Left Thumb",IDC_SET_LT,7,60,50,14,BS_FLAT
+    PUSHBUTTON      "Right Thumb",IDC_SET_RT,61,60,50,14,BS_FLAT
+    PUSHBUTTON      "Start",IDC_SET_START,114,60,50,14,BS_FLAT
+    PUSHBUTTON      "Back",IDC_SET_BACK,168,60,50,14,BS_FLAT
+    GROUPBOX        "Analog Thumbsticks",IDC_STATIC,226,1,115,47
+    PUSHBUTTON      "DPad Left",IDC_SET_DPAD_LEFT,6,79,50,14,BS_FLAT
+    PUSHBUTTON      "DPad Right",IDC_SET_DPAD_RIGHT,60,79,50,14,BS_FLAT
+    PUSHBUTTON      "DPad Up",IDC_SET_DPAD_UP,114,79,50,14,BS_FLAT
+    PUSHBUTTON      "DPad Down",IDC_DPAD_DOWN,168,78,50,14,BS_FLAT
+    PUSHBUTTON      "Left +/- X",IDC_SET_LEFT_X,231,11,50,14,BS_FLAT
+    PUSHBUTTON      "Left +/- Y",IDC_SET_LEFT_Y,231,29,50,14,BS_FLAT
+    PUSHBUTTON      "Right +/- X",IDC_SET_RIGHT_X,285,11,50,14,BS_FLAT
+    PUSHBUTTON      "Right +/- Y",IDC_SET_RIGHT_Y,285,29,50,14,BS_FLAT
+    PUSHBUTTON      "&Load Configuration...",IDC_LOAD_CONFIG,230,61,105,14,
+                    BS_FLAT
+    PUSHBUTTON      "&Save Configuration...",IDC_SAVE_CONFIG,230,78,105,14,
+                    BS_FLAT
+    GROUPBOX        "Configuration Management",IDC_STATIC,227,51,114,46
+    PUSHBUTTON      "&Cancel",IDC_INPUT_CONFIG_CANCEL,231,106,50,14,BS_FLAT
+    PUSHBUTTON      "&Accept",IDC_INPUT_CONFIG_ACCEPT,285,106,50,14,BS_FLAT
+    GROUPBOX        "Status",IDC_STATIC,2,98,338,27
+    LTEXT           "Waiting for YOU to push a button for configuration...",
+                    IDC_STATIC,8,107,212,15,SS_CENTERIMAGE
 END
 
 #endif    // English (U.S.) resources

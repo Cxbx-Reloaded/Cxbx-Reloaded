@@ -96,7 +96,7 @@ CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, DebugMode D
 
             SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
             
-            printf("CxbxKrnl (0x%.08X): Debug console allocated.\n", GetCurrentThreadId());
+            printf("CxbxKrnl (0x%.08X): Debug console allocated (DM_CONSOLE).\n", GetCurrentThreadId());
         }
     }
     else if(DebugConsole == DM_FILE)
@@ -105,13 +105,16 @@ CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, DebugMode D
 
         freopen(DebugFilename, "wt", stdout);
 
-        printf("Emu (0x%.08X): Debug console allocated.\n", GetCurrentThreadId());
+        printf("Emu (0x%.08X): Debug console allocated (DM_FILE).\n", GetCurrentThreadId());
     }
 
     // ******************************************************************
     // * debug trace
     // ******************************************************************
     {
+        #ifdef _DEBUG_TRACE
+        printf("CxbxKrnl (0x%.08X): _DEBUG_TRACE enabled.\n", GetCurrentThreadId());
+
         printf("Emu: EmuInit\n"
                "(\n"
                "   LibraryVersion      : 0x%.08X\n"
@@ -122,6 +125,10 @@ CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, DebugMode D
                "   Entry               : 0x%.08X\n"
                ");\n",
                LibraryVersion, DebugConsole, DebugFilename, XbeHeader, XbeHeaderSize, Entry);
+
+        #else
+        printf("CxbxKrnl (0x%.08X): _DEBUG_TRACE disabled.\n", GetCurrentThreadId());
+        #endif
     }
 
     // ******************************************************************

@@ -9,10 +9,6 @@ Cxbx Todo:
   Exe and CxbxKrnl should be cleaned up at some point before final
   process termination.
 
-  Responsibility for Kernel Debug output should be moved entirely to
-  the Exe (actually CxbxKrnl.dll) menu. This means you dont have to
-  pass around the console configuration between GUI and Krnl.
-
   D3D Rendering window should inherit from Wnd class. The title should
   also somehow be updated with information on the playing game.
 
