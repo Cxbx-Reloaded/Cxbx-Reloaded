@@ -245,6 +245,10 @@ void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*E
     // ******************************************************************
     for(uint32 a=0;a<OovpaTableSize/sizeof(OOVPATable);a++)
     {
+        #ifdef _DEBUG_TRACE
+        printf("EmuXInstallWrappers: Searching for %s...", OovpaTable[a].szFuncName);
+        #endif
+
         OOVPA *Oovpa = OovpaTable[a].Oovpa;
 
         uint32 count = Oovpa->Count;
@@ -287,12 +291,22 @@ void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*E
                 if(v == count)
                 {
                     #ifdef _DEBUG_TRACE
-                    printf("EmuXInstallWrappers: 0x%.08X -> %s\n", cur, OovpaTable[a].szFuncName);
+                    printf("Found! (0x%.08X)\n", cur);
                     #endif
 
                     EmuXInstallWrapper((void*)cur, OovpaTable[a].lpRedirect);
 
                     break;
+                }
+
+                // ******************************************************************
+                // * not found
+                // ******************************************************************
+                if(cur == upper && v != count)
+                {
+                    #ifdef _DEBUG_TRACE
+                    printf("None (OK)\n");
+                    #endif
                 }
             }
         }
@@ -332,12 +346,22 @@ void EmuXInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*E
                 if(v == count)
                 {
                     #ifdef _DEBUG_TRACE
-                    printf("EmuXInstallWrappers: 0x%.08X -> %s\n", cur, OovpaTable[a].szFuncName);
+                    printf("Found! (0x%.08X)\n", cur);
                     #endif
 
                     EmuXInstallWrapper((void*)cur, OovpaTable[a].lpRedirect);
 
                     break;
+                }
+
+                // ******************************************************************
+                // * not found
+                // ******************************************************************
+                if(cur == upper && v != count)
+                {
+                    #ifdef _DEBUG_TRACE
+                    printf("None (OK)\n");
+                    #endif
                 }
             }
         }

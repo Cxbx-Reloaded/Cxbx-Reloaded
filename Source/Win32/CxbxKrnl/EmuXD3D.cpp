@@ -53,7 +53,7 @@ HWND              g_EmuXWindow  = NULL;  // Rendering Window
 // * static
 // ******************************************************************
 static LRESULT WINAPI EmuXMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-static void EmuXProcessMessages(PVOID);
+static void EmuXRenderWindow(PVOID);
 
 // ******************************************************************
 // * func: EmuXInitD3D
@@ -64,7 +64,7 @@ VOID xboxkrnl::EmuXInitD3D()
     // * spark up a new thread to handle window message processing
     // ******************************************************************
     {
-        _beginthread(EmuXProcessMessages, 0, NULL);
+        _beginthread(EmuXRenderWindow, 0, NULL);
 
         while(g_EmuXWindow == NULL)
             Sleep(10);
@@ -80,24 +80,9 @@ VOID xboxkrnl::EmuXInitD3D()
 }
 
 // ******************************************************************
-// * func: EmuXMsgProc
+// * func: EmuXRenderWindow
 // ******************************************************************
-LRESULT WINAPI EmuXMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    switch(msg)
-    {
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            return 0;
-    }
-
-    return DefWindowProc(hWnd, msg, wParam, lParam);
-}
-
-// ******************************************************************
-// * func: EmuXProcessMessages
-// ******************************************************************
-void EmuXProcessMessages(PVOID)
+void EmuXRenderWindow(PVOID)
 {
     // ******************************************************************
     // * register window class
@@ -109,7 +94,7 @@ void EmuXProcessMessages(PVOID)
             CS_CLASSDC,
             EmuXMsgProc,
             0, 0, GetModuleHandle(NULL),
-            NULL, NULL, NULL, NULL,
+            NULL, LoadCursor(NULL, IDC_ARROW), (HBRUSH)(COLOR_APPWORKSPACE + 1), NULL,
             "CxbxRender",
             NULL
         };
@@ -153,6 +138,21 @@ void EmuXProcessMessages(PVOID)
     }
 
     ExitProcess(0);
+}
+
+// ******************************************************************
+// * func: EmuXMsgProc
+// ******************************************************************
+LRESULT WINAPI EmuXMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch(msg)
+    {
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            return 0;
+    }
+
+    return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
 // ******************************************************************

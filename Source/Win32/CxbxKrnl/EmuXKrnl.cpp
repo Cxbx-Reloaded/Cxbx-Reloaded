@@ -93,7 +93,7 @@ DWORD WINAPI PsCreateSystemThreadExProxy
     }
     #endif
 
-    EmuXSwapFS();   // XBox FS
+    EmuXSwapFS();   // Xbox FS
 
     __asm
     {
@@ -173,7 +173,7 @@ XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
         break;
     }
 
-    EmuXSwapFS();   // XBox FS
+    EmuXSwapFS();   // Xbox FS
 
     return STATUS_SUCCESS;
 }
@@ -188,7 +188,23 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
 {
     EmuXSwapFS();   // Win2k/XP FS
 
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXKrnl (0x%.08X): HalReturnToFirmware\n"
+               "(\n"
+               "   Routine             : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Routine);
+    }
+    #endif
+
     MessageBox(NULL, "HalReturnToFirmware()", "EmuXKrnl", MB_OK);
+
+    ExitProcess(0);
+
     /*
     ReturnFirmwareHalt          = 0x0,
     ReturnFirmwareReboot        = 0x1,
@@ -198,9 +214,46 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
     ReturnFirmwareAll           = 0x5
     */
 
-    EmuXSwapFS();   // XBox FS
+    EmuXSwapFS();   // Xbox FS
+}
 
-    exit(1);
+// ******************************************************************
+// * 0x0063 - KeDelayExecutionThread
+// ******************************************************************
+XBSYSAPI EXPORTNUM(99) NTSTATUS NTAPI xboxkrnl::KeDelayExecutionThread
+(
+    IN KPROCESSOR_MODE  WaitMode,
+    IN BOOLEAN          Alertable,
+    IN PLARGE_INTEGER   Interval
+)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXKrnl (0x%.08X): KeDelayExecutionThread\n"
+               "(\n"
+               "   WaitMode            : 0x%.08X\n"
+               "   Alertable           : 0x%.08X\n"
+               "   Interval            : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), WaitMode, Alertable, Interval);
+        printf("%.08X <-> %.08X\n", Interval->HighPart, Interval->LowPart);
+    }
+    #endif
+
+    // TODO: Worry about Interval.LargePart if necessary
+    if((sint32)Interval->LowPart < 0)
+        Sleep(-(sint32)Interval->LowPart/10000);
+    else
+        EmuXPanic();
+
+    EmuXSwapFS();   // Xbox FS
+
+    return STATUS_SUCCESS;
 }
 
 // ******************************************************************
@@ -235,7 +288,7 @@ XBSYSAPI EXPORTNUM(107) VOID NTAPI xboxkrnl::KeInitializeDpc
     Dpc->Type = DpcObject;
 	Dpc->DeferredContext = DeferredContext;
 
-    EmuXSwapFS();   // XBox FS
+    EmuXSwapFS();   // Xbox FS
 
     return;
 }
@@ -276,7 +329,7 @@ XBSYSAPI EXPORTNUM(113) VOID NTAPI xboxkrnl::KeInitializeTimerEx
     Timer->DueTime.QuadPart          = 0;
     Timer->Period                    = 0;
 
-    EmuXSwapFS();   // XBox FS
+    EmuXSwapFS();   // Xbox FS
 
     return;
 }
@@ -308,7 +361,7 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
     }
     #endif
 
-    EmuXSwapFS();   // XBox FS
+    EmuXSwapFS();   // Xbox FS
 
     return FALSE;
 }
@@ -346,7 +399,7 @@ XBSYSAPI EXPORTNUM(184) NTSTATUS xboxkrnl::NtAllocateVirtualMemory
 
     *BaseAddress = VirtualAlloc(*BaseAddress, AllocationSize, AllocationType, Protect);
 
-    EmuXSwapFS();   // XBox FS
+    EmuXSwapFS();   // Xbox FS
 
     return STATUS_SUCCESS;
 }
@@ -377,7 +430,7 @@ XBSYSAPI EXPORTNUM(187) NTSTATUS NTAPI xboxkrnl::NtClose
     if(CloseHandle(Handle) != TRUE)
         return STATUS_UNSUCCESSFUL;
 
-    EmuXSwapFS();   // XBox FS
+    EmuXSwapFS();   // Xbox FS
 
     return STATUS_SUCCESS;
 }
@@ -416,7 +469,7 @@ XBSYSAPI EXPORTNUM(202) NTSTATUS xboxkrnl::NtOpenFile
     }
     #endif
 
-    EmuXSwapFS();   // XBox FS
+    EmuXSwapFS();   // Xbox FS
 
     return STATUS_SUCCESS;
 }
@@ -453,7 +506,7 @@ XBSYSAPI EXPORTNUM(218) NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformationFile
     }
     #endif
 
-    EmuXSwapFS();   // XBox FS
+    EmuXSwapFS();   // Xbox FS
 
     return STATUS_SUCCESS;
 }
@@ -514,7 +567,7 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
     if(ThreadId != NULL)
         *ThreadId = dwThreadId;
 
-    EmuXSwapFS();   // XBox FS
+    EmuXSwapFS();   // Xbox FS
 
     return STATUS_SUCCESS;
 }
@@ -542,13 +595,13 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
     }
     #endif
 
-    // We have to initialize this because the xbox software doesn't seem
+    // We have to initialize this because the Xbox software doesn't seem
     // to always do it. Redundant initializations seem to be ok :/
     InitializeCriticalSection((win32::PRTL_CRITICAL_SECTION)CriticalSection);
 
     EnterCriticalSection((win32::PRTL_CRITICAL_SECTION)CriticalSection);
 
-    EmuXSwapFS();   // XBox FS
+    EmuXSwapFS();   // Xbox FS
 }
 
 // ******************************************************************
@@ -576,7 +629,7 @@ XBSYSAPI EXPORTNUM(291) VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
 
     InitializeCriticalSection((win32::PRTL_CRITICAL_SECTION)CriticalSection);
 
-    EmuXSwapFS();   // XBox FS
+    EmuXSwapFS();   // Xbox FS
 
     return;
 }
@@ -606,7 +659,7 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
 
     LeaveCriticalSection((win32::PRTL_CRITICAL_SECTION)CriticalSection);
 
-    EmuXSwapFS();   // XBox FS
+    EmuXSwapFS();   // Xbox FS
 }
 
 // ******************************************************************
@@ -632,7 +685,7 @@ XBSYSAPI EXPORTNUM(301) xboxkrnl::ULONG NTAPI xboxkrnl::RtlNtStatusToDosError
     }
     #endif
 
-    EmuXSwapFS();   // XBox FS
+    EmuXSwapFS();   // Xbox FS
 
     return 0;
 }

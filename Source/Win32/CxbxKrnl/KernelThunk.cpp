@@ -45,8 +45,8 @@
 // * not implemented yet (no prototype exists). otherwise, enable
 // * "#define PANIC(numb) cxbx_panic"
 // ******************************************************************
-#define PANIC(numb) EmuXPanic
-//#define PANIC(numb) numb
+//#define PANIC(numb) EmuXPanic
+#define PANIC(numb) numb
 
 CXBXKRNL_API uint32 KernelThunkTable[367] =
 {
@@ -149,7 +149,7 @@ CXBXKRNL_API uint32 KernelThunkTable[367] =
     (uint32)PANIC(0x0060),                          // 0x0060 (96)
     (uint32)PANIC(0x0061),                          // 0x0061 (97)
     (uint32)PANIC(0x0062),                          // 0x0062 (98)
-    (uint32)PANIC(0x0063),                          // 0x0063 (99)
+    (uint32)&xboxkrnl::KeDelayExecutionThread,      // 0x0063 (99)
     (uint32)PANIC(0x0064),                          // 0x0064 (100)
     (uint32)PANIC(0x0065),                          // 0x0065 (101)
     (uint32)PANIC(0x0066),                          // 0x0066 (102)

@@ -65,7 +65,7 @@ extern "C"
 // ******************************************************************
 // * Basic types
 // ******************************************************************
-typedef char                CHAR;
+typedef char                CHAR, CCHAR;
 typedef short               SHORT;
 typedef long                LONG;
 typedef unsigned char       UCHAR;
@@ -131,6 +131,32 @@ typedef unsigned __int64                ULONGLONG;
 #define OUT
 
 // ******************************************************************
+// * KPROCESSOR_MODE
+// ******************************************************************
+typedef CCHAR KPROCESSOR_MODE;
+
+// ******************************************************************
+// * MODE
+// ******************************************************************
+typedef enum _MODE
+{
+    KernelMode,
+    UserMode,
+    MaximumMode
+}
+MODE;
+
+// ******************************************************************
+// * LARGE_INTEGER
+// ******************************************************************
+typedef struct _LARGE_INTEGER
+{
+    DWORD   LowPart;
+    LONG    HighPart;
+}
+LARGE_INTEGER, *PLARGE_INTEGER;
+
+// ******************************************************************
 // * LDT_ENTRY
 // ******************************************************************
 typedef struct _LDT_ENTRY
@@ -168,6 +194,16 @@ typedef struct _LDT_ENTRY
     HighWord;
 }
 LDT_ENTRY, *PLDT_ENTRY;
+
+// ******************************************************************
+// * KeDelayExecutionThread
+// ******************************************************************
+NTSYSAPI NTSTATUS NTAPI KeDelayExecutionThread
+(
+    IN KPROCESSOR_MODE  WaitMode,
+    IN BOOLEAN          Alertable,
+    IN PLARGE_INTEGER   Interval
+);
 
 // ******************************************************************
 // * NtSetLdtEntries
@@ -264,7 +300,7 @@ typedef struct _IO_STATUS_BLOCK
 IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 
 // ******************************************************************
-// * NtSetLdtEntries
+// * ZwOpenFile
 // ******************************************************************
 NTSYSAPI NTSTATUS NTAPI ZwOpenFile
 (
