@@ -372,6 +372,9 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             break;
 
         case WM_KILLFOCUS:
+            if(g_XBVideo.GetFullscreen())
+                EmuCleanup(NULL);
+
             dwRestoreSleepRate = EmuAutoSleepRate;
             EmuAutoSleepRate = 0;
             break;

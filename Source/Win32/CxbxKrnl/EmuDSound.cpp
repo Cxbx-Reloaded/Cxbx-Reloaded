@@ -167,17 +167,19 @@ HRESULT WINAPI XTL::EmuDirectSoundCreate
 // ******************************************************************
 VOID WINAPI XTL::EmuDirectSoundDoWork()
 {
+    EmuSwapFS();   // Win2k/XP FS
+
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
         printf("EmuDSound (0x%X): EmuDirectSoundDoWork();\n", GetCurrentThreadId());
-        EmuSwapFS();   // XBox FS
     }
     #endif
 
     HackUpdateSoundBuffers();
     HackUpdateSoundStreams();
+
+    EmuSwapFS();   // XBox FS
 
     return;
 }
@@ -216,9 +218,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
 
         DSBufferDesc.dwSize = sizeof(DSBufferDesc);
         DSBufferDesc.dwFlags = pdsbd->dwFlags & dwAcceptableMask;
-
-        DSBufferDesc.dwBufferBytes = 16384; // NOTE: HACK: TEMPORARY FOR STELLA
-
+        DSBufferDesc.dwBufferBytes = 16384; // NOTE: HACK: TEMPORARY FOR STELLA/HALO
         DSBufferDesc.dwReserved = 0;
         DSBufferDesc.lpwfxFormat = pdsbd->lpwfxFormat;              // TODO: Make sure this is the same as PC
         DSBufferDesc.guid3DAlgorithm = DS3DALG_DEFAULT;
@@ -274,6 +274,17 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
         DSBufferDesc.dwReserved = 0;
         DSBufferDesc.lpwfxFormat = pdssd->lpwfxFormat;  // TODO: Make sure this is the same as PC
         DSBufferDesc.guid3DAlgorithm = DS3DALG_DEFAULT;
+
+        if(DSBufferDesc.lpwfxFormat->wFormatTag != WAVE_FORMAT_PCM)
+        {
+            EmuWarning("Invalid WAVE_FORMAT!\n");
+
+            *(*ppStream)->GetSoundBufferRef() = 0;
+
+            EmuSwapFS();   // XBox FS
+
+            return DS_OK;
+        }
     }
 
     HRESULT hRet = g_pDSound8->CreateSoundBuffer(&DSBufferDesc, (*ppStream)->GetSoundBufferRef(), NULL);
@@ -299,11 +310,10 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateStream
     PVOID                   pUnknown
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
-
     // debug trace
     #ifdef _DEBUG_TRACE
     {
+        EmuSwapFS();   // Win2k/XP FS
         printf("EmuDSound (0x%X): EmuIDirectSound8_CreateStream\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -312,12 +322,11 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateStream
                "   pUnknown                  : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, pdssd, ppStream, pUnknown);
+        EmuSwapFS();   // XBox FS
     }
     #endif
 
     EmuDirectSoundCreateStream(pdssd, ppStream);
-
-    EmuSwapFS();   // XBox FS
 
     return DS_OK;
 }
