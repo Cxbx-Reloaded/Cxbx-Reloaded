@@ -55,7 +55,7 @@ typedef signed short   sint16;
 typedef signed long    sint32;
 
 // define this to trace intercepted function calls
-#define _DEBUG_TRACE
+//#define _DEBUG_TRACE
 
 // define this to trace warnings
 #define _DEBUG_WARNINGS

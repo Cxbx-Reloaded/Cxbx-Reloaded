@@ -596,7 +596,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 // begin scene
                 g_pD3DDevice8->BeginScene();
 
-                // initially, show a navy blue screen
+                // initially, show a black screen
                 g_pD3DDevice8->Clear(0, 0, D3DCLEAR_TARGET, 0xFF000000, 0, 0);
                 g_pD3DDevice8->Present(0, 0, 0, 0);
 
@@ -727,9 +727,7 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3D8_CreateDevice\n"
@@ -780,9 +778,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_GetDeviceCaps
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetDeviceCaps\n"
@@ -810,9 +806,7 @@ UINT WINAPI XTL::EmuIDirect3D8_GetAdapterModeCount
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3D8_GetAdapterModeCount\n"
@@ -825,10 +819,6 @@ UINT WINAPI XTL::EmuIDirect3D8_GetAdapterModeCount
 
     // NOTE: WARNING: We should return only modes that should exist on a real
     // Xbox. This could even be configurable, if desirable.
-
-    // ******************************************************************
-    // * redirect to windows d3d
-    // ******************************************************************
     UINT ret = g_pD3D8->GetAdapterModeCount(g_XBVideo.GetDisplayAdapter());
 
     EmuSwapFS();   // XBox FS
@@ -847,9 +837,7 @@ HRESULT WINAPI XTL::EmuIDirect3D8_GetAdapterDisplayMode
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3D8_GetAdapterDisplayMode\n"
@@ -863,19 +851,13 @@ HRESULT WINAPI XTL::EmuIDirect3D8_GetAdapterDisplayMode
 
     // NOTE: WARNING: We should cache the "Emulated" display mode and return
     // This value. We can initialize the cache with the default Xbox mode data.
-
-    // ******************************************************************
-    // * redirect to windows d3d
-    // ******************************************************************
     HRESULT hRet = g_pD3D8->GetAdapterDisplayMode
     (
         g_XBVideo.GetDisplayAdapter(),
         (D3DDISPLAYMODE*)pMode
     );
 
-    // ******************************************************************
-    // * make adjustments to parameters to make sense with windows d3d
-    // ******************************************************************
+    // make adjustments to the parameters to make sense with windows direct3d
     {
         D3DDISPLAYMODE *pPCMode = (D3DDISPLAYMODE*)pMode;
 
@@ -904,9 +886,7 @@ HRESULT WINAPI XTL::EmuIDirect3D8_EnumAdapterModes
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3D8_EnumAdapterModes\n"
@@ -921,15 +901,9 @@ HRESULT WINAPI XTL::EmuIDirect3D8_EnumAdapterModes
 
     // NOTE: WARNING: We should probably only return valid xbox display modes,
     // this should be coordinated with GetAdapterModeCount, etc.
-
-    // ******************************************************************
-    // * redirect to windows d3d
-    // ******************************************************************
     HRESULT hRet = g_pD3D8->EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), Mode, (D3DDISPLAYMODE*)pMode);
 
-    // ******************************************************************
-    // * make adjustments to parameters to make sense with windows d3d
-    // ******************************************************************
+    // make adjustments to parameters to make sense with windows direct3d
     {
         D3DDISPLAYMODE *pPCMode = (D3DDISPLAYMODE*)pMode;
 
@@ -953,9 +927,7 @@ VOID WINAPI XTL::EmuIDirect3D8_KickOffAndWaitForIdle()
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3D8_KickOffAndWaitForIdle()\n", GetCurrentThreadId());
@@ -976,9 +948,7 @@ ULONG WINAPI XTL::EmuIDirect3DDevice8_AddRef()
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_AddRef()\n", GetCurrentThreadId());
@@ -999,9 +969,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_BeginStateBlock()
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_BeginStateBlock()\n", GetCurrentThreadId());
@@ -1022,9 +990,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CaptureStateBlock(DWORD Token)
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CaptureStateBlock\n"
@@ -1049,9 +1015,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_ApplyStateBlock(DWORD Token)
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_ApplyStateBlock\n"
@@ -1076,9 +1040,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_EndStateBlock(DWORD *pToken)
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_EndStateBlock\n"
@@ -1110,9 +1072,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CopyRects
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CopyRects\n"
@@ -1128,9 +1088,6 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CopyRects
     }
     #endif
 
-    // ******************************************************************
-    // * Redirect to PC D3D
-    // ******************************************************************
     HRESULT hRet = g_pD3DDevice8->CopyRects
     (
         pSourceSurface->EmuSurface8, 
@@ -1158,9 +1115,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateImageSurface
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreateImageSurface\n"
@@ -1195,9 +1150,7 @@ XTL::X_D3DSurface* WINAPI XTL::EmuIDirect3DDevice8_GetBackBuffer2
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetBackBuffer2\n"
@@ -1273,9 +1226,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_GetBackBuffer
     X_D3DSurface      **ppBackBuffer
 )
 {
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
@@ -1305,9 +1256,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetViewport
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetViewport\n"
@@ -1336,9 +1285,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetShaderConstantMode
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetShaderConstantMode\n"
@@ -1366,9 +1313,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetRenderTarget
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetRenderTarget\n"
@@ -1397,9 +1342,7 @@ XTL::X_D3DSurface * WINAPI XTL::EmuIDirect3DDevice8_GetRenderTarget2()
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetRenderTarget2()\n",
@@ -1426,9 +1369,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetDepthStencilSurface
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetDepthStencilSurface\n"
@@ -1458,9 +1399,7 @@ XTL::X_D3DSurface * WINAPI XTL::EmuIDirect3DDevice8_GetDepthStencilSurface2()
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetDepthStencilSurface2()\n",
@@ -1489,9 +1428,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetTile
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetTile\n"
@@ -1522,9 +1459,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetTileNoWait
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetTileNoWait\n"
@@ -1557,9 +1492,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreateVertexShader\n"
@@ -1573,17 +1506,12 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
     }
     #endif
 
-    // ******************************************************************
-    // * create emulated shader struct
-    // ******************************************************************
+    // create emulated shader struct
     X_D3DVertexShader *pD3DVertexShader = new X_D3DVertexShader();
 
-    // Todo: Intelligently fill out these fields as necessary
+    // TODO: Intelligently fill out these fields as necessary
     ZeroMemory(pD3DVertexShader, sizeof(X_D3DVertexShader));
 
-    // ******************************************************************
-    // * redirect to windows d3d
-    // ******************************************************************
     HRESULT hRet = g_pD3DDevice8->CreateVertexShader
     (
         pDeclaration,
@@ -1618,9 +1546,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShaderConstant
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexShaderConstant\n"
@@ -1633,9 +1559,6 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShaderConstant
     }
     #endif
 
-    // ******************************************************************
-    // * redirect to windows d3d
-    // ******************************************************************
     HRESULT hRet = g_pD3DDevice8->SetVertexShaderConstant
     (
         Register,
@@ -1664,9 +1587,7 @@ VOID __fastcall XTL::EmuIDirect3DDevice8_SetVertexShaderConstant1
     CONST PVOID pConstantData
 )
 {
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
@@ -1694,9 +1615,7 @@ VOID __fastcall XTL::EmuIDirect3DDevice8_SetVertexShaderConstant4
     CONST PVOID pConstantData
 )
 {
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
@@ -1726,9 +1645,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreatePixelShader
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreatePixelShader\n"
@@ -1769,9 +1686,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetPixelShader
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetPixelShader\n"
@@ -1840,9 +1755,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreateTexture\n"
@@ -1893,9 +1806,6 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
 
         *ppTexture = new X_D3DTexture();
 
-        // ******************************************************************
-        // * redirect to windows d3d
-        // ******************************************************************
         hRet = g_pD3DDevice8->CreateTexture
         (
             Width, Height, Levels, 
@@ -1940,9 +1850,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVolumeTexture
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreateVolumeTexture\n"
@@ -1994,9 +1902,6 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVolumeTexture
 
         *ppVolumeTexture = new X_D3DVolumeTexture();
 
-        // ******************************************************************
-        // * redirect to windows d3d
-        // ******************************************************************
         hRet = g_pD3DDevice8->CreateVolumeTexture
         (
             Width, Height, Depth, Levels, 
@@ -2035,9 +1940,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateCubeTexture
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreateCubeTexture\n"
@@ -2079,9 +1982,6 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateCubeTexture
 
     *ppCubeTexture = new X_D3DCubeTexture();
 
-    // ******************************************************************
-    // * redirect to windows d3d
-    // ******************************************************************
     HRESULT hRet = g_pD3DDevice8->CreateCubeTexture
     (
         EdgeLength, Levels, 
@@ -2111,9 +2011,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateIndexBuffer
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreateIndexBuffer\n"
@@ -2130,9 +2028,6 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateIndexBuffer
 
     *ppIndexBuffer = new X_D3DIndexBuffer();
 
-    // ******************************************************************
-    // * redirect to windows d3d
-    // ******************************************************************
     HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer
     (
         Length, NULL, D3DFMT_INDEX16, D3DPOOL_MANAGED, &((*ppIndexBuffer)->EmuIndexBuffer8)
@@ -2157,9 +2052,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetIndices
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetIndices\n"
@@ -2198,9 +2091,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetTexture
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetTexture\n"
@@ -2239,9 +2130,7 @@ VOID __fastcall XTL::EmuIDirect3DDevice8_SwitchTexture
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SwitchTexture\n"
@@ -2284,9 +2173,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetDisplayMode
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetDisplayMode\n"
@@ -2299,9 +2186,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetDisplayMode
 
     HRESULT hRet;
 
-    // ******************************************************************
-    // * make adjustments to parameters to make sense with windows d3d
-    // ******************************************************************
+    // make adjustments to parameters to make sense with windows d3d
     {
         D3DDISPLAYMODE *pPCMode = (D3DDISPLAYMODE*)pMode;
 
@@ -2329,9 +2214,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Begin
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_Begin\n"
@@ -2367,9 +2250,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData2f
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexData2f\n"
@@ -2403,9 +2284,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexData4f\n"
@@ -2460,9 +2339,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_End()
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_End();\n", GetCurrentThreadId());
@@ -2502,9 +2379,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Clear
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_Clear\n"
@@ -2521,9 +2396,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Clear
     }
     #endif
     
-    // ******************************************************************
-    // * make adjustments to parameters to make sense with windows d3d
-    // ******************************************************************
+    // make adjustments to parameters to make sense with windows d3d
     {
         // TODO: D3DCLEAR_TARGET_A, *R, *G, *B don't exist on windows
         DWORD newFlags = 0;
@@ -2536,6 +2409,9 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Clear
 
         if(Flags & 0x00000002)
             newFlags |= D3DCLEAR_STENCIL;
+
+        if(Flags & ~(0x000000f0 | 0x00000001 | 0x00000002))
+            EmuWarning("Unsupported Flag(s) for IDirect3DDevice8_Clear : 0x%.08X", Flags & ~(0x000000f0 | 0x00000001 | 0x00000002));
 
         Flags = newFlags;
     }
@@ -2560,9 +2436,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Present
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_Present\n"
@@ -2593,9 +2467,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Swap
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_Swap\n"
@@ -2628,9 +2500,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DResource8_Register\n"
@@ -2648,12 +2518,10 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
     DWORD dwCommonType = pResource->Common & X_D3DCOMMON_TYPE_MASK;
 
-	// Add the offset of the current texture to the base
+	// add the offset of the current texture to the base
 	pBase = (PVOID)((DWORD)pBase+pThis->Data);
 
-    // ******************************************************************
-    // * Determine the resource type, and initialize
-    // ******************************************************************
+    // Determine the resource type, and initialize
     switch(dwCommonType)
     {
         case X_D3DCOMMON_TYPE_VERTEXBUFFER:
@@ -2664,9 +2532,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
             X_D3DVertexBuffer *pVertexBuffer = (X_D3DVertexBuffer*)pResource;
 
-            // ******************************************************************
-            // * Create the vertex buffer
-            // ******************************************************************
+            // create vertex buffer
             {
                 DWORD dwSize = EmuCheckAllocationSize(pBase);
 
@@ -2704,9 +2570,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
             X_D3DIndexBuffer *pIndexBuffer = (X_D3DIndexBuffer*)pResource;
 
-            // ******************************************************************
-            // * Create the index buffer
-            // ******************************************************************
+            // create index buffer
             {
                 DWORD dwSize = EmuCheckAllocationSize(pBase);
 
@@ -2772,9 +2636,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
             if(bCubemap)
                 EmuCleanup("Cubemaps are temporarily unsupported");
 
-            // ******************************************************************
-            // * Interpret Width/Height/BPP
-            // ******************************************************************
+            // Interpret Width/Height/BPP
             if(X_Format == 0x07 /* X_D3DFMT_X8R8G8B8 */ || X_Format == 0x06 /* X_D3DFMT_A8R8G8B8 */)
             {
                 bSwizzled = TRUE;
@@ -2835,9 +2697,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 EmuCleanup("0x%.08X is not a supported format!\n", X_Format);
             }
 
-            // ******************************************************************
-            // * Create the happy little texture
-            // ******************************************************************
+            // create the happy little texture
             if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
             {
                 hRet = g_pD3DDevice8->CreateImageSurface(dwWidth, dwHeight, Format, &pResource->EmuSurface8);
@@ -2879,9 +2739,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
             D3DLOCKED_RECT LockedRect;
 
-            // ******************************************************************
-            // * Copy over data (deswizzle if necessary)
-            // ******************************************************************
+            // copy over data (deswizzle if necessary)
             if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
                 hRet = pResource->EmuSurface8->LockRect(&LockedRect, NULL, 0);
             else
@@ -2900,7 +2758,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 BYTE *pDest = (BYTE*)LockedRect.pBits;
                 for(DWORD v=0;v<dwHeight;v++)
                 {
-                    memset(pDest, 0xFF, dwWidth*dwBPP);
+                    memset(pDest, 0, dwWidth*dwBPP);
 
                     pDest += LockedRect.Pitch;
                     pSrc  += dwPitch;
@@ -2928,7 +2786,6 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                         memcpy(pDest, pSrc, dwWidth*dwHeight*dwBPP);
                     else
                     {
-                        // TODO: Faster copy (maybe unnecessary)
                         for(DWORD v=0;v<dwHeight;v++)
                         {
                             memcpy(pDest, pSrc, dwWidth*dwBPP);
@@ -2990,9 +2847,7 @@ ULONG WINAPI XTL::EmuIDirect3DResource8_AddRef
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DResource8_AddRef\n"
@@ -3027,9 +2882,7 @@ ULONG WINAPI XTL::EmuIDirect3DResource8_Release
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DResource8_Release\n"
@@ -3086,9 +2939,7 @@ BOOL WINAPI XTL::EmuIDirect3DResource8_IsBusy
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DResource8_IsBusy\n"
@@ -3101,7 +2952,7 @@ BOOL WINAPI XTL::EmuIDirect3DResource8_IsBusy
 
     IDirect3DResource8 *pResource8 = pThis->EmuResource8;
 
-    // I guess we arent doing anything, just return false..
+    // we'll just pretend nothing is ever busy (for now?)
 
     EmuSwapFS();   // XBox FS
 
@@ -3120,9 +2971,7 @@ VOID WINAPI XTL::EmuGet2DSurfaceDesc
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuGet2DSurfaceDesc\n"
@@ -3148,9 +2997,7 @@ VOID WINAPI XTL::EmuGet2DSurfaceDesc
     else
         hRet = pPixelContainer->EmuTexture8->GetLevelDesc(dwLevel, &SurfaceDesc);
 
-    // ******************************************************************
-    // * Rearrange into windows format (remove D3DPool)
-    // ******************************************************************
+    // rearrange into windows format (remove D3DPOOL)
     {
         // Convert Format (PC->Xbox)
         pDesc->Format = EmuPC2XB_D3DFormat(SurfaceDesc.Format);
@@ -3186,9 +3033,7 @@ VOID WINAPI XTL::EmuGet2DSurfaceDescD
     X_D3DSURFACE_DESC   *pDesc
 )
 {
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
@@ -3218,9 +3063,7 @@ HRESULT WINAPI XTL::EmuIDirect3DSurface8_GetDesc
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DSurface8_GetDesc\n"
@@ -3256,9 +3099,7 @@ HRESULT WINAPI XTL::EmuIDirect3DSurface8_GetDesc
 
         hRet = pSurface8->GetDesc(&SurfaceDesc);
 
-        // ******************************************************************
-        // * Rearrange into windows format (remove D3DPool)
-        // ******************************************************************
+        // rearrange into windows format (remove D3DPool)
         {
             // Convert Format (PC->Xbox)
             pDesc->Format = EmuPC2XB_D3DFormat(SurfaceDesc.Format);
@@ -3299,9 +3140,7 @@ HRESULT WINAPI XTL::EmuIDirect3DSurface8_LockRect
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DSurface8_LockRect\n"
@@ -3365,9 +3204,7 @@ DWORD WINAPI XTL::EmuIDirect3DBaseTexture8_GetLevelCount
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DBaseTexture8_GetLevelCount\n"
@@ -3423,9 +3260,7 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_LockRect
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DTexture8_LockRect\n"
@@ -3474,9 +3309,7 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DTexture8_GetSurfaceLevel\n"
@@ -3527,9 +3360,7 @@ HRESULT WINAPI XTL::EmuIDirect3DVolumeTexture8_LockBox
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DVolumeTexture8_LockBox\n"
@@ -3570,9 +3401,7 @@ HRESULT WINAPI XTL::EmuIDirect3DCubeTexture8_LockRect
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DCubeTexture8_LockRect\n"
@@ -3606,9 +3435,7 @@ ULONG WINAPI XTL::EmuIDirect3DDevice8_Release()
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_Release();\n", GetCurrentThreadId());
@@ -3654,9 +3481,7 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EmuIDirect3DDevice8_CreateVertexBuffer2
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreateVertexBuffer2\n"
@@ -3696,9 +3521,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_EnableOverlay
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_EnableOverlay\n"
@@ -3713,9 +3536,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_EnableOverlay
     {
         if(Enable)
         {
-            // ******************************************************************
-            // * Initialize Primary Surface
-            // ******************************************************************
+            // initialize primary surface
             {
                 DDSURFACEDESC2 ddsd2;
 
@@ -3731,9 +3552,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_EnableOverlay
                     EmuCleanup("Could not create primary surface");
             }
 
-            // ******************************************************************
-            // * Initialize Overlay Surface
-            // ******************************************************************
+            // initialize overlay surface
             {
                 DDSURFACEDESC2 ddsd2;
 
@@ -3790,9 +3609,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_UpdateOverlay\n"
@@ -3807,9 +3624,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
     }
     #endif
 
-    // ******************************************************************
-    // * manually copy data over to overlay
-    // ******************************************************************
+    // manually copy data over to overlay
     if(g_bSupportsYUY2)
     {
         D3DSURFACE_DESC SurfaceDesc;
@@ -3827,7 +3642,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
 
         pSurface->EmuSurface8->LockRect(&LockedRect, NULL, NULL);
 
-        // Copy Data
+        // copy data
         {
             char *pDest = (char*)ddsd2.lpSurface;
             char *pSour = (char*)LockedRect.pBits;
@@ -3835,7 +3650,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
             int w = SurfaceDesc.Width;
             int h = SurfaceDesc.Height;
 
-            // TODO: sucker the game into rendering directly to the overlay :]
+            // TODO: sucker the game into rendering directly to the overlay (speed boost)
             for(int y=0;y<h;y++)
             {
                 memcpy(pDest, pSour, w*2);
@@ -3848,9 +3663,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
         g_pDDSOverlay7->Unlock(NULL);
     }
 
-    // ******************************************************************
-    // * update overlay!
-    // ******************************************************************
+    // update overlay!
     if(g_bSupportsYUY2)
     {
         RECT SourRect = {0, 0, g_dwOverlayW, g_dwOverlayH}, DestRect;
@@ -3968,9 +3781,7 @@ BOOL WINAPI XTL::EmuIDirect3DDevice8_GetOverlayUpdateStatus()
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetOverlayUpdateStatus();\n",
@@ -3991,9 +3802,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_BlockUntilVerticalBlank()
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_BlockUntilVerticalBlank();\n",
@@ -4016,9 +3825,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetVerticalBlankCallback(PVOID pCallback)
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVerticalBlankCallback\n"
@@ -4029,7 +3836,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetVerticalBlankCallback(PVOID pCallback)
     }
     #endif
 
-    EmuWarning("EmuIDirect3DDevice8_SetVerticalBlankCallback is not implemented!");
+    EmuCleanup("EmuIDirect3DDevice8_SetVerticalBlankCallback is not implemented!");
 
     EmuSwapFS();   // XBox FS
 
@@ -4047,9 +3854,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetTextureState_TexCoordIndex\n"
@@ -4082,9 +3887,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetTextureState_BorderColor
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetTextureState_BorderColor\n"
@@ -4113,9 +3916,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_NormalizeNormals
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_NormalizeNormals\n"
@@ -4143,9 +3944,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_TextureFactor
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_TextureFactor\n"
@@ -4173,9 +3972,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_ZBias
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_ZBias\n"
@@ -4203,9 +4000,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias\n"
@@ -4236,9 +4031,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_FillMode
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_FillMode\n"
@@ -4266,9 +4059,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_FogColor
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_FogColor\n"
@@ -4296,9 +4087,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable\n"
@@ -4327,9 +4116,7 @@ VOID __fastcall XTL::EmuIDirect3DDevice8_SetRenderState_Simple
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_Simple\n"
@@ -4395,7 +4182,7 @@ VOID __fastcall XTL::EmuIDirect3DDevice8_SetRenderState_Simple
                 break;
         };
 
-        // Todo: Verify these params as you add support for them!
+        // TODO: verify these params as you add support for them!
         g_pD3DDevice8->SetRenderState((D3DRENDERSTATETYPE)State, Value);
     }
 
@@ -4414,9 +4201,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_VertexBlend
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_VertexBlend\n"
@@ -4427,9 +4212,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_VertexBlend
     }
     #endif
 
-    // ******************************************************************
-    // * Convert from Xbox D3D to PC D3D enumeration
-    // ******************************************************************
+    // convert from Xbox direct3d to PC direct3d enumeration
     if(Value <= 1)
         Value = Value;
     else if(Value == 3)
@@ -4456,9 +4239,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_CullMode
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_CullMode\n"
@@ -4469,9 +4250,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_CullMode
     }
     #endif
 
-    // ******************************************************************
-    // * Convert from Xbox D3D to PC D3D enumeration
-    // ******************************************************************
+    // convert from Xbox D3D to PC D3D enumeration
     // TODO: XDK-Specific Tables? So far they are the same
     switch(Value)
     {
@@ -4505,9 +4284,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_ZEnable
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_ZEnable\n"
@@ -4535,9 +4312,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_StencilEnable
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_StencilEnable\n"
@@ -4565,9 +4340,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias\n"
@@ -4595,9 +4368,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_ShadowFunc
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_ShadowFunc\n"
@@ -4625,9 +4396,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_YuvEnable
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_YuvEnable\n"
@@ -4656,9 +4425,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetTransform
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetTransform\n"
@@ -4690,9 +4457,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_GetTransform
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetTransform\n"
@@ -4727,9 +4492,7 @@ VOID WINAPI XTL::EmuIDirect3DVertexBuffer8_Lock
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DVertexBuffer8_Lock\n"
@@ -4767,9 +4530,7 @@ BYTE* WINAPI XTL::EmuIDirect3DVertexBuffer8_Lock2
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DVertexBuffer8_Lock2\n"
@@ -4804,9 +4565,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetStreamSource
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetStreamSource\n"
@@ -4846,9 +4605,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetVertexShader
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexShader\n"
@@ -5123,9 +4880,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVertices
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_DrawVertices\n"
@@ -5182,9 +4937,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVerticesUP
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_DrawVerticesUP\n"
@@ -5250,9 +5003,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_DrawIndexedVertices\n"
@@ -5304,9 +5055,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetLight
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetLight\n"
@@ -5335,9 +5084,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetMaterial
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetMaterial\n"
@@ -5366,9 +5113,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_LightEnable
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_LightEnable\n"
@@ -5394,9 +5139,7 @@ VOID WINAPI EmuIDirect3DDevice8_BlockUntilVerticalBlank()
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_BlockUntilVerticalBlank();\n", GetCurrentThreadId());
@@ -5417,9 +5160,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetRenderTarget
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderTarget\n"
@@ -5467,9 +5208,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreatePalette
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreatePalette\n"
@@ -5511,9 +5250,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetPalette
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetPalette\n"
@@ -5542,9 +5279,7 @@ void WINAPI XTL::EmuIDirect3DDevice8_SetFlickerFilter
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetFlickerFilter\n"
@@ -5572,9 +5307,7 @@ void WINAPI XTL::EmuIDirect3DDevice8_SetSoftDisplayFilter
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetSoftDisplayFilter\n"
@@ -5604,9 +5337,7 @@ HRESULT WINAPI XTL::EmuIDirect3DPalette8_Lock
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
+    // debug trace
     #ifdef _DEBUG_TRACE
     {
         printf("EmuD3D8 (0x%X): EmuIDirect3DPalette8_Lock\n"
