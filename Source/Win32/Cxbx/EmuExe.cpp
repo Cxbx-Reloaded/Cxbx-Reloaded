@@ -284,14 +284,23 @@ EmuExe::EmuExe(Xbe *x_Xbe, uint32 x_debug_console, char *x_debug_filename) : Exe
             // ******************************************************************
             // * update import table directory entry
             // ******************************************************************
-            m_OptionalHeader.m_image_data_directory[1].m_virtual_addr = m_SectionHeader[i].m_virtual_addr + 0x08;
-            m_OptionalHeader.m_image_data_directory[1].m_size = 0x28;
+            m_OptionalHeader.m_image_data_directory[IMAGE_DIRECTORY_ENTRY_IMPORT].m_virtual_addr = m_SectionHeader[i].m_virtual_addr + 0x08;
+            m_OptionalHeader.m_image_data_directory[IMAGE_DIRECTORY_ENTRY_IMPORT].m_size = 0x28;
 
             // ******************************************************************
             // * update import address table directory entry
             // ******************************************************************
-            m_OptionalHeader.m_image_data_directory[12].m_virtual_addr = m_SectionHeader[i].m_virtual_addr;
-            m_OptionalHeader.m_image_data_directory[12].m_size = 0x08;
+            m_OptionalHeader.m_image_data_directory[IMAGE_DIRECTORY_ENTRY_IAT].m_virtual_addr = m_SectionHeader[i].m_virtual_addr;
+            m_OptionalHeader.m_image_data_directory[IMAGE_DIRECTORY_ENTRY_IAT].m_size = 0x08;
+
+            // ******************************************************************
+            // * update TLS entry
+            // ******************************************************************
+            if(x_Xbe->m_Header.dwTLSAddr != 0)
+            {
+                m_OptionalHeader.m_image_data_directory[IMAGE_DIRECTORY_ENTRY_TLS].m_virtual_addr = x_Xbe->m_Header.dwTLSAddr - m_OptionalHeader.m_image_base;
+                m_OptionalHeader.m_image_data_directory[IMAGE_DIRECTORY_ENTRY_TLS].m_size = 0x28;
+            }
         }
 
         // ******************************************************************

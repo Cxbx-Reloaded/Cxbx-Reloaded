@@ -101,32 +101,25 @@ void EmuXGenerateFS()
     // ******************************************************************
     __asm
     {
+        // Obtain "OrgFS"
         mov ax, fs
         mov OrgFS, ax
-    }
 
-    // ******************************************************************
-    // * Obtain "OrgNtTib"
-    // ******************************************************************
-    __asm
-    {
+        // Obtain "OrgNtTib"
         mov eax, fs:[0x18]
         mov OrgNtTib, eax
-    }
 
-    // ******************************************************************
-    // * Save "NewFS" inside OrgFS.ArbitraryUserPointer
-    // ******************************************************************
-    __asm
-    {
+        // Save "NewFS" inside OrgFS.ArbitraryUserPointer
         mov ax, NewFS
-        mov fs:[0x14], ax   // OrgFS.ArbitraryUserPointer
+        mov fs:[0x14], ax
     }
 
     // ******************************************************************
     // * Generate TIB
     // ******************************************************************
     {
+        void *TLSPtr = 0;
+
         xboxkrnl::KTHREAD *KThread = new xboxkrnl::KTHREAD();
 
         memcpy(&NewPcr->NtTib, OrgNtTib, sizeof(NT_TIB));
@@ -134,7 +127,14 @@ void EmuXGenerateFS()
         NewPcr->NtTib.Self = &NewPcr->NtTib;
         NewPcr->PrcbData.CurrentThread = KThread;
 
-        KThread->TlsData = (void*)0xCDCDCDCD;
+        // Retrieve Win2k/XP TEB.ThreadLocalStoragePointer
+        __asm
+        {
+            mov eax, fs:[0x2C]
+            mov TLSPtr, eax
+        }
+
+        KThread->TlsData = (void*)TLSPtr;
     }
 
     // ******************************************************************
@@ -232,14 +232,12 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, ui
     printf("CxbxKrnl [0x%.08X]: Initial thread starting.\n", GetCurrentThreadId());
 
     EmuXSwapFS();   // XBox FS
+
     Entry();
+
     EmuXSwapFS();   // Win2k/XP FS
 
     printf("CxbxKrnl [0x%.08X]: Initial thread ended.\n", GetCurrentThreadId());
-
-    // just spin forever (for now...)
-    while(true)
-        Sleep(1000);
 
     return;
 }
@@ -311,7 +309,6 @@ DWORD WINAPI PsCreateSystemThreadExProxy
         push        StartContext2
         push        StartContext1
         lea         ebp, [esp-4]
-        int 3
         jmp near    esi
     }
 
@@ -320,6 +317,31 @@ DWORD WINAPI PsCreateSystemThreadExProxy
 #pragma warning(pop)
 
 using namespace xboxkrnl;
+
+// ******************************************************************
+// * 0x0031 - HalReturnToFirmware
+// ******************************************************************
+XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
+(
+	RETURN_FIRMWARE Routine
+)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    MessageBox(NULL, "HalReturnToFirmware()", "CxbxKrnl", MB_OK);
+    /*
+    ReturnFirmwareHalt          = 0x0,
+    ReturnFirmwareReboot        = 0x1,
+    ReturnFirmwareQuickReboot   = 0x2,
+    ReturnFirmwareHard          = 0x3,
+    ReturnFirmwareFatal         = 0x4,
+    ReturnFirmwareAll           = 0x5
+    */
+
+    EmuXSwapFS();   // XBox FS
+
+    exit(1);
+}
 
 // ******************************************************************
 // * 0x00BB - NtClose
@@ -414,26 +436,47 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
 }
 
 // ******************************************************************
-// * 0x0031 - HalReturnToFirmware
+// * 0x0115 RtlEnterCriticalSection
 // ******************************************************************
-XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
-(
-	RETURN_FIRMWARE Routine
-)
+XBSYSAPI EXPORTNUM(277) VOID xboxkrnl::RtlEnterCriticalSection(DWORD Unknown)
 {
     EmuXSwapFS();   // Win2k/XP FS
 
-    MessageBox(NULL, "HalReturnToFirmware()", "CxbxKrnl", MB_OK);
-    /*
-    ReturnFirmwareHalt          = 0x0,
-    ReturnFirmwareReboot        = 0x1,
-    ReturnFirmwareQuickReboot   = 0x2,
-    ReturnFirmwareHard          = 0x3,
-    ReturnFirmwareFatal         = 0x4,
-    ReturnFirmwareAll           = 0x5
-    */
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG
+    {
+        printf("CxbxKrnl [0x%.08X]: RtlEnterCriticalSection\n"
+               "          (\n"
+               "             Unknown             : 0x%.08X\n"
+               "          );\n",
+               GetCurrentThreadId(), Unknown);
+    }
+    #endif
 
     EmuXSwapFS();   // XBox FS
+}
 
-    exit(1);
+// ******************************************************************
+// * 0x0126 RtlEnterCriticalSection
+// ******************************************************************
+XBSYSAPI EXPORTNUM(294) VOID xboxkrnl::RtlLeaveCriticalSection(DWORD Unknown)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG
+    {
+        printf("CxbxKrnl [0x%.08X]: RtlLeaveCriticalSection\n"
+               "          (\n"
+               "             Unknown             : 0x%.08X\n"
+               "          );\n",
+               GetCurrentThreadId(), Unknown);
+    }
+    #endif
+
+    EmuXSwapFS();   // XBox FS
 }
