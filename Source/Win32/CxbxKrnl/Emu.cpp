@@ -385,7 +385,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     {
         EmuSwapFS();   // XBox FS
 
-        _asm int 3
+//        _asm int 3
 
         Entry();
 

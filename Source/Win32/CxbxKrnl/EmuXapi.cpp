@@ -426,29 +426,14 @@ VOID WINAPI xapi::EmuXapiInitProcess()
 
 		EmuSwapFS();   // XBox FS
 
-		uint32 pHeapParameters = (uint32)&HeapParameters;
 		uint32 dwPeHeapReserve = g_pXbeHeader->dwPeHeapReserve;
 		uint32 dwPeHeapCommit  = g_pXbeHeader->dwPeHeapCommit;
 
         PVOID dwResult = 0;
 
-        #define HEAP_GROWABLE                 0x00000002
+        #define HEAP_GROWABLE 0x00000002
 
-        __asm
-		{
-            xor ecx, ecx
-
-			push pHeapParameters
-			push ecx
-			push dwPeHeapCommit
-			push dwPeHeapReserve
-			push ecx
-			push HEAP_GROWABLE
-			call g_pRtlCreateHeap
-			mov dwResult, eax
-		}
-
-        *xapi::EmuXapiProcessHeap = dwResult;
+        *xapi::EmuXapiProcessHeap = xapi::g_pRtlCreateHeap(HEAP_GROWABLE, 0, dwPeHeapReserve, dwPeHeapCommit, 0, &HeapParameters);
 	}
 
     return;

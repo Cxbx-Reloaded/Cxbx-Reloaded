@@ -1327,6 +1327,12 @@ HRESULT WINAPI xd3d8::EmuIDirect3DResource8_Register
     // ******************************************************************
     switch(pResource->Common & X_D3DCOMMON_TYPE_MASK)
     {
+        case X_D3DCOMMON_TYPE_VERTEXBUFFER:
+        {
+            EmuCleanup("Remember to do vertex buffers in here ;]");
+        }
+        break;
+
         case X_D3DCOMMON_TYPE_TEXTURE:
         {
             X_D3DPixelContainer *pPixelContainer = (X_D3DPixelContainer*)pResource;

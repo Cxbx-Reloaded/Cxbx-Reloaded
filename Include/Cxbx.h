@@ -59,14 +59,18 @@ typedef signed short   sint16;
 typedef signed long    sint32;
 
 // ******************************************************************
-// * Version information
-// ******************************************************************
-#define _CXBX_VERSION "0.7.2"
-
-// ******************************************************************
 // * Define this to trace intercepted function calls
 // ******************************************************************
 #define _DEBUG_TRACE
+
+// ******************************************************************
+// * Version information
+// ******************************************************************
+#ifndef _DEBUG_TRACE
+#define _CXBX_VERSION "0.7.2"
+#else
+#define _CXBX_VERSION "0.7.2-Trace"
+#endif
 
 // ******************************************************************
 // * Round up dwValue to nearest multiple of dwMult
