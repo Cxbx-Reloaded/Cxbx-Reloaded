@@ -1700,7 +1700,9 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
         g_dwOverlayH = Height;
     }
 
-    // HACK HACK HACK!!! TODO: Make sure texture is the correct dimensions
+    // ******************************************************************
+    // * adjust width/height to power of 2
+    // ******************************************************************
     {
         UINT NewWidth=0, NewHeight=0;
 
@@ -2276,6 +2278,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
             else
             {
                 // TODO: HACK: Figure out why this is necessary!
+                // TODO: This is necessary for DXT1 textures at least (4x4 blocks minimum)
                 if(dwWidth < 4)
                 {
                     printf("*Warning* expanding texture width (%d->4)\n", dwWidth);
