@@ -3350,15 +3350,21 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Begin
 
     g_IVBPrimitiveType = PrimitiveType;
 
-    // allocate a max of 32 entries
-    g_IVBTable = (struct XTL::_D3DIVB*)CxbxMalloc(sizeof(XTL::_D3DIVB)*32);
+    if(g_IVBTable == 0)
+    {
+        g_IVBTable = (struct XTL::_D3DIVB*)CxbxMalloc(sizeof(XTL::_D3DIVB)*1024);
+    }
+
     g_IVBTblOffs = 0;
     g_IVBFVF = 0;
 
     // default values
-    ZeroMemory(g_IVBTable, sizeof(XTL::_D3DIVB)*32);
+    ZeroMemory(g_IVBTable, sizeof(XTL::_D3DIVB)*1024);
 
-    g_pIVBVertexBuffer = (DWORD*)CxbxMalloc(sizeof(struct XTL::_D3DIVB)*32);
+    if(g_pIVBVertexBuffer == 0)
+    {
+        g_pIVBVertexBuffer = (DWORD*)CxbxMalloc(sizeof(XTL::_D3DIVB)*1024);
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -3634,7 +3640,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexDataColor
     FLOAT g = DWtoF((Color & 0x0000FF00) >> 8);
     FLOAT b = DWtoF((Color & 0x000000FF) >> 0);
 
-    return EmuIDirect3DDevice8_SetVertexData4f(Register, a, g, b, a);
+    return EmuIDirect3DDevice8_SetVertexData4f(Register, r, g, b, a);
 }
 
 // ******************************************************************
@@ -3649,9 +3655,9 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_End()
     if(g_IVBTblOffs != 0)
         EmuFlushIVB();
 
-    CxbxFree(g_pIVBVertexBuffer);
-
-    CxbxFree(g_IVBTable);
+    // TODO: Should technically clean this up at some point..but on XP doesnt matter much
+//    CxbxFree(g_pIVBVertexBuffer);
+//    CxbxFree(g_IVBTable);
 
     EmuSwapFS();   // XBox FS
 
