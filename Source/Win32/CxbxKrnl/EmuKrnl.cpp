@@ -1768,8 +1768,10 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
     }
     #endif
 
+    //printf("CriticalSection->LockCount : %d\n", CriticalSection->LockCount);
+
     // This seems redundant, but xbox software doesn't always do it
-    if(CriticalSection->LockCount == -1)
+    //if(CriticalSection->LockCount == -1)
         NtDll::RtlInitializeCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
 
     NtDll::RtlEnterCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);

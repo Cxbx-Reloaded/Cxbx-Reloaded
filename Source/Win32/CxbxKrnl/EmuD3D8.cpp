@@ -2167,7 +2167,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
         case X_D3DCOMMON_TYPE_PUSHBUFFER:
         {
-            printf("*Warning: X_D3DCOMMON_TYPE_PUSHBUFFER is not yet implemented\n");
+            printf("*Warning* X_D3DCOMMON_TYPE_PUSHBUFFER is not yet implemented\n");
 
             X_D3DPushBuffer *pPushBuffer = (X_D3DPushBuffer*)pResource;
         }

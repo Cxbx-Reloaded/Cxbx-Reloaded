@@ -1,5 +1,10 @@
 cxbx website: http://www.caustik.com/xbox/
 
+version: 0.7.7b (07/16/03)
+--------------------------------
+
+- Fixed loss compatibility with X-Marbles, etc
+
 version: 0.7.7 (07/15/03)
 --------------------------------
 

@@ -57,6 +57,154 @@ namespace XTL
 };
 
 // ******************************************************************
+// * func: EmuRtlCreateHeap
+// ******************************************************************
+PVOID WINAPI XTL::EmuRtlCreateHeap
+(
+    IN ULONG   Flags,
+    IN PVOID   Base OPTIONAL,
+    IN ULONG   Reserve OPTIONAL,
+    IN ULONG   Commit,
+    IN BOOLEAN Lock OPTIONAL,
+    IN PVOID   RtlHeapParams OPTIONAL
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuRtlCreateHeap\n"
+               "(\n"
+               "   Flags               : 0x%.08X\n"
+               "   Base                : 0x%.08X\n"
+               "   Reserve             : 0x%.08X\n"
+               "   Commit              : 0x%.08X\n"
+               "   Lock                : 0x%.08X\n"
+               "   RtlHeapParams       : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Flags, Base, Reserve, Commit, Lock, RtlHeapParams);
+    }
+    #endif
+
+    NtDll::RTL_HEAP_DEFINITION RtlHeapDefinition;
+
+    ZeroMemory(&RtlHeapDefinition, sizeof(RtlHeapDefinition));
+
+    RtlHeapDefinition.Length = sizeof(RtlHeapDefinition);
+
+    PVOID pRet = NtDll::RtlCreateHeap(Flags, Base, Reserve, Commit, Lock, &RtlHeapDefinition);
+
+    EmuSwapFS();   // XBox FS
+
+    return pRet;
+}
+
+// ******************************************************************
+// * func: EmuRtlAllocateHeap
+// ******************************************************************
+PVOID WINAPI XTL::EmuRtlAllocateHeap
+(
+    IN HANDLE hHeap,
+    IN DWORD  dwFlags,
+    IN SIZE_T dwBytes
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuRtlAllocateHeap\n"
+               "(\n"
+               "   hHeap               : 0x%.08X\n"
+               "   dwFlags             : 0x%.08X\n"
+               "   dwBytes             : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), hHeap, dwFlags, dwBytes);
+    }
+    #endif
+
+    PVOID pRet = NtDll::RtlAllocateHeap(hHeap, dwFlags, dwBytes);
+
+    EmuSwapFS();   // XBox FS
+
+    return pRet;
+}
+
+// ******************************************************************
+// * func: EmuRtlFreeHeap
+// ******************************************************************
+BOOL WINAPI XTL::EmuRtlFreeHeap
+(
+    IN HANDLE hHeap,
+    IN DWORD  dwFlags,
+    IN PVOID  lpMem
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuRtlFreeHeap\n"
+               "(\n"
+               "   hHeap               : 0x%.08X\n"
+               "   dwFlags             : 0x%.08X\n"
+               "   lpMem               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), hHeap, dwFlags, lpMem);
+    }
+    #endif
+
+    BOOL bRet = NtDll::RtlFreeHeap(hHeap, dwFlags, lpMem);
+
+    EmuSwapFS();   // XBox FS
+
+    return bRet;
+}
+
+// ******************************************************************
+// * func: EmuRtlSizeHeap
+// ******************************************************************
+SIZE_T WINAPI XTL::EmuRtlSizeHeap
+(
+    IN HANDLE hHeap,
+    IN DWORD  dwFlags,
+    IN PVOID  lpMem
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuRtlSizeHeap\n"
+               "(\n"
+               "   hHeap               : 0x%.08X\n"
+               "   dwFlags             : 0x%.08X\n"
+               "   lpMem               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), hHeap, dwFlags, lpMem);
+    }
+    #endif
+
+    SIZE_T ret = NtDll::RtlSizeHeap(hHeap, dwFlags, lpMem);
+
+    EmuSwapFS();   // XBox FS
+
+    return ret;
+}
+
+// ******************************************************************
 // * func: XapiUnknownBad1
 // ******************************************************************
 // NOTE: This does some hard disk verification and other things

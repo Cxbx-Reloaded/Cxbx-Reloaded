@@ -60,6 +60,7 @@ NtDll::FPTR_RtlLeaveCriticalSection        NtDll::RtlLeaveCriticalSection      =
 NtDll::FPTR_RtlCreateHeap                  NtDll::RtlCreateHeap                = (NtDll::FPTR_RtlCreateHeap)GetProcAddress(hNtDll, "RtlCreateHeap");
 NtDll::FPTR_RtlAllocateHeap                NtDll::RtlAllocateHeap              = (NtDll::FPTR_RtlAllocateHeap)GetProcAddress(hNtDll, "RtlAllocateHeap");
 NtDll::FPTR_RtlFreeHeap                    NtDll::RtlFreeHeap                  = (NtDll::FPTR_RtlFreeHeap)GetProcAddress(hNtDll, "RtlFreeHeap");
+NtDll::FPTR_RtlSizeHeap                    NtDll::RtlSizeHeap                  = (NtDll::FPTR_RtlSizeHeap)GetProcAddress(hNtDll, "RtlSizeHeap");
 NtDll::FPTR_NtWaitForSingleObject          NtDll::NtWaitForSingleObject        = (NtDll::FPTR_NtWaitForSingleObject)GetProcAddress(hNtDll, "NtWaitForSingleObject");
 NtDll::FPTR_NtAllocateVirtualMemory        NtDll::NtAllocateVirtualMemory      = (NtDll::FPTR_NtAllocateVirtualMemory)GetProcAddress(hNtDll, "NtAllocateVirtualMemory");
 NtDll::FPTR_NtFreeVirtualMemory            NtDll::NtFreeVirtualMemory          = (NtDll::FPTR_NtFreeVirtualMemory)GetProcAddress(hNtDll, "NtFreeVirtualMemory");
