@@ -77,6 +77,25 @@ inline D3DTRANSFORMSTATETYPE EmuXB2PC_D3DTS(D3DTRANSFORMSTATETYPE State)
     return State;
 }
 
+// Todo: Fill out this enumeration tabel for convienance
+typedef DWORD X_D3DBLENDOP;
+
+// ******************************************************************
+// * func: EmuXB2PC_D3DBLENDOP
+// ******************************************************************
+inline D3DBLENDOP EmuXB2PC_D3DBLENDOP(X_D3DBLENDOP Value)
+{
+    switch(Value)
+    {
+        case 0x8006:
+            return D3DBLENDOP_ADD;
+    }
+
+    EmuCleanup("Unknown D3DBLENDOP (0x%.08X)", Value);
+
+    return (D3DBLENDOP)Value;
+}
+
 // Todo: Fill out this enumeration table for convienance
 typedef DWORD X_D3DBLEND;
 
@@ -414,7 +433,7 @@ extern UINT EmuD3DVertexToPrimitive[11][2];
 // * EmuD3DRenderStateSimpleEncoded
 // ******************************************************************
 #define X_D3DRSSE_UNK 0x7fffffff
-extern CONST DWORD EmuD3DRenderStateSimpleEncoded[82];
+extern CONST DWORD EmuD3DRenderStateSimpleEncoded[174];
 
 // ******************************************************************
 // * EmuD3DTileCache (8 Tiles Max)

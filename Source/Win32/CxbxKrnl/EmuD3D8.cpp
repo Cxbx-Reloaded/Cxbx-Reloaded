@@ -445,6 +445,14 @@ HRESULT WINAPI xdirectx::EmuIDirect3D8_CreateDevice
     }
     #endif
 
+    // only one device should be created at once
+    // TODO: ensure all surfaces are somehow cleaned up?
+    if(g_pD3DDevice8 != 0)
+    {
+        g_pD3DDevice8->Release();
+        g_pD3DDevice8 = 0;
+    }
+
     // ******************************************************************
     // * verify no ugly circumstances
     // ******************************************************************
@@ -1401,7 +1409,17 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_CreateTexture
 
     if(FAILED(hRet))
         printf("*Warning* CreateTexture FAILED\n");
+/*
+    {
+        static int dwDumpTex = 0;
 
+        char szBuffer[255];
+
+        sprintf(szBuffer, "C:\\Aaron\\Textures\\CreateTexture%.03d.bmp", dwDumpTex++);
+
+        D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, (*ppTexture)->EmuTexture8, NULL);
+    }
+*/
     EmuSwapFS();   // XBox FS
 
     return hRet;
@@ -2676,7 +2694,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_SetRenderState_FogColor
     }
     #endif
 
-    printf("*Warning* SetRenderState_FogColor not implemented!\n");
+    g_pD3DDevice8->SetRenderState(D3DRS_FOGCOLOR, Value);
 
     EmuSwapFS();   // XBox FS
 
@@ -2741,7 +2759,7 @@ VOID __fastcall xdirectx::EmuIDirect3DDevice8_SetRenderState_Simple
     int State = -1;
 
     // Todo: make this faster and more elegant
-    for(int v=0;v<82;v++)
+    for(int v=0;v<174;v++)
     {
         if(EmuD3DRenderStateSimpleEncoded[v] == Method)
         {
@@ -2756,10 +2774,37 @@ VOID __fastcall xdirectx::EmuIDirect3DDevice8_SetRenderState_Simple
     {
         switch(State)
         {
+            case D3DRS_COLORWRITEENABLE:
+            {
+                DWORD OrigValue = Value;
+
+                Value = 0;
+
+                if(OrigValue & (1L<<16))
+                    Value |= D3DCOLORWRITEENABLE_RED;
+                if(OrigValue & (1L<<8))
+                    Value |= D3DCOLORWRITEENABLE_GREEN;
+                if(OrigValue & (1L<<0))
+                    Value |= D3DCOLORWRITEENABLE_BLUE;
+                if(OrigValue & (1L<<24))
+                    Value |= D3DCOLORWRITEENABLE_ALPHA;
+            }
+            break;
+
+            case D3DRS_SHADEMODE:
+                Value = Value & 0x03;
+                break;
+
+            case D3DRS_BLENDOP:
+                Value = EmuXB2PC_D3DBLENDOP(Value);
+                break;
+            
             case D3DRS_SRCBLEND:
             case D3DRS_DESTBLEND:
                 Value = EmuXB2PC_D3DBLEND(Value);
                 break;
+            
+            case D3DRS_ZFUNC:
             case D3DRS_ALPHAFUNC:
                 Value = EmuXB2PC_D3DCMPFUNC(Value);
                 break;

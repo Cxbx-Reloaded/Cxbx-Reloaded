@@ -40,7 +40,7 @@
 WndAbout::WndAbout(HINSTANCE x_hInstance, HWND x_parent) : Wnd(x_hInstance)
 {
     m_classname = "WndAbout";
-    m_wndname   = "Cxbx " _CXBX_VERSION;
+    m_wndname   = "Cxbx : About";
 
     m_w         = 285;
     m_h         = 180;
@@ -113,9 +113,9 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 			// * draw bottom URL bar
 			// ******************************************************************
             {
-                SetBkColor(hDC, GetSysColor(COLOR_HIGHLIGHT));
+                SetBkColor(hDC, GetSysColor(COLOR_3DFACE));
 
-				SetTextColor(hDC, GetSysColor(COLOR_HIGHLIGHTTEXT));
+				SetTextColor(hDC, GetSysColor(COLOR_BTNTEXT));
 
                 char buffer[] = " Contact the author : caustik@caustik.com";
 

@@ -521,21 +521,21 @@ typedef NTSTATUS (NTAPI *FPTR_NtDelayExecution)
     IN PLARGE_INTEGER   DelayInterval
 );
 
-#define DUPLICATE_SAME_ATTRIBUTES   0x00000004
-
 // ******************************************************************
 // * NtDuplicateObject
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtDuplicateObject)
 (
     IN  HANDLE          SourceProcessHandle,
-    IN  PHANDLE         SourceHandle,
+    IN  HANDLE          SourceHandle,
     IN  HANDLE          TargetProcessHandle,
     OUT PHANDLE         TargetHandle,
     IN  ACCESS_MASK     DesiredAccess OPTIONAL,
     IN  ULONG           Attributes,
     IN  ULONG           Options
 );
+
+#define DUPLICATE_SAME_ATTRIBUTES   0x00000004
 
 // ******************************************************************
 // * NtSetLdtEntries

@@ -169,7 +169,7 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&Caustik's XBox Hacking Page...", ID_HELP_HOMEPAGE
+        MENUITEM "&Goto Cxbx Home Page...",     ID_HELP_HOMEPAGE
         MENUITEM SEPARATOR
         MENUITEM "&About",                      ID_HELP_ABOUT
     END

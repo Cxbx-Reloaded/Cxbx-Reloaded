@@ -401,7 +401,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                 else
                 {
                     xdirectx::EmuD3DDeferredRenderState = 0;
-                    printf("Emu (0x%X): *Warning* EmuD3DDeferredRenderState not found!\n");
+                    printf("Emu (0x%X): *Warning* EmuD3DDeferredRenderState not found!\n", GetCurrentThreadId());
                 }
 
                 pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361, lower, upper);

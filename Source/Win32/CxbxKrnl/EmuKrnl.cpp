@@ -1017,10 +1017,10 @@ XBSYSAPI EXPORTNUM(197) NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
     NTSTATUS ret = NT_NtDuplicateObject
     (
         GetCurrentProcess(),
-        &SourceHandle,
+        SourceHandle,
         GetCurrentProcess(),
         TargetHandle,
-        0, 0, DUPLICATE_SAME_ACCESS | DUPLICATE_SAME_ATTRIBUTES
+        0, 0, Options
     );
 
     if(ret != STATUS_SUCCESS)
