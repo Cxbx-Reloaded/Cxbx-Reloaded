@@ -1404,7 +1404,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Play
 
         pThis->EmuLockPtr1 = 0;
     }
-
+    
     HRESULT hRet = pThis->EmuDirectSoundBuffer8->Play(0, 0, dwFlags);
 
     pThis->EmuPlayFlags = dwFlags;

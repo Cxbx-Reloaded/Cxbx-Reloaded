@@ -1854,6 +1854,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
 
     if(FAILED(hRet))
     {
+        pD3DVertexShader->Handle = 0;
+
         EmuWarning("VertexShader was not really created!");
 
         hRet = D3D_OK;
@@ -3148,7 +3150,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_RunPushBuffer
     }
     #endif
 
-    _asm int 3
+    //_asm int 3
 
     DWORD *pdwPushData = (DWORD*)pPushBuffer->Data;
     DWORD dwIndices = 0;
@@ -3156,86 +3158,54 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_RunPushBuffer
 
     D3DPRIMITIVETYPE PCPrimitiveType;
 
-    // retrieve the current stream source for debugging purposes
+    // NVPB_DrawVertices
+    if(*pdwPushData++ == 0x000417FC)
     {
-        IDirect3DVertexBuffer8 *pVertexBuffer8=0;
+        X_D3DPRIMITIVETYPE PrimitiveType = *pdwPushData++;
 
-        UINT dwStride=0;
-
-        HRESULT hRet = g_pD3DDevice8->GetStreamSource(0, &pVertexBuffer8, &dwStride);
-
-        if(FAILED(hRet))
-            EmuCleanup("Unable to retrieve current stream source!");
-
-        D3DVERTEXBUFFER_DESC Desc;
-
-        hRet = pVertexBuffer8->GetDesc(&Desc);
-
-        BYTE *pbData=0;
-        hRet = pVertexBuffer8->Lock(0, 0, &pbData, NULL);
-
-        pVertexBuffer8->Unlock();
-    }
-
-    while(*pdwPushData != 0)
-    {
-        switch(*pdwPushData++)
+        if(PrimitiveType == 0)
         {
-            // NVPB_DrawVertices
-            case 0x000417FC:
+        }
+        else
+        {
+            PCPrimitiveType = EmuPrimitiveType(PrimitiveType);
+
+            // index list
+            if( (*pdwPushData & 0x40001800) == 0x40001800)
             {
-                X_D3DPRIMITIVETYPE PrimitiveType = *pdwPushData++;
+                DWORD dwBytes = (*pdwPushData & 0x0FFF0000) >> 16;
 
-                if(PrimitiveType == 0)
-                {
-                }
-                else
-                {
-                    PCPrimitiveType = EmuPrimitiveType(PrimitiveType);
+                if(PCPrimitiveType == D3DPT_TRIANGLESTRIP)
+                    dwIndices = dwBytes/2;
 
-                    // index list
-                    if( (*pdwPushData & 0x40001800) == 0x40001800)
-                    {
-                        DWORD dwBytes = (*pdwPushData & 0x0FFF0000) >> 16;
+                pIndexData = (PVOID)++pdwPushData;
 
-                        if(PCPrimitiveType == D3DPT_TRIANGLESTRIP)
-                            dwIndices = dwBytes/2;
+                LPDIRECT3DINDEXBUFFER8 pIndexBuffer=0;
 
-                        pIndexData = (PVOID)++pdwPushData;
+                g_pD3DDevice8->CreateIndexBuffer(dwBytes, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer);
 
-                        LPDIRECT3DINDEXBUFFER8 pIndexBuffer=0;
+                WORD *pData=0;
 
-                        g_pD3DDevice8->CreateIndexBuffer(dwBytes, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer);
+                pIndexBuffer->Lock(0, dwBytes, (UCHAR**)&pData, NULL);
 
-                        WORD *pData=0;
+                memcpy(pData, pIndexData, dwBytes);
 
-                        pIndexBuffer->Lock(0, dwBytes, (UCHAR**)&pData, NULL);
+                pIndexBuffer->Unlock();
 
-                        memcpy(pData, pIndexData, dwBytes);
+                g_pD3DDevice8->SetIndices(pIndexBuffer, 0);
 
-                        pIndexBuffer->Unlock();
+                // vertex stream is complete
+                g_pD3DDevice8->DrawIndexedPrimitive
+                (
+                    PCPrimitiveType, 0, dwIndices, 0, EmuD3DVertex2PrimitiveCount(PrimitiveType, dwIndices)
+                );
 
-                        g_pD3DDevice8->SetIndices(pIndexBuffer, 0);
-
-                        // vertex stream is complete
-                        g_pD3DDevice8->DrawIndexedPrimitive
-                        (
-                            PCPrimitiveType, 0, dwIndices, 0, EmuD3DVertex2PrimitiveCount(PrimitiveType, dwIndices)
-                        );
-
-                        pIndexBuffer->Release();
-
-                        break;
-                    }
-
-                    //_asm int 3
-                }
+                pIndexBuffer->Release();
             }
-            break;
+
+            //_asm int 3
         }
     }
-
-    EmuWarning("PushBuffers not supported!");
 
     EmuSwapFS();   // XBox FS
 
