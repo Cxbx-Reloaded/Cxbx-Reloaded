@@ -240,18 +240,21 @@ HRESULT WINAPI xboxkrnl::EmuXIDirect3DDevice8_Clear
     // * make adjustments to parameters to make sense with windows d3d
     // ******************************************************************
     {
-        DWORD newFlags = 0;
+        // Tricky MS randomizing .h #defines :[
+        {
+            DWORD newFlags = 0;
 
-        if(Flags & 0x000000f0l)
-            newFlags |= D3DCLEAR_TARGET;
+            if(Flags & 0x000000f0l)
+                newFlags |= D3DCLEAR_TARGET;
 
-        if(Flags & 0x00000001l)
-            newFlags |= D3DCLEAR_ZBUFFER;
+            if(Flags & 0x00000001l)
+                newFlags |= D3DCLEAR_ZBUFFER;
 
-        if(Flags & 0x00000002l)
-            newFlags |= D3DCLEAR_STENCIL;
+            if(Flags & 0x00000002l)
+                newFlags |= D3DCLEAR_STENCIL;
 
-        Flags = newFlags;
+            Flags = newFlags;
+        }
     }
 
     HRESULT ret = g_pD3D8Device->Clear(Count, pRects, Flags, Color, Z, Stencil);
