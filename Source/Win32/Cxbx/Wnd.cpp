@@ -34,7 +34,7 @@
 #include "Cxbx.h"
 #include "Wnd.h"
 
-#include "resource.h"
+#include "ResCxbx.h"
 
 // ******************************************************************
 // * constructor
@@ -71,6 +71,8 @@ bool Wnd::ProcessMessages()
     // initialize window
     if(!m_initialized)
     {
+        HMODULE hCxbxDll = GetModuleHandle("Cxbx.dll");
+
         m_initialized = true;
 
         WNDCLASS wnd_class;
@@ -79,7 +81,7 @@ bool Wnd::ProcessMessages()
         wnd_class.lpszClassName = m_classname;
         wnd_class.lpfnWndProc   = WndProcForward;
         wnd_class.style         = m_clsstyle;
-        wnd_class.hIcon         = LoadIcon(m_hInstance, MAKEINTRESOURCE(IDI_CXBX));
+        wnd_class.hIcon         = LoadIcon(hCxbxDll, MAKEINTRESOURCE(IDI_CXBX));
         wnd_class.hCursor       = LoadCursor(NULL, IDC_ARROW);
         wnd_class.lpszMenuName  = NULL;
         wnd_class.cbClsExtra    = 0;

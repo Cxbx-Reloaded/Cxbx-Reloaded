@@ -34,7 +34,7 @@
 #include "Cxbx.h"
 #include "WndAbout.h"
 
-#include "resource.h"
+#include "ResCxbx.h"
 
 // ******************************************************************
 // * constructor

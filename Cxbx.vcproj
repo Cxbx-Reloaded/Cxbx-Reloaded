@@ -196,7 +196,7 @@ upxCxbx.bat
 				RelativePath=".\Include\Core\Xbe.h">
 			</File>
 			<File
-				RelativePath=".\Resource\resource.h">
+				RelativePath=".\Resource\CxbxRes.h">
 			</File>
 		</Filter>
 		<Filter

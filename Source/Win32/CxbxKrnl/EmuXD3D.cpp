@@ -40,6 +40,8 @@ namespace win32
     #include <process.h>
 }
 
+#include "ResCxbxDll.h"
+
 using namespace win32;
 
 // ******************************************************************
@@ -67,7 +69,7 @@ VOID xboxkrnl::EmuXInitD3D()
         _beginthread(EmuXRenderWindow, 0, NULL);
 
         while(g_EmuXWindow == NULL)
-            Sleep(10);
+            Sleep(100);
     }
 
     // ******************************************************************
@@ -88,13 +90,15 @@ void EmuXRenderWindow(PVOID)
     // * register window class
     // ******************************************************************
     {
+        HMODULE hCxbxDll = GetModuleHandle("Cxbx.dll");
+
         WNDCLASSEX wc =
         {
             sizeof(WNDCLASSEX),
             CS_CLASSDC,
             EmuXMsgProc,
             0, 0, GetModuleHandle(NULL),
-            NULL, LoadCursor(NULL, IDC_ARROW), (HBRUSH)(COLOR_APPWORKSPACE + 1), NULL,
+            LoadIcon(hCxbxDll, MAKEINTRESOURCE(IDI_CXBX)), LoadCursor(NULL, IDC_ARROW), (HBRUSH)(COLOR_APPWORKSPACE + 1), NULL,
             "CxbxRender",
             NULL
         };

@@ -35,7 +35,7 @@
 #include "EmuExe.h"
 #include "WndMain.h"
 #include "WndAbout.h"
-#include "resource.h"
+#include "ResCxbx.h"
 
 #include <stdio.h>
 
