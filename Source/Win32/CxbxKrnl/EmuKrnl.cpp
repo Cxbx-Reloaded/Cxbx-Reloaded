@@ -1876,6 +1876,9 @@ XBSYSAPI EXPORTNUM(219) NTSTATUS NTAPI xboxkrnl::NtReadFile
 
     NTSTATUS ret = NtDll::NtReadFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, (NtDll::LARGE_INTEGER*)ByteOffset, 0);
 
+    if(FAILED(ret))
+        EmuWarning("NtReadFile Failed!");
+
     EmuSwapFS();   // Xbox FS
 
     return ret;
