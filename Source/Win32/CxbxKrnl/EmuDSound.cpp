@@ -594,6 +594,34 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetMixBinHeadroom
 }
 
 // ******************************************************************
+// * func: EmuIDirectSound8_SetMixBinVolumes
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSound8_SetMixBinVolumes
+(
+    LPDIRECTSOUND8          pThis,
+    PVOID					pMixBins
+)
+{
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        EmuSwapFS();   // Win2k/XP FS
+        printf("EmuDSound (0x%X): EmuIDirectSound8_SetMixBinVolumes\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   pMixBins					 : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, pMixBins);
+        EmuSwapFS();   // XBox FS
+    }
+    #endif
+
+    // TODO: Actually do something
+
+    return DS_OK;
+}
+
+// ******************************************************************
 // * func: EmuIDirectSound8_SetPosition
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirectSound8_SetPosition

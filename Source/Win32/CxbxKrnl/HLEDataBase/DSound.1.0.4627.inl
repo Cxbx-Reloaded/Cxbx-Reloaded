@@ -140,6 +140,194 @@ SOOVPA<15> CDirectSound_SetMixBinHeadroom_1_0_4627 =
 };
 
 // ******************************************************************
+// * IDirectSound8_SetMixBinHeadroom
+// ******************************************************************
+SOOVPA<12> IDirectSound8_SetMixBinHeadroom_1_0_4627 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    1,  // XRef Is  Used
+
+    {
+        // IDirectSound8_SetMixBinHeadroom+0x19 : call [CDirectSound::SetMixBinHeadroom]
+        { 0x19, XREF_DSSETMIXBINHEADROOMA }, // (Offset,Value)-Pair #1
+
+        // IDirectSound8_SetMixBinHeadroom+0x04 : push [esp+0x0C]
+        { 0x04, 0xFF }, // (Offset,Value)-Pair #2
+        { 0x05, 0x74 }, // (Offset,Value)-Pair #3
+        { 0x06, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x07, 0x0C }, // (Offset,Value)-Pair #5
+
+        // IDirectSound8_SetMixBinHeadroom+0x0E : add eax, 0xFFFFFFF8
+        { 0x0E, 0x83 }, // (Offset,Value)-Pair #6
+        { 0x0F, 0xC0 }, // (Offset,Value)-Pair #7
+        { 0x10, 0xF8 }, // (Offset,Value)-Pair #8
+
+        // IDirectSound8_SetMixBinHeadroom+0x13 : sbb ecx, ecx
+        { 0x13, 0x1B }, // (Offset,Value)-Pair #9
+        { 0x14, 0xC9 }, // (Offset,Value)-Pair #10
+
+        // IDirectSound8_SetMixBinHeadroom+0x15 : and ecx, eax
+        { 0x15, 0x23 }, // (Offset,Value)-Pair #11
+        { 0x16, 0xC8 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundVoiceSettings::SetMixBinVolumes
+// ******************************************************************
+SOOVPA<10> CDirectSoundVoiceSettings_SetMixBinVolumes_1_0_4627 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    XREF_DSSETMIXBINVOLUMESC,	// XRef Is  Saved
+    0,                          // XRef Not Used
+
+    {
+        // CDirectSoundVoiceSettings_SetMixBinVolumes+0x09 : jbe +0x16
+        { 0x09, 0x76 }, // (Offset,Value)-Pair #1
+        { 0x0A, 0x16 }, // (Offset,Value)-Pair #2
+
+        // CDirectSoundVoiceSettings_SetMixBinVolumes+0x18 : mov [ecx+edi*4+0x30], eax
+        { 0x18, 0x89 }, // (Offset,Value)-Pair #3
+        { 0x19, 0x44 }, // (Offset,Value)-Pair #4
+        { 0x1A, 0xB9 }, // (Offset,Value)-Pair #5
+        { 0x1B, 0x30 }, // (Offset,Value)-Pair #6
+
+        // CDirectSoundVoiceSettings_SetMixBinVolumes+0x1E : jb +0xEC
+        { 0x1E, 0x72 }, // (Offset,Value)-Pair #7
+        { 0x1F, 0xEC }, // (Offset,Value)-Pair #8
+
+        // CDirectSoundVoiceSettings_SetMixBinVolumes+0x22 : retn 0x04
+        { 0x22, 0xC2 }, // (Offset,Value)-Pair #9
+        { 0x23, 0x04 }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundVoice::SetMixBinVolumes
+// ******************************************************************
+SOOVPA<17> CDirectSoundVoice_SetMixBinVolumes_1_0_4627 =
+{
+    0,  // Large == 0
+    17, // Count == 17
+
+    XREF_DSSETMIXBINVOLUMESB,	// XRef Is Saved
+    1,                          // XRef Is Used
+
+    {
+        // IDirectSound8_SetMixBinVolumes+0x0D : call [CDirectSoundVoiceSettings::SetMixBinVolumes]
+        { 0x0D, XREF_DSSETMIXBINVOLUMESC }, // (Offset,Value)-Pair #1
+
+		// CDirectSoundVoice_SetMixBinVolumes+0x01 : mov esi, [esp+8]
+        { 0x01, 0x8B }, // (Offset,Value)-Pair #2
+        { 0x02, 0x74 }, // (Offset,Value)-Pair #3
+        { 0x03, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x04, 0x08 }, // (Offset,Value)-Pair #5
+
+        // CDirectSoundVoice_SetMixBinVolumes+0x05 : push [esp+0x0C]
+        { 0x05, 0xFF }, // (Offset,Value)-Pair #6
+        { 0x06, 0x74 }, // (Offset,Value)-Pair #7
+        { 0x07, 0x24 }, // (Offset,Value)-Pair #8
+        { 0x08, 0x0C }, // (Offset,Value)-Pair #9
+
+        // CDirectSoundVoice_SetMixBinVolumes+0x09 : mov ecx, [esi+0x10]
+        { 0x09, 0x8B }, // (Offset,Value)-Pair #10
+        { 0x0A, 0x4E }, // (Offset,Value)-Pair #11
+        { 0x0B, 0x10 }, // (Offset,Value)-Pair #12
+
+        // CDirectSoundVoice_SetMixBinVolumes+0x11 : mov ecx, [esi+0x0C]
+        { 0x11, 0x8B }, // (Offset,Value)-Pair #13
+        { 0x12, 0x4E }, // (Offset,Value)-Pair #14
+        { 0x13, 0x0C }, // (Offset,Value)-Pair #15
+
+        // CDirectSoundVoice_SetMixBinVolumes+0x1A : retn 0x08
+        { 0x1A, 0xC2 }, // (Offset,Value)-Pair #16
+        { 0x1B, 0x08 }, // (Offset,Value)-Pair #17
+    }
+};
+
+// ******************************************************************
+// * CDirectSound::SetMixBinVolumes
+// ******************************************************************
+SOOVPA<17> CDirectSound_SetMixBinVolumes_1_0_4627 =
+{
+    0,  // Large == 0
+    17, // Count == 17
+
+    XREF_DSSETMIXBINVOLUMESA,	// XRef Is  Saved
+    1,                          // XRef Not Used
+
+    {
+        // IDirectSound8_SetMixBinVolumes+0x32 : call [CDirectSoundVoice::SetMixBinVolumes]
+        { 0x32, XREF_DSSETMIXBINVOLUMESB }, // (Offset,Value)-Pair #1
+
+		// CDirectSound_SetMixBinVolumes+0x21 : mov eax, 0x80004005
+        { 0x21, 0xB8 }, // (Offset,Value)-Pair #2
+        { 0x22, 0x05 }, // (Offset,Value)-Pair #3
+        { 0x23, 0x40 }, // (Offset,Value)-Pair #4
+        { 0x24, 0x00 }, // (Offset,Value)-Pair #5
+        { 0x25, 0x80 }, // (Offset,Value)-Pair #6
+
+        // CDirectSound_SetMixBinVolumes+0x29 : push [esp+0x10]; push [esp+0x10]
+        { 0x29, 0xFF }, // (Offset,Value)-Pair #7
+        { 0x2A, 0x74 }, // (Offset,Value)-Pair #8
+        { 0x2B, 0x24 }, // (Offset,Value)-Pair #9
+        { 0x2C, 0x10 }, // (Offset,Value)-Pair #10
+        { 0x2D, 0xFF }, // (Offset,Value)-Pair #11
+        { 0x2E, 0x74 }, // (Offset,Value)-Pair #12
+        { 0x2F, 0x24 }, // (Offset,Value)-Pair #13
+        { 0x30, 0x10 }, // (Offset,Value)-Pair #14
+
+        // CDirectSound_SetMixBinVolumes+0x49 : pop edi
+        { 0x49, 0x5F }, // (Offset,Value)-Pair #15
+
+        // CDirectSound_SetMixBinVolumes+0x4B : retn 0x08
+        { 0x4B, 0xC2 }, // (Offset,Value)-Pair #16
+        { 0x4C, 0x08 }, // (Offset,Value)-Pair #17
+    }
+};
+
+// ******************************************************************
+// * IDirectSound8_SetMixBinVolumes
+// ******************************************************************
+SOOVPA<12> IDirectSound8_SetMixBinVolumes_1_0_4627 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    1,  // XRef Is  Used
+
+    {
+        // IDirectSound8_SetMixBinVolumes+0x15 : call [CDirectSound::SetMixBinVolumes]
+        { 0x15, XREF_DSSETMIXBINVOLUMESA }, // (Offset,Value)-Pair #1
+
+        // IDirectSound8_SetMixBinVolumes+0x04 : push [esp+0x08]
+        { 0x04, 0xFF }, // (Offset,Value)-Pair #2
+        { 0x05, 0x74 }, // (Offset,Value)-Pair #3
+        { 0x06, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x07, 0x08 }, // (Offset,Value)-Pair #5
+
+        // IDirectSound8_SetMixBinVolumes+0x0A : add eax, 0xFFFFFFE4
+        { 0x0A, 0x83 }, // (Offset,Value)-Pair #6
+        { 0x0B, 0xC0 }, // (Offset,Value)-Pair #7
+        { 0x0C, 0xE4 }, // (Offset,Value)-Pair #8
+
+        // IDirectSound8_SetMixBinVolumes+0x0F : sbb ecx, ecx
+        { 0x0F, 0x1B }, // (Offset,Value)-Pair #9
+        { 0x10, 0xC9 }, // (Offset,Value)-Pair #10
+
+        // IDirectSound8_SetMixBinVolumes+0x11 : and ecx, eax
+        { 0x11, 0x23 }, // (Offset,Value)-Pair #11
+        { 0x12, 0xC8 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
 // * DirectSoundCreateBuffer
 // ******************************************************************
 SOOVPA<12> DirectSoundCreateBuffer_1_0_4627 =
@@ -206,42 +394,6 @@ SOOVPA<12> IDirectSound8_SetI3DL2Listener_1_0_4627 =
         { 0x14, 0xC9 }, // (Offset,Value)-Pair #10
 
         // IDirectSound8_SetI3DL2Listener+0x15 : and ecx, eax
-        { 0x15, 0x23 }, // (Offset,Value)-Pair #11
-        { 0x16, 0xC8 }, // (Offset,Value)-Pair #12
-    }
-};
-
-// ******************************************************************
-// * IDirectSound8_SetMixBinHeadroom
-// ******************************************************************
-SOOVPA<12> IDirectSound8_SetMixBinHeadroom_1_0_4627 =
-{
-    0,  // Large == 0
-    12, // Count == 12
-
-    -1, // XRef Not Saved
-    1,  // XRef Is  Used
-
-    {
-        // IDirectSound8_SetMixBinHeadroom+0x19 : call [CDirectSound::SetMixBinHeadroom]
-        { 0x19, XREF_DSSETMIXBINHEADROOMA }, // (Offset,Value)-Pair #1
-
-        // IDirectSound8_SetMixBinHeadroom+0x04 : push [esp+0x0C]
-        { 0x04, 0xFF }, // (Offset,Value)-Pair #2
-        { 0x05, 0x74 }, // (Offset,Value)-Pair #3
-        { 0x06, 0x24 }, // (Offset,Value)-Pair #4
-        { 0x07, 0x0C }, // (Offset,Value)-Pair #5
-
-        // IDirectSound8_SetMixBinHeadroom+0x0E : add eax, 0xFFFFFFF8
-        { 0x0E, 0x83 }, // (Offset,Value)-Pair #6
-        { 0x0F, 0xC0 }, // (Offset,Value)-Pair #7
-        { 0x10, 0xF8 }, // (Offset,Value)-Pair #8
-
-        // IDirectSound8_SetMixBinHeadroom+0x13 : sbb ecx, ecx
-        { 0x13, 0x1B }, // (Offset,Value)-Pair #9
-        { 0x14, 0xC9 }, // (Offset,Value)-Pair #10
-
-        // IDirectSound8_SetMixBinHeadroom+0x15 : and ecx, eax
         { 0x15, 0x23 }, // (Offset,Value)-Pair #11
         { 0x16, 0xC8 }, // (Offset,Value)-Pair #12
     }
@@ -646,6 +798,50 @@ OOVPATable DSound_1_0_4627[] =
         "CDirectSound::SetMixBinHeadroom (XREF)" 
         #endif
     },
+    // IDirectSound8_SetMixBinHeadroom
+    {
+        (OOVPA*)&IDirectSound8_SetMixBinHeadroom_1_0_4627,
+
+        XTL::EmuIDirectSound8_SetMixBinHeadroom,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSound8_SetMixBinHeadroom"
+        #endif
+    },
+    // CDirectSoundVoiceSettings_SetMixBinVolumes
+    {
+        (OOVPA*)&CDirectSoundVoiceSettings_SetMixBinVolumes_1_0_4627, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundVoiceSettings::SetMixBinVolumes (XREF)" 
+        #endif
+    },
+    // CDirectSoundVoice_SetMixBinVolumes
+    {
+        (OOVPA*)&CDirectSoundVoice_SetMixBinVolumes_1_0_4627, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundVoice::SetMixBinVolumes (XREF)" 
+        #endif
+    },
+    // CDirectSound_SetMixBinVolumes
+    {
+        (OOVPA*)&CDirectSound_SetMixBinVolumes_1_0_4627, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSound::SetMixBinVolumes (XREF)" 
+        #endif
+    },
+    // IDirectSound8_SetMixBinVolumes
+    {
+        (OOVPA*)&IDirectSound8_SetMixBinVolumes_1_0_4627,
+
+        XTL::EmuIDirectSound8_SetMixBinVolumes,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSound8_SetMixBinVolumes"
+        #endif
+    },
     // DirectSoundCreateBuffer
     {
         (OOVPA*)&DirectSoundCreateBuffer_1_0_4627,
@@ -674,16 +870,6 @@ OOVPATable DSound_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirectSound8_SetI3DL2Listener" 
-        #endif
-    },
-    // IDirectSound8_SetMixBinHeadroom
-    {
-        (OOVPA*)&IDirectSound8_SetMixBinHeadroom_1_0_4627,
-
-        XTL::EmuIDirectSound8_SetMixBinHeadroom,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirectSound8_SetMixBinHeadroom"
         #endif
     },
     // CMcpxVoiceClient_SetVolume

@@ -275,6 +275,15 @@ HRESULT WINAPI EmuIDirectSound8_SetMixBinHeadroom
 );
 
 // ******************************************************************
+// * func: EmuIDirectSound8_SetMixBinVolumes
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSound8_SetMixBinVolumes
+(
+    LPDIRECTSOUND8          pThis,
+    PVOID					pMixBins	// TODO: fill this out
+);
+
+// ******************************************************************
 // * func: EmuIDirectSound8_SetPosition
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSound8_SetPosition
