@@ -1760,7 +1760,34 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetViewport
            GetCurrentThreadId(), pViewport, pViewport->X, pViewport->Y, pViewport->Width,
            pViewport->Height, pViewport->MinZ, pViewport->MaxZ);
 
+    DWORD dwWidth  = pViewport->Width;
+    DWORD dwHeight = pViewport->Height;
+
+    // resize to fit screen (otherwise crashes occur)
+    {
+        if(dwWidth > 640)
+        {
+            EmuWarning("Resizing Viewport->Width to 640");
+            ((D3DVIEWPORT8*)pViewport)->Width = 640;
+        }
+
+        if(dwHeight > 480)
+        {
+            EmuWarning("Resizing Viewport->Height to 480");
+            ((D3DVIEWPORT8*)pViewport)->Height = 480;
+        }
+    }
+
     HRESULT hRet = g_pD3DDevice8->SetViewport(pViewport);
+
+    // restore originals
+    {
+        if(dwWidth > 640)
+            ((D3DVIEWPORT8*)pViewport)->Width = dwWidth;
+
+        if(dwHeight > 480)
+            ((D3DVIEWPORT8*)pViewport)->Height = dwHeight;
+    }
 
     if(FAILED(hRet))
     {
@@ -3156,7 +3183,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Begin
            GetCurrentThreadId(), PrimitiveType);
 
     if(PrimitiveType != 7)
-        EmuCleanup("EmuIDirect3DDevice8_End does not support primitive : %d", g_dwD3DIVBPrim);
+        EmuCleanup("EmuIDirect3DDevice8_Begin does not support primitive : %d", PrimitiveType);
 
     g_dwD3DIVBInd  = 0;
     g_dwD3DIVBPrim = PrimitiveType;
