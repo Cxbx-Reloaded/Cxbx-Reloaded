@@ -126,6 +126,7 @@ PVOID WINAPI XTL::EmuRtlAllocateHeap
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
+        /* too much debug output
         printf("EmuXapi (0x%X): EmuRtlAllocateHeap\n"
                "(\n"
                "   hHeap               : 0x%.08X\n"
@@ -133,6 +134,7 @@ PVOID WINAPI XTL::EmuRtlAllocateHeap
                "   dwBytes             : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), hHeap, dwFlags, dwBytes);
+        //*/
     }
     #endif
 
@@ -160,6 +162,7 @@ BOOL WINAPI XTL::EmuRtlFreeHeap
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
+        /* too much debug output
         printf("EmuXapi (0x%X): EmuRtlFreeHeap\n"
                "(\n"
                "   hHeap               : 0x%.08X\n"
@@ -167,6 +170,7 @@ BOOL WINAPI XTL::EmuRtlFreeHeap
                "   lpMem               : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), hHeap, dwFlags, lpMem);
+       //*/
     }
     #endif
 
@@ -194,6 +198,7 @@ SIZE_T WINAPI XTL::EmuRtlSizeHeap
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
+        /* too much debug output
         printf("EmuXapi (0x%X): EmuRtlSizeHeap\n"
                "(\n"
                "   hHeap               : 0x%.08X\n"
@@ -201,6 +206,7 @@ SIZE_T WINAPI XTL::EmuRtlSizeHeap
                "   lpMem               : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), hHeap, dwFlags, lpMem);
+        //*/
     }
     #endif
 

@@ -1644,6 +1644,10 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetRenderTarget
 
     *ppRenderTarget = g_pCachedRenderTarget;
 
+    #ifdef _DEBUG_TRACE
+    printf("EmuD3D8 (0x%X): RenderTarget := 0x%.08X\n", pSurface8);
+    #endif
+
     EmuSwapFS();   // Xbox FS
 
     return D3D_OK;
@@ -1667,6 +1671,10 @@ XTL::X_D3DSurface * WINAPI XTL::EmuIDirect3DDevice8_GetRenderTarget2()
     IDirect3DSurface8 *pSurface8 = g_pCachedRenderTarget->EmuSurface8;
 
     pSurface8->AddRef();
+
+    #ifdef _DEBUG_TRACE
+    printf("EmuD3D8 (0x%X): RenderTarget := 0x%.08X\n", pSurface8);
+    #endif
 
     EmuSwapFS();   // Xbox FS
 
@@ -1701,6 +1709,10 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetDepthStencilSurface
 
     *ppZStencilSurface = g_pCachedZStencilSurface;
 
+    #ifdef _DEBUG_TRACE
+    printf("EmuD3D8 (0x%X): DepthStencilSurface := 0x%.08X\n", pSurface8);
+    #endif
+
     EmuSwapFS();   // Xbox FS
 
     return D3D_OK;
@@ -1725,6 +1737,10 @@ XTL::X_D3DSurface * WINAPI XTL::EmuIDirect3DDevice8_GetDepthStencilSurface2()
 
     if(pSurface8 != 0)
         pSurface8->AddRef();
+
+    #ifdef _DEBUG_TRACE
+    printf("EmuD3D8 (0x%X): DepthStencilSurface := 0x%.08X\n", pSurface8);
+    #endif
 
     EmuSwapFS();   // Xbox FS
 
@@ -2194,7 +2210,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
             EmuWarning("CreateTexture Failed!");
 
         #ifdef _DEBUG_TRACE
-        printf("EmuD3D8 (0x%X): Created Texture : 0x%.08X\n", GetCurrentThreadId(), *ppTexture);
+        printf("EmuD3D8 (0x%X): Created Texture : 0x%.08X (0x%.08X)\n", GetCurrentThreadId(), *ppTexture, (*ppTexture)->EmuTexture8);
         #endif
     }
     else
@@ -3132,7 +3148,6 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_RunPushBuffer
     }
     #endif
 
-    /*
     _asm int 3
 
     DWORD *pdwPushData = (DWORD*)pPushBuffer->Data;
@@ -3140,6 +3155,27 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_RunPushBuffer
     PVOID pIndexData = 0;
 
     D3DPRIMITIVETYPE PCPrimitiveType;
+
+    // retrieve the current stream source for debugging purposes
+    {
+        IDirect3DVertexBuffer8 *pVertexBuffer8=0;
+
+        UINT dwStride=0;
+
+        HRESULT hRet = g_pD3DDevice8->GetStreamSource(0, &pVertexBuffer8, &dwStride);
+
+        if(FAILED(hRet))
+            EmuCleanup("Unable to retrieve current stream source!");
+
+        D3DVERTEXBUFFER_DESC Desc;
+
+        hRet = pVertexBuffer8->GetDesc(&Desc);
+
+        BYTE *pbData=0;
+        hRet = pVertexBuffer8->Lock(0, 0, &pbData, NULL);
+
+        pVertexBuffer8->Unlock();
+    }
 
     while(*pdwPushData != 0)
     {
@@ -3197,7 +3233,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_RunPushBuffer
             }
             break;
         }
-    }*/
+    }
 
     EmuWarning("PushBuffers not supported!");
 
@@ -3608,6 +3644,13 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
             if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
             {
                 hRet = g_pD3DDevice8->CreateImageSurface(dwWidth, dwHeight, Format, &pResource->EmuSurface8);
+
+                if(FAILED(hRet))
+                    EmuCleanup("CreateImageSurface Failed!");
+
+                #ifdef _DEBUG_TRACE
+                printf("EmuIDirect3DResource8_Register (0x%X) : Successfully Created ImageSurface (0x%.08X, 0x%.08X)\n", GetCurrentThreadId(), pResource, pResource->EmuSurface8);
+                #endif
             }
             else
             {
@@ -3644,6 +3687,10 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
                     if(FAILED(hRet))
                         EmuCleanup("CreateCubeTexture Failed!");
+
+                    #ifdef _DEBUG_TRACE
+                    printf("EmuIDirect3DResource8_Register (0x%X) : Successfully Created CubeTexture (0x%.08X, 0x%.08X)\n", GetCurrentThreadId(), pResource, pResource->EmuCubeTexture8);
+                    #endif
                 }
                 else
                 {
@@ -3660,6 +3707,10 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
                     if(FAILED(hRet))
                         EmuCleanup("CreateTexture Failed!");
+
+                    #ifdef _DEBUG_TRACE
+                    printf("EmuIDirect3DResource8_Register (0x%X) : Successfully Created Texture (0x%.08X, 0x%.08X)\n", GetCurrentThreadId(), pResource, pResource->EmuTexture8);
+                    #endif
                 }
             }
 
@@ -4331,6 +4382,13 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel
         *ppSurfaceLevel = new X_D3DSurface();
 
         hRet = pTexture8->GetSurfaceLevel(Level, &((*ppSurfaceLevel)->EmuSurface8));
+
+        #ifdef _DEBUG_TRACE
+        if(!FAILED(hRet))
+        {
+            printf("EmuD3D8 (0x%X): EmuIDirect3DTexture8_GetSurfaceLevel := 0x%.08X\n", GetCurrentThreadId(), (*ppSurfaceLevel)->EmuSurface8);
+        }
+        #endif
     }
 
     EmuSwapFS();   // XBox FS
