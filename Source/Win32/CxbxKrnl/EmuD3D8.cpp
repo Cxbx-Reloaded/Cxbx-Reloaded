@@ -61,6 +61,7 @@ XTL::LPDIRECTDRAWSURFACE7    g_pDDSOverlay7 = NULL; // DirectDraw7 Overlay Surfa
 XTL::LPDIRECTDRAWCLIPPER     g_pDDClipper   = NULL; // DirectDraw7 Clipper
 DWORD                        g_CurrentVertexShader = 0;
 BOOL                         g_bFakePixelShaderLoaded = FALSE;
+BOOL                         g_bIsFauxFullscreen = FALSE;
 
 // Static Function(s)
 static BOOL WINAPI                  EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescription, LPSTR lpDriverName, LPVOID lpContext, HMONITOR hm);
@@ -407,12 +408,10 @@ void ToggleFauxFullscreen(HWND hWnd)
     if(g_XBVideo.GetFullscreen())
         return;
 
-    static bool bIsNormal = true;
-
     static LONG lRestore = 0, lRestoreEx = 0;
     static RECT lRect = {0};
 
-    if(bIsNormal)
+    if(!g_bIsFauxFullscreen)
     {
         if(g_hEmuParent != NULL)
         {
@@ -449,7 +448,7 @@ void ToggleFauxFullscreen(HWND hWnd)
         }
     }
 
-    bIsNormal = !bIsNormal;
+    g_bIsFauxFullscreen = !g_bIsFauxFullscreen;
 }
 
 // rendering window message procedure
@@ -554,7 +553,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
         case WM_SETCURSOR:
         {
-            if(g_XBVideo.GetFullscreen())
+            if(g_XBVideo.GetFullscreen() || g_bIsFauxFullscreen)
             {
                 SetCursor(NULL);
                 return 0;
