@@ -161,7 +161,12 @@ BEGIN
         , GRAYED
         MENUITEM "Config &Video...",            ID_SETTINGS_CONFIG_VIDEO
         MENUITEM SEPARATOR
-        MENUITEM "Generate &Exe Automatically", ID_SETTINGS_AUTOGEN
+        POPUP "Executable &Generation"
+        BEGIN
+            MENUITEM "&Automatic (&Windows Temp)",  ID_SETTINGS_GENWT
+            MENUITEM "Automatic (&Xbe Path)",       ID_SETTINGS_GENXP
+            MENUITEM "&Manual",                     ID_SETTINGS_GENMA
+        END
     END
     POPUP "E&mulation"
     BEGIN

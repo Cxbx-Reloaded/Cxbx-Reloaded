@@ -104,6 +104,17 @@ extern "C" CXBXKRNL_API void NTAPI EmuNoFunc()
 }
 
 // ******************************************************************
+// * func: EmuVerifyVersion
+// ******************************************************************
+extern "C" CXBXKRNL_API bool NTAPI EmuVerifyVersion(const char *szVersion)
+{
+    if(strcmp(szVersion, _CXBX_VERSION) != 0)
+        return false;
+
+    return true;
+}
+
+// ******************************************************************
 // * func: EmuCleanThread
 // ******************************************************************
 extern "C" CXBXKRNL_API void NTAPI EmuCleanThread()
@@ -223,21 +234,9 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 	{
 		char szBuffer[260];
 
-        GetModuleFileName(NULL, szBuffer, 260);
+        g_EmuShared->GetXbePath(szBuffer);
 
-        sint32 spot=-1;
-        for(int v=0;v<260;v++)
-        {
-            if(szBuffer[v] == '\\')
-                spot = v;
-            else if(szBuffer[v] == '\0')
-                break;
-        }
-
-        if(spot != -1)
-            szBuffer[spot] = '\0';
-
-		SetCurrentDirectory(szBuffer);
+        SetCurrentDirectory(szBuffer);
 
 		g_hCurDir = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 

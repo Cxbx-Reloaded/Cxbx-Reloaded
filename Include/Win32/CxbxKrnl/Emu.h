@@ -45,6 +45,11 @@
 extern "C" CXBXKRNL_API void NTAPI EmuNoFunc();
 
 // ******************************************************************
+// * func: EmuVerifyVersion
+// ******************************************************************
+extern "C" CXBXKRNL_API bool NTAPI EmuVerifyVersion(const char *szVersion);
+
+// ******************************************************************
 // * func: EmuInit
 // ******************************************************************
 extern "C" CXBXKRNL_API void NTAPI EmuInit(void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());

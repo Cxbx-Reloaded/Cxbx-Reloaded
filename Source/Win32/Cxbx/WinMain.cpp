@@ -31,6 +31,7 @@
 // *  All rights reserved
 // *
 // ******************************************************************
+#include "Emu.h"
 #include "WndMain.h"
 #include "EmuShared.h"
 #include "EmuExe.h"
@@ -40,6 +41,12 @@
 // ******************************************************************
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+    if(!EmuVerifyVersion(_CXBX_VERSION))
+    {
+        MessageBox(NULL, "Cxbx.dll is the incorrect version", "Cxbx", MB_OK);
+        return 1;
+    }
+
     EmuShared::Init();
 
     WndMain *MainWindow = new WndMain(hInstance);
@@ -51,7 +58,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     {
         MainWindow->OpenXbe(__argv[1]);
 
-        MainWindow->StartEmulation(true);
+        MainWindow->StartEmulation(AUTO_CONVERT_WINDOWS_TEMP);
     }
 
     while(MainWindow->GetError() == 0 && MainWindow->ProcessMessages())

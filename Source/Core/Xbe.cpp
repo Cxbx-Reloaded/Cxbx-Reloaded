@@ -33,6 +33,7 @@
 // ******************************************************************
 #include "Xbe.h"
 #include "Exe.h"
+#include "Emu.h"
 
 #include <memory.h>
 #include <locale.h>
@@ -44,7 +45,7 @@
 // ******************************************************************
 Xbe::Xbe(const char *x_szFilename)
 {
-    char szBuffer[255];
+    char szBuffer[260];
 
     ConstructorInit();
 
@@ -59,6 +60,28 @@ Xbe::Xbe(const char *x_szFilename)
     {
         SetError("Could not open Xbe file.", true);
         return;
+    }
+
+    printf("OK\n");
+
+    // ******************************************************************
+    // * remember xbe path
+    // ******************************************************************
+    {
+        printf("Xbe::Xbe Storing Xbe Path...");
+
+        strcpy(m_szPath, x_szFilename);
+
+        int v=0, c=0;
+
+        while(m_szPath[v] != '\0')
+        {
+            if(m_szPath[v] == '\\')
+                c = v+1;
+            v++;
+        }
+
+        m_szPath[c] = '\0';
     }
 
     printf("OK\n");
@@ -967,7 +990,7 @@ void Xbe::Export(const char *x_szXbeFilename)
     if(GetError() != 0)
         return;
 
-    char szBuffer[255];
+    char szBuffer[260];
 
     printf("Xbe::Export: Writing Xbe file...");
 

@@ -63,16 +63,22 @@ class EmuShared : public Mutex
         CXBXKRNL_API static void Cleanup();
 
         // ******************************************************************
-        // * Xbox Video Accessor
+        // * Xbox Video Accessors
         // ******************************************************************
-        CXBXKRNL_API void GetXBVideo(XBVideo *video) { Lock(); memcpy(video, &m_XBVideo, sizeof(XBVideo)); Unlock(); }
-        CXBXKRNL_API void SetXBVideo(XBVideo *video) { Lock(); memcpy(&m_XBVideo, video, sizeof(XBVideo)); Unlock(); }
+        CXBXKRNL_API void GetXBVideo(      XBVideo *video) { Lock(); memcpy(video, &m_XBVideo, sizeof(XBVideo)); Unlock(); }
+        CXBXKRNL_API void SetXBVideo(const XBVideo *video) { Lock(); memcpy(&m_XBVideo, video, sizeof(XBVideo)); Unlock(); }
 
         // ******************************************************************
-        // * Xbox Controller Accessor
+        // * Xbox Controller Accessors
         // ******************************************************************
-        CXBXKRNL_API void GetXBController(XBController *ctrl) { Lock(); memcpy(ctrl, &m_XBController, sizeof(XBController)); Unlock();}
-        CXBXKRNL_API void SetXBController(XBController *ctrl) { Lock(); memcpy(&m_XBController, ctrl, sizeof(XBController)); Unlock();}
+        CXBXKRNL_API void GetXBController(      XBController *ctrl) { Lock(); memcpy(ctrl, &m_XBController, sizeof(XBController)); Unlock();}
+        CXBXKRNL_API void SetXBController(const XBController *ctrl) { Lock(); memcpy(&m_XBController, ctrl, sizeof(XBController)); Unlock();}
+
+        // ******************************************************************
+        // * Xbe Path Accessors
+        // ******************************************************************
+        CXBXKRNL_API void GetXbePath(      char *path) { Lock(); strcpy(path, m_XbePath); Unlock(); }
+        CXBXKRNL_API void SetXbePath(const char *path) { Lock(); strcpy(m_XbePath, path); Unlock(); }
 
     private:
         // ******************************************************************
@@ -80,6 +86,7 @@ class EmuShared : public Mutex
         // ******************************************************************
         XBController m_XBController;
         XBVideo      m_XBVideo;
+        char         m_XbePath[260];
 };
 
 // ******************************************************************

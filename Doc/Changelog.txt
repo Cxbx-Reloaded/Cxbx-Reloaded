@@ -1,9 +1,17 @@
 cxbx website: http://www.caustik.com/xbox/
 
-version: 0.7.9 (??/??/??)
+version: 0.7.8c (09/02/03)
 --------------------------------
 
 - Spontaneous CreateDevice failures fixed (many, at least)
+
+- Exe now able to generate into temporary directory, allowing
+  games to be run from a read only device without path issues.
+
+- Finally, Cxbx.dll and Cxbx.exe enforce version synchronization.
+  This should at least diagnose about 9 billion people's problems.
+
+- Very minor splash image tweaks
 
 version: 0.7.8b (08/30/03)
 --------------------------------

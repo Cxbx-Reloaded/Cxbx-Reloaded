@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Developer Studio generated include file.
-// Used by C:\Aaron\Projects\Cxbx\Resource\Cxbx.rc
+// Used by D:\Projects\Cxbx\Resource\Cxbx.rc
 //
 #define IDI_CXBX                        101
 #define IDB_SPLASH                      102
@@ -91,13 +91,16 @@
 #define ID_EDIT_DUMPXBEINFOTO_FILE      40071
 #define ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE 40072
 #define ID_SETTINGS_DIR                 40076
+#define ID_SETTINGS_GENXP               40078
+#define ID_SETTINGS_GENWT               40079
+#define ID_SETTINGS_GENMA               40080
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        115
-#define _APS_NEXT_COMMAND_VALUE         40077
+#define _APS_NEXT_COMMAND_VALUE         40081
 #define _APS_NEXT_CONTROL_VALUE         1049
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

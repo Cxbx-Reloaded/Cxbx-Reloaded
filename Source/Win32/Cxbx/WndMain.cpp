@@ -44,7 +44,7 @@
 // ******************************************************************
 // * constructor
 // ******************************************************************
-WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m_Xbe(0), m_Exe(0), m_bExeChanged(false), m_bXbeChanged(false), m_bAutoConvertToExe(TRUE), m_KrnlDebug(DM_NONE), m_CxbxDebug(DM_NONE), m_dwRecentXbe(0), m_dwRecentExe(0)
+WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m_Xbe(0), m_Exe(0), m_bExeChanged(false), m_bXbeChanged(false), m_AutoConvertToExe(AUTO_CONVERT_WINDOWS_TEMP), m_KrnlDebug(DM_NONE), m_CxbxDebug(DM_NONE), m_dwRecentXbe(0), m_dwRecentExe(0)
 {
     // ******************************************************************
     // * Initialize members
@@ -105,7 +105,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m
             RegQueryValueEx(hKey, "RecentExe", NULL, &dwType, (PBYTE)&m_dwRecentExe, &dwSize);
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegQueryValueEx(hKey, "AutoConvertToExe", NULL, &dwType, (PBYTE)&m_bAutoConvertToExe, &dwSize);
+            RegQueryValueEx(hKey, "AutoConvertToExe", NULL, &dwType, (PBYTE)&m_AutoConvertToExe, &dwSize);
 
             dwType = REG_SZ; dwSize = 260;
             RegQueryValueEx(hKey, "CxbxDebugFilename", NULL, &dwType, (PBYTE)m_CxbxDebugFilename, &dwSize);
@@ -173,7 +173,7 @@ WndMain::~WndMain()
             RegSetValueEx(hKey, "RecentExe", 0, dwType, (PBYTE)&m_dwRecentExe, dwSize);
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "AutoConvertToExe", 0, dwType, (PBYTE)&m_bAutoConvertToExe, dwSize);
+            RegSetValueEx(hKey, "AutoConvertToExe", 0, dwType, (PBYTE)&m_AutoConvertToExe, dwSize);
 
             dwType = REG_SZ; dwSize = 260;
             RegSetValueEx(hKey, "CxbxDebugFilename", 0, dwType, (PBYTE)m_CxbxDebugFilename, dwSize);
@@ -359,7 +359,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 case VK_F5:
                 {
                     if(m_Xbe != 0)
-                        StartEmulation(m_bAutoConvertToExe == TRUE);
+                        StartEmulation(m_AutoConvertToExe);
                 }
                 break;
             }
@@ -1018,12 +1018,28 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 break;
 
                 case ID_EMULATION_START:
-                    StartEmulation(m_bAutoConvertToExe == TRUE);
+                    StartEmulation(m_AutoConvertToExe);
                     break;
 
-                case ID_SETTINGS_AUTOGEN:
+                case ID_SETTINGS_GENWT:
                 {
-                    m_bAutoConvertToExe = !m_bAutoConvertToExe;
+                    m_AutoConvertToExe = AUTO_CONVERT_WINDOWS_TEMP;
+
+                    RefreshMenus();
+                }
+                break;
+
+                case ID_SETTINGS_GENXP:
+                {
+                    m_AutoConvertToExe = AUTO_CONVERT_XBE_PATH;
+
+                    RefreshMenus();
+                }
+                break;
+
+                case ID_SETTINGS_GENMA:
+                {
+                    m_AutoConvertToExe = AUTO_CONVERT_MANUAL;
 
                     RefreshMenus();
                 }
@@ -1314,9 +1330,27 @@ void WndMain::RefreshMenus()
 	    // ******************************************************************
         {
             HMENU sett_menu = GetSubMenu(menu, 3);
+            HMENU auto_menu = GetSubMenu(sett_menu, 4);
 
-	        // check "Generate Exe Automatically" if appropriate
-            CheckMenuItem(sett_menu, ID_SETTINGS_AUTOGEN, MF_BYCOMMAND | ((m_bAutoConvertToExe == TRUE) ? MF_CHECKED : MF_UNCHECKED) );
+	        // check appropriate choice
+            if(m_AutoConvertToExe == AUTO_CONVERT_WINDOWS_TEMP)
+            {
+                CheckMenuItem(auto_menu, ID_SETTINGS_GENWT, MF_BYCOMMAND | MF_CHECKED);
+                CheckMenuItem(auto_menu, ID_SETTINGS_GENXP, MF_BYCOMMAND | MF_UNCHECKED);
+                CheckMenuItem(auto_menu, ID_SETTINGS_GENMA, MF_BYCOMMAND | MF_UNCHECKED);
+            }
+            else if(m_AutoConvertToExe == AUTO_CONVERT_XBE_PATH)
+            {
+                CheckMenuItem(auto_menu, ID_SETTINGS_GENWT, MF_BYCOMMAND | MF_UNCHECKED);
+                CheckMenuItem(auto_menu, ID_SETTINGS_GENXP, MF_BYCOMMAND | MF_CHECKED);
+                CheckMenuItem(auto_menu, ID_SETTINGS_GENMA, MF_BYCOMMAND | MF_UNCHECKED);
+            }
+            else
+            {
+                CheckMenuItem(auto_menu, ID_SETTINGS_GENWT, MF_BYCOMMAND | MF_UNCHECKED);
+                CheckMenuItem(auto_menu, ID_SETTINGS_GENXP, MF_BYCOMMAND | MF_UNCHECKED);
+                CheckMenuItem(auto_menu, ID_SETTINGS_GENMA, MF_BYCOMMAND | MF_CHECKED);
+            }
         }
 
         // ******************************************************************
@@ -1757,7 +1791,7 @@ bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists)
 		}
 	}
 
-	// ******************************************************************
+    // ******************************************************************
 	// * convert file
 	// ******************************************************************
 	{
@@ -1786,7 +1820,7 @@ bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists)
 // ******************************************************************
 // * StartEmulation
 // ******************************************************************
-void WndMain::StartEmulation(bool x_bAutoConvert)
+void WndMain::StartEmulation(EnumAutoConvert x_AutoConvert)
 {
     char szBuffer[260];
 
@@ -1795,7 +1829,29 @@ void WndMain::StartEmulation(bool x_bAutoConvert)
 	// ******************************************************************
     if(m_ExeFilename[0] == '\0' || m_bExeChanged)
     {
-        if(x_bAutoConvert)
+        if(x_AutoConvert == AUTO_CONVERT_WINDOWS_TEMP)
+        {
+            char szTempPath[260];
+
+            GetTempPath(259, szTempPath);
+
+            SuggestFilename(m_XbeFilename, szBuffer, ".exe");
+
+            int v=0, c=0;
+
+            while(szBuffer[v] != '\0')
+            {
+                if(szBuffer[v] == '\\')
+                    c = v+1;
+                v++;
+            }
+
+            strcat(szTempPath, &szBuffer[c]);
+
+            if(!ConvertToExe(szTempPath, false))
+                return;
+        }
+        else if(x_AutoConvert == AUTO_CONVERT_XBE_PATH)
         {
             SuggestFilename(m_XbeFilename, szBuffer, ".exe");
 
@@ -1808,6 +1864,11 @@ void WndMain::StartEmulation(bool x_bAutoConvert)
                 return;
         }
     }
+
+    // ******************************************************************
+    // * register xbe path with Cxbx.dll
+    // ******************************************************************
+    g_EmuShared->SetXbePath(m_Xbe->m_szPath);
 
     // ******************************************************************
 	// * shell exe
@@ -1838,5 +1899,4 @@ void WndMain::StartEmulation(bool x_bAutoConvert)
             printf("WndMain: %s emulation started.\n", m_Xbe->m_szAsciiTitle);
         }
     }
-
 }

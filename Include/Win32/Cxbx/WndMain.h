@@ -45,6 +45,16 @@
 #define RECENT_EXE_SIZE 10
 
 // ******************************************************************
+// * AutoConvert methods
+// ******************************************************************
+enum EnumAutoConvert
+{
+    AUTO_CONVERT_MANUAL       = 0,
+    AUTO_CONVERT_XBE_PATH     = 1,
+    AUTO_CONVERT_WINDOWS_TEMP = 2
+};
+
+// ******************************************************************
 // * class : WndMain
 // ******************************************************************
 class WndMain : public Wnd
@@ -75,7 +85,7 @@ class WndMain : public Wnd
         // ******************************************************************
         // * start emulation (converting to .exe if not done already)
         // ******************************************************************
-        void StartEmulation(bool x_bAutoConvert);
+        void StartEmulation(EnumAutoConvert x_bAutoConvert);
 
         // ******************************************************************
         // * accessor
@@ -144,7 +154,7 @@ class WndMain : public Wnd
         // ******************************************************************
         // * should emulation always auto-create the .exe?
         // ******************************************************************
-        BOOL        m_bAutoConvertToExe;
+        EnumAutoConvert m_AutoConvertToExe;
 
         // ******************************************************************
         // * Recent Xbe files

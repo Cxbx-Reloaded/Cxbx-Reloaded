@@ -1,8 +1,5 @@
 Cxbx Todo (* denotes high priority, + denotes medium priority)
 
-  * CreateDevice/Release must be called in the context of the same thread,
-    so there needs to be a proxy CreateDevice and Release thread.
-
   * Go lower level with mutants (maybe unnecessary), use \??\ and also
     set root directory to null.
 

@@ -351,9 +351,9 @@ void Exe::Export(const char *x_szExeFilename)
 
             if(fwrite(m_bzSection[v], RawSize, 1, ExeFile) != 1)
             {
-                char Buffer[255];
-                sprintf(Buffer, "Could not write PE section %d (%Xh)", v, v);
-                SetError(Buffer, false);
+                char buffer[255];
+                sprintf(buffer, "Could not write PE section %d (%Xh)", v, v);
+                SetError(buffer, false);
                 goto cleanup;
             }
 
