@@ -46,7 +46,7 @@ extern void ShowControllerConfig(HWND hwnd);
 // ******************************************************************
 #define JOYSTICK_DETECT_SENSITIVITY 25000
 #define BUTTON_DETECT_SENSITIVITY   0
-#define MOUSE_DETECT_SENSITIVITY    20
+#define MOUSE_DETECT_SENSITIVITY    10
 #define POV_DETECT_SENSITIVITY      50000
 
 #endif

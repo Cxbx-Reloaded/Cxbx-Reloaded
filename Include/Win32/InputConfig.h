@@ -44,10 +44,14 @@ enum InputDeviceComponent
     // ******************************************************************
     // * Analog Axis
     // ******************************************************************
-    INPUT_DEVICE_COMPONENT_LTHUMBX = 0,
-    INPUT_DEVICE_COMPONENT_LTHUMBY,
-    INPUT_DEVICE_COMPONENT_RTHUMBX,
-    INPUT_DEVICE_COMPONENT_RTHUMBY,
+    INPUT_DEVICE_COMPONENT_LTHUMBPOSX = 0,
+    INPUT_DEVICE_COMPONENT_LTHUMBNEGX,
+    INPUT_DEVICE_COMPONENT_LTHUMBPOSY,
+    INPUT_DEVICE_COMPONENT_LTHUMBNEGY,
+    INPUT_DEVICE_COMPONENT_RTHUMBPOSX,
+    INPUT_DEVICE_COMPONENT_RTHUMBNEGX,
+    INPUT_DEVICE_COMPONENT_RTHUMBPOSY,
+    INPUT_DEVICE_COMPONENT_RTHUMBNEGY,
     // ******************************************************************
     // * Analog Buttons
     // ******************************************************************

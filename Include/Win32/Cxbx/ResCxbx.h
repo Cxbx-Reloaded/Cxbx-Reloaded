@@ -24,15 +24,17 @@
 #define IDC_SET_DPAD_RIGHT              1013
 #define IDC_SET_DPAD_UP                 1014
 #define IDC_SET_DPAD_DOWN               1015
-#define IDC_SET_LEFT_X                  1016
-#define IDC_SET_LEFT_Y                  1017
-#define IDC_SET_RIGHT_X                 1018
-#define IDC_SET_RIGHT_Y                 1019
-#define IDC_LOAD_CONFIG                 1020
-#define IDC_SAVE_CONFIG                 1021
+#define IDC_SET_LEFT_POSY               1016
+#define IDC_SET_LEFT_NEGX               1017
+#define IDC_SET_LEFT_NEGY               1018
+#define IDC_SET_LEFT_POSX               1019
 #define IDC_INPUT_CONFIG_CANCEL         1022
 #define IDC_INPUT_CONFIG_ACCEPT         1023
 #define IDC_CONFIG_STATUS               1025
+#define IDC_SET_RIGHT_POSY              1026
+#define IDC_SET_RIGHT_NEGY              1027
+#define IDC_SET_RIGHT_NEGX              1028
+#define IDC_SET_RIGHT_POSX              1029
 #define ID_FILE_EXIT                    40005
 #define ID_HELP_ABOUT                   40008
 #define ID_EMULATION_START              40009
@@ -84,7 +86,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        112
 #define _APS_NEXT_COMMAND_VALUE         40073
-#define _APS_NEXT_CONTROL_VALUE         1026
+#define _APS_NEXT_CONTROL_VALUE         1030
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

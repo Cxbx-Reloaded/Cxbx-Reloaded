@@ -104,17 +104,29 @@ INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam,
                     g_EmuShared->SetInputConfiguration(&g_InputConfig);
                     EndDialog(hWndDlg, wParam);
                     break;
-                case IDC_SET_LEFT_X:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_LTHUMBX);
+                case IDC_SET_LEFT_POSY:
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_LTHUMBPOSY);
                     break;
-                case IDC_SET_LEFT_Y:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_LTHUMBY);
+                case IDC_SET_LEFT_NEGY:
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_LTHUMBNEGY);
                     break;
-                case IDC_SET_RIGHT_X:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_RTHUMBX);
+                case IDC_SET_LEFT_POSX:
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_LTHUMBPOSX);
                     break;
-                case IDC_SET_RIGHT_Y:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_RTHUMBY);
+                case IDC_SET_LEFT_NEGX:
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_LTHUMBNEGX);
+                    break;
+                case IDC_SET_RIGHT_POSY:
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_RTHUMBPOSY);
+                    break;
+                case IDC_SET_RIGHT_NEGY:
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_RTHUMBNEGY);
+                    break;
+                case IDC_SET_RIGHT_POSX:
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_RTHUMBPOSX);
+                    break;
+                case IDC_SET_RIGHT_NEGX:
+                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_RTHUMBNEGX);
                     break;
                 case IDC_SET_X:
                     ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_X);
