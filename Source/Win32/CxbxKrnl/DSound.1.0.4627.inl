@@ -610,6 +610,26 @@ OOVPATable DSound_1_0_4627[] =
         "CDirectSound::CreateSoundBuffer (XREF)" 
         #endif
     },
+    // IDirectSoundBuffer8::SetPlayRegion (* unchanged since 4361 *)
+    {
+        (OOVPA*)&IDirectSoundBuffer8_SetPlayRegion_1_0_4361,
+
+        XTL::EmuIDirectSoundBuffer8_SetPlayRegion,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSoundBuffer8_SetPlayRegion" 
+        #endif
+    },
+    // IDirectSoundBuffer8::SetLoopRegion (* unchanged since 4361 *)
+    {
+        (OOVPA*)&IDirectSoundBuffer8_SetLoopRegion_1_0_4361,
+
+        XTL::EmuIDirectSoundBuffer8_SetLoopRegion,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSoundBuffer8_SetLoopRegion" 
+        #endif
+    },
     // CDirectSound_SetI3DL2Listener
     {
         (OOVPA*)&CDirectSound_SetI3DL2Listener_1_0_4627, 0,

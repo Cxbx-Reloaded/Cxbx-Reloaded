@@ -199,6 +199,7 @@ inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
         case 0x3F: // Linear     (X_D3DFMT_LIN_A8B8G8R8)
             return D3DFMT_A8R8G8B8; // Note: Warning: R<->B Swapped!
 
+        case 0x1E: // Linear     (X_D3DFMT_LIN_X8R8G8B8)
         case 0x07: // Swizzled   (X_D3DFMT_X8R8G8B8)
             return D3DFMT_X8R8G8B8;
 

@@ -486,7 +486,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
             //                EmuCleanup("Unknown MultiSampleType (0x%.08X)", pPresentationParameters->MultiSampleType);
                     }
 
-                    g_EmuCDPD.pPresentationParameters->Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+                    g_EmuCDPD.pPresentationParameters->Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
         
                     // retrieve resolution from configuration
                     if(g_EmuCDPD.pPresentationParameters->Windowed)
@@ -706,6 +706,10 @@ static DWORD EmuCheckAllocationSize(PVOID pBase)
     if(MemoryBasicInfo.State != MEM_COMMIT)
         return 0;
 
+    // this is a hack in order to determine when pointers come from a large write-combined database
+    if(MemoryBasicInfo.RegionSize > 5*1024*1024)
+        return -1;
+
     return MemoryBasicInfo.RegionSize - ((DWORD)pBase - (DWORD)MemoryBasicInfo.BaseAddress);
 }
 
@@ -883,9 +887,20 @@ UINT WINAPI XTL::EmuIDirect3D8_GetAdapterModeCount
     }
     #endif
 
-    // NOTE: WARNING: We should return only modes that should exist on a real
-    // Xbox. This could even be configurable, if desirable.
     UINT ret = g_pD3D8->GetAdapterModeCount(g_XBVideo.GetDisplayAdapter());
+
+    D3DDISPLAYMODE Mode;
+
+    for(uint32 v=0;v<ret;v++)
+    {
+        HRESULT hRet = g_pD3D8->EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), v, &Mode);
+
+        if(hRet != D3D_OK)
+            break;
+
+        if(Mode.Width != 640 || Mode.Height != 480)
+            ret--;
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -965,9 +980,23 @@ HRESULT WINAPI XTL::EmuIDirect3D8_EnumAdapterModes
     }
     #endif
 
-    // NOTE: WARNING: We should probably only return valid xbox display modes,
-    // this should be coordinated with GetAdapterModeCount, etc.
-    HRESULT hRet = g_pD3D8->EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), Mode, (D3DDISPLAYMODE*)pMode);
+    HRESULT hRet;
+
+    static int ModeAdder = 0;
+
+    if(Mode == 0)
+        ModeAdder = 0;
+
+    do
+    {
+        hRet = g_pD3D8->EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), Mode+ModeAdder, (D3DDISPLAYMODE*)pMode);
+
+        if(hRet != D3D_OK || (pMode->Width == 640 && pMode->Height == 480))
+            break;
+
+        ModeAdder++;
+    }
+    while(true);
 
     // make adjustments to parameters to make sense with windows direct3d
     {
@@ -2602,6 +2631,9 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
             {
                 DWORD dwSize = EmuCheckAllocationSize(pBase);
 
+                if(dwSize == -1)
+                    EmuCleanup("Detected dangerous allocation techniques. This will be fixed soon!");
+
                 hRet = g_pD3DDevice8->CreateVertexBuffer
                 (
                     dwSize, 0, 0, D3DPOOL_MANAGED,
@@ -2639,6 +2671,9 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
             // create index buffer
             {
                 DWORD dwSize = EmuCheckAllocationSize(pBase);
+
+                if(dwSize == -1)
+                    EmuCleanup("Detected dangerous allocation techniques. This will be fixed soon!");
 
                 HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer
                 (
