@@ -3327,11 +3327,13 @@ BOOL WINAPI XTL::EmuIDirect3DResource8_IsBusy
     // debug trace
     #ifdef _DEBUG_TRACE
     {
+        /* too much output
         printf("EmuD3D8 (0x%X): EmuIDirect3DResource8_IsBusy\n"
                "(\n"
                "   pThis               : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis);
+       //*/
     }
     #endif
 
@@ -5000,10 +5002,10 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetStreamSource
         printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetStreamSource\n"
                "(\n"
                "   StreamNumber        : 0x%.08X\n"
-               "   pStreamData         : 0x%.08X\n"
+               "   pStreamData         : 0x%.08X (0x%.08X)\n"
                "   Stride              : 0x%.08X\n"
                ");\n",
-               GetCurrentThreadId(), StreamNumber, pStreamData, Stride);
+               GetCurrentThreadId(), StreamNumber, pStreamData, (pStreamData != 0) ? pStreamData->EmuVertexBuffer8 : 0, Stride);
     }
     #endif
 
@@ -5459,9 +5461,12 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
 
     uint32 nStride = EmuFixupVerticesA(PrimitiveType, PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, 0, 0, 0, 0);
 
+    if(pIndexData != 0)
+        EmuCleanup("Unsupported?");
+
     g_pD3DDevice8->DrawIndexedPrimitive
     (
-        PCPrimitiveType, 0, VertexCount, ((DWORD)pIndexData)/2, PrimitiveCount
+        PCPrimitiveType, 0, VertexCount, /*((DWORD)pIndexData)/2*/0, PrimitiveCount
     );
 
     if(nStride != -1)

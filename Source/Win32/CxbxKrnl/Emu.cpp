@@ -72,6 +72,7 @@ extern HANDLE       g_hTDrive    = NULL;
 extern HANDLE       g_hUDrive    = NULL;
 extern HANDLE       g_hZDrive    = NULL;
 extern BOOL			g_bEmuSuspended = FALSE;
+extern BOOL         g_bEmuException = FALSE;
 
 // global exception patching address
 extern uint32       g_HaloHack[4] = {0};
@@ -510,7 +511,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         // _USE_XGMATH Disabled in mesh :[
         // halo : dword_0_2E2D18
         // halo : 1744F0 (bink)
-        //_asm int 3
+        _asm int 3
 
         Entry();
 
@@ -563,7 +564,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuWarning(const char *szWarningMessage, ...)
 // cleanup emulation
 extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage, ...)
 {
-    EmuSuspend();
+    g_bEmuException = TRUE;
 
     // print out error message (if exists)
     if(szErrorMessage != NULL)
@@ -588,8 +589,6 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage, ...)
 
         MessageBox(NULL, szBuffer1, "CxbxKrnl", MB_OK | MB_ICONSTOP);
     }
-
-    EmuResume();
 
     printf("CxbxKrnl: Terminating Process\n");
     fflush(stdout);
@@ -642,7 +641,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuRegisterThread(HANDLE hThread)
 // suspend all threads that have been created with PsCreateSystemThreadEx
 extern "C" CXBXKRNL_API void NTAPI EmuSuspend()
 {
-    if(g_bEmuSuspended)
+    if(g_bEmuSuspended || g_bEmuException)
         return;
 
     g_bEmuSuspended = TRUE;
@@ -697,6 +696,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuResume()
 // exception handler
 extern int EmuException(LPEXCEPTION_POINTERS e)
 {
+    g_bEmuException = TRUE;
+
     if(EmuIsXboxFS())
         EmuSwapFS();
 
@@ -745,6 +746,8 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
                     printf("EmuMain (0x%X): Halo Access Adjust 1 was applied!\n", GetCurrentThreadId());
                     #endif
 
+                    g_bEmuException = FALSE;
+
                     return EXCEPTION_CONTINUE_EXECUTION;
                 }
             }
@@ -777,6 +780,8 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
                     #ifdef _DEBUG_TRACE
                     printf("EmuMain (0x%X): Halo Access Adjust 2 was applied!\n", GetCurrentThreadId());
                     #endif
+
+                    g_bEmuException = FALSE;
 
                     return EXCEPTION_CONTINUE_EXECUTION;
                 }
@@ -830,6 +835,9 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
             else if(ret == IDIGNORE)
             {
                 printf("EmuMain (0x%X): Ignored Breakpoint Exception\n", GetCurrentThreadId());
+
+                g_bEmuException = FALSE;
+
                 return EXCEPTION_CONTINUE_EXECUTION;
             }
         }
@@ -850,6 +858,8 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
             }
         }
 	}
+
+    g_bEmuException = FALSE;
 
     return EXCEPTION_CONTINUE_SEARCH;
 }

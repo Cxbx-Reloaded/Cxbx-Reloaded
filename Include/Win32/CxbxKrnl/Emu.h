@@ -79,7 +79,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuSuspend();
 // resume emulation
 extern "C" CXBXKRNL_API void NTAPI EmuResume();
 
-// global flag specifying current emulation state
+// global flags specifying current emulation state
+extern BOOL g_bEmuException;
 extern BOOL g_bEmuSuspended;
 
 // global exception patching address
