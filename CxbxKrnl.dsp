@@ -169,6 +169,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.4361.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.4432.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.4627.h
 # End Source File
 # Begin Source File
@@ -382,6 +386,19 @@ SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.3936.inl
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.4361.inl
 # PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.4432.inl
+
+!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
+
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 

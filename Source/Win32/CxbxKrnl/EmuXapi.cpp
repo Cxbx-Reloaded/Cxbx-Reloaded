@@ -396,12 +396,12 @@ DWORD WINAPI XTL::EmuXGetDevices
     }
     #endif
 
-    DWORD ret = NULL;
+    DWORD ret = 0;
 
     if(DeviceType->Reserved[0] == 0 && DeviceType->Reserved[1] == 0 && DeviceType->Reserved[2] == 0 && DeviceType->Reserved[3] == 0)
         ret = (1 << 0);    // Return 1 Controller
     else
-        EmuCleanup("Unknown DeviceType");
+        EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X, 0x%.08X)\n", DeviceType->Reserved[0], DeviceType->Reserved[1], DeviceType->Reserved[2], DeviceType->Reserved[3]);
 
     EmuSwapFS();   // XBox FS
 

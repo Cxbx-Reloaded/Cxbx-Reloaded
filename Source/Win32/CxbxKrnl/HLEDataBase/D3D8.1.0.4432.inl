@@ -970,6 +970,16 @@ OOVPATable D3D8_1_0_4432[] =
         "EmuIDirect3D8_EnumAdapterModes" 
         #endif
     },
+    // IDirect3DDevice8::GetBackBuffer (* unchanged since 4361 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_GetBackBuffer_1_0_4361,
+
+        XTL::EmuIDirect3DDevice8_GetBackBuffer,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetBackBuffer"
+        #endif
+    },
     // IDirect3DDevice8::GetRenderTarget
     {
         (OOVPA*)&IDirect3DDevice8_GetRenderTarget_1_0_4432,
