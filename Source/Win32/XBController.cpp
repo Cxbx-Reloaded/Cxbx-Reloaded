@@ -564,6 +564,14 @@ void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
     DWORD dwFlags=0;
 
     // ******************************************************************
+    // * Default values necessary for axis
+    // ******************************************************************
+    Controller->Gamepad.sThumbLX = 0;
+    Controller->Gamepad.sThumbLY = 0;
+    Controller->Gamepad.sThumbRX = 0;
+    Controller->Gamepad.sThumbRY = 0;
+
+    // ******************************************************************
     // * Poll all devices
     // ******************************************************************
     for(int v=0;v<XBCTRL_OBJECT_COUNT;v++)
@@ -587,7 +595,7 @@ void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
                 hRet = pDevice->Acquire();
         }
 
-        WORD wValue = 0;
+        SHORT wValue = 0;
 
         // ******************************************************************
         // * Interpret PC Joystick Input
@@ -599,9 +607,22 @@ void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
             pDevice->GetDeviceState(sizeof(JoyState), &JoyState);
 
             if(dwFlags & DEVICE_FLAG_AXIS)
-            {             
-                DWORD *pdwAxis = (DWORD*)((uint32)&JoyState + dwInfo);
-                wValue = (WORD)*pdwAxis;
+            {
+                LONG *pdwAxis = (LONG*)((uint32)&JoyState + dwInfo);
+                wValue = (SHORT)(*pdwAxis);
+
+                if(dwFlags & DEVICE_FLAG_NEGATIVE)
+                {
+                    if(wValue < 0)
+                        wValue = abs(wValue+1);
+                    else
+                        wValue = 0;
+                }
+                else if(dwFlags & DEVICE_FLAG_POSITIVE)
+                {
+                    if(wValue < 0)
+                        wValue = 0;
+                }
             }
         }
 
@@ -610,10 +631,39 @@ void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
         // ******************************************************************
         if(v >= XBCTRL_OBJECT_LTHUMBPOSX && v <= XBCTRL_OBJECT_RTHUMBNEGY)
         {
+            switch(v)
+            {
+                case XBCTRL_OBJECT_LTHUMBPOSY:
+                    Controller->Gamepad.sThumbLY += wValue;
+                    break;
+                case XBCTRL_OBJECT_LTHUMBNEGY:
+                    Controller->Gamepad.sThumbLY -= wValue;
+                    break;
+                case XBCTRL_OBJECT_RTHUMBPOSY:
+                    Controller->Gamepad.sThumbRY += wValue;
+                    break;
+                case XBCTRL_OBJECT_RTHUMBNEGY:
+                    Controller->Gamepad.sThumbRY -= wValue;
+                    break;
+                case XBCTRL_OBJECT_LTHUMBPOSX:
+                    Controller->Gamepad.sThumbLX += wValue;
+                    break;
+                case XBCTRL_OBJECT_LTHUMBNEGX:
+                    Controller->Gamepad.sThumbLX -= wValue;
+                    break;
+                case XBCTRL_OBJECT_RTHUMBPOSX:
+                    Controller->Gamepad.sThumbRX += wValue;
+                    break;
+                case XBCTRL_OBJECT_RTHUMBNEGX:
+                    Controller->Gamepad.sThumbRX -= wValue;
+                    break;
+            }
+/*
             // Map value to controller
             WORD *pwAxis = (WORD*)((uint32)&Controller->Gamepad.sThumbLX + (v/2)*2);
 
             *pwAxis = wValue;
+            */
         }
     }
 
