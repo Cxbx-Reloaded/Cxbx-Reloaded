@@ -1051,26 +1051,14 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
         }
 
         case WM_CLOSE:
-            if(m_bXbeChanged)
-            {
-                int ret = MessageBox(m_hwnd, "Changes have been made, do you wish to save?", "Cxbx", MB_ICONQUESTION | MB_YESNOCANCEL);
-
-                switch(ret)
-                {
-                    case IDYES:
-                        SaveXbeAs();
-                        break;
-                    case IDCANCEL:
-                        break;
-                }
-            }
-            
+        {            
             if(m_Xbe != 0)
                 CloseXbe();
 
-            DestroyWindow(hwnd);
-
-            break;
+            if(m_Xbe == 0)
+                DestroyWindow(hwnd);
+        }
+        break;
 
         case WM_DESTROY:
         {

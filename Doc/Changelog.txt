@@ -3,6 +3,8 @@ cxbx website: http://www.caustik.com/xbox/
 version: 0.7.1 (05/30/03)
 --------------------------------
 
+- Fixed some Xbe change detection logic
+
 - Open Xbe and Import Exe can be done when a file
   is already open (automatically closes, checking if
   you made changes first).

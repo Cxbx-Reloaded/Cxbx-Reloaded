@@ -273,7 +273,7 @@ BEGIN
     COMBOBOX        IDC_VC_D3D_DEVICE,76,31,173,53,CBS_DROPDOWNLIST | 
                     WS_VSCROLL | WS_TABSTOP
     COMBOBOX        IDC_VC_VIDEO_RESOLUTION,76,49,173,59,CBS_DROPDOWNLIST | 
-                    WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+                    WS_VSCROLL | WS_TABSTOP
 END
 
 #endif    // English (U.S.) resources
