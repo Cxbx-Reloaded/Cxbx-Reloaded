@@ -3633,6 +3633,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
             // TODO: HACK: Temporary?
             if(X_Format == 0x2E)
             {
+                EmuCleanup("D3DFMT_LIN_D24S8 not yet supported!");
                 X_Format = 0x12;
                 Format   = D3DFMT_A8R8G8B8;
             }
@@ -3852,19 +3853,19 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                     {
                         if(bSwizzled)
                         {
-                                if((DWORD)pSrc == 0x80000000)
-                                {
-                                    // TODO: Fix or handle this situation..?
-                                }
-                                else
-                                {
-                                    XTL::EmuXGUnswizzleRect
-                                    (
-                                    pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits, 
-                                        LockedRect.Pitch, iRect, iPoint, dwBPP
-                                    );
-                                }
+                            if((DWORD)pSrc == 0x80000000)
+                            {
+                                // TODO: Fix or handle this situation..?
                             }
+                            else
+                            {
+                                XTL::EmuXGUnswizzleRect
+                                (
+                                    pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits, 
+                                    LockedRect.Pitch, iRect, iPoint, dwBPP
+                                );
+                            }
+                        }
                         else if(bCompressed)
                         {
                             // NOTE: compressed size is (dwWidth/2)*(dwHeight/2)/2, so each level divides by 4
