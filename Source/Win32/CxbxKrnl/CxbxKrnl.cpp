@@ -127,9 +127,14 @@ void EmuXGenerateFS()
     // * Generate TIB
     // ******************************************************************
     {
+        xboxkrnl::KTHREAD *KThread = new xboxkrnl::KTHREAD();
+
         memcpy(&NewPcr->NtTib, OrgNtTib, sizeof(NT_TIB));
 
         NewPcr->NtTib.Self = &NewPcr->NtTib;
+        NewPcr->PrcbData.CurrentThread = KThread;
+
+        KThread->TlsData = (void*)0xCDCDCDCD;
     }
 
     // ******************************************************************
@@ -222,13 +227,13 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, ui
     // ******************************************************************
     {
         EmuXGenerateFS();
-
-        // TODO: Initialize "new" FS structure
     }
 
     printf("CxbxKrnl [0x%.08X]: Initial thread starting.\n", GetCurrentThreadId());
 
+    EmuXSwapFS();   // XBox FS
     Entry();
+    EmuXSwapFS();   // Win2k/XP FS
 
     printf("CxbxKrnl [0x%.08X]: Initial thread ended.\n", GetCurrentThreadId());
 
@@ -244,7 +249,11 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, ui
 // ******************************************************************
 CXBXKRNL_API void NTAPI EmuXDummy()
 {
+    EmuXSwapFS();   // Win2k/XP FS
+
     MessageBox(NULL, "EmuXDummy()", "CxbxKrnl", MB_OK);
+
+    EmuXSwapFS();   // XBox FS
 }
 
 // ******************************************************************
@@ -252,9 +261,13 @@ CXBXKRNL_API void NTAPI EmuXDummy()
 // ******************************************************************
 CXBXKRNL_API void NTAPI EmuXPanic()
 {
+    EmuXSwapFS();   // Win2k/XP FS
+
     printf("CxbxKrnl [0x%.08X]: EmuXPanic()\n", GetCurrentThreadId());
 
     MessageBox(NULL, "Kernel Panic! Process will now terminate.", "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
+
+    EmuXSwapFS();   // XBox FS
 
     exit(1);
 }
@@ -288,6 +301,10 @@ DWORD WINAPI PsCreateSystemThreadExProxy
 
     delete iPsCreateSystemThreadExProxyParam;
 
+    EmuXGenerateFS();
+
+    EmuXSwapFS();   // XBox FS
+
     __asm
     {
         mov         esi, StartRoutine
@@ -312,6 +329,8 @@ XBSYSAPI EXPORTNUM(187) NTSTATUS NTAPI xboxkrnl::NtClose
 	IN HANDLE Handle
 )
 {
+    EmuXSwapFS();   // Win2k/XP FS
+
     // ******************************************************************
     // * debug trace
     // ******************************************************************
@@ -327,6 +346,8 @@ XBSYSAPI EXPORTNUM(187) NTSTATUS NTAPI xboxkrnl::NtClose
 
     if(CloseHandle(Handle) != TRUE)
         return STATUS_UNSUCCESSFUL;
+
+    EmuXSwapFS();   // XBox FS
 
     return STATUS_SUCCESS;
 }
@@ -348,6 +369,8 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
     IN  PKSTART_ROUTINE StartRoutine
 )
 {
+    EmuXSwapFS();   // Win2k/XP FS
+
     // ******************************************************************
     // * debug trace
     // ******************************************************************
@@ -385,6 +408,8 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
     if(ThreadId != NULL)
         *ThreadId = dwThreadId;
 
+    EmuXSwapFS();   // XBox FS
+
     return STATUS_SUCCESS;
 }
 
@@ -396,6 +421,8 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
 	RETURN_FIRMWARE Routine
 )
 {
+    EmuXSwapFS();   // Win2k/XP FS
+
     MessageBox(NULL, "HalReturnToFirmware()", "CxbxKrnl", MB_OK);
     /*
     ReturnFirmwareHalt          = 0x0,
@@ -405,6 +432,8 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
     ReturnFirmwareFatal         = 0x4,
     ReturnFirmwareAll           = 0x5
     */
+
+    EmuXSwapFS();   // XBox FS
 
     exit(1);
 }

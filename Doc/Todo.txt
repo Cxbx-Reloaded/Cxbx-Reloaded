@@ -2,10 +2,7 @@ Cxbx Todo:
 
   General Code Cleanup [caustik]
 
-  Use KeGetCurrentThread for fs:28h (May not be able to w/out kernel mode)
-  If not, fake it by constructing a fake KTHREAD possibly. In any event,
-  the current crashing method is an attempt to locate TLSData inside of a
-  KTHREAD object returned by fs:28h.
+  Find out where NewPcr->PrcbData.CurrentThread->TlsData should point.
 
   Exe->Xbe should use an "OpenXDK" logo bitmap by default. This can be done
   by having a debug version of Cxbx output the necessary raw data. Then, you
