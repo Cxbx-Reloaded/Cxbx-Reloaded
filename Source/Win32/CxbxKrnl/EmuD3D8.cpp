@@ -151,7 +151,9 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
     {
         DWORD dwThreadId;
 
-        CreateThread(NULL, NULL, EmuUpdateTickCount, NULL, NULL, &dwThreadId);
+        HANDLE hThread = CreateThread(NULL, NULL, EmuUpdateTickCount, NULL, NULL, &dwThreadId);
+
+		EmuRegisterThread(hThread);
     }
 
     // create the create device proxy thread
@@ -353,43 +355,63 @@ static DWORD WINAPI EmuRenderWindow(LPVOID)
 // rendering window message procedure
 static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    static DWORD dwRestoreSleepRate = EmuAutoSleepRate;
+    static bool bAutoPaused = false;
 
     switch(msg)
     {
         case WM_DESTROY:
+        {
             DeleteObject(g_hBgBrush);
             PostQuitMessage(0);
             return 0;
+        }
+        break;
 
         case WM_KEYDOWN:
+        {
             if(wParam == VK_ESCAPE)
                 PostMessage(hWnd, WM_CLOSE, 0, 0);
-            break;
+        }
+        break;
 
         case WM_SETFOCUS:
-            EmuAutoSleepRate = dwRestoreSleepRate;
-            break;
+        {
+            if(bAutoPaused)
+            {
+                bAutoPaused = false;
+			    EmuResume();
+            }
+        }
+        break;
 
         case WM_KILLFOCUS:
+        {
             if(g_XBVideo.GetFullscreen())
                 EmuCleanup(NULL);
 
-            dwRestoreSleepRate = EmuAutoSleepRate;
-            EmuAutoSleepRate = 0;
-            break;
+            if(!g_bEmuSuspended)
+            {
+                bAutoPaused = true;
+			    EmuSuspend();
+            }
+        }
+        break;
 
         case WM_CLOSE:
             DestroyWindow(hWnd);
             break;
 
         case WM_SETCURSOR:
+        {
             if(g_XBVideo.GetFullscreen())
             {
                 SetCursor(NULL);
                 return 0;
             }
+
             return DefWindowProc(hWnd, msg, wParam, lParam);
+        }
+        break;
 
         default:
             return DefWindowProc(hWnd, msg, wParam, lParam);
@@ -2820,7 +2842,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 {
                     // TODO: once this is known to be working, remove the warning
                     EmuWarning("Vertex buffer allocation size unknown");
-                    dwSize = 0x200;  // temporarily assign a small buffer, which will be increased later
+                    dwSize = 0x2000;  // temporarily assign a small buffer, which will be increased later
                 }
 
                 hRet = g_pD3DDevice8->CreateVertexBuffer
@@ -2865,7 +2887,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 {
                     // TODO: once this is known to be working, remove the warning
                     EmuWarning("Vertex buffer allocation size unknown");
-                    dwSize = 0x200;  // temporarily assign a small buffer, which will be increased later
+                    dwSize = 0x2000;  // temporarily assign a small buffer, which will be increased later
                 }
 
                 HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer

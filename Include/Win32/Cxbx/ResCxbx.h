@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Developer Studio generated include file.
-// Used by C:\Aaron\Projects\Cxbx\Resource\Cxbx.rc
+// Used by C:\Aaron\Projects\Cxbx\Cxbx\Resource\Cxbx.rc
 //
 #define IDI_CXBX                        101
 #define IDB_SPLASH                      102
@@ -45,8 +45,6 @@
 #define IDC_VC_CANCEL                   1041
 #define IDC_CV_VSYNC                    1042
 #define IDC_VC_VIDEO_RESOLUTION         1047
-#define IDC_YUY2GRAY                    1048
-#define IDC_QUICK_CONFIG                1049
 #define ID_FILE_EXIT                    40005
 #define ID_HELP_ABOUT                   40008
 #define ID_EMULATION_START              40009
@@ -65,7 +63,6 @@
 #define ID_EMULATION_DEBUGOUTPUTGUI_FILE 40036
 #define ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE 40037
 #define ID_EMULATION_DEBUGOUTPUTKERNEL_FILE 40038
-#define ID_SETTINGS_AUTOGEN             40045
 #define ID_SETTINGS_CONFIG_CONTROLLER   40046
 #define ID_SETTINGS_CONFIG_VIDEO        40047
 #define ID_SETTINGS_CONFIGURESOUND      40048
@@ -91,7 +88,6 @@
 #define ID_FILE_REXE_9                  40069
 #define ID_EDIT_DUMPXBEINFOTO_FILE      40071
 #define ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE 40072
-#define ID_SETTINGS_DIR                 40076
 #define ID_SETTINGS_GENXP               40078
 #define ID_SETTINGS_GENWT               40079
 #define ID_SETTINGS_GENMA               40080

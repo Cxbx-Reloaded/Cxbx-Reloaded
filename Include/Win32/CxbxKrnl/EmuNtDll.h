@@ -840,6 +840,15 @@ typedef NTSTATUS (NTAPI *FPTR_NtSetInformationFile)
 );
 
 // ******************************************************************
+// * NtSuspendThread
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtSuspendThread)
+(	
+	IN  HANDLE  ThreadHandle,
+	OUT	PULONG	PreviousSuspendCount OPTIONAL
+);
+
+// ******************************************************************
 // * NtResumeThread
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtResumeThread)
@@ -967,6 +976,7 @@ extern FPTR_NtWriteFile                    NtWriteFile;
 extern FPTR_NtYieldExecution               NtYieldExecution;
 extern FPTR_NtSetInformationFile           NtSetInformationFile;
 extern FPTR_NtSetEvent                     NtSetEvent;
+extern FPTR_NtSuspendThread                NtSuspendThread;
 extern FPTR_NtResumeThread                 NtResumeThread;
 extern FPTR_NtSetLdtEntries                NtSetLdtEntries;
 

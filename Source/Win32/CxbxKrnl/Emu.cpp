@@ -44,6 +44,12 @@ namespace xboxkrnl
 #include "EmuFS.h"
 
 // prevent name collisions
+namespace NtDll
+{
+    #include "EmuNtDll.h"
+};
+
+// prevent name collisions
 namespace XTL
 {
     #include "EmuXTL.h"
@@ -65,6 +71,7 @@ extern HANDLE		g_hCurDir    = NULL;
 extern HANDLE       g_hTDrive    = NULL;
 extern HANDLE       g_hUDrive    = NULL;
 extern HANDLE       g_hZDrive    = NULL;
+extern BOOL			g_bEmuSuspended = FALSE;
 
 // global exception patching address
 extern uint32       g_HaloHack[4] = {0};
@@ -74,6 +81,9 @@ static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper);
 static void  EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *pXbeHeader);
 static void  EmuXRefFailure();
 static int   ExitException(LPEXCEPTION_POINTERS e);
+
+// Static Variable(s)
+static HANDLE g_hThreads[MAXIMUM_XBOX_THREADS] = {0};
 
 // Dll entry point, exit point, ...
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
@@ -553,6 +563,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuWarning(const char *szWarningMessage, ...)
 // cleanup emulation
 extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage, ...)
 {
+    EmuSuspend();
+
     // print out error message (if exists)
     if(szErrorMessage != NULL)
     {
@@ -576,6 +588,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage, ...)
 
         MessageBox(NULL, szBuffer1, "CxbxKrnl", MB_OK | MB_ICONSTOP);
     }
+
+    EmuResume();
 
     printf("CxbxKrnl: Terminating Process\n");
     fflush(stdout);
@@ -606,6 +620,78 @@ extern "C" CXBXKRNL_API void NTAPI EmuPanic()
     EmuCleanup("Kernel Panic!");
 
     EmuSwapFS();   // XBox FS
+}
+
+// register a thread handle with the emulation thread management
+extern "C" CXBXKRNL_API void NTAPI EmuRegisterThread(HANDLE hThread)
+{
+	int v=0;
+	for(v=0;v<MAXIMUM_XBOX_THREADS;v++)
+	{
+		if(g_hThreads[v] == 0)
+		{
+			g_hThreads[v] = hThread;
+			break;
+		}
+	}
+
+	if(v == MAXIMUM_XBOX_THREADS)
+		EmuCleanup("There are too many active threads!");
+}
+
+// suspend all threads that have been created with PsCreateSystemThreadEx
+extern "C" CXBXKRNL_API void NTAPI EmuSuspend()
+{
+    if(g_bEmuSuspended)
+        return;
+
+    g_bEmuSuspended = TRUE;
+
+	for(int v=0;v<MAXIMUM_XBOX_THREADS;v++)
+	{
+		if(g_hThreads[v] != NULL)
+		{
+            SuspendThread(g_hThreads[v]);
+		}
+	}
+
+    // append 'paused' to rendering window caption text
+    {
+        char szBuffer[256];
+
+        GetWindowText(g_hEmuWindow, szBuffer, 255 - 10);
+
+        strcat(szBuffer, " (paused)");
+        SetWindowText(g_hEmuWindow, szBuffer);
+    }
+}
+
+// resume all threads that have been created with PsCreateSystemThreadEx
+extern "C" CXBXKRNL_API void NTAPI EmuResume()
+{
+    if(!g_bEmuSuspended)
+        return;
+
+    // remove 'paused' from rendering window caption text
+    {
+        char szBuffer[256];
+
+        GetWindowText(g_hEmuWindow, szBuffer, 255);
+
+        szBuffer[strlen(szBuffer)-9] = '\0';
+
+        SetWindowText(g_hEmuWindow, szBuffer);
+    }
+
+    for(int v=0;v<MAXIMUM_XBOX_THREADS;v++)
+	{
+		if(g_hThreads[v] != NULL)
+		{
+			ResumeThread(g_hThreads[v]);
+		}
+	}
+
+	g_bEmuSuspended = FALSE;
 }
 
 // exception handler

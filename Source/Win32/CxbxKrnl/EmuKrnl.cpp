@@ -2153,6 +2153,15 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
         printf("EmuKrnl (0x%X): ThreadHandle : 0x%X\n", GetCurrentThreadId(), *ThreadHandle);
         #endif
 
+        // we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
+        {
+            HANDLE hDupHandle = NULL;
+
+            DuplicateHandle(GetCurrentProcess(), *ThreadHandle, GetCurrentProcess(), &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
+
+            EmuRegisterThread(hDupHandle);
+        }
+
         if(ThreadId != NULL)
             *ThreadId = dwThreadId;
     }

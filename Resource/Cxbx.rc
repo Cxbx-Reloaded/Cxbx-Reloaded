@@ -253,9 +253,8 @@ BEGIN
     PUSHBUTTON      "Save Configuration...",IDC_BUTTON2,113,102,104,14,
                     BS_FLAT | WS_DISABLED
     CTEXT           "Please choose one of the controller components from above...",
-                    IDC_CONFIG_STATUS,70,121,265,12,SS_CENTERIMAGE,
+                    IDC_CONFIG_STATUS,2,121,336,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
-    PUSHBUTTON      "[ quick config ]",IDC_QUICK_CONFIG,6,121,60,12,BS_FLAT
 END
 
 IDD_VIDEO_CFG DIALOGEX 0, 0, 258, 110

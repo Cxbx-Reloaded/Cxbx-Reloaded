@@ -6,8 +6,7 @@ version: 0.7.9 (??/??/??)
 - DirectSound support! Turok and Stella (Atari 2600 emulator)
   are both able to play sound+music, works great!
 
-- Added "quick config" button to input configuration dialog
-  this saves a ton of time and is long overdue :)
+- Added auto-pause functionality when window loses focus
 
 - Fixed start/back mapping problem :)
 

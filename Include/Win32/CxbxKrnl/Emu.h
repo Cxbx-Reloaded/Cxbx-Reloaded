@@ -70,6 +70,18 @@ extern int EmuException(LPEXCEPTION_POINTERS e);
 // check the allocation size of a given virtual address
 extern int EmuCheckAllocationSize(LPVOID pBase, bool largeBound);
 
+// register a thread handle with the emulation thread management
+extern "C" CXBXKRNL_API void NTAPI EmuRegisterThread(HANDLE hThread);
+
+// suspend emulation
+extern "C" CXBXKRNL_API void NTAPI EmuSuspend();
+
+// resume emulation
+extern "C" CXBXKRNL_API void NTAPI EmuResume();
+
+// global flag specifying current emulation state
+extern BOOL g_bEmuSuspended;
+
 // global exception patching address
 extern uint32 g_HaloHack[4];
 

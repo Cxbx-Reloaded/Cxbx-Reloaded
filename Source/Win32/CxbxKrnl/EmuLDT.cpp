@@ -51,11 +51,6 @@ namespace NtDll
 };
 
 // ******************************************************************
-// * Maximum number of threads this LDT system will handle
-// ******************************************************************
-#define MAXIMUM_XBOX_THREADS 256
-
-// ******************************************************************
 // * Table of free LDT entries
 // ******************************************************************
 static uint16 FreeLDTEntries[MAXIMUM_XBOX_THREADS];

@@ -187,6 +187,7 @@ INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam,
                 case IDC_SET_RTHUMB:
                     ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_RTHUMB);
                     break;
+				/* Not very good..
                 case IDC_QUICK_CONFIG:
                     struct tmpstruct
                     {
@@ -228,6 +229,7 @@ INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam,
                     }
 
                     break;
+					//*/
             } 
         }
         break;

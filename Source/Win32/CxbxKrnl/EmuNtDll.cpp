@@ -84,5 +84,6 @@ NtDll::FPTR_NtWriteFile                    NtDll::NtWriteFile                  =
 NtDll::FPTR_NtYieldExecution               NtDll::NtYieldExecution             = (NtDll::FPTR_NtYieldExecution)GetProcAddress(hNtDll, "NtYieldExecution");
 NtDll::FPTR_NtSetInformationFile           NtDll::NtSetInformationFile         = (NtDll::FPTR_NtSetInformationFile)GetProcAddress(hNtDll, "NtSetInformationFile");
 NtDll::FPTR_NtSetEvent                     NtDll::NtSetEvent                   = (NtDll::FPTR_NtSetEvent)GetProcAddress(hNtDll, "NtSetEvent");
+NtDll::FPTR_NtSuspendThread                NtDll::NtSuspendThread              = (NtDll::FPTR_NtSuspendThread)GetProcAddress(hNtDll, "NtSuspendThread");
 NtDll::FPTR_NtResumeThread                 NtDll::NtResumeThread               = (NtDll::FPTR_NtResumeThread)GetProcAddress(hNtDll, "NtResumeThread");
 NtDll::FPTR_NtSetLdtEntries                NtDll::NtSetLdtEntries              = (NtDll::FPTR_NtSetLdtEntries)GetProcAddress(hNtDll, "NtSetLdtEntries");
