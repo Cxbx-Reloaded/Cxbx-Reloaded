@@ -207,6 +207,13 @@ struct X_D3DPushBuffer : public X_D3DResource
     ULONG AllocationSize;
 };
 
+struct X_D3DFixup : public X_D3DResource
+{
+    ULONG Run;
+    ULONG Next;
+    ULONG Size;
+};
+
 struct X_D3DPalette : public X_D3DResource
 {
 };

@@ -38,7 +38,7 @@
 extern void EmuExecutePushBuffer
 (
     X_D3DPushBuffer       *pPushBuffer,
-    PVOID                  pFixup
+    X_D3DFixup            *pFixup
 );
 
 // push buffer debugging

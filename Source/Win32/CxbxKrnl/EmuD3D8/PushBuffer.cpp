@@ -48,7 +48,7 @@ bool g_bPBSkipPusher = false;
 void XTL::EmuExecutePushBuffer
 (
     X_D3DPushBuffer       *pPushBuffer,
-    PVOID                  pFixup
+    X_D3DFixup            *pFixup
 )
 {
     if(g_bSkipPush)
@@ -246,9 +246,10 @@ void XTL::EmuExecutePushBuffer
                     #ifdef _DEBUG_TRACK_PB
                     }
                     #endif
+
+                    g_pD3DDevice8->SetIndices(0, 0);
                 }
 
-                // cleanup
                 pIndexBuffer->Release();
             }
         }

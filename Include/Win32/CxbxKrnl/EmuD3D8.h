@@ -553,11 +553,10 @@ HRESULT WINAPI EmuIDirect3DDevice8_End();
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_RunPushBuffer
 // ******************************************************************
-// TODO: D3DPushBuffer and D3DFixup
 VOID WINAPI EmuIDirect3DDevice8_RunPushBuffer
 (
     X_D3DPushBuffer       *pPushBuffer,
-    PVOID                  pFixup
+    X_D3DFixup            *pFixup
 );
 
 // ******************************************************************

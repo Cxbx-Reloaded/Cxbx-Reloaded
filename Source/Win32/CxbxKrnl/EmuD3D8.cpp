@@ -3012,11 +3012,11 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Begin
         g_IVBTable[v].Position.x = 0;
         g_IVBTable[v].Position.y = 0;
         g_IVBTable[v].Position.z = 0;
-        g_IVBTable[v].dwSpecular = 0x00000000;
-        g_IVBTable[v].dwDiffuse = 0x00000000;
         g_IVBTable[v].Normal.x = 0;
         g_IVBTable[v].Normal.y = 0;
         g_IVBTable[v].Normal.z = 0;
+        g_IVBTable[v].dwDiffuse = 0x00000000;
+        g_IVBTable[v].dwSpecular = 0x00000000;
         g_IVBTable[v].TexCoord1.x = 0;
         g_IVBTable[v].TexCoord1.y = 0;
         g_IVBTable[v].TexCoord2.x = 0;
@@ -3193,11 +3193,10 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_End()
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_RunPushBuffer
 // ******************************************************************
-// TODO: D3DPushBuffer and D3DFixup
 VOID WINAPI XTL::EmuIDirect3DDevice8_RunPushBuffer
 (
     X_D3DPushBuffer       *pPushBuffer,
-    PVOID                  pFixup
+    X_D3DFixup            *pFixup
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -3781,6 +3780,19 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
             //*/
         }
         break;
+
+        case X_D3DCOMMON_TYPE_FIXUP:
+        {
+            X_D3DFixup *pFixup = (X_D3DFixup*)pResource;
+
+            EmuCleanup("IDirect3DReosurce8::Register -> X_D3DCOMMON_TYPE_FIXUP is not yet supported\n"
+            "0x%.08X (pFixup->Common) \n"
+            "0x%.08X (pFixup->Data)   \n"
+            "0x%.08X (pFixup->Lock)   \n"
+            "0x%.08X (pFixup->Run)    \n"
+            "0x%.08X (pFixup->Next)   \n"
+            "0x%.08X (pFixup->Size)   \n", pFixup->Common, pFixup->Data, pFixup->Lock, pFixup->Run, pFixup->Next, pFixup->Size);
+        }
 
         default:
             EmuCleanup("IDirect3DResource8::Register -> Common Type 0x%.08X not yet supported", dwCommonType);
@@ -5719,7 +5731,8 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_ShadowFunc
            ");\n",
            GetCurrentThreadId(), Value);
 
-    EmuWarning("ShadowFunc not implemented");
+    // this warning just gets annoying
+//    EmuWarning("ShadowFunc not implemented");
 
     EmuSwapFS();   // XBox FS
 
@@ -6137,8 +6150,8 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVerticesUP
             FLOAT py = DWtoF(pdwVB[1]);
             FLOAT pz = DWtoF(pdwVB[2]);
             FLOAT rhw = DWtoF(pdwVB[3]);
-            DWORD dwSpecular = pdwVB[4];
             DWORD dwDiffuse = pdwVB[5];
+            DWORD dwSpecular = pdwVB[4];
             FLOAT tx = DWtoF(pdwVB[6]);
             FLOAT ty = DWtoF(pdwVB[7]);
             
@@ -6146,8 +6159,8 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVerticesUP
             
             printf("%.02d XYZ        : {%.08f, %.08f, %.08f}\n", r, px, py, pz);
             printf("%.02d RHW        : %f\n", r, rhw);
-            printf("%.02d dwSpecular : 0x%.08X\n", r, dwSpecular);
             printf("%.02d dwDiffuse  : 0x%.08X\n", r, dwDiffuse);
+            printf("%.02d dwSpecular : 0x%.08X\n", r, dwSpecular);
             printf("%.02d Tex1       : {%.08f, %.08f}\n", r, tx, ty);
             printf("\n");
 
@@ -6303,6 +6316,8 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
 
         if(pIndexBuffer != 0)
             bActiveIB = true;
+
+        pIndexBuffer->Release();
     }
 
     UINT uiNumVertices = 0;

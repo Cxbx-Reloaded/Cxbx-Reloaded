@@ -263,22 +263,6 @@ VOID XTL::EmuFlushIVB()
                 EmuCleanup("Unsupported Position Mask (FVF := 0x%.08X)", dwShader);
             }
             
-            if(dwShader & D3DFVF_SPECULAR)
-            {
-                *(DWORD*)pdwVB++ = g_IVBTable[v].dwSpecular;
-                
-                uiStride += sizeof(DWORD);
-
-                DbgPrintf("IVB Specular := 0x%.08X\n", g_IVBTable[v].dwSpecular);
-            }
-
-            if(dwShader & D3DFVF_DIFFUSE)
-            {
-                *(DWORD*)pdwVB++ = g_IVBTable[v].dwDiffuse;
-                
-                DbgPrintf("IVB Diffuse := 0x%.08X\n", g_IVBTable[v].dwDiffuse);
-            }
-
             if(dwShader & D3DFVF_NORMAL)
             {
                 *(FLOAT*)pdwVB++ = g_IVBTable[v].Normal.x;
@@ -288,6 +272,22 @@ VOID XTL::EmuFlushIVB()
                 uiStride += sizeof(FLOAT)*3;
 
                 DbgPrintf("IVB Normal := {%f, %f, %f}\n", g_IVBTable[v].Normal.x, g_IVBTable[v].Normal.y, g_IVBTable[v].Normal.z);
+            }
+
+            if(dwShader & D3DFVF_DIFFUSE)
+            {
+                *(DWORD*)pdwVB++ = g_IVBTable[v].dwDiffuse;
+                
+                DbgPrintf("IVB Diffuse := 0x%.08X\n", g_IVBTable[v].dwDiffuse);
+            }
+
+            if(dwShader & D3DFVF_SPECULAR)
+            {
+                *(DWORD*)pdwVB++ = g_IVBTable[v].dwSpecular;
+                
+                uiStride += sizeof(DWORD);
+
+                DbgPrintf("IVB Specular := 0x%.08X\n", g_IVBTable[v].dwSpecular);
             }
 
             DWORD dwTexN = (dwShader & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
