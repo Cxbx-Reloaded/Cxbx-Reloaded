@@ -2836,8 +2836,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
 
         case 4:             // D3DVSDE_SPECULAR
         {
-            if(a > 1.0f || a < -1.0f) a = 0.0f - ((a/320.0f) - 1.0f);
-            if(b > 1.0f || b < -1.0f) b = 0.0f - ((b/240.0f) - 1.0f);
+            if(a > 1.0f || a < -1.0f) a = a/640.0f;
+            if(b > 1.0f || b < -1.0f) b = b/480.0f;
 
             g_D3DIVB[g_dwD3DIVBInd].TexCoord1.x = a;
             g_D3DIVB[g_dwD3DIVBInd].TexCoord1.y = b;
@@ -2872,8 +2872,10 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
 */
         case 10:            // D3DVSDE_TEXCOORD1
         {
-            if(a > 1.0f || a < -1.0f) a = 0.0f - ((a/320.0f) - 1.0f);
-            if(b > 1.0f || b < -1.0f) b = 0.0f - ((b/240.0f) - 1.0f);
+            //if(a > 1.0f || a < -1.0f) a = 0.0f - ((a/320.0f) - 1.0f);
+            //if(b > 1.0f || b < -1.0f) b = 0.0f - ((b/240.0f) - 1.0f);
+            if(a > 1.0f || a < -1.0f) a = a/640.0f;
+            if(b > 1.0f || b < -1.0f) b = b/480.0f;
 
             g_D3DIVB[g_dwD3DIVBInd].TexCoord2.x = a;
             g_D3DIVB[g_dwD3DIVBInd].TexCoord2.y = b;
@@ -2885,8 +2887,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
 
         case 11:            // D3DVSDE_TEXCOORD2
         {
-            if(a > 1.0f || a < -1.0f) a = 0.0f - ((a/320.0f) - 1.0f);
-            if(b > 1.0f || b < -1.0f) b = 0.0f - ((b/240.0f) - 1.0f);
+            if(a > 1.0f || a < -1.0f) a = a/640.0f;
+            if(b > 1.0f || b < -1.0f) b = b/480.0f;
 
             g_D3DIVB[g_dwD3DIVBInd].TexCoord3.x = a;
             g_D3DIVB[g_dwD3DIVBInd].TexCoord3.y = b;
@@ -2898,8 +2900,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
 
         case 12:            // D3DVSDE_TEXCOORD3
         {
-            if(a > 1.0f || a < -1.0f) a = 0.0f - ((a/320.0f) - 1.0f);
-            if(b > 1.0f || b < -1.0f) b = 0.0f - ((b/240.0f) - 1.0f);
+            if(a > 1.0f || a < -1.0f) a = a/640.0f;
+            if(b > 1.0f || b < -1.0f) b = b/480.0f;
 
             g_D3DIVB[g_dwD3DIVBInd].TexCoord4.x = a;
             g_D3DIVB[g_dwD3DIVBInd].TexCoord4.y = b;
