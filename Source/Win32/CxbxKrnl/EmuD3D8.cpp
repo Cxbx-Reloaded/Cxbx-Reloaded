@@ -428,8 +428,8 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
     // ******************************************************************
     // * TODO: Query for Software Vertex Processing abilities!!
     // ******************************************************************
-//    BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
-    BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+    BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+//    BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
 
     // ******************************************************************
     // * redirect to windows d3d
@@ -448,17 +448,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
     // * it is necessary to store this pointer globally for emulation
     // ******************************************************************
     g_pD3D8Device = *ppReturnedDeviceInterface;
-/*
-    // TODO: HACK: This code should be intercepted and executed at a lower level
-    if(g_pD3D8Device != 0)
-    {
-        LPDIRECT3DTEXTURE8 pPyramideTexture = NULL;
 
-        D3DXCreateTextureFromFile(g_pD3D8Device, "cxbx.jpg",&pPyramideTexture);
-
-        g_pD3D8Device->SetTexture(0, pPyramideTexture);
-    }
-*/
     EmuSwapFS();   // XBox FS
 
     return hRet;

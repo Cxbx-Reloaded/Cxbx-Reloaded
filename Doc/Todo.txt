@@ -14,6 +14,8 @@ Cxbx Todo (* denotes high priority)
 
   * SetRenderState Simple for 4627 (Draw[Indexed]Vertices states are +10 up to 116, then some new ones?)
 
+  * What does SetLastError check Irql for? Should this be emulated?
+
   Perfect the timing on KeTickCount
 
   Some sort of delete-after-emulation type of functionality?

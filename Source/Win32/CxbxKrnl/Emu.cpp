@@ -62,6 +62,8 @@ namespace xd3d8
     #include "xd3d8.h"
 };
 
+#include <locale.h>
+
 #include "EmuKrnl.h"
 #include "EmuShared.h"
 #include "HLEDataBase.h"
@@ -136,6 +138,9 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     g_pTLS       = pTLS;
     g_pTLSData   = pTLSData;
 	g_pXbeHeader = pXbeHeader;
+
+	// For Unicode Conversions
+	setlocale(LC_ALL, "English");
 
     // ******************************************************************
     // * debug console allocation (if configured)
@@ -390,6 +395,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     __try
     {
         EmuSwapFS();   // XBox FS
+
+		_asm int 3
 
 		Entry();
 

@@ -643,36 +643,76 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
     }
     #endif
 
-    // TODO: Actually parse parameters and use the right CreateDisposition
-//    *FileHandle = CreateFile(ObjectAttributes->ObjectName->Buffer, DesiredAccess, ShareAccess, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	char szFinalPath[260];
+
+    // ******************************************************************
+	// * Make corrections to path, if necessary
+    // ******************************************************************
+	{
+		char *szBuffer = ObjectAttributes->ObjectName->Buffer;
+
+		// ******************************************************************
+		// * D:\ should map to current directory
+		// ******************************************************************
+		if( (szBuffer[0] == 'D' || szBuffer[0] == 'd') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+		{
+			szBuffer += 3;
+
+			GetCurrentDirectory(260, szFinalPath);
+
+			strcat(szFinalPath, "\\");
+
+			strcat(szFinalPath, szBuffer);
+		}
+		else
+			strcpy(szFinalPath, szBuffer);
+	}
+
+	#ifdef _DEBUG_TRACE
+	printf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+	printf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+	printf("  New:\"%s\"\n", szFinalPath);
+	#endif
+
+	/****** The problem with this code is you can't use network paths, etc
+
+	NTSTATUS ret;
 
 	wchar_t wszObjectName[160];
 
 	xntdll::UNICODE_STRING    NtUnicodeString;
 	xntdll::OBJECT_ATTRIBUTES NtObjAttr;
 
-    setlocale(LC_ALL, "English");
-    mbstowcs(wszObjectName, ObjectAttributes->ObjectName->Buffer, 160);
+    // ******************************************************************
+	// * Initialize Object Attributes
+    // ******************************************************************
+	{
+		mbstowcs(wszObjectName, szFinalPath, 160);
 
-	NT_RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
+		NT_RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
 
-	// Initialize NtObjAttr
-	InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
-	NtObjAttr.Length = sizeof(xntdll::OBJECT_ATTRIBUTES);
+		InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
+	}
 
-    NTSTATUS ret = NT_NtCreateFile
-    (
-        FileHandle, DesiredAccess, &NtObjAttr, (xntdll::IO_STATUS_BLOCK*)IoStatusBlock,
-        (xntdll::LARGE_INTEGER*)AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, NULL
-    );
+    // ******************************************************************
+	// * Redirect to NtCreateFile
+    // ******************************************************************
+	ret = NT_NtCreateFile
+	(
+		FileHandle, DesiredAccess, &NtObjAttr, (xntdll::IO_STATUS_BLOCK*)IoStatusBlock,
+		(xntdll::LARGE_INTEGER*)AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, NULL
+	);
 
 	if(FAILED(ret))
-		MessageBox(g_hEmuWindow, "NtCreateFile Failure!", "Cxbx", MB_OK);
-
-// NOTE: We can map this to IoCreateFile once implemented (if ever necessary)
-//    xboxkrnl::IoCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, 0);
+		EmuCleanup("NtCreateFile Failed!");
+	*/
+	// NOTE: We can map this to IoCreateFile once implemented (if ever necessary)
+	//       xboxkrnl::IoCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, 0);
 
     EmuSwapFS();   // Xbox FS
+
+    // TODO: Actually parse parameters and use the right CreateDisposition
+    *FileHandle = CreateFile(szFinalPath, DesiredAccess, ShareAccess, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
     if(*FileHandle == INVALID_HANDLE_VALUE)
         return STATUS_UNSUCCESSFUL;
