@@ -233,6 +233,7 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, ui
 
     EmuXSwapFS();   // XBox FS
 
+    _asm _emit 0xF1
     Entry();
 
     EmuXSwapFS();   // Win2k/XP FS
@@ -301,13 +302,28 @@ DWORD WINAPI PsCreateSystemThreadExProxy
 
     EmuXGenerateFS();
 
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG
+    {
+        printf("CxbxKrnl [0x%.08X]: PsCreateSystemThreadExProxy\n"
+               "          (\n"
+               "             StartContext1       : 0x%.08X\n"
+               "             StartContext2       : 0x%.08X\n"
+               "             StartRoutine        : 0x%.08X\n"
+               "          );\n",
+               GetCurrentThreadId(), StartContext1, StartContext2, StartRoutine);
+    }
+    #endif
+
     EmuXSwapFS();   // XBox FS
 
     __asm
     {
         mov         esi, StartRoutine
-        push        StartContext2
         push        StartContext1
+        push        StartContext2
         lea         ebp, [esp-4]
         jmp near    esi
     }
@@ -438,7 +454,10 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
 // ******************************************************************
 // * 0x0115 RtlEnterCriticalSection
 // ******************************************************************
-XBSYSAPI EXPORTNUM(277) VOID xboxkrnl::RtlEnterCriticalSection(DWORD Unknown)
+XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
+(
+  IN PRTL_CRITICAL_SECTION CriticalSection
+)
 {
     EmuXSwapFS();   // Win2k/XP FS
 
@@ -449,11 +468,17 @@ XBSYSAPI EXPORTNUM(277) VOID xboxkrnl::RtlEnterCriticalSection(DWORD Unknown)
     {
         printf("CxbxKrnl [0x%.08X]: RtlEnterCriticalSection\n"
                "          (\n"
-               "             Unknown             : 0x%.08X\n"
+               "             CriticalSection     : 0x%.08X\n"
                "          );\n",
-               GetCurrentThreadId(), Unknown);
+               GetCurrentThreadId(), CriticalSection);
     }
     #endif
+
+    // We have to initialize this because the xbox software doesn't seem
+    // to always do it. Redundant initializations seem to be ok :/
+    InitializeCriticalSection((win32::PRTL_CRITICAL_SECTION)CriticalSection);
+
+    EnterCriticalSection((win32::PRTL_CRITICAL_SECTION)CriticalSection);
 
     EmuXSwapFS();   // XBox FS
 }
@@ -461,7 +486,10 @@ XBSYSAPI EXPORTNUM(277) VOID xboxkrnl::RtlEnterCriticalSection(DWORD Unknown)
 // ******************************************************************
 // * 0x0126 RtlEnterCriticalSection
 // ******************************************************************
-XBSYSAPI EXPORTNUM(294) VOID xboxkrnl::RtlLeaveCriticalSection(DWORD Unknown)
+XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
+(
+  IN PRTL_CRITICAL_SECTION CriticalSection
+)
 {
     EmuXSwapFS();   // Win2k/XP FS
 
@@ -472,11 +500,15 @@ XBSYSAPI EXPORTNUM(294) VOID xboxkrnl::RtlLeaveCriticalSection(DWORD Unknown)
     {
         printf("CxbxKrnl [0x%.08X]: RtlLeaveCriticalSection\n"
                "          (\n"
-               "             Unknown             : 0x%.08X\n"
+               "             CriticalSection     : 0x%.08X\n"
                "          );\n",
-               GetCurrentThreadId(), Unknown);
+               GetCurrentThreadId(), CriticalSection);
     }
     #endif
+
+    LeaveCriticalSection((win32::PRTL_CRITICAL_SECTION)CriticalSection);
+
+    _asm _emit 0xF1
 
     EmuXSwapFS();   // XBox FS
 }
