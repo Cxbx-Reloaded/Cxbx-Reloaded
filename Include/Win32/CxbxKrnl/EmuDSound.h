@@ -523,6 +523,15 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_SetLoopRegion
 );
 
 // ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetPitch
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetPitch
+(
+    X_CDirectSoundBuffer   *pThis,
+    LONG                    lPitch
+);
+
+// ******************************************************************
 // * func: EmuIDirectSoundBuffer8_SetVolume
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSoundBuffer8_SetVolume

@@ -96,6 +96,40 @@ SOOVPA<11> IDirect3D8_GetDeviceCaps_1_0_3925 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_BlockUntilVerticalBlank
+// ******************************************************************
+SOOVPA<14> IDirect3DDevice8_BlockUntilVerticalBlank_1_0_3925 =
+{
+    0,  // Large == 0
+    14, // Count == 14
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_BlockUntilVerticalBlank+0x05 : push 0;push 0;push 1
+        { 0x05, 0x6A }, // (Offset,Value)-Pair #1
+        { 0x06, 0x00 }, // (Offset,Value)-Pair #2
+        { 0x07, 0x6A }, // (Offset,Value)-Pair #3
+        { 0x08, 0x00 }, // (Offset,Value)-Pair #4
+        { 0x09, 0x6A }, // (Offset,Value)-Pair #5
+        { 0x0A, 0x01 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_BlockUntilVerticalBlank+0x0B : mov dword ptr [eax+0x24F4], 
+        { 0x0B, 0xC7 }, // (Offset,Value)-Pair #7
+        { 0x0C, 0x80 }, // (Offset,Value)-Pair #8
+        { 0x0D, 0xF4 }, // (Offset,Value)-Pair #9
+        { 0x0E, 0x24 }, // (Offset,Value)-Pair #10
+        { 0x0F, 0x00 }, // (Offset,Value)-Pair #11
+
+        // IDirect3DDevice8_BlockUntilVerticalBlank+0x17 : and eax, 0x24F0
+        { 0x17, 0x05 }, // (Offset,Value)-Pair #12
+        { 0x18, 0xF0 }, // (Offset,Value)-Pair #13
+        { 0x19, 0x24 }, // (Offset,Value)-Pair #14
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetRenderTarget
 // ******************************************************************
 SOOVPA<11> IDirect3DDevice8_SetRenderTarget_1_0_3925 =
@@ -129,6 +163,40 @@ SOOVPA<11> IDirect3DDevice8_SetRenderTarget_1_0_3925 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_GetTransform
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_GetTransform_1_0_3925 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_GetTransform+0x0A : add esi, 0x22
+        { 0x0A, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x0B, 0xC6 }, // (Offset,Value)-Pair #2
+        { 0x0C, 0x22 }, // (Offset,Value)-Pair #3
+
+        // IDirect3DDevice8_GetTransform+0x12 : shl esi, 6; add esi, eax
+        { 0x12, 0xC1 }, // (Offset,Value)-Pair #4
+        { 0x13, 0xE6 }, // (Offset,Value)-Pair #5
+        { 0x14, 0x06 }, // (Offset,Value)-Pair #6
+        { 0x15, 0x03 }, // (Offset,Value)-Pair #7
+        { 0x16, 0xF0 }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_GetTransform+0x17 : mov ecx, 0x10
+        { 0x17, 0xB9 }, // (Offset,Value)-Pair #7
+        { 0x18, 0x10 }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_GetTransform+0x20 : retn 0x08
+        { 0x20, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x21, 0x08 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetStreamSource
 // ******************************************************************
 SOOVPA<12> IDirect3DDevice8_SetStreamSource_1_0_3925 =
@@ -157,6 +225,74 @@ SOOVPA<12> IDirect3DDevice8_SetStreamSource_1_0_3925 =
         { 0x6B, 0xC9 }, // (Offset,Value)-Pair #10
         { 0x6C, 0x80 }, // (Offset,Value)-Pair #11
         { 0x6D, 0x02 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetVertexShader
+// ******************************************************************
+SOOVPA<14> IDirect3DDevice8_SetVertexShader_1_0_3925 =
+{
+    0,  // Large == 0
+    14, // Count == 14
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetVertexShader+0x05 : test bl, 1
+        { 0x05, 0xF6 }, // (Offset,Value)-Pair #1
+        { 0x06, 0xC3 }, // (Offset,Value)-Pair #2
+        { 0x07, 0x01 }, // (Offset,Value)-Pair #3
+
+        // IDirect3DDevice8_SetVertexShader+0x10 : mov eax, [esi+0x0470]
+        { 0x10, 0x8B }, // (Offset,Value)-Pair #4
+        { 0x11, 0x86 }, // (Offset,Value)-Pair #5
+        { 0x12, 0x70 }, // (Offset,Value)-Pair #6
+        { 0x13, 0x04 }, // (Offset,Value)-Pair #7
+
+        // IDirect3DDevice8_SetVertexShader+0x6D : retn 0x04
+        { 0x6D, 0xC2 }, // (Offset,Value)-Pair #8
+        { 0x6E, 0x04 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DDevice8_SetVertexShader+0x8C : mov dword ptr [eax], 0x81E94
+        { 0x8C, 0xC7 }, // (Offset,Value)-Pair #10
+        { 0x8D, 0x40 }, // (Offset,Value)-Pair #11
+        { 0x8E, 0x08 }, // (Offset,Value)-Pair #12
+        { 0x8F, 0x94 }, // (Offset,Value)-Pair #13
+        { 0x90, 0x1E }, // (Offset,Value)-Pair #14
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetPixelShader
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_SetPixelShader_1_0_3925 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetPixelShader+0x0D : lea ecx, [eax+0x0464]
+        { 0x0D, 0x8D }, // (Offset,Value)-Pair #1
+        { 0x0E, 0x88 }, // (Offset,Value)-Pair #2
+        { 0x0F, 0x64 }, // (Offset,Value)-Pair #3
+        { 0x10, 0x04 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DDevice8_SetPixelShader+0x19 : mov dword ptr [eax+0x0468], 0
+        { 0x19, 0xC7 }, // (Offset,Value)-Pair #5
+        { 0x1A, 0x80 }, // (Offset,Value)-Pair #6
+        { 0x1B, 0x68 }, // (Offset,Value)-Pair #7
+        { 0x1C, 0x04 }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_SetPixelShader+0x32 : mov [esp+0x04], 0
+        { 0x32, 0xC7 }, // (Offset,Value)-Pair #9
+        { 0x33, 0x44 }, // (Offset,Value)-Pair #10
+        { 0x34, 0x24 }, // (Offset,Value)-Pair #11
+        { 0x35, 0x04 }, // (Offset,Value)-Pair #12
     }
 };
 
@@ -252,6 +388,138 @@ SOOVPA<12> IDirect3DDevice8_SetTexture_1_0_3925 =
         // IDirect3DDevice8_SetTexture+0x7D : retn 0x08
         { 0x7D, 0xC2 }, // (Offset,Value)-Pair #11
         { 0x7E, 0x08 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_Begin
+// ******************************************************************
+SOOVPA<11> IDirect3DDevice8_Begin_1_0_3925 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_Begin+0x20 : mov dword ptr [eax], 0x417FC
+        { 0x20, 0xC7 }, // (Offset,Value)-Pair #1
+        { 0x21, 0x00 }, // (Offset,Value)-Pair #2
+        { 0x22, 0xFC }, // (Offset,Value)-Pair #3
+        { 0x23, 0x17 }, // (Offset,Value)-Pair #4
+        { 0x24, 0x04 }, // (Offset,Value)-Pair #5
+        { 0x25, 0x00 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_Begin+0x2E : shl edx, 6
+        { 0x2E, 0x0D }, // (Offset,Value)-Pair #7
+        { 0x2F, 0x00 }, // (Offset,Value)-Pair #8
+        { 0x30, 0x08 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DDevice8_Begin+0x38 : retn 0x08
+        { 0x38, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x39, 0x04 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetVertexData2f
+// ******************************************************************
+SOOVPA<14> IDirect3DDevice8_SetVertexData2f_1_0_3925 =
+{
+    0,  // Large == 0
+    14, // Count == 14
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetVertexData2f+0x11 : lea edx, ds:abs[ecx*8]
+        { 0x11, 0x8D }, // (Offset,Value)-Pair #1
+        { 0x12, 0x14 }, // (Offset,Value)-Pair #2
+        { 0x13, 0xCD }, // (Offset,Value)-Pair #3
+
+        // IDirect3DDevice8_SetVertexData2f+0x1C : mov [eax], edx; mov edx, [esp+0x10]
+        { 0x1C, 0x89 }, // (Offset,Value)-Pair #4
+        { 0x1D, 0x10 }, // (Offset,Value)-Pair #5
+        { 0x1E, 0x8B }, // (Offset,Value)-Pair #6
+        { 0x1F, 0x54 }, // (Offset,Value)-Pair #7
+        { 0x20, 0x24 }, // (Offset,Value)-Pair #8
+        { 0x21, 0x10 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DDevice8_SetVertexData2f+0x28 : add eax, 0x0C
+        { 0x28, 0x83 }, // (Offset,Value)-Pair #10
+        { 0x29, 0xC0 }, // (Offset,Value)-Pair #11
+        { 0x2A, 0x0C }, // (Offset,Value)-Pair #12
+
+        // IDirect3DDevice8_SetVertexData2f+0x2E : retn 0x0C
+        { 0x2E, 0xC2 }, // (Offset,Value)-Pair #13
+        { 0x2F, 0x0C }, // (Offset,Value)-Pair #14
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetVertexData4f
+// ******************************************************************
+SOOVPA<11> IDirect3DDevice8_SetVertexData4f_1_0_3925 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetVertexData4f+0x11 : cmp ecx, -1; jnz +0x07
+        { 0x11, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x12, 0xF9 }, // (Offset,Value)-Pair #2
+        { 0x13, 0xFF }, // (Offset,Value)-Pair #3
+        { 0x14, 0x75 }, // (Offset,Value)-Pair #4
+        { 0x15, 0x07 }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_SetVertexData4f+0x1D : add ecx, 0x01A0
+        { 0x1D, 0x81 }, // (Offset,Value)-Pair #6
+        { 0x1E, 0xC1 }, // (Offset,Value)-Pair #7
+        { 0x1F, 0xA0 }, // (Offset,Value)-Pair #8
+        { 0x20, 0x01 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DDevice8_SetVertexData4f+0x50 : retn 0x14
+        { 0x50, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x51, 0x14 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_End
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_End_1_0_3925 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_End+0x17 : mov dword ptr [eax], 0x417FC
+        { 0x17, 0xC7 }, // (Offset,Value)-Pair #1
+        { 0x18, 0x00 }, // (Offset,Value)-Pair #2
+        { 0x19, 0xFC }, // (Offset,Value)-Pair #3
+        { 0x1A, 0x17 }, // (Offset,Value)-Pair #4
+        { 0x1B, 0x04 }, // (Offset,Value)-Pair #5
+        { 0x1C, 0x00 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_End+0x2C : test ah, 0x10
+        { 0x2C, 0xF6 }, // (Offset,Value)-Pair #7
+        { 0x2D, 0xC4 }, // (Offset,Value)-Pair #8
+        { 0x2E, 0x10 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DDevice8_End+0x2F : jz +0x07
+        { 0x2F, 0x74 }, // (Offset,Value)-Pair #10
+        { 0x30, 0x07 }, // (Offset,Value)-Pair #11
+
+        // IDirect3DDevice8_End+0x40 : retn
+        { 0x40, 0xC3 }, // (Offset,Value)-Pair #12
     }
 };
 
@@ -676,6 +944,41 @@ SOOVPA<11> IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_3925 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetTextureState_BorderColor
+// ******************************************************************
+SOOVPA<13> IDirect3DDevice8_SetTextureState_BorderColor_1_0_3925 =
+{
+    0,  // Large == 0
+    13, // Count == 13
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetTextureState_BorderColor+0x13 : shl eax, 0x07
+        { 0x13, 0xC1 }, // (Offset,Value)-Pair #1
+        { 0x14, 0xE2 }, // (Offset,Value)-Pair #2
+        { 0x15, 0x06 }, // (Offset,Value)-Pair #3
+
+        // IDirect3DDevice8_SetTextureState_BorderColor+0x16 : add edx, 0x41B24
+        { 0x16, 0x81 }, // (Offset,Value)-Pair #4
+        { 0x17, 0xC2 }, // (Offset,Value)-Pair #5
+        { 0x18, 0x24 }, // (Offset,Value)-Pair #6
+        { 0x19, 0x1B }, // (Offset,Value)-Pair #7
+        { 0x1A, 0x04 }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_SetTextureState_BorderColor+0x2A : shl ecx, 7
+        { 0x2A, 0xC1 }, // (Offset,Value)-Pair #9
+        { 0x2B, 0xE1 }, // (Offset,Value)-Pair #10
+        { 0x2C, 0x07 }, // (Offset,Value)-Pair #11
+
+        // IDirect3DDevice8_SetTextureState_BorderColor+0x34 : retn 0x08
+        { 0x34, 0xC2 }, // (Offset,Value)-Pair #12
+        { 0x35, 0x08 }, // (Offset,Value)-Pair #13
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetRenderState_CullMode
 // ******************************************************************
 SOOVPA<15> IDirect3DDevice8_SetRenderState_CullMode_1_0_3925 =
@@ -746,6 +1049,38 @@ SOOVPA<13> IDirect3DDevice8_SetRenderState_Simple_1_0_3925 =
         // IDirect3DDevice8_SetRenderState_Simple+0x2B : jmp +0xD3
         { 0x2B, 0xEB }, // (Offset,Value)-Pair #12
         { 0x2C, 0xD3 }, // (Offset,Value)-Pair #13
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetTransform
+// ******************************************************************
+SOOVPA<10> IDirect3DDevice8_SetTransform_1_0_3925 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetTransform+0x3A : fld dword ptr [edx+0x28]
+        { 0x3A, 0xD9 }, // (Offset,Value)-Pair #1
+        { 0x3B, 0x42 }, // (Offset,Value)-Pair #2
+        { 0x3C, 0x28 }, // (Offset,Value)-Pair #3
+
+        // IDirect3DDevice8_SetTransform+0x47 : test ah, 0x44
+        { 0x47, 0xF6 }, // (Offset,Value)-Pair #4
+        { 0x48, 0xC4 }, // (Offset,Value)-Pair #5
+        { 0x49, 0x44 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_SetTransform+0x55 : fnstsw ax
+        { 0x55, 0xDF }, // (Offset,Value)-Pair #7
+        { 0x56, 0xE0 }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_SetTransform+0x7A : fdivp st(1), st
+        { 0x7A, 0xDE }, // (Offset,Value)-Pair #9
+        { 0x7B, 0xF9 }, // (Offset,Value)-Pair #10
     }
 };
 
@@ -1537,6 +1872,16 @@ OOVPATable D3D8_1_0_3925[] =
         "EmuIDirect3DDevice8_Release" 
         #endif
     },
+    // IDirect3DDevice8::BlockUntilVerticalBlank
+    {
+        (OOVPA*)&IDirect3DDevice8_BlockUntilVerticalBlank_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_BlockUntilVerticalBlank,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_BlockUntilVerticalBlank" 
+        #endif
+    },
     // IDirect3DDevice8::SetRenderTarget
     {
         (OOVPA*)&IDirect3DDevice8_SetRenderTarget_1_0_3925,
@@ -1547,6 +1892,16 @@ OOVPATable D3D8_1_0_3925[] =
         "EmuIDirect3DDevice8_SetRenderTarget" 
         #endif
     },
+    // IDirect3DDevice8::GetTransform
+    {
+        (OOVPA*)&IDirect3DDevice8_GetTransform_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_GetTransform,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetTransform" 
+        #endif
+    },
     // IDirect3DDevice8::SetStreamSource
     {
         (OOVPA*)&IDirect3DDevice8_SetStreamSource_1_0_3925,
@@ -1555,6 +1910,26 @@ OOVPATable D3D8_1_0_3925[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetStreamSource" 
+        #endif
+    },
+    // IDirect3DDevice8::SetVertexShader
+    {
+        (OOVPA*)&IDirect3DDevice8_SetVertexShader_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_SetVertexShader,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetVertexShader" 
+        #endif
+    },
+    // IDirect3DDevice8::SetPixelShader
+    {
+        (OOVPA*)&IDirect3DDevice8_SetPixelShader_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_SetPixelShader,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetPixelShader" 
         #endif
     },
     // IDirect3DDevice8::SetIndices
@@ -1585,6 +1960,46 @@ OOVPATable D3D8_1_0_3925[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetTexture" 
+        #endif
+    },
+    // IDirect3DDevice8::Begin
+    {
+        (OOVPA*)&IDirect3DDevice8_Begin_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_Begin,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_Begin" 
+        #endif
+    },
+    // IDirect3DDevice8::SetVertexData2f
+    {
+        (OOVPA*)&IDirect3DDevice8_SetVertexData2f_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_SetVertexData2f,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetVertexData2f" 
+        #endif
+    },
+    // IDirect3DDevice8::SetVertexData4f
+    {
+        (OOVPA*)&IDirect3DDevice8_SetVertexData4f_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_SetVertexData4f,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetVertexData4f" 
+        #endif
+    },
+    // IDirect3DDevice8::End
+    {
+        (OOVPA*)&IDirect3DDevice8_End_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_End,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_End" 
         #endif
     },
     // IDirect3DDevice8::Clear
@@ -1707,6 +2122,16 @@ OOVPATable D3D8_1_0_3925[] =
         "EmuIDirect3DDevice8_SetTextureState_TexCoordIndex" 
         #endif
     },
+    // IDirect3DDevice8::SetTextureState_BorderColor
+    {
+        (OOVPA*)&IDirect3DDevice8_SetTextureState_BorderColor_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_SetTextureState_BorderColor,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetTextureState_BorderColor" 
+        #endif
+    },
     // IDirect3DDevice8::SetRenderState_CullMode
     {
         (OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_3925,
@@ -1725,6 +2150,16 @@ OOVPATable D3D8_1_0_3925[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetRenderState_Simple" 
+        #endif
+    },
+    // IDirect3DDevice8::SetTransform
+    {
+        (OOVPA*)&IDirect3DDevice8_SetTransform_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_SetTransform,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetTransform" 
         #endif
     },
     // IDirect3DDevice8::SetRenderState_FogColor

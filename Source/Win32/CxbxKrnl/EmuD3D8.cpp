@@ -1279,6 +1279,8 @@ XTL::X_D3DSurface* WINAPI XTL::EmuIDirect3DDevice8_GetBackBuffer2
 
     X_D3DSurface *pBackBuffer = new X_D3DSurface();
 
+    pBackBuffer->Data = X_D3DRESOURCE_DATA_FLAG_SURFACE;
+
     if(BackBuffer == -1)
         BackBuffer = 0;
 
@@ -1768,9 +1770,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreatePixelShader
     }
     #endif
 
-    // ******************************************************************
-    // * redirect to windows d3d
-    // ******************************************************************
+    // redirect to windows d3d
     HRESULT hRet = g_pD3DDevice8->CreatePixelShader
     (
         pFunction,
@@ -1812,13 +1812,14 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetPixelShader
     }
     #endif
 
-    // ******************************************************************
-    // * redirect to windows d3d
-    // ******************************************************************
+    // redirect to windows d3d
+    HRESULT hRet = D3D_OK;
+    /* TODO: kingofc's pixel shader stuff
     HRESULT hRet = g_pD3DDevice8->SetPixelShader
     (
         Handle
     );
+    //*/
 
     if(FAILED(hRet))
     {
@@ -2349,6 +2350,135 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetDisplayMode
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_Begin
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_Begin
+(
+    X_D3DPRIMITIVETYPE     PrimitiveType
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_Begin\n"
+               "(\n"
+               "   PrimitiveType       : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), PrimitiveType);
+    }
+    #endif
+
+    // TODO: actually um..implement this
+    HRESULT hRet = S_OK;
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetVertexData2f
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData2f
+(
+    int     Register,
+    FLOAT   a,
+    FLOAT   b
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexData2f\n"
+               "(\n"
+               "   Register            : 0x%.08X\n"
+               "   a                   : %f\n"
+               "   b                   : %f\n"
+               ");\n",
+               GetCurrentThreadId(), Register, a, b);
+    }
+    #endif
+
+    // TODO: actually um..implement this
+    HRESULT hRet = S_OK;
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetVertexData4f
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
+(
+    int     Register,
+    FLOAT   a,
+    FLOAT   b,
+    FLOAT   c,
+    FLOAT   d
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexData4f\n"
+               "(\n"
+               "   Register            : 0x%.08X\n"
+               "   a                   : %f\n"
+               "   b                   : %f\n"
+               "   c                   : %f\n"
+               "   d                   : %f\n"
+               ");\n",
+               GetCurrentThreadId(), Register, a, b, c, d);
+    }
+    #endif
+
+    // TODO: actually um..implement this
+    HRESULT hRet = S_OK;
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_End
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_End()
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_End();\n", GetCurrentThreadId());
+    }
+    #endif
+
+    // TODO: actually um..implement this
+    HRESULT hRet = S_OK;
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_Clear
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirect3DDevice8_Clear
@@ -2751,34 +2881,43 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
             RECT  iRect  = {0,0,0,0};
             POINT iPoint = {0,0};
 
-            if(bSwizzled)
+            BYTE *pSrc = (BYTE*)pBase;
+
+            if(pResource->Data == X_D3DRESOURCE_DATA_FLAG_SURFACE)
             {
-                XTL::EmuXGUnswizzleRect
-                (
-                    pBase, dwWidth, dwHeight, dwDepth, LockedRect.pBits, 
-                    LockedRect.Pitch, iRect, iPoint, dwBPP
-                );
-            }
-            else if(bCompressed)
-            {
-                memcpy(LockedRect.pBits, pBase, dwCompressedSize);
+                EmuWarning("Attempt to registered to another resource's data (eww!)");
+                // TODO: handle this horrible situation
             }
             else
             {
-                BYTE *pDest = (BYTE*)LockedRect.pBits;
-                BYTE *pSrc  = (BYTE*)pBase;
-
-                if((DWORD)LockedRect.Pitch == dwPitch && dwPitch == dwWidth*dwBPP)
-                    memcpy(pDest, pSrc, dwWidth*dwHeight*dwBPP);
+                if(bSwizzled)
+                {
+                    XTL::EmuXGUnswizzleRect
+                    (
+                        pSrc, dwWidth, dwHeight, dwDepth, LockedRect.pBits, 
+                        LockedRect.Pitch, iRect, iPoint, dwBPP
+                    );
+                }
+                else if(bCompressed)
+                {
+                    memcpy(LockedRect.pBits, pSrc, dwCompressedSize);
+                }
                 else
                 {
-                    // TODO: Faster copy (maybe unnecessary)
-                    for(DWORD v=0;v<dwHeight;v++)
-                    {
-                        memcpy(pDest, pSrc, dwWidth*dwBPP);
+                    BYTE *pDest = (BYTE*)LockedRect.pBits;
 
-                        pDest += LockedRect.Pitch;
-                        pSrc  += dwPitch;
+                    if((DWORD)LockedRect.Pitch == dwPitch && dwPitch == dwWidth*dwBPP)
+                        memcpy(pDest, pSrc, dwWidth*dwHeight*dwBPP);
+                    else
+                    {
+                        // TODO: Faster copy (maybe unnecessary)
+                        for(DWORD v=0;v<dwHeight;v++)
+                        {
+                            memcpy(pDest, pSrc, dwWidth*dwBPP);
+
+                            pDest += LockedRect.Pitch;
+                            pSrc  += dwPitch;
+                        }
                     }
                 }
             }
@@ -3899,6 +4038,38 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
         EmuCleanup("EmuIDirect3DDevice8_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)", Value);
 
     g_pD3DDevice8->SetTextureStageState(Stage, D3DTSS_TEXCOORDINDEX, Value);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetTextureState_BorderColor
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetTextureState_BorderColor
+(
+    DWORD Stage,
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetTextureState_BorderColor\n"
+               "(\n"
+               "   Stage               : 0x%.08X\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Stage, Value);
+    }
+    #endif
+
+    g_pD3DDevice8->SetTextureStageState(Stage, D3DTSS_BORDERCOLOR, Value);
 
     EmuSwapFS();   // XBox FS
 
@@ -5329,6 +5500,25 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_LightEnable
     EmuSwapFS();   // XBox FS
     
     return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_BlockUntilVerticalBlank
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_BlockUntilVerticalBlank()
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_BlockUntilVerticalBlank();\n", GetCurrentThreadId());
+    }
+    #endif
+
+    return;
 }
 
 // ******************************************************************

@@ -628,9 +628,9 @@ XBSYSAPI EXPORTNUM(128) VOID NTAPI xboxkrnl::KeQuerySystemTime
     {
         printf("EmuKrnl (0x%X): KeQuerySystemTime\n"
                "(\n"
-               "   CurrentTime         : 0x%.08X (%d)\n"
+               "   CurrentTime         : 0x%.08X\n"
                ");\n",
-               GetCurrentThreadId(), CurrentTime, CurrentTime == 0 ? 0 : CurrentTime->QuadPart);
+               GetCurrentThreadId(), CurrentTime);
     }
     #endif
 
@@ -764,25 +764,7 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
     }
     #endif
 
-    PVOID pRet = 0;
-
-    if(LowestAcceptableAddress != 0)
-    {
-        DWORD dwDummy;
-
-        if(VirtualProtect((PVOID)LowestAcceptableAddress, NumberOfBytes, PAGE_EXECUTE_READWRITE, &dwDummy) == TRUE)
-            pRet = (PVOID)LowestAcceptableAddress;
-        else
-            pRet = VirtualAlloc((PVOID)LowestAcceptableAddress, NumberOfBytes, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-    }
-
-    if(pRet == 0)
-    {
-        if(LowestAcceptableAddress != 0)
-            EmuWarning("Unable to allocate proper virtual memory region");
-
-        pRet = malloc(NumberOfBytes);
-    }
+    PVOID pRet = malloc(NumberOfBytes);
 
     #ifdef _DEBUG_TRACE
     printf("EmuKrnl (0x%X): MmAllocateContiguous returned 0x%.08X\n", GetCurrentThreadId(), pRet);
@@ -2376,6 +2358,70 @@ XBSYSAPI EXPORTNUM(301) xboxkrnl::ULONG NTAPI xboxkrnl::RtlNtStatusToDosError
     EmuSwapFS();   // Xbox FS
 
     return ret;
+}
+
+// ******************************************************************
+// * 0x0130 - RtlTimeFieldsToTime
+// ******************************************************************
+XBSYSAPI EXPORTNUM(304) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTimeFieldsToTime
+(
+    IN  PTIME_FIELDS    TimeFields,
+    OUT PLARGE_INTEGER  Time
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): RtlTimeFieldsToTime\n"
+               "(\n"
+               "   TimeFields          : 0x%.08X\n"
+               "   Time                : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), TimeFields, Time);
+    }
+    #endif
+
+    BOOLEAN bRet = NtDll::RtlTimeFieldsToTime((NtDll::TIME_FIELDS*)TimeFields, (NtDll::LARGE_INTEGER*)Time);
+
+    EmuSwapFS();   // Xbox FS
+
+    return bRet;
+}
+
+// ******************************************************************
+// * 0x0131 - RtlTimeToTimeFields
+// ******************************************************************
+XBSYSAPI EXPORTNUM(305) VOID NTAPI xboxkrnl::RtlTimeToTimeFields
+(
+    IN  PLARGE_INTEGER  Time,
+    OUT PTIME_FIELDS    TimeFields 
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): RtlTimeToTimeFields\n"
+               "(\n"
+               "   Time                : 0x%.08X\n"
+               "   TimeFields          : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Time, TimeFields);
+    }
+    #endif
+
+    NtDll::RtlTimeToTimeFields((NtDll::LARGE_INTEGER*)Time, (NtDll::TIME_FIELDS*)TimeFields);
+
+    EmuSwapFS();   // Xbox FS
+
+    return;
 }
 
 // ******************************************************************

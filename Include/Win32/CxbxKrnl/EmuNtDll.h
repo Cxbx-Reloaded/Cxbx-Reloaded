@@ -458,6 +458,22 @@ typedef struct _FILE_DIRECTORY_INFORMATION
 FILE_DIRECTORY_INFORMATION;
 
 // ******************************************************************
+// * TIME_FIELDS
+// ******************************************************************
+typedef struct _TIME_FIELDS
+{
+    USHORT  Year;
+    USHORT  Month;
+    USHORT  Day;
+    USHORT  Hour;
+    USHORT  Minute;
+    USHORT  Second;
+    USHORT  Millisecond;
+    USHORT  Weekday;
+}
+TIME_FIELDS, *PTIME_FIELDS;
+
+// ******************************************************************
 // * KeDelayExecutionThread
 // ******************************************************************
 typedef NTSTATUS (NTAPI *KeDelayExecutionThread)
@@ -522,6 +538,24 @@ typedef SIZE_T (NTAPI *FPTR_RtlSizeHeap)
 // * RtlNtStatusToDosError
 // ******************************************************************
 typedef ULONG (NTAPI *FPTR_RtlNtStatusToDosError)(NTSTATUS Status);
+
+// ******************************************************************
+// * RtlTimeToTimeFields
+// ******************************************************************
+typedef BOOLEAN (NTAPI *FPTR_RtlTimeFieldsToTime)
+(
+  IN  PTIME_FIELDS    TimeFields,
+  OUT PLARGE_INTEGER  Time
+);
+
+// ******************************************************************
+// * RtlTimeToTimeFields
+// ******************************************************************
+typedef VOID (NTAPI *FPTR_RtlTimeToTimeFields)
+(
+  IN  PLARGE_INTEGER  Time,
+  OUT PTIME_FIELDS    TimeFields 
+);
 
 // ******************************************************************
 // * RtlInitAnsiString
@@ -872,6 +906,8 @@ extern FPTR_RtlInitUnicodeString           RtlInitUnicodeString;
 extern FPTR_RtlAnsiStringToUnicodeString   RtlAnsiStringToUnicodeString;
 extern FPTR_RtlUnicodeStringToAnsiString   RtlUnicodeStringToAnsiString;
 extern FPTR_RtlNtStatusToDosError          RtlNtStatusToDosError;
+extern FPTR_RtlTimeFieldsToTime            RtlTimeFieldsToTime;
+extern FPTR_RtlTimeToTimeFields            RtlTimeToTimeFields;
 extern FPTR_RtlInitializeCriticalSection   RtlInitializeCriticalSection;
 extern FPTR_RtlEnterCriticalSection        RtlEnterCriticalSection;
 extern FPTR_RtlLeaveCriticalSection        RtlLeaveCriticalSection;

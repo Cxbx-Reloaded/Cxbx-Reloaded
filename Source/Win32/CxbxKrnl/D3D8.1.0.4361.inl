@@ -1287,7 +1287,7 @@ SOOVPA<14> IDirect3DDevice8_SetVertexShader_1_0_4361 =
         { 0x90, 0xC2 }, // (Offset,Value)-Pair #8
         { 0x91, 0x04 }, // (Offset,Value)-Pair #9
 
-        // IDirect3DDevice8_SetVertexShader+0xB0 : mov dword ptr [eaax], 0x4194C
+        // IDirect3DDevice8_SetVertexShader+0xB0 : mov dword ptr [eax], 0x4194C
         { 0xB0, 0xC7 }, // (Offset,Value)-Pair #10
         { 0xB1, 0x00 }, // (Offset,Value)-Pair #11
         { 0xB2, 0x4C }, // (Offset,Value)-Pair #12

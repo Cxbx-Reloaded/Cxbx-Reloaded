@@ -64,6 +64,10 @@ extern void EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
 // ******************************************************************
 extern void EmuD3DCleanup();
 
+// special resource data flags
+#define X_D3DRESOURCE_DATA_FLAG_BASE    (0xEFFFFFFE)
+#define X_D3DRESOURCE_DATA_FLAG_SURFACE (X_D3DRESOURCE_DATA_FLAG_BASE - 1)
+
 // Todo: Fill out this enumeration table for convienance
 typedef DWORD X_D3DFORMAT;
 
@@ -891,6 +895,41 @@ HRESULT WINAPI EmuIDirect3DDevice8_GetDisplayMode
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_Begin
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_Begin
+(
+    X_D3DPRIMITIVETYPE     PrimitiveType
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetVertexData2f
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetVertexData2f
+(
+    int     Register,
+    FLOAT   a,
+    FLOAT   b
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetVertexData4f
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetVertexData4f
+(
+    int     Register,
+    FLOAT   a,
+    FLOAT   b,
+    FLOAT   c,
+    FLOAT   d
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_End
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_End();
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_Clear
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_Clear
@@ -1117,6 +1156,15 @@ VOID WINAPI EmuIDirect3DDevice8_SetVerticalBlankCallback(PVOID pCallback);
 // * func: EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
+(
+    DWORD Stage,
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetTextureState_BorderColor
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetTextureState_BorderColor
 (
     DWORD Stage,
     DWORD Value
@@ -1370,6 +1418,11 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreatePalette
     X_D3DPALETTESIZE    Size,
     X_D3DPalette      **ppPalette
 );
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_BlockUntilVerticalBlank
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_BlockUntilVerticalBlank();
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderTarget
