@@ -54,12 +54,6 @@ extern GUID hRefGUID_bTexIsLinear;
 // EmuD3DTileCache (8 tiles maximum)
 extern X_D3DTILE EmuD3DTileCache[0x08];
 
-// EmuD3DDeferredRenderState
-extern DWORD *EmuD3DDeferredRenderState;
-
-// EmuD3DDeferredTextureState
-extern DWORD *EmuD3DDeferredTextureState;
-
 // ******************************************************************
 // * func: EmuIDirect3D8_CreateDevice
 // ******************************************************************
@@ -155,9 +149,9 @@ HRESULT WINAPI EmuIDirect3D8_EnumAdapterModes
 VOID WINAPI EmuIDirect3D8_KickOffAndWaitForIdle();
 
 // ******************************************************************
-// * func: EmuIDirect3D8_SetGammaRamp
+// * func: EmuIDirect3DDevice8_SetGammaRamp
 // ******************************************************************
-VOID WINAPI EmuIDirect3D8_SetGammaRamp
+VOID WINAPI EmuIDirect3DDevice8_SetGammaRamp
 (
     DWORD                   dwFlags,
     CONST X_D3DGAMMARAMP   *pRamp

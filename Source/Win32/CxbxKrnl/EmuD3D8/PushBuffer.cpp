@@ -44,6 +44,8 @@ namespace XTL
 
 extern XTL::LPDIRECT3DDEVICE8 g_pD3DDevice8;  // Direct3D8 Device
 
+bool XTL::g_bStepPush = FALSE;
+
 // pushbuffer execution emulation
 void XTL::EmuExecutePushBuffer
 (
@@ -55,6 +57,11 @@ void XTL::EmuExecutePushBuffer
 
     D3DPRIMITIVETYPE    PCPrimitiveType = (D3DPRIMITIVETYPE)-1;
     X_D3DPRIMITIVETYPE  XBPrimitiveType = -1;
+
+    // TODO: This technically should be enabled
+    //XTL::EmuUpdateDeferredStates();
+
+    // NOTE: I believe 0x1808 is actually a seperate command, but I need to verify this.
 
     while(true)
     {
@@ -123,6 +130,13 @@ void XTL::EmuExecutePushBuffer
                     (
                         PCPrimitiveType, 0, dwCount*2, 0, EmuD3DVertex2PrimitiveCount(XBPrimitiveType, dwCount*2)
                     );
+
+                    if(g_bStepPush)
+                    {
+                        printf("dwCount := 0x%.08X\n", dwCount);
+                        Sleep(100);
+                        g_pD3DDevice8->Present(0,0,0,0);
+                    }
                 }
 
                 // cleanup

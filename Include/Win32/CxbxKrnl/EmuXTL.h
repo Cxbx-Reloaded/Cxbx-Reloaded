@@ -40,6 +40,7 @@
 #include "EmuD3D8\VertexBuffer.h"
 #include "EmuD3D8\PushBuffer.h"
 #include "EmuD3D8\VertexShader.h"
+#include "EmuD3D8\State.h"
 #include "EmuDInput.h"
 #include "EmuDSound.h"
 #include "EmuXOnline.h"

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D8->PushBuffer.h
+// *   Cxbx->Win32->CxbxKrnl->EmuD3D8->State.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -26,22 +26,20 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2002-2004 Aaron Robinson <caustik@caustik.com>
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef PUSHBUFFER_H
-#define PUSHBUFFER_H
+#ifndef STATE_H
+#define STATE_H
 
-// emulate the execution of an xbox d3d pushbuffer
-extern void EmuExecutePushBuffer
-(
-    X_D3DPushBuffer       *pPushBuffer,
-    PVOID                  pFixup
-);
+// EmuD3DDeferredRenderState
+extern DWORD *EmuD3DDeferredRenderState;
 
-// push buffer debugging
-extern bool g_bStepPush;
+// EmuD3DDeferredTextureState
+extern DWORD *EmuD3DDeferredTextureState;
+
+extern void EmuUpdateDeferredStates();
 
 #endif

@@ -345,9 +345,9 @@ SOOVPA<10> IDirect3D_RecordStateBlock_1_0_4361 =
 };
 
 // ******************************************************************
-// * IDirect3D_SetGammaRamp
+// * IDirect3DDevice8_SetGammaRamp
 // ******************************************************************
-SOOVPA<9> IDirect3D_SetGammaRamp_1_0_4361 =
+SOOVPA<9> IDirect3DDevice8_SetGammaRamp_1_0_4361 =
 {
     0,  // Large == 0
     9,  // Count == 9
@@ -356,17 +356,17 @@ SOOVPA<9> IDirect3D_SetGammaRamp_1_0_4361 =
     0,  // XRef Not Used
 
     {
-        // IDirect3D_SetGammaRamp+0x11 : and eax, 1; push ebx
+        // IDirect3DDevice8_SetGammaRamp+0x11 : and eax, 1; push ebx
         { 0x11, 0x83 }, // (Offset,Value)-Pair #1
         { 0x12, 0xE0 }, // (Offset,Value)-Pair #2
         { 0x13, 0x01 }, // (Offset,Value)-Pair #3
         { 0x14, 0x53 }, // (Offset,Value)-Pair #4
 
-        // IDirect3D_SetGammaRamp+0x2F : rep movsd
+        // IDirect3DDevice8_SetGammaRamp+0x2F : rep movsd
         { 0x2F, 0xF3 }, // (Offset,Value)-Pair #5
         { 0x30, 0xA5 }, // (Offset,Value)-Pair #6
 
-        // IDirect3D_SetGammaRamp+0x3E : push ebx; mov ecx, edx
+        // IDirect3DDevice8_SetGammaRamp+0x3E : push ebx; mov ecx, edx
         { 0x3E, 0x53 }, // (Offset,Value)-Pair #7
         { 0x3F, 0x8B }, // (Offset,Value)-Pair #8
         { 0x40, 0xCA }, // (Offset,Value)-Pair #9
@@ -2106,14 +2106,14 @@ OOVPATable D3D8_1_0_4361[] =
         "EmuIDirect3D_ClearStateBlockFlags (XREF)"
         #endif
     },
-    // IDirect3D::SetGammaRamp
+    // IDirect3DDevice8::SetGammaRamp
     {
-        (OOVPA*)&IDirect3D_SetGammaRamp_1_0_4361,
+        (OOVPA*)&IDirect3DDevice8_SetGammaRamp_1_0_4361,
             
-        XTL::EmuIDirect3D8_SetGammaRamp,
+        XTL::EmuIDirect3DDevice8_SetGammaRamp,
 
         #ifdef _DEBUG_TRACE
-        "EmuIDirect3D_SetGammaRamp"
+        "EmuIDirect3DDevice8_SetGammaRamp"
         #endif
     },
     // IDirect3D::RecordStateBlock

@@ -229,6 +229,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8\PushBuffer.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8\State.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8\VertexBuffer.h
 # End Source File
 # Begin Source File
@@ -466,6 +470,10 @@ SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8\Convert.cpp
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8\PushBuffer.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8\State.cpp
 # End Source File
 # Begin Source File
 

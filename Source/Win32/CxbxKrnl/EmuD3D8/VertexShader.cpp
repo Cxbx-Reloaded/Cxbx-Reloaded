@@ -26,7 +26,8 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2002-2004 Aaron Robinson <caustik@caustik.com>
+// *                Kingofc <kingofc@freenet.de>
 // *
 // *  All rights reserved
 // *
