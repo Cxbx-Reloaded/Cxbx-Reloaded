@@ -1646,15 +1646,22 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Process
            ");\n",
            GetCurrentThreadId(), pThis, pInputBuffer, pOutputBuffer);
 
-    // update buffer data cache
-    pThis->EmuBuffer = pInputBuffer->pvBuffer;
+    if(pThis->EmuDirectSoundBuffer8 != NULL)
+    {
+        // update buffer data cache
+        pThis->EmuBuffer = pInputBuffer->pvBuffer;
 
-    EmuResizeIDirectSoundStream8(pThis, pInputBuffer->dwMaxSize);
+        EmuResizeIDirectSoundStream8(pThis, pInputBuffer->dwMaxSize);
 
-    *pInputBuffer->pdwStatus = S_OK;
+        *pInputBuffer->pdwStatus = S_OK;
 
-    HackUpdateSoundStreams();
-    
+        HackUpdateSoundStreams();
+    }
+    else
+    {
+        *pInputBuffer->pdwStatus = S_OK;
+    }
+
     EmuSwapFS();   // XBox FS
 
     return DS_OK;
@@ -1674,6 +1681,21 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Discontinuity(X_CDirectSoundStream *pT
            GetCurrentThreadId(), pThis);
 
     // TODO: Actually Process
+
+    EmuSwapFS();   // XBox FS
+
+    return DS_OK;
+}
+
+// ******************************************************************
+// * func: EmuCDirectSound_SynchPlayback
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSound_SynchPlayback(PVOID pUnknown)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSound_SynchPlayback(0x%.08X);\n",
+           GetCurrentThreadId());
 
     EmuSwapFS();   // XBox FS
 

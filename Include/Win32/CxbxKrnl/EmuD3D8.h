@@ -94,6 +94,11 @@ VOID WINAPI EmuIDirect3DDevice8_GetDeviceCaps
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_GetDisplayFieldStatus
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_GetDisplayFieldStatus(X_D3DFIELD_STATUS *pFieldStatus);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_BeginPush
 // ******************************************************************
 PDWORD WINAPI EmuIDirect3DDevice8_BeginPush(DWORD Count);

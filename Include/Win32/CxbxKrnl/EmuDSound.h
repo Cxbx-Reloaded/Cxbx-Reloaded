@@ -574,6 +574,11 @@ HRESULT WINAPI EmuCDirectSoundStream_Process
 HRESULT WINAPI EmuCDirectSoundStream_Discontinuity(X_CDirectSoundStream *pThis);
 
 // ******************************************************************
+// * func: EmuCDirectSound_SynchPlayback
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSound_SynchPlayback(PVOID pUnknown);
+
+// ******************************************************************
 // * func: EmuCDirectSoundStream_Pause
 // ******************************************************************
 HRESULT WINAPI EmuCDirectSoundStream_Pause

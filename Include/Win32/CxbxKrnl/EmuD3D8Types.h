@@ -317,6 +317,22 @@ struct X_D3DTILE
     DWORD   ZOffset;
 };
 
+typedef enum _X_D3DFIELDTYPE
+{
+    X_D3DFIELD_ODD            = 1,
+    X_D3DFIELD_EVEN           = 2,
+    X_D3DFIELD_PROGRESSIVE    = 3,
+    X_D3DFIELD_FORCE_DWORD    = 0x7fffffff
+}
+X_D3DFIELDTYPE;
+
+typedef struct _X_D3DFIELD_STATUS
+{
+    X_D3DFIELDTYPE Field;
+    UINT           VBlankCount;
+}
+X_D3DFIELD_STATUS;
+
 typedef struct _D3DVBLANKDATA
 {
     DWORD           VBlank;

@@ -881,7 +881,6 @@ OOVPATable DSound_1_0_4432[] =
         "EmuIDirectSound8_SetDistanceFactor" 
         #endif
     },
-
     // IDirectSound8::DownloadEffectsImage (* unchanged since 3936 *)
     {
         (OOVPA*)&IDirectSound8_DownloadEffectsImage_1_0_3936,
