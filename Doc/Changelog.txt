@@ -1,5 +1,10 @@
 cxbx website: http://www.caustik.com/xbox/
 
+version: 0.7.9 (??/??/??)
+--------------------------------
+
+- Spontaneous CreateDevice failures fixed (many, at least)
+
 version: 0.7.8b (08/30/03)
 --------------------------------
 
