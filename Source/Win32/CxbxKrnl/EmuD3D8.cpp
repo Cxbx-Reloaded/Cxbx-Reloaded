@@ -3150,62 +3150,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_RunPushBuffer
     }
     #endif
 
-    //_asm int 3
-
-    DWORD *pdwPushData = (DWORD*)pPushBuffer->Data;
-    DWORD dwIndices = 0;
-    PVOID pIndexData = 0;
-
-    D3DPRIMITIVETYPE PCPrimitiveType;
-
-    // NVPB_DrawVertices
-    if(*pdwPushData++ == 0x000417FC)
-    {
-        X_D3DPRIMITIVETYPE PrimitiveType = *pdwPushData++;
-
-        if(PrimitiveType == 0)
-        {
-        }
-        else
-        {
-            PCPrimitiveType = EmuPrimitiveType(PrimitiveType);
-
-            // index list
-            if( (*pdwPushData & 0x40001800) == 0x40001800)
-            {
-                DWORD dwBytes = (*pdwPushData & 0x0FFF0000) >> 16;
-
-                if(PCPrimitiveType == D3DPT_TRIANGLESTRIP)
-                    dwIndices = dwBytes/2;
-
-                pIndexData = (PVOID)++pdwPushData;
-
-                LPDIRECT3DINDEXBUFFER8 pIndexBuffer=0;
-
-                g_pD3DDevice8->CreateIndexBuffer(dwBytes, 0, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer);
-
-                WORD *pData=0;
-
-                pIndexBuffer->Lock(0, dwBytes, (UCHAR**)&pData, NULL);
-
-                memcpy(pData, pIndexData, dwBytes);
-
-                pIndexBuffer->Unlock();
-
-                g_pD3DDevice8->SetIndices(pIndexBuffer, 0);
-
-                // vertex stream is complete
-                g_pD3DDevice8->DrawIndexedPrimitive
-                (
-                    PCPrimitiveType, 0, dwIndices, 0, EmuD3DVertex2PrimitiveCount(PrimitiveType, dwIndices)
-                );
-
-                pIndexBuffer->Release();
-            }
-
-            //_asm int 3
-        }
-    }
+    XTL::EmuExecutePushBuffer(pPushBuffer, pFixup);
 
     EmuSwapFS();   // XBox FS
 

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXTL.h
+// *   Cxbx->Win32->CxbxKrnl->EmuD3D8Conv.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,16 +31,14 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUXTL_H
-#define EMUXTL_H
+#ifndef EMUD3D8PUSHBUFFER_H
+#define EMUD3D8PUSHBUFFER_H
 
-#include "EmuXapi.h"
-#include "EmuD3D8.h"
-#include "EmuD3D8Conv.h"
-#include "EmuD3D8PushBuffer.h"
-#include "EmuDInput.h"
-#include "EmuDSound.h"
-#include "EmuXOnline.h"
-#include "EmuXG.h"
+// emulate the execution of an xbox d3d pushbuffer
+extern void EmuExecutePushBuffer
+(
+    X_D3DPushBuffer       *pPushBuffer,
+    PVOID                  pFixup
+);
 
 #endif

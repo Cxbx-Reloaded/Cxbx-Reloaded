@@ -1,5 +1,5 @@
 # Microsoft Developer Studio Project File - Name="CxbxKrnl" - Package Owner=<4>
-# Microsoft Developer Studio Generated Build File, Format Version 6.00
+# Microsoft Developer Studio Generated Build File, Format Version 60000
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102
@@ -227,6 +227,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8.h
 # Begin Source File
 
 SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8Conv.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8PushBuffer.h
 # End Source File
 # Begin Source File
 
@@ -548,6 +552,10 @@ SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8.cpp
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8Conv.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8PushBuffer.cpp
 # End Source File
 # Begin Source File
 
