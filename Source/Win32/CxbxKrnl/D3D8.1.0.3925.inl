@@ -837,6 +837,38 @@ SOOVPA<11> IDirect3DDevice8_SetRenderState_Dxt1NoiseEnable_1_0_3925 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetRenderState_ZBias
+// ******************************************************************
+SOOVPA<10> IDirect3DDevice8_SetRenderState_ZBias_1_0_3925 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetRenderState_ZBias+0x0B : setnz al
+        { 0x0B, 0x0F }, // (Offset,Value)-Pair #1
+        { 0x0C, 0x95 }, // (Offset,Value)-Pair #2
+        { 0x0D, 0xC0 }, // (Offset,Value)-Pair #3
+
+        // IDirect3DDevice8_SetRenderState_ZBias+0x14 : fild [esp+0x10]
+        { 0x14, 0xDB }, // (Offset,Value)-Pair #4
+        { 0x15, 0x44 }, // (Offset,Value)-Pair #5
+        { 0x16, 0x24 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_SetRenderState_ZBias+0x45 : push 0x4E
+        { 0x45, 0x6A }, // (Offset,Value)-Pair #7
+        { 0x46, 0x4E }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_SetRenderState_ZBias+0x45 : retn 0x04
+        { 0x71, 0xC2 }, // (Offset,Value)-Pair #9
+        { 0x72, 0x04 }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetRenderState_ZEnable
 // ******************************************************************
 SOOVPA<13> IDirect3DDevice8_SetRenderState_ZEnable_1_0_3925 =
@@ -1656,6 +1688,16 @@ OOVPATable D3D8_1_0_3925[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable" 
+        #endif
+    },
+    // IDirect3DDevice8::SetRenderState_ZBias
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_ZBias_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_ZBias,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_ZBias" 
         #endif
     },
     // IDirect3DDevice8::SetRenderState_ZEnable

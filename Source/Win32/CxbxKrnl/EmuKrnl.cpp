@@ -520,9 +520,9 @@ XBSYSAPI EXPORTNUM(99) NTSTATUS NTAPI xboxkrnl::KeDelayExecutionThread
                "(\n"
                "   WaitMode            : 0x%.08X\n"
                "   Alertable           : 0x%.08X\n"
-               "   Interval            : 0x%.08X\n"
+               "   Interval            : 0x%.08X (%d)\n"
                ");\n",
-               GetCurrentThreadId(), WaitMode, Alertable, Interval);
+               GetCurrentThreadId(), WaitMode, Alertable, Interval, Interval == 0 ? 0 : Interval->QuadPart);
     }
     #endif
 
@@ -628,9 +628,9 @@ XBSYSAPI EXPORTNUM(128) VOID NTAPI xboxkrnl::KeQuerySystemTime
     {
         printf("EmuKrnl (0x%X): KeQuerySystemTime\n"
                "(\n"
-               "   CurrentTime         : 0x%.08X\n"
+               "   CurrentTime         : 0x%.08X (%d)\n"
                ");\n",
-               GetCurrentThreadId(), CurrentTime);
+               GetCurrentThreadId(), CurrentTime, CurrentTime == 0 ? 0 : CurrentTime->QuadPart);
     }
     #endif
 
@@ -1786,10 +1786,10 @@ XBSYSAPI EXPORTNUM(219) NTSTATUS NTAPI xboxkrnl::NtReadFile
                "   IoStatusBlock       : 0x%.08X\n"
                "   Buffer              : 0x%.08X\n"
                "   Length              : 0x%.08X\n"
-               "   ByteOffset          : 0x%.08X\n"
+               "   ByteOffset          : 0x%.08X (%d)\n"
                ");\n",
                GetCurrentThreadId(), FileHandle, Event, ApcRoutine, 
-               ApcContext, IoStatusBlock, Buffer, Length, ByteOffset);
+               ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, ByteOffset == 0 ? 0 : ByteOffset->QuadPart);
     }
     #endif
 
@@ -1988,9 +1988,9 @@ XBSYSAPI EXPORTNUM(234) NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObjectEx
                "   Handle               : 0x%.08X\n"
                "   WaitMode             : 0x%.08X\n"
                "   Alertable            : 0x%.08X\n"
-               "   Timeout              : 0x%.08X\n"
+               "   Timeout              : 0x%.08X (%d)\n"
                ");\n",
-               GetCurrentThreadId(), Handle, WaitMode, Alertable, Timeout);
+               GetCurrentThreadId(), Handle, WaitMode, Alertable, Timeout, Timeout == 0 ? 0 : Timeout->QuadPart);
     }
     #endif
 
@@ -2006,14 +2006,14 @@ XBSYSAPI EXPORTNUM(234) NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObjectEx
 // ******************************************************************
 XBSYSAPI EXPORTNUM(236) NTSTATUS NTAPI xboxkrnl::NtWriteFile
 (	
-	IN  HANDLE  FileHandle,            // TODO: correct paramters
-	IN	PVOID	Event,
-	IN	PVOID	ApcRoutine,
-	IN	PVOID	ApcContext,
-	OUT	PVOID	IoStatusBlock,
-	IN	PVOID	Buffer,
-	IN	ULONG	Length,
-	IN	PVOID	ByteOffset
+	IN  HANDLE          FileHandle,            // TODO: correct paramters
+	IN	PVOID	        Event,
+	IN	PVOID	        ApcRoutine,
+	IN	PVOID	        ApcContext,
+	OUT	PVOID	        IoStatusBlock,
+	IN	PVOID	        Buffer,
+	IN	ULONG	        Length,
+	IN	PLARGE_INTEGER  ByteOffset
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -2032,10 +2032,10 @@ XBSYSAPI EXPORTNUM(236) NTSTATUS NTAPI xboxkrnl::NtWriteFile
                "   IoStatusBlock       : 0x%.08X\n"
                "   Buffer              : 0x%.08X\n"
                "   Length              : 0x%.08X\n"
-               "   ByteOffset          : 0x%.08X\n"
+               "   ByteOffset          : 0x%.08X (%d)\n"
                ");\n",
                GetCurrentThreadId(), FileHandle, Event, ApcRoutine, 
-               ApcContext, IoStatusBlock, Buffer, Length, ByteOffset);
+               ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, ByteOffset == 0 ? 0 : ByteOffset->QuadPart);
     }
     #endif
 

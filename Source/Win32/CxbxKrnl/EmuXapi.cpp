@@ -712,6 +712,9 @@ BOOL WINAPI XTL::EmuSetThreadPriority
 
     BOOL bRet = SetThreadPriority(hThread, nPriority);
 
+    if(bRet == FALSE)
+        EmuWarning("SetThreadPriority Failed!");
+
     EmuSwapFS();   // XBox FS
 
     return bRet;
