@@ -54,6 +54,9 @@ namespace XTL
 #include "EmuShared.h"
 #include "HLEDataBase.h"
 
+// Ugly Global Pull-In
+extern HWND         g_hEmuWindow; // rendering window
+
 // Global Variable(s)
 extern Xbe::TLS    *g_pTLS       = NULL;
 extern void        *g_pTLSData   = NULL;
@@ -635,7 +638,7 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
 
             e->ContextRecord->Eip += 1;
 
-            int ret = MessageBox(XTL::g_hEmuWindow, buffer, "Cxbx", MB_ICONSTOP | MB_ABORTRETRYIGNORE);
+            int ret = MessageBox(g_hEmuWindow, buffer, "Cxbx", MB_ICONSTOP | MB_ABORTRETRYIGNORE);
 
             if(ret == IDABORT)
             {
@@ -658,7 +661,7 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
                 "  Press \"Cancel\" to debug.",
                 e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip, e->ContextRecord->EFlags);
 
-            if(MessageBox(XTL::g_hEmuWindow, buffer, "Cxbx", MB_ICONSTOP | MB_OKCANCEL) == IDOK)
+            if(MessageBox(g_hEmuWindow, buffer, "Cxbx", MB_ICONSTOP | MB_OKCANCEL) == IDOK)
             {
                 printf("EmuMain (0x%X): Aborting Emulation\n", GetCurrentThreadId());
                 fflush(stdout);
@@ -868,13 +871,13 @@ int ExitException(LPEXCEPTION_POINTERS e)
 
     fflush(stdout);
 
-    MessageBox(XTL::g_hEmuWindow, "Warning: Could not safely terminate process!", "Cxbx", MB_OK);
+    MessageBox(g_hEmuWindow, "Warning: Could not safely terminate process!", "Cxbx", MB_OK);
 
     count++;
 
     if(count > 1)
     {
-        MessageBox(XTL::g_hEmuWindow, "Warning: Multiple Problems!", "Cxbx", MB_OK);
+        MessageBox(g_hEmuWindow, "Warning: Multiple Problems!", "Cxbx", MB_OK);
         return EXCEPTION_CONTINUE_SEARCH;
     }
 

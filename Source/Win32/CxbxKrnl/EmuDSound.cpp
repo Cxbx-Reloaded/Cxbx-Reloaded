@@ -59,6 +59,9 @@ namespace XTL
 #include <process.h>
 #include <locale.h>
 
+// Ugly Global Pull-In
+extern HWND                g_hEmuWindow; // rendering window
+
 // ******************************************************************
 // * Static Variable(s)
 // ******************************************************************

@@ -46,6 +46,9 @@ namespace XTL
 
 #include "EmuShared.h"
 
+// Ugly Global Pull-In
+extern HWND         g_hEmuWindow; // rendering window
+
 // ******************************************************************
 // * Static Variable(s)
 // ******************************************************************
@@ -58,7 +61,7 @@ bool XTL::EmuDInputInit()
 {
     g_EmuShared->GetXBController(&g_XBController);
 
-    g_XBController.ListenBegin(XTL::g_hEmuWindow);
+    g_XBController.ListenBegin(g_hEmuWindow);
 
     if(g_XBController.GetError())
         return false;

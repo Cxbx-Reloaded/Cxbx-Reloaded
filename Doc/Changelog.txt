@@ -10,6 +10,10 @@ version: 0.7.9 (??/??/??)
 - Fixed a glitch in EmuExe that was outputting some bad Exes
   in situations such as the msdashboard. (thanks sop skrutt!)
 
+- Fixed LineLoop rendering (X-Marbles, Gamepad, etc etc)
+
+- Some speed optimizations for vertice translation
+
 version: 0.7.8c (09/02/03)
 --------------------------------
 

@@ -132,18 +132,9 @@ SOURCE=.\Doc\Todo.txt
 # Begin Group "Include"
 
 # PROP Default_Filter ""
-# Begin Source File
+# Begin Group "hle h"
 
-SOURCE=.\Include\Win32\AlignPosfix1.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\AlignPrefix1.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Cxbx.h
-# End Source File
+# PROP Default_Filter ""
 # Begin Source File
 
 SOURCE=.\Include\Win32\CxbxKrnl\D3D8.1.0.3925.h
@@ -175,6 +166,55 @@ SOURCE=.\Include\Win32\CxbxKrnl\DSound.1.0.4361.h
 # Begin Source File
 
 SOURCE=.\Include\Win32\CxbxKrnl\DSound.1.0.4627.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.3911.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.4034.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.4134.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.4361.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.4627.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\XG.1.0.4361.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\XG.1.0.4627.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\XNet.1.0.3911.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\XOnline.1.0.4361.h
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=.\Include\Win32\AlignPosfix1.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\AlignPrefix1.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Cxbx.h
 # End Source File
 # Begin Source File
 
@@ -242,26 +282,6 @@ SOURCE=.\Include\Win32\CxbxKrnl\OOVPA.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.3911.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.4034.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.4134.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.4361.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.4627.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Include\Win32\XBController.h
 # End Source File
 # Begin Source File
@@ -271,22 +291,6 @@ SOURCE=.\Include\Core\Xbe.h
 # Begin Source File
 
 SOURCE=.\Include\Win32\XBVideo.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\XG.1.0.4361.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\XG.1.0.4627.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\XNet.1.0.3911.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\XOnline.1.0.4361.h
 # End Source File
 # End Group
 # Begin Group "Resource"
@@ -302,6 +306,9 @@ SOURCE=.\Resource\CxbxDll.rc
 # End Source File
 # End Group
 # Begin Group "Source"
+
+# PROP Default_Filter ""
+# Begin Group "hle inl"
 
 # PROP Default_Filter ""
 # Begin Source File
@@ -336,6 +343,43 @@ SOURCE=.\Source\Win32\CxbxKrnl\DSound.1.0.4361.inl
 
 SOURCE=.\Source\Win32\CxbxKrnl\DSound.1.0.4627.inl
 # End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\Xapi.1.0.3911.inl
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\Xapi.1.0.4034.inl
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\Xapi.1.0.4134.inl
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\Xapi.1.0.4361.inl
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\Xapi.1.0.4627.inl
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\XG.1.0.4361.inl
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\XG.1.0.4627.inl
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\XNet.1.0.3911.inl
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\XOnline.1.0.4361.inl
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\Emu.cpp
@@ -410,47 +454,11 @@ SOURCE=.\Source\Win32\Mutex.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\Xapi.1.0.3911.inl
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Win32\CxbxKrnl\Xapi.1.0.4034.inl
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Win32\CxbxKrnl\Xapi.1.0.4134.inl
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Win32\CxbxKrnl\Xapi.1.0.4361.inl
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Win32\CxbxKrnl\Xapi.1.0.4627.inl
-# End Source File
-# Begin Source File
-
 SOURCE=.\Source\Win32\XBController.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\XBVideo.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Win32\CxbxKrnl\XG.1.0.4361.inl
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Win32\CxbxKrnl\XG.1.0.4627.inl
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Win32\CxbxKrnl\XNet.1.0.3911.inl
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Win32\CxbxKrnl\XOnline.1.0.4361.inl
 # End Source File
 # End Group
 # End Target
