@@ -628,27 +628,6 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 // cache device pointer
                 g_pD3DDevice8 = *g_EmuCDPD.ppReturnedDeviceInterface;
 
-                // check for YUY2 overlay support TODO: accept other overlay types
-                {
-                    XTL::D3DDISPLAYMODE DisplayMode;
-
-                    if(g_pD3DDevice8->GetDisplayMode(&DisplayMode) != D3D_OK)
-                        g_bSupportsYUY2 = FALSE;
-                    else
-                    {
-                        ::HRESULT hRet = g_pD3D8->CheckDeviceFormat
-                        (
-                            g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-                            (XTL::D3DFORMAT)DisplayMode.Format, 0, XTL::D3DRTYPE_SURFACE, XTL::D3DFMT_YUY2
-                        );
-
-                        g_bSupportsYUY2 = SUCCEEDED(hRet);
-
-                        if(!g_bSupportsYUY2)
-                            EmuWarning("YUY2 overlays are not supported in hardware, could be slow!");
-                    }
-                }
-
                 // default NULL guid
                 ZeroMemory(&g_ddguid, sizeof(GUID));
 
@@ -669,6 +648,33 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
                     if(FAILED(hRet))
                         EmuCleanup("Could not set cooperative level");
+                }
+
+                // check for YUY2 overlay support TODO: accept other overlay types
+                {
+                    DWORD  dwCodes = 0;
+                    DWORD *lpCodes = 0;
+
+                    g_pDD7->GetFourCCCodes(&dwCodes, lpCodes);
+
+                    lpCodes = (DWORD*)malloc(dwCodes*sizeof(DWORD));
+
+                    g_pDD7->GetFourCCCodes(&dwCodes, lpCodes);
+
+                    g_bSupportsYUY2 = false;
+                    for(DWORD v=0;v<dwCodes;v++)
+                    {
+                        if(lpCodes[v] == MAKEFOURCC('Y','U','Y','2'))
+                        {
+                            g_bSupportsYUY2 = true;
+                            break;
+                        }
+                    }
+
+                    free(lpCodes);
+
+                    if(!g_bSupportsYUY2)
+                        EmuWarning("YUY2 overlays are not supported in hardware, could be slow!");
                 }
 
                 // initialize primary surface
