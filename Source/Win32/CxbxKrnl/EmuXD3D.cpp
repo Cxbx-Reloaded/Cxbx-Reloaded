@@ -69,7 +69,7 @@ VOID xboxkrnl::EmuXInitD3D()
         _beginthread(EmuXRenderWindow, 0, NULL);
 
         while(g_EmuXWindow == NULL)
-            Sleep(100);
+            Sleep(10);
     }
 
     // ******************************************************************
