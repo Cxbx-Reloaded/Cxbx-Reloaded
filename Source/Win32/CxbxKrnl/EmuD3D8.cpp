@@ -78,7 +78,7 @@ volatile bool            g_ThreadInitialized = false;
 // * statics
 // ******************************************************************
 static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-static void EmuRenderWindow(PVOID);
+static DWORD WINAPI EmuRenderWindow(LPVOID);
 
 // ******************************************************************
 // * D3DVertexToPrimitive
@@ -117,7 +117,9 @@ VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
     // * spark up a new thread to handle window message processing
     // ******************************************************************
     {
-        _beginthread(EmuRenderWindow, 0, NULL);
+        DWORD dwThreadId;
+
+        CreateThread(NULL, NULL, EmuRenderWindow, NULL, NULL, &dwThreadId);
 
         while(!g_ThreadInitialized)
             Sleep(10);
@@ -154,7 +156,7 @@ VOID EmuD3DCleanup()
 // ******************************************************************
 // * func: EmuRenderWindow
 // ******************************************************************
-void EmuRenderWindow(PVOID)
+DWORD WINAPI EmuRenderWindow(LPVOID)
 {
     // ******************************************************************
     // * register window class
@@ -257,6 +259,8 @@ void EmuRenderWindow(PVOID)
 
         EmuCleanup(NULL);
     }
+
+    return 0;
 }
 
 // ******************************************************************
@@ -372,7 +376,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
     // ******************************************************************
     // * redirect to windows d3d
     // ******************************************************************
-    HRESULT ret = g_pD3D8->CreateDevice
+    HRESULT hRet = g_pD3D8->CreateDevice
     (
         Adapter,
         DeviceType,
@@ -389,7 +393,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
 
     EmuSwapFS();   // XBox FS
 
-    return ret;
+    return hRet;
 }
 
 // ******************************************************************

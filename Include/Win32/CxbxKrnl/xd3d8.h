@@ -34,7 +34,7 @@
 #ifndef XD3D8_H
 #define XD3D8_H
 
-#include "d3d8.h"
+#include <d3d8.h>
 
 // ******************************************************************
 // * D3DResource

@@ -1,5 +1,7 @@
 Cxbx Todo:
 
+  Fix TLS (Just do it by hand, forget using Win32 TLS)
+
   Phase out EmuPanic() (EmuCleanup is good)
 
   Some sort of delete-after-emulation type of functionality?
@@ -17,8 +19,6 @@ Cxbx Todo:
   Closing a console should not terminate the entire process.
 
   If possible, Direct3D Rendering window should inherit from Wnd.
-
-  Try to add compatibility with Windows ME using LLDT assembly.
 
   Xbe file associations via user configuration. This could include an
   option to either automatically execute the Xbe, or simply open it up

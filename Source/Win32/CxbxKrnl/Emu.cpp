@@ -52,12 +52,12 @@ namespace xboxkrnl
 // ******************************************************************
 // * global / static
 // ******************************************************************
-extern DWORD g_dwTlsAdjust = 0;
+extern Xbe::TLS *g_pTLS = 0;
 
 // ******************************************************************
 // * static
 // ******************************************************************
-static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *XbeHeader);
+static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *pXbeHeader);
 static int ExitException(LPEXCEPTION_POINTERS e);
 
 // ******************************************************************
@@ -96,15 +96,23 @@ static void EmuCleanThread()
 
     EmuCleanupFS();
 
-    ExitThread(0);
+    TerminateThread(GetCurrentThread(), 0);
 }
 
 // ******************************************************************
 // * func: EmuInit
 // ******************************************************************
-extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)())
+extern "C" CXBXKRNL_API void NTAPI EmuInit
+(
+    Xbe::TLS               *pTLS,
+    Xbe::LibraryVersion    *pLibraryVersion,
+    DebugMode               DbgMode,
+    char                   *szDebugFilename,
+    Xbe::Header            *pXbeHeader,
+    uint32                  dwXbeHeaderSize,
+    void                  (*Entry)())
 {
-    g_dwTlsAdjust = TlsAdjust;
+    g_pTLS = pTLS;
 
     // ******************************************************************
     // * debug console allocation (if configured)
@@ -134,7 +142,10 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion
     {
         FreeConsole();
 
-        freopen("nul", "wt", stdout);
+        char buffer[16];
+
+        if(GetConsoleTitle(buffer, 16) != NULL)
+            freopen("nul", "w", stdout);
     }
 
     // ******************************************************************
@@ -146,15 +157,15 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion
 
         printf("Emu: EmuInit\n"
                "(\n"
-               "   TlsAdjust           : 0x%.08X\n"
-               "   LibraryVersion      : 0x%.08X\n"
+               "   pTLS                : 0x%.08X\n"
+               "   pLibraryVersion     : 0x%.08X\n"
                "   DebugConsole        : 0x%.08X\n"
                "   DebugFilename       : \"%s\"\n"
-               "   XBEHeader           : 0x%.08X\n"
-               "   XBEHeaderSize       : 0x%.08X\n"
+               "   pXBEHeader          : 0x%.08X\n"
+               "   pXBEHeaderSize      : 0x%.08X\n"
                "   Entry               : 0x%.08X\n"
                ");\n",
-               TlsAdjust, LibraryVersion, DbgMode, szDebugFilename, XbeHeader, XbeHeaderSize, Entry);
+               pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
 
         #else
         printf("CxbxKrnl (0x%.08X): _DEBUG_TRACE disabled.\n", GetCurrentThreadId());
@@ -172,14 +183,16 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion
         VirtualProtect(MemXbeHeader, 0x1000, PAGE_READWRITE, &old_protection);
 
         // we sure hope we aren't corrupting anything necessary for an .exe to survive :]
-        MemXbeHeader->dwSizeofHeaders   = XbeHeader->dwSizeofHeaders;
-        MemXbeHeader->dwCertificateAddr = XbeHeader->dwCertificateAddr;
-        MemXbeHeader->dwPeHeapReserve   = XbeHeader->dwPeHeapReserve;
-        MemXbeHeader->dwPeHeapCommit    = XbeHeader->dwPeHeapCommit;
+        MemXbeHeader->dwSizeofHeaders   = pXbeHeader->dwSizeofHeaders;
+        MemXbeHeader->dwCertificateAddr = pXbeHeader->dwCertificateAddr;
+        MemXbeHeader->dwPeHeapReserve   = pXbeHeader->dwPeHeapReserve;
+        MemXbeHeader->dwPeHeapCommit    = pXbeHeader->dwPeHeapCommit;
 
-        memcpy(&MemXbeHeader->dwInitFlags, &XbeHeader->dwInitFlags, sizeof(XbeHeader->dwInitFlags));
+        memcpy(&MemXbeHeader->dwInitFlags, &pXbeHeader->dwInitFlags, sizeof(pXbeHeader->dwInitFlags));
 
-        memcpy((void*)XbeHeader->dwCertificateAddr, &((uint08*)XbeHeader)[XbeHeader->dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
+        printf("pXbeHeader->dwCertificateAddr : 0x%.08X -> 0x%.08X\n", pXbeHeader->dwCertificateAddr, pXbeHeader->dwCertificateAddr + sizeof(Xbe::Certificate));
+
+        memcpy((void*)pXbeHeader->dwCertificateAddr, &((uint08*)pXbeHeader)[pXbeHeader->dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
     }
 
     // ******************************************************************
@@ -188,35 +201,35 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion
     {
         EmuInitFS();
 
-        EmuGenerateFS(TlsAdjust);
+        EmuGenerateFS(pTLS);
     }
 
     // ******************************************************************
     // * Initialize OpenXDK emulation
     // ******************************************************************
-    if(LibraryVersion == 0)
+    if(pLibraryVersion == 0)
         printf("Emu: Detected OpenXDK application...\n");
 
     // ******************************************************************
     // * Initialize Microsoft XDK emulation
     // ******************************************************************
-    if(LibraryVersion != 0)
+    if(pLibraryVersion != 0)
     {
         printf("Emu: Detected Microsoft XDK application...\n");
 
-        uint32 dwLibraryVersions = XbeHeader->dwLibraryVersions;
+        uint32 dwLibraryVersions = pXbeHeader->dwLibraryVersions;
         uint32 dwHLEEntries      = HLEDataBaseSize/sizeof(HLEData);
 
         for(uint32 v=0;v<dwLibraryVersions;v++)
         {
-            uint16 MajorVersion = LibraryVersion[v].wMajorVersion;
-            uint16 MinorVersion = LibraryVersion[v].wMinorVersion;
-            uint16 BuildVersion = LibraryVersion[v].wBuildVersion;
+            uint16 MajorVersion = pLibraryVersion[v].wMajorVersion;
+            uint16 MinorVersion = pLibraryVersion[v].wMinorVersion;
+            uint16 BuildVersion = pLibraryVersion[v].wBuildVersion;
 
             char szLibraryName[9] = {0};
 
             for(uint32 c=0;c<8;c++)
-                szLibraryName[c] = LibraryVersion[v].szName[c];
+                szLibraryName[c] = pLibraryVersion[v].szName[c];
 
             printf("Emu: Locating HLE Information for %s %d.%d.%d...", szLibraryName, MajorVersion, MinorVersion, BuildVersion);
 
@@ -231,14 +244,14 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion
 
                 printf("Found\n");
 
-                EmuInstallWrappers(HLEDataBase[d].OovpaTable, HLEDataBase[d].OovpaTableSize, Entry, XbeHeader);
+                EmuInstallWrappers(HLEDataBase[d].OovpaTable, HLEDataBase[d].OovpaTableSize, Entry, pXbeHeader);
             }
 
             if(!found)
                 printf("Skipped\n");
         }
 
-        EmuD3DInit(XbeHeader, XbeHeaderSize);
+        EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
     }
 
     printf("Emu (0x%.08X): Initial thread starting.\n", GetCurrentThreadId());
@@ -296,27 +309,13 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage)
     {
         FreeConsole();
 
-        freopen("CONOUT$", "wt", stdout);
+        char buffer[16];
+
+        if(GetConsoleTitle(buffer, 16) != NULL)
+            freopen("nul", "w", stdout);
     }
 
-    // ******************************************************************
-    // * We're outta here...
-    // ******************************************************************
-    while(true)
-    {
-        // Hilariously, window's will just stop sending exceptions
-        // If we insist that we don't care about TLS failure.
-        __try
-        {
-            ExitProcess(0);
-        }
-        __except(EXCEPTION_EXECUTE_HANDLER)
-        {
-
-        }
-
-        Sleep(10);
-    }
+    TerminateProcess(GetCurrentProcess(), 0);
 
     return;
 }
@@ -350,7 +349,7 @@ inline void EmuInstallWrapper(void *FunctionAddr, void *WrapperAddr)
 // ******************************************************************
 // * func: EmuInstallWrappers
 // ******************************************************************
-void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *XbeHeader)
+void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *pXbeHeader)
 {
     // ******************************************************************
     // * traverse the full OOVPA table
@@ -364,8 +363,8 @@ void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*En
         OOVPA *Oovpa = OovpaTable[a].Oovpa;
 
         uint32 count = Oovpa->Count;
-        uint32 lower = XbeHeader->dwBaseAddr;
-        uint32 upper = XbeHeader->dwBaseAddr + XbeHeader->dwSizeofImage;
+        uint32 lower = pXbeHeader->dwBaseAddr;
+        uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
 
         // ******************************************************************
         // * Large
@@ -498,7 +497,7 @@ int EmuException(LPEXCEPTION_POINTERS e)
 	// ******************************************************************
 	{
 		printf("\n");
-		printf("Recieved Exception : 0x%.08X\n", e->ExceptionRecord->ExceptionCode);
+		printf("CxbxKrnl(0x%.08X): Recieved Exception : 0x%.08X\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
 		printf("\n");
 	}
 

@@ -1359,7 +1359,10 @@ void WndMain::UpdateDebugConsoles()
     {
         FreeConsole();
 
-        freopen("nul", "wt", stdout);
+        char buffer[16];
+
+        if(GetConsoleTitle(buffer, 16) != NULL)
+            freopen("nul", "w", stdout);
     }
 }
 

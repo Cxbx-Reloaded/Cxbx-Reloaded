@@ -34,16 +34,10 @@
 #ifndef EMUFS_H
 #define EMUFS_H
 
-// ******************************************************************
-// * TLSExData
-// ******************************************************************
-struct TLSExData
-{
-    unsigned short wSwapFS;
-    bool           bIsXboxFS;
-    unsigned long  dwSizeOfOrgTLS;
-    void          *pOrgTLS;
-};
+#include "Xbe.h"
+
+// word @ FS:[0x14] := wSwapFS
+// byte @ FS:[0x16] := bIsXboxFS
 
 // ******************************************************************
 // * func: EmuSwapFS
@@ -59,8 +53,8 @@ static inline void EmuSwapFS()
 {
     __asm
     {
-        mov eax, fs:[0x14]
-        mov fs, [eax]
+        mov ax, fs:[0x14]
+        mov fs, ax
     }
 }
 
@@ -79,8 +73,7 @@ static inline bool EmuIsXboxFS()
 
     __asm
     {
-        mov eax, fs:[0x14]
-        mov ah, [eax+2]
+        mov ah, fs:[0x14]
         mov chk, ah
     }
 
@@ -90,7 +83,7 @@ static inline bool EmuIsXboxFS()
 // ******************************************************************
 // * func: EmuGenerateFS
 // ******************************************************************
-void EmuGenerateFS(int TlsAdjust);
+void EmuGenerateFS(Xbe::TLS *pTLS);
 
 // ******************************************************************
 // * func: EmuCleanupFS
