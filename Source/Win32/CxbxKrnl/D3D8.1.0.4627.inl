@@ -147,6 +147,39 @@ SOOVPA<13> IDirect3DDevice8_CreateVertexBuffer2_1_0_4627 =
     }
 };
 
+
+// ******************************************************************
+// * IDirect3DDevice8_SetRenderState_ZEnable
+// ******************************************************************
+SOOVPA<13> IDirect3DDevice8_SetRenderState_ZEnable_1_0_4627 =
+{
+    0,  // Large == 0
+    13, // Count == 13
+
+    {
+        // IDirect3DDevice8_SetRenderState_CullMode+0x0C : jb +0x05
+        { 0x0C, 0x72 }, // (Offset,Value)-Pair #1
+        { 0x0D, 0x05 }, // (Offset,Value)-Pair #2
+
+        // IDirect3DDevice8_SetRenderState_CullMode+0x1B : mov ecx, [esi+0x21B8h]
+        { 0x1B, 0x8B }, // (Offset,Value)-Pair #3
+        { 0x1C, 0x8E }, // (Offset,Value)-Pair #4
+        { 0x1D, 0xB8 }, // (Offset,Value)-Pair #5
+        { 0x1E, 0x21 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_SetRenderState_CullMode+0x2E : mov dword ptr [eax], 0x4030
+        { 0x2E, 0xC7 }, // (Offset,Value)-Pair #7
+        { 0x2F, 0x00 }, // (Offset,Value)-Pair #8
+        { 0x30, 0x0C }, // (Offset,Value)-Pair #9
+        { 0x31, 0x03 }, // (Offset,Value)-Pair #10
+        { 0x32, 0x04 }, // (Offset,Value)-Pair #11
+
+        // IDirect3DDevice8_SetRenderState_CullMode+0x8C : retn 0x04
+        { 0x8C, 0xC2 }, // (Offset,Value)-Pair #12
+        { 0x8D, 0x04 }, // (Offset,Value)-Pair #13
+    }
+};
+
 // ******************************************************************
 // * IDirect3DVertexBuffer8_Lock2
 // ******************************************************************
@@ -230,6 +263,16 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetRenderState_CullMode" 
+        #endif
+    },
+    // IDirect3DDevice8::SetRenderState_ZEnable
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_ZEnable_1_0_4627,
+
+        xd3d8::EmuIDirect3DDevice8_SetRenderState_ZEnable,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_ZEnable" 
         #endif
     },
     // IDirect3DDevice8::SetTransform (* unchanged since 4361 *)

@@ -72,9 +72,9 @@ extern UINT D3DVertexToPrimitive[11][2];
 extern D3DRENDERSTATETYPE D3DRenderState2PC[160];
 
 // ******************************************************************
-// * EmuD3DRenderState
+// * EmuD3DDefferedRenderState
 // ******************************************************************
-extern DWORD *EmuD3DRenderState;
+extern DWORD *EmuD3DDefferedRenderState;
 
 // ******************************************************************
 // * EmuPrimitiveType

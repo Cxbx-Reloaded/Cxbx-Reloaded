@@ -333,24 +333,25 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 					}
 				}
             }
-			else if(strcmp("D3D8", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && (BuildVersion == 4361))
+			else if(strcmp("D3D8", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && (BuildVersion == 4361 || BuildVersion == 4627))
 			{
                 uint32 lower = pXbeHeader->dwBaseAddr;
                 uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
 
-				// ******************************************************************
-				// * Locate IDirect3DDevice8_SetRenderState_CullMode
-				// ******************************************************************
-				{
-					void *pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4361, lower, upper);
+				void *pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4361, lower, upper);
 
-					if(pFunc != 0)
-					{
-						xd3d8::EmuD3DRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x200);
+                // ******************************************************************
+				// * Locate D3DRenderState
+				// ******************************************************************
+                if(pFunc != 0)
+                {
+                    if(BuildVersion == 4361)
+						xd3d8::EmuD3DDefferedRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x200 + 82*4);
+                    else if(BuildVersion == 4627)
+						xd3d8::EmuD3DDefferedRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x24C + 92*4);
 
-						printf("Emu (0x%X): 0x%.08X -> EmuD3DRenderState\n", GetCurrentThreadId(), xd3d8::EmuD3DRenderState);
-					}
-				}
+					printf("Emu (0x%X): 0x%.08X -> EmuD3DDefferedRenderState\n", GetCurrentThreadId(), xd3d8::EmuD3DDefferedRenderState);
+                }
 			}
         }
 
@@ -395,8 +396,6 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     __try
     {
         EmuSwapFS();   // XBox FS
-
-		_asm int 3
 
 		Entry();
 

@@ -111,6 +111,16 @@ OOVPATable XAPI_1_0_4627[] =
         #endif
     },
     //*/
+    // XapiThreadStartup (* unchanged since 1.0.4361 *)
+    {
+        (OOVPA*)&XapiThreadStartup_1_0_4361,
+
+        xapi::EmuXapiThreadStartup,
+
+        #ifdef _DEBUG_TRACE
+        "XapiThreadStartup"
+        #endif
+    },
     //* Too High Level
     // XapiInitProcess (* unchanged since 1.0.4361 *)
     {

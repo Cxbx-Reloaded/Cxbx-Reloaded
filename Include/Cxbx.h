@@ -61,7 +61,7 @@ typedef signed long    sint32;
 // ******************************************************************
 // * Version information
 // ******************************************************************
-#define _CXBX_VERSION "0.7.0-pre2"
+#define _CXBX_VERSION "0.7.0-pre3"
 
 // ******************************************************************
 // * Define this to trace intercepted function calls

@@ -73,7 +73,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
     // * Copy Global TLS to Local
     // ******************************************************************
     {
-		uint32 dwCopySize = RoundUp(pTLS->dwDataEndAddr - pTLS->dwDataStartAddr, 0x04);
+		uint32 dwCopySize = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr;
         uint32 dwZeroSize = pTLS->dwSizeofZeroFill;
 
         pNewTLS = new uint08[dwCopySize + dwZeroSize];

@@ -99,9 +99,9 @@ UINT xd3d8::D3DVertexToPrimitive[11][2] =
 };
 
 // ******************************************************************
-// * EmuD3DRenderState
+// * EmuD3DDefferedRenderState
 // ******************************************************************
-DWORD *xd3d8::EmuD3DRenderState;
+DWORD *xd3d8::EmuD3DDefferedRenderState;
 
 // ******************************************************************
 // * D3DRenderState2PC (Convert Xbox->PC RenderState enum values)
@@ -931,7 +931,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
     #endif
 
 	// Certain D3DRS values need to be checked on each Draw[Indexed]Vertices
-	g_pD3D8Device->SetRenderState(D3DRS_LIGHTING, xd3d8::EmuD3DRenderState[92]);
+	g_pD3D8Device->SetRenderState(D3DRS_LIGHTING, xd3d8::EmuD3DDefferedRenderState[10]);
 
     UINT PrimitiveCount = D3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
 

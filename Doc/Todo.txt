@@ -1,18 +1,14 @@
 Cxbx Todo (* denotes high priority)
 
-  * D3D8.lib D3DDevice_SetRenderState_ZEnable@4 for 4627
-
   * XAPILIB XapiThreadStartup for 4627
 
-  * Stabilize Heap Allocation (i.e. new) -> Crashes after initial commit is full
+  * Stabilize Heap Allocation (i.e. operator new) -> Crashes after initial commit is full
 
   * Stabilize TLS (it's close...)
 
   * 3D Textured Demo
 
   * Retail Games (esp. XDK 4361)
-
-  * SetRenderState Simple for 4627 (Draw[Indexed]Vertices states are +10 up to 116, then some new ones?)
 
   * What does SetLastError check Irql for? Should this be emulated?
 
