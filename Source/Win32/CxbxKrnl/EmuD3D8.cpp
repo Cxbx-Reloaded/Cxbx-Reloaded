@@ -369,6 +369,8 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 
     printf("EmuD3D8 (0x%X): Message-Pump thread is running.\n", GetCurrentThreadId());
 
+	SetFocus(g_hEmuWindow);
+
     // message processing loop
     {
         MSG msg;
