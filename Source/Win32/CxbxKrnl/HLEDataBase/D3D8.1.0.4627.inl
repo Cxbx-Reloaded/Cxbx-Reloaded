@@ -2441,6 +2441,28 @@ SOOVPA<8> X_D3DDevice_SetVertexShaderInput_1_0_4627 =
 };
 
 // ******************************************************************
+// * D3DDevice_GetStreamSource2 (Maybe same in older versions)
+// ******************************************************************
+SOOVPA<7> X_D3DDevice_GetStreamSource2_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x06, 0x34 },
+        { 0x12, 0x85 },
+        { 0x16, 0x57 },
+        { 0x22, 0x8B },
+        { 0x26, 0x89 },
+        { 0x2E, 0x00 },
+        { 0x36, 0x89 },
+    }
+};
+
+// ******************************************************************
 // * D3D8_1_0_4627
 // ******************************************************************
 OOVPATable D3D8_1_0_4627[] =
@@ -3130,6 +3152,16 @@ OOVPATable D3D8_1_0_4627[] =
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_GetTransform" 
         #endif
+    },
+    // D3DDevice_GetStreamSource2
+    {
+        (OOVPA*)&X_D3DDevice_GetStreamSource2_1_0_4627,
+        XTL::EmuIDirect3DDevice8_GetStreamSource2,
+
+        #ifdef _DEBUG_TRACE
+        "D3DDevice_GetStreamSource2"
+        #endif
+
     },
     // IDirect3DDevice8::SetStreamSource (* unchanged since 4361 *)
     {

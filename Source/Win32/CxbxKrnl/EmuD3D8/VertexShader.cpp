@@ -461,8 +461,8 @@ static inline boolean HasMACO(VSH_SHADER_INSTRUCTION *pInstruction)
 
 static inline boolean HasMACARL(VSH_SHADER_INSTRUCTION *pInstruction)
 {
-    return !IsInUse(pInstruction->Output.OutputMask) && 
-            pInstruction->Output.OutputMux == OMUX_MAC &&
+    return /*!IsInUse(pInstruction->Output.OutputMask) && 
+            pInstruction->Output.OutputMux == OMUX_MAC &&*/
             pInstruction->MAC == MAC_ARL;
 }
 
@@ -852,6 +852,8 @@ static VSH_INTERMEDIATE_FORMAT *VshNewIntermediate(VSH_XBOX_SHADER *pShader)
 {
     VshVerifyBufferBounds(pShader);
 
+    ZeroMemory(&pShader->Intermediate[pShader->IntermediateCount], sizeof(VSH_INTERMEDIATE_FORMAT));
+
     return &pShader->Intermediate[pShader->IntermediateCount++];
 }
 
@@ -1185,6 +1187,13 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
         // Combining not supported in vs.1.1
         pIntermediate->IsCombined = FALSE;
 
+        /*
+        if(pIntermediate->Output.Type == IMD_OUTPUT_O && pIntermediate->Output.Address == OREG_OFOG)
+        {
+            // The PC shader assembler doesn't like masks on scalar registers
+            VshSetOutputMask(&pIntermediate->Output, TRUE, TRUE, TRUE, TRUE);
+        }*/
+
         if(pIntermediate->InstructionType == IMD_ILU && pIntermediate->ILU == ILU_RCC)
         {
             // Convert rcc to rcp
@@ -1355,42 +1364,55 @@ DWORD Xb2PCRegisterType(DWORD VertexRegister)
     case -1:
         DbgVshPrintf("D3DVSDE_VERTEX /* xbox ext. */");
         PCRegisterType = -1;
+        break;
     case 0:
         DbgVshPrintf("D3DVSDE_POSITION");
         PCRegisterType = D3DVSDE_POSITION;
+        break;
     case 1:
         DbgVshPrintf("D3DVSDE_BLENDWEIGHT");
         PCRegisterType = D3DVSDE_BLENDWEIGHT;
+        break;
     case 2:
         DbgVshPrintf("D3DVSDE_NORMAL");
         PCRegisterType = D3DVSDE_NORMAL;
+        break;
     case 3:
         DbgVshPrintf("D3DVSDE_DIFFUSE");
         PCRegisterType = D3DVSDE_DIFFUSE;
+        break;
     case 4:
         DbgVshPrintf("D3DVSDE_SPECULAR");
         PCRegisterType = D3DVSDE_SPECULAR;
+        break;
     case 5:
         DbgVshPrintf("D3DVSDE_FOG /* xbox ext. */");
         PCRegisterType = -1;
+        break;
     case 7:
         DbgVshPrintf("D3DVSDE_BACKDIFFUSE /* xbox ext. */");
         PCRegisterType = -1;
+        break;
     case 8:
         DbgVshPrintf("D3DVSDE_BACKSPECULAR /* xbox ext. */");
         PCRegisterType = -1;
+        break;
     case 9:
         DbgVshPrintf("D3DVSDE_TEXCOORD0");
         PCRegisterType = D3DVSDE_TEXCOORD0;
+        break;
     case 10:
         DbgVshPrintf("D3DVSDE_TEXCOORD1");
         PCRegisterType = D3DVSDE_TEXCOORD1;
+        break;
     case 11:
         DbgVshPrintf("D3DVSDE_TEXCOORD2");
         PCRegisterType = D3DVSDE_TEXCOORD2;
+        break;
     case 12:
         DbgVshPrintf("D3DVSDE_TEXCOORD3");
         PCRegisterType = D3DVSDE_TEXCOORD3;
+        break;
     default:
         DbgVshPrintf("%d /* unknown register */", VertexRegister);
         PCRegisterType = -1;
@@ -1523,9 +1545,9 @@ static boolean VshAddStreamPatch(VSH_PATCH_DATA *pPatchData)
 
         pStreamPatch->ConversionStride = pPatchData->ConversionStride;
         pStreamPatch->NbrTypes = pPatchData->TypePatchData.NbrTypes;
-        pStreamPatch->NeedPatch = pStreamPatch->NeedPatch;
-        pStreamPatch->pTypes = (UINT *)malloc(pPatchData->TypePatchData.NbrTypes);
-        memcpy(pStreamPatch->pTypes, pPatchData->TypePatchData.Types, pPatchData->TypePatchData.NbrTypes);
+        pStreamPatch->NeedPatch = pPatchData->NeedPatching;
+        pStreamPatch->pTypes = (UINT *)malloc(pPatchData->TypePatchData.NbrTypes * sizeof(VSH_TYPE_PATCH_DATA));
+        memcpy(pStreamPatch->pTypes, pPatchData->TypePatchData.Types, pPatchData->TypePatchData.NbrTypes * sizeof(VSH_TYPE_PATCH_DATA));
 
         return TRUE;
     }
@@ -1927,16 +1949,32 @@ extern HRESULT XTL::EmuRecompileVshFunction
         DbgVshPrintf("%s", pShaderDisassembly);
         DbgVshPrintf("-----------------------\n");
 
-        HRESULT Result = D3DXAssembleShader(pShaderDisassembly,
-                                            strlen(pShaderDisassembly),
-                                            D3DXASM_SKIPVALIDATION,
-                                            NULL,
-                                            ppRecompiled,
-                                            NULL);
+        hRet = D3DXAssembleShader(pShaderDisassembly,
+                                  strlen(pShaderDisassembly),
+                                  D3DXASM_SKIPVALIDATION,
+                                  NULL,
+                                  ppRecompiled,
+                                  NULL);
+
+        if (FAILED(hRet))
+        {
+            EmuWarning("Couldn't assemble recompiled vertex shader\n");
+        }
 
         free(pShaderDisassembly);
     }
     free(pShader);
 
     return hRet;
+}
+
+extern void XTL::FreeVertexDynamicPatch(VERTEX_SHADER *pVertexShader)
+{
+    for (DWORD i = 0; i < pVertexShader->VertexDynamicPatch.NbrStreams; i++)
+    {
+        free(pVertexShader->VertexDynamicPatch.pStreamPatches[i].pTypes);
+    }
+    free(pVertexShader->VertexDynamicPatch.pStreamPatches);
+    pVertexShader->VertexDynamicPatch.pStreamPatches = NULL;
+    pVertexShader->VertexDynamicPatch.NbrStreams = 0;
 }

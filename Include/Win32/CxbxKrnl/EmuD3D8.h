@@ -1104,6 +1104,15 @@ BYTE* WINAPI EmuIDirect3DVertexBuffer8_Lock2
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_GetStreamSource2
+// ******************************************************************
+XTL::X_D3DVertexBuffer* WINAPI EmuIDirect3DDevice8_GetStreamSource2
+(
+    UINT  StreamNumber,
+    UINT *pStride
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetStreamSource
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_SetStreamSource

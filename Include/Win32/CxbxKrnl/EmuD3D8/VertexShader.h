@@ -34,7 +34,7 @@
 #ifndef VERTEXSHADER_H
 #define VERTEXSHADER_H
 
-//#define _DEBUG_VSH
+#define _DEBUG_VSH
 
 // nv2a microcode header
 typedef struct
@@ -67,6 +67,8 @@ extern HRESULT EmuRecompileVshFunction
     DWORD        *pOriginalSize,
     boolean      bNoReservedConstants
 );
+
+extern void FreeVertexDynamicPatch(VERTEX_SHADER *pVertexShader);
 
 inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle & 0x80000000) ? TRUE : FALSE; }
 inline X_D3DVertexShader *VshHandleGetVertexShader(DWORD Handle) { return (X_D3DVertexShader *)(Handle & 0x7FFFFFFF); }

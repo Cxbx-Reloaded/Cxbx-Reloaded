@@ -2095,7 +2095,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
                                                    pFunction == NULL,
                                                    &pVertexShader->VertexDynamicPatch);
 
-    if(SUCCEEDED(hRet))
+    if(SUCCEEDED(hRet) && pFunction)
     {
         hRet = XTL::EmuRecompileVshFunction((DWORD*)pFunction,
                                             &pRecompiledBuffer,
@@ -2104,6 +2104,12 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
         if(SUCCEEDED(hRet))
         {
             pRecompiledFunction = (DWORD*)pRecompiledBuffer->GetBufferPointer();
+        }
+        else
+        {
+            pRecompiledFunction = NULL;
+            EmuWarning("Couldn't recompile vertex shader function.\n");
+            hRet = D3D_OK; // Try using a fixed function vertex shader instead
         }
     }
 
@@ -2121,8 +2127,20 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
         if(pRecompiledBuffer)
         {
             pRecompiledBuffer->Release();
+            pRecompiledBuffer = NULL;
         }
     }
+
+    free(pRecompiledDeclaration);
+
+    pVertexShader->pDeclaration = (DWORD*)malloc(DeclarationSize);
+    memcpy(pVertexShader->pDeclaration, pDeclaration, DeclarationSize);
+
+    pVertexShader->FunctionSize = 0;
+    pVertexShader->pFunction = NULL;
+    pVertexShader->Type = X_D3DSMT_VERTEXSHADER;
+    pVertexShader->Size = (VertexShaderSize - sizeof(VSH_SHADER_HEADER)) / VSH_INSTRUCTION_SIZE_BYTES;
+    pVertexShader->DeclarationSize = DeclarationSize;
 
     if(SUCCEEDED(hRet))
     {
@@ -2137,39 +2155,38 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
             pVertexShader->pFunction = NULL;
             pVertexShader->FunctionSize = 0;
         }
-        pVertexShader->pDeclaration = (DWORD*)malloc(DeclarationSize);
-        memcpy(pVertexShader->pDeclaration, pDeclaration, DeclarationSize);
-        pVertexShader->Type = X_D3DSMT_VERTEXSHADER;
         pVertexShader->Handle = Handle;
-        pVertexShader->Size = (VertexShaderSize - sizeof(VSH_SHADER_HEADER)) / VSH_INSTRUCTION_SIZE_BYTES;
-        pVertexShader->DeclarationSize = DeclarationSize;
     }
     else
     {
-        pVertexShader->Handle = D3DFVF_XYZ/* | D3DFVF_TEX0*/;
+        pVertexShader->Handle = D3DFVF_XYZ | D3DFVF_TEX0;
     }
+
     pD3DVertexShader->Handle = (DWORD)pVertexShader;
 
     *pHandle = ((DWORD)pD3DVertexShader) | 0x80000000;
 
-#ifdef _DEBUG_VSH
     if(FAILED(hRet))
     {
-        char pFileName[30];
-        static int FailedShaderCount = 0;
-        VSH_SHADER_HEADER *pHeader = (VSH_SHADER_HEADER*)pFunction;
-        EmuWarning("Couldn't create vertex shader!");
-        sprintf(pFileName, "failed%05d.xvu", FailedShaderCount);
-        FILE *f = fopen(pFileName, "wb");
-        if(f)
+#ifdef _DEBUG_VSH
+        if (pFunction)
         {
-            fwrite(pFunction, sizeof(VSH_SHADER_HEADER) + pHeader->NumInst * 16, 1, f);
-            fclose(f);
+            char pFileName[30];
+            static int FailedShaderCount = 0;
+            VSH_SHADER_HEADER *pHeader = (VSH_SHADER_HEADER*)pFunction;
+            EmuWarning("Couldn't create vertex shader!");
+            sprintf(pFileName, "failed%05d.xvu", FailedShaderCount);
+            FILE *f = fopen(pFileName, "wb");
+            if(f)
+            {
+                fwrite(pFunction, sizeof(VSH_SHADER_HEADER) + pHeader->NumInst * 16, 1, f);
+                fclose(f);
+            }
+            FailedShaderCount++;
         }
-        FailedShaderCount++;
-        //hRet = D3D_OK;
-    }
 #endif // _DEBUG_VSH
+        hRet = D3D_OK;
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -6049,6 +6066,33 @@ BYTE* WINAPI XTL::EmuIDirect3DVertexBuffer8_Lock2
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_GetStreamSource2
+// ******************************************************************
+XTL::X_D3DVertexBuffer* WINAPI XTL::EmuIDirect3DDevice8_GetStreamSource2
+(
+    UINT  StreamNumber,
+    UINT *pStride
+)
+{
+    EmuSwapFS();
+
+    // debug trace
+    DbgPrintf( "EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_GetStreamSource2\n"
+               "(\n"
+               "   StreamNumber               : 0x%.08X\n"
+               "   pStride                    : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), StreamNumber, pStride);
+
+    EmuWarning("Not correctly implemented yet!");
+    X_D3DVertexBuffer* pVertexBuffer;
+    g_pD3DDevice8->GetStreamSource(StreamNumber, (struct XTL::IDirect3DVertexBuffer8 **)&pVertexBuffer, pStride);
+
+    EmuSwapFS();
+    return pVertexBuffer;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetStreamSource
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetStreamSource
@@ -6764,13 +6808,8 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DeleteVertexShader
             free(pVertexShader->pFunction);
         }
 
-        // TODO: Also free the dynamic streams patches!
-        for(DWORD i = 0; i < pVertexShader->VertexDynamicPatch.NbrStreams; i++)
-        {
-            free(pVertexShader->VertexDynamicPatch.pStreamPatches[i].pTypes);
-        }
+        FreeVertexDynamicPatch(pVertexShader);
 
-        free(pVertexShader->VertexDynamicPatch.pStreamPatches);
         free(pVertexShader);
         free(pD3DVertexShader);
     }
