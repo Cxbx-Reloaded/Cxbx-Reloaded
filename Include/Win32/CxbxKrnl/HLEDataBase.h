@@ -207,7 +207,7 @@ enum XRefDataBaseOffset
     // XAPI
     /* not necessary?
     XREF_XAPIXCALCULATESIGNATUREBEGINEX
-    */
+    //*/
     // +s
 };
 

@@ -3114,7 +3114,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_End()
 // TODO: D3DPushBuffer and D3DFixup
 VOID WINAPI XTL::EmuIDirect3DDevice8_RunPushBuffer
 (
-    PVOID                  pPushBuffer,
+    X_D3DPushBuffer       *pPushBuffer,
     PVOID                  pFixup
 )
 {
@@ -3406,9 +3406,11 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
         case X_D3DCOMMON_TYPE_PUSHBUFFER:
         {
-            EmuWarning("X_D3DCOMMON_TYPE_PUSHBUFFER is not yet implemented");
-
             X_D3DPushBuffer *pPushBuffer = (X_D3DPushBuffer*)pResource;
+
+            #ifdef _DEBUG_TRACE
+            printf("EmuIDirect3DResource8_Register (0x%X) : Successfully Created PushBuffer (0x%.08X, 0x%.08X)\n", GetCurrentThreadId(), pResource->Data, pPushBuffer->Size, pPushBuffer->AllocationSize);
+            #endif
         }
         break;
 
@@ -5639,6 +5641,12 @@ static void EmuUpdateDeferredStates()
         if(XTL::EmuD3DDeferredRenderState[1] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_FOGTABLEMODE, XTL::EmuD3DDeferredRenderState[1]);
 
+        if(XTL::EmuD3DDeferredRenderState[2] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_FOGSTART, XTL::EmuD3DDeferredRenderState[2]);
+
+        if(XTL::EmuD3DDeferredRenderState[3] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_FOGEND, XTL::EmuD3DDeferredRenderState[3]);
+
         if(XTL::EmuD3DDeferredRenderState[6] != X_D3DRS_UNK)
         {
             ::DWORD dwConv = 0;
@@ -5655,6 +5663,9 @@ static void EmuUpdateDeferredStates()
 
         if(XTL::EmuD3DDeferredRenderState[11] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_SPECULARENABLE, XTL::EmuD3DDeferredRenderState[11]);
+
+        if(XTL::EmuD3DDeferredRenderState[13] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_COLORVERTEX, XTL::EmuD3DDeferredRenderState[13]);
 
         if(XTL::EmuD3DDeferredRenderState[20] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, XTL::EmuD3DDeferredRenderState[20]);
@@ -5683,6 +5694,9 @@ static void EmuUpdateDeferredStates()
         if(XTL::EmuD3DDeferredRenderState[30] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALE_C, XTL::EmuD3DDeferredRenderState[30]);
 
+        if(XTL::EmuD3DDeferredRenderState[31] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_POINTSIZE_MAX, XTL::EmuD3DDeferredRenderState[31]);
+
         if(XTL::EmuD3DDeferredRenderState[33] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_PATCHSEGMENTS, XTL::EmuD3DDeferredRenderState[33]);
 
@@ -5691,9 +5705,9 @@ static void EmuUpdateDeferredStates()
         {
             if(XTL::EmuD3DDeferredRenderState[v] != X_D3DRS_UNK)
             {
-                if(v != 0  && v != 1  && v != 6  && v != 10 && v != 11 && v != 20 && v != 23
-                && v != 24 && v != 25 && v != 26 && v != 27 && v != 28 && v != 29 && v != 30
-                && v != 33)
+                if(v != 0  && v != 1  && v != 2 && v != 3 && v != 6  && v != 10 && v != 11 && v != 13 
+                && v != 20 && v != 23 && v != 24 && v != 25 && v != 26 && v != 27 && v != 28 && v != 29
+                && v != 30 && v != 31 && v != 33)
                     EmuWarning("Unhandled RenderState Change @ %d (%d)", v, v + 82);
             }
         }

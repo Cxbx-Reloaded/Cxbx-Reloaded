@@ -246,7 +246,7 @@ SOOVPA<8> XCalculateSignatureEnd_1_0_4627 =
         { 0x39, 0xEC },
     }
 };
-*/
+//*/
 // +s
 
 // ******************************************************************
@@ -438,7 +438,7 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXCalculateSignatureEnd"
         #endif
     },
-    */
+    //*/
     // s+
 };
 

@@ -316,7 +316,7 @@ extern uint32 XRefDataBase[] =
     -1, // XREF_DSBUFFERSETI3DL2SOURCE
     /* not necessary?
     -1, //XREF_XAPIXCALCULATESIGNATUREBEGINEX
-    */
+    //*/
     // +s
 };
 

@@ -203,6 +203,7 @@ struct X_D3DIndexBuffer : public X_D3DResource
 // ******************************************************************
 struct X_D3DPushBuffer : public X_D3DResource
 {
+    ULONG Size;
     ULONG AllocationSize;
 };
 
@@ -799,7 +800,7 @@ HRESULT WINAPI EmuIDirect3DDevice8_End();
 // TODO: D3DPushBuffer and D3DFixup
 VOID WINAPI EmuIDirect3DDevice8_RunPushBuffer
 (
-    PVOID                  pPushBuffer,
+    X_D3DPushBuffer       *pPushBuffer,
     PVOID                  pFixup
 );
 

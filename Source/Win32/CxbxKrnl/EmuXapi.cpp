@@ -1082,4 +1082,4 @@ DWORD WINAPI XTL::EmuXCalculateSignatureEnd
 
     return ERROR_SUCCESS;
 }
-*/
+//*/

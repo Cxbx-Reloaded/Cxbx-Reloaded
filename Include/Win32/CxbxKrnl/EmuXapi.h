@@ -551,7 +551,7 @@ DWORD WINAPI EmuXCalculateSignatureEnd
   HANDLE                hCalcSig,
   PXCALCSIG_SIGNATURE   pSignature
 );
-*/
+//*/
 // +s
 
 #endif
