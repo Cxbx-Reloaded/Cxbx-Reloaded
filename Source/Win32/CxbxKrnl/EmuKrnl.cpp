@@ -2487,8 +2487,10 @@ XBSYSAPI EXPORTNUM(337) VOID NTAPI xboxkrnl::XcSHAFinal(UCHAR *pbSHAContext, UCH
            GetCurrentThreadId(), pbSHAContext, pbDigest);
 
     // for now, we dont care about the digest
-    for(int v=0;v<16;v++)
+    for(int v=0;v<20;v++)
+    {
         pbDigest[v] = 0;
+    }
 
     EmuSwapFS();   // Xbox FS
 
