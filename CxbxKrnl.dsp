@@ -106,6 +106,22 @@ SOURCE=.\Bin\Cxbx.dll
 # Begin Group "Doc"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\Doc\Changelog.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\Doc\RemovedCode.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\Doc\Thanks.txt
+# End Source File
+# Begin Source File
+
+SOURCE=.\Doc\Todo.txt
+# End Source File
 # End Group
 # Begin Group "Include"
 
