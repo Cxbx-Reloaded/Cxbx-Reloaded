@@ -2365,6 +2365,28 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData2f
 
     HRESULT hRet = S_OK;
 
+    D3DINLINE_VERTEX *pD3DInlineVertex = (D3DINLINE_VERTEX*)&g_pD3DIVBData[g_pD3DIVBInd*sizeof(D3DINLINE_VERTEX)];
+
+    switch(Register)
+    {
+        case 0:             // D3DVSDE_POSITION
+        {
+            pD3DInlineVertex->x = a*640.0f;
+            pD3DInlineVertex->y = b*480.0f;
+            pD3DInlineVertex->z = 0.0f;
+            pD3DInlineVertex->rhw = 1.0f;
+
+            g_pD3DIVBInd++;
+        }
+        break;
+
+        case 4:             // D3DVSDE_SPECULAR
+        {
+            // TODO: hehe
+        }
+        break;
+    }
+
     EmuSwapFS();   // XBox FS
 
     return hRet;

@@ -55,16 +55,16 @@ typedef signed short   sint16;
 typedef signed long    sint32;
 
 // define this to trace intercepted function calls
-#define _DEBUG_TRACE
+//#define _DEBUG_TRACE
 
 // define this to trace warnings
-#define _DEBUG_WARNINGS
+//#define _DEBUG_WARNINGS
 
 // version information
 #ifndef _DEBUG_TRACE
-#define _CXBX_VERSION "0.7.9-Pre3"
+#define _CXBX_VERSION "0.7.9-Pre4"
 #else
-#define _CXBX_VERSION "0.7.9-Pre3-Trace"
+#define _CXBX_VERSION "0.7.9-Pre4-Trace"
 #endif
 
 // round dwValue to the nearest multiple of dwMult
