@@ -1842,17 +1842,20 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
     // TODO: Intelligently fill out these fields as necessary
     ZeroMemory(pD3DVertexShader, sizeof(X_D3DVertexShader));
 
+    HRESULT hRet = D3D_OK;
+
+    /*
     HRESULT hRet = g_pD3DDevice8->CreateVertexShader
     (
         pDeclaration,
         pFunction,
         &pD3DVertexShader->Handle,
         g_dwVertexShaderUsage   // TODO: HACK: Xbox has extensions!
-    );
+    );*/
 
     *pHandle = (DWORD)pD3DVertexShader;
 
-    if(FAILED(hRet))
+//    if(FAILED(hRet))
     {
         pD3DVertexShader->Handle = 0;
 
@@ -5693,7 +5696,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetVertexShader
         // create emulated shader struct
         X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader*)Handle;
         
-        hRet = g_pD3DDevice8->SetVertexShader(0);
+        hRet = g_pD3DDevice8->SetVertexShader(D3DFVF_XYZ|D3DFVF_TEX0);
     }
     else
     {
