@@ -70,11 +70,6 @@ xntdll::FPTR_RtlEnterCriticalSection      NT_RtlEnterCriticalSection      = (xnt
 xntdll::FPTR_RtlLeaveCriticalSection      NT_RtlLeaveCriticalSection      = (xntdll::FPTR_RtlLeaveCriticalSection)GetProcAddress(hNtDll, "RtlLeaveCriticalSection");
 
 // ******************************************************************
-// * Special macros for our "special" file handles
-// ******************************************************************
-#define IS_EMU_HANDLE(x) (!(((uint32)x) & 0x80000000))
-
-// ******************************************************************
 // * (Helper) PCSTProxyParam
 // ******************************************************************
 typedef struct _PCSTProxyParam
@@ -142,12 +137,7 @@ DWORD WINAPI PCSTProxy
         printf("Emu: WARNING!! Problem with ExceptionFilter\n");
     }
 
-    __asm
-    {
-
-callComplete:   nop
-
-    }
+callComplete:
 
     return 0;
 }
@@ -205,10 +195,8 @@ XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
         break;
 
         default:
-        {
             printf("EmuKrnl (0x%.08X): ExQueryNonVolatileSetting unknown ValueIndex : %.08X\n", ValueIndex);
-        }
-        break;
+            break;
     }
 
     EmuSwapFS();   // Xbox FS
@@ -274,7 +262,7 @@ XBSYSAPI EXPORTNUM(66) NTSTATUS NTAPI xboxkrnl::IoCreateFile
                "(\n"
                "   FileHandle          : 0x%.08X\n"
                "   DesiredAccess       : 0x%.08X\n"
-               "   ObjectAttributes    : 0x%.08X\n"
+               "   ObjectAttributes    : 0x%.08X (%s)\n"
                "   IoStatusBlock       : 0x%.08X\n"
                "   AllocationSize      : 0x%.08X\n"
                "   FileAttributes      : 0x%.08X\n"
@@ -283,17 +271,35 @@ XBSYSAPI EXPORTNUM(66) NTSTATUS NTAPI xboxkrnl::IoCreateFile
                "   CreateOptions       : 0x%.08X\n"
                "   Options             : 0x%.08X\n"
                ");\n",
-               GetCurrentThreadId(), FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock,
-               AllocationSize, FileAttributes, ShareAccess, Disposition, CreateOptions, Options);
+               GetCurrentThreadId(), FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes->ObjectName->Buffer,
+               IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, Disposition, CreateOptions, Options);
     }
     #endif
 
     NTSTATUS ret = STATUS_SUCCESS;
 
-    // TODO: HACK: We are just handling specific cases for now
+    // ******************************************************************
+    // * For now, just check for 'special' cases
+    // ******************************************************************
     if(strcmp(ObjectAttributes->ObjectName->Buffer, "\\Device\\Harddisk0\\partition1\\") == 0)
     {
-        // TODO: return a 'special' file handle for partition1
+        EmuHandle *iEmuHandle = new EmuHandle;
+
+        iEmuHandle->m_Type = EMUHANDLE_TYPE_PARTITION1;
+
+        *FileHandle = PtrToEmuHandle(iEmuHandle);
+
+        // TODO: Update IoStatusBlock if necessary
+    }
+    else if(strcmp(ObjectAttributes->ObjectName->Buffer, "\\Device\\Harddisk0\\partition1\\TDATA") == 0)
+    {
+        EmuHandle *iEmuHandle = new EmuHandle;
+
+        iEmuHandle->m_Type = EMUHANDLE_TYPE_TDATA;
+
+        *FileHandle = PtrToEmuHandle(iEmuHandle);
+
+        // TODO: Update IoStatusBlock if necessary
     }
     else
     {
@@ -308,6 +314,40 @@ XBSYSAPI EXPORTNUM(66) NTSTATUS NTAPI xboxkrnl::IoCreateFile
         );
         */
     }
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
+}
+
+// ******************************************************************
+// * 0x0043 IoCreateSymbolicLink
+// ******************************************************************
+XBSYSAPI EXPORTNUM(67) NTSTATUS xboxkrnl::IoCreateSymbolicLink
+(
+    IN PSTRING SymbolicLinkName,
+    IN PSTRING DeviceName
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%.08X): IoCreateSymbolicLink\n"
+               "(\n"
+               "   SymbolicLinkName    : 0x%.08X (%s)\n"
+               "   DeviceName          : 0x%.08X (%s)\n"
+               ");\n",
+               GetCurrentThreadId(), SymbolicLinkName, SymbolicLinkName->Buffer,
+               DeviceName, DeviceName->Buffer);
+    }
+    #endif
+
+    // TODO: Actually um...implement this function
+    NTSTATUS ret = STATUS_OBJECT_NAME_COLLISION;
 
     EmuSwapFS();   // Xbox FS
 
@@ -342,8 +382,8 @@ XBSYSAPI EXPORTNUM(99) NTSTATUS NTAPI xboxkrnl::KeDelayExecutionThread
     #endif
 
     // TODO: Worry about Interval.LargePart if necessary
-    if((sint32)Interval->LowPart < 0)
-        Sleep(-(sint32)Interval->LowPart/10000);
+    if((sint32)Interval->u.LowPart < 0)
+        Sleep(-(sint32)Interval->u.LowPart/10000);
     else
         EmuPanic();
 
@@ -528,11 +568,64 @@ XBSYSAPI EXPORTNUM(187) NTSTATUS NTAPI xboxkrnl::NtClose
     }
     #endif
 
-    NTSTATUS ret = NT_NtClose(Handle);
+    NTSTATUS ret = STATUS_SUCCESS;
+    
+    // ******************************************************************
+    // * delete 'special' handles
+    // ******************************************************************
+    if(IsEmuHandle(Handle))
+    {
+        EmuHandle *iEmuHandle = EmuHandleToPtr(Handle);
+
+        delete iEmuHandle;
+
+        ret = STATUS_SUCCESS;
+    }
+    // ******************************************************************
+    // * close normal handles
+    // ******************************************************************
+    else
+    {
+        ret = NT_NtClose(Handle);
+    }
 
     EmuSwapFS();   // Xbox FS
 
     return ret;
+}
+
+// ******************************************************************
+// * 0x00BE - NtCreateFile
+// ******************************************************************
+XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
+(
+	OUT PHANDLE             FileHandle, 
+	IN  ACCESS_MASK         DesiredAccess,
+	IN  POBJECT_ATTRIBUTES	ObjectAttributes,
+	OUT PIO_STATUS_BLOCK	IoStatusBlock,
+	IN  PLARGE_INTEGER	    AllocationSize OPTIONAL, 
+	IN  ULONG	            FileAttributes, 
+	IN  ULONG	            ShareAccess, 
+	IN  ULONG	            CreateDisposition, 
+	IN  ULONG	            CreateOptions 
+)
+{
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        EmuSwapFS();   // Win2k/XP FS
+
+        printf("EmuKrnl (0x%.08X): NtCreateFile [See IoCreateFile Params...]\n", GetCurrentThreadId());
+
+        EmuSwapFS();   // Xbox FS
+    }
+    #endif
+
+    xboxkrnl::IoCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, 0);
+
+    return STATUS_SUCCESS;
 }
 
 // ******************************************************************
@@ -559,17 +652,7 @@ XBSYSAPI EXPORTNUM(202) NTSTATUS xboxkrnl::NtOpenFile
     {
         EmuSwapFS();   // Win2k/XP FS
 
-        printf("EmuKrnl (0x%.08X): NtOpenFile\n"
-               "(\n"
-               "   FileHandle          : 0x%.08X\n"
-               "   DesiredAccess       : 0x%.08X\n"
-               "   ObjectAttributes    : 0x%.08X\n"
-               "   IoStatusBlock       : 0x%.08X\n"
-               "   ShareAccess         : 0x%.08X\n"
-               "   OpenOptions         : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), FileHandle, DesiredAccess, ObjectAttributes, 
-               IoStatusBlock, ShareAccess, OpenOptions);
+        printf("EmuKrnl (0x%.08X): NtOpenFile [See IoCreateFile Params...]\n", GetCurrentThreadId());
 
         EmuSwapFS();   // Xbox FS
     }
@@ -611,6 +694,35 @@ XBSYSAPI EXPORTNUM(218) NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformationFile
                Length, FileInformationClass);
     }
     #endif
+
+    // ******************************************************************
+    // * For now, handle 'special' case
+    // ******************************************************************
+    if(IsEmuHandle(FileHandle))
+    {
+        EmuHandle *iEmuHandle = EmuHandleToPtr(FileHandle);
+
+        // ******************************************************************
+        // * For now, only handle partition 1 'special' case
+        // ******************************************************************
+        if(iEmuHandle->m_Type == EMUHANDLE_TYPE_PARTITION1 && FileInformationClass == FileFsSizeInformation)
+        {
+            FILE_FS_SIZE_INFORMATION *SizeInfo = (FILE_FS_SIZE_INFORMATION*)FileInformation;
+
+            SizeInfo->TotalAllocationUnits.QuadPart     = 0x4C468;
+            SizeInfo->AvailableAllocationUnits.QuadPart = 0x2F125;
+            SizeInfo->SectorsPerAllocationUnit          = 32;
+            SizeInfo->BytesPerSector                    = 512;
+        }
+        else
+        {
+            EmuPanic();
+        }
+    }
+    else
+    {
+        EmuPanic();
+    }
 
     EmuSwapFS();   // Xbox FS
 
@@ -838,3 +950,12 @@ XBSYSAPI EXPORTNUM(301) xboxkrnl::ULONG NTAPI xboxkrnl::RtlNtStatusToDosError
 
     return ret;
 }
+
+// ******************************************************************
+// * 0x0141 - XboxHardwareInfo
+// ******************************************************************
+XBSYSAPI EXPORTNUM(322) XBOX_HARDWARE_INFO xboxkrnl::XboxHardwareInfo = 
+{
+    0xC0000035,
+    0,0,0,0
+};

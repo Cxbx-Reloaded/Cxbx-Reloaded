@@ -34,5 +34,58 @@
 #ifndef EMUFILE_H
 #define EMUFILE_H
 
+// ******************************************************************
+// * prevent name collisions
+// ******************************************************************
+namespace xboxkrnl
+{
+    #include <xboxkrnl/xboxkrnl.h>
+};
+
+#include "Emu.h"
+
+// ******************************************************************
+// * emulated "special" file handle
+// ******************************************************************
+struct EmuHandle
+{
+    enum _EmuHandleType m_Type;
+};
+
+// ******************************************************************
+// * Various "special" handle types
+// ******************************************************************
+typedef enum _EmuHandleType
+{
+    EMUHANDLE_TYPE_PARTITION1 = 0,
+    EMUHANDLE_TYPE_TDATA
+}
+EmuHandleType;
+
+// ******************************************************************
+// * is hFile a 'special' emulated handle?
+// ******************************************************************
+static inline bool IsEmuHandle(xboxkrnl::HANDLE hFile)
+{
+    bool ret = ((uint32)hFile) > 0x80000000;
+
+    return ret;
+}
+
+// ******************************************************************
+// * convert from 'special' emulated handle to a pointer
+// ******************************************************************
+static inline EmuHandle *EmuHandleToPtr(xboxkrnl::HANDLE hFile)
+{
+    return (EmuHandle*)((uint32)hFile - 0x80000000);
+}
+
+// ******************************************************************
+// * convert from 'special' emulated handle to a pointer
+// ******************************************************************
+static inline HANDLE PtrToEmuHandle(EmuHandle *pEmuHandle)
+{
+    return (HANDLE)((uint32)pEmuHandle + 0x80000000);
+}
 
 #endif

@@ -419,7 +419,7 @@ VOID WINAPI xapi::EmuXapiBootDash(DWORD UnknownA, DWORD UnknownB, DWORD UnknownC
     }
     #endif
 
-    MessageBox(NULL, "Warning: XBE has done a bad bad thing.\n\nThis process may not terminate elegantly.", "Cxbx", MB_OK);
+    MessageBox(NULL, "Warning: XBE has terminated unexpectedly.\n\nThis process might not terminate elegantly.", "Cxbx", MB_OK);
 
     ExitProcess(0);
 

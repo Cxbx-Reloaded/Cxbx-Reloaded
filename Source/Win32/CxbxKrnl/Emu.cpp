@@ -429,7 +429,16 @@ void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*En
 // ******************************************************************
 int EmuException(LPEXCEPTION_POINTERS e)
 {
-    int ret = MessageBox(NULL, "WARNING: This thread has performed an illegal operation.\n\nPress 'OK' to terminate emulation.\nPress 'Cancel' to debug.", "Cxbx", MB_ICONSTOP | MB_OKCANCEL);
+    static int count = 0;
+
+    count++;
+
+    if(count < 200)
+        return EXCEPTION_CONTINUE_EXECUTION;
+    else
+        count = 0;
+
+    int ret = MessageBox(NULL, "ERROR: Maximum exception count reached.\n\nPress 'OK' to terminate emulation.\nPress 'Cancel' to debug.", "Cxbx", MB_ICONSTOP | MB_OKCANCEL);
 
     if(ret == IDOK)
         ExitProcess(1);
