@@ -269,7 +269,10 @@ BOOL WINAPI EmuQueryPerformanceCounter
     PLARGE_INTEGER lpPerformanceCount
 );
 
-BOOL WINAPI XTL::EmuQueryPerformanceFrequency
+// ******************************************************************
+// * func: EmuQueryPerformanceCounter
+// ******************************************************************
+BOOL WINAPI EmuQueryPerformanceFrequency
 (
     PLARGE_INTEGER lpFrequency
 );

@@ -500,7 +500,12 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
         if(!g_XBVideo.GetVSync() && (g_D3DCaps.PresentationIntervals & D3DPRESENT_INTERVAL_IMMEDIATE) && g_XBVideo.GetFullscreen())
             pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
         else
-            pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+        {
+            if(g_D3DCaps.PresentationIntervals & D3DPRESENT_INTERVAL_ONE && g_XBVideo.GetFullscreen())
+                pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+            else
+                pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
+        }
 
         // TODO: Support Xbox extensions if possible
         if(pPresentationParameters->MultiSampleType != 0)
@@ -3084,9 +3089,6 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
         DestRect.bottom -= nBorderHeight;
 
         HRESULT hRet = g_pDDSOverlay7->UpdateOverlay(&SourRect, g_pDDSPrimary, &DestRect, DDOVER_SHOW, 0);
-
-        if(FAILED(hRet))
-            EmuCleanup("Could not update overlay");
     }
 
     EmuSwapFS();   // XBox FS
@@ -3133,7 +3135,8 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_BlockUntilVerticalBlank()
     }
     #endif
 
-    g_pDD7->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
+    if(g_XBVideo.GetVSync())
+        g_pDD7->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
 
     EmuSwapFS();   // XBox FS
 
