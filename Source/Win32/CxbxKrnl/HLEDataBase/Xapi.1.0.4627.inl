@@ -322,36 +322,6 @@ SOOVPA<12> XInputGetState_1_0_4928 =
     0,  // XRef Not Used
 
     {
-        { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
-        { 0x0D, 0xAC }, // (Offset,Value)-Pair #3
-
-        { 0x25, 0xF6 }, // (Offset,Value)-Pair #4
-        { 0x26, 0x46 }, // (Offset,Value)-Pair #5
-        { 0x27, 0x04 }, // (Offset,Value)-Pair #6
-        { 0x28, 0x02 }, // (Offset,Value)-Pair #7
-
-        { 0x39, 0xF3 }, // (Offset,Value)-Pair #8
-        { 0x3A, 0xAB }, // (Offset,Value)-Pair #9
-
-        { 0x90, 0xBF }, // (Offset,Value)-Pair #10
-        { 0x91, 0xE8 }, // (Offset,Value)-Pair #11
-        { 0x92, 0x7B }, // (Offset,Value)-Pair #12
-    }
-};
-
-// ******************************************************************
-// * XInputSetState
-// ******************************************************************
-SOOVPA<12> XInputSetState_1_0_4928 =
-{
-    0,  // Large == 0
-    12, // Count == 12
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
         { 0x0E, 0x8B }, // (Offset,Value)-Pair #1
         { 0x0F, 0x8A }, // (Offset,Value)-Pair #2
         { 0x10, 0xA3 }, // (Offset,Value)-Pair #3
@@ -368,6 +338,36 @@ SOOVPA<12> XInputSetState_1_0_4928 =
 
         { 0x69, 0xC2 }, // (Offset,Value)-Pair #11
         { 0x6A, 0x08 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
+// * XInputGetCapabilities
+// ******************************************************************
+SOOVPA<12> XInputGetCapabilities_1_0_4928 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
+        { 0x0D, 0xAC }, // (Offset,Value)-Pair #3
+
+        { 0x25, 0xF6 }, // (Offset,Value)-Pair #4
+        { 0x26, 0x46 }, // (Offset,Value)-Pair #5
+        { 0x27, 0x04 }, // (Offset,Value)-Pair #6
+        { 0x28, 0x02 }, // (Offset,Value)-Pair #7
+
+        { 0x39, 0xF3 }, // (Offset,Value)-Pair #8
+        { 0x3A, 0xAB }, // (Offset,Value)-Pair #9
+
+        { 0x90, 0xBF }, // (Offset,Value)-Pair #10
+        { 0x91, 0xE8 }, // (Offset,Value)-Pair #11
+        { 0x92, 0x7B }, // (Offset,Value)-Pair #12
     }
 };
 
@@ -614,14 +614,14 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXInputGetState"
         #endif
     },
-    // XInputSetState
+    // XInputGetCapabilities
     {
-        (OOVPA*)&XInputSetState_1_0_4928,
+        (OOVPA*)&XInputGetCapabilities_1_0_4928,
 
-        XTL::EmuXInputSetState,
+        XTL::EmuXInputGetCapabilities,
 
         #ifdef _DEBUG_TRACE
-        "EmuXInputSetState"
+        "EmuXInputGetCapabilities"
         #endif
     },
     // XInputSetState (* unchanged since 1.0.4361 *)

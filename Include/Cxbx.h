@@ -68,15 +68,15 @@ typedef signed long    sint32;
 // define this to trace warnings
 #define _DEBUG_WARNINGS
 
-// define this to dump textures @ SetTexture
+// define these to dump textures
 //#define _DEBUG_DUMP_TEXTURE_SETTEXTURE "C:\\Aaron\\Textures\\"
 //#define _DEBUG_DUMP_TEXTURE_REGISTER   "C:\\Aaron\\Textures\\"
 
 // version information
 #ifndef _DEBUG_TRACE
-#define _CXBX_VERSION "0.8.0-Pre2"
+#define _CXBX_VERSION "0.8.0-Pre3"
 #else
-#define _CXBX_VERSION "0.8.0-Pre2-Trace"
+#define _CXBX_VERSION "0.8.0-Pre3-Trace"
 #endif
 
 // round dwValue to the nearest multiple of dwMult

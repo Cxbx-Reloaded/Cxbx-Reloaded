@@ -1,3 +1,50 @@
+>> nice code for dumping textures inside of push buffer stuff
+
+            /*
+            IDirect3DBaseTexture8 *pTexture = 0;
+
+            g_pD3DDevice8->GetTexture(0, &pTexture);
+    
+            if(pTexture != NULL)
+            {
+                static int dwDumpTexture = 0;
+
+                char szBuffer[256];
+
+                printf("Texture Time...\n");
+
+                switch(pTexture->GetType())
+                {
+                    case D3DRTYPE_TEXTURE:
+                    {
+                        printf("_TEXTURE\n");
+                        sprintf(szBuffer, "C:\\Aaron\\Textures\\PushBufferTex - %.03d (0x%.08X).bmp", dwDumpTexture++, pTexture);
+
+                        ((IDirect3DTexture8*)pTexture)->UnlockRect(0);
+
+                        D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture, NULL);
+                    }
+                    break;
+
+                    case D3DRTYPE_CUBETEXTURE:
+                    {
+                        printf("_CUBETEXTURE\n");
+                        for(int face=0;face<6;face++)
+                        {
+                            sprintf(szBuffer, "C:\\Aaron\\Textures\\PushBufferTexCube%d - %.03d (0x%.08X).bmp", face, dwDumpTexture++, pTexture);
+
+                            ((IDirect3DCubeTexture8*)pTexture)->UnlockRect((D3DCUBEMAP_FACES)face, 0);
+                            
+                            D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture, NULL);
+                        }
+                    }
+                    break;
+                }
+            }
+            //*/
+
+<<
+
 >>
 
     /* TODO: Use new handle wrapping code

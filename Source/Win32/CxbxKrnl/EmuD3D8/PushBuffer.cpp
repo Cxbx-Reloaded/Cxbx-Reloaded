@@ -162,8 +162,6 @@ extern void XTL::EmuExecutePushBufferRaw
 
             pVertexData = ++pdwPushData;
 
-            // TODO: debug print out of vertex data
-
             pdwPushData += dwCount;
 
             // retrieve vertex shader
@@ -180,7 +178,20 @@ extern void XTL::EmuExecutePushBufferRaw
                 dwVertexShader = -1;
             }
 
+            //
             // calculate stride
+            //
+
+            dwStride = 0;
+
+            if(!VshHandleIsVertexShader(dwVertexShader))
+            {
+                if(dwVertexShader & D3DFVF_XYZRHW) { dwStride += sizeof(FLOAT)*4; }
+                if(dwVertexShader & D3DFVF_DIFFUSE) { dwStride += sizeof(DWORD); }
+                if(dwVertexShader & D3DFVF_SPECULAR) { dwStride += sizeof(DWORD); }
+
+                dwStride += ((dwVertexShader & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT)*sizeof(FLOAT)*2;
+            }
 
             /*
             // create cached vertex buffer only once, with maxed out size
@@ -208,10 +219,44 @@ extern void XTL::EmuExecutePushBufferRaw
             }
             */
 
+            #ifdef _DEBUG_TRACK_PB
+            if(bShowPB)
+            {
+                printf("NVPB_InlineVertexArray(...)\n");
+                printf("  dwCount : %d\n", dwCount);
+                printf("  dwVertexShader : 0x%08X\n", dwVertexShader);
+            }
+            #endif
+
             // render vertices
             if(dwVertexShader != -1)
             {
-                g_pD3DDevice8->DrawPrimitiveUP(PCPrimitiveType, dwCount / dwStride, pVertexData, dwStride);
+                UINT VertexCount = (dwCount*sizeof(DWORD)) / dwStride;
+                UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(XBPrimitiveType, VertexCount);
+
+                VertexPatchDesc VPDesc;
+
+                VPDesc.dwVertexCount = VertexCount;
+                VPDesc.PrimitiveType = XBPrimitiveType;
+                VPDesc.dwPrimitiveCount = PrimitiveCount;
+                VPDesc.dwOffset = 0;
+                VPDesc.pVertexStreamZeroData = pVertexData;
+                VPDesc.uiVertexStreamZeroStride = dwStride;
+                VPDesc.hVertexShader = dwVertexShader;
+
+                VertexPatcher VertPatch;
+
+                bool bPatched = VertPatch.Apply(&VPDesc);
+
+                g_pD3DDevice8->DrawPrimitiveUP
+                (
+                    PCPrimitiveType,
+                    VPDesc.dwPrimitiveCount,
+                    VPDesc.pVertexStreamZeroData,
+                    VPDesc.uiVertexStreamZeroStride
+                );
+
+                VertPatch.Restore();
             }
 
             pdwPushData--;
