@@ -3426,7 +3426,7 @@ static void EmuUpdateDeferredStates()
     using namespace XTL;
 
     // Certain D3DRS values need to be checked on each Draw[Indexed]Vertices
-    if(XTL::EmuD3DDeferredRenderState != 0)
+    if(EmuD3DDeferredRenderState != 0)
     {
         if(XTL::EmuD3DDeferredRenderState[0] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_FOGENABLE,             XTL::EmuD3DDeferredRenderState[0]);
@@ -3616,6 +3616,35 @@ static void EmuUpdateDeferredStates()
                 }
             }
             //**/
+        }
+
+        // if point sprites are enabled, copy stage 3 over to 0
+        if(EmuD3DDeferredRenderState[26] == TRUE)
+        {
+            // pCur = Texture Stage 3 States
+            ::DWORD *pCur = &EmuD3DDeferredTextureState[2*32];
+
+            IDirect3DBaseTexture8 *pTexture;
+
+            // set the point sprites texture 
+            g_pD3DDevice8->GetTexture(3, &pTexture); 
+            g_pD3DDevice8->SetTexture(0, pTexture); 
+
+            // disable all other stages 
+            g_pD3DDevice8->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE); 
+            g_pD3DDevice8->SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE); 
+
+            // in that case we have to copy over the stage by hand
+            for(int v=0;v<30;v++)
+            { 
+                if(pCur[v] != X_D3DTSS_UNK)
+                {
+                    ::DWORD dwValue;
+
+                    g_pD3DDevice8->GetTextureStageState(3, (D3DTEXTURESTAGESTATETYPE)v, &dwValue);
+                    g_pD3DDevice8->SetTextureStageState(0, (D3DTEXTURESTAGESTATETYPE)v, dwValue);
+                }
+            } 
         }
     }
 }
