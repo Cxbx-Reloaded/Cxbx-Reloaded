@@ -1,10 +1,12 @@
 Cxbx Todo:
 
+  Retail Games!
+
+  Hijack TLS init function, prepare using our own rules.
+
   Certain SetRenderState's simply update a global..have Cxbx use these
 
   Fix TLS (Just do it by hand, forget using Win32 TLS)
-
-  Phase out EmuPanic() (EmuCleanup is good)
 
   Some sort of delete-after-emulation type of functionality?
 

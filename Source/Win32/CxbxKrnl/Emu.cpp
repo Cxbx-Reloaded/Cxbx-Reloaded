@@ -308,6 +308,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     {
         EmuSwapFS();   // XBox FS
 
+//        __asm int 3
+
         Entry();
 
         EmuSwapFS();   // Win2k/XP FS
@@ -338,7 +340,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage)
     {
         char buffer[255];
 
-        sprintf(buffer, "CxbxKrnl: Recieved Fatal Message \"%s\"\n", szErrorMessage);
+        sprintf(buffer, "CxbxKrnl: Recieved Fatal Message!\n\n%s\n", szErrorMessage);
 
         printf("%s", buffer);
 

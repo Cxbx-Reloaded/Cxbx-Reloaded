@@ -370,7 +370,7 @@ bool XBController::ConfigPoll(char *szStatus)
             dwFlags = DEVICE_FLAG_KEYBOARD;
 
             // ******************************************************************
-            // * Check for Mouse Key State Change
+            // * Check for Keyboard State Change
             // ******************************************************************
             for(int r=0;r<256;r++)
             {
@@ -409,7 +409,7 @@ bool XBController::ConfigPoll(char *szStatus)
             // ******************************************************************
             // * Detect Button State Change
             // ******************************************************************
-            for(int r=0;r<8;r++)
+            for(int r=0;r<4;r++)
             {
                 // 0x80 is the mask for button push
                 if(MouseState.rgbButtons[r] & 0x80)
@@ -437,6 +437,7 @@ bool XBController::ConfigPoll(char *szStatus)
             // ******************************************************************
             else
             {
+                printf("MouseState.lX : %d\n", MouseState.lX);
                 LONG lAbsDeltaX=0, lAbsDeltaY=0, lAbsDeltaZ=0;
                 LONG lDeltaX=0, lDeltaY=0, lDeltaZ=0;
 
@@ -566,6 +567,9 @@ void XBController::ListenBegin(HWND hwnd)
 // ******************************************************************
 void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
 {
+    if(Controller == NULL)
+        return;
+
     LPDIRECTINPUTDEVICE8 pDevice=NULL;
     HRESULT hRet=0;
     DWORD dwFlags=0;
@@ -609,7 +613,7 @@ void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
         // ******************************************************************
         if(dwFlags & DEVICE_FLAG_JOYSTICK)
         {
-            DIJOYSTATE JoyState;
+            DIJOYSTATE JoyState = {0};
 
             if(pDevice->GetDeviceState(sizeof(JoyState), &JoyState) != DI_OK)
                 continue;
@@ -647,7 +651,7 @@ void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
         // ******************************************************************
         else if(dwFlags & DEVICE_FLAG_KEYBOARD)
         {
-            BYTE KeyboardState[256];
+            BYTE KeyboardState[256] = {0};
 
             if(pDevice->GetDeviceState(sizeof(KeyboardState), &KeyboardState) != DI_OK)
                 continue;
@@ -658,6 +662,69 @@ void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
                 wValue = 32767;
             else
                 wValue = 0;
+        }
+        // ******************************************************************
+        // * Interpret PC Mouse Input
+        // ******************************************************************
+        else if(dwFlags & DEVICE_FLAG_MOUSE)
+        {
+            DIMOUSESTATE2 MouseState = {0};
+
+            if(pDevice->GetDeviceState(sizeof(MouseState), &MouseState) != DI_OK)
+                continue;
+
+            if(dwFlags & DEVICE_FLAG_MOUSE_CLICK)
+            {
+                if(MouseState.rgbButtons[dwInfo] & 0x80)
+                    wValue = 32767;
+                else
+                    wValue = 0;
+            }
+            else if(dwFlags & DEVICE_FLAG_AXIS)
+            {
+                static LONG lAccumX = 0;
+                static LONG lAccumY = 0;
+                static LONG lAccumZ = 0;
+
+                lAccumX += MouseState.lX * 300;
+                lAccumY += MouseState.lY * 300;
+                lAccumZ += MouseState.lZ * 300;
+
+                if(lAccumX > 32767)
+                    lAccumX = 32767;
+                else if(lAccumX < -32768)
+                    lAccumX = -32768;
+
+                if(lAccumY > 32767)
+                    lAccumY = 32767;
+                else if(lAccumY < -32768)
+                    lAccumY = -32768;
+
+                if(lAccumZ > 32767)
+                    lAccumZ = 32767;
+                else if(lAccumZ < -32768)
+                    lAccumZ = -32768;
+
+                if(dwInfo == DIMOFS_X)
+                    wValue = (WORD)lAccumX;
+                else if(dwInfo == DIMOFS_Y)
+                    wValue = (WORD)lAccumY;
+                else if(dwInfo == DIMOFS_Z)
+                    wValue = (WORD)lAccumZ;
+
+                if(dwFlags & DEVICE_FLAG_NEGATIVE)
+                {
+                    if(wValue < 0)
+                        wValue = abs(wValue+1);
+                    else
+                        wValue = 0;
+                }
+                else if(dwFlags & DEVICE_FLAG_POSITIVE)
+                {
+                    if(wValue < 0)
+                        wValue = 0;
+                }
+            }
         }
 
         // ******************************************************************

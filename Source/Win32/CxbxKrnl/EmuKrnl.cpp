@@ -286,7 +286,7 @@ XBSYSAPI EXPORTNUM(66) NTSTATUS NTAPI xboxkrnl::IoCreateFile
 
     NTSTATUS ret = STATUS_SUCCESS;
 
-    EmuPanic();
+    EmuCleanup("IoCreateFile Not Implemented");
     /* TODO: Use new handle wrapping code
 
     // ******************************************************************
@@ -697,7 +697,7 @@ XBSYSAPI EXPORTNUM(218) NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformationFile
     }
     #endif
 
-    EmuPanic();
+    EmuCleanup("NtQueryVolumeInformationFile Not Implemented");
 
     /* TODO: Use new handle wrapping code
 
