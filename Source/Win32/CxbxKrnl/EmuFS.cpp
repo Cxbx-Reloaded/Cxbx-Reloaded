@@ -59,7 +59,7 @@ void EmuInitFS()
 // ******************************************************************
 // * func: EmuGenerateFS
 // ******************************************************************
-void EmuGenerateFS()
+void EmuGenerateFS(int TlsAdjust)
 {
     NT_TIB         *OrgNtTib;
     xboxkrnl::KPCR *NewPcr;
@@ -122,11 +122,46 @@ void EmuGenerateFS()
         }
 
         // HACK: This converts from XBE stack form to Windows form (I guess?!)
-        TLSPtr = (void*)((uint32)TLSPtr+20 + (2*8));
+        TLSPtr = (void*)((uint32)TLSPtr + TlsAdjust);
+
+        // TlsAdjust == -1 implies that there is no TLS
+        if(TlsAdjust == -1)
+        {
+            TLSPtr = new uint32;
+            *(uint32*)TLSPtr = 0;
+        }
 
         NewPcr->PrcbData.CurrentThread->TlsData = TLSPtr;
     }
+/*
+Data Start Address               : 0x00000000
+Data End Address                 : 0x00000000
+TLS Index Address                : 0x00030DC4
+TLS Callback Address             : 0x00000000
+Size of Zero Fill                : 0x0000000C -> 12
+Characteristics                  : 0x00000000 -> 16
 
+Data Start Address               : 0x00010494 |
+Data End Address                 : 0x000104A0 |-> 12
+TLS Index Address                : 0x00030D5C
+TLS Callback Address             : 0x00000000
+Size of Zero Fill                : 0x00000008 -> 8
+Characteristics                  : 0x00000000 -> 26
+
+Data Start Address               : 0x00010494 |
+Data End Address                 : 0x000104A4 |-> 16
+TLS Index Address                : 0x00030D5C
+TLS Callback Address             : 0x00000000
+Size of Zero Fill                : 0x00000008 -> 8
+Characteristics                  : 0x00000000 -> 36
+
+Data Start Address               : 0x00010494 |
+Data End Address                 : 0x000104A8 |-> 20
+TLS Index Address                : 0x00030D5C
+TLS Callback Address             : 0x00000000
+Size of Zero Fill                : 0x00000008 -> 8
+Characteristics                  : 0x00000000 -> 52
+*/
     // ******************************************************************
     // * Swap into the "NewFS"
     // ******************************************************************
@@ -144,12 +179,10 @@ void EmuGenerateFS()
     // ******************************************************************
     // * Save "TLSPtr" inside NewFS.StackBase
     // ******************************************************************
+    __asm
     {
-        __asm
-        {
-            mov eax, TLSPtr
-            mov fs:[0x04], eax
-        }
+        mov eax, TLSPtr
+        mov fs:[0x04], eax
     }
 
     // ******************************************************************

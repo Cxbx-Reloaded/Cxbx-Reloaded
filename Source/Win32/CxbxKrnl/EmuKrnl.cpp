@@ -96,7 +96,7 @@ DWORD WINAPI PCSTProxy
 
     delete iPCSTProxyParam;
 
-    EmuGenerateFS();
+    EmuGenerateFS(g_TlsAdjust);
 
     // ******************************************************************
     // * debug trace

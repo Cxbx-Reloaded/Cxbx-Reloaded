@@ -47,7 +47,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuNoFunc();
 // ******************************************************************
 // * func: EmuInit
 // ******************************************************************
-extern "C" CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
+extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
 
 // ******************************************************************
 // * func: EmuPanic
@@ -58,5 +58,10 @@ extern "C" CXBXKRNL_API void NTAPI EmuPanic();
 // * data: KernelThunkTable
 // ******************************************************************
 extern "C" CXBXKRNL_API uint32 KernelThunkTable[367];
+
+// ******************************************************************
+// * data: g_TlsAdjust
+// ******************************************************************
+extern uint32 g_TlsAdjust;
 
 #endif

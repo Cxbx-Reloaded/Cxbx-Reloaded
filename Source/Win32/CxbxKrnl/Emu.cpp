@@ -53,6 +53,8 @@ namespace xboxkrnl
 // ******************************************************************
 static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*Entry)(), Xbe::Header *XbeHeader);
 
+uint32 g_TlsAdjust = 0;
+
 // ******************************************************************
 // * func: DllMain
 // ******************************************************************
@@ -82,8 +84,10 @@ extern "C" CXBXKRNL_API void NTAPI EmuNoFunc()
 // ******************************************************************
 // * func: EmuInit
 // ******************************************************************
-extern "C" CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)())
+extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)())
 {
+    g_TlsAdjust = TlsAdjust;
+
     // ******************************************************************
     // * debug console allocation (if configured)
     // ******************************************************************
@@ -118,6 +122,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, 
 
         printf("Emu: EmuInit\n"
                "(\n"
+               "   TlsAdjust           : 0x%.08X\n"
                "   LibraryVersion      : 0x%.08X\n"
                "   DebugConsole        : 0x%.08X\n"
                "   DebugFilename       : \"%s\"\n"
@@ -125,7 +130,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, 
                "   XBEHeaderSize       : 0x%.08X\n"
                "   Entry               : 0x%.08X\n"
                ");\n",
-               LibraryVersion, DbgMode, szDebugFilename, XbeHeader, XbeHeaderSize, Entry);
+               TlsAdjust, LibraryVersion, DbgMode, szDebugFilename, XbeHeader, XbeHeaderSize, Entry);
 
         #else
         printf("CxbxKrnl (0x%.08X): _DEBUG_TRACE disabled.\n", GetCurrentThreadId());
@@ -204,15 +209,13 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, 
     {
         EmuInitFS();
 
-        EmuGenerateFS();
+        EmuGenerateFS(TlsAdjust);
         
         EmuInitD3D(XbeHeader, XbeHeaderSize);
     }
 
     printf("Emu (0x%.08X): Initial thread starting.\n", GetCurrentThreadId());
 
-    // This must be enabled or the debugger may crash (sigh)
-    // __asm _emit 0xF1
     EmuSwapFS();   // XBox FS
 
     Entry();

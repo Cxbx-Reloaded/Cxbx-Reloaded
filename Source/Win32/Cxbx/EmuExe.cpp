@@ -550,6 +550,33 @@ EmuExe::EmuExe(Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename) : Exe
             memcpy(m_bzSection[i] + 0x100 + x_Xbe->m_Header.dwSizeofHeaders + 260, x_Xbe->m_LibraryVersion, sizeof(Xbe::LibraryVersion) * x_Xbe->m_Header.dwLibraryVersions);
 
             // ******************************************************************
+            // * calculate TLS adjustment
+            // ******************************************************************
+            uint32 TlsAdjust = 0;
+
+            if(x_Xbe->m_TLS == 0 || OrigTLSAddr == 0)
+                TlsAdjust = -1;
+            else
+            {
+                // ******************************************************************
+                // * necessary tls adjustment values
+                // ******************************************************************
+                uint32 TlsZF = OrigTLS.dwSizeofZeroFill;
+                uint32 TlsEA = OrigTLS.dwDataEndAddr;
+                uint32 TlsSA = OrigTLS.dwDataStartAddr;
+
+                // ******************************************************************
+                // * calculate tls adjustment
+                // ******************************************************************
+                TlsAdjust  = TlsZF + (TlsEA - TlsSA) + 0x0F;
+                TlsAdjust &= 0xFFFFFFF0;
+                TlsAdjust += 4;
+                TlsAdjust /= 5;
+                TlsAdjust += 2;
+                TlsAdjust *= 4;
+            }
+
+            // ******************************************************************
             // * patch prolog function parameters
             // ******************************************************************
             *(uint32 *)((uint32)m_bzSection[i] + 1)  = (uint32)EmuInit;
@@ -559,6 +586,7 @@ EmuExe::EmuExe(Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename) : Exe
             *(uint32 *)((uint32)m_bzSection[i] + 21) = m_SectionHeader[i].m_virtual_addr + m_OptionalHeader.m_image_base + 0x100 + x_Xbe->m_Header.dwSizeofHeaders;
             *(uint32 *)((uint32)m_bzSection[i] + 26) = x_debug_mode;
             *(uint32 *)((uint32)m_bzSection[i] + 31) = m_SectionHeader[i].m_virtual_addr + m_OptionalHeader.m_image_base + 0x100 + x_Xbe->m_Header.dwSizeofHeaders + 260;
+            *(uint32 *)((uint32)m_bzSection[i] + 36) = TlsAdjust;
 
             printf("OK\n");
         }

@@ -254,6 +254,11 @@ class Xbe : public Error
         // ******************************************************************
         uint08 *GetTLSData() { if(m_TLS == 0) return 0; else return GetAddr(m_TLS->dwDataStartAddr); }
 
+        // ******************************************************************
+        // * GetTLSIndex
+        // ******************************************************************
+        uint32 *GetTLSIndex() { if(m_TLS == 0) return 0; else return (uint32*)GetAddr(m_TLS->dwTLSIndexAddr); }
+
     private:
         // ******************************************************************
         // * Constructor Initialization

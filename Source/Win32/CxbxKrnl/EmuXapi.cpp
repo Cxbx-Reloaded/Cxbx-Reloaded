@@ -45,6 +45,7 @@ namespace xapi
     #include "EmuXapi.h"
 };
 
+#include "Emu.h"
 #include "EmuFS.h"
 #include "EmuD3D8.h"
 #include "EmuDInput.h"
@@ -74,7 +75,7 @@ static DWORD WINAPI EmuCreateThreadProxy
 
     delete iEmuCreateThreadProxyParam;
 
-    EmuGenerateFS();
+    EmuGenerateFS(g_TlsAdjust);
 
     // ******************************************************************
     // * debug trace
@@ -336,8 +337,6 @@ HANDLE WINAPI xapi::EmuCreateThread
        dwCreationFlags,
        lpThreadId
     );
-
-    printf("Returned : %d\n", RetHandle);
 
     EmuSwapFS();   // XBox FS
 
