@@ -642,9 +642,6 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CopyRects
         pDestPointsArray
     );
 
-    if(FAILED(hRet))
-        EmuCleanup("Hello");
-
     EmuSwapFS();   // Xbox FS
 
     return hRet;
@@ -953,10 +950,11 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreateVertexShader
     );
 
     if(FAILED(hRet))
+    {
         printf("*Warning* we're lying about the creation of a vertex shader!\n");
 
-    // hey look, we lied
-    hRet = D3D_OK;
+        hRet = D3D_OK;
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -1000,8 +998,12 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetVertexShaderConstant
         ConstantCount
     );
 
-    // hey look, we lied
-    hRet = D3D_OK;
+    if(FAILED(hRet))
+    {
+        printf("*Warning* we're lying about setting a vertex shader constant!\n");
+
+        hRet = D3D_OK;
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -1042,8 +1044,12 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreatePixelShader
         pHandle
     );
 
-    // hey look, we lied
-    hRet = D3D_OK;
+    if(FAILED(hRet))
+    {
+        printf("*Warning* we're lying about the creation of a pixel shader!\n");
+
+        hRet = D3D_OK;
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -1081,8 +1087,12 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetPixelShader
         Handle
     );
 
-    // hey look, we lied
-    hRet = D3D_OK;
+    if(FAILED(hRet))
+    {
+        printf("*Warning* we're lying about setting a pixel shader!\n");
+
+        hRet = D3D_OK;
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -1674,7 +1684,6 @@ HRESULT WINAPI xd3d8::EmuIDirect3DResource8_Register
             // ******************************************************************
             hRet = g_pD3DDevice8->CreateTexture
             (
-                // TODO: HACK: These are temporarily FIXED until we deswizzle
                 dwWidth, dwHeight, dwMipMap, 0, Format,
                 D3DPOOL_MANAGED, &pResource->EmuTexture8
             );
@@ -2345,7 +2354,7 @@ VOID __fastcall xd3d8::EmuIDirect3DDevice8_SetRenderState_Simple
 
     if(State == -1)
     {
-        printf("RenderState_Simple(0x%.08X, 0x%.08X) is unsupported\n", Method, Value);
+        printf("*Warning* RenderState_Simple(0x%.08X, 0x%.08X) is unsupported\n", Method, Value);
         EmuCleanup("RenderState_Simple(0x%.08X, 0x%.08X) is unsupported", Method, Value);
     }
     else
@@ -2731,52 +2740,181 @@ static void EmuUpdateDeferredStates()
     // Certain D3DRS values need to be checked on each Draw[Indexed]Vertices
     if(xd3d8::EmuD3DDeferredRenderState != 0)
     {
+        if(xd3d8::EmuD3DDeferredRenderState[0] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_FOGENABLE,             xd3d8::EmuD3DDeferredRenderState[0]);
+
+        if(xd3d8::EmuD3DDeferredRenderState[1] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_FOGTABLEMODE,          xd3d8::EmuD3DDeferredRenderState[1]);
+
         if(xd3d8::EmuD3DDeferredRenderState[10] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_LIGHTING,              xd3d8::EmuD3DDeferredRenderState[10]);
+
+        if(xd3d8::EmuD3DDeferredRenderState[11] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_SPECULARENABLE,        xd3d8::EmuD3DDeferredRenderState[11]);
 
         if(xd3d8::EmuD3DDeferredRenderState[20] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, xd3d8::EmuD3DDeferredRenderState[20]);
 
         if(xd3d8::EmuD3DDeferredRenderState[23] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_AMBIENT,               xd3d8::EmuD3DDeferredRenderState[23]);
+
+        /** To check for unhandled RenderStates
+        for(int v=0;v<117-82;v++)
+        {
+            if(xd3d8::EmuD3DDeferredRenderState[v] != X_D3DRS_UNK)
+            {
+                if(v != 0 && v != 1 && v != 10 && v != 11 && v != 20 && v != 23)
+                    printf("*Warning* Unhandled RenderState Change @ %d (%d)\n", v, v + 82);
+            }
+        }
+        **/
     }
 
     // Certain D3DTS values need to be checked on each Draw[Indexed]Vertices
     if(xd3d8::EmuD3DDeferredTextureState != 0)
     {
-        // TODO: HACK: Handle more than just stage 1 !!!! Make sure pCur is calculated right!
         for(int v=0;v<4;v++)
         {
             DWORD *pCur = xd3d8::EmuD3DDeferredTextureState+v;
 
-            if(pCur[21] != X_D3DTSS_UNK)
-                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_TEXTURETRANSFORMFLAGS, pCur[21]);
+            if(pCur[0] != X_D3DTSS_UNK)
+            {
+                if(pCur[0] == 5)
+                    EmuCleanup("ClampToEdge is unsupported (temporarily)");
+
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ADDRESSU, pCur[0]);
+            }
+
+            if(pCur[1] != X_D3DTSS_UNK)
+            {
+                if(pCur[1] == 5)
+                    EmuCleanup("ClampToEdge is unsupported (temporarily)");
+
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ADDRESSV, pCur[1]);
+            }
+
+            if(pCur[2] != X_D3DTSS_UNK)
+            {
+                if(pCur[2] == 5)
+                    EmuCleanup("ClampToEdge is unsupported (temporarily)");
+
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ADDRESSW, pCur[2]);
+            }
+
+            if(pCur[3] != X_D3DTSS_UNK)
+            {
+                if(pCur[3] == 4)
+                    EmuCleanup("QuinCunx is unsupported (temporarily)");
+
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_MAGFILTER, pCur[3]);
+            }
+
+            if(pCur[4] != X_D3DTSS_UNK)
+            {
+                if(pCur[4] == 4)
+                    EmuCleanup("QuinCunx is unsupported (temporarily)");
+
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_MINFILTER, pCur[4]);
+            }
+
+            if(pCur[5] != X_D3DTSS_UNK)
+            {
+                if(pCur[5] == 4)
+                    EmuCleanup("QuinCunx is unsupported (temporarily)");
+
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_MIPFILTER, pCur[5]);
+            }
 
             // TODO: Use a lookup table, this is not always a 1:1 map
             if(pCur[12] != X_D3DTSS_UNK)
-                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, pCur[12]);
+            {
+                if(pCur[12] > 12)
+                    EmuCleanup("(Temporarily) Unsupported D3DTSS_ALPHAOP Value (%d)", pCur[12]);
 
-            // TODO: I think these are OK, but verify this eventually
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, pCur[12]);
+            }
+
+            if(pCur[13] != X_D3DTSS_UNK)
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLORARG0, pCur[13]);
+
             if(pCur[14] != X_D3DTSS_UNK)
                 g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLORARG1, pCur[14]);
+
             if(pCur[15] != X_D3DTSS_UNK)
                 g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLORARG2, pCur[15]);
 
             // TODO: Use a lookup table, this is not always a 1:1 map (same as D3DTSS_COLOROP)
             if(pCur[16] != X_D3DTSS_UNK)
+            {
+                if(pCur[16] > 12)
+                    EmuCleanup("(Temporarily) Unsupported D3DTSS_ALPHAOP Value (%d)", pCur[16]);
+
                 g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ALPHAOP, pCur[16]);
+            }
+
+            if(pCur[17] != X_D3DTSS_UNK)
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ALPHAARG0, pCur[17]);
+
+            if(pCur[18] != X_D3DTSS_UNK)
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ALPHAARG1, pCur[18]);
+            
+            if(pCur[19] != X_D3DTSS_UNK)
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ALPHAARG2, pCur[19]);
+
+            if(pCur[20] != X_D3DTSS_UNK)
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_RESULTARG, pCur[20]);
+
+            if(pCur[21] != X_D3DTSS_UNK)
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_TEXTURETRANSFORMFLAGS, pCur[21]);
+
+            if(pCur[29] != X_D3DTSS_UNK)
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_BORDERCOLOR, pCur[29]);
+
+            /** To check for unhandled texture stage state changes
+            for(int r=0;r<32;r++)
+            {
+                static const int unchecked[] = 
+                {
+                    0, 1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 29, 30, 31
+                };
+
+                if(pCur[r] != X_D3DTSS_UNK)
+                {
+                    bool pass = true;
+
+                    for(int q=0;q<sizeof(unchecked)/sizeof(int);q++)
+                    {
+                        if(r == unchecked[q])
+                        {
+                            pass = false;
+                            break;
+                        }
+                    }
+
+                    if(pass)
+                        printf("*Warning* Unhandled TextureState Change @ %d->%d\n", v, r);
+                }
+            }
+            **/
         }
     }
 }
+
+static struct SlideCache
+{
+    PVOID pOrigPtr;
+    xd3d8::IDirect3DVertexBuffer8 *pVertexBuffer8;
+}
+g_SlideCache[32] = {0};
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_DrawVertices
 // ******************************************************************
 VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
 (
-    D3DPRIMITIVETYPE PrimitiveType,
-    UINT             StartVertex,
-    UINT             VertexCount
+    X_D3DPRIMITIVETYPE PrimitiveType,
+    UINT               StartVertex,
+    UINT               VertexCount
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -2798,14 +2936,101 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
 
     EmuUpdateDeferredStates();
 
+    if((DWORD)PrimitiveType == 0x03 || (DWORD)PrimitiveType == 0x08 || (DWORD)PrimitiveType == 0x09 || (DWORD)PrimitiveType == 0x10)
+        printf("Unsupported PrimitiveType! (%d)\n", (DWORD)PrimitiveType);
+
     UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
 
     // Convert from Xbox to PC enumeration
-    PrimitiveType = EmuPrimitiveType(PrimitiveType);
+    D3DPRIMITIVETYPE PCPrimitiveType = EmuPrimitiveType(PrimitiveType);
+
+    // Todo: Strongly optimize and modularize this routine
+    if(PrimitiveType == 8)  // Quad List
+    {
+        UINT nStride = 0;
+
+        IDirect3DVertexBuffer8 *pOrigVertexBuffer8 = 0;
+        IDirect3DVertexBuffer8 *pHackVertexBuffer8 = 0;
+
+        g_pD3DDevice8->GetStreamSource(0, &pOrigVertexBuffer8, &nStride);
+
+        DWORD dwCached = -1;
+        for(int v=0;v<32;v++)
+        {
+            if(g_SlideCache[v].pOrigPtr == pOrigVertexBuffer8)
+            {
+                pHackVertexBuffer8 = g_SlideCache[v].pVertexBuffer8;
+                dwCached = v;
+                break;
+            }
+        }
+
+        // if we haven't already converted this buffer to triangles, do it now
+        if(dwCached == -1)
+        {
+            int e=0;
+
+            // Find an empty cache
+            for(e=0;e<32;e++)
+                if(g_SlideCache[e].pOrigPtr == 0)
+                    break;
+
+            g_SlideCache[e].pOrigPtr = pOrigVertexBuffer8;
+
+            g_pD3DDevice8->CreateVertexBuffer(PrimitiveCount*nStride*6, 0, 0, D3DPOOL_DEFAULT, &pHackVertexBuffer8);
+
+            g_SlideCache[e].pVertexBuffer8 = pHackVertexBuffer8;
+
+            BOOL bPatch = FALSE;
+
+            DWORD dwVertexShader = NULL;
+
+            g_pD3DDevice8->GetVertexShader(&dwVertexShader);
+
+            if(dwVertexShader & D3DFVF_XYZRHW)
+				bPatch=TRUE;
+
+            BYTE *pOrigVertexData = 0;
+            BYTE *pHackVertexData = 0;
+
+            pOrigVertexBuffer8->Lock(0, 0, &pOrigVertexData, 0);
+            pHackVertexBuffer8->Lock(0, 0, &pHackVertexData, 0);
+
+			for(DWORD i=0;i<PrimitiveCount;i++)
+            {
+				memcpy(&pHackVertexData[i*nStride*6+0*nStride], &pOrigVertexData[i*nStride*4+2*nStride], nStride);
+				memcpy(&pHackVertexData[i*nStride*6+1*nStride], &pOrigVertexData[i*nStride*4+0*nStride], nStride);
+				memcpy(&pHackVertexData[i*nStride*6+2*nStride], &pOrigVertexData[i*nStride*4+1*nStride], nStride);
+				memcpy(&pHackVertexData[i*nStride*6+3*nStride], &pOrigVertexData[i*nStride*4+2*nStride], nStride);
+				memcpy(&pHackVertexData[i*nStride*6+4*nStride], &pOrigVertexData[i*nStride*4+3*nStride], nStride);
+				memcpy(&pHackVertexData[i*nStride*6+5*nStride], &pOrigVertexData[i*nStride*4+0*nStride], nStride);
+
+                if(bPatch)
+                {
+				    for(int z=0; z<6; z++)
+                    {
+				        if(((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[2] == 0.0f)
+					        ((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[2] = 1.0f;
+				        if(((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[3] == 0.0f)
+					        ((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[3] = 1.0f;
+				    }
+                }
+			}
+
+			pOrigVertexBuffer8->Unlock();
+            pHackVertexBuffer8->Unlock();
+        }
+
+        PrimitiveCount *= 2;
+
+        g_pD3DDevice8->SetStreamSource(0, pHackVertexBuffer8, nStride);
+
+        pOrigVertexBuffer8->Release();
+    }
 
     g_pD3DDevice8->DrawPrimitive
     (
-        PrimitiveType,
+        PCPrimitiveType,
         StartVertex,
         PrimitiveCount
     );
@@ -2820,10 +3045,10 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
 // ******************************************************************
 VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawVerticesUP
 (
-    D3DPRIMITIVETYPE PrimitiveType,
-    UINT             VertexCount,
-    CONST PVOID      pVertexStreamZeroData,
-    UINT             VertexStreamZeroStride
+    X_D3DPRIMITIVETYPE  PrimitiveType,
+    UINT                VertexCount,
+    CONST PVOID         pVertexStreamZeroData,
+    UINT                VertexStreamZeroStride
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -2847,14 +3072,17 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawVerticesUP
 
     EmuUpdateDeferredStates();
 
+    if((DWORD)PrimitiveType == 0x03 || (DWORD)PrimitiveType == 0x08 || (DWORD)PrimitiveType == 0x09 || (DWORD)PrimitiveType == 0x10)
+        printf("Unsupported PrimitiveType! (%d)\n", (DWORD)PrimitiveType);
+
     UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
 
     // Convert from Xbox to PC enumeration
-    PrimitiveType = EmuPrimitiveType(PrimitiveType);
+    D3DPRIMITIVETYPE PCPrimitiveType = EmuPrimitiveType(PrimitiveType);
 
     g_pD3DDevice8->DrawPrimitiveUP
     (
-        PrimitiveType,
+        PCPrimitiveType,
         PrimitiveCount,
         pVertexStreamZeroData,
         VertexStreamZeroStride
@@ -2871,9 +3099,9 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawVerticesUP
 // ******************************************************************
 VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawIndexedVertices
 (
-    D3DPRIMITIVETYPE PrimitiveType,
-    UINT             VertexCount,
-    CONST PWORD      pIndexData
+    X_D3DPRIMITIVETYPE  PrimitiveType,
+    UINT                VertexCount,
+    CONST PWORD         pIndexData
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -2895,14 +3123,17 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_DrawIndexedVertices
 
     EmuUpdateDeferredStates();
 
+    if((DWORD)PrimitiveType == 0x03 || (DWORD)PrimitiveType == 0x08 || (DWORD)PrimitiveType == 0x09 || (DWORD)PrimitiveType == 0x10)
+        printf("Unsupported PrimitiveType! (%d)\n", (DWORD)PrimitiveType);
+
     UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
 
     // Convert from Xbox to PC enumeration
-    PrimitiveType = EmuPrimitiveType(PrimitiveType);
+    D3DPRIMITIVETYPE PCPrimitiveType = EmuPrimitiveType(PrimitiveType);
 
     g_pD3DDevice8->DrawIndexedPrimitive
     (
-        PrimitiveType, 0, PrimitiveCount,
+        PCPrimitiveType, 0, PrimitiveCount,
         0, PrimitiveCount
     );
 

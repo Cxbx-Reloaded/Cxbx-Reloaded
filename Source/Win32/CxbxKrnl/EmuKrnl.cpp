@@ -298,35 +298,6 @@ XBSYSAPI EXPORTNUM(66) NTSTATUS NTAPI xboxkrnl::IoCreateFile
     // TODO: Use NtCreateFile if necessary. If it will work, we're fine
     EmuCleanup("IoCreateFile not implemented");
 
-    /* TODO: Use new handle wrapping code
-
-    // ******************************************************************
-    // * For now, just check for 'special' cases
-    // ******************************************************************
-    if(strcmp(ObjectAttributes->ObjectName->Buffer, "\\Device\\Harddisk0\\partition1\\") == 0)
-    {
-        EmuHandle *iEmuHandle = new EmuHandle;
-
-        iEmuHandle->m_Type = EMUHANDLE_TYPE_PARTITION1;
-
-        *FileHandle = PtrToEmuHandle(iEmuHandle);
-    }
-    else if(strcmp(ObjectAttributes->ObjectName->Buffer, "\\Device\\Harddisk0\\partition1\\TDATA") == 0)
-    {
-        EmuHandle *iEmuHandle = new EmuHandle;
-
-        iEmuHandle->m_Type = EMUHANDLE_TYPE_TDATA;
-
-        *FileHandle = PtrToEmuHandle(iEmuHandle);
-
-        // TODO: Update IoStatusBlock if necessary
-    }
-    else
-    {
-        EmuPanic();
-    }
-    */
-
     EmuSwapFS();   // Xbox FS
 
     return ret;

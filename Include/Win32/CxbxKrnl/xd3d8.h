@@ -363,6 +363,9 @@ struct X_D3DTILE
     DWORD   ZOffset;
 };
 
+// Todo: Fill out this enumeration table for convienance
+typedef DWORD X_D3DPRIMITIVETYPE;
+
 // ******************************************************************
 // * EmuD3DVertexToPrimitive
 // ******************************************************************
@@ -405,9 +408,9 @@ extern D3DPRIMITIVETYPE EmuPrimitiveTypeLookup[];
 // ******************************************************************
 // * EmuPrimitiveType
 // ******************************************************************
-static inline D3DPRIMITIVETYPE EmuPrimitiveType(int PrimitiveType)
+static inline D3DPRIMITIVETYPE EmuPrimitiveType(X_D3DPRIMITIVETYPE PrimitiveType)
 {
-    if(PrimitiveType == 0x7FFFFFFF)
+    if((DWORD)PrimitiveType == 0x7FFFFFFF)
         return D3DPT_FORCE_DWORD;
 
     return EmuPrimitiveTypeLookup[PrimitiveType];
@@ -911,9 +914,9 @@ HRESULT WINAPI EmuIDirect3DDevice8_SetVertexShader
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_DrawVertices
 (
-    D3DPRIMITIVETYPE PrimitiveType,
-    UINT             StartVertex,
-    UINT             VertexCount
+    X_D3DPRIMITIVETYPE  PrimitiveType,
+    UINT                StartVertex,
+    UINT                VertexCount
 );
 
 // ******************************************************************
@@ -921,10 +924,10 @@ VOID WINAPI EmuIDirect3DDevice8_DrawVertices
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_DrawVerticesUP
 (
-    D3DPRIMITIVETYPE PrimitiveType,
-    UINT             VertexCount,
-    CONST PVOID      pVertexStreamZeroData,
-    UINT             VertexStreamZeroStride
+    X_D3DPRIMITIVETYPE  PrimitiveType,
+    UINT                VertexCount,
+    CONST PVOID         pVertexStreamZeroData,
+    UINT                VertexStreamZeroStride
 );
 
 // ******************************************************************
@@ -932,9 +935,9 @@ VOID WINAPI EmuIDirect3DDevice8_DrawVerticesUP
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_DrawIndexedVertices
 (
-    D3DPRIMITIVETYPE PrimitiveType,
-    UINT             VertexCount,
-    CONST PWORD      pIndexData
+    X_D3DPRIMITIVETYPE  PrimitiveType,
+    UINT                VertexCount,
+    CONST PWORD         pIndexData
 );
 
 // ******************************************************************
