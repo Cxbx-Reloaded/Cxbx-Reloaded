@@ -97,9 +97,9 @@ SOOVPA<11> RtlSizeHeap_1_0_4627 =
 };
 
 // ******************************************************************
-// * XapiUnknownBad1
+// * XMountUtilityDrive
 // ******************************************************************
-SOOVPA<8> XapiUnknownBad1_1_0_4627 =
+SOOVPA<8> XMountUtilityDrive_1_0_4627 =
 {
     0,  // Large == 0
     8,  // Count == 8
@@ -171,14 +171,14 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuRtlSizeHeap"
         #endif
     },
-    // XapiUnknownBad1
+    // XMountUtilityDrive
     {
-        (OOVPA*)&XapiUnknownBad1_1_0_4627,
+        (OOVPA*)&XMountUtilityDrive_1_0_4627,
 
-        XTL::EmuXapiUnknownBad1,
+        XTL::EmuXMountUtilityDrive,
 
         #ifdef _DEBUG_TRACE
-        "EmuXapiUnknownBad1"
+        "EmuXMountUtilityDrive"
         #endif
     },
     // XInitDevices (* unchanged since 1.0.3911 *)

@@ -598,6 +598,16 @@ VOID __fastcall EmuIDirect3DDevice8_SetVertexShaderConstant4
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetVertexShaderConstantNotInline
+// ******************************************************************
+VOID __fastcall EmuIDirect3DDevice8_SetVertexShaderConstantNotInline
+(
+    INT         Register,
+    CONST PVOID pConstantData,
+    DWORD       ConstantCount
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_CreatePixelShader
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_CreatePixelShader

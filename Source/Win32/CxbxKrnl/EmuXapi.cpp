@@ -212,35 +212,6 @@ SIZE_T WINAPI XTL::EmuRtlSizeHeap
 }
 
 // ******************************************************************
-// * func: XapiUnknownBad1
-// ******************************************************************
-// NOTE: This does some hard disk verification and other things
-VOID WINAPI XTL::EmuXapiUnknownBad1
-(
-    IN DWORD dwUnknown
-)
-{
-    EmuSwapFS();   // Win2k/XP FS
-
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuXapi (0x%X): EmuXapiUnknownBad1\n"
-               "(\n"
-               "   dwUnknown           : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), dwUnknown);
-    }
-    #endif
-
-    EmuSwapFS();   // XBox FS
-
-    return;
-}
-
-// ******************************************************************
 // * func: EmuQueryPerformanceCounter
 // ******************************************************************
 BOOL WINAPI XTL::EmuQueryPerformanceCounter

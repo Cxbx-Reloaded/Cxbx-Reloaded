@@ -311,15 +311,6 @@ SIZE_T WINAPI EmuRtlSizeHeap
 );
 
 // ******************************************************************
-// * func: XapiUnknownBad1
-// ******************************************************************
-// NOTE: This does some hard disk verification and other things
-VOID WINAPI EmuXapiUnknownBad1
-(
-    IN DWORD dwUnknown
-);
-
-// ******************************************************************
 // * func: EmuQueryPerformanceCounter
 // ******************************************************************
 BOOL WINAPI EmuQueryPerformanceCounter

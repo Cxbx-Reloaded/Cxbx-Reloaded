@@ -1541,7 +1541,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetViewport
     HRESULT hRet = g_pD3DDevice8->SetViewport(pViewport);
 
     if(FAILED(hRet))
-        EmuCleanup("Unable to set viewport!");
+        EmuWarning("Unable to set viewport!");
 
     EmuSwapFS();   // Xbox FS
 
@@ -1906,6 +1906,36 @@ VOID __fastcall XTL::EmuIDirect3DDevice8_SetVertexShaderConstant4
     #endif
 
     XTL::EmuIDirect3DDevice8_SetVertexShaderConstant(Register - 96, pConstantData, 4);
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetVertexShaderConstantNotInline
+// ******************************************************************
+VOID __fastcall XTL::EmuIDirect3DDevice8_SetVertexShaderConstantNotInline
+(
+    INT         Register,
+    CONST PVOID pConstantData,
+    DWORD       ConstantCount
+)
+{
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        EmuSwapFS();   // Win2k/XP FS
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexShaderConstantNotInline\n"
+               "(\n"
+               "   Register            : 0x%.08X\n"
+               "   pConstantData       : 0x%.08X\n"
+               "   ConstantCount       : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Register, pConstantData, ConstantCount);
+        EmuSwapFS();   // XBox FS
+    }
+    #endif
+
+    XTL::EmuIDirect3DDevice8_SetVertexShaderConstant(Register - 96, pConstantData, ConstantCount);
 
     return;
 }

@@ -421,7 +421,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 						        XTL::g_pRtlCreateHeap = (XTL::pfRtlCreateHeap)((uint32)pFunc + (uint32)XTL::g_pRtlCreateHeap + 0x37 + 0x04);
 
 						        printf("EmuMain (0x%X): 0x%.08X -> EmuXapiProcessHeap\n", GetCurrentThreadId(), XTL::EmuXapiProcessHeap);
-						        printf("EmuMain (0x%X): 0x%.08X -> RtlCreateHeap\n", GetCurrentThreadId(), XTL::g_pRtlCreateHeap);
+						        printf("EmuMain (0x%X): 0x%.08X -> g_pRtlCreateHeap\n", GetCurrentThreadId(), XTL::g_pRtlCreateHeap);
 					        }
 				        }
                     }
