@@ -387,7 +387,15 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     ofn.Flags           = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
                     if(GetOpenFileName(&ofn) == TRUE)
+                    {
+                        if(m_Xbe != 0)
+                            CloseXbe();
+
+                        if(m_Xbe != 0)
+                            break;
+
                         OpenXbe(ofn.lpstrFile);
+                    }
                 }
                 break;
 
@@ -428,7 +436,15 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     ofn.Flags           = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
                     if(GetOpenFileName(&ofn) == TRUE)
+                    {
+                        if(m_Xbe != 0)
+                            CloseXbe();
+
+                        if(m_Xbe != 0)
+                            break;
+
                         ImportExe(ofn.lpstrFile);
+                    }
                 }
                 break;
 
@@ -1188,9 +1204,6 @@ void WndMain::RefreshMenus()
         {
 			HMENU file_menu = GetSubMenu(menu, 0);
 
-            // enable/disable open .xbe file
-            EnableMenuItem(file_menu, ID_FILE_OPEN_XBE, MF_BYCOMMAND | (m_Xbe != 0) ? MF_GRAYED : MF_ENABLED);
-
             // enable/disable close .xbe file
             EnableMenuItem(file_menu, ID_FILE_CLOSE_XBE, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
 
@@ -1199,9 +1212,6 @@ void WndMain::RefreshMenus()
 
 			// enable/disable save .xbe file as
 			EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILEAS, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
-
-            // enable/disable import from .exe
-            EnableMenuItem(file_menu, ID_FILE_IMPORTFROMEXE, MF_BYCOMMAND | (m_Xbe != 0) ? MF_GRAYED : MF_ENABLED);
 
             // enable/disable export to .exe
             EnableMenuItem(file_menu, ID_FILE_EXPORTTOEXE, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);

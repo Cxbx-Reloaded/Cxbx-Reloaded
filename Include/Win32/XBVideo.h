@@ -57,6 +57,18 @@ class XBVideo : public Error
         void Save(const char *szRegistryKey);
 
         // ******************************************************************
+        // * SetDirect3DDevice
+        // ******************************************************************
+        void  SetDirect3DDevice(DWORD dwDirect3DDevice) { m_dwDirect3DDevice = dwDirect3DDevice; }
+        DWORD GetDirect3DDevice() { return m_dwDirect3DDevice; }
+
+        // ******************************************************************
+        // * SetDisplayAdapter
+        // ******************************************************************
+        void  SetDisplayAdapter(DWORD dwDisplayAdapter) { m_dwDisplayAdapter = dwDisplayAdapter; }
+        DWORD GetDisplayAdapter() { return m_dwDisplayAdapter; }
+
+        // ******************************************************************
         // * Fullscreen Toggling
         // ******************************************************************
         void SetFullscreen(BOOL bFullscreen) { m_bFullscreen = bFullscreen; }
@@ -72,8 +84,10 @@ class XBVideo : public Error
         // ******************************************************************
         // * Configuration
         // ******************************************************************
-        BOOL m_bFullscreen;
-        BOOL m_bVSync;
+        DWORD m_dwDisplayAdapter;
+        DWORD m_dwDirect3DDevice;
+        BOOL  m_bFullscreen;
+        BOOL  m_bVSync;
 };
 
 #endif

@@ -42,9 +42,9 @@
 #include <dinput.h>
 
 // ******************************************************************
-// * exported globals
+// * Static Variable(s)
 // ******************************************************************
-XBController       g_XBController;
+static XBController g_XBController;
 
 // ******************************************************************
 // * prevent name collisions

@@ -46,6 +46,7 @@ namespace xboxkrnl
 #include "EmuFS.h"
 #include "EmuKrnl.h"
 #include "EmuDInput.h"
+#include "EmuShared.h"
 
 // ******************************************************************
 // * prevent name collisions
@@ -62,23 +63,28 @@ namespace xd3d8
 #include <locale.h>
 
 // ******************************************************************
-// * globals
+// * Global(s)
 // ******************************************************************
-xd3d8::LPDIRECT3D8       g_pD3D8         = NULL;   // Direct3D8
-xd3d8::LPDIRECT3DDEVICE8 g_pD3D8Device   = NULL;   // Direct3D8 Device
-Xbe::Header             *g_XbeHeader     = NULL;   // XbeHeader
-uint32                   g_XbeHeaderSize = 0;      // XbeHeaderSize
-HWND                     g_hEmuWindow    = NULL;   // Rendering Window
-xd3d8::D3DCAPS8          g_D3DCaps;                // Direct3D8 Caps
-HBRUSH                   g_hBgBrush      = NULL;   // Background Brush
-volatile bool            g_ThreadInitialized = false;
+HWND g_hEmuWindow    = NULL;   // Rendering Window
 
 // ******************************************************************
-// * statics
+// * Static Function(s)
 // ******************************************************************
 static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static DWORD WINAPI   EmuRenderWindow(LPVOID);
 static DWORD WINAPI   EmuUpdateTickCount(LPVOID);
+
+// ******************************************************************
+// * Static Variable(s)
+// ******************************************************************
+static xd3d8::LPDIRECT3D8       g_pD3D8         = NULL;   // Direct3D8
+static xd3d8::LPDIRECT3DDEVICE8 g_pD3D8Device   = NULL;   // Direct3D8 Device
+static Xbe::Header             *g_XbeHeader     = NULL;   // XbeHeader
+static uint32                   g_XbeHeaderSize = 0;      // XbeHeaderSize
+static xd3d8::D3DCAPS8          g_D3DCaps;                // Direct3D8 Caps
+static HBRUSH                   g_hBgBrush      = NULL;   // Background Brush
+static volatile bool            g_ThreadInitialized = false;
+static XBVideo                  g_XBVideo;
 
 // ******************************************************************
 // * D3DVertexToPrimitive
@@ -127,6 +133,8 @@ xd3d8::D3DPRIMITIVETYPE xd3d8::EmuPrimitiveTypeLookup[] =
 // ******************************************************************
 VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 {
+    g_EmuShared->GetXBVideo(&g_XBVideo);
+
     // ******************************************************************
     // * store XbeHeader and XbeHeaderSize for further use
     // ******************************************************************
@@ -170,7 +178,7 @@ VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         if(g_pD3D8 == NULL)
             EmuCleanup("Could not initialize Direct3D!");
 
-        g_pD3D8->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, &g_D3DCaps);
+        g_pD3D8->GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), D3DDEVTYPE_HAL, &g_D3DCaps);
     }
 }
 
@@ -261,12 +269,26 @@ DWORD WINAPI EmuRenderWindow(LPVOID)
             sprintf(AsciiTitle, "Cxbx : Emulating %s", tAsciiTitle);
         }
 
-        g_hEmuWindow = CreateWindow
-        (
-            "CxbxRender", AsciiTitle,
-            WS_OVERLAPPEDWINDOW, 100, 100, 640, 480,
-            GetDesktopWindow(), NULL, GetModuleHandle(NULL), NULL
-        );
+        // ******************************************************************
+        // * Create Window
+        // ******************************************************************
+        {
+            DWORD dwStyle = WS_OVERLAPPEDWINDOW;
+            int x = 100, y = 100, nWidth = 640, nHeight = 480;
+
+            if(g_XBVideo.GetFullscreen())
+            {
+                x = y = nWidth = nHeight = 0;
+                dwStyle = WS_POPUP;
+            }
+
+            g_hEmuWindow = CreateWindow
+            (
+                "CxbxRender", AsciiTitle,
+                dwStyle, x, y, nWidth, nHeight,
+                GetDesktopWindow(), NULL, GetModuleHandle(NULL), NULL
+            );
+        }
     }
 
     // ******************************************************************
@@ -330,11 +352,13 @@ LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_CLOSE:
             DestroyWindow(hWnd);
             break;
-/*
         case WM_SETCURSOR:
-            SetCursor(NULL);
-            return 0;
-*/
+            if(g_XBVideo.GetFullscreen())
+            {
+                SetCursor(NULL);
+                return 0;
+            }
+            // WM_SETCURSOR Fall through
         default:
             return DefWindowProc(hWnd, msg, wParam, lParam);
     }
@@ -380,12 +404,13 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
     // * make adjustments to parameters to make sense with windows d3d
     // ******************************************************************
     {
-        Adapter = D3DADAPTER_DEFAULT;
+        DeviceType =(g_XBVideo.GetDirect3DDevice() == 0) ? D3DDEVTYPE_HAL : D3DDEVTYPE_REF;
+        Adapter    = g_XBVideo.GetDisplayAdapter();
 
-        pPresentationParameters->Windowed = TRUE;
+        pPresentationParameters->Windowed = !g_XBVideo.GetFullscreen();
 
-        // TODO: Enable this optionally (to slow games down)
-        // pPresentationParameters->SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
+        if(g_XBVideo.GetVSync())
+            pPresentationParameters->SwapEffect = D3DSWAPEFFECT_COPY_VSYNC;
 
         hFocusWindow = g_hEmuWindow;
 
@@ -411,7 +436,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
         {
             D3DDISPLAYMODE D3DDisplayMode;
 
-            g_pD3D8->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &D3DDisplayMode);
+            g_pD3D8->GetAdapterDisplayMode(g_XBVideo.GetDisplayAdapter(), &D3DDisplayMode);
 
             pPresentationParameters->BackBufferFormat = D3DDisplayMode.Format;
         }
@@ -420,7 +445,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
     // ******************************************************************
     // * Detect vertex processing capabilities
     // ******************************************************************
-    if(g_D3DCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT)
+    if(g_D3DCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT && DeviceType != D3DDEVTYPE_HAL)
     {
         #ifdef _DEBUG_TRACE
         printf("EmuD3D8 (0x%X): Using hardware vertex processing\n", GetCurrentThreadId());
