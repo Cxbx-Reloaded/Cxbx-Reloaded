@@ -1030,7 +1030,8 @@ HRESULT WINAPI xdirectx::EmuIDirect3DDevice8_GetDepthStencilSurface
 
     IDirect3DSurface8 *pSurface8 = g_pCachedZStencilSurface->EmuSurface8;
 
-    pSurface8->AddRef();
+    if(pSurface8 != 0)
+        pSurface8->AddRef();
 
     *ppZStencilSurface = g_pCachedZStencilSurface;
 
@@ -1056,7 +1057,8 @@ xdirectx::X_D3DSurface * WINAPI xdirectx::EmuIDirect3DDevice8_GetDepthStencilSur
 
     IDirect3DSurface8 *pSurface8 = g_pCachedZStencilSurface->EmuSurface8;
 
-    pSurface8->AddRef();
+    if(pSurface8 != 0)
+        pSurface8->AddRef();
 
     EmuSwapFS();   // Xbox FS
 
