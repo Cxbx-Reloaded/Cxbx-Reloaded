@@ -525,7 +525,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         // ***** Remember to check SetLastError/GetLastError, this is very potential!
         // ***** Hint: BP@GetLastError and see if it matches up with Xeon's SetLastError?
         // ***** Note: SetLastError could be expected as implicit from some calls!
-        //_asm int 3
+        _asm int 3
         // ***** Problem could be GetLastError() after cache 
 
         Entry();

@@ -2026,6 +2026,9 @@ XBSYSAPI EXPORTNUM(236) NTSTATUS NTAPI xboxkrnl::NtWriteFile
     }
     #endif
 
+    if(ByteOffset != 0 && ByteOffset->QuadPart == 0x01C00800)
+        _asm int 3
+
     NTSTATUS ret = NtDll::NtWriteFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, (NtDll::LARGE_INTEGER*)ByteOffset, 0);
 
     EmuSwapFS();   // Xbox FS
