@@ -102,6 +102,9 @@ static DWORD WINAPI PCSTProxy
     }
     #endif
 
+    if(StartSuspended == TRUE)
+        SuspendThread(GetCurrentThread());
+
     EmuGenerateFS(g_pTLS, g_pTLSData);
 
     // call thread notification routine(s)
@@ -115,9 +118,6 @@ static DWORD WINAPI PCSTProxy
 
         EmuSwapFS();   // Win2k/XP FS
     }
-
-    if(StartSuspended == TRUE)
-        SuspendThread(GetCurrentThread());
 
     // use the special calling convention
     __try

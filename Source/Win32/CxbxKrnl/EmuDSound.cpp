@@ -1245,6 +1245,12 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_GetCurrentPosition
         EmuWarning("GetCurrentPosition FAILED");
 
     #ifdef _DEBUG_TRACE
+    /*
+    static int chk = 0;
+
+    if(chk++ == 700)
+        _asm int 3
+    //*/
     printf("*pdwCurrentPlayCursor := %d, *pdwCurrentWriteCursor := %d\n", *pdwCurrentPlayCursor, *pdwCurrentWriteCursor);
     #endif
 

@@ -107,6 +107,15 @@ extern HANDLE g_hZDrive;
 // thread notification routine
 extern PVOID g_pfnThreadNotification;
 
+// XInputSetState status waiters
+extern struct XInputSetStateStatus
+{
+    HANDLE  hDevice;
+    DWORD   dwLatency;
+    PVOID   pFeedback;
+}
+g_pXInputSetStateStatus[8];
+
 // extra stuff for multimonitors (win95+)
 typedef struct _MONITORINFO
 {

@@ -460,9 +460,38 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
         xboxkrnl::KeTickCount = timeGetTime();
         Sleep(1);
 
+        // check up on xinput waiters
+        for(int v=0;v<8;v++)
+        {
+            HANDLE hDevice = g_pXInputSetStateStatus[v].hDevice;
+
+            // NOTE: This uses an arbitrary latency!
+            if(hDevice != 0 && g_pXInputSetStateStatus[v].dwLatency++ == 4)
+            {
+                XTL::PXINPUT_FEEDBACK pFeedback = (XTL::PXINPUT_FEEDBACK)g_pXInputSetStateStatus[v].pFeedback;
+
+                pFeedback->Header.dwStatus = STATUS_SUCCESS;
+
+                #ifdef _DEBUG_TRACE
+                printf("EmuUpdateTickCount() : Updated pFeedback (hDevice : 0x%.08X, pFeedback : 0x%.08X) to STATUS_SUCCESS\n", hDevice, pFeedback);
+                #endif
+
+                if(pFeedback->Header.hEvent != NULL)
+                {
+                    #ifdef _DEBUG_TRACE
+                    printf("Triggering XINPUT_FEEDBACK Event (hDevice : 0x%X, pFeedback : )\n", hDevice, pFeedback);
+                    #endif
+                    SetEvent(pFeedback->Header.hEvent);
+                }
+
+                g_pXInputSetStateStatus[v].hDevice = 0;
+                g_pXInputSetStateStatus[v].dwLatency = 0;
+                g_pXInputSetStateStatus[v].pFeedback = 0;
+            }
+        }
+
         // trigger vblank callback
         {
-            g_VBData.VBlank++;
             g_VBData.Flags = 1; // D3DVBLANK_SWAPDONE
 
             if(g_pVBCallback != NULL)
@@ -3045,6 +3074,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Present
     HRESULT hRet = g_pD3DDevice8->Present(pSourceRect, pDestRect, (HWND)pDummy1, (CONST RGNDATA*)pDummy2);
 
     g_VBData.Swap++;
+    g_VBData.VBlank++;
 
     EmuSwapFS();   // XBox FS
 

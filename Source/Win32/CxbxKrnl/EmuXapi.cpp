@@ -40,6 +40,13 @@
 #include "Emu.h"
 #include "EmuFS.h"
 
+// XInputSetState status waiters
+extern XInputSetStateStatus g_pXInputSetStateStatus[8] = 
+{
+    {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0},
+    {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}
+};
+
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
@@ -614,14 +621,48 @@ DWORD WINAPI XTL::EmuXInputSetState
     }
     #endif
 
-    pFeedback->Header.dwStatus = ERROR_SUCCESS;
+    pFeedback->Header.dwStatus = ERROR_IO_PENDING;
 
-    if(pFeedback->Header.hEvent != NULL)
+    int v=0;
+
+    bool found=false;
+    
+    // verify this device is not already queued to be set
+    for(v=0;v<8;v++)
     {
-        #ifdef _DEBUG_TRACE
-        printf("Triggering XINPUT_FEEDBACK Event (0x%X)\n", pFeedback->Header.hEvent);
-        #endif
-        SetEvent(pFeedback->Header.hEvent);
+        if(g_pXInputSetStateStatus[v].hDevice == hDevice)
+        {
+            if(g_pXInputSetStateStatus[v].pFeedback != pFeedback)
+                EmuWarning("EmuXInputSetState lost feedback pointer!");
+
+            g_pXInputSetStateStatus[v].pFeedback = pFeedback;
+            g_pXInputSetStateStatus[v].dwLatency = 0;
+
+            found=true;
+        }
+    }
+
+    v=0;
+
+    // locate a blank entry and fill
+    if(!found)
+    {
+        for(v=0;v<8;v++)
+        {
+            if(g_pXInputSetStateStatus[v].hDevice == 0)
+            {
+                g_pXInputSetStateStatus[v].hDevice = hDevice;
+                g_pXInputSetStateStatus[v].dwLatency = 0;
+                g_pXInputSetStateStatus[v].pFeedback = pFeedback;
+                break;
+            }
+        }
+    }
+
+    // verify we found a slot
+    if(v == 8)
+    {
+        EmuCleanup("Ran out of XInputSetStateStatus slots!");
     }
 
     EmuSwapFS();   // XBox FS
