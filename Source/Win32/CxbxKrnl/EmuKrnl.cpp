@@ -1311,55 +1311,55 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
 
     char *szBuffer = ObjectAttributes->ObjectName->Buffer;
 
-    // D:\ should map to current directory
-    if( (szBuffer[0] == 'D' || szBuffer[0] == 'd') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-    {
-        szBuffer += 3;
+	// D:\ should map to current directory
+	if( (szBuffer[0] == 'D' || szBuffer[0] == 'd') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+	{
+		szBuffer += 3;
 
-        ObjectAttributes->RootDirectory = g_hCurDir;
+		ObjectAttributes->RootDirectory = g_hCurDir;
 
-        #ifdef _DEBUG_TRACE
-        printf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-        printf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-        printf("  New:\"$XbePath\\%s\"\n", szBuffer);
-        #endif
-    }
-    else if( (szBuffer[0] == 'T' || szBuffer[0] == 't') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-    {
-        szBuffer += 3;
+		#ifdef _DEBUG_TRACE
+		printf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+		printf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+		printf("  New:\"$XbePath\\%s\"\n", szBuffer);
+		#endif
+	}
+	else if( (szBuffer[0] == 'T' || szBuffer[0] == 't') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+	{
+		szBuffer += 3;
 
-        ObjectAttributes->RootDirectory = g_hTDrive;
+		ObjectAttributes->RootDirectory = g_hTDrive;
 
-        #ifdef _DEBUG_TRACE
-        printf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-        printf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-        printf("  New:\"$CxbxPath\\TDATA\\%s\"\n", szBuffer);
-        #endif
-    }
-    else if( (szBuffer[0] == 'U' || szBuffer[0] == 'u') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-    {
-        szBuffer += 3;
+		#ifdef _DEBUG_TRACE
+		printf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+		printf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+		printf("  New:\"$CxbxPath\\TDATA\\%s\"\n", szBuffer);
+		#endif
+	}
+	else if( (szBuffer[0] == 'U' || szBuffer[0] == 'u') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+	{
+		szBuffer += 3;
 
-        ObjectAttributes->RootDirectory = g_hUDrive;
+		ObjectAttributes->RootDirectory = g_hUDrive;
 
-        #ifdef _DEBUG_TRACE
-        printf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-        printf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-        printf("  New:\"$CxbxPath\\UDATA\\%s\"\n", szBuffer);
-        #endif
-    }
-    else if( (szBuffer[0] == 'Z' || szBuffer[0] == 'z') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-    {
-        szBuffer += 3;
+		#ifdef _DEBUG_TRACE
+		printf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+		printf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+		printf("  New:\"$CxbxPath\\UDATA\\%s\"\n", szBuffer);
+		#endif
+	}
+	else if( (szBuffer[0] == 'Z' || szBuffer[0] == 'z') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+	{
+		szBuffer += 3;
 
-        ObjectAttributes->RootDirectory = g_hZDrive;
+		ObjectAttributes->RootDirectory = g_hZDrive;
 
-        #ifdef _DEBUG_TRACE
-        printf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-        printf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-        printf("  New:\"$CxbxPath\\CxbxCache\\%s\"\n", szBuffer);
-        #endif
-    }
+		#ifdef _DEBUG_TRACE
+		printf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+		printf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+		printf("  New:\"$CxbxPath\\CxbxCache\\%s\"\n", szBuffer);
+		#endif
+	}
 
     // TODO: Wildcards are not allowed??
     {
@@ -1764,6 +1764,9 @@ XBSYSAPI EXPORTNUM(211) NTSTATUS NTAPI xboxkrnl::NtQueryInformationFile
     }
     #endif
 
+	if(FileInfo != FilePositionInformation && FileInfo != FileNetworkOpenInformation)
+		EmuCleanup("Unknown FILE_INFORMATION_CLASS 0x%.08X", FileInfo);
+
 	NTSTATUS ret = NtDll::NtQueryInformationFile
 	(
 		FileHandle,
@@ -1819,7 +1822,9 @@ XBSYSAPI EXPORTNUM(218) NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformationFile
         (NtDll::PFILE_FS_SIZE_INFORMATION)FileInformation, Length,
         (NtDll::FS_INFORMATION_CLASS)FileInformationClass
     );
-/*
+
+	// NOTE: TODO: Dynamically fill in, or allow configuration?
+	if(FileInformationClass == FileFsSizeInformation)
     {
         FILE_FS_SIZE_INFORMATION *SizeInfo = (FILE_FS_SIZE_INFORMATION*)FileInformation;
 
@@ -1828,7 +1833,7 @@ XBSYSAPI EXPORTNUM(218) NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformationFile
         SizeInfo->SectorsPerAllocationUnit          = 32;
         SizeInfo->BytesPerSector                    = 512;
     }
-*/
+
     EmuSwapFS();   // Xbox FS
 
     return ret;
@@ -2045,23 +2050,37 @@ XBSYSAPI EXPORTNUM(232) VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
 
     EmuSwapFS();   // Xbox FS
 
-    uint32 status = 0xC0000000;
+	uint32 dwEcx, dwEax;
 
-    if(0xC0000000 != (IoStatusBlock->u1.Status & 0xC0000000)) 
-        status = 0;
-
-    __asm
+	if((IoStatusBlock->u1.Status & 0xC0000000) == 0xC0000000)
+	{
+		dwEcx = 0;
+		dwEax = NtDll::RtlNtStatusToDosError(IoStatusBlock->u1.Status);
+	}
+	else
+	{
+		dwEcx = (DWORD)IoStatusBlock->u1.Pointer;
+		dwEax = 0;
+	}
+    
+	__asm
     {
         pushad
-
-        mov esi, IoStatusBlock
-        mov ecx, [esi]
-        mov eax, status
+		/*
+		mov esi, IoStatusBlock
+        mov ecx, dwEcx
+        mov eax, dwEax
+		*/
+		// TODO: Figure out if/why this works!? Matches prototype, but not xboxkrnl disassembly
+		mov esi, dwEcx
+		mov ecx, IoStatusBlock
+		mov eax, dwEax
 
         push esi
         push ecx
         push eax
-        call ApcContext
+
+		call ApcContext
 
         popad
     }
