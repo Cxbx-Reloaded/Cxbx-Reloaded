@@ -73,7 +73,7 @@ static inline bool EmuIsXboxFS()
 
     __asm
     {
-        mov ah, fs:[0x14]
+        mov ah, fs:[0x16]
         mov chk, ah
     }
 

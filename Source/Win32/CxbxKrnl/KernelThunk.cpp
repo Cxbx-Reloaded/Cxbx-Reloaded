@@ -57,8 +57,8 @@ namespace xboxkrnl
 // * option "#define PANIC(numb) cxbx_panic"
 // *
 // ******************************************************************
-#define PANIC(numb) EmuPanic
-//#define PANIC(numb) numb
+//#define PANIC(numb) EmuPanic
+#define PANIC(numb) numb
 
 // ******************************************************************
 // * KernelThunkTable
