@@ -432,6 +432,15 @@ BOOL WINAPI EmuSetThreadPriority
 );
 
 // ******************************************************************
+// * func: EmuGetExitCodeThread
+// ******************************************************************
+BOOL WINAPI EmuGetExitCodeThread
+(
+    HANDLE  hThread,
+    LPDWORD lpExitCode
+);
+
+// ******************************************************************
 // * func: EmuXapiInitProcess
 // ******************************************************************
 VOID WINAPI EmuXapiInitProcess();

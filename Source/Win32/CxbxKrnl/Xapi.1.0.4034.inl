@@ -105,43 +105,6 @@ SOOVPA<14> XGetDevices_1_0_4034 =
     }
 };
 /*
-// ******************************************************************
-// * XInputOpen
-// ******************************************************************
-SOOVPA<12> XInputOpen_1_0_4034 =
-{
-    0,  // Large == 0
-    12, // Count == 12
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        // XInputOpen+0x14 : push 0x57
-        { 0x14, 0x6A }, // (Offset,Value)-Pair #1
-        { 0x15, 0x57 }, // (Offset,Value)-Pair #2
-
-        // XInputOpen+0x1D : jmp +0x33
-        { 0x1D, 0xEB }, // (Offset,Value)-Pair #3
-        { 0x1E, 0x33 }, // (Offset,Value)-Pair #4
-
-        // XInputOpen+0x33 : add edx, 0x10
-        { 0x33, 0x83 }, // (Offset,Value)-Pair #5
-        { 0x34, 0xC2 }, // (Offset,Value)-Pair #6
-        { 0x35, 0x10 }, // (Offset,Value)-Pair #7
-
-        // XInputOpen+0x47 : jmp +0x06
-        { 0x47, 0x75 }, // (Offset,Value)-Pair #8
-        { 0x48, 0x06 }, // (Offset,Value)-Pair #9
-
-        // XInputOpen+0x52 : leave
-        { 0x52, 0xC9 }, // (Offset,Value)-Pair #10
-
-        // XInputOpen+0x53 : retn 0x10
-        { 0x53, 0xC2 }, // (Offset,Value)-Pair #11
-        { 0x54, 0x10 }, // (Offset,Value)-Pair #12
-    }
-};
 
 // ******************************************************************
 // * XInputGetCapabilities

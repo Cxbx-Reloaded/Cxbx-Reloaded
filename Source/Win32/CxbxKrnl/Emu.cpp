@@ -456,7 +456,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 				        // ******************************************************************
                         {
                             if(BuildVersion == 4134)
-                                EmuCleanup("Oops, I didnt do this part yet either");
+                                pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4134, lower, upper);
                             else if(BuildVersion == 4361)
                                 pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361, lower, upper);
                             else if(BuildVersion == 4627)
@@ -464,7 +464,10 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
                             if(pFunc != 0)
                             {
-					            XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x19) - 0x70);
+                                if(BuildVersion == 4134)
+					                XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x18) - 0x70);
+                                else
+					                XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x19) - 0x70);
 
                                 for(int v=0;v<32*4;v++)
                                     XTL::EmuD3DDeferredTextureState[v] = X_D3DTSS_UNK;

@@ -684,6 +684,38 @@ BOOL WINAPI XTL::EmuSetThreadPriority
 }
 
 // ******************************************************************
+// * func: EmuGetExitCodeThread
+// ******************************************************************
+BOOL WINAPI XTL::EmuGetExitCodeThread
+(
+    HANDLE  hThread,
+    LPDWORD lpExitCode
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuGetExitCodeThread\n"
+               "(\n"
+               "   hThread             : 0x%.08X\n"
+               "   lpExitCode          : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), hThread, lpExitCode);
+    }
+    #endif
+
+    BOOL bRet = GetExitCodeThread(hThread, lpExitCode);
+
+    EmuSwapFS();   // XBox FS
+
+    return bRet;
+}
+
+// ******************************************************************
 // * func: EmuXapiInitProcess
 // ******************************************************************
 VOID WINAPI XTL::EmuXapiInitProcess()

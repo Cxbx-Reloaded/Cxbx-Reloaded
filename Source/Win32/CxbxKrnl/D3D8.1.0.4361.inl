@@ -834,35 +834,6 @@ SOOVPA<13> IDirect3DDevice8_GetDisplayMode_1_0_4361 =
 };
 
 // ******************************************************************
-// * IDirect3DDevice8_Clear
-// ******************************************************************
-LOOVPA<9> IDirect3DDevice8_Clear_1_0_4361 =
-{
-    1,  // Large == 1
-    9,  // Count == 9
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        // IDirect3DDevice8_Clear+0x0000 : sub esp, 38h
-        { 0x0000, 0x83 }, // (Offset,Value)-Pair #1
-        { 0x0001, 0xEC }, // (Offset,Value)-Pair #2
-        { 0x0002, 0x38 }, // (Offset,Value)-Pair #3
-
-        // IDirect3DDevice8_Clear+0x000B : mov ebx, [ebp+0x2074]
-        { 0x000B, 0x8B }, // (Offset,Value)-Pair #4
-        { 0x000C, 0x9D }, // (Offset,Value)-Pair #5
-        { 0x000D, 0x74 }, // (Offset,Value)-Pair #6
-        { 0x000E, 0x20 }, // (Offset,Value)-Pair #7
-
-        // IDirect3DDevice8_Clear+0x0399 : retn 0x18
-        { 0x0399, 0xC2 }, // (Offset,Value)-Pair #8
-        { 0x039A, 0x18 }, // (Offset,Value)-Pair #9
-    }
-};
-
-// ******************************************************************
 // * IDirect3DDevice8_Swap
 // ******************************************************************
 SOOVPA<11> IDirect3DDevice8_Swap_1_0_4361 =
@@ -1327,38 +1298,6 @@ SOOVPA<12> IDirect3DDevice8_SetRenderState_MultiSampleAntiAlias_1_0_4361 =
         // IDirect3DDevice8_SetRenderState_MultiSampleAntiAlias+0x4F : retn 0x04
         { 0x4F, 0xC2 }, // (Offset,Value)-Pair #11
         { 0x50, 0x04 }, // (Offset,Value)-Pair #12
-    }
-};
-
-// ******************************************************************
-// * IDirect3DDevice8_SetTransform
-// ******************************************************************
-SOOVPA<10> IDirect3DDevice8_SetTransform_1_0_4361 =
-{
-    0,  // Large == 0
-    10, // Count == 10
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        // IDirect3DDevice8_SetTransform+0x16 : lea edi, [ecx+ebx+0x750]
-        { 0x16, 0x8D }, // (Offset,Value)-Pair #1
-        { 0x17, 0xBC }, // (Offset,Value)-Pair #2
-        { 0x18, 0x19 }, // (Offset,Value)-Pair #3
-
-        // IDirect3DDevice8_SetTransform+0x24 : repe movsd
-        { 0x24, 0xF3 }, // (Offset,Value)-Pair #4
-        { 0x25, 0xA5 }, // (Offset,Value)-Pair #5
-
-        // IDirect3DDevice8_SetTransform+0x78 : fld [edx+0x3C]
-        { 0x78, 0xD9 }, // (Offset,Value)-Pair #6
-        { 0x79, 0x42 }, // (Offset,Value)-Pair #7
-        { 0x7A, 0x3C }, // (Offset,Value)-Pair #8
-
-        // IDirect3DDevice8_SetTransform+0x92 : jmp +0x10
-        { 0x92, 0xEB }, // (Offset,Value)-Pair #9
-        { 0x93, 0x10 }, // (Offset,Value)-Pair #10
     }
 };
 
@@ -2314,9 +2253,9 @@ OOVPATable D3D8_1_0_4361[] =
         "EmuIDirect3DDevice8_GetDisplayMode"
         #endif
     },
-    // IDirect3DDevice8::Clear
+    // IDirect3DDevice8::Clear (* unchanged since 4134 *)
     {
-        (OOVPA*)&IDirect3DDevice8_Clear_1_0_4361,
+        (OOVPA*)&IDirect3DDevice8_Clear_1_0_4134,
 
         XTL::EmuIDirect3DDevice8_Clear,
 
@@ -2434,6 +2373,16 @@ OOVPATable D3D8_1_0_4361[] =
         "EmuIDirect3DDevice8_SetRenderState_FillMode" 
         #endif
     },
+    // IDirect3DDevice8::SetRenderState_FogColor (* unchanged since 4134 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_FogColor_1_0_4134,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_FogColor,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_FogColor" 
+        #endif
+    },
     // IDirect3DDevice8::SetRenderState_Simple
     {
         (OOVPA*)&IDirect3DDevice8_SetRenderState_Simple_1_0_4361,
@@ -2474,9 +2423,9 @@ OOVPATable D3D8_1_0_4361[] =
         "EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias" 
         #endif
     },
-    // IDirect3DDevice8::SetTransform
+    // IDirect3DDevice8::SetTransform (* unchanged since 4134 *)
     {
-        (OOVPA*)&IDirect3DDevice8_SetTransform_1_0_4361,
+        (OOVPA*)&IDirect3DDevice8_SetTransform_1_0_4134,
 
         XTL::EmuIDirect3DDevice8_SetTransform,
 

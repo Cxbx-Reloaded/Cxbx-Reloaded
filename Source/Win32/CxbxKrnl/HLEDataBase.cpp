@@ -119,6 +119,13 @@ HLEData HLEDataBase[] =
         D3D8_1_0_4034,
         D3D8_1_0_4034_SIZE
     },
+    // D3D8 Version 1.0.4134
+    {
+        "D3D8",
+        1, 0, 4134,
+        D3D8_1_0_4134,
+        D3D8_1_0_4134_SIZE
+    },
     // D3D8 Version 1.0.4361
     {
         "D3D8",
