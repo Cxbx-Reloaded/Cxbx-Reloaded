@@ -1,5 +1,5 @@
 # Microsoft Developer Studio Project File - Name="CxbxKrnl" - Package Owner=<4>
-# Microsoft Developer Studio Generated Build File, Format Version 60000
+# Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102
@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /O2 /I "Include" /I "Include/Core/" /I "Include/Win32/" /I "Include/Win32/Cxbxkrnl" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /O2 /I "Include" /I "Include/Core/" /I "Include/Win32/" /I "Include/Win32/Cxbx" /I "Include/Win32/CxbxKrnl" /I "Include/Win32/CxbxKrnl/HLEDataBase" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
