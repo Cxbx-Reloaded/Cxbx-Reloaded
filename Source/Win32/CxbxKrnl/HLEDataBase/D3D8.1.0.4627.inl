@@ -358,6 +358,38 @@ SOOVPA<13> IDirect3DDevice8_SetRenderTarget_1_0_4627 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_AddRef
+// ******************************************************************
+SOOVPA<10> IDirect3DDevice8_AddRef_1_0_4627 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_AddRef+0x00 : mov eax, [addr]
+        { 0x00, 0xA1 }, // (Offset,Value)-Pair #1
+
+        // IDirect3DDevice8_AddRef+0x05 : mov ecx, [eax+0x0500]
+        { 0x05, 0x8B }, // (Offset,Value)-Pair #2
+        { 0x06, 0x88 }, // (Offset,Value)-Pair #3
+        { 0x07, 0x00 }, // (Offset,Value)-Pair #4
+        { 0x08, 0x05 }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_AddRef+0x0B : inc ecx
+        { 0x0B, 0x41 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_AddRef+0x0C : mov [eax+0x0500], ecx
+        { 0x0C, 0x89 }, // (Offset,Value)-Pair #7
+        { 0x0D, 0x88 }, // (Offset,Value)-Pair #8
+        { 0x0E, 0x00 }, // (Offset,Value)-Pair #9
+        { 0x0F, 0x05 }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetShaderConstantMode
 // ******************************************************************
 SOOVPA<12> IDirect3DDevice8_SetShaderConstantMode_1_0_4627 =
@@ -1705,6 +1737,16 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_SetRenderTarget"
         #endif
     },
+    // IDirect3DDevice8::AddRef
+    {
+        (OOVPA*)&IDirect3DDevice8_AddRef_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_AddRef,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_AddRef"
+        #endif
+    },
     // IDirect3DDevice8::SetShaderConstantMode
     {
         (OOVPA*)&IDirect3DDevice8_SetShaderConstantMode_1_0_4627,
@@ -2103,6 +2145,16 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetRenderState_StencilEnable" 
+        #endif
+    },
+    // IDirect3DDevice8::SetRenderState_OcclusionCullEnable (* unchanged since 4432 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_OcclusionCullEnable_1_0_4432,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable" 
         #endif
     },
     // IDirect3DDevice8::SetRenderState_MultiSampleAntiAlias

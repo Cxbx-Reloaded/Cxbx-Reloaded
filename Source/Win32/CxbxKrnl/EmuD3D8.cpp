@@ -82,6 +82,7 @@ static BOOL                         g_bSupportsYUY2 = FALSE;// Does device suppo
 static XTL::LPDIRECTDRAW7           g_pDD7          = NULL; // DirectDraw7
 static DWORD                        g_dwOverlayW    = 640;  // Cached Overlay Width
 static DWORD                        g_dwOverlayH    = 480;  // Cached Overlay Height
+static DWORD                        g_dwOverlayP    = 640;  // Cached Overlay Pitch
 static Xbe::Header                 *g_XbeHeader     = NULL; // XbeHeader
 static uint32                       g_XbeHeaderSize = 0;    // XbeHeaderSize
 static XTL::D3DCAPS8                g_D3DCaps;              // Direct3D8 Caps
@@ -2359,6 +2360,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
         // cache the overlay size
         g_dwOverlayW = Width;
         g_dwOverlayH = Height;
+        g_dwOverlayP = RoundUp(g_dwOverlayW, 64)*2;
     }
 
     HRESULT hRet;
@@ -2393,7 +2395,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
     }
     else
     {
-        DWORD dwSize = g_dwOverlayW*g_dwOverlayH*2;
+        DWORD dwSize = g_dwOverlayP*g_dwOverlayH;
         DWORD dwPtr = (DWORD)malloc(dwSize + sizeof(DWORD));
 
         DWORD *pRefCount = (DWORD*)(dwPtr + dwSize);
@@ -2406,6 +2408,11 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
         
         (*ppTexture)->Data = X_D3DRESOURCE_DATA_FLAG_YUVSURF;
         (*ppTexture)->Lock = dwPtr;
+        (*ppTexture)->Format = 0x24;
+
+        (*ppTexture)->Size  = (g_dwOverlayW & X_D3DSIZE_WIDTH_MASK);
+        (*ppTexture)->Size &= (g_dwOverlayH << X_D3DSIZE_HEIGHT_SHIFT);
+        (*ppTexture)->Size &= (g_dwOverlayP << X_D3DSIZE_PITCH_SHIFT);
 
         hRet = D3D_OK;
     }
@@ -2474,6 +2481,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVolumeTexture
         // cache the overlay size
         g_dwOverlayW = Width;
         g_dwOverlayH = Height;
+        g_dwOverlayP = RoundUp(g_dwOverlayW, 64)*2;
     }
 
     HRESULT hRet;
@@ -2496,7 +2504,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVolumeTexture
     }
     else
     {
-        DWORD dwSize = g_dwOverlayW*g_dwOverlayH*2;
+        DWORD dwSize = g_dwOverlayP*g_dwOverlayH;
         DWORD dwPtr = (DWORD)malloc(dwSize + sizeof(DWORD));
 
         DWORD *pRefCount = (DWORD*)(dwPtr + dwSize);
@@ -2505,7 +2513,13 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVolumeTexture
         *pRefCount = 1;
 
         // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
-        *ppVolumeTexture = (X_D3DVolumeTexture*)(dwPtr | 0x80000000);
+        (*ppVolumeTexture)->Data = X_D3DRESOURCE_DATA_FLAG_YUVSURF;
+        (*ppVolumeTexture)->Lock = dwPtr;
+        (*ppVolumeTexture)->Format = 0x24;
+
+        (*ppVolumeTexture)->Size  = (g_dwOverlayW & X_D3DSIZE_WIDTH_MASK);
+        (*ppVolumeTexture)->Size &= (g_dwOverlayH << X_D3DSIZE_HEIGHT_SHIFT);
+        (*ppVolumeTexture)->Size &= (g_dwOverlayP << X_D3DSIZE_PITCH_SHIFT);
 
         hRet = D3D_OK;
     }
@@ -4004,7 +4018,7 @@ ULONG WINAPI XTL::EmuIDirect3DResource8_Release
     if(pThis->Data == X_D3DRESOURCE_DATA_FLAG_YUVSURF)
     {
         DWORD  dwPtr = (DWORD)pThis->Lock;
-        DWORD *pRefCount = (DWORD*)(dwPtr + g_dwOverlayW*g_dwOverlayH*2);
+        DWORD *pRefCount = (DWORD*)(dwPtr + g_dwOverlayP*g_dwOverlayH);
 
         if(--(*pRefCount) == 0)
         {
@@ -4203,7 +4217,7 @@ HRESULT WINAPI XTL::EmuIDirect3DSurface8_GetDesc
         pDesc->Height = g_dwOverlayH;
         pDesc->Width  = g_dwOverlayW;
         pDesc->MultiSampleType = (D3DMULTISAMPLE_TYPE)0;
-        pDesc->Size   = g_dwOverlayW*g_dwOverlayH*2;
+        pDesc->Size   = g_dwOverlayP*g_dwOverlayH;
         pDesc->Type   = D3DRTYPE_SURFACE;
         pDesc->Usage  = 0;
 
@@ -4278,7 +4292,7 @@ HRESULT WINAPI XTL::EmuIDirect3DSurface8_LockRect
 
     if(pThis->Data == X_D3DRESOURCE_DATA_FLAG_YUVSURF)
     {
-        pLockedRect->Pitch = g_dwOverlayW*2;
+        pLockedRect->Pitch = g_dwOverlayP;
         pLockedRect->pBits = (PVOID)pThis->Lock;
 
         hRet = D3D_OK;
@@ -4360,7 +4374,7 @@ XTL::X_D3DResource * WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel2
     // In a special situation, we are actually returning a memory ptr with high bit set
     if(pThis->Data == X_D3DRESOURCE_DATA_FLAG_YUVSURF)
     {
-        DWORD dwSize = g_dwOverlayW*g_dwOverlayH*2;
+        DWORD dwSize = g_dwOverlayP*g_dwOverlayH;
 
         DWORD *pRefCount = (DWORD*)((DWORD)pThis->Lock + dwSize);
 
@@ -4409,7 +4423,7 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_LockRect
     // check if we have an unregistered YUV2 resource
     if( pThis != 0 && pThis->Data == X_D3DRESOURCE_DATA_FLAG_YUVSURF)
     {
-        pLockedRect->Pitch = g_dwOverlayW*2;
+        pLockedRect->Pitch = g_dwOverlayP;
         pLockedRect->pBits = (PVOID)pThis->Lock;
 
         hRet = D3D_OK;
@@ -4469,7 +4483,7 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel
     // if highest bit is set, this is actually a raw memory pointer (for YUY2 simulation)
     if(pThis->Data == X_D3DRESOURCE_DATA_FLAG_YUVSURF)
     {
-        DWORD dwSize = g_dwOverlayW*g_dwOverlayH*2;
+        DWORD dwSize = g_dwOverlayP*g_dwOverlayH;
 
         DWORD *pRefCount = (DWORD*)((DWORD)pThis->Lock + dwSize);
 
@@ -4773,6 +4787,11 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
     }
     #endif
 
+    if(SrcRect != NULL)
+        printf("SrcRect : {%d, %d, %d, %d}\n", SrcRect->left, SrcRect->top, SrcRect->right, SrcRect->bottom);
+    if(DstRect != NULL)
+        printf("DstRect : {%d, %d, %d, %d}\n", DstRect->left, DstRect->top, DstRect->right, DstRect->bottom);
+
     // manually copy data over to overlay
     if(g_bSupportsYUY2)
     {
@@ -4793,16 +4812,16 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
             int h = g_dwOverlayH;
 
             // TODO: sucker the game into rendering directly to the overlay (speed boost)
-            if(ddsd2.lPitch == w*2)
-                memcpy(pDest, pSour, h*w*2);
-            else
+//            if(ddsd2.lPitch == w*2)
+//                memcpy(pDest, pSour, h*w*2);
+//            else
             {
                 for(int y=0;y<h;y++)
                 {
                     memcpy(pDest, pSour, w*2);
 
                     pDest += ddsd2.lPitch;
-                    pSour += w*2;
+                    pSour += g_dwOverlayP;
                 }
             }
         }
@@ -4863,7 +4882,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
 
             uint32 dx=0, dy=0;
 
-            uint32 dwImageSize = (g_dwOverlayW * g_dwOverlayH) * 2;
+            uint32 dwImageSize = g_dwOverlayP*g_dwOverlayH;
 
             // grayscale
             if(false)

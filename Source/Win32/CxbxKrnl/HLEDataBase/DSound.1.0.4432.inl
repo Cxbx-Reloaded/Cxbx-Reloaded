@@ -33,6 +33,42 @@
 // ******************************************************************
 
 // ******************************************************************
+// * IDirectSound8_Release
+// ******************************************************************
+SOOVPA<12> IDirectSound8_Release_1_0_4432 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirectSound8_Release+0x04 : lea ecx, [eax-8]
+        { 0x04, 0x8D }, // (Offset,Value)-Pair #1
+        { 0x05, 0x48 }, // (Offset,Value)-Pair #2
+        { 0x06, 0xF8 }, // (Offset,Value)-Pair #3
+
+        // IDirectSound8_Release+0x07 : neg eax
+        { 0x07, 0xF7 }, // (Offset,Value)-Pair #4
+        { 0x08, 0xD8 }, // (Offset,Value)-Pair #5
+
+        // IDirectSound8_Release+0x09 : sbb eax, eax
+        { 0x09, 0x1B }, // (Offset,Value)-Pair #6
+        { 0x0A, 0xC0 }, // (Offset,Value)-Pair #7
+
+        // IDirectSound8_Release+0x0D : mov ecx, [eax]
+        { 0x0D, 0x8B }, // (Offset,Value)-Pair #8
+        { 0x0E, 0x08 }, // (Offset,Value)-Pair #9
+
+        // IDirectSound8_Release+0x10 : call dword ptr [ecx+8]
+        { 0x10, 0xFF }, // (Offset,Value)-Pair #10
+        { 0x11, 0x51 }, // (Offset,Value)-Pair #11
+        { 0x12, 0x08 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
 // * CDirectSoundVoice::SetMaxDistance
 // ******************************************************************
 SOOVPA<9> CDirectSoundVoice_SetMaxDistance_1_0_4432 =
@@ -435,7 +471,7 @@ OOVPATable DSound_1_0_4432[] =
         "CDirectSoundStream_Pause"
         #endif
     },
-    // IDirectSound8::AddRef
+    // IDirectSound8::AddRef (* unchanged since 4361 *)
     {
         (OOVPA*)&IDirectSound8_AddRef_1_0_4361,
 
@@ -443,6 +479,16 @@ OOVPATable DSound_1_0_4432[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirectSound8_AddRef" 
+        #endif
+    },
+    // IDirectSound8::Release
+    {
+        (OOVPA*)&IDirectSound8_Release_1_0_4432,
+
+        XTL::EmuIDirectSound8_Release,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSound8_Release" 
         #endif
     },
     // IDirectSound8::CreateSoundBuffer (* unchanged since 4361 *)
