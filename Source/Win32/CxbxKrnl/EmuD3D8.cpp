@@ -402,6 +402,10 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
         {
             if(wParam == VK_ESCAPE)
                 PostMessage(hWnd, WM_CLOSE, 0, 0);
+            else if(wParam == VK_F10)
+            {
+                XTL::g_bBrkPush = TRUE;
+            }
             else if(wParam == VK_F11)
             {
                 if(g_iWireframe++ == 2)
@@ -2032,7 +2036,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
 
     DWORD *pRecompiled=0;
 
-    //XTL::EmuRecompileVSHDeclaration((DWORD*)pDeclaration, (DWORD)pD3DVertexShader);
+    XTL::EmuRecompileVSHDeclaration((DWORD*)pDeclaration, (DWORD)pD3DVertexShader);
     //XTL::EmuRecompileVSHFunction((DWORD*)pFunction, &pRecompiled);
 
     HRESULT hRet = D3D_OK;
@@ -4531,6 +4535,8 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel
 
         *ppSurfaceLevel = new X_D3DSurface();
 
+        (*ppSurfaceLevel)->Data = 0xB00BBABE;
+
         hRet = pTexture8->GetSurfaceLevel(Level, &((*ppSurfaceLevel)->EmuSurface8));
 
         #ifdef _DEBUG_TRACE
@@ -6382,9 +6388,9 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetVertexShader
     if(Handle > 0xFFFF)
     {
         X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader*)Handle;
-        
-//        hRet = g_pD3DDevice8->SetVertexShader(pD3DVertexShader->Handle);
-        hRet = g_pD3DDevice8->SetVertexShader(D3DFVF_XYZ);
+
+        hRet = g_pD3DDevice8->SetVertexShader(pD3DVertexShader->Handle);
+//        hRet = g_pD3DDevice8->SetVertexShader(D3DFVF_XYZ);
     }
     else
     {

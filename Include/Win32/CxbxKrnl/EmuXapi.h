@@ -472,6 +472,23 @@ BOOL WINAPI EmuSetThreadPriority
 );
 
 // ******************************************************************
+// * func: EmuGetThreadPriority
+// ******************************************************************
+int WINAPI EmuGetThreadPriority
+(
+    HANDLE  hThread
+);
+
+// ******************************************************************
+// * func: EmuSetThreadPriorityBoost
+// ******************************************************************
+BOOL WINAPI EmuSetThreadPriorityBoost
+(
+    HANDLE  hThread,
+    BOOL    DisablePriorityBoost
+);
+
+// ******************************************************************
 // * func: EmuGetExitCodeThread
 // ******************************************************************
 BOOL WINAPI EmuGetExitCodeThread

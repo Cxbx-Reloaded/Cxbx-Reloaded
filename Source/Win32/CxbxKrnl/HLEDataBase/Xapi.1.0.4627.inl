@@ -33,6 +33,70 @@
 // ******************************************************************
 
 // ******************************************************************
+// * SetThreadPriorityBoost
+// ******************************************************************
+SOOVPA<10> SetThreadPriorityBoost_1_0_4627 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // SetThreadPriorityBoost+0x0D : push [ebp+0x08]
+        { 0x0D, 0xFF }, // (Offset,Value)-Pair #1
+        { 0x0E, 0x75 }, // (Offset,Value)-Pair #2
+        { 0x0F, 0x08 }, // (Offset,Value)-Pair #3
+
+        // SetThreadPriorityBoost+0x18 : jl +0x20
+        { 0x18, 0x7C }, // (Offset,Value)-Pair #4
+        { 0x19, 0x20 }, // (Offset,Value)-Pair #5
+
+        // SetThreadPriorityBoost+0x1F : setnz al
+        { 0x1F, 0x0F }, // (Offset,Value)-Pair #6
+        { 0x20, 0x95 }, // (Offset,Value)-Pair #7
+        { 0x21, 0xC0 }, // (Offset,Value)-Pair #8
+
+        // SetThreadPriorityBoost+0x2C : mov ecx, [ebp+0x08]
+        { 0x2C, 0x8B }, // (Offset,Value)-Pair #9
+        { 0x2D, 0x4D }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
+// * GetThreadPriority
+// ******************************************************************
+SOOVPA<10> GetThreadPriority_1_0_4627 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // GetThreadPriority+0x0D : push [ebp+0x08]
+        { 0x0D, 0xFF }, // (Offset,Value)-Pair #1
+        { 0x0E, 0x75 }, // (Offset,Value)-Pair #2
+        { 0x0F, 0x08 }, // (Offset,Value)-Pair #3
+
+        // GetThreadPriority+0x18 : jl +0x2B
+        { 0x18, 0x7C }, // (Offset,Value)-Pair #4
+        { 0x19, 0x2B }, // (Offset,Value)-Pair #5
+
+        // GetThreadPriority+0x2F : cmp esi, 0xFFFFFFF0
+        { 0x2F, 0x83 }, // (Offset,Value)-Pair #6
+        { 0x30, 0xFE }, // (Offset,Value)-Pair #7
+        { 0x31, 0xF0 }, // (Offset,Value)-Pair #8
+
+        // GetThreadPriority+0x37 : mov ecx, [ebp+0x08]
+        { 0x37, 0x8B }, // (Offset,Value)-Pair #9
+        { 0x38, 0x4D }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
 // * RtlFreeHeap
 // ******************************************************************
 SOOVPA<9> RtlFreeHeap_1_0_4627 =
@@ -98,6 +162,46 @@ SOOVPA<10> RtlReAllocateHeap_1_0_4627 =
 // ******************************************************************
 OOVPATable XAPI_1_0_4627[] =
 {
+    // SetThreadPriorityBoost
+    {
+        (OOVPA*)&SetThreadPriorityBoost_1_0_4627,
+
+        XTL::EmuSetThreadPriorityBoost,
+
+        #ifdef _DEBUG_TRACE
+        "EmuSetThreadPriorityBoost"
+        #endif
+    },
+    // SetThreadPriority (* unchanged since 3911 *)
+    {
+        (OOVPA*)&SetThreadPriority_1_0_3911,
+
+        XTL::EmuSetThreadPriority,
+
+        #ifdef _DEBUG_TRACE
+        "EmuSetThreadPriority"
+        #endif
+    },
+    // GetThreadPriority
+    {
+        (OOVPA*)&GetThreadPriority_1_0_4627,
+
+        XTL::EmuGetThreadPriority,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGetThreadPriority"
+        #endif
+    },
+    // XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
+    {
+        (OOVPA*)&XRegisterThreadNotifyRoutine_1_0_3911,
+
+        XTL::EmuXRegisterThreadNotifyRoutine,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXRegisterThreadNotifyRoutine"
+        #endif
+    },
     // RtlCreateHeap (* unchanged since 1.0.4361 *) (* OR FARTHER *)
     {
         (OOVPA*)&RtlCreateHeap_1_0_3911,

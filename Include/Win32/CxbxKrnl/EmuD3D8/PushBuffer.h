@@ -44,5 +44,6 @@ extern void EmuExecutePushBuffer
 // push buffer debugging
 extern bool g_bStepPush;
 extern bool g_bSkipPush;
+extern bool g_bBrkPush;
 
 #endif

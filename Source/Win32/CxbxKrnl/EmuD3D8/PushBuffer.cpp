@@ -46,6 +46,7 @@ extern XTL::LPDIRECT3DDEVICE8 g_pD3DDevice8;  // Direct3D8 Device
 
 bool XTL::g_bStepPush = FALSE;
 bool XTL::g_bSkipPush = FALSE;
+bool XTL::g_bBrkPush  = FALSE;
 
 // pushbuffer execution emulation
 void XTL::EmuExecutePushBuffer
@@ -54,6 +55,28 @@ void XTL::EmuExecutePushBuffer
     PVOID                  pFixup
 )
 {
+    /*
+    if(g_bStepPush && g_bSkipPush)
+    {
+        g_bBrkPush = FALSE;
+        _asm int 3;
+
+        IDirect3DVertexBuffer8 *pVertexBuffer=0;
+
+        UINT uiStride=0;
+
+        g_pD3DDevice8->GetStreamSource(0, &pVertexBuffer, &uiStride);
+
+        BYTE *pbData=0;
+
+        pVertexBuffer->Lock(0, 0, &pbData, D3DLOCK_READONLY);
+
+        _asm int 3
+
+        pVertexBuffer->Unlock();
+    }
+    */
+
     if(g_bSkipPush)
         return;
 

@@ -750,6 +750,41 @@ BOOL WINAPI XTL::EmuCloseHandle
 }
 
 // ******************************************************************
+// * func: EmuSetThreadPriorityBoost
+// ******************************************************************
+BOOL WINAPI XTL::EmuSetThreadPriorityBoost
+(
+    HANDLE  hThread,
+    BOOL    DisablePriorityBoost
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuSetThreadPriorityBoost\n"
+               "(\n"
+               "   hThread             : 0x%.08X\n"
+               "   DisablePriorityBoost: 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), hThread, DisablePriorityBoost);
+    }
+    #endif
+
+    BOOL bRet = SetThreadPriorityBoost(hThread, DisablePriorityBoost);
+
+    if(bRet == FALSE)
+        EmuWarning("SetThreadPriorityBoost Failed!");
+
+    EmuSwapFS();   // XBox FS
+
+    return bRet;
+}
+
+// ******************************************************************
 // * func: EmuSetThreadPriority
 // ******************************************************************
 BOOL WINAPI XTL::EmuSetThreadPriority
@@ -782,6 +817,40 @@ BOOL WINAPI XTL::EmuSetThreadPriority
     EmuSwapFS();   // XBox FS
 
     return bRet;
+}
+
+
+// ******************************************************************
+// * func: EmuGetThreadPriority
+// ******************************************************************
+int WINAPI XTL::EmuGetThreadPriority
+(
+    HANDLE  hThread
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuGetThreadPriority\n"
+               "(\n"
+               "   hThread             : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), hThread);
+    }
+    #endif
+
+    int iRet = GetThreadPriority(hThread);
+
+    if(iRet == THREAD_PRIORITY_ERROR_RETURN)
+        EmuWarning("GetThreadPriority Failed!");
+
+    EmuSwapFS();   // XBox FS
+
+    return iRet;
 }
 
 // ******************************************************************

@@ -2039,6 +2039,36 @@ XBSYSAPI EXPORTNUM(226) NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
 }
 
 // ******************************************************************
+// * 0x00E7 - NtSuspendThread
+// ******************************************************************
+XBSYSAPI EXPORTNUM(231) NTSTATUS NTAPI xboxkrnl::NtSuspendThread
+(
+    IN  HANDLE  ThreadHandle,
+    OUT PULONG  PreviousSuspendCount OPTIONAL
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): NtSuspendThread\n"
+               "(\n"
+               "   ThreadHandle         : 0x%.08X\n"
+               "   PreviousSuspendCount : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), ThreadHandle, PreviousSuspendCount);
+    }
+    #endif
+
+    NTSTATUS ret = NtDll::NtSuspendThread(ThreadHandle, PreviousSuspendCount);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
+}
+
+// ******************************************************************
 // * 0x00E8 - NtUserIoApcDispatcher
 // ******************************************************************
 XBSYSAPI EXPORTNUM(232) VOID NTAPI xboxkrnl::NtUserIoApcDispatcher

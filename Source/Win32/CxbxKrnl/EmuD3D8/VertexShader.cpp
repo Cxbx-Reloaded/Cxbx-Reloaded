@@ -130,12 +130,60 @@ void XTL::EmuRecompileVSHDeclaration
                     DWORD dwDataType = (pDeclaration[v] >> D3DVSD_DATATYPESHIFT) & 0xFF;
                     DWORD dwNewDataType = 0;
 
+                    /* experimental!
+                    switch(dwVertexRegister)
+                    {
+                        case 0:
+                            pD3DVertexShader->Handle |= D3DFVF_XYZ;
+                            break;
+                        case 1:
+                            pD3DVertexShader->Handle |= D3DFVF_DIFFUSE;
+                            break;
+                        case 2:
+                            pD3DVertexShader->Handle &= ~D3DFVF_XYZ;
+                            pD3DVertexShader->Handle |=  D3DFVF_XYZRHW;
+                            break;
+                        case 3:
+                            pD3DVertexShader->Handle |= D3DFVF_DIFFUSE;
+                            break;
+                        case 4:
+                            pD3DVertexShader->Handle |= D3DFVF_SPECULAR;
+                            break;
+                        case 5:
+                            pD3DVertexShader->Handle |= D3DFVF_DIFFUSE;
+                            break;
+                        case 6:
+                            pD3DVertexShader->Handle |= D3DFVF_DIFFUSE;
+                            break;
+                        case 7:
+                            pD3DVertexShader->Handle |= D3DFVF_DIFFUSE;
+                            break;
+                        case 8:
+                            pD3DVertexShader->Handle |= D3DFVF_DIFFUSE;
+                            break;
+                        case 9:
+                            pD3DVertexShader->Handle &= ~D3DFVF_TEXCOUNT_MASK;
+                            pD3DVertexShader->Handle |= D3DFVF_TEX1;
+                            break;
+                        case 10:
+                            pD3DVertexShader->Handle &= ~D3DFVF_TEXCOUNT_MASK;
+                            pD3DVertexShader->Handle |= D3DFVF_TEX2;
+                            break;
+                        case 11:
+                            pD3DVertexShader->Handle &= ~D3DFVF_TEXCOUNT_MASK;
+                            pD3DVertexShader->Handle |= D3DFVF_TEX3;
+                            break;
+                        case 12:
+                            pD3DVertexShader->Handle &= ~D3DFVF_TEXCOUNT_MASK;
+                            pD3DVertexShader->Handle |= D3DFVF_TEX4;
+                            break;
+                    }*/
+
                     switch(dwDataType)
                     {
                         case 0x12:
                             DbgPrintf("D3DVSDT_FLOAT1");
                             dwNewDataType = D3DVSDT_FLOAT1;
-                            pD3DVertexShader->Handle |= D3DFVF_XYZ;
                             break;
                         case 0x22:
                             DbgPrintf("D3DVSDT_FLOAT2");
@@ -144,17 +192,14 @@ void XTL::EmuRecompileVSHDeclaration
                         case 0x32:
                             DbgPrintf("D3DVSDT_FLOAT3");
                             dwNewDataType = D3DVSDT_FLOAT3;
-                            pD3DVertexShader->Handle |= D3DFVF_NORMAL;
                             break;
                         case 0x42:
                             DbgPrintf("D3DVSDT_FLOAT4");
                             dwNewDataType = D3DVSDT_FLOAT4;
-                            pD3DVertexShader->Handle |= D3DFVF_DIFFUSE;
                             break;
                         case 0x40:
                             DbgPrintf("D3DVSDT_D3DCOLOR");
                             dwNewDataType = D3DVSDT_D3DCOLOR;
-                            pD3DVertexShader->Handle |= D3DFVF_SPECULAR;
                             break;
                         case 0x25:
                             DbgPrintf("D3DVSDT_SHORT2");
@@ -175,7 +220,6 @@ void XTL::EmuRecompileVSHDeclaration
                         case 0x31:
                             DbgPrintf("D3DVSDT_NORMSHORT3 /* xbox ext. */");
                             dwNewDataType = D3DVSDT_FLOAT3;
-                            pD3DVertexShader->Handle |= D3DFVF_NORMAL;
                             break;
                         case 0x41:
                             DbgPrintf("D3DVSDT_NORMSHORT4 /* xbox ext. */");
