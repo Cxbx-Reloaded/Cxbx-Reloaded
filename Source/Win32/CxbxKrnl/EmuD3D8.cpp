@@ -471,7 +471,11 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
     // * it is necessary to store this pointer globally for emulation
     // ******************************************************************
     g_pD3D8Device = *ppReturnedDeviceInterface;
-
+/* HACK
+	LPDIRECT3DTEXTURE8 pCxbxTexture;
+	D3DXCreateTextureFromFile(g_pD3D8Device, "Media\\cxbx.bmp", &pCxbxTexture);
+	g_pD3D8Device->SetTexture(0, pCxbxTexture);
+*/
     EmuSwapFS();   // XBox FS
 
     return hRet;

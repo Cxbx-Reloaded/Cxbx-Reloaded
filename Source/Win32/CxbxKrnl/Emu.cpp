@@ -71,9 +71,10 @@ namespace xd3d8
 // ******************************************************************
 // * global / static
 // ******************************************************************
-extern Xbe::TLS    *g_pTLS       = 0;
-extern void        *g_pTLSData   = 0;
-extern Xbe::Header *g_pXbeHeader = 0;
+extern Xbe::TLS    *g_pTLS       = NULL;
+extern void        *g_pTLSData   = NULL;
+extern Xbe::Header *g_pXbeHeader = NULL;
+extern HANDLE		g_hCurDir    = NULL;
 
 // ******************************************************************
 // * static
@@ -243,6 +244,11 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
             szBuffer[spot] = '\0';
 
 		SetCurrentDirectory(szBuffer);
+
+		g_hCurDir = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+
+		if(g_hCurDir == INVALID_HANDLE_VALUE)
+			EmuCleanup("Could not map D:\\\n");
 	}
 
     // ******************************************************************
@@ -397,7 +403,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     {
         EmuSwapFS();   // XBox FS
 
-        Entry();
+		Entry();
 
         EmuSwapFS();   // Win2k/XP FS
     }

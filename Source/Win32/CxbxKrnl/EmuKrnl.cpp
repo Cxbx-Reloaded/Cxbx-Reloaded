@@ -352,7 +352,7 @@ XBSYSAPI EXPORTNUM(67) NTSTATUS xboxkrnl::IoCreateSymbolicLink
     }
     #endif
 
-	EmuCleanup("IoCreateSymbolicLink not implemented");
+    EmuCleanup("IoCreateSymbolicLink not implemented");
 
     // TODO: Actually um...implement this function
     NTSTATUS ret = STATUS_OBJECT_NAME_COLLISION;
@@ -643,79 +643,53 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
     }
     #endif
 
-	char szFinalPath[260];
+    char *szBuffer = ObjectAttributes->ObjectName->Buffer;
 
     // ******************************************************************
-	// * Make corrections to path, if necessary
+    // * D:\ should map to current directory
     // ******************************************************************
-	{
-		char *szBuffer = ObjectAttributes->ObjectName->Buffer;
+    if( (szBuffer[0] == 'D' || szBuffer[0] == 'd') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+    {
+        szBuffer += 3;
 
-		// ******************************************************************
-		// * D:\ should map to current directory
-		// ******************************************************************
-		if( (szBuffer[0] == 'D' || szBuffer[0] == 'd') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-		{
-			szBuffer += 3;
+        ObjectAttributes->RootDirectory = g_hCurDir;
 
-			GetCurrentDirectory(260, szFinalPath);
+        #ifdef _DEBUG_TRACE
+        printf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+        printf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+        printf("  New:\"%s\"\n", szBuffer);
+        #endif
+    }
 
-			strcat(szFinalPath, "\\");
+    wchar_t wszObjectName[160];
 
-			strcat(szFinalPath, szBuffer);
-		}
-		else
-			strcpy(szFinalPath, szBuffer);
-	}
-
-	#ifdef _DEBUG_TRACE
-	printf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-	printf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-	printf("  New:\"%s\"\n", szFinalPath);
-	#endif
-
-	/****** The problem with this code is you can't use network paths, etc
-
-	NTSTATUS ret;
-
-	wchar_t wszObjectName[160];
-
-	xntdll::UNICODE_STRING    NtUnicodeString;
-	xntdll::OBJECT_ATTRIBUTES NtObjAttr;
+    xntdll::UNICODE_STRING    NtUnicodeString;
+    xntdll::OBJECT_ATTRIBUTES NtObjAttr;
 
     // ******************************************************************
-	// * Initialize Object Attributes
+    // * Initialize Object Attributes
     // ******************************************************************
-	{
-		mbstowcs(wszObjectName, szFinalPath, 160);
+    {
+        mbstowcs(wszObjectName, szBuffer, 160);
 
-		NT_RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
+        NT_RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
 
-		InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
-	}
+        InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
+    }
 
     // ******************************************************************
-	// * Redirect to NtCreateFile
+    // * Redirect to NtCreateFile
     // ******************************************************************
-	ret = NT_NtCreateFile
-	(
-		FileHandle, DesiredAccess, &NtObjAttr, (xntdll::IO_STATUS_BLOCK*)IoStatusBlock,
-		(xntdll::LARGE_INTEGER*)AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, NULL
-	);
+    NTSTATUS ret = NT_NtCreateFile
+    (
+        FileHandle, DesiredAccess, &NtObjAttr, (xntdll::IO_STATUS_BLOCK*)IoStatusBlock,
+        (xntdll::LARGE_INTEGER*)AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, NULL
+    );
 
-	if(FAILED(ret))
-		EmuCleanup("NtCreateFile Failed!");
-	*/
-	// NOTE: We can map this to IoCreateFile once implemented (if ever necessary)
-	//       xboxkrnl::IoCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, 0);
+    // NOTE: We can map this to IoCreateFile once implemented (if ever necessary)
+    //       xboxkrnl::IoCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, 0);
 
     EmuSwapFS();   // Xbox FS
-
-    // TODO: Actually parse parameters and use the right CreateDisposition
-    *FileHandle = CreateFile(szFinalPath, DesiredAccess, ShareAccess, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-
-    if(*FileHandle == INVALID_HANDLE_VALUE)
-        return STATUS_UNSUCCESSFUL;
 
     return STATUS_SUCCESS;
 }
@@ -750,7 +724,48 @@ XBSYSAPI EXPORTNUM(202) NTSTATUS xboxkrnl::NtOpenFile
     }
     #endif
 
+    EmuCleanup("And...Remember to check if this should be NTAPI (NtOpenFile)");
+
     xboxkrnl::IoCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, 0, 0, ShareAccess, 1, OpenOptions, 0);
+
+    return STATUS_SUCCESS;
+}
+
+// ******************************************************************
+// * 0x00D3 - NtQueryInformationFile
+// ******************************************************************
+XBSYSAPI EXPORTNUM(211) NTSTATUS NTAPI xboxkrnl::NtQueryInformationFile
+(   
+    IN  HANDLE                  FileHandle,
+    OUT PIO_STATUS_BLOCK        IoStatusBlock,
+    OUT PVOID                   FileInformation, 
+    IN  ULONG                   Length, 
+    IN  FILE_INFORMATION_CLASS  FileInfo
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): NtQueryInformationFile\n"
+               "(\n"
+               "   FileHandle          : 0x%.08X\n"
+               "   IoStatusBlock       : 0x%.08X\n"
+               "   FileInformation     : 0x%.08X\n"
+               "   Length              : 0x%.08X\n"
+               "   FileInformationClass: 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation, 
+               Length, FileInfo);
+    }
+    #endif
+
+    EmuCleanup("NtQueryInformationFile (TODO)");
+
+    EmuSwapFS();   // Xbox FS
 
     return STATUS_SUCCESS;
 }
