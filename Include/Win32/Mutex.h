@@ -45,28 +45,28 @@ class Mutex
         // ******************************************************************
         // * Constructor
         // ******************************************************************
-        Mutex() { InitializeCriticalSection(&m_CS); }
+        Mutex() { m_Mutex = 0; }
 
         // ******************************************************************
         // * Deconstructor
         // ******************************************************************
-        ~Mutex() { DeleteCriticalSection(&m_CS); }
+        ~Mutex() {  }
 
         // ******************************************************************
         // * Lock critical section
         // ******************************************************************
-        void Lock() { EnterCriticalSection(&m_CS); }
+        void Lock() { while(InterlockedCompareExchange(&m_Mutex, 1, 0) == 1) Sleep(0); }
 
         // ******************************************************************
         // * Unlock critical section
         // ******************************************************************
-        void Unlock() { LeaveCriticalSection(&m_CS); }
+        void Unlock() { if(m_Mutex == 1)InterlockedDecrement(&m_Mutex); }
 
     private:
         // ******************************************************************
         // * Critical section
         // ******************************************************************
-        CRITICAL_SECTION m_CS;
+        int32 m_Mutex;
 };
 
 #endif

@@ -95,11 +95,8 @@ INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam,
                     EndDialog(hWndDlg, wParam); 
                     break;
                 case IDC_INPUT_CONFIG_ACCEPT:
-                    {
-                        g_EmuShared->Lock();
-                        InputConfig *g_InputConfig = g_EmuShared->GetInputConfiguration();
-                        g_EmuShared->Unlock();
-                    }
+                    g_EmuShared->UpdateInputConfiguration(&g_InputConfig);
+                    EndDialog(hWndDlg, wParam);
                     break;
                 case IDC_SET_LEFT_X:
                     ConfigureInput(hWndDlg, hWndButton, InputConfig::MapLThumbX);

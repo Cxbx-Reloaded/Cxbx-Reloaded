@@ -57,15 +57,40 @@ CXBXKRNL_API void EmuSharedInit();
 CXBXKRNL_API void EmuSharedCleanup();
 
 // ******************************************************************
-// * shared memory
+// * EmuShared : Shared memory
 // ******************************************************************
 extern CXBXKRNL_API class EmuShared : public Mutex
 {
     public:
-        InputConfig *GetInputConfiguration() { return &m_InputConfig; }
+        // ******************************************************************
+        // * UpdateInputConfiguration
+        // ******************************************************************
+        void UpdateInputConfiguration(InputConfig *x_InputConfig)
+        {
+            g_EmuShared->Lock();
+
+            memcpy(&m_InputConfig, x_InputConfig, sizeof(InputConfig));
+
+            m_dwChangeID++;
+
+            g_EmuShared->Unlock();
+        }
+
+        // ******************************************************************
+        // * Check the current Change ID
+        // ******************************************************************
+        uint32 GetChangeID() { return m_dwChangeID; }
 
     private:
+        // ******************************************************************
+        // * Shared configuration
+        // ******************************************************************
         InputConfig m_InputConfig;
+
+        // ******************************************************************
+        // * Used to see if there has been a change
+        // ******************************************************************
+        uint32 m_dwChangeID;
 }
 *g_EmuShared;
 
