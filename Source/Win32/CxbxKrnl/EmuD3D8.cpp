@@ -1931,7 +1931,7 @@ XTL::X_D3DSurface * WINAPI XTL::EmuIDirect3DDevice8_GetDepthStencilSurface2()
         pSurface8->AddRef();
 
     #ifdef _DEBUG_TRACE
-    printf("EmuD3D8 (0x%X): DepthStencilSurface := 0x%.08X\n", pSurface8);
+    printf("EmuD3D8 (0x%X): DepthStencilSurface := 0x%.08X\n", GetCurrentThreadId(), pSurface8);
     #endif
 
     EmuSwapFS();   // Xbox FS

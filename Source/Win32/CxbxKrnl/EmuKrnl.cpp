@@ -42,6 +42,7 @@ namespace xboxkrnl
 
 #include <stdio.h>
 #include <locale.h>
+#include <process.h>
 
 // prevent name collisions
 namespace NtDll
@@ -85,7 +86,7 @@ g_pAlignCache[ALIGN_CACHE_SIZE] = {0};
 // PsCreateSystemThread proxy procedure
 #pragma warning(push)
 #pragma warning(disable: 4731)  // disable ebp modification warning
-static DWORD WINAPI PCSTProxy
+static unsigned int WINAPI PCSTProxy
 (
     IN PVOID Parameter
 )
@@ -374,8 +375,6 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
                GetCurrentThreadId(), Routine);
     }
     #endif
-
-    _asm int 3
 
     EmuCleanup("Xbe has rebooted : HalReturnToFirmware(%d)", Routine);
 }
@@ -1963,6 +1962,8 @@ XBSYSAPI EXPORTNUM(224) NTSTATUS NTAPI xboxkrnl::NtResumeThread
 
     NTSTATUS ret = NtDll::NtResumeThread(ThreadHandle, PreviousSuspendCount);
 
+    Sleep(10);
+
     EmuSwapFS();   // Xbox FS
 
     return ret;
@@ -2361,10 +2362,11 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
         iPCSTProxyParam->StartRoutine  = StartRoutine;
         iPCSTProxyParam->StartSuspended = CreateSuspended;
 
-        *ThreadHandle = CreateThread(NULL, NULL, &PCSTProxy, iPCSTProxyParam, NULL, &dwThreadId);
+        *ThreadHandle = (HANDLE)_beginthreadex(NULL, NULL, PCSTProxy, iPCSTProxyParam, NULL, (uint*)&dwThreadId);
+//        *ThreadHandle = CreateThread(NULL, NULL, PCSTProxy, iPCSTProxyParam, NULL, &dwThreadId);
 
         #ifdef _DEBUG_TRACE
-        printf("EmuKrnl (0x%X): ThreadHandle : 0x%X\n", GetCurrentThreadId(), *ThreadHandle);
+        printf("EmuKrnl (0x%X): ThreadHandle : 0x%X, ThreadId : 0x%.08X\n", GetCurrentThreadId(), *ThreadHandle, dwThreadId);
         #endif
 
         // we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
@@ -2419,7 +2421,8 @@ XBSYSAPI EXPORTNUM(258) VOID NTAPI xboxkrnl::PsTerminateSystemThread(IN NTSTATUS
 
     EmuCleanupFS();
 
-    ExitThread(ExitStatus);
+    _endthreadex(ExitStatus);
+    //ExitThread(ExitStatus);
 
     return;
 }

@@ -1564,6 +1564,41 @@ SOOVPA<11> IDirect3DVertexBuffer8_Lock2B_1_0_4627 =
 };
 
 // ******************************************************************
+// * IDirect3DResource8_ReleaseB
+// ******************************************************************
+SOOVPA<11> IDirect3DResource8_ReleaseB_1_0_4627 =
+{
+    0,  // Large == 0
+    11, // Count == 8
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DResource8_ReleaseB+0x09 : and ecx, 0xFFFF
+        { 0x09, 0x81 }, // (Offset,Value)-Pair #1
+        { 0x0A, 0xE1 }, // (Offset,Value)-Pair #2
+        { 0x0B, 0xFF }, // (Offset,Value)-Pair #3
+        { 0x0C, 0xFF }, // (Offset,Value)-Pair #4
+
+        // IDirect3DResource8_ReleaseB+0x14 : and eax, 0x00070000
+        { 0x14, 0x25 }, // (Offset,Value)-Pair #5
+        { 0x17, 0x07 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DResource8_ReleaseB+0x19 : cmp eax, 0x00050000
+        { 0x19, 0x3D }, // (Offset,Value)-Pair #7
+        { 0x1C, 0x05 }, // (Offset,Value)-Pair #8
+
+        // IDirect3DResource8_ReleaseB+0x3D : pop edi
+        { 0x3D, 0x5F }, // (Offset,Value)-Pair #9
+
+        // IDirect3DResource8_ReleaseB+0x4A : retn 0x04
+        { 0x4A, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x4B, 0x04 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
 // * IDirect3DSurface8_LockRectB
 // ******************************************************************
 SOOVPA<17> IDirect3DSurface8_LockRectB_1_0_4627 =
@@ -2572,6 +2607,16 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DResource8_Release" 
+        #endif
+    },
+    // IDirect3DResource8::ReleaseB
+    {
+        (OOVPA*)&IDirect3DResource8_ReleaseB_1_0_4627,
+
+        XTL::EmuIDirect3DResource8_Release,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DResource8_ReleaseB" 
         #endif
     },
     // IDirect3DResource8::IsBusy (* unchanged since 4361 *)

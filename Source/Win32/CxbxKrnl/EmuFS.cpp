@@ -86,7 +86,8 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		}
 		else
 		{
-			printf("EmuFS (0x%X): TLS Data Dump... \nEmuFS (0x%X): 0x%.08X: ", GetCurrentThreadId(), GetCurrentThreadId(), pNewTLS);
+			printf("EmuFS (0x%X): TLS Data Dump...\n", GetCurrentThreadId());
+            printf("EmuFS (0x%X): 0x%.08X: ", GetCurrentThreadId(), pNewTLS);
 
 			uint32 stop = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr + pTLS->dwSizeofZeroFill;
 
