@@ -13,6 +13,7 @@ yet, so it takes a few minutes.
 <begin idapro code>
 
 auto addr;
+auto funcEnd;
 auto count;
 
 addr = FindCode( *** D3D SECTION START VIRTUAL ADDRESS ***, SEARCH_DOWN | SEARCH_NEXT);
@@ -27,14 +28,16 @@ while(1)
 {
     count = count+1;
 
-    Message("    0x%.08X,\n", addr);
-
     addr = NextFunction(addr+1);
 
     if(addr == BADADDR || addr > *** D3D SECTION END VIRTUAL ADDRESS ***)
     {
         break;
     }
+
+    funcEnd = FindFuncEnd(addr);
+
+    Message("    0x%.08X, // -> 0x%.08X (Size : %d bytes)\n", addr, funcEnd, funcEnd - addr);
 
     Jump(addr);
 }
