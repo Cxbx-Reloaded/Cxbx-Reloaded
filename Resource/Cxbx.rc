@@ -61,9 +61,9 @@ END
 // Bitmap
 //
 
-IDB_SPLASH              BITMAP  DISCARDABLE     "Splash.bmp"
 IDB_LOGO                BITMAP  DISCARDABLE     "Logo.bmp"
 IDB_ABOUT               BITMAP  DISCARDABLE     "About.bmp"
+IDB_SPLASH              BITMAP  DISCARDABLE     "Splash.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -216,7 +216,7 @@ END
 IDD_CONTROLLER_CFG DIALOGEX 0, 0, 343, 137
 STYLE DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Cxbx : Controller Configuration"
-FONT 8, "Verdana"
+FONT 8, "Verdana", 0, 0, 0x1
 BEGIN
     PUSHBUTTON      "X",IDC_SET_X,7,11,50,14,BS_FLAT
     PUSHBUTTON      "Y",IDC_SET_Y,60,11,50,14,BS_FLAT
