@@ -86,7 +86,7 @@ extern class ResourceTracker : public Mutex
 }
 g_VBTrackTotal, g_VBTrackDisable,
 g_PBTrackTotal, g_PBTrackDisable, g_PBTrackShowOnce,
-g_PatchedStreamsCache, g_DataToTexture;
+g_PatchedStreamsCache, g_DataToTexture, g_AlignCache;
 
 struct RTNode
 {

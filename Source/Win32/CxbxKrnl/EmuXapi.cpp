@@ -75,6 +75,22 @@ VOID WINAPI XTL::EmuXapiApplyKernelPatches()
 }
 
 // ******************************************************************
+// * func: EmuXFormatUtilityDrive
+// ******************************************************************
+BOOL WINAPI XTL::EmuXFormatUtilityDrive()
+{
+    #ifdef _DEBUG_TRACE
+    EmuSwapFS();   // Win2k/XP FS
+    DbgPrintf("EmuXapi (0x%X): EmuXFormatUtilityDrive()\n", GetCurrentThreadId());
+    EmuSwapFS();   // XBox FS
+    #endif
+
+    // TODO: yeah... we'll format... riiiiight
+
+    return TRUE;
+}
+
+// ******************************************************************
 // * func: EmuRtlCreateHeap
 // ******************************************************************
 PVOID WINAPI XTL::EmuRtlCreateHeap

@@ -55,6 +55,7 @@ namespace NtDll
 #include "EmuFile.h"
 #include "EmuAlloc.h"
 #include "EmuXTL.h"
+#include "ResourceTracker.h"
 
 // PsCreateSystemThread proxy parameters
 typedef struct _PCSTProxyParam
@@ -69,16 +70,6 @@ PCSTProxyParam;
 
 // Global Variable(s)
 extern PVOID g_pfnThreadNotification = NULL;
-
-// MmAllocateContiguousMemory[Ex] allocate unaligned data and then manually align the pointer,
-// returning this to the Xbe. The original pointer must be retained in order to properly free.
-#define ALIGN_CACHE_SIZE 1024
-struct _AlignCache
-{
-    PVOID pOrigPtr;
-    PVOID pAligPtr;
-}
-g_pAlignCache[ALIGN_CACHE_SIZE] = {0};
 
 // PsCreateSystemThread proxy procedure
 #pragma warning(push)
@@ -675,21 +666,6 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
            ");\n",
            GetCurrentThreadId(), NumberOfBytes);
 
-    DWORD dwAlignIndex = -1;
-
-    for(int v=0;v<ALIGN_CACHE_SIZE;v++)
-    {
-        if(g_pAlignCache[v].pOrigPtr == 0)
-        {
-            dwAlignIndex = v;
-            break;
-        }
-    }
-
-    // verify we have enough align cache entries
-    if(dwAlignIndex = -1)
-        EmuCleanup("Out of AlignCache slots!");
-
     //
     // NOTE: Kludgey (but necessary) solution:
     // 
@@ -699,17 +675,15 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 
     PVOID pRet = CxbxMalloc(NumberOfBytes + 0x1000);
 
-    g_pAlignCache[dwAlignIndex].pOrigPtr = pRet;
-
     // align to page boundary
     {
         DWORD dwRet = (DWORD)pRet;
 
         dwRet += 0x1000 - dwRet%0x1000;
 
-        pRet = (PVOID)dwRet;
+        g_AlignCache.insert(dwRet, pRet);
 
-        g_pAlignCache[dwAlignIndex].pAligPtr = pRet;
+        pRet = (PVOID)dwRet;
     }
 
     DbgPrintf("EmuKrnl (0x%X): MmAllocateContiguous returned 0x%.08X\n", GetCurrentThreadId(), pRet);
@@ -744,21 +718,6 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
            GetCurrentThreadId(), NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress,
            Alignment, ProtectionType);
 
-    DWORD dwAlignIndex = -1;
-
-    for(int v=0;v<ALIGN_CACHE_SIZE;v++)
-    {
-        if(g_pAlignCache[v].pOrigPtr == 0)
-        {
-            dwAlignIndex = v;
-            break;
-        }
-    }
-
-    // verify we have enough align cache entries
-    if(dwAlignIndex == -1)
-        EmuCleanup("Out of AlignCache slots!");
-
     //
     // NOTE: Kludgey (but necessary) solution:
     // 
@@ -768,17 +727,15 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 
     PVOID pRet = CxbxMalloc(NumberOfBytes + 0x1000);
     
-    g_pAlignCache[dwAlignIndex].pOrigPtr = pRet;
-
     // align to page boundary
     {
         DWORD dwRet = (DWORD)pRet;
 
         dwRet += 0x1000 - dwRet%0x1000;
 
-        pRet = (PVOID)dwRet;
+        g_AlignCache.insert(dwRet, pRet);
 
-        g_pAlignCache[dwAlignIndex].pAligPtr = pRet;
+        pRet = (PVOID)dwRet;
     }
 
     static int count = 0;
@@ -835,24 +792,18 @@ XBSYSAPI EXPORTNUM(171) VOID NTAPI xboxkrnl::MmFreeContiguousMemory
            ");\n",
            GetCurrentThreadId(), BaseAddress);
 
-    // retrieve correct allocation base address (since MmAllocContiguousMemory[Ex] aligns upward)
+    PVOID OrigBaseAddress = BaseAddress;
+    
+    if(g_AlignCache.exists(BaseAddress))
     {
-        int v=0;
-        for(v=0;v<ALIGN_CACHE_SIZE;v++)
-        {
-            if(g_pAlignCache[v].pAligPtr == BaseAddress)
-            {
-                BaseAddress = g_pAlignCache[v].pOrigPtr;
-                g_pAlignCache[v].pAligPtr = 0;
-                g_pAlignCache[v].pOrigPtr = 0;
-                break;
-            }
-        }
+        OrigBaseAddress = g_AlignCache.get(BaseAddress);
+
+        g_AlignCache.remove(BaseAddress);
     }
 
-    if(BaseAddress != &xLaunchDataPage)
+    if(OrigBaseAddress != &xLaunchDataPage)
     {
-        CxbxFree(BaseAddress);
+        CxbxFree(OrigBaseAddress);
     }
     else
     {

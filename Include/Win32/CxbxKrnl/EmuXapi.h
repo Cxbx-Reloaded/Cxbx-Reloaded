@@ -286,6 +286,11 @@ XCALCSIG_SIGNATURE, *PXCALCSIG_SIGNATURE;
 VOID WINAPI EmuXapiApplyKernelPatches();
 
 // ******************************************************************
+// * func: EmuXFormatUtilityDrive
+// ******************************************************************
+BOOL WINAPI EmuXFormatUtilityDrive();
+
+// ******************************************************************
 // * func: EmuRtlCreateHeap
 // ******************************************************************
 PVOID WINAPI EmuRtlCreateHeap

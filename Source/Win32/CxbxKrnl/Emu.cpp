@@ -378,9 +378,18 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                 uint16 MajorVersion = pLibraryVersion[v].wMajorVersion;
                 uint16 MinorVersion = pLibraryVersion[v].wMinorVersion;
                 uint16 BuildVersion = pLibraryVersion[v].wBuildVersion;
+                uint16 OrigBuildVersion = BuildVersion;
+
+                //
+                // Aliases
+                //
+                {
+                    if(BuildVersion == 4928)
+                        BuildVersion = 4627;
 
                 if(BuildVersion == 5659)
                     BuildVersion = 5558;
+                }
 
                 char szLibraryName[9] = {0};
 
@@ -438,9 +447,18 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                             }
                             else if(BuildVersion >= 4361)
                             {
+                                if(OrigBuildVersion == 4928)
+                                {
+					                pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_4928, lower, upper);
+                                    ProcessHeapOffs = 0x44;
+                                    RtlCreateHeapOffs = 0x3B;
+                                }
+                                else
+                                {
 					            pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_4361, lower, upper);
                                 ProcessHeapOffs = 0x3E;
                                 RtlCreateHeapOffs = 0x37;
+                            }
                             }
                             else // 3911, 4034, 4134
                             {
@@ -608,7 +626,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         // _USE_XGMATH Disabled in mesh :[
         // halo : dword_0_2E2D18
         // halo : 1744F0 (bink)
-        //_asm int 3;
+        _asm int 3;
 
         /*
         for(int v=0;v<sizeof(funcAddr)/sizeof(uint32);v++)
