@@ -21,7 +21,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="Include,Include/Win32/,Include/Win32/Cxbx,Include/Win32/Cxbxkrnl,Resource"
+				AdditionalIncludeDirectories="Include,Include/Win32/,Include/Win32/Cxbx,Include/Win32/Cxbxkrnl"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;CXBXKRNL_EXPORTS"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -64,7 +64,8 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				Culture="1033"/>
+				Culture="1033"
+				AdditionalIncludeDirectories="Include\Win32\CxbxKrnl"/>
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
@@ -81,7 +82,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="Include,Include/Win32/,Include/Win32/Cxbxkrnl,Resource"
+				AdditionalIncludeDirectories="Include,Include/Win32/,Include/Win32/Cxbxkrnl"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;CXBXKRNL_EXPORTS"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
@@ -122,7 +123,8 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				Culture="1033"/>
+				Culture="1033"
+				AdditionalIncludeDirectories="Include\Win32\CxbxKrnl"/>
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
@@ -191,6 +193,9 @@
 				RelativePath=".\Include\Win32\CxbxKrnl\EmuLDT.h">
 			</File>
 			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuShared.h">
+			</File>
+			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\EmuXapi.h">
 			</File>
 			<File
@@ -227,13 +232,13 @@
 					Name="Debug|Win32">
 					<Tool
 						Name="VCResourceCompilerTool"
-						AdditionalIncludeDirectories="Resource;$(NoInherit)"/>
+						AdditionalIncludeDirectories="Include\Win32\CxbxKrnl;Resource;$(NoInherit)"/>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32">
 					<Tool
 						Name="VCResourceCompilerTool"
-						AdditionalIncludeDirectories="Resource;$(NoInherit)"/>
+						AdditionalIncludeDirectories="Include\Win32\CxbxKrnl;Resource;$(NoInherit)"/>
 				</FileConfiguration>
 			</File>
 		</Filter>
@@ -266,6 +271,9 @@
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\EmuLDT.cpp">
+			</File>
+			<File
+				RelativePath=".\Source\Win32\CxbxKrnl\EmuShared.cpp">
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\EmuXapi.cpp">

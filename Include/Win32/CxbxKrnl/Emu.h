@@ -35,6 +35,15 @@
 #define EMU_H
 
 // ******************************************************************
+// * cxbxkrnl exports, others import
+// ******************************************************************
+#ifndef _CXBXKRNL_INTERNAL
+#define CXBXKRNL_API DECLSPEC_IMPORT
+#else
+#define CXBXKRNL_API DECLSPEC_EXPORT
+#endif
+
+// ******************************************************************
 // * prevent name collisions
 // ******************************************************************
 namespace xboxkrnl
@@ -83,15 +92,6 @@ extern xboxkrnl::XINPUT_STATE   g_EmuController1;
 #if defined(__cplusplus)
 extern "C"
 {
-#endif
-
-// ******************************************************************
-// * cxbxkrnl exports, others import
-// ******************************************************************
-#ifndef _CXBXKRNL_INTERNAL
-#define CXBXKRNL_API DECLSPEC_IMPORT
-#else
-#define CXBXKRNL_API DECLSPEC_EXPORT
 #endif
 
 // ******************************************************************

@@ -1387,7 +1387,8 @@ void WndMain::StartEmulation(bool x_bAutoConvert)
 
             SuggestFilename(m_XbeFilename, filename, ".exe");
 
-            ConvertToExe(filename, false);
+            if(!ConvertToExe(filename, false))
+                return;
         }
         else
         {

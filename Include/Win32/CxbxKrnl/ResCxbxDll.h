@@ -3,11 +3,6 @@
 // Used by CxbxDll.rc
 //
 #define IDI_CXBX                        101
-#define IDR_RENDERMENU                  102
-#define ID_EMULATION_PAUSE              40005
-#define ID_EMULATION_EXIT               40007
-#define ID_EMULATION_CONTINUE           40008
-#define ID_GRAPHICS_FULLSCREEN          40009
 
 // Next default values for new objects
 // 

@@ -21,7 +21,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="Include,Include/Win32/,Include/Win32/Cxbxkrnl,Include/Win32/Cxbx,Resource"
+				AdditionalIncludeDirectories="Include,Include/Win32/,Include/Win32/Cxbxkrnl,Include/Win32/Cxbx"
 				PreprocessorDefinitions="WIN32,NDEBUG,_WINDOWS"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
@@ -65,7 +65,8 @@ upxCxbx.bat
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				Culture="1033"/>
+				Culture="1033"
+				AdditionalIncludeDirectories="Include\Win32\Cxbx"/>
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
@@ -82,7 +83,7 @@ upxCxbx.bat
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="Include,Include/Win32/,Include/Win32/Cxbxkrnl,Include/Win32/Cxbx,Resource"
+				AdditionalIncludeDirectories="Include,Include/Win32/,Include/Win32/Cxbxkrnl,Include/Win32/Cxbx"
 				PreprocessorDefinitions="WIN32,_DEBUG,_WINDOWS"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -124,7 +125,8 @@ upxCxbx.bat
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				Culture="1033"/>
+				Culture="1033"
+				AdditionalIncludeDirectories="Include\Win32\Cxbx"/>
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
@@ -217,13 +219,13 @@ upxCxbx.bat
 					Name="Release|Win32">
 					<Tool
 						Name="VCResourceCompilerTool"
-						AdditionalIncludeDirectories="Resource;$(NoInherit)"/>
+						AdditionalIncludeDirectories="Include\Win32\Cxbx;Resource;$(NoInherit)"/>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug|Win32">
 					<Tool
 						Name="VCResourceCompilerTool"
-						AdditionalIncludeDirectories="Resource;$(NoInherit)"/>
+						AdditionalIncludeDirectories="Include\Win32\Cxbx;Resource;$(NoInherit)"/>
 				</FileConfiguration>
 			</File>
 			<File

@@ -203,14 +203,17 @@ LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_CREATE:
         {
+            /* We aren't using a menu anymore
             HMODULE hCxbxDll = GetModuleHandle("Cxbx.dll");
 
             HMENU hMenu = LoadMenu(hCxbxDll, MAKEINTRESOURCE(IDR_RENDERMENU));
 
             SetMenu(hWnd, hMenu);
+            */
         }
         break;
 
+        /*
         case WM_COMMAND:
         {
             switch(LOWORD(wParam))
@@ -221,6 +224,7 @@ LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
         }
         break;
+        */
 
 		case WM_KEYDOWN:
 			switch (wParam)

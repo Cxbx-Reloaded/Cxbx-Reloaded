@@ -57,57 +57,11 @@ static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, vo
 // ******************************************************************
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-    // ******************************************************************
-    // * Initialize shared memory
-    // ******************************************************************
     if(fdwReason == DLL_PROCESS_ATTACH)
-    {
-        bool init = true;
-
-        g_hMapObject = CreateFileMapping
-        ( 
-            INVALID_HANDLE_VALUE,   // Paging file
-            NULL,                   // default security attributes
-            PAGE_READWRITE,         // read/write access
-            0,                      // size: high 32 bits
-            sizeof(EmuShared),     // size: low 32 bits
-            "EmuShared"            // name of map object
-        );
-
-        if(g_hMapObject == NULL)
-            return FALSE;
-
-        if(GetLastError() == ERROR_ALREADY_EXISTS)
-            init = false;
-
-        g_EmuShared = (EmuShared*)MapViewOfFile
-        (
-            g_hMapObject,   // object to map view of
-            FILE_MAP_WRITE, // read/write access
-            0,              // high offset:  map from
-            0,              // low offset:   beginning
-            0               // default: map entire file
-        );
-
-        if(g_EmuShared == NULL) 
-            return FALSE; 
-
-        if(init)
-        {
-            // initialization of shared data
-            g_EmuShared->dwRandomData = 0;
-        }
-    }
+        EmuSharedInit();
     
-    // ******************************************************************
-    // * Release shared memory
-    // ******************************************************************
     if(fdwReason == DLL_PROCESS_DETACH)
-    {
-        UnmapViewOfFile(g_EmuShared);
-
-        CloseHandle(g_hMapObject);
-    }
+        EmuSharedCleanup();
 
     return TRUE;
 }

@@ -1,6 +1,6 @@
 //Microsoft Developer Studio generated resource script.
 //
-#include "ResCxbxDll.h"
+#include "..\Include\Win32\CxbxKrnl\ResCxbxDll.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -55,20 +55,6 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_CXBX                ICON    DISCARDABLE     "Cxbx.ico"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Menu
-//
-
-IDR_RENDERMENU MENU DISCARDABLE 
-BEGIN
-    POPUP "E&mulation"
-    BEGIN
-        MENUITEM "E&xit",                       ID_EMULATION_EXIT
-    END
-END
-
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
