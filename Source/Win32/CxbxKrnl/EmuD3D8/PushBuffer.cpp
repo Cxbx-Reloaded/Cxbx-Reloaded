@@ -234,7 +234,7 @@ void XTL::EmuExecutePushBuffer
 
                     if(!g_bPBSkipPusher)
                     {
-                        if (IsValidCurrentShader())
+                        if(IsValidCurrentShader())
                         {
                             g_pD3DDevice8->DrawIndexedPrimitive
                             (

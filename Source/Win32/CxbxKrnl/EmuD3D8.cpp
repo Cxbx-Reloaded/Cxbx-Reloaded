@@ -59,6 +59,7 @@ XTL::LPDIRECT3DDEVICE8       g_pD3DDevice8  = NULL; // Direct3D8 Device
 XTL::LPDIRECTDRAWSURFACE7    g_pDDSPrimary  = NULL; // DirectDraw7 Primary Surface
 XTL::LPDIRECTDRAWSURFACE7    g_pDDSOverlay7 = NULL; // DirectDraw7 Overlay Surface
 XTL::LPDIRECTDRAWCLIPPER     g_pDDClipper   = NULL; // DirectDraw7 Clipper
+DWORD                        g_CurrentVertexShader = 0;
 
 // Static Function(s)
 static BOOL WINAPI                  EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescription, LPSTR lpDriverName, LPVOID lpContext, HMONITOR hm);
@@ -109,7 +110,6 @@ static XTL::X_D3DSurface           *g_pCachedRenderTarget = NULL;
 static XTL::X_D3DSurface           *g_pCachedZStencilSurface = NULL;
 static DWORD                        g_dwVertexShaderUsage = 0;
 static XTL::X_D3DSHADERCONSTANTMODE g_VertexShaderConstantMode = X_D3DSCM_192CONSTANTS;
-static DWORD                        g_CurrentVertexShader = 0;
 static DWORD                        g_VertexShaderSlots[136];
 
 // cached Direct3D tiles
@@ -2503,7 +2503,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
     D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
 
     // TODO: HACK: Devices that don't support this should somehow emulate it!
-    //* This is OK on my GeForce FX 5600
+    /* This is OK on my GeForce FX 5600
     if(PCFormat == D3DFMT_D16)
     {
         EmuWarning("D3DFMT_D16 is an unsupported texture format!");
@@ -2516,13 +2516,13 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
         PCFormat = D3DFMT_X8R8G8B8;
     }
     //*/
-    //* This is OK on my GeForce FX 5600
+    /* This is OK on my GeForce FX 5600
     else if(PCFormat == D3DFMT_D24S8)
     {
         EmuWarning("D3DFMT_D24S8 is an unsupported texture format!");
         PCFormat = D3DFMT_X8R8G8B8;
     }//*/
-    else if(PCFormat == D3DFMT_YUY2)
+    /*else */if(PCFormat == D3DFMT_YUY2)
     {
         // cache the overlay size
         g_dwOverlayW = Width;
@@ -2543,8 +2543,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
         *ppTexture = new X_D3DTexture();
 
         // disabled along with D3DFMT_D16 above
-        //if(Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL))
-        //    PCPool = D3DPOOL_DEFAULT;
+        if(Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL))
+            PCPool = D3DPOOL_DEFAULT;
 
         hRet = g_pD3DDevice8->CreateTexture
         (
@@ -6058,12 +6058,19 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVertices
     // Convert from Xbox to PC enumeration
     D3DPRIMITIVETYPE PCPrimitiveType = EmuPrimitiveType(PrimitiveType);
 
-    IDirect3DVertexBuffer8 *pOrigVertexBuffer8 = 0;
-    IDirect3DVertexBuffer8 *pHackVertexBuffer8 = 0;
+    VertexPatchDesc VPDesc;
 
-    uint32 nStride = EmuFixupVerticesA(PrimitiveType, PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, StartVertex, 0, 0, 0);
+    VPDesc.PrimitiveType = PrimitiveType;
+    VPDesc.dwPrimitiveCount = PrimitiveCount;
+    VPDesc.dwOffset = StartVertex;
+    VPDesc.pVertexStreamZeroData = 0;
+    VPDesc.uiVertexStreamZeroStride = 0;
 
-    if (IsValidCurrentShader())
+    VertexPatcher VertPatch;
+
+    bool bPatched = VertPatch.Apply(&VPDesc);
+
+    if(IsValidCurrentShader())
     {
         #ifdef _DEBUG_TRACK_VB
         if(g_bVBSkipStream)
@@ -6082,16 +6089,14 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVertices
             (
                 PCPrimitiveType,
                 StartVertex,
-                PrimitiveCount
+                VPDesc.dwPrimitiveCount
             );
         #ifdef _DEBUG_TRACK_VB
         }
         #endif
     }
 
-    // TODO: use original stride here (duh!)
-    if(nStride != -1)
-        EmuFixupVerticesB(nStride, pOrigVertexBuffer8, pHackVertexBuffer8);
+    VertPatch.Restore();
 
     EmuSwapFS();   // XBox FS
 
@@ -6191,12 +6196,17 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVerticesUP
     // Convert from Xbox to PC enumeration
     D3DPRIMITIVETYPE PCPrimitiveType = EmuPrimitiveType(PrimitiveType);
 
-    IDirect3DVertexBuffer8 *pOrigVertexBuffer8 = 0;
-    IDirect3DVertexBuffer8 *pHackVertexBuffer8 = 0;
+    VertexPatchDesc VPDesc;
 
-    PVOID pNewVertexStreamZeroData = pVertexStreamZeroData;
+    VPDesc.PrimitiveType = PrimitiveType;
+    VPDesc.dwPrimitiveCount = PrimitiveCount;
+    VPDesc.dwOffset = 0;
+    VPDesc.pVertexStreamZeroData = pVertexStreamZeroData;
+    VPDesc.uiVertexStreamZeroStride = VertexStreamZeroStride;
 
-    uint32 nStride = EmuFixupVerticesA(PrimitiveType, PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, 0, pVertexStreamZeroData, VertexStreamZeroStride, &pNewVertexStreamZeroData);
+    VertexPatcher VertPatch;
+
+    bool bPatched = VertPatch.Apply(&VPDesc);
 
     if (IsValidCurrentShader())
     {
@@ -6208,9 +6218,9 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVerticesUP
         g_pD3DDevice8->DrawPrimitiveUP
         (
             PCPrimitiveType,
-            PrimitiveCount,
-            pNewVertexStreamZeroData,
-            VertexStreamZeroStride
+            VPDesc.dwPrimitiveCount,
+            VPDesc.pVertexStreamZeroData,
+            VPDesc.uiVertexStreamZeroStride
         );
 
         #ifdef _DEBUG_TRACK_VB
@@ -6218,13 +6228,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVerticesUP
         #endif
     }
 
-    if(nStride != -1)
-    {
-        EmuFixupVerticesB(nStride, pOrigVertexBuffer8, pHackVertexBuffer8);
-
-        if(pNewVertexStreamZeroData != 0)
-            CxbxFree(pNewVertexStreamZeroData);
-    }
+    VertPatch.Restore();
 
     EmuSwapFS();   // XBox FS
 
@@ -6294,10 +6298,17 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
     // Convert from Xbox to PC enumeration
     D3DPRIMITIVETYPE PCPrimitiveType = EmuPrimitiveType(PrimitiveType);
 
-    IDirect3DVertexBuffer8 *pOrigVertexBuffer8 = 0;
-    IDirect3DVertexBuffer8 *pHackVertexBuffer8 = 0;
+    VertexPatchDesc VPDesc;
 
-    uint32 nStride = EmuFixupVerticesA(PrimitiveType, PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, 0, 0, 0, 0);
+    VPDesc.PrimitiveType = PrimitiveType;
+    VPDesc.dwPrimitiveCount = PrimitiveCount;
+    VPDesc.dwOffset = 0;
+    VPDesc.pVertexStreamZeroData = 0;
+    VPDesc.uiVertexStreamZeroStride = 0;
+
+    VertexPatcher VertPatch;
+
+    bool bPatched = VertPatch.Apply(&VPDesc);
 
     #ifdef _DEBUG_TRACK_VB
     if(!g_bVBSkipStream)
@@ -6315,15 +6326,16 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
         g_pD3DDevice8->GetIndices(&pIndexBuffer, &BaseIndex);
 
         if(pIndexBuffer != 0)
+        {
             bActiveIB = true;
-
-        pIndexBuffer->Release();
+            pIndexBuffer->Release();
+        }
     }
 
     UINT uiNumVertices = 0;
     UINT uiStartIndex = 0;
 
-    // TODO: Caching (if it becomes noticably slow to recreate the buffer each time)
+    // TODO: caching (if it becomes noticably slow to recreate the buffer each time)
     if(!bActiveIB)
     {
         g_pD3DDevice8->CreateIndexBuffer(VertexCount*2, D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIndexBuffer);
@@ -6353,11 +6365,11 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
         uiStartIndex = ((DWORD)pIndexData)/2;
     }
 
-    if (IsValidCurrentShader())
+    if(IsValidCurrentShader())
     {
         g_pD3DDevice8->DrawIndexedPrimitive
         (
-            PCPrimitiveType, 0, uiNumVertices, uiStartIndex, PrimitiveCount
+            PCPrimitiveType, 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount
         );
     }
 
@@ -6371,8 +6383,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
     }
     #endif
 
-    if(nStride != -1)
-        EmuFixupVerticesB(nStride, pOrigVertexBuffer8, pHackVertexBuffer8);
+    VertPatch.Restore();
 
     EmuSwapFS();   // XBox FS
 
@@ -6417,12 +6428,17 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVerticesUP
     // Convert from Xbox to PC enumeration
     D3DPRIMITIVETYPE PCPrimitiveType = EmuPrimitiveType(PrimitiveType);
 
-    IDirect3DVertexBuffer8 *pOrigVertexBuffer8 = 0;
-    IDirect3DVertexBuffer8 *pHackVertexBuffer8 = 0;
+    VertexPatchDesc VPDesc;
 
-    PVOID pNewVertexStreamZeroData = pVertexStreamZeroData;
+    VPDesc.PrimitiveType = PrimitiveType;
+    VPDesc.dwPrimitiveCount = PrimitiveCount;
+    VPDesc.dwOffset = 0;
+    VPDesc.pVertexStreamZeroData = pVertexStreamZeroData;
+    VPDesc.uiVertexStreamZeroStride = VertexStreamZeroStride;
 
-    uint32 nStride = EmuFixupVerticesA(PrimitiveType, PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, 0, pVertexStreamZeroData, VertexStreamZeroStride, &pNewVertexStreamZeroData);
+    VertexPatcher VertPatch;
+
+    bool bPatched = VertPatch.Apply(&VPDesc);
 
     #ifdef _DEBUG_TRACK_VB
     if(!g_bVBSkipStream)
@@ -6433,7 +6449,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVerticesUP
     {
         g_pD3DDevice8->DrawIndexedPrimitiveUP
         (
-            PCPrimitiveType, 0, VertexCount, PrimitiveCount, pIndexData, D3DFMT_INDEX16, pNewVertexStreamZeroData, VertexStreamZeroStride
+            PCPrimitiveType, 0, VertexCount, VPDesc.dwPrimitiveCount, pIndexData, D3DFMT_INDEX16, VPDesc.pVertexStreamZeroData, VPDesc.uiVertexStreamZeroStride
         );
     }
 
@@ -6441,13 +6457,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVerticesUP
     }
     #endif
 
-    if(nStride != -1)
-    {
-        EmuFixupVerticesB(nStride, pOrigVertexBuffer8, pHackVertexBuffer8);
-
-        if(pNewVertexStreamZeroData != 0)
-            CxbxFree(pNewVertexStreamZeroData);
-    }
+    VertPatch.Restore();
 
     EmuSwapFS();   // XBox FS
 

@@ -36,26 +36,37 @@
 
 #include "Cxbx.h"
 
-// fixup xbox extensions to be compatible with PC direct3d
-extern UINT EmuFixupVerticesA
-(
-    DWORD                           PrimitiveType,
-    UINT                           &PrimitiveCount,
-    XTL::IDirect3DVertexBuffer8   *&pOrigVertexBuffer8,
-    XTL::IDirect3DVertexBuffer8   *&pHackVertexBuffer8,
-    UINT                            dwOffset,
-    PVOID                           pVertexStreamZeroData,
-    UINT                            uiVertexStreamZeroStride, 
-    PVOID                          *ppNewVertexStreamZeroData
-);
+typedef struct _VertexPatchDesc
+{
+    IN     X_D3DPRIMITIVETYPE   PrimitiveType;
+    IN     DWORD                dwPrimitiveCount;
+    IN     DWORD                dwOffset;
+    IN OUT PVOID                pVertexStreamZeroData;
+    IN     UINT                 uiVertexStreamZeroStride;
+}
+VertexPatchDesc;
 
-// fixup xbox extensions to be compatible with PC direct3d
-extern VOID EmuFixupVerticesB
-(
-    UINT                            nStride,
-    XTL::IDirect3DVertexBuffer8   *&pOrigVertexBuffer8,
-    XTL::IDirect3DVertexBuffer8   *&pHackVertexBuffer8
-);
+class VertexPatcher
+{
+    public:
+        VertexPatcher();
+       ~VertexPatcher();
+
+        bool Apply(VertexPatchDesc *pPatchDesc);
+        bool Restore();
+
+    private:
+
+        IDirect3DVertexBuffer8 *pOrigVertexBuffer8;
+        IDirect3DVertexBuffer8 *pPatchedVertexBuffer8;
+
+        UINT uiStride;
+
+        PVOID pNewVertexStreamZeroData;
+
+        bool bPatched;
+        bool bAllocatedStreamZeroData;
+};
 
 // inline vertex buffer emulation
 extern DWORD                  *g_pIVBVertexBuffer;

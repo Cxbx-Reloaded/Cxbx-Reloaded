@@ -49,6 +49,7 @@ namespace XTL
     #include "EmuXG.h"
 }
 
-extern XTL::LPDIRECT3DDEVICE8 g_pD3DDevice8;
+extern XTL::LPDIRECT3DDEVICE8   g_pD3DDevice8;
+extern DWORD                    g_CurrentVertexShader;
 
 #endif
