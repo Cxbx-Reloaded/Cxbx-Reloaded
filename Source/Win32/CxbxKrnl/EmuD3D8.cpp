@@ -2299,10 +2299,17 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetIndices
     // HACK: Halo Hack
     if(pIndexData != 0 && pIndexData->Lock == 0x00840863)
         pIndexData->Lock = 0;
-    /*
+    //*
     fflush(stdout);
     if(pIndexData != 0)
-        _asm int 3
+    {
+        static int chk = 0;
+        if(chk++ > 0)
+        {
+            Sleep(3000);
+            _asm int 3
+        }
+    }
     //*/
 
     IDirect3DIndexBuffer8 *pIndexBuffer = 0;
@@ -2353,6 +2360,19 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetTexture
     }
 
     HRESULT hRet = g_pD3DDevice8->SetTexture(Stage, pBaseTexture8);
+
+    /*
+    {
+        static int dwDumpTex = 0;
+
+        char szBuffer[255];
+
+        sprintf(szBuffer, "C:\\Aaron\\Textures\\SetTexture%.03d.bmp", dwDumpTex++);
+
+        if(pTexture != 0 && pTexture->EmuTexture8 != 0)
+            D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture->EmuTexture8, NULL);
+    }
+    //*/
 
     EmuSwapFS();   // XBox FS
 
@@ -2888,6 +2908,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                     // TODO: once this is known to be working, remove the warning
                     EmuWarning("Vertex buffer allocation size unknown");
                     dwSize = 0x2000;  // temporarily assign a small buffer, which will be increased later
+                    dwSize = 0x336;
                 }
 
                 HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer
@@ -5472,6 +5493,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
     if(nStride != -1)
         EmuFixupVerticesB(nStride, pOrigVertexBuffer8, pHackVertexBuffer8);
 
+    g_pD3DDevice8->Present(0, 0, 0, 0);
     EmuSwapFS();   // XBox FS
 
     return;
