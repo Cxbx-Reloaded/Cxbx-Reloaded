@@ -3735,6 +3735,8 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
                 if(X_Format == 0x0C)    // D3DFMT_DXT1 : 64bits per block/per 16 texels
                     dwCompressedSize /= 2;
+
+                dwBPP = 1;
             }
             else
             {
