@@ -981,7 +981,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetVisibilityTestResult
     // TODO: actually emulate this!?
 
     if(pResult != 0)
-        *pResult = 0;
+        *pResult = 640*480;
 
     if(pTimeStamp != 0)
         *pTimeStamp = 0;
@@ -1579,7 +1579,10 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetViewport
     HRESULT hRet = g_pD3DDevice8->SetViewport(pViewport);
 
     if(FAILED(hRet))
+    {
         EmuWarning("Unable to set viewport!");
+        hRet = D3D_OK;
+    }
 
     EmuSwapFS();   // Xbox FS
 
