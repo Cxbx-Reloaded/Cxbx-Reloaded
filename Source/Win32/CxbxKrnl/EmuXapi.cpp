@@ -337,6 +337,8 @@ HANDLE WINAPI xapi::EmuCreateThread
        lpThreadId
     );
 
+    printf("Returned : %d\n", RetHandle);
+
     EmuSwapFS();   // XBox FS
 
     return RetHandle;
@@ -418,8 +420,9 @@ VOID WINAPI xapi::EmuXapiBootDash(DWORD UnknownA, DWORD UnknownB, DWORD UnknownC
     }
     #endif
 
-    // TODO: Cleanly "Boot Dash" :-)
-    exit(0);
+    MessageBox(NULL, "Warning: XBE has done a bad bad thing.\n\nThis process may not terminate elegantly.", "Cxbx", MB_OK);
+
+    ExitProcess(0);
 
     EmuSwapFS();   // XBox FS
 

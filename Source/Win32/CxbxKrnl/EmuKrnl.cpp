@@ -58,36 +58,43 @@ namespace xntdll
 // ******************************************************************
 // * Loaded at run-time to avoid linker conflicts
 // ******************************************************************
-xntdll::FPTR_RtlInitAnsiString NT_RtlInitAnsiString = (xntdll::FPTR_RtlInitAnsiString)GetProcAddress(GetModuleHandle("ntdll"), "RtlInitAnsiString");
+HMODULE hNtDll = GetModuleHandle("ntdll");
+xntdll::FPTR_RtlInitAnsiString            NT_RtlInitAnsiString            = (xntdll::FPTR_RtlInitAnsiString)GetProcAddress(hNtDll, "RtlInitAnsiString");
+xntdll::FPTR_RtlNtStatusToDosError        NT_RtlNtStatusToDosError        = (xntdll::FPTR_RtlNtStatusToDosError)GetProcAddress(hNtDll, "RtlNtStatusToDosError");
+xntdll::FPTR_NtAllocateVirtualMemory      NT_NtAllocateVirtualMemory      = (xntdll::FPTR_NtAllocateVirtualMemory)GetProcAddress(hNtDll, "NtAllocateVirtualMemory");
+xntdll::FPTR_NtClose                      NT_NtClose                      = (xntdll::FPTR_NtClose)GetProcAddress(hNtDll, "NtClose");
+xntdll::FPTR_RtlInitializeCriticalSection NT_RtlInitializeCriticalSection = (xntdll::FPTR_RtlInitializeCriticalSection)GetProcAddress(hNtDll, "RtlInitializeCriticalSection");
+xntdll::FPTR_RtlEnterCriticalSection      NT_RtlEnterCriticalSection      = (xntdll::FPTR_RtlEnterCriticalSection)GetProcAddress(hNtDll, "RtlEnterCriticalSection");
+xntdll::FPTR_RtlLeaveCriticalSection      NT_RtlLeaveCriticalSection      = (xntdll::FPTR_RtlLeaveCriticalSection)GetProcAddress(hNtDll, "RtlLeaveCriticalSection");
 
 // ******************************************************************
-// * (HELPER) PsCreateSystemThreadExProxyParam
+// * (Helper) PCSTProxyParam
 // ******************************************************************
-typedef struct _PsCreateSystemThreadExProxyParam
+typedef struct _PCSTProxyParam
 {
     IN PVOID StartContext1;
     IN PVOID StartContext2;
     IN PVOID StartRoutine;
 }
-PsCreateSystemThreadExProxyParam;
+PCSTProxyParam;
 
 // ******************************************************************
-// * PsCreateSystemThreadExProxy
+// * (Helper) PCSTProxy
 // ******************************************************************
 #pragma warning(push)
 #pragma warning(disable: 4731)  // disable ebp modification warning
-DWORD WINAPI PsCreateSystemThreadExProxy
+DWORD WINAPI PCSTProxy
 (
     IN PVOID Parameter
 )
 {
-    PsCreateSystemThreadExProxyParam *iPsCreateSystemThreadExProxyParam = (PsCreateSystemThreadExProxyParam*)Parameter;
+    PCSTProxyParam *iPCSTProxyParam = (PCSTProxyParam*)Parameter;
 
-    uint32 StartContext1 = (uint32)iPsCreateSystemThreadExProxyParam->StartContext1;
-    uint32 StartContext2 = (uint32)iPsCreateSystemThreadExProxyParam->StartContext2;
-    uint32 StartRoutine  = (uint32)iPsCreateSystemThreadExProxyParam->StartRoutine;
+    uint32 StartContext1 = (uint32)iPCSTProxyParam->StartContext1;
+    uint32 StartContext2 = (uint32)iPCSTProxyParam->StartContext2;
+    uint32 StartRoutine  = (uint32)iPCSTProxyParam->StartRoutine;
 
-    delete iPsCreateSystemThreadExProxyParam;
+    delete iPCSTProxyParam;
 
     EmuGenerateFS();
 
@@ -96,7 +103,7 @@ DWORD WINAPI PsCreateSystemThreadExProxy
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuKrnl (0x%.08X): PsCreateSystemThreadExProxy\n"
+        printf("EmuKrnl (0x%.08X): PCSTProxy\n"
                "(\n"
                "   StartContext1       : 0x%.08X\n"
                "   StartContext2       : 0x%.08X\n"
@@ -108,6 +115,9 @@ DWORD WINAPI PsCreateSystemThreadExProxy
 
     EmuSwapFS();   // Xbox FS
 
+    // ******************************************************************
+    // * use the special calling convention
+    // ******************************************************************
     __asm
     {
         mov         esi, StartRoutine
@@ -121,8 +131,6 @@ callComplete:
 
         nop
     }
-
-    // EmuSwapFS();
 
     return 0;
 }
@@ -214,18 +222,9 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
     }
     #endif
 
-    MessageBox(NULL, "HalReturnToFirmware()", "EmuKrnl", MB_OK);
+    MessageBox(NULL, "Warning: XBE is quitting (HalReturnToFirmware).\n\nThis process may not terminate elegantly.", "Cxbx", MB_OK);
 
     ExitProcess(0);
-
-    /*
-    ReturnFirmwareHalt          = 0x0,
-    ReturnFirmwareReboot        = 0x1,
-    ReturnFirmwareQuickReboot   = 0x2,
-    ReturnFirmwareHard          = 0x3,
-    ReturnFirmwareFatal         = 0x4,
-    ReturnFirmwareAll           = 0x5
-    */
 
     EmuSwapFS();   // Xbox FS
 }
@@ -375,8 +374,13 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
 
     EmuSwapFS();   // Xbox FS
 
-    return FALSE;
+    return TRUE;
 }
+
+// ******************************************************************
+// * 0x00A4 - LaunchDataPage (actually a pointer)
+// ******************************************************************
+XBSYSAPI EXPORTNUM(164) xboxkrnl::DWORD xboxkrnl::LaunchDataPage = 0;
 
 // ******************************************************************
 // * 0x00B8 - NtAllocateVirtualMemory
@@ -385,7 +389,7 @@ XBSYSAPI EXPORTNUM(184) NTSTATUS xboxkrnl::NtAllocateVirtualMemory
 (
     IN OUT PVOID    *BaseAddress,
     IN ULONG         ZeroBits,
-    IN OUT SIZE_T    AllocationSize,
+    IN OUT PULONG    AllocationSize,
     IN DWORD         AllocationType,
     IN DWORD         Protect
 )
@@ -409,11 +413,11 @@ XBSYSAPI EXPORTNUM(184) NTSTATUS xboxkrnl::NtAllocateVirtualMemory
     }
     #endif
 
-    *BaseAddress = VirtualAlloc(*BaseAddress, AllocationSize, AllocationType, Protect);
+    NTSTATUS ret = NT_NtAllocateVirtualMemory(GetCurrentProcess(), BaseAddress, ZeroBits, AllocationSize, AllocationType, Protect);
 
     EmuSwapFS();   // Xbox FS
 
-    return STATUS_SUCCESS;
+    return ret;
 }
 
 // ******************************************************************
@@ -439,12 +443,11 @@ XBSYSAPI EXPORTNUM(187) NTSTATUS NTAPI xboxkrnl::NtClose
     }
     #endif
 
-    if(CloseHandle(Handle) != TRUE)
-        return STATUS_UNSUCCESSFUL;
+    NTSTATUS ret = NT_NtClose(Handle);
 
     EmuSwapFS();   // Xbox FS
 
-    return STATUS_SUCCESS;
+    return ret;
 }
 
 // ******************************************************************
@@ -565,19 +568,24 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
     }
     #endif
 
-    DWORD dwThreadId = NULL;
+    // ******************************************************************
+    // * create thread, using our special proxy technique
+    // ******************************************************************
+    {
+        DWORD dwThreadId;
 
-    // PsCreateSystemThreadExProxy is responsible for cleaning up this pointer
-    ::PsCreateSystemThreadExProxyParam *iPsCreateSystemThreadProxyParam = new ::PsCreateSystemThreadExProxyParam();
+        // PCSTProxy is responsible for cleaning up this pointer
+        ::PCSTProxyParam *iPCSTProxyParam = new ::PCSTProxyParam();
 
-    iPsCreateSystemThreadProxyParam->StartContext1 = StartContext1;
-    iPsCreateSystemThreadProxyParam->StartContext2 = StartContext2;
-    iPsCreateSystemThreadProxyParam->StartRoutine  = StartRoutine;
+        iPCSTProxyParam->StartContext1 = StartContext1;
+        iPCSTProxyParam->StartContext2 = StartContext2;
+        iPCSTProxyParam->StartRoutine  = StartRoutine;
 
-    *ThreadHandle = CreateThread(NULL, NULL, &PsCreateSystemThreadExProxy, iPsCreateSystemThreadProxyParam, NULL, &dwThreadId);
+        *ThreadHandle = CreateThread(NULL, NULL, &PCSTProxy, iPCSTProxyParam, NULL, &dwThreadId);
 
-    if(ThreadId != NULL)
-        *ThreadId = dwThreadId;
+        if(ThreadId != NULL)
+            *ThreadId = dwThreadId;
+    }
 
     EmuSwapFS();   // Xbox FS
 
@@ -607,13 +615,14 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
     }
     #endif
 
-    // We have to initialize this because the Xbox software doesn't seem
-    // to always do it. Redundant initializations seem to be ok :/
-    InitializeCriticalSection((::PRTL_CRITICAL_SECTION)CriticalSection);
+    // This seems redundant, but xbox software doesn't always do it
+    NT_RtlInitializeCriticalSection((xntdll::_RTL_CRITICAL_SECTION*)CriticalSection);
 
-    EnterCriticalSection((::PRTL_CRITICAL_SECTION)CriticalSection);
+    NT_RtlEnterCriticalSection((xntdll::_RTL_CRITICAL_SECTION*)CriticalSection);
 
     EmuSwapFS();   // Xbox FS
+
+    return;
 }
 
 // ******************************************************************
@@ -671,7 +680,7 @@ XBSYSAPI EXPORTNUM(291) VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
     }
     #endif
 
-    InitializeCriticalSection((::PRTL_CRITICAL_SECTION)CriticalSection);
+    NT_RtlInitializeCriticalSection((xntdll::_RTL_CRITICAL_SECTION*)CriticalSection);
 
     EmuSwapFS();   // Xbox FS
 
@@ -688,6 +697,9 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
 {
     EmuSwapFS();   // Win2k/XP FS
 
+    // Note: We need to execute this before debug output to avoid trouble
+    NT_RtlLeaveCriticalSection((xntdll::_RTL_CRITICAL_SECTION*)CriticalSection);
+
     // ******************************************************************
     // * debug trace
     // ******************************************************************
@@ -701,9 +713,9 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
     }
     #endif
 
-    LeaveCriticalSection((::PRTL_CRITICAL_SECTION)CriticalSection);
-
     EmuSwapFS();   // Xbox FS
+
+    return;
 }
 
 // ******************************************************************
@@ -729,7 +741,9 @@ XBSYSAPI EXPORTNUM(301) xboxkrnl::ULONG NTAPI xboxkrnl::RtlNtStatusToDosError
     }
     #endif
 
+    ULONG ret = NT_RtlNtStatusToDosError(Status);
+
     EmuSwapFS();   // Xbox FS
 
-    return 0;
+    return ret;
 }

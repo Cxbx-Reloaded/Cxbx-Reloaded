@@ -34,6 +34,8 @@
 #ifndef INPUTCONFIG_H
 #define INPUTCONFIG_H
 
+#include <string.h>
+
 // ******************************************************************
 // * Input Device Component IDs
 // ******************************************************************
@@ -125,9 +127,10 @@ class InputConfig
         void Get(InputDeviceComponent idc, int *dwDevice, int *dwInfo, int *dwFlags);
 
         // ******************************************************************
-        // * To enumerate device names
+        // * To enumerate and set device names
         // ******************************************************************
         const char *GetDeviceName(int offset) { return (const char*)m_DeviceName[offset]; }
+        void SetDeviceName(int offset, const char *device_name) { strncpy(m_DeviceName[offset], device_name, 259); }
 
     private:
         // ******************************************************************
@@ -138,7 +141,7 @@ class InputConfig
         // ******************************************************************
         // * Devices used by one or more input mappings
         // ******************************************************************
-        char m_DeviceName[260][MAX_INPUT_DEVICES];
+        char m_DeviceName[MAX_INPUT_DEVICES][260];
 
         // ******************************************************************
         // * Input Device Components

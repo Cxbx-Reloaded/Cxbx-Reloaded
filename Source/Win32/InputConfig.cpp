@@ -132,7 +132,7 @@ int InputConfig::Insert(const char *DeviceName)
     int v=0;
 
     for(v=0;v<MAX_INPUT_DEVICES;v++)
-        if(strcmp(DeviceName, m_DeviceName[v]) == 0)
+        if(strcmp(m_DeviceName[v], DeviceName) == 0)
             return v;
 
     for(v=0;v<MAX_INPUT_DEVICES;v++)

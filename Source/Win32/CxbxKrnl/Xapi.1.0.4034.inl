@@ -31,14 +31,14 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-/*
+
 // ******************************************************************
 // * XInitDevices
 // ******************************************************************
-// * NOTE: We are actually intercepting USBD_Init, because XInitDevices
-// *       Simply redirects to that function
+// * NOTE: We are actually intercepting USBD_Init, because
+// *       XInitDevices Simply redirects to that function
 // ******************************************************************
-SOOVPA<10> XInitDevices_1_0_4361 =
+SOOVPA<10> XInitDevices_1_0_4034 =
 {
     0,  // Large == 0
     10, // Count == 10
@@ -67,7 +67,7 @@ SOOVPA<10> XInitDevices_1_0_4361 =
 // ******************************************************************
 // * XGetDevices
 // ******************************************************************
-SOOVPA<14> XGetDevices_1_0_4361 =
+SOOVPA<14> XGetDevices_1_0_4034 =
 {
     0,  // Large == 0
     14, // Count == 14
@@ -98,11 +98,11 @@ SOOVPA<14> XGetDevices_1_0_4361 =
         { 0x20, 0x04 }, // (Offset,Value)-Pair #14
     }
 };
-
+/*
 // ******************************************************************
 // * XInputOpen
 // ******************************************************************
-SOOVPA<12> XInputOpen_1_0_4361 =
+SOOVPA<12> XInputOpen_1_0_4034 =
 {
     0,  // Large == 0
     12, // Count == 12
@@ -287,10 +287,9 @@ SOOVPA<7> XapiInitProcess_1_0_4361 =
 // ******************************************************************
 OOVPATable XAPI_1_0_4034[] =
 {
-    /*
     // XInitDevices
     {
-        (OOVPA*)&XInitDevices_1_0_4361,
+        (OOVPA*)&XInitDevices_1_0_4034,
 
         xapi::EmuXInitDevices,
 
@@ -300,7 +299,7 @@ OOVPATable XAPI_1_0_4034[] =
     },
     // XGetDevices
     {
-        (OOVPA*)&XGetDevices_1_0_4361,
+        (OOVPA*)&XGetDevices_1_0_4034,
 
         xapi::EmuXGetDevices,
 
@@ -308,9 +307,10 @@ OOVPATable XAPI_1_0_4034[] =
         "EmuXGetDevices"
         #endif
     },
+/* These functions havent been rev'd yet (may be same as new/old)
     // XInputOpen
     {
-        (OOVPA*)&XInputOpen_1_0_4361,
+        (OOVPA*)&XInputOpen_1_0_4034,
 
         xapi::EmuXInputOpen,
 
@@ -339,6 +339,7 @@ OOVPATable XAPI_1_0_4034[] =
         #endif
     },
     */
+    /* Too High Level
     // CreateThread (* unchanged since 1.0.3911 *)
     {
         (OOVPA*)&CreateThread_1_0_3911,
@@ -349,6 +350,7 @@ OOVPATable XAPI_1_0_4034[] =
         "EmuCreateThread" 
         #endif
     },
+    */
     /*
     // CloseHandle (*???*)
     {
@@ -361,6 +363,7 @@ OOVPATable XAPI_1_0_4034[] =
         #endif
     },
     */
+    /* Too High Level
     // XapiInitProcess (* unchanged since 1.0.3911 *)
     {
         (OOVPA*)&XapiInitProcess_1_0_3911,
@@ -371,6 +374,7 @@ OOVPATable XAPI_1_0_4034[] =
         "EmuXapiInitProcess" 
         #endif
     },
+    */
     // XapiBootToDash (* unchanged since 1.0.3911 *)
     {
         (OOVPA*)&XapiBootDash_1_0_3911,
@@ -381,6 +385,7 @@ OOVPATable XAPI_1_0_4034[] =
         "EmuXapiBootDash"
         #endif
     },
+    /* Too High Level
     // __rtinit (* unchanged since 1.0.3911 *)
     {
         (OOVPA*)&__rtinit_1_0_3911,
@@ -390,7 +395,8 @@ OOVPATable XAPI_1_0_4034[] =
         #ifdef _DEBUG_TRACE
         "Emu__rtinit",
         #endif
-    },
+    },*/
+    /* Too High Level
     // __cinit (* unchanged since 1.0.3911 *)
     {
         (OOVPA*)&__cinit_1_0_3911,
@@ -400,7 +406,7 @@ OOVPATable XAPI_1_0_4034[] =
         #ifdef _DEBUG_TRACE
         "Emu__cinit",
         #endif
-    },
+    },*/
 };
 
 // ******************************************************************

@@ -371,6 +371,8 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, InputDeviceComponent idc)
 
                     int b=0;
 
+                    dwFlags = INPUT_MAPPING_JOYSTICK;
+
                     if(abs(InputState.lX) > JOYSTICK_DETECT_SENSITIVITY)
                     {
                         dwHow   = FIELD_OFFSET(DIJOYSTATE, lX);
@@ -425,7 +427,7 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, InputDeviceComponent idc)
 
                         g_InputConfig.Map(idc, DeviceInstance.tszInstanceName, ObjectInstance.dwType, dwFlags);
 
-						printf("Cxbx: Detected %s on %s (dwType : %.08X)\n", ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType);
+						printf("Cxbx: Detected %s on %s\n", ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType);
 
 						sprintf(szNewText, "%s Successfully Mapped To %s On %s!", szOrgText, ObjectInstance.tszName, DeviceInstance.tszInstanceName);
 					}
@@ -438,6 +440,8 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, InputDeviceComponent idc)
 					BYTE InputState[256];
 
 					g_pInputDev[v]->GetDeviceState(256, InputState);
+
+                    dwFlags = INPUT_MAPPING_KEYBOARD;
 
 					for(int v=0;v<256;v++)
 					{
@@ -466,13 +470,15 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, InputDeviceComponent idc)
 
 					g_pInputDev[v]->GetDeviceState(sizeof(DIMOUSESTATE2), &InputState);
 
+                    dwFlags = INPUT_MAPPING_MOUSE;
+
                     // detect button changes
 					for(int b=0;b<8;b++)
 					{
 						if(InputState.rgbButtons[b] & 0x80)
 						{
 							dwHow = b;
-							dwFlags &= INPUT_MAPPING_MOUSE_CLICK;
+							dwFlags |= INPUT_MAPPING_MOUSE_CLICK;
 							break;
 						}
 					}
@@ -492,7 +498,7 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, InputDeviceComponent idc)
                         LONG delta_lX=0, delta_lY=0, delta_lZ=0;
                         LONG absd_lX=0, absd_lY=0, absd_lZ=0;
 
-                        if(InputState.lX == -1 || InputState.lY == -1 || InputState.lZ == -1)
+                        if(LastMouse_lY == -1 || LastMouse_lY == -1 || LastMouse_lZ == -1)
                             delta_lX = delta_lY = delta_lZ = 0;
                         else
                         {
@@ -509,37 +515,43 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, InputDeviceComponent idc)
 
                         max = (max > absd_lZ) ? max : absd_lZ;
 
+                        LastMouse_lX = InputState.lX;
+                        LastMouse_lY = InputState.lY;
+                        LastMouse_lZ = InputState.lZ;
+
                         if(max > MOUSE_DETECT_SENSITIVITY)
                         {
                             if(max == absd_lX && absd_lX > MOUSE_DETECT_SENSITIVITY)
                             {
-                                dwHow = FIELD_OFFSET(DIMOUSESTATE2, lX);
+                                dwHow = DIMOFS_X;
                                 dwFlags |= (delta_lX > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
                             }
                             else if(max == absd_lY && absd_lY > MOUSE_DETECT_SENSITIVITY)
                             {
-                                dwHow = FIELD_OFFSET(DIMOUSESTATE2, lY);
+                                dwHow = DIMOFS_Y;
                                 dwFlags |= (delta_lY > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
                             }
                             else if(max == absd_lZ && absd_lZ > MOUSE_DETECT_SENSITIVITY)
                             {
-                                dwHow = FIELD_OFFSET(DIMOUSESTATE2, lZ);
+                                dwHow = DIMOFS_Z;
                                 dwFlags |= (delta_lZ > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
                             }
 
-                            LastMouse_lX = InputState.lX;
-                            LastMouse_lY = InputState.lY;
-                            LastMouse_lZ = InputState.lZ;
-
                             if(dwHow != -1)
 					        {
-						        g_pInputDev[v]->GetObjectInfo(&ObjectInstance, dwHow, DIPH_BYOFFSET);
-
                                 g_InputConfig.Map(idc, "SysMouse", dwHow, dwFlags);
 
-                                printf("Cxbx: Detected Movement on the %s %s on SysMouse\n", (dwFlags & INPUT_MAPPING_AXIS_POSITIVE) ? "Positive" : "Negative", ObjectInstance.tszName);
+                                ObjectInstance.dwSize = sizeof(ObjectInstance);
 
-						        sprintf(szNewText, "%s Successfully Mapped To %s %s On %s!", szOrgText, (dwFlags & INPUT_MAPPING_AXIS_POSITIVE) ? "Positive" : "Negative", ObjectInstance.tszName, "SysMouse");
+                                char *szDirection = (dwFlags & INPUT_MAPPING_AXIS_POSITIVE) ? "Positive" : "Negative";
+                                char *szObjName = "Unknown";
+
+                                if(g_pInputDev[v]->GetObjectInfo(&ObjectInstance, dwHow, DIPH_BYOFFSET) == DI_OK)
+                                    szObjName = ObjectInstance.tszName;
+
+                                printf("Cxbx: Detected Movement on the %s %s on SysMouse\n", szDirection, szObjName);
+
+						        sprintf(szNewText, "%s Successfully Mapped To %s %s On %s!", szOrgText, szDirection, szObjName, "SysMouse");
                             }                    
                         }
                     }

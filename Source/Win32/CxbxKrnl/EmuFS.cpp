@@ -123,6 +123,8 @@ void EmuGenerateFS()
 
         // HACK: This converts from XBE stack form to Windows form (I guess?!)
         TLSPtr = (void*)((uint32)TLSPtr+20 + (2*8));
+
+        NewPcr->PrcbData.CurrentThread->TlsData = TLSPtr;
     }
 
     // ******************************************************************
@@ -142,10 +144,12 @@ void EmuGenerateFS()
     // ******************************************************************
     // * Save "TLSPtr" inside NewFS.StackBase
     // ******************************************************************
-    __asm
     {
-        mov eax, TLSPtr
-        mov fs:[0x04], eax
+        __asm
+        {
+            mov eax, TLSPtr
+            mov fs:[0x04], eax
+        }
     }
 
     // ******************************************************************

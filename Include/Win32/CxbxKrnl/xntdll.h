@@ -211,34 +211,18 @@ typedef struct _STRING
 STRING, ANSI_STRING, *PSTRING, *PANSI_STRING;
 
 // ******************************************************************
-// * KeDelayExecutionThread
+// * RTL_CRITICAL_SECTION
 // ******************************************************************
-NTSYSAPI NTSTATUS NTAPI KeDelayExecutionThread
-(
-    IN KPROCESSOR_MODE  WaitMode,
-    IN BOOLEAN          Alertable,
-    IN PLARGE_INTEGER   Interval
-);
-
-// ******************************************************************
-// * NtSetLdtEntries
-// ******************************************************************
-NTSYSAPI NTSTATUS NTAPI NtSetLdtEntries
-(
-    IN USHORT       Selector1,
-    IN LDT_ENTRY    Descriptor1,
-    IN USHORT       Selector2,
-    IN LDT_ENTRY    Descriptor2
-);
-
-// ******************************************************************
-// * 0x0121 - RtlInitAnsiString
-// ******************************************************************
-typedef VOID (NTAPI *FPTR_RtlInitAnsiString)
-(
-  IN OUT PANSI_STRING   DestinationString,
-  IN     PCSZ           SourceString
-);
+typedef struct _RTL_CRITICAL_SECTION
+{
+    DWORD               Unknown[4];                                     // 0x00
+	LONG                LockCount;                                      // 0x10
+    LONG                RecursionCount;                                 // 0x14
+    HANDLE              OwningThread;                                   // 0x18
+    HANDLE              LockSemaphore;
+    DWORD               Reserved;
+}
+RTL_CRITICAL_SECTION, *PRTL_CRITICAL_SECTION;
 
 // ******************************************************************
 // * Valid values for the Attributes field
@@ -334,6 +318,86 @@ NTSYSAPI NTSTATUS NTAPI ZwOpenFile
     OUT PIO_STATUS_BLOCK    IoStatusBlock,
     IN  ULONG               ShareAccess,
     IN  ULONG               OpenOptions
+);
+
+// ******************************************************************
+// * KeDelayExecutionThread
+// ******************************************************************
+NTSYSAPI NTSTATUS NTAPI KeDelayExecutionThread
+(
+    IN KPROCESSOR_MODE  WaitMode,
+    IN BOOLEAN          Alertable,
+    IN PLARGE_INTEGER   Interval
+);
+
+// ******************************************************************
+// * NtSetLdtEntries
+// ******************************************************************
+NTSYSAPI NTSTATUS NTAPI NtSetLdtEntries
+(
+    IN USHORT       Selector1,
+    IN LDT_ENTRY    Descriptor1,
+    IN USHORT       Selector2,
+    IN LDT_ENTRY    Descriptor2
+);
+
+// ******************************************************************
+// * RtlNtStatusToDosError
+// ******************************************************************
+typedef ULONG (NTAPI *FPTR_RtlNtStatusToDosError)(NTSTATUS Status);
+
+// ******************************************************************
+// * RtlInitAnsiString
+// ******************************************************************
+typedef VOID (NTAPI *FPTR_RtlInitAnsiString)
+(
+  IN OUT PANSI_STRING   DestinationString,
+  IN     PCSZ           SourceString
+);
+
+// ******************************************************************
+// * NtAllocateVirtualMemory
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtAllocateVirtualMemory)
+(
+  IN HANDLE               ProcessHandle,
+  IN OUT PVOID            *BaseAddress,
+  IN ULONG                ZeroBits,
+  IN OUT PULONG           RegionSize,
+  IN ULONG                AllocationType,
+  IN ULONG                Protect
+);
+
+// ******************************************************************
+// * NtClose
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtClose)
+(
+  IN HANDLE               Handle
+);
+
+// ******************************************************************
+// * RtlInitializeCriticalSection
+// ******************************************************************
+typedef VOID (NTAPI *FPTR_RtlInitializeCriticalSection)
+(
+  IN PRTL_CRITICAL_SECTION CriticalSection
+);
+
+// ******************************************************************
+// * RtlEnterCriticalSection
+// ******************************************************************
+typedef VOID (NTAPI *FPTR_RtlEnterCriticalSection)
+(
+  IN PRTL_CRITICAL_SECTION CriticalSection
+);
+
+// ******************************************************************
+// * RtlLeaveCriticalSection
+// ******************************************************************
+typedef VOID (NTAPI *FPTR_RtlLeaveCriticalSection)
+(
+  IN PRTL_CRITICAL_SECTION CriticalSection
 );
 
 #if defined(__cplusplus)

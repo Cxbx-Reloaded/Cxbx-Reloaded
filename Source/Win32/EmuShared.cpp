@@ -103,8 +103,8 @@ CXBXKRNL_API void EmuShared::Init()
     // ******************************************************************
     if(init)
     {
-        g_EmuShared->LoadInputConfiguration();
         g_EmuShared->InitInputConfiguration();
+        g_EmuShared->LoadInputConfiguration();
     }
 }
 
@@ -157,66 +157,44 @@ CXBXKRNL_API void EmuShared::LoadInputConfiguration()
     // * Load configuration from registry
     // ******************************************************************
     {
-        /*
         DWORD   dwDisposition, dwType, dwSize;
         HKEY    hKey;
 
         if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx\\Input", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
         {
-            for(int v=0;v<MAX_INPUT_DEVICES;v++)
+            char szBuffer[128];
+            char szDeviceName[260] = "";
+
+            for(int d=0;d<MAX_INPUT_DEVICES;d++)
             {
+                const char *szCur = m_InputConfig.GetDeviceName(d);
+
+                if(szCur[0] == '\0')
+                    continue;
+
+                sprintf(szBuffer, "Device Name #%d", d);
+
+                dwType = REG_SZ; dwSize = 260;
+                RegQueryValueEx(hKey, szBuffer, NULL, &dwType, (PBYTE)szDeviceName, &dwSize);
+
+                m_InputConfig.SetDeviceName(d, szDeviceName);
+            }
+
+            for(int c=0;c<INPUT_DEVICE_COMPONENT_COUNT;c++)
+            {
+                int RawData[3] = {-1, -1, 0}; // dwDevice, dwInfo, dwFlags
+
+                sprintf(szBuffer, "Component : %s", g_InputDeviceTitle[c]);
+
+                dwType = REG_BINARY; dwSize = sizeof(RawData);
+                RegQueryValueEx(hKey, szBuffer, NULL, &dwType, (PBYTE)&RawData[0], &dwSize);
+
+                if(RawData[0] != -1)
+                    m_InputConfig.Map((InputDeviceComponent)c, m_InputConfig.GetDeviceName(RawData[0]), RawData[1], RawData[2]);
             }
 
             RegCloseKey(hKey);
-            /*
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_CxbxDebug, &dwSize);
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegQueryValueEx(hKey, "KrnlDebug", NULL, &dwType, (PBYTE)&m_KrnlDebug, &dwSize);
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegQueryValueEx(hKey, "RecentXbe", NULL, &dwType, (PBYTE)&m_dwRecentXbe, &dwSize);
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegQueryValueEx(hKey, "RecentExe", NULL, &dwType, (PBYTE)&m_dwRecentExe, &dwSize);
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegQueryValueEx(hKey, "AutoConvertToExe", NULL, &dwType, (PBYTE)&m_bAutoConvertToExe, &dwSize);
-
-            dwType = REG_SZ; dwSize = 260;
-            RegQueryValueEx(hKey, "CxbxDebugFilename", NULL, &dwType, (PBYTE)m_CxbxDebugFilename, &dwSize);
-
-            dwType = REG_SZ; dwSize = 260;
-            RegQueryValueEx(hKey, "KrnlDebugFilename", NULL, &dwType, (PBYTE)m_KrnlDebugFilename, &dwSize);
-
-            int v=0;
-
-            for(v=0;v<m_dwRecentXbe;v++)
-            {
-                char buffer[32];
-
-                sprintf(buffer, "RecentXbe%d", v);
-
-                m_szRecentXbe[v] = (char*)calloc(1, 260);
-
-                dwType = REG_SZ; dwSize = 260;
-                RegQueryValueEx(hKey, buffer, NULL, &dwType, (PBYTE)m_szRecentXbe[v], &dwSize);
-            }
-
-            for(v=0;v<m_dwRecentExe;v++)
-            {
-                char buffer[32];
-
-                sprintf(buffer, "RecentExe%d", v);
-
-                m_szRecentExe[v] = (char*)calloc(1, 260);
-
-                dwType = REG_SZ; dwSize = 260;
-                RegQueryValueEx(hKey, buffer, NULL, &dwType, (PBYTE)m_szRecentExe[v], &dwSize);
-            }
         }
-        */
     }
 
     Unlock();
@@ -246,18 +224,20 @@ CXBXKRNL_API void EmuShared::SaveInputConfiguration()
             {
                 const char *szCur = m_InputConfig.GetDeviceName(d);
 
-                if(szCur[0] == '\0')
-                    continue;
-
                 sprintf(szBuffer, "Device Name #%d", d);
 
-                dwType = REG_SZ; dwSize = 260;
-                RegSetValueEx(hKey, szBuffer, 0, dwType, (PBYTE)szCur, dwSize);
+                if(szCur[0] == '\0')
+                    RegDeleteValue(hKey, szBuffer);
+                else
+                {
+                    dwType = REG_SZ; dwSize = 260;
+                    RegSetValueEx(hKey, szBuffer, 0, dwType, (PBYTE)szCur, dwSize);
+                }
             }
 
             for(int c=0;c<INPUT_DEVICE_COMPONENT_COUNT;c++)
             {
-                int RawData[3] = {-1, -1, 0};
+                int RawData[3] = {-1, -1, 0}; // dwDevice, dwInfo, dwFlags
 
                 m_InputConfig.Get((InputDeviceComponent)c, &RawData[0], &RawData[1], &RawData[2]);
 

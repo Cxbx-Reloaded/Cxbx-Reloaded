@@ -5,19 +5,23 @@ version: 0.7.0 (??/??/??)
 
 - Added Controller Input and Configuration!
 
+- __declspec(thread) style TLS is working!!
+
 - Added Recent Xbe/Exe file menus
 
-- Fixed GUI color issues
+- Massive code re-organization.
+
+- Lots of random optimizations
+
+- Went lower level with certain components of
+  emulation. This should allow progress to move
+  faster, ironically.
 
 - Some Xbe parsing and debug output fixes.
   You should now be able to deal with the
   slightly odd Linux Xbe files.
 
-- __declspec(thread) style TLS is working!!
-
-- Massive code re-organization.
-
-- Lots of random optimizations
+- Fixed GUI color issues
 
 version: 0.6.0-pre12 (02/23/03)
 --------------------------------
