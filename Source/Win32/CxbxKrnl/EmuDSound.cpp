@@ -90,6 +90,10 @@ static void HackUpdateSoundBuffers()
         PVOID pAudioPtr, pAudioPtr2;
         DWORD dwAudioBytes, dwAudioBytes2;
 
+        // unlock existing lock
+        if(g_pDSoundBufferCache[v]->EmuLockPtr1 != 0)
+            g_pDSoundBufferCache[v]->EmuDirectSoundBuffer8->Unlock(g_pDSoundBufferCache[v]->EmuLockPtr1, g_pDSoundBufferCache[v]->EmuLockBytes1, g_pDSoundBufferCache[v]->EmuLockPtr2, g_pDSoundBufferCache[v]->EmuLockBytes2);
+
         HRESULT hRet = g_pDSoundBufferCache[v]->EmuDirectSoundBuffer8->Lock(0, g_pDSoundBufferCache[v]->EmuBufferDesc->dwBufferBytes, &pAudioPtr, &dwAudioBytes, &pAudioPtr2, &dwAudioBytes2, 0);
 
         if(SUCCEEDED(hRet))
@@ -102,6 +106,8 @@ static void HackUpdateSoundBuffers()
 
             g_pDSoundBufferCache[v]->EmuDirectSoundBuffer8->Unlock(pAudioPtr, dwAudioBytes, pAudioPtr2, dwAudioBytes2);
         }
+
+        // TODO: relock old lock ??
     }
 }
 
@@ -141,6 +147,10 @@ static void EmuResizeIDirectSoundBuffer8(XTL::X_CDirectSoundBuffer *pThis, DWORD
 {
     if(dwBytes == pThis->EmuBufferDesc->dwBufferBytes)
         return;
+
+    #ifdef _DEBUG_TRACE
+    printf("EmuResizeIDirectSoundBuffer8 : Resizing! (0x%.08X->0x%.08X)\n", pThis->EmuBufferDesc->dwBufferBytes, dwBytes);
+    #endif
 
     DWORD dwPlayCursor, dwWriteCursor, dwStatus;
 
@@ -742,7 +752,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
             EmuWarning("Use of unsupported pdsbd->dwFlags mask(s) (0x%.08X)", pdsbd->dwFlags & (~dwAcceptableMask));
 
         pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
-        pDSBufferDesc->dwFlags = (pdsbd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME;
+        pDSBufferDesc->dwFlags = (pdsbd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
         pDSBufferDesc->dwBufferBytes = pdsbd->dwBufferBytes;
 
         if(pDSBufferDesc->dwBufferBytes < DSBSIZE_MIN)
@@ -772,7 +782,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
     (*ppBuffer)->EmuLockBytes2 = 0;
 
     #ifdef _DEBUG_TRACE
-    printf("EmuDSound (0x%X): EmuDirectSoundCreateBuffer, *ppBuffer := 0x%.08X\n", GetCurrentThreadId(), *ppBuffer);
+    printf("EmuDSound (0x%X): EmuDirectSoundCreateBuffer, *ppBuffer := 0x%.08X, bytes := 0x%.08X\n", GetCurrentThreadId(), *ppBuffer, pDSBufferDesc->dwBufferBytes);
     #endif
 
     HRESULT hRet = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &((*ppBuffer)->EmuDirectSoundBuffer8), NULL);
@@ -1052,7 +1062,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetLoopRegion
     }
     #endif
 
-    // Todo: Translate params, then make the PC DirectSound call
+    EmuResizeIDirectSoundBuffer8(pThis, dwLoopLength);
 
     EmuSwapFS();   // XBox FS
 
@@ -1233,6 +1243,10 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_GetCurrentPosition
 
     if(FAILED(hRet))
         EmuWarning("GetCurrentPosition FAILED");
+
+    #ifdef _DEBUG_TRACE
+    printf("*pdwCurrentPlayCursor := %d, *pdwCurrentWriteCursor := %d\n", *pdwCurrentPlayCursor, *pdwCurrentWriteCursor);
+    #endif
 
     HackUpdateSoundBuffers();
     HackUpdateSoundStreams();
