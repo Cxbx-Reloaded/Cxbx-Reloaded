@@ -4840,7 +4840,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
             int h = g_dwOverlayH;
 
             // TODO: sucker the game into rendering directly to the overlay (speed boost)
-            if(ddsd2.lPitch == w*2 && g_dwOverlayP == w*2)
+            if( (ddsd2.lPitch == w*2) && ((int)g_dwOverlayP == w*2) )
                 memcpy(pDest, pSour, h*w*2);
             else
             {
@@ -6581,6 +6581,75 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
 
     if(nStride != -1)
         EmuFixupVerticesB(nStride, pOrigVertexBuffer8, pHackVertexBuffer8);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_DrawIndexedVerticesUP
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVerticesUP
+(
+    X_D3DPRIMITIVETYPE  PrimitiveType,
+    UINT                VertexCount,
+    CONST PVOID         pIndexData,
+    CONST PVOID         pVertexStreamZeroData,
+    UINT                VertexStreamZeroStride
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_DrawIndexedVerticesUP\n"
+               "(\n"
+               "   PrimitiveType            : 0x%.08X\n"
+               "   VertexCount              : 0x%.08X\n"
+               "   pIndexData               : 0x%.08X\n"
+               "   pVertexStreamZeroData    : 0x%.08X\n"
+               "   VertexStreamZeroStride   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), PrimitiveType, VertexCount, pIndexData, pVertexStreamZeroData, VertexStreamZeroStride);
+    }
+
+    #endif
+
+    // update index buffer, if necessary
+    if(g_pIndexBuffer != 0 && g_pIndexBuffer->Lock == X_D3DRESOURCE_LOCK_FLAG_NOSIZE)
+        EmuCleanup("g_pIndexBuffer != 0");
+
+    EmuUpdateDeferredStates();
+
+    if((DWORD)PrimitiveType == 0x08 || (DWORD)PrimitiveType == 0x09 || (DWORD)PrimitiveType == 0x10)
+        EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
+
+    UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
+
+    // Convert from Xbox to PC enumeration
+    D3DPRIMITIVETYPE PCPrimitiveType = EmuPrimitiveType(PrimitiveType);
+
+    IDirect3DVertexBuffer8 *pOrigVertexBuffer8 = 0;
+    IDirect3DVertexBuffer8 *pHackVertexBuffer8 = 0;
+
+    PVOID pNewVertexStreamZeroData = pVertexStreamZeroData;
+
+    uint32 nStride = EmuFixupVerticesA(PrimitiveType, PrimitiveCount, pOrigVertexBuffer8, pHackVertexBuffer8, 0, pVertexStreamZeroData, VertexStreamZeroStride, &pNewVertexStreamZeroData);
+
+    g_pD3DDevice8->DrawIndexedPrimitiveUP
+    (
+        PCPrimitiveType, 0, VertexCount, PrimitiveCount, pIndexData, D3DFMT_INDEX16, pNewVertexStreamZeroData, VertexStreamZeroStride
+    );
+
+    if(nStride != -1)
+    {
+        EmuFixupVerticesB(nStride, pOrigVertexBuffer8, pHackVertexBuffer8);
+
+        if(pNewVertexStreamZeroData != 0)
+            free(pNewVertexStreamZeroData);
+    }
 
     EmuSwapFS();   // XBox FS
 

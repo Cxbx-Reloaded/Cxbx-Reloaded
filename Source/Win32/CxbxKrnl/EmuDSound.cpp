@@ -145,7 +145,7 @@ static void HackUpdateSoundStreams()
 // resize an emulated directsound buffer, if necessary
 static void EmuResizeIDirectSoundBuffer8(XTL::X_CDirectSoundBuffer *pThis, DWORD dwBytes)
 {
-    if(dwBytes == pThis->EmuBufferDesc->dwBufferBytes)
+    if(dwBytes == pThis->EmuBufferDesc->dwBufferBytes || dwBytes == 0)
         return;
 
     #ifdef _DEBUG_TRACE

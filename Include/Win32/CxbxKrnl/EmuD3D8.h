@@ -1139,6 +1139,18 @@ VOID WINAPI EmuIDirect3DDevice8_DrawIndexedVertices
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_DrawIndexedVerticesUP
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_DrawIndexedVerticesUP
+(
+    X_D3DPRIMITIVETYPE  PrimitiveType,
+    UINT                VertexCount,
+    CONST PVOID         pIndexData,
+    CONST PVOID         pVertexStreamZeroData,
+    UINT                VertexStreamZeroStride
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetLight
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_SetLight
