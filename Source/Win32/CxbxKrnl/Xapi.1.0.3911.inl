@@ -40,6 +40,9 @@ SOOVPA<8> CreateThread_1_0_3911 =
     0,  // Large == 0
     8,  // Count == 8
 
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
     {
         // CreateThread+0x0A : mov eax, ds:10130h
         { 0x0A, 0xA1 }, // (Offset,Value)-Pair #1
@@ -64,6 +67,9 @@ SOOVPA<7> XapiInitProcess_1_0_3911 =
 {
     0,  // Large == 0
     7,  // Count == 7
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
 
     {
         // XapiInitProcess+0x00 : sub esp, 30h
@@ -90,6 +96,9 @@ SOOVPA<11> XapiBootDash_1_0_3911 =
 {
     0,  // Large == 0
     11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
 
     {
         // XapiBootDash+0x03 : sub esp, 0x0C00

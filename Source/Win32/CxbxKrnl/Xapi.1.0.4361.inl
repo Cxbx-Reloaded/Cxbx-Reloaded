@@ -40,6 +40,9 @@ SOOVPA<10> RtlCreateHeap_1_0_4361 =
     0,  // Large == 0
     10, // Count == 10
 
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
     {
         // RtlCreateHeap+0x13 : push 0x0C
         { 0x13, 0x6A }, // (Offset,Value)-Pair #1
@@ -70,6 +73,9 @@ SOOVPA<11> RtlAllocateHeap_1_0_4361 =
 {
     0,  // Large == 0
     11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
 
     {
         // RtlAllocateHeap+0x1E : or ecx, [esi+0x18]
@@ -103,6 +109,9 @@ SOOVPA<12> RtlFreeHeap_1_0_4361 =
     0,  // Large == 0
     12, // Count == 12
 
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
     {
         // RtlFreeHeap+0x1F : test ecx, ecx
         { 0x1F, 0x85 }, // (Offset,Value)-Pair #1
@@ -135,6 +144,9 @@ SOOVPA<14> XGetDevices_1_0_4361 =
 {
     0,  // Large == 0
     14, // Count == 14
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
 
     {
         // XGetDevices+0x07 : mov edx, [esp+arg_0]
@@ -171,6 +183,9 @@ SOOVPA<12> XInputOpen_1_0_4361 =
     0,  // Large == 0
     12, // Count == 12
 
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
     {
         // XInputOpen+0x14 : push 0x57
         { 0x14, 0x6A }, // (Offset,Value)-Pair #1
@@ -205,6 +220,9 @@ SOOVPA<14> XInputGetCapabilities_1_0_4361 =
 {
     0,  // Large == 0
     14, // Count == 14
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
 
     {
         // XInputGetCapabilities+0x03 : sub esp, 0x48
@@ -241,6 +259,9 @@ SOOVPA<12> XInputGetState_1_0_4361 =
     0,  // Large == 0
     12, // Count == 12
 
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
     {
         // XInputGetState+0x0E : mov ecx, [edx+0x0A3]
         { 0x0E, 0x8B }, // (Offset,Value)-Pair #1
@@ -273,6 +294,9 @@ SOOVPA<12> XInputSetState_1_0_4361 =
 {
     0,  // Large == 0
     12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
 
     {
         // XInputSetState+0x04 : lea eax, [ecx+0x0A3]
@@ -307,6 +331,9 @@ SOOVPA<8> CreateThread_1_0_4361 =
     0,  // Large == 0
     8,  // Count == 8
 
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
     {
         // CreateThread+0x0A : mov eax, ds:10130h
         { 0x0A, 0xA1 }, // (Offset,Value)-Pair #1
@@ -331,6 +358,9 @@ SOOVPA<10> CloseHandle_1_0_4361 =
 {
     0,  // Large == 0
     10, // Count == 10
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
 
     {
         // CloseHandle+0x00 : push [esp+4]
@@ -361,6 +391,9 @@ SOOVPA<7> XapiInitProcess_1_0_4361 =
     0,  // Large == 0
     7,  // Count == 7
 
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
     {
         // XapiInitProcess+0x00 : sub esp, 30h
         { 0x05, 0x30 }, // (Offset,Value)-Pair #1
@@ -387,6 +420,9 @@ SOOVPA<10> XapiThreadStartup_1_0_4361 =
 {
     0,  // Large == 0
     10, // Count == 10
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
 
     {
         // XapiThreadStartup+0x00 : push 0x18
@@ -418,6 +454,9 @@ SOOVPA<10> XapiSetupPerTitleDriveLetters_1_0_4361 =
 {
     0,  // Large == 0
     10, // Count == 10
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
 
     {
         // XapiSetupPerTitleDriveLetters+0x09 : lea eax, [ebp-0x0C]

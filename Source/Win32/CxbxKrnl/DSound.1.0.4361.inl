@@ -40,6 +40,9 @@ SOOVPA<9> DirectSoundCreate_1_0_4361 =
     0,  // Large == 0
     9,  // Count == 9
 
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
     {
         // DirectSoundCreate+0x0B : movzx esi, al
         { 0x0B, 0x0F }, // (Offset,Value)-Pair #1
@@ -70,6 +73,9 @@ SOOVPA<9> IDirectSound8_CreateSoundBuffer_1_0_4361 =
     0,  // Large == 0
     9,  // Count == 9
 
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
     {
         // IDirectSound8_CreateSoundBuffer+0x2A : push 0x24
         { 0x2A, 0x6A }, // (Offset,Value)-Pair #1
@@ -97,6 +103,9 @@ SOOVPA<10> IDirectSoundBuffer8_SetBufferData_1_0_4361 =
     10, // Count == 10
 
     // NOTE: This is actually intercepting CDirectSoundBuffer::SetBufferData(void*, ULONG)
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
 
     {
         // IDirectSoundBuffer8_SetBufferData+0x48 : cmp ebx, [eax+0x00B8]
@@ -129,6 +138,9 @@ SOOVPA<10> IDirectSoundBuffer8_SetPlayRegion_1_0_4361 =
 
     // NOTE: This is actually intercepting CDirectSoundBuffer::SetPlayRegion(ULONG, ULONG)
 
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
     {
         // IDirectSoundBuffer8_SetPlayRegion+0x10 : movzx edi, al
         { 0x10, 0x0F }, // (Offset,Value)-Pair #1
@@ -157,6 +169,9 @@ SOOVPA<11> IDirectSoundBuffer8_SetLoopRegion_1_0_4361 =
     11, // Count == 11
 
     // NOTE: This is actually intercepting CDirectSoundBuffer::SetLoopRegion(ULONG, ULONG)
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
 
     {
         // IDirectSoundBuffer8_SetLoopRegion+0x24 : mov eax, 0x80004005
@@ -190,6 +205,9 @@ SOOVPA<11> IDirectSoundBuffer8_SetVolume_1_0_4361 =
 
     // NOTE: This is actually intercepting CDirectSoundBuffer::SetVolume(ULONG)
 
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
     {
         // IDirectSoundBuffer8_SetVolume+0x0D : movzx esi, al
         { 0x0D, 0x0F }, // (Offset,Value)-Pair #1
@@ -221,6 +239,9 @@ SOOVPA<9> IDirectSoundBuffer8_SetCurrentPosition_1_0_4361 =
     9,  // Count == 9
 
     // NOTE: This is actually intercepting CMcpxBuffer::SetCurrentPosition(ULONG)
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
 
     {
         // IDirectSoundBuffer8_SetCurrentPosition+0x11 : mov al, [esi+12]

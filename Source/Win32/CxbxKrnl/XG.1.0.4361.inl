@@ -40,6 +40,9 @@ SOOVPA<12> XGIsSwizzledFormat_1_0_4361 =
     0,  // Large == 0
     12, // Count == 12
 
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
     {
         // RtlCreateHeap+0x04 : cmp eax, 0x2D
         { 0x04, 0x83 }, // (Offset,Value)-Pair #1

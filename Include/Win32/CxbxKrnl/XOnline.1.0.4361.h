@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->Xapi.1.0.3911.h
+// *   Cxbx->Win32->CxbxKrnl->XOnline.1.0.4361.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,13 +31,12 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef XAPI_1_0_3911_H
-#define XAPI_1_0_3911_H
+#ifndef XONLINE_1_0_4627_H
+#define XONLINE_1_0_4627_H
 
 #include "OOVPA.h"
 
-extern SOOVPA<9>    __cinit_1_0_3911;
-extern OOVPATable   XAPI_1_0_3911[];
-extern uint32       XAPI_1_0_3911_SIZE;
+extern OOVPATable XOnline_1_0_4361[];
+extern uint32     XOnline_1_0_4361_SIZE;
 
 #endif

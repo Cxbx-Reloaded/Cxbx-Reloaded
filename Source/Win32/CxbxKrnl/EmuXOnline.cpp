@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->HLEDataBase.h
+// *   Cxbx->Win32->CxbxKrnl->EmuXOnline.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,64 +31,89 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef HLEDATABASE_H
-#define HLEDATABASE_H
+#define _CXBXKRNL_INTERNAL
+#define _XBOXKRNL_LOCAL_
 
-#include "Xapi.1.0.3911.h"
-#include "Xapi.1.0.4034.h"
-#include "Xapi.1.0.4361.h"
-#include "Xapi.1.0.4627.h"
-#include "D3D8.1.0.3925.h"
-#include "D3D8.1.0.4034.h"
-#include "D3D8.1.0.4361.h"
-#include "D3D8.1.0.4627.h"
-#include "DSound.1.0.4361.h"
-#include "XG.1.0.4361.h"
-#include "XG.1.0.4627.h"
-#include "XOnline.1.0.4361.h"
+#undef FIELD_OFFSET     // prevent macro redefinition warnings
+#include <windows.h>
 
 // ******************************************************************
-// * HLEDataBase
+// * prevent name collisions
 // ******************************************************************
-extern struct HLEData
+namespace xntdll
 {
-    char       *Library;
-
-    uint16      MajorVersion;
-    uint16      MinorVersion;
-    uint16      BuildVersion;
-
-    OOVPATable *OovpaTable;
-    uint32      OovpaTableSize;
-}
-HLEDataBase[];
-
-// ******************************************************************
-// * HLEDataBaseSize
-// ******************************************************************
-extern uint32 HLEDataBaseSize;
-
-// ******************************************************************
-// * XRefDataBase
-// ******************************************************************
-extern uint32 XRefDataBase[];
-
-// ******************************************************************
-// * UnResolvedXRefs
-// ******************************************************************
-extern uint32 UnResolvedXRefs;
-
-// ******************************************************************
-// * bXRefFirstPass
-// ******************************************************************
-extern bool bXRefFirstPass;
-
-// ******************************************************************
-// * XRefDataBaseOffset
-// ******************************************************************
-enum XRefDataBaseOffset
-{
-    XREF_XNINIT = 0
+    #include "xntdll.h"
 };
 
-#endif
+// ******************************************************************
+// * prevent name collisions
+// ******************************************************************
+namespace xonline
+{
+    #include "xonline.h"
+};
+
+#include "Emu.h"
+#include "EmuFS.h"
+#include "EmuD3D8.h"
+#include "EmuDInput.h"
+
+// ******************************************************************
+// * func: EmuWSAStartup
+// ******************************************************************
+int WINAPI xonline::EmuWSAStartup
+(
+    WORD        wVersionRequested,
+    LPVOID      lpWSAData   // todo: use correct type
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuWSAStartup\n"
+               "(\n"
+               "   wVersionRequested   : 0x%.08X\n"
+               "   lpWSAData           : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), wVersionRequested, lpWSAData);
+    }
+    #endif
+
+    EmuSwapFS();   // XBox FS
+
+    // Fake Successfull...hehehe...sucker...hehehehehe
+    return 0;
+}
+
+// ******************************************************************
+// * func: EmuXNetStartup
+// ******************************************************************
+INT WINAPI xonline::EmuXNetStartup
+(
+    const PVOID pDummy
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuXNetStartup\n"
+               "(\n"
+               "   pDummy              : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pDummy);
+    }
+    #endif
+
+    EmuSwapFS();   // XBox FS
+
+    // Fake Successfull...hehehe...sucker...hehehehehe
+    return 0;
+}

@@ -45,17 +45,23 @@ struct OOVPA
 {
     uint16 Large : 1;
     uint16 Count : 15;
+
+    uint08 XRefSaveIndex;
+    uint08 XRefCount;
 };
 
 // ******************************************************************
-// * Large Optimized (Order,Value)-Pair Array
+// * Large Optimized (Offset,Value)-Pair Array
 // ******************************************************************
 template <uint16 COUNT> struct LOOVPA
 {
     uint16 Large : 1;
     uint16 Count : 15;
 
-    // Large (Order,Value)-Pair(s)
+    uint08 XRefSaveIndex;
+    uint08 XRefCount;
+
+    // Large (Offset,Value)-Pair(s)
     struct LOVP
     {
         uint16 Offset;
@@ -65,14 +71,17 @@ template <uint16 COUNT> struct LOOVPA
 };
 
 // ******************************************************************
-// * Small Optimized (Order,Value)-Pair Array
+// * Small Optimized (Offset,Value)-Pair Array
 // ******************************************************************
 template <uint16 COUNT> struct SOOVPA
 {
     uint16 Large : 1;
     uint16 Count : 15;
 
-    // Small (Order,Value)-Pair(s)
+    uint08 XRefSaveIndex;
+    uint08 XRefCount;
+
+    // Small (Offset,Value)-Pair(s)
     struct SOVP
     {
         uint08 Offset;

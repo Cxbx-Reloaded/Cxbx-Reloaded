@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->HLEDataBase.h
+// *   Cxbx->Win32->CxbxKrnl->xonline.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,64 +31,24 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef HLEDATABASE_H
-#define HLEDATABASE_H
-
-#include "Xapi.1.0.3911.h"
-#include "Xapi.1.0.4034.h"
-#include "Xapi.1.0.4361.h"
-#include "Xapi.1.0.4627.h"
-#include "D3D8.1.0.3925.h"
-#include "D3D8.1.0.4034.h"
-#include "D3D8.1.0.4361.h"
-#include "D3D8.1.0.4627.h"
-#include "DSound.1.0.4361.h"
-#include "XG.1.0.4361.h"
-#include "XG.1.0.4627.h"
-#include "XOnline.1.0.4361.h"
+#ifndef XONLINE_H
+#define XONLINE_H
 
 // ******************************************************************
-// * HLEDataBase
+// * func: EmuWSAStartup
 // ******************************************************************
-extern struct HLEData
-{
-    char       *Library;
-
-    uint16      MajorVersion;
-    uint16      MinorVersion;
-    uint16      BuildVersion;
-
-    OOVPATable *OovpaTable;
-    uint32      OovpaTableSize;
-}
-HLEDataBase[];
+int WINAPI EmuWSAStartup
+(
+    WORD        wVersionRequested,
+    LPVOID      lpWSAData   // todo: use correct type
+);
 
 // ******************************************************************
-// * HLEDataBaseSize
+// * func: EmuXNetStartup
 // ******************************************************************
-extern uint32 HLEDataBaseSize;
-
-// ******************************************************************
-// * XRefDataBase
-// ******************************************************************
-extern uint32 XRefDataBase[];
-
-// ******************************************************************
-// * UnResolvedXRefs
-// ******************************************************************
-extern uint32 UnResolvedXRefs;
-
-// ******************************************************************
-// * bXRefFirstPass
-// ******************************************************************
-extern bool bXRefFirstPass;
-
-// ******************************************************************
-// * XRefDataBaseOffset
-// ******************************************************************
-enum XRefDataBaseOffset
-{
-    XREF_XNINIT = 0
-};
+INT WINAPI EmuXNetStartup
+(
+    const PVOID pDummy
+);
 
 #endif

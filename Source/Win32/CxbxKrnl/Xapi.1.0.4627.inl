@@ -40,6 +40,9 @@ SOOVPA<9> RtlFreeHeap_1_0_4627 =
     0,  // Large == 0
     9,  // Count == 9
 
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
     {
         // RtlFreeHeap+0x1F : test edi, edi
         { 0x1F, 0x85 }, // (Offset,Value)-Pair #1
@@ -67,6 +70,9 @@ SOOVPA<8> XapiUnknownBad1_1_0_4627 =
 {
     0,  // Large == 0
     8,  // Count == 8
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
 
     {
         // XapiUnknownBad1+0x51 : push 0x0104

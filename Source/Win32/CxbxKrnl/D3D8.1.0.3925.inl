@@ -40,6 +40,9 @@ SOOVPA<8> IDirect3D8_CreateDevice_1_0_3925 =
     0,  // Large == 0
     8,  // Count == 8
 
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
     {
         // IDirect3D8_CreateDevice+0x07 : jnz +0x0A
         { 0x07, 0x75 }, // (Offset,Value)-Pair #1
@@ -68,6 +71,9 @@ SOOVPA<10> IDirect3DDevice8_Present_1_0_3925 =
     10, // Count == 10
 
     // TENTATIVE!
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
 
     {
         // IDirect3DDevice8_Present+0x0A : push 2

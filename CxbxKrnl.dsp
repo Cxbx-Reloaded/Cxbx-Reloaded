@@ -264,6 +264,14 @@ SOURCE=.\Include\Win32\CxbxKrnl\XG.1.0.4627.h
 
 SOURCE=.\Include\Win32\CxbxKrnl\xntdll.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\XOnline.1.0.4361.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\xonline.h
+# End Source File
 # End Group
 # Begin Group "Resource"
 
@@ -350,6 +358,10 @@ SOURCE=.\Source\Win32\CxbxKrnl\EmuXG.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Source\Win32\CxbxKrnl\EmuXOnline.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\Core\Error.cpp
 # End Source File
 # Begin Source File
@@ -395,6 +407,10 @@ SOURCE=.\Source\Win32\CxbxKrnl\XG.1.0.4361.inl
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\XG.1.0.4627.inl
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\XOnline.1.0.4361.inl
 # End Source File
 # End Group
 # End Target
