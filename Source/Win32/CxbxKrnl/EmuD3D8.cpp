@@ -1556,10 +1556,6 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
     }
     #endif
 
-    _asm int 3
-
-    pBase = (PVOID)((DWORD)pBase + (DWORD)pThis->Data);
-
     HRESULT hRet;
 
     X_D3DResource *pResource = (X_D3DResource*)pThis;
@@ -1647,6 +1643,9 @@ HRESULT WINAPI xdirectx::EmuIDirect3DResource8_Register
             EmuCleanup("X_D3DCOMMON_TYPE_SURFACE temporarily unsupported");
         case X_D3DCOMMON_TYPE_TEXTURE:
         {
+            // TODO: Find out why this only seems to be safe with textures (for now)
+            pBase = (PVOID)((DWORD)pBase + (DWORD)pThis->Data);
+
             #ifdef _DEBUG_TRACE
             printf("EmuIDirect3DResource8_Register :-> Texture...\n");
             #endif
@@ -3023,7 +3022,7 @@ static void EmuUpdateDeferredStates()
                     EmuCleanup("QuinCunx is unsupported (temporarily)");
 
                 // TODO: Figure out wtf is wrong with this!
-//                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_MIPFILTER, pCur[5]);
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_MIPFILTER, pCur[5]);
             }
 
             // TODO: Use a lookup table, this is not always a 1:1 map
@@ -3129,34 +3128,37 @@ uint32 EmuQuadHackA(uint32 PrimitiveCount, xdirectx::IDirect3DVertexBuffer8 *&pO
     BYTE *pOrigVertexData = 0;
     BYTE *pHackVertexData = 0;
 
-    pOrigVertexBuffer8->Lock(0, 0, &pOrigVertexData, 0);
-    pHackVertexBuffer8->Lock(0, 0, &pHackVertexData, 0);
-
-	for(DWORD i=0;i<PrimitiveCount;i++)
+    if(pOrigVertexBuffer8 != 0 && pHackVertexBuffer8 != 0)
     {
-		memcpy(&pHackVertexData[i*nStride*6+0*nStride], &pOrigVertexData[i*nStride*4+2*nStride], nStride);
-		memcpy(&pHackVertexData[i*nStride*6+1*nStride], &pOrigVertexData[i*nStride*4+0*nStride], nStride);
-		memcpy(&pHackVertexData[i*nStride*6+2*nStride], &pOrigVertexData[i*nStride*4+1*nStride], nStride);
-		memcpy(&pHackVertexData[i*nStride*6+3*nStride], &pOrigVertexData[i*nStride*4+2*nStride], nStride);
-		memcpy(&pHackVertexData[i*nStride*6+4*nStride], &pOrigVertexData[i*nStride*4+3*nStride], nStride);
-		memcpy(&pHackVertexData[i*nStride*6+5*nStride], &pOrigVertexData[i*nStride*4+0*nStride], nStride);
+        pOrigVertexBuffer8->Lock(0, 0, &pOrigVertexData, 0);
+        pHackVertexBuffer8->Lock(0, 0, &pHackVertexData, 0);
 
-        if(bPatch)
+	    for(DWORD i=0;i<PrimitiveCount;i++)
         {
-			for(int z=0; z<6; z++)
+		    memcpy(&pHackVertexData[i*nStride*6+0*nStride], &pOrigVertexData[i*nStride*4+2*nStride], nStride);
+		    memcpy(&pHackVertexData[i*nStride*6+1*nStride], &pOrigVertexData[i*nStride*4+0*nStride], nStride);
+		    memcpy(&pHackVertexData[i*nStride*6+2*nStride], &pOrigVertexData[i*nStride*4+1*nStride], nStride);
+		    memcpy(&pHackVertexData[i*nStride*6+3*nStride], &pOrigVertexData[i*nStride*4+2*nStride], nStride);
+		    memcpy(&pHackVertexData[i*nStride*6+4*nStride], &pOrigVertexData[i*nStride*4+3*nStride], nStride);
+		    memcpy(&pHackVertexData[i*nStride*6+5*nStride], &pOrigVertexData[i*nStride*4+0*nStride], nStride);
+
+            if(bPatch)
             {
-				if(((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[2] == 0.0f)
-					((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[2] = 1.0f;
-				if(((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[3] == 0.0f)
-					((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[3] = 1.0f;
-			}
-        }
-	}
+			    for(int z=0; z<6; z++)
+                {
+				    if(((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[2] == 0.0f)
+					    ((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[2] = 1.0f;
+				    if(((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[3] == 0.0f)
+					    ((FLOAT*)&pHackVertexData[i*nStride*6+z*nStride])[3] = 1.0f;
+			    }
+            }
+	    }
 
-	pOrigVertexBuffer8->Unlock();
-    pHackVertexBuffer8->Unlock();
+	    pOrigVertexBuffer8->Unlock();
+        pHackVertexBuffer8->Unlock();
 
-    g_pD3DDevice8->SetStreamSource(0, pHackVertexBuffer8, nStride);
+        g_pD3DDevice8->SetStreamSource(0, pHackVertexBuffer8, nStride);
+    }
 
     return nStride;
 }
@@ -3166,10 +3168,13 @@ uint32 EmuQuadHackA(uint32 PrimitiveCount, xdirectx::IDirect3DVertexBuffer8 *&pO
 // ******************************************************************
 VOID EmuQuadHackB(uint32 nStride, xdirectx::IDirect3DVertexBuffer8 *&pOrigVertexBuffer8, xdirectx::IDirect3DVertexBuffer8 *&pHackVertexBuffer8)
 {
-    g_pD3DDevice8->SetStreamSource(0, pOrigVertexBuffer8, nStride);
+    if(pOrigVertexBuffer8 != 0 && pHackVertexBuffer8 != 0)
+        g_pD3DDevice8->SetStreamSource(0, pOrigVertexBuffer8, nStride);
 
-    pOrigVertexBuffer8->Release();
-    pHackVertexBuffer8->Release();
+    if(pOrigVertexBuffer8 != 0)
+        pOrigVertexBuffer8->Release();
+    if(pHackVertexBuffer8 != 0)
+        pHackVertexBuffer8->Release();
 }
 
 // ******************************************************************
