@@ -237,6 +237,9 @@ upxCxbx.bat
 				RelativePath=".\Source\Core\Exe.cpp">
 			</File>
 			<File
+				RelativePath="Source\Core\OpenXDK.cpp">
+			</File>
+			<File
 				RelativePath=".\Source\Win32\Cxbx\Prolog.cpp">
 			</File>
 			<File

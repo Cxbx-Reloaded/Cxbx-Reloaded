@@ -150,6 +150,10 @@ SOURCE=.\Source\Standard\Cxbe\Main.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Source\Core\OpenXDK.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\Core\Xbe.cpp
 # End Source File
 # End Group

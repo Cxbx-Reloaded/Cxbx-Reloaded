@@ -186,6 +186,9 @@
 				RelativePath=".\Source\Standard\Cxbe\Main.cpp">
 			</File>
 			<File
+				RelativePath="Source\Core\OpenXDK.cpp">
+			</File>
+			<File
 				RelativePath=".\Source\Core\Xbe.cpp">
 			</File>
 		</Filter>

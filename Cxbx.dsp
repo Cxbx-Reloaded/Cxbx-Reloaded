@@ -204,6 +204,10 @@ SOURCE=.\Source\Core\Exe.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Source\Core\OpenXDK.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\Win32\Cxbx\Prolog.cpp
 # End Source File
 # Begin Source File
