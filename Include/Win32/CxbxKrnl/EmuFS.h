@@ -117,7 +117,7 @@ static inline void EmuSwapFS()
         mov ax, fs:[0x14]
         mov fs, ax
     }
-/*
+
     // ******************************************************************
     // * Every "N" interceptions, perform various periodic services
     // ******************************************************************
@@ -135,7 +135,7 @@ static inline void EmuSwapFS()
 
         // Back to Zero!
         dwInterceptionCount = 0;
-    }*/
+    }
 }
 
 #endif

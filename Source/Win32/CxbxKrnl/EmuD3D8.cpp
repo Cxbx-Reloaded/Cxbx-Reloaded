@@ -1161,9 +1161,6 @@ xd3d8::X_D3DResource * WINAPI xd3d8::EmuIDirect3DDevice8_CreateTexture2
     D3DRESOURCETYPE     D3DResource
 )
 {
-    // TODO: Verify this function's parameters ^
-    printf("*Warning* EmuIDirect3DDevice8_CreateTexture2 is unverified!\n");
-
     X_D3DResource *pTexture;
 
     EmuIDirect3DDevice8_CreateTexture(Width, Height, Levels, Usage, Format, D3DPOOL_MANAGED, &pTexture);
@@ -1212,7 +1209,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreateTexture
     // TODO: HACK: Devices that don't support this should somehow emulate it!
     if(PCFormat == D3DFMT_D16)
     {
-        printf("*Warning* D3DFMT_16 is an unsupported texture format!");
+        printf("*Warning* D3DFMT_16 is an unsupported texture format!\n");
         PCFormat = D3DFMT_X8R8G8B8;
     }
 
@@ -1224,12 +1221,12 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreateTexture
     HRESULT hRet = g_pD3DDevice8->CreateTexture
     (
         Width, Height, Levels, 
-        Usage,   // TODO: Xbox Allows a border to be drawn (maybe hack this in software ;[)
+        0,  // TODO: Xbox Allows a border to be drawn (maybe hack this in software ;[)
         PCFormat, D3DPOOL_MANAGED, &((*ppTexture)->EmuTexture8)
     );
 
     if(FAILED(hRet))
-        EmuCleanup("CreateTexture FAILED!");
+        printf("*Warning* CreateTexture FAILED\n");
 
     EmuSwapFS();   // XBox FS
 

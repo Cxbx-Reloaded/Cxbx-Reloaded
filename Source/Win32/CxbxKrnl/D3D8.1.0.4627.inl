@@ -280,6 +280,35 @@ SOOVPA<11> IDirect3DDevice8_SetVertexShaderConstant_1_0_4627 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetPixelShader
+// ******************************************************************
+SOOVPA<10> IDirect3DDevice8_SetPixelShader_1_0_4627 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    {
+        // IDirect3DDevice8_SetPixelShader+0x26 : or ecx, 0x4800
+        { 0x26, 0x81 }, // (Offset,Value)-Pair #1
+        { 0x27, 0xC9 }, // (Offset,Value)-Pair #2
+        { 0x28, 0x00 }, // (Offset,Value)-Pair #3
+        { 0x29, 0x48 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DDevice8_SetPixelShader+0x3E : or eax, 0x2000
+        { 0x3E, 0x0D }, // (Offset,Value)-Pair #5
+        { 0x40, 0x20 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_SetPixelShader+0x7D : retn 0x04
+        { 0x7D, 0xC2 }, // (Offset,Value)-Pair #7
+        { 0x7E, 0x04 }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_SetPixelShader+0xDE : rep movsd
+        { 0xDE, 0xF3 }, // (Offset,Value)-Pair #9
+        { 0xDF, 0xA5 }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_CreateTexture2
 // ******************************************************************
 SOOVPA<12> IDirect3DDevice8_CreateTexture2_1_0_4627 =
@@ -940,6 +969,16 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_CreatePixelShader"
+        #endif
+    },
+    // IDirect3DDevice8::SetPixelShader
+    {
+        (OOVPA*)&IDirect3DDevice8_SetPixelShader_1_0_4627,
+
+        xd3d8::EmuIDirect3DDevice8_SetPixelShader,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetPixelShader"
         #endif
     },
     // IDirect3DDevice8::CreateTexture2

@@ -3,12 +3,14 @@ cxbx website: http://www.caustik.com/xbox/
 version: 0.7.4 (06/22/03)
 --------------------------------
 
+- FIRST RETAIL GAME GRAPHICS (simple, but yay!!)
+
 - Quad rendering
 
 - Tons of new XD3D emulation
 
-- Some nice demos play now, including the cool
-  PointSprites demo.
+- Some nice demos play now, including the cool PointSprites
+  demo. There are some issues right now with the mipmap filters
 
 - Fixed a user input bug (was ignoring digital buttons)
 
