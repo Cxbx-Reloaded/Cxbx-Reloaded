@@ -69,8 +69,11 @@ bool Wnd::ProcessMessages()
     // initialize window
     if(!m_initialized)
     {
+#ifdef _DEBUG
+        HMODULE hCxbxDll = GetModuleHandle("CxbxKrnl.dll");
+#else
         HMODULE hCxbxDll = GetModuleHandle("Cxbx.dll");
-
+#endif
         m_initialized = true;
 
         WNDCLASS wnd_class;

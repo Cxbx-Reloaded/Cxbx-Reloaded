@@ -48,6 +48,8 @@ namespace xboxkrnl
 #include "EmuShared.h"
 #include "HLEDataBase.h"
 
+#include <math.h>
+
 // ******************************************************************
 // * global / static
 // ******************************************************************

@@ -230,6 +230,53 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
 }
 
 // ******************************************************************
+// * 0x0042 - IoCreateFile
+// ******************************************************************
+XBSYSAPI EXPORTNUM(66) NTSTATUS NTAPI xboxkrnl::IoCreateFile
+(
+    OUT PHANDLE             FileHandle,
+    IN  ACCESS_MASK         DesiredAccess,
+    IN  POBJECT_ATTRIBUTES  ObjectAttributes,
+    OUT PIO_STATUS_BLOCK    IoStatusBlock,
+    IN  PLARGE_INTEGER      AllocationSize,
+    IN  ULONG               FileAttributes,
+    IN  ULONG               ShareAccess,
+    IN  ULONG               Disposition,
+    IN  ULONG               CreateOptions,
+    IN  ULONG               Options
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%.08X): IoCreateFile\n"
+               "(\n"
+               "   FileHandle          : 0x%.08X\n"
+               "   DesiredAccess       : 0x%.08X\n"
+               "   ObjectAttributes    : 0x%.08X\n"
+               "   IoStatusBlock       : 0x%.08X\n"
+               "   AllocationSize      : 0x%.08X\n"
+               "   FileAttributes      : 0x%.08X\n"
+               "   ShareAccess         : 0x%.08X\n"
+               "   Disposition         : 0x%.08X\n"
+               "   CreateOptions       : 0x%.08X\n"
+               "   Options             : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock,
+               AllocationSize, FileAttributes, ShareAccess, Disposition, CreateOptions, Options);
+    }
+    #endif
+
+    EmuSwapFS();   // Xbox FS
+
+    return STATUS_SUCCESS;
+}
+
+// ******************************************************************
 // * 0x0063 - KeDelayExecutionThread
 // ******************************************************************
 XBSYSAPI EXPORTNUM(99) NTSTATUS NTAPI xboxkrnl::KeDelayExecutionThread
@@ -463,13 +510,17 @@ XBSYSAPI EXPORTNUM(202) NTSTATUS xboxkrnl::NtOpenFile
     IN  ULONG               OpenOptions
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    // Note: Since we are simply redirecting to IoCreateFile, we do not
+    //       want to swap FS registers like normal (except for when
+    //       _DEBUG_TRACE is enabled)
 
     // ******************************************************************
     // * debug trace
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
+        EmuSwapFS();   // Win2k/XP FS
+
         printf("EmuKrnl (0x%.08X): NtOpenFile\n"
                "(\n"
                "   FileHandle          : 0x%.08X\n"
@@ -481,10 +532,12 @@ XBSYSAPI EXPORTNUM(202) NTSTATUS xboxkrnl::NtOpenFile
                ");\n",
                GetCurrentThreadId(), FileHandle, DesiredAccess, ObjectAttributes, 
                IoStatusBlock, ShareAccess, OpenOptions);
+
+        EmuSwapFS();   // Xbox FS
     }
     #endif
 
-    EmuSwapFS();   // Xbox FS
+    xboxkrnl::IoCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, 0, 0, ShareAccess, 1, OpenOptions, 0);
 
     return STATUS_SUCCESS;
 }

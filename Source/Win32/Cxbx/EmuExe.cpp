@@ -483,9 +483,12 @@ EmuExe::EmuExe(Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename) : Exe
             *(uint32*)&m_bzSection[i][0x30] = dwVirtAddr + 0x38;
             *(uint32*)&m_bzSection[i][0x34] = 0;
             *(uint16*)&m_bzSection[i][0x38] = 0x0001;
-            
-            memcpy(&m_bzSection[i][0x3A], "_EmuNoFunc@0\0\0cxbx.dll\0\0\0\0\0\0", 28);
 
+#ifdef _DEBUG
+            memcpy(&m_bzSection[i][0x3A], "_EmuNoFunc@0\0\0CxbxKrnl.dll\0\0", 28);
+#else
+            memcpy(&m_bzSection[i][0x3A], "_EmuNoFunc@0\0\0Cxbx.dll\0\0\0\0\0\0", 28);
+#endif
             // ******************************************************************
             // * TLS Data
             // ******************************************************************

@@ -120,7 +120,11 @@ void EmuRenderWindow(PVOID)
     // * register window class
     // ******************************************************************
     {
+#ifdef _DEBUG
+        HMODULE hCxbxDll = GetModuleHandle("CxbxKrnl.dll");
+#else
         HMODULE hCxbxDll = GetModuleHandle("Cxbx.dll");
+#endif
 
         WNDCLASSEX wc =
         {
