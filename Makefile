@@ -42,6 +42,7 @@ GCC295 = cpp0-2.95
 OBJECTS	= Source/Core/Error.o \
 	Source/Core/Exe.o \
 	Source/Core/Xbe.o \
+        Source/Core/OpenXDK.o \
 	Source/Standard/Cxbe/Main.o
 
 RESOURCES = 

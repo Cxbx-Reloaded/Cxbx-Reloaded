@@ -57,12 +57,6 @@ struct OVPS
 // ******************************************************************
 struct OVP
 {
-    union OVPU
-    {
-        OVPL *ovpl;
-
-        OVPS *ovps;
-    };
 };
 
 // ******************************************************************
@@ -71,9 +65,14 @@ struct OVP
 struct OOVPA
 {
     uint16  Count : 15; // Number of Order,Value Pairs
-    uint16  Large : 1;  // "Large" or "Small" offsets? (16,8 bit)
+    uint16  Large : 1;  // Large (16 bit) or Small (8 bit) offsets?
 
-    OVP     ovp;
+    union OVPU
+    {
+        OVPL ovpl[];
+        OVPS ovps[];
+    }
+	ovpu;
 };
 
 #endif
