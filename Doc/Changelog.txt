@@ -6,22 +6,25 @@ version: 0.7.9 (??/??/??)
 - DirectSound support! Turok and Stella (Atari 2600 emulator)
   are both able to play sound+music, works great!
 
-- Fixed start/back mapping problem :)
+- Added "quick config" button to input configuration dialog
+  this saves a ton of time and is long overdue :)
 
-- Absurd amounts of new code, including general code cleanup
+- Fixed start/back mapping problem :)
 
 - Fixed a glitch in EmuExe that was outputting some bad Exes
   in situations such as the msdashboard. (thanks sop skrutt!)
 
 - Fixed LineLoop rendering (X-Marbles, Gamepad, etc etc)
 
-- Some speed optimizations for vertice translation
+- Some speed optimizations for vertex buffer translation
 
 - CreateDevice via proxy thread caused some issues with the
   interplay between directdraw & direct3d. I resolved this new
   issue and things are good again.
 
 - Overlay support now should work with multimonitors
+
+- Absurd amounts of new code, including general code cleanup
 
 version: 0.7.8c (09/02/03)
 --------------------------------

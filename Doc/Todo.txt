@@ -70,5 +70,3 @@ Cxbx Todo (* denotes high priority, + denotes medium priority)
 
   Allow a logo bitmap to be added if one does not exist. This may require that
   the size of headers be increased. (sizeof_headers).
-
-  Xbe::m_Header should be allocated dynamically to make room for huge headers.

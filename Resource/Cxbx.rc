@@ -216,7 +216,7 @@ END
 IDD_CONTROLLER_CFG DIALOGEX 0, 0, 343, 137
 STYLE DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Cxbx : Controller Configuration"
-FONT 8, "Verdana", 0, 0, 0x1
+FONT 8, "Verdana"
 BEGIN
     PUSHBUTTON      "X",IDC_SET_X,7,11,50,14,BS_FLAT
     PUSHBUTTON      "Y",IDC_SET_Y,60,11,50,14,BS_FLAT
@@ -253,8 +253,9 @@ BEGIN
     PUSHBUTTON      "Save Configuration...",IDC_BUTTON2,113,102,104,14,
                     BS_FLAT | WS_DISABLED
     CTEXT           "Please choose one of the controller components from above...",
-                    IDC_CONFIG_STATUS,6,121,329,12,SS_CENTERIMAGE,
+                    IDC_CONFIG_STATUS,71,121,264,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
+    PUSHBUTTON      "[ quick config ]",IDC_QUICK_CONFIG,6,120,60,14,BS_FLAT
 END
 
 IDD_VIDEO_CFG DIALOGEX 0, 0, 258, 110

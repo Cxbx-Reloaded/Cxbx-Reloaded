@@ -187,6 +187,44 @@ INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam,
                 case IDC_SET_RTHUMB:
                     ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_RTHUMB);
                     break;
+                case IDC_QUICK_CONFIG:
+                    struct tmpstruct
+                    {
+                        HWND hWnd;
+                        XBCtrlObject ctrl;
+                    }
+                    order[] = 
+                    {
+                        { GetDlgItem(hWndDlg, IDC_SET_X), XBCTRL_OBJECT_X }, 
+                        { GetDlgItem(hWndDlg, IDC_SET_Y), XBCTRL_OBJECT_Y },
+                        { GetDlgItem(hWndDlg, IDC_SET_A), XBCTRL_OBJECT_A }, 
+                        { GetDlgItem(hWndDlg, IDC_SET_B), XBCTRL_OBJECT_B },
+                        { GetDlgItem(hWndDlg, IDC_SET_WHITE), XBCTRL_OBJECT_WHITE }, 
+                        { GetDlgItem(hWndDlg, IDC_SET_BLACK), XBCTRL_OBJECT_BLACK },
+                        { GetDlgItem(hWndDlg, IDC_SET_LTRIGGER), XBCTRL_OBJECT_LTRIGGER }, 
+                        { GetDlgItem(hWndDlg, IDC_SET_RTRIGGER), XBCTRL_OBJECT_RTRIGGER },
+                        { GetDlgItem(hWndDlg, IDC_SET_DPAD_UP), XBCTRL_OBJECT_DPADUP }, 
+                        { GetDlgItem(hWndDlg, IDC_SET_DPAD_DOWN), XBCTRL_OBJECT_DPADDOWN },
+                        { GetDlgItem(hWndDlg, IDC_SET_DPAD_LEFT), XBCTRL_OBJECT_DPADLEFT }, 
+                        { GetDlgItem(hWndDlg, IDC_SET_DPAD_RIGHT), XBCTRL_OBJECT_DPADRIGHT },
+                        { GetDlgItem(hWndDlg, IDC_SET_BACK), XBCTRL_OBJECT_BACK }, 
+                        { GetDlgItem(hWndDlg, IDC_SET_START), XBCTRL_OBJECT_START },
+                        { GetDlgItem(hWndDlg, IDC_SET_LTHUMB), XBCTRL_OBJECT_LTHUMB }, 
+                        { GetDlgItem(hWndDlg, IDC_SET_RTHUMB), XBCTRL_OBJECT_RTHUMB },
+                        { GetDlgItem(hWndDlg, IDC_SET_LEFT_POSY), XBCTRL_OBJECT_LTHUMBPOSY }, 
+                        { GetDlgItem(hWndDlg, IDC_SET_LEFT_NEGY), XBCTRL_OBJECT_LTHUMBNEGY },
+                        { GetDlgItem(hWndDlg, IDC_SET_LEFT_NEGX), XBCTRL_OBJECT_LTHUMBNEGX }, 
+                        { GetDlgItem(hWndDlg, IDC_SET_LEFT_POSX), XBCTRL_OBJECT_LTHUMBPOSX },
+                        { GetDlgItem(hWndDlg, IDC_SET_RIGHT_POSY), XBCTRL_OBJECT_RTHUMBPOSY }, 
+                        { GetDlgItem(hWndDlg, IDC_SET_RIGHT_NEGY), XBCTRL_OBJECT_RTHUMBNEGY },
+                        { GetDlgItem(hWndDlg, IDC_SET_RIGHT_NEGX), XBCTRL_OBJECT_RTHUMBNEGX }, 
+                        { GetDlgItem(hWndDlg, IDC_SET_RIGHT_POSX), XBCTRL_OBJECT_RTHUMBPOSX },
+                    };
+
+                    for(int v=0;v<sizeof(order)/sizeof(tmpstruct);v++)
+                        ConfigureInput(hWndDlg, order[v].hWnd, order[v].ctrl);
+
+                    break;
             } 
         }
         break;
