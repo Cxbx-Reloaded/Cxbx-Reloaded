@@ -971,6 +971,7 @@ XBSYSAPI EXPORTNUM(182) VOID NTAPI xboxkrnl::MmSetAddressProtect
     }
     #endif
 
+    /*
     // Halo Hack
     if(BaseAddress == (PVOID)0x80366000)
     {
@@ -987,9 +988,9 @@ XBSYSAPI EXPORTNUM(182) VOID NTAPI xboxkrnl::MmSetAddressProtect
         EmuWarning("VirtualProtect Failed!");
 
     #ifdef _DEBUG_TRACE
-    printf("EmuKrnl (0x%X): VirtualProtect was 0x%.08X -> 0x%.08X\n", dwOldProtect, NewProtect & (~PAGE_WRITECOMBINE));
+    printf("EmuKrnl (0x%X): VirtualProtect was 0x%.08X -> 0x%.08X\n", GetCurrentThreadId(), dwOldProtect, NewProtect & (~PAGE_WRITECOMBINE));
     #endif
-
+    //*/
     EmuSwapFS();   // Xbox FS
 
     return;
