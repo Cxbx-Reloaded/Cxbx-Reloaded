@@ -161,7 +161,6 @@ LRESULT WINAPI EmuXMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             return 0;
 
         case WM_CREATE:
-        // initialize menu
         {
             HMODULE hCxbxDll = GetModuleHandle("Cxbx.dll");
 
