@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Cxbx.h
+// *   Cxbx->Win32->CxbxKrnl->EmuD3D8Conv.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,63 +31,54 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef CXBX_H
-#define CXBX_H
+#define _CXBXKRNL_INTERNAL
+#define _XBOXKRNL_LOCAL_
+
+#include "Emu.h"
 
 // ******************************************************************
-// * cxbxkrnl exports, others import
+// * prevent name collisions
 // ******************************************************************
-#ifndef _CXBXKRNL_INTERNAL
-#define CXBXKRNL_API __declspec(dllimport)
-#else
-#define CXBXKRNL_API __declspec(dllexport)
-#endif
-
-// ******************************************************************
-// * Caustik's favorite typedefs
-// ******************************************************************
-typedef signed int     sint;
-typedef unsigned int   uint;
-typedef char           int08;
-typedef short          int16;
-typedef long           int32;
-typedef unsigned char  uint08;
-typedef unsigned short uint16;
-typedef unsigned long  uint32;
-typedef signed char    sint08;
-typedef signed short   sint16;
-typedef signed long    sint32;
-
-// ******************************************************************
-// * Version information
-// ******************************************************************
-#define _CXBX_VERSION "0.7.2-pre1"
-
-// ******************************************************************
-// * Define this to trace intercepted function calls
-// ******************************************************************
-#define _DEBUG_TRACE
-
-// ******************************************************************
-// * Round up dwValue to nearest multiple of dwMult
-// ******************************************************************
-static uint32 RoundUp(uint32 dwValue, uint32 dwMult)
+namespace xd3d8
 {
-    if(dwMult == 0)
-        return dwValue;
-
-    return dwValue - (dwValue-1)%dwMult + (dwMult - 1);
-}
-
-// ******************************************************************
-// * Different debug mode types. Debug information is directed to
-// * Either a visible console screen, or to an external file
-// ******************************************************************
-enum DebugMode
-{
-    DM_NONE,
-    DM_CONSOLE,
-    DM_FILE
+    #include "xd3d8.h"
 };
 
-#endif
+#include "EmuD3D8.h"
+
+// ******************************************************************
+// * D3DVertexToPrimitive
+// ******************************************************************
+UINT xd3d8::D3DVertexToPrimitive[11][2] =
+{
+    {0, 0},
+    {1, 0},
+    {2, 0},
+    {1, 1},
+    {1, 1},
+    {3, 0},
+    {1, 2},
+    {1, 2},
+    {4, 0},
+    {2, 2},
+    {0, 0},
+};
+
+// ******************************************************************
+// * EmuPrimitiveType
+// ******************************************************************
+xd3d8::D3DPRIMITIVETYPE xd3d8::EmuPrimitiveTypeLookup[] = 
+{
+    /* NULL                 = 0         */ (xd3d8::D3DPRIMITIVETYPE)0,
+    /* D3DPT_POINTLIST      = 1,        */ xd3d8::D3DPT_POINTLIST,
+    /* D3DPT_LINELIST       = 2,        */ xd3d8::D3DPT_LINELIST,
+    /* D3DPT_LINELOOP       = 3,  Xbox  */ xd3d8::D3DPT_LINELIST,
+    /* D3DPT_LINESTRIP      = 4,        */ xd3d8::D3DPT_LINESTRIP,
+    /* D3DPT_TRIANGLELIST   = 5,        */ xd3d8::D3DPT_TRIANGLELIST,
+    /* D3DPT_TRIANGLESTRIP  = 6,        */ xd3d8::D3DPT_TRIANGLESTRIP,
+    /* D3DPT_TRIANGLEFAN    = 7,        */ xd3d8::D3DPT_TRIANGLEFAN,
+    /* D3DPT_QUADLIST       = 8,  Xbox  */ xd3d8::D3DPT_TRIANGLELIST,
+    /* D3DPT_QUADSTRIP      = 9,  Xbox  */ xd3d8::D3DPT_TRIANGLELIST,
+    /* D3DPT_POLYGON        = 10, Xbox  */ xd3d8::D3DPT_TRIANGLELIST,
+    /* D3DPT_MAX            = 11,       */ (xd3d8::D3DPRIMITIVETYPE)11
+};

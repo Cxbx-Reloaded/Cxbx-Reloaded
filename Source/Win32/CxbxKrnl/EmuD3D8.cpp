@@ -57,6 +57,7 @@ namespace xd3d8
 };
 
 #include "EmuD3D8.h"
+
 #include "ResCxbxDll.h"
 
 #include <process.h>
@@ -65,7 +66,7 @@ namespace xd3d8
 // ******************************************************************
 // * Global(s)
 // ******************************************************************
-HWND g_hEmuWindow    = NULL;   // Rendering Window
+HWND g_hEmuWindow = NULL;   // Rendering Window
 
 // ******************************************************************
 // * Static Function(s)
@@ -87,46 +88,9 @@ static volatile bool            g_ThreadInitialized = false;
 static XBVideo                  g_XBVideo;
 
 // ******************************************************************
-// * D3DVertexToPrimitive
-// ******************************************************************
-UINT xd3d8::D3DVertexToPrimitive[11][2] =
-{
-    {0, 0},
-    {1, 0},
-    {2, 0},
-    {1, 1},
-    {1, 1},
-    {3, 0},
-    {1, 2},
-    {1, 2},
-    {4, 0},
-    {2, 2},
-    {0, 0},
-};
-
-// ******************************************************************
 // * EmuD3DDefferedRenderState
 // ******************************************************************
 DWORD *xd3d8::EmuD3DDefferedRenderState;
-
-// ******************************************************************
-// * EmuPrimitiveType
-// ******************************************************************
-xd3d8::D3DPRIMITIVETYPE xd3d8::EmuPrimitiveTypeLookup[] = 
-{
-    /* NULL                 = 0         */ (xd3d8::D3DPRIMITIVETYPE)0,
-    /* D3DPT_POINTLIST      = 1,        */ xd3d8::D3DPT_POINTLIST,
-    /* D3DPT_LINELIST       = 2,        */ xd3d8::D3DPT_LINELIST,
-    /* D3DPT_LINELOOP       = 3,  Xbox  */ xd3d8::D3DPT_LINELIST,
-    /* D3DPT_LINESTRIP      = 4,        */ xd3d8::D3DPT_LINESTRIP,
-    /* D3DPT_TRIANGLELIST   = 5,        */ xd3d8::D3DPT_TRIANGLELIST,
-    /* D3DPT_TRIANGLESTRIP  = 6,        */ xd3d8::D3DPT_TRIANGLESTRIP,
-    /* D3DPT_TRIANGLEFAN    = 7,        */ xd3d8::D3DPT_TRIANGLEFAN,
-    /* D3DPT_QUADLIST       = 8,  Xbox  */ xd3d8::D3DPT_TRIANGLELIST,
-    /* D3DPT_QUADSTRIP      = 9,  Xbox  */ xd3d8::D3DPT_TRIANGLELIST,
-    /* D3DPT_POLYGON        = 10, Xbox  */ xd3d8::D3DPT_TRIANGLELIST,
-    /* D3DPT_MAX            = 11,       */ (xd3d8::D3DPRIMITIVETYPE)11
-};
 
 // ******************************************************************
 // * func: EmuD3DInit
@@ -417,33 +381,17 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
 
         hFocusWindow = g_hEmuWindow;
 
-        // ******************************************************************
-        // * TODO: Use lookup table if it becomes necessary
-        // ******************************************************************
-        {
-            if(pPresentationParameters->BackBufferFormat == 0x07)
-                pPresentationParameters->BackBufferFormat = D3DFMT_X8R8G8B8;
-            else if(pPresentationParameters->BackBufferFormat == 0x06)
-                pPresentationParameters->BackBufferFormat = D3DFMT_A8R8G8B8;
-            else
-                EmuCleanup("EmuIDirect3D8_CreateDevice: Unknown BackBufferFormat");
-
-            if(pPresentationParameters->AutoDepthStencilFormat == 0x2A)
-                pPresentationParameters->AutoDepthStencilFormat = D3DFMT_D24S8;
-            else if(pPresentationParameters->AutoDepthStencilFormat == 0x2C)
-                pPresentationParameters->AutoDepthStencilFormat = D3DFMT_D16;
-        }
+        pPresentationParameters->BackBufferFormat       = EmuXB2PC_D3DFormat(pPresentationParameters->BackBufferFormat);
+        pPresentationParameters->AutoDepthStencilFormat = EmuXB2PC_D3DFormat(pPresentationParameters->AutoDepthStencilFormat);
 
         // ******************************************************************
         // * Retrieve Resolution from Configuration
         // ******************************************************************
         if(pPresentationParameters->Windowed)
         {
-            sscanf(g_XBVideo.GetVideoResolution(), "%d x %d", 
-                &pPresentationParameters->BackBufferWidth,  
-                &pPresentationParameters->BackBufferHeight);
-
             D3DDISPLAYMODE D3DDisplayMode;
+
+            sscanf(g_XBVideo.GetVideoResolution(), "%d x %d", &pPresentationParameters->BackBufferWidth, &pPresentationParameters->BackBufferHeight);
 
             g_pD3D8->GetAdapterDisplayMode(g_XBVideo.GetDisplayAdapter(), &D3DDisplayMode);
 
@@ -551,17 +499,8 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreateTexture
     }
     #endif
 
-    // ******************************************************************
-    // * make adjustments to parameters to make sense with windows d3d
-    // ******************************************************************
-    {
-        if(Format == 0x07)
-            Format = D3DFMT_X8R8G8B8;
-        else if(Format == 0x06)
-            Format = D3DFMT_A8R8G8B8;
-        else
-            EmuCleanup("EmuIDirect3DDevice8_CreateTexture: Unknown Format");
-    }
+    // Convert Format (Xbox->PC)
+    Format = EmuXB2PC_D3DFormat(Format);
 
     // ******************************************************************
     // * redirect to windows d3d
@@ -611,15 +550,11 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_GetDisplayMode
 
         hRet = g_pD3D8Device->GetDisplayMode(pPCMode);
 
-        if(pPCMode->Format == D3DFMT_X8R8G8B8)
-            pMode->Format = (xd3d8::D3DFORMAT)0x07;
-        else if(pPCMode->Format == D3DFMT_A8R8G8B8)
-            pMode->Format = (xd3d8::D3DFORMAT)0x06;
-        else
-            EmuCleanup("EmuIDirect3DDevice8_GetDisplayMode: Unknown Format");
+        // Convert Format (PC->Xbox)
+        pMode->Format = EmuPC2XB_D3DFormat(pPCMode->Format);
 
         // TODO: Make this configurable in the future?
-        pMode->Flags  = 0x000000A1;
+        pMode->Flags  = 0x000000A1; // D3DPRESENTFLAG_FIELD | D3DPRESENTFLAG_INTERLACED | D3DPRESENTFLAG_LOCKABLE_BACKBUFFER
     }
 
     EmuSwapFS();   // XBox FS
@@ -666,8 +601,6 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_Clear
     // ******************************************************************
     {
         // TODO: D3DCLEAR_TARGET_A, *R, *G, *B don't exist on windows
-        // TODO: Use lookup table that is dependant on library version
-        // Tricky MS randomizing .h #defines :[
         DWORD newFlags = 0;
 
         if(Flags & 0x000000f0l)
@@ -793,17 +726,13 @@ HRESULT WINAPI xd3d8::EmuIDirect3DSurface8_GetDesc
     {
         D3DSURFACE_DESC *pPCDesc = (D3DSURFACE_DESC*)pDesc;
 
-        if(pDesc->Format == D3DFMT_X8R8G8B8)
-            pDesc->Format = (xd3d8::D3DFORMAT)0x07;
-        else if(pDesc->Format == D3DFMT_A8R8G8B8)
-            pDesc->Format = (xd3d8::D3DFORMAT)0x06;
-        else
-            EmuCleanup("EmuIDirect3DSurface8_GetDesc Unknown Format");
+        // Convert Format (PC->Xbox)
+        pDesc->Format = EmuPC2XB_D3DFormat(pPCDesc->Format);
 
-        pDesc->Format = pPCDesc->Format;
-
-        // TODO: Handle Type > 7 !? How !?
         pDesc->Type   = pPCDesc->Type;
+
+        if(pDesc->Type > 7)
+            EmuCleanup("EmuIDirect3DSurface8_GetDesc: pDesc->Type > 7");
 
         pDesc->Usage  = pPCDesc->Usage;
         pDesc->Size   = pPCDesc->Size;
@@ -817,6 +746,50 @@ HRESULT WINAPI xd3d8::EmuIDirect3DSurface8_GetDesc
         pDesc->Width  = pPCDesc->Width;
         pDesc->Height = pPCDesc->Height;
     }
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DSurface8_LockRect
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DSurface8_LockRect
+(
+    PVOID               pThis,
+    D3DLOCKED_RECT     *pLockedRect,
+    CONST RECT         *pRect,
+    DWORD               Flags
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DSurface8_LockRect\n"
+               "(\n"
+               "   pThis               : 0x%.08X\n"
+               "   pLockedRect         : 0x%.08X\n"
+               "   pRect               : 0x%.08X\n"
+               "   Flags               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, pLockedRect, pRect, Flags);
+    }
+    #endif
+
+    if(Flags == 0x40)
+    {
+        printf("EmuIDirect3DSurface8_LockRect: WARNING, TILE LOCK!\n");
+        Flags = 0;
+    }
+    else if(Flags != 0)
+        EmuCleanup("EmuIDirect3DSurface8_LockRect: Unknown Flags!");
+
+    HRESULT hRet = ((IDirect3DSurface8*)pThis)->LockRect(pLockedRect, pRect, Flags);
 
     EmuSwapFS();   // XBox FS
 
@@ -940,7 +913,6 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetRenderState_CullMode
     // * Convert from Xbox D3D to PC D3D enumeration
     // ******************************************************************
     // TODO: XDK-Specific Tables? So far they are the same
-
     switch(Value)
     {
         case 0:
@@ -952,6 +924,8 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetRenderState_CullMode
         case 0x901:
             Value = D3DCULL_CCW;
             break;
+        default:
+            EmuCleanup("EmuIDirect3DDevice8_SetRenderState_CullMode: Unknown Cullmode");
     }
 
     g_pD3D8Device->SetRenderState(D3DRS_CULLMODE, Value);

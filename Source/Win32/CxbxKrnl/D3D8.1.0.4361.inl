@@ -358,6 +358,51 @@ SOOVPA<15> IDirect3DSurface8_GetDesc_1_0_4361 =
 };
 
 // ******************************************************************
+// * IDirect3DSurface8_LockRect
+// ******************************************************************
+SOOVPA<16> IDirect3DSurface8_LockRect_1_0_4361 =
+{
+    0,  // Large == 0
+    16, // Count == 16
+
+    {
+        // IDirect3DSurface8_LockRect+0x00 : mov eax, [esp+0x10]
+        { 0x00, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x01, 0x44 }, // (Offset,Value)-Pair #2
+        { 0x02, 0x24 }, // (Offset,Value)-Pair #3
+        { 0x03, 0x10 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DSurface8_LockRect+0x04 : mov ecx, [esp+0x0C]
+        { 0x04, 0x8B }, // (Offset,Value)-Pair #5
+        { 0x05, 0x4C }, // (Offset,Value)-Pair #6
+        { 0x06, 0x24 }, // (Offset,Value)-Pair #7
+        { 0x07, 0x0C }, // (Offset,Value)-Pair #8
+
+        // IDirect3DSurface8_LockRect+0x0C : push eax
+        { 0x0C, 0x50 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DSurface8_LockRect+0x11 : push ecx
+        { 0x11, 0x51 }, // (Offset,Value)-Pair #10
+
+        // IDirect3DSurface8_LockRect+0x12 : push edx
+        { 0x12, 0x52 }, // (Offset,Value)-Pair #11
+
+        // IDirect3DSurface8_LockRect+0x13 : push 0
+        { 0x13, 0x6A }, // (Offset,Value)-Pair #12
+
+        // IDirect3DSurface8_LockRect+0x15 : push 0
+        { 0x15, 0x6A }, // (Offset,Value)-Pair #13
+
+        // IDirect3DSurface8_LockRect+0x18 : call [abs]
+        { 0x18, 0xE8 }, // (Offset,Value)-Pair #14
+
+        // IDirect3DSurface8_LockRect+0x11 : retn 0x08
+        { 0x1D, 0xC2 }, // (Offset,Value)-Pair #15
+        { 0x1E, 0x10 }, // (Offset,Value)-Pair #16
+    }
+};
+
+// ******************************************************************
 // * IDirect3DTexture8_GetSurfaceLevel
 // ******************************************************************
 SOOVPA<11> IDirect3DTexture8_GetSurfaceLevel_1_0_4361 =
@@ -683,6 +728,16 @@ OOVPATable D3D8_1_0_4361[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DSurface8_GetDesc" 
+        #endif
+    },
+    // IDirect3DSurface8::LockRect
+    {
+        (OOVPA*)&IDirect3DSurface8_LockRect_1_0_4361,
+
+        xd3d8::EmuIDirect3DSurface8_LockRect,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DSurface8_LockRect" 
         #endif
     },
     // IDirect3DTexture8::GetSurfaceLevel

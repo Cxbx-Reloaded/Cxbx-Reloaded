@@ -37,11 +37,47 @@
 #include <d3d8.h>
 #include <d3dx8tex.h>
 
+#include "Emu.h"
+
 // ******************************************************************
 // * X_D3DFORMAT
 // ******************************************************************
 // NOTE: HACK: These enumerations are not equivalent!
 typedef D3DFORMAT X_D3DFORMAT;
+
+// ******************************************************************
+// * func: EmuXB2PC_D3DFormat
+// ******************************************************************
+inline D3DFORMAT EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
+{
+    if(Format == 0x07)
+        return D3DFMT_X8R8G8B8;
+    else if(Format == 0x06)
+        return D3DFMT_A8R8G8B8;
+    else if(Format == 0x2A)
+        return D3DFMT_D24S8;
+    else if(Format == 0x2C)
+        return D3DFMT_D16;
+
+    EmuCleanup("EmuXB2PC_D3DFormat: Unknown Format");
+
+    return Format;
+}
+
+// ******************************************************************
+// * func: EmuPC2XB_D3DFormat
+// ******************************************************************
+inline X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format)
+{
+    if(Format == D3DFMT_X8R8G8B8)
+        return (D3DFORMAT)0x07;
+    else if(Format == D3DFMT_A8R8G8B8)
+        return (D3DFORMAT)0x06;
+
+    EmuCleanup("EmuPC2XB_D3DFormat: Unknown Format");
+
+    return Format;
+}
 
 // ******************************************************************
 // * X_D3DRESOURCETYPE
@@ -201,6 +237,17 @@ HRESULT WINAPI EmuIDirect3DSurface8_GetDesc
 (
     PVOID               pThis,
     X_D3DSURFACE_DESC  *pDesc
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DSurface8_LockRect
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DSurface8_LockRect
+(
+    PVOID               pThis,
+    D3DLOCKED_RECT     *pLockedRect,
+    CONST RECT         *pRect,
+    DWORD               Flags
 );
 
 // ******************************************************************

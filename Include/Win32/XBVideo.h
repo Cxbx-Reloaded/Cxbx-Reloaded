@@ -71,7 +71,7 @@ class XBVideo : public Error
         // ******************************************************************
         // * SetVideoResolution
         // ******************************************************************
-        void  SetVideoResolution(const char *szBuffer) { strcpy(m_szVideoResolution, szBuffer); }
+        void SetVideoResolution(const char *szBuffer) { strcpy(m_szVideoResolution, szBuffer); }
         const char *GetVideoResolution(){ return m_szVideoResolution; }
 
         // ******************************************************************

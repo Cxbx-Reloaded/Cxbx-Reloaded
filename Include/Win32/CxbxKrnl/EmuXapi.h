@@ -113,7 +113,15 @@ typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
 // ******************************************************************
 // * pfRtlCreateHeap
 // ******************************************************************
-typedef PVOID (WINAPI *pfRtlCreateHeap)(DWORD, DWORD, DWORD, DWORD, DWORD, DWORD);
+typedef PVOID (WINAPI *pfRtlCreateHeap)
+(
+    IN ULONG   Flags,
+    IN PVOID   Base OPTIONAL,
+    IN ULONG   Reserve OPTIONAL,
+    IN ULONG   Commit,
+    IN BOOLEAN Lock OPTIONAL,
+    IN PVOID   RtlHeapParams OPTIONAL
+);
 
 // ******************************************************************
 // * XINPUT_POLLING_PARAMETERS

@@ -234,6 +234,10 @@ SOURCE=.\Include\Win32\XBController.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Core\Xbe.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\XBVideo.h
 # End Source File
 # Begin Source File
@@ -283,6 +287,10 @@ SOURCE=.\Source\Win32\CxbxKrnl\Emu.cpp
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8Conv.cpp
 # End Source File
 # Begin Source File
 

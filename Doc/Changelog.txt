@@ -1,5 +1,10 @@
 cxbx website: http://www.caustik.com/xbox/
 
+version: 0.7.2 (??/??/03)
+--------------------------------
+
+- Textures
+
 version: 0.7.1 (05/30/03)
 --------------------------------
 
