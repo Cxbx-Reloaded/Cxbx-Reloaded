@@ -283,7 +283,14 @@ static DWORD WINAPI EmuRenderWindow(LPVOID)
         {
             DWORD dwStyle = WS_OVERLAPPEDWINDOW;
 
+            int nTitleHeight  = GetSystemMetrics(SM_CYCAPTION);
+            int nBorderWidth  = GetSystemMetrics(SM_CXSIZEFRAME);
+            int nBorderHeight = GetSystemMetrics(SM_CYSIZEFRAME);
+
             int x = 100, y = 100, nWidth = 640, nHeight = 480;
+
+            nWidth  += nBorderWidth*2;
+            nHeight += nBorderHeight*2 + nTitleHeight;
 
             sscanf(g_XBVideo.GetVideoResolution(), "%d x %d", &nWidth, &nHeight);
 
