@@ -145,7 +145,7 @@ void DbgConsole::ParseCommand()
     {
         g_bPrintfOn = !g_bPrintfOn;
         printf("CxbxDbg: Trace is now %s\n", g_bPrintfOn ? "ON" : "OFF");
-    }
+	}
     else
     {
         printf("CxbxDbg: Cmd \"%s\" not recognized!\n", m_szInput);

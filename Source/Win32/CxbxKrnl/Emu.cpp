@@ -607,7 +607,10 @@ extern "C" CXBXKRNL_API void NTAPI EmuWarning(const char *szWarningMessage, ...)
 
     strcat(szBuffer1, szBuffer2);
 
-    printf("%s\n", szBuffer1);
+	if(g_bPrintfOn)
+	{
+		printf("%s\n", szBuffer1);
+	}
 
     fflush(stdout);
 
