@@ -76,6 +76,18 @@ ULONG WINAPI EmuIDirectSound8_Release
 );
 
 // ******************************************************************
+// * func: EmuIDirectSound8_DownloadEffectsImage
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSound8_DownloadEffectsImage
+(
+    LPDIRECTSOUND8          pThis,
+    LPCVOID                 pvImageBuffer,
+    DWORD                   dwImageSize,
+    PVOID                   pImageLoc,      // TODO: Use this param
+    PVOID                  *ppImageDesc     // TODO: Use this param
+);
+
+// ******************************************************************
 // * func: EmuIDirectSound8_CreateSoundBuffer
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSound8_CreateSoundBuffer

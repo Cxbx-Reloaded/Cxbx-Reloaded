@@ -129,6 +129,44 @@ ULONG WINAPI XTL::EmuIDirectSound8_Release
 }
 
 // ******************************************************************
+// * func: EmuIDirectSound8_DownloadEffectsImage
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSound8_DownloadEffectsImage
+(
+    LPDIRECTSOUND8          pThis,
+    LPCVOID                 pvImageBuffer,
+    DWORD                   dwImageSize,
+    PVOID                   pImageLoc,      // TODO: Use this param
+    PVOID                  *ppImageDesc     // TODO: Use this param
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSound8_DownloadEffectsImage\n"
+               "(\n"
+               "   pvImageBuffer             : 0x%.08X\n"
+               "   dwImageSize               : 0x%.08X\n"
+               "   pImageLoc                 : 0x%.08X\n"
+               "   ppImageDesc               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pvImageBuffer, dwImageSize, pImageLoc, ppImageDesc);
+    }
+    #endif
+
+    // TODO: Actually implement this
+    printf("*Note* EmuIDirectSound8_DownloadEffectsImage is being ignored\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
 // * func: EmuIDirectSound8_CreateSoundBuffer
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirectSound8_CreateSoundBuffer

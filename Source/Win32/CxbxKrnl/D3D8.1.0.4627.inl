@@ -179,7 +179,7 @@ SOOVPA<12> IDirect3DDevice8_GetBackBuffer2_1_0_4627 =
         { 0x05, 0xF8 }, // (Offset,Value)-Pair #2
         { 0x06, 0xFF }, // (Offset,Value)-Pair #3
 
-        // IDirect3DDevice8_GetBackBuffer+0x19 : jnz +0x19
+        // IDirect3DDevice8_GetBackBuffer+0x0D : jnz +0x19
         { 0x0D, 0x75 }, // (Offset,Value)-Pair #4
         { 0x0E, 0x19 }, // (Offset,Value)-Pair #5
 
@@ -193,6 +193,40 @@ SOOVPA<12> IDirect3DDevice8_GetBackBuffer2_1_0_4627 =
         // IDirect3DDevice8_GetBackBuffer+0x40 : retn 0x04
         { 0x40, 0xC2 }, // (Offset,Value)-Pair #11
         { 0x41, 0x04 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_GetBackBuffer2B
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_GetBackBuffer2B_1_0_4627 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_GetBackBuffer2B+0x04 : cmp eax, 0xFFFFFFFF
+        { 0x04, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x05, 0xF8 }, // (Offset,Value)-Pair #2
+        { 0x06, 0xFF }, // (Offset,Value)-Pair #3
+
+        // IDirect3DDevice8_GetBackBuffer2B+0x0D : jnz +0x07
+        { 0x0D, 0x75 }, // (Offset,Value)-Pair #4
+        { 0x0E, 0x07 }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_GetBackBuffer2B+0x1E : mov esi, [ecx+eax*4+0x21C0]
+        { 0x1E, 0x8B }, // (Offset,Value)-Pair #6
+        { 0x1F, 0xB4 }, // (Offset,Value)-Pair #7
+        { 0x20, 0x81 }, // (Offset,Value)-Pair #8
+        { 0x21, 0xC0 }, // (Offset,Value)-Pair #9
+        { 0x22, 0x21 }, // (Offset,Value)-Pair #10
+
+        // IDirect3DDevice8_GetBackBuffer2B+0x4C : retn 0x04
+        { 0x4C, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x4D, 0x04 }, // (Offset,Value)-Pair #12
     }
 };
 
@@ -265,6 +299,42 @@ SOOVPA<10> IDirect3DDevice8_GetDepthStencilSurface2_1_0_4627 =
 
         // IDirect3DDevice8_GetDepthStencilSurface2+0x1D : retn
         { 0x1D, 0xC3 }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_GetDepthStencilSurface2B
+// ******************************************************************
+SOOVPA<10> IDirect3DDevice8_GetDepthStencilSurface2B_1_0_4627 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_GetDepthStencilSurface2B+0x00 : mov eax, [addr]
+        { 0x00, 0xA1 }, // (Offset,Value)-Pair #1
+
+        // IDirect3DDevice8_GetDepthStencilSurface2B+0x05 : push esi
+        { 0x05, 0x56 }, // (Offset,Value)-Pair #2
+
+        // IDirect3DDevice8_GetDepthStencilSurface2B+0x06 : mov esi, [eax + 0x21B8]
+        { 0x06, 0x8B }, // (Offset,Value)-Pair #3
+        { 0x07, 0xB0 }, // (Offset,Value)-Pair #4
+        { 0x08, 0xB8 }, // (Offset,Value)-Pair #5
+        { 0x09, 0x21 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_GetDepthStencilSurface2B+0x0E : jnz +0x04
+        { 0x0E, 0x75 }, // (Offset,Value)-Pair #7
+        { 0x0F, 0x04 }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_GetDepthStencilSurface2B+0x31 : call [addr]
+        { 0x31, 0xE8 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DDevice8_GetDepthStencilSurface2B+0x3B : retn
+        { 0x3B, 0xC3 }, // (Offset,Value)-Pair #10
     }
 };
 
@@ -1088,6 +1158,16 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_GetBackBuffer2"
         #endif
     },
+    // IDirect3DDevice8::GetBackBuffer2B
+    {
+        (OOVPA*)&IDirect3DDevice8_GetBackBuffer2B_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_GetBackBuffer2,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetBackBuffer2B"
+        #endif
+    },
     // IDirect3DDevice8::GetRenderTarget2
     {
         (OOVPA*)&IDirect3DDevice8_GetRenderTarget2_1_0_4627,
@@ -1106,6 +1186,16 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_GetDepthStencilSurface2"
+        #endif
+    },
+    // IDirect3DDevice8::GetDepthStencilSurface2B
+    {
+        (OOVPA*)&IDirect3DDevice8_GetDepthStencilSurface2B_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_GetDepthStencilSurface2,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetDepthStencilSurface2B"
         #endif
     },
     // IDirect3DDevice8::GetTile

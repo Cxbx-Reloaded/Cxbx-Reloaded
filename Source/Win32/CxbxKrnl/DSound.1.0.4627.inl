@@ -65,6 +65,39 @@ SOOVPA<10> IDirectSound8_Release_1_0_4627 =
 };
 
 // ******************************************************************
+// * IDirectSound8_DownloadEffectsImage
+// ******************************************************************
+SOOVPA<11> IDirectSound8_DownloadEffectsImage_1_0_4627 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirectSound8_DownloadEffectsImage+0x03 : push [ebp+0x18]
+        { 0x03, 0xFF }, // (Offset,Value)-Pair #1
+        { 0x04, 0x75 }, // (Offset,Value)-Pair #2
+        { 0x05, 0x18 }, // (Offset,Value)-Pair #3
+
+        // IDirectSound8_DownloadEffectsImage+0x06 : mov eax, [ebp+0x08]
+        { 0x06, 0x8B }, // (Offset,Value)-Pair #4
+        { 0x07, 0x45 }, // (Offset,Value)-Pair #5
+        { 0x08, 0x08 }, // (Offset,Value)-Pair #6
+
+        // IDirectSound8_DownloadEffectsImage+0x11 : add eax, 0xFFFFFFF8
+        { 0x11, 0x83 }, // (Offset,Value)-Pair #7
+        { 0x12, 0xC0 }, // (Offset,Value)-Pair #8
+        { 0x13, 0xF8 }, // (Offset,Value)-Pair #9
+
+        // IDirectSound8_DownloadEffectsImage+0x24 : retn 0x14
+        { 0x24, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x25, 0x14 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
 // * DirectSoundCreate_1_0_4627
 // ******************************************************************
 OOVPATable DSound_1_0_4627[] =
@@ -87,6 +120,16 @@ OOVPATable DSound_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirectSound8_Release" 
+        #endif
+    },
+    // IDirectSound8::DownloadEffectsImage
+    {
+        (OOVPA*)&IDirectSound8_DownloadEffectsImage_1_0_4627,
+
+        XTL::EmuIDirectSound8_DownloadEffectsImage,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSound8_DownloadEffectsImage" 
         #endif
     },
 };
