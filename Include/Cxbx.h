@@ -84,8 +84,8 @@ enum DebugMode
 // ******************************************************************
 // * Core Components
 // ******************************************************************
-#include "Core/Error.h"
-#include "Core/Exe.h"
-#include "Core/Xbe.h"
+#include "Error.h"
+#include "Exe.h"
+#include "Xbe.h"
 
 #endif

@@ -36,27 +36,30 @@
 #include "DlgControllerConfig.h"
 #include "EmuShared.h"
 
-#include <stdio.h>
-
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
+#include <stdio.h>
 
 // ******************************************************************
-// * globals
+// * exported globals
 // ******************************************************************
-LPDIRECTINPUT8       g_pDirectInput8                  = NULL;
-LPDIRECTINPUTDEVICE8 g_pInputDev[MAX_INPUT_DEVICES]   = {0};
-int                  g_pInputCur                      = 0;
-bool                 g_bConfigDone                    = true;
-InputConfig          g_InputConfig;
+InputConfig g_InputConfig;
 
 // ******************************************************************
-// * static
+// * static functions
 // ******************************************************************
 static INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL    CALLBACK EnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi, LPVOID pvRef);
 static BOOL    CALLBACK EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOID pvRef);
 static void             ConfigureInput(HWND hWndDlg, HWND hWndButton, void (InputConfig::*MapFunc)(const char *, int, int));
+
+// ******************************************************************
+// * static variables
+// ******************************************************************
+static LPDIRECTINPUT8       g_pDirectInput8                  = NULL;
+static LPDIRECTINPUTDEVICE8 g_pInputDev[MAX_INPUT_DEVICES]   = {0};
+static int                  g_pInputCur                      = 0;
+static bool                 g_bConfigDone                    = true;
 
 // ******************************************************************
 // * Show Controller configuration dialog window

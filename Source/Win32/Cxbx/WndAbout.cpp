@@ -96,6 +96,8 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
             m_OrigBmp  = (HBITMAP)SelectObject(m_BackDC, m_BackBmp);
 
             ReleaseDC(hwnd, hDC);
+
+            SetClassLong(hwnd, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
         }
         break;
 

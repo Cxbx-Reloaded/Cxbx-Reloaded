@@ -34,15 +34,18 @@
 #define _CXBXKRNL_INTERNAL
 #include "Cxbx.h"
 #include "Emu.h"
+#include "InputConfig.h"
 
 using namespace win32;
 
 // ******************************************************************
 // * globals
 // ******************************************************************
-LPDIRECTINPUT8          g_pDirectInput8 = NULL;         
-LPDIRECTINPUTDEVICE8    g_pGameCtrl     = NULL;
-xboxkrnl::XINPUT_STATE  g_EmuController1   = {0};
+LPDIRECTINPUT8          g_pDirectInput8 = NULL;
+LPDIRECTINPUTDEVICE8    g_pInputDev[MAX_INPUT_DEVICES]   = {0};
+int                     g_pInputCur                      = 0;
+xboxkrnl::XINPUT_STATE  g_EmuController1;
+
 
 // ******************************************************************
 // * statics
@@ -59,7 +62,7 @@ void xboxkrnl::EmuInitDInput()
     // * Create DirectInput object
     // ******************************************************************
     {
-        HRESULT hRet = DirectInput8Create
+        DirectInput8Create
         (
             GetModuleHandle(NULL),
             DIRECTINPUT_VERSION,
@@ -67,58 +70,53 @@ void xboxkrnl::EmuInitDInput()
             (void**)&g_pDirectInput8,
             NULL
         );
-
-        if(hRet != DI_OK)
-            EmuPanic();
     }
 
     // ******************************************************************
     // * Enumerate Controller(s)
     // ******************************************************************
+    if(g_pDirectInput8 != 0)
     {
-        HRESULT hRet = g_pDirectInput8->EnumDevices
+        g_pDirectInput8->EnumDevices
         (
             DI8DEVCLASS_GAMECTRL,
             EnumGameCtrlCallback,
             NULL,
             DIEDFL_ATTACHEDONLY
         );
-
-        if(hRet != DI_OK)
-            EmuPanic();
-
-        if(g_pGameCtrl == NULL)
-            return;
     }
 
     // ******************************************************************
-    // * Set Controller data format
+    // * Set cooperative level and acquire
     // ******************************************************************
     {
-        HRESULT hRet = g_pGameCtrl->SetDataFormat(&c_dfDIJoystick);
+        for(int v=g_pInputCur-1;v>=0;v--)
+        {
+            g_pInputDev[v]->SetCooperativeLevel(g_EmuWindow, DISCL_EXCLUSIVE | DISCL_FOREGROUND);
+            g_pInputDev[v]->SetDataFormat(&c_dfDIJoystick);
+            g_pInputDev[v]->Acquire();
 
-        if(FAILED(hRet))
-            EmuPanic();
-    }
+            HRESULT hRet = g_pInputDev[v]->Poll();
 
-    // ******************************************************************
-    // * Set cooperative level
-    // ******************************************************************
-    {
-        HRESULT hRet = g_pGameCtrl->SetCooperativeLevel(g_EmuWindow, DISCL_EXCLUSIVE | DISCL_FOREGROUND);
+            if(FAILED(hRet))
+            {
+                hRet = g_pInputDev[v]->Acquire();
 
-        if(FAILED(hRet))
-            EmuPanic();
+                while(hRet == DIERR_INPUTLOST)
+                    hRet = g_pInputDev[v]->Acquire();
+
+                if(hRet != DIERR_INPUTLOST)
+                    break;
+            }
+        }
     }
 
     // ******************************************************************
     // * Enumerate Controller objects
     // ******************************************************************
     {
-        HRESULT hRet = g_pGameCtrl->EnumObjects(EnumObjectsCallback, NULL, DIDFT_ALL);
-
-        if(FAILED(hRet))
-            EmuPanic();
+        for(int v=0;v<g_pInputCur;v++)
+            g_pInputDev[v]->EnumObjects(EnumObjectsCallback, (LPVOID)v, DIDFT_ALL);
     }
 }
 
@@ -127,14 +125,15 @@ void xboxkrnl::EmuInitDInput()
 // ******************************************************************
 static BOOL CALLBACK EnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi, LPVOID pvRef)
 {
-    HRESULT hRet = g_pDirectInput8->CreateDevice(lpddi->guidInstance, &g_pGameCtrl, NULL);
-
-    // keep on enumerating if this device could not be created
+    HRESULT hRet = g_pDirectInput8->CreateDevice(lpddi->guidInstance, &g_pInputDev[g_pInputCur], NULL);
+    
     if(FAILED(hRet))
         return DIENUM_CONTINUE;
 
-    // once we find a working device, stop enumeration (we just want one)
-    return DIENUM_STOP;
+    g_pInputDev[g_pInputCur++]->SetDataFormat(&c_dfDIJoystick);
+
+    return DIENUM_CONTINUE;
+
 }
 
 // ******************************************************************
@@ -149,12 +148,12 @@ static BOOL CALLBACK EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOI
         diprg.diph.dwSize       = sizeof(DIPROPRANGE); 
         diprg.diph.dwHeaderSize = sizeof(DIPROPHEADER); 
         diprg.diph.dwHow        = DIPH_BYID; 
-        diprg.diph.dwObj        = lpddoi->dwType; // Specify the enumerated axis
+        diprg.diph.dwObj        = lpddoi->dwType;
         diprg.lMin              = -32768; 
         diprg.lMax              = 32767; 
     
         // set axis range
-        HRESULT hRet = g_pGameCtrl->SetProperty(DIPROP_RANGE, &diprg.diph);
+        HRESULT hRet = g_pInputDev[(int)pvRef]->SetProperty(DIPROP_RANGE, &diprg.diph);
 
         if(FAILED(hRet))
             return DIENUM_STOP;
@@ -168,6 +167,7 @@ static BOOL CALLBACK EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOI
 // ******************************************************************
 void xboxkrnl::EmuPollController()
 {
+    /*
     DIJOYSTATE ControllerState;
 
     if(g_pGameCtrl == NULL)
@@ -195,6 +195,6 @@ void xboxkrnl::EmuPollController()
     g_EmuController1.Gamepad.sThumbRY = (short)(-1 - ControllerState.lY);
     g_EmuController1.Gamepad.sThumbLX = (short)ControllerState.lRx;
     g_EmuController1.Gamepad.sThumbLY = (short)(-1 - ControllerState.lRy);
-
+*/
     return;
 }

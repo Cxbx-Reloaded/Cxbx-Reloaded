@@ -34,8 +34,6 @@
 #ifndef DLGCONTROLLERCONFIG_H
 #define DLGCONTROLLERCONFIG_H
 
-#include "InputConfig.h"
-
 #include <windows.h>
 
 // ******************************************************************

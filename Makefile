@@ -34,7 +34,7 @@
 # *  File Authors: Aaron Robinson, Edgar Hucek
 # ******************************************************************
 CC	= g++
-CFLAGS  = -g -O2 -IInclude -IInclude/Standard -IInclude/Standard/Cxbe -IInclude/Linux/
+CFLAGS  = -g -O2 -IInclude -IInclude/Core -IInclude/Standard -IInclude/Standard/Cxbe -IInclude/Linux/
 OBJCOPY	= objcopy
 GCC295 = cpp0-2.95
 #LDFLAGS = -s -S -T ldscript.ld
