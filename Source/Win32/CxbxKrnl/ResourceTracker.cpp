@@ -34,25 +34,40 @@
 #include "ResourceTracker.h"
 
 // exported globals
-bool            g_bVBSkipStream = false;
-bool            g_bVBSkipPusher = false;
+
+bool g_bVBSkipStream = false;
+bool g_bVBSkipPusher = false;
+
 ResourceTracker g_VBTrackTotal;
 ResourceTracker g_VBTrackDisable;
+
 ResourceTracker g_PBTrackTotal;
 ResourceTracker g_PBTrackDisable;
+ResourceTracker g_PBTrackShowOnce;
 
 ResourceTracker::~ResourceTracker()
 {
-	RTNode *cur = m_head;
+    clear();
+}
 
-	while(cur != 0)
-	{
+void ResourceTracker::clear()
+{
+    this->Lock();
+
+    RTNode *cur = m_head;
+
+    while(cur != 0)
+    {
         RTNode *tmp = cur->pNext;
 
         delete cur;
 
-		cur = tmp;
-	}
+        cur = tmp;
+    }
+
+    m_head = m_tail = 0;
+
+    this->Unlock();
 }
 
 void ResourceTracker::insert(void *pResource)

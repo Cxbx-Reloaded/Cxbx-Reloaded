@@ -46,7 +46,10 @@ extern class ResourceTracker : public Mutex
 		ResourceTracker() : m_head(0), m_tail(0) {};
 	   ~ResourceTracker();
 
-	    // insert a ptr
+        // clear the tracker
+        void clear();
+
+        // insert a ptr
 		void insert(void *pResource);
 
 		// remove a ptr
@@ -64,7 +67,7 @@ extern class ResourceTracker : public Mutex
 		struct RTNode *m_tail;
 }
 g_VBTrackTotal, g_VBTrackDisable,
-g_PBTrackTotal, g_PBTrackDisable;
+g_PBTrackTotal, g_PBTrackDisable, g_PBTrackShowOnce;
 
 struct RTNode
 {

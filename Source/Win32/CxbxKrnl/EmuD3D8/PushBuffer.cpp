@@ -45,9 +45,11 @@ namespace XTL
 
 extern XTL::LPDIRECT3DDEVICE8 g_pD3DDevice8;  // Direct3D8 Device
 
-bool XTL::g_bStepPush = FALSE;
-bool XTL::g_bSkipPush = FALSE;
-bool XTL::g_bBrkPush  = FALSE;
+bool XTL::g_bStepPush = false;
+bool XTL::g_bSkipPush = false;
+bool XTL::g_bBrkPush  = false;
+
+bool g_bPBSkipPusher = false;
 
 // pushbuffer execution emulation
 void XTL::EmuExecutePushBuffer
@@ -58,6 +60,9 @@ void XTL::EmuExecutePushBuffer
 {
     if(g_bSkipPush)
         return;
+
+    if(pFixup != NULL)
+        EmuCleanup("PushBuffer has fixups\n");
 
     DWORD *pdwPushData = (DWORD*)pPushBuffer->Data;
 
@@ -71,6 +76,24 @@ void XTL::EmuExecutePushBuffer
 //	g_pD3DDevice8->SetRenderState(D3DRS_ZENABLE, FALSE);
 //	g_pD3DDevice8->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
 
+    #ifdef _DEBUG_TRACK_PB
+    bool bShowPB = false;
+
+    g_PBTrackTotal.insert(pdwPushData);
+
+    if(g_PBTrackShowOnce.exists(pdwPushData))
+    {
+        g_PBTrackShowOnce.remove(pdwPushData);
+
+        printf("\n");
+        printf("\n");
+        printf("  PushBuffer@0x%.08X...\n", pdwPushData);
+        printf("\n");
+
+        bShowPB = true;
+    }
+    #endif
+
     // NOTE: I believe 0x1808 is actually a seperate command, but I need to verify this.
 
     while(true)
@@ -83,10 +106,32 @@ void XTL::EmuExecutePushBuffer
         {
             pdwPushData++;
 
+            #ifdef _DEBUG_TRACK_PB
+            if(bShowPB)
+            {
+                printf("  NVPB_SetBeginEnd(");
+            }
+            #endif
+
             if(*pdwPushData == 0)
+            {
+                #ifdef _DEBUG_TRACK_PB
+                if(bShowPB)
+                {
+                    printf("DONE)\n");
+                }
+                #endif
                 break;  // done?
+            }
             else
             {
+                #ifdef _DEBUG_TRACK_PB
+                if(bShowPB)
+                {
+                    printf("PrimitiveType := %d)\n", *pdwPushData);
+                }
+                #endif
+
                 XBPrimitiveType = *pdwPushData;
                 PCPrimitiveType = EmuPrimitiveType(XBPrimitiveType);
             }
@@ -111,7 +156,56 @@ void XTL::EmuExecutePushBuffer
             pIndexData = pdwPushData;
 
             #ifdef _DEBUG_TRACK_PB
-            g_PBTrackTotal.insert(pIndexData);
+            if(bShowPB)
+            {
+                printf("  NVPB_InlineArray(0x%.08X)...\n", pIndexData);
+                printf("\n");
+                printf("  Index Array Data...\n");
+
+                WORD *pwVal = (WORD*)pIndexData;
+
+                for(uint s=0;s<dwCount/2;s++)
+                {
+                    if(s%8 == 0) printf("\n  ");
+
+                    printf("  %.04X", *pwVal++);
+                }
+
+                printf("\n");
+
+                XTL::IDirect3DVertexBuffer8 *pActiveVB = NULL;
+
+                D3DVERTEXBUFFER_DESC VBDesc;
+
+                BYTE *pVBData = 0;
+                UINT  uiStride;
+
+                // retrieve stream data
+                g_pD3DDevice8->GetStreamSource(0, &pActiveVB, &uiStride);
+
+                // retrieve stream desc
+                pActiveVB->GetDesc(&VBDesc);
+
+                // unlock just in case
+                pActiveVB->Unlock();
+
+                // grab ptr
+                pActiveVB->Lock(0, 0, &pVBData, D3DLOCK_READONLY);
+
+                // print out stream data
+                {
+                    printf("\n");
+                    printf("  Vertex Stream Data (0x%.08X)...\n", pActiveVB);
+                    printf("\n");
+                    printf("  Format : %d\n", VBDesc.Format);
+                    printf("  Size   : %d bytes\n", VBDesc.Size);
+                    printf("  FVF    : 0x%.08X\n", VBDesc.FVF);
+                    printf("\n");
+                }
+
+                // release ptr
+                pActiveVB->Unlock();
+            }
             #endif
 
             pdwPushData += dwCount - (bInc ? 0 : 1);
@@ -141,14 +235,17 @@ void XTL::EmuExecutePushBuffer
                     g_pD3DDevice8->SetIndices(pIndexBuffer, 0);
 
                     #ifdef _DEBUG_TRACK_PB
-                    if(!g_PBTrackDisable.exists(pIndexData))
+                    if(!g_PBTrackDisable.exists((PVOID)pPushBuffer->Data))
                     {
                     #endif
 
-                    g_pD3DDevice8->DrawIndexedPrimitive
-                    (
-                        PCPrimitiveType, 0, dwCount*2, 0, EmuD3DVertex2PrimitiveCount(XBPrimitiveType, dwCount*2)
-                    );
+                    if(!g_bPBSkipPusher)
+                    {
+                        g_pD3DDevice8->DrawIndexedPrimitive
+                        (
+                            PCPrimitiveType, 0, dwCount*2, 0, EmuD3DVertex2PrimitiveCount(XBPrimitiveType, dwCount*2)
+                        );
+                    }
 
                     #ifdef _DEBUG_TRACK_PB
                     }
@@ -162,6 +259,15 @@ void XTL::EmuExecutePushBuffer
 
         pdwPushData++;
     }
+
+    #ifdef _DEBUG_TRACK_PB
+    if(bShowPB)
+    {
+        printf("\n");
+        printf("CxbxDbg> ");
+        fflush(stdout);
+    }
+    #endif
 
     if(g_bStepPush)
     {

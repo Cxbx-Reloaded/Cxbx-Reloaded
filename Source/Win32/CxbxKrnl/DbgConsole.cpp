@@ -117,7 +117,15 @@ void DbgConsole::Reset()
 }
 
 #ifdef _DEBUG_TRACK_VB
-static void EnableTracker(ResourceTracker &trackTotal, ResourceTracker &trackDisable, int a, int b, bool enable)
+typedef enum _ETAction
+{
+    ETA_ENABLE  = 0,
+    ETA_DISABLE = 1,
+    ETA_SHOW    = 2
+}
+ETAction;
+
+static void EnableTracker(ResourceTracker &trackTotal, ResourceTracker &tracker, int a, int b, ETAction action)
 {
     int v=0;
 
@@ -140,16 +148,21 @@ static void EnableTracker(ResourceTracker &trackTotal, ResourceTracker &trackDis
             if((cur == NULL) || (cur->pNext == NULL))
                 break;
 
-            if(enable)
+            if(action == ETA_ENABLE)
+                printf("CxbxDbg: #%.02d (0x%.08X) enabled\n", a, cur->pResource);
+            else if(action == ETA_DISABLE)
+                printf("CxbxDbg: #%.02d (0x%.08X) disabled\n", a, cur->pResource);
+            else if(action == ETA_SHOW)
+                printf("CxbxDbg: #%.02d (0x%.08X) queued for show info..\n", a, cur->pResource);
+
+            if(action == ETA_ENABLE)
             {
-                trackDisable.remove(cur->pResource);
+                tracker.remove(cur->pResource);
             }
             else
             {
-                trackDisable.insert(cur->pResource);
+                tracker.insert(cur->pResource);
             }
-
-            printf("CxbxDbg: %.02d (0x%.08X) %s\n", a, cur->pResource, enable ? "enabled" : "disabled");
 
             cur = cur->pNext;
         }
@@ -194,8 +207,10 @@ void DbgConsole::ParseCommand()
 
 		#ifdef _DEBUG_TRACK_PB
         printf("CxbxDbg:  ListPB    [LPB]   : List Active Push Buffers\n");
-        printf("CxbxDbg:  DisablePB [DPB #] : Disable Active Push Buffer(s)\n");
-        printf("CxbxDbg:  EnablePB  [EPB #] : Enable Active Push Buffer(s)\n");
+        printf("CxbxDbg:  ShowPB    [SPB #] : Show Push Buffer(s)\n");
+        printf("CxbxDbg:  DisablePB [DPB #] : Disable Push Buffer(s)\n");
+        printf("CxbxDbg:  EnablePB  [EPB #] : Enable Push Buffer(s)\n");
+        printf("CxbxDbg:  ClearPB   [CPB]   : Clear Push Buffer List\n");
 		#endif
 
         #ifdef _DEBUG_ALLOC
@@ -245,11 +260,11 @@ void DbgConsole::ParseCommand()
         
         if(c == 1)
         {
-            EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, n, false);
+            EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, n, ETA_DISABLE);
         }
         else if(c == 2)
         {
-            EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, m, false);
+            EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, m, ETA_DISABLE);
         }
         else
         {
@@ -264,11 +279,11 @@ void DbgConsole::ParseCommand()
         
         if(c == 1)
         {
-            EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, n, true);
+            EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, n, ETA_ENABLE);
         }
         else if(c == 2)
         {
-            EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, m, true);
+            EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, m, ETA_ENABLE);
         }
         else
         {
@@ -296,6 +311,25 @@ void DbgConsole::ParseCommand()
 
         g_PBTrackTotal.Unlock();
     }
+    else if(stricmp(szCmd, "spb") == 0 || stricmp(szCmd, "ShowPB") == 0)
+    {
+        int n=0, m=0;
+
+        int c = sscanf(m_szInput, "%*s %d-%d", &n, &m);
+        
+        if(c == 1)
+        {
+            EnableTracker(g_PBTrackTotal, g_PBTrackShowOnce, n, n, ETA_SHOW);
+        }
+        else if(c == 2)
+        {
+            EnableTracker(g_PBTrackTotal, g_PBTrackShowOnce, n, m, ETA_SHOW);
+        }
+        else
+        {
+            printf("CxbxDbg: Syntax Incorrect (spb #)\n");
+        }
+    }
     else if(stricmp(szCmd, "dpb") == 0 || stricmp(szCmd, "DisablePB") == 0)
     {
         int n=0, m=0;
@@ -304,11 +338,11 @@ void DbgConsole::ParseCommand()
         
         if(c == 1)
         {
-            EnableTracker(g_PBTrackTotal, g_PBTrackDisable, n, n, false);
+            EnableTracker(g_PBTrackTotal, g_PBTrackDisable, n, n, ETA_DISABLE);
         }
         else if(c == 2)
         {
-            EnableTracker(g_PBTrackTotal, g_PBTrackDisable, n, m, false);
+            EnableTracker(g_PBTrackTotal, g_PBTrackDisable, n, m, ETA_DISABLE);
         }
         else
         {
@@ -323,16 +357,22 @@ void DbgConsole::ParseCommand()
 
         if(c == 1)
         {
-            EnableTracker(g_PBTrackTotal, g_PBTrackDisable, n, n, true);
+            EnableTracker(g_PBTrackTotal, g_PBTrackDisable, n, n, ETA_ENABLE);
         }
         else if(c == 2)
         {
-            EnableTracker(g_PBTrackTotal, g_PBTrackDisable, n, m, true);
+            EnableTracker(g_PBTrackTotal, g_PBTrackDisable, n, m, ETA_ENABLE);
         }
         else
         {
             printf("CxbxDbg: Syntax Incorrect (dpb #)\n");
         }
+    }
+    else if(stricmp(szCmd, "cpb") == 0 || stricmp(szCmd, "ClearPB") == 0)
+    {
+        g_PBTrackTotal.clear();
+
+        printf("CxbxDbg: Push Buffer List Cleared!\n");
     }
 	#endif
     #ifdef _DEBUG_ALLOC
