@@ -34,18 +34,14 @@
 #ifndef CXBX_H
 #define CXBX_H
 
-// ******************************************************************
-// * cxbxkrnl exports, others import
-// ******************************************************************
+// CxbxKrnl exports, others import
 #ifndef _CXBXKRNL_INTERNAL
 #define CXBXKRNL_API __declspec(dllimport)
 #else
 #define CXBXKRNL_API __declspec(dllexport)
 #endif
 
-// ******************************************************************
-// * Caustik's favorite typedefs
-// ******************************************************************
+// Caustik's favorite typedefs
 typedef signed int     sint;
 typedef unsigned int   uint;
 typedef char           int08;
@@ -58,24 +54,20 @@ typedef signed char    sint08;
 typedef signed short   sint16;
 typedef signed long    sint32;
 
-// ******************************************************************
-// * Define this to trace intercepted function calls
-// ******************************************************************
-#define _DEBUG_TRACE
-#define _DEBUG_WARNINGS
+// define this to trace intercepted function calls
+//#define _DEBUG_TRACE
 
-// ******************************************************************
-// * Version information
-// ******************************************************************
+// define this to trace warnings
+//#define _DEBUG_WARNINGS
+
+// version information
 #ifndef _DEBUG_TRACE
-#define _CXBX_VERSION "0.7.9-Pre1"
+#define _CXBX_VERSION "0.7.9-Pre2"
 #else
-#define _CXBX_VERSION "0.7.9-Pre1-Trace"
+#define _CXBX_VERSION "0.7.9-Pre2-Trace"
 #endif
 
-// ******************************************************************
-// * Round up dwValue to nearest multiple of dwMult
-// ******************************************************************
+// round dwValue to the nearest multiple of dwMult
 static uint32 RoundUp(uint32 dwValue, uint32 dwMult)
 {
     if(dwMult == 0)
@@ -84,10 +76,7 @@ static uint32 RoundUp(uint32 dwValue, uint32 dwMult)
     return dwValue - (dwValue-1)%dwMult + (dwMult - 1);
 }
 
-// ******************************************************************
-// * Different debug mode types. Debug information is directed to
-// * Either a visible console screen, or to an external file
-// ******************************************************************
+// debug mode choices, either console screen or external file
 enum DebugMode
 {
     DM_NONE,

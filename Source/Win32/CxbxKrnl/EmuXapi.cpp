@@ -614,7 +614,7 @@ DWORD WINAPI XTL::EmuXInputSetState
     }
     #endif
 
-    printf("*Warning* Ignoring EmuXInputSetState!\n");
+    EmuWarning("Ignoring EmuXInputSetState!");
 
     EmuSwapFS();   // XBox FS
 

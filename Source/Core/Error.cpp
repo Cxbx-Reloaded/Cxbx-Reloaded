@@ -35,9 +35,7 @@
 
 #include <string.h>
 
-// ******************************************************************
-// * func : ClearError
-// ******************************************************************
+// clear the current error (returns false if error was fatal)
 bool Error::ClearError()
 {
     if(m_bFatal)
@@ -52,9 +50,7 @@ bool Error::ClearError()
     return true;
 }
 
-// ******************************************************************
-// * func : SetError
-// ******************************************************************
+// protected so only derived class may set an error
 void Error::SetError(const char *x_szError, bool x_bFatal)
 {
     if(m_szError == 0)

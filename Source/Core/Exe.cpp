@@ -36,9 +36,7 @@
 #include <stdio.h>
 #include <memory.h>
 
-// ******************************************************************
-// * constructor
-// ******************************************************************
+// construct via Exe file
 Exe::Exe(const char *x_szFilename)
 {
     ConstructorInit();
@@ -47,9 +45,7 @@ Exe::Exe(const char *x_szFilename)
 
     FILE *ExeFile = fopen(x_szFilename, "rb");
 
-    // ******************************************************************
-    // * verify exe file was opened
-    // ******************************************************************
+    // verify Exe file was opened
     if(ExeFile == 0)
     {
         SetError("Could not open Exe file.", true);
@@ -58,9 +54,7 @@ Exe::Exe(const char *x_szFilename)
 
     printf("OK\n");
 
-    // ******************************************************************
-    // * ignore dos stub (if it exists)
-    // ******************************************************************
+    // ignore dos stub (if exists)
     {
         printf("Exe::Exe: Reading DOS stub...");
 
@@ -90,9 +84,7 @@ Exe::Exe(const char *x_szFilename)
         }
     }
 
-    // ******************************************************************
-    // * read pe header
-    // ******************************************************************
+    // read PE header
     {
         printf("Exe::Exe: Reading PE header...");
 
@@ -111,9 +103,7 @@ Exe::Exe(const char *x_szFilename)
         printf("OK\n");
     }
 
-    // ******************************************************************
-    // * read optional header
-    // ******************************************************************
+    // read optional header
     {
         printf("Exe::Exe: Reading Optional Header...");
 
@@ -132,9 +122,7 @@ Exe::Exe(const char *x_szFilename)
          printf("OK\n");
     }
 
-    // ******************************************************************
-    // * read section headers
-    // ******************************************************************
+    // read section headers
     {
         m_SectionHeader = new SectionHeader[m_Header.m_sections];
 
@@ -156,9 +144,7 @@ Exe::Exe(const char *x_szFilename)
         }
     }
 
-    // ******************************************************************
-    // * read sections
-    // ******************************************************************
+    // read sections
     {
         printf("Exe::Exe: Reading Sections...\n");
 
@@ -181,9 +167,7 @@ Exe::Exe(const char *x_szFilename)
                 continue;
             }
 
-            // ******************************************************************
-            // * read current section from file (if raw_size > 0)
-            // ******************************************************************
+            // read current section from file (if raw_size > 0)
             {
                 fseek(ExeFile, raw_addr, SEEK_SET);
 
@@ -213,18 +197,14 @@ cleanup:
     fclose(ExeFile);
 }
 
-// ******************************************************************
-// * ConstructorInit
-// ******************************************************************
+// constructor initialization
 void Exe::ConstructorInit()
 {
     m_SectionHeader = 0;
     m_bzSection     = 0;
 }
 
-// ******************************************************************
-// * deconstructor
-// ******************************************************************
+// deconstructor
 Exe::~Exe()
 {
     if(m_bzSection != 0)
@@ -238,9 +218,7 @@ Exe::~Exe()
     delete[] m_SectionHeader;
 }
 
-// ******************************************************************
-// * Export
-// ******************************************************************
+// export to Exe file
 void Exe::Export(const char *x_szExeFilename)
 {
     if(GetError() != 0)
@@ -250,9 +228,7 @@ void Exe::Export(const char *x_szExeFilename)
 
     FILE *ExeFile = fopen(x_szExeFilename, "wb");
 
-    // ******************************************************************
-    // * verify that file was opened
-    // ******************************************************************
+    // verify file was opened successfully
     if(ExeFile == 0)
     {
         SetError("Could not open .exe file.", false);
@@ -261,9 +237,7 @@ void Exe::Export(const char *x_szExeFilename)
 
     printf("OK\n");
 
-    // ******************************************************************
-    // * write dos stub
-    // ******************************************************************
+    // write dos stub
     {
         printf("Exe::Export: Writing DOS stub...");
 
@@ -276,9 +250,7 @@ void Exe::Export(const char *x_szExeFilename)
         printf("OK\n");
     }
 
-    // ******************************************************************
-    // * write pe header
-    // ******************************************************************
+    // write pe header
     {
         printf("Exe::Export: Writing PE Header...");
 
@@ -291,9 +263,7 @@ void Exe::Export(const char *x_szExeFilename)
         printf("OK\n");
     }
 
-    // ******************************************************************
-    // * write optional header
-    // ******************************************************************
+    // write optional header
     {
         printf("Exe::Export: Writing Optional Header...");
 
@@ -306,9 +276,7 @@ void Exe::Export(const char *x_szExeFilename)
         printf("OK\n");
     }
 
-    // ******************************************************************
-    // * write section headers
-    // ******************************************************************
+    // write section header
     {
         printf("Exe::Export: Writing Section Headers...\n");
 
@@ -328,9 +296,7 @@ void Exe::Export(const char *x_szExeFilename)
         }
     }
 
-    // ******************************************************************
-    // * write sections
-    // ******************************************************************
+    // write sections
     {
         printf("Exe::Export: Writing Sections...\n");
 
@@ -376,9 +342,7 @@ cleanup:
     return;
 }
 
-// ******************************************************************
-// * GetAddr
-// ******************************************************************
+// return a modifiable pointer inside this structure that corresponds to a virtual address
 uint08 *Exe::GetAddr(uint32 x_dwVirtualAddress)
 {
     for(uint32 v=0;v<m_Header.m_sections;v++)

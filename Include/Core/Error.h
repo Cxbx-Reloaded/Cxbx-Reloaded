@@ -36,47 +36,31 @@
 
 #include "Cxbx.h"
 
-// ******************************************************************
-// * Inherited from this class for easy Error detection
-// ******************************************************************
+// inherit from this class for handy error reporting capability
 class Error
 {
     public:
-        // ******************************************************************
-        // * Return current error (or zero if there is none)
-        // ******************************************************************
+        // return current error (zero if there is none)
         const char *GetError() const { return m_szError; }
 
-        // ******************************************************************
-        // * Is the current error fatal? (if so, class should be 'dead')
-        // ******************************************************************
+        // is the current error fatal? (class is "dead" on fatal errors)
         bool IsFatal() const { return m_bFatal; }
 
-        // ******************************************************************
-        // * Clear current error (returns false if error was fatal)
-        // ******************************************************************
+        // clear the current error (returns false if error was fatal)
         bool ClearError();
 
     protected:
-        // ******************************************************************
-        // * Protected constructor so this class must be inherited from
-        // ******************************************************************
+        // protected constructor so this class must be inherited from
         Error() : m_szError(0), m_bFatal(false) { }
 
-        // ******************************************************************
-        // * Protected deconstructor
-        // ******************************************************************
+        // protected deconstructor
        ~Error() { delete[] m_szError; }
 
-        // ******************************************************************
-        // * Protected so only derived class may set an error
-        // ******************************************************************
+        // protected so only derived class may set an error
         void SetError(const char *x_szError, bool x_bFatal);
 
     private:
-        // ******************************************************************
-        // * Current error information
-        // ******************************************************************
+        // current error information
         bool  m_bFatal;
         char *m_szError;
 };

@@ -36,30 +36,20 @@
 
 #include "Error.h"
 
-// ******************************************************************
-// * Exe (PE) file object
-// ******************************************************************
+// Exe (PE) file object
 class Exe : public Error
 {
     public:
-        // ******************************************************************
-        // * Construct via Exe file
-        // ******************************************************************
+        // construct via Exe file
         Exe(const char *x_szFilename);
 
-        // ******************************************************************
-        // * Deconstructor
-        // ******************************************************************
+        // deconstructor
        ~Exe();
 
-        // ******************************************************************
-        // * Export to EXE file
-        // ******************************************************************
+        // export to Exe file
         void Export(const char *x_szExeFilename);
 
-        // ******************************************************************
-        // * DOSHeader
-        // ******************************************************************
+        // DOSHeader
         #include "AlignPrefix1.h"
         struct DOSHeader
         {
@@ -86,9 +76,7 @@ class Exe : public Error
         #include "AlignPosfix1.h"
         m_DOSHeader;
 
-        // ******************************************************************
-        // * Header (PE)
-        // ******************************************************************
+        // Header (PE)
         #include "AlignPrefix1.h"
         struct Header
         {
@@ -104,9 +92,7 @@ class Exe : public Error
         #include "AlignPosfix1.h"
         m_Header;
 
-        // ******************************************************************
-        // * OptionalHeader (PE)
-        // ******************************************************************
+        // optional header (PE)
         #include "AlignPrefix1.h"
         struct OptionalHeader
         {
@@ -151,9 +137,7 @@ class Exe : public Error
         #include "AlignPosfix1.h"
         m_OptionalHeader;
 
-        // ******************************************************************
-        // * PE Section Header
-        // ******************************************************************
+        // PE section header
         #include "AlignPrefix1.h"
         struct SectionHeader
         {
@@ -171,53 +155,38 @@ class Exe : public Error
         #include "AlignPosfix1.h"
         *m_SectionHeader;
 
-        // ******************************************************************
-        // * array of section data
-        // ******************************************************************
+        // array of section data
         uint08 **m_bzSection;
 
     protected:
-        // ******************************************************************
-        // * Protected Default Constructor
-        // ******************************************************************
+        // protected default constructor
         Exe() {};
 
-        // ******************************************************************
-        // * constructor initialization
-        // ******************************************************************
+        // constructor initialization
         void ConstructorInit();
 
-        // ******************************************************************
-        // * return a modifiable pointer inside this structure that 
-        // * corresponds to a virtual address
-        // ******************************************************************
+        // return a modifiable pointer inside this structure that corresponds to a virtual address
         uint08 *GetAddr(uint32 x_dwVirtualAddress);
 
 };
 
-// ******************************************************************
-// * PE File/Segment alignments: these must always both equal 0x0020
-// ******************************************************************
-#define PE_FILE_ALIGN                        0x00000020  // File alignment
-#define PE_SEGM_ALIGN                        0x00000020  // Segment alignment
+// PE file/segment alignments : these must always both equal 0x0020
+#define PE_FILE_ALIGN                        0x00000020
+#define PE_SEGM_ALIGN                        0x00000020
 
-// ******************************************************************
-// * Section Characeristics
-// ******************************************************************
-#define IMAGE_SCN_CNT_CODE                   0x00000020  // Section contains code.
-#define IMAGE_SCN_CNT_INITIALIZED_DATA       0x00000040  // Section contains initialized data.
-#define IMAGE_SCN_CNT_UNINITIALIZED_DATA     0x00000080  // Section contains uninitialized data.
-#define IMAGE_SCN_MEM_DISCARDABLE            0x02000000  // Section can be discarded.
-#define IMAGE_SCN_MEM_NOT_CACHED             0x04000000  // Section is not cachable.
-#define IMAGE_SCN_MEM_NOT_PAGED              0x08000000  // Section is not pageable.
-#define IMAGE_SCN_MEM_SHARED                 0x10000000  // Section is shareable.
-#define IMAGE_SCN_MEM_EXECUTE                0x20000000  // Section is executable.
-#define IMAGE_SCN_MEM_READ                   0x40000000  // Section is readable.
-#define IMAGE_SCN_MEM_WRITE                  0x80000000  // Section is writeable.
+// section characteristics
+#define IMAGE_SCN_CNT_CODE                   0x00000020
+#define IMAGE_SCN_CNT_INITIALIZED_DATA       0x00000040
+#define IMAGE_SCN_CNT_UNINITIALIZED_DATA     0x00000080
+#define IMAGE_SCN_MEM_DISCARDABLE            0x02000000
+#define IMAGE_SCN_MEM_NOT_CACHED             0x04000000
+#define IMAGE_SCN_MEM_NOT_PAGED              0x08000000
+#define IMAGE_SCN_MEM_SHARED                 0x10000000
+#define IMAGE_SCN_MEM_EXECUTE                0x20000000
+#define IMAGE_SCN_MEM_READ                   0x40000000
+#define IMAGE_SCN_MEM_WRITE                  0x80000000
 
-// ******************************************************************
-// * Based relocation types
-// ******************************************************************
+// based relocation types
 #define IMAGE_REL_BASED_ABSOLUTE             0
 #define IMAGE_REL_BASED_HIGH                 1
 #define IMAGE_REL_BASED_LOW                  2
@@ -228,14 +197,10 @@ class Exe : public Error
 #define IMAGE_REL_BASED_IA64_IMM64           9
 #define IMAGE_REL_BASED_DIR64                10
 
-// ******************************************************************
-// * Machine type(s)
-// ******************************************************************
-#define IMAGE_FILE_MACHINE_I386              0x014c  // Intel 386.
+// machine type(s)
+#define IMAGE_FILE_MACHINE_I386              0x014c  // Intel 386
 
-// ******************************************************************
-// * Subsystems
-// ******************************************************************
+// subsystems
 #define IMAGE_SUBSYSTEM_UNKNOWN              0
 #define IMAGE_SUBSYSTEM_NATIVE               1
 #define IMAGE_SUBSYSTEM_WINDOWS_GUI          2
@@ -245,9 +210,7 @@ class Exe : public Error
 #define IMAGE_SUBSYSTEM_NATIVE_WINDOWS       8
 #define IMAGE_SUBSYSTEM_WINDOWS_CE_GUI       9
 
-// ******************************************************************
-// * Directory Entries
-// ******************************************************************
+// directory entries
 #define IMAGE_DIRECTORY_ENTRY_EXPORT          0   // Export Directory
 #define IMAGE_DIRECTORY_ENTRY_IMPORT          1   // Import Directory
 #define IMAGE_DIRECTORY_ENTRY_RESOURCE        2   // Resource Directory
@@ -265,9 +228,7 @@ class Exe : public Error
 #define IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT   13   // Delay Load Import Descriptors
 #define IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR 14   // COM Runtime descriptor
 
-// ******************************************************************
-// * DOS stub
-// ******************************************************************
+// typical DOS stub
 static uint08 bzDOSStub[] =
 {
     0x4D, 0x5A, 0x90, 0x00, 0x03, 0x00, 0x00, 0x00, 

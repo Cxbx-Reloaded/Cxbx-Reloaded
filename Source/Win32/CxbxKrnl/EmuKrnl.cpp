@@ -1403,7 +1403,7 @@ XBSYSAPI EXPORTNUM(197) NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
     );
 
     if(ret != STATUS_SUCCESS)
-        printf("*Warning* Object was not duplicated\n");
+        EmuWarning("Object was not duplicated!");
 
     EmuSwapFS();   // Xbox FS
 

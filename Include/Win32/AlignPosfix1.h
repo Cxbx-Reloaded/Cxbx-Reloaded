@@ -34,9 +34,7 @@
 #ifndef ALIGNPOSFIX1_H
 #define ALIGNPOSFIX1_H
 
-// ******************************************************************
-// * Turn off 1-byte structure alignment
-// ******************************************************************
+// turn off 1-byte structure alignment
 #pragma pack()
 
 #endif

@@ -36,15 +36,11 @@
 
 #include <string.h>
 
-// ******************************************************************
-// * Static Global(s)
-// ******************************************************************
+// static global(s)
 static void ShowUsage();
 static void MakeUpper(char *str);
 
-// ******************************************************************
-// * func : main
-// ******************************************************************
+// program entry point
 int main(int argc, char *argv[])
 {
     char szErrorMessage[266] = {0};
@@ -54,27 +50,21 @@ int main(int argc, char *argv[])
     char szXbeTitle[256]     = "Untitled";
     bool bRetail             = true;
 
-    // ******************************************************************
-    // * parse command line
-    // ******************************************************************
+    // parse command line
     for(int v=1;v<argc;v++)
     {
         char *szOption    = 0;
         char *szParam     = 0;
         uint  dwParamSize = 0;
 
-        // ******************************************************************
-        // * if this isn't an option, it must be the exe file
-        // ******************************************************************
+        // if this isn't an option, it must be the Exe file
         if(argv[v][0] != '-')
         {
             strncpy(szExeFilename, argv[v], 265);
             continue;
         }
 
-        // ******************************************************************
-        // * locate colon and seperate option / parameter
-        // ******************************************************************
+        // locate the colon and seperate option / parameters
         {
             uint dwColon = (uint)-1;
 
@@ -102,9 +92,7 @@ int main(int argc, char *argv[])
                 dwParamSize++;
         }
 
-        // ******************************************************************
-        // * interpret the current switch
-        // ******************************************************************
+        // interpret the current switch
         {
             char szOptionU[266] = {0};
             char szParamU[266] = {0};
@@ -152,36 +140,28 @@ int main(int argc, char *argv[])
         }
     }
 
-    // ******************************************************************
-    // * verify we recieved the required parameters
-    // ******************************************************************
+    // verify we recieved the required parameters
     if(szExeFilename[0] == '\0')
     {
         ShowUsage();
         return 1;
     }
 
-    // ******************************************************************
-    // * if we dont have an .xbe filename, generate one from exe_filename
-    // ******************************************************************
+    // if we don't have an Xbe filename, generate one from szExeFilename
     if(szXbeFilename[0] == '\0')
     {
         strcpy(szXbeFilename, szExeFilename);
 
         char *szFilename = &szXbeFilename[0];
 
-        // ******************************************************************
-        // * locate last \ or / (if there are any)
-        // ******************************************************************
+        // locate last \ or / (if there are any)
         {
             for(int c=0;szXbeFilename[c] != 0;c++)
                 if(szXbeFilename[c] == '\\' || szXbeFilename[c] == '/')
                     szFilename = &szXbeFilename[c+1];
         }
 
-        // ******************************************************************
-        // * locate and remove last . (if there are any)
-        // ******************************************************************
+        // locate and remove last . (if there are any)
         {
             char szWorkingU[266];
 
@@ -202,9 +182,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    // ******************************************************************
-    // * open, and convert exe file
-    // ******************************************************************
+    // open and convert Exe file
     {
         Exe *ExeFile = new Exe(szExeFilename);
 
@@ -267,9 +245,7 @@ cleanup:
     return 0;
 }
 
-// ******************************************************************
-// * ShowUsage
-// ******************************************************************
+// show program usage
 static void ShowUsage()
 {
     printf
@@ -288,9 +264,7 @@ static void ShowUsage()
     );
 }
 
-// ******************************************************************
-// * MakeUpper
-// ******************************************************************
+// convert string to upper case
 static void MakeUpper(char *str)
 {
     while(*str != '\0')

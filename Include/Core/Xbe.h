@@ -38,50 +38,32 @@
 
 #include <stdio.h>
 
-// ******************************************************************
-// * Xbe (Xbox Executable) file object
-// ******************************************************************
+// Xbe (Xbox Executable) file object
 class Xbe : public Error
 {
     public:
-        // ******************************************************************
-        // * Construct via Xbe file
-        // ******************************************************************
+        // construct via Xbe file
         Xbe(const char *x_szFilename);
 
-        // ******************************************************************
-        // * Construct via Exe file object
-        // ******************************************************************
+        // construct via Exe file object
         Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail);
 
-        // ******************************************************************
-        // * Deconstructor
-        // ******************************************************************
+        // deconstructor
        ~Xbe();
 
-        // ******************************************************************
-        // * Export to XBE file
-        // ******************************************************************
+        // export to Xbe file
         void Export(const char *x_szXbeFilename);
-        
-        // ******************************************************************
-        // * Dump XBE information to text file
-        // ******************************************************************
+
+        // dump Xbe information to text file
         void DumpInformation(FILE *x_file);
 
-        // ******************************************************************
-        // * Import logo bitmap from raw monochrome data
-        // ******************************************************************
+        // import logo bitmap from raw monochrome data
         void ImportLogoBitmap(const uint08 x_Gray[100*17]);
 
-        // ******************************************************************
-        // * Export logo bitmap to raw monochrome data
-        // ******************************************************************
+        // export logo bitmap to raw monochrome data
         void ExportLogoBitmap(uint08 x_Gray[100*17]);
 
-        // ******************************************************************
-        // * XBE header
-        // ******************************************************************
+        // Xbe header
         #include "AlignPrefix1.h"
         struct Header
         {
@@ -133,14 +115,10 @@ class Xbe : public Error
         #include "AlignPosfix1.h"
         m_Header;
 
-        // ******************************************************************
-        // * XBE header extra bytes (used to preserve unknown data)
-        // ******************************************************************
+        // Xbe header extra byte (used to preserve unknown data)
 		char *m_HeaderEx;
 
-        // ******************************************************************
-        // * XBE certificate
-        // ******************************************************************
+        // Xbe certificate
         #include "AlignPrefix1.h"
         struct Certificate
         {
@@ -161,9 +139,7 @@ class Xbe : public Error
         #include "AlignPosfix1.h"
         m_Certificate;
 
-        // ******************************************************************
-        // * XBE section header
-        // ******************************************************************
+        // Xbe section header
         #include "AlignPrefix1.h"
         struct SectionHeader
         {
@@ -196,9 +172,7 @@ class Xbe : public Error
         #include "AlignPosfix1.h"
         *m_SectionHeader;
 
-        // ******************************************************************
-        // * XBE library versions
-        // ******************************************************************
+        // Xbe library versions
         #include "AlignPrefix1.h"
         struct LibraryVersion
         {
@@ -218,9 +192,7 @@ class Xbe : public Error
         #include "AlignPosfix1.h"
         *m_LibraryVersion, *m_KernelLibraryVersion, *m_XAPILibraryVersion;
 
-        // ******************************************************************
-        // * XBE Thread Local Storage
-        // ******************************************************************
+        // Xbe thread local storage
         #include "AlignPrefix1.h"
         struct TLS
         {
@@ -234,56 +206,35 @@ class Xbe : public Error
         #include "AlignPosfix1.h"
         *m_TLS;
 
-        // ******************************************************************
-        // * XBE section names, each 8 bytes max and null terminated
-        // ******************************************************************
+        // Xbe section names, each 8 bytes max and null terminated
         char (*m_szSectionName)[9];
 
-        // ******************************************************************
-        // * XBE sections
-        // ******************************************************************
+        // Xbe sections
         uint08 **m_bzSection;
 
-        // ******************************************************************
-        // * XBE original path
-        // ******************************************************************
+        // Xbe original path
         char m_szPath[260];
 
-        // ******************************************************************
-        // * XBE ascii title, translated from certificate title
-        // ******************************************************************
+        // Xbe ascii title, translated from certificate title
         char m_szAsciiTitle[40];
 
-        // ******************************************************************
-        // * GetTLSData
-        // ******************************************************************
+        // retrieve thread local storage data address
         uint08 *GetTLSData() { if(m_TLS == 0) return 0; else return GetAddr(m_TLS->dwDataStartAddr); }
 
-        // ******************************************************************
-        // * GetTLSIndex
-        // ******************************************************************
+        // retrieve thread local storage index address
         uint32 *GetTLSIndex() { if(m_TLS == 0) return 0; else return (uint32*)GetAddr(m_TLS->dwTLSIndexAddr); }
 
     private:
-        // ******************************************************************
-        // * Constructor Initialization
-        // ******************************************************************
+        // constructor initialization
         void ConstructorInit();
 
-        // ******************************************************************
-        // * return a modifiable pointer inside this structure that 
-        // * corresponds to a virtual address
-        // ******************************************************************
+        // return a modifiable pointer inside this structure that corresponds to a virtual address
         uint08 *GetAddr(uint32 x_dwVirtualAddress);
 
-        // ******************************************************************
-        // * return a modifiable pointer to logo bitmap data
-        // ******************************************************************
+        // return a modifiable pointer to logo bitmap data
         uint08 *GetLogoBitmap(uint32 x_dwSize);
 
-        // ******************************************************************
-        // * used to encode / decode logo bitmap data
-        // ******************************************************************
+        // used to encode/decode logo bitmap data
         union LogoRLE
         {
             struct Eight
@@ -305,25 +256,19 @@ class Xbe : public Error
         };
 };
 
-// ******************************************************************
-// * Debug / Retail XOR Keys
-// ****************************************************************** 
+// debug/retail XOR keys
 const uint32 XOR_EP_DEBUG                            = 0x94859D4B; // Entry Point (Debug)
 const uint32 XOR_EP_RETAIL                           = 0xA8FC57AB; // Entry Point (Retail)
 const uint32 XOR_KT_DEBUG                            = 0xEFB1F152; // Kernel Thunk (Debug)
 const uint32 XOR_KT_RETAIL                           = 0x5B6D40B6; // Kernel Thunk (Retail)
 
-// ******************************************************************
-// * Game region flags for XBE certificate
-// ****************************************************************** 
+// game region flags for Xbe certificate
 const uint32 XBEIMAGE_GAME_REGION_NA                 = 0x00000001;
 const uint32 XBEIMAGE_GAME_REGION_JAPAN              = 0x00000002;
 const uint32 XBEIMAGE_GAME_REGION_RESTOFWORLD        = 0x00000004;
 const uint32 XBEIMAGE_GAME_REGION_MANUFACTURING      = 0x80000000;
  
-// ******************************************************************
-// * Media type flags for XBE certificate
-// ****************************************************************** 
+// media type flags for Xbe certificate
 const uint32 XBEIMAGE_MEDIA_TYPE_HARD_DISK           = 0x00000001;
 const uint32 XBEIMAGE_MEDIA_TYPE_DVD_X2              = 0x00000002;
 const uint32 XBEIMAGE_MEDIA_TYPE_DVD_CD              = 0x00000004;
@@ -338,9 +283,7 @@ const uint32 XBEIMAGE_MEDIA_TYPE_NONSECURE_HARD_DISK = 0x40000000;
 const uint32 XBEIMAGE_MEDIA_TYPE_NONSECURE_MODE      = 0x80000000;
 const uint32 XBEIMAGE_MEDIA_TYPE_MEDIA_MASK          = 0x00FFFFFF;
 
-// ******************************************************************
-// * OpenXDK logo bitmap (used by cxbe by default)
-// ****************************************************************** 
+// OpenXDK logo bitmap (used by cxbe by default)
 extern uint08 OpenXDK[];
 extern uint32 dwSizeOfOpenXDK;
 
