@@ -61,6 +61,10 @@ void XTL::EmuExecutePushBuffer
     // TODO: This technically should be enabled
     //XTL::EmuUpdateDeferredStates();
 
+//	g_pD3DDevice8->Clear(0, NULL, D3DCLEAR_ZBUFFER, 0, 1.0, NULL);
+//	g_pD3DDevice8->SetRenderState(D3DRS_ZENABLE, FALSE);
+//	g_pD3DDevice8->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+
     // NOTE: I believe 0x1808 is actually a seperate command, but I need to verify this.
 
     while(true)

@@ -229,7 +229,6 @@ SOOVPA<10> IDirectSound8_CreateStream_1_0_3936 =
     }
 };
 
-
 // ******************************************************************
 // * CDirectSound::CreateSoundBuffer
 // ******************************************************************
@@ -544,7 +543,7 @@ SOOVPA<11> IDirectSoundBuffer8_SetVolumeB_1_0_3936 =
 
     {
         // IDirectSoundBuffer8_SetVolumeB+0x26 : mov ecx, [esi+0xE0]
-        { 0x26, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x26, 0x8B }, // (Offset,Vclj)/Ð`mrHC*
         { 0x27, 0x8E }, // (Offset,Value)-Pair #2
         { 0x28, 0xE0 }, // (Offset,Value)-Pair #3
         { 0x29, 0x00 }, // (Offset,Value)-Pair #4

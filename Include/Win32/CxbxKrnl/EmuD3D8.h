@@ -68,6 +68,19 @@ HRESULT WINAPI EmuIDirect3D8_CreateDevice
 );
 
 // ******************************************************************
+// * func: EmuIDirect3D8_CheckDeviceFormat
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3D8_CheckDeviceFormat
+(
+    UINT                        Adapter,
+    D3DDEVTYPE                  DeviceType,
+    D3DFORMAT                   AdapterFormat,
+    DWORD                       Usage,
+    X_D3DRESOURCETYPE           RType,
+    X_D3DFORMAT                 CheckFormat
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_GetDeviceCaps
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_GetDeviceCaps

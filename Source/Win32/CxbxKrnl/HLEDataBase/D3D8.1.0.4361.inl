@@ -63,6 +63,36 @@ SOOVPA<8> IDirect3D8_CreateDevice_1_0_4361 =
 };
 
 // ******************************************************************
+// * IDirect3D8_CheckDeviceFormat
+// ******************************************************************
+SOOVPA<8> IDirect3D8_CheckDeviceFormat_1_0_4361 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3D8_CheckDeviceFormat+0x0D : retn 0x18
+        { 0x0D, 0xC2 }, // (Offset,Value)-Pair #1
+        { 0x0E, 0x18 }, // (Offset,Value)-Pair #2
+
+        // IDirect3D8_CheckDeviceFormat+0x15 : jz +0x08
+        { 0x15, 0x74 }, // (Offset,Value)-Pair #3
+        { 0x16, 0x08 }, // (Offset,Value)-Pair #4
+
+        // IDirect3D8_CheckDeviceFormat+0x29 : mov cl, 0x80
+        { 0x29, 0xB1 }, // (Offset,Value)-Pair #5
+        { 0x2A, 0x80 }, // (Offset,Value)-Pair #6
+
+        // IDirect3D8_CheckDeviceFormat+0x61 : retn 0x18
+        { 0x61, 0xC2 }, // (Offset,Value)-Pair #7
+        { 0x62, 0x18 }, // (Offset,Value)-Pair #8
+    }
+};
+
+// ******************************************************************
 // * IDirect3D8_GetAdapterModeCount
 // ******************************************************************
 SOOVPA<12> IDirect3D8_GetAdapterModeCount_1_0_4361 =
@@ -2026,6 +2056,16 @@ OOVPATable D3D8_1_0_4361[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3D8_CreateDevice" 
+        #endif
+    },
+    // IDirect3D8::CheckDeviceFormat
+    {
+        (OOVPA*)&IDirect3D8_CheckDeviceFormat_1_0_4361,
+
+        XTL::EmuIDirect3D8_CheckDeviceFormat,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3D8_CheckDeviceFormat" 
         #endif
     },
     // IDirect3D8::GetAdapterModeCount

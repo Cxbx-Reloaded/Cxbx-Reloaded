@@ -70,6 +70,9 @@ XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
         case 0x06: // Swizzled   (X_D3DFMT_A8R8G8B8)
             return D3DFMT_A8R8G8B8;
 
+        case 0x16: // Linear     (X_D3DFMT_LIN_R8B8)
+            return D3DFMT_R5G6B5;   // NOTE: HACK: Totally and utterly wrong :) 
+
         case 0x3F: // Linear     (X_D3DFMT_LIN_A8B8G8R8)
             return D3DFMT_A8R8G8B8; // NOTE: HACK: R<->B Swapped!
 

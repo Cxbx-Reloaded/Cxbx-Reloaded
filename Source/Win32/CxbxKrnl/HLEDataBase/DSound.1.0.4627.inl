@@ -1062,226 +1062,6 @@ SOOVPA<11> IDirectSound8_SetDopplerFactor_1_0_4627 =
 };
 
 // ******************************************************************
-// * CDirectSound::CommitDeferredSettings
-// ******************************************************************
-SOOVPA<11> CDirectSound_CommitDeferredSettings_1_0_4627 =
-{
-    0,  // Large == 0
-    11, // Count == 11
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        // CDirectSound_CommitDeferredSettings+0x10 : movzx eax, al
-        { 0x10, 0x0F }, // (Offset,Value)-Pair #1
-        { 0x11, 0xB6 }, // (Offset,Value)-Pair #2
-        { 0x12, 0xC0 }, // (Offset,Value)-Pair #3
-
-        // CDirectSound_CommitDeferredSettings+0x27 : mov eax, 0x80004005
-        { 0x27, 0xB8 }, // (Offset,Value)-Pair #4
-        { 0x28, 0x05 }, // (Offset,Value)-Pair #5
-        { 0x29, 0x40 }, // (Offset,Value)-Pair #6
-        { 0x2B, 0x80 }, // (Offset,Value)-Pair #7
-
-        // CDirectSound_CommitDeferredSettings+0x5C : and [eax+0xA4], esi
-        { 0x5C, 0x21 }, // (Offset,Value)-Pair #8
-        { 0x5D, 0xB0 }, // (Offset,Value)-Pair #9
-        { 0x5E, 0xA4 }, // (Offset,Value)-Pair #10
-
-        // CDirectSound_CommitDeferredSettings+0x78 : leave
-        { 0x78, 0xC9 }, // (Offset,Value)-Pair #11
-    }
-};
-
-// s+
-// ******************************************************************
-// * CDirectSoundVoice::SetMaxDistance
-// ******************************************************************
-SOOVPA<9> CDirectSoundVoice_SetMaxDistance_1_0_4627 =
-{
-    0,  // Large == 0
-    9,  // Count == 9
-
-    XREF_DSVOICESETMAXDISTANCE, // XRef Is Saved
-    0,                          // XRef Not Used
-
-    {
-        // CDirectSoundVoice_SetMaxDistance+0x0D : mov edx, [esp+arg_4]
-        { 0x0D, 0x8B },
-        { 0x0E, 0x54 },
-        { 0x0F, 0x24 },
-        { 0x10, 0x08 },
-
-        // CDirectSoundVoice_SetMaxDistance+0x11 : mov [eax+38h], edx
-        { 0x11, 0x89 },
-        { 0x12, 0x50 },
-        { 0x13, 0x38 },
-
-        // CDirectSoundVoice_SetMaxDistance+0x30 : retn 0Ch
-        { 0x31, 0x0C },
-        { 0x32, 0x00 }
-    }
-};
-
-// ******************************************************************
-// * CDirectSoundBuffer::SetMaxDistance
-// ******************************************************************
-SOOVPA<10> CDirectSoundBuffer_SetMaxDistance_1_0_4627 =
-{
-    0,  // Large == 0
-    10, // Count == 10
-
-    XREF_DSBUFFERSETMAXDISTANCE, // XRef Is Saved
-    1,                           // XRef Is Used
-
-    {
-        // CDirectSoundBuffer_SetMaxDistance+0x39 : call [CDirectSoundVoice::SetMaxDistance]
-        { 0x3A, XREF_DSVOICESETMAXDISTANCE },
-
-        // CDirectSoundBuffer_SetMaxDistance+0x21 : mov eax, 80004005h
-        { 0x22, 0x05 },
-        { 0x23, 0x40 },
-        { 0x24, 0x00 },
-        { 0x25, 0x80 },
-
-        // CDirectSoundBuffer_SetMaxDistance+0x32 : fstp    [esp+0Ch+var_C]
-        { 0x32, 0xD9 },
-        { 0x33, 0x1C },
-        { 0x34, 0x24 },
-
-        // CDirectSoundBuffer_SetMaxDistance+0x53 : retn 0Ch
-        { 0x54, 0x0C },
-        { 0x55, 0x00 }
-    }
-};
-
-// ******************************************************************
-// * IDirectSoundBuffer_SetMaxDistance
-// ******************************************************************
-SOOVPA<10> IDirectSoundBuffer_SetMaxDistance_1_0_4627 =
-{
-    0,  // Large == 0
-    10, // Count == 10
-
-    -1, // XRef Not Saved
-    1,  // XRef Is Used
-
-    {
-        // IDirectSoundBuffer_SetMaxDistance+0x1C : call [CDirectSoundBuffer::SetMaxDistance]
-        { 0x1D, XREF_DSBUFFERSETMAXDISTANCE },
-
-        // IDirectSoundBuffer_SetMaxDistance+0x04 : fld [esp+4+arg_4]
-        { 0x04, 0xD9 },
-        { 0x05, 0x44 },
-        { 0x06, 0x24 },
-        { 0x07, 0x0C },
-
-        // IDirectSoundBuffer_SetMaxDistance+0x12 : add eax, 0FFFFFFE4
-        { 0x12, 0x83 },
-        { 0x13, 0xC0 },
-        { 0x14, 0xE4 },
-
-        // IDirectSoundBuffer_SetMaxDistance+0x21 : retn 0Ch
-        { 0x22, 0x0C },
-        { 0x23, 0x00 }
-    }
-};
-
-// ******************************************************************
-// * CDirectSoundVoice::SetMinDistance
-// ******************************************************************
-SOOVPA<9> CDirectSoundVoice_SetMinDistance_1_0_4627 =
-{
-    0,  // Large == 0
-    9,  // Count == 9
-
-    XREF_DSVOICESETMINDISTANCE, // XRef Is Saved
-    0,                          // XRef Not Used
-
-    {
-        // CDirectSoundVoice_SetMinDistance+0x0D : mov edx, [esp+arg_4]
-        { 0x0D, 0x8B },
-        { 0x0E, 0x54 },
-        { 0x0F, 0x24 },
-        { 0x10, 0x08 },
-
-        // CDirectSoundVoice_SetMinDistance+0x11 : mov [eax+34h], edx
-        { 0x11, 0x89 },
-        { 0x12, 0x50 },
-        { 0x13, 0x34 },
-
-        // CDirectSoundVoice_SetMinDistance+0x30 : retn 0Ch
-        { 0x31, 0x0C },
-        { 0x32, 0x00 }
-    }
-};
-
-// ******************************************************************
-// * CDirectSoundBuffer::SetMinDistance
-// ******************************************************************
-SOOVPA<10> CDirectSoundBuffer_SetMinDistance_1_0_4627 =
-{
-    0,  // Large == 0
-    10, // Count == 10
-
-    XREF_DSBUFFERSETMINDISTANCE, // XRef Is Saved
-    1,                           // XRef Is Used
-
-    {
-        // CDirectSoundBuffer_SetMinDistance+0x39 : call [CDirectSoundVoice::SetMinDistance]
-        { 0x3A, XREF_DSVOICESETMINDISTANCE },
-
-        // CDirectSoundBuffer_SetMinDistance+0x21 : mov eax, 80004005h
-        { 0x22, 0x05 },
-        { 0x23, 0x40 },
-        { 0x24, 0x00 },
-        { 0x25, 0x80 },
-
-        // CDirectSoundBuffer_SetMinDistance+0x32 : fstp    [esp+0Ch+var_C]
-        { 0x32, 0xD9 },
-        { 0x33, 0x1C },
-        { 0x34, 0x24 },
-
-        // CDirectSoundBuffer_SetMinDistance+0x53 : retn 0Ch
-        { 0x54, 0x0C },
-        { 0x55, 0x00 }
-    }
-};
-
-// ******************************************************************
-// * IDirectSoundBuffer_SetMinDistance
-// ******************************************************************
-SOOVPA<10> IDirectSoundBuffer_SetMinDistance_1_0_4627 =
-{
-    0,  // Large == 0
-    10, // Count == 10
-
-    -1, // XRef Not Saved
-    1,  // XRef Is Used
-
-    {
-        // IDirectSoundBuffer_SetMinDistance+0x1C : call [CDirectSoundBuffer::SetMinDistance]
-        { 0x1D, XREF_DSBUFFERSETMINDISTANCE },
-
-        // IDirectSoundBuffer_SetMinDistance+0x04 : fld [esp+4+arg_4]
-        { 0x04, 0xD9 },
-        { 0x05, 0x44 },
-        { 0x06, 0x24 },
-        { 0x07, 0x0C },
-
-        // IDirectSoundBuffer_SetMinDistance+0x12 : add eax, 0FFFFFFE4
-        { 0x12, 0x83 },
-        { 0x13, 0xC0 },
-        { 0x14, 0xE4 },
-
-        // IDirectSoundBuffer_SetMinDistance+0x21 : retn 0Ch
-        { 0x22, 0x0C },
-        { 0x23, 0x00 }
-    }
-};
-
-// ******************************************************************
 // * CDirectSoundVoice::SetRolloffFactor
 // ******************************************************************
 SOOVPA<9> CDirectSoundVoice_SetRolloffFactor_1_0_4627 =
@@ -2618,9 +2398,9 @@ OOVPATable DSound_1_0_4627[] =
         "EmuIDirectSound8_SetDopplerFactor" 
         #endif
     },
-    // CDirectSound::CommitDeferredSettings
+    // CDirectSound::CommitDeferredSettings (* unchanged since 4432 *)
     {
-        (OOVPA*)&CDirectSound_CommitDeferredSettings_1_0_4627,
+        (OOVPA*)&CDirectSound_CommitDeferredSettings_1_0_4432,
 
         XTL::EmuCDirectSound_CommitDeferredSettings,
 
@@ -2628,57 +2408,57 @@ OOVPATable DSound_1_0_4627[] =
         "EmuCDirectSound_CommitDeferredSettings" 
         #endif
     },
-    // s+
-    // CDirectSoundVoice::SetMaxDistance (XREF)
+    // CDirectSoundVoice::SetMaxDistance (XREF) (* unchanged since 4432 *)
     {
-        (OOVPA*)&CDirectSoundVoice_SetMaxDistance_1_0_4627, 0,
+        (OOVPA*)&CDirectSoundVoice_SetMaxDistance_1_0_4432, 0,
 
         #ifdef _DEBUG_TRACE
         "CDirectSoundVoice::SetMaxDistance (XRef)" 
         #endif
     },
-    // CDirectSoundBuffer::SetMaxDistance (XREF)
+    // CDirectSoundBuffer::SetMaxDistance (XREF) (* unchanged since 4432 *)
     {
-        (OOVPA*)&CDirectSoundBuffer_SetMaxDistance_1_0_4627, 0,
+        (OOVPA*)&CDirectSoundBuffer_SetMaxDistance_1_0_4432, 0,
 
         #ifdef _DEBUG_TRACE
         "CDirectSoundBuffer::SetMaxDistance (XRef)" 
         #endif
     },
-    // IDirectSoundBuffer_SetMaxDistance
+    // IDirectSoundBuffer_SetMaxDistance (* unchanged since 4432 *)
     {
-        (OOVPA*)&IDirectSoundBuffer_SetMaxDistance_1_0_4627,
+        (OOVPA*)&IDirectSoundBuffer_SetMaxDistance_1_0_4432,
         XTL::EmuIDirectSoundBuffer8_SetMaxDistance,
 
         #ifdef _DEBUG_TRACE
         "IDirectSoundBuffer8_SetMaxDistance" 
         #endif
     },
-    // CDirectSoundVoice::SetMinDistance (XREF)
+    // CDirectSoundVoice::SetMinDistance (XREF) (* unchanged since 4432 *)
     {
-        (OOVPA*)&CDirectSoundVoice_SetMinDistance_1_0_4627, 0,
+        (OOVPA*)&CDirectSoundVoice_SetMinDistance_1_0_4432, 0,
 
         #ifdef _DEBUG_TRACE
         "CDirectSoundVoice::SetMinDistance (XRef)" 
         #endif
     },
-    // CDirectSoundBuffer::SetMinDistance (XREF)
+    // CDirectSoundBuffer::SetMinDistance (XREF) (* unchanged since 4432 *)
     {
-        (OOVPA*)&CDirectSoundBuffer_SetMinDistance_1_0_4627, 0,
+        (OOVPA*)&CDirectSoundBuffer_SetMinDistance_1_0_4432, 0,
 
         #ifdef _DEBUG_TRACE
         "CDirectSoundBuffer::SetMinDistance (XRef)" 
         #endif
     },
-    // IDirectSoundBuffer_SetMinDistance
+    // IDirectSoundBuffer_SetMinDistance (* unchanged since 4432 *)
     {
-        (OOVPA*)&IDirectSoundBuffer_SetMinDistance_1_0_4627,
+        (OOVPA*)&IDirectSoundBuffer_SetMinDistance_1_0_4432,
         XTL::EmuIDirectSoundBuffer8_SetMinDistance,
 
         #ifdef _DEBUG_TRACE
         "IDirectSoundBuffer8_SetMinDistance" 
         #endif
     },
+    // s+
     // CDirectSoundVoice::SetRolloffFactor (XREF)
     {
         (OOVPA*)&CDirectSoundVoice_SetRolloffFactor_1_0_4627, 0,

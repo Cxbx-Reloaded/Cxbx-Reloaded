@@ -76,8 +76,8 @@ static void                         EmuAdjustPower2(UINT *dwWidth, UINT *dwHeigh
 
 // Static Variable(s)
 static GUID                         g_ddguid;               // DirectDraw driver GUID
-static HMONITOR						g_hMonitor      = NULL; // Handle to DirectDraw monitor
-static XTL::LPDIRECT3D8				g_pD3D8         = NULL; // Direct3D8
+static HMONITOR                     g_hMonitor      = NULL; // Handle to DirectDraw monitor
+static XTL::LPDIRECT3D8             g_pD3D8         = NULL; // Direct3D8
 static BOOL                         g_bSupportsYUY2 = FALSE;// Does device support YUY2 overlays?
 static XTL::LPDIRECTDRAW7           g_pDD7          = NULL; // DirectDraw7
 static DWORD                        g_dwOverlayW    = 640;  // Cached Overlay Width
@@ -251,7 +251,15 @@ static BOOL WINAPI EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescrip
     {
         g_hMonitor = hm;
         dwEnumCount = 0;
-        memcpy(&g_ddguid, lpGUID, sizeof(GUID));
+        if(lpGUID != 0)
+        {
+            memcpy(&g_ddguid, lpGUID, sizeof(GUID));
+        }
+        else
+        {
+            memset(&g_ddguid, 0, sizeof(GUID));
+        }
+
         return FALSE;
     }
 
@@ -415,7 +423,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
                     if(bAutoPaused)
                     {
                         bAutoPaused = false;
-			            EmuResume();
+                        EmuResume();
                     }
                 }
                 break;
@@ -428,7 +436,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
                     if(!g_bEmuSuspended)
                     {
                         bAutoPaused = true;
-			            EmuSuspend();
+                        EmuSuspend();
                     }
                 }
                 break;
@@ -727,8 +735,8 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     ddsd2.dwSize = sizeof(ddsd2);
                     ddsd2.dwFlags = DDSD_CAPS;
                     ddsd2.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
-		                
-	                HRESULT hRet = g_pDD7->CreateSurface(&ddsd2, &g_pDDSPrimary, 0);
+                        
+                    HRESULT hRet = g_pDD7->CreateSurface(&ddsd2, &g_pDDSPrimary, 0);
 
                     if(FAILED(hRet))
                         EmuCleanup("Could not create primary surface (0x%.08X)", hRet);
@@ -922,6 +930,52 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
     EmuSwapFS();   // XBox FS
 
     return g_EmuCDPD.hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3D8_CheckDeviceFormat
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3D8_CheckDeviceFormat
+(
+    UINT                        Adapter,
+    D3DDEVTYPE                  DeviceType,
+    D3DFORMAT                   AdapterFormat,
+    DWORD                       Usage,
+    X_D3DRESOURCETYPE           RType,
+    X_D3DFORMAT                 CheckFormat
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3D8_CheckDeviceFormat\n"
+               "(\n"
+               "   Adapter                   : 0x%.08X\n"
+               "   DeviceType                : 0x%.08X\n"
+               "   AdapterFormat             : 0x%.08X\n"
+               "   Usage                     : 0x%.08X\n"
+               "   RType                     : 0x%.08X\n"
+               "   CheckFormat               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Adapter, DeviceType, AdapterFormat,
+               Usage, RType, CheckFormat);
+    }
+    #endif
+
+    if(RType > 7)
+        EmuCleanup("RType > 7");
+
+    HRESULT hRet = g_pD3D8->CheckDeviceFormat
+    (
+        g_XBVideo.GetDisplayAdapter(), (g_XBVideo.GetDirect3DDevice() == 0) ? XTL::D3DDEVTYPE_HAL : XTL::D3DDEVTYPE_REF,
+        EmuXB2PC_D3DFormat(AdapterFormat), Usage, RType, EmuXB2PC_D3DFormat(CheckFormat)
+    );
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
 }
 
 // ******************************************************************
@@ -2348,7 +2402,10 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
         *pRefCount = 1;
 
         // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
-        *ppTexture = (X_D3DTexture*)(dwPtr | 0x80000000);
+        *ppTexture = new X_D3DTexture();
+        
+        (*ppTexture)->Data = X_D3DRESOURCE_DATA_FLAG_YUVSURF;
+        (*ppTexture)->Lock = dwPtr;
 
         hRet = D3D_OK;
     }
@@ -2848,7 +2905,7 @@ static void EmuFlushD3DIVB()
                     #endif
 
                     break;
-				case D3DFVF_TEX2:
+                case D3DFVF_TEX2:
                     memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord1.x, sizeof(XTL::D3DXVECTOR2));
                     i += sizeof(XTL::D3DXVECTOR2);
                     memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord2.x, sizeof(XTL::D3DXVECTOR2));
@@ -2860,7 +2917,7 @@ static void EmuFlushD3DIVB()
                     #endif
 
                     break;
-				case D3DFVF_TEX3:
+                case D3DFVF_TEX3:
                     memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord1.x, sizeof(XTL::D3DXVECTOR2));
                     i += sizeof(XTL::D3DXVECTOR2);
                     memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord2.x, sizeof(XTL::D3DXVECTOR2));
@@ -2875,7 +2932,7 @@ static void EmuFlushD3DIVB()
                     #endif
 
                     break;
-				case D3DFVF_TEX4:
+                case D3DFVF_TEX4:
                     memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord1.x, sizeof(XTL::D3DXVECTOR2));
                     i += sizeof(XTL::D3DXVECTOR2);
                     memcpy(&pStreamData[i], &g_D3DIVB[r].TexCoord2.x, sizeof(XTL::D3DXVECTOR2));
@@ -2893,7 +2950,7 @@ static void EmuFlushD3DIVB()
                     #endif
 
                     break;
-			}
+            }
         }
 
         // close any outstanding locks
@@ -3441,8 +3498,8 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
     DWORD dwCommonType = pResource->Common & X_D3DCOMMON_TYPE_MASK;
 
-	// add the offset of the current texture to the base
-	pBase = (PVOID)((DWORD)pBase+pThis->Data);
+    // add the offset of the current texture to the base
+    pBase = (PVOID)((DWORD)pBase+pThis->Data);
 
     // Determine the resource type, and initialize
     switch(dwCommonType)
@@ -3944,9 +4001,9 @@ ULONG WINAPI XTL::EmuIDirect3DResource8_Release
 
     ULONG uRet = 0;
 
-    if((uint32)pThis & 0x80000000)
+    if(pThis->Data == X_D3DRESOURCE_DATA_FLAG_YUVSURF)
     {
-        DWORD  dwPtr = (DWORD)pThis & 0x7FFFFFFF;
+        DWORD  dwPtr = (DWORD)pThis->Lock;
         DWORD *pRefCount = (DWORD*)(dwPtr + g_dwOverlayW*g_dwOverlayH*2);
 
         if(--(*pRefCount) == 0)
@@ -4140,7 +4197,7 @@ HRESULT WINAPI XTL::EmuIDirect3DSurface8_GetDesc
 
     HRESULT hRet;
 
-    if((uint32)pThis & 0x80000000)
+    if(pThis->Data == X_D3DRESOURCE_DATA_FLAG_YUVSURF)
     {
         pDesc->Format = EmuPC2XB_D3DFormat(D3DFMT_YUY2);
         pDesc->Height = g_dwOverlayH;
@@ -4219,10 +4276,10 @@ HRESULT WINAPI XTL::EmuIDirect3DSurface8_LockRect
 
     HRESULT hRet;
 
-    if((uint32)pThis & 0x80000000)
+    if(pThis->Data == X_D3DRESOURCE_DATA_FLAG_YUVSURF)
     {
         pLockedRect->Pitch = g_dwOverlayW*2;
-        pLockedRect->pBits = (void*)((uint32)pThis & 0x7FFFFFFF);
+        pLockedRect->pBits = (PVOID)pThis->Lock;
 
         hRet = D3D_OK;
     }
@@ -4301,11 +4358,11 @@ XTL::X_D3DResource * WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel2
     X_D3DSurface *pSurfaceLevel;
 
     // In a special situation, we are actually returning a memory ptr with high bit set
-    if((uint32)pThis & 0x80000000)
+    if(pThis->Data == X_D3DRESOURCE_DATA_FLAG_YUVSURF)
     {
         DWORD dwSize = g_dwOverlayW*g_dwOverlayH*2;
 
-        DWORD *pRefCount = (DWORD*)(((DWORD)pThis & 0x7FFFFFFF) + dwSize);
+        DWORD *pRefCount = (DWORD*)((DWORD)pThis->Lock + dwSize);
 
         // initialize ref count
         (*pRefCount)++;
@@ -4346,23 +4403,36 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_LockRect
                GetCurrentThreadId(), pThis, Level, pLockedRect, pRect, Flags);
     }
     #endif
-        
-    EmuVerifyResourceIsRegistered(pThis);
 
-    IDirect3DTexture8 *pTexture8 = pThis->EmuTexture8;
+    HRESULT hRet;
 
-    DWORD NewFlags = 0;
+    // check if we have an unregistered YUV2 resource
+    if( pThis != 0 && pThis->Data == X_D3DRESOURCE_DATA_FLAG_YUVSURF)
+    {
+        pLockedRect->Pitch = g_dwOverlayW*2;
+        pLockedRect->pBits = (PVOID)pThis->Lock;
 
-    if(Flags & 0x80)
-        NewFlags |= D3DLOCK_READONLY;
+        hRet = D3D_OK;
+    }
+    else
+    {
+        EmuVerifyResourceIsRegistered(pThis);
 
-    if(Flags & !(0x80 | 0x40))
-        EmuCleanup("EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)", Flags);
+        IDirect3DTexture8 *pTexture8 = pThis->EmuTexture8;
 
-    // Remove old lock(s)
-    pTexture8->UnlockRect(Level);
+        DWORD NewFlags = 0;
 
-    HRESULT hRet = pTexture8->LockRect(Level, pLockedRect, pRect, NewFlags);
+        if(Flags & 0x80)
+            NewFlags |= D3DLOCK_READONLY;
+
+        if(Flags & !(0x80 | 0x40))
+            EmuCleanup("EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)", Flags);
+
+        // Remove old lock(s)
+        pTexture8->UnlockRect(Level);
+
+        hRet = pTexture8->LockRect(Level, pLockedRect, pRect, NewFlags);
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -4397,11 +4467,11 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel
     HRESULT hRet;
 
     // if highest bit is set, this is actually a raw memory pointer (for YUY2 simulation)
-    if((uint32)pThis & 0x80000000)
+    if(pThis->Data == X_D3DRESOURCE_DATA_FLAG_YUVSURF)
     {
         DWORD dwSize = g_dwOverlayW*g_dwOverlayH*2;
 
-        DWORD *pRefCount = (DWORD*)(((DWORD)pThis & 0x7FFFFFFF) + dwSize);
+        DWORD *pRefCount = (DWORD*)((DWORD)pThis->Lock + dwSize);
 
         // initialize ref count
         (*pRefCount)++;
@@ -4717,7 +4787,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
         // copy data
         {
             char *pDest = (char*)ddsd2.lpSurface;
-            char *pSour = (char*)((uint32)pSurface & 0x7FFFFFFF);
+            char *pSour = (char*)pSurface->Lock;
 
             int w = g_dwOverlayW;
             int h = g_dwOverlayH;
@@ -4787,7 +4857,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
         // if we obtained the backbuffer, manually translate the YUY2 into the backbuffer format
         if(hRet == D3D_OK && pBackBuffer->LockRect(&LockedRectDest, NULL, NULL) == D3D_OK)
         {
-            uint08 *pCurByte = (uint08*)((uint32)pSurface & 0x7FFFFFFF);
+            uint08 *pCurByte = (uint08*)pSurface->Lock;
 
             uint08 *pDest = (uint08*)LockedRectDest.pBits;
 
