@@ -611,11 +611,9 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
     // ******************************************************************
     {
         g_pCachedRenderTarget = new X_D3DSurface();
-        printf("g_pCachedRenderTarget : 0x%.08X\n", g_pCachedRenderTarget);
         g_pD3DDevice8->GetRenderTarget(&g_pCachedRenderTarget->EmuSurface8);
 
         g_pCachedZStencilSurface = new X_D3DSurface();
-        printf("g_pCachedZStencilSurface : 0x%.08X\n", g_pCachedZStencilSurface);
         g_pD3DDevice8->GetDepthStencilSurface(&g_pCachedZStencilSurface->EmuSurface8);
     }
 
@@ -1006,8 +1004,6 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateImageSurface
 
     *ppBackBuffer = new X_D3DSurface();
 
-    printf("New X_D3DSurface : 0x%.08X\n", *ppBackBuffer);
-
     D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
 
     HRESULT hRet = g_pD3DDevice8->CreateImageSurface(Width, Height, PCFormat, &((*ppBackBuffer)->EmuSurface8));
@@ -1075,8 +1071,6 @@ XTL::X_D3DSurface* WINAPI XTL::EmuIDirect3DDevice8_GetBackBuffer2
     */
 
     X_D3DSurface *pBackBuffer = new X_D3DSurface();
-
-    printf("New X_D3DSurface : 0x%.08X\n", pBackBuffer);
 
     if(BackBuffer == -1)
         BackBuffer = 0;
@@ -2512,14 +2506,16 @@ VOID WINAPI XTL::EmuGet2DSurfaceDesc
 
     EmuVerifyResourceIsRegistered(pPixelContainer);
 
-    // TODO: HACK: notice that this is only safe to wrap a Texture Get2DSurfaceDesc,
-    // as it makes an assumption here. If there is some way to determine if this pointer
-    // is a texture or a surface, it'd be alot better!
-    IDirect3DTexture8 *pTexture8 = pPixelContainer->EmuTexture8;
-
     D3DSURFACE_DESC SurfaceDesc;
 
-    HRESULT hRet = pTexture8->GetLevelDesc(dwLevel, &SurfaceDesc);
+    ZeroMemory(&SurfaceDesc, sizeof(SurfaceDesc));
+
+    HRESULT hRet;
+
+    if(dwLevel == 0xFEFEFEFE)
+        hRet = pPixelContainer->EmuSurface8->GetDesc(&SurfaceDesc);
+    else
+        hRet = pPixelContainer->EmuTexture8->GetLevelDesc(dwLevel, &SurfaceDesc);
 
     // ******************************************************************
     // * Rearrange into windows format (remove D3DPool)
@@ -2575,7 +2571,7 @@ VOID WINAPI XTL::EmuGet2DSurfaceDescD
     }
     #endif
 
-    EmuGet2DSurfaceDesc(pPixelContainer, 0, pDesc);
+    EmuGet2DSurfaceDesc(pPixelContainer, 0xFEFEFEFE, pDesc);
 
     return;
 }
@@ -2834,8 +2830,6 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel
     IDirect3DTexture8 *pTexture8 = pThis->EmuTexture8;
 
     *ppSurfaceLevel = new X_D3DSurface();
-
-    printf("New X_D3DSurface : 0x%.08X\n", *ppSurfaceLevel);
 
     HRESULT hRet = pTexture8->GetSurfaceLevel(Level, &((*ppSurfaceLevel)->EmuSurface8));
 
