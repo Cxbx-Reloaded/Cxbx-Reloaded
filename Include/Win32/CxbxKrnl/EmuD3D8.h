@@ -660,9 +660,9 @@ VOID WINAPI EmuIDirect3DDevice8_GetBackBuffer
 );
 
 // ******************************************************************
-// * func: EmuIDirect3D8_SetViewport
+// * func: EmuIDirect3DDevice8_SetViewport
 // ******************************************************************
-HRESULT WINAPI EmuIDirect3D8_SetViewport
+HRESULT WINAPI EmuIDirect3DDevice8_SetViewport
 (
     CONST D3DVIEWPORT8 *pViewport
 );
@@ -832,9 +832,21 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreateCubeTexture
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_CreateIndexBuffer
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_CreateIndexBuffer
+(
+    UINT                 Length,
+    DWORD                Usage,
+    D3DFORMAT            Format,
+    D3DPOOL              Pool,
+    X_D3DIndexBuffer   **ppIndexBuffer
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetIndices
 // ******************************************************************
-VOID WINAPI EmuIDirect3DDevice8_SetIndices
+HRESULT WINAPI EmuIDirect3DDevice8_SetIndices
 (
     X_D3DIndexBuffer   *pIndexData,
     UINT                BaseVertexIndex
@@ -1346,6 +1358,15 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreatePalette
 (
     X_D3DPALETTESIZE    Size,
     X_D3DPalette      **ppPalette
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderTarget
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetRenderTarget
+(
+    X_D3DSurface    *pRenderTarget,
+    X_D3DSurface    *pNewZStencil
 );
 
 // ******************************************************************

@@ -1189,9 +1189,9 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_GetBackBuffer
 }
 
 // ******************************************************************
-// * func: EmuIDirect3D8_SetViewport
+// * func: EmuIDirect3DDevice8_SetViewport
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirect3D8_SetViewport
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetViewport
 (
     CONST D3DVIEWPORT8 *pViewport
 )
@@ -1203,7 +1203,7 @@ HRESULT WINAPI XTL::EmuIDirect3D8_SetViewport
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        printf("EmuD3D8 (0x%X): EmuIDirect3D8_SetViewport\n"
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetViewport\n"
                "(\n"
                "   pViewport           : 0x%.08X\n"
                ");\n",
@@ -1989,9 +1989,58 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateCubeTexture
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_CreateIndexBuffer
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateIndexBuffer
+(
+    UINT                 Length,
+    DWORD                Usage,
+    D3DFORMAT            Format,
+    D3DPOOL              Pool,
+    X_D3DIndexBuffer   **ppIndexBuffer
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreateIndexBuffer\n"
+               "(\n"
+               "   Length              : 0x%.08X\n"
+               "   Usage               : 0x%.08X\n"
+               "   Format              : 0x%.08X\n"
+               "   Pool                : 0x%.08X\n"
+               "   ppIndexBuffer       : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Length, Usage, Format, Pool, ppIndexBuffer);
+    }
+    #endif
+
+    *ppIndexBuffer = new X_D3DIndexBuffer();
+
+    // ******************************************************************
+    // * redirect to windows d3d
+    // ******************************************************************
+    HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer
+    (
+        Length, D3DUSAGE_DYNAMIC, D3DFMT_INDEX16, D3DPOOL_MANAGED, &((*ppIndexBuffer)->EmuIndexBuffer8)
+    );
+
+    if(FAILED(hRet))
+        printf("*Warning* CreateIndexBuffer FAILED\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetIndices
 // ******************************************************************
-VOID WINAPI XTL::EmuIDirect3DDevice8_SetIndices
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetIndices
 (
     X_D3DIndexBuffer   *pIndexData,
     UINT                BaseVertexIndex
@@ -2013,15 +2062,20 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetIndices
     }
     #endif
 
-    EmuVerifyResourceIsRegistered(pIndexData);
+    IDirect3DIndexBuffer8 *pIndexBuffer = 0;
 
-    IDirect3DIndexBuffer8 *pIndexBuffer = pIndexData->EmuIndexBuffer8;
+    if(pIndexData != 0)
+    {
+        EmuVerifyResourceIsRegistered(pIndexData);
 
-    g_pD3DDevice8->SetIndices(pIndexBuffer, BaseVertexIndex);
+        pIndexBuffer = pIndexData->EmuIndexBuffer8;
+    }
+
+    HRESULT hRet = g_pD3DDevice8->SetIndices(pIndexBuffer, BaseVertexIndex);
 
     EmuSwapFS();   // XBox FS
 
-    return;
+    return hRet;
 }
 
 // ******************************************************************
@@ -5123,6 +5177,56 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_LightEnable
 
     EmuSwapFS();   // XBox FS
     
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderTarget
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetRenderTarget
+(
+    X_D3DSurface    *pRenderTarget,
+    X_D3DSurface    *pNewZStencil
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderTarget\n"
+               "(\n"
+               "   pRenderTarget       : 0x%.08X\n"
+               "   pNewZStencil        : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pRenderTarget, pNewZStencil);
+    }
+    #endif
+
+    IDirect3DSurface8 *pPCRenderTarget = 0;
+    IDirect3DSurface8 *pPCNewZStencil  = 0;
+
+    if(pRenderTarget != 0)
+    {
+        EmuVerifyResourceIsRegistered(pRenderTarget);
+        pPCRenderTarget = pRenderTarget->EmuSurface8;
+    }
+
+    if(pNewZStencil != 0)
+    {
+        EmuVerifyResourceIsRegistered(pNewZStencil);
+        pPCNewZStencil  = pNewZStencil->EmuSurface8;
+    }
+
+    HRESULT hRet = g_pD3DDevice8->SetRenderTarget(pPCRenderTarget, pPCNewZStencil);
+
+    EmuSwapFS();   // XBox FS
+    
+    if(FAILED(hRet))
+        EmuWarning("SetRenderTarget Failed! (0x%.08X)", hRet);
+
     return hRet;
 }
 

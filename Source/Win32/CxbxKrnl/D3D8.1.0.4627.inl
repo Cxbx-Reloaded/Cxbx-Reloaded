@@ -163,9 +163,9 @@ SOOVPA<9> IDirect3D8_KickOffAndWaitForIdle_1_0_4627 =
 };
 
 // ******************************************************************
-// * IDirect3D8_SetViewport
+// * IDirect3DDevice8_SetViewport
 // ******************************************************************
-SOOVPA<9> IDirect3D8_SetViewport_1_0_4627 =
+SOOVPA<9> IDirect3DDevice8_SetViewport_1_0_4627 =
 {
     0,  // Large == 0
     9,  // Count == 9
@@ -174,17 +174,17 @@ SOOVPA<9> IDirect3D8_SetViewport_1_0_4627 =
     0,  // XRef Not Used
 
     {
-        // IDirect3D8_SetViewport+0x0A : mov eax, [esi+0x21B4]
+        // IDirect3DDevice8_SetViewport+0x0A : mov eax, [esi+0x21B4]
         { 0x0A, 0x8B }, // (Offset,Value)-Pair #1
         { 0x0B, 0x86 }, // (Offset,Value)-Pair #2
         { 0x0C, 0xB4 }, // (Offset,Value)-Pair #3
         { 0x0D, 0x21 }, // (Offset,Value)-Pair #4
 
-        // IDirect3D8_SetViewport+0x63 : shl edi, cl
+        // IDirect3DDevice8_SetViewport+0x63 : shl edi, cl
         { 0x63, 0xD3 }, // (Offset,Value)-Pair #5
         { 0x64, 0xE7 }, // (Offset,Value)-Pair #6
 
-        // IDirect3D8_SetViewport+0xDF : and ecx, 0x0F
+        // IDirect3DDevice8_SetViewport+0xDF : and ecx, 0x0F
         { 0xDF, 0x83 }, // (Offset,Value)-Pair #7
         { 0xE0, 0xE1 }, // (Offset,Value)-Pair #8
         { 0xE1, 0x0F }, // (Offset,Value)-Pair #9
@@ -1497,12 +1497,12 @@ OOVPATable D3D8_1_0_4627[] =
     },
     // IDirect3DDevice8::SetViewport
     {
-        (OOVPA*)&IDirect3D8_SetViewport_1_0_4627,
+        (OOVPA*)&IDirect3DDevice8_SetViewport_1_0_4627,
 
-        XTL::EmuIDirect3D8_SetViewport,
+        XTL::EmuIDirect3DDevice8_SetViewport,
 
         #ifdef _DEBUG_TRACE
-        "EmuIDirect3D8_SetViewport"
+        "EmuIDirect3DDevice8_SetViewport"
         #endif
     },
     // IDirect3DDevice8::SetShaderConstantMode
