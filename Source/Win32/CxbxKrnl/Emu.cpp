@@ -49,6 +49,7 @@ namespace xboxkrnl
 #include "HLEDataBase.h"
 
 #include <math.h>
+#include <Tlhelp32.h>
 
 // ******************************************************************
 // * global / static

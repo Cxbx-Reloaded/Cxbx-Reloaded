@@ -276,10 +276,8 @@ DWORD WINAPI xapi::EmuXInputGetState
     //       and they are always normal Controllers
     if((int)hDevice >= 1 && (int)hDevice <= 4)
     {
-        EmuDInputPoll();
-
         if((int)hDevice == 1)
-            memcpy(pState, &g_EmuController1, sizeof(XINPUT_STATE));
+            EmuDInputPoll(pState);
 
         ret = ERROR_SUCCESS;
     }

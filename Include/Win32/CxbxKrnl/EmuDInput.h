@@ -43,11 +43,6 @@ namespace xapi
 };
 
 // ******************************************************************
-// * exported globals
-// ******************************************************************
-extern xapi::XINPUT_STATE g_EmuController1;  // Input Controller
-
-// ******************************************************************
 // * func: EmuDInputInit
 // ******************************************************************
 extern void EmuDInputInit();
@@ -60,7 +55,7 @@ extern void EmuDInputCleanup();
 // ******************************************************************
 // * func: EmuDInputPoll
 // ******************************************************************
-extern void EmuDInputPoll();
+extern void EmuDInputPoll(xapi::PXINPUT_STATE Controller);
 
 // ******************************************************************
 // * offsets into analog button array

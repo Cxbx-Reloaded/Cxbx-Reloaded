@@ -204,11 +204,6 @@ void EmuRenderWindow(PVOID)
     EmuDInputInit();
 
     // ******************************************************************
-    // * the other thread can continue now
-    // ******************************************************************
-    g_ThreadInitialized = true;
-
-    // ******************************************************************
     // * message processing loop
     // ******************************************************************
     {
@@ -220,6 +215,8 @@ void EmuRenderWindow(PVOID)
         {
             if(PeekMessage( &msg, NULL, 0U, 0U, PM_REMOVE ))
             {
+                g_ThreadInitialized = true;
+
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);
             }

@@ -235,12 +235,13 @@ class XBController : public Error
 #define DEVICE_FLAG_KEYBOARD      (1 << 1)
 #define DEVICE_FLAG_MOUSE         (1 << 2)
 #define DEVICE_FLAG_AXIS          (1 << 3)
-#define DEVICE_FLAG_POSITIVE      (1 << 4)
-#define DEVICE_FLAG_NEGATIVE      (1 << 5)
-#define DEVICE_FLAG_MOUSE_CLICK   (1 << 6)
-#define DEVICE_FLAG_MOUSE_LX      (1 << 7)
-#define DEVICE_FLAG_MOUSE_LY      (1 << 8)
-#define DEVICE_FLAG_MOUSE_LZ      (1 << 9)
+#define DEVICE_FLAG_BUTTON        (1 << 4)
+#define DEVICE_FLAG_POSITIVE      (1 << 5)
+#define DEVICE_FLAG_NEGATIVE      (1 << 6)
+#define DEVICE_FLAG_MOUSE_CLICK   (1 << 7)
+#define DEVICE_FLAG_MOUSE_LX      (1 << 8)
+#define DEVICE_FLAG_MOUSE_LY      (1 << 9)
+#define DEVICE_FLAG_MOUSE_LZ      (1 << 10)
 
 // ******************************************************************
 // * Detection Sensitivity

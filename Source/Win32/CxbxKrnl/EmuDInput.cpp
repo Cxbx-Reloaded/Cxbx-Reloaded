@@ -44,7 +44,6 @@
 // ******************************************************************
 // * exported globals
 // ******************************************************************
-xapi::XINPUT_STATE g_EmuController1;
 XBController       g_XBController;
 
 // ******************************************************************
@@ -78,8 +77,8 @@ void EmuDInputCleanup()
 // ******************************************************************
 // * func: EmuPollController
 // ******************************************************************
-void EmuDInputPoll()
+void EmuDInputPoll(xapi::PXINPUT_STATE Controller)
 {
-    g_XBController.ListenPoll(&g_EmuController1);
+    g_XBController.ListenPoll(Controller);
     return;
 }

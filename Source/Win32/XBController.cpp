@@ -328,8 +328,13 @@ bool XBController::ConfigPoll(char *szStatus)
                         dwHow = FIELD_OFFSET(DIJOYSTATE, rgdwPOV[b]);
             else
                 for(int b=0;b<32;b++)
+                {
                     if(JoyState.rgbButtons[b] > DETECT_SENSITIVITY_BUTTON)
+                    {
                         dwHow = FIELD_OFFSET(DIJOYSTATE, rgbButtons[b]);
+                        dwFlags |= DEVICE_FLAG_BUTTON;
+                    }
+                }
 
             // ******************************************************************
             // * Retrieve Object Info
@@ -544,7 +549,7 @@ void XBController::ListenBegin(HWND hwnd)
 
     for(v=0;v<XBCTRL_OBJECT_COUNT;v++)
     {
-        if(m_ObjectConfig[v].dwDevice > m_dwInputDeviceCount)
+        if(m_ObjectConfig[v].dwDevice >= m_dwInputDeviceCount)
         {
             printf("Warning: Device Mapped to %s was not found!\n", m_DeviceNameLookup[v]);
             m_ObjectConfig[v].dwDevice = -1;
@@ -604,7 +609,8 @@ void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
         {
             DIJOYSTATE JoyState;
 
-            pDevice->GetDeviceState(sizeof(JoyState), &JoyState);
+            if(pDevice->GetDeviceState(sizeof(JoyState), &JoyState) != DI_OK)
+                continue;
 
             if(dwFlags & DEVICE_FLAG_AXIS)
             {
@@ -624,6 +630,32 @@ void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
                         wValue = 0;
                 }
             }
+            else if(dwFlags & DEVICE_FLAG_BUTTON)
+            {
+                BYTE *pbButton = (BYTE*)((uint32)&JoyState + dwInfo);
+
+                if(*pbButton & 0x80)
+                    wValue = 32767;
+                else
+                    wValue = 0;
+            }
+        }
+        // ******************************************************************
+        // * Interpret PC KeyBoard Input
+        // ******************************************************************
+        else if(dwFlags & DEVICE_FLAG_KEYBOARD)
+        {
+            BYTE KeyboardState[256];
+
+            if(pDevice->GetDeviceState(sizeof(KeyboardState), &KeyboardState) != DI_OK)
+                continue;
+
+            BYTE bKey = KeyboardState[dwInfo];
+
+            if(bKey & 0x80)
+                wValue = 32767;
+            else
+                wValue = 0;
         }
 
         // ******************************************************************
@@ -658,12 +690,6 @@ void XBController::ListenPoll(xapi::XINPUT_STATE *Controller)
                     Controller->Gamepad.sThumbRX -= wValue;
                     break;
             }
-/*
-            // Map value to controller
-            WORD *pwAxis = (WORD*)((uint32)&Controller->Gamepad.sThumbLX + (v/2)*2);
-
-            *pwAxis = wValue;
-            */
         }
     }
 
@@ -710,6 +736,8 @@ bool XBController::DeviceIsUsed(const char *szDeviceName)
 // ******************************************************************
 void XBController::DInputInit(HWND hwnd)
 {
+    m_dwInputDeviceCount = NULL;
+
     // ******************************************************************
     // * Create DirectInput Object
     // ******************************************************************
@@ -754,7 +782,8 @@ void XBController::DInputInit(HWND hwnd)
                 m_InputDevice[m_dwInputDeviceCount++].m_Device->SetDataFormat(&c_dfDIKeyboard);
             }
 
-            ReorderObjects("SysKeyboard", m_dwInputDeviceCount - 1);
+            if(m_CurrentState == XBCTRL_STATE_LISTEN)
+                ReorderObjects("SysKeyboard", m_dwInputDeviceCount - 1);
         }
 
         if(m_CurrentState == XBCTRL_STATE_CONFIG || DeviceIsUsed("SysMouse"))
@@ -768,7 +797,8 @@ void XBController::DInputInit(HWND hwnd)
                 m_InputDevice[m_dwInputDeviceCount++].m_Device->SetDataFormat(&c_dfDIMouse2);
             }
 
-            ReorderObjects("SysMouse", m_dwInputDeviceCount - 1);
+            if(m_CurrentState == XBCTRL_STATE_LISTEN)
+                ReorderObjects("SysMouse", m_dwInputDeviceCount - 1);
         }
     }
 
@@ -860,10 +890,8 @@ int XBController::Insert(const char *szDeviceName)
     int v=0;
 
     for(v=0;v<XBCTRL_MAX_DEVICES;v++)
-    {
         if(strcmp(m_DeviceName[v], szDeviceName) == 0)
             return v;
-    }
 
     for(v=0;v<XBCTRL_MAX_DEVICES;v++)
     {
@@ -887,13 +915,32 @@ int XBController::Insert(const char *szDeviceName)
 // ******************************************************************
 void XBController::ReorderObjects(const char *szDeviceName, int pos)
 {
-    for(int v=0;v<XBCTRL_OBJECT_COUNT;v++)
+    int old = -1, v=0;
+
+    // locate old device name position
+    for(v=0;v<XBCTRL_MAX_DEVICES;v++)
     {
-        if(strcmp(m_DeviceName[m_ObjectConfig[v].dwDevice], szDeviceName) == 0)
+        if(strcmp(m_DeviceName[v], szDeviceName) == 0)
         {
-            m_ObjectConfig[v].dwDevice = pos;
-            strcpy(m_DeviceName[pos], szDeviceName);
+            old = v;
+            break;
         }
+    }
+
+    // Swap names, if necessary
+    if(old != pos)
+    {
+        strcpy(m_DeviceName[old], m_DeviceName[pos]);
+        strcpy(m_DeviceName[pos], szDeviceName);
+    }
+
+    // Update all old values
+    for(v=0;v<XBCTRL_OBJECT_COUNT;v++)
+    {
+        if(m_ObjectConfig[v].dwDevice == old)
+            m_ObjectConfig[v].dwDevice = pos;
+        else if(m_ObjectConfig[v].dwDevice == pos)
+            m_ObjectConfig[v].dwDevice = old;
     }
 
     return;
@@ -917,8 +964,6 @@ BOOL XBController::EnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi)
 
         if(m_CurrentState == XBCTRL_STATE_LISTEN)
             ReorderObjects(lpddi->tszInstanceName, m_dwInputDeviceCount - 1);
-
-        printf("Emu: Monitoring Device %s\n", lpddi->tszInstanceName);
     }
 
     return DIENUM_CONTINUE;
@@ -939,6 +984,22 @@ BOOL XBController::EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi)
         diprg.diph.dwObj        = lpddoi->dwType;
         diprg.lMin              = 0 - 32768; 
         diprg.lMax              = 0 + 32767; 
+
+        HRESULT hRet = m_InputDevice[m_dwCurObject].m_Device->SetProperty(DIPROP_RANGE, &diprg.diph);
+
+        if(FAILED(hRet))
+            return DIENUM_STOP;
+    }
+    else if(lpddoi->dwType & DIDFT_BUTTON)
+    {
+        DIPROPRANGE diprg; 
+
+        diprg.diph.dwSize       = sizeof(DIPROPRANGE); 
+        diprg.diph.dwHeaderSize = sizeof(DIPROPHEADER); 
+        diprg.diph.dwHow        = DIPH_BYID; 
+        diprg.diph.dwObj        = lpddoi->dwType;
+        diprg.lMin              = 0; 
+        diprg.lMax              = 255; 
 
         HRESULT hRet = m_InputDevice[m_dwCurObject].m_Device->SetProperty(DIPROP_RANGE, &diprg.diph);
 
