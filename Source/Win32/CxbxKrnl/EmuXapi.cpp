@@ -90,7 +90,7 @@ PVOID WINAPI XTL::EmuRtlCreateHeap
 
     RtlHeapDefinition.Length = sizeof(RtlHeapDefinition);
 
-    PVOID pRet = NtDll::RtlCreateHeap(Flags, Base, Reserve, Commit, Lock, &RtlHeapDefinition);
+    PVOID pRet = NtDll::RtlCreateHeap(HEAP_CREATE_ALIGN_16 | Flags, Base, Reserve, Commit, Lock, &RtlHeapDefinition);
 
     EmuSwapFS();   // XBox FS
 
