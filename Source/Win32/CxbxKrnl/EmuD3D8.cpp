@@ -2418,12 +2418,27 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetPixelShader
 
     // redirect to windows d3d
     HRESULT hRet = D3D_OK;
-    /* TODO: kingofc's pixel shader stuff
-    HRESULT hRet = g_pD3DDevice8->SetPixelShader
-    (
-        Handle
-    );
-    //*/
+
+    // TODO: Pixel Shader emulation
+    /*
+    // simplest possible pixel shader (diffuse only)
+    static const char szDiffusePixelShader[] =
+        "// Diffuse only         \n"\
+        "ps.1.1                  \n"\
+        "mov r0, v0              \n";// c0
+
+    LPD3DXBUFFER pShader = 0;
+    LPD3DXBUFFER pErrors = 0;
+
+    // assemble the shader
+    D3DXAssembleShader(szDiffusePixelShader, strlen(szDiffusePixelShader) - 1, 0, NULL, &pShader, &pErrors);
+
+    DWORD dwHandle = 0;
+
+    // create the shader device handle
+    g_pD3DDevice8->CreatePixelShader((DWORD*)pShader->GetBufferPointer(), &dwHandle);
+    g_pD3DDevice8->SetPixelShader(dwHandle);
+    */
 
     if(FAILED(hRet))
     {
@@ -2503,11 +2518,11 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
     D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
 
     // TODO: HACK: Devices that don't support this should somehow emulate it!
-    /* This is OK on my GeForce FX 5600
+    //* This is OK on my GeForce FX 5600
     if(PCFormat == D3DFMT_D16)
     {
         EmuWarning("D3DFMT_D16 is an unsupported texture format!");
-        PCFormat = D3DFMT_X8R8G8B8;
+        PCFormat = D3DFMT_R5G6B5;
     }
     //*
     else if(PCFormat == D3DFMT_P8)
@@ -2516,13 +2531,13 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
         PCFormat = D3DFMT_X8R8G8B8;
     }
     //*/
-    /* This is OK on my GeForce FX 5600
+    //* This is OK on my GeForce FX 5600
     else if(PCFormat == D3DFMT_D24S8)
     {
         EmuWarning("D3DFMT_D24S8 is an unsupported texture format!");
         PCFormat = D3DFMT_X8R8G8B8;
     }//*/
-    /*else */if(PCFormat == D3DFMT_YUY2)
+    else if(PCFormat == D3DFMT_YUY2)
     {
         // cache the overlay size
         g_dwOverlayW = Width;
@@ -2534,16 +2549,15 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
 
     if(PCFormat != D3DFMT_YUY2)
     {
-        DWORD   PCUsage = 0;// disabled along with D3DFMT_D16 above
-        //DWORD   PCUsage = Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL);
+        DWORD   PCUsage = Usage & (D3DUSAGE_RENDERTARGET);
+//        DWORD   PCUsage = Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL);
         D3DPOOL PCPool  = D3DPOOL_MANAGED;
 
         EmuAdjustPower2(&Width, &Height);
 
         *ppTexture = new X_D3DTexture();
 
-        // disabled along with D3DFMT_D16 above
-        if(Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL))
+        if(Usage & (D3DUSAGE_RENDERTARGET))
             PCPool = D3DPOOL_DEFAULT;
 
         hRet = g_pD3DDevice8->CreateTexture
