@@ -67,6 +67,10 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, ui
         {
             freopen("CONOUT$", "wt", stdout);
 
+            SetConsoleTitle("Cxbx " CXBX_VERSION " Kernel Debug Console");
+
+            SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY);
+
             printf("CxbxKrnl [0x%.08X]: Debug console allocated.\n", GetCurrentThreadId());
         }
     }

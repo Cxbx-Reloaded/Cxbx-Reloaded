@@ -1119,6 +1119,10 @@ void WndMain::UpdateDebugConsoles()
         {
             freopen("CONOUT$", "wt", stdout);
 
+            SetConsoleTitle("Cxbx " CXBX_VERSION " Debug Console");
+
+            SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY);
+
             printf("%s", "WndMain: Debug console allocated.\n");
 
             CheckMenuItem(view_debg, ID_VIEW_DEBUGOUTPUTGUI_CONSOLE, MF_CHECKED);
