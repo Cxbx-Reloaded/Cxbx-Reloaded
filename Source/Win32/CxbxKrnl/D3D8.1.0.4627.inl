@@ -1188,6 +1188,16 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_SetTransform" 
         #endif
     },
+    // IDirect3DDevice8::GetTransform (* unchanged since 4361 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_GetTransform_1_0_4361,
+
+        xd3d8::EmuIDirect3DDevice8_GetTransform,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetTransform" 
+        #endif
+    },
     // IDirect3DDevice8::SetStreamSource (* unchanged since 4361 *)
     {
         (OOVPA*)&IDirect3DDevice8_SetStreamSource_1_0_4361,

@@ -385,7 +385,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     {
         EmuSwapFS();   // XBox FS
 
-        _asm int 3
+        // _USE_XGMATH Disabled in mesh :[
+        // _asm int 3
 
         Entry();
 

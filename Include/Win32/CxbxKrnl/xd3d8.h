@@ -46,6 +46,39 @@
 // NOTE: HACK: These enumerations are not equivalent!
 typedef D3DFORMAT X_D3DFORMAT;
 
+/**
+// Oops: Well, heres PC->Xbox if you ever need it... :]
+// ******************************************************************
+// * Convert from PC D3D to Xbox D3D enumeration
+// ******************************************************************
+// TODO: XDK-Specific Tables? So far they are the same
+if((uint32)State < 4)
+    State = (D3DTRANSFORMSTATETYPE)(State - 2);
+else if((uint32)State < 20)
+    State = (D3DTRANSFORMSTATETYPE)(State - 14);
+else if((uint32)State > 255)
+    State = (D3DTRANSFORMSTATETYPE)(State - 250);
+else
+    EmuCleanup("Unknown Transform State Type (%d)", State);
+*/
+
+// ******************************************************************
+// * func: EmuXB2PC_D3DTS
+// ******************************************************************
+inline D3DTRANSFORMSTATETYPE EmuXB2PC_D3DTS(D3DTRANSFORMSTATETYPE State)
+{
+    if((uint32)State < 2)
+        return (D3DTRANSFORMSTATETYPE)(State + 2);
+    else if((uint32)State < 6)
+        return (D3DTRANSFORMSTATETYPE)(State + 14);
+    else if((uint32)State < 9)
+        return D3DTS_WORLDMATRIX(State-6);
+
+    EmuCleanup("Unknown Transform State Type (%d)", State);
+
+    return State;
+}
+
 // ******************************************************************
 // * func: EmuXB2PC_D3DFormat
 // ******************************************************************
@@ -273,6 +306,11 @@ extern UINT D3DVertexToPrimitive[11][2];
 // ******************************************************************
 #define D3DVertex2PrimitiveCount(PrimitiveType, VertexCount)    \
 	(((VertexCount)-D3DVertexToPrimitive[PrimitiveType][1])/D3DVertexToPrimitive[PrimitiveType][0])
+
+// ******************************************************************
+// * EmuD3DTileCache (8 Tiles Max)
+// ******************************************************************
+extern X_D3DTILE EmuD3DTileCache[0x08];
 
 // ******************************************************************
 // * EmuD3DDeferredRenderState
@@ -710,6 +748,15 @@ VOID WINAPI EmuIDirect3DDevice8_SetTransform
 (
     D3DTRANSFORMSTATETYPE State,
     CONST D3DMATRIX      *pMatrix
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetTransform
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_GetTransform
+(
+    D3DTRANSFORMSTATETYPE State,
+    D3DMATRIX            *pMatrix
 );
 
 // ******************************************************************

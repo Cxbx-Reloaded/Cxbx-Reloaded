@@ -82,6 +82,7 @@ HWND g_hEmuWindow = NULL;   // Rendering Window
 static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static DWORD WINAPI   EmuRenderWindow(LPVOID);
 static DWORD WINAPI   EmuUpdateTickCount(LPVOID);
+static DWORD          EmuCheckAllocationSize(LPVOID);
 
 // ******************************************************************
 // * Static Variable(s)
@@ -101,6 +102,11 @@ static XBVideo                  g_XBVideo;
 static xd3d8::X_D3DSurface     *g_pCachedRenderTarget = NULL;
 static xd3d8::X_D3DSurface     *g_pCachedZStencilSurface = NULL;
 static DWORD                    g_dwVertexShaderUsage = 0;
+
+// ******************************************************************
+// * EmuD3DTiles (8 Tiles Max)
+// ******************************************************************
+xd3d8::X_D3DTILE xd3d8::EmuD3DTileCache[0x08] = {0};
 
 // ******************************************************************
 // * EmuD3DDeferredRenderState
@@ -867,7 +873,8 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_GetTile
     }
     #endif
 
-    printf("*Warning* we are ignoring IDirect3DDevice8::GetTile\n");
+    if(pTile != NULL)
+        memcpy(pTile, &EmuD3DTileCache[Index], sizeof(X_D3DTILE));
 
     EmuSwapFS();   // XBox FS
 
@@ -899,7 +906,8 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetTileNoWait
     }
     #endif
 
-    printf("*Warning* we are ignoring IDirect3DDevice8::SetTileNoWait\n");
+    if(pTile != NULL)
+        memcpy(&EmuD3DTileCache[Index], pTile, sizeof(X_D3DTILE));
 
     EmuSwapFS();   // XBox FS
 
@@ -1152,7 +1160,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_SetTexture
     #endif
 
     IDirect3DBaseTexture8 *pBaseTexture8 = pTexture->EmuBaseTexture8;
- 
+
     HRESULT hRet = g_pD3DDevice8->SetTexture(Stage, pBaseTexture8);
 
     EmuSwapFS();   // XBox FS
@@ -1384,6 +1392,24 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_Swap
 }
 
 // ******************************************************************
+// * func: EmuCheckAllocationSize
+// ******************************************************************
+DWORD EmuCheckAllocationSize(PVOID pBase)
+{
+    MEMORY_BASIC_INFORMATION MemoryBasicInfo;
+
+    DWORD dwRet = VirtualQuery(pBase, &MemoryBasicInfo, sizeof(MemoryBasicInfo));
+
+    if(dwRet == 0)
+        return 0;
+
+    if(MemoryBasicInfo.State != MEM_COMMIT)
+        return 0;
+
+    return MemoryBasicInfo.RegionSize - ((DWORD)pBase - (DWORD)MemoryBasicInfo.BaseAddress);
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DResource8_Register
 // ******************************************************************
 HRESULT WINAPI xd3d8::EmuIDirect3DResource8_Register
@@ -1419,7 +1445,33 @@ HRESULT WINAPI xd3d8::EmuIDirect3DResource8_Register
     {
         case X_D3DCOMMON_TYPE_VERTEXBUFFER:
         {
-            EmuCleanup("Remember to do vertex buffers in here ;]");
+            X_D3DVertexBuffer *pVertexBuffer = (X_D3DVertexBuffer*)pResource;
+
+            // ******************************************************************
+            // * Create the vertex buffer
+            // ******************************************************************
+            {
+                DWORD dwSize = EmuCheckAllocationSize(pBase);
+
+                HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer
+                (
+                    dwSize, 0, 0, D3DPOOL_MANAGED,
+                    &pResource->EmuVertexBuffer8
+                );
+
+                BYTE *pData = 0;
+
+                hRet = pResource->EmuVertexBuffer8->Lock(0, 0, &pData, 0);
+
+                if(FAILED(hRet))
+                    EmuCleanup("VertexBuffer Lock failed");
+
+                memcpy(pData, (void*)pBase, dwSize);
+
+                pResource->EmuVertexBuffer8->Unlock();
+
+                pResource->Data = (ULONG)pData;
+            }
         }
         break;
 
@@ -1775,9 +1827,9 @@ xd3d8::X_D3DVertexBuffer* WINAPI xd3d8::EmuIDirect3DDevice8_CreateVertexBuffer2
     HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer
     (
         Length, 
-        D3DUSAGE_WRITEONLY,
         0,
-        D3DPOOL_DEFAULT, 
+        0,
+        D3DPOOL_MANAGED, 
         &pD3DVertexBuffer->EmuVertexBuffer8
     );
 
@@ -2199,18 +2251,43 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetTransform
     }
     #endif
 
-    // ******************************************************************
-    // * Convert from Xbox D3D to PC D3D enumeration
-    // ******************************************************************
-    // TODO: XDK-Specific Tables? So far they are the same
-    if((uint32)State < 2)
-        State = (D3DTRANSFORMSTATETYPE)(State + 2);
-    else if((uint32)State < 6)
-        State = (D3DTRANSFORMSTATETYPE)(State + 14);
-    else if((uint32)State < 9)
-        State = D3DTS_WORLDMATRIX(State-6);
+    State = EmuXB2PC_D3DTS(State);
 
     g_pD3DDevice8->SetTransform(State, pMatrix);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetTransform
+// ******************************************************************
+VOID WINAPI xd3d8::EmuIDirect3DDevice8_GetTransform
+(
+    D3DTRANSFORMSTATETYPE State,
+    D3DMATRIX            *pMatrix
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetTransform\n"
+               "(\n"
+               "   State               : 0x%.08X\n"
+               "   pMatrix             : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), State, pMatrix);
+    }
+    #endif
+
+    State = EmuXB2PC_D3DTS(State);
+
+    g_pD3DDevice8->GetTransform(State, pMatrix);
 
     EmuSwapFS();   // XBox FS
 

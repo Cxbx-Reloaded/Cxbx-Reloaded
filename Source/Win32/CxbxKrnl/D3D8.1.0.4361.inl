@@ -708,6 +708,39 @@ SOOVPA<10> IDirect3DDevice8_SetTransform_1_0_4361 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_GetTransform
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_GetTransform_1_0_4361 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    {
+        // IDirect3DDevice8_GetTransform+0x0A : shl ecx, 0x06
+        { 0x0A, 0xC1 }, // (Offset,Value)-Pair #1
+        { 0x0B, 0xE1 }, // (Offset,Value)-Pair #2
+        { 0x0C, 0x06 }, // (Offset,Value)-Pair #3
+
+        // IDirect3DDevice8_GetTransform+0x12 : lea esi, [ecx+eax+*numb*]
+        { 0x12, 0x8D }, // (Offset,Value)-Pair #4
+        { 0x13, 0xB4 }, // (Offset,Value)-Pair #5
+        { 0x14, 0x01 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_GetTransform+0x19 : mov ecx, 0x10
+        { 0x19, 0xB9 }, // (Offset,Value)-Pair #7
+        { 0x1A, 0x10 }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_GetTransform+0x20 : pop edi, pop esi
+        { 0x20, 0x5F }, // (Offset,Value)-Pair #9
+        { 0x21, 0x5E }, // (Offset,Value)-Pair #10
+
+        // IDirect3DDevice8_GetTransform+0x22 : retn 0x08
+        { 0x22, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x23, 0x08 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetStreamSource
 // ******************************************************************
 SOOVPA<14> IDirect3DDevice8_SetStreamSource_1_0_4361 =
@@ -1416,6 +1449,16 @@ OOVPATable D3D8_1_0_4361[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetTransform" 
+        #endif
+    },
+    // IDirect3DDevice8::GetTransform
+    {
+        (OOVPA*)&IDirect3DDevice8_GetTransform_1_0_4361,
+
+        xd3d8::EmuIDirect3DDevice8_GetTransform,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetTransform" 
         #endif
     },
     // IDirect3DDevice8::SetStreamSource
