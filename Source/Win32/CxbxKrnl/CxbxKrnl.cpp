@@ -324,11 +324,18 @@ DWORD WINAPI PsCreateSystemThreadExProxy
     __asm
     {
         mov         esi, StartRoutine
-        push        StartContext1
         push        StartContext2
+        push        StartContext1
+        push        offset callComplete
         lea         ebp, [esp-4]
         jmp near    esi
+
+callComplete:
+
+        nop
     }
+
+    EmuXSwapFS();
 
     return 0;
 }
@@ -341,8 +348,8 @@ using namespace xboxkrnl;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
 (
-	IN  NVRAM_SETTING_CLASS ValueIndex,
-	OUT PNVRAM_TYPE_CLASS   Type,
+	IN  DWORD               ValueIndex,
+	OUT DWORD              *Type,
 	OUT PUCHAR              Value,
 	IN  SIZE_T              ValueLength,
 	OUT PSIZE_T             ResultLength OPTIONAL
@@ -366,6 +373,31 @@ XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
                GetCurrentThreadId(), ValueIndex, Type, Value, ValueLength, ResultLength);
     }
     #endif
+
+    // ******************************************************************
+    // * handle eeprom read
+    // ******************************************************************
+    switch(ValueIndex)
+    {
+        case EEPROM_MISC:
+        {
+            if(Type != 0)
+                *Type  = 0x04;
+
+            if(Value != 0)
+                *Value = 0;
+
+            if(ResultLength != 0)
+                *ResultLength = 0x04;
+        }
+        break;
+
+        default:
+        {
+            printf("CxbxKrnl [0x%.08X]: ExQueryNonVolatileSetting unknown ValueIndex : %.08X\n", ValueIndex);
+        }
+        break;
+    }
 
     EmuXSwapFS();   // XBox FS
 
@@ -424,6 +456,11 @@ XBSYSAPI EXPORTNUM(107) VOID NTAPI xboxkrnl::KeInitializeDpc
     }
     #endif
 
+    Dpc->Number = 0;
+	Dpc->DeferredRoutine = DeferredRoutine;
+    Dpc->Type = DpcObject;
+	Dpc->DeferredContext = DeferredContext;
+
     EmuXSwapFS();   // XBox FS
 
     return;
@@ -453,6 +490,17 @@ XBSYSAPI EXPORTNUM(113) VOID NTAPI xboxkrnl::KeInitializeTimerEx
                GetCurrentThreadId(), Timer, Type);
     }
     #endif
+    
+    Timer->Header.Type               = Type + 8;
+    Timer->Header.Inserted           = 0;
+    Timer->Header.Size               = sizeof(*Timer) / sizeof(ULONG);
+    Timer->Header.SignalState        = 0;
+    Timer->TimerListEntry.Blink      = NULL;
+    Timer->TimerListEntry.Flink      = NULL;
+    Timer->Header.WaitListHead.Flink = &Timer->Header.WaitListHead;
+    Timer->Header.WaitListHead.Blink = &Timer->Header.WaitListHead;
+    Timer->DueTime.QuadPart          = 0;
+    Timer->Period                    = 0;
 
     EmuXSwapFS();   // XBox FS
 

@@ -2,9 +2,6 @@ Cxbx Todo:
 
   General Code Cleanup [caustik]
 
-  * KeInitializeDpc, KeInitializeTimer, ExQueryNonVolatileSetting
-  * Locate "RtlNtStatusToDosError" in Win2k/XP doc
-
   Add support for .XBE file handling capabilities through shell.
   When opening an .XBE with Cxbx, there should be an optional flag
   which will cause it to automagically generate the .Exe and start
