@@ -1634,9 +1634,9 @@ SOOVPA<11> IDirect3DResource8_ReleaseB_1_0_4627 =
 };
 
 // ******************************************************************
-// * IDirect3DTexture8_LockRectB
+// * IDirect3DVolumeTexture8_LockBox
 // ******************************************************************
-SOOVPA<15> IDirect3DTexture8_LockRectB_1_0_4627 =
+SOOVPA<15> IDirect3DVolumeTexture8_LockBox_1_0_4627 =
 {
     0,  // Large == 0
     15, // Count == 15
@@ -1645,30 +1645,30 @@ SOOVPA<15> IDirect3DTexture8_LockRectB_1_0_4627 =
     0,  // XRef Not Used
 
     {
-        // IDirect3DTexture8_LockRectB+0x00 : mov eax, [esp+0x14]
+        // IDirect3DVolumeTexture8_LockBox+0x00 : mov eax, [esp+0x14]
         { 0x00, 0x8B }, // (Offset,Value)-Pair #1
         { 0x01, 0x44 }, // (Offset,Value)-Pair #2
         { 0x02, 0x24 }, // (Offset,Value)-Pair #3
         { 0x03, 0x14 }, // (Offset,Value)-Pair #4
 
-        // IDirect3DTexture8_LockRectB+0x04 : mov ecx, [esp+0x10]
+        // IDirect3DVolumeTexture8_LockBox+0x04 : mov ecx, [esp+0x10]
         { 0x04, 0x8B }, // (Offset,Value)-Pair #5
         { 0x05, 0x4C }, // (Offset,Value)-Pair #6
         { 0x06, 0x24 }, // (Offset,Value)-Pair #7
         { 0x07, 0x0C }, // (Offset,Value)-Pair #8
 
-        // IDirect3DTexture8_LockRectB+0x0C : push eax
+        // IDirect3DVolumeTexture8_LockBox+0x0C : push eax
         { 0x0C, 0x50 }, // (Offset,Value)-Pair #9
 
-        // IDirect3DTexture8_LockRectB+0x11 : push ecx; push edx; push eax
+        // IDirect3DVolumeTexture8_LockBox+0x11 : push ecx; push edx; push eax
         { 0x11, 0x51 }, // (Offset,Value)-Pair #10
         { 0x12, 0x52 }, // (Offset,Value)-Pair #11
         { 0x13, 0x50 }, // (Offset,Value)-Pair #12
 
-        // IDirect3DTexture8_LockRectB+0x18 : call [addr]
+        // IDirect3DVolumeTexture8_LockBox+0x18 : call [addr]
         { 0x18, 0xE8 }, // (Offset,Value)-Pair #13
 
-        // IDirect3DTexture8_LockRectB+0x1D : retn 0x14
+        // IDirect3DVolumeTexture8_LockBox+0x1D : retn 0x14
         { 0x1D, 0xC2 }, // (Offset,Value)-Pair #14
         { 0x1E, 0x14 }, // (Offset,Value)-Pair #15
     }
@@ -2823,14 +2823,14 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DTexture8_LockRect" 
         #endif
     },
-    // IDirect3DTexture8::LockRectB
+    // IDirect3DVolumeTexture8::LockBox
     {
-        (OOVPA*)&IDirect3DTexture8_LockRectB_1_0_4627,
+        (OOVPA*)&IDirect3DVolumeTexture8_LockBox_1_0_4627,
 
-        XTL::EmuIDirect3DTexture8_LockRect,
+        XTL::EmuIDirect3DVolumeTexture8_LockBox,
 
         #ifdef _DEBUG_TRACE
-        "EmuIDirect3DTexture8_LockRectB" 
+        "EmuIDirect3DVolumeTexture8_LockBox" 
         #endif
     },
 };

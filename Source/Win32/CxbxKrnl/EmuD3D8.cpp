@@ -2547,6 +2547,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVolumeTexture
 
         if(FAILED(hRet))
             EmuWarning("CreateVolumeTexture Failed! (0x%.08X)", hRet);
+
+        DbgPrintf("EmuD3D8 (0x%X): Created Volume Texture : 0x%.08X (0x%.08X)\n", GetCurrentThreadId(), *ppVolumeTexture, (*ppVolumeTexture)->EmuVolumeTexture8);
     }
     else
     {
@@ -4599,6 +4601,9 @@ HRESULT WINAPI XTL::EmuIDirect3DVolumeTexture8_LockBox
     IDirect3DVolumeTexture8 *pVolumeTexture8 = pThis->EmuVolumeTexture8;
 
     HRESULT hRet = pVolumeTexture8->LockBox(Level, pLockedVolume, pBox, Flags);
+
+    if(FAILED(hRet))
+        EmuWarning("LockBox Failed!");
 
     EmuSwapFS();   // XBox FS
 
