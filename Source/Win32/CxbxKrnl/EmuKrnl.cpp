@@ -74,12 +74,13 @@ extern PVOID g_pfnThreadNotification = NULL;
 
 // MmAllocateContiguousMemory[Ex] allocate unaligned data and then manually align the pointer,
 // returning this to the Xbe. The original pointer must be retained in order to properly free.
+#define ALIGN_CACHE_SIZE 128
 struct _AlignCache
 {
     PVOID pOrigPtr;
     PVOID pAligPtr;
 }
-g_pAlignCache[32] = {0};
+g_pAlignCache[ALIGN_CACHE_SIZE] = {0};
 
 // PsCreateSystemThread proxy procedure
 #pragma warning(push)
@@ -741,7 +742,7 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 
     DWORD dwAlignIndex = -1;
 
-    for(int v=0;v<32;v++)
+    for(int v=0;v<ALIGN_CACHE_SIZE;v++)
     {
         if(g_pAlignCache[v].pOrigPtr == 0)
         {
@@ -817,7 +818,7 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 
     DWORD dwAlignIndex = -1;
 
-    for(int v=0;v<32;v++)
+    for(int v=0;v<ALIGN_CACHE_SIZE;v++)
     {
         if(g_pAlignCache[v].pOrigPtr == 0)
         {
@@ -923,7 +924,7 @@ XBSYSAPI EXPORTNUM(171) VOID NTAPI xboxkrnl::MmFreeContiguousMemory
     // retrieve correct allocation base address (since MmAllocContiguousMemory[Ex] aligns upward)
     {
         int v=0;
-        for(v=0;v<32;v++)
+        for(v=0;v<ALIGN_CACHE_SIZE;v++)
         {
             if(g_pAlignCache[v].pAligPtr == BaseAddress)
             {

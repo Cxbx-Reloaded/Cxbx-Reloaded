@@ -2098,8 +2098,16 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
     }
     else
     {
+        DWORD dwSize = g_dwOverlayW*g_dwOverlayH*2;
+        DWORD dwPtr = (DWORD)malloc(dwSize + sizeof(DWORD));
+
+        DWORD *pRefCount = (DWORD*)(dwPtr + dwSize);
+
+        // initialize ref count
+        *pRefCount = 1;
+
         // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
-        *ppTexture = (X_D3DTexture*)((uint32)(new uint08[g_dwOverlayW*g_dwOverlayH*2]) | 0x80000000);
+        *ppTexture = (X_D3DTexture*)(dwPtr | 0x80000000);
 
         hRet = D3D_OK;
     }
@@ -2190,8 +2198,16 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVolumeTexture
     }
     else
     {
+        DWORD dwSize = g_dwOverlayW*g_dwOverlayH*2;
+        DWORD dwPtr = (DWORD)malloc(dwSize + sizeof(DWORD));
+
+        DWORD *pRefCount = (DWORD*)(dwPtr + dwSize);
+
+        // initialize ref count
+        *pRefCount = 1;
+
         // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
-        *ppVolumeTexture = (X_D3DVolumeTexture*)((uint32)(new uint08[g_dwOverlayW*g_dwOverlayH*2]) | 0x80000000);
+        *ppVolumeTexture = (X_D3DVolumeTexture*)(dwPtr | 0x80000000);
 
         hRet = D3D_OK;
     }
@@ -3617,32 +3633,46 @@ ULONG WINAPI XTL::EmuIDirect3DResource8_Release
 
     ULONG uRet = 0;
 
-    IDirect3DResource8 *pResource8 = pThis->EmuResource8;
+    if((uint32)pThis & 0x80000000)
+    {
+        DWORD  dwPtr = (DWORD)pThis & 0x7FFFFFFF;
+        DWORD *pRefCount = (DWORD*)(dwPtr + g_dwOverlayW*g_dwOverlayH*2);
 
-    if(pThis->Lock == 0x8000BEEF)
-    {
-        delete[] (PVOID)pThis->Data;
-        uRet = --pThis->Lock;
-    }
-    else if(pResource8 != 0)
-    {
-        for(int v=0;v<16;v++)
+        if(--(*pRefCount) == 0)
         {
-            if(pCache[v].Data == pThis->Data && pThis->Data != 0)
-            {
-                pCache[v].Data = 0;
-                break;
-            }
+            // free memory associated with this special resource handle
+            free((PVOID)dwPtr);
         }
+    }
+    else
+    {
+        IDirect3DResource8 *pResource8 = pThis->EmuResource8;
 
-        uRet = pResource8->Release();
-
-        if(uRet == 0)
+        if(pThis->Lock == 0x8000BEEF)
         {
-            #ifdef _DEBUG_TRACE
-            printf("EmuIDirect3DResource8_Release (0x%X): Cleaned up a Resource!\n", GetCurrentThreadId());
-            #endif
-            delete pThis;
+            delete[] (PVOID)pThis->Data;
+            uRet = --pThis->Lock;
+        }
+        else if(pResource8 != 0)
+        {
+            for(int v=0;v<16;v++)
+            {
+                if(pCache[v].Data == pThis->Data && pThis->Data != 0)
+                {
+                    pCache[v].Data = 0;
+                    break;
+                }
+            }
+
+            uRet = pResource8->Release();
+
+            if(uRet == 0)
+            {
+                #ifdef _DEBUG_TRACE
+                printf("EmuIDirect3DResource8_Release (0x%X): Cleaned up a Resource!\n", GetCurrentThreadId());
+                #endif
+                delete pThis;
+            }
         }
     }
 
@@ -3961,7 +3991,16 @@ XTL::X_D3DResource * WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel2
 
     // In a special situation, we are actually returning a memory ptr with high bit set
     if((uint32)pThis & 0x80000000)
+    {
+        DWORD dwSize = g_dwOverlayW*g_dwOverlayH*2;
+
+        DWORD *pRefCount = (DWORD*)(((DWORD)pThis & 0x7FFFFFFF) + dwSize);
+
+        // initialize ref count
+        (*pRefCount)++;
+
         return pThis;
+    }
 
     EmuIDirect3DTexture8_GetSurfaceLevel(pThis, Level, &pSurfaceLevel);
 
@@ -4049,7 +4088,15 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel
     // if highest bit is set, this is actually a raw memory pointer (for YUY2 simulation)
     if((uint32)pThis & 0x80000000)
     {
+        DWORD dwSize = g_dwOverlayW*g_dwOverlayH*2;
+
+        DWORD *pRefCount = (DWORD*)(((DWORD)pThis & 0x7FFFFFFF) + dwSize);
+
+        // initialize ref count
+        (*pRefCount)++;
+
         *ppSurfaceLevel = (X_D3DSurface*)pThis;
+
         hRet = D3D_OK;
     }
     else
