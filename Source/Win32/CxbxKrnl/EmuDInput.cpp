@@ -35,19 +35,8 @@
 #define _XBOXKRNL_DEFEXTRN_
 
 #include "Emu.h"
-
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace XTL
-{
-    #include "EmuXTL.h"
-};
-
+#include "EmuXTL.h"
 #include "EmuShared.h"
-
-// Ugly Global Pull-In
-extern HWND         g_hEmuWindow; // rendering window
 
 // ******************************************************************
 // * Static Variable(s)

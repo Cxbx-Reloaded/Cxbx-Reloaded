@@ -35,15 +35,8 @@
 #define _XBOXKRNL_DEFEXTRN_
 
 #include "Emu.h"
+#include "EmuXTL.h"
 #include "ResourceTracker.h"
-
-// prevent name collisions
-namespace XTL
-{
-    #include "EmuXTL.h"
-};
-
-extern XTL::LPDIRECT3DDEVICE8 g_pD3DDevice8;  // Direct3D8 Device
 
 bool XTL::g_bStepPush = false;
 bool XTL::g_bSkipPush = false;

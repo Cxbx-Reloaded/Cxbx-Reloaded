@@ -50,35 +50,26 @@ namespace NtDll
     #include "EmuNtDll.h"
 };
 
-// prevent name collisions
-namespace XTL
-{
-    #include "EmuXTL.h"
-};
-
-#include <locale.h>
-
+#include "EmuXTL.h"
 #include "EmuShared.h"
 #include "HLEDataBase.h"
 
-// Ugly Global Pull-In
-extern HWND				g_hEmuWindow; // rendering window
-extern HWND				g_hEmuParent; // rendering window parent
+#include <locale.h>
 
 // Global Variable(s)
-extern Xbe::TLS        *g_pTLS       = NULL;
-extern void            *g_pTLSData   = NULL;
-extern Xbe::Header     *g_pXbeHeader = NULL;
-extern HANDLE		    g_hCurDir    = NULL;
-extern HANDLE           g_hTDrive    = NULL;
-extern HANDLE           g_hUDrive    = NULL;
-extern HANDLE           g_hZDrive    = NULL;
-extern volatile BOOL	g_bEmuSuspended = FALSE;
-extern volatile BOOL    g_bEmuException = FALSE;
-extern volatile bool    g_bPrintfOn = true;
+Xbe::TLS        *g_pTLS       = NULL;
+void            *g_pTLSData   = NULL;
+Xbe::Header     *g_pXbeHeader = NULL;
+HANDLE		    g_hCurDir    = NULL;
+HANDLE           g_hTDrive    = NULL;
+HANDLE           g_hUDrive    = NULL;
+HANDLE           g_hZDrive    = NULL;
+volatile BOOL	g_bEmuSuspended = FALSE;
+volatile BOOL    g_bEmuException = FALSE;
+volatile bool    g_bPrintfOn = true;
 
 // global exception patching address
-extern uint32 g_HaloHack[4] = {0};
+uint32 g_HaloHack[4] = {0};
 
 // Static Function(s)
 static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper);
@@ -514,8 +505,11 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                                 else
 					                XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x19) - 0x70);
 
-                                for(int v=0;v<32*4;v++)
-                                    XTL::EmuD3DDeferredTextureState[v] = X_D3DTSS_UNK;
+                                for(int s=0;s<4;s++)
+                                {
+                                    for(int v=0;v<32;v++)
+                                        XTL::EmuD3DDeferredTextureState[v+s*32] = X_D3DTSS_UNK;
+                                }
 
                                 DbgPrintf("EmuMain (0x%X): 0x%.08X -> EmuD3DDeferredTextureState\n", GetCurrentThreadId(), XTL::EmuD3DDeferredTextureState);
                             }

@@ -38,17 +38,8 @@
 #include <windows.h>
 
 #include "Emu.h"
-
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace XTL
-{
-    #include "EmuXTL.h"
-};
-
+#include "EmuXTL.h"
 #include "HLEDataBase.h"
-
 #include "HLEDataBase/Xapi.1.0.3911.inl"
 #include "HLEDataBase/Xapi.1.0.4034.inl"
 #include "HLEDataBase/Xapi.1.0.4134.inl"

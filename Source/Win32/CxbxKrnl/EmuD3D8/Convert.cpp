@@ -36,12 +36,7 @@
 #define _XBOXKRNL_DEFEXTRN_
 
 #include "Emu.h"
-
-// prevent name collisions
-namespace XTL
-{
-    #include "EmuXTL.h"
-};
+#include "EmuXTL.h"
 
 // convert from xbox to pc color formats
 XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)

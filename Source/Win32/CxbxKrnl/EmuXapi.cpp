@@ -56,13 +56,7 @@ namespace NtDll
     #include "EmuNtDll.h"
 };
 
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace XTL
-{
-    #include "EmuXTL.h"
-};
+#include "EmuXTL.h"
 
 // ******************************************************************
 // * func: EmuRtlCreateHeap

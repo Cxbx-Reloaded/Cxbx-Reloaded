@@ -37,14 +37,7 @@
 
 #include "Emu.h"
 #include "EmuAlloc.h"
-
-// prevent name collisions
-namespace XTL
-{
-    #include "EmuXTL.h"
-};
-
-extern XTL::LPDIRECT3DDEVICE8 g_pD3DDevice8;  // Direct3D8 Device
+#include "EmuXTL.h"
 
 // inline vertex buffer emulation
 XTL::DWORD                  *XTL::g_pIVBVertexBuffer = 0;
@@ -340,7 +333,26 @@ VOID XTL::EmuFlushIVB()
             }
         }
 
-        //*
+        /*
+        static XTL::IDirect3DTexture8 *pTexture = 0;
+
+        if(pTexture == 0)
+        {
+            g_pD3DDevice8->CreateTexture(512, 512, 1, 0, D3DFMT_X8R8G8B8, D3DPOOL_MANAGED, &pTexture);
+
+            IDirect3DSurface8 *pSurface = 0;;
+
+            pTexture->GetSurfaceLevel(0, &pSurface);
+
+            D3DXLoadSurfaceFromFileA(pSurface, NULL, NULL, "C:\\texture.bmp", NULL, D3DX_FILTER_NONE, 0, NULL);
+
+            pSurface->Release();
+        }
+
+        g_pD3DDevice8->SetTexture(0, pTexture);
+        //*/
+
+        /*
         IDirect3DBaseTexture8 *pTexture = 0;
 
         g_pD3DDevice8->GetTexture(0, &pTexture);
@@ -351,7 +363,7 @@ VOID XTL::EmuFlushIVB()
 
             char szBuffer[255];
 
-            sprintf(szBuffer, "C:\\Aaron\\Textures\\Texture%.03d.bmp", dwDumpTexture++);
+            sprintf(szBuffer, "C:\\Aaron\\Textures\\Texture-Active%.03d.bmp", dwDumpTexture++);
 
             D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture, NULL);
         }

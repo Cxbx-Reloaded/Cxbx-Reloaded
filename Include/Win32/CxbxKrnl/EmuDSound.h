@@ -118,7 +118,10 @@ struct X_CDirectSoundBuffer
     PVOID           EmuLockPtr2;        // Offset: 0x38
     DWORD           EmuLockBytes2;      // Offset: 0x3C
     DWORD           EmuPlayFlags;       // Offset: 0x40
+    DWORD           EmuFlags;           // Offset: 0x44
 };
+
+#define DSB_FLAG_ADPCM 0x00000001
 
 // ******************************************************************
 // * X_CDirectSoundStream

@@ -39,16 +39,9 @@
 #include "EmuAlloc.h"
 #include "DbgConsole.h"
 #include "ResourceTracker.h"
+#include "EmuXTL.h"
 
 #include <conio.h>
-
-// prevent name collisions
-namespace XTL
-{
-    #include "EmuXTL.h"
-};
-
-extern XTL::LPDIRECT3DDEVICE8 g_pD3DDevice8;  // Direct3D8 Device
 
 DbgConsole::DbgConsole()
 {

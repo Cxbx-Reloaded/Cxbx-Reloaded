@@ -65,12 +65,6 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage, ...);
 // kernel function not implemented, panic
 extern "C" CXBXKRNL_API void NTAPI EmuPanic();
 
-// exception handler
-extern int EmuException(LPEXCEPTION_POINTERS e);
-
-// check the allocation size of a given virtual address
-extern int EmuCheckAllocationSize(LPVOID pBase, bool largeBound);
-
 // register a thread handle with the emulation thread management
 extern "C" CXBXKRNL_API void NTAPI EmuRegisterThread(HANDLE hThread);
 
@@ -79,6 +73,12 @@ extern "C" CXBXKRNL_API void NTAPI EmuSuspend();
 
 // resume emulation
 extern "C" CXBXKRNL_API void NTAPI EmuResume();
+
+// exception handler
+extern int EmuException(LPEXCEPTION_POINTERS e);
+
+// check the allocation size of a given virtual address
+extern int EmuCheckAllocationSize(LPVOID pBase, bool largeBound);
 
 // global flags specifying current emulation state
 extern volatile BOOL g_bEmuException;
@@ -104,6 +104,8 @@ extern HANDLE g_hCurDir;
 extern HANDLE g_hTDrive;
 extern HANDLE g_hUDrive;
 extern HANDLE g_hZDrive;
+extern HWND   g_hEmuWindow;
+extern HWND   g_hEmuParent;
 
 // thread notification routine
 extern PVOID g_pfnThreadNotification;
@@ -116,15 +118,5 @@ extern struct XInputSetStateStatus
     PVOID   pFeedback;
 }
 g_pXInputSetStateStatus[8];
-/*
-// extra stuff for multimonitors (win95+)
-typedef struct _MONITORINFO
-{
-  DWORD  cbSize; 
-  RECT   rcMonitor; 
-  RECT   rcWork; 
-  DWORD  dwFlags; 
-}
-MONITORINFO, *LPMONITORINFO; 
-*/
+
 #endif

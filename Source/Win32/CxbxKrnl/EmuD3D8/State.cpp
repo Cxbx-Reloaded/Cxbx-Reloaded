@@ -35,14 +35,7 @@
 #define _XBOXKRNL_DEFEXTRN_
 
 #include "Emu.h"
-
-// prevent name collisions
-namespace XTL
-{
-    #include "EmuXTL.h"
-};
-
-extern XTL::LPDIRECT3DDEVICE8 g_pD3DDevice8;  // Direct3D8 Device
+#include "EmuXTL.h"
 
 // deferred state lookup tables
 DWORD *XTL::EmuD3DDeferredRenderState;
@@ -205,7 +198,7 @@ void XTL::EmuUpdateDeferredStates()
             if(pCur[12] != X_D3DTSS_UNK)
             {
                 if(pCur[12] > 12)
-                    EmuCleanup("(Temporarily) Unsupported D3DTSS_ALPHAOP Value (%d)", pCur[12]);
+                    EmuCleanup("(Temporarily) Unsupported D3DTSS_COLOROP Value (%d)", pCur[12]);
 
                 g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, pCur[12]);
             }

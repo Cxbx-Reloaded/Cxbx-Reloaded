@@ -46,25 +46,19 @@ namespace xboxkrnl
 #include "DbgConsole.h"
 #include "ResourceTracker.h"
 #include "EmuAlloc.h"
-
-// prevent name collisions
-namespace XTL
-{
-    #include "EmuXTL.h"
-};
-
+#include "EmuXTL.h"
 #include "ResCxbxDll.h"
 
 #include <process.h>
 #include <locale.h>
 
 // Global(s)
-extern HWND                         g_hEmuWindow   = NULL; // rendering window
-extern HWND                         g_hEmuParent   = NULL; // rendering window parent
-extern XTL::LPDIRECT3DDEVICE8       g_pD3DDevice8  = NULL; // Direct3D8 Device
-extern XTL::LPDIRECTDRAWSURFACE7    g_pDDSPrimary  = NULL; // DirectDraw7 Primary Surface
-extern XTL::LPDIRECTDRAWSURFACE7    g_pDDSOverlay7 = NULL; // DirectDraw7 Overlay Surface
-extern XTL::LPDIRECTDRAWCLIPPER     g_pDDClipper   = NULL; // DirectDraw7 Clipper
+HWND                         g_hEmuWindow   = NULL; // rendering window
+HWND                         g_hEmuParent   = NULL; // rendering window parent
+XTL::LPDIRECT3DDEVICE8       g_pD3DDevice8  = NULL; // Direct3D8 Device
+XTL::LPDIRECTDRAWSURFACE7    g_pDDSPrimary  = NULL; // DirectDraw7 Primary Surface
+XTL::LPDIRECTDRAWSURFACE7    g_pDDSOverlay7 = NULL; // DirectDraw7 Overlay Surface
+XTL::LPDIRECTDRAWCLIPPER     g_pDDClipper   = NULL; // DirectDraw7 Clipper
 
 // Static Function(s)
 static BOOL WINAPI                  EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescription, LPSTR lpDriverName, LPVOID lpContext, HMONITOR hm);
@@ -2876,6 +2870,19 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetTexture
     {
         EmuVerifyResourceIsRegistered(pTexture);
         pBaseTexture8 = pTexture->EmuBaseTexture8;
+
+        /*
+        if(pBaseTexture8 != NULL)
+        {
+            static int dwDumpTexture = 0;
+
+            char szBuffer[255];
+
+            sprintf(szBuffer, "C:\\Aaron\\Textures\\0x%.08X-Texture%.03d.bmp", pTexture, dwDumpTexture++);
+
+            D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pBaseTexture8, NULL);
+        } 
+        //*/
     }
 
     HRESULT hRet = g_pD3DDevice8->SetTexture(Stage, (g_iWireframe == 0) ? pBaseTexture8 : 0);
@@ -3078,11 +3085,11 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
         {
             int o = g_IVBTblOffs;
 
-//            if(a > 640) a = 640;
-//            if(b > 480) b = 480;
+            if(a > 640) a = 640;
+            if(b > 480) b = 480;
 
-//            if(a > 1.0f) a /= 640.0f;
-//            if(b > 1.0f) b /= 480.0f;
+            if(a > 1.0f) a /= 640.0f;
+            if(b > 1.0f) b /= 480.0f;
 
             g_IVBTable[o].TexCoord1.x = a;
             g_IVBTable[o].TexCoord1.y = b;
@@ -3093,8 +3100,9 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
         {
             int o = g_IVBTblOffs;
 
-//            g_IVBTable[o].Position.x = (a/320.0f) - 1.0f;
-//            g_IVBTable[o].Position.y = (b/240.0f) - 1.0f;
+//            a = (a/320.0f) - 1.0f;
+//            b = (b/240.0f) - 1.0f;
+
             g_IVBTable[o].Position.x = a;
             g_IVBTable[o].Position.y = b;
             g_IVBTable[o].Position.z = c;
@@ -3304,7 +3312,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Swap
 
     // TODO: Ensure this flag is always the same across library versions
     if(Flags != 0)
-        EmuCleanup("XTL::EmuIDirect3DDevice8_Swap: Flags != 0");
+        EmuWarning("XTL::EmuIDirect3DDevice8_Swap: Flags != 0");
 
     HRESULT hRet = g_pD3DDevice8->Present(0, 0, 0, 0);
 
@@ -4771,7 +4779,8 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_BlockUntilVerticalBlank()
     DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_BlockUntilVerticalBlank();\n",
            GetCurrentThreadId());
 
-    if(g_XBVideo.GetVSync())
+    // segaGT tends to freeze with this on
+//    if(g_XBVideo.GetVSync())
         g_pDD7->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
 
     EmuSwapFS();   // XBox FS
@@ -6089,7 +6098,67 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVerticesUP
     EmuUpdateDeferredStates();
 
     if((DWORD)PrimitiveType == 0x09 || (DWORD)PrimitiveType == 0x10)
-        EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
+        EmuCleanup("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
+
+    /*
+    // DEBUG
+    {
+        static FLOAT fixer[] = 
+        {
+            0.0f, 0.0f, 1.0f,
+            0.0f, 480.0f, 1.0f,
+            640.0f, 0.0f, 1.0f,
+            640.0f, 480.0f, 1.0f,
+        };
+
+        DWORD *pdwVB = (DWORD*)pVertexStreamZeroData;
+    
+        for(uint r=0;r<VertexCount;r++)
+        {
+            pdwVB[0] = FtoDW(fixer[r*3+0]);
+            pdwVB[1] = FtoDW(fixer[r*3+1]);
+            pdwVB[2] = FtoDW(fixer[r*3+2]);
+            pdwVB[5] = 0xFFFFFFFF;
+
+            FLOAT px = DWtoF(pdwVB[0]);
+            FLOAT py = DWtoF(pdwVB[1]);
+            FLOAT pz = DWtoF(pdwVB[2]);
+            FLOAT rhw = DWtoF(pdwVB[3]);
+            DWORD dwSpecular = pdwVB[4];
+            DWORD dwDiffuse = pdwVB[5];
+            FLOAT tx = DWtoF(pdwVB[6]);
+            FLOAT ty = DWtoF(pdwVB[7]);
+            
+            //D3DFVF_POSITION_MASK
+            
+            printf("%.02d XYZ        : {%.08f, %.08f, %.08f}\n", r, px, py, pz);
+            printf("%.02d RHW        : %f\n", r, rhw);
+            printf("%.02d dwSpecular : 0x%.08X\n", r, dwSpecular);
+            printf("%.02d dwDiffuse  : 0x%.08X\n", r, dwDiffuse);
+            printf("%.02d Tex1       : {%.08f, %.08f}\n", r, tx, ty);
+            printf("\n");
+
+            pdwVB += (VertexStreamZeroStride/4);
+        }
+    }
+    //*/
+
+    /*
+    IDirect3DBaseTexture8 *pTexture = 0;
+
+    g_pD3DDevice8->GetTexture(0, &pTexture);
+    
+    if(pTexture != NULL)
+    {
+        static int dwDumpTexture = 0;
+
+        char szBuffer[255];
+
+        sprintf(szBuffer, "C:\\Aaron\\Textures\\Texture-Active%.03d.bmp", dwDumpTexture++);
+
+        D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture, NULL);
+    }
+    //*/
 
     UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
 

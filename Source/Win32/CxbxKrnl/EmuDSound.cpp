@@ -44,20 +44,12 @@ namespace xboxkrnl
 #include "EmuFS.h"
 #include "EmuShared.h"
 #include "EmuAlloc.h"
+#include "EmuXTL.h"
 
-// prevent name collisions
-namespace XTL
-{
-    #include "EmuXTL.h"
-};
-
-#include "ResCxbxDll.h"
-
+#include <mmreg.h>
+#include <msacm.h>
 #include <process.h>
 #include <locale.h>
-
-// Ugly Global Pull-In
-extern HWND                g_hEmuWindow; // rendering window
 
 XTL::X_CDirectSoundStream::_vtbl XTL::X_CDirectSoundStream::vtbl = 
 {
@@ -742,6 +734,8 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
            ");\n",
            GetCurrentThreadId(), pdsbd, ppBuffer);
 
+    DWORD dwEmuFlags = 0;
+
     DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)CxbxMalloc(sizeof(DSBUFFERDESC));
     
     // convert from Xbox to PC DSound
@@ -769,6 +763,8 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
 
             if(pDSBufferDesc->lpwfxFormat->wFormatTag == /*WAVE_FORMAT_XBOX_ADPCM*/0x0069)
             {
+                dwEmuFlags |= DSB_FLAG_ADPCM;
+
                 EmuWarning("WAVE_FORMAT_XBOX_ADPCM Unsupported!");
 
                 pDSBufferDesc->lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
@@ -809,6 +805,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
     (*ppBuffer)->EmuLockBytes1 = 0;
     (*ppBuffer)->EmuLockPtr2 = 0;
     (*ppBuffer)->EmuLockBytes2 = 0;
+    (*ppBuffer)->EmuFlags = dwEmuFlags;
 
     DbgPrintf("EmuDSound (0x%X): EmuDirectSoundCreateBuffer, *ppBuffer := 0x%.08X, bytes := 0x%.08X\n", GetCurrentThreadId(), *ppBuffer, pDSBufferDesc->dwBufferBytes);
 
@@ -1290,7 +1287,16 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Play
         pThis->EmuLockPtr1 = 0;
     }
     
-    HRESULT hRet = pThis->EmuDirectSoundBuffer8->Play(0, 0, dwFlags);
+    HRESULT hRet;
+
+    if(pThis->EmuFlags & DSB_FLAG_ADPCM)
+    {
+        hRet = D3D_OK;
+    }
+    else
+    {
+        hRet = pThis->EmuDirectSoundBuffer8->Play(0, 0, dwFlags);
+    }
 
     pThis->EmuPlayFlags = dwFlags;
 

@@ -42,13 +42,7 @@
 #include <string.h>
 #include <windows.h>
 
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace XTL
-{
-    #include "EmuXTL.h"
-};
+#include "EmuXTL.h"
 
 // ******************************************************************
 // * Xbox Controller Object IDs

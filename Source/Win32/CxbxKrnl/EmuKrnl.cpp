@@ -54,12 +54,7 @@ namespace NtDll
 #include "EmuFS.h"
 #include "EmuFile.h"
 #include "EmuAlloc.h"
-
-// prevent name collisions
-namespace XTL
-{
-    #include "EmuXTL.h"
-};
+#include "EmuXTL.h"
 
 // PsCreateSystemThread proxy parameters
 typedef struct _PCSTProxyParam
