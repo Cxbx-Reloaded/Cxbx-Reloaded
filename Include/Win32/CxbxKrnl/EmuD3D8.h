@@ -1231,6 +1231,14 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreatePalette
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_CreatePalette2
+// ******************************************************************
+X_D3DPalette * WINAPI EmuIDirect3DDevice8_CreatePalette2
+(
+    X_D3DPALETTESIZE    Size
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_BlockUntilVerticalBlank
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_BlockUntilVerticalBlank();
@@ -1276,6 +1284,15 @@ HRESULT WINAPI EmuIDirect3DPalette8_Lock
 (
     X_D3DPalette   *pThis,
     D3DCOLOR      **ppColors,
+    DWORD           Flags
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DPalette8_Lock2
+// ******************************************************************
+D3DCOLOR * WINAPI EmuIDirect3DPalette8_Lock2
+(
+    X_D3DPalette   *pThis,
     DWORD           Flags
 );
 

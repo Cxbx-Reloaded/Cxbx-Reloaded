@@ -379,6 +379,9 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                 uint16 MinorVersion = pLibraryVersion[v].wMinorVersion;
                 uint16 BuildVersion = pLibraryVersion[v].wBuildVersion;
 
+                if(BuildVersion == 5659)
+                    BuildVersion = 5558;
+
                 char szLibraryName[9] = {0};
 
                 for(uint32 c=0;c<8;c++)
@@ -423,6 +426,13 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                             else if(BuildVersion >= 5558)
                             {
                                 pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_5558, lower, upper);
+
+                                // 5659 has an updated function
+                                if(pFunc == 0)
+                                {
+                                    pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_5659, lower, upper);
+                                }
+
                                 ProcessHeapOffs = 0x51;
                                 RtlCreateHeapOffs = 0x4A;
                             }

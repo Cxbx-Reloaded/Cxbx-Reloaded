@@ -93,18 +93,18 @@ SOOVPA<12> IDirect3DDevice8_GetBackBuffer2_1_0_5849 =
         { 0x05, 0xF8 }, // (Offset,Value)-Pair #2
         { 0x06, 0xFF }, // (Offset,Value)-Pair #3
 
-        // IDirect3DDevice8_GetBackBuffer+0x0D : jnz +0x19
+        // IDirect3DDevice8_GetBackBuffer2+0x0D : jnz +0x19
         { 0x0D, 0x75 }, // (Offset,Value)-Pair #4
         { 0x0E, 0x19 }, // (Offset,Value)-Pair #5
 
-        // IDirect3DDevice8_GetBackBuffer+0x18 : mov esi, [ecx+eax*4+0x21C0]
+        // IDirect3DDevice8_GetBackBuffer2+0x18 : mov esi, [ecx+eax*4+0x21C0]
         { 0x15, 0x8B }, // (Offset,Value)-Pair #6
         { 0x16, 0xB4 }, // (Offset,Value)-Pair #7
         { 0x17, 0x81 }, // (Offset,Value)-Pair #8
         { 0x18, 0x14 }, // (Offset,Value)-Pair #9
         { 0x19, 0x1A }, // (Offset,Value)-Pair #10
 
-        // IDirect3DDevice8_GetBackBuffer+0x40 : retn 0x04
+        // IDirect3DDevice8_GetBackBuffer2+0x40 : retn 0x04
         { 0x40, 0xC2 }, // (Offset,Value)-Pair #11
         { 0x41, 0x04 }, // (Offset,Value)-Pair #12
     }

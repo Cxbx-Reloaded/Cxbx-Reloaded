@@ -37,6 +37,7 @@
 #include "OOVPA.h"
 
 extern SOOVPA<8> XapiInitProcess_1_0_5558;
+extern SOOVPA<8> XapiInitProcess_1_0_5659;
 extern OOVPATable XAPI_1_0_5558[];
 extern uint32     XAPI_1_0_5558_SIZE;
 

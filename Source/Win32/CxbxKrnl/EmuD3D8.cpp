@@ -1256,6 +1256,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_LoadVertexShader
     }
 
     EmuSwapFS();   // Xbox FS
+
     return D3D_OK;
 }
 
@@ -1272,8 +1273,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SelectVertexShader
 
     DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SelectVertexShader\n"
            "(\n"
-           "   Handle                    : 0x%.08X\n"
-           "   Address                   : 0x%.08X\n"
+           "   Handle              : 0x%.08X\n"
+           "   Address             : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), Handle, Address);
 
@@ -1284,7 +1285,16 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SelectVertexShader
     }
     else if(Address < 136)
     {
-        g_pD3DDevice8->SetVertexShader(((VERTEX_SHADER *)((X_D3DVertexShader *)g_VertexShaderSlots[Address])->Handle)->Handle);
+        X_D3DVertexShader *pVertexShader = (X_D3DVertexShader*)g_VertexShaderSlots[Address];
+
+        if(pVertexShader != NULL)
+        {
+            g_pD3DDevice8->SetVertexShader(((VERTEX_SHADER *)((X_D3DVertexShader *)g_VertexShaderSlots[Address])->Handle)->Handle);
+        }
+        else
+        {
+            EmuWarning("g_VertexShaderSlots[%d] = 0", Address);
+        }
     }
 
     EmuSwapFS();   // XBox FS
@@ -1941,7 +1951,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetShaderConstantMode
 
     DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetShaderConstantMode\n"
            "(\n"
-           "   Mode              : 0x%.08X\n"
+           "   Mode                : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), Mode);
 
@@ -3682,7 +3692,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 dwPitch  = dwWidth*2;
                 dwBPP = 2;
             }
-            else if(X_Format == 0x00 /* X_D3DFMT_L8 */ || X_Format == 0x01 /* X_D3DFMT_AL8 */ || X_Format == 0x1A /* X_D3DFMT_A8L8 */)
+            else if(X_Format == 0x00 /* X_D3DFMT_L8 */ || X_Format == 0x0B /* X_D3DFMT_P8 */ || X_Format == 0x01 /* X_D3DFMT_AL8 */ || X_Format == 0x1A /* X_D3DFMT_A8L8 */)
             {
                 bSwizzled = TRUE;
 
@@ -6805,17 +6815,29 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreatePalette
     X_D3DPalette      **ppPalette
 )
 {
+    *ppPalette = EmuIDirect3DDevice8_CreatePalette2(Size);
+
+    return D3D_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_CreatePalette2
+// ******************************************************************
+XTL::X_D3DPalette * WINAPI XTL::EmuIDirect3DDevice8_CreatePalette2
+(
+    X_D3DPALETTESIZE    Size
+)
+{
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreatePalette\n"
+    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreatePalette2\n"
            "(\n"
            "   Size                : 0x%.08X\n"
-           "   ppPalette           : 0x%.08X\n"
            ");\n",
-           GetCurrentThreadId(), Size, ppPalette);
+           GetCurrentThreadId(), Size);
 
-    *ppPalette = new X_D3DPalette();
-
+    X_D3DPalette *pPalette = new X_D3DPalette();
+ 
     static int lk[4] =
     {
         256*sizeof(D3DCOLOR),    // D3DPALETTE_256
@@ -6824,13 +6846,13 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreatePalette
         32*sizeof(D3DCOLOR)      // D3DPALETTE_32
     };
 
-    (*ppPalette)->Common = 0;
-    (*ppPalette)->Lock = 0x8000BEEF; // emulated reference count for palettes
-    (*ppPalette)->Data = (DWORD)new uint08[lk[Size]];
+    pPalette->Common = 0;
+    pPalette->Lock = 0x8000BEEF; // emulated reference count for palettes
+    pPalette->Data = (DWORD)new uint08[lk[Size]];
 
     EmuSwapFS();   // XBox FS
     
-    return D3D_OK;
+    return pPalette;
 }
 
 // ******************************************************************
@@ -6916,21 +6938,34 @@ HRESULT WINAPI XTL::EmuIDirect3DPalette8_Lock
     DWORD           Flags
 )
 {
+    *ppColors = EmuIDirect3DPalette8_Lock2(pThis, Flags);
+    
+    return D3D_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DPalette8_Lock2
+// ******************************************************************
+XTL::D3DCOLOR * WINAPI XTL::EmuIDirect3DPalette8_Lock2
+(
+    X_D3DPalette   *pThis,
+    DWORD           Flags
+)
+{
     EmuSwapFS();   // Win2k/XP FS
 
     DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DPalette8_Lock\n"
            "(\n"
            "   pThis               : 0x%.08X\n"
-           "   ppColors            : 0x%.08X\n"
            "   Flags               : 0x%.08X\n"
            ");\n",
-           GetCurrentThreadId(), ppColors, Flags);
+           GetCurrentThreadId(), Flags);
 
-    *ppColors = (D3DCOLOR*)pThis->Data;
+    D3DCOLOR *pColors = (D3DCOLOR*)pThis->Data;
 
     EmuSwapFS();   // XBox FS
-    
-    return D3D_OK;
+
+    return pColors;
 }
 
 // ******************************************************************
