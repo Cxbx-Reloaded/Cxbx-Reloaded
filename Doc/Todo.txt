@@ -2,10 +2,6 @@ Cxbx Todo (* denotes high priority, + denotes medium priority)
 
 HLE :
 
-  * On release, remove vertex buffers from trackers
-
-  * Make VBTrack thread-safe
-
   * NSIS installer. Option to clear UDATA/TDATA/CxbxCache
 
   * Modularize inline vertex buffers (Begin()/End())
