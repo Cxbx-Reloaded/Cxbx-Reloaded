@@ -45,9 +45,25 @@ Message("}\n");
 
 <begin c code>
 
-for(int v=0;v<sizeof(funcAddr)/sizeof(uint32);v++)
-{
-    *(uint08*)(funcAddr[v]) = 0xCC;
-}
+Where funcExclude is an array of uint32 addresses to exclude from the search...
+
+        for(int v=0;v<sizeof(funcAddr)/sizeof(uint32);v++)
+        {
+            bool bExclude = false;
+            for(int r=0;r<sizeof(funcExclude)/sizeof(uint32);r++)
+            {
+                if(funcAddr[v] == funcExclude[r])
+                {
+                    bExclude = true;
+                    break;
+                }
+            }
+
+            if(!bExclude)
+            {
+                *(uint08*)(funcAddr[v]) = 0xCC;
+            }
+        }
+
 
 </end c code>

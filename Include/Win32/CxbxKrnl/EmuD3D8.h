@@ -48,9 +48,6 @@ extern VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
 // cleanup direct3d
 extern VOID EmuD3DCleanup();
 
-// is this texture linear?
-extern GUID hRefGUID_bTexIsLinear;
-
 // EmuD3DTileCache (8 tiles maximum)
 extern X_D3DTILE EmuD3DTileCache[0x08];
 

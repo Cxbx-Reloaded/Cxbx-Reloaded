@@ -47,6 +47,8 @@ ResourceTracker g_PBTrackShowOnce;
 
 ResourceTracker g_PatchedStreamsCache;
 
+ResourceTracker g_DataToTexture;
+
 ResourceTracker::~ResourceTracker()
 {
     clear();

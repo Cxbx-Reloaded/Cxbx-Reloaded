@@ -186,6 +186,42 @@ SOOVPA<11> IDirect3DDevice8_SelectVertexShader_1_0_5558 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_CreateVertexShader
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_CreateVertexShader_1_0_5558 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_CreateVertexShader+0x00 : push ecx; push ebx; push ebp
+        { 0x00, 0x51 }, // (Offset,Value)-Pair #1
+        { 0x01, 0x53 }, // (Offset,Value)-Pair #2
+        { 0x02, 0x55 }, // (Offset,Value)-Pair #3
+
+        // IDirect3DDevice8_CreateVertexShader+0x0A : jz +0x10
+        { 0x0A, 0x74 }, // (Offset,Value)-Pair #4
+        { 0x0B, 0x10 }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_CreateVertexShader+0x43 : shl eax, 0x02
+        { 0x43, 0xC1 }, // (Offset,Value)-Pair #6
+        { 0x44, 0xE0 }, // (Offset,Value)-Pair #7
+        { 0x45, 0x02 }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_CreateVertexShader+0x73 : mov eax, 0x8007000E
+        { 0x65, 0x07 }, // (Offset,Value)-Pair #11
+        { 0x66, 0x80 }, // (Offset,Value)-Pair #12
+
+        // IDirect3DDevice8_CreateVertexShader+0x69 : retn 0x10
+        { 0x69, 0xC2 }, // (Offset,Value)-Pair #9
+        { 0x6A, 0x10 }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetVertexShaderConstant1
 // ******************************************************************
 SOOVPA<11> IDirect3DDevice8_SetVertexShaderConstant1_1_0_5558 =
@@ -303,6 +339,28 @@ LOOVPA<8> IDirect3DDevice8_Clear_1_0_5558 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_CreateVertexBuffer2
+// ******************************************************************
+SOOVPA<17> IDirect3DDevice8_CreateVertexBuffer2_1_0_5558 =
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x08, 0xE8 },
+        { 0x12, 0x1E },
+        { 0x1C, 0x50 },
+        { 0x26, 0x68 },
+        { 0x31, 0x33 },
+        { 0x3A, 0xFF },
+        { 0x44, 0x01 },
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_UpdateOverlay
 // ******************************************************************
 SOOVPA<11> IDirect3DDevice8_UpdateOverlay_1_0_5558 =
@@ -408,6 +466,29 @@ SOOVPA<7> IDirect3DDevice8_SetPixelShader_1_0_5558 =
         { 0x9E, 0x20 },
         { 0xBE, 0x08 },
         { 0xE1, 0xF6 },
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_CreateTexture2
+// ******************************************************************
+SOOVPA<8> IDirect3DDevice8_CreateTexture2_1_0_5558 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x14, 0x4C },
+        { 0x2A, 0x8B },
+        { 0x42, 0x8B },
+        { 0x56, 0x80 },
+        { 0x70, 0x85 },
+        { 0x82, 0x5E },
+        { 0x98, 0x89 },
+        { 0xAE, 0x1C },
     }
 };
 
@@ -585,6 +666,28 @@ SOOVPA<8> IDirect3DDevice8_SetVertexShader_1_0_5558 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetIndices
+// ******************************************************************
+SOOVPA<7> IDirect3DDevice8_SetIndices_1_0_5558 =
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x0F, 0x10 },
+        { 0x20, 0xC7 },
+        { 0x31, 0xC0 },
+        { 0x42, 0x78 },
+        { 0x53, 0xBE },
+        { 0x64, 0x89 },
+        { 0x75, 0x10 },
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetTexture
 // ******************************************************************
 SOOVPA<8> IDirect3DDevice8_SetTexture_1_0_5558 =
@@ -702,6 +805,29 @@ SOOVPA<11> IDirect3DDevice8_BlockUntilVerticalBlank_1_0_5558 =
         { 0x17, 0x05 },
         { 0x1C, 0x50 },
         { 0x23, 0xC3 },
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_DrawIndexedVertices
+// ******************************************************************
+SOOVPA<8> IDirect3DDevice8_DrawIndexedVertices_1_0_5558 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0x5E },
+        { 0x3E, 0x17 },
+        { 0x5E, 0x00 },
+        { 0x7E, 0x8B },
+        { 0x9E, 0x89 },
+        { 0xBE, 0x2B },
+        { 0xDE, 0x00 },
+        { 0xFE, 0x04 },
     }
 };
 
@@ -914,12 +1040,23 @@ OOVPATable D3D8_1_0_5558[] =
     },
     // D3DDevice_RunVertexStateShader (* unchanged since 4627 *)
     {
-        (OOVPA*)&X_D3DDevice_RunVertexStateShader_1_0_4627,
-        XTL::EmuIDirect3DDevice8_RunVertexStateShader,
+       (OOVPA*)&X_D3DDevice_RunVertexStateShader_1_0_4627,
+
+       XTL::EmuIDirect3DDevice8_RunVertexStateShader,
 
        #ifdef _DEBUG_TRACE
        "D3DDevice_RunVertexStateShader"
        #endif
+    },
+    // D3DDevice_GetVertexShaderSize (* unchanged since 4627 *)
+    {
+        (OOVPA*)&X_D3DDevice_GetVertexShaderSize_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_GetVertexShaderSize,
+
+        #ifdef _DEBUG_TRACE
+        "D3DDevice_GetVertexShaderSize"
+        #endif
     },
     // IDirect3DDevice8::LoadVertexShader
     {
@@ -941,6 +1078,16 @@ OOVPATable D3D8_1_0_5558[] =
         "EmuIDirect3DDevice8_SelectVertexShader"
         #endif
     },
+    // IDirect3DDevice8::CreateVertexShader
+    {
+        (OOVPA*)&IDirect3DDevice8_CreateVertexShader_1_0_5558,
+
+        XTL::EmuIDirect3DDevice8_CreateVertexShader,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_CreateVertexShader"
+        #endif
+    },
     // IDirect3DDevice8::SetVertexShaderConstant1
     {
         (OOVPA*)&IDirect3DDevice8_SetVertexShaderConstant1_1_0_5558,
@@ -959,6 +1106,16 @@ OOVPATable D3D8_1_0_5558[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetVertexShaderConstantNotInlineFast"
+        #endif
+    },
+    // IDirect3DDevice8::CreateVertexBuffer2
+    {
+        (OOVPA*)&IDirect3DDevice8_CreateVertexBuffer2_1_0_5558,
+
+        XTL::EmuIDirect3DDevice8_CreateVertexBuffer2,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_CreateVertexBuffer2"
         #endif
     },
     // IDirect3DDevice8::UpdateOverlay
@@ -1031,6 +1188,16 @@ OOVPATable D3D8_1_0_5558[] =
         "EmuIDirect3DDevice8_BlockUntilVerticalBlank"
         #endif
     },
+    // IDirect3DDevice8::DrawIndexedVertices
+    {
+        (OOVPA*)&IDirect3DDevice8_DrawIndexedVertices_1_0_5558,
+
+        XTL::EmuIDirect3DDevice8_DrawIndexedVertices,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_DrawIndexedVertices"
+        #endif
+    },
     // IDirect3DDevice8::DrawIndexedVerticesUP
     {
         (OOVPA*)&IDirect3DDevice8_DrawIndexedVerticesUP_1_0_5558,
@@ -1049,6 +1216,16 @@ OOVPATable D3D8_1_0_5558[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetPixelShader"
+        #endif
+    },
+    // IDirect3DDevice8::CreateTexture2
+    {
+        (OOVPA*)&IDirect3DDevice8_CreateTexture2_1_0_5558,
+
+        XTL::EmuIDirect3DDevice8_CreateTexture2,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_CreateTexture2"
         #endif
     },
     // IDirect3DDevice8::GetDisplayMode (* unchanged since 4627 *)
@@ -1301,6 +1478,16 @@ OOVPATable D3D8_1_0_5558[] =
         "EmuIDirect3DDevice8_SetVertexShader"
         #endif
     },
+    // IDirect3DDevice8::SetIndices
+    {
+        (OOVPA*)&IDirect3DDevice8_SetIndices_1_0_5558,
+
+        XTL::EmuIDirect3DDevice8_SetIndices,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetIndices"
+        #endif
+    },
     // IDirect3DDevice8::SetTexture
     {
         (OOVPA*)&IDirect3DDevice8_SetTexture_1_0_5558,
@@ -1379,6 +1566,16 @@ OOVPATable D3D8_1_0_5558[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetShaderConstantMode"
+        #endif
+    },
+    // IDirect3DResource8::Register (* unchanged since 3925 *)
+    {
+        (OOVPA*)&IDirect3DResource8_Register_1_0_3925,
+
+        XTL::EmuIDirect3DResource8_Register,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DResource8_Register"
         #endif
     },
     // IDirect3DResource8::AddRef (* unchanged since 3925 *)

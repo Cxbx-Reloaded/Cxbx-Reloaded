@@ -197,7 +197,7 @@ void XTL::EmuUpdateDeferredStates()
             // TODO: Use a lookup table, this is not always a 1:1 map
             if(pCur[12] != X_D3DTSS_UNK)
             {
-                if(pCur[12] > 12)
+                if(pCur[12] > 12 && !(pCur[12] >= 17 && pCur[12] <= 21))
                     EmuCleanup("(Temporarily) Unsupported D3DTSS_COLOROP Value (%d)", pCur[12]);
 
                 g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, pCur[12]);

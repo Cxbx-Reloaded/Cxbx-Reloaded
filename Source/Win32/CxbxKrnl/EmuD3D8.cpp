@@ -427,8 +427,8 @@ void ToggleFauxFullscreen(HWND hWnd)
         }
 
         SetWindowLong(hWnd, GWL_STYLE, WS_POPUP);
-        SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
         ShowWindow(hWnd, SW_MAXIMIZE);
+        SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
     }
     else
     {
@@ -1343,6 +1343,10 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SelectVertexShader
         VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)(((X_D3DVertexShader *)(Handle & 0x7FFFFFFF))->Handle);
         g_pD3DDevice8->SetVertexShader(pVertexShader->Handle);
     }
+    else if(Handle == NULL)
+    {
+        g_pD3DDevice8->SetVertexShader(D3DFVF_XYZ | D3DFVF_TEX0);
+    }
     else if(Address < 136)
     {
         X_D3DVertexShader *pVertexShader = (X_D3DVertexShader*)g_VertexShaderSlots[Address];
@@ -2227,6 +2231,16 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
     ZeroMemory(pD3DVertexShader, sizeof(X_D3DVertexShader));
     ZeroMemory(pVertexShader, sizeof(VERTEX_SHADER));
 
+    // HACK: TODO: support this situation
+    if(pDeclaration == NULL)
+    {
+        *pHandle = NULL;
+
+        EmuSwapFS();   // Win2k/XP FS
+
+        return S_OK;
+    }
+
     LPD3DXBUFFER pRecompiledBuffer = NULL;
     DWORD        *pRecompiledDeclaration;
     DWORD        *pRecompiledFunction = NULL;
@@ -2768,7 +2782,22 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
         );
 
         if(FAILED(hRet))
+        {
             EmuWarning("CreateTexture Failed!");
+            (*ppTexture)->Data = 0xBEADBEAD;
+        }
+        else
+        {
+            D3DLOCKED_RECT LockedRect;
+
+            (*ppTexture)->EmuTexture8->LockRect(0, &LockedRect, NULL, NULL);
+
+            (*ppTexture)->Data = (DWORD)LockedRect.pBits;
+
+            g_DataToTexture.insert((*ppTexture)->Data, *ppTexture);
+
+            (*ppTexture)->EmuTexture8->UnlockRect(0);
+        }
 
         DbgPrintf("EmuD3D8 (0x%X): Created Texture : 0x%.08X (0x%.08X)\n", GetCurrentThreadId(), *ppTexture, (*ppTexture)->EmuTexture8);
     }
@@ -3120,7 +3149,9 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetTexture
 
             char szBuffer[255];
 
-            sprintf(szBuffer, "C:\\Aaron\\Textures\\0x%.08X-Texture%.03d.bmp", pTexture, dwDumpTexture++);
+            sprintf(szBuffer, "C:\\Aaron\\Textures\\0x%.08X-SetTexture%.03d.bmp", pTexture, dwDumpTexture++);
+
+            pTexture->EmuTexture8->UnlockRect(0);
 
             D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pBaseTexture8, NULL);
         } 
@@ -3154,28 +3185,48 @@ VOID __fastcall XTL::EmuIDirect3DDevice8_SwitchTexture
            ");\n",
            GetCurrentThreadId(), Method, Data, Format);
 
-    EmuWarning("EmuIDirect3DDevice8_SwitchTexture is not implemented!");
+    DWORD StageLookup[] = { 0x00081b00, 0x00081b40, 0x00081b80, 0x00081bc0 };
+    DWORD Stage = -1;
 
-    //
-    // TODO: Crawl list of active X_D3DTexture's, searching for Data..
-    //       we're basically screwed in the event that the texture is
-    //       not _Register'd (should never happen though)
-    //
+    for(int v=0;v<4;v++)
+    {
+        if(StageLookup[v] == Method)
+        {
+            Stage = v;
+        }
+    }
 
-    /* 
-    IDirect3DBaseTexture8 *pBaseTexture8 = pTexture->EmuBaseTexture8;
-    IDirect3DBaseTexture8 *pPrevTexture8 = NULL;
+    if(Stage == -1)
+    {
+        EmuWarning("Unknown Method (0x%.08X)", Method);
+    }
+    else
+    {
+        //
+        // WARNING: TODO: Correct reference counting has not been completely verified for this code
+        //
 
-    // Xbox SwitchTexture does not decrement the reference count on the
-    // old texture, but SetTexture does, so we need to pre-increment
-    g_pD3DDevice8->GetTexture(Stage, &pPrevTexture8);
+        X_D3DTexture *pTexture = (X_D3DTexture *)g_DataToTexture.get(Data);
 
-    HRESULT hRet = g_pD3DDevice8->SetTexture(Stage, pBaseTexture8);
+        EmuWarning("Switching Texture 0x%.08X (0x%.08X) @ Stage %d", pTexture, pTexture->EmuBaseTexture8, Stage);
 
-    // Xbox SwitchTexture does not increment reference count, but the
-    // above SetTexture does, so we need to remove it.
-    pBaseTexture8->Release();
-    //*/
+        HRESULT hRet = g_pD3DDevice8->SetTexture(Stage, pTexture->EmuBaseTexture8);
+
+        /*
+        if(pTexture->EmuBaseTexture8 != NULL)
+        {
+            static int dwDumpTexture = 0;
+
+            char szBuffer[255];
+
+            sprintf(szBuffer, "C:\\Aaron\\Textures\\0x%.08X-SwitchTexture%.03d.bmp", pTexture, dwDumpTexture++);
+
+            pTexture->EmuTexture8->UnlockRect(0);
+
+            D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture->EmuBaseTexture8, NULL);
+        } 
+        //*/
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -4089,7 +4140,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
                     char szBuffer[255];
 
-                    sprintf(szBuffer, "C:\\Aaron\\Textures\\%.03d-Surface%.03d.bmp", X_Format, dwDumpSurface++);
+                    sprintf(szBuffer, "C:\\Aaron\\Textures\\%.03d-RegSurface%.03d.bmp", X_Format, dwDumpSurface++);
 
                     D3DXSaveSurfaceToFile(szBuffer, D3DXIFF_BMP, pResource->EmuSurface8, NULL, NULL);
                 }
@@ -4105,7 +4156,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                         {
                             IDirect3DSurface8 *pSurface=0;
 
-                            sprintf(szBuffer, "C:\\Aaron\\Textures\\%.03d-CubeTex%.03d-%d.bmp", X_Format, dwDumpCube++, v);
+                            sprintf(szBuffer, "C:\\Aaron\\Textures\\%.03d-RegCubeTex%.03d-%d.bmp", X_Format, dwDumpCube++, v);
 
                             pResource->EmuCubeTexture8->GetCubeMapSurface((D3DCUBEMAP_FACES)v, 0, &pSurface);
 
@@ -4118,7 +4169,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
                         char szBuffer[255];
 
-                        sprintf(szBuffer, "C:\\Aaron\\Textures\\%.03d-Texture%.03d.bmp", X_Format, dwDumpTex++);
+                        sprintf(szBuffer, "C:\\Aaron\\Textures\\%.03d-RegTexture%.03d.bmp", X_Format, dwDumpTex++);
 
                         D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pResource->EmuTexture8, NULL);
                     }
@@ -4337,7 +4388,7 @@ VOID WINAPI XTL::EmuGet2DSurfaceDesc
 
         char szBuffer[255];
 
-        sprintf(szBuffer, "C:\\Aaron\\Textures\\Texture%.03d.bmp", dwDumpTexture++);
+        sprintf(szBuffer, "C:\\Aaron\\Textures\\GetDescTexture%.03d.bmp", dwDumpTexture++);
 
         D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pPixelContainer->EmuTexture8, NULL);
         */
@@ -6134,7 +6185,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_YuvEnable
            ");\n",
            GetCurrentThreadId(), Value);
 
-    EmuWarning("YuvEnable not implemented");
+    EmuWarning("YuvEnable not implemented (0x%.08X)", Value);
 
     EmuSwapFS();   // XBox FS
 
