@@ -44,7 +44,7 @@
 // ******************************************************************
 // * constructor
 // ******************************************************************
-WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_xbe(0), m_exe(0), m_exe_changed(false), m_xbe_changed(false), m_krnl_debug(0)
+WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_xbe(0), m_exe(0), m_exe_changed(false), m_xbe_changed(false), m_krnl_debug(0), m_cxbx_debug(0)
 {
     m_classname = "WndMain";
     m_wndname   = "Cxbx: Version " CXBX_VERSION;
@@ -52,7 +52,9 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_xbe(0), m_exe(0), 
     m_w         = 327;
     m_h         = 253;
 
-	// center to desktop
+    // ******************************************************************
+    // * Center to desktop
+    // ******************************************************************
     {
         RECT rect;
 
@@ -68,6 +70,25 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_xbe(0), m_exe(0), 
     m_xbe_filename = new char[260];
     m_xbe_filename[0] = '\0';
 
+    // ******************************************************************
+    // * Load configuration from registry
+    // ******************************************************************
+    {
+        DWORD   dwDisposition, dwType, dwSize;
+        HKEY    hKey;
+
+        if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
+        {
+            dwType = REG_DWORD;
+            dwSize = sizeof(DWORD);
+
+            RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_cxbx_debug, &dwSize);
+            RegQueryValueEx(hKey, "KrnlDebug", NULL, &dwType, (PBYTE)&m_krnl_debug, &dwSize);
+
+            RegCloseKey(hKey);
+        }
+    }
+
     return;
 }
 
@@ -76,6 +97,25 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_xbe(0), m_exe(0), 
 // ******************************************************************
 WndMain::~WndMain()
 {
+    // ******************************************************************
+    // * Save configuration to registry
+    // ******************************************************************
+    {
+        DWORD   dwDisposition, dwType, dwSize;
+        HKEY    hKey;
+
+        if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
+        {
+            dwType = REG_DWORD;
+            dwSize = sizeof(DWORD);
+
+            RegSetValueEx(hKey, "CxbxDebug", 0, dwType, (PBYTE)&m_cxbx_debug, dwSize);
+            RegSetValueEx(hKey, "KrnlDebug", 0, dwType, (PBYTE)&m_krnl_debug, dwSize);
+
+            RegCloseKey(hKey);
+        }
+    }
+
     delete[] m_xbe_filename;
     delete[] m_exe_filename;
 }
@@ -131,6 +171,14 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
         case WM_PAINT:
         {
+            static bool menuInit = false;
+
+            if(menuInit == false)
+            {
+                UpdateDebugConsoles();
+                menuInit = true;
+            }
+
             PAINTSTRUCT ps;
 
             BeginPaint(hwnd, &ps);
@@ -652,44 +700,25 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 case ID_VIEW_KERNELDEBUGCONSOLE:
                 {
-                    HMENU menu = GetMenu(m_hwnd);
-                    HMENU view_menu = GetSubMenu(menu, 2);
-
                     if(m_krnl_debug == 0)
-                    {                    
                         m_krnl_debug = 1;
-
-                        CheckMenuItem(view_menu, ID_VIEW_KERNELDEBUGCONSOLE, MF_CHECKED);
-                    }
                     else
-                    {
                         m_krnl_debug = 0;
 
-                        CheckMenuItem(view_menu, ID_VIEW_KERNELDEBUGCONSOLE, MF_UNCHECKED);
-                    }
-
                     MessageBox(m_hwnd, "This will not take effect until emulation is (re)started.\n", "Cxbx", MB_OK);
+
+                    UpdateDebugConsoles();
                 }
                 break;
 
                 case ID_VIEW_DEBUGCONSOLE:
 				{
-                    HMENU menu = GetMenu(m_hwnd);
-                    HMENU view_menu = GetSubMenu(menu, 2);
-
-                    if(AllocConsole())
-                    {
-                        freopen("CONOUT$", "wt", stdout);
-
-                        printf("%s", "Cxbx: Debug console allocated.\n");
-
-                        CheckMenuItem(view_menu, ID_VIEW_DEBUGCONSOLE, MF_CHECKED);
-                    }
+                    if(m_cxbx_debug == 0)
+                        m_cxbx_debug = 1;
                     else
-                    {
-                        FreeConsole();
-                        CheckMenuItem(view_menu, ID_VIEW_DEBUGCONSOLE, MF_UNCHECKED);
-                    }
+                        m_cxbx_debug = 0;
+
+                    UpdateDebugConsoles();
 				}
 				break;
 
@@ -952,6 +981,38 @@ void WndMain::LoadLogo()
     }
 
     RedrawWindow(m_hwnd, NULL, NULL, RDW_INVALIDATE);
+}
+
+// ******************************************************************
+// * UpdateDebugConsoles
+// ******************************************************************
+void WndMain::UpdateDebugConsoles()
+{
+    HMENU menu = GetMenu(m_hwnd);
+    HMENU view_menu = GetSubMenu(menu, 2);
+
+    if(m_krnl_debug == 1)
+        CheckMenuItem(view_menu, ID_VIEW_KERNELDEBUGCONSOLE, MF_CHECKED);
+    else
+        CheckMenuItem(view_menu, ID_VIEW_KERNELDEBUGCONSOLE, MF_UNCHECKED);
+
+    if(m_cxbx_debug == 1)
+    {
+        if(AllocConsole())
+        {
+            freopen("CONOUT$", "wt", stdout);
+
+            printf("%s", "Cxbx: Debug console allocated.\n");
+
+            CheckMenuItem(view_menu, ID_VIEW_DEBUGCONSOLE, MF_CHECKED);
+        }
+    }
+    else
+    {
+        FreeConsole();
+
+        CheckMenuItem(view_menu, ID_VIEW_DEBUGCONSOLE, MF_UNCHECKED);
+    }
 }
 
 // ******************************************************************

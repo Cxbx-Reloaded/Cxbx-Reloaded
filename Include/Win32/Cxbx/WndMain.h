@@ -52,8 +52,11 @@ class WndMain : public Wnd
 
         void SuggestFilename(const char *x_orig_filename, char *x_filename, char x_extension[4]);
 
-        void XbeLoaded();       // after an xbe is loaded, some stuff needs to update
-        void LoadLogo();        // refresh the logo in the main window
+        void XbeLoaded();           // after an xbe is loaded, some stuff needs to update
+
+        void LoadLogo();            // refresh the logo in the main window
+
+        void UpdateDebugConsoles(); // Allocate / Deallocate debug consoles as per configuration
 
         bool ConvertToExe();
 
@@ -80,6 +83,7 @@ class WndMain : public Wnd
         bool        m_xbe_changed;
         bool        m_exe_changed;
 
+        uint32      m_cxbx_debug;
         uint32      m_krnl_debug;
 };
 

@@ -2,8 +2,6 @@ Cxbx Todo:
 
   General Code Cleanup [caustik]
 
-  Configuration should be saved to registry. (i.e. Debug Console)
-
   Debug outputs should be configurable to STDOUT (console) or text file.
 
   Exe->Xbe should use an "OpenXDK" logo bitmap by default. This can be done
