@@ -1707,6 +1707,38 @@ XBSYSAPI EXPORTNUM(219) NTSTATUS NTAPI xboxkrnl::NtReadFile
 }
 
 // ******************************************************************
+// * 0x00E1 - NtSetEvent
+// ******************************************************************
+XBSYSAPI EXPORTNUM(225) NTSTATUS NTAPI xboxkrnl::NtSetEvent
+(
+    IN  HANDLE EventHandle,
+    OUT PLONG  PreviousState
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): NtSetEvent\n"
+               "(\n"
+               "   EventHandle          : 0x%.08X\n"
+               "   PreviousState        : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), EventHandle, PreviousState);
+    }
+    #endif
+
+    NTSTATUS ret = NtDll::NtSetEvent(EventHandle, PreviousState);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
+}
+
+// ******************************************************************
 // * 0x00E2 - NtSetInformationFile
 // ******************************************************************
 XBSYSAPI EXPORTNUM(226) NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
@@ -1822,6 +1854,12 @@ XBSYSAPI EXPORTNUM(236) NTSTATUS NTAPI xboxkrnl::NtWriteFile
     NTSTATUS ret = NtDll::NtWriteFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, (NtDll::LARGE_INTEGER*)ByteOffset, 0);
 
     EmuSwapFS();   // Xbox FS
+
+    if(ApcRoutine != NULL)
+        EmuWarning("NtWriteFile has an ApcRoutine that is ignored!");
+
+    if(FAILED(ret))
+        EmuWarning("NtWriteFile Failed! (0x%.08X)", ret);
 
     return ret;
 }

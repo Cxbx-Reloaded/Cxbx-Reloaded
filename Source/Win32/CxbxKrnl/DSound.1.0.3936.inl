@@ -1754,6 +1754,101 @@ SOOVPA<13> IDirectSound8_SetOrientation_1_0_3936 =
 };
 
 // ******************************************************************
+// * CDirectSound::CommitDeferredSettingsB
+// ******************************************************************
+SOOVPA<11> CDirectSound_CommitDeferredSettingsB_1_0_3936 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    XREF_COMMITDEFERREDSETTINGSB, // XRef Is Saved
+    0,                            // XRef Not Used
+
+    {
+        // CDirectSound_CommitDeferredSettingsB+0x56 : fld dword ptr [eax+0x174]
+        { 0x56, 0xD9 }, // (Offset,Value)-Pair #1
+        { 0x57, 0x80 }, // (Offset,Value)-Pair #2
+        { 0x58, 0x74 }, // (Offset,Value)-Pair #3
+        { 0x59, 0x01 }, // (Offset,Value)-Pair #4
+        { 0x5A, 0x00 }, // (Offset,Value)-Pair #5
+        { 0x5B, 0x00 }, // (Offset,Value)-Pair #6
+
+        // CDirectSound_CommitDeferredSettingsB+0xA8 : fsubp st(1), st
+        { 0xA8, 0xDE }, // (Offset,Value)-Pair #7
+        { 0xA9, 0xE9 }, // (Offset,Value)-Pair #8
+
+        // CDirectSound_CommitDeferredSettingsB+0xD4 : mov esi, 0x118
+        { 0xD4, 0xBE }, // (Offset,Value)-Pair #9
+        { 0xD5, 0x18 }, // (Offset,Value)-Pair #10
+        { 0xD6, 0x01 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
+// * CDirectSound::CommitDeferredSettingsA
+// ******************************************************************
+SOOVPA<10> CDirectSound_CommitDeferredSettingsA_1_0_3936 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    XREF_COMMITDEFERREDSETTINGSA, // XRef Is Saved
+    1,                            // XRef Is Used
+
+    {
+        // CDirectSound_CommitDeferredSettingsA+0x12 : call [CDirectSound::CommitDeferredSettingsB]
+        { 0x12, XREF_COMMITDEFERREDSETTINGSB }, // (Offset,Value)-Pair #1
+
+        // CDirectSound_CommitDeferredSettingsA+0x0C : mov ecx, [eax+0x0C]
+        { 0x0C, 0x8B }, // (Offset,Value)-Pair #2
+        { 0x0D, 0x48 }, // (Offset,Value)-Pair #3
+        { 0x0E, 0x0C }, // (Offset,Value)-Pair #4
+
+        // CDirectSound_CommitDeferredSettingsA+0x0F : push 0
+        { 0x0F, 0x6A }, // (Offset,Value)-Pair #5
+        { 0x10, 0x00 }, // (Offset,Value)-Pair #6
+
+        // CDirectSound_CommitDeferredSettingsA+0x19 : jz +0x0B
+        { 0x19, 0x74 }, // (Offset,Value)-Pair #7
+        { 0x1A, 0x0B }, // (Offset,Value)-Pair #8
+
+        // CDirectSound_CommitDeferredSettingsA+0x28 : retn 0x04
+        { 0x28, 0xC2 }, // (Offset,Value)-Pair #9
+        { 0x29, 0x04 }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
+// * CDirectSound_CommitDeferredSettings
+// ******************************************************************
+SOOVPA<8> CDirectSound_CommitDeferredSettings_1_0_3936 =
+{
+    0, // Large == 0
+    8, // Count == 8
+
+    -1, // XRef Not Saved
+    1,  // XRef Is  Used
+
+    {
+        // CDirectSound_CommitDeferredSettings+0x11 : call [CDirectSound::CommitDeferredSettingsA]
+        { 0x11, XREF_COMMITDEFERREDSETTINGSA },  // (Offset,Value)-Pair #1
+
+        // CDirectSound_CommitDeferredSettings+0x06 : and eax, 0xFFFFFFF8
+        { 0x06, 0x83 }, // (Offset,Value)-Pair #2
+        { 0x07, 0xC0 }, // (Offset,Value)-Pair #3
+        { 0x08, 0xF8 }, // (Offset,Value)-Pair #4
+
+        // CDirectSound_CommitDeferredSettings+0x09 : neg ecx
+        { 0x09, 0xF7 }, // (Offset,Value)-Pair #5
+        { 0x0A, 0xD9 }, // (Offset,Value)-Pair #6
+
+        // CDirectSound_CommitDeferredSettings+0x15 : retn 0x04
+        { 0x15, 0xC2 }, // (Offset,Value)-Pair #7
+        { 0x16, 0x04 }, // (Offset,Value)-Pair #8
+    }
+};
+
+// ******************************************************************
 // * CDirectSound::SetDistanceFactorB
 // ******************************************************************
 SOOVPA<13> CDirectSound_SetDistanceFactorB_1_0_3936 =
@@ -2833,6 +2928,32 @@ OOVPATable DSound_1_0_3936[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirectSound8_SetOrientation" 
+        #endif
+    },
+    // CDirectSound::CommitDeferredSettingsB (XREF)
+    {
+        (OOVPA*)&CDirectSound_CommitDeferredSettingsB_1_0_3936, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSound_CommitDeferredSettingsB (XRef)"
+        #endif
+    },
+    // CDirectSound::CommitDeferredSettingsA (XREF)
+    {
+        (OOVPA*)&CDirectSound_CommitDeferredSettingsA_1_0_3936, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSound_CommitDeferredSettingsA (XRef)"
+        #endif
+    },
+    // CDirectSound::CommitDeferredSettings
+    {
+        (OOVPA*)&CDirectSound_CommitDeferredSettings_1_0_3936,
+
+        XTL::EmuCDirectSound_CommitDeferredSettings,
+
+        #ifdef _DEBUG_TRACE
+        "EmuCDirectSound_CommitDeferredSettings" 
         #endif
     },
     // CDirectSound::SetDistanceFactorB (XREF)

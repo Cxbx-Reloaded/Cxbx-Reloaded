@@ -78,4 +78,5 @@ NtDll::FPTR_NtCreateFile                   NtDll::NtCreateFile                 =
 NtDll::FPTR_NtReadFile                     NtDll::NtReadFile                   = (NtDll::FPTR_NtReadFile)GetProcAddress(hNtDll, "NtReadFile");
 NtDll::FPTR_NtWriteFile                    NtDll::NtWriteFile                  = (NtDll::FPTR_NtWriteFile)GetProcAddress(hNtDll, "NtWriteFile");
 NtDll::FPTR_NtSetInformationFile           NtDll::NtSetInformationFile         = (NtDll::FPTR_NtSetInformationFile)GetProcAddress(hNtDll, "NtSetInformationFile");
+NtDll::FPTR_NtSetEvent                     NtDll::NtSetEvent                   = (NtDll::FPTR_NtSetEvent)GetProcAddress(hNtDll, "NtSetEvent");
 NtDll::FPTR_NtSetLdtEntries                NtDll::NtSetLdtEntries              = (NtDll::FPTR_NtSetLdtEntries)GetProcAddress(hNtDll, "NtSetLdtEntries");

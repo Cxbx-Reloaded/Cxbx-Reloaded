@@ -95,7 +95,7 @@ typedef USHORT             *PUSHORT;
 typedef ULONG              *PULONG;
 typedef ULONG              *ULONG_PTR;
 typedef ACCESS_MASK        *PACCESS_MASK;
-typedef LONG               *LONG_PTR;
+typedef LONG               *PLONG, *LONG_PTR;
 typedef INT_PTR            *PINT_PTR;
 typedef void                VOID;
 typedef VOID               *PVOID;
@@ -770,6 +770,15 @@ typedef NTSTATUS (NTAPI *FPTR_NtSetInformationFile)
 );
 
 // ******************************************************************
+// * NtSetEvent
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtSetEvent)
+(	
+	IN  HANDLE  EventHandle,
+	OUT	PLONG	PreviousState OPTIONAL
+);
+
+// ******************************************************************
 // * NtQueryDirectoryFile
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtQueryDirectoryFile)
@@ -873,6 +882,7 @@ extern FPTR_NtCreateFile                   NtCreateFile;
 extern FPTR_NtReadFile                     NtReadFile;
 extern FPTR_NtWriteFile                    NtWriteFile;
 extern FPTR_NtSetInformationFile           NtSetInformationFile;
+extern FPTR_NtSetEvent                     NtSetEvent;
 extern FPTR_NtSetLdtEntries                NtSetLdtEntries;
 
 #if defined(__cplusplus)

@@ -267,6 +267,8 @@ extern uint32 XRefDataBase[] =
     -1, // XREF_DSSTREAMSETROLLOFFFACTOR1A (Stream)
     -1, // XREF_DSSTREAMSETROLLOFFFACTOR1B
     -1, // XREF_GET2DSURFACEDESCB
+    -1, // XREF_COMMITDEFERREDSETTINGSA
+    -1, // XREF_COMMITDEFERREDSETTINGSB
 };
 
 // ******************************************************************
