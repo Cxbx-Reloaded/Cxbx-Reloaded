@@ -1,5 +1,8 @@
 Cxbx Todo:
 
+  Configuration may not need to be a modal. Spark off a seperate thread
+  to process messages, allow only one open at a time.
+
   Multimonitor support (of course!) Direct3D9::EnumAdapterModes iteration
 
   Closing console should toggle it, not close the entire app. I'm sure
