@@ -70,6 +70,44 @@ SOOVPA<12> QueryPerformanceCounter_1_0_4361 =
     }
 };
 
+// ******************************************************************
+// * QueryPerformanceFrequency
+// ******************************************************************
+SOOVPA<15> QueryPerformanceFrequency_1_0_4361 =
+{
+    0,  // Large == 0
+    15, // Count == 15
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // QueryPerformanceFrequency+0x04 : and dword ptr [eax+4], 0
+        { 0x04, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x05, 0x60 }, // (Offset,Value)-Pair #2
+        { 0x06, 0x04 }, // (Offset,Value)-Pair #3
+        { 0x07, 0x00 }, // (Offset,Value)-Pair #4
+
+        // QueryPerformanceFrequency+0x06 : mov dword ptr [eax], 0x2BB5C755
+        { 0x08, 0xC7 }, // (Offset,Value)-Pair #5
+        { 0x09, 0x00 }, // (Offset,Value)-Pair #6
+        { 0x0A, 0x55 }, // (Offset,Value)-Pair #7
+        { 0x0B, 0xC7 }, // (Offset,Value)-Pair #8
+        { 0x0C, 0xB5 }, // (Offset,Value)-Pair #9
+        { 0x0D, 0x2B }, // (Offset,Value)-Pair #10
+
+        // QueryPerformanceFrequency+0x0E : xor eax, eax
+        { 0x0E, 0x33 }, // (Offset,Value)-Pair #11
+        { 0x0F, 0xC0 }, // (Offset,Value)-Pair #12
+
+        // QueryPerformanceFrequency+0x10 : inc eax
+        { 0x10, 0x40 }, // (Offset,Value)-Pair #13
+
+        // QueryPerformanceFrequency+0x11 : retn 0x04
+        { 0x11, 0xC2 }, // (Offset,Value)-Pair #14
+        { 0x12, 0x04 }, // (Offset,Value)-Pair #15
+    }
+};
 
 // ******************************************************************
 // * XGetDevices
@@ -519,6 +557,16 @@ OOVPATable XAPI_1_0_4361[] =
 
         #ifdef _DEBUG_TRACE
         "EmuQueryPerformanceCounter"
+        #endif
+    },
+    // QueryPerformanceFrequency
+    {
+        (OOVPA*)&QueryPerformanceFrequency_1_0_4361,
+
+        XTL::EmuQueryPerformanceFrequency,
+
+        #ifdef _DEBUG_TRACE
+        "EmuQueryPerformanceFrequency"
         #endif
     },
     // XInitDevices (* unchanged since 1.0.4034 *)
