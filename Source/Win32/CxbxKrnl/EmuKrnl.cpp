@@ -729,7 +729,7 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
     }
     #endif
 
-    PVOID pRet = malloc(NumberOfBytes);
+    PVOID pRet = VirtualAlloc(NULL, NumberOfBytes, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 
     EmuSwapFS();   // Xbox FS
 
@@ -971,7 +971,6 @@ XBSYSAPI EXPORTNUM(182) VOID NTAPI xboxkrnl::MmSetAddressProtect
     }
     #endif
 
-    /*
     // Halo Hack
     if(BaseAddress == (PVOID)0x80366000)
     {
@@ -990,7 +989,7 @@ XBSYSAPI EXPORTNUM(182) VOID NTAPI xboxkrnl::MmSetAddressProtect
     #ifdef _DEBUG_TRACE
     printf("EmuKrnl (0x%X): VirtualProtect was 0x%.08X -> 0x%.08X\n", GetCurrentThreadId(), dwOldProtect, NewProtect & (~PAGE_WRITECOMBINE));
     #endif
-    //*/
+
     EmuSwapFS();   // Xbox FS
 
     return;
