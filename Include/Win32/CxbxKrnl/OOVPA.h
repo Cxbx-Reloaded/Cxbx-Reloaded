@@ -82,11 +82,21 @@ template <uint16 COUNT> struct SOOVPA
 };
 
 // ******************************************************************
+// * DummyClass
+// ******************************************************************
+class DummyClass
+{
+};
+
+typedef (DummyClass::*DummyClassPtr)();
+
+// ******************************************************************
 // * OOVPATable
 // ******************************************************************
 struct OOVPATable
 {
     OOVPA *Oovpa;
+
     void  *lpRedirect;
 
     #ifdef _DEBUG_TRACE

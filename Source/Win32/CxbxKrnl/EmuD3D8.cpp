@@ -425,6 +425,8 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
                 pPresentationParameters->BackBufferFormat = D3DFMT_X8R8G8B8;
             else if(pPresentationParameters->BackBufferFormat == 0x06)
                 pPresentationParameters->BackBufferFormat = D3DFMT_A8R8G8B8;
+            else
+                EmuCleanup("EmuIDirect3D8_CreateDevice: Unknown BackBufferFormat");
 
             if(pPresentationParameters->AutoDepthStencilFormat == 0x2A)
                 pPresentationParameters->AutoDepthStencilFormat = D3DFMT_D24S8;
@@ -515,6 +517,68 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_CreateTexture
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_CreateTexture
+(
+    UINT                Width,
+    UINT                Height,
+    UINT                Levels,
+    DWORD               Usage,
+    D3DFORMAT           Format,
+    D3DPOOL             Pool,
+    IDirect3DTexture8 **ppTexture
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreateTexture\n"
+               "(\n"
+               "   Width               : 0x%.08X\n"
+               "   Height              : 0x%.08X\n"
+               "   Levels              : 0x%.08X\n"
+               "   Usage               : 0x%.08X\n"
+               "   Format              : 0x%.08X\n"
+               "   Pool                : 0x%.08X\n"
+               "   ppTexture           : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Width, Height, Levels, Usage, Format, Pool, ppTexture);
+    }
+    #endif
+
+    // ******************************************************************
+    // * make adjustments to parameters to make sense with windows d3d
+    // ******************************************************************
+    {
+        if(Format == 0x07)
+            Format = D3DFMT_X8R8G8B8;
+        else if(Format == 0x06)
+            Format = D3DFMT_A8R8G8B8;
+        else
+            EmuCleanup("EmuIDirect3DDevice8_CreateTexture: Unknown Format");
+    }
+
+    // ******************************************************************
+    // * redirect to windows d3d
+    // ******************************************************************
+    HRESULT hRet = g_pD3D8Device->CreateTexture
+    (
+        Width, Height, Levels, 
+        0,   // TODO: Xbox Allows a border to be drawn (maybe hack this in software ;[)
+        Format, D3DPOOL_DEFAULT, ppTexture        
+    );
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_GetDisplayMode
 // ******************************************************************
 HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_GetDisplayMode
@@ -547,8 +611,12 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_GetDisplayMode
 
         hRet = g_pD3D8Device->GetDisplayMode(pPCMode);
 
-        // TODO: Translate from XD3D to D3D
-        pMode->Format = pPCMode->Format;
+        if(pPCMode->Format == D3DFMT_X8R8G8B8)
+            pMode->Format = (xd3d8::D3DFORMAT)0x07;
+        else if(pPCMode->Format == D3DFMT_A8R8G8B8)
+            pMode->Format = (xd3d8::D3DFORMAT)0x06;
+        else
+            EmuCleanup("EmuIDirect3DDevice8_GetDisplayMode: Unknown Format");
 
         // TODO: Make this configurable in the future?
         pMode->Flags  = 0x000000A1;
@@ -690,6 +758,103 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_Swap
     EmuSwapFS();   // XBox FS
 
     return ret;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DSurface8_GetDesc
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DSurface8_GetDesc
+(
+    PVOID               pThis,
+    X_D3DSURFACE_DESC  *pDesc
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DSurface8_GetDesc\n"
+               "(\n"
+               "   pThis               : 0x%.08X\n"
+               "   pDesc               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, pDesc);
+    }
+    #endif
+
+    HRESULT hRet = ((IDirect3DSurface8*)pThis)->GetDesc((D3DSURFACE_DESC*)pDesc);
+
+    // ******************************************************************
+    // * Rearrange into windows format (remove D3DPool)
+    // ******************************************************************
+    {
+        D3DSURFACE_DESC *pPCDesc = (D3DSURFACE_DESC*)pDesc;
+
+        if(pDesc->Format == D3DFMT_X8R8G8B8)
+            pDesc->Format = (xd3d8::D3DFORMAT)0x07;
+        else if(pDesc->Format == D3DFMT_A8R8G8B8)
+            pDesc->Format = (xd3d8::D3DFORMAT)0x06;
+        else
+            EmuCleanup("EmuIDirect3DSurface8_GetDesc Unknown Format");
+
+        pDesc->Format = pPCDesc->Format;
+
+        // TODO: Handle Type > 7 !? How !?
+        pDesc->Type   = pPCDesc->Type;
+
+        pDesc->Usage  = pPCDesc->Usage;
+        pDesc->Size   = pPCDesc->Size;
+
+        // TODO: Convert from Xbox to PC!!
+        if(pPCDesc->MultiSampleType == D3DMULTISAMPLE_NONE)
+            pDesc->MultiSampleType = (xd3d8::D3DMULTISAMPLE_TYPE)0x0011;
+        else
+            EmuCleanup("EmuIDirect3DSurface8_GetDesc Unknown Multisample format!");
+
+        pDesc->Width  = pPCDesc->Width;
+        pDesc->Height = pPCDesc->Height;
+    }
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DTexture8_GetSurfaceLevel
+// ******************************************************************
+HRESULT WINAPI xd3d8::EmuIDirect3DTexture8_GetSurfaceLevel
+(
+    PVOID               pThis,
+    UINT                Level,
+    IDirect3DSurface8 **ppSurfaceLevel
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DTexture8_GetSurfaceLevel\n"
+               "(\n"
+               "   pThis               : 0x%.08X\n"
+               "   Level               : 0x%.08X\n"
+               "   ppSurfaceLevel      : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, Level, ppSurfaceLevel);
+    }
+    #endif
+
+    HRESULT hRet = ((IDirect3DTexture8*)pThis)->GetSurfaceLevel(Level, ppSurfaceLevel);
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
 }
 
 // ******************************************************************

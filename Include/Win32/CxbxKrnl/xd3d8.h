@@ -40,8 +40,14 @@
 // ******************************************************************
 // * X_D3DFORMAT
 // ******************************************************************
-// NOTE: HACK: These enumerations may not be equivalent!
+// NOTE: HACK: These enumerations are not equivalent!
 typedef D3DFORMAT X_D3DFORMAT;
+
+// ******************************************************************
+// * X_D3DRESOURCETYPE
+// ******************************************************************
+// NOTE: HACK: These enumerations are not equivalent when > 7!
+typedef D3DRESOURCETYPE X_D3DRESOURCETYPE;
 
 // ******************************************************************
 // * X_D3DDISPLAYMODE
@@ -55,6 +61,21 @@ typedef struct _X_D3DDISPLAYMODE
     X_D3DFORMAT Format;
 }
 X_D3DDISPLAYMODE;
+
+// ******************************************************************
+// * X_D3DSURFACEDESC
+// ******************************************************************
+typedef struct _X_D3DSURFACE_DESC
+{
+    X_D3DFORMAT         Format;
+    X_D3DRESOURCETYPE   Type;
+    DWORD               Usage;
+    UINT                Size;
+    D3DMULTISAMPLE_TYPE MultiSampleType;
+    UINT                Width;
+    UINT                Height;
+}
+X_D3DSURFACE_DESC;
 
 // ******************************************************************
 // * D3DResource
@@ -120,6 +141,20 @@ HRESULT WINAPI EmuIDirect3D8_CreateDevice
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_CreateTexture
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_CreateTexture
+(
+    UINT                Width,
+    UINT                Height,
+    UINT                Levels,
+    DWORD               Usage,
+    D3DFORMAT           Format,
+    D3DPOOL             Pool,
+    IDirect3DTexture8 **ppTexture
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_GetDisplayMode
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_GetDisplayMode
@@ -157,6 +192,25 @@ HRESULT WINAPI EmuIDirect3DDevice8_Present
 HRESULT WINAPI EmuIDirect3DDevice8_Swap
 (
     DWORD Flags
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DSurface8_GetDesc
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DSurface8_GetDesc
+(
+    PVOID               pThis,
+    X_D3DSURFACE_DESC  *pDesc
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DTexture8_GetSurfaceLevel
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DTexture8_GetSurfaceLevel
+(
+    PVOID               pThis,
+    UINT                Level,
+    IDirect3DSurface8 **ppSurfaceLevel
 );
 
 // ******************************************************************
