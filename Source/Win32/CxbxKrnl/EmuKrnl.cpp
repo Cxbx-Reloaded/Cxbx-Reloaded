@@ -66,6 +66,7 @@ static HMODULE hNtDll = GetModuleHandle("ntdll");
 
 xntdll::FPTR_RtlInitAnsiString              NT_RtlInitAnsiString            = (xntdll::FPTR_RtlInitAnsiString)GetProcAddress(hNtDll, "RtlInitAnsiString");
 xntdll::FPTR_RtlInitUnicodeString           NT_RtlInitUnicodeString         = (xntdll::FPTR_RtlInitUnicodeString)GetProcAddress(hNtDll, "RtlInitUnicodeString");
+xntdll::FPTR_RtlAnsiStringToUnicodeString   NT_RtlAnsiStringToUnicodeString = (xntdll::FPTR_RtlAnsiStringToUnicodeString)GetProcAddress(hNtDll, "RtlAnsiStringToUnicodeString");
 xntdll::FPTR_RtlUnicodeStringToAnsiString   NT_RtlUnicodeStringToAnsiString = (xntdll::FPTR_RtlUnicodeStringToAnsiString)GetProcAddress(hNtDll, "RtlUnicodeStringToAnsiString");
 xntdll::FPTR_RtlNtStatusToDosError          NT_RtlNtStatusToDosError        = (xntdll::FPTR_RtlNtStatusToDosError)GetProcAddress(hNtDll, "RtlNtStatusToDosError");
 xntdll::FPTR_RtlInitializeCriticalSection   NT_RtlInitializeCriticalSection = (xntdll::FPTR_RtlInitializeCriticalSection)GetProcAddress(hNtDll, "RtlInitializeCriticalSection");
@@ -1441,6 +1442,40 @@ XBSYSAPI EXPORTNUM(258) VOID NTAPI xboxkrnl::PsTerminateSystemThread(IN NTSTATUS
     EmuSwapFS();   // Xbox FS
 
     return;
+}
+
+// ******************************************************************
+// * RtlAnsiStringToUnicodeString
+// ******************************************************************
+XBSYSAPI EXPORTNUM(260) NTSTATUS NTAPI xboxkrnl::RtlAnsiStringToUnicodeString
+(
+    PUNICODE_STRING DestinationString,
+    PSTRING         SourceString,
+    UCHAR           AllocateDestinationString
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): RtlAnsiStringToUnicodeString\n"
+               "(\n"
+               "   DestinationString         : 0x%.08X\n"
+               "   SourceString              : 0x%.08X\n"
+               "   AllocateDestinationString : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), DestinationString, SourceString, AllocateDestinationString);
+    }
+    #endif
+
+    NTSTATUS ret = NT_RtlAnsiStringToUnicodeString((xntdll::UNICODE_STRING*)DestinationString, (xntdll::STRING*)SourceString, AllocateDestinationString);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
 }
 
 // ******************************************************************

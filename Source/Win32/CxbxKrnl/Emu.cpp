@@ -277,9 +277,15 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         if(spot != -1)
             szBuffer[spot] = '\0';
 
+        Xbe::Certificate *pCertificate = (Xbe::Certificate*)pXbeHeader->dwCertificateAddr;
+
         // Create TData Directory
         {
             strcpy(&szBuffer[spot], "\\TDATA");
+
+            CreateDirectory(szBuffer, NULL);
+
+            sprintf(&szBuffer[spot+6], "\\%08x", pCertificate->dwTitleId);
 
             CreateDirectory(szBuffer, NULL);
 
@@ -292,6 +298,10 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         // Create UData Directory
         {
             strcpy(&szBuffer[spot], "\\UDATA");
+
+            CreateDirectory(szBuffer, NULL);
+
+            sprintf(&szBuffer[spot+6], "\\%08x", pCertificate->dwTitleId);
 
             CreateDirectory(szBuffer, NULL);
 
@@ -404,24 +414,29 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                     printf("Emu (0x%X): *Warning* EmuD3DDeferredRenderState not found!\n", GetCurrentThreadId());
                 }
 
-                pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361, lower, upper);
-
                 // ******************************************************************
 				// * Locate D3DDeferredTextureState
 				// ******************************************************************
-                if(pFunc != 0 && (BuildVersion == 4361))
                 {
-					xdirectx::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x19) - 0x70);
+                    if(BuildVersion == 4361)
+                        pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361, lower, upper);
+                    else if(BuildVersion == 4627)
+                        pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4627, lower, upper);
 
-                    for(int v=0;v<32*4;v++)
-                        xdirectx::EmuD3DDeferredTextureState[v] = X_D3DTSS_UNK;
+                    if(pFunc != 0)
+                    {
+					    xdirectx::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x19) - 0x70);
 
-                    printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredTextureState\n", GetCurrentThreadId(), xdirectx::EmuD3DDeferredTextureState);
-                }
-                else
-                {
-                    xdirectx::EmuD3DDeferredTextureState = 0;
-                    printf("Emu (0x%X): *Warning* EmuD3DDeferredTextureState not found!\n");
+                        for(int v=0;v<32*4;v++)
+                            xdirectx::EmuD3DDeferredTextureState[v] = X_D3DTSS_UNK;
+
+                        printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredTextureState\n", GetCurrentThreadId(), xdirectx::EmuD3DDeferredTextureState);
+                    }
+                    else
+                    {
+                        xdirectx::EmuD3DDeferredTextureState = 0;
+                        printf("Emu (0x%X): *Warning* EmuD3DDeferredTextureState not found!\n");
+                    }
                 }
 			}
         }

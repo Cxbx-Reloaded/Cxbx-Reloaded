@@ -1,7 +1,9 @@
 cxbx website: http://www.caustik.com/xbox/
 
-version: 0.7.5 (??/??/??)
+version: 0.7.5 (05/30/03)
 --------------------------------
+
+- X-Marbles homebrew demo is playable!
 
 - New GUI bitmap (thanks, bot!)
 

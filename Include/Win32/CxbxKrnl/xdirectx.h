@@ -1066,6 +1066,26 @@ HRESULT WINAPI EmuIDirect3DDevice8_LightEnable
     BOOL             bEnable
 );
 
+
+
+// ********** DirectSound Emulation **********
+
+// ******************************************************************
+// * X_CDirectSoundBuffer
+// ******************************************************************
+struct X_CDirectSoundBuffer
+{
+    BYTE    UnknownA[0x20];     // Offset: 0x00
+
+    union                       // Offset: 0x20
+    {
+        PVOID                   pMpcxBuffer;
+        IDirectSoundBuffer8    *EmuDirectSoundBuffer8;
+    };
+
+    BYTE    UnknownB[0x0C];     // Offset: 0x24
+};
+
 // ******************************************************************
 // * func: EmuDirectSoundCreate
 // ******************************************************************
@@ -1081,10 +1101,10 @@ HRESULT WINAPI EmuDirectSoundCreate
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSound8_CreateSoundBuffer
 (
-    LPDIRECTSOUND8       pThis,
-    LPCDSBUFFERDESC      pdsbd,
-    LPDIRECTSOUNDBUFFER *ppBuffer,
-    LPUNKNOWN            pUnkOuter
+    LPDIRECTSOUND8          pThis,
+    LPCDSBUFFERDESC         pdsbd,
+    X_CDirectSoundBuffer  **ppBuffer,
+    LPUNKNOWN               pUnkOuter
 );
 
 // ******************************************************************
@@ -1092,7 +1112,7 @@ HRESULT WINAPI EmuIDirectSound8_CreateSoundBuffer
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSoundBuffer8_SetBufferData
 (
-    LPDIRECTSOUNDBUFFER8    pThis,
+    X_CDirectSoundBuffer   *pThis,
     LPVOID                  pvBufferData,
     DWORD                   dwBufferBytes
 );
@@ -1102,7 +1122,7 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_SetBufferData
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSoundBuffer8_SetPlayRegion
 (
-    LPDIRECTSOUNDBUFFER8    pThis,
+    X_CDirectSoundBuffer   *pThis,
     DWORD                   dwPlayStart,
     DWORD                   dwPlayLength
 );
@@ -1112,9 +1132,26 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_SetPlayRegion
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSoundBuffer8_SetLoopRegion
 (
-    LPDIRECTSOUNDBUFFER8    pThis,
+    X_CDirectSoundBuffer   *pThis,
     DWORD                   dwLoopStart,
     DWORD                   dwLoopLength
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetVolume
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetVolume
+(
+    X_CDirectSoundBuffer   *pThis,
+    LONG                    lVolume
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetCurrentPosition
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetCurrentPosition
+(
+    DWORD   dwNewPosition
 );
 
 #endif

@@ -115,10 +115,10 @@ HRESULT WINAPI xdirectx::EmuDirectSoundCreate
 // ******************************************************************
 HRESULT WINAPI xdirectx::EmuIDirectSound8_CreateSoundBuffer
 (
-    LPDIRECTSOUND8       pThis,
-    LPCDSBUFFERDESC      pdsbd,
-    LPDIRECTSOUNDBUFFER *ppBuffer,
-    LPUNKNOWN            pUnkOuter
+    LPDIRECTSOUND8          pThis,
+    LPCDSBUFFERDESC         pdsbd,
+    X_CDirectSoundBuffer  **ppBuffer,
+    LPUNKNOWN               pUnkOuter
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -138,8 +138,14 @@ HRESULT WINAPI xdirectx::EmuIDirectSound8_CreateSoundBuffer
     }
     #endif
 
+    // Todo: Garbage Collection
+    *ppBuffer = new X_CDirectSoundBuffer();
+
+    (*ppBuffer)->EmuDirectSoundBuffer8 = 0;
+
     // Todo: Translate params, then make the PC DirectSound call
 //    HRESULT hRet = pThis->CreateSoundBuffer(pdsbd, ppBuffer, pUnkOuter);
+
     printf("*Warning* EmuIDirectSound8_CreateSoundBuffer is being ignored\n");
 
     EmuSwapFS();   // XBox FS
@@ -152,7 +158,7 @@ HRESULT WINAPI xdirectx::EmuIDirectSound8_CreateSoundBuffer
 // ******************************************************************
 HRESULT WINAPI xdirectx::EmuIDirectSoundBuffer8_SetBufferData
 (
-    LPDIRECTSOUNDBUFFER8    pThis,
+    X_CDirectSoundBuffer   *pThis,
     LPVOID                  pvBufferData,
     DWORD                   dwBufferBytes
 )
@@ -187,7 +193,7 @@ HRESULT WINAPI xdirectx::EmuIDirectSoundBuffer8_SetBufferData
 // ******************************************************************
 HRESULT WINAPI xdirectx::EmuIDirectSoundBuffer8_SetPlayRegion
 (
-    LPDIRECTSOUNDBUFFER8    pThis,
+    X_CDirectSoundBuffer   *pThis,
     DWORD                   dwPlayStart,
     DWORD                   dwPlayLength
 )
@@ -222,7 +228,7 @@ HRESULT WINAPI xdirectx::EmuIDirectSoundBuffer8_SetPlayRegion
 // ******************************************************************
 HRESULT WINAPI xdirectx::EmuIDirectSoundBuffer8_SetLoopRegion
 (
-    LPDIRECTSOUNDBUFFER8    pThis,
+    X_CDirectSoundBuffer   *pThis,
     DWORD                   dwLoopStart,
     DWORD                   dwLoopLength
 )
@@ -246,6 +252,70 @@ HRESULT WINAPI xdirectx::EmuIDirectSoundBuffer8_SetLoopRegion
 
     // Todo: Translate params, then make the PC DirectSound call
     printf("*Warning* EmuIDirectSoundBuffer8_SetLoopRegion is being ignored\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return STATUS_SUCCESS;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetVolume
+// ******************************************************************
+HRESULT WINAPI xdirectx::EmuIDirectSoundBuffer8_SetVolume
+(
+    X_CDirectSoundBuffer   *pThis,
+    LONG                    lVolume
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetVolume\n"
+               "(\n"
+               "   pThis                     : 0x%.08X\n"
+               "   lVolume                   : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pThis, lVolume);
+    }
+    #endif
+
+    // Todo: Translate params, then make the PC DirectSound call
+    printf("*Warning* EmuIDirectSoundBuffer8_SetVolume is being ignored\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return STATUS_SUCCESS;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetCurrentPosition
+// ******************************************************************
+HRESULT WINAPI xdirectx::EmuIDirectSoundBuffer8_SetCurrentPosition
+(
+    DWORD                   dwNewPosition
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetCurrentPosition\n"
+               "(\n"
+               "   dwNewPosition             : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), dwNewPosition);
+    }
+    #endif
+
+    // Todo: Translate params, then make the PC DirectSound call
+    printf("*Warning* EmuIDirectSoundBuffer8_SetCurrentPosition is being ignored\n");
 
     EmuSwapFS();   // XBox FS
 

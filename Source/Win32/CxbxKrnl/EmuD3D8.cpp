@@ -190,10 +190,8 @@ VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         PresParam.AutoDepthStencilFormat = 0x2A; /* X_D3DFMT_D24S8 */
         PresParam.SwapEffect = xdirectx::D3DSWAPEFFECT_DISCARD;
 
-        xdirectx::IDirect3DDevice8 *pDevice = 0;
-
         EmuSwapFS();    // XBox FS
-        xdirectx::EmuIDirect3D8_CreateDevice(0, xdirectx::D3DDEVTYPE_HAL, 0, 0x00000040, &PresParam, &pDevice);
+        xdirectx::EmuIDirect3D8_CreateDevice(0, xdirectx::D3DDEVTYPE_HAL, 0, 0x00000040, &PresParam, &g_pD3DDevice8);
         EmuSwapFS();    // Win2k/XP FS
     }
 }
@@ -3609,13 +3607,10 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_DrawIndexedVertices
     }
     #endif
 
-    if(PrimitiveType == 8)  // Quad List
-        EmuCleanup("DrawIndexVertices does not handle Quad->Tri yet!");
-
     EmuUpdateDeferredStates();
 
     if((DWORD)PrimitiveType == 0x03 || (DWORD)PrimitiveType == 0x08 || (DWORD)PrimitiveType == 0x09 || (DWORD)PrimitiveType == 0x10)
-        printf("Unsupported PrimitiveType! (%d)\n", (DWORD)PrimitiveType);
+        printf("*Warning* unsupported PrimitiveType! (%d)\n", (DWORD)PrimitiveType);
 
     UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
 
@@ -3635,8 +3630,7 @@ VOID WINAPI xdirectx::EmuIDirect3DDevice8_DrawIndexedVertices
 
     g_pD3DDevice8->DrawIndexedPrimitive
     (
-        PCPrimitiveType, 0, PrimitiveCount,
-        0, PrimitiveCount
+        PCPrimitiveType, 0, VertexCount, (DWORD)pIndexData/sizeof(WORD), PrimitiveCount
     );
 
     if(PrimitiveType == 8)  // Quad List
