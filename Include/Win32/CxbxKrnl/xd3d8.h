@@ -574,6 +574,71 @@ VOID WINAPI EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_NormalizeNormals
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_NormalizeNormals
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_TextureFactor
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_TextureFactor
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_ZBias
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_ZBias
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_FillMode
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_FillMode
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_FogColor
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_FogColor
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable
+(
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_Simple
+// ******************************************************************
+VOID __fastcall EmuIDirect3DDevice8_SetRenderState_Simple
+(
+    DWORD Method,
+    DWORD Value
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_CullMode
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_SetRenderState_CullMode

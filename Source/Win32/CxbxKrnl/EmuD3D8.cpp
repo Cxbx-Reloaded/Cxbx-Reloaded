@@ -413,7 +413,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
         // TODO: Support Xbox extensions if possible
         if(pPresentationParameters->MultiSampleType != 0)
         {
-            printf("Warning: MultiSampleType (0x%.08X) Not Supported!\n", pPresentationParameters->MultiSampleType);
+            printf("*Warning* MultiSampleType (0x%.08X) Not Supported!\n", pPresentationParameters->MultiSampleType);
 
             pPresentationParameters->MultiSampleType = D3DMULTISAMPLE_NONE;
 
@@ -1527,7 +1527,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3DSurface8_LockRect
                GetCurrentThreadId(), pThis, pLockedRect, pRect, Flags);
         
         if(Flags & 0x40)
-            printf("EmuIDirect3DSurface8_LockRect: *Warning* D3DLOCK_TILED ignored!\n");
+            printf("*Warning* D3DLOCK_TILED ignored!\n");
     }
     #endif
 
@@ -1725,6 +1725,251 @@ VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
         EmuCleanup("EmuIDirect3DDevice8_SetTextureState_TexCoordIndex: Unknown TexCoordIndex Value (0x%.08X)", Value);
 
     g_pD3DDevice8->SetTextureStageState(Stage, D3DTSS_TEXCOORDINDEX, Value);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_NormalizeNormals
+// ******************************************************************
+VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetRenderState_NormalizeNormals
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_NormalizeNormals\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+    g_pD3DDevice8->SetRenderState(D3DRS_NORMALIZENORMALS, Value);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_TextureFactor
+// ******************************************************************
+VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetRenderState_TextureFactor
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_TextureFactor\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+    g_pD3DDevice8->SetRenderState(D3DRS_TEXTUREFACTOR, Value);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_ZBias
+// ******************************************************************
+VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetRenderState_ZBias
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_ZBias\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+    g_pD3DDevice8->SetRenderState(D3DRS_ZBIAS, Value);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias
+// ******************************************************************
+VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+//  TODO: Analyze performance and compatibility (undefined behavior on PC with triangles or points)
+//  g_pD3DDevice8->SetRenderState(D3DRS_EDGEANTIALIAS, Value);
+
+    printf("*Warning* SetRenderState_EdgeAntiAlias not implemented!\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_FillMode
+// ******************************************************************
+VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetRenderState_FillMode
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_FillMode\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+    printf("*Warning* SetRenderState_FillMode not implemented!\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_FogColor
+// ******************************************************************
+VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetRenderState_FogColor
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_FogColor\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+    printf("*Warning* SetRenderState_FogColor not implemented!\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable
+// ******************************************************************
+VOID WINAPI xd3d8::EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+    printf("*Warning* SetRenderState_Dxt1NoiseEnable not implemented!\n");
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_Simple
+// ******************************************************************
+VOID __fastcall xd3d8::EmuIDirect3DDevice8_SetRenderState_Simple
+(
+    DWORD Method,
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_Simple\n"
+               "(\n"
+               "   Method              : 0x%.08X\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Method, Value);
+    }
+    #endif
+
+    printf("*Warning* SetRenderState_Simple not implemented!\n");
 
     EmuSwapFS();   // XBox FS
 
