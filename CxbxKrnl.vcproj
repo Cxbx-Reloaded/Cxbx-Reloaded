@@ -144,6 +144,9 @@
 				RelativePath="Doc\Changelog.txt">
 			</File>
 			<File
+				RelativePath="Doc\RemovedCode.txt">
+			</File>
+			<File
 				RelativePath="Doc\Thanks.txt">
 			</File>
 			<File
@@ -154,10 +157,19 @@
 			Name="Include"
 			Filter="">
 			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\CxbxKrnl.h">
+				RelativePath="Include\Win32\CxbxKrnl\EmuX.h">
 			</File>
 			<File
-				RelativePath="Include\Win32\CxbxKrnl\LDT.h">
+				RelativePath="Include\Win32\CxbxKrnl\EmuXFS.h">
+			</File>
+			<File
+				RelativePath="Include\Win32\CxbxKrnl\EmuXKrnl.h">
+			</File>
+			<File
+				RelativePath="Include\Win32\CxbxKrnl\EmuXLDT.h">
+			</File>
+			<File
+				RelativePath="Include\Win32\CxbxKrnl\EmuXxapi.h">
 			</File>
 			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\xntdll.h">
@@ -171,13 +183,22 @@
 			Name="Source"
 			Filter="">
 			<File
-				RelativePath=".\Source\Win32\CxbxKrnl\CxbxKrnl.cpp">
+				RelativePath="Source\Win32\CxbxKrnl\EmuX.cpp">
+			</File>
+			<File
+				RelativePath="Source\Win32\CxbxKrnl\EmuXFS.cpp">
+			</File>
+			<File
+				RelativePath="Source\Win32\CxbxKrnl\EmuXKrnl.cpp">
+			</File>
+			<File
+				RelativePath="Source\Win32\CxbxKrnl\EmuXLDT.cpp">
+			</File>
+			<File
+				RelativePath="Source\Win32\CxbxKrnl\EmuXxapi.cpp">
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\KernelThunk.cpp">
-			</File>
-			<File
-				RelativePath="Source\Win32\CxbxKrnl\LDT.cpp">
 			</File>
 		</Filter>
 	</Files>

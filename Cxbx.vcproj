@@ -147,6 +147,9 @@ upxCxbx.bat
 				RelativePath="Doc\Changelog.txt">
 			</File>
 			<File
+				RelativePath="Doc\RemovedCode.txt">
+			</File>
+			<File
 				RelativePath="Doc\Thanks.txt">
 			</File>
 			<File

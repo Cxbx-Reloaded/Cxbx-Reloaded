@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->CxbxKrnl.cpp
+// *   Cxbx->Win32->CxbxKrnl->EmuXKrnl.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,13 +31,11 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Cxbx.h"
-
 #define CXBXKRNL_INTERNAL
 #define _XBOXKRNL_LOCAL_
-#include "CxbxKrnl.h"
 
-#include "LDT.h"
+#include "Cxbx.h"
+#include "EmuX.h"
 
 #include <stdio.h>
 
@@ -54,268 +52,10 @@ namespace xntdll
 // ******************************************************************
 namespace win32
 {
-    #undef FIELD_OFFSET     // prevent macro redefinition warnings
     #include <windows.h>
 };
 
 using namespace win32;
-
-// ******************************************************************
-// * func: EmuXInstallWrappers
-// ******************************************************************
-void EmuXInstallWrappers(void (*Entry)())
-{
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    {
-        printf("CxbxKrnl [0x%.08X]: EmuXInstallWrappers()\n"
-               "          (\n"
-               "             Entry               : 0x%.08X\n"
-               "          );\n",
-            GetCurrentThreadId(), Entry);
-    }
-
-    // ******************************************************************
-    // * install CreateThread vector
-    // ******************************************************************
-    {
-        // ******************************************************************
-        // * CreateThread is easily located using an offset from the standard
-        // * xbe entry point
-        // ******************************************************************
-        uint32  RelCallAddr         = (uint32)Entry + 0x54;
-        uint32  RelRealCreateThread = *(uint32*)(RelCallAddr + 1);
-        uint08 *RealCreateThread    = (uint08*)(RelCallAddr + RelRealCreateThread + 5);
-
-        *(uint08*)&RealCreateThread[0] = 0xE9;
-        *(uint32*)&RealCreateThread[1] = (uint32)xboxkrnl::EmuCreateThread - (uint32)RealCreateThread - 5;
-    }
-
-    // ******************************************************************
-    // * install CloseHandle vector
-    // ******************************************************************
-    {
-        // ******************************************************************
-        // * CloseHandle is easily located using an offset from the standard
-        // * xbe entry point
-        // ******************************************************************
-        uint32  RelCallAddr         = (uint32)Entry + 0x6A;
-        uint32  RelRealCloseHandle  = *(uint32*)(RelCallAddr + 1);
-        uint08 *RealCloseHandle     = (uint08*)(RelCallAddr + RelRealCloseHandle + 5);
-
-        *(uint08*)&RealCloseHandle[0] = 0xE9;
-        *(uint32*)&RealCloseHandle[1] = (uint32)xboxkrnl::EmuCloseHandle - (uint32)RealCloseHandle - 5;
-    }
-}
-
-// ******************************************************************
-// * func: EmuXGenerateFS
-// ******************************************************************
-void EmuXGenerateFS()
-{
-    NT_TIB         *OrgNtTib;
-    xboxkrnl::KPCR *NewPcr;
-
-    uint16 NewFS=0;
-    uint16 OrgFS=0;
-
-    uint32 dwSize = sizeof(xboxkrnl::KPCR);
-
-    NewPcr = (xboxkrnl::KPCR*)new char[dwSize];
-
-    NewFS = LDTAllocate((uint32)NewPcr, (uint32)NewPcr + dwSize);
-
-    // ******************************************************************
-    // * Obtain "OrgFS"
-    // ******************************************************************
-    __asm
-    {
-        // Obtain "OrgFS"
-        mov ax, fs
-        mov OrgFS, ax
-
-        // Obtain "OrgNtTib"
-        mov eax, fs:[0x18]
-        mov OrgNtTib, eax
-
-        // Save "NewFS" inside OrgFS.ArbitraryUserPointer
-        mov ax, NewFS
-        mov fs:[0x14], ax
-    }
-
-    // ******************************************************************
-    // * Generate TIB
-    // ******************************************************************
-    {
-        void *TLSPtr = 0;
-
-        xboxkrnl::KTHREAD *KThread = new xboxkrnl::KTHREAD();
-
-        memcpy(&NewPcr->NtTib, OrgNtTib, sizeof(NT_TIB));
-
-        NewPcr->NtTib.Self = &NewPcr->NtTib;
-        NewPcr->PrcbData.CurrentThread = KThread;
-
-        // Retrieve Win2k/XP TEB.ThreadLocalStoragePointer
-        __asm
-        {
-            mov eax, fs:[0x2C]
-            mov TLSPtr, eax
-        }
-
-        KThread->TlsData = (void*)TLSPtr;
-    }
-
-    // ******************************************************************
-    // * Swap into the "NewFS"
-    // ******************************************************************
-    EmuXSwapFS();
-
-    // ******************************************************************
-    // * Save "OrgFS" inside NewFS.ArbitraryUserPointer
-    // ******************************************************************
-    __asm
-    {
-        mov ax, OrgFS
-        mov fs:[0x14], ax   // NewFS.ArbitraryUserPointer
-    }
-
-    // ******************************************************************
-    // * Swap back into the "OrgFS"
-    // ******************************************************************
-    EmuXSwapFS();
-}
-
-// ******************************************************************
-// * func: EmuXInit
-// ******************************************************************
-CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, uint08 *XBEHeader, uint32 XBEHeaderSize, void (*Entry)())
-{
-    // ******************************************************************
-    // * debug console allocation (if configured)
-    // ******************************************************************
-    if(DebugConsole == DM_CONSOLE)
-    {
-        if(AllocConsole())
-        {
-            freopen("CONOUT$", "wt", stdout);
-
-            printf("CxbxKrnl [0x%.08X]: Debug console allocated.\n", GetCurrentThreadId());
-        }
-    }
-    else if(DebugConsole == DM_FILE)
-    {
-        FreeConsole();
-
-        freopen(DebugFilename, "wt", stdout);
-
-        printf("CxbxKrnl [0x%.08X]: Debug console allocated.\n", GetCurrentThreadId());
-    }
-
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    {
-        printf("CxbxKrnl [0x%.08X]: EmuXInit\n"
-               "          (\n"
-               "             DebugConsole        : 0x%.08X\n"
-               "             DebugFilename       : \"%s\"\n"
-               "             XBEHeader           : 0x%.08X\n"
-               "             XBEHeaderSize       : 0x%.08X\n"
-               "             Entry               : 0x%.08X\n"
-               "          );\n",
-               GetCurrentThreadId(), DebugConsole, DebugFilename, XBEHeader, XBEHeaderSize, Entry);
-    }
-
-    // ******************************************************************
-    // * Locate functions and install wrapper vectors
-    // ******************************************************************
-    {
-        EmuXInstallWrappers(Entry);
-    }
-
-    // ******************************************************************
-    // * Load the necessary pieces of XBEHeader
-    // ******************************************************************
-    {
-        uint32 old_protection = 0;
-
-        VirtualProtect((void*)0x00010000, 0x1000, PAGE_READWRITE, &old_protection);
-
-        // we sure hope we aren't corrupting anything necessary for an .exe to survive :]
-        uint32 dwSizeofHeaders   = *(uint32*)&XBEHeader[0x0108];
-        uint32 dwCertificateAddr = *(uint32*)&XBEHeader[0x0118];
-        uint32 dwInitFlags       = *(uint32*)&XBEHeader[0x0124];
-        uint32 dwPeHeapReserve   = *(uint32*)&XBEHeader[0x0134];
-        uint32 dwPeHeapCommit    = *(uint32*)&XBEHeader[0x0138];
-
-        *(uint32 *)0x00010108 = dwSizeofHeaders;
-        *(uint32 *)0x00010118 = dwCertificateAddr;
-        *(uint32 *)0x00010124 = dwInitFlags;
-        *(uint32 *)0x00010134 = dwPeHeapReserve;
-        *(uint32 *)0x00010138 = dwPeHeapCommit;
-
-        memcpy((void*)dwCertificateAddr, &XBEHeader[dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
-    }
-
-    // ******************************************************************
-    // * Initialize LDT system
-    // ******************************************************************
-    {
-        LDTSystemInit();
-    }
-
-    // ******************************************************************
-    // * Initialize FS:* structure
-    // ******************************************************************
-    {
-        EmuXGenerateFS();
-    }
-
-    printf("CxbxKrnl [0x%.08X]: Initial thread starting.\n", GetCurrentThreadId());
-
-    EmuXSwapFS();   // XBox FS
-
-    // This must be enabled or the debugger may crash (sigh)
-    //_asm _emit 0xF1
-
-    Entry();
-
-    EmuXSwapFS();   // Win2k/XP FS
-
-    printf("CxbxKrnl [0x%.08X]: Initial thread ended.\n", GetCurrentThreadId());
-
-    fflush(stdout);
-
-    return;
-}
-
-// ******************************************************************
-// * func: EmuXDummy
-// ******************************************************************
-CXBXKRNL_API void NTAPI EmuXDummy()
-{
-    EmuXSwapFS();   // Win2k/XP FS
-
-    MessageBox(NULL, "EmuXDummy()", "CxbxKrnl", MB_OK);
-
-    EmuXSwapFS();   // XBox FS
-}
-
-// ******************************************************************
-// * func: EmuXPanic
-// ******************************************************************
-CXBXKRNL_API void NTAPI EmuXPanic()
-{
-    EmuXSwapFS();   // Win2k/XP FS
-
-    printf("CxbxKrnl [0x%.08X]: EmuXPanic()\n", GetCurrentThreadId());
-
-    MessageBox(NULL, "Kernel Panic! Process will now terminate.", "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
-
-    EmuXSwapFS();   // XBox FS
-}
 
 // ******************************************************************
 // * (HELPER) PsCreateSystemThreadExProxyParam

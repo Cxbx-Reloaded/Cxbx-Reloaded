@@ -43,7 +43,7 @@ Exe::Exe(const char *x_szFilename)
 {
     ConstructorInit();
 
-    printf("Exe::Exe: Reading Exe file...");
+    printf("Exe::Exe: Opening Exe file...");
 
     FILE *ExeFile = fopen(x_szFilename, "rb");
 
@@ -52,7 +52,7 @@ Exe::Exe(const char *x_szFilename)
     // ******************************************************************
     if(ExeFile == 0)
     {
-        SetError("could not open .exe file.", true);
+        SetError("Could not open Exe file.", true);
         return;
     }
 
@@ -66,7 +66,7 @@ Exe::Exe(const char *x_szFilename)
 
         if(fread(&m_DOSHeader.m_magic, sizeof(m_DOSHeader.m_magic), 1, ExeFile) != 1)
         {
-            SetError("unexpected read error while reading magic number", true);
+            SetError("Unexpected read error while reading magic number", true);
             goto cleanup;
         }
 
@@ -76,7 +76,7 @@ Exe::Exe(const char *x_szFilename)
 
             if(fread(&m_DOSHeader.m_cblp, sizeof(m_DOSHeader)-2, 1, ExeFile) != 1)
             {
-                SetError("unexpected read error while reading dos header", true);
+                SetError("Unexpected read error while reading DOS stub", true);
                 goto cleanup;
             }
 
@@ -98,13 +98,13 @@ Exe::Exe(const char *x_szFilename)
 
         if(fread(&m_Header, sizeof(m_Header), 1, ExeFile) != 1)
         {
-            SetError("unexpected read error while reading pe header", true);
+            SetError("Unexpected read error while reading PE header", true);
             goto cleanup;
         }
 
         if(m_Header.m_magic != *(uint32*)"PE\0\0")
         {
-            SetError("invalid file,  could not locate PE header", true);
+            SetError("Invalid file (could not locate PE header)", true);
             goto cleanup;
         }
 
@@ -119,13 +119,13 @@ Exe::Exe(const char *x_szFilename)
 
         if(fread(&m_OptionalHeader, sizeof(m_OptionalHeader), 1, ExeFile) != 1)
         {
-            SetError("unexpected read error while reading optional header", true);
+            SetError("Unexpected read error while reading PE optional header", true);
             goto cleanup;
         }
 
         if(m_OptionalHeader.m_magic != 0x010B)
         {
-            SetError("invalid file, could not locate optional header", true);
+            SetError("Invalid file (could not locate PE optional header)", true);
             goto cleanup;
         }
 
@@ -147,7 +147,7 @@ Exe::Exe(const char *x_szFilename)
             if(fread(&m_SectionHeader[v], sizeof(SectionHeader), 1, ExeFile) != 1)
             {
                 char buffer[255];
-                sprintf(buffer, "could not read pe section header %d (%Xh)", v, v);
+                sprintf(buffer, "Could not read PE section header %d (%Xh)", v, v);
                 SetError(buffer, true);
                 goto cleanup;
             }
@@ -190,7 +190,7 @@ Exe::Exe(const char *x_szFilename)
                 if(fread(m_bzSection[v], raw_size, 1, ExeFile) != 1)
                 {
                     char buffer[255];
-                    sprintf(buffer, "could not read pe section %d (%Xh)", v, v);
+                    sprintf(buffer, "Could not read PE section %d (%Xh)", v, v);
                     SetError(buffer, true);
                     goto cleanup;
                 }
@@ -200,12 +200,15 @@ Exe::Exe(const char *x_szFilename)
         }
     }
 
-    printf("Exe::Exe: .Exe was successfully opened.\n", x_szFilename);
+    printf("Exe::Exe: Exe was successfully opened.\n", x_szFilename);
 
 cleanup:
 
     if(GetError() != 0)
+    {
         printf("FAILED!\n");
+        printf("Exe::Exe: ERROR -> %s\n", GetError());
+    }
 
     fclose(ExeFile);
 }
@@ -243,7 +246,7 @@ void Exe::Export(const char *x_szExeFilename)
     if(GetError() != 0)
         return;
 
-    printf("Exe::Export: Writing Exe file...");
+    printf("Exe::Export: Opening Exe file...");
 
     FILE *ExeFile = fopen(x_szExeFilename, "wb");
 
@@ -252,7 +255,7 @@ void Exe::Export(const char *x_szExeFilename)
     // ******************************************************************
     if(ExeFile == 0)
     {
-        SetError("could not open .exe file.", false);
+        SetError("Could not open .exe file.", false);
         return;
     }
 
@@ -266,7 +269,7 @@ void Exe::Export(const char *x_szExeFilename)
 
         if(fwrite(bzDOSStub, sizeof(bzDOSStub), 1, ExeFile) != 1)
         {
-            SetError("could not write dos stub", false);
+            SetError("Could not write dos stub", false);
             goto cleanup;
         }
 
@@ -281,7 +284,7 @@ void Exe::Export(const char *x_szExeFilename)
 
         if(fwrite(&m_Header, sizeof(Header), 1, ExeFile) != 1)
         {
-            SetError("could not write pe header", false);
+            SetError("Could not write PE header", false);
             goto cleanup;
         }
 
@@ -296,7 +299,7 @@ void Exe::Export(const char *x_szExeFilename)
 
         if(fwrite(&m_OptionalHeader, sizeof(OptionalHeader), 1, ExeFile) != 1)
         {
-            SetError("could not write pe optional header", false);
+            SetError("Could not write PE optional header", false);
             goto cleanup;
         }
 
@@ -316,7 +319,7 @@ void Exe::Export(const char *x_szExeFilename)
             if(fwrite(&m_SectionHeader[v], sizeof(SectionHeader), 1, ExeFile) != 1)
             {
                 char buffer[255];
-                sprintf(buffer, "could not write pe section header %d (%Xh)", v, v);
+                sprintf(buffer, "Could not write PE section header %d (%Xh)", v, v);
                 SetError(buffer, false);
                 goto cleanup;
             }
@@ -349,7 +352,7 @@ void Exe::Export(const char *x_szExeFilename)
             if(fwrite(m_bzSection[v], RawSize, 1, ExeFile) != 1)
             {
                 char Buffer[255];
-                sprintf(Buffer, "could not write pe section %d (%Xh)", v, v);
+                sprintf(Buffer, "Could not write PE section %d (%Xh)", v, v);
                 SetError(Buffer, false);
                 goto cleanup;
             }
@@ -363,7 +366,10 @@ void Exe::Export(const char *x_szExeFilename)
 cleanup:
 
     if(GetError() != 0)
+    {
         printf("FAILED!\n");
+        printf("Exe::Export: ERROR -> %s\n", GetError());
+    }
 
     fclose(ExeFile);
 

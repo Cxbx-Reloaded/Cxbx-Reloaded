@@ -35,7 +35,7 @@
 
 #include "EmuExe.h"
 #include "Prolog.h"
-#include "CxbxKrnl.h"
+#include "EmuX.h"
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>

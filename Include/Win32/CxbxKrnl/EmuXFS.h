@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Cxbx.h
+// *   Cxbx->Win32->CxbxKrnl->EmuXFS.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,60 +31,36 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef CXBX_H
-#define CXBX_H
+#ifndef EMUXFS_H
+#define EMUXFS_H
 
 // ******************************************************************
-// * Caustik's favorite typedefs
+// * func: EmuXSwapFS
 // ******************************************************************
-typedef signed int     sint;
-typedef unsigned int   uint;
-typedef char           int08;
-typedef short          int16;
-typedef long           int32;
-typedef unsigned char  uint08;
-typedef unsigned short uint16;
-typedef unsigned long  uint32;
-typedef signed char    sint08;
-typedef signed short   sint16;
-typedef signed long    sint32;
-
+// *
+// * This function is used to swap between the native Win2k/XP FS:
+// * structure, and the EmuX FS: structure. Before running Windows
+// * code, you *must* swap over to Win2k/XP FS. Similarly, before
+// * running Xbox code, you *must* swap back over to EmuX FS.
+// *
 // ******************************************************************
-// * Version Information
-// ******************************************************************
-#define CXBX_VERSION "0.6.0-pre11"
-
-// ******************************************************************
-// * Define this to trace intercepted function calls
-// ******************************************************************
-#define _DEBUG_TRACE
-
-// ******************************************************************
-// * func : RoundUp
-// ******************************************************************
-static uint32 RoundUp(uint32 x_dwValue, uint32 x_dwMult)
+static inline void EmuXSwapFS()
 {
-    if(x_dwMult == 0)
-        return x_dwValue;
-
-    return x_dwValue - (x_dwValue-1)%x_dwMult + (x_dwMult - 1);
+    __asm
+    {
+        mov ax, fs:[0x14]   // FS.ArbitraryUserPointer
+        mov fs, ax
+    }
 }
 
 // ******************************************************************
-// * enum : DebugMode
+// * func: EmuXGenerateFS
 // ******************************************************************
-enum DebugMode
-{
-    DM_NONE,
-    DM_CONSOLE,
-    DM_FILE
-};
+void EmuXGenerateFS();
 
 // ******************************************************************
-// * Core Components
+// * func: EmuXInitFS
 // ******************************************************************
-#include "Core/Error.h"
-#include "Core/Exe.h"
-#include "Core/Xbe.h"
+void EmuXInitFS();
 
 #endif

@@ -32,8 +32,8 @@
 // *
 // ******************************************************************
 #include "Cxbx.h"
+#include "EmuX.h"
 #include "EmuExe.h"
-#include "CxbxKrnl.h"
 #include "WndMain.h"
 #include "WndAbout.h"
 

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->CxbxKrnl.h
+// *   Cxbx->Win32->CxbxKrnl->EmuXxapi.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,75 +31,40 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef CXBXKRNL_H
-#define CXBXKRNL_H
+#ifndef EMUXAPI_H
+#define EMUXAPI_H
+
+#include "EmuX.h"
 
 // ******************************************************************
-// * func: EmuXSwapFS
+// * calling conventions
 // ******************************************************************
-// *
-// * This function is used to swap between the native Win2k/XP FS:
-// * structure, and the EmuX FS: structure. Before running Windows
-// * code, you *must* swap over to Win2k/XP FS. Similarly, before
-// * running Xbox code, you *must* swap back over to EmuX FS.
-// *
-// ******************************************************************
-inline void EmuXSwapFS()
-{
-    __asm
-    {
-        mov ax, fs:[0x14]   // FS.ArbitraryUserPointer
-        mov fs, ax
-    }
-}
-
-void EmuXGenerateFS();
+#define WINAPI              __stdcall
 
 // ******************************************************************
-// * namespace used to avoid collisions with ntdll and win32
+// * basic types
 // ******************************************************************
-namespace xboxkrnl
-{
-    #include <xboxkrnl/xboxkrnl.h>
-    #include "EmuXapi.h"
-};
-
-#if defined(__cplusplus)
-extern "C"
-{
-#endif
+typedef int                 BOOL;
 
 // ******************************************************************
-// * cxbxkrnl exports, others import
+// * func: EmuXCreateThread
 // ******************************************************************
-#ifndef CXBXKRNL_INTERNAL
-#define CXBXKRNL_API DECLSPEC_IMPORT
-#else
-#define CXBXKRNL_API DECLSPEC_EXPORT
-#endif
+HANDLE WINAPI EmuXCreateThread
+(
+    LPSECURITY_ATTRIBUTES   lpThreadAttributes,
+    DWORD                   dwStackSize,
+    LPTHREAD_START_ROUTINE  lpStartAddress,
+    LPVOID                  lpParameter,
+    DWORD                   dwCreationFlags,
+    LPDWORD                 lpThreadId
+);
 
 // ******************************************************************
-// * data: KernelThunkTable
+// * func: EmuXCloseHandle
 // ******************************************************************
-extern CXBXKRNL_API uint32 KernelThunkTable[367];
-
-// ******************************************************************
-// * func: EmuXInit
-// ******************************************************************
-CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, uint08 *XBEHeader, uint32 XBEHeaderSize, void (*Entry)());
-
-// ******************************************************************
-// * func: EmuXDummy
-// ******************************************************************
-CXBXKRNL_API void NTAPI EmuXDummy();
-
-// ******************************************************************
-// * func: EmuXPanic
-// ******************************************************************
-CXBXKRNL_API void NTAPI EmuXPanic();
-
-#if defined(__cplusplus)
-}
-#endif
+BOOL WINAPI EmuXCloseHandle
+(
+    HANDLE hObject
+);
 
 #endif

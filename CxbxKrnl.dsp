@@ -128,15 +128,23 @@ SOURCE=.\Doc\Todo.txt
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Include\Win32\CxbxKrnl\CxbxKrnl.h
+SOURCE=.\Include\Win32\CxbxKrnl\EmuX.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Win32\CxbxKrnl\EmuXapi.h
+SOURCE=.\Include\Win32\CxbxKrnl\EmuXFS.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Win32\CxbxKrnl\LDT.h
+SOURCE=.\Include\Win32\CxbxKrnl\EmuXKrnl.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\EmuXLDT.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\EmuXxapi.h
 # End Source File
 # Begin Source File
 
@@ -152,19 +160,27 @@ SOURCE=.\Include\Win32\CxbxKrnl\xntdll.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\CxbxKrnl.cpp
+SOURCE=.\Source\Win32\CxbxKrnl\EmuX.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuXapi.cpp
+SOURCE=.\Source\Win32\CxbxKrnl\EmuXFS.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuXKrnl.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuXLDT.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuXxapi.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\KernelThunk.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Win32\CxbxKrnl\LDT.cpp
 # End Source File
 # End Group
 # End Target

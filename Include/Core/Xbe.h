@@ -291,18 +291,18 @@ class Xbe : public Error
 // ******************************************************************
 // * Debug / Retail XOR Keys
 // ****************************************************************** 
-const uint32 XOR_EP_DEBUG  = 0x94859D4B; // Entry Point (Debug)
-const uint32 XOR_EP_RETAIL = 0xA8FC57AB; // Entry Point (Retail)
-const uint32 XOR_KT_DEBUG  = 0xEFB1F152; // Kernel Thunk (Debug)
-const uint32 XOR_KT_RETAIL = 0x5B6D40B6; // Kernel Thunk (Retail)
+const uint32 XOR_EP_DEBUG                            = 0x94859D4B; // Entry Point (Debug)
+const uint32 XOR_EP_RETAIL                           = 0xA8FC57AB; // Entry Point (Retail)
+const uint32 XOR_KT_DEBUG                            = 0xEFB1F152; // Kernel Thunk (Debug)
+const uint32 XOR_KT_RETAIL                           = 0x5B6D40B6; // Kernel Thunk (Retail)
 
 // ******************************************************************
 // * Game region flags for XBE certificate
 // ****************************************************************** 
-const uint32 XBEIMAGE_GAME_REGION_NA            = 0x00000001;
-const uint32 XBEIMAGE_GAME_REGION_JAPAN         = 0x00000002;
-const uint32 XBEIMAGE_GAME_REGION_RESTOFWORLD   = 0x00000004;
-const uint32 XBEIMAGE_GAME_REGION_MANUFACTURING = 0x80000000;
+const uint32 XBEIMAGE_GAME_REGION_NA                 = 0x00000001;
+const uint32 XBEIMAGE_GAME_REGION_JAPAN              = 0x00000002;
+const uint32 XBEIMAGE_GAME_REGION_RESTOFWORLD        = 0x00000004;
+const uint32 XBEIMAGE_GAME_REGION_MANUFACTURING      = 0x80000000;
  
 // ******************************************************************
 // * Media type flags for XBE certificate

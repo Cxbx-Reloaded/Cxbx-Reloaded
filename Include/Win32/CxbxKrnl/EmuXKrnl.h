@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->LDT.h
+// *   Cxbx->Win32->CxbxKrnl->EmuXKrnl.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,13 +31,8 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef LDT_H
-#define LDT_H
+#ifndef EMUXKRNL_H
+#define EMUXKRNL_H
 
-void    LDTSystemInit();
-
-uint16  LDTAllocate(uint32 dwBaseAddr, uint32 dwLimit);
-
-void    LDTDeallocate(uint16 wSelector);
 
 #endif

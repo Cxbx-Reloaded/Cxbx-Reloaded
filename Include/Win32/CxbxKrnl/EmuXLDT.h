@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Cxbx.h
+// *   Cxbx->Win32->CxbxKrnl->EmuXLDT.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,60 +31,22 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef CXBX_H
-#define CXBX_H
+#ifndef EMUXLDT_H
+#define EMUXLDT_H
 
 // ******************************************************************
-// * Caustik's favorite typedefs
+// * func: EmuXInitLDT
 // ******************************************************************
-typedef signed int     sint;
-typedef unsigned int   uint;
-typedef char           int08;
-typedef short          int16;
-typedef long           int32;
-typedef unsigned char  uint08;
-typedef unsigned short uint16;
-typedef unsigned long  uint32;
-typedef signed char    sint08;
-typedef signed short   sint16;
-typedef signed long    sint32;
+void EmuXInitLDT();
 
 // ******************************************************************
-// * Version Information
+// * func: EmuXAllocateLDT
 // ******************************************************************
-#define CXBX_VERSION "0.6.0-pre11"
+uint16 EmuXAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit);
 
 // ******************************************************************
-// * Define this to trace intercepted function calls
+// * func: EmuXDeallocateLDT
 // ******************************************************************
-#define _DEBUG_TRACE
-
-// ******************************************************************
-// * func : RoundUp
-// ******************************************************************
-static uint32 RoundUp(uint32 x_dwValue, uint32 x_dwMult)
-{
-    if(x_dwMult == 0)
-        return x_dwValue;
-
-    return x_dwValue - (x_dwValue-1)%x_dwMult + (x_dwMult - 1);
-}
-
-// ******************************************************************
-// * enum : DebugMode
-// ******************************************************************
-enum DebugMode
-{
-    DM_NONE,
-    DM_CONSOLE,
-    DM_FILE
-};
-
-// ******************************************************************
-// * Core Components
-// ******************************************************************
-#include "Core/Error.h"
-#include "Core/Exe.h"
-#include "Core/Xbe.h"
+void EmuXDeallocateLDT(uint16 wSelector);
 
 #endif

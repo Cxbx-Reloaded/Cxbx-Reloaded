@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXapi.h
+// *   Cxbx->Win32->CxbxKrnl->EmuX.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,40 +31,58 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUXAPI_H
-#define EMUXAPI_H
-
-#include "CxbxKrnl.h"
+#ifndef EMUX_H
+#define EMUX_H
 
 // ******************************************************************
-// * calling conventions
+// * namespace used to avoid collisions with ntdll and win32
 // ******************************************************************
-#define WINAPI              __stdcall
+namespace xboxkrnl
+{
+    #include <xboxkrnl/xboxkrnl.h>
+    #include "EmuXxapi.h"
+};
+
+#include "EmuXKrnl.h"
+#include "EmuXLDT.h"
+#include "EmuXFS.h"
+
+#if defined(__cplusplus)
+extern "C"
+{
+#endif
 
 // ******************************************************************
-// * basic types
+// * cxbxkrnl exports, others import
 // ******************************************************************
-typedef int                 BOOL;
+#ifndef CXBXKRNL_INTERNAL
+#define CXBXKRNL_API DECLSPEC_IMPORT
+#else
+#define CXBXKRNL_API DECLSPEC_EXPORT
+#endif
 
 // ******************************************************************
-// * func: EmuCreateThread
+// * func: EmuXInit
 // ******************************************************************
-HANDLE WINAPI EmuCreateThread
-(
-    LPSECURITY_ATTRIBUTES   lpThreadAttributes,
-    DWORD                   dwStackSize,
-    LPTHREAD_START_ROUTINE  lpStartAddress,
-    LPVOID                  lpParameter,
-    DWORD                   dwCreationFlags,
-    LPDWORD                 lpThreadId
-);
+CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, uint08 *XBEHeader, uint32 XBEHeaderSize, void (*Entry)());
 
 // ******************************************************************
-// * func: EmuCloseHandle
+// * func: EmuXDummy
 // ******************************************************************
-BOOL WINAPI EmuCloseHandle
-(
-    HANDLE hObject
-);
+CXBXKRNL_API void NTAPI EmuXDummy();
+
+// ******************************************************************
+// * func: EmuXPanic
+// ******************************************************************
+CXBXKRNL_API void NTAPI EmuXPanic();
+
+// ******************************************************************
+// * data: KernelThunkTable
+// ******************************************************************
+extern CXBXKRNL_API uint32 KernelThunkTable[367];
+
+#if defined(__cplusplus)
+}
+#endif
 
 #endif

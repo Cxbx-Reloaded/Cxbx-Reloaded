@@ -196,8 +196,8 @@ class Exe : public Error
 // ******************************************************************
 // * PE File/Segment alignments: these must always both equal 0x0020
 // ******************************************************************
-static uint32 PE_FILE_ALIGN (0x0020);
-static uint32 PE_SEGM_ALIGN (0x0020);
+#define PE_FILE_ALIGN                        0x00000020  // File alignment
+#define PE_SEGM_ALIGN                        0x00000020  // Segment alignment
 
 // ******************************************************************
 // * Section Characeristics
