@@ -2606,8 +2606,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
 
     if(PCFormat != D3DFMT_YUY2)
     {
-        DWORD   PCUsage = Usage & (D3DUSAGE_RENDERTARGET);
-//        DWORD   PCUsage = Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL);
+        DWORD   PCUsage = Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL);
         D3DPOOL PCPool  = D3DPOOL_MANAGED;
 
         EmuAdjustPower2(&Width, &Height);
