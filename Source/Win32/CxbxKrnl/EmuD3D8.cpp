@@ -3723,86 +3723,109 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
             for(uint32 r=0;r<stop;r++)
             {
-                D3DLOCKED_RECT LockedRect;
+                // as we iterate through mipmap levels, we'll adjust the source resource offset
+                DWORD dwCompressedOffset = 0;
 
-                // copy over data (deswizzle if necessary)
-                if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
-                    hRet = pResource->EmuSurface8->LockRect(&LockedRect, NULL, 0);
-                else
+                // iterate through the number of mipmap levels
+                for(uint level=0;level<dwMipMapLevels;level++)
                 {
-                    if(bCubemap)
-                        hRet = pResource->EmuCubeTexture8->LockRect((D3DCUBEMAP_FACES)r, 0, &LockedRect, NULL, 0);
+                    D3DLOCKED_RECT LockedRect;
+
+                    // copy over data (deswizzle if necessary)
+                    if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
+                        hRet = pResource->EmuSurface8->LockRect(&LockedRect, NULL, 0);
                     else
-                        hRet = pResource->EmuTexture8->LockRect(0, &LockedRect, NULL, 0);
-                }
-
-                RECT  iRect  = {0,0,0,0};
-                POINT iPoint = {0,0};
-
-                BYTE *pSrc = (BYTE*)pBase;
-
-                if( (pResource->Data == X_D3DRESOURCE_DATA_FLAG_SURFACE) || ((DWORD)pBase == X_D3DRESOURCE_DATA_FLAG_SURFACE) )
-                {
-                    EmuWarning("Attempt to registered to another resource's data (eww!)");
-
-                    // TODO: handle this horrible situation
-                    BYTE *pDest = (BYTE*)LockedRect.pBits;
-                    for(DWORD v=0;v<dwHeight;v++)
                     {
-                        memset(pDest, 0, dwWidth*dwBPP);
-
-                        pDest += LockedRect.Pitch;
-                        pSrc  += dwPitch;
-                    }
-                }
-                else
-                {
-                    if(bSwizzled)
-                    {
-                        if((DWORD)pSrc == 0x80000000)
+                        if(bCubemap)
                         {
-                            // TODO: Fix or handle this situation..?
+                            hRet = pResource->EmuCubeTexture8->LockRect((D3DCUBEMAP_FACES)r, 0, &LockedRect, NULL, 0);
                         }
                         else
                         {
-                            XTL::EmuXGUnswizzleRect
-                            (
-                                pSrc, dwWidth, dwHeight, dwDepth, LockedRect.pBits, 
-                                LockedRect.Pitch, iRect, iPoint, dwBPP
-                            );
+                            hRet = pResource->EmuTexture8->LockRect(level, &LockedRect, NULL, 0);
                         }
                     }
-                    else if(bCompressed)
+
+                    RECT  iRect  = {0,0,0,0};
+                    POINT iPoint = {0,0};
+
+                    BYTE *pSrc = (BYTE*)pBase;
+
+                    if( (pResource->Data == X_D3DRESOURCE_DATA_FLAG_SURFACE) || ((DWORD)pBase == X_D3DRESOURCE_DATA_FLAG_SURFACE) )
                     {
-                        memcpy(LockedRect.pBits, pSrc, dwCompressedSize);
-                    }
-                    else
-                    {
+                        EmuWarning("Attempt to registered to another resource's data (eww!)");
+
+                        // TODO: handle this horrible situation
                         BYTE *pDest = (BYTE*)LockedRect.pBits;
+                        for(DWORD v=0;v<dwHeight;v++)
+                        {
+                            memset(pDest, 0, dwWidth*dwBPP);
 
-                        if((DWORD)LockedRect.Pitch == dwPitch && dwPitch == dwWidth*dwBPP)
-                            memcpy(pDest, pSrc, dwWidth*dwHeight*dwBPP);
+                            pDest += LockedRect.Pitch;
+                            pSrc  += dwPitch;
+                        }
+                    }
+                    else
+                    {
+                        if(bSwizzled)
+                        {
+                            // for now, we have no logic for uncompressed mip map levels
+                            if(level == 0)
+                            {
+                                if((DWORD)pSrc == 0x80000000)
+                                {
+                                    // TODO: Fix or handle this situation..?
+                                }
+                                else
+                                {
+                                    XTL::EmuXGUnswizzleRect
+                                    (
+                                        pSrc, dwWidth, dwHeight, dwDepth, LockedRect.pBits, 
+                                        LockedRect.Pitch, iRect, iPoint, dwBPP
+                                    );
+                                }
+                            }
+                        }
+                        else if(bCompressed)
+                        {
+                            // NOTE: compressed size is (dwWidth/2)*(dwHeight/2)/2, so each level divides by 4
+
+                            memcpy(LockedRect.pBits, pSrc + dwCompressedOffset, dwCompressedSize >> (level*2));
+
+                            dwCompressedOffset += (dwCompressedSize >> (level*2));
+                        }
                         else
                         {
-                            for(DWORD v=0;v<dwHeight;v++)
+                            // for now, we have no logic for uncompressed mipmap levels
+                            if(level == 0)
                             {
-                                memcpy(pDest, pSrc, dwWidth*dwBPP);
+                                BYTE *pDest = (BYTE*)LockedRect.pBits;
 
-                                pDest += LockedRect.Pitch;
-                                pSrc  += dwPitch;
+                                if((DWORD)LockedRect.Pitch == dwPitch && dwPitch == dwWidth*dwBPP)
+                                    memcpy(pDest, pSrc, dwWidth*dwHeight*dwBPP);
+                                else
+                                {
+                                    for(DWORD v=0;v<dwHeight;v++)
+                                    {
+                                        memcpy(pDest, pSrc, dwWidth*dwBPP);
+
+                                        pDest += LockedRect.Pitch;
+                                        pSrc  += dwPitch;
+                                    }
+                                }
                             }
                         }
                     }
-                }
 
-                if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
-                    pResource->EmuSurface8->UnlockRect();
-                else
-                {
-                    if(bCubemap)
-                        pResource->EmuCubeTexture8->UnlockRect((D3DCUBEMAP_FACES)r, 0);
+                    if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
+                        pResource->EmuSurface8->UnlockRect();
                     else
-                        pResource->EmuTexture8->UnlockRect(0);
+                    {
+                        if(bCubemap)
+                            pResource->EmuCubeTexture8->UnlockRect((D3DCUBEMAP_FACES)r, 0);
+                        else
+                            pResource->EmuTexture8->UnlockRect(level);
+                    }
                 }
             }
 

@@ -233,6 +233,9 @@ BOOL WINAPI XTL::EmuQueryPerformanceCounter
 
     BOOL bRet = QueryPerformanceCounter(lpPerformanceCount);
 
+    // debug - 4x speed
+    //lpPerformanceCount->QuadPart *= 4;
+
     EmuSwapFS();   // XBox FS
 
     return bRet;
