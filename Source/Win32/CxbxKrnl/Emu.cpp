@@ -71,10 +71,10 @@ namespace xd3d8
 // ******************************************************************
 // * global / static
 // ******************************************************************
-extern Xbe::TLS    *g_pTLS       = NULL;
-extern void        *g_pTLSData   = NULL;
-extern Xbe::Header *g_pXbeHeader = NULL;
-extern HANDLE		g_hCurDir    = NULL;
+Xbe::TLS    *g_pTLS       = NULL;
+void        *g_pTLSData   = NULL;
+Xbe::Header *g_pXbeHeader = NULL;
+HANDLE		 g_hCurDir    = NULL;
 
 // ******************************************************************
 // * static
@@ -257,9 +257,6 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     if(pLibraryVersion == 0)
         printf("Emu (0x%X): Detected OpenXDK application...\n", GetCurrentThreadId());
 
-    uint32 xca;
-    uint32 xcz;
-
     // ******************************************************************
     // * Initialize Microsoft XDK emulation
     // ******************************************************************
@@ -304,21 +301,6 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
             {
                 uint32 lower = pXbeHeader->dwBaseAddr;
                 uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
-
-				// ******************************************************************
-				// * Locate xca/xcz pre-entry point vector table bounds
-				// ******************************************************************
-				{
-					void *pFunc = EmuLocateFunction((OOVPA*)&__cinit_1_0_3911, lower, upper);
-
-					if(pFunc != 0)
-					{
-						xca = *(uint32*)((uint32)pFunc + 0x32);
-						xcz = *(uint32*)((uint32)pFunc + 0x39);
-
-						printf("Emu (0x%X): 0x%.08X -> Pre-Entry Execution Vectors (%dx)\n", GetCurrentThreadId(), xca, (xcz - xca)/4);
-					}
-				}
 
 				// ******************************************************************
 				// * Locate XapiProcessHeap
@@ -373,27 +355,6 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         EmuGenerateFS(pTLS, pTLSData);
     }
 
-    printf("Emu (0x%X): Pre-Entry Code Executing.\n", GetCurrentThreadId());
-
-    // ******************************************************************
-    // * Static/Constructors
-    // ******************************************************************
-    for(uint32 v=xca;v<xcz; v+=4)
-    {
-        uint32 pFunc = *(uint32*)v;
-
-        if(pFunc != 0 && pFunc != -1)
-        {
-            printf("Emu (0x%X): Pre-Entry Code @ 0x%.08X\n", GetCurrentThreadId(), pFunc);
-
-            EmuSwapFS();    // Xbox FS
-
-            __asm call pFunc
-
-            EmuSwapFS();    // Win2k/XP FS
-        }
-    }
-
     printf("Emu (0x%X): Initial thread starting.\n", GetCurrentThreadId());
 
     // ******************************************************************
@@ -403,7 +364,6 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
     {
         EmuSwapFS();   // XBox FS
 
-        __asm int 3
         Entry();
 
         EmuSwapFS();   // Win2k/XP FS

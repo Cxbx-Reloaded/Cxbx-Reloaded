@@ -363,14 +363,4 @@ NTSTATUS CDECL XapiSetupPerTitleDriveLetters(DWORD dwTitleId, LPCWSTR wszTitleNa
 // ******************************************************************
 VOID WINAPI EmuXapiBootDash(DWORD UnknownA, DWORD UnknownB, DWORD UnknownC);
 
-// ******************************************************************
-// * func: Emu__rtinit
-// ******************************************************************
-VOID Emu__rtinit();
-
-// ******************************************************************
-// * func: Emu__cinit
-// ******************************************************************
-VOID Emu__cinit();
-
 #endif

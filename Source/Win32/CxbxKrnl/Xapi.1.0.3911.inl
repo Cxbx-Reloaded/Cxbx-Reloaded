@@ -114,65 +114,6 @@ SOOVPA<11> XapiBootDash_1_0_3911 =
 };
 
 // ******************************************************************
-// * __rtinit
-// ******************************************************************
-SOOVPA<8> __rtinit_1_0_3911 =
-{
-    0,  // Large == 0
-    8,  // Count == 8
-
-    {
-        // __rtinit+0x02 : mov eax, abs
-        { 0x02, 0xB8 }, // (Offset,Value)-Pair #1
-
-        // __rtinit+0x07 : mov edi, abs
-        { 0x07, 0xBF }, // (Offset,Value)-Pair #2
-
-        // __rtinit+0x18 : cmp eax, -1
-        { 0x18, 0x83 }, // (Offset,Value)-Pair #3
-        { 0x19, 0xF8 }, // (Offset,Value)-Pair #4
-        { 0x1A, 0xFF }, // (Offset,Value)-Pair #5
-
-        // __rtinit+0x22 : cmp esi, edi
-        { 0x22, 0x3B }, // (Offset,Value)-Pair #6
-        { 0x23, 0xF7 }, // (Offset,Value)-Pair #7
-
-        // __rtinit+0x28 : retn
-        { 0x28, 0xC3 }, // (Offset,Value)-Pair #8
-    }
-};
-
-// ******************************************************************
-// * __cinit
-// ******************************************************************
-SOOVPA<9> __cinit_1_0_3911 =
-{
-    0,  // Large == 0
-    9,  // Count == 9
-
-    {
-        // __cinit+0x09 : call eax
-        { 0x09, 0xFF }, // (Offset,Value)-Pair #1
-        { 0x0A, 0xD0 }, // (Offset,Value)-Pair #2
-
-        // __cinit+0x1B : jnb +0x14
-        { 0x1B, 0x73 }, // (Offset,Value)-Pair #3
-        { 0x1C, 0x14 }, // (Offset,Value)-Pair #4
-
-        // __cinit+0x4A : jz +0x02
-        { 0x4A, 0x74 }, // (Offset,Value)-Pair #5
-        { 0x4B, 0x02 }, // (Offset,Value)-Pair #6
-
-        // __cinit+0x4C : call eax
-        { 0x4C, 0xFF }, // (Offset,Value)-Pair #7
-        { 0x4D, 0xD0 }, // (Offset,Value)-Pair #8
-
-        // __cinit+0x57 : retn
-        { 0x57, 0xC3 }, // (Offset,Value)-Pair #9
-    }
-};
-
-// ******************************************************************
 // * XAPI_1_0_3911
 // ******************************************************************
 OOVPATable XAPI_1_0_3911[] =
@@ -211,30 +152,6 @@ OOVPATable XAPI_1_0_3911[] =
         "EmuXapiBootDash"
         #endif
     },
-    //* Too High Level
-    // __rtinit
-    {
-        (OOVPA*)&__rtinit_1_0_3911,
-
-        xapi::Emu__rtinit,
-
-        #ifdef _DEBUG_TRACE
-        "Emu__rtinit",
-        #endif
-    },
-    //*/
-    //* Too High Level
-    // __cinit
-    {
-        (OOVPA*)&__cinit_1_0_3911,
-
-        xapi::Emu__cinit,
-
-        #ifdef _DEBUG_TRACE
-        "Emu__cinit",
-        #endif
-    },
-    //*/
 };
 
 // ******************************************************************

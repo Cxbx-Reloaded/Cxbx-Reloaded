@@ -853,6 +853,9 @@ HRESULT WINAPI xd3d8::EmuIDirect3DSurface8_LockRect
     if(Flags & !(0x80 | 0x40))
         EmuCleanup("EmuIDirect3DSurface8_LockRect: Unknown Flags!");
 
+    // This is lame, but we have no choice (afaik)
+    ((IDirect3DSurface8*)pThis)->UnlockRect();
+
     HRESULT hRet = ((IDirect3DSurface8*)pThis)->LockRect(pLockedRect, pRect, NewFlags);
 
     EmuSwapFS();   // XBox FS

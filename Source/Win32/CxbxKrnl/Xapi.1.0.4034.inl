@@ -385,30 +385,6 @@ OOVPATable XAPI_1_0_4034[] =
         "EmuXapiBootDash"
         #endif
     },
-    //* Too High Level
-    // __rtinit (* unchanged since 1.0.3911 *)
-    {
-        (OOVPA*)&__rtinit_1_0_3911,
-
-        xapi::Emu__rtinit,
-
-        #ifdef _DEBUG_TRACE
-        "Emu__rtinit",
-        #endif
-    },
-    //*/
-    //* Too High Level
-    // __cinit (* unchanged since 1.0.3911 *)
-    {
-        (OOVPA*)&__cinit_1_0_3911,
-
-        xapi::Emu__cinit,
-
-        #ifdef _DEBUG_TRACE
-        "Emu__cinit",
-        #endif
-    },
-    //*/
 };
 
 // ******************************************************************
