@@ -775,6 +775,15 @@ VOID WINAPI EmuIDirect3DDevice8_SetTextureState_BorderColor
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetTextureState_ColorKeyColor
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetTextureState_ColorKeyColor
+(
+    DWORD Stage,
+    DWORD Value
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTextureState_BumpEnv
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_SetTextureState_BumpEnv

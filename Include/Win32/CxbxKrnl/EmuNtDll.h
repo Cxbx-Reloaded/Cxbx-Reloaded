@@ -534,6 +534,17 @@ typedef BOOL (NTAPI *FPTR_RtlFreeHeap)
 );
 
 // ******************************************************************
+// * RtlReAllocateHeap
+// ******************************************************************
+typedef PVOID (NTAPI *FPTR_RtlReAllocateHeap)
+(
+    IN HANDLE hHeap,
+    IN DWORD  dwFlags,
+    IN PVOID  lpMem,
+    IN DWORD  dwBytes
+);
+
+// ******************************************************************
 // * RtlSizeHeap
 // ******************************************************************
 typedef SIZE_T (NTAPI *FPTR_RtlSizeHeap)
@@ -955,6 +966,7 @@ extern FPTR_NtWaitForMultipleObjects       NtWaitForMultipleObjects;
 extern FPTR_RtlCreateHeap                  RtlCreateHeap;
 extern FPTR_RtlAllocateHeap                RtlAllocateHeap;
 extern FPTR_RtlFreeHeap                    RtlFreeHeap;
+extern FPTR_RtlReAllocateHeap              RtlReAllocateHeap;
 extern FPTR_RtlSizeHeap                    RtlSizeHeap;
 extern FPTR_NtAllocateVirtualMemory        NtAllocateVirtualMemory;
 extern FPTR_NtFreeVirtualMemory            NtFreeVirtualMemory;
