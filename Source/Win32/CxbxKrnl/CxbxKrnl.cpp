@@ -206,11 +206,16 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, ui
 
         VirtualProtect((void*)0x00010000, 0x1000, PAGE_READWRITE, &old_protection);
 
+        // we sure hope we aren't corrupting anything necessary for an .exe to survive :]
         uint32 dwSizeofHeaders   = *(uint32*)&XBEHeader[0x0108];
         uint32 dwCertificateAddr = *(uint32*)&XBEHeader[0x0118];
+        uint32 dwPeHeapReserve   = *(uint32*)&XBEHeader[0x0134];
+        uint32 dwPeHeapCommit    = *(uint32*)&XBEHeader[0x0138];
 
         *(uint32 *)0x00010108 = dwSizeofHeaders;
         *(uint32 *)0x00010118 = dwCertificateAddr;
+        *(uint32 *)0x00010134 = dwPeHeapReserve;
+        *(uint32 *)0x00010138 = dwPeHeapCommit;
 
         memcpy((void*)dwCertificateAddr, &XBEHeader[dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
     }
@@ -508,6 +513,76 @@ XBSYSAPI EXPORTNUM(113) VOID NTAPI xboxkrnl::KeInitializeTimerEx
 }
 
 // ******************************************************************
+// * 0x0095 - KeSetTimer
+// ******************************************************************
+XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
+(
+    IN PKTIMER        Timer,
+    IN LARGE_INTEGER  DueTime,
+    IN PKDPC          Dpc OPTIONAL
+)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG
+    {
+        printf("CxbxKrnl [0x%.08X]: KeSetTimer\n"
+               "          (\n"
+               "             Timer               : 0x%.08X\n"
+               "             DueTime             : 0x%I64X\n"
+               "             Dpc                 : 0x%.08X\n"
+               "          );\n",
+               GetCurrentThreadId(), Timer, DueTime, Dpc);
+    }
+    #endif
+
+    EmuXSwapFS();   // XBox FS
+
+    return FALSE;
+}
+
+// ******************************************************************
+// * 0x00B8 - NtAllocateVirtualMemory
+// ******************************************************************
+XBSYSAPI EXPORTNUM(184) NTSTATUS xboxkrnl::NtAllocateVirtualMemory
+(
+    IN OUT PVOID    *BaseAddress,
+    IN ULONG         ZeroBits,
+    IN OUT SIZE_T    AllocationSize,
+    IN DWORD         AllocationType,
+    IN DWORD         Protect
+)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG
+    {
+        printf("CxbxKrnl [0x%.08X]: NtAllocateVirtualMemory\n"
+               "          (\n"
+               "             BaseAddress         : 0x%.08X\n"
+               "             ZeroBits            : 0x%.08X\n"
+               "             AllocationSize      : 0x%.08X\n"
+               "             AllocationType      : 0x%.08X\n"
+               "             Protect             : 0x%.08X\n"
+               "          );\n",
+               GetCurrentThreadId(), BaseAddress, ZeroBits, AllocationSize, AllocationType, Protect);
+    }
+    #endif
+
+    *BaseAddress = VirtualAlloc(*BaseAddress, AllocationSize, AllocationType, Protect);
+
+    EmuXSwapFS();   // XBox FS
+
+    return STATUS_SUCCESS;
+}
+
+// ******************************************************************
 // * 0x00BB - NtClose
 // ******************************************************************
 XBSYSAPI EXPORTNUM(187) NTSTATUS NTAPI xboxkrnl::NtClose
@@ -532,6 +607,82 @@ XBSYSAPI EXPORTNUM(187) NTSTATUS NTAPI xboxkrnl::NtClose
 
     if(CloseHandle(Handle) != TRUE)
         return STATUS_UNSUCCESSFUL;
+
+    EmuXSwapFS();   // XBox FS
+
+    return STATUS_SUCCESS;
+}
+
+// ******************************************************************
+// * 0x00CA - NtOpenFile
+// ******************************************************************
+XBSYSAPI EXPORTNUM(202) NTSTATUS xboxkrnl::NtOpenFile
+(
+    OUT PHANDLE             FileHandle,
+    IN  ACCESS_MASK         DesiredAccess,
+    IN  POBJECT_ATTRIBUTES  ObjectAttributes,
+    OUT PIO_STATUS_BLOCK    IoStatusBlock,
+    IN  ULONG               ShareAccess,
+    IN  ULONG               OpenOptions
+)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG
+    {
+        printf("CxbxKrnl [0x%.08X]: NtOpenFile\n"
+               "          (\n"
+               "             FileHandle          : 0x%.08X\n"
+               "             DesiredAccess       : 0x%.08X\n"
+               "             ObjectAttributes    : 0x%.08X\n"
+               "             IoStatusBlock       : 0x%.08X\n"
+               "             ShareAccess         : 0x%.08X\n"
+               "             OpenOptions         : 0x%.08X\n"
+               "          );\n",
+               GetCurrentThreadId(), FileHandle, DesiredAccess, ObjectAttributes, 
+               IoStatusBlock, ShareAccess, OpenOptions);
+    }
+    #endif
+
+    EmuXSwapFS();   // XBox FS
+
+    return STATUS_SUCCESS;
+}
+
+// ******************************************************************
+// * 0x00DA - NtQueryVolumeInformationFile
+// ******************************************************************
+XBSYSAPI EXPORTNUM(218) NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformationFile
+(
+    IN  HANDLE                  FileHandle,
+    OUT PIO_STATUS_BLOCK        IoStatusBlock,
+    OUT PVOID                   FileInformation,
+    IN  ULONG                   Length,
+    IN  FS_INFORMATION_CLASS    FileInformationClass
+)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG
+    {
+        printf("CxbxKrnl [0x%.08X]: NtQueryVolumeInformationFile\n"
+               "          (\n"
+               "             FileHandle          : 0x%.08X\n"
+               "             IoStatusBlock       : 0x%.08X\n"
+               "             FileInformation     : 0x%.08X\n"
+               "             Length              : 0x%.08X\n"
+               "             FileInformationClass: 0x%.08X\n"
+               "          );\n",
+               GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation, 
+               Length, FileInformationClass);
+    }
+    #endif
 
     EmuXSwapFS();   // XBox FS
 
@@ -629,6 +780,36 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
     EnterCriticalSection((win32::PRTL_CRITICAL_SECTION)CriticalSection);
 
     EmuXSwapFS();   // XBox FS
+}
+
+// ******************************************************************
+// * 0x0123 - RtlInitializeCriticalSection
+// ******************************************************************
+XBSYSAPI EXPORTNUM(291) VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
+(
+  IN PRTL_CRITICAL_SECTION CriticalSection
+)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG
+    {
+        printf("CxbxKrnl [0x%.08X]: RtlInitializeCriticalSection\n"
+               "          (\n"
+               "             CriticalSection     : 0x%.08X\n"
+               "          );\n",
+               GetCurrentThreadId(), CriticalSection);
+    }
+    #endif
+
+    InitializeCriticalSection((win32::PRTL_CRITICAL_SECTION)CriticalSection);
+
+    EmuXSwapFS();   // XBox FS
+
+    return;
 }
 
 // ******************************************************************
