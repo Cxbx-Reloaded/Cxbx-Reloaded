@@ -247,10 +247,11 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 // decompress jpeg, convert to bitmap resource
                 {
-                    HGLOBAL hRes = LoadResource(NULL, FindResource(NULL, MAKEINTRESOURCE(IDR_JPEG_SPLASH), "JPEG"));
+                    HRSRC hSrc = FindResource(NULL, MAKEINTRESOURCE(IDR_JPEG_SPLASH), "JPEG");
+                    HGLOBAL hRes = LoadResource(NULL, hSrc);
                     uint08 *jpgData = (uint08*)LockResource(hRes);
 
-                    uint32 jpgFileSize = 0xB8C0 - 4;
+                    uint32 jpgFileSize = SizeofResource(NULL, hSrc);
                     uint32 bmpFileSize = 0;
 
                     uint08 *bmpBuff = 0;
