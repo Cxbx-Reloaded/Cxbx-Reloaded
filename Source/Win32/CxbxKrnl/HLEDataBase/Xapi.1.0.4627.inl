@@ -202,7 +202,7 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXRegisterThreadNotifyRoutine"
         #endif
     },
-    // RtlCreateHeap (* unchanged since 1.0.4361 *) (* OR FARTHER *)
+    // RtlCreateHeap (* unchanged since 1.0.3911 *)
     {
         (OOVPA*)&RtlCreateHeap_1_0_3911,
 
@@ -212,7 +212,7 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuRtlCreateHeap"
         #endif
     },
-    // RtlAllocateHeap (* unchanged since 1.0.4361 *) (* OR FARTHER *)
+    // RtlAllocateHeap (* unchanged since 1.0.3911 *)
     {
         (OOVPA*)&RtlAllocateHeap_1_0_3911,
 

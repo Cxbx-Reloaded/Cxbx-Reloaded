@@ -70,6 +70,11 @@ HRESULT WINAPI EmuIDirect3D8_CreateDevice
 // ******************************************************************
 // * func: EmuIDirect3D8_CheckDeviceFormat
 // ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_GetCreationParameters(D3DDEVICE_CREATION_PARAMETERS *pParameters);
+
+// ******************************************************************
+// * func: EmuIDirect3D8_CheckDeviceFormat
+// ******************************************************************
 HRESULT WINAPI EmuIDirect3D8_CheckDeviceFormat
 (
     UINT                        Adapter,

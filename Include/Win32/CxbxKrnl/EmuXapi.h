@@ -281,6 +281,11 @@ XCALCSIG_SIGNATURE, *PXCALCSIG_SIGNATURE;
 #define XCALCSIG_FLAG_NON_ROAMABLE  (0x00000001)
 
 // ******************************************************************
+// * func: EmuXapiApplyKernelPatches
+// ******************************************************************
+VOID WINAPI EmuXapiApplyKernelPatches();
+
+// ******************************************************************
 // * func: EmuRtlCreateHeap
 // ******************************************************************
 PVOID WINAPI EmuRtlCreateHeap

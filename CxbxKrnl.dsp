@@ -1,5 +1,5 @@
 # Microsoft Developer Studio Project File - Name="CxbxKrnl" - Package Owner=<4>
-# Microsoft Developer Studio Generated Build File, Format Version 6.00
+# Microsoft Developer Studio Generated Build File, Format Version 60000
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102
@@ -161,6 +161,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.3936.h
 # End Source File
 # Begin Source File
@@ -174,6 +178,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.4432.h
 # Begin Source File
 
 SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.4627.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.5849.h
 # End Source File
 # Begin Source File
 
@@ -198,6 +206,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4432.h
 # Begin Source File
 
 SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.5849.h
 # End Source File
 # Begin Source File
 
@@ -395,6 +407,11 @@ SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.inl
 # End Source File
 # Begin Source File
 
+SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.inl
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.3936.inl
 # PROP Exclude_From_Build 1
 # End Source File
@@ -406,19 +423,16 @@ SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.4361.inl
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.4432.inl
-
-!IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
-
 # PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.4627.inl
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.5849.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
@@ -449,6 +463,11 @@ SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4432.inl
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.inl
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.5849.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File

@@ -401,7 +401,9 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 
                 if(bXRefFirstPass)
                 {
-                    if(strcmp("XAPILIB", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && (BuildVersion == 3911 || BuildVersion == 4034 || BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4432 || BuildVersion == 4627))
+                    if(strcmp("XAPILIB", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && 
+                        (BuildVersion == 3911 || BuildVersion == 4034 || BuildVersion == 4134 || BuildVersion == 4361
+                      || BuildVersion == 4432 || BuildVersion == 4627 || BuildVersion == 5849))
                     {
                         uint32 lower = pXbeHeader->dwBaseAddr;
                         uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
@@ -409,25 +411,43 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                         // locate XapiProcessHeap
                         {
                             void *pFunc = 0;
+                            uint ProcessHeapOffs;
+                            uint RtlCreateHeapOffs;
 
-                            if(BuildVersion >= 4361)
+                            if(BuildVersion >= 5849)
+                            {
+                                pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_5849, lower, upper);
+                                ProcessHeapOffs = 0x51;
+                                RtlCreateHeapOffs = 0x4A;
+                            }
+                            else if(BuildVersion >= 4361)
+                            {
 					            pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_4361, lower, upper);
+                                ProcessHeapOffs = 0x3E;
+                                RtlCreateHeapOffs = 0x37;
+                            }
                             else // 3911, 4034, 4134
+                            {
                                 pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_3911, lower, upper);
+                                ProcessHeapOffs = 0x3E;
+                                RtlCreateHeapOffs = 0x37;
+                            }
 
-					        if(pFunc != 0)
+                            if(pFunc != 0)
 					        {
-						        XTL::EmuXapiProcessHeap = *(PVOID**)((uint32)pFunc + 0x3E);
+						        XTL::EmuXapiProcessHeap = *(PVOID**)((uint32)pFunc + ProcessHeapOffs);
 
-						        XTL::g_pRtlCreateHeap = *(XTL::pfRtlCreateHeap*)((uint32)pFunc + 0x37);
-						        XTL::g_pRtlCreateHeap = (XTL::pfRtlCreateHeap)((uint32)pFunc + (uint32)XTL::g_pRtlCreateHeap + 0x37 + 0x04);
+						        XTL::g_pRtlCreateHeap = *(XTL::pfRtlCreateHeap*)((uint32)pFunc + RtlCreateHeapOffs);
+						        XTL::g_pRtlCreateHeap = (XTL::pfRtlCreateHeap)((uint32)pFunc + (uint32)XTL::g_pRtlCreateHeap + RtlCreateHeapOffs + 0x04);
 
 						        DbgPrintf("EmuMain (0x%X): 0x%.08X -> EmuXapiProcessHeap\n", GetCurrentThreadId(), XTL::EmuXapiProcessHeap);
 						        DbgPrintf("EmuMain (0x%X): 0x%.08X -> g_pRtlCreateHeap\n", GetCurrentThreadId(), XTL::g_pRtlCreateHeap);
 					        }
 				        }
                     }
-			        else if(strcmp("D3D8", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && (BuildVersion == 3925 || BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4432 || BuildVersion == 4627))
+			        else if(strcmp("D3D8", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 &&
+                        (BuildVersion == 3925 || BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4432 
+                      || BuildVersion == 4627 || BuildVersion == 5849))
 			        {
                         uint32 lower = pXbeHeader->dwBaseAddr;
                         uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
@@ -436,8 +456,10 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                         
                         if(BuildVersion == 3925)
                             pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_3925, lower, upper);
-                        else
+                        else if(BuildVersion < 5849)
                             pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4134, lower, upper);
+                        else
+                            pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_5849, lower, upper);
 
                         // locate D3DDeferredRenderState
                         if(pFunc != 0)
@@ -471,6 +493,12 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
 						        XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x24C + 92*4);
                                 patchOffset = 162*4 - 92*4;
                             }
+                            else if(BuildVersion == 5849)
+                            {
+                                // WARNING: Not thoroughly tested (just seemed very correct right away)
+						        XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x24C + 92*4);
+                                patchOffset = 162*4 - 92*4;
+                            }
 
                             XRefDataBase[XREF_D3DRS_STENCILCULLENABLE]     = (uint32)XTL::EmuD3DDeferredRenderState + patchOffset + 0*4;
                             XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD]     = (uint32)XTL::EmuD3DDeferredRenderState + patchOffset + 1*4;
@@ -496,7 +524,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                                 pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4134, lower, upper);
                             else if(BuildVersion == 4361 || BuildVersion == 4432)
                                 pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361, lower, upper);
-                            else if(BuildVersion == 4627)
+                            else if(BuildVersion == 4627 || BuildVersion == 5849)
                                 pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4627, lower, upper);
 
                             if(pFunc != 0)

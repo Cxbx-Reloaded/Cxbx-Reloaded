@@ -53,15 +53,15 @@ namespace xboxkrnl
 #include <locale.h>
 
 // Global(s)
-HWND                         g_hEmuWindow   = NULL; // rendering window
-HWND                         g_hEmuParent   = NULL; // rendering window parent
-XTL::LPDIRECT3DDEVICE8       g_pD3DDevice8  = NULL; // Direct3D8 Device
-XTL::LPDIRECTDRAWSURFACE7    g_pDDSPrimary  = NULL; // DirectDraw7 Primary Surface
-XTL::LPDIRECTDRAWSURFACE7    g_pDDSOverlay7 = NULL; // DirectDraw7 Overlay Surface
-XTL::LPDIRECTDRAWCLIPPER     g_pDDClipper   = NULL; // DirectDraw7 Clipper
-DWORD                        g_CurrentVertexShader = 0;
-BOOL                         g_bFakePixelShaderLoaded = FALSE;
-BOOL                         g_bIsFauxFullscreen = FALSE;
+HWND                                g_hEmuWindow   = NULL; // rendering window
+HWND                                g_hEmuParent   = NULL; // rendering window parent
+XTL::LPDIRECT3DDEVICE8              g_pD3DDevice8  = NULL; // Direct3D8 Device
+XTL::LPDIRECTDRAWSURFACE7           g_pDDSPrimary  = NULL; // DirectDraw7 Primary Surface
+XTL::LPDIRECTDRAWSURFACE7           g_pDDSOverlay7 = NULL; // DirectDraw7 Overlay Surface
+XTL::LPDIRECTDRAWCLIPPER            g_pDDClipper   = NULL; // DirectDraw7 Clipper
+DWORD                               g_CurrentVertexShader = 0;
+BOOL                                g_bFakePixelShaderLoaded = FALSE;
+BOOL                                g_bIsFauxFullscreen = FALSE;
 
 // Static Function(s)
 static BOOL WINAPI                  EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescription, LPSTR lpDriverName, LPVOID lpContext, HMONITOR hm);
@@ -1046,6 +1046,29 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CreateDevice
     EmuSwapFS();   // XBox FS
 
     return g_EmuCDPD.hRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3D8_CheckDeviceFormat
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_GetCreationParameters(D3DDEVICE_CREATION_PARAMETERS *pParameters)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetCreationParameters\n"
+           "(\n"
+           "   pParameters               : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pParameters);
+
+    pParameters->AdapterOrdinal = D3DADAPTER_DEFAULT;
+    pParameters->DeviceType = D3DDEVTYPE_HAL;
+    pParameters->hFocusWindow = NULL;
+    pParameters->BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+
+    EmuSwapFS();   // XBox FS
+
+    return;
 }
 
 // ******************************************************************

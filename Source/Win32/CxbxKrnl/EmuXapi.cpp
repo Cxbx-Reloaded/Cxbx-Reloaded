@@ -59,6 +59,22 @@ namespace NtDll
 #include "EmuXTL.h"
 
 // ******************************************************************
+// * func: EmuXapiApplyKernelPatches
+// ******************************************************************
+VOID WINAPI XTL::EmuXapiApplyKernelPatches()
+{
+    #ifdef _DEBUG_TRACE
+    EmuSwapFS();   // Win2k/XP FS
+    DbgPrintf("EmuXapi (0x%X): EmuXapiApplyKernelPatches()\n", GetCurrentThreadId());
+    EmuSwapFS();   // XBox FS
+    #endif
+
+    // we dont really feel like patching, now do we?
+
+    return;
+}
+
+// ******************************************************************
 // * func: EmuRtlCreateHeap
 // ******************************************************************
 PVOID WINAPI XTL::EmuRtlCreateHeap
