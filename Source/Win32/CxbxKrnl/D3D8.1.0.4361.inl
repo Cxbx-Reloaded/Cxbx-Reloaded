@@ -116,6 +116,41 @@ SOOVPA<11> IDirect3DDevice8_Swap_1_0_4361 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_CreateVertexBuffer
+// ******************************************************************
+// NOTE: This is set up differently than other XDK version!
+
+// ******************************************************************
+// * IDirect3DVertexBuffer8_Lock
+// ******************************************************************
+SOOVPA<11> IDirect3DVertexBuffer8_Lock_1_0_4361 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    {
+        // IDirect3DVertexBuffer8_Lock+0x01 : mov bl, [esp+0x18]
+        { 0x01, 0x8A }, // (Offset,Value)-Pair #1
+        { 0x02, 0x5C }, // (Offset,Value)-Pair #2
+        { 0x03, 0x24 }, // (Offset,Value)-Pair #3
+        { 0x04, 0x18 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DVertexBuffer8_Lock+0x09 : jnz +0x24
+        { 0x09, 0x75 }, // (Offset,Value)-Pair #5
+        { 0x0A, 0x24 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DVertexBuffer8_Lock+0x2F : test bl, 0xA0
+        { 0x2F, 0xF6 }, // (Offset,Value)-Pair #7
+        { 0x30, 0xC3 }, // (Offset,Value)-Pair #8
+        { 0x31, 0xA0 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DVertexBuffer8_Lock+0x50 : retn 0x14
+        { 0x50, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x51, 0x14 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
 // * D3D8_1_0_4361
 // ******************************************************************
 OOVPATable D3D8_1_0_4361[] =

@@ -7,7 +7,7 @@ version: 0.7.0 (??/??/??)
 
 - Added Recent Xbe/Exe file menus
 
-- Support __declspec(thread) style TLS ouch!! :)
+- Support __declspec(thread) style TLS ( buggy :( )
 
 - Fixed GUI color issues
 

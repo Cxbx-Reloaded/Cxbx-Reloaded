@@ -40,6 +40,7 @@
 #include <windows.h>
 #define DIRECT3D_VERSION 0x0800
 #include <d3d8.h>
+#include <d3d8types.h>
 
 // ******************************************************************
 // * global exports

@@ -80,6 +80,24 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 static void EmuRenderWindow(PVOID);
 
 // ******************************************************************
+// * D3DVertexToPrimitive
+// ******************************************************************
+UINT xd3d8::D3DVertexToPrimitive[11][2] =
+{
+    {0, 0},
+    {1, 0},
+    {2, 0},
+    {1, 1},
+    {1, 1},
+    {3, 0},
+    {1, 2},
+    {1, 2},
+    {4, 0},
+    {2, 2},
+    {0, 0},
+};
+
+// ******************************************************************
 // * func: EmuD3DInit
 // ******************************************************************
 VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
@@ -467,4 +485,187 @@ HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_Swap
     EmuSwapFS();   // XBox FS
 
     return ret;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_CreateVertexBuffer
+// ******************************************************************
+xd3d8::D3DVertexBuffer* WINAPI xd3d8::EmuIDirect3DDevice8_CreateVertexBuffer2
+(
+    UINT Length
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_CreateVertexBuffer2\n"
+               "(\n"
+               "   Length              : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Length);
+    }
+    #endif
+
+    IDirect3DVertexBuffer8 *ppVertexBuffer=NULL;
+
+    HRESULT hRet = g_pD3D8Device->CreateVertexBuffer
+    (
+		Length, 
+		D3DUSAGE_WRITEONLY,
+		0,
+		D3DPOOL_DEFAULT, 
+		&ppVertexBuffer
+    );
+
+    EmuSwapFS();   // XBox FS
+
+    return (xd3d8::D3DVertexBuffer*)ppVertexBuffer;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DVertexBuffer8_Lock
+// ******************************************************************
+BYTE* WINAPI xd3d8::EmuIDirect3DVertexBuffer8_Lock
+(
+    D3DVertexBuffer *ppVertexBuffer,
+    DWORD            Flags
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%.08X): EmuIDirect3DVertexBuffer8_Lock\n"
+               "(\n"
+               "   ppVertexBuffer      : 0x%.08X\n"
+               "   Flags               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), ppVertexBuffer, Flags);
+    }
+    #endif
+
+    BYTE *pbData = NULL;
+
+    HRESULT hRet = ((IDirect3DVertexBuffer8*)ppVertexBuffer)->Lock(0, 0, &pbData, Flags);
+
+    EmuSwapFS();   // XBox FS
+
+    return pbData;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetStreamSource
+// ******************************************************************
+void WINAPI xd3d8::EmuIDirect3DDevice8_SetStreamSource
+(
+    UINT             StreamNumber,
+    D3DVertexBuffer *pStreamData,
+    UINT             Stride
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_SetStreamSource\n"
+               "(\n"
+               "   StreamNumber        : 0x%.08X\n"
+               "   pStreamData         : 0x%.08X\n"
+               "   Stride              : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), StreamNumber, pStreamData, Stride);
+    }
+    #endif
+
+    ((IDirect3DVertexBuffer8*)pStreamData)->Unlock();
+
+	HRESULT ret = g_pD3D8Device->SetStreamSource(StreamNumber, (IDirect3DVertexBuffer8*)pStreamData, Stride);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetVertexShader
+// ******************************************************************
+void WINAPI xd3d8::EmuIDirect3DDevice8_SetVertexShader
+(
+    DWORD Handle
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_SetVertexShader\n"
+               "(\n"
+               "   Handle              : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Handle);
+    }
+    #endif
+
+	HRESULT ret = g_pD3D8Device->SetVertexShader(Handle);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_DrawVertices
+// ******************************************************************
+void WINAPI xd3d8::EmuIDirect3DDevice8_DrawVertices
+(
+    D3DPRIMITIVETYPE PrimitiveType,
+    UINT             StartVertex,
+    UINT             VertexCount
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_DrawVertices\n"
+               "(\n"
+               "   PrimitiveType       : 0x%.08X\n"
+               "   StartVertex         : 0x%.08X\n"
+               "   VertexCount         : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), PrimitiveType, StartVertex, VertexCount);
+    }
+    #endif
+
+    UINT PrimitiveCount = D3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
+
+    // Convert from Xbox to PC enumeration
+    PrimitiveType = EmuPrimitiveType(PrimitiveType);
+
+    HRESULT hRet = g_pD3D8Device->DrawPrimitive
+    (
+        PrimitiveType,
+        StartVertex,
+		PrimitiveCount
+    );
+
+    EmuSwapFS();   // XBox FS
+
+    return;
 }
