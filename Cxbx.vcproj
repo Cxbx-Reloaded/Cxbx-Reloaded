@@ -44,6 +44,7 @@
 				OutputFile=".\Bin/Cxbx.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
+				IgnoreDefaultLibraryNames="libc"
 				ProgramDatabaseFile=".\Bin/Cxbx.pdb"
 				SubSystem="2"/>
 			<Tool
@@ -199,9 +200,6 @@ upxCxbx.bat
 				RelativePath=".\Include\Core\Exe.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\InputConfig.h">
-			</File>
-			<File
 				RelativePath=".\Include\Win32\Mutex.h">
 			</File>
 			<File
@@ -215,6 +213,9 @@ upxCxbx.bat
 			</File>
 			<File
 				RelativePath=".\Include\Win32\Cxbx\WndMain.h">
+			</File>
+			<File
+				RelativePath=".\Include\Win32\XBController.h">
 			</File>
 			<File
 				RelativePath=".\Include\Core\Xbe.h">
@@ -267,9 +268,6 @@ upxCxbx.bat
 				RelativePath=".\Source\Core\Exe.cpp">
 			</File>
 			<File
-				RelativePath=".\Source\Win32\InputConfig.cpp">
-			</File>
-			<File
 				RelativePath=".\Source\Win32\Mutex.cpp">
 			</File>
 			<File
@@ -289,6 +287,9 @@ upxCxbx.bat
 			</File>
 			<File
 				RelativePath=".\Source\Win32\Cxbx\WndMain.cpp">
+			</File>
+			<File
+				RelativePath=".\Source\Win32\XBController.cpp">
 			</File>
 			<File
 				RelativePath=".\Source\Core\Xbe.cpp">

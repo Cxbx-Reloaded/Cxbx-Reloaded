@@ -69,6 +69,7 @@ Xbe::Header             *g_XbeHeader     = NULL;   // XbeHeader
 uint32                   g_XbeHeaderSize = 0;      // XbeHeaderSize
 HWND                     g_EmuWindow     = NULL;   // Rendering Window
 xd3d8::D3DCAPS8          g_D3DCaps;                // Direct3D8 Caps
+bool                     g_ThreadInitialized = false;
 
 // ******************************************************************
 // * statics
@@ -95,7 +96,7 @@ VOID EmuInitD3D(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
     {
         _beginthread(EmuRenderWindow, 0, NULL);
 
-        while(g_EmuWindow == NULL)
+        while(!g_ThreadInitialized)
             Sleep(10);
     }
 
@@ -187,6 +188,11 @@ void EmuRenderWindow(PVOID)
     // * initialize direct input
     // ******************************************************************
     EmuInitDInput();
+
+    // ******************************************************************
+    // * the other thread can continue now
+    // ******************************************************************
+    g_ThreadInitialized = true;
 
     // ******************************************************************
     // * message processing loop

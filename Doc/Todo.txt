@@ -1,5 +1,9 @@
 Cxbx Todo:
 
+  Encapsulate XBController. Remove all relevent old implementation modules.
+
+  Batch config all buttons (should be very easy..just click one by one)
+
   Encapsulate RecentFiles into a nice little class
 
   Configuration screens may not necessarily need to be modal windows.

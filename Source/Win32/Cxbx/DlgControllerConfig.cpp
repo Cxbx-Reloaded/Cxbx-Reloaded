@@ -40,33 +40,22 @@
 #include <stdio.h>
 
 // ******************************************************************
-// * Exported Global(s)
-// ******************************************************************
-InputConfig g_InputConfig;
-
-// ******************************************************************
 // * Static Function(s)
 // ******************************************************************
-static INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-static BOOL    CALLBACK EnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi, LPVOID pvRef);
-static BOOL    CALLBACK EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOID pvRef);
-static void             ConfigureInput(HWND hWndDlg, HWND hWndButton, InputDeviceComponent idc);
+INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object);
 
 // ******************************************************************
 // * Static Variable(s)
 // ******************************************************************
-static LPDIRECTINPUT8       g_pDirectInput8                     = NULL;
-static LPDIRECTINPUTDEVICE8 g_pInputDev[MAX_INPUT_DEVICES]      = {0};
-static DWORD                g_pInputDevFlags[MAX_INPUT_DEVICES] = {0};
-static int                  g_pInputCur                         = 0;
-static bool                 g_bConfigDone                       = true;
+XBController g_XBController;
 
 // ******************************************************************
 // * Show Controller Configuration Dialog Window
 // ******************************************************************
 void ShowControllerConfig(HWND hwnd)
 {
-    g_EmuShared->GetInputConfiguration(&g_InputConfig);
+    g_EmuShared->GetXBController(&g_XBController);
 
     DialogBox
     (
@@ -101,80 +90,80 @@ INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam,
                     EndDialog(hWndDlg, wParam); 
                     break;
                 case IDC_INPUT_CONFIG_ACCEPT:
-                    g_EmuShared->SetInputConfiguration(&g_InputConfig);
+                    g_EmuShared->SetXBController(&g_XBController);
                     EndDialog(hWndDlg, wParam);
                     break;
                 case IDC_SET_LEFT_POSY:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_LTHUMBPOSY);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_LTHUMBPOSY);
                     break;
                 case IDC_SET_LEFT_NEGY:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_LTHUMBNEGY);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_LTHUMBNEGY);
                     break;
                 case IDC_SET_LEFT_POSX:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_LTHUMBPOSX);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_LTHUMBPOSX);
                     break;
                 case IDC_SET_LEFT_NEGX:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_LTHUMBNEGX);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_LTHUMBNEGX);
                     break;
                 case IDC_SET_RIGHT_POSY:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_RTHUMBPOSY);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_RTHUMBPOSY);
                     break;
                 case IDC_SET_RIGHT_NEGY:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_RTHUMBNEGY);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_RTHUMBNEGY);
                     break;
                 case IDC_SET_RIGHT_POSX:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_RTHUMBPOSX);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_RTHUMBPOSX);
                     break;
                 case IDC_SET_RIGHT_NEGX:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_RTHUMBNEGX);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_RTHUMBNEGX);
                     break;
                 case IDC_SET_X:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_X);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_X);
                     break;
                 case IDC_SET_Y:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_Y);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_Y);
                     break;
                 case IDC_SET_A:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_A);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_A);
                     break;
                 case IDC_SET_B:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_B);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_B);
                     break;
                 case IDC_SET_WHITE:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_WHITE);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_WHITE);
                     break;
                 case IDC_SET_BLACK:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_BLACK);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_BLACK);
                     break;
                 case IDC_SET_LTRIGGER:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_LTRIGGER);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_LTRIGGER);
                     break;
                 case IDC_SET_RTRIGGER:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_RTRIGGER);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_RTRIGGER);
                     break;
                 case IDC_SET_DPAD_UP:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_DPADUP);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_DPADUP);
                     break;
                 case IDC_SET_DPAD_DOWN:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_DPADDOWN);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_DPADDOWN);
                     break;
                 case IDC_SET_DPAD_LEFT:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_DPADLEFT);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_DPADLEFT);
                     break;
                 case IDC_SET_DPAD_RIGHT:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_DPADRIGHT);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_DPADRIGHT);
                     break;
                 case IDC_SET_BACK:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_BACK);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_BACK);
                     break;
                 case IDC_SET_START:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_START);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_START);
                     break;
                 case IDC_SET_LTHUMB:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_LTHUMB);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_LTHUMB);
                     break;
                 case IDC_SET_RTHUMB:
-                    ConfigureInput(hWndDlg, hWndButton, INPUT_DEVICE_COMPONENT_RTHUMB);
+                    ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_RTHUMB);
                     break;
             } 
         }
@@ -184,56 +173,16 @@ INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam,
 }
 
 // ******************************************************************
-// * Enumerate Game Controller(s)
-// ******************************************************************
-BOOL CALLBACK EnumGameCtrlCallback(LPCDIDEVICEINSTANCE lpddi, LPVOID pvRef)
-{
-    HRESULT hRet = g_pDirectInput8->CreateDevice(lpddi->guidInstance, &g_pInputDev[g_pInputCur], NULL);
-    
-    if(!FAILED(hRet))
-	{
-		g_pInputDevFlags[g_pInputCur] = INPUT_MAPPING_JOYSTICK;
-
-        g_pInputDev[g_pInputCur++]->SetDataFormat(&c_dfDIJoystick);
-	}
-
-    return DIENUM_CONTINUE;
-}
-
-// ******************************************************************
-// * Enumerate Game Controller Object(s)
-// ******************************************************************
-BOOL CALLBACK EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOID pvRef)
-{
-    if(lpddoi->dwType & DIDFT_AXIS)
-    {
-        DIPROPRANGE diprg; 
-
-        diprg.diph.dwSize       = sizeof(DIPROPRANGE); 
-        diprg.diph.dwHeaderSize = sizeof(DIPROPHEADER); 
-        diprg.diph.dwHow        = DIPH_BYID; 
-        diprg.diph.dwObj        = lpddoi->dwType;
-        diprg.lMin              = 0 - 32768; 
-        diprg.lMax              = 0 + 32767; 
-
-        HRESULT hRet = g_pInputDev[(int)pvRef]->SetProperty(DIPROP_RANGE, &diprg.diph);
-
-        if(FAILED(hRet))
-            return DIENUM_STOP;
-    }
-
-    return DIENUM_CONTINUE;
-}
-
-// ******************************************************************
 // * ConfigureInput
 // ******************************************************************
-void ConfigureInput(HWND hWndDlg, HWND hWndButton, InputDeviceComponent idc)
+VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object)
 {
-    if(!g_bConfigDone)
+    static bConfigDone = true;
+
+    if(!bConfigDone)
         return;
 
-    g_bConfigDone = false;
+    bConfigDone = false;
 
     char szOrgText[32];
     char szNewText[255] = "Recieved no user input, try again...";
@@ -241,367 +190,49 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, InputDeviceComponent idc)
     SetWindowText(GetDlgItem(hWndDlg, IDC_CONFIG_STATUS), "Waiting for your input...");
     GetWindowText(hWndButton, szOrgText, 32);
 
-    // ******************************************************************
-    // * Create DirectInput object
-    // ******************************************************************
-    {
-        DirectInput8Create
-        (
-            GetModuleHandle(NULL),
-            DIRECTINPUT_VERSION,
-            IID_IDirectInput8,
-            (void**)&g_pDirectInput8,
-            NULL
-        );
-    }
-
-    // ******************************************************************
-    // * Create all the devices available (well...most of them)
-    // ******************************************************************
-    if(g_pDirectInput8 != 0)
-    {
-        HRESULT hRet;
-
-        hRet = g_pDirectInput8->EnumDevices
-        (
-            DI8DEVCLASS_GAMECTRL,
-            EnumGameCtrlCallback,
-            NULL,
-            DIEDFL_ATTACHEDONLY
-        );
-
-        hRet = g_pDirectInput8->CreateDevice(GUID_SysKeyboard, &g_pInputDev[g_pInputCur], NULL);
-
-        if(!FAILED(hRet))
-		{
-			g_pInputDevFlags[g_pInputCur] = INPUT_MAPPING_KEYBOARD;
-
-            g_pInputDev[g_pInputCur++]->SetDataFormat(&c_dfDIKeyboard);
-		}
-
-        hRet = g_pDirectInput8->CreateDevice(GUID_SysMouse, &g_pInputDev[g_pInputCur], NULL);
-
-        if(!FAILED(hRet))
-		{
-			g_pInputDevFlags[g_pInputCur] = INPUT_MAPPING_MOUSE;
-
-            g_pInputDev[g_pInputCur++]->SetDataFormat(&c_dfDIMouse2);
-		}
-    }
-
-    // ******************************************************************
-    // * Set cooperative level and acquire
-    // ******************************************************************
-    {
-        for(int v=g_pInputCur-1;v>=0;v--)
-        {
-            g_pInputDev[v]->SetCooperativeLevel(hWndDlg, DISCL_NONEXCLUSIVE | DISCL_FOREGROUND);
-            g_pInputDev[v]->Acquire();
-
-            HRESULT hRet = g_pInputDev[v]->Poll();
-
-            if(FAILED(hRet))
-            {
-                hRet = g_pInputDev[v]->Acquire();
-
-                while(hRet == DIERR_INPUTLOST)
-                    hRet = g_pInputDev[v]->Acquire();
-
-                if(hRet != DIERR_INPUTLOST)
-                    break;
-            }
-        }
-    }
-
-    // ******************************************************************
-    // * Enumerate Controller objects
-    // ******************************************************************
-    {
-        for(int v=0;v<g_pInputCur;v++)
-            g_pInputDev[v]->EnumObjects(EnumObjectsCallback, (LPVOID)v, DIDFT_ALL);
-    }
-
-    // ******************************************************************
-    // * Last Mouse Input for Delta Calculations
-    // ******************************************************************
-    LONG LastMouse_lX = -1;
-    LONG LastMouse_lY = -1;
-    LONG LastMouse_lZ = -1;
+    g_XBController.ConfigBegin(hWndDlg, object);
 
     // ******************************************************************
     // * Wait for input, or 5 second timeout
     // ******************************************************************
+    for(int v=100;v>0;v--)
     {
-        DIDEVICEINSTANCE        DeviceInstance;
-        DIDEVICEOBJECTINSTANCE  ObjectInstance;
-
-        DeviceInstance.dwSize = sizeof(DIDEVICEINSTANCE);
-        ObjectInstance.dwSize = sizeof(DIDEVICEOBJECTINSTANCE);
-
-        for(int v=100;v>0 && !g_bConfigDone;v--)
+        // ******************************************************************
+        // * Update the button text every second
+        // ******************************************************************
+        if(v%20 == 0)
         {
-            // ******************************************************************
-            // * Update the button text every second
-            // ******************************************************************
-            if(v%20 == 0)
-            {
-                char szBuffer[255];
+            char szBuffer[255];
 
-                sprintf(szBuffer, "%d", (v+19)/20);
+            sprintf(szBuffer, "%d", (v+19)/20);
 
-                SetWindowText(hWndButton, szBuffer);
-            }
-
-            // ******************************************************************
-            // * Monitor for significant device state changes
-            // ******************************************************************
-            for(int v=g_pInputCur-1;v>=0 && !g_bConfigDone;v--)
-            {
-                HRESULT hRet = g_pInputDev[v]->Poll();
-
-                if(FAILED(hRet))
-                {
-                    hRet = g_pInputDev[v]->Acquire();
-
-                    while(hRet == DIERR_INPUTLOST)
-                        hRet = g_pInputDev[v]->Acquire();
-
-                    return;
-                }
-
-                DWORD dwHow = -1;
-                DWORD dwFlags = g_pInputDevFlags[v];
-
-                // ******************************************************************
-                // * Detect Joystick Input
-                // ******************************************************************
-				if(g_pInputDevFlags[v] & INPUT_MAPPING_JOYSTICK)
-                {
-					DIJOYSTATE InputState = {0};
-
-					g_pInputDev[v]->GetDeviceState(sizeof(DIJOYSTATE), &InputState);
-
-                    int b=0;
-
-                    dwFlags = INPUT_MAPPING_JOYSTICK;
-
-                    if(abs(InputState.lX) > JOYSTICK_DETECT_SENSITIVITY)
-                    {
-                        dwHow   = FIELD_OFFSET(DIJOYSTATE, lX);
-                        dwFlags |= (InputState.lX > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
-                    }
-                    else if(abs(InputState.lY) > JOYSTICK_DETECT_SENSITIVITY)
-                    {
-                        dwHow = FIELD_OFFSET(DIJOYSTATE, lY);
-                        dwFlags |= (InputState.lY > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
-                    }
-                    else if(abs(InputState.lZ) > JOYSTICK_DETECT_SENSITIVITY)
-                    {
-                        dwHow = FIELD_OFFSET(DIJOYSTATE, lZ);
-                        dwFlags |= (InputState.lZ > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
-                    }
-                    else if(abs(InputState.lRx) > JOYSTICK_DETECT_SENSITIVITY)
-                    {
-                        dwHow = FIELD_OFFSET(DIJOYSTATE, lRx);
-                        dwFlags |= (InputState.lRx > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
-                    }
-                    else if(abs(InputState.lRy) > JOYSTICK_DETECT_SENSITIVITY)
-                    {
-                        dwHow = FIELD_OFFSET(DIJOYSTATE, lRy);
-                        dwFlags |= (InputState.lRy > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
-                    }
-                    else if(abs(InputState.lRz) > JOYSTICK_DETECT_SENSITIVITY)
-                    {
-                        dwHow = FIELD_OFFSET(DIJOYSTATE, lRz);
-                        dwFlags |= (InputState.lRz > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
-                    }
-                    else 
-                        for(b=0;b<2;b++)
-                            if(abs(InputState.rglSlider[b]) > JOYSTICK_DETECT_SENSITIVITY)
-                                dwHow = FIELD_OFFSET(DIJOYSTATE, rglSlider[b]);
-                    else 
-                        for(b=0;b<4;b++)
-                            if(abs(InputState.rgdwPOV[b]) > POV_DETECT_SENSITIVITY)
-                                dwHow = FIELD_OFFSET(DIJOYSTATE, rgdwPOV[b]);
-                    else
-                        for(b=0;b<32;b++)
-                            if(InputState.rgbButtons[b] > BUTTON_DETECT_SENSITIVITY)
-                                dwHow = FIELD_OFFSET(DIJOYSTATE, rgbButtons[b]);
-
-					// ******************************************************************
-					// * Retrieve Object Info
-					// ******************************************************************
-					if(dwHow != -1)
-					{
-						g_pInputDev[v]->GetDeviceInfo(&DeviceInstance);
-
-						g_pInputDev[v]->GetObjectInfo(&ObjectInstance, dwHow, DIPH_BYOFFSET);
-
-                        g_InputConfig.Map(idc, DeviceInstance.tszInstanceName, ObjectInstance.dwType, dwFlags);
-
-						printf("Cxbx: Detected %s on %s\n", ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType);
-
-						sprintf(szNewText, "%s Successfully Mapped To %s On %s!", szOrgText, ObjectInstance.tszName, DeviceInstance.tszInstanceName);
-					}
-                }
-                // ******************************************************************
-                // * Detect Keyboard Input
-                // ******************************************************************
-				else if(g_pInputDevFlags[v] & INPUT_MAPPING_KEYBOARD)
-				{
-					BYTE InputState[256];
-
-					g_pInputDev[v]->GetDeviceState(256, InputState);
-
-                    dwFlags = INPUT_MAPPING_KEYBOARD;
-
-					for(int v=0;v<256;v++)
-					{
-						if(InputState[v] != 0)
-						{
-							dwHow = v;
-							break;
-						}
-					}
-
-					if(dwHow != -1)
-					{
-                        g_InputConfig.Map(idc, "SysKeyboard", dwHow, dwFlags);
-
-						printf("Cxbx: Detected Key %d on SysKeyboard\n", dwHow);
-
-						sprintf(szNewText, "%s Successfully Mapped To Key %d On %s!", szOrgText, dwHow, "SysKeyboard");
-					}
-				}
-                // ******************************************************************
-                // * Detect Mouse Input
-                // ******************************************************************
-				else if(g_pInputDevFlags[v] & INPUT_MAPPING_MOUSE)
-				{
-					DIMOUSESTATE2 InputState = {0};
-
-					g_pInputDev[v]->GetDeviceState(sizeof(DIMOUSESTATE2), &InputState);
-
-                    dwFlags = INPUT_MAPPING_MOUSE;
-
-                    // detect button changes
-					for(int b=0;b<8;b++)
-					{
-						if(InputState.rgbButtons[b] & 0x80)
-						{
-							dwHow = b;
-							dwFlags |= INPUT_MAPPING_MOUSE_CLICK;
-							break;
-						}
-					}
-
-                    // found a button change
-                    if(dwHow != -1)
-					{
-                        g_InputConfig.Map(idc, "SysMouse", dwHow, dwFlags);
-
-						printf("Cxbx: Detected Button %d on SysMouse\n", dwHow);
-
-						sprintf(szNewText, "%s Successfully Mapped To Button %d On %s!", szOrgText, dwHow, "SysMouse");
-					}
-                    // no button changes
-                    else
-                    {
-                        LONG delta_lX=0, delta_lY=0, delta_lZ=0;
-                        LONG absd_lX=0, absd_lY=0, absd_lZ=0;
-
-                        if(LastMouse_lY == -1 || LastMouse_lY == -1 || LastMouse_lZ == -1)
-                            delta_lX = delta_lY = delta_lZ = 0;
-                        else
-                        {
-                            delta_lX = InputState.lX - LastMouse_lX;
-                            delta_lY = InputState.lY - LastMouse_lY;
-                            delta_lZ = InputState.lZ - LastMouse_lZ;
-
-                            absd_lX  = abs(delta_lX);
-                            absd_lY  = abs(delta_lY);
-                            absd_lZ  = abs(delta_lZ);
-                        }
-
-                        int max = (absd_lX > absd_lY) ? absd_lX : absd_lY;
-
-                        max = (max > absd_lZ) ? max : absd_lZ;
-
-                        LastMouse_lX = InputState.lX;
-                        LastMouse_lY = InputState.lY;
-                        LastMouse_lZ = InputState.lZ;
-
-                        if(max > MOUSE_DETECT_SENSITIVITY)
-                        {
-                            if(max == absd_lX && absd_lX > MOUSE_DETECT_SENSITIVITY)
-                            {
-                                dwHow = DIMOFS_X;
-                                dwFlags |= (delta_lX > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
-                            }
-                            else if(max == absd_lY && absd_lY > MOUSE_DETECT_SENSITIVITY)
-                            {
-                                dwHow = DIMOFS_Y;
-                                dwFlags |= (delta_lY > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
-                            }
-                            else if(max == absd_lZ && absd_lZ > MOUSE_DETECT_SENSITIVITY)
-                            {
-                                dwHow = DIMOFS_Z;
-                                dwFlags |= (delta_lZ > 0) ? INPUT_MAPPING_AXIS_POSITIVE : INPUT_MAPPING_AXIS_NEGATIVE;
-                            }
-
-                            if(dwHow != -1)
-					        {
-                                g_InputConfig.Map(idc, "SysMouse", dwHow, dwFlags);
-
-                                ObjectInstance.dwSize = sizeof(ObjectInstance);
-
-                                char *szDirection = (dwFlags & INPUT_MAPPING_AXIS_POSITIVE) ? "Positive" : "Negative";
-                                char *szObjName = "Unknown";
-
-                                if(g_pInputDev[v]->GetObjectInfo(&ObjectInstance, dwHow, DIPH_BYOFFSET) == DI_OK)
-                                    szObjName = ObjectInstance.tszName;
-
-                                printf("Cxbx: Detected Movement on the %s %s on SysMouse\n", szDirection, szObjName);
-
-						        sprintf(szNewText, "%s Successfully Mapped To %s %s On %s!", szOrgText, szDirection, szObjName, "SysMouse");
-                            }                    
-                        }
-                    }
-				}
-
-				if(dwHow != -1)
-					g_bConfigDone = true;
-            }
-
-            Sleep(50);
+            SetWindowText(hWndButton, szBuffer);
         }
+
+        if(g_XBController.GetError())
+            goto cleanup;
+
+        if(g_XBController.ConfigPoll(szNewText))
+            break;
+
+        Sleep(50);
     }
 
-    // ******************************************************************
-    // * Cleanup Devices
-    // ******************************************************************
-    {
-        for(int v=g_pInputCur-1;v>=0;v--)
-        {
-            g_pInputDev[v]->Unacquire();
-            g_pInputDev[v]->Release();
-            g_pInputDev[v] = 0;
-        }
+    if(g_XBController.GetError())
+        goto cleanup;
+    else
+        g_XBController.ConfigEnd();
 
-        g_pInputCur = 0;
-
-        if(g_pDirectInput8 != 0)
-        {
-            g_pDirectInput8->Release();
-            g_pDirectInput8 = 0;
-        }
-    }
+cleanup:
 
     // ******************************************************************
     // * Update Window
     // ******************************************************************
 	{
-		SetWindowText(hWndButton, szOrgText);
+        if(g_XBController.GetError())
+            strcpy(szNewText, g_XBController.GetError());
+
+        SetWindowText(hWndButton, szOrgText);
 
 		SetWindowText(GetDlgItem(hWndDlg, IDC_CONFIG_STATUS), szNewText);
 
@@ -612,5 +243,5 @@ void ConfigureInput(HWND hWndDlg, HWND hWndButton, InputDeviceComponent idc)
 
 	}
 
-    g_bConfigDone = true;
+    bConfigDone = true;
 }

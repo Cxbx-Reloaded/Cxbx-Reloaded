@@ -35,8 +35,7 @@
 #define EMUSHARED_H
 
 #include "Cxbx.h"
-#include "Mutex.h"
-#include "InputConfig.h"
+#include "XBController.h"
 
 #include <memory.h>
 
@@ -46,7 +45,11 @@
 class EmuShared : public Mutex
 {
     public:
-        // WARNING: Contructor Will Not Be Called (Do Not Add One)
+        // ******************************************************************
+        // * Constructor / Deconstructor
+        // ******************************************************************
+        CXBXKRNL_API  EmuShared();
+        CXBXKRNL_API ~EmuShared();
 
         // ******************************************************************
         // * Each process needs to call this to initialize shared memory
@@ -59,42 +62,22 @@ class EmuShared : public Mutex
         CXBXKRNL_API static void Cleanup();
 
         // ******************************************************************
-        // * Initialize Input Configuration
+        // * Xbox Controller Accessor
         // ******************************************************************
-        CXBXKRNL_API void InitInputConfiguration() { m_InputConfig.Init(); }
-
-        // ******************************************************************
-        // * Input Configuration Accessors
-        // ******************************************************************
-        CXBXKRNL_API void SetInputConfiguration(InputConfig *x_InputConfig);
-        CXBXKRNL_API void GetInputConfiguration(InputConfig *x_InputConfig);
-
-        // ******************************************************************
-        // * Input Configuration Load/Save From Registry
-        // ******************************************************************
-        CXBXKRNL_API void LoadInputConfiguration();
-        CXBXKRNL_API void SaveInputConfiguration();
-
-        // ******************************************************************
-        // * Check the current Change ID
-        // ******************************************************************
-        uint32 GetChangeID() { return m_dwChangeID; }
+        CXBXKRNL_API void GetXBController(XBController *ctrl) { Lock(); memcpy(ctrl, &m_XBController, sizeof(XBController)); Unlock();}
+        CXBXKRNL_API void SetXBController(XBController *ctrl) { Lock(); memcpy(&m_XBController, ctrl, sizeof(XBController)); Unlock();}
 
     private:
         // ******************************************************************
         // * Shared configuration
         // ******************************************************************
-        InputConfig m_InputConfig;
-
-        // ******************************************************************
-        // * Used to see if there has been a change
-        // ******************************************************************
-        uint32 m_dwChangeID;
+        XBController m_XBController;
 };
 
 // ******************************************************************
 // * Exported Global Shared Memory Pointer
 // ******************************************************************
 extern CXBXKRNL_API EmuShared *g_EmuShared;
+extern CXBXKRNL_API int        g_EmuSharedRefCount;
 
 #endif

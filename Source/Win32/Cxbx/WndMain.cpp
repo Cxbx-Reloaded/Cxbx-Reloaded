@@ -210,8 +210,6 @@ WndMain::~WndMain()
 
             RegCloseKey(hKey);
         }
-
-        g_EmuShared->SaveInputConfiguration();
     }
 
     // ******************************************************************
@@ -1360,6 +1358,8 @@ void WndMain::UpdateDebugConsoles()
     else
     {
         FreeConsole();
+
+        freopen("NUL", "wt", stdout);
     }
 }
 

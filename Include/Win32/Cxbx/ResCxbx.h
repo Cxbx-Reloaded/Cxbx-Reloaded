@@ -35,6 +35,8 @@
 #define IDC_SET_RIGHT_NEGY              1027
 #define IDC_SET_RIGHT_NEGX              1028
 #define IDC_SET_RIGHT_POSX              1029
+#define IDC_BUTTON1                     1030
+#define IDC_BUTTON2                     1031
 #define ID_FILE_EXIT                    40005
 #define ID_HELP_ABOUT                   40008
 #define ID_EMULATION_START              40009
@@ -86,7 +88,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        112
 #define _APS_NEXT_COMMAND_VALUE         40073
-#define _APS_NEXT_CONTROL_VALUE         1030
+#define _APS_NEXT_CONTROL_VALUE         1034
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

@@ -45,7 +45,7 @@
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="Lib"
-				IgnoreDefaultLibraryNames="libc"
+				IgnoreDefaultLibraryNames="libcd"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Bin\Debug/CxbxKrnl.pdb"
 				ImportLibrary=".\Bin\Debug/CxbxKrnl.lib"/>
@@ -106,6 +106,7 @@
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="Lib"
+				IgnoreDefaultLibraryNames="libc"
 				ProgramDatabaseFile=".\Bin/Cxbx.pdb"
 				ImportLibrary=".\Bin/Cxbx.lib"/>
 			<Tool
@@ -230,6 +231,9 @@
 				RelativePath=".\Include\Win32\CxbxKrnl\ResCxbxDll.h">
 			</File>
 			<File
+				RelativePath=".\Include\Win32\XBController.h">
+			</File>
+			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\Xapi.1.0.3911.h">
 			</File>
 			<File
@@ -316,13 +320,13 @@
 				RelativePath=".\Source\Win32\CxbxKrnl\HLEDataBase.cpp">
 			</File>
 			<File
-				RelativePath=".\Source\Win32\InputConfig.cpp">
-			</File>
-			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\KernelThunk.cpp">
 			</File>
 			<File
 				RelativePath=".\Source\Win32\Mutex.cpp">
+			</File>
+			<File
+				RelativePath=".\Source\Win32\XBController.cpp">
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\Xapi.1.0.3911.inl">

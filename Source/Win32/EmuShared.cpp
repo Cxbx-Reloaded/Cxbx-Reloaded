@@ -41,17 +41,24 @@
 #include <stdio.h>
 
 // ******************************************************************
-// * shared memory
+// * exported globals
 // ******************************************************************
 CXBXKRNL_API EmuShared *g_EmuShared = NULL;
+CXBXKRNL_API int        g_EmuSharedRefCount = 0;
 
 // ******************************************************************
-// * func: EmuSharedInit
+// * static/global
+// ******************************************************************
+HANDLE hMapObject = NULL;
+
+// ******************************************************************
+// * func: EmuShared::EmuSharedInit
 // ******************************************************************
 CXBXKRNL_API void EmuShared::Init()
 {
-    static HANDLE hMapObject = NULL;
-    
+    // ******************************************************************
+    // * Ensure initialization only occurs once
+    // ******************************************************************
     bool init = true;
 
     // ******************************************************************
@@ -102,10 +109,9 @@ CXBXKRNL_API void EmuShared::Init()
     // * Executed only on first initialization of shared memory
     // ******************************************************************
     if(init)
-    {
-        g_EmuShared->InitInputConfiguration();
-        g_EmuShared->LoadInputConfiguration();
-    }
+        g_EmuShared->EmuShared::EmuShared();
+
+    g_EmuSharedRefCount++;
 }
 
 // ******************************************************************
@@ -113,143 +119,26 @@ CXBXKRNL_API void EmuShared::Init()
 // ******************************************************************
 CXBXKRNL_API void EmuShared::Cleanup()
 {
+    g_EmuSharedRefCount--;
+
+    if(g_EmuSharedRefCount == 0)
+        g_EmuShared->EmuShared::~EmuShared();
+
     UnmapViewOfFile(g_EmuShared);
 }
 
 // ******************************************************************
-// * func: SetInputConfiguration
+// * Constructor
 // ******************************************************************
-CXBXKRNL_API void EmuShared::SetInputConfiguration(InputConfig *x_InputConfig)
+CXBXKRNL_API EmuShared::EmuShared()
 {
-    Lock();
-
-    memcpy(&m_InputConfig, x_InputConfig, sizeof(InputConfig));
-
-    m_dwChangeID++;
-
-    Unlock();
-
-    return;
+    m_XBController.Load("Software\\Cxbx\\XBController");
 }
 
 // ******************************************************************
-// * func: GetInputConfiguration
+// * Deconstructor
 // ******************************************************************
-CXBXKRNL_API void EmuShared::GetInputConfiguration(InputConfig *x_InputConfig)
+CXBXKRNL_API EmuShared::~EmuShared()
 {
-	Lock();
-
-	memcpy(x_InputConfig, &m_InputConfig, sizeof(InputConfig));
-
-	Unlock();
-
-    return;
-}
-
-// ******************************************************************
-// * func: LoadInputConfiguration
-// ******************************************************************
-CXBXKRNL_API void EmuShared::LoadInputConfiguration()
-{
-    Lock();
-
-    // ******************************************************************
-    // * Load configuration from registry
-    // ******************************************************************
-    {
-        DWORD   dwDisposition, dwType, dwSize;
-        HKEY    hKey;
-
-        if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx\\Input", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
-        {
-            char szBuffer[128];
-            char szDeviceName[260] = "";
-
-            for(int d=0;d<MAX_INPUT_DEVICES;d++)
-            {
-                const char *szCur = m_InputConfig.GetDeviceName(d);
-
-                if(szCur[0] == '\0')
-                    continue;
-
-                sprintf(szBuffer, "Device Name #%d", d);
-
-                dwType = REG_SZ; dwSize = 260;
-                RegQueryValueEx(hKey, szBuffer, NULL, &dwType, (PBYTE)szDeviceName, &dwSize);
-
-                m_InputConfig.SetDeviceName(d, szDeviceName);
-            }
-
-            for(int c=0;c<INPUT_DEVICE_COMPONENT_COUNT;c++)
-            {
-                int RawData[3] = {-1, -1, 0}; // dwDevice, dwInfo, dwFlags
-
-                sprintf(szBuffer, "Component : %s", g_InputDeviceName[c]);
-
-                dwType = REG_BINARY; dwSize = sizeof(RawData);
-                RegQueryValueEx(hKey, szBuffer, NULL, &dwType, (PBYTE)&RawData[0], &dwSize);
-
-                if(RawData[0] != -1)
-                    m_InputConfig.Map((InputDeviceComponent)c, m_InputConfig.GetDeviceName(RawData[0]), RawData[1], RawData[2]);
-            }
-
-            RegCloseKey(hKey);
-        }
-    }
-
-    Unlock();
-
-    return;
-}
-
-// ******************************************************************
-// * func: SaveInputConfiguration
-// ******************************************************************
-CXBXKRNL_API void EmuShared::SaveInputConfiguration()
-{
-    Lock();
-
-    // ******************************************************************
-    // * Save configuration to registry
-    // ******************************************************************
-    {
-        DWORD dwDisposition, dwType, dwSize;
-        HKEY  hKey;
-
-        if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx\\Input", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
-        {
-            char szBuffer[128];
-
-            for(int d=0;d<MAX_INPUT_DEVICES;d++)
-            {
-                const char *szCur = m_InputConfig.GetDeviceName(d);
-
-                sprintf(szBuffer, "Device Name #%d", d);
-
-                if(szCur[0] == '\0')
-                    RegDeleteValue(hKey, szBuffer);
-                else
-                {
-                    dwType = REG_SZ; dwSize = 260;
-                    RegSetValueEx(hKey, szBuffer, 0, dwType, (PBYTE)szCur, dwSize);
-                }
-            }
-
-            for(int c=0;c<INPUT_DEVICE_COMPONENT_COUNT;c++)
-            {
-                int RawData[3] = {-1, -1, 0}; // dwDevice, dwInfo, dwFlags
-
-                m_InputConfig.Get((InputDeviceComponent)c, &RawData[0], &RawData[1], &RawData[2]);
-
-                sprintf(szBuffer, "Component : %s", g_InputDeviceName[c]);
-
-                dwType = REG_BINARY; dwSize = sizeof(RawData);
-                RegSetValueEx(hKey, szBuffer, 0, dwType, (PBYTE)&RawData, dwSize);
-            }
-        }
-    }
-
-    Unlock();
-
-    return;
+    m_XBController.Save("Software\\Cxbx\\XBController");
 }

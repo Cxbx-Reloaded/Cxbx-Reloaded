@@ -113,6 +113,12 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion
 
         printf("Emu (0x%.08X): Debug console allocated (DM_FILE).\n", GetCurrentThreadId());
     }
+    else
+    {
+        FreeConsole();
+
+        freopen("NUL", "wt", stdout);
+    }
 
     // ******************************************************************
     // * debug trace
@@ -298,7 +304,7 @@ void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*En
     for(uint32 a=0;a<OovpaTableSize/sizeof(OOVPATable);a++)
     {
         #ifdef _DEBUG_TRACE
-        printf("EmuInstallWrappers: Searching for %s...", OovpaTable[a].szFuncName);
+        printf("Emu: Searching for %s...", OovpaTable[a].szFuncName);
         #endif
 
         OOVPA *Oovpa = OovpaTable[a].Oovpa;
