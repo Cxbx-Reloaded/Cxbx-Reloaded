@@ -39,3 +39,16 @@ xboxkrnl::NtOpenFile :
     }
     */
 
+
+logo bitmap dump:
+
+    FILE *outfile = fopen("C:\\Logo.txt", "wt");
+    for(uint32 d=0;d<dwLength;d++)
+    {
+        if(d%10 == 0)
+            fprintf(outfile, "\n");
+        fprintf(outfile, "0x%.02X, ", RLE[d]);
+    }
+
+    fprintf(outfile, "\nsize : %.08X", dwLength);
+    fclose(outfile);

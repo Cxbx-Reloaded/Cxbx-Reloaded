@@ -412,13 +412,13 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
         }
 
         // ******************************************************************
-        // * make room for logo bitmap (temporary HACK)
+        // * make room for largest possible logo bitmap
         // ******************************************************************
         {
             mrc = RoundUp(mrc, 0x10);
 
             m_Header.dwLogoBitmapAddr = mrc;
-            m_Header.dwSizeofLogoBitmap = 0x6A4;    // Max Possible
+            m_Header.dwSizeofLogoBitmap = 100*17;    // Max Possible
 
             mrc += m_Header.dwSizeofLogoBitmap;
         }
@@ -695,12 +695,16 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
         }
 
         // ******************************************************************
-        // * blank logo bitmap (HACK)
+        // * write default "OpenXDK" logo bitmap
         // ******************************************************************
         {
-            uint08 *blank = GetAddr(m_Header.dwLogoBitmapAddr);
+            uint08 *RawAddr = GetAddr(m_Header.dwLogoBitmapAddr);
 
-            memset(blank, 0, 100*17);
+            memset(RawAddr, 0, 100*17);
+
+            memcpy(RawAddr, OpenXDK, dwSizeOfOpenXDK);
+
+            m_Header.dwSizeofLogoBitmap = dwSizeOfOpenXDK;
         }
 
         // ******************************************************************

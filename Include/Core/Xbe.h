@@ -321,4 +321,10 @@ const uint32 XBEIMAGE_MEDIA_TYPE_NONSECURE_HARD_DISK = 0x40000000;
 const uint32 XBEIMAGE_MEDIA_TYPE_NONSECURE_MODE      = 0x80000000;
 const uint32 XBEIMAGE_MEDIA_TYPE_MEDIA_MASK          = 0x00FFFFFF;
 
+// ******************************************************************
+// * OpenXDK logo bitmap (used by cxbe by default)
+// ****************************************************************** 
+extern uint08 OpenXDK[];
+extern uint32 dwSizeOfOpenXDK;
+
 #endif
