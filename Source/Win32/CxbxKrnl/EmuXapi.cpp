@@ -897,6 +897,47 @@ VOID WINAPI XTL::EmuXapiBootDash(DWORD UnknownA, DWORD UnknownB, DWORD UnknownC)
 }
 
 // ******************************************************************
+// * func: EmuXRegisterThreadNotifyRoutine
+// ******************************************************************
+VOID WINAPI XTL::EmuXRegisterThreadNotifyRoutine
+(
+    PXTHREAD_NOTIFICATION   pThreadNotification,
+    BOOL                    fRegister
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuXRegisterThreadNotifyRoutine\n"
+               "(\n"
+               "   pThreadNotification : 0x%.08X\n"
+               "   fRegister           : 0x%.08X\n"
+               ");\n",
+                GetCurrentThreadId(), pThreadNotification, fRegister);
+    }
+    #endif
+
+    if(fRegister)
+    {
+        if(g_pfnThreadNotification != NULL)
+            EmuCleanup("Multiple thread notification routines installed (caustik can fix this!)");
+
+        g_pfnThreadNotification = pThreadNotification->pfnNotifyRoutine;
+    }
+    else
+    {
+        if(g_pfnThreadNotification != NULL)
+            g_pfnThreadNotification = NULL;
+    }
+
+    EmuSwapFS();   // XBox FS
+}
+
+// ******************************************************************
 // * func: EmuXCalculateSignatureBegin
 // ******************************************************************
 HANDLE WINAPI XTL::EmuXCalculateSignatureBegin(DWORD dwFlags)

@@ -145,6 +145,11 @@ HRESULT WINAPI EmuDirectSoundCreate
 );
 
 // ******************************************************************
+// * func: EmuDirectSoundDoWork
+// ******************************************************************
+VOID WINAPI EmuDirectSoundDoWork();
+
+// ******************************************************************
 // * func: EmuDirectSoundCreateBuffer
 // ******************************************************************
 HRESULT WINAPI EmuDirectSoundCreateBuffer

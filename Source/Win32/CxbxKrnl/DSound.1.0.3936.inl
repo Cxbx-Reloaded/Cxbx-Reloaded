@@ -64,6 +64,100 @@ SOOVPA<9> DirectSoundCreate_1_0_3936 =
 };
 
 // ******************************************************************
+// * DirectSoundDoWorkB
+// ******************************************************************
+SOOVPA<12> DirectSoundDoWorkB_1_0_3936 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    XREF_DSDOWORKB, // XRef Is  Saved
+    0,              // XRef Not Used
+
+    {
+        // DirectSoundDoWorkB+0x06 : lea edi, [ebx+0x664]
+        { 0x06, 0x8D }, // (Offset,Value)-Pair #1
+        { 0x07, 0xBB }, // (Offset,Value)-Pair #2
+        { 0x08, 0x64 }, // (Offset,Value)-Pair #3
+        { 0x09, 0x06 }, // (Offset,Value)-Pair #4
+        { 0x0A, 0x00 }, // (Offset,Value)-Pair #5
+        { 0x0B, 0x00 }, // (Offset,Value)-Pair #6
+
+        // DirectSoundDoWorkB+0x20 : mov eax, [ecx]
+        { 0x20, 0x8B }, // (Offset,Value)-Pair #7
+        { 0x21, 0x01 }, // (Offset,Value)-Pair #8
+
+        // DirectSoundDoWorkB+0x33 : add edi, 4; dec ebp
+        { 0x33, 0x83 }, // (Offset,Value)-Pair #9
+        { 0x34, 0xC7 }, // (Offset,Value)-Pair #10
+        { 0x35, 0x04 }, // (Offset,Value)-Pair #11
+        { 0x36, 0x4D }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
+// * DirectSoundDoWorkA
+// ******************************************************************
+SOOVPA<9> DirectSoundDoWorkA_1_0_3936 =
+{
+    0, // Large == 0
+    9, // Count == 9
+
+    XREF_DSDOWORKA, // XRef Is Saved
+    1,              // XRef Is Used
+
+    {
+        // DirectSoundDoWorkA+0x10 : call [DirectSoundDoWorkB]
+        { 0x10, XREF_DSDOWORKB }, // (Offset,Value)-Pair #1
+
+        // DirectSoundDoWorkA+0x08 : mov eax, [esp+0x08]
+        { 0x08, 0x8B }, // (Offset,Value)-Pair #2
+        { 0x09, 0x44 }, // (Offset,Value)-Pair #3
+        { 0x0A, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x0B, 0x08 }, // (Offset,Value)-Pair #5
+
+        // DirectSoundDoWorkA+0x17 : jz +0x0B
+        { 0x17, 0x74 }, // (Offset,Value)-Pair #6
+        { 0x18, 0x0B }, // (Offset,Value)-Pair #7
+
+        // DirectSoundDoWorkA+0x24 : retn 0x04
+        { 0x24, 0xC2 }, // (Offset,Value)-Pair #8
+        { 0x25, 0x04 }, // (Offset,Value)-Pair #9
+    }
+};
+
+// ******************************************************************
+// * DirectSoundDoWork
+// ******************************************************************
+SOOVPA<9> DirectSoundDoWork_1_0_3936 =
+{
+    0, // Large == 0
+    9, // Count == 9
+
+    -1, // XRef Not Saved
+    1,  // XRef Is  Used
+
+    {
+        // DirectSoundDoWork+0x13 : call [XREF_DSDOWORKA]
+        { 0x13, XREF_DSDOWORKA }, // (Offset,Value)-Pair #1
+
+        // DirectSoundDoWork+0x0D : test eax, eax;jz +0x06
+        { 0x0D, 0x85 }, // (Offset,Value)-Pair #2
+        { 0x0E, 0xC0 }, // (Offset,Value)-Pair #3
+        { 0x0F, 0x74 }, // (Offset,Value)-Pair #4
+        { 0x10, 0x06 }, // (Offset,Value)-Pair #5
+
+        // DirectSoundDoWork+0x19 : pop esi; jz +0x0B
+        { 0x19, 0x5E }, // (Offset,Value)-Pair #6
+        { 0x1A, 0x74 }, // (Offset,Value)-Pair #7
+        { 0x1B, 0x0B }, // (Offset,Value)-Pair #8
+
+        // DirectSoundDoWork+0x27 : retn
+        { 0x27, 0xC3 }, // (Offset,Value)-Pair #9
+    }
+};
+
+// ******************************************************************
 // * CDirectSound::CreateSoundStream
 // ******************************************************************
 SOOVPA<16> CDirectSound_CreateSoundStream_1_0_3936 =
@@ -2500,6 +2594,32 @@ OOVPATable DSound_1_0_3936[] =
 
         #ifdef _DEBUG_TRACE
         "EmuDirectSoundCreate" 
+        #endif
+    },
+    // DirectSoundDoWorkB (XREF)
+    {
+        (OOVPA*)&DirectSoundDoWorkB_1_0_3936, 0,
+
+        #ifdef _DEBUG_TRACE
+        "DirectSoundDoWorkB (XRef)"
+        #endif
+    },
+    // DirectSoundDoWorkA (XREF)
+    {
+        (OOVPA*)&DirectSoundDoWorkA_1_0_3936, 0,
+
+        #ifdef _DEBUG_TRACE
+        "DirectSoundDoWorkA (XRef)"
+        #endif
+    },
+    // CDirectSoundStream::SetAllParameters
+    {
+        (OOVPA*)&DirectSoundDoWork_1_0_3936,
+
+        XTL::EmuDirectSoundDoWork,
+
+        #ifdef _DEBUG_TRACE
+        "EmuDirectSoundDoWork" 
         #endif
     },
     // CDirectSound_CreateSoundStream

@@ -1565,9 +1565,9 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_SetTileNoWait"
         #endif
     },
-    // IDirect3DDevice8::CreateVertexShader (* unchanged since 4361 *)
+    // IDirect3DDevice8::CreateVertexShader (* unchanged since 3925 *)
     {
-        (OOVPA*)&IDirect3DDevice8_CreateVertexShader_1_0_4361,
+        (OOVPA*)&IDirect3DDevice8_CreateVertexShader_1_0_3925,
 
         XTL::EmuIDirect3DDevice8_CreateVertexShader,
 

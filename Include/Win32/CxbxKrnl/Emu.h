@@ -111,4 +111,9 @@ extern HANDLE g_hTDrive;
 extern HANDLE g_hUDrive;
 extern HANDLE g_hZDrive;
 
+// ******************************************************************
+// * data: Thread Notification Routine
+// ******************************************************************
+extern PVOID g_pfnThreadNotification;
+
 #endif

@@ -1631,12 +1631,9 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShaderConstant
     }
     #endif
 
-    HRESULT hRet;
-
     // ******************************************************************
     // * redirect to windows d3d
     // ******************************************************************
-    /*
     HRESULT hRet = g_pD3DDevice8->SetVertexShaderConstant
     (
         Register,
@@ -1645,9 +1642,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShaderConstant
     );
 
     if(FAILED(hRet))
-    */
     {
-        printf("*Warning* we're lying about setting a vertex shader constant!\n");
+        EmuWarning("We're lying about setting a vertex shader constant!");
 
         hRet = D3D_OK;
     }
@@ -1753,7 +1749,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreatePixelShader
 
     if(FAILED(hRet))
     {
-        printf("*Warning* we're lying about the creation of a pixel shader!\n");
+        EmuWarning("We're lying about the creation of a pixel shader!");
 
         hRet = D3D_OK;
     }
@@ -1796,7 +1792,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetPixelShader
 
     if(FAILED(hRet))
     {
-        printf("*Warning* we're lying about setting a pixel shader!\n");
+        EmuWarning("We're lying about setting a pixel shader!");
 
         hRet = D3D_OK;
     }
@@ -1907,7 +1903,11 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
         );
 
         if(FAILED(hRet))
-            EmuWarning("CreateTexture FAILED");
+            EmuWarning("CreateTexture Failed!");
+
+        #ifdef _DEBUG_TRACE
+        printf("EmuD3D8 (0x%X): Created Texture : 0x%.08X\n", GetCurrentThreadId(), *ppTexture);
+        #endif
     }
     else
     {
@@ -2004,7 +2004,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVolumeTexture
         );
 
         if(FAILED(hRet))
-            EmuWarning("CreateVolumeTexture FAILED");
+            EmuWarning("CreateVolumeTexture Failed!");
     }
     else
     {
@@ -2089,7 +2089,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateCubeTexture
     );
 
     if(FAILED(hRet))
-        EmuWarning("CreateCubeTexture FAILED");
+        EmuWarning("CreateCubeTexture Failed!");
 
     EmuSwapFS();   // XBox FS
 
@@ -2134,11 +2134,11 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateIndexBuffer
     // ******************************************************************
     HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer
     (
-        Length, D3DUSAGE_DYNAMIC, D3DFMT_INDEX16, D3DPOOL_MANAGED, &((*ppIndexBuffer)->EmuIndexBuffer8)
+        Length, NULL, D3DFMT_INDEX16, D3DPOOL_MANAGED, &((*ppIndexBuffer)->EmuIndexBuffer8)
     );
 
     if(FAILED(hRet))
-        printf("*Warning* CreateIndexBuffer FAILED\n");
+        EmuWarning("CreateIndexBuffer Failed! (0x%.08X)", hRet);
 
     EmuSwapFS();   // XBox FS
 
@@ -2512,7 +2512,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 hRet = pResource->EmuVertexBuffer8->Lock(0, 0, &pData, 0);
 
                 if(FAILED(hRet))
-                    EmuCleanup("VertexBuffer Lock failed");
+                    EmuCleanup("VertexBuffer Lock Failed!");
 
                 memcpy(pData, (void*)pBase, dwSize);
 
@@ -2548,14 +2548,14 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 );
 
                 if(FAILED(hRet))
-                    EmuCleanup("CreateIndexBuffer failed");
+                    EmuCleanup("CreateIndexBuffer Failed!");
 
                 BYTE *pData = 0;
 
                 hRet = pResource->EmuIndexBuffer8->Lock(0, dwSize, &pData, 0);
 
                 if(FAILED(hRet))
-                    EmuCleanup("IndexBuffer Lock failed");
+                    EmuCleanup("IndexBuffer Lock Failed!");
 
                 memcpy(pData, (void*)pBase, dwSize);
 
@@ -2705,7 +2705,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 );
 
                 if(FAILED(hRet))
-                    EmuCleanup("CreateTexture failed");
+                    EmuCleanup("CreateTexture Failed!");
             }
 
             D3DLOCKED_RECT LockedRect;
@@ -3151,7 +3151,7 @@ HRESULT WINAPI XTL::EmuIDirect3DSurface8_LockRect
         hRet = pSurface8->LockRect(pLockedRect, pRect, NewFlags);
 
         if(FAILED(hRet))
-            printf("*Warning* LockRect failed\n");
+            EmuWarning("LockRect Failed!");
     }
 
     EmuSwapFS();   // XBox FS
@@ -3473,8 +3473,6 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EmuIDirect3DDevice8_CreateVertexBuffer2
 
     X_D3DVertexBuffer *pD3DVertexBuffer = new X_D3DVertexBuffer();
 
-    IDirect3DVertexBuffer8 *ppVertexBuffer=NULL;
-
     HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer
     (
         Length, 
@@ -3483,6 +3481,9 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EmuIDirect3DDevice8_CreateVertexBuffer2
         D3DPOOL_MANAGED, 
         &pD3DVertexBuffer->EmuVertexBuffer8
     );
+
+    if(FAILED(hRet))
+        EmuWarning("CreateVertexBuffer Failed!");
 
     EmuSwapFS();   // XBox FS
 
@@ -4518,6 +4519,9 @@ VOID WINAPI XTL::EmuIDirect3DVertexBuffer8_Lock
     IDirect3DVertexBuffer8 *pVertexBuffer8 = ppVertexBuffer->EmuVertexBuffer8;
 
     HRESULT hRet = pVertexBuffer8->Lock(OffsetToLock, SizeToLock, ppbData, Flags);
+
+    if(FAILED(hRet))
+        EmuWarning("VertexBuffer Lock Failed!");
 
     EmuSwapFS();   // XBox FS
 

@@ -215,36 +215,6 @@ SOOVPA<15> QueryPerformanceFrequency_1_0_4361 =
 };
 
 // ******************************************************************
-// * XGetDeviceChanges
-// ******************************************************************
-SOOVPA<8> XGetDeviceChanges_1_0_4361 =
-{
-    0,  // Large == 0
-    8,  // Count == 8
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        // XGetDeviceChanges+0x07 : xor eax, eax
-        { 0x07, 0x33 }, // (Offset,Value)-Pair #1
-        { 0x08, 0xC0 }, // (Offset,Value)-Pair #2
-
-        // XGetDeviceChanges+0x33 : not edx
-        { 0x33, 0xF7 }, // (Offset,Value)-Pair #3
-        { 0x34, 0xD2 }, // (Offset,Value)-Pair #4
-
-        // XGetDeviceChanges+0x42 : or edx, edi
-        { 0x42, 0x0B }, // (Offset,Value)-Pair #5
-        { 0x43, 0xD7 }, // (Offset,Value)-Pair #6
-
-        // XGetDeviceChanges+0x51 : mov cl, al
-        { 0x51, 0x8A }, // (Offset,Value)-Pair #7
-        { 0x52, 0xC8 }, // (Offset,Value)-Pair #8
-    }
-};
-
-// ******************************************************************
 // * XInputOpen
 // ******************************************************************
 SOOVPA<12> XInputOpen_1_0_4361 =
@@ -686,9 +656,9 @@ OOVPATable XAPI_1_0_4361[] =
         "EmuXGetDevices"
         #endif
     },
-    // XGetDeviceChanges
+    // XGetDeviceChanges (* unchanged since 3911 *)
     {
-        (OOVPA*)&XGetDeviceChanges_1_0_4361,
+        (OOVPA*)&XGetDeviceChanges_1_0_3911,
 
         XTL::EmuXGetDeviceChanges,
 

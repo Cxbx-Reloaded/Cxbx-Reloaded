@@ -225,6 +225,39 @@ SOOVPA<11> XapiBootDash_1_0_3911 =
 };
 
 // ******************************************************************
+// * XRegisterThreadNotifyRoutine
+// ******************************************************************
+SOOVPA<11> XRegisterThreadNotifyRoutine_1_0_3911 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // XRegisterThreadNotifyRoutine+0x0D : cmp [esp+0x0C], 0
+        { 0x0D, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x0E, 0x7C }, // (Offset,Value)-Pair #2
+        { 0x0F, 0x24 }, // (Offset,Value)-Pair #3
+        { 0x10, 0x0C }, // (Offset,Value)-Pair #4
+
+        // XRegisterThreadNotifyRoutine+0x12 : jz +0x1C
+        { 0x12, 0x74 }, // (Offset,Value)-Pair #5
+        { 0x13, 0x1C }, // (Offset,Value)-Pair #6
+
+        // XRegisterThreadNotifyRoutine+0x24 : mov [eax+4], ecx
+        { 0x24, 0x89 }, // (Offset,Value)-Pair #7
+        { 0x25, 0x48 }, // (Offset,Value)-Pair #8
+        { 0x26, 0x04 }, // (Offset,Value)-Pair #9
+
+        // XRegisterThreadNotifyRoutine+0x46 : retn 0x08
+        { 0x46, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x47, 0x08 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
 // * XCalculateSignatureBegin
 // ******************************************************************
 SOOVPA<10> XCalculateSignatureBegin_1_0_3911 =
@@ -257,6 +290,108 @@ SOOVPA<10> XCalculateSignatureBegin_1_0_3911 =
 };
 
 // ******************************************************************
+// * XGetDeviceChanges
+// ******************************************************************
+SOOVPA<8> XGetDeviceChanges_1_0_3911 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // XGetDeviceChanges+0x07 : xor eax, eax
+        { 0x07, 0x33 }, // (Offset,Value)-Pair #1
+        { 0x08, 0xC0 }, // (Offset,Value)-Pair #2
+
+        // XGetDeviceChanges+0x33 : not edx
+        { 0x33, 0xF7 }, // (Offset,Value)-Pair #3
+        { 0x34, 0xD2 }, // (Offset,Value)-Pair #4
+
+        // XGetDeviceChanges+0x42 : or edx, edi
+        { 0x42, 0x0B }, // (Offset,Value)-Pair #5
+        { 0x43, 0xD7 }, // (Offset,Value)-Pair #6
+
+        // XGetDeviceChanges+0x51 : mov cl, al
+        { 0x51, 0x8A }, // (Offset,Value)-Pair #7
+        { 0x52, 0xC8 }, // (Offset,Value)-Pair #8
+    }
+};
+
+// ******************************************************************
+// * XInputOpen
+// ******************************************************************
+SOOVPA<11> XInputOpen_1_0_3911 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // XInputOpen+0x20 : jmp +0x0B
+        { 0x20, 0xEB }, // (Offset,Value)-Pair #1
+        { 0x21, 0x0B }, // (Offset,Value)-Pair #2
+
+        // XInputOpen+0x29 : jnz +0x3D
+        { 0x29, 0x75 }, // (Offset,Value)-Pair #3
+        { 0x2A, 0x3D }, // (Offset,Value)-Pair #4
+
+        // XInputOpen+0x4A : add edx, 0x10
+        { 0x4A, 0x83 }, // (Offset,Value)-Pair #5
+        { 0x4B, 0xC2 }, // (Offset,Value)-Pair #6
+        { 0x4C, 0x10 }, // (Offset,Value)-Pair #7
+
+        // XInputOpen+0x66 : jmp +0x09
+        { 0x66, 0xEB }, // (Offset,Value)-Pair #8
+        { 0x67, 0x09 }, // (Offset,Value)-Pair #9
+
+        // XInputOpen+0x68 : push 0x57
+        { 0x68, 0x6A }, // (Offset,Value)-Pair #10
+        { 0x69, 0x57 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
+// * XInputGetState
+// ******************************************************************
+SOOVPA<13> XInputGetState_1_0_3911 =
+{
+    0,  // Large == 0
+    13, // Count == 13
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // XInputGetState+0x0E : cmp byte ptr [edx+0x0A3], 1
+        { 0x0E, 0x80 }, // (Offset,Value)-Pair #1
+        { 0x0F, 0xBA }, // (Offset,Value)-Pair #2
+        { 0x10, 0xA3 }, // (Offset,Value)-Pair #3
+        { 0x14, 0x01 }, // (Offset,Value)-Pair #4
+
+        // XInputGetState+0x17 : push 0x57
+        { 0x17, 0x6A }, // (Offset,Value)-Pair #5
+        { 0x18, 0x57 }, // (Offset,Value)-Pair #6
+
+        // XInputGetState+0x1A : jmp +0x46
+        { 0x1A, 0xEB }, // (Offset,Value)-Pair #7
+        { 0x1B, 0x46 }, // (Offset,Value)-Pair #8
+
+        // XInputGetState+0x28 : mov ebx, 0x048F
+        { 0x28, 0xBB }, // (Offset,Value)-Pair #9
+        { 0x29, 0x8F }, // (Offset,Value)-Pair #10
+        { 0x2A, 0x04 }, // (Offset,Value)-Pair #11
+
+        // XInputGetState+0x6E : retn 8
+        { 0x6E, 0xC2 }, // (Offset,Value)-Pair #12
+        { 0x6F, 0x08 }, // (Offset,Value)-Pair #13
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_3911
 // ******************************************************************
 OOVPATable XAPI_1_0_3911[] =
@@ -271,6 +406,7 @@ OOVPATable XAPI_1_0_3911[] =
         "EmuXInitDevices"
         #endif
     },
+    /* Too High Level
     // CreateMutex
     {
         (OOVPA*)&CreateMutex_1_0_3911,
@@ -281,6 +417,7 @@ OOVPATable XAPI_1_0_3911[] =
         "EmuCreateMutex" 
         #endif
     },
+    //*/
     /* Too High Level
     // CreateThread
     {
@@ -325,6 +462,16 @@ OOVPATable XAPI_1_0_3911[] =
         "EmuXapiBootDash"
         #endif
     },
+    // XRegisterThreadNotifyRoutine
+    {
+        (OOVPA*)&XRegisterThreadNotifyRoutine_1_0_3911,
+
+        XTL::EmuXRegisterThreadNotifyRoutine,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXRegisterThreadNotifyRoutine"
+        #endif
+    },
     /*
     // XCalculateSignatureBegin
     {
@@ -337,6 +484,36 @@ OOVPATable XAPI_1_0_3911[] =
         #endif
     },
     */
+    // XGetDeviceChanges
+    {
+        (OOVPA*)&XGetDeviceChanges_1_0_3911,
+
+        XTL::EmuXGetDeviceChanges,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXGetDeviceChanges"
+        #endif
+    },
+    // XInputOpen
+    {
+        (OOVPA*)&XInputOpen_1_0_3911,
+
+        XTL::EmuXInputOpen,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputOpen"
+        #endif
+    },
+    // XInputGetState
+    {
+        (OOVPA*)&XInputGetState_1_0_3911,
+
+        XTL::EmuXInputGetState,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputGetState"
+        #endif
+    },
 };
 
 // ******************************************************************

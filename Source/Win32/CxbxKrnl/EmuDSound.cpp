@@ -115,6 +115,25 @@ HRESULT WINAPI XTL::EmuDirectSoundCreate
 }
 
 // ******************************************************************
+// * func: EmuDirectSoundDoWork
+// ******************************************************************
+VOID WINAPI XTL::EmuDirectSoundDoWork()
+{
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        EmuSwapFS();   // Win2k/XP FS
+        printf("EmuDSound (0x%X): EmuDirectSoundDoWork();\n", GetCurrentThreadId());
+        EmuSwapFS();   // XBox FS
+    }
+    #endif
+
+    return;
+}
+
+// ******************************************************************
 // * func: EmuDirectSoundCreateBuffer
 // ******************************************************************
 HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer

@@ -77,6 +77,11 @@ typedef struct _PCSTProxyParam
 PCSTProxyParam;
 
 // ******************************************************************
+// * data: Thread Notification Routine
+// ******************************************************************
+extern PVOID g_pfnThreadNotification = NULL;
+
+// ******************************************************************
 // * (Helper) PCSTProxy
 // ******************************************************************
 #pragma warning(push)
@@ -112,6 +117,20 @@ static DWORD WINAPI PCSTProxy
     EmuGenerateFS(g_pTLS, g_pTLSData);
 
     // ******************************************************************
+    // * Call thread notification routine(s)
+    // ******************************************************************
+    if(g_pfnThreadNotification != 0)
+    {
+        XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification;
+
+        EmuSwapFS();   // Xbox FS
+
+        pfnNotificationRoutine(TRUE);
+
+        EmuSwapFS();   // Win2k/XP FS
+    }
+
+    // ******************************************************************
     // * use the special calling convention
     // ******************************************************************
     __try
@@ -136,6 +155,20 @@ static DWORD WINAPI PCSTProxy
 callComplete:
 
     EmuSwapFS();    // Win2k/XP FS
+
+    // ******************************************************************
+    // * Call thread notification routine(s)
+    // ******************************************************************
+    if(g_pfnThreadNotification != 0)
+    {
+        XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification;
+
+        EmuSwapFS();   // Xbox FS
+
+        pfnNotificationRoutine(FALSE);
+
+        EmuSwapFS();   // Win2k/XP FS
+    }
 
     EmuCleanThread();
 
@@ -652,9 +685,22 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
 XBSYSAPI EXPORTNUM(156) volatile xboxkrnl::DWORD xboxkrnl::KeTickCount = 0;
 
 // ******************************************************************
+// * xLaunchDataPage (pointed to by LaunchDataPage)
+// ******************************************************************
+LAUNCH_DATA_PAGE xLaunchDataPage =
+{
+    {   // header
+        2,
+        0,
+        "D:\\default.xbe",
+        0
+    }
+};
+
+// ******************************************************************
 // * 0x00A4 - LaunchDataPage (actually a pointer)
 // ******************************************************************
-XBSYSAPI EXPORTNUM(164) xboxkrnl::DWORD xboxkrnl::LaunchDataPage = 0;
+XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = &xLaunchDataPage;
 
 // ******************************************************************
 // * 0x00A5 - MmAllocateContiguousMemory
@@ -786,7 +832,8 @@ XBSYSAPI EXPORTNUM(171) VOID NTAPI xboxkrnl::MmFreeContiguousMemory
     }
     #endif
 
-    delete[] BaseAddress;
+    if(BaseAddress != &xLaunchDataPage)
+        delete[] BaseAddress;
 
     EmuSwapFS();   // Xbox FS
 
@@ -1064,6 +1111,9 @@ XBSYSAPI EXPORTNUM(189) NTSTATUS NTAPI xboxkrnl::NtCreateEvent
     // ******************************************************************
     NTSTATUS ret = NtDll::NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, (szBuffer != 0) ? &NtObjAttr : 0, (NtDll::EVENT_TYPE)EventType, InitialState);
 
+    if(FAILED(ret))
+        EmuWarning("NtCreateEvent Failed!");
+
     #ifdef _DEBUG_TRACE
     printf("EmuKrnl (0x%X): NtCreateEvent EventHandle = 0x%.08X\n", GetCurrentThreadId(), *EventHandle);
     #endif
@@ -1274,19 +1324,20 @@ XBSYSAPI EXPORTNUM(192) NTSTATUS NTAPI xboxkrnl::NtCreateMutant
     // ******************************************************************
     if(szBuffer != 0)
     {
-        mbstowcs(wszObjectName, szBuffer, 160);
+        mbstowcs(wszObjectName, "\\??\\", 4);
+        mbstowcs(wszObjectName+4, szBuffer, 160);
 
         NtDll::RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
 
         InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
     }
 
+    NtObjAttr.RootDirectory = 0;
+
     NTSTATUS ret = NtDll::NtCreateMutant(MutantHandle, MUTANT_ALL_ACCESS, (szBuffer != 0) ? &NtObjAttr : 0, InitialOwner);
 
     if(FAILED(ret))
-        EmuCleanup("NtCreateMutant Failed : FIXME!! (0x%.08X)!", ret);
-    else
-        EmuCleanup("NtCreateMutant Success");
+        EmuWarning("NtCreateMutant Failed!");
 
     EmuSwapFS();   // Xbox FS
 
@@ -2065,6 +2116,20 @@ XBSYSAPI EXPORTNUM(258) VOID NTAPI xboxkrnl::PsTerminateSystemThread(IN NTSTATUS
                GetCurrentThreadId(), ExitStatus);
     }
     #endif
+
+    // ******************************************************************
+    // * Call thread notification routine(s)
+    // ******************************************************************
+    if(g_pfnThreadNotification != 0)
+    {
+        XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification;
+
+        EmuSwapFS();   // Xbox FS
+
+        pfnNotificationRoutine(FALSE);
+
+        EmuSwapFS();   // Win2k/XP FS
+    }
 
     ExitThread(ExitStatus);
 

@@ -253,6 +253,21 @@ typedef struct _RTL_HEAP_PARAMETERS
 RTL_HEAP_PARAMETERS;
 
 // ******************************************************************
+// * XTHREAD_NOTIFY_PROC
+// ******************************************************************
+typedef VOID (WINAPI *XTHREAD_NOTIFY_PROC)(BOOL fCreate);
+
+// ******************************************************************
+// * XTHREAD_NOTIFICATION
+// ******************************************************************
+typedef struct _XTHREAD_NOTIFICATION
+{
+    LIST_ENTRY          Reserved;
+    XTHREAD_NOTIFY_PROC pfnNotifyRoutine;
+}
+XTHREAD_NOTIFICATION, *PXTHREAD_NOTIFICATION;
+
+// ******************************************************************
 // * func: EmuRtlCreateHeap
 // ******************************************************************
 PVOID WINAPI EmuRtlCreateHeap
@@ -485,6 +500,15 @@ NTSTATUS CDECL XapiSetupPerTitleDriveLetters(DWORD dwTitleId, LPCWSTR wszTitleNa
 // * func: EmuXapiBootDash
 // ******************************************************************
 VOID WINAPI EmuXapiBootDash(DWORD UnknownA, DWORD UnknownB, DWORD UnknownC);
+
+// ******************************************************************
+// * func: EmuXRegisterThreadNotifyRoutine
+// ******************************************************************
+VOID WINAPI EmuXRegisterThreadNotifyRoutine
+(
+    PXTHREAD_NOTIFICATION   pThreadNotification,
+    BOOL                    fRegister
+);
 
 // ******************************************************************
 // * func: EmuXCalculateSignatureBegin
