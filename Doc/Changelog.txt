@@ -3,7 +3,7 @@ cxbx website: http://www.caustik.com/xbox/
 version: 0.7.2 (??/??/03)
 --------------------------------
 
-- Textures
+- Textures (bmp, jpg, png, etc)
 
 - rtinit/cinit HLE and pre-entry execution was
   totally removed and occurs naturally on a low

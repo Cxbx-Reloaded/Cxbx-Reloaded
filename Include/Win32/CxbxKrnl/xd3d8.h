@@ -115,6 +115,29 @@ typedef struct _X_D3DSURFACE_DESC
 X_D3DSURFACE_DESC;
 
 // ******************************************************************
+// * X_D3DPRESENT_PARAMETERS
+// ******************************************************************
+typedef struct _X_D3DPRESENT_PARAMETERS
+{
+    UINT                BackBufferWidth;
+    UINT                BackBufferHeight;
+    D3DFORMAT           BackBufferFormat;
+    UINT                BackBufferCount;
+    D3DMULTISAMPLE_TYPE MultiSampleType;
+    D3DSWAPEFFECT       SwapEffect;
+    HWND                hDeviceWindow;
+    BOOL                Windowed;
+    BOOL                EnableAutoDepthStencil;
+    D3DFORMAT           AutoDepthStencilFormat;
+    DWORD               Flags;
+    UINT                FullScreen_RefreshRateInHz; 
+    UINT                FullScreen_PresentationInterval;
+    IDirect3DSurface8  *BufferSurfaces[3];
+    IDirect3DSurface8  *DepthStencilSurface;
+}
+X_D3DPRESENT_PARAMETERS;
+
+// ******************************************************************
 // * D3DResource
 // ******************************************************************
 struct D3DResource
@@ -169,12 +192,12 @@ static inline D3DPRIMITIVETYPE EmuPrimitiveType(int PrimitiveType)
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3D8_CreateDevice
 (
-    UINT                    Adapter,
-    D3DDEVTYPE              DeviceType,
-    HWND                    hFocusWindow,
-    DWORD                   BehaviorFlags,
-    D3DPRESENT_PARAMETERS  *pPresentationParameters,
-    IDirect3DDevice8      **ppReturnedDeviceInterface
+    UINT                        Adapter,
+    D3DDEVTYPE                  DeviceType,
+    HWND                        hFocusWindow,
+    DWORD                       BehaviorFlags,
+    X_D3DPRESENT_PARAMETERS    *pPresentationParameters,
+    IDirect3DDevice8          **ppReturnedDeviceInterface
 );
 
 // ******************************************************************

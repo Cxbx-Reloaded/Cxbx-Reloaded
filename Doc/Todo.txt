@@ -1,5 +1,7 @@
 Cxbx Todo (* denotes high priority)
 
+  * Why is CreateDevice failing for NBA2NIGHT 2002?
+
   * Stabilize Heap Allocation (i.e. operator new) -> Crashes after initial commit is full
 
   * Stabilize TLS (it's close...)

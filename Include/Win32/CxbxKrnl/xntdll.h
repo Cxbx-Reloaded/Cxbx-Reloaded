@@ -330,6 +330,16 @@ typedef struct _IO_STATUS_BLOCK
 IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 
 // ******************************************************************
+// * EVENT_TYPE
+// ******************************************************************
+typedef enum _EVENT_TYPE
+{
+    NotificationEvent = 0,
+    SynchronizationEvent
+}
+EVENT_TYPE;
+
+// ******************************************************************
 // * CREATE_FILE_TYPE
 // ******************************************************************
 typedef enum _CREATE_FILE_TYPE
@@ -339,6 +349,18 @@ typedef enum _CREATE_FILE_TYPE
 	CreateFileTypeMailslot
 }
 CREATE_FILE_TYPE;
+
+// ******************************************************************
+// * FILE_FS_SIZE_INFORMATION
+// ******************************************************************
+typedef struct _FILE_FS_SIZE_INFORMATION
+{
+    LARGE_INTEGER	TotalAllocationUnits;
+    LARGE_INTEGER	AvailableAllocationUnits;
+    ULONG		    SectorsPerAllocationUnit;
+    ULONG		    BytesPerSector;
+}
+FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
 
 // ******************************************************************
 // * FILE_INFORMATION_CLASS
@@ -390,22 +412,26 @@ typedef enum _FILE_INFORMATION_CLASS
 FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
 
 // ******************************************************************
-// * ZwOpenFile
+// * FS_INFORMATION_CLASS
 // ******************************************************************
-NTSYSAPI NTSTATUS NTAPI ZwOpenFile
-(
-    OUT PHANDLE             FileHandle,
-    IN  ACCESS_MASK         DesiredAccess,
-    IN  POBJECT_ATTRIBUTES  ObjectAttributes,
-    OUT PIO_STATUS_BLOCK    IoStatusBlock,
-    IN  ULONG               ShareAccess,
-    IN  ULONG               OpenOptions
-);
+typedef enum _FS_INFORMATION_CLASS
+{
+    FileFsVolumeInformation       = 1,
+    FileFsLabelInformation,      // 2
+    FileFsSizeInformation,       // 3
+    FileFsDeviceInformation,     // 4
+    FileFsAttributeInformation,  // 5
+    FileFsControlInformation,    // 6
+    FileFsFullSizeInformation,   // 7
+    FileFsObjectIdInformation,   // 8
+    FileFsMaximumInformation
+}
+FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
 
 // ******************************************************************
 // * KeDelayExecutionThread
 // ******************************************************************
-NTSYSAPI NTSTATUS NTAPI KeDelayExecutionThread
+typedef NTSTATUS (NTAPI *KeDelayExecutionThread)
 (
     IN KPROCESSOR_MODE  WaitMode,
     IN BOOLEAN          Alertable,
@@ -413,7 +439,15 @@ NTSYSAPI NTSTATUS NTAPI KeDelayExecutionThread
 );
 
 // ******************************************************************
-// * func: FPTR_RtlCreateHeap
+// * KeQuerySystemTime
+// ******************************************************************
+typedef VOID (NTAPI *FPTR_KeQuerySystemTime)
+(
+    PLARGE_INTEGER CurrentTime
+);
+
+// ******************************************************************
+// * RtlCreateHeap
 // ******************************************************************
 typedef PVOID (NTAPI *FPTR_RtlCreateHeap)
 (
@@ -426,7 +460,7 @@ typedef PVOID (NTAPI *FPTR_RtlCreateHeap)
 );
 
 // ******************************************************************
-// * func: EmuRtlAllocateHeap
+// * RtlAllocateHeap
 // ******************************************************************
 typedef PVOID (NTAPI *FPTR_RtlAllocateHeap)
 (
@@ -436,33 +470,13 @@ typedef PVOID (NTAPI *FPTR_RtlAllocateHeap)
 );
 
 // ******************************************************************
-// * func: EmuRtlFreeHeap
+// * RtlFreeHeap
 // ******************************************************************
 typedef BOOL (NTAPI *FPTR_RtlFreeHeap)
 (
     IN HANDLE hHeap,
     IN DWORD  dwFlags,
     IN PVOID  lpMem
-);
-
-// ******************************************************************
-// * NtDelayExecution
-// ******************************************************************
-typedef NTSTATUS (NTAPI *FPTR_NtDelayExecution)
-(
-    IN BOOLEAN          Alertable,
-    IN PLARGE_INTEGER   DelayInterval
-);
-
-// ******************************************************************
-// * NtSetLdtEntries
-// ******************************************************************
-typedef NTSTATUS (NTAPI *FPTR_NtSetLdtEntries)
-(
-    IN USHORT       Selector1,
-    IN LDT_ENTRY    Descriptor1,
-    IN USHORT       Selector2,
-    IN LDT_ENTRY    Descriptor2
 );
 
 // ******************************************************************
@@ -489,6 +503,26 @@ typedef VOID (NTAPI *FPTR_RtlInitUnicodeString)
 );
 
 // ******************************************************************
+// * NtDelayExecution
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtDelayExecution)
+(
+    IN BOOLEAN          Alertable,
+    IN PLARGE_INTEGER   DelayInterval
+);
+
+// ******************************************************************
+// * NtSetLdtEntries
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtSetLdtEntries)
+(
+    IN USHORT       Selector1,
+    IN LDT_ENTRY    Descriptor1,
+    IN USHORT       Selector2,
+    IN LDT_ENTRY    Descriptor2
+);
+
+// ******************************************************************
 // * NtAllocateVirtualMemory
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtAllocateVirtualMemory)
@@ -499,14 +533,6 @@ typedef NTSTATUS (NTAPI *FPTR_NtAllocateVirtualMemory)
   IN OUT PULONG           RegionSize,
   IN ULONG                AllocationType,
   IN ULONG                Protect
-);
-
-// ******************************************************************
-// * NtClose
-// ******************************************************************
-typedef NTSTATUS (NTAPI *FPTR_NtClose)
-(
-  IN HANDLE               Handle
 );
 
 // ******************************************************************
@@ -534,6 +560,18 @@ typedef VOID (NTAPI *FPTR_RtlLeaveCriticalSection)
 );
 
 // ******************************************************************
+// * NtCreateEvent
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtCreateEvent)
+(
+    OUT PHANDLE             EventHandle,
+    IN  ACCESS_MASK         DesiredAccess,
+    IN  POBJECT_ATTRIBUTES  ObjectAttributes OPTIONAL,
+    IN  EVENT_TYPE          EventType,
+    IN  BOOLEAN             InitialState
+);
+
+// ******************************************************************
 // * NtCreateFile
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtCreateFile)
@@ -549,6 +587,27 @@ typedef NTSTATUS (NTAPI *FPTR_NtCreateFile)
     IN  ULONG				CreateOptions,
 	IN  PVOID				EaBuffer OPTIONAL,
 	IN  ULONG				EaLength
+);
+
+// ******************************************************************
+// * NtClose
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtClose)
+(
+  IN HANDLE               Handle
+);
+
+// ******************************************************************
+// * NtOpenFile
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtOpenFile)
+(
+    OUT PHANDLE             FileHandle,
+    IN  ACCESS_MASK         DesiredAccess,
+    IN  POBJECT_ATTRIBUTES  ObjectAttributes,
+    OUT PIO_STATUS_BLOCK    IoStatusBlock,
+    IN  ULONG               ShareAccess,
+    IN  ULONG               OpenOptions
 );
 
 // ******************************************************************
@@ -588,11 +647,23 @@ typedef NTSTATUS (NTAPI *FPTR_NtWriteFile)
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtQueryInformationFile)
 (
-	IN  HANDLE                  FileHandle,
-	OUT PIO_STATUS_BLOCK        IoStatusBlock,
-	OUT PVOID                   FileInformation, 
-	IN  ULONG                   Length, 
-	IN  FILE_INFORMATION_CLASS  FileInfo
+	IN  HANDLE                      FileHandle,
+	OUT PIO_STATUS_BLOCK            IoStatusBlock,
+	OUT PFILE_FS_SIZE_INFORMATION   FileInformation, 
+	IN  ULONG                       Length, 
+	IN  FILE_INFORMATION_CLASS      FileInfo
+);
+
+// ******************************************************************
+// * NtQueryVolumeInformationFile
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtQueryVolumeInformationFile)
+(
+    IN  HANDLE                      FileHandle,
+    OUT PIO_STATUS_BLOCK            IoStatusBlock,
+    OUT PFILE_FS_SIZE_INFORMATION   FileInformation,
+    IN  ULONG                       Length,
+    IN  FS_INFORMATION_CLASS        FsInformationClass
 );
 
 // ******************************************************************

@@ -335,12 +335,12 @@ LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 // ******************************************************************
 HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
 (
-    UINT                    Adapter,
-    D3DDEVTYPE              DeviceType,
-    HWND                    hFocusWindow,
-    DWORD                   BehaviorFlags,
-    D3DPRESENT_PARAMETERS  *pPresentationParameters,
-    IDirect3DDevice8      **ppReturnedDeviceInterface
+    UINT                        Adapter,
+    D3DDEVTYPE                  DeviceType,
+    HWND                        hFocusWindow,
+    DWORD                       BehaviorFlags,
+    X_D3DPRESENT_PARAMETERS    *pPresentationParameters,
+    IDirect3DDevice8          **ppReturnedDeviceInterface
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -363,6 +363,12 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
                BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
     }
     #endif
+
+    // ******************************************************************
+    // * verify no ugly circumstances
+    // ******************************************************************
+    if(pPresentationParameters->BufferSurfaces[0] != NULL || pPresentationParameters->DepthStencilSurface != NULL)
+        EmuCleanup("EmuIDirect3D8_CreateDevice: BufferSurfaces or DepthStencilSurface != NULL");
 
     // ******************************************************************
     // * make adjustments to parameters to make sense with windows d3d
@@ -407,11 +413,11 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
 
             if(strcmp(szBackBufferFormat, "x1r5g5b5") == 0)
                 pPresentationParameters->BackBufferFormat = D3DFMT_X1R5G5B5;
-            if(strcmp(szBackBufferFormat, "r5g6r5") == 0)
+            else if(strcmp(szBackBufferFormat, "r5g6r5") == 0)
                 pPresentationParameters->BackBufferFormat = D3DFMT_R5G6B5;
-            if(strcmp(szBackBufferFormat, "x8r8g8b8") == 0)
+            else if(strcmp(szBackBufferFormat, "x8r8g8b8") == 0)
                 pPresentationParameters->BackBufferFormat = D3DFMT_X8R8G8B8;
-            if(strcmp(szBackBufferFormat, "a8r8g8b8") == 0)
+            else if(strcmp(szBackBufferFormat, "a8r8g8b8") == 0)
                 pPresentationParameters->BackBufferFormat = D3DFMT_A8R8G8B8;
         }
     }
@@ -419,7 +425,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
     // ******************************************************************
     // * Detect vertex processing capabilities
     // ******************************************************************
-    if(g_D3DCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT && DeviceType != D3DDEVTYPE_HAL)
+    if((g_D3DCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) && DeviceType == D3DDEVTYPE_HAL)
     {
         #ifdef _DEBUG_TRACE
         printf("EmuD3D8 (0x%X): Using hardware vertex processing\n", GetCurrentThreadId());
@@ -443,7 +449,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
         DeviceType,
         hFocusWindow,
         BehaviorFlags,
-        pPresentationParameters,
+        (xd3d8::D3DPRESENT_PARAMETERS*)pPresentationParameters,
         ppReturnedDeviceInterface
     );
 
@@ -451,11 +457,7 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
     // * it is necessary to store this pointer globally for emulation
     // ******************************************************************
     g_pD3D8Device = *ppReturnedDeviceInterface;
-/* HACK
-	LPDIRECT3DTEXTURE8 pCxbxTexture;
-	D3DXCreateTextureFromFile(g_pD3D8Device, "Media\\cxbx.bmp", &pCxbxTexture);
-	g_pD3D8Device->SetTexture(0, pCxbxTexture);
-//*/
+
     EmuSwapFS();   // XBox FS
 
     return hRet;

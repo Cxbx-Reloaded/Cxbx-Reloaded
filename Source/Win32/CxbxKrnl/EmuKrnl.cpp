@@ -67,13 +67,16 @@ static HMODULE hNtDll = GetModuleHandle("ntdll");
 xntdll::FPTR_RtlInitAnsiString              NT_RtlInitAnsiString            = (xntdll::FPTR_RtlInitAnsiString)GetProcAddress(hNtDll, "RtlInitAnsiString");
 xntdll::FPTR_RtlInitUnicodeString           NT_RtlInitUnicodeString         = (xntdll::FPTR_RtlInitUnicodeString)GetProcAddress(hNtDll, "RtlInitUnicodeString");
 xntdll::FPTR_RtlNtStatusToDosError          NT_RtlNtStatusToDosError        = (xntdll::FPTR_RtlNtStatusToDosError)GetProcAddress(hNtDll, "RtlNtStatusToDosError");
+xntdll::FPTR_RtlInitializeCriticalSection   NT_RtlInitializeCriticalSection = (xntdll::FPTR_RtlInitializeCriticalSection)GetProcAddress(hNtDll, "RtlInitializeCriticalSection");
+xntdll::FPTR_RtlEnterCriticalSection        NT_RtlEnterCriticalSection      = (xntdll::FPTR_RtlEnterCriticalSection)GetProcAddress(hNtDll, "RtlEnterCriticalSection");
+xntdll::FPTR_RtlLeaveCriticalSection        NT_RtlLeaveCriticalSection      = (xntdll::FPTR_RtlLeaveCriticalSection)GetProcAddress(hNtDll, "RtlLeaveCriticalSection");
+
 xntdll::FPTR_NtAllocateVirtualMemory        NT_NtAllocateVirtualMemory      = (xntdll::FPTR_NtAllocateVirtualMemory)GetProcAddress(hNtDll, "NtAllocateVirtualMemory");
 xntdll::FPTR_NtClose                        NT_NtClose                      = (xntdll::FPTR_NtClose)GetProcAddress(hNtDll, "NtClose");
 xntdll::FPTR_NtDelayExecution               NT_NtDelayExecution             = (xntdll::FPTR_NtDelayExecution)GetProcAddress(hNtDll, "NtDelayExecution");
 xntdll::FPTR_NtQueryInformationFile         NT_NtQueryInformationFile       = (xntdll::FPTR_NtQueryInformationFile)GetProcAddress(hNtDll, "NtQueryInformationFile");
-xntdll::FPTR_RtlInitializeCriticalSection   NT_RtlInitializeCriticalSection = (xntdll::FPTR_RtlInitializeCriticalSection)GetProcAddress(hNtDll, "RtlInitializeCriticalSection");
-xntdll::FPTR_RtlEnterCriticalSection        NT_RtlEnterCriticalSection      = (xntdll::FPTR_RtlEnterCriticalSection)GetProcAddress(hNtDll, "RtlEnterCriticalSection");
-xntdll::FPTR_RtlLeaveCriticalSection        NT_RtlLeaveCriticalSection      = (xntdll::FPTR_RtlLeaveCriticalSection)GetProcAddress(hNtDll, "RtlLeaveCriticalSection");
+xntdll::FPTR_NtQueryVolumeInformationFile   NT_NtQueryVolumeInformationFile = (xntdll::FPTR_NtQueryVolumeInformationFile)GetProcAddress(hNtDll, "NtQueryVolumeInformationFile");
+xntdll::FPTR_NtCreateEvent                  NT_NtCreateEvent                = (xntdll::FPTR_NtCreateEvent)GetProcAddress(hNtDll, "NtCreateEvent");
 xntdll::FPTR_NtCreateFile                   NT_NtCreateFile                 = (xntdll::FPTR_NtCreateFile)GetProcAddress(hNtDll, "NtCreateFile");
 xntdll::FPTR_NtReadFile                     NT_NtReadFile                   = (xntdll::FPTR_NtReadFile)GetProcAddress(hNtDll, "NtReadFile");
 xntdll::FPTR_NtWriteFile                    NT_NtWriteFile                  = (xntdll::FPTR_NtWriteFile)GetProcAddress(hNtDll, "NtWriteFile");
@@ -477,6 +480,40 @@ XBSYSAPI EXPORTNUM(113) VOID NTAPI xboxkrnl::KeInitializeTimerEx
 }
 
 // ******************************************************************
+// * 0x0080 - KeQuerySystemTime
+// ******************************************************************
+XBSYSAPI EXPORTNUM(128) VOID NTAPI xboxkrnl::KeQuerySystemTime
+(
+    PLARGE_INTEGER CurrentTime
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): KeQuerySystemTime\n"
+               "(\n"
+               "   CurrentTime         : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), CurrentTime);
+    }
+    #endif
+
+    SYSTEMTIME SystemTime;
+
+    GetSystemTime(&SystemTime);
+
+    SystemTimeToFileTime(&SystemTime, (FILETIME*)CurrentTime);
+
+    EmuSwapFS();   // Xbox FS
+
+    return;
+}
+
+// ******************************************************************
 // * 0x0095 - KeSetTimer
 // ******************************************************************
 XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
@@ -502,6 +539,8 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
                GetCurrentThreadId(), Timer, DueTime, Dpc);
     }
     #endif
+
+    EmuCleanup("KeSetTimer: Not Implemented!");
 
     EmuSwapFS();   // Xbox FS
 
@@ -647,6 +686,64 @@ XBSYSAPI EXPORTNUM(187) NTSTATUS NTAPI xboxkrnl::NtClose
 }
 
 // ******************************************************************
+// * 0x00BD - NtCreateEvent
+// ******************************************************************
+XBSYSAPI EXPORTNUM(189) NTSTATUS NTAPI xboxkrnl::NtCreateEvent
+(
+    OUT PHANDLE             EventHandle,
+    IN  POBJECT_ATTRIBUTES  ObjectAttributes OPTIONAL,
+    IN  EVENT_TYPE          EventType,
+    IN  BOOLEAN             InitialState
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): NtCreateEvent\n"
+               "(\n"
+               "   EventHandle         : 0x%.08X\n"
+               "   ObjectAttributes    : 0x%.08X (\"%s\")\n"
+               "   EventType           : 0x%.08X\n"
+               "   InitialState        : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), EventHandle, ObjectAttributes, ObjectAttributes->ObjectName->Buffer,
+               EventType, InitialState);
+    }
+    #endif
+
+    char *szBuffer = ObjectAttributes->ObjectName->Buffer;
+
+    wchar_t wszObjectName[160];
+
+    xntdll::UNICODE_STRING    NtUnicodeString;
+    xntdll::OBJECT_ATTRIBUTES NtObjAttr;
+
+    // ******************************************************************
+    // * Initialize Object Attributes
+    // ******************************************************************
+    {
+        mbstowcs(wszObjectName, szBuffer, 160);
+
+        NT_RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
+
+        InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
+    }
+
+    // ******************************************************************
+    // * Redirect to NtCreateEvent
+    // ******************************************************************
+    NTSTATUS ret = NT_NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, &NtObjAttr, (xntdll::EVENT_TYPE)EventType, InitialState);
+
+    EmuSwapFS();   // Xbox FS
+
+    return STATUS_SUCCESS;
+}
+
+// ******************************************************************
 // * 0x00BE - NtCreateFile
 // ******************************************************************
 XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
@@ -750,28 +847,28 @@ XBSYSAPI EXPORTNUM(202) NTSTATUS xboxkrnl::NtOpenFile
     IN  ULONG               OpenOptions
 )
 {
-    // Note: Since we are simply redirecting to IoCreateFile, we do not
-    //       want to swap FS registers like normal (except for when
-    //       _DEBUG_TRACE is enabled)
-
     // ******************************************************************
     // * debug trace
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
         EmuSwapFS();   // Win2k/XP FS
-
-        printf("EmuKrnl (0x%X): NtOpenFile [See IoCreateFile Params...]\n", GetCurrentThreadId());
-
+        printf("EmuKrnl (0x%X): NtOpenFile\n"
+               "(\n"
+               "   FileHandle          : 0x%.08X\n"
+               "   DesiredAccess       : 0x%.08X\n"
+               "   ObjectAttributes    : 0x%.08X (\"%s\")\n"
+               "   IoStatusBlock       : 0x%.08X\n"
+               "   ShareAccess         : 0x%.08X\n"
+               "   CreateOptions       : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes->ObjectName->Buffer,
+               IoStatusBlock, ShareAccess, OpenOptions);
         EmuSwapFS();   // Xbox FS
     }
     #endif
 
-    EmuCleanup("And...Remember to check if this should be NTAPI (NtOpenFile)");
-
-    xboxkrnl::IoCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, 0, 0, ShareAccess, 1, OpenOptions, 0);
-
-    return STATUS_SUCCESS;
+    return NtCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, NULL, 0, ShareAccess, FILE_OPEN, OpenOptions);
 }
 
 // ******************************************************************
@@ -779,11 +876,11 @@ XBSYSAPI EXPORTNUM(202) NTSTATUS xboxkrnl::NtOpenFile
 // ******************************************************************
 XBSYSAPI EXPORTNUM(211) NTSTATUS NTAPI xboxkrnl::NtQueryInformationFile
 (   
-    IN  HANDLE                  FileHandle,
-    OUT PIO_STATUS_BLOCK        IoStatusBlock,
-    OUT PVOID                   FileInformation, 
-    IN  ULONG                   Length, 
-    IN  FILE_INFORMATION_CLASS  FileInfo
+    IN  HANDLE                      FileHandle,
+    OUT PIO_STATUS_BLOCK            IoStatusBlock,
+    OUT PFILE_FS_SIZE_INFORMATION   FileInformation, 
+    IN  ULONG                       Length, 
+    IN  FILE_INFORMATION_CLASS      FileInfo
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -810,7 +907,7 @@ XBSYSAPI EXPORTNUM(211) NTSTATUS NTAPI xboxkrnl::NtQueryInformationFile
 	(
 		FileHandle,
         (xntdll::PIO_STATUS_BLOCK)IoStatusBlock,
-		FileInformation,
+        (xntdll::PFILE_FS_SIZE_INFORMATION)FileInformation,
 		Length,
         (xntdll::FILE_INFORMATION_CLASS)FileInfo
 	);
@@ -825,11 +922,11 @@ XBSYSAPI EXPORTNUM(211) NTSTATUS NTAPI xboxkrnl::NtQueryInformationFile
 // ******************************************************************
 XBSYSAPI EXPORTNUM(218) NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformationFile
 (
-    IN  HANDLE                  FileHandle,
-    OUT PIO_STATUS_BLOCK        IoStatusBlock,
-    OUT PVOID                   FileInformation,
-    IN  ULONG                   Length,
-    IN  FS_INFORMATION_CLASS    FileInformationClass
+    IN  HANDLE                      FileHandle,
+    OUT PIO_STATUS_BLOCK            IoStatusBlock,
+    OUT PFILE_FS_SIZE_INFORMATION   FileInformation,
+    IN  ULONG                       Length,
+    IN  FS_INFORMATION_CLASS        FileInformationClass
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -852,43 +949,29 @@ XBSYSAPI EXPORTNUM(218) NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformationFile
     }
     #endif
 
-    EmuCleanup("NtQueryVolumeInformationFile Not Implemented");
+    if(FileInformationClass != FileFsSizeInformation)
+        EmuCleanup("NtQueryVolumeInformationFile: Unsupported FileInformationClass");
 
-    /* TODO: Use new handle wrapping code
-
-    // ******************************************************************
-    // * For now, handle 'special' case
-    // ******************************************************************
-    if(IsEmuHandle(FileHandle))
+    NTSTATUS ret = NT_NtQueryVolumeInformationFile
+    (
+        FileHandle,
+        (xntdll::PIO_STATUS_BLOCK)IoStatusBlock,
+        (xntdll::PFILE_FS_SIZE_INFORMATION)FileInformation, Length,
+        (xntdll::FS_INFORMATION_CLASS)FileInformationClass
+    );
+/*
     {
-        EmuHandle *iEmuHandle = EmuHandleToPtr(FileHandle);
+        FILE_FS_SIZE_INFORMATION *SizeInfo = (FILE_FS_SIZE_INFORMATION*)FileInformation;
 
-        // ******************************************************************
-        // * For now, only handle partition 1 'special' case
-        // ******************************************************************
-        if(iEmuHandle->m_Type == EMUHANDLE_TYPE_PARTITION1 && FileInformationClass == FileFsSizeInformation)
-        {
-            FILE_FS_SIZE_INFORMATION *SizeInfo = (FILE_FS_SIZE_INFORMATION*)FileInformation;
-
-            SizeInfo->TotalAllocationUnits.QuadPart     = 0x4C468;
-            SizeInfo->AvailableAllocationUnits.QuadPart = 0x2F125;
-            SizeInfo->SectorsPerAllocationUnit          = 32;
-            SizeInfo->BytesPerSector                    = 512;
-        }
-        else
-        {
-            EmuPanic();
-        }
+        SizeInfo->TotalAllocationUnits.QuadPart     = 0x4C468;
+        SizeInfo->AvailableAllocationUnits.QuadPart = 0x2F125;
+        SizeInfo->SectorsPerAllocationUnit          = 32;
+        SizeInfo->BytesPerSector                    = 512;
     }
-    else
-    {
-        EmuPanic();
-    }
-    */
-
+*/
     EmuSwapFS();   // Xbox FS
 
-    return STATUS_SUCCESS;
+    return ret;
 }
 
 // ******************************************************************
