@@ -382,6 +382,8 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
             // Xbox DirectX #defines are different from Win32 DirectX
             if(pPresentationParameters->AutoDepthStencilFormat == 0x2A)
                 pPresentationParameters->AutoDepthStencilFormat = D3DFMT_D24S8;
+            else if(pPresentationParameters->AutoDepthStencilFormat == 0x2C)
+                pPresentationParameters->AutoDepthStencilFormat = D3DFMT_D16;
         }
     }
 
@@ -411,7 +413,10 @@ HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
 
     // TODO: HACK: This needs to be auto-updated from Xbox D3D global variable(s)
     if(g_pD3D8Device != 0)
-        g_pD3D8Device->SetRenderState( D3DRS_LIGHTING, FALSE );
+    {
+        g_pD3D8Device->SetRenderState(D3DRS_LIGHTING, FALSE);
+        g_pD3D8Device->SetRenderState(D3DRS_ZENABLE, TRUE);
+    }
 
     EmuSwapFS();   // XBox FS
 
