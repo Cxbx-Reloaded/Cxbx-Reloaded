@@ -47,6 +47,7 @@ namespace xboxkrnl
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
+#include <stdio.h>
 
 // ******************************************************************
 // * func: EmuInitFS
@@ -167,6 +168,11 @@ void EmuGenerateFS(int TlsAdjust)
     // * Swap back into the "OrgFS"
     // ******************************************************************
     EmuSwapFS();
+
+    // ******************************************************************
+    // * Debug output
+    // ******************************************************************
+    printf("EmuFS: OrgFS=%d NewFS=%d TlsAdjust=%d\n", OrgFS, NewFS, TlsAdjust);
 }
 
 // ******************************************************************

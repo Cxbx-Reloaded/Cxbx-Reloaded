@@ -445,9 +445,7 @@ VOID WINAPI xapi::EmuXapiBootDash(DWORD UnknownA, DWORD UnknownB, DWORD UnknownC
     }
     #endif
 
-    MessageBox(NULL, "EmuXapiBootDash (Emulation can not continue).", "Cxbx", MB_OK | MB_ICONSTOP);
-
-    ExitProcess(0);
+    EmuCleanup("EmuXapiBootDash");
 
     EmuSwapFS();   // XBox FS
 

@@ -255,7 +255,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion
 // ******************************************************************
 // * func: EmuCleanThread
 // ******************************************************************
-static __declspec(naked) void EmuCleanThread()
+static void EmuCleanThread()
 {
     if(EmuIsXboxFS())
         EmuSwapFS();    // Win2k/XP FS
@@ -280,7 +280,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage)
     {
         char buffer[255];
 
-        sprintf(buffer, "CxbxKrnl: Recieved Exception \"%s\"\n", szErrorMessage);
+        sprintf(buffer, "CxbxKrnl: Recieved Fatal Message \"%s\"\n", szErrorMessage);
 
         printf("%s", buffer);
 
@@ -298,13 +298,21 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage)
             break;
 
         // ignore current thread
-        if(tl->dwThreadId != GetCurrentThreadId())
+        DWORD cur = GetCurrentThreadId();
+        DWORD cmp = tl->dwThreadId;
+
+        if(cmp == 0)
+            break;
+
+        if(cmp != cur)
         {
             SuspendThread(tl->hThread);
 
             CONTEXT Context;
 
             Context.ContextFlags = CONTEXT_CONTROL;
+
+            GetThreadContext(tl->hThread, &Context);
 
             Context.Eip = (DWORD)EmuCleanThread;
 
@@ -332,7 +340,9 @@ extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage)
     printf("CxbxKrnl: Terminating Process\n");
     fflush(stdout);
 
-    EmuCleanThread();
+    EmuCleanupFS();
+
+    ExitProcess(0);
 
     return;
 }

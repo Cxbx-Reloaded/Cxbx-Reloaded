@@ -69,7 +69,7 @@ Xbe::Header             *g_XbeHeader     = NULL;   // XbeHeader
 uint32                   g_XbeHeaderSize = 0;      // XbeHeaderSize
 HWND                     g_hEmuWindow    = NULL;   // Rendering Window
 xd3d8::D3DCAPS8          g_D3DCaps;                // Direct3D8 Caps
-bool                     g_ThreadInitialized = false;
+volatile bool            g_ThreadInitialized = false;
 HBRUSH                   g_hBgBrush      = NULL;   // Background Brush
 
 // ******************************************************************
@@ -101,6 +101,8 @@ VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 
         while(!g_ThreadInitialized)
             Sleep(10);
+
+        Sleep(50);
     }
 
     // ******************************************************************
@@ -222,7 +224,7 @@ void EmuRenderWindow(PVOID)
 
         while(msg.message != WM_QUIT)
         {
-            if(PeekMessage( &msg, NULL, 0U, 0U, PM_REMOVE ))
+            if(PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
             {
                 g_ThreadInitialized = true;
 
@@ -257,11 +259,12 @@ LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_CLOSE:
             DestroyWindow(hWnd);
             break;
-/*
+
+        /*
         case WM_SETCURSOR:
             SetCursor(NULL);
-            break;
-*/
+            return 0;
+        */
         default:
             return DefWindowProc(hWnd, msg, wParam, lParam);
     }
