@@ -182,6 +182,44 @@ BOOL WINAPI XTL::EmuRtlFreeHeap
 }
 
 // ******************************************************************
+// * func: EmuRtlReAllocateHeap
+// ******************************************************************
+PVOID WINAPI XTL::EmuRtlReAllocateHeap
+(
+    IN HANDLE hHeap,
+    IN DWORD  dwFlags,
+    IN PVOID  lpMem,
+    IN SIZE_T dwBytes
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        //* too much debug output
+        printf("EmuXapi (0x%X): EmuRtlReAllocateHeap\n"
+               "(\n"
+               "   hHeap               : 0x%.08X\n"
+               "   dwFlags             : 0x%.08X\n"
+               "   lpMem               : 0x%.08X\n"
+               "   dwBytes             : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), hHeap, dwFlags, lpMem, dwBytes);
+       //*/
+    }
+    #endif
+
+    PVOID pRet = NtDll::RtlReAllocateHeap(hHeap, dwFlags, lpMem, dwBytes);
+
+    EmuSwapFS();   // XBox FS
+
+    return pRet;
+}
+
+// ******************************************************************
 // * func: EmuRtlSizeHeap
 // ******************************************************************
 SIZE_T WINAPI XTL::EmuRtlSizeHeap

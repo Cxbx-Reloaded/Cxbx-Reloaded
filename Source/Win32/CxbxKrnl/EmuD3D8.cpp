@@ -4986,6 +4986,36 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetTextureState_BorderColor
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetTextureState_ColorKeyColor
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetTextureState_ColorKeyColor
+(
+    DWORD Stage,
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetTextureState_ColorKeyColor\n"
+               "(\n"
+               "   Stage               : 0x%.08X\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Stage, Value);
+    }
+    #endif
+
+    EmuWarning("SetTextureState_ColorKeyColor is not supported!");
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTextureState_BumpEnv
 // ******************************************************************
 VOID WINAPI XTL::EmuIDirect3DDevice8_SetTextureState_BumpEnv

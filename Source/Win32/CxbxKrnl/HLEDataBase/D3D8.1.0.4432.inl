@@ -310,6 +310,38 @@ SOOVPA<15> IDirect3DDevice8_SetTextureState_BorderColor_1_0_4432 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetTextureState_ColorKeyColor
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_SetTextureState_ColorKeyColor_1_0_4432 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetTextureState_ColorKeyColor+0x0C : jb +0x05
+        { 0x0C, 0x72 }, // (Offset,Value)-Pair #1
+        { 0x0D, 0x05 }, // (Offset,Value)-Pair #2
+
+        // IDirect3DDevice8_SetTextureState_ColorKeyColor+0x27 : add eax, 8; mov [esi], eax; shl ecx, 7
+        { 0x27, 0x83 }, // (Offset,Value)-Pair #3
+        { 0x28, 0xC0 }, // (Offset,Value)-Pair #4
+        { 0x29, 0x08 }, // (Offset,Value)-Pair #5
+        { 0x2A, 0x89 }, // (Offset,Value)-Pair #6
+        { 0x2B, 0x06 }, // (Offset,Value)-Pair #7
+        { 0x2C, 0xC1 }, // (Offset,Value)-Pair #8
+        { 0x2D, 0xE1 }, // (Offset,Value)-Pair #9
+        { 0x2E, 0x07 }, // (Offset,Value)-Pair #10
+
+        // IDirect3DDevice8_SetTextureState_ColorKeyColor+0x36 : retn 0x08
+        { 0x36, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x37, 0x08 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetRenderState_FrontFace
 // ******************************************************************
 SOOVPA<11> IDirect3DDevice8_SetRenderState_FrontFace_1_0_4432 =
@@ -396,38 +428,6 @@ SOOVPA<9> IDirect3DDevice8_SetRenderState_LogicOp_1_0_4432 =
         // IDirect3DDevice8_SetRenderState_LogicOp+0x4F : retn 0x04
         { 0x4F, 0xC2 }, // (Offset,Value)-Pair #8
         { 0x50, 0x04 }, // (Offset,Value)-Pair #9
-    }
-};
-
-// ******************************************************************
-// * IDirect3DDevice8_SetTextureState_TexCoordIndex
-// ******************************************************************
-SOOVPA<10> IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4432 =
-{
-    0,  // Large == 0
-    10, // Count == 10
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        // IDirect3DDevice8_SetTextureState_TexCoordIndex+0x0D : shl eax, 0x07
-        { 0x0D, 0xC1 }, // (Offset,Value)-Pair #1
-        { 0x0E, 0xE0 }, // (Offset,Value)-Pair #2
-        { 0x0F, 0x07 }, // (Offset,Value)-Pair #3
-
-        // IDirect3DDevice8_SetTextureState_TexCoordIndex+0x24 : cmp eax, ecx
-        { 0x24, 0x3B }, // (Offset,Value)-Pair #4
-        { 0x25, 0xC1 }, // (Offset,Value)-Pair #5
-
-        // IDirect3DDevice8_SetTextureState_TexCoordIndex+0x6B : mov ebp, 0x2400
-        { 0x6B, 0xBD }, // (Offset,Value)-Pair #6
-        { 0x6C, 0x24 }, // (Offset,Value)-Pair #7
-
-        // IDirect3DDevice8_SetTextureState_TexCoordIndex+0xB3 : shl edx, 0x04
-        { 0xB3, 0xC1 }, // (Offset,Value)-Pair #8
-        { 0xB4, 0xE2 }, // (Offset,Value)-Pair #9
-        { 0xB5, 0x04 }, // (Offset,Value)-Pair #10
     }
 };
 
@@ -1070,6 +1070,26 @@ OOVPATable D3D8_1_0_4432[] =
         "EmuIDirect3DDevice8_SetTextureState_BorderColor" 
         #endif
     },
+    // IDirect3DDevice8::SetTextureState_ColorKeyColor
+    {
+        (OOVPA*)&IDirect3DDevice8_SetTextureState_ColorKeyColor_1_0_4432,
+
+        XTL::EmuIDirect3DDevice8_SetTextureState_ColorKeyColor,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetTextureState_ColorKeyColor" 
+        #endif
+    },
+    // IDirect3DDevice8::SetTextureState_TexCoordIndex (* unchanged since 4361 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361,
+
+        XTL::EmuIDirect3DDevice8_SetTextureState_TexCoordIndex,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetTextureState_TexCoordIndex" 
+        #endif
+    },
     // IDirect3DDevice8::SetRenderState_VertexBlend (* unchanged since 4361 *)
     {
         (OOVPA*)&IDirect3DDevice8_SetRenderState_VertexBlend_1_0_4361,
@@ -1258,16 +1278,6 @@ OOVPATable D3D8_1_0_4432[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed" 
-        #endif
-    },
-    // IDirect3DDevice8::SetTextureState_TexCoordIndex
-    {
-        (OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4432,
-
-        XTL::EmuIDirect3DDevice8_SetTextureState_TexCoordIndex,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirect3DDevice8_SetTextureState_TexCoordIndex" 
         #endif
     },
     // IDirect3DDevice8::SetRenderState_Dxt1NoiseEnable

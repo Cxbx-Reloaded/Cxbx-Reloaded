@@ -64,6 +64,36 @@ SOOVPA<9> RtlFreeHeap_1_0_4627 =
 };
 
 // ******************************************************************
+// * RtlReAllocateHeap
+// ******************************************************************
+SOOVPA<10> RtlReAllocateHeap_1_0_4627 =
+{
+    0,  // Large == 0
+    10,  // Count == 10
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // RtlReAllocateHeap+0x1C : test esi, esi
+        { 0x1C, 0x85 }, // (Offset,Value)-Pair #1
+        { 0x1D, 0xF6 }, // (Offset,Value)-Pair #2
+
+        // RtlReAllocateHeap+0x26 : or [ebp+0x0C], ecx
+        { 0x26, 0x09 }, // (Offset,Value)-Pair #3
+        { 0x27, 0x4D }, // (Offset,Value)-Pair #4
+        { 0x28, 0x0C }, // (Offset,Value)-Pair #5
+
+        // RtlReAllocateHeap+0x61 : jz +0x06; add ecx, 0x10
+        { 0x61, 0x74 }, // (Offset,Value)-Pair #6
+        { 0x62, 0x06 }, // (Offset,Value)-Pair #7
+        { 0x63, 0x83 }, // (Offset,Value)-Pair #8
+        { 0x64, 0xC1 }, // (Offset,Value)-Pair #9
+        { 0x65, 0x10 }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_4627
 // ******************************************************************
 OOVPATable XAPI_1_0_4627[] =
@@ -96,6 +126,16 @@ OOVPATable XAPI_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuRtlFreeHeap"
+        #endif
+    },
+    // RtlReAllocateHeap
+    {
+        (OOVPA*)&RtlReAllocateHeap_1_0_4627,
+
+        XTL::EmuRtlReAllocateHeap,
+
+        #ifdef _DEBUG_TRACE
+        "EmuRtlReAllocateHeap"
         #endif
     },
     // RtlSizeHeap (* unchanged since 4432 *)
