@@ -965,14 +965,16 @@ XBSYSAPI EXPORTNUM(182) VOID NTAPI xboxkrnl::MmSetAddressProtect
                "(\n"
                "   BaseAddress              : 0x%.08X\n"
                "   NumberOfBytes            : 0x%.08X\n"
-               "   Persist                  : 0x%.08X\n"
+               "   NewProtect               : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), BaseAddress, NumberOfBytes, NewProtect);
     }
     #endif
 
-    // TODO: Actually set protection
-    EmuWarning("MmSetAddressProtect is being ignored");
+    DWORD dwOldProtect;
+
+    if(!VirtualProtect(BaseAddress, NumberOfBytes, NewProtect & (~PAGE_WRITECOMBINE), &dwOldProtect))
+        EmuWarning("VirtualProtect Failed!");
 
     EmuSwapFS();   // Xbox FS
 
