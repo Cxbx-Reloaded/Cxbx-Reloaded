@@ -749,6 +749,133 @@ VOID WINAPI XTL::EmuIDirect3D8_KickOffAndWaitForIdle()
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_AddRef
+// ******************************************************************
+ULONG WINAPI XTL::EmuIDirect3DDevice8_AddRef()
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_AddRef()\n", GetCurrentThreadId());
+    }
+    #endif
+
+    ULONG ret = g_pD3DDevice8->AddRef();
+
+    EmuSwapFS();   // XBox FS
+
+    return ret;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_BeginStateBlock
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_BeginStateBlock()
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_BeginStateBlock()\n", GetCurrentThreadId());
+    }
+    #endif
+
+    ULONG ret = g_pD3DDevice8->BeginStateBlock();
+
+    EmuSwapFS();   // XBox FS
+
+    return ret;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_CaptureStateBlock
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_CaptureStateBlock(DWORD Token)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CaptureStateBlock\n"
+               "(\n"
+               "   Token               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Token);
+    }
+    #endif
+
+    ULONG ret = g_pD3DDevice8->CaptureStateBlock(Token);
+
+    EmuSwapFS();   // XBox FS
+
+    return ret;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_ApplyStateBlock
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_ApplyStateBlock(DWORD Token)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_ApplyStateBlock\n"
+               "(\n"
+               "   Token               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Token);
+    }
+    #endif
+
+    ULONG ret = g_pD3DDevice8->ApplyStateBlock(Token);
+
+    EmuSwapFS();   // XBox FS
+
+    return ret;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_EndStateBlock
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_EndStateBlock(DWORD *pToken)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_EndStateBlock\n"
+               "(\n"
+               "   pToken              : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), pToken);
+    }
+    #endif
+
+    ULONG ret = g_pD3DDevice8->EndStateBlock(pToken);
+
+    EmuSwapFS();   // XBox FS
+
+    return ret;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_CopyRects
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirect3DDevice8_CopyRects
@@ -2808,6 +2935,48 @@ VOID __fastcall XTL::EmuIDirect3DDevice8_SetRenderState_Simple
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_VertexBlend
+// ******************************************************************
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_VertexBlend
+(
+    DWORD Value
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_VertexBlend\n"
+               "(\n"
+               "   Value               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Value);
+    }
+    #endif
+
+    // ******************************************************************
+    // * Convert from Xbox D3D to PC D3D enumeration
+    // ******************************************************************
+    if(Value <= 1)
+        Value = Value;
+    else if(Value == 3)
+        Value = 2;
+    else if(Value == 5)
+        Value = 3;
+    else
+        EmuCleanup("Unsupported D3DVERTEXBLENDFLAGS (%d)", Value);
+
+    g_pD3DDevice8->SetRenderState(D3DRS_VERTEXBLEND, Value);
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_CullMode
 // ******************************************************************
 VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_CullMode
@@ -3117,9 +3286,15 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetStreamSource
     }
     #endif
 
-    IDirect3DVertexBuffer8 *pVertexBuffer8 = pStreamData->EmuVertexBuffer8;
+    IDirect3DVertexBuffer8 *pVertexBuffer8 = NULL;
 
-    pVertexBuffer8->Unlock();
+    if(pStreamData != NULL)
+    {
+        EmuVerifyResourceIsRegistered(pStreamData);
+
+        pVertexBuffer8 = pStreamData->EmuVertexBuffer8;
+        pVertexBuffer8->Unlock();
+    }
 
     HRESULT hRet = g_pD3DDevice8->SetStreamSource(StreamNumber, pVertexBuffer8, Stride);
 

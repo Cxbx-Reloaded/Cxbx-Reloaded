@@ -88,7 +88,10 @@ extern bool bXRefFirstPass;
 // ******************************************************************
 enum XRefDataBaseOffset
 {
-    XREF_XNINIT = 0
+    XREF_XNINIT                 = 0,
+    XREF_FCLOSEDEVICE           = 1,
+    XREF_CLEARSTATEBLOCKFLAGS   = 2,
+    XREF_RECORDSTATEBLOCK       = 3
 };
 
 #endif

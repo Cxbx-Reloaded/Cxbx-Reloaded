@@ -34,9 +34,6 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_LOCAL_
 
-#undef FIELD_OFFSET     // prevent macro redefinition warnings
-#include <windows.h>
-
 #include "Emu.h"
 #include "EmuFS.h"
 
@@ -62,7 +59,7 @@ namespace XTL
 int WINAPI XTL::EmuWSAStartup
 (
     WORD        wVersionRequested,
-    LPVOID      lpWSAData   // todo: use correct type
+    WSADATA    *lpWSAData
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -81,10 +78,11 @@ int WINAPI XTL::EmuWSAStartup
     }
     #endif
 
+    int ret = XTL::WSAStartup(wVersionRequested, lpWSAData);
+
     EmuSwapFS();   // XBox FS
 
-    // Fake Successfull...hehehe...sucker...hehehehehe
-    return 0;
+    return ret;
 }
 
 // ******************************************************************
@@ -114,4 +112,132 @@ INT WINAPI XTL::EmuXNetStartup
 
     // Fake Successfull...hehehe...sucker...hehehehehe
     return 0;
+}
+
+// ******************************************************************
+// * func: EmuThis::Emusocket
+// ******************************************************************
+SOCKET XTL::EmuThis::Emusocket
+(
+    int   af,
+    int   type,
+    int   protocol
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuThis::Emusocket\n"
+               "(\n"
+               "   this                : 0x%.08X\n"
+               "   af                  : 0x%.08X\n"
+               "   type                : 0x%.08X\n"
+               "   protocol            : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), this, af, type, protocol);
+    }
+    #endif
+
+    SOCKET ret = socket(af, type, protocol);
+
+    EmuSwapFS();   // XBox FS
+
+    return ret;
+}
+
+// ******************************************************************
+// * func: EmuThis::Emubind
+// ******************************************************************
+int XTL::EmuThis::Emubind(SOCKET s, const struct sockaddr FAR *name, int namelen)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuThis::Emubind\n"
+               "(\n"
+               "   this                : 0x%.08X\n"
+               "   s                   : 0x%.08X\n"
+               "   name                : 0x%.08X\n"
+               "   namelen             : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), this, s, name, namelen);
+    }
+    #endif
+
+    // TODO: Host-To-Network order if necessary (probably not?)
+
+    int ret = bind(s, name, namelen);
+
+    EmuSwapFS();   // XBox FS
+
+    return ret;
+}
+
+// ******************************************************************
+// * func: EmuThis::Emulisten
+// ******************************************************************
+int XTL::EmuThis::Emulisten(SOCKET s, int backlog)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuThis::Emulisten\n"
+               "(\n"
+               "   this                : 0x%.08X\n"
+               "   s                   : 0x%.08X\n"
+               "   listen              : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), this, s, backlog);
+    }
+    #endif
+
+    // TODO: Host-To-Network order if necessary (probably not?)
+
+    int ret = listen(s, backlog);
+
+    EmuSwapFS();   // XBox FS
+
+    return ret;
+}
+
+// ******************************************************************
+// * func: EmuThis::Emuioctlsocket
+// ******************************************************************
+int XTL::EmuThis::Emuioctlsocket(SOCKET s, long cmd, u_long FAR *argp)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuThis::Emuioctlsocket\n"
+               "(\n"
+               "   this                : 0x%.08X\n"
+               "   s                   : 0x%.08X\n"
+               "   cmd                 : 0x%.08X\n"
+               "   argp                : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), this, s, cmd, argp);
+    }
+    #endif
+
+    int ret = ioctlsocket(s, cmd, argp);
+
+    EmuSwapFS();   // XBox FS
+
+    return ret;
 }

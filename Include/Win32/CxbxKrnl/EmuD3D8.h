@@ -534,6 +534,31 @@ HRESULT WINAPI EmuIDirect3D8_EnumAdapterModes
 VOID WINAPI EmuIDirect3D8_KickOffAndWaitForIdle();
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_AddRef
+// ******************************************************************
+ULONG WINAPI EmuIDirect3DDevice8_AddRef();
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_BeginStateBlock
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_BeginStateBlock();
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_CaptureStateBlock
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_CaptureStateBlock(DWORD Token);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_ApplyStateBlock
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_ApplyStateBlock(DWORD Token);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_EndStateBlock
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_EndStateBlock(DWORD *pToken);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_CopyRects
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_CopyRects
@@ -937,6 +962,14 @@ VOID WINAPI EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable
 VOID __fastcall EmuIDirect3DDevice8_SetRenderState_Simple
 (
     DWORD Method,
+    DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderState_VertexBlend
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_VertexBlend
+(
     DWORD Value
 );
 

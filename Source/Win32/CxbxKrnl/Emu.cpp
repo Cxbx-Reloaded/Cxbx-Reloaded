@@ -320,9 +320,12 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         uint32 dwHLEEntries      = HLEDataBaseSize/sizeof(HLEData);
 
         uint32 LastUnResolvedXRefs;
+        uint32 OrigUnResolvedXRefs = UnResolvedXRefs;
 
-        do
+        for(int p=0;UnResolvedXRefs < LastUnResolvedXRefs;p++)
         {
+            printf("Emu (0x%X): Beginning HLE Pass %d...\n", GetCurrentThreadId(), p);
+
             LastUnResolvedXRefs = UnResolvedXRefs;
 
             bool bFoundD3D = false;
@@ -371,93 +374,95 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
                 if(!found)
                     printf("Skipped\n");
 
-                if(strcmp("XAPILIB", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && (BuildVersion == 4627 || BuildVersion == 4361 || BuildVersion == 4034 || BuildVersion == 3911))
+                if(bXRefFirstPass)
                 {
-                    uint32 lower = pXbeHeader->dwBaseAddr;
-                    uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
-
-				    // ******************************************************************
-				    // * Locate XapiProcessHeap
-				    // ******************************************************************
-				    if(BuildVersion == 4361 || BuildVersion == 4627)
-				    {
-					    void *pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_4361, lower, upper);
-
-					    if(pFunc != 0)
-					    {
-						    XTL::EmuXapiProcessHeap = *(PVOID**)((uint32)pFunc + 0x3E);
-
-						    XTL::g_pRtlCreateHeap = *(XTL::pfRtlCreateHeap*)((uint32)pFunc + 0x37);
-						    XTL::g_pRtlCreateHeap = (XTL::pfRtlCreateHeap)((uint32)pFunc + (uint32)XTL::g_pRtlCreateHeap + 0x37 + 0x04);
-
-						    printf("Emu (0x%X): 0x%.08X -> EmuXapiProcessHeap\n", GetCurrentThreadId(), XTL::EmuXapiProcessHeap);
-						    printf("Emu (0x%X): 0x%.08X -> RtlCreateHeap\n", GetCurrentThreadId(), XTL::g_pRtlCreateHeap);
-					    }
-				    }
-                }
-			    else if(strcmp("D3D8", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && (BuildVersion == 4361 || BuildVersion == 4627))
-			    {
-                    uint32 lower = pXbeHeader->dwBaseAddr;
-                    uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
-
-				    void *pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4361, lower, upper);
-
-                    // ******************************************************************
-				    // * Locate D3DDeferredRenderState
-				    // ******************************************************************
-                    if(pFunc != 0 && (BuildVersion == 4361 || BuildVersion == 4627))
+                    if(strcmp("XAPILIB", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && (BuildVersion == 4627 || BuildVersion == 4361 || BuildVersion == 4034 || BuildVersion == 3911))
                     {
-                        if(BuildVersion == 4361)
-						    XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x200 + 82*4);
-                        else if(BuildVersion == 4627)
-						    XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x24C + 92*4);
+                        uint32 lower = pXbeHeader->dwBaseAddr;
+                        uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
 
-                        for(int v=0;v<146;v++)
-                            XTL::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
+				        // ******************************************************************
+				        // * Locate XapiProcessHeap
+				        // ******************************************************************
+				        if(BuildVersion == 4361 || BuildVersion == 4627)
+				        {
+					        void *pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_4361, lower, upper);
 
-                        printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredRenderState\n", GetCurrentThreadId(), XTL::EmuD3DDeferredRenderState);
+					        if(pFunc != 0)
+					        {
+						        XTL::EmuXapiProcessHeap = *(PVOID**)((uint32)pFunc + 0x3E);
+
+						        XTL::g_pRtlCreateHeap = *(XTL::pfRtlCreateHeap*)((uint32)pFunc + 0x37);
+						        XTL::g_pRtlCreateHeap = (XTL::pfRtlCreateHeap)((uint32)pFunc + (uint32)XTL::g_pRtlCreateHeap + 0x37 + 0x04);
+
+						        printf("Emu (0x%X): 0x%.08X -> EmuXapiProcessHeap\n", GetCurrentThreadId(), XTL::EmuXapiProcessHeap);
+						        printf("Emu (0x%X): 0x%.08X -> RtlCreateHeap\n", GetCurrentThreadId(), XTL::g_pRtlCreateHeap);
+					        }
+				        }
                     }
-                    else
-                    {
-                        XTL::EmuD3DDeferredRenderState = 0;
-                        printf("Emu (0x%X): *Warning* EmuD3DDeferredRenderState not found!\n", GetCurrentThreadId());
-                    }
+			        else if(strcmp("D3D8", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && (BuildVersion == 4361 || BuildVersion == 4627))
+			        {
+                        uint32 lower = pXbeHeader->dwBaseAddr;
+                        uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
 
-                    // ******************************************************************
-				    // * Locate D3DDeferredTextureState
-				    // ******************************************************************
-                    {
-                        if(BuildVersion == 4361)
-                            pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361, lower, upper);
-                        else if(BuildVersion == 4627)
-                            pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4627, lower, upper);
+				        void *pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4361, lower, upper);
 
-                        if(pFunc != 0)
+                        // ******************************************************************
+				        // * Locate D3DDeferredRenderState
+				        // ******************************************************************
+                        if(pFunc != 0 && (BuildVersion == 4361 || BuildVersion == 4627))
                         {
-					        XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x19) - 0x70);
+                            if(BuildVersion == 4361)
+						        XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x200 + 82*4);
+                            else if(BuildVersion == 4627)
+						        XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x24C + 92*4);
 
-                            for(int v=0;v<32*4;v++)
-                                XTL::EmuD3DDeferredTextureState[v] = X_D3DTSS_UNK;
+                            for(int v=0;v<146;v++)
+                                XTL::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
 
-                            printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredTextureState\n", GetCurrentThreadId(), XTL::EmuD3DDeferredTextureState);
+                            printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredRenderState\n", GetCurrentThreadId(), XTL::EmuD3DDeferredRenderState);
                         }
                         else
                         {
-                            XTL::EmuD3DDeferredTextureState = 0;
-                            printf("Emu (0x%X): *Warning* EmuD3DDeferredTextureState not found!\n", GetCurrentThreadId());
+                            XTL::EmuD3DDeferredRenderState = 0;
+                            printf("Emu (0x%X): *Warning* EmuD3DDeferredRenderState not found!\n", GetCurrentThreadId());
                         }
-                    }
-			    }
+
+                        // ******************************************************************
+				        // * Locate D3DDeferredTextureState
+				        // ******************************************************************
+                        {
+                            if(BuildVersion == 4361)
+                                pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361, lower, upper);
+                            else if(BuildVersion == 4627)
+                                pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4627, lower, upper);
+
+                            if(pFunc != 0)
+                            {
+					            XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x19) - 0x70);
+
+                                for(int v=0;v<32*4;v++)
+                                    XTL::EmuD3DDeferredTextureState[v] = X_D3DTSS_UNK;
+
+                                printf("Emu (0x%X): 0x%.08X -> EmuD3DDeferredTextureState\n", GetCurrentThreadId(), XTL::EmuD3DDeferredTextureState);
+                            }
+                            else
+                            {
+                                XTL::EmuD3DDeferredTextureState = 0;
+                                printf("Emu (0x%X): *Warning* EmuD3DDeferredTextureState not found!\n", GetCurrentThreadId());
+                            }
+                        }
+			        }
+                }
             }
 
             bXRefFirstPass = false;
         }
-        while(UnResolvedXRefs < LastUnResolvedXRefs);
 
         // ******************************************************************
         // * Display XRef Summary
         // ******************************************************************
-        printf("Emu (0x%X): Resolved %d cross reference(s)\n", GetCurrentThreadId(), UnResolvedXRefs);
+        printf("Emu (0x%X): Resolved %d cross reference(s)\n", GetCurrentThreadId(), OrigUnResolvedXRefs - UnResolvedXRefs);
     }
 
 	// ******************************************************************
@@ -483,7 +488,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit
         EmuSwapFS();   // XBox FS
 
         // _USE_XGMATH Disabled in mesh :[
-        //_asm int 3
+        _asm int 3
 
         Entry();
 
@@ -617,7 +622,7 @@ void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
                 uint32 RealValue = *(uint32*)(cur + Offset);
 
                 if(XRefDataBase[Value] == -1)
-                    return 0; // Unsatisfied XRef is not acceptable
+                    goto skipout_L;   // Unsatisfied XRef is not acceptable
 
                 if(RealValue + cur + Offset+4 != XRefDataBase[Value])
                     break;
@@ -642,14 +647,23 @@ void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
             // ******************************************************************
             if(v == count)
             {
-                if(Loovpa->XRefSaveIndex != (uint08)-1 && XRefDataBase[Loovpa->XRefSaveIndex] == -1)
+                if(Loovpa->XRefSaveIndex != (uint08)-1)
                 {
-                    UnResolvedXRefs--;
-                    XRefDataBase[Loovpa->XRefSaveIndex] = cur;
+                    if(XRefDataBase[Loovpa->XRefSaveIndex] == -1)
+                    {
+                        UnResolvedXRefs--;
+                        XRefDataBase[Loovpa->XRefSaveIndex] = cur;
+
+                        return (void*)cur;
+                    }
+                    else
+                        return 0;   // Already Found, no bother patching again
                 }
 
                 return (void*)cur;
             }
+
+            skipout_L:;
         }
     }
     // ******************************************************************
@@ -679,9 +693,9 @@ void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
                 uint32 RealValue = *(uint32*)(cur + Offset);
 
                 if(XRefDataBase[Value] == -1)
-                    return 0; // Unsatisfied XRef is not acceptable
+                    goto skipout_S;   // Unsatisfied XRef is not acceptable
 
-                if(RealValue + cur + Offset+4 != XRefDataBase[Value])
+                if( (RealValue + cur + Offset + 4 != XRefDataBase[Value]))
                     break;
             }
 
@@ -706,12 +720,21 @@ void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
             {
                 if(Soovpa->XRefSaveIndex != (uint08)-1)
                 {
-                    UnResolvedXRefs--;
-                    XRefDataBase[Soovpa->XRefSaveIndex] = cur;
+                    if(XRefDataBase[Soovpa->XRefSaveIndex] == -1)
+                    {
+                        UnResolvedXRefs--;
+                        XRefDataBase[Soovpa->XRefSaveIndex] = cur;
+
+                        return (void*)cur;
+                    }
+                    else
+                        return 0;   // Already Found, no bother patching again
                 }
 
                 return (void*)cur;
             }
+
+            skipout_S:;
         }
     }
 
@@ -755,6 +778,8 @@ void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, void (*En
 void EmuXRefFailure()
 {
     EmuSwapFS();    // Win2k/XP FS
+
+    _asm int 3
     
     EmuCleanup("XRef-only function body reached. Fatal Error.");
 }

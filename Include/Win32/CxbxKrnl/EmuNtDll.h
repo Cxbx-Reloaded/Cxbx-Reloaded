@@ -330,6 +330,16 @@ typedef struct _IO_STATUS_BLOCK
 IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 
 // ******************************************************************
+// * IO_APC_ROUTINE
+// ******************************************************************
+typedef VOID (NTAPI *PIO_APC_ROUTINE)
+(
+    IN PVOID            ApcContext,
+    IN PIO_STATUS_BLOCK IoStatusBlock,
+    IN ULONG            Reserved
+);
+
+// ******************************************************************
 // * EVENT_TYPE
 // ******************************************************************
 typedef enum _EVENT_TYPE
@@ -691,6 +701,24 @@ typedef NTSTATUS (NTAPI *FPTR_NtSetInformationFile)
 );
 
 // ******************************************************************
+// * NtQueryDirectoryFile
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtQueryDirectoryFile)
+(
+    IN  HANDLE                  FileHandle,
+    IN  HANDLE                  Event OPTIONAL,
+    IN  PIO_APC_ROUTINE         ApcRoutine OPTIONAL,
+    IN  PVOID                   ApcContext OPTIONAL,
+    OUT PIO_STATUS_BLOCK        IoStatusBlock,
+    OUT PVOID                   FileInformation,
+    IN  ULONG                   Length,
+    IN  FILE_INFORMATION_CLASS  FileInformationClass,
+    IN  BOOLEAN                 ReturnSingleEntry,
+    IN  PUNICODE_STRING         FileMask OPTIONAL,
+    IN  BOOLEAN                 RestartScan
+);
+
+// ******************************************************************
 // * NtQueryFullAttributesFile
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtQueryFullAttributesFile)
@@ -763,6 +791,7 @@ extern FPTR_NtClose                        NtClose;
 extern FPTR_NtDelayExecution               NtDelayExecution;
 extern FPTR_NtDuplicateObject              NtDuplicateObject;
 extern FPTR_NtQueryInformationFile         NtQueryInformationFile;
+extern FPTR_NtQueryDirectoryFile           NtQueryDirectoryFile;
 extern FPTR_NtQueryFullAttributesFile      NtQueryFullAttributesFile;
 extern FPTR_NtQueryVolumeInformationFile   NtQueryVolumeInformationFile;
 extern FPTR_NtCreateEvent                  NtCreateEvent;

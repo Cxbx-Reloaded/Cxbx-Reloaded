@@ -335,6 +335,36 @@ HANDLE WINAPI XTL::EmuXInputOpen
 }
 
 // ******************************************************************
+// * func: EmuXInputClose
+// ******************************************************************
+VOID WINAPI XTL::EmuXInputClose
+(
+    IN HANDLE hDevice
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXapi (0x%X): EmuXInputClose\n"
+               "(\n"
+               "   hDevice             : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), hDevice);
+    }
+    #endif
+
+    // TODO: Actually clean up the device when/if necessary
+
+    EmuSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
 // * func: EmuXInputGetCapabilities
 // ******************************************************************
 DWORD WINAPI XTL::EmuXInputGetCapabilities

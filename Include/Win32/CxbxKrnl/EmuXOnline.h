@@ -34,13 +34,54 @@
 #ifndef EMUXONLINE_H
 #define EMUXONLINE_H
 
+// If you've never seen ugly code before, here is some for you
+#undef FD_SET
+#undef SO_DONTLINGER
+#undef AF_IPX
+#undef AF_MAX
+#undef SOMAXCONN
+#undef FD_READ
+#undef FD_WRITE
+#undef FD_OOB
+#undef FD_ACCEPT
+#undef FD_CONNECT
+#undef FD_CLOSE
+
+#include <winsock2.h>
+
+// ******************************************************************
+// * clas: EmuThis
+// ******************************************************************
+class EmuThis
+{
+    // ******************************************************************
+    // * func: Emusocket
+    // ******************************************************************
+    SOCKET Emusocket(int af, int type, int protocol);
+
+    // ******************************************************************
+    // * func: Emubind
+    // ******************************************************************
+    int Emubind(SOCKET s, const struct sockaddr FAR *name, int namelen);
+
+    // ******************************************************************
+    // * func: Emulisten
+    // ******************************************************************
+    int Emulisten(SOCKET s, int backlog);
+
+    // ******************************************************************
+    // * func: Emuioctlsocket
+    // ******************************************************************
+    int Emuioctlsocket(SOCKET s, long cmd, u_long FAR *argp);
+};
+
 // ******************************************************************
 // * func: EmuWSAStartup
 // ******************************************************************
 int WINAPI EmuWSAStartup
 (
     WORD        wVersionRequested,
-    LPVOID      lpWSAData   // todo: use correct type
+    WSADATA    *lpWSAData
 );
 
 // ******************************************************************
@@ -49,16 +90,6 @@ int WINAPI EmuWSAStartup
 INT WINAPI EmuXNetStartup
 (
     const PVOID pDummy
-);
-
-// ******************************************************************
-// * func: Emusocket
-// ******************************************************************
-SOCKET socket
-(
-    int af,
-    int type,
-    int protocol
 );
 
 #endif

@@ -333,6 +333,14 @@ HANDLE WINAPI EmuXInputOpen
 );
 
 // ******************************************************************
+// * func: EmuXInputClose
+// ******************************************************************
+VOID WINAPI EmuXInputClose
+(
+    IN HANDLE hDevice
+);
+
+// ******************************************************************
 // * func: EmuXInputGetCapabilities
 // ******************************************************************
 DWORD WINAPI EmuXInputGetCapabilities

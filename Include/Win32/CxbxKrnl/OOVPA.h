@@ -36,6 +36,23 @@
 
 #include "Cxbx.h"
 
+// ******************************************************************
+// * Take THIS C++ !!
+// ******************************************************************
+template <class BaseClass, typename MFT> inline void *MFPtoFP( MFT pMemFunc)
+{
+    union
+    {
+        MFT pMemFunc;
+        void (*pFunc)();
+    }
+    ThisConv;
+
+    ThisConv.pMemFunc = pMemFunc;
+
+    return ThisConv.pFunc;
+}
+
 #pragma pack(1)
 
 // ******************************************************************

@@ -1034,47 +1034,6 @@ SOOVPA<14> IDirect3DTexture8_GetSurfaceLevel2_1_0_4627 =
 };
 
 // ******************************************************************
-// * IDirect3DTexture8_LockRect
-// ******************************************************************
-SOOVPA<17> IDirect3DTexture8_LockRect_1_0_4627 =
-{
-    0,  // Large == 0
-    17, // Count == 17
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        // IDirect3DTexture8_LockRect+0x00 : mov eax, [esp+0x14]
-        { 0x00, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x01, 0x44 }, // (Offset,Value)-Pair #2
-        { 0x02, 0x24 }, // (Offset,Value)-Pair #3
-        { 0x03, 0x14 }, // (Offset,Value)-Pair #4
-
-        // IDirect3DTexture8_LockRect+0x04 : mov ecx, [esp+0x10]
-        { 0x04, 0x8B }, // (Offset,Value)-Pair #5
-        { 0x05, 0x4C }, // (Offset,Value)-Pair #6
-        { 0x06, 0x24 }, // (Offset,Value)-Pair #7
-        { 0x07, 0x10 }, // (Offset,Value)-Pair #8
-
-        // IDirect3DTexture8_LockRect+0x0C : push eax, push ecx, push edx, push eax, push 0
-        { 0x0C, 0x50 }, // (Offset,Value)-Pair #9
-        { 0x11, 0x51 }, // (Offset,Value)-Pair #10
-        { 0x16, 0x52 }, // (Offset,Value)-Pair #11
-        { 0x17, 0x50 }, // (Offset,Value)-Pair #12
-        { 0x18, 0x6A }, // (Offset,Value)-Pair #13
-        { 0x19, 0x00 }, // (Offset,Value)-Pair #14
-
-        // IDirect3DTexture8_LockRect+0x1B : call [addr]
-        { 0x1B, 0xE8 }, // (Offset,Value)-Pair #15
-
-        // IDirect3DTexture8_LockRect+0x1B : retn 0x14
-        { 0x20, 0xC2 }, // (Offset,Value)-Pair #16
-        { 0x21, 0x14 }, // (Offset,Value)-Pair #17
-    }
-};
-
-// ******************************************************************
 // * D3D8_1_0_4627
 // ******************************************************************
 OOVPATable D3D8_1_0_4627[] =
@@ -1599,9 +1558,9 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DTexture8_GetSurfaceLevel2" 
         #endif
     },
-    // IDirect3DTexture8::LockRect
+    // IDirect3DTexture8::LockRect (* unchanged since 4361 *)
     {
-        (OOVPA*)&IDirect3DTexture8_LockRect_1_0_4627,
+        (OOVPA*)&IDirect3DTexture8_LockRect_1_0_4361,
 
         XTL::EmuIDirect3DTexture8_LockRect,
 

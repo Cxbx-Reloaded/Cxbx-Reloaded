@@ -958,6 +958,23 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
         #endif
     }
 
+    // ******************************************************************
+    // * TODO: Wildcards are not allowed??
+    // ******************************************************************
+    {
+        for(int v=0;szBuffer[v] != '\0';v++)
+        {
+            if(szBuffer[v] == '*')
+            {
+                if(v > 0)
+                    szBuffer[v-1] = '\0';
+                else
+                    szBuffer[v] = '\0';
+                break;
+            }
+        }
+    }
+
     wchar_t wszObjectName[160];
 
     NtDll::UNICODE_STRING    NtUnicodeString;
@@ -988,7 +1005,7 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI xboxkrnl::NtCreateFile
 
     EmuSwapFS();   // Xbox FS
 
-    return STATUS_SUCCESS;
+    return ret;
 }
 
 // ******************************************************************
@@ -1073,6 +1090,76 @@ XBSYSAPI EXPORTNUM(202) NTSTATUS NTAPI xboxkrnl::NtOpenFile
     #endif
 
     return NtCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, NULL, 0, ShareAccess, FILE_OPEN, OpenOptions);
+}
+
+// ******************************************************************
+// * 0x00CF - NtQueryDirectoryFile
+// ******************************************************************
+XBSYSAPI EXPORTNUM(207) NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
+(
+    IN  HANDLE                  FileHandle,
+    IN  HANDLE                  Event OPTIONAL,
+    IN  PVOID                   ApcRoutine, // Todo: define this routine's prototype
+    IN  PVOID                   ApcContext,
+    OUT PIO_STATUS_BLOCK        IoStatusBlock,
+    OUT PVOID                   FileInformation,
+    IN  ULONG                   Length,
+    IN  FILE_INFORMATION_CLASS  FileInformationClass,
+    IN  PSTRING                 FileMask,
+    IN  BOOLEAN                 RestartScan
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuKrnl (0x%X): NtQueryDirectoryFile\n"
+               "(\n"
+               "   FileHandle           : 0x%.08X\n"
+               "   Event                : 0x%.08X\n"
+               "   ApcRoutine           : 0x%.08X\n"
+               "   ApcContext           : 0x%.08X\n"
+               "   IoStatusBlock        : 0x%.08X\n"
+               "   FileInformation      : 0x%.08X\n"
+               "   Length               : 0x%.08X\n"
+               "   FileInformationClass : 0x%.08X\n"
+               "   FileMask             : 0x%.08X (%s)\n"
+               "   RestartScan          : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock,
+               FileInformation, Length, FileInformationClass, FileMask,
+               (FileMask != 0) ? FileMask->Buffer : "", RestartScan);
+    }
+    #endif
+
+    wchar_t wszObjectName[160];
+
+    NtDll::UNICODE_STRING NtFileMask;
+
+    // ******************************************************************
+    // * Initialize FileMask
+    // ******************************************************************
+    {
+        if(FileMask != 0)
+            mbstowcs(wszObjectName, FileMask->Buffer, 160);
+        else
+            mbstowcs(wszObjectName, "", 160);
+
+        NtDll::RtlInitUnicodeString(&NtFileMask, wszObjectName);
+    }
+
+    NTSTATUS ret = NtDll::NtQueryDirectoryFile
+    (
+        FileHandle, Event, (NtDll::PIO_APC_ROUTINE)ApcRoutine, ApcContext, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock, FileInformation,
+        Length, (NtDll::FILE_INFORMATION_CLASS)FileInformationClass, FALSE, &NtFileMask, RestartScan
+    );
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
 }
 
 // ******************************************************************

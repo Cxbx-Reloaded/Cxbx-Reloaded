@@ -65,6 +65,7 @@ NtDll::FPTR_NtClose                        NtDll::NtClose                      =
 NtDll::FPTR_NtDelayExecution               NtDll::NtDelayExecution             = (NtDll::FPTR_NtDelayExecution)GetProcAddress(hNtDll, "NtDelayExecution");
 NtDll::FPTR_NtDuplicateObject              NtDll::NtDuplicateObject            = (NtDll::FPTR_NtDuplicateObject)GetProcAddress(hNtDll, "NtDuplicateObject");
 NtDll::FPTR_NtQueryInformationFile         NtDll::NtQueryInformationFile       = (NtDll::FPTR_NtQueryInformationFile)GetProcAddress(hNtDll, "NtQueryInformationFile");
+NtDll::FPTR_NtQueryDirectoryFile           NtDll::NtQueryDirectoryFile         = (NtDll::FPTR_NtQueryDirectoryFile)GetProcAddress(hNtDll, "NtQueryDirectoryFile");
 NtDll::FPTR_NtQueryFullAttributesFile      NtDll::NtQueryFullAttributesFile    = (NtDll::FPTR_NtQueryFullAttributesFile)GetProcAddress(hNtDll, "NtQueryFullAttributesFile");
 NtDll::FPTR_NtQueryVolumeInformationFile   NtDll::NtQueryVolumeInformationFile = (NtDll::FPTR_NtQueryVolumeInformationFile)GetProcAddress(hNtDll, "NtQueryVolumeInformationFile");
 NtDll::FPTR_NtCreateEvent                  NtDll::NtCreateEvent                = (NtDll::FPTR_NtCreateEvent)GetProcAddress(hNtDll, "NtCreateEvent");
