@@ -34,15 +34,7 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
-// prevent name collisions
-namespace xboxkrnl
-{
-    #include <xboxkrnl/xboxkrnl.h>
-};
-
 #include "Emu.h"
-#include "EmuFS.h"
-#include "EmuShared.h"
 
 // prevent name collisions
 namespace XTL
@@ -50,7 +42,98 @@ namespace XTL
     #include "EmuXTL.h"
 };
 
-extern XTL::LPDIRECT3DDEVICE8 g_pD3DDevice8;  // Direct3D8 Device
+// convert from xbox to pc color formats
+XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
+{
+    switch(Format)
+    {
+        case 0x00: // Swizzled   (X_D3DFMT_L8)
+        case 0x01: // Swizzled   (X_D3DFMT_AL8) // NOTE: Hack: Alpha ignored, basically
+            return D3DFMT_L8;
+
+        case 0x02: // Swizzled   (X_D3DFMT_A1R5G5B5)
+            return D3DFMT_A1R5G5B5;
+
+        case 0x1A: // Swizzled   (X_D3DFMT_A8L8)
+            return D3DFMT_R5G6B5;   // NOTE: HACK: Totally and utterly wrong :)
+
+        case 0x1D: // Linear     (X_D3DFMT_LIN_A4R4G4B4)
+        case 0x04: // Swizzled   (X_D3DFMT_A4R4G4B4)
+            return D3DFMT_A4R4G4B4;
+
+        case 0x11: // Linear     (X_D3DFMT_LIN_R5G6B5)
+        case 0x05: // Swizzled   (X_D3DFMT_R5G6B5)
+            return D3DFMT_R5G6B5;
+
+        case 0x12: // Linear     (X_D3DFMT_LIN_A8R8G8B8)
+        case 0x06: // Swizzled   (X_D3DFMT_A8R8G8B8)
+            return D3DFMT_A8R8G8B8;
+
+        case 0x3F: // Linear     (X_D3DFMT_LIN_A8B8G8R8)
+            return D3DFMT_A8R8G8B8; // NOTE: HACK: R<->B Swapped!
+
+        case 0x1E: // Linear     (X_D3DFMT_LIN_X8R8G8B8)
+        case 0x07: // Swizzled   (X_D3DFMT_X8R8G8B8)
+            return D3DFMT_X8R8G8B8;
+
+        case 0x0B: // Swizzled   (X_D3DFMT_P8)
+            return D3DFMT_P8;
+
+        case 0x0C: // Compressed (X_D3DFMT_DXT1)
+            return D3DFMT_DXT1;
+
+        case 0x0E: // Compressed (X_D3DFMT_DXT2)
+            return D3DFMT_DXT2;
+
+        case 0x0F: // Compressed (X_D3DFMT_DXT3)
+            return D3DFMT_DXT3;
+
+        case 0x24: // Swizzled   (X_D3DFMT_YUV2)
+            return D3DFMT_YUY2;
+
+        case 0x2E: // Linear     (X_D3DFMT_LIN_D24S8)
+        case 0x2A: // Swizzled   (X_D3DFMT_D24S8)
+            return D3DFMT_D24S8;
+
+        case 0x2B: // Swizzled   (X_D3DFMT_F24S8)
+            return D3DFMT_D24S8;    // NOTE: Hack!! PC does not have D3DFMT_F24S8 (Float vs Int)
+
+        case 0x30: // Linear     (X_D3DFMT_LIN_D16)
+        case 0x2C: // Swizzled   (X_D3DFMT_D16)
+            return D3DFMT_D16;
+
+        case 0x28: // Swizzled   (X_D3DFMT_V8U8)
+            return D3DFMT_V8U8;
+    }
+
+    EmuCleanup("EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)", Format);
+
+    return (D3DFORMAT)Format;
+}
+
+// convert from pc to xbox color formats
+XTL::X_D3DFORMAT XTL::EmuPC2XB_D3DFormat(D3DFORMAT Format)
+{
+    switch(Format)
+    {
+        case D3DFMT_YUY2:
+            return 0x24;
+        case D3DFMT_R5G6B5:
+            return 0x05;
+        case D3DFMT_D24S8:
+            return 0x2A;
+        case D3DFMT_X8R8G8B8:
+//            return 0x1E;    // Linear (X_D3DFMT_LIN_X8R8G8B8)
+            return 0x07;
+        case D3DFMT_A8R8G8B8:
+//            return 0x12;    // Linear (X_D3DFMT_LIN_A8R8G8B8)
+            return 0x06;
+    }
+
+    EmuCleanup("EmuPC2XB_D3DFormat: Unknown Format (%d)", Format);
+
+    return Format;
+}
 
 // lookup table for converting vertex count to primitive count
 UINT XTL::EmuD3DVertexToPrimitive[11][2] =
@@ -179,191 +262,3 @@ CONST DWORD XTL::EmuD3DRenderStateSimpleEncoded[174] =
     X_D3DRSSE_UNK,  0x00040350,     // 170
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 172
 };
-
-// fixup xbox extensions to be compatible with PC direct3d
-UINT XTL::EmuFixupVerticesA
-(
-    DWORD                           PrimitiveType,
-    UINT                           &PrimitiveCount,
-    XTL::IDirect3DVertexBuffer8   *&pOrigVertexBuffer8,
-    XTL::IDirect3DVertexBuffer8   *&pHackVertexBuffer8,
-    UINT                            dwOffset,
-    PVOID                           pVertexStreamZeroData,
-    UINT                            uiVertexStreamZeroStride, 
-    PVOID                          *ppNewVertexStreamZeroData
-)
-{
-    // only quad and listloop are supported right now
-    if(PrimitiveType != 8 && PrimitiveType != 3)
-        return -1;
-
-    // stride of this stream source
-    UINT uiStride = 0;
-
-    // sizes of our part in the vertex buffer
-    DWORD dwOriginalSize    = 0;
-    DWORD dwNewSize         = 0;
-
-    // sizes with the rest of the buffer
-    DWORD dwOriginalSizeWR  = 0;
-    DWORD dwNewSizeWR       = 0;
-
-    // vertex data arrays
-    BYTE *pOrigVertexData = 0;
-    BYTE *pHackVertexData = 0;
-
-    if(pVertexStreamZeroData == 0)
-    {
-        g_pD3DDevice8->GetStreamSource(0, &pOrigVertexBuffer8, &uiStride);
-
-        if(PrimitiveType == 8)      // Quad
-        {
-            PrimitiveCount *= 2;
-
-            // This is a list of sqares/rectangles, so we convert it to a list of triangles
-            dwOriginalSize  = PrimitiveCount*uiStride*2;
-            dwNewSize       = PrimitiveCount*uiStride*3;
-        }
-        else if(PrimitiveType == 3) // LineLoop
-        {
-            PrimitiveCount += 1;
-
-            // We will add exactly one more line
-            dwOriginalSize  = PrimitiveCount*uiStride;
-            dwNewSize       = PrimitiveCount*uiStride + uiStride;
-        }
-
-        // Retrieve the original buffer size
-        {
-            XTL::D3DVERTEXBUFFER_DESC Desc;
-
-            if(FAILED(pOrigVertexBuffer8->GetDesc(&Desc))) 
-                EmuCleanup("Could not retrieve buffer size");
-
-            // Here we save the full buffer size
-            dwOriginalSizeWR = Desc.Size;
-
-            // So we can now calculate the size of the rest (dwOriginalSizeWR - dwOriginalSize) and
-            // add it to our new calculated size of the patched buffer
-            dwNewSizeWR = dwNewSize + dwOriginalSizeWR - dwOriginalSize;
-        }
-
-        g_pD3DDevice8->CreateVertexBuffer(dwNewSizeWR, 0, 0, XTL::D3DPOOL_MANAGED, &pHackVertexBuffer8);
-
-        if(pOrigVertexBuffer8 != 0)
-            pOrigVertexBuffer8->Lock(0, 0, &pOrigVertexData, 0);
-
-        if(pHackVertexBuffer8 != 0)
-            pHackVertexBuffer8->Lock(0, 0, &pHackVertexData, 0);
-    }
-    else
-    {
-        uiStride = uiVertexStreamZeroStride;
-
-        if(PrimitiveType == 8)      // Quad
-        {
-            PrimitiveCount *= 2;
-
-            // This is a list of sqares/rectangles, so we convert it to a list of triangles
-            dwOriginalSize  = PrimitiveCount*uiStride*2;
-            dwNewSize       = PrimitiveCount*uiStride*3;
-        }
-        else if(PrimitiveType == 3) // LineLoop
-        {
-            PrimitiveCount += 1;
-
-            // We will add exactly one more line
-            dwOriginalSize  = PrimitiveCount*uiStride;
-            dwNewSize       = PrimitiveCount*uiStride + uiStride;
-        }
-
-        dwOriginalSizeWR = dwOriginalSize;
-        dwNewSizeWR = dwNewSize;
-
-        pHackVertexData = (uint08*)malloc(dwNewSizeWR);
-        pOrigVertexData = (uint08*)pVertexStreamZeroData;
-
-        *ppNewVertexStreamZeroData = pHackVertexData;
-    }
-
-    DWORD dwVertexShader = NULL;
-
-    g_pD3DDevice8->GetVertexShader(&dwVertexShader);
-
-    // Copy the nonmodified data
-    memcpy(pHackVertexData, pOrigVertexData, dwOffset);
-    memcpy(&pHackVertexData[dwOffset+dwNewSize], &pOrigVertexData[dwOffset+dwOriginalSize], dwOriginalSizeWR-dwOffset-dwOriginalSize);
-
-    if(PrimitiveType == 8)      // Quad
-    {
-        uint08 *pHack1 = &pHackVertexData[dwOffset+0*uiStride];
-        uint08 *pHack2 = &pHackVertexData[dwOffset+3*uiStride];
-        uint08 *pHack3 = &pHackVertexData[dwOffset+4*uiStride];
-        uint08 *pHack4 = &pHackVertexData[dwOffset+5*uiStride];
-
-        uint08 *pOrig1 = &pOrigVertexData[dwOffset+0*uiStride];
-        uint08 *pOrig2 = &pOrigVertexData[dwOffset+2*uiStride];
-        uint08 *pOrig3 = &pOrigVertexData[dwOffset+3*uiStride];
-
-        for(uint32 i=0;i<PrimitiveCount/2;i++)
-        {
-            memcpy(pHack1, pOrig1, uiStride*3); // Vertex 0,1,2 := Vertex 0,1,2
-            memcpy(pHack2, pOrig2, uiStride);   // Vertex 3     := Vertex 2
-            memcpy(pHack3, pOrig3, uiStride);   // Vertex 4     := Vertex 3
-            memcpy(pHack4, pOrig1, uiStride);   // Vertex 5     := Vertex 0
-
-            pHack1 += uiStride*6;
-            pHack2 += uiStride*6;
-            pHack3 += uiStride*6;
-            pHack4 += uiStride*6;
-
-            pOrig1 += uiStride*4;
-            pOrig2 += uiStride*4;
-            pOrig3 += uiStride*4;
-
-            if(dwVertexShader & D3DFVF_XYZRHW)
-            {
-                for(int z=0;z<6;z++)
-                {
-                    if(((FLOAT*)&pHackVertexData[dwOffset+i*uiStride*6+z*uiStride])[2] == 0.0f)
-                        ((FLOAT*)&pHackVertexData[dwOffset+i*uiStride*6+z*uiStride])[2] = 1.0f;
-                    if(((FLOAT*)&pHackVertexData[dwOffset+i*uiStride*6+z*uiStride])[3] == 0.0f)
-                        ((FLOAT*)&pHackVertexData[dwOffset+i*uiStride*6+z*uiStride])[3] = 1.0f;
-                }
-            }
-        }
-    }
-    else if(PrimitiveType == 3)
-    {
-        memcpy(&pHackVertexData[dwOffset], &pOrigVertexData[dwOffset], dwOriginalSize);
-        memcpy(&pHackVertexData[dwOffset + dwOriginalSize], &pOrigVertexData[dwOffset], uiStride);
-    }
-
-    if(pVertexStreamZeroData == 0)
-    {
-        pOrigVertexBuffer8->Unlock();
-        pHackVertexBuffer8->Unlock();
-
-        g_pD3DDevice8->SetStreamSource(0, pHackVertexBuffer8, uiStride);
-    }
-
-    return uiStride;
-}
-
-// fixup xbox extensions to be compatible with PC direct3d
-VOID XTL::EmuFixupVerticesB
-(
-    UINT                            nStride,
-    XTL::IDirect3DVertexBuffer8   *&pOrigVertexBuffer8,
-    XTL::IDirect3DVertexBuffer8   *&pHackVertexBuffer8
-)
-{
-    if(pOrigVertexBuffer8 != 0 && pHackVertexBuffer8 != 0)
-        g_pD3DDevice8->SetStreamSource(0, pOrigVertexBuffer8, nStride);
-
-    if(pOrigVertexBuffer8 != 0)
-        pOrigVertexBuffer8->Release();
-
-    if(pHackVertexBuffer8 != 0)
-        pHackVertexBuffer8->Release();
-}

@@ -228,7 +228,6 @@ typedef struct _RTL_HEAP_DEFINITION
     ULONG   Unknown9;
     ULONG   Unknown10;
     ULONG   Unknown11;
-    ULONG   Unknown12;
 }
 RTL_HEAP_DEFINITION, *PRTL_HEAP_DEFINITION;
 

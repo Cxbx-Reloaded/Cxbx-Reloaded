@@ -444,7 +444,7 @@ SOURCE=.\Source\Win32\CxbxKrnl\HLEDataBase\XOnline.1.0.4361.inl
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuDirect3D\Convert.cpp
+SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8\Convert.cpp
 # End Source File
 # Begin Source File
 

@@ -2052,20 +2052,44 @@ XBSYSAPI EXPORTNUM(232) VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
 
     EmuSwapFS();   // Xbox FS
 
-	uint32 dwEcx, dwEax;
+	uint32 dwEsi, dwEax, dwEcx;
+    uint32 dw1, dw2, dw3;
 
 	if((IoStatusBlock->u1.Status & 0xC0000000) == 0xC0000000)
 	{
-		dwEcx = 0;
-		dwEax = NtDll::RtlNtStatusToDosError(IoStatusBlock->u1.Status);
+		dw1 = 0;
+		dw3 = NtDll::RtlNtStatusToDosError(IoStatusBlock->u1.Status);
 	}
 	else
 	{
-		dwEcx = (DWORD)IoStatusBlock->u1.Pointer;
-		dwEax = 0;
+		dw1 = (DWORD)IoStatusBlock->u1.Pointer;
+		dw3 = 0;
 	}
     
-	__asm
+    dw2 = (DWORD)IoStatusBlock;
+
+    /*
+    // ~XDK 3911??
+    if(true)
+    {
+        dwEsi = dw2;
+        dwEcx = dw1;
+        dwEax = dw3;
+
+    }
+    else
+    {
+        dwEsi = dw1;
+        dwEcx = dw2;
+        dwEax = dw3;
+    }//*/
+
+    // hack!? (Seems to work in both above cases...sigh)
+    dwEsi = dw2;
+    dwEcx = dw2;
+    dwEax = dw3;
+
+    __asm
     {
         pushad
 		/*
@@ -2074,8 +2098,9 @@ XBSYSAPI EXPORTNUM(232) VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
         mov eax, dwEax
 		*/
 		// TODO: Figure out if/why this works!? Matches prototype, but not xboxkrnl disassembly
-		mov esi, dwEcx
-		mov ecx, IoStatusBlock
+        // Seems to be XDK/version dependand??
+		mov esi, dwEsi
+		mov ecx, dwEcx
 		mov eax, dwEax
 
         push esi
