@@ -65,17 +65,8 @@ IDR_RENDERMENU MENU DISCARDABLE
 BEGIN
     POPUP "E&mulation"
     BEGIN
-        MENUITEM "&Pause\t(F2)",                ID_EMULATION_PAUSE
-        MENUITEM "&Continue",                   ID_EMULATION_CONTINUE
-        , CHECKED, GRAYED
-        MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_EMULATION_EXIT
     END
-    POPUP "&Graphics"
-    BEGIN
-        MENUITEM "&Fullscreen\t(Alt+Enter)",    ID_GRAPHICS_FULLSCREEN
-    END
-    MENUITEM "&Help",                       65535
 END
 
 #endif    // English (U.S.) resources

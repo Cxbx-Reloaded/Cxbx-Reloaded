@@ -135,6 +135,74 @@ SOOVPA<12> XInputOpen_1_0_4361 =
 };
 
 // ******************************************************************
+// * XInputGetCapabilities
+// ******************************************************************
+SOOVPA<14> XInputGetCapabilities_1_0_4361 =
+{
+    0,  // Large == 0
+    14, // Count == 14
+
+    {
+        // XInputGetCapabilities+0x03 : sub esp, 0x48
+        { 0x03, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x04, 0xEC }, // (Offset,Value)-Pair #2
+        { 0x05, 0x48 }, // (Offset,Value)-Pair #3
+
+        // XInputGetCapabilities+0x24 : test byte ptr [esi+4], 2
+        { 0x24, 0xF6 }, // (Offset,Value)-Pair #4
+        { 0x25, 0x46 }, // (Offset,Value)-Pair #5
+        { 0x26, 0x04 }, // (Offset,Value)-Pair #6
+        { 0x27, 0x02 }, // (Offset,Value)-Pair #7
+
+        // XInputGetCapabilities+0x3A : stosb
+        { 0x3A, 0xAA }, // (Offset,Value)-Pair #8
+
+        // XInputGetCapabilities+0x7D : mov [ebp+var_48], 0x30
+        { 0x7D, 0xC6 }, // (Offset,Value)-Pair #9
+        { 0x7E, 0x45 }, // (Offset,Value)-Pair #10
+        { 0x7F, 0xB8 }, // (Offset,Value)-Pair #11
+        { 0x80, 0x30 }, // (Offset,Value)-Pair #12
+
+        // XInputGetCapabilities+0xEE : cmp [eax], ebx
+        { 0xEE, 0x39 }, // (Offset,Value)-Pair #13
+        { 0xEF, 0x18 }, // (Offset,Value)-Pair #14
+    }
+};
+
+// ******************************************************************
+// * XInputGetState
+// ******************************************************************
+SOOVPA<12> XInputGetState_1_0_4361 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    {
+        // XInputGetState+0x0E : mov ecx, [edx+0x0A3]
+        { 0x0E, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x0F, 0x8A }, // (Offset,Value)-Pair #2
+        { 0x10, 0xA3 }, // (Offset,Value)-Pair #3
+
+        // XInputGetState+0x1D : push 0x57
+        { 0x1D, 0x6A }, // (Offset,Value)-Pair #4
+        { 0x1E, 0x57 }, // (Offset,Value)-Pair #5
+
+        // XInputGetState+0x20 : jmp +0x3E
+        { 0x20, 0xEB }, // (Offset,Value)-Pair #6
+        { 0x21, 0x3E }, // (Offset,Value)-Pair #7
+
+        // XInputGetState+0x2E : mov ebx, 0x048F
+        { 0x2E, 0xBB }, // (Offset,Value)-Pair #8
+        { 0x2F, 0x8F }, // (Offset,Value)-Pair #9
+        { 0x30, 0x04 }, // (Offset,Value)-Pair #10
+
+        // XInputGetState+0x6C : retn 8
+        { 0x6C, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x6D, 0x08 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
 // * CreateThread
 // ******************************************************************
 SOOVPA<8> CreateThread_1_0_4361 =
@@ -304,16 +372,6 @@ SOOVPA<9> __cinit_1_0_4361 =
 // ******************************************************************
 OOVPATable XAPI_1_0_4361[] =
 {
-    // XInputOpen
-    {
-        (OOVPA*)&XInputOpen_1_0_4361,
-
-        xboxkrnl::EmuXXInputOpen,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXXInputOpen"
-        #endif
-    },
     // XInitDevices
     {
         (OOVPA*)&XInitDevices_1_0_4361,
@@ -332,6 +390,36 @@ OOVPATable XAPI_1_0_4361[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXXGetDevices"
+        #endif
+    },
+    // XInputOpen
+    {
+        (OOVPA*)&XInputOpen_1_0_4361,
+
+        xboxkrnl::EmuXXInputOpen,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXXInputOpen"
+        #endif
+    },
+    // XInputGetCapabilities
+    {
+        (OOVPA*)&XInputGetCapabilities_1_0_4361,
+
+        xboxkrnl::EmuXXInputGetCapabilities,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXXInputGetCapabilities"
+        #endif
+    },
+    // XInputGetState
+    {
+        (OOVPA*)&XInputGetState_1_0_4361,
+
+        xboxkrnl::EmuXXInputGetState,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXXInputGetState"
         #endif
     },
     // CreateThread

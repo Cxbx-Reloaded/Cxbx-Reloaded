@@ -83,6 +83,77 @@ typedef struct _XPP_DEVICE_TYPE
 XPP_DEVICE_TYPE, *PXPP_DEVICE_TYPE;
 
 // ******************************************************************
+// * XINPUT_GAMEPAD
+// ******************************************************************
+typedef struct _XINPUT_GAMEPAD
+{
+    WORD    wButtons;
+    BYTE    bAnalogButtons[8];
+    SHORT   sThumbLX;
+    SHORT   sThumbLY;
+    SHORT   sThumbRX;
+    SHORT   sThumbRY;
+}
+XINPUT_GAMEPAD, *PXINPUT_GAMEPAD;
+
+// ******************************************************************
+// * XINPUT_RUMBLE
+// ******************************************************************
+typedef struct _XINPUT_RUMBLE
+{
+    WORD   wLeftMotorSpeed;
+    WORD   wRightMotorSpeed;
+}
+XINPUT_RUMBLE, *PXINPUT_RUMBLE;
+
+// ******************************************************************
+// * XINPUT_CAPABILITIES
+// ******************************************************************
+typedef struct _XINPUT_CAPABILITIES
+{
+    BYTE SubType;
+    WORD Reserved;
+
+    union  
+    {
+        XINPUT_GAMEPAD Gamepad;
+    }
+    In;
+
+    union
+    {
+        XINPUT_RUMBLE Rumble;
+    }
+    Out;
+}
+XINPUT_CAPABILITIES, *PXINPUT_CAPABILITIES;
+
+// ******************************************************************
+// * Device SubTypes
+// ******************************************************************
+#define XINPUT_DEVSUBTYPE_GC_GAMEPAD              0x01
+#define XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT          0x02
+#define XINPUT_DEVSUBTYPE_GC_WHEEL                0x10
+#define XINPUT_DEVSUBTYPE_GC_ARCADE_STICK         0x20
+#define XINPUT_DEVSUBTYPE_GC_DIGITAL_ARCADE_STICK 0x21
+#define XINPUT_DEVSUBTYPE_GC_FLIGHT_STICK         0x30
+#define XINPUT_DEVSUBTYPE_GC_SNOWBOARD            0x40
+
+// ******************************************************************
+// * XINPUT_STATE
+// ******************************************************************
+typedef struct _XINPUT_STATE
+{
+    DWORD dwPacketNumber;
+
+    union
+    {
+        XINPUT_GAMEPAD Gamepad;
+    };
+}
+XINPUT_STATE, *PXINPUT_STATE;
+
+// ******************************************************************
 // * func: EmuXXInitDevices
 // ******************************************************************
 VOID WINAPI EmuXXInitDevices
@@ -108,6 +179,24 @@ HANDLE WINAPI EmuXXInputOpen
     IN DWORD                        dwPort,
     IN DWORD                        dwSlot,
     IN PXINPUT_POLLING_PARAMETERS   pPollingParameters OPTIONAL
+);
+
+// ******************************************************************
+// * func: EmuXXInputGetCapabilities
+// ******************************************************************
+DWORD WINAPI EmuXXInputGetCapabilities
+(
+    IN  HANDLE               hDevice,
+    OUT PXINPUT_CAPABILITIES pCapabilities
+);
+
+// ******************************************************************
+// * func: EmuXInputGetState
+// ******************************************************************
+DWORD WINAPI EmuXXInputGetState
+(
+    IN  HANDLE         hDevice,
+    OUT PXINPUT_STATE  pState
 );
 
 // ******************************************************************

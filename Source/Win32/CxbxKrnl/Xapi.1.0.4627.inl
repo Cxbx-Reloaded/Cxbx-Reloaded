@@ -37,16 +37,6 @@
 // ******************************************************************
 OOVPATable XAPI_1_0_4627[] =
 {
-    // XInputOpen (* unchanged since 1.0.4361 *)
-    {
-        (OOVPA*)&XInputOpen_1_0_4361,
-
-        xboxkrnl::EmuXXInputOpen,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXXInputOpen"
-        #endif
-    },
     // XInitDevices (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&XInitDevices_1_0_4361,
@@ -65,6 +55,36 @@ OOVPATable XAPI_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXXGetDevices" 
+        #endif
+    },
+    // XInputOpen (* unchanged since 1.0.4361 *)
+    {
+        (OOVPA*)&XInputOpen_1_0_4361,
+
+        xboxkrnl::EmuXXInputOpen,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXXInputOpen"
+        #endif
+    },
+    // XInputGetCapabilities (* unchanged since 1.0.4361 *)
+    {
+        (OOVPA*)&XInputGetCapabilities_1_0_4361,
+
+        xboxkrnl::EmuXXInputGetCapabilities,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXXInputGetCapabilities"
+        #endif
+    },
+    // XInputGetState
+    {
+        (OOVPA*)&XInputGetState_1_0_4361,
+
+        xboxkrnl::EmuXXInputGetState,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXXInputGetState"
         #endif
     },
     // CreateThread (* unchanged since 1.0.4361 *)

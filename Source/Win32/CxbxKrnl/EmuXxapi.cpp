@@ -176,8 +176,94 @@ HANDLE WINAPI xboxkrnl::EmuXXInputOpen
     HANDLE ret = NULL;
 
     // TODO: We simply return dwPort+1 to represent the input device (lame!)
-    if(dwPort <= 4)
+    if(dwPort <= 3)
         ret = (HANDLE)(dwPort+1);
+
+    EmuXSwapFS();   // XBox FS
+
+    return ret;
+}
+
+// ******************************************************************
+// * func: EmuXXInputGetCapabilities
+// ******************************************************************
+DWORD WINAPI xboxkrnl::EmuXXInputGetCapabilities
+(
+    IN  HANDLE               hDevice,
+    OUT PXINPUT_CAPABILITIES pCapabilities
+)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXxapi (0x%.08X): EmuXXInputGetCapabilities\n"
+               "(\n"
+               "   hDevice             : 0x%.08X\n"
+               "   pCapabilities       : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), hDevice, pCapabilities);
+    }
+    #endif
+
+    DWORD ret = ERROR_INVALID_HANDLE;
+
+    // TODO: For now, the only valid handles are controllers 1 through 4,
+    //       and they are always normal controllers
+    if((int)hDevice >= 1 && (int)hDevice <= 4)
+    {
+        pCapabilities->SubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD;
+
+        ZeroMemory(&pCapabilities->In.Gamepad, sizeof(pCapabilities->In.Gamepad));
+
+        ret = ERROR_SUCCESS;
+    }
+
+    EmuXSwapFS();   // XBox FS
+
+    return ret;
+}
+
+// ******************************************************************
+// * func: EmuXInputGetState
+// ******************************************************************
+DWORD WINAPI xboxkrnl::EmuXXInputGetState
+(
+    IN  HANDLE         hDevice,
+    OUT PXINPUT_STATE  pState
+)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG_TRACE
+    {
+        printf("EmuXxapi (0x%.08X): XInputGetState\n"
+               "(\n"
+               "   hDevice             : 0x%.08X\n"
+               "   pState              : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), hDevice, pState);
+    }
+    #endif
+
+    DWORD ret = ERROR_INVALID_HANDLE;
+
+    // TODO: For now, the only valid handles are controllers 1 through 4,
+    //       and they are always normal controllers
+    if((int)hDevice >= 1 && (int)hDevice <= 4)
+    {
+        ZeroMemory(&pState->Gamepad, sizeof(pState->Gamepad));
+
+        pState->Gamepad.sThumbLX = 10000;
+
+        ret = ERROR_SUCCESS;
+    }
 
     EmuXSwapFS();   // XBox FS
 
