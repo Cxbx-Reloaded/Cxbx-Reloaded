@@ -260,7 +260,15 @@ DWORD WINAPI xboxkrnl::EmuXXInputGetState
     {
         ZeroMemory(&pState->Gamepad, sizeof(pState->Gamepad));
 
-        pState->Gamepad.sThumbLX = 10000;
+        static int cur  = -20000;
+        static int curs = 500;
+
+        cur += curs;
+
+        if(cur > 20000 || cur < -20000)
+            curs = -curs;
+
+        pState->Gamepad.sThumbLX = cur;
 
         ret = ERROR_SUCCESS;
     }
