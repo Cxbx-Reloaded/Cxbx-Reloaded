@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuD3D.h
+// *   Cxbx->Win32->CxbxKrnl->EmuD3D8.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,48 +31,23 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUD3D_H
-#define EMUD3D_H
+#ifndef EMUD3D8_H
+#define EMUD3D8_H
 
-#include "Emu.h"
+#include "Xbe.h"
+
+#include <windows.h>
+#define DIRECT3D_VERSION 0x0800
+#include <d3d8.h>
+
+// ******************************************************************
+// * global exports
+// ******************************************************************
+extern HWND g_EmuWindow;       // Rendering Window
 
 // ******************************************************************
 // * func: EmuInitD3D
 // ******************************************************************
-VOID EmuInitD3D(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
-
-// ******************************************************************
-// * func: EmuIDirect3D8_CreateDevice
-// ******************************************************************
-win32::HRESULT WINAPI EmuIDirect3D8_CreateDevice
-(
-    win32::UINT                    Adapter,
-    win32::D3DDEVTYPE              DeviceType,
-    win32::HWND                    hFocusWindow,
-    win32::DWORD                   BehaviorFlags,
-    win32::D3DPRESENT_PARAMETERS  *pPresentationParameters,
-    win32::IDirect3DDevice8      **ppReturnedDeviceInterface
-);
-
-// ******************************************************************
-// * func: EmuIDirect3DDevice8_Clear
-// ******************************************************************
-win32::HRESULT WINAPI EmuIDirect3DDevice8_Clear
-(
-    win32::DWORD                  Count,
-    CONST win32::D3DRECT         *pRects,
-    win32::DWORD                  Flags,
-    win32::D3DCOLOR               Color,
-    float                         Z,
-    win32::DWORD                  Stencil
-);
-
-// ******************************************************************
-// * func: EmuIDirect3DDevice8_Swap
-// ******************************************************************
-win32::HRESULT WINAPI EmuIDirect3DDevice8_Swap
-(
-    win32::DWORD Flags
-);
+void EmuInitD3D(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
 
 #endif

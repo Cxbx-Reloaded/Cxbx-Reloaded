@@ -31,13 +31,12 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Cxbx.h"
-#include "EmuExe.h"
 #include "WndMain.h"
 #include "WndAbout.h"
+#include "DlgControllerConfig.h"
 #include "ResCxbx.h"
+#include "EmuExe.h"
 
-#include <stdio.h>
 #include <io.h>
 
 // ******************************************************************

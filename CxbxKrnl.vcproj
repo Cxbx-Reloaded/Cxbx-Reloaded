@@ -21,7 +21,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="Include,Include/Win32/,Include/Win32/Cxbx,Include/Win32/Cxbxkrnl"
+				AdditionalIncludeDirectories="Include,Include/Core/,Include/Win32/,Include/Win32/Cxbx,Include/Win32/Cxbxkrnl"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;CXBXKRNL_EXPORTS"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -45,6 +45,7 @@
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
 				AdditionalLibraryDirectories="Lib"
+				IgnoreDefaultLibraryNames="libc"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Bin\Debug/Cxbx.pdb"
 				ImportLibrary=".\Bin\Debug/Cxbx.lib"/>
@@ -82,7 +83,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="Include,Include/Win32/,Include/Win32/Cxbxkrnl"
+				AdditionalIncludeDirectories="Include,Include/Core/,Include/Win32/,Include/Win32/Cxbxkrnl"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;CXBXKRNL_EXPORTS"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
@@ -153,6 +154,9 @@
 				RelativePath=".\Doc\Changelog.txt">
 			</File>
 			<File
+				RelativePath=".\Doc\Input.txt">
+			</File>
+			<File
 				RelativePath=".\Doc\RemovedCode.txt">
 			</File>
 			<File
@@ -166,6 +170,15 @@
 			Name="Include"
 			Filter="">
 			<File
+				RelativePath=".\Include\Win32\AlignPosfix1.h">
+			</File>
+			<File
+				RelativePath=".\Include\Win32\AlignPrefix1.h">
+			</File>
+			<File
+				RelativePath=".\Include\Cxbx.h">
+			</File>
+			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\D3D8.1.0.3925.h">
 			</File>
 			<File
@@ -178,7 +191,7 @@
 				RelativePath=".\Include\Win32\CxbxKrnl\Emu.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\EmuD3D.h">
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuD3D8.h">
 			</File>
 			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\EmuDInput.h">
@@ -202,10 +215,13 @@
 				RelativePath=".\Include\Win32\CxbxKrnl\HLEDataBase.h">
 			</File>
 			<File
+				RelativePath=".\Include\Win32\Mutex.h">
+			</File>
+			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\OOVPA.h">
 			</File>
 			<File
-				RelativePath=".\Resource\ResCxbxKrnl.h">
+				RelativePath=".\Include\Win32\CxbxKrnl\ResCxbxDll.h">
 			</File>
 			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\Xapi.1.0.3911.h">
@@ -215,6 +231,9 @@
 			</File>
 			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\Xapi.1.0.4627.h">
+			</File>
+			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\xd3d8.h">
 			</File>
 			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\xntdll.h">
@@ -258,7 +277,7 @@
 				RelativePath=".\Source\Win32\CxbxKrnl\Emu.cpp">
 			</File>
 			<File
-				RelativePath=".\Source\Win32\CxbxKrnl\EmuD3D.cpp">
+				RelativePath=".\Source\Win32\CxbxKrnl\EmuD3D8.cpp">
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\EmuDInput.cpp">

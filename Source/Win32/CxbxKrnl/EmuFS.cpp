@@ -31,10 +31,21 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Cxbx.h"
-#include "Emu.h"
+#define _CXBXKRNL_INTERNAL
+#define _XBOXKRNL_LOCAL_
 
-using namespace win32;
+// ******************************************************************
+// * prevent name collisions
+// ******************************************************************
+namespace xboxkrnl
+{
+    #include <xboxkrnl/xboxkrnl.h>
+};
+
+#include "EmuFS.h"
+#include "EmuLDT.h"
+
+#include <windows.h>
 
 // ******************************************************************
 // * func: EmuInitFS

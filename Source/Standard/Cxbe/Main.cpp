@@ -31,10 +31,10 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Cxbx.h"
+#include "Exe.h"
+#include "Xbe.h"
 
 #include <string.h>
-#include <stdio.h>
 
 // ******************************************************************
 // * statics

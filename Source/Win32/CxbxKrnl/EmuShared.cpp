@@ -34,12 +34,9 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_LOCAL_
 
-#include "Cxbx.h"
-#include "Emu.h"
-
-using namespace win32;
-
 #include "EmuShared.h"
+
+#include <windows.h>
 
 // ******************************************************************
 // * shared memory

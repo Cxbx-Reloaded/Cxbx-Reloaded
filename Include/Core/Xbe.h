@@ -34,7 +34,9 @@
 #ifndef XBE_H
 #define XBE_H
 
-#include <stdlib.h>
+#include "Error.h"
+
+#include <stdio.h>
 
 // ******************************************************************
 // * Xbe (Xbox Executable) file object
@@ -250,7 +252,7 @@ class Xbe : public Error
         // ******************************************************************
         // * GetTLSData
         // ******************************************************************
-        uint08 *GetTLSData() { return GetAddr(m_TLS->dwDataStartAddr); }
+        uint08 *GetTLSData() { if(m_TLS == 0) return 0; else return GetAddr(m_TLS->dwDataStartAddr); }
 
     private:
         // ******************************************************************

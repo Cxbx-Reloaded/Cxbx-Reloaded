@@ -34,8 +34,6 @@
 #ifndef MUTEX_H
 #define MUTEX_H
 
-#include <windows.h>
-
 // ******************************************************************
 // * Mutex object (intended to be inherited from)
 // ******************************************************************

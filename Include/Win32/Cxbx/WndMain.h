@@ -35,7 +35,8 @@
 #define WNDMAIN_H
 
 #include "Wnd.h"
-#include "DlgControllerConfig.h"
+#include "Exe.h"
+#include "Xbe.h"
 
 // ******************************************************************
 // * constants

@@ -31,13 +31,11 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Cxbx.h"
 #include "EmuExe.h"
 #include "Prolog.h"
-
 #include "Emu.h"
 
-using namespace win32;
+#include <stdio.h>
 
 // ******************************************************************
 // * constructor

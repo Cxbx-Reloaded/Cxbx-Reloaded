@@ -34,15 +34,9 @@
 #ifndef EMU_H
 #define EMU_H
 
-// ******************************************************************
-// * cxbxkrnl exports, others import
-// ******************************************************************
-#ifndef _CXBXKRNL_INTERNAL
-#define CXBXKRNL_API DECLSPEC_IMPORT
-#else
-#define CXBXKRNL_API DECLSPEC_EXPORT
-#endif
+#include "Xbe.h"
 
+/*
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
@@ -88,34 +82,28 @@ extern xboxkrnl::XINPUT_STATE   g_EmuController1;
 #include "EmuKrnl.h"
 #include "EmuLDT.h"
 #include "EmuFS.h"
+*/
 
-#if defined(__cplusplus)
-extern "C"
-{
-#endif
+#include <windows.h>
 
 // ******************************************************************
 // * func: EmuNoFunc
 // ******************************************************************
-CXBXKRNL_API void NTAPI EmuNoFunc();
+extern "C" CXBXKRNL_API void NTAPI EmuNoFunc();
 
 // ******************************************************************
 // * func: EmuInit
 // ******************************************************************
-CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, DebugMode DebugConsole, char *DebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
+extern "C" CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, DebugMode DebugConsole, char *DebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
 
 // ******************************************************************
 // * func: EmuPanic
 // ******************************************************************
-CXBXKRNL_API void NTAPI EmuPanic();
+extern "C" CXBXKRNL_API void NTAPI EmuPanic();
 
 // ******************************************************************
 // * data: KernelThunkTable
 // ******************************************************************
-extern CXBXKRNL_API uint32 KernelThunkTable[367];
-
-#if defined(__cplusplus)
-}
-#endif
+extern "C" CXBXKRNL_API uint32 KernelThunkTable[367];
 
 #endif

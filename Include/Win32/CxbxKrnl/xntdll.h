@@ -39,6 +39,8 @@ extern "C"
 {
 #endif
 
+#include <ctype.h>  // winnt ntndis
+
 // ******************************************************************
 // * fixes some compiler errors and warnings
 // ******************************************************************
@@ -117,7 +119,9 @@ typedef unsigned __int64                ULONGLONG;
 // * calling conventions
 // ******************************************************************
 #define NTAPI               __stdcall
+#ifndef CDECL
 #define CDECL               __cdecl
+#endif
 #define INLINE              __inline
 #define DECLSPEC_NORETURN   __declspec(noreturn)
 

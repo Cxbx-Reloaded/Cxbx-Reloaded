@@ -31,10 +31,22 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Cxbx.h"
-#include "Emu.h"
+#define _CXBXKRNL_INTERNAL
+#define _XBOXKRNL_LOCAL_
 
-using namespace win32;
+#include <windows.h>
+
+// ******************************************************************
+// * prevent name collisions
+// ******************************************************************
+namespace xapi
+{
+    #include "EmuXapi.h"
+};
+
+#include "EmuFS.h"
+#include "EmuD3D8.h"
+#include "EmuDInput.h"
 
 // ******************************************************************
 // * EmuCreateThreadProxyParam
@@ -89,7 +101,7 @@ static DWORD WINAPI EmuCreateThreadProxy
 // ******************************************************************
 // * func: EmuXInitDevices
 // ******************************************************************
-VOID WINAPI xboxkrnl::EmuXInitDevices
+VOID WINAPI xapi::EmuXInitDevices
 (
     DWORD   Unknown1,
     PVOID   Unknown2
@@ -122,7 +134,7 @@ VOID WINAPI xboxkrnl::EmuXInitDevices
 // ******************************************************************
 // * func: EmuXGetDevices
 // ******************************************************************
-DWORD WINAPI xboxkrnl::EmuXGetDevices
+DWORD WINAPI xapi::EmuXGetDevices
 (
     PXPP_DEVICE_TYPE DeviceType
 )
@@ -151,7 +163,7 @@ DWORD WINAPI xboxkrnl::EmuXGetDevices
 // ******************************************************************
 // * func: EmuXInputOpen
 // ******************************************************************
-HANDLE WINAPI xboxkrnl::EmuXInputOpen
+HANDLE WINAPI xapi::EmuXInputOpen
 (
     IN PXPP_DEVICE_TYPE             DeviceType,
     IN DWORD                        dwPort,
@@ -191,7 +203,7 @@ HANDLE WINAPI xboxkrnl::EmuXInputOpen
 // ******************************************************************
 // * func: EmuXInputGetCapabilities
 // ******************************************************************
-DWORD WINAPI xboxkrnl::EmuXInputGetCapabilities
+DWORD WINAPI xapi::EmuXInputGetCapabilities
 (
     IN  HANDLE               hDevice,
     OUT PXINPUT_CAPABILITIES pCapabilities
@@ -234,7 +246,7 @@ DWORD WINAPI xboxkrnl::EmuXInputGetCapabilities
 // ******************************************************************
 // * func: EmuInputGetState
 // ******************************************************************
-DWORD WINAPI xboxkrnl::EmuXInputGetState
+DWORD WINAPI xapi::EmuXInputGetState
 (
     IN  HANDLE         hDevice,
     OUT PXINPUT_STATE  pState
@@ -278,7 +290,7 @@ DWORD WINAPI xboxkrnl::EmuXInputGetState
 // ******************************************************************
 // * func: EmuCreateThread
 // ******************************************************************
-HANDLE WINAPI xboxkrnl::EmuCreateThread
+HANDLE WINAPI xapi::EmuCreateThread
 (
     LPSECURITY_ATTRIBUTES   lpThreadAttributes,
     DWORD                   dwStackSize,
@@ -332,7 +344,7 @@ HANDLE WINAPI xboxkrnl::EmuCreateThread
 // ******************************************************************
 // * func: EmuCloseHandle
 // ******************************************************************
-BOOL WINAPI xboxkrnl::EmuCloseHandle
+BOOL WINAPI xapi::EmuCloseHandle
 (
     HANDLE hObject
 )
@@ -362,7 +374,7 @@ BOOL WINAPI xboxkrnl::EmuCloseHandle
 // ******************************************************************
 // * func: EmuXapiInitProcess
 // ******************************************************************
-VOID WINAPI xboxkrnl::EmuXapiInitProcess()
+VOID WINAPI xapi::EmuXapiInitProcess()
 {
     EmuSwapFS();   // Win2k/XP FS
 
@@ -386,7 +398,7 @@ VOID WINAPI xboxkrnl::EmuXapiInitProcess()
 // ******************************************************************
 // * func: EmuXapiBootDash
 // ******************************************************************
-VOID WINAPI xboxkrnl::EmuXapiBootDash(uint32 UnknownA, uint32 UnknownB, uint32 UnknownC)
+VOID WINAPI xapi::EmuXapiBootDash(DWORD UnknownA, DWORD UnknownB, DWORD UnknownC)
 {
     EmuSwapFS();   // Win2k/XP FS
 
@@ -416,7 +428,7 @@ VOID WINAPI xboxkrnl::EmuXapiBootDash(uint32 UnknownA, uint32 UnknownB, uint32 U
 // ******************************************************************
 // * func: Emu__rtinit
 // ******************************************************************
-VOID xboxkrnl::Emu__rtinit()
+VOID xapi::Emu__rtinit()
 {
     EmuSwapFS();   // Win2k/XP FS
 
@@ -435,7 +447,7 @@ VOID xboxkrnl::Emu__rtinit()
 // ******************************************************************
 // * func: Emu__cinit
 // ******************************************************************
-VOID xboxkrnl::Emu__cinit()
+VOID xapi::Emu__cinit()
 {
     EmuSwapFS();   // Win2k/XP FS
 

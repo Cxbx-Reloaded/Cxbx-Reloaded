@@ -34,21 +34,72 @@
 #ifndef EMUXAPI_H
 #define EMUXAPI_H
 
-#include "Emu.h"
-
 // ******************************************************************
 // * calling conventions
 // ******************************************************************
 #define WINAPI              __stdcall
 
 // ******************************************************************
-// * basic types
+// * Basic types
 // ******************************************************************
+typedef char                CHAR, CCHAR;
+typedef short               SHORT, CSHORT;
+typedef long                LONG;
+typedef unsigned char       UCHAR;
+typedef unsigned char       BYTE;
+typedef unsigned char       BOOLEAN;
+typedef unsigned short      USHORT;
+typedef	unsigned short		WORD;
+typedef unsigned long       ULONG;
+typedef	unsigned long       DWORD;
+typedef unsigned long       SIZE_T, *PSIZE_T;
+typedef unsigned long       ACCESS_MASK, *PACCESS_MASK;
+typedef unsigned long       PHYSICAL_ADDRESS;
+typedef long                INT_PTR;
+typedef unsigned __int64    ULONGLONG;
+
+// xapi
 typedef int                 BOOL;
 typedef int                 INT;
 typedef unsigned int        UINT;
 typedef unsigned int        *PUINT;
 typedef LONG                HRESULT;
+
+// ******************************************************************
+// * Pointer types
+// ******************************************************************
+typedef CHAR               *PCHAR;
+typedef CHAR               *PCSZ;
+typedef BYTE               *PBYTE;
+typedef BOOLEAN            *PBOOLEAN;
+typedef UCHAR              *PUCHAR;
+typedef USHORT             *PUSHORT;
+typedef ULONG              *PULONG;
+typedef DWORD              *LPDWORD;
+typedef ACCESS_MASK        *PACCESS_MASK;
+typedef LONG               *LONG_PTR;
+typedef ULONG              *ULONG_PTR;
+typedef INT_PTR            *PINT_PTR;
+#ifndef VOID
+#define VOID void
+#endif
+typedef VOID               *PVOID, *LPVOID;
+typedef void               *HANDLE;
+typedef HANDLE             *PHANDLE;
+
+// ******************************************************************
+// * documentation purposes only
+// ******************************************************************
+#define EXPORTNUM(a)
+#define UNALIGNED
+#define OPTIONAL
+#define IN
+#define OUT
+
+// ******************************************************************
+// * LPSECURITY_ATTRIBUTES
+// ******************************************************************
+typedef void* LPSECURITY_ATTRIBUTES;
 
 // ******************************************************************
 // * PTHREAD_START_ROUTINE / LPTHREAD_START_ROUTINE
@@ -228,7 +279,7 @@ VOID WINAPI EmuXapiInitProcess();
 // ******************************************************************
 // * func: EmuXapiBootDash
 // ******************************************************************
-VOID WINAPI EmuXapiBootDash(uint32 UnknownA, uint32 UnknownB, uint32 UnknownC);
+VOID WINAPI EmuXapiBootDash(DWORD UnknownA, DWORD UnknownB, DWORD UnknownC);
 
 // ******************************************************************
 // * func: Emu__rtinit

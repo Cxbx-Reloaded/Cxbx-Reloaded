@@ -79,7 +79,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 d3d8.lib dinput8.lib dxguid.lib ntdll.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /pdb:"Bin\Debug/Cxbx.pdb" /debug /machine:I386 /nodefaultlib:"libc" /implib:"Bin\Debug/Cxbx.lib" /pdbtype:sept /libpath:"Lib"
+# ADD LINK32 d3d8.lib dinput8.lib dxguid.lib ntdll.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /nodefaultlib:"libc" /out:"Bin\Debug/Cxbx.dll" /pdbtype:sept /libpath:"Lib"
 # SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
@@ -133,6 +133,18 @@ SOURCE=.\Doc\Todo.txt
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=.\Include\Win32\AlignPosfix1.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\AlignPrefix1.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Cxbx.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\CxbxKrnl\D3D8.1.0.3925.h
 # End Source File
 # Begin Source File
@@ -149,7 +161,7 @@ SOURCE=.\Include\Win32\CxbxKrnl\Emu.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D.h
+SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8.h
 # End Source File
 # Begin Source File
 
@@ -189,7 +201,7 @@ SOURCE=.\Include\Win32\CxbxKrnl\OOVPA.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Resource\ResCxbxKrnl.h
+SOURCE=.\Include\Win32\CxbxKrnl\ResCxbxDll.h
 # End Source File
 # Begin Source File
 
@@ -202,6 +214,10 @@ SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.4361.h
 # Begin Source File
 
 SOURCE=.\Include\Win32\CxbxKrnl\Xapi.1.0.4627.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Include\Win32\CxbxKrnl\xd3d8.h
 # End Source File
 # Begin Source File
 
@@ -241,7 +257,7 @@ SOURCE=.\Source\Win32\CxbxKrnl\Emu.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D.cpp
+SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8.cpp
 # End Source File
 # Begin Source File
 

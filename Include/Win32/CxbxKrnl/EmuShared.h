@@ -34,17 +34,11 @@
 #ifndef EMUSHARED_H
 #define EMUSHARED_H
 
+#include "Cxbx.h"
 #include "Mutex.h"
 #include "InputConfig.h"
 
-// ******************************************************************
-// * cxbxkrnl exports, others import
-// ******************************************************************
-#ifndef _CXBXKRNL_INTERNAL
-#define CXBXKRNL_API DECLSPEC_IMPORT
-#else
-#define CXBXKRNL_API DECLSPEC_EXPORT
-#endif
+#include <memory.h>
 
 // ******************************************************************
 // * func: EmuSharedInit

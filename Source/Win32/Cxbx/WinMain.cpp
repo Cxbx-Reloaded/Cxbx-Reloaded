@@ -31,13 +31,9 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Cxbx.h"
-#include "EmuExe.h"
 #include "WndMain.h"
 #include "EmuShared.h"
-
-#undef FIELD_OFFSET     // prevent macro redefinition warnings
-#include <windows.h>
+#include "EmuExe.h"
 
 // ******************************************************************
 // * func : WinMain

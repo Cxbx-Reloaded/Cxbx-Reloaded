@@ -31,9 +31,8 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Cxbx.h"
-#include "ResCxbx.h"
 #include "DlgControllerConfig.h"
+#include "ResCxbx.h"
 #include "EmuShared.h"
 
 #define DIRECTINPUT_VERSION 0x0800

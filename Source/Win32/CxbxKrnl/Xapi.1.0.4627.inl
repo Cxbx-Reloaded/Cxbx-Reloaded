@@ -41,7 +41,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&XInitDevices_1_0_4361,
 
-        xboxkrnl::EmuXInitDevices,
+        xapi::EmuXInitDevices,
 
         #ifdef _DEBUG_TRACE
         "EmuXInitDevices"
@@ -51,7 +51,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&XGetDevices_1_0_4361,
 
-        xboxkrnl::EmuXGetDevices,
+        xapi::EmuXGetDevices,
 
         #ifdef _DEBUG_TRACE
         "EmuXGetDevices" 
@@ -61,7 +61,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&XInputOpen_1_0_4361,
 
-        xboxkrnl::EmuXInputOpen,
+        xapi::EmuXInputOpen,
 
         #ifdef _DEBUG_TRACE
         "EmuXInputOpen"
@@ -71,7 +71,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&XInputGetCapabilities_1_0_4361,
 
-        xboxkrnl::EmuXInputGetCapabilities,
+        xapi::EmuXInputGetCapabilities,
 
         #ifdef _DEBUG_TRACE
         "EmuXInputGetCapabilities"
@@ -81,7 +81,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&XInputGetState_1_0_4361,
 
-        xboxkrnl::EmuXInputGetState,
+        xapi::EmuXInputGetState,
 
         #ifdef _DEBUG_TRACE
         "EmuXInputGetState"
@@ -91,7 +91,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&CreateThread_1_0_4361,
 
-        xboxkrnl::EmuCreateThread,
+        xapi::EmuCreateThread,
 
         #ifdef _DEBUG_TRACE
         "EmuCreateThread" 
@@ -101,7 +101,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&CloseHandle_1_0_4361,
 
-        xboxkrnl::EmuCloseHandle,
+        xapi::EmuCloseHandle,
 
         #ifdef _DEBUG_TRACE
         "EmuCloseHandle" 
@@ -111,7 +111,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&XapiInitProcess_1_0_4361,
 
-        xboxkrnl::EmuXapiInitProcess,
+        xapi::EmuXapiInitProcess,
 
         #ifdef _DEBUG_TRACE
         "EmuXapiInitProcess" 
@@ -121,7 +121,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&XapiBootDash_1_0_3911,
 
-        xboxkrnl::EmuXapiBootDash,
+        xapi::EmuXapiBootDash,
 
         #ifdef _DEBUG_TRACE
         "EmuXapiBootDash"
@@ -131,7 +131,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&__rtinit_1_0_3911,
 
-        xboxkrnl::Emu__rtinit,
+        xapi::Emu__rtinit,
 
         #ifdef _DEBUG_TRACE
         "Emu__rtinit",
@@ -141,7 +141,7 @@ OOVPATable XAPI_1_0_4627[] =
     {
         (OOVPA*)&__cinit_1_0_3911,
 
-        xboxkrnl::Emu__cinit,
+        xapi::Emu__cinit,
 
         #ifdef _DEBUG_TRACE
         "Emu__cinit",

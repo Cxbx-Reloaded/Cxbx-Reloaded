@@ -153,6 +153,10 @@ SOURCE=.\Include\Win32\Cxbx\DlgControllerConfig.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Include\Win32\CxbxKrnl\Emu.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Include\Win32\Cxbx\EmuExe.h
 # End Source File
 # Begin Source File
@@ -178,10 +182,6 @@ SOURCE=.\Include\Win32\Mutex.h
 # Begin Source File
 
 SOURCE=.\Include\Win32\Cxbx\Prolog.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Resource\ResCxbx.h
 # End Source File
 # Begin Source File
 

@@ -21,7 +21,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="Include,Include/Standard,Include/Standard/Cxbe,Include/Win32/"
+				AdditionalIncludeDirectories="Include,Include/Core/,Include/Standard,Include/Standard/Cxbe,Include/Win32/"
 				PreprocessorDefinitions="WIN32,NDEBUG,_CONSOLE"
 				StringPooling="TRUE"
 				RuntimeLibrary="4"
@@ -43,6 +43,7 @@
 				OutputFile=".\Bin/Cxbe.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
+				IgnoreDefaultLibraryNames="libc"
 				ProgramDatabaseFile=".\Bin/Cxbe.pdb"
 				SubSystem="1"/>
 			<Tool
@@ -74,7 +75,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="Include,Include/Standard,Include/Standard/Cxbe,Include/Win32/"
+				AdditionalIncludeDirectories="Include,Include/Core/,Include/Standard,Include/Standard/Cxbe,Include/Win32/"
 				PreprocessorDefinitions="WIN32,_DEBUG,_CONSOLE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="5"
@@ -97,6 +98,7 @@
 				OutputFile=".\Bin/Debug/Cxbe.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
+				IgnoreDefaultLibraryNames="libc"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Bin/Debug/Cxbe.pdb"
 				SubSystem="1"/>
@@ -139,6 +141,9 @@
 			Filter="">
 			<File
 				RelativePath=".\Doc\Changelog.txt">
+			</File>
+			<File
+				RelativePath=".\Doc\Input.txt">
 			</File>
 			<File
 				RelativePath=".\Doc\RemovedCode.txt">

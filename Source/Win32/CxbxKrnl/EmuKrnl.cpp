@@ -34,8 +34,15 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_LOCAL_
 
-#include "Cxbx.h"
-#include "Emu.h"
+// ******************************************************************
+// * prevent name collisions
+// ******************************************************************
+namespace xboxkrnl
+{
+    #include <xboxkrnl/xboxkrnl.h>
+};
+
+#include <stdio.h>
 
 // ******************************************************************
 // * prevent name collisions
@@ -45,7 +52,8 @@ namespace xntdll
     #include "xntdll.h"
 };
 
-using namespace win32;
+#include "Emu.h"
+#include "EmuFS.h"
 
 // ******************************************************************
 // * Loaded at run-time to avoid linker conflicts
@@ -601,9 +609,9 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
 
     // We have to initialize this because the Xbox software doesn't seem
     // to always do it. Redundant initializations seem to be ok :/
-    InitializeCriticalSection((win32::PRTL_CRITICAL_SECTION)CriticalSection);
+    InitializeCriticalSection((::PRTL_CRITICAL_SECTION)CriticalSection);
 
-    EnterCriticalSection((win32::PRTL_CRITICAL_SECTION)CriticalSection);
+    EnterCriticalSection((::PRTL_CRITICAL_SECTION)CriticalSection);
 
     EmuSwapFS();   // Xbox FS
 }
@@ -663,7 +671,7 @@ XBSYSAPI EXPORTNUM(291) VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
     }
     #endif
 
-    InitializeCriticalSection((win32::PRTL_CRITICAL_SECTION)CriticalSection);
+    InitializeCriticalSection((::PRTL_CRITICAL_SECTION)CriticalSection);
 
     EmuSwapFS();   // Xbox FS
 
@@ -693,7 +701,7 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
     }
     #endif
 
-    LeaveCriticalSection((win32::PRTL_CRITICAL_SECTION)CriticalSection);
+    LeaveCriticalSection((::PRTL_CRITICAL_SECTION)CriticalSection);
 
     EmuSwapFS();   // Xbox FS
 }

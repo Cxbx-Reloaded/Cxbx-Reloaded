@@ -35,6 +35,15 @@
 #define CXBX_H
 
 // ******************************************************************
+// * cxbxkrnl exports, others import
+// ******************************************************************
+#ifndef _CXBXKRNL_INTERNAL
+#define CXBXKRNL_API __declspec(dllimport)
+#else
+#define CXBXKRNL_API __declspec(dllexport)
+#endif
+
+// ******************************************************************
 // * Caustik's favorite typedefs
 // ******************************************************************
 typedef signed int     sint;
@@ -80,12 +89,5 @@ enum DebugMode
     DM_CONSOLE,
     DM_FILE
 };
-
-// ******************************************************************
-// * Core Components
-// ******************************************************************
-#include "Error.h"
-#include "Exe.h"
-#include "Xbe.h"
 
 #endif

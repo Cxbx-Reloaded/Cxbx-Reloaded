@@ -31,7 +31,6 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Cxbx.h"
 #include "InputConfig.h"
 
 #include <windows.h>

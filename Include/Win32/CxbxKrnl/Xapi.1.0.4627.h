@@ -34,6 +34,8 @@
 #ifndef XAPI_1_0_4627_H
 #define XAPI_1_0_4627_H
 
+#include "OOVPA.h"
+
 extern OOVPATable XAPI_1_0_4627[];
 extern uint32     XAPI_1_0_4627_SIZE;
 

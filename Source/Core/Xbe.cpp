@@ -31,11 +31,12 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Cxbx.h"
+#include "Xbe.h"
+#include "Exe.h"
 
 #include <memory.h>
 #include <locale.h>
-#include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 
 // ******************************************************************

@@ -34,6 +34,8 @@
 #ifndef D3D8_1_0_4361_H
 #define D3D8_1_0_4361_H
 
+#include "OOVPA.h"
+
 extern OOVPATable D3D8_1_0_4361[];
 extern uint32     D3D8_1_0_4361_SIZE;
 

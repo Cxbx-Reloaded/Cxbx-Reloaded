@@ -32,31 +32,43 @@
 // *
 // ******************************************************************
 #define _CXBXKRNL_INTERNAL
-#include "Cxbx.h"
-#include "Emu.h"
+#define _XBOXKRNL_LOCAL_
 
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
-namespace win32
+namespace xboxkrnl
 {
-    #include <process.h>
-    #include <locale.h>
-}
+    #include <xboxkrnl/xboxkrnl.h>
+};
 
+#include "Emu.h"
+#include "EmuFS.h"
+#include "EmuDInput.h"
+
+// ******************************************************************
+// * prevent name collisions
+// ******************************************************************
+namespace xd3d8
+{
+    #include "xd3d8.h"
+};
+
+#include "EmuD3D8.h"
 #include "ResCxbxDll.h"
 
-using namespace win32;
+#include <process.h>
+#include <locale.h>
 
 // ******************************************************************
 // * globals
 // ******************************************************************
-LPDIRECT3D8       g_pD3D8         = NULL;   // Direct3D8
-LPDIRECT3DDEVICE8 g_pD3D8Device   = NULL;   // Direct3D8 Device
-Xbe::Header      *g_XbeHeader     = NULL;   // XbeHeader
-uint32            g_XbeHeaderSize = 0;      // XbeHeaderSize
-HWND              g_EmuWindow     = NULL;   // Rendering Window
-D3DCAPS8          g_D3DCaps;                // Direct3D8 Caps
+xd3d8::LPDIRECT3D8       g_pD3D8         = NULL;   // Direct3D8
+xd3d8::LPDIRECT3DDEVICE8 g_pD3D8Device   = NULL;   // Direct3D8 Device
+Xbe::Header             *g_XbeHeader     = NULL;   // XbeHeader
+uint32                   g_XbeHeaderSize = 0;      // XbeHeaderSize
+HWND                     g_EmuWindow     = NULL;   // Rendering Window
+xd3d8::D3DCAPS8          g_D3DCaps;                // Direct3D8 Caps
 
 // ******************************************************************
 // * statics
@@ -67,7 +79,7 @@ static void EmuRenderWindow(PVOID);
 // ******************************************************************
 // * func: EmuInitD3D
 // ******************************************************************
-VOID xboxkrnl::EmuInitD3D(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
+VOID EmuInitD3D(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 {
     // ******************************************************************
     // * store XbeHeader and XbeHeaderSize for further use
@@ -91,6 +103,7 @@ VOID xboxkrnl::EmuInitD3D(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
     // * create Direct3D8 and retrieve caps
     // ******************************************************************
     {
+        using namespace xd3d8;
         // xbox Direct3DCreate8 returns "1" always, so we need our own ptr
         g_pD3D8 = Direct3DCreate8(D3D_SDK_VERSION);
 
@@ -168,7 +181,7 @@ void EmuRenderWindow(PVOID)
     // ******************************************************************
     // * initialize direct input
     // ******************************************************************
-    xboxkrnl::EmuInitDInput();
+    EmuInitDInput();
 
     // ******************************************************************
     // * message processing loop
@@ -253,7 +266,7 @@ LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 // ******************************************************************
 // * func: EmuIDirect3D8_CreateDevice
 // ******************************************************************
-HRESULT WINAPI xboxkrnl::EmuIDirect3D8_CreateDevice
+HRESULT WINAPI xd3d8::EmuIDirect3D8_CreateDevice
 (
     UINT                    Adapter,
     D3DDEVTYPE              DeviceType,
@@ -352,7 +365,7 @@ HRESULT WINAPI xboxkrnl::EmuIDirect3D8_CreateDevice
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_Clear
 // ******************************************************************
-HRESULT WINAPI xboxkrnl::EmuIDirect3DDevice8_Clear
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_Clear
 (
     DWORD           Count,
     CONST D3DRECT  *pRects,
@@ -414,7 +427,7 @@ HRESULT WINAPI xboxkrnl::EmuIDirect3DDevice8_Clear
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_Swap
 // ******************************************************************
-HRESULT WINAPI xboxkrnl::EmuIDirect3DDevice8_Swap
+HRESULT WINAPI xd3d8::EmuIDirect3DDevice8_Swap
 (
     DWORD Flags
 )

@@ -31,8 +31,13 @@
 // *  All rights reserved
 // *
 // ******************************************************************
+#define _CXBXKRNL_INTERNAL
+#define _XBOXKRNL_LOCAL_
+
 #include "Cxbx.h"
-#include "Emu.h"
+#include "EmuFS.h"
+
+#include <windows.h>
 
 // ******************************************************************
 // * prevent name collisions
@@ -41,8 +46,6 @@ namespace xntdll
 {
     #include "xntdll.h"
 };
-
-using namespace win32;
 
 // ******************************************************************
 // * Maximum number of threads this LDT system will handle

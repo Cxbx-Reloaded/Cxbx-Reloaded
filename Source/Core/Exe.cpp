@@ -31,7 +31,7 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Cxbx.h"
+#include "Exe.h"
 
 #include <stdio.h>
 #include <memory.h>

@@ -31,11 +31,18 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Cxbx.h"
-
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_LOCAL_
-#include "Emu.h"
+
+// ******************************************************************
+// * prevent name collisions
+// ******************************************************************
+namespace xboxkrnl
+{
+    #include <xboxkrnl/xboxkrnl.h>
+};
+
+#include "Cxbx.h"
 
 // ******************************************************************
 // * NOTE:
@@ -55,7 +62,7 @@
 // ******************************************************************
 // * KernelThunkTable
 // ******************************************************************
-CXBXKRNL_API uint32 KernelThunkTable[367] =
+extern "C" CXBXKRNL_API uint32 KernelThunkTable[367] =
 {
     (uint32)PANIC(0x0000),                          // 0x0000 (0)
     (uint32)PANIC(0x0001),                          // 0x0001 (1)

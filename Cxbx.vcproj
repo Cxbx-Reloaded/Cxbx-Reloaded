@@ -21,7 +21,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="Include,Include/Win32/,Include/Win32/Cxbxkrnl,Include/Win32/Cxbx"
+				AdditionalIncludeDirectories="Include,Include/Core/,Include/Win32/,Include/Win32/Cxbxkrnl,Include/Win32/Cxbx"
 				PreprocessorDefinitions="WIN32,NDEBUG,_WINDOWS"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="odbc32.lib odbccp32.lib"
+				AdditionalDependencies="dinput8.lib dxguid.lib odbc32.lib odbccp32.lib"
 				OutputFile=".\Bin/Cxbx.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
@@ -83,7 +83,7 @@ upxCxbx.bat
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="Include,Include/Win32/,Include/Win32/Cxbxkrnl,Include/Win32/Cxbx"
+				AdditionalIncludeDirectories="Include,Include/Core/,Include/Win32/,Include/Win32/Cxbxkrnl,Include/Win32/Cxbx"
 				PreprocessorDefinitions="WIN32,_DEBUG,_WINDOWS"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -102,10 +102,11 @@ upxCxbx.bat
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="odbc32.lib odbccp32.lib"
+				AdditionalDependencies="dinput8.lib dxguid.lib odbc32.lib odbccp32.lib"
 				OutputFile=".\Bin\Debug/Cxbx.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
+				IgnoreDefaultLibraryNames="libc"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Bin\Debug/Cxbx.pdb"
 				SubSystem="2"/>
@@ -155,6 +156,9 @@ upxCxbx.bat
 				RelativePath=".\Doc\Changelog.txt">
 			</File>
 			<File
+				RelativePath=".\Doc\Input.txt">
+			</File>
+			<File
 				RelativePath=".\Doc\RemovedCode.txt">
 			</File>
 			<File
@@ -177,7 +181,16 @@ upxCxbx.bat
 				RelativePath=".\Include\Cxbx.h">
 			</File>
 			<File
+				RelativePath=".\Include\Win32\Cxbx\DlgControllerConfig.h">
+			</File>
+			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\Emu.h">
+			</File>
+			<File
 				RelativePath=".\Include\Win32\Cxbx\EmuExe.h">
+			</File>
+			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuShared.h">
 			</File>
 			<File
 				RelativePath=".\Include\Core\Error.h">
@@ -186,10 +199,13 @@ upxCxbx.bat
 				RelativePath=".\Include\Core\Exe.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\Cxbx\Prolog.h">
+				RelativePath=".\Include\Win32\InputConfig.h">
 			</File>
 			<File
-				RelativePath=".\Resource\ResCxbx.h">
+				RelativePath=".\Include\Win32\Mutex.h">
+			</File>
+			<File
+				RelativePath=".\Include\Win32\Cxbx\Prolog.h">
 			</File>
 			<File
 				RelativePath=".\Include\Win32\Cxbx\Wnd.h">
@@ -239,6 +255,9 @@ upxCxbx.bat
 			Name="Source"
 			Filter="">
 			<File
+				RelativePath=".\Source\Win32\Cxbx\DlgControllerConfig.cpp">
+			</File>
+			<File
 				RelativePath=".\Source\Win32\Cxbx\EmuExe.cpp">
 			</File>
 			<File
@@ -246,6 +265,12 @@ upxCxbx.bat
 			</File>
 			<File
 				RelativePath=".\Source\Core\Exe.cpp">
+			</File>
+			<File
+				RelativePath=".\Source\Win32\InputConfig.cpp">
+			</File>
+			<File
+				RelativePath=".\Source\Win32\Mutex.cpp">
 			</File>
 			<File
 				RelativePath=".\Source\Core\OpenXDK.cpp">

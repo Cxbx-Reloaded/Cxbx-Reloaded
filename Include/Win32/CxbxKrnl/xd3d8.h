@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->HLEDataBase.cpp
+// *   Cxbx->Win32->CxbxKrnl->xd3d8.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,86 +31,43 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
-#define _XBOXKRNL_LOCAL_
+#ifndef XD3D8_H
+#define XD3D8_H
 
-#include <windows.h>
-
-// ******************************************************************
-// * prevent name collisions
-// ******************************************************************
-namespace xapi
-{
-    #include "EmuXapi.h"
-};
-
-#include "HLEDataBase.h"
+#include "d3d8.h"
 
 // ******************************************************************
-// * prevent name collisions
+// * func: EmuIDirect3D8_CreateDevice
 // ******************************************************************
-namespace xd3d8
-{
-    #include "xd3d8.h"
-};
-
-#include "Xapi.1.0.3911.inl"
-#include "Xapi.1.0.4361.inl"
-#include "Xapi.1.0.4627.inl"
-#include "D3D8.1.0.3925.inl"
-#include "D3D8.1.0.4361.inl"
-#include "D3D8.1.0.4627.inl"
+HRESULT WINAPI EmuIDirect3D8_CreateDevice
+(
+    UINT                    Adapter,
+    D3DDEVTYPE              DeviceType,
+    HWND                    hFocusWindow,
+    DWORD                   BehaviorFlags,
+    D3DPRESENT_PARAMETERS  *pPresentationParameters,
+    IDirect3DDevice8      **ppReturnedDeviceInterface
+);
 
 // ******************************************************************
-// * HLEDataBase
+// * func: EmuIDirect3DDevice8_Clear
 // ******************************************************************
-HLEData HLEDataBase[] =
-{
-    // Xapilib Version 1.0.3911
-    {
-        "XAPILIB",
-        1, 0, 3911,
-        XAPI_1_0_3911,
-        XAPI_1_0_3911_SIZE
-    },
-    // Xapilib Version 1.0.4361
-    {
-        "XAPILIB",
-        1, 0, 4361,
-        XAPI_1_0_4361,
-        XAPI_1_0_4361_SIZE
-    },
-    // Xapilib Version 1.0.4627
-    {
-        "XAPILIB",
-        1, 0, 4627,
-        XAPI_1_0_4627,
-        XAPI_1_0_4627_SIZE
-    },
-    // D3D8 Version 1.0.3925
-    {
-        "D3D8",
-        1, 0, 3925,
-        D3D8_1_0_3925,
-        D3D8_1_0_3925_SIZE
-    },
-    // D3D8 Version 1.0.4361
-    {
-        "D3D8",
-        1, 0, 4361,
-        D3D8_1_0_4361,
-        D3D8_1_0_4361_SIZE
-    },
-    // D3D8 Version 1.0.4627
-    {
-        "D3D8",
-        1, 0, 4627,
-        D3D8_1_0_4627,
-        D3D8_1_0_4627_SIZE
-    },
-};
+HRESULT WINAPI EmuIDirect3DDevice8_Clear
+(
+    DWORD                  Count,
+    CONST D3DRECT         *pRects,
+    DWORD                  Flags,
+    D3DCOLOR               Color,
+    float                  Z,
+    DWORD                  Stencil
+);
 
 // ******************************************************************
-// * HLEDataBaseSize
+// * func: EmuIDirect3DDevice8_Swap
 // ******************************************************************
-extern uint32 HLEDataBaseSize = sizeof(HLEDataBase);
+HRESULT WINAPI EmuIDirect3DDevice8_Swap
+(
+    DWORD Flags
+);
+
+#endif

@@ -32,11 +32,22 @@
 // *
 // ******************************************************************
 #define _CXBXKRNL_INTERNAL
-#include "Cxbx.h"
-#include "Emu.h"
+#define _XBOXKRNL_LOCAL_
+
+#include "EmuD3D8.h"
+#include "EmuDInput.h"
 #include "InputConfig.h"
 
-using namespace win32;
+#define DIRECTINPUT_VERSION 0x0800
+#include <dinput.h>
+
+// ******************************************************************
+// * prevent name collisions
+// ******************************************************************
+namespace xapi
+{
+    #include <EmuXapi.h>
+};
 
 // ******************************************************************
 // * globals
@@ -44,7 +55,7 @@ using namespace win32;
 LPDIRECTINPUT8          g_pDirectInput8 = NULL;
 LPDIRECTINPUTDEVICE8    g_pInputDev[MAX_INPUT_DEVICES]   = {0};
 int                     g_pInputCur                      = 0;
-xboxkrnl::XINPUT_STATE  g_EmuController1;
+xapi::XINPUT_STATE      g_EmuController1;
 
 
 // ******************************************************************
@@ -56,7 +67,7 @@ static BOOL CALLBACK EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOI
 // ******************************************************************
 // * func: EmuInitDInput
 // ******************************************************************
-void xboxkrnl::EmuInitDInput()
+void EmuInitDInput()
 {
     // ******************************************************************
     // * Create DirectInput object
@@ -165,7 +176,7 @@ static BOOL CALLBACK EnumObjectsCallback(LPCDIDEVICEOBJECTINSTANCE lpddoi, LPVOI
 // ******************************************************************
 // * func: EmuPollController
 // ******************************************************************
-void xboxkrnl::EmuPollController()
+void EmuPollController()
 {
     /*
     DIJOYSTATE ControllerState;

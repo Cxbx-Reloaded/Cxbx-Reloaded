@@ -34,7 +34,7 @@
 #ifndef EMUEXE_H
 #define EMUEXE_H
 
-#include "Cxbx.h"
+#include "Exe.h"
 
 // ******************************************************************
 // * class : EmuExe

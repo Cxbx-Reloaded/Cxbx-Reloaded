@@ -34,7 +34,18 @@
 #ifndef EMUDINPUT_H
 #define EMUDINPUT_H
 
-#include "Emu.h"
+// ******************************************************************
+// * prevent name collisions
+// ******************************************************************
+namespace xapi
+{
+    #include <EmuXapi.h>
+};
+
+// ******************************************************************
+// * exported globals
+// ******************************************************************
+extern xapi::XINPUT_STATE g_EmuController1;  // Input Controller
 
 // ******************************************************************
 // * func: EmuPollInput

@@ -34,20 +34,19 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_LOCAL_
 
-#include "Cxbx.h"
-#include "Emu.h"
-
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
-namespace xntdll
+namespace xboxkrnl
 {
-    #include "xntdll.h"
+    #include <xboxkrnl/xboxkrnl.h>
 };
 
-using namespace win32;
-
+#include "Emu.h"
+#include "EmuFS.h"
+#include "EmuD3D8.h"
 #include "EmuShared.h"
+#include "HLEDataBase.h"
 
 // ******************************************************************
 // * global / static
@@ -71,7 +70,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 // ******************************************************************
 // * func: EmuNoFunc
 // ******************************************************************
-CXBXKRNL_API void NTAPI EmuNoFunc()
+extern "C" CXBXKRNL_API void NTAPI EmuNoFunc()
 {
     EmuSwapFS();   // Win2k/XP FS
 
@@ -83,7 +82,7 @@ CXBXKRNL_API void NTAPI EmuNoFunc()
 // ******************************************************************
 // * func: EmuInit
 // ******************************************************************
-CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, DebugMode DebugConsole, char *DebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)())
+extern "C" CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, DebugMode DebugConsole, char *DebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)())
 {
     // ******************************************************************
     // * debug console allocation (if configured)
@@ -207,7 +206,7 @@ CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, DebugMode D
 
         EmuGenerateFS();
         
-        xboxkrnl::EmuInitD3D(XbeHeader, XbeHeaderSize);
+        EmuInitD3D(XbeHeader, XbeHeaderSize);
     }
 
     printf("Emu (0x%.08X): Initial thread starting.\n", GetCurrentThreadId());
@@ -233,7 +232,7 @@ CXBXKRNL_API void NTAPI EmuInit(Xbe::LibraryVersion *LibraryVersion, DebugMode D
 // ******************************************************************
 // * func: EmuPanic
 // ******************************************************************
-CXBXKRNL_API void NTAPI EmuPanic()
+extern "C" CXBXKRNL_API void NTAPI EmuPanic()
 {
     EmuSwapFS();   // Win2k/XP FS
 

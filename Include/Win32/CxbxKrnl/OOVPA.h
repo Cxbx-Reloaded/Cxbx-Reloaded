@@ -34,6 +34,8 @@
 #ifndef OOVPA_H
 #define OOVPA_H
 
+#include "Cxbx.h"
+
 #pragma pack(1)
 
 // ******************************************************************

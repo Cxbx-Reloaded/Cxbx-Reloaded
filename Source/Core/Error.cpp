@@ -31,7 +31,7 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Cxbx.h"
+#include "Error.h"
 
 #include <string.h>
 
