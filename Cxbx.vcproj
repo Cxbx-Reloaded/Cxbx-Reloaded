@@ -192,7 +192,13 @@ upxCxbx.bat
 				RelativePath=".\Include\Win32\CxbxKrnl\Emu.h">
 			</File>
 			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuD3D8.h">
+			</File>
+			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\EmuDInput.h">
+			</File>
+			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuDSound.h">
 			</File>
 			<File
 				RelativePath=".\Include\Win32\Cxbx\EmuExe.h">
@@ -201,10 +207,16 @@ upxCxbx.bat
 				RelativePath=".\Include\Win32\CxbxKrnl\EmuShared.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\EmuXapi.h">
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuXG.h">
 			</File>
 			<File
-				RelativePath=".\Include\Core\Error.h">
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuXOnline.h">
+			</File>
+			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuXTL.h">
+			</File>
+			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuXapi.h">
 			</File>
 			<File
 				RelativePath=".\Include\Core\Exe.h">

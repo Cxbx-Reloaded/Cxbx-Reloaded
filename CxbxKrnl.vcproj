@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="dsound.lib winmm.lib d3dx8.lib d3d8.lib dinput8.lib dxguid.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="ws2_32.lib dsound.lib winmm.lib d3dx8.lib d3d8.lib dinput8.lib dxguid.lib odbc32.lib odbccp32.lib"
 				OutputFile=".\Bin\Debug/CxbxKrnl.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
@@ -102,7 +102,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="dsound.lib winmm.lib d3d8.lib dinput8.lib dxguid.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="ws2_32.lib dsound.lib winmm.lib d3d8.lib dinput8.lib dxguid.lib odbc32.lib odbccp32.lib"
 				OutputFile="Bin/Cxbx.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
@@ -197,6 +197,9 @@
 				RelativePath=".\Include\Win32\CxbxKrnl\DSound.1.0.4361.h">
 			</File>
 			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\DSound.1.0.4627.h">
+			</File>
+			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\Emu.h">
 			</File>
 			<File
@@ -206,22 +209,31 @@
 				RelativePath=".\Include\Win32\CxbxKrnl\EmuDInput.h">
 			</File>
 			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuDSound.h">
+			</File>
+			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\EmuFS.h">
 			</File>
 			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\EmuFile.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\EmuKrnl.h">
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuLDT.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\EmuLDT.h">
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuNtDll.h">
 			</File>
 			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\EmuShared.h">
 			</File>
 			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\EmuXG.h">
+			</File>
+			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuXOnline.h">
+			</File>
+			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\EmuXTL.h">
 			</File>
 			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\EmuXapi.h">
@@ -236,9 +248,6 @@
 				RelativePath=".\Include\Win32\CxbxKrnl\OOVPA.h">
 			</File>
 			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\ResCxbxDll.h">
-			</File>
-			<File
 				RelativePath=".\Include\Win32\XBController.h">
 			</File>
 			<File
@@ -249,6 +258,9 @@
 			</File>
 			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\XG.1.0.4627.h">
+			</File>
+			<File
+				RelativePath=".\Include\Win32\CxbxKrnl\XOnline.1.0.4361.h">
 			</File>
 			<File
 				RelativePath=".\Include\Win32\CxbxKrnl\Xapi.1.0.3911.h">
@@ -264,12 +276,6 @@
 			</File>
 			<File
 				RelativePath=".\Include\Core\Xbe.h">
-			</File>
-			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\xdirectx.h">
-			</File>
-			<File
-				RelativePath=".\Include\Win32\CxbxKrnl\xntdll.h">
 			</File>
 		</Filter>
 		<Filter
@@ -313,6 +319,9 @@
 				RelativePath=".\Source\Win32\CxbxKrnl\DSound.1.0.4361.inl">
 			</File>
 			<File
+				RelativePath=".\Source\Win32\CxbxKrnl\DSound.1.0.4627.inl">
+			</File>
+			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\Emu.cpp">
 			</File>
 			<File
@@ -340,10 +349,16 @@
 				RelativePath=".\Source\Win32\CxbxKrnl\EmuLDT.cpp">
 			</File>
 			<File
+				RelativePath=".\Source\Win32\CxbxKrnl\EmuNtDll.cpp">
+			</File>
+			<File
 				RelativePath=".\Source\Win32\EmuShared.cpp">
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\EmuXG.cpp">
+			</File>
+			<File
+				RelativePath=".\Source\Win32\CxbxKrnl\EmuXOnline.cpp">
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\EmuXapi.cpp">
@@ -371,6 +386,9 @@
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\XG.1.0.4627.inl">
+			</File>
+			<File
+				RelativePath=".\Source\Win32\CxbxKrnl\XOnline.1.0.4361.inl">
 			</File>
 			<File
 				RelativePath=".\Source\Win32\CxbxKrnl\Xapi.1.0.3911.inl">
