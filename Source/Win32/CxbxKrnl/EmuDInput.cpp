@@ -57,13 +57,16 @@ namespace xapi
 // ******************************************************************
 // * func: EmuDInputInit
 // ******************************************************************
-void EmuDInputInit()
+bool EmuDInputInit()
 {
     g_EmuShared->GetXBController(&g_XBController);
 
     g_XBController.ListenBegin(g_EmuWindow);
 
-    return;
+    if(g_XBController.GetError())
+        return false;
+
+    return true;
 }
 
 // ******************************************************************
@@ -72,6 +75,9 @@ void EmuDInputInit()
 void EmuDInputCleanup()
 {
     g_XBController.ListenEnd();
+
+    if(g_XBController.GetError())
+        MessageBox(NULL, g_XBController.GetError(), "Cxbx [*UNHANDLED!*]", MB_OK);  // TODO: Handle this!
 }
 
 // ******************************************************************
@@ -80,5 +86,9 @@ void EmuDInputCleanup()
 void EmuDInputPoll(xapi::PXINPUT_STATE Controller)
 {
     g_XBController.ListenPoll(Controller);
+
+    if(g_XBController.GetError())
+        MessageBox(NULL, g_XBController.GetError(), "Cxbx [*UNHANDLED!*]", MB_OK);  // TODO: Handle this!
+
     return;
 }

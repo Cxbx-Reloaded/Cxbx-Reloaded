@@ -45,6 +45,7 @@ namespace xboxkrnl
 #include "Emu.h"
 #include "EmuFS.h"
 #include "EmuD3D8.h"
+#include "EmuKrnl.h"
 #include "EmuShared.h"
 #include "HLEDataBase.h"
 
@@ -255,21 +256,51 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion
 
     fflush(stdout);
 
-    while(true)
-        Sleep(1000);
-
     return;
 }
 
 // ******************************************************************
 // * func: EmuCleanup
 // ******************************************************************
-extern "C" CXBXKRNL_API void NTAPI EmuCleanup()
+extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage)
 {
     if(EmuIsXboxFS())
         EmuSwapFS();    // Win2k/XP FS
 
+    // ******************************************************************
+    // * Suspend all Threads
+    // ******************************************************************
+    while(true)
+    {
+        ThreadList *tl = ThreadList::pHead;
+
+        if(tl == NULL)
+            break;
+
+        SuspendThread(tl->hThread);
+
+        ThreadList::pHead = tl->pNext;
+
+        delete tl;
+    }
+
+    // ******************************************************************
+    // * Print out ErrorMessage (if exists)
+    // ******************************************************************
+    if(szErrorMessage != NULL)
+    {
+        char buffer[255];
+
+        sprintf(buffer, "CxbxKrnl: Recieved Exception \"%s\"\n", szErrorMessage);
+
+        printf("%s", buffer);
+
+        MessageBox(NULL, buffer, "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
+    }
+
 //    EmuD3DCleanup();
+
+    printf("CxbxKrnl: Terminating Process\n");
 
     ExitProcess(0);
 
@@ -293,7 +324,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuPanic()
     MessageBox(NULL, "Kernel Panic! Process will now terminate.", "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
 #endif
 
-    EmuCleanup();
+    EmuCleanup("Kernel Panic!");
 
     EmuSwapFS();   // XBox FS
 }

@@ -445,7 +445,7 @@ VOID WINAPI xapi::EmuXapiBootDash(DWORD UnknownA, DWORD UnknownB, DWORD UnknownC
     }
     #endif
 
-    MessageBox(NULL, "Warning: XBE has terminated unexpectedly.\n\nThis process might not terminate elegantly.", "Cxbx", MB_OK);
+    MessageBox(NULL, "EmuXapiBootDash (Emulation can not continue).", "Cxbx", MB_OK | MB_ICONSTOP);
 
     ExitProcess(0);
 

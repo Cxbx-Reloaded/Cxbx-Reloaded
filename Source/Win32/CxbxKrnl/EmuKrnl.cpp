@@ -55,6 +55,12 @@ namespace xntdll
 #include "Emu.h"
 #include "EmuFS.h"
 #include "EmuFile.h"
+#include "EmuKrnl.h"
+
+// ******************************************************************
+// * Globals
+// ******************************************************************
+ThreadList *ThreadList::pHead = new ThreadList;
 
 // ******************************************************************
 // * Loaded at run-time to avoid linker conflicts
@@ -91,6 +97,13 @@ static DWORD WINAPI PCSTProxy
     IN PVOID Parameter
 )
 {
+    ThreadList *tl = ThreadList::pHead;
+
+    tl->hThread = GetCurrentThread();
+    tl->pNext   = new ThreadList;
+    tl->pNext->pNext = NULL;
+    tl->pHead   = tl->pNext;
+
     PCSTProxyParam *iPCSTProxyParam = (PCSTProxyParam*)Parameter;
 
     uint32 StartContext1 = (uint32)iPCSTProxyParam->StartContext1;

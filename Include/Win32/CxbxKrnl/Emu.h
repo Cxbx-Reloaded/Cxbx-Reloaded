@@ -52,7 +52,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuInit(uint32 TlsAdjust, Xbe::LibraryVersion
 // ******************************************************************
 // * func: EmuCleanup
 // ******************************************************************
-extern "C" CXBXKRNL_API void NTAPI EmuCleanup();
+extern "C" CXBXKRNL_API void NTAPI EmuCleanup(const char *szErrorMessage);
 
 // ******************************************************************
 // * func: EmuPanic

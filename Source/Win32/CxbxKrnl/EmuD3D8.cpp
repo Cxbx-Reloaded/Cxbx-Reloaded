@@ -70,6 +70,7 @@ uint32                   g_XbeHeaderSize = 0;      // XbeHeaderSize
 HWND                     g_EmuWindow     = NULL;   // Rendering Window
 xd3d8::D3DCAPS8          g_D3DCaps;                // Direct3D8 Caps
 bool                     g_ThreadInitialized = false;
+HBRUSH                   g_hBgBrush      = NULL;   // Background Brush
 
 // ******************************************************************
 // * statics
@@ -111,6 +112,9 @@ VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         // xbox Direct3DCreate8 returns "1" always, so we need our own ptr
         g_pD3D8 = Direct3DCreate8(D3D_SDK_VERSION);
 
+        if(g_pD3D8 == NULL)
+            EmuCleanup("Could not initialize Direct3D!");
+
         g_pD3D8->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, &g_D3DCaps);
     }
 }
@@ -140,6 +144,10 @@ void EmuRenderWindow(PVOID)
         HMODULE hCxbxDll = GetModuleHandle("Cxbx.dll");
 #endif
 
+        LOGBRUSH logBrush = {BS_SOLID, RGB(0,0,0)};
+
+        g_hBgBrush = CreateBrushIndirect(&logBrush);
+
         WNDCLASSEX wc =
         {
             sizeof(WNDCLASSEX),
@@ -148,7 +156,7 @@ void EmuRenderWindow(PVOID)
             0, 0, GetModuleHandle(NULL),
             LoadIcon(hCxbxDll, MAKEINTRESOURCE(IDI_CXBX)),
             LoadCursor(NULL, IDC_ARROW), 
-            (HBRUSH)(COLOR_APPWORKSPACE + 1), NULL,
+            (HBRUSH)(g_hBgBrush), NULL,
             "CxbxRender",
             NULL
         };
@@ -201,7 +209,8 @@ void EmuRenderWindow(PVOID)
     // ******************************************************************
     // * initialize direct input
     // ******************************************************************
-    EmuDInputInit();
+    if(!EmuDInputInit())
+        EmuCleanup("Could not initialize DirectInput!");
 
     // ******************************************************************
     // * message processing loop
@@ -224,7 +233,7 @@ void EmuRenderWindow(PVOID)
                 Sleep(10);
         }
 
-        EmuCleanup();
+        EmuCleanup(NULL);
     }
 }
 
@@ -236,6 +245,7 @@ LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     switch(msg)
     {
         case WM_DESTROY:
+            DeleteObject(g_hBgBrush);
             PostQuitMessage(0);
             return 0;
 

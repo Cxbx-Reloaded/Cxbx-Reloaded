@@ -34,5 +34,15 @@
 #ifndef EMUKRNL_H
 #define EMUKRNL_H
 
+// ******************************************************************
+// * Linked list of threads
+// ******************************************************************
+struct ThreadList
+{
+    static ThreadList *pHead;
+
+    HANDLE      hThread;
+    ThreadList *pNext;
+};
 
 #endif
