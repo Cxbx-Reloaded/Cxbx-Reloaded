@@ -1,5 +1,7 @@
 Cxbx Todo:
 
+  Use SetDataFormat instead of parsing device input by hand?
+
   Batch config all buttons (should be very easy..just click one by one)
 
   Encapsulate RecentFiles into a nice little class
