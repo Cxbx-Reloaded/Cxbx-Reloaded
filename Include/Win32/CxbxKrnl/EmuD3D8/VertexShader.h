@@ -75,6 +75,7 @@ extern boolean IsValidCurrentShader(void);
 
 inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle & 0x80000000) ? TRUE : FALSE; }
 inline X_D3DVertexShader *VshHandleGetVertexShader(DWORD Handle) { return (X_D3DVertexShader *)(Handle & 0x7FFFFFFF); }
+VERTEX_DYNAMIC_PATCH *VshGetVertexDynamicPatch(DWORD Handle);
 
 #ifdef _DEBUG_TRACK_VS
 #define DbgVshPrintf if(g_bPrintfOn) printf

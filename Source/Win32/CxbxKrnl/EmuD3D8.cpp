@@ -862,7 +862,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     &g_pDummyBuffer
                 );
 
-                for(int Streams = 0; Streams < 16; Streams++)
+                for(int Streams = 0; Streams < 8; Streams++)
                 {
                     g_pD3DDevice8->SetStreamSource(Streams, g_pDummyBuffer, 1);
                 }
@@ -2273,13 +2273,25 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShaderConstant
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexShaderConstant\n"
+#ifdef _DEBUG_TRACK_VS_CONST
+    printf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexShaderConstant\n"
            "(\n"
            "   Register            : 0x%.08X\n"
            "   pConstantData       : 0x%.08X\n"
            "   ConstantCount       : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), Register, pConstantData, ConstantCount);
+
+    for (uint32 i = 0; i < ConstantCount; i++)
+    {
+        printf("SetVertexShaderConstant, c%d (c%d) = { %f, %f, %f, %f }\n",
+               Register - 96 + i, Register + i,
+               *((float*)pConstantData + 4 * i),
+               *((float*)pConstantData + 4 * i + 1),
+               *((float*)pConstantData + 4 * i + 2),
+               *((float*)pConstantData + 4 * i + 3));
+    }
+#endif // _DEBUG_TRACK_VS_CONST
 
     HRESULT hRet = g_pD3DDevice8->SetVertexShaderConstant
     (
@@ -2381,7 +2393,7 @@ VOID __fastcall XTL::EmuIDirect3DDevice8_SetVertexShaderConstantNotInline
     }
     #endif
 
-    XTL::EmuIDirect3DDevice8_SetVertexShaderConstant(Register, pConstantData, ConstantCount);
+    XTL::EmuIDirect3DDevice8_SetVertexShaderConstant(Register, pConstantData, ConstantCount / 4);
 
     return;
 }
@@ -2491,6 +2503,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetPixelShader
                 "tex t1                         \n"
                 "                               \n"
                 "mul r0, t0, t1                 \n";
+//                "mul r0, t0, t1.a                 \n";
 //                "mov r0, v0                     \n";
 
             LPD3DXBUFFER pShader = 0;
@@ -6180,11 +6193,13 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVertices
 
     VertexPatchDesc VPDesc;
 
+    VPDesc.dwVertexCount = VertexCount;
     VPDesc.PrimitiveType = PrimitiveType;
     VPDesc.dwPrimitiveCount = PrimitiveCount;
     VPDesc.dwOffset = StartVertex;
     VPDesc.pVertexStreamZeroData = 0;
     VPDesc.uiVertexStreamZeroStride = 0;
+    VPDesc.hVertexShader = g_CurrentVertexShader;
 
     VertexPatcher VertPatch;
 
@@ -6318,11 +6333,13 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVerticesUP
 
     VertexPatchDesc VPDesc;
 
+    VPDesc.dwVertexCount = VertexCount;
     VPDesc.PrimitiveType = PrimitiveType;
     VPDesc.dwPrimitiveCount = PrimitiveCount;
     VPDesc.dwOffset = 0;
     VPDesc.pVertexStreamZeroData = pVertexStreamZeroData;
     VPDesc.uiVertexStreamZeroStride = VertexStreamZeroStride;
+    VPDesc.hVertexShader = g_CurrentVertexShader;
 
     VertexPatcher VertPatch;
 
@@ -6420,11 +6437,13 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
 
     VertexPatchDesc VPDesc;
 
+    VPDesc.dwVertexCount = VertexCount;
     VPDesc.PrimitiveType = PrimitiveType;
     VPDesc.dwPrimitiveCount = PrimitiveCount;
     VPDesc.dwOffset = 0;
     VPDesc.pVertexStreamZeroData = 0;
     VPDesc.uiVertexStreamZeroStride = 0;
+    VPDesc.hVertexShader = g_CurrentVertexShader;
 
     VertexPatcher VertPatch;
 
@@ -6550,11 +6569,13 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVerticesUP
 
     VertexPatchDesc VPDesc;
 
+    VPDesc.dwVertexCount = VertexCount;
     VPDesc.PrimitiveType = PrimitiveType;
     VPDesc.dwPrimitiveCount = PrimitiveCount;
     VPDesc.dwOffset = 0;
     VPDesc.pVertexStreamZeroData = pVertexStreamZeroData;
     VPDesc.uiVertexStreamZeroStride = VertexStreamZeroStride;
+    VPDesc.hVertexShader = g_CurrentVertexShader;
 
     VertexPatcher VertPatch;
 

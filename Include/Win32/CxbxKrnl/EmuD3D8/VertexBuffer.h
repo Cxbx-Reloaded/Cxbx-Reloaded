@@ -35,16 +35,46 @@
 #define VERTEXBUFFER_H
 
 #include "Cxbx.h"
+//#include <time.h> // Conflict with io.h
+
+#define MAX_NBR_STREAMS 16
 
 typedef struct _VertexPatchDesc
 {
-    IN     X_D3DPRIMITIVETYPE   PrimitiveType;
-    IN     DWORD                dwPrimitiveCount;
-    IN     DWORD                dwOffset;
-    IN OUT PVOID                pVertexStreamZeroData;
-    IN     UINT                 uiVertexStreamZeroStride;
+    IN     X_D3DPRIMITIVETYPE    PrimitiveType;
+    IN     DWORD                 dwVertexCount;
+    IN     DWORD                 dwPrimitiveCount;
+    IN     DWORD                 dwOffset;
+    // Data if Draw...UP call
+    IN OUT PVOID                 pVertexStreamZeroData;
+    IN     UINT                  uiVertexStreamZeroStride;
+    // The current vertex shader, used to identify the streams
+    IN     DWORD                 hVertexShader;
 }
 VertexPatchDesc;
+
+typedef struct _PATCHEDSTREAM
+{
+    IDirect3DVertexBuffer8 *pOriginalStream;
+    IDirect3DVertexBuffer8 *pPatchedStream;
+    UINT                    uiOrigStride;
+    UINT                    uiNewStride;
+    bool                    bUsedCached;
+} PATCHEDSTREAM;
+
+typedef struct _CACHEDSTREAM
+{
+    uint32         uiCRC32;
+    uint32         uiCheckFrequency;
+    uint32         uiCacheHit;
+    bool           bIsUP;
+    PATCHEDSTREAM  Stream;
+    void          *pStreamUP;           // Draw..UP (instead of pOriginalStream)
+    uint32         uiLength;            // The length of the stream
+    uint32         uiCount;             // CRC32 check count
+    uint32         dwPrimitiveCount;
+    long           lLastUsed;           // For cache removal purposes
+} CACHEDSTREAM;
 
 class VertexPatcher
 {
@@ -57,15 +87,38 @@ class VertexPatcher
 
     private:
 
-        IDirect3DVertexBuffer8 *pOrigVertexBuffer8;
-        IDirect3DVertexBuffer8 *pPatchedVertexBuffer8;
+        UINT m_uiNbrStreams;
+        PATCHEDSTREAM m_pStreams[MAX_NBR_STREAMS];
 
-        UINT uiStride;
+        PVOID m_pNewVertexStreamZeroData;
 
-        PVOID pNewVertexStreamZeroData;
+        bool m_bPatched;
+        bool m_bAllocatedStreamZeroData;
 
-        bool bPatched;
-        bool bAllocatedStreamZeroData;
+        VERTEX_DYNAMIC_PATCH *m_pDynamicPatch;
+
+        // Returns the number of streams of a patch
+        UINT GetNbrStreams(VertexPatchDesc *pPatchDesc);
+
+        // Dumps the cache to the console
+        static void DumpCache(void);
+
+        // Caches a patched stream
+        void CacheStream(VertexPatchDesc *pPatchDesc,
+                         UINT             uiStream);
+
+        // Frees a cached, patched stream
+        void FreeCachedStream(void *pStream);
+
+        // Tries to apply a previously patched stream from the cache
+        bool ApplyCachedStream(VertexPatchDesc *pPatchDesc,
+                               UINT             uiStream);
+
+        // Patches the types of the stream
+        bool PatchStream(VertexPatchDesc *pPatchDesc, UINT uiStream);
+
+        // Patches the primitive of the stream
+        bool PatchPrimitive(VertexPatchDesc *pPatchDesc, UINT uiStream);
 };
 
 // inline vertex buffer emulation

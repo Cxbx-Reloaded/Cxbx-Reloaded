@@ -45,6 +45,8 @@ ResourceTracker g_PBTrackTotal;
 ResourceTracker g_PBTrackDisable;
 ResourceTracker g_PBTrackShowOnce;
 
+ResourceTracker g_PatchedStreamsCache;
+
 ResourceTracker::~ResourceTracker()
 {
     clear();
@@ -72,29 +74,36 @@ void ResourceTracker::clear()
 
 void ResourceTracker::insert(void *pResource)
 {
+    insert((uint32)pResource, pResource);
+}
+
+void ResourceTracker::insert(uint32 uiKey, void *pResource)
+{
     this->Lock();
 
-    if(exists(pResource))
+    if(exists(uiKey))
     {
         this->Unlock();
         return;
     }
 
     if(m_head == 0)
-	{
-		m_tail = m_head = new RTNode();
-		m_tail->pResource = 0;
-		m_tail->pNext = 0;
-	}
+    {
+        m_tail = m_head = new RTNode();
+        m_tail->pResource = 0;
+        m_tail->pNext = 0;
+    }
 
-	m_tail->pResource = pResource;
+    m_tail->pResource = pResource;
+    m_tail->uiKey = uiKey;
 
-	m_tail->pNext = new RTNode();
+    m_tail->pNext = new RTNode();
 
     m_tail = m_tail->pNext;
 
     m_tail->pResource = 0;
-	m_tail->pNext = 0;
+    m_tail->uiKey = 0;
+    m_tail->pNext = 0;
 
     this->Unlock();
 
@@ -103,6 +112,11 @@ void ResourceTracker::insert(void *pResource)
 
 void ResourceTracker::remove(void *pResource)
 {
+    remove((uint32)pResource);
+}
+
+void ResourceTracker::remove(uint32 uiKey)
+{
     this->Lock();
 
     RTNode *pre = 0;
@@ -110,7 +124,7 @@ void ResourceTracker::remove(void *pResource)
 
     while(cur != 0)
     {
-        if(cur->pResource == pResource)
+        if(cur->uiKey == uiKey)
         {
             if(pre != 0)
             {
@@ -147,13 +161,18 @@ void ResourceTracker::remove(void *pResource)
 
 bool ResourceTracker::exists(void *pResource)
 {
+    return exists((uint32)pResource);
+}
+
+bool ResourceTracker::exists(uint32 uiKey)
+{
     this->Lock();
 
     RTNode *cur = m_head;
 
     while(cur != 0)
     {
-        if(cur->pResource == pResource)
+        if(cur->uiKey == uiKey)
         {
             this->Unlock();
             return true;
@@ -165,4 +184,46 @@ bool ResourceTracker::exists(void *pResource)
     this->Unlock();
 
     return false;
+}
+
+void *ResourceTracker::get(void *pResource)
+{
+    return get((uint32)pResource);
+}
+
+void *ResourceTracker::get(uint32 uiKey)
+{
+    RTNode *cur = m_head;
+
+    while(cur != 0)
+    {
+        if(cur->uiKey == uiKey)
+        {
+            return cur->pResource;
+        }
+
+        cur = cur->pNext;
+    }
+
+    return 0;
+}
+
+uint32 ResourceTracker::get_count(void)
+{
+    uint32 uiCount = 0;
+
+    this->Lock();
+
+    RTNode *cur = m_head;
+
+    while(cur != 0)
+    {
+        uiCount++;
+
+        cur = cur->pNext;
+    }
+
+    this->Unlock();
+
+    return uiCount;
 }

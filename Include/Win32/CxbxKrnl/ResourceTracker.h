@@ -43,36 +43,56 @@ extern bool g_bPBSkipPusher;
 extern class ResourceTracker : public Mutex
 {
     public:
-		ResourceTracker() : m_head(0), m_tail(0) {};
-	   ~ResourceTracker();
+        ResourceTracker() : m_head(0), m_tail(0) {};
+       ~ResourceTracker();
 
         // clear the tracker
         void clear();
 
-        // insert a ptr
-		void insert(void *pResource);
+        // insert a ptr using the pResource pointer as key
+        void insert(void *pResource);
 
-		// remove a ptr
-		void remove(void *pResource);
+        // insert a ptr using an explicit key
+        void insert(uint32 uiKey, void *pResource);
 
-		// check for existance of ptr
-		bool exists(void *pResource);
+        // remove a ptr using the pResource pointer as key
+        void remove(void *pResource);
+
+        // remove a ptr using an explicit key
+        void remove(uint32 uiKey);
+
+        // check for existance of ptr using the pResource pointer as key
+        bool exists(void *pResource);
+
+        // check for existance of an explicit key
+        bool exists(uint32 uiKey);
+
+        // retrieves aresource using the resource ointer as key, explicit locking needed
+        void *get(void *pResource);
+
+        // retrieves a resource using an explicit key, explicit locking needed
+        void *get(uint32 uiKey);
+
+        // retrieves the number of entries in the tracker
+        uint32 get_count(void);
 
         // for traversal
         struct RTNode *getHead() { return m_head; }
 
     private:
-		// list of "live" vertex buffers for debugging purposes
-		struct RTNode *m_head;
-		struct RTNode *m_tail;
+        // list of "live" vertex buffers for debugging purposes
+        struct RTNode *m_head;
+        struct RTNode *m_tail;
 }
 g_VBTrackTotal, g_VBTrackDisable,
-g_PBTrackTotal, g_PBTrackDisable, g_PBTrackShowOnce;
+g_PBTrackTotal, g_PBTrackDisable, g_PBTrackShowOnce,
+g_PatchedStreamsCache;
 
 struct RTNode
 {
-	void    *pResource;
-	RTNode  *pNext;
+    uint32   uiKey;
+    void    *pResource;
+    RTNode  *pNext;
 };
 
 #endif

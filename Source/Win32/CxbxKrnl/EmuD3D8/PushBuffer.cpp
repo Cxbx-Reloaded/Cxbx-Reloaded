@@ -243,6 +243,22 @@ void XTL::EmuExecutePushBuffer
 
                 // render indexed vertices
                 {
+                    UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(XBPrimitiveType, dwCount * 2);
+                    VertexPatchDesc VPDesc;
+
+                    VPDesc.dwVertexCount = dwCount * 2;
+                    VPDesc.PrimitiveType = XBPrimitiveType;
+                    VPDesc.dwPrimitiveCount = PrimitiveCount;
+                    VPDesc.dwOffset = 0;
+                    VPDesc.pVertexStreamZeroData = 0;
+                    VPDesc.uiVertexStreamZeroStride = 0;
+                    // TODO: Set the current shader and let the patcher handle it..
+                    VPDesc.hVertexShader = g_CurrentVertexShader;
+
+                    VertexPatcher VertPatch;
+
+                    bool bPatched = VertPatch.Apply(&VPDesc);
+
                     g_pD3DDevice8->SetIndices(pIndexBuffer, 0);
 
                     #ifdef _DEBUG_TRACK_PB
@@ -277,10 +293,9 @@ void XTL::EmuExecutePushBuffer
 
                             g_pD3DDevice8->SetMaterial(&mtrl);
                             //*/
-
                             g_pD3DDevice8->DrawIndexedPrimitive
                             (
-                                PCPrimitiveType, 0, dwCount*2, 0, EmuD3DVertex2PrimitiveCount(XBPrimitiveType, dwCount*2)
+                                PCPrimitiveType, 0, /*dwCount*2*/8*1024*1024, 0, PrimitiveCount
                             );
                         }
                     }
@@ -288,6 +303,8 @@ void XTL::EmuExecutePushBuffer
                     #ifdef _DEBUG_TRACK_PB
                     }
                     #endif
+
+                    VertPatch.Restore();
 
                     g_pD3DDevice8->SetIndices(0, 0);
                 }

@@ -188,26 +188,27 @@ void DbgConsole::ParseCommand()
         printf("CxbxDbg: \n");
         printf("CxbxDbg: Cxbx Debug Command List:\n");
         printf("CxbxDbg: \n");
-        printf("CxbxDbg:  Help      [H]     : Show Command List\n");
-        printf("CxbxDbg:  Quit/Exit [Q]     : Stop Emulation\n");
-        printf("CxbxDbg:  Trace     [T]     : Toggle Debug Trace\n");
+        printf("CxbxDbg:  Help            [H]     : Show Command List\n");
+        printf("CxbxDbg:  Quit/Exit       [Q]     : Stop Emulation\n");
+        printf("CxbxDbg:  Trace           [T]     : Toggle Debug Trace\n");
 
-		#ifdef _DEBUG_TRACK_VB
-        printf("CxbxDbg:  ListVB    [LVB]   : List Active Vertex Buffers\n");
-        printf("CxbxDbg:  DisableVB [DVB #] : Disable Active Vertex Buffer(s)\n");
-        printf("CxbxDbg:  EnableVB  [EVB #] : Enable Active Vertex Buffer(s)\n");
-		#endif
+        #ifdef _DEBUG_TRACK_VB
+        printf("CxbxDbg:  ListVB          [LVB]   : List Active Vertex Buffers\n");
+        printf("CxbxDbg:  DisableVB       [DVB #] : Disable Active Vertex Buffer(s)\n");
+        printf("CxbxDbg:  EnableVB        [EVB #] : Enable Active Vertex Buffer(s)\n");
+        printf("CxbxDbg:  DumpStreamCache [DSC]   : Dumps the patched streams cache\n");
+        #endif
 
-		#ifdef _DEBUG_TRACK_PB
-        printf("CxbxDbg:  ListPB    [LPB]   : List Active Push Buffers\n");
-        printf("CxbxDbg:  ShowPB    [SPB #] : Show Push Buffer(s)\n");
-        printf("CxbxDbg:  DisablePB [DPB #] : Disable Push Buffer(s)\n");
-        printf("CxbxDbg:  EnablePB  [EPB #] : Enable Push Buffer(s)\n");
-        printf("CxbxDbg:  ClearPB   [CPB]   : Clear Push Buffer List\n");
-		#endif
+        #ifdef _DEBUG_TRACK_PB
+        printf("CxbxDbg:  ListPB          [LPB]   : List Active Push Buffers\n");
+        printf("CxbxDbg:  ShowPB          [SPB #] : Show Push Buffer(s)\n");
+        printf("CxbxDbg:  DisablePB       [DPB #] : Disable Push Buffer(s)\n");
+        printf("CxbxDbg:  EnablePB        [EPB #] : Enable Push Buffer(s)\n");
+        printf("CxbxDbg:  ClearPB         [CPB]   : Clear Push Buffer List\n");
+        #endif
 
         #ifdef _DEBUG_ALLOC
-        printf("CxbxDbg:  DumpMem   [DMEM]  : Dump the heap allocation tracking table\n");
+        printf("CxbxDbg:  DumpMem         [DMEM]  : Dump the heap allocation tracking table\n");
         #endif // _DEBUG_ALLOCC
 
         printf("CxbxDbg:  CLS\n");
@@ -224,8 +225,8 @@ void DbgConsole::ParseCommand()
     {
         g_bPrintfOn = !g_bPrintfOn;
         printf("CxbxDbg: Trace is now %s\n", g_bPrintfOn ? "ON" : "OFF");
-	}
-	#ifdef _DEBUG_TRACK_VB
+    }
+    #ifdef _DEBUG_TRACK_VB
     else if(stricmp(szCmd, "lvb") == 0 || stricmp(szCmd, "ListVB") == 0)
     {
         int v=0;
@@ -283,8 +284,12 @@ void DbgConsole::ParseCommand()
             printf("CxbxDbg: Syntax Incorrect (dvb #)\n");
         }
     }
+    else if(stricmp(szCmd, "dsc") == 0 || stricmp(szCmd, "DumpStreamCache") == 0)
+    {
+        XTL::VertexPatcher::DumpCache();
+    }
     #endif
-	#ifdef _DEBUG_TRACK_PB
+    #ifdef _DEBUG_TRACK_PB
     else if(stricmp(szCmd, "lpb") == 0 || stricmp(szCmd, "ListPB") == 0)
     {
         int v=0;
@@ -367,7 +372,7 @@ void DbgConsole::ParseCommand()
 
         printf("CxbxDbg: Push Buffer List Cleared!\n");
     }
-	#endif
+    #endif
     #ifdef _DEBUG_ALLOC
     else if(stricmp(szCmd, "dmem") == 0 || stricmp(szCmd, "DumpMem") == 0)
     {

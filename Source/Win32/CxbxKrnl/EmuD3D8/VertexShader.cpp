@@ -717,7 +717,8 @@ static void VshWriteParameter(VSH_IMD_PARAMETER *pParameter,
 }
 
 static void VshWriteShader(VSH_XBOX_SHADER *pShader,
-                           char* pDisassembly)
+                           char* pDisassembly,
+                           boolean Truncate)
 {
     uint32 DisassemblyPos = 0;
     switch(pShader->ShaderHeader.Version)
@@ -737,10 +738,14 @@ static void VshWriteShader(VSH_XBOX_SHADER *pShader,
         default:
             break;
     }
-    for (int i = 0; i < pShader->IntermediateCount && i < 128; i++)
+    for (int i = 0; i < pShader->IntermediateCount && (i < 128 || !Truncate); i++)
     {
         VSH_INTERMEDIATE_FORMAT *pIntermediate = &pShader->Intermediate[i];
 
+        if(i == 128)
+        {
+            DisassemblyPos += sprintf(pDisassembly + DisassemblyPos, "; -- Passing the truncation limit --\n");
+        }
         // Writing combining sign if neccessary
         if(pIntermediate->IsCombined)
         {
@@ -1329,7 +1334,7 @@ VSH_STREAM_PATCH_DATA;
 typedef struct _VSH_PATCH_DATA
 {
     boolean              NeedPatching;
-    DWORD                ConversionStride;
+    DWORD                ConvertedStride;
     VSH_TYPE_PATCH_DATA  TypePatchData;
     VSH_STREAM_PATCH_DATA StreamPatchData;
 }
@@ -1536,7 +1541,7 @@ static boolean VshAddStreamPatch(VSH_PATCH_DATA *pPatchData)
 
         XTL::STREAM_DYNAMIC_PATCH* pStreamPatch = &pPatchData->StreamPatchData.pStreamPatches[CurrentStream];
 
-        pStreamPatch->ConversionStride = pPatchData->ConversionStride;
+        pStreamPatch->ConvertedStride = pPatchData->ConvertedStride;
         pStreamPatch->NbrTypes = pPatchData->TypePatchData.NbrTypes;
         pStreamPatch->NeedPatch = pPatchData->NeedPatching;
         pStreamPatch->pTypes = (UINT *)CxbxMalloc(pPatchData->TypePatchData.NbrTypes * sizeof(VSH_TYPE_PATCH_DATA));
@@ -1565,7 +1570,7 @@ static void VshConvertToken_STREAM(DWORD          *pToken,
         // copy current data to structure
         if(VshAddStreamPatch(pPatchData))
         {
-            pPatchData->ConversionStride = 0;
+            pPatchData->ConvertedStride = 0;
             pPatchData->TypePatchData.NbrTypes = 0;
             pPatchData->NeedPatching = FALSE;
         }
@@ -1630,109 +1635,107 @@ static void VshConvertToken_STREAMDATA_REG(DWORD          *pToken,
     case 0x12:
         DbgVshPrintf("D3DVSDT_FLOAT1");
         NewDataType = D3DVSDT_FLOAT1;
-        pPatchData->ConversionStride += sizeof(FLOAT);
+        pPatchData->ConvertedStride += sizeof(FLOAT);
         break;
     case 0x22:
         DbgVshPrintf("D3DVSDT_FLOAT2");
         NewDataType = D3DVSDT_FLOAT2; 
-        pPatchData->ConversionStride += 2*sizeof(FLOAT);
+        pPatchData->ConvertedStride += 2*sizeof(FLOAT);
         break;
     case 0x32:
         DbgVshPrintf("D3DVSDT_FLOAT3");
         NewDataType = D3DVSDT_FLOAT3;
-        pPatchData->ConversionStride += 3*sizeof(FLOAT);
+        pPatchData->ConvertedStride += 3*sizeof(FLOAT);
         break;
     case 0x42:
         DbgVshPrintf("D3DVSDT_FLOAT4");
         NewDataType = D3DVSDT_FLOAT4;
-        pPatchData->ConversionStride += 4*sizeof(FLOAT);
+        pPatchData->ConvertedStride += 4*sizeof(FLOAT);
         break;
     case 0x40:
         DbgVshPrintf("D3DVSDT_D3DCOLOR");
         NewDataType = D3DVSDT_D3DCOLOR; 
-        pPatchData->ConversionStride += sizeof(D3DCOLOR);
+        pPatchData->ConvertedStride += sizeof(D3DCOLOR);
         break;
     case 0x25:
         DbgVshPrintf("D3DVSDT_SHORT2");
         NewDataType = D3DVSDT_SHORT2;
-        pPatchData->ConversionStride += 2*sizeof(XTL::SHORT);
+        pPatchData->ConvertedStride += 2*sizeof(XTL::SHORT);
         break;
     case 0x45:
         DbgVshPrintf("D3DVSDT_SHORT4");
         NewDataType = D3DVSDT_SHORT4;
-        pPatchData->ConversionStride += 4*sizeof(XTL::SHORT);
+        pPatchData->ConvertedStride += 4*sizeof(XTL::SHORT);
         break;
     case 0x11:
         DbgVshPrintf("D3DVSDT_NORMSHORT1 /* xbox ext. */");
         NewDataType = D3DVSDT_SHORT2; // hmm, emulation?
-        pPatchData->ConversionStride += 2*sizeof(XTL::SHORT);
+        pPatchData->ConvertedStride += 2*sizeof(XTL::SHORT);
         pPatchData->NeedPatching = TRUE;
         break;
     case 0x21:
         DbgVshPrintf("D3DVSDT_NORMSHORT2 /* xbox ext. */");
         NewDataType = D3DVSDT_SHORT2;
-        pPatchData->ConversionStride += 2*sizeof(XTL::SHORT);
+        pPatchData->ConvertedStride += 2*sizeof(XTL::SHORT);
         pPatchData->NeedPatching = TRUE;
         break;
     case 0x31:
         DbgVshPrintf("D3DVSDT_NORMSHORT3 /* xbox ext. nsp */");
         NewDataType = D3DVSDT_SHORT4;
-        pPatchData->ConversionStride += 4*sizeof(XTL::SHORT);
+        pPatchData->ConvertedStride += 4*sizeof(XTL::SHORT);
         pPatchData->NeedPatching = TRUE;
         break;
     case 0x41:
         DbgVshPrintf("D3DVSDT_NORMSHORT4 /* xbox ext. */");
         NewDataType = D3DVSDT_SHORT4;
-        pPatchData->ConversionStride += 4*sizeof(XTL::SHORT);
+        pPatchData->ConvertedStride += 4*sizeof(XTL::SHORT);
         pPatchData->NeedPatching = TRUE;
         break;
     case 0x16:
         DbgVshPrintf("D3DVSDT_NORMPACKED3 /* xbox ext. nsp */");
         NewDataType = D3DVSDT_FLOAT3;//0xFF; //32bit
-        pPatchData->ConversionStride += 3*sizeof(FLOAT);
+        pPatchData->ConvertedStride += 3*sizeof(FLOAT);
         pPatchData->NeedPatching = TRUE;
         break;
     case 0x15:
         DbgVshPrintf("D3DVSDT_SHORT1 /* xbox ext. nsp */");
         NewDataType = D3DVSDT_SHORT2;
-        pPatchData->ConversionStride += 2*sizeof(XTL::SHORT);
+        pPatchData->ConvertedStride += 2*sizeof(XTL::SHORT);
         pPatchData->NeedPatching = TRUE;
         break;
     case 0x35:
         DbgVshPrintf("D3DVSDT_SHORT3 /* xbox ext. nsp */");
-        //dwNewDataType = 0xFF;
         NewDataType = D3DVSDT_SHORT4;
-        pPatchData->ConversionStride += 4*sizeof(XTL::SHORT);
+        pPatchData->ConvertedStride += 4*sizeof(XTL::SHORT);
         pPatchData->NeedPatching = TRUE;
         break;
     case 0x14:
         DbgVshPrintf("D3DVSDT_PBYTE1 /* xbox ext. nsp */");
-        NewDataType = D3DVSDT_UBYTE4;
-        pPatchData->ConversionStride += 4*sizeof(XTL::BYTE);
+        NewDataType = D3DVSDT_FLOAT1;
+        pPatchData->ConvertedStride += 1*sizeof(FLOAT);
         pPatchData->NeedPatching = TRUE;
         break;
     case 0x24:
         DbgVshPrintf("D3DVSDT_PBYTE2 /* xbox ext. nsp */");
-        NewDataType = D3DVSDT_UBYTE4;
-        pPatchData->ConversionStride += 4*sizeof(XTL::BYTE);
+        NewDataType = D3DVSDT_FLOAT2;
+        pPatchData->ConvertedStride += 2*sizeof(FLOAT);
         pPatchData->NeedPatching = TRUE;
         break;
     case 0x34:
         DbgVshPrintf("D3DVSDT_PBYTE3 /* xbox ext. nsp */");
-        NewDataType = D3DVSDT_UBYTE4;
-        pPatchData->ConversionStride += 4*sizeof(XTL::BYTE);
+        NewDataType = D3DVSDT_FLOAT3;
+        pPatchData->ConvertedStride += 3*sizeof(FLOAT);
         pPatchData->NeedPatching = TRUE;
         break;
     case 0x44:
         DbgVshPrintf("D3DVSDT_PBYTE4 /* xbox ext. */");
-        NewDataType = D3DVSDT_UBYTE4;
-        pPatchData->ConversionStride += 4*sizeof(XTL::BYTE);
-        //not sure, what to patch
+        NewDataType = D3DVSDT_FLOAT4;
+        pPatchData->ConvertedStride += 4*sizeof(FLOAT);
         break;
     case 0x72:
         DbgVshPrintf("D3DVSDT_FLOAT2H /* xbox ext. */");
         NewDataType = D3DVSDT_FLOAT3;
-        pPatchData->ConversionStride += 3*sizeof(FLOAT);
+        pPatchData->ConvertedStride += 3*sizeof(FLOAT);
         pPatchData->NeedPatching = TRUE;
         break;
     case 0x02:
@@ -1931,12 +1934,12 @@ extern HRESULT XTL::EmuRecompileVshFunction
 
         char* pShaderDisassembly = (char*)CxbxMalloc(pShader->IntermediateCount * 50); // Should be plenty
         DbgVshPrintf("-- Before conversion --\n");
-        VshWriteShader(pShader, pShaderDisassembly);
+        VshWriteShader(pShader, pShaderDisassembly, FALSE);
         DbgVshPrintf("%s", pShaderDisassembly);
         DbgVshPrintf("-----------------------\n");
 
         VshConvertShader(pShader, bNoReservedConstants);
-        VshWriteShader(pShader, pShaderDisassembly);
+        VshWriteShader(pShader, pShaderDisassembly, TRUE);
 
         DbgVshPrintf("-- After conversion ---\n");
         DbgVshPrintf("%s", pShaderDisassembly);
@@ -1987,6 +1990,7 @@ extern boolean XTL::IsValidCurrentShader(void)
         {
             return FALSE;
         }
+        /*
         for (uint32 i = 0; i < pVertexShader->VertexDynamicPatch.NbrStreams; i++)
         {
             if (pVertexShader->VertexDynamicPatch.pStreamPatches[i].NeedPatch)
@@ -1996,6 +2000,22 @@ extern boolean XTL::IsValidCurrentShader(void)
                 return FALSE;
             }
         }
+        */
     }
     return TRUE;
+}
+
+extern XTL::VERTEX_DYNAMIC_PATCH *XTL::VshGetVertexDynamicPatch(DWORD Handle)
+{
+    X_D3DVertexShader *pD3DVertexShader = VshHandleGetVertexShader(Handle);
+    VERTEX_SHADER *pVertexShader = (VERTEX_SHADER *)pD3DVertexShader->Handle;
+
+    for (uint32 i = 0; i < pVertexShader->VertexDynamicPatch.NbrStreams; i++)
+    {
+        if (pVertexShader->VertexDynamicPatch.pStreamPatches[i].NeedPatch)
+        {
+            return &pVertexShader->VertexDynamicPatch;
+        }
+    }
+    return NULL;
 }

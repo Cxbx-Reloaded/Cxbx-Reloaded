@@ -120,18 +120,18 @@ struct X_D3DVertexShader
 typedef struct _STREAM_DYNAMIC_PATCH_
 {
     BOOL  NeedPatch;       // This is to know whether is data which must be patched
-    DWORD ConversionStride;
+    DWORD ConvertedStride;
     DWORD NbrTypes;        // Number of the stream data types
     UINT  *pTypes;         // The stream data types (xbox)
 } STREAM_DYNAMIC_PATCH;
 
 typedef struct _VERTEX_DYNAMIC_PATCH_
 {
-    UINT                  NbrStreams; // The number of streams the vertex shader uses
-    STREAM_DYNAMIC_PATCH *pStreamPatches;
+    UINT                         NbrStreams; // The number of streams the vertex shader uses
+    STREAM_DYNAMIC_PATCH        *pStreamPatches;
 } VERTEX_DYNAMIC_PATCH;
 
-typedef struct _VERTEX_SHADER 
+typedef struct _VERTEX_SHADER
 {
     DWORD Handle;
 
