@@ -233,7 +233,9 @@ CXBXKRNL_API void NTAPI EmuXInit(DebugMode DebugConsole, char *DebugFilename, ui
 
     EmuXSwapFS();   // XBox FS
 
+    // This must be enabled or the debugger may crash (sigh)
     _asm _emit 0xF1
+
     Entry();
 
     EmuXSwapFS();   // Win2k/XP FS
@@ -335,6 +337,42 @@ DWORD WINAPI PsCreateSystemThreadExProxy
 using namespace xboxkrnl;
 
 // ******************************************************************
+// * 0x0018 ExQueryNonVolatileSetting
+// ******************************************************************
+XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
+(
+	IN  NVRAM_SETTING_CLASS ValueIndex,
+	OUT PNVRAM_TYPE_CLASS   Type,
+	OUT PUCHAR              Value,
+	IN  SIZE_T              ValueLength,
+	OUT PSIZE_T             ResultLength OPTIONAL
+)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG
+    {
+        printf("CxbxKrnl [0x%.08X]: ExQueryNonVolatileSetting\n"
+               "          (\n"
+               "             ValueIndex          : 0x%.08X\n"
+               "             Type                : 0x%.08X\n"
+               "             Value               : 0x%.08X\n"
+               "             ValueLength         : 0x%.08X\n"
+               "             ResultLength        : 0x%.08X\n"
+               "          );\n",
+               GetCurrentThreadId(), ValueIndex, Type, Value, ValueLength, ResultLength);
+    }
+    #endif
+
+    EmuXSwapFS();   // XBox FS
+
+    return STATUS_SUCCESS;
+}
+
+// ******************************************************************
 // * 0x0031 - HalReturnToFirmware
 // ******************************************************************
 XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
@@ -357,6 +395,68 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
     EmuXSwapFS();   // XBox FS
 
     exit(1);
+}
+
+// ******************************************************************
+// * 0x006B - KeInitializeDpc
+// ******************************************************************
+XBSYSAPI EXPORTNUM(107) VOID NTAPI xboxkrnl::KeInitializeDpc
+(
+    KDPC                *Dpc,
+    PKDEFERRED_ROUTINE   DeferredRoutine,
+    PVOID                DeferredContext
+)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG
+    {
+        printf("CxbxKrnl [0x%.08X]: KeInitializeDpc\n"
+               "          (\n"
+               "             Dpc                 : 0x%.08X\n"
+               "             DeferredRoutine     : 0x%.08X\n"
+               "             DeferredContext     : 0x%.08X\n"
+               "          );\n",
+               GetCurrentThreadId(), Dpc, DeferredRoutine, DeferredContext);
+    }
+    #endif
+
+    EmuXSwapFS();   // XBox FS
+
+    return;
+}
+
+// ******************************************************************
+// * 0x0071 - KeInitializeTimerEx
+// ******************************************************************
+XBSYSAPI EXPORTNUM(113) VOID NTAPI xboxkrnl::KeInitializeTimerEx
+(
+    IN PKTIMER      Timer,
+    IN TIMER_TYPE   Type
+)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG
+    {
+        printf("CxbxKrnl [0x%.08X]: KeInitializeTimerEx\n"
+               "          (\n"
+               "             Timer               : 0x%.08X\n"
+               "             Type                : 0x%.08X\n"
+               "          );\n",
+               GetCurrentThreadId(), Timer, Type);
+    }
+    #endif
+
+    EmuXSwapFS();   // XBox FS
+
+    return;
 }
 
 // ******************************************************************
@@ -508,7 +608,33 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
 
     LeaveCriticalSection((win32::PRTL_CRITICAL_SECTION)CriticalSection);
 
-    _asm _emit 0xF1
+    EmuXSwapFS();   // XBox FS
+}
+
+// ******************************************************************
+// * 0x012D - RtlNtStatusToDosError
+// ******************************************************************
+XBSYSAPI EXPORTNUM(301) xboxkrnl::ULONG NTAPI xboxkrnl::RtlNtStatusToDosError
+(
+	IN NTSTATUS	Status
+)
+{
+    EmuXSwapFS();   // Win2k/XP FS
+
+    // ******************************************************************
+    // * debug trace
+    // ******************************************************************
+    #ifdef _DEBUG
+    {
+        printf("CxbxKrnl [0x%.08X]: RtlNtStatusToDosError\n"
+               "          (\n"
+               "             Status              : 0x%.08X\n"
+               "          );\n",
+               GetCurrentThreadId(), Status);
+    }
+    #endif
 
     EmuXSwapFS();   // XBox FS
+
+    return 0;
 }

@@ -2,7 +2,8 @@ Cxbx Todo:
 
   General Code Cleanup [caustik]
 
-  Find out where NewPcr->PrcbData.CurrentThread->TlsData should point.
+  * KeInitializeDpc, KeInitializeTimer, ExQueryNonVolatileSetting
+  * Locate "RtlNtStatusToDosError" in Win2k/XP doc
 
   Exe->Xbe should use an "OpenXDK" logo bitmap by default. This can be done
   by having a debug version of Cxbx output the necessary raw data. Then, you
