@@ -63,10 +63,10 @@ typedef signed long    sint32;
 //#define _DEBUG_ALLOC
 
 // define this to trace intercepted function calls
-#define _DEBUG_TRACE
+//#define _DEBUG_TRACE
 
 // define this to trace warnings
-#define _DEBUG_WARNINGS
+//#define _DEBUG_WARNINGS
 
 // define these to dump textures
 //#define _DEBUG_DUMP_TEXTURE_SETTEXTURE "C:\\Aaron\\Textures\\"
@@ -74,9 +74,9 @@ typedef signed long    sint32;
 
 // version information
 #ifndef _DEBUG_TRACE
-#define _CXBX_VERSION "0.8.0-Pre3"
+#define _CXBX_VERSION "0.8.0"
 #else
-#define _CXBX_VERSION "0.8.0-Pre3-Trace"
+#define _CXBX_VERSION "0.8.0-Trace"
 #endif
 
 // round dwValue to the nearest multiple of dwMult

@@ -652,7 +652,9 @@ static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xb
 
         if(pFunc != 0)
         {
+            #ifdef _DEBUG_TRACE
             DbgPrintf("HLE: 0x%.08X -> %s\n", pFunc, OovpaTable[a].szFuncName);
+            #endif
 
             if(OovpaTable[a].lpRedirect == 0)
             {

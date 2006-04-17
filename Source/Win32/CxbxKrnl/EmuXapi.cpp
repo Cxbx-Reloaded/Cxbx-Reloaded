@@ -1198,7 +1198,7 @@ VOID WINAPI XTL::EmuXapiThreadStartup
     }
     */
 
-    _asm int 3;
+    //_asm int 3;
 
     return;
 }
