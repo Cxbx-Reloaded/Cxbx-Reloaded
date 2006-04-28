@@ -485,8 +485,18 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
         case WM_KEYDOWN:
         {
+            /*! disable fullscreen if we are set to faux mode, and faux fullscreen is active */
             if(wParam == VK_ESCAPE)
-                PostMessage(hWnd, WM_CLOSE, 0, 0);
+            {
+                if(g_XBVideo.GetFullscreen())
+                {
+                    SendMessage(hWnd, WM_CLOSE, 0, 0);
+                }
+                else if(g_bIsFauxFullscreen)
+                {
+                    ToggleFauxFullscreen(hWnd);
+                }
+            }
             else if(wParam == VK_F8)
             {
                 g_bPrintfOn = !g_bPrintfOn;
