@@ -36,60 +36,6 @@
 #include <stdio.h>
 #include <malloc.h>
 
-#include <pshpack2.h>
-typedef struct tagBITMAPFILEHEADER
-{
-    uint16 bfType;
-    uint32 bfSize;
-    uint16 bfReserved1;
-    uint16 bfReserved2;
-    uint32 bfOffBits;
-}
-BITMAPFILEHEADER;
-#include <poppack.h>
-
-typedef struct tagBITMAPINFOHEADER
-{
-    uint32 biSize;
-    sint32 biWidth;
-    sint32 biHeight;
-    uint16 biPlanes;
-    uint16 biBitCount;
-    uint32 biCompression;
-    uint32 biSizeImage;
-    sint32 biXPelsPerMeter;
-    sint32 biYPelsPerMeter;
-    uint32 biClrUsed;
-    uint32 biClrImportant;
-}
-BITMAPINFOHEADER;
-
-#include <pshpack1.h>
-typedef struct tagRGBTRIPLE
-{
-    uint08 rgbtBlue;
-    uint08 rgbtGreen;
-    uint08 rgbtRed;
-}
-RGBTRIPLE;
-#include <poppack.h>
-
-typedef struct tagRGBQUAD
-{
-    uint08 rgbBlue;
-    uint08 rgbGreen;
-    uint08 rgbRed;
-    uint08 rgbReserved;
-}
-RGBQUAD;
-
-typedef struct tagBITMAPINFO
-{
-    BITMAPINFOHEADER bmiHeader;
-    RGBQUAD          bmiColors[1];
-}
-BITMAPINFO;
-
 extern "C"
 {
     #include "jpeglib.h"
@@ -183,19 +129,17 @@ uint08 *jpeg2bmp(uint08 *jpeg, uint32 jpegSize, uint32 *bmpSize, uint32 *bmpWidt
 
     // re-order color data
     {
-        RGBTRIPLE *rgbData = (RGBTRIPLE*)buffer;
-
         uint32 v=0;
         
         for(v=0;v<cinfo.output_width*cinfo.output_height;v++)
         {
-            uint08 r = rgbData[v].rgbtRed;
-            uint08 g = rgbData[v].rgbtGreen;
-            uint08 b = rgbData[v].rgbtBlue;
+            uint08 r = buffer[v*3+2];
+            uint08 g = buffer[v*3+1];
+            uint08 b = buffer[v*3+0];
 
-            rgbData[v].rgbtRed = b;
-            rgbData[v].rgbtGreen = g;
-            rgbData[v].rgbtBlue = r;
+            buffer[v*3+2] = b;
+            buffer[v*3+1] = g;
+            buffer[v*3+0] = r;
         }
     }
 
