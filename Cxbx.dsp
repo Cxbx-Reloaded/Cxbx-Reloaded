@@ -112,6 +112,126 @@ SOURCE=.\Source\Win32\Cxbx\jpegdec\jpegdec.h
 SOURCE=.\Source\Win32\Cxbx\jpegdec\jpeglib.h
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE=.\Source\Win32\AlignPosfix1.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\AlignPrefix1.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8\Convert.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Cxbx.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\Cxbx\DlgControllerConfig.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\Cxbx\DlgVideoConfig.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\Emu.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8Types.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuDInput.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuDSound.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\Cxbx\EmuExe.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuShared.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuXapi.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuXG.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuXOnline.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuXTL.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Core\Exe.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\Mutex.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\Cxbx\Prolog.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8\PushBuffer.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8\State.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8\VertexBuffer.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8\VertexShader.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\Cxbx\Wnd.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\Cxbx\WndAbout.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\Cxbx\WndMain.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\XBController.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Core\Xbe.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Win32\XBVideo.h
+# End Source File
 # End Group
 # Begin Group "Resource"
 
@@ -127,6 +247,10 @@ SOURCE=.\Resource\Cxbx.ico
 # Begin Source File
 
 SOURCE=.\Resource\Cxbx.rc
+# End Source File
+# Begin Source File
+
+SOURCE=.\Resource\Logo.bmp
 # End Source File
 # Begin Source File
 
