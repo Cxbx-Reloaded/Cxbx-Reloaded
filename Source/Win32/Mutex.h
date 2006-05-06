@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Core->Error.cpp
+// *   Cxbx->Win32->Mutex.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,34 +31,25 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Core/Error.h"
+#ifndef MUTEX_H
+#define MUTEX_H
 
-#include <string.h>
+#include <windows.h>
 
-// clear the current error (returns false if error was fatal)
-bool Error::ClearError()
+// mutex object (intended to be inherited from)
+class Mutex
 {
-    if(m_bFatal)
-		return false;
+    public:
+        Mutex();
 
-    delete[] m_szError;
+        void Lock();
+        void Unlock();
 
-    m_szError = 0;
+    private:
+        LONG m_MutexLock;      // Mutex lock
+        LONG m_OwnerProcess;   // Current owner process (or zero)
+        LONG m_OwnerThread;    // Current owner thread
+        LONG m_LockCount;      // Lock count within this thread
+};
 
-    m_bFatal  = false;
-
-    return true;
-}
-
-// protected so only derived class may set an error
-void Error::SetError(const char *x_szError, bool x_bFatal)
-{
-    if(m_szError == 0)
-        m_szError = new char[256];
-
-    strncpy(m_szError, x_szError, 255);
-
-    m_bFatal = x_bFatal;
-
-    return;
-}
+#endif

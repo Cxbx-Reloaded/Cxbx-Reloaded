@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Core->Error.cpp
+// *   Cxbx->Win32->Cxbx->EmuExe.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,34 +31,22 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Core/Error.h"
+#ifndef EMUEXE_H
+#define EMUEXE_H
 
-#include <string.h>
+#include "Core/Exe.h"
+#include <windows.h>
 
-// clear the current error (returns false if error was fatal)
-bool Error::ClearError()
+// ******************************************************************
+// * class : EmuExe
+// ******************************************************************
+class EmuExe : public Exe
 {
-    if(m_bFatal)
-		return false;
+    public:
+        // ******************************************************************
+        // * Construct via Xbe file object
+        // ******************************************************************
+        EmuExe(class Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename, HWND hwndParent = NULL);
+};
 
-    delete[] m_szError;
-
-    m_szError = 0;
-
-    m_bFatal  = false;
-
-    return true;
-}
-
-// protected so only derived class may set an error
-void Error::SetError(const char *x_szError, bool x_bFatal)
-{
-    if(m_szError == 0)
-        m_szError = new char[256];
-
-    strncpy(m_szError, x_szError, 255);
-
-    m_bFatal = x_bFatal;
-
-    return;
-}
+#endif

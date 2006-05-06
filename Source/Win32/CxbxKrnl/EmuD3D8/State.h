@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Core->Error.cpp
+// *   Cxbx->Win32->CxbxKrnl->EmuD3D8->State.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -26,39 +26,20 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2002-2004 Aaron Robinson <caustik@caustik.com>
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Core/Error.h"
+#ifndef STATE_H
+#define STATE_H
 
-#include <string.h>
+// EmuD3DDeferredRenderState
+extern DWORD *EmuD3DDeferredRenderState;
 
-// clear the current error (returns false if error was fatal)
-bool Error::ClearError()
-{
-    if(m_bFatal)
-		return false;
+// EmuD3DDeferredTextureState
+extern DWORD *EmuD3DDeferredTextureState;
 
-    delete[] m_szError;
+extern void EmuUpdateDeferredStates();
 
-    m_szError = 0;
-
-    m_bFatal  = false;
-
-    return true;
-}
-
-// protected so only derived class may set an error
-void Error::SetError(const char *x_szError, bool x_bFatal)
-{
-    if(m_szError == 0)
-        m_szError = new char[256];
-
-    strncpy(m_szError, x_szError, 255);
-
-    m_bFatal = x_bFatal;
-
-    return;
-}
+#endif

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Core->Error.cpp
+// *   Cxbx->Win32->CxbxKrnl->EmuD3D8->VertexShader.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,34 +31,31 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Core/Error.h"
+#ifndef DBGCONSOLE_H
+#define DBGCONSOLE_H
 
-#include <string.h>
+#include "Cxbx.h"
 
-// clear the current error (returns false if error was fatal)
-bool Error::ClearError()
+// debug console input
+class DbgConsole
 {
-    if(m_bFatal)
-		return false;
+    public:
+        DbgConsole();
+       ~DbgConsole();
 
-    delete[] m_szError;
+        // process commands
+        void Process();
 
-    m_szError = 0;
+        // parse an individual command
+        void ParseCommand();
 
-    m_bFatal  = false;
+        // reset input buffer & display prompt
+        void Reset();
 
-    return true;
-}
+    private:
+        // keyboard buffer
+        char m_szInput[1024];
+        uint m_cur;
+};
 
-// protected so only derived class may set an error
-void Error::SetError(const char *x_szError, bool x_bFatal)
-{
-    if(m_szError == 0)
-        m_szError = new char[256];
-
-    strncpy(m_szError, x_szError, 255);
-
-    m_bFatal = x_bFatal;
-
-    return;
-}
+#endif

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Core->Error.cpp
+// *   Cxbx->Win32->CxbxKrnl->HLEIntercept.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,34 +31,9 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Core/Error.h"
+#ifndef HLEINTERCEPT_H
+#define HLEINTERCEPT_H
 
-#include <string.h>
+extern "C" void EmuHLEIntercept(Xbe::LibraryVersion *LibraryVersion, Xbe::Header *XbeHeader);
 
-// clear the current error (returns false if error was fatal)
-bool Error::ClearError()
-{
-    if(m_bFatal)
-		return false;
-
-    delete[] m_szError;
-
-    m_szError = 0;
-
-    m_bFatal  = false;
-
-    return true;
-}
-
-// protected so only derived class may set an error
-void Error::SetError(const char *x_szError, bool x_bFatal)
-{
-    if(m_szError == 0)
-        m_szError = new char[256];
-
-    strncpy(m_szError, x_szError, 255);
-
-    m_bFatal = x_bFatal;
-
-    return;
-}
+#endif

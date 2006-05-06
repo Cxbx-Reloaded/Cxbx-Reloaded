@@ -33,11 +33,11 @@
 // ******************************************************************
 #include "Xbe.h"
 #include "Exe.h"
-#include "Emu.h"
 
 #include <memory.h>
 #include <locale.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 // construct via Xbe file

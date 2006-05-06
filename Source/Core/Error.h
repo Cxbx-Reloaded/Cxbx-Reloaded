@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Core->Error.cpp
+// *   Cxbx->Core->Error.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,34 +31,38 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "Core/Error.h"
+#ifndef ERROR_H
+#define ERROR_H
 
-#include <string.h>
+#include "Cxbx.h"
 
-// clear the current error (returns false if error was fatal)
-bool Error::ClearError()
+// inherit from this class for handy error reporting capability
+class Error
 {
-    if(m_bFatal)
-		return false;
+    public:
+        // return current error (zero if there is none)
+        const char *GetError() const { return m_szError; }
 
-    delete[] m_szError;
+        // is the current error fatal? (class is "dead" on fatal errors)
+        bool IsFatal() const { return m_bFatal; }
 
-    m_szError = 0;
+        // clear the current error (returns false if error was fatal)
+        bool ClearError();
 
-    m_bFatal  = false;
+    protected:
+        // protected constructor so this class must be inherited from
+        Error() : m_szError(0), m_bFatal(false) { }
 
-    return true;
-}
+        // protected deconstructor
+       ~Error() { delete[] m_szError; }
 
-// protected so only derived class may set an error
-void Error::SetError(const char *x_szError, bool x_bFatal)
-{
-    if(m_szError == 0)
-        m_szError = new char[256];
+        // protected so only derived class may set an error
+        void SetError(const char *x_szError, bool x_bFatal);
 
-    strncpy(m_szError, x_szError, 255);
+    private:
+        // current error information
+        bool  m_bFatal;
+        char *m_szError;
+};
 
-    m_bFatal = x_bFatal;
-
-    return;
-}
+#endif

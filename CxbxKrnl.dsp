@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /I "Include" /I "Include/Core/" /I "Include/Win32/" /I "Include/Win32/Cxbx" /I "Include/Win32/CxbxKrnl" /I "Include/Win32/CxbxKrnl/HLEDataBase" /I "Import/OpenXDK/include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /I "Import\OpenXDK" /I "Source" /I "Source\Win32" /I "Import\OpenXDK\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -70,7 +70,7 @@ LINK32=xilink6.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "Include" /I "Include/Core/" /I "Include/Win32/" /I "Include/Win32/Cxbx" /I "Include/Win32/CxbxKrnl" /I "Include/Win32/CxbxKrnl/HLEDataBase" /I "Import/OpenXDK/include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "Source" /I "Source\Win32" /I "Import\OpenXDK\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /GZ /c
 # SUBTRACT CPP /Fr
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
@@ -90,289 +90,17 @@ LINK32=xilink6.exe
 
 # Name "CxbxKrnl - Win32 Release"
 # Name "CxbxKrnl - Win32 Debug"
-# Begin Group "Bin"
-
-# PROP Default_Filter ""
-# Begin Group "Debug"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Bin\Debug\Cxbx.dll
-# End Source File
-# End Group
-# Begin Source File
-
-SOURCE=.\Bin\Cxbx.dll
-# End Source File
-# End Group
-# Begin Group "Doc"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Doc\Changelog.txt
-# End Source File
-# Begin Source File
-
-SOURCE=.\Doc\Input.txt
-# End Source File
-# Begin Source File
-
-SOURCE=.\Doc\RemovedCode.txt
-# End Source File
-# Begin Source File
-
-SOURCE=.\Doc\Thanks.txt
-# End Source File
-# Begin Source File
-
-SOURCE=.\Doc\Todo.txt
-# End Source File
-# End Group
 # Begin Group "Include"
 
 # PROP Default_Filter ""
 # Begin Group "HLEDataBase (h)"
 
 # PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.3925.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4034.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4134.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4361.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4432.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.3936.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.4361.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.4432.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.4627.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.5558.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\DSound.1.0.5849.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4034.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4134.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4361.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4432.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.5558.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\Xapi.1.0.5849.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\XG.1.0.4361.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\XG.1.0.4627.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\XNet.1.0.3911.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase\XOnline.1.0.4361.h
-# End Source File
 # End Group
 # Begin Group "EmuD3D8 (h)"
 
 # PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8\Convert.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8\PushBuffer.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8\State.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8\VertexBuffer.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8\VertexShader.h
-# End Source File
 # End Group
-# Begin Source File
-
-SOURCE=.\Include\Win32\AlignPosfix1.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\AlignPrefix1.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Cxbx.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\DbgConsole.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\Emu.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuAlloc.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8Types.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuDInput.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuDSound.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuFile.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuFS.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuLDT.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuNtDll.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuShared.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuXapi.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuXG.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuXOnline.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuXTL.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEDataBase.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\HLEIntercept.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\Mutex.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\OOVPA.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\ResourceTracker.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\XBController.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Core\Xbe.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\XBVideo.h
-# End Source File
 # End Group
 # Begin Group "Resource"
 

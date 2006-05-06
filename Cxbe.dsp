@@ -1,5 +1,5 @@
 # Microsoft Developer Studio Project File - Name="Cxbe" - Package Owner=<4>
-# Microsoft Developer Studio Generated Build File, Format Version 60000
+# Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Console Application" 0x0103
@@ -25,7 +25,7 @@ CFG=Cxbe - Win32 Debug
 # PROP AllowPerConfigDependencies 0
 # PROP Scc_ProjName "Cxbe"
 # PROP Scc_LocalPath "."
-CPP=cl.exe
+CPP=xicl6.exe
 RSC=rc.exe
 
 !IF  "$(CFG)" == "Cxbe - Win32 Release"
@@ -42,13 +42,13 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /W3 /GX /O2 /I "Include" /I "Include/Core/" /I "Include/Standard" /I "Include/Standard/Cxbe" /I "Include/Win32/" /I "Include/Win32/CxbxKrnl/" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
+# ADD CPP /nologo /W3 /GX /O2 /I "Source" /I "Source\Win32" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=link.exe
+LINK32=xilink6.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
 # SUBTRACT LINK32 /pdb:none
@@ -67,14 +67,14 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /I "Include" /I "Include/Core/" /I "Include/Standard" /I "Include/Standard/Cxbe" /I "Include/Win32/" /I "Include/Win32/CxbxKrnl/" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /Zi /Od /I "Source" /I "Source\Win32" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
 # SUBTRACT CPP /Fr
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=link.exe
+LINK32=xilink6.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /map /debug /machine:I386 /pdbtype:sept
 # SUBTRACT LINK32 /pdb:none
@@ -85,77 +85,33 @@ LINK32=link.exe
 
 # Name "Cxbe - Win32 Release"
 # Name "Cxbe - Win32 Debug"
-# Begin Group "Bin"
-
-# PROP Default_Filter ""
-# Begin Group "Debug"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Bin\Debug\Cxbe.exe
-# End Source File
-# End Group
-# Begin Source File
-
-SOURCE=.\Bin\Cxbe.exe
-# End Source File
-# End Group
-# Begin Group "Doc"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Doc\Changelog.txt
-# End Source File
-# Begin Source File
-
-SOURCE=.\Doc\Input.txt
-# End Source File
-# Begin Source File
-
-SOURCE=.\Doc\RemovedCode.txt
-# End Source File
-# Begin Source File
-
-SOURCE=.\Doc\Thanks.txt
-# End Source File
-# Begin Source File
-
-SOURCE=.\Doc\Todo.txt
-# End Source File
-# End Group
 # Begin Group "Include"
 
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Include\Win32\AlignPosfix1.h
+SOURCE=.\Source\Win32\AlignPosfix1.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Win32\AlignPrefix1.h
+SOURCE=.\Source\Win32\AlignPrefix1.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Cxbx.h
+SOURCE=.\Source\Cxbx.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Core\Error.h
+SOURCE=.\Source\Core\Error.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Core\Exe.h
+SOURCE=.\Source\Core\Exe.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Core\Xbe.h
+SOURCE=.\Source\Core\Xbe.h
 # End Source File
-# End Group
-# Begin Group "Resource"
-
-# PROP Default_Filter ""
 # End Group
 # Begin Group "Source"
 

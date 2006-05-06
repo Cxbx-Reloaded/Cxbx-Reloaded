@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /Zi /O2 /I "Include" /I "Include/Core/" /I "Include/Win32/" /I "Include/Win32/Cxbxkrnl" /I "Include/Win32/Cxbx" /I "Include/Win32/Cxbx/jpegdec" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /Fr /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /Zi /O2 /I "Source" /I "Source\Win32" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /Fr /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -74,7 +74,7 @@ PostBuild_Cmds=cd PostBuild	upxCxbx.bat
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "Include" /I "Include/Core/" /I "Include/Win32/" /I "Include/Win32/Cxbxkrnl" /I "Include/Win32/Cxbx" /I "Include/Win32/Cxbx/jpegdec" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /Fr /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "Source" /I "Source\Win32" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /Fr /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -93,46 +93,6 @@ LINK32=xilink6.exe
 
 # Name "Cxbx - Win32 Release"
 # Name "Cxbx - Win32 Debug"
-# Begin Group "Bin"
-
-# PROP Default_Filter ""
-# Begin Group "Debug"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Bin\Debug\Cxbx.exe
-# End Source File
-# End Group
-# Begin Source File
-
-SOURCE=.\Bin\Cxbx.exe
-# End Source File
-# End Group
-# Begin Group "Doc"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=.\Doc\Changelog.txt
-# End Source File
-# Begin Source File
-
-SOURCE=.\Doc\Input.txt
-# End Source File
-# Begin Source File
-
-SOURCE=.\Doc\RemovedCode.txt
-# End Source File
-# Begin Source File
-
-SOURCE=.\Doc\Thanks.txt
-# End Source File
-# Begin Source File
-
-SOURCE=.\Doc\Todo.txt
-# End Source File
-# End Group
 # Begin Group "Include"
 
 # PROP Default_Filter ""
@@ -141,117 +101,21 @@ SOURCE=.\Doc\Todo.txt
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Include\Win32\Cxbx\jpegdec\jconfig.h
+SOURCE=.\Source\Win32\Cxbx\jpegdec\jconfig.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Win32\Cxbx\jpegdec\jmorecfg.h
+SOURCE=.\Source\Win32\Cxbx\jpegdec\jmorecfg.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Win32\Cxbx\jpegdec\jpegdec.h
+SOURCE=.\Source\Win32\Cxbx\jpegdec\jpegdec.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Include\Win32\Cxbx\jpegdec\jpeglib.h
+SOURCE=.\Source\Win32\Cxbx\jpegdec\jpeglib.h
 # End Source File
 # End Group
-# Begin Source File
-
-SOURCE=.\Include\Win32\AlignPosfix1.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\AlignPrefix1.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Cxbx.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\Cxbx\DlgControllerConfig.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\Cxbx\DlgVideoConfig.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\Emu.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuD3D8.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuDInput.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuDSound.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\Cxbx\EmuExe.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuShared.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuXapi.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuXG.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuXOnline.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\CxbxKrnl\EmuXTL.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Core\Exe.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\Mutex.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\Cxbx\Prolog.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\Cxbx\Wnd.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\Cxbx\WndAbout.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\Cxbx\WndMain.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\XBController.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Core\Xbe.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Include\Win32\XBVideo.h
-# End Source File
 # End Group
 # Begin Group "Resource"
 
