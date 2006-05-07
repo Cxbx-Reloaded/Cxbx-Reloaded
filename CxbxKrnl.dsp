@@ -223,6 +223,10 @@ SOURCE=.\Source\Cxbx.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Source\Win32\CxbxKrnl\CxbxKrnl.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\Win32\CxbxKrnl\DbgConsole.h
 # End Source File
 # Begin Source File
@@ -503,6 +507,10 @@ SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8\VertexBuffer.cpp
 SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8\VertexShader.cpp
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE=.\Source\Win32\CxbxKrnl\CxbxKrnl.cpp
+# End Source File
 # Begin Source File
 
 SOURCE=.\Source\Win32\CxbxKrnl\DbgConsole.cpp

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->HLEIntercept.h
+// *   Cxbx->Win32->CxbxKrnl->CxbxKrnl.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,9 +31,53 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef HLEINTERCEPT_H
-#define HLEINTERCEPT_H
+#ifndef CXBXKRNL_H
+#define CXBXKRNL_H
 
-void EmuHLEIntercept(Xbe::LibraryVersion *LibraryVersion, Xbe::Header *XbeHeader);
+#include "Cxbx.h"
+
+#include "Core/Xbe.h"
+
+#undef FIELD_OFFSET     // prevent macro redefinition warnings
+#include <windows.h>
+#include <multimon.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*! validate version string match */
+CXBXKRNL_API bool CxbxKrnlVerifyVersion(const char *szVersion);
+
+/*! initialize emulation */
+CXBXKRNL_API void CxbxKrnlInit(HWND hwndParent, void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
+
+/*! cleanup emulation */
+CXBXKRNL_API void CxbxKrnlCleanup(const char *szErrorMessage, ...);
+
+/*! terminate the calling thread */
+CXBXKRNL_API void CxbxKrnlTerminateThread();
+
+/*! empty function */
+CXBXKRNL_API void CxbxKrnlNoFunc();
+
+/*! kernel thunk table */
+extern CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367];
+
+/*! thread local storage structure */
+extern CXBXKRNL_API Xbe::TLS *CxbxKrnl_TLS;
+
+/*! thread local storage data */
+extern CXBXKRNL_API void *CxbxKrnl_TLSData;
+
+/*! xbe header structure */
+extern CXBXKRNL_API Xbe::Header *CxbxKrnl_XbeHeader;
+
+/*! parent window handle */
+extern CXBXKRNL_API HWND CxbxKrnl_hEmuParent;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

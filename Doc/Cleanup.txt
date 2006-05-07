@@ -20,6 +20,9 @@ Legend :
 : Structure
   * Move all includes into Source (since they are not exported!)
   - Organize all #include's cleanly, and use good relative paths when desirable
+  - Move things out of CxbxKrnl.h if they are internal to CxbxKrnl
 - CxbxKrnl
   - CxbxKrnlVerifyVersion etc
+: General Cleanup
+  - AutoSwapFS (like AutoMutex)
 

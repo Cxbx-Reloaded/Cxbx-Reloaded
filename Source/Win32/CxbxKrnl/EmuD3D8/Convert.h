@@ -34,6 +34,8 @@
 #ifndef CONVERT_H
 #define CONVERT_H
 
+#include "CxbxKrnl.h"
+
 // simple render state encoding lookup table
 #define X_D3DRSSE_UNK 0x7fffffff
 extern CONST DWORD EmuD3DRenderStateSimpleEncoded[174];
@@ -56,7 +58,7 @@ else if((uint32)State < 20)
 else if((uint32)State > 255)
     State = (D3DTRANSFORMSTATETYPE)(State - 250);
 else
-    EmuCleanup("Unknown Transform State Type (%d)", State);
+    CxbxKrnlCleanup("Unknown Transform State Type (%d)", State);
 //*/
 
 // convert from xbox to pc texture transform state types
@@ -69,7 +71,7 @@ inline D3DTRANSFORMSTATETYPE EmuXB2PC_D3DTS(D3DTRANSFORMSTATETYPE State)
     else if((uint32)State < 10)
         return D3DTS_WORLDMATRIX(State-6);
 
-    EmuCleanup("Unknown Transform State Type (%d)", State);
+    CxbxKrnlCleanup("Unknown Transform State Type (%d)", State);
 
     return State;
 }
@@ -83,7 +85,7 @@ inline D3DBLENDOP EmuXB2PC_D3DBLENDOP(X_D3DBLENDOP Value)
             return D3DBLENDOP_ADD;
     }
 
-    EmuCleanup("Unknown D3DBLENDOP (0x%.08X)", Value);
+    CxbxKrnlCleanup("Unknown D3DBLENDOP (0x%.08X)", Value);
 
     return (D3DBLENDOP)Value;
 }
@@ -96,7 +98,7 @@ inline D3DBLEND EmuXB2PC_D3DBLEND(X_D3DBLEND Value)
     else if(Value < 0x309)
         return (D3DBLEND)((Value & 0xF) + 3);
 
-    EmuCleanup("Unknown Xbox D3DBLEND Extension (0x%.08X)", Value);
+    CxbxKrnlCleanup("Unknown Xbox D3DBLEND Extension (0x%.08X)", Value);
 
     return (D3DBLEND)Value;
 }
