@@ -90,11 +90,11 @@ LINK32=xilink6.exe
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Win32\AlignPosfix1.h
+SOURCE=.\Source\Common\Win32\AlignPosfix1.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\AlignPrefix1.h
+SOURCE=.\Source\Common\Win32\AlignPrefix1.h
 # End Source File
 # Begin Source File
 

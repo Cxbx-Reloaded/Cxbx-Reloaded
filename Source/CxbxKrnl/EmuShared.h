@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->Cxbx->XBVideo.h
+// *   Cxbx->Win32->CxbxKrnl->EmuShared.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,70 +31,68 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef XBVIDEO_H
-#define XBVIDEO_H
+#ifndef EMUSHARED_H
+#define EMUSHARED_H
 
 #include "Cxbx.h"
-#include "Common/Error.h"
-#include "Mutex.h"
+#include "Common/XBController.h"
+#include "Common/XBVideo.h"
+
+#include <memory.h>
 
 // ******************************************************************
-// * class: XBVideo
+// * EmuShared : Shared memory
 // ******************************************************************
-class XBVideo : public Error
+class EmuShared : public Mutex
 {
     public:
         // ******************************************************************
-        // * Initialization
+        // * Constructor / Deconstructor
         // ******************************************************************
-        XBVideo();
-       ~XBVideo();
+        CXBXKRNL_API  EmuShared();
+        CXBXKRNL_API ~EmuShared();
 
         // ******************************************************************
-        // * Registry Load/Save
+        // * Each process needs to call this to initialize shared memory
         // ******************************************************************
-        void Load(const char *szRegistryKey);
-        void Save(const char *szRegistryKey);
+        CXBXKRNL_API static void Init();
 
         // ******************************************************************
-        // * SetDirect3DDevice
+        // * Each process needs to call this to cleanup shared memory
         // ******************************************************************
-        void  SetDirect3DDevice(DWORD dwDirect3DDevice) { m_dwDirect3DDevice = dwDirect3DDevice; }
-        DWORD GetDirect3DDevice() { return m_dwDirect3DDevice; }
+        CXBXKRNL_API static void Cleanup();
 
         // ******************************************************************
-        // * SetDisplayAdapter
+        // * Xbox Video Accessors
         // ******************************************************************
-        void  SetDisplayAdapter(DWORD dwDisplayAdapter) { m_dwDisplayAdapter = dwDisplayAdapter; }
-        DWORD GetDisplayAdapter() { return m_dwDisplayAdapter; }
+        CXBXKRNL_API void GetXBVideo(      XBVideo *video) { Lock(); memcpy(video, &m_XBVideo, sizeof(XBVideo)); Unlock(); }
+        CXBXKRNL_API void SetXBVideo(const XBVideo *video) { Lock(); memcpy(&m_XBVideo, video, sizeof(XBVideo)); Unlock(); }
 
         // ******************************************************************
-        // * SetVideoResolution
+        // * Xbox Controller Accessors
         // ******************************************************************
-        void SetVideoResolution(const char *szBuffer) { strcpy(m_szVideoResolution, szBuffer); }
-        const char *GetVideoResolution(){ return m_szVideoResolution; }
+        CXBXKRNL_API void GetXBController(      XBController *ctrl) { Lock(); memcpy(ctrl, &m_XBController, sizeof(XBController)); Unlock();}
+        CXBXKRNL_API void SetXBController(const XBController *ctrl) { Lock(); memcpy(&m_XBController, ctrl, sizeof(XBController)); Unlock();}
 
         // ******************************************************************
-        // * Fullscreen Toggling
+        // * Xbe Path Accessors
         // ******************************************************************
-        void SetFullscreen(BOOL bFullscreen) { m_bFullscreen = bFullscreen; }
-        BOOL GetFullscreen() { return m_bFullscreen; }
-
-        // ******************************************************************
-        // * VSync Toggling
-        // ******************************************************************
-        void SetVSync(BOOL bVSync) { m_bVSync = bVSync; }
-        BOOL GetVSync() { return m_bVSync; }
+        CXBXKRNL_API void GetXbePath(      char *path) { Lock(); strcpy(path, m_XbePath); Unlock(); }
+        CXBXKRNL_API void SetXbePath(const char *path) { Lock(); strcpy(m_XbePath, path); Unlock(); }
 
     private:
         // ******************************************************************
-        // * Configuration
+        // * Shared configuration
         // ******************************************************************
-        char  m_szVideoResolution[100];
-        DWORD m_dwDisplayAdapter;
-        DWORD m_dwDirect3DDevice;
-        BOOL  m_bFullscreen;
-        BOOL  m_bVSync;
+        XBController m_XBController;
+        XBVideo      m_XBVideo;
+        char         m_XbePath[260];
 };
+
+// ******************************************************************
+// * Exported Global Shared Memory Pointer
+// ******************************************************************
+extern CXBXKRNL_API EmuShared *g_EmuShared;
+extern CXBXKRNL_API int        g_EmuSharedRefCount;
 
 #endif

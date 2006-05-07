@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->Mutex.h
+// *   Cxbx->Win32->CxbxKrnl->EmuDInput.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,25 +31,50 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef MUTEX_H
-#define MUTEX_H
+#define _CXBXKRNL_INTERNAL
+#define _XBOXKRNL_DEFEXTRN_
 
-#include <windows.h>
+#include "Emu.h"
+#include "EmuXTL.h"
+#include "EmuShared.h"
 
-// mutex object (intended to be inherited from)
-class Mutex
+// ******************************************************************
+// * Static Variable(s)
+// ******************************************************************
+static XBController g_XBController;
+
+// ******************************************************************
+// * func: XTL::EmuDInputInit
+// ******************************************************************
+bool XTL::EmuDInputInit()
 {
-    public:
-        Mutex();
+    g_EmuShared->GetXBController(&g_XBController);
 
-        void Lock();
-        void Unlock();
+    g_XBController.ListenBegin(g_hEmuWindow);
 
-    private:
-        LONG m_MutexLock;      // Mutex lock
-        LONG m_OwnerProcess;   // Current owner process (or zero)
-        LONG m_OwnerThread;    // Current owner thread
-        LONG m_LockCount;      // Lock count within this thread
-};
+    if(g_XBController.GetError())
+        return false;
 
-#endif
+    return true;
+}
+
+// ******************************************************************
+// * func: XTL::EmuDInputCleanup
+// ******************************************************************
+void XTL::EmuDInputCleanup()
+{
+    g_XBController.ListenEnd();
+}
+
+// ******************************************************************
+// * func: XTL::EmuPollController
+// ******************************************************************
+void XTL::EmuDInputPoll(XTL::PXINPUT_STATE Controller)
+{
+    g_XBController.ListenPoll(Controller);
+
+    if(g_XBController.GetError())
+        MessageBox(NULL, g_XBController.GetError(), "Cxbx [*UNHANDLED!*]", MB_OK);  // TODO: Handle this!
+
+    return;
+}

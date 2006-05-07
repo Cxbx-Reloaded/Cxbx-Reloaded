@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /Zi /O2 /I "Source" /I "Source\Common\Win32" /I "Source\Win32" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /Fr /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /Zi /O2 /I "Source" /I "Source\Common\Win32" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /Fr /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -70,7 +70,7 @@ LINK32=xilink6.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "Source" /I "Source\Common\Win32" /I "Source\Win32" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /Fr /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "Source" /I "Source\Common\Win32" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /Fr /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
@@ -97,32 +97,32 @@ LINK32=xilink6.exe
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Win32\Cxbx\jpegdec\jconfig.h
+SOURCE=.\Source\Cxbx\jpegdec\jconfig.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\Cxbx\jpegdec\jmorecfg.h
+SOURCE=.\Source\Cxbx\jpegdec\jmorecfg.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\Cxbx\jpegdec\jpegdec.h
+SOURCE=.\Source\Cxbx\jpegdec\jpegdec.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\Cxbx\jpegdec\jpeglib.h
+SOURCE=.\Source\Cxbx\jpegdec\jpeglib.h
 # End Source File
 # End Group
 # Begin Source File
 
-SOURCE=.\Source\Win32\AlignPosfix1.h
+SOURCE=.\Source\AlignPosfix1.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\AlignPrefix1.h
+SOURCE=.\Source\AlignPrefix1.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8\Convert.h
+SOURCE=.\Source\CxbxKrnl\EmuD3D8\Convert.h
 # End Source File
 # Begin Source File
 
@@ -130,107 +130,91 @@ SOURCE=.\Source\Cxbx.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\Cxbx\DlgControllerConfig.h
+SOURCE=.\Source\Cxbx\DlgControllerConfig.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\Cxbx\DlgVideoConfig.h
+SOURCE=.\Source\Cxbx\DlgVideoConfig.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\Emu.h
+SOURCE=.\Source\CxbxKrnl\Emu.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8.h
+SOURCE=.\Source\CxbxKrnl\EmuD3D8.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8Types.h
+SOURCE=.\Source\CxbxKrnl\EmuD3D8Types.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuDInput.h
+SOURCE=.\Source\CxbxKrnl\EmuDInput.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuDSound.h
+SOURCE=.\Source\CxbxKrnl\EmuDSound.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\Cxbx\EmuExe.h
+SOURCE=.\Source\Cxbx\EmuExe.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuShared.h
+SOURCE=.\Source\CxbxKrnl\EmuShared.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuXapi.h
+SOURCE=.\Source\CxbxKrnl\EmuXapi.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuXG.h
+SOURCE=.\Source\CxbxKrnl\EmuXG.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuXOnline.h
+SOURCE=.\Source\CxbxKrnl\EmuXOnline.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuXTL.h
+SOURCE=.\Source\CxbxKrnl\EmuXTL.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Exe.h
+SOURCE=.\Source\Common\Error.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\Mutex.h
+SOURCE=.\Source\Cxbx\Prolog.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\Cxbx\Prolog.h
+SOURCE=.\Source\CxbxKrnl\EmuD3D8\PushBuffer.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8\PushBuffer.h
+SOURCE=.\Source\CxbxKrnl\EmuD3D8\State.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8\State.h
+SOURCE=.\Source\CxbxKrnl\EmuD3D8\VertexBuffer.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8\VertexBuffer.h
+SOURCE=.\Source\CxbxKrnl\EmuD3D8\VertexShader.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\CxbxKrnl\EmuD3D8\VertexShader.h
+SOURCE=.\Source\Cxbx\Wnd.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\Cxbx\Wnd.h
+SOURCE=.\Source\Cxbx\WndAbout.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\Cxbx\WndAbout.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Win32\Cxbx\WndMain.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Win32\XBController.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Common\Xbe.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Win32\XBVideo.h
+SOURCE=.\Source\Cxbx\WndMain.h
 # End Source File
 # End Group
 # Begin Group "Resource"
@@ -265,20 +249,20 @@ SOURCE=.\Resource\Splash.jpg
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Win32\Cxbx\jpegdec\jpegdec.cpp
+SOURCE=.\Source\Cxbx\jpegdec\jpegdec.cpp
 # End Source File
 # End Group
 # Begin Source File
 
-SOURCE=.\Source\Win32\Cxbx\DlgControllerConfig.cpp
+SOURCE=.\Source\Cxbx\DlgControllerConfig.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\Cxbx\DlgVideoConfig.cpp
+SOURCE=.\Source\Cxbx\DlgVideoConfig.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\Cxbx\EmuExe.cpp
+SOURCE=.\Source\Cxbx\EmuExe.cpp
 # End Source File
 # Begin Source File
 
@@ -290,7 +274,7 @@ SOURCE=.\Source\Common\Exe.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\Mutex.cpp
+SOURCE=.\Source\Common\Mutex.cpp
 # End Source File
 # Begin Source File
 
@@ -298,27 +282,27 @@ SOURCE=.\Source\Common\OpenXDK.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\Cxbx\Prolog.cpp
+SOURCE=.\Source\Cxbx\Prolog.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\Cxbx\WinMain.cpp
+SOURCE=.\Source\Cxbx\WinMain.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\Cxbx\Wnd.cpp
+SOURCE=.\Source\Cxbx\Wnd.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\Cxbx\WndAbout.cpp
+SOURCE=.\Source\Cxbx\WndAbout.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\Cxbx\WndMain.cpp
+SOURCE=.\Source\Cxbx\WndMain.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\XBController.cpp
+SOURCE=.\Source\Common\XBController.cpp
 # End Source File
 # Begin Source File
 
@@ -326,7 +310,7 @@ SOURCE=.\Source\Common\Xbe.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Win32\XBVideo.cpp
+SOURCE=.\Source\Common\XBVideo.cpp
 # End Source File
 # End Group
 # End Target
