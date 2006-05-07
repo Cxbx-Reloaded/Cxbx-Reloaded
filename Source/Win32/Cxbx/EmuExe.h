@@ -34,7 +34,7 @@
 #ifndef EMUEXE_H
 #define EMUEXE_H
 
-#include "Core/Exe.h"
+#include "Common/Exe.h"
 #include <windows.h>
 
 // ******************************************************************

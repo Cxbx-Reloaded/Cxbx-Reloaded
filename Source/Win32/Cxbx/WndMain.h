@@ -35,8 +35,8 @@
 #define WNDMAIN_H
 
 #include "Wnd.h"
-#include "Core/Exe.h"
-#include "Core/Xbe.h"
+#include "Common/Exe.h"
+#include "Common/Xbe.h"
 
 // ******************************************************************
 // * constants

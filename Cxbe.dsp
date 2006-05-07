@@ -102,15 +102,15 @@ SOURCE=.\Source\Cxbx.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Core\Error.h
+SOURCE=.\Source\Common\Error.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Core\Exe.h
+SOURCE=.\Source\Common\Exe.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Core\Xbe.h
+SOURCE=.\Source\Common\Xbe.h
 # End Source File
 # End Group
 # Begin Group "Source"
@@ -118,11 +118,11 @@ SOURCE=.\Source\Core\Xbe.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Core\Error.cpp
+SOURCE=.\Source\Common\Error.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Core\Exe.cpp
+SOURCE=.\Source\Common\Exe.cpp
 # End Source File
 # Begin Source File
 
@@ -130,11 +130,11 @@ SOURCE=.\Source\Standard\Cxbe\Main.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Core\OpenXDK.cpp
+SOURCE=.\Source\Common\OpenXDK.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Core\Xbe.cpp
+SOURCE=.\Source\Common\Xbe.cpp
 # End Source File
 # End Group
 # End Target

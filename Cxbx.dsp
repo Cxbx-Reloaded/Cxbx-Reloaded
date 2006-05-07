@@ -182,7 +182,7 @@ SOURCE=.\Source\Win32\CxbxKrnl\EmuXTL.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Core\Exe.h
+SOURCE=.\Source\Common\Exe.h
 # End Source File
 # Begin Source File
 
@@ -226,7 +226,7 @@ SOURCE=.\Source\Win32\XBController.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Core\Xbe.h
+SOURCE=.\Source\Common\Xbe.h
 # End Source File
 # Begin Source File
 
@@ -282,11 +282,11 @@ SOURCE=.\Source\Win32\Cxbx\EmuExe.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Core\Error.cpp
+SOURCE=.\Source\Common\Error.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Core\Exe.cpp
+SOURCE=.\Source\Common\Exe.cpp
 # End Source File
 # Begin Source File
 
@@ -294,7 +294,7 @@ SOURCE=.\Source\Win32\Mutex.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Core\OpenXDK.cpp
+SOURCE=.\Source\Common\OpenXDK.cpp
 # End Source File
 # Begin Source File
 
@@ -322,7 +322,7 @@ SOURCE=.\Source\Win32\XBController.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Core\Xbe.cpp
+SOURCE=.\Source\Common\Xbe.cpp
 # End Source File
 # Begin Source File
 

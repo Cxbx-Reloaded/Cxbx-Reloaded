@@ -31,8 +31,9 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "../../Core/Exe.h"
-#include "../../Core/Xbe.h"
+
+#include "../../Common/Exe.h"
+#include "../../Common/Xbe.h"
 
 #include <string.h>
 

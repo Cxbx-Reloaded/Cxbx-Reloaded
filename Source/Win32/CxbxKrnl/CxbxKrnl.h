@@ -36,7 +36,7 @@
 
 #include "Cxbx.h"
 
-#include "Core/Xbe.h"
+#include "Common/Xbe.h"
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>

@@ -34,7 +34,7 @@
 #ifndef EMUFS_H
 #define EMUFS_H
 
-#include "Core/Xbe.h"
+#include "Common/Xbe.h"
 
 // word @ FS:[0x14] := wSwapFS
 // byte @ FS:[0x16] := bIsXboxFS

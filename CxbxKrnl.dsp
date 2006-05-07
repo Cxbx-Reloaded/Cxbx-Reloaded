@@ -327,7 +327,7 @@ SOURCE=.\Source\Win32\XBController.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Core\Xbe.h
+SOURCE=.\Source\Common\Xbe.h
 # End Source File
 # Begin Source File
 
@@ -582,7 +582,7 @@ SOURCE=.\Source\Win32\CxbxKrnl\EmuXOnline.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Core\Error.cpp
+SOURCE=.\Source\Common\Error.cpp
 # End Source File
 # Begin Source File
 

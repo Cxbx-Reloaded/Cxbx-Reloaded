@@ -36,7 +36,7 @@
 
 #include "EmuD3D8Types.h"
 
-#include "Core/Xbe.h"
+#include "Common/Xbe.h"
 #include "Emu.h"
 
 #define DIRECTDRAW_VERSION 0x0700

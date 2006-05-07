@@ -34,7 +34,7 @@
 #ifndef EXE_H
 #define EXE_H
 
-#include "Core/Error.h"
+#include "Common/Error.h"
 
 // Exe (PE) file object
 class Exe : public Error

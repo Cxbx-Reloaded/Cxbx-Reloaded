@@ -39,10 +39,10 @@ OBJCOPY	= objcopy
 GCC295 = cpp0-2.95
 #LDFLAGS = -s -S -T ldscript.ld
 
-OBJECTS	= Source/Core/Error.o \
-	Source/Core/Exe.o \
-	Source/Core/Xbe.o \
-        Source/Core/OpenXDK.o \
+OBJECTS	= Source/Common/Error.o \
+	Source/Common/Exe.o \
+	Source/Common/Xbe.o \
+        Source/Common/OpenXDK.o \
 	Source/Standard/Cxbe/Main.o
 
 RESOURCES = 
