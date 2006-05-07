@@ -38,8 +38,7 @@
 // clear the current error (returns false if error was fatal)
 bool Error::ClearError()
 {
-    if(m_bFatal)
-		return false;
+    if(m_bFatal) { return false; }
 
     delete[] m_szError;
 
@@ -53,8 +52,7 @@ bool Error::ClearError()
 // protected so only derived class may set an error
 void Error::SetError(const char *x_szError, bool x_bFatal)
 {
-    if(m_szError == 0)
-        m_szError = new char[256];
+    if(m_szError == 0) { m_szError = new char[256]; }
 
     strncpy(m_szError, x_szError, 255);
 
