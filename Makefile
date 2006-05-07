@@ -43,7 +43,7 @@ OBJECTS	= Source/Common/Error.o \
 	Source/Common/Exe.o \
 	Source/Common/Xbe.o \
         Source/Common/OpenXDK.o \
-	Source/Standard/Cxbe/Main.o
+	Source/Cxbe/Main.o
 
 RESOURCES = 
 

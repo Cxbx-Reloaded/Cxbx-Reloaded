@@ -32,8 +32,8 @@
 // *
 // ******************************************************************
 
-#include "../../Common/Exe.h"
-#include "../../Common/Xbe.h"
+#include "../Common/Exe.h"
+#include "../Common/Xbe.h"
 
 #include <string.h>
 
