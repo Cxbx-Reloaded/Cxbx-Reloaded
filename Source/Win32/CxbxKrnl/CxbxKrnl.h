@@ -55,8 +55,20 @@ CXBXKRNL_API void CxbxKrnlInit(HWND hwndParent, void *pTLSData, Xbe::TLS *pTLS, 
 /*! cleanup emulation */
 CXBXKRNL_API void CxbxKrnlCleanup(const char *szErrorMessage, ...);
 
+/*! register a thread handle */
+CXBXKRNL_API void CxbxKrnlRegisterThread(HANDLE hThread);
+
+/*! suspend emulation */
+CXBXKRNL_API void CxbxKrnlSuspend();
+
+/*! resume emulation */
+CXBXKRNL_API void CxbxKrnlResume();
+
 /*! terminate the calling thread */
 CXBXKRNL_API void CxbxKrnlTerminateThread();
+
+/*! kernel panic (trap for unimplemented kernel functions) */
+CXBXKRNL_API void CxbxKrnlPanic();
 
 /*! empty function */
 CXBXKRNL_API void CxbxKrnlNoFunc();

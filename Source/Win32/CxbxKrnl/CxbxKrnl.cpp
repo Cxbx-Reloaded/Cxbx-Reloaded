@@ -65,6 +65,9 @@ extern CXBXKRNL_API Xbe::Header *CxbxKrnl_XbeHeader = NULL;
 /*! parent window handle */
 extern CXBXKRNL_API HWND CxbxKrnl_hEmuParent = NULL;
 
+/*! thread handles */
+static HANDLE g_hThreads[MAXIMUM_XBOX_THREADS] = { 0 };
+
 extern "C" CXBXKRNL_API bool CxbxKrnlVerifyVersion(const char *szVersion)
 {
     if(strcmp(szVersion, _CXBX_VERSION) != 0)
@@ -326,7 +329,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
         DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
 
-        EmuRegisterThread(hDupHandle);
+        CxbxKrnlRegisterThread(hDupHandle);
     }
 
     DbgPrintf("EmuMain (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
@@ -392,7 +395,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlCleanup(const char *szErrorMessage, ...)
 {
     g_bEmuException = true;
 
-    EmuResume();
+    CxbxKrnlResume();
 
     // print out error message (if exists)
     if(szErrorMessage != NULL)
@@ -439,6 +442,104 @@ extern "C" CXBXKRNL_API void CxbxKrnlCleanup(const char *szErrorMessage, ...)
     return;
 }
 
+extern "C" CXBXKRNL_API void CxbxKrnlRegisterThread(HANDLE hThread)
+{
+    int v=0;
+
+    for(v=0;v<MAXIMUM_XBOX_THREADS;v++)
+    {
+        if(g_hThreads[v] == 0)
+        {
+            g_hThreads[v] = hThread;
+            break;
+        }
+    }
+
+    if(v == MAXIMUM_XBOX_THREADS)
+    {
+        CxbxKrnlCleanup("There are too many active threads!");
+    }
+}
+
+extern "C" CXBXKRNL_API void CxbxKrnlSuspend()
+{
+    if(g_bEmuSuspended || g_bEmuException)
+        return;
+
+    for(int v=0;v<MAXIMUM_XBOX_THREADS;v++)
+    {
+        if(g_hThreads[v] != NULL)
+        {
+            DWORD dwExitCode;
+
+            if(GetExitCodeThread(g_hThreads[v], &dwExitCode) && dwExitCode == STILL_ACTIVE)
+            {
+                // suspend thread if it is active
+                SuspendThread(g_hThreads[v]);
+            }
+            else
+            {
+                // remove thread from thread list if it is dead
+                g_hThreads[v] = 0;
+            }
+        }
+    }
+
+    // append 'paused' to rendering window caption text
+    {
+        char szBuffer[256];
+
+        HWND hWnd = (CxbxKrnl_hEmuParent != NULL) ? CxbxKrnl_hEmuParent : g_hEmuWindow;
+
+        GetWindowText(hWnd, szBuffer, 255 - 10);
+
+        strcat(szBuffer, " (paused)");
+        SetWindowText(hWnd, szBuffer);
+    }
+
+    g_bEmuSuspended = true;
+}
+
+extern "C" CXBXKRNL_API void CxbxKrnlResume()
+{
+    if(!g_bEmuSuspended)
+        return;
+
+    // remove 'paused' from rendering window caption text
+    {
+        char szBuffer[256];
+
+        HWND hWnd = (CxbxKrnl_hEmuParent != NULL) ? CxbxKrnl_hEmuParent : g_hEmuWindow;
+
+        GetWindowText(hWnd, szBuffer, 255);
+
+        szBuffer[strlen(szBuffer)-9] = '\0';
+
+        SetWindowText(hWnd, szBuffer);
+    }
+
+    for(int v=0;v<MAXIMUM_XBOX_THREADS;v++)
+    {
+        if(g_hThreads[v] != NULL)
+        {
+            DWORD dwExitCode;
+
+            if(GetExitCodeThread(g_hThreads[v], &dwExitCode) && dwExitCode == STILL_ACTIVE)
+            {
+                // resume thread if it is active
+                ResumeThread(g_hThreads[v]);
+            }
+            else
+            {
+                // remove thread from thread list if it is dead
+                g_hThreads[v] = 0;
+            }
+        }
+    }
+
+    g_bEmuSuspended = false;
+}
+
 extern "C" CXBXKRNL_API void CxbxKrnlTerminateThread()
 {
     if(EmuIsXboxFS())
@@ -447,6 +548,18 @@ extern "C" CXBXKRNL_API void CxbxKrnlTerminateThread()
     EmuCleanupFS();
 
     TerminateThread(GetCurrentThread(), 0);
+}
+
+extern "C" CXBXKRNL_API void CxbxKrnlPanic()
+{
+    if(EmuIsXboxFS())
+        EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuMain (0x%X): CxbxKrnlPanic()\n", GetCurrentThreadId());
+
+    CxbxKrnlCleanup("Kernel Panic!");
+
+    EmuSwapFS();   // XBox FS
 }
 
 extern "C" CXBXKRNL_API void CxbxKrnlNoFunc()

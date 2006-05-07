@@ -47,18 +47,6 @@ extern "C" CXBXKRNL_API void NTAPI EmuWarning(const char *szWarningMessage, ...)
 inline void NTAPI EmuWarning(const char *szWarningMessage, ...) { }
 #endif
 
-// kernel function not implemented, panic
-extern "C" CXBXKRNL_API void NTAPI EmuPanic();
-
-// register a thread handle with the emulation thread management
-extern "C" CXBXKRNL_API void NTAPI EmuRegisterThread(HANDLE hThread);
-
-// suspend emulation
-extern "C" CXBXKRNL_API void NTAPI EmuSuspend();
-
-// resume emulation
-extern "C" CXBXKRNL_API void NTAPI EmuResume();
-
 // exception handler
 extern int EmuException(LPEXCEPTION_POINTERS e);
 
