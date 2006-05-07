@@ -186,6 +186,10 @@ SOURCE=.\Source\Common\Error.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Source\Common\Win32\Mutex.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\Cxbx\Prolog.h
 # End Source File
 # Begin Source File
@@ -215,6 +219,14 @@ SOURCE=.\Source\Cxbx\WndAbout.h
 # Begin Source File
 
 SOURCE=.\Source\Cxbx\WndMain.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Common\Win32\XBController.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Common\Win32\XBVideo.h
 # End Source File
 # End Group
 # Begin Group "Resource"
@@ -274,7 +286,7 @@ SOURCE=.\Source\Common\Exe.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Mutex.cpp
+SOURCE=.\Source\Common\Win32\Mutex.cpp
 # End Source File
 # Begin Source File
 
@@ -302,7 +314,7 @@ SOURCE=.\Source\Cxbx\WndMain.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\XBController.cpp
+SOURCE=.\Source\Common\Win32\XBController.cpp
 # End Source File
 # Begin Source File
 
@@ -310,7 +322,7 @@ SOURCE=.\Source\Common\Xbe.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\XBVideo.cpp
+SOURCE=.\Source\Common\Win32\XBVideo.cpp
 # End Source File
 # End Group
 # End Target
