@@ -16,7 +16,7 @@ Legend :
   * Pull upx into Import folder
   * Export Cxbx.exe/Cxbx.dll
   * Pull ntdll into Import folder
-  - Pull jpegdec into Import folder
+  * Pull jpegdec into Import folder
 : Structure
   * Move all includes into Source (since they are not exported!)
   - Organize all #include's cleanly, and use good relative paths when desirable
