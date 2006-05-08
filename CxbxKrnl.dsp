@@ -323,11 +323,11 @@ SOURCE=.\Source\CxbxKrnl\EmuD3D8\VertexShader.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\XBController.h
+SOURCE=.\Source\Common\Win32\XBController.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\XBVideo.h
+SOURCE=.\Source\Common\Win32\XBVideo.h
 # End Source File
 # End Group
 # Begin Group "Resource"
@@ -562,7 +562,7 @@ SOURCE=.\Source\CxbxKrnl\EmuNtDll.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\EmuShared.cpp
+SOURCE=.\Source\Common\Win32\EmuShared.cpp
 # End Source File
 # Begin Source File
 
@@ -594,7 +594,7 @@ SOURCE=.\Source\CxbxKrnl\KernelThunk.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Mutex.cpp
+SOURCE=.\Source\Common\Win32\Mutex.cpp
 # End Source File
 # Begin Source File
 
@@ -606,7 +606,7 @@ SOURCE=.\Source\CxbxKrnl\ResourceTracker.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\XBController.cpp
+SOURCE=.\Source\Common\Win32\XBController.cpp
 # End Source File
 # Begin Source File
 
@@ -614,7 +614,7 @@ SOURCE=.\Source\Common\Xbe.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\XBVideo.cpp
+SOURCE=.\Source\Common\Win32\XBVideo.cpp
 # End Source File
 # End Group
 # End Target

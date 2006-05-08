@@ -35,7 +35,7 @@
 #define RESOURCETRACKER_H
 
 #include "Cxbx.h"
-#include "Common/Mutex.h"
+#include "Common/Win32/Mutex.h"
 
 extern bool g_bVBSkipStream;
 extern bool g_bPBSkipPusher;
