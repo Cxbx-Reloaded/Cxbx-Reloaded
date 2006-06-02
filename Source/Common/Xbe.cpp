@@ -1047,7 +1047,7 @@ void Xbe::DumpInformation(FILE *x_file)
     fprintf(x_file, "Size of Headers                  : 0x%.08X\n", m_Header.dwSizeofHeaders);
     fprintf(x_file, "Size of Image                    : 0x%.08X\n", m_Header.dwSizeofImage);
     fprintf(x_file, "Size of Image Header             : 0x%.08X\n", m_Header.dwSizeofImageHeader);
-    fprintf(x_file, "TimeDate Stamp                   : 0x%.08X (%s)\n", m_Header.dwTimeDate, BetterTime(ctime((const long*)&m_Header.dwTimeDate)));
+    fprintf(x_file, "TimeDate Stamp                   : 0x%.08X (%s)\n", m_Header.dwTimeDate, BetterTime(ctime((const time_t*)&m_Header.dwTimeDate)));
     fprintf(x_file, "Certificate Address              : 0x%.08X\n", m_Header.dwCertificateAddr);
     fprintf(x_file, "Number of Sections               : 0x%.08X\n", m_Header.dwSections);
     fprintf(x_file, "Section Headers Address          : 0x%.08X\n", m_Header.dwSectionHeadersAddr);
