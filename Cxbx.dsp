@@ -114,11 +114,11 @@ SOURCE=.\Source\Cxbx\jpegdec\jpeglib.h
 # End Group
 # Begin Source File
 
-SOURCE=.\Source\AlignPosfix1.h
+SOURCE=.\Source\Common\Win32\AlignPosfix1.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\AlignPrefix1.h
+SOURCE=.\Source\Common\Win32\AlignPrefix1.h
 # End Source File
 # Begin Source File
 
@@ -127,6 +127,10 @@ SOURCE=.\Source\CxbxKrnl\EmuD3D8\Convert.h
 # Begin Source File
 
 SOURCE=.\Source\Cxbx.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\CxbxKrnl\CxbxKrnl.h
 # End Source File
 # Begin Source File
 
@@ -186,6 +190,10 @@ SOURCE=.\Source\Common\Error.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Source\Common\Exe.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\Common\Win32\Mutex.h
 # End Source File
 # Begin Source File
@@ -223,6 +231,10 @@ SOURCE=.\Source\Cxbx\WndMain.h
 # Begin Source File
 
 SOURCE=.\Source\Common\Win32\XBController.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Common\Xbe.h
 # End Source File
 # Begin Source File
 

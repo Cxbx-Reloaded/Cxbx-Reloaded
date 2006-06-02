@@ -211,11 +211,11 @@ SOURCE=.\Source\CxbxKrnl\EmuD3D8\Convert.h
 # End Group
 # Begin Source File
 
-SOURCE=.\Source\AlignPosfix1.h
+SOURCE=.\Source\Common\Win32\AlignPosfix1.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\AlignPrefix1.h
+SOURCE=.\Source\Common\Win32\AlignPrefix1.h
 # End Source File
 # Begin Source File
 
@@ -271,6 +271,10 @@ SOURCE=.\Source\CxbxKrnl\EmuNtDll.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Source\CxbxKrnl\EmuShared.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\CxbxKrnl\EmuXapi.h
 # End Source File
 # Begin Source File
@@ -291,11 +295,19 @@ SOURCE=.\Source\Common\Error.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\Source\Common\Exe.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\CxbxKrnl\HLEIntercept.h
 # End Source File
 # Begin Source File
 
 SOURCE=.\Source\Common\Mutex.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Common\Win32\Mutex.h
 # End Source File
 # Begin Source File
 
@@ -324,6 +336,10 @@ SOURCE=.\Source\CxbxKrnl\EmuD3D8\VertexShader.h
 # Begin Source File
 
 SOURCE=.\Source\Common\Win32\XBController.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\Common\Xbe.h
 # End Source File
 # Begin Source File
 
