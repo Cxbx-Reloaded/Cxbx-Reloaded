@@ -242,7 +242,7 @@ INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam,
 // ******************************************************************
 VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object)
 {
-    static bConfigDone = true;
+    static bool bConfigDone = true;
 
     if(!bConfigDone)
         return;

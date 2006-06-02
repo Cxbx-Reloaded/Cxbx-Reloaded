@@ -376,7 +376,7 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
         }
 
         // build time/date
-        m_Header.dwTimeDate = CurrentTime;
+        m_Header.dwTimeDate = (uint32)CurrentTime;
 
         // TODO: generate valid addr if necessary
         m_Header.dwNonKernelImportDirAddr = 0;
@@ -500,7 +500,7 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
             // certificate size is a constant
             m_Certificate.dwSize = sizeof(m_Certificate);
 
-            m_Certificate.dwTimeDate = CurrentTime;
+            m_Certificate.dwTimeDate = (uint32)CurrentTime;
 
             // TODO: generate in the form CX-9999
             m_Certificate.dwTitleId = 0xFFFF0002;
