@@ -436,7 +436,7 @@ static const char* OReg_Name[] =
     "a0.x"
 };
 
-static inline IsInUse(const boolean *pMask)
+static inline int IsInUse(const boolean *pMask)
 {
     return (pMask[0] || pMask[1] || pMask[2] || pMask[3]);
 }
@@ -473,10 +473,10 @@ static inline boolean HasILUO(VSH_SHADER_INSTRUCTION *pInstruction)
 }
 
 // Retrieves a number of bits in the instruction token
-static inline VshGetFromToken(uint32 *pShaderToken,
-                              uint08 SubToken,
-                              uint08 StartBit,
-                              uint08 BitLength)
+static inline int VshGetFromToken(uint32 *pShaderToken,
+                                  uint08 SubToken,
+                                  uint08 StartBit,
+                                  uint08 BitLength)
 {
     return (pShaderToken[SubToken] >> StartBit) & ~(0xFFFFFFFF << BitLength);
 }

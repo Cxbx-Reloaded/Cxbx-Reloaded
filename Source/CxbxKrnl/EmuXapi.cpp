@@ -1183,7 +1183,7 @@ VOID WINAPI XTL::EmuXapiThreadStartup
 
     EmuSwapFS();   // XBox FS
 
-    typedef (__stdcall *pfDummyFunc)(DWORD dwDummy);
+    typedef int (__stdcall *pfDummyFunc)(DWORD dwDummy);
 
     pfDummyFunc func = (pfDummyFunc)dwDummy1;
 
