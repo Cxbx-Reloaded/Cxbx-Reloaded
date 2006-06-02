@@ -303,10 +303,6 @@ SOURCE=.\Source\CxbxKrnl\HLEIntercept.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Mutex.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Source\Common\Win32\Mutex.h
 # End Source File
 # Begin Source File
