@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->Cxbx->DlgControllerConfig.h
+// *   Cxbx->Cxbx->DlgControllerConfig.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -36,9 +36,7 @@
 
 #include <windows.h>
 
-// ******************************************************************
-// * Show Dialog
-// ******************************************************************
-extern void ShowControllerConfig(HWND hwnd);
+/*! show controller configuration dialog */
+extern VOID ShowControllerConfig(HWND hwnd);
 
 #endif

@@ -37,6 +37,6 @@
 #include <windows.h>
 
 /*! show video configuration dialog */
-extern void ShowVideoConfig(HWND hwnd);
+extern VOID ShowVideoConfig(HWND hwnd);
 
 #endif

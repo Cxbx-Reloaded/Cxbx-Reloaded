@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->Cxbx->DlgVideoConfig.cpp
+// *   Cxbx->Cxbx->DlgVideoConfig.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -61,10 +61,7 @@ static HWND g_hDirect3DDevice = NULL;
 /*! handle to video resolution list window */
 static HWND g_hVideoResolution = NULL;
 
-// ******************************************************************
-// * func: ShowVideoConfig
-// ******************************************************************
-void ShowVideoConfig(HWND hwnd)
+VOID ShowVideoConfig(HWND hwnd)
 {
     /*! reset changes flag */
     g_bHasChanges = FALSE;
@@ -96,9 +93,6 @@ cleanup:
     }
 }
 
-// ******************************************************************
-// * func: DlgVideoConfigProc
-// ******************************************************************
 INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch(uMsg)
@@ -145,6 +139,29 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 
                 SendMessage(GetDlgItem(hWndDlg, IDC_CV_VSYNC), BM_SETCHECK, (WPARAM)g_XBVideo.GetVSync(), 0);
             }
+        }
+        break;
+
+        case WM_CLOSE:
+        {
+            /*! if changes have been made, check if the user wants to save them */
+            if(g_bHasChanges)
+            {
+                int ret = MessageBox(hWndDlg, "Do you wish to apply your changes?", "Cxbx", MB_ICONQUESTION | MB_YESNOCANCEL);
+
+                switch(ret)
+                {
+                    case IDYES:
+                        PostMessage(hWndDlg, WM_COMMAND, IDC_VC_ACCEPT, 0);
+                        break;
+					case IDNO:
+						PostMessage(hWndDlg, WM_COMMAND, IDC_VC_CANCEL, 0);
+                        break;
+                }
+                break;
+            }
+
+            PostMessage(hWndDlg, WM_COMMAND, IDC_VC_CANCEL, 0);
         }
         break;
 
@@ -211,29 +228,6 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
                 }
                 break;
             }
-        }
-        break;
-
-        case WM_CLOSE:
-        {
-            /*! if changes have been made, check if the user wants to save them */
-            if(g_bHasChanges)
-            {
-                int ret = MessageBox(hWndDlg, "Do you wish to apply your changes?", "Cxbx", MB_ICONQUESTION | MB_YESNOCANCEL);
-
-                switch(ret)
-                {
-                    case IDYES:
-                        PostMessage(hWndDlg, WM_COMMAND, IDC_VC_ACCEPT, 0);
-                        break;
-					case IDNO:
-						PostMessage(hWndDlg, WM_COMMAND, IDC_VC_CANCEL, 0);
-                        break;
-                }
-                break;
-            }
-
-            PostMessage(hWndDlg, WM_COMMAND, IDC_VC_CANCEL, 0);
         }
         break;
     } 
