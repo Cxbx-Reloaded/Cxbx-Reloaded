@@ -38,7 +38,7 @@ IDI_CXBX                ICON    DISCARDABLE     "Cxbx.ico"
 
 1 TEXTINCLUDE DISCARDABLE 
 BEGIN
-    "..\\Include\\Win32\\Cxbx\\ResCxbx.h\0"
+    "..\\Source\\Cxbx\\ResCxbx.h\0"
 END
 
 2 TEXTINCLUDE DISCARDABLE 
@@ -250,6 +250,8 @@ BEGIN
     CTEXT           "Please choose one of the controller components from above...",
                     IDC_CONFIG_STATUS,2,121,336,12,SS_CENTERIMAGE,
                     WS_EX_STATICEDGE
+    PUSHBUTTON      "Click to configure all input...",IDC_CONFIGURE_ALL,6,
+                    102,210,14,BS_FLAT
 END
 
 IDD_VIDEO_CFG DIALOGEX 0, 0, 258, 110

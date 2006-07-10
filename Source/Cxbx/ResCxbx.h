@@ -39,6 +39,7 @@
 #define IDC_SET_RIGHT_NEGX              1028
 #define IDC_SET_RIGHT_POSX              1029
 #define IDC_BUTTON1                     1030
+#define IDC_CONFIGURE_ALL               1030
 #define IDC_BUTTON2                     1031
 #define IDC_CV_FULLSCREEN               1034
 #define IDC_VC_DISPLAY_ADAPTER          1037

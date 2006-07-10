@@ -211,6 +211,52 @@ INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam,
                 case IDC_SET_RTHUMB:
                     ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_RTHUMB);
                     break;
+
+                case IDC_CONFIGURE_ALL:
+                {
+                    int v=0;
+
+                    struct _ConfigObj
+                    {
+                        int idcVal;
+                        XBCtrlObject ctrl;
+                    }
+                    configObj[] = 
+                    {
+                        { IDC_SET_X, XBCTRL_OBJECT_X }, 
+                        { IDC_SET_Y, XBCTRL_OBJECT_Y },
+                        { IDC_SET_A, XBCTRL_OBJECT_A }, 
+                        { IDC_SET_B, XBCTRL_OBJECT_B },
+                        { IDC_SET_WHITE, XBCTRL_OBJECT_WHITE }, 
+                        { IDC_SET_BLACK, XBCTRL_OBJECT_BLACK },
+                        { IDC_SET_LTRIGGER, XBCTRL_OBJECT_LTRIGGER }, 
+                        { IDC_SET_RTRIGGER, XBCTRL_OBJECT_RTRIGGER },
+                        { IDC_SET_DPAD_UP, XBCTRL_OBJECT_DPADUP }, 
+                        { IDC_SET_DPAD_DOWN, XBCTRL_OBJECT_DPADDOWN },
+                        { IDC_SET_DPAD_LEFT, XBCTRL_OBJECT_DPADLEFT }, 
+                        { IDC_SET_DPAD_RIGHT, XBCTRL_OBJECT_DPADRIGHT },
+                        { IDC_SET_BACK, XBCTRL_OBJECT_BACK }, 
+                        { IDC_SET_START, XBCTRL_OBJECT_START },
+                        { IDC_SET_LTHUMB, XBCTRL_OBJECT_LTHUMB }, 
+                        { IDC_SET_RTHUMB, XBCTRL_OBJECT_RTHUMB },
+                        { IDC_SET_LEFT_POSY, XBCTRL_OBJECT_LTHUMBPOSY }, 
+                        { IDC_SET_LEFT_NEGY, XBCTRL_OBJECT_LTHUMBNEGY },
+                        { IDC_SET_LEFT_NEGX, XBCTRL_OBJECT_LTHUMBNEGX }, 
+                        { IDC_SET_LEFT_POSX, XBCTRL_OBJECT_LTHUMBPOSX },
+                        { IDC_SET_RIGHT_POSY, XBCTRL_OBJECT_RTHUMBPOSY }, 
+                        { IDC_SET_RIGHT_NEGY, XBCTRL_OBJECT_RTHUMBNEGY },
+                        { IDC_SET_RIGHT_NEGX, XBCTRL_OBJECT_RTHUMBNEGX }, 
+                        { IDC_SET_RIGHT_POSX, XBCTRL_OBJECT_RTHUMBPOSX },
+                    };
+
+                    for(v=0;v<sizeof(configObj) / sizeof(_ConfigObj);v++)
+                    {
+                        Sleep(500);
+                        ConfigureInput(hWndDlg, GetDlgItem(hWndDlg, configObj[v].idcVal), configObj[v].ctrl);
+                    }
+
+                    break;
+                }
             } 
         }
         break;
@@ -315,7 +361,8 @@ VOID EnableButtonWindows(HWND hWndDlg, HWND hExclude, BOOL bEnable)
         IDC_SET_BACK, IDC_SET_START, IDC_SET_LTRIGGER, IDC_SET_RTRIGGER,
         IDC_SET_LEFT_POSY, IDC_SET_LEFT_NEGY, IDC_SET_LEFT_NEGX, IDC_SET_LEFT_POSX,
         IDC_SET_RIGHT_POSY, IDC_SET_RIGHT_NEGY, IDC_SET_RIGHT_NEGX, IDC_SET_RIGHT_POSX,
-        IDC_INPUT_CONFIG_CANCEL, IDC_INPUT_CONFIG_ACCEPT
+        IDC_INPUT_CONFIG_CANCEL, IDC_INPUT_CONFIG_ACCEPT,
+        IDC_CONFIGURE_ALL
     };
 
     /*! enable / disable all the listed windows */
