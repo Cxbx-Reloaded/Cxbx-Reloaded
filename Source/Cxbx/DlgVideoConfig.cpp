@@ -31,59 +31,69 @@
 // *  All rights reserved
 // *
 // ******************************************************************
+
+#include "CxbxKrnl/EmuShared.h"
+
 #include "DlgVideoConfig.h"
 #include "ResCxbx.h"
-#include "CxbxKrnl/EmuShared.h"
-#include "CxbxKrnl/Emu.h"
 
-#include <stdio.h>
 #include <d3d8.h>
 
-// ******************************************************************
-// * Global(s)
-// ******************************************************************
-XTL::D3DDEVTYPE  g_DevType[2] = {XTL::D3DDEVTYPE_HAL, XTL::D3DDEVTYPE_REF};
-char            *g_szDevType[2] = {"Direct3D HAL (Hardware Accelerated)", "Direct3D REF (Software)"};
-
-// ******************************************************************
-// * Static Function(s)
-// ******************************************************************
+/*! windows dialog procedure */
 static INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+/*! refresh UI based on selected display adapter */
 static VOID RefreshDisplayAdapter();
+/*! refresh UI based on selected device */
 static VOID RefreshDirect3DDevice();
 
-// ******************************************************************
-// * Static Variable(s)
-// ******************************************************************
-static XTL::LPDIRECT3D8        g_pD3D8         = NULL;   // Direct3D8
-static XTL::LPDIRECT3DDEVICE8  g_pD3D8Device   = NULL;   // Direct3D8 Device
-static XBVideo                 g_XBVideo;
-static BOOL                    g_bHasChanges;
-static DWORD                   g_dwAdapterCount = 0;
-static DWORD                   g_dwVideoResolution = 0;
-static HWND                    g_hDisplayAdapter  = NULL;
-static HWND                    g_hDirect3DDevice  = NULL;
-static HWND                    g_hVideoResolution = NULL;
+/*! direct3d instance */
+static XTL::LPDIRECT3D8 g_pD3D8 = 0;
+/*! video configuration */
+static XBVideo g_XBVideo;
+/*! changes flag */
+static BOOL g_bHasChanges = FALSE;
+/*! number of adapters */
+static DWORD g_dwAdapterCount = 0;
+/*! handle to display adapter list window */
+static HWND g_hDisplayAdapter = NULL;
+/*! handle to device list window */
+static HWND g_hDirect3DDevice = NULL;
+/*! handle to video resolution list window */
+static HWND g_hVideoResolution = NULL;
 
 // ******************************************************************
 // * func: ShowVideoConfig
 // ******************************************************************
 void ShowVideoConfig(HWND hwnd)
 {
-	g_bHasChanges = FALSE;
+    /*! reset changes flag */
+    g_bHasChanges = FALSE;
 
+    /*! retrieve video configuration */
     g_EmuShared->GetXBVideo(&g_XBVideo);
 
-    // ******************************************************************
-    // * Display Window
-    // ******************************************************************
-    DialogBox
-    (
-        GetModuleHandle(NULL),
-        MAKEINTRESOURCE(IDD_VIDEO_CFG),
-        hwnd,
-        DlgVideoConfigProc
-    );
+    /*! initialize direct3d */
+    {
+        g_pD3D8 = XTL::Direct3DCreate8(D3D_SDK_VERSION);
+
+        if(g_pD3D8 == 0) { goto cleanup; }
+
+        g_dwAdapterCount = g_pD3D8->GetAdapterCount();
+    }
+
+    /*! show dialog box */
+    DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_VIDEO_CFG), hwnd, DlgVideoConfigProc);
+
+cleanup:
+
+    /*! cleanup direct3d */
+    {
+        if(g_pD3D8 != 0)
+        {
+            g_pD3D8->Release();
+            g_pD3D8 = 0;
+        }
+    }
 }
 
 // ******************************************************************
@@ -99,48 +109,42 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
             g_hDirect3DDevice  = GetDlgItem(hWndDlg, IDC_VC_D3D_DEVICE);
             g_hVideoResolution = GetDlgItem(hWndDlg, IDC_VC_VIDEO_RESOLUTION);
 
+            /*! set window icon */
             SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CXBX)));
 
-            // ******************************************************************
-            // * Create Direct3D
-            // ******************************************************************
-            {
-                g_pD3D8 = XTL::Direct3DCreate8(D3D_SDK_VERSION);
-
-                if(g_pD3D8 == NULL)
-                    break;
-            }
-
-            // ******************************************************************
-            // * Enumerate Display Adapters
-            // ******************************************************************
+            /*! enumerate display adapters */
             {
                 SendMessage(g_hDisplayAdapter, CB_RESETCONTENT, 0, 0);
 
-                XTL::D3DADAPTER_IDENTIFIER8 AdapterIdentifier;
-
-                g_dwAdapterCount = g_pD3D8->GetAdapterCount();
-
                 for(uint32 v=0;v<g_dwAdapterCount;v++)
                 {
-                    g_pD3D8->GetAdapterIdentifier(v, D3DENUM_NO_WHQL_LEVEL, &AdapterIdentifier);
+                    XTL::D3DADAPTER_IDENTIFIER8 adapterIdentifier;
+
+                    g_pD3D8->GetAdapterIdentifier(v, D3DENUM_NO_WHQL_LEVEL, &adapterIdentifier);
 
                     if(v == 0)
+                    {
                         SendMessage(g_hDisplayAdapter, CB_ADDSTRING, 0, (LPARAM)"Primary Display Adapter");
+                    }
                     else
-                        SendMessage(g_hDisplayAdapter, CB_ADDSTRING, 0, (LPARAM)AdapterIdentifier.Description);
+                    {
+                        SendMessage(g_hDisplayAdapter, CB_ADDSTRING, 0, (LPARAM)adapterIdentifier.Description);
+                    }
                 }
             }
 
+            /*! activate configured display adapter */
             SendMessage(g_hDisplayAdapter, CB_SETCURSEL, g_XBVideo.GetDisplayAdapter(), 0);
 
+            /*! refresh UI based on currently selected display adapter */
             RefreshDisplayAdapter();
 
-            // ******************************************************************
-            // * Check Appropriate Options
-            // ******************************************************************
-            SendMessage(GetDlgItem(hWndDlg, IDC_CV_FULLSCREEN), BM_SETCHECK, (WPARAM)g_XBVideo.GetFullscreen(), 0);
-            SendMessage(GetDlgItem(hWndDlg, IDC_CV_VSYNC), BM_SETCHECK, (WPARAM)g_XBVideo.GetVSync(), 0);
+            /*! check appropriate options */
+            {
+                SendMessage(GetDlgItem(hWndDlg, IDC_CV_FULLSCREEN), BM_SETCHECK, (WPARAM)g_XBVideo.GetFullscreen(), 0);
+
+                SendMessage(GetDlgItem(hWndDlg, IDC_CV_VSYNC), BM_SETCHECK, (WPARAM)g_XBVideo.GetVSync(), 0);
+            }
         }
         break;
 
@@ -156,9 +160,7 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
                 
                 case IDC_VC_ACCEPT:
                 {
-                    // ******************************************************************
-                    // * Store Video Resolution
-                    // ******************************************************************
+                    /*! save video resolution configuration */
                     {
                         HWND hVideoResolution = GetDlgItem(hWndDlg, IDC_VC_VIDEO_RESOLUTION);
 
@@ -171,13 +173,9 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
                         g_XBVideo.SetVideoResolution(szBuffer);
                     }
 
-                    // ******************************************************************
-                    // * Store Fullscreen/VSync Configuration
-                    // ******************************************************************
+                    /*! save fullscreen/vsync options */
                     {
-                        LRESULT lRet;
-
-                        lRet = SendMessage(GetDlgItem(hWndDlg, IDC_CV_FULLSCREEN), BM_GETCHECK, 0, 0);
+                        LRESULT lRet = SendMessage(GetDlgItem(hWndDlg, IDC_CV_FULLSCREEN), BM_GETCHECK, 0, 0);
 
                         g_XBVideo.SetFullscreen(lRet == BST_CHECKED);
 
@@ -186,6 +184,7 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
                         g_XBVideo.SetVSync(lRet == BST_CHECKED);
                     }
 
+                    /*! save video configuration */
                     g_EmuShared->SetXBVideo(&g_XBVideo);
 
                     EndDialog(hWndDlg, wParam);
@@ -194,21 +193,20 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 
                 case IDC_VC_DISPLAY_ADAPTER:
                 {
-                    switch(HIWORD(wParam))
+                    if(HIWORD(wParam) == CBN_SELCHANGE)
                     {
-                        case CBN_SELCHANGE:
-                            RefreshDisplayAdapter();
-                            break;
+                        RefreshDisplayAdapter();
+                        break;
                     }
                 }
                 break;
 
                 case IDC_VC_D3D_DEVICE:
                 {
-                    switch(HIWORD(wParam))
+                    if(HIWORD(wParam) == CBN_SELCHANGE)
                     {
-                        case CBN_SELCHANGE:
-                            RefreshDirect3DDevice();
+                        RefreshDirect3DDevice();
+                        break;
                     }
                 }
                 break;
@@ -218,6 +216,7 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 
         case WM_CLOSE:
         {
+            /*! if changes have been made, check if the user wants to save them */
             if(g_bHasChanges)
             {
                 int ret = MessageBox(hWndDlg, "Do you wish to apply your changes?", "Cxbx", MB_ICONQUESTION | MB_YESNOCANCEL);
@@ -229,111 +228,152 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
                         break;
 					case IDNO:
 						PostMessage(hWndDlg, WM_COMMAND, IDC_VC_CANCEL, 0);
-					default:
                         break;
                 }
+                break;
             }
-			else
-			{
-				PostMessage(hWndDlg, WM_COMMAND, IDC_VC_CANCEL, 0);
-				break;
-			}
-			break;
-            EndDialog(hWndDlg, wParam);
+
+            PostMessage(hWndDlg, WM_COMMAND, IDC_VC_CANCEL, 0);
         }
         break;
     } 
     return FALSE; 
 }
 
-// ******************************************************************
-// * func: RefreshDisplayAdapter
-// ******************************************************************
 VOID RefreshDisplayAdapter()
 {
-    g_XBVideo.SetDisplayAdapter(SendMessage(g_hDisplayAdapter, CB_GETCURSEL, 0, 0));
-
-    SendMessage(g_hDirect3DDevice, CB_RESETCONTENT, 0, 0);
-
-    // ******************************************************************
-    // * Enumerate Direct3D Devices
-    // ******************************************************************
+    /*! save configured display adapter */
     {
-        XTL::D3DCAPS8 Caps;
+        DWORD dwOld = g_XBVideo.GetDisplayAdapter();
 
-        for(uint32 d=0;d<2;d++)
-            if(g_pD3D8->GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), g_DevType[d], &Caps) == D3D_OK)
-                SendMessage(g_hDirect3DDevice, CB_ADDSTRING, 0, (LPARAM)g_szDevType[d]);
+        DWORD dwDisplayAdapter = (DWORD)SendMessage(g_hDisplayAdapter, CB_GETCURSEL, 0, 0);
+
+        if(dwDisplayAdapter != dwOld)
+        {
+            g_bHasChanges = TRUE;
+
+            g_XBVideo.SetDisplayAdapter(dwDisplayAdapter);
+        }
     }
 
+    /*! generate list of device types */
+    {
+        /*! device types */
+        static const XTL::D3DDEVTYPE devType[2] = { XTL::D3DDEVTYPE_HAL, XTL::D3DDEVTYPE_REF };
+
+        /*! human readable device types */
+        static const char *szDevType[2] = { "Direct3D HAL (Hardware Accelerated)", "Direct3D REF (Software)" };
+
+        /*! clear device listbox */
+        SendMessage(g_hDirect3DDevice, CB_RESETCONTENT, 0, 0);
+
+        /*! step through devices types */
+        for(uint32 d=0;d<2;d++)
+        {
+            XTL::D3DCAPS8 Caps;
+
+            /*! verify device is available */
+            if(g_pD3D8->GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), devType[d], &Caps) == D3D_OK)
+            {
+                /*! add device to list */
+                SendMessage(g_hDirect3DDevice, CB_ADDSTRING, 0, (LPARAM)szDevType[d]);
+            }
+        }
+    }
+
+    /*! activate configured device */
     SendMessage(g_hDirect3DDevice, CB_SETCURSEL, g_XBVideo.GetDirect3DDevice(), 0);
 
+    /*! refresh based on new device selection */
     RefreshDirect3DDevice();
 
     return;
 }
 
-// ******************************************************************
-// * func: RefreshDirect3DDevice
-// ******************************************************************
 VOID RefreshDirect3DDevice()
 {
-    g_XBVideo.SetDirect3DDevice(SendMessage(g_hDirect3DDevice, CB_GETCURSEL, 0, 0));
+    DWORD dwVideoResolution = 0;
 
-    SendMessage(g_hVideoResolution, CB_RESETCONTENT, 0, 0);
-
-    g_dwVideoResolution = 0;
-
-    // ******************************************************************
-    // * Enumerate Video Modes
-    // ******************************************************************
+    /*! save configured device */
     {
-        XTL::D3DDISPLAYMODE DisplayMode;
+        DWORD dwOld = g_XBVideo.GetDirect3DDevice();
 
-        uint32 dwAdapterModeCount = g_pD3D8->GetAdapterModeCount(g_XBVideo.GetDisplayAdapter());
+        DWORD dwDirect3DDevice = SendMessage(g_hDirect3DDevice, CB_GETCURSEL, 0, 0);
 
-        char szBuffer[260];
-
-        SendMessage(g_hVideoResolution, CB_ADDSTRING, 0, (LPARAM)"Automatic (Default)");
-
-        for(uint32 v=0;v<dwAdapterModeCount;v++)
+        if(dwDirect3DDevice != dwOld)
         {
-            char *szFormat = 0;
+            g_bHasChanges = TRUE;
 
-            g_pD3D8->EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), v, &DisplayMode);
-
-            switch(DisplayMode.Format)
-            {
-                case XTL::D3DFMT_X1R5G5B5:
-                    szFormat = "16bit x1r5g5b5";
-                    break;
-                case XTL::D3DFMT_R5G6B5:
-                    szFormat = "16bit r5g6r5";
-                    break;
-                case XTL::D3DFMT_X8R8G8B8:
-                    szFormat = "32bit x8r8g8b8";
-                    break;
-                case XTL::D3DFMT_A8R8G8B8:
-                    szFormat = "32bit a8r8g8b8";
-                    break;
-                default:
-                    szFormat = "Unknown";
-                    break;
-            };
-
-            if(DisplayMode.RefreshRate == 0)
-                sprintf(szBuffer, "%d x %d %s", DisplayMode.Width, DisplayMode.Height, szFormat);
-            else
-                sprintf(szBuffer, "%d x %d %s (%d hz)", DisplayMode.Width, DisplayMode.Height, szFormat, DisplayMode.RefreshRate);
-
-            if(strcmp(szBuffer, g_XBVideo.GetVideoResolution()) == 0)
-                g_dwVideoResolution = v+1;
-
-            SendMessage(g_hVideoResolution, CB_ADDSTRING, 0, (LPARAM)szBuffer);
+            g_XBVideo.SetDirect3DDevice(dwDirect3DDevice);
         }
     }
 
-    SendMessage(g_hVideoResolution, CB_SETCURSEL, g_dwVideoResolution, 0);
+    /*! generate list of display modes */
+    {
+        /*! clear display mode listbox */
+        SendMessage(g_hVideoResolution, CB_RESETCONTENT, 0, 0);
+
+        /*! enumerate display modes */
+        {
+            uint32 dwAdapterModeCount = g_pD3D8->GetAdapterModeCount(g_XBVideo.GetDisplayAdapter());
+
+            SendMessage(g_hVideoResolution, CB_ADDSTRING, 0, (LPARAM)"Automatic (Default)");
+
+            /*! enumerate through available adapter modes */
+            for(uint32 v=0;v<dwAdapterModeCount;v++)
+            {
+                char *szFormat = 0;
+
+                XTL::D3DDISPLAYMODE displayMode;
+
+                g_pD3D8->EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), v, &displayMode);
+
+                switch(displayMode.Format)
+                {
+                    case XTL::D3DFMT_X1R5G5B5:
+                        szFormat = "16bit x1r5g5b5";
+                        break;
+                    case XTL::D3DFMT_R5G6B5:
+                        szFormat = "16bit r5g6r5";
+                        break;
+                    case XTL::D3DFMT_X8R8G8B8:
+                        szFormat = "32bit x8r8g8b8";
+                        break;
+                    case XTL::D3DFMT_A8R8G8B8:
+                        szFormat = "32bit a8r8g8b8";
+                        break;
+                    default:
+                        szFormat = "Unknown";
+                        break;
+                };
+
+                /*! add display mode to list */
+                {
+                    char szBuffer[260];
+
+                    if(displayMode.RefreshRate == 0)
+                    {
+                        sprintf(szBuffer, "%d x %d %s", displayMode.Width, displayMode.Height, szFormat);
+                    }
+                    else
+                    {
+                        sprintf(szBuffer, "%d x %d %s (%d hz)", displayMode.Width, displayMode.Height, szFormat, displayMode.RefreshRate);
+                    }
+
+                    /*! if current mode is the configured video resolution, activate it in the list */
+                    if(strcmp(szBuffer, g_XBVideo.GetVideoResolution()) == 0)
+                    {
+                        dwVideoResolution = v+1;
+                    }
+
+                    SendMessage(g_hVideoResolution, CB_ADDSTRING, 0, (LPARAM)szBuffer);
+                }
+            }
+        }
+    }
+
+    /*! activate configured display mode */
+    SendMessage(g_hVideoResolution, CB_SETCURSEL, dwVideoResolution, 0);
     
     return;
 }

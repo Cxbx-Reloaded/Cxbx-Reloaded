@@ -36,9 +36,7 @@
 
 #include <windows.h>
 
-// ******************************************************************
-// * Show Dialog
-// ******************************************************************
+/*! show video configuration dialog */
 extern void ShowVideoConfig(HWND hwnd);
 
 #endif
