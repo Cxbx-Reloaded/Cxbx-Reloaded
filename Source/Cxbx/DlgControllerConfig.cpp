@@ -45,7 +45,7 @@ static INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM 
 /*! configure input for the specified controller object */
 static VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object);
 /*! enable / disable button windows */
-static VOID EnableButtonWindows(HWND hWndDlg, BOOL bEnable);
+static VOID EnableButtonWindows(HWND hWndDlg, HWND hExclude, BOOL bEnable);
 
 /*! controller configuration */
 static XBController g_XBController;
@@ -230,7 +230,7 @@ VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object)
 	g_bHasChanges = TRUE;
 
     /*! disable all buttons */
-    EnableButtonWindows(hWndDlg, FALSE);
+    EnableButtonWindows(hWndDlg, hWndButton, FALSE);
 
     char szOrgText[32];
     char szNewText[255] = "Recieved no user input, try again...";
@@ -278,7 +278,7 @@ VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object)
 cleanup:
 
     /*! enable all buttons */
-    EnableButtonWindows(hWndDlg, TRUE);
+    EnableButtonWindows(hWndDlg, hWndButton, TRUE);
 
     /*! update window with status */
     {
@@ -301,7 +301,7 @@ cleanup:
     bConfigDone = true;
 }
 
-VOID EnableButtonWindows(HWND hWndDlg, BOOL bEnable)
+VOID EnableButtonWindows(HWND hWndDlg, HWND hExclude, BOOL bEnable)
 {
     int v=0;
 
@@ -323,8 +323,6 @@ VOID EnableButtonWindows(HWND hWndDlg, BOOL bEnable)
     {
         HWND hWnd = GetDlgItem(hWndDlg, itemList[v]);
 
-        EnableWindow(hWnd, bEnable);
+        if(hWnd != hExclude) { EnableWindow(hWnd, bEnable); }
     }
 }
-
-
