@@ -44,6 +44,8 @@
 static INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 /*! configure input for the specified controller object */
 static VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object);
+/*! enable / disable button windows */
+static VOID EnableButtonWindows(HWND hWndDlg, BOOL bEnable);
 
 /*! controller configuration */
 static XBController g_XBController;
@@ -227,6 +229,9 @@ VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object)
 
 	g_bHasChanges = TRUE;
 
+    /*! disable all buttons */
+    EnableButtonWindows(hWndDlg, FALSE);
+
     char szOrgText[32];
     char szNewText[255] = "Recieved no user input, try again...";
 
@@ -272,6 +277,9 @@ VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object)
 
 cleanup:
 
+    /*! enable all buttons */
+    EnableButtonWindows(hWndDlg, TRUE);
+
     /*! update window with status */
     {
         if(g_XBController.GetError())
@@ -292,3 +300,31 @@ cleanup:
 
     bConfigDone = true;
 }
+
+VOID EnableButtonWindows(HWND hWndDlg, BOOL bEnable)
+{
+    int v=0;
+
+    /*! list of applicable child windows */
+    int itemList[] = 
+    {
+        IDC_SET_X, IDC_SET_Y, IDC_SET_A, IDC_SET_B,
+        IDC_SET_WHITE, IDC_SET_BLACK,
+        IDC_SET_LTHUMB, IDC_SET_RTHUMB,
+        IDC_SET_DPAD_UP, IDC_SET_DPAD_DOWN, IDC_SET_DPAD_LEFT, IDC_SET_DPAD_RIGHT,
+        IDC_SET_BACK, IDC_SET_START, IDC_SET_LTRIGGER, IDC_SET_RTRIGGER,
+        IDC_SET_LEFT_POSY, IDC_SET_LEFT_NEGY, IDC_SET_LEFT_NEGX, IDC_SET_LEFT_POSX,
+        IDC_SET_RIGHT_POSY, IDC_SET_RIGHT_NEGY, IDC_SET_RIGHT_NEGX, IDC_SET_RIGHT_POSX,
+        IDC_INPUT_CONFIG_CANCEL, IDC_INPUT_CONFIG_ACCEPT
+    };
+
+    /*! enable / disable all the listed windows */
+    for(v=0;v<sizeof(itemList) / sizeof(int);v++)
+    {
+        HWND hWnd = GetDlgItem(hWndDlg, itemList[v]);
+
+        EnableWindow(hWnd, bEnable);
+    }
+}
+
+
