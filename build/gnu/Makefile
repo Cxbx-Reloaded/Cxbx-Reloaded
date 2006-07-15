@@ -34,16 +34,16 @@
 # *  File Authors: Aaron Robinson, Edgar Hucek
 # ******************************************************************
 CC	= g++
-CFLAGS  = -g -O2 -ISource -ISource/Common/Linux -ISource/Linux
+CFLAGS  = -g -O2 -I../../src -I../../src/Common/Linux -I../..src/Linux
 OBJCOPY	= objcopy
 GCC295 = cpp0-2.95
 #LDFLAGS = -s -S -T ldscript.ld
 
-OBJECTS	= Source/Common/Error.o \
-	Source/Common/Exe.o \
-	Source/Common/Xbe.o \
-        Source/Common/OpenXDK.o \
-	Source/Cxbe/Main.o
+OBJECTS	= ../../src/Common/Error.o \
+	../../src/Common/Exe.o \
+	../../src/Common/Xbe.o \
+	../../src/Common/OpenXDK.o \
+	../../src/Cxbe/Main.o
 
 RESOURCES = 
 
@@ -52,10 +52,10 @@ all	: cxbe
 
 clean	:
 	rm -rf *.o *~ core *.core ${OBJECTS} ${RESOURCES}
-	rm -rf *.o *~ core *.core ${OBJECTS} ${RESOURCES} Bin/cxbe Bin/cxbe.exe
+	rm -rf *.o *~ core *.core ${OBJECTS} ${RESOURCES} ../../bin/cxbe ../../bin/cxbe.exe
 
 cxbe : ${OBJECTS} ${RESOURCES}
-	${CC} -o Bin/$@ ${OBJECTS} ${RESOURCES} ${LDFLAGS-XBE}
+	${CC} -o ../../bin/$@ ${OBJECTS} ${RESOURCES} ${LDFLAGS-XBE}
 
 ### rules:
 
