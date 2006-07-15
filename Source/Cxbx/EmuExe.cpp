@@ -34,6 +34,7 @@
 
 #include "EmuExe.h"
 #include "Prolog.h"
+#include "CxbxUtil.h"
 #include "CxbxKrnl/CxbxKrnl.h"
 
 #include <stdio.h>

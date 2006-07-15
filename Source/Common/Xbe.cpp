@@ -33,6 +33,7 @@
 // ******************************************************************
 #include "Xbe.h"
 #include "Exe.h"
+#include "CxbxUtil.h"
 
 #include <memory.h>
 #include <locale.h>

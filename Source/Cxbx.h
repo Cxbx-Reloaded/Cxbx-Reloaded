@@ -34,14 +34,15 @@
 #ifndef CXBX_H
 #define CXBX_H
 
-// CxbxKrnl exports, others import
+/*! CxbxKrnl exports, others import */
 #ifndef _CXBXKRNL_INTERNAL
 #define CXBXKRNL_API __declspec(dllimport)
 #else
 #define CXBXKRNL_API __declspec(dllexport)
 #endif
 
-// Caustik's favorite typedefs
+/*! \name primitive typedefs */
+/*! \{ */
 typedef signed int     sint;
 typedef unsigned int   uint;
 typedef char           int08;
@@ -53,48 +54,34 @@ typedef unsigned long  uint32;
 typedef signed char    sint08;
 typedef signed short   sint16;
 typedef signed long    sint32;
+/*! \} */
 
-// define this to track resources for debugging purposes
-//#define _DEBUG_TRACK_VB // Vertex Buffers
-//#define _DEBUG_TRACK_VS // Vertex Shaders
-//#define _DEBUG_TRACK_PB // Push Buffers
-
-// define this to track memory allocations
-//#define _DEBUG_ALLOC
-
+/*! define this to track vertex buffers */
+#define _DEBUG_TRACK_VB
+/*! define this to track vertex shaders */
+#define _DEBUG_TRACK_VS
+/*! define this to track push buffers */
+#define _DEBUG_TRACK_PB
+/*! define this to track memory allocations */
+#define _DEBUG_ALLOC
 // define this to trace intercepted function calls
 #define _DEBUG_TRACE
-
 // define this to trace warnings
-//#define _DEBUG_WARNINGS
+#define _DEBUG_WARNINGS
 
 // define these to dump textures
 //#define _DEBUG_DUMP_TEXTURE_SETTEXTURE "C:\\Aaron\\Textures\\"
 //#define _DEBUG_DUMP_TEXTURE_REGISTER   "C:\\Aaron\\Textures\\"
 
-// version information
+/*! version string dependent on trace flag */
 #ifndef _DEBUG_TRACE
 #define _CXBX_VERSION "0.8.0"
 #else
 #define _CXBX_VERSION "0.8.0-Trace"
 #endif
 
-// round dwValue to the nearest multiple of dwMult
-static uint32 RoundUp(uint32 dwValue, uint32 dwMult)
-{
-    if(dwMult == 0)
-        return dwValue;
-
-    return dwValue - (dwValue-1)%dwMult + (dwMult - 1);
-}
-
 // debug mode choices, either console screen or external file
-enum DebugMode
-{
-    DM_NONE,
-    DM_CONSOLE,
-    DM_FILE
-};
+enum DebugMode { DM_NONE, DM_CONSOLE, DM_FILE };
 
 // maximum number of threads cxbx can handle
 #define MAXIMUM_XBOX_THREADS 256

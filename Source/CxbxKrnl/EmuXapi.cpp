@@ -37,6 +37,7 @@
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
+#include "CxbxUtil.h"
 #include "CxbxKrnl.h"
 #include "Emu.h"
 #include "EmuFS.h"
