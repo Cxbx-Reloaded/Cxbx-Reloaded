@@ -38,12 +38,12 @@ RSC=rc.exe
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "bin\release"
-# PROP Intermediate_Dir "bin\release"
+# PROP Output_Dir "..\..\bin\release"
+# PROP Intermediate_Dir "..\..\bin\release"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /I "Import\OpenXDK" /I "Source" /I "Source\Common" /I "Source\Common\Win32" /I "Import\OpenXDK\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /I "..\..\import\OpenXDK" /I "..\..\src" /I "..\..\src\Common" /I "..\..\src\Common\Win32" /I "..\..\import\OpenXDK\include" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 ws2_32.lib dsound.lib winmm.lib ddraw.lib d3dx8.lib d3d8.lib dinput8.lib dxguid.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /pdb:none /machine:I386 /out:"bin\release\Cxbx.dll" /libpath:"Lib"
+# ADD LINK32 ws2_32.lib dsound.lib winmm.lib ddraw.lib d3dx8.lib d3d8.lib dinput8.lib dxguid.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /pdb:none /machine:I386 /out:"..\..\bin\release\Cxbx.dll"
 # SUBTRACT LINK32 /profile /map /debug
 
 !ELSEIF  "$(CFG)" == "CxbxKrnl - Win32 Debug"
@@ -65,12 +65,12 @@ LINK32=link.exe
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
-# PROP Output_Dir "bin\debug"
-# PROP Intermediate_Dir "bin\debug"
+# PROP Output_Dir "..\..\bin\debug"
+# PROP Intermediate_Dir "..\..\bin\debug"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "Source" /I "Source\Common" /I "Source\Common\Win32" /I "Import\OpenXDK\include" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "..\..\src\Common" /I "..\..\import\OpenXDK\include" /I "..\..\src" /I "..\..\src\Common\Win32" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "CXBXKRNL_EXPORTS" /YX /FD /GZ /c
 # SUBTRACT CPP /Fr
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
@@ -81,7 +81,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 ws2_32.lib dsound.lib winmm.lib ddraw.lib d3dx8.lib d3d8.lib dinput8.lib dxguid.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /map /debug /machine:I386 /pdbtype:sept /libpath:"Lib"
+# ADD LINK32 ws2_32.lib dsound.lib winmm.lib ddraw.lib d3dx8.lib d3d8.lib dinput8.lib dxguid.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /map /debug /machine:I386 /pdbtype:sept
 # SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
@@ -98,107 +98,107 @@ LINK32=link.exe
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\D3D8.1.0.3925.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.3925.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\D3D8.1.0.4034.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4034.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\D3D8.1.0.4134.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4134.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\D3D8.1.0.4361.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4361.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\D3D8.1.0.4432.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4432.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\DSound.1.0.3936.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.3936.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\DSound.1.0.4361.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4361.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\DSound.1.0.4432.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4432.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\DSound.1.0.4627.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4627.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\DSound.1.0.5849.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5849.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\Xapi.1.0.4034.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4034.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\Xapi.1.0.4134.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4134.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\Xapi.1.0.4361.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4361.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\Xapi.1.0.4432.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4432.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\Xapi.1.0.5558.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5558.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\Xapi.1.0.5849.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5849.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\XG.1.0.4361.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4361.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\XG.1.0.4627.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4627.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\XNet.1.0.3911.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.3911.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\XOnline.1.0.4361.h
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4361.h
 # End Source File
 # End Group
 # Begin Group "EmuD3D8 (h)"
@@ -206,140 +206,140 @@ SOURCE=.\Source\CxbxKrnl\HLEDataBase\XOnline.1.0.4361.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuD3D8\Convert.h
+SOURCE=..\..\src\CxbxKrnl\EmuD3D8\Convert.h
 # End Source File
 # End Group
 # Begin Source File
 
-SOURCE=.\Source\Common\Win32\AlignPosfix1.h
+SOURCE=..\..\src\Common\Win32\AlignPosfix1.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Win32\AlignPrefix1.h
+SOURCE=..\..\src\Common\Win32\AlignPrefix1.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Cxbx.h
+SOURCE=..\..\src\Cxbx.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\CxbxKrnl.h
+SOURCE=..\..\src\CxbxKrnl\CxbxKrnl.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\DbgConsole.h
+SOURCE=..\..\src\CxbxKrnl\DbgConsole.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\Emu.h
+SOURCE=..\..\src\CxbxKrnl\Emu.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuAlloc.h
+SOURCE=..\..\src\CxbxKrnl\EmuAlloc.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuD3D8.h
+SOURCE=..\..\src\CxbxKrnl\EmuD3D8.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuD3D8Types.h
+SOURCE=..\..\src\CxbxKrnl\EmuD3D8Types.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuDInput.h
+SOURCE=..\..\src\CxbxKrnl\EmuDInput.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuDSound.h
+SOURCE=..\..\src\CxbxKrnl\EmuDSound.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuFile.h
+SOURCE=..\..\src\CxbxKrnl\EmuFile.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuFS.h
+SOURCE=..\..\src\CxbxKrnl\EmuFS.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuLDT.h
+SOURCE=..\..\src\CxbxKrnl\EmuLDT.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuNtDll.h
+SOURCE=..\..\src\CxbxKrnl\EmuNtDll.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuShared.h
+SOURCE=..\..\src\CxbxKrnl\EmuShared.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuXapi.h
+SOURCE=..\..\src\CxbxKrnl\EmuXapi.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuXG.h
+SOURCE=..\..\src\CxbxKrnl\EmuXG.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuXOnline.h
+SOURCE=..\..\src\CxbxKrnl\EmuXOnline.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuXTL.h
+SOURCE=..\..\src\CxbxKrnl\EmuXTL.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Error.h
+SOURCE=..\..\src\Common\Error.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Exe.h
+SOURCE=..\..\src\Common\Exe.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEIntercept.h
+SOURCE=..\..\src\CxbxKrnl\HLEIntercept.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Win32\Mutex.h
+SOURCE=..\..\src\Common\Win32\Mutex.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\OOVPA.h
+SOURCE=..\..\src\CxbxKrnl\OOVPA.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuD3D8\PushBuffer.h
+SOURCE=..\..\src\CxbxKrnl\EmuD3D8\PushBuffer.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\ResourceTracker.h
+SOURCE=..\..\src\CxbxKrnl\ResourceTracker.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuD3D8\State.h
+SOURCE=..\..\src\CxbxKrnl\EmuD3D8\State.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuD3D8\VertexBuffer.h
+SOURCE=..\..\src\CxbxKrnl\EmuD3D8\VertexBuffer.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuD3D8\VertexShader.h
+SOURCE=..\..\src\CxbxKrnl\EmuD3D8\VertexShader.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Win32\XBController.h
+SOURCE=..\..\src\Common\Win32\XBController.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Xbe.h
+SOURCE=..\..\src\Common\Xbe.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Win32\XBVideo.h
+SOURCE=..\..\src\Common\Win32\XBVideo.h
 # End Source File
 # End Group
 # Begin Group "Resource"
@@ -347,11 +347,11 @@ SOURCE=.\Source\Common\Win32\XBVideo.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Resource\Cxbx.ico
+SOURCE=..\..\resource\Cxbx.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\Resource\CxbxDll.rc
+SOURCE=..\..\resource\CxbxDll.rc
 # End Source File
 # End Group
 # Begin Group "Source"
@@ -362,132 +362,132 @@ SOURCE=.\Resource\CxbxDll.rc
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\D3D8.1.0.3925.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.3925.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\D3D8.1.0.4034.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4034.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\D3D8.1.0.4134.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4134.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\D3D8.1.0.4361.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4361.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\D3D8.1.0.4432.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4432.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\DSound.1.0.3936.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.3936.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\DSound.1.0.4361.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4361.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\DSound.1.0.4432.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4432.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\DSound.1.0.4627.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4627.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\DSound.1.0.5558.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5558.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\DSound.1.0.5849.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5849.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\Xapi.1.0.4034.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4034.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\Xapi.1.0.4134.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4134.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\Xapi.1.0.4361.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4361.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\Xapi.1.0.4432.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4432.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\Xapi.1.0.5558.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5558.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\Xapi.1.0.5849.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5849.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\XG.1.0.4361.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4361.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\XG.1.0.4627.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4627.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\XNet.1.0.3911.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.3911.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase\XOnline.1.0.4361.inl
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4361.inl
 # PROP Exclude_From_Build 1
 # End Source File
 # End Group
@@ -496,36 +496,36 @@ SOURCE=.\Source\CxbxKrnl\HLEDataBase\XOnline.1.0.4361.inl
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuD3D8\Convert.cpp
+SOURCE=..\..\src\CxbxKrnl\EmuD3D8\Convert.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuD3D8\PushBuffer.cpp
+SOURCE=..\..\src\CxbxKrnl\EmuD3D8\PushBuffer.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuD3D8\State.cpp
+SOURCE=..\..\src\CxbxKrnl\EmuD3D8\State.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuD3D8\VertexBuffer.cpp
+SOURCE=..\..\src\CxbxKrnl\EmuD3D8\VertexBuffer.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuD3D8\VertexShader.cpp
+SOURCE=..\..\src\CxbxKrnl\EmuD3D8\VertexShader.cpp
 # End Source File
 # End Group
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\CxbxKrnl.cpp
+SOURCE=..\..\src\CxbxKrnl\CxbxKrnl.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\DbgConsole.cpp
+SOURCE=..\..\src\CxbxKrnl\DbgConsole.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\Emu.cpp
+SOURCE=..\..\src\CxbxKrnl\Emu.cpp
 
 !IF  "$(CFG)" == "CxbxKrnl - Win32 Release"
 
@@ -538,95 +538,95 @@ SOURCE=.\Source\CxbxKrnl\Emu.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuAlloc.cpp
+SOURCE=..\..\src\CxbxKrnl\EmuAlloc.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuD3D8.cpp
+SOURCE=..\..\src\CxbxKrnl\EmuD3D8.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuDInput.cpp
+SOURCE=..\..\src\CxbxKrnl\EmuDInput.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuDSound.cpp
+SOURCE=..\..\src\CxbxKrnl\EmuDSound.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuFile.cpp
+SOURCE=..\..\src\CxbxKrnl\EmuFile.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuFS.cpp
+SOURCE=..\..\src\CxbxKrnl\EmuFS.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuKrnl.cpp
+SOURCE=..\..\src\CxbxKrnl\EmuKrnl.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuLDT.cpp
+SOURCE=..\..\src\CxbxKrnl\EmuLDT.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuNtDll.cpp
+SOURCE=..\..\src\CxbxKrnl\EmuNtDll.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Win32\EmuShared.cpp
+SOURCE=..\..\src\Common\Win32\EmuShared.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuXapi.cpp
+SOURCE=..\..\src\CxbxKrnl\EmuXapi.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuXG.cpp
+SOURCE=..\..\src\CxbxKrnl\EmuXG.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\EmuXOnline.cpp
+SOURCE=..\..\src\CxbxKrnl\EmuXOnline.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Error.cpp
+SOURCE=..\..\src\Common\Error.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEDataBase.cpp
+SOURCE=..\..\src\CxbxKrnl\HLEDataBase.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\HLEIntercept.cpp
+SOURCE=..\..\src\CxbxKrnl\HLEIntercept.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\KernelThunk.cpp
+SOURCE=..\..\src\CxbxKrnl\KernelThunk.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Win32\Mutex.cpp
+SOURCE=..\..\src\Common\Win32\Mutex.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\OpenXDK.cpp
+SOURCE=..\..\src\Common\OpenXDK.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\CxbxKrnl\ResourceTracker.cpp
+SOURCE=..\..\src\CxbxKrnl\ResourceTracker.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Win32\XBController.cpp
+SOURCE=..\..\src\Common\Win32\XBController.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Xbe.cpp
+SOURCE=..\..\src\Common\Xbe.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Win32\XBVideo.cpp
+SOURCE=..\..\src\Common\Win32\XBVideo.cpp
 # End Source File
 # End Group
 # End Target

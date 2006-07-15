@@ -1,6 +1,6 @@
 //Microsoft Developer Studio generated resource script.
 //
-#include "..\Source\Cxbx\ResCxbx.h"
+#include "..\src\Cxbx\ResCxbx.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -38,7 +38,7 @@ IDI_CXBX                ICON    DISCARDABLE     "Cxbx.ico"
 
 1 TEXTINCLUDE DISCARDABLE 
 BEGIN
-    "..\\Source\\Cxbx\\ResCxbx.h\0"
+    "..\\src\\Cxbx\\ResCxbx.h\0"
 END
 
 2 TEXTINCLUDE DISCARDABLE 

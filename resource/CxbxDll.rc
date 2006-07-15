@@ -1,6 +1,6 @@
 //Microsoft Developer Studio generated resource script.
 //
-#include "..\Source\CxbxKrnl\ResCxbxDll.h"
+#include "..\src\CxbxKrnl\ResCxbxDll.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////

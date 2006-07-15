@@ -37,12 +37,12 @@ RSC=rc.exe
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "bin\release"
-# PROP Intermediate_Dir "bin\release"
+# PROP Output_Dir "..\..\bin\release"
+# PROP Intermediate_Dir "..\..\bin\release"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /I "Source" /I "Source\Common\Win32" /I "Source\Win32" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /I "..\..\src" /I "..\..\src\Common\Win32" /I "..\..\src\Win32" /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -62,12 +62,12 @@ LINK32=link.exe
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
-# PROP Output_Dir "bin\debug"
-# PROP Intermediate_Dir "bin\debug"
+# PROP Output_Dir "..\..\bin\debug"
+# PROP Intermediate_Dir "..\..\bin\debug"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "Source" /I "Source\Common\Win32" /I "Source\Win32" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "..\..\src" /I "..\..\src\Common\Win32" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
 # SUBTRACT CPP /Fr
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
@@ -90,27 +90,27 @@ LINK32=link.exe
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Common\Win32\AlignPosfix1.h
+SOURCE=..\..\src\Common\Win32\AlignPosfix1.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Win32\AlignPrefix1.h
+SOURCE=..\..\src\Common\Win32\AlignPrefix1.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Cxbx.h
+SOURCE=..\..\src\Cxbx.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Error.h
+SOURCE=..\..\src\Common\Error.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Exe.h
+SOURCE=..\..\src\Common\Exe.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Xbe.h
+SOURCE=..\..\src\Common\Xbe.h
 # End Source File
 # End Group
 # Begin Group "Source"
@@ -118,23 +118,23 @@ SOURCE=.\Source\Common\Xbe.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=.\Source\Common\Error.cpp
+SOURCE=..\..\src\Common\Error.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Exe.cpp
+SOURCE=..\..\src\Common\Exe.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Cxbe\Main.cpp
+SOURCE=..\..\src\Cxbe\Main.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\OpenXDK.cpp
+SOURCE=..\..\src\Common\OpenXDK.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\Common\Xbe.cpp
+SOURCE=..\..\src\Common\Xbe.cpp
 # End Source File
 # End Group
 # End Target
