@@ -1,0 +1,33 @@
+                 ooooo     ooo ooooooooo.   ooooooo  ooooo
+                 `888'     `8' `888   `Y88.  `8888    d8'
+                  888       8   888   .d88'    Y888..8P
+                  888       8   888ooo88P'      `8888'
+                  888       8   888            .8PY888.
+                  `88.    .8'   888           d8'  `888b
+                    `YbodP'    o888o        o888o  o88888o
+
+
+                    The Ultimate Packer for eXecutables
+   Copyright (c) 1996-2006 Markus Oberhumer, Laszlo Molnar & John Reiser
+                        http://upx.sourceforge.net
+
+
+
+MAJOR NEWS IN UPX 2
+===================
+
+The main news since 1.25 are:
+
+  * new format: added support for arm/pe (ARM executables running on WinCE)
+  * new format: added support for linux elf/amd64
+  * new format: added support for linux elf/ppc32
+  * new format: added support for mach/ppc32 (Apple Mac OS X)
+  * new format: added support for bootable Linux kernels ("vmlinuz/386")
+  * new format: added support for Playstation exes ("ps1/exe")
+
+  * slightly better compression using the new NRV2E algorithm
+  * new options for compression tuning (e.g. '--brute')
+  * improved win32/pe compatibility
+  * direct ELF-to-memory decompression
+  * various bug fixes
+
