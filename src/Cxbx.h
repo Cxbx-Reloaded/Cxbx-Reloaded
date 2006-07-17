@@ -64,13 +64,14 @@ typedef signed long    sint32;
 #define _DEBUG_TRACK_PB
 /*! define this to track memory allocations */
 #define _DEBUG_ALLOC
-// define this to trace intercepted function calls
+/*! define this to trace intercepted function calls */
 #define _DEBUG_TRACE
-// define this to trace warnings
+/*! define this to trace warnings */
 #define _DEBUG_WARNINGS
 
-// define these to dump textures
+/*! define this to dump textures that have been set */
 //#define _DEBUG_DUMP_TEXTURE_SETTEXTURE "C:\\Aaron\\Textures\\"
+/*! define this to dump textures that are registered */
 //#define _DEBUG_DUMP_TEXTURE_REGISTER   "C:\\Aaron\\Textures\\"
 
 /*! version string dependent on trace flag */
@@ -80,15 +81,16 @@ typedef signed long    sint32;
 #define _CXBX_VERSION "0.8.0-Trace"
 #endif
 
-// debug mode choices, either console screen or external file
+/*! debug mode choices */
 enum DebugMode { DM_NONE, DM_CONSOLE, DM_FILE };
 
-// maximum number of threads cxbx can handle
+/*! maximum number of threads cxbx can handle */
 #define MAXIMUM_XBOX_THREADS 256
 
+/*! runtime DbgPrintf toggle boolean */
 extern volatile bool g_bPrintfOn;
 
-// convienance debug output macros
+/*! DbgPrintf enabled if _DEBUG_TRACE is set */
 #ifdef _DEBUG_TRACE
 #define DbgPrintf if(g_bPrintfOn) printf
 #else
