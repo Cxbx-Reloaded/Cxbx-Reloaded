@@ -84,7 +84,7 @@ XTL::X_CDirectSoundStream::_vtbl XTL::X_CDirectSoundStream::vtbl =
 };
 
 // size of sound buffer cache (used for periodic sound buffer updates)
-#define SOUNDBUFFER_CACHE_SIZE 0x100
+#define SOUNDBUFFER_CACHE_SIZE 0x200
 
 // size of sound stream cache (used for periodic sound stream updates)
 #define SOUNDSTREAM_CACHE_SIZE 0x100
