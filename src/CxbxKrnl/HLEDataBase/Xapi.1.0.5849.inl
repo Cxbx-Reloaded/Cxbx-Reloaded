@@ -56,6 +56,28 @@ SOOVPA<8> XapiInitProcess_1_0_5849 =
 };
 
 // ******************************************************************
+// * XGetDeviceChanges
+// ******************************************************************
+SOOVPA<7> XGetDeviceChanges_1_0_5849 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x0C, 0x75 },
+        { 0x1A, 0x53 },
+        { 0x28, 0xF7 },
+        { 0x36, 0x56 },
+        { 0x44, 0x89 },
+        { 0x52, 0xC8 },
+        { 0x60, 0x5F },
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_5849
 // ******************************************************************
 OOVPATable XAPI_1_0_5849[] =
@@ -208,6 +230,16 @@ OOVPATable XAPI_1_0_5849[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXInputGetState"
+        #endif
+    },
+	// XGetDeviceChanges
+    {
+        (OOVPA*)&XGetDeviceChanges_1_0_5849,
+
+        XTL::EmuXGetDeviceChanges,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXGetDeviceChanges"
         #endif
     },
     /* obsolete?

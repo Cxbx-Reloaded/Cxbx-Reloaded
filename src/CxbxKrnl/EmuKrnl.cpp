@@ -187,6 +187,35 @@ XBSYSAPI EXPORTNUM(14) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePool
 }
 
 // ******************************************************************
+// * 0x000F ExAllocatePoolWithTag
+// ******************************************************************
+// * Differences from NT: There is no PoolType field, as the XBOX
+// * only has 1 pool, the non-paged pool.
+// ******************************************************************
+XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
+(
+	IN SIZE_T NumberOfBytes,
+	IN ULONG Tag
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): ExAllocatePoolWithTag\n"
+           "(\n"
+		   "   NumberOfBytes       : 0x%.08X\n"
+		   "   Tag                 : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), NumberOfBytes, Tag);
+	
+	// TODO: Actually implement this
+    PVOID pRet = CxbxMalloc(NumberOfBytes);
+
+    EmuSwapFS();   // Xbox FS
+
+    return pRet;
+}
+
+// ******************************************************************
 // * 0x0018 ExQueryNonVolatileSetting
 // ******************************************************************
 XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
@@ -622,7 +651,37 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
            ");\n",
            GetCurrentThreadId(), Timer, DueTime, Dpc);
 
-    CxbxKrnlCleanup("KeSetTimer is not implemented");
+	// Call KeSetTimerEx
+	KeSetTimerEx(Timer, DueTime, 0, Dpc);
+
+    EmuSwapFS();   // Xbox FS
+
+    return TRUE;
+}
+
+// ******************************************************************
+// * 0x0096 - KeSetTimerEx
+// ******************************************************************
+XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
+(
+    IN PKTIMER        Timer,
+    IN LARGE_INTEGER  DueTime,
+    IN LONG           Period OPTIONAL,
+    IN PKDPC          Dpc OPTIONAL
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): KeSetTimerEx\n"
+           "(\n"
+           "   Timer               : 0x%.08X\n"
+           "   DueTime             : 0x%I64X\n"
+		   "   Period              : 0x%.08X\n"
+           "   Dpc                 : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), Timer, DueTime, Period, Dpc);
+
+    CxbxKrnlCleanup("KeSetTimerEx is not implemented");
 
     EmuSwapFS();   // Xbox FS
 
@@ -646,6 +705,48 @@ LAUNCH_DATA_PAGE xLaunchDataPage =
         0
     }
 };
+
+// ******************************************************************
+// * 0x00A0 - KfRaiseIrql
+// ******************************************************************
+XBSYSAPI EXPORTNUM(160) xboxkrnl::UCHAR NTAPI xboxkrnl::KfRaiseIrql
+(
+	IN UCHAR NewIrql
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): KfRaiseIrql\n"
+           "(\n"
+           "   NewIrql            : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), NewIrql);
+
+    EmuSwapFS();   // Xbox FS
+
+    return 0;
+}
+
+// ******************************************************************
+// * 0x00A1 - KfLowerIrql
+// ******************************************************************
+XBSYSAPI EXPORTNUM(161) xboxkrnl::UCHAR NTAPI xboxkrnl::KfLowerIrql
+(
+	IN UCHAR NewIrql
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): KfLowerIrql\n"
+           "(\n"
+           "   NewIrql            : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), NewIrql);
+
+    EmuSwapFS();   // Xbox FS
+
+    return 0;
+}
 
 // ******************************************************************
 // * 0x00A4 - LaunchDataPage (actually a pointer)
@@ -2247,6 +2348,35 @@ XBSYSAPI EXPORTNUM(260) NTSTATUS NTAPI xboxkrnl::RtlAnsiStringToUnicodeString
     EmuSwapFS();   // Xbox FS
 
     return ret;
+}
+// ******************************************************************
+// * 0x0108 - RtlAssert - Debug API?
+// ******************************************************************
+XBSYSAPI EXPORTNUM(264) VOID NTAPI xboxkrnl::RtlAssert
+(
+    PVOID	FailedAssertion,
+    PVOID	FileName,
+    ULONG	LineNumber,
+	PCHAR	Message
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): RtlAssert\n"
+           "(\n"
+           "   FailedAssertion           : 0x%.08X\n"
+           "   FileName                  : 0x%.08X\n"
+           "   LineNumber                : 0x%.08X\n"
+		   "   Message                   : 0x%.08X (\"%s\")\n"
+           ");\n",
+           GetCurrentThreadId(), FailedAssertion, FileName, Message, Message);
+
+	//TODO: Actually implement this.
+    //NTSTATUS ret = NtDll::RtlAssert((NtDll::UNICODE_STRING*)DestinationString, (NtDll::STRING*)SourceString, AllocateDestinationString);
+
+    EmuSwapFS();   // Xbox FS
+
+    return;
 }
 
 // ******************************************************************

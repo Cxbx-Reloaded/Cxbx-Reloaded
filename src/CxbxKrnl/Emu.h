@@ -60,6 +60,9 @@ extern volatile bool g_bEmuSuspended;
 // global exception patching address
 extern uint32 g_HaloHack[4];
 
+// global exception patching address
+extern uint32 funcExclude[2048];
+
 // partition emulation directory handles
 extern HANDLE g_hCurDir;
 extern CHAR  *g_strCurDrive;

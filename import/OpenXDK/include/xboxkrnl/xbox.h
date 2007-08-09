@@ -59,8 +59,23 @@ XBSYSAPI EXPORTNUM(37) LONG NTAPI FscSetCacheSize(ULONG uCachePages);
 
 XBSYSAPI VOID *KdDebuggerEnabled;
 XBSYSAPI VOID *KdDebuggerNotPresent;
-XBSYSAPI VOID *KfRaiseIrql;
-XBSYSAPI VOID *KfLowerIrql;
+
+// ******************************************************************
+// * KfRaiseIrql
+// ******************************************************************
+XBSYSAPI EXPORTNUM(160) UCHAR NTAPI KfRaiseIrql
+(
+	IN UCHAR	NewIrql
+);
+
+// ******************************************************************
+// * KfLowerIrql
+// ******************************************************************
+XBSYSAPI EXPORTNUM(161) UCHAR NTAPI KfLowerIrql
+(
+	IN UCHAR	NewIrql
+);
+
 XBSYSAPI VOID *KiBugCheckData;
 XBSYSAPI VOID *KiUnlockDispatcherDatabase;
 

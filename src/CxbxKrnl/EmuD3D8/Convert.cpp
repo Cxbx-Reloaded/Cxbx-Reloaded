@@ -191,6 +191,31 @@ XTL::X_D3DFORMAT XTL::EmuPC2XB_D3DFormat(D3DFORMAT Format)
     return Format;
 }
 
+DWORD XTL::EmuXB2PC_D3DLock(DWORD Flags)
+{
+	DWORD NewFlags = 0;
+
+	// Need to convert the flags, TODO: fix the xbox extensions
+	if(Flags & X_D3DLOCK_NOFLUSH)
+	{
+		NewFlags ^= 0;
+	}
+	if(Flags & X_D3DLOCK_NOOVERWRITE)
+	{
+		NewFlags ^= D3DLOCK_NOOVERWRITE;
+	}
+	if(Flags & X_D3DLOCK_TILED)
+	{
+		NewFlags ^= 0;
+	}
+	if(Flags & X_D3DLOCK_READONLY)
+	{
+		NewFlags ^= D3DLOCK_READONLY;
+	}
+
+    return NewFlags;
+}
+
 // lookup table for converting vertex count to primitive count
 UINT XTL::EmuD3DVertexToPrimitive[11][2] =
 {

@@ -33,7 +33,18 @@ XBSYSAPI EXPORTNUM(261) NTSTATUS NTAPI RtlAppendStringToString
 
 XBSYSAPI VOID *RtlAppendUnicodeStringToString;
 XBSYSAPI VOID *RtlAppendUnicodeToString;
-XBSYSAPI VOID *RtlAssert;
+
+// ******************************************************************
+// * RtlAssert
+// ******************************************************************
+XBSYSAPI EXPORTNUM(264) VOID NTAPI RtlAssert
+(
+    PVOID	FailedAssertion,
+    PVOID	FileName,
+    ULONG	LineNumber,
+	PCHAR	Message
+);
+
 XBSYSAPI VOID *RtlCaptureContext;
 XBSYSAPI VOID *RtlCaptureStackBackTrace;
 XBSYSAPI VOID *RtlCharToInteger;

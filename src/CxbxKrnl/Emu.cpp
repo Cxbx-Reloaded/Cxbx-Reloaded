@@ -231,6 +231,28 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
         }
     }
 
+    // check for Battlestar Galactica hack *PAL Version*
+    {
+        if(e->ExceptionRecord->ExceptionCode == 0xC0000096)
+        {
+            // Battlestar Galactica Hack 1
+            if(e->ContextRecord->Eip == 0x000CB580)
+            {
+                //if(e->ContextRecord->Ecx == 0x00000200 || e->ContextRecord->Ecx == 0x00000100)
+                //{
+                    // Battlestar Galactica WBINVD skip
+					e->ContextRecord->Eip += 2;
+
+                    DbgPrintf("EmuMain (0x%X): Battlestar Galactica Hack 1 was applied!\n", GetCurrentThreadId());
+
+                    g_bEmuException = false;
+
+                    return EXCEPTION_CONTINUE_EXECUTION;
+                //}
+            }
+        }
+    }
+
     // print debug information
     {
         if(e->ExceptionRecord->ExceptionCode == 0x80000003)

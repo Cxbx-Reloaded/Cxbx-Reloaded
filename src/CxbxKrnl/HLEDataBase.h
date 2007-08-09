@@ -54,6 +54,7 @@
 #include "HLEDataBase/DSound.1.0.4361.h"
 #include "HLEDataBase/DSound.1.0.4432.h"
 #include "HLEDataBase/DSound.1.0.4627.h"
+#include "HLEDataBase/DSound.1.0.5558.h"
 #include "HLEDataBase/DSound.1.0.5849.h"
 #include "HLEDataBase/XG.1.0.4361.h"
 #include "HLEDataBase/XG.1.0.4627.h"
@@ -228,6 +229,26 @@ enum XRefDataBaseOffset
     XREF_DSBUFFERSETI3DL2SOURCE,
     XREF_DirectSound_CDirectSoundVoice_SetFormat,
     XREF_DirectSound_CDirectSoundBuffer_SetFormat,
+	XREF_DirectSound_CFullHRTFSource_GetCenterVolume,
+	XREF_DirectSound_CHRTFSource_SetFullHRTF5Channel,
+	XREF_D3D_SetFence,
+	XREF_D3D_BlockOnResource,
+	XREF_DirectSound_CMcpxVoiceClient_SetLFO,
+	XREF_DirectSound_CDirectSoundVoice_SetLFO,
+	XREF_DirectSound_CDirectSoundBuffer_SetLFO,
+	XREF_DirectSound_CDirectSoundVoice_SetVolume,
+	XREF_DirectSound_CDirectSoundBuffer_SetVolume,
+	XREF_DirectSound_CDirectSoundBuffer_SetLoopRegion,
+	XREF_DirectSound_CMcpxBuffer_Play,
+	XREF_DirectSound_CDirectSoundBuffer_PlayEx,
+	XREF_DirectSound_WaveFormat_CreateXboxAdpcmFormat,
+	XREF_DirectSound_CDirectSoundVoice_SetConeAngles,
+	XREF_DirectSound_CDirectSoundBuffer_SetConeAngles,
+	XREF_DirectSound_CDirectSoundVoice_CommitDeferredSettings,
+	XREF_DirectSound_CDirectSoundVoice_SetAllParameters,
+	XREF_DirectSound_CDirectSoundBuffer_SetAllParameters,
+	XREF_DirectSound_CDirectSoundVoice_SetRolloffCurve,
+	XREF_DirectSound_CDirectSoundBuffer_SetRolloffCurve,
     // XAPI
     /* not necessary?
     XREF_XAPIXCALCULATESIGNATUREBEGINEX

@@ -66,6 +66,7 @@ extern "C" const char *szHLELastCompileTime = __TIMESTAMP__;
 #include "HLEDataBase/DSound.1.0.5849.inl"
 #include "HLEDataBase/XG.1.0.4361.inl"
 #include "HLEDataBase/XG.1.0.4627.inl"
+#include "HLEDataBase/XG.1.0.5558.inl"
 #include "HLEDataBase/XNet.1.0.3911.inl"
 #include "HLEDataBase/XOnline.1.0.4361.inl"
 
@@ -242,6 +243,13 @@ HLEData HLEDataBase[] =
         XG_1_0_4627,
         XG_1_0_4627_SIZE
     },
+    // XG Version 1.0.5558
+    {
+        "XGRAPHC",
+        1, 0, 5558,
+        XG_1_0_5558,
+        XG_1_0_5558_SIZE
+    },
     // XNet Version 1.0.3911
     {
         "XNETS",
@@ -389,6 +397,26 @@ extern uint32 XRefDataBase[] =
     -1, // XREF_DSBUFFERSETI3DL2SOURCE
     -1, // XREF_DirectSound_CDirectSoundVoice_SetFormat
     -1, // XREF_DirectSound_CDirectSoundBuffer_SetFormat
+	-1, // XREF_DirectSound_CFullHRTFSource_GetCenterVolume
+	-1, // XREF_DirectSound_CHRTFSource_SetFullHRTF5Channel
+	-1, // XREF_D3D_SetFence
+	-1, // XREF_D3D_BlockOnResource
+	-1, // XREF_DirectSound_CMcpxVoiceClient_SetLFO
+	-1, // XREF_DirectSound_CDirectSoundVoice_SetLFO
+	-1, // XREF_DirectSound_CDirectSoundBuffer_SetLFO
+	-1, // XREF_DirectSound_CDirectSoundVoice_SetVolume
+	-1, // XREF_DirectSound_CDirectSoundBuffer_SetVolume
+	-1, // XREF_DirectSound_CDirectSoundBuffer_SetLoopRegion
+	-1, // XREF_DirectSound_CMcpxBuffer_Play
+	-1, // XREF_DirectSound_CDirectSoundBuffer_PlayEx
+	-1, // XREF_DirectSound_WaveFormat_CreateXboxAdpcmFormat
+	-1, // XREF_DirectSound_CDirectSoundVoice_SetConeAngles
+	-1, // XREF_DirectSound_CDirectSoundBuffer_SetConeAngles
+	-1, // XREF_DirectSound_CDirectSoundVoice_CommitDeferredSettings
+	-1, // XREF_DirectSound_CDirectSoundVoice_SetAllParameters
+	-1, // XREF_DirectSound_CDirectSoundBuffer_SetAllParameters
+	-1, // XREF_DirectSound_CDirectSoundVoice_SetRolloffCurve
+	-1, // XREF_DirectSound_CDirectSoundBuffer_SetRolloffCurve
     /* not necessary?
     -1, //XREF_XAPIXCALCULATESIGNATUREBEGINEX
     //*/

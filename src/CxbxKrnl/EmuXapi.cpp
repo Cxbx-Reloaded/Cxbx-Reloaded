@@ -852,14 +852,15 @@ DWORD WINAPI XTL::EmuXInputGetState
     {
         if(pph->pPollingParameters != NULL)
         {
-            if(pph->pPollingParameters->fAutoPoll == FALSE)
+			// 5849 XDK samples hang if this code is allowed to execute, TODO: figure out why.
+            /*if(pph->pPollingParameters->fAutoPoll == FALSE)
             {
                 //
                 // TODO: uh..
                 //
 
                 EmuWarning("EmuXInputGetState : fAutoPoll == FALSE");
-            }
+            }*/
         }
 
         DWORD dwPort = pph->dwPort;

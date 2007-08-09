@@ -48,6 +48,9 @@ static void  EmuXRefFailure();
 #include <shlobj.h>
 #include <vector>
 
+uint32 fcount = 0;
+uint32 funcExclude[2048] = {0};
+
 static std::vector<void *> vCacheOut;
 
 static bool bCacheInp = false;
@@ -187,9 +190,30 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                 uint16 BuildVersion = pLibraryVersion[v].wBuildVersion;
                 uint16 OrigBuildVersion = BuildVersion;
 
-                // aliases
+                // Aliases - for testing purposes only
+				if(BuildVersion == 4721) { BuildVersion = 4627; }
                 if(BuildVersion == 4928) { BuildVersion = 4627; }
+				if(BuildVersion == 5344) { BuildVersion = 5558; }
+				if(BuildVersion == 5455) { BuildVersion = 5558; }
                 if(BuildVersion == 5659) { BuildVersion = 5558; }
+				if(BuildVersion == 5788) { BuildVersion = 5558; }
+				if(BuildVersion == 5028) { BuildVersion = 4627; }
+				if(BuildVersion == 5933) { BuildVersion = 5849; }	// These XDK versions are pretty mutch the same
+				/*
+				if(BuildVersion == 3944) { BuildVersion = 3925; }
+				if(BuildVersion == 4039) { BuildVersion = 4034; }
+				if(BuildVersion == 4242) { BuildVersion = 4432; }
+				if(BuildVersion == 4531) { BuildVersion = 4432; }
+				if(BuildVersion == 4721) { BuildVersion = 4432; }
+				if(BuildVersion == 4831) { BuildVersion = 4432; }
+				if(BuildVersion == 4928) { BuildVersion = 4432; }
+				if(BuildVersion == 5028) { BuildVersion = 4432; }
+				if(BuildVersion == 5120) { BuildVersion = 4432; }
+				if(BuildVersion == 5233) { BuildVersion = 4432; }
+				if(BuildVersion == 5344) { BuildVersion = 4432; }
+				if(BuildVersion == 5455) { BuildVersion = 4432; }
+				if(BuildVersion == 5933) { BuildVersion = 4432; }
+				*/
 
                 char szLibraryName[9] = {0};
 
@@ -426,7 +450,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
     //
     // update cache file
     //
-
+/* Turn of the nasty HLE cacheing (When you are adding oovaps anyway), it's in dire need of a better file identify system
     if(vCacheOut.size() > 0)
     {
         FILE *pCacheFile = fopen(szCacheFileName, "wb");
@@ -461,7 +485,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
 
         fclose(pCacheFile);
     }
-
+*/
     vCacheOut.empty();
 
     DbgPrintf("\n");
@@ -659,6 +683,7 @@ static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xb
             else
             {
                 EmuInstallWrapper(pFunc, OovpaTable[a].lpRedirect);
+				funcExclude[fcount++] = (uint32)pFunc;
             }
         }
     }

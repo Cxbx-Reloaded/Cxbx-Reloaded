@@ -240,6 +240,50 @@ SOOVPA<8> XapiInitProcess_1_0_5659 =
 };
 
 // ******************************************************************
+// * XGetDeviceChanges
+// ******************************************************************
+SOOVPA<7> XGetDeviceChanges_1_0_5558 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x0C, 0x75 },
+        { 0x1A, 0x53 },
+        { 0x28, 0xF7 },
+        { 0x36, 0x56 },
+        { 0x44, 0x89 },
+        { 0x52, 0xC8 },
+        { 0x60, 0x5F },
+    }
+};
+
+// ******************************************************************
+// * XInputSetState
+// ******************************************************************
+SOOVPA<7> XInputSetState_1_0_5558 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x05, 0x81 },
+        { 0x0C, 0xF6 },
+        { 0x13, 0x57 },
+        { 0x1A, 0x08 },
+        { 0x21, 0x8B },
+        { 0x28, 0x88 },
+        { 0x30, 0xC2 },
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_5558
 // ******************************************************************
 OOVPATable XAPI_1_0_5558[] =
@@ -364,6 +408,16 @@ OOVPATable XAPI_1_0_5558[] =
         "EmuXGetDevices" 
         #endif
     },
+    // XGetDeviceChanges
+    {
+        (OOVPA*)&XGetDeviceChanges_1_0_5558,
+
+        XTL::EmuXGetDeviceChanges,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXGetDeviceChanges"
+        #endif
+    },
     // XInputOpen (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&XInputOpen_1_0_4361,
@@ -392,6 +446,16 @@ OOVPATable XAPI_1_0_5558[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXInputGetState"
+        #endif
+    },
+    // XInputSetState
+    {
+        (OOVPA*)&XInputSetState_1_0_5558,
+
+        XTL::EmuXInputSetState,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputSetState"
         #endif
     },
     /* obsolete?

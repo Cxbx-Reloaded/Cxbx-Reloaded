@@ -27,7 +27,19 @@ XBSYSAPI EXPORTNUM(14) PVOID NTAPI ExAllocatePool
 	IN ULONG NumberOfBytes
 );
 
-XBSYSAPI VOID *ExAllocatePoolWithTag;
+// ******************************************************************
+// * ExAllocatePoolWithTag
+// ******************************************************************
+// *
+// * Allocates pool memory with a tag
+// *
+// ******************************************************************
+XBSYSAPI EXPORTNUM(15) PVOID NTAPI ExAllocatePoolWithTag
+(
+	IN SIZE_T NumberOfBytes,
+	IN ULONG Tag
+);
+
 XBSYSAPI VOID *ExEventObjectType;
 
 // ******************************************************************

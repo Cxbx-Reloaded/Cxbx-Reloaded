@@ -84,7 +84,7 @@ XTL::X_CDirectSoundStream::_vtbl XTL::X_CDirectSoundStream::vtbl =
 };
 
 // size of sound buffer cache (used for periodic sound buffer updates)
-#define SOUNDBUFFER_CACHE_SIZE 0x200
+#define SOUNDBUFFER_CACHE_SIZE 0x100
 
 // size of sound stream cache (used for periodic sound stream updates)
 #define SOUNDSTREAM_CACHE_SIZE 0x100
@@ -1509,6 +1509,8 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
         if(pDSBufferDesc->lpwfxFormat != NULL && pDSBufferDesc->lpwfxFormat->wFormatTag != WAVE_FORMAT_PCM)
         {
             EmuWarning("Invalid WAVE_FORMAT!");
+			if(pDSBufferDesc->lpwfxFormat->wFormatTag == /*WAVE_FORMAT_XBOX_ADPCM*/0x0069)
+				EmuWarning("WAVE_FORMAT_XBOX_ADPCM Unsupported!");
 
             (*ppStream)->EmuDirectSoundBuffer8 = 0;
 
@@ -2559,8 +2561,138 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetFormat
     }
     #endif
 
-    HRESULT hRet = D3D_OK;
+    HRESULT hRet = DS_OK;
 
     EmuSwapFS();   // XBox FS
+
     return hRet;
+}
+
+// ******************************************************************
+// * func: EmuDirectSoundUseFullHRTF
+// ******************************************************************
+STDAPI_(void) EmuDirectSoundUseFullHRTF
+(
+	void
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuDSound (0x%X): EmuDirectSoundUseFullHRTF()\n", GetCurrentThreadId());
+
+    // TODO: Actually implement this
+
+    EmuSwapFS();   // XBox FS
+}
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetLFO
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetLFO
+(
+	LPDIRECTSOUNDBUFFER  pThis,
+	LPCDSLFODESC         pLFODesc
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetLFO\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   pLFODesc                  : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, pLFODesc);
+
+	// TODO: Implement
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuXAudioCreateAdpcmFormat
+// ******************************************************************
+VOID WINAPI XTL::EmuXAudioCreateAdpcmFormat
+(
+	WORD                   nChannels,
+	DWORD                  nSamplesPerSec,
+	LPXBOXADPCMWAVEFORMAT  pwfx
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuDSound (0x%X): EmuXAudioCreateAdpcmFormat\n"
+           "(\n"
+           "   nChannels                 : 0x%.04X\n"
+           "   nSamplesPerSec            : 0x%.08X\n"
+           "   pwfx                      : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), nChannels, nSamplesPerSec, pwfx);
+
+	// Fill out the pwfx structure with the appropriate data
+	pwfx->wfx.wFormatTag		= WAVE_FORMAT_XBOX_ADPCM;
+	pwfx->wfx.nChannels			= nChannels;
+	pwfx->wfx.nSamplesPerSec	= nSamplesPerSec;
+	pwfx->wfx.nAvgBytesPerSec	= (nSamplesPerSec*nChannels * 36)/64;
+	pwfx->wfx.nBlockAlign		= nChannels * 36;
+	pwfx->wfx.wBitsPerSample	= 4;
+	pwfx->wfx.cbSize			= 2;
+	pwfx->wSamplesPerBlock		= 64;
+
+    EmuSwapFS();   // XBox FS
+}
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetRolloffCurve
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetRolloffCurve
+(
+	LPDIRECTSOUNDBUFFER  pThis,
+	const FLOAT         *pflPoints,
+	DWORD                dwPointCount,
+	DWORD                dwApply
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetRolloffCurve\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   pflPoints                 : 0x%.08X\n"
+           "   dwPointCount              : 0x%.08X\n"
+		   "   dwApply                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, pflPoints, dwPointCount, dwApply);
+
+	// TODO: Implement
+
+    EmuSwapFS();   // XBox FS
+
+	return DS_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSoundStream_SetVolume
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundStream_SetVolume
+(
+	LPDIRECTSOUNDSTREAM pStream,
+	LONG                lVolume
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundStream_SetVolume\n"
+           "(\n"
+           "   pStream                   : 0x%.08X\n"
+           "   lVolume                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pStream, lVolume);
+
+	// TODO: Implement
+
+    EmuSwapFS();   // XBox FS
+
+	return DS_OK;
 }

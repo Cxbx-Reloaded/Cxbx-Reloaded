@@ -237,6 +237,12 @@ struct X_D3DResource
 // special resource lock flags
 #define X_D3DRESOURCE_LOCK_FLAG_NOSIZE  0xEFFFFFFF
 
+// Lock flags
+#define X_D3DLOCK_NOFLUSH               0x00000010 // Xbox extension
+#define X_D3DLOCK_NOOVERWRITE           0x00000020
+#define X_D3DLOCK_TILED                 0x00000040 // Xbox extension
+#define X_D3DLOCK_READONLY              0x00000080
+
 struct X_D3DVertexBuffer : public X_D3DResource
 {
 

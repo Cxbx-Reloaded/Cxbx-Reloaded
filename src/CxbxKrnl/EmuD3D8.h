@@ -1148,7 +1148,7 @@ VOID WINAPI EmuIDirect3DDevice8_SetRenderState_YuvEnable
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTransform
 // ******************************************************************
-VOID WINAPI EmuIDirect3DDevice8_SetTransform
+HRESULT WINAPI EmuIDirect3DDevice8_SetTransform
 (
     D3DTRANSFORMSTATETYPE State,
     CONST D3DMATRIX      *pMatrix
@@ -1157,7 +1157,7 @@ VOID WINAPI EmuIDirect3DDevice8_SetTransform
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetTransform
 // ******************************************************************
-VOID WINAPI EmuIDirect3DDevice8_GetTransform
+HRESULT WINAPI EmuIDirect3DDevice8_GetTransform
 (
     D3DTRANSFORMSTATETYPE State,
     D3DMATRIX            *pMatrix
@@ -1206,7 +1206,7 @@ HRESULT WINAPI EmuIDirect3DDevice8_SetStreamSource
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexShader
 // ******************************************************************
-VOID WINAPI EmuIDirect3DDevice8_SetVertexShader
+HRESULT WINAPI EmuIDirect3DDevice8_SetVertexShader
 (
     DWORD            Handle
 );
@@ -1235,7 +1235,7 @@ VOID WINAPI EmuIDirect3DDevice8_DrawVerticesUP
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_DrawIndexedVertices
 // ******************************************************************
-VOID WINAPI EmuIDirect3DDevice8_DrawIndexedVertices
+HRESULT WINAPI EmuIDirect3DDevice8_DrawIndexedVertices
 (
     X_D3DPRIMITIVETYPE  PrimitiveType,
     UINT                VertexCount,
@@ -1487,6 +1487,95 @@ HRESULT WINAPI EmuIDirect3DDevice8_GetVertexShaderFunction
     DWORD  Handle,
     PVOID *pData,
     DWORD *pSizeOfData
+);
+
+// ******************************************************************
+// * func: EmuIDirect3D8_AllocContiguousMemory
+// ******************************************************************
+PVOID WINAPI EmuIDirect3D8_AllocContiguousMemory
+(
+    SIZE_T dwSize,
+    DWORD dwAllocAttributes
+);
+
+// ******************************************************************
+// * func: IDirect3DTexture8_GetLevelDesc
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DTexture8_GetLevelDesc
+(
+    UINT Level,
+    X_D3DSURFACE_DESC* pDesc
+);
+
+// ******************************************************************
+// * func: EmuIDirect3D8_CheckDeviceMultiSampleType
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3D8_CheckDeviceMultiSampleType
+(
+	UINT                 Adapter,
+	D3DDEVTYPE           DeviceType,
+	D3DFORMAT            SurfaceFormat,
+	BOOL                 Windowed,
+	D3DMULTISAMPLE_TYPE  MultiSampleType
+);
+
+// ******************************************************************
+// * func: EmuIDirect3D8_GetDeviceCaps
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3D8_GetDeviceCaps
+(
+	UINT        Adapter,
+	D3DDEVTYPE  DeviceType,
+	D3DCAPS8    *pCaps
+);
+
+// ******************************************************************
+// * func: EmuIDirect3D8_SetPushBufferSize
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3D8_SetPushBufferSize
+(
+	DWORD PushBufferSize,
+	DWORD KickOffSize
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_InsertFence
+// ******************************************************************
+DWORD WINAPI EmuIDirect3DDevice8_InsertFence();
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_BlockOnFence
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_BlockOnFence
+(
+	DWORD Fence
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DResource8_BlockUntilNotBusy
+// ******************************************************************
+VOID WINAPI EmuIDirect3DResource8_BlockUntilNotBusy
+(
+	X_D3DResource *pThis
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DVertexBuffer8_GetDesc
+// ******************************************************************
+VOID WINAPI EmuIDirect3DVertexBuffer8_GetDesc
+(
+	X_D3DVertexBuffer    *pThis,
+	D3DVERTEXBUFFER_DESC *pDesc
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetScissors
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetScissors
+(
+	DWORD          Count, 
+	BOOL           Exclusive, 
+	CONST D3DRECT  *pRects
 );
 
 #endif
