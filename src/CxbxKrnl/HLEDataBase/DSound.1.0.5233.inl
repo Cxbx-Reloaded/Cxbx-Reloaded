@@ -502,6 +502,77 @@ SOOVPA<8> CDirectSoundStream_SetMixBins_1_0_5233 =
 };
 
 // ******************************************************************
+// * CDirectSoundVoice::SetRolloffCurve
+// ******************************************************************
+SOOVPA<8> CDirectSoundVoice_SetRolloffCurve_1_0_5233 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    XREF_DSVOICESETROLLOFFCURVE,  // Xref Is Saved
+    0,                            // Xref Not Used
+
+    {
+        { 0x07, 0x8B },
+        { 0x10, 0x08 },
+        { 0x12, 0x51 },
+        { 0x19, 0xB4 },
+        { 0x22, 0x51 },
+        { 0x2B, 0x00 },
+        { 0x34, 0x10 },
+        { 0x3E, 0x33 },
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundBuffer::SetRolloffCurve
+// ******************************************************************
+SOOVPA<8> CDirectSoundBuffer_SetRolloffCurve_1_0_5233 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    XREF_DSBUFFERSETROLLOFFCURVE,  // Xref Is Saved
+    1,                             // Xref Is Used
+
+    {
+        { 0x3A, XREF_DSVOICESETROLLOFFCURVE },
+
+        { 0x0C, 0x00 },
+        { 0x14, 0x74 },
+        { 0x21, 0xB8 },
+        { 0x2A, 0x74 },
+        { 0x35, 0xFF },
+        { 0x40, 0x8B },
+        { 0x4F, 0x8B },
+    }
+};
+
+// ******************************************************************
+// * IDirectSoundBuffer8_SetRolloffCurve
+// ******************************************************************
+SOOVPA<8> IDirectSoundBuffer8_SetRolloffCurve_1_0_5233 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    1,  // Xref Is Used
+
+    {
+        { 0x1D, XREF_DSBUFFERSETROLLOFFCURVE },
+
+        { 0x03, 0x10 },
+        { 0x08, 0xFF },
+        { 0x0D, 0xC8 },
+        { 0x12, 0x83 },
+        { 0x17, 0x1B },
+        { 0x1C, 0xE8 },
+        { 0x21, 0xC2 },
+    }
+};
+
+// ******************************************************************
 // * Direct_1_0_5233
 // ******************************************************************
 OOVPATable DSound_1_0_5233[] =
@@ -1250,6 +1321,33 @@ OOVPATable DSound_1_0_5233[] =
         "IDirectSoundBuffer8_SetMode"
         #endif
 
+    },
+    // CDirectSoundVoice::SetRolloffCurve (XREF)
+    {
+        (OOVPA*)&CDirectSoundVoice_SetRolloffCurve_1_0_5233, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundVoice::SetRolloffCurve (XREF)"
+        #endif
+
+    },
+    // CDirectSoundBuffer::SetRolloffCurve (XREF)
+    {
+        (OOVPA*)&CDirectSoundBuffer_SetRolloffCurve_1_0_5233, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundBuffer::SetRolloffCurve (XREF)"
+        #endif
+    },
+    // IDirectSoundBuffer8::SetRolloffCurve
+    {
+        (OOVPA*)&IDirectSoundBuffer8_SetRolloffCurve_1_0_5233,
+
+        XTL::EmuIDirectSoundBuffer8_SetRolloffCurve,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSoundBuffer8_SetRolloffCurve"
+        #endif
     },
 };
 

@@ -1097,6 +1097,142 @@ SOOVPA<8> IDirect3DDevice8_SetScreenSpaceOffset_1_0_5233 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetRenderState_MultiSampleMode
+// ******************************************************************
+SOOVPA<8> IDirect3DDevice8_SetRenderState_MultiSampleMode_1_0_5233 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // XRef Not Saved
+    1,  // XRef Is  Used
+
+    {
+        { 0x0B, XREF_D3DRS_MULTISAMPLEMODE },
+
+        { 0x03, 0x04 },
+        { 0x0F, 0x8B },
+        { 0x15, 0x3B },
+        { 0x1C, 0x14 },
+        { 0x1D, 0x8D },
+        { 0x2C, 0xE8 },
+        { 0x32, 0x04 },
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode
+// ******************************************************************
+SOOVPA<8> IDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode_1_0_5233 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // XRef Not Saved
+    1,  // XRef Is  Used
+
+    {
+        { 0x0B, XREF_D3DRS_MULTISAMPLERENDERTARGETMODE },
+
+        { 0x03, 0x04 },
+        { 0x0F, 0x8B },
+        { 0x15, 0x3B },
+        { 0x1C, 0x14 },
+        { 0x1D, 0x8D },
+        { 0x2C, 0xE8 },
+        { 0x32, 0x04 },
+    }
+};
+
+// ******************************************************************
+// * D3D::CommonSetRenderTarget
+// ******************************************************************
+SOOVPA<8> D3D_CommonSetRenderTarget_1_0_5233 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    XREF_COMMONSETRENDERTARGET, // XRef Is Saved
+    0,                          // XRef Not Used
+
+    {
+        { 0x02, 0x1C },
+        { 0x20, 0x30 },
+        { 0x6B, 0x06 },
+        { 0x85, 0x4C },
+        { 0xA5, 0x10 },
+        { 0xB8, 0x0C },
+        { 0xDC, 0xD9 },
+        { 0xFF, 0x75 },
+    }
+};
+
+// ******************************************************************
+// * D3D::SetFence
+// ******************************************************************
+SOOVPA<7> D3D_SetFence_1_0_5233 =
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    XREF_D3D_SETFENCE, // Xref Is Saved
+    0,                 // Xref Not Used
+
+    {
+        { 0x0E, 0x05 },
+        { 0x18, 0xC9 },
+        { 0x3E, 0x3F },
+        { 0x5E, 0x28 },
+        { 0x86, 0x5D },
+        { 0x98, 0xE8 },
+        { 0xA2, 0x04 },
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_InsertFence
+// ******************************************************************
+SOOVPA<5> IDirect3DDevice8_InsertFence_1_0_5233 =
+{
+    0,  // Large == 0
+    5,  // Count == 5
+
+    -1, // Xref Not Saved
+    1,  // Xref Is  Used
+
+    {
+        { 0x03, XREF_D3D_SETFENCE },
+
+        { 0x00, 0x6A },
+        { 0x01, 0x00 },
+        { 0x02, 0xE8 },
+        { 0x07, 0xC3 },
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_IsFencePending
+// ******************************************************************
+SOOVPA<6> IDirect3DDevice8_IsFencePending_1_0_5233 =
+{
+    0,  // Large == 0
+    6,  // Count == 6
+
+    -1, // Xref Not Saved
+    1,  // Xref Is  Used
+
+    {
+        { 0x01, XREF_D3DDEVICE },
+
+        { 0x07, 0x30 },
+        { 0x0A, 0x2C },
+        { 0x10, 0xD1 },
+        { 0x17, 0x1B },
+        { 0x1C, 0x04 },
+    }
+};
+
+// ******************************************************************
 // * D3D8_1_0_5233
 // ******************************************************************
 OOVPATable D3D8_1_0_5233[] =
@@ -1209,6 +1345,24 @@ OOVPATable D3D8_1_0_5233[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_GetDepthStencilSurface2"
+        #endif
+    },
+    // D3D::CommonSetRenderTarget (XREF)
+    {
+        (OOVPA*)&D3D_CommonSetRenderTarget_1_0_5233, 0,
+
+        #ifdef _DEBUG_TRACE
+        "D3D::CommonSetRenderTarget (XREF)"
+        #endif
+    },
+    // IDirect3DDevice8::SetRenderTarget (* unchanged since 4627 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderTarget_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_SetRenderTarget,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderTarget"
         #endif
     },
     // IDirect3DDevice8::AddRef
@@ -1661,6 +1815,26 @@ OOVPATable D3D8_1_0_5233[] =
         "EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias"
         #endif
     },
+    // IDirect3DDevice8::SetRenderState_MultiSampleMode
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_MultiSampleMode_1_0_5233,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_MultiSampleMode,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_MultiSampleMode"
+        #endif
+    },
+    // IDirect3DDevice8::SetRenderState_MultiSampleRenderTargetMode
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode_1_0_5233,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode"
+        #endif
+    },
     // IDirect3DDevice8::SetRenderState_ShadowFunc (* unchanged since 4432 *)
     {
         (OOVPA*)&IDirect3DDevice8_SetRenderState_ShadowFunc_1_0_4432,
@@ -1998,6 +2172,34 @@ OOVPATable D3D8_1_0_5233[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetScreenSpaceOffset"
+        #endif
+    },
+    // D3D::SetFence (XREF)
+    {
+        (OOVPA*)&D3D_SetFence_1_0_5233, 0,
+
+        #ifdef _DEBUG_TRACE
+        "D3D::SetFence (XREF)"
+        #endif
+    },
+    // IDirect3DDevice8::InsertFence
+    {
+        (OOVPA*)&IDirect3DDevice8_InsertFence_1_0_5233,
+
+        XTL::EmuIDirect3DDevice8_InsertFence,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_InsertFence"
+        #endif
+    },
+    // IDirect3DDevice8::IsFencePending
+    {
+        (OOVPA*)&IDirect3DDevice8_IsFencePending_1_0_5233,
+
+        XTL::EmuIDirect3DDevice8_IsFencePending,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_IsFencePending"
         #endif
     },
 };

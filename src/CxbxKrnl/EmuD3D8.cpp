@@ -7517,7 +7517,9 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetRenderTarget
 
     if(pNewZStencil != 0)
     {
-        EmuVerifyResourceIsRegistered(pNewZStencil);
+        // HACK: Futurama
+        if(((pNewZStencil->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT) != 0x4B)
+            EmuVerifyResourceIsRegistered(pNewZStencil); // FIXME
         pPCNewZStencil  = pNewZStencil->EmuSurface8;
     }
 
@@ -8336,6 +8338,29 @@ DWORD WINAPI XTL::EmuIDirect3DDevice8_InsertFence()
     EmuSwapFS();   // XBox FS
 
     return dwRet;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_IsFencePending
+// ******************************************************************
+BOOL WINAPI XTL::EmuIDirect3DDevice8_IsFencePending
+(
+    DWORD Fence
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_IsFencePending\n"
+           "(\n"
+           "   Fence                     : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), Fence);
+
+    // TODO: Implement
+
+    EmuSwapFS();   // XBox FS
+
+    return FALSE;
 }
 
 // ******************************************************************

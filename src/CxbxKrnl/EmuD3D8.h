@@ -1539,6 +1539,14 @@ HRESULT WINAPI EmuIDirect3D8_SetPushBufferSize
 DWORD WINAPI EmuIDirect3DDevice8_InsertFence();
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_IsFencePending
+// ******************************************************************
+BOOL WINAPI EmuIDirect3DDevice8_IsFencePending
+(
+    DWORD Fence
+);
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_BlockOnFence
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_BlockOnFence

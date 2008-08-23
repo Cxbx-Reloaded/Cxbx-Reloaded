@@ -667,10 +667,10 @@ SOOVPA<7> IDirect3D8_SetPushBufferSize_1_0_5558 =
 SOOVPA<14> D3D_SetFence_1_0_5558 =
 {
     0,  // Large == 0
-    14,  // Count == 5
+    14, // Count == 14
 
-    XREF_D3D_SetFence, // Xref Is Saved
-    0,  // Xref Not Used
+    XREF_D3D_SETFENCE, // Xref Is Saved
+    0,                 // Xref Not Used
 
     {
         { 0x14, 0x8B },
@@ -687,27 +687,6 @@ SOOVPA<14> D3D_SetFence_1_0_5558 =
         { 0x91, 0xC7 },
         { 0x92, 0x46 },
         { 0x93, 0x3C },
-    }
-};
-
-// ******************************************************************
-// * IDirect3DDevice8_InsertFence
-// ******************************************************************
-SOOVPA<5> IDirect3DDevice8_InsertFence_1_0_5558 =
-{
-    0,  // Large == 0
-    5,  // Count == 5
-
-    -1, // Xref Not Saved
-    1,  // Xref Is Used
-
-    {
-        { 0x03, XREF_D3D_SetFence },
-
-        { 0x00, 0x6A },
-        { 0x01, 0x00 },
-        { 0x02, 0xE8 },
-        { 0x07, 0xC3 },
     }
 };
 
@@ -1536,9 +1515,9 @@ OOVPATable D3D8_1_0_5558[] =
         "D3D::SetFence (XREF)"
         #endif
     },
-    // IDirect3DDevice8::InsertFence
+    // IDirect3DDevice8::InsertFence (* unchanged since 5233 *)
     {
-        (OOVPA*)&IDirect3DDevice8_InsertFence_1_0_5558,
+        (OOVPA*)&IDirect3DDevice8_InsertFence_1_0_5233,
 
         XTL::EmuIDirect3DDevice8_InsertFence,
 

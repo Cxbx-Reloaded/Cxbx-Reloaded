@@ -310,11 +310,14 @@ extern uint32 XRefDataBase[] =
 {
     -1, // XREF_D3DDEVICE
     -1, // XREF_DXSRSCULLMODE
+    -1, // XREF_D3DRS_MULTISAMPLEMODE
+    -1, // XREF_D3DRS_MULTISAMPLERENDERTARGETMODE
     -1, // XREF_D3DRS_ROPZCMPALWAYSREAD
     -1, // XREF_D3DRS_ROPZREAD
     -1, // XREF_D3DRS_DONOTCULLUNCOMPRESSED
     -1, // XREF_D3DRS_STENCILCULLENABLE
     -1, // XREF_D3DCD_LAZYSETSTATEVB
+    -1, // XREF_D3D_SETFENCE
     -1, // XREF_XNINIT
     -1, // XREF_FCLOSEDEVICE
     -1, // XREF_CLEARSTATEBLOCKFLAGS
@@ -411,6 +414,7 @@ extern uint32 XRefDataBase[] =
     -1, // XREF_DSVOICESETMODE
     -1, // XREF_DSVOICESETMAXDISTANCE
     -1, // XREF_DSVOICESETMINDISTANCE
+    -1, // XREF_DSVOICESETROLLOFFCURVE
     -1, // XREF_DSVOICESETROLLOFFFACTOR
     -1, // XREF_DSVOICESETDISTANCEFACTOR
     -1, // XREF_DSVOICESETCONEANGLES
@@ -423,6 +427,7 @@ extern uint32 XRefDataBase[] =
     -1, // XREF_DSBUFFERSETMODE
     -1, // XREF_DSBUFFERSETMAXDISTANCE
     -1, // XREF_DSBUFFERSETMINDISTANCE
+    -1, // XREF_DSBUFFERSETROLLOFFCURVE
     -1, // XREF_DSBUFFERSETROLLOFFFACTOR
     -1, // XREF_DSBUFFERSETDISTANCEFACTOR
     -1, // XREF_DSBUFFERSETCONEANGLES
@@ -436,7 +441,6 @@ extern uint32 XRefDataBase[] =
     -1, // XREF_DirectSound_CDirectSoundBuffer_SetFormat
     -1, // XREF_DirectSound_CFullHRTFSource_GetCenterVolume
     -1, // XREF_DirectSound_CHRTFSource_SetFullHRTF5Channel
-    -1, // XREF_D3D_SetFence
     -1, // XREF_D3D_BlockOnResource
     -1, // XREF_DirectSound_CMcpxVoiceClient_SetLFO
     -1, // XREF_DirectSound_CDirectSoundVoice_SetLFO
@@ -452,8 +456,6 @@ extern uint32 XRefDataBase[] =
     -1, // XREF_DirectSound_CDirectSoundVoice_CommitDeferredSettings
     -1, // XREF_DirectSound_CDirectSoundVoice_SetAllParameters
     -1, // XREF_DirectSound_CDirectSoundBuffer_SetAllParameters
-    -1, // XREF_DirectSound_CDirectSoundVoice_SetRolloffCurve
-    -1, // XREF_DirectSound_CDirectSoundBuffer_SetRolloffCurve
     /* not necessary?
     -1, //XREF_XAPIXCALCULATESIGNATUREBEGINEX
     //*/
