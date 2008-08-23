@@ -8408,3 +8408,28 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetScissors
 
     return D3D_OK;
 }
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetScreenSpaceOffset
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetScreenSpaceOffset
+(
+    FLOAT x,
+    FLOAT y
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetScreenSpaceOffset\n"
+           "(\n"
+           "   x                         : %f\n"
+           "   y                         : %f\n"
+           ");\n",
+           GetCurrentThreadId(), x, y);
+
+    EmuWarning("EmuIDirect3DDevice8_SetScreenSpaceOffset ignored");
+
+    EmuSwapFS();   // XBox FS
+
+    return D3D_OK;
+}

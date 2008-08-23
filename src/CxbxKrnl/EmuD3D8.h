@@ -1578,4 +1578,13 @@ HRESULT WINAPI EmuIDirect3DDevice8_SetScissors
     CONST D3DRECT  *pRects
 );
 
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetScreenSpaceOffset
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetScreenSpaceOffset
+(
+    FLOAT x,
+    FLOAT y
+);
+
 #endif
