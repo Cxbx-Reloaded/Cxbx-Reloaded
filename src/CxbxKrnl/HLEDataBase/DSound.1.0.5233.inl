@@ -454,6 +454,54 @@ SOOVPA<9> CDirectSoundStream_SetVolume_1_0_5233 =
 };
 
 // ******************************************************************
+// * CDirectSoundStream::SetFrequency
+// ******************************************************************
+SOOVPA<8> CDirectSoundStream_SetFrequency_1_0_5233 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // XRef Not Saved
+    1,  // XRef Is  Used
+
+    {
+        { 0x36, XREF_DSBUFFERSETFREQUENCYB },
+
+        { 0x0E, 0xB6 },
+        { 0x15, 0x0B },
+        { 0x27, 0x26 },
+        { 0x2A, 0x24 },
+        { 0x3E, 0x74 },
+        { 0x4D, 0x5F },
+        { 0x50, 0x08 },
+    }
+};
+
+// ******************************************************************
+// * CDirectSoundStream::SetMixBins
+// ******************************************************************
+SOOVPA<8> CDirectSoundStream_SetMixBins_1_0_5233 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // XRef Not Saved
+    1,  // XRef Is  Used
+
+    {
+        { 0x36, XREF_DSSETMIXBINSB },
+
+        { 0x0E, 0xB6 },
+        { 0x15, 0x0B },
+        { 0x27, 0x26 },
+        { 0x2A, 0x24 },
+        { 0x3E, 0x74 },
+        { 0x4D, 0x5F },
+        { 0x50, 0x08 },
+    }
+};
+
+// ******************************************************************
 // * Direct_1_0_5233
 // ******************************************************************
 OOVPATable DSound_1_0_5233[] =
@@ -600,6 +648,16 @@ OOVPATable DSound_1_0_5233[] =
         "EmuIDirectSoundBuffer8_SetMixBins"
         #endif
     },
+    // CDirectSoundStream::SetMixBins
+    {
+        (OOVPA*)&CDirectSoundStream_SetMixBins_1_0_5233,
+
+        XTL::EmuCDirectSoundStream_SetMixBins,
+
+        #ifdef _DEBUG_TRACE
+        "EmuCDirectSoundStream_SetMixBins"
+        #endif
+    },
     // CDirectSound::SetPositionA (XREF) (* unchanged since 4627 *)
     {
         (OOVPA*)&CDirectSound_SetPositionA_1_0_4627, 0,
@@ -662,6 +720,16 @@ OOVPATable DSound_1_0_5233[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirectSoundBuffer8_SetFrequency"
+        #endif
+    },
+    // CDirectSoundStream::SetFrequency
+    {
+        (OOVPA*)&CDirectSoundStream_SetFrequency_1_0_5233,
+
+        XTL::EmuCDirectSoundStream_SetFrequency,
+
+        #ifdef _DEBUG_TRACE
+        "EmuCDirectSoundStream_SetFrequency"
         #endif
     },
     // CMcpxVoiceClient_SetVolume (XREF) (* unchanged since 4627 *)

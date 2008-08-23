@@ -109,6 +109,29 @@ SOOVPA<7> XInitDevices_1_0_5233 =
 };
 
 // ******************************************************************
+// * XInputGetCapabilities
+// ******************************************************************
+SOOVPA<8> XInputGetCapabilities_1_0_5233 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1D, 0x85 },
+        { 0x3C, 0x8A },
+        { 0x5B, 0x00 },
+        { 0x85, 0x45 },
+        { 0xA0, 0xD4 },
+        { 0xBB, 0x02 },
+        { 0xDA, 0x8D },
+        { 0xF9, 0x46 },
+    }
+};
+
+// ******************************************************************
 // * XGetDeviceChanges
 // ******************************************************************
 SOOVPA<7> XGetDeviceChanges_1_0_5233 =
@@ -175,6 +198,26 @@ OOVPATable XAPI_1_0_5233[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXapiInitProcess"
+        #endif
+    },
+    // SetThreadPriority (* unchanged since 3911 *)
+    {
+        (OOVPA*)&SetThreadPriority_1_0_3911,
+
+        XTL::EmuSetThreadPriority,
+
+        #ifdef _DEBUG_TRACE
+        "EmuSetThreadPriority"
+        #endif
+    },
+    // SetThreadPriorityBoost (* unchanged since 4627 *)
+    {
+        (OOVPA*)&SetThreadPriorityBoost_1_0_4627,
+
+        XTL::EmuSetThreadPriorityBoost,
+
+        #ifdef _DEBUG_TRACE
+        "EmuSetThreadPriorityBoost"
         #endif
     },
     // XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
@@ -305,6 +348,16 @@ OOVPATable XAPI_1_0_5233[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXInputOpen"
+        #endif
+    },
+    // XInputGetCapabilities
+    {
+        (OOVPA*)&XInputGetCapabilities_1_0_5233,
+
+        XTL::EmuXInputGetCapabilities,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputGetCapabilities"
         #endif
     },
     // XID_fCloseDevice (* unchanged since 1.0.4928 *)

@@ -217,6 +217,44 @@ SOOVPA<7> IDirect3DDevice8_SetPixelShader_1_0_5233 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_CreateTexture2
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_CreateTexture2_1_0_5233 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_CreateTexture2+0x04 : lea eax, [esp+0x20]
+        { 0x04, 0x8D }, // (Offset,Value)-Pair #1
+        { 0x07, 0x20 }, // (Offset,Value)-Pair #2
+
+        // IDirect3DDevice8_CreateTexture2+0x10 : setz dl
+        { 0x10, 0x0F }, // (Offset,Value)-Pair #3
+        { 0x11, 0x94 }, // (Offset,Value)-Pair #4
+        { 0x12, 0xC2 }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_CreateTexture2+0x2E : push 0x00
+        { 0x2E, 0x6A }, // (Offset,Value)-Pair #6
+        { 0x2F, 0x00 }, // (Offset,Value)-Pair #7
+
+        // IDirect3DDevice8_CreateTexture2+0x57 : call [abs]
+        { 0x57, 0xE8 }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_CreateTexture2+0x7C : jnz +0x0D
+        { 0x7C, 0x75 }, // (Offset,Value)-Pair #9
+        { 0x7D, 0x0D }, // (Offset,Value)-Pair #10
+
+        // IDirect3DDevice8_CreateTexture2+0xB2 : retn 0x1C
+        { 0xB2, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0xB3, 0x1C }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetRenderState_CullMode
 // ******************************************************************
 SOOVPA<13> IDirect3DDevice8_SetRenderState_CullMode_1_0_5233 =
@@ -1008,6 +1046,29 @@ SOOVPA<8> IDirect3DDevice8_CopyRects_1_0_5233 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetScissors
+// ******************************************************************
+SOOVPA<8> IDirect3DDevice8_SetScissors_1_0_5233 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x07, 0x2C },
+        { 0x28, 0x44 },
+        { 0x60, 0x38 },
+        { 0x7D, 0x54 },
+        { 0xAC, 0x03 },
+        { 0xB8, 0xD9 },
+        { 0xD4, 0x1C },
+        { 0xFE, 0x4C },
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetScreenSpaceOffset
 // ******************************************************************
 SOOVPA<8> IDirect3DDevice8_SetScreenSpaceOffset_1_0_5233 =
@@ -1088,6 +1149,16 @@ OOVPATable D3D8_1_0_5233[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_CopyRects"
+        #endif
+    },
+    // IDirect3DDevice8::SetScissors
+    {
+        (OOVPA*)&IDirect3DDevice8_SetScissors_1_0_5233,
+
+        XTL::EmuIDirect3DDevice8_SetScissors,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetScissors"
         #endif
     },
     // IDirect3DDevice8::GetGammaRamp (* unchanged since 4627 *)
@@ -1250,7 +1321,17 @@ OOVPATable D3D8_1_0_5233[] =
         "EmuIDirect3DDevice8_SetPixelShader"
         #endif
     },
-    // IDirect3DDevice8::CreateTexture2C(* unchanged since 4627 *)
+    // IDirect3DDevice8::CreateTexture2
+    {
+        (OOVPA*)&IDirect3DDevice8_CreateTexture2_1_0_5233,
+
+        XTL::EmuIDirect3DDevice8_CreateTexture2,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_CreateTexture2"
+        #endif
+    },
+    // IDirect3DDevice8::CreateTexture2C (* unchanged since 4627 *)
     {
         (OOVPA*)&IDirect3DDevice8_CreateTexture2C_1_0_4627,
 
@@ -1738,6 +1819,16 @@ OOVPATable D3D8_1_0_5233[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_BlockUntilVerticalBlank"
+        #endif
+    },
+    // IDirect3DDevice8::GetViewport (* unchanged since 4627 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_GetViewport_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_GetViewport,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetViewport"
         #endif
     },
     // IDirect3DDevice8::SetViewport

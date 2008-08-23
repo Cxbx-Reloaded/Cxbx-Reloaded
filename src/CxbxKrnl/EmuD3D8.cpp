@@ -111,6 +111,8 @@ static DWORD                        g_VBLastSwap = 0;
 // cached Direct3D state variable(s)
 static XTL::X_D3DSurface           *g_pCachedRenderTarget = NULL;
 static XTL::X_D3DSurface           *g_pCachedZStencilSurface = NULL;
+static XTL::X_D3DSurface           *g_YuvSurface = NULL;
+static BOOL                         g_fYuvEnabled = FALSE;
 static DWORD                        g_dwVertexShaderUsage = 0;
 static DWORD                        g_VertexShaderSlots[136];
 
@@ -2929,6 +2931,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
         (*ppTexture)->Size |= (g_dwOverlayH << X_D3DSIZE_HEIGHT_SHIFT);
         (*ppTexture)->Size |= (g_dwOverlayP << X_D3DSIZE_PITCH_SHIFT);
 
+        g_YuvSurface = (X_D3DSurface*)*ppTexture;
+
         hRet = D3D_OK;
     }
 
@@ -4635,12 +4639,21 @@ ULONG WINAPI XTL::EmuIDirect3DResource8_AddRef
 
     ULONG uRet = 0;
 
-    IDirect3DResource8 *pResource8 = pThis->EmuResource8;
+    if(IsSpecialResource(pThis->Data) && (pThis->Data & X_D3DRESOURCE_DATA_FLAG_YUVSURF))
+    {
+        DWORD  dwPtr = (DWORD)pThis->Lock;
+        DWORD *pRefCount = (DWORD*)(dwPtr + g_dwOverlayP*g_dwOverlayH);
+        ++(*pRefCount);
+    }
+    else
+    {
+        IDirect3DResource8 *pResource8 = pThis->EmuResource8;
 
-    if(pThis->Lock == 0x8000BEEF)
-        uRet = ++pThis->Lock;
-    else if(pResource8 != 0)
-        uRet = pResource8->AddRef();
+        if(pThis->Lock == 0x8000BEEF)
+            uRet = ++pThis->Lock;
+        else if(pResource8 != 0)
+            uRet = pResource8->AddRef();
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -4672,6 +4685,9 @@ ULONG WINAPI XTL::EmuIDirect3DResource8_Release
 
         if(--(*pRefCount) == 0)
         {
+            if(g_YuvSurface == pThis)
+                g_YuvSurface = NULL;
+
             // free memory associated with this special resource handle
             CxbxFree((PVOID)dwPtr);
         }
@@ -6651,18 +6667,35 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_ShadowFunc
 // ******************************************************************
 VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_YuvEnable
 (
-    DWORD Value
+    BOOL Enable
 )
 {
     EmuSwapFS();   // Win2k/XP FS
 
     DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_YuvEnable\n"
            "(\n"
-           "   Value               : 0x%.08X\n"
+           "   Enable              : 0x%.08X\n"
            ");\n",
-           GetCurrentThreadId(), Value);
+           GetCurrentThreadId(), Enable);
 
-    EmuWarning("YuvEnable not implemented (0x%.08X)", Value);
+    // HACK: Display YUV surface by using an overlay.
+    if(Enable != g_fYuvEnabled)
+    {
+        g_fYuvEnabled = Enable;
+
+        EmuWarning("EmuIDirect3DDevice8_SetRenderState_YuvEnable using overlay!");
+
+        EmuSwapFS();
+        EmuIDirect3DDevice8_EnableOverlay(g_fYuvEnabled);
+        EmuSwapFS();
+    }
+
+    if(g_fYuvEnabled)
+    {
+        EmuSwapFS();
+        EmuIDirect3DDevice8_UpdateOverlay(g_YuvSurface, 0, 0, FALSE, 0);
+        EmuSwapFS();
+    }
 
     EmuSwapFS();   // XBox FS
 
@@ -7451,18 +7484,6 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_LightEnable
     EmuSwapFS();   // XBox FS
 
     return hRet;
-}
-
-// ******************************************************************
-// * func: EmuIDirect3DDevice8_BlockUntilVerticalBlank
-// ******************************************************************
-VOID WINAPI EmuIDirect3DDevice8_BlockUntilVerticalBlank()
-{
-    EmuSwapFS();   // Win2k/XP FS
-
-    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_BlockUntilVerticalBlank();\n", GetCurrentThreadId());
-
-    return;
 }
 
 // ******************************************************************

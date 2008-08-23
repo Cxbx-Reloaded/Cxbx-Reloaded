@@ -1142,7 +1142,7 @@ VOID WINAPI EmuIDirect3DDevice8_SetRenderState_ShadowFunc
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_SetRenderState_YuvEnable
 (
-    DWORD Value
+    BOOL Enable
 );
 
 // ******************************************************************
@@ -1301,11 +1301,6 @@ X_D3DPalette * WINAPI EmuIDirect3DDevice8_CreatePalette2
 (
     X_D3DPALETTESIZE    Size
 );
-
-// ******************************************************************
-// * func: EmuIDirect3DDevice8_BlockUntilVerticalBlank
-// ******************************************************************
-VOID WINAPI EmuIDirect3DDevice8_BlockUntilVerticalBlank();
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderTarget

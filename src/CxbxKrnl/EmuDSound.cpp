@@ -2226,6 +2226,31 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_SetI3DL2Source
 }
 
 // ******************************************************************
+// * func: EmuCDirectSoundStream_SetMixBins
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMixBins
+(
+    PVOID   pThis,
+    PVOID   pMixBins
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetMixBins\n"
+            "(\n"
+            "   pThis                     : 0x%.08X\n"
+            "   pMixBins                  : 0x%.08X\n"
+            ");\n",
+            GetCurrentThreadId(), pThis, pMixBins);
+
+    // TODO: Actually implement this.
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
 // * func: EmuIDirectSoundStream_Unknown1
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirectSoundStream_Unknown1

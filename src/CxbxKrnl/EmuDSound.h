@@ -853,6 +853,15 @@ HRESULT WINAPI EmuIDirectSoundStream_SetI3DL2Source
 );
 
 // ******************************************************************
+// * func: EmuCDirectSoundStream_SetMixBins
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetMixBins
+(
+    PVOID   pThis,
+    PVOID   pMixBins
+);
+
+// ******************************************************************
 // * func: EmuIDirectSoundStream_Unknown1
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSoundStream_Unknown1

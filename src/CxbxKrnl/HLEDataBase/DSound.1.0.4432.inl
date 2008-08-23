@@ -404,8 +404,8 @@ SOOVPA<17> CDirectSoundBuffer_SetMixBins_1_0_4432 =
     0,  // Large == 0
     17, // Count == 17
 
-    XREF_DSSETMIXBINSA, // XRef Is  Saved
-    1,                  // XRef Not Used
+    XREF_DSSETMIXBINSA, // XRef Is Saved
+    1,                  // XRef Is Used
 
     {
         // CDirectSoundBuffer_SetMixBins+0x32 : call [CDirectSoundVoice::SetMixBins]
