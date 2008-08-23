@@ -699,9 +699,9 @@ OOVPATable D3D8_1_0_5849[] =
         "EmuIDirect3DDevice8_GetCreationParameters"
         #endif
     },
-    // IDirect3DDevice8::Clear (* unchanged since 5558 *)
+    // IDirect3DDevice8::Clear (* unchanged since 5233 *)
     {
-        (OOVPA*)&IDirect3DDevice8_Clear_1_0_5558,
+        (OOVPA*)&IDirect3DDevice8_Clear_1_0_5233,
 
         XTL::EmuIDirect3DDevice8_Clear,
 
@@ -709,9 +709,9 @@ OOVPATable D3D8_1_0_5849[] =
         "EmuIDirect3DDevice8_Clear"
         #endif
     },
-    // IDirect3DDevice8::Swap (* unchanged since 5558 *)
+    // IDirect3DDevice8::Swap (* unchanged since 5233 *)
     {
-        (OOVPA*)&IDirect3DDevice8_Swap_1_0_5558,
+        (OOVPA*)&IDirect3DDevice8_Swap_1_0_5233,
 
         XTL::EmuIDirect3DDevice8_Swap,
 
@@ -759,9 +759,9 @@ OOVPATable D3D8_1_0_5849[] =
         "EmuIDirect3DDevice8_CreatePixelShader"
         #endif
     },
-    // IDirect3DDevice8::SetPixelShader (* unchanged since 5558 *)
+    // IDirect3DDevice8::SetPixelShader (* unchanged since 5233 *)
     {
-        (OOVPA*)&IDirect3DDevice8_SetPixelShader_1_0_5558,
+        (OOVPA*)&IDirect3DDevice8_SetPixelShader_1_0_5233,
 
         XTL::EmuIDirect3DDevice8_SetPixelShader,
 
@@ -849,9 +849,9 @@ OOVPATable D3D8_1_0_5849[] =
         "EmuIDirect3DDevice8_SetTextureState_BorderColor"
         #endif
     },
-    // IDirect3DDevice8::SetRenderState_CullMode (* unchanged since 5558 *)
+    // IDirect3DDevice8::SetRenderState_CullMode (* unchanged since 5233 *)
     {
-        (OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_5558,
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_5233,
 
         XTL::EmuIDirect3DDevice8_SetRenderState_CullMode,
 
@@ -929,9 +929,9 @@ OOVPATable D3D8_1_0_5849[] =
         "EmuIDirect3DDevice8_SetRenderState_Simple"
         #endif
     },
-    // IDirect3DDevice8::SetRenderState_ZEnable (* unchanged since 5558 *)
+    // IDirect3DDevice8::SetRenderState_ZEnable (* unchanged since 5233 *)
     {
-        (OOVPA*)&IDirect3DDevice8_SetRenderState_ZEnable_1_0_5558,
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_ZEnable_1_0_5233,
 
         XTL::EmuIDirect3DDevice8_SetRenderState_ZEnable,
 
@@ -1009,9 +1009,9 @@ OOVPATable D3D8_1_0_5849[] =
         "EmuIDirect3DDevice8_SetIndices"
         #endif
     },
-    // IDirect3DDevice8::SetTexture (* unchanged since 5558 *)
+    // IDirect3DDevice8::SetTexture (* unchanged since 5233 *)
     {
-        (OOVPA*)&IDirect3DDevice8_SetTexture_1_0_5558,
+        (OOVPA*)&IDirect3DDevice8_SetTexture_1_0_5233,
 
         XTL::EmuIDirect3DDevice8_SetTexture,
 
@@ -1019,9 +1019,9 @@ OOVPATable D3D8_1_0_5849[] =
         "EmuIDirect3DDevice8_SetTexture"
         #endif
     },
-    // IDirect3DDevice8::Begin (* unchanged since 5558 *)
+    // IDirect3DDevice8::Begin (* unchanged since 5233 *)
     {
-        (OOVPA*)&IDirect3DDevice8_Begin_1_0_5558,
+        (OOVPA*)&IDirect3DDevice8_Begin_1_0_5233,
 
         XTL::EmuIDirect3DDevice8_Begin,
 

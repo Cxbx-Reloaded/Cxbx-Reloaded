@@ -48,6 +48,7 @@ extern "C" const char *szHLELastCompileTime = __TIMESTAMP__;
 #include "HLEDataBase/Xapi.1.0.4361.inl"
 #include "HLEDataBase/Xapi.1.0.4432.inl"
 #include "HLEDataBase/Xapi.1.0.4627.inl"
+#include "HLEDataBase/Xapi.1.0.5233.inl"
 #include "HLEDataBase/Xapi.1.0.5558.inl"
 #include "HLEDataBase/Xapi.1.0.5849.inl"
 #include "HLEDataBase/D3D8.1.0.3925.inl"
@@ -56,16 +57,19 @@ extern "C" const char *szHLELastCompileTime = __TIMESTAMP__;
 #include "HLEDataBase/D3D8.1.0.4361.inl"
 #include "HLEDataBase/D3D8.1.0.4432.inl"
 #include "HLEDataBase/D3D8.1.0.4627.inl"
+#include "HLEDataBase/D3D8.1.0.5233.inl"
 #include "HLEDataBase/D3D8.1.0.5558.inl"
 #include "HLEDataBase/D3D8.1.0.5849.inl"
 #include "HLEDataBase/DSound.1.0.3936.inl"
 #include "HLEDataBase/DSound.1.0.4361.inl"
 #include "HLEDataBase/DSound.1.0.4432.inl"
 #include "HLEDataBase/DSound.1.0.4627.inl"
+#include "HLEDataBase/DSound.1.0.5233.inl"
 #include "HLEDataBase/DSound.1.0.5558.inl"
 #include "HLEDataBase/DSound.1.0.5849.inl"
 #include "HLEDataBase/XG.1.0.4361.inl"
 #include "HLEDataBase/XG.1.0.4627.inl"
+#include "HLEDataBase/XG.1.0.5233.inl"
 #include "HLEDataBase/XG.1.0.5558.inl"
 #include "HLEDataBase/XNet.1.0.3911.inl"
 #include "HLEDataBase/XOnline.1.0.4361.inl"
@@ -117,12 +121,12 @@ HLEData HLEDataBase[] =
         XAPI_1_0_4627,
         XAPI_1_0_4627_SIZE
     },
-    // Xapilib Version 1.0.5849
+    // Xapilib Version 1.0.5233
     {
         "XAPILIB",
-        1, 0, 5849,
-        XAPI_1_0_5849,
-        XAPI_1_0_5849_SIZE
+        1, 0, 5233,
+        XAPI_1_0_5233,
+        XAPI_1_0_5233_SIZE
     },
     // Xapilib Version 1.0.5558
     {
@@ -130,6 +134,13 @@ HLEData HLEDataBase[] =
         1, 0, 5558,
         XAPI_1_0_5558,
         XAPI_1_0_5558_SIZE
+    },
+    // Xapilib Version 1.0.5849
+    {
+        "XAPILIB",
+        1, 0, 5849,
+        XAPI_1_0_5849,
+        XAPI_1_0_5849_SIZE
     },
     // D3D8 Version 1.0.3925
     {
@@ -173,6 +184,13 @@ HLEData HLEDataBase[] =
         D3D8_1_0_4627,
         D3D8_1_0_4627_SIZE
     },
+    // D3D8 Version 1.0.5233
+    {
+        "D3D8",
+        1, 0, 5233,
+        D3D8_1_0_5233,
+        D3D8_1_0_5233_SIZE
+    },
     // D3D8 Version 1.0.5558
     {
         "D3D8",
@@ -215,6 +233,13 @@ HLEData HLEDataBase[] =
         DSound_1_0_4627,
         DSound_1_0_4627_SIZE
     },
+    // DSound Version 1.0.5233
+    {
+        "DSOUND",
+        1, 0, 5233,
+        DSound_1_0_5233,
+        DSound_1_0_5233_SIZE
+    },
     // DSound Version 1.0.5558
     {
         "DSOUND",
@@ -242,6 +267,13 @@ HLEData HLEDataBase[] =
         1, 0, 4627,
         XG_1_0_4627,
         XG_1_0_4627_SIZE
+    },
+    // XG Version 1.0.5233
+    {
+        "XGRAPHC",
+        1, 0, 5233,
+        XG_1_0_5233,
+        XG_1_0_5233_SIZE
     },
     // XG Version 1.0.5558
     {
@@ -282,7 +314,7 @@ extern uint32 XRefDataBase[] =
     -1, // XREF_D3DRS_ROPZREAD
     -1, // XREF_D3DRS_DONOTCULLUNCOMPRESSED
     -1, // XREF_D3DRS_STENCILCULLENABLE
-    -1, // XREF_LAZYSETSTATEVB
+    -1, // XREF_D3DCD_LAZYSETSTATEVB
     -1, // XREF_XNINIT
     -1, // XREF_FCLOSEDEVICE
     -1, // XREF_CLEARSTATEBLOCKFLAGS

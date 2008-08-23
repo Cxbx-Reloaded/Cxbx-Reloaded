@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->D3D8.1.0.5558.h
+// *   Cxbx->Win32->CxbxKrnl->XG.1.0.5233.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,12 +31,12 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef D3D8_1_0_5558_H
-#define D3D8_1_0_5558_H
+#ifndef XG_1_0_5233_H
+#define XG_1_0_5233_H
 
 #include "OOVPA.h"
 
-extern OOVPATable D3D8_1_0_5558[];
-extern uint32     D3D8_1_0_5558_SIZE;
+extern OOVPATable XG_1_0_5233[];
+extern uint32     XG_1_0_5233_SIZE;
 
 #endif

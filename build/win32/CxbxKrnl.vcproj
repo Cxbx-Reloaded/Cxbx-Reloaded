@@ -363,6 +363,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5233.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.h"
 					>
 				</File>
@@ -384,6 +388,10 @@
 				</File>
 				<File
 					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4627.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5233.h"
 					>
 				</File>
 				<File
@@ -415,6 +423,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5233.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5558.h"
 					>
 				</File>
@@ -428,6 +440,10 @@
 				</File>
 				<File
 					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4627.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5233.h"
 					>
 				</File>
 				<File
@@ -1197,6 +1213,26 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5233.inl"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
 					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.inl"
 					>
 					<FileConfiguration
@@ -1298,6 +1334,26 @@
 				</File>
 				<File
 					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4627.inl"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5233.inl"
 					>
 					<FileConfiguration
 						Name="Release|Win32"
@@ -1477,6 +1533,26 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5233.inl"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
 					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5558.inl"
 					>
 					<FileConfiguration
@@ -1538,6 +1614,26 @@
 				</File>
 				<File
 					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4627.inl"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5233.inl"
 					>
 					<FileConfiguration
 						Name="Release|Win32"

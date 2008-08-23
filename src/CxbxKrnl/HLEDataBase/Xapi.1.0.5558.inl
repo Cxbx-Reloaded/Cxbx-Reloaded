@@ -33,28 +33,6 @@
 // ******************************************************************
 
 // ******************************************************************
-// * XapiApplyKernelPatches
-// ******************************************************************
-SOOVPA<7> XapiApplyKernelPatches_1_0_5558 =
-{
-    0,  // Large == 0
-    7,  // Count == 7
-
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
-
-    {
-        { 0x17, 0x81 },
-        { 0x30, 0x81 },
-        { 0x49, 0x05 },
-        { 0x62, 0x1B },
-        { 0x7B, 0x85 },
-        { 0x96, 0x6A },
-        { 0xAD, 0x5F },
-    }
-};
-
-// ******************************************************************
 // * RtlCreateHeap
 // ******************************************************************
 SOOVPA<8> RtlCreateHeap_1_0_5558 =
@@ -120,31 +98,6 @@ SOOVPA<8> RtlSizeHeap_1_0_5558 =
         { 0x22, 0xF0 },
         { 0x28, 0xE0 },
         { 0x2E, 0x00 },
-    }
-};
-
-// ******************************************************************
-// * XInitDevices
-// ******************************************************************
-// * NOTE: We are actually intercepting USBD_Init, because
-// *       XInitDevices Simply redirects to that function
-// ******************************************************************
-SOOVPA<7> XInitDevices_1_0_5558 =
-{
-    0,  // Large == 0
-    7,  // Count == 7
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        { 0x0E, 0x75 },
-        { 0x20, 0xBE },
-        { 0x2E, 0xC0 },
-        { 0x3E, 0xEC },
-        { 0x50, 0x0F },
-        { 0x5F, 0xE8 },
-        { 0x70, 0x5F },
     }
 };
 
@@ -240,57 +193,13 @@ SOOVPA<8> XapiInitProcess_1_0_5659 =
 };
 
 // ******************************************************************
-// * XGetDeviceChanges
-// ******************************************************************
-SOOVPA<7> XGetDeviceChanges_1_0_5558 =
-{
-    0,  // Large == 0
-    7,  // Count == 7
-
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
-
-    {
-        { 0x0C, 0x75 },
-        { 0x1A, 0x53 },
-        { 0x28, 0xF7 },
-        { 0x36, 0x56 },
-        { 0x44, 0x89 },
-        { 0x52, 0xC8 },
-        { 0x60, 0x5F },
-    }
-};
-
-// ******************************************************************
-// * XInputSetState
-// ******************************************************************
-SOOVPA<7> XInputSetState_1_0_5558 =
-{
-    0,  // Large == 0
-    7,  // Count == 7
-
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
-
-    {
-        { 0x05, 0x81 },
-        { 0x0C, 0xF6 },
-        { 0x13, 0x57 },
-        { 0x1A, 0x08 },
-        { 0x21, 0x8B },
-        { 0x28, 0x88 },
-        { 0x30, 0xC2 },
-    }
-};
-
-// ******************************************************************
 // * XAPI_1_0_5558
 // ******************************************************************
 OOVPATable XAPI_1_0_5558[] =
 {
-    // XapiApplyKernelPatches_1_0_5558
+    // XapiApplyKernelPatches (* unchanged since 5233 *)
     {
-        (OOVPA*)&XapiApplyKernelPatches_1_0_5558,
+        (OOVPA*)&XapiApplyKernelPatches_1_0_5233,
 
         XTL::EmuXapiApplyKernelPatches,
 
@@ -388,9 +297,9 @@ OOVPATable XAPI_1_0_5558[] =
         "EmuXMountUtilityDrive"
         #endif
     },
-    // XInitDevices
+    // XInitDevices (* unchanged since 5233 *)
     {
-        (OOVPA*)&XInitDevices_1_0_5558,
+        (OOVPA*)&XInitDevices_1_0_5233,
 
         XTL::EmuXInitDevices,
 
@@ -408,9 +317,9 @@ OOVPATable XAPI_1_0_5558[] =
         "EmuXGetDevices"
         #endif
     },
-    // XGetDeviceChanges
+    // XGetDeviceChanges (* unchanged since 5233 *)
     {
-        (OOVPA*)&XGetDeviceChanges_1_0_5558,
+        (OOVPA*)&XGetDeviceChanges_1_0_5233,
 
         XTL::EmuXGetDeviceChanges,
 
@@ -448,9 +357,9 @@ OOVPATable XAPI_1_0_5558[] =
         "EmuXInputGetState"
         #endif
     },
-    // XInputSetState
+    // XInputSetState (* unchanged since 5233 *)
     {
-        (OOVPA*)&XInputSetState_1_0_5558,
+        (OOVPA*)&XInputSetState_1_0_5233,
 
         XTL::EmuXInputSetState,
 

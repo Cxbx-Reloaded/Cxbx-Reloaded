@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->Xapi.1.0.5849.cpp
+// *   Cxbx->Win32->CxbxKrnl->Xapi.1.0.5233.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -33,32 +33,85 @@
 // ******************************************************************
 
 // ******************************************************************
-// * XapiInitProcess
+// * XapiApplyKernelPatches
 // ******************************************************************
-SOOVPA<8> XapiInitProcess_1_0_5849 =
+SOOVPA<7> XapiApplyKernelPatches_1_0_5233 =
 {
     0,  // Large == 0
-    8,  // Count == 8
+    7,  // Count == 7
 
     -1, // Xref Not Saved
     0,  // Xref Not Used
 
     {
-        { 0x22, 0x6A },
-        { 0x3E, 0x01 },
-        { 0x5E, 0x75 },
-        { 0x7E, 0x5E },
-        { 0x9E, 0x7D },
-        { 0xBE, 0x51 },
-        { 0xDE, 0x00 },
-        { 0xFE, 0x53 },
+        { 0x17, 0x81 },
+        { 0x30, 0x81 },
+        { 0x49, 0x05 },
+        { 0x62, 0x1B },
+        { 0x7B, 0x85 },
+        { 0x96, 0x6A },
+        { 0xAD, 0x5F },
+    }
+};
+
+// ******************************************************************
+// * XapiInitProcess
+// ******************************************************************
+SOOVPA<7> XapiInitProcess_1_0_5233 =
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // XapiInitProcess+0x03 : sub esp, 0x34
+        { 0x05, 0x34 }, // (Offset,Value)-Pair #1
+
+        // XapiInitProcess+0x22 : push 0x0C
+        { 0x22, 0x6A }, // (Offset,Value)-Pair #2
+        { 0x23, 0x0C }, // (Offset,Value)-Pair #3
+
+        // XapiInitProcess+0x2A : repe stosd
+        { 0x2A, 0xF3 }, // (Offset,Value)-Pair #4
+        { 0x2B, 0xAB }, // (Offset,Value)-Pair #5
+
+        // XapiInitProcess+0x55 : jz +0x0B
+        { 0x55, 0x74 }, // (Offset,Value)-Pair #6
+        { 0x56, 0x4B }, // (Offset,Value)-Pair #7
+    }
+};
+
+// ******************************************************************
+// * XInitDevices
+// ******************************************************************
+// * NOTE: We are actually intercepting USBD_Init, because
+// *       XInitDevices Simply redirects to that function
+// ******************************************************************
+SOOVPA<7> XInitDevices_1_0_5233 =
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        { 0x0E, 0x75 },
+        { 0x20, 0xBE },
+        { 0x2E, 0xC0 },
+        { 0x3E, 0xEC },
+        { 0x50, 0x0F },
+        { 0x5F, 0xE8 },
+        { 0x70, 0x5F },
     }
 };
 
 // ******************************************************************
 // * XGetDeviceChanges
 // ******************************************************************
-SOOVPA<7> XGetDeviceChanges_1_0_5849 =
+SOOVPA<7> XGetDeviceChanges_1_0_5233 =
 {
     0,  // Large == 0
     7,  // Count == 7
@@ -78,11 +131,33 @@ SOOVPA<7> XGetDeviceChanges_1_0_5849 =
 };
 
 // ******************************************************************
-// * XAPI_1_0_5849
+// * XInputSetState
 // ******************************************************************
-OOVPATable XAPI_1_0_5849[] =
+SOOVPA<7> XInputSetState_1_0_5233 =
 {
-    // XapiApplyKernelPatches (* unchanged since 5233 *)
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x05, 0x81 },
+        { 0x0C, 0xF6 },
+        { 0x13, 0x57 },
+        { 0x1A, 0x08 },
+        { 0x21, 0x8B },
+        { 0x28, 0x88 },
+        { 0x30, 0xC2 },
+    }
+};
+
+// ******************************************************************
+// * XAPI_1_0_5233
+// ******************************************************************
+OOVPATable XAPI_1_0_5233[] =
+{
+    // XapiApplyKernelPatches
     {
         (OOVPA*)&XapiApplyKernelPatches_1_0_5233,
 
@@ -92,19 +167,29 @@ OOVPATable XAPI_1_0_5849[] =
         "EmuXapiApplyKernelPatches"
         #endif
     },
-    // SetThreadPriority (* unchanged since 3911 *)
+    // XapiInitProcess
     {
-        (OOVPA*)&SetThreadPriority_1_0_3911,
+        (OOVPA*)&XapiInitProcess_1_0_5233,
 
-        XTL::EmuSetThreadPriority,
+        XTL::EmuXapiInitProcess,
 
         #ifdef _DEBUG_TRACE
-        "EmuSetThreadPriority"
+        "EmuXapiInitProcess"
         #endif
     },
-    // RtlCreateHeap (* unchanged since 5558 *)
+    // XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
     {
-        (OOVPA*)&RtlCreateHeap_1_0_5558,
+        (OOVPA*)&XRegisterThreadNotifyRoutine_1_0_3911,
+
+        XTL::EmuXRegisterThreadNotifyRoutine,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXRegisterThreadNotifyRoutine"
+        #endif
+    },
+    // RtlCreateHeap (* unchanged since 1.0.3911 *)
+    {
+        (OOVPA*)&RtlCreateHeap_1_0_3911,
 
         XTL::EmuRtlCreateHeap,
 
@@ -112,9 +197,9 @@ OOVPATable XAPI_1_0_5849[] =
         "EmuRtlCreateHeap"
         #endif
     },
-    // RtlAllocateHeap (* unchanged since 5558 *)
+    // RtlAllocateHeap (* unchanged since 1.0.3911 *)
     {
-        (OOVPA*)&RtlAllocateHeap_1_0_5558,
+        (OOVPA*)&RtlAllocateHeap_1_0_3911,
 
         XTL::EmuRtlAllocateHeap,
 
@@ -122,7 +207,7 @@ OOVPATable XAPI_1_0_5849[] =
         "EmuRtlAllocateHeap"
         #endif
     },
-    // RtlFreeHeap (* unchanged since 4627 *)
+    // RtlFreeHeap (* unchanged since 1.0.4627 *)
     {
         (OOVPA*)&RtlFreeHeap_1_0_4627,
 
@@ -132,7 +217,7 @@ OOVPATable XAPI_1_0_5849[] =
         "EmuRtlFreeHeap"
         #endif
     },
-    // RtlReAllocateHeap (* unchanged since 4627 *)
+    // RtlReAllocateHeap (* unchanged since 1.0.4627 *)
     {
         (OOVPA*)&RtlReAllocateHeap_1_0_4627,
 
@@ -142,9 +227,9 @@ OOVPATable XAPI_1_0_5849[] =
         "EmuRtlReAllocateHeap"
         #endif
     },
-    // RtlSizeHeap (* unchanged since 5558 *)
+    // RtlSizeHeap (* unchanged since 4432 *)
     {
-        (OOVPA*)&RtlSizeHeap_1_0_5558,
+        (OOVPA*)&RtlSizeHeap_1_0_4432,
 
         XTL::EmuRtlSizeHeap,
 
@@ -182,7 +267,7 @@ OOVPATable XAPI_1_0_5849[] =
         "EmuXMountUtilityDrive"
         #endif
     },
-    // XInitDevices (* unchanged since 5233 *)
+    // XInitDevices
     {
         (OOVPA*)&XInitDevices_1_0_5233,
 
@@ -202,6 +287,16 @@ OOVPATable XAPI_1_0_5849[] =
         "EmuXGetDevices"
         #endif
     },
+    // XGetDeviceChanges
+    {
+        (OOVPA*)&XGetDeviceChanges_1_0_5233,
+
+        XTL::EmuXGetDeviceChanges,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXGetDeviceChanges"
+        #endif
+    },
     // XInputOpen (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&XInputOpen_1_0_4361,
@@ -212,19 +307,27 @@ OOVPATable XAPI_1_0_5849[] =
         "EmuXInputOpen"
         #endif
     },
-    // XInputGetCapabilities (* unchanged since 5558 *)
+    // XID_fCloseDevice (* unchanged since 1.0.4928 *)
     {
-        (OOVPA*)&XInputGetCapabilities_1_0_5558,
-
-        XTL::EmuXInputGetCapabilities,
+        (OOVPA*)&XID_fCloseDevice_1_0_4928, 0,
 
         #ifdef _DEBUG_TRACE
-        "EmuXInputGetCapabilities"
+        "XID_fCloseDevice (XREF)"
         #endif
     },
-    // XInputGetState (* unchanged since 5558 *)
+    // XInputClose (* unchanged since 1.0.4928 *)
     {
-        (OOVPA*)&XInputGetState_1_0_5558,
+        (OOVPA*)&XInputClose_1_0_4928,
+
+        XTL::EmuXInputClose,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputClose"
+        #endif
+    },
+    // XInputGetState (* unchanged since 1.0.4928 *)
+    {
+        (OOVPA*)&XInputGetState_1_0_4928,
 
         XTL::EmuXInputGetState,
 
@@ -232,36 +335,14 @@ OOVPATable XAPI_1_0_5849[] =
         "EmuXInputGetState"
         #endif
     },
-    // XGetDeviceChanges
+    // XInputSetState
     {
-        (OOVPA*)&XGetDeviceChanges_1_0_5849,
+        (OOVPA*)&XInputSetState_1_0_5233,
 
-        XTL::EmuXGetDeviceChanges,
+        XTL::EmuXInputSetState,
 
         #ifdef _DEBUG_TRACE
-        "EmuXGetDeviceChanges"
-        #endif
-    },
-    /* obsolete?
-    // XapiThreadStartup (* unchanged since 1.0.4361 *)
-    {
-        (OOVPA*)&XapiThreadStartup_1_0_4361,
-
-        XTL::EmuXapiThreadStartup,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiThreadStartup"
-        #endif
-    },
-    //*/
-    // XapiInitProcess
-    {
-        (OOVPA*)&XapiInitProcess_1_0_5849,
-
-        XTL::EmuXapiInitProcess,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiInitProcess"
+        "EmuXInputSetState"
         #endif
     },
     // XapiBootToDash (* unchanged since 1.0.3911 *)
@@ -277,6 +358,6 @@ OOVPATable XAPI_1_0_5849[] =
 };
 
 // ******************************************************************
-// * XAPI_1_0_5849_SIZE
+// * XAPI_1_0_5233_SIZE
 // ******************************************************************
-uint32 XAPI_1_0_5849_SIZE = sizeof(XAPI_1_0_5849);
+uint32 XAPI_1_0_5233_SIZE = sizeof(XAPI_1_0_5233);

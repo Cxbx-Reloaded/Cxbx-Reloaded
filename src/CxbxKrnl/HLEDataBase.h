@@ -40,6 +40,7 @@
 #include "HLEDataBase/Xapi.1.0.4361.h"
 #include "HLEDataBase/Xapi.1.0.4432.h"
 #include "HLEDataBase/Xapi.1.0.4627.h"
+#include "HLEDataBase/Xapi.1.0.5233.h"
 #include "HLEDataBase/Xapi.1.0.5558.h"
 #include "HLEDataBase/Xapi.1.0.5849.h"
 #include "HLEDataBase/D3D8.1.0.3925.h"
@@ -48,16 +49,19 @@
 #include "HLEDataBase/D3D8.1.0.4361.h"
 #include "HLEDataBase/D3D8.1.0.4432.h"
 #include "HLEDataBase/D3D8.1.0.4627.h"
+#include "HLEDataBase/D3D8.1.0.5233.h"
 #include "HLEDataBase/D3D8.1.0.5558.h"
 #include "HLEDataBase/D3D8.1.0.5849.h"
 #include "HLEDataBase/DSound.1.0.3936.h"
 #include "HLEDataBase/DSound.1.0.4361.h"
 #include "HLEDataBase/DSound.1.0.4432.h"
 #include "HLEDataBase/DSound.1.0.4627.h"
+#include "HLEDataBase/DSound.1.0.5233.h"
 #include "HLEDataBase/DSound.1.0.5558.h"
 #include "HLEDataBase/DSound.1.0.5849.h"
 #include "HLEDataBase/XG.1.0.4361.h"
 #include "HLEDataBase/XG.1.0.4627.h"
+#include "HLEDataBase/XG.1.0.5233.h"
 #include "HLEDataBase/XG.1.0.5558.h"
 #include "HLEDataBase/XNet.1.0.3911.h"
 #include "HLEDataBase/XOnline.1.0.4361.h"
@@ -114,7 +118,7 @@ enum XRefDataBaseOffset
     XREF_D3DRS_ROPZREAD,
     XREF_D3DRS_DONOTCULLUNCOMPRESSED,
     XREF_D3DRS_STENCILCULLENABLE,
-    XREF_LAZYSETSTATEVB,
+    XREF_D3DCD_LAZYSETSTATEVB,
     XREF_XNINIT,
     XREF_FCLOSEDEVICE,
     XREF_CLEARSTATEBLOCKFLAGS,

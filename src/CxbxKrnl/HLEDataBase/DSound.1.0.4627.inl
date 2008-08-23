@@ -2242,7 +2242,7 @@ OOVPATable DSound_1_0_4627[] =
         "CDirectSound_SetPositionA (XRef)"
         #endif
     },
-    // IDirectSound8::SetPosition
+    // IDirectSound8::SetPosition (* unchanged since 3936 *)
     {
         (OOVPA*)&IDirectSound8_SetPosition_1_0_3936,
 
@@ -2334,7 +2334,7 @@ OOVPATable DSound_1_0_4627[] =
         "IDirectSoundBuffer8_LockA (XRef)"
         #endif
     },
-    // IDirectSoundBuffer8::Lock
+    // IDirectSoundBuffer8::Lock (* unchanged since 3936 *)
     {
         (OOVPA*)&IDirectSoundBuffer8_Lock_1_0_3936,
 

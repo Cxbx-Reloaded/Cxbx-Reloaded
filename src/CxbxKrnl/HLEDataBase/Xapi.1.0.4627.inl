@@ -564,7 +564,7 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuRtlSizeHeap"
         #endif
     },
-    // QueryPerformanceCounter (* unchanged since 4627 *)
+    // QueryPerformanceCounter (* unchanged since 4361 *)
     {
         (OOVPA*)&QueryPerformanceCounter_1_0_4361,
 
@@ -574,7 +574,7 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuQueryPerformanceCounter"
         #endif
     },
-    // QueryPerformanceFrequency (* unchanged since 4627 *)
+    // QueryPerformanceFrequency (* unchanged since 4361 *)
     {
         (OOVPA*)&QueryPerformanceFrequency_1_0_4361,
 
