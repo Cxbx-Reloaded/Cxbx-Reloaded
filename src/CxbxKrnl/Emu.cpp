@@ -57,6 +57,11 @@ namespace NtDll
 #include "HLEDataBase.h"
 #include "HLEIntercept.h"
 
+#ifdef _DEBUG
+#include <Dbghelp.h>
+CRITICAL_SECTION dbgCritical;
+#endif
+
 // Global Variable(s)
 HANDLE           g_hCurDir    = NULL;
 CHAR            *g_strCurDrive= NULL;
@@ -83,6 +88,10 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
     if(fdwReason == DLL_PROCESS_ATTACH)
     {
+#ifdef _DEBUG
+        InitializeCriticalSection(&dbgCritical);
+#endif
+
         EmuShared::Init();
         hInitInstance = hinstDLL;
     }
@@ -91,6 +100,10 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     {
         if(hInitInstance == hinstDLL)
             EmuShared::Cleanup();
+
+#ifdef _DEBUG
+        DeleteCriticalSection(&dbgCritical);
+#endif
     }
 
     return TRUE;
@@ -268,6 +281,11 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
             e->ContextRecord->Eip, e->ContextRecord->EFlags,
             e->ContextRecord->Eax, e->ContextRecord->Ebx, e->ContextRecord->Ecx, e->ContextRecord->Edx,
             e->ContextRecord->Esi, e->ContextRecord->Edi, e->ContextRecord->Esp, e->ContextRecord->Ebp);
+
+#ifdef _DEBUG
+        CONTEXT Context = *(e->ContextRecord);
+        EmuPrintStackTrace(&Context);
+#endif
     }
 
     fflush(stdout);
@@ -393,3 +411,76 @@ int ExitException(LPEXCEPTION_POINTERS e)
 
     return EXCEPTION_CONTINUE_SEARCH;
 }
+
+#ifdef _DEBUG
+// print call stack trace
+void EmuPrintStackTrace(PCONTEXT ContextRecord)
+{
+    static int const STACK_MAX     = 16;
+    static int const SYMBOL_MAXLEN = 64;
+
+    EnterCriticalSection(&dbgCritical);
+
+    IMAGEHLP_MODULE64 module = { sizeof(IMAGEHLP_MODULE) };
+
+    BOOL fSymInitialized;
+    fSymInitialized = SymInitialize(GetCurrentProcess(), NULL, TRUE);
+
+    STACKFRAME64 frame = { sizeof(STACKFRAME64) };
+    frame.AddrPC.Offset    = ContextRecord->Eip;
+    frame.AddrPC.Mode      = AddrModeFlat;
+    frame.AddrFrame.Offset = ContextRecord->Ebp;
+    frame.AddrFrame.Mode   = AddrModeFlat;
+    frame.AddrStack.Offset = ContextRecord->Esp;
+    frame.AddrStack.Mode   = AddrModeFlat;
+
+    for(int i = 0; i < STACK_MAX; i++)
+    {
+        if(!StackWalk64(
+            IMAGE_FILE_MACHINE_I386,
+            GetCurrentProcess(),
+            GetCurrentThread(),
+            &frame,
+            ContextRecord,
+            NULL,
+            SymFunctionTableAccess64,
+            SymGetModuleBase64,
+            NULL))
+            break;
+
+        DWORD64 dwDisplacement = 0;
+        PSYMBOL_INFO pSymbol = 0;
+        BYTE symbol[sizeof(SYMBOL_INFO) + SYMBOL_MAXLEN];
+
+        SymGetModuleInfo64(GetCurrentProcess(), frame.AddrPC.Offset, &module);
+
+        if(fSymInitialized)
+        {
+            pSymbol = (PSYMBOL_INFO)symbol;
+            pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO) + SYMBOL_MAXLEN - 1;
+            pSymbol->MaxNameLen = SYMBOL_MAXLEN;
+
+            if(!SymFromAddr(GetCurrentProcess(), frame.AddrPC.Offset, &dwDisplacement, pSymbol))
+                pSymbol = 0;
+        }
+
+        if(module.ModuleName)
+            printf(" %2d: %-8s 0x%.08X", i, module.ModuleName, frame.AddrPC.Offset);
+        else
+            printf(" %2d: %8c 0x%.08X", i, ' ', frame.AddrPC.Offset);
+
+        if(pSymbol)
+        {
+            printf(" %s+0x%.04X\n", pSymbol->Name, dwDisplacement);
+        }
+        else
+            printf("\n");
+    }
+    printf("\n");
+
+    if(fSymInitialized)
+        SymCleanup(GetCurrentProcess());
+
+    LeaveCriticalSection(&dbgCritical);
+}
+#endif

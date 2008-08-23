@@ -1007,8 +1007,11 @@ void Xbe::ConstructorInit()
 }
 
 // better time
-static char *BetterTime(char *x_ctime)
+static char *BetterTime(uint32 x_timeDate)
 {
+    time_t x_time = x_timeDate;
+    char *x_ctime = ctime(&x_time);
+
     int v=0;
 
     for(v=0;x_ctime[v] != '\n';v++);
@@ -1048,7 +1051,7 @@ void Xbe::DumpInformation(FILE *x_file)
     fprintf(x_file, "Size of Headers                  : 0x%.08X\n", m_Header.dwSizeofHeaders);
     fprintf(x_file, "Size of Image                    : 0x%.08X\n", m_Header.dwSizeofImage);
     fprintf(x_file, "Size of Image Header             : 0x%.08X\n", m_Header.dwSizeofImageHeader);
-    fprintf(x_file, "TimeDate Stamp                   : 0x%.08X (%s)\n", m_Header.dwTimeDate, BetterTime(ctime((const time_t*)&m_Header.dwTimeDate)));
+    fprintf(x_file, "TimeDate Stamp                   : 0x%.08X (%s)\n", m_Header.dwTimeDate, BetterTime(m_Header.dwTimeDate));
     fprintf(x_file, "Certificate Address              : 0x%.08X\n", m_Header.dwCertificateAddr);
     fprintf(x_file, "Number of Sections               : 0x%.08X\n", m_Header.dwSections);
     fprintf(x_file, "Section Headers Address          : 0x%.08X\n", m_Header.dwSectionHeadersAddr);
@@ -1091,7 +1094,7 @@ void Xbe::DumpInformation(FILE *x_file)
     fprintf(x_file, "(PE) Base Address                : 0x%.08X\n", m_Header.dwPeBaseAddr);
     fprintf(x_file, "(PE) Size of Image               : 0x%.08X\n", m_Header.dwPeSizeofImage);
     fprintf(x_file, "(PE) Checksum                    : 0x%.08X\n", m_Header.dwPeChecksum);
-    fprintf(x_file, "(PE) TimeDate Stamp              : 0x%.08X (%s)\n", m_Header.dwPeTimeDate, BetterTime(ctime((time_t*)&m_Header.dwPeTimeDate)));
+    fprintf(x_file, "(PE) TimeDate Stamp              : 0x%.08X (%s)\n", m_Header.dwPeTimeDate, BetterTime(m_Header.dwPeTimeDate));
     fprintf(x_file, "Debug Pathname Address           : 0x%.08X (\"%s\")\n", m_Header.dwDebugPathnameAddr, GetAddr(m_Header.dwDebugPathnameAddr));
     fprintf(x_file, "Debug Filename Address           : 0x%.08X (\"%s\")\n", m_Header.dwDebugFilenameAddr, GetAddr(m_Header.dwDebugFilenameAddr));
     fprintf(x_file, "Debug Unicode filename Address   : 0x%.08X (L\"%s\")\n", m_Header.dwDebugUnicodeFilenameAddr, AsciiFilename);
@@ -1107,7 +1110,7 @@ void Xbe::DumpInformation(FILE *x_file)
     fprintf(x_file, "Dumping XBE Certificate...\n");
     fprintf(x_file, "\n");
     fprintf(x_file, "Size of Certificate              : 0x%.08X\n", m_Certificate.dwSize);
-    fprintf(x_file, "TimeDate Stamp                   : 0x%.08X (%s)\n", m_Certificate.dwTimeDate, BetterTime(ctime((time_t*)&m_Certificate.dwTimeDate)));
+    fprintf(x_file, "TimeDate Stamp                   : 0x%.08X (%s)\n", m_Certificate.dwTimeDate, BetterTime(m_Certificate.dwTimeDate));
     fprintf(x_file, "Title ID                         : 0x%.08X\n", m_Certificate.dwTitleId);
     fprintf(x_file, "Title                            : L\"%s\"\n", m_szAsciiTitle);
 
