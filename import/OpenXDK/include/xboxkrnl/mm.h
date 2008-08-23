@@ -49,8 +49,24 @@ XBSYSAPI EXPORTNUM(167) PVOID NTAPI MmAllocateSystemMemory
 );
 
 XBSYSAPI VOID *MmClaimGpuInstanceMemory;
-XBSYSAPI VOID *MmCreateKernelStack;
-XBSYSAPI VOID *MmDeleteKernelStack;
+
+// ******************************************************************
+// * MmCreateKernelStack
+// ******************************************************************
+XBSYSAPI EXPORTNUM(169) PVOID NTAPI MmCreateKernelStack
+(
+    IN ULONG NumberOfBytes,
+    IN ULONG Unknown
+);
+
+// ******************************************************************
+// * MmDeleteKernelStack
+// ******************************************************************
+XBSYSAPI EXPORTNUM(170) VOID NTAPI MmDeleteKernelStack
+(
+    IN PVOID EndAddress,
+    IN PVOID BaseAddress
+);
 
 // ******************************************************************
 // * MmFreeContiguousMemory

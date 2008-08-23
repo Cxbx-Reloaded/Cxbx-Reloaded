@@ -880,6 +880,65 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
 }
 
 // ******************************************************************
+// * 0x00A9 - MmCreateKernelStack
+// ******************************************************************
+// * Differences from NT: Custom stack size.
+// ******************************************************************
+XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
+(
+    ULONG NumberOfBytes,
+    ULONG Unknown
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): MmCreateKernelStack\n"
+           "(\n"
+           "   NumberOfBytes            : 0x%.08X\n"
+           "   Unknown                  : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), NumberOfBytes, Unknown);
+
+    if(Unknown)
+        EmuWarning("MmCreateKernelStack unknown parameter ignored\n");
+
+    NtDll::PVOID pRet = NULL;
+    if(FAILED(NtDll::NtAllocateVirtualMemory(GetCurrentProcess(), &pRet, 0, &NumberOfBytes, MEM_COMMIT, PAGE_READWRITE)))
+        EmuWarning("MmCreateKernelStack failed!\n");
+    else
+        pRet = (PVOID)((ULONG)pRet + NumberOfBytes);
+
+    EmuSwapFS();   // Xbox FS
+
+    return pRet;
+}
+
+// ******************************************************************
+// * 0x00AA - MmDeleteKernelStack
+// ******************************************************************
+XBSYSAPI EXPORTNUM(170) VOID NTAPI xboxkrnl::MmDeleteKernelStack
+(
+    PVOID EndAddress,
+    PVOID BaseAddress
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): MmDeleteKernelStack\n"
+           "(\n"
+           "   EndAddress               : 0x%.08X\n"
+           "   BaseAddress              : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), EndAddress, BaseAddress);
+
+    ULONG RegionSize = 0;
+    if (FAILED(NtDll::NtFreeVirtualMemory(GetCurrentProcess(), &BaseAddress, &RegionSize, MEM_RELEASE)))
+        EmuWarning("MmDeleteKernelStack failed!\n");
+
+    EmuSwapFS();   // Xbox FS
+}
+
+// ******************************************************************
 // * 0x00AB - MmFreeContiguousMemory
 // ******************************************************************
 XBSYSAPI EXPORTNUM(171) VOID NTAPI xboxkrnl::MmFreeContiguousMemory
@@ -970,7 +1029,7 @@ XBSYSAPI EXPORTNUM(178) VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 }
 
 // ******************************************************************
-// * MmQueryAllocationSize
+// * 0x00B4 - MmQueryAllocationSize
 // ******************************************************************
 XBSYSAPI EXPORTNUM(180) XTL::ULONG NTAPI xboxkrnl::MmQueryAllocationSize
 (
@@ -1437,6 +1496,49 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 }
 
 // ******************************************************************
+// * 0x00C1 - NtCreateSemaphore
+// ******************************************************************
+XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
+(
+    OUT PHANDLE             SemaphoreHandle,
+    IN  POBJECT_ATTRIBUTES  ObjectAttributes,
+    IN  ULONG               InitialCount,
+    IN  ULONG               MaximumCount
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): NtCreateSemaphore\n"
+           "(\n"
+           "   SemaphoreHandle     : 0x%.08X\n"
+           "   ObjectAttributes    : 0x%.08X\n"
+           "   InitialCount        : 0x%.08X\n"
+           "   MaximumCount        : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), SemaphoreHandle, ObjectAttributes,
+           InitialCount, MaximumCount);
+
+    // redirect to Win2k/XP
+    NTSTATUS ret = NtDll::NtCreateSemaphore
+    (
+        SemaphoreHandle,
+        SEMAPHORE_ALL_ACCESS,
+        (NtDll::POBJECT_ATTRIBUTES)ObjectAttributes,
+        InitialCount,
+        MaximumCount
+    );
+
+    if(FAILED(ret))
+        EmuWarning("NtCreateSemaphore failed!");
+
+    DbgPrintf("EmuKrnl (0x%X): NtCreateSemaphore SemaphoreHandle = 0x%.08X\n", GetCurrentThreadId(), *SemaphoreHandle);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
+}
+
+// ******************************************************************
 // * 0x00C5 - NtDuplicateObject
 // ******************************************************************
 XBSYSAPI EXPORTNUM(197) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
@@ -1763,6 +1865,42 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 }
 
 // ******************************************************************
+// * 0x00D9 - NtQueryVirtualMemory
+// ******************************************************************
+XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
+(
+    IN  PVOID                       BaseAddress,
+    OUT PMEMORY_BASIC_INFORMATION   Buffer
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): NtQueryVirtualMemory\n"
+           "(\n"
+           "   BaseAddress         : 0x%.08X\n"
+           "   Buffer              : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), BaseAddress, Buffer);
+
+    NTSTATUS ret = NtDll::NtQueryVirtualMemory
+    (
+        GetCurrentProcess(),
+        BaseAddress,
+        (NtDll::MEMORY_INFORMATION_CLASS)NtDll::MemoryBasicInformation,
+        (NtDll::PMEMORY_BASIC_INFORMATION)Buffer,
+        sizeof(MEMORY_BASIC_INFORMATION),
+        0
+    );
+
+    if(FAILED(ret))
+        EmuWarning("NtQueryVirtualMemory failed!");
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
+}
+
+// ******************************************************************
 // * 0x00DA - NtQueryVolumeInformationFile
 // ******************************************************************
 XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformationFile
@@ -1887,6 +2025,36 @@ XBSYSAPI EXPORTNUM(221) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseMutant
     EmuSwapFS();   // Xbox FS
 
     return STATUS_SUCCESS;
+}
+
+// ******************************************************************
+// * 0x00DE - NtReleaseSemaphore
+// ******************************************************************
+XBSYSAPI EXPORTNUM(222) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseSemaphore
+(
+    IN  HANDLE              SemaphoreHandle,
+    IN  ULONG               ReleaseCount,
+    OUT PULONG              PreviousCount
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): NtReleaseSemaphore\n"
+           "(\n"
+           "   SemaphoreHandle      : 0x%.08X\n"
+           "   ReleaseCount         : 0x%.08X\n"
+           "   PreviousCount        : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), SemaphoreHandle, ReleaseCount, PreviousCount);
+
+    NTSTATUS ret = NtDll::NtReleaseSemaphore(SemaphoreHandle, ReleaseCount, PreviousCount);
+
+    if(FAILED(ret))
+        EmuWarning("NtReleaseSemaphore failed!");
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
 }
 
 // ******************************************************************

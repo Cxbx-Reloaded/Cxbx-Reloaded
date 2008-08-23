@@ -93,7 +93,17 @@ XBSYSAPI EXPORTNUM(192) NTSTATUS NTAPI NtCreateMutant
     IN  BOOLEAN             InitialOwner
 );
 
-XBSYSAPI VOID *NtCreateSemaphore;
+// ******************************************************************
+// * NtCreateSemaphore
+// ******************************************************************
+XBSYSAPI EXPORTNUM(193) NTSTATUS NTAPI NtCreateSemaphore
+(
+    OUT PHANDLE             SemaphoreHandle,
+    IN  POBJECT_ATTRIBUTES  ObjectAttributes,
+    IN  ULONG               InitialCount,
+    IN  ULONG               MaximumCount
+);
+
 XBSYSAPI VOID *NtCreateTimer;
 XBSYSAPI VOID *NtDeleteFile;
 XBSYSAPI VOID *NtDeviceIoControlFile;
@@ -198,7 +208,15 @@ XBSYSAPI VOID *NtQueryMutant;
 XBSYSAPI VOID *NtQuerySemaphore;
 XBSYSAPI VOID *NtQuerySymbolicLinkObject;
 XBSYSAPI VOID *NtQueryTimer;
-XBSYSAPI VOID *NtQueryVirtualMemory;
+
+// ******************************************************************
+// * NtQueryVirtualMemory
+// ******************************************************************
+XBSYSAPI EXPORTNUM(217) NTSTATUS NTAPI NtQueryVirtualMemory
+(
+    IN  PVOID                       BaseAddress,
+    OUT PMEMORY_BASIC_INFORMATION   Buffer
+);
 
 // ******************************************************************
 // * NtQueryVolumeInformationFile
@@ -242,7 +260,16 @@ XBSYSAPI EXPORTNUM(221) NTSTATUS NTAPI NtReleaseMutant
     OUT PLONG   PreviousCount
 );
 
-XBSYSAPI VOID *NtReleaseSemaphore;
+// ******************************************************************
+// * NtReleaseSemaphore
+// ******************************************************************
+XBSYSAPI EXPORTNUM(222) NTSTATUS NTAPI NtReleaseSemaphore
+(
+    IN  HANDLE  SemaphoreHandle,
+    IN  ULONG   ReleaseCount,
+    OUT PULONG  PreviousCount
+);
+
 XBSYSAPI VOID *NtRemoveIoCompletion;
 
 // ******************************************************************

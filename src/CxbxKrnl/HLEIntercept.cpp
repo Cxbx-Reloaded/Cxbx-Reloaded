@@ -420,7 +420,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                     }
                 }
 
-                DbgPrintf("HLE: * Searching HLE database for %s %d.%d.%d...", pLibraryVersion[v].szName, MajorVersion, MinorVersion, BuildVersion);
+                DbgPrintf("HLE: * Searching HLE database for %s %d.%d.%d...", szLibraryName, MajorVersion, MinorVersion, BuildVersion);
 
                 bool found=false;
 

@@ -453,6 +453,21 @@ typedef struct _IO_STATUS_BLOCK
 IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 
 // ******************************************************************
+// * MEMORY_BASIC_INFORMATION *Same as Win2k/XP*
+// ******************************************************************
+typedef struct _MEMORY_BASIC_INFORMATION
+{
+    PVOID   BaseAddress;
+    PVOID   AllocationBase;
+    DWORD   AllocationProtect;
+    SIZE_T  RegionSize;
+    DWORD   State;
+    DWORD   Protect;
+    DWORD   Type;
+}
+MEMORY_BASIC_INFORMATION, *PMEMORY_BASIC_INFORMATION;
+
+// ******************************************************************
 // * EVENT_TYPE
 // ******************************************************************
 typedef enum _EVENT_TYPE

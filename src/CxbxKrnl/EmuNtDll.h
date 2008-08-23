@@ -340,6 +340,30 @@ typedef VOID (NTAPI *PIO_APC_ROUTINE)
 );
 
 // ******************************************************************
+// * MEMORY_BASIC_INFORMATION
+// ******************************************************************
+typedef struct _MEMORY_BASIC_INFORMATION
+{
+    PVOID   BaseAddress;
+    PVOID   AllocationBase;
+    DWORD   AllocationProtect;
+    SIZE_T  RegionSize;
+    DWORD   State;
+    DWORD   Protect;
+    DWORD   Type;
+}
+MEMORY_BASIC_INFORMATION, *PMEMORY_BASIC_INFORMATION;
+
+// ******************************************************************
+// * MEMORY_INFORMATION_CLASS
+// ******************************************************************
+typedef enum _MEMORY_INFORMATION_CLASS
+{
+    MemoryBasicInformation
+}
+MEMORY_INFORMATION_CLASS;
+
+// ******************************************************************
 // * EVENT_TYPE
 // ******************************************************************
 typedef enum _EVENT_TYPE
@@ -709,6 +733,19 @@ typedef NTSTATUS (NTAPI *FPTR_NtFreeVirtualMemory)
 );
 
 // ******************************************************************
+// * NtQueryVirtualMemory
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtQueryVirtualMemory)
+(
+    IN  HANDLE                      ProcessHandle,
+    IN  PVOID                       BaseAddress,
+    IN  MEMORY_INFORMATION_CLASS    MemoryInformationClass,
+    OUT PVOID                       Buffer,
+    IN  ULONG                       Length,
+    OUT PULONG                      ResultLength OPTIONAL
+);
+
+// ******************************************************************
 // * RtlInitializeCriticalSection
 // ******************************************************************
 typedef VOID (NTAPI *FPTR_RtlInitializeCriticalSection)
@@ -784,6 +821,28 @@ typedef NTSTATUS (NTAPI *FPTR_NtReleaseMutant)
 (
     IN  HANDLE              MutantHandle,
     OUT PLONG               PreviousCount OPTIONAL
+);
+
+// ******************************************************************
+// * NtCreateSemaphore
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtCreateSemaphore)
+(
+    OUT PHANDLE             SemaphoreHandle,
+    IN  ACCESS_MASK         DesiredAccess,
+    IN  POBJECT_ATTRIBUTES  ObjectAttributes OPTIONAL,
+    IN  ULONG               InitialCount,
+    IN  ULONG               MaximumCount
+);
+
+// ******************************************************************
+// * NtReleaseSemaphore
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtReleaseSemaphore)
+(
+    IN  HANDLE              SemaphoreHandle,
+    IN  ULONG               ReleaseCount,
+    OUT PULONG              PreviousCount OPTIONAL
 );
 
 // ******************************************************************
@@ -1004,6 +1063,7 @@ extern FPTR_RtlReAllocateHeap              RtlReAllocateHeap;
 extern FPTR_RtlSizeHeap                    RtlSizeHeap;
 extern FPTR_NtAllocateVirtualMemory        NtAllocateVirtualMemory;
 extern FPTR_NtFreeVirtualMemory            NtFreeVirtualMemory;
+extern FPTR_NtQueryVirtualMemory           NtQueryVirtualMemory;
 extern FPTR_NtClearEvent                   NtClearEvent;
 extern FPTR_NtClose                        NtClose;
 extern FPTR_NtDelayExecution               NtDelayExecution;
@@ -1016,6 +1076,8 @@ extern FPTR_NtQueryVolumeInformationFile   NtQueryVolumeInformationFile;
 extern FPTR_NtCreateEvent                  NtCreateEvent;
 extern FPTR_NtCreateMutant                 NtCreateMutant;
 extern FPTR_NtReleaseMutant                NtReleaseMutant;
+extern FPTR_NtCreateSemaphore              NtCreateSemaphore;
+extern FPTR_NtReleaseSemaphore             NtReleaseSemaphore;
 extern FPTR_NtCreateFile                   NtCreateFile;
 extern FPTR_NtReadFile                     NtReadFile;
 extern FPTR_NtWriteFile                    NtWriteFile;

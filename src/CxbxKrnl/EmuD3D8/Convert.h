@@ -73,6 +73,8 @@ inline D3DTRANSFORMSTATETYPE EmuXB2PC_D3DTS(D3DTRANSFORMSTATETYPE State)
         return (D3DTRANSFORMSTATETYPE)(State + 14);
     else if((uint32)State < 10)
         return D3DTS_WORLDMATRIX(State-6);
+    else if((uint32)State == 10) // Max
+        return (D3DTRANSFORMSTATETYPE)(D3DTS_TEXTURE7 + 1);
 
     CxbxKrnlCleanup("Unknown Transform State Type (%d)", State);
 
