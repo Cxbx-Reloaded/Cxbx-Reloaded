@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->Xapi.1.0.5558.cpp
@@ -35,7 +35,7 @@
 // ******************************************************************
 // * XapiApplyKernelPatches
 // ******************************************************************
-SOOVPA<7> XapiApplyKernelPatches_1_0_5558 = 
+SOOVPA<7> XapiApplyKernelPatches_1_0_5558 =
 {
     0,  // Large == 0
     7,  // Count == 7
@@ -57,7 +57,7 @@ SOOVPA<7> XapiApplyKernelPatches_1_0_5558 =
 // ******************************************************************
 // * RtlCreateHeap
 // ******************************************************************
-SOOVPA<8> RtlCreateHeap_1_0_5558 = 
+SOOVPA<8> RtlCreateHeap_1_0_5558 =
 {
     0,  // Large == 0
     8,  // Count == 8
@@ -80,7 +80,7 @@ SOOVPA<8> RtlCreateHeap_1_0_5558 =
 // ******************************************************************
 // * RtlAllocateHeap
 // ******************************************************************
-SOOVPA<8> RtlAllocateHeap_1_0_5558 = 
+SOOVPA<8> RtlAllocateHeap_1_0_5558 =
 {
     0,  // Large == 0
     8,  // Count == 8
@@ -103,7 +103,7 @@ SOOVPA<8> RtlAllocateHeap_1_0_5558 =
 // ******************************************************************
 // * RtlSizeHeap
 // ******************************************************************
-SOOVPA<8> RtlSizeHeap_1_0_5558 = 
+SOOVPA<8> RtlSizeHeap_1_0_5558 =
 {
     0,  // Large == 0
     8,  // Count == 8
@@ -151,7 +151,7 @@ SOOVPA<7> XInitDevices_1_0_5558 =
 // ******************************************************************
 // * XInputGetCapabilities
 // ******************************************************************
-SOOVPA<8> XInputGetCapabilities_1_0_5558 = 
+SOOVPA<8> XInputGetCapabilities_1_0_5558 =
 {
     0,  // Large == 0
     8,  // Count == 8
@@ -174,7 +174,7 @@ SOOVPA<8> XInputGetCapabilities_1_0_5558 =
 // ******************************************************************
 // * XInputGetState
 // ******************************************************************
-SOOVPA<7> XInputGetState_1_0_5558 = 
+SOOVPA<7> XInputGetState_1_0_5558 =
 {
     0,  // Large == 0
     7,  // Count == 7
@@ -196,7 +196,7 @@ SOOVPA<7> XInputGetState_1_0_5558 =
 // ******************************************************************
 // * XapiInitProcess
 // ******************************************************************
-SOOVPA<8> XapiInitProcess_1_0_5558 = 
+SOOVPA<8> XapiInitProcess_1_0_5558 =
 {
     0,  // Large == 0
     8,  // Count == 8
@@ -219,7 +219,7 @@ SOOVPA<8> XapiInitProcess_1_0_5558 =
 // ******************************************************************
 // * XapiInitProcess
 // ******************************************************************
-SOOVPA<8> XapiInitProcess_1_0_5659 = 
+SOOVPA<8> XapiInitProcess_1_0_5659 =
 {
     0,  // Large == 0
     8,  // Count == 8
@@ -242,7 +242,7 @@ SOOVPA<8> XapiInitProcess_1_0_5659 =
 // ******************************************************************
 // * XGetDeviceChanges
 // ******************************************************************
-SOOVPA<7> XGetDeviceChanges_1_0_5558 = 
+SOOVPA<7> XGetDeviceChanges_1_0_5558 =
 {
     0,  // Large == 0
     7,  // Count == 7
@@ -264,7 +264,7 @@ SOOVPA<7> XGetDeviceChanges_1_0_5558 =
 // ******************************************************************
 // * XInputSetState
 // ******************************************************************
-SOOVPA<7> XInputSetState_1_0_5558 = 
+SOOVPA<7> XInputSetState_1_0_5558 =
 {
     0,  // Large == 0
     7,  // Count == 7
@@ -405,7 +405,7 @@ OOVPATable XAPI_1_0_5558[] =
         XTL::EmuXGetDevices,
 
         #ifdef _DEBUG_TRACE
-        "EmuXGetDevices" 
+        "EmuXGetDevices"
         #endif
     },
     // XGetDeviceChanges
@@ -477,7 +477,7 @@ OOVPATable XAPI_1_0_5558[] =
         XTL::EmuXapiInitProcess,
 
         #ifdef _DEBUG_TRACE
-        "EmuXapiInitProcess" 
+        "EmuXapiInitProcess"
         #endif
     },
     // XapiInitProcess
@@ -487,7 +487,7 @@ OOVPATable XAPI_1_0_5558[] =
         XTL::EmuXapiInitProcess,
 
         #ifdef _DEBUG_TRACE
-        "EmuXapiInitProcess" 
+        "EmuXapiInitProcess"
         #endif
     },
     // XapiBootToDash (* unchanged since 1.0.3911 *)

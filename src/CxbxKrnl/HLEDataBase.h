@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->HLEDataBase.h
@@ -172,8 +172,8 @@ enum XRefDataBaseOffset
     XREF_DSBUFFERSETPLAYREGIONA,
     XREF_DSBUFFERLOCKA,
     XREF_DSBUFFERSETHEADROOMA,
-	XREF_DSBUFFERSETFREQUENCYA,
-	XREF_DSBUFFERSETFREQUENCYB,
+    XREF_DSBUFFERSETFREQUENCYA,
+    XREF_DSBUFFERSETFREQUENCYB,
     XREF_DSSTREAMSETMAXDISTANCE1A,
     XREF_DSSTREAMSETMAXDISTANCE1B,
     XREF_DSSTREAMSETMAXDISTANCE1C,
@@ -230,26 +230,26 @@ enum XRefDataBaseOffset
     XREF_DSBUFFERSETI3DL2SOURCE,
     XREF_DirectSound_CDirectSoundVoice_SetFormat,
     XREF_DirectSound_CDirectSoundBuffer_SetFormat,
-	XREF_DirectSound_CFullHRTFSource_GetCenterVolume,
-	XREF_DirectSound_CHRTFSource_SetFullHRTF5Channel,
-	XREF_D3D_SetFence,
-	XREF_D3D_BlockOnResource,
-	XREF_DirectSound_CMcpxVoiceClient_SetLFO,
-	XREF_DirectSound_CDirectSoundVoice_SetLFO,
-	XREF_DirectSound_CDirectSoundBuffer_SetLFO,
-	XREF_DirectSound_CDirectSoundVoice_SetVolume,
-	XREF_DirectSound_CDirectSoundBuffer_SetVolume,
-	XREF_DirectSound_CDirectSoundBuffer_SetLoopRegion,
-	XREF_DirectSound_CMcpxBuffer_Play,
-	XREF_DirectSound_CDirectSoundBuffer_PlayEx,
-	XREF_DirectSound_WaveFormat_CreateXboxAdpcmFormat,
-	XREF_DirectSound_CDirectSoundVoice_SetConeAngles,
-	XREF_DirectSound_CDirectSoundBuffer_SetConeAngles,
-	XREF_DirectSound_CDirectSoundVoice_CommitDeferredSettings,
-	XREF_DirectSound_CDirectSoundVoice_SetAllParameters,
-	XREF_DirectSound_CDirectSoundBuffer_SetAllParameters,
-	XREF_DirectSound_CDirectSoundVoice_SetRolloffCurve,
-	XREF_DirectSound_CDirectSoundBuffer_SetRolloffCurve,
+    XREF_DirectSound_CFullHRTFSource_GetCenterVolume,
+    XREF_DirectSound_CHRTFSource_SetFullHRTF5Channel,
+    XREF_D3D_SetFence,
+    XREF_D3D_BlockOnResource,
+    XREF_DirectSound_CMcpxVoiceClient_SetLFO,
+    XREF_DirectSound_CDirectSoundVoice_SetLFO,
+    XREF_DirectSound_CDirectSoundBuffer_SetLFO,
+    XREF_DirectSound_CDirectSoundVoice_SetVolume,
+    XREF_DirectSound_CDirectSoundBuffer_SetVolume,
+    XREF_DirectSound_CDirectSoundBuffer_SetLoopRegion,
+    XREF_DirectSound_CMcpxBuffer_Play,
+    XREF_DirectSound_CDirectSoundBuffer_PlayEx,
+    XREF_DirectSound_WaveFormat_CreateXboxAdpcmFormat,
+    XREF_DirectSound_CDirectSoundVoice_SetConeAngles,
+    XREF_DirectSound_CDirectSoundBuffer_SetConeAngles,
+    XREF_DirectSound_CDirectSoundVoice_CommitDeferredSettings,
+    XREF_DirectSound_CDirectSoundVoice_SetAllParameters,
+    XREF_DirectSound_CDirectSoundBuffer_SetAllParameters,
+    XREF_DirectSound_CDirectSoundVoice_SetRolloffCurve,
+    XREF_DirectSound_CDirectSoundBuffer_SetRolloffCurve,
     // XAPI
     /* not necessary?
     XREF_XAPIXCALCULATESIGNATUREBEGINEX

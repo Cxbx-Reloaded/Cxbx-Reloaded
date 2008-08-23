@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->EmuDSound.h
@@ -46,10 +46,10 @@
 // ******************************************************************
 struct X_DSBUFFERDESC
 {
-    DWORD           dwSize; 
-    DWORD           dwFlags; 
-    DWORD           dwBufferBytes; 
-    LPWAVEFORMATEX  lpwfxFormat; 
+    DWORD           dwSize;
+    DWORD           dwFlags;
+    DWORD           dwBufferBytes;
+    LPWAVEFORMATEX  lpwfxFormat;
     LPVOID          lpMixBins;      // TODO: Implement
     DWORD           dwInputMixBin;
 };
@@ -65,7 +65,7 @@ struct X_DSSTREAMDESC
     PVOID                       lpfnCallback;   // TODO: Correct Parameter
     LPVOID                      lpvContext;
     PVOID                       lpMixBins;      // TODO: Correct Parameter
-}; 
+};
 
 // ******************************************************************
 // * REFERENCE_TIME
@@ -94,19 +94,19 @@ XMEDIAPACKET, *PXMEDIAPACKET, *LPXMEDIAPACKET;
 // ******************************************************************
 typedef struct _DSLFODESC
 {
-	DWORD dwLFO;
-	DWORD dwDelay;
-	DWORD dwDelta;
-	LONG lPitchModulation;
-	LONG lFilterCutOffRange;
-	LONG lAmplitudeModulation;
+    DWORD dwLFO;
+    DWORD dwDelay;
+    DWORD dwDelta;
+    LONG lPitchModulation;
+    LONG lFilterCutOffRange;
+    LONG lAmplitudeModulation;
 }
 DSLFODESC, *LPCDSLFODESC;
 
 // ******************************************************************
 // * XBOXADPCMWAVEFORMAT
 // ******************************************************************
-typedef struct xbox_adpcmwaveformat_tag 
+typedef struct xbox_adpcmwaveformat_tag
 {
     WAVEFORMATEX    wfx;                    // WAVEFORMATEX data
     WORD            wSamplesPerBlock;       // Number of samples per encoded block.  It must be 64.
@@ -174,7 +174,7 @@ class X_CMcpxStream
             //
             // TODO: Function needs X_CMcpxStream "this" pointer (ecx!)
             //
- 
+
             VOID (WINAPI *Dummy_0x10)(DWORD dwDummy1, DWORD dwDummy2);   // 0x10
         }
         *pVtbl;
@@ -383,7 +383,7 @@ HRESULT WINAPI EmuIDirectSound8_SetMixBinHeadroom
 HRESULT WINAPI EmuIDirectSoundBuffer8_SetMixBins
 (
     LPDIRECTSOUND8          pThis,
-    PVOID					pMixBins	// TODO: fill this out
+    PVOID                   pMixBins    // TODO: fill this out
 );
 
 // ******************************************************************
@@ -392,7 +392,7 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_SetMixBins
 HRESULT WINAPI EmuIDirectSoundBuffer8_SetMixBinVolumes
 (
     LPDIRECTSOUND8          pThis,
-    PVOID					pMixBins	// TODO: fill this out
+    PVOID                   pMixBins    // TODO: fill this out
 );
 
 // ******************************************************************
@@ -494,13 +494,13 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_SetPlayRegion
 HRESULT WINAPI EmuIDirectSoundBuffer8_Lock
 (
     X_CDirectSoundBuffer   *pThis,
-    DWORD                   dwOffset, 
-    DWORD                   dwBytes, 
-    LPVOID                 *ppvAudioPtr1, 
-    LPDWORD                 pdwAudioBytes1, 
-    LPVOID                 *ppvAudioPtr2, 
-    LPDWORD                 pdwAudioBytes2, 
-    DWORD                   dwFlags 
+    DWORD                   dwOffset,
+    DWORD                   dwBytes,
+    LPVOID                 *ppvAudioPtr1,
+    LPDWORD                 pdwAudioBytes1,
+    LPVOID                 *ppvAudioPtr2,
+    LPDWORD                 pdwAudioBytes2,
+    DWORD                   dwFlags
 );
 
 // ******************************************************************
@@ -966,7 +966,7 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_SetI3DL2Source
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSoundBuffer8_SetFormat
 (
-    X_CDirectSoundBuffer *pBuffer, 
+    X_CDirectSoundBuffer *pBuffer,
     LPCWAVEFORMATEX pwfxFormat
 );
 
@@ -975,7 +975,7 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_SetFormat
 // ******************************************************************
 STDAPI_(void) EmuDirectSoundUseFullHRTF
 (
-	void
+    void
 );
 
 // ******************************************************************
@@ -983,8 +983,8 @@ STDAPI_(void) EmuDirectSoundUseFullHRTF
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSoundBuffer8_SetLFO
 (
-	LPDIRECTSOUNDBUFFER  pThis,
-	LPCDSLFODESC         pLFODesc
+    LPDIRECTSOUNDBUFFER  pThis,
+    LPCDSLFODESC         pLFODesc
 );
 
 // ******************************************************************
@@ -992,9 +992,9 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_SetLFO
 // ******************************************************************
 VOID WINAPI EmuXAudioCreateAdpcmFormat
 (
-	WORD                   nChannels,
-	DWORD                  nSamplesPerSec,
-	LPXBOXADPCMWAVEFORMAT  pwfx
+    WORD                   nChannels,
+    DWORD                  nSamplesPerSec,
+    LPXBOXADPCMWAVEFORMAT  pwfx
 );
 
 // ******************************************************************
@@ -1002,10 +1002,10 @@ VOID WINAPI EmuXAudioCreateAdpcmFormat
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSoundBuffer8_SetRolloffCurve
 (
-	LPDIRECTSOUNDBUFFER  pThis,
-	const FLOAT         *pflPoints,
-	DWORD                dwPointCount,
-	DWORD                dwApply
+    LPDIRECTSOUNDBUFFER  pThis,
+    const FLOAT         *pflPoints,
+    DWORD                dwPointCount,
+    DWORD                dwApply
 );
 
 // ******************************************************************
@@ -1013,8 +1013,8 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_SetRolloffCurve
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSoundStream_SetVolume
 (
-	LPDIRECTSOUNDSTREAM pStream,
-	LONG                lVolume
+    LPDIRECTSOUNDSTREAM pStream,
+    LONG                lVolume
 );
 
 #endif

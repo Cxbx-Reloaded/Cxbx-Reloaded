@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->HLEIntercept.cpp
@@ -191,29 +191,29 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                 uint16 OrigBuildVersion = BuildVersion;
 
                 // Aliases - for testing purposes only
-				if(BuildVersion == 4721) { BuildVersion = 4627; }
+                if(BuildVersion == 4721) { BuildVersion = 4627; }
                 if(BuildVersion == 4928) { BuildVersion = 4627; }
-				if(BuildVersion == 5344) { BuildVersion = 5558; }
-				if(BuildVersion == 5455) { BuildVersion = 5558; }
+                if(BuildVersion == 5344) { BuildVersion = 5558; }
+                if(BuildVersion == 5455) { BuildVersion = 5558; }
                 if(BuildVersion == 5659) { BuildVersion = 5558; }
-				if(BuildVersion == 5788) { BuildVersion = 5558; }
-				if(BuildVersion == 5028) { BuildVersion = 4627; }
-				if(BuildVersion == 5933) { BuildVersion = 5849; }	// These XDK versions are pretty mutch the same
-				/*
-				if(BuildVersion == 3944) { BuildVersion = 3925; }
-				if(BuildVersion == 4039) { BuildVersion = 4034; }
-				if(BuildVersion == 4242) { BuildVersion = 4432; }
-				if(BuildVersion == 4531) { BuildVersion = 4432; }
-				if(BuildVersion == 4721) { BuildVersion = 4432; }
-				if(BuildVersion == 4831) { BuildVersion = 4432; }
-				if(BuildVersion == 4928) { BuildVersion = 4432; }
-				if(BuildVersion == 5028) { BuildVersion = 4432; }
-				if(BuildVersion == 5120) { BuildVersion = 4432; }
-				if(BuildVersion == 5233) { BuildVersion = 4432; }
-				if(BuildVersion == 5344) { BuildVersion = 4432; }
-				if(BuildVersion == 5455) { BuildVersion = 4432; }
-				if(BuildVersion == 5933) { BuildVersion = 4432; }
-				*/
+                if(BuildVersion == 5788) { BuildVersion = 5558; }
+                if(BuildVersion == 5028) { BuildVersion = 4627; }
+                if(BuildVersion == 5933) { BuildVersion = 5849; }   // These XDK versions are pretty mutch the same
+                /*
+                if(BuildVersion == 3944) { BuildVersion = 3925; }
+                if(BuildVersion == 4039) { BuildVersion = 4034; }
+                if(BuildVersion == 4242) { BuildVersion = 4432; }
+                if(BuildVersion == 4531) { BuildVersion = 4432; }
+                if(BuildVersion == 4721) { BuildVersion = 4432; }
+                if(BuildVersion == 4831) { BuildVersion = 4432; }
+                if(BuildVersion == 4928) { BuildVersion = 4432; }
+                if(BuildVersion == 5028) { BuildVersion = 4432; }
+                if(BuildVersion == 5120) { BuildVersion = 4432; }
+                if(BuildVersion == 5233) { BuildVersion = 4432; }
+                if(BuildVersion == 5344) { BuildVersion = 4432; }
+                if(BuildVersion == 5455) { BuildVersion = 4432; }
+                if(BuildVersion == 5933) { BuildVersion = 4432; }
+                */
 
                 char szLibraryName[9] = {0};
 
@@ -241,7 +241,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
 
                 if(bXRefFirstPass)
                 {
-                    if(strcmp("XAPILIB", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 && 
+                    if(strcmp("XAPILIB", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 &&
                         (BuildVersion == 3911 || BuildVersion == 4034 || BuildVersion == 4134 || BuildVersion == 4361
                       || BuildVersion == 4432 || BuildVersion == 4627 || BuildVersion == 5558 || BuildVersion == 5849))
                     {
@@ -277,13 +277,13 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                             {
                                 if(OrigBuildVersion == 4928)
                                 {
-					                pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_4928, lower, upper);
+                                    pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_4928, lower, upper);
                                     ProcessHeapOffs = 0x44;
                                     RtlCreateHeapOffs = 0x3B;
                                 }
                                 else
                                 {
-					                pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_4361, lower, upper);
+                                    pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_4361, lower, upper);
                                     ProcessHeapOffs = 0x3E;
                                     RtlCreateHeapOffs = 0x37;
                                 }
@@ -308,14 +308,14 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                         }
                     }
                     else if(strcmp("D3D8", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 &&
-                        (BuildVersion == 3925 || BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4432 
+                        (BuildVersion == 3925 || BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4432
                       || BuildVersion == 4627 || BuildVersion == 5558 || BuildVersion == 5849))
                     {
                         uint32 lower = pXbeHeader->dwBaseAddr;
                         uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
 
                         void *pFunc = 0;
-                        
+
                         if(BuildVersion == 3925)
                             pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_3925, lower, upper);
                         else if(BuildVersion < 5558)
@@ -683,7 +683,7 @@ static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xb
             else
             {
                 EmuInstallWrapper(pFunc, OovpaTable[a].lpRedirect);
-				funcExclude[fcount++] = (uint32)pFunc;
+                funcExclude[fcount++] = (uint32)pFunc;
             }
         }
     }

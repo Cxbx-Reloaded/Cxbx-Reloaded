@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->EmuShared.cpp
@@ -74,7 +74,7 @@ CXBXKRNL_API void EmuShared::Init()
     // ******************************************************************
     {
         hMapObject = CreateFileMapping
-        ( 
+        (
             INVALID_HANDLE_VALUE,   // Paging file
             NULL,                   // default security attributes
             PAGE_READWRITE,         // read/write access
@@ -84,7 +84,7 @@ CXBXKRNL_API void EmuShared::Init()
         );
 
         if(hMapObject == NULL)
-			CxbxKrnlCleanup("Could not map shared memory!");
+            CxbxKrnlCleanup("Could not map shared memory!");
 
         if(GetLastError() == ERROR_ALREADY_EXISTS)
             init = false;
@@ -103,8 +103,8 @@ CXBXKRNL_API void EmuShared::Init()
             0               // default: map entire file
         );
 
-        if(g_EmuShared == NULL) 
-			CxbxKrnlCleanup("Could not map view of shared memory!");
+        if(g_EmuShared == NULL)
+            CxbxKrnlCleanup("Could not map view of shared memory!");
     }
 
     // ******************************************************************

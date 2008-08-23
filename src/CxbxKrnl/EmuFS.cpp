@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->EmuFS.cpp
@@ -69,7 +69,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 
     // copy global TLS to the current thread
     {
-		uint32 dwCopySize = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr;
+        uint32 dwCopySize = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr;
         uint32 dwZeroSize = pTLS->dwSizeofZeroFill;
 
         pNewTLS = (uint08*)CxbxMalloc(dwCopySize + dwZeroSize + 0x100 /* + HACK: extra safety padding 0x100*/);
@@ -81,29 +81,29 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
     // dump raw TLS data
     {
         #ifdef _DEBUG_TRACE
-		if(pNewTLS == 0)
-		{
-			DbgPrintf("EmuFS (0x%X): TLS Non-Existant (OK)\n", GetCurrentThreadId());
-		}
-		else
-		{
-			DbgPrintf("EmuFS (0x%X): TLS Data Dump...\n", GetCurrentThreadId());
+        if(pNewTLS == 0)
+        {
+            DbgPrintf("EmuFS (0x%X): TLS Non-Existant (OK)\n", GetCurrentThreadId());
+        }
+        else
+        {
+            DbgPrintf("EmuFS (0x%X): TLS Data Dump...\n", GetCurrentThreadId());
             DbgPrintf("EmuFS (0x%X): 0x%.08X: ", GetCurrentThreadId(), pNewTLS);
 
-			uint32 stop = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr + pTLS->dwSizeofZeroFill;
+            uint32 stop = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr + pTLS->dwSizeofZeroFill;
 
-			for(uint32 v=0;v<stop;v++)
-			{
-				uint08 *bByte = (uint08*)pNewTLS + v;
+            for(uint32 v=0;v<stop;v++)
+            {
+                uint08 *bByte = (uint08*)pNewTLS + v;
 
-				DbgPrintf("%.01X", (uint32)*bByte);
+                DbgPrintf("%.01X", (uint32)*bByte);
 
-				if((v+1) % 0x10 == 0 && v+1<stop)
-					DbgPrintf("\nEmuFS (0x%X): 0x%.08X: ", GetCurrentThreadId(), ((uint32)pNewTLS + v));
-			}
+                if((v+1) % 0x10 == 0 && v+1<stop)
+                    DbgPrintf("\nEmuFS (0x%X): 0x%.08X: ", GetCurrentThreadId(), ((uint32)pNewTLS + v));
+            }
 
-			DbgPrintf("\n");
-		}
+            DbgPrintf("\n");
+        }
         #endif
     }
 

@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->EmuLDT.cpp
@@ -95,7 +95,7 @@ uint16 EmuAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit)
         {
             LeaveCriticalSection(&EmuLDTLock);
 
-			CxbxKrnlCleanup("Could not locate free LDT entry (too many threads?)");
+            CxbxKrnlCleanup("Could not locate free LDT entry (too many threads?)");
 
             return 0;
         }
@@ -108,19 +108,19 @@ uint16 EmuAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit)
         LDTEntry.BaseLow                    = (WORD)(dwBaseAddr & 0xFFFF);
         LDTEntry.HighWord.Bits.BaseMid      = (dwBaseAddr >> 16) & 0xFF;
         LDTEntry.HighWord.Bits.BaseHi       = (dwBaseAddr >> 24) & 0xFF;
-	    LDTEntry.HighWord.Bits.Type         = 0x13; // RW data segment
-	    LDTEntry.HighWord.Bits.Dpl          = 3;    // user segment
-	    LDTEntry.HighWord.Bits.Pres         = 1;    // present
-	    LDTEntry.HighWord.Bits.Sys          = 0;
-	    LDTEntry.HighWord.Bits.Reserved_0   = 0;
-	    LDTEntry.HighWord.Bits.Default_Big  = 1;    // 386 segment
-	    LDTEntry.HighWord.Bits.Granularity  = (dwLimit >= 0x00100000) ? 1 : 0;
+        LDTEntry.HighWord.Bits.Type         = 0x13; // RW data segment
+        LDTEntry.HighWord.Bits.Dpl          = 3;    // user segment
+        LDTEntry.HighWord.Bits.Pres         = 1;    // present
+        LDTEntry.HighWord.Bits.Sys          = 0;
+        LDTEntry.HighWord.Bits.Reserved_0   = 0;
+        LDTEntry.HighWord.Bits.Default_Big  = 1;    // 386 segment
+        LDTEntry.HighWord.Bits.Granularity  = (dwLimit >= 0x00100000) ? 1 : 0;
 
         if(LDTEntry.HighWord.Bits.Granularity)
             dwLimit >>= 12;
 
         LDTEntry.LimitLow                   = (WORD)(dwLimit & 0xFFFF);
-	    LDTEntry.HighWord.Bits.LimitHi      = (dwLimit >> 16) & 0xF;
+        LDTEntry.HighWord.Bits.LimitHi      = (dwLimit >> 16) & 0xF;
     }
 
     // ******************************************************************
@@ -131,7 +131,7 @@ uint16 EmuAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit)
         {
             LeaveCriticalSection(&EmuLDTLock);
 
-			CxbxKrnlCleanup("Could not set LDT entries");
+            CxbxKrnlCleanup("Could not set LDT entries");
 
             return 0;
         }

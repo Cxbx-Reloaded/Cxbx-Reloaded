@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->EmuD3D8Types.h
@@ -34,7 +34,7 @@
 #ifndef EMUD3D8TYPES_H
 #define EMUD3D8TYPES_H
 
-// include direct3d 8x headers 
+// include direct3d 8x headers
 #define DIRECT3D_VERSION 0x0800
 #include <d3d8.h>
 #include <d3dx8tex.h>
@@ -120,7 +120,7 @@ typedef struct _X_D3DPRESENT_PARAMETERS
     BOOL                EnableAutoDepthStencil;
     X_D3DFORMAT         AutoDepthStencilFormat;
     DWORD               Flags;
-    UINT                FullScreen_RefreshRateInHz; 
+    UINT                FullScreen_RefreshRateInHz;
     UINT                FullScreen_PresentationInterval;
     IDirect3DSurface8  *BufferSurfaces[3];
     IDirect3DSurface8  *DepthStencilSurface;
@@ -297,7 +297,7 @@ struct X_D3DPixelContainer : public X_D3DResource
 #define X_D3DFORMAT_DIMENSION_SHIFT       4
 #define X_D3DFORMAT_FORMAT_MASK           0x0000FF00
 #define X_D3DFORMAT_FORMAT_SHIFT          8
-#define X_D3DFORMAT_MIPMAP_MASK           0x000F0000 
+#define X_D3DFORMAT_MIPMAP_MASK           0x000F0000
 #define X_D3DFORMAT_MIPMAP_SHIFT          16
 #define X_D3DFORMAT_USIZE_MASK            0x00F00000      // Log 2 of the U size of the base texture
 #define X_D3DFORMAT_USIZE_SHIFT           20

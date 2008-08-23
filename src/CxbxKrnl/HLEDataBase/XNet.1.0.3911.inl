@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->XNet.1.0.3911.cpp
@@ -163,7 +163,7 @@ OOVPATable XNet_1_0_3911[] =
     // XNetStartup
     {
         (OOVPA*)&XNetStartup_1_0_3911,
-            
+
         XTL::EmuXNetStartup,
 
         #ifdef _DEBUG_TRACE
@@ -173,7 +173,7 @@ OOVPATable XNet_1_0_3911[] =
     // WSAStartup
     {
         (OOVPA*)&WSAStartup_1_0_3911,
-            
+
         XTL::EmuWSAStartup,
 
         #ifdef _DEBUG_TRACE
@@ -191,7 +191,7 @@ OOVPATable XNet_1_0_3911[] =
     // XNetGetEthernetLinkStatus
     {
         (OOVPA*)&XNetGetEthernetLinkStatus_1_0_3911,
-            
+
         XTL::EmuXNetGetEthernetLinkStatus,
 
         #ifdef _DEBUG_TRACE

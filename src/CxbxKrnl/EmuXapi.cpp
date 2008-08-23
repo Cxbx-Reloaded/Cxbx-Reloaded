@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->EmuXapi.cpp
@@ -132,41 +132,41 @@ HANDLE WINAPI XTL::EmuFindFirstFileA
         }
 
         // D:\ should map to current directory
-	    if( (szBuffer[0] == 'D' || szBuffer[0] == 'd') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-	    {
-		    szBuffer += 3;
-	    }
-	    else if( (szBuffer[0] == 'T' || szBuffer[0] == 't') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-	    {
-		    szBuffer += 3;
+        if( (szBuffer[0] == 'D' || szBuffer[0] == 'd') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+        {
+            szBuffer += 3;
+        }
+        else if( (szBuffer[0] == 'T' || szBuffer[0] == 't') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+        {
+            szBuffer += 3;
 
             szRoot = g_strTDrive;
-	    }
-	    else if( (szBuffer[0] == 'U' || szBuffer[0] == 'u') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-	    {
-		    szBuffer += 3;
+        }
+        else if( (szBuffer[0] == 'U' || szBuffer[0] == 'u') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+        {
+            szBuffer += 3;
 
             szRoot = g_strUDrive;
-	    }
-	    else if( (szBuffer[0] == 'Z' || szBuffer[0] == 'z') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-	    {
-		    szBuffer += 3;
+        }
+        else if( (szBuffer[0] == 'Z' || szBuffer[0] == 'z') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+        {
+            szBuffer += 3;
 
             szRoot = g_strZDrive;
-	    }
+        }
     }
 
     //printf("af1 : %s\n", szRoot);
     //printf("af2 : %s\n", szBuffer);
 
     //char szOldDir[MAX_PATH];
-    
+
     //GetCurrentDirectory(MAX_PATH, szOldDir);
 
     SetCurrentDirectory(szRoot);
 
     HANDLE hRet = FindFirstFile(szBuffer, lpFindFileData);
-    
+
     if(!FAILED(hRet))
     {
         do
@@ -567,8 +567,8 @@ DWORD WINAPI XTL::EmuXGetDevices
 BOOL WINAPI XTL::EmuXGetDeviceChanges
 (
     PXPP_DEVICE_TYPE DeviceType,
-    PDWORD           pdwInsertions,                  
-    PDWORD           pdwRemovals                     
+    PDWORD           pdwInsertions,
+    PDWORD           pdwRemovals
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -742,7 +742,7 @@ DWORD WINAPI XTL::EmuXInputPoll
            GetCurrentThreadId(), hDevice);
 
     POLLING_PARAMETERS_HANDLE *pph = (POLLING_PARAMETERS_HANDLE*)hDevice;
- 
+
     //
     // Poll input
     //
@@ -852,7 +852,7 @@ DWORD WINAPI XTL::EmuXInputGetState
     {
         if(pph->pPollingParameters != NULL)
         {
-			// 5849 XDK samples hang if this code is allowed to execute, TODO: figure out why.
+            // 5849 XDK samples hang if this code is allowed to execute, TODO: figure out why.
             /*if(pph->pPollingParameters->fAutoPoll == FALSE)
             {
                 //
@@ -911,7 +911,7 @@ DWORD WINAPI XTL::EmuXInputSetState
         //
 
         bool found = false;
-        
+
         for(v=0;v<XINPUT_SETSTATE_SLOTS;v++)
         {
             if(g_pXInputSetStateStatus[v].hDevice == hDevice)
@@ -1132,25 +1132,25 @@ VOID WINAPI XTL::EmuXapiInitProcess()
 
     DbgPrintf("EmuXapi (0x%X): EmuXapiInitProcess();\n", GetCurrentThreadId());
 
-	// call RtlCreateHeap
-	{
+    // call RtlCreateHeap
+    {
         RTL_HEAP_PARAMETERS HeapParameters;
 
-		ZeroMemory(&HeapParameters, sizeof(HeapParameters));
+        ZeroMemory(&HeapParameters, sizeof(HeapParameters));
 
         HeapParameters.Length = sizeof(HeapParameters);
 
-		EmuSwapFS();   // XBox FS
+        EmuSwapFS();   // XBox FS
 
-		uint32 dwPeHeapReserve = CxbxKrnl_XbeHeader->dwPeHeapReserve;
-		uint32 dwPeHeapCommit  = CxbxKrnl_XbeHeader->dwPeHeapCommit;
+        uint32 dwPeHeapReserve = CxbxKrnl_XbeHeader->dwPeHeapReserve;
+        uint32 dwPeHeapCommit  = CxbxKrnl_XbeHeader->dwPeHeapCommit;
 
         PVOID dwResult = 0;
 
         #define HEAP_GROWABLE 0x00000002
 
         *XTL::EmuXapiProcessHeap = XTL::g_pRtlCreateHeap(HEAP_GROWABLE, 0, dwPeHeapReserve, dwPeHeapCommit, NULL, &HeapParameters);
-	}
+    }
 
     return;
 }

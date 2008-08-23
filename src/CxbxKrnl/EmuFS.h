@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->EmuFS.h
@@ -68,13 +68,13 @@ static inline bool EmuIsXboxFS()
 //
 // Xbox is a single process system, and because of this fact, demos
 // and games are likely to suffer from Xbox-Never-Sleeps syndrome.
-// 
+//
 // Basically, there are situations where the Xbe will have no
 // reason to bother yielding to other threads. One solution to this
 // problem is to keep track of the number of function intercepts,
 // and every so often, force a sleep. This is the rate at which
 // those forced sleeps occur.
-// 
+//
 extern uint32 EmuAutoSleepRate;
 
 //

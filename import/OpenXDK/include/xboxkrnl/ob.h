@@ -1,5 +1,5 @@
 // ******************************************************************
-// * 
+// *
 // * proj : OpenXDK
 // *
 // * desc : Open Source XBox Development Kit
@@ -25,7 +25,7 @@ XBSYSAPI VOID *ObpObjectHandleTable;
 XBSYSAPI EXPORTNUM(246) BOOLEAN NTAPI ObReferenceObjectByHandle
 ( unsigned int a,
   unsigned int b,
-  unsigned int c 
+  unsigned int c
 );
 
 

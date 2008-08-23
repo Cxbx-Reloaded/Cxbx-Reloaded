@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->EmuNtDll.h
@@ -74,9 +74,9 @@ typedef unsigned char       UCHAR;
 typedef unsigned char       BYTE;
 typedef unsigned char       BOOLEAN;
 typedef unsigned short      USHORT;
-typedef	unsigned short		WORD;
+typedef unsigned short      WORD;
 typedef unsigned long       ULONG;
-typedef	unsigned long       DWORD;
+typedef unsigned long       DWORD;
 typedef unsigned long       SIZE_T, *PSIZE_T;
 typedef unsigned long       ACCESS_MASK;
 typedef unsigned long       PHYSICAL_ADDRESS;
@@ -237,7 +237,7 @@ RTL_HEAP_DEFINITION, *PRTL_HEAP_DEFINITION;
 typedef struct _RTL_CRITICAL_SECTION
 {
     DWORD               Unknown[4];                                     // 0x00
-	LONG                LockCount;                                      // 0x10
+    LONG                LockCount;                                      // 0x10
     LONG                RecursionCount;                                 // 0x14
     HANDLE              OwningThread;                                   // 0x18
     HANDLE              LockSemaphore;
@@ -292,7 +292,7 @@ OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 
 // ******************************************************************
 // * InitializeObjectAttributes
-// * 
+// *
 // * VOID
 // * InitializeObjectAttributes(
 // *     OUT POBJECT_ATTRIBUTES p,
@@ -301,7 +301,7 @@ OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 // *     IN HANDLE r,
 // *     IN PSECURITY_DESCRIPTOR s
 // *     )
-// * 
+// *
 // ******************************************************************
 #define InitializeObjectAttributes( p, n, a, r, s )     \
 {                                                       \
@@ -364,9 +364,9 @@ OBJECT_WAIT_TYPE;
 // ******************************************************************
 typedef enum _CREATE_FILE_TYPE
 {
-	CreateFileTypeNone,
-	CreateFileTypeNamedPipe,
-	CreateFileTypeMailslot
+    CreateFileTypeNone,
+    CreateFileTypeNamedPipe,
+    CreateFileTypeMailslot
 }
 CREATE_FILE_TYPE;
 
@@ -375,10 +375,10 @@ CREATE_FILE_TYPE;
 // ******************************************************************
 typedef struct _FILE_FS_SIZE_INFORMATION
 {
-    LARGE_INTEGER	TotalAllocationUnits;
-    LARGE_INTEGER	AvailableAllocationUnits;
-    ULONG		    SectorsPerAllocationUnit;
-    ULONG		    BytesPerSector;
+    LARGE_INTEGER   TotalAllocationUnits;
+    LARGE_INTEGER   AvailableAllocationUnits;
+    ULONG           SectorsPerAllocationUnit;
+    ULONG           BytesPerSector;
 }
 FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
 
@@ -451,7 +451,7 @@ FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
 // ******************************************************************
 // * FILE_DIRECTORY_INFORMATION
 // ******************************************************************
-typedef struct _FILE_DIRECTORY_INFORMATION 
+typedef struct _FILE_DIRECTORY_INFORMATION
 {
     ULONG           NextEntryOffset;
     ULONG           FileIndex;
@@ -590,7 +590,7 @@ typedef BOOLEAN (NTAPI *FPTR_RtlTimeFieldsToTime)
 typedef VOID (NTAPI *FPTR_RtlTimeToTimeFields)
 (
     IN  PLARGE_INTEGER  Time,
-    OUT PTIME_FIELDS    TimeFields 
+    OUT PTIME_FIELDS    TimeFields
 );
 
 // ******************************************************************
@@ -791,17 +791,17 @@ typedef NTSTATUS (NTAPI *FPTR_NtReleaseMutant)
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtCreateFile)
 (
-	OUT PHANDLE				FileHandle,
-	IN  ACCESS_MASK			DesiredAccess,
-	IN  POBJECT_ATTRIBUTES	ObjectAttributes,
-	OUT PIO_STATUS_BLOCK	IoStatusBlock,
-	IN  PLARGE_INTEGER		AllocationSize OPTIONAL,
-    IN  ULONG				FileAttributes,
-    IN  ULONG				ShareAccess,
-    IN  ULONG				CreateDisposition,
-    IN  ULONG				CreateOptions,
-	IN  PVOID				EaBuffer OPTIONAL,
-	IN  ULONG				EaLength
+    OUT PHANDLE             FileHandle,
+    IN  ACCESS_MASK         DesiredAccess,
+    IN  POBJECT_ATTRIBUTES  ObjectAttributes,
+    OUT PIO_STATUS_BLOCK    IoStatusBlock,
+    IN  PLARGE_INTEGER      AllocationSize OPTIONAL,
+    IN  ULONG               FileAttributes,
+    IN  ULONG               ShareAccess,
+    IN  ULONG               CreateDisposition,
+    IN  ULONG               CreateOptions,
+    IN  PVOID               EaBuffer OPTIONAL,
+    IN  ULONG               EaLength
 );
 
 // ******************************************************************
@@ -838,14 +838,14 @@ typedef NTSTATUS (NTAPI *FPTR_NtOpenFile)
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtReadFile)
 (
-	IN  HANDLE          FileHandle,            // TODO: correct paramters
-	IN  HANDLE          Event OPTIONAL,
-	IN  PVOID           ApcRoutine OPTIONAL,
-	IN  PVOID           ApcContext,
-	OUT PVOID           IoStatusBlock,
-	OUT PVOID           Buffer,
-	IN  ULONG           Length,
-	IN  PLARGE_INTEGER  ByteOffset OPTIONAL,
+    IN  HANDLE          FileHandle,            // TODO: correct paramters
+    IN  HANDLE          Event OPTIONAL,
+    IN  PVOID           ApcRoutine OPTIONAL,
+    IN  PVOID           ApcContext,
+    OUT PVOID           IoStatusBlock,
+    OUT PVOID           Buffer,
+    IN  ULONG           Length,
+    IN  PLARGE_INTEGER  ByteOffset OPTIONAL,
     IN  PULONG          Key OPTIONAL
 );
 
@@ -854,14 +854,14 @@ typedef NTSTATUS (NTAPI *FPTR_NtReadFile)
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtWriteFile)
 (
-	IN  HANDLE          FileHandle,            // TODO: correct paramters
-	IN  HANDLE          Event OPTIONAL,
-	IN  PVOID           ApcRoutine OPTIONAL,
-	IN  PVOID           ApcContext,
-	OUT PVOID           IoStatusBlock,
-	OUT PVOID           Buffer,
-	IN  ULONG           Length,
-	IN  PLARGE_INTEGER  ByteOffset OPTIONAL,
+    IN  HANDLE          FileHandle,            // TODO: correct paramters
+    IN  HANDLE          Event OPTIONAL,
+    IN  PVOID           ApcRoutine OPTIONAL,
+    IN  PVOID           ApcContext,
+    OUT PVOID           IoStatusBlock,
+    OUT PVOID           Buffer,
+    IN  ULONG           Length,
+    IN  PLARGE_INTEGER  ByteOffset OPTIONAL,
     IN  PULONG          Key OPTIONAL
 );
 
@@ -874,39 +874,39 @@ typedef VOID (NTAPI *FPTR_NtYieldExecution)();
 // * NtSetInformationFile
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtSetInformationFile)
-(	
-	IN  HANDLE  FileHandle,            // TODO: correct paramters
-	OUT	PVOID	IoStatusBlock,
-	IN	PVOID	FileInformation,
-	IN	ULONG	Length,
-	IN	ULONG	FileInformationClass
+(
+    IN  HANDLE  FileHandle,            // TODO: correct paramters
+    OUT PVOID   IoStatusBlock,
+    IN  PVOID   FileInformation,
+    IN  ULONG   Length,
+    IN  ULONG   FileInformationClass
 );
 
 // ******************************************************************
 // * NtSuspendThread
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtSuspendThread)
-(	
-	IN  HANDLE  ThreadHandle,
-	OUT	PULONG	PreviousSuspendCount OPTIONAL
+(
+    IN  HANDLE  ThreadHandle,
+    OUT PULONG  PreviousSuspendCount OPTIONAL
 );
 
 // ******************************************************************
 // * NtResumeThread
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtResumeThread)
-(	
-	IN  HANDLE  ThreadHandle,
-	OUT	PULONG	SuspendCount OPTIONAL
+(
+    IN  HANDLE  ThreadHandle,
+    OUT PULONG  SuspendCount OPTIONAL
 );
 
 // ******************************************************************
 // * NtSetEvent
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtSetEvent)
-(	
-	IN  HANDLE  EventHandle,
-	OUT	PLONG	PreviousState OPTIONAL
+(
+    IN  HANDLE  EventHandle,
+    OUT PLONG   PreviousState OPTIONAL
 );
 
 // ******************************************************************
@@ -941,11 +941,11 @@ typedef NTSTATUS (NTAPI *FPTR_NtQueryFullAttributesFile)
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtQueryInformationFile)
 (
-	IN  HANDLE                      FileHandle,
-	OUT PIO_STATUS_BLOCK            IoStatusBlock,
-	OUT PFILE_FS_SIZE_INFORMATION   FileInformation, 
-	IN  ULONG                       Length, 
-	IN  FILE_INFORMATION_CLASS      FileInfo
+    IN  HANDLE                      FileHandle,
+    OUT PIO_STATUS_BLOCK            IoStatusBlock,
+    OUT PFILE_FS_SIZE_INFORMATION   FileInformation,
+    IN  ULONG                       Length,
+    IN  FILE_INFORMATION_CLASS      FileInfo
 );
 
 // ******************************************************************
@@ -965,20 +965,20 @@ typedef NTSTATUS (NTAPI *FPTR_NtQueryVolumeInformationFile)
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_IoCreateFile)
 (
-	OUT PHANDLE				FileHandle,
-	IN  ACCESS_MASK			DesiredAccess,
-	IN  POBJECT_ATTRIBUTES	ObjectAttributes,
-	OUT PIO_STATUS_BLOCK	IoStatusBlock,
-	IN  PLARGE_INTEGER		AllocationSize OPTIONAL,
-    IN  ULONG				FileAttributes,
-    IN  ULONG				ShareAccess,
-    IN  ULONG				Disposition,
-    IN  ULONG				CreateOptions,
-    IN  PVOID				EaBuffer OPTIONAL,
-    IN  ULONG				EaLength,
-    IN  CREATE_FILE_TYPE	CreateFileType,
-    IN  PVOID				ExtraCreateParameters OPTIONAL,
-    IN  ULONG				Options
+    OUT PHANDLE             FileHandle,
+    IN  ACCESS_MASK         DesiredAccess,
+    IN  POBJECT_ATTRIBUTES  ObjectAttributes,
+    OUT PIO_STATUS_BLOCK    IoStatusBlock,
+    IN  PLARGE_INTEGER      AllocationSize OPTIONAL,
+    IN  ULONG               FileAttributes,
+    IN  ULONG               ShareAccess,
+    IN  ULONG               Disposition,
+    IN  ULONG               CreateOptions,
+    IN  PVOID               EaBuffer OPTIONAL,
+    IN  ULONG               EaLength,
+    IN  CREATE_FILE_TYPE    CreateFileType,
+    IN  PVOID               ExtraCreateParameters OPTIONAL,
+    IN  ULONG               Options
 );
 
 // ******************************************************************

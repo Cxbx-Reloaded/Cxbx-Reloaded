@@ -1,5 +1,5 @@
 // ******************************************************************
-// * 
+// *
 // * proj : OpenXDK
 // *
 // * desc : Open Source XBox Development Kit
@@ -39,10 +39,10 @@ XBSYSAPI VOID *RtlAppendUnicodeToString;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(264) VOID NTAPI RtlAssert
 (
-    PVOID	FailedAssertion,
-    PVOID	FileName,
-    ULONG	LineNumber,
-	PCHAR	Message
+    PVOID   FailedAssertion,
+    PVOID   FileName,
+    ULONG   LineNumber,
+    PCHAR   Message
 );
 
 XBSYSAPI VOID *RtlCaptureContext;
@@ -76,8 +76,8 @@ XBSYSAPI VOID *RtlCompareUnicodeString;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(272) VOID NTAPI RtlCopyString
 (
-  IN OUT PVOID	Destination,        // TODO: should be STRING
-  IN     PVOID	Source OPTIONAL     // TODO: should be STRING
+  IN OUT PVOID  Destination,        // TODO: should be STRING
+  IN     PVOID  Source OPTIONAL     // TODO: should be STRING
 );
 
 XBSYSAPI VOID *RtlCopyUnicodeString;
@@ -112,7 +112,7 @@ XBSYSAPI VOID *RtlGetCallersAddress;
 // * Initialize a counted ANSI string.
 // *
 // ******************************************************************
-XBSYSAPI EXPORTNUM(289) VOID NTAPI RtlInitAnsiString 
+XBSYSAPI EXPORTNUM(289) VOID NTAPI RtlInitAnsiString
 (
   IN OUT PANSI_STRING DestinationString,
   IN     PCSZ         SourceString
@@ -171,7 +171,7 @@ XBSYSAPI VOID *RtlMultiByteToUnicodeSize;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(301) ULONG NTAPI RtlNtStatusToDosError
 (
-	IN NTSTATUS	Status
+    IN NTSTATUS Status
 );
 
 XBSYSAPI VOID *RtlRaiseException;
@@ -192,7 +192,7 @@ XBSYSAPI EXPORTNUM(304) BOOLEAN NTAPI RtlTimeFieldsToTime
 XBSYSAPI EXPORTNUM(305) VOID NTAPI RtlTimeToTimeFields
 (
     IN  PLARGE_INTEGER  Time,
-    OUT PTIME_FIELDS    TimeFields 
+    OUT PTIME_FIELDS    TimeFields
 );
 
 // ******************************************************************

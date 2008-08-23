@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->Cxbx->Wnd.cpp
@@ -90,7 +90,7 @@ bool Wnd::ProcessMessages()
         wnd_class.hbrBackground = m_background;
 
         m_class = RegisterClass(&wnd_class);
-        
+
         m_hwnd = CreateWindowEx
         (
             NULL,
@@ -120,7 +120,7 @@ cleanup:;
 
     }
 
-	MSG msg;
+    MSG msg;
 
     if(PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
     {
@@ -155,7 +155,7 @@ LRESULT CALLBACK Wnd::WndProcForward(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
             return DefWindowProc(hwnd, uMsg, wParam, lParam);
         }
     }
- 
+
     return forward_to->WndProc(hwnd, uMsg, wParam, lParam);
 }
 
@@ -165,16 +165,16 @@ LRESULT CALLBACK Wnd::WndProcForward(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 LRESULT CALLBACK Wnd::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch(uMsg)
-	{
+    {
         case WM_CLOSE:
             DestroyWindow(hwnd);
             break;
         case WM_DESTROY:
             PostQuitMessage(0);
-			break;
-		default:
-			return DefWindowProc(hwnd, uMsg, wParam, lParam);
-	}
+            break;
+        default:
+            return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
 
     return 0;
 }

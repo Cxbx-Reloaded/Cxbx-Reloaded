@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->Cxbx->WndAbout.cpp
@@ -68,8 +68,8 @@ WndAbout::~WndAbout()
 // window message processing procedure
 LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	switch(uMsg)
-	{
+    switch(uMsg)
+    {
         case WM_CREATE:
         {
             // resize window so that client area := 400x300
@@ -92,7 +92,7 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
             int nHeight = -MulDiv(8, GetDeviceCaps(hDC, LOGPIXELSY), 72);
 
-			m_hFont = CreateFont(nHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_ROMAN, "Verdana");
+            m_hFont = CreateFont(nHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_ROMAN, "Verdana");
 
             m_BackBmp = CreateCompatibleBitmap(hDC, 400, 300);
 
@@ -166,21 +166,21 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
         case WM_LBUTTONUP:
             SendMessage(hwnd, WM_CLOSE, 0, 0);
-			break;
+            break;
 
         case WM_CLOSE:
             EnableWindow(m_parent, TRUE);
             DestroyWindow(hwnd);
-			break;
+            break;
 
         case WM_DESTROY:
             DeleteObject(m_hFont);
             PostQuitMessage(0);
-			break;
+            break;
 
         default:
-			return DefWindowProc(hwnd, uMsg, wParam, lParam);
-	}
+            return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
 
     return 0;
 }

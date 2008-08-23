@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->Mutex.cpp
@@ -55,9 +55,9 @@ void Mutex::Lock()
 #if (_MSC_VER < 1300)  // We are not using VC++.NET
         while(InterlockedCompareExchange((LPVOID*)&m_MutexLock, (LPVOID)1, (LPVOID)0))
 #else
-		while(InterlockedCompareExchange((LPLONG)&m_MutexLock, (LONG)1, (LONG)0))
+        while(InterlockedCompareExchange((LPLONG)&m_MutexLock, (LONG)1, (LONG)0))
 #endif
-			Sleep(1);
+            Sleep(1);
 
         // Are we the the new owner?
         if (!m_OwnerProcess)
@@ -105,7 +105,7 @@ void Mutex::Unlock()
 #if (_MSC_VER < 1300)  // We are not using VC++.NET
     while(InterlockedCompareExchange((LPVOID*)&m_MutexLock, (LPVOID)1, (LPVOID)0))
 #else
-	while (InterlockedCompareExchange((LPLONG)&m_MutexLock, (LONG)1, (LONG)0))
+    while (InterlockedCompareExchange((LPLONG)&m_MutexLock, (LONG)1, (LONG)0))
 #endif
         Sleep(1);
 

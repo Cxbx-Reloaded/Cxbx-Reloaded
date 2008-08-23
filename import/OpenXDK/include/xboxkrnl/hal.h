@@ -1,5 +1,5 @@
 // ******************************************************************
-// * 
+// *
 // * proj : OpenXDK
 // *
 // * desc : Open Source XBox Development Kit
@@ -59,7 +59,7 @@ XBSYSAPI VOID *HalRequestSoftwareInterrupt;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN HalReturnToFirmware
 (
-	RETURN_FIRMWARE Routine
+    RETURN_FIRMWARE Routine
 );
 
 // ******************************************************************

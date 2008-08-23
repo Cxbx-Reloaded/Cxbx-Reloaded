@@ -268,7 +268,7 @@ SOOVPA<11> IDirect3D8_KickOffAndWaitForIdle2_1_0_4627 =
 // ******************************************************************
 // * IDirect3DDevice8_BeginPush
 // ******************************************************************
-SOOVPA<7> IDirect3DDevice8_BeginPush_1_0_4627 = 
+SOOVPA<7> IDirect3DDevice8_BeginPush_1_0_4627 =
 {
     0,  // Large == 0
     7,  // Count == 7
@@ -536,7 +536,7 @@ SOOVPA<8> IDirect3DDevice8_CopyRects_1_0_4627 =
 // ******************************************************************
 // * IDirect3DDevice8_GetGammaRamp
 // ******************************************************************
-SOOVPA<7> IDirect3DDevice8_GetGammaRamp_1_0_4627 = 
+SOOVPA<7> IDirect3DDevice8_GetGammaRamp_1_0_4627 =
 {
     0,  // Large == 0
     7,  // Count == 7
@@ -993,7 +993,7 @@ SOOVPA<12> IDirect3DDevice8_SetVertexShaderConstantNotInline_1_0_4627 =
 // ******************************************************************
 // * D3DDevice_DeletePixelShader@4
 // ******************************************************************
-SOOVPA<7> IDirect3DDevice8_DeletePixelShader_1_0_4627 = 
+SOOVPA<7> IDirect3DDevice8_DeletePixelShader_1_0_4627 =
 {
     0,  // Large == 0
     7,  // Count == 7
@@ -3151,7 +3151,7 @@ OOVPATable D3D8_1_0_4627[] =
         XTL::EmuIDirect3D8_CheckDeviceFormat,
 
         #ifdef _DEBUG_TRACE
-        "EmuIDirect3D8_CheckDeviceFormat" 
+        "EmuIDirect3D8_CheckDeviceFormat"
         #endif
     },
     // IDirect3DDevice8::BeginVisibilityTest
@@ -3787,7 +3787,7 @@ OOVPATable D3D8_1_0_4627[] =
         XTL::EmuIDirect3DDevice8_SetTextureState_ColorKeyColor,
 
         #ifdef _DEBUG_TRACE
-        "EmuIDirect3DDevice8_SetTextureState_ColorKeyColor" 
+        "EmuIDirect3DDevice8_SetTextureState_ColorKeyColor"
         #endif
     },
     // IDirect3DDevice8::SetRenderState_VertexBlend (* unchanged since 4361 *)
@@ -3797,7 +3797,7 @@ OOVPATable D3D8_1_0_4627[] =
         XTL::EmuIDirect3DDevice8_SetRenderState_VertexBlend,
 
         #ifdef _DEBUG_TRACE
-        "EmuIDirect3DDevice8_SetRenderState_VertexBlend" 
+        "EmuIDirect3DDevice8_SetRenderState_VertexBlend"
         #endif
     },
     // IDirect3DDevice8::SetRenderState_CullModeB
@@ -3967,7 +3967,7 @@ OOVPATable D3D8_1_0_4627[] =
         XTL::EmuIDirect3DDevice8_SetRenderState_LineWidth,
 
         #ifdef _DEBUG_TRACE
-        "EmuIDirect3DDevice8_SetRenderState_LineWidth" 
+        "EmuIDirect3DDevice8_SetRenderState_LineWidth"
         #endif
     },
     // IDirect3DDevice8::SetRenderState_OcclusionCullEnable (* unchanged since 4432 *)

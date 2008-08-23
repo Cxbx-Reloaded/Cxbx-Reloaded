@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->HLEDataBase.cpp
@@ -274,7 +274,7 @@ extern uint32 HLEDataBaseSize = sizeof(HLEDataBase);
 // ******************************************************************
 // * XRefDataBase
 // ******************************************************************
-extern uint32 XRefDataBase[] = 
+extern uint32 XRefDataBase[] =
 {
     -1, // XREF_D3DDEVICE
     -1, // XREF_DXSRSCULLMODE
@@ -340,8 +340,8 @@ extern uint32 XRefDataBase[] =
     -1, // XREF_DSBUFFERSETPLAYREGIONA (Buffer)
     -1, // XREF_DSBUFFERLOCKA (Buffer)
     -1, // XREF_DSBUFFERSETHEADROOMA (Buffer)
-	-1, // XREF_DSBUFFERSETFREQUENCYA (Buffer)
-	-1, // XREF_DSBUFFERSETFREQUENCYB
+    -1, // XREF_DSBUFFERSETFREQUENCYA (Buffer)
+    -1, // XREF_DSBUFFERSETFREQUENCYB
     -1, // XREF_DSSTREAMSETMAXDISTANCE1A (Stream)
     -1, // XREF_DSSTREAMSETMAXDISTANCE1B
     -1, // XREF_DSSTREAMSETMAXDISTANCE1C
@@ -397,26 +397,26 @@ extern uint32 XRefDataBase[] =
     -1, // XREF_DSBUFFERSETI3DL2SOURCE
     -1, // XREF_DirectSound_CDirectSoundVoice_SetFormat
     -1, // XREF_DirectSound_CDirectSoundBuffer_SetFormat
-	-1, // XREF_DirectSound_CFullHRTFSource_GetCenterVolume
-	-1, // XREF_DirectSound_CHRTFSource_SetFullHRTF5Channel
-	-1, // XREF_D3D_SetFence
-	-1, // XREF_D3D_BlockOnResource
-	-1, // XREF_DirectSound_CMcpxVoiceClient_SetLFO
-	-1, // XREF_DirectSound_CDirectSoundVoice_SetLFO
-	-1, // XREF_DirectSound_CDirectSoundBuffer_SetLFO
-	-1, // XREF_DirectSound_CDirectSoundVoice_SetVolume
-	-1, // XREF_DirectSound_CDirectSoundBuffer_SetVolume
-	-1, // XREF_DirectSound_CDirectSoundBuffer_SetLoopRegion
-	-1, // XREF_DirectSound_CMcpxBuffer_Play
-	-1, // XREF_DirectSound_CDirectSoundBuffer_PlayEx
-	-1, // XREF_DirectSound_WaveFormat_CreateXboxAdpcmFormat
-	-1, // XREF_DirectSound_CDirectSoundVoice_SetConeAngles
-	-1, // XREF_DirectSound_CDirectSoundBuffer_SetConeAngles
-	-1, // XREF_DirectSound_CDirectSoundVoice_CommitDeferredSettings
-	-1, // XREF_DirectSound_CDirectSoundVoice_SetAllParameters
-	-1, // XREF_DirectSound_CDirectSoundBuffer_SetAllParameters
-	-1, // XREF_DirectSound_CDirectSoundVoice_SetRolloffCurve
-	-1, // XREF_DirectSound_CDirectSoundBuffer_SetRolloffCurve
+    -1, // XREF_DirectSound_CFullHRTFSource_GetCenterVolume
+    -1, // XREF_DirectSound_CHRTFSource_SetFullHRTF5Channel
+    -1, // XREF_D3D_SetFence
+    -1, // XREF_D3D_BlockOnResource
+    -1, // XREF_DirectSound_CMcpxVoiceClient_SetLFO
+    -1, // XREF_DirectSound_CDirectSoundVoice_SetLFO
+    -1, // XREF_DirectSound_CDirectSoundBuffer_SetLFO
+    -1, // XREF_DirectSound_CDirectSoundVoice_SetVolume
+    -1, // XREF_DirectSound_CDirectSoundBuffer_SetVolume
+    -1, // XREF_DirectSound_CDirectSoundBuffer_SetLoopRegion
+    -1, // XREF_DirectSound_CMcpxBuffer_Play
+    -1, // XREF_DirectSound_CDirectSoundBuffer_PlayEx
+    -1, // XREF_DirectSound_WaveFormat_CreateXboxAdpcmFormat
+    -1, // XREF_DirectSound_CDirectSoundVoice_SetConeAngles
+    -1, // XREF_DirectSound_CDirectSoundBuffer_SetConeAngles
+    -1, // XREF_DirectSound_CDirectSoundVoice_CommitDeferredSettings
+    -1, // XREF_DirectSound_CDirectSoundVoice_SetAllParameters
+    -1, // XREF_DirectSound_CDirectSoundBuffer_SetAllParameters
+    -1, // XREF_DirectSound_CDirectSoundVoice_SetRolloffCurve
+    -1, // XREF_DirectSound_CDirectSoundBuffer_SetRolloffCurve
     /* not necessary?
     -1, //XREF_XAPIXCALCULATESIGNATUREBEGINEX
     //*/

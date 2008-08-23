@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->Xapi.1.0.3911.cpp
@@ -625,7 +625,7 @@ OOVPATable XAPI_1_0_3911[] =
         XTL::EmuCreateMutex,
 
         #ifdef _DEBUG_TRACE
-        "EmuCreateMutex" 
+        "EmuCreateMutex"
         #endif
     },
     //*/
@@ -637,7 +637,7 @@ OOVPATable XAPI_1_0_3911[] =
         XTL::EmuCreateThread,
 
         #ifdef _DEBUG_TRACE
-        "EmuCreateThread" 
+        "EmuCreateThread"
         #endif
     },
     */
@@ -659,7 +659,7 @@ OOVPATable XAPI_1_0_3911[] =
         XTL::EmuXapiInitProcess,
 
         #ifdef _DEBUG_TRACE
-        "EmuXapiInitProcess" 
+        "EmuXapiInitProcess"
         #endif
     },
     //*/

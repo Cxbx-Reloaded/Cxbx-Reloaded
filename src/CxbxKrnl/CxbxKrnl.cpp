@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->CxbxKrnl.cpp
@@ -79,7 +79,7 @@ extern "C" CXBXKRNL_API bool CxbxKrnlVerifyVersion(const char *szVersion)
 extern "C" CXBXKRNL_API void CxbxKrnlInit
 (
     HWND                    hwndParent,
-    void                   *pTLSData, 
+    void                   *pTLSData,
     Xbe::TLS               *pTLS,
     Xbe::LibraryVersion    *pLibraryVersion,
     DebugMode               DbgMode,
@@ -108,7 +108,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
             SetConsoleTitle("Cxbx : Kernel Debug Console");
 
             SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
-            
+
             printf("EmuMain (0x%X): Cxbx Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
             printf("EmuMain (0x%X): Debug Console Allocated (DM_CONSOLE).\n", GetCurrentThreadId());
         }

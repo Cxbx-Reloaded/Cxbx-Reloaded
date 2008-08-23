@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->Xapi.1.0.5849.cpp
@@ -35,7 +35,7 @@
 // ******************************************************************
 // * XapiInitProcess
 // ******************************************************************
-SOOVPA<8> XapiInitProcess_1_0_5849 = 
+SOOVPA<8> XapiInitProcess_1_0_5849 =
 {
     0,  // Large == 0
     8,  // Count == 8
@@ -58,7 +58,7 @@ SOOVPA<8> XapiInitProcess_1_0_5849 =
 // ******************************************************************
 // * XGetDeviceChanges
 // ******************************************************************
-SOOVPA<7> XGetDeviceChanges_1_0_5849 = 
+SOOVPA<7> XGetDeviceChanges_1_0_5849 =
 {
     0,  // Large == 0
     7,  // Count == 7
@@ -199,7 +199,7 @@ OOVPATable XAPI_1_0_5849[] =
         XTL::EmuXGetDevices,
 
         #ifdef _DEBUG_TRACE
-        "EmuXGetDevices" 
+        "EmuXGetDevices"
         #endif
     },
     // XInputOpen (* unchanged since 1.0.4361 *)
@@ -232,7 +232,7 @@ OOVPATable XAPI_1_0_5849[] =
         "EmuXInputGetState"
         #endif
     },
-	// XGetDeviceChanges
+    // XGetDeviceChanges
     {
         (OOVPA*)&XGetDeviceChanges_1_0_5849,
 
@@ -261,7 +261,7 @@ OOVPATable XAPI_1_0_5849[] =
         XTL::EmuXapiInitProcess,
 
         #ifdef _DEBUG_TRACE
-        "EmuXapiInitProcess" 
+        "EmuXapiInitProcess"
         #endif
     },
     // XapiBootToDash (* unchanged since 1.0.3911 *)

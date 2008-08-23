@@ -1,5 +1,5 @@
 // ******************************************************************
-// * 
+// *
 // * proj : OpenXDK
 // *
 // * desc : Open Source XBox Development Kit
@@ -22,10 +22,10 @@ XBSYSAPI EXPORTNUM(1) PVOID NTAPI AvGetSavedDataAddress();
 // ******************************************************************
 XBSYSAPI EXPORTNUM(2) VOID NTAPI AvSendTVEncoderOption
 (
-	IN	PVOID	RegisterBase, 
-	IN	ULONG	Option, 
-	IN	ULONG	Param, 
-	OUT	ULONG	*Result
+    IN  PVOID   RegisterBase,
+    IN  ULONG   Option,
+    IN  ULONG   Param,
+    OUT ULONG   *Result
 );
 
 // ******************************************************************
@@ -33,12 +33,12 @@ XBSYSAPI EXPORTNUM(2) VOID NTAPI AvSendTVEncoderOption
 // ******************************************************************
 XBSYSAPI EXPORTNUM(4) ULONG NTAPI AvSetDisplayMode
 (
-	IN PVOID	RegisterBase,
-	IN ULONG	Step,
-	IN ULONG	Mode,
-	IN ULONG	Format,
-	IN ULONG	Pitch,
-	IN ULONG	FrameBuffer
+    IN PVOID    RegisterBase,
+    IN ULONG    Step,
+    IN ULONG    Mode,
+    IN ULONG    Format,
+    IN ULONG    Pitch,
+    IN ULONG    FrameBuffer
 );
 
 // ******************************************************************
@@ -46,7 +46,7 @@ XBSYSAPI EXPORTNUM(4) ULONG NTAPI AvSetDisplayMode
 // ******************************************************************
 XBSYSAPI EXPORTNUM(4) VOID NTAPI AvSetSavedDataAddress
 (
-	IN PVOID	Address
+    IN PVOID    Address
 );
 
 XBSYSAPI VOID *FscGetCacheSize;
@@ -65,7 +65,7 @@ XBSYSAPI VOID *KdDebuggerNotPresent;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(160) UCHAR NTAPI KfRaiseIrql
 (
-	IN UCHAR	NewIrql
+    IN UCHAR    NewIrql
 );
 
 // ******************************************************************
@@ -73,7 +73,7 @@ XBSYSAPI EXPORTNUM(160) UCHAR NTAPI KfRaiseIrql
 // ******************************************************************
 XBSYSAPI EXPORTNUM(161) UCHAR NTAPI KfLowerIrql
 (
-	IN UCHAR	NewIrql
+    IN UCHAR    NewIrql
 );
 
 XBSYSAPI VOID *KiBugCheckData;

@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->EmuD3D->State.cpp
@@ -66,7 +66,7 @@ void XTL::EmuUpdateDeferredStates()
         if(XTL::EmuD3DDeferredRenderState[6] != X_D3DRS_UNK)
         {
             ::DWORD dwConv = 0;
-            
+
             dwConv |= (XTL::EmuD3DDeferredRenderState[6] & 0x00000010) ? D3DWRAP_U : 0;
             dwConv |= (XTL::EmuD3DDeferredRenderState[6] & 0x00001000) ? D3DWRAP_V : 0;
             dwConv |= (XTL::EmuD3DDeferredRenderState[6] & 0x00100000) ? D3DWRAP_W : 0;
@@ -91,14 +91,14 @@ void XTL::EmuUpdateDeferredStates()
 
         if(XTL::EmuD3DDeferredRenderState[24] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_POINTSIZE, XTL::EmuD3DDeferredRenderState[24]);
-                                                                       
-        if(XTL::EmuD3DDeferredRenderState[25] != X_D3DRS_UNK)        
+
+        if(XTL::EmuD3DDeferredRenderState[25] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_POINTSIZE_MIN, XTL::EmuD3DDeferredRenderState[25]);
-                                                                       
-        if(XTL::EmuD3DDeferredRenderState[26] != X_D3DRS_UNK)        
+
+        if(XTL::EmuD3DDeferredRenderState[26] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_POINTSPRITEENABLE, XTL::EmuD3DDeferredRenderState[26]);
 
-        if(XTL::EmuD3DDeferredRenderState[27] != X_D3DRS_UNK)        
+        if(XTL::EmuD3DDeferredRenderState[27] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_POINTSCALEENABLE, XTL::EmuD3DDeferredRenderState[27]);
 
         if(XTL::EmuD3DDeferredRenderState[28] != X_D3DRS_UNK)
@@ -121,7 +121,7 @@ void XTL::EmuUpdateDeferredStates()
         {
             if(XTL::EmuD3DDeferredRenderState[v] != X_D3DRS_UNK)
             {
-                if(v != 0  && v != 1  && v != 2 && v != 3 && v != 6  && v != 10 && v != 11 && v != 13 
+                if(v != 0  && v != 1  && v != 2 && v != 3 && v != 6  && v != 10 && v != 11 && v != 13
                 && v != 20 && v != 23 && v != 24 && v != 25 && v != 26 && v != 27 && v != 28 && v != 29
                 && v != 30 && v != 31 && v != 33)
                     EmuWarning("Unhandled RenderState Change @ %d (%d)", v, v + 82);
@@ -226,7 +226,7 @@ void XTL::EmuUpdateDeferredStates()
 
             if(pCur[18] != X_D3DTSS_UNK)
                 g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ALPHAARG1, pCur[18]);
-            
+
             if(pCur[19] != X_D3DTSS_UNK)
                 g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ALPHAARG2, pCur[19]);
 
@@ -242,7 +242,7 @@ void XTL::EmuUpdateDeferredStates()
             /** To check for unhandled texture stage state changes
             for(int r=0;r<32;r++)
             {
-                static const int unchecked[] = 
+                static const int unchecked[] =
                 {
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 29, 30, 31
                 };
@@ -275,17 +275,17 @@ void XTL::EmuUpdateDeferredStates()
 
             IDirect3DBaseTexture8 *pTexture;
 
-            // set the point sprites texture 
-            g_pD3DDevice8->GetTexture(3, &pTexture); 
-            g_pD3DDevice8->SetTexture(0, pTexture); 
+            // set the point sprites texture
+            g_pD3DDevice8->GetTexture(3, &pTexture);
+            g_pD3DDevice8->SetTexture(0, pTexture);
 
-            // disable all other stages 
-            g_pD3DDevice8->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE); 
-            g_pD3DDevice8->SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE); 
+            // disable all other stages
+            g_pD3DDevice8->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
+            g_pD3DDevice8->SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
 
             // in that case we have to copy over the stage by hand
             for(int v=0;v<30;v++)
-            { 
+            {
                 if(pCur[v] != X_D3DTSS_UNK)
                 {
                     ::DWORD dwValue;
@@ -293,7 +293,7 @@ void XTL::EmuUpdateDeferredStates()
                     g_pD3DDevice8->GetTextureStageState(3, (D3DTEXTURESTAGESTATETYPE)v, &dwValue);
                     g_pD3DDevice8->SetTextureStageState(0, (D3DTEXTURESTAGESTATETYPE)v, dwValue);
                 }
-            } 
+            }
         }
     }
 

@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->Xapi.1.0.4432.cpp
@@ -238,7 +238,7 @@ OOVPATable XAPI_1_0_4432[] =
         XTL::EmuXGetDevices,
 
         #ifdef _DEBUG_TRACE
-        "EmuXGetDevices" 
+        "EmuXGetDevices"
         #endif
     },
     // XInputOpen (* unchanged since 1.0.4361 *)
@@ -301,7 +301,7 @@ OOVPATable XAPI_1_0_4432[] =
         XTL::EmuXapiInitProcess,
 
         #ifdef _DEBUG_TRACE
-        "EmuXapiInitProcess" 
+        "EmuXapiInitProcess"
         #endif
     },
     //*/

@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Standard->Cxbe->Main.cpp
@@ -235,7 +235,7 @@ cleanup:
     if(szErrorMessage[0] != 0)
     {
         ShowUsage();
-    
+
         printf("\n");
         printf(" *  Error : %s\n", szErrorMessage);
 
@@ -252,7 +252,7 @@ static void ShowUsage()
     (
         "CXBE XBE->EXE (XBox->Win32) Relinker (CXBX Core Version " _CXBX_VERSION ")\n"
         "Copyright (C) Aaron Robinson 2002-2003. All rights reserved.\n"
-        "\n" 
+        "\n"
         "Usage : cxbe [options] [exefile]\n"
         "\n"
         "Options :\n"

@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Cxbx->DlgControllerConfig.cpp
@@ -55,7 +55,7 @@ static BOOL g_bHasChanges = FALSE;
 VOID ShowControllerConfig(HWND hwnd)
 {
     /*! reset changes flag */
-	g_bHasChanges = FALSE;
+    g_bHasChanges = FALSE;
 
     /*! retrieve controller configuration */
     g_EmuShared->GetXBController(&g_XBController);
@@ -90,8 +90,8 @@ INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam,
                     case IDYES:
                         PostMessage(hWndDlg, WM_COMMAND, IDC_INPUT_CONFIG_ACCEPT, 0);
                         break;
-					case IDNO:
-						PostMessage(hWndDlg, WM_COMMAND, IDC_INPUT_CONFIG_CANCEL, 0);
+                    case IDNO:
+                        PostMessage(hWndDlg, WM_COMMAND, IDC_INPUT_CONFIG_CANCEL, 0);
                         break;
                 }
                 break;
@@ -99,16 +99,16 @@ INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam,
 
             PostMessage(hWndDlg, WM_COMMAND, IDC_INPUT_CONFIG_CANCEL, 0);
         }
-		break;
+        break;
 
         case WM_COMMAND:
         {
             HWND hWndButton = GetDlgItem(hWndDlg, LOWORD(wParam));
 
             switch(LOWORD(wParam))
-            { 
+            {
                 case IDC_INPUT_CONFIG_CANCEL:
-                    EndDialog(hWndDlg, wParam); 
+                    EndDialog(hWndDlg, wParam);
                     break;
 
                 case IDC_INPUT_CONFIG_ACCEPT:
@@ -159,51 +159,51 @@ INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam,
                 case IDC_SET_A:
                     ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_A);
                     break;
-                
+
                 case IDC_SET_B:
                     ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_B);
                     break;
-                
+
                 case IDC_SET_WHITE:
                     ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_WHITE);
                     break;
-                
+
                 case IDC_SET_BLACK:
                     ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_BLACK);
                     break;
-                
+
                 case IDC_SET_LTRIGGER:
                     ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_LTRIGGER);
                     break;
-                
+
                 case IDC_SET_RTRIGGER:
                     ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_RTRIGGER);
                     break;
-                
+
                 case IDC_SET_DPAD_UP:
                     ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_DPADUP);
                     break;
-                
+
                 case IDC_SET_DPAD_DOWN:
                     ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_DPADDOWN);
                     break;
-                
+
                 case IDC_SET_DPAD_LEFT:
                     ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_DPADLEFT);
                     break;
-                
+
                 case IDC_SET_DPAD_RIGHT:
                     ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_DPADRIGHT);
                     break;
-                
+
                 case IDC_SET_BACK:
                     ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_BACK);
                     break;
-                
+
                 case IDC_SET_START:
                     ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_START);
                     break;
-                
+
                 case IDC_SET_LTHUMB:
                     ConfigureInput(hWndDlg, hWndButton, XBCTRL_OBJECT_LTHUMB);
                     break;
@@ -221,31 +221,31 @@ INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam,
                         int idcVal;
                         XBCtrlObject ctrl;
                     }
-                    configObj[] = 
+                    configObj[] =
                     {
-                        { IDC_SET_X, XBCTRL_OBJECT_X }, 
+                        { IDC_SET_X, XBCTRL_OBJECT_X },
                         { IDC_SET_Y, XBCTRL_OBJECT_Y },
-                        { IDC_SET_A, XBCTRL_OBJECT_A }, 
+                        { IDC_SET_A, XBCTRL_OBJECT_A },
                         { IDC_SET_B, XBCTRL_OBJECT_B },
-                        { IDC_SET_WHITE, XBCTRL_OBJECT_WHITE }, 
+                        { IDC_SET_WHITE, XBCTRL_OBJECT_WHITE },
                         { IDC_SET_BLACK, XBCTRL_OBJECT_BLACK },
-                        { IDC_SET_LTRIGGER, XBCTRL_OBJECT_LTRIGGER }, 
+                        { IDC_SET_LTRIGGER, XBCTRL_OBJECT_LTRIGGER },
                         { IDC_SET_RTRIGGER, XBCTRL_OBJECT_RTRIGGER },
-                        { IDC_SET_DPAD_UP, XBCTRL_OBJECT_DPADUP }, 
+                        { IDC_SET_DPAD_UP, XBCTRL_OBJECT_DPADUP },
                         { IDC_SET_DPAD_DOWN, XBCTRL_OBJECT_DPADDOWN },
-                        { IDC_SET_DPAD_LEFT, XBCTRL_OBJECT_DPADLEFT }, 
+                        { IDC_SET_DPAD_LEFT, XBCTRL_OBJECT_DPADLEFT },
                         { IDC_SET_DPAD_RIGHT, XBCTRL_OBJECT_DPADRIGHT },
-                        { IDC_SET_BACK, XBCTRL_OBJECT_BACK }, 
+                        { IDC_SET_BACK, XBCTRL_OBJECT_BACK },
                         { IDC_SET_START, XBCTRL_OBJECT_START },
-                        { IDC_SET_LTHUMB, XBCTRL_OBJECT_LTHUMB }, 
+                        { IDC_SET_LTHUMB, XBCTRL_OBJECT_LTHUMB },
                         { IDC_SET_RTHUMB, XBCTRL_OBJECT_RTHUMB },
-                        { IDC_SET_LEFT_POSY, XBCTRL_OBJECT_LTHUMBPOSY }, 
+                        { IDC_SET_LEFT_POSY, XBCTRL_OBJECT_LTHUMBPOSY },
                         { IDC_SET_LEFT_NEGY, XBCTRL_OBJECT_LTHUMBNEGY },
-                        { IDC_SET_LEFT_NEGX, XBCTRL_OBJECT_LTHUMBNEGX }, 
+                        { IDC_SET_LEFT_NEGX, XBCTRL_OBJECT_LTHUMBNEGX },
                         { IDC_SET_LEFT_POSX, XBCTRL_OBJECT_LTHUMBPOSX },
-                        { IDC_SET_RIGHT_POSY, XBCTRL_OBJECT_RTHUMBPOSY }, 
+                        { IDC_SET_RIGHT_POSY, XBCTRL_OBJECT_RTHUMBPOSY },
                         { IDC_SET_RIGHT_NEGY, XBCTRL_OBJECT_RTHUMBNEGY },
-                        { IDC_SET_RIGHT_NEGX, XBCTRL_OBJECT_RTHUMBNEGX }, 
+                        { IDC_SET_RIGHT_NEGX, XBCTRL_OBJECT_RTHUMBNEGX },
                         { IDC_SET_RIGHT_POSX, XBCTRL_OBJECT_RTHUMBPOSX },
                     };
 
@@ -257,11 +257,11 @@ INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam,
 
                     break;
                 }
-            } 
+            }
         }
         break;
-    } 
-    return FALSE; 
+    }
+    return FALSE;
 }
 
 VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object)
@@ -273,7 +273,7 @@ VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object)
 
     bConfigDone = false;
 
-	g_bHasChanges = TRUE;
+    g_bHasChanges = TRUE;
 
     /*! disable all buttons */
     EnableButtonWindows(hWndDlg, hWndButton, FALSE);
@@ -352,7 +352,7 @@ VOID EnableButtonWindows(HWND hWndDlg, HWND hExclude, BOOL bEnable)
     int v=0;
 
     /*! list of applicable child windows */
-    int itemList[] = 
+    int itemList[] =
     {
         IDC_SET_X, IDC_SET_Y, IDC_SET_A, IDC_SET_B,
         IDC_SET_WHITE, IDC_SET_BLACK,

@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->EmuD3D8.h
@@ -1365,7 +1365,7 @@ D3DCOLOR * WINAPI EmuIDirect3DPalette8_Lock2
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_GetVertexShaderSize
 (
-    DWORD Handle, 
+    DWORD Handle,
     UINT* pSize
 );
 
@@ -1456,7 +1456,7 @@ VOID WINAPI EmuIDirect3DDevice8_RunVertexStateShader
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_LoadVertexShaderProgram
 (
-    CONST DWORD *pFunction, 
+    CONST DWORD *pFunction,
     DWORD        Address
 );
 
@@ -1465,7 +1465,7 @@ VOID WINAPI EmuIDirect3DDevice8_LoadVertexShaderProgram
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_GetVertexShaderType
 (
-    DWORD  Handle, 
+    DWORD  Handle,
     DWORD *pType
 );
 
@@ -1512,11 +1512,11 @@ HRESULT WINAPI EmuIDirect3DTexture8_GetLevelDesc
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3D8_CheckDeviceMultiSampleType
 (
-	UINT                 Adapter,
-	D3DDEVTYPE           DeviceType,
-	D3DFORMAT            SurfaceFormat,
-	BOOL                 Windowed,
-	D3DMULTISAMPLE_TYPE  MultiSampleType
+    UINT                 Adapter,
+    D3DDEVTYPE           DeviceType,
+    D3DFORMAT            SurfaceFormat,
+    BOOL                 Windowed,
+    D3DMULTISAMPLE_TYPE  MultiSampleType
 );
 
 // ******************************************************************
@@ -1524,9 +1524,9 @@ HRESULT WINAPI EmuIDirect3D8_CheckDeviceMultiSampleType
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3D8_GetDeviceCaps
 (
-	UINT        Adapter,
-	D3DDEVTYPE  DeviceType,
-	D3DCAPS8    *pCaps
+    UINT        Adapter,
+    D3DDEVTYPE  DeviceType,
+    D3DCAPS8    *pCaps
 );
 
 // ******************************************************************
@@ -1534,8 +1534,8 @@ HRESULT WINAPI EmuIDirect3D8_GetDeviceCaps
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3D8_SetPushBufferSize
 (
-	DWORD PushBufferSize,
-	DWORD KickOffSize
+    DWORD PushBufferSize,
+    DWORD KickOffSize
 );
 
 // ******************************************************************
@@ -1548,7 +1548,7 @@ DWORD WINAPI EmuIDirect3DDevice8_InsertFence();
 // ******************************************************************
 VOID WINAPI EmuIDirect3DDevice8_BlockOnFence
 (
-	DWORD Fence
+    DWORD Fence
 );
 
 // ******************************************************************
@@ -1556,7 +1556,7 @@ VOID WINAPI EmuIDirect3DDevice8_BlockOnFence
 // ******************************************************************
 VOID WINAPI EmuIDirect3DResource8_BlockUntilNotBusy
 (
-	X_D3DResource *pThis
+    X_D3DResource *pThis
 );
 
 // ******************************************************************
@@ -1564,8 +1564,8 @@ VOID WINAPI EmuIDirect3DResource8_BlockUntilNotBusy
 // ******************************************************************
 VOID WINAPI EmuIDirect3DVertexBuffer8_GetDesc
 (
-	X_D3DVertexBuffer    *pThis,
-	D3DVERTEXBUFFER_DESC *pDesc
+    X_D3DVertexBuffer    *pThis,
+    D3DVERTEXBUFFER_DESC *pDesc
 );
 
 // ******************************************************************
@@ -1573,9 +1573,9 @@ VOID WINAPI EmuIDirect3DVertexBuffer8_GetDesc
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_SetScissors
 (
-	DWORD          Count, 
-	BOOL           Exclusive, 
-	CONST D3DRECT  *pRects
+    DWORD          Count,
+    BOOL           Exclusive,
+    CONST D3DRECT  *pRects
 );
 
 #endif

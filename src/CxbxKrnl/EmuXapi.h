@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->EmuXapi.h
@@ -49,9 +49,9 @@ typedef unsigned char       UCHAR;
 typedef unsigned char       BYTE;
 typedef unsigned char       BOOLEAN;
 typedef unsigned short      USHORT;
-typedef	unsigned short		WORD;
+typedef unsigned short      WORD;
 typedef unsigned long       ULONG;
-typedef	unsigned long       DWORD;
+typedef unsigned long       DWORD;
 typedef unsigned long       SIZE_T, *PSIZE_T;
 typedef unsigned long       ACCESS_MASK, *PACCESS_MASK;
 typedef unsigned long       PHYSICAL_ADDRESS;
@@ -189,7 +189,7 @@ typedef struct _XINPUT_CAPABILITIES
     BYTE SubType;
     WORD Reserved;
 
-    union  
+    union
     {
         XINPUT_GAMEPAD Gamepad;
     }
@@ -420,8 +420,8 @@ DWORD WINAPI EmuXGetDevices
 BOOL WINAPI EmuXGetDeviceChanges
 (
     PXPP_DEVICE_TYPE DeviceType,
-    PDWORD           pdwInsertions,                  
-    PDWORD           pdwRemovals                     
+    PDWORD           pdwInsertions,
+    PDWORD           pdwRemovals
 );
 
 // ******************************************************************
@@ -534,7 +534,7 @@ BOOL WINAPI EmuSetThreadPriorityBoost
     HANDLE  hThread,
     BOOL    DisablePriorityBoost
 );
-            
+
 // ******************************************************************
 // * func: EmuGetExitCodeThread
 // ******************************************************************

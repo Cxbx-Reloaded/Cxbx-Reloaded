@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->Xapi.1.0.4627.cpp
@@ -81,7 +81,7 @@ SOOVPA<7> XapiInitProcess_1_0_4928 =
 // ******************************************************************
 // * XFormatUtilityDrive
 // ******************************************************************
-SOOVPA<7> XFormatUtilityDrive_1_0_4627 = 
+SOOVPA<7> XFormatUtilityDrive_1_0_4627 =
 {
     0,  // Large == 0
     7,  // Count == 7
@@ -103,7 +103,7 @@ SOOVPA<7> XFormatUtilityDrive_1_0_4627 =
 // ******************************************************************
 // * FindFirstFileA
 // ******************************************************************
-SOOVPA<8> FindFirstFileA_1_0_4627 = 
+SOOVPA<8> FindFirstFileA_1_0_4627 =
 {
     0,  // Large == 0
     8,  // Count == 8
@@ -126,7 +126,7 @@ SOOVPA<8> FindFirstFileA_1_0_4627 =
 // ******************************************************************
 // * FindNextFileA
 // ******************************************************************
-SOOVPA<7> FindNextFileA_1_0_4627 = 
+SOOVPA<7> FindNextFileA_1_0_4627 =
 {
     0,  // Large == 0
     7,  // Count == 7
@@ -271,7 +271,7 @@ SOOVPA<10> RtlReAllocateHeap_1_0_4627 =
 };
 
 // ******************************************************************
-// * XID_fCloseDevice 
+// * XID_fCloseDevice
 // ******************************************************************
 SOOVPA<11> XID_fCloseDevice_1_0_4928 =
 {
@@ -345,7 +345,7 @@ SOOVPA<10> XInputPoll_1_0_4928 =
         { 0x17, 0x41 }, // (Offset,Value)-Pair #2
         { 0x18, 0x04 }, // (Offset,Value)-Pair #3
         { 0x19, 0x02 }, // (Offset,Value)-Pair #4
-        
+
         { 0x25, 0x39 }, // (Offset,Value)-Pair #5
         { 0x26, 0x70 }, // (Offset,Value)-Pair #6
         { 0x27, 0x04 }, // (Offset,Value)-Pair #7
@@ -439,7 +439,7 @@ OOVPATable XAPI_1_0_4627[] =
         XTL::EmuXapiInitProcess,
 
         #ifdef _DEBUG_TRACE
-        "EmuXapiInitProcess" 
+        "EmuXapiInitProcess"
         #endif
     },
     // XFormatUtilityDrive
@@ -611,7 +611,7 @@ OOVPATable XAPI_1_0_4627[] =
         XTL::EmuXGetDevices,
 
         #ifdef _DEBUG_TRACE
-        "EmuXGetDevices" 
+        "EmuXGetDevices"
         #endif
     },
     // XInputOpen (* unchanged since 1.0.4361 *)
@@ -722,7 +722,7 @@ OOVPATable XAPI_1_0_4627[] =
         XTL::EmuXapiInitProcess,
 
         #ifdef _DEBUG_TRACE
-        "EmuXapiInitProcess" 
+        "EmuXapiInitProcess"
         #endif
     },
     //*/

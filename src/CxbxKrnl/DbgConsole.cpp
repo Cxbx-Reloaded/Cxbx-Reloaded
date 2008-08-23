@@ -106,7 +106,7 @@ void DbgConsole::Reset()
 
     printf("CxbxDbg> ");
     fflush(stdout);
-    
+
     m_szInput[0] = '\0';
 }
 
@@ -231,7 +231,7 @@ void DbgConsole::ParseCommand()
     else if(_stricmp(szCmd, "lvb") == 0 || _stricmp(szCmd, "ListVB") == 0)
     {
         int v=0;
-        
+
         g_VBTrackTotal.Lock();
 
         RTNode *cur = g_VBTrackTotal.getHead();
@@ -252,7 +252,7 @@ void DbgConsole::ParseCommand()
         int n=0, m=0;
 
         int c = sscanf(m_szInput, "%*s %d-%d", &n, &m);
-        
+
         if(c == 1)
         {
             EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, n, ETA_DISABLE);
@@ -271,7 +271,7 @@ void DbgConsole::ParseCommand()
         int n=0, m=0;
 
         int c = sscanf(m_szInput, "%*s %d-%d", &n, &m);
-        
+
         if(c == 1)
         {
             EnableTracker(g_VBTrackTotal, g_VBTrackDisable, n, n, ETA_ENABLE);
@@ -315,7 +315,7 @@ void DbgConsole::ParseCommand()
         int n=0, m=0;
 
         int c = sscanf(m_szInput, "%*s %d-%d", &n, &m);
-        
+
         if(c == 1)
         {
             EnableTracker(g_PBTrackTotal, g_PBTrackShowOnce, n, n, ETA_SHOW);
@@ -334,7 +334,7 @@ void DbgConsole::ParseCommand()
         int n=0, m=0;
 
         int c = sscanf(m_szInput, "%*s %d-%d", &n, &m);
-        
+
         if(c == 1)
         {
             EnableTracker(g_PBTrackTotal, g_PBTrackDisable, n, n, ETA_DISABLE);

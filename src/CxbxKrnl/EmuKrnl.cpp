@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->EmuKrnl.cpp
@@ -168,7 +168,7 @@ using namespace xboxkrnl;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(14) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePool
 (
-	IN ULONG NumberOfBytes
+    IN ULONG NumberOfBytes
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -194,20 +194,20 @@ XBSYSAPI EXPORTNUM(14) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePool
 // ******************************************************************
 XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
 (
-	IN SIZE_T NumberOfBytes,
-	IN ULONG Tag
+    IN SIZE_T NumberOfBytes,
+    IN ULONG Tag
 )
 {
     EmuSwapFS();   // Win2k/XP FS
 
     DbgPrintf("EmuKrnl (0x%X): ExAllocatePoolWithTag\n"
            "(\n"
-		   "   NumberOfBytes       : 0x%.08X\n"
-		   "   Tag                 : 0x%.08X\n"
+           "   NumberOfBytes       : 0x%.08X\n"
+           "   Tag                 : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), NumberOfBytes, Tag);
-	
-	// TODO: Actually implement this
+
+    // TODO: Actually implement this
     PVOID pRet = CxbxMalloc(NumberOfBytes);
 
     EmuSwapFS();   // Xbox FS
@@ -548,7 +548,7 @@ XBSYSAPI EXPORTNUM(113) VOID NTAPI xboxkrnl::KeInitializeTimerEx
            "   Type                : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), Timer, Type);
-    
+
     Timer->Header.Type               = Type + 8;
     Timer->Header.Inserted           = 0;
     Timer->Header.Size               = sizeof(*Timer) / sizeof(ULONG);
@@ -651,8 +651,8 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
            ");\n",
            GetCurrentThreadId(), Timer, DueTime, Dpc);
 
-	// Call KeSetTimerEx
-	KeSetTimerEx(Timer, DueTime, 0, Dpc);
+    // Call KeSetTimerEx
+    KeSetTimerEx(Timer, DueTime, 0, Dpc);
 
     EmuSwapFS();   // Xbox FS
 
@@ -676,7 +676,7 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
            "(\n"
            "   Timer               : 0x%.08X\n"
            "   DueTime             : 0x%I64X\n"
-		   "   Period              : 0x%.08X\n"
+           "   Period              : 0x%.08X\n"
            "   Dpc                 : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), Timer, DueTime, Period, Dpc);
@@ -711,7 +711,7 @@ LAUNCH_DATA_PAGE xLaunchDataPage =
 // ******************************************************************
 XBSYSAPI EXPORTNUM(160) xboxkrnl::UCHAR NTAPI xboxkrnl::KfRaiseIrql
 (
-	IN UCHAR NewIrql
+    IN UCHAR NewIrql
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -732,7 +732,7 @@ XBSYSAPI EXPORTNUM(160) xboxkrnl::UCHAR NTAPI xboxkrnl::KfRaiseIrql
 // ******************************************************************
 XBSYSAPI EXPORTNUM(161) xboxkrnl::UCHAR NTAPI xboxkrnl::KfLowerIrql
 (
-	IN UCHAR NewIrql
+    IN UCHAR NewIrql
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -758,7 +758,7 @@ XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = &
 // ******************************************************************
 XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemory
 (
-	IN ULONG NumberOfBytes
+    IN ULONG NumberOfBytes
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -771,7 +771,7 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 
     //
     // NOTE: Kludgey (but necessary) solution:
-    // 
+    //
     // Since this memory must be aligned on a page boundary, we must allocate an extra page
     // so that we can return a valid page aligned pointer
     //
@@ -801,11 +801,11 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 // ******************************************************************
 XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemoryEx
 (
-	IN ULONG			NumberOfBytes,
-	IN PHYSICAL_ADDRESS LowestAcceptableAddress,
-	IN PHYSICAL_ADDRESS HighestAcceptableAddress,
-	IN ULONG			Alignment OPTIONAL,
-	IN ULONG			ProtectionType
+    IN ULONG            NumberOfBytes,
+    IN PHYSICAL_ADDRESS LowestAcceptableAddress,
+    IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+    IN ULONG            Alignment OPTIONAL,
+    IN ULONG            ProtectionType
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -823,13 +823,13 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 
     //
     // NOTE: Kludgey (but necessary) solution:
-    // 
+    //
     // Since this memory must be aligned on a page boundary, we must allocate an extra page
     // so that we can return a valid page aligned pointer
     //
 
     PVOID pRet = CxbxMalloc(NumberOfBytes + 0x1000);
-    
+
     // align to page boundary
     {
         DWORD dwRet = (DWORD)pRet;
@@ -884,7 +884,7 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
 // ******************************************************************
 XBSYSAPI EXPORTNUM(171) VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 (
-	IN PVOID BaseAddress
+    IN PVOID BaseAddress
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -896,7 +896,7 @@ XBSYSAPI EXPORTNUM(171) VOID NTAPI xboxkrnl::MmFreeContiguousMemory
            GetCurrentThreadId(), BaseAddress);
 
     PVOID OrigBaseAddress = BaseAddress;
-    
+
     if(g_AlignCache.exists(BaseAddress))
     {
         OrigBaseAddress = g_AlignCache.get(BaseAddress);
@@ -1142,7 +1142,7 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
            GetCurrentThreadId(), Handle);
 
     NTSTATUS ret = STATUS_SUCCESS;
-    
+
     // delete 'special' handles
     if(IsEmuHandle(Handle))
     {
@@ -1224,15 +1224,15 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 // ******************************************************************
 XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
 (
-    OUT PHANDLE             FileHandle, 
+    OUT PHANDLE             FileHandle,
     IN  ACCESS_MASK         DesiredAccess,
     IN  POBJECT_ATTRIBUTES  ObjectAttributes,
     OUT PIO_STATUS_BLOCK    IoStatusBlock,
-    IN  PLARGE_INTEGER      AllocationSize OPTIONAL, 
-    IN  ULONG               FileAttributes, 
-    IN  ULONG               ShareAccess, 
-    IN  ULONG               CreateDisposition, 
-    IN  ULONG               CreateOptions 
+    IN  PLARGE_INTEGER      AllocationSize OPTIONAL,
+    IN  ULONG               FileAttributes,
+    IN  ULONG               ShareAccess,
+    IN  ULONG               CreateDisposition,
+    IN  ULONG               CreateOptions
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -1268,46 +1268,46 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
         }
 
         // D:\ should map to current directory
-	    if( (szBuffer[0] == 'D' || szBuffer[0] == 'd') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-	    {
-		    szBuffer += 3;
+        if( (szBuffer[0] == 'D' || szBuffer[0] == 'd') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+        {
+            szBuffer += 3;
 
-		    ObjectAttributes->RootDirectory = g_hCurDir;
+            ObjectAttributes->RootDirectory = g_hCurDir;
 
-		    DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-		    DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-		    DbgPrintf("  New:\"$XbePath\\%s\"\n", szBuffer);
-	    }
-	    else if( (szBuffer[0] == 'T' || szBuffer[0] == 't') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-	    {
-		    szBuffer += 3;
+            DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+            DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+            DbgPrintf("  New:\"$XbePath\\%s\"\n", szBuffer);
+        }
+        else if( (szBuffer[0] == 'T' || szBuffer[0] == 't') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+        {
+            szBuffer += 3;
 
-		    ObjectAttributes->RootDirectory = g_hTDrive;
+            ObjectAttributes->RootDirectory = g_hTDrive;
 
-		    DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-		    DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-		    DbgPrintf("  New:\"$CxbxPath\\EmuDisk\\T\\%s\"\n", szBuffer);
-	    }
-	    else if( (szBuffer[0] == 'U' || szBuffer[0] == 'u') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-	    {
-		    szBuffer += 3;
+            DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+            DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+            DbgPrintf("  New:\"$CxbxPath\\EmuDisk\\T\\%s\"\n", szBuffer);
+        }
+        else if( (szBuffer[0] == 'U' || szBuffer[0] == 'u') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+        {
+            szBuffer += 3;
 
-		    ObjectAttributes->RootDirectory = g_hUDrive;
+            ObjectAttributes->RootDirectory = g_hUDrive;
 
-		    DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-		    DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-		    DbgPrintf("  New:\"$CxbxPath\\EmuDisk\\U\\%s\"\n", szBuffer);
-	    }
-	    else if( (szBuffer[0] == 'Z' || szBuffer[0] == 'z') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-	    {
-		    szBuffer += 3;
+            DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+            DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+            DbgPrintf("  New:\"$CxbxPath\\EmuDisk\\U\\%s\"\n", szBuffer);
+        }
+        else if( (szBuffer[0] == 'Z' || szBuffer[0] == 'z') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+        {
+            szBuffer += 3;
 
-		    ObjectAttributes->RootDirectory = g_hZDrive;
+            ObjectAttributes->RootDirectory = g_hZDrive;
 
-		    DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-		    DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-		    DbgPrintf("  New:\"$CxbxPath\\EmuDisk\\Z\\%s\"\n", szBuffer);
-	    }
+            DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+            DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+            DbgPrintf("  New:\"$CxbxPath\\EmuDisk\\Z\\%s\"\n", szBuffer);
+        }
 
         //
         // TODO: Wildcards are not allowed??
@@ -1659,7 +1659,7 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 // * 0x00D2 - NtQueryFullAttributesFile
 // ******************************************************************
 XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributesFile
-(   
+(
     IN  POBJECT_ATTRIBUTES          ObjectAttributes,
     OUT PVOID                       Attributes
 )
@@ -1689,7 +1689,7 @@ XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributes
         InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
     }
 
-	NTSTATUS ret = NtDll::NtQueryFullAttributesFile(&NtObjAttr, Attributes);
+    NTSTATUS ret = NtDll::NtQueryFullAttributesFile(&NtObjAttr, Attributes);
 
     EmuSwapFS();   // Xbox FS
 
@@ -1700,11 +1700,11 @@ XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributes
 // * 0x00D3 - NtQueryInformationFile
 // ******************************************************************
 XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFile
-(   
+(
     IN  HANDLE                      FileHandle,
     OUT PIO_STATUS_BLOCK            IoStatusBlock,
-    OUT PVOID                       FileInformation, 
-    IN  ULONG                       Length, 
+    OUT PVOID                       FileInformation,
+    IN  ULONG                       Length,
     IN  FILE_INFORMATION_CLASS      FileInfo
 )
 {
@@ -1718,20 +1718,20 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
            "   Length              : 0x%.08X\n"
            "   FileInformationClass: 0x%.08X\n"
            ");\n",
-           GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation, 
+           GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation,
            Length, FileInfo);
 
-	if(FileInfo != FilePositionInformation && FileInfo != FileNetworkOpenInformation)
-		CxbxKrnlCleanup("Unknown FILE_INFORMATION_CLASS 0x%.08X", FileInfo);
+    if(FileInfo != FilePositionInformation && FileInfo != FileNetworkOpenInformation)
+        CxbxKrnlCleanup("Unknown FILE_INFORMATION_CLASS 0x%.08X", FileInfo);
 
-	NTSTATUS ret = NtDll::NtQueryInformationFile
-	(
-		FileHandle,
+    NTSTATUS ret = NtDll::NtQueryInformationFile
+    (
+        FileHandle,
         (NtDll::PIO_STATUS_BLOCK)IoStatusBlock,
         (NtDll::PFILE_FS_SIZE_INFORMATION)FileInformation,
-		Length,
+        Length,
         (NtDll::FILE_INFORMATION_CLASS)FileInfo
-	);
+    );
 
     //
     // DEBUGGING!
@@ -1784,7 +1784,7 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
            "   Length              : 0x%.08X\n"
            "   FileInformationClass: 0x%.08X\n"
            ");\n",
-           GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation, 
+           GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation,
            Length, FileInformationClass);
 
     // Safety/Sanity Check
@@ -1799,8 +1799,8 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
         (NtDll::FS_INFORMATION_CLASS)FileInformationClass
     );
 
-	// NOTE: TODO: Dynamically fill in, or allow configuration?
-	if(FileInformationClass == FileFsSizeInformation)
+    // NOTE: TODO: Dynamically fill in, or allow configuration?
+    if(FileInformationClass == FileFsSizeInformation)
     {
         FILE_FS_SIZE_INFORMATION *SizeInfo = (FILE_FS_SIZE_INFORMATION*)FileInformation;
 
@@ -1820,14 +1820,14 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 // ******************************************************************
 XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 (
-	IN  HANDLE          FileHandle,            // TODO: correct paramters
-	IN  HANDLE          Event OPTIONAL,
-	IN  PVOID           ApcRoutine OPTIONAL,
-	IN  PVOID           ApcContext,
-	OUT PVOID           IoStatusBlock,
-	OUT PVOID           Buffer,
-	IN  ULONG           Length,
-	IN  PLARGE_INTEGER  ByteOffset OPTIONAL
+    IN  HANDLE          FileHandle,            // TODO: correct paramters
+    IN  HANDLE          Event OPTIONAL,
+    IN  PVOID           ApcRoutine OPTIONAL,
+    IN  PVOID           ApcContext,
+    OUT PVOID           IoStatusBlock,
+    OUT PVOID           Buffer,
+    IN  ULONG           Length,
+    IN  PLARGE_INTEGER  ByteOffset OPTIONAL
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -1843,7 +1843,7 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
            "   Length              : 0x%.08X\n"
            "   ByteOffset          : 0x%.08X (0x%.08X)\n"
            ");\n",
-           GetCurrentThreadId(), FileHandle, Event, ApcRoutine, 
+           GetCurrentThreadId(), FileHandle, Event, ApcRoutine,
            ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, ByteOffset == 0 ? 0 : ByteOffset->QuadPart);
 
 // Halo...
@@ -1949,11 +1949,11 @@ XBSYSAPI EXPORTNUM(225) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetEvent
 // ******************************************************************
 XBSYSAPI EXPORTNUM(226) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
 (
-	IN  HANDLE  FileHandle,            // TODO: correct paramters
-	OUT	PVOID	IoStatusBlock,
-	IN	PVOID	FileInformation,
-	IN	ULONG	Length,
-	IN	ULONG	FileInformationClass
+    IN  HANDLE  FileHandle,            // TODO: correct paramters
+    OUT PVOID   IoStatusBlock,
+    IN  PVOID   FileInformation,
+    IN  ULONG   Length,
+    IN  ULONG   FileInformationClass
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -1966,7 +1966,7 @@ XBSYSAPI EXPORTNUM(226) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
            "   Length               : 0x%.08X\n"
            "   FileInformationClass : 0x%.08X\n"
            ");\n",
-           GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation, 
+           GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation,
            Length, FileInformationClass);
 
     NTSTATUS ret = NtDll::NtSetInformationFile(FileHandle, IoStatusBlock, FileInformation, Length, FileInformationClass);
@@ -2031,15 +2031,15 @@ XBSYSAPI EXPORTNUM(232) VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
     dwEsi = (uint32)IoStatusBlock;
 
     if((IoStatusBlock->u1.Status & 0xC0000000) == 0xC0000000)
-	{
-		dwEcx = 0;
-		dwEax = NtDll::RtlNtStatusToDosError(IoStatusBlock->u1.Status);
-	}
-	else
-	{
-		dwEcx = (DWORD)IoStatusBlock->Information;
-		dwEax = 0;
-	}
+    {
+        dwEcx = 0;
+        dwEax = NtDll::RtlNtStatusToDosError(IoStatusBlock->u1.Status);
+    }
+    else
+    {
+        dwEcx = (DWORD)IoStatusBlock->Information;
+        dwEax = 0;
+    }
 
     /*
     // ~XDK 3911??
@@ -2060,22 +2060,22 @@ XBSYSAPI EXPORTNUM(232) VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
     __asm
     {
         pushad
-		/*
-		mov esi, IoStatusBlock
+        /*
+        mov esi, IoStatusBlock
         mov ecx, dwEcx
         mov eax, dwEax
-		*/
-		// TODO: Figure out if/why this works!? Matches prototype, but not xboxkrnl disassembly
+        */
+        // TODO: Figure out if/why this works!? Matches prototype, but not xboxkrnl disassembly
         // Seems to be XDK/version dependand??
-		mov esi, dwEsi
-		mov ecx, dwEcx
-		mov eax, dwEax
+        mov esi, dwEsi
+        mov ecx, dwEcx
+        mov eax, dwEax
 
         push esi
         push ecx
         push eax
 
-		call ApcContext
+        call ApcContext
 
         popad
     }
@@ -2156,15 +2156,15 @@ XBSYSAPI EXPORTNUM(235) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForMultipleObje
 // * 0x00EC - NtWriteFile
 // ******************************************************************
 XBSYSAPI EXPORTNUM(236) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFile
-(	
-	IN  HANDLE          FileHandle,            // TODO: correct paramters
-	IN	PVOID	        Event,
-	IN	PVOID	        ApcRoutine,
-	IN	PVOID	        ApcContext,
-	OUT	PVOID	        IoStatusBlock,
-	IN	PVOID	        Buffer,
-	IN	ULONG	        Length,
-	IN	PLARGE_INTEGER  ByteOffset
+(
+    IN  HANDLE          FileHandle,            // TODO: correct paramters
+    IN  PVOID           Event,
+    IN  PVOID           ApcRoutine,
+    IN  PVOID           ApcContext,
+    OUT PVOID           IoStatusBlock,
+    IN  PVOID           Buffer,
+    IN  ULONG           Length,
+    IN  PLARGE_INTEGER  ByteOffset
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -2180,7 +2180,7 @@ XBSYSAPI EXPORTNUM(236) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFile
            "   Length              : 0x%.08X\n"
            "   ByteOffset          : 0x%.08X (0x%.08X)\n"
            ");\n",
-           GetCurrentThreadId(), FileHandle, Event, ApcRoutine, 
+           GetCurrentThreadId(), FileHandle, Event, ApcRoutine,
            ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, ByteOffset == 0 ? 0 : ByteOffset->QuadPart);
 
 // Halo..
@@ -2354,10 +2354,10 @@ XBSYSAPI EXPORTNUM(260) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAnsiStringToUnicod
 // ******************************************************************
 XBSYSAPI EXPORTNUM(264) VOID NTAPI xboxkrnl::RtlAssert
 (
-    PVOID	FailedAssertion,
-    PVOID	FileName,
-    ULONG	LineNumber,
-	PCHAR	Message
+    PVOID   FailedAssertion,
+    PVOID   FileName,
+    ULONG   LineNumber,
+    PCHAR   Message
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -2367,11 +2367,11 @@ XBSYSAPI EXPORTNUM(264) VOID NTAPI xboxkrnl::RtlAssert
            "   FailedAssertion           : 0x%.08X\n"
            "   FileName                  : 0x%.08X\n"
            "   LineNumber                : 0x%.08X\n"
-		   "   Message                   : 0x%.08X (\"%s\")\n"
+           "   Message                   : 0x%.08X (\"%s\")\n"
            ");\n",
            GetCurrentThreadId(), FailedAssertion, FileName, Message, Message);
 
-	//TODO: Actually implement this.
+    //TODO: Actually implement this.
     //NTSTATUS ret = NtDll::RtlAssert((NtDll::UNICODE_STRING*)DestinationString, (NtDll::STRING*)SourceString, AllocateDestinationString);
 
     EmuSwapFS();   // Xbox FS
@@ -2413,7 +2413,7 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
 // ******************************************************************
 // * 0x0121 - RtlInitAnsiString
 // ******************************************************************
-XBSYSAPI EXPORTNUM(289) VOID NTAPI xboxkrnl::RtlInitAnsiString 
+XBSYSAPI EXPORTNUM(289) VOID NTAPI xboxkrnl::RtlInitAnsiString
 (
   IN OUT PANSI_STRING DestinationString,
   IN     PCSZ         SourceString
@@ -2556,7 +2556,7 @@ XBSYSAPI EXPORTNUM(304) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTimeFieldsToTime
 XBSYSAPI EXPORTNUM(305) VOID NTAPI xboxkrnl::RtlTimeToTimeFields
 (
     IN  PLARGE_INTEGER  Time,
-    OUT PTIME_FIELDS    TimeFields 
+    OUT PTIME_FIELDS    TimeFields
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -2628,7 +2628,7 @@ XBSYSAPI EXPORTNUM(308) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToAns
 // ******************************************************************
 // * 0x0142 - XboxHardwareInfo
 // ******************************************************************
-XBSYSAPI EXPORTNUM(322) XBOX_HARDWARE_INFO xboxkrnl::XboxHardwareInfo = 
+XBSYSAPI EXPORTNUM(322) XBOX_HARDWARE_INFO xboxkrnl::XboxHardwareInfo =
 {
     0xC0000035,
     0,0,0,0
@@ -2637,7 +2637,7 @@ XBSYSAPI EXPORTNUM(322) XBOX_HARDWARE_INFO xboxkrnl::XboxHardwareInfo =
 // ******************************************************************
 // * 0x0143 - XboxHDKey
 // ******************************************************************
-XBSYSAPI EXPORTNUM(323) xboxkrnl::UCHAR xboxkrnl::XboxHDKey[16] = 
+XBSYSAPI EXPORTNUM(323) xboxkrnl::UCHAR xboxkrnl::XboxHDKey[16] =
 {
     0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00,

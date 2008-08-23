@@ -276,7 +276,7 @@ VSH_IMD_PARAMETER;
 
 typedef struct _VSH_INTERMEDIATE_FORMAT
 {
-    
+
     boolean                  IsCombined;
     VSH_IMD_INSTRUCTION_TYPE InstructionType;
     VSH_MAC                  MAC;
@@ -384,7 +384,7 @@ static const VSH_OPCODE_PARAMS g_OpCodeParams[] =
     { ILU_NOP, MAC_ARL, TRUE,  FALSE, FALSE }
 };
 
-static const char* MAC_OpCode[] = 
+static const char* MAC_OpCode[] =
 {
     "nop",
     "mov",
@@ -404,7 +404,7 @@ static const char* MAC_OpCode[] =
     "???"
 };
 
-static const char* ILU_OpCode[] = 
+static const char* ILU_OpCode[] =
 {
     "nop",
     "mov",
@@ -448,14 +448,14 @@ static inline boolean HasMACR(VSH_SHADER_INSTRUCTION *pInstruction)
 
 static inline boolean HasMACO(VSH_SHADER_INSTRUCTION *pInstruction)
 {
-    return IsInUse(pInstruction->Output.OutputMask) && 
+    return IsInUse(pInstruction->Output.OutputMask) &&
             pInstruction->Output.OutputMux == OMUX_MAC &&
             pInstruction->MAC != MAC_NOP;
 }
 
 static inline boolean HasMACARL(VSH_SHADER_INSTRUCTION *pInstruction)
 {
-    return /*!IsInUse(pInstruction->Output.OutputMask) && 
+    return /*!IsInUse(pInstruction->Output.OutputMask) &&
             pInstruction->Output.OutputMux == OMUX_MAC &&*/
             pInstruction->MAC == MAC_ARL;
 }
@@ -467,7 +467,7 @@ static inline boolean HasILUR(VSH_SHADER_INSTRUCTION *pInstruction)
 
 static inline boolean HasILUO(VSH_SHADER_INSTRUCTION *pInstruction)
 {
-    return IsInUse(pInstruction->Output.OutputMask) && 
+    return IsInUse(pInstruction->Output.OutputMask) &&
             pInstruction->Output.OutputMux == OMUX_ILU &&
             pInstruction->ILU != ILU_NOP;
 }
@@ -861,7 +861,7 @@ static void VshInsertIntermediate(VSH_XBOX_SHADER         *pShader,
                                   uint16                  Pos)
 {
     VshVerifyBufferBounds(pShader);
-    
+
     for (int i = pShader->IntermediateCount; i >= Pos; i--)
     {
         pShader->Intermediate[i + 1] = pShader->Intermediate[i];
@@ -1135,7 +1135,7 @@ static void VshRemoveScreenSpaceInstructions(VSH_XBOX_SHADER *pShader)
                                 if(pIntermediate1W->InstructionType == IMD_ILU &&
                                     pIntermediate1W->ILU == ILU_RCC &&
                                     pIntermediate1W->Output.Type == IMD_OUTPUT_R &&
-                                    pIntermediate1W->Output.Address == 
+                                    pIntermediate1W->Output.Address ==
                                     pIntermediate->Parameters[1].Parameter.Address)
                                 {
                                     DbgVshPrintf("Deleted +rcc r1.x, r12.w\n");
@@ -1640,7 +1640,7 @@ static void VshConvertToken_STREAMDATA_REG(DWORD          *pToken,
         break;
     case 0x22:
         DbgVshPrintf("D3DVSDT_FLOAT2");
-        NewDataType = D3DVSDT_FLOAT2; 
+        NewDataType = D3DVSDT_FLOAT2;
         pPatchData->ConvertedStride += 2*sizeof(FLOAT);
         break;
     case 0x32:
@@ -1655,7 +1655,7 @@ static void VshConvertToken_STREAMDATA_REG(DWORD          *pToken,
         break;
     case 0x40:
         DbgVshPrintf("D3DVSDT_D3DCOLOR");
-        NewDataType = D3DVSDT_D3DCOLOR; 
+        NewDataType = D3DVSDT_D3DCOLOR;
         pPatchData->ConvertedStride += sizeof(D3DCOLOR);
         break;
     case 0x25:
@@ -1823,7 +1823,7 @@ static DWORD VshRecompileToken(DWORD          *pToken,
 
 DWORD XTL::EmuRecompileVshDeclaration
 (
-    DWORD                *pDeclaration, 
+    DWORD                *pDeclaration,
     DWORD               **ppRecompiledDeclaration,
     DWORD                *pDeclarationSize,
     boolean               IsFixedFunction,

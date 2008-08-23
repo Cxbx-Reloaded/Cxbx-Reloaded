@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->EmuD3D->PushBuffer.cpp
@@ -523,9 +523,9 @@ extern void XTL::EmuExecutePushBufferRaw
                 DbgDumpMesh((WORD*)pIndexData, dwCount);
             }
             #endif
-          
+
             pdwPushData += (dwCount/2) - (bInc ? 0 : 2);
-            
+
             // perform rendering
             {
                 HRESULT hRet;
@@ -723,7 +723,7 @@ void DbgDumpMesh(WORD *pIndexData, DWORD dwCount)
         uint max = maxIndex+1;
         for(uint v=0;v<max;v++)
         {
-            fprintf(dbgVertices, "      %f;%f;%f;%s\n", 
+            fprintf(dbgVertices, "      %f;%f;%f;%s\n",
                 *(FLOAT*)&pVBData[v*uiStride+0],
                 *(FLOAT*)&pVBData[v*uiStride+4],
                 *(FLOAT*)&pVBData[v*uiStride+8],

@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->EmuFile.h
@@ -69,43 +69,43 @@ class EmuHandle
         volatile enum _EmuHandleType m_Type;
 
         // To keep the size 8 bytes, these 2 items are in a union
-	    union
-	    {
-		    // Pointer to actual object (when handle is valid)
-		    volatile class EmuNtObject *m_Object;
+        union
+        {
+            // Pointer to actual object (when handle is valid)
+            volatile class EmuNtObject *m_Object;
 
             // Pointer to next free handle
-		    volatile EmuHandle *m_NextFree;
-	    };
+            volatile EmuHandle *m_NextFree;
+        };
 
         // Close this handle
-	    NtDll::NTSTATUS Close(void);
+        NtDll::NTSTATUS Close(void);
 
-	    // Initialize the EmuHandle system
+        // Initialize the EmuHandle system
         static bool Initialize();
 
         // Close all open handles
-	    static void CloseAll(void);
+        static void CloseAll(void);
 
         // Allocate an empty handle
-	    static volatile EmuHandle *Allocate(void);
+        static volatile EmuHandle *Allocate(void);
 
     private:
-	    // Array of EmuHandles in the system
-	    static EmuHandle Handles[EMU_MAX_HANDLES];
+        // Array of EmuHandles in the system
+        static EmuHandle Handles[EMU_MAX_HANDLES];
 
         // Pointer to first free handle in array, or NULL if none
-	    volatile static EmuHandle *FirstFree;
+        volatile static EmuHandle *FirstFree;
 
         // Pointer to last free handle in array, or NULL if none
-	    volatile static EmuHandle *LastFree;
+        volatile static EmuHandle *LastFree;
 
         // Lock on the handle system
-	    static CRITICAL_SECTION HandleLock;
+        static CRITICAL_SECTION HandleLock;
 
-	    // Quick functions to lock/unlock
-	    inline static void Lock(void);
-	    inline static void Unlock(void);
+        // Quick functions to lock/unlock
+        inline static void Lock(void);
+        inline static void Unlock(void);
 };
 
 // ******************************************************************
@@ -113,17 +113,17 @@ class EmuHandle
 // ******************************************************************
 typedef enum _EmuHandleType
 {
-	// Unallocated handle
-	EMUHANDLE_TYPE_EMPTY = 0,
+    // Unallocated handle
+    EMUHANDLE_TYPE_EMPTY = 0,
 
     // Allocated but so far unused handle
-	EMUHANDLE_TYPE_ALLOCATED,
+    EMUHANDLE_TYPE_ALLOCATED,
 
     // File handle with no really special features
-	EMUHANDLE_TYPE_FILE,
+    EMUHANDLE_TYPE_FILE,
 
     // Fake file/directory/directory object/partition handle
-	EMUHANDLE_TYPE_OBJECT
+    EMUHANDLE_TYPE_OBJECT
 }
 EmuHandleType;
 
@@ -133,33 +133,33 @@ EmuHandleType;
 class EmuNtObject
 {
     public:
-	    // Decrements the reference count of this object (never override)
-	    void NtClose(void);
+        // Decrements the reference count of this object (never override)
+        void NtClose(void);
 
-	    // These functions mimic the Nt* calls
+        // These functions mimic the Nt* calls
 
-	    // Increments the reference count of this object
-	    // For file handles, a whole new EmuFile structure is returned.
-	    // For other objects (the default implementation), "this" is returned.
-	    virtual EmuNtObject *NtDuplicateObject(void);
+        // Increments the reference count of this object
+        // For file handles, a whole new EmuFile structure is returned.
+        // For other objects (the default implementation), "this" is returned.
+        virtual EmuNtObject *NtDuplicateObject(void);
 
     protected:
-	    // Object name (Unicode, because we handle after-conversion strings)
-	    const WCHAR *Name;
-	    ULONG NameLength;
-	    // Permanent status
-	    bool PermanentFlag;
+        // Object name (Unicode, because we handle after-conversion strings)
+        const WCHAR *Name;
+        ULONG NameLength;
+        // Permanent status
+        bool PermanentFlag;
 
-	    // Called by close() when the reference count reaches zero
-	    virtual void Free(void) = 0;
-	    // Constructor
-	    EmuNtObject(void);
-	    // Destructor
-	    virtual ~EmuNtObject() = 0;
+        // Called by close() when the reference count reaches zero
+        virtual void Free(void) = 0;
+        // Constructor
+        EmuNtObject(void);
+        // Destructor
+        virtual ~EmuNtObject() = 0;
 
     private:
-	    // Reference count
-	    ULONG RefCount;
+        // Reference count
+        ULONG RefCount;
 };
 
 // ******************************************************************
@@ -168,13 +168,13 @@ class EmuNtObject
 class EmuNtFile : public EmuNtObject
 {
     public:
-	    // We need to override NtDuplicateObject in this case
+        // We need to override NtDuplicateObject in this case
 
     private:
-	    // The Windows file handle
-	    HANDLE File;
-	    // Pointer to the volume from which this came
-	    //EmuNtVolume *Volume;
+        // The Windows file handle
+        HANDLE File;
+        // Pointer to the volume from which this came
+        //EmuNtVolume *Volume;
 };
 
 // ******************************************************************

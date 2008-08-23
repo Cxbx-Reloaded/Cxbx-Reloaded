@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->EmuDSound.cpp
@@ -52,7 +52,7 @@ namespace xboxkrnl
 #include <process.h>
 #include <locale.h>
 
-XTL::X_CMcpxStream::_vtbl XTL::X_CMcpxStream::vtbl = 
+XTL::X_CMcpxStream::_vtbl XTL::X_CMcpxStream::vtbl =
 {
     0xBEEFC001,                     // 0x00
     0xBEEFC002,                     // 0x04
@@ -61,7 +61,7 @@ XTL::X_CMcpxStream::_vtbl XTL::X_CMcpxStream::vtbl =
     &XTL::EmuCMcpxStream_Dummy_0x10,// 0x10
 };
 
-XTL::X_CDirectSoundStream::_vtbl XTL::X_CDirectSoundStream::vtbl = 
+XTL::X_CDirectSoundStream::_vtbl XTL::X_CDirectSoundStream::vtbl =
 {
     &XTL::EmuCDirectSoundStream_AddRef,         // 0x00
     &XTL::EmuCDirectSoundStream_Release,        // 0x04
@@ -785,7 +785,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
     DWORD dwEmuFlags = 0;
 
     DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)CxbxMalloc(sizeof(DSBUFFERDESC));
-    
+
     // convert from Xbox to PC DSound
     {
         DWORD dwAcceptableMask = 0x00000010 | 0x00000020 | 0x00000080 | 0x00000100 | 0x00002000 | 0x00040000 | 0x00080000;
@@ -799,7 +799,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
 
         if(pDSBufferDesc->dwBufferBytes < DSBSIZE_MIN)
             pDSBufferDesc->dwBufferBytes = DSBSIZE_MIN;
-        else if(pDSBufferDesc->dwBufferBytes > DSBSIZE_MAX) 
+        else if(pDSBufferDesc->dwBufferBytes > DSBSIZE_MAX)
             pDSBufferDesc->dwBufferBytes = DSBSIZE_MAX;
 
         pDSBufferDesc->dwReserved = 0;
@@ -1010,13 +1010,13 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPlayRegion
 HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Lock
 (
     X_CDirectSoundBuffer   *pThis,
-    DWORD                   dwOffset, 
-    DWORD                   dwBytes, 
-    LPVOID                 *ppvAudioPtr1, 
-    LPDWORD                 pdwAudioBytes1, 
-    LPVOID                 *ppvAudioPtr2, 
-    LPDWORD                 pdwAudioBytes2, 
-    DWORD                   dwFlags 
+    DWORD                   dwOffset,
+    DWORD                   dwBytes,
+    LPVOID                 *ppvAudioPtr1,
+    LPDWORD                 pdwAudioBytes1,
+    LPVOID                 *ppvAudioPtr2,
+    LPDWORD                 pdwAudioBytes2,
+    DWORD                   dwFlags
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -1334,7 +1334,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Play
 
         pThis->EmuLockPtr1 = 0;
     }
-    
+
     HRESULT hRet;
 
     if(pThis->EmuFlags & DSB_FLAG_ADPCM)
@@ -1481,9 +1481,9 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
 
     // TODO: Garbage Collection
     *ppStream = new X_CDirectSoundStream();
-    
+
     DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)CxbxMalloc(sizeof(DSBUFFERDESC));
-    
+
     // convert from Xbox to PC DSound
     {
         DWORD dwAcceptableMask = 0x00000010; // TODO: Note 0x00040000 is being ignored (DSSTREAMCAPS_LOCDEFER)
@@ -1509,8 +1509,8 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
         if(pDSBufferDesc->lpwfxFormat != NULL && pDSBufferDesc->lpwfxFormat->wFormatTag != WAVE_FORMAT_PCM)
         {
             EmuWarning("Invalid WAVE_FORMAT!");
-			if(pDSBufferDesc->lpwfxFormat->wFormatTag == /*WAVE_FORMAT_XBOX_ADPCM*/0x0069)
-				EmuWarning("WAVE_FORMAT_XBOX_ADPCM Unsupported!");
+            if(pDSBufferDesc->lpwfxFormat->wFormatTag == /*WAVE_FORMAT_XBOX_ADPCM*/0x0069)
+                EmuWarning("WAVE_FORMAT_XBOX_ADPCM Unsupported!");
 
             (*ppStream)->EmuDirectSoundBuffer8 = 0;
 
@@ -2543,7 +2543,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetI3DL2Source
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetFormat
 (
-    X_CDirectSoundBuffer *pBuffer, 
+    X_CDirectSoundBuffer *pBuffer,
     LPCWAVEFORMATEX pwfxFormat
 )
 {
@@ -2573,7 +2573,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetFormat
 // ******************************************************************
 STDAPI_(void) EmuDirectSoundUseFullHRTF
 (
-	void
+    void
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -2590,8 +2590,8 @@ STDAPI_(void) EmuDirectSoundUseFullHRTF
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetLFO
 (
-	LPDIRECTSOUNDBUFFER  pThis,
-	LPCDSLFODESC         pLFODesc
+    LPDIRECTSOUNDBUFFER  pThis,
+    LPCDSLFODESC         pLFODesc
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -2603,7 +2603,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetLFO
            ");\n",
            GetCurrentThreadId(), pThis, pLFODesc);
 
-	// TODO: Implement
+    // TODO: Implement
 
     EmuSwapFS();   // XBox FS
 
@@ -2615,9 +2615,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetLFO
 // ******************************************************************
 VOID WINAPI XTL::EmuXAudioCreateAdpcmFormat
 (
-	WORD                   nChannels,
-	DWORD                  nSamplesPerSec,
-	LPXBOXADPCMWAVEFORMAT  pwfx
+    WORD                   nChannels,
+    DWORD                  nSamplesPerSec,
+    LPXBOXADPCMWAVEFORMAT  pwfx
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -2630,15 +2630,15 @@ VOID WINAPI XTL::EmuXAudioCreateAdpcmFormat
            ");\n",
            GetCurrentThreadId(), nChannels, nSamplesPerSec, pwfx);
 
-	// Fill out the pwfx structure with the appropriate data
-	pwfx->wfx.wFormatTag		= WAVE_FORMAT_XBOX_ADPCM;
-	pwfx->wfx.nChannels			= nChannels;
-	pwfx->wfx.nSamplesPerSec	= nSamplesPerSec;
-	pwfx->wfx.nAvgBytesPerSec	= (nSamplesPerSec*nChannels * 36)/64;
-	pwfx->wfx.nBlockAlign		= nChannels * 36;
-	pwfx->wfx.wBitsPerSample	= 4;
-	pwfx->wfx.cbSize			= 2;
-	pwfx->wSamplesPerBlock		= 64;
+    // Fill out the pwfx structure with the appropriate data
+    pwfx->wfx.wFormatTag        = WAVE_FORMAT_XBOX_ADPCM;
+    pwfx->wfx.nChannels         = nChannels;
+    pwfx->wfx.nSamplesPerSec    = nSamplesPerSec;
+    pwfx->wfx.nAvgBytesPerSec   = (nSamplesPerSec*nChannels * 36)/64;
+    pwfx->wfx.nBlockAlign       = nChannels * 36;
+    pwfx->wfx.wBitsPerSample    = 4;
+    pwfx->wfx.cbSize            = 2;
+    pwfx->wSamplesPerBlock      = 64;
 
     EmuSwapFS();   // XBox FS
 }
@@ -2648,10 +2648,10 @@ VOID WINAPI XTL::EmuXAudioCreateAdpcmFormat
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetRolloffCurve
 (
-	LPDIRECTSOUNDBUFFER  pThis,
-	const FLOAT         *pflPoints,
-	DWORD                dwPointCount,
-	DWORD                dwApply
+    LPDIRECTSOUNDBUFFER  pThis,
+    const FLOAT         *pflPoints,
+    DWORD                dwPointCount,
+    DWORD                dwApply
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -2661,15 +2661,15 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetRolloffCurve
            "   pThis                     : 0x%.08X\n"
            "   pflPoints                 : 0x%.08X\n"
            "   dwPointCount              : 0x%.08X\n"
-		   "   dwApply                   : 0x%.08X\n"
+           "   dwApply                   : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), pThis, pflPoints, dwPointCount, dwApply);
 
-	// TODO: Implement
+    // TODO: Implement
 
     EmuSwapFS();   // XBox FS
 
-	return DS_OK;
+    return DS_OK;
 }
 
 // ******************************************************************
@@ -2677,8 +2677,8 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetRolloffCurve
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirectSoundStream_SetVolume
 (
-	LPDIRECTSOUNDSTREAM pStream,
-	LONG                lVolume
+    LPDIRECTSOUNDSTREAM pStream,
+    LONG                lVolume
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -2690,9 +2690,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_SetVolume
            ");\n",
            GetCurrentThreadId(), pStream, lVolume);
 
-	// TODO: Implement
+    // TODO: Implement
 
     EmuSwapFS();   // XBox FS
 
-	return DS_OK;
+    return DS_OK;
 }

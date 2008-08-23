@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->EmuXG.cpp
@@ -81,7 +81,7 @@ PVOID WINAPI XTL::EmuXGIsSwizzledFormat
 // ******************************************************************
 VOID WINAPI XTL::EmuXGSwizzleRect
 (
-    LPCVOID       pSource, 
+    LPCVOID       pSource,
     DWORD         Pitch,
     LPCRECT       pRect,
     LPVOID        pDest,
@@ -149,7 +149,7 @@ VOID WINAPI XTL::EmuXGSwizzleRect
 // ******************************************************************
 VOID WINAPI XTL::EmuXGSwizzleBox
 (
-    LPCVOID          pSource, 
+    LPCVOID          pSource,
     DWORD            RowPitch,
     DWORD            SlicePitch,
     CONST D3DBOX    *pBox,
@@ -209,93 +209,93 @@ VOID WINAPI XTL::EmuXGUnswizzleRect
     DWORD           dwBPP
 )
 {
-	DWORD dwOffsetU = 0, dwMaskU = 0;
+    DWORD dwOffsetU = 0, dwMaskU = 0;
     DWORD dwOffsetV = 0, dwMaskV = 0;
     DWORD dwOffsetW = 0, dwMaskW = 0;
 
-	DWORD i = 1;
-	DWORD j = 1;
+    DWORD i = 1;
+    DWORD j = 1;
 
-//	while( (i >= dwWidth) || (i >= dwHeight) || (i >= dwDepth) )
+//  while( (i >= dwWidth) || (i >= dwHeight) || (i >= dwDepth) )
     while( (i <= dwWidth) || (i <= dwHeight) || (i <= dwDepth) )
     {
         if(i < dwWidth)
         {
-			dwMaskU |= j;
-			j<<=1;
-		}
+            dwMaskU |= j;
+            j<<=1;
+        }
 
         if(i < dwHeight)
         {
-			dwMaskV |= j;
-			j<<=1;
-		}
+            dwMaskV |= j;
+            j<<=1;
+        }
 
         if(i < dwDepth)
         {
-			dwMaskW |= j;   
-            j<<=1;  
+            dwMaskW |= j;
+            j<<=1;
         }
 
         i<<=1;
-	}
+    }
 
     DWORD dwSU = 0;
-	DWORD dwSV = 0;
-	DWORD dwSW = 0;
-	DWORD dwMaskMax=0;
+    DWORD dwSV = 0;
+    DWORD dwSW = 0;
+    DWORD dwMaskMax=0;
 
-	// get the biggest mask
-	if(dwMaskU > dwMaskV)
-		dwMaskMax=dwMaskU;
-	else
-		dwMaskMax=dwMaskV;
-	if(dwMaskW > dwMaskMax)
-		dwMaskMax=dwMaskW;
+    // get the biggest mask
+    if(dwMaskU > dwMaskV)
+        dwMaskMax=dwMaskU;
+    else
+        dwMaskMax=dwMaskV;
+    if(dwMaskW > dwMaskMax)
+        dwMaskMax=dwMaskW;
 
-	for(i = 1; i <= dwMaskMax; i<<=1)
+    for(i = 1; i <= dwMaskMax; i<<=1)
     {
-		if(i<=dwMaskU)
+        if(i<=dwMaskU)
         {
-			if(dwMaskU & i) dwSU |= (dwOffsetU & i);
-			else            dwOffsetU<<=1;
-		}
+            if(dwMaskU & i) dwSU |= (dwOffsetU & i);
+            else            dwOffsetU<<=1;
+        }
 
         if(i<=dwMaskV)
         {
-			if(dwMaskV & i) dwSV |= (dwOffsetV & i);
-			else            dwOffsetV<<=1;
-		}
-		
+            if(dwMaskV & i) dwSV |= (dwOffsetV & i);
+            else            dwOffsetV<<=1;
+        }
+
         if(i<=dwMaskW)
         {
-			if(dwMaskW & i) dwSW |= (dwOffsetW & i);
-			else            dwOffsetW<<=1;
-		}
-	}
+            if(dwMaskW & i) dwSW |= (dwOffsetW & i);
+            else            dwOffsetW<<=1;
+        }
+    }
 
-	DWORD dwW = dwSW;
-	DWORD dwV = dwSV;
-	DWORD dwU = dwSU;
+    DWORD dwW = dwSW;
+    DWORD dwV = dwSV;
+    DWORD dwU = dwSU;
 
-	for(DWORD z=0; z<dwDepth; z++) 
-	{
-		dwV = dwSV;
+    for(DWORD z=0; z<dwDepth; z++)
+    {
+        dwV = dwSV;
 
-		for(DWORD y=0; y<dwHeight; y++) 
-		{
-			dwU = dwSU;
+        for(DWORD y=0; y<dwHeight; y++)
+        {
+            dwU = dwSU;
 
-			for (DWORD x=0; x<dwWidth; x++) 
-			{
-				memcpy(pDstBuff, &((BYTE*)pSrcBuff)[(dwU|dwV|dwW)*dwBPP], dwBPP);
-				pDstBuff=(PVOID)(((DWORD)pDstBuff)+dwBPP);
+            for (DWORD x=0; x<dwWidth; x++)
+            {
+                memcpy(pDstBuff, &((BYTE*)pSrcBuff)[(dwU|dwV|dwW)*dwBPP], dwBPP);
+                pDstBuff=(PVOID)(((DWORD)pDstBuff)+dwBPP);
 
-				dwU = (dwU - dwMaskU) & dwMaskU;
-			}
-			pDstBuff=(PVOID)(((DWORD)pDstBuff)+(dwPitch-dwWidth*dwBPP));
-			dwV = (dwV - dwMaskV) & dwMaskV;
-		}
-		dwW = (dwW - dwMaskW) & dwMaskW;
-	}
+                dwU = (dwU - dwMaskU) & dwMaskU;
+            }
+            pDstBuff=(PVOID)(((DWORD)pDstBuff)+(dwPitch-dwWidth*dwBPP));
+            dwV = (dwV - dwMaskV) & dwMaskV;
+        }
+        dwW = (dwW - dwMaskW) & dwMaskW;
+    }
 }

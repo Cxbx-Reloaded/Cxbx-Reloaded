@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->Emu.cpp
@@ -241,7 +241,7 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
                 //if(e->ContextRecord->Ecx == 0x00000200 || e->ContextRecord->Ecx == 0x00000100)
                 //{
                     // Battlestar Galactica WBINVD skip
-					e->ContextRecord->Eip += 2;
+                    e->ContextRecord->Eip += 2;
 
                     DbgPrintf("EmuMain (0x%X): Battlestar Galactica Hack 1 was applied!\n", GetCurrentThreadId());
 
@@ -278,7 +278,7 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
 
         if(e->ExceptionRecord->ExceptionCode == 0x80000003)
         {
-            sprintf(buffer, 
+            sprintf(buffer,
                 "Recieved Breakpoint Exception (int 3) @ EIP := 0x%.08X\n"
                 "\n"
                 "  Press Abort to terminate emulation.\n"
@@ -311,7 +311,7 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
         }
         else
         {
-            sprintf(buffer, 
+            sprintf(buffer,
                 "Recieved Exception Code 0x%.08X @ EIP := 0x%.08X\n"
                 "\n"
                 "  Press \"OK\" to terminate emulation.\n"

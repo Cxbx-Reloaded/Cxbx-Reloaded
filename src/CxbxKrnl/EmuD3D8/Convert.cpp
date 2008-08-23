@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->EmuD3D8->Convert.cpp
@@ -103,7 +103,7 @@ XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
         case 0x16: // Linear     (X_D3DFMT_LIN_R8B8)
         {
             EmuWarning("X_D3DFMT_LIN_R8B8 -> D3DFMT_R5G6B5");
-            return D3DFMT_R5G6B5;   // NOTE: HACK: Totally and utterly wrong :) 
+            return D3DFMT_R5G6B5;   // NOTE: HACK: Totally and utterly wrong :)
         }
         case 0x3F: // Linear     (X_D3DFMT_LIN_A8B8G8R8)
         {
@@ -193,25 +193,25 @@ XTL::X_D3DFORMAT XTL::EmuPC2XB_D3DFormat(D3DFORMAT Format)
 
 DWORD XTL::EmuXB2PC_D3DLock(DWORD Flags)
 {
-	DWORD NewFlags = 0;
+    DWORD NewFlags = 0;
 
-	// Need to convert the flags, TODO: fix the xbox extensions
-	if(Flags & X_D3DLOCK_NOFLUSH)
-	{
-		NewFlags ^= 0;
-	}
-	if(Flags & X_D3DLOCK_NOOVERWRITE)
-	{
-		NewFlags ^= D3DLOCK_NOOVERWRITE;
-	}
-	if(Flags & X_D3DLOCK_TILED)
-	{
-		NewFlags ^= 0;
-	}
-	if(Flags & X_D3DLOCK_READONLY)
-	{
-		NewFlags ^= D3DLOCK_READONLY;
-	}
+    // Need to convert the flags, TODO: fix the xbox extensions
+    if(Flags & X_D3DLOCK_NOFLUSH)
+    {
+        NewFlags ^= 0;
+    }
+    if(Flags & X_D3DLOCK_NOOVERWRITE)
+    {
+        NewFlags ^= D3DLOCK_NOOVERWRITE;
+    }
+    if(Flags & X_D3DLOCK_TILED)
+    {
+        NewFlags ^= 0;
+    }
+    if(Flags & X_D3DLOCK_READONLY)
+    {
+        NewFlags ^= D3DLOCK_READONLY;
+    }
 
     return NewFlags;
 }
@@ -233,7 +233,7 @@ UINT XTL::EmuD3DVertexToPrimitive[11][2] =
 };
 
 // conversion table for xbox->pc primitive types
-XTL::D3DPRIMITIVETYPE XTL::EmuPrimitiveTypeLookup[] = 
+XTL::D3DPRIMITIVETYPE XTL::EmuPrimitiveTypeLookup[] =
 {
     /* NULL                 = 0         */ (XTL::D3DPRIMITIVETYPE)0,
     /* D3DPT_POINTLIST      = 1,        */ XTL::D3DPT_POINTLIST,
@@ -258,7 +258,7 @@ CONST DWORD XTL::EmuD3DRenderStateSimpleEncoded[174] =
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 0
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 2
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 4
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 6 
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 6
     X_D3DRSSE_UNK,  0x0004037c,     // 8  - D3DRS_SHADEMODE
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 10
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 12
@@ -272,7 +272,7 @@ CONST DWORD XTL::EmuD3DRenderStateSimpleEncoded[174] =
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 28
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 30
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 32
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 34 
+    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 34
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 36
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 38
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 40

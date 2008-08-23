@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->XOnline.1.0.4361.cpp
@@ -257,7 +257,7 @@ OOVPATable XOnline_1_0_4361[] =
     // XNetStartup
     {
         (OOVPA*)&XNetStartup_1_0_4361,
-            
+
         XTL::EmuXNetStartup,
 
         #ifdef _DEBUG_TRACE
@@ -267,7 +267,7 @@ OOVPATable XOnline_1_0_4361[] =
     // WSAStartup
     {
         (OOVPA*)&WSAStartup_1_0_4361,
-            
+
         XTL::EmuWSAStartup,
 
         #ifdef _DEBUG_TRACE

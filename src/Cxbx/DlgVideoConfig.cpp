@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Cxbx->DlgVideoConfig.cpp
@@ -154,8 +154,8 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
                     case IDYES:
                         PostMessage(hWndDlg, WM_COMMAND, IDC_VC_ACCEPT, 0);
                         break;
-					case IDNO:
-						PostMessage(hWndDlg, WM_COMMAND, IDC_VC_CANCEL, 0);
+                    case IDNO:
+                        PostMessage(hWndDlg, WM_COMMAND, IDC_VC_CANCEL, 0);
                         break;
                 }
                 break;
@@ -170,11 +170,11 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
             HWND hWndButton = GetDlgItem(hWndDlg, LOWORD(wParam));
 
             switch(LOWORD(wParam))
-            { 
+            {
                 case IDC_VC_CANCEL:
-                    EndDialog(hWndDlg, wParam); 
+                    EndDialog(hWndDlg, wParam);
                     break;
-                
+
                 case IDC_VC_ACCEPT:
                 {
                     /*! save video resolution configuration */
@@ -230,8 +230,8 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
             }
         }
         break;
-    } 
-    return FALSE; 
+    }
+    return FALSE;
 }
 
 VOID RefreshDisplayAdapter()
@@ -368,6 +368,6 @@ VOID RefreshDirect3DDevice()
 
     /*! activate configured display mode */
     SendMessage(g_hVideoResolution, CB_SETCURSEL, dwVideoResolution, 0);
-    
+
     return;
 }

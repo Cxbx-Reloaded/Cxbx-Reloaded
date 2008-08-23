@@ -1,5 +1,5 @@
 // ******************************************************************
-// * 
+// *
 // * proj : OpenXDK
 // *
 // * desc : Open Source XBox Development Kit
@@ -24,7 +24,7 @@ XBSYSAPI VOID *ExAcquireReadWriteLockShared;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(14) PVOID NTAPI ExAllocatePool
 (
-	IN ULONG NumberOfBytes
+    IN ULONG NumberOfBytes
 );
 
 // ******************************************************************
@@ -36,8 +36,8 @@ XBSYSAPI EXPORTNUM(14) PVOID NTAPI ExAllocatePool
 // ******************************************************************
 XBSYSAPI EXPORTNUM(15) PVOID NTAPI ExAllocatePoolWithTag
 (
-	IN SIZE_T NumberOfBytes,
-	IN ULONG Tag
+    IN SIZE_T NumberOfBytes,
+    IN ULONG Tag
 );
 
 XBSYSAPI VOID *ExEventObjectType;
@@ -66,11 +66,11 @@ XBSYSAPI VOID *ExQueryPoolBlockSize;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI ExQueryNonVolatileSetting
 (
-	IN  DWORD               ValueIndex,
-	OUT DWORD              *Type,
-	OUT PUCHAR              Value,
-	IN  SIZE_T              ValueLength,
-	OUT PSIZE_T             ResultLength OPTIONAL
+    IN  DWORD               ValueIndex,
+    OUT DWORD              *Type,
+    OUT PUCHAR              Value,
+    IN  SIZE_T              ValueLength,
+    OUT PSIZE_T             ResultLength OPTIONAL
 );
 
 XBSYSAPI VOID *ExReadWriteRefurbInfo;

@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->DSound.1.0.4361.cpp
@@ -818,7 +818,7 @@ OOVPATable DSound_1_0_4361[] =
         XTL::EmuDirectSoundCreate,
 
         #ifdef _DEBUG_TRACE
-        "EmuDirectSoundCreate" 
+        "EmuDirectSoundCreate"
         #endif
     },
     // CDirectSound_CreateSoundStream
@@ -826,7 +826,7 @@ OOVPATable DSound_1_0_4361[] =
         (OOVPA*)&CDirectSound_CreateSoundStream_1_0_4361, 0,
 
         #ifdef _DEBUG_TRACE
-        "CDirectSound::CreateSoundStream (XREF)" 
+        "CDirectSound::CreateSoundStream (XREF)"
         #endif
     },
     // DirectSoundCreateStream
@@ -836,7 +836,7 @@ OOVPATable DSound_1_0_4361[] =
         XTL::EmuDirectSoundCreateStream,
 
         #ifdef _DEBUG_TRACE
-        "EmuDirectSoundCreateStream" 
+        "EmuDirectSoundCreateStream"
         #endif
     },
     // CMcpxStream::Pause
@@ -850,7 +850,7 @@ OOVPATable DSound_1_0_4361[] =
     // CDirectSoundStream::Pause
     {
         (OOVPA*)&CDirectSoundStream_Pause_1_0_4361,
-            
+
         XTL::EmuCDirectSoundStream_Pause,
 
         #ifdef _DEBUG_TRACE
@@ -864,7 +864,7 @@ OOVPATable DSound_1_0_4361[] =
         XTL::EmuIDirectSound8_AddRef,
 
         #ifdef _DEBUG_TRACE
-        "EmuIDirectSound8_AddRef" 
+        "EmuIDirectSound8_AddRef"
         #endif
     },
     // IDirectSound8::CreateSoundBuffer
@@ -874,7 +874,7 @@ OOVPATable DSound_1_0_4361[] =
         XTL::EmuIDirectSound8_CreateSoundBuffer,
 
         #ifdef _DEBUG_TRACE
-        "EmuIDirectSound8_CreateSoundBuffer" 
+        "EmuIDirectSound8_CreateSoundBuffer"
         #endif
     },
     // IDirectSoundBuffer8::SetPlayRegion
@@ -884,7 +884,7 @@ OOVPATable DSound_1_0_4361[] =
         XTL::EmuIDirectSoundBuffer8_SetPlayRegion,
 
         #ifdef _DEBUG_TRACE
-        "EmuIDirectSoundBuffer8_SetPlayRegion" 
+        "EmuIDirectSoundBuffer8_SetPlayRegion"
         #endif
     },
     // IDirectSoundBuffer8::SetLoopRegion
@@ -894,7 +894,7 @@ OOVPATable DSound_1_0_4361[] =
         XTL::EmuIDirectSoundBuffer8_SetLoopRegion,
 
         #ifdef _DEBUG_TRACE
-        "EmuIDirectSoundBuffer8_SetLoopRegion" 
+        "EmuIDirectSoundBuffer8_SetLoopRegion"
         #endif
     },
     // IDirectSoundBuffer8::SetVolume
@@ -904,7 +904,7 @@ OOVPATable DSound_1_0_4361[] =
         XTL::EmuIDirectSoundBuffer8_SetVolume,
 
         #ifdef _DEBUG_TRACE
-        "EmuIDirectSoundBuffer8_SetVolume" 
+        "EmuIDirectSoundBuffer8_SetVolume"
         #endif
     },
     // CMcpxBuffer::SetBufferData
@@ -925,8 +925,8 @@ OOVPATable DSound_1_0_4361[] =
     },
     // IDirectSoundBuffer8::SetBufferData
     {
-        (OOVPA*)&IDirectSoundBuffer8_SetBufferData_1_0_4361, 
-            
+        (OOVPA*)&IDirectSoundBuffer8_SetBufferData_1_0_4361,
+
         XTL::EmuIDirectSoundBuffer8_SetBufferData,
 
         #ifdef _DEBUG_TRACE
@@ -951,8 +951,8 @@ OOVPATable DSound_1_0_4361[] =
     },
     // IDirectSoundBuffer8::SetCurrentPosition
     {
-        (OOVPA*)&IDirectSoundBuffer8_SetCurrentPosition_1_0_4361, 
-            
+        (OOVPA*)&IDirectSoundBuffer8_SetCurrentPosition_1_0_4361,
+
         XTL::EmuIDirectSoundBuffer8_SetCurrentPosition,
 
         #ifdef _DEBUG_TRACE
@@ -977,8 +977,8 @@ OOVPATable DSound_1_0_4361[] =
     },
     // IDirectSoundBuffer8::GetCurrentPosition (* unchanged since 3936 *)
     {
-        (OOVPA*)&IDirectSoundBuffer8_GetCurrentPosition_1_0_3936, 
-            
+        (OOVPA*)&IDirectSoundBuffer8_GetCurrentPosition_1_0_3936,
+
         XTL::EmuIDirectSoundBuffer8_GetCurrentPosition,
 
         #ifdef _DEBUG_TRACE
@@ -1003,8 +1003,8 @@ OOVPATable DSound_1_0_4361[] =
     },
     // IDirectSoundBuffer8::Play
     {
-        (OOVPA*)&IDirectSoundBuffer8_Play_1_0_4361, 
-            
+        (OOVPA*)&IDirectSoundBuffer8_Play_1_0_4361,
+
         XTL::EmuIDirectSoundBuffer8_Play,
 
         #ifdef _DEBUG_TRACE
@@ -1029,8 +1029,8 @@ OOVPATable DSound_1_0_4361[] =
     },
     // IDirectSoundBuffer8::Stop
     {
-        (OOVPA*)&IDirectSoundBuffer8_Stop_1_0_4361, 
-            
+        (OOVPA*)&IDirectSoundBuffer8_Stop_1_0_4361,
+
         XTL::EmuIDirectSoundBuffer8_Stop,
 
         #ifdef _DEBUG_TRACE

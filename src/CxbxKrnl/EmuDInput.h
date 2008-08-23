@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->CxbxKrnl->EmuDInput.h
@@ -55,14 +55,14 @@ extern void EmuDInputPoll(PXINPUT_STATE Controller);
 // ******************************************************************
 // * offsets into analog button array
 // ******************************************************************
-#define XINPUT_GAMEPAD_A			    0
-#define XINPUT_GAMEPAD_B			    1
-#define XINPUT_GAMEPAD_X			    2
-#define XINPUT_GAMEPAD_Y			    3
-#define XINPUT_GAMEPAD_BLACK		    4
-#define XINPUT_GAMEPAD_WHITE		    5
-#define XINPUT_GAMEPAD_LEFT_TRIGGER		6
-#define XINPUT_GAMEPAD_RIGHT_TRIGGER	7
+#define XINPUT_GAMEPAD_A                0
+#define XINPUT_GAMEPAD_B                1
+#define XINPUT_GAMEPAD_X                2
+#define XINPUT_GAMEPAD_Y                3
+#define XINPUT_GAMEPAD_BLACK            4
+#define XINPUT_GAMEPAD_WHITE            5
+#define XINPUT_GAMEPAD_LEFT_TRIGGER     6
+#define XINPUT_GAMEPAD_RIGHT_TRIGGER    7
 
 // ******************************************************************
 // * masks for digital buttons

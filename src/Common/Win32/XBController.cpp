@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->XBController.cpp
@@ -321,7 +321,7 @@ bool XBController::ConfigPoll(char *szStatus)
                 dwHow = FIELD_OFFSET(XTL::DIJOYSTATE, lRz);
                 dwFlags |= (JoyState.lRz > 0) ? (DEVICE_FLAG_AXIS | DEVICE_FLAG_POSITIVE) : (DEVICE_FLAG_AXIS | DEVICE_FLAG_NEGATIVE);
             }
-            else 
+            else
             {
                 for(int b=0;b<2;b++)
                 {
@@ -1116,7 +1116,7 @@ BOOL XBController::EnumGameCtrlCallback(XTL::LPCDIDEVICEINSTANCE lpddi)
         return DIENUM_CONTINUE;
 
     HRESULT hRet = m_pDirectInput8->CreateDevice(lpddi->guidInstance, &m_InputDevice[m_dwInputDeviceCount].m_Device, NULL);
-    
+
     if(!FAILED(hRet))
     {
         m_InputDevice[m_dwInputDeviceCount].m_Flags = DEVICE_FLAG_JOYSTICK;
@@ -1137,14 +1137,14 @@ BOOL XBController::EnumObjectsCallback(XTL::LPCDIDEVICEOBJECTINSTANCE lpddoi)
 {
     if(lpddoi->dwType & DIDFT_AXIS)
     {
-        XTL::DIPROPRANGE diprg; 
+        XTL::DIPROPRANGE diprg;
 
-        diprg.diph.dwSize       = sizeof(XTL::DIPROPRANGE); 
-        diprg.diph.dwHeaderSize = sizeof(XTL::DIPROPHEADER); 
-        diprg.diph.dwHow        = DIPH_BYID; 
+        diprg.diph.dwSize       = sizeof(XTL::DIPROPRANGE);
+        diprg.diph.dwHeaderSize = sizeof(XTL::DIPROPHEADER);
+        diprg.diph.dwHow        = DIPH_BYID;
         diprg.diph.dwObj        = lpddoi->dwType;
-        diprg.lMin              = 0 - 32768; 
-        diprg.lMax              = 0 + 32767; 
+        diprg.lMin              = 0 - 32768;
+        diprg.lMax              = 0 + 32767;
 
         HRESULT hRet = m_InputDevice[m_dwCurObject].m_Device->SetProperty(DIPROP_RANGE, &diprg.diph);
 
@@ -1158,14 +1158,14 @@ BOOL XBController::EnumObjectsCallback(XTL::LPCDIDEVICEOBJECTINSTANCE lpddoi)
     }
     else if(lpddoi->dwType & DIDFT_BUTTON)
     {
-        XTL::DIPROPRANGE diprg; 
+        XTL::DIPROPRANGE diprg;
 
-        diprg.diph.dwSize       = sizeof(XTL::DIPROPRANGE); 
-        diprg.diph.dwHeaderSize = sizeof(XTL::DIPROPHEADER); 
-        diprg.diph.dwHow        = DIPH_BYID; 
+        diprg.diph.dwSize       = sizeof(XTL::DIPROPRANGE);
+        diprg.diph.dwHeaderSize = sizeof(XTL::DIPROPHEADER);
+        diprg.diph.dwHow        = DIPH_BYID;
         diprg.diph.dwObj        = lpddoi->dwType;
-        diprg.lMin              = 0; 
-        diprg.lMax              = 255; 
+        diprg.lMin              = 0;
+        diprg.lMax              = 255;
 
         HRESULT hRet = m_InputDevice[m_dwCurObject].m_Device->SetProperty(DIPROP_RANGE, &diprg.diph);
 
@@ -1204,7 +1204,7 @@ BOOL CALLBACK WrapEnumObjectsCallback(XTL::LPCDIDEVICEOBJECTINSTANCE lpddoi, LPV
 // ******************************************************************
 // * Input Device Name Lookup Table
 // ******************************************************************
-const char *XBController::m_DeviceNameLookup[XBCTRL_OBJECT_COUNT] = 
+const char *XBController::m_DeviceNameLookup[XBCTRL_OBJECT_COUNT] =
 {
     // ******************************************************************
     // * Analog Axis

@@ -84,7 +84,7 @@ static unsigned int CRC32(unsigned char *data, int len)
 {
     unsigned int        result;
     int                 i;;
-    
+
     if(len < 4) abort();
 
     result = *data++ << 24;
@@ -93,12 +93,12 @@ static unsigned int CRC32(unsigned char *data, int len)
     result |= *data++;
     result = ~ result;
     len -=4;
-    
+
     for(i=0; i<len; i++)
     {
         result = (result << 8 | *data++) ^ crctab[result >> 24];
     }
-    
+
     return ~result;
 }
 
@@ -1173,7 +1173,7 @@ VOID XTL::EmuFlushIVB()
         IDirect3DBaseTexture8 *pTexture = 0;
 
         g_pD3DDevice8->GetTexture(0, &pTexture);
-    
+
         if(pTexture != NULL)
         {
             static int dwDumpTexture = 0;
@@ -1431,7 +1431,7 @@ VOID XTL::EmuUpdateActiveTexture()
                         {
                             XTL::EmuXGUnswizzleRect
                             (
-                                pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits, 
+                                pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits,
                                 LockedRect.Pitch, iRect, iPoint, dwBPP
                             );
                         }

@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->Cxbx->jpegdec->jpegdec.cpp
@@ -48,7 +48,7 @@ static void init_source(j_decompress_ptr cinfo)
 
 static boolean fill_input_buffer(j_decompress_ptr cinfo)
 {
-    return FALSE; 
+    return FALSE;
 }
 
 static void skip_input_data(j_decompress_ptr cinfo, long num_bytes)
@@ -65,7 +65,7 @@ static void skip_input_data(j_decompress_ptr cinfo, long num_bytes)
 static void term_source(j_decompress_ptr cinfo)
 {
     // do nothing!
-} 
+}
 
 void jpeg_memory_src(j_decompress_ptr cinfo, uint08 *buffer, uint32 bufferSize)
 {
@@ -130,7 +130,7 @@ uint08 *jpeg2bmp(uint08 *jpeg, uint32 jpegSize, uint32 *bmpSize, uint32 *bmpWidt
     // re-order color data
     {
         uint32 v=0;
-        
+
         for(v=0;v<cinfo.output_width*cinfo.output_height;v++)
         {
             uint08 r = buffer[v*3+2];

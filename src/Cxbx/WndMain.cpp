@@ -1,10 +1,10 @@
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
-// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;; 
-// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['  
-// *  $$$              Y$$$P     $$""""Y$$     Y$$$P    
-// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,  
+// *  ,;;;'````'    `;;;,  .,;;  ;;;'';;'   `;;;,  .,;;
+// *  [[[             '[[,,[['   [[[__[[\.    '[[,,[['
+// *  $$$              Y$$$P     $$""""Y$$     Y$$$P
+// *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
 // *   Cxbx->Win32->Cxbx->WndMain.cpp
@@ -52,8 +52,8 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m
         m_w         = 640;
         m_h         = 480;
 
-	    m_ExeFilename = (char*)calloc(1, 260);
-	    m_XbeFilename = (char*)calloc(1, 260);
+        m_ExeFilename = (char*)calloc(1, 260);
+        m_XbeFilename = (char*)calloc(1, 260);
 
         m_CxbxDebugFilename = (char*)calloc(1, 260);
         m_KrnlDebugFilename = (char*)calloc(1, 260);
@@ -214,8 +214,8 @@ WndMain::~WndMain()
 // window message processing procedure
 LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	switch(uMsg)
-	{
+    switch(uMsg)
+    {
         case WM_CREATE:
         {
             // initialize menu
@@ -240,7 +240,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             }
 
             // initialize back buffer
-			{
+            {
                 HDC hDC = GetDC(hwnd);
 
                 m_BackBmp = CreateCompatibleBitmap(hDC, 640, 480);
@@ -282,7 +282,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
 
                 m_LogoBmp  = (HBITMAP)LoadImage(m_hInstance, MAKEINTRESOURCE(IDB_LOGO), IMAGE_BITMAP, 0, 0, 0);
-                
+
                 m_BackDC   = CreateCompatibleDC(hDC);
                 m_LogoDC   = CreateCompatibleDC(hDC);
 
@@ -358,29 +358,29 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             HDC hDC = GetDC(hwnd);
 
             // draw splash / logo / status
-			{
+            {
                 static const int nLogoBmpW = 100, nLogoBmpH = 17;
 
                 BitBlt(hDC, 0, 0, 640, 480, m_BackDC, 0, 0, SRCCOPY);
-//				BitBlt(hDC, 0, 10, 320, 160, m_BackDC, 0, 0, SRCCOPY);
-				BitBlt(hDC, 640-nLogoBmpW-4, 480-nLogoBmpH-4, nLogoBmpW, nLogoBmpH, m_LogoDC, 0, 0, SRCCOPY);
+//              BitBlt(hDC, 0, 10, 320, 160, m_BackDC, 0, 0, SRCCOPY);
+                BitBlt(hDC, 640-nLogoBmpW-4, 480-nLogoBmpH-4, nLogoBmpW, nLogoBmpH, m_LogoDC, 0, 0, SRCCOPY);
 
-				int nHeight = -MulDiv(8, GetDeviceCaps(hDC, LOGPIXELSY), 72);
+                int nHeight = -MulDiv(8, GetDeviceCaps(hDC, LOGPIXELSY), 72);
 
-				HFONT hFont = CreateFont(nHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_ROMAN, "Verdana");
+                HFONT hFont = CreateFont(nHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_ROMAN, "Verdana");
 
                 HGDIOBJ tmpObj = SelectObject(hDC, hFont);
 
                 SetBkColor(hDC, RGB(0,0,0));
 
-				SetTextColor(hDC, RGB(255,255,255));
+                SetTextColor(hDC, RGB(255,255,255));
 
                 char buffer[255];
 
                 if(m_Xbe != 0 && m_Xbe->GetError() == 0)
                     sprintf(buffer, "%s Loaded!", m_Xbe->m_szAsciiTitle);
                 else
-    				sprintf(buffer, "%s", "Disclaimer: Cxbx has no affiliation with Microsoft");
+                    sprintf(buffer, "%s", "Disclaimer: Cxbx has no affiliation with Microsoft");
 
                 RECT rect = {0, 480-15-5, 640-100-4-69, 480-5};
 
@@ -389,7 +389,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 SelectObject(hDC, tmpObj);
 
                 DeleteObject(hFont);
-			}
+            }
 
             if(hDC != NULL)
                 ReleaseDC(hwnd, hDC);
@@ -468,20 +468,20 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 case ID_FILE_CLOSE_XBE:
                     CloseXbe();
-					break;
+                    break;
 
-				case ID_FILE_SAVEXBEFILE:
-				{
+                case ID_FILE_SAVEXBEFILE:
+                {
                     if(m_XbeFilename[0] == '\0')
                         SaveXbeAs();
                     else
-					    SaveXbe(m_XbeFilename);
-				}
-				break;
+                        SaveXbe(m_XbeFilename);
+                }
+                break;
 
-				case ID_FILE_SAVEXBEFILEAS:
+                case ID_FILE_SAVEXBEFILEAS:
                     SaveXbeAs();
-					break;
+                    break;
 
                 case ID_FILE_IMPORTFROMEXE:
                 {
@@ -585,43 +585,43 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     SendMessage(hwnd, WM_CLOSE, 0, 0);
                     break;
 
-				case ID_EDIT_LOGOBITMAP_EXPORT:
-				{
+                case ID_EDIT_LOGOBITMAP_EXPORT:
+                {
                     OPENFILENAME ofn = {0};
 
-					char filename[260] = "logo.bmp";
+                    char filename[260] = "logo.bmp";
 
-					ofn.lStructSize     = sizeof(OPENFILENAME);
-					ofn.hwndOwner       = m_hwnd;
-					ofn.lpstrFilter     = "Bitmap Image Files (*.bmp)\0*.bmp\0";
-					ofn.lpstrFile       = filename;
-					ofn.nMaxFile        = 260;
-					ofn.nFilterIndex    = 1;
-					ofn.lpstrFileTitle  = NULL;
-					ofn.nMaxFileTitle   = 0;
-					ofn.lpstrInitialDir = NULL;
+                    ofn.lStructSize     = sizeof(OPENFILENAME);
+                    ofn.hwndOwner       = m_hwnd;
+                    ofn.lpstrFilter     = "Bitmap Image Files (*.bmp)\0*.bmp\0";
+                    ofn.lpstrFile       = filename;
+                    ofn.nMaxFile        = 260;
+                    ofn.nFilterIndex    = 1;
+                    ofn.lpstrFileTitle  = NULL;
+                    ofn.nMaxFileTitle   = 0;
+                    ofn.lpstrInitialDir = NULL;
                     ofn.lpstrDefExt     = "bmp";
                     ofn.lpstrTitle      = "Export Logo Bitmap";
-					ofn.Flags           = OFN_PATHMUSTEXIST;
+                    ofn.Flags           = OFN_PATHMUSTEXIST;
 
-					if(GetSaveFileName(&ofn) == TRUE)
+                    if(GetSaveFileName(&ofn) == TRUE)
                     {
                         // ask permission to overwrite if file already exists
-						if(_access(ofn.lpstrFile, 0) != -1)
-						{
-							if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx", MB_ICONQUESTION | MB_YESNO) != IDYES)
-								return TRUE;
-						}
+                        if(_access(ofn.lpstrFile, 0) != -1)
+                        {
+                            if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx", MB_ICONQUESTION | MB_YESNO) != IDYES)
+                                return TRUE;
+                        }
 
                         // export logo bitmap
-					    {
+                        {
                             uint08 i_gray[100*17];
 
-							m_Xbe->ExportLogoBitmap(i_gray);
+                            m_Xbe->ExportLogoBitmap(i_gray);
 
-							if(m_Xbe->GetError() == 0)
-							{
-								FILE *LogoBitmap = fopen(ofn.lpstrFile, "wb");
+                            if(m_Xbe->GetError() == 0)
+                            {
+                                FILE *LogoBitmap = fopen(ofn.lpstrFile, "wb");
 
                                 // write bitmap header
                                 {
@@ -676,11 +676,11 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                                     fwrite(&pad, 2, 1, LogoBitmap);
                                 }
 
-								fclose(LogoBitmap);
-							}
+                                fclose(LogoBitmap);
+                            }
 
-							if(m_Xbe->GetError() != 0)
-							    MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
+                            if(m_Xbe->GetError() != 0)
+                                MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
                             else
                             {
                                 char buffer[255];
@@ -690,40 +690,40 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                                 MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
 
                                 printf("WndMain: %s\n", buffer);
-						    }
-					    }
+                            }
+                        }
                     }
-				}
-				break;
+                }
+                break;
 
-				case ID_EDIT_LOGOBITMAP_IMPORT:
-				{
+                case ID_EDIT_LOGOBITMAP_IMPORT:
+                {
                     OPENFILENAME ofn = {0};
 
-					char filename[260] = "*.bmp";
+                    char filename[260] = "*.bmp";
 
-					ofn.lStructSize     = sizeof(OPENFILENAME);
-					ofn.hwndOwner       = m_hwnd;
-					ofn.lpstrFilter     = "Bitmap Image Files (*.bmp)\0*.bmp\0";
-					ofn.lpstrFile       = filename;
-					ofn.nMaxFile        = 260;
-					ofn.nFilterIndex    = 1;
-					ofn.lpstrFileTitle  = NULL;
-					ofn.nMaxFileTitle   = 0;
-					ofn.lpstrInitialDir = NULL;
+                    ofn.lStructSize     = sizeof(OPENFILENAME);
+                    ofn.hwndOwner       = m_hwnd;
+                    ofn.lpstrFilter     = "Bitmap Image Files (*.bmp)\0*.bmp\0";
+                    ofn.lpstrFile       = filename;
+                    ofn.nMaxFile        = 260;
+                    ofn.nFilterIndex    = 1;
+                    ofn.lpstrFileTitle  = NULL;
+                    ofn.nMaxFileTitle   = 0;
+                    ofn.lpstrInitialDir = NULL;
                     ofn.lpstrDefExt     = "bmp";
                     ofn.lpstrTitle      = "Import Logo Bitmap";
-					ofn.Flags           = OFN_PATHMUSTEXIST;
+                    ofn.Flags           = OFN_PATHMUSTEXIST;
 
-					if(GetOpenFileName(&ofn) == TRUE)
+                    if(GetOpenFileName(&ofn) == TRUE)
                     {
                         // import logo bitmap
-					    {
+                        {
                             uint08 i_gray[100*17];
 
                             // read bitmap file
                             {
-								FILE *logo = fopen(ofn.lpstrFile, "rb");
+                                FILE *logo = fopen(ofn.lpstrFile, "rb");
 
                                 char *bmp_err = 0;
 
@@ -771,11 +771,11 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                                 }
                             }
 
-							m_Xbe->ImportLogoBitmap(i_gray);
+                            m_Xbe->ImportLogoBitmap(i_gray);
 
-							if(m_Xbe->GetError() != 0)
+                            if(m_Xbe->GetError() != 0)
                             {
-							    MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
+                                MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
 
                                 if(m_Xbe->IsFatal())
                                     CloseXbe();
@@ -796,11 +796,11 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                                 printf("WndMain: %s\n", buffer);
 
                                 MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
-						    }
-					    }
+                            }
+                        }
                     }
-				}
-				break;
+                }
+                break;
 
                 case ID_EDIT_PATCH_ALLOW64MB:
                 {
@@ -858,28 +858,28 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 {
                     OPENFILENAME ofn = {0};
 
-					char filename[260] = "Xbe.txt";
+                    char filename[260] = "Xbe.txt";
 
-					ofn.lStructSize     = sizeof(OPENFILENAME);
-					ofn.hwndOwner       = m_hwnd;
-					ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
-					ofn.lpstrFile       = filename;
-					ofn.nMaxFile        = 260;
-					ofn.nFilterIndex    = 1;
-					ofn.lpstrFileTitle  = NULL;
-					ofn.nMaxFileTitle   = 0;
-					ofn.lpstrInitialDir = NULL;
+                    ofn.lStructSize     = sizeof(OPENFILENAME);
+                    ofn.hwndOwner       = m_hwnd;
+                    ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
+                    ofn.lpstrFile       = filename;
+                    ofn.nMaxFile        = 260;
+                    ofn.nFilterIndex    = 1;
+                    ofn.lpstrFileTitle  = NULL;
+                    ofn.nMaxFileTitle   = 0;
+                    ofn.lpstrInitialDir = NULL;
                     ofn.lpstrDefExt     = "txt";
-					ofn.Flags           = OFN_PATHMUSTEXIST;
+                    ofn.Flags           = OFN_PATHMUSTEXIST;
 
-					if(GetSaveFileName(&ofn) == TRUE)
+                    if(GetSaveFileName(&ofn) == TRUE)
                     {
                         // ask permission to overwrite if file exists
-						if(_access(ofn.lpstrFile, 0) != -1)
-						{
-							if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx", MB_ICONQUESTION | MB_YESNO) != IDYES)
-								return TRUE;
-						}
+                        if(_access(ofn.lpstrFile, 0) != -1)
+                        {
+                            if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx", MB_ICONQUESTION | MB_YESNO) != IDYES)
+                                return TRUE;
+                        }
 
                         // dump xbe information to file
                         {
@@ -973,21 +973,21 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     {
                         OPENFILENAME ofn = {0};
 
-	                    char filename[260] = "KrnlDebug.txt";
+                        char filename[260] = "KrnlDebug.txt";
 
                         ofn.lStructSize     = sizeof(OPENFILENAME);
-	                    ofn.hwndOwner       = m_hwnd;
-	                    ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
-	                    ofn.lpstrFile       = filename;
-	                    ofn.nMaxFile        = 260;
-	                    ofn.nFilterIndex    = 1;
-	                    ofn.lpstrFileTitle  = NULL;
-	                    ofn.nMaxFileTitle   = 0;
-	                    ofn.lpstrInitialDir = NULL;
+                        ofn.hwndOwner       = m_hwnd;
+                        ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
+                        ofn.lpstrFile       = filename;
+                        ofn.nMaxFile        = 260;
+                        ofn.nFilterIndex    = 1;
+                        ofn.lpstrFileTitle  = NULL;
+                        ofn.nMaxFileTitle   = 0;
+                        ofn.lpstrInitialDir = NULL;
                         ofn.lpstrDefExt     = "txt";
-	                    ofn.Flags           = OFN_PATHMUSTEXIST;
+                        ofn.Flags           = OFN_PATHMUSTEXIST;
 
-	                    if(GetSaveFileName(&ofn) != FALSE)
+                        if(GetSaveFileName(&ofn) != FALSE)
                         {
                             MessageBox(m_hwnd, "This will not take effect until emulation is (re)started.\n", "Cxbx", MB_OK);
 
@@ -1006,7 +1006,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 break;
 
                 case ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE:
-				{
+                {
                     if(m_CxbxDebug == DM_NONE || m_CxbxDebug == DM_FILE)
                         m_CxbxDebug = DM_CONSOLE;
                     else
@@ -1015,8 +1015,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     RefreshMenus();
 
                     UpdateDebugConsoles();
-				}
-				break;
+                }
+                break;
 
                 case ID_EMULATION_DEBUGOUTPUTGUI_FILE:
                 {
@@ -1032,21 +1032,21 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     {
                         OPENFILENAME ofn = {0};
 
-	                    char filename[260] = "CxbxDebug.txt";
+                        char filename[260] = "CxbxDebug.txt";
 
                         ofn.lStructSize     = sizeof(OPENFILENAME);
-	                    ofn.hwndOwner       = m_hwnd;
-	                    ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
-	                    ofn.lpstrFile       = filename;
-	                    ofn.nMaxFile        = 260;
-	                    ofn.nFilterIndex    = 1;
-	                    ofn.lpstrFileTitle  = NULL;
-	                    ofn.nMaxFileTitle   = 0;
-	                    ofn.lpstrInitialDir = NULL;
+                        ofn.hwndOwner       = m_hwnd;
+                        ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
+                        ofn.lpstrFile       = filename;
+                        ofn.nMaxFile        = 260;
+                        ofn.nFilterIndex    = 1;
+                        ofn.lpstrFileTitle  = NULL;
+                        ofn.nMaxFileTitle   = 0;
+                        ofn.lpstrInitialDir = NULL;
                         ofn.lpstrDefExt     = "txt";
-	                    ofn.Flags           = OFN_PATHMUSTEXIST;
+                        ofn.Flags           = OFN_PATHMUSTEXIST;
 
-	                    if(GetSaveFileName(&ofn) != FALSE)
+                        if(GetSaveFileName(&ofn) != FALSE)
                         {
                             strncpy(m_CxbxDebugFilename, ofn.lpstrFile, 259);
 
@@ -1116,7 +1116,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
         }
 
         case WM_CLOSE:
-        {            
+        {
             if(m_Xbe != 0)
                 CloseXbe();
 
@@ -1143,7 +1143,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
             DeleteObject(m_BackBmp);
 
-			ReleaseDC(hwnd, hDC);
+            ReleaseDC(hwnd, hDC);
 
             delete m_Xbe;
 
@@ -1154,8 +1154,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
         break;
 
         default:
-			return DefWindowProc(hwnd, uMsg, wParam, lParam);
-	}
+            return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
 
     return 0;
 }
@@ -1201,7 +1201,7 @@ void WndMain::XbeLoaded()
 
     InvalidateRgn(m_hwnd, NULL, TRUE);
 
-    printf("WndMain: %s loaded.\n", m_Xbe->m_szAsciiTitle);    
+    printf("WndMain: %s loaded.\n", m_Xbe->m_szAsciiTitle);
 }
 
 // load logo bitmap
@@ -1243,16 +1243,16 @@ void WndMain::RefreshMenus()
 
         // file menu
         {
-			HMENU file_menu = GetSubMenu(menu, 0);
+            HMENU file_menu = GetSubMenu(menu, 0);
 
             // enable/disable close .xbe file
             EnableMenuItem(file_menu, ID_FILE_CLOSE_XBE, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
 
-			// enable/disable save .xbe file
-			EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILE, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
+            // enable/disable save .xbe file
+            EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILE, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
 
-			// enable/disable save .xbe file as
-			EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILEAS, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
+            // enable/disable save .xbe file as
+            EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILEAS, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
 
             // enable/disable export to .exe
             EnableMenuItem(file_menu, ID_FILE_EXPORTTOEXE, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
@@ -1356,7 +1356,7 @@ void WndMain::RefreshMenus()
             HMENU sett_menu = GetSubMenu(menu, 3);
             HMENU auto_menu = GetSubMenu(sett_menu, 4);
 
-	        // check appropriate choice
+            // check appropriate choice
             if(m_AutoConvertToExe == AUTO_CONVERT_WINDOWS_TEMP)
             {
                 CheckMenuItem(auto_menu, ID_SETTINGS_GENWT, MF_BYCOMMAND | MF_CHECKED);
@@ -1437,7 +1437,7 @@ void WndMain::UpdateRecentFiles()
     // clear existing menu items
     {
         int v, max;
-        
+
         max = GetMenuItemCount(RXbeMenu);
         for(v=0;v<max;v++)
             RemoveMenu(RXbeMenu, 0, MF_BYPOSITION);
@@ -1618,18 +1618,18 @@ void WndMain::CloseXbe()
 void WndMain::SaveXbe(const char *x_filename)
 {
     // ask permission to overwrite if the file already exists
-	if(_access(x_filename, 0) != -1)
-	{
-		if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx", MB_ICONQUESTION | MB_YESNO) != IDYES)
-			return;
-	}
+    if(_access(x_filename, 0) != -1)
+    {
+        if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx", MB_ICONQUESTION | MB_YESNO) != IDYES)
+            return;
+    }
 
     // export xbe file
-	{
+    {
         m_Xbe->Export(x_filename);
 
-		if(m_Xbe->GetError() != 0)
-			MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
+        if(m_Xbe->GetError() != 0)
+            MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
         else
         {
             char buffer[255];
@@ -1641,8 +1641,8 @@ void WndMain::SaveXbe(const char *x_filename)
             MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
 
             m_bXbeChanged = false;
-		}
-	}
+        }
+    }
 }
 
 // save xbe as
@@ -1650,24 +1650,24 @@ void WndMain::SaveXbeAs()
 {
     OPENFILENAME ofn = {0};
 
-	char filename[260] = "default.xbe";
+    char filename[260] = "default.xbe";
 
     SuggestFilename(m_XbeFilename, filename, ".xbe");
 
-	ofn.lStructSize     = sizeof(OPENFILENAME);
-	ofn.hwndOwner       = m_hwnd;
-	ofn.lpstrFilter     = "Xbox Executables (*.xbe)\0*.xbe\0";
-	ofn.lpstrFile       = filename;
-	ofn.nMaxFile        = 260;
-	ofn.nFilterIndex    = 1;
-	ofn.lpstrFileTitle  = NULL;
-	ofn.nMaxFileTitle   = 0;
-	ofn.lpstrInitialDir = NULL;
+    ofn.lStructSize     = sizeof(OPENFILENAME);
+    ofn.hwndOwner       = m_hwnd;
+    ofn.lpstrFilter     = "Xbox Executables (*.xbe)\0*.xbe\0";
+    ofn.lpstrFile       = filename;
+    ofn.nMaxFile        = 260;
+    ofn.nFilterIndex    = 1;
+    ofn.lpstrFileTitle  = NULL;
+    ofn.nMaxFileTitle   = 0;
+    ofn.lpstrInitialDir = NULL;
     ofn.lpstrDefExt     = "xbe";
-	ofn.Flags           = OFN_PATHMUSTEXIST;
+    ofn.Flags           = OFN_PATHMUSTEXIST;
 
-	if(GetSaveFileName(&ofn) == TRUE)
-		SaveXbe(ofn.lpstrFile);
+    if(GetSaveFileName(&ofn) == TRUE)
+        SaveXbe(ofn.lpstrFile);
 }
 
 // import an exe file
@@ -1758,7 +1758,7 @@ void WndMain::ImportExe(const char *x_filename)
 // convert to exe file
 bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists, HWND hwndParent)
 {
-	char filename[260] = "default.exe";
+    char filename[260] = "default.exe";
 
     if(x_filename == NULL)
     {
@@ -1767,18 +1767,18 @@ bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists, HWND 
         SuggestFilename(m_XbeFilename, filename, ".exe");
 
         ofn.lStructSize     = sizeof(OPENFILENAME);
-	    ofn.hwndOwner       = m_hwnd;
-	    ofn.lpstrFilter     = "Windows Executables (*.exe)\0*.exe\0";
-	    ofn.lpstrFile       = filename;
-	    ofn.nMaxFile        = 260;
-	    ofn.nFilterIndex    = 1;
-	    ofn.lpstrFileTitle  = NULL;
-	    ofn.nMaxFileTitle   = 0;
-	    ofn.lpstrInitialDir = NULL;
+        ofn.hwndOwner       = m_hwnd;
+        ofn.lpstrFilter     = "Windows Executables (*.exe)\0*.exe\0";
+        ofn.lpstrFile       = filename;
+        ofn.nMaxFile        = 260;
+        ofn.nFilterIndex    = 1;
+        ofn.lpstrFileTitle  = NULL;
+        ofn.nMaxFileTitle   = 0;
+        ofn.lpstrInitialDir = NULL;
         ofn.lpstrDefExt     = "exe";
-	    ofn.Flags           = OFN_PATHMUSTEXIST;
+        ofn.Flags           = OFN_PATHMUSTEXIST;
 
-	    if(GetSaveFileName(&ofn) == FALSE)
+        if(GetSaveFileName(&ofn) == FALSE)
             return false;
 
         strcpy(filename, ofn.lpstrFile);
@@ -1789,24 +1789,24 @@ bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists, HWND 
     }
 
     // ask permission to overwrite if this file already exists
-	if(x_bVerifyIfExists)
-	{
-		if(_access(filename, 0) != -1)
-		{
-			if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx", MB_ICONQUESTION | MB_YESNO) != IDYES)
-				return false;
-		}
-	}
+    if(x_bVerifyIfExists)
+    {
+        if(_access(filename, 0) != -1)
+        {
+            if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx", MB_ICONQUESTION | MB_YESNO) != IDYES)
+                return false;
+        }
+    }
 
     // convert file
-	{
-		EmuExe i_EmuExe(m_Xbe, m_KrnlDebug, m_KrnlDebugFilename, hwndParent);
+    {
+        EmuExe i_EmuExe(m_Xbe, m_KrnlDebug, m_KrnlDebugFilename, hwndParent);
 
-		i_EmuExe.Export(filename);
+        i_EmuExe.Export(filename);
 
-		if(i_EmuExe.GetError() != 0)
+        if(i_EmuExe.GetError() != 0)
         {
-			MessageBox(m_hwnd, i_EmuExe.GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
+            MessageBox(m_hwnd, i_EmuExe.GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
             return false;
         }
         else
@@ -1817,7 +1817,7 @@ bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists, HWND 
 
             m_bExeChanged = false;
         }
-	}
+    }
 
     return true;
 }
