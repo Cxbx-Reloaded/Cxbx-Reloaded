@@ -75,7 +75,7 @@ XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
             EmuWarning("X_D3DFMT_AL8 -> D3DFMT_L8");
             return D3DFMT_L8;
         }
-
+        case 0x10: // Linear     (X_D3DFMT_LIN_A1R5G5B5)
         case 0x02: // Swizzled   (X_D3DFMT_A1R5G5B5)
             return D3DFMT_A1R5G5B5;
 

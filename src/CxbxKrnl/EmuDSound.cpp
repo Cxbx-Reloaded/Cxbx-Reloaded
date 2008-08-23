@@ -362,6 +362,54 @@ HRESULT WINAPI XTL::EmuCDirectSound_GetSpeakerConfig
 }
 
 // ******************************************************************
+// * func: EmuIDirectSound8_EnableHeadphones
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSound8_EnableHeadphones
+(
+    LPDIRECTSOUND8          pThis,
+    BOOL                    fEnabled
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_EnableHeadphones\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   fEnabled                  : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, fEnabled);
+
+    EmuWarning("EmuIDirectSound8_EnableHeadphones ignored");
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSound8_SynchPlayback
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSound8_SynchPlayback
+(
+    LPDIRECTSOUND8          pThis
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SynchPlayback\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis);
+
+    EmuWarning("EmuIDirectSound8_SynchPlayback ignored");
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
 // * func: EmuIDirectSound8_DownloadEffectsImage
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirectSound8_DownloadEffectsImage
@@ -809,7 +857,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
             pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)CxbxMalloc(sizeof(WAVEFORMATEX)+pdsbd->lpwfxFormat->cbSize);
             memcpy(pDSBufferDesc->lpwfxFormat, pdsbd->lpwfxFormat, sizeof(WAVEFORMATEX));
 
-            if(pDSBufferDesc->lpwfxFormat->wFormatTag == /*WAVE_FORMAT_XBOX_ADPCM*/0x0069)
+            if(pDSBufferDesc->lpwfxFormat->wFormatTag == WAVE_FORMAT_XBOX_ADPCM)
             {
                 dwEmuFlags |= DSB_FLAG_ADPCM;
 
@@ -1316,8 +1364,17 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Play
            ");\n",
            GetCurrentThreadId(), pThis, dwReserved1, dwReserved2, dwFlags);
 
-    if(dwFlags & (~DSBPLAY_LOOPING))
+    if(dwFlags & ~(X_DSBPLAY_LOOPING | X_DSBPLAY_FROMSTART))
         CxbxKrnlCleanup("Unsupported Playing Flags");
+
+    // rewind buffer
+    if((dwFlags & X_DSBPLAY_FROMSTART) != X_DSBPLAY_FROMSTART)
+    {
+        if(FAILED(pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0)))
+            EmuWarning("Rewinding buffer failed!");
+
+        dwFlags &= ~X_DSBPLAY_FROMSTART;
+    }
 
     HackUpdateSoundBuffers();
 
@@ -1509,7 +1566,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
         if(pDSBufferDesc->lpwfxFormat != NULL && pDSBufferDesc->lpwfxFormat->wFormatTag != WAVE_FORMAT_PCM)
         {
             EmuWarning("Invalid WAVE_FORMAT!");
-            if(pDSBufferDesc->lpwfxFormat->wFormatTag == /*WAVE_FORMAT_XBOX_ADPCM*/0x0069)
+            if(pDSBufferDesc->lpwfxFormat->wFormatTag == WAVE_FORMAT_XBOX_ADPCM)
                 EmuWarning("WAVE_FORMAT_XBOX_ADPCM Unsupported!");
 
             (*ppStream)->EmuDirectSoundBuffer8 = 0;
@@ -1666,7 +1723,8 @@ ULONG WINAPI XTL::EmuCDirectSoundStream_AddRef(X_CDirectSoundStream *pThis)
            GetCurrentThreadId(), pThis);
 
     if(pThis != 0)
-        pThis->EmuDirectSoundBuffer8->AddRef();
+        if(pThis->EmuDirectSoundBuffer8 != 0) // HACK: Ignore unsupported codecs.
+            pThis->EmuDirectSoundBuffer8->AddRef();
 
     EmuSwapFS();   // XBox FS
 
@@ -2537,6 +2595,36 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetI3DL2Source
 
     return DS_OK;
 }
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetMode
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMode
+(
+    X_CDirectSoundBuffer   *pBuffer,
+    DWORD                   dwMode,
+    DWORD                   dwApply
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuD3D8 (0x%X): EmuIDirectSoundBuffer8_SetFormat\n"
+           "(\n"
+           "   pBuffer             : 0x%.08X\n"
+           "   dwMode              : 0x%.08X\n"
+           "   dwApply             : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pBuffer, dwMode, dwApply);
+
+    HRESULT hRet = DS_OK;
+
+    EmuWarning("EmuIDirectSoundBuffer8_SetMode ignored");
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
 // +s
 // ******************************************************************
 // * func: EmuIDirectSoundBuffer8_SetFormat

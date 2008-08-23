@@ -41,6 +41,10 @@
 
 #include <dsound.h>
 
+// EmuIDirectSoundBuffer8_Play flags
+#define X_DSBPLAY_LOOPING       0x00000001
+#define X_DSBPLAY_FROMSTART     0x00000002
+
 // ******************************************************************
 // * X_DSBUFFERDESC
 // ******************************************************************
@@ -298,6 +302,23 @@ HRESULT WINAPI EmuCDirectSound_GetSpeakerConfig
 (
     X_CDirectSound         *pThis,
     PDWORD                  pdwSpeakerConfig
+);
+
+// ******************************************************************
+// * func: EmuIDirectSound8_EnableHeadphones
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSound8_EnableHeadphones
+(
+    LPDIRECTSOUND8          pThis,
+    BOOL                    fEnabled
+);
+
+// ******************************************************************
+// * func: EmuIDirectSound8_SynchPlayback
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSound8_SynchPlayback
+(
+    LPDIRECTSOUND8          pThis
 );
 
 // ******************************************************************
@@ -960,6 +981,16 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_SetI3DL2Source
     DWORD                   dwApply
 );
 // +s
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetMode
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetMode
+(
+    X_CDirectSoundBuffer   *pBuffer,
+    DWORD                   dwMode,
+    DWORD                   dwApply
+);
 
 // ******************************************************************
 // * func: EmuIDirectSoundBuffer8_SetFormat
