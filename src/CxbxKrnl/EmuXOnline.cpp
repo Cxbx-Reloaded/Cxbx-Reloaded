@@ -65,7 +65,7 @@ int WINAPI XTL::EmuWSAStartup
            ");\n",
            GetCurrentThreadId(), wVersionRequested, lpWSAData);
 
-    int ret = XTL::WSAStartup(wVersionRequested, lpWSAData);
+    int ret = WSAStartup(wVersionRequested, lpWSAData);
 
     EmuSwapFS();   // XBox FS
 

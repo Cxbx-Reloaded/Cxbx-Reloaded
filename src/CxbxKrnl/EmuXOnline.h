@@ -34,21 +34,6 @@
 #ifndef EMUXONLINE_H
 #define EMUXONLINE_H
 
-// If you've never seen ugly code before, here is some for you
-#undef FD_SET
-#undef SO_DONTLINGER
-#undef AF_IPX
-#undef AF_MAX
-#undef SOMAXCONN
-#undef FD_READ
-#undef FD_WRITE
-#undef FD_OOB
-#undef FD_ACCEPT
-#undef FD_CONNECT
-#undef FD_CLOSE
-
-#include <winsock2.h>
-
 // ******************************************************************
 // * clas: EmuThis
 // ******************************************************************

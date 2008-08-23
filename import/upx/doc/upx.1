@@ -129,7 +129,7 @@
 .\" ========================================================================
 .\"
 .IX Title "UPX 1"
-.TH UPX 1 "2006-06-06" "upx 2.01" " "
+.TH UPX 1 "2008-04-27" "upx 3.03" " "
 .SH "NAME"
 upx \- compress or expand executable files
 .SH "SYNOPSIS"
@@ -139,7 +139,7 @@ upx \- compress or expand executable files
 .IX Header "ABSTRACT"
 .Vb 3
 \&                    The Ultimate Packer for eXecutables
-\&   Copyright (c) 1996-2006 Markus Oberhumer, Laszlo Molnar & John Reiser
+\&   Copyright (c) 1996-2008 Markus Oberhumer, Laszlo Molnar & John Reiser
 \&                        http://upx.sourceforge.net
 .Ve
 .PP
@@ -174,8 +174,8 @@ Please report all problems or suggestions to the authors. Thanks.
 .Ve
 .PP
 .Vb 2
-\&  - very fast decompression: about 10 MB/sec on an ancient Pentium 133,
-\&      about 200 MB/sec on an Athlon XP 2000+.
+\&  - very fast decompression: about 10 MiB/sec on an ancient Pentium 133,
+\&      about 200 MiB/sec on an Athlon XP 2000+.
 .Ve
 .PP
 .Vb 2
@@ -265,12 +265,19 @@ shows the compressed / uncompressed size and the compression ratio of
 .PP
 \&\fB\-\-version\fR: print the version of \fB\s-1UPX\s0\fR
 .PP
+\&\fB\-\-exact\fR: when compressing, require to be able to get a byte-identical file
+after decompression with option \fB\-d\fR. [\s-1NOTE:\s0 this is work in progress and is
+not supported for all formats yet. If you do care, as a workaround you can
+compress and then decompress your program a first time \- any further
+compress-decompress steps should then yield byte-identical results
+as compared to the first decompressed version.]
+.PP
 [ ...to be written... \- type `\fBupx \-\-help\fR' for now ]
 .SH "COMPRESSION LEVELS & TUNING"
 .IX Header "COMPRESSION LEVELS & TUNING"
 \&\fB\s-1UPX\s0\fR offers ten different compression levels from \fB\-1\fR to \fB\-9\fR,
 and \fB\-\-best\fR.  The default compression level is \fB\-8\fR for files
-smaller than 512 kB, and \fB\-7\fR otherwise.
+smaller than 512 KiB, and \fB\-7\fR otherwise.
 .IP "\(bu" 4
 Compression levels 1, 2 and 3 are pretty fast.
 .IP "\(bu" 4
@@ -284,33 +291,16 @@ Note that compression level \fB\-\-best\fR can be somewhat slow for large
 files, but you definitely should use it when releasing a final version
 of your program.
 .PP
-Quick start for achieving the best compression ratio:
-.Sp
-.RS 4
-Try \fBupx \-\-brute myfile.exe\fR.
-.RE
-.PP
-Details for achieving the best compression ratio:
+Quick info for achieving the best compression ratio:
 .IP "\(bu" 4
-Use the compression level \fB\-\-best\fR.
-.IP "\(bu" 4
-Try one or both of the options \fB\-\-all\-methods\fR and \fB\-\-all\-filters\fR.
-.IP "\(bu" 4
-Try the option \fB\-\-crp\-ms=NUMBER\fR. This uses more memory during compression
-to achieve a (slightly) better compression ratio.
-.Sp
-\&\s-1NUMBER\s0 must be a decimal value from 10000 to 999999, inclusive.
-The default value is 10000 (ten thousand).
-.IP "\(bu" 4
-Info: the option \fB\-\-brute\fR is an abbrevation for the options
-\&\fB\-\-best \-\-all\-methods \-\-all\-filters \-\-crp\-ms=999999\fR.
+Try \fBupx \-\-brute myfile.exe\fR or even \fBupx \-\-ultra\-brute myfile.exe\fR.
 .IP "\(bu" 4
 Try if \fB\-\-overlay=strip\fR works.
 .IP "\(bu" 4
 For win32/pe programs there's \fB\-\-strip\-relocs=0\fR. See notes below.
 .SH "OVERLAY HANDLING OPTIONS"
 .IX Header "OVERLAY HANDLING OPTIONS"
-Info: An \*(L"overlay\*(R" means auxillary data atached after the logical end of
+Info: An \*(L"overlay\*(R" means auxiliary data attached after the logical end of
 an executable, and it often contains application specific data
 (this is a common practice to avoid an extra data file, though
 it would be better to use resource sections).
@@ -465,7 +455,7 @@ Extra options available for this executable format:
 First of all, it is recommended to use \fB\s-1UPX\s0\fR *instead* of \fBstrip\fR. strip has
 the very bad habit of replacing your stub with its own (outdated) version.
 Additionally \fB\s-1UPX\s0\fR corrects a bug/feature in strip v2.8.x: it
-will fix the 4 KByte aligment of the stub.
+will fix the 4 KiB alignment of the stub.
 .PP
 \&\fB\s-1UPX\s0\fR includes the full functionality of stubify. This means it will
 automatically stubify your \s-1COFF\s0 files. Use the option \fB\-\-coff\fR to
@@ -504,7 +494,7 @@ Introduction
 .PP
 .Vb 4
 \&  Linux/386 support in UPX consists of 3 different executable formats,
-\&  one optimized for ELF excutables ("linux/elf386"), one optimized
+\&  one optimized for ELF executables ("linux/elf386"), one optimized
 \&  for shell scripts ("linux/sh386"), and one generic format
 \&  ("linux/386").
 .Ve
@@ -542,14 +532,14 @@ General user's overview
 .PP
 .Vb 15
 \&  Depending on the statistics of usage and access, and the relative
-\&  speeds of CPU, RAM, swap space, /tmp, and filesystem storage, then
+\&  speeds of CPU, RAM, swap space, /tmp, and file system storage, then
 \&  invoking and running a compressed executable can be faster than
 \&  directly running the corresponding uncompressed program.
-\&  The operating system might perfrom fewer expensive I/O operations
+\&  The operating system might perform fewer expensive I/O operations
 \&  to invoke the compressed program.  Paging to or from swap space
-\&  or /tmp might be faster than paging from the general filesystem.
+\&  or /tmp might be faster than paging from the general file system.
 \&  ``Medium-sized'' programs which access about 1/3 to 1/2 of their
-\&  stored program bytes can do particulary well with compression.
+\&  stored program bytes can do particularly well with compression.
 \&  Small programs tend not to benefit as much because the absolute
 \&  savings is less.  Big programs tend not to benefit proportionally
 \&  because each invocation may use only a small fraction of the program,
@@ -560,7 +550,7 @@ General user's overview
 .PP
 .Vb 6
 \&  Currently, executables compressed by UPX do not share RAM at runtime
-\&  in the way that executables mapped from a filesystem do.  As a
+\&  in the way that executables mapped from a file system do.  As a
 \&  result, if the same program is run simultaneously by more than one
 \&  process, then using the compressed version will require more RAM and/or
 \&  swap space.  So, shell programs (bash, csh, etc.)  and ``make''
@@ -675,7 +665,7 @@ The linux/elf386 format decompresses directly into \s-1RAM\s0,
 uses only one exec, does not use space in /tmp,
 and does not use /proc.
 .PP
-Linux/elf386 is automatically selected for Linux \s-1ELF\s0 exectuables.
+Linux/elf386 is automatically selected for Linux \s-1ELF\s0 executables.
 .PP
 Packed programs will be byte-identical to the original after uncompression.
 .PP
@@ -774,7 +764,7 @@ Extra options available for this executable format:
 Please read the general Linux description first.
 .PP
 The generic linux/386 format decompresses to /tmp and needs
-/proc filesystem support. It starts the decompressed program
+/proc file system support. It starts the decompressed program
 via the \fIexecve()\fR syscall.
 .PP
 Linux/386 is only selected if the specialized linux/elf386
@@ -787,11 +777,11 @@ How it works:
 .Vb 7
 \&  For files which are not ELF and not a script for a known "-c" shell,
 \&  UPX uses kernel execve(), which first requires decompressing to a
-\&  temporary file in the filesystem.  Interestingly -
+\&  temporary file in the file system.  Interestingly -
 \&  because of the good memory management of the Linux kernel - this
-\&  often does not introduce a noticable delay, and in fact there
+\&  often does not introduce a noticeable delay, and in fact there
 \&  will be no disk access at all if you have enough free memory as
-\&  the entire process takes places within the filesystem buffers.
+\&  the entire process takes places within the file system buffers.
 .Ve
 .PP
 .Vb 2
@@ -829,7 +819,7 @@ Specific drawbacks:
 .Ve
 .PP
 .Vb 4
-\&  - You must have /proc filesystem support as the stub wants to open
+\&  - You must have /proc file system support as the stub wants to open
 \&    /proc/<pid>/exe and needs /proc/<pid>/fd/X. This also means that you
 \&    cannot compress programs that are used during the boot sequence
 \&    before /proc is mounted.
@@ -845,8 +835,8 @@ Specific drawbacks:
 .Vb 4
 \&  - Because of temporary decompression to disk the decompression speed
 \&    is not as fast as with the other executable formats. Still, I can see
-\&    no noticable delay when starting programs like my ~3 MB emacs (which
-\&    is less than 1 MB when compressed :-).
+\&    no noticeable delay when starting programs like my ~3 MiB emacs (which
+\&    is less than 1 MiB when compressed :-).
 .Ve
 .PP
 Extra options available for this executable format:
@@ -866,22 +856,26 @@ nostalgic feelings of one of the authors.
 Packed programs will be byte-identical to the original after uncompression,
 until further notice.
 .PP
-Maximum uncompressed size: ~1998848 bytes.
+Maximum uncompressed size: ~1.89 / ~7.60 MiB.
 .PP
 Notes:
 .PP
-.Vb 2
-\&  - UPX creates as default a 'CD-Rom only' PS1/PS2 compatible executable.
-\&    For transfer between client/target use options below.
+.Vb 6
+\&  - UPX creates as default a suitable executable for CD-Mastering
+\&    and console transfer. For a CD-Master main executable you could also try
+\&    the special option "--boot-only" as described below.
+\&    It has been reported that upx packed executables are fully compatible with
+\&    the Sony PlayStation 2 (PS2, PStwo) and Sony PlayStation Portable (PSP) in
+\&    Sony PlayStation (PSone) emulation mode.
 .Ve
 .PP
 .Vb 6
 \&  - Normally the packed files use the same memory areas like the uncompressed
 \&    versions, so they will not override other memory areas while unpacking.
 \&    If this isn't possible UPX will abort showing a 'packed data overlap'
-\&    error. With the "--force" option UPX will set a few 'bytes higher' loading
-\&    offset for the packed file, but this isn't a real problem if it is a
-\&    single or boot-only executable.
+\&    error. With the "--force" option UPX will relocate the loading address
+\&    for the packed file, but this isn't a real problem if it is a single or
+\&    the main executable.
 .Ve
 .PP
 Extra options available for this executable format:
@@ -893,18 +887,26 @@ Extra options available for this executable format:
 \&                      the default method gives the best results anyway.
 .Ve
 .PP
+.Vb 1
+\&  --8-bit             Uses 8 bit size compression [default: 32 bit]
+.Ve
+.PP
+.Vb 1
+\&  --8mib-ram          PSone has 8 MiB ram available [default: 2 MiB]
+.Ve
+.PP
 .Vb 4
-\&  --boot-only         The format will only run from a CD and may slightly
-\&                      improves the compression ratio. The decompression
-\&                      routines are faster than default ones.
-\&                      But it cannot be used for host/client transfer !
+\&  --boot-only         This format is for main exes and CD-Mastering only !
+\&                      It may slightly improve the compression ratio,
+\&                      decompression routines are faster than default ones.
+\&                      But it cannot be used for console transfer !
 .Ve
 .PP
 .Vb 4
 \&  --no-align          This option disables CD mode 2 data sector format
 \&                      alignment. May slightly improves the compression ratio,
 \&                      but the compressed executable will not boot from a CD.
-\&                      Use it for client/target transfer only !
+\&                      Use it for console transfer only !
 .Ve
 .Sh "\s-1NOTES\s0 \s-1FOR\s0 \s-1RTM32/PE\s0 and \s-1ARM/PE\s0"
 .IX Subsection "NOTES FOR RTM32/PE and ARM/PE"
@@ -951,7 +953,7 @@ Benefits:
 \&  - Better compression (but note that the kernel was already compressed,
 \&  so the improvement is not as large as with other formats).
 \&  Still, the bytes saved may be essential for special needs like
-\&  bootdisks.
+\&  boot disks.
 .Ve
 .PP
 .Vb 4
@@ -1005,13 +1007,13 @@ Extra options available for this executable format:
 .Sh "\s-1NOTES\s0 \s-1FOR\s0 \s-1WIN32/PE\s0"
 .IX Subsection "NOTES FOR WIN32/PE"
 The \s-1PE\s0 support in \fB\s-1UPX\s0\fR is quite stable now, but probably there are
-still some incompabilities with some files.
+still some incompatibilities with some files.
 .PP
 Because of the way \fB\s-1UPX\s0\fR (and other packers for this format) works, you
 can see increased memory usage of your compressed files because the whole
 program is loaded into memory at startup.
 If you start several instances of huge compressed programs you're
-wasting memory because the common segements of the program won't
+wasting memory because the common segments of the program won't
 get shared across the instances.
 On the other hand if you're compressing only smaller programs, or
 running only one instance of larger programs, then this penalty is
@@ -1029,8 +1031,8 @@ Screensavers are supported, with the restriction that the filename
 must end with \*(L".scr\*(R" (as screensavers are handled slightly different
 than normal exe files).
 .PP
-\&\s-1UPX\s0 compressed \s-1PE\s0 files has some minor memory overhead (usually in the
-10 \- 30 kbytes range) which can be seen by specifying the \*(L"\-i\*(R" command
+\&\s-1UPX\s0 compressed \s-1PE\s0 files have some minor memory overhead (usually in the
+10 \- 30 KiB range) which can be seen by specifying the \*(L"\-i\*(R" command
 line switch during compression.
 .PP
 Extra options available for this executable format:
@@ -1047,11 +1049,12 @@ Extra options available for this executable format:
 \&                      regardless of this option.
 .Ve
 .PP
-.Vb 4
+.Vb 5
 \&  --compress-icons=0  Don't compress any icons.
 \&  --compress-icons=1  Compress all but the first icon.
 \&  --compress-icons=2  Compress all icons which are not in the
 \&                      first icon directory. [DEFAULT]
+\&  --compress-icons=3  Compress all icons.
 .Ve
 .PP
 .Vb 1
@@ -1140,13 +1143,13 @@ Please report all bugs immediately to the authors.
 .Ve
 .SH "COPYRIGHT"
 .IX Header "COPYRIGHT"
-Copyright (C) 1996\-2006 Markus Franz Xaver Johannes Oberhumer
+Copyright (C) 1996\-2008 Markus Franz Xaver Johannes Oberhumer
 .PP
-Copyright (C) 1996\-2006 Laszlo Molnar
+Copyright (C) 1996\-2008 Laszlo Molnar
 .PP
-Copyright (C) 2000\-2006 John F. Reiser
+Copyright (C) 2000\-2008 John F. Reiser
 .PP
-Copyright (C) 2002\-2006 Jens Medoch
+Copyright (C) 2002\-2008 Jens Medoch
 .PP
 This program may be used freely, and you are welcome to
 redistribute it under certain conditions.

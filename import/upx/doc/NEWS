@@ -2,6 +2,72 @@
 User visible changes for UPX
 ==================================================================
 
+Changes in 3.03 (27 Apr 2008):
+  * implement cache flushing for PowerPC (esp. model 440)
+  * fix cache flushing on MIPS (>3 MiB compressed, or with holes)
+  * fix MIPS big-endian
+  * bug fixes
+
+Changes in 3.02 (16 Dec 2007):
+  * fix unmapping on arm-linux.elf
+  * fix error checking in mmap for i386-linux.elf [triggered by -fPIE]
+  * bug fixes
+
+Changes in 3.01 (31 Jul 2007):
+  * new options --no-mode, --no-owner and --no-time to disable preservation
+    of mode (file permissions), file ownership and timestamps.
+  * dos/exe: fixed an incorrect error message caused by a bug in
+    relocation handling
+  * new format linux/mipsel supports ELF on [32-bit] R3000
+  * fix argv[0] on PowerPC with --lzma
+  * bug fixes
+
+Changes in 3.00 (27 Apr 2007):
+  * watcom/le & tmt/adam: fixed a problem when using certain filters
+
+Changes in 2.93 beta (08 Mar 2007):
+  * new formats Mach/i386 and Mach/fat support Mac OS X i686 and
+    Universal binaries [i686 and PowerPC only]
+  * dos/exe: LZMA is now also supported for 16-bit dos/exe. Please note that
+    you have to explicitly use '--lzma' even for '--ultra-brute' here
+    because runtime decompression is about 30 times slower than NRV -
+    which is really noticeable on old machines.
+  * dos/exe: fixed a rarely occuring bug in relocation handling
+  * win32/pe & arm/pe: better icon compression handling
+
+Changes in 2.92 beta (23 Jan 2007):
+  * new option '--ultra-brute' which tries even more variants
+  * slightly improved compression ratio for some files when
+    using '--brute' or '--ultra-brute'
+  * bug fixes
+
+Changes in 2.91 beta (29 Nov 2006):
+  * assorted bug fixes
+  * arm/pe: fix "missing" icon & version info resource problem for wince 5
+  * win32/pe & arm/pe: added option --compress-icons=3 to compress all icons
+
+Changes in 2.90 beta (08 Oct 2006):
+  * LZMA algorithm support for most of the 32-bit and 64-bit file formats;
+    use new option '--lzma' to enable
+  * new format: BSD/elf386 supporting FreeBSD, NetBSD and OpenBSD
+    via auto-detection of PT_NOTE or EI_OSABI
+  * arm/pe: all the NRV compression methods are now supported
+    (only NRV2D is missing in thumb mode)
+  * linux/elf386, linux/ElfAMD: remember /proc/self/exe in environment
+  * major source code changes: the runtime decompression stubs are now
+    built from internal ELF objects
+
+==================================================================
+
+Changes in 2.03 (07 Nov 2006):
+  * bvmlinuz/386: fix for kernels not at 0x100000; also allow x86_64
+  * linux/elf386: work around Linux kernel bug (0-length .bss needs PF_W)
+
+Changes in 2.02 (13 Aug 2006):
+  * linux/386: work around Linux kernel bug (".bss" requires PF_W)
+  * linux/ppc32, mach/ppc32: compressed programs now work on a 405 CPU
+  * vmlinuz/386: fixed zlib uncompression problem on DOS
+
 Changes in 2.01 (06 Jun 2006):
   * arm/pe: better DLL support
   * dos/exe: device driver support added
@@ -269,8 +335,8 @@ Changes in 0.80 (03 Aug 1999)
   * win32/pe: even better TLS support
   * win32/pe: versioninfo works on NT
   * win32/pe: import by ordinal from kernel32.dll works
-  * win32/pe: other import improvements: importing a nonexistant DLL
-    results in a usual Windows message, importing a nonexistant function
+  * win32/pe: other import improvements: importing a nonexistent DLL
+    results in a usual Windows message, importing a nonexistent function
     results in program exit (instead of crash ;-)
   * win32/pe: new option: '--compress-resources=0'
   * win32/pe: reduced memory requirement during uncompression, some
@@ -322,7 +388,7 @@ Changes in 0.60 (06 Mar 1999)
   * win32/pe: fixed file corruption when the size of the export data is invalid
   * win32/pe: fixed a problem with empty resource data
   * win32/pe: compressed file alignment set to minimum value
-  * win32/pe: made all compressed sections writeable
+  * win32/pe: made all compressed sections writable
   * fixed some other win32/pe bugs
   * fixed an address optimization problem for some not Watcom LE files
   * fixed a bug which could make UPX hang when an exe header contained
@@ -363,3 +429,5 @@ Changes in 0.20 (05 Jul 1998)
 Changes in 0.05 (26 May 1998)
   * first public beta release
 
+
+# vim:set syntax=off tw=0 ts=4 sw=4 et: -*- coding: utf-8 -*-

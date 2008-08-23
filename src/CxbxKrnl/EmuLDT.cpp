@@ -127,8 +127,6 @@ uint16 EmuAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit)
     // * Allocate selector
     // ******************************************************************
     {
-        using namespace NtDll;
-
         if(!NT_SUCCESS(NtDll::NtSetLdtEntries((x*8)+7+8, LDTEntry, 0, LDTEntry)))
         {
             LeaveCriticalSection(&EmuLDTLock);

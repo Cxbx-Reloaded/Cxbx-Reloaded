@@ -195,7 +195,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
         else
             GetCurrentDirectory(260, szBuffer);
 
-        g_strCurDrive = strdup(szBuffer);
+        g_strCurDrive = _strdup(szBuffer);
 
         g_hCurDir = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
@@ -251,7 +251,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
             CreateDirectory(szBuffer, NULL);
 
-            g_strTDrive = strdup(szBuffer);
+            g_strTDrive = _strdup(szBuffer);
 
             g_hTDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
@@ -274,7 +274,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
             CreateDirectory(szBuffer, NULL);
 
-            g_strUDrive = strdup(szBuffer);
+            g_strUDrive = _strdup(szBuffer);
 
             g_hUDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
@@ -299,7 +299,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
             CreateDirectory(szBuffer, NULL);
             //*/
 
-            g_strZDrive = strdup(szBuffer);
+            g_strZDrive = _strdup(szBuffer);
 
             g_hZDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 

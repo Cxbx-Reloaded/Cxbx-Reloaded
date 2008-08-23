@@ -184,7 +184,7 @@ void DbgConsole::ParseCommand()
 
     // TODO: as command list grows, turn into static string/ptr lookup
 
-    if(stricmp(szCmd, "h") == 0 || stricmp(szCmd, "help") == 0)
+    if(_stricmp(szCmd, "h") == 0 || _stricmp(szCmd, "help") == 0)
     {
         printf("CxbxDbg: \n");
         printf("CxbxDbg: Cxbx Debug Command List:\n");
@@ -217,18 +217,18 @@ void DbgConsole::ParseCommand()
         printf("CxbxDbg: # denotes parameter of form [#] or [#-#]\n");
         printf("CxbxDbg: \n");
     }
-    else if(stricmp(szCmd, "q") == 0 || stricmp(szCmd, "quit") == 0 || stricmp(szCmd, "exit") == 0)
+    else if(_stricmp(szCmd, "q") == 0 || _stricmp(szCmd, "quit") == 0 || _stricmp(szCmd, "exit") == 0)
     {
         printf("CxbxDbg: Goodbye...\n");
         CxbxKrnlCleanup(NULL);
     }
-    else if(stricmp(szCmd, "t") == 0 || stricmp(szCmd, "trace") == 0)
+    else if(_stricmp(szCmd, "t") == 0 || _stricmp(szCmd, "trace") == 0)
     {
         g_bPrintfOn = !g_bPrintfOn;
         printf("CxbxDbg: Trace is now %s\n", g_bPrintfOn ? "ON" : "OFF");
     }
     #ifdef _DEBUG_TRACK_VB
-    else if(stricmp(szCmd, "lvb") == 0 || stricmp(szCmd, "ListVB") == 0)
+    else if(_stricmp(szCmd, "lvb") == 0 || _stricmp(szCmd, "ListVB") == 0)
     {
         int v=0;
         
@@ -247,7 +247,7 @@ void DbgConsole::ParseCommand()
 
         g_VBTrackTotal.Unlock();
     }
-    else if(stricmp(szCmd, "dvb") == 0 || stricmp(szCmd, "DisableVB") == 0)
+    else if(_stricmp(szCmd, "dvb") == 0 || _stricmp(szCmd, "DisableVB") == 0)
     {
         int n=0, m=0;
 
@@ -266,7 +266,7 @@ void DbgConsole::ParseCommand()
             printf("CxbxDbg: Syntax Incorrect (dvb #)\n");
         }
     }
-    else if(stricmp(szCmd, "evb") == 0 || stricmp(szCmd, "EnableVB") == 0)
+    else if(_stricmp(szCmd, "evb") == 0 || _stricmp(szCmd, "EnableVB") == 0)
     {
         int n=0, m=0;
 
@@ -285,13 +285,13 @@ void DbgConsole::ParseCommand()
             printf("CxbxDbg: Syntax Incorrect (dvb #)\n");
         }
     }
-    else if(stricmp(szCmd, "dsc") == 0 || stricmp(szCmd, "DumpStreamCache") == 0)
+    else if(_stricmp(szCmd, "dsc") == 0 || _stricmp(szCmd, "DumpStreamCache") == 0)
     {
         XTL::VertexPatcher::DumpCache();
     }
     #endif
     #ifdef _DEBUG_TRACK_PB
-    else if(stricmp(szCmd, "lpb") == 0 || stricmp(szCmd, "ListPB") == 0)
+    else if(_stricmp(szCmd, "lpb") == 0 || _stricmp(szCmd, "ListPB") == 0)
     {
         int v=0;
 
@@ -310,7 +310,7 @@ void DbgConsole::ParseCommand()
 
         g_PBTrackTotal.Unlock();
     }
-    else if(stricmp(szCmd, "spb") == 0 || stricmp(szCmd, "ShowPB") == 0)
+    else if(_stricmp(szCmd, "spb") == 0 || _stricmp(szCmd, "ShowPB") == 0)
     {
         int n=0, m=0;
 
@@ -329,7 +329,7 @@ void DbgConsole::ParseCommand()
             printf("CxbxDbg: Syntax Incorrect (spb #)\n");
         }
     }
-    else if(stricmp(szCmd, "dpb") == 0 || stricmp(szCmd, "DisablePB") == 0)
+    else if(_stricmp(szCmd, "dpb") == 0 || _stricmp(szCmd, "DisablePB") == 0)
     {
         int n=0, m=0;
 
@@ -348,7 +348,7 @@ void DbgConsole::ParseCommand()
             printf("CxbxDbg: Syntax Incorrect (dpb #)\n");
         }
     }
-    else if(stricmp(szCmd, "epb") == 0 || stricmp(szCmd, "EnablePB") == 0)
+    else if(_stricmp(szCmd, "epb") == 0 || _stricmp(szCmd, "EnablePB") == 0)
     {
         int n=0, m=0;
 
@@ -367,7 +367,7 @@ void DbgConsole::ParseCommand()
             printf("CxbxDbg: Syntax Incorrect (dpb #)\n");
         }
     }
-    else if(stricmp(szCmd, "cpb") == 0 || stricmp(szCmd, "ClearPB") == 0)
+    else if(_stricmp(szCmd, "cpb") == 0 || _stricmp(szCmd, "ClearPB") == 0)
     {
         g_PBTrackTotal.clear();
 
@@ -375,14 +375,14 @@ void DbgConsole::ParseCommand()
     }
     #endif
     #ifdef _DEBUG_ALLOC
-    else if(stricmp(szCmd, "dmem") == 0 || stricmp(szCmd, "DumpMem") == 0)
+    else if(_stricmp(szCmd, "dmem") == 0 || _stricmp(szCmd, "DumpMem") == 0)
     {
         int Full;
         int c = sscanf(m_szInput, "%*s %d", &Full);
         CxbxAllocDump(Full != 0);
     }
     #endif // _DEBUG_ALLOC
-    else if(stricmp(szCmd, "cls") == 0)
+    else if(_stricmp(szCmd, "cls") == 0)
     {
         // clear screen using system call
         system("cls");

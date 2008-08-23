@@ -85,6 +85,9 @@ class VertexPatcher
         bool Apply(VertexPatchDesc *pPatchDesc);
         bool Restore();
 
+        // Dumps the cache to the console
+        static void DumpCache(void);
+
     private:
 
         UINT m_uiNbrStreams;
@@ -99,9 +102,6 @@ class VertexPatcher
 
         // Returns the number of streams of a patch
         UINT GetNbrStreams(VertexPatchDesc *pPatchDesc);
-
-        // Dumps the cache to the console
-        static void DumpCache(void);
 
         // Caches a patched stream
         void CacheStream(VertexPatchDesc *pPatchDesc,

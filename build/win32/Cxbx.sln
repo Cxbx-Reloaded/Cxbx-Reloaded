@@ -1,0 +1,35 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cxbe", "Cxbe.vcproj", "{028D5D8F-072C-4308-9095-4EF1EA6B83B0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cxbx", "Cxbx.vcproj", "{E7A72D3D-5810-4078-A243-348B59726365}"
+	ProjectSection(ProjectDependencies) = postProject
+		{22592F16-CC5F-45CB-A40A-022FF6FCC146} = {22592F16-CC5F-45CB-A40A-022FF6FCC146}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CxbxKrnl", "CxbxKrnl.vcproj", "{22592F16-CC5F-45CB-A40A-022FF6FCC146}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{028D5D8F-072C-4308-9095-4EF1EA6B83B0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{028D5D8F-072C-4308-9095-4EF1EA6B83B0}.Debug|Win32.Build.0 = Debug|Win32
+		{028D5D8F-072C-4308-9095-4EF1EA6B83B0}.Release|Win32.ActiveCfg = Release|Win32
+		{028D5D8F-072C-4308-9095-4EF1EA6B83B0}.Release|Win32.Build.0 = Release|Win32
+		{E7A72D3D-5810-4078-A243-348B59726365}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E7A72D3D-5810-4078-A243-348B59726365}.Debug|Win32.Build.0 = Debug|Win32
+		{E7A72D3D-5810-4078-A243-348B59726365}.Release|Win32.ActiveCfg = Release|Win32
+		{E7A72D3D-5810-4078-A243-348B59726365}.Release|Win32.Build.0 = Release|Win32
+		{22592F16-CC5F-45CB-A40A-022FF6FCC146}.Debug|Win32.ActiveCfg = Debug|Win32
+		{22592F16-CC5F-45CB-A40A-022FF6FCC146}.Debug|Win32.Build.0 = Debug|Win32
+		{22592F16-CC5F-45CB-A40A-022FF6FCC146}.Release|Win32.ActiveCfg = Release|Win32
+		{22592F16-CC5F-45CB-A40A-022FF6FCC146}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -6,7 +6,7 @@ SYNOPSIS
 
 ABSTRACT
                         The Ultimate Packer for eXecutables
-       Copyright (c) 1996-2006 Markus Oberhumer, Laszlo Molnar & John Reiser
+       Copyright (c) 1996-2008 Markus Oberhumer, Laszlo Molnar & John Reiser
                             http://upx.sourceforge.net
 
     UPX is a portable, extendable, high-performance executable packer for
@@ -37,8 +37,8 @@ DESCRIPTION
       - excellent compression ratio: compresses better than zip/gzip,
           use UPX to decrease the size of your distribution !
 
-      - very fast decompression: about 10 MB/sec on an ancient Pentium 133,
-          about 200 MB/sec on an Athlon XP 2000+.
+      - very fast decompression: about 10 MiB/sec on an ancient Pentium 133,
+          about 200 MiB/sec on an Athlon XP 2000+.
 
       - no memory overhead for your compressed executables for most of the
           supported formats
@@ -114,11 +114,18 @@ OPTIONS
 
     --version: print the version of UPX
 
+    --exact: when compressing, require to be able to get a byte-identical
+    file after decompression with option -d. [NOTE: this is work in progress
+    and is not supported for all formats yet. If you do care, as a
+    workaround you can compress and then decompress your program a first
+    time - any further compress-decompress steps should then yield
+    byte-identical results as compared to the first decompressed version.]
+
     [ ...to be written... - type `upx --help' for now ]
 
 COMPRESSION LEVELS & TUNING
     UPX offers ten different compression levels from -1 to -9, and --best.
-    The default compression level is -8 for files smaller than 512 kB, and
+    The default compression level is -8 for files smaller than 512 KiB, and
     -7 otherwise.
 
     *   Compression levels 1, 2 and 3 are pretty fast.
@@ -133,34 +140,19 @@ COMPRESSION LEVELS & TUNING
     but you definitely should use it when releasing a final version of your
     program.
 
-    Quick start for achieving the best compression ratio:
+    Quick info for achieving the best compression ratio:
 
-        Try upx --brute myfile.exe.
-
-    Details for achieving the best compression ratio:
-
-    *   Use the compression level --best.
-
-    *   Try one or both of the options --all-methods and --all-filters.
-
-    *   Try the option --crp-ms=NUMBER. This uses more memory during
-        compression to achieve a (slightly) better compression ratio.
-
-        NUMBER must be a decimal value from 10000 to 999999, inclusive. The
-        default value is 10000 (ten thousand).
-
-    *   Info: the option --brute is an abbrevation for the options --best
-        --all-methods --all-filters --crp-ms=999999.
+    *   Try upx --brute myfile.exe or even upx --ultra-brute myfile.exe.
 
     *   Try if --overlay=strip works.
 
     *   For win32/pe programs there's --strip-relocs=0. See notes below.
 
 OVERLAY HANDLING OPTIONS
-    Info: An "overlay" means auxillary data atached after the logical end of
-    an executable, and it often contains application specific data (this is
-    a common practice to avoid an extra data file, though it would be better
-    to use resource sections).
+    Info: An "overlay" means auxiliary data attached after the logical end
+    of an executable, and it often contains application specific data (this
+    is a common practice to avoid an extra data file, though it would be
+    better to use resource sections).
 
     UPX handles overlays like many other executable packers do: it simply
     copies the overlay after the compressed image. This works with some
@@ -285,7 +277,7 @@ NOTES FOR THE SUPPORTED EXECUTABLE FORMATS
     First of all, it is recommended to use UPX *instead* of strip. strip has
     the very bad habit of replacing your stub with its own (outdated)
     version. Additionally UPX corrects a bug/feature in strip v2.8.x: it
-    will fix the 4 KByte aligment of the stub.
+    will fix the 4 KiB alignment of the stub.
 
     UPX includes the full functionality of stubify. This means it will
     automatically stubify your COFF files. Use the option --coff to disable
@@ -319,7 +311,7 @@ NOTES FOR THE SUPPORTED EXECUTABLE FORMATS
     Introduction
 
       Linux/386 support in UPX consists of 3 different executable formats,
-      one optimized for ELF excutables ("linux/elf386"), one optimized
+      one optimized for ELF executables ("linux/elf386"), one optimized
       for shell scripts ("linux/sh386"), and one generic format
       ("linux/386").
 
@@ -347,14 +339,14 @@ NOTES FOR THE SUPPORTED EXECUTABLE FORMATS
       or network I/O.
 
       Depending on the statistics of usage and access, and the relative
-      speeds of CPU, RAM, swap space, /tmp, and filesystem storage, then
+      speeds of CPU, RAM, swap space, /tmp, and file system storage, then
       invoking and running a compressed executable can be faster than
       directly running the corresponding uncompressed program.
-      The operating system might perfrom fewer expensive I/O operations
+      The operating system might perform fewer expensive I/O operations
       to invoke the compressed program.  Paging to or from swap space
-      or /tmp might be faster than paging from the general filesystem.
+      or /tmp might be faster than paging from the general file system.
       ``Medium-sized'' programs which access about 1/3 to 1/2 of their
-      stored program bytes can do particulary well with compression.
+      stored program bytes can do particularly well with compression.
       Small programs tend not to benefit as much because the absolute
       savings is less.  Big programs tend not to benefit proportionally
       because each invocation may use only a small fraction of the program,
@@ -363,7 +355,7 @@ NOTES FOR THE SUPPORTED EXECUTABLE FORMATS
       then compression may win anyway.
 
       Currently, executables compressed by UPX do not share RAM at runtime
-      in the way that executables mapped from a filesystem do.  As a
+      in the way that executables mapped from a file system do.  As a
       result, if the same program is run simultaneously by more than one
       process, then using the compressed version will require more RAM and/or
       swap space.  So, shell programs (bash, csh, etc.)  and ``make''
@@ -448,7 +440,7 @@ NOTES FOR THE SUPPORTED EXECUTABLE FORMATS
     The linux/elf386 format decompresses directly into RAM, uses only one
     exec, does not use space in /tmp, and does not use /proc.
 
-    Linux/elf386 is automatically selected for Linux ELF exectuables.
+    Linux/elf386 is automatically selected for Linux ELF executables.
 
     Packed programs will be byte-identical to the original after
     uncompression.
@@ -532,8 +524,8 @@ NOTES FOR THE SUPPORTED EXECUTABLE FORMATS
   NOTES FOR LINUX/386
     Please read the general Linux description first.
 
-    The generic linux/386 format decompresses to /tmp and needs /proc
-    filesystem support. It starts the decompressed program via the execve()
+    The generic linux/386 format decompresses to /tmp and needs /proc file
+    system support. It starts the decompressed program via the execve()
     syscall.
 
     Linux/386 is only selected if the specialized linux/elf386 and
@@ -546,11 +538,11 @@ NOTES FOR THE SUPPORTED EXECUTABLE FORMATS
 
       For files which are not ELF and not a script for a known "-c" shell,
       UPX uses kernel execve(), which first requires decompressing to a
-      temporary file in the filesystem.  Interestingly -
+      temporary file in the file system.  Interestingly -
       because of the good memory management of the Linux kernel - this
-      often does not introduce a noticable delay, and in fact there
+      often does not introduce a noticeable delay, and in fact there
       will be no disk access at all if you have enough free memory as
-      the entire process takes places within the filesystem buffers.
+      the entire process takes places within the file system buffers.
 
       A compressed executable consists of the UPX stub and an overlay
       which contains the original program in a compressed form.
@@ -576,7 +568,7 @@ NOTES FOR THE SUPPORTED EXECUTABLE FORMATS
         decompression, but you still need it for the full execution time
         of the program.
 
-      - You must have /proc filesystem support as the stub wants to open
+      - You must have /proc file system support as the stub wants to open
         /proc/<pid>/exe and needs /proc/<pid>/fd/X. This also means that you
         cannot compress programs that are used during the boot sequence
         before /proc is mounted.
@@ -588,8 +580,8 @@ NOTES FOR THE SUPPORTED EXECUTABLE FORMATS
 
       - Because of temporary decompression to disk the decompression speed
         is not as fast as with the other executable formats. Still, I can see
-        no noticable delay when starting programs like my ~3 MB emacs (which
-        is less than 1 MB when compressed :-).
+        no noticeable delay when starting programs like my ~3 MiB emacs (which
+        is less than 1 MiB when compressed :-).
 
     Extra options available for this executable format:
 
@@ -606,19 +598,23 @@ NOTES FOR THE SUPPORTED EXECUTABLE FORMATS
     Packed programs will be byte-identical to the original after
     uncompression, until further notice.
 
-    Maximum uncompressed size: ~1998848 bytes.
+    Maximum uncompressed size: ~1.89 / ~7.60 MiB.
 
     Notes:
 
-      - UPX creates as default a 'CD-Rom only' PS1/PS2 compatible executable.
-        For transfer between client/target use options below.
+      - UPX creates as default a suitable executable for CD-Mastering
+        and console transfer. For a CD-Master main executable you could also try
+        the special option "--boot-only" as described below.
+        It has been reported that upx packed executables are fully compatible with
+        the Sony PlayStation 2 (PS2, PStwo) and Sony PlayStation Portable (PSP) in
+        Sony PlayStation (PSone) emulation mode.
 
       - Normally the packed files use the same memory areas like the uncompressed
         versions, so they will not override other memory areas while unpacking.
         If this isn't possible UPX will abort showing a 'packed data overlap'
-        error. With the "--force" option UPX will set a few 'bytes higher' loading
-        offset for the packed file, but this isn't a real problem if it is a
-        single or boot-only executable.
+        error. With the "--force" option UPX will relocate the loading address
+        for the packed file, but this isn't a real problem if it is a single or
+        the main executable.
 
     Extra options available for this executable format:
 
@@ -627,15 +623,19 @@ NOTES FOR THE SUPPORTED EXECUTABLE FORMATS
                           the compression ratio in some cases, but usually
                           the default method gives the best results anyway.
 
-      --boot-only         The format will only run from a CD and may slightly
-                          improves the compression ratio. The decompression
-                          routines are faster than default ones.
-                          But it cannot be used for host/client transfer !
+      --8-bit             Uses 8 bit size compression [default: 32 bit]
+
+      --8mib-ram          PSone has 8 MiB ram available [default: 2 MiB]
+
+      --boot-only         This format is for main exes and CD-Mastering only !
+                          It may slightly improve the compression ratio,
+                          decompression routines are faster than default ones.
+                          But it cannot be used for console transfer !
 
       --no-align          This option disables CD mode 2 data sector format
                           alignment. May slightly improves the compression ratio,
                           but the compressed executable will not boot from a CD.
-                          Use it for client/target transfer only !
+                          Use it for console transfer only !
 
   NOTES FOR RTM32/PE and ARM/PE
     Same as win32/pe.
@@ -675,7 +675,7 @@ NOTES FOR THE SUPPORTED EXECUTABLE FORMATS
       - Better compression (but note that the kernel was already compressed,
       so the improvement is not as large as with other formats).
       Still, the bytes saved may be essential for special needs like
-      bootdisks.
+      boot disks.
 
          For example, this is what I get for my 2.2.16 kernel:
             1589708  vmlinux
@@ -715,16 +715,16 @@ NOTES FOR THE SUPPORTED EXECUTABLE FORMATS
 
   NOTES FOR WIN32/PE
     The PE support in UPX is quite stable now, but probably there are still
-    some incompabilities with some files.
+    some incompatibilities with some files.
 
     Because of the way UPX (and other packers for this format) works, you
     can see increased memory usage of your compressed files because the
     whole program is loaded into memory at startup. If you start several
     instances of huge compressed programs you're wasting memory because the
-    common segements of the program won't get shared across the instances.
-    On the other hand if you're compressing only smaller programs, or
-    running only one instance of larger programs, then this penalty is
-    smaller, but it's still there.
+    common segments of the program won't get shared across the instances. On
+    the other hand if you're compressing only smaller programs, or running
+    only one instance of larger programs, then this penalty is smaller, but
+    it's still there.
 
     If you're running executables from network, then compressed programs
     will load faster, and require less bandwidth during execution.
@@ -738,9 +738,9 @@ NOTES FOR THE SUPPORTED EXECUTABLE FORMATS
     end with ".scr" (as screensavers are handled slightly different than
     normal exe files).
 
-    UPX compressed PE files has some minor memory overhead (usually in the
-    10 - 30 kbytes range) which can be seen by specifying the "-i" command
-    line switch during compression.
+    UPX compressed PE files have some minor memory overhead (usually in the
+    10 - 30 KiB range) which can be seen by specifying the "-i" command line
+    switch during compression.
 
     Extra options available for this executable format:
 
@@ -758,6 +758,7 @@ NOTES FOR THE SUPPORTED EXECUTABLE FORMATS
       --compress-icons=1  Compress all but the first icon.
       --compress-icons=2  Compress all icons which are not in the
                           first icon directory. [DEFAULT]
+      --compress-icons=3  Compress all icons.
 
       --compress-resources=0  Don't compress any resources at all.
 
@@ -821,13 +822,13 @@ AUTHORS
      Jens Medoch <jssg@users.sourceforge.net>
 
 COPYRIGHT
-    Copyright (C) 1996-2006 Markus Franz Xaver Johannes Oberhumer
+    Copyright (C) 1996-2008 Markus Franz Xaver Johannes Oberhumer
 
-    Copyright (C) 1996-2006 Laszlo Molnar
+    Copyright (C) 1996-2008 Laszlo Molnar
 
-    Copyright (C) 2000-2006 John F. Reiser
+    Copyright (C) 2000-2008 John F. Reiser
 
-    Copyright (C) 2002-2006 Jens Medoch
+    Copyright (C) 2002-2008 Jens Medoch
 
     This program may be used freely, and you are welcome to redistribute it
     under certain conditions.
