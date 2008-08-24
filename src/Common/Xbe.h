@@ -36,7 +36,7 @@
 
 #include "Common/Error.h"
 
-#include <stdio.h>
+#include <cstdio>
 
 // Xbe (Xbox Executable) file object
 class Xbe : public Error

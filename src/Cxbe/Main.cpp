@@ -35,7 +35,7 @@
 #include "../Common/Exe.h"
 #include "../Common/Xbe.h"
 
-#include <string.h>
+#include <cstring>
 
 // static global(s)
 static void ShowUsage();

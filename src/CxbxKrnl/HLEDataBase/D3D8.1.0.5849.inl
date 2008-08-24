@@ -1170,7 +1170,7 @@ OOVPATable D3D8_1_0_5849[] =
         "EmuIDirect3DTexture8_GetSurfaceLevel2"
         #endif
     },
-    // IDirect3DDevice8::SetLight//(OOVPA*)&IDirect3DDevice8_SetLight_1_0_5558,
+    // IDirect3DDevice8::SetLight
     {
 
         (OOVPA*)&IDirect3DDevice8_SetLight_1_0_5558,

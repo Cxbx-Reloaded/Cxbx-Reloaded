@@ -35,7 +35,7 @@
 #include "ResCxbx.h"
 #include "jpegdec/jpegdec.h"
 
-#include <stdio.h>
+#include <cstdio>
 
 WndAbout::WndAbout(HINSTANCE x_hInstance, HWND x_parent) : Wnd(x_hInstance)
 {

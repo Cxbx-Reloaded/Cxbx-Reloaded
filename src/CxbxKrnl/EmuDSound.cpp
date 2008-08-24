@@ -50,7 +50,7 @@ namespace xboxkrnl
 #include <mmreg.h>
 #include <msacm.h>
 #include <process.h>
-#include <locale.h>
+#include <clocale>
 
 XTL::X_CMcpxStream::_vtbl XTL::X_CMcpxStream::vtbl =
 {

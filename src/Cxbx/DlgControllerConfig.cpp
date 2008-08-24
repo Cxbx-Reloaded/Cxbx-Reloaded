@@ -38,7 +38,7 @@
 #include "ResCxbx.h"
 
 #include <dinput.h>
-#include <stdio.h>
+#include <cstdio>
 
 /*! windows dialog procedure */
 static INT_PTR CALLBACK DlgControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);

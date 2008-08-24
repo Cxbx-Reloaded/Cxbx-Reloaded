@@ -37,7 +37,7 @@
 #include "CxbxUtil.h"
 #include "CxbxKrnl/CxbxKrnl.h"
 
-#include <stdio.h>
+#include <cstdio>
 
 // ******************************************************************
 // * constructor

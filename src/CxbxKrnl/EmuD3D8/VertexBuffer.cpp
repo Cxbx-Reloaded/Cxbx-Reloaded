@@ -40,7 +40,7 @@
 #include "CxbxKrnl/EmuXTL.h"
 #include "CxbxKrnl/ResourceTracker.h"
 
-#include <time.h>
+#include <ctime>
 
 #define VERTEX_BUFFER_CACHE_SIZE 64
 #define MAX_STREAM_NOT_USED_TIME (2 * CLOCKS_PER_SEC) // TODO: Trim the not used time

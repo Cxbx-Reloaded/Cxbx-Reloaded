@@ -40,9 +40,9 @@ namespace xboxkrnl
     #include <xboxkrnl/xboxkrnl.h>
 };
 
-#include <stdio.h>
-#include <ctype.h>
-#include <locale.h>
+#include <cstdio>
+#include <cctype>
+#include <clocale>
 #include <process.h>
 
 // prevent name collisions

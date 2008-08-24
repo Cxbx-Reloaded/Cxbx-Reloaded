@@ -48,7 +48,7 @@ namespace xboxkrnl
 #include "HLEIntercept.h"
 
 #include <shlobj.h>
-#include <locale.h>
+#include <clocale>
 
 /* prevent name collisions */
 namespace NtDll

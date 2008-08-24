@@ -38,8 +38,8 @@
 #include "Common/Error.h"
 #include "Mutex.h"
 
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <windows.h>
 
 #include "CxbxKrnl/EmuXTL.h"

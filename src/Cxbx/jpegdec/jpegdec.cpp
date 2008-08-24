@@ -33,7 +33,7 @@
 // ******************************************************************
 #include "jpegdec.h"
 
-#include <stdio.h>
+#include <cstdio>
 #include <malloc.h>
 
 extern "C"

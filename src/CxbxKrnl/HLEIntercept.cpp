@@ -198,7 +198,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                 if(BuildVersion == 5659) { BuildVersion = 5558; }
                 if(BuildVersion == 5788) { BuildVersion = 5558; }
                 if(BuildVersion == 5028) { BuildVersion = 4627; }
-                if(BuildVersion == 5933) { BuildVersion = 5849; }   // These XDK versions are pretty mutch the same
+                if(BuildVersion == 5933) { BuildVersion = 5849; }   // These XDK versions are pretty much the same
                 /*
                 if(BuildVersion == 3944) { BuildVersion = 3925; }
                 if(BuildVersion == 4039) { BuildVersion = 4034; }
@@ -273,7 +273,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                                 ProcessHeapOffs = 0x51;
                                 RtlCreateHeapOffs = 0x4A;
                             }
-                            if(BuildVersion >= 5233)
+                            else if(BuildVersion >= 5233)
                             {
                                 pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_5233, lower, upper);
                                 ProcessHeapOffs = 0x51;

@@ -33,7 +33,7 @@
 // ******************************************************************
 #include "Exe.h"
 
-#include <stdio.h>
+#include <cstdio>
 #include <memory.h>
 
 // construct via Exe file

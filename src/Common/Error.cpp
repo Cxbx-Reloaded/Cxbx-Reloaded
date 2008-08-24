@@ -34,7 +34,7 @@
 
 #include "Common/Error.h"
 
-#include <string.h>
+#include <cstring>
 
 // clear the current error (returns false if error was fatal)
 bool Error::ClearError()

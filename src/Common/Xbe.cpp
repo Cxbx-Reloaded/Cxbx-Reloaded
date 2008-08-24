@@ -36,10 +36,10 @@
 #include "CxbxUtil.h"
 
 #include <memory.h>
-#include <locale.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+#include <clocale>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 
 // construct via Xbe file
 Xbe::Xbe(const char *x_szFilename)

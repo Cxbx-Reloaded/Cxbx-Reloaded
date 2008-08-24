@@ -52,7 +52,7 @@ namespace xboxkrnl
 #include "ResCxbxDll.h"
 
 #include <process.h>
-#include <locale.h>
+#include <clocale>
 
 // Global(s)
 HWND                                g_hEmuWindow   = NULL; // rendering window
