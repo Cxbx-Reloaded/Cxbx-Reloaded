@@ -665,6 +665,92 @@ SOOVPA<7> IDirect3DTexture8_LockRect_1_0_5849 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_BeginPushBuffer
+// ******************************************************************
+SOOVPA<6> IDirect3DDevice8_BeginPushBuffer_1_0_5849 =
+{
+    0,  // Large == 0
+    6,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x09, 0x00 },
+        { 0x11, 0x8B },
+        { 0x2F, 0x08 },
+        { 0x43, 0x57 },
+        { 0x58, 0xC8 },
+        { 0x63, 0x04 },
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_EndPushBuffer
+// ******************************************************************
+SOOVPA<6> IDirect3DDevice8_EndPushBuffer_1_0_5849 =
+{
+    0,  // Large == 0
+    6,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x09, 0x00 },
+        { 0x15, 0x50 },
+        { 0x47, 0x7B },
+        { 0x61, 0x78 },
+        { 0x77, 0x07 },
+        { 0x8C, 0xC3 },
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_RunPushBuffer
+// ******************************************************************
+SOOVPA<6> IDirect3DDevice8_RunPushBuffer_1_0_5849 =
+{
+    0,  // Large == 0
+    6,  // Count == 6
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        { 0x0E, 0xED },
+        { 0x42, 0x18 },
+        { 0x62, 0x04 },
+        { 0x8D, 0x1C },
+        { 0xAF, 0x0F },
+        { 0xF6, 0x41 },
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetVerticalBlankCallback
+// ******************************************************************
+SOOVPA<7> IDirect3DDevice8_SetVerticalBlankCallback_1_0_5849 =
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // XRef Not Saved
+    1,  // XRef Is  Used
+
+    {
+        { 0x06, XREF_D3DDEVICE },
+
+        { 0x01, 0x44 },
+        { 0x03, 0x04 },
+        { 0x05, 0x0D },
+        { 0x0C, 0xB8 },
+        { 0x0D, 0x1D },
+        { 0x11, 0x04 },
+    }
+};
+
+// ******************************************************************
 // * D3D8_1_0_5849
 // ******************************************************************
 OOVPATable D3D8_1_0_5849[] =
@@ -817,6 +903,16 @@ OOVPATable D3D8_1_0_5849[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_End"
+        #endif
+    },
+    // IDirect3DDevice8::SetVerticalBlankCallback
+    {
+        (OOVPA*)&IDirect3DDevice8_SetVerticalBlankCallback_1_0_5849,
+
+        XTL::EmuIDirect3DDevice8_SetVerticalBlankCallback,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetVerticalBlankCallback"
         #endif
     },
     // IDirect3DDevice8::SetTextureState_TexCoordIndex (* unchanged since 4627 *)
@@ -1017,6 +1113,66 @@ OOVPATable D3D8_1_0_5849[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetTexture"
+        #endif
+    },
+    // D3D::CDevice::LazySetStateVB (XREF) (* unchanged since 5558 *)
+    {
+        (OOVPA*)&D3D_CDevice_LazySetStateVB_1_0_5558, 0,
+
+        #ifdef _DEBUG_TRACE
+        "D3D::CDevice::LazySetStateVB (XREF)"
+        #endif
+    },
+    // IDirect3DDevice8::BeginPush (* unchanged since 5558 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_BeginPush_1_0_5558,
+
+        XTL::EmuIDirect3DDevice8_BeginPush,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_BeginPush"
+        #endif
+    },
+    // IDirect3DDevice8::EndPush (* unchanged since 4627 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_EndPush_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_EndPush,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_EndPush"
+        #endif
+    },
+    /* Not implemented yet.
+    // IDirect3DDevice8::BeginPushBuffer
+    {
+        (OOVPA*)&IDirect3DDevice8_BeginPushBuffer_1_0_5849,
+
+        XTL::EmuIDirect3DDevice8_BeginPushBuffer,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_BeginPushBuffer"
+        #endif
+    },
+    // IDirect3DDevice8::EndPushBuffer
+    {
+        (OOVPA*)&IDirect3DDevice8_EndPushBuffer_1_0_5849,
+
+        XTL::EmuIDirect3DDevice8_EndPushBuffer,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_EndPushBuffer"
+        #endif
+    },
+    */
+    // IDirect3DDevice8::RunPushBuffer
+    {
+        (OOVPA*)&IDirect3DDevice8_RunPushBuffer_1_0_5849,
+
+        XTL::EmuIDirect3DDevice8_RunPushBuffer,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_RunPushBuffer"
         #endif
     },
     // IDirect3DDevice8::Begin (* unchanged since 5233 *)

@@ -1997,13 +1997,13 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetViewport
 
     // resize to fit screen (otherwise crashes occur)
     {
-        if(dwWidth != 640)
+        if(dwWidth > 640)
         {
             EmuWarning("Resizing Viewport->Width to 640");
             ((D3DVIEWPORT8*)pViewport)->Width = 640;
         }
 
-        if(dwHeight != 480)
+        if(dwHeight > 480)
         {
             EmuWarning("Resizing Viewport->Height to 480");
             ((D3DVIEWPORT8*)pViewport)->Height = 480;
@@ -4126,7 +4126,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
             X_D3DFORMAT X_Format = (X_D3DFORMAT)((pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
             D3DFORMAT   Format   = EmuXB2PC_D3DFormat(X_Format);
-            D3DFORMAT   CacheFormat;
+            D3DFORMAT   CacheFormat = (XTL::D3DFORMAT)0;
             // TODO: check for dimensions
 
             // TODO: HACK: Temporary?
