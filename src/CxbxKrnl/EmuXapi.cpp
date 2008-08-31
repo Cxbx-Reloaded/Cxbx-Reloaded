@@ -582,7 +582,7 @@ BOOL WINAPI XTL::EmuXGetDeviceChanges
            GetCurrentThreadId(), DeviceType, pdwInsertions, pdwRemovals);
 
     BOOL bRet = FALSE;
-    BOOL bFirst = TRUE;
+    static BOOL bFirst = TRUE;
 
     // Return 1 Controller Inserted initially, then no changes forever
     if(bFirst)
@@ -590,6 +590,7 @@ BOOL WINAPI XTL::EmuXGetDeviceChanges
         *pdwInsertions = (1<<0);
         *pdwRemovals   = 0;
         bRet = TRUE;
+        bFirst = FALSE;
     }
     else
     {
@@ -636,7 +637,7 @@ HANDLE WINAPI XTL::EmuXInputOpen
             {
                 pph->pPollingParameters = new XINPUT_POLLING_PARAMETERS();
 
-                memcpy(&pph->pPollingParameters, pPollingParameters, sizeof(XINPUT_POLLING_PARAMETERS));
+                memcpy(pph->pPollingParameters, pPollingParameters, sizeof(XINPUT_POLLING_PARAMETERS));
             }
             else
             {
@@ -656,7 +657,7 @@ HANDLE WINAPI XTL::EmuXInputOpen
                     pph->pPollingParameters = new XINPUT_POLLING_PARAMETERS();
                 }
 
-                memcpy(&pph->pPollingParameters, pPollingParameters, sizeof(XINPUT_POLLING_PARAMETERS));
+                memcpy(pph->pPollingParameters, pPollingParameters, sizeof(XINPUT_POLLING_PARAMETERS));
             }
             else
             {
@@ -852,15 +853,14 @@ DWORD WINAPI XTL::EmuXInputGetState
     {
         if(pph->pPollingParameters != NULL)
         {
-            // 5849 XDK samples hang if this code is allowed to execute, TODO: figure out why.
-            /*if(pph->pPollingParameters->fAutoPoll == FALSE)
+            if(pph->pPollingParameters->fAutoPoll == FALSE)
             {
                 //
                 // TODO: uh..
                 //
 
                 EmuWarning("EmuXInputGetState : fAutoPoll == FALSE");
-            }*/
+            }
         }
 
         DWORD dwPort = pph->dwPort;
