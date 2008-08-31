@@ -63,6 +63,25 @@ BOOL XTL::EmuXBFormatIsSwizzled(X_D3DFORMAT Format, DWORD *pBPP)
     return FALSE;
 }
 
+BOOL XTL::EmuXBFormatIsLinear(X_D3DFORMAT Format)
+{
+    switch(Format)
+    {
+        case 0x10: // X_D3DFMT_LIN_A1R5G5B5
+        case 0x11: // X_D3DFMT_LIN_R5G6B5
+        case 0x12: // X_D3DFMT_LIN_A8R8G8B8
+        case 0x16: // X_D3DFMT_LIN_R8B8
+        case 0x1D: // X_D3DFMT_LIN_A4R4G4B4
+        case 0x1E: // X_D3DFMT_LIN_X8R8G8B8
+        case 0x2E: // X_D3DFMT_LIN_D24S8
+        case 0x30: // X_D3DFMT_LIN_D16
+        case 0x3F: // X_D3DFMT_LIN_A8B8G8R8
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
 XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 {
     switch(Format)

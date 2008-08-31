@@ -620,6 +620,29 @@ SOOVPA<11> IDirect3DDevice8_SetVertexShaderConstant1_1_0_5849 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetVertexData2f
+// ******************************************************************
+SOOVPA<8> IDirect3DDevice8_SetVertexData2f_1_0_5849 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        { 0x0D, 0x05 },
+        { 0x17, 0x8D },
+        { 0x19, 0xCD },
+        { 0x1F, 0x4C },
+        { 0x25, 0x54 },
+        { 0x27, 0x10 },
+        { 0x30, 0x0C },
+        { 0x35, 0x0C },
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_DrawVerticesUP
 // ******************************************************************
 SOOVPA<8> IDirect3DDevice8_DrawVerticesUP_1_0_5849 =
@@ -865,9 +888,9 @@ OOVPATable D3D8_1_0_5849[] =
         "EmuIDirect3DDevice8_GetDisplayMode"
         #endif
     },
-    // IDirect3DDevice8::SetVertexData2f (* unchanged since 4627 *)
+    // IDirect3DDevice8::SetVertexData2f
     {
-        (OOVPA*)&IDirect3DDevice8_SetVertexData2f_1_0_4627,
+        (OOVPA*)&IDirect3DDevice8_SetVertexData2f_1_0_5849,
 
         XTL::EmuIDirect3DDevice8_SetVertexData2f,
 

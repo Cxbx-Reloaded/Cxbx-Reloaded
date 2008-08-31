@@ -3458,7 +3458,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetDisplayMode
 
         // TODO: Retrieve from current CreateDevice settings?
         pMode->Width = 640;
-        pMode->Height = 457;    // Battlestar Galactica PAL Version
+        pMode->Height = 480;
     }
 
     EmuSwapFS();   // XBox FS
@@ -3601,8 +3601,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
         {
             int o = g_IVBTblOffs;
 
-            g_IVBTable[o].Position.x = a;//vertices[o*2+0];//a;
-            g_IVBTable[o].Position.y = b;//vertices[o*2+1];//b;
+            g_IVBTable[o].Position.x = a;
+            g_IVBTable[o].Position.y = b;
             g_IVBTable[o].Position.z = c;
             g_IVBTable[o].Rhw = 1.0f;
 
@@ -3645,13 +3645,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
         case 9: // D3DVSDE_TEXCOORD0
         {
             int o = g_IVBTblOffs;
-            /*
-            if(a > 640) a = 640;
-            if(b > 480) b = 480;
 
-            if(a > 1.0f) a /= 640.0f;
-            if(b > 1.0f) b /= 480.0f;
-            //*/
             g_IVBTable[o].TexCoord1.x = a;
             g_IVBTable[o].TexCoord1.y = b;
 
@@ -3665,13 +3659,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
         case 10: // D3DVSDE_TEXCOORD1
         {
             int o = g_IVBTblOffs;
-            /*
-            if(a > 640) a = 640;
-            if(b > 480) b = 480;
 
-            if(a > 1.0f) a /= 640.0f;
-            if(b > 1.0f) b /= 480.0f;
-            //*/
             g_IVBTable[o].TexCoord2.x = a;
             g_IVBTable[o].TexCoord2.y = b;
 
@@ -3685,13 +3673,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
         case 11: // D3DVSDE_TEXCOORD2
         {
             int o = g_IVBTblOffs;
-            /*
-            if(a > 640) a = 640;
-            if(b > 480) b = 480;
 
-            if(a > 1.0f) a /= 640.0f;
-            if(b > 1.0f) b /= 480.0f;
-            //*/
             g_IVBTable[o].TexCoord3.x = a;
             g_IVBTable[o].TexCoord3.y = b;
 
@@ -3705,13 +3687,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
         case 12: // D3DVSDE_TEXCOORD3
         {
             int o = g_IVBTblOffs;
-            /*
-            if(a > 640) a = 640;
-            if(b > 480) b = 480;
 
-            if(a > 1.0f) a /= 640.0f;
-            if(b > 1.0f) b /= 480.0f;
-            //*/
             g_IVBTable[o].TexCoord4.x = a;
             g_IVBTable[o].TexCoord4.y = b;
 
@@ -3726,15 +3702,10 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
         {
             int o = g_IVBTblOffs;
 
-            /*
-            a = (a*320.0f) + 320.0f;
-            b = (b*240.0f) + 240.0f;
-            //*/
-
-            g_IVBTable[o].Position.x = a;//vertices[o*2+0];//a;
-            g_IVBTable[o].Position.y = b;//vertices[o*2+1];//b;
+            g_IVBTable[o].Position.x = a;
+            g_IVBTable[o].Position.y = b;
             g_IVBTable[o].Position.z = c;
-            g_IVBTable[o].Rhw = 1.0f;
+            g_IVBTable[o].Rhw = d;
 
             g_IVBTblOffs++;
 
