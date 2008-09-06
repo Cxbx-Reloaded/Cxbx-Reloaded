@@ -247,17 +247,17 @@ DWORD XTL::EmuXB2PC_D3DLock(DWORD Flags)
 // lookup table for converting vertex count to primitive count
 UINT XTL::EmuD3DVertexToPrimitive[11][2] =
 {
-    {0, 0},
-    {1, 0},
-    {2, 0},
-    {1, 1},
-    {1, 1},
-    {3, 0},
-    {1, 2},
-    {1, 2},
-    {4, 0},
-    {2, 2},
-    {0, 0},
+    {0, 0}, // NULL
+    {1, 0}, // X_D3DPT_POINTLIST
+    {2, 0}, // X_D3DPT_LINELIST
+    {1, 1}, // X_D3DPT_LINELOOP
+    {1, 1}, // X_D3DPT_LINESTRIP
+    {3, 0}, // X_D3DPT_TRIANGLELIST
+    {1, 2}, // X_D3DPT_TRIANGLESTRIP
+    {1, 2}, // X_D3DPT_TRIANGLEFAN
+    {4, 0}, // X_D3DPT_QUADLIST
+    {2, 2}, // X_D3DPT_QUADSTRIP
+    {1, 0}, // X_D3DPT_POLYGON
 };
 
 // conversion table for xbox->pc primitive types
@@ -272,8 +272,8 @@ XTL::D3DPRIMITIVETYPE XTL::EmuPrimitiveTypeLookup[] =
     /* D3DPT_TRIANGLESTRIP  = 6,        */ XTL::D3DPT_TRIANGLESTRIP,
     /* D3DPT_TRIANGLEFAN    = 7,        */ XTL::D3DPT_TRIANGLEFAN,
     /* D3DPT_QUADLIST       = 8,  Xbox  */ XTL::D3DPT_TRIANGLELIST,
-    /* D3DPT_QUADSTRIP      = 9,  Xbox  */ XTL::D3DPT_TRIANGLELIST,
-    /* D3DPT_POLYGON        = 10, Xbox  */ XTL::D3DPT_TRIANGLELIST,
+    /* D3DPT_QUADSTRIP      = 9,  Xbox  */ XTL::D3DPT_TRIANGLESTRIP,
+    /* D3DPT_POLYGON        = 10, Xbox  */ XTL::D3DPT_TRIANGLEFAN,
     /* D3DPT_MAX            = 11,       */ (XTL::D3DPRIMITIVETYPE)11
 };
 

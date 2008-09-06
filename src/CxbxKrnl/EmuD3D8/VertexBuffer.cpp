@@ -849,9 +849,40 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
                                         UINT             uiStream)
 {
     PATCHEDSTREAM *pStream = &m_pStreams[uiStream];
-    // only quad and listloop are currently supported
-    if((pPatchDesc->PrimitiveType != X_D3DPT_QUADLIST) && (pPatchDesc->PrimitiveType != X_D3DPT_LINELOOP))
-        return false;
+
+    if((pPatchDesc->PrimitiveType) < 1 || (pPatchDesc->PrimitiveType >= X_D3DPT_MAX))
+    {
+        CxbxKrnlCleanup("Unknown primitive type: 0x%.02X\n", pPatchDesc->PrimitiveType);
+    }
+
+    // Unsupported primitives that don't need deep patching.
+    switch(pPatchDesc->PrimitiveType)
+    {
+        // Quad strip is just like a triangle strip, but requires two
+        // vertices per primitive.
+        case X_D3DPT_QUADSTRIP:
+            pPatchDesc->dwVertexCount -= pPatchDesc->dwVertexCount % 2;
+            pPatchDesc->PrimitiveType = X_D3DPT_TRIANGLESTRIP;
+            break;
+
+        // Convex polygon is the same as a triangle fan.
+        case X_D3DPT_POLYGON:
+            pPatchDesc->PrimitiveType = X_D3DPT_TRIANGLEFAN;
+            break;
+    }
+
+    pPatchDesc->dwPrimitiveCount = EmuD3DVertex2PrimitiveCount(pPatchDesc->PrimitiveType, pPatchDesc->dwVertexCount);
+
+    // Skip primitives that don't need further patching.
+    switch(pPatchDesc->PrimitiveType)
+    {
+        case X_D3DPT_QUADLIST:
+        case X_D3DPT_LINELOOP:
+            break;
+
+        default:
+            return false;
+    }
 
     if(pPatchDesc->pVertexStreamZeroData && uiStream > 0)
     {
@@ -876,25 +907,33 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
     {
         g_pD3DDevice8->GetStreamSource(0, &pStream->pOriginalStream, &pStream->uiOrigStride);
         pStream->uiNewStride = pStream->uiOrigStride; // The stride is still the same
+    }
+    else
+    {
+        pStream->uiOrigStride = pPatchDesc->uiVertexStreamZeroStride;
+    }
 
-        if(pPatchDesc->PrimitiveType == X_D3DPT_QUADLIST)
-        {
-            pPatchDesc->dwPrimitiveCount *= 2;
+    // Quad list
+    if(pPatchDesc->PrimitiveType == X_D3DPT_QUADLIST)
+    {
+        pPatchDesc->dwPrimitiveCount *= 2;
 
-            // This is a list of sqares/rectangles, so we convert it to a list of triangles
-            dwOriginalSize  = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride * 2;
-            dwNewSize       = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride * 3;
-        }
-        // LineLoop
-        else if(pPatchDesc->PrimitiveType == X_D3DPT_LINELOOP)
-        {
-            pPatchDesc->dwPrimitiveCount += 1;
+        // This is a list of sqares/rectangles, so we convert it to a list of triangles
+        dwOriginalSize  = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride * 2;
+        dwNewSize       = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride * 3;
+    }
+    // Line loop
+    else if(pPatchDesc->PrimitiveType == X_D3DPT_LINELOOP)
+    {
+        pPatchDesc->dwPrimitiveCount += 1;
 
-            // We will add exactly one more line
-            dwOriginalSize  = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride;
-            dwNewSize       = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride + pStream->uiOrigStride;
-        }
+        // We will add exactly one more line
+        dwOriginalSize  = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride;
+        dwNewSize       = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride + pStream->uiOrigStride;
+    }
 
+    if(pPatchDesc->pVertexStreamZeroData == 0)
+    {
         // Retrieve the original buffer size
         {
             XTL::D3DVERTEXBUFFER_DESC Desc;
@@ -926,25 +965,6 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
     }
     else
     {
-        pStream->uiOrigStride = pPatchDesc->uiVertexStreamZeroStride;
-
-        if(pPatchDesc->PrimitiveType == X_D3DPT_QUADLIST)
-        {
-            pPatchDesc->dwPrimitiveCount *= 2;
-
-            // This is a list of sqares/rectangles, so we convert it to a list of triangles
-            dwOriginalSize  = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride * 2;
-            dwNewSize       = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride * 3;
-        }
-        else if(pPatchDesc->PrimitiveType == X_D3DPT_LINELOOP) // LineLoop
-        {
-            pPatchDesc->dwPrimitiveCount += 1;
-
-            // We will add exactly one more line
-            dwOriginalSize  = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride;
-            dwNewSize       = pPatchDesc->dwPrimitiveCount * pStream->uiOrigStride + pStream->uiOrigStride;
-        }
-
         dwOriginalSizeWR = dwOriginalSize;
         dwNewSizeWR = dwNewSize;
 
@@ -963,7 +983,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
            &pOrigVertexData[pPatchDesc->dwOffset+dwOriginalSize],
            dwOriginalSizeWR - pPatchDesc->dwOffset - dwOriginalSize);
 
-    // Quad
+    // Quad list
     if(pPatchDesc->PrimitiveType == X_D3DPT_QUADLIST)
     {
         uint08 *pPatch1 = &pPatchedVertexData[pPatchDesc->dwOffset     * pStream->uiOrigStride];
@@ -1003,7 +1023,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
             }
         }
     }
-    // LineLoop
+    // Line loop
     else if(pPatchDesc->PrimitiveType == X_D3DPT_LINELOOP)
     {
         memcpy(&pPatchedVertexData[pPatchDesc->dwOffset], &pOrigVertexData[pPatchDesc->dwOffset], dwOriginalSize);
@@ -1098,346 +1118,190 @@ bool XTL::VertexPatcher::Restore()
 
 VOID XTL::EmuFlushIVB()
 {
-    if(g_IVBPrimitiveType == X_D3DPT_TRIANGLEFAN)
+    XTL::EmuUpdateDeferredStates();
+
+    DWORD *pdwVB = (DWORD*)g_IVBTable;
+
+    UINT uiStride = 0;
+
+    // Parse IVB table with current FVF shader if possible.
+    bool bFVF = !VshHandleIsVertexShader(g_CurrentVertexShader);
+    DWORD dwCurFVF;
+    if(bFVF && ((g_CurrentVertexShader & D3DFVF_POSITION_MASK) != D3DFVF_XYZRHW))
     {
-        XTL::EmuUpdateDeferredStates();
-
-        DWORD *pdwVB = (DWORD*)g_IVBTable;
-
-        UINT uiStride = 0;
-
-        DbgPrintf("g_IVBTblOffs := %d\n", g_IVBTblOffs);
-
-        // TEMP DEBUGGING
-        /*
-        g_IVBTable[0].TexCoord1.x = 0.0f;
-        g_IVBTable[0].TexCoord1.y = 0.0f;
-        g_IVBTable[1].TexCoord1.x = 1.0f;
-        g_IVBTable[1].TexCoord1.y = 0.0f;
-        g_IVBTable[2].TexCoord1.x = 1.0f;
-        g_IVBTable[2].TexCoord1.y = 1.0f;
-        g_IVBTable[3].TexCoord1.x = 0.0f;
-        g_IVBTable[3].TexCoord1.y = 1.0f;
-        g_IVBTable[0].TexCoord2.x = 0.0f;
-        g_IVBTable[0].TexCoord2.y = 0.0f;
-        g_IVBTable[1].TexCoord2.x = 1.0f;
-        g_IVBTable[1].TexCoord2.y = 0.0f;
-        g_IVBTable[2].TexCoord2.x = 1.0f;
-        g_IVBTable[2].TexCoord2.y = 1.0f;
-        g_IVBTable[3].TexCoord2.x = 0.0f;
-        g_IVBTable[3].TexCoord2.y = 1.0f;
-        g_IVBTable[0].TexCoord3.x = 0.0f;
-        g_IVBTable[0].TexCoord3.y = 0.0f;
-        g_IVBTable[1].TexCoord3.x = 1.0f;
-        g_IVBTable[1].TexCoord3.y = 0.0f;
-        g_IVBTable[2].TexCoord3.x = 1.0f;
-        g_IVBTable[2].TexCoord3.y = 1.0f;
-        g_IVBTable[3].TexCoord3.x = 0.0f;
-        g_IVBTable[3].TexCoord3.y = 1.0f;
-        g_IVBTable[0].TexCoord4.x = 0.0f;
-        g_IVBTable[0].TexCoord4.y = 0.0f;
-        g_IVBTable[1].TexCoord4.x = 1.0f;
-        g_IVBTable[1].TexCoord4.y = 0.0f;
-        g_IVBTable[2].TexCoord4.x = 1.0f;
-        g_IVBTable[2].TexCoord4.y = 1.0f;
-        g_IVBTable[3].TexCoord4.x = 0.0f;
-        g_IVBTable[3].TexCoord4.y = 1.0f;
-        //*/
-        /*
-        static IDirect3DTexture8 *pDummyTexture[4] = {0, 0, 0, 0};
-
-        for(int Stage=0;Stage<4;Stage++)
-        {
-            if(pDummyTexture[Stage] == 0)
-            {
-                if(Stage == 0)
-                {
-                    if(D3DXCreateTextureFromFile(g_pD3DDevice8, "C:\\dummy1.bmp", &pDummyTexture[Stage]) != D3D_OK)
-                        CxbxKrnlCleanup("Could not create dummy texture!");
-                }
-                else if(Stage == 1)
-                {
-                    if(D3DXCreateTextureFromFile(g_pD3DDevice8, "C:\\dummy2.bmp", &pDummyTexture[Stage]) != D3D_OK)
-                        CxbxKrnlCleanup("Could not create dummy texture!");
-                }
-            }
-
-            g_pD3DDevice8->SetTexture(Stage, pDummyTexture[Stage]);
-        }
-       /*
-        g_pD3DDevice8->SetTextureStageState(0, D3DTSS_COLOROP,   D3DTOP_BLENDDIFFUSEALPHA);
-        g_pD3DDevice8->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-        g_pD3DDevice8->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_SPECULAR);
-        g_pD3DDevice8->SetTextureStageState(0, D3DTSS_ALPHAOP,   D3DTOP_SELECTARG1);
-        g_pD3DDevice8->SetTextureStageState(0, D3DTSS_ALPHAARG1,   D3DTA_TEXTURE);
-*/
-        /*
-        g_pD3DDevice8->SetTextureStageState(0, D3DTSS_ALPHAOP,   D3DTOP_SELECTARG1);
-        g_pD3DDevice8->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-        g_pD3DDevice8->SetTextureStageState(0, D3DTSS_COLOROP,   D3DTOP_SELECTARG1);
-        g_pD3DDevice8->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-        g_pD3DDevice8->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-
-        g_pD3DDevice8->SetTextureStageState(1, D3DTSS_ALPHAOP,   D3DTOP_DISABLE);
-        g_pD3DDevice8->SetTextureStageState(1, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-        g_pD3DDevice8->SetTextureStageState(1, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
-        g_pD3DDevice8->SetTextureStageState(1, D3DTSS_COLOROP,   D3DTOP_DISABLE);
-        g_pD3DDevice8->SetTextureStageState(1, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-        g_pD3DDevice8->SetTextureStageState(1, D3DTSS_COLORARG2, D3DTA_CURRENT);
-
-        g_pD3DDevice8->SetTextureStageState(2, D3DTSS_ALPHAOP,   D3DTOP_DISABLE);
-        g_pD3DDevice8->SetTextureStageState(2, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-        g_pD3DDevice8->SetTextureStageState(2, D3DTSS_COLOROP,   D3DTOP_DISABLE);
-        g_pD3DDevice8->SetTextureStageState(2, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-        g_pD3DDevice8->SetTextureStageState(2, D3DTSS_COLORARG2, D3DTA_CURRENT);
-
-        g_pD3DDevice8->SetTextureStageState(3, D3DTSS_ALPHAOP,   D3DTOP_DISABLE);
-        g_pD3DDevice8->SetTextureStageState(3, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-        g_pD3DDevice8->SetTextureStageState(3, D3DTSS_COLOROP,   D3DTOP_DISABLE);
-        g_pD3DDevice8->SetTextureStageState(3, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-        g_pD3DDevice8->SetTextureStageState(3, D3DTSS_COLORARG2, D3DTA_CURRENT);
-
-        g_pD3DDevice8->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-        g_pD3DDevice8->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_SRCCOLOR);
-        g_pD3DDevice8->SetRenderState(D3DRS_AMBIENT, RGB(255,255,255));
-        g_pD3DDevice8->SetRenderState(D3DRS_LIGHTING, FALSE);
-        g_pD3DDevice8->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-        g_pD3DDevice8->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE);
-        //*/
-
-        for(uint v=0;v<g_IVBTblOffs;v++)
-        {
-            DWORD dwPos = g_IVBFVF & D3DFVF_POSITION_MASK;
-
-            if(dwPos == D3DFVF_XYZRHW)
-            {
-                *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.x;
-                *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.y;
-                *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.z;
-                *(FLOAT*)pdwVB++ = g_IVBTable[v].Rhw;
-
-                if(v == 0)
-                {
-                    uiStride += (sizeof(FLOAT)*4);
-                }
-
-                DbgPrintf("IVB Position := {%f, %f, %f}\n", g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z);
-            }
-            else
-            {
-                CxbxKrnlCleanup("Unsupported Position Mask (FVF := 0x%.08X)", g_IVBFVF);
-            }
-
-            if(g_IVBFVF & D3DFVF_DIFFUSE)
-            {
-                *(DWORD*)pdwVB++ = g_IVBTable[v].dwDiffuse;
-
-                if(v == 0)
-                {
-                    uiStride += sizeof(DWORD);
-                }
-
-                DbgPrintf("IVB Diffuse := 0x%.08X\n", g_IVBTable[v].dwDiffuse);
-            }
-
-            if(g_IVBFVF & D3DFVF_SPECULAR)
-            {
-                *(DWORD*)pdwVB++ = g_IVBTable[v].dwDiffuse;
-
-                if(v == 0)
-                {
-                    uiStride += sizeof(DWORD);
-                }
-
-                DbgPrintf("IVB Specular := 0x%.08X\n", g_IVBTable[v].dwSpecular);
-            }
-
-            DWORD dwTexN = (g_IVBFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
-
-            if(dwTexN >= 1)
-            {
-                *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord1.x;
-                *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord1.y;
-
-                if(v == 0)
-                {
-                    uiStride += sizeof(FLOAT)*2;
-                }
-
-                DbgPrintf("IVB TexCoord1 := {%f, %f}\n", g_IVBTable[v].TexCoord1.x, g_IVBTable[v].TexCoord1.y);
-            }
-
-            if(dwTexN >= 2)
-            {
-                *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord2.x;
-                *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord2.y;
-
-                if(v == 0)
-                {
-                    uiStride += sizeof(FLOAT)*2;
-                }
-
-                DbgPrintf("IVB TexCoord2 := {%f, %f}\n", g_IVBTable[v].TexCoord2.x, g_IVBTable[v].TexCoord2.y);
-            }
-
-            if(dwTexN >= 3)
-            {
-                *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord3.x;
-                *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord3.y;
-
-                if(v == 0)
-                {
-                    uiStride += sizeof(FLOAT)*2;
-                }
-
-                DbgPrintf("IVB TexCoord3 := {%f, %f}\n", g_IVBTable[v].TexCoord3.x, g_IVBTable[v].TexCoord3.y);
-            }
-
-            if(dwTexN >= 4)
-            {
-                *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord4.x;
-                *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord4.y;
-
-                if(v == 0)
-                {
-                    uiStride += sizeof(FLOAT)*2;
-                }
-
-                DbgPrintf("IVB TexCoord4 := {%f, %f}\n", g_IVBTable[v].TexCoord4.x, g_IVBTable[v].TexCoord4.y);
-            }
-        }
-
-        g_pD3DDevice8->SetVertexShader(g_IVBFVF);
-        g_pD3DDevice8->SetPixelShader(NULL);
-
-        // patch buffer
-        UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(g_IVBPrimitiveType, g_IVBTblOffs);
-
-        VertexPatchDesc VPDesc;
-
-        VPDesc.dwVertexCount = g_IVBTblOffs;
-        VPDesc.PrimitiveType = g_IVBPrimitiveType;
-        VPDesc.dwPrimitiveCount = PrimitiveCount;
-        VPDesc.dwOffset = 0;
-        VPDesc.pVertexStreamZeroData = g_IVBTable;
-        VPDesc.uiVertexStreamZeroStride = uiStride;
-        // TODO: Set the current shader and let the patcher handle it..
-        VPDesc.hVertexShader = g_IVBFVF;
-
-        VertexPatcher VertPatch;
-
-        bool bPatched = VertPatch.Apply(&VPDesc);
-
-        /*
-        IDirect3DBaseTexture8 *pTexture = 0;
-
-        g_pD3DDevice8->GetTexture(0, &pTexture);
-
-        if(pTexture != NULL)
-        {
-            static int dwDumpTexture = 0;
-
-            char szBuffer[255];
-
-            sprintf(szBuffer, "C:\\Aaron\\Textures\\Texture-Active%.03d (0x%.08X).bmp", dwDumpTexture++, pTexture);
-
-            D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture, NULL);
-        }
-        //*/
-        //EmuUpdateActiveTexture();
-
-        g_pD3DDevice8->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, VPDesc.dwPrimitiveCount, VPDesc.pVertexStreamZeroData, VPDesc.uiVertexStreamZeroStride);
-
-        VertPatch.Restore();
-
-        g_IVBTblOffs = 0;
+        dwCurFVF = g_CurrentVertexShader;
     }
-    else if((g_IVBPrimitiveType == X_D3DPT_QUADLIST) && (g_IVBTblOffs == 4))
+    else
     {
-        XTL::EmuUpdateDeferredStates();
+        dwCurFVF = g_IVBFVF;
+    }
 
-        DWORD *pdwVB = (DWORD*)g_IVBTable;
+    DbgPrintf("g_IVBTblOffs := %d\n", g_IVBTblOffs);
 
-        UINT uiStride = 0;
+    for(uint v=0;v<g_IVBTblOffs;v++)
+    {
+        DWORD dwPos = dwCurFVF & D3DFVF_POSITION_MASK;
 
-        for(int v=0;v<4;v++)
+        if(dwPos == D3DFVF_XYZ)
         {
-            DWORD dwPos = g_IVBFVF & D3DFVF_POSITION_MASK;
+            *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.x;
+            *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.y;
+            *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.z;
 
-            if(dwPos == D3DFVF_XYZ)
+            if(v == 0)
             {
-                *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.x;
-                *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.y;
-                *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.z;
-
-                if(v == 0)
-                {
-                    uiStride += (sizeof(FLOAT)*3);
-                }
-
-                DbgPrintf("IVB Position := {%f, %f, %f}\n", g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z);
-            }
-            else
-            {
-                CxbxKrnlCleanup("Unsupported Position Mask (FVF := 0x%.08X)", g_IVBFVF);
+                uiStride += (sizeof(FLOAT)*3);
             }
 
-            if(g_IVBFVF & D3DFVF_DIFFUSE)
+            DbgPrintf("IVB Position := {%f, %f, %f}\n", g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z);
+ 
+        }
+        else if(dwPos == D3DFVF_XYZRHW)
+        {
+            *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.x;
+            *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.y;
+            *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.z;
+            *(FLOAT*)pdwVB++ = g_IVBTable[v].Rhw;
+
+            if(v == 0)
             {
-                *(DWORD*)pdwVB++ = g_IVBTable[v].dwDiffuse;
-
-                if(v == 0)
-                {
-                    uiStride += sizeof(DWORD);
-                }
-
-                DbgPrintf("IVB Diffuse := 0x%.08X\n", g_IVBTable[v].dwDiffuse);
+                uiStride += (sizeof(FLOAT)*4);
             }
 
-            DWORD dwTexN = (g_IVBFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
-
-            if(dwTexN >= 1)
-            {
-                *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord1.x;
-                *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord1.y;
-
-                if(v == 0)
-                {
-                    uiStride += sizeof(FLOAT)*2;
-                }
-
-                DbgPrintf("IVB TexCoord1 := {%f, %f}\n", g_IVBTable[v].TexCoord1.x, g_IVBTable[v].TexCoord1.y);
-            }
+            DbgPrintf("IVB Position := {%f, %f, %f, %f}\n", g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z, g_IVBTable[v].Position.z, g_IVBTable[v].Rhw);
         }
 
-        g_pD3DDevice8->SetVertexShader(g_IVBFVF);
-        g_pD3DDevice8->SetPixelShader(NULL);
+        else
+        {
+            CxbxKrnlCleanup("Unsupported Position Mask (FVF := 0x%.08X)", g_IVBFVF);
+        }
 
-        // patch buffer
-        UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(g_IVBPrimitiveType, 4);
+        if(dwPos == D3DFVF_NORMAL)
+        {
+            *(FLOAT*)pdwVB++ = g_IVBTable[v].Normal.x;
+            *(FLOAT*)pdwVB++ = g_IVBTable[v].Normal.y;
+            *(FLOAT*)pdwVB++ = g_IVBTable[v].Normal.z;
 
-        VertexPatchDesc VPDesc;
+            if(v == 0)
+            {
+                uiStride += (sizeof(FLOAT)*3);
+            }
 
-        VPDesc.dwVertexCount = 4;
-        VPDesc.PrimitiveType = g_IVBPrimitiveType;
-        VPDesc.dwPrimitiveCount = PrimitiveCount;
-        VPDesc.dwOffset = 0;
-        VPDesc.pVertexStreamZeroData = g_IVBTable;
-        VPDesc.uiVertexStreamZeroStride = uiStride;
-        // TODO: Set the current shader and let the patcher handle it..
-        VPDesc.hVertexShader = g_IVBFVF;
+            DbgPrintf("IVB Normal := {%f, %f, %f}\n", g_IVBTable[v].Normal.x, g_IVBTable[v].Normal.y, g_IVBTable[v].Normal.z);
+ 
+        }
 
-        VertexPatcher VertPatch;
+        if(dwCurFVF & D3DFVF_DIFFUSE)
+        {
+            *(DWORD*)pdwVB++ = g_IVBTable[v].dwDiffuse;
 
-        bool bPatched = VertPatch.Apply(&VPDesc);
+            if(v == 0)
+            {
+                uiStride += sizeof(DWORD);
+            }
 
-        g_pD3DDevice8->DrawPrimitiveUP(D3DPT_TRIANGLELIST, VPDesc.dwPrimitiveCount, VPDesc.pVertexStreamZeroData, VPDesc.uiVertexStreamZeroStride);
+            DbgPrintf("IVB Diffuse := 0x%.08X\n", g_IVBTable[v].dwDiffuse);
+        }
 
-        VertPatch.Restore();
+        if(dwCurFVF & D3DFVF_SPECULAR)
+        {
+            *(DWORD*)pdwVB++ = g_IVBTable[v].dwSpecular;
 
-        // ignore
-        g_IVBTblOffs = 0;
+            if(v == 0)
+            {
+                uiStride += sizeof(DWORD);
+            }
+
+            DbgPrintf("IVB Specular := 0x%.08X\n", g_IVBTable[v].dwSpecular);
+        }
+
+        DWORD dwTexN = (dwCurFVF & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT;
+
+        if(dwTexN >= 1)
+        {
+            *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord1.x;
+            *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord1.y;
+
+            if(v == 0)
+            {
+                uiStride += sizeof(FLOAT)*2;
+            }
+
+            DbgPrintf("IVB TexCoord1 := {%f, %f}\n", g_IVBTable[v].TexCoord1.x, g_IVBTable[v].TexCoord1.y);
+        }
+
+        if(dwTexN >= 2)
+        {
+            *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord2.x;
+            *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord2.y;
+
+            if(v == 0)
+            {
+                uiStride += sizeof(FLOAT)*2;
+            }
+
+            DbgPrintf("IVB TexCoord2 := {%f, %f}\n", g_IVBTable[v].TexCoord2.x, g_IVBTable[v].TexCoord2.y);
+        }
+
+        if(dwTexN >= 3)
+        {
+            *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord3.x;
+            *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord3.y;
+
+            if(v == 0)
+            {
+                uiStride += sizeof(FLOAT)*2;
+            }
+
+            DbgPrintf("IVB TexCoord3 := {%f, %f}\n", g_IVBTable[v].TexCoord3.x, g_IVBTable[v].TexCoord3.y);
+        }
+
+        if(dwTexN >= 4)
+        {
+            *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord4.x;
+            *(FLOAT*)pdwVB++ = g_IVBTable[v].TexCoord4.y;
+
+            if(v == 0)
+            {
+                uiStride += sizeof(FLOAT)*2;
+            }
+
+            DbgPrintf("IVB TexCoord4 := {%f, %f}\n", g_IVBTable[v].TexCoord4.x, g_IVBTable[v].TexCoord4.y);
+        }
     }
+
+    VertexPatchDesc VPDesc;
+
+    VPDesc.PrimitiveType = g_IVBPrimitiveType;
+    VPDesc.dwVertexCount = g_IVBTblOffs;
+    VPDesc.dwOffset = 0;
+    VPDesc.pVertexStreamZeroData = g_IVBTable;
+    VPDesc.uiVertexStreamZeroStride = uiStride;
+    VPDesc.hVertexShader = g_CurrentVertexShader;
+
+    VertexPatcher VertPatch;
+
+    bool bPatched = VertPatch.Apply(&VPDesc);
+
+    if(bFVF)
+    {
+        g_pD3DDevice8->SetVertexShader(dwCurFVF);
+    }
+
+    g_pD3DDevice8->DrawPrimitiveUP(
+        EmuPrimitiveType(VPDesc.PrimitiveType),
+        VPDesc.dwPrimitiveCount,
+        VPDesc.pVertexStreamZeroData,
+        VPDesc.uiVertexStreamZeroStride);
+
+    if(bFVF)
+    {
+        g_pD3DDevice8->SetVertexShader(g_CurrentVertexShader);
+    }
+
+    VertPatch.Restore();
+
+    g_IVBTblOffs = 0;
 
     return;
 }

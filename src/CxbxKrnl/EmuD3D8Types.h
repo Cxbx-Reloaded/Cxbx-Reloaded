@@ -46,6 +46,7 @@ typedef DWORD X_D3DBLENDOP;
 typedef DWORD X_D3DBLEND;
 typedef DWORD X_D3DCMPFUNC;
 typedef DWORD X_D3DFILLMODE;
+typedef DWORD X_D3DSHADEMODE;
 typedef DWORD X_D3DTEXTURESTAGESTATETYPE;
 
 // Primitives supported by draw-primitive API

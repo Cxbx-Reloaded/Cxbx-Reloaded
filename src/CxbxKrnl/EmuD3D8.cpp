@@ -3482,9 +3482,6 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Begin
            ");\n",
            GetCurrentThreadId(), PrimitiveType);
 
-    if((PrimitiveType != X_D3DPT_TRIANGLEFAN) && (PrimitiveType != X_D3DPT_QUADSTRIP) && (PrimitiveType != X_D3DPT_QUADLIST))
-        CxbxKrnlCleanup("EmuIDirect3DDevice8_Begin does not support primitive : %d", PrimitiveType);
-
     g_IVBPrimitiveType = PrimitiveType;
 
     if(g_IVBTable == 0)
@@ -3597,6 +3594,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
 
     switch(Register)
     {
+        // TODO: Blend weight.
+
         case 0: // D3DVSDE_POSITION
         {
             int o = g_IVBTblOffs;
@@ -3609,6 +3608,20 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
             g_IVBTblOffs++;
 
             g_IVBFVF |= D3DFVF_XYZRHW;
+        }
+        break;
+
+        case 2: // D3DVSDE_NORMAL
+        {
+            int o = g_IVBTblOffs;
+
+            g_IVBTable[o].Normal.x = a;
+            g_IVBTable[o].Normal.y = b;
+            g_IVBTable[o].Normal.z = c;
+
+            g_IVBTblOffs++;
+
+            g_IVBFVF |= D3DFVF_NORMAL;
         }
         break;
 
@@ -3706,6 +3719,10 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData4f
             g_IVBTable[o].Position.y = b;
             g_IVBTable[o].Position.z = c;
             g_IVBTable[o].Rhw = d;
+
+            // Copy current color to next vertex
+            g_IVBTable[o+1].dwDiffuse  = g_IVBTable[o].dwDiffuse;
+            g_IVBTable[o+1].dwSpecular = g_IVBTable[o].dwSpecular;
 
             g_IVBTblOffs++;
 
@@ -6149,7 +6166,7 @@ VOID __fastcall XTL::EmuIDirect3DDevice8_SetRenderState_Simple
             break;
 
             case D3DRS_SHADEMODE:
-                Value = Value & 0x03;
+                Value = EmuXB2PC_D3DSHADEMODE(Value);
                 DbgPrintf("D3DRS_SHADEMODE := 0x%.08X\n", Value);
                 break;
 
@@ -6962,19 +6979,10 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVertices
 
     EmuUpdateDeferredStates();
 
-    if( (PrimitiveType == X_D3DPT_QUADSTRIP) || (PrimitiveType == X_D3DPT_POLYGON) )
-        EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
-
-    UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
-
-    // Convert from Xbox to PC enumeration
-    D3DPRIMITIVETYPE PCPrimitiveType = EmuPrimitiveType(PrimitiveType);
-
     VertexPatchDesc VPDesc;
 
-    VPDesc.dwVertexCount = VertexCount;
     VPDesc.PrimitiveType = PrimitiveType;
-    VPDesc.dwPrimitiveCount = PrimitiveCount;
+    VPDesc.dwVertexCount = VertexCount;
     VPDesc.dwOffset = StartVertex;
     VPDesc.pVertexStreamZeroData = 0;
     VPDesc.uiVertexStreamZeroStride = 0;
@@ -6987,24 +6995,17 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVertices
     if(IsValidCurrentShader())
     {
         #ifdef _DEBUG_TRACK_VB
-        if(g_bVBSkipStream)
-        {
-            g_pD3DDevice8->DrawPrimitive
-            (
-                PCPrimitiveType,
-                StartVertex,
-                0
-            );
-        }
-        else
+        if(!g_bVBSkipStream)
         {
         #endif
-            g_pD3DDevice8->DrawPrimitive
-            (
-                PCPrimitiveType,
-                StartVertex,
-                VPDesc.dwPrimitiveCount
-            );
+
+        g_pD3DDevice8->DrawPrimitive
+        (
+            EmuPrimitiveType(VPDesc.PrimitiveType),
+            StartVertex,
+            VPDesc.dwPrimitiveCount
+        );
+
         #ifdef _DEBUG_TRACK_VB
         }
         #endif
@@ -7042,79 +7043,10 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVerticesUP
 
     EmuUpdateDeferredStates();
 
-    if( (PrimitiveType == X_D3DPT_QUADSTRIP) || (PrimitiveType == X_D3DPT_POLYGON) )
-        CxbxKrnlCleanup("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
-
-    /*
-    // DEBUG
-    {
-        static FLOAT fixer[] =
-        {
-            0.0f, 0.0f, 1.0f,
-            0.0f, 480.0f, 1.0f,
-            640.0f, 0.0f, 1.0f,
-            640.0f, 480.0f, 1.0f,
-        };
-
-        DWORD *pdwVB = (DWORD*)pVertexStreamZeroData;
-
-        for(uint r=0;r<VertexCount;r++)
-        {
-            pdwVB[0] = FtoDW(fixer[r*3+0]);
-            pdwVB[1] = FtoDW(fixer[r*3+1]);
-            pdwVB[2] = FtoDW(fixer[r*3+2]);
-            pdwVB[5] = 0xFFFFFFFF;
-
-            FLOAT px = DWtoF(pdwVB[0]);
-            FLOAT py = DWtoF(pdwVB[1]);
-            FLOAT pz = DWtoF(pdwVB[2]);
-            FLOAT rhw = DWtoF(pdwVB[3]);
-            DWORD dwDiffuse = pdwVB[5];
-            DWORD dwSpecular = pdwVB[4];
-            FLOAT tx = DWtoF(pdwVB[6]);
-            FLOAT ty = DWtoF(pdwVB[7]);
-
-            //D3DFVF_POSITION_MASK
-
-            printf("%.02d XYZ        : {%.08f, %.08f, %.08f}\n", r, px, py, pz);
-            printf("%.02d RHW        : %f\n", r, rhw);
-            printf("%.02d dwDiffuse  : 0x%.08X\n", r, dwDiffuse);
-            printf("%.02d dwSpecular : 0x%.08X\n", r, dwSpecular);
-            printf("%.02d Tex1       : {%.08f, %.08f}\n", r, tx, ty);
-            printf("\n");
-
-            pdwVB += (VertexStreamZeroStride/4);
-        }
-    }
-    //*/
-
-    /*
-    IDirect3DBaseTexture8 *pTexture = 0;
-
-    g_pD3DDevice8->GetTexture(0, &pTexture);
-
-    if(pTexture != NULL)
-    {
-        static int dwDumpTexture = 0;
-
-        char szBuffer[255];
-
-        sprintf(szBuffer, "C:\\Aaron\\Textures\\Texture-Active%.03d.bmp", dwDumpTexture++);
-
-        D3DXSaveTextureToFile(szBuffer, D3DXIFF_BMP, pTexture, NULL);
-    }
-    //*/
-
-    UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
-
-    // Convert from Xbox to PC enumeration
-    D3DPRIMITIVETYPE PCPrimitiveType = EmuPrimitiveType(PrimitiveType);
-
     VertexPatchDesc VPDesc;
 
-    VPDesc.dwVertexCount = VertexCount;
     VPDesc.PrimitiveType = PrimitiveType;
-    VPDesc.dwPrimitiveCount = PrimitiveCount;
+    VPDesc.dwVertexCount = VertexCount;
     VPDesc.dwOffset = 0;
     VPDesc.pVertexStreamZeroData = pVertexStreamZeroData;
     VPDesc.uiVertexStreamZeroStride = VertexStreamZeroStride;
@@ -7133,7 +7065,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawVerticesUP
 
         g_pD3DDevice8->DrawPrimitiveUP
         (
-            PCPrimitiveType,
+            EmuPrimitiveType(VPDesc.PrimitiveType),
             VPDesc.dwPrimitiveCount,
             VPDesc.pVertexStreamZeroData,
             VPDesc.uiVertexStreamZeroStride
@@ -7206,19 +7138,13 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
 
     EmuUpdateDeferredStates();
 
-    if( (PrimitiveType == X_D3DPT_QUADLIST) || (PrimitiveType == X_D3DPT_QUADSTRIP) || (PrimitiveType == X_D3DPT_POLYGON) )
+    if( (PrimitiveType == X_D3DPT_LINELOOP) || (PrimitiveType == X_D3DPT_QUADLIST) )
         EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
-
-    UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
-
-    // Convert from Xbox to PC enumeration
-    D3DPRIMITIVETYPE PCPrimitiveType = EmuPrimitiveType(PrimitiveType);
 
     VertexPatchDesc VPDesc;
 
-    VPDesc.dwVertexCount = VertexCount;
     VPDesc.PrimitiveType = PrimitiveType;
-    VPDesc.dwPrimitiveCount = PrimitiveCount;
+    VPDesc.dwVertexCount = VertexCount;
     VPDesc.dwOffset = 0;
     VPDesc.pVertexStreamZeroData = 0;
     VPDesc.uiVertexStreamZeroStride = 0;
@@ -7287,7 +7213,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
     {
         g_pD3DDevice8->DrawIndexedPrimitive
         (
-            PCPrimitiveType, 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount
+            EmuPrimitiveType(VPDesc.PrimitiveType), 0, uiNumVertices, uiStartIndex, VPDesc.dwPrimitiveCount
         );
     }
 
@@ -7338,19 +7264,13 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVerticesUP
 
     EmuUpdateDeferredStates();
 
-    if( (PrimitiveType == X_D3DPT_QUADLIST) || (PrimitiveType == X_D3DPT_QUADSTRIP) || (PrimitiveType == X_D3DPT_POLYGON) )
+    if( (PrimitiveType == X_D3DPT_LINELOOP) || (PrimitiveType == X_D3DPT_QUADLIST) )
         EmuWarning("Unsupported PrimitiveType! (%d)", (DWORD)PrimitiveType);
-
-    UINT PrimitiveCount = EmuD3DVertex2PrimitiveCount(PrimitiveType, VertexCount);
-
-    // Convert from Xbox to PC enumeration
-    D3DPRIMITIVETYPE PCPrimitiveType = EmuPrimitiveType(PrimitiveType);
 
     VertexPatchDesc VPDesc;
 
-    VPDesc.dwVertexCount = VertexCount;
     VPDesc.PrimitiveType = PrimitiveType;
-    VPDesc.dwPrimitiveCount = PrimitiveCount;
+    VPDesc.dwVertexCount = VertexCount;
     VPDesc.dwOffset = 0;
     VPDesc.pVertexStreamZeroData = pVertexStreamZeroData;
     VPDesc.uiVertexStreamZeroStride = VertexStreamZeroStride;
@@ -7369,7 +7289,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVerticesUP
     {
         g_pD3DDevice8->DrawIndexedPrimitiveUP
         (
-            PCPrimitiveType, 0, VertexCount, VPDesc.dwPrimitiveCount, pIndexData, D3DFMT_INDEX16, VPDesc.pVertexStreamZeroData, VPDesc.uiVertexStreamZeroStride
+            EmuPrimitiveType(VPDesc.PrimitiveType), 0, VPDesc.dwVertexCount, VPDesc.dwPrimitiveCount, pIndexData, D3DFMT_INDEX16, VPDesc.pVertexStreamZeroData, VPDesc.uiVertexStreamZeroStride
         );
     }
 

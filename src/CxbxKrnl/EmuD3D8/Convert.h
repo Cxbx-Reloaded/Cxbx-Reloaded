@@ -123,6 +123,12 @@ inline D3DFILLMODE EmuXB2PC_D3DFILLMODE(X_D3DFILLMODE Value)
     return (D3DFILLMODE)((Value & 0xF) + 1);
 }
 
+// convert from xbox to pc shade modes
+inline D3DSHADEMODE EmuXB2PC_D3DSHADEMODE(X_D3DSHADEMODE Value)
+{
+    return (D3DSHADEMODE)((Value & 0x3) + 1);
+}
+
 // table used for vertex->primitive count conversion
 extern UINT EmuD3DVertexToPrimitive[11][2];
 

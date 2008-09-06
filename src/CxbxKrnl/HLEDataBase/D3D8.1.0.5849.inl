@@ -326,6 +326,29 @@ SOOVPA<8> IDirect3DDevice8_DrawIndexedVertices_1_0_5849 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_DrawIndexedVerticesUP
+// ******************************************************************
+SOOVPA<8> IDirect3DDevice8_DrawIndexedVerticesUP_1_0_5849 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        { 0x1F, 0x05 },
+        { 0x3A, 0x89 },
+        { 0x64, 0xF0 },
+        { 0x73, 0x13 },
+        { 0x94, 0xAF },
+        { 0xAB, 0x12 },
+        { 0xE4, 0xDB },
+        { 0xFF, 0x0C },
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetMaterial
 // ******************************************************************
 SOOVPA<9> IDirect3DDevice8_SetMaterial_1_0_5849 =
@@ -1249,6 +1272,16 @@ OOVPATable D3D8_1_0_5849[] =
         "EmuIDirect3DDevice8_DrawIndexedVertices"
         #endif
     },
+    // IDirect3DDevice8::DrawIndexedVerticesUP
+    {
+        (OOVPA*)&IDirect3DDevice8_DrawIndexedVerticesUP_1_0_5849,
+
+        XTL::EmuIDirect3DDevice8_DrawIndexedVerticesUP,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_DrawIndexedVerticesUP"
+        #endif
+    },
     // IDirect3DDevice8::SetMaterial
     {
         (OOVPA*)&IDirect3DDevice8_SetMaterial_1_0_5849,
@@ -1297,6 +1330,16 @@ OOVPATable D3D8_1_0_5849[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DResource8_Release"
+        #endif
+    },
+    // IDirect3DResource8::IsBusy (* unchanged since 4361 *)
+    {
+        (OOVPA*)&IDirect3DResource8_IsBusy_1_0_4361,
+
+        XTL::EmuIDirect3DResource8_IsBusy,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DResource8_IsBusy"
         #endif
     },
     // IDirect3DSurface8::GetDesc (* unchanged since 4361 *)
