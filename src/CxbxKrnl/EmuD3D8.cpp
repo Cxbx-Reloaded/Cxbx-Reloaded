@@ -6927,18 +6927,16 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexShader
 
     g_CurrentVertexShader = Handle;
 
-    /* What have you been trying to do here?
-    XTL::D3DXVECTOR4 vOffset;
-    XTL::D3DXVECTOR4 vScale;
-
-    EmuSwapFS();
-    EmuIDirect3DDevice8_GetViewportOffsetAndScale(&vOffset, &vScale);
-    EmuSwapFS();
-    */
+    // Store viewport offset and scale in constant registers 58 (c-38) and
+    // 59 (c-37) used for screen space transformation.
     if(g_VertexShaderConstantMode != X_VSCM_NONERESERVED)
     {
-        //g_pD3DDevice8->SetVertexShaderConstant( 58, &vScale, 1 );
-        //g_pD3DDevice8->SetVertexShaderConstant( 59, &vOffset, 1 );
+        // TODO: Proper solution.
+        static float vScale[] = { (2.0f / 640), (-2.0f / 480), 0.0f, 0.0f };
+        static float vOffset[] = { -1.0f, 1.0f, 0.0f, 1.0f };
+
+        g_pD3DDevice8->SetVertexShaderConstant(58, vScale, 1);
+        g_pD3DDevice8->SetVertexShaderConstant(59, vOffset, 1);
     }
 
     DWORD RealHandle;
