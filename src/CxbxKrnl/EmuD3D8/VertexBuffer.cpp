@@ -412,10 +412,16 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 {
     // FVF buffers doesn't have Xbox extensions, but texture coordinates may
     // need normalization if used with linear textures.
-    if(!VshHandleIsVertexShader(pPatchDesc->hVertexShader)
-        && (pPatchDesc->hVertexShader & D3DFVF_TEXCOUNT_MASK))
+    if(!VshHandleIsVertexShader(pPatchDesc->hVertexShader))
     {
-        return NormalizeTexCoords(pPatchDesc, uiStream);
+        if(pPatchDesc->hVertexShader & D3DFVF_TEXCOUNT_MASK)
+        {
+            return NormalizeTexCoords(pPatchDesc, uiStream);
+        }
+        else
+        {
+            return false;
+        }
     }
 
     if(!m_pDynamicPatch || !m_pDynamicPatch->pStreamPatches[uiStream].NeedPatch)

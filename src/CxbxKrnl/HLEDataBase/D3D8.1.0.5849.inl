@@ -33,6 +33,73 @@
 // ******************************************************************
 
 // ******************************************************************
+// * IDirect3DDevice8_EndVisibilityTest
+// ******************************************************************
+SOOVPA<7> IDirect3DDevice8_EndVisibilityTest_1_0_5849 =
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        { 0x10, 0x09 },
+        { 0x12, 0x0E },
+        { 0x18, 0x04 },
+        { 0x34, 0xCC },
+        { 0x3D, 0x0E },
+        { 0x50, 0x0C },
+        { 0x58, 0x04 },
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_GetVisibilityTestResult
+// ******************************************************************
+SOOVPA<7> IDirect3DDevice8_GetVisibilityTestResult_1_0_5849 =
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        { 0x0E, 0x08 },
+        { 0x10, 0xFF },
+        { 0x2A, 0x16 },
+        { 0x3C, 0x76 },
+        { 0x3F, 0x0C },
+        { 0x51, 0x0A },
+        { 0x5F, 0x0C },
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_GetViewport
+// ******************************************************************
+SOOVPA<8> IDirect3DDevice8_GetViewport_1_0_5849 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        { 0x09, 0x05 },
+        { 0x14, 0x04 },
+        { 0x1D, 0x08 },
+        { 0x20, 0x0C },
+        { 0x26, 0x10 },
+        { 0x2B, 0x40 },
+        { 0x2F, 0x14 },
+        { 0x31, 0x04 },
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetBackBufferScale
 // ******************************************************************
 SOOVPA<7> IDirect3DDevice8_SetBackBufferScale_1_0_5849 =
@@ -811,6 +878,46 @@ OOVPATable D3D8_1_0_5849[] =
         "EmuIDirect3D8_CreateDevice"
         #endif
     },
+    // IDirect3DDevice8::BeginVisibilityTest (* unchanged since 4627 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_BeginVisibilityTest_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_BeginVisibilityTest,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_BeginVisibilityTest"
+        #endif
+    },
+    // IDirect3DDevice8::EndVisibilityTest
+    {
+        (OOVPA*)&IDirect3DDevice8_EndVisibilityTest_1_0_5849,
+
+        XTL::EmuIDirect3DDevice8_EndVisibilityTest,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_EndVisibilityTest"
+        #endif
+    },
+    // IDirect3DDevice8::GetVisibilityTestResult
+    {
+        (OOVPA*)&IDirect3DDevice8_GetVisibilityTestResult_1_0_5849,
+
+        XTL::EmuIDirect3DDevice8_GetVisibilityTestResult,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetVisibilityTestResult"
+        #endif
+    },
+    // IDirect3DDevice8::GetViewport
+    {
+        (OOVPA*)&IDirect3DDevice8_GetViewport_1_0_5849,
+
+        XTL::EmuIDirect3DDevice8_GetViewport,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetViewport"
+        #endif
+    },
     // IDirect3DDevice8::SetBackBufferScale
     {
         (OOVPA*)&IDirect3DDevice8_SetBackBufferScale_1_0_5849,
@@ -1350,6 +1457,16 @@ OOVPATable D3D8_1_0_5849[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DSurface8_GetDesc"
+        #endif
+    },
+    // IDirect3DDevice8::CopyRects (* unchanged since 5233 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_CopyRects_1_0_5233,
+
+        XTL::EmuIDirect3DDevice8_CopyRects,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_CopyRects"
         #endif
     },
     // IDirect3DTexture8::LockRect

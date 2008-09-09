@@ -45,6 +45,7 @@ BOOL XTL::EmuXBFormatIsSwizzled(X_D3DFORMAT Format, DWORD *pBPP)
         case 0x00:
         case 0x01:
         case 0x0B:
+        case 0x19: // X_D3DFMT_A8
             *pBPP = 1;
             return TRUE;
         case 0x02:

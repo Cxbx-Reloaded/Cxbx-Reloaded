@@ -377,12 +377,12 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 
         bool lPrintfOn = g_bPrintfOn;
 
+        g_bRenderWindowActive = true;
+
         while(msg.message != WM_QUIT)
         {
             if(PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
             {
-                g_bRenderWindowActive = true;
-
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);
             }
@@ -4156,7 +4156,9 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 dwPitch  = dwWidth*2;
                 dwBPP = 2;
             }
-            else if(X_Format == 0x00 /* X_D3DFMT_L8 */ || X_Format == 0x0B /* X_D3DFMT_P8 */ || X_Format == 0x01 /* X_D3DFMT_AL8 */ || X_Format == 0x1A /* X_D3DFMT_A8L8 */)
+            else if(X_Format == 0x00 /* X_D3DFMT_L8 */ || X_Format == 0x0B /* X_D3DFMT_P8 */
+                || X_Format == 0x01 /* X_D3DFMT_AL8 */ || X_Format == 0x1A /* X_D3DFMT_A8L8 */
+                || X_Format == 0x19 /* X_D3DFMT_A8 */)
             {
                 bSwizzled = TRUE;
 
@@ -4641,6 +4643,8 @@ ULONG WINAPI XTL::EmuIDirect3DResource8_AddRef
             uRet = ++pThis->Lock;
         else if(pResource8 != 0)
             uRet = pResource8->AddRef();
+
+        pThis->Common = (pThis->Common & ~X_D3DCOMMON_REFCOUNT_MASK) | ((pThis->Common & X_D3DCOMMON_REFCOUNT_MASK) + 1);
     }
 
     EmuSwapFS();   // XBox FS
@@ -4725,7 +4729,10 @@ ULONG WINAPI XTL::EmuIDirect3DResource8_Release
                 //delete pThis;
             }
         }
+
+        pThis->Common = (pThis->Common & ~X_D3DCOMMON_REFCOUNT_MASK) | ((pThis->Common & X_D3DCOMMON_REFCOUNT_MASK) - 1);
     }
+
 
     EmuSwapFS();   // XBox FS
 
