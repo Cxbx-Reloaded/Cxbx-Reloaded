@@ -885,9 +885,9 @@ VOID WINAPI EmuIDirect3DDevice8_SetTextureState_TwoSidedLighting
 );
 
 // ******************************************************************
-// * func: EmuIDirect3DDevice8_SetTextureState_BackFillMode
+// * func: EmuIDirect3DDevice8_SetRenderState_BackFillMode
 // ******************************************************************
-VOID WINAPI EmuIDirect3DDevice8_SetTextureState_BackFillMode
+VOID WINAPI EmuIDirect3DDevice8_SetRenderState_BackFillMode
 (
     DWORD Value
 );

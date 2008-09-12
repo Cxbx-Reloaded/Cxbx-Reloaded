@@ -290,6 +290,28 @@ SOOVPA<13> IDirect3DDevice8_SetRenderState_CullMode_1_0_5233 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetRenderState_Dxt1NoiseEnable
+// ******************************************************************
+SOOVPA<7> IDirect3DDevice8_SetRenderState_Dxt1NoiseEnable_1_0_5233 =
+{
+    0,  // Large == 0
+    7,  // Count == 9
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        { 0x0F, 0xB4 },
+        { 0x10, 0x15 },
+        { 0x16, 0x0D },
+        { 0x1F, 0x3C },
+        { 0x34, 0x36 },
+        { 0x58, 0x05 },
+        { 0x75, 0x04 },
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetRenderState_TextureFactor
 // ******************************************************************
 SOOVPA<9> IDirect3DDevice8_SetRenderState_TextureFactor_1_0_5233 =
@@ -1735,6 +1757,16 @@ OOVPATable D3D8_1_0_5233[] =
         "EmuIDirect3DDevice8_SetRenderState_FillMode"
         #endif
     },
+    // IDirect3DDevice8::SetRenderState_BackFillMode (* unchanged since 4432 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_BackFillMode_1_0_4432,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_BackFillMode,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_BackFillMode"
+        #endif
+    },
     // IDirect3DDevice8::SetRenderState_FogColor (* unchanged since 4134 *)
     {
         (OOVPA*)&IDirect3DDevice8_SetRenderState_FogColor_1_0_4134,
@@ -1743,6 +1775,16 @@ OOVPATable D3D8_1_0_5233[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetRenderState_FogColor"
+        #endif
+    },
+    // IDirect3DDevice8::SetRenderState_Dxt1NoiseEnable
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_Dxt1NoiseEnable_1_0_5233,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable"
         #endif
     },
     // IDirect3DDevice8::SetRenderState_Simple (* unchanged since 4361 *)
@@ -1803,6 +1845,46 @@ OOVPATable D3D8_1_0_5233[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable"
+        #endif
+    },
+    // IDirect3DDevice8::SetRenderState_StencilCullEnable (* unchanged since 4432 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_StencilCullEnable_1_0_4432,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_StencilCullEnable,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_StencilCullEnable"
+        #endif
+    },
+    // IDirect3DDevice8::SetRenderState_RopZCmpAlwaysRead (* unchanged since 4432 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead_1_0_4432,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead"
+        #endif
+    },
+    // IDirect3DDevice8::SetRenderState_RopZRead (* unchanged since 4432 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_RopZRead_1_0_4432,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_RopZRead,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_RopZRead"
+        #endif
+    },
+    // IDirect3DDevice8::SetRenderState_DoNotCullUncompressed (* unchanged since 4432 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_DoNotCullUncompressed_1_0_4432,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed"
         #endif
     },
     // IDirect3DDevice8::SetRenderState_MultiSampleAntiAlias (* unchanged since 4627 *)

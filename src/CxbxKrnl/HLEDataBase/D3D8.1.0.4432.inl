@@ -271,9 +271,9 @@ SOOVPA<13> IDirect3DDevice8_SetTextureState_TwoSidedLighting_1_0_4432 =
 };
 
 // ******************************************************************
-// * IDirect3DDevice8_SetTextureState_BackFillMode
+// * IDirect3DDevice8_SetRenderState_BackFillMode
 // ******************************************************************
-SOOVPA<13> IDirect3DDevice8_SetTextureState_BackFillMode_1_0_4432 =
+SOOVPA<13> IDirect3DDevice8_SetRenderState_BackFillMode_1_0_4432 =
 {
     0,  // Large == 0
     13, // Count == 13
@@ -282,15 +282,15 @@ SOOVPA<13> IDirect3DDevice8_SetTextureState_BackFillMode_1_0_4432 =
     0,  // XRef Not Used
 
     {
-        // IDirect3DDevice8_SetTextureState_BackFillMode+0x1C : jb +0x05
+        // IDirect3DDevice8_SetRenderState_BackFillMode+0x1C : jb +0x05
         { 0x1C, 0x72 }, // (Offset,Value)-Pair #1
         { 0x1D, 0x05 }, // (Offset,Value)-Pair #2
 
-        // IDirect3DDevice8_SetTextureState_BackFillMode+0x35 : mov dword ptr [eax], abs
+        // IDirect3DDevice8_SetRenderState_BackFillMode+0x35 : mov dword ptr [eax], abs
         { 0x35, 0xC7 }, // (Offset,Value)-Pair #3
         { 0x36, 0x00 }, // (Offset,Value)-Pair #4
 
-        // IDirect3DDevice8_SetTextureState_BackFillMode+0x3B : add eax, 0x0C; mov [esi], eax; mov [abs], edi
+        // IDirect3DDevice8_SetRenderState_BackFillMode+0x3B : add eax, 0x0C; mov [esi], eax; mov [abs], edi
         { 0x41, 0x83 }, // (Offset,Value)-Pair #5
         { 0x42, 0xC0 }, // (Offset,Value)-Pair #6
         { 0x43, 0x0C }, // (Offset,Value)-Pair #7
@@ -299,7 +299,7 @@ SOOVPA<13> IDirect3DDevice8_SetTextureState_BackFillMode_1_0_4432 =
         { 0x46, 0x89 }, // (Offset,Value)-Pair #10
         { 0x47, 0x3D }, // (Offset,Value)-Pair #11
 
-        // IDirect3DDevice8_SetTextureState_BackFillMode+0x4E : retn 0x04
+        // IDirect3DDevice8_SetRenderState_BackFillMode+0x4E : retn 0x04
         { 0x4E, 0xC2 }, // (Offset,Value)-Pair #12
         { 0x4F, 0x04 }, // (Offset,Value)-Pair #13
     }
@@ -1341,14 +1341,14 @@ OOVPATable D3D8_1_0_4432[] =
         "EmuIDirect3DDevice8_SetTextureState_TwoSidedLighting"
         #endif
     },
-    // IDirect3DDevice8::SetTextureState_BackFillMode
+    // IDirect3DDevice8::SetRenderState_BackFillMode
     {
-        (OOVPA*)&IDirect3DDevice8_SetTextureState_BackFillMode_1_0_4432,
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_BackFillMode_1_0_4432,
 
-        XTL::EmuIDirect3DDevice8_SetTextureState_BackFillMode,
+        XTL::EmuIDirect3DDevice8_SetRenderState_BackFillMode,
 
         #ifdef _DEBUG_TRACE
-        "EmuIDirect3DDevice8_SetTextureState_BackFillMode"
+        "EmuIDirect3DDevice8_SetRenderState_BackFillMode"
         #endif
     },
     // IDirect3DDevice8::SetTextureState_BorderColor (* unchanged since 4361 *)

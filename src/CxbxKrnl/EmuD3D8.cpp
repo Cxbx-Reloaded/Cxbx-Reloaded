@@ -5782,16 +5782,16 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetTextureState_TwoSidedLighting
 }
 
 // ******************************************************************
-// * func: EmuIDirect3DDevice8_SetTextureState_BackFillMode
+// * func: EmuIDirect3DDevice8_SetRenderState_BackFillMode
 // ******************************************************************
-VOID WINAPI XTL::EmuIDirect3DDevice8_SetTextureState_BackFillMode
+VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_BackFillMode
 (
     DWORD Value
 )
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetTextureState_BackFillMode\n"
+    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetRenderState_BackFillMode\n"
            "(\n"
            "   Value               : 0x%.08X\n"
            ");\n",
@@ -7413,10 +7413,15 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetRenderTarget
 
     if(pNewZStencil != 0)
     {
-        // HACK: Futurama
-        if(((pNewZStencil->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT) != 0x4B)
-            EmuVerifyResourceIsRegistered(pNewZStencil); // FIXME
-        pPCNewZStencil  = pNewZStencil->EmuSurface8;
+        if(pNewZStencil->EmuSurface8 != 0)
+        {
+            EmuVerifyResourceIsRegistered(pNewZStencil);
+            pPCNewZStencil = pNewZStencil->EmuSurface8;
+        }
+        else
+        {
+            pPCNewZStencil = g_pCachedZStencilSurface->EmuSurface8;
+        }
     }
 
     // TODO: Follow that stencil!
