@@ -63,6 +63,12 @@ void XTL::EmuUpdateDeferredStates()
         if(XTL::EmuD3DDeferredRenderState[3] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_FOGEND, XTL::EmuD3DDeferredRenderState[3]);
 
+        if(XTL::EmuD3DDeferredRenderState[4] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_FOGDENSITY, XTL::EmuD3DDeferredRenderState[4]);
+
+        if(XTL::EmuD3DDeferredRenderState[5] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_RANGEFOGENABLE, XTL::EmuD3DDeferredRenderState[5]);
+
         if(XTL::EmuD3DDeferredRenderState[6] != X_D3DRS_UNK)
         {
             ::DWORD dwConv = 0;
@@ -74,6 +80,17 @@ void XTL::EmuUpdateDeferredStates()
             g_pD3DDevice8->SetRenderState(D3DRS_WRAP0, dwConv);
         }
 
+        if(XTL::EmuD3DDeferredRenderState[7] != X_D3DRS_UNK)
+        {
+            ::DWORD dwConv = 0;
+
+            dwConv |= (XTL::EmuD3DDeferredRenderState[7] & 0x00000010) ? D3DWRAP_U : 0;
+            dwConv |= (XTL::EmuD3DDeferredRenderState[7] & 0x00001000) ? D3DWRAP_V : 0;
+            dwConv |= (XTL::EmuD3DDeferredRenderState[7] & 0x00100000) ? D3DWRAP_W : 0;
+
+            g_pD3DDevice8->SetRenderState(D3DRS_WRAP1, dwConv);
+        }
+
         if(XTL::EmuD3DDeferredRenderState[10] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_LIGHTING, XTL::EmuD3DDeferredRenderState[10]);
 
@@ -83,8 +100,14 @@ void XTL::EmuUpdateDeferredStates()
         if(XTL::EmuD3DDeferredRenderState[13] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_COLORVERTEX, XTL::EmuD3DDeferredRenderState[13]);
 
+        if(XTL::EmuD3DDeferredRenderState[19] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_DIFFUSEMATERIALSOURCE, XTL::EmuD3DDeferredRenderState[19]);
+
         if(XTL::EmuD3DDeferredRenderState[20] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, XTL::EmuD3DDeferredRenderState[20]);
+
+        if(XTL::EmuD3DDeferredRenderState[21] != X_D3DRS_UNK)
+            g_pD3DDevice8->SetRenderState(D3DRS_EMISSIVEMATERIALSOURCE, XTL::EmuD3DDeferredRenderState[21]);
 
         if(XTL::EmuD3DDeferredRenderState[23] != X_D3DRS_UNK)
             g_pD3DDevice8->SetRenderState(D3DRS_AMBIENT, XTL::EmuD3DDeferredRenderState[23]);
@@ -121,9 +144,9 @@ void XTL::EmuUpdateDeferredStates()
         {
             if(XTL::EmuD3DDeferredRenderState[v] != X_D3DRS_UNK)
             {
-                if(v != 0  && v != 1  && v != 2 && v != 3 && v != 6  && v != 10 && v != 11 && v != 13
-                && v != 20 && v != 23 && v != 24 && v != 25 && v != 26 && v != 27 && v != 28 && v != 29
-                && v != 30 && v != 31 && v != 33)
+                if(v !=  0 && v !=  1 && v !=  2 && v !=  3 && v !=  4 && v !=  5 && v !=  6 && v !=  7
+                && v != 10 && v != 11 && v != 13 && v != 19 && v != 20 && v != 21 && v != 23 && v != 24
+                && v != 25 && v != 26 && v != 27 && v != 28 && v != 29 && v != 30 && v != 31 && v != 33)
                     EmuWarning("Unhandled RenderState Change @ %d (%d)", v, v + 82);
             }
         }
