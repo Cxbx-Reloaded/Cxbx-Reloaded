@@ -101,51 +101,6 @@ SOOVPA<7> XFormatUtilityDrive_1_0_4627 =
 };
 
 // ******************************************************************
-// * FindFirstFileA
-// ******************************************************************
-SOOVPA<8> FindFirstFileA_1_0_4627 =
-{
-    0,  // Large == 0
-    8,  // Count == 8
-
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
-
-    {
-        { 0x1E, 0x89 },
-        { 0x3E, 0x74 },
-        { 0x5E, 0x45 },
-        { 0x7E, 0x75 },
-        { 0x9E, 0x8D },
-        { 0xBE, 0xFE },
-        { 0xE1, 0x56 },
-        { 0xFE, 0x57 },
-    }
-};
-
-// ******************************************************************
-// * FindNextFileA
-// ******************************************************************
-SOOVPA<7> FindNextFileA_1_0_4627 =
-{
-    0,  // Large == 0
-    7,  // Count == 7
-
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
-
-    {
-        { 0x09, 0x56 },
-        { 0x14, 0x00 },
-        { 0x1F, 0x50 },
-        { 0x2C, 0x3B },
-        { 0x37, 0x33 },
-        { 0x40, 0xB0 },
-        { 0x4B, 0xC0 },
-    }
-};
-
-// ******************************************************************
 // * SetThreadPriorityBoost
 // ******************************************************************
 SOOVPA<10> SetThreadPriorityBoost_1_0_4627 =
@@ -452,28 +407,6 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXFormatUtilityDrive"
         #endif
     },
-    /* ended up not fixing anything in panzer dragoon!
-    // FindFirstFileA
-    {
-        (OOVPA*)&FindFirstFileA_1_0_4627,
-
-        XTL::EmuFindFirstFileA,
-
-        #ifdef _DEBUG_TRACE
-        "EmuFindFirstFileA"
-        #endif
-    },
-    // FindNextFileA
-    {
-        (OOVPA*)&FindNextFileA_1_0_4627,
-
-        XTL::EmuFindNextFileA,
-
-        #ifdef _DEBUG_TRACE
-        "EmuFindNextFileA"
-        #endif
-    },
-    //*/
     // SetThreadPriorityBoost
     {
         (OOVPA*)&SetThreadPriorityBoost_1_0_4627,

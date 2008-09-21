@@ -390,6 +390,29 @@ SOOVPA<11> XRegisterThreadNotifyRoutine_1_0_3911 =
         { 0x47, 0x08 }, // (Offset,Value)-Pair #11
     }
 };
+
+// ******************************************************************
+// * GetTimeZoneInformation
+// ******************************************************************
+SOOVPA<7> GetTimeZoneInformation_1_0_3911 =
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x05, 0x28 },
+        { 0x2E, 0x28 },
+        { 0x4F, 0x59 },
+        { 0x56, 0xAB },
+        { 0x8C, 0xC0 },
+        { 0xB9, 0x80 },
+        { 0xF7, 0x99 },
+    }
+};
+
 /* not necessary?
 // ******************************************************************
 // * XCalculateSignatureBegin
@@ -663,6 +686,16 @@ OOVPATable XAPI_1_0_3911[] =
         #endif
     },
     //*/
+    // GetTimeZoneInformation
+    {
+        (OOVPA*)&GetTimeZoneInformation_1_0_3911,
+
+        XTL::EmuGetTimeZoneInformation,
+
+        #ifdef _DEBUG_TRACE
+        "GetTimeZoneInformation"
+        #endif
+    },
     // XapiBootToDash
     {
         (OOVPA*)&XapiBootDash_1_0_3911,

@@ -200,6 +200,16 @@ OOVPATable XAPI_1_0_5233[] =
         "EmuXapiInitProcess"
         #endif
     },
+    // GetTimeZoneInformation (* unchanged since 3911 *)
+    {
+        (OOVPA*)&GetTimeZoneInformation_1_0_3911,
+
+        XTL::EmuGetTimeZoneInformation,
+
+        #ifdef _DEBUG_TRACE
+        "GetTimeZoneInformation"
+        #endif
+    },
     // SetThreadPriority (* unchanged since 3911 *)
     {
         (OOVPA*)&SetThreadPriority_1_0_3911,

@@ -59,6 +59,10 @@ namespace NtDll
 #include "EmuXTL.h"
 #include "ResourceTracker.h"
 
+#pragma warning(disable:4005) // Ignore redefined status values
+#include <ntstatus.h>
+#pragma warning(default:4005)
+
 // PsCreateSystemThread proxy parameters
 typedef struct _PCSTProxyParam
 {
@@ -327,6 +331,14 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
                 *ResultLength = 0x04;
         }
         break;
+
+        /* Timezone info
+        case 0x0FF:
+        {
+            _asm int 3;
+        }
+        break;
+        //*/
 
         default:
             EmuWarning("ExQueryNonVolatileSetting unknown ValueIndex (%d)", ValueIndex);
@@ -1368,17 +1380,17 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
             DbgPrintf("  New:\"$CxbxPath\\EmuDisk\\Z\\%s\"\n", szBuffer);
         }
 
-        //
-        // TODO: Wildcards are not allowed??
-        //
-
+        // Ignore wildcards. Xapi FindFirstFile uses the same path buffer for
+        // NtOpenFile and NtQueryDirectoryFile. Wildcards are only parsed by
+        // the latter.
         {
             for(int v=0;szBuffer[v] != '\0';v++)
             {
+                // FIXME: Fallback to parent directory if wildcard is found.
                 if(szBuffer[v] == '*')
                 {
-                    if(v > 0) { ReplaceIndex = v-1; }
-                    else { ReplaceIndex = v; }
+                    ReplaceIndex = v;
+                    break;
                 }
             }
         }
@@ -1418,6 +1430,48 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
         FileHandle, DesiredAccess, &NtObjAttr, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock,
         (NtDll::LARGE_INTEGER*)AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, NULL
     );
+
+    // If we're trying to open a regular file as a directory, fallback to
+    // parent directory. This behavior is required by Xapi FindFirstFile.
+    if(ret == STATUS_NOT_A_DIRECTORY)
+    {
+        DbgPrintf("EmuKrnl (0x%X): NtCreateFile fallback to parent directory\n", GetCurrentThreadId());
+
+        // Restore original buffer.
+        if(ReplaceIndex != -1)
+        {
+            szBuffer[ReplaceIndex] = ReplaceChar;
+        }
+
+        // Strip filename from path.
+        int CurIndex = strlen(szBuffer);
+        while(CurIndex--)
+        {
+            if(szBuffer[CurIndex] == '\\')
+            {
+                ReplaceIndex = CurIndex;
+                break;
+            }
+        }
+        if(CurIndex == -1)
+        {
+            ReplaceIndex = 0;
+        }
+
+        // Modify buffer again.
+        ReplaceChar = szBuffer[ReplaceIndex];
+        szBuffer[ReplaceIndex] = '\0';
+        DbgPrintf("  New:\"$CurRoot\\%s\"\n", szBuffer);
+
+        mbstowcs(wszObjectName, szBuffer, 160);
+        NtDll::RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
+
+        ret = NtDll::NtCreateFile
+        (
+            FileHandle, DesiredAccess, &NtObjAttr, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock,
+            (NtDll::LARGE_INTEGER*)AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, NULL
+        );
+    }
 
     if(FAILED(ret))
     {

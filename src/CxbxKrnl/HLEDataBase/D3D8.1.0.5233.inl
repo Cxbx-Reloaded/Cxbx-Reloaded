@@ -1255,6 +1255,49 @@ SOOVPA<6> IDirect3DDevice8_IsFencePending_1_0_5233 =
 };
 
 // ******************************************************************
+// * D3D::BlockOnTime
+// ******************************************************************
+SOOVPA<6> D3D_BlockOnTime_1_0_5233 =
+{
+    0,  // Large == 0
+    6,  // Count == 6
+
+    XREF_D3D_BLOCKONTIME, // Xref Is Saved
+    0,                    // Xref Not Used
+
+    {
+        { 0x09, 0x30 },
+        { 0x27, 0x07 },
+        { 0x55, 0x7E },
+        { 0x7B, 0x58 },
+        { 0xE3, 0x80 },
+        { 0xF5, 0x2C },
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_BlockOnFence
+// ******************************************************************
+SOOVPA<6> IDirect3DDevice8_BlockOnFence_1_0_5233 =
+{
+    0,  // Large == 0
+    6,  // Count == 6
+
+    -1, // Xref Not Saved
+    1,  // Xref Is  Used
+
+    {
+        { 0x08, XREF_D3D_BLOCKONTIME },
+
+        { 0x00, 0x8B },
+        { 0x02, 0x24 },
+        { 0x04, 0x6A },
+        { 0x06, 0x50 },
+        { 0x0D, 0x04 },
+    }
+};
+
+// ******************************************************************
 // * D3D8_1_0_5233
 // ******************************************************************
 OOVPATable D3D8_1_0_5233[] =
@@ -2282,6 +2325,24 @@ OOVPATable D3D8_1_0_5233[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_IsFencePending"
+        #endif
+    },
+    // D3D::BlockOnTime (XREF)
+    {
+        (OOVPA*)&D3D_BlockOnTime_1_0_5233, 0,
+
+        #ifdef _DEBUG_TRACE
+        "D3D::BlockOnTime (XREF)"
+        #endif
+    },
+    // IDirect3DDevice8::BlockOnFence
+    {
+        (OOVPA*)&IDirect3DDevice8_BlockOnFence_1_0_5233,
+
+        XTL::EmuIDirect3DDevice8_BlockOnFence,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_BlockOnFence"
         #endif
     },
 };
