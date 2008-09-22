@@ -596,28 +596,6 @@ SOOVPA<12> IDirect3DDevice8_GetBackBuffer2_1_0_5558 =
 };
 
 // ******************************************************************
-// * IDirect3DTexture8_LockRect
-// ******************************************************************
-SOOVPA<17> IDirect3DTexture8_LockRect_1_0_5558 =
-{
-    0,  // Large == 0
-    7,  // Count == 7
-
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
-
-    {
-        { 0x03, 0x14 },
-        { 0x08, 0x8B },
-        { 0x0D, 0x8B },
-        { 0x12, 0x8B },
-        { 0x17, 0x50 },
-        { 0x20, 0xC2 },
-        { 0x21, 0x14 },
-    }
-};
-
-// ******************************************************************
 // * IDirect3D8_CheckDeviceMultiSampleType
 // ******************************************************************
 SOOVPA<7> IDirect3D8_CheckDeviceMultiSampleType_1_0_5558 =
@@ -1417,9 +1395,9 @@ OOVPATable D3D8_1_0_5558[] =
         "EmuIDirect3DPalette8_Lock2"
         #endif
     },
-    // IDirect3DTexture8::LockRect
+    // IDirect3DTexture8::LockRect (* unchanged since 5233 *)
     {
-        (OOVPA*)&IDirect3DTexture8_LockRect_1_0_5558,
+        (OOVPA*)&IDirect3DTexture8_LockRect_1_0_5233,
 
         XTL::EmuIDirect3DTexture8_LockRect,
 
@@ -1427,9 +1405,9 @@ OOVPATable D3D8_1_0_5558[] =
         "EmuIDirect3DTexture8_LockRect"
         #endif
     },
-    // IDirect3DSurface8::LockRect (* unchanged since 4361 *)
+    // IDirect3DSurface8::LockRect (* unchanged since 3925 *)
     {
-        (OOVPA*)&IDirect3DSurface8_LockRect_1_0_4361,
+        (OOVPA*)&IDirect3DSurface8_LockRect_1_0_3925,
 
         XTL::EmuIDirect3DSurface8_LockRect,
 

@@ -205,7 +205,7 @@ SOOVPA<11> XID_fCloseDevice_1_0_4361 =
         { 0x92, 0x86 }, // (Offset,Value)-Pair #5
         { 0x93, 0xA7 }, // (Offset,Value)-Pair #6
 
-        // XID_fCloseDevice+0x91 : mov [esi+0x00A7], eax
+        // XID_fCloseDevice+0x91 : mov [esi+0x00A7], eax    // FIXME: Same instruction repeated.
         { 0x91, 0x89 }, // (Offset,Value)-Pair #7
         { 0x92, 0x86 }, // (Offset,Value)-Pair #8
         { 0x93, 0xA7 }, // (Offset,Value)-Pair #9
@@ -213,36 +213,6 @@ SOOVPA<11> XID_fCloseDevice_1_0_4361 =
         // XID_fCloseDevice+0x91 : leave; retn
         { 0x9F, 0xC9 }, // (Offset,Value)-Pair #10
         { 0xA0, 0xC3 }, // (Offset,Value)-Pair #11
-    }
-};
-
-// ******************************************************************
-// * XInputClose
-// ******************************************************************
-SOOVPA<8> XInputClose_1_0_4361 =
-{
-    0,  // Large == 0
-    8,  // Count == 8
-
-    -1, // XRef Not Saved
-    1,  // XRef Is Used
-
-    {
-        // XInputClose+0x05 : call [fCloseDevice]
-        { 0x05, XREF_FCLOSEDEVICE },  // (Offset,Value)-Pair #1
-
-        // XInputClose+0x00 : mov ecx, [esp+0x04]
-        { 0x00, 0x8B }, // (Offset,Value)-Pair #2
-        { 0x01, 0x4C }, // (Offset,Value)-Pair #3
-        { 0x02, 0x24 }, // (Offset,Value)-Pair #4
-        { 0x03, 0x04 }, // (Offset,Value)-Pair #5
-
-        // XInputClose+0x04 : call [fCloseDevice]
-        { 0x04, 0xE8 }, // (Offset,Value)-Pair #6
-
-        // XInputClose+0x09 : retn 0x04
-        { 0x09, 0xC2 }, // (Offset,Value)-Pair #7
-        { 0x0A, 0x04 }, // (Offset,Value)-Pair #8
     }
 };
 
@@ -614,9 +584,9 @@ OOVPATable XAPI_1_0_4361[] =
         "XID_fCloseDevice (XREF)"
         #endif
     },
-    // XInputClose
+    // XInputClose (* unchanged since 3911 *)
     {
-        (OOVPA*)&XInputClose_1_0_4361,
+        (OOVPA*)&XInputClose_1_0_3911,
 
         XTL::EmuXInputClose,
 

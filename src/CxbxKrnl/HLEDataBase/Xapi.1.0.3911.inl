@@ -448,6 +448,44 @@ SOOVPA<10> XCalculateSignatureBegin_1_0_3911 =
 */
 
 // ******************************************************************
+// * XGetDevices
+// ******************************************************************
+SOOVPA<14> XGetDevices_1_0_3911 =
+{
+    0,  // Large == 0
+    14, // Count == 14
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // XGetDevices+0x07 : mov edx, [esp+arg_0]
+        { 0x07, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x08, 0x54 }, // (Offset,Value)-Pair #2
+        { 0x09, 0x24 }, // (Offset,Value)-Pair #3
+        { 0x0A, 0x08 }, // (Offset,Value)-Pair #4
+
+        // XGetDevices+0x0D : and [edx+4], 0
+        { 0x0D, 0x83 }, // (Offset,Value)-Pair #5
+        { 0x0E, 0x62 }, // (Offset,Value)-Pair #6
+        { 0x0F, 0x04 }, // (Offset,Value)-Pair #7
+        { 0x10, 0x00 }, // (Offset,Value)-Pair #8
+
+        // XGetDevices+0x11 : mov cl, al
+        { 0x11, 0x8A }, // (Offset,Value)-Pair #9
+        { 0x12, 0xC8 }, // (Offset,Value)-Pair #10
+
+        // XGetDevices+0x16 : call KfLowerIrql
+        { 0x16, 0xFF }, // (Offset,Value)-Pair #11
+        { 0x17, 0x15 }, // (Offset,Value)-Pair #12
+
+        // XGetDevices+0x1F : retn 4
+        { 0x1F, 0xC2 }, // (Offset,Value)-Pair #13
+        { 0x20, 0x04 }, // (Offset,Value)-Pair #14
+    }
+};
+
+// ******************************************************************
 // * XGetDeviceChanges
 // ******************************************************************
 SOOVPA<8> XGetDeviceChanges_1_0_3911 =
@@ -509,6 +547,106 @@ SOOVPA<11> XInputOpen_1_0_3911 =
         // XInputOpen+0x68 : push 0x57
         { 0x68, 0x6A }, // (Offset,Value)-Pair #10
         { 0x69, 0x57 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
+// * XID_fCloseDevice
+// ******************************************************************
+SOOVPA<10> XID_fCloseDevice_1_0_3911 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    XREF_FCLOSEDEVICE,  // XRef Is  Saved
+    0,                  // XRef Not Used
+
+    {
+        // XID_fCloseDevice+0x19 : jz +0x5C
+        { 0x19, 0x74 }, // (Offset,Value)-Pair #1
+        { 0x1A, 0x5C }, // (Offset,Value)-Pair #2
+
+        // XID_fCloseDevice+0x1B : cmp [esi+0x00A3], 1
+        { 0x1B, 0x80 }, // (Offset,Value)-Pair #3
+        { 0x1D, 0xA3 }, // (Offset,Value)-Pair #4
+        { 0x21, 0x01 }, // (Offset,Value)-Pair #5
+
+        // XID_fCloseDevice+0x91 : mov [esi+0x00A4], eax
+        { 0x95, 0x89 }, // (Offset,Value)-Pair #6
+        { 0x96, 0x86 }, // (Offset,Value)-Pair #7
+        { 0x97, 0xA4 }, // (Offset,Value)-Pair #8
+
+        // XID_fCloseDevice+0xA3 : leave; retn
+        { 0xA3, 0xC9 }, // (Offset,Value)-Pair #9
+        { 0xA4, 0xC3 }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
+// * XInputClose
+// ******************************************************************
+SOOVPA<8> XInputClose_1_0_3911 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // XRef Not Saved
+    1,  // XRef Is Used
+
+    {
+        // XInputClose+0x05 : call [fCloseDevice]
+        { 0x05, XREF_FCLOSEDEVICE },  // (Offset,Value)-Pair #1
+
+        // XInputClose+0x00 : mov ecx, [esp+0x04]
+        { 0x00, 0x8B }, // (Offset,Value)-Pair #2
+        { 0x01, 0x4C }, // (Offset,Value)-Pair #3
+        { 0x02, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x03, 0x04 }, // (Offset,Value)-Pair #5
+
+        // XInputClose+0x04 : call [fCloseDevice]
+        { 0x04, 0xE8 }, // (Offset,Value)-Pair #6
+
+        // XInputClose+0x09 : retn 0x04
+        { 0x09, 0xC2 }, // (Offset,Value)-Pair #7
+        { 0x0A, 0x04 }, // (Offset,Value)-Pair #8
+    }
+};
+
+// ******************************************************************
+// * XInputGetCapabilities
+// ******************************************************************
+SOOVPA<14> XInputGetCapabilities_1_0_3911 =
+{
+    0,  // Large == 0
+    14, // Count == 14
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // XInputGetCapabilities+0x03 : sub esp, 0x48
+        { 0x03, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x04, 0xEC }, // (Offset,Value)-Pair #2
+        { 0x05, 0x48 }, // (Offset,Value)-Pair #3
+
+        // XInputGetCapabilities+0x24 : test byte ptr [esi+4], 2
+        { 0x24, 0xF6 }, // (Offset,Value)-Pair #4
+        { 0x25, 0x46 }, // (Offset,Value)-Pair #5
+        { 0x26, 0x04 }, // (Offset,Value)-Pair #6
+        { 0x27, 0x02 }, // (Offset,Value)-Pair #7
+
+        // XInputGetCapabilities+0x3A : stosb
+        { 0x3A, 0xAA }, // (Offset,Value)-Pair #8
+
+        // XInputGetCapabilities+0x8A : mov [ebp+var_48], 0x30
+        { 0x8A, 0xC6 }, // (Offset,Value)-Pair #9
+        { 0x8B, 0x45 }, // (Offset,Value)-Pair #10
+        { 0x8C, 0xB8 }, // (Offset,Value)-Pair #11
+        { 0x8D, 0x30 }, // (Offset,Value)-Pair #12
+
+        // XInputGetCapabilities+0xFB : cmp [eax], ebx
+        { 0xFB, 0x39 }, // (Offset,Value)-Pair #13
+        { 0xFC, 0x18 }, // (Offset,Value)-Pair #14
     }
 };
 
@@ -728,6 +866,16 @@ OOVPATable XAPI_1_0_3911[] =
         #endif
     },
     */
+    // XGetDevices
+    {
+        (OOVPA*)&XGetDevices_1_0_3911,
+
+        XTL::EmuXGetDevices,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXGetDevices"
+        #endif
+    },
     // XGetDeviceChanges
     {
         (OOVPA*)&XGetDeviceChanges_1_0_3911,
@@ -746,6 +894,34 @@ OOVPATable XAPI_1_0_3911[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXInputOpen"
+        #endif
+    },
+    // XID_fCloseDevice
+    {
+        (OOVPA*)&XID_fCloseDevice_1_0_3911, 0,
+
+        #ifdef _DEBUG_TRACE
+        "XID_fCloseDevice (XREF)"
+        #endif
+    },
+    // XInputClose
+    {
+        (OOVPA*)&XInputClose_1_0_3911,
+
+        XTL::EmuXInputClose,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputClose"
+        #endif
+    },
+    // XInputGetCapabilities
+    {
+        (OOVPA*)&XInputGetCapabilities_1_0_3911,
+
+        XTL::EmuXInputGetCapabilities,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputGetCapabilities"
         #endif
     },
     // XInputGetState

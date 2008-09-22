@@ -523,6 +523,28 @@ SOOVPA<13> IDirect3DPalette8_Lock2_1_0_5233 =
 };
 
 // ******************************************************************
+// * IDirect3DTexture8_LockRect
+// ******************************************************************
+SOOVPA<17> IDirect3DTexture8_LockRect_1_0_5233 =
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x03, 0x14 },
+        { 0x08, 0x8B },
+        { 0x0D, 0x8B },
+        { 0x12, 0x8B },
+        { 0x17, 0x50 },
+        { 0x20, 0xC2 },
+        { 0x21, 0x14 },
+    }
+};
+
+// ******************************************************************
 // * Get2DSurfaceDesc
 // ******************************************************************
 SOOVPA<10> Get2DSurfaceDesc_1_0_5233 =
@@ -1520,9 +1542,9 @@ OOVPATable D3D8_1_0_5233[] =
         "EmuIDirect3DDevice8_DeletePixelShader"
         #endif
     },
-    // IDirect3DDevice8::CreatePixelShader (* unchanged since 4361 *)
+    // IDirect3DDevice8::CreatePixelShader (* unchanged since 3925 *)
     {
-        (OOVPA*)&IDirect3DDevice8_CreatePixelShader_1_0_4361,
+        (OOVPA*)&IDirect3DDevice8_CreatePixelShader_1_0_3925,
 
         XTL::EmuIDirect3DDevice8_CreatePixelShader,
 
@@ -2160,6 +2182,16 @@ OOVPATable D3D8_1_0_5233[] =
         "EmuIDirect3DResource8_Release"
         #endif
     },
+    // IDirect3DResource8::IsBusy (* unchanged since 4361 *)
+    {
+        (OOVPA*)&IDirect3DResource8_IsBusy_1_0_4361,
+
+        XTL::EmuIDirect3DResource8_IsBusy,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DResource8_IsBusy"
+        #endif
+    },
     // IDirect3DPalette8::Lock2
     {
         (OOVPA*)&IDirect3DPalette8_Lock2_1_0_5233,
@@ -2168,6 +2200,26 @@ OOVPATable D3D8_1_0_5233[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DPalette8_Lock2"
+        #endif
+    },
+    // IDirect3DTexture8::LockRect
+    {
+        (OOVPA*)&IDirect3DTexture8_LockRect_1_0_5233,
+
+        XTL::EmuIDirect3DTexture8_LockRect,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DTexture8_LockRect"
+        #endif
+    },
+    // Lock2DSurface (* unchanged since 3925 *)
+    {
+        (OOVPA*)&Lock2DSurface_1_0_3925,
+
+        XTL::EmuLock2DSurface,
+
+        #ifdef _DEBUG_TRACE
+        "EmuLock2DSurface"
         #endif
     },
     // Get2DSurfaceDesc
@@ -2190,9 +2242,9 @@ OOVPATable D3D8_1_0_5233[] =
         "EmuIDirect3DSurface8_GetDesc"
         #endif
     },
-    // IDirect3DSurface8::LockRect (* unchanged since 4361 *)
+    // IDirect3DSurface8::LockRect (* unchanged since 3925 *)
     {
-        (OOVPA*)&IDirect3DSurface8_LockRect_1_0_4361,
+        (OOVPA*)&IDirect3DSurface8_LockRect_1_0_3925,
 
         XTL::EmuIDirect3DSurface8_LockRect,
 

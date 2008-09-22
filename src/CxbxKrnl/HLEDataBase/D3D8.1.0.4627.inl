@@ -3490,9 +3490,9 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_DeletePixelShader"
         #endif
     },
-    // IDirect3DDevice8::CreatePixelShader (* unchanged since 4361 *)
+    // IDirect3DDevice8::CreatePixelShader (* unchanged since 3925 *)
     {
-        (OOVPA*)&IDirect3DDevice8_CreatePixelShader_1_0_4361,
+        (OOVPA*)&IDirect3DDevice8_CreatePixelShader_1_0_3925,
 
         XTL::EmuIDirect3DDevice8_CreatePixelShader,
 
@@ -4280,9 +4280,9 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DSurface8_GetDesc"
         #endif
     },
-    // IDirect3DSurface8::LockRect (* unchanged since 4361 *)
+    // IDirect3DSurface8::LockRect (* unchanged since 3925 *)
     {
-        (OOVPA*)&IDirect3DSurface8_LockRect_1_0_4361,
+        (OOVPA*)&IDirect3DSurface8_LockRect_1_0_3925,
 
         XTL::EmuIDirect3DSurface8_LockRect,
 

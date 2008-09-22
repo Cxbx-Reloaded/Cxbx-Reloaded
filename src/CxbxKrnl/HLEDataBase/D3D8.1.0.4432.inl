@@ -1851,9 +1851,9 @@ OOVPATable D3D8_1_0_4432[] =
         "EmuIDirect3DPalette8_Lock"
         #endif
     },
-    // IDirect3DSurface8::LockRect (* unchanged since 4361 *)
+    // IDirect3DSurface8::LockRect (* unchanged since 3925 *)
     {
-        (OOVPA*)&IDirect3DSurface8_LockRect_1_0_4361,
+        (OOVPA*)&IDirect3DSurface8_LockRect_1_0_3925,
 
         XTL::EmuIDirect3DSurface8_LockRect,
 

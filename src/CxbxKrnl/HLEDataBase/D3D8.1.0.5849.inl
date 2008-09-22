@@ -1479,9 +1479,9 @@ OOVPATable D3D8_1_0_5849[] =
         "EmuIDirect3DTexture8_LockRect"
         #endif
     },
-    // IDirect3DSurface8::LockRect (* unchanged since 4361 *)
+    // IDirect3DSurface8::LockRect (* unchanged since 3925 *)
     {
-        (OOVPA*)&IDirect3DSurface8_LockRect_1_0_4361,
+        (OOVPA*)&IDirect3DSurface8_LockRect_1_0_3925,
 
         XTL::EmuIDirect3DSurface8_LockRect,
 

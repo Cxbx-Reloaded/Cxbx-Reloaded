@@ -213,6 +213,9 @@ XTL::X_D3DFORMAT XTL::EmuPC2XB_D3DFormat(D3DFORMAT Format)
         case D3DFMT_A4R4G4B4:
             return 0x1D;        // Linear
 //            return 0x04;      // Swizzled
+        case D3DFMT_L8:
+            return 0x13;        // Linear
+//            return 0x00;      // Swizzled
     }
 
     CxbxKrnlCleanup("EmuPC2XB_D3DFormat: Unknown Format (%d)", Format);

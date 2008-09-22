@@ -112,16 +112,6 @@ OOVPATable XG_1_0_5558[] =
         "EmuXGSwizzleRect"
         #endif
     },
-    // XGUnswizzleRect (* unchanged since 5233 *)
-    {
-        (OOVPA*)&XGUnswizzleRect_1_0_5233,
-
-        XTL::EmuXGUnswizzleRect,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXGUnswizzleRect"
-        #endif
-    },
     // XGSwizzleBox (* UNTESTED *)
     {
         (OOVPA*)&XGSwizzleBox_1_0_5558,
