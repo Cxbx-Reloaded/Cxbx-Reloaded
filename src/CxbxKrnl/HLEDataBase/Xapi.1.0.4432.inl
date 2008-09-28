@@ -64,69 +64,6 @@ SOOVPA<9> RtlFreeHeap_1_0_4432 =
 };
 
 // ******************************************************************
-// * RtlReAllocateHeap
-// ******************************************************************
-SOOVPA<10> RtlReAllocateHeap_1_0_4432 =
-{
-    0,  // Large == 0
-    10,  // Count == 10
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        // RtlReAllocateHeap+0x1C : test esi, esi
-        { 0x1C, 0x85 }, // (Offset,Value)-Pair #1
-        { 0x1D, 0xF6 }, // (Offset,Value)-Pair #2
-
-        // RtlReAllocateHeap+0x26 : mov edx, [ebp+0x14]
-        { 0x26, 0x8B }, // (Offset,Value)-Pair #3
-        { 0x27, 0x55 }, // (Offset,Value)-Pair #4
-        { 0x28, 0x14 }, // (Offset,Value)-Pair #5
-
-        // RtlReAllocateHeap+0x5E : jz +0x06; add ecx, 0x10
-        { 0x5E, 0x74 }, // (Offset,Value)-Pair #6
-        { 0x5F, 0x06 }, // (Offset,Value)-Pair #7
-        { 0x60, 0x83 }, // (Offset,Value)-Pair #8
-        { 0x61, 0xC1 }, // (Offset,Value)-Pair #9
-        { 0x62, 0x10 }, // (Offset,Value)-Pair #10
-    }
-};
-
-// ******************************************************************
-// * RtlSizeHeap
-// ******************************************************************
-SOOVPA<11> RtlSizeHeap_1_0_4432 =
-{
-    0,  // Large == 0
-    11, // Count == 11
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        // RtlSizeHeap+0x04 : mov al, [ecx-0x0B]
-        { 0x04, 0x8A }, // (Offset,Value)-Pair #1
-        { 0x05, 0x41 }, // (Offset,Value)-Pair #2
-        { 0x06, 0xF5 }, // (Offset,Value)-Pair #3
-
-        // RtlSizeHeap+0x07 : test al, 1
-        { 0x07, 0xA8 }, // (Offset,Value)-Pair #4
-        { 0x08, 0x01 }, // (Offset,Value)-Pair #5
-
-        // RtlSizeHeap+0x14 : movzx edx, word ptr [ecx-0x10]
-        { 0x14, 0x0F }, // (Offset,Value)-Pair #6
-        { 0x15, 0xB7 }, // (Offset,Value)-Pair #7
-        { 0x16, 0x51 }, // (Offset,Value)-Pair #8
-        { 0x17, 0xF0 }, // (Offset,Value)-Pair #9
-
-        // RtlSizeHeap+0x2A : sub eax, ecx
-        { 0x2A, 0x2B }, // (Offset,Value)-Pair #10
-        { 0x2B, 0xC1 }, // (Offset,Value)-Pair #11
-    }
-};
-
-// ******************************************************************
 // * XMountUtilityDrive
 // ******************************************************************
 SOOVPA<8> XMountUtilityDrive_1_0_4432 =
@@ -191,9 +128,9 @@ OOVPATable XAPI_1_0_4432[] =
         "EmuRtlFreeHeap"
         #endif
     },
-    // RtlReAllocateHeap
+    // RtlReAllocateHeap (* unchanged since 1.0.3911 *)
     {
-        (OOVPA*)&RtlReAllocateHeap_1_0_4432,
+        (OOVPA*)&RtlReAllocateHeap_1_0_3911,
 
         XTL::EmuRtlReAllocateHeap,
 
@@ -201,9 +138,9 @@ OOVPATable XAPI_1_0_4432[] =
         "EmuRtlReAllocateHeap"
         #endif
     },
-    // RtlSizeHeap
+    // RtlSizeHeap (* unchanged since 1.0.3911 *)
     {
-        (OOVPA*)&RtlSizeHeap_1_0_4432,
+        (OOVPA*)&RtlSizeHeap_1_0_3911,
 
         XTL::EmuRtlSizeHeap,
 

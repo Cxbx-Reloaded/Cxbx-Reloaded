@@ -572,40 +572,6 @@ SOOVPA<10> IDirect3DDevice8_SetPixelShader_1_0_3925 =
     }
 };
 
-/* FIXME: Is this correct?
-// ******************************************************************
-// * IDirect3DDevice8_SetPixelShader
-// ******************************************************************
-SOOVPA<12> IDirect3DDevice8_SetPixelShader_1_0_3925 =
-{
-    0,  // Large == 0
-    12, // Count == 12
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        // IDirect3DDevice8_SetPixelShader+0x0D : lea ecx, [eax+0x0464]
-        { 0x0D, 0x8D }, // (Offset,Value)-Pair #1
-        { 0x0E, 0x88 }, // (Offset,Value)-Pair #2
-        { 0x0F, 0x64 }, // (Offset,Value)-Pair #3
-        { 0x10, 0x04 }, // (Offset,Value)-Pair #4
-
-        // IDirect3DDevice8_SetPixelShader+0x19 : mov dword ptr [eax+0x0468], 0
-        { 0x19, 0xC7 }, // (Offset,Value)-Pair #5
-        { 0x1A, 0x80 }, // (Offset,Value)-Pair #6
-        { 0x1B, 0x68 }, // (Offset,Value)-Pair #7
-        { 0x1C, 0x04 }, // (Offset,Value)-Pair #8
-
-        // IDirect3DDevice8_SetPixelShader+0x32 : mov [esp+0x04], 0
-        { 0x32, 0xC7 }, // (Offset,Value)-Pair #9
-        { 0x33, 0x44 }, // (Offset,Value)-Pair #10
-        { 0x34, 0x24 }, // (Offset,Value)-Pair #11
-        { 0x35, 0x04 }, // (Offset,Value)-Pair #12
-    }
-};
-//*/
-
 // ******************************************************************
 // * IDirect3DDevice8_SetIndices
 // ******************************************************************

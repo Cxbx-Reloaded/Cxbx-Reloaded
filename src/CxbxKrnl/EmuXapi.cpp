@@ -257,14 +257,23 @@ PVOID WINAPI XTL::EmuRtlReAllocateHeap
            GetCurrentThreadId(), hHeap, dwFlags, lpMem, dwBytes);
    //*/
 
+    BYTE offs;
+
     if(lpMem != NULL)
     {
-        BYTE offs = *(BYTE*)((uint32)lpMem - 1);
+        offs = *(BYTE*)((uint32)lpMem - 1);
 
         lpMem = (PVOID)((uint32)lpMem - offs);
     }
 
     PVOID pRet = CxbxRtlRealloc(hHeap, dwFlags, lpMem, dwBytes + 0x20);
+
+    if(lpMem != NULL)
+    {
+        pRet = (PVOID)((uint32)pRet + offs);
+    }
+
+    DbgPrintf("pRet : 0x%.08X\n", pRet);
 
     EmuSwapFS();   // XBox FS
 

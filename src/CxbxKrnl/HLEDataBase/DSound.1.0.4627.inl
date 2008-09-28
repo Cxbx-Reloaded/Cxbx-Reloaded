@@ -1609,37 +1609,6 @@ SOOVPA<9> CDirectSoundBuffer_SetPosition_1_0_4627 =
 };
 
 // ******************************************************************
-// * IDirectSoundBuffer_SetPosition
-// ******************************************************************
-SOOVPA<9> IDirectSoundBuffer_SetPosition_1_0_4627 =
-{
-    0,  // Large == 0
-    9,  // Count == 9
-
-    -1, // XRef Not Saved
-    1,  // XRef Is Used
-
-    {
-        // IDirectSoundBuffer_SetPosition+0x2C : call [CDirectSoundBuffer::SetPosition]
-        { 0x2D, XREF_DSBUFFERSETPOSITION },
-
-        // IDirectSoundBuffer_SetPosition+0x09 : mov eax, [ebp+arg_0]
-        { 0x09, 0x8B },
-        { 0x0A, 0x45 },
-        { 0x0B, 0x08 },
-
-        // IDirectSoundBuffer_SetPosition+0x28 : fstp [esp+10h+var_10]
-        { 0x28, 0xD9 },
-        { 0x29, 0x1C },
-        { 0x2A, 0x24 },
-
-        // IDirectSoundBuffer_SetPosition+0x32 : retn 14h
-        { 0x33, 0x14 },
-        { 0x34, 0x00 }
-    }
-};
-
-// ******************************************************************
 // * CDirectSoundVoice::SetVelocity
 // ******************************************************************
 SOOVPA<8> CDirectSoundVoice_SetVelocity_1_0_4627 =
@@ -1695,37 +1664,6 @@ SOOVPA<9> CDirectSoundBuffer_SetVelocity_1_0_4627 =
         // CDirectSoundBuffer_SetVelocity+0x64 : retn 14h
         { 0x65, 0x14 },
         { 0x66, 0x00 }
-    }
-};
-
-// ******************************************************************
-// * IDirectSoundBuffer_SetVelocity
-// ******************************************************************
-SOOVPA<9> IDirectSoundBuffer_SetVelocity_1_0_4627 =
-{
-    0,  // Large == 0
-    9,  // Count == 9
-
-    -1, // XRef Not Saved
-    1,  // XRef Is Used
-
-    {
-        // IDirectSoundBuffer_SetVelocity+0x2C : call [CDirectSoundBuffer::SetVelocity]
-        { 0x2D, XREF_DSBUFFERSETVELOCITY },
-
-        // IDirectSoundBuffer_SetVelocity+0x09 : mov eax, [ebp+arg_0]
-        { 0x09, 0x8B },
-        { 0x0A, 0x45 },
-        { 0x0B, 0x08 },
-
-        // IDirectSoundBuffer_SetVelocity+0x28 : fstp [esp+10h+var_10]
-        { 0x28, 0xD9 },
-        { 0x29, 0x1C },
-        { 0x2A, 0x24 },
-
-        // IDirectSoundBuffer_SetVelocity+0x32 : retn 14h
-        { 0x33, 0x14 },
-        { 0x34, 0x00 }
     }
 };
 
@@ -2822,9 +2760,9 @@ OOVPATable DSound_1_0_4627[] =
         "CDirectSoundBuffer::SetPosition (XRef)"
         #endif
     },
-    // IDirectSoundBuffer_SetPosition
+    // IDirectSoundBuffer8_SetPosition (* unchanged since 3936 *)
     {
-        (OOVPA*)&IDirectSoundBuffer_SetPosition_1_0_4627,
+        (OOVPA*)&IDirectSoundBuffer8_SetPosition_1_0_3936,
         XTL::EmuIDirectSoundBuffer8_SetPosition,
 
         #ifdef _DEBUG_TRACE
@@ -2847,9 +2785,9 @@ OOVPATable DSound_1_0_4627[] =
         "CDirectSoundBuffer::SetVelocity (XRef)"
         #endif
     },
-    // IDirectSoundBuffer_SetVelocity
+    // IDirectSoundBuffer8_SetVelocity (* unchanged since 3936 *)
     {
-        (OOVPA*)&IDirectSoundBuffer_SetVelocity_1_0_4627,
+        (OOVPA*)&IDirectSoundBuffer8_SetVelocity_1_0_3936,
         XTL::EmuIDirectSoundBuffer8_SetVelocity,
 
         #ifdef _DEBUG_TRACE

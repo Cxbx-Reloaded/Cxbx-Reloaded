@@ -280,9 +280,9 @@ OOVPATable XAPI_1_0_5233[] =
         "EmuRtlReAllocateHeap"
         #endif
     },
-    // RtlSizeHeap (* unchanged since 4432 *)
+    // RtlSizeHeap (* unchanged since 3911 *)
     {
-        (OOVPA*)&RtlSizeHeap_1_0_4432,
+        (OOVPA*)&RtlSizeHeap_1_0_3911,
 
         XTL::EmuRtlSizeHeap,
 

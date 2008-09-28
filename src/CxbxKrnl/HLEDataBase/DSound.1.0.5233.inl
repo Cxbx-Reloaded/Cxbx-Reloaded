@@ -288,8 +288,8 @@ SOOVPA<8> CDirectSoundVoice_SetMode_1_0_5233 =
     0,  // Large == 0
     8,  // Count == 8
 
-    XREF_DSVOICESETMODE, // Xref Is Saved
-    0,                   // Xref Not Used
+    XREF_DSBUFFERSETMODEB, // Xref Is Saved
+    0,                     // Xref Not Used
 
     {
         { 0x00, 0xF6 }, // (Offset,Value)-Pair #1
@@ -311,11 +311,11 @@ SOOVPA<8> CDirectSoundBuffer_SetMode_1_0_5233 =
     0,  // Large == 0
     8,  // Count == 8
 
-    XREF_DSBUFFERSETMODE, // Xref Is Saved
-    1,                    // Xref Is Used
+    XREF_DSBUFFERSETMODEA, // Xref Is Saved
+    1,                     // Xref Is Used
 
     {
-        { 0x36, XREF_DSVOICESETMODE }, // (Offset,Value)-Pair #1
+        { 0x36, XREF_DSBUFFERSETMODEB }, // (Offset,Value)-Pair #1
 
         { 0x01, 0xE8 }, // (Offset,Value)-Pair #2
         { 0x15, 0x0B }, // (Offset,Value)-Pair #3
@@ -339,7 +339,7 @@ SOOVPA<8> IDirectSoundBuffer8_SetMode_1_0_5233 =
     1,  // XRef Is Used
 
     {
-        { 0x19, XREF_DSBUFFERSETMODE }, // (Offset,Value)-Pair #1
+        { 0x19, XREF_DSBUFFERSETMODEA }, // (Offset,Value)-Pair #1
 
         // IDirectSound8_EnableHeadphones+0x0E : add eax, 0xFFFFFFE4
         { 0x0E, 0x83 }, // (Offset,Value)-Pair #2
@@ -1177,9 +1177,9 @@ OOVPATable DSound_1_0_5233[] =
         "CDirectSoundBuffer::SetPosition (XREF)"
         #endif
     },
-    // IDirectSoundBuffer_SetPosition (* unchanged since 4627 *)
+    // IDirectSoundBuffer8_SetPosition (* unchanged since 3936 *)
     {
-        (OOVPA*)&IDirectSoundBuffer_SetPosition_1_0_4627,
+        (OOVPA*)&IDirectSoundBuffer8_SetPosition_1_0_3936,
 
         XTL::EmuIDirectSoundBuffer8_SetPosition,
 
@@ -1203,9 +1203,9 @@ OOVPATable DSound_1_0_5233[] =
         "CDirectSoundBuffer::SetVelocity (XREF)"
         #endif
     },
-    // IDirectSoundBuffer_SetVelocity (* unchanged since 4627 *)
+    // IDirectSoundBuffer8_SetVelocity (* unchanged since 3936 *)
     {
-        (OOVPA*)&IDirectSoundBuffer_SetVelocity_1_0_4627,
+        (OOVPA*)&IDirectSoundBuffer8_SetVelocity_1_0_3936,
 
         XTL::EmuIDirectSoundBuffer8_SetVelocity,
 

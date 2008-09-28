@@ -221,6 +221,15 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                     szLibraryName[c] = pLibraryVersion[v].szName[c];
                 }
 
+                // Several 3911 titles has different DSound builds.
+                if(strcmp(szLibraryName, "DSOUND") == 0)
+                {
+                    if(BuildVersion < 4034)
+                    {
+                        BuildVersion = 3936;
+                    }
+                }
+
                 // TODO: HACK: These libraries are packed into one database
                 if(strcmp(szLibraryName, "D3DX8") == 0)
                 {

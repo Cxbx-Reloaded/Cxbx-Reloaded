@@ -2401,6 +2401,30 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
             pRecompiledBuffer->Release();
             pRecompiledBuffer = NULL;
         }
+
+        //* Fallback to dummy shader.
+        if(FAILED(hRet))
+        {
+            static const char dummy[] =
+                "vs.1.1\n"
+                "mov oPos, v0\n";
+
+            EmuWarning("Trying fallback:\n%s\n", dummy);
+            hRet = D3DXAssembleShader(dummy,
+                                      strlen(dummy),
+                                      D3DXASM_SKIPVALIDATION,
+                                      NULL,
+                                      &pRecompiledBuffer,
+                                      NULL);
+            hRet = g_pD3DDevice8->CreateVertexShader
+            (
+                pRecompiledDeclaration,
+                (DWORD*)pRecompiledBuffer->GetBufferPointer(),
+                &Handle,
+                g_dwVertexShaderUsage
+            );
+        }
+        //*/
     }
     // Save the status, to remove things later
     pVertexShader->Status = hRet;
