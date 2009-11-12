@@ -48,6 +48,7 @@ typedef DWORD X_D3DCMPFUNC;
 typedef DWORD X_D3DFILLMODE;
 typedef DWORD X_D3DSHADEMODE;
 typedef DWORD X_D3DTEXTURESTAGESTATETYPE;
+typedef PVOID X_D3DCALLBACK;
 
 // Primitives supported by draw-primitive API
 typedef enum _X_D3DPRIMITIVETYPE
@@ -151,6 +152,28 @@ struct X_D3DVertexShader
     DWORD UnknownC[0x59];
 };
 
+typedef struct _X_D3DPIXELSHADERDEF	// <- blueshogun 10/1/07
+{
+   DWORD    PSAlphaInputs[8];          // Alpha inputs for each stage
+   DWORD    PSFinalCombinerInputsABCD; // Final combiner inputs
+   DWORD    PSFinalCombinerInputsEFG;  // Final combiner inputs (continued)
+   DWORD    PSConstant0[8];            // C0 for each stage
+   DWORD    PSConstant1[8];            // C1 for each stage
+   DWORD    PSAlphaOutputs[8];         // Alpha output for each stage
+   DWORD    PSRGBInputs[8];            // RGB inputs for each stage
+   DWORD    PSCompareMode;             // Compare modes for clipplane texture mode
+   DWORD    PSFinalCombinerConstant0;  // C0 in final combiner
+   DWORD    PSFinalCombinerConstant1;  // C1 in final combiner
+   DWORD    PSRGBOutputs[8];           // Stage 0 RGB outputs
+   DWORD    PSCombinerCount;           // Active combiner count (Stages 0-7)
+   DWORD    PSTextureModes;            // Texture addressing modes
+   DWORD    PSDotMapping;              // Input mapping for dot product modes
+   DWORD    PSInputTexture;            // Texture source for some texture modes
+   DWORD    PSC0Mapping;               // Mapping of c0 regs to D3D constants
+   DWORD    PSC1Mapping;               // Mapping of c1 regs to D3D constants
+   DWORD    PSFinalCombinerConstants;  // Final combiner constant mapping
+}X_D3DPIXELSHADERDEF;
+
 typedef struct _STREAM_DYNAMIC_PATCH_
 {
     BOOL  NeedPatch;       // This is to know whether is data which must be patched
@@ -226,6 +249,7 @@ struct X_D3DResource
 #define X_D3DRESOURCE_DATA_FLAG_YUVSURF 0x00000002 // YUV memory surface
 #define X_D3DRESOURCE_DATA_FLAG_D3DREND 0x00000004 // D3D Render Target
 #define X_D3DRESOURCE_DATA_FLAG_D3DSTEN 0x00000008 // D3D Stencil Surface
+#define X_D3DRESOURCE_DATA_FLAG_TEXCLON 0x00000010 // HACK: Cloned resource
 
 #define IsSpecialResource(x) ( ((DWORD)(x) & X_D3DRESOURCE_DATA_FLAG_SPECIAL) == X_D3DRESOURCE_DATA_FLAG_SPECIAL)
 
@@ -348,6 +372,12 @@ struct X_D3DTILE
     DWORD   ZStartTag;
     DWORD   ZOffset;
 };
+
+typedef enum _X_D3DCALLBACKTYPE	// blueshogun96 10/1/07
+{
+	X_D3DCALLBACK_READ		= 1,
+	X_D3DCALLBACK_WRITE		= 2
+}X_D3DCALLBACKTYPE;
 
 typedef enum _X_D3DFIELDTYPE
 {

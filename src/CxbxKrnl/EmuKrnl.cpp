@@ -168,6 +168,22 @@ callComplete:
 using namespace xboxkrnl;
 
 // ******************************************************************
+// * 0x0001 AvGetSavedDataAddress()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress()
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuKrnl (0x%X): AvGetSavedDataAddress();\n", GetCurrentThreadId() );
+
+	// TODO: We might want to return something sometime...
+
+	EmuSwapFS();	// Xbox FS
+
+	return NULL;
+}
+
+// ******************************************************************
 // * 0x000E ExAllocatePool
 // ******************************************************************
 XBSYSAPI EXPORTNUM(14) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePool
@@ -1397,7 +1413,7 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
 
         // Note: Hack: Not thread safe (if problems occur, create a temp buffer)
         if(ReplaceIndex != -1)
-        {
+		{
             ReplaceChar = szBuffer[ReplaceIndex];
             szBuffer[ReplaceIndex] = '\0';
         }
@@ -1720,6 +1736,45 @@ XBSYSAPI EXPORTNUM(202) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenFile
 }
 
 // ******************************************************************
+// * 0x00CE - NtQueueApcThread
+// ******************************************************************
+XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
+(
+	IN HANDLE               ThreadHandle,
+	IN PIO_APC_ROUTINE      ApcRoutine,
+	IN PVOID                ApcRoutineContext OPTIONAL,
+	IN PIO_STATUS_BLOCK     ApcStatusBlock OPTIONAL,
+	IN ULONG                ApcReserved OPTIONAL 
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuKrnl (0x%X): NtQueryDirectoryFile\n"
+           "(\n"
+           "   ThreadHandle         : 0x%.08X\n"
+           "   ApcRoutine           : 0x%.08X\n"
+           "   ApcRoutineContext    : 0x%.08X\n"
+           "   ApcStatusBlock       : 0x%.08X\n"
+           "   ApcReserved          : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), ThreadHandle, ApcRoutine, ApcRoutineContext,
+		   ApcStatusBlock, ApcReserved);
+
+	NTSTATUS ret;
+
+	// TODO: Not too sure how this one works.  If there's any special *magic* that needs to be
+	//		 done, let me know!
+	ret = NtDll::NtQueueApcThread( (NtDll::HANDLE) ThreadHandle, (NtDll::PIO_APC_ROUTINE) ApcRoutine, ApcRoutineContext, 
+									(NtDll::PIO_STATUS_BLOCK) ApcStatusBlock, ApcReserved );
+	if( FAILED( ret ) )
+		EmuWarning( "NtQueueApcThread failed!" );
+
+	EmuSwapFS();	// Xbox FS
+
+	return ret;
+}
+
+// ******************************************************************
 // * 0x00CF - NtQueryDirectoryFile
 // ******************************************************************
 XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
@@ -1877,8 +1932,8 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
            GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation,
            Length, FileInfo);
 
-    if(FileInfo != FilePositionInformation && FileInfo != FileNetworkOpenInformation)
-        CxbxKrnlCleanup("Unknown FILE_INFORMATION_CLASS 0x%.08X", FileInfo);
+//    if(FileInfo != FilePositionInformation && FileInfo != FileNetworkOpenInformation)
+//        CxbxKrnlCleanup("Unknown FILE_INFORMATION_CLASS 0x%.08X", FileInfo);
 
     NTSTATUS ret = NtDll::NtQueryInformationFile
     (
@@ -2630,6 +2685,33 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
     EmuSwapFS();   // Xbox FS
 
     return;
+}
+
+// ******************************************************************
+// * 0x0117 - RtlEqualString
+// ******************************************************************
+XBSYSAPI EXPORTNUM(279) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualString
+(
+  IN PSTRING String1,
+  IN PSTRING String2,
+  IN BOOLEAN CaseSensitive
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuKrnl (0x%X): RtlEqualString\n"
+			"(\n"
+			"	String2            : 0x%.08X (\"%s\")\n"
+			"	String2            : 0x%.08X (\"%s\")\n"
+			"	CaseSensitive      : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), String1, String1, String2, String2, CaseSensitive );
+
+	BOOLEAN bRet = NtDll::RtlEqualString( (NtDll::PSTRING)String1, (NtDll::PSTRING)String2, (NtDll::BOOLEAN)CaseSensitive );
+
+	EmuSwapFS();	// Xbox FS
+
+	return bRet;
 }
 
 // ******************************************************************

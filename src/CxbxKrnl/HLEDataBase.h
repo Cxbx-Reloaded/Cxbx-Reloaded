@@ -65,6 +65,8 @@
 #include "HLEDataBase/XG.1.0.5558.h"
 #include "HLEDataBase/XNet.1.0.3911.h"
 #include "HLEDataBase/XOnline.1.0.4361.h"
+#include "HLEDataBase/XOnline.1.0.4627.h"
+#include "HLEDataBase/XactEng.1.0.4627.h"
 
 // ******************************************************************
 // * szHLELastCompileTime
@@ -262,11 +264,28 @@ enum XRefDataBaseOffset
     XREF_DirectSound_CDirectSoundVoice_CommitDeferredSettings,
     XREF_DirectSound_CDirectSoundVoice_SetAllParameters,
     XREF_DirectSound_CDirectSoundBuffer_SetAllParameters,
+	XREF_DirectSound_CDirectSound_EnableHeadphones,
+	XREF_DirectSound_CDirectSoundVoice_SetHeadroom,
+	XREF_DirectSound_CDirectSound_GetOutputLevels,
+	XREF_DirectSound_CDirectSoundBuffer_Pause,
+	XREF_DirectSound_CMcpxBuffer_GetStatus,
+	XREF_DirectSound_CDirectSoundBuffer_GetStatus,
+	// XACT
+	// +s
+	XREF_XACT_CEngine_RegisterWaveBank,
+	XREF_XACT_CEngine_RegisterStreamedWaveBank,
+	XREF_XACT_CEngine_CreateSoundBank,
+	XREF_XACT_CEngine_DownloadEffectsImage,
+	XREF_XACT_CEngine_CreateSoundSource,
+	XREF_XACT_CSoundBank_GetSoundCueIndexFromFriendlyName,
+
     // XAPI
     /* not necessary?
     XREF_XAPIXCALCULATESIGNATUREBEGINEX
     //*/
     // +s
+//	XREF_XLoadSectionByHandle,
+//	XREF_XFreeSectionByHandle,
 };
 
 #endif

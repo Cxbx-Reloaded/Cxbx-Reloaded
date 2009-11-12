@@ -249,7 +249,7 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
         if(e->ExceptionRecord->ExceptionCode == 0xC0000096)
         {
             // Battlestar Galactica Hack 1
-            if(e->ContextRecord->Eip == 0x000CB580)
+            if(e->ContextRecord->Eip == 0x000CB580 || e->ContextRecord->Eip == 0x000CB340)
             {
                 //if(e->ContextRecord->Ecx == 0x00000200 || e->ContextRecord->Ecx == 0x00000100)
                 //{
@@ -263,6 +263,142 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
                     return EXCEPTION_CONTINUE_EXECUTION;
                 //}
             }
+        }
+    }
+
+	// Smashing drive *NTSC* 
+	if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
+	{
+		if(e->ContextRecord->Eip == 0xA41F5)
+		{
+			// Skip call to D3D::SwapStart(class D3D::CDevice *)
+			memset( (void*) 0xA41F0, 0x90, 0x10 );
+			DbgPrintf("EmuMain (0x%X): Smashing drive hack 1 applied!\n", GetCurrentThreadId());
+
+			g_bEmuException = false;
+
+			return EXCEPTION_CONTINUE_EXECUTION;
+		}
+	}
+
+	// House of the Dead 3 *NTSC*
+	if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
+	{
+		if(e->ContextRecord->Eip == 0xB961E)
+		{
+			e->ContextRecord->Eip += 2;
+
+			DbgPrintf("EmuMain (0x%X): House of the Dead hack 1 applied!\n", GetCurrentThreadId());
+
+			g_bEmuException = false;
+
+			return EXCEPTION_CONTINUE_EXECUTION;
+		}
+	}
+
+	// Unreal Championship *NTSC*
+	//if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
+	//{
+	//	// Unknown NVIDIA Soundstorm APU register
+	//	// mov eax, ds:0xFE80200C
+	//	if(e->ContextRecord->Eip == 0x2C8E78 )
+	//	{
+	//		// Set EAX to zero
+	//		//e->ContextRecord->Eax = 0;
+	//		// Skip this instruction
+	//		e->ContextRecord->Eip += 5;
+	//		*((DWORD*) 0x2C8E79) = 0x00;
+	//		*((DWORD*) 0x2C8E7A) = 0x00;
+	//		*((DWORD*) 0x2C8E7B) = 0x00;
+	//		*((DWORD*) 0x2C8E7C) = 0x00;
+
+	//		DbgPrintf("EmuMain (0x%X): Unreal Championship hack 1 applied!\n", GetCurrentThreadId());
+
+	//		g_bEmuException = false;
+
+	//		return EXCEPTION_CONTINUE_EXECUTION;
+	//	}
+	//}
+
+	// Zapper *NTSC*
+	if(e->ExceptionRecord->ExceptionCode == 0xC0000096)
+	{
+		if(e->ContextRecord->Eip == 0xE2250)
+		{
+			// Zapper WBINVD skip
+            e->ContextRecord->Eip += 2;
+
+            DbgPrintf("EmuMain (0x%X): Zapper Hack 1 was applied!\n", GetCurrentThreadId());
+
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+    }
+
+	// Fusion Frenzy (Demo) *NTSC*
+	// The full version probably has the same problem.  If so, add the address here :)
+	if(e->ExceptionRecord->ExceptionCode == 0xC0000096)
+	{
+		if(e->ContextRecord->Eip == 0x4ED70)
+		{
+			// Zapper WBINVD skip
+            e->ContextRecord->Eip += 2;
+
+            DbgPrintf("EmuMain (0x%X): Fusion Frenzy hack 1 was applied!\n", GetCurrentThreadId());
+
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+    }
+
+	// Taz: Wanted *NTSC*
+	// Okay this is getting rediculous!
+	if(e->ExceptionRecord->ExceptionCode == 0xC0000096)
+	{
+		if(e->ContextRecord->Eip == 0x151090)
+		{
+			// WBINVD skip
+            e->ContextRecord->Eip += 2;
+
+            DbgPrintf("EmuMain (0x%X): Taz Wanted Hack 1 was applied!\n", GetCurrentThreadId());
+
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+    }
+
+	// Phantom Crash *NTSC*
+	if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
+	{
+		if(e->ContextRecord->Eip == 0xB2EF9)
+		{
+			// fstp dword ptr [eax]
+            e->ContextRecord->Eip += 2;
+
+            DbgPrintf("EmuMain (0x%X): Phantom Crash hack 1 was applied!\n", GetCurrentThreadId());
+
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+    }
+
+	// Blood Rayne *NTSC*
+	if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
+	{
+		if(e->ContextRecord->Eip == 0x12707D)
+		{
+			// rep movsd
+            e->ContextRecord->Eip += 2;
+
+            DbgPrintf("EmuMain (0x%X): Blood Rayne hack 1 was applied!\n", GetCurrentThreadId());
+
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
         }
     }
 

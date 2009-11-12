@@ -1320,6 +1320,166 @@ SOOVPA<6> IDirect3DDevice8_BlockOnFence_1_0_5233 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetPalette
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_SetPalette_1_0_5233 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetPalette+0x0D : mov eax, [edi+esi*4+0x0A88]
+        { 0x0D, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x0E, 0x84 }, // (Offset,Value)-Pair #2
+        { 0x0F, 0xBE }, // (Offset,Value)-Pair #3
+        { 0x10, 0x48 }, // (Offset,Value)-Pair #4
+        { 0x11, 0x0B }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_SetPalette+0x51 : add ebp, 0x80000
+        { 0x51, 0x81 }, // (Offset,Value)-Pair #6
+        { 0x52, 0xC5 }, // (Offset,Value)-Pair #7
+        { 0x53, 0x00 }, // (Offset,Value)-Pair #8
+        { 0x54, 0x00 }, // (Offset,Value)-Pair #9
+        { 0x55, 0x08 }, // (Offset,Value)-Pair #10
+
+        // IDirect3DDevice8_SetPalette+0x8A : retn 0x08
+        { 0x8A, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x8B, 0x08 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetFlickerFilter
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_SetFlickerFilter_1_0_5233 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetFlickerFilter+0x1C : mov eax, [eax+0x17C8]
+        { 0x1C, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x1D, 0x80 }, // (Offset,Value)-Pair #2
+        { 0x1E, 0xC8 }, // (Offset,Value)-Pair #3
+        { 0x1F, 0x17 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DDevice8_SetFlickerFilter+0x22 : push 0; push esi; push 0x0B; push eax
+        { 0x22, 0x6A }, // (Offset,Value)-Pair #5
+        { 0x23, 0x00 }, // (Offset,Value)-Pair #6
+        { 0x24, 0x56 }, // (Offset,Value)-Pair #7
+        { 0x25, 0x6A }, // (Offset,Value)-Pair #8
+        { 0x26, 0x0B }, // (Offset,Value)-Pair #9
+        { 0x27, 0x50 }, // (Offset,Value)-Pair #10
+
+        // IDirect3DDevice8_SetFlickerFilter+0x3F : retn 0x04
+        { 0x3F, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x40, 0x04 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetFlickerFilter
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_SetFlickerFilter_1_0_5344 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetFlickerFilter+0x1C : mov eax, [eax+0x17C8]
+        { 0x1C, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x1D, 0x80 }, // (Offset,Value)-Pair #2
+        { 0x1E, 0xF8 }, // (Offset,Value)-Pair #3
+        { 0x1F, 0x17 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DDevice8_SetFlickerFilter+0x22 : push 0; push esi; push 0x0B; push eax
+        { 0x22, 0x6A }, // (Offset,Value)-Pair #5
+        { 0x23, 0x00 }, // (Offset,Value)-Pair #6
+        { 0x24, 0x56 }, // (Offset,Value)-Pair #7
+        { 0x25, 0x6A }, // (Offset,Value)-Pair #8
+        { 0x26, 0x0B }, // (Offset,Value)-Pair #9
+        { 0x27, 0x50 }, // (Offset,Value)-Pair #10
+
+        // IDirect3DDevice8_SetFlickerFilter+0x3F : retn 0x04
+        { 0x3F, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x40, 0x04 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetFlickerFilter
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_SetSoftDisplayFilter_1_0_5233 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetSoftDisplayFilter+0x25 : mov edx, [eax+0x17C8]
+        { 0x25, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x26, 0x90 }, // (Offset,Value)-Pair #2
+        { 0x27, 0xC8 }, // (Offset,Value)-Pair #3
+        { 0x28, 0x17 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DDevice8_SetSoftDisplayFilter+0x2B : push 0; push esi; push 0x0E; push edx
+        { 0x2B, 0x6A }, // (Offset,Value)-Pair #5
+        { 0x2C, 0x00 }, // (Offset,Value)-Pair #6
+        { 0x2D, 0x56 }, // (Offset,Value)-Pair #7
+        { 0x2E, 0x6A }, // (Offset,Value)-Pair #8
+        { 0x2F, 0x0E }, // (Offset,Value)-Pair #9
+        { 0x30, 0x52 }, // (Offset,Value)-Pair #10
+
+        // IDirect3DDevice8_SetSoftDisplayFilter+0x4E : retn 0x04
+        { 0x4E, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x4F, 0x04 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetFlickerFilter
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_SetSoftDisplayFilter_1_0_5344 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetSoftDisplayFilter+0x25 : mov edx, [eax+0x17F8]
+        { 0x25, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x26, 0x90 }, // (Offset,Value)-Pair #2
+        { 0x27, 0xF8 }, // (Offset,Value)-Pair #3
+        { 0x28, 0x17 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DDevice8_SetSoftDisplayFilter+0x2B : push 0; push esi; push 0x0E; push edx
+        { 0x22, 0x6A }, // (Offset,Value)-Pair #5
+        { 0x23, 0x00 }, // (Offset,Value)-Pair #6
+        { 0x24, 0x56 }, // (Offset,Value)-Pair #7
+        { 0x25, 0x6A }, // (Offset,Value)-Pair #8
+        { 0x26, 0x0E }, // (Offset,Value)-Pair #9
+        { 0x27, 0x52 }, // (Offset,Value)-Pair #10
+
+        // IDirect3DDevice8_SetSoftDisplayFilter+0x4E : retn 0x04
+        { 0x4E, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x4F, 0x04 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
 // * D3D8_1_0_5233
 // ******************************************************************
 OOVPATable D3D8_1_0_5233[] =
@@ -1384,9 +1544,9 @@ OOVPATable D3D8_1_0_5233[] =
         "EmuIDirect3DDevice8_SetScissors"
         #endif
     },
-    // IDirect3DDevice8::GetGammaRamp (* unchanged since 4627 *)
+    // IDirect3DDevice8::GetGammaRamp (* unchanged since 4034 *)
     {
-        (OOVPA*)&IDirect3DDevice8_GetGammaRamp_1_0_4627,
+        (OOVPA*)&IDirect3DDevice8_GetGammaRamp_1_0_4034,
 
         XTL::EmuIDirect3DDevice8_GetGammaRamp,
 
@@ -2395,6 +2555,76 @@ OOVPATable D3D8_1_0_5233[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_BlockOnFence"
+        #endif
+    },
+	// IDirect3DDevice8::GetTransform (* unchanged since 4361 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_GetTransform_1_0_4361,
+
+        XTL::EmuIDirect3DDevice8_GetTransform,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetTransform"
+        #endif
+    },
+	// IDirect3DDevice8::SetPalette
+    {
+        (OOVPA*)&IDirect3DDevice8_SetPalette_1_0_5233,
+
+        XTL::EmuIDirect3DDevice8_SetPalette,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetPalette"
+        #endif
+    },
+	// IDirect3DDevice8::GetCreationParameters (* unchanged since 4034 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_GetCreationParameters_1_0_4034,
+
+        XTL::EmuIDirect3DDevice8_GetCreationParameters,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetCreationParameters"
+        #endif
+    },
+	// IDirect3DDevice8::SetFlickerFilter
+    {
+        (OOVPA*)&IDirect3DDevice8_SetFlickerFilter_1_0_5233,
+
+        XTL::EmuIDirect3DDevice8_SetFlickerFilter,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetFlickerFilter"
+        #endif
+    },
+	// IDirect3DDevice8::SetFlickerFilter
+    {
+        (OOVPA*)&IDirect3DDevice8_SetFlickerFilter_1_0_5344,
+
+        XTL::EmuIDirect3DDevice8_SetFlickerFilter,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetFlickerFilter_5344"
+        #endif
+    },
+	// IDirect3DDevice8::SetSoftDisplayFilter
+    {
+        (OOVPA*)&IDirect3DDevice8_SetSoftDisplayFilter_1_0_5233,
+
+        XTL::EmuIDirect3DDevice8_SetSoftDisplayFilter,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetSoftDisplayFilter"
+        #endif
+    },
+	// IDirect3DDevice8::SetSoftDisplayFilter
+    {
+        (OOVPA*)&IDirect3DDevice8_SetSoftDisplayFilter_1_0_5344,
+
+        XTL::EmuIDirect3DDevice8_SetSoftDisplayFilter,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetSoftDisplayFilter_5344"
         #endif
     },
 };

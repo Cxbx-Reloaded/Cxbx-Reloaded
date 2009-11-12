@@ -1590,4 +1590,134 @@ HRESULT WINAPI EmuIDirect3DDevice8_SetScreenSpaceOffset
     FLOAT y
 );
 
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_InsertFence
+// ******************************************************************
+DWORD WINAPI EmuIDirect3DDevice8_InsertFence();
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_BlockOnFence
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_BlockOnFence
+(
+	DWORD Fence
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DResource8_BlockUntilNotBusy
+// ******************************************************************
+VOID WINAPI EmuIDirect3DResource8_BlockUntilNotBusy
+(
+	X_D3DResource *pThis
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DVertexBuffer8_GetDesc
+// ******************************************************************
+VOID WINAPI EmuIDirect3DVertexBuffer8_GetDesc
+(
+	X_D3DVertexBuffer    *pThis,
+	D3DVERTEXBUFFER_DESC *pDesc
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetScissors
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetScissors
+(
+	DWORD          Count, 
+	BOOL           Exclusive, 
+	CONST D3DRECT  *pRects
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetPixelShaderProgram
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetPixelShaderProgram
+(
+	CONST X_D3DPIXELSHADERDEF *pPSDef
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice_SetScreenSpaceOffset
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetScreenSpaceOffset
+(
+	FLOAT x,
+	FLOAT y
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_CreateStateBlock
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_CreateStateBlock
+(
+	D3DSTATEBLOCKTYPE Type,
+	DWORD			  *pToken
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_InsertCallback
+// ******************************************************************
+VOID WINAPI EmuIDirect3DDevice8_InsertCallback
+(
+	X_D3DCALLBACKTYPE	Type,
+	X_D3DCALLBACK		pCallback,
+	DWORD				Context
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_DrawRectPatch
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_DrawRectPatch
+(
+	UINT					Handle,
+	CONST FLOAT				*pNumSegs,
+	CONST D3DRECTPATCH_INFO *pRectPatchInfo
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetProjectionViewportMatrix
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_GetProjectionViewportMatrix
+(
+	D3DMATRIX *pProjectionViewport
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_BackFillMode
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_BackFillMode
+(
+	DWORD Value
+);
+
+// ******************************************************************
+// * func: EmuD3DDevice_KickOff (D3D::CDevice::KickOff)
+// ******************************************************************
+VOID WINAPI EmuD3DDevice_KickOff();
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetTexture2
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_GetTexture2
+(
+	X_D3DResource*	pTexture
+);
+
+// ******************************************************************
+// * func: EmuD3DDevice_SetStateVB (D3D::CDevice::SetStateVB)
+// ******************************************************************
+VOID WINAPI EmuD3DDevice_SetStateVB( ULONG Unknown1 );
+
+// ******************************************************************
+// * func: EmuD3DDevice_SetStateUP (D3D::CDevice::SetStateUP)
+// ******************************************************************
+VOID WINAPI EmuD3DDevice_SetStateUP();
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetStipple
+// ******************************************************************
+void WINAPI EmuIDirect3DDevice8_SetStipple( DWORD* pPattern );
+
 #endif

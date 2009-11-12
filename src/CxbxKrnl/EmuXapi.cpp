@@ -49,6 +49,11 @@ extern XInputSetStateStatus g_pXInputSetStateStatus[XINPUT_SETSTATE_SLOTS] = {0}
 // XInputOpen handles
 extern HANDLE g_hInputHandle[XINPUT_HANDLE_SLOTS] = {0};
 
+// Xbe section list
+extern SectionList* g_pSectionList;
+// Number of sections
+extern int g_NumSections;
+
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
@@ -1174,6 +1179,279 @@ VOID WINAPI XTL::EmuXRegisterThreadNotifyRoutine
     }
 
     EmuSwapFS();   // XBox FS
+}
+
+// ******************************************************************
+// * func: EmuCreateFiber
+// ******************************************************************
+LPVOID WINAPI XTL::EmuCreateFiber
+(
+	DWORD					dwStackSize,
+	LPFIBER_START_ROUTINE	lpStartRoutine,
+	LPVOID					lpParameter
+)
+{
+	EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuXapi (0x%X): EmuCreateFiber\n"
+           "(\n"
+		   "   dwStackSize         : 0x%.08X\n"
+           "   lpStartRoutine      : 0x%.08X\n"
+           "   lpParameter         : 0x%.08X\n"
+           ");\n",
+            GetCurrentThreadId(), dwStackSize, lpStartRoutine, lpParameter);
+
+	LPVOID pFiber = CreateFiber( dwStackSize, lpStartRoutine, lpParameter );
+	if( !pFiber )
+		EmuWarning( "CreateFiber failed!" );
+
+	EmuSwapFS();	// Xbox FS
+
+	return pFiber;
+}
+
+// ******************************************************************
+// * func: EmuDeleteFiber
+// ******************************************************************
+VOID WINAPI XTL::EmuDeleteFiber
+(
+	LPVOID					lpFiber
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuDeleteFiber\n"
+			"(\n"
+			"	lpFiber            : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), lpFiber );
+
+	DeleteFiber( lpFiber );
+
+	EmuSwapFS();	// Xbox FS
+}
+
+// ******************************************************************
+// * func: EmuLoadSectionA
+// ******************************************************************
+LPVOID WINAPI XTL::EmuXLoadSectionA
+(
+	LPCSTR					pSectionName
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuXLoadSectionA\n"
+			"(\n"
+			"   pSectionName       : \"%s\"\n"
+			");\n",
+			GetCurrentThreadId(), pSectionName, pSectionName );
+
+	// Search this .xbe for the section it wants to load.
+	// If we find it, return the address of it.
+//	LPVOID pRet = NULL;
+
+	// Get the .xbe header
+	/*Xbe::Header* pXbeHeader = (Xbe::Header*) 0x00010000;
+
+	// Get the number of sections this .xbe has and the
+	// location of the section headers.
+	DWORD dwNumSections = pXbeHeader->dwSections;
+	DWORD dwSectionAddr = pXbeHeader->dwSectionHeadersAddr - pXbeHeader->dwBaseAddr;
+
+	// Get section headers.
+	Xbe::SectionHeader* pSectionHeaders = (Xbe::SectionHeader*) CxbxMalloc( sizeof( Xbe::SectionHeader ) * dwNumSections );
+
+	DWORD dwOffset = dwSectionAddr;
+
+	for( DWORD i = 0; i < dwNumSections; i++ )
+	{
+		memcpy( &pSectionHeaders[i], ((DWORD*) dwOffset), sizeof( Xbe::SectionHeader ) );
+		dwOffset += sizeof( Xbe::SectionHeader );
+	}
+
+	// Find a match to the section name
+	DWORD dwSection = -1;
+
+	for( DWORD i = 0; i < dwNumSections; i++ )
+	{
+		char szSectionName[32];
+		dwOffset = pSectionHeaders[i].dwSectionNameAddr - pXbeHeader->dwBaseAddr;
+		sprintf( szSectionName, "%s", ((DWORD*) dwOffset) );
+
+		// Do we have a match?
+		if( !strcmp( szSectionName, pSectionName ) )
+		{
+			dwSection = i;
+			break;
+		}
+	}
+
+	// If we have a match, get the raw address of this section
+	// and return a pointer to that address.
+	if( dwSection != -1 )
+	{
+		pRet = (LPVOID) pSectionHeaders[dwSection].dwRawAddr;
+	}
+
+	// Free up the memory
+	CxbxFree( pSectionHeaders );*/
+
+	LPVOID pRet = NULL;
+	/*int Section = -1;
+
+	DbgPrintf( "Sections: %d\n", g_NumSections );
+	DbgPrintf( "Section List 0x%.08X\n", g_pSectionList );
+
+	if( g_pSectionList )
+	{
+		for( int i = 0; i < (int) g_NumSections; i++ )
+		{
+			if( !strcmp( g_pSectionList[i].szSectionName, pSectionName ) )
+			{
+				Section = i;
+				break;
+			}
+		}
+
+		for( int i = 0; i < g_NumSections; i++ )
+			DbgPrintf( "Section #%d: %s\n", i, g_pSectionList[i].szSectionName );
+
+		if( Section != -1 )
+		{
+			pRet = ((LPVOID) g_pSectionList[Section].dwSectionAddr);
+		}
+
+		__asm int 3;
+	}
+	else
+	{
+		EmuWarning( "Section List not initialized!" );
+		__asm int 3;
+	}*/
+
+	EmuSwapFS();	// Xbox FS
+
+	return pRet;
+}
+
+// ******************************************************************
+// * func: EmuXFreeSectionA
+// ******************************************************************
+BOOL WINAPI XTL::EmuXFreeSectionA
+(
+	LPCSTR					pSectionName
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuXFreeSectionA\n"
+			"(\n"
+			"   pSectionName       : \"%s\"\n"
+			");\n",
+			GetCurrentThreadId(), pSectionName, pSectionName );
+
+	// TODO: Implement (if necessary)?
+//	CxbxKrnlCleanup( "XFreeSectionA is not implemented" );
+
+	EmuSwapFS();	// Xbox FS
+
+	return TRUE;
+}
+
+// ******************************************************************
+// * func: EmuXGetSectionHandleA
+// ******************************************************************
+HANDLE WINAPI XTL::EmuXGetSectionHandleA
+(
+	LPCSTR					pSectionName
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuXGetSectionHandleA\n"
+			"(\n"
+			"   pSectionName       : \"%s\"\n"
+			");\n",
+			GetCurrentThreadId(), pSectionName, pSectionName );
+
+	// TODO: Implement (if necessary)?
+//	CxbxKrnlCleanup( "XGetSectionHandleA is not implemented" );
+
+	EmuSwapFS();	// Xbox FS
+
+	return NULL;
+}
+
+// ******************************************************************
+// * func: EmuXLoadSectionByHandle
+// ******************************************************************
+LPVOID WINAPI XTL::EmuXLoadSectionByHandle
+(
+	HANDLE					hSection
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuXLoadSectionByHandle\n"
+			"(\n"
+			"   hSection           : 0x%.80X\n"
+			");\n",
+			GetCurrentThreadId(), hSection );
+
+	// TODO: Implement (if necessary)?
+//	CxbxKrnlCleanup( "XLoadSectionByHandle is not implemented" );
+
+	EmuSwapFS();	// Xbox FS
+
+	return NULL;
+}
+
+// ******************************************************************
+// * func: EmuXFreeSectionByHandle
+// ******************************************************************
+BOOL WINAPI XTL::EmuXFreeSectionByHandle
+(
+	HANDLE					hSection
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuXFreeSectionByHandle\n"
+			"(\n"
+			"   hSection           : 0x%.80X\n"
+			");\n",
+			GetCurrentThreadId(), hSection );
+
+	// TODO: Implement (if necessary)?
+//	CxbxKrnlCleanup( "XLoadSectionByHandle is not implemented" );
+
+	EmuSwapFS();	// Xbox FS
+
+	return NULL;
+}
+
+// ******************************************************************
+// * func: EmuRtlDestroyHeap
+// ******************************************************************
+PVOID WINAPI XTL::EmuRtlDestroyHeap
+(
+    IN HANDLE HeapHandle
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuRtlDestroyHeap\n"
+			"(\n"
+			"   HeapHandle         : 0x%.80X\n"
+			");\n",
+			GetCurrentThreadId(), HeapHandle );
+
+	PVOID pRet = NtDll::RtlDestroyHeap( HeapHandle );
+
+	EmuSwapFS();	// Xbox FS
+
+	return pRet;
 }
 
 /* not necessary?

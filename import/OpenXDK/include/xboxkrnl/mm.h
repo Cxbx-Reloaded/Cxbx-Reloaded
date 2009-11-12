@@ -1,5 +1,5 @@
 // ******************************************************************
-// *
+// * 
 // * proj : OpenXDK
 // *
 // * desc : Open Source XBox Development Kit
@@ -18,13 +18,13 @@ XBSYSAPI VOID *MmGlobalData;
 // * MmAllocateContiguousMemory
 // ******************************************************************
 // *
-// * Allocates a range of physically contiguous, cache-aligned
+// * Allocates a range of physically contiguous, cache-aligned 
 // * memory from nonpaged pool (main pool on xbox).
 // *
 // ******************************************************************
 XBSYSAPI EXPORTNUM(165) PVOID NTAPI MmAllocateContiguousMemory
 (
-    IN ULONG NumberOfBytes
+	IN ULONG NumberOfBytes
 );
 
 // ******************************************************************
@@ -32,11 +32,11 @@ XBSYSAPI EXPORTNUM(165) PVOID NTAPI MmAllocateContiguousMemory
 // ******************************************************************
 XBSYSAPI EXPORTNUM(166) PVOID NTAPI MmAllocateContiguousMemoryEx
 (
-    IN ULONG            NumberOfBytes,
-    IN PHYSICAL_ADDRESS LowestAcceptableAddress,
-    IN PHYSICAL_ADDRESS HighestAcceptableAddress,
-    IN ULONG            Alignment OPTIONAL,
-    IN ULONG            ProtectionType
+	IN ULONG			NumberOfBytes,
+	IN PHYSICAL_ADDRESS LowestAcceptableAddress,
+	IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+	IN ULONG			Alignment OPTIONAL,
+	IN ULONG			ProtectionType
 );
 
 // ******************************************************************
@@ -55,8 +55,7 @@ XBSYSAPI VOID *MmClaimGpuInstanceMemory;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(169) PVOID NTAPI MmCreateKernelStack
 (
-    IN ULONG NumberOfBytes,
-    IN ULONG Unknown
+	BOOLEAN GuiStack
 );
 
 // ******************************************************************
@@ -64,8 +63,8 @@ XBSYSAPI EXPORTNUM(169) PVOID NTAPI MmCreateKernelStack
 // ******************************************************************
 XBSYSAPI EXPORTNUM(170) VOID NTAPI MmDeleteKernelStack
 (
-    IN PVOID EndAddress,
-    IN PVOID BaseAddress
+	PVOID Stack,
+	BOOLEAN GuiStack
 );
 
 // ******************************************************************
@@ -73,7 +72,7 @@ XBSYSAPI EXPORTNUM(170) VOID NTAPI MmDeleteKernelStack
 // ******************************************************************
 XBSYSAPI EXPORTNUM(171) VOID NTAPI MmFreeContiguousMemory
 (
-    IN PVOID BaseAddress
+	IN PVOID BaseAddress
 );
 
 // ******************************************************************
@@ -99,7 +98,7 @@ XBSYSAPI VOID *MmIsAddressValid;
 XBSYSAPI EXPORTNUM(175) PHYSICAL_ADDRESS NTAPI MmLockUnlockBufferPages
 (
     IN PHYSICAL_ADDRESS   BaseAddress,
-    IN ULONG            NumberOfBytes,
+	IN ULONG            NumberOfBytes,
     IN ULONG            Protect
 );
 

@@ -33,6 +33,115 @@
 // ******************************************************************
 
 // ******************************************************************
+// * IDirect3DDevice8_GetGammaRamp
+// ******************************************************************
+SOOVPA<7> IDirect3DDevice8_GetGammaRamp_1_0_4034 =
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x05, 0x8B },
+        { 0x0A, 0x00 },
+        { 0x10, 0xE1 },
+        { 0x16, 0x0C },
+        { 0x1C, 0x00 },
+        { 0x22, 0x00 },
+        { 0x28, 0x04 },
+    }
+};
+
+
+// ******************************************************************
+// * IDirect3DDevice8_GetCreationParameters
+// ******************************************************************
+SOOVPA<7> IDirect3DDevice8_GetCreationParameters_1_0_4034 =
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x06, 0x8B },
+        { 0x0E, 0x8B },
+        { 0x16, 0x4E },
+        { 0x1E, 0x83 },
+        { 0x26, 0x00 },
+        { 0x2E, 0x5E },
+        { 0x36, 0xC9 },
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_GetViewport
+// ******************************************************************
+SOOVPA<10> IDirect3DDevice8_GetViewport_1_0_4034 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_GetViewport+0x05 : push esi; push edi
+        { 0x05, 0x56 }, // (Offset,Value)-Pair #1
+        { 0x06, 0x57 }, // (Offset,Value)-Pair #2
+
+        // IDirect3DDevice8_GetViewport+0x0B : lea esi, [eax+0x0B50]
+        { 0x0B, 0x8D }, // (Offset,Value)-Pair #3
+        { 0x0C, 0xB0 }, // (Offset,Value)-Pair #4
+        { 0x0D, 0x50 }, // (Offset,Value)-Pair #5
+        { 0x0E, 0x0B }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_GetViewport+0x11 : mov ecx, 6
+        { 0x11, 0xB9 }, // (Offset,Value)-Pair #7
+        { 0x12, 0x06 }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_GetViewport+0x1A : retn 0x04
+        { 0x1A, 0xC2 }, // (Offset,Value)-Pair #9
+        { 0x1B, 0x04 }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetViewport
+// ******************************************************************
+SOOVPA<10> IDirect3DDevice8_SetViewport_1_0_4034 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetViewport+0x00 : sub esp, 0x08
+        { 0x00, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x01, 0xEC }, // (Offset,Value)-Pair #2
+        { 0x02, 0x08 }, // (Offset,Value)-Pair #3
+
+        // IDirect3DDevice8_SetViewport+0x2D : mov ebx, [esp+0x14]
+        { 0x2D, 0x8B }, // (Offset,Value)-Pair #4
+        { 0x2E, 0x5C }, // (Offset,Value)-Pair #5
+        { 0x2F, 0x24 }, // (Offset,Value)-Pair #6
+        { 0x30, 0x14 }, // (Offset,Value)-Pair #7
+
+        // IDirect3DDevice8_SetViewport+0x53 : jnz +0x12
+        { 0x53, 0x75 }, // (Offset,Value)-Pair #8
+        { 0x54, 0x12 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DDevice8_SetViewport+0x9B : inc edx
+        { 0x9B, 0x42 }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
 // * D3D8_1_0_4034
 // ******************************************************************
 OOVPATable D3D8_1_0_4034[] =
@@ -674,6 +783,47 @@ OOVPATable D3D8_1_0_4034[] =
     },
 
     // ********************** END WARNING UNTESTED!!! *******************
+
+	// IDirect3DDevice8::GetGammaRamp
+    {
+        (OOVPA*)&IDirect3DDevice8_GetGammaRamp_1_0_4034,
+
+        XTL::EmuIDirect3DDevice8_GetGammaRamp,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetGammaRamp"
+        #endif
+    },
+	// IDirect3DDevice8::GetCreationParameters
+    {
+        (OOVPA*)&IDirect3DDevice8_GetCreationParameters_1_0_4034,
+
+        XTL::EmuIDirect3DDevice8_GetCreationParameters,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetCreationParameters"
+        #endif
+    },
+	// IDirect3DDevice8::GetViewport
+    {
+        (OOVPA*)&IDirect3DDevice8_GetViewport_1_0_4034,
+
+        XTL::EmuIDirect3DDevice8_GetViewport,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetViewport"
+        #endif
+    },
+	// IDirect3DDevice8::SetViewport
+    {
+        (OOVPA*)&IDirect3DDevice8_SetViewport_1_0_4034,
+
+        XTL::EmuIDirect3DDevice8_SetViewport,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetViewport"
+        #endif
+    },
 };
 
 // ******************************************************************

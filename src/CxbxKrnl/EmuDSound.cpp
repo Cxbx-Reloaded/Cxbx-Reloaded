@@ -94,6 +94,7 @@ static XTL::LPDIRECTSOUND8          g_pDSound8 = NULL;
 static int                          g_pDSound8RefCount = 0;
 static XTL::X_CDirectSoundBuffer   *g_pDSoundBufferCache[SOUNDBUFFER_CACHE_SIZE];
 static XTL::X_CDirectSoundStream   *g_pDSoundStreamCache[SOUNDSTREAM_CACHE_SIZE];
+static int							g_bDSoundCreateCalled = false;
 
 // periodically update sound buffers
 static void HackUpdateSoundBuffers()
@@ -252,7 +253,10 @@ HRESULT WINAPI XTL::EmuDirectSoundCreate
 
     HRESULT hRet = DS_OK;
 
-    if(!initialized)
+	// Set this flag when this function is called
+	g_bDSoundCreateCalled = true;
+
+    if(!initialized || !g_pDSound8)
     {
         hRet = DirectSoundCreate8(NULL, ppDirectSound, NULL);
 
@@ -277,6 +281,11 @@ HRESULT WINAPI XTL::EmuDirectSoundCreate
 
         initialized = true;
     }
+
+	// This way we can be sure that this function returns a valid
+	// DirectSound8 pointer even if we initialized it elsewhere!
+	if(!(*ppDirectSound) && g_pDSound8)
+		*ppDirectSound = g_pDSound8;
 
     g_pDSound8RefCount = 1;
 
@@ -880,6 +889,24 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
                 */
             }
         }
+		else
+		{
+			EmuWarning("Creating dummy WAVEFORMATEX (pdsbd->lpwfxFormat = NULL)...");
+			__asm int 3;
+		
+			// HACK: For Quantum Redshift, create dummy WAVEFORMATEX data.
+			// TODO: A better response to this scenario if possible.
+
+			pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)CxbxMalloc(sizeof(WAVEFORMATEX));
+
+	//		pDSBufferDesc->lpwfxFormat->cbSize = sizeof( WAVEFORMATEX );
+			pDSBufferDesc->lpwfxFormat->nChannels = 2;
+			pDSBufferDesc->lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
+			pDSBufferDesc->lpwfxFormat->nSamplesPerSec = 48000;
+			pDSBufferDesc->lpwfxFormat->nBlockAlign = 4;
+			pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = 4 * 48000;
+			pDSBufferDesc->lpwfxFormat->wBitsPerSample = 16;
+		}
 
         pDSBufferDesc->guid3DAlgorithm = DS3DALG_DEFAULT;
     }
@@ -1594,10 +1621,45 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
 
     DbgPrintf("EmuDSound (0x%X): EmuDirectSoundCreateStream, *ppStream := 0x%.08X\n", GetCurrentThreadId(), *ppStream);
 
+	if(!g_pDSound8)
+	{
+		if( !g_bDSoundCreateCalled )
+		{
+			HRESULT hRet;
+
+			EmuWarning("Initializing DirectSound pointer since it DirectSoundCreate was not called!");
+
+			// Create the DirectSound buffer before continuing...
+			if(FAILED(DirectSoundCreate8( NULL, &g_pDSound8, NULL )))
+				CxbxKrnlCleanup("Unable to initialize DirectSound!");
+
+			hRet = g_pDSound8->SetCooperativeLevel(g_hEmuWindow, DSSCL_PRIORITY);
+
+			if(FAILED(hRet))
+				CxbxKrnlCleanup("g_pDSound8->SetCooperativeLevel Failed!");
+
+			int v=0;
+			// clear sound buffer cache
+			for(v=0;v<SOUNDBUFFER_CACHE_SIZE;v++)
+				g_pDSoundBufferCache[v] = 0;
+
+			// clear sound stream cache
+			for(v=0;v<SOUNDSTREAM_CACHE_SIZE;v++)
+				g_pDSoundStreamCache[v] = 0;
+
+			// Let's count DirectSound as being initialized now
+			g_bDSoundCreateCalled = true;
+		}
+		else
+			EmuWarning("DirectSound not initialized!");
+	}
+
     HRESULT hRet = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &(*ppStream)->EmuDirectSoundBuffer8, NULL);
 
     if(FAILED(hRet))
         EmuWarning("CreateSoundBuffer Failed!");
+
+//	__asm int 3
 
     // cache this sound stream
     {
@@ -2808,4 +2870,171 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_SetVolume
     EmuSwapFS();   // XBox FS
 
     return DS_OK;
+}
+
+
+// ******************************************************************
+// * func: EmuIDirectSound_EnableHeadphones
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSound_EnableHeadphones
+(
+	LPDIRECTSOUND		pThis,
+	BOOL				fEnabled
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuDSound (0x%X): EmuIDirectSound_EnableHeadphones\n"
+			"(\n"
+			"	pThis					: 0x%.08X\n"
+			"   fEnabled				: 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), pThis, fEnabled);
+
+	EmuSwapFS();	// Xbox FS
+
+	return DS_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_AddRef
+// ******************************************************************
+ULONG WINAPI XTL::EmuIDirectSoundBuffer8_AddRef
+(
+    X_CDirectSoundBuffer   *pThis
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer_AddRef\n"
+			"(\n"
+			"	pThis					: 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), pThis);
+	
+	ULONG ret;
+
+	if(pThis != 0)
+        if(pThis->EmuDirectSoundBuffer8 != 0) // HACK: Ignore unsupported codecs.
+            ret = pThis->EmuDirectSoundBuffer8->AddRef();
+
+	EmuSwapFS();	// Xbox FS
+
+	return ret;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_Pause
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Pause
+(
+    X_CDirectSoundBuffer   *pThis,
+	DWORD					dwPause
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer_Pause\n"
+			"(\n"
+			"	pThis					: 0x%.08X\n"
+			"   dwPause                 : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), pThis, dwPause);
+
+	// This function wasn't part of the XDK until 4721.
+	HRESULT ret = S_OK;
+
+	if(pThis != NULL)
+	{
+		if(pThis->EmuDirectSoundBuffer8)
+		{
+			if(dwPause == X_DSBPAUSE_PAUSE)
+				ret = pThis->EmuDirectSoundBuffer8->Stop();
+			if(dwPause == X_DSBPAUSE_RESUME)
+			{
+				DWORD dwFlags = (pThis->EmuPlayFlags & X_DSBPLAY_LOOPING) ? DSBPLAY_LOOPING : 0;
+				ret = pThis->EmuDirectSoundBuffer8->Play(0, 0, dwFlags);
+			}
+			if(dwPause == X_DSBPAUSE_SYNCHPLAYBACK)
+				EmuWarning("DSBPAUSE_SYNCHPLAYBACK is not yet supported!");
+		}
+	}
+
+	EmuSwapFS();	// Xbox FS
+
+	return ret;
+}
+
+//// ******************************************************************
+//// * func: EmuIDirectSoundBuffer_Pause
+//// ******************************************************************
+//extern "C" HRESULT __stdcall XTL::EmuIDirectSoundBuffer_PauseEx
+//(
+//    X_CDirectSoundBuffer   *pThis,
+//	REFERENCE_TIME			rtTimestamp,
+//	DWORD					dwPause
+//)
+//{
+//	EmuSwapFS();	// Win2k/XP FS
+//
+//	DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer_PauseEx\n"
+//			"(\n"
+//			"	pThis					: 0x%.08X\n"
+//			"   rtTimestamp             : 0x%.08X\n"
+//			"   dwPause                 : 0x%.08X\n"
+//			");\n",
+//			GetCurrentThreadId(), pThis, rtTimestamp, dwPause);
+//	
+//	// This function wasn't part of the XDK until 4721.
+//	// TODO: Implement time stamp feature (a thread maybe?)
+//	EmuWarning("IDirectSoundBuffer_PauseEx not fully implemented!");
+//
+//	HRESULT ret;
+//
+//	if(pThis != NULL)
+//	{
+//		if(pThis->EmuDirectSoundBuffer8)
+//		{
+//			if(dwPause == X_DSBPAUSE_PAUSE)
+//				ret = pThis->EmuDirectSoundBuffer8->Stop();
+//			if(dwPause == X_DSBPAUSE_RESUME)
+//			{
+//				DWORD dwFlags = (pThis->EmuPlayFlags & X_DSBPLAY_LOOPING) ? DSBPLAY_LOOPING : 0;
+//				ret = pThis->EmuDirectSoundBuffer8->Play(0, 0, dwFlags);
+//			}
+//			if(dwPause == X_DSBPAUSE_SYNCHPLAYBACK)
+//				EmuWarning("DSBPAUSE_SYNCHPLAYBACK is not yet supported!");
+//		}
+//	}
+//
+//	EmuSwapFS();	// Xbox FS
+//
+//	return ret;
+//}
+
+// ******************************************************************
+// * func: EmuIDirectSound8_GetOutputLevels
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSound8_GetOutputLevels
+(
+	LPDIRECTSOUND8		   *pThis,
+	X_DSOUTPUTLEVELS	   *pOutputLevels,
+	BOOL					bResetPeakValues
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_GetOutputLevels\n"
+			"(\n"
+			"	pThis					: 0x%.08X\n"
+			"   pOutputLevels           : 0x%.08X\n"
+			"   bResetPeakValues        : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), pThis, pOutputLevels, bResetPeakValues);
+
+	// TODO: Anything?  Either way, I've never seen a game to date use this...
+
+	EmuSwapFS();
+
+	return S_OK;
 }

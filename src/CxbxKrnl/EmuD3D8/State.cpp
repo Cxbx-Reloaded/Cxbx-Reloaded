@@ -220,10 +220,19 @@ void XTL::EmuUpdateDeferredStates()
             // TODO: Use a lookup table, this is not always a 1:1 map
             if(pCur[12] != X_D3DTSS_UNK)
             {
-                if(pCur[12] > 12 && !(pCur[12] >= 17 && pCur[12] <= 21))
+                if(pCur[12] > 12 && !(pCur[12] >= 17 && pCur[12] <= 21) && (pCur[12] != 22) && (pCur[12] != 14) &&
+					(pCur[12] != 15))
                     CxbxKrnlCleanup("(Temporarily) Unsupported D3DTSS_COLOROP Value (%d)", pCur[12]);
 
-                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, pCur[12]);
+				// Dirty Hack: 22 == D3DTOP_DOTPRODUCT3
+				if( pCur[12] == 22 )
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_DOTPRODUCT3);
+				else if( pCur[12] == 14 )
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_BLENDTEXTUREALPHA);
+				else if( pCur[12] == 15 )
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_BLENDFACTORALPHA);
+				else
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, pCur[12]);
             }
 
             if(pCur[13] != X_D3DTSS_UNK)
@@ -238,10 +247,15 @@ void XTL::EmuUpdateDeferredStates()
             // TODO: Use a lookup table, this is not always a 1:1 map (same as D3DTSS_COLOROP)
             if(pCur[16] != X_D3DTSS_UNK)
             {
-                if(pCur[16] > 12)
+                if(pCur[16] > 12 && pCur[16] != 14)
                     CxbxKrnlCleanup("(Temporarily) Unsupported D3DTSS_ALPHAOP Value (%d)", pCur[16]);
 
-                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ALPHAOP, pCur[16]);
+				if( pCur[16] == 14 )
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_BLENDTEXTUREALPHA );
+				if( pCur[16] == 15 )
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ALPHAOP, D3DTOP_BLENDFACTORALPHA );
+				else
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ALPHAOP, pCur[16]);
             }
 
             if(pCur[17] != X_D3DTSS_UNK)

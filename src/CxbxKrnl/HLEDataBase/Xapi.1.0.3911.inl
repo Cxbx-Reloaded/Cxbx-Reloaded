@@ -787,6 +787,273 @@ SOOVPA<12> XInputSetState_1_0_3911 =
 };
 
 // ******************************************************************
+// * SetThreadPriorityBoost
+// ******************************************************************
+SOOVPA<10> SetThreadPriorityBoost_1_0_3911 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // SetThreadPriorityBoost+0x0D : push [ebp+0x08]
+        { 0x0D, 0xFF }, // (Offset,Value)-Pair #1
+        { 0x0E, 0x75 }, // (Offset,Value)-Pair #2
+        { 0x0F, 0x08 }, // (Offset,Value)-Pair #3
+
+        // SetThreadPriorityBoost+0x18 : jl +0x20
+        { 0x18, 0x7C }, // (Offset,Value)-Pair #4
+        { 0x19, 0x20 }, // (Offset,Value)-Pair #5
+
+        // SetThreadPriorityBoost+0x1F : setnz al
+        { 0x1F, 0x0F }, // (Offset,Value)-Pair #6
+        { 0x20, 0x95 }, // (Offset,Value)-Pair #7
+        { 0x21, 0xC0 }, // (Offset,Value)-Pair #8
+
+        // SetThreadPriorityBoost+0x2C : mov ecx, [ebp+0x08]
+        { 0x2C, 0x8B }, // (Offset,Value)-Pair #9
+        { 0x2D, 0x4D }, // (Offset,Value)-Pair #10
+    }
+};
+
+// ******************************************************************
+// * GetThreadPriority
+// ******************************************************************
+SOOVPA<10> GetThreadPriority_1_0_3911 =
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // GetThreadPriority+0x0D : push [ebp+0x08]
+        { 0x0D, 0xFF }, // (Offset,Value)-Pair #1
+        { 0x0E, 0x75 }, // (Offset,Value)-Pair #2
+        { 0x0F, 0x08 }, // (Offset,Value)-Pair #3
+
+        // GetThreadPriority+0x18 : jl +0x2B
+        { 0x18, 0x7C }, // (Offset,Value)-Pair #4
+        { 0x19, 0x2B }, // (Offset,Value)-Pair #5
+
+        // GetThreadPriority+0x2F : cmp esi, 0xFFFFFFF0
+        { 0x2F, 0x83 }, // (Offset,Value)-Pair #6
+        { 0x30, 0xFE }, // (Offset,Value)-Pair #7
+        { 0x31, 0xF0 }, // (Offset,Value)-Pair #8
+
+        // GetThreadPriority+0x37 : mov ecx, [ebp+0x08]
+        { 0x37, 0x8B }, // (Offset,Value)-Pair #9
+        { 0x38, 0x4D }, // (Offset,Value)-Pair #10
+    }
+};
+
+//// ******************************************************************
+//// * XGetDevices
+//// ******************************************************************
+//SOOVPA<14> XGetDevices_1_0_3911 =
+//{
+//    0,  // Large == 0
+//    14, // Count == 14
+//
+//    -1, // XRef Not Saved
+//    0,  // XRef Not Used
+//
+//    {
+//        // XGetDevices+0x07 : mov edx, [esp+arg_0]
+//        { 0x07, 0x8B }, // (Offset,Value)-Pair #1
+//        { 0x08, 0x54 }, // (Offset,Value)-Pair #2
+//        { 0x09, 0x24 }, // (Offset,Value)-Pair #3
+//        { 0x0A, 0x08 }, // (Offset,Value)-Pair #4
+//
+//        // XGetDevices+0x0D : and [edx+4], 0
+//        { 0x0D, 0x83 }, // (Offset,Value)-Pair #5
+//        { 0x0E, 0x62 }, // (Offset,Value)-Pair #6
+//        { 0x0F, 0x04 }, // (Offset,Value)-Pair #7
+//        { 0x10, 0x00 }, // (Offset,Value)-Pair #8
+//
+//        // XGetDevices+0x11 : mov cl, al
+//        { 0x11, 0x8A }, // (Offset,Value)-Pair #9
+//        { 0x12, 0xC8 }, // (Offset,Value)-Pair #10
+//
+//        // XGetDevices+0x16 : call KfLowerIrql
+//        { 0x16, 0xFF }, // (Offset,Value)-Pair #11
+//        { 0x17, 0x15 }, // (Offset,Value)-Pair #12
+//
+//        // XGetDevices+0x1F : retn 4
+//        { 0x1F, 0xC2 }, // (Offset,Value)-Pair #13
+//        { 0x20, 0x04 }, // (Offset,Value)-Pair #14
+//    }
+//};
+
+// ******************************************************************
+// * CreateFiber
+// ******************************************************************
+SOOVPA<11> CreateFiber_1_0_3911 = 
+{
+	0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+		// CreateFiber+0x11 : mov ecx, 0x3000
+		{ 0x11, 0xB9 },
+		{ 0x12, 0x00 },
+		{ 0x13, 0x30 },
+		{ 0x14, 0x00 },
+		{ 0x15, 0x00 },
+
+		// CreateFiber+0x2A : call ds:MmCreateKernelStack
+		{ 0x2A, 0xFF },
+		{ 0x2B, 0x15 },
+		{ 0x2C, 0xF8 },
+		{ 0x2D, 0xD1 },
+		{ 0x2E, 0x1E },
+		{ 0x2F, 0x00 }
+	}
+};
+
+// ******************************************************************
+// * DeleteFiber
+// ******************************************************************
+SOOVPA<9> DeleteFiber_1_0_3911 = 
+{
+	0,  // Large == 0
+    9,  // Count == 9
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+		// DeleteFiber+0x0A : call ds:MmDeleteKernelStack
+		{ 0x0A, 0xFF },
+		{ 0x0B, 0x15 },
+		{ 0x0C, 0xFC },
+		{ 0x0D, 0xD1 },
+		{ 0x0E, 0x1E },
+		{ 0x0F, 0x00 },
+
+		// DeleteFiber+0x10 : retn 4
+		{ 0x10, 0xC2 },
+		{ 0x11, 0x04 },
+		{ 0x12, 0x00 },
+	}
+};
+
+//// ******************************************************************
+//// * XInputGetCapabilities
+//// ******************************************************************
+//SOOVPA<14> XInputGetCapabilities_1_0_3911 =
+//{
+//    0,  // Large == 0
+//    14, // Count == 14
+//
+//    -1, // XRef Not Saved
+//    0,  // XRef Not Used
+//
+//    {
+//        // XInputGetCapabilities+0x03 : sub esp, 0x48
+//        { 0x03, 0x83 }, // (Offset,Value)-Pair #1
+//        { 0x04, 0xEC }, // (Offset,Value)-Pair #2
+//        { 0x05, 0x48 }, // (Offset,Value)-Pair #3
+//
+//        // XInputGetCapabilities+0x24 : test byte ptr [esi+4], 2
+//        { 0x24, 0xF6 }, // (Offset,Value)-Pair #4
+//        { 0x25, 0x46 }, // (Offset,Value)-Pair #5
+//        { 0x26, 0x04 }, // (Offset,Value)-Pair #6
+//        { 0x27, 0x02 }, // (Offset,Value)-Pair #7
+//
+//        // XInputGetCapabilities+0x3A : stosb
+//        { 0x3A, 0xAA }, // (Offset,Value)-Pair #8
+//
+//        // XInputGetCapabilities+0x8A : mov [ebp+var_48], 0x30
+//        { 0x8A, 0xC6 }, // (Offset,Value)-Pair #9
+//        { 0x8B, 0x45 }, // (Offset,Value)-Pair #10
+//        { 0x8C, 0xB8 }, // (Offset,Value)-Pair #11
+//        { 0x8D, 0x30 }, // (Offset,Value)-Pair #12
+//
+//        // XInputGetCapabilities+0xFB : cmp [eax], ebx
+//        { 0xFB, 0x39 }, // (Offset,Value)-Pair #13
+//        { 0xFC, 0x18 }, // (Offset,Value)-Pair #14
+//    }
+//};
+
+// ******************************************************************
+// * XLoadSectionA
+// ******************************************************************
+SOOVPA<10> XLoadSectionA_1_0_3911 = 
+{
+	0,	// Large == 0
+	10,	// Count == 10
+
+	-1,	// XRef not saved
+	0,	// XRef not used
+
+	{
+		// XLoadSectionA+0x0F : call XLoadSectionByHandle
+//		{ 0x10, XREF_XLoadSectionByHandle },
+
+		// XLoadSectionA+0x0: push dword ptr [esp+4]
+		{ 0x00, 0xFF },
+		{ 0x01, 0x74 },
+		{ 0x02, 0x24 },
+		{ 0x03, 0x04 },
+
+		// XLoadSectionA+0x9: cmp eax, 0xFFFFFFFF
+		{ 0x09, 0x83 },
+		{ 0x0A, 0xF8 },
+		{ 0x0B, 0xFF },
+
+		// XLoadSectionA+0xE: push eax
+		{ 0x0E, 0x50 },
+
+		// XLoadSectionA+0x18: ret 4
+		{ 0x18, 0xC2 },
+		{ 0x19, 0x04 },
+	}
+};
+
+// ******************************************************************
+// * XFreeSectionA
+// ******************************************************************
+SOOVPA<11> XFreeSectionA_1_0_3911 = 
+{
+	0,	// Large == 0
+	11,	// Count == 11
+
+	-1,	// XRef not saved
+	0,	// XRef not used
+
+	{
+		// XFreeSectionA+0x0F : call XFreeSectionByHandle
+//		{ 0x10, XREF_XFreeSectionByHandle },
+
+		// XLoadSectionA+0x0: push dword ptr [esp+4]
+		{ 0x00, 0xFF },
+		{ 0x01, 0x74 },
+		{ 0x02, 0x24 },
+		{ 0x03, 0x04 },
+
+		// XLoadSectionA+0x9: cmp eax, 0xFFFFFFFF
+		{ 0x09, 0x83 },
+		{ 0x0A, 0xF8 },
+		{ 0x0B, 0xFF },
+
+		// XLoadSectionA+0x14: jz 0x2
+		{ 0x14, 0xEB },
+		{ 0x15, 0x02 },
+
+		// XLoadSectionA+0x18: ret 4
+		{ 0x18, 0xC2 },
+		{ 0x19, 0x04 },
+	}
+};
+
+// ******************************************************************
 // * XAPI_1_0_3911
 // ******************************************************************
 OOVPATable XAPI_1_0_3911[] =
@@ -1031,6 +1298,86 @@ OOVPATable XAPI_1_0_3911[] =
         "EmuXInputSetState"
         #endif
     },
+	// SetThreadPriorityBoost
+	{
+		(OOVPA*)&SetThreadPriorityBoost_1_0_3911,
+
+		XTL::EmuSetThreadPriorityBoost,
+
+		#ifdef _DEBUG_TRACE
+		"EmuSetThreadPriorityBoost"
+		#endif
+	},
+	// GetThreadPriority
+	{
+		(OOVPA*)&GetThreadPriority_1_0_3911,
+
+		XTL::EmuGetThreadPriority,
+
+		#ifdef _DEBUG_TRACE
+		"EmuGetThreadPriority"
+		#endif
+	},
+	// XGetDevices
+	{
+		(OOVPA*)&XGetDevices_1_0_3911,
+
+		XTL::EmuXGetDevices,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXGetDevices"
+		#endif
+	},
+	// CreateFiber
+	{
+		(OOVPA*)&CreateFiber_1_0_3911,
+
+		XTL::EmuCreateFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuCreateFiber"
+		#endif
+	},
+	// DeleteFiber
+	{
+		(OOVPA*)&DeleteFiber_1_0_3911,
+
+		XTL::EmuDeleteFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuDeleteFiber"
+		#endif
+	},
+	// XInputGetCapabilities
+	{
+		(OOVPA*)&XInputGetCapabilities_1_0_3911,
+
+		XTL::EmuXInputGetCapabilities,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXInputGetCapabilities"
+		#endif
+	},
+	// XLoadSectionA
+	{
+		(OOVPA*)&XLoadSectionA_1_0_3911, 
+			
+		XTL::EmuXLoadSectionA,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXLoadSectionA"
+		#endif
+	},
+	// XFreeSectionA
+	{
+		(OOVPA*)&XFreeSectionA_1_0_3911, 
+			
+		XTL::EmuXFreeSectionA,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXFreeSectionA"
+		#endif
+	},
 };
 
 // ******************************************************************

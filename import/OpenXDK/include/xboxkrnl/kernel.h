@@ -1,5 +1,5 @@
 // ******************************************************************
-// *
+// * 
 // * proj : OpenXDK
 // *
 // * desc : Open Source XBox Development Kit
@@ -98,7 +98,11 @@ XBSYSAPI EXPORTNUM(128) VOID NTAPI KeQuerySystemTime
     PLARGE_INTEGER CurrentTime
 );
 
-XBSYSAPI VOID *KeRaiseIrqlToDpcLevel;
+// ******************************************************************
+// * KeRaiseIrqlToDpcLevel
+// ******************************************************************
+XBSYSAPI EXPORTNUM(129) UCHAR NTAPI KeRaiseIrqlToDpcLevel( VOID );
+
 XBSYSAPI VOID *KeRaiseIrqlToSynchLevel;
 XBSYSAPI VOID *KeReleaseMutant;
 XBSYSAPI VOID *KeReleaseSemaphore;

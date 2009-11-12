@@ -1167,6 +1167,108 @@ SOOVPA<14> IDirect3DTexture8_GetSurfaceLevel_1_0_4432 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_BackFillMode
+// ******************************************************************
+SOOVPA<9> IDirect3DDevice8_BackFillMode_1_0_4531 = 
+{
+    0,  // Large == 0
+    9,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x04, 0x56 },
+		{ 0x10, 0x8B },
+		{ 0x11, 0x06 },
+		{ 0x12, 0x3B },
+		{ 0x13, 0x46 },
+		{ 0x14, 0x04 },
+		{ 0x41, 0x83 },
+		{ 0x42, 0xC0 },
+		{ 0x43, 0x0C },
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_EndPush
+// ******************************************************************
+// TODO: Add...
+SOOVPA<12> IDirect3DDevice8_EndPush_1_0_4531 =
+{
+    0,  // Large == 0
+    12, // Count == 10
+
+    -1, // Xref Not Saved
+    1,  // Xref Is  Used
+
+    {
+        { 0x06, XREF_D3DDEVICE }, // 1
+
+        { 0x00, 0x8B }, // 2
+        { 0x01, 0x44 }, // 3
+        { 0x02, 0x24 }, // 4
+        { 0x03, 0x04 }, // 5
+        { 0x04, 0x8B }, // 6
+        { 0x05, 0x0D }, // 7
+        { 0x0A, 0x89 }, // 8
+        { 0x0B, 0x01 }, // 9
+        { 0x0C, 0xC2 }, // 10
+        { 0x0D, 0x04 }, // 11
+        { 0x0E, 0x00 }, // 12
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_DeletePixelShader@4
+// ******************************************************************
+// TODO: Add
+SOOVPA<7> IDirect3DDevice8_DeletePixelShader_1_0_4531 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x02, 0x24 },
+        { 0x06, 0x75 },
+        { 0x0A, 0x04 },
+        { 0x0E, 0x09 },
+        { 0x12, 0x04 },
+        { 0x18, 0xC2 },
+        { 0x1A, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_Release
+// ******************************************************************
+SOOVPA<14> IDirect3DDevice8_Release_1_0_4432 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+		{ 0x07, 0x8B },
+		{ 0x08, 0x87 },
+		{ 0x09, 0x40 },
+		{ 0x0A, 0x04 },
+		{ 0x0B, 0x00 },
+		{ 0x0C, 0x00 },
+		{ 0x1B, 0xB9 },
+		{ 0x1C, 0xC0 },
+		{ 0x1D, 0x0A },
+		{ 0x1E, 0x00 },
+		{ 0x1F, 0x00 }
+	}
+};
+
+// ******************************************************************
 // * D3D8_1_0_4432
 // ******************************************************************
 OOVPATable D3D8_1_0_4432[] =
@@ -1201,9 +1303,9 @@ OOVPATable D3D8_1_0_4432[] =
         "EmuIDirect3D8_EnumAdapterModes"
         #endif
     },
-    // IDirect3DDevice8::SetRenderTarget (* unchanged since 4361 *)
+    // IDirect3DDevice8::SetRenderTarget (* unchanged since 4134 *)
     {
-        (OOVPA*)&IDirect3DDevice8_SetRenderTarget_1_0_4361,
+        (OOVPA*)&IDirect3DDevice8_SetRenderTarget_1_0_4134,
 
         XTL::EmuIDirect3DDevice8_SetRenderTarget,
 
@@ -1221,9 +1323,9 @@ OOVPATable D3D8_1_0_4432[] =
         "EmuIDirect3DDevice8_AddRef"
         #endif
     },
-    // IDirect3DDevice8::GetBackBuffer (* unchanged since 4361 *)
+    // IDirect3DDevice8::GetBackBuffer (* unchanged since 4134 *)
     {
-        (OOVPA*)&IDirect3DDevice8_GetBackBuffer_1_0_4361,
+        (OOVPA*)&IDirect3DDevice8_GetBackBuffer_1_0_4134,
 
         XTL::EmuIDirect3DDevice8_GetBackBuffer,
 
@@ -1291,9 +1393,9 @@ OOVPATable D3D8_1_0_4432[] =
         "EmuIDirect3D8_KickOffAndWaitForIdle"
         #endif
     },
-    // IDirect3DDevice8::SetViewport (* unchanged since 4361 *)
+    // IDirect3DDevice8::SetViewport (* unchanged since 4034 *)
     {
-        (OOVPA*)&IDirect3DDevice8_SetViewport_1_0_4361,
+        (OOVPA*)&IDirect3DDevice8_SetViewport_1_0_4034,
 
         XTL::EmuIDirect3DDevice8_SetViewport,
 
@@ -1869,6 +1971,66 @@ OOVPATable D3D8_1_0_4432[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DTexture8_LockRect"
+        #endif
+    },
+	// IDirect3DDevice8_Release
+	{
+		(OOVPA*)&IDirect3DDevice8_Release_1_0_4432,
+
+		XTL::EmuIDirect3DDevice8_Release,
+
+		#ifdef _DEBUG_TRACE
+		"EmuIDirect3DDevice8_Release"
+		#endif
+	},
+	// IDirect3DDevice8::SetMaterial (* unchanged since 4361 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetMaterial_1_0_4361,
+
+        XTL::EmuIDirect3DDevice8_SetMaterial,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetMaterial"
+        #endif
+    },
+	// IDirect3DDevice8_GetDeviceCaps (* unchanged since 3925 *)
+	{
+		(OOVPA*)&IDirect3DDevice8_GetDeviceCaps_1_0_3925, 
+			
+		XTL::EmuIDirect3DDevice8_GetDeviceCaps,
+
+		#ifdef _DEBUG_TRACE
+		"EmuIDirect3DDevice8_GetDeviceCaps"
+		#endif
+	},
+	// IDirect3DDevice8_BackFillMode_4531
+	{
+		(OOVPA*)&IDirect3DDevice8_BackFillMode_1_0_4531,
+
+		XTL::EmuIDirect3DDevice8_BackFillMode,
+
+		#ifdef _DEBUG_TRACE
+		"EmuIDirect3DDevice8_BackFillMode_4531"
+		#endif
+	},
+	// IDirect3DSurface8::GetDesc (* unchanged since 4361 *)
+    {
+        (OOVPA*)&IDirect3DSurface8_GetDesc_1_0_4361,
+
+        XTL::EmuIDirect3DSurface8_GetDesc,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DSurface8_GetDesc"
+        #endif
+    },
+	// Get2DSurfacDesc (* unchanged since 4361 *)
+    {
+        (OOVPA*)&Get2DSurfaceDesc_1_0_4361,
+
+        XTL::EmuGet2DSurfaceDesc,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGet2DSurfaceDesc"
         #endif
     },
 };

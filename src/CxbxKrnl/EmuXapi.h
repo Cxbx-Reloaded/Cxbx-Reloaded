@@ -579,6 +579,72 @@ VOID WINAPI EmuXRegisterThreadNotifyRoutine
     BOOL                    fRegister
 );
 
+// ******************************************************************
+// * func: EmuCreateFiber
+// ******************************************************************
+LPVOID WINAPI EmuCreateFiber
+(
+	DWORD					dwStackSize,
+	LPFIBER_START_ROUTINE	lpStartRoutine,
+	LPVOID					lpParameter
+);
+
+// ******************************************************************
+// * func: EmuDeleteFiber
+// ******************************************************************
+VOID WINAPI EmuDeleteFiber
+(
+	LPVOID					lpFiber
+);
+
+// ******************************************************************
+// * func: EmuXLoadSectionA
+// ******************************************************************
+LPVOID WINAPI EmuXLoadSectionA
+(
+	LPCSTR					pSectionName
+);
+
+// ******************************************************************
+// * func: EmuXFreeSectionA
+// ******************************************************************
+BOOL WINAPI EmuXFreeSectionA
+(
+	LPCSTR					pSectionName
+);
+
+// ******************************************************************
+// * func: EmuXGetSectionHandleA
+// ******************************************************************
+HANDLE WINAPI EmuXGetSectionHandleA
+(
+	LPCSTR					pSectionName
+);
+
+// ******************************************************************
+// * func: EmuXLoadSectionByHandle
+// ******************************************************************
+LPVOID WINAPI EmuXLoadSectionByHandle
+(
+	HANDLE					hSection
+);
+
+// ******************************************************************
+// * func: EmuXFreeSectionByHandle
+// ******************************************************************
+BOOL WINAPI EmuXFreeSectionByHandle
+(
+	HANDLE					hSection
+);
+
+// ******************************************************************
+// * func: EmuRtlDestroyHeap
+// ******************************************************************
+PVOID WINAPI EmuRtlDestroyHeap
+(
+    IN HANDLE HeapHandle
+);
+
 // s+
 /* not necessary?
 // ******************************************************************

@@ -229,6 +229,102 @@ LOOVPA<9> IDirect3DDevice8_Clear_1_0_4134 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_GetBackBuffer
+// ******************************************************************
+SOOVPA<12> IDirect3DDevice8_GetBackBuffer_1_0_4134 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_GetBackBuffer+0x04 : cmp eax, 0xFFFFFFFF
+        { 0x04, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x05, 0xF8 }, // (Offset,Value)-Pair #2
+        { 0x06, 0xFF }, // (Offset,Value)-Pair #3
+
+        // IDirect3DDevice8_GetBackBuffer+0x0D : jnz +0x07
+        { 0x0D, 0x75 }, // (Offset,Value)-Pair #4
+        { 0x0E, 0x07 }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_GetBackBuffer+0x18 : sbb eax, eax
+        { 0x18, 0x1B }, // (Offset,Value)-Pair #6
+        { 0x19, 0xC0 }, // (Offset,Value)-Pair #7
+
+        // IDirect3DDevice8_GetBackBuffer+0x1D : mov eax, [ecx+eax*4+0x207C]
+        { 0x1D, 0x8B }, // (Offset,Value)-Pair #8
+        { 0x1E, 0x84 }, // (Offset,Value)-Pair #9
+        { 0x1F, 0x81 }, // (Offset,Value)-Pair #10
+        { 0x20, 0x7C }, // (Offset,Value)-Pair #11
+        { 0x21, 0x20 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_GetDepthStencilSurface
+// ******************************************************************
+SOOVPA<9> IDirect3DDevice8_GetDepthStencilSurface_1_0_4134 =
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_GetDepthStencilSurface+0x00 : mov eax, [addr]
+        { 0x00, 0xA1 }, // (Offset,Value)-Pair #1
+
+        // IDirect3DDevice8_GetDepthStencilSurface+0x05 : mov eax, [eax + 0x2074]
+        { 0x05, 0x8B }, // (Offset,Value)-Pair #2
+        { 0x06, 0x80 }, // (Offset,Value)-Pair #3
+        { 0x07, 0x74 }, // (Offset,Value)-Pair #4
+        { 0x08, 0x20 }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_GetDepthStencilSurface+0x11 : mov [ecx], eax
+        { 0x11, 0x89 }, // (Offset,Value)-Pair #6
+        { 0x12, 0x01 }, // (Offset,Value)-Pair #7
+
+        // IDirect3DDevice8_GetDepthStencilSurface+0x1D : retn 0x04
+        { 0x1D, 0xC2 }, // (Offset,Value)-Pair #8
+        { 0x1E, 0x04 }, // (Offset,Value)-Pair #9
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetRenderTarget
+// ******************************************************************
+SOOVPA<9> IDirect3DDevice8_SetRenderTarget_1_0_4134 =
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetRenderTarget+0x00 : sub esp, 0x3C
+        { 0x00, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x01, 0xEC }, // (Offset,Value)-Pair #2
+        { 0x02, 0x3C }, // (Offset,Value)-Pair #3
+
+        // IDirect3DDevice8_SetRenderTarget+014 : jnz +0x0C
+        { 0x14, 0x75 }, // (Offset,Value)-Pair #4
+        { 0x15, 0x0C }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_SetRenderTarget+0x44 : push ebp
+        { 0x44, 0x55 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_SetRenderTarget+0x79 : shr ecx, 0x14
+        { 0x79, 0xC1 }, // (Offset,Value)-Pair #7
+        { 0x7A, 0xE9 }, // (Offset,Value)-Pair #8
+        { 0x7B, 0x14 }, // (Offset,Value)-Pair #9
+    }
+};
+
+// ******************************************************************
 // * D3D8_1_0_4134
 // ******************************************************************
 OOVPATable D3D8_1_0_4134[] =
@@ -388,16 +484,6 @@ OOVPATable D3D8_1_0_4134[] =
         "EmuIDirect3DDevice8_SetVerticalBlankCallback"
         #endif
     },
-    // IDirect3DDevice8::SetRenderTarget
-    {
-        (OOVPA*)&IDirect3DDevice8_SetRenderTarget_1_0_3925,
-
-        XTL::EmuIDirect3DDevice8_SetRenderTarget,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirect3DDevice8_SetRenderTarget"
-        #endif
-    },
     // IDirect3DDevice8::GetTransform
     {
         (OOVPA*)&IDirect3DDevice8_GetTransform_1_0_3925,
@@ -448,9 +534,9 @@ OOVPATable D3D8_1_0_4134[] =
         "EmuIDirect3DDevice8_SetIndices"
         #endif
     },
-    // IDirect3DDevice8::SetViewport
+    // IDirect3DDevice8::SetViewport (* unchanged since 4034 *)
     {
-        (OOVPA*)&IDirect3DDevice8_SetViewport_1_0_3925,
+        (OOVPA*)&IDirect3DDevice8_SetViewport_1_0_4034,
 
         XTL::EmuIDirect3DDevice8_SetViewport,
 
@@ -758,16 +844,6 @@ OOVPATable D3D8_1_0_4134[] =
         "EmuIDirect3DDevice8_GetBackBuffer"
         #endif
     },
-    // IDirect3DDevice8::GetDepthStencilSurface
-    {
-        (OOVPA*)&IDirect3DDevice8_GetDepthStencilSurface_1_0_3925,
-
-        XTL::EmuIDirect3DDevice8_GetDepthStencilSurface,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirect3DDevice8_GetDepthStencilSurface"
-        #endif
-    },
     // IDirect3DDevice8::CreateVertexBuffer
     {
         (OOVPA*)&IDirect3DDevice8_CreateVertexBuffer_1_0_3925,
@@ -890,6 +966,38 @@ OOVPATable D3D8_1_0_4134[] =
     },
 
     // ********************** END WARNING UNTESTED!!! *******************
+
+	// IDirect3DDevice8::GetBackBuffer
+    {
+        (OOVPA*)&IDirect3DDevice8_GetBackBuffer_1_0_4134,
+
+        XTL::EmuIDirect3DDevice8_GetBackBuffer,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetBackBuffer"
+        #endif
+    },
+    // IDirect3DDevice8::GetDepthStencilSurface
+    {
+        (OOVPA*)&IDirect3DDevice8_GetDepthStencilSurface_1_0_4134,
+
+        XTL::EmuIDirect3DDevice8_GetDepthStencilSurface,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetDepthStencilSurface"
+        #endif
+    },
+	
+    // IDirect3DDevice8::SetRenderTarget
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderTarget_1_0_4134,
+
+        XTL::EmuIDirect3DDevice8_SetRenderTarget,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderTarget"
+        #endif
+    },
 };
 
 // ******************************************************************

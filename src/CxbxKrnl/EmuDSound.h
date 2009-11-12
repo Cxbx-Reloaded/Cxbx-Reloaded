@@ -45,6 +45,12 @@
 #define X_DSBPLAY_LOOPING       0x00000001
 #define X_DSBPLAY_FROMSTART     0x00000002
 
+// EmuIDirectSoundBuffer8_Pause flags
+#define X_DSBPAUSE_RESUME             0x00000000
+#define X_DSBPAUSE_PAUSE              0x00000001
+#define X_DSBPAUSE_SYNCHPLAYBACK      0x00000002
+
+
 // ******************************************************************
 // * X_DSBUFFERDESC
 // ******************************************************************
@@ -118,6 +124,30 @@ typedef struct xbox_adpcmwaveformat_tag
 XBOXADPCMWAVEFORMAT, *PXBOXADPCMWAVEFORMAT, *LPXBOXADPCMWAVEFORMAT;
 
 typedef const XBOXADPCMWAVEFORMAT *LPCXBOXADPCMWAVEFORMAT;
+
+// ******************************************************************
+// * X_DSOUTPUTLEVELS
+// ******************************************************************
+struct X_DSOUTPUTLEVELS
+{
+    DWORD dwAnalogLeftTotalPeak;	// analog peak
+    DWORD dwAnalogRightTotalPeak;
+    DWORD dwAnalogLeftTotalRMS;		// analog RMS
+    DWORD dwAnalogRightTotalRMS;
+    DWORD dwDigitalFrontLeftPeak;	// digital peak levels
+    DWORD dwDigitalFrontCenterPeak;
+    DWORD dwDigitalFrontRightPeak;
+    DWORD dwDigitalBackLeftPeak;
+    DWORD dwDigitalBackRightPeak;
+    DWORD dwDigitalLowFrequencyPeak;
+    DWORD dwDigitalFrontLeftRMS;	// digital RMS levels
+    DWORD dwDigitalFrontCenterRMS;
+    DWORD dwDigitalFrontRightRMS;
+    DWORD dwDigitalBackLeftRMS;
+    DWORD dwDigitalBackRightRMS;
+    DWORD dwDigitalLowFrequencyRMS;
+};
+
 
 typedef struct IDirectSoundStream IDirectSoundStream;
 typedef IDirectSoundStream *LPDIRECTSOUNDSTREAM;
@@ -1055,6 +1085,52 @@ HRESULT WINAPI EmuIDirectSoundStream_SetVolume
 (
     LPDIRECTSOUNDSTREAM pStream,
     LONG                lVolume
+);
+
+// ******************************************************************
+// * func: EmuIDirectSound_EnableHeadphones
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSound_EnableHeadphones
+(
+	LPDIRECTSOUND		pThis,
+	BOOL				fEnabled
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_AddRef
+// ******************************************************************
+ULONG WINAPI EmuIDirectSoundBuffer8_AddRef
+(
+    X_CDirectSoundBuffer   *pThis
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_Pause
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_Pause
+(
+    X_CDirectSoundBuffer   *pThis,
+	DWORD					dwPause
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_PauseEx
+// ******************************************************************
+extern "C" HRESULT __stdcall EmuIDirectSoundBuffer_PauseEx
+(
+    X_CDirectSoundBuffer   *pThis,
+	REFERENCE_TIME			rtTimestamp,
+	DWORD					dwPause
+);
+
+// ******************************************************************
+// * func: EmuIDirectSound8_GetOutputLevels
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSound8_GetOutputLevels
+(
+	LPDIRECTSOUND8		   *pThis,
+	X_DSOUTPUTLEVELS	   *pOutputLevels,
+	BOOL					bResetPeakValues
 );
 
 #endif

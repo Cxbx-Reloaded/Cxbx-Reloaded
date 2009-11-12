@@ -418,7 +418,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlCleanup(const char *szErrorMessage, ...)
 
         printf("%s\n", szBuffer1);
 
-        MessageBox(NULL, szBuffer1, "CxbxKrnl", MB_OK | MB_ICONSTOP);
+        MessageBox(NULL, szBuffer1, "CxbxKrnl", MB_OK | MB_ICONEXCLAMATION);
     }
 
     printf("CxbxKrnl: Terminating Process\n");

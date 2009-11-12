@@ -1,0 +1,195 @@
+Cxbx Changelog for Shogun3D Branch
+
+??/??/09
+- Added most of my previous changes to the disten branch so I can continue
+  to build my work on it (mainly because my old branch was just too slow).
+
+- Got Smashing Drive to run at full speed.  The intro animations will now
+  show as well.  Still have some buggy textures though.
+
+- Added the changes necesarry to run XDK 4831 games.
+
+- Added more XDK functions (I don't remember what they all were):
+	IDirectSound8_EnableHeadphones (4627, 4721)
+	IDirect3DDevice8_SetPixelShader (4721)
+	IDirectSoundStream_Pause (4627, 4928)
+	EmuXapiApplyKernelPatches (4831)
+
+- Lots more stuff too, I just don't remember what I did exactly.  I'll log
+  it when I remember :)
+
+4/20?/09
+- Unreal Championship finally shows the first intro video!  I've been at
+  this game for ages, but couldn't get it to work in XP, only vista and I 
+  have no screens because videos won't render in Vista for some reason
+  (not even in Turok!) -_-  Anyway, I had to do a brute force hack for it
+  to work (I skipped the call to IDirectSoundStream_SetHeadroom) when running
+  with OllyDbg.  I couldn't get a working OOVPA for it for some odd reason!
+
+4/24/09 7:46 PM
+- Moved the following functions (from -> to)
+	IDirect3DDevice8_GetGammaRamp (4627 -> 4034)
+	IDirect3DDevice8_GetCreationParameters (5849 -> 4034)
+	IDirect3DDevice8_setViewport (4361 -> 4034)
+
+- Added the following functions
+	IDirect3DDevice8_GetViewport (4034)
+
+4/25/09 10:44 AM
+- Moved the following function(s) (from -> to)
+	IDirect3DDevice8_GetBackBuffer (4361 -> 4134)
+	IDirect3DDevice8_GetDepthStencilSurface (4361 -> 4134)
+	IDirect3DDevice8_SetRenderTarget (4361 -> 4134)
+
+5/16/09 8:24 PM
+- Added the following function(s)
+	IDirect3DDevice8_AddRef (5558)
+
+- Other new stuff:
+	D3DTOP_DOTPRODUCT3 (for bumpmapping!)
+
+8/28/09
+- Added more Direct3D stuff (4627 and maybe more, I forgot what they all were).
+	IDirect3DDevice8_SetPalette (4627) is the only one I really remember.
+
+8/29/09
+- Fixed a bug in EmuDirectSoundCreateStream.  This function is sometimes called before
+  DirectSoundCreate is called, so when that happens we need to initialize DirectSound
+  before we can continue.
+- The above fix gets Rayman Arena showing intros again!
+- Added the following function(s)
+	IDirect3DDevice8_SetGammaRamp (3925)
+	SetThreadPriorityBoost (3911)
+	GetThreadPriority (3911)
+	CreateFiber (3911)
+	DeleteFiber (3911)
+
+8/30/09
+- Added the following functions(s)
+	IDirect3DDevice8_BackFillMode (4531)
+	IDirect3DDevice8_GetProjectionViewMatrix (4627)
+	IDirect3DDevice8_DrawRectPatch (4627)
+	IDirect3DDevice8_InsertCallback (4627)
+	IDirect3DDevice8_CreateStateBlock (4627)
+	IDirect3DDevice8_SetPixelShaderProgram (4627)
+	IDirect3DDevice8_BackFillMode (4531)
+	IDIrect3DDevice8_Release (4432)
+	CreateFiber (4034-4627)
+	CreateFiber (4034-4627)
+	IDirect3DSurface8_GetDesc (4432-4531)
+- Redirected XAPILIB 4531 to 4627.
+
+9/1/09
+- Added the following functions
+	Get2DSurfaceDesc (4432-4531)
+	IDirect3DDevice8_SetMaterial (3925)
+- Added the following kernel API(s)
+	AvGetSavedDataAddress (IDirect3DDevice8_GetPersistedSurface is too small to HLE).
+- Added the following source files
+	XOnline(s).1.0.4627.h/inl
+
+??/??/09
+- Added the following function(s)
+	XInputGetCapabilities (3911)
+
+10/??/09 
+- Added the following file(s)
+	EmuXAudio\XboxAdpcm.cpp/h
+	EmuXAudio\XSoundBank.cpp/h
+	EmuXAudio\XWaveBank.cpp/h
+
+10/13/09
+- Added the following functions
+	XLoadSectionA (3911-4627 and beyond?)
+	XFreeSectionA (3911-4627 and beyond?)
+	CDirectSound8::SetAllParametersA (4831)
+	NtQueueApcThread
+- Caustik's theory was right, section loading APIs are safe to ignore (so far)!
+- Updated the following functions
+	EmuIDirect3DResource8_Register (added D3DFMT_LIN_A1R5G5B5)
+	EmuUpdateActiveTexture (added D3DFMT_LIN_A1R5G5B5)
+- Zapper (XDK 4831) now reaches intros and plays intro videos!
+- Taz: Wanted (XDK 4432) plays intro videos and shows loading screen!
+- The games listed above use the same engine and have the same bug.  If/when I find it,
+  I guess both games should be okay.
+
+10/14/09
+- Added the following functions
+	IDirectSoundBuffer8_AddRef (4627, should be the same as 3936 but not tested).
+
+10/15/09
+- Added the following functions
+	IDirect3DDevice8_SetVertexShaderConstant4 (5558)
+	IDirect3DDevice8_DrawVerticesUP (5558)
+	IDirect3DDevice8_GetTransform (5233-5558)
+
+10/16/09
+- Added the following functions
+	CMcpxBuffer::Play (4721)
+
+10/20/09
+- Added the following functions
+	D3DDevice_SetRenderState_MultiSampleMask (4627, 4721)
+	D3DDevice_SetRenderState_LogicOp (4627, 4721)
+- Robotech: Battlecry is starting to work!
+	TODO: Add IDirectSoundBuffer_GetStatus and IDirectSoundBuffer_Pause for 4721
+
+11/1/09
+- Added the following functions
+	GetTimeZoneInformation (4034 - 5120)
+
+11/2/09
+- Added the following functions
+	IDirect3DDevice8_SetPixelShaderConstant (4627-4298)
+	SetThreadPriority (4034 - 5120)
+	GetExitCodeThread (4242 - 4928)
+	RtlDestroyHeap (4627-4928) (Others?)
+	CDirectSoundVoice::SetAllParameters (4627 - 4928)
+	CDirectSoundBuffer::SetAllParameters (4627 - 4928)
+	IDirectSoundBuffer8_SetAllParameters (4627 - 4928)
+	D3D::SetFence (4627 - 4928)
+	IDirect3DDevice8_InsertFence (4627 - 4928)
+	D3D::CDevice::KickOff (4627 - 4928)
+	IDirect3DDevice8_SetPixelShaderConstant (4928 - 5344) (implimented only for 4928)
+	IDirect3DDevice8_SetRenderState_TwoSidedLighting (4627 - 4928)
+	IDirect3DDevice8_GetTexture2 (4627 - 4928)
+- Other new stuff
+	Added D3DTOP_BLENDTEXTUREALPHA (14)	
+- Panzer Dragoon Orta (4928) goes ingame!  No 3D graphics yet, but still significant progress.  Not yet stable due to a few random crashes and freezes prior to going ingame.
+
+TODO: Investigate 0x2AE7F2 and 0x2C8877 for Panzer.
+
+11/3/09
+- Fixed my implementation of IDirect3DDevice8_GetTexture2 (dirty hack)
+
+11/4/09
+- Added the following functions
+	D3D::CDevice::SetStateVB (4627 - 4928)
+	D3D::CDevice::SetStateUP (4627 - 4928)
+	IDirect3DDevice8_DrawIndexedVerticesUP (4627 - 4928)
+
+11/5/09
+- Added the following functions
+	IDirect3DDevice8_SetPalette (5233)
+	IDirect3DDevice8_GetCreationParameters (5233)
+	IDirect3DDevice8_SetFlickerFilter (5233 - 5344)
+	IDirect3DDevice8_SetSoftDisplayFilter (5233 - 5344)
+	XACTEngineCreate (4627 & 4928)
+	XACTEngineDoWork (4627)
+	XACT::CEngine::RegisterWaveBank (4627)
+	IXACTEngine_RegisterWaveBank (4627)
+	XACT::CEngine::RegisterStreamedWaveBank (4627)
+	IXACTEngine_RegisterStreamedWaveBank (4627)
+	XACT::CEngine::CreateSoundBank (4627)
+	IXACTEngine_CreateSoundBank (4627)
+	XACT::CEngine::DownloadEffectsImage (4627)
+	IXACTEngine_DownloadEffectsImage (4627)
+	XACT::CEngine::CreateSoundSource (4627)
+	IXACTEngine_CreateSoundSource (4627)
+	XACT::CSoundBank::GetSoundCueIndexFromFriendlyName (4627)
+	IXACTSoundBank_GetSoundCueIndexFromFriendlyName (4627)
+	IXACTSoundBank_Play (4627) (Needs further investigation...)
+	
+- Added the following texture formats
+	D3DFMT_A8B8G8R8 (Swizzled)
+	D3DFMT_UYVY (Swizzled, afaik)

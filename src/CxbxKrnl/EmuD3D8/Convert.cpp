@@ -127,6 +127,13 @@ XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
             EmuWarning("X_D3DFMT_LIN_R8B8 -> D3DFMT_R5G6B5");
             return D3DFMT_R5G6B5;   // NOTE: HACK: Totally and utterly wrong :)
         }
+
+		case 0x3A: // Swizzled	 (X_D3DFMT_A8B8G8R8)
+		{
+            EmuWarning("X_D3DFMT_A8B8G8R8 -> D3DFMT_A8R8G8B8");
+            return D3DFMT_A8R8G8B8; // NOTE: HACK: R<->B Swapped!
+        }
+
         case 0x3F: // Linear     (X_D3DFMT_LIN_A8B8G8R8)
         {
             EmuWarning("X_D3DFMT_LIN_A8B8G8R8 -> D3DFMT_A8R8G8B8");
@@ -151,6 +158,9 @@ XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 
         case 0x24: // Swizzled   (X_D3DFMT_YUV2)
             return D3DFMT_YUY2;
+
+		case 0x25: // Swizzled	 (X_D3DFMT_UYVY)
+			return D3DFMT_UYVY;
 
         case 0x2E: // Linear     (X_D3DFMT_LIN_D24S8)
         case 0x2A: // Swizzled   (X_D3DFMT_D24S8)
@@ -190,6 +200,8 @@ XTL::X_D3DFORMAT XTL::EmuPC2XB_D3DFormat(D3DFORMAT Format)
     {
         case D3DFMT_YUY2:
             return 0x24;
+		case D3DFMT_UYVY:
+			return 0x25;
         case D3DFMT_R5G6B5:
             return 0x11;        // Linear
 //            return 0x05;      // Swizzled

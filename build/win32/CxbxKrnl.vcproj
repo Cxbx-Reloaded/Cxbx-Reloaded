@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="CxbxKrnl"
 	ProjectGUID="{22592F16-CC5F-45CB-A40A-022FF6FCC146}"
 	TargetFrameworkVersion="0"
@@ -280,6 +280,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\CxbxKrnl\EmuXactEng.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\CxbxKrnl\EmuXapi.h"
 				>
 			</File>
@@ -399,6 +403,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4627.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.h"
 					>
 				</File>
@@ -458,6 +466,10 @@
 					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4361.h"
 					>
 				</File>
+				<File
+					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4627.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="EmuD3D8 (h)"
@@ -480,6 +492,22 @@
 				</File>
 				<File
 					RelativePath="..\..\src\CxbxKrnl\EmuD3D8\VertexShader.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="EmuXBAudio (h)"
+				>
+				<File
+					RelativePath="..\..\src\CxbxKrnl\EmuXBAudio\XboxAdpcm.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\CxbxKrnl\EmuXBAudio\XSoundBank.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\CxbxKrnl\EmuXBAudio\XWaveBank.h"
 					>
 				</File>
 			</Filter>
@@ -802,6 +830,10 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\src\CxbxKrnl\EmuXactEng.cpp"
+				>
 			</File>
 			<File
 				RelativePath="..\..\src\CxbxKrnl\EmuXapi.cpp"
@@ -1413,6 +1445,10 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4627.inl"
+					>
+				</File>
+				<File
 					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.inl"
 					>
 					<FileConfiguration
@@ -1712,6 +1748,10 @@
 						/>
 					</FileConfiguration>
 				</File>
+				<File
+					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4627.inl"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="EmuD3D8 (cpp)"
@@ -1825,6 +1865,22 @@
 							PreprocessorDefinitions=""
 						/>
 					</FileConfiguration>
+				</File>
+			</Filter>
+			<Filter
+				Name="EmuXBAudio (cpp)"
+				>
+				<File
+					RelativePath="..\..\src\CxbxKrnl\EmuXBAudio\XboxAdpcm.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\CxbxKrnl\EmuXBAudio\XSoundBank.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\CxbxKrnl\EmuXBAudio\XWaveBank.cpp"
+					>
 				</File>
 			</Filter>
 		</Filter>

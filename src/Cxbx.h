@@ -63,9 +63,13 @@ typedef signed long    sint32;
 /*! define this to track push buffers */
 #define _DEBUG_TRACK_PB
 /*! define this to track memory allocations */
+#ifdef _DEBUG
 #define _DEBUG_ALLOC
+#endif
 /*! define this to trace intercepted function calls */
+#ifdef _DEBUG
 #define _DEBUG_TRACE
+#endif
 /*! define this to trace warnings */
 #define _DEBUG_WARNINGS
 
@@ -76,9 +80,9 @@ typedef signed long    sint32;
 
 /*! version string dependent on trace flag */
 #ifndef _DEBUG_TRACE
-#define _CXBX_VERSION "0.8.0-ds"
+#define _CXBX_VERSION "0.8.1-Beta"
 #else
-#define _CXBX_VERSION "0.8.0-ds-Trace"
+#define _CXBX_VERSION "0.8.1-Beta-Trace"
 #endif
 
 /*! debug mode choices */

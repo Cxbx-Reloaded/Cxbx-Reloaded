@@ -191,9 +191,12 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                 uint16 OrigBuildVersion = BuildVersion;
 
                 // Aliases - for testing purposes only
+				if(BuildVersion == 4242) { BuildVersion = 4361; }
+				if(BuildVersion == 4531) { BuildVersion = 4432; }
                 if(BuildVersion == 4721) { BuildVersion = 4627; }
+				if(BuildVersion == 4831) { BuildVersion = 4627; }
                 if(BuildVersion == 4928) { BuildVersion = 4627; }
-                if(BuildVersion == 5344) { BuildVersion = 5558; }
+                if(BuildVersion == 5344) { BuildVersion = 5233; }
                 if(BuildVersion == 5455) { BuildVersion = 5558; }
                 if(BuildVersion == 5659) { BuildVersion = 5558; }
                 if(BuildVersion == 5788) { BuildVersion = 5558; }
@@ -228,7 +231,28 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                     {
                         BuildVersion = 3936;
                     }
+
+					// Redirect other highly similar DSOUND library versions
+					if(BuildVersion == 4361 || BuildVersion == 4400 || BuildVersion == 4432 || 
+						BuildVersion == 4531 || BuildVersion == 4134)
+						BuildVersion = 4627;
                 }
+
+				// Some 3911 titles have different D3D8 builds
+				if(strcmp(szLibraryName, "D3D8") == 0)
+				{
+					if(BuildVersion == 3948)
+						BuildVersion = 3925;
+				}
+
+				// Change a few XAPILIB versions to similar counterparts
+				if(strcmp(szLibraryName, "XAPILIB") == 0)
+				{
+					if(BuildVersion == 3944)
+						BuildVersion = 3911;
+					if(OrigBuildVersion == 4531)
+						BuildVersion = 4627;
+				}
 
                 // TODO: HACK: These libraries are packed into one database
                 if(strcmp(szLibraryName, "D3DX8") == 0)
@@ -290,7 +314,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                             }
                             else if(BuildVersion >= 4361)
                             {
-                                if(OrigBuildVersion == 4928)
+                                if(OrigBuildVersion == 4928 || OrigBuildVersion == 4831)
                                 {
                                     pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_4928, lower, upper);
                                     ProcessHeapOffs = 0x44;
@@ -389,7 +413,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                         else
                         {
                             XTL::EmuD3DDeferredRenderState = 0;
-                            EmuWarning("EmuD3DDeferredRenderState was not found!");
+                            CxbxKrnlCleanup("EmuD3DDeferredRenderState was not found!");
                         }
 
                         // locate D3DDeferredTextureState

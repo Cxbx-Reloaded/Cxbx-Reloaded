@@ -58,7 +58,7 @@ namespace xboxkrnl
 extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367] =
 {
     (uint32)PANIC(0x0000),                          // 0x0000 (0)
-    (uint32)PANIC(0x0001),                          // 0x0001 (1)
+    (uint32)&xboxkrnl::AvGetSavedDataAddress,       // 0x0001 (1)
     (uint32)PANIC(0x0002),                          // 0x0002 (2)
     (uint32)PANIC(0x0003),                          // 0x0003 (3)
     (uint32)PANIC(0x0004),                          // 0x0004 (4)
@@ -263,7 +263,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367] =
     (uint32)PANIC(0x00CB),                          // 0x00CB (203)
     (uint32)PANIC(0x00CC),                          // 0x00CC (204)
     (uint32)PANIC(0x00CD),                          // 0x00CD (205)
-    (uint32)PANIC(0x00CE),                          // 0x00CE (206)
+    (uint32)&xboxkrnl::NtQueueApcThread,            // 0x00CE (206)
     (uint32)&xboxkrnl::NtQueryDirectoryFile,        // 0x00CF (207)
     (uint32)PANIC(0x00D0),                          // 0x00D0 (208)
     (uint32)PANIC(0x00D1),                          // 0x00D1 (209)
@@ -336,7 +336,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367] =
     (uint32)PANIC(0x0114),                          // 0x0114 (276)
     (uint32)&xboxkrnl::RtlEnterCriticalSection,     // 0x0115 (277)
     (uint32)PANIC(0x0116),                          // 0x0116 (278)
-    (uint32)PANIC(0x0117),                          // 0x0117 (279)
+    (uint32)&xboxkrnl::RtlEqualString,              // 0x0117 (279)
     (uint32)PANIC(0x0118),                          // 0x0118 (280)
     (uint32)PANIC(0x0119),                          // 0x0119 (281)
     (uint32)PANIC(0x011A),                          // 0x011A (282)

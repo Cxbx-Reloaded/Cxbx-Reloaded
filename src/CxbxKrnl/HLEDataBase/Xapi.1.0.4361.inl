@@ -658,6 +658,87 @@ OOVPATable XAPI_1_0_4361[] =
         "EmuXapiBootDash"
         #endif
     },
+	// XMountUtilityDrive
+	// TODO: This needs to be verified on 4361, not just 4242!
+    {
+        (OOVPA*)&XMountUtilityDrive_1_0_4134,
+
+        XTL::EmuXMountUtilityDrive,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXMountUtilityDrive_4242" 
+        #endif
+    },
+	// CreateFiber (* unchanged since 3911 *)
+	{
+		(OOVPA*)&CreateFiber_1_0_3911,
+
+		XTL::EmuCreateFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuCreateFiber"
+		#endif
+	},
+	// DeleteFiber (* unchanged since 3911 *)
+	{
+		(OOVPA*)&DeleteFiber_1_0_3911,
+
+		XTL::EmuDeleteFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuDeleteFiber"
+		#endif
+	},
+	// XLoadSectionA (* unchanged since 3911 *)
+	{
+		(OOVPA*)&XLoadSectionA_1_0_3911, 
+			
+		XTL::EmuXLoadSectionA,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXLoadSectionA"
+		#endif
+	},
+	// XFreeSectionA (* unchanged since 3911 *)
+	{
+		(OOVPA*)&XFreeSectionA_1_0_3911, 
+			
+		XTL::EmuXFreeSectionA,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXFreeSectionA"
+		#endif
+	},
+	// GetTimeZoneInformation (* unchanged since 3911 *)
+    {
+        (OOVPA*)&GetTimeZoneInformation_1_0_3911,
+
+        XTL::EmuGetTimeZoneInformation,
+
+        #ifdef _DEBUG_TRACE
+        "GetTimeZoneInformation"
+        #endif
+    },
+    // SetThreadPriority (* unchanged since 3911 *)
+    {
+        (OOVPA*)&SetThreadPriority_1_0_3911,
+
+        XTL::EmuSetThreadPriority,
+
+        #ifdef _DEBUG_TRACE
+        "EmuSetThreadPriority"
+        #endif
+    },
+	// GetExitCodeThread (* unchanged since 3911 *)
+    {
+        (OOVPA*)&GetExitCodeThread_1_0_3911,
+
+        XTL::EmuGetExitCodeThread,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGetExitCodeThread"
+        #endif
+    },
 };
 
 // ******************************************************************

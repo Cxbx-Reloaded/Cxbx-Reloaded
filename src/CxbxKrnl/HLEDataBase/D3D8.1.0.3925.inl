@@ -2436,6 +2436,68 @@ SOOVPA<7> X_D3DDevice_GetVertexShaderSize_1_0_3925 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetGammaRamp
+// ******************************************************************
+SOOVPA<9> IDirect3DDevice8_SetGammaRamp_1_0_3925 =
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetGammaRamp+0x11 : and eax, 1; push ebx
+        { 0x11, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x12, 0xE0 }, // (Offset,Value)-Pair #2
+        { 0x13, 0x01 }, // (Offset,Value)-Pair #3
+        { 0x14, 0x53 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DDevice8_SetGammaRamp+0x2F : rep movsd
+        { 0x2F, 0xF3 }, // (Offset,Value)-Pair #5
+        { 0x30, 0xA5 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_SetGammaRamp+0x3E : push ebx; mov ecx, edx
+        { 0x3E, 0x53 }, // (Offset,Value)-Pair #7
+        { 0x3F, 0x8B }, // (Offset,Value)-Pair #8
+        { 0x40, 0xCA }, // (Offset,Value)-Pair #9
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_SetMaterial
+// ******************************************************************
+SOOVPA<11> IDirect3DDevice8_SetMaterial_1_0_3925 =
+{
+    0,  // Large == 0
+    11, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetMaterial+0x0B : lea edi, [eax+0xB18]
+        { 0x0B, 0x8D }, // (Offset,Value)-Pair #1
+        { 0x0C, 0xB8 }, // (Offset,Value)-Pair #2
+        { 0x0D, 0x18 }, // (Offset,Value)-Pair #3
+        { 0x0E, 0x0B }, // (Offset,Value)-Pair #4
+
+        // IDirect3DDevice8_SetMaterial+0x11 : mov ecx, 0x11
+        { 0x11, 0xB9 }, // (Offset,Value)-Pair #5
+        { 0x12, 0x11 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DDevice8_SetMaterial+0x1C : or ecx, 0x20
+        { 0x1B, 0x83 }, // (Offset,Value)-Pair #7
+        { 0x1C, 0xC9 }, // (Offset,Value)-Pair #8
+        { 0x1D, 0x20 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DDevice8_SetMaterial+0x23 : retn 0x04
+        { 0x23, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x24, 0x04 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
 // * D3D8_1_0_3925
 // ******************************************************************
 OOVPATable D3D8_1_0_3925[] =
@@ -3157,6 +3219,25 @@ OOVPATable D3D8_1_0_3925[] =
 
         #ifdef _DEBUG_TRACE
         "D3DDevice_GetVertexShaderSize"
+        #endif
+    },
+	// IDirect3DDevice8_SetGammaRamp
+	{
+		(OOVPA*)&IDirect3DDevice8_SetGammaRamp_1_0_3925,
+		XTL::EmuIDirect3DDevice8_SetGammaRamp,
+
+		#ifdef _DEBUG_TRACE
+		"IDirect3DDevice8_SetGammaRamp"
+		#endif
+	},
+	// IDirect3DDevice8::SetMaterial
+    {
+        (OOVPA*)&IDirect3DDevice8_SetMaterial_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_SetMaterial,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetMaterial"
         #endif
     },
 };

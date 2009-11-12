@@ -73,6 +73,8 @@ extern "C" const char *szHLELastCompileTime = __TIMESTAMP__;
 #include "HLEDataBase/XG.1.0.5558.inl"
 #include "HLEDataBase/XNet.1.0.3911.inl"
 #include "HLEDataBase/XOnline.1.0.4361.inl"
+#include "HLEDataBase/XOnline.1.0.4627.inl"
+#include "HLEDataBase/XactEng.1.0.4627.inl"
 
 // ******************************************************************
 // * HLEDataBase
@@ -296,6 +298,21 @@ HLEData HLEDataBase[] =
         XOnline_1_0_4361,
         XOnline_1_0_4361_SIZE
     },
+	// XOnline(s) Version 1.0.4627
+	// TODO: Verify differences between XONLINE and XONLINES (if any)
+    {
+        "XONLINES",
+        1, 0, 4627,
+        XOnline_1_0_4627,
+        XOnline_1_0_4627_SIZE
+    },
+	// XactEng Version 1.0.4627
+	{
+		"XACTENG",
+		1, 0, 4627,
+		XactEng_1_0_4627,
+		XactEng_1_0_4627_SIZE
+	},
 };
 
 // ******************************************************************
@@ -457,6 +474,19 @@ extern uint32 XRefDataBase[] =
     -1, // XREF_DirectSound_CDirectSoundVoice_CommitDeferredSettings
     -1, // XREF_DirectSound_CDirectSoundVoice_SetAllParameters
     -1, // XREF_DirectSound_CDirectSoundBuffer_SetAllParameters
+	-1, // XREF_DirectSound_CDirectSound_EnableHeadphones
+	-1, // XREF_DirectSound_CDirectSoundVoice_SetHeadroom
+	-1, // XREF_DirectSound_CDirectSound_GetOutputLevels
+	-1, // XREF_DirectSound_CDirectSoundBuffer_Pause
+	-1, // XREF_DirectSound_CMcpxBuffer_GetStatus
+	-1, // XREF_DirectSound_CDirectSoundBuffer_GetStatus
+	// XACT
+	-1, // XREF_XACT_CEngine_RegisterWaveBank
+	-1, // XREF_XACT_CEngine_RegisterStreamedWaveBank
+	-1, // XREF_XACT_CEngine_CreateSoundBank
+	-1, // XREF_XACT_CEngine_DownloadEffectsImage
+	-1, // XREF_XACT_CEngine_CreateSoundSource
+	-1, // XREF_XACT_CSoundBank_GetSoundCueIndexFromFriendlyName
     /* not necessary?
     -1, //XREF_XAPIXCALCULATESIGNATUREBEGINEX
     //*/

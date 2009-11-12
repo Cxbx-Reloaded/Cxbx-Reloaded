@@ -122,28 +122,6 @@ SOOVPA<7> IDirect3DDevice8_SetBackBufferScale_1_0_5849 =
 };
 
 // ******************************************************************
-// * IDirect3DDevice8_GetCreationParameters
-// ******************************************************************
-SOOVPA<7> IDirect3DDevice8_GetCreationParameters_1_0_5849 =
-{
-    0,  // Large == 0
-    7,  // Count == 7
-
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
-
-    {
-        { 0x06, 0x8B },
-        { 0x0E, 0x8B },
-        { 0x16, 0x4E },
-        { 0x1E, 0x83 },
-        { 0x26, 0x00 },
-        { 0x2E, 0x5E },
-        { 0x36, 0xC9 },
-    }
-};
-
-// ******************************************************************
 // * IDirect3DDevice8_GetBackBuffer2
 // ******************************************************************
 SOOVPA<12> IDirect3DDevice8_GetBackBuffer2_1_0_5849 =
@@ -928,9 +906,9 @@ OOVPATable D3D8_1_0_5849[] =
         "EmuIDirect3DDevice8_SetBackBufferScale"
         #endif
     },
-    // IDirect3DDevice8::GetCreationParameters
+    // IDirect3DDevice8::GetCreationParameters (* unchanged since 4034 *)
     {
-        (OOVPA*)&IDirect3DDevice8_GetCreationParameters_1_0_5849,
+        (OOVPA*)&IDirect3DDevice8_GetCreationParameters_1_0_4034,
 
         XTL::EmuIDirect3DDevice8_GetCreationParameters,
 

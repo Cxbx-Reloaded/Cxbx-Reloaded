@@ -252,6 +252,56 @@ OOVPATable XAPI_1_0_4432[] =
         "EmuXapiBootDash"
         #endif
     },
+	// XLoadSectionA (* unchanged since 3911 *)
+	{
+		(OOVPA*)&XLoadSectionA_1_0_3911, 
+			
+		XTL::EmuXLoadSectionA,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXLoadSectionA"
+		#endif
+	},
+	// XFreeSectionA (* unchanged since 3911 *)
+	{
+		(OOVPA*)&XFreeSectionA_1_0_3911, 
+			
+		XTL::EmuXFreeSectionA,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXFreeSectionA"
+		#endif
+	},
+	// GetExitCodeThread (* unchanged since 3911 *)
+    {
+        (OOVPA*)&GetExitCodeThread_1_0_3911,
+
+        XTL::EmuGetExitCodeThread,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGetExitCodeThread"
+        #endif
+    },
+ // GetTimeZoneInformation (* unchanged since 3911 *)
+    {
+        (OOVPA*)&GetTimeZoneInformation_1_0_3911,
+
+        XTL::EmuGetTimeZoneInformation,
+
+        #ifdef _DEBUG_TRACE
+        "GetTimeZoneInformation"
+        #endif
+    },
+    // SetThreadPriority (* unchanged since 3911 *)
+    {
+        (OOVPA*)&SetThreadPriority_1_0_3911,
+
+        XTL::EmuSetThreadPriority,
+
+        #ifdef _DEBUG_TRACE
+        "EmuSetThreadPriority"
+        #endif
+    },
 };
 
 // ******************************************************************

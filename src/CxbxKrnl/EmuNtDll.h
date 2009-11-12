@@ -664,6 +664,16 @@ typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeStringToAnsiString)
 );
 
 // ******************************************************************
+// * RtlEqualString
+// ******************************************************************
+typedef BOOLEAN (NTAPI *FPTR_RtlEqualString)
+(
+	IN PSTRING			String1,
+	IN PSTRING			String2,
+	IN BOOLEAN			CaseSensitive
+);
+
+// ******************************************************************
 // * NtDelayExecution
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtDelayExecution)
@@ -1041,9 +1051,29 @@ typedef NTSTATUS (NTAPI *FPTR_IoCreateFile)
 );
 
 // ******************************************************************
+// * NtQueueApcThread
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtQueueApcThread)
+(
+	IN HANDLE               ThreadHandle,
+	IN PIO_APC_ROUTINE      ApcRoutine,
+	IN PVOID                ApcRoutineContext OPTIONAL,
+	IN PIO_STATUS_BLOCK     ApcStatusBlock OPTIONAL,
+	IN ULONG                ApcReserved OPTIONAL 
+);
+
+// ******************************************************************
+// * RtlDestroyHeap
+// ******************************************************************
+typedef PVOID (NTAPI *FPTR_RtlDestroyHeap)
+(
+    IN PVOID				HeapHandle
+);
+
+// ******************************************************************
 // * Exported API
 // ******************************************************************
-extern FPTR_RtlInitAnsiString              RtlInitAnsiString ;
+extern FPTR_RtlInitAnsiString              RtlInitAnsiString;
 extern FPTR_RtlInitUnicodeString           RtlInitUnicodeString;
 extern FPTR_RtlAnsiStringToUnicodeString   RtlAnsiStringToUnicodeString;
 extern FPTR_RtlUnicodeStringToAnsiString   RtlUnicodeStringToAnsiString;
@@ -1061,6 +1091,8 @@ extern FPTR_RtlAllocateHeap                RtlAllocateHeap;
 extern FPTR_RtlFreeHeap                    RtlFreeHeap;
 extern FPTR_RtlReAllocateHeap              RtlReAllocateHeap;
 extern FPTR_RtlSizeHeap                    RtlSizeHeap;
+extern FPTR_RtlDestroyHeap				   RtlDestroyHeap;
+extern FPTR_RtlEqualString				   RtlEqualString;
 extern FPTR_NtAllocateVirtualMemory        NtAllocateVirtualMemory;
 extern FPTR_NtFreeVirtualMemory            NtFreeVirtualMemory;
 extern FPTR_NtQueryVirtualMemory           NtQueryVirtualMemory;
@@ -1087,6 +1119,7 @@ extern FPTR_NtSetEvent                     NtSetEvent;
 extern FPTR_NtSuspendThread                NtSuspendThread;
 extern FPTR_NtResumeThread                 NtResumeThread;
 extern FPTR_NtSetLdtEntries                NtSetLdtEntries;
+extern FPTR_NtQueueApcThread			   NtQueueApcThread;
 
 #if defined(__cplusplus)
 }

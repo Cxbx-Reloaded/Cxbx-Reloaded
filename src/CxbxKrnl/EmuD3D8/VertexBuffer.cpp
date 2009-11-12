@@ -1351,7 +1351,7 @@ VOID XTL::EmuUpdateActiveTexture()
             }
             else if(X_Format == 0x05 /* X_D3DFMT_R5G6B5 */ || X_Format == 0x04 /* X_D3DFMT_A4R4G4B4 */
                  || X_Format == 0x1D /* X_D3DFMT_LIN_A4R4G4B4 */ || X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */
-                 || X_Format == 0x28 /* X_D3DFMT_G8B8 */)
+                 || X_Format == 0x28 /* X_D3DFMT_G8B8 */ || X_Format == 0x10 /* X_D3DFMT_LIN_A1R5G5B5 */)
             {
                 bSwizzled = TRUE;
 
@@ -1375,7 +1375,8 @@ VOID XTL::EmuUpdateActiveTexture()
                 dwPitch  = dwWidth;
                 dwBPP = 1;
             }
-            else if(X_Format == 0x1E /* X_D3DFMT_LIN_X8R8G8B8 */ || X_Format == 0x12 /* X_D3DFORMAT_A8R8G8B8 */ || X_Format == 0x2E /* D3DFMT_LIN_D24S8 */)
+            else if(X_Format == 0x1E /* X_D3DFMT_LIN_X8R8G8B8 */ || X_Format == 0x12 /* X_D3DFORMAT_A8R8G8B8 */ 
+				 || X_Format == 0x2E /* D3DFMT_LIN_D24S8 */ || X_Format == 0x3F /* X_D3DFMT_LIN_A8B8G8R8 */)
             {
                 // Linear 32 Bit
                 dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;

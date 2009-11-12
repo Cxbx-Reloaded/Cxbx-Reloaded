@@ -45,8 +45,12 @@ namespace XTL
     #include "EmuD3D8\State.h"
     #include "EmuDInput.h"
     #include "EmuDSound.h"
+//	#include "EmuXBAudio\XboxAdpcm.h"
+//	#include "EmuXBAudio\XSoundBank.h"
+//	#include "EmuXBAudio\XWaveBank.h"
     #include "EmuXOnline.h"
     #include "EmuXG.h"
+	#include "EmuXactEng.h"
 }
 
 extern XTL::LPDIRECT3DDEVICE8   g_pD3DDevice8;

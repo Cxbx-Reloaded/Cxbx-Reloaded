@@ -1,0 +1,30 @@
+blueshogun's Todo list:
+
+
+Emulation:
+ - Continue sorting things out between XDKs 4432 and 4627 for 4531.  Some things from 4627
+   should be moved to 4531 anyway.
+ - Check for similarities in XGRAPHIC library for 4361, 4432 and 4627.
+ - Continue adding support for the Xbox ADPCM codec.  Numerous open source projects support 
+   it, so I guess it shouldn't be too hard.
+ - Finish adding basic XACT support.
+ - Ensure the Cxbx has some basic support for every XDK.  We're close, but 5028, 5120, 5455
+   and 5788 need further investigation.
+ - The Xbox's version of the .xsb format needs to be reversed for XACT.
+ - Verify that section loading APIs can really be ignored.
+ - Basic network capabilities?
+
+More:
+ - For completion's sake, we're going to have to use Direct3D 9 or OpenGL (OpenGL is better for
+   emulating Xbox, trust me) to emulate all of the missing functionality of Direct3D 8.  OpenGL is
+   also closer to NVIDIA's hardware.
+ - An option to disable sound processing. Quantum Redshift may need this...
+
+Game Specific:
+ - Add I/CDirectSoundBuffer_Pause and I/CDirectSoundBuffer_GetStatus for 4721 (Robotech Battlecry)
+ - The engine used by Taz: Wanted (4432) and Zapper (4831)  are almost completely the same.  There's
+   a missing XAPI function causing the crash, so fixing one will essentially fix the other.
+ - Unreal Championship requires XACT emulation.
+ - Azurik: Rize of Perathia (possibly the hardest Xbox game to emulate) has some unusual situations
+   going on (heap corruption, empty shaders, etc.).  We need better solutions for such scenarios.
+ - DOA3 is getting close...
