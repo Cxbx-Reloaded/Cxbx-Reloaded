@@ -1,0 +1,110 @@
+/******************************************************************************/
+/*                                                                            */
+/*                              It has arrived!                               */
+/*                                                                            */
+/*                       Gamepad support for the OpenXDK                      */
+/*                                                                            */
+/******************************************************************************/
+
+This is a lib build of the gamepad code - its more or less independent..it
+doens't need any of the other openxdk header files, and will work in the ms xdk
+as well.
+
+Its been designed to be as flexible as possible - so many of the xinput.h
+interface functions have been designed so we can tweek away at the workings
+and get you a great feel in tim.
+
+It works!  But might need a bit of improvement for speed.
+
+Externals:
+
+
+extern "C" __u32 __stdcall MmAllocateContiguousMemory(__u32 a);
+extern "C" __u32 __stdcall MmLockUnlockBufferPages(__u32 MemoryAddress, __u32 NumberOfBytes, __u32 a);
+extern "C" __u32 __stdcall MmGetPhysicalAddress(__u32  BaseAddress);
+
+
+These are the only external links in our code!  Everything else..even the 
+myGetTickCount() have all been implemented inside our code!
+
+
+How to use it:
+
+/******************************************************************************/
+/*
+    How does this code work?  What lib's does it need?  How would I use it
+	in my code?
+
+	Well the aim of the gamepad code was to develop an independent set of 
+	code for the openxdk - but because it's lib independent it also works on
+	the xdk.
+
+	<1> Include our header file, and the other files which do all the work..
+	    later they'll be put into a library
+	    e.g. #include "xinput/xinput.h"   // Gamepad input
+	    
+	<2> Init our gamepad code
+	    e.g.
+		    stXINPUT xin;
+		    xInitInput(&xin);
+		You do this ocne at the start of the program, I did it this way as I don't
+		like globals, so you need to pass it a stuct called stXINPUT which
+		keeps all our usb/gampad information in.
+
+	<3> Get our gamepad information in our main loop e.g:
+		stXPAD pad;
+		xGetPadInput(&pad, &xin);
+
+	<4> When we've all finished, call xReleaseInput(&xin);
+
+	<Misc> You can also set the rumble effect - still in development
+	e.g. xSetPadInput(&pad, &xin);
+*/
+/******************************************************************************/
+
+
+Feedback welcome: bkenwright@xbdev.net
+
+
+Edits to OpenXDK main code:
+
+mm.h    line:83
+
+from:
+
+XBSYSAPI VOID *MmLockUnlockBufferPages;
+
+to:
+
+XBSYSAPI EXPORTNUM(175) PHYSICAL_ADDRESS NTAPI MmLockUnlockBufferPages
+(
+    IN PHYSICAL_ADDRESS   BaseAddress,
+	IN ULONG            NumberOfBytes,
+    IN ULONG            Protect
+);
+
+
+mm.c   line:94
+
+from:
+
+XBSYSAPI VOID *MmLockUnlockBufferPages = 0;
+
+to:
+
+
+XBSYSAPI EXPORTNUM(175) PHYSICAL_ADDRESS NTAPI MmLockUnlockBufferPages
+(
+    IN PHYSICAL_ADDRESS   BaseAddress,
+	IN ULONG            NumberOfBytes,
+    IN ULONG            Protect
+)
+{
+	return;
+}
+
+
+
+
+
+
