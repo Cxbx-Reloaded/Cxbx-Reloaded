@@ -1,0 +1,19 @@
+DirectX Software Development Kit Redistributable Code
+-------------------------------------------------------------
+Redistributable Code is identified as all of the files in the following 
+directory on the DirectX 8.0 SDK CD:
+
+   redist/directx8/
+
+All files in the above directory must be included in any distribution of 
+the DirectX 8.0 Redistributable Code with the exception of the Broadcast
+Driver Architecture cab files:
+
+   bda.cab
+   bdant.cab
+
+Both of which are considered optional DirectX 8.0 redistributable 
+components and can be removed from your distribution of the DirectX 
+8.0 redistributable components.
+
+
