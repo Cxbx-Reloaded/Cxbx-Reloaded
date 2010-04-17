@@ -12,7 +12,15 @@
 #ifndef XBOXKRNL_HAL_H
 #define XBOXKRNL_HAL_H
 
-XBSYSAPI VOID *HalReadSMCTrayState;
+// ******************************************************************
+// * HalReadSMCTrayState
+// ******************************************************************
+XBSYSAPI EXPORTNUM(9) VOID NTAPI HalReadSMCTrayState
+(
+	DWORD*	State,
+	DWORD*	Count
+);
+
 XBSYSAPI VOID *HalClearSoftwareInterrupt;
 XBSYSAPI VOID *HalDisableSystemInterrupt;
 XBSYSAPI VOID *HalDiskCachePartitionCount;
