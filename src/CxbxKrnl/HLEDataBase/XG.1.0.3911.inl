@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->XG.1.0.4627.cpp
+// *   Cxbx->Win32->CxbxKrnl->XG.1.0.3911.inl
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -33,41 +33,100 @@
 // ******************************************************************
 
 // ******************************************************************
-// * XGSwizzleBox
+// * XGIsSwizzledFormat
 // ******************************************************************
-SOOVPA<10> XGSwizzleBox_1_0_4627 =
+SOOVPA<7> XGIsSwizzledFormat_1_0_3911 = 
 {
     0,  // Large == 0
-    10, // Count == 10
+    7,  // Count == 7
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
 
     {
-        // XGSwizzleBox+0x60 : sub ecx, [eax]
-        { 0x60, 0x2B }, // (Offset,Value)-Pair #1
-        { 0x61, 0x08 }, // (Offset,Value)-Pair #2
+        { 0x07, 0x7F },
+        { 0x10, 0x7C },
+        { 0x19, 0x0B },
+        { 0x22, 0xF8 },
+        { 0x2B, 0x83 },
+        { 0x34, 0x0A },
+        { 0x3D, 0x7F },
+    }
+};
 
-        // XGSwizzleBox+0x8E : lea ecx, [ebp+0xD8]
-        { 0x8E, 0x8D }, // (Offset,Value)-Pair #3
-        { 0x8F, 0x4D }, // (Offset,Value)-Pair #4
-        { 0x90, 0xD8 }, // (Offset,Value)-Pair #5
+// ******************************************************************
+// * XGSwizzleRect
+// ******************************************************************
+SOOVPA<8> XGSwizzleRect_1_0_3911 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
 
-        // XGSwizzleBox+0xD5 : shl eax, 2
-        { 0xD5, 0xC1 }, // (Offset,Value)-Pair #6
-        { 0xD6, 0xE0 }, // (Offset,Value)-Pair #7
-        { 0xD7, 0x02 }, // (Offset,Value)-Pair #8
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
 
-        // XGSwizzleBox+0xE2 : test ebx, ebx
-        { 0xE2, 0x85 }, // (Offset,Value)-Pair #9
-        { 0xE3, 0xDB }, // (Offset,Value)-Pair #10
+    {
+        { 0x1E, 0x03 },
+        { 0x3E, 0x89 },
+        { 0x5E, 0x83 },
+        { 0x7E, 0x6C },
+        { 0x9E, 0xFF },
+        { 0xBE, 0xFF },
+        { 0xDE, 0x89 },
+        { 0xFE, 0x89 },
+    }
+};
+
+// ******************************************************************
+// * XGSwizzleBox
+// ******************************************************************
+SOOVPA<8> XGSwizzleBox_1_0_3911 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0x75 },
+        { 0x3E, 0x4D },
+        { 0x5E, 0x48 },
+        { 0x7E, 0x04 },
+        { 0x9E, 0xD8 },
+        { 0xC0, 0x83 },
+        { 0xDE, 0xAF },
+        { 0xFE, 0x45 },
+    }
+};
+
+// ******************************************************************
+// * XGUnswizzleRect
+// ******************************************************************
+SOOVPA<8> XGUnswizzleRect_1_0_3911 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0x03 },
+        { 0x3E, 0x00 },
+        { 0x5E, 0xD2 },
+        { 0x7E, 0x75 },
+        { 0x9E, 0x70 },
+        { 0xC1, 0xE9 },
+        { 0xDE, 0x89 },
+        { 0xFE, 0x60 },
     }
 };
 
 // ******************************************************************
 // * XGWriteSurfaceOrTextureToXPR
 // ******************************************************************
-SOOVPA<7> XGWriteSurfaceOrTextureToXPR_1_0_4627 = 
+SOOVPA<7> XGWriteSurfaceOrTextureToXPR_1_0_3911 = 
 {
     0,  // Large == 0
     7,  // Count == 7
@@ -82,18 +141,18 @@ SOOVPA<7> XGWriteSurfaceOrTextureToXPR_1_0_4627 =
         { 0x7E, 0x33 },
         { 0x9E, 0xC2 },
         { 0xBE, 0xF0 },
-        { 0xE2, 0x8B },
+        { 0xDE, 0xFC },
     }
 };
 
 // ******************************************************************
-// * XG_1_0_4627
+// * XG_1_0_3911
 // ******************************************************************
-OOVPATable XG_1_0_4627[] =
+OOVPATable XG_1_0_3911[] =
 {
-    // XGIsSwizzledFormat (* unchanged since 4361 *)
+    // XGIsSwizzledFormat
     {
-        (OOVPA*)&XGIsSwizzledFormat_1_0_4361,
+        (OOVPA*)&XGIsSwizzledFormat_1_0_3911,
 
         XTL::EmuXGIsSwizzledFormat,
 
@@ -101,9 +160,9 @@ OOVPATable XG_1_0_4627[] =
         "XGIsSwizzledFormat"
         #endif
     },
-    // XGSwizzleRect (* unchanged since 4361 *)
+    // XGSwizzleRect
     {
-        (OOVPA*)&XGSwizzleRect_1_0_4361,
+        (OOVPA*)&XGSwizzleRect_1_0_3911,
 
         XTL::EmuXGSwizzleRect,
 
@@ -111,9 +170,19 @@ OOVPATable XG_1_0_4627[] =
         "EmuXGSwizzleRect"
         #endif
     },
+	// XGUnswizzleRect
+    {
+        (OOVPA*)&XGUnswizzleRect_1_0_3911,
+
+        XTL::EmuXGUnswizzleRect,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXGUnswizzleRect"
+        #endif
+    },
     // XGSwizzleBox
     {
-        (OOVPA*)&XGSwizzleBox_1_0_4627,
+        (OOVPA*)&XGSwizzleBox_1_0_3911,
 
         XTL::EmuXGSwizzleBox,
 
@@ -123,7 +192,7 @@ OOVPATable XG_1_0_4627[] =
     },
 	// XGWriteSurfaceOrTextureToXPR
     {
-        (OOVPA*)&XGWriteSurfaceOrTextureToXPR_1_0_4627,
+        (OOVPA*)&XGWriteSurfaceOrTextureToXPR_1_0_3911,
 
         XTL::EmuXGWriteSurfaceOrTextureToXPR,
 
@@ -134,6 +203,6 @@ OOVPATable XG_1_0_4627[] =
 };
 
 // ******************************************************************
-// * XG_1_0_4627_SIZE
+// * XG_1_0_3911_SIZE
 // ******************************************************************
-uint32 XG_1_0_4627_SIZE = sizeof(XG_1_0_4627);
+uint32 XG_1_0_3911_SIZE = sizeof(XG_1_0_3911);

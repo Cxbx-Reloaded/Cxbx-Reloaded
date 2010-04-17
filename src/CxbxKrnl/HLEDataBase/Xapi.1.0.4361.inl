@@ -327,6 +327,42 @@ SOOVPA<12> XInputSetState_1_0_4361 =
 };
 
 // ******************************************************************
+// * XInputSetState
+// ******************************************************************
+SOOVPA<12> XInputSetState_1_0_4928 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // XInputSetState+0x04 : lea eax, [ecx+0x0A3]
+        { 0x04, 0x8D }, // (Offset,Value)-Pair #1
+        { 0x05, 0x81 }, // (Offset,Value)-Pair #2
+        { 0x06, 0xA3 }, // (Offset,Value)-Pair #3
+
+        // XInputSetState+0x12 : push 0x57
+        { 0x12, 0x6A }, // (Offset,Value)-Pair #4
+        { 0x13, 0x57 }, // (Offset,Value)-Pair #5
+
+        // XInputSetState+0x15 : jmp +0x19
+        { 0x15, 0xEB }, // (Offset,Value)-Pair #6
+        { 0x16, 0x19 }, // (Offset,Value)-Pair #7
+
+        // XInputSetState+0x28 : mov [edx+0x41], al
+        { 0x28, 0x88 }, // (Offset,Value)-Pair #8
+        { 0x29, 0x42 }, // (Offset,Value)-Pair #9
+        { 0x2A, 0x41 }, // (Offset,Value)-Pair #10
+
+        // XInputSetState+0x30 : retn 0x08
+        { 0x30, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x31, 0x08 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
 // * CreateThread
 // ******************************************************************
 SOOVPA<8> CreateThread_1_0_4361 =
@@ -514,6 +550,26 @@ OOVPATable XAPI_1_0_4361[] =
 
         #ifdef _DEBUG_TRACE
         "EmuRtlFreeHeap"
+        #endif
+    },
+	// RtlReAllocateHeap (* unchanged since 1.0.3911 *)
+    {
+        (OOVPA*)&RtlReAllocateHeap_1_0_3911,
+
+        XTL::EmuRtlReAllocateHeap,
+
+        #ifdef _DEBUG_TRACE
+        "EmuRtlReAllocateHeap"
+        #endif
+    },
+    // RtlSizeHeap (* unchanged since 1.0.3911 *)
+    {
+        (OOVPA*)&RtlSizeHeap_1_0_3911,
+
+        XTL::EmuRtlSizeHeap,
+
+        #ifdef _DEBUG_TRACE
+        "EmuRtlSizeHeap"
         #endif
     },
     // QueryPerformanceCounter
@@ -739,6 +795,36 @@ OOVPATable XAPI_1_0_4361[] =
         "EmuGetExitCodeThread"
         #endif
     },
+	// SetThreadPriorityBoost (* unchanged since 3911 *)
+	{
+		(OOVPA*)&SetThreadPriorityBoost_1_0_3911,
+
+		XTL::EmuSetThreadPriorityBoost,
+
+		#ifdef _DEBUG_TRACE
+		"EmuSetThreadPriorityBoost"
+		#endif
+	},
+	// SignalObjectAndWait (* unchanged since 3911 *)
+	{
+		(OOVPA*)&SignalObjectAndWait_1_0_3911, 
+			
+		XTL::EmuSignalObjectAndWait,
+
+		#ifdef _DEBUG_TRACE
+		"EmuSignalObjectAndWait"
+		#endif
+	},
+	// QueueUserAPC (* unchanged since 3911 *)
+	{ 
+		(OOVPA*)&QueueUserAPC_1_0_3911,
+
+		XTL::EmuQueueUserAPC,
+			
+		#ifdef _DEBUG_TRACE
+		"EmuQueueUserAPC"
+		#endif
+	},
 };
 
 // ******************************************************************

@@ -83,4 +83,26 @@ INT WINAPI EmuXNetStartup
 // ******************************************************************
 DWORD WINAPI EmuXNetGetEthernetLinkStatus();
 
+// ******************************************************************
+// * func: EmuXOnlineLaunchNewImage
+// ******************************************************************
+HRESULT WINAPI XOnlineLaunchNewImage
+(
+    LPCSTR	lpImagePath,
+    LPVOID	pLaunchData
+);
+
+// ******************************************************************
+// * func: EmuXOnlineLogon
+// ******************************************************************
+HRESULT WINAPI EmuXOnlineLogon
+(
+    VOID*	pUsers,
+    DWORD*	pdwServiceIDs,
+    DWORD	dwServices,
+    HANDLE	hEvent,
+    HANDLE	pHandle
+);
+
+
 #endif

@@ -60,6 +60,8 @@ typedef signed long    sint32;
 #define _DEBUG_TRACK_VB
 /*! define this to track vertex shaders */
 #define _DEBUG_TRACK_VS
+/*! define this to track pixel shaders */
+#define _DEBUG_TRACK_PS
 /*! define this to track push buffers */
 #define _DEBUG_TRACK_PB
 /*! define this to track memory allocations */
@@ -72,6 +74,8 @@ typedef signed long    sint32;
 #endif
 /*! define this to trace warnings */
 #define _DEBUG_WARNINGS
+/*! define this to trace vertex shader constants */
+#define _DEBUG_TRACK_VS_CONST
 
 /*! define this to dump textures that have been set */
 //#define _DEBUG_DUMP_TEXTURE_SETTEXTURE "C:\\xbox\\_textures\\"
@@ -80,9 +84,9 @@ typedef signed long    sint32;
 
 /*! version string dependent on trace flag */
 #ifndef _DEBUG_TRACE
-#define _CXBX_VERSION "0.8.1-Beta"
+#define _CXBX_VERSION "0.8.1-Pre2"
 #else
-#define _CXBX_VERSION "0.8.1-Beta-Trace"
+#define _CXBX_VERSION "0.8.1-Pre2-Trace"
 #endif
 
 /*! debug mode choices */

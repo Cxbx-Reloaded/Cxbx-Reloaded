@@ -11,8 +11,12 @@ Emulation:
  - Ensure the Cxbx has some basic support for every XDK.  We're close, but 5028, 5120, 5455
    and 5788 need further investigation.
  - The Xbox's version of the .xsb format needs to be reversed for XACT.
- - Verify that section loading APIs can really be ignored.
+ - Cache xbe section addresses and names for XLoad/FreeSection[ByHandle]
  - Basic network capabilities?
+ - Some vertex shaders have their constant register usage modified by Cxbx (to balance out
+   the fact that Xbox vertex shaders can use constant values -96 to 96.  Adding 96 in
+   SetVertexShaderConstant fixes some samples and Petit Copter, but breaks Turok.
+ - Indexed geometry rendered with D3DPT_QUADLIST is badly broken (Panzer and Robotech: Battlecry).
 
 More:
  - For completion's sake, we're going to have to use Direct3D 9 or OpenGL (OpenGL is better for
@@ -21,10 +25,9 @@ More:
  - An option to disable sound processing. Quantum Redshift may need this...
 
 Game Specific:
- - Add I/CDirectSoundBuffer_Pause and I/CDirectSoundBuffer_GetStatus for 4721 (Robotech Battlecry)
- - The engine used by Taz: Wanted (4432) and Zapper (4831)  are almost completely the same.  There's
-   a missing XAPI function causing the crash, so fixing one will essentially fix the other.
- - Unreal Championship requires XACT emulation.
  - Azurik: Rize of Perathia (possibly the hardest Xbox game to emulate) has some unusual situations
    going on (heap corruption, empty shaders, etc.).  We need better solutions for such scenarios.
  - DOA3 is getting close...
+ - Fusion Frenzy: There are some bugs in the D3DFMT_P8 -> D3DFMT_A8R8G8B8 conversion code.
+ - Keep working on Run Like Hell, you might be surprised!
+ - Find out what's causing the stack corruption with Petit Copter.

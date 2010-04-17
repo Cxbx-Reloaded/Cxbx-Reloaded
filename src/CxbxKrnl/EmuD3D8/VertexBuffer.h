@@ -82,7 +82,7 @@ class VertexPatcher
         VertexPatcher();
        ~VertexPatcher();
 
-        bool Apply(VertexPatchDesc *pPatchDesc);
+        bool Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError);
         bool Restore();
 
         // Dumps the cache to the console
@@ -112,7 +112,8 @@ class VertexPatcher
 
         // Tries to apply a previously patched stream from the cache
         bool ApplyCachedStream(VertexPatchDesc *pPatchDesc,
-                               UINT             uiStream);
+                               UINT             uiStream,
+							   bool			   *pbFatalError);
 
         // Patches the types of the stream
         bool PatchStream(VertexPatchDesc *pPatchDesc, UINT uiStream);
@@ -133,6 +134,7 @@ extern struct _D3DIVB
 {
     XTL::D3DXVECTOR3 Position;   // Position
     FLOAT            Rhw;        // Rhw
+	FLOAT			 Blend1;	 // Blend1		
     XTL::DWORD       dwSpecular; // Specular
     XTL::DWORD       dwDiffuse;  // Diffuse
     XTL::D3DXVECTOR3 Normal;     // Normal

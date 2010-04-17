@@ -65,6 +65,9 @@ extern volatile bool g_bEmuSuspended;
 // global exception patching address
 extern uint32 g_HaloHack[4];
 
+// Dead to Rights hack
+extern uint32 g_DeadToRightsHack[2];
+
 // global exception patching address
 extern uint32 funcExclude[2048];
 
@@ -80,7 +83,8 @@ extern CHAR  *g_strZDrive;
 extern HWND   g_hEmuWindow;
 
 // thread notification routine
-extern PVOID g_pfnThreadNotification;
+extern PVOID g_pfnThreadNotification[16];
+extern int g_iThreadNotificationCount;
 
 // NOTE: this is an arbitrary latency
 #define XINPUT_SETSTATE_LATENCY 4

@@ -98,4 +98,14 @@ VOID WINAPI EmuXGUnswizzleRect
     DWORD           dwBPP
 );
 
+// ******************************************************************
+// * func: EmuXGWriteSurfaceOrTextureToXPR
+// ******************************************************************
+HRESULT WINAPI EmuXGWriteSurfaceOrTextureToXPR
+( 
+	LPVOID			pResource,
+	const char*		cPath,
+	BOOL			bWriteSurfaceAsTexture
+);
+
 #endif

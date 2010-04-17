@@ -193,3 +193,562 @@ TODO: Investigate 0x2AE7F2 and 0x2C8877 for Panzer.
 - Added the following texture formats
 	D3DFMT_A8B8G8R8 (Swizzled)
 	D3DFMT_UYVY (Swizzled, afaik)
+
+11/11/09
+- Added the following texture format(s)
+	D3DFMT_UNKNOWN (Undefined) (For MetalSlug 3)
+
+- Added the following functions
+	IDirect3DDevice8_SetShaderConstantMode (5849)
+	IDirect3DDevice8_SetViewport (5849)
+	QueueUserAPC (5849) (Possibly too high level)
+	CDirectSound_SetAllParameters (4721)
+
+11/18/09
+- Added the following function(s)
+	IDirect3D8_CreateDevice (5028)
+
+11/20/09
+- Added the following function(s)
+	RtlReallocateHeap (4361)
+	RtlSizeHeap (4361)
+	CDirectSoundVoiceSettings::SetMixBinVolumes (4361)
+	CDirectSoundVoice::SetMixBinVolumes (4361)
+	CDirectSoundBuffer::SetMixBinVolumes (4361)
+
+- Removed DSOUND 4361 alias to 4627 (This will break Smashing Drive!)
+
+11/22/09
+- Temporarily set DSOUND 4361 alias to 4627 again.
+- Added the following function(s)
+	CDirectSoundStream_SetMixBins (4627)
+	CMcpxVoiceClient_SetEG (4627)
+	CDirectSoundVoice_SetEG (4627)
+	CDirectSoundStream_SetEG (4627)
+	CDirectSoundStream_FlushEx (4627)
+	IDirectSoundStream_FlushEx (4627)
+
+11/23/09
+- Added the following function(s)
+	RtlCreateHeap (4134)
+	RtlAllocateHeap  (4134)
+	RtlFreeHeap (4134)
+	RtlReAllocateHeap (4134)
+	RtlSizeHeap (4134)
+	XapiBootDash (4134)
+	XRegisterThreadNotifyRoutine (4134)
+	XGetDeviceChanges (4134)
+	XID_fCloseDevice (XREF) (4134)
+	XInputClose (4134)
+	XInputGetCapabilities (4134)
+	SetThreadPriorityBoost (4134)
+	GetThreadPriority (4134)
+	XGetDevices (4134)
+	QueryPerformanceCounter (4134)
+	QueryPerformanceFrequency (4134)
+	XInputPoll (4134 - 4928)
+	XGetSectionHandleA (4134 - 4928)
+	XLoadSectionByHandle (4134 - 4928)
+	XFreeSectionByHandle (4134 - 4928)
+	RtlDestroyHeap (4134 - 4928)
+	D3DDevice_CreatePixelShader (4134)
+	IDirect3DSurface8_LockRect (4134)
+	Lock2DSurface (4134)
+	D3DDevice_SetGammaRamp (4134)
+	IDirect3D8_CheckDeviceFormat (4134)
+	IDirect3D8_GetAdapterModeCount (4134)
+	IDirect3D8_EnumAdapterModes (4134)
+	IDirect3DDevice8_LoadVertexShader (4134)
+	IDirect3DDevice8_SelectVertexShader (4134)
+	IDirect3DDevice8_CopyRects (4134)
+	IDirect3DDevice8_CreateImageSurface (4134)
+	IDirect3DDevice8_SetVertexShaderConstant (4134)
+	IDirect3DDevice8_SetPixelShader (4134)
+	IDirect3DDevice8_SetTextureState_BumpEnv (4134)
+	IDirect3DDevice8_SetIndices (4134)
+	IDirect3DDevice8_SetTexture (4134)
+	IDirect3DDevice8_SetRenderState_VertexBlend (4134)
+	IDirect3DDevice8_SetRenderState_TextureFactor (4134)
+	IDirect3DDevice8_SetRenderState_EdgeAntiAlias (4134)
+	IDirect3DDevice8_SetRenderState_Simple (4134)
+	IDirect3DDevice8_SetRenderState_ZEnable (4134)
+	IDirect3DDevice8_SetRenderState_StencilEnable (4134)
+	IDirect3DDevice8_SetRenderState_MultiSampleAntiAlias (4134)
+	IDirect3DDevice8_GetTransform (4134)
+	IDirect3DDevice8_SetStreamSource (4134)
+	IDirect3DDevice8_SetVertexShader (4134)
+	IDirect3DDevice8_DrawVertices (4134)
+	IDirect3DDevice8_DrawVerticesUP (4134)
+	IDirect3DDevice8_DrawIndexedVertices (4134)
+	IDirect3DDevice8_SetLight (4134)
+	IDirect3DDevice8_SetMaterial (4134)
+	IDirect3DDevice8_LightEnable (4134)
+	IDirect3DVertexBuffer8_Lock (4134)
+	Get2DSurfaceDesc (4134)
+	IDirect3DSurface8_GetDesc (4134)
+	IDirect3DDevice8_SetRenderState_StencilFail (4134)
+	IDirect3DDevice8_SetRenderState_NormalizeNormals (4134)
+	IDirect3DDevice8_Reset (4134 - 4361)
+	IDirect3D8_KickOffAndWaitForIdle (4134 - 4361)
+	IDirect3DDevice8_SetTextureState_TwoSidedLighting (4134 - 4361)
+	IDirect3DDevice8_SetRenderState_BackFillMode (4134 - 4361)
+	IDirect3DDevice8_SetTextureState_ColorKeyColor (4134 - 4361)
+	IDirect3DDevice8_SetRenderState_FrontFace (4134 - 4361)
+	IDirect3DDevice8_SetRenderState_LogicOp (4134 - 4361)
+	IDirect3DDevice8_SetRenderState_StencilFail (4134 - 4361)
+	IDirect3DDevice8_SetRenderState_OcclusionCullEnable (4134 - 4361)
+	IDirect3DDevice8_SetRenderState_StencilCullEnable (4134 - 4361)
+
+- Move the following functions
+	XInputPoll (4928 -> 4134)
+	XGetSectionHandleA (4627 -> 4134)
+	XLoadSectionByHandle (4627 -> 4134)
+	XFreeSectionByHandle (4627 -> 4134)
+	RtlDestroyHeap (4627 -> 4134)	
+	IDirect3DDevice8_Reset (4134)
+	IDirect3D8_KickOffAndWaitForIdle (4432 -> 4134)
+	IDirect3DDevice8_SetTextureState_TwoSidedLighting (4432 -> 4134)
+	IDirect3DDevice8_SetRenderState_BackFillMode (4432 -> 4134)
+	IDirect3DDevice8_SetTextureState_ColorKeyColor (4432 -> 4134)
+	IDirect3DDevice8_SetRenderState_FrontFace (4432 -> 4134)
+	IDirect3DDevice8_SetRenderState_LogicOp (4432 -> 4134)
+	IDirect3DDevice8_SetRenderState_StencilFail (4432 -> 4134)
+	IDirect3DDevice8_SetRenderState_OcclusionCullEnable (4432 -> 4134)
+	IDirect3DDevice8_SetRenderState_StencilCullEnable (4432 -> 4134)
+
+- Added a bit of code to print out more details about the Direct3D device
+  each Xbox game is trying to create.
+- Added a hack to disable Tripple Buffering.  JSRF needs this for cards that
+  don't support it with the parameters it's using.
+
+11/24/09
+- Added the following functions(s)
+	IDirect3DDevice8_FillMode (4134)
+	IDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead (4134 - 4627)
+	IDirect3DDevice8_SetRenderState_RopZRead (4134 - 4627)
+	IDirect3DDevice8_SetRenderState_DoNotCullUncompressed (4134 - 4627)
+	IDirect3DDevice8_SetRenderState_Dxt1NoiseEnable (4134 - 4361)
+	IDirect3DDevice8_SetRenderState_MultiSampleMask (4134 - 4361)
+	IDirect3DDevice8_SetRenderState_MultiSampleMode (4134 - 4361)
+	IDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode (4134 - 4361)
+	IDirect3DDevice8_SetRenderState_ShadowFunc (4134 - 4361)
+	IDirect3DDevice8_SetRenderState_YuvEnable (4134 - 4361)
+	IDirect3DDevice8_DrawIndexedVerticesUP (4134 - 4361)
+	IDirect3DDevice8_SetPixelShaderConstant (4134 - 4627)
+	IDirect3DDevice8_DeletePixelShader (4134 - 4627)
+	IDirect3DDevice8_SetRenderState_CullModeB (4134 - 4627)
+	IDirect3DDevice8_DeleteVertexShader (4134 - 4627)
+	IDirect3DDevice8_SetScreenSpaceOffset (4134 - 4627)
+	D3D::SetFence (XREF) (4134 - 4627)
+	IDirect3DDevice8_SetRenderState_LineWidth (4134 - 4361)
+	IDirect3DDevice8_GetGammaRamp (4134)
+	SetThreadPriorityBoost (4134 - 4361)
+	IDirect3DDevice8_BlockUntilVerticalBlank (4134)
+	IDirect3DDevice8_SetSwapCallback (4134 - 4361)
+	IDirect3DDevice8_GetTile (4134 - 4361)
+	IDirect3DDevice8_SetTile (4134 - 4361)
+	IDirect3DDevice8_IsBusy (4134 - 4361)
+
+- Fix a bug in D3D8 4134.  IDirect3DDevice8_SetRenderState_Fillmode_1_0_3925 was giving
+  us a false positive.  The problem exists in 4034 as well because whoever started
+  trying to add 4034 and 4134 support just threw in a bunch of signatures from D3D8 3925
+  must have been looking for similarities in that XDK.  Good idea when you don't have
+  a certain XDK, but it's not 100% safe to do (or leave in unattended).
+- Attempting to impliment IDirect3DDevice8_SetSwapCallback.  Some of the steps necessary
+  will revolve around IDirect3DDevice8_SetVerticalBlankCallback's inner workings.  Adding 
+  the callback function to execute each time D3DDevice_Present/Swap is called is easy, but
+  Some of the parameters require a bit of leg work.  Right now, some of my implementation
+  is guess work.  Hopefully Caustik will have a good idea of what to do.
+- Even worse, the signatures for D3DDevice_SetSwapCallback and D3DDevice_SetVerticalBlankCallback
+  are almost completely identical and are different by an extremely small margin.  For 4134,
+  it looks the same as 4361's.  I might be over reacting, but I just don't want to screw this
+  up because working on JSRF is proving to be a delicate operation!
+
+11/26/09
+- Added the following function(s)
+	XnInit (5233)
+	bind (5233)
+	ioctlsocket (5233)
+	WSAStartup (5233)
+	XNetStartup (5233 - 5344)
+	CDirectSoundStream_SetMode (3936)
+
+12/1/09
+- Added the following function(s)
+	XACT::CEngine::RegisterNotification (4627)
+	IXACTEngine_RegisterNotification (4627)
+	XACT::CEngine::GetNotification (4627)
+	IXACTEngine_GetNotification (4627)
+	XACT::CEngine::CreateSoundBank (4928)
+	IXACTEngine::CreateSoundBank (4928)
+	XACT::CEngine::RegisterWaveBank (4928)
+	IXACTEngine::RegisterWaveBank (4928)
+	XAudioDownloadEffectsImage (4627 - 4928)
+
+12/2/09
+- Added the following function(s)
+	XACT::CEngine::UnRegisterWaveBank (4928)(*)
+	IXACTEngine_UnRegisterWaveBank (4928)(*)
+	IDirect3DDevice8_PersistDisplay (4627 & 4928)
+	XNetGetEthernetLinkStatus (4627 - 4928, 5233 & 5344)
+	XGWriteSurfaceOrTextureToXPR (4627 - 4928)
+- Other things
+	Added D3DTOP_BLENDCURRENTALPHA (13)
+
+- Unreal Championship gets passed the loading screen and the menus appear to be interactive
+  as well.  It took F-O-R-E-V-E-R, but I'm finally beginning to make some significant progress
+  since my last updates for this game.
+
+(*) Could be wrong.  Look into IXACTEngine_SetNotification as well...
+
+12/3/09
+- Added the following function(s)
+	XLaunchNewImageA (4627 & 4928)
+        XGetLaunchInfo (4627 - 4928)
+- Unreal Championship appears to be "almost" ingame.  The LaunchData parameter from XLaunchNewImageA
+  is saved in a .bin file (CxbxLaunchData.bin) and is loaded once XGetLaunchInfo is called.  After it
+  is loaded, the file is deleted so that Unreal Championship is started normally.  When CxbxLaunchData.bin
+  is loaded by XGetLaunchInfo, Unreal Championship will use this data to load the desired level and
+  data that goes with it.  The biggest problem is that the controller is no longer recognized after
+  Cxbx is restarted.  It may take yet another hack to get around this.  If we can, we'll find out whether
+  this game can be played or not.
+
+12/26/09
+- Added the following function(s)
+	XSetProcessQuantumLength (4627 & 4721)
+	XGetFileCacheSize (5233 & 5344)
+	IDirect3DDevice8_Unknown1 (5233) (*)
+	IDirect3DDevice8_SetRenderState_TwoSidedLighting (5120 & 5233)
+	IDirect3DDevice8_SetRenderState_FrontFace (4531 - 5233)
+	IDirect3DDevice8_SetRenderState_LogicOp (4721 - 5344)
+	IDirect3DDevice8_BeginPush (5233 & 5344)
+	IDirect3DDevice8_EndPush (5233 & 5344)
+
+(*) This is not the actual function name.  Since I was unable to find any functions even somewhat similar
+to it (I don't have 5233, but not even 5344 helped this time), I just created a dummy function to the game 
+from crashing.  There were 4 functions that had access to it, and I had no idea which one was calling it,
+nor could I find out what those functions were either.  The only lead I had was that it called the kernel
+function AvSendTVEncoderOption, which led me to the assumption that we can get away with ignoring this function
+for now.  So far, this only occurs in games known as "Run Like Hell" and "Oddworld Munch's Oddyssee".
+
+12/27/09
+- Added the following function(s)
+	IDirect3DDevice8_AddRef (3925) [3911]
+	CDirectSoundStream_GetInfo (All) (*)
+	IDirect3DDevice8_Unknown1 (3925) (**)
+	IDirect3DDevice8_GetViewport (3925)
+	IDirect3DDevice8_GetGammaRamp (3925)
+	SignalObjectAndWait (3911 - 4627)
+	PulseEvent (3911)
+	IDirect3DDevice8_GetDisplayFieldStatus (3925)
+
+- Stopped Cxbx from trying to assemble "empty" shaders in Azurik: Rize of Perathia.
+
+(*) Since this function is part of the DirectSoundStream VTable (CDirectSoundStream::vtbl), the XDK doesn't
+matter.
+(**) See update for 12/26/09
+
+12/28/09
+- Added the following function(s)
+	IDirect3DDevice8_SetSwapCallback (4928)
+	IDirect3DDevice8_SetRenderState_MultiSampleAntiAlias (3925) [3911]
+
+12/29/09
+- Added the following function(s)
+	CDirectSoundVoice_SetMode (4627 - 4831)
+	CDirectSoundBuffer_SetMode (4627 - 4831)
+	IDirectSoundBuffer_SetMode (4627 - 4831)
+	IDirect3DDevice8_SetRenderState_FrontFace (4531 - 5120)
+	IDirect3DDevice8_SetRenderState_MultiSampleMode (4531 - 4831)
+	IDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode (4531 - 4831)
+	IDirect3DDevice8_SetRenderState_StencilCullEnable (4531 - 4831)
+
+1/1/2010
+- Added the following function(s)
+	IDirect3DDevice8_SetGammaRamp (4242 - 4531)
+	IDirect3DDevice8_CreateVertexBuffer (4432)
+	IDirect3DDevice8_SetShaderConstantMode (4361 - 4432)
+	IDirect3DDevice8_SetVertexShaderConstant (4432 & 4531?)
+	IDirect3DDevice8_CreatePixelShader (4432 & 4531)
+	IDirect3DDevice8_GetViewport (4400 - 4531?)
+	IDirect3DDevice8_DrawVertices (4400 - 4531?)
+	IDirect3DDevice8_SetFlickerFilter (4361 & 4432)
+	IDirect3DDevice8_SetSoftDisplayFilter (4361 & 4432)
+	IDirect3DDevice8_SetGammaRamp (4432)
+	IDirect3DDevice8_DrawIndexedVertices (4400 - 4531?)
+	IDirect3DDevice8_PrimeVertexCache (4361)
+	IDirect3DDevice8_BeginPush/EndPush (4361)
+	IDirect3DDevice8_Begin/End (4361 - 4531?)
+	IDirect3DDevice8_SetVertexData2f (4361 - 4531?)
+	IDirect3DDevice8_SetVertexData4f (4361 - 4531?)
+	IDirect3DDevice8_SetVertexData4ub (4361 - 4531?)
+	CDirectSoundBuffer_PlayEx (4361 - 4627)(*)
+	IDirectSoundBuffer8_PlayEx (4361 - 4627)(*)
+	CMxpxBuffer_Stop2 (4361 - 4432)(**)
+	CDirectSoundBuffer_StopEx (4361 - 4627)
+	IDirectSoundBuffer8_StopEx (4361 - 4627)
+	CDirectSound_SetPosition (4361 - 4432)
+
+- Added support for D3DVSDE_BLENDWEIGHT
+
+(*) Not yet confirmed
+(**) There are two versions of CMcpxBuffer_Stop.  One has one parameter (ulong), and the other has two and calls
+     the first one (__int64, ulong).  My signature is for the one with 2 params.
+
+1/2/10
+- Added the following function(s)
+	CDirectSound_SetVelocity (4432)	
+	CDirectSoundVOice_SetPosition (4432)
+	IDirect3DDevice8_SetIndices (4400 - 4531)
+
+- Added all known blending operations (a bit surprised Caustik only added D3DBLENDOP_ADD)
+
+1/3/10
+- Added the following function(s)
+	IDirect3DDevice8_SetRenderState_VertexBlend (3925) [3911]
+	IDirect3DDevice8_SetRenderState_BackFillMode (3925) [3911]
+	IDirect3DDevice8_SetRenderState_TwoSidedLighting (3925) [3911]
+	IDirect3DDevice8_SetRenderState_NormalizeNormals (3925) [3911]
+	IDirect3DDevice8_SetRenderState_FrontFace (3925) [3911]
+	IDirect3DDevice8_SetRenderState_TextureFactor (3925) [3911]
+	IDirect3DDevice8_SetRenderState_LogicOp (3925) [3911]
+	IDirect3DDevice8_SetRenderState_EdgeAntiAlias (3925) [3911]
+	IDirect3DDevice8_SetRenderState_MultiSampleMask (3925) [3911]
+	IDirect3DDevice8_SetRenderState_MultiSampleMode (3925) [3911]
+	CreateFiber (4432)
+	DeleteFiber (4432)
+
+- Added the following kernel function(s)
+	KeBugCheck (*)
+
+- Fixed up EmuIDirect3DDevice8_UpdateOverlay a bit.  Updating the overlay
+  in software lets me see video playback again and let's me take screen
+  shots because it's a YUV -> RGB conversion.  Videos also play at more
+  "correct" speeds in software anyway.  Unreal Championship requires
+  this to be done in software to avoid crashing.  Also, since the YUV 
+  overlay is done in software, it's not updated automatically like a hard-
+  ware accelerated overlay, so I added a hack to update the screen if
+  Present or Swap was not called since the last update of the overlay.
+  this fixes most problems I've had with video playback.
+
+(*) TODO: Find out what is calling this (possibly XapiFiberStartup)
+
+1/4/10
+- Added the following function(s)
+	IDirect3DDevice8_SetRenderState_ShadowFunc (3925) [3911]
+	IDirect3DDevice8_SetRenderState_LineWidth (3925) [3911]
+	IDirect3DDevice8_SetRenderState_YuvEnable (3925) [3911]
+	IDirect3DDevice8_PersistDisplay (3925) [3911]
+
+1/5/10
+- Added the following function(s)
+	CDirectSoundVoice_SetPitch (4627)
+	CDirectSoundBuffer_SetPitch (4627)
+	IDirectSoundBuffer8_SetPitch (4627)
+	CMcpxBuffer_GetStatus (4721)
+	IDirect3DDevice8_CreateIndexBuffer (5558)
+	IDirect3DDevice8_CreateIndexBuffer2 (5558)
+	IDirect3DDevice8_SetVerticalBlankCallback (5233)
+
+- The TechCertGame works again, but freezes ingame.
+
+1/6/10
+- Added the following function(s)
+	IDirect3DDevice8_SampleAlpha (5233 - 5344)
+	IDirect3DDevice8_GetVertexShaderSize (4134 - 4531)
+
+1/8/10
+- Added the following function(s)
+	CMcpxBuffer_Pause (4928 - 5344)
+	CDirectSoundBuffer_Pause (4928 - 5344)
+	IDirectSoundBuffer8_Pause (4928 - 5344)
+	CreateSemaphore (5558) (*)
+	ReleaseSemaphore (5558) (*)
+	IDirect3D8_GetAdapterModeCount (4721 - 5558)
+	IDirect3D8_EnumAdapterModes (4721 - 5558)
+	IDirect3DDevice8_SetverticalBlankCallback (5558)
+	IDirect3DDevice8_SetSwapCallback (5558)
+	IDirect3DDevice8_GetGammaRamp (5558 - 5659?)
+	IDirect3DDevice8_SetRenderState_TextureFactor (5558)
+	IDirect3DDevice8_SetRenderState_VertexBlend (5558)	
+
+- Created new function EmuXB2PC_D3DMultisampleFormat(DWORD Type) in convert.cpp
+- Fixed a bug in IDirect3D8_CheckMultiSampleDeviceType, actually use PCSurfaceFormat
+  flag instead of actual parameter!
+
+(*) Yes they are high level, but it fixes some problems with Metal Arms (5558)
+
+1/15/10
+- Added the following function(s)
+	IDirect3DDevice8_DrawVertices (3925) [3911]
+	IDirect3DDevice8_DrawVerticesUP (3925) [3911]
+	IDirect3DDevice8_DrawIndexedVerticesUP (3925) [3911]
+	CMcpxAPU::Set3dDopplerFactor (3936) [3911]
+	CDirectSound::SetDopplerFactor (3936) [3911]
+	IDirectSound8_SetDopplerFactor (3936) [3911]
+	IDirect3DDevice8_GetDisplayMode (3925) [3911]
+	XGIsSwizzledFormat (3911)
+	XGSizzleRect (3911)
+	XGUnswizzleRect (3911)
+	XGSwizzleBox (3911)
+	XGWriteSurfaceOrTextureToXPR (3911)
+
+- Added the following kernel function(s)
+	IoDismountVolumeByName
+	HalReadSMCTrayState
+
+- Added XG.1.0.3911.h/inl (it's about damn time!)
+
+1/16/09
+- Added the folliwing function(s)
+	IDirect3DDevice8_SetTextureState_BumpEnv (3925) [3911]
+	IDirect3DDevice8_SetTextureState_ColorKeyColor (3925) [3911]
+	IDirect3DDevice8_SetVertexData4s (3925) [3911]
+	IDirect3D8_SetPushBufferSize (3925) [3911]
+	CSensaura3d::GetFullHRTFFilterPair (3936) [3911]
+	DirectSoundUseFullHRTF (3936) [3911]
+	CDirectSound::GetCaps (3936) [3911]
+	IDirectSound8_GetCaps (3936) [3911]
+
+1/22/09
+- Added the following function(s)
+	timeSetEvent (4627 & 4721)
+	timeKillEvent (4627 & 4721)
+	CDirectSoundVoice::SetConeAngles (3936) [3911]
+	DirectSoundEnterCriticalSection (3936) [3911]
+	CDirectSoundBuffer::PlayEx (3936) [3911]
+	IDirectSoundBuffer8_PlayEx (3936) [3911]
+	DirectSoundUseFullHRTF (3936) [3911]
+	RaiseException (4627 - 4928)
+
+1/23/10
+- Added the following function(s)
+	D3D_AllocContiguousMemory (3925) [3911] (*)
+	IDirect3DResource8_GetType (3925) [3911] (*)
+
+(*) Cxbx doesn't crash without this signature...
+(**) Just for testing purposes.  You can remove it if you want/need.
+
+1/24/10
+- Added the following function(s)
+	IDirect3DDevice8_SetRenderState_Deferred (3925) [3911] (*)
+	IDirect3DDevice8_SetLight (3925) [3911]
+	IDirect3DDevice8_LightEnable (3925) [3911]
+	IDirect3DDevice8_CreateVertexShader (3925) [3911]
+	IDirect3DDevice8_SetRenderTarget (3948) [3911]
+
+(*) This can/should be removed once the detection of 3911's D3DDeferredRenderState
+is properly located.
+
+- Fixed the ordering problem with Deferred Texture States in 3911.
+- TODO: Compensate the difference in modified vertex shader constants.
+
+1/25/10
+- Added the following function(s)
+	IDirect3DSurface8_GetDesc (3925) [3911]
+	IDirectSound8_AddRef (3936) / [3911] - 4242
+	DirectSoundGetSampleTime (3936) [3911]
+	IDirectSoundBuffer8_AddRef (3936) [3911] - 4627
+
+- Moved the following function(s)
+	IDirectSound8_AddRef (4361 -> 3936)
+	IDirectSoundBuffer8_AddRef (4627 -> 3936)
+
+- Fix some bugs in EmuDirectSoundBufferCreate.  DSBCAPS_MIXIN,_FXIN AND _FXIN2 
+  were getting by the "AcceptableMask" undetected.
+
+1/27/10
+- Added the following function(s)
+	IDirect3DDevice8_SetTile (3925) [3911]
+	CDirectSoundBuffer::SetMinDistance (3936) [3911]
+	IDirectSoundBuffer8_SetMinDistance (3936) [3911]
+	CDirectSoundBuffer::SetMaxDistance (3936) [3911]
+	IDirectSoundBuffer8_SetMaxDistance (3936) [3911]
+	IDirect3DDevice8_ApplyStateBlock (3925) [3911]
+	IDirect3DDevice8_CaptureStateBlock (3925) [3911]
+	IDirect3DDevice8_CreateStateBlock (3925) [3911]
+	IDirect3DDevice8_DeleteStateBlock (3925) [3911]
+	IDirect3DDevice8_DeletePixelShader (3925) [3911]
+	IDirectSoundBuffer8_SetMixBinVolumes (3925) [3911]
+
+_ Added the following kernel function(s)
+	KeRaiseIrqlToDpcLevel
+
+1/28/10
+- Added the following function(s)
+	QueueUserAPC (3911 - 5788)
+	GetThreadPriority (5849)
+	SetThreadPriorityBoost (5849)	
+	IDirect3DDevice8_BlockUntilVerticalBlank (5849)
+	XGetSectionHandleA (5849)
+	XLoadSectionByHandle (5949)
+	XFreeSectionByHandle (5849)
+	XGetSectionSize (5849)
+
+- Moved the following function(s)
+	QueueUserAPC (5849 -> 3911)
+
+- Fixed the problem with QueueUserAPC, it works now.  Had to set the
+  right permisions for it to work on windows.
+- Made another signature for CMcpxBuffer::GetCurrentPosition (3911). The original
+  was off by one byte.
+
+2/4/10
+- Added the following function(s)
+	D3D::KickOffAndWaitForIdle (5344 - 5558)
+	IDirect3DDevice8_Reset (5558)
+	IDirect3DDevice8_SetGammaRamp (5455 - 5558)
+	IDirect3DDevice8_GetViewport (5558)
+	GetFileAttributesA (5558)
+	VirtualProtect (4627 - 5558) (*)
+
+(*) Probably too high level...
+
+4/9/10
+- Added new Simple Renderstates
+	D3DRS_STENCILZFAIL
+	D3DRS_STENCILPASS
+	D3DRS_STENCILFUNC
+	D3DRS_STENCILREF
+	D3DRS_STENCILMASK
+	D3DRS_STENCILWRITEMASK
+
+- Added the following function(s)
+	D3DDevice_SetModelView (3925) [3911]
+	D3DDevice_FlushVertexCache (3925) [3911]
+	D3DDevice_SetScissors (3925) [3911]
+	D3DDevice_SetVertexShaderInput (3925) [3911]
+	D3DDevice_PrimeVertexCache (3925) [3911]
+	D3DDevice_SetVertexData4ub (3925) [3911]
+	D3DDevice_SetVertexShaderConstant (3925) [3911]
+	D3DDevice_BeginPushBuffer (3925) [3911]
+	D3DDevice_EndPushBuffer (3925) [3911]
+	D3DDevice_SetRenderState_RopZCmpAlwaysRead (3925) [3911]
+	D3DDevice_SetRenderState_RopZRead (3925) [3911] (*)
+	D3DDevice_SetRenderState_DoNotCullUncompressed (3925) [3911] (*)
+
+(*) Not yet verified.  Signatures are right, but XRefs probably aren't.
+
+4/10/10
+- Added a new fix for Halo in EmuFlushIVB(). Use g_IVBFVF when the current FVF is 0.
+- Added the following function(s)
+	D3D::SetFence (XRef) (3925) [3911]
+	D3DDevice_InsertFence (3925) [3911]
+	D3DDevice_LoadVertexShaderProgram (3925) [3911]
+	D3DDevice_RunPushBuffer (3925) [3911]
+	IDirectSoundBuffer8_Play (3936) [3911] (Fixed)
+
+- Azurik: Rize of Perathia now goes ingame!
+
+4/11/10
+- Fixed a minor bug with the deferred texture state (D3DTSS_MAGFILTER) for XDK 3911.
+- Fixed a major bug in the push buffer execution code.  The stride was not incremented 
+  for the D3DFVF_XYZ flag.  Using the position mask to find position related FVFs.
+- Robotech: Battlecry is now playable!
+
+4/13/10
+- Added the following function(s)
+	Direct3D_EnumAdapterModes (5233-5344)
+	D3DDevice_SetVerticalBlankCallback (5455)
+	D3DDevice_GetProjection
+	

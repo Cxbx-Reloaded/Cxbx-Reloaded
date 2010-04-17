@@ -84,6 +84,29 @@ SOOVPA<7> XapiInitProcess_1_0_5233 =
 };
 
 // ******************************************************************
+// * XapiInitProcess
+// ******************************************************************
+SOOVPA<8> XapiInitProcess_1_0_5344 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x22, 0x6A },
+        { 0x3E, 0x01 },
+        { 0x5E, 0x7D },
+        { 0x7E, 0x8B },
+        { 0x9F, 0x68 },
+        { 0xBE, 0x01 },
+        { 0xDE, 0x6A },
+        { 0xFE, 0x02 },
+    }
+};
+
+// ******************************************************************
 // * XInitDevices
 // ******************************************************************
 // * NOTE: We are actually intercepting USBD_Init, because
@@ -176,6 +199,27 @@ SOOVPA<7> XInputSetState_1_0_5233 =
 };
 
 // ******************************************************************
+// * XGetFileCacheSize
+// ******************************************************************
+SOOVPA<6> XGetFileCacheSize_1_0_5344 = 
+{
+    0,  // Large == 0
+    6,  // Count == 6
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x00, 0xFF },
+        { 0x01, 0x15 },
+        { 0x06, 0xC1 },
+        { 0x07, 0xE0 },
+        { 0x08, 0x0C },
+        { 0x09, 0xC3 },
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_5233
 // ******************************************************************
 OOVPATable XAPI_1_0_5233[] =
@@ -198,6 +242,16 @@ OOVPATable XAPI_1_0_5233[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXapiInitProcess"
+        #endif
+    },
+	// XapiInitProcess
+    {
+        (OOVPA*)&XapiInitProcess_1_0_5344,
+
+        XTL::EmuXapiInitProcess,
+
+        #ifdef _DEBUG_TRACE
+		"EmuXapiInitProcess (5344)"
         #endif
     },
     // GetTimeZoneInformation (* unchanged since 3911 *)
@@ -416,6 +470,34 @@ OOVPATable XAPI_1_0_5233[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXapiBootDash"
+        #endif
+    },
+	// XGetFileCacheSize
+    {
+        (OOVPA*)&XGetFileCacheSize_1_0_5344,
+        XTL::EmuXGetFileCacheSize,
+
+        #ifdef _DEBUG_TRACE
+        "XGetFileCacheSize"
+        #endif
+	},
+	// QueueUserAPC (* unchanged since 3911 *)
+	{ 
+		(OOVPA*)&QueueUserAPC_1_0_3911,
+
+		XTL::EmuQueueUserAPC,
+			
+		#ifdef _DEBUG_TRACE
+		"EmuQueueUserAPC"
+		#endif
+	},
+	// VirtualProtect (* unchanged since 4627 *)
+    {
+        (OOVPA*)&VirtualProtect_1_0_4627,
+        XTL::EmuVirtualProtect,
+
+        #ifdef _DEBUG_TRACE
+        "VirtualProtect"
         #endif
     },
 };

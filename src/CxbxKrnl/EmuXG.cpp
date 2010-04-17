@@ -179,14 +179,41 @@ VOID WINAPI XTL::EmuXGSwizzleBox
            GetCurrentThreadId(), pSource, RowPitch, SlicePitch, pBox, pDest, Width, Height,
            Depth, pPoint, BytesPerPixel);
 
-    if(pBox == NULL && pPoint == NULL && RowPitch == 0 && SlicePitch == 0)
-    {
-        memcpy(pDest, pSource, Width*Height*Depth*BytesPerPixel);
-    }
-    else
-    {
-        CxbxKrnlCleanup("Temporarily unsupported swizzle (easy fix)");
-    }
+	if(pDest != (LPVOID) 0x80000000)
+	{
+		if(pBox == NULL && pPoint == NULL && RowPitch == 0 && SlicePitch == 0)
+		{
+			memcpy(pDest, pSource, Width*Height*Depth*BytesPerPixel);
+		}
+		else
+		{
+			if(pPoint != NULL && (pPoint->u != 0 || pPoint->u != 0 || pPoint->w != 0))
+				CxbxKrnlCleanup("Temporarily unsupported swizzle (very easy fix)");
+
+			DWORD dwMaxY = Height;
+			DWORD dwMaxZ = Depth;
+			DWORD dwChunkSize = Width;
+
+			uint08 *pSrc = (uint08*)pSource;
+			uint08 *pDst = (uint08*)pDest;
+
+			if(pBox != 0)
+			{
+				pSrc += pBox->Top*RowPitch;
+				pSrc += pBox->Left;
+
+				dwMaxY = pBox->Bottom - pBox->Top;
+				dwChunkSize = pBox->Right - pBox->Left;
+			}
+
+			for(DWORD y=0;y<dwMaxY;y++)
+			{
+				memcpy(pSrc, pDst, dwChunkSize);
+				pSrc += RowPitch;
+				pDst += RowPitch;
+			}
+        }
+	}
 
     EmuSwapFS();   // Xbox FS
 
@@ -298,4 +325,35 @@ VOID WINAPI XTL::EmuXGUnswizzleRect
         }
         dwW = (dwW - dwMaskW) & dwMaskW;
     }
+}
+
+// ******************************************************************
+// * func: EmuXGWriteSurfaceOrTextureToXPR
+// ******************************************************************
+HRESULT WINAPI XTL::EmuXGWriteSurfaceOrTextureToXPR
+( 
+	LPVOID			pResource,
+	const char*		cPath,
+	BOOL			bWriteSurfaceAsTexture
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuXGWriteSurfaceOrTextureToXPR\n"
+           "(\n"
+           "   pResource              : 0x%.08X\n"
+		   "   cPath                  : 0x%.08X\n"
+		   "   bWriteSurfaceAsTexture : 0x%.08X\n"
+		   ");\n",
+		   GetCurrentThreadId(), pResource, cPath, bWriteSurfaceAsTexture);
+
+	// TODO: If necessary, either reverse the .xbx and .xpr file formats
+	// and write the surface/texture to a file, or output a generic .xbx
+	// file and be done with it.
+
+	EmuWarning("(Temporarily) ignoring EmuXGWriteSurfaceOrTextureToXPR. Need file specs.");
+
+	EmuSwapFS();	// Xbox FS
+
+	return S_OK;
 }

@@ -55,6 +55,9 @@ extern X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format);
 // convert from xbox to pc d3d lock flags
 extern DWORD EmuXB2PC_D3DLock(DWORD Flags);
 
+// convert from xbox to pc multisample formats
+extern D3DMULTISAMPLE_TYPE EmuXB2PC_D3DMultiSampleFormat(DWORD Type);
+
 /**
 // convert from pc to xbox texture transform state types (unnecessary so far)
 if((uint32)State < 4)
@@ -91,6 +94,24 @@ inline D3DBLENDOP EmuXB2PC_D3DBLENDOP(X_D3DBLENDOP Value)
     {
         case 0x8006:
             return D3DBLENDOP_ADD;
+		case 0x800a:
+			return D3DBLENDOP_SUBTRACT;
+		case 0x800b:
+			return D3DBLENDOP_REVSUBTRACT;
+		case 0x8007:
+			return D3DBLENDOP_MIN;
+		case 0x8008:
+			return D3DBLENDOP_MAX;
+		case 0xF006:
+			{
+				CxbxKrnlCleanup("D3DBLENDOP_ADDSIGNED is not supported!");
+				return D3DBLENDOP_ADD;
+			};
+		case 0xF005:
+			{
+				CxbxKrnlCleanup("D3DBLENDOP_REVSUBTRACTSIGNED is not supported!");
+				return D3DBLENDOP_REVSUBTRACT;
+			}
     }
 
     CxbxKrnlCleanup("Unknown D3DBLENDOP (0x%.08X)", Value);
@@ -98,7 +119,7 @@ inline D3DBLENDOP EmuXB2PC_D3DBLENDOP(X_D3DBLENDOP Value)
     return (D3DBLENDOP)Value;
 }
 
-// convert from xbox to pc blend types
+// convert from xbox to pc blend types 
 inline D3DBLEND EmuXB2PC_D3DBLEND(X_D3DBLEND Value)
 {
     if(Value < 2)
@@ -127,6 +148,35 @@ inline D3DFILLMODE EmuXB2PC_D3DFILLMODE(X_D3DFILLMODE Value)
 inline D3DSHADEMODE EmuXB2PC_D3DSHADEMODE(X_D3DSHADEMODE Value)
 {
     return (D3DSHADEMODE)((Value & 0x3) + 1);
+}
+
+// convert from xbox to pc stencilop modes
+inline D3DSTENCILOP EmuXB2PC_D3DSTENCILOP(X_D3DSTENCILOP Value)
+{
+	switch(Value)
+	{
+	case 0x1e00:
+		return D3DSTENCILOP_KEEP;
+	case 0:
+		return D3DSTENCILOP_ZERO;
+	case 0x1e01:
+		return D3DSTENCILOP_REPLACE;
+	case 0x1e02:
+		return D3DSTENCILOP_INCRSAT;
+	case 0x1e03:
+		return D3DSTENCILOP_DECRSAT;
+	case 0x150a:
+		return D3DSTENCILOP_INVERT;
+	case 0x8507:
+		return D3DSTENCILOP_INCR;
+	case 0x8508:
+		return D3DSTENCILOP_DECR;
+
+	default:
+		CxbxKrnlCleanup("Unknown D3DSTENCILOP (0x%.08X)", Value);
+	}
+
+	return (D3DSTENCILOP) Value;
 }
 
 // table used for vertex->primitive count conversion

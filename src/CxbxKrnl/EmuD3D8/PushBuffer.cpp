@@ -267,7 +267,21 @@ extern void XTL::EmuExecutePushBufferRaw
 
             if(!VshHandleIsVertexShader(dwVertexShader))
             {
-                if(dwVertexShader & D3DFVF_XYZRHW) { dwStride += sizeof(FLOAT)*4; }
+                /*if(dwVertexShader & D3DFVF_XYZRHW)	{ dwStride += sizeof(FLOAT)*4; }
+				if(dwVertexShader & D3DFVF_XYZ)		{ dwStride += sizeof(FLOAT)*3; }
+				if(dwVertexShader & D3DFVF_XYZB1)	{ dwStride += sizeof(FLOAT); }
+				if(dwVertexShader & D3DFVF_XYZB2)	{ dwStride += sizeof(FLOAT)*2; }
+				if(dwVertexShader & D3DFVF_XYZB3)	{ dwStride += sizeof(FLOAT)*3; }
+				if(dwVertexShader & D3DFVF_XYZB4)	{ dwStride += sizeof(FLOAT)*4; }*/
+
+				if((dwVertexShader & D3DFVF_POSITION_MASK) == D3DFVF_XYZRHW){ dwStride += sizeof(FLOAT)*4; }
+				if((dwVertexShader & D3DFVF_POSITION_MASK) == D3DFVF_XYZ)   { dwStride += sizeof(FLOAT)*3; }
+				if((dwVertexShader & D3DFVF_POSITION_MASK) == D3DFVF_XYZB1)	{ dwStride += sizeof(FLOAT)*4; }
+				if((dwVertexShader & D3DFVF_POSITION_MASK) == D3DFVF_XYZB2)	{ dwStride += sizeof(FLOAT)*5; }
+				if((dwVertexShader & D3DFVF_POSITION_MASK) == D3DFVF_XYZB3)	{ dwStride += sizeof(FLOAT)*6; }
+				if((dwVertexShader & D3DFVF_POSITION_MASK) == D3DFVF_XYZB4)	{ dwStride += sizeof(FLOAT)*7; }
+
+				if(dwVertexShader & D3DFVF_NORMAL)  { dwStride += sizeof(FLOAT)*3; }
                 if(dwVertexShader & D3DFVF_DIFFUSE) { dwStride += sizeof(DWORD); }
                 if(dwVertexShader & D3DFVF_SPECULAR) { dwStride += sizeof(DWORD); }
 
@@ -329,7 +343,7 @@ extern void XTL::EmuExecutePushBufferRaw
 
                 VertexPatcher VertPatch;
 
-                bool bPatched = VertPatch.Apply(&VPDesc);
+                bool bPatched = VertPatch.Apply(&VPDesc, NULL);
 
                 g_pD3DDevice8->DrawPrimitiveUP
                 (
@@ -425,7 +439,7 @@ extern void XTL::EmuExecutePushBufferRaw
 
                     VertexPatcher VertPatch;
 
-                    bool bPatched = VertPatch.Apply(&VPDesc);
+                    bool bPatched = VertPatch.Apply(&VPDesc, NULL);
 
                     g_pD3DDevice8->SetIndices(pIndexBuffer, 0);
 
@@ -588,7 +602,7 @@ extern void XTL::EmuExecutePushBufferRaw
 
                     VertexPatcher VertPatch;
 
-                    bool bPatched = VertPatch.Apply(&VPDesc);
+                    bool bPatched = VertPatch.Apply(&VPDesc, NULL);
 
                     g_pD3DDevice8->SetIndices(pIndexBuffer, 0);
 

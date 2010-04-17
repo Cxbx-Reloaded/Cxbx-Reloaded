@@ -360,6 +360,26 @@ OOVPATable XAPI_1_0_4034[] =
         "EmuSetThreadPriority"
         #endif
     },
+	// SignalObjectAndWait (* unchanged since 3911 *)
+	{
+		(OOVPA*)&SignalObjectAndWait_1_0_3911, 
+			
+		XTL::EmuSignalObjectAndWait,
+
+		#ifdef _DEBUG_TRACE
+		"EmuSignalObjectAndWait"
+		#endif
+	},
+	// QueueUserAPC (* unchanged since 3911 *)
+	{ 
+		(OOVPA*)&QueueUserAPC_1_0_3911,
+
+		XTL::EmuQueueUserAPC,
+			
+		#ifdef _DEBUG_TRACE
+		"EmuQueueUserAPC"
+		#endif
+	},
 };
 
 // ******************************************************************

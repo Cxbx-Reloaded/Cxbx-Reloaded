@@ -179,6 +179,7 @@
 				ProgramDatabaseFile=".\..\..\bin\debug/CxbxKrnl.pdb"
 				GenerateMapFile="true"
 				MapFileName=".\..\..\bin\debug/CxbxKrnl.map"
+				StackReserveSize="8000000"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 				ImportLibrary=".\..\..\bin\debug/CxbxKrnl.lib"
@@ -379,6 +380,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.5849.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.3936.h"
 					>
 				</File>
@@ -443,6 +448,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.3911.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4361.h"
 					>
 				</File>
@@ -470,12 +479,20 @@
 					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4627.h"
 					>
 				</File>
+				<File
+					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5233.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="EmuD3D8 (h)"
 				>
 				<File
 					RelativePath="..\..\src\CxbxKrnl\EmuD3D8\Convert.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\src\CxbxKrnl\EmuD3D8\PixelShader.h"
 					>
 				</File>
 				<File
@@ -1305,6 +1322,10 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.5849.inl"
+					>
+				</File>
+				<File
 					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.3936.inl"
 					>
 					<FileConfiguration
@@ -1629,6 +1650,10 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.3911.inl"
+					>
+				</File>
+				<File
 					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4361.inl"
 					>
 					<FileConfiguration
@@ -1752,6 +1777,10 @@
 					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4627.inl"
 					>
 				</File>
+				<File
+					RelativePath="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5233.inl"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="EmuD3D8 (cpp)"
@@ -1777,6 +1806,10 @@
 							PreprocessorDefinitions=""
 						/>
 					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\..\src\CxbxKrnl\EmuD3D8\PixelShader.cpp"
+					>
 				</File>
 				<File
 					RelativePath="..\..\src\CxbxKrnl\EmuD3D8\PushBuffer.cpp"

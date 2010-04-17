@@ -43,6 +43,15 @@
 
 
 // ******************************************************************
+// * XACT Interfaces
+// ******************************************************************
+struct X_XACTEngine;
+struct X_XACTWaveBank;
+struct X_XACTSoundBank;
+struct X_XACTSoundSource;
+struct X_XACTSoundCue;
+
+// ******************************************************************
 // * X_XACT_RUNTIME_PARAMETERS
 // ******************************************************************
 struct X_XACT_RUNTIME_PARAMETERS 
@@ -63,6 +72,32 @@ struct X_XACT_WAVEBANK_STREAMING_PARAMETERS
     DWORD                       dwOffset;                       // offset within file of wavebank header
     DWORD                       dwPacketSizeInMilliSecs;        // stream packet size to use for each stream (in ms)
 };
+
+// ******************************************************************
+// * X_XACT_NOTIFICATION_DESCRIPTION
+// ******************************************************************
+struct X_XACT_NOTIFICATION_DESCRIPTION
+{
+    WORD				wType;
+    WORD				wFlags;
+    X_XACTSoundBank*	pSoundBank;
+    X_XACTWaveBank*		pWaveBank;
+    DWORD				dwSoundCueIndex;
+    X_XACTSoundCue*		pSoundCue;
+    PVOID				pvContext;
+    HANDLE				hEvent;
+};
+
+typedef const X_XACT_NOTIFICATION_DESCRIPTION *PCXACT_NOTIFICATION_DESCRIPTION;
+
+//struct X_XACT_NOTIFICATION
+//{
+//    X_XACT_NOTIFICATION_DESCRIPTION Header;
+//    X_XACT_NOTIFICATION_UNION Data;
+//    REFERENCE_TIME rtTimeStamp;
+//};
+//
+//typedef const X_XACT_NOTIFICATION *PXACT_NOTIFICATION;
 
 // ******************************************************************
 // * X_XACTEngine
@@ -287,6 +322,34 @@ HRESULT WINAPI EmuIXACTSoundSource_SetVelocity
     FLOAT				y,
     FLOAT				z,
     DWORD				dwApply
+);
+
+// ******************************************************************
+// * EmuIXACTEngine_RegisterNotification
+// ******************************************************************
+HRESULT WINAPI EmuIXACTEngine_RegisterNotification
+(
+	X_XACTEngine*					pThis,
+    PCXACT_NOTIFICATION_DESCRIPTION pNotificationDesc
+);
+
+// ******************************************************************
+// * EmuIXACTEngine_GetNotification
+// ******************************************************************
+HRESULT WINAPI EmuIXACTEngine_GetNotification
+(
+	X_XACTEngine*					pThis,
+    PCXACT_NOTIFICATION_DESCRIPTION pNotificationDesc,
+    LPVOID						    pNotification
+);
+
+// ******************************************************************
+// * EmuIXACTEngine_UnRegisterWaveBank
+// ******************************************************************
+HRESULT WINAPI EmuIXACTEngine_UnRegisterWaveBank
+(
+	X_XACTEngine*	pThis,
+    X_XACTWaveBank*	pWaveBank
 );
 
 #endif

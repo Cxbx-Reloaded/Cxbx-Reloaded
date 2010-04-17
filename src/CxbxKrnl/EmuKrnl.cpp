@@ -75,7 +75,8 @@ typedef struct _PCSTProxyParam
 PCSTProxyParam;
 
 // Global Variable(s)
-extern PVOID g_pfnThreadNotification = NULL;
+extern PVOID g_pfnThreadNotification[16] = { NULL };
+extern int g_iThreadNotificationCount = 0;
 
 // PsCreateSystemThread proxy procedure
 #pragma warning(push)
@@ -108,17 +109,24 @@ static unsigned int WINAPI PCSTProxy
     EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
 
     // call thread notification routine(s)
-    if(g_pfnThreadNotification != 0)
+    if(g_iThreadNotificationCount != 0)
     {
-        XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification;
+		for(int i = 0; i < 16; i++ )
+		{
+			XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification[i];
 
-        DbgPrintf("EmKrnl (0x%X): Calling pfnNotificationRoutine (0x%.08X)\n", GetCurrentThreadId(), pfnNotificationRoutine);
+			// If the routine doesn't exist, don't execute it!
+			if(pfnNotificationRoutine == NULL)
+				continue;
 
-        EmuSwapFS();   // Xbox FS
+			DbgPrintf("EmKrnl (0x%X): Calling pfnNotificationRoutine[%d] (0x%.08X)\n", g_iThreadNotificationCount, GetCurrentThreadId(), pfnNotificationRoutine);
 
-        pfnNotificationRoutine(TRUE);
+			EmuSwapFS();   // Xbox FS
 
-        EmuSwapFS();   // Win2k/XP FS
+			pfnNotificationRoutine(TRUE);
+
+			EmuSwapFS();   // Win2k/XP FS
+		}
     }
 
     // use the special calling convention
@@ -148,15 +156,24 @@ callComplete:
     EmuSwapFS();    // Win2k/XP FS
 
     // call thread notification routine(s)
-    if(g_pfnThreadNotification != 0)
+    if(g_iThreadNotificationCount != 0)
     {
-        XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification;
+		for(int i = 0; i < 16; i++ )
+		{
+			XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification[i];
 
-        EmuSwapFS();   // Xbox FS
+			// If the routine doesn't exist, don't execute it!
+			if(pfnNotificationRoutine == NULL)
+				continue;
 
-        pfnNotificationRoutine(FALSE);
+			DbgPrintf("EmKrnl (0x%X): Calling pfnNotificationRoutine[%d] (0x%.08X)\n", g_iThreadNotificationCount, GetCurrentThreadId(), pfnNotificationRoutine);
 
-        EmuSwapFS();   // Win2k/XP FS
+			EmuSwapFS();   // Xbox FS
+
+			pfnNotificationRoutine(FALSE);
+
+			EmuSwapFS();   // Win2k/XP FS
+		}
     }
 
     CxbxKrnlTerminateThread();
@@ -181,6 +198,37 @@ XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress()
 	EmuSwapFS();	// Xbox FS
 
 	return NULL;
+}
+
+// ******************************************************************
+// * 0x0009 HalReadSMCTrayState
+// ******************************************************************
+XBSYSAPI EXPORTNUM(9) VOID NTAPI xboxkrnl::HalReadSMCTrayState
+(
+	DWORD*	State,
+	DWORD*	Count
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+	
+	DbgPrintf("EmuKrnl (0x%X): HalReadSMCTrayState\n"
+           "(\n"
+           "   State              : 0x%.08X\n"
+		   "   Count              : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), State, Count);
+
+#define TRAY_CLOSED_MEDIA_PRESENT 96
+#define TRAY_CLOSED_NO_MEDIA 64
+#define TRAY_OPEN 16
+
+	// TODO: Make this configurable?
+	// TODO: What is the count parameter for??
+
+	*State = TRAY_CLOSED_NO_MEDIA;
+//	*Count = 1;
+
+	EmuSwapFS();	// Xbox FS
 }
 
 // ******************************************************************
@@ -502,6 +550,51 @@ XBSYSAPI EXPORTNUM(69) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDeleteSymbolicLink
 }
 
 // ******************************************************************
+// * IoDismountVolumeByName
+// ******************************************************************
+XBSYSAPI EXPORTNUM(91) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDismountVolumeByName
+(
+	IN PSTRING VolumeName
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuKrnl (0x%X): IoDismountVolumeByName\n"
+			"(\n"
+			"   VolumeName        : 0x%.08X (%s)\n"
+			");\n",
+			GetCurrentThreadId(), VolumeName, VolumeName);
+
+	// TODO: Anything?
+	NTSTATUS ret = STATUS_SUCCESS;
+
+	EmuSwapFS();	// Xbox FS
+
+	return ret;
+}
+
+// ******************************************************************
+// * KeBugCheck
+// ******************************************************************
+XBSYSAPI EXPORTNUM(95) VOID NTAPI xboxkrnl::KeBugCheck
+(
+	IN ULONG BugCheckMode
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuKrnl (0x%X): KeBugCheck\n"
+			"(\n"
+			"   BugCheckMode      : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), BugCheckMode);
+
+	// TODO: Investigate XapiFiberStartup maybe?
+
+	EmuSwapFS();	// Xbox FS
+}
+
+// ******************************************************************
 // * 0x0063 - KeDelayExecutionThread
 // ******************************************************************
 XBSYSAPI EXPORTNUM(99) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeDelayExecutionThread
@@ -660,6 +753,22 @@ XBSYSAPI EXPORTNUM(128) VOID NTAPI xboxkrnl::KeQuerySystemTime
 }
 
 // ******************************************************************
+// * KeRaiseIrqlToDpcLevel
+// ******************************************************************
+XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): KeRaiseIrqlToDpcLevel()\n", GetCurrentThreadId());
+
+	// I really tried to avoid adding this...
+
+	EmuSwapFS();
+
+	return 0;
+}
+
+// ******************************************************************
 // * 0x0095 - KeSetTimer
 // ******************************************************************
 XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
@@ -680,7 +789,8 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
            GetCurrentThreadId(), Timer, DueTime, Dpc);
 
     // Call KeSetTimerEx
-    KeSetTimerEx(Timer, DueTime, 0, Dpc);
+//    KeSetTimerEx(Timer, DueTime, 0, Dpc);
+	CxbxKrnlCleanup("KeSetTimer is not implemented!");
 
     EmuSwapFS();   // Xbox FS
 
@@ -1365,6 +1475,17 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
             DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
             DbgPrintf("  New:\"$XbePath\\%s\"\n", szBuffer);
         }
+		// Going to map Y:\ to current directory as well (dashboard test, 3944)
+        else if( (szBuffer[0] == 'Y' || szBuffer[0] == 'y') && szBuffer[1] == ':' && szBuffer[2] == '\\')
+        {
+            szBuffer += 3;
+
+            ObjectAttributes->RootDirectory = g_hCurDir;
+
+            DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
+            DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+            DbgPrintf("  New:\"$XbePath\\%s\"\n", szBuffer);
+        }
         else if( (szBuffer[0] == 'T' || szBuffer[0] == 't') && szBuffer[1] == ':' && szBuffer[2] == '\\')
         {
             szBuffer += 3;
@@ -1749,7 +1870,7 @@ XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
 {
 	EmuSwapFS();	// Win2k/XP FS
 
-	DbgPrintf("EmuKrnl (0x%X): NtQueryDirectoryFile\n"
+	DbgPrintf("EmuKrnl (0x%X): NtQueueApcThread\n"
            "(\n"
            "   ThreadHandle         : 0x%.08X\n"
            "   ApcRoutine           : 0x%.08X\n"
@@ -1902,6 +2023,9 @@ XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributes
 
     NTSTATUS ret = NtDll::NtQueryFullAttributesFile(&NtObjAttr, Attributes);
 
+	if(FAILED(ret))
+		EmuWarning("NtQueryFullAttributesFile failed! (0x%.08X)\n", ret);
+
     EmuSwapFS();   // Xbox FS
 
     return ret;
@@ -1931,6 +2055,9 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
            ");\n",
            GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation,
            Length, FileInfo);
+
+	// TODO: IIRC, this function is depreciated.  Maybe we should just use
+	// ZwQueryInformationFile instead?
 
 //    if(FileInfo != FilePositionInformation && FileInfo != FileNetworkOpenInformation)
 //        CxbxKrnlCleanup("Unknown FILE_INFORMATION_CLASS 0x%.08X", FileInfo);
@@ -1966,7 +2093,7 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
     }
 
     if(FAILED(ret))
-        EmuWarning("NtQueryInformationFile failed!");
+        EmuWarning("NtQueryInformationFile failed! (0x%.08X)", ret);
 
     EmuSwapFS();   // Xbox FS
 
@@ -2526,6 +2653,8 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
            GetCurrentThreadId(), ThreadHandle, ThreadExtraSize, KernelStackSize, TlsDataSize, ThreadId,
            StartContext1, StartContext2, CreateSuspended, DebugStack, StartRoutine);
 
+	static bool bFirstTime = false;
+
     // create thread, using our special proxy technique
     {
         DWORD dwThreadId;
@@ -2579,15 +2708,24 @@ XBSYSAPI EXPORTNUM(258) VOID NTAPI xboxkrnl::PsTerminateSystemThread(IN NTSTATUS
            GetCurrentThreadId(), ExitStatus);
 
     // call thread notification routine(s)
-    if(g_pfnThreadNotification != 0)
+    if(g_iThreadNotificationCount != 0)
     {
-        XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification;
+		for(int i = 0; i < 16; i++ )
+		{
+			XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification[i];
 
-        EmuSwapFS();   // Xbox FS
+			// If the routine doesn't exist, don't execute it!
+			if(pfnNotificationRoutine == NULL)
+				continue;
 
-        pfnNotificationRoutine(FALSE);
+			DbgPrintf("EmKrnl (0x%X): Calling pfnNotificationRoutine[%d] (0x%.08X)\n", g_iThreadNotificationCount, GetCurrentThreadId(), pfnNotificationRoutine);
 
-        EmuSwapFS();   // Win2k/XP FS
+			EmuSwapFS();   // Xbox FS
+
+			pfnNotificationRoutine(FALSE);
+
+			EmuSwapFS();   // Win2k/XP FS
+		}
     }
 
 //    CxbxKrnlTerminateThread();
@@ -2677,7 +2815,7 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
     //printf("CriticalSection->LockCount : %d\n", CriticalSection->LockCount);
 
     // This seems redundant, but xbox software doesn't always do it
-    //if(CriticalSection->LockCount == -1)
+    if(CriticalSection->LockCount == -1)
         NtDll::RtlInitializeCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
 
     NtDll::RtlEnterCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);

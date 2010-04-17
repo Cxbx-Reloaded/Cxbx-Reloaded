@@ -47,6 +47,7 @@ typedef DWORD X_D3DBLEND;
 typedef DWORD X_D3DCMPFUNC;
 typedef DWORD X_D3DFILLMODE;
 typedef DWORD X_D3DSHADEMODE;
+typedef DWORD X_D3DSTENCILOP;
 typedef DWORD X_D3DTEXTURESTAGESTATETYPE;
 typedef PVOID X_D3DCALLBACK;
 
@@ -403,8 +404,21 @@ typedef struct _D3DVBLANKDATA
 }
 D3DVBLANKDATA;
 
+typedef struct _D3DSWAPDATA 
+{
+    DWORD           Swap;
+    DWORD           SwapVBlank;
+    DWORD           MissedVBlanks;
+    DWORD           TimeUntilSwapVBlank;
+    DWORD           TimeBetweenSwapVBlanks;
+} 
+D3DSWAPDATA;
+
 // D3DVBLANKCALLBACK
 typedef void (__cdecl * D3DVBLANKCALLBACK)(D3DVBLANKDATA *pData);
+
+// D3DSWAPCALLBACK
+typedef void (__cdecl * D3DSWAPCALLBACK)(D3DSWAPDATA *pData);
 
 // deferred render state "unknown" flag
 #define X_D3DRS_UNK  0x7fffffff

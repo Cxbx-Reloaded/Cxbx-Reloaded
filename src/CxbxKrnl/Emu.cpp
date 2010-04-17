@@ -78,6 +78,9 @@ volatile bool    g_bPrintfOn = true;
 // global exception patching address
 uint32 g_HaloHack[4] = {0};
 
+// Dead to Rights hack
+uint32 g_DeadToRightsHack[2] = {0};
+
 // Static Function(s)
 static int ExitException(LPEXCEPTION_POINTERS e);
 
@@ -155,9 +158,19 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
         if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
         {
             // Halo Access Adjust 1
-            if(e->ContextRecord->Eip == 0x0003394C)
+            if(e->ContextRecord->Eip == 0x0003394C || e->ContextRecord->Eip == 0x0003387C)
             {
-                if(e->ContextRecord->Ecx == 0x803BD800)
+				// blueshogun96 4/10/2010
+				// Quite frankly, I don't know how Caustik came up with this hack.
+				// A similar situation comes up prior to going ingame almost immediately
+				// after the menus.  The hack wasn't applied because the register values
+				// were different, but the situation looks the same.  Also, I don't know
+				// where the 0x803A6000 came from in the first hack.  Is this accomodating
+				// for size??  Or does this need to stay constant.  More information is
+				// welcome!
+
+                if(e->ContextRecord->Ecx == 0x803BD800 || e->ContextRecord->Ecx == 0x803E853C || 
+				   e->ContextRecord->Ecx == 0x813B5018)
                 {
                     // Halo BINK skip
                     {
@@ -294,31 +307,18 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
 
 			return EXCEPTION_CONTINUE_EXECUTION;
 		}
+
+		if(e->ContextRecord->Eip == 0x1197F4)
+		{
+			e->ContextRecord->Eip += 2;
+
+			DbgPrintf("EmuMain (0x%X): House of the Dead hack 2 applied!\n", GetCurrentThreadId());
+
+			g_bEmuException = false;
+
+			return EXCEPTION_CONTINUE_EXECUTION;
+		}
 	}
-
-	// Unreal Championship *NTSC*
-	//if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
-	//{
-	//	// Unknown NVIDIA Soundstorm APU register
-	//	// mov eax, ds:0xFE80200C
-	//	if(e->ContextRecord->Eip == 0x2C8E78 )
-	//	{
-	//		// Set EAX to zero
-	//		//e->ContextRecord->Eax = 0;
-	//		// Skip this instruction
-	//		e->ContextRecord->Eip += 5;
-	//		*((DWORD*) 0x2C8E79) = 0x00;
-	//		*((DWORD*) 0x2C8E7A) = 0x00;
-	//		*((DWORD*) 0x2C8E7B) = 0x00;
-	//		*((DWORD*) 0x2C8E7C) = 0x00;
-
-	//		DbgPrintf("EmuMain (0x%X): Unreal Championship hack 1 applied!\n", GetCurrentThreadId());
-
-	//		g_bEmuException = false;
-
-	//		return EXCEPTION_CONTINUE_EXECUTION;
-	//	}
-	//}
 
 	// Zapper *NTSC*
 	if(e->ExceptionRecord->ExceptionCode == 0xC0000096)
@@ -342,7 +342,7 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
 	{
 		if(e->ContextRecord->Eip == 0x4ED70)
 		{
-			// Zapper WBINVD skip
+			// WBINVD skip
             e->ContextRecord->Eip += 2;
 
             DbgPrintf("EmuMain (0x%X): Fusion Frenzy hack 1 was applied!\n", GetCurrentThreadId());
@@ -384,6 +384,19 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
 
             return EXCEPTION_CONTINUE_EXECUTION;
         }
+
+		if(e->ContextRecord->Eip == 0xB2EFB || e->ContextRecord->Eip == (0xB2EFB + 3) ||
+		   e->ContextRecord->Eip == (0xB2EFB + 6) || e->ContextRecord->Eip == (0xB2EFB + 9))
+		{
+			// mov [eax-0xX], edi
+            e->ContextRecord->Eip += 3;
+
+            DbgPrintf("EmuMain (0x%X): Phantom Crash hack 2 was applied!\n", GetCurrentThreadId());
+
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
     }
 
 	// Blood Rayne *NTSC*
@@ -401,6 +414,254 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
             return EXCEPTION_CONTINUE_EXECUTION;
         }
     }
+	else if(e->ExceptionRecord->ExceptionCode == 0x80000003)
+    {
+		if(e->ContextRecord->Eip == 0xDF138)
+		{
+			// int 3
+			e->ContextRecord->Eip++;
+
+			DbgPrintf("EmuMain (0x%X): Blood Rayne hack 2 was applied!\n", GetCurrentThreadId());
+			
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+    }
+
+	// JetSetRadio Future *NTSC*
+	if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
+	{
+		if(e->ContextRecord->Eip == 0x48226)
+		{
+			// mov edx, [eax]
+            e->ContextRecord->Eip += 2;
+
+            DbgPrintf("EmuMain (0x%X): JetSetRadio Future hack 1 was applied!\n", GetCurrentThreadId());
+
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+
+		if(e->ContextRecord->Eip == 0x48233)
+		{
+			// call dword ptr [edx+0x10]
+            e->ContextRecord->Eip += 3;
+
+            DbgPrintf("EmuMain (0x%X): JetSetRadio Future hack 2 was applied!\n", GetCurrentThreadId());
+
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+		if(e->ContextRecord->Eip == 0x47448)
+		{
+			// mov edx, [ecx]
+			// push ecx
+			// call dword ptr [edx+0x0C]
+            e->ContextRecord->Eip += 6;
+
+            DbgPrintf("EmuMain (0x%X): JetSetRadio Future hack 3 was applied!\n", GetCurrentThreadId());
+
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+
+		//if(e->ContextRecord->Eip == 0x48233)
+		//{
+		//	// call dword ptr [edx+0x10]
+  //          e->ContextRecord->Eip += 3;
+
+  //          DbgPrintf("EmuMain (0x%X): JetSetRadio Future hack 2 was applied!\n", GetCurrentThreadId());
+
+  //          g_bEmuException = false;
+
+  //          return EXCEPTION_CONTINUE_EXECUTION;
+  //      }
+    }
+
+	// Unreal Championship *NTSC*
+	if(e->ExceptionRecord->ExceptionCode == 0xC0000096)
+	{
+		if(e->ContextRecord->Eip == 0x4DD40)
+		{
+			// WBINVD skip
+            e->ContextRecord->Eip += 2;
+
+            DbgPrintf("EmuMain (0x%X): Unreal Championship Hack 1 was applied!\n", GetCurrentThreadId());
+
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+	}
+	else if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
+	{
+		if(e->ContextRecord->Eip == 0x6E94B)
+		{
+			// mov ecx, [eax+4]
+			e->ContextRecord->Eip += 3;
+
+            DbgPrintf("EmuMain (0x%X): Unreal Championship Hack 2 was applied!\n", GetCurrentThreadId());
+
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+		if(e->ContextRecord->Eip == 0x6E954)
+		{
+			// mov [eax+4], ecx
+			e->ContextRecord->Eip += 3;
+
+            DbgPrintf("EmuMain (0x%X): Unreal Championship Hack 3 was applied!\n", GetCurrentThreadId());
+
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+    }
+
+	// Frogger Beyond *NTSC*
+	if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
+	{
+		if(e->ContextRecord->Eip == 0x19F9D0)
+		{
+			// 
+            e->ContextRecord->Eip += 3;
+
+            DbgPrintf("EmuMain (0x%X): Frogger Beyond Hack 1 was applied!\n", GetCurrentThreadId());
+
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+	}
+
+	// Rayman Arena *NTSC*
+	if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
+	{
+		if(e->ContextRecord->Eip == 0x18B40C)
+		{
+			// call dword ptr [ecx+4]
+            e->ContextRecord->Eip += 3;
+
+            DbgPrintf("EmuMain (0x%X): Rayman Arena Hack 1 was applied!\n", GetCurrentThreadId());
+
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+	}
+
+	// Dead to Rights (Region shouldn't matter)
+	/*if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
+	{
+		if(g_DeadToRightsHack[0])
+		{
+			DbgPrintf("EmuMain (0x%X): Dead to Rights Hack 1 was applied!\n", GetCurrentThreadId());
+
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+	}*/
+
+	/* Metal Gear Solid II (NTSC) */
+	if(e->ExceptionRecord->ExceptionCode == 0xC0000096)
+	{
+		if(e->ContextRecord->Eip == 0x4E2A0D)
+		{
+			// WBINVD skip
+            e->ContextRecord->Eip += 2;
+
+            DbgPrintf("EmuMain (0x%X): Metal Gear Solid II Hack 1 was applied!\n", GetCurrentThreadId());
+
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+	}
+
+	// Soul Calibur II
+	if(e->ExceptionRecord->ExceptionCode == 0xC0000096)
+	{
+		if(e->ContextRecord->Eip == 0x25452)
+		{
+			// WBINVD skip
+            e->ContextRecord->Eip += 2;
+
+            DbgPrintf("EmuMain (0x%X): Soul Calibur II Hack 1 was applied!\n", GetCurrentThreadId());
+
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+	}
+
+	/* Munch Trial(NTSC)*/
+	if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
+	{
+		if(e->ContextRecord->Eip == 0x254D96)
+		{
+			// rep movsd
+            e->ContextRecord->Eip += 2;
+
+            DbgPrintf("EmuMain (0x%X): Munch Trial hack 1 was applied!\n", GetCurrentThreadId());
+
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+	}
+
+	if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
+	{
+		if(e->ContextRecord->Eip == 0x346B4)
+		{
+			// cmp dword ptr [eax+0x208], 0
+            e->ContextRecord->Eip += 7;
+
+            DbgPrintf("EmuMain (0x%X): Xbox Dashboard (3944) hack 1 was applied!\n", GetCurrentThreadId());
+
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+	}
+
+	// Splinter Cell
+	if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
+	{
+		if(e->ContextRecord->Eip == 0x1421A)
+		{
+			// mov ecx, [eax+4]
+            e->ContextRecord->Eip += 3;
+
+            DbgPrintf("EmuMain (0x%X): Splinter Cell hack 1 was applied!\n", GetCurrentThreadId());
+
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+	}
+
+	// Metal Slug 3
+	if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
+	{
+		if(e->ContextRecord->Eip == 0x1B59BC)
+		{
+			// mov [ecx+0x28], eax
+            e->ContextRecord->Eip += 3;
+
+            DbgPrintf("EmuMain (0x%X): Metal Slug 3 hack 1 was applied!\n", GetCurrentThreadId());
+
+            g_bEmuException = false;
+
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
+	}
 
     // print debug information
     {

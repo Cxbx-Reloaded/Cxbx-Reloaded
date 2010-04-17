@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuXTL.h
+// *   Cxbx->Win32->CxbxKrnl->XOnline.1.0.5233.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,32 +31,12 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUXTL_H
-#define EMUXTL_H
+#ifndef XONLINE_1_0_5233_H
+#define XONLINE_1_0_5233_H
 
-namespace XTL
-{
-    #include "EmuXapi.h"
-    #include "EmuD3D8.h"
-    #include "EmuD3D8\Convert.h"
-    #include "EmuD3D8\VertexBuffer.h"
-    #include "EmuD3D8\PushBuffer.h"
-    #include "EmuD3D8\VertexShader.h"
-	#include "EmuD3D8\PixelShader.h"
-    #include "EmuD3D8\State.h"
-    #include "EmuDInput.h"
-    #include "EmuDSound.h"
-//	#include "EmuXBAudio\XboxAdpcm.h"
-//	#include "EmuXBAudio\XSoundBank.h"
-//	#include "EmuXBAudio\XWaveBank.h"
-    #include "EmuXOnline.h"
-    #include "EmuXG.h"
-	#include "EmuXactEng.h"
-}
+#include "OOVPA.h"
 
-extern XTL::LPDIRECT3DDEVICE8   g_pD3DDevice8;
-extern DWORD                    g_CurrentVertexShader;
-extern BOOL                     g_bFakePixelShaderLoaded;
-extern BOOL                     g_bIsFauxFullscreen;
+extern OOVPATable XOnline_1_0_5233[];
+extern uint32     XOnline_1_0_5233_SIZE;
 
 #endif

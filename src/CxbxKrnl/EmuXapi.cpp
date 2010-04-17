@@ -54,6 +54,10 @@ extern SectionList* g_pSectionList;
 // Number of sections
 extern int g_NumSections;
 
+bool g_bXLaunchNewImageCalled = false;
+bool g_bXInputOpenCalled = false;
+
+
 // ******************************************************************
 // * prevent name collisions
 // ******************************************************************
@@ -63,6 +67,13 @@ namespace NtDll
 };
 
 #include "EmuXTL.h"
+
+
+XTL::POLLING_PARAMETERS_HANDLE g_pph;
+XTL::XINPUT_POLLING_PARAMETERS g_pp;
+
+// Saved launch data
+XTL::LAUNCH_DATA g_SavedLaunchData;
 
 // ******************************************************************
 // * func: EmuXapiApplyKernelPatches
@@ -184,18 +195,21 @@ PVOID WINAPI XTL::EmuRtlAllocateHeap
 
     PVOID pRet = CxbxRtlAlloc(hHeap, dwFlags, dwBytes+0x20);
 
-    offs = (BYTE)(RoundUp((uint32)pRet, 0x20) - (uint32)pRet);
+	if( pRet )
+	{
+		offs = (BYTE)(RoundUp((uint32)pRet, 0x20) - (uint32)pRet);
 
-    if(offs == 0)
-    {
-        offs = 0x20;
-    }
+		if(offs == 0)
+		{
+			offs = 0x20;
+		}
 
-    pRet = (PVOID)((uint32)pRet + offs);
+		pRet = (PVOID)((uint32)pRet + offs);
 
-    *(BYTE*)((uint32)pRet - 1) = offs;
+		*(BYTE*)((uint32)pRet - 1) = offs;
 
-    DbgPrintf("pRet : 0x%.08X\n", pRet);
+		DbgPrintf("pRet : 0x%.08X\n", pRet);
+	}
 
     EmuSwapFS();   // XBox FS
 
@@ -528,11 +542,11 @@ HANDLE WINAPI XTL::EmuXInputOpen
     {
         if(g_hInputHandle[dwPort] == 0)
         {
-            pph = new POLLING_PARAMETERS_HANDLE();
+            pph = (POLLING_PARAMETERS_HANDLE*) &g_pph;	// new POLLING_PARAMETERS_HANDLE();
 
             if(pPollingParameters != NULL)
             {
-                pph->pPollingParameters = new XINPUT_POLLING_PARAMETERS();
+                pph->pPollingParameters = (XINPUT_POLLING_PARAMETERS*) &g_pp; // new XINPUT_POLLING_PARAMETERS();
 
                 memcpy(pph->pPollingParameters, pPollingParameters, sizeof(XINPUT_POLLING_PARAMETERS));
             }
@@ -551,7 +565,7 @@ HANDLE WINAPI XTL::EmuXInputOpen
             {
                 if(pph->pPollingParameters == 0)
                 {
-                    pph->pPollingParameters = new XINPUT_POLLING_PARAMETERS();
+                    pph->pPollingParameters = (XINPUT_POLLING_PARAMETERS*) &g_pp; // new XINPUT_POLLING_PARAMETERS();
                 }
 
                 memcpy(pph->pPollingParameters, pPollingParameters, sizeof(XINPUT_POLLING_PARAMETERS));
@@ -560,7 +574,7 @@ HANDLE WINAPI XTL::EmuXInputOpen
             {
                 if(pph->pPollingParameters != 0)
                 {
-                    delete pph->pPollingParameters;
+                    //delete pph->pPollingParameters;
 
                     pph->pPollingParameters = 0;
                 }
@@ -569,6 +583,8 @@ HANDLE WINAPI XTL::EmuXInputOpen
 
         pph->dwPort = dwPort;
     }
+
+	g_bXInputOpenCalled = true;
 
     EmuSwapFS();   // XBox FS
 
@@ -1167,15 +1183,36 @@ VOID WINAPI XTL::EmuXRegisterThreadNotifyRoutine
 
     if(fRegister)
     {
-        if(g_pfnThreadNotification != NULL)
-            CxbxKrnlCleanup("Multiple thread notification routines installed (caustik can fix this!)");
+		// I honestly don't expect this to happen, but if it does...
+        if(g_iThreadNotificationCount >= 16)
+			CxbxKrnlCleanup("Too many thread notification routines installed\n"
+							"If you're reading this message than tell blueshogun you saw it!!!");
 
-        g_pfnThreadNotification = pThreadNotification->pfnNotifyRoutine;
+		// Find an empty spot in the thread notification array
+		for(int i = 0; i < 16; i++)
+		{
+			// If we find one, then add it to the array, and break the loop so
+			// that we don't accidently register the same routine twice!
+			if(g_pfnThreadNotification[i] == NULL)
+			{
+				g_pfnThreadNotification[i] = pThreadNotification->pfnNotifyRoutine;				
+				g_iThreadNotificationCount++;
+				break;
+			}
+		}
     }
     else
     {
-        if(g_pfnThreadNotification != NULL)
-            g_pfnThreadNotification = NULL;
+		// Go through each routine and nullify the routine passed in.
+        for(int i = 0; i < 16; i++)
+		{
+			if(pThreadNotification->pfnNotifyRoutine == g_pfnThreadNotification[i])
+			{
+				g_pfnThreadNotification[i] = NULL;
+				g_iThreadNotificationCount--;
+				break;
+			}
+		}
     }
 
     EmuSwapFS();   // XBox FS
@@ -1247,88 +1284,13 @@ LPVOID WINAPI XTL::EmuXLoadSectionA
 			");\n",
 			GetCurrentThreadId(), pSectionName, pSectionName );
 
-	// Search this .xbe for the section it wants to load.
+	// TODO: Search this .xbe for the section it wants to load.
 	// If we find it, return the address of it.
-//	LPVOID pRet = NULL;
-
-	// Get the .xbe header
-	/*Xbe::Header* pXbeHeader = (Xbe::Header*) 0x00010000;
-
-	// Get the number of sections this .xbe has and the
-	// location of the section headers.
-	DWORD dwNumSections = pXbeHeader->dwSections;
-	DWORD dwSectionAddr = pXbeHeader->dwSectionHeadersAddr - pXbeHeader->dwBaseAddr;
-
-	// Get section headers.
-	Xbe::SectionHeader* pSectionHeaders = (Xbe::SectionHeader*) CxbxMalloc( sizeof( Xbe::SectionHeader ) * dwNumSections );
-
-	DWORD dwOffset = dwSectionAddr;
-
-	for( DWORD i = 0; i < dwNumSections; i++ )
-	{
-		memcpy( &pSectionHeaders[i], ((DWORD*) dwOffset), sizeof( Xbe::SectionHeader ) );
-		dwOffset += sizeof( Xbe::SectionHeader );
-	}
-
-	// Find a match to the section name
-	DWORD dwSection = -1;
-
-	for( DWORD i = 0; i < dwNumSections; i++ )
-	{
-		char szSectionName[32];
-		dwOffset = pSectionHeaders[i].dwSectionNameAddr - pXbeHeader->dwBaseAddr;
-		sprintf( szSectionName, "%s", ((DWORD*) dwOffset) );
-
-		// Do we have a match?
-		if( !strcmp( szSectionName, pSectionName ) )
-		{
-			dwSection = i;
-			break;
-		}
-	}
-
-	// If we have a match, get the raw address of this section
-	// and return a pointer to that address.
-	if( dwSection != -1 )
-	{
-		pRet = (LPVOID) pSectionHeaders[dwSection].dwRawAddr;
-	}
-
-	// Free up the memory
-	CxbxFree( pSectionHeaders );*/
-
 	LPVOID pRet = NULL;
-	/*int Section = -1;
 
-	DbgPrintf( "Sections: %d\n", g_NumSections );
-	DbgPrintf( "Section List 0x%.08X\n", g_pSectionList );
-
-	if( g_pSectionList )
-	{
-		for( int i = 0; i < (int) g_NumSections; i++ )
-		{
-			if( !strcmp( g_pSectionList[i].szSectionName, pSectionName ) )
-			{
-				Section = i;
-				break;
-			}
-		}
-
-		for( int i = 0; i < g_NumSections; i++ )
-			DbgPrintf( "Section #%d: %s\n", i, g_pSectionList[i].szSectionName );
-
-		if( Section != -1 )
-		{
-			pRet = ((LPVOID) g_pSectionList[Section].dwSectionAddr);
-		}
-
-		__asm int 3;
-	}
-	else
-	{
-		EmuWarning( "Section List not initialized!" );
-		__asm int 3;
-	}*/
+	// Xbox Dashboard (3944)
+	if(strcmp("XIPS", pSectionName)==0)
+		pRet = (void*) 0x11C000;
 
 	EmuSwapFS();	// Xbox FS
 
@@ -1375,12 +1337,36 @@ HANDLE WINAPI XTL::EmuXGetSectionHandleA
 			");\n",
 			GetCurrentThreadId(), pSectionName, pSectionName );
 
+	DWORD* pdwRet = NULL;
+
 	// TODO: Implement (if necessary)?
 //	CxbxKrnlCleanup( "XGetSectionHandleA is not implemented" );
 
+	// TODO: Save the name and address of each section contained in 
+	// this .xbe instead of adding this stuff by hand because the section
+	// address can change from one game region to the next, and some games
+	// will use the same engine and section name, so accuracy is not
+	// guarunteed.
+
+	// Metal Gear Solid II (NTSC)
+	if( !strcmp( pSectionName, "Rev24b" ) )
+	{
+		pdwRet = (DWORD*) 0x648000;
+	}
+
+	// Metal Slug 3 (NTSC)
+	if(!strcmp(pSectionName, "newpal"))
+		pdwRet = (DWORD*) 0x26C000;
+	if(!strcmp(pSectionName, "msg_font"))
+		pdwRet = (DWORD*) 0x270000;
+	if(!strcmp(pSectionName, "se_all"))
+		pdwRet = (DWORD*) 0x272000;
+	if(!strcmp(pSectionName, ".XTLID"))
+		pdwRet = (DWORD*) 0x8C5000;
+
 	EmuSwapFS();	// Xbox FS
 
-	return NULL;
+	return (LPVOID) pdwRet;
 }
 
 // ******************************************************************
@@ -1395,16 +1381,16 @@ LPVOID WINAPI XTL::EmuXLoadSectionByHandle
 
 	DbgPrintf("EmuXapi (0x%X): EmuXLoadSectionByHandle\n"
 			"(\n"
-			"   hSection           : 0x%.80X\n"
+			"   hSection           : 0x%.08X\n"
 			");\n",
 			GetCurrentThreadId(), hSection );
 
-	// TODO: Implement (if necessary)?
-//	CxbxKrnlCleanup( "XLoadSectionByHandle is not implemented" );
+	// The handle should contain the address of this section by the hack
+	// used in EmuXGetSectionHandleA.
 
 	EmuSwapFS();	// Xbox FS
 
-	return NULL;
+	return (LPVOID) hSection;
 }
 
 // ******************************************************************
@@ -1419,7 +1405,7 @@ BOOL WINAPI XTL::EmuXFreeSectionByHandle
 
 	DbgPrintf("EmuXapi (0x%X): EmuXFreeSectionByHandle\n"
 			"(\n"
-			"   hSection           : 0x%.80X\n"
+			"   hSection           : 0x%.08X\n"
 			");\n",
 			GetCurrentThreadId(), hSection );
 
@@ -1428,8 +1414,42 @@ BOOL WINAPI XTL::EmuXFreeSectionByHandle
 
 	EmuSwapFS();	// Xbox FS
 
-	return NULL;
+	return TRUE;
 }
+
+// ******************************************************************
+// * func: EmuXGetSectionSize
+// ******************************************************************
+DWORD WINAPI XTL::EmuXGetSectionSize
+(
+	HANDLE hSection                       
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuXGetSectionSize\n"
+			"(\n"
+			"   hSection           : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), hSection );
+
+	DWORD dwSize = 0;
+
+	// Metal Slug 3 (NTSC)
+	if(hSection == (HANDLE) 0x26C000)	// newpal
+		dwSize = 0x31DA;
+	else if(hSection == (HANDLE) 0x270000)	// msg_fong
+		dwSize = 0x115F;
+	else if(hSection == (HANDLE) 0x272000)	// se_all
+		dwSize = 0x64F37E;
+	else if(hSection == (HANDLE) 0x8C5000)	// .XTLID
+		dwSize = 0x480;
+
+	EmuSwapFS();
+
+	return dwSize;
+}
+
 
 // ******************************************************************
 // * func: EmuRtlDestroyHeap
@@ -1443,7 +1463,7 @@ PVOID WINAPI XTL::EmuRtlDestroyHeap
 
 	DbgPrintf("EmuXapi (0x%X): EmuRtlDestroyHeap\n"
 			"(\n"
-			"   HeapHandle         : 0x%.80X\n"
+			"   HeapHandle         : 0x%.08X\n"
 			");\n",
 			GetCurrentThreadId(), HeapHandle );
 
@@ -1453,6 +1473,518 @@ PVOID WINAPI XTL::EmuRtlDestroyHeap
 
 	return pRet;
 }
+
+// ******************************************************************
+// * func: EmuQueueUserAPC
+// ******************************************************************
+DWORD WINAPI XTL::EmuQueueUserAPC
+(
+	PAPCFUNC	pfnAPC,
+	HANDLE		hThread,
+	DWORD		dwData
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuQueueUserAPC\n"
+			"(\n"
+			"   pfnAPC           : 0x%.08X\n"
+			"   hThread          : 0x%.08X\n"
+			"   dwData           : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), pfnAPC, hThread, dwData);
+
+	DWORD dwRet = 0;
+
+	// If necessary, we can just continue to emulate NtQueueApcThread (0xCE).
+	// I added this because NtQueueApcThread fails in Metal Slug 3.
+
+	HANDLE hApcThread = NULL;
+	if(!DuplicateHandle(GetCurrentProcess(),hThread,GetCurrentProcess(),&hApcThread,THREAD_SET_CONTEXT,FALSE,0))
+		EmuWarning("DuplicateHandle failed!");
+
+	dwRet = QueueUserAPC(pfnAPC, hApcThread, dwData);
+	if(!dwRet)
+		EmuWarning("QueueUserAPC failed!");
+
+	EmuSwapFS();	// Xbox FS
+
+	return dwRet;
+}
+
+// ******************************************************************
+// * func: EmuGetOverlappedResult
+// ******************************************************************
+BOOL WINAPI XTL::EmuGetOverlappedResult
+(
+	HANDLE			hFile,
+	LPOVERLAPPED	lpOverlapped,
+	LPDWORD			lpNumberOfBytesTransferred,
+	BOOL			bWait
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuGetOverlappedResult\n"
+			"(\n"
+			"   hFile            : 0x%.08X\n"
+			"   lpOverlapped     : 0x%.08X\n"
+			"   lpNumberOfBytesTransformed : 0x%.08X\n"
+			"   bWait            : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait);
+
+	BOOL bRet = GetOverlappedResult( hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait );
+
+//	if(bWait)
+//		bRet = TRUE; // Sucker...
+
+	EmuSwapFS();	// Xbox FS
+
+	return bRet;
+}
+
+// ******************************************************************
+// * func: EmuXLaunchNewImage
+// ******************************************************************
+DWORD WINAPI XTL::EmuXLaunchNewImage
+(
+	LPCSTR			lpTitlePath,
+	PLAUNCH_DATA	pLaunchData
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuXLaunchNewImage\n"
+			"(\n"
+			"   lpTitlePath      : 0x%.08X (%s)\n"
+			"   pLaunchData      : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), lpTitlePath, lpTitlePath, pLaunchData);
+
+	// If this function succeeds, it doesn't get a chance to return anything.
+	DWORD dwRet = ERROR_GEN_FAILURE;
+
+	// If no path is specified, then the xbe is rebooting to dashboard
+	if(!lpTitlePath)
+		CxbxKrnlCleanup("The xbe is rebooting (XLaunchNewImage)");
+
+	// Ignore any other attempts to execute other .xbe files (for now).
+	EmuWarning("Not executing the xbe!");
+
+	// Save the launch data
+	if(pLaunchData != NULL)
+	{
+		CopyMemory(&g_SavedLaunchData, pLaunchData, sizeof(LAUNCH_DATA));
+
+		// Save the launch data parameters to disk for later.
+		DbgPrintf("Saving launch data as CxbxLaunchData.bin...\n");
+
+		FILE* fp = fopen("CxbxLaunchData.bin", "wb");
+
+		fseek(fp, 0, SEEK_SET);
+		fwrite(pLaunchData, sizeof( LAUNCH_DATA ), 1, fp);
+		fclose(fp);
+	}
+
+	g_bXLaunchNewImageCalled = true;
+
+	// Temporary Hack (Unreal): Jump back to the entry point
+	uint32* start = (uint32*) 0x21C13B;
+
+	EmuSwapFS();	// Xbox FS
+
+	__asm
+	{
+		/*mov esi, 0;
+		mov edi, 0;
+		mov esp, 0;
+		mov ebp, 0;*/
+		jmp start;
+	}
+
+	return dwRet;
+}
+
+// ******************************************************************
+// * func: EmuXGetLaunchInfo
+// ******************************************************************
+DWORD WINAPI XTL::EmuXGetLaunchInfo
+(
+	PDWORD			pdwLaunchDataType,
+	PLAUNCH_DATA	pLaunchData
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuXGetLaunchInfo\n"
+			"(\n"
+			"   pdwLaunchDataType : 0x%.08X\n"
+			"   pLaunchData       : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), pdwLaunchDataType, pLaunchData);
+	
+	DWORD dwRet = E_FAIL;
+
+	// Has XLaunchNewImage been called since we've started this round?
+	if(g_bXLaunchNewImageCalled)
+	{
+		// I don't think we'll be emulating any other xbox apps
+    	// other than games anytime soon...
+    	*pdwLaunchDataType = LDT_TITLE; 
+
+		// Copy saved launch data
+		CopyMemory(pLaunchData, &g_SavedLaunchData, sizeof(LAUNCH_DATA));
+
+		dwRet = ERROR_SUCCESS;
+	}
+
+	FILE* fp = NULL;
+
+	// Does CxbxLaunchData.bin exist?
+	if(!g_bXLaunchNewImageCalled)
+		fp = fopen("CxbxLaunchData.bin", "rb");
+
+	// If it does exist, load it.
+	if(fp)
+	{
+		// Data from Xbox game
+		*pdwLaunchDataType = LDT_TITLE; 
+
+		// Read in the contents.
+		fseek(fp, 0, SEEK_SET);
+		fread(&g_SavedLaunchData, sizeof(LAUNCH_DATA), 1, fp);
+		memcpy(pLaunchData, &g_SavedLaunchData, sizeof(LAUNCH_DATA));
+//		fread(pLaunchData, sizeof(LAUNCH_DATA), 1, fp);
+//		memcpy(&g_SavedLaunchData, pLaunchData, sizeof(LAUNCH_DATA));
+		fclose(fp);
+
+		// Delete the file once we're done.
+		DeleteFile("CxbxLaunchData.bin");
+
+		// HACK: Initialize XInput from restart
+		/*if(g_bXInputOpenCalled)
+		{
+			EmuSwapFS();
+			XTL::EmuXInputOpen( NULL, 0, 0, NULL );
+			EmuSwapFS();
+		}*/
+
+		dwRet = ERROR_SUCCESS;
+	}
+
+	EmuSwapFS();	// Xbox FS
+
+	return dwRet;
+}
+
+// ******************************************************************
+// * func: EmuXSetProcessQuantumLength
+// ******************************************************************
+VOID WINAPI XTL::EmuXSetProcessQuantumLength
+(
+    DWORD dwMilliseconds
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuXSetProcessQuantumLength\n"
+			"(\n"
+			"   dwMilliseconds    : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), dwMilliseconds);
+
+	// TODO: Implement?
+	EmuWarning("XSetProcessQuantumLength is being ignored!");
+
+	EmuSwapFS();	// Xbox FS
+}
+	
+// ******************************************************************
+// * func: EmuXGetFileCacheSize
+// ******************************************************************
+DWORD WINAPI XTL::EmuXGetFileCacheSize()
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuXGetFileCacheSize()\n", GetCurrentThreadId());
+
+	// Return the default cache size for now.
+	// TODO: Save the file cache size if/when set.
+	DWORD dwRet = 64 * 1024;
+
+	EmuSwapFS();
+
+	return dwRet;
+}
+
+// ******************************************************************
+// * func: EmuSignalObjectAndWait
+// ******************************************************************
+DWORD WINAPI XTL::EmuSignalObjectAndWait
+(
+	HANDLE	hObjectToSignal,
+	HANDLE	hObjectToWaitOn,
+	DWORD	dwMilliseconds,
+	BOOL	bAlertable
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuSignalObjectAndWait\n"
+			"(\n"
+			"   hObjectToSignal   : 0x%.08X\n"
+			"   hObjectToWaitOn   : 0x%.08X\n"
+			"   dwMilliseconds    : 0x%.08X\n"
+			"   bAlertable        : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), hObjectToSignal, hObjectToWaitOn, dwMilliseconds, bAlertable);
+
+	DWORD dwRet = SignalObjectAndWait( hObjectToSignal, hObjectToWaitOn, dwMilliseconds, bAlertable ); 
+
+	EmuSwapFS();	// Xbox FS
+
+	return dwRet;
+}
+
+// ******************************************************************
+// * func: EmuPulseEvent
+// ******************************************************************
+BOOL WINAPI XTL::EmuPulseEvent( HANDLE hEvent )
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuPulseEvent\n"
+			"(\n"
+			"   hEvent            : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), hEvent);
+
+	// TODO: This function might be a bit too high level.  If it is,
+	// feel free to implement NtPulseEvent in EmuKrnl.cpp
+
+	BOOL bRet = PulseEvent( hEvent );
+
+	EmuSwapFS();	// Xbox FS
+
+	return bRet;
+}
+
+// ******************************************************************
+// * func: EmuCreateSemaphore
+// ******************************************************************
+HANDLE WINAPI XTL::EmuCreateSemaphore
+(
+	LPVOID	lpSemaphoreAttributes, 
+	LONG	lInitialCount,
+	LONG	lMaximumCount,
+	LPSTR	lpName
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuCreateSemaphore\n"
+			"(\n"
+			"   lpSemaphoreAttributes : 0x%.08X\n"
+			"   lInitialCount         : 0x%.08X\n"
+			"   lMaximumCount         : 0x%.08X\n"
+			"   lpName                : 0x%.08X (%s)\n"
+			");\n",
+			GetCurrentThreadId(), lpSemaphoreAttributes, lInitialCount, lMaximumCount, lpName);
+
+	if(lpSemaphoreAttributes)
+		EmuWarning( "lpSemaphoreAttributes != NULL" );
+
+	HANDLE hRet = CreateSemaphore( NULL, lInitialCount, lMaximumCount, lpName );
+	if( !hRet )
+		EmuWarning( "CreateSemaphore failed!" );
+
+	EmuSwapFS();	// Xbox FS
+
+	return hRet;
+}
+
+// ******************************************************************
+// * func: EmuReleaseSemaphore
+// ******************************************************************
+BOOL WINAPI XTL::EmuReleaseSemaphore
+(
+	HANDLE	hSemaphore,
+	LONG	lReleaseCount,
+	LPLONG	lpPreviousCount
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuReleaseSemaphore\n"
+			"(\n"
+			"   hSemaphore        : 0x%.08X\n"
+			"   lReleaseCount     : 0x%.08X\n"
+			"   lpPreviousCount   : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), hSemaphore, lReleaseCount, lpPreviousCount);
+
+	BOOL bRet = ReleaseSemaphore( hSemaphore, lReleaseCount, lpPreviousCount );
+	if( !bRet )
+		EmuWarning( "ReleaseSemaphore failed!" );
+
+	EmuSwapFS();	// Xbox FS
+
+	return bRet;
+}
+
+// ******************************************************************
+// * func: timeSetEvent
+// ******************************************************************
+MMRESULT WINAPI XTL::EmutimeSetEvent
+(
+	UINT			uDelay,
+	UINT			uResolution,
+	LPTIMECALLBACK	fptc,
+	DWORD			dwUser,
+	UINT			fuEvent
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuReleaseSemaphore\n"
+			"(\n"
+			"   uDelay            : 0x%.08X\n"
+			"   uResolution       : 0x%.08X\n"
+			"   fptc              : 0x%.08X\n"
+			"   dwUser            : 0x%.08X\n"
+			"   fuEvent           : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), uDelay, uResolution, fptc, dwUser, fuEvent);
+
+	MMRESULT Ret = timeSetEvent( uDelay, uResolution, fptc, (DWORD_PTR) dwUser, fuEvent );
+
+	EmuSwapFS();	// Xbox FS
+
+	return Ret;
+}
+
+// ******************************************************************
+// * func: timeKillEvent
+// ******************************************************************
+MMRESULT WINAPI XTL::EmutimeKillEvent
+(
+	UINT uTimerID  
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuReleaseSemaphore\n"
+			"(\n"
+			"   uTimerID          : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), uTimerID);
+
+	MMRESULT Ret = timeKillEvent( uTimerID );
+
+	EmuSwapFS();	// Xbox FS
+
+	return Ret;
+}
+
+// ******************************************************************
+// * func: EmuRaiseException
+// ******************************************************************
+VOID WINAPI XTL::EmuRaiseException
+(
+	DWORD			dwExceptionCode,       // exception code
+	DWORD			dwExceptionFlags,      // continuable exception flag
+	DWORD			nNumberOfArguments,    // number of arguments
+	CONST ULONG_PTR *lpArguments		   // array of arguments
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuRaiseException\n"
+			"(\n"
+			"   dwExceptionCode   : 0x%.08X\n"
+			"   dwExceptionFlags  : 0x%.08X\n"
+			"   nNumberOfArguments: 0x%.08X\n"
+			"   lpArguments       : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), dwExceptionCode, dwExceptionFlags, nNumberOfArguments, lpArguments);
+
+	// TODO: Implement or not?
+//	RaiseException(dwExceptionCode, dwExceptionFlags, nNumberOfArguments, (*(ULONG_PTR**) &lpArguments));
+
+	EmuSwapFS();	// Xbox FS
+}
+
+// ******************************************************************
+// * func: EmuGetFileAttributesA
+// ******************************************************************
+DWORD WINAPI XTL::EmuGetFileAttributesA
+(
+	LPCSTR			lpFileName    // name of file or directory
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuGetFileAttributesA\n"
+			"(\n"
+			"   lpFileName        : (%s)\n"
+			");\n", 
+			GetCurrentThreadId(), lpFileName);
+
+	// Dues Ex...
+
+	// Shave off the D:\ and default to the current directory.
+	// TODO: Other directories (i.e. Utility)?
+
+	char* szBuffer = (char*) lpFileName;
+
+	if((szBuffer[0] == 'D' || szBuffer[0] == 'd') && szBuffer[1] == ':' || szBuffer[2] == '\\')
+	{
+		szBuffer += 3;
+
+		 DbgPrintf("EmuXapi (0x%X): GetFileAttributesA Corrected path...\n", GetCurrentThreadId());
+         DbgPrintf("  Org:\"%s\"\n", lpFileName);
+         DbgPrintf("  New:\"$XbePath\\%s\"\n", szBuffer);
+    }
+
+	DWORD dwRet = GetFileAttributes(szBuffer);
+	if(FAILED(dwRet))
+		EmuWarning("GetFileAttributes failed!");
+
+	EmuSwapFS();
+
+	return dwRet;
+}
+
+// ******************************************************************
+// func: EmuVirtualProtect
+// ******************************************************************
+BOOL WINAPI XTL::EmuVirtualProtect
+(
+	LPVOID	lpAddress,       // region of committed pages
+	SIZE_T	dwSize,          // size of the region
+	DWORD	flNewProtect,    // desired access protection
+	PDWORD	lpflOldProtect   // old protection
+)
+{
+	EmuSwapFS();
+
+	DbgPrintf("EmuXapi (0x%X): EmuVirtualProtect\n"
+			"(\n"
+			"   lpAddress         : 0x%.08X\n"
+			"   dwSize            : 0x%.08X\n"
+			"   flNewProtect      : 0x%.08X\n"
+			"   lpflOldProtect    : 0x%.08X\n"
+			");\n", 
+			GetCurrentThreadId(), lpAddress, dwSize, flNewProtect, lpflOldProtect);
+
+	DWORD dwRet = VirtualProtect(lpAddress, dwSize, flNewProtect, lpflOldProtect);
+
+	EmuSwapFS();
+
+	return dwRet;
+}
+
 
 /* not necessary?
 // ******************************************************************

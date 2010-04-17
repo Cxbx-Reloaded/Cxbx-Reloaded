@@ -52,6 +52,7 @@
 #include "HLEDataBase/D3D8.1.0.5233.h"
 #include "HLEDataBase/D3D8.1.0.5558.h"
 #include "HLEDataBase/D3D8.1.0.5849.h"
+#include "HLEDataBase/D3D8LTCG.1.0.5849.h"
 #include "HLEDataBase/DSound.1.0.3936.h"
 #include "HLEDataBase/DSound.1.0.4361.h"
 #include "HLEDataBase/DSound.1.0.4432.h"
@@ -66,6 +67,7 @@
 #include "HLEDataBase/XNet.1.0.3911.h"
 #include "HLEDataBase/XOnline.1.0.4361.h"
 #include "HLEDataBase/XOnline.1.0.4627.h"
+#include "HLEDataBase/XOnline.1.0.5233.h"
 #include "HLEDataBase/XactEng.1.0.4627.h"
 
 // ******************************************************************
@@ -125,6 +127,7 @@ enum XRefDataBaseOffset
     XREF_D3DCD_LAZYSETSTATEVB,
     XREF_D3D_BLOCKONTIME,
     XREF_D3D_SETFENCE,
+	XREF_D3D_KickOffAndWaitForIdle,
     XREF_XNINIT,
     XREF_FCLOSEDEVICE,
     XREF_CLEARSTATEBLOCKFLAGS,
@@ -266,10 +269,31 @@ enum XRefDataBaseOffset
     XREF_DirectSound_CDirectSoundBuffer_SetAllParameters,
 	XREF_DirectSound_CDirectSound_EnableHeadphones,
 	XREF_DirectSound_CDirectSoundVoice_SetHeadroom,
+	XREF_DirectSound_CDirectSoundBuffer_SetHeadroom,
 	XREF_DirectSound_CDirectSound_GetOutputLevels,
+	XREF_DirectSound_CMcpxBuffer_Pause,
 	XREF_DirectSound_CDirectSoundBuffer_Pause,
 	XREF_DirectSound_CMcpxBuffer_GetStatus,
 	XREF_DirectSound_CDirectSoundBuffer_GetStatus,
+	XREF_DirectSound_CDirectSoundVoice_SetEG,
+	XREF_DirectSound_CMcpxVoiceClient_SetEG,
+	XREF_DirectSound_CMcpxVoiceClient_SetFilter,
+	XREF_DirectSound_CDirectSoundVoice_SetFilter,
+	XREF_DirectSound_CDirectSoundBuffer_SetFilter,
+	XREF_DirectSound_CDirectSoundStream_SetFilter,
+	XREF_DirectSound_CDirectSoundBuffer_StopEx,
+	XREF_CMcpxBuffer_Stop2,
+	XREF_CMcpxAPU_Set3dDopplerFactor,
+	XREF_CSensaura3d_GetFullHRTFFilterPair,
+	XREF_CDirectSound_GetCaps,
+	XREF_CDirectSoundVoice_SetPitch,
+	XREF_DirectSoundEnterCriticalSection,
+	XREF_CDirectSoundBuffer_SetMinDistance,
+	XREF_CDirectSoundBuffer_SetMaxDistance,
+	XREF_CMcpxVoiceClient_Commit3dSettings,
+	XREF_CMcpxVoiceClient_SetI3DL2Source,
+	XREF_CDirectSoundVoice_SetI3DL2Source,
+	XREF_CDirectSoundVoice_SetMixBinVolumes,
 	// XACT
 	// +s
 	XREF_XACT_CEngine_RegisterWaveBank,
@@ -278,6 +302,13 @@ enum XRefDataBaseOffset
 	XREF_XACT_CEngine_DownloadEffectsImage,
 	XREF_XACT_CEngine_CreateSoundSource,
 	XREF_XACT_CSoundBank_GetSoundCueIndexFromFriendlyName,
+	XREF_XACT_CEngine_RegisterNotification,
+	XREF_XACT_CEngine_GetNotification,
+	XREF_XACT_CEngine_UnRegisterWaveBank,
+	// XONLINE
+	// +s
+	XREF_XoUpdateLaunchNewImageInternal,
+	XREF_CXo_XOnlineLogon,
 
     // XAPI
     /* not necessary?

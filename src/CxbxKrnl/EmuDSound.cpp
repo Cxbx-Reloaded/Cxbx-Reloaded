@@ -68,7 +68,7 @@ XTL::X_CDirectSoundStream::_vtbl XTL::X_CDirectSoundStream::vtbl =
 /*
     STDMETHOD(GetInfo)(THIS_ LPXMEDIAINFO pInfo) PURE;
 */
-    0xBEEFB001,                                 // 0x08
+	&XTL::EmuCDirectSoundStream_GetInfo,        // 0x08
     &XTL::EmuCDirectSoundStream_GetStatus,      // 0x0C
     &XTL::EmuCDirectSoundStream_Process,        // 0x10
     &XTL::EmuCDirectSoundStream_Discontinuity,  // 0x14
@@ -842,10 +842,13 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
     DWORD dwEmuFlags = 0;
 
     DSBUFFERDESC *pDSBufferDesc = (DSBUFFERDESC*)CxbxMalloc(sizeof(DSBUFFERDESC));
+	DSBUFFERDESC *pDSBufferDescSpecial = NULL;
+	bool bIsSpecial = false;
 
     // convert from Xbox to PC DSound
     {
-        DWORD dwAcceptableMask = 0x00000010 | 0x00000020 | 0x00000080 | 0x00000100 | 0x00002000 | 0x00040000 | 0x00080000;
+        //DWORD dwAcceptableMask = 0x00000010 | 0x00000020 | 0x00000080 | 0x00000100 | 0x00002000 | 0x00040000 | 0x00080000;
+		DWORD dwAcceptableMask = 0x00000010 | 0x00000020 | 0x00000080 | 0x00000100 | 0x00020000 | 0x00040000 /*| 0x00080000*/;
 
         if(pdsbd->dwFlags & (~dwAcceptableMask))
             EmuWarning("Use of unsupported pdsbd->dwFlags mask(s) (0x%.08X)", pdsbd->dwFlags & (~dwAcceptableMask));
@@ -891,39 +894,70 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
         }
 		else
 		{
+			bIsSpecial = true;
+			dwEmuFlags |= DSB_FLAG_RECIEVEDATA;
+
 			EmuWarning("Creating dummy WAVEFORMATEX (pdsbd->lpwfxFormat = NULL)...");
-			__asm int 3;
 		
-			// HACK: For Quantum Redshift, create dummy WAVEFORMATEX data.
+			// HACK: This is a special sound buffer, create dummy WAVEFORMATEX data.
+			// It's supposed to recieve data rather than generate it.  Buffers created
+			// with flags DSBCAPS_MIXIN, DSBCAPS_FXIN, and DSBCAPS_FXIN2 will have no
+			// WAVEFORMATEX structure by default.
+
 			// TODO: A better response to this scenario if possible.
 
-			pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)CxbxMalloc(sizeof(WAVEFORMATEX));
+			pDSBufferDescSpecial = (DSBUFFERDESC*)CxbxMalloc(sizeof(DSBUFFERDESC));
+			pDSBufferDescSpecial->lpwfxFormat =  (WAVEFORMATEX*)CxbxMalloc(sizeof(WAVEFORMATEX));
 
-	//		pDSBufferDesc->lpwfxFormat->cbSize = sizeof( WAVEFORMATEX );
-			pDSBufferDesc->lpwfxFormat->nChannels = 2;
-			pDSBufferDesc->lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
-			pDSBufferDesc->lpwfxFormat->nSamplesPerSec = 48000;
-			pDSBufferDesc->lpwfxFormat->nBlockAlign = 4;
-			pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = 4 * 48000;
-			pDSBufferDesc->lpwfxFormat->wBitsPerSample = 16;
+			//memset(pDSBufferDescSpecial->lpwfxFormat, 0, sizeof(WAVEFORMATEX)); 
+		    //memset(pDSBufferDescSpecial, 0, sizeof(DSBUFFERDESC)); 
+
+		    pDSBufferDescSpecial->lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM; 
+		    pDSBufferDescSpecial->lpwfxFormat->nChannels = 2; 
+		    pDSBufferDescSpecial->lpwfxFormat->nSamplesPerSec = 22050; 
+		    pDSBufferDescSpecial->lpwfxFormat->nBlockAlign = 4; 
+		    pDSBufferDescSpecial->lpwfxFormat->nAvgBytesPerSec = pDSBufferDescSpecial->lpwfxFormat->nSamplesPerSec * 
+																 pDSBufferDescSpecial->lpwfxFormat->nBlockAlign; 
+		    pDSBufferDescSpecial->lpwfxFormat->wBitsPerSample = 16; 
+		 
+		    pDSBufferDescSpecial->dwSize = sizeof(DSBUFFERDESC); 
+		    pDSBufferDescSpecial->dwFlags = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_CTRLFREQUENCY; 
+		    pDSBufferDescSpecial->dwBufferBytes = 3 * pDSBufferDescSpecial->lpwfxFormat->nAvgBytesPerSec;
+
+	//		pDSBufferDesc->lpwfxFormat = (WAVEFORMATEX*)CxbxMalloc(sizeof(WAVEFORMATEX)/*+pdsbd->lpwfxFormat->cbSize*/);
+
+	////	pDSBufferDesc->lpwfxFormat->cbSize = sizeof( WAVEFORMATEX );
+	//		pDSBufferDesc->lpwfxFormat->nChannels = 1;
+	//		pDSBufferDesc->lpwfxFormat->wFormatTag = WAVE_FORMAT_PCM;
+	//		pDSBufferDesc->lpwfxFormat->nSamplesPerSec = 22050;
+	//		pDSBufferDesc->lpwfxFormat->nBlockAlign = 4;
+	//		pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = 4 * 22050;
+	//		pDSBufferDesc->lpwfxFormat->wBitsPerSample = 16;
+
+			// Give this buffer 3 seconds of data if needed
+			/*if(pdsbd->dwBufferBytes == 0)
+				pDSBufferDesc->dwBufferBytes = 3 * pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec;*/
 		}
 
         pDSBufferDesc->guid3DAlgorithm = DS3DALG_DEFAULT;
     }
 
     // sanity check
-    if(pDSBufferDesc->lpwfxFormat->nBlockAlign != (pDSBufferDesc->lpwfxFormat->nChannels*pDSBufferDesc->lpwfxFormat->wBitsPerSample)/8)
-    {
-        pDSBufferDesc->lpwfxFormat->nBlockAlign = (2*pDSBufferDesc->lpwfxFormat->wBitsPerSample)/8;
-        pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = pDSBufferDesc->lpwfxFormat->nSamplesPerSec * pDSBufferDesc->lpwfxFormat->nBlockAlign;
-    }
+	if(!bIsSpecial)
+	{
+		if(pDSBufferDesc->lpwfxFormat->nBlockAlign != (pDSBufferDesc->lpwfxFormat->nChannels*pDSBufferDesc->lpwfxFormat->wBitsPerSample)/8)
+		{
+			pDSBufferDesc->lpwfxFormat->nBlockAlign = (2*pDSBufferDesc->lpwfxFormat->wBitsPerSample)/8;
+			pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = pDSBufferDesc->lpwfxFormat->nSamplesPerSec * pDSBufferDesc->lpwfxFormat->nBlockAlign;
+		}
+	}
 
     // TODO: Garbage Collection
     *ppBuffer = new X_CDirectSoundBuffer();
 
     (*ppBuffer)->EmuDirectSoundBuffer8 = 0;
     (*ppBuffer)->EmuBuffer = 0;
-    (*ppBuffer)->EmuBufferDesc = pDSBufferDesc;
+	(*ppBuffer)->EmuBufferDesc = bIsSpecial ? pDSBufferDescSpecial : pDSBufferDesc;
     (*ppBuffer)->EmuLockPtr1 = 0;
     (*ppBuffer)->EmuLockBytes1 = 0;
     (*ppBuffer)->EmuLockPtr2 = 0;
@@ -932,10 +966,13 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
 
     DbgPrintf("EmuDSound (0x%X): EmuDirectSoundCreateBuffer, *ppBuffer := 0x%.08X, bytes := 0x%.08X\n", GetCurrentThreadId(), *ppBuffer, pDSBufferDesc->dwBufferBytes);
 
-    HRESULT hRet = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &((*ppBuffer)->EmuDirectSoundBuffer8), NULL);
+    HRESULT hRet = g_pDSound8->CreateSoundBuffer(bIsSpecial ? pDSBufferDescSpecial : pDSBufferDesc, &((*ppBuffer)->EmuDirectSoundBuffer8), NULL);
 
     if(FAILED(hRet))
+	{
         EmuWarning("CreateSoundBuffer Failed!");
+		(*ppBuffer)->EmuDirectSoundBuffer8 = NULL;
+	}
 
     // cache this sound buffer
     {
@@ -1217,24 +1254,27 @@ ULONG WINAPI XTL::EmuIDirectSoundBuffer8_Release
 
     if(pThis != 0)
     {
-        uRet = pThis->EmuDirectSoundBuffer8->Release();
+		if(!(pThis->EmuFlags & DSB_FLAG_RECIEVEDATA))
+		{
+			uRet = pThis->EmuDirectSoundBuffer8->Release();
 
-        if(uRet == 0)
-        {
-            // remove cache entry
-            for(int v=0;v<SOUNDBUFFER_CACHE_SIZE;v++)
-            {
-                if(g_pDSoundBufferCache[v] == pThis)
-                    g_pDSoundBufferCache[v] = 0;
-            }
+			if(uRet == 0)
+			{
+				// remove cache entry
+				for(int v=0;v<SOUNDBUFFER_CACHE_SIZE;v++)
+				{
+					if(g_pDSoundBufferCache[v] == pThis)
+						g_pDSoundBufferCache[v] = 0;
+				}
 
-            if(pThis->EmuBufferDesc->lpwfxFormat != NULL)
-                CxbxFree(pThis->EmuBufferDesc->lpwfxFormat);
+				if(pThis->EmuBufferDesc->lpwfxFormat != NULL)
+					CxbxFree(pThis->EmuBufferDesc->lpwfxFormat);
 
-            CxbxFree(pThis->EmuBufferDesc);
+				CxbxFree(pThis->EmuBufferDesc);
 
-            delete pThis;
-        }
+				delete pThis;
+			}
+		}
     }
 
     EmuSwapFS();   // XBox FS
@@ -1719,7 +1759,9 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateStream
 // ******************************************************************
 VOID WINAPI XTL::EmuCMcpxStream_Dummy_0x10(DWORD dwDummy1, DWORD dwDummy2)
 {
-    EmuWarning("EmuCMcpxStream_Dummy_0x10 is ignored!");
+	// Causes deadlock in Halo...
+	// TODO: Verify that this is a Vista related problem (I HATE Vista!)
+//    EmuWarning("EmuCMcpxStream_Dummy_0x10 is ignored!");
     return;
 }
 
@@ -1833,6 +1875,40 @@ ULONG WINAPI XTL::EmuCDirectSoundStream_Release(X_CDirectSoundStream *pThis)
     EmuSwapFS();   // XBox FS
 
     return uRet;
+}
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_GetInfo
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSoundStream_GetInfo
+(
+	X_CDirectSoundStream*	pThis, 
+	LPXMEDIAINFO			pInfo
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_GetInfo\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   pInfo                     : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, pInfo);
+
+	// TODO: A (real) implementation?
+	EmuWarning("EmuCDirectSoundStream_GetInfo is not yet supported!");
+
+	if( pInfo )
+	{
+		pInfo->dwFlags = XMO_STREAMF_FIXED_SAMPLE_SIZE;
+		pInfo->dwInputSize = 0x40000;
+		pInfo->dwOutputSize = 0x40000;
+		pInfo->dwMaxLookahead = 0x4000;
+	}
+
+	EmuSwapFS();	// Xbox FS
+
+	return DS_OK;
 }
 
 // ******************************************************************
@@ -2695,7 +2771,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMode
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf("EmuD3D8 (0x%X): EmuIDirectSoundBuffer8_SetFormat\n"
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetFormat\n"
            "(\n"
            "   pBuffer             : 0x%.08X\n"
            "   dwMode              : 0x%.08X\n"
@@ -2908,15 +2984,25 @@ ULONG WINAPI XTL::EmuIDirectSoundBuffer8_AddRef
 
 	DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer_AddRef\n"
 			"(\n"
-			"	pThis					: 0x%.08X\n"
+			"   pThis                   : 0x%.08X\n"
 			");\n",
 			GetCurrentThreadId(), pThis);
 	
-	ULONG ret;
+	ULONG ret = 0;
 
 	if(pThis != 0)
-        if(pThis->EmuDirectSoundBuffer8 != 0) // HACK: Ignore unsupported codecs.
-            ret = pThis->EmuDirectSoundBuffer8->AddRef();
+	{
+		// HACK: Skip this on unsupported flags
+		if(pThis->EmuFlags & DSB_FLAG_RECIEVEDATA)
+		{
+			EmuWarning("Not adding reference to a potentially pad pointer!");
+		}
+		else
+		{
+			if(pThis->EmuDirectSoundBuffer8 != 0) // HACK: Ignore unsupported codecs.
+				ret = pThis->EmuDirectSoundBuffer8->AddRef();
+		}
+	}
 
 	EmuSwapFS();	// Xbox FS
 
@@ -2944,7 +3030,8 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Pause
 	// This function wasn't part of the XDK until 4721.
 	HRESULT ret = S_OK;
 
-	if(pThis != NULL)
+	// Unstable!
+	/*if(pThis != NULL)
 	{
 		if(pThis->EmuDirectSoundBuffer8)
 		{
@@ -2958,7 +3045,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Pause
 			if(dwPause == X_DSBPAUSE_SYNCHPLAYBACK)
 				EmuWarning("DSBPAUSE_SYNCHPLAYBACK is not yet supported!");
 		}
-	}
+	}*/
 
 	EmuSwapFS();	// Xbox FS
 
@@ -3037,4 +3124,303 @@ HRESULT WINAPI XTL::EmuIDirectSound8_GetOutputLevels
 	EmuSwapFS();
 
 	return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetEG
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSoundStream_SetEG
+(
+	LPVOID		pThis,
+	LPVOID		pEnvelopeDesc
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetEG\n"
+			"(\n"
+			"	pThis					: 0x%.08X\n"
+			"   pEnvelopeDesc           : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), pThis, pEnvelopeDesc);
+
+	// TODO: Implement this...
+
+	EmuSwapFS();	// Xbox FS
+
+	return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSoundStream_Flush
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundStream_Flush()
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundStream_Flush()\n", GetCurrentThreadId() );
+
+	// TODO: Actually implement
+
+	EmuSwapFS();
+
+	return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSoundStream_FlushEx
+// ******************************************************************
+extern "C" HRESULT WINAPI XTL::EmuIDirectSoundStream_FlushEx
+(
+	X_CDirectSoundStream*	pThis,
+	REFERENCE_TIME			rtTimeStamp,
+	DWORD					dwFlags
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundStream_FlushEx\n"
+			"(\n"
+			"	pThis					: 0x%.08X\n"
+			"   rtTimeStamp             : 0x%.08X\n"
+			"   dwFlags                 : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), pThis, rtTimeStamp, dwFlags);
+
+	// TODO: Actually implement
+
+	EmuSwapFS();	// Xbox FS
+
+	return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetMode
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMode
+(
+    X_CDirectSoundStream   *pStream,
+    DWORD                   dwMode,
+    DWORD                   dwApply
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetFormat\n"
+           "(\n"
+           "   pStream             : 0x%.08X\n"
+           "   dwMode              : 0x%.08X\n"
+           "   dwApply             : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pStream, dwMode, dwApply);
+
+    HRESULT hRet = DS_OK;
+
+    EmuWarning("EmuCDirectSoundStream_SetMode ignored");
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
+// * func: EmuXAudioDownloadEffectsImage
+// ******************************************************************
+HRESULT WINAPI XTL::EmuXAudioDownloadEffectsImage
+(
+    LPCSTR		pszImageName,
+    LPVOID		pImageLoc,
+    DWORD		dwFlags,
+    LPVOID	   *ppImageDesc
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuDSound (0x%X): EmuXAudioDownloadEffectsImage\n"
+           "(\n"
+           "   pszImageName        : 0x%.08X\n"
+		   "   pImageLoc           : 0x%.08X\n"
+		   "   dwFlags             : 0x%.08X\n"
+		   "   ppImageDesc         : 0x%.08X\n"
+		   ");\n",
+		   GetCurrentThreadId(), pszImageName, pImageLoc, dwFlags, ppImageDesc );
+
+	 EmuSwapFS();	// Xbox FS
+
+	 return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetFilter
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetFilter
+(
+	LPVOID			pThis,
+	X_DSFILTERDESC* pFilterDesc
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetFilter\n"
+           "(\n"
+           "   pThis               : 0x%.08X\n"
+		   "   pFilterDesc         : 0x%.08X\n"
+		   ");\n",
+		   GetCurrentThreadId(), pThis, pFilterDesc);
+
+	// TODO: Implement
+
+	EmuWarning("IDirectSoundBuffer8_SetFilter not yet supported!");
+
+	EmuSwapFS();	// Xbox FS
+
+	return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetFilter
+// ******************************************************************
+HRESULT WINAPI XTL::EmuCDirectSoundStream_SetFilter
+(
+	X_CDirectSoundStream*	pThis,
+	X_DSFILTERDESC*			pFilterDesc
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetFilter\n"
+           "(\n"
+           "   pThis               : 0x%.08X\n"
+		   "   pFilterDesc         : 0x%.08X\n"
+		   ");\n",
+		   GetCurrentThreadId(), pThis, pFilterDesc);
+
+	// TODO: Implement
+
+	EmuWarning("CDirectSoundStream_SetFilter not yet supported!");
+
+	EmuSwapFS();	// Xbox FS
+
+	return S_OK;
+}
+
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_PlayEx
+// ******************************************************************
+extern "C" HRESULT __stdcall XTL::EmuIDirectSoundBuffer8_PlayEx
+(
+    X_CDirectSoundBuffer *pBuffer,
+    REFERENCE_TIME        rtTimeStamp,
+    DWORD                 dwFlags
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_PlayEx\n"
+           "(\n"
+           "   pBuffer                   : 0x%.08X\n"
+           "   rtTimeStamp               : 0x%.08X\n"
+           "   dwFlags                   : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pBuffer, rtTimeStamp, dwFlags);
+
+    if(pBuffer->EmuDirectSoundBuffer8 == 0)
+        EmuWarning("pBuffer->EmuDirectSoundBuffer8 == 0");
+
+    EmuWarning("PlayEx not yet implemented!");
+
+    EmuSwapFS();   // XBox FS
+
+    return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSound8_GetCaps
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSound8_GetCaps
+(
+	X_CDirectSound*	pThis,
+    X_DSCAPS*		pDSCaps
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetFilter\n"
+           "(\n"
+           "   pThis               : 0x%.08X\n"
+		   "   pDSCaps             : 0x%.08X\n"
+		   ");\n",
+		   GetCurrentThreadId(), pThis, pDSCaps);
+
+	// Get PC's DirectSound capabilities
+	DSCAPS DSCapsPC;
+	ZeroMemory( &DSCapsPC, sizeof( DSCAPS ) );
+
+	HRESULT hRet = g_pDSound8->GetCaps( &DSCapsPC );
+	if(FAILED(hRet))
+		EmuWarning("Failed to get PC DirectSound caps!");
+
+	// Convert PC -> Xbox
+	if(pDSCaps)
+	{
+		// WARNING: This may not be accurate under Windows Vista...
+		pDSCaps->dwFree2DBuffers	= DSCapsPC.dwFreeHwMixingAllBuffers;
+		pDSCaps->dwFree3DBuffers	= DSCapsPC.dwFreeHw3DAllBuffers;
+		pDSCaps->dwFreeBufferSGEs	= 256;							// TODO: Verify max on a real Xbox
+		pDSCaps->dwMemoryAllocated	= DSCapsPC.dwFreeHwMemBytes;	// TODO: Bytes or MegaBytes?
+	}	
+
+	EmuSwapFS();	// Xbox FS
+
+	return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSoundStream_SetPitch
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundStream_SetPitch
+(	
+	X_CDirectSoundStream*	pThis,
+    LONG					lPitch
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundStream_SetPitch\n"
+           "(\n"
+           "   pThis               : 0x%.08X\n"
+		   "   lPitch              : 0x%.08X\n"
+		   ");\n",
+		   GetCurrentThreadId(), pThis, lPitch);
+
+	HRESULT hRet = S_OK;
+
+	EmuWarning("IDirectSoundStream_SetPitch not yet implemented!");
+
+	return hRet;
+}
+
+// ******************************************************************
+// * func: EmuDirectSoundGetSampleTime
+// ******************************************************************
+DWORD WINAPI XTL::EmuDirectSoundGetSampleTime()
+{
+	EmuSwapFS();	// Win2k/XP FS
+	
+	DbgPrintf("EmuDSound (0x%X): EmuDirectSoundGetSampleTime();\n", GetCurrentThreadId());
+
+	// FIXME: This is the best I could think of for now.
+	// Check the XDK documentation for the description of what this function 
+	// can actually do.  BTW, this function accesses the NVIDIA SoundStorm APU
+	// register directly (0xFE80200C).
+
+	// TODO: Handle reset at certain event?
+	// TODO: Wait until a DirectSoundBuffer/Stream is being played?
+	static DWORD dwStart = GetTickCount();
+	DWORD dwRet = GetTickCount() - dwStart;
+
+	EmuSwapFS();
+
+	return 0;
 }

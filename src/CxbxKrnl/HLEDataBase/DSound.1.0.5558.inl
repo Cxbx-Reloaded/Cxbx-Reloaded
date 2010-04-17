@@ -1701,6 +1701,28 @@ SOOVPA<8> IDirectSoundBuffer8_SetDopplerFactor_1_0_5558 =
         { 0x21, 0xC2 },
     }
 };
+// ******************************************************************
+// * IDirectSoundBuffer_Lock
+// ******************************************************************
+SOOVPA<8> IDirectSoundBuffer_Lock_1_0_5558 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x04, 0x75 },
+        { 0x0A, 0x75 },
+        { 0x10, 0x1C },
+        { 0x16, 0x18 },
+        { 0x1C, 0x1B },
+        { 0x22, 0xC8 },
+        { 0x2C, 0x5D },
+        { 0x2E, 0x20 },
+    }
+};
 
 // ******************************************************************
 // * Direct_1_0_5558
@@ -2629,6 +2651,16 @@ OOVPATable DSound_1_0_5558[] =
         "EmuDirectSoundCreateBuffer"
         #endif
     },
+	// IDirectSoundBuffer_Lock
+	{
+		(OOVPA*)&IDirectSoundBuffer_Lock_1_0_5558,
+
+		XTL::EmuIDirectSoundBuffer8_Lock,
+
+		#ifdef _DEBUG_TRACE
+		"EmuIDirectSoundBuffer8_Lock"
+		#endif
+	},
 };
 
 // ******************************************************************

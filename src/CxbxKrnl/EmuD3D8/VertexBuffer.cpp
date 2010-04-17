@@ -51,6 +51,7 @@ XTL::X_D3DPRIMITIVETYPE      XTL::g_IVBPrimitiveType = XTL::X_D3DPT_INVALID;
 UINT                         XTL::g_IVBTblOffs = 0;
 struct XTL::_D3DIVB         *XTL::g_IVBTable = 0;
 extern DWORD                 XTL::g_IVBFVF = 0;
+extern XTL::X_D3DVertexBuffer      *g_pVertexBuffer = NULL;
 
 static unsigned int crctab[256];
 
@@ -144,7 +145,7 @@ void XTL::VertexPatcher::CacheStream(VertexPatchDesc *pPatchDesc,
     UINT                       uiStride;
     IDirect3DVertexBuffer8    *pOrigVertexBuffer;
     XTL::D3DVERTEXBUFFER_DESC  Desc;
-    void                      *pCalculateData;
+    void                      *pCalculateData = NULL;
     uint32                     uiKey;
     UINT                       uiLength;
     CACHEDSTREAM              *pCachedStream = (CACHEDSTREAM *)CxbxMalloc(sizeof(CACHEDSTREAM));
@@ -262,12 +263,13 @@ void XTL::VertexPatcher::FreeCachedStream(void *pStream)
 }
 
 bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
-                                           UINT             uiStream)
+                                           UINT             uiStream,
+										   bool			   *pbFatalError)
 {
     UINT                       uiStride;
     IDirect3DVertexBuffer8    *pOrigVertexBuffer;
     XTL::D3DVERTEXBUFFER_DESC  Desc;
-    void                      *pCalculateData;
+    void                      *pCalculateData = NULL;
     UINT                       uiLength;
     bool                       bApplied = false;
     uint32                     uiKey;
@@ -276,7 +278,20 @@ bool XTL::VertexPatcher::ApplyCachedStream(VertexPatchDesc *pPatchDesc,
     if(!pPatchDesc->pVertexStreamZeroData)
     {
         g_pD3DDevice8->GetStreamSource(uiStream, &pOrigVertexBuffer, &uiStride);
-        if(FAILED(pOrigVertexBuffer->GetDesc(&Desc)))
+        if(!pOrigVertexBuffer)
+		{
+			/*if(!g_pVertexBuffer || !g_pVertexBuffer->EmuVertexBuffer8)
+				CxbxKrnlCleanup("Unable to retrieve original buffer (Stream := %d)", uiStream);
+			else
+				pOrigVertexBuffer = g_pVertexBuffer->EmuVertexBuffer8;*/
+
+			if(pbFatalError)
+				*pbFatalError = true;
+
+			return false;
+		}
+
+		if(FAILED(pOrigVertexBuffer->GetDesc(&Desc)))
         {
             CxbxKrnlCleanup("Could not retrieve original buffer size");
         }
@@ -731,9 +746,10 @@ bool XTL::VertexPatcher::NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT ui
     else
     {
         // Copy stream for patching and caching.
+
         g_pD3DDevice8->GetStreamSource(uiStream, &pOrigVertexBuffer, &uiStride);
         XTL::D3DVERTEXBUFFER_DESC Desc;
-        if(FAILED(pOrigVertexBuffer->GetDesc(&Desc)))
+        if(!pOrigVertexBuffer || FAILED(pOrigVertexBuffer->GetDesc(&Desc)))
         {
             CxbxKrnlCleanup("Could not retrieve original FVF buffer size.");
         }
@@ -883,7 +899,10 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
     switch(pPatchDesc->PrimitiveType)
     {
         case X_D3DPT_QUADLIST:
+			//EmuWarning("VertexPatcher::PatchPrimitive: Processing D3DPT_QUADLIST");
+			break;
         case X_D3DPT_LINELOOP:
+			//EmuWarning("VertexPatcher::PatchPrimitive: Processing D3DPT_LINELOOP");
             break;
 
         default:
@@ -993,13 +1012,13 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
     if(pPatchDesc->PrimitiveType == X_D3DPT_QUADLIST)
     {
         uint08 *pPatch1 = &pPatchedVertexData[pPatchDesc->dwOffset     * pStream->uiOrigStride];
-        uint08 *pPatch2 = &pPatchedVertexData[pPatchDesc->dwOffset + 3 * pStream->uiOrigStride];
-        uint08 *pPatch3 = &pPatchedVertexData[pPatchDesc->dwOffset + 4 * pStream->uiOrigStride];
-        uint08 *pPatch4 = &pPatchedVertexData[pPatchDesc->dwOffset + 5 * pStream->uiOrigStride];
+        uint08 *pPatch2 = &pPatchedVertexData[(pPatchDesc->dwOffset + 3) * pStream->uiOrigStride];
+        uint08 *pPatch3 = &pPatchedVertexData[(pPatchDesc->dwOffset + 4) * pStream->uiOrigStride];
+        uint08 *pPatch4 = &pPatchedVertexData[(pPatchDesc->dwOffset + 5) * pStream->uiOrigStride];
 
         uint08 *pOrig1 = &pOrigVertexData[pPatchDesc->dwOffset     * pStream->uiOrigStride];
-        uint08 *pOrig2 = &pOrigVertexData[pPatchDesc->dwOffset + 2 * pStream->uiOrigStride];
-        uint08 *pOrig3 = &pOrigVertexData[pPatchDesc->dwOffset + 3 * pStream->uiOrigStride];
+        uint08 *pOrig2 = &pOrigVertexData[(pPatchDesc->dwOffset + 2) * pStream->uiOrigStride];
+        uint08 *pOrig3 = &pOrigVertexData[(pPatchDesc->dwOffset + 3) * pStream->uiOrigStride];
 
         for(uint32 i = 0;i < pPatchDesc->dwPrimitiveCount/2;i++)
         {
@@ -1049,7 +1068,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
     return true;
 }
 
-bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc)
+bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc, bool *pbFatalError)
 {
     bool Patched = false;
     // Get the number of streams
@@ -1062,7 +1081,7 @@ bool XTL::VertexPatcher::Apply(VertexPatchDesc *pPatchDesc)
     {
         bool LocalPatched = false;
 
-        if(ApplyCachedStream(pPatchDesc, uiStream))
+        if(ApplyCachedStream(pPatchDesc, uiStream, pbFatalError))
         {
             m_pStreams[uiStream].bUsedCached = true;
             continue;
@@ -1136,6 +1155,13 @@ VOID XTL::EmuFlushIVB()
     if(bFVF && ((g_CurrentVertexShader & D3DFVF_POSITION_MASK) != D3DFVF_XYZRHW))
     {
         dwCurFVF = g_CurrentVertexShader;
+
+		// HACK: Halo...
+		if(dwCurFVF == 0)
+		{
+			EmuWarning("EmuFlushIVB(): using g_IVBFVF instead of current FVF!");
+			dwCurFVF = g_IVBFVF;
+		}
     }
     else
     {
@@ -1176,13 +1202,28 @@ VOID XTL::EmuFlushIVB()
 
             DbgPrintf("IVB Position := {%f, %f, %f, %f}\n", g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z, g_IVBTable[v].Position.z, g_IVBTable[v].Rhw);
         }
+		else if(dwPos == D3DFVF_XYZB1)
+        {
+            *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.x;
+            *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.y;
+            *(FLOAT*)pdwVB++ = g_IVBTable[v].Position.z;
+			*(FLOAT*)pdwVB++ = g_IVBTable[v].Blend1;
+
+            if(v == 0)
+            {
+                uiStride += (sizeof(FLOAT)*4);
+            }
+
+			DbgPrintf("IVB Position := {%f, %f, %f, %f}\n", g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z, g_IVBTable[v].Blend1);
+        }
 
         else
         {
-            CxbxKrnlCleanup("Unsupported Position Mask (FVF := 0x%.08X)", g_IVBFVF);
+			CxbxKrnlCleanup("Unsupported Position Mask (FVF := 0x%.08X dwPos := 0x%.08X)", dwCurFVF, dwPos);
         }
 
-        if(dwPos == D3DFVF_NORMAL)
+//      if(dwPos == D3DFVF_NORMAL)	// <- This didn't look right but if it is, change it back...
+		if(dwCurFVF & D3DFVF_NORMAL)
         {
             *(FLOAT*)pdwVB++ = g_IVBTable[v].Normal.x;
             *(FLOAT*)pdwVB++ = g_IVBTable[v].Normal.y;
@@ -1287,7 +1328,7 @@ VOID XTL::EmuFlushIVB()
 
     VertexPatcher VertPatch;
 
-    bool bPatched = VertPatch.Apply(&VPDesc);
+    bool bPatched = VertPatch.Apply(&VPDesc, NULL);
 
     if(bFVF)
     {

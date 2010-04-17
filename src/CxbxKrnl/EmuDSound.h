@@ -100,6 +100,42 @@ typedef struct _XMEDIAPACKET
 XMEDIAPACKET, *PXMEDIAPACKET, *LPXMEDIAPACKET;
 
 // ******************************************************************
+// * XMEDIAINFO
+// ******************************************************************
+typedef struct _XMEDIAINFO
+{
+    DWORD  dwFlags;
+    DWORD  dwInputSize;
+    DWORD  dwOutputSize;
+    DWORD  dwMaxLookahead;
+} 
+XMEDIAINFO, *PXEIDIAINFO, *LPXMEDIAINFO;
+
+// XMEDIAINFO Flags
+#define XMO_STREAMF_FIXED_SAMPLE_SIZE           0x00000001      // The object supports only a fixed sample size
+#define XMO_STREAMF_FIXED_PACKET_ALIGNMENT      0x00000002      // The object supports only a fixed packet alignment
+#define XMO_STREAMF_INPUT_ASYNC                 0x00000004      // The object supports receiving input data asynchronously
+#define XMO_STREAMF_OUTPUT_ASYNC                0x00000008      // The object supports providing output data asynchronously
+#define XMO_STREAMF_IN_PLACE                    0x00000010      // The object supports in-place modification of data
+#define XMO_STREAMF_MASK                        0x0000001F
+
+// ******************************************************************
+// * X_DSFILTERDESC
+// ******************************************************************
+struct X_DSFILTERDESC
+{
+    DWORD dwMode;
+    DWORD dwQCoefficient;
+    DWORD adwCoefficients[4];
+};
+
+// X_DSFILTERDESC modes
+#define DSFILTER_MODE_BYPASS        0x00000000      // The filter is bypassed
+#define DSFILTER_MODE_DLS2          0x00000001      // DLS2 mode
+#define DSFILTER_MODE_PARAMEQ       0x00000002      // Parametric equalizer mode
+#define DSFILTER_MODE_MULTI         0x00000003      // Multifunction mode
+
+// ******************************************************************
 // * DSLFODESC
 // ******************************************************************
 typedef struct _DSLFODESC
@@ -148,6 +184,18 @@ struct X_DSOUTPUTLEVELS
     DWORD dwDigitalLowFrequencyRMS;
 };
 
+// ******************************************************************
+// * X_DSCAPS
+// ******************************************************************
+struct X_DSCAPS
+{                                                       
+    DWORD dwFree2DBuffers;
+    DWORD dwFree3DBuffers;
+    DWORD dwFreeBufferSGEs;
+    DWORD dwMemoryAllocated;
+};
+
+
 
 typedef struct IDirectSoundStream IDirectSoundStream;
 typedef IDirectSoundStream *LPDIRECTSOUNDSTREAM;
@@ -186,6 +234,7 @@ struct X_CDirectSoundBuffer
 
 #define DSB_FLAG_ADPCM 0x00000001
 #define WAVE_FORMAT_XBOX_ADPCM 0x0069
+#define DSB_FLAG_RECIEVEDATA 0x00001000
 
 // ******************************************************************
 // * X_CMcpxStream
@@ -241,7 +290,12 @@ class X_CDirectSoundStream
         {
             ULONG (WINAPI *AddRef)(X_CDirectSoundStream *pThis);            // 0x00
             ULONG (WINAPI *Release)(X_CDirectSoundStream *pThis);           // 0x04
-            DWORD Unknown;                                                  // 0x08
+            
+			HRESULT (WINAPI *GetInfo)										// 0x08
+			(
+				X_CDirectSoundStream   *pThis,
+				XMEDIAINFO			   *pInfo
+			);
 
             HRESULT (WINAPI *GetStatus)                                     // 0x0C
             (
@@ -657,6 +711,16 @@ HRESULT WINAPI EmuIDirectSoundBuffer8_Play
 );
 
 // ******************************************************************
+// * func: EmuIDirectSoundBuffer8_PlayEx
+// ******************************************************************
+extern "C" HRESULT __stdcall EmuIDirectSoundBuffer8_PlayEx
+(
+    X_CDirectSoundBuffer *pBuffer,
+    REFERENCE_TIME        rtTimeStamp,
+    DWORD                 dwFlags
+);
+
+// ******************************************************************
 // * func: EmuIDirectSoundBuffer8_SetVolume
 // ******************************************************************
 HRESULT WINAPI EmuIDirectSoundBuffer8_SetVolume
@@ -723,6 +787,15 @@ ULONG WINAPI EmuCDirectSoundStream_AddRef(X_CDirectSoundStream *pThis);
 // * func: EmuCDirectSoundStream_Release
 // ******************************************************************
 ULONG WINAPI EmuCDirectSoundStream_Release(X_CDirectSoundStream *pThis);
+
+// ******************************************************************
+// * EmuCDirectSoundStream_GetInfo
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_GetInfo
+(
+	X_CDirectSoundStream*	pThis, 
+	LPXMEDIAINFO			pInfo
+);
 
 // ******************************************************************
 // * func: EmuCDirectSoundStream_GetStatus
@@ -1132,5 +1205,91 @@ HRESULT WINAPI EmuIDirectSound8_GetOutputLevels
 	X_DSOUTPUTLEVELS	   *pOutputLevels,
 	BOOL					bResetPeakValues
 );
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetEG
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetEG
+(
+	LPVOID		pThis,
+	LPVOID		pEnvelopeDesc
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundStream_Flush
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundStream_Flush();
+
+// ******************************************************************
+// * func: EmuIDirectSoundStream_FlushEx
+// ******************************************************************
+extern "C" HRESULT WINAPI EmuIDirectSoundStream_FlushEx
+(
+	X_CDirectSoundStream*	pThis,
+	REFERENCE_TIME			rtTimeStamp,
+	DWORD					dwFlags
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetMode
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetMode
+(
+    X_CDirectSoundStream   *pStream,
+    DWORD                   dwMode,
+    DWORD                   dwApply
+);
+	
+// ******************************************************************
+// * func: EmuXAudioDownloadEffectsImage
+// ******************************************************************
+HRESULT WINAPI EmuXAudioDownloadEffectsImage
+(
+    LPCSTR		pszImageName,
+    LPVOID		pImageLoc,
+    DWORD		dwFlags,
+    LPVOID	   *ppImageDesc
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetFilter
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetFilter
+(
+	LPVOID			pThis,
+	X_DSFILTERDESC* pFilterDesc
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetFilter
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetFilter
+(
+	X_CDirectSoundStream*	pThis,
+	X_DSFILTERDESC*			pFilterDesc
+);
+
+// ******************************************************************
+// * func: EmuIDirectSound8_GetCaps
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSound8_GetCaps
+(
+	X_CDirectSound*	pThis,
+    X_DSCAPS*		pDSCaps
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundStream_SetPitch
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundStream_SetPitch
+(	
+	X_CDirectSoundStream*	pThis,
+    LONG					lPitch
+);
+
+// ******************************************************************
+// * func: EmuDirectSoundGetSampleTime
+// ******************************************************************
+DWORD WINAPI EmuDirectSoundGetSampleTime();
 
 #endif

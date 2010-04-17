@@ -60,6 +60,7 @@ extern "C" const char *szHLELastCompileTime = __TIMESTAMP__;
 #include "HLEDataBase/D3D8.1.0.5233.inl"
 #include "HLEDataBase/D3D8.1.0.5558.inl"
 #include "HLEDataBase/D3D8.1.0.5849.inl"
+#include "HLEDataBase/D3D8LTCG.1.0.5849.inl"
 #include "HLEDataBase/DSound.1.0.3936.inl"
 #include "HLEDataBase/DSound.1.0.4361.inl"
 #include "HLEDataBase/DSound.1.0.4432.inl"
@@ -67,6 +68,7 @@ extern "C" const char *szHLELastCompileTime = __TIMESTAMP__;
 #include "HLEDataBase/DSound.1.0.5233.inl"
 #include "HLEDataBase/DSound.1.0.5558.inl"
 #include "HLEDataBase/DSound.1.0.5849.inl"
+#include "HLEDataBase/XG.1.0.3911.inl"
 #include "HLEDataBase/XG.1.0.4361.inl"
 #include "HLEDataBase/XG.1.0.4627.inl"
 #include "HLEDataBase/XG.1.0.5233.inl"
@@ -74,6 +76,7 @@ extern "C" const char *szHLELastCompileTime = __TIMESTAMP__;
 #include "HLEDataBase/XNet.1.0.3911.inl"
 #include "HLEDataBase/XOnline.1.0.4361.inl"
 #include "HLEDataBase/XOnline.1.0.4627.inl"
+#include "HLEDataBase/XOnline.1.0.5233.inl"
 #include "HLEDataBase/XactEng.1.0.4627.inl"
 
 // ******************************************************************
@@ -207,6 +210,13 @@ HLEData HLEDataBase[] =
         D3D8_1_0_5849,
         D3D8_1_0_5849_SIZE
     },
+	// D3D8LTCG Version 1.0.5849
+    {
+        "D3D8LTCG",
+        1, 0, 5849,
+        D3D8LTCG_1_0_5849,
+        D3D8LTCG_1_0_5849_SIZE
+    },
     // DSound Version 1.0.3936
     {
         "DSOUND",
@@ -255,6 +265,13 @@ HLEData HLEDataBase[] =
         1, 0, 5849,
         DSound_1_0_5849,
         DSound_1_0_5849_SIZE
+    },
+	// XG Version 1.0.3911
+    {
+        "XGRAPHC",
+        1, 0, 3911,
+        XG_1_0_3911,
+        XG_1_0_3911_SIZE
     },
     // XG Version 1.0.4361
     {
@@ -305,6 +322,13 @@ HLEData HLEDataBase[] =
         1, 0, 4627,
         XOnline_1_0_4627,
         XOnline_1_0_4627_SIZE
+    },
+	// XOnline(s) Version 1.0.5233
+	{
+        "XONLINES",
+        1, 0, 5233,
+        XOnline_1_0_5233,
+        XOnline_1_0_5233_SIZE
     },
 	// XactEng Version 1.0.4627
 	{
@@ -476,10 +500,31 @@ extern uint32 XRefDataBase[] =
     -1, // XREF_DirectSound_CDirectSoundBuffer_SetAllParameters
 	-1, // XREF_DirectSound_CDirectSound_EnableHeadphones
 	-1, // XREF_DirectSound_CDirectSoundVoice_SetHeadroom
+	-1, // XREF_DirectSound_CDirectSoundBuffer_SetHeadroom
 	-1, // XREF_DirectSound_CDirectSound_GetOutputLevels
+	-1, // XREF_DirectSound_CMcpxBuffer_Pause
 	-1, // XREF_DirectSound_CDirectSoundBuffer_Pause
 	-1, // XREF_DirectSound_CMcpxBuffer_GetStatus
 	-1, // XREF_DirectSound_CDirectSoundBuffer_GetStatus
+	-1, // XREF_DirectSound_CDirectSoundVoice_SetEG
+	-1, // XREF_DirectSound_CMcpxVoiceClient_SetEG
+	-1,	// XREF_DirectSound_CMcpxVoiceClient_SetFilter
+	-1,	// XREF_DirectSound_CDirectSoundVoice_SetFilter
+	-1,	// XREF_DirectSound_CDirectSoundBuffer_SetFilter
+	-1,	// XREF_DirectSound_CDirectSoundStream_SetFilter
+	-1, // XREF_DirectSound_CDirectSoundBuffer_StopEx
+	-1,	// XREF_CMcpxBuffer_Stop2
+	-1, // XREF_CMcpxAPU_Set3dDopplerFactor
+	-1, // XREF_CSensaura3d_GetFullHRTFFilterPair
+	-1, // XREF_CDirectSound_GetCaps
+	-1, // XREF_CDirectSoundVoice_SetPitch
+	-1, // XREF_DirectSoundEnterCriticalSection
+	-1, // XREF_CDirectSoundBuffer_SetMinDistance
+	-1, // XREF_CDirectSoundBuffer_SetMaxDistance
+	-1, // XREF_CMcpxVoiceClient_Commit3dSettings
+	-1,	// XREF_CMcpxVoiceClient_SetI3DL2Source
+	-1,	// XREF_CDirectSoundVoice_SetI3DL2Source
+	-1,	// XREF_CDirectSoundVoice_SetMixBinVolumes
 	// XACT
 	-1, // XREF_XACT_CEngine_RegisterWaveBank
 	-1, // XREF_XACT_CEngine_RegisterStreamedWaveBank
@@ -487,6 +532,13 @@ extern uint32 XRefDataBase[] =
 	-1, // XREF_XACT_CEngine_DownloadEffectsImage
 	-1, // XREF_XACT_CEngine_CreateSoundSource
 	-1, // XREF_XACT_CSoundBank_GetSoundCueIndexFromFriendlyName
+	-1, // XREF_XACT_CEngine_RegisterNotification
+	-1, // XREF_XACT_CEngine_GetNotification
+	-1, // XREF_XACT_CEngine_UnRegisterWaveBank
+	// XONLINE
+	-1, // XREF_XoUpdateLaunchNewImageInternal
+	-1, // XREF_CXo_XOnlineLogon
+	-1,
     /* not necessary?
     -1, //XREF_XAPIXCALCULATESIGNATUREBEGINEX
     //*/

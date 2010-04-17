@@ -79,7 +79,7 @@ HRESULT WINAPI XTL::EmuXACTEngineCreate
 
 	// TODO: Any other form of initialization?
 
-//	*ppEngine = (X_XACTEngine*) CxbxMalloc( sizeof( X_XACTEngine ) );
+	*ppEngine = (X_XACTEngine*) CxbxMalloc( sizeof( X_XACTEngine ) );
 
 	EmuSwapFS();	// Xbox FS
 	
@@ -98,9 +98,9 @@ void WINAPI XTL::EmuXACTEngineDoWork()
 	// TODO: Anything else required here?
 	// AFAIK, this function just calls DirectSoundDoWork()
 
-	EmuSwapFS();
-	EmuDirectSoundDoWork();
-	EmuSwapFS();
+	//EmuSwapFS();
+	//EmuDirectSoundDoWork();
+	//EmuSwapFS();
 
 	EmuSwapFS();	// Xbox FS
 }
@@ -129,7 +129,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_RegisterWaveBank
 
 	// TODO: Implement
 
-//	*ppWaveBank = (X_XACTWaveBank*) CxbxMalloc( sizeof( X_XACTWaveBank ) );
+	*ppWaveBank = (X_XACTWaveBank*) CxbxMalloc( sizeof( X_XACTWaveBank ) );
 
 	EmuSwapFS();	// Xbox FS
 
@@ -158,7 +158,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_RegisterStreamedWaveBank
 
 	// TODO: Implement
 
-//	*ppWaveBank = (X_XACTWaveBank*) CxbxMalloc( sizeof( X_XACTWaveBank ) );
+	*ppWaveBank = (X_XACTWaveBank*) CxbxMalloc( sizeof( X_XACTWaveBank ) );
 
 	EmuSwapFS();	// Xbox FS
 
@@ -189,7 +189,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_CreateSoundBank
 
 	// TODO: Implement
 
-//	*ppSoundBank = (X_XACTSoundBank*) CxbxMalloc( sizeof( X_XACTSoundBank ) );
+	*ppSoundBank = (X_XACTSoundBank*) CxbxMalloc( sizeof( X_XACTSoundBank ) );
 
 	EmuSwapFS();	// Xbox FS
 
@@ -246,6 +246,8 @@ HRESULT WINAPI XTL::EmuIXACTEngine_CreateSoundSource
 		   "   ppSoundSource             : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), pThis, dwFlags, ppSoundSource);
+
+	*ppSoundSource = (X_XACTSoundSource*) malloc( sizeof( X_XACTSoundSource ) );
 
 	EmuSwapFS();
 
@@ -544,6 +546,87 @@ HRESULT WINAPI XTL::EmuIXACTSoundSource_SetVelocity
 		   "   dwApply                   : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), pThis, x, y, z, dwApply);
+
+	EmuSwapFS();
+
+	return S_OK;
+}
+
+// ******************************************************************
+// * EmuIXACTEngine_RegisterNotification
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIXACTEngine_RegisterNotification
+(
+	X_XACTEngine*					pThis,
+    PCXACT_NOTIFICATION_DESCRIPTION pNotificationDesc
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_RegisterNotification\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+		   "   pNotificationDesc         : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, pNotificationDesc);
+
+	EmuSwapFS();
+
+	return S_OK;
+}
+
+// ******************************************************************
+// * EmuIXACTEngine_GetNotification
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIXACTEngine_GetNotification
+(
+	X_XACTEngine*					pThis,
+    PCXACT_NOTIFICATION_DESCRIPTION pNotificationDesc,
+    LPVOID						    pNotification
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_GetNotification\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+		   "   pNotificationDesc         : 0x%.08X\n"
+		   "   pNotification             : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, pNotificationDesc, pNotification);
+
+	// TODO: The contents of XACT_NOTIFICATION can vary from one XDK to the next.
+	// The definition for 4627 is different than 5558.
+
+	EmuSwapFS();
+
+	return S_OK;
+}
+
+// ******************************************************************
+// * EmuIXACTEngine_UnRegisterWaveBank
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIXACTEngine_UnRegisterWaveBank
+(
+	X_XACTEngine*	pThis,
+    X_XACTWaveBank*	pWaveBank
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_UnRegisterWaveBank\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+		   "   pWaveBank                 : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, pWaveBank);
+
+	// Even though the documentation doesn't tell us much, I'm
+	// assuming that after this function is called, the pointer
+	// to IXACTWaveBank is released.
+
+//	if(pWaveBank)
+//		free(pWaveBank);
 
 	EmuSwapFS();
 

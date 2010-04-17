@@ -33,41 +33,32 @@
 // ******************************************************************
 
 // ******************************************************************
-// * XnInit
+// * XNetStartup
 // ******************************************************************
-SOOVPA<12> XnInit_1_0_4627 =
+SOOVPA<8> XNetStartup_1_0_5344 = 
 {
     0,  // Large == 0
-    12, // Count == 12
+    8,  // Count == 8
 
-    XREF_XNINIT, // XRef Is Saved
-    0,           // XRef Not Used
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
 
     {
-        // XnInit+0x03 : sub esp, 0x0218
-        { 0x03, 0x81 }, // (Offset,Value)-Pair #1
-        { 0x04, 0xEC }, // (Offset,Value)-Pair #2
-        { 0x05, 0x18 }, // (Offset,Value)-Pair #3
-        { 0x06, 0x02 }, // (Offset,Value)-Pair #4
-
-        // XnInit+0x19 : cmpxchg [ecx], edx
-        { 0x19, 0x0F }, // (Offset,Value)-Pair #5
-        { 0x1A, 0xB1 }, // (Offset,Value)-Pair #6
-        { 0x1B, 0x11 }, // (Offset,Value)-Pair #7
-
-        // XnInit+0x3C : push 0x4454454E
-        { 0x3C, 0x68 }, // (Offset,Value)-Pair #8
-        { 0x3D, 0x4E }, // (Offset,Value)-Pair #9
-		{ 0x3E, 0x45 }, // (Offset,Value)-Pair #10
-		{ 0x3F, 0x54 }, // (Offset,Value)-Pair #11
-		{ 0x40, 0x44 }, // (Offset,Value)-Pair #12
+        { 0x01, 0xC0 },
+        { 0x04, 0x50 },
+        { 0x07, 0x24 },
+        { 0x0A, 0x68 },
+        { 0x0F, 0xE8 },
+        { 0x14, 0xC2 },
+        { 0x15, 0x04 },
+        { 0x16, 0x00 },
     }
 };
 
 // ******************************************************************
 // * XNetGetEthernetLinkStatus
 // ******************************************************************
-SOOVPA<8> XNetGetEthernetLinkStatus_1_0_4627 = 
+SOOVPA<8> XNetGetEthernetLinkStatus_1_0_5344 = 
 {
     0,  // Large == 0
     8,  // Count == 8
@@ -88,36 +79,60 @@ SOOVPA<8> XNetGetEthernetLinkStatus_1_0_4627 =
 };
 
 // ******************************************************************
-// * XoUpdateLaunchNewImageInternal
+// * CXo::XOnlineLogon
 // ******************************************************************
-SOOVPA<8> XoUpdateLaunchNewImageInternal_1_0_4627 = 
+SOOVPA<8> CXo_XOnlineLogon_1_0_5344 = 
 {
     0,  // Large == 0
     8,  // Count == 8
 
-    XREF_XoUpdateLaunchNewImageInternal, // Xref Is Saved
+    XREF_CXo_XOnlineLogon,  // Xref Is Saved
     0,  // Xref Not Used
 
     {
-        { 0x1E, 0xDB },
-        { 0x3E, 0x1B },
-        { 0x5E, 0xF6 },
-        { 0x81, 0x83 },
-        { 0x9E, 0xE8 },
-        { 0xBE, 0x50 },
-        { 0xDE, 0xE8 },
-        { 0xFE, 0x15 },
+        { 0x21, 0xA8 },
+        { 0x3E, 0x80 },
+        { 0x5E, 0x00 },
+        { 0x7E, 0x04 },
+        { 0xA2, 0x85 },
+        { 0xBE, 0xEC },
+        { 0xDE, 0xF9 },
+        { 0xFE, 0x33 },
+    }
+};
+
+// ******************************************************************
+// * XOnlineLogon
+// ******************************************************************
+SOOVPA<8> XOnlineLogon_1_0_5344 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    1,  // Xref Is Used
+
+    {
+        { 0x0B, XREF_CXo_XOnlineLogon },
+
+        { 0x00, 0x55 },
+        { 0x01, 0x8B },
+        { 0x02, 0xEC },
+        { 0x03, 0x5D },
+        { 0x04, 0x8B },
+        { 0x05, 0x0D },
+        { 0x0A, 0xE9 },
     }
 };
 
 // ******************************************************************
 // * XOnline_1_0_4627
 // ******************************************************************
-OOVPATable XOnline_1_0_4627[] =
+OOVPATable XOnline_1_0_5233[] =
 {
-    // XNetStartup (* unchanged since 4361 *)
+    // XNetStartup
     {
-        (OOVPA*)&XNetStartup_1_0_4361,
+        (OOVPA*)&XNetStartup_1_0_5344,
 
         XTL::EmuXNetStartup,
 
@@ -125,7 +140,7 @@ OOVPATable XOnline_1_0_4627[] =
         "EmuXNetStartup"
         #endif
     },
-	// WSAStartup
+	// WSAStartup (* unchanged since 4361 *)
     {
         (OOVPA*)&WSAStartup_1_0_4361,
 
@@ -135,7 +150,7 @@ OOVPATable XOnline_1_0_4627[] =
         "EmuWSAStartup"
         #endif
     },
-    // XnInit (XREF)
+    // XnInit (XREF) (* unchanged since 4627 *)
     {
         (OOVPA*)&XnInit_1_0_4627, 0,
 
@@ -144,7 +159,7 @@ OOVPATable XOnline_1_0_4627[] =
         #endif
     },
     // socket
-    {
+    /*{
         (OOVPA*)&socket_1_0_4361,
 
         MFPtoFP<XTL::EmuThis>(XTL::EmuThis::Emusocket),
@@ -152,7 +167,7 @@ OOVPATable XOnline_1_0_4627[] =
         #ifdef _DEBUG_TRACE
         "Emusocket"
         #endif
-    },
+    },*/
     // bind (* unchanged since 4361 *)
     {
         (OOVPA*)&bind_1_0_4361,
@@ -164,7 +179,7 @@ OOVPATable XOnline_1_0_4627[] =
         #endif
     },
     // listen
-    {
+    /*{
         (OOVPA*)&listen_1_0_4361,
 
         MFPtoFP<XTL::EmuThis>(XTL::EmuThis::Emulisten),
@@ -172,7 +187,7 @@ OOVPATable XOnline_1_0_4627[] =
         #ifdef _DEBUG_TRACE
         "Emulisten"
         #endif
-    },
+    },*/
     // ioctlsocket (* unchanged since 4361 *)
     {
         (OOVPA*)&ioctlsocket_1_0_4361,
@@ -185,24 +200,34 @@ OOVPATable XOnline_1_0_4627[] =
     },
 	// XNetGetEthernetLinkStatus
     {
-        (OOVPA*)&XNetGetEthernetLinkStatus_1_0_4627,
+        (OOVPA*)&XNetGetEthernetLinkStatus_1_0_5344,
         XTL::EmuXNetGetEthernetLinkStatus,
 
         #ifdef _DEBUG_TRACE
-        "XNetGetEthernetLinkStatus"
+        "EmuXNetGetEthernetLinkStatus"
         #endif
     },
-	// XoUpdateLaunchNewImageInternal (XREF)
+	// CXo::XOnlineLogon (XREF)
     {
-        (OOVPA*)&XoUpdateLaunchNewImageInternal_1_0_4627, 0,
+        (OOVPA*)&CXo_XOnlineLogon_1_0_5344,
+        0,
 
         #ifdef _DEBUG_TRACE
-		"XoUpdateLaunchNewImageInternal (XREF)"
+		"CXo::XOnlineLogon (XREF) (5344)"
+        #endif
+    },
+	// XOnlineLogon
+    {
+        (OOVPA*)&XOnlineLogon_1_0_5344,
+        XTL::EmuXOnlineLogon,
+
+        #ifdef _DEBUG_TRACE
+		"EmuXOnlineLogon (5344)"
         #endif
     },
 };
 
 // ******************************************************************
-// * XOnline_1_0_4627_SIZE
+// * XOnline_1_0_5233_SIZE
 // ******************************************************************
-uint32 XOnline_1_0_4627_SIZE = sizeof(XOnline_1_0_4627);
+uint32 XOnline_1_0_5233_SIZE = sizeof(XOnline_1_0_5233);

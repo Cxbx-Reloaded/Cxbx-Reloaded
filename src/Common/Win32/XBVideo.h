@@ -86,6 +86,12 @@ class XBVideo : public Error
         void SetVSync(BOOL bVSync) { m_bVSync = bVSync; }
         BOOL GetVSync() { return m_bVSync; }
 
+		// ******************************************************************
+		// * Hardware YUV Toggling
+		// ******************************************************************
+		void SetHardwareYUV(BOOL bHardwareYUV) { m_bHardwareYUV = bHardwareYUV; }
+		BOOL GetHardwareYUV() { return m_bHardwareYUV; }
+
     private:
         // ******************************************************************
         // * Configuration
@@ -95,6 +101,7 @@ class XBVideo : public Error
         DWORD m_dwDirect3DDevice;
         BOOL  m_bFullscreen;
         BOOL  m_bVSync;
+		BOOL  m_bHardwareYUV;
 };
 
 #endif

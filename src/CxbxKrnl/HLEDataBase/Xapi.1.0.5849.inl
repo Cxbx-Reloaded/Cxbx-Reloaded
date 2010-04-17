@@ -78,6 +78,92 @@ SOOVPA<7> XGetDeviceChanges_1_0_5849 =
 };
 
 // ******************************************************************
+// * GetThreadPriority
+// ******************************************************************
+SOOVPA<7> GetThreadPriority_1_0_5849 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x0D, 0xFF },
+        { 0x16, 0x85 },
+        { 0x1F, 0x15 },
+        { 0x2A, 0x04 },
+        { 0x35, 0xF1 },
+        { 0x40, 0x8B },
+        { 0x4B, 0xB8 },
+    }
+};
+
+// ******************************************************************
+// * SetThreadPriorityBoost
+// ******************************************************************
+SOOVPA<7> SetThreadPriorityBoost_1_0_5849 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x07, 0xFF },
+        { 0x10, 0xFF },
+        { 0x19, 0x20 },
+        { 0x22, 0x50 },
+        { 0x2C, 0x8B },
+        { 0x35, 0x33 },
+        { 0x40, 0x33 },
+    }
+};
+
+// ******************************************************************
+// * XGetSectionSize
+// ******************************************************************
+SOOVPA<5> XGetSectionSize_1_0_5849 = 
+{
+    0,  // Large == 0
+    5,  // Count == 5
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x00, 0x8B },
+        { 0x02, 0x24 },
+        { 0x04, 0x8B },
+        { 0x06, 0x08 },
+        { 0x08, 0x04 },
+    }
+};
+
+// ******************************************************************
+// * RaiseException
+// ******************************************************************
+SOOVPA<7> RaiseException_1_0_5849 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x09, 0x83 },
+        { 0x14, 0x8B },
+        { 0x1F, 0xC7 },
+        { 0x2A, 0x10 },
+        { 0x35, 0x89 },
+        { 0x40, 0x5F },
+        { 0x4B, 0xFF },
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_5849
 // ******************************************************************
 OOVPATable XAPI_1_0_5849[] =
@@ -272,6 +358,91 @@ OOVPATable XAPI_1_0_5849[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXapiBootDash"
+        #endif
+    },
+	// QueueUserAPC (* unchanged since 3911 *)
+	{ 
+		(OOVPA*)&QueueUserAPC_1_0_3911,
+
+		XTL::EmuQueueUserAPC,
+			
+		#ifdef _DEBUG_TRACE
+		"EmuQueueUserAPC"
+		#endif
+	},
+	// GetThreadPriority
+    {
+        (OOVPA*)&GetThreadPriority_1_0_5849,
+        XTL::EmuGetThreadPriority,
+
+        #ifdef _DEBUG_TRACE
+        "GetThreadPriority"
+        #endif
+    },
+    // SetThreadPriorityBoost
+    {
+        (OOVPA*)&SetThreadPriorityBoost_1_0_5849,
+        XTL::EmuSetThreadPriorityBoost,
+
+        #ifdef _DEBUG_TRACE
+        "SetThreadPriorityBoost"
+        #endif
+    },
+    // GetThreadPriorityBoost
+    /*{
+        (OOVPA*)&GetThreadPriorityBoost_1_0_5849,
+        XTL::EmuGetThreadPriorityBoost,
+
+        #ifdef _DEBUG_TRACE
+        "GetThreadPriorityBoost"
+        #endif
+    },*/
+	// XGetSectionHandleA (* unchanged since 4134 *)
+	{
+		(OOVPA*)&XGetSectionHandleA_1_0_4134, 
+			
+		XTL::EmuXGetSectionHandleA,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXGetSectionHandleA"
+		#endif
+	},
+	// XLoadSectionByHandle (* unchanged since 4134 *)
+	{
+		(OOVPA*)&XLoadSectionByHandle_1_0_4134, 
+			
+		XTL::EmuXLoadSectionByHandle,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXLoadSectionByHandle"
+		#endif
+	},
+	// XFreeSectionByHandle (* unchanged since 4134 *)
+	{
+		(OOVPA*)&XFreeSectionByHandle_1_0_4134, 
+			
+		XTL::EmuXFreeSectionByHandle,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXFreeSectionByHandle"
+		#endif
+	},
+	// XGetSectionSize
+    {
+        (OOVPA*)&XGetSectionSize_1_0_5849,
+        XTL::EmuXGetSectionSize,
+
+        #ifdef _DEBUG_TRACE
+        "XGetSectionSize"
+        #endif
+    },
+	// RaiseException
+    {
+        (OOVPA*)&RaiseException_1_0_5849,
+        XTL::EmuRaiseException,
+
+        #ifdef _DEBUG_TRACE
+        "RaiseException"
         #endif
     },
 };

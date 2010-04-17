@@ -193,6 +193,116 @@ SOOVPA<8> XapiInitProcess_1_0_5659 =
 };
 
 // ******************************************************************
+// * CreateSemaphoreA
+// ******************************************************************
+SOOVPA<7> CreateSemaphoreA_1_0_5558 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x0A, 0x74 },
+        { 0x16, 0x50 },
+        { 0x22, 0x10 },
+        { 0x31, 0x85 },
+        { 0x3A, 0x75 },
+        { 0x4A, 0x8B },
+        { 0x55, 0x33 },
+    }
+};
+
+// ******************************************************************
+// * ReleaseSemaphore
+// ******************************************************************
+SOOVPA<7> ReleaseSemaphore_1_0_5558 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x03, 0x0C },
+        { 0x08, 0xFF },
+        { 0x0D, 0x15 },
+        { 0x12, 0x85 },
+        { 0x17, 0xC0 },
+        { 0x1C, 0xE8 },
+        { 0x21, 0x33 },
+    }
+};
+
+// ******************************************************************
+// * XLaunchNewImageA
+// ******************************************************************
+SOOVPA<7> XLaunchNewImageA_1_0_5558 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x07, 0xF0 },
+        { 0x10, 0xD2 },
+        { 0x19, 0x19 },
+        { 0x22, 0x52 },
+        { 0x2B, 0xE8 },
+        { 0x34, 0x6A },
+        { 0x3D, 0x10 },
+    }
+};
+
+// ******************************************************************
+// * XGetLaunchInfo
+// ******************************************************************
+SOOVPA<7> XGetLaunchInfo_1_0_5558 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x0B, 0x8B },
+        { 0x18, 0x15 },
+        { 0x25, 0x8B },
+        { 0x32, 0x30 },
+        { 0x3F, 0x00 },
+        { 0x4C, 0x83 },
+        { 0x59, 0x5E },
+    }
+};
+
+// ******************************************************************
+// * GetFileAttributesA
+// ******************************************************************
+SOOVPA<7> GetFileAttributesA_1_0_5558 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x08, 0x08 },
+        { 0x13, 0x8D },
+        { 0x1C, 0x50 },
+        { 0x26, 0xFF },
+        { 0x30, 0x15 },
+        { 0x3A, 0x45 },
+        { 0x44, 0x83 },
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_5558
 // ******************************************************************
 OOVPATable XAPI_1_0_5558[] =
@@ -407,6 +517,72 @@ OOVPATable XAPI_1_0_5558[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXapiBootDash"
+        #endif
+    },
+	// CreateSemaphore
+	{
+		(OOVPA*)&CreateSemaphoreA_1_0_5558,
+
+		XTL::EmuCreateSemaphore,
+
+		#ifdef _DEBUG_TRACE
+		"EmuCreateSemaphoreA"
+		#endif
+	},
+	// ReleaseSemaphore
+	{
+		(OOVPA*)&ReleaseSemaphore_1_0_5558,
+
+		XTL::EmuReleaseSemaphore,
+
+		#ifdef _DEBUG_TRACE
+		"EmuReleaseSemaphore"
+		#endif
+	},
+	// XLaunchNewImageA
+    {
+        (OOVPA*)&XLaunchNewImageA_1_0_5558,
+        XTL::EmuXLaunchNewImage,
+
+        #ifdef _DEBUG_TRACE
+        "XLaunchNewImageA"
+        #endif
+    },
+    // XGetLaunchInfo
+    {
+        (OOVPA*)&XGetLaunchInfo_1_0_5558,
+        XTL::EmuXGetLaunchInfo,
+
+        #ifdef _DEBUG_TRACE
+        "XGetLaunchInfo"
+        #endif
+    },
+	// QueueUserAPC (* unchanged since 3911 *)
+	{ 
+		(OOVPA*)&QueueUserAPC_1_0_3911,
+
+		XTL::EmuQueueUserAPC,
+			
+		#ifdef _DEBUG_TRACE
+		"EmuQueueUserAPC"
+		#endif
+	},
+	// GetFileAttributesA
+    {
+        (OOVPA*)&GetFileAttributesA_1_0_5558,
+        XTL::EmuGetFileAttributesA,
+
+        #ifdef _DEBUG_TRACE
+        "GetFileAttributesA"
+        #endif
+    },
+	// VirtualProtect (* unchanged since 4627 *)
+    {
+        (OOVPA*)&VirtualProtect_1_0_4627,
+        XTL::EmuVirtualProtect,
+
+        #ifdef _DEBUG_TRACE
+        "VirtualProtect"
         #endif
     },
 };

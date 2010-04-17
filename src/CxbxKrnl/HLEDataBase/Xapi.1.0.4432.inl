@@ -302,6 +302,46 @@ OOVPATable XAPI_1_0_4432[] =
         "EmuSetThreadPriority"
         #endif
     },
+	// SignalObjectAndWait (* unchanged since 3911 *)
+	{
+		(OOVPA*)&SignalObjectAndWait_1_0_3911, 
+			
+		XTL::EmuSignalObjectAndWait,
+
+		#ifdef _DEBUG_TRACE
+		"EmuSignalObjectAndWait"
+		#endif
+	},
+	// CreateFiber (* unchanged since 3911 *)
+	{
+		(OOVPA*)&CreateFiber_1_0_3911,
+
+		XTL::EmuCreateFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuCreateFiber"
+		#endif
+	},
+	// DeleteFiber (* unchanged since 3911 *)
+	{
+		(OOVPA*)&DeleteFiber_1_0_3911,
+
+		XTL::EmuDeleteFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuDeleteFiber"
+		#endif
+	},
+	// QueueUserAPC (* unchanged since 3911 *)
+	{ 
+		(OOVPA*)&QueueUserAPC_1_0_3911,
+
+		XTL::EmuQueueUserAPC,
+			
+		#ifdef _DEBUG_TRACE
+		"EmuQueueUserAPC"
+		#endif
+	},
 };
 
 // ******************************************************************

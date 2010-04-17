@@ -174,7 +174,7 @@ XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 
         case 0x30: // Linear     (X_D3DFMT_LIN_D16)
         case 0x2C: // Swizzled   (X_D3DFMT_D16)
-            return D3DFMT_D16;
+            return D3DFMT_D16;		// TODO: D3DDMT_D16 on Xbox is always lockable
 
         case 0x27: // Swizzled   (X_D3DFMT_L6V5U5)
             return D3DFMT_L6V5U5;
@@ -187,6 +187,9 @@ XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 
         case 0x64:
             return D3DFMT_VERTEXDATA;
+
+		case 0xFFFFFFFF:
+			return D3DFMT_UNKNOWN;	// TODO: Not sure if this counts as swizzled or not...
     }
 
     CxbxKrnlCleanup("EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)", Format);
@@ -228,6 +231,12 @@ XTL::X_D3DFORMAT XTL::EmuPC2XB_D3DFormat(D3DFORMAT Format)
         case D3DFMT_L8:
             return 0x13;        // Linear
 //            return 0x00;      // Swizzled
+		case D3DFMT_D16:
+		case D3DFMT_D16_LOCKABLE:
+			return 0x2C;
+
+		case D3DFMT_UNKNOWN:
+			return 0xFFFFFFFF;
     }
 
     CxbxKrnlCleanup("EmuPC2XB_D3DFormat: Unknown Format (%d)", Format);
@@ -258,6 +267,37 @@ DWORD XTL::EmuXB2PC_D3DLock(DWORD Flags)
     }
 
     return NewFlags;
+}
+
+// convert from xbox to pc multisample formats
+XTL::D3DMULTISAMPLE_TYPE XTL::EmuXB2PC_D3DMultiSampleFormat(DWORD Type)
+{
+	switch(Type)
+	{
+	case 0x0011:
+		return D3DMULTISAMPLE_NONE;
+
+	case 0x1021:
+	case 0x1121:
+	case 0x2021:
+	case 0x2012:
+		return D3DMULTISAMPLE_2_SAMPLES;
+
+	case 0x1022:
+	case 0x1222:
+	case 0x2022:
+	case 0x2222:
+		return D3DMULTISAMPLE_4_SAMPLES;
+
+	case 0x1233:
+	case 0x2233:
+		return D3DMULTISAMPLE_9_SAMPLES;
+	}
+
+	CxbxKrnlCleanup( "Unknown Multisample Type (0x%X)!\n"
+		             "If this value is greater than 0xFFFF contact blueshogun!" );
+
+	return D3DMULTISAMPLE_NONE;
 }
 
 // lookup table for converting vertex count to primitive count
@@ -303,12 +343,12 @@ CONST DWORD XTL::EmuD3DRenderStateSimpleEncoded[174] =
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 2
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 4
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 6
-    X_D3DRSSE_UNK,  0x0004037c,     // 8  - D3DRS_SHADEMODE
+    X_D3DRSSE_UNK,  0x0004037c,     // 8  - , D3DRS_SHADEMODE
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 10
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 12
     0x0004035c,     0x00040300,     // 14 - D3DRS_ZWRITEENABLE, D3DRS_ALPHATESTENABLE
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 16
-    X_D3DRSSE_UNK,  0x00040344,     // 18
+    X_D3DRSSE_UNK,  0x00040344,     // 18 - , D3DRS_SRCBLEND
     0x00040348,     X_D3DRSSE_UNK,  // 20 - D3DRS_DESTBLEND
     X_D3DRSSE_UNK,  0x00040354,     // 22 - , D3DRS_ZFUNC
     0x00040340,     0x0004033c,     // 24 - D3DRS_ALPHAREF, D3DRS_ALPHAFUNC
@@ -326,9 +366,9 @@ CONST DWORD XTL::EmuD3DRenderStateSimpleEncoded[174] =
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 48
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 50
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 52
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 54
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 56
-    X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 58
+    0x00040374,     0x00040378,     // 54 - D3DRS_STENCILZFAIL, D3DRS_STENCILPASS
+    0x00040364,     0x00040368,     // 56 - D3DRS_STENCILFUNC, D3DRS_STENCILREF
+    0x0004036c,     0x00040360,		// 58 - D3DRS_STENCILMASK, D3DRS_STENCILWRITEMASK
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 60
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 62
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 64

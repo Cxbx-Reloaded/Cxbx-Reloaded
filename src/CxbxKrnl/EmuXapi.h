@@ -292,6 +292,23 @@ XCALCSIG_SIGNATURE, *PXCALCSIG_SIGNATURE;
 #define XCALCSIG_FLAG_NON_ROAMABLE  (0x00000001)
 
 // ******************************************************************
+// * LAUNCH_DATA
+// ******************************************************************
+#define MAX_LAUNCH_DATA_SIZE	1024 * 3
+
+typedef struct _LAUNCH_DATA 
+{
+	BYTE	Data[MAX_LAUNCH_DATA_SIZE];
+} 
+LAUNCH_DATA, *PLAUNCH_DATA;
+
+#define LDT_TITLE                 0
+#define LDT_FROM_DASHBOARD        2
+#define LDT_FROM_DEBUGGER_CMDLINE 3
+#define LDT_FROM_UPDATE           4
+
+
+// ******************************************************************
 // * func: EmuXapiApplyKernelPatches
 // ******************************************************************
 VOID WINAPI EmuXapiApplyKernelPatches();
@@ -594,7 +611,7 @@ LPVOID WINAPI EmuCreateFiber
 // ******************************************************************
 VOID WINAPI EmuDeleteFiber
 (
-	LPVOID					lpFiber
+	LPVOID lpFiber
 );
 
 // ******************************************************************
@@ -602,7 +619,7 @@ VOID WINAPI EmuDeleteFiber
 // ******************************************************************
 LPVOID WINAPI EmuXLoadSectionA
 (
-	LPCSTR					pSectionName
+	LPCSTR pSectionName
 );
 
 // ******************************************************************
@@ -610,7 +627,7 @@ LPVOID WINAPI EmuXLoadSectionA
 // ******************************************************************
 BOOL WINAPI EmuXFreeSectionA
 (
-	LPCSTR					pSectionName
+	LPCSTR pSectionName
 );
 
 // ******************************************************************
@@ -618,7 +635,7 @@ BOOL WINAPI EmuXFreeSectionA
 // ******************************************************************
 HANDLE WINAPI EmuXGetSectionHandleA
 (
-	LPCSTR					pSectionName
+	LPCSTR pSectionName
 );
 
 // ******************************************************************
@@ -626,7 +643,7 @@ HANDLE WINAPI EmuXGetSectionHandleA
 // ******************************************************************
 LPVOID WINAPI EmuXLoadSectionByHandle
 (
-	HANDLE					hSection
+	HANDLE hSection
 );
 
 // ******************************************************************
@@ -634,7 +651,15 @@ LPVOID WINAPI EmuXLoadSectionByHandle
 // ******************************************************************
 BOOL WINAPI EmuXFreeSectionByHandle
 (
-	HANDLE					hSection
+	HANDLE hSection
+);
+
+// ******************************************************************
+// * func: EmuXGetSectionSize
+// ******************************************************************
+DWORD WINAPI EmuXGetSectionSize
+(
+	HANDLE hSection                       
 );
 
 // ******************************************************************
@@ -644,6 +669,146 @@ PVOID WINAPI EmuRtlDestroyHeap
 (
     IN HANDLE HeapHandle
 );
+
+// ******************************************************************
+// * func: EmuQueueUserAPC
+// ******************************************************************
+DWORD WINAPI EmuQueueUserAPC
+(
+	PAPCFUNC	pfnAPC,
+	HANDLE		hThread,
+	DWORD   	dwData
+);
+
+// ******************************************************************
+// * func: EmuGetOverlappedResult
+// ******************************************************************
+BOOL WINAPI EmuGetOverlappedResult
+(
+	HANDLE			hFile,
+	LPOVERLAPPED	lpOverlapped,
+	LPDWORD			lpNumberOfBytesTransferred,
+	BOOL			bWait
+);
+
+// ******************************************************************
+// * func: EmuXLaunchNewImage
+// ******************************************************************
+DWORD WINAPI EmuXLaunchNewImage
+(
+	LPCSTR			lpTitlePath,
+	PLAUNCH_DATA	pLaunchData
+);
+
+// ******************************************************************
+// * func: EmuXGetLaunchInfo
+// ******************************************************************
+DWORD WINAPI EmuXGetLaunchInfo
+(
+	PDWORD			pdwLaunchDataType,
+	PLAUNCH_DATA	pLaunchData
+);
+
+// ******************************************************************
+// * func: EmuXSetProcessQuantumLength
+// ******************************************************************
+VOID WINAPI EmuXSetProcessQuantumLength
+(
+    DWORD dwMilliseconds
+);
+
+// ******************************************************************
+// * func: EmuXGetFileCacheSize
+// ******************************************************************
+DWORD WINAPI EmuXGetFileCacheSize();
+
+// ******************************************************************
+// * func: EmuSignalObjectAndWait
+// ******************************************************************
+DWORD WINAPI EmuSignalObjectAndWait
+(
+	HANDLE	hObjectToSignal,
+	HANDLE	hObjectToWaitOn,
+	DWORD	dwMilliseconds,
+	BOOL	bAlertable
+);
+
+// ******************************************************************
+// * func: EmuPulseEvent
+// ******************************************************************
+BOOL WINAPI EmuPulseEvent( HANDLE hEvent );
+
+// ******************************************************************
+// * func: EmuCreateSemaphore
+// ******************************************************************
+HANDLE WINAPI EmuCreateSemaphore
+(
+	LPVOID	lpSemaphoreAttributes, 
+	LONG	lInitialCount,
+	LONG	lMaximumCount,
+	LPSTR	lpName
+);
+
+// ******************************************************************
+// * func: EmuReleaseSemaphore
+// ******************************************************************
+BOOL WINAPI EmuReleaseSemaphore
+(
+	HANDLE	hSemaphore,
+	LONG	lReleaseCount,
+	LPLONG	lpPreviousCount
+);
+
+// ******************************************************************
+// * func: timeSetEvent
+// ******************************************************************
+MMRESULT WINAPI EmutimeSetEvent
+(
+	UINT			uDelay,
+	UINT			uResolution,
+	LPTIMECALLBACK	fptc,
+	DWORD			dwUser,
+	UINT			fuEvent
+);
+
+// ******************************************************************
+// * func: timeKillEvent
+// ******************************************************************
+MMRESULT WINAPI EmutimeKillEvent
+(
+	UINT uTimerID  
+);
+
+// ******************************************************************
+// * func: EmuRaiseException
+// ******************************************************************
+VOID WINAPI EmuRaiseException
+(
+	DWORD			dwExceptionCode,       // exception code
+	DWORD			dwExceptionFlags,      // continuable exception flag
+	DWORD			nNumberOfArguments,    // number of arguments
+	CONST ULONG_PTR *lpArguments		   // array of arguments
+);
+
+// ******************************************************************
+// * func: EmuGetFileAttributesA
+// ******************************************************************
+DWORD WINAPI EmuGetFileAttributesA
+(
+	LPCSTR			lpFileName    // name of file or directory
+);
+
+// ******************************************************************
+// func: EmuVirtualProtect
+// ******************************************************************
+BOOL WINAPI EmuVirtualProtect
+(
+	LPVOID	lpAddress,       // region of committed pages
+	SIZE_T	dwSize,          // size of the region
+	DWORD	flNewProtect,    // desired access protection
+	PDWORD	lpflOldProtect   // old protection
+);
+
 
 // s+
 /* not necessary?

@@ -38,7 +38,7 @@
 // ******************************************************************
 // * func: XBVideo::XBVideo
 // ******************************************************************
-XBVideo::XBVideo() : m_bVSync(false), m_bFullscreen(false)
+XBVideo::XBVideo() : m_bVSync(false), m_bFullscreen(false), m_bHardwareYUV(false)
 {
     strcpy(m_szVideoResolution, "Automatic (Default)");
 }
@@ -81,6 +81,9 @@ void XBVideo::Load(const char *szRegistryKey)
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegQueryValueEx(hKey, "VSync", NULL, &dwType, (PBYTE)&m_bVSync, &dwSize);
 
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            RegQueryValueEx(hKey, "HardwareYUV", NULL, &dwType, (PBYTE)&m_bHardwareYUV, &dwSize);
+
             RegCloseKey(hKey);
         }
     }
@@ -116,6 +119,9 @@ void XBVideo::Save(const char *szRegistryKey)
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegSetValueEx(hKey, "VSync", 0, dwType, (PBYTE)&m_bVSync, dwSize);
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            RegSetValueEx(hKey, "HardwareYUV", 0, dwType, (PBYTE)&m_bHardwareYUV, dwSize);
 
             RegCloseKey(hKey);
         }

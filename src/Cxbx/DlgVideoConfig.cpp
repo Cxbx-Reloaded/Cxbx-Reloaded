@@ -138,6 +138,8 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
                 SendMessage(GetDlgItem(hWndDlg, IDC_CV_FULLSCREEN), BM_SETCHECK, (WPARAM)g_XBVideo.GetFullscreen(), 0);
 
                 SendMessage(GetDlgItem(hWndDlg, IDC_CV_VSYNC), BM_SETCHECK, (WPARAM)g_XBVideo.GetVSync(), 0);
+
+				SendMessage(GetDlgItem(hWndDlg, IDC_CV_HARDWAREYUV), BM_SETCHECK, (WPARAM)g_XBVideo.GetHardwareYUV(), 0);
             }
         }
         break;
@@ -190,7 +192,7 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
                         g_XBVideo.SetVideoResolution(szBuffer);
                     }
 
-                    /*! save fullscreen/vsync options */
+                    /*! save fullscreen/vsync/YUV options */
                     {
                         LRESULT lRet = SendMessage(GetDlgItem(hWndDlg, IDC_CV_FULLSCREEN), BM_GETCHECK, 0, 0);
 
@@ -199,6 +201,10 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
                         lRet = SendMessage(GetDlgItem(hWndDlg, IDC_CV_VSYNC), BM_GETCHECK, 0, 0);
 
                         g_XBVideo.SetVSync(lRet == BST_CHECKED);
+
+						lRet = SendMessage(GetDlgItem(hWndDlg, IDC_CV_HARDWAREYUV), BM_GETCHECK, 0, 0);
+
+						g_XBVideo.SetHardwareYUV(lRet == BST_CHECKED);
                     }
 
                     /*! save video configuration */

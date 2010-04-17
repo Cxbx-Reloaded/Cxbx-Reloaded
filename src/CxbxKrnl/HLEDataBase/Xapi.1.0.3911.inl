@@ -1054,6 +1054,81 @@ SOOVPA<11> XFreeSectionA_1_0_3911 =
 };
 
 // ******************************************************************
+// * SignalObjectAndWait
+// ******************************************************************
+SOOVPA<8> SignalObjectAndWait_1_0_3911 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x07, 0x75 },
+        { 0x12, 0x8B },
+        { 0x19, 0x01 },
+        { 0x26, 0x85 },
+        { 0x2B, 0x7D },
+        { 0x34, 0x00 },
+        { 0x3F, 0x83 },
+        { 0x46, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * PulseEvent
+// ******************************************************************
+SOOVPA<11> PulseEvent_1_0_3911 = 
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+		// PulseEvent+0x00 : push 0
+		{ 0x00, 0x6A },
+		{ 0x01, 0x00 },
+        // PulseEvent+0x02 : push [esp+8]
+		{ 0x02, 0xFF },
+		{ 0x03, 0x74 },
+		{ 0x04, 0x24 },
+		{ 0x05, 0x08 },
+		// PulseEvent+0x06 : call ds:NtPulseEvent
+		{ 0x06, 0xFF },
+		{ 0x07, 0x15 },
+		{ 0x08, 0x54 },
+		// PulseEvent+0x12 : test eax, eax
+		{ 0x0C, 0x85 },
+		{ 0x0D, 0xC0 },
+    }
+};
+
+// ******************************************************************
+// * QueueUserAPC
+// ******************************************************************
+SOOVPA<7> QueueUserAPC_1_0_3911 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x03, 0x74 },
+        { 0x08, 0x24 },
+        { 0x0F, 0xFF },
+        { 0x12, 0x18 },
+        { 0x19, 0x33 },
+        { 0x1C, 0xC0 },
+        { 0x21, 0xC1 },
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_3911
 // ******************************************************************
 OOVPATable XAPI_1_0_3911[] =
@@ -1376,6 +1451,36 @@ OOVPATable XAPI_1_0_3911[] =
 
 		#ifdef _DEBUG_TRACE
 		"EmuXFreeSectionA"
+		#endif
+	},
+	// SignalObjectAndWait
+	{
+		(OOVPA*)&SignalObjectAndWait_1_0_3911, 
+			
+		XTL::EmuSignalObjectAndWait,
+
+		#ifdef _DEBUG_TRACE
+		"EmuSignalObjectAndWait"
+		#endif
+	},
+	// PulseEvent
+	{
+		(OOVPA*)&PulseEvent_1_0_3911, 
+			
+		XTL::EmuPulseEvent,
+
+		#ifdef _DEBUG_TRACE
+		"EmuPulseEvent"
+		#endif
+	},
+	// QueueUserAPC
+	{ 
+		(OOVPA*)&QueueUserAPC_1_0_3911,
+
+		XTL::EmuQueueUserAPC,
+			
+		#ifdef _DEBUG_TRACE
+		"EmuQueueUserAPC"
 		#endif
 	},
 };

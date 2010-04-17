@@ -208,3 +208,59 @@ int XTL::EmuThis::Emuioctlsocket(SOCKET s, long cmd, u_long FAR *argp)
 
     return ret;
 }
+
+// ******************************************************************
+// * func: EmuXOnlineLaunchNewImage
+// ******************************************************************
+HRESULT WINAPI XOnlineLaunchNewImage
+(
+    LPCSTR	lpImagePath,
+    LPVOID	pLaunchData
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("XOnline (0x%X): EmuXOnlineLaunchNewImage\n"
+		"(\n"
+		"   lpImagePath           : 0x%.08X (%s)\n"
+		"   pLaunchData           : 0x%.08X\n"
+		");\n",
+		GetCurrentThreadId(), lpImagePath, lpImagePath, pLaunchData);
+
+	// TODO: Launch another .xbe from Cxbx someday?
+
+	EmuSwapFS();	// Xbox FS
+
+	return E_FAIL;
+}
+
+// ******************************************************************
+// * func: EmuXOnlineLogon
+// ******************************************************************
+HRESULT WINAPI XTL::EmuXOnlineLogon
+(
+    VOID*	pUsers,
+    DWORD*	pdwServiceIDs,
+    DWORD	dwServices,
+    HANDLE	hEvent,
+    HANDLE	pHandle
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("XOnline (0x%X): EmuXOnlineLogon\n"
+		"(\n"
+		"   pUsers                : 0x%.08X\n"
+		"   pdwServiceIDs         : 0x%.08X\n"
+		"   dwServices            : 0x%.08X\n"
+		"   hEvent                : 0x%.08X\n"
+		"   pHandle               : 0x%.08X\n"
+		");\n",
+		GetCurrentThreadId(), pUsers, pdwServiceIDs, dwServices, hEvent, pHandle);
+
+	// TODO: What will it take to log on to Xbox Live?
+
+	EmuSwapFS();	// Xbox FS
+
+	return HRESULT(0x80151000L);	// XONLINE_E_LOGON_NO_NETWORK_CONNECTION
+}

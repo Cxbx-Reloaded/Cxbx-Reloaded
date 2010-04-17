@@ -1269,8 +1269,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
         // Make constant registers range from 0 to 192 instead of -96 to 96
         if(pIntermediate->Output.Type == IMD_OUTPUT_C)
         {
-			//if(pIntermediate->Output.Address < 0)
-				pIntermediate->Output.Address += 96;
+            pIntermediate->Output.Address += 96;
         }
 
         for (int j = 0; j < 3; j++)
@@ -1284,93 +1283,31 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
                 // Make constant registers range from 0 to 192 instead of -96 to 96
                 if(pIntermediate->Parameters[j].Parameter.ParameterType == PARAM_C)
                 {
-					//if(pIntermediate->Parameters[j].Parameter.Address < 0)
-						pIntermediate->Parameters[j].Parameter.Address += 96;
+                    pIntermediate->Parameters[j].Parameter.Address += 96;
                 }
             }
         }
 
         if(pIntermediate->InstructionType == IMD_MAC && pIntermediate->MAC == MAC_DPH)
         {
-			// 2010/01/12 - revel8n - attempt to alleviate conversion issues relate to the dph instruction
-
             // Replace dph with dp3 and add
             if(pIntermediate->Output.Type != IMD_OUTPUT_R)
             {
                 // TODO: Complete dph support
                 EmuWarning("Can't simulate dph for other than output r registers (yet)\n");
-
-				// attempt to find unused register...
-				int outRegister = -1;
-				for (int j = 11; j >= 0; --j)
-				{
-					if(!RUsage[j])
-					{
-						outRegister = j;
-						break;
-					}
-				}
-
-				// return failure if there are no available registers
-				if (outRegister == -1)
-				{
-					return FALSE;
-				}
-
-				VSH_INTERMEDIATE_FORMAT TmpIntermediate = *pIntermediate;
-
-				// modify the instructions
-				// the register value is not needed beyond these instructions so setting the usage flag should not be necessary (??)
-				pIntermediate->MAC = MAC_DP3;
-				pIntermediate->Output.Type = IMD_OUTPUT_R;
-				pIntermediate->Output.Address = outRegister;
-				VshSetOutputMask(&pIntermediate->Output, TRUE, TRUE, TRUE, TRUE);
-
-				TmpIntermediate.MAC = MAC_ADD;
-				TmpIntermediate.Parameters[0].IsA0X = FALSE;
-				TmpIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
-				TmpIntermediate.Parameters[0].Parameter.Address = outRegister;
-				TmpIntermediate.Parameters[0].Parameter.Neg = FALSE;
-				//VshSetSwizzle(&TmpIntermediate.Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
-				VshSetSwizzle(&TmpIntermediate.Parameters[1], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
-				//VshSetOutputMask(&TmpIntermediate.Output, FALSE, FALSE, FALSE, TRUE);
-				VshInsertIntermediate(pShader, &TmpIntermediate, i + 1);
+                return FALSE;
             }
-			else
-			{
-				VSH_INTERMEDIATE_FORMAT TmpIntermediate = *pIntermediate;
-				pIntermediate->MAC = MAC_DP3;
-				TmpIntermediate.MAC = MAC_ADD;
-				TmpIntermediate.Parameters[0].IsA0X = FALSE;
-				TmpIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
-				TmpIntermediate.Parameters[0].Parameter.Address = TmpIntermediate.Output.Address;
-				TmpIntermediate.Parameters[0].Parameter.Neg = FALSE;
-
-				int swizzle = (TmpIntermediate.Output.Mask[0]) | (TmpIntermediate.Output.Mask[1] << 1) | (TmpIntermediate.Output.Mask[2] << 2) | (TmpIntermediate.Output.Mask[3] << 3);
-				switch (swizzle)
-				{
-				case 1:
-					VshSetSwizzle(&TmpIntermediate.Parameters[0], SWIZZLE_X, SWIZZLE_X, SWIZZLE_X, SWIZZLE_X);
-					break;
-				case 2:
-					VshSetSwizzle(&TmpIntermediate.Parameters[0], SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y, SWIZZLE_Y);
-					break;
-				case 4:
-					VshSetSwizzle(&TmpIntermediate.Parameters[0], SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z, SWIZZLE_Z);
-					break;
-				case 8:
-					VshSetSwizzle(&TmpIntermediate.Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
-					break;
-				case 15:
-				default:
-					VshSetSwizzle(&TmpIntermediate.Parameters[0], SWIZZLE_X, SWIZZLE_Y, SWIZZLE_Z, SWIZZLE_W);
-					break;
-				}
-				//VshSetSwizzle(&TmpIntermediate.Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
-				VshSetSwizzle(&TmpIntermediate.Parameters[1], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
-				//VshSetOutputMask(&TmpIntermediate.Output, FALSE, FALSE, FALSE, TRUE);
-				VshInsertIntermediate(pShader, &TmpIntermediate, i + 1);
-			}
+            VSH_INTERMEDIATE_FORMAT TmpIntermediate = *pIntermediate;
+            pIntermediate->MAC = MAC_DP3;
+            TmpIntermediate.MAC = MAC_ADD;
+            TmpIntermediate.Parameters[0].IsA0X = FALSE;
+            TmpIntermediate.Parameters[0].Parameter.ParameterType = PARAM_R;
+            TmpIntermediate.Parameters[0].Parameter.Address = TmpIntermediate.Output.Address;
+            TmpIntermediate.Parameters[0].Parameter.Neg = FALSE;
+            VshSetSwizzle(&TmpIntermediate.Parameters[0], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
+            VshSetSwizzle(&TmpIntermediate.Parameters[1], SWIZZLE_W, SWIZZLE_W, SWIZZLE_W, SWIZZLE_W);
+            VshSetOutputMask(&TmpIntermediate.Output, FALSE, FALSE, FALSE, TRUE);
+            VshInsertIntermediate(pShader, &TmpIntermediate, i + 1);
             i++;
         }
     }
@@ -1671,9 +1608,8 @@ static boolean VshAddStreamPatch(VSH_PATCH_DATA *pPatchData)
         pStreamPatch->ConvertedStride = pPatchData->ConvertedStride;
         pStreamPatch->NbrTypes = pPatchData->TypePatchData.NbrTypes;
         pStreamPatch->NeedPatch = pPatchData->NeedPatching;
-		// 2010/01/12 - revel8n - fixed allocated data size and type
-        pStreamPatch->pTypes = (UINT *)CxbxMalloc(pPatchData->TypePatchData.NbrTypes * sizeof(UINT)); //VSH_TYPE_PATCH_DATA));
-        memcpy(pStreamPatch->pTypes, pPatchData->TypePatchData.Types, pPatchData->TypePatchData.NbrTypes * sizeof(UINT)); //VSH_TYPE_PATCH_DATA));
+        pStreamPatch->pTypes = (UINT *)CxbxMalloc(pPatchData->TypePatchData.NbrTypes * sizeof(VSH_TYPE_PATCH_DATA));
+        memcpy(pStreamPatch->pTypes, pPatchData->TypePatchData.Types, pPatchData->TypePatchData.NbrTypes * sizeof(VSH_TYPE_PATCH_DATA));
 
         return TRUE;
     }
@@ -2073,7 +2009,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
         DbgVshPrintf("%s", pShaderDisassembly);
         DbgVshPrintf("-----------------------\n");
 
-        // HACK: Azurik. Prevent Direct3D from trying to assemble this.
+		// HACK: Azurik. Prevent Direct3D from trying to assemble this.
 		if(!strcmp(pShaderDisassembly, "vs.1.1\n"))
 		{
 			EmuWarning("Cannot assemble empty vertex shader!\n");

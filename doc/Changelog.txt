@@ -1,5 +1,25 @@
 Cxbx Home Page: http://www.caustik.com/cxbx/
 
+version: 0.8.1 (2/3/10)
+--------------------------------
+
+- Cxbx's compatibility has vastly increased (see compatibility list).
+
+- Added video option to enable/disable hardware YUV surfaces for video playback.
+  (This should fix problems with videos not showing up or robotic sounds).
+
+- Fixed bug in vertex patching code for Vista (thanks defiance)!
+
+- Most XDKs have at least basic support.
+
+- Fixed pipeline bumpmapping is now supported.
+
+- Multiple thread notification routines now supported.
+
+- Lots of bug fixes.
+
+- And many more I can't remember (it's been a long time)!
+
 version: 0.8.0 (??/??/??)
 --------------------------------
 
