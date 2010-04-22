@@ -1643,13 +1643,16 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
             return DS_OK;
         }
 
-        // we only support 2 channels right now
-        if(pDSBufferDesc->lpwfxFormat->nChannels > 2)
-        {
-            pDSBufferDesc->lpwfxFormat->nChannels = 2;
-            pDSBufferDesc->lpwfxFormat->nBlockAlign = (2*pDSBufferDesc->lpwfxFormat->wBitsPerSample)/8;
-            pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = pDSBufferDesc->lpwfxFormat->nSamplesPerSec * pDSBufferDesc->lpwfxFormat->nBlockAlign;
-        }
+		if(pDSBufferDesc->lpwfxFormat != NULL)
+		{
+			// we only support 2 channels right now
+			if(pDSBufferDesc->lpwfxFormat->nChannels > 2)
+			{
+				pDSBufferDesc->lpwfxFormat->nChannels = 2;
+				pDSBufferDesc->lpwfxFormat->nBlockAlign = (2*pDSBufferDesc->lpwfxFormat->wBitsPerSample)/8;
+				pDSBufferDesc->lpwfxFormat->nAvgBytesPerSec = pDSBufferDesc->lpwfxFormat->nSamplesPerSec * pDSBufferDesc->lpwfxFormat->nBlockAlign;
+			}
+		}
     }
 
     (*ppStream)->EmuBuffer = 0;

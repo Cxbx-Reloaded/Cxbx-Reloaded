@@ -1829,4 +1829,14 @@ HRESULT WINAPI EmuIDirect3DDevice8_EndPushBuffer();
 // ******************************************************************
 void WINAPI EmuXMETAL_StartPush(void* Unknown);
 
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetModelView
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_GetModelView(D3DXMATRIX* pModelView);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetBackMaterial
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetBackMaterial(D3DMATERIAL8* pMaterial);
+
 #endif

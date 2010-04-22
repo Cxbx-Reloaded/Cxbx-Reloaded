@@ -1094,6 +1094,75 @@ SOOVPA<7> IDirect3DDevice8_GetProjectionViewportMatrix_1_0_5455 =
 };
 
 // ******************************************************************
+// * D3DDevice_GetModelView
+// ******************************************************************
+SOOVPA<7> D3DDevice_GetModelView_1_0_5558 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x05, 0x57 },
+        { 0x0A, 0x85 },
+        { 0x10, 0xB0 },
+        { 0x16, 0x10 },
+        { 0x1C, 0x5E },
+        { 0x22, 0xC1 },
+        { 0x28, 0xE0 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_SetBackMaterial
+// ******************************************************************
+SOOVPA<9> D3DDevice_SetBackMaterial_1_0_5558 = 
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x04, 0x08 },
+        { 0x0C, 0x81 },
+        { 0x0E, 0x34 },
+        { 0x10, 0x00 },
+        { 0x16, 0x00 },
+        { 0x1F, 0x81 },
+        { 0x22, 0x90 },
+        { 0x2C, 0x5E },
+        { 0x2E, 0x04 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_SetRenderState_TwoSidedLighting
+// ******************************************************************
+SOOVPA<8> D3DDevice_SetRenderState_TwoSidedLighting_1_0_5558 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x0E, 0x05 },
+        { 0x1E, 0x89 },
+        { 0x30, 0x00 },
+        { 0x40, 0x89 },
+        { 0x52, 0x8B },
+        { 0x60, 0x75 },
+        { 0x6E, 0x48 },
+        { 0x7E, 0x04 },
+    }
+};
+
+// ******************************************************************
 // * D3D8_1_0_5558
 // ******************************************************************
 OOVPATable D3D8_1_0_5558[] =
@@ -2106,6 +2175,36 @@ OOVPATable D3D8_1_0_5558[] =
 		"EmuIDirect3DDevice8_GetProjectionViewportMatrix (5455)"
 		#endif
 	},
+	// IDirect3DDevice8::GetModelView
+    {
+        (OOVPA*)&D3DDevice_GetModelView_1_0_5558,
+
+        XTL::EmuIDirect3DDevice8_GetModelView,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetModelView"
+        #endif
+    },
+	// IDirect3DDevice8::SetBackMaterial
+    {
+        (OOVPA*)&D3DDevice_SetBackMaterial_1_0_5558,
+
+        XTL::EmuIDirect3DDevice8_SetBackMaterial,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetBackMaterial"
+        #endif
+    },
+	// IDirect3DDevice8::SetRenderState_TwoSidedLighting
+    {
+        (OOVPA*)&D3DDevice_SetRenderState_TwoSidedLighting_1_0_5558,
+
+        XTL::EmuIDirect3DDevice8_SetTextureState_TwoSidedLighting,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_TwoSidedLighting"
+        #endif
+    },
 };
 
 // ******************************************************************

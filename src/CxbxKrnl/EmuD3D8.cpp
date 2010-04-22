@@ -9450,7 +9450,52 @@ void WINAPI XTL::EmuXMETAL_StartPush(void* Unknown)
 		   ");\n", GetCurrentThreadId(), Unknown);
 
 	// This function is too low level to actually emulate
+	// Only use for debugging.
 	__asm int 3;
 
 	EmuSwapFS();	// Xbox FS
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetModelView
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetModelView(D3DXMATRIX* pModelView)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetModelView\n"
+		   "(\n" 
+		   "   pModelView        : 0x%.08X\n"
+		   ");\n", GetCurrentThreadId(), pModelView);
+
+	D3DXMATRIX mtxWorld, mtxView;
+
+	// I hope this is right
+	g_pD3DDevice8->GetTransform( D3DTS_WORLD, &mtxWorld );
+	g_pD3DDevice8->GetTransform( D3DTS_VIEW, &mtxView );
+
+	*pModelView = mtxWorld * mtxView;
+
+	EmuSwapFS();	// Xbox FS
+
+	return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetBackMaterial
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetBackMaterial(D3DMATERIAL8* pMaterial)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetBackMaterial\n"
+		   "(\n" 
+		   "   pMaterial         : 0x%.08X\n"
+		   ");\n", GetCurrentThreadId(), pMaterial);
+
+	EmuWarning("SetBackMaterial is not supported!");
+
+	EmuSwapFS();	// Xbox FS
+
+	return S_OK;
 }

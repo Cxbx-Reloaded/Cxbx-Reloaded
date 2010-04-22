@@ -751,4 +751,10 @@ _ Added the following kernel function(s)
 	Direct3D_EnumAdapterModes (5233-5344)
 	D3DDevice_SetVerticalBlankCallback (5455)
 	D3DDevice_GetProjection
+
+4/21/10
+- Added the following function(s)
+	D3DDevice_GetModelView (5558)
+	D3DDevice_SetBackMaterial (5558)
+	D3DDevice_SetRenderState_TwoSidedLighting (5558)
 	
