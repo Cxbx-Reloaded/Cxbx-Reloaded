@@ -197,6 +197,7 @@ SOOVPA<7> XapiInitProcess_1_0_4361 =
     }
 };
 */
+
 // ******************************************************************
 // * XAPI_1_0_4034
 // ******************************************************************
@@ -380,6 +381,147 @@ OOVPATable XAPI_1_0_4034[] =
 		"EmuQueueUserAPC"
 		#endif
 	},
+	// XInputSetState (* unchanged since 3911 *)
+    {
+        (OOVPA*)&XInputSetState_1_0_3911,
+
+        XTL::EmuXInputSetState,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputSetState"
+        #endif
+    },
+	// RtlCreateHeap (* unchanged since 3911 *)
+    {
+        (OOVPA*)&RtlCreateHeap_1_0_3911,
+
+        XTL::EmuRtlCreateHeap,
+
+        #ifdef _DEBUG_TRACE
+        "EmuRtlCreateHeap"
+        #endif
+    },
+    // RtlAllocateHeap (* unchanged since 3911 *)
+    {
+        (OOVPA*)&RtlAllocateHeap_1_0_3911,
+
+        XTL::EmuRtlAllocateHeap,
+
+        #ifdef _DEBUG_TRACE
+        "EmuRtlAllocateHeap"
+        #endif
+    },
+    // RtlFreeHeap (* unchanged since 3911 *)
+    {
+        (OOVPA*)&RtlFreeHeap_1_0_3911,
+
+        XTL::EmuRtlFreeHeap,
+
+        #ifdef _DEBUG_TRACE
+        "EmuRtlFreeHeap"
+        #endif
+    },
+    //*
+    // RtlReAllocateHeap (* unchanged since 3911 *)
+    {
+        (OOVPA*)&RtlReAllocateHeap_1_0_3911,
+
+        XTL::EmuRtlReAllocateHeap,
+
+        #ifdef _DEBUG_TRACE
+        "EmuRtlReAllocateHeap"
+        #endif
+    },
+    //*/
+    //*
+    // RtlSizeHeap (* unchanged since 3911 *)
+    {
+        (OOVPA*)&RtlSizeHeap_1_0_3911,
+
+        XTL::EmuRtlSizeHeap,
+
+        #ifdef _DEBUG_TRACE
+        "EmuRtlSizeHeap"
+        #endif
+    },
+	// XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
+    {
+        (OOVPA*)&XRegisterThreadNotifyRoutine_1_0_3911,
+
+        XTL::EmuXRegisterThreadNotifyRoutine,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXRegisterThreadNotifyRoutine"
+        #endif
+    },
+	// XGetDeviceChanges (* unchanged since 3911 *)
+    {
+        (OOVPA*)&XGetDeviceChanges_1_0_3911,
+
+        XTL::EmuXGetDeviceChanges,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXGetDeviceChanges"
+        #endif
+    },
+	// XID_fCloseDevice (* unchanged since 3911 *)
+    {
+        (OOVPA*)&XID_fCloseDevice_1_0_3911, 0,
+
+        #ifdef _DEBUG_TRACE
+        "XID_fCloseDevice (XREF)"
+        #endif
+    },
+    // XInputClose (* unchanged since 3911 *)
+    {
+        (OOVPA*)&XInputClose_1_0_3911,
+
+        XTL::EmuXInputClose,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputClose"
+        #endif
+    },
+    // XInputGetCapabilities (* unchanged since 3911 *)
+    {
+        (OOVPA*)&XInputGetCapabilities_1_0_3911,
+
+        XTL::EmuXInputGetCapabilities,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputGetCapabilities"
+        #endif
+    },
+	// GetThreadPriority (* unchanged since 3911 *)
+	{
+		(OOVPA*)&GetThreadPriority_1_0_3911,
+
+		XTL::EmuGetThreadPriority,
+
+		#ifdef _DEBUG_TRACE
+		"EmuGetThreadPriority"
+		#endif
+	},
+	// XInputOpen (* unchanged since 3911 *)
+    {
+        (OOVPA*)&XInputOpen_1_0_3911,
+
+        XTL::EmuXInputOpen,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputOpen"
+        #endif
+    },
+	// XInputGetState (* unchanged since 3911 *)
+    {
+        (OOVPA*)&XInputGetState_1_0_3911,
+
+        XTL::EmuXInputGetState,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputGetState"
+        #endif
+    },
 };
 
 // ******************************************************************

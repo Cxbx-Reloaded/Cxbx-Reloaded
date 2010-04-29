@@ -1900,6 +1900,15 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateImageSurface
     D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
 
     HRESULT hRet = g_pD3DDevice8->CreateImageSurface(Width, Height, PCFormat, &((*ppBackBuffer)->EmuSurface8));
+	if(FAILED(hRet) && Format == 0x2E)
+	{
+		EmuWarning("CreateImageSurface: D3DFMT_LIN_D24S8 -> D3DFMT_A8R8G8B8");
+
+		hRet = g_pD3DDevice8->CreateImageSurface(Width, Height, D3DFMT_A8R8G8B8, &((*ppBackBuffer)->EmuSurface8));
+	}
+	
+	if(FAILED(hRet))
+		/*EmuWarning*/CxbxKrnlCleanup("CreateImageSurface failed!\nFormat = 0x%8.8X", Format);
 
     EmuSwapFS();   // Xbox FS
 
@@ -4395,6 +4404,13 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 Format   = D3DFMT_A8R8G8B8;
             }
 
+			if(X_Format == 0x30)
+            {
+                /*CxbxKrnlCleanup*/EmuWarning("D3DFMT_LIN_D16 not yet supported!");
+                X_Format = 0x11;
+                Format   = D3DFMT_R5G6B5;
+            }
+
             DWORD dwWidth, dwHeight, dwBPP, dwDepth = 1, dwPitch = 0, dwMipMapLevels = 1;
             BOOL  bSwizzled = FALSE, bCompressed = FALSE, dwCompressedSize = 0;
             BOOL  bCubemap = pPixelContainer->Format & X_D3DFORMAT_CUBEMAP;
@@ -4413,8 +4429,8 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 dwBPP = 4;
             }
             else if(X_Format == 0x05 /* X_D3DFMT_R5G6B5 */ || X_Format == 0x04 /* X_D3DFMT_A4R4G4B4 */
-                 || X_Format == 0x1D /* X_D3DFMT_LIN_A4R4G4B4 */ || X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */
-                 || X_Format == 0x28 /* X_D3DFMT_G8B8 */ || X_Format == 0x10 /* X_D3DFMT_LIN_A1R5G5B5 */)
+                 || X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */
+                 || X_Format == 0x28 /* X_D3DFMT_G8B8 */ )
             {
                 bSwizzled = TRUE;
 
@@ -4440,7 +4456,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 dwPitch  = dwWidth;
                 dwBPP = 1;
             }
-            else if(X_Format == 0x1E /* X_D3DFMT_LIN_X8R8G8B8 */ || X_Format == 0x12 /* X_D3DFORMAT_A8R8G8B8 */ 
+            else if(X_Format == 0x1E /* X_D3DFMT_LIN_X8R8G8B8 */ || X_Format == 0x12 /* X_D3DFMT_LIN_A8R8G8B8 */ 
 				 || X_Format == 0x2E /* D3DFMT_LIN_D24S8 */ || X_Format == 0x3F /* X_D3DFMT_LIN_A8B8G8R8 */)
             {
                 // Linear 32 Bit
@@ -4449,7 +4465,8 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)+1)*64;
                 dwBPP = 4;
             }
-            else if(X_Format == 0x11 /* D3DFMT_LIN_R5G6B5 */)
+            else if(X_Format == 0x11 /* D3DFMT_LIN_R5G6B5 */ || X_Format == 0x30 /* D3DFMT_LIN_D16 */
+				 || X_Format == 0x1D /* X_D3DFMT_LIN_A4R4G4B4 */ || X_Format == 0x10 /* X_D3DFMT_LIN_A1R5G5B5 */)
             {
                 // Linear 16 Bit
                 dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
@@ -9025,6 +9042,12 @@ VOID WINAPI XTL::EmuD3DDevice_KickOff()
 	DbgPrintf("EmuD3D8 (0x%X): EmuD3DDevice_KickOff()\n", GetCurrentThreadId());
 
 	// TODO: Anything (kick off and NOT wait for idle)?
+	// NOTE: We should actually emulate IDirect3DDevice8_KickPushBuffer()
+	// instead of this function.  When needed, use the breakpoint (int 3)
+	// to determine what is calling this function if it's something other
+	// than IDirect3DDevice8_KickPushBuffer() itself.
+
+//	__asm int 3;
 
 	EmuSwapFS();	// Xbox FS
 }

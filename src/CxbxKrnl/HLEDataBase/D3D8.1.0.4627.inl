@@ -4402,9 +4402,9 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_SetRenderState_CullModeB"
         #endif
     },
-    // IDirect3DDevice8::SetRenderState_CullMode (* unchanged since 4134 *)
+    // IDirect3DDevice8::SetRenderState_CullMode (* unchanged since 4034 *)
     {
-        (OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4134,
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4034,
 
         XTL::EmuIDirect3DDevice8_SetRenderState_CullMode,
 

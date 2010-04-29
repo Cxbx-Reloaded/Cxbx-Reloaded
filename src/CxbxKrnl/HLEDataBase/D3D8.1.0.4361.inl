@@ -192,36 +192,6 @@ SOOVPA<10> IDirect3D8_EnumAdapterModes_1_0_4361 =
 };
 
 // ******************************************************************
-// * IDirect3DDevice8_LoadVertexShader
-// ******************************************************************
-SOOVPA<10> IDirect3DDevice8_LoadVertexShader_1_0_4361 =
-{
-    0,  // Large == 0
-    10, // Count == 10
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        // IDirect3DDevice8_LoadVertexShader+0x07 : mov al, [ebx+0x08]
-        { 0x07, 0x8A }, // (Offset,Value)-Pair #1
-        { 0x08, 0x43 }, // (Offset,Value)-Pair #2
-        { 0x09, 0x08 }, // (Offset,Value)-Pair #3
-
-        // IDirect3DDevice8_LoadVertexShader+0x32 : mov dword ptr [eax], 0x00041E9C
-        { 0x32, 0xC7 }, // (Offset,Value)-Pair #4
-        { 0x33, 0x00 }, // (Offset,Value)-Pair #5
-        { 0x34, 0x9C }, // (Offset,Value)-Pair #6
-        { 0x35, 0x1E }, // (Offset,Value)-Pair #7
-        { 0x36, 0x04 }, // (Offset,Value)-Pair #8
-
-        // IDirect3DDevice8_LoadVertexShader+0x4E : mov [ebx], ebx
-        { 0x4E, 0x89 }, // (Offset,Value)-Pair #9
-        { 0x4F, 0x13 }, // (Offset,Value)-Pair #10
-    }
-};
-
-// ******************************************************************
 // * IDirect3DDevice8_SelectVertexShader
 // ******************************************************************
 SOOVPA<11> IDirect3DDevice8_SelectVertexShader_1_0_4361 =
@@ -2259,9 +2229,9 @@ OOVPATable D3D8_1_0_4361[] =
         "EmuIDirect3D8_EnumAdapterModes"
         #endif
     },
-    // IDirect3DDevice8::LoadVertexShader
+    // IDirect3DDevice8::LoadVertexShader (* unchanged since 4034 *)
     {
-        (OOVPA*)&IDirect3DDevice8_LoadVertexShader_1_0_4361,
+        (OOVPA*)&IDirect3DDevice8_LoadVertexShader_1_0_4034,
 
         XTL::EmuIDirect3DDevice8_LoadVertexShader,
 
@@ -2625,9 +2595,9 @@ OOVPATable D3D8_1_0_4361[] =
         "EmuIDirect3DDevice8_SetRenderState_VertexBlend"
         #endif
     },
-    // IDirect3DDevice8::SetRenderState_CullMode (* unchanged since 4134 *)
+    // IDirect3DDevice8::SetRenderState_CullMode (* unchanged since 4034 *)
     {
-        (OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4134,
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4034,
 
         XTL::EmuIDirect3DDevice8_SetRenderState_CullMode,
 
@@ -3450,6 +3420,16 @@ OOVPATable D3D8_1_0_4361[] =
 
         #ifdef _DEBUG_TRACE
         "D3DDevice_GetVertexShaderSize"
+        #endif
+    },
+	// IDirect3DDevice8::BlockOnFence (* unchanged since 4134 *)
+    {
+        (OOVPA*)&D3DDevice_BlockOnFence_1_0_4134,
+
+        XTL::EmuIDirect3DDevice8_BlockOnFence,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_BlockOnFence"
         #endif
     },
 };
