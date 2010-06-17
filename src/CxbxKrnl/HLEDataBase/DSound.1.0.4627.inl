@@ -3170,7 +3170,7 @@ OOVPATable DSound_1_0_4627[] =
 		#endif
 	},
     // IDirectSound8::SetAllParameters (* unchanged since 3936 *)
-    /*{
+    {
         (OOVPA*)&IDirectSound8_SetAllParameters_1_0_3936,
 
         XTL::EmuIDirectSound8_SetAllParameters,
@@ -3178,7 +3178,7 @@ OOVPATable DSound_1_0_4627[] =
         #ifdef _DEBUG_TRACE
         "EmuIDirectSound8_SetAllParameters"
         #endif
-    },*/
+    },
     // CDirectSoundVoiceSettings_SetMixBins (* unchanged since 4432 *)
     {
         (OOVPA*)&CDirectSoundVoiceSettings_SetMixBins_1_0_4432, 0,

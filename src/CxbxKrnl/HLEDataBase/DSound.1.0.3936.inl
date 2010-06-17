@@ -3690,7 +3690,7 @@ SOOVPA<11> IDirectSound8_SetVelocity_1_0_3936 =
         { 0x33, 0x14 }, // (Offset,Value)-Pair #11
     }
 };
-/*
+
 // ******************************************************************
 // * CDirectSound::SetAllParametersB
 // ******************************************************************
@@ -3790,7 +3790,7 @@ SOOVPA<12> IDirectSound8_SetAllParameters_1_0_3936 =
         { 0x1D, 0xC2 }, // (Offset,Value)-Pair #11
         { 0x1E, 0x0C }, // (Offset,Value)-Pair #12
     }
-};*/
+};
 
 // ******************************************************************
 // * IDirectSound8_DownloadEffectsImage

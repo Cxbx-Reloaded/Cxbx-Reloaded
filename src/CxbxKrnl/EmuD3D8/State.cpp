@@ -173,7 +173,7 @@ void XTL::EmuUpdateDeferredStates()
                 if(pCur[0+Adjust2] == 5)
                     CxbxKrnlCleanup("ClampToEdge is unsupported (temporarily)");
 
-                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ADDRESSU, pCur[0]);
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ADDRESSU, pCur[0+Adjust2]);
             }
 
             if(pCur[1+Adjust2] != X_D3DTSS_UNK)
@@ -181,7 +181,7 @@ void XTL::EmuUpdateDeferredStates()
                 if(pCur[1+Adjust2] == 5)
                     CxbxKrnlCleanup("ClampToEdge is unsupported (temporarily)");
 
-                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ADDRESSV, pCur[1]);
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ADDRESSV, pCur[1+Adjust2]);
             }
 
             if(pCur[2+Adjust2] != X_D3DTSS_UNK)
@@ -189,7 +189,7 @@ void XTL::EmuUpdateDeferredStates()
                 if(pCur[2+Adjust2] == 5)
                     CxbxKrnlCleanup("ClampToEdge is unsupported (temporarily)");
 
-                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ADDRESSW, pCur[2]);
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_ADDRESSW, pCur[2+Adjust2]);
             }
 
             if(pCur[3+Adjust2] != X_D3DTSS_UNK)
@@ -253,7 +253,7 @@ void XTL::EmuUpdateDeferredStates()
                 g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLORARG1, pCur[14-Adjust1]);
 
             if(pCur[15-Adjust1] != X_D3DTSS_UNK)
-                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLORARG2, pCur[15]);
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLORARG2, pCur[15-Adjust1]);
 
             // TODO: Use a lookup table, this is not always a 1:1 map (same as D3DTSS_COLOROP)
             if(pCur[16-Adjust1] != X_D3DTSS_UNK)
@@ -286,8 +286,8 @@ void XTL::EmuUpdateDeferredStates()
             if(pCur[21-Adjust1] != X_D3DTSS_UNK)
                 g_pD3DDevice8->SetTextureStageState(v, D3DTSS_TEXTURETRANSFORMFLAGS, pCur[21-Adjust1]);
 
-            if(pCur[29] != X_D3DTSS_UNK)
-                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_BORDERCOLOR, pCur[29]);
+            /*if(pCur[29] != X_D3DTSS_UNK)	// This is NOT a deferred texture state!
+                g_pD3DDevice8->SetTextureStageState(v, D3DTSS_BORDERCOLOR, pCur[29]);*/
 
             /** To check for unhandled texture stage state changes
             for(int r=0;r<32;r++)
