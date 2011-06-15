@@ -1206,4 +1206,9 @@ TODO: Verify that Lock3DSurface is the same on other XDKs like Lock2DSurface
 	D3DDevice_GetTile (5849)
 	XapiInitProcess (5028)
 
-- 
+6/15/11
+- Added the following function(s)
+	XGUnswizzleRect (4627)
+
+- Added the following source file(s)
+	XG.1.0.4432.h/inl
