@@ -72,6 +72,7 @@ extern "C" const char *szHLELastCompileTime = __TIMESTAMP__;
 #include "HLEDataBase/XG.1.0.3911.inl"
 #include "HLEDataBase/XG.1.0.4034.inl"
 #include "HLEDataBase/XG.1.0.4361.inl"
+#include "HLEDataBase/XG.1.0.4432.inl"
 #include "HLEDataBase/XG.1.0.4627.inl"
 #include "HLEDataBase/XG.1.0.5233.inl"
 #include "HLEDataBase/XG.1.0.5558.inl"
@@ -297,6 +298,13 @@ HLEData HLEDataBase[] =
         1, 0, 4361,
         XG_1_0_4361,
         XG_1_0_4361_SIZE
+    },
+	// XG Version 1.0.4432
+    {
+        "XGRAPHC",
+        1, 0, 4432,
+        XG_1_0_4432,
+        XG_1_0_4432_SIZE
     },
     // XG Version 1.0.4627
     {

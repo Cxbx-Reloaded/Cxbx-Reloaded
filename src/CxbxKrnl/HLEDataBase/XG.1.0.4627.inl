@@ -87,6 +87,29 @@ SOOVPA<7> XGWriteSurfaceOrTextureToXPR_1_0_4627 =
 };
 
 // ******************************************************************
+// * XGUnswizzleRect
+// ******************************************************************
+SOOVPA<8> XGUnswizzleRect_1_0_4627 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0x03 },
+        { 0x3E, 0x00 },
+        { 0x5E, 0xD2 },
+        { 0x7E, 0x75 },
+        { 0x9E, 0x70 },
+        { 0xC1, 0xE9 },
+        { 0xDE, 0x89 },
+        { 0xFE, 0x60 },
+    }
+};
+
+// ******************************************************************
 // * XG_1_0_4627
 // ******************************************************************
 OOVPATable XG_1_0_4627[] =
@@ -109,6 +132,16 @@ OOVPATable XG_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXGSwizzleRect"
+        #endif
+    },
+	// XGUnswizzleRect 
+    {
+        (OOVPA*)&XGUnswizzleRect_1_0_4627,
+
+        XTL::EmuXGUnswizzleRect,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXGUnswizzleRect"
         #endif
     },
     // XGSwizzleBox

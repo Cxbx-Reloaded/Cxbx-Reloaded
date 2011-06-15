@@ -214,6 +214,8 @@ PVOID WINAPI XTL::EmuRtlAllocateHeap
 
 	// JSRF test
 //	if( !pRet ) __asm int 3;
+	if( dwBytes == 0x2D0BC0 )
+		__asm int 3;
 
     EmuSwapFS();   // XBox FS
 
@@ -1424,6 +1426,11 @@ HANDLE WINAPI XTL::EmuXGetSectionHandleA
 	{
 		pRet = (void*) 0x38E6A0;
 	}
+
+	// Taz Wanted (NTSC)
+	/*else if(!strcmp(pSectionName, "sig" ))
+	{
+		pRet = (void*) 0x*/
 
 	// Red Star (Unknown Region)
 	/*else if(!strcmp(pSectionName, "BINK32"))

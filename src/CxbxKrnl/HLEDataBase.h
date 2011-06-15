@@ -64,6 +64,7 @@
 #include "HLEDataBase/XG.1.0.3911.h"
 #include "HLEDataBase/XG.1.0.4034.h"
 #include "HLEDataBase/XG.1.0.4361.h"
+#include "HLEDataBase/XG.1.0.4432.h"
 #include "HLEDataBase/XG.1.0.4627.h"
 #include "HLEDataBase/XG.1.0.5233.h"
 #include "HLEDataBase/XG.1.0.5558.h"
