@@ -146,6 +146,28 @@ SOOVPA<7> XGWriteSurfaceOrTextureToXPR_1_0_3911 =
 };
 
 // ******************************************************************
+// * XGSetTextureHeader
+// ******************************************************************
+SOOVPA<7> XGSetTextureHeader_1_0_3911 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x04, 0x75 },
+        { 0x0A, 0x00 },
+        { 0x10, 0xFF },
+        { 0x16, 0xFF },
+        { 0x1C, 0x75 },
+        { 0x26, 0x5D },
+        { 0x28, 0x24 },
+    }
+};
+
+// ******************************************************************
 // * XG_1_0_3911
 // ******************************************************************
 OOVPATable XG_1_0_3911[] =
@@ -200,6 +222,15 @@ OOVPATable XG_1_0_3911[] =
         "EmuXGWriteSurfaceOrTextureToXPR"
         #endif
     },
+	// XGSetTextureHeader
+	{
+		(OOVPA*)&XGSetTextureHeader_1_0_3911,
+		XTL::EmuXGSetTextureHeader,
+
+		#ifdef _DEBUG_TRACE
+		"XGSetTextureHeader"
+		#endif
+	},
 };
 
 // ******************************************************************

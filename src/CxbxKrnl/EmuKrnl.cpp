@@ -77,6 +77,7 @@ PCSTProxyParam;
 // Global Variable(s)
 extern PVOID g_pfnThreadNotification[16] = { NULL };
 extern int g_iThreadNotificationCount = 0;
+PVOID g_pPersistedData = NULL;
 
 // PsCreateSystemThread proxy procedure
 #pragma warning(push)
@@ -194,10 +195,19 @@ XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress()
 	DbgPrintf("EmuKrnl (0x%X): AvGetSavedDataAddress();\n", GetCurrentThreadId() );
 
 	// TODO: We might want to return something sometime...
+	/*if( !g_pPersistedData )
+	{
+		FILE* fp = fopen( "PersistedSurface.bin", "rb" );
+		fseek( fp, 0, SEEK_END );
+		long size = ftell( fp );
+		g_pPersistedData = malloc( size );
+		fread( g_pPersistedData, size, 1, fp );
+		fclose(fp);
+	}*/
 
 	EmuSwapFS();	// Xbox FS
 
-	return NULL;
+	return NULL; //g_pPersistedData;
 }
 
 // ******************************************************************
@@ -763,7 +773,7 @@ XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 
 	// I really tried to avoid adding this...
 	__asm int 3;
-	CxbxKrnlCleanup("KeRaiseIrqlToDpcLevel not implemented! (Tell blueshogun -_-)");
+//	CxbxKrnlCleanup("KeRaiseIrqlToDpcLevel not implemented! (Tell blueshogun -_-)");
 
 	EmuSwapFS();
 
@@ -792,6 +802,7 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
 
     // Call KeSetTimerEx
 //    KeSetTimerEx(Timer, DueTime, 0, Dpc);
+	__asm int 3;
 	CxbxKrnlCleanup("KeSetTimer is not implemented!");
 
     EmuSwapFS();   // Xbox FS
@@ -1290,8 +1301,21 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
            "   Protect             : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), BaseAddress, *BaseAddress, ZeroBits, AllocationSize, *AllocationSize, AllocationType, Protect);
+	
+	// TODO: The flag known as MEM_NOZERO (which appears to be exclusive to Xbox) has the exact
+	// same value as MEM_ROTATE which causes problems for Windows XP, but not Vista.  Removing
+	// this flag fixes Azurik for XP.
+	DWORD MEM_NOZERO = 0x800000;
+
+	if( AllocationType & MEM_NOZERO )
+	{
+		EmuWarning( "MEM_NOZERO flag is not supported!" );
+		AllocationType &= ~MEM_NOZERO;
+	}
 
     NTSTATUS ret = NtDll::NtAllocateVirtualMemory(GetCurrentProcess(), BaseAddress, ZeroBits, AllocationSize, AllocationType, Protect);
+	if( ret == 0xC00000F3 )
+		EmuWarning( "Invalid Param!" );
 
     EmuSwapFS();   // Xbox FS
 
@@ -1455,6 +1479,9 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
     int  ReplaceIndex = -1;
 
     char *szBuffer = ObjectAttributes->ObjectName->Buffer;
+
+	if(szBuffer == (char*) 0xFFFFFFFF)
+		szBuffer = NULL;
 
     if(szBuffer != NULL)
     {
@@ -2007,12 +2034,25 @@ XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributes
            ");\n",
            GetCurrentThreadId(), ObjectAttributes, ObjectAttributes->ObjectName->Buffer, Attributes);
 
+//	__asm int 3;
+
     char *szBuffer = ObjectAttributes->ObjectName->Buffer;
 
     wchar_t wszObjectName[160];
 
     NtDll::UNICODE_STRING    NtUnicodeString;
     NtDll::OBJECT_ATTRIBUTES NtObjAttr;
+
+	// Ensure that we are in the current directory for D:\\.
+	// TODO: Other directories when needed.
+	if((szBuffer[0] == 'D' || szBuffer[0] == 'd') && szBuffer[1] == ':' || szBuffer[2] == '\\')
+	{
+		szBuffer += 3;
+
+		 DbgPrintf("EmuXapi (0x%X): NtQueryFullAttributesFile Corrected path...\n", GetCurrentThreadId());
+         DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
+         DbgPrintf("  New:\"$XbePath\\%s\"\n", szBuffer);
+    }
 
     // initialize object attributes
     {

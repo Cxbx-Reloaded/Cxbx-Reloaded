@@ -195,7 +195,9 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
 
                 // Aliases - for testing purposes only
 				if(BuildVersion == 4039) { BuildVersion = 4034; }
+				if(BuildVersion == 4238) { BuildVersion = 4361; }	// I don't think this XDK was released.
 				if(BuildVersion == 4242) { BuildVersion = 4361; }
+				if(BuildVersion == 4400) { BuildVersion = 4361; }
 				if(BuildVersion == 4531) { BuildVersion = 4432; }
                 if(BuildVersion == 4721) { BuildVersion = 4627; }
 				if(BuildVersion == 4831) { BuildVersion = 4627; }
@@ -234,8 +236,18 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
 				// Test
 				if(strcmp(szLibraryName, "XGRAPHC") == 0)
 				{
-					if(BuildVersion == 4432)
+				//	if(BuildVersion == 4432)
+				//		BuildVersion = 4361;
+					if(BuildVersion == 3944)
+						BuildVersion = 3911;
+					if(OrigBuildVersion == 4531)
 						BuildVersion = 4361;
+					// Quick test (JSRF)
+					if(OrigBuildVersion == 4134)
+						BuildVersion = 4361;
+					// Quick test (Simpsons: RoadRage)
+				//	if(BuildVersion == 4034)
+				//		BuildVersion = 3911;
 				}
 
                 // Several 3911 titles has different DSound builds.
@@ -248,7 +260,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
 
 					// Redirect other highly similar DSOUND library versions
 					if(BuildVersion == 4361 || BuildVersion == 4400 || BuildVersion == 4432 || 
-						BuildVersion == 4531 || BuildVersion == 4134)
+						BuildVersion == 4531 )
 						BuildVersion = 4627;
                 }
 
@@ -269,15 +281,17 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
 				{
 					if(BuildVersion == 3944)
 						BuildVersion = 3911;
+					if(BuildVersion == 3950)
+						BuildVersion = 3911;
 					if(OrigBuildVersion == 4531)
 						BuildVersion = 4627;
 				}
 
 				// Test (do not release uncommented!)
-				if(strcmp(szLibraryName, "D3D8LTCG") == 0)
+				/*if(strcmp(szLibraryName, "D3D8LTCG") == 0)
 				{
 					strcpy(szLibraryName, "D3D8");
-				}
+				}*/
 
                 // TODO: HACK: These libraries are packed into one database
                 if(strcmp(szLibraryName, "D3DX8") == 0)
@@ -333,7 +347,16 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                             }
                             else if(BuildVersion >= 5233)
                             {
-                                pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_5233, lower, upper);
+								// 5344 has an updated version
+								if(OrigBuildVersion == 5344)
+								{
+									pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_5344, lower, upper);
+								}
+								else
+								{
+									pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_5233, lower, upper);
+								}
+
                                 ProcessHeapOffs = 0x51;
                                 RtlCreateHeapOffs = 0x4A;
                             }
@@ -345,6 +368,13 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                                     ProcessHeapOffs = 0x44;
                                     RtlCreateHeapOffs = 0x3B;
                                 }
+								else if(OrigBuildVersion == 5028)
+								{
+									pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_5028, lower, upper);
+
+                                    ProcessHeapOffs = 0x51;
+                                    RtlCreateHeapOffs = 0x4A;
+								}
                                 else
                                 {
                                     pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_4361, lower, upper);
@@ -352,6 +382,12 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                                     RtlCreateHeapOffs = 0x37;
                                 }
                             }
+							else if( OrigBuildVersion == 3950 )
+							{
+								pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_3950, lower, upper);
+                                ProcessHeapOffs = 0x3E;
+                                RtlCreateHeapOffs = 0x37;
+							}
                             else // 3911, 4034, 4134
                             {
                                 pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_3911, lower, upper);
@@ -406,7 +442,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
 								//XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x25) - 0x19F + 72*4);  // TODO: Clean up (?)
 								//patchOffset = 142*4 - 72*4; // TODO: Verify
                             }
-                            else if(BuildVersion == 4134)
+                            else if(BuildVersion == 4034 || BuildVersion == 4134)
                             {
                                 XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x248 + 82*4);  // TODO: Verify
                                 patchOffset = 142*4 - 82*4;

@@ -78,9 +78,9 @@ typedef signed long    sint32;
 #define _DEBUG_TRACK_VS_CONST
 
 /*! define this to dump textures that have been set */
-//#define _DEBUG_DUMP_TEXTURE_SETTEXTURE "C:\\xbox\\_textures\\"
+//#define _DEBUG_DUMP_TEXTURE_SETTEXTURE "D:\\xbox\\_textures\\"
 /*! define this to dump textures that are registered */
-//#define _DEBUG_DUMP_TEXTURE_REGISTER   "C:\\xbox\\_textures\\"
+//#define _DEBUG_DUMP_TEXTURE_REGISTER   "D:\\cxbx\\_textures\\"
 
 /*! version string dependent on trace flag */
 #ifndef _DEBUG_TRACE

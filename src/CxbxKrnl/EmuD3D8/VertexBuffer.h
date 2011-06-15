@@ -151,4 +151,6 @@ extern VOID EmuFlushIVB();
 
 extern VOID EmuUpdateActiveTexture();
 
+extern DWORD g_dwPrimPerFrame;
+ 
 #endif

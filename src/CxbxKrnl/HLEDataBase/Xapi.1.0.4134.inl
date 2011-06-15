@@ -407,6 +407,96 @@ SOOVPA<8> RtlDestroyHeap_1_0_4134 =
 };
 
 // ******************************************************************
+// * XMountMUA
+// ******************************************************************
+SOOVPA<8> XMountMUA_1_0_4134 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x22, 0x8A },
+        { 0x3E, 0x89 },
+        { 0x5E, 0x5C },
+        { 0x7E, 0xF4 },
+        { 0x9E, 0x50 },
+        { 0xBE, 0xF8 },
+        { 0xDE, 0x8D },
+        { 0xFE, 0x09 },
+    }
+};
+
+// ******************************************************************
+// * GetFileAttributesA
+// ******************************************************************
+SOOVPA<7> GetFileAttributesA_1_0_4134 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x08, 0x08 },
+        { 0x13, 0x8D },
+        { 0x1C, 0x50 },
+        { 0x26, 0xFF },
+        { 0x30, 0x15 },
+        { 0x3A, 0x45 },
+        { 0x44, 0x83 },
+    }
+};
+
+// ******************************************************************
+// * timeSetEvent
+// ******************************************************************
+SOOVPA<7> timeSetEvent_1_0_4134 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0x8D },
+        { 0x3E, 0x89 },
+        { 0x5E, 0x15 },
+        { 0x7E, 0x3F },
+        { 0x9E, 0x03 },
+        { 0xBE, 0x32 },
+        { 0xDE, 0x89 },
+    }
+};
+
+// ******************************************************************
+// * timeKillEvent
+// ******************************************************************
+SOOVPA<8> timeKillEvent_1_0_4134 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x0E, 0x8B },
+        { 0x1A, 0xC2 },
+        { 0x28, 0x8D },
+        { 0x36, 0x56 },
+        { 0x44, 0x00 },
+        { 0x52, 0x00 },
+        { 0x60, 0x5E },
+        { 0x6E, 0x00 },
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_4134
 // ******************************************************************
 OOVPATable XAPI_1_0_4134[] =
@@ -674,16 +764,6 @@ OOVPATable XAPI_1_0_4134[] =
 		"EmuGetThreadPriority"
 		#endif
 	},
-	// XGetDevices (* unchanged since 3911 *)
-	{
-		(OOVPA*)&XGetDevices_1_0_3911,
-
-		XTL::EmuXGetDevices,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXGetDevices"
-		#endif
-	},
 	// QueryPerformanceCounter
     {
         (OOVPA*)&QueryPerformanceCounter_1_0_4134,
@@ -784,6 +864,42 @@ OOVPATable XAPI_1_0_4134[] =
 		"EmuQueueUserAPC"
 		#endif
 	},
+	// XMountMUA
+    {
+        (OOVPA*)&XMountMUA_1_0_4134,
+        XTL::EmuXMountMUA,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXMountMUA"
+        #endif
+    },
+	// GetFileAttributesA
+    {
+        (OOVPA*)&GetFileAttributesA_1_0_4134,
+        XTL::EmuGetFileAttributesA,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGetFileAttributesA"
+        #endif
+    },
+	// timeSetEvent
+    {
+        (OOVPA*)&timeSetEvent_1_0_4134,
+        XTL::EmutimeSetEvent,
+
+        #ifdef _DEBUG_TRACE
+        "EmutimeSetEvent"
+        #endif
+    },
+    // timeKillEvent
+    {
+        (OOVPA*)&timeKillEvent_1_0_4134,
+        XTL::EmutimeKillEvent,
+
+        #ifdef _DEBUG_TRACE
+        "EmutimeKillEvent"
+        #endif
+    },
 };
 
 // ******************************************************************

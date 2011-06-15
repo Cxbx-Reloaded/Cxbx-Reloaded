@@ -127,6 +127,13 @@ inline D3DBLEND EmuXB2PC_D3DBLEND(X_D3DBLEND Value)
     else if(Value < 0x309)
         return (D3DBLEND)((Value & 0xF) + 3);
 
+	if(Value == 0x8001)
+	{
+		// HACK: Quantum Redshift. This is only supported via OpenGL.
+		EmuWarning("X_D3DBLEND_CONSTANTCOLOR -> D3DBLEND_DESTCOLOR");
+		return D3DBLEND_ONE;
+	}
+
     CxbxKrnlCleanup("Unknown Xbox D3DBLEND Extension (0x%.08X)", Value);
 
     return (D3DBLEND)Value;

@@ -418,11 +418,21 @@ enum PS_GLOBALFLAGS
 };
 
 // dump pixel shader definition to file
-void DumpPixelShaderDefToFile( X_D3DPIXELSHADERDEF* pPSDef );
+void DumpPixelShaderDefToFile( X_D3DPIXELSHADERDEF* pPSDef, const char* pszCode );
 // print relevant contents to the debug console
 void PrintPixelShaderDefContents( X_D3DPIXELSHADERDEF* pDSDef );
 // Recompile Xbox PixelShader def
 HRESULT EmuRecompilePshDef( X_D3DPIXELSHADERDEF* pPSDef, LPD3DXBUFFER* ppRecompiled );
+
+/*
+ * Kingofc's pixel shader functions
+ */
+// Pixel Shader Stuff
+HRESULT CreatePixelShaderFunction(X_D3DPIXELSHADERDEF *pPSD, LPD3DXBUFFER* ppRecompiled);
+
+// check
+bool IsValidPixelShader(void);
+
 
 #ifdef _DEBUG_TRACK_PS
 #define DbgPshPrintf if(g_bPrintfOn) printf

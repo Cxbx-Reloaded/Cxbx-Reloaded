@@ -54,20 +54,25 @@
 #include "HLEDataBase/D3D8.1.0.5849.h"
 #include "HLEDataBase/D3D8LTCG.1.0.5849.h"
 #include "HLEDataBase/DSound.1.0.3936.h"
+#include "HLEDataBase/DSound.1.0.4134.h"
 #include "HLEDataBase/DSound.1.0.4361.h"
 #include "HLEDataBase/DSound.1.0.4432.h"
 #include "HLEDataBase/DSound.1.0.4627.h"
 #include "HLEDataBase/DSound.1.0.5233.h"
 #include "HLEDataBase/DSound.1.0.5558.h"
 #include "HLEDataBase/DSound.1.0.5849.h"
+#include "HLEDataBase/XG.1.0.3911.h"
+#include "HLEDataBase/XG.1.0.4034.h"
 #include "HLEDataBase/XG.1.0.4361.h"
 #include "HLEDataBase/XG.1.0.4627.h"
 #include "HLEDataBase/XG.1.0.5233.h"
 #include "HLEDataBase/XG.1.0.5558.h"
+#include "HLEDataBase/XG.1.0.5849.h"
 #include "HLEDataBase/XNet.1.0.3911.h"
 #include "HLEDataBase/XOnline.1.0.4361.h"
 #include "HLEDataBase/XOnline.1.0.4627.h"
 #include "HLEDataBase/XOnline.1.0.5233.h"
+#include "HLEDataBase/XOnline.1.0.5849.h"
 #include "HLEDataBase/XactEng.1.0.4627.h"
 
 // ******************************************************************
@@ -128,6 +133,7 @@ enum XRefDataBaseOffset
     XREF_D3D_BLOCKONTIME,
     XREF_D3D_SETFENCE,
 	XREF_D3D_KickOffAndWaitForIdle,
+	XREF_D3D_MakeRequestedSpace,
     XREF_XNINIT,
     XREF_FCLOSEDEVICE,
     XREF_CLEARSTATEBLOCKFLAGS,
@@ -294,6 +300,13 @@ enum XRefDataBaseOffset
 	XREF_CMcpxVoiceClient_SetI3DL2Source,
 	XREF_CDirectSoundVoice_SetI3DL2Source,
 	XREF_CDirectSoundVoice_SetMixBinVolumes,
+	XREF_CDirectSoundStream_SetMixBinVolumes,
+	XREF_DirectSound_CDirectSoundStream_SetHeadroom,
+	XREF_DirectSound_CDirectSoundVoice_SetOutputBuffer,
+	XREF_DirectSound_CDirectSoundBuffer_SetOutputBuffer,
+	XREF_DirectSound_CDirectSoundBuffer_SetNotificationPositions,
+	XREF_DirectSound_CDirectSoundBuffer_SetEG,
+	XREF_DirectSound_CDirectSound_GetEffectData,
 	// XACT
 	// +s
 	XREF_XACT_CEngine_RegisterWaveBank,

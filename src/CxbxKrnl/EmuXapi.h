@@ -34,6 +34,8 @@
 #ifndef EMUXAPI_H
 #define EMUXAPI_H
 
+#include <dxerr8.h>
+
 // ******************************************************************
 // * calling conventions
 // ******************************************************************
@@ -156,6 +158,16 @@ typedef struct _XPP_DEVICE_TYPE
     ULONG Reserved[3];
 }
 XPP_DEVICE_TYPE, *PXPP_DEVICE_TYPE;
+
+// ******************************************************************
+// * XDEVICE_PREALLOC_TYPE
+// ******************************************************************
+typedef struct _XDEVICE_PREALLOC_TYPE 
+{
+    PXPP_DEVICE_TYPE DeviceType;
+    DWORD            dwPreallocCount;
+} 
+XDEVICE_PREALLOC_TYPE, *PXDEVICE_PREALLOC_TYPE;
 
 // ******************************************************************
 // * XINPUT_GAMEPAD
@@ -307,6 +319,11 @@ LAUNCH_DATA, *PLAUNCH_DATA;
 #define LDT_FROM_DEBUGGER_CMDLINE 3
 #define LDT_FROM_UPDATE           4
 
+// ******************************************************************
+// * XGetDeviceEnumerationStatus flags
+// ******************************************************************
+#define XDEVICE_ENUMERATION_IDLE 0
+#define XDEVICE_ENUMERATION_BUSY 1
 
 // ******************************************************************
 // * func: EmuXapiApplyKernelPatches
@@ -409,8 +426,8 @@ BOOL WINAPI EmuXMountUtilityDrive
 // ******************************************************************
 VOID WINAPI EmuXInitDevices
 (
-    DWORD   Unknown1,
-    PVOID   Unknown2
+    DWORD					dwPreallocTypeCount,
+	PXDEVICE_PREALLOC_TYPE	PreallocTypes
 );
 
 // ******************************************************************
@@ -490,7 +507,7 @@ DWORD WINAPI EmuXInputSetState
 // ******************************************************************
 HANDLE WINAPI EmuCreateThread
 (
-    LPSECURITY_ATTRIBUTES   lpThreadAttributes,
+    LPVOID				    lpThreadAttributes,
     DWORD                   dwStackSize,
     LPTHREAD_START_ROUTINE  lpStartAddress,
     LPVOID                  lpParameter,
@@ -514,6 +531,30 @@ HANDLE WINAPI EmuCreateMutex
 BOOL WINAPI EmuCloseHandle
 (
     HANDLE hObject
+);
+
+// ******************************************************************
+// * func: EmuExitThread
+// ******************************************************************
+VOID WINAPI EmuExitThread
+(
+	DWORD dwExitCode  
+);
+
+// ******************************************************************
+// * func: ResumeThread
+// ******************************************************************
+DWORD WINAPI EmuResumeThread
+(
+	HANDLE hThread 
+);
+
+// ******************************************************************
+// * func: SuspendThread
+// ******************************************************************
+DWORD WINAPI EmuSuspendThread
+(
+	HANDLE hThread 
 );
 
 // ******************************************************************
@@ -799,7 +840,7 @@ DWORD WINAPI EmuGetFileAttributesA
 );
 
 // ******************************************************************
-// func: EmuVirtualProtect
+// * func: EmuVirtualProtect
 // ******************************************************************
 BOOL WINAPI EmuVirtualProtect
 (
@@ -809,6 +850,102 @@ BOOL WINAPI EmuVirtualProtect
 	PDWORD	lpflOldProtect   // old protection
 );
 
+// ******************************************************************
+// * func: EmulstrcmpiW
+// ******************************************************************
+int WINAPI EmulstrcmpiW
+(
+	LPCWSTR lpString1,
+	LPCWSTR lpString2
+);
+
+// ******************************************************************
+// * func: XMountMUA
+// ******************************************************************
+DWORD WINAPI EmuXMountMUA
+(
+	DWORD dwPort,                  
+	DWORD dwSlot,                  
+	PCHAR pchDrive               
+);
+
+// ******************************************************************
+// * func: EmuCreateWaitableTimerA
+// ******************************************************************
+HANDLE WINAPI EmuCreateWaitableTimerA
+(
+	LPVOID					lpTimerAttributes, // SD
+	BOOL					bManualReset,      // reset type
+	LPCSTR					lpTimerName        // object name
+);
+
+// ******************************************************************
+// * func: EmuSetWaitableTimer
+// ******************************************************************
+BOOL WINAPI EmuSetWaitableTimer
+(
+	HANDLE				hTimer,                     // handle to timer
+	const LARGE_INTEGER *pDueTime,					// timer due time
+	LONG				lPeriod,                    // timer interval
+	PTIMERAPCROUTINE	pfnCompletionRoutine,		// completion routine
+	LPVOID				lpArgToCompletionRoutine,   // completion routine parameter
+	BOOL				fResume                     // resume state
+);
+
+// ******************************************************************
+// * func: EmuXMountAlternateTitle
+// ******************************************************************
+DWORD WINAPI EmuXMountAlternateTitle
+(
+	LPCSTR		lpRootPath,               
+	DWORD		dwAltTitleId,               
+	PCHAR		pchDrive               
+);
+
+// ******************************************************************
+// * func: EmuXUnmountAlternateTitle
+// ******************************************************************
+DWORD WINAPI EmuXUnmountAlternateTitle(CHAR chDrive);
+
+// ******************************************************************
+// * func: EmuVirtualAlloc
+// ******************************************************************
+LPVOID WINAPI EmuVirtualAlloc
+(
+	LPVOID lpAddress,        
+	SIZE_T dwSize,           
+	DWORD flAllocationType,  
+	DWORD flProtect          
+);
+
+// ******************************************************************
+// * func: EmuVirtualAlloc
+// ******************************************************************
+BOOL WINAPI EmuVirtualFree
+(
+	LPVOID lpAddress,   
+	SIZE_T dwSize,      
+	DWORD dwFreeType    
+);
+
+// ******************************************************************
+// * func: EmuMoveFileA
+// ******************************************************************
+BOOL WINAPI EmuMoveFileA
+(
+    LPCSTR lpExistingFileName,
+    LPCSTR lpNewFileName
+);
+
+// ******************************************************************
+// * func: EmuXGetDeviceEnumerationStatus
+// ******************************************************************
+DWORD WINAPI EmuXGetDeviceEnumerationStatus();
+
+// ******************************************************************
+// * func: EmuSwitchToThread
+// ******************************************************************
+BOOL WINAPI EmuSwitchToThread();
 
 // s+
 /* not necessary?

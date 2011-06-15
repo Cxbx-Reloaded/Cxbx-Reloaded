@@ -175,6 +175,31 @@ typedef struct _X_D3DPIXELSHADERDEF	// <- blueshogun 10/1/07
    DWORD    PSFinalCombinerConstants;  // Final combiner constant mapping
 }X_D3DPIXELSHADERDEF;
 
+// These structures are used by Cxbx, not by the Xbox!!!
+typedef struct _PixelShader_ 
+{
+	//IDirect3DPixelShader9* pShader;
+	//ID3DXConstantTable *pConstantTable;
+	DWORD Handle;
+
+	BOOL bBumpEnvMap;
+
+	// constants
+	DWORD PSRealC0[8];
+	DWORD PSRealC1[8];
+	DWORD PSRealFC0;
+	DWORD PSRealFC1;
+
+	BOOL bConstantsInitialized;
+	BOOL bConstantsChanged;
+
+	DWORD dwStatus;
+	X_D3DPIXELSHADERDEF	PSDef;
+
+	DWORD dwStageMap[4];
+
+} PIXEL_SHADER;
+
 typedef struct _STREAM_DYNAMIC_PATCH_
 {
     BOOL  NeedPatch;       // This is to know whether is data which must be patched
@@ -251,6 +276,7 @@ struct X_D3DResource
 #define X_D3DRESOURCE_DATA_FLAG_D3DREND 0x00000004 // D3D Render Target
 #define X_D3DRESOURCE_DATA_FLAG_D3DSTEN 0x00000008 // D3D Stencil Surface
 #define X_D3DRESOURCE_DATA_FLAG_TEXCLON 0x00000010 // HACK: Cloned resource
+#define X_D3DRESOURCE_DATA_FLAG_8BITTEX 0x00000020 // Palettized texture (D3DFMT_P8)
 
 #define IsSpecialResource(x) ( ((DWORD)(x) & X_D3DRESOURCE_DATA_FLAG_SPECIAL) == X_D3DRESOURCE_DATA_FLAG_SPECIAL)
 

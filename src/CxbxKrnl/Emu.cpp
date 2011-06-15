@@ -430,7 +430,7 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
     }
 
 	// JetSetRadio Future *NTSC*
-	if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
+	/*if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
 	{
 		if(e->ContextRecord->Eip == 0x48226)
 		{
@@ -480,12 +480,12 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
 
   //          return EXCEPTION_CONTINUE_EXECUTION;
   //      }
-    }
+    }*/
 
 	// Unreal Championship *NTSC*
 	if(e->ExceptionRecord->ExceptionCode == 0xC0000096)
 	{
-		if(e->ContextRecord->Eip == 0x4DD40)
+		if(e->ContextRecord->Eip == 0x4DD40 || e->ContextRecord->Eip == 0x4E7D0)
 		{
 			// WBINVD skip
             e->ContextRecord->Eip += 2;
@@ -542,17 +542,26 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
 	// Rayman Arena *NTSC*
 	if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
 	{
-		if(e->ContextRecord->Eip == 0x18B40C)
+		//if(e->ContextRecord->Eip == 0x18B40C)
+		//{
+		//	// call dword ptr [ecx+4]
+  //          e->ContextRecord->Eip += 3;
+
+  //          DbgPrintf("EmuMain (0x%X): Rayman Arena Hack 1 was applied!\n", GetCurrentThreadId());
+
+  //          g_bEmuException = false;
+
+  //          return EXCEPTION_CONTINUE_EXECUTION;
+  //      }
+		if(e->ContextRecord->Eip == 0x1B8F978)
 		{
-			// call dword ptr [ecx+4]
-            e->ContextRecord->Eip += 3;
-
-            DbgPrintf("EmuMain (0x%X): Rayman Arena Hack 1 was applied!\n", GetCurrentThreadId());
-
-            g_bEmuException = false;
+			// db ff (may be driver specific problem!)
+			e->ContextRecord->Eip++;
+			 
+			g_bEmuException = false;
 
             return EXCEPTION_CONTINUE_EXECUTION;
-        }
+		}
 	}
 
 	// Dead to Rights (Region shouldn't matter)
@@ -650,18 +659,145 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
 	// Metal Slug 3
 	if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
 	{
-		if(e->ContextRecord->Eip == 0x1B59BC)
-		{
-			// mov [ecx+0x28], eax
-            e->ContextRecord->Eip += 3;
+		//if(e->ContextRecord->Eip == 0x1B59BC)
+		//{
+		//	// mov [ecx+0x28], eax
+  //          e->ContextRecord->Eip += 3;
 
-            DbgPrintf("EmuMain (0x%X): Metal Slug 3 hack 1 was applied!\n", GetCurrentThreadId());
+  //          DbgPrintf("EmuMain (0x%X): Metal Slug 3 hack 1 was applied!\n", GetCurrentThreadId());
 
-            g_bEmuException = false;
+  //          g_bEmuException = false;
 
-            return EXCEPTION_CONTINUE_EXECUTION;
-        }
+  //          return EXCEPTION_CONTINUE_EXECUTION;
+  //      }
+
+		//if(e->ContextRecord->Eip == 0x1B59CA)
+		//{
+		//	// mov [ecx+0x28], eax
+  //          e->ContextRecord->Eip += 3;
+
+  //          DbgPrintf("EmuMain (0x%X): Metal Slug 3 hack 2 was applied!\n", GetCurrentThreadId());
+
+  //          g_bEmuException = false;
+
+  //          return EXCEPTION_CONTINUE_EXECUTION;
+  //      }
+
+		//if(e->ContextRecord->Eip == 0x1B59DE)
+		//{
+		//	// mov [ecx+0x28], eax
+  //          e->ContextRecord->Eip += 3;
+
+  //          DbgPrintf("EmuMain (0x%X): Metal Slug 3 hack 3 was applied!\n", GetCurrentThreadId());
+
+  //          g_bEmuException = false;
+
+  //          return EXCEPTION_CONTINUE_EXECUTION;
+  //      }
+
+		//if(e->ContextRecord->Eip == 0x1B59EC)
+		//{
+		//	// mov [ecx+0x28], eax
+  //          e->ContextRecord->Eip += 3;
+
+  //          DbgPrintf("EmuMain (0x%X): Metal Slug 3 hack 4 was applied!\n", GetCurrentThreadId());
+
+  //          g_bEmuException = false;
+
+  //          return EXCEPTION_CONTINUE_EXECUTION;
+  //  `    }
+
+		//if(e->ContextRecord->Eip == 0x1B59BC)
+		//{
+		//	// mov [ecx+0x28], eax
+  //          e->ContextRecord->Eip += 7;
+
+  //          DbgPrintf("EmuMain (0x%X): Metal Slug 3 hack 1 was applied!\n", GetCurrentThreadId());
+
+  //          g_bEmuException = false;
+
+  //          return EXCEPTION_CONTINUE_EXECUTION;
+  //      }
 	}
+
+	// Privileged instruction check
+	if(e->ExceptionRecord->ExceptionCode == 0xC0000096)
+	{
+		DWORD dwEip = e->ContextRecord->Eip;
+
+		// WRMSR
+		if(*((BYTE*)dwEip) == 0x0F && *((BYTE*)dwEip+1) == 0x30)
+		{
+			e->ContextRecord->Eip += 2;
+
+			DbgPrintf("EmuMain (0x%X): Skipping privileged instruction (WRMSR)\n", GetCurrentThreadId());
+
+			g_bEmuException = false;
+
+			return EXCEPTION_CONTINUE_EXECUTION;
+		}
+
+		// RDMSR
+		if(*((BYTE*)dwEip) == 0x0F && *((BYTE*)dwEip+1) == 0x32)
+		{
+			e->ContextRecord->Eip += 2;
+
+			DbgPrintf("EmuMain (0x%X): Skipping privileged instruction (RDMSR)\n", GetCurrentThreadId());
+
+			g_bEmuException = false;
+
+			return EXCEPTION_CONTINUE_EXECUTION;
+		}
+
+		// RDPMC
+		if(*((BYTE*)dwEip) == 0x0F && *((BYTE*)dwEip+1) == 0x33)
+		{
+			e->ContextRecord->Eip += 2;
+
+			DbgPrintf("EmuMain (0x%X): Skipping privileged instruction (RDPMC)\n", GetCurrentThreadId());
+
+			g_bEmuException = false;
+
+			return EXCEPTION_CONTINUE_EXECUTION;
+		}
+
+		// WBINVD
+		if(*((BYTE*)dwEip) == 0x0F && *((BYTE*)dwEip+1) == 0x09)
+		{
+			e->ContextRecord->Eip += 2;
+
+			DbgPrintf("EmuMain (0x%X): Skipping privileged instruction (WBINVD)\n", GetCurrentThreadId());
+
+			g_bEmuException = false;
+
+			return EXCEPTION_CONTINUE_EXECUTION;
+		}
+
+		// CLI
+		if(*((BYTE*)dwEip) == 0xFA)
+		{
+			e->ContextRecord->Eip += 1;
+
+			DbgPrintf("EmuMain (0x%X): Skipping privileged instruction (CLI)\n", GetCurrentThreadId());
+
+			g_bEmuException = false;
+
+			return EXCEPTION_CONTINUE_EXECUTION;
+		}
+
+		// STI
+		if(*((BYTE*)dwEip) == 0xFB)
+		{
+			e->ContextRecord->Eip += 1;
+
+			DbgPrintf("EmuMain (0x%X): Skipping privileged instruction (STI)\n", GetCurrentThreadId());
+
+			g_bEmuException = false;
+
+			return EXCEPTION_CONTINUE_EXECUTION;
+		}
+	}
+
 
     // print debug information
     {

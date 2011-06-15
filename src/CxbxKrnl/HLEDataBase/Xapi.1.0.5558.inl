@@ -303,6 +303,29 @@ SOOVPA<7> GetFileAttributesA_1_0_5558 =
 };
 
 // ******************************************************************
+// * XMountMUA
+// ******************************************************************
+SOOVPA<8> XMountMUA_1_0_5558 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x22, 0x8A },
+        { 0x3E, 0x89 },
+        { 0x5E, 0x5C },
+        { 0x7E, 0xF4 },
+        { 0x9E, 0x50 },
+        { 0xBE, 0xF8 },
+        { 0xDE, 0x8D },
+        { 0xFE, 0x09 },
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_5558
 // ******************************************************************
 OOVPATable XAPI_1_0_5558[] =
@@ -583,6 +606,85 @@ OOVPATable XAPI_1_0_5558[] =
 
         #ifdef _DEBUG_TRACE
         "VirtualProtect"
+        #endif
+    },
+	// XGetSectionHandleA (* unchanged since 4134 *)
+	{
+		(OOVPA*)&XGetSectionHandleA_1_0_4134, 
+			
+		XTL::EmuXGetSectionHandleA,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXGetSectionHandleA"
+		#endif
+	},
+	// XLoadSectionByHandle (* unchanged since 4134 *)
+	{
+		(OOVPA*)&XLoadSectionByHandle_1_0_4134, 
+			
+		XTL::EmuXLoadSectionByHandle,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXLoadSectionByHandle"
+		#endif
+	},
+	// XFreeSectionByHandle (* unchanged since 4134 *)
+	{
+		(OOVPA*)&XFreeSectionByHandle_1_0_4134, 
+			
+		XTL::EmuXFreeSectionByHandle,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXFreeSectionByHandle"
+		#endif
+	},
+	// SetThreadPriorityBoost (* unchanged since 4627 *)
+    {
+        (OOVPA*)&SetThreadPriorityBoost_1_0_4627,
+
+        XTL::EmuSetThreadPriorityBoost,
+
+        #ifdef _DEBUG_TRACE
+        "EmuSetThreadPriorityBoost"
+        #endif
+    },
+	// GetThreadPriority (* unchanged since 4627 *)
+    {
+        (OOVPA*)&GetThreadPriority_1_0_4627,
+
+        XTL::EmuGetThreadPriority,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGetThreadPriority"
+        #endif
+    },
+	// GetTimeZoneInformation (* unchanged since 3911 *)
+    {
+        (OOVPA*)&GetTimeZoneInformation_1_0_3911,
+
+        XTL::EmuGetTimeZoneInformation,
+
+        #ifdef _DEBUG_TRACE
+        "GetTimeZoneInformation"
+        #endif
+    },
+    // SetThreadPriority (* unchanged since 3911 *)
+    {
+        (OOVPA*)&SetThreadPriority_1_0_3911,
+
+        XTL::EmuSetThreadPriority,
+
+        #ifdef _DEBUG_TRACE
+        "EmuSetThreadPriority"
+        #endif
+    },
+	// XMountMUA
+    {
+        (OOVPA*)&XMountMUA_1_0_5558,
+        XTL::EmuXMountMUA,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXMountMUA"
         #endif
     },
 };

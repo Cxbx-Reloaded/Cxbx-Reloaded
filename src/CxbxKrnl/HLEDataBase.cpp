@@ -62,6 +62,7 @@ extern "C" const char *szHLELastCompileTime = __TIMESTAMP__;
 #include "HLEDataBase/D3D8.1.0.5849.inl"
 #include "HLEDataBase/D3D8LTCG.1.0.5849.inl"
 #include "HLEDataBase/DSound.1.0.3936.inl"
+#include "HLEDataBase/DSound.1.0.4134.inl"
 #include "HLEDataBase/DSound.1.0.4361.inl"
 #include "HLEDataBase/DSound.1.0.4432.inl"
 #include "HLEDataBase/DSound.1.0.4627.inl"
@@ -69,14 +70,17 @@ extern "C" const char *szHLELastCompileTime = __TIMESTAMP__;
 #include "HLEDataBase/DSound.1.0.5558.inl"
 #include "HLEDataBase/DSound.1.0.5849.inl"
 #include "HLEDataBase/XG.1.0.3911.inl"
+#include "HLEDataBase/XG.1.0.4034.inl"
 #include "HLEDataBase/XG.1.0.4361.inl"
 #include "HLEDataBase/XG.1.0.4627.inl"
 #include "HLEDataBase/XG.1.0.5233.inl"
 #include "HLEDataBase/XG.1.0.5558.inl"
+#include "HLEDataBase/XG.1.0.5849.inl"
 #include "HLEDataBase/XNet.1.0.3911.inl"
 #include "HLEDataBase/XOnline.1.0.4361.inl"
 #include "HLEDataBase/XOnline.1.0.4627.inl"
 #include "HLEDataBase/XOnline.1.0.5233.inl"
+#include "HLEDataBase/XOnline.1.0.5849.inl"
 #include "HLEDataBase/XactEng.1.0.4627.inl"
 
 // ******************************************************************
@@ -224,6 +228,13 @@ HLEData HLEDataBase[] =
         DSound_1_0_3936,
         DSound_1_0_3936_SIZE
     },
+	// DSound Version 1.0.4134
+    {
+        "DSOUND",
+        1, 0, 4134,
+        DSound_1_0_4134,
+        DSound_1_0_4134_SIZE
+    },
     // DSound Version 1.0.4361
     {
         "DSOUND",
@@ -273,6 +284,13 @@ HLEData HLEDataBase[] =
         XG_1_0_3911,
         XG_1_0_3911_SIZE
     },
+	// XG Version 1.0.4034
+    {
+        "XGRAPHC",
+        1, 0, 4034,
+        XG_1_0_4034,
+        XG_1_0_4034_SIZE
+    },
     // XG Version 1.0.4361
     {
         "XGRAPHC",
@@ -300,6 +318,13 @@ HLEData HLEDataBase[] =
         1, 0, 5558,
         XG_1_0_5558,
         XG_1_0_5558_SIZE
+    },
+	// XG Version 1.0.5849
+    {
+        "XGRAPHC",
+        1, 0, 5849,
+        XG_1_0_5849,
+        XG_1_0_5849_SIZE
     },
     // XNet Version 1.0.3911
     {
@@ -329,6 +354,13 @@ HLEData HLEDataBase[] =
         1, 0, 5233,
         XOnline_1_0_5233,
         XOnline_1_0_5233_SIZE
+    },
+	// XOnline(s) Version 1.0.5849
+	{
+        "XONLINES",
+        1, 0, 5849,
+        XOnline_1_0_5849,
+        XOnline_1_0_5849_SIZE
     },
 	// XactEng Version 1.0.4627
 	{
@@ -360,6 +392,7 @@ extern uint32 XRefDataBase[] =
     -1, // XREF_D3DCD_LAZYSETSTATEVB
     -1, // XREF_D3D_BLOCKONTIME
     -1, // XREF_D3D_SETFENCE
+	-1, // XREF_D3D_MakeRequestedSpace
     -1, // XREF_XNINIT
     -1, // XREF_FCLOSEDEVICE
     -1, // XREF_CLEARSTATEBLOCKFLAGS
@@ -525,6 +558,13 @@ extern uint32 XRefDataBase[] =
 	-1,	// XREF_CMcpxVoiceClient_SetI3DL2Source
 	-1,	// XREF_CDirectSoundVoice_SetI3DL2Source
 	-1,	// XREF_CDirectSoundVoice_SetMixBinVolumes
+	-1, // XREF_CDirectSoundStream_SetMixBinVolumes
+	-1, // XREF_DirectSound_CDirectSoundStream_SetHeadroom
+	-1, // XREF_DirectSound_CDirectSoundVoice_SetOutputBuffer
+	-1, // XREF_DirectSound_CDirectSoundBuffer_SetOutputBuffer
+	-1, // XREF_DirectSound_CDirectSoundBuffer_SetNotificationPositions
+	-1, // XREF_DirectSound_CDirectSoundBuffer_SetEG
+	-1, // XREF_DirectSound_CDirectSound_GetEffectData
 	// XACT
 	-1, // XREF_XACT_CEngine_RegisterWaveBank
 	-1, // XREF_XACT_CEngine_RegisterStreamedWaveBank

@@ -1349,6 +1349,16 @@ OOVPATable DSound_1_0_5233[] =
         "EmuIDirectSoundBuffer8_SetRolloffCurve"
         #endif
     },
+	// IDirectSound8::AddRef (* unchanged since 3936 *)
+    {
+        (OOVPA*)&IDirectSound8_AddRef_1_0_3936,
+
+        XTL::EmuIDirectSound8_AddRef,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSound8_AddRef"
+        #endif
+    },
 };
 
 // ******************************************************************

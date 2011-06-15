@@ -4237,6 +4237,216 @@ SOOVPA<7> D3DDevice_BlockOnFence_1_0_3925 =
 };
 
 // ******************************************************************
+// * Direct3D_EnumAdapterModes
+// ******************************************************************
+SOOVPA<8> Direct3D_EnumAdapterModes_1_0_3925 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x20, 0x8B },
+        { 0x3E, 0xE3 },
+        { 0x5E, 0x75 },
+        { 0x7E, 0x00 },
+        { 0x9E, 0x00 },
+        { 0xBE, 0x0F },
+        { 0xE2, 0x89 },
+        { 0xFE, 0x5D },
+    }
+};
+
+// ******************************************************************
+// * Direct3D_GetAdapterModeCount
+// ******************************************************************
+SOOVPA<8> Direct3D_GetAdapterModeCount_1_0_3925 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x14, 0x8B },
+        { 0x26, 0xE2 },
+        { 0x3A, 0x00 },
+        { 0x4E, 0x00 },
+        { 0x62, 0x19 },
+        { 0x76, 0x75 },
+        { 0x8A, 0x3B },
+        { 0x9E, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_Reset
+// ******************************************************************
+SOOVPA<7> D3DDevice_Reset_1_0_3925 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x15, 0x8B },
+        { 0x2C, 0x8B },
+        { 0x43, 0x8B },
+        { 0x5A, 0x08 },
+        { 0x74, 0x8B },
+        { 0x88, 0x50 },
+        { 0x9F, 0x03 },
+    }
+};
+
+// ******************************************************************
+// * Direct3D_GetAdapterIdentifier
+// ******************************************************************
+SOOVPA<7> Direct3D_GetAdapterIdentifier_1_0_3925 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x04, 0x85 },
+        { 0x0A, 0x08 },
+        { 0x10, 0x56 },
+        { 0x16, 0xB9 },
+        { 0x20, 0xF3 },
+        { 0x22, 0x5F },
+        { 0x28, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * Direct3D_GetDeviceCaps
+// ******************************************************************
+SOOVPA<7> Direct3D_GetDeviceCaps_1_0_3925 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x04, 0x85 },
+        { 0x0A, 0x08 },
+        { 0x10, 0x83 },
+        { 0x16, 0x08 },
+        { 0x1C, 0xC2 },
+        { 0x22, 0x0C },
+        { 0x29, 0x33 },
+    }
+};
+
+// ******************************************************************
+// * D3D::SetCommonDebugRegisters
+// ******************************************************************
+SOOVPA<10> D3D_SetCommonDebugRegisters_1_0_3925 = 
+{
+    0,  // Large == 0
+    10, // Count == 10
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+		{ 0x07, 0x8B },
+		{ 0x08, 0x96 },
+		{ 0x09, 0x44 },
+		{ 0x0A, 0x2B },
+        { 0x31, 0x81 },
+        { 0x32, 0xE2 },
+        { 0x33, 0xFF },
+        { 0x34, 0xFF },
+        { 0x35, 0xEF },
+        { 0x36, 0xE7 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_CreateImageSurface
+// ******************************************************************
+SOOVPA<7> D3DDevice_CreateImageSurface_1_0_3925 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x02, 0x24 },
+        { 0x06, 0x24 },
+        { 0x0A, 0x24 },
+        { 0x0E, 0x44 },
+        { 0x12, 0x00 },
+        { 0x16, 0xE8 },
+        { 0x1B, 0xC2 },
+    }
+};
+
+// ******************************************************************
+// * D3D::BlockOnTime
+// ******************************************************************
+SOOVPA<9> D3D_BlockOnTime_1_0_3925 =
+{
+    0,  // Large == 0
+    9,  // Count == 6
+
+    XREF_D3D_BLOCKONTIME, // Xref Is Saved
+    0,                    // Xref Not Used
+
+    {
+        // D3D::BlockOnFence+0x0A : push edi
+		{ 0x0A, 0x57 },
+		// D3D::BlockOnFence+0x4E : cmp eax, 0x8000
+		{ 0x4E, 0x3D },
+		{ 0x4F, 0x00 },
+		{ 0x50, 0x80 },
+		{ 0x51, 0x00 },
+		// D3D::BlockOnFence+0x6E : mov ebp, 0x40100
+		{ 0x6E, 0xBD },
+		{ 0x6F, 0x00 },
+		{ 0x70, 0x01 },
+		{ 0x71, 0x04 }
+    }
+};
+
+// ******************************************************************
+// * D3D::BlockOnResource
+// ******************************************************************
+SOOVPA<9> D3D_BlockOnResource_1_0_3925 =
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    XREF_D3D_BlockOnResource, // Xref Is Saved
+    0,  // Xref Not Used
+
+    {
+		{ 0x34, 0x8B }, // mov edx, [ecx+0x1C]
+		{ 0x35, 0x51 },
+		{ 0x36, 0x1C },
+		{ 0x41, 0xC2 }, // retn 4
+        { 0x42, 0x04 },
+        { 0x43, 0x00 },
+        { 0x7E, 0xC2 }, // retn 4
+        { 0x7F, 0x04 },
+        { 0x80, 0x00 },
+    }
+};
+
+// ******************************************************************
 // * D3D8_1_0_3925
 // ******************************************************************
 OOVPATable D3D8_1_0_3925[] =
@@ -5609,7 +5819,89 @@ OOVPATable D3D8_1_0_3925[] =
         XTL::EmuIDirect3DDevice8_BlockOnFence,
 
         #ifdef _DEBUG_TRACE
-        "EmuIDirect3DDevice8_BlockOnFence "
+        "EmuIDirect3DDevice8_BlockOnFence"
+        #endif
+    },
+	// Direct3D_EnumAdapterModes
+	{
+		(OOVPA*)&Direct3D_EnumAdapterModes_1_0_3925,
+		XTL::EmuIDirect3D8_EnumAdapterModes,
+
+		#ifdef _DEBUG_TRACE
+		"EmuIDirect3D8_EnumAdapterModes"
+		#endif
+	},
+	// Direct3D_GetAdapterModeCount
+	{
+		(OOVPA*)&Direct3D_GetAdapterModeCount_1_0_3925,
+		XTL::EmuIDirect3D8_GetAdapterModeCount,
+
+		#ifdef _DEBUG_TRACE
+		"EmuIDirect3D8_GetAdapterModeCount"
+		#endif
+	},
+	// IDirect3DDevice8::Reset
+    {
+        (OOVPA*)&D3DDevice_Reset_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_Reset,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_Reset"
+        #endif
+    },
+	// Direct3D_GetAdapterIdentifier
+	{
+		(OOVPA*)&Direct3D_GetAdapterIdentifier_1_0_3925,
+		XTL::EmuIDirect3D8_GetAdapterIdentifier,
+
+		#ifdef _DEBUG_TRACE
+		"EmuIDirect3D8_GetAdapterIdentifier"
+		#endif
+    },
+	// Direct3D_GetDeviceCaps
+	{
+		(OOVPA*)&Direct3D_GetDeviceCaps_1_0_3925,
+		XTL::EmuIDirect3D8_GetDeviceCaps,
+
+		#ifdef _DEBUG_TRACE
+		"EmuIDirect3D8_GetDeviceCaps"
+		#endif
+    },
+	// D3D::SetCommonDebugRegisters
+	{
+		(OOVPA*)&D3D_SetCommonDebugRegisters_1_0_3925,
+		XTL::EmuD3D_SetCommonDebugRegisters,
+
+		#ifdef _DEBUG_TRACE
+		"EmuD3D::SetCommonDebugRegisters"
+		#endif
+	},
+	// D3DDevice_CreateImageSurface
+	{
+		(OOVPA*)&D3DDevice_CreateImageSurface_1_0_3925,
+		XTL::EmuIDirect3DDevice8_CreateImageSurface,
+
+		#ifdef _DEBUG_TRACE
+		"D3DDevice_CreateImageSurface"
+		#endif
+	},
+	// D3D::BlockOnTime
+	{
+		(OOVPA*)&D3D_BlockOnTime_1_0_3925, 
+		XTL::EmuD3D_BlockOnTime,
+
+		#ifdef _DEBUG_TRACE
+		"D3D::BlockOnTime"
+		#endif
+	},
+	// D3D::BlockOnResource
+    {
+        (OOVPA*)&D3D_BlockOnResource_1_0_3925, 
+		XTL::EmuD3D_BlockOnResource,
+
+        #ifdef _DEBUG_TRACE
+        "D3D::BlockOnResource"
         #endif
     },
 };

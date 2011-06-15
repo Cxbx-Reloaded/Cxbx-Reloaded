@@ -101,6 +101,98 @@ SOOVPA<10> XGSwizzleRect_1_0_4361 =
 };
 
 // ******************************************************************
+// * XGUnswizzleRect
+// ******************************************************************
+SOOVPA<8> XGUnswizzleRect_1_0_4361 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0x03 },
+        { 0x3E, 0x00 },
+        { 0x5E, 0xD2 },
+        { 0x7E, 0x75 },
+        { 0x9E, 0x70 },
+        { 0xC1, 0xE9 },
+        { 0xDE, 0x89 },
+        { 0xFE, 0x60 },
+    }
+};
+
+// ******************************************************************
+// * XGSetVertexBufferHeader
+// ******************************************************************
+SOOVPA<8> XGSetVertexBufferHeader_1_0_4361 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x01, 0x44 },
+        { 0x04, 0x8B },
+        { 0x07, 0x18 },
+        { 0x0A, 0x08 },
+        { 0x0D, 0x00 },
+        { 0x10, 0x00 },
+        { 0x13, 0x48 },
+        { 0x16, 0x18 },
+    }
+};
+
+// ******************************************************************
+// * XGCompressRect
+// ******************************************************************
+SOOVPA<8> XGCompressRect_1_0_4361 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0x00 },
+        { 0x3E, 0xA8 },
+        { 0x5E, 0x85 },
+        { 0x80, 0x85 },
+        { 0x9E, 0x07 },
+        { 0xBE, 0x80 },
+        { 0xDE, 0x74 },
+        { 0xFE, 0x8B },
+    }
+};
+
+// ******************************************************************
+// * XGSetIndexBufferHeader
+// ******************************************************************
+SOOVPA<8> XGSetIndexBufferHeader_1_0_4361 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x01, 0x44 },
+        { 0x04, 0x8B },
+        { 0x07, 0x18 },
+        { 0x0A, 0x08 },
+        { 0x0D, 0x00 },
+        { 0x10, 0x01 },
+        { 0x13, 0x48 },
+        { 0x16, 0x18 },
+    }
+};
+
+// ******************************************************************
 // * XG_1_0_4361
 // ******************************************************************
 OOVPATable XG_1_0_4361[] =
@@ -123,6 +215,55 @@ OOVPATable XG_1_0_4361[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXGSwizzleRect"
+        #endif
+    },
+	// XGUnswizzleRect
+    {
+        (OOVPA*)&XGUnswizzleRect_1_0_4361,
+
+        XTL::EmuXGUnswizzleRect,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXGUnswizzleRect"
+        #endif
+    },
+	// XGSetTextureHeader (* Unchanged since 3911 *)
+	{
+		(OOVPA*)&XGSetTextureHeader_1_0_3911,
+		XTL::EmuXGSetTextureHeader,
+
+		#ifdef _DEBUG_TRACE
+		"XGSetTextureHeader"
+		#endif
+	},
+	// XGSetVertexBufferHeader
+    {
+        (OOVPA*)&XGSetVertexBufferHeader_1_0_4361,
+
+        0,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXGSetVertexBufferHeader"
+        #endif
+    },
+	// XGSetIndexBufferHeader
+    {
+        (OOVPA*)&XGSetIndexBufferHeader_1_0_4361,
+
+        0,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXGSetIndexBufferHeader"
+        #endif
+    },
+	// XGCompressRect
+    {
+        (OOVPA*)&XGCompressRect_1_0_4361,
+
+        0,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXGCompressRect"
         #endif
     },
 };

@@ -88,6 +88,75 @@ SOOVPA<8> XGSwizzleRect_1_0_5558 =
 };
 
 // ******************************************************************
+// * XGUnswizzleRect
+// ******************************************************************
+SOOVPA<8> XGUnswizzleRect_1_0_5558 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0x03 },
+        { 0x3E, 0x00 },
+        { 0x5E, 0xD2 },
+        { 0x7E, 0x75 },
+        { 0x9E, 0x70 },
+        { 0xC1, 0xE9 },
+        { 0xDE, 0x89 },
+        { 0xFE, 0x60 },
+    }
+};
+
+// ******************************************************************
+// * XGSwizzleBox
+// ******************************************************************
+//SOOVPA<8> XGSwizzleBox_1_0_5558 = 
+//{
+//    0,  // Large == 0
+//    8,  // Count == 8
+//
+//    -1, // Xref Not Saved
+//    0,  // Xref Not Used
+//
+//    {
+//        { 0x1E, 0x75 },
+//        { 0x3E, 0x4D },
+//        { 0x5E, 0x48 },
+//        { 0x7E, 0x04 },
+//        { 0x9E, 0xD8 },
+//        { 0xC0, 0x83 },
+//        { 0xDE, 0xAF },
+//        { 0xFE, 0x45 },
+//    }
+//};
+
+// ******************************************************************
+// * XGUnswizzleBox
+// ******************************************************************
+SOOVPA<8> XGUnswizzleBox_1_0_5558 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0x26 },
+        { 0x3E, 0x55 },
+        { 0x5E, 0x58 },
+        { 0x7E, 0x89 },
+        { 0xA0, 0xFF },
+        { 0xBE, 0x2C },
+        { 0xDE, 0x24 },
+        { 0xFE, 0x20 },
+    }
+};
+
+// ******************************************************************
 // * XG_1_0_5558
 // ******************************************************************
 OOVPATable XG_1_0_5558[] =
@@ -122,6 +191,26 @@ OOVPATable XG_1_0_5558[] =
         "EmuXGSwizzleBox"
         #endif
     },
+	// XGUnswizzleRect
+    {
+        (OOVPA*)&XGUnswizzleRect_1_0_5558,
+
+        XTL::EmuXGUnswizzleRect,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXGSwizzleRect"
+        #endif
+    },
+    // XGUnswizzleBox (* UNTESTED *)
+    /*{
+        (OOVPA*)&XGUnswizzleBox_1_0_5558,
+
+        XTL::EmuXGUnswizzleBox,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXGSwizzleBox"
+        #endif
+    },*/
 };
 
 // ******************************************************************

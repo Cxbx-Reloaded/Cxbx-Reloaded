@@ -79,6 +79,35 @@ SOOVPA<7> XapiInitProcess_1_0_4928 =
 };
 
 // ******************************************************************
+// * XapiInitProcess
+// ******************************************************************
+SOOVPA<7> XapiInitProcess_1_0_5028 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // XapiInitProcess+0x03 : sub esp, 0x34
+        { 0x05, 0x34 }, // (Offset,Value)-Pair #1
+
+        // XapiInitProcess+0x22 : push 0x0C
+        { 0x22, 0x6A }, // (Offset,Value)-Pair #2
+        { 0x23, 0x0C }, // (Offset,Value)-Pair #3
+
+        // XapiInitProcess+0x2A : repe stosd
+        { 0x2A, 0xF3 }, // (Offset,Value)-Pair #4
+        { 0x2B, 0xAB }, // (Offset,Value)-Pair #5
+
+        // XapiInitProcess+0x55 : jz +0x0B
+        { 0x55, 0x74 }, // (Offset,Value)-Pair #6
+        { 0x56, 0x5F }, // (Offset,Value)-Pair #7
+    }
+};
+
+// ******************************************************************
 // * XFormatUtilityDrive
 // ******************************************************************
 SOOVPA<7> XFormatUtilityDrive_1_0_4627 =
@@ -228,6 +257,28 @@ SOOVPA<10> RtlReAllocateHeap_1_0_4627 =
 // ******************************************************************
 // * XID_fCloseDevice
 // ******************************************************************
+SOOVPA<7> XID_fCloseDevice_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    XREF_FCLOSEDEVICE,  // Xref Is Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x13, 0x1E },
+        { 0x28, 0x75 },
+        { 0x3D, 0x01 },
+        { 0x52, 0xC6 },
+        { 0x67, 0xFF },
+        { 0x7C, 0x06 },
+        { 0x91, 0x89 },
+    }
+};
+
+// ******************************************************************
+// * XID_fCloseDevice
+// ******************************************************************
 SOOVPA<11> XID_fCloseDevice_1_0_4928 =
 {
     0,  // Large == 0
@@ -358,18 +409,22 @@ SOOVPA<12> XInputGetCapabilities2_1_0_4928 =
     0,  // XRef Not Used
 
     {
+		// mov     ebx, ds:KeRaiseIrqlToDpcLevel
         { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
         { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
         { 0x0D, 0x1C }, // (Offset,Value)-Pair #3
 
+		// test    byte ptr [esi+4], 2
         { 0x25, 0xF6 }, // (Offset,Value)-Pair #4
         { 0x26, 0x46 }, // (Offset,Value)-Pair #5
         { 0x27, 0x04 }, // (Offset,Value)-Pair #6
         { 0x28, 0x02 }, // (Offset,Value)-Pair #7
 
+		// rep stosd
         { 0x39, 0xF3 }, // (Offset,Value)-Pair #8
         { 0x3A, 0xAB }, // (Offset,Value)-Pair #9
 
+		// mov  edi, offset unknown_libname_2
         { 0x90, 0xBF }, // (Offset,Value)-Pair #10
         { 0x91, 0xCC }, // (Offset,Value)-Pair #11
         { 0x92, 0x5C }, // (Offset,Value)-Pair #12
@@ -403,6 +458,111 @@ SOOVPA<12> XInputGetCapabilities3_1_0_4928 =
         { 0x90, 0xBF }, // (Offset,Value)-Pair #10
         { 0x91, 0x8A }, // (Offset,Value)-Pair #11
         { 0x92, 0x2A }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
+// * XInputGetCapabilities2
+// ******************************************************************
+/* Unreal Championship's version is different */
+SOOVPA<12> XInputGetCapabilities4_1_0_4928 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+		// mov     ebx, ds:KeRaiseIrqlToDpcLevel
+        { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
+        { 0x0D, 0xDC }, // (Offset,Value)-Pair #3
+
+		// test    byte ptr [esi+4], 2
+        { 0x25, 0xF6 }, // (Offset,Value)-Pair #4
+        { 0x26, 0x46 }, // (Offset,Value)-Pair #5
+        { 0x27, 0x04 }, // (Offset,Value)-Pair #6
+        { 0x28, 0x02 }, // (Offset,Value)-Pair #7
+
+		// rep stosd
+        { 0x39, 0xF3 }, // (Offset,Value)-Pair #8
+        { 0x3A, 0xAB }, // (Offset,Value)-Pair #9
+
+		// mov  edi, offset unknown_libname_2
+        { 0x90, 0xBF }, // (Offset,Value)-Pair #10
+        { 0x91, 0x8C }, // (Offset,Value)-Pair #11
+        { 0x92, 0x8C }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
+// * XInputGetCapabilities5
+// ******************************************************************
+/* DOAV */
+SOOVPA<12> XInputGetCapabilities5_1_0_4928 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+		// mov     ebx, ds:KeRaiseIrqlToDpcLevel
+        { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
+        { 0x0D, 0xF4 }, // (Offset,Value)-Pair #3
+
+		// test    byte ptr [esi+4], 2
+        { 0x25, 0xF6 }, // (Offset,Value)-Pair #4
+        { 0x26, 0x46 }, // (Offset,Value)-Pair #5
+        { 0x27, 0x04 }, // (Offset,Value)-Pair #6
+        { 0x28, 0x02 }, // (Offset,Value)-Pair #7
+
+		// rep stosd
+        { 0x39, 0xF3 }, // (Offset,Value)-Pair #8
+        { 0x3A, 0xAB }, // (Offset,Value)-Pair #9
+
+		// mov  edi, offset unknown_libname_2
+        { 0x90, 0xBF }, // (Offset,Value)-Pair #10
+        { 0x91, 0x17 }, // (Offset,Value)-Pair #11
+        { 0x92, 0xB7 }, // (Offset,Value)-Pair #12
+    }
+};
+
+// ******************************************************************
+// * XInputGetCapabilities6
+// ******************************************************************
+/* Defender */
+SOOVPA<12> XInputGetCapabilities6_1_0_4928 =
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+		// mov     ebx, ds:KeRaiseIrqlToDpcLevel
+        { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
+        { 0x0D, 0x78 }, // (Offset,Value)-Pair #3
+
+		// test    byte ptr [esi+4], 2
+        { 0x25, 0xF6 }, // (Offset,Value)-Pair #4
+        { 0x26, 0x46 }, // (Offset,Value)-Pair #5
+        { 0x27, 0x04 }, // (Offset,Value)-Pair #6
+        { 0x28, 0x02 }, // (Offset,Value)-Pair #7
+
+		// rep stosd
+        { 0x39, 0xF3 }, // (Offset,Value)-Pair #8
+        { 0x3A, 0xAB }, // (Offset,Value)-Pair #9
+
+		// mov  edi, offset unknown_libname_2
+        { 0x90, 0xBF }, // (Offset,Value)-Pair #10
+        { 0x91, 0xE5 }, // (Offset,Value)-Pair #11
+        { 0x92, 0xCF }, // (Offset,Value)-Pair #12
     }
 };
 
@@ -832,6 +992,159 @@ SOOVPA<7> VirtualProtect_1_0_4627 =
 };
 
 // ******************************************************************
+// * CreateSemaphoreA
+// ******************************************************************
+SOOVPA<7> CreateSemaphoreA_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x0A, 0x74 },
+        { 0x16, 0x50 },
+        { 0x22, 0x10 },
+        { 0x31, 0x85 },
+        { 0x3A, 0x75 },
+        { 0x4A, 0x8B },
+        { 0x55, 0x33 },
+    }
+};
+
+// ******************************************************************
+// * ReleaseSemaphore
+// ******************************************************************
+SOOVPA<7> ReleaseSemaphore_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x03, 0x0C },
+        { 0x08, 0xFF },
+        { 0x0D, 0x15 },
+        { 0x12, 0x85 },
+        { 0x17, 0xC0 },
+        { 0x1C, 0xE8 },
+        { 0x21, 0x33 },
+    }
+};
+
+// ******************************************************************
+// * XMountAlternateTitleA
+// ******************************************************************
+SOOVPA<7> XMountAlternateTitleA_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0x0F },
+        { 0x3E, 0x56 },
+        { 0x5E, 0xFF },
+        { 0x7E, 0x8D },
+        { 0x9E, 0x50 },
+        { 0xBE, 0x66 },
+        { 0xDE, 0xF0 },
+    }
+};
+
+// ******************************************************************
+// * XMountAlternateTitleA
+// ******************************************************************
+SOOVPA<7> XMountAlternateTitleA_1_0_4928 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0x0F },
+        { 0x3E, 0x83 },
+        { 0x5E, 0x03 },
+        { 0x7E, 0x8D },
+        { 0x9E, 0x00 },
+        { 0xBE, 0x01 },
+        { 0xDE, 0x45 },
+    }
+};
+
+// ******************************************************************
+// * XUnmountAlternateTitleA
+// ******************************************************************
+SOOVPA<7> XUnmountAlternateTitleA_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x0A, 0x65 },
+        { 0x16, 0xFF },
+        { 0x23, 0x83 },
+        { 0x2E, 0x45 },
+        { 0x3A, 0x50 },
+        { 0x46, 0x0B },
+        { 0x52, 0x50 },
+    }
+};
+
+// ******************************************************************
+// * XGetFileCacheSize
+// ******************************************************************
+SOOVPA<6> XGetFileCacheSize_1_0_4627 = 
+{
+    0,  // Large == 0
+    6,  // Count == 6
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x00, 0xFF },
+        { 0x01, 0x15 },
+        { 0x06, 0xC1 },
+        { 0x07, 0xE0 },
+        { 0x08, 0x0C },
+        { 0x09, 0xC3 },
+    }
+};
+
+// ******************************************************************
+// * MoveFileA
+// ******************************************************************
+SOOVPA<7> MoveFileA_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x11, 0x8D },
+        { 0x24, 0xE8 },
+        { 0x37, 0x50 },
+        { 0x4A, 0x7D },
+        { 0x5D, 0xFF },
+        { 0x74, 0xFF },
+        { 0x83, 0x33 },
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_4627
 // ******************************************************************
 OOVPATable XAPI_1_0_4627[] =
@@ -854,6 +1167,16 @@ OOVPATable XAPI_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXapiInitProcess"
+        #endif
+    },
+	// XapiInitProcess
+    {
+        (OOVPA*)&XapiInitProcess_1_0_5028,
+
+        XTL::EmuXapiInitProcess,
+
+        #ifdef _DEBUG_TRACE
+		"EmuXapiInitProcess (5028)"
         #endif
     },
     // XFormatUtilityDrive
@@ -1026,6 +1349,14 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXInputPoll"
         #endif
     },
+	// XID_fCloseDevice
+    {
+        (OOVPA*)&XID_fCloseDevice_1_0_4627, 0,
+
+        #ifdef _DEBUG_TRACE
+		"XID_fCloseDevice (4627) (XREF)"
+        #endif
+    },
     // XID_fCloseDevice
     {
         (OOVPA*)&XID_fCloseDevice_1_0_4928, 0,
@@ -1102,6 +1433,26 @@ OOVPATable XAPI_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXInputGetCapabilities3"
+        #endif
+    },
+	// XInputGetCapabilities4
+    {
+        (OOVPA*)&XInputGetCapabilities4_1_0_4928,
+
+        XTL::EmuXInputGetCapabilities,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputGetCapabilities4"
+        #endif
+    },
+	// XInputGetCapabilities5
+    {
+        (OOVPA*)&XInputGetCapabilities5_1_0_4928,
+
+        XTL::EmuXInputGetCapabilities,
+
+        #ifdef _DEBUG_TRACE
+		"EmuXInputGetCapabilities(5)"
         #endif
     },
     // XInputSetState (* unchanged since 1.0.4361 *)
@@ -1206,6 +1557,16 @@ OOVPATable XAPI_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXInputGetCapabilities4_4831"
+        #endif
+    },
+	// XInputGetCapabilities6
+    {
+        (OOVPA*)&XInputGetCapabilities6_1_0_4928,
+
+        XTL::EmuXInputGetCapabilities,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputGetCapabilities6_4928"
         #endif
     },
 	// XGetSectionHandleA (* unchanged since 4134 *)
@@ -1454,6 +1815,80 @@ OOVPATable XAPI_1_0_4627[] =
         "VirtualProtect"
         #endif
     },
+	// CreateSemaphore
+	{
+		(OOVPA*)&CreateSemaphoreA_1_0_4627,
+
+		XTL::EmuCreateSemaphore,
+
+		#ifdef _DEBUG_TRACE
+		"EmuCreateSemaphoreA"
+		#endif
+	},
+	// ReleaseSemaphore
+	{
+		(OOVPA*)&ReleaseSemaphore_1_0_4627,
+
+		XTL::EmuReleaseSemaphore,
+
+		#ifdef _DEBUG_TRACE
+		"EmuReleaseSemaphore"
+		#endif
+	},
+	// XMountAlternateTitleA
+	{
+		(OOVPA*)&XMountAlternateTitleA_1_0_4627,
+		XTL::EmuXMountAlternateTitle,
+
+		#ifdef _DEBUG_TRACE
+		"XMountAlternateTitleA"
+		#endif
+	},
+	// XMountAlternateTitleA
+	{
+		(OOVPA*)&XMountAlternateTitleA_1_0_4928,
+		XTL::EmuXMountAlternateTitle,
+
+		#ifdef _DEBUG_TRACE
+		"XMountAlternateTitleA (4928)"
+		#endif
+	},
+	// XUnmountAlternateTitleA
+	{
+		(OOVPA*)&XUnmountAlternateTitleA_1_0_4627,
+	    XTL::EmuXUnmountAlternateTitle,
+
+		#ifdef _DEBUG_TRACE
+		"XUnmountAlternateTitleA"
+		#endif
+	},
+	// GetFileAttributesA (* unchanged since 4134 *)
+    {
+        (OOVPA*)&GetFileAttributesA_1_0_4134,
+        XTL::EmuGetFileAttributesA,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGetFileAttributesA"
+        #endif
+    },
+	// XGetFileCacheSize
+    {
+        (OOVPA*)&XGetFileCacheSize_1_0_4627,
+        XTL::EmuXGetFileCacheSize,
+
+        #ifdef _DEBUG_TRACE
+        "XGetFileCacheSize"
+        #endif
+	},
+	// MoveFileA
+	/*{
+		(OOVPA*)&MoveFileA_1_0_4627,
+		XTL::EmuMoveFileA,
+
+		#ifdef _DEBUG_TRACE
+		"MoveFileA"
+		#endif
+	},*/
 };
 
 // ******************************************************************

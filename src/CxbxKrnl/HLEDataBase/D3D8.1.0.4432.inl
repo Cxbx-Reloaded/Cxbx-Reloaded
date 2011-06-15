@@ -770,6 +770,39 @@ SOOVPA<12> IDirect3DDevice8_SetSoftDisplayFilter_1_0_4432 =
 };
 
 // ******************************************************************
+// * IDirect3DVertexBuffer8_Lock
+// ******************************************************************
+SOOVPA<11> IDirect3DVertexBuffer8_Lock_1_0_4531 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DVertexBuffer8_Lock+0x01 : mov bl, [esp+0x18]
+        { 0x01, 0x8A }, // (Offset,Value)-Pair #1
+        { 0x02, 0x5C }, // (Offset,Value)-Pair #2
+        { 0x03, 0x24 }, // (Offset,Value)-Pair #3
+        { 0x04, 0x18 }, // (Offset,Value)-Pair #4
+
+        // IDirect3DVertexBuffer8_Lock+0x09 : jnz +0x24
+        { 0x09, 0x75 }, // (Offset,Value)-Pair #5
+        { 0x0A, 0x24 }, // (Offset,Value)-Pair #6
+
+        // IDirect3DVertexBuffer8_Lock+0x2F : test bl, 0xA0
+        { 0x2F, 0xF6 }, // (Offset,Value)-Pair #7
+        { 0x30, 0xC3 }, // (Offset,Value)-Pair #8
+        { 0x31, 0xA0 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DVertexBuffer8_Lock+0x50 : retn 0x14
+        { 0x54, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x55, 0x14 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
 // * D3D8_1_0_4432
 // ******************************************************************
 OOVPATable D3D8_1_0_4432[] =
@@ -884,9 +917,9 @@ OOVPATable D3D8_1_0_4432[] =
         "EmuIDirect3DDevice8_SetPixelShader"
         #endif
     },
-    // IDirect3D8::KickOffAndWaitForIdle (* unchanged since 4134 *)
+    // IDirect3D8::KickOffAndWaitForIdle (* unchanged since 4034 *)
     {
-        (OOVPA*)&IDirect3D8_KickOffAndWaitForIdle_1_0_4134,
+        (OOVPA*)&IDirect3D8_KickOffAndWaitForIdle_1_0_4034,
 
         XTL::EmuIDirect3D8_KickOffAndWaitForIdle,
 
@@ -1632,6 +1665,16 @@ OOVPATable D3D8_1_0_4432[] =
         "EmuIDirect3DVertexBuffer8_Lock"
         #endif
     },
+	// IDirect3DVertexBuffer8::Lock
+    {
+        (OOVPA*)&IDirect3DVertexBuffer8_Lock_1_0_4531,
+
+        XTL::EmuIDirect3DVertexBuffer8_Lock,
+
+        #ifdef _DEBUG_TRACE
+		"EmuIDirect3DVertexBuffer8_Lock (4531)"
+        #endif
+    },
 	// IDirect3DDevice8::SetShaderConstantMode (* unchanged since 4361 *)
     {
         (OOVPA*)&IDirect3DDevice8_SetShaderConstantMode_1_0_4361,
@@ -1790,6 +1833,16 @@ OOVPATable D3D8_1_0_4432[] =
 
         #ifdef _DEBUG_TRACE
         "D3DDevice_GetVertexShaderSize"
+        #endif
+    },
+	// Lock2DSurface (* unchanged since 3925 *)
+    {
+        (OOVPA*)&Lock2DSurface_1_0_3925,
+
+        XTL::EmuLock2DSurface,
+
+        #ifdef _DEBUG_TRACE
+        "EmuLock2DSurface"
         #endif
     },
 };

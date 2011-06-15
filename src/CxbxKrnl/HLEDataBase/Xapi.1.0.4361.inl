@@ -518,6 +518,73 @@ SOOVPA<10> XapiSetupPerTitleDriveLetters_1_0_4361 =
 };
 
 // ******************************************************************
+// * XMountMUA
+// ******************************************************************
+SOOVPA<8> XMountMUA_1_0_4361 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x22, 0x8A },
+        { 0x3E, 0x89 },
+        { 0x5E, 0x5C },
+        { 0x7E, 0xF4 },
+        { 0x9E, 0x50 },
+        { 0xBE, 0xF8 },
+        { 0xDE, 0x8D },
+        { 0xFE, 0x09 },
+    }
+};
+
+// ******************************************************************
+// * CreateWaitableTimerA
+// ******************************************************************
+SOOVPA<7> CreateWaitableTimerA_1_0_4361 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x0A, 0x74 },
+        { 0x16, 0x50 },
+        { 0x22, 0x39 },
+        { 0x2E, 0xFF },
+        { 0x3A, 0x00 },
+        { 0x46, 0x6A },
+        { 0x52, 0x50 },
+    }
+};
+
+// ******************************************************************
+// * SetWaitableTimer
+// ******************************************************************
+SOOVPA<7> SetWaitableTimer_1_0_4361 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x07, 0x10 },
+        { 0x10, 0xFF },
+        { 0x19, 0xFF },
+        { 0x22, 0x0A },
+        { 0x2B, 0xEB },
+        { 0x34, 0x6A },
+        { 0x3F, 0x33 },
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_4361
 // ******************************************************************
 OOVPATable XAPI_1_0_4361[] =
@@ -824,6 +891,42 @@ OOVPATable XAPI_1_0_4361[] =
 		#ifdef _DEBUG_TRACE
 		"EmuQueueUserAPC"
 		#endif
+	},
+	// GetFileAttributesA (* unchanged since 4134 *)
+    {
+        (OOVPA*)&GetFileAttributesA_1_0_4134,
+        XTL::EmuGetFileAttributesA,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGetFileAttributesA"
+        #endif
+    },
+	// XMountMUA
+    {
+        (OOVPA*)&XMountMUA_1_0_4361,
+        XTL::EmuXMountMUA,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXMountMUA"
+        #endif
+    },
+	// CreateWaitableTimerA
+    {
+        (OOVPA*)&CreateWaitableTimerA_1_0_4361,
+        XTL::EmuCreateWaitableTimerA,
+
+        #ifdef _DEBUG_TRACE
+        "EmuCreateWaitableTimerA"
+        #endif
+    },
+    // SetWaitableTimer
+    {
+       (OOVPA*)&SetWaitableTimer_1_0_4361,
+       XTL::EmuSetWaitableTimer,
+
+       #ifdef _DEBUG_TRACE
+       "EmuSetWaitableTimer"
+       #endif
 	},
 };
 

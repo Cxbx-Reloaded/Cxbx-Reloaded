@@ -1292,4 +1292,111 @@ HRESULT WINAPI EmuIDirectSoundStream_SetPitch
 // ******************************************************************
 DWORD WINAPI EmuDirectSoundGetSampleTime();
 
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetMixBinVolumes
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetMixBinVolumes
+(
+	X_CDirectSoundStream*	pThis,
+    DWORD					dwMixBinMask,
+    const LONG*				alVolumes
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetMixBinVolumes2
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetMixBinVolumes2
+(
+    X_CDirectSoundStream*	pThis,
+    LPVOID					pMixBins
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetI3DL2Source
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetI3DL2Source
+(
+    X_CDirectSoundStream*   pThis,
+    PVOID   pds3db,
+    DWORD   dwApply
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetI3DL2Source
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetAllParameters
+(
+	X_CDirectSoundBuffer*	pThis,
+    VOID*					pcDs3dBuffer,
+    DWORD					dwApply
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream::SetFormat
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetFormat
+(
+	X_CDirectSoundStream*	pThis,
+    LPCWAVEFORMATEX			pwfxFormat
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetOutputBuffer
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetOutputBuffer
+(
+	X_CDirectSoundBuffer*	pThis,
+    X_CDirectSoundBuffer*	pOutputBuffer
+);
+
+// ******************************************************************
+// * func: EmuCDirectSoundStream_SetOutputBuffer
+// ******************************************************************
+HRESULT WINAPI EmuCDirectSoundStream_SetOutputBuffer
+(
+	X_CDirectSoundStream*	pThis,
+	X_CDirectSoundBuffer*	pOutputBuffer
+);
+
+// ******************************************************************
+// * func: EmuXFileCreaeMediaObjectEx
+// ******************************************************************
+HRESULT WINAPI EmuXFileCreateMediaObjectEx
+(
+    HANDLE	hFile,
+    void**	ppMediaObject
+);
+
+// ******************************************************************
+// * func: EmuXWaveFileCreateMediaObject
+// ******************************************************************
+HRESULT WINAPI EmuXWaveFileCreateMediaObject
+(
+    LPCSTR			pszFileName,
+    LPCWAVEFORMATEX *ppwfxFormat,
+    void			**ppMediaObject
+);
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetEG
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetEG
+(
+	X_CDirectSoundBuffer*	pThis,
+    LPVOID					pEnvelopeDesc
+);
+
+// ******************************************************************
+// * func: EmuIDirectSound8_GetEffectData
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSound8_GetEffectData
+(
+	X_CDirectSound*	pThis,
+    DWORD			dwEffectIndex,
+    DWORD			dwOffset,
+    LPVOID			pvData,
+    DWORD			dwDataSize
+);
+
+
 #endif

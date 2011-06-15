@@ -164,6 +164,49 @@ SOOVPA<7> RaiseException_1_0_5849 =
 };
 
 // ******************************************************************
+// * XGetDeviceEnumerationStatus
+// ******************************************************************
+SOOVPA<7> XGetDeviceEnumerationStatus_1_0_5849 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x04, 0x15 },
+        { 0x0A, 0x35 },
+        { 0x10, 0x09 },
+        { 0x17, 0x00 },
+        { 0x1C, 0x46 },
+        { 0x25, 0x8B },
+        { 0x28, 0xC3 },
+    }
+};
+
+// ******************************************************************
+// * SwitchToThread
+// ******************************************************************
+SOOVPA<6> SwitchToThread_1_0_5849 = 
+{
+    0,  // Large == 0
+    6,  // Count == 6
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x01, 0x15 },
+        { 0x06, 0x33 },
+        { 0x07, 0xC9 },
+        { 0x0A, 0x00 },
+        { 0x0D, 0x0F },
+        { 0x10, 0x8B },
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_5849
 // ******************************************************************
 OOVPATable XAPI_1_0_5849[] =
@@ -443,6 +486,53 @@ OOVPATable XAPI_1_0_5849[] =
 
         #ifdef _DEBUG_TRACE
         "RaiseException"
+        #endif
+    },
+	// XLaunchNewImageA (* unchanged since 5558 *)
+    {
+        (OOVPA*)&XLaunchNewImageA_1_0_5558,
+        XTL::EmuXLaunchNewImage,
+
+        #ifdef _DEBUG_TRACE
+        "XLaunchNewImageA"
+        #endif
+    },
+	// XInputSetState (* unchanged since 5233 *)
+    {
+        (OOVPA*)&XInputSetState_1_0_5233,
+
+        XTL::EmuXInputSetState,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputSetState"
+        #endif
+    },
+	// XGetDeviceEnumerationStatus
+	{
+		(OOVPA*)&XGetDeviceEnumerationStatus_1_0_5849,
+		XTL::EmuXGetDeviceEnumerationStatus,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXGetDeviceEnumerationStatus"
+		#endif
+	},
+	// SwitchToThread
+	/*{
+		(OOVPA*)&SwitchToThread_1_0_5849,
+		XTL::EmuSwitchToThread,
+
+		#ifdef _DEBUG_TRACE
+		"EmuSwitchToThread"
+		#endif
+	},*/
+	// XFormatUtilityDrive (* unchanged since 4627 *)
+    {
+        (OOVPA*)&XFormatUtilityDrive_1_0_4627,
+
+        XTL::EmuXFormatUtilityDrive,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXFormatUtilityDrive"
         #endif
     },
 };

@@ -284,6 +284,16 @@ OOVPATable XAPI_1_0_5233[] =
         "EmuSetThreadPriorityBoost"
         #endif
     },
+	// GetThreadPriority (* unchanged since 4627 *)
+    {
+        (OOVPA*)&GetThreadPriority_1_0_4627,
+
+        XTL::EmuGetThreadPriority,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGetThreadPriority"
+        #endif
+    },
     // XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
     {
         (OOVPA*)&XRegisterThreadNotifyRoutine_1_0_3911,
@@ -498,6 +508,15 @@ OOVPATable XAPI_1_0_5233[] =
 
         #ifdef _DEBUG_TRACE
         "VirtualProtect"
+        #endif
+    },
+	// GetFileAttributesA (* unchanged since 4134 *)
+    {
+        (OOVPA*)&GetFileAttributesA_1_0_4134,
+        XTL::EmuGetFileAttributesA,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGetFileAttributesA"
         #endif
     },
 };

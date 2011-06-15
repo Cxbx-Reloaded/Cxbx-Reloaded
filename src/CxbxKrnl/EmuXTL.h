@@ -52,10 +52,12 @@ namespace XTL
     #include "EmuXOnline.h"
     #include "EmuXG.h"
 	#include "EmuXactEng.h"
+	#include "EmuXInput.h"
 }
 
 extern XTL::LPDIRECT3DDEVICE8   g_pD3DDevice8;
 extern DWORD                    g_CurrentVertexShader;
+extern XTL::PIXEL_SHADER *		g_CurrentPixelShader;
 extern BOOL                     g_bFakePixelShaderLoaded;
 extern BOOL                     g_bIsFauxFullscreen;
 

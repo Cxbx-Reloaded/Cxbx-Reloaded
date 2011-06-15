@@ -58,6 +58,10 @@ void XTL::EmuExecutePushBuffer
     if(pFixup != NULL)
         CxbxKrnlCleanup("PushBuffer has fixups\n");
 
+#ifdef _DEBUG_TRACK_PB
+	DbgDumpPushBuffer((DWORD*)pPushBuffer->Data, pPushBuffer->Size);
+#endif
+
     EmuExecutePushBufferRaw((DWORD*)pPushBuffer->Data);
 
     return;
@@ -258,6 +262,12 @@ extern void XTL::EmuExecutePushBufferRaw
                 EmuWarning("FVF Vertex Shader is null");
                 dwVertexShader = -1;
             }
+			/*else if(dwVertexShader == 0x6)
+			{
+				dwVertexShader = (D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
+			}*/
+
+		//	printf( "EmuExecutePushBufferRaw: FVF = 0x%.08X\n" );
 
             //
             // calculate stride
@@ -352,6 +362,8 @@ extern void XTL::EmuExecutePushBufferRaw
                     VPDesc.pVertexStreamZeroData,
                     VPDesc.uiVertexStreamZeroStride
                 );
+
+				g_dwPrimPerFrame += VPDesc.dwPrimitiveCount;
 
                 VertPatch.Restore();
             }
@@ -457,6 +469,8 @@ extern void XTL::EmuExecutePushBufferRaw
                                 PCPrimitiveType, 0, 8*1024*1024, 0, PrimitiveCount
 //                                PCPrimitiveType, 0, dwCount*2, 0, PrimitiveCount
                             );
+
+							g_dwPrimPerFrame += PrimitiveCount;
                         }
                     }
 
@@ -617,6 +631,8 @@ extern void XTL::EmuExecutePushBufferRaw
                         (
                             PCPrimitiveType, 0, /*dwCount*2*/8*1024*1024, 0, PrimitiveCount
                         );
+
+						g_dwPrimPerFrame += PrimitiveCount;
                     }
 
                     #ifdef _DEBUG_TRACK_PB
@@ -633,7 +649,7 @@ extern void XTL::EmuExecutePushBufferRaw
         }
         else
         {
-            EmuWarning("Unknown PushBuffer Operation (0x%.04X, %d)", dwMethod, dwCount);
+            CxbxKrnlCleanup("Unknown PushBuffer Operation (0x%.04X, %d)", dwMethod, dwCount);
             return;
         }
 
@@ -673,7 +689,7 @@ void DbgDumpMesh(WORD *pIndexData, DWORD dwCount)
     g_pD3DDevice8->GetStreamSource(0, &pActiveVB, &uiStride);
 
     char szFileName[128];
-    sprintf(szFileName, "C:\\CxbxMesh-0x%.08X.x", pIndexData);
+    sprintf(szFileName, "D:\\_cxbx\\mesh\\CxbxMesh-0x%.08X.x", pIndexData);
     FILE *dbgVertices = fopen(szFileName, "wt");
 
     // retrieve stream desc
@@ -780,4 +796,50 @@ void DbgDumpMesh(WORD *pIndexData, DWORD dwCount)
     // release ptr
     pActiveVB->Unlock();
 }
+
+void XTL::DbgDumpPushBuffer( DWORD* PBData, DWORD dwSize )
+{
+	static int PbNumber = 0;	// Keep track of how many push buffers we've attemted to convert.
+	DWORD dwVertexShader;
+	char szPB[512];			
+
+	// Prevent dumping too many of these!
+	if( PbNumber > 300 )
+		return;
+
+	// Get a copy of the current vertex shader
+	g_pD3DDevice8->GetVertexShader( &dwVertexShader );
+
+	/*if( g_CurrentVertexShader != dwVertexShader )
+	{
+		printf( "g_CurrentVertexShader does not match FVF from GetVertexShader!\n"
+					"g_CurrentVertexShader = 0x%.08X\n"
+					"GetVertexShader = 0x%.08X\n" );
+	}*/
+	
+	if( dwVertexShader > 0xFFFF )
+	{
+		EmuWarning( "Cannot dump pushbuffer without an FVF (programmable shaders not supported)" );
+		return;
+	}
+
+	sprintf( szPB, "D:\\cxbx\\_pushbuffer\\pushbuffer%.03d.txt", PbNumber++ );
+
+	// Create a new file for this pushbuffer's data
+	HANDLE hFile = CreateFile( szPB, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0 );
+	if( hFile == INVALID_HANDLE_VALUE )
+		EmuWarning("Error creating pushbuffer file!");
+
+	DWORD dwBytesWritten;
+
+	// Write pushbuffer data to the file.
+	// TODO: Cache the 32-bit CRC of each pushbuffer to ensure that the same
+	// pushbuffer is not written twice within a given emulation session.
+	WriteFile( hFile, &g_CurrentVertexShader, sizeof( DWORD ), &dwBytesWritten, NULL );
+	WriteFile( hFile, PBData, dwSize, &dwBytesWritten, NULL );
+
+	// Close handle
+	CloseHandle( hFile );
+}
+
 #endif

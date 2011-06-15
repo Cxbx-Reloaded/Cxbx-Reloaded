@@ -36,6 +36,7 @@
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
+//#include <xinput.h>
 
 #include "CxbxUtil.h"
 #include "CxbxKrnl.h"
@@ -210,6 +211,9 @@ PVOID WINAPI XTL::EmuRtlAllocateHeap
 
 		DbgPrintf("pRet : 0x%.08X\n", pRet);
 	}
+
+	// JSRF test
+//	if( !pRet ) __asm int 3;
 
     EmuSwapFS();   // XBox FS
 
@@ -412,18 +416,26 @@ BOOL WINAPI XTL::EmuXMountUtilityDrive
 // ******************************************************************
 VOID WINAPI XTL::EmuXInitDevices
 (
-    DWORD   Unknown1,
-    PVOID   Unknown2
+    DWORD					dwPreallocTypeCount,
+	PXDEVICE_PREALLOC_TYPE	PreallocTypes
 )
 {
     EmuSwapFS();   // Win2k/XP FS
 
     DbgPrintf("EmuXapi (0x%X): EmuXInitDevices\n"
            "(\n"
-           "   Unknown1            : 0x%.08X\n"
-           "   Unknown2            : 0x%.08X\n"
+           "   dwPreallocTypeCount : 0x%.08X\n"
+           "   PreallocTypes       : 0x%.08X\n"
            ");\n",
-           GetCurrentThreadId(), Unknown1, Unknown2);
+           GetCurrentThreadId(), dwPreallocTypeCount, PreallocTypes);
+
+	/*for( DWORD i = 0; i < dwPreallocTypeCount; i++ )
+	{
+		printf( "PreallocTypes[%d]: Device = 0x%.08X, 0x%.08X, 0x%.08X\n\tCount %d\n", i,
+			PreallocTypes[i].DeviceType->Reserved[0],
+			PreallocTypes[i].DeviceType->Reserved[1],
+			PreallocTypes[i].DeviceType->Reserved[2], PreallocTypes[i].dwPreallocCount );
+	}*/
 
     int v;
 
@@ -498,20 +510,28 @@ BOOL WINAPI XTL::EmuXGetDeviceChanges
     // Return 1 Controller Inserted initially, then no changes forever
     if(bFirst)
     {
-        *pdwInsertions = (1<<0);
-        *pdwRemovals   = 0;
-        bRet = TRUE;
-        bFirst = FALSE;
+        if(DeviceType->Reserved[0] == 0 && DeviceType->Reserved[1] == 0 && DeviceType->Reserved[2] == 0 && DeviceType->Reserved[3] == 0)
+		{
+			*pdwInsertions = (1<<0);
+			*pdwRemovals   = 0;
+			bRet = TRUE;
+			bFirst = FALSE;
+		}
+		else
+		{
+			// TODO: What if it's not a controller?
+			EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X, 0x%.08X)\n", DeviceType->Reserved[0], DeviceType->Reserved[1], DeviceType->Reserved[2], DeviceType->Reserved[3]);
+		}
     }
     else
     {
-        *pdwInsertions = 0;
+        *pdwInsertions = (1<<0); //0;
         *pdwRemovals   = 0;
     }
 
     EmuSwapFS();   // XBox FS
 
-    return bRet;
+    return TRUE; //bRet;
 }
 
 // ******************************************************************
@@ -780,13 +800,18 @@ DWORD WINAPI XTL::EmuXInputGetState
 
         if((dwPort >= 0) && (dwPort <= 3))
         {
+			DbgPrintf( "EmuXInputGetState(): dwPort = %d\n", dwPort );
+
             if(dwPort == 0)
             {
                 EmuDInputPoll(pState);
+		//		EmuXInputPCPoll(pState);
                 ret = ERROR_SUCCESS;
             }
         }
     }
+	else
+		EmuWarning( "EmuXInputGetState(): pph == NULL!" );
 
     EmuSwapFS();   // XBox FS
 
@@ -1290,7 +1315,14 @@ LPVOID WINAPI XTL::EmuXLoadSectionA
 
 	// Xbox Dashboard (3944)
 	if(strcmp("XIPS", pSectionName)==0)
-		pRet = (void*) 0x11C000;
+		pRet = (void*) 0x13B500;
+
+	// Blade II NTSC
+	else if(!strcmp(pSectionName, "DSPImage"))
+		pRet = (void*) 0x41F900;
+
+	else
+		__asm int 3;
 
 	EmuSwapFS();	// Xbox FS
 
@@ -1337,7 +1369,7 @@ HANDLE WINAPI XTL::EmuXGetSectionHandleA
 			");\n",
 			GetCurrentThreadId(), pSectionName, pSectionName );
 
-	DWORD* pdwRet = NULL;
+	void* pRet = NULL;
 
 	// TODO: Implement (if necessary)?
 //	CxbxKrnlCleanup( "XGetSectionHandleA is not implemented" );
@@ -1351,22 +1383,62 @@ HANDLE WINAPI XTL::EmuXGetSectionHandleA
 	// Metal Gear Solid II (NTSC)
 	if( !strcmp( pSectionName, "Rev24b" ) )
 	{
-		pdwRet = (DWORD*) 0x648000;
+		pRet = (void*) 0xCE3E60;
 	}
 
 	// Metal Slug 3 (NTSC)
-	if(!strcmp(pSectionName, "newpal"))
-		pdwRet = (DWORD*) 0x26C000;
-	if(!strcmp(pSectionName, "msg_font"))
-		pdwRet = (DWORD*) 0x270000;
-	if(!strcmp(pSectionName, "se_all"))
-		pdwRet = (DWORD*) 0x272000;
-	if(!strcmp(pSectionName, ".XTLID"))
-		pdwRet = (DWORD*) 0x8C5000;
+	else if(!strcmp(pSectionName, "newpal"))
+	{
+		pRet = (void*) 0x2C79E0;
+	}
+	else if(!strcmp(pSectionName, "msg_font"))
+	{
+		pRet = (void*) 0x2CABC0;
+	}
+	else if(!strcmp(pSectionName, "se_all"))
+	{
+		pRet = (void*) 0x2CBD20;
+	}
+	else if(!strcmp(pSectionName, ".XTLID"))
+	{
+		__asm int 3;
+		pRet = (void*) 0x91B0A0;
+	}
+
+	// Zapper (NTSC)
+	else if(!strcmp(pSectionName, "SYSFONT"))
+	{
+		pRet = (void*) 0x2CEC80;
+	}
+
+	// Conflict: Desert Storm (NTSC)
+	else if(!strcmp(pSectionName, "FONTIMG"))
+	{
+		pRet = (void*) 0x364580;
+	}
+	else if(!strcmp(pSectionName, "FONTT0"))
+	{
+		pRet = (void*) 0x37E620;
+	}
+	else if(!strcmp(pSectionName, "FONTT1"))
+	{
+		pRet = (void*) 0x38E6A0;
+	}
+
+	// Red Star (Unknown Region)
+	/*else if(!strcmp(pSectionName, "BINK32"))
+	{
+		pRet = (void*) 0x00366F60;
+	}*/
+
+	else
+	{
+		__asm int 3;
+	}
 
 	EmuSwapFS();	// Xbox FS
 
-	return (LPVOID) pdwRet;
+	return (LPVOID) pRet;
 }
 
 // ******************************************************************
@@ -1571,6 +1643,7 @@ DWORD WINAPI XTL::EmuXLaunchNewImage
 
 	// Ignore any other attempts to execute other .xbe files (for now).
 	EmuWarning("Not executing the xbe!");
+//	CxbxKrnlCleanup("XLaunchNewImage(): Attempting to launch %s", lpTitlePath);
 
 	// Save the launch data
 	if(pLaunchData != NULL)
@@ -1589,19 +1662,44 @@ DWORD WINAPI XTL::EmuXLaunchNewImage
 
 	g_bXLaunchNewImageCalled = true;
 
+	// Hey, let's try executing the .exe instead of the .xbe!
+	/*{
+		char* szExePath = (char*) lpTitlePath;
+		int len = strlen( lpTitlePath );
+
+		strcpy( szExePath, lpTitlePath );
+		szExePath[len-3] = 'e';
+		szExePath[len-2] = 'x';
+		szExePath[len-1] = 'e';
+		
+		if( szExePath[0] == 'D' && szExePath[1] == ':' && szExePath[2] == '\\' )
+			szExePath += 3;
+
+		DbgPrintf( "Attempting to execute %s instead of the equivelant .xbe\n", szExePath );
+
+		if((int)ShellExecute(NULL, "open", szExePath, NULL, ".\\", SW_SHOWDEFAULT) <= 32)
+		{
+			EmuWarning( "Could not launch %s", szExePath );
+		}
+		else
+		{
+			CxbxKrnlCleanup( "New emulation session has begun.\nTODO: Use a more graceful method..." );
+		}
+	}*/
+
 	// Temporary Hack (Unreal): Jump back to the entry point
-	uint32* start = (uint32*) 0x21C13B;
+//	uint32* start = (uint32*) 0x21C13B;
 
 	EmuSwapFS();	// Xbox FS
 
-	__asm
+	/*__asm
 	{
-		/*mov esi, 0;
+		mov esi, 0;
 		mov edi, 0;
 		mov esp, 0;
-		mov ebp, 0;*/
+		mov ebp, 0;
 		jmp start;
-	}
+	}*/
 
 	return dwRet;
 }
@@ -1655,8 +1753,6 @@ DWORD WINAPI XTL::EmuXGetLaunchInfo
 		fseek(fp, 0, SEEK_SET);
 		fread(&g_SavedLaunchData, sizeof(LAUNCH_DATA), 1, fp);
 		memcpy(pLaunchData, &g_SavedLaunchData, sizeof(LAUNCH_DATA));
-//		fread(pLaunchData, sizeof(LAUNCH_DATA), 1, fp);
-//		memcpy(&g_SavedLaunchData, pLaunchData, sizeof(LAUNCH_DATA));
 		fclose(fp);
 
 		// Delete the file once we're done.
@@ -1795,7 +1891,7 @@ HANDLE WINAPI XTL::EmuCreateSemaphore
 	if(lpSemaphoreAttributes)
 		EmuWarning( "lpSemaphoreAttributes != NULL" );
 
-	HANDLE hRet = CreateSemaphore( NULL, lInitialCount, lMaximumCount, lpName );
+	HANDLE hRet = CreateSemaphoreA( NULL, lInitialCount, lMaximumCount, lpName );
 	if( !hRet )
 		EmuWarning( "CreateSemaphore failed!" );
 
@@ -1847,7 +1943,7 @@ MMRESULT WINAPI XTL::EmutimeSetEvent
 {
 	EmuSwapFS();	// Win2k/XP FS
 
-	DbgPrintf("EmuXapi (0x%X): EmuReleaseSemaphore\n"
+	DbgPrintf("EmuXapi (0x%X): EmutimeSetEvent\n"
 			"(\n"
 			"   uDelay            : 0x%.08X\n"
 			"   uResolution       : 0x%.08X\n"
@@ -1947,7 +2043,7 @@ DWORD WINAPI XTL::EmuGetFileAttributesA
          DbgPrintf("  New:\"$XbePath\\%s\"\n", szBuffer);
     }
 
-	DWORD dwRet = GetFileAttributes(szBuffer);
+	DWORD dwRet = GetFileAttributesA(szBuffer);
 	if(FAILED(dwRet))
 		EmuWarning("GetFileAttributes failed!");
 
@@ -1985,6 +2081,200 @@ BOOL WINAPI XTL::EmuVirtualProtect
 	return dwRet;
 }
 
+// ******************************************************************
+// func: EmulstrcmpiW
+// ******************************************************************
+int WINAPI XTL::EmulstrcmpiW
+(
+	LPCWSTR lpString1,
+	LPCWSTR lpString2
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmulstrcmpiW\n"
+			"(\n"
+			"   lpString1         : 0x%.08X (%S)\n"
+			"   lpString2         : 0x%.08X (%S)\n"
+			");\n", 
+			GetCurrentThreadId(), lpString1, lpString1, lpString2, lpString2);
+
+	int Ret = lstrcmpiW(lpString1, lpString2);
+
+	EmuSwapFS();	// Xbox FS
+
+	return Ret;
+}
+
+// ******************************************************************
+// func: XMountMUA
+// ******************************************************************
+DWORD WINAPI XTL::EmuXMountMUA
+(
+	DWORD dwPort,                  
+	DWORD dwSlot,                  
+	PCHAR pchDrive               
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuXMountMUA\n"
+			"(\n"
+			"   dwPort            : 0x%.08X\n"
+			"   dwSlot            : 0x%.08X\n"
+			"   pchDrive          : 0x%.08X (%s)\n"
+			");\n", 
+			GetCurrentThreadId(), dwPort, dwSlot, pchDrive, pchDrive);
+
+	// TODO: Actually allow memory card emulation? This might make transferring
+	// game saves a bit easier if the memory card directory was configurable. =]
+
+	EmuSwapFS();	// Xbox FS
+
+	return E_FAIL;
+}
+
+// ******************************************************************
+// func: EmuCreateWaitableTimer
+// ******************************************************************
+HANDLE WINAPI XTL::EmuCreateWaitableTimerA
+(
+	LPVOID					lpTimerAttributes, // SD
+	BOOL					bManualReset,      // reset type
+	LPCSTR					lpTimerName        // object name
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuCreateWaitableTimerA\n"
+			"(\n"
+			"   lpTimerAttributes : 0x%.08X\n"
+			"   bManualReset      : 0x%.08X\n"
+			"   lpTimerName       : 0x%.08X (%s)\n"
+			");\n", 
+			GetCurrentThreadId(), lpTimerAttributes, bManualReset, lpTimerName, lpTimerName);
+
+	// For Xbox titles, this param should always be NULL.
+	if(lpTimerAttributes)
+		EmuWarning("lpTimerAttributes != NULL");
+
+	HANDLE hRet = CreateWaitableTimerA( NULL, bManualReset, lpTimerName );
+
+	EmuSwapFS();	// Xbox FS
+
+	return hRet;
+}
+
+// ******************************************************************
+// func: EmuSetWaitableTimer
+// ******************************************************************
+BOOL WINAPI XTL::EmuSetWaitableTimer
+(
+	HANDLE				hTimer,                     // handle to timer
+	const LARGE_INTEGER *pDueTime,					// timer due time
+	LONG				lPeriod,                    // timer interval
+	PTIMERAPCROUTINE	pfnCompletionRoutine,		// completion routine
+	LPVOID				lpArgToCompletionRoutine,   // completion routine parameter
+	BOOL				fResume                     // resume state
+)
+{
+	
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuSetWaitableTimer\n"
+			"(\n"
+			"   hTimer            : 0x%.08X\n"
+			"   pDueTime          : 0x%.08X\n"
+			"   lPeriod           : 0x%.08X\n"
+			"   pfnCompletionRoutine : 0x%.08X\n"
+			"   lpArgToCompletionRoutine : 0x%.08X\n"
+			"   fResume           : 0x%.08X\n"
+			");\n", 
+			GetCurrentThreadId(), hTimer, pDueTime, lPeriod, pfnCompletionRoutine,
+				lpArgToCompletionRoutine, fResume);
+
+	BOOL Ret = SetWaitableTimer( hTimer, pDueTime, lPeriod, pfnCompletionRoutine,
+							lpArgToCompletionRoutine, fResume );
+	if(!Ret)
+		EmuWarning("SetWaitableTimer failed!");
+
+	EmuSwapFS();	// Xbox FS
+
+	return Ret;
+}
+
+// ******************************************************************
+// * func: EmuXMountAlternateTitle
+// ******************************************************************
+DWORD WINAPI XTL::EmuXMountAlternateTitle
+(
+	LPCSTR		lpRootPath,               
+	DWORD		dwAltTitleId,               
+	PCHAR		pchDrive               
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuXMountAlternateTitle\n"
+			"(\n"
+			"   lpRootPath         : 0x%.08X (%s)\n"
+			"   dwAltTitleId       : 0x%.08X\n"
+			"   pchDrive           : 0x%.08X (%s)\n"
+			");\n",
+			GetCurrentThreadId(), lpRootPath, lpRootPath, dwAltTitleId, pchDrive, pchDrive);
+
+	// TODO: Anything?
+
+	EmuSwapFS();	// Xbox FS
+
+	return ERROR_SUCCESS;
+}
+
+// ******************************************************************
+// * func: EmuXUnmountAlternateTitle
+// ******************************************************************
+DWORD WINAPI XTL::EmuXUnmountAlternateTitle(CHAR chDrive)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuXUnmountAlternativeTitle\n"
+			"(\n"
+			"   chDrive           : 0x%.08X (%c)\n"
+			");\n",
+			GetCurrentThreadId(), chDrive, chDrive);
+
+	EmuSwapFS();
+
+	return ERROR_SUCCESS;
+}
+
+// ******************************************************************
+// * func: EmuMoveFileA
+// ******************************************************************
+BOOL WINAPI XTL::EmuMoveFileA
+(
+    LPCSTR lpExistingFileName,
+    LPCSTR lpNewFileName
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	printf("EmuXapi (0x%X): EmuMoveFileA\n"
+			"(\n"
+			"   lpExistingFileName : 0x%.08X (%s)\n"
+			"   lpNewFileName      : 0x%.08X (%s)\n"
+			");\n",
+			GetCurrentThreadId(), lpExistingFileName, lpExistingFileName,
+							lpNewFileName, lpNewFileName);
+
+	// For Panzer.
+	BOOL bRet = MoveFileA( lpExistingFileName, lpNewFileName );
+
+
+	EmuSwapFS();	// Xbox FS
+
+	return bRet;
+}
 
 /* not necessary?
 // ******************************************************************
@@ -2081,3 +2371,230 @@ DWORD WINAPI XTL::EmuXCalculateSignatureEnd
     return ERROR_SUCCESS;
 }
 //*/
+
+/* Yeah, I know these are too high level, but I'm just testing to see 
+   if adding these will fix some problems with multi-threaded games hanging
+   in WinXP (i.e. Panzer and Azurik). */
+
+// ******************************************************************
+// * func: EmuCreateThread
+// ******************************************************************
+HANDLE WINAPI XTL::EmuCreateThread
+(
+    LPVOID				    lpThreadAttributes,
+    DWORD                   dwStackSize,
+    LPTHREAD_START_ROUTINE  lpStartAddress,
+    LPVOID                  lpParameter,
+    DWORD                   dwCreationFlags,
+    LPDWORD                 lpThreadId
+)
+{
+	EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuXapi (0x%X): EmuCreateThread\n"
+           "(\n"
+           "   lpThreadAttributes  : 0x%.08X\n"
+           "   dwStackSize         : 0x%.08X\n"
+		   "   lpStartAddress      : 0x%.08X\n"
+		   "   lpParameter         : 0x%.08X\n"
+		   "   dwCreationFlags     : 0x%.08X\n"
+		   "   lpThreadId          : 0x%.08X\n"
+           ");\n",
+            GetCurrentThreadId(), lpThreadAttributes, dwStackSize, lpStartAddress, 
+				lpParameter, dwCreationFlags, lpThreadId);
+
+	HANDLE hRet = CreateThread( (PSECURITY_ATTRIBUTES) lpThreadAttributes, dwStackSize, lpStartAddress,
+						lpParameter, dwCreationFlags, lpThreadId );
+
+    EmuSwapFS();   // XBox FS
+
+	return hRet;
+}
+
+// ******************************************************************
+// * func: EmuCreateMutex
+// ******************************************************************
+HANDLE WINAPI EmuCreateMutex
+(
+    LPSECURITY_ATTRIBUTES   lpMutexAttributes,
+    BOOL                    bInitialOwner,
+    LPCSTR                  lpName
+)
+{
+	// TODO: Later (if needed)
+	return NULL;
+}
+
+// ******************************************************************
+// * func: EmuCloseHandle
+// ******************************************************************
+//BOOL WINAPI XTL::EmuCloseHandle
+//(
+//    HANDLE hObject
+//)
+//{
+//	EmuSwapFS();   // Win2k/XP FS
+//
+//    DbgPrintf("EmuXapi (0x%X): EmuCloseHandle\n"
+//           "(\n"
+//           "   hObject             : 0x%.08X\n",
+//           ");\n",
+//            GetCurrentThreadId(), hObject);
+//
+//	BOOL bRet = CloseHandle( hObject );
+//
+//	EmuSwapFS();	// Xbox FS
+//
+//	return bRet;
+//}
+
+// ******************************************************************
+// * func: EmuExitThread
+// ******************************************************************
+VOID WINAPI XTL::EmuExitThread
+(
+	DWORD dwExitCode  
+)
+{
+	DbgPrintf("EmuXapi (0x%X): EmuExitThread\n"
+           "(\n"
+           "   dwExitCode           : 0x%.08X\n"
+           ");\n",
+            GetCurrentThreadId(), dwExitCode);
+
+	ExitThread( dwExitCode );
+
+	EmuSwapFS();	// Xbox FS
+}
+
+// ******************************************************************
+// * func: ResumeThread
+// ******************************************************************
+DWORD WINAPI XTL::EmuResumeThread
+(
+	HANDLE hThread 
+)
+{
+	EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuXapi (0x%X): EmuResumeThread\n"
+           "(\n"
+           "   hThread             : 0x%.08X\n"
+           ");\n",
+            GetCurrentThreadId(), hThread);
+
+	DWORD dwRet = ResumeThread( hThread );
+
+	EmuSwapFS();	// Xbox FS
+
+	return dwRet;
+}
+
+// ******************************************************************
+// * func: SuspendThread
+// ******************************************************************
+DWORD WINAPI XTL::EmuSuspendThread
+(
+	HANDLE hThread 
+)
+{
+	EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuXapi (0x%X): EmuSuspendThread\n"
+           "(\n"
+           "   hThread             : 0x%.08X\n"
+           ");\n",
+            GetCurrentThreadId(), hThread);
+
+	DWORD dwRet = SuspendThread( hThread );
+
+	EmuSwapFS();	// Xbox FS
+
+	return dwRet;
+}
+
+// ******************************************************************
+// * func: EmuVirtualAlloc
+// ******************************************************************
+LPVOID WINAPI XTL::EmuVirtualAlloc
+(
+	LPVOID lpAddress,        
+	SIZE_T dwSize,           
+	DWORD flAllocationType,  
+	DWORD flProtect          
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuVirtualAlloc\n"
+           "(\n"
+           "   lpAddress           : 0x%.08X\n"
+		   "   dwSize              : 0x%.08X\n"
+		   "   flAllocationType    : 0x%.08X\n"
+		   "   flProtect           : 0x%.08X\n"
+           ");\n",
+            GetCurrentThreadId(), lpAddress, dwSize, flAllocationType, flProtect);
+
+	LPVOID ret = VirtualAllocEx( GetCurrentProcess(), lpAddress, dwSize, flAllocationType, flProtect );
+
+	EmuSwapFS();	// Xbox FS
+
+	return ret;
+}
+
+// ******************************************************************
+// * func: EmuVirtualAlloc
+// ******************************************************************
+BOOL WINAPI XTL::EmuVirtualFree
+(
+	LPVOID lpAddress,   
+	SIZE_T dwSize,      
+	DWORD dwFreeType    
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuVirtualFree\n"
+           "(\n"
+           "   lpAddress           : 0x%.08X\n"
+		   "   dwSize              : 0x%.08X\n"
+		   "   dwFreeType          : 0x%.08X\n"
+           ");\n",
+            GetCurrentThreadId(), lpAddress, dwSize, dwFreeType);
+
+	BOOL bRet = VirtualFreeEx( GetCurrentProcess(), lpAddress, dwSize, dwFreeType );
+
+	EmuSwapFS();	// Xbox FS
+
+	return bRet;
+}
+
+// ******************************************************************
+// * func: EmuXGetDeviceEnumerationStatus
+// ******************************************************************
+DWORD WINAPI XTL::EmuXGetDeviceEnumerationStatus()
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuXGetDeviceEnumerationStatus()\n", GetCurrentThreadId());
+
+	EmuSwapFS();	// Xbox FS
+
+	return XDEVICE_ENUMERATION_IDLE;
+}
+
+// ******************************************************************
+// * func: EmuSwitchToThread
+// ******************************************************************
+BOOL WINAPI XTL::EmuSwitchToThread()
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuSwitchToThread()\n", GetCurrentThreadId());
+
+	BOOL bRet = SwitchToThread();
+
+	EmuSwapFS();	// Xbox FS
+
+	return bRet;
+}

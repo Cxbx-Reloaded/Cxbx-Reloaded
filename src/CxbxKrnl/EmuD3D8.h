@@ -731,6 +731,18 @@ VOID WINAPI EmuLock2DSurface
 );
 
 // ******************************************************************
+// * func: EmuLock3DSurface
+// ******************************************************************
+VOID WINAPI EmuLock3DSurface
+(
+    X_D3DPixelContainer *pPixelContainer,
+    UINT				Level,
+	D3DLOCKED_BOX		*pLockedVolume,
+	D3DBOX				*pBox,
+	DWORD				Flags
+);
+
+// ******************************************************************
 // * func: EmuGet2DSurfaceDesc
 // ******************************************************************
 VOID WINAPI EmuGet2DSurfaceDesc
@@ -1659,7 +1671,7 @@ HRESULT WINAPI EmuIDirect3DDevice8_SetScissors
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_SetPixelShaderProgram
 (
-	CONST X_D3DPIXELSHADERDEF *pPSDef
+	X_D3DPIXELSHADERDEF *pPSDef
 );
 
 // ******************************************************************
@@ -1838,5 +1850,78 @@ HRESULT WINAPI EmuIDirect3DDevice8_GetModelView(D3DXMATRIX* pModelView);
 // * func: EmuIDirect3DDevice8_SetBackMaterial
 // ******************************************************************
 HRESULT WINAPI EmuIDirect3DDevice8_SetBackMaterial(D3DMATERIAL8* pMaterial);
+
+// ******************************************************************
+// * func: EmuIDirect3D8_GetAdapterIdentifier
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3D8_GetAdapterIdentifier
+(
+	UINT					Adapter,
+	DWORD					Flags,
+	D3DADAPTER_IDENTIFIER8* pIdentifier
+);
+
+// ******************************************************************
+// * func: D3D::MakeRequestedSpace
+// ******************************************************************
+HRESULT WINAPI EmuD3D_MakeRequestedSpace( DWORD Unknown1, DWORD Unknown2 );
+
+// ******************************************************************
+// * func: D3DDevice_MakeSpace
+// ******************************************************************
+void WINAPI EmuD3DDevice_MakeSpace();
+
+// ******************************************************************
+// * func: D3D::SetCommonDebugRegisters
+// ******************************************************************
+void WINAPI EmuD3D_SetCommonDebugRegisters();
+
+// ******************************************************************
+// * func: D3D::BlockOnTime
+// ******************************************************************
+void WINAPI EmuD3D_BlockOnTime( DWORD Unknown1, int Unknown2 );
+
+// ******************************************************************
+// * func: D3D::BlockOnResource
+// ******************************************************************
+void WINAPI EmuD3D_BlockOnResource( X_D3DResource* pResource );
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetPushBufferOffset
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_GetPushBufferOffset
+(
+	DWORD *pOffset
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DCubeTexture8_GetCubeMapSurface
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DCubeTexture8_GetCubeMapSurface
+(
+	X_D3DCubeTexture*	pThis,
+	D3DCUBEMAP_FACES	FaceType,
+	UINT				Level,
+	X_D3DSurface**		ppCubeMapSurface
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DCubeTexture8_GetCubeMapSurface2
+// ******************************************************************
+X_D3DSurface* WINAPI EmuIDirect3DCubeTexture8_GetCubeMapSurface2
+(
+	X_D3DCubeTexture*	pThis,
+	D3DCUBEMAP_FACES	FaceType,
+	UINT				Level
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetPixelShader
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_GetPixelShader
+(
+	DWORD  Name,
+	DWORD* pHandle
+);
 
 #endif

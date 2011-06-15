@@ -1274,6 +1274,16 @@ OOVPATable DSound_1_0_4361[] =
 		"IDirectSoundBuffer8_AddRef"
 		#endif
 	},
+	// IDirectSound8::Release (* unchanged since 3936 *)
+    {
+        (OOVPA*)&IDirectSound8_Release_1_0_3936,
+
+        XTL::EmuIDirectSound8_Release,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSound8_Release"
+        #endif
+    },
 };
 
 // ******************************************************************

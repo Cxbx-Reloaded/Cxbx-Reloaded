@@ -45,6 +45,12 @@ extern void EmuExecutePushBufferRaw
     DWORD                 *pdwPushData
 );
 
+extern void DbgDumpPushBuffer
+( 
+	DWORD*				  PBData, 
+	DWORD				  dwSize 
+);
+
 // primary push buffer
 extern uint32  g_dwPrimaryPBCount;
 extern uint32 *g_pPrimaryPB;

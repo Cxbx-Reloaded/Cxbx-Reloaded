@@ -389,6 +389,35 @@ SOOVPA<7> XapiInitProcess_1_0_3911 =
 };
 
 // ******************************************************************
+// * XapiInitProcess
+// ******************************************************************
+SOOVPA<7> XapiInitProcess_1_0_3950 =
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // XapiInitProcess+0x03 : sub esp, 30h
+        { 0x05, 0x30 }, // (Offset,Value)-Pair #1
+
+        // XapiInitProcess+0x0F : push 0x0C
+        { 0x10, 0x6A }, // (Offset,Value)-Pair #2
+        { 0x11, 0x0C }, // (Offset,Value)-Pair #3
+
+        // XapiInitProcess+0x17 : repe stosd
+        { 0x18, 0xF3 }, // (Offset,Value)-Pair #4
+        { 0x19, 0xAB }, // (Offset,Value)-Pair #5
+
+        // XapiInitProcess+0x42 : jnz +0x0A
+        { 0x43, 0x75 }, // (Offset,Value)-Pair #6
+        { 0x44, 0x0A }, // (Offset,Value)-Pair #7
+    }
+};
+
+// ******************************************************************
 // * XapiBootDash
 // ******************************************************************
 SOOVPA<11> XapiBootDash_1_0_3911 =
@@ -1129,6 +1158,227 @@ SOOVPA<7> QueueUserAPC_1_0_3911 =
 };
 
 // ******************************************************************
+// * lstrcmpiW
+// ******************************************************************
+SOOVPA<8> lstrcmpiW_1_0_3911 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x07, 0x56 },
+        { 0x0F, 0x01 },
+        { 0x10, 0xE8 },
+        { 0x19, 0x39 },
+        { 0x22, 0x0E },
+        { 0x2D, 0x59 },
+        { 0x34, 0xEB },
+        { 0x3D, 0x03 },
+    }
+};
+
+// ******************************************************************
+// * XMountAlternateTitleA
+// ******************************************************************
+SOOVPA<7> XMountAlternateTitleA_1_0_3911 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0x0F },
+        { 0x3E, 0x56 },
+        { 0x5E, 0xFF },
+        { 0x7E, 0x8D },
+        { 0x9E, 0x50 },
+        { 0xBE, 0x66 },
+        { 0xDE, 0xF0 },
+    }
+};
+
+// ******************************************************************
+// * XUnmountAlternateTitleA
+// ******************************************************************
+SOOVPA<7> XUnmountAlternateTitleA_1_0_3911 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x0A, 0x65 },
+        { 0x16, 0xFF },
+        { 0x23, 0x83 },
+        { 0x2E, 0x45 },
+        { 0x3A, 0x50 },
+        { 0x46, 0x0B },
+        { 0x52, 0x50 },
+    }
+};
+
+// ******************************************************************
+// * XMountMUA
+// ******************************************************************
+SOOVPA<7> XMountMUA_1_0_3911 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0x0C },
+        { 0x3E, 0x66 },
+        { 0x61, 0x85 },
+        { 0x7E, 0x8D },
+        { 0xA2, 0x0F },
+        { 0xBE, 0x50 },
+        { 0xDE, 0x74 },
+    }
+};
+
+// ******************************************************************
+// * CloseHandle
+// ******************************************************************
+SOOVPA<8> CloseHandle_1_0_3911 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x02, 0x24 },
+        { 0x03, 0x04 },
+        { 0x0A, 0x85 },
+        { 0x0B, 0xC0 },
+        { 0x0E, 0x33 },
+        { 0x12, 0x08 },
+        { 0x19, 0x33 },
+        { 0x1A, 0xC0 },
+    }
+};
+
+// ******************************************************************
+// * ExitThread
+// ******************************************************************
+SOOVPA<5> ExitThread_1_0_3911 = 
+{
+    0,  // Large == 0
+    5,  // Count == 5
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x01, 0x00 },
+        { 0x07, 0xFF },
+        { 0x08, 0x74 },
+        { 0x0A, 0x04 },
+        { 0x11, 0xCC },
+    }
+};
+
+// ******************************************************************
+// * VirtualAlloc
+// ******************************************************************
+SOOVPA<7> VirtualAlloc_1_0_3911 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1,  // Xref Not Saved
+    0,   // Xref Not Used
+
+    {
+        { 0x04, 0x75 },
+        { 0x0A, 0x75 },
+        { 0x10, 0x45 },
+        { 0x19, 0x85 },
+        { 0x1C, 0x05 },
+        { 0x22, 0x50 },
+        { 0x28, 0x33 },
+    }
+};
+
+// ******************************************************************
+// * VirtualFree
+// ******************************************************************
+SOOVPA<7> VirtualFree_1_0_3911 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1,  // Xref Not Saved
+    0,   // Xref Not Used
+
+    {
+        { 0x06, 0x80 },
+        { 0x0E, 0x07 },
+        { 0x16, 0xFF },
+        { 0x1E, 0x45 },
+        { 0x27, 0x85 },
+        { 0x2E, 0xEB },
+        { 0x36, 0x33 },
+    }
+};
+
+// ******************************************************************
+// * XLaunchNewImageA
+// ******************************************************************
+SOOVPA<8> XLaunchNewImageA_1_0_3911 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0x80 },
+        { 0x3E, 0xC0 },
+        { 0x5E, 0xFF },
+        { 0x7E, 0xFC },
+        { 0x9E, 0x08 },
+        { 0xBE, 0x50 },
+        { 0xDE, 0x05 },
+        { 0xFE, 0x85 },
+    }
+};
+
+// ******************************************************************
+// * XGetLaunchInfo
+// ******************************************************************
+SOOVPA<7> XGetLaunchInfo_1_0_3911 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x0B, 0x8B },
+        { 0x18, 0x15 },
+        { 0x25, 0x8B },
+        { 0x32, 0x30 },
+        { 0x3F, 0x00 },
+        { 0x4C, 0x83 },
+        { 0x59, 0x5E },
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_3911
 // ******************************************************************
 OOVPATable XAPI_1_0_3911[] =
@@ -1219,9 +1469,9 @@ OOVPATable XAPI_1_0_3911[] =
         #endif
     },
     //*/
-    /* Too High Level
+    /* Too High Level */
     // CreateThread
-    {
+   /* {
         (OOVPA*)&CreateThread_1_0_3911,
 
         XTL::EmuCreateThread,
@@ -1229,8 +1479,7 @@ OOVPATable XAPI_1_0_3911[] =
         #ifdef _DEBUG_TRACE
         "EmuCreateThread"
         #endif
-    },
-    */
+    },*/
     // SetThreadPriority
     {
         (OOVPA*)&SetThreadPriority_1_0_3911,
@@ -1250,6 +1499,16 @@ OOVPATable XAPI_1_0_3911[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXapiInitProcess"
+        #endif
+    },
+	// XapiInitProcess
+    {
+        (OOVPA*)&XapiInitProcess_1_0_3950,
+
+        XTL::EmuXapiInitProcess,
+
+        #ifdef _DEBUG_TRACE
+		"EmuXapiInitProcess (3950)"
         #endif
     },
     //*/
@@ -1483,6 +1742,97 @@ OOVPATable XAPI_1_0_3911[] =
 		"EmuQueueUserAPC"
 		#endif
 	},
+	// lstrcmpiW
+	/*{ 
+		(OOVPA*)&lstrcmpiW_1_0_3911,
+
+		XTL::EmulstrcmpiW,
+			
+		#ifdef _DEBUG_TRACE
+		"EmulstrcmpiW"
+		#endif
+	},*/
+	// XMountAlternateTitleA
+	{
+		(OOVPA*)&XMountAlternateTitleA_1_0_3911,
+		XTL::EmuXMountAlternateTitle,
+
+		#ifdef _DEBUG_TRACE
+		"XMountAlternateTitleA"
+		#endif
+	},
+	// XUnmountAlternateTitleA
+	{
+		(OOVPA*)&XUnmountAlternateTitleA_1_0_3911,
+	    XTL::EmuXUnmountAlternateTitle,
+
+		#ifdef _DEBUG_TRACE
+		"XUnmountAlternateTitleA"
+		#endif
+	},
+	// XMountMUA
+    {
+        (OOVPA*)&XMountMUA_1_0_3911,
+        XTL::EmuXMountMUA,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXMountMUA"
+        #endif
+    },
+	// XLaunchNewImageA
+    {
+        (OOVPA*)&XLaunchNewImageA_1_0_3911,
+        XTL::EmuXLaunchNewImage,
+
+        #ifdef _DEBUG_TRACE
+		"EmuXLaunchNewImageA"
+        #endif
+    },
+	// XGetLaunchInfo
+    {
+        (OOVPA*)&XGetLaunchInfo_1_0_3911,
+        XTL::EmuXGetLaunchInfo,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXGetLaunchInfo"
+        #endif
+    },
+	// CloseHandle
+    /*{
+	   (OOVPA*)&CloseHandle_1_0_3911,
+	   XTL::EmuCloseHandle,
+
+	   #ifdef _DEBUG_TRACE
+	   "CloseHandle"
+	   #endif
+    },*/
+	// ExitThread
+    /*{
+       (OOVPA*)&ExitThread_1_0_3911,
+       XTL::EmuExitThread,
+
+       #ifdef _DEBUG_TRACE
+       "ExitThread"
+       #endif
+    },*/
+	// VirtualAlloc@16
+    //{
+    //   (OOVPA*)&VirtualAlloc_1_0_3911,
+    //   XTL::EmuVirtualAlloc,
+
+    //   #ifdef _DEBUG_TRACE
+    //   "EmuVirtualAlloc"
+    //   #endif
+    //},
+    //// VirtualFree@12
+    //{
+    //   (OOVPA*)&VirtualFree_1_0_3911,
+    //   XTL::EmuVirtualFree,
+
+    //   #ifdef _DEBUG_TRACE
+    //   "EmuVirtualFree"
+    //   #endif
+    //},
 };
 
 // ******************************************************************

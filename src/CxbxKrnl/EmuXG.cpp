@@ -357,3 +357,114 @@ HRESULT WINAPI XTL::EmuXGWriteSurfaceOrTextureToXPR
 
 	return S_OK;
 }
+
+// ******************************************************************
+// * func: EmuXGSetTextureHeader
+// ******************************************************************
+VOID WINAPI XTL::EmuXGSetTextureHeader
+(
+	UINT			Width,
+	UINT			Height,
+	UINT			Levels,
+	DWORD			Usage,
+	D3DFORMAT		Format,
+	D3DPOOL			Pool,
+	X_D3DTexture*	pTexture,
+	UINT			Data,
+	UINT			Pitch
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuXGSetTextureHeader\n"
+           "(\n"
+           "   Width                  : 0x%.08X\n"
+		   "   Height                 : 0x%.08X\n"
+		   "   Levels                 : 0x%.08X\n"
+		   "   Usage                  : 0x%.08X\n"
+		   "   Format                 : 0x%.08X\n"
+		   "   Pool                   : 0x%.08X\n"
+		   "   pTexture               : 0x%.08X\n"
+		   "   Data                   : 0x%.08X\n"
+		   "   Pitch                  : 0x%.08X\n"
+		   ");\n",
+		   GetCurrentThreadId(), Width, Height, Levels, Usage, 
+				Format, Pool, pTexture, Data, Pitch);
+
+	// NOTES: This function simply creates a texture that needs to be registered
+	// via D3DDevice_Register afterwards.  So, do I just create the texture via
+	// EmuIDirect3DDevice8_CreateTexture, or just fill in the interface and let
+	// EmuIDirect3DDevice8_Register do the rest?  Trial and error.
+
+	X_D3DTexture* pTempTexture = NULL;
+	DWORD l2w = (DWORD) log( (float)Width ) / log(2.0f);
+	DWORD l2h = (DWORD) log( (float)Height ) / log(2.0f);
+
+	/*if( Data != 0 )
+		CxbxKrnlCleanup( "Data != 0 (XGSetTextureHeader)" );
+
+	if( Pitch != 0 )
+		CxbxKrnlCleanup( "Pitch != 0 (XGSetTextureHeader)" );*/
+
+	// Generate a temporary texture and fill in the necessary fields within
+	// the X_D3DTexture interface (lazy, I know).
+	EmuSwapFS();
+	pTempTexture = (X_D3DTexture*) XTL::EmuIDirect3DDevice8_CreateTexture2(Width, Height, 0, Levels, Usage, Format, 
+		XTL::D3DRTYPE_TEXTURE);
+	EmuSwapFS();
+
+	pTexture->Data		= pTempTexture->Data;
+	pTexture->Common	= X_D3DCOMMON_TYPE_TEXTURE; //pTempTexture->Common;
+//	pTexture->Format	= pTempTexture->Format;
+	pTexture->Lock		= pTempTexture->Lock; // 0;
+	pTexture->Size		= pTempTexture->Size;
+
+	EmuSwapFS();
+	XTL::EmuIDirect3DResource8_Release(pTempTexture);
+	EmuSwapFS();
+
+	// Manually fill in Format parameters
+	/*pTexture->Format |= ( ( ( Width >> 1 ) & 0xF ) << X_D3DFORMAT_USIZE_SHIFT ) |	// Width
+					   ( ( ( Height>> 1 ) & 0xF ) << X_D3DFORMAT_VSIZE_SHIFT ) |	// Height
+					   ( ( ( Levels     ) & 0xF ) << X_D3DFORMAT_MIPMAP_SHIFT ) |	// Mip Levels
+				//	   ( ( ( ((DWORD)Format)) & 0xFF ) << X_D3DFORMAT_FORMAT_SHIFT ) |	// Format (Already set)
+					   ( ( ( 2			) & 0xF ) << X_D3DFORMAT_DIMENSION_SHIFT );	// Dimensions
+*/
+	pTexture->Format |= ( ( l2w & 0xF ) << X_D3DFORMAT_USIZE_SHIFT );
+	pTexture->Format |= ( ( l2h & 0xF ) << X_D3DFORMAT_VSIZE_SHIFT );
+	pTexture->Format |= ( ( Levels & 0xF ) << X_D3DFORMAT_MIPMAP_SHIFT );
+	pTexture->Format |= ( ( ( ((DWORD)Format)) & 0xFF ) << X_D3DFORMAT_FORMAT_SHIFT );
+	pTexture->Format |= ( ( 2 & 0xF ) << X_D3DFORMAT_DIMENSION_SHIFT );
+
+//	D3DCOLOR_XRGB(
+	DbgPrintf( "pTexture->Format:= 0x%.08X\n", pTexture->Format );
+
+	EmuSwapFS();	// Xbox FS
+}
+
+// ******************************************************************
+// * func: EmuXFONT_OpenBitmapFontFromMemory 
+// ******************************************************************
+//HRESULT WINAPI XTL::EmuXFONT_OpenBitmapFontFromMemory 
+//(
+//	CONST void		*pFontData,
+//	unsigned		uFontDataSize,
+//	void			**ppFont
+//)
+//{
+//	EmuSwapFS();	// Win2k/XP FS
+//
+//	DbgPrintf("EmuXapi (0x%X): EmuXFONT_OpenBitmapFontFromMemory\n"
+//           "(\n"
+//		   "   pFontData              : 0x%.08X\n"
+//		   "   uFontDataSize          : 0x%.08X\n"
+//		   "   ppFont                 : 0x%.08X\n"
+//		   ");\n",
+//		   GetCurrentThreadId(), pFontData, uFontDataSize, ppFont);
+//
+//	__asm int 3;
+//
+//	EmuSwapFS(); // Xbox FS
+//
+//	return E_FAIL;
+//}

@@ -53,6 +53,7 @@ struct XTL::_D3DIVB         *XTL::g_IVBTable = 0;
 extern DWORD                 XTL::g_IVBFVF = 0;
 extern XTL::X_D3DVertexBuffer      *g_pVertexBuffer = NULL;
 
+extern DWORD				XTL::g_dwPrimPerFrame = 0;
 static unsigned int crctab[256];
 
 static void CRC32Init(void)
@@ -659,6 +660,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[1] = ((FLOAT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1];
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[2] = 0.0f;
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[3] = ((FLOAT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[2];
+					break;
 
                 /*TODO
                 case 0x02:
@@ -1022,9 +1024,14 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
 
         for(uint32 i = 0;i < pPatchDesc->dwPrimitiveCount/2;i++)
         {
+		//	__asm int 3;
+		//	DbgPrintf( "pPatch1 = 0x%.08X pOrig1 = 0x%.08X pStream->uiOrigStride * 3 = 0x%.08X\n", pPatch1, pOrig1, pStream->uiOrigStride * 3 );
             memcpy(pPatch1, pOrig1, pStream->uiOrigStride * 3); // Vertex 0,1,2 := Vertex 0,1,2
+		//	__asm int 3;
             memcpy(pPatch2, pOrig2, pStream->uiOrigStride);     // Vertex 3     := Vertex 2
+		//	__asm int 3;
             memcpy(pPatch3, pOrig3, pStream->uiOrigStride);     // Vertex 4     := Vertex 3
+		//	__asm int 3;
             memcpy(pPatch4, pOrig1, pStream->uiOrigStride);     // Vertex 5     := Vertex 0
 
             pPatch1 += pStream->uiOrigStride * 6;
@@ -1052,7 +1059,7 @@ bool XTL::VertexPatcher::PatchPrimitive(VertexPatchDesc *pPatchDesc,
     else if(pPatchDesc->PrimitiveType == X_D3DPT_LINELOOP)
     {
         memcpy(&pPatchedVertexData[pPatchDesc->dwOffset], &pOrigVertexData[pPatchDesc->dwOffset], dwOriginalSize);
-        memcpy(&pPatchedVertexData[pPatchDesc->dwOffset + dwOriginalSize], &pOrigVertexData[pPatchDesc->dwOffset], pStream->uiOrigStride);
+	    memcpy(&pPatchedVertexData[pPatchDesc->dwOffset + dwOriginalSize], &pOrigVertexData[pPatchDesc->dwOffset], pStream->uiOrigStride);
     }
 
     if(pPatchDesc->pVertexStreamZeroData == 0)
@@ -1340,6 +1347,8 @@ VOID XTL::EmuFlushIVB()
         VPDesc.dwPrimitiveCount,
         VPDesc.pVertexStreamZeroData,
         VPDesc.uiVertexStreamZeroStride);
+
+	g_dwPrimPerFrame += VPDesc.dwPrimitiveCount;
 
     if(bFVF)
     {

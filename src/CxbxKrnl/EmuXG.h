@@ -108,4 +108,30 @@ HRESULT WINAPI EmuXGWriteSurfaceOrTextureToXPR
 	BOOL			bWriteSurfaceAsTexture
 );
 
+// ******************************************************************
+// * func: EmuXGSetTextureHeader
+// ******************************************************************
+VOID	WINAPI EmuXGSetTextureHeader
+(
+	UINT			Width,
+	UINT			Height,
+	UINT			Levels,
+	DWORD			Usage,
+	D3DFORMAT		Format,
+	D3DPOOL			Pool,
+	X_D3DTexture*	pTexture,
+	UINT			Data,
+	UINT			Pitch
+);
+
+// ******************************************************************
+// * func: EmuXFONT_OpenBitmapFontFromMemory 
+// ******************************************************************
+HRESULT WINAPI EmuXFONT_OpenBitmapFontFromMemory 
+(
+	CONST void		*pFontData,
+	unsigned		uFontDataSize,
+	void			**ppFont
+);
+
 #endif

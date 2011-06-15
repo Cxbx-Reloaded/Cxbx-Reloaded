@@ -842,4 +842,368 @@ TODO: Add D3DResource_GetType?
 - Added the following texture format(s)
 	D3DFMT_LIN_D16 (Use D3DFMT_R5G6B5 instead)
 	D3DFMT_LIN_G8B8 (Use D3DFMT_R5G6B5 instead)
-	
+
+6/??/10
+- Panzer goes ingame again.
+
+7/5/10
+- Added the following function(s)
+	XLaunchNewImageA (5849)
+
+7/11/10
+- Added the following function(s)
+	D3DDevice_BeginStateBlock (5558)
+	D3DDevice_EndStateBlock (5558)
+	CDirectSound::EnableHeadphones [3936] (3911)
+	IDirectSound_EnableHeadphones [3936] (3911)
+
+- Blasteroids-X shows intro screen (missing an unknown DirectSound API and a bug in RtlLeaveCriticalSection)
+- BloodWake shows loading screen.
+- Fixed a bug where some textures weren't getting unswizzled before rendering (thanks defiance!)
+- Temporarily commented out bad signatures:
+ 	CDirectSoundStream::SetAllParameters[AB] (3911)	
+	CDirectSoundStream::SetI3DL2Source[A] (3911)
+- Turok broke somehow (NULL surface causing crash).  :(
+
+7/14/10
+- Added the following function(s)
+	Direct3D_EnumAdapterModes (3911) [3925]
+	Direct3D_GetAdapterModeCount (3911) [3925]
+	D3DDevice_Reset (3911) [3925]
+	Direct3D_GetAdapterIdentifier (3911) [3925]
+	Direct3D_GetDeviceCaps (3911) [3925]
+	lstrcmpiW (3911 - 3944)
+
+7/15/10
+- Added the following function(s)
+	GetFileAttributesA (4361) (*)
+	XMountMUA (4361)
+	CreateWaitableTimerA (4361)
+	SetWaitableTimer (4361)
+
+(*) This function should be used instead of it's low level counterpart!
+
+7/16/10
+- Added the following function(s)
+	D3DDevice_SetRenderState_FrontFace (5558)
+
+7/17/10
+- Added the following function(s)
+	D3DDevice_Clear (5849_LTCG)
+	D3DDevice_Swap (5849_LTCG)
+	D3DVertexBuffer_Lock2 (5849_LTCG)
+	D3DDevice_SetVertexShader (5849_LTCG)
+
+7/19/10
+- Added the following function(s)
+	D3DDevice_SetRenderState_FrontFace (5849)
+	D3DDevice_SetBackMaterial (5849)
+	D3DDevice_SetRenderState_TwoSidedLighting (5849)
+
+7/23/10
+- Added the following function(s)
+	XMountAlternativeTitleA (3911, 4627, 4928)
+	XUnmountAlternativeTitleA (3911, 4627 - 4928)
+
+7/24/10
+- Added the following function(s)
+	D3D::KickOffAndWaitForIdle (5849)
+
+- Added a seperate check for priviledged instructions
+
+11/7/10
+- Added the following function(s)
+	D3DDevice_BeginStateBlock (4627)
+	D3DDevice_EndStateBlock (4627)
+	D3DDevice_ApplyStateBlock (4627)
+	D3DDevice_CaptureStateBlock (4627)
+	D3DDevice_DeleteStateBlock (4627)
+	D3DSurface_GetDesc (4034, 4039)
+	D3D::PixelJar::Get2DSurfaceDesc (4034, 4039)
+	D3DDevice_Clear (4034)
+	D3DDevice_SetLight (4034)
+	D3DVertexBuffer_Lock (4034)
+	D3DDevice_SetTexture (4034)
+	D3DDevice_SetPalette (4034)
+	D3DDevice_SetTextureState_TexCoordIndex (4034)
+	D3DDevice_SetMaterial (4034)
+	D3DDevice_SetVertexShader (4034)
+	D3DDevice_Swap (4034)
+	D3D::KickOffAndwaitForIdle (4034)
+
+11/8/10
+- Added the following function(s)
+	XGSwizzleBox (4034)
+	XGSwizzleRect (4034)
+	D3D::PixelJar::Get2DSurfaceDesc (5558)
+	D3DTexture_LockRect (5558)
+	D3D::MakeRequestedSpace (5558)(*)
+	D3DDevice_MakeSpace (5558)(*)
+	CDirectSoundVoice::SetI3DL2Source (5558)
+	CDirectSoundBuffer::SetI3DL2Source (5558)
+	IDirectSoundBuffer8_SetI3DL2Source (5558)
+	CDirectSoundVoice::SetAllParameters (5558)
+	CDirectSoundBuffer::SetAllParameters (5558)
+	IDirectSoundBuffer8_SetAllParameters (5558)
+	XGetSectionHandleA (5558)
+	XLoadSectionByHandleA (5558)
+	XFreeSectionByHandleA (5558)
+	CDirectSoundVoice::SetHeadroom (5558)
+	CDirectSoundBuffer::SetHeadroom (5558)
+	IDirectSoundBuffer8_SetHeadroom (5558)
+	CDirectSoundStream::SetHeadroom (5558)(**)
+	CDirectSoundBuffer::GetCurrentPosition (5558)
+	IDirectSoundBuffer_GetCurrentPosition (5558)
+	CDirectSoundStream::SetFormat (5558)
+	CDirectSoundStream::SetMixBins (5558)
+	D3DDevice_SetRenderTarget (5558)
+	D3DDevice_SetPixelShaderConstant (5558)
+	Lock2DSurface (5558)
+	D3DDevice_SetFlickerFilter (5455)
+	CDirectSound::EnableHeadphones (5455, 5558)
+	IDirectSound8_EnableHeadphones (5455, 5558)
+	SetThreadPriority (5455, 5558)
+	D3DDevice_BlockUntilVerticalBlank (5455)
+	GetThreadPriority (5455, 5558)
+	GetTimeZoneInformation (5455, 5558)
+	SetThreadPriorityBoost (5455, 5558)
+	D3DDevice_SetScissors (5455)
+	D3DDevice_SetScreenSpaceOffset (5455, 5558)
+	D3DDevice_InsertCallback (5455, 5558)
+	D3DDevice_SetRenderState_LineWidth (5455)
+	D3DDevice_FlushVertexCache (5455, 5558)
+	D3DDevice_SetRenderState_LogicOp (5455, 5558)
+
+- Added the following file(s)
+	XG.1.0.4034.cpp/h
+
+- Fixed the 5558 signature for D3DDevice_SetVertexShaderConstant1
+
+- Added cube texture support in EmuIDirect3DDevice8_CreateTexture2
+
+- Metal Arms (XDK 5558) is starting to work!
+
+(*) These functions are not to be emulated, just used to find functions
+that call them... making my life easer!
+
+(**) I only added the signature, not the actual function that goes with
+it.  I'll do that later because I'm just adding the stuff that Metal Arms
+needs to work for now.
+
+11/9/10
+- Added the following function(s)
+	D3DDevice_LightEnable (5455)
+	D3DDevice_SetModelView (5455, 5558)
+	D3DDevice_SetIndices (5455)
+	IDirectSound_AddRef (5233)
+	D3DDevice_SetVertexData4ub (4531-5344)
+	D3DDevice_SetVertexData2f (5233, 5344)
+	D3DDevice_SetVertexData4f (5233, 5344)
+	D3DDevice_SetViewport (5344)
+	D3DDevice_SetTransform (5344)
+	D3DDevice_GetBackBuffer2B (5558)(*)
+	D3DDevice_PersistDisplay (5558)
+
+- An implementation of D3DDevice_SetModelView is still needed!
+
+- Fixed a bug in HLEIntercept.cpp; XapiInitProcess sig for XDK 5344 was not
+being referenced (was using 5233's sig instead).
+
+- Tetris Worlds (5233) shows intro screens and XIII (5558) shows dirty disc
+error (because I didn't hava a full dump).
+
+(*) Nothing special, but the signature is just different by one byte
+in XIII, so I created two different sigs so Metal Arms doesn't break!
+
+11/11/10
+- Added the following function(s)
+	D3DDevice_Release (4361)
+	D3D::CreateStandAloneSurface (4034)(*)
+	D3DDevice_GetBackBuffer (4034)
+	D3D::SetTileNoWait (5849)
+	D3DDevice_SetGammaRamp (5849)
+	CDirectSoundVoiceSettings::SetMixBins (5849)
+	CDirectSoundVoice::SetMixBins (5849)
+	CDirectSoundBuffer::SetMixBins (5849)
+	IDirectSoundBuffer_SetMixBins (5849)
+	CDirectSoundStream_SetMixBins (5849)
+	CDirectSound::SetMixBinVolumes (5849)
+	IDirectSound_SetMixBinVolumes (5849)
+	XnInit (5849)
+	XNetStartup (5849)
+	WSAStartup (5849)
+	XNetGetEthernetLinkStatus (5849)
+	XInputSetState (5849)
+	CDirectSound::SetPosition (5849)
+	IDirectSound_SetPosition (5849)
+
+(*) D3DDevice_CreateImageSurface is just a simple call to this function.
+It's the same, so treat it as such.  Add it whenever possible because
+Cxbx won't crash when it's not intercepted!  I added this and Simpsons 
+RoadRage started to work!
+
+11/13/10
+- Added the following function(s)
+	CDirectSound::setVelocity (5849)	
+	IDirectSound_SetVelocity (5849)
+	CDirectSound::CommitDeferredSettings (5849)
+	D3DDevice_GetRenderTarget2 (5849)
+
+12/13/10
+- Added the following function(s)
+	D3D::BlockOnTime (3911) [3925]
+	D3D::BlockOnResource (3911) [3925]
+
+- Fixed a bug in NtAllocateVirtualMemory.  The Xbox exclusive flag MEM_NOZERO
+holds the same value as MEM_ROTATE, causing an error to be returned (0xC00000F3)
+that occurs in XP, but not Vista.
+
+- Azurik now goes ingame on XP (due to the above fix)!  Man, I love this game so
+much... *tear*
+
+12/26/10
+- Added the following function(s)
+	D3DDevice_CreateCubeTexture (4361)
+	D3DCubeTexture_GetCubeMapSurface (4361)
+
+1/13/11
+- Added the following function(s)
+	XInputGetCapabilities (4928, for Defender)
+	CDirectSound::SetAllParameters (4928)
+	CDirectSoundVoice::SetRollOffCurve (4627-4928)
+	CDirectSoundBuffer::SetRollOffCurve (4627-4928)
+	CDirectSoundStream::SetRollOffCurve (4627-4928)
+	IDirectSoundBuffer_SetRollOffCurve (4627-4928)
+	D3D::BlockOnTime (4627-4928)
+	D3DDevice_BlockOnFence (4627-4928)
+
+1/28/11
+- Added the following texture format(s)
+	D3DFMT_LIN_A8
+
+- Added the following function(s)
+	D3D::PixelJar::Lock3DSurface (4627-4831)(*)
+	D3D::PixelJar::Lock2DSurface (4242-5120)(*)
+	D3DDevice_CreateImageSurface (4627-4831)
+	D3DCubeTexture8_GetCubeMapSurface2 (4627-4831)
+	XFileCreateMediaObjectEx (4627-4831)
+
+- Fixed a bug in EmuIDirect3DDevice8_SetTextureStageState_TextureCoordIndex
+
+- Whacked goes ingame, only on Debug mode so far.  Retail crashes.  Single
+  player campaign crashes also  :(
+
+- Quantum Redshift reaches menus.  Missing blending required option.
+
+(*) These should have been added a long time ago.  With all due respect, I 
+find it a bit amusing that D3DDevice_CopyRects was implemented and 
+D3DDevice_CreateImageSurface wasn't O_o
+
+TODO: Verify that Lock3DSurface is the same on other XDKs like Lock2DSurface
+
+1/29/11
+- Added the following function(s):
+	XWaveFileCreateMediaObject (4627-4831)
+	CDirectSoundBuffer::SetEG (4627-4721)
+	IDirectSoundBuffer_SetEG (4627-4721)
+	D3DDevice_SetSoftDisplayFilter (4627-4928)
+	XGetFileCacheSize (4627-4928)
+	CDirectSoundStream_SetHeadRoom (4627-4928)
+	D3DDevice_SetPixelShader (4627-4928)
+	D3DDevice_CreatePalette2 (4627)
+	D3DPalette_Lock2 (4627)
+
+- Added a dirty hack for a missing blend state D3DBLEND_CONSTANTCOLOR
+  This is not supported by standard Direct3D, but is supported on OpenGL.
+
+- Quantum Redshift; controller input not yet working, but updated to ingame
+  status because ingame graphics do work when demos are played and loads 
+  levels without problems, but complete loading fails due to a failed texture
+  creation attempt (512x512xDXT1 8 mip levels).  Controller won't respond.
+
+2/3/11
+- Added the following function(s)
+	XMountMUA (5558)
+	Probably more I forgot.
+
+2/4/11
+- Added the following function(s)
+	D3DDevice::SetRenderState_StencilFail (5849)
+	D3DDevice::SetRenderState_VertexBlend (5849)
+	D3DDevice::SetRenderState_MultiSampleMask (5849)
+	D3DDevice::SetPalette (5849)
+	D3DDevice::LoadVertexShaderProgram (5849)
+	DirectSoundCreateBuffer (5849)
+	XGetDeviceEnumerationStatus (5849)
+	D3DDevice::GetPushBufferOffset (5849)
+	D3D::MakeRequestedSpace (5849) (XRef only)
+	D3D::MakeSpace? (5849) (XRef only)
+	D3DDevice_SetVertexShaderConstantNotInline (5849)
+	D3DDevice_FlushVertexCache (5849)
+	D3DDevice_BeginPushBuffer (4627)
+	D3DDevice_EndPushBuffer (4627)
+
+3/27/11
+- Instead of redirecting DSOUND 4134 -> 4627, Write a totally new DSOUND .inl
+  file for it.  See?  I'm working on JSRF...
+- Added the following function(s)
+	IDirectSound8_CreateSoundBuffer (4134)
+	CDirectSoundVoice::SetHeadroom (4134)
+	CDirectSoundBuffer::SetHeadroom (4134)
+	IDirectSoundBuffer_SetHeadroom (4134)
+	IDirectSoundBuffer_Lock (4134)
+	CDirectSoundVoice::SetVolume (4134)
+	CDirectSoundBuffer::SetVolume (4134)
+	IDirectSoundBuffer_SetVolume (4134)
+	CDirectSound::SetI3DL2Listener (4134)
+	IDirectSound_SetI3DL2Listener (4134)
+	CDirectSound::GetBufferData (4134)
+	IDirectSound_GetBufferData (4134)
+	timeSetEvent (4134)
+	timeKillEvent (4134)
+	CDirectSoundVoiceSettings::SetMixBins (4134)
+	CDirectSoundVoice::SetMixBins (4134)
+	CDirectSoundBuffer::SetMixBins (4134)
+	IDirectSoundBuffer_SetMixBins (4134)
+
+4/6/11
+- Added the following function(s)
+	XGSetTextureHeader (3911)
+
+4/16/11
+- Added the following function(s)
+	D3DDevice_SetShaderConstantMode (4134)
+
+4/17/11
+- Added the following function(s)
+	D3DDevice_GetVertexShaderSize (5849)
+	D3DDevice_LoadVertexShader (5849)
+	D3DDevice_SelectVertexShader (5849)
+	CMcpxBuffer::SetCurrentPosition (5849)
+	CDirectSoundBuffer::SetCurrentPosition (5849)
+	IDirectSoundBuffer_SetCurrentPosition (5849)
+
+5/9/11
+- Added the following function(s)
+	CDirectSound::SetDistanceFactor (4531)
+	CDirectSound::SetDopplerFactor (4531)
+	CDirectSoundBuffer::SetLoopRegion (5849)
+	IDirectSoundBuffer_SetLoopRegion (5849)
+	XFormatUtilityDrive (5849)
+	D3DDevice_AddRef (5849)
+	D3D::ClearStateBlockFlags (5849)
+	D3D::RecordStateBlock (5849)
+	D3DDevice_BeginStateBlock (5849)
+	D3DDevice_EndStateBlock (5849)
+	CMcpxBuffer::Stop (5849)
+	CDirectSoundBuffer::StopEx (5849)
+	IDirectSoundBuffer_StopEx (5849)
+
+5/20/11
+- Added the following function(s)
+	D3DDevice_SetRenderState_BackFillMode (5849)
+	D3DDevice_SetRenderState_Dxt1NoiseEnable (5849)
+	D3DDevice_GetTile (5849)
+	XapiInitProcess (5028)
+
+- 

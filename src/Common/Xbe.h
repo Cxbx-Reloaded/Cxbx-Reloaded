@@ -270,6 +270,10 @@ const uint32 XOR_EP_RETAIL                           = 0xA8FC57AB; // Entry Poin
 const uint32 XOR_KT_DEBUG                            = 0xEFB1F152; // Kernel Thunk (Debug)
 const uint32 XOR_KT_RETAIL                           = 0x5B6D40B6; // Kernel Thunk (Retail)
 
+// Sega Chihiro XOR keys
+const uint32 XOR_EP_CHIHIRO							 = 0x40B5C16E;
+const uint32 XOR_KT_CHIHIRO							 = 0x2290059D;
+
 // game region flags for Xbe certificate
 const uint32 XBEIMAGE_GAME_REGION_NA                 = 0x00000001;
 const uint32 XBEIMAGE_GAME_REGION_JAPAN              = 0x00000002;

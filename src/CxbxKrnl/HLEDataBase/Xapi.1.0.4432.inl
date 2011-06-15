@@ -342,6 +342,15 @@ OOVPATable XAPI_1_0_4432[] =
 		"EmuQueueUserAPC"
 		#endif
 	},
+	// GetFileAttributesA (* unchanged since 4134 *)
+    {
+        (OOVPA*)&GetFileAttributesA_1_0_4134,
+        XTL::EmuGetFileAttributesA,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGetFileAttributesA"
+        #endif
+    },
 };
 
 // ******************************************************************
