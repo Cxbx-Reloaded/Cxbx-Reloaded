@@ -214,8 +214,6 @@ PVOID WINAPI XTL::EmuRtlAllocateHeap
 
 	// JSRF test
 //	if( !pRet ) __asm int 3;
-	if( dwBytes == 0x2D0BC0 )
-		__asm int 3;
 
     EmuSwapFS();   // XBox FS
 
