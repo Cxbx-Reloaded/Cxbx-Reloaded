@@ -851,6 +851,29 @@ SOOVPA<12> IDirect3DDevice8_SetLight_1_0_5233 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetLight
+// ******************************************************************
+SOOVPA<8> IDirect3DDevice8_SetLight_1_0_5344 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0x00 },
+        { 0x3E, 0x89 },
+        { 0x5E, 0x00 },
+        { 0x7E, 0x03 },
+        { 0x9E, 0xC8 },
+        { 0xBE, 0xC9 },
+        { 0xDE, 0x03 },
+        { 0xFE, 0xC1 },
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_LightEnable
 // ******************************************************************
 SOOVPA<13> IDirect3DDevice8_LightEnable_1_0_5233 =
@@ -884,6 +907,29 @@ SOOVPA<13> IDirect3DDevice8_LightEnable_1_0_5233 =
         // IDirect3DDevice8_LightEnable+0xE1 : retn 0x08
         { 0xE1, 0xC2 }, // (Offset,Value)-Pair #12
         { 0xE2, 0x08 }, // (Offset,Value)-Pair #13
+    }
+};
+
+// ******************************************************************
+// * IDirect3DDevice8_LightEnable
+// ******************************************************************
+SOOVPA<8> IDirect3DDevice8_LightEnable_1_0_5344 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0x8D },
+        { 0x3E, 0xC7 },
+        { 0x5E, 0xC7 },
+        { 0x7E, 0x00 },
+        { 0x9E, 0x85 },
+        { 0xBE, 0x01 },
+        { 0xDE, 0x00 },
+        { 0xFE, 0x83 },
     }
 };
 
@@ -2500,6 +2546,16 @@ OOVPATable D3D8_1_0_5233[] =
         "EmuIDirect3DDevice8_SetLight"
         #endif
     },
+	// IDirect3DDevice8::SetLight
+    {
+        (OOVPA*)&IDirect3DDevice8_SetLight_1_0_5344,
+
+        XTL::EmuIDirect3DDevice8_SetLight,
+
+        #ifdef _DEBUG_TRACE
+		"EmuIDirect3DDevice8_SetLight (5344)"
+        #endif
+    },
     // IDirect3DDevice8::LightEnable
     {
         (OOVPA*)&IDirect3DDevice8_LightEnable_1_0_5233,
@@ -2508,6 +2564,16 @@ OOVPATable D3D8_1_0_5233[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_LightEnable"
+        #endif
+    },
+	// IDirect3DDevice8::LightEnable
+    {
+        (OOVPA*)&IDirect3DDevice8_LightEnable_1_0_5344,
+
+        XTL::EmuIDirect3DDevice8_LightEnable,
+
+        #ifdef _DEBUG_TRACE
+		"EmuIDirect3DDevice8_LightEnable (5344)"
         #endif
     },
     // IDirect3DDevice8::DrawIndexedVertices

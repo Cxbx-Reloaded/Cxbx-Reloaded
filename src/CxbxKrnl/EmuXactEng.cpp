@@ -247,7 +247,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_CreateSoundSource
            ");\n",
            GetCurrentThreadId(), pThis, dwFlags, ppSoundSource);
 
-	*ppSoundSource = (X_XACTSoundSource*) malloc( sizeof( X_XACTSoundSource ) );
+	*ppSoundSource = (X_XACTSoundSource*) CxbxMalloc( sizeof( X_XACTSoundSource ) );
 
 	EmuSwapFS();
 

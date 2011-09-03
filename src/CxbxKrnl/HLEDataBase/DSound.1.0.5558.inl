@@ -2159,6 +2159,76 @@ SOOVPA<8> IDirectSound_EnableHeadphones_1_0_5558 =
 };
 
 // ******************************************************************
+// * DirectSound::CDirectSound::GetOutputLevels
+// ******************************************************************
+SOOVPA<7> DirectSound_CDirectSound_GetOutputLevels_1_0_5558 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    XREF_DirectSound_CDirectSound_GetOutputLevels,  // Xref Is Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x07, 0x10 },
+        { 0x10, 0xF3 },
+        { 0x19, 0x5E },
+        { 0x22, 0xFE },
+        { 0x2B, 0x85 },
+        { 0x34, 0xA6 },
+        { 0x3D, 0xD0 },
+    }
+};
+
+// ******************************************************************
+// * IDirectSound_GetOutputLevels
+// ******************************************************************
+SOOVPA<9> IDirectSound_GetOutputLevels_1_0_5558 = 
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    -1, // Xref Not Saved
+    1,  // Xref Is Used
+
+    {
+        { 0x19, XREF_DirectSound_CDirectSound_GetOutputLevels },
+
+        { 0x02, 0x24 },
+        { 0x06, 0x24 },
+        { 0x0A, 0xFF },
+        { 0x0E, 0x83 },
+        { 0x12, 0xD9 },
+        { 0x16, 0xC8 },
+        { 0x1D, 0xC2 },
+        { 0x1E, 0x0C },
+    }
+};
+
+// ******************************************************************
+// * XAudioDownloadEffectsImage
+// ******************************************************************
+SOOVPA<8> XAudioDownloadEffectsImage_1_0_5558 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0xB6 },
+        { 0x41, 0x83 },
+        { 0x61, 0x8B },
+        { 0x80, 0x85 },
+        { 0x9E, 0x8B },
+        { 0xBE, 0x6A },
+        { 0xDE, 0x07 },
+        { 0xFE, 0xF7 },
+    }
+};
+
+// ******************************************************************
 // * Direct_1_0_5558
 // ******************************************************************
 OOVPATable DSound_1_0_5558[] =
@@ -3256,6 +3326,33 @@ OOVPATable DSound_1_0_5558[] =
         "IDirectSound8_EnableHeadphones"
         #endif
     },
+	// DirectSound::CDirectSound::GetOutputLevels (XREF)
+	{
+		(OOVPA*)&DirectSound_CDirectSound_GetOutputLevels_1_0_5558,
+		0,
+
+		#ifdef _DEBUG_TRACE
+		"DirectSound::CDirectSound::GetOutputLevels (XREF)"
+		#endif
+	},
+	// IDirectSound_GetOutputLevels
+	{
+		(OOVPA*)&IDirectSound_GetOutputLevels_1_0_5558,
+		XTL::EmuIDirectSound8_GetOutputLevels,
+
+		#ifdef _DEBUG_TRACE
+		"IDirectSound_GetOutputLevels"
+		#endif
+	},
+	// XAudioDownloadEffectsImage
+	{
+		(OOVPA*)&XAudioDownloadEffectsImage_1_0_5558,
+		XTL::EmuXAudioDownloadEffectsImage,
+
+		#ifdef _DEBUG_TRACE
+		"XAudioDownloadEffectsImage"
+		#endif
+	},
 };
 
 // ******************************************************************

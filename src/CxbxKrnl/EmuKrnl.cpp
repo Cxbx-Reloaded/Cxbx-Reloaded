@@ -194,6 +194,35 @@ XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress()
 
 	DbgPrintf("EmuKrnl (0x%X): AvGetSavedDataAddress();\n", GetCurrentThreadId() );
 
+//	__asm int 3;
+
+	// Allocate a buffer the size of the screen buffer and return that.
+	// TODO: Fill this buffer with the contents of the front buffer.
+	// TODO: This isn't always the size we need...
+
+	if( g_pPersistedData )
+	{
+		CxbxFree( g_pPersistedData );
+		g_pPersistedData = NULL;
+	}
+
+	g_pPersistedData = CxbxMalloc( 640*480*4 );
+
+#if 0
+	// Get a copy of the front buffer
+	IDirect3DSurface8* pFrontBuffer = NULL;
+
+	if( SUCCEEDED(g_pD3DDevice8->GetFrontBuffer(pFrontBuffer)))
+	{
+		D3DLOCKED_RECT LockedRect;
+		pFrontBuffer->LockRect( 0, NULL, &LockedRect );
+
+		CopyMemory( g_pPersistedData, LockRect.pBits, 640*480*4 );
+
+		pFrontBuffer->UnlockRect();
+	}
+#endif
+
 	// TODO: We might want to return something sometime...
 	/*if( !g_pPersistedData )
 	{
@@ -207,7 +236,7 @@ XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress()
 
 	EmuSwapFS();	// Xbox FS
 
-	return NULL; //g_pPersistedData;
+	return NULL;//g_pPersistedData;
 }
 
 // ******************************************************************
@@ -772,7 +801,7 @@ XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
     DbgPrintf("EmuKrnl (0x%X): KeRaiseIrqlToDpcLevel()\n", GetCurrentThreadId());
 
 	// I really tried to avoid adding this...
-	__asm int 3;
+//	__asm int 3;
 //	CxbxKrnlCleanup("KeRaiseIrqlToDpcLevel not implemented! (Tell blueshogun -_-)");
 
 	EmuSwapFS();

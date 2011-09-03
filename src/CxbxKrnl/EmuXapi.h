@@ -947,6 +947,16 @@ DWORD WINAPI EmuXGetDeviceEnumerationStatus();
 // ******************************************************************
 BOOL WINAPI EmuSwitchToThread();
 
+// ******************************************************************
+// * func: EmuXInputGetDeviceDescription
+// ******************************************************************
+DWORD WINAPI EmuXInputGetDeviceDescription
+(
+    HANDLE	hDevice,
+    PVOID	pDescription
+);
+
+
 // s+
 /* not necessary?
 // ******************************************************************

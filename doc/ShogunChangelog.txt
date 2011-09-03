@@ -1212,3 +1212,10 @@ TODO: Verify that Lock3DSurface is the same on other XDKs like Lock2DSurface
 
 - Added the following source file(s)
 	XG.1.0.4432.h/inl
+
+6/25/11
+- Added the following function(s)
+	XInputGetDeviceDescription (4831)
+
+- Fixed the signature for XInputCapabilities (4831). This signature is 
+  generally very weak among 4831 and 4928...

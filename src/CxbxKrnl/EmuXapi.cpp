@@ -1321,6 +1321,10 @@ LPVOID WINAPI XTL::EmuXLoadSectionA
 	else if(!strcmp(pSectionName, "DSPImage"))
 		pRet = (void*) 0x41F900;
 
+	// Zapper (NTSC)
+//	else if(!strcmp(pSectionName, "sig"))
+//		pRet = (void*) 0x41F900;
+
 	else
 		__asm int 3;
 
@@ -1401,7 +1405,7 @@ HANDLE WINAPI XTL::EmuXGetSectionHandleA
 	}
 	else if(!strcmp(pSectionName, ".XTLID"))
 	{
-		__asm int 3;
+//		__asm int 3;
 		pRet = (void*) 0x91B0A0;
 	}
 
@@ -1438,7 +1442,7 @@ HANDLE WINAPI XTL::EmuXGetSectionHandleA
 
 	else
 	{
-		__asm int 3;
+//		__asm int 3;
 	}
 
 	EmuSwapFS();	// Xbox FS
@@ -2602,4 +2606,29 @@ BOOL WINAPI XTL::EmuSwitchToThread()
 	EmuSwapFS();	// Xbox FS
 
 	return bRet;
+}
+
+// ******************************************************************
+// * func: EmuXInputGetDeviceDescription
+// ******************************************************************
+DWORD WINAPI XTL::EmuXInputGetDeviceDescription
+(
+    HANDLE	hDevice,
+    PVOID	pDescription
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuXInputGetDeviceDescription\n"
+           "(\n"
+           "   hDevice             : 0x%.08X\n"
+		   "   pDescription        : 0x%.08X\n"
+           ");\n",
+            GetCurrentThreadId(), hDevice, pDescription);
+
+	// TODO: Lightgun support?
+
+	EmuSwapFS();	// Xbox FS
+
+	return ERROR_NOT_SUPPORTED; // ERROR_DEVICE_NOT_CONNECTED;
 }
