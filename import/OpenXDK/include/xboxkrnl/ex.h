@@ -73,7 +73,16 @@ XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI ExQueryNonVolatileSetting
     OUT PSIZE_T             ResultLength OPTIONAL
 );
 
-XBSYSAPI VOID *ExReadWriteRefurbInfo;
+// ******************************************************************
+// * ExReadWriteRefurbInfo
+// ******************************************************************
+XBSYSAPI EXPORTNUM(25) NTSTATUS NTAPI ExReadWriteRefurbInfo
+(
+	PVOID	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3
+);
+
 XBSYSAPI VOID *ExRaiseException;
 XBSYSAPI VOID *ExRaiseStatus;
 XBSYSAPI VOID *ExReleaseReadWriteLock;

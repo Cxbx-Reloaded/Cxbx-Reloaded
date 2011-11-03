@@ -492,6 +492,34 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 }
 
 // ******************************************************************
+// * 0x0019 - ExReadWriteRefurbInfo
+// ******************************************************************
+XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
+(
+	PVOID	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3
+)
+{
+	EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): ExReadWriteRefurbInfo\n"
+           "(\n"
+           "   Unknown1            : 0x%.08X\n"
+           "   Unknown2            : 0x%.08X\n"
+           "   Unknown3            : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), Unknown1, Unknown2, Unknown3);
+
+	// TODO: What does this do?
+	EmuWarning( "ExReadWriteRefurbInfo ignored!" );
+
+	EmuSwapFS();	// Xbox FS
+
+	return STATUS_SUCCESS;
+}
+
+// ******************************************************************
 // * 0x001D - ExSaveNonVolatileSetting
 // ******************************************************************
 XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetting
@@ -2517,6 +2545,34 @@ XBSYSAPI EXPORTNUM(226) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
            Length, FileInformationClass);
 
     NTSTATUS ret = NtDll::NtSetInformationFile(FileHandle, IoStatusBlock, FileInformation, Length, FileInformationClass);
+
+    EmuSwapFS();   // Xbox FS
+
+    return ret;
+}
+
+// ******************************************************************
+// * 0x00E4 - NtSetSystemTime
+// ******************************************************************
+XBSYSAPI EXPORTNUM(228) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetSystemTime
+(
+	IN  PLARGE_INTEGER			SystemTime,
+	OUT PLARGE_INTEGER			PreviousTime OPTIONAL 
+)
+{
+	EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): NtSetInformationFile\n"
+           "(\n"
+           "   SystemTime           : 0x%.08X\n"
+           "   PreviousTime         : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), SystemTime, PreviousTime);
+
+	// Maybe it's not such a good idea to allow Cxbx to change your time 
+	// clock.  Might need admin privileges to do this.... dunno.
+
+    NTSTATUS ret = STATUS_SUCCESS;
 
     EmuSwapFS();   // Xbox FS
 

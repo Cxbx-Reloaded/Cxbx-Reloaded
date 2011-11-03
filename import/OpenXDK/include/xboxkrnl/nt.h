@@ -318,7 +318,16 @@ XBSYSAPI EXPORTNUM(226) NTSTATUS NTAPI NtSetInformationFile
 );
 
 XBSYSAPI VOID *NtSetIoCompletion;
-XBSYSAPI VOID *NtSetSystemTime;
+
+// ******************************************************************
+// * NtSetSystemTime
+// ******************************************************************
+XBSYSAPI EXPORTNUM(228) NTSTATUS NTAPI NtSetSystemTime
+(
+	IN  PLARGE_INTEGER			SystemTime,
+	OUT PLARGE_INTEGER			PreviousTime OPTIONAL 
+);
+
 XBSYSAPI VOID *NtSetTimerEx;
 XBSYSAPI VOID *NtSignalAndWaitForSingleObjectEx;
 

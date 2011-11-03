@@ -1235,3 +1235,8 @@ TODO: Verify that Lock3DSurface is the same on other XDKs like Lock2DSurface
 	ExSaveNonVolatileSetting
 
 - Xbox Dashboard (3944) is working.  Not fully functional but working.
+
+11/3/11
+- Made a few quick fixes to make the Dashboard a little more functional
+  and a little less buggy/crashy. Now only the system info option will
+  kill you!

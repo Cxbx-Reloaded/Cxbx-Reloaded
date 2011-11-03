@@ -2285,7 +2285,6 @@ BOOL WINAPI XTL::EmuMoveFileA
 	// For Panzer.
 	BOOL bRet = MoveFileA( lpExistingFileName, lpNewFileName );
 
-
 	EmuSwapFS();	// Xbox FS
 
 	return bRet;
@@ -2666,6 +2665,21 @@ DWORD WINAPI XTL::EmuXMountMURootA
 	PCHAR pchDrive               
 )
 {
-	// TODO: Implement. Until then, redirect to XMountMUA
-	return EmuXMountMUA(dwPort, dwSlot, pchDrive);
+	{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuXMountMURootA\n"
+			"(\n"
+			"   dwPort            : 0x%.08X\n"
+			"   dwSlot            : 0x%.08X\n"
+			"   pchDrive          : 0x%.08X (%s)\n"
+			");\n", 
+			GetCurrentThreadId(), dwPort, dwSlot, pchDrive, pchDrive);
+
+	// TODO: The params are probably wrong...
+
+	EmuSwapFS();	// Xbox FS
+
+	return ERROR_SUCCESS;
+}
 }
