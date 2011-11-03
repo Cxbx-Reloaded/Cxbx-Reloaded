@@ -1770,6 +1770,12 @@ void WINAPI EmuIDirect3DDevice8_SetSwapCallback
 HRESULT WINAPI EmuIDirect3DDevice8_PersistDisplay();
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_GetPersistedSurface
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_GetPersistedSurface(X_D3DSurface **ppSurface);
+X_D3DSurface* WINAPI EmuIDirect3DDevice8_GetPersistedSurface2();
+
+// ******************************************************************
 // * func: EmuIDirect3DDevice8_Unknown1
 // ******************************************************************
 void WINAPI EmuIDirect3DDevice8_Unknown1();

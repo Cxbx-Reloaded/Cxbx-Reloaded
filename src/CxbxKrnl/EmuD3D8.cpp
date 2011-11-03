@@ -1805,7 +1805,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetGammaRamp
         PCRamp.blue[v]  = pRamp->blue[v];
     }
 
-    g_pD3DDevice8->SetGammaRamp(dwPCFlags, &PCRamp);
+//    g_pD3DDevice8->SetGammaRamp(dwPCFlags, &PCRamp);
 
     EmuSwapFS();   // XBox FS
 
@@ -9610,7 +9610,18 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_PersistDisplay()
 	// ionship is the only game that uses this functionality that I know of.
 	// Other Unreal Engine 2.x games might as well.
 
-	EmuWarning("(Temporarily) Not persisting display. Blueshogun can fix this.");
+	IDirect3DSurface8* pBackSurface = NULL;
+	if( SUCCEEDED( g_pD3DDevice8->GetBackBuffer( 0, D3DBACKBUFFER_TYPE_MONO, &pBackSurface ) ) )
+	{
+		D3DXSaveSurfaceToFile( "persisted_surface.bmp", D3DXIFF_BMP, pBackSurface, NULL, NULL );
+		pBackSurface->Release();
+
+		DbgPrintf("Persisted display surface saved to persisted_surface.bmp\n");
+	}
+	else
+	{
+		EmuWarning("(Temporarily) Not persisting display. Blueshogun can fix this.");
+	}
 
 	if(!g_pD3DDevice8)
 	{
@@ -10203,4 +10214,81 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetPixelShader
 	EmuSwapFS();	// Xbox FS
 
 	return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetPersistedSurface
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetPersistedSurface(X_D3DSurface **ppSurface)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetPersistedSurface\n"
+			"(\n"
+			"   ppSurface          : 0x%.08X\n"
+			");\n", GetCurrentThreadId(), ppSurface);
+
+	// Attempt to load the persisted surface from persisted_surface.bmp
+
+	*ppSurface = new X_D3DSurface;
+
+	HRESULT hr = g_pD3DDevice8->CreateImageSurface( 640, 480, D3DFMT_X8R8G8B8, &(*ppSurface)->EmuSurface8 );
+	if( SUCCEEDED( hr ) )
+	{
+		hr = D3DXLoadSurfaceFromFileA( (*ppSurface)->EmuSurface8, NULL, NULL, "persisted_surface.bmp",
+			NULL, D3DX_DEFAULT, 0, NULL );
+		if( SUCCEEDED( hr ) )
+		{
+			DbgPrintf( "Successfully loaded persisted_surface.bmp\n" );
+		}
+		else
+		{
+			EmuWarning( "Could not load persisted_surface.bmp!\n" );
+		}
+	}
+	else
+	{
+		EmuWarning( "Could not create temporary surface!" );
+	}
+	
+	EmuSwapFS();	// Xbox FS
+
+	return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetPersistedSurface
+// ******************************************************************
+XTL::X_D3DSurface* WINAPI XTL::EmuIDirect3DDevice8_GetPersistedSurface2()
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetPersistedSurface()\n", GetCurrentThreadId());
+
+	// Attempt to load the persisted surface from persisted_surface.bmp
+
+	X_D3DSurface* pSurface = new X_D3DSurface;
+
+	HRESULT hr = g_pD3DDevice8->CreateImageSurface( 640, 480, D3DFMT_X8R8G8B8, &pSurface->EmuSurface8 );
+	if( SUCCEEDED( hr ) )
+	{
+		hr = D3DXLoadSurfaceFromFileA( pSurface->EmuSurface8, NULL, NULL, "persisted_surface.bmp",
+			NULL, D3DX_DEFAULT, 0, NULL );
+		if( SUCCEEDED( hr ) )
+		{
+			DbgPrintf( "Successfully loaded persisted_surface.bmp\n" );
+		}
+		else
+		{
+			EmuWarning( "Could not load persisted_surface.bmp!\n" );
+		}
+	}
+	else
+	{
+		EmuWarning( "Could not create temporary surface!" );
+	}
+	
+	EmuSwapFS();	// Xbox FS
+
+	return pSurface;
 }

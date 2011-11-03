@@ -4091,6 +4091,27 @@ SOOVPA<7> D3DDevice_EndPushBuffer_1_0_4627 =
 };
 
 // ******************************************************************
+// * D3DDevice_GetPersistedSurface2
+// ******************************************************************
+SOOVPA<7> D3DDevice_GetPersistedSurface2_1_0_4627 = 
+{
+    0,  // Large == 0
+    6,  // Count == 6
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x00, 0xFF },
+        { 0x01, 0x25 },
+        { 0x02, 0x04 },
+        { 0x03, 0xC1 },
+        { 0x04, 0x3A },
+        { 0x05, 0x00 },
+    }
+};
+
+// ******************************************************************
 // * D3D8_1_0_4627
 // ******************************************************************
 OOVPATable D3D8_1_0_4627[] =
@@ -6083,6 +6104,16 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_EndPushBuffer"
+        #endif
+    },
+	// D3DDevice_GetPersistedSurface2
+	{
+        (OOVPA*)&D3DDevice_GetPersistedSurface2_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_GetPersistedSurface2,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetPersistedSurface2 ***"
         #endif
     },
 };

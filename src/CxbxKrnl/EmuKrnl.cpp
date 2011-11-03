@@ -240,6 +240,44 @@ XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress()
 }
 
 // ******************************************************************
+// * 0x0008 DbgPrint
+// ******************************************************************
+XBSYSAPI EXPORTNUM(8) xboxkrnl::ULONG _cdecl xboxkrnl::DbgPrint
+(
+	PCHAR  Format, ...
+)
+{
+	EmuSwapFS();   // Win2k/XP FS
+
+	DbgPrintf( "EmuKrnl (0x%X): DbgPrint\n"
+		"(\n"
+		"   Format              : 0x%.08X\n"
+		"   ...\n"
+		");\n",
+		GetCurrentThreadId(), Format);
+
+	if(Format != NULL) 
+	{
+		char szBuffer[MAX_PATH];
+
+		va_list argp;
+		va_start(argp, Format);
+
+		vsprintf(szBuffer, Format, argp);
+		va_end(argp);
+
+		//LogPrintf("[EmuKrnl] DbgPrint: %s", szBuffer);
+
+		EmuWarning(szBuffer);
+		//DbgPrintf(szBuffer);
+	}
+
+	EmuSwapFS();   // Xbox FS
+
+	return STATUS_SUCCESS;
+}
+
+// ******************************************************************
 // * 0x0009 HalReadSMCTrayState
 // ******************************************************************
 XBSYSAPI EXPORTNUM(9) VOID NTAPI xboxkrnl::HalReadSMCTrayState
@@ -454,6 +492,35 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 }
 
 // ******************************************************************
+// * 0x001D - ExSaveNonVolatileSetting
+// ******************************************************************
+XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetting
+(
+    IN  DWORD               ValueIndex,
+    OUT DWORD              *Type,
+    IN  PUCHAR              Value,
+    IN  SIZE_T              ValueLength
+)
+{
+	EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): ExQueryNonVolatileSetting\n"
+           "(\n"
+           "   ValueIndex          : 0x%.08X\n"
+           "   Type                : 0x%.08X\n"
+           "   Value               : 0x%.08X\n"
+           "   ValueLength         : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), ValueIndex, Type, Value, ValueLength);
+
+	// TODO: Later.
+
+	EmuSwapFS();	// Xbox FS
+
+	return STATUS_SUCCESS;
+}
+
+// ******************************************************************
 // * 0x0025 - FscSetCacheSize
 // ******************************************************************
 XBSYSAPI EXPORTNUM(37) xboxkrnl::LONG NTAPI xboxkrnl::FscSetCacheSize(ULONG uCachePages)
@@ -489,7 +556,12 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
            ");\n",
            GetCurrentThreadId(), Routine);
 
-    CxbxKrnlCleanup("Xbe has rebooted : HalReturnToFirmware(%d)", Routine);
+	if( ReturnFirmwareFatal )
+		EmuWarning("Stupid hack, lol" );
+	else
+		CxbxKrnlCleanup("Xbe has rebooted : HalReturnToFirmware(%d)", Routine);
+
+	EmuSwapFS(); // Xbox FS
 }
 
 // ******************************************************************

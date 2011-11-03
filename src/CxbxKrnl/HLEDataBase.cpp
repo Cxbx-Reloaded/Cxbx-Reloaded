@@ -573,6 +573,7 @@ extern uint32 XRefDataBase[] =
 	-1, // XREF_DirectSound_CDirectSoundBuffer_SetNotificationPositions
 	-1, // XREF_DirectSound_CDirectSoundBuffer_SetEG
 	-1, // XREF_DirectSound_CDirectSound_GetEffectData
+	-1, // XREF_CDirectSoundBuffer_SetNotificationPositions
 	// XACT
 	-1, // XREF_XACT_CEngine_RegisterWaveBank
 	-1, // XREF_XACT_CEngine_RegisterStreamedWaveBank

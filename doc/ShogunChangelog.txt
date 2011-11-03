@@ -1219,3 +1219,19 @@ TODO: Verify that Lock3DSurface is the same on other XDKs like Lock2DSurface
 
 - Fixed the signature for XInputCapabilities (4831). This signature is 
   generally very weak among 4831 and 4928...
+
+11/2/11
+- Added the following function(s)
+	XAutoPowerDownResetTimer (3911, 3944)
+	CDirectSoundBuffer::SetNotificationPositions (3911, 3944)
+	IDirectSoundBuffer_SetNotificationPositions (3911, 3944)
+	XLoadSectionHandleA (3911, 3944)
+	XFreeSectionHandleA (3911, 3944)
+	XGetSectionHandleA (3911, 3944)
+	XMountMURootA (3911, 3944)
+
+- Added the following kernel function(s)
+	DbgPrint
+	ExSaveNonVolatileSetting
+
+- Xbox Dashboard (3944) is working.  Not fully functional but working.

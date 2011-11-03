@@ -854,7 +854,8 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
             EmuWarning("Use of unsupported pdsbd->dwFlags mask(s) (0x%.08X)", pdsbd->dwFlags & (~dwAcceptableMask));
 
         pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
-        pDSBufferDesc->dwFlags = (pdsbd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
+        pDSBufferDesc->dwFlags = (pdsbd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2 |
+			DSBCAPS_CTRLPOSITIONNOTIFY;
         pDSBufferDesc->dwBufferBytes = pdsbd->dwBufferBytes;
 
         if(pDSBufferDesc->dwBufferBytes < DSBSIZE_MIN)
@@ -3732,4 +3733,56 @@ HRESULT WINAPI XTL::EmuIDirectSound8_GetEffectData
 	EmuSwapFS();	// Xbox FS
 
 	return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetNotificationPositions
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetNotificationPositions
+(
+	X_CDirectSoundBuffer*	pThis,
+    DWORD					dwNotifyCount,
+    LPCDSBPOSITIONNOTIFY	paNotifies
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetNotificationPositions\n"
+           "(\n"
+		   "   pThis                     : 0x%.08X\n"
+           "   dwNotifyCount             : 0x%.08X\n"
+		   "   paNotifies                : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), pThis, dwNotifyCount, paNotifies);
+
+	HRESULT hr;
+
+	// If we have a valid buffer, query a PC IDirectSoundNotify pointer and
+	// use the paramaters as is since they are directly compatible, then release
+	// the pointer. Any buffer that uses this *MUST* be created with the
+	// DSBCAPS_CTRLPOSITIONNOTIFY flag!
+
+	IDirectSoundNotify* pNotify = NULL;
+
+	if( pThis )
+	{
+		if( pThis->EmuDirectSoundBuffer8 )
+		{
+			hr = pThis->EmuDirectSoundBuffer8->QueryInterface( IID_IDirectSoundNotify, (LPVOID*) pNotify );
+			if( SUCCEEDED( hr ) )
+			{
+				hr = pNotify->SetNotificationPositions( dwNotifyCount, paNotifies );
+				if( FAILED( hr ) )
+					EmuWarning( "Could not set notification position(s)!" );
+
+				pNotify->Release();
+			}
+			else
+				EmuWarning( "Could not create notification interface!" );
+		}
+	}
+
+	EmuSwapFS();	// Xbox FS
+
+	return hr;
 }

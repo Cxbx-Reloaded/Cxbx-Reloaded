@@ -1379,6 +1379,152 @@ SOOVPA<7> XGetLaunchInfo_1_0_3911 =
 };
 
 // ******************************************************************
+// * XGetSectionHandleA
+// ******************************************************************
+SOOVPA<13> XGetSectionHandleA_1_0_3911 = 
+{
+	0,	// Large == 0
+	13,	// Count == 0
+
+	-1,	// XRef not saved
+	0,	// XRef not used
+
+	{
+		// XGetSectionaHandleA+0x03 : sub esp, 0x10
+		{ 0x03, 0x83 },
+		{ 0x04, 0xEC },
+		{ 0x05, 0x10 },
+
+		// XGetSectionaHandleA+0x24 : imul esi, 0x38
+		{ 0x24, 0x6B },
+		{ 0x25, 0xF6 },
+		{ 0x26, 0x38 },
+
+		// XGetSectionaHandleA+0x4F : push 0x490
+		{ 0x4F, 0x68 },
+		{ 0x50, 0x90 },
+		{ 0x51, 0x04 },
+		{ 0x52, 0x00 },
+		{ 0x53, 0x00 },
+
+		// XGetSectionaHandleA+0x60 : retn 4
+		{ 0x60, 0xC2 },
+		{ 0x61, 0x04 }
+	}
+};
+
+// ******************************************************************
+// * XLoadSectionByHandle
+// ******************************************************************
+SOOVPA<11> XLoadSectionByHandle_1_0_3911 = 
+{
+	0,	// Large == 0
+	11,	// Count == 11
+
+	-1,	// XRef not saved
+	0,	// XRef not used
+
+	{
+		// XLoadSectionByHandle+0x01 : mov esi, [esp+4+arg_0]
+		{ 0x01, 0x8B },
+		{ 0x02, 0x74 },
+		{ 0x03, 0x24 },
+		{ 0x04, 0x08 },
+
+		// XLoadSectionByHandle+0x0C : test eax, eax
+		{ 0x0C, 0x85 },
+		{ 0x0D, 0xC0 },
+
+		// XLoadSectionByHandle+0x1A : mov eax, [esi+4]
+		{ 0x1A, 0x8B },
+		{ 0x1B, 0x46 },
+		{ 0x1C, 0x04 },
+
+		// XLoadSectionByHandle+0x1E : retn 4
+		{ 0x1E, 0xC2 },
+		{ 0x1F, 0x04 }
+	}
+};
+
+// ******************************************************************
+// * XFreeSectionByHandle
+// ******************************************************************
+SOOVPA<11> XFreeSectionByHandle_1_0_3911 = 
+{
+	0,	// Large == 0
+	11,	// Count == 11
+
+	-1,	// XRef not saved
+	0,	// XRef not used
+
+	{
+		// XFreeSectionByHandle+0x00 : push esp
+		{ 0x00, 0xFF },
+		{ 0x01, 0x74 },
+		{ 0x02, 0x24 },
+		{ 0x03, 0x04 },
+
+		// XFreeSectionByHandle+0x0A : test eax, eax
+		{ 0x0A, 0x85 },
+		{ 0x0B, 0xC0 },
+
+		// XFreeSectionByHandle+0x18 : xor eax, eax
+		{ 0x18, 0x33 },
+		{ 0x19, 0xC0 },
+
+		// XFreeSectionByHandle+0x1A : inc eax
+		{ 0x1A, 0x40 },
+
+		// XFreeSectionByHandle+0x1B : retn 4
+		{ 0x1B, 0xC2 },
+		{ 0x1C, 0x04 }
+	}
+};
+
+// ******************************************************************
+// * XAutoPowerDownResetTimer
+// ******************************************************************
+SOOVPA<6> XAutoPowerDownResetTimer_1_0_3911 = 
+{
+    0,  // Large == 0
+    6,  // Count == 6
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x02, 0x59 },
+        { 0x08, 0x51 },
+        { 0x0A, 0x00 },
+        { 0x0E, 0x50 },
+        { 0x14, 0xFF },
+        { 0x1A, 0xC3 },
+    }
+};
+
+// ******************************************************************
+// * XMountMURootA
+// ******************************************************************
+SOOVPA<7> XMountMURootA_1_0_3911 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0x0C },
+        { 0x3E, 0x00 },
+        { 0x61, 0x8B },
+        { 0x7E, 0x00 },
+        { 0x9E, 0x00 },
+        { 0xBE, 0xFF },
+        { 0xDE, 0xFF },
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_3911
 // ******************************************************************
 OOVPATable XAPI_1_0_3911[] =
@@ -1795,6 +1941,55 @@ OOVPATable XAPI_1_0_3911[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXGetLaunchInfo"
+        #endif
+    },
+	// XGetSectionHandleA
+	{
+		(OOVPA*)&XGetSectionHandleA_1_0_3911, 
+			
+		XTL::EmuXGetSectionHandleA,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXGetSectionHandleA"
+		#endif
+	},
+	// XLoadSectionByHandle 
+	{
+		(OOVPA*)&XLoadSectionByHandle_1_0_3911, 
+			
+		XTL::EmuXLoadSectionByHandle,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXLoadSectionByHandle"
+		#endif
+	},
+	// XFreeSectionByHandle
+	{
+		(OOVPA*)&XFreeSectionByHandle_1_0_3911, 
+			
+		XTL::EmuXFreeSectionByHandle,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXFreeSectionByHandle"
+		#endif
+	},
+	// XAutoPowerDownResetTimer
+	{
+		(OOVPA*)&XAutoPowerDownResetTimer_1_0_3911,
+
+		XTL::EmuXAutoPowerDownResetTimer,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXAutoPowerDownResetTimer"
+		#endif
+	},
+	// XMountMURootA
+    {
+        (OOVPA*)&XMountMURootA_1_0_3911,
+        XTL::EmuXMountMURootA,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXMountMURootA"
         #endif
     },
 	// CloseHandle

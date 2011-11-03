@@ -712,6 +712,29 @@ SOOVPA<12> XInputGetCapabilities4_1_0_4831 =
 };
 
 // ******************************************************************
+// * XInputGetCapabilities5
+// ******************************************************************
+SOOVPA<12> XInputGetCapabilities5_1_0_4831 =
+{
+    0,  // Large == 0
+    8,	// Count == 8
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+		{ 0x22, 0xF6 },
+		{ 0x23, 0x46 },
+		{ 0x24, 0x04 },
+		{ 0x25, 0x02 },
+		{ 0x44, 0x6A },
+		{ 0x45, 0x12 },
+		{ 0xF1, 0xC2 },
+		{ 0xF2, 0x08 },
+    }
+};
+
+// ******************************************************************
 // * XLoadSectionA
 // ******************************************************************
 SOOVPA<10> XLoadSectionA_1_0_4627 = 
@@ -1145,6 +1168,30 @@ SOOVPA<7> MoveFileA_1_0_4627 =
 };
 
 // ******************************************************************
+// * XInputGetDeviceDescription
+// ******************************************************************
+SOOVPA<9> XInputGetDeviceDescription_1_0_4831 = 
+{
+	0,	// Large == 0
+	9,	// Count == 9
+
+	-1,	// Xref Not Saved
+	0,	// Xref Not Used
+
+	{
+		{ 0x03, 0x83 },
+		{ 0x04, 0xEC },
+		{ 0x05, 0x48 },
+		{ 0x06, 0x83 },
+		{ 0x07, 0x65 },
+		{ 0x08, 0xF8 },
+		{ 0x09, 0x00 },
+		{ 0x34, 0x6A },
+		{ 0x35, 0x06 },
+	}
+};
+
+// ******************************************************************
 // * XAPI_1_0_4627
 // ******************************************************************
 OOVPATable XAPI_1_0_4627[] =
@@ -1559,6 +1606,16 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXInputGetCapabilities4_4831"
         #endif
     },
+	// XInputGetCapabilities5
+    {
+        (OOVPA*)&XInputGetCapabilities5_1_0_4831,
+
+        XTL::EmuXInputGetCapabilities,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputGetCapabilities5_4831"
+        #endif
+    },
 	// XInputGetCapabilities6
     {
         (OOVPA*)&XInputGetCapabilities6_1_0_4928,
@@ -1878,6 +1935,15 @@ OOVPATable XAPI_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "XGetFileCacheSize"
+        #endif
+	},
+	// XInputGetDeviceDescription
+	{
+        (OOVPA*)&XInputGetDeviceDescription_1_0_4831,
+        XTL::EmuXInputGetDeviceDescription,
+
+        #ifdef _DEBUG_TRACE
+        "XInputGetDeviceDescription_4831"
         #endif
 	},
 	// MoveFileA

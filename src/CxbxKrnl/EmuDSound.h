@@ -1398,5 +1398,15 @@ HRESULT WINAPI EmuIDirectSound8_GetEffectData
     DWORD			dwDataSize
 );
 
+// ******************************************************************
+// * func: EmuIDirectSoundBuffer8_SetNotificationPositions
+// ******************************************************************
+HRESULT WINAPI EmuIDirectSoundBuffer8_SetNotificationPositions
+(
+	X_CDirectSoundBuffer*	pThis,
+    DWORD					dwNotifyCount,
+    LPCDSBPOSITIONNOTIFY	paNotifies
+);
+
 
 #endif

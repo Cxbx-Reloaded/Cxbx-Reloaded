@@ -4783,6 +4783,53 @@ SOOVPA<14> CDirectSoundStream_SetI3DL2Source_1_0_3936 =
 };
 
 // ******************************************************************
+// * CDirectSoundBuffer::SetNotificationPositions
+// ******************************************************************
+SOOVPA<7> CDirectSoundBuffer_SetNotificationPositions_1_0_3936 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    XREF_CDirectSoundBuffer_SetNotificationPositions,  // Xref Is Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x09, 0x24 },
+        { 0x14, 0x24 },
+        { 0x1F, 0x74 },
+        { 0x2A, 0x50 },
+        { 0x35, 0xF6 },
+        { 0x40, 0x07 },
+        { 0x4D, 0x5F },
+    }
+};
+
+// ******************************************************************
+// * IDirectSoundBuffer_SetNotificationPositions
+// ******************************************************************
+SOOVPA<9> IDirectSoundBuffer_SetNotificationPositions_1_0_3936 = 
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    -1, // Xref Not Saved
+    1,  // Xref Is Used
+
+    {
+        { 0x19, XREF_CDirectSoundBuffer_SetNotificationPositions },
+
+        { 0x02, 0x24 },
+        { 0x06, 0x24 },
+        { 0x0A, 0xFF },
+        { 0x0E, 0x83 },
+        { 0x12, 0xD9 },
+        { 0x16, 0xC8 },
+        { 0x1D, 0xC2 },
+        { 0x1E, 0x0C },
+    }
+};
+
+// ******************************************************************
 // * DirectSoundCreate_1_0_3936
 // ******************************************************************
 OOVPATable DSound_1_0_3936[] =
@@ -6090,6 +6137,24 @@ OOVPATable DSound_1_0_3936[] =
 
         #ifdef _DEBUG_TRACE
         "EmuCDirectSoundStream_SetI3DL2Source ***********************"
+        #endif
+    },
+	// CDirectSoundBuffer_SetNotificationPositions
+    {
+        (OOVPA*)&CDirectSoundBuffer_SetNotificationPositions_1_0_3936, 0,
+
+        #ifdef _DEBUG_TRACE
+        "EmuCDirectSoundBuffer_SetNotificationPositions"
+        #endif
+    },
+	// IDirectSoundBuffer_SetNotificationPositions
+    {
+        (OOVPA*)&IDirectSoundBuffer_SetNotificationPositions_1_0_3936, 
+
+		XTL::EmuIDirectSoundBuffer8_SetNotificationPositions,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSoundBuffer_SetNotificationPositions"
         #endif
     },
 };

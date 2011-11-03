@@ -15,7 +15,10 @@
 XBSYSAPI VOID *DbgBreakPoint;
 XBSYSAPI VOID *DbgBreakPointWithStatus;
 XBSYSAPI VOID *DbgLoadImageSymbols;
-XBSYSAPI VOID *DbgPrint;
+XBSYSAPI EXPORTNUM(8) ULONG _cdecl DbgPrint
+(
+	PCHAR  Format, ...
+);
 XBSYSAPI VOID *DbgPrompt;
 XBSYSAPI VOID *DbgUnLoadImageSymbols;
 

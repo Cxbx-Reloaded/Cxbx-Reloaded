@@ -1429,6 +1429,12 @@ HANDLE WINAPI XTL::EmuXGetSectionHandleA
 		pRet = (void*) 0x38E6A0;
 	}
 
+	// Xbox Dashboard (3944)
+	else if(!strcmp(pSectionName, "EnglishXlate" ))
+	{
+		pRet = (void*) 0x140620;
+	}
+
 	// Taz Wanted (NTSC)
 	/*else if(!strcmp(pSectionName, "sig" ))
 	{
@@ -1442,7 +1448,7 @@ HANDLE WINAPI XTL::EmuXGetSectionHandleA
 
 	else
 	{
-//		__asm int 3;
+		__asm int 3;
 	}
 
 	EmuSwapFS();	// Xbox FS
@@ -2631,4 +2637,35 @@ DWORD WINAPI XTL::EmuXInputGetDeviceDescription
 	EmuSwapFS();	// Xbox FS
 
 	return ERROR_NOT_SUPPORTED; // ERROR_DEVICE_NOT_CONNECTED;
+}
+
+// ******************************************************************
+// * func: EmuXAutoPowerDownResetTimer
+// ******************************************************************
+int WINAPI XTL::EmuXAutoPowerDownResetTimer()
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuXAutoPowerDownResetTimer()\n",
+            GetCurrentThreadId());
+
+	// Meh, that's what the 'X' is for! =]
+
+	EmuSwapFS();	// Xbox FS
+
+	return TRUE;
+}
+
+// ******************************************************************
+// * func: EmuXMountMURootA
+// ******************************************************************
+DWORD WINAPI XTL::EmuXMountMURootA
+(
+	DWORD dwPort,                  
+	DWORD dwSlot,                  
+	PCHAR pchDrive               
+)
+{
+	// TODO: Implement. Until then, redirect to XMountMUA
+	return EmuXMountMUA(dwPort, dwSlot, pchDrive);
 }

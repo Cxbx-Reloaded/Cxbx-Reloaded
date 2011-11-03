@@ -860,9 +860,19 @@ int WINAPI EmulstrcmpiW
 );
 
 // ******************************************************************
-// * func: XMountMUA
+// * func: EmuXMountMUA
 // ******************************************************************
 DWORD WINAPI EmuXMountMUA
+(
+	DWORD dwPort,                  
+	DWORD dwSlot,                  
+	PCHAR pchDrive               
+);
+
+// ******************************************************************
+// * func: EmuXMountMURootA
+// ******************************************************************
+DWORD WINAPI EmuXMountMURootA
 (
 	DWORD dwPort,                  
 	DWORD dwSlot,                  
@@ -956,6 +966,10 @@ DWORD WINAPI EmuXInputGetDeviceDescription
     PVOID	pDescription
 );
 
+// ******************************************************************
+// * func: EmuXAutoPowerDownResetTimer
+// ******************************************************************
+int WINAPI EmuXAutoPowerDownResetTimer();
 
 // s+
 /* not necessary?
