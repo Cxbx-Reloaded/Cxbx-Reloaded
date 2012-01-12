@@ -2543,13 +2543,19 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVertexShader
 
     if(SUCCEEDED(hRet) && pFunction)
     {
+		boolean bUseDeclarationOnly = 0;
+
         hRet = XTL::EmuRecompileVshFunction((DWORD*)pFunction,
                                             &pRecompiledBuffer,
                                             &VertexShaderSize,
-                                            g_VertexShaderConstantMode == X_VSCM_NONERESERVED);
+                                            g_VertexShaderConstantMode == X_VSCM_NONERESERVED,
+											&bUseDeclarationOnly);
         if(SUCCEEDED(hRet))
         {
-            pRecompiledFunction = (DWORD*)pRecompiledBuffer->GetBufferPointer();
+			if(!bUseDeclarationOnly)
+				pRecompiledFunction = (DWORD*)pRecompiledBuffer->GetBufferPointer();
+			else
+				pRecompiledFunction = NULL;
         }
         else
         {
@@ -3489,6 +3495,8 @@ XTL::X_D3DIndexBuffer * WINAPI XTL::EmuIDirect3DDevice8_CreateIndexBuffer2(UINT 
     return pIndexBuffer;
 }
 
+BOOL g_bBadIndexData = FALSE;
+
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetIndices
 // ******************************************************************
@@ -3521,6 +3529,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetIndices
 
     HRESULT hRet = D3D_OK;
 
+//#if 0
 	if(pIndexData != NULL)
 	{
 		DbgPrintf("EmuIDirect3DDevice8_SetIndcies(): pIndexData->EmuIndexBuffer8:= 0x%.08X\n", pIndexData->EmuIndexBuffer8 );
@@ -3558,7 +3567,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetIndices
 
         hRet = g_pD3DDevice8->SetIndices(0, BaseVertexIndex);
     }
-
+//#endif
 fail:
     EmuSwapFS();   // XBox FS
 
@@ -4654,7 +4663,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 dwBPP = 4;
             }
             else if(X_Format == 0x05 /* X_D3DFMT_R5G6B5 */ || X_Format == 0x04 /* X_D3DFMT_A4R4G4B4 */
-                 || X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */
+                 || X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */ || X_Format == 0x03 /* X_D3DFMT_X1R5G5B5 */
                  || X_Format == 0x28 /* X_D3DFMT_G8B8 */ )
             {
                 bSwizzled = TRUE;
@@ -7864,7 +7873,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
            "   pIndexData          : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), PrimitiveType, VertexCount, pIndexData);
-
+//#if 0
     // update index buffer, if necessary
     if(g_pIndexBuffer != 0 && g_pIndexBuffer->Lock == X_D3DRESOURCE_LOCK_FLAG_NOSIZE)
     {
@@ -8022,7 +8031,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_DrawIndexedVertices
     #endif
 
     VertPatch.Restore();
-
+//#endif
     EmuSwapFS();   // XBox FS
 
     return D3D_OK;

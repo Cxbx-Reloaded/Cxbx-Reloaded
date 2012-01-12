@@ -326,6 +326,116 @@ SOOVPA<8> XMountMUA_1_0_5558 =
 };
 
 // ******************************************************************
+// * CreateFiber
+// ******************************************************************
+SOOVPA<7> CreateFiber_1_0_5558 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x10, 0x00 },
+        { 0x22, 0x57 },
+        { 0x34, 0x75 },
+        { 0x46, 0x41 },
+        { 0x58, 0xFC },
+        { 0x6A, 0x39 },
+        { 0x7C, 0xCE },
+    }
+};
+
+// ******************************************************************
+// * DeleteFiber
+// ******************************************************************
+SOOVPA<6> DeleteFiber_1_0_5558 = 
+{
+    0,  // Large == 0
+    6,  // Count == 6
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x01, 0x44 },
+        { 0x04, 0xFF },
+        { 0x07, 0xFF },
+        { 0x0A, 0xFF },
+        { 0x10, 0xC2 },
+        { 0x11, 0x04 },
+    }
+};
+
+// ******************************************************************
+// * SwitchToFiber
+// ******************************************************************
+SOOVPA<8> SwitchToFiber_1_0_5558 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x06, 0x64 },
+        { 0x0E, 0x44 },
+        { 0x16, 0xFF },
+        { 0x1E, 0x91 },
+        { 0x26, 0x61 },
+        { 0x31, 0x64 },
+        { 0x36, 0x00 },
+        { 0x3E, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * ConvertThreadToFiber
+// ******************************************************************
+SOOVPA<7> ConvertThreadToFiber_1_0_5558 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x05, 0x64 },
+        { 0x0C, 0x8B },
+        { 0x13, 0x8D },
+        { 0x1A, 0x01 },
+        { 0x21, 0x8B },
+        { 0x28, 0x89 },
+        { 0x31, 0x8B },
+    }
+};
+
+// ******************************************************************
+// * XapiFiberStartup
+// ******************************************************************
+SOOVPA<7> XapiFiberStartup_1_0_5558 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x07, 0xE8 },
+        { 0x10, 0xA1 },
+        { 0x1C, 0x8B },
+        { 0x25, 0xFF },
+        { 0x2B, 0x0C },
+        { 0x34, 0xC3 },
+        { 0x3D, 0x00 },
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_5558
 // ******************************************************************
 OOVPATable XAPI_1_0_5558[] =
@@ -685,6 +795,65 @@ OOVPATable XAPI_1_0_5558[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXMountMUA"
+        #endif
+    },
+	// CreateFiber
+	{
+		(OOVPA*)&CreateFiber_1_0_5558,
+
+		XTL::EmuCreateFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuCreateFiber"
+		#endif
+	},
+	// DeleteFiber
+	{
+		(OOVPA*)&DeleteFiber_1_0_5558,
+
+		XTL::EmuDeleteFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuDeleteFiber"
+		#endif
+	},
+	// SwitchToFiber
+	{
+		(OOVPA*)&SwitchToFiber_1_0_5558,
+
+		XTL::EmuSwitchToFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuSwitchToFiber"
+		#endif
+	},
+	// ConvertThreadToFiber
+	{
+		(OOVPA*)&ConvertThreadToFiber_1_0_5558,
+
+		XTL::EmuConvertThreadToFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuConvertThreadToFiber"
+		#endif
+	},
+	//// XapiFiberStartup
+	//{
+	//	(OOVPA*)&XapiFiberStartup_1_0_5558,
+	//	XTL::EmuXapiFiberStartup,
+
+	//	#ifdef _DEBUG_TRACE
+	//	"XapiFiberStartup"
+	//	#endif
+	//},
+	// RtlDestroyHeap (* unchanged since 4134 *)
+    {
+        (OOVPA*)&RtlDestroyHeap_1_0_4134,
+
+        XTL::EmuRtlDestroyHeap,
+
+        #ifdef _DEBUG_TRACE
+        "EmuRtlDestroyHeap"
         #endif
     },
 };

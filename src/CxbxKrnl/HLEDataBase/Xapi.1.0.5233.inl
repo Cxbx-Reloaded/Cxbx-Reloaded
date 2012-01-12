@@ -519,6 +519,16 @@ OOVPATable XAPI_1_0_5233[] =
         "EmuGetFileAttributesA"
         #endif
     },
+	// RtlDestroyHeap (* unchanged since 4134 *)
+    {
+        (OOVPA*)&RtlDestroyHeap_1_0_4134,
+
+        XTL::EmuRtlDestroyHeap,
+
+        #ifdef _DEBUG_TRACE
+        "EmuRtlDestroyHeap"
+        #endif
+    },
 };
 
 // ******************************************************************

@@ -104,4 +104,5 @@ g_pXInputSetStateStatus[XINPUT_SETSTATE_SLOTS];
 
 extern HANDLE g_hInputHandle[XINPUT_HANDLE_SLOTS];
 
+extern void InitializeSectionStructures(void);
 #endif

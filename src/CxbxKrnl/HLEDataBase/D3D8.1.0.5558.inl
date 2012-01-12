@@ -3258,6 +3258,36 @@ OOVPATable D3D8_1_0_5558[] =
         "EmuIDirect3DDevice8_SetVertexData2f"
         #endif
     },
+	// IDirect3DDevice8::SetRenderState_RopZCmpAlwaysRead (* unchanged since 4134 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead_1_0_4134,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead"
+        #endif
+    },
+	// IDirect3DDevice8::SetRenderState_RopZRead (* unchanged since 4134 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_RopZRead_1_0_4134,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_RopZRead,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_RopZRead"
+        #endif
+    },
+    // IDirect3DDevice8::SetRenderState_DoNotCullUncompressed (* unchanged since 4134 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_DoNotCullUncompressed_1_0_4134,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed"
+        #endif
+    },
 };
 
 // ******************************************************************

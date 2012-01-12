@@ -415,6 +415,12 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
         CxbxKrnlRegisterThread(hDupHandle);
     }
 
+	//
+	// Clear critical section list
+	//
+	//extern void InitializeSectionStructures(void); 
+	InitializeSectionStructures();
+
     DbgPrintf("EmuMain (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
 
     XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);

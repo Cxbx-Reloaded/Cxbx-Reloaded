@@ -973,6 +973,51 @@ SOOVPA<9> DeleteFiber_1_0_3911 =
 	}
 };
 
+// ******************************************************************
+// * SwitchToFiber
+// ******************************************************************
+SOOVPA<8> SwitchToFiber_1_0_3911 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x06, 0x64 },
+        { 0x0E, 0x44 },
+        { 0x16, 0xFF },
+        { 0x1E, 0x91 },
+        { 0x26, 0x61 },
+        { 0x31, 0x64 },
+        { 0x36, 0x00 },
+        { 0x3E, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * ConvertThreadToFiber
+// ******************************************************************
+SOOVPA<7> ConvertThreadToFiber_1_0_3911 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x05, 0x64 },
+        { 0x0C, 0x8B },
+        { 0x13, 0x8D },
+        { 0x1A, 0x01 },
+        { 0x21, 0x8B },
+        { 0x28, 0x89 },
+        { 0x31, 0x8B },
+    }
+};
+
 //// ******************************************************************
 //// * XInputGetCapabilities
 //// ******************************************************************
@@ -1525,6 +1570,50 @@ SOOVPA<7> XMountMURootA_1_0_3911 =
 };
 
 // ******************************************************************
+// * XMountUtilityDrive
+// ******************************************************************
+SOOVPA<7> XMountUtilityDrive_1_0_3911 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1C, 0x85 },
+        { 0x3A, 0x8D },
+        { 0x58, 0x10 },
+        { 0x76, 0xF8 },
+        { 0x94, 0xF8 },
+        { 0xB3, 0x8B },
+        { 0xD0, 0xC0 },
+    }
+};
+
+// ******************************************************************
+// * GetFileAttributesA
+// ******************************************************************
+SOOVPA<7> GetFileAttributesA_1_0_3911 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x08, 0x08 },
+        { 0x13, 0x8D },
+        { 0x1C, 0x50 },
+        { 0x26, 0xFF },
+        { 0x30, 0x15 },
+        { 0x3A, 0x45 },
+        { 0x44, 0x83 },
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_3911
 // ******************************************************************
 OOVPATable XAPI_1_0_3911[] =
@@ -1828,6 +1917,26 @@ OOVPATable XAPI_1_0_3911[] =
 		"EmuDeleteFiber"
 		#endif
 	},
+	// SwitchToFiber
+	{
+		(OOVPA*)&SwitchToFiber_1_0_3911,
+
+		XTL::EmuSwitchToFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuSwitchToFiber"
+		#endif
+	},
+	// ConvertThreadToFiber
+	{
+		(OOVPA*)&ConvertThreadToFiber_1_0_3911,
+
+		XTL::EmuConvertThreadToFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuConvertThreadToFiber"
+		#endif
+	},
 	// XInputGetCapabilities
 	{
 		(OOVPA*)&XInputGetCapabilities_1_0_3911,
@@ -1990,6 +2099,25 @@ OOVPATable XAPI_1_0_3911[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXMountMURootA"
+        #endif
+    },
+	// XMountUtilityDrive
+	{
+        (OOVPA*)&XMountUtilityDrive_1_0_3911,
+
+        XTL::EmuXMountUtilityDrive,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXMountUtilityDrive" 
+        #endif
+    },
+	// GetFileAttributesA
+    {
+        (OOVPA*)&GetFileAttributesA_1_0_3911,
+        XTL::EmuGetFileAttributesA,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGetFileAttributesA"
         #endif
     },
 	// CloseHandle

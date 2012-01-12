@@ -1400,7 +1400,7 @@ VOID XTL::EmuUpdateActiveTexture()
                 dwBPP = 4;
             }
             else if(X_Format == 0x05 /* X_D3DFMT_R5G6B5 */ || X_Format == 0x04 /* X_D3DFMT_A4R4G4B4 */
-                 || X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */
+                 || X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */ || X_Format == 0x03 /* X_D3DFMT_X1R5G5B5 */
                  || X_Format == 0x28 /* X_D3DFMT_G8B8 */ )
             {
                 bSwizzled = TRUE;

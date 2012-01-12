@@ -656,6 +656,27 @@ VOID WINAPI EmuDeleteFiber
 );
 
 // ******************************************************************
+// * func: EmuSwitchToFiber
+// ******************************************************************
+VOID WINAPI EmuSwitchToFiber
+(
+	LPVOID lpFiber 
+);
+
+// ******************************************************************
+// * func: EmuConvertThreadToFiber
+// ******************************************************************
+LPVOID WINAPI EmuConvertThreadToFiber
+(
+	LPVOID lpParameter
+);
+
+// ******************************************************************
+// * func: EmuXapiFiberStartup
+// ******************************************************************
+VOID WINAPI EmuXapiFiberStartup(DWORD dwDummy);
+
+// ******************************************************************
 // * func: EmuXLoadSectionA
 // ******************************************************************
 LPVOID WINAPI EmuXLoadSectionA

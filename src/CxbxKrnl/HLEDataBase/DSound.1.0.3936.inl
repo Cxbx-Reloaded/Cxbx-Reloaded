@@ -4755,10 +4755,10 @@ SOOVPA<9> CDirectSoundStream_SetMixBinVolumes_1_0_3936 =
 // ******************************************************************
 // * CDirectSoundStream::SetI3DL2Source
 // ******************************************************************
-SOOVPA<14> CDirectSoundStream_SetI3DL2Source_1_0_3936 = 
+SOOVPA<9> CDirectSoundStream_SetI3DL2Source_1_0_3936 = 
 {
     0,  // Large == 0
-    14, // Count == 14
+    9,  // Count == 9
 
     0,  // Xref Is Saved
     1,  // Xref Is Used
@@ -4766,17 +4766,12 @@ SOOVPA<14> CDirectSoundStream_SetI3DL2Source_1_0_3936 =
     {
         { 0x11, XREF_CDirectSoundVoice_SetI3DL2Source },
 
-		{ 0x00, 0xFF },
-        { 0x01, 0x74 },
-        { 0x02, 0x24 },
-        { 0x03, 0x0C },
-		{ 0x04, 0x8B },
-        { 0x05, 0x44 },
-        { 0x06, 0x24 },
+		{ 0x01, 0x74 },
+        { 0x04, 0x8B },
         { 0x07, 0x08 },
-		{ 0x0C, 0x83 },
+        { 0x0A, 0x24 },
         { 0x0D, 0xC0 },
-		{ 0x0E, 0x04 },
+        { 0x10, 0xE8 },
         { 0x15, 0xC2 },
         { 0x16, 0x0C },
     }
@@ -6046,16 +6041,16 @@ OOVPATable DSound_1_0_3936[] =
         0,
 
         #ifdef _DEBUG_TRACE
-        "CMcpxVoiceClient::SetI3DL2Source (XREF)"
+		"CMcpxVoiceClient::SetI3DL2Source (XREF) NIGGER (1) **************"
         #endif
     },
 	// CDirectSoundVoice::SetI3DL2Source (XREF)
     {
         (OOVPA*)&CDirectSoundVoice_SetI3DL2Source_1_0_3936,
-        0,
+		XTL::EmuCDirectSoundStream_SetI3DL2Source,
 
         #ifdef _DEBUG_TRACE
-        "CDirectSoundVoice::SetI3DL2Source (XREF)"
+		"CDirectSoundVoice::SetI3DL2Source (XREF) NIGGER (2) *************"
         #endif
     },
 	// IDirectSoundBuffer_SetI3DL2Source
@@ -6130,15 +6125,15 @@ OOVPATable DSound_1_0_3936[] =
         #endif
     },
 	// CDirectSoundStream::SetI3DL2Source
-    {
+    /*{
         (OOVPA*)&CDirectSoundStream_SetI3DL2Source_1_0_3936,
 
         XTL::EmuCDirectSoundStream_SetI3DL2Source,
 
         #ifdef _DEBUG_TRACE
-        "EmuCDirectSoundStream_SetI3DL2Source ***********************"
+		"EmuCDirectSoundStream_SetI3DL2Source"
         #endif
-    },
+    },*/
 	// CDirectSoundBuffer_SetNotificationPositions
     {
         (OOVPA*)&CDirectSoundBuffer_SetNotificationPositions_1_0_3936, 0,

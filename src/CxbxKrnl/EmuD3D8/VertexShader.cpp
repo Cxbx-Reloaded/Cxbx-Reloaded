@@ -2005,13 +2005,15 @@ extern HRESULT XTL::EmuRecompileVshFunction
     DWORD        *pFunction,
     LPD3DXBUFFER *ppRecompiled,
     DWORD        *pOriginalSize,
-    boolean      bNoReservedConstants
+    boolean      bNoReservedConstants,
+	boolean		 *pbUseDeclarationOnly
 )
 {
     VSH_SHADER_HEADER   *pShaderHeader = (VSH_SHADER_HEADER*)pFunction;
     DWORD               *pToken;
     boolean             EOI = false;
     VSH_XBOX_SHADER     *pShader = (VSH_XBOX_SHADER*)CxbxMalloc(sizeof(VSH_XBOX_SHADER));
+	LPD3DXBUFFER		pErrors = NULL;
     HRESULT             hRet = 0;
 
     // TODO: support this situation..
@@ -2020,6 +2022,8 @@ extern HRESULT XTL::EmuRecompileVshFunction
 
     *ppRecompiled = NULL;
     *pOriginalSize = 0;
+	*pbUseDeclarationOnly = 0;
+
     if(!pShader)
     {
         EmuWarning("Couldn't allocate memory for vertex shader conversion buffer");
@@ -2060,7 +2064,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
         // The size of the shader is
         *pOriginalSize = (DWORD)pToken - (DWORD)pFunction;
 
-        char* pShaderDisassembly = (char*)CxbxMalloc(pShader->IntermediateCount * 50); // Should be plenty
+        char* pShaderDisassembly = (char*)CxbxMalloc(pShader->IntermediateCount * 100); // Should be plenty
         DbgVshPrintf("-- Before conversion --\n");
         VshWriteShader(pShader, pShaderDisassembly, FALSE);
         DbgVshPrintf("%s", pShaderDisassembly);
@@ -2076,8 +2080,14 @@ extern HRESULT XTL::EmuRecompileVshFunction
         // HACK: Azurik. Prevent Direct3D from trying to assemble this.
 		if(!strcmp(pShaderDisassembly, "vs.1.1\n"))
 		{
-			EmuWarning("Cannot assemble empty vertex shader!\n");
-			hRet = D3DXERR_INVALIDDATA;
+			EmuWarning("Cannot assemble empty vertex shader!");
+			EmuWarning("Attempting to use vertex declaration instead...");
+
+			// Attempt to use the vertex declaration for a fixed pipeline
+			// vertex shader instead...
+			*pbUseDeclarationOnly = 1;
+
+			hRet = S_OK;
 		}
 		else
 		{
@@ -2087,13 +2097,17 @@ extern HRESULT XTL::EmuRecompileVshFunction
                                   D3DXASM_SKIPVALIDATION,
                                   NULL,
                                   ppRecompiled,
-                                  NULL);
+                                  &pErrors);
 		}
 
         if (FAILED(hRet))
         {
             EmuWarning("Couldn't assemble recompiled vertex shader\n");
+			EmuWarning("%s\n", pErrors->GetBufferPointer());
         }
+
+		if( pErrors )
+			pErrors->Release();
 
         CxbxFree(pShaderDisassembly);
     }

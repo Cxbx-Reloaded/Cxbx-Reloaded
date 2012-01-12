@@ -79,6 +79,47 @@ extern PVOID g_pfnThreadNotification[16] = { NULL };
 extern int g_iThreadNotificationCount = 0;
 PVOID g_pPersistedData = NULL;
 
+// A critical section containing the PC and Xbox equivalent
+struct INTERNAL_CRITICAL_SECTION
+{
+	xboxkrnl::PRTL_CRITICAL_SECTION XboxCriticalSection;
+	NtDll::_RTL_CRITICAL_SECTION NativeCriticalSection;
+};
+
+#define MAX_XBOX_CRITICAL_SECTIONS 1024
+INTERNAL_CRITICAL_SECTION GlobalCriticalSections[MAX_XBOX_CRITICAL_SECTIONS] = {0};
+
+void InitializeSectionStructures(void)
+{
+	ZeroMemory(GlobalCriticalSections, sizeof(GlobalCriticalSections));
+}
+
+int FindCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION CriticalSection)
+{
+	int FreeSection = -1;
+
+	int iSection = 0;
+	for (iSection = 0; iSection < MAX_XBOX_CRITICAL_SECTIONS; ++iSection)
+	{
+		if (GlobalCriticalSections[iSection].XboxCriticalSection == CriticalSection)
+		{
+			FreeSection = iSection;
+			break;
+		}
+		else if (FreeSection < 0 && GlobalCriticalSections[iSection].XboxCriticalSection == NULL)
+		{
+			FreeSection = iSection;
+		}
+	}
+
+	if (FreeSection < 0)
+	{
+		EmuWarning("Too many critical sections in use!\n");
+	}
+
+	return FreeSection;
+}
+
 // PsCreateSystemThread proxy procedure
 #pragma warning(push)
 #pragma warning(disable: 4731)  // disable ebp modification warning
@@ -194,7 +235,7 @@ XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress()
 
 	DbgPrintf("EmuKrnl (0x%X): AvGetSavedDataAddress();\n", GetCurrentThreadId() );
 
-//	__asm int 3;
+	__asm int 3;
 
 	// Allocate a buffer the size of the screen buffer and return that.
 	// TODO: Fill this buffer with the contents of the front buffer.
@@ -1178,15 +1219,14 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
            "   Unknown                  : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), NumberOfBytes, Unknown);
-
-    if(Unknown)
-        EmuWarning("MmCreateKernelStack unknown parameter ignored\n");
-
-    NtDll::PVOID pRet = NULL;
-    if(FAILED(NtDll::NtAllocateVirtualMemory(GetCurrentProcess(), &pRet, 0, &NumberOfBytes, MEM_COMMIT, PAGE_READWRITE)))
-        EmuWarning("MmCreateKernelStack failed!\n");
-    else
-        pRet = (PVOID)((ULONG)pRet + NumberOfBytes);
+	
+	/*__asm int 3;
+	CxbxKrnlCleanup( "MmCreateKernelStack unimplemented (check call stack)" );*/
+	NtDll::PVOID pRet = NULL;
+	if(FAILED(NtDll::NtAllocateVirtualMemory(GetCurrentProcess(), &pRet, 0, &NumberOfBytes, MEM_COMMIT, PAGE_READWRITE)))
+	    EmuWarning("MmCreateKernelStack failed!\n");
+	else
+		pRet = (PVOID)((ULONG)pRet + NumberOfBytes);
 
     EmuSwapFS();   // Xbox FS
 
@@ -1211,7 +1251,9 @@ XBSYSAPI EXPORTNUM(170) VOID NTAPI xboxkrnl::MmDeleteKernelStack
            ");\n",
            GetCurrentThreadId(), EndAddress, BaseAddress);
 
-    ULONG RegionSize = 0;
+   /* __asm int 3;
+	CxbxKrnlCleanup( "MmDeleteKernelStack unimplemented (check call stack)" );*/
+	ULONG RegionSize = 0;
     if (FAILED(NtDll::NtFreeVirtualMemory(GetCurrentProcess(), &BaseAddress, &RegionSize, MEM_RELEASE)))
         EmuWarning("MmDeleteKernelStack failed!\n");
 
@@ -3013,11 +3055,28 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
 
     //printf("CriticalSection->LockCount : %d\n", CriticalSection->LockCount);
 
-    // This seems redundant, but xbox software doesn't always do it
-    if(CriticalSection->LockCount == -1)
-        NtDll::RtlInitializeCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
+	// This seems redundant, but xbox software doesn't always do it
+	if (CriticalSection)
+	{
+		int iSection = FindCriticalSection(CriticalSection);
 
-    NtDll::RtlEnterCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
+		if (iSection >= 0)
+		{
+			GlobalCriticalSections[iSection].XboxCriticalSection = CriticalSection;
+			if (CriticalSection->LockCount < 0)
+				NtDll::RtlInitializeCriticalSection(&GlobalCriticalSections[iSection].NativeCriticalSection);
+
+			NtDll::RtlEnterCriticalSection(&GlobalCriticalSections[iSection].NativeCriticalSection);
+
+			CriticalSection->LockCount = GlobalCriticalSections[iSection].NativeCriticalSection.LockCount;
+			CriticalSection->RecursionCount = GlobalCriticalSections[iSection].NativeCriticalSection.RecursionCount;
+			CriticalSection->OwningThread = GlobalCriticalSections[iSection].NativeCriticalSection.OwningThread;
+		}
+		//if(CriticalSection->LockCount == -1)
+			//NtDll::RtlInitializeCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
+
+		//NtDll::RtlEnterCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
+	}
 
     EmuSwapFS();   // Xbox FS
 
@@ -3093,8 +3152,18 @@ XBSYSAPI EXPORTNUM(291) VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
            ");\n",
            GetCurrentThreadId(), CriticalSection);
     //*/
+	int iSection = FindCriticalSection(CriticalSection);
 
-    NtDll::RtlInitializeCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
+	if (iSection >= 0)
+	{
+		GlobalCriticalSections[iSection].XboxCriticalSection = CriticalSection;
+		NtDll::RtlInitializeCriticalSection(&GlobalCriticalSections[iSection].NativeCriticalSection);
+
+		CriticalSection->LockCount = GlobalCriticalSections[iSection].NativeCriticalSection.LockCount;
+		CriticalSection->RecursionCount = GlobalCriticalSections[iSection].NativeCriticalSection.RecursionCount;
+		CriticalSection->OwningThread = GlobalCriticalSections[iSection].NativeCriticalSection.OwningThread;
+	}
+	//NtDll::RtlInitializeCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
 
     EmuSwapFS();   // Xbox FS
 
@@ -3111,8 +3180,19 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    // Note: We need to execute this before debug output to avoid trouble
-    NtDll::RtlLeaveCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
+	int iSection = FindCriticalSection(CriticalSection);
+
+	if (iSection >= 0)
+	{
+		GlobalCriticalSections[iSection].XboxCriticalSection = CriticalSection;
+		NtDll::RtlLeaveCriticalSection(&GlobalCriticalSections[iSection].NativeCriticalSection);
+
+		CriticalSection->LockCount = GlobalCriticalSections[iSection].NativeCriticalSection.LockCount;
+		CriticalSection->RecursionCount = GlobalCriticalSections[iSection].NativeCriticalSection.RecursionCount;
+		CriticalSection->OwningThread = GlobalCriticalSections[iSection].NativeCriticalSection.OwningThread;
+	}
+	// Note: We need to execute this before debug output to avoid trouble
+	//NtDll::RtlLeaveCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
 
     /* sorta pointless
     DbgPrintf("EmuKrnl (0x%X): RtlLeaveCriticalSection\n"
@@ -3232,7 +3312,23 @@ XBSYSAPI EXPORTNUM(306) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTryEnterCriticalSec
            ");\n",
            GetCurrentThreadId(), CriticalSection);
 
-    BOOL bRet = NtDll::RtlTryEnterCriticalSection((NtDll::PRTL_CRITICAL_SECTION)CriticalSection);
+	BOOL bRet = FALSE;
+	
+	int iSection = FindCriticalSection(CriticalSection);
+
+	if (iSection >= 0)
+	{
+		GlobalCriticalSections[iSection].XboxCriticalSection = CriticalSection;
+		if (CriticalSection->LockCount < 0)
+			NtDll::RtlInitializeCriticalSection(&GlobalCriticalSections[iSection].NativeCriticalSection);
+
+		bRet = NtDll::RtlTryEnterCriticalSection(&GlobalCriticalSections[iSection].NativeCriticalSection);
+
+		CriticalSection->LockCount = GlobalCriticalSections[iSection].NativeCriticalSection.LockCount;
+		CriticalSection->RecursionCount = GlobalCriticalSections[iSection].NativeCriticalSection.RecursionCount;
+		CriticalSection->OwningThread = GlobalCriticalSections[iSection].NativeCriticalSection.OwningThread;
+	}
+	//bRet = NtDll::RtlTryEnterCriticalSection((NtDll::PRTL_CRITICAL_SECTION)CriticalSection);
 
     EmuSwapFS();   // Xbox FS
 

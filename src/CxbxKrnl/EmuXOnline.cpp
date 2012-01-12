@@ -106,7 +106,7 @@ DWORD WINAPI XTL::EmuXNetGetEthernetLinkStatus()
     EmuSwapFS();   // XBox FS
 
     // for now, no ethernet connection is available
-    return 0;
+    return XNET_ETHERNET_LINK_ACTIVE | XNET_ETHERNET_LINK_100MBPS;
 }
 
 // ******************************************************************

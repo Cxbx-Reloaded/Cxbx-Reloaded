@@ -535,6 +535,56 @@ OOVPATable XAPI_1_0_5849[] =
         "EmuXFormatUtilityDrive"
         #endif
     },
+	// CreateFiber
+	{
+		(OOVPA*)&CreateFiber_1_0_5558,
+
+		XTL::EmuCreateFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuCreateFiber"
+		#endif
+	},
+	// DeleteFiber
+	{
+		(OOVPA*)&DeleteFiber_1_0_5558,
+
+		XTL::EmuDeleteFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuDeleteFiber"
+		#endif
+	},
+	// SwitchToFiber
+	{
+		(OOVPA*)&SwitchToFiber_1_0_5558,
+
+		XTL::EmuSwitchToFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuSwitchToFiber"
+		#endif
+	},
+	// ConvertThreadToFiber
+	{
+		(OOVPA*)&ConvertThreadToFiber_1_0_5558,
+
+		XTL::EmuConvertThreadToFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuConvertThreadToFiber"
+		#endif
+	},
+	// RtlDestroyHeap (* unchanged since 4134 *)
+    {
+        (OOVPA*)&RtlDestroyHeap_1_0_4134,
+
+        XTL::EmuRtlDestroyHeap,
+
+        #ifdef _DEBUG_TRACE
+        "EmuRtlDestroyHeap"
+        #endif
+    },
 };
 
 // ******************************************************************

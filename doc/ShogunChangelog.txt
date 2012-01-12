@@ -1240,3 +1240,74 @@ TODO: Verify that Lock3DSurface is the same on other XDKs like Lock2DSurface
 - Made a few quick fixes to make the Dashboard a little more functional
   and a little less buggy/crashy. Now only the system info option will
   kill you!
+
+12/3/11
+- Added proper critical section handling. Xbox critical section structure
+  is different than the Win32 one. Using revel8n (defiance)'s code. Thanks!
+
+- Added a dirty fix for XAPILIB.1.0.3950. So far, only the Halo demo uses this.
+  Should make a proper fix later.
+
+1/7/12
+- Added the following function(s)
+	CreateFiber (5558-5849)
+	DeleteFiber (5558-5849)
+	SwitchToFiber (3911, 5558-5849)
+	ChangeThreadToFiber (3911, 5558-5849)
+
+1/10/12
+- Added the following function(s)
+	D3DDevice_Swap (5849)(*)
+	D3D::CDevice::KickOff (D3DDevice::KickPushBuffer) (5849)
+	D3DDevice_SetRenderState_RopZCmpAlwaysRead (5455-5849)
+	D3DDevice_SetRenderState_RopZRead (5455-5849)
+	D3DDevice_SetRenderState_DoNotCullUncompressed (5455-5849)
+	D3DDevice_SetSoftDisplayFilter (5849)
+	D3DDevice_SetFlickerFilter (5849)
+	CDirectSound::SetRollOffFactor (5849)
+	IDirectSound8_SetRollOffFactor (5849)
+	CDirectSound::SetDopplerFactor (5849)
+	IDirectSound8_SetDopplerFactor (5849)
+	CDirectSoundVoice::SetPitch (5849)
+	CDirectSoundBuffer::SetPitch (5849)
+	IDirectSoundBuffer8:SetPitch (5849)
+	CDirectSoundVoice::SetMaxDistance (5849)
+	CDirectSoundBuffer::SetMaxDistance (5849)
+	IDirectSoundBuffer8_SetMaxDistance (5849)
+	CDirectSoundVoice::SetMinDistance (5849)
+	CDirectSoundBuffer::SetMinDistance (5849)
+	IDirectSoundBuffer8_SetMinDistance (5849)
+	CDirectSoundVoice::SetVolume (5849)
+	CDirectSoundBuffer::SetVolume (5849)
+	IDirectSoundBuffer8_SetVolume (5849)
+	CDirectSoundVoice::SetPosition (5849)
+	CDirectSoundBuffer::SetPosition (5849)
+	IDirectSoundBuffer8_SetPosition (5849)
+	CDirectSoundVoice::SetVelocity (5849)
+	CDirectSoundBuffer::SetVelocity (5849)
+	IDirectSoundBuffer8_SetVelocity (5849)
+	CMcpxBuffer::Play (5849)(**)
+	CDirectSoundBuffer::PlayEx (5849)
+	IDirectSoundBuffer8_PlayEx (5849)
+	D3DDevice_SetRenderState_MultiSampleMode (5849)
+	D3DDevice_SetRenderState_MultiSampleRenderTargetMode (5849)
+	D3DDevice_SetRenderState_MultiSampleAntiAlias (5849)
+	D3DDevice_SetRenderState_MultiSampleMask (5849)
+	RtlDestroyHeap (4242-4531, 4721-5849)
+	CDirectSound::CreateSoundStream (5849)
+	DirectSoundCreateStream (5849)
+	CDirectSoundStream::SetMixBinVolumes (5849)
+	CMcpxStream::Pause (5849)
+	CDirectSoundStream::Pause (5849)
+	CDirectSoundStream::FlushEx (5849)
+	IDirectSoundStream_FlushEx (5849)
+	DirectSoundDoWork (5849)
+	D3DDevice_GeDisplayFieldStatus (5849)
+	CDirectSound::SynchPlayback (5849)
+	IDirectSound8_SynchPlayback (5849)
+
+- Fixed a tiny bug in the vertex shader reassembler code (needed a bigger buffer
+  for Castlevania).
+
+(*) Needed an alternative signature for this one.
+(**) Needed a new signature.

@@ -656,68 +656,20 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
         }
 	}
 
-	// Metal Slug 3
+	// Halo demo
 	if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
 	{
-		//if(e->ContextRecord->Eip == 0x1B59BC)
-		//{
-		//	// mov [ecx+0x28], eax
-  //          e->ContextRecord->Eip += 3;
+		if(e->ContextRecord->Eip == 0x4835C)
+		{
+			// mov dword ptr [eax], 1
+            e->ContextRecord->Eip += 6;
 
-  //          DbgPrintf("EmuMain (0x%X): Metal Slug 3 hack 1 was applied!\n", GetCurrentThreadId());
+            DbgPrintf("EmuMain (0x%X): Halo Demo hack 1 was applied!\n", GetCurrentThreadId());
 
-  //          g_bEmuException = false;
+            g_bEmuException = false;
 
-  //          return EXCEPTION_CONTINUE_EXECUTION;
-  //      }
-
-		//if(e->ContextRecord->Eip == 0x1B59CA)
-		//{
-		//	// mov [ecx+0x28], eax
-  //          e->ContextRecord->Eip += 3;
-
-  //          DbgPrintf("EmuMain (0x%X): Metal Slug 3 hack 2 was applied!\n", GetCurrentThreadId());
-
-  //          g_bEmuException = false;
-
-  //          return EXCEPTION_CONTINUE_EXECUTION;
-  //      }
-
-		//if(e->ContextRecord->Eip == 0x1B59DE)
-		//{
-		//	// mov [ecx+0x28], eax
-  //          e->ContextRecord->Eip += 3;
-
-  //          DbgPrintf("EmuMain (0x%X): Metal Slug 3 hack 3 was applied!\n", GetCurrentThreadId());
-
-  //          g_bEmuException = false;
-
-  //          return EXCEPTION_CONTINUE_EXECUTION;
-  //      }
-
-		//if(e->ContextRecord->Eip == 0x1B59EC)
-		//{
-		//	// mov [ecx+0x28], eax
-  //          e->ContextRecord->Eip += 3;
-
-  //          DbgPrintf("EmuMain (0x%X): Metal Slug 3 hack 4 was applied!\n", GetCurrentThreadId());
-
-  //          g_bEmuException = false;
-
-  //          return EXCEPTION_CONTINUE_EXECUTION;
-  //  `    }
-
-		//if(e->ContextRecord->Eip == 0x1B59BC)
-		//{
-		//	// mov [ecx+0x28], eax
-  //          e->ContextRecord->Eip += 7;
-
-  //          DbgPrintf("EmuMain (0x%X): Metal Slug 3 hack 1 was applied!\n", GetCurrentThreadId());
-
-  //          g_bEmuException = false;
-
-  //          return EXCEPTION_CONTINUE_EXECUTION;
-  //      }
+            return EXCEPTION_CONTINUE_EXECUTION;
+        }
 	}
 
 	// Privileged instruction check

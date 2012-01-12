@@ -382,12 +382,12 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                                     RtlCreateHeapOffs = 0x37;
                                 }
                             }
-							else if( OrigBuildVersion == 3950 )
+							/*else if( OrigBuildVersion == 3950 )
 							{
 								pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_3950, lower, upper);
                                 ProcessHeapOffs = 0x3E;
                                 RtlCreateHeapOffs = 0x37;
-							}
+							}*/
                             else // 3911, 4034, 4134
                             {
                                 pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_3911, lower, upper);
@@ -405,6 +405,19 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                                 DbgPrintf("HLE: 0x%.08X -> EmuXapiProcessHeap\n", XTL::EmuXapiProcessHeap);
                                 DbgPrintf("HLE: 0x%.08X -> g_pRtlCreateHeap\n", XTL::g_pRtlCreateHeap);
                             }
+							else if( OrigBuildVersion == 3950 )
+							{
+								// This library doesn't appear to have XapiInitProcess.
+								// So far, only the Halo demo uses this XDK library version.
+								// TODO: Don't use hard coded values in case other games using this library
+								// version are discovered. You can get XapiProcessHeap from LocalFree+0x7.
+
+								XTL::EmuXapiProcessHeap = (PVOID*)(0x2D9758);
+								XTL::g_pRtlCreateHeap = (XTL::pfRtlCreateHeap)(0x164FC);
+
+								DbgPrintf("HLE: 0x%.08X -> EmuXapiProcessHeap\n", XTL::EmuXapiProcessHeap);
+                                DbgPrintf("HLE: 0x%.08X -> g_pRtlCreateHeap\n", XTL::g_pRtlCreateHeap);
+							}
                         }
                     }
                     else if(strcmp("D3D8", szLibraryName) == 0 /*&& strcmp("D3D8LTCG", szOrigLibraryName)*/ && 

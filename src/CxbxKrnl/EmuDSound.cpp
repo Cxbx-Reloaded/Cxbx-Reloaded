@@ -854,8 +854,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
             EmuWarning("Use of unsupported pdsbd->dwFlags mask(s) (0x%.08X)", pdsbd->dwFlags & (~dwAcceptableMask));
 
         pDSBufferDesc->dwSize = sizeof(DSBUFFERDESC);
-        pDSBufferDesc->dwFlags = (pdsbd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2 |
-			DSBCAPS_CTRLPOSITIONNOTIFY;
+        pDSBufferDesc->dwFlags = (pdsbd->dwFlags & dwAcceptableMask) | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
         pDSBufferDesc->dwBufferBytes = pdsbd->dwBufferBytes;
 
         if(pDSBufferDesc->dwBufferBytes < DSBSIZE_MIN)
@@ -3337,7 +3336,11 @@ extern "C" HRESULT __stdcall XTL::EmuIDirectSoundBuffer8_PlayEx
     if(pBuffer->EmuDirectSoundBuffer8 == 0)
         EmuWarning("pBuffer->EmuDirectSoundBuffer8 == 0");
 
-    EmuWarning("PlayEx not yet implemented!");
+//    EmuWarning("PlayEx not yet implemented!");
+
+	// TODO: Handle other non-PC standard flags
+	DWORD dwPCFlags = ( dwFlags & DSBPLAY_LOOPING ) ? DSBPLAY_LOOPING : 0;
+	HRESULT hr = pBuffer->EmuDirectSoundBuffer8->Play( 0, 0, dwPCFlags );
 
     EmuSwapFS();   // XBox FS
 

@@ -76,6 +76,17 @@ XTL::XINPUT_POLLING_PARAMETERS g_pp;
 // Saved launch data
 XTL::LAUNCH_DATA g_SavedLaunchData;
 
+// Fiber function list
+typedef struct _XFIBER
+{
+	LPFIBER_START_ROUTINE pfnRoutine;
+	LPVOID				  pParam;
+}XFIBER;
+
+XFIBER g_Fibers[256];
+// Number of fiber routines queued
+int	   g_FiberCount = 0;
+
 // ******************************************************************
 // * func: EmuXapiApplyKernelPatches
 // ******************************************************************
@@ -1266,6 +1277,14 @@ LPVOID WINAPI XTL::EmuCreateFiber
 	LPVOID pFiber = CreateFiber( dwStackSize, lpStartRoutine, lpParameter );
 	if( !pFiber )
 		EmuWarning( "CreateFiber failed!" );
+	else
+		DbgPrintf("CreateFiber returned 0x%X\n" );
+
+	// Add to list of queued fiber routines
+	g_Fibers[g_FiberCount].pfnRoutine = lpStartRoutine;
+	if( lpParameter ) g_Fibers[g_FiberCount].pParam = lpParameter;
+
+	g_FiberCount++;
 
 	EmuSwapFS();	// Xbox FS
 
@@ -1291,6 +1310,97 @@ VOID WINAPI XTL::EmuDeleteFiber
 	DeleteFiber( lpFiber );
 
 	EmuSwapFS();	// Xbox FS
+}
+
+// ******************************************************************
+// * func: EmuSwitchToFiber
+// ******************************************************************
+VOID WINAPI XTL::EmuSwitchToFiber
+(
+	LPVOID lpFiber 
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuSwitchToFiber\n"
+			"(\n"
+			"	lpFiber            : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), lpFiber );
+
+//	SwitchToFiber( lpFiber );	// <- Hangs/crashes...
+
+	// Execute fiber routines
+	for( int i = 0; i < g_FiberCount; i++ )
+	{
+		EmuSwapFS();	// Xbox FS
+		if( g_Fibers[i].pfnRoutine )
+			g_Fibers[i].pfnRoutine(g_Fibers[i].pParam);
+		EmuSwapFS();	// Win2k/XP FS
+	}
+
+	g_FiberCount = 0;
+
+	DbgPrintf( "Finished executing fibers!\n" );
+
+	EmuSwapFS();	// Xbox FS
+}
+
+// ******************************************************************
+// * func: EmuConvertThreadToFiber
+// ******************************************************************
+LPVOID WINAPI XTL::EmuConvertThreadToFiber
+(
+	LPVOID lpParameter
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuConvertThreadToFiber\n"
+			"(\n"
+			"	lpParameter        : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), lpParameter );
+
+	LPVOID pRet = ConvertThreadToFiber( lpParameter );
+	
+	DbgPrintf( "EmuConvertThreadToFiber returned 0x%X\n", pRet );
+
+	EmuSwapFS();	// Xbox FS
+
+	return pRet;
+}
+
+// ******************************************************************
+// * func: EmuXapiFiberStartup
+// ******************************************************************
+VOID WINAPI XTL::EmuXapiFiberStartup(DWORD dwDummy)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuXapiFiberStarup()\n"
+			"(\n"
+			"	dwDummy            : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), dwDummy);
+
+	EmuSwapFS();	// Xbox FS
+
+	typedef void (__stdcall *pfDummyFunc)(DWORD dwDummy);
+	pfDummyFunc func = (pfDummyFunc)dwDummy;
+
+	void* TlsIndex = (void*) CxbxKrnl_TLS->dwTLSIndexAddr;
+
+	__asm 
+	{
+		mov     eax, TlsIndex
+		mov     ecx, fs:4
+		mov     eax, [ecx+eax*4]
+		mov     eax, [eax+8]
+		push    dword ptr [eax]
+		call    func
+	}
+
 }
 
 // ******************************************************************
@@ -1326,7 +1436,10 @@ LPVOID WINAPI XTL::EmuXLoadSectionA
 //		pRet = (void*) 0x41F900;
 
 	else
-		__asm int 3;
+	{
+		EmuWarning( "Section %s not found!", pSectionName );
+	//	__asm int 3;
+	}
 
 	EmuSwapFS();	// Xbox FS
 
@@ -1772,6 +1885,10 @@ DWORD WINAPI XTL::EmuXGetLaunchInfo
 
 		// Delete the file once we're done.
 		DeleteFile("CxbxLaunchData.bin");
+
+		//void* ptr = (void*) 0x416250;
+		//memcpy( ptr, &g_pph, sizeof( XTL::POLLING_PARAMETERS_HANDLE ) );
+		//ptr = (void*) &g_pph;
 
 		// HACK: Initialize XInput from restart
 		/*if(g_bXInputOpenCalled)
