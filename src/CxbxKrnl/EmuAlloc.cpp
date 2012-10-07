@@ -107,7 +107,7 @@ static bool CheckIntegrity(CXBX_MEMORY_BLOCK *pBlock)
 
     if(*(uint32*)GetMemEnd(pBlock) != MEMORY_GUARD)
     {
-        printf("    Memory block corrupted at end, overwrite: 0x.04X\n",
+        printf("    Memory block corrupted at end, overwrite: 0x%.04X\n",
                *(uint32*)GetMemEnd(pBlock));
         Integrity = false;
     }
