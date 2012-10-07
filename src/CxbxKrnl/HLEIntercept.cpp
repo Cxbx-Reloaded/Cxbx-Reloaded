@@ -643,7 +643,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
         DbgPrintf("HLE: Resolved %d cross reference(s)\n", OrigUnResolvedXRefs - UnResolvedXRefs);
     }
 
-    vCacheInp.empty();
+    vCacheInp.clear();
 
     //
     // update cache file
@@ -684,7 +684,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
         fclose(pCacheFile);
     }
 */
-    vCacheOut.empty();
+    vCacheOut.clear();
 
     DbgPrintf("\n");
 
