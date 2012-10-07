@@ -1246,16 +1246,16 @@ void WndMain::RefreshMenus()
             HMENU file_menu = GetSubMenu(menu, 0);
 
             // enable/disable close .xbe file
-            EnableMenuItem(file_menu, ID_FILE_CLOSE_XBE, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
+            EnableMenuItem(file_menu, ID_FILE_CLOSE_XBE, MF_BYCOMMAND | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
 
             // enable/disable save .xbe file
-            EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILE, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
+            EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILE, MF_BYCOMMAND | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
 
             // enable/disable save .xbe file as
-            EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILEAS, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
+            EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILEAS, MF_BYCOMMAND | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
 
             // enable/disable export to .exe
-            EnableMenuItem(file_menu, ID_FILE_EXPORTTOEXE, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
+            EnableMenuItem(file_menu, ID_FILE_EXPORTTOEXE, MF_BYCOMMAND | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
 
             // recent xbe files menu
             {
@@ -1283,8 +1283,8 @@ void WndMain::RefreshMenus()
             HMENU pach_menu = GetSubMenu(edit_menu, 1);
 
             // enable export .xbe info
-            EnableMenuItem(edit_menu, ID_EDIT_DUMPXBEINFOTO_FILE, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
-            EnableMenuItem(edit_menu, ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE, MF_BYCOMMAND | (m_Xbe == 0) ? MF_GRAYED : MF_ENABLED);
+            EnableMenuItem(edit_menu, ID_EDIT_DUMPXBEINFOTO_FILE, MF_BYCOMMAND | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
+            EnableMenuItem(edit_menu, ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE, MF_BYCOMMAND | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
 
             // enable logo bitmap menu
             EnableMenuItem(edit_menu, 0, MF_BYPOSITION | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
@@ -1382,10 +1382,10 @@ void WndMain::RefreshMenus()
             HMENU emul_menu = GetSubMenu(menu, 4);
 
             // enable emulation start
-            EnableMenuItem(emul_menu, ID_EMULATION_START, MF_BYCOMMAND | (m_Xbe == 0 || (m_hwndChild != NULL)) ? MF_GRAYED : MF_ENABLED);
+            EnableMenuItem(emul_menu, ID_EMULATION_START, MF_BYCOMMAND | ((m_Xbe == 0 || (m_hwndChild != NULL)) ? MF_GRAYED : MF_ENABLED));
 
             // enable emulation stop
-            EnableMenuItem(emul_menu, ID_EMULATION_STOP, MF_BYCOMMAND | (m_hwndChild == NULL) ? MF_GRAYED : MF_ENABLED);
+            EnableMenuItem(emul_menu, ID_EMULATION_STOP, MF_BYCOMMAND | ((m_hwndChild == NULL) ? MF_GRAYED : MF_ENABLED));
         }
     }
 }
