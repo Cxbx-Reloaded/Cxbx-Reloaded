@@ -1058,7 +1058,7 @@ void Xbe::DumpInformation(FILE *x_file)
 
     // print init flags
     {
-        fprintf(x_file, "Init Flags                       : 0x%.08X ", m_Header.dwInitFlags);
+        fprintf(x_file, "Init Flags                       : 0x%.08X ", m_Header.dwInitFlags.bMountUtilityDrive);
 
         if(m_Header.dwInitFlags.bMountUtilityDrive)
             fprintf(x_file, "[Mount Utility Drive] ");
@@ -1176,7 +1176,7 @@ void Xbe::DumpInformation(FILE *x_file)
 
             // print flags
             {
-                fprintf(x_file, "Flags                            : 0x%.08X ", m_SectionHeader[v].dwFlags);
+                fprintf(x_file, "Flags                            : 0x%.08X ", m_SectionHeader[v].dwFlags.bWritable);
 
                 if(m_SectionHeader[v].dwFlags.bWritable)
                     fprintf(x_file, "(Writable) ");
