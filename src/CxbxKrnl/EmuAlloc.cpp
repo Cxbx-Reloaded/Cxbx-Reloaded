@@ -506,7 +506,7 @@ void *CxbxRtlReallocDebug(HANDLE Heap,
                    "        File: %s\n"
                    "        Line: %d\n",
                    pRealloc->pMem,
-                   pRealloc->pFile, pRealloc->Size, pRealloc->Line,
+                   pRealloc->Size, pRealloc->pFile, pRealloc->Line,
                    Bytes, pFile, Line);
         }
         void *pNewMem = NtDll::RtlReAllocateHeap(Heap, Flags, GetMemStart(pRealloc), Bytes + 2 * sizeof(MEMORY_GUARD));
