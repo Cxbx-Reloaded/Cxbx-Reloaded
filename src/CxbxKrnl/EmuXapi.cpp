@@ -485,10 +485,10 @@ DWORD WINAPI XTL::EmuXGetDevices
 
     DWORD ret = 0;
 
-    if(DeviceType->Reserved[0] == 0 && DeviceType->Reserved[1] == 0 && DeviceType->Reserved[2] == 0 && DeviceType->Reserved[3] == 0)
+    if(DeviceType->Reserved[0] == 0 && DeviceType->Reserved[1] == 0 && DeviceType->Reserved[2] == 0)
         ret = (1 << 0);    // Return 1 Controller
     else
-        EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X, 0x%.08X)\n", DeviceType->Reserved[0], DeviceType->Reserved[1], DeviceType->Reserved[2], DeviceType->Reserved[3]);
+        EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X)\n", DeviceType->Reserved[0], DeviceType->Reserved[1], DeviceType->Reserved[2]);
 
     EmuSwapFS();   // XBox FS
 
@@ -521,7 +521,7 @@ BOOL WINAPI XTL::EmuXGetDeviceChanges
     // Return 1 Controller Inserted initially, then no changes forever
     if(bFirst)
     {
-        if(DeviceType->Reserved[0] == 0 && DeviceType->Reserved[1] == 0 && DeviceType->Reserved[2] == 0 && DeviceType->Reserved[3] == 0)
+        if(DeviceType->Reserved[0] == 0 && DeviceType->Reserved[1] == 0 && DeviceType->Reserved[2] == 0)
 		{
 			*pdwInsertions = (1<<0);
 			*pdwRemovals   = 0;
@@ -531,7 +531,7 @@ BOOL WINAPI XTL::EmuXGetDeviceChanges
 		else
 		{
 			// TODO: What if it's not a controller?
-			EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X, 0x%.08X)\n", DeviceType->Reserved[0], DeviceType->Reserved[1], DeviceType->Reserved[2], DeviceType->Reserved[3]);
+			EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X)\n", DeviceType->Reserved[0], DeviceType->Reserved[1], DeviceType->Reserved[2]);
 		}
     }
     else
