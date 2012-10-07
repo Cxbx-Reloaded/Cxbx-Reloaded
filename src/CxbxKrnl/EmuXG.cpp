@@ -187,7 +187,7 @@ VOID WINAPI XTL::EmuXGSwizzleBox
 		}
 		else
 		{
-			if(pPoint != NULL && (pPoint->u != 0 || pPoint->u != 0 || pPoint->w != 0))
+			if(pPoint != NULL && (pPoint->u != 0 || pPoint->v != 0 || pPoint->w != 0))
 				CxbxKrnlCleanup("Temporarily unsupported swizzle (very easy fix)");
 
 			DWORD dwMaxY = Height;
