@@ -218,7 +218,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_DownloadEffectsImage
 		   "   pEffectLoc                : 0x%.08X\n"
 		   "   ppImageDesc               : 0x%.08X\n"
            ");\n",
-           GetCurrentThreadId(), pThis, dwSize, pEffectLoc, ppImageDesc);
+           GetCurrentThreadId(), pThis, pvData, dwSize, pEffectLoc, ppImageDesc);
 
 	// TODO: Implement
 

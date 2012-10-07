@@ -371,7 +371,7 @@ bool XBController::ConfigPoll(char *szStatus)
 
                 Map(CurConfigObject, DeviceInstance.tszInstanceName, dwHow, dwFlags);
 
-                printf("Cxbx: Detected %s%s on %s\n", szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType);
+                printf("Cxbx: Detected %s%s on %s%s\n", szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType);
 
                 sprintf(szStatus, "Success: %s Mapped to '%s%s' on '%s'!", m_DeviceNameLookup[CurConfigObject], szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName);
 

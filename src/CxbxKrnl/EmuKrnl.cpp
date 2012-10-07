@@ -3025,7 +3025,7 @@ XBSYSAPI EXPORTNUM(264) VOID NTAPI xboxkrnl::RtlAssert
            "   LineNumber                : 0x%.08X\n"
            "   Message                   : 0x%.08X (\"%s\")\n"
            ");\n",
-           GetCurrentThreadId(), FailedAssertion, FileName, Message, Message);
+           GetCurrentThreadId(), FailedAssertion, FileName, LineNumber, Message, Message);
 
     //TODO: Actually implement this.
     //NTSTATUS ret = NtDll::RtlAssert((NtDll::UNICODE_STRING*)DestinationString, (NtDll::STRING*)SourceString, AllocateDestinationString);

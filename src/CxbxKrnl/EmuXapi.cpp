@@ -1278,7 +1278,7 @@ LPVOID WINAPI XTL::EmuCreateFiber
 	if( !pFiber )
 		EmuWarning( "CreateFiber failed!" );
 	else
-		DbgPrintf("CreateFiber returned 0x%X\n" );
+		DbgPrintf("CreateFiber returned 0x%X\n", pFiber);
 
 	// Add to list of queued fiber routines
 	g_Fibers[g_FiberCount].pfnRoutine = lpStartRoutine;
@@ -1415,7 +1415,7 @@ LPVOID WINAPI XTL::EmuXLoadSectionA
 
 	DbgPrintf("EmuXapi (0x%X): EmuXLoadSectionA\n"
 			"(\n"
-			"   pSectionName       : \"%s\"\n"
+			"   pSectionName       : 0x%.08X (\"%s\")\n"
 			");\n",
 			GetCurrentThreadId(), pSectionName, pSectionName );
 
@@ -1458,7 +1458,7 @@ BOOL WINAPI XTL::EmuXFreeSectionA
 
 	DbgPrintf("EmuXapi (0x%X): EmuXFreeSectionA\n"
 			"(\n"
-			"   pSectionName       : \"%s\"\n"
+			"   pSectionName       : 0x%.08X (\"%s\")\n"
 			");\n",
 			GetCurrentThreadId(), pSectionName, pSectionName );
 
@@ -1482,7 +1482,7 @@ HANDLE WINAPI XTL::EmuXGetSectionHandleA
 
 	DbgPrintf("EmuXapi (0x%X): EmuXGetSectionHandleA\n"
 			"(\n"
-			"   pSectionName       : \"%s\"\n"
+			"   pSectionName       : 0x%.08X (\"%s\")\n"
 			");\n",
 			GetCurrentThreadId(), pSectionName, pSectionName );
 
@@ -2018,7 +2018,7 @@ HANDLE WINAPI XTL::EmuCreateSemaphore
 			"   lMaximumCount         : 0x%.08X\n"
 			"   lpName                : 0x%.08X (%s)\n"
 			");\n",
-			GetCurrentThreadId(), lpSemaphoreAttributes, lInitialCount, lMaximumCount, lpName);
+			GetCurrentThreadId(), lpSemaphoreAttributes, lInitialCount, lMaximumCount, lpName, lpName);
 
 	if(lpSemaphoreAttributes)
 		EmuWarning( "lpSemaphoreAttributes != NULL" );

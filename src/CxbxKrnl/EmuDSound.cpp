@@ -2016,7 +2016,10 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Flush(X_CDirectSoundStream *pThis)
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_Flush();\n",
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_Flush\n"
+		   "(\n"
+		   "   pThis           : 0x%.08X\n"
+		   ");\n",
            GetCurrentThreadId(), pThis);
 
     // TODO: Actually Flush
@@ -2033,8 +2036,11 @@ HRESULT WINAPI XTL::EmuCDirectSound_SynchPlayback(PVOID pUnknown)
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf("EmuDSound (0x%X): EmuCDirectSound_SynchPlayback(0x%.08X);\n",
-           GetCurrentThreadId());
+    DbgPrintf("EmuDSound (0x%X): EmuCDirectSound_SynchPlayback\n"
+		   "(\n"
+		   "   pUnknown           : 0x%.08X\n"
+		   ");\n",
+		   GetCurrentThreadId(), pUnknown);
 
     EmuSwapFS();   // XBox FS
 
