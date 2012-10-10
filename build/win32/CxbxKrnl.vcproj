@@ -540,6 +540,10 @@
 				Name="EmuXBAudio (h)"
 				>
 				<File
+					RelativePath="..\..\src\CxbxKrnl\EmuXBAudio\uXboxAdpcmDecoder.h"
+					>
+				</File>
+				<File
 					RelativePath="..\..\src\CxbxKrnl\EmuXBAudio\XboxAdpcm.h"
 					>
 				</File>
@@ -1951,6 +1955,10 @@
 			<Filter
 				Name="EmuXBAudio (cpp)"
 				>
+				<File
+					RelativePath="..\..\src\CxbxKrnl\EmuXBAudio\uXboxAdpcmDecoder.c"
+					>
+				</File>
 				<File
 					RelativePath="..\..\src\CxbxKrnl\EmuXBAudio\XboxAdpcm.cpp"
 					>

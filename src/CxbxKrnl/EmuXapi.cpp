@@ -2782,7 +2782,7 @@ DWORD WINAPI XTL::EmuXMountMURootA
 	PCHAR pchDrive               
 )
 {
-	{
+	
 	EmuSwapFS();	// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuXMountMURootA\n"
@@ -2799,4 +2799,71 @@ DWORD WINAPI XTL::EmuXMountMURootA
 
 	return ERROR_SUCCESS;
 }
+
+// ******************************************************************
+// * func: EmuReadFileEx
+// ******************************************************************
+BOOL WINAPI XTL::EmuReadFileEx
+(
+	HANDLE hFile,                                       // handle to file
+	LPVOID lpBuffer,                                    // data buffer
+	DWORD nNumberOfBytesToRead,                         // number of bytes to read
+	LPOVERLAPPED lpOverlapped,                          // offset
+	LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine // completion routine
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuXapi (0x%X): EmuReadFileEx\n"
+			"(\n"
+			"   hFile                : 0x%.08X\n"
+			"   lpBuffer             : 0x%.08X\n"
+			"   nNumberOfBytesToRead : 0x%.08X\n"
+			"   lpOverlapped         : 0x%.08X\n"
+			"   lpCompletionRoutine  : 0x%.08X\n"
+			");\n", 
+			GetCurrentThreadId(), hFile, lpBuffer, nNumberOfBytesToRead, 
+			lpOverlapped, lpCompletionRoutine);
+
+	BOOL bRet = ReadFileEx( hFile, lpBuffer, nNumberOfBytesToRead, lpOverlapped, lpCompletionRoutine );
+	if(!bRet)
+		printf("ReadFilEx failed!");
+
+	EmuSwapFS();
+
+	return bRet;
+}
+
+// ******************************************************************
+// * func: EmuWriteFileEx
+// ******************************************************************
+BOOL WINAPI XTL::EmuWriteFileEx
+(
+	HANDLE hFile,                                       // handle to output file
+	LPCVOID lpBuffer,                                   // data buffer
+	DWORD nNumberOfBytesToWrite,                        // number of bytes to write
+	LPOVERLAPPED lpOverlapped,                          // overlapped buffer
+	LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine // completion routine
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	printf("EmuXapi (0x%X): EmuWriteFileEx\n"
+			"(\n"
+			"   hFile                : 0x%.08X\n"
+			"   lpBuffer             : 0x%.08X\n"
+			"   nNumberOfBytesToWrite: 0x%.08X\n"
+			"   lpOverlapped         : 0x%.08X\n"
+			"   lpCompletionRoutine  : 0x%.08X\n"
+			");\n", 
+			GetCurrentThreadId(), hFile, lpBuffer, nNumberOfBytesToWrite, 
+			lpOverlapped, lpCompletionRoutine);
+
+	BOOL bRet = WriteFileEx( hFile, lpBuffer, nNumberOfBytesToWrite, lpOverlapped, lpCompletionRoutine );;
+	if(!bRet)
+		printf("WriteFilEx failed!");
+
+	EmuSwapFS();
+
+	return bRet;
 }

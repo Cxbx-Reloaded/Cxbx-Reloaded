@@ -1311,3 +1311,96 @@ TODO: Verify that Lock3DSurface is the same on other XDKs like Lock2DSurface
 
 (*) Needed an alternative signature for this one.
 (**) Needed a new signature.
+
+1/14/12
+- Added the following function(s)
+	D3DDevice_SetVertexShaderConstant1Fast (5558)
+	D3DDevice_LoadVertexShaderProgram (5558)
+	D3DDevice_SetPixelShaderProgram (5558)
+	XID_fCloseDevice (5558)
+	XInputClose (5558)
+	CDirectSound::SetPosition (5558)
+	IDirectSound8_SetPosition (5558)
+	CDirectSound::SetVelocity (5558)
+	IDirectSound8_SetPosition (5558)
+	CDirectSound::CreateStream (5558)
+	IDirectSound8_CreateStream (5558)
+	CDirectSoundStream::SetRolloffCurve (5558)
+	CDirectSoundStream::SetMinDistance (5558)
+	CDirectSoundStream::SetHeadroom (5558)
+	CDirectSoundStream::SetFrequency (5558)
+
+2/29/12
+- Added the following function(s)
+	D3DDevice_SetRenderState_BackFillMode (5344-5558)
+	D3DDevice_SetRenderState_TextureFactor (5344-5558)
+	D3DDevice_SetRenderState_MultiSampleMask (5344-5558)
+	D3DDevice_SetRenderState_MultiSampleMode (5455, 5558)
+	D3DDevice_SetRenderState_MultiSampleRenderTargetMode (5455, 5558)
+	D3DDevice_SetRenderState_Dxt1NoiseEnable (5455, 5558)
+	D3DDevice_SetRenderState_StencilCullEnable (5344-5558)
+	D3DDevice_SetTextureState_ColorKeyColor (5344-5558)
+
+9/24/12
+- Added the following function(s)
+	D3DDevice_GetBackBuffer2 (5344)
+	D3DDevice_SetVerticalBlankCallback (5344)
+	D3DDevice_SetSwapCallback (5344)
+	D3DDevice_GetViewport (5344)
+	CDirectSoundVoice::SetMaxDistance (5344)
+	CDirectSoundBuffer::SetMaxDistance (5344)
+	IDirectSoundBuffer_SetMaxDistance (5344)
+	CDirectSoundVoice::SetMinDistance (5344)
+	CDirectSoundBuffer::SetMinDistance (5344)
+	IDirectSoundBuffer_SetMinDistance (5344)
+	CDirectSound::SetI3DL2Listener (5344)
+	IDirectSound_SetI3DL2Listener (5344)
+	CDirectSound::SetRolloffFactor (5344)
+	IDirectSound_SetRolloffFactor (5344)
+	CDirectSound::SetDistanceFactor (5344)
+	IDirectSound_SetDistanceFactor (5344)
+	CDirectSound::SetDopplerFactor (5344)
+	IDirectSound_SetDopplerFactor (5344)
+	D3DDevice_SetRenderTargetFast (5344)
+	D3DDevice_SetScreenSpaceOffset (5344)
+	D3DDevice_SetScissors (5344)
+	D3DDevice_SetMaterial (5344)
+	D3DCubeTexture_GetCubeMapSurface2 (5344, 5849)
+	D3DDevice_SetVertexShaderConstant1Fast (5788, 5849)
+
+9/27/12
+- Added the following function(s)
+	XAudioDownloadEffectsImage (5849)
+	IDirectSound_SetEffectData (5849) (No X-Refs!)
+	D3DDevice_SetScissors (5849)
+	D3DDevice_GetScissors (5849)
+	D3DDevice_GetBackMaterial (5849)
+	D3DDevice_CaptureStateBlock (5849)
+	D3DDevice_ApplyStateBlock (5849)
+	D3DDevice_SetRenderState_StencilCullEnable (5849)
+	D3DDevice_SetRenderState_OcclusionCullEnable (5849)
+	XFileMediaObject_Seek (XDK Independent)
+	CDirectSoundStream::SetFormat (5849)
+	CDirectSoundStream::SetPitch (5849)
+	CDirectSoundStream::SetHeadroom (5849)
+	XFileMediaObject_AddRef (XDK Independent)
+	XFileMediaObject_Release (XDK Independent)
+	XFileMediaObject_GetInfo (XDK Independent)
+	XFileMediaObject_GetStatus (XDK Independent)
+	XFileMediaObject_Process (XDK Independent)
+	XFileMediaObject_DoWork (XDK Independent)
+	XFileMediaObject_Discontinuity (XDK Independent)
+	CDirectSoundBuffer::Play (5849)
+	IDirectSoundBuffer_Play (5849)
+	D3DDevice_GetTexture2 (5849)
+
+- Fixed a bug in EmuIDirect3DResource8_Register to prevent crashing.
+- Outrun2 is starting to work!
+
+9/28/12
+- Added the following function(s)
+	D3DDevice_SetRenderTargetFast (5455 - 5849)
+
+- Fixed a [stupid] error in D3DDevice_GetTexture2. It was my fault, so 
+I have no one  to blame but myself this time.  This should (hopefully) 
+fix Panzer Dragoon  ORTA's issue with Pandora's Box.

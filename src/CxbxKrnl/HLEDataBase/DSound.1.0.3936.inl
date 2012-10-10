@@ -6041,7 +6041,7 @@ OOVPATable DSound_1_0_3936[] =
         0,
 
         #ifdef _DEBUG_TRACE
-		"CMcpxVoiceClient::SetI3DL2Source (XREF) NIGGER (1) **************"
+		"CMcpxVoiceClient::SetI3DL2Source (XREF)"
         #endif
     },
 	// CDirectSoundVoice::SetI3DL2Source (XREF)
@@ -6050,7 +6050,7 @@ OOVPATable DSound_1_0_3936[] =
 		XTL::EmuCDirectSoundStream_SetI3DL2Source,
 
         #ifdef _DEBUG_TRACE
-		"CDirectSoundVoice::SetI3DL2Source (XREF) NIGGER (2) *************"
+		"CDirectSoundVoice::SetI3DL2Source (XREF)"
         #endif
     },
 	// IDirectSoundBuffer_SetI3DL2Source

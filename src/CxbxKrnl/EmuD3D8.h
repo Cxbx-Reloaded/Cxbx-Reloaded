@@ -1736,10 +1736,7 @@ VOID WINAPI EmuD3DDevice_KickOff();
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetTexture2
 // ******************************************************************
-HRESULT WINAPI EmuIDirect3DDevice8_GetTexture2
-(
-	X_D3DResource*	pTexture
-);
+X_D3DResource* WINAPI EmuIDirect3DDevice8_GetTexture2(DWORD Stage);
 
 // ******************************************************************
 // * func: EmuD3DDevice_SetStateVB (D3D::CDevice::SetStateVB)
@@ -1929,5 +1926,29 @@ HRESULT WINAPI EmuIDirect3DDevice8_GetPixelShader
 	DWORD  Name,
 	DWORD* pHandle
 );
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_SetRenderTargetFast
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetRenderTargetFast
+(
+    X_D3DSurface	*pRenderTarget,
+    X_D3DSurface	*pNewZStencil,
+    DWORD			Flags
+);
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetScissors
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_GetScissors
+(
+	DWORD	*pCount, 
+	BOOL	*pExclusive, 
+	D3DRECT *pRects
+);
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetBackMaterial
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_GetBackMaterial(D3DMATERIAL8* pMaterial);
 
 #endif

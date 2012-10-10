@@ -1584,6 +1584,143 @@ SOOVPA<7> D3DDevice_GetDisplayFieldStatus_1_0_5849 =
 };
 
 // ******************************************************************
+// * D3DDevice_GetScissors
+// ******************************************************************
+SOOVPA<7> D3DDevice_GetScissors_1_0_5849 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x0B, 0x74 },
+        { 0x14, 0x11 },
+        { 0x1F, 0x04 },
+        { 0x2A, 0x85 },
+        { 0x35, 0xE1 },
+        { 0x40, 0xC1 },
+        { 0x4B, 0xA4 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_SetScissors
+// ******************************************************************
+SOOVPA<8> D3DDevice_SetScissors_1_0_5849 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1D, 0x44 },
+        { 0x3C, 0x8B },
+        { 0x5D, 0xD9 },
+        { 0x7D, 0xD8 },
+        { 0x99, 0x0E },
+        { 0xB8, 0xE8 },
+        { 0xD7, 0x24 },
+        { 0xF6, 0x8B },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_GetBackMaterial
+// ******************************************************************
+SOOVPA<8> D3DDevice_GetBackMaterial_1_0_5849 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x05, 0x56 },
+        { 0x06, 0x57 },
+        { 0x0A, 0x0C },
+        { 0x0D, 0x44 },
+        { 0x0E, 0x0F },
+        { 0x12, 0x11 },
+        { 0x16, 0xF3 },
+        { 0x1A, 0xC2 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_CaptureStateBlock
+// ******************************************************************
+SOOVPA<8> D3DDevice_CaptureStateBlock_1_0_5849 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x1E, 0x3C },
+        { 0x3E, 0xC0 },
+        { 0x5E, 0x7E },
+        { 0x7E, 0x00 },
+        { 0x9E, 0x74 },
+        { 0xC0, 0x8B },
+        { 0xDE, 0x83 },
+        { 0xFE, 0x45 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_SetRenderState_RopZCmpAlwaysRead
+// ******************************************************************
+SOOVPA<7> D3DDevice_SetRenderState_RopZCmpAlwaysRead_1_0_5849 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    1,  // Xref Is Used
+
+    {
+		{ 0x05, XREF_D3DRS_ROPZCMPALWAYSREAD },
+
+        { 0x01, 0x44 },
+        { 0x04, 0xA3 },
+        { 0x09, 0xE8 },
+        { 0x0E, 0xC2 },
+        { 0x0F, 0x04 },
+        { 0x10, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_GetTexture2
+// ******************************************************************
+SOOVPA<8> D3DDevice_GetTexture2_1_0_5849 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x03, 0x04 },
+        { 0x0A, 0x56 },
+        { 0x0D, 0x81 },
+        { 0x0E, 0x88 },
+        { 0x12, 0x8B },
+        { 0x17, 0x06 },
+        { 0x1E, 0x8B },
+        { 0x21, 0xC2 },
+    }
+};
+
+// ******************************************************************
 // * D3D8_1_0_5849
 // ******************************************************************
 OOVPATable D3D8_1_0_5849[] =
@@ -2809,6 +2946,154 @@ OOVPATable D3D8_1_0_5849[] =
         "EmuIDirect3DDevice8_GetDisplayFieldStatus"
         #endif
    },
+   // IDirect3DCubeTexture8::GetCubeMapSurface2 (* Unchanged since 4627 *)
+    {
+        (OOVPA*)&D3DCubeTexture_GetCubeMapSurface2_1_0_4627,
+
+        XTL::EmuIDirect3DCubeTexture8_GetCubeMapSurface2,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DCubeTexture8_GetCubeMapSurface2"
+        #endif
+    }, 
+	// IDirect3DDevice8::SetVertexShaderConstant1Fast (* Unchanged since 5558 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetVertexShaderConstant1Fast_1_0_5558,
+
+        XTL::EmuIDirect3DDevice8_SetVertexShaderConstant1,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetVertexShaderConstant1Fast"
+        #endif
+    },
+	// D3DDevice_SetPixelShaderProgram (* Unchanged since 5558 *)
+    {
+        (OOVPA*)&D3DDevice_SetPixelShaderProgram_1_0_5558,
+        XTL::EmuIDirect3DDevice8_SetPixelShaderProgram,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetPixelShaderProgram"
+        #endif
+    },
+	// IDirect3DDevice8::SetScissors
+    {
+        (OOVPA*)&D3DDevice_SetScissors_1_0_5849,
+
+        XTL::EmuIDirect3DDevice8_SetScissors,
+
+        #ifdef _DEBUG_TRACE
+		"EmuIDirect3DDevice8_SetScissors"
+        #endif
+    },
+	// IDirect3DDevice8::GetScissors
+    {
+        (OOVPA*)&D3DDevice_GetScissors_1_0_5849,
+
+        XTL::EmuIDirect3DDevice8_GetScissors,
+
+        #ifdef _DEBUG_TRACE
+		"EmuIDirect3DDevice8_GetScissors"
+        #endif
+    },
+	// IDirect3DDevice8::GetBackMaterial
+    {
+        (OOVPA*)&D3DDevice_GetBackMaterial_1_0_5849,
+
+        XTL::EmuIDirect3DDevice8_GetBackMaterial,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetBackMaterial"
+        #endif
+    },
+	// IDirect3DDevice8::ApplyStateBlock (* unchanged since 4627 *)
+    {
+        (OOVPA*)&D3DDevice_ApplyStateBlock_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_ApplyStateBlock,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_ApplyStateBlock"
+        #endif
+    },
+	// IDirect3DDevice8::CaptureStateBlock
+    {
+        (OOVPA*)&D3DDevice_CaptureStateBlock_1_0_5849,
+
+        XTL::EmuIDirect3DDevice8_CaptureStateBlock,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_CaptureStateBlock"
+        #endif
+    },
+	// IDirect3DDevice8::SetRenderState_StencilCullEnable (* unchanged since 4134 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_StencilCullEnable_1_0_4134,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_StencilCullEnable,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_StencilCullEnable"
+        #endif
+    },
+	// IDirect3DDevice8::SetRenderState_OcclusionCullEnable (* unchanged since 4134 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_OcclusionCullEnable_1_0_4134,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable"
+        #endif
+    },
+	// IDirect3DDevice8::SetRenderState_RopZCmpAlwaysRead
+    {
+        (OOVPA*)&D3DDevice_SetRenderState_RopZCmpAlwaysRead_1_0_5849,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead"
+        #endif
+    },
+	// IDirect3DDevice8::SetRenderState_RopZRead (* unchanged since 4134 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_RopZRead_1_0_4134,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_RopZRead,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_RopZRead"
+        #endif
+    },
+    // IDirect3DDevice8::SetRenderState_DoNotCullUncompressed (* unchanged since 4134 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_DoNotCullUncompressed_1_0_4134,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed"
+        #endif
+    },
+	// D3DDevice_GetTexture2
+	{
+       (OOVPA*)&D3DDevice_GetTexture2_1_0_5849,
+       XTL::EmuIDirect3DDevice8_GetTexture2,
+
+       #ifdef _DEBUG_TRACE
+       "EmuIDirect3DDevice8_GetTexture2"
+       #endif
+    },
+	// IDirect3DDevice8::SetRenderTargetFast (* unchanged since 5344 *)
+    {
+        (OOVPA*)&D3DDevice_SetRenderTargetFast_1_0_5344,
+
+        XTL::EmuIDirect3DDevice8_SetRenderTargetFast,
+
+        #ifdef _DEBUG_TRACE
+		"EmuIDirect3DDevice8_SetRenderTargetFast"
+        #endif
+    },
 };
 
 // ******************************************************************

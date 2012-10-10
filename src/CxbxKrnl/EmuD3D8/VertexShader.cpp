@@ -2134,6 +2134,9 @@ extern boolean XTL::IsValidCurrentShader(void)
     EmuSwapFS();
     EmuIDirect3DDevice8_GetVertexShader(&Handle);
     EmuSwapFS();
+
+	//printf( "VS = 0x%.08X\n", Handle );
+
     if (VshHandleIsVertexShader(Handle))
     {
         X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader *)(Handle & 0x7FFFFFFF);

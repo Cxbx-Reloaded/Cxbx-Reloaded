@@ -202,6 +202,41 @@ SOOVPA<11> IDirect3DDevice8_SetVertexShaderConstant1_1_0_5558 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetVertexShaderConstant1Fast
+// ******************************************************************
+SOOVPA<11> IDirect3DDevice8_SetVertexShaderConstant1Fast_1_0_5558 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetVertexShaderConstant1Fast+0x05 : add eax, 0x1C
+        { 0x05, 0x83 }, // (Offset,Value)-Pair #1
+        { 0x06, 0xC0 }, // (Offset,Value)-Pair #2
+        { 0x07, 0x1C }, // (Offset,Value)-Pair #3
+
+        // IDirect3DDevice8_SetVertexShaderConstant1Fast+0x0E : jnb +0x2E
+        { 0x0E, 0x73 }, // (Offset,Value)-Pair #4
+        { 0x0F, 0x2E }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_SetVertexShaderConstant1Fast+0x28 : mov [eax-0x10], ecx
+        { 0x28, 0x89 }, // (Offset,Value)-Pair #6
+        { 0x29, 0x48 }, // (Offset,Value)-Pair #7
+        { 0x2A, 0xF0 }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_SetVertexShaderConstant1Fast+0x3D : retn
+        { 0x3D, 0xC3 }, // (Offset,Value)-Pair #9
+
+        // IDirect3DDevice8_SetVertexShaderConstant1Fast+0x47 : jmp +0xB7
+        { 0x47, 0xEB }, // (Offset,Value)-Pair #10
+        { 0x48, 0xB7 }, // (Offset,Value)-Pair #11
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetViewport
 // ******************************************************************
 SOOVPA<9> IDirect3DDevice8_SetViewport_1_0_5558 =
@@ -1922,6 +1957,192 @@ SOOVPA<8> D3DDevice_SetVertexData2f_1_0_5558 =
 };
 
 // ******************************************************************
+// * D3DDevice_LoadVertexShaderProgram
+// ******************************************************************
+SOOVPA<7> D3DDevice_LoadVertexShaderProgram_1_0_5558 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x0B, 0x2D },
+        { 0x18, 0x10 },
+        { 0x25, 0xE0 },
+        { 0x32, 0x5F },
+        { 0x3F, 0x24 },
+        { 0x4C, 0x83 },
+        { 0x5C, 0x89 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_SetPixelShaderProgram
+// ******************************************************************
+SOOVPA<7> D3DDevice_SetPixelShaderProgram_1_0_5558 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x06, 0xA1 },
+        { 0x0E, 0x88 },
+        { 0x16, 0x00 },
+        { 0x1E, 0x00 },
+        { 0x26, 0x09 },
+        { 0x32, 0xC7 },
+        { 0x36, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_SetRenderState_MultiSampleMode
+// ******************************************************************
+SOOVPA<9> D3DDevice_SetRenderState_MultiSampleMode_1_0_5558 = 
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x03, 0x04 },
+        { 0x0A, 0xA3 },
+        { 0x0F, 0x8B },
+        { 0x12, 0x19 },
+        { 0x17, 0x04 },
+        { 0x1B, 0x75 },
+        { 0x1C, 0x07 },
+        { 0x24, 0xC2 },
+        { 0x26, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_SetRenderState_MultiSampleMode
+// ******************************************************************
+SOOVPA<9> D3DDevice_SetRenderState_MultiSampleMode_1_0_5455 = 
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x03, 0x04 },
+        { 0x0A, 0xA3 },
+        { 0x0F, 0x8B },
+        { 0x12, 0x15 },
+        { 0x17, 0xF4 },
+        { 0x1B, 0x75 },
+        { 0x1C, 0x07 },
+        { 0x24, 0xC2 },
+        { 0x26, 0x00 },
+    }
+};
+
+
+// ******************************************************************
+// * D3DDevice_SetRenderState_MultiSampleRenderTargetMode
+// ******************************************************************
+SOOVPA<9> D3DDevice_SetRenderState_MultiSampleRenderTargetMode_1_0_5455 = 
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x03, 0x04 },
+        { 0x0A, 0xA3 },
+        { 0x0F, 0x8B },
+        { 0x12, 0x15 },
+        { 0x17, 0xF4 },
+        { 0x1B, 0x74 },
+        { 0x1C, 0x07 },
+        { 0x24, 0xC2 },
+        { 0x26, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_SetRenderState_MultiSampleRenderTargetMode
+// ******************************************************************
+SOOVPA<9> D3DDevice_SetRenderState_MultiSampleRenderTargetMode_1_0_5558 = 
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x03, 0x04 },
+        { 0x0A, 0xA3 },
+        { 0x0F, 0x8B },
+        { 0x12, 0x19 },
+        { 0x17, 0x04 },
+        { 0x1B, 0x74 },
+        { 0x1C, 0x07 },
+        { 0x24, 0xC2 },
+        { 0x26, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_SetRenderState_Dxt1NoiseEnable
+// ******************************************************************
+SOOVPA<8> D3DDevice_SetRenderState_Dxt1NoiseEnable_1_0_5558 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x0D, 0x8B },
+        { 0x1D, 0x80 },
+        { 0x2B, 0x08 },
+        { 0x3A, 0x01 },
+        { 0x49, 0xC7 },
+        { 0x58, 0x05 },
+        { 0x67, 0xC0 },
+        { 0x76, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_IsFencePending
+// ******************************************************************
+SOOVPA<7> D3DDevice_IsFencePending_1_0_5558 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x05, 0x8B },
+        { 0x06, 0x48 },
+        { 0x0A, 0x2C },
+        { 0x0E, 0xD0 },
+        { 0x12, 0x44 },
+        { 0x16, 0xC2 },
+        { 0x1A, 0xD8 },
+    }
+};
+
+// ******************************************************************
 // * D3D8_1_0_5558
 // ******************************************************************
 OOVPATable D3D8_1_0_5558[] =
@@ -2032,6 +2253,16 @@ OOVPATable D3D8_1_0_5558[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetVertexShaderConstant1"
+        #endif
+    },
+	// IDirect3DDevice8::SetVertexShaderConstant1Fast
+    {
+        (OOVPA*)&IDirect3DDevice8_SetVertexShaderConstant1Fast_1_0_5558,
+
+        XTL::EmuIDirect3DDevice8_SetVertexShaderConstant1,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetVertexShaderConstant1Fast"
         #endif
     },
     // IDirect3DDevice8::SetVertexShaderConstantNotInline (* unchanged since 5233 *)
@@ -3286,6 +3517,145 @@ OOVPATable D3D8_1_0_5558[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed"
+        #endif
+    },
+	// D3DDevice_LoadVertexShaderProgram
+    {
+        (OOVPA*)&D3DDevice_LoadVertexShaderProgram_1_0_5558,
+
+        XTL::EmuIDirect3DDevice8_LoadVertexShaderProgram,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_LoadVertexShaderProgram"
+        #endif
+    },
+	// D3DDevice_SetPixelShaderProgram
+    {
+        (OOVPA*)&D3DDevice_SetPixelShaderProgram_1_0_5558,
+        XTL::EmuIDirect3DDevice8_SetPixelShaderProgram,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetPixelShaderProgram"
+        #endif
+    },
+	// IDirect3DDevice8::SetRenderState_BackFillMode (* unchanged since 4134 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_BackFillMode_1_0_4134,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_BackFillMode,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_BackFillMode"
+        #endif
+    },
+	// IDirect3DDevice8::SetRenderState_TextureFactor (* unchanged since 5233 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_TextureFactor_1_0_5233,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_TextureFactor,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_TextureFactor"
+        #endif
+    },
+	// D3DDevice_SetRenderState_MultiSampleMask (* unchanged since 5233 *)
+	{
+		(OOVPA*)&D3DDevice_SetRenderState_MultiSampleMask_1_0_5233,
+
+		XTL::EmuIDirect3DDevice8_SetRenderState_MultiSampleMask,
+
+		#ifdef _DEBUG_TRACE
+		"EmuIDirect3DDevice8_SetRenderState_MultiSampleMask"
+		#endif
+	},
+	// IDirect3DDevice8::SetRenderState_MultiSampleMode
+    {
+        (OOVPA*)&D3DDevice_SetRenderState_MultiSampleMode_1_0_5558,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_MultiSampleMode,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_MultiSampleMode"
+        #endif
+    },
+	// IDirect3DDevice8::SetRenderState_MultiSampleMode
+    {
+        (OOVPA*)&D3DDevice_SetRenderState_MultiSampleMode_1_0_5455,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_MultiSampleMode,
+
+        #ifdef _DEBUG_TRACE
+		"EmuIDirect3DDevice8_SetRenderState_MultiSampleMode (5455)"
+        #endif
+    },
+	// IDirect3DDevice8::SetRenderState_MultiSampleRenderTargetMode
+    {
+        (OOVPA*)&D3DDevice_SetRenderState_MultiSampleRenderTargetMode_1_0_5558,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode"
+        #endif
+    },
+	// IDirect3DDevice8::SetRenderState_MultiSampleRenderTargetMode
+    {
+        (OOVPA*)&D3DDevice_SetRenderState_MultiSampleRenderTargetMode_1_0_5455,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode,
+
+        #ifdef _DEBUG_TRACE
+		"EmuIDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode (5455)"
+        #endif
+    },
+	// IDirect3DDevice8::SetRenderState_Dxt1NoiseEnable
+    {
+        (OOVPA*)&D3DDevice_SetRenderState_Dxt1NoiseEnable_1_0_5558,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable"
+        #endif
+    },
+	// IDirect3DDevice8::SetRenderState_StencilCullEnable (* unchanged since 4134 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_StencilCullEnable_1_0_4134,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_StencilCullEnable,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_StencilCullEnable"
+        #endif
+    },
+	// IDirect3DDevice8::SetTextureState_ColorKeyColor (* unchanged since 4134 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetTextureState_ColorKeyColor_1_0_4134,
+
+        XTL::EmuIDirect3DDevice8_SetTextureState_ColorKeyColor,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetTextureState_ColorKeyColor"
+        #endif
+    },
+	// IDirect3DDevice8::IsFencePending
+    {
+        (OOVPA*)&D3DDevice_IsFencePending_1_0_5558,
+
+        XTL::EmuIDirect3DDevice8_IsFencePending,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_IsFencePending"
+        #endif
+    },
+	// IDirect3DDevice8::SetRenderTargetFast (* unchanged since 5344 *)
+    {
+        (OOVPA*)&D3DDevice_SetRenderTargetFast_1_0_5344,
+
+        XTL::EmuIDirect3DDevice8_SetRenderTargetFast,
+
+        #ifdef _DEBUG_TRACE
+		"EmuIDirect3DDevice8_SetRenderTargetFast"
         #endif
     },
 };

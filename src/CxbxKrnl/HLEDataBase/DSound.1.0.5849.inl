@@ -217,35 +217,35 @@ SOOVPA<8> IDirectSoundBuffer8_SetFormat_1_0_5849 =
 // ******************************************************************
 // * CMcpxBuffer_Play
 // ******************************************************************
-//SOOVPA<11> CMcpxBuffer_Play_1_0_5849 =
-//{
-//    0,  // Large == 0
-//    11, // Count == 11
-//
-//    XREF_DSOUNDPLAY,    // XRef Is  Saved
-//    0,                  // XRef Not Used
-//
-//    {
-//        // CMcpxBuffer_Play+0x0B : test dword ptr [eax+8], 0x182000
-//        { 0x0B, 0xF7 }, // (Offset,Value)-Pair #1
-//        { 0x0C, 0x40 }, // (Offset,Value)-Pair #2
-//
-//        // CMcpxBuffer_Play+0x13 : jz +0x09
-//        { 0x13, 0x74 }, // (Offset,Value)-Pair #3
-//        { 0x14, 0x05 }, // (Offset,Value)-Pair #4
-//
-//        // CMcpxBuffer_Play+0x32 : test byte ptr [esi+0x12], 0x42
-//        { 0x32, 0xF6 }, // (Offset,Value)-Pair #5
-//        { 0x33, 0x46 }, // (Offset,Value)-Pair #6
-//        { 0x34, 0x12 }, // (Offset,Value)-Pair #7
-//        { 0x35, 0x42 }, // (Offset,Value)-Pair #8
-//
-//        // CMcpxBuffer_Play+0xA4 : call dword ptr [eax+0x1C]
-//        { 0xA4, 0xFF }, // (Offset,Value)-Pair #9
-//        { 0xA5, 0x50 }, // (Offset,Value)-Pair #10
-//        { 0xA6, 0x1C }, // (Offset,Value)-Pair #11
-//    }
-//};
+SOOVPA<11> CMcpxBuffer_Play_1_0_5849 =
+{
+    0,  // Large == 0
+    11, // Count == 11
+
+    XREF_DirectSound_CMcpxBuffer_Play,    // XRef Is  Saved
+    0,                  // XRef Not Used
+
+    {
+        // CMcpxBuffer_Play+0x0B : test dword ptr [eax+8], 0x182000
+        { 0x0B, 0xF7 }, // (Offset,Value)-Pair #1
+        { 0x0C, 0x40 }, // (Offset,Value)-Pair #2
+
+        // CMcpxBuffer_Play+0x13 : jz +0x09
+        { 0x13, 0x74 }, // (Offset,Value)-Pair #3
+        { 0x14, 0x05 }, // (Offset,Value)-Pair #4
+
+        // CMcpxBuffer_Play+0x32 : test byte ptr [esi+0x12], 0x42
+        { 0x32, 0xF6 }, // (Offset,Value)-Pair #5
+        { 0x33, 0x46 }, // (Offset,Value)-Pair #6
+        { 0x34, 0x12 }, // (Offset,Value)-Pair #7
+        { 0x35, 0x42 }, // (Offset,Value)-Pair #8
+
+        // CMcpxBuffer_Play+0xA4 : call dword ptr [eax+0x1C]
+        { 0xA4, 0xFF }, // (Offset,Value)-Pair #9
+        { 0xA5, 0x50 }, // (Offset,Value)-Pair #10
+        { 0xA6, 0x1C }, // (Offset,Value)-Pair #11
+    }
+};
 
 // ******************************************************************
 // * DirectSound::CMcpxBuffer::Play
@@ -267,6 +267,76 @@ SOOVPA<8> DirectSound_CMcpxBuffer_Play_1_0_5849 =
         { 0x26, 0x75 },
         { 0x2F, 0x8B },
         { 0x36, 0xC2 },
+    }
+};
+
+// ******************************************************************
+// * DirectSound::CMcpxBuffer::Play
+// ******************************************************************
+SOOVPA<7> DirectSound_CMcpxBuffer_Play2_1_0_5849 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    XREF_DirectSound_CMcpxBuffer_Play2,  // Xref Is Saved
+    0,  // Xref Not Used
+
+    {
+		{ 0x17, 0x43 },
+		{ 0x2D, 0xF6 },
+		{ 0x2E, 0xC3 },
+		{ 0x2F, 0x04 },
+        { 0xAD, 0xC2 },
+		{ 0xAE, 0x04 },
+		{ 0xAF, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * DirectSound::CDirectSoundBuffer::Play
+// ******************************************************************
+SOOVPA<9> DirectSound_CDirectSoundBuffer_Play_1_0_5849 = 
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    XREF_DSOUNDPLAY2,  // Xref Is Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x0C, 0x00 },
+        { 0x14, 0x74 },
+        { 0x21, 0xB8 },
+        { 0x2A, 0x24 },
+        { 0x2E, 0x20 },
+        { 0x33, 0x18 },
+        { 0x39, 0x85 },
+        { 0x44, 0xFF },
+        { 0x4B, 0xC7 },
+    }
+};
+
+// ******************************************************************
+// * IDirectSoundBuffer_Play
+// ******************************************************************
+SOOVPA<8> IDirectSoundBuffer_Play_1_0_5849 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    1,  // Xref Is Used
+
+    {
+        { 0x1D, XREF_DSOUNDPLAY2 },
+
+        { 0x03, 0x10 },
+        { 0x08, 0xFF },
+        { 0x0D, 0xC8 },
+        { 0x12, 0x83 },
+        { 0x17, 0x1B },
+        { 0x1C, 0xE8 },
+        { 0x21, 0xC2 },
     }
 };
 
@@ -1843,6 +1913,131 @@ SOOVPA<7> DirectSoundDoWork_1_0_5849 =
 };
 
 // ******************************************************************
+// * IDirectSound_SetEffectData
+// ******************************************************************
+// * No XRefs! Woohoo!
+// ******************************************************************
+SOOVPA<7> IDirectSound_SetEffectData_1_0_5849 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x04, 0x75 },
+        { 0x0A, 0x75 },
+        { 0x10, 0x14 },
+        { 0x16, 0x10 },
+        { 0x1C, 0x1B },
+        { 0x26, 0x5D },
+        { 0x28, 0x18 },
+    }
+};
+
+// ******************************************************************
+// * DirectSound::CMemoryManager::PoolAlloc
+// ******************************************************************
+SOOVPA<10> DirectSound_CMemoryManager_PoolAlloc_1_0_5849 = 
+{
+	0,	// Large == 0
+	10,	// Count == 10
+
+	-1,	// Xref Not Saved
+	0,	// Xref Not Used
+
+	{
+		{ 0x24, 0x83 },
+		{ 0x25, 0x7C },
+		{ 0x26, 0x24 },
+		{ 0x27, 0x10 },
+		{ 0x28, 0x00 },
+		{ 0x37, 0xF3 },
+		{ 0x38, 0xAB },
+		{ 0x44, 0xC2 },
+		{ 0x45, 0x0C },
+		{ 0x46, 0x00 },
+	}
+};
+
+// ******************************************************************
+// * XFileCreateMediaObjectAsync
+// ******************************************************************
+SOOVPA<8> XFileCreateMediaObjectAsync_1_0_5849 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x0A, 0xC0 },
+        { 0x16, 0xF8 },
+        { 0x22, 0xE6 },
+        { 0x2E, 0x20 },
+        { 0x3D, 0x8B },
+        { 0x49, 0x8B },
+        { 0x52, 0x06 },
+        { 0x5E, 0x0C },
+    }
+};
+
+// ******************************************************************
+// * DirectSound::CDirectSoundStream::SetPitch
+// ******************************************************************
+SOOVPA<12> DirectSound_CDirectSoundStream_SetPitch_1_0_5849 = 
+{
+    0,  // Large == 0
+    12, // Count == 12
+
+    -1, // Xref Not Saved
+    1,  // Xref Is Used
+
+    {
+        { 0x36, XREF_DSBUFFERSETPITCHB },
+
+        { 0x00, 0x56 },
+        { 0x0C, 0x00 },
+        { 0x14, 0x74 },
+        { 0x21, 0xB8 },
+        { 0x2A, 0x24 },
+        { 0x35, 0xE8 },
+        { 0x40, 0x68 },
+        { 0x4B, 0x8B },
+		{ 0x4F, 0xC2 },
+		{ 0x50, 0x08 },
+		{ 0x51, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * DirectSound::CDirectSoundStream::SetHeadroom
+// ******************************************************************
+SOOVPA<9> DirectSound_CDirectSoundStream_SetHeadroom_1_0_5849 = 
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    -1, // Xref Not Saved
+    1,  // Xref Is Used
+
+    {
+        { 0x36, XREF_DirectSound_CDirectSoundVoice_SetHeadroom },
+
+        { 0x00, 0x56 },
+        { 0x0C, 0x00 },
+        { 0x14, 0x74 },
+        { 0x21, 0xB8 },
+        { 0x2A, 0x24 },
+        { 0x35, 0xE8 },
+        { 0x40, 0x68 },
+        { 0x4B, 0x8B },
+    }
+};
+
+// ******************************************************************
 // * Direct_1_0_5849
 // ******************************************************************
 OOVPATable DSound_1_0_5849[] =
@@ -2149,7 +2344,7 @@ OOVPATable DSound_1_0_5849[] =
         "IDirectSoundBuffer8_SetMinDistance"
         #endif
     },
-    // CMcpxBuffer::Play
+    // CMcpxBuffer::Play 
     {
         (OOVPA*)&DirectSound_CMcpxBuffer_Play_1_0_5849, 0,
 
@@ -2157,24 +2352,14 @@ OOVPATable DSound_1_0_5849[] =
         "CMcpxBuffer_Play (XREF)"
         #endif
     },
-    // CDirectSoundBuffer::Play (* unchanged since 4361 *)
-    {
-        (OOVPA*)&CDirectSoundBuffer_Play_1_0_4361, 0,
+	// CMcpxBuffer::Play
+    /*{
+        (OOVPA*)&CMcpxBuffer_Play_1_0_5849, 0,
 
         #ifdef _DEBUG_TRACE
-        "CDirectSoundBuffer_Play (XREF)"
+        "CMcpxBuffer_Play2 (XREF)"
         #endif
-    },
-    // IDirectSoundBuffer8::Play (* unchanged since 4361 *)
-    {
-        (OOVPA*)&IDirectSoundBuffer8_Play_1_0_4361,
-
-        XTL::EmuIDirectSoundBuffer8_Play,
-
-        #ifdef _DEBUG_TRACE
-        "IDirectSoundBuffer8_Play"
-        #endif
-    },
+    },*/
     // IDirectSoundBuffer_Stop (Possibly weak, but quite OK for 4627 DSOUND)
     {
         (OOVPA*)&IDirectSoundBuffer_Stop_1_0_4627,
@@ -2740,6 +2925,95 @@ OOVPATable DSound_1_0_5849[] =
 
         #ifdef _DEBUG_TRACE
         "CDirectSound_SynchPlayback_1_0_5558"
+        #endif
+    },
+	// XAudioDownloadEffectsImage (* unchanged since 4627 *)
+	{
+        (OOVPA*)&XAudioDownloadEffectsImage_1_0_4627,
+        XTL::EmuXAudioDownloadEffectsImage,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXAudioDownloadEffectsImage"
+        #endif
+    },
+	// IDirectSoundStream_FlushEx
+    {
+        (OOVPA*)&IDirectSound_SetEffectData_1_0_5849, 
+		XTL::EmuIDirectSound8_SetEffectData,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSound_SetEffectData"
+        #endif
+    },
+	// DirectSound::CMemoryManager::PoolAlloc
+	{
+        (OOVPA*)&DirectSound_CMemoryManager_PoolAlloc_1_0_5849, 0,
+
+        #ifdef _DEBUG_TRACE
+		"DirectSound::CMemoryManager::PoolAlloc (XREF)"
+        #endif
+    },
+	// XFileCreateMediaObjectAsync
+	{
+        (OOVPA*)&XFileCreateMediaObjectAsync_1_0_5849, 
+			
+		XTL::EmuXFileCreateMediaObjectAsync,
+
+        #ifdef _DEBUG_TRACE
+		"XFileCreateMediaObjectAsync"
+        #endif
+    },
+	// CDirectSoundStream::SetFormat (* unchanged since 5558 *)
+    {
+        (OOVPA*)&DirectSound_CDirectSoundStream_SetFormat_1_0_5558, 
+		XTL::EmuCDirectSoundStream_SetFormat,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundStream::SetFormat"
+        #endif
+    },
+	// CDirectSoundStream::SetPitch
+    {
+        (OOVPA*)&DirectSound_CDirectSoundStream_SetPitch_1_0_5849, 
+		XTL::EmuCDirectSoundStream_SetPitch,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundStream::SetPitch"
+        #endif
+    },
+	// DirectSound::CDirectSoundStream::SetHeadroom
+    {
+        (OOVPA*)&DirectSound_CDirectSoundStream_SetHeadroom_1_0_5849,
+		XTL::EmuIDirectSoundStream_SetHeadroom,
+
+        #ifdef _DEBUG_TRACE
+        "DirectSound::CDirectSoundStream::SetHeadroom"
+        #endif
+	},
+	// CMcpxBuffer::Play2
+    {
+        (OOVPA*)&DirectSound_CMcpxBuffer_Play2_1_0_5849, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CMcpxBuffer_Play2 (XREF)"
+        #endif
+    },
+	// CDirectSoundBuffer::Play 
+    {
+        (OOVPA*)&DirectSound_CDirectSoundBuffer_Play_1_0_5849, 0,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundBuffer_Play (XREF)"
+        #endif
+    },
+    // IDirectSoundBuffer8::Play 
+    {
+        (OOVPA*)&IDirectSoundBuffer_Play_1_0_5849,
+
+        XTL::EmuIDirectSoundBuffer8_Play,
+
+        #ifdef _DEBUG_TRACE
+        "IDirectSoundBuffer8_Play"
         #endif
     },
 };

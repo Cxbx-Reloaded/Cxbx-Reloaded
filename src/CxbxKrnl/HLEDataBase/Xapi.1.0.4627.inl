@@ -32,7 +32,7 @@
 // *
 // ******************************************************************
 
-// NOTE: This function actually came in with 4928
+// NOTE: This function actually came in with 4831, not 4928!
 // ******************************************************************
 // * XapiApplyKernelPatches
 // ******************************************************************
@@ -75,6 +75,35 @@ SOOVPA<7> XapiInitProcess_1_0_4928 =
         { 0x4A, 0xA1 }, // (Offset,Value)-Pair #5
         { 0x4B, 0x18 }, // (Offset,Value)-Pair #6
         { 0x4C, 0x01 }, // (Offset,Value)-Pair #7
+    }
+};
+
+// ******************************************************************
+// * XapiInitProcess
+// ******************************************************************
+SOOVPA<7> XapiInitProcess_1_0_4831 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // XapiInitProcess+0x03 : sub esp, 0x34
+        { 0x05, 0x34 }, // (Offset,Value)-Pair #1
+
+        // XapiInitProcess+0x13 : push 0x0C
+        { 0x13, 0x6A }, // (Offset,Value)-Pair #2
+        { 0x14, 0x0C }, // (Offset,Value)-Pair #3
+
+        // XapiInitProcess+0x2A : repe stosd
+        { 0x1B, 0xF3 }, // (Offset,Value)-Pair #4
+        { 0x1C, 0xAB }, // (Offset,Value)-Pair #5
+
+        // XapiInitProcess+0x55 : jz +0x0B
+        { 0x48, 0x74 }, // (Offset,Value)-Pair #6
+        { 0x49, 0x4A }, // (Offset,Value)-Pair #7
     }
 };
 
@@ -1214,6 +1243,16 @@ OOVPATable XAPI_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXapiInitProcess"
+        #endif
+    },
+	// XapiInitProcess
+    {
+        (OOVPA*)&XapiInitProcess_1_0_4831,
+
+        XTL::EmuXapiInitProcess,
+
+        #ifdef _DEBUG_TRACE
+		"EmuXapiInitProcess (4831)"
         #endif
     },
 	// XapiInitProcess

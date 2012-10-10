@@ -992,6 +992,30 @@ DWORD WINAPI EmuXInputGetDeviceDescription
 // ******************************************************************
 int WINAPI EmuXAutoPowerDownResetTimer();
 
+// ******************************************************************
+// * func: EmuReadFileEx
+// ******************************************************************
+BOOL WINAPI EmuReadFileEx
+(
+	HANDLE hFile,                                       // handle to file
+	LPVOID lpBuffer,                                    // data buffer
+	DWORD nNumberOfBytesToRead,                         // number of bytes to read
+	LPOVERLAPPED lpOverlapped,                          // offset
+	LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine // completion routine
+);
+
+// ******************************************************************
+// * func: EmuWriteFileEx
+// ******************************************************************
+BOOL WINAPI EmuWriteFileEx
+(
+	HANDLE hFile,                                       // handle to output file
+	LPCVOID lpBuffer,                                   // data buffer
+	DWORD nNumberOfBytesToWrite,                        // number of bytes to write
+	LPOVERLAPPED lpOverlapped,                          // overlapped buffer
+	LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine // completion routine
+);
+
 // s+
 /* not necessary?
 // ******************************************************************

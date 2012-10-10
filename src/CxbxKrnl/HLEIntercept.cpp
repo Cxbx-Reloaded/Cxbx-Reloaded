@@ -365,6 +365,12 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                                 if(OrigBuildVersion == 4928 || OrigBuildVersion == 4831)
                                 {
                                     pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_4928, lower, upper);
+
+									if( pFunc == 0 )
+									{
+										pFunc = EmuLocateFunction((OOVPA*)&XapiInitProcess_1_0_4831, lower, upper);
+									}
+
                                     ProcessHeapOffs = 0x44;
                                     RtlCreateHeapOffs = 0x3B;
                                 }
@@ -491,6 +497,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                             }
 
                             DbgPrintf("HLE: 0x%.08X -> EmuD3DDeferredRenderState\n", XTL::EmuD3DDeferredRenderState);
+							//DbgPrintf("HLE: 0x%.08X -> XREF_D3DRS_ROPZCMPALWAYSREAD\n", XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD] );
                         }
                         else
                         {

@@ -436,6 +436,53 @@ SOOVPA<7> XapiFiberStartup_1_0_5558 =
 };
 
 // ******************************************************************
+// * XID_fCloseDevice
+// ******************************************************************
+SOOVPA<7> XID_fCloseDevice_1_0_5558 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    XREF_FCLOSEDEVICE,  // Xref Is Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x11, 0x45 },
+        { 0x24, 0xFF },
+        { 0x37, 0x89 },
+        { 0x4A, 0x86 },
+        { 0x5D, 0x53 },
+        { 0x70, 0xFF },
+        { 0x84, 0x89 },
+    }
+};
+
+// ******************************************************************
+// * XInputClose
+// ******************************************************************
+SOOVPA<9> XInputClose_1_0_5558 = 
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    -1, // Xref Not Saved
+    1,  // Xref Is Used
+
+    {
+        { 0x05, XREF_FCLOSEDEVICE },
+
+        { 0x00, 0x8B },
+        { 0x01, 0x4C },
+        { 0x02, 0x24 },
+        { 0x03, 0x04 },
+        { 0x04, 0xE8 },
+        { 0x09, 0xC2 },
+        { 0x0A, 0x04 },
+        { 0x0B, 0x00 },
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_5558
 // ******************************************************************
 OOVPATable XAPI_1_0_5558[] =
@@ -854,6 +901,24 @@ OOVPATable XAPI_1_0_5558[] =
 
         #ifdef _DEBUG_TRACE
         "EmuRtlDestroyHeap"
+        #endif
+    },
+	// XID_fCloseDevice
+    {
+        (OOVPA*)&XID_fCloseDevice_1_0_5558, 0,
+
+        #ifdef _DEBUG_TRACE
+        "XID_fCloseDevice (XREF)"
+        #endif
+    },
+	// XInputClose
+    {
+        (OOVPA*)&XInputClose_1_0_5558,
+
+        XTL::EmuXInputClose,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXInputClose"
         #endif
     },
 };

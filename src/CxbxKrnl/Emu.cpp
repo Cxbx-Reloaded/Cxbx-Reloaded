@@ -762,10 +762,12 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
             " EIP := 0x%.08X EFL := 0x%.08X\n"
             " EAX := 0x%.08X EBX := 0x%.08X ECX := 0x%.08X EDX := 0x%.08X\n"
             " ESI := 0x%.08X EDI := 0x%.08X ESP := 0x%.08X EBP := 0x%.08X\n"
+			" CR2 := 0x%.08X\n"
             "\n",
             e->ContextRecord->Eip, e->ContextRecord->EFlags,
             e->ContextRecord->Eax, e->ContextRecord->Ebx, e->ContextRecord->Ecx, e->ContextRecord->Edx,
-            e->ContextRecord->Esi, e->ContextRecord->Edi, e->ContextRecord->Esp, e->ContextRecord->Ebp);
+            e->ContextRecord->Esi, e->ContextRecord->Edi, e->ContextRecord->Esp, e->ContextRecord->Ebp,
+			e->ContextRecord->Dr2);
 
 #ifdef _DEBUG
         CONTEXT Context = *(e->ContextRecord);

@@ -446,6 +446,9 @@ typedef void (__cdecl * D3DVBLANKCALLBACK)(D3DVBLANKDATA *pData);
 // D3DSWAPCALLBACK
 typedef void (__cdecl * D3DSWAPCALLBACK)(D3DSWAPDATA *pData);
 
+// D3DCALLBACK
+typedef void (__cdecl * D3DCALLBACK)(DWORD Context);
+
 // deferred render state "unknown" flag
 #define X_D3DRS_UNK  0x7fffffff
 

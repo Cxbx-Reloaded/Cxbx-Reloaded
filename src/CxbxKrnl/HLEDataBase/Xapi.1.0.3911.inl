@@ -1614,6 +1614,52 @@ SOOVPA<7> GetFileAttributesA_1_0_3911 =
 };
 
 // ******************************************************************
+// * ReadFileEx@20
+// ******************************************************************
+SOOVPA<8> ReadFileEx_1_0_3911 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x09, 0x48 },
+        { 0x14, 0x8D },
+        { 0x1F, 0xFF },
+        { 0x2A, 0xFF },
+		{ 0x2F, 0x00 },
+        { 0x35, 0x00 },
+        { 0x40, 0x50 },
+        { 0x4B, 0xC0 },
+    }
+};
+
+// ******************************************************************
+// * WriteFileEx
+// ******************************************************************
+SOOVPA<8> WriteFileEx_1_0_3911 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x09, 0x48 },
+        { 0x14, 0x8D },
+        { 0x1F, 0xFF },
+        { 0x2A, 0xFF },
+		{ 0x2F, 0xFC },
+        { 0x35, 0x00 },
+        { 0x40, 0x50 },
+        { 0x4B, 0xC0 },
+    }
+};
+
+// ******************************************************************
 // * XAPI_1_0_3911
 // ******************************************************************
 OOVPATable XAPI_1_0_3911[] =
@@ -2120,6 +2166,24 @@ OOVPATable XAPI_1_0_3911[] =
         "EmuGetFileAttributesA"
         #endif
     },
+	// ReadFileEx
+	/*{
+        (OOVPA*)&ReadFileEx_1_0_3911,
+        XTL::EmuReadFileEx,
+
+        #ifdef _DEBUG_TRACE
+        "EmuReadFileEx"
+        #endif
+    },
+	// WriteFileEx
+	{
+        (OOVPA*)&WriteFileEx_1_0_3911,
+        XTL::EmuWriteFileEx,
+
+        #ifdef _DEBUG_TRACE
+        "EmuWriteFileEx"
+        #endif
+    },*/
 	// CloseHandle
     /*{
 	   (OOVPA*)&CloseHandle_1_0_3911,
