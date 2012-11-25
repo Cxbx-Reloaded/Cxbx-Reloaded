@@ -3330,7 +3330,7 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
            Length, FileInformationClass);
 
     // Safety/Sanity Check
-    if((FileInformationClass != FileFsSizeInformation) && (FileInformationClass != FileDirectoryInformation))
+    if(FileInformationClass != FileFsSizeInformation)
         CxbxKrnlCleanup("NtQueryVolumeInformationFile: Unsupported FileInformationClass");
 
     NTSTATUS ret = NtDll::NtQueryVolumeInformationFile
