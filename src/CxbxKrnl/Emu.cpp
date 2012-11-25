@@ -789,7 +789,7 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
                 "  Press Abort to terminate emulation.\n"
                 "  Press Retry to debug.\n"
                 "  Press Ignore to continue emulation.",
-                e->ContextRecord->Eip, e->ContextRecord->EFlags);
+                e->ContextRecord->Eip);
 
             e->ContextRecord->Eip += 1;
 
@@ -821,7 +821,7 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
                 "\n"
                 "  Press \"OK\" to terminate emulation.\n"
                 "  Press \"Cancel\" to debug.",
-                e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip, e->ContextRecord->EFlags);
+                e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip);
 
             if(MessageBox(g_hEmuWindow, buffer, "Cxbx", MB_ICONSTOP | MB_OKCANCEL) == IDOK)
             {
