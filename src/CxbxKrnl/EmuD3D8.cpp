@@ -5706,7 +5706,7 @@ HRESULT WINAPI XTL::EmuIDirect3DSurface8_LockRect
         if(Flags & 0x80)
             NewFlags |= D3DLOCK_READONLY;
 
-        if(Flags & !(0x80 | 0x40))
+        if(!(Flags & 0x80) && !(Flags & 0x40))
             CxbxKrnlCleanup("EmuIDirect3DSurface8_LockRect: Unknown Flags! (0x%.08X)", Flags);
 
 		try
@@ -5833,7 +5833,7 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_LockRect
         if(Flags & 0x80)
             NewFlags |= D3DLOCK_READONLY;
 
-        if(Flags & !(0x80 | 0x40))
+        if(!(Flags & 0x80) && !(Flags & 0x40))
             CxbxKrnlCleanup("EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)", Flags);
 
         // Remove old lock(s)
