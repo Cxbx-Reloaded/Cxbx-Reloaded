@@ -43,10 +43,10 @@
 /*! program entry point */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    /*! verify Cxbx.dll is the same version as Cxbx.exe */
+    /*! verify CxbxKrnl.dll is the same version as Cxbx.exe */
     if(!CxbxKrnlVerifyVersion(_CXBX_VERSION))
     {
-        MessageBox(NULL, "Cxbx.dll is the incorrect version", "Cxbx", MB_OK);
+        MessageBox(NULL, "CxbxKrnl.dll is the incorrect version", "Cxbx", MB_OK);
         return 1;
     }
 

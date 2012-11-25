@@ -448,11 +448,7 @@ EmuExe::EmuExe(Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename, HWND 
             *(uint32*)&m_bzSection[i][0x34] = 0;
             *(uint16*)&m_bzSection[i][0x38] = 0x0001;
 
-            #ifdef _DEBUG
             memcpy(&m_bzSection[i][0x3A], "CxbxKrnlNoFunc\0\0CxbxKrnl.dll\0\0", 30);
-            #else
-            memcpy(&m_bzSection[i][0x3A], "CxbxKrnlNoFunc\0\0Cxbx.dll\0\0\0\0\0\0", 30);
-            #endif
 
             printf("OK\n");
         }

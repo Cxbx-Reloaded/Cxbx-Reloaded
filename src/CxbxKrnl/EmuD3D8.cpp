@@ -294,11 +294,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 
     // register window class
     {
-        #ifdef _DEBUG
         HMODULE hCxbxDll = GetModuleHandle("CxbxKrnl.dll");
-        #else
-        HMODULE hCxbxDll = GetModuleHandle("Cxbx.dll");
-        #endif
 
         LOGBRUSH logBrush = {BS_SOLID, RGB(0,0,0)};
 

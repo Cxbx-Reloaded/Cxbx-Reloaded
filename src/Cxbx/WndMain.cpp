@@ -1866,7 +1866,7 @@ void WndMain::StartEmulation(EnumAutoConvert x_AutoConvert, HWND hwndParent)
         }
     }
 
-    // register xbe path with Cxbx.dll
+    // register xbe path with CxbxKrnl.dll
     g_EmuShared->SetXbePath(m_Xbe->m_szPath);
 
     // shell exe
