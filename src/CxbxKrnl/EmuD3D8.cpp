@@ -10396,7 +10396,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetScissors
 
 	g_pD3DDevice8->GetViewport( &vp );
 
-	pRects->x1 = pRects->x2 = 0;
+	pRects->x1 = pRects->y1 = 0;
 	pRects->x2 = vp.Width;
 	pRects->y2 = vp.Height;
 
