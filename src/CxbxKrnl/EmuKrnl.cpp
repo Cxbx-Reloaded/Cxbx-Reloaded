@@ -1208,6 +1208,34 @@ XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress()
 }
 
 // ******************************************************************
+// * 0x0002 AvSendTVEncoderOption()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(2) VOID NTAPI xboxkrnl::AvSendTVEncoderOption
+(
+    IN  PVOID   RegisterBase,
+    IN  ULONG   Option,
+    IN  ULONG   Param,
+    OUT ULONG   *Result
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuKrnl (0x%X): AvSendTVEncoderOption\n"
+           "(\n"
+           "   RegisterBase       : 0x%.08X\n"
+		   "   Option             : 0x%.08X\n"
+		   "   Param              : 0x%.08X\n"
+		   "   Result             : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), RegisterBase, Option, Param, Result);
+
+	// TODO: What does this do?
+	EmuWarning( "AvSendTVEncoderOption ignored!" );
+
+	EmuSwapFS();   // Xbox FS
+}
+
+// ******************************************************************
 // * 0x0008 DbgPrint
 // ******************************************************************
 XBSYSAPI EXPORTNUM(8) xboxkrnl::ULONG _cdecl xboxkrnl::DbgPrint

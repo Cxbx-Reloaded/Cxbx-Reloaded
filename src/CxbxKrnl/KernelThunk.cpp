@@ -59,7 +59,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367] =
 {
     (uint32)PANIC(0x0000),                          // 0x0000 (0)
     (uint32)&xboxkrnl::AvGetSavedDataAddress,       // 0x0001 (1)
-    (uint32)PANIC(0x0002),                          // 0x0002 (2)
+    (uint32)&xboxkrnl::AvSendTVEncoderOption,	    // 0x0002 (2)
     (uint32)PANIC(0x0003),                          // 0x0003 (3)
     (uint32)PANIC(0x0004),                          // 0x0004 (4)
     (uint32)PANIC(0x0005),                          // 0x0005 (5)
