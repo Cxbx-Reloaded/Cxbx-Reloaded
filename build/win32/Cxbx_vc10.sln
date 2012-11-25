@@ -1,14 +1,18 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual C++ Express 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cxbe", "Cxbe.vcproj", "{028D5D8F-072C-4308-9095-4EF1EA6B83B0}"
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cxbe", "Cxbe_vc10.vcxproj", "{028D5D8F-072C-4308-9095-4EF1EA6B83B0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{22592F16-CC5F-45CB-A40A-022FF6FCC146} = {22592F16-CC5F-45CB-A40A-022FF6FCC146}
+		{E7A72D3D-5810-4078-A243-348B59726365} = {E7A72D3D-5810-4078-A243-348B59726365}
+	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cxbx", "Cxbx.vcproj", "{E7A72D3D-5810-4078-A243-348B59726365}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cxbx", "Cxbx_vc10.vcxproj", "{E7A72D3D-5810-4078-A243-348B59726365}"
 	ProjectSection(ProjectDependencies) = postProject
 		{22592F16-CC5F-45CB-A40A-022FF6FCC146} = {22592F16-CC5F-45CB-A40A-022FF6FCC146}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CxbxKrnl", "CxbxKrnl.vcproj", "{22592F16-CC5F-45CB-A40A-022FF6FCC146}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CxbxKrnl", "CxbxKrnl_vc10.vcxproj", "{22592F16-CC5F-45CB-A40A-022FF6FCC146}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

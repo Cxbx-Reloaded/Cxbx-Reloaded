@@ -33,6 +33,7 @@
 // ******************************************************************
 #define _CXBXKRNL_INTERNAL
 
+#include <cmath>
 #include "CxbxKrnl.h"
 #include "Emu.h"
 #include "EmuFS.h"

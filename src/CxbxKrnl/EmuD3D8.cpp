@@ -4500,8 +4500,8 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 				{
 					// TODO: Hack for Crazy Taxi 3?
 					char szString[256];
-					sprintf( szString, "CreateVertexBuffer Failed!\n\nVB Size = 0x%X\n\nError: %s\nDesc: %s", dwSize,
-						DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet));
+					sprintf( szString, "CreateVertexBuffer Failed!\n\nVB Size = 0x%X\n\nError: \nDesc: ", dwSize/*,
+						DXGetErrorString8A(hRet)*//*, DXGetErrorDescription8A(hRet)*/);
 					
 					if( dwSize != 0 )
 						CxbxKrnlCleanup( szString );
@@ -4524,8 +4524,8 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 hRet = pResource->EmuVertexBuffer8->Lock(0, 0, &pData, 0);
 
                 if(FAILED(hRet))
-                    CxbxKrnlCleanup("VertexBuffer Lock Failed!\n\nError: %s\nDesc: %s",
-								DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet));
+                    CxbxKrnlCleanup("VertexBuffer Lock Failed!\n\nError: \nDesc: "/*,
+								DXGetErrorString8A(hRet)*//*, DXGetErrorDescription8A(hRet)*/);
 
 
                 memcpy(pData, (void*)pBase, dwSize);
@@ -4567,8 +4567,8 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 );
 
                 if(FAILED(hRet))
-					CxbxKrnlCleanup("CreateIndexBuffer Failed!\n\nError: %s\nDesc: %s\nSize: %d",
-								DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet), dwSize);
+					CxbxKrnlCleanup("CreateIndexBuffer Failed!\n\nError: \nDesc: \nSize: %d",
+								/*DXGetErrorString8A(hRet), *//*DXGetErrorDescription8A(hRet),*/ dwSize);
 
 
                 BYTE *pData = 0;
@@ -4576,8 +4576,8 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 hRet = pResource->EmuIndexBuffer8->Lock(0, dwSize, &pData, 0);
 
                 if(FAILED(hRet))
-                    CxbxKrnlCleanup("IndexBuffer Lock Failed!\n\nError: %s\nDesc: %s",
-								DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet));
+                    CxbxKrnlCleanup("IndexBuffer Lock Failed!\n\nError: %s\nDesc: "/*,
+								DXGetErrorString8A(hRet)*//*, DXGetErrorDescription8A(hRet)*/);
 
 
                 memcpy(pData, (void*)pBase, dwSize);
@@ -4796,8 +4796,8 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                     hRet = g_pD3DDevice8->CreateImageSurface(dwWidth, dwHeight, Format, &pResource->EmuSurface8);
 
                     if(FAILED(hRet))
-                        CxbxKrnlCleanup("CreateImageSurface Failed!\n\nError: %s\nDesc: %s",
-								DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet));
+                        CxbxKrnlCleanup("CreateImageSurface Failed!\n\nError: %s\nDesc: %s"/*,
+								DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet)*/);
 ;
 
                     DbgPrintf("EmuIDirect3DResource8_Register (0x%X) : Successfully Created ImageSurface (0x%.08X, 0x%.08X)\n", GetCurrentThreadId(), pResource, pResource->EmuSurface8);
@@ -4851,8 +4851,8 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                         );
 
                         if(FAILED(hRet))
-                            CxbxKrnlCleanup("CreateCubeTexture Failed!\n\nError: %s\nDesc: %s",
-								DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet));
+                            CxbxKrnlCleanup("CreateCubeTexture Failed!\n\nError: \nDesc: "/*,
+								DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet)*/);
 
                         DbgPrintf("EmuIDirect3DResource8_Register (0x%X) : Successfully Created CubeTexture (0x%.08X, 0x%.08X)\n", GetCurrentThreadId(), pResource, pResource->EmuCubeTexture8);
                     }
@@ -4884,8 +4884,8 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 						}*/
 
                         if(FAILED(hRet))
-							CxbxKrnlCleanup("CreateTexture Failed!\n\nError: %s\nDesc: %s",
-								DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet));
+							CxbxKrnlCleanup("CreateTexture Failed!\n\nError: \nDesc: "/*,
+								DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet)*/);
 
                         DbgPrintf("EmuIDirect3DResource8_Register (0x%X) : Successfully Created Texture (0x%.08X, 0x%.08X)\n", GetCurrentThreadId(), pResource, pResource->EmuTexture8);
                     }
@@ -9660,7 +9660,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_PersistDisplay()
 	IDirect3DSurface8* pBackSurface = NULL;
 	if( SUCCEEDED( g_pD3DDevice8->GetBackBuffer( 0, D3DBACKBUFFER_TYPE_MONO, &pBackSurface ) ) )
 	{
-		D3DXSaveSurfaceToFile( "persisted_surface.bmp", D3DXIFF_BMP, pBackSurface, NULL, NULL );
+		//D3DXSaveSurfaceToFile( "persisted_surface.bmp", D3DXIFF_BMP, pBackSurface, NULL, NULL );
 		pBackSurface->Release();
 
 		DbgPrintf("Persisted display surface saved to persisted_surface.bmp\n");
