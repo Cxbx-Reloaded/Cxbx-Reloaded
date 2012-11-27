@@ -5696,9 +5696,6 @@ HRESULT WINAPI XTL::EmuIDirect3DSurface8_LockRect
     }
     else
     {
-        if(Flags & 0x40)
-            EmuWarning("D3DLOCK_TILED ignored!");
-
         IDirect3DSurface8 *pSurface8 = pThis->EmuSurface8;
 
         DWORD NewFlags = 0;
@@ -5706,7 +5703,10 @@ HRESULT WINAPI XTL::EmuIDirect3DSurface8_LockRect
         if(Flags & 0x80)
             NewFlags |= D3DLOCK_READONLY;
 
-        if(!(Flags & 0x80) && !(Flags & 0x40))
+        if(Flags & 0x40)
+            EmuWarning("D3DLOCK_TILED ignored!");
+
+        if(!(Flags & 0x80) && !(Flags & 0x40) && Flags != 0)
             CxbxKrnlCleanup("EmuIDirect3DSurface8_LockRect: Unknown Flags! (0x%.08X)", Flags);
 
 		try
@@ -5833,7 +5833,10 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_LockRect
         if(Flags & 0x80)
             NewFlags |= D3DLOCK_READONLY;
 
-        if(!(Flags & 0x80) && !(Flags & 0x40))
+        if(Flags & 0x40)
+            EmuWarning("D3DLOCK_TILED ignored!");        
+
+        if(!(Flags & 0x80) && !(Flags & 0x40) && Flags != 0)
             CxbxKrnlCleanup("EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)", Flags);
 
         // Remove old lock(s)
