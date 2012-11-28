@@ -55,8 +55,8 @@ XBSYSAPI VOID *MmClaimGpuInstanceMemory;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(169) PVOID NTAPI MmCreateKernelStack
 (
-    IN ULONG NumberOfBytes,
-    IN ULONG Unknown
+    IN ULONG	NumberOfBytes,
+    IN BOOLEAN	DebuggerThread
 );
 
 // ******************************************************************

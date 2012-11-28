@@ -2162,8 +2162,8 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
 // ******************************************************************
 XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 (
-    ULONG NumberOfBytes,
-    ULONG Unknown
+    IN ULONG	NumberOfBytes,
+    IN BOOLEAN  DebuggerThread
 )
 {
     EmuSwapFS();   // Win2k/XP FS
@@ -2171,13 +2171,14 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
     DbgPrintf("EmuKrnl (0x%X): MmCreateKernelStack\n"
            "(\n"
            "   NumberOfBytes            : 0x%.08X\n"
-           "   Unknown                  : 0x%.08X\n"
+           "   DebuggerThread           : 0x%.08X\n"
            ");\n",
-           GetCurrentThreadId(), NumberOfBytes, Unknown);
+           GetCurrentThreadId(), NumberOfBytes, DebuggerThread);
 	
-	/*__asm int 3;
-	CxbxKrnlCleanup( "MmCreateKernelStack unimplemented (check call stack)" );*/
 	NtDll::PVOID pRet = NULL;
+
+	// We should validate NumberOfBytes for alignment with the page size
+
 	if(FAILED(NtDll::NtAllocateVirtualMemory(GetCurrentProcess(), &pRet, 0, &NumberOfBytes, MEM_COMMIT, PAGE_READWRITE)))
 	    EmuWarning("MmCreateKernelStack failed!\n");
 	else
