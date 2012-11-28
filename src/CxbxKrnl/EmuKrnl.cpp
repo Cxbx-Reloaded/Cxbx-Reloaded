@@ -4053,7 +4053,7 @@ XBSYSAPI EXPORTNUM(279) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualString
 
 	DbgPrintf("EmuKrnl (0x%X): RtlEqualString\n"
 			"(\n"
-			"	String2            : 0x%.08X (\"%s\")\n"
+			"	String1            : 0x%.08X (\"%s\")\n"
 			"	String2            : 0x%.08X (\"%s\")\n"
 			"	CaseSensitive      : 0x%.08X\n"
 			");\n",
