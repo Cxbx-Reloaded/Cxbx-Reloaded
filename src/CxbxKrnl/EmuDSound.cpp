@@ -109,7 +109,7 @@ static XTL::LPDIRECTSOUND8          g_pDSound8 = NULL;
 static int                          g_pDSound8RefCount = 0;
 static XTL::X_CDirectSoundBuffer   *g_pDSoundBufferCache[SOUNDBUFFER_CACHE_SIZE];
 static XTL::X_CDirectSoundStream   *g_pDSoundStreamCache[SOUNDSTREAM_CACHE_SIZE];
-static int							g_bDSoundCreateCalled = false;
+static int							g_bDSoundCreateCalled = FALSE;
 
 // periodically update sound buffers
 static void HackUpdateSoundBuffers()
@@ -269,7 +269,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreate
     HRESULT hRet = DS_OK;
 
 	// Set this flag when this function is called
-	g_bDSoundCreateCalled = true;
+	g_bDSoundCreateCalled = TRUE;
 
     if(!initialized || !g_pDSound8)
     {
@@ -1711,7 +1711,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
 				g_pDSoundStreamCache[v] = 0;
 
 			// Let's count DirectSound as being initialized now
-			g_bDSoundCreateCalled = true;
+			g_bDSoundCreateCalled = TRUE;
 		}
 		else
 			EmuWarning("DirectSound not initialized!");

@@ -361,9 +361,9 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
         {
             memset(&m_Header.dwInitFlags, 0, sizeof(m_Header.dwInitFlags));
 
-            m_Header.dwInitFlags.bLimit64MB = true;
-            m_Header.dwInitFlags.bDontSetupHarddisk = false;
-            m_Header.dwInitFlags.bMountUtilityDrive = true;
+            m_Header.dwInitFlags.bLimit64MB = 1;
+            m_Header.dwInitFlags.bDontSetupHarddisk = 0;
+            m_Header.dwInitFlags.bMountUtilityDrive = 1;
         }
 
         // various PE copies
@@ -587,12 +587,12 @@ Xbe::Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail)
                 memset(&m_SectionHeader[v].dwFlags, 0, sizeof(m_SectionHeader->dwFlags));
 
                 if(characteristics & IMAGE_SCN_MEM_WRITE)
-                    m_SectionHeader[v].dwFlags.bWritable =  true;
+                    m_SectionHeader[v].dwFlags.bWritable =  1;
 
                 if( (characteristics & IMAGE_SCN_MEM_EXECUTE) || (characteristics & IMAGE_SCN_CNT_CODE) )
-                    m_SectionHeader[v].dwFlags.bExecutable = true;
+                    m_SectionHeader[v].dwFlags.bExecutable = 1;
 
-                m_SectionHeader[v].dwFlags.bPreload = true;
+                m_SectionHeader[v].dwFlags.bPreload = 1;
                 m_SectionHeader[v].dwVirtualAddr = x_Exe->m_SectionHeader[v].m_virtual_addr + m_Header.dwPeBaseAddr;
 
                 if(v < m_Header.dwSections-1)
