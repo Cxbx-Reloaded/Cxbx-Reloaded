@@ -1361,7 +1361,7 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
 // ******************************************************************
 XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
 (
-    IN  DWORD               ValueIndex,
+    IN  EEPROM_INDEX        ValueIndex,
     OUT DWORD              *Type,
     OUT PUCHAR              Value,
     IN  SIZE_T              ValueLength,
@@ -1380,111 +1380,100 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
            ");\n",
            GetCurrentThreadId(), ValueIndex, Type, Value, ValueLength, ResultLength);
 
+    if (!Type || !Value)
+        CxbxKrnlCleanup("Assertion in ExQueryNonVolatileSetting()");
+
+    NTSTATUS ret = STATUS_SUCCESS;
+
     // handle eeprom read
     switch(ValueIndex)
     {
         // Factory Game Region
-        case 0x104:
+        case EEPROM_FACTORY_GAME_REGION:
         {
             // TODO: configurable region or autodetect of some sort
-            if(Type != 0)
-                *Type = 0x04;
-
-            if(Value != 0)
-                *Value = 0x01;  // North America
-
             if(ResultLength != 0)
                 *ResultLength = 0x04;
+
+            if(ValueLength >= 4) {
+                *Type = 0x04;
+                *Value = 0x01;  // North America
+            }
         }
         break;
 
-        // Factory AC Region
-        case 0x103:
+        // Factory AV Region
+        case EEPROM_FACTORY_AV_REGION:
         {
             // TODO: configurable region or autodetect of some sort
-            if(Type != 0)
-                *Type = 0x04;
-
-            if(Value != 0)
-                *Value = 0x01; // NTSC_M
-
             if(ResultLength != 0)
                 *ResultLength = 0x04;
+			
+            *Type = 0x04;
+            *Value = 0x01; // NTSC_M
         }
         break;
 
         // Language
-        case 0x007:
+        case EEPROM_LANGUAGE:
         {
             // TODO: configurable language or autodetect of some sort
-            if(Type != 0)
-                *Type = 0x04;
-
-            if(Value != 0)
-                *Value = 0x01;  // English
-
             if(ResultLength != 0)
                 *ResultLength = 0x04;
+
+            *Type = 0x04;
+            *Value = 0x01;  // English
         }
         break;
 
-        // Video Flags
-        case 0x008:
+        // Video Flag
+        case EEPROM_VIDEO:
         {
             // TODO: configurable video flags or autodetect of some sort
-            if(Type != 0)
-                *Type = 0x04;
-
-            if(Value != 0)
-                *Value = 0x10;  // Letterbox
-
             if(ResultLength != 0)
                 *ResultLength = 0x04;
+
+            *Type = 0x04;
+            *Value = 0x10;  // Letterbox
         }
         break;
 
         // Audio Flags
-        case 0x009:
+        case EEPROM_AUDIO:
         {
-            if(Type != 0)
-                *Type = 0x04;
-
-            if(Value != 0)
-                *Value = 0;
-
             if(ResultLength != 0)
-                *ResultLength = 0x04;
+                *ResultLength = 0x04;            
+            
+            *Type = 0x04;
+            *Value = 0;  // Stereo, no AC3, no DTS
         }
 
         case EEPROM_MISC:
         {
-            if(Type != 0)
-                *Type  = 0x04;
-
-            if(Value != 0)
-                *Value = 0;
-
             if(ResultLength != 0)
                 *ResultLength = 0x04;
+            
+            *Type  = 0x04;
+            *Value = 0;  // No automatic power down
         }
         break;
 
-        /* Timezone info
-        case 0x0FF:
+        case EEPROM_MAX_OS:
         {
-            _asm int 3;
+            // I'm fairly sure calling ExQueryNonVolatileSetting with EEPROM_MAX_OS is a bug in the game
+            ret = STATUS_OBJECT_NAME_NOT_FOUND;
         }
         break;
-        //*/
 
         default:
             EmuWarning("ExQueryNonVolatileSetting unknown ValueIndex (%d)", ValueIndex);
+            ret = STATUS_OBJECT_NAME_NOT_FOUND;
             break;
     }
 
     EmuSwapFS();   // Xbox FS
 
-    return STATUS_SUCCESS;
+    return ret;
 }
 
 // ******************************************************************
