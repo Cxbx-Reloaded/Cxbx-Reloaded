@@ -5813,7 +5813,7 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_LockRect
 
     HRESULT hRet;
 
-	DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DTexture8_LockRect (pThis->Texture = 0x%8.8X)\n", pThis->EmuTexture8);
+	DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DTexture8_LockRect (pThis->Texture = 0x%8.8X)\n", GetCurrentThreadId(), pThis->EmuTexture8);
 
     EmuVerifyResourceIsRegistered(pThis);
 
@@ -8486,10 +8486,10 @@ XTL::D3DCOLOR * WINAPI XTL::EmuIDirect3DPalette8_Lock2
 
     DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DPalette8_Lock\n"
            "(\n"
-           "   pThis               : 0x%.08X\n"
+           "   pThis               : 0x%.08X (->Data : 0x%.08X)\n"
            "   Flags               : 0x%.08X\n"
            ");\n",
-           GetCurrentThreadId(), Flags);
+           GetCurrentThreadId(), pThis, pThis->Data, Flags);
 
     D3DCOLOR *pColors = (D3DCOLOR*)pThis->Data;
 
@@ -9338,8 +9338,8 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateStateBlock
 
 	DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreateStateBlock\n"
            "(\n"
-           "   Type                      : %f\n"
-           "   pToken                    : %f\n"
+           "   Type                      : 0x%.08X\n"
+           "   pToken                    : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), Type, pToken);
 
@@ -9586,7 +9586,7 @@ VOID WINAPI XTL::EmuD3DDevice_SetStateUP()
 {
 	EmuSwapFS();	// Win2k/XP FS
 
-	DbgPrintf("EmuD3D8 (0x%X): EmuD3DDevice_SetStateUP()\n");
+	DbgPrintf("EmuD3D8 (0x%X): EmuD3DDevice_SetStateUP()\n", GetCurrentThreadId());
 
 	// TODO: Anything?
 	__asm int 3;
@@ -9963,7 +9963,7 @@ void WINAPI XTL::EmuXMETAL_StartPush(void* Unknown)
 
 	DbgPrintf("EmuD3D8 (0x%X): EmuXMETAL_StartPush\n"
 		   "(\n" 
-		   "   Unknown           : 0x%.08X\n",
+		   "   Unknown           : 0x%.08X\n"
 		   ");\n", GetCurrentThreadId(), Unknown);
 
 	// This function is too low level to actually emulate

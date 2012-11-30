@@ -1207,7 +1207,7 @@ VOID XTL::EmuFlushIVB()
                 uiStride += (sizeof(FLOAT)*4);
             }
 
-            DbgPrintf("IVB Position := {%f, %f, %f, %f}\n", g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z, g_IVBTable[v].Position.z, g_IVBTable[v].Rhw);
+            DbgPrintf("IVB Position := {%f, %f, %f, %f, %f}\n", g_IVBTable[v].Position.x, g_IVBTable[v].Position.y, g_IVBTable[v].Position.z, g_IVBTable[v].Position.z, g_IVBTable[v].Rhw);
         }
 		else if(dwPos == D3DFVF_XYZB1)
         {

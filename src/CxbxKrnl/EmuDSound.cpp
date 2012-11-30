@@ -3891,7 +3891,7 @@ HRESULT WINAPI XTL::EmuXFileCreateMediaObjectAsync
 		   "   dwMaxPackets              : 0x%.08X\n"
            "   ppMediaObject             : 0x%.08X\n"
            ");\n",
-           GetCurrentThreadId(), hFile, ppMediaObject);
+           GetCurrentThreadId(), hFile, dwMaxPackets, ppMediaObject);
 
 	// TODO: Implement
 
