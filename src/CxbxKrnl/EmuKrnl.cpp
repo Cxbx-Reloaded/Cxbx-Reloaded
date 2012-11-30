@@ -1766,10 +1766,10 @@ XBSYSAPI EXPORTNUM(107) VOID NTAPI xboxkrnl::KeInitializeDpc
            GetCurrentThreadId(), Dpc, DeferredRoutine, DeferredContext);
 
     // inialize Dpc field values
-    Dpc->Number = 0;
     Dpc->DeferredRoutine = DeferredRoutine;
     Dpc->Type = DpcObject;
     Dpc->DeferredContext = DeferredContext;
+    Dpc->Inserted = FALSE;
 
     EmuSwapFS();   // Xbox FS
 

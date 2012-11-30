@@ -704,8 +704,8 @@ typedef VOID (*PKDEFERRED_ROUTINE)
 typedef struct _KDPC
 {
     CSHORT              Type;               // 0x00
-    UCHAR               Number;             // 0x02
-    UCHAR               Importance;         // 0x03
+    BOOLEAN             Inserted;           // 0x02
+    BYTE                Padding;            // 0x03
     LIST_ENTRY          DpcListEntry;       // 0x04
     PKDEFERRED_ROUTINE  DeferredRoutine;    // 0x0C
     PVOID               DeferredContext;
