@@ -279,9 +279,10 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
         }
     }
 
-	// Smashing drive *NTSC* 
+	
 	if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
 	{
+		// Smashing drive *NTSC* 
 		if(e->ContextRecord->Eip == 0xA41F5)
 		{
 			// Skip call to D3D::SwapStart(class D3D::CDevice *)
@@ -292,11 +293,8 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
 
 			return EXCEPTION_CONTINUE_EXECUTION;
 		}
-	}
 
-	// House of the Dead 3 *NTSC*
-	if(e->ExceptionRecord->ExceptionCode == 0xC0000005)
-	{
+		// House of the Dead 3 *NTSC*
 		if(e->ContextRecord->Eip == 0xB961E)
 		{
 			e->ContextRecord->Eip += 2;
@@ -308,6 +306,7 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
 			return EXCEPTION_CONTINUE_EXECUTION;
 		}
 
+		// House of the Dead 3 *NTSC*
 		if(e->ContextRecord->Eip == 0x1197F4)
 		{
 			e->ContextRecord->Eip += 2;

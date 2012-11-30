@@ -71,7 +71,7 @@ static BOOL				g_bXInputInitialized = FALSE;
 // ******************************************************************
 // * func: EmuXInputPCPoll
 // ******************************************************************
-void XTL::EmuXInputPCPoll( XTL::PXINPUT_STATE Controller )
+/*void XTL::EmuXInputPCPoll( XTL::PXINPUT_STATE Controller )
 {
 	//
 	// Get the PC's XInput values
@@ -99,4 +99,4 @@ void XTL::EmuXInputPCPoll( XTL::PXINPUT_STATE Controller )
 	Controller->Gamepad.bAnalogButtons[5] = (g_Controller.Gamepad.wButtons & 0x0200) ? 1 : 0;
 	Controller->Gamepad.bAnalogButtons[6] = g_Controller.Gamepad.bLeftTrigger;
 	Controller->Gamepad.bAnalogButtons[7] = g_Controller.Gamepad.bRightTrigger;
-}
+}*/

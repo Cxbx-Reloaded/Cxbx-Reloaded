@@ -37,6 +37,6 @@
 // ******************************************************************
 // * func: EmuXInputPCPoll
 // ******************************************************************
-void EmuXInputPCPoll( XTL::PXINPUT_STATE Controller );
+// void EmuXInputPCPoll( XTL::PXINPUT_STATE Controller );
 
 #endif
