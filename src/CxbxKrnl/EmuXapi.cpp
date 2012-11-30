@@ -2177,7 +2177,7 @@ DWORD WINAPI XTL::EmuGetFileAttributesA
 
 	DWORD dwRet = GetFileAttributesA(szBuffer);
 	if(FAILED(dwRet))
-		EmuWarning("GetFileAttributes failed!");
+		EmuWarning("GetFileAttributes(\"%s\") failed!", szBuffer);
 
 	EmuSwapFS();
 
