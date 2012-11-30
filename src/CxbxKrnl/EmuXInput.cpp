@@ -69,7 +69,7 @@ static BOOL				g_bXInputInitialized = FALSE;
 
 
 // ******************************************************************
-// * func: EmuXInputPoll
+// * func: EmuXInputPCPoll
 // ******************************************************************
 void XTL::EmuXInputPCPoll( XTL::PXINPUT_STATE Controller )
 {

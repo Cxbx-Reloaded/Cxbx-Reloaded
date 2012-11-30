@@ -67,7 +67,7 @@ void XTL::EmuDInputCleanup()
 }
 
 // ******************************************************************
-// * func: XTL::EmuPollController
+// * func: XTL::EmuDInputPoll
 // ******************************************************************
 void XTL::EmuDInputPoll(XTL::PXINPUT_STATE Controller)
 {

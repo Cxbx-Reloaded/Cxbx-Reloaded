@@ -830,7 +830,7 @@ DWORD WINAPI XTL::EmuXInputGetState
 }
 
 // ******************************************************************
-// * func: EmuInputGetState
+// * func: EmuInputSetState
 // ******************************************************************
 DWORD WINAPI XTL::EmuXInputSetState
 (

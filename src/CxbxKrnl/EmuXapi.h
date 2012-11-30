@@ -494,7 +494,7 @@ DWORD WINAPI EmuXInputGetState
 );
 
 // ******************************************************************
-// * func: EmuXInputGetState
+// * func: EmuXInputSetState
 // ******************************************************************
 DWORD WINAPI EmuXInputSetState
 (
