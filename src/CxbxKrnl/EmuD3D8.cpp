@@ -4617,10 +4617,11 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
         case X_D3DCOMMON_TYPE_SURFACE:
         case X_D3DCOMMON_TYPE_TEXTURE:
         {
-            if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
+            if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE) {
                 DbgPrintf("EmuIDirect3DResource8_Register :-> Surface...\n");
-            else
+            } else {
                 DbgPrintf("EmuIDirect3DResource8_Register :-> Texture...\n");
+            }
 
             X_D3DPixelContainer *pPixelContainer = (X_D3DPixelContainer*)pResource;
 
