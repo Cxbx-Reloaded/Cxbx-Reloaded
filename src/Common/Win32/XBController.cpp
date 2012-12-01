@@ -371,7 +371,7 @@ bool XBController::ConfigPoll(char *szStatus)
 
                 Map(CurConfigObject, DeviceInstance.tszInstanceName, dwHow, dwFlags);
 
-                DbgPrintf("Cxbx: Detected %s%s on %s%lu\n", szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType);
+                printf("Cxbx: Detected %s%s on %s%lu\n", szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType);
 
                 sprintf(szStatus, "Success: %s Mapped to '%s%s' on '%s'!", m_DeviceNameLookup[CurConfigObject], szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName);
 
@@ -408,7 +408,7 @@ bool XBController::ConfigPoll(char *szStatus)
             {
                 Map(CurConfigObject, "SysKeyboard", dwHow, dwFlags);
 
-                DbgPrintf("Cxbx: Detected Key %d on SysKeyboard\n", dwHow);
+                printf("Cxbx: Detected Key %d on SysKeyboard\n", dwHow);
 
                 sprintf(szStatus, "Success: %s Mapped to Key %d on SysKeyboard", m_DeviceNameLookup[CurConfigObject], dwHow);
 
@@ -446,7 +446,7 @@ bool XBController::ConfigPoll(char *szStatus)
             {
                 Map(CurConfigObject, "SysMouse", dwHow, dwFlags);
 
-                DbgPrintf("Cxbx: Detected Button %d on SysMouse\n", dwHow);
+                printf("Cxbx: Detected Button %d on SysMouse\n", dwHow);
 
                 sprintf(szStatus, "Success: %s Mapped to Button %d on SysMouse", m_DeviceNameLookup[CurConfigObject], dwHow);
 
@@ -518,7 +518,7 @@ bool XBController::ConfigPoll(char *szStatus)
 
                     Map(CurConfigObject, "SysMouse", dwHow, dwFlags);
 
-                    DbgPrintf("Cxbx: Detected Movement on the %s%s on SysMouse\n", szDirection, szObjName);
+                    printf("Cxbx: Detected Movement on the %s%s on SysMouse\n", szDirection, szObjName);
 
                     sprintf(szStatus, "Success: %s Mapped to %s%s on SysMouse", m_DeviceNameLookup[CurConfigObject], szDirection, szObjName);
 
@@ -573,7 +573,7 @@ void XBController::ListenBegin(HWND hwnd)
     {
         if(m_ObjectConfig[v].dwDevice >= m_dwInputDeviceCount)
         {
-            DbgPrintf("Warning: Device Mapped to %s was not found!\n", m_DeviceNameLookup[v]);
+            printf("Warning: Device Mapped to %s was not found!\n", m_DeviceNameLookup[v]);
             m_ObjectConfig[v].dwDevice = -1;
         }
     }
