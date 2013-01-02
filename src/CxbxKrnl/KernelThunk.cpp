@@ -102,7 +102,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367] =
     (uint32)PANIC(0x002A),                          // 0x002A (42)
     (uint32)PANIC(0x002B),                          // 0x002B (43)
     (uint32)PANIC(0x002C),                          // 0x002C (44)
-    (uint32)PANIC(0x002D),                          // 0x002D (45)
+    (uint32)&xboxkrnl::HalReadSMBusValue,           // 0x002D (45)
     (uint32)PANIC(0x002E),                          // 0x002E (46)
     (uint32)PANIC(0x002F),                          // 0x002F (47)
     (uint32)PANIC(0x0030),                          // 0x0030 (48)

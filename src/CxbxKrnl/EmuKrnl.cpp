@@ -1554,6 +1554,40 @@ XBSYSAPI EXPORTNUM(37) xboxkrnl::LONG NTAPI xboxkrnl::FscSetCacheSize(ULONG uCac
 }
 
 // ******************************************************************
+// * 0x002D - HalReadSMBusValue
+// ******************************************************************
+XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
+(
+    IN  UCHAR               Address,
+    IN  UCHAR               Command,
+    IN  BOOLEAN             ReadWord,
+    OUT PULONG              DataValue
+)
+{
+	EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): HalReadSMBusValue\n"
+           "(\n"
+           "   Address             : 0x%.08X\n"
+           "   Command             : 0x%.08X\n"
+           "   ReadWord            : 0x%.08X\n"
+           "   DataValue           : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), Address, Command, ReadWord, DataValue);
+
+    if (ReadWord) {
+        // Write UCHAR
+    } else {
+        // Write BYTE
+    }
+
+	EmuSwapFS();	// Xbox FS
+
+	return STATUS_SUCCESS;
+}
+
+
+// ******************************************************************
 // * 0x0031 - HalReturnToFirmware
 // ******************************************************************
 XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
