@@ -3779,7 +3779,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetNotificationPositions
            ");\n",
            GetCurrentThreadId(), pThis, dwNotifyCount, paNotifies);
 
-	HRESULT hr;
+	HRESULT hr = DSERR_INVALIDPARAM;
 
 	// If we have a valid buffer, query a PC IDirectSoundNotify pointer and
 	// use the paramaters as is since they are directly compatible, then release
