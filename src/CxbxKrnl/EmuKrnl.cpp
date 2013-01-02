@@ -1578,6 +1578,35 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
 }
 
 // ******************************************************************
+// * 0x0032 - HalWriteSMBusValue
+// ******************************************************************
+XBSYSAPI EXPORTNUM(50) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMBusValue
+(
+    IN  UCHAR               Address,
+    IN  UCHAR               Command,
+    IN  BOOLEAN             WriteWord,
+    IN  ULONG               DataValue
+)
+{
+	EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): HalWriteSMBusValue\n"
+           "(\n"
+           "   Address             : 0x%.08X\n"
+           "   Command             : 0x%.08X\n"
+           "   WriteWord           : 0x%.08X\n"
+           "   DataValue           : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), Address, Command, WriteWord, DataValue);
+
+	// TODO: Later.
+
+	EmuSwapFS();	// Xbox FS
+
+	return STATUS_SUCCESS;
+}
+
+// ******************************************************************
 // * 0x0042 - IoCreateFile
 // ******************************************************************
 XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile

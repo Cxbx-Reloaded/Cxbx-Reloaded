@@ -73,12 +73,12 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN HalReturnToFirmware
 // ******************************************************************
 // * HalWriteSMBusValue
 // ******************************************************************
-XBSYSAPI EXPORTNUM(50) ULONG NTAPI HalWriteSMBusValue
+XBSYSAPI EXPORTNUM(50) NTSTATUS NTAPI HalWriteSMBusValue
 (
     UCHAR   Address,
     UCHAR   Command,
-    BOOLEAN WordFlag,
-    ULONG   Value
+    BOOLEAN WriteWord,
+    ULONG   DataValue
 );
 
 // ******************************************************************
