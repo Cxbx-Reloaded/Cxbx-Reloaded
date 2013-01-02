@@ -7596,7 +7596,7 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EmuIDirect3DDevice8_GetStreamSource2
                GetCurrentThreadId(), StreamNumber, pStride);
 
     EmuWarning("Not correctly implemented yet!");
-    X_D3DVertexBuffer* pVertexBuffer;
+    X_D3DVertexBuffer* pVertexBuffer = new X_D3DVertexBuffer();
     g_pD3DDevice8->GetStreamSource(StreamNumber, (struct XTL::IDirect3DVertexBuffer8 **)&pVertexBuffer, pStride);
 
     EmuSwapFS();
