@@ -1460,8 +1460,12 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 
         case EEPROM_MAX_OS:
         {
-            // I'm fairly sure calling ExQueryNonVolatileSetting with EEPROM_MAX_OS is a bug in the game
-            ret = STATUS_OBJECT_NAME_NOT_FOUND;
+            // This is called to return a complete XBOX_USER_SETTINGS structure
+            //
+            // One example is from XapipQueryTimeZoneInformation(), where it is used to
+            // detect the local timezone information.
+
+            // TODO
         }
         break;
 
