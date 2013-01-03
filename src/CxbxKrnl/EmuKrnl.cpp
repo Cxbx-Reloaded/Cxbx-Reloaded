@@ -2397,28 +2397,56 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 
     DbgPrintf("EmuKrnl (0x%X): MmQueryStatistics\n"
            "(\n"
-           "   MemoryStatistics         : 0x%.08X\n"
+           "   MemoryStatistics         : 0x%.08X (MemoryStatistics->Length = 0x%.08X)\n"
            ");\n",
-           GetCurrentThreadId(), MemoryStatistics);
+           GetCurrentThreadId(), MemoryStatistics, MemoryStatistics->Length);
 
     MEMORYSTATUS MemoryStatus;
+    SYSTEM_INFO SysInfo;
+    NTSTATUS ret;
 
-    GlobalMemoryStatus(&MemoryStatus);
+    if (MemoryStatistics->Length == 0x24)
+    {
+        GlobalMemoryStatus(&MemoryStatus);
+        GetSystemInfo(&SysInfo);
 
-    ZeroMemory(MemoryStatistics, sizeof(MM_STATISTICS));
+        /** 
+        * When each of the PMM_STATISTICS MemoryStatistics elements
+        * are setup correctly below, these two lines become redundant 
+        */
+        ZeroMemory(MemoryStatistics, sizeof(MM_STATISTICS));
+        MemoryStatistics->Length = sizeof(MM_STATISTICS);
 
-    MemoryStatistics->Length = sizeof(MM_STATISTICS);
-    MemoryStatistics->TotalPhysicalPages = MemoryStatus.dwTotalVirtual / 4096;
-    MemoryStatistics->AvailablePages = MemoryStatus.dwAvailVirtual / 4096;
+        MemoryStatistics->TotalPhysicalPages = MemoryStatus.dwTotalPhys / SysInfo.dwPageSize;
+        MemoryStatistics->AvailablePages = MemoryStatus.dwAvailPhys / SysInfo.dwPageSize;
+        MemoryStatistics->VirtualMemoryBytesCommitted = MemoryStatus.dwTotalVirtual - MemoryStatus.dwAvailVirtual;
+        MemoryStatistics->VirtualMemoryBytesReserved = MemoryStatus.dwAvailVirtual;
+        // MemoryStatistics->CachePagesCommitted = [ ];
+        // MemoryStatistics->PoolPagesCommitted = [ ];
+        // MemoryStatistics->StackPagesCommitted = [ ];
+        // MemoryStatistics->ImagePagesCommitted = [ ];
 
-    // HACK (does this matter?)
-    MemoryStatistics->VirtualMemoryBytesReserved = MemoryStatus.dwTotalPhys - MemoryStatus.dwAvailPhys;
+        DbgPrintf("   MemoryStatistics->Length                      = 0x%.08X\n", MemoryStatistics->Length);
+        DbgPrintf("   MemoryStatistics->TotalPhysicalPages          = 0x%.08X\n", MemoryStatistics->TotalPhysicalPages);
+        DbgPrintf("   MemoryStatistics->AvailablePages              = 0x%.08X\n", MemoryStatistics->AvailablePages);
+        DbgPrintf("   MemoryStatistics->VirtualMemoryBytesCommitted = 0x%.08X\n", MemoryStatistics->VirtualMemoryBytesCommitted);
+        DbgPrintf("   MemoryStatistics->VirtualMemoryBytesReserved  = 0x%.08X\n", MemoryStatistics->VirtualMemoryBytesReserved);
+        DbgPrintf("   MemoryStatistics->CachePagesCommitted         = 0x%.08X\n", MemoryStatistics->CachePagesCommitted);
+        DbgPrintf("   MemoryStatistics->PoolPagesCommitted          = 0x%.08X\n", MemoryStatistics->PoolPagesCommitted);
+        DbgPrintf("   MemoryStatistics->StackPagesCommitted         = 0x%.08X\n", MemoryStatistics->StackPagesCommitted);
+        DbgPrintf("   MemoryStatistics->ImagePagesCommitted         = 0x%.08X\n", MemoryStatistics->ImagePagesCommitted);
 
-    // the rest arent really used from what i've seen
+        ret = STATUS_SUCCESS;
+    } 
+    else 
+    {
+        EmuWarning("EmuKrnl (0x%X): MmQueryStatistics with unusual size -> 0x%.08X\n", GetCurrentThreadId(), MemoryStatistics->Length);
+        ret = STATUS_INVALID_PARAMETER;
+    }
 
     EmuSwapFS();   // Xbox FS
 
-    return STATUS_SUCCESS;
+    return ret;
 }
 
 // ******************************************************************
