@@ -5193,6 +5193,9 @@ ULONG WINAPI XTL::EmuIDirect3DResource8_AddRef
 
     ULONG uRet = 0;
 
+    if (!pThis)
+        EmuWarning("IDirect3DResource8::AddRef() was not passed a valid pointer!");
+
     if(IsSpecialResource(pThis->Data) && (pThis->Data & X_D3DRESOURCE_DATA_FLAG_YUVSURF))
     {
         DWORD  dwPtr = (DWORD)pThis->Lock;
