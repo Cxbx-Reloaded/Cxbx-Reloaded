@@ -1863,12 +1863,14 @@ XBSYSAPI EXPORTNUM(113) VOID NTAPI xboxkrnl::KeInitializeTimerEx
 
     Timer->Header.Type               = Type + 8;
     Timer->Header.Inserted           = 0;
-    Timer->Header.Size               = sizeof(*Timer) / sizeof(ULONG);
+    Timer->Header.Size               = sizeof(KTIMER) / sizeof(ULONG);
     Timer->Header.SignalState        = 0;
+
     Timer->TimerListEntry.Blink      = NULL;
     Timer->TimerListEntry.Flink      = NULL;
     Timer->Header.WaitListHead.Flink = &Timer->Header.WaitListHead;
     Timer->Header.WaitListHead.Blink = &Timer->Header.WaitListHead;
+
     Timer->DueTime.QuadPart          = 0;
     Timer->Period                    = 0;
 
@@ -1981,14 +1983,12 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
            ");\n",
            GetCurrentThreadId(), Timer, DueTime, Dpc);
 
-    // Call KeSetTimerEx
-//    KeSetTimerEx(Timer, DueTime, 0, Dpc);
-	__asm int 3;
-	CxbxKrnlCleanup("KeSetTimer is not implemented!");
+    // Call KeSetTimerEx with a period of zero
+    BOOLEAN bRet = KeSetTimerEx(Timer, DueTime, 0, Dpc);
 
     EmuSwapFS();   // Xbox FS
 
-    return TRUE;
+    return bRet;
 }
 
 // ******************************************************************
@@ -2233,7 +2233,22 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 	
 	NtDll::PVOID pRet = NULL;
 
-	// We should validate NumberOfBytes for alignment with the page size
+    if (!NumberOfBytes) {
+        // NumberOfBytes cannot be zero when passed to NtAllocateVirtualMemory() below
+        CxbxKrnlCleanup("Assertion: 'NumberOfBytes != 0' in MmCreateKernelStack()");
+    }
+
+    if (NumberOfBytes & 0xFF) {
+        // Validate NumberOfBytes for alignment with the page size
+        CxbxKrnlCleanup("Assertion: '(NumberOfBytes & (PAGE_SIZE -1)) == 0' in MmCreateKernelStack()");
+    }
+
+    /**
+     * Function at present does not:
+     * - Create an additional guard PAGE_SIZE after allocation,
+     * - Fill allocation with any values
+     * - Treat DebuggerThread any differently
+     */
 
 	if(FAILED(NtDll::NtAllocateVirtualMemory(GetCurrentProcess(), &pRet, 0, &NumberOfBytes, MEM_COMMIT, PAGE_READWRITE)))
 	    EmuWarning("MmCreateKernelStack failed!\n");
