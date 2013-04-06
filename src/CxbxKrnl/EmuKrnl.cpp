@@ -1861,7 +1861,7 @@ XBSYSAPI EXPORTNUM(113) VOID NTAPI xboxkrnl::KeInitializeTimerEx
            ");\n",
            GetCurrentThreadId(), Timer, Type);
 
-    Timer->Header.Type               = Type + 8;
+    Timer->Header.Type               = Type + 8;  // 8 = TimerNotificationObject 
     Timer->Header.Inserted           = 0;
     Timer->Header.Size               = sizeof(KTIMER) / sizeof(ULONG);
     Timer->Header.SignalState        = 0;
@@ -1978,10 +1978,10 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
     DbgPrintf("EmuKrnl (0x%X): KeSetTimer\n"
            "(\n"
            "   Timer               : 0x%.08X\n"
-           "   DueTime             : 0x%I64X\n"
+           "   DueTime             : 0x%.16X\n"
            "   Dpc                 : 0x%.08X\n"
            ");\n",
-           GetCurrentThreadId(), Timer, DueTime, Dpc);
+           GetCurrentThreadId(), Timer, DueTime.QuadPart, Dpc);
 
     // Call KeSetTimerEx with a period of zero
     BOOLEAN bRet = KeSetTimerEx(Timer, DueTime, 0, Dpc);
@@ -2007,13 +2007,15 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
     DbgPrintf("EmuKrnl (0x%X): KeSetTimerEx\n"
            "(\n"
            "   Timer               : 0x%.08X\n"
-           "   DueTime             : 0x%I64X\n"
+           "   DueTime             : 0x%.16X\n"
            "   Period              : 0x%.08X\n"
            "   Dpc                 : 0x%.08X\n"
            ");\n",
-           GetCurrentThreadId(), Timer, DueTime, Period, Dpc);
+           GetCurrentThreadId(), Timer, DueTime.QuadPart, Period, Dpc);
 
     CxbxKrnlCleanup("KeSetTimerEx is not implemented");
+
+
 
     EmuSwapFS();   // Xbox FS
 
