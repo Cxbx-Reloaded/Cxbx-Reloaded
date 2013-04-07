@@ -4115,15 +4115,14 @@ XBSYSAPI EXPORTNUM(264) VOID NTAPI xboxkrnl::RtlAssert
 
     DbgPrintf("EmuKrnl (0x%X): RtlAssert\n"
            "(\n"
-           "   FailedAssertion           : 0x%.08X\n"
-           "   FileName                  : 0x%.08X\n"
-           "   LineNumber                : 0x%.08X\n"
+           "   FailedAssertion           : 0x%.08X (\"%s\")\n"
+           "   FileName                  : 0x%.08X (\"%s\")\n"
+           "   LineNumber                : 0x%.08X (\"%lu\")\n"
            "   Message                   : 0x%.08X (\"%s\")\n"
            ");\n",
-           GetCurrentThreadId(), FailedAssertion, FileName, LineNumber, Message, Message);
+           GetCurrentThreadId(), FailedAssertion, FailedAssertion, FileName, FileName, LineNumber, LineNumber, Message, Message);
 
-    //TODO: Actually implement this.
-    //NTSTATUS ret = NtDll::RtlAssert((NtDll::UNICODE_STRING*)DestinationString, (NtDll::STRING*)SourceString, AllocateDestinationString);
+    CxbxKrnlCleanup("RtlAssert() raised by emulated program - consult Debug log");
 
     EmuSwapFS();   // Xbox FS
 
