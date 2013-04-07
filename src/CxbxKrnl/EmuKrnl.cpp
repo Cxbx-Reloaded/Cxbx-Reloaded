@@ -2013,13 +2013,51 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
            ");\n",
            GetCurrentThreadId(), Timer, DueTime.QuadPart, Period, Dpc);
 
-    CxbxKrnlCleanup("KeSetTimerEx is not implemented");
+    BOOLEAN Inserted;
+    LARGE_INTEGER Interval;
+    LARGE_INTEGER SystemTime;
 
+    #define RemoveEntryList(e) do { PLIST_ENTRY f = (e)->Flink, b = (e)->Blink; f->Blink = b; b->Flink = f; (e)->Flink = (e)->Blink = NULL; } while (0)
 
+    if (Timer->Header.Type != 8 && Timer->Header.Type != 9) {
+        CxbxKrnlCleanup("Assertion: '(Timer)->Header.Type == TimerNotificationObject) || ((Timer)->Header.Type == TimerSynchronizationObject)' in KeSetTimerEx()");
+    }
+
+    Inserted = Timer->Header.Inserted;
+    if (Inserted != FALSE) {
+        // Do some unlinking if already inserted in the linked list
+        Timer->Header.Inserted = FALSE;
+        RemoveEntryList(&Timer->TimerListEntry);
+    }
+
+    Timer->Header.SignalState = FALSE;
+    Timer->Dpc = Dpc;
+    Timer->Period = Period;
+
+    if (/*!KiInsertTreeTimer(Timer,DueTime)*/ TRUE) {
+        if (Timer->Header.WaitListHead.Flink != &Timer->Header.WaitListHead) {
+            // KiWaitTest(Timer, 0);
+        }
+
+        if (Dpc != NULL) {
+            // Call the Dpc routine if one is specified
+            KeQuerySystemTime(&SystemTime);
+            // Need to implement KeInsertQueueDpc xboxkrnl.exe export (ordinal 119)
+            // KeInsertQueueDpc(Timer->Dpc, SystemTime.LowPart, SystemTime.HighPart);
+        }
+
+        if (Period != 0) {
+            // Prepare the repetition if Timer is periodic
+            Interval.QuadPart = (-10 * 1000) * Timer->Period;
+            while (/*!KiInsertTreeTimer(Timer,Interval)*/TRUE) {
+                ;
+            }
+        }
+    }
 
     EmuSwapFS();   // Xbox FS
 
-    return TRUE;
+    return Inserted;
 }
 
 // ******************************************************************
