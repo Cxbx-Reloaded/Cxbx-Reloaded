@@ -1344,9 +1344,9 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
     DbgPrintf("EmuKrnl (0x%X): ExAllocatePoolWithTag\n"
            "(\n"
            "   NumberOfBytes       : 0x%.08X\n"
-           "   Tag                 : 0x%.08X (%s)\n"
+           "   Tag                 : 0x%.08X\n"
            ");\n",
-           GetCurrentThreadId(), NumberOfBytes, Tag, Tag);
+           GetCurrentThreadId(), NumberOfBytes, Tag);
 
     // TODO: Actually implement this
     PVOID pRet = CxbxMalloc(NumberOfBytes);
@@ -1354,6 +1354,27 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
     EmuSwapFS();   // Xbox FS
 
     return pRet;
+}
+
+// ******************************************************************
+// * 0x0011 ExFreePool
+// ******************************************************************
+XBSYSAPI EXPORTNUM(17) VOID NTAPI xboxkrnl::ExFreePool
+(
+	IN PVOID	P
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+	
+	DbgPrintf("EmuKrnl (0x%X): ExFreePool\n"
+           "(\n"
+           "   P                  : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), P);
+
+	CxbxFree(P);
+
+	EmuSwapFS();	// Xbox FS
 }
 
 // ******************************************************************

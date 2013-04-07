@@ -49,7 +49,7 @@ XBSYSAPI VOID *ExEventObjectType;
 // * Deallocates a block  of pool memory
 // *
 // ******************************************************************
-XBSYSAPI EXPORTNUM(17) PVOID NTAPI ExFreePool
+XBSYSAPI EXPORTNUM(17) VOID NTAPI ExFreePool
 (
     IN PVOID P
 );
