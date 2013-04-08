@@ -1614,7 +1614,7 @@ BOOL WINAPI XTL::EmuXFreeSectionByHandle
 			GetCurrentThreadId(), hSection );
 
 	// TODO: Implement (if necessary)?
-//	CxbxKrnlCleanup( "XLoadSectionByHandle is not implemented" );
+//	CxbxKrnlCleanup( "XFreeSectionByHandle is not implemented" );
 
 	EmuSwapFS();	// Xbox FS
 
