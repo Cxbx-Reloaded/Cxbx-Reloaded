@@ -3457,8 +3457,29 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
         0
     );
 
-    if(FAILED(ret))
-        EmuWarning("NtQueryVirtualMemory failed!");
+    if(FAILED(ret)) {
+        EmuWarning("NtQueryVirtualMemory failed (%s)!", NtStatusToString(ret));
+
+        // Bugfix for "Forza Motorsport", which iterates over 2 Gb of memory in 64kb chunks,
+        // but fails on this last query. It's not done though, as after this Forza tries to
+        // NtAllocateVirtualMemory at address 0x00000000 (3 times, actually) which fails too...
+        //
+        // Ported back from dxbx, translator PatrickvL
+        
+        if (BaseAddress == (PVOID)0x7FFF0000) {
+            Buffer->BaseAddress = BaseAddress;
+            Buffer->AllocationBase = BaseAddress;
+            Buffer->AllocationProtect = PAGE_READONLY;
+            Buffer->RegionSize = 64 * 1024;             // size, in bytes, of the region beginning at the base address in which all pages have identical attributes
+            Buffer->State = 4096;                       // MEM_DECOMMIT | PAGE_EXECUTE_WRITECOPY etc
+            Buffer->Protect = PAGE_READONLY;            // One of the flags listed for the AllocationProtect member is specified
+            Buffer->Type = 262144;                      // Specifies the type of pages in the region. (MEM_IMAGE, MEM_MAPPED or MEM_PRIVATE)
+
+            ret = STATUS_SUCCESS;
+
+            DbgPrintf("EmuKrnl (0x%X): NtQueryVirtualMemory: Applied fix for Forza Motorsport!\n", GetCurrentThreadId());
+        }
+    }
 
     EmuSwapFS();   // Xbox FS
 
