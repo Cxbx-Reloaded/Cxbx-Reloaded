@@ -1488,9 +1488,6 @@ HANDLE WINAPI XTL::EmuXGetSectionHandleA
 
 	void* pRet = NULL;
 
-	// TODO: Implement (if necessary)?
-//	CxbxKrnlCleanup( "XGetSectionHandleA is not implemented" );
-
 	// TODO: Save the name and address of each section contained in 
 	// this .xbe instead of adding this stuff by hand because the section
 	// address can change from one game region to the next, and some games
@@ -1548,6 +1545,13 @@ HANDLE WINAPI XTL::EmuXGetSectionHandleA
 		pRet = (void*) 0x140620;
 	}
 
+	// Forza Motorsport (ALL, XDK 5849)
+	else if(!strcmp(pSectionName, "DDERR" ))
+	{
+		pRet = (void*) 0x572000;    // Raw Address
+		// pRet = (void*) 0x5EBDA0;    // Virtual Address
+	}
+
 	// Taz Wanted (NTSC)
 	/*else if(!strcmp(pSectionName, "sig" ))
 	{
@@ -1561,7 +1565,7 @@ HANDLE WINAPI XTL::EmuXGetSectionHandleA
 
 	else
 	{
-		__asm int 3;
+		CxbxKrnlCleanup( "XGetSectionHandleA is not implemented for section '%s'", pSectionName );
 	}
 
 	EmuSwapFS();	// Xbox FS
