@@ -7391,8 +7391,22 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_ShadowFunc
            ");\n",
            GetCurrentThreadId(), Value);
 
+    // ShadowFunc reflects the following Xbox-only extension
+    //
+    // typedef enum _D3DRENDERSTATETYPE {
+    //   ...
+    //   D3DRS_SHADOWFUNC = 156, // D3DCMPFUNC
+    //   ...
+    // } D3DRENDERSTATETYPE;
+    //
+    // Value is a member of the D3DCMPFUNC enumeration that 
+    // specifies what function to use with a shadow buffer. 
+    // The default value is D3DCMP_NEVER. 
+
+    // EmuXB2PC_D3DCMPFUNC(Value);
+
     // this warning just gets annoying
-//    EmuWarning("ShadowFunc not implemented");
+    // EmuWarning("ShadowFunc not implemented");
 
     EmuSwapFS();   // XBox FS
 
