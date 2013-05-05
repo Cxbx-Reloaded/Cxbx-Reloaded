@@ -140,7 +140,7 @@ Exe::Exe(const char *x_szFilename)
                 goto cleanup;
             }
 
-            printf("OK\n", v);
+            printf("OK\n");
         }
     }
 
@@ -184,7 +184,7 @@ Exe::Exe(const char *x_szFilename)
         }
     }
 
-    printf("Exe::Exe: Exe was successfully opened.\n", x_szFilename);
+    printf("Exe::Exe: Exe (%s) was successfully opened.\n", x_szFilename);
 
 cleanup:
 
