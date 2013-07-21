@@ -981,6 +981,28 @@ SOOVPA<10> D3DDevice_SetTileNoWait_1_0_5849 =
 };
 
 // ******************************************************************
+// * D3DDevice_SetSwapCallback
+// ******************************************************************
+SOOVPA<7> D3DDevice_SetSwapCallback_1_0_5849 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x01, 0x44 },
+        { 0x04, 0x8B },
+        { 0x0A, 0x89 },
+        { 0x0B, 0x81 },
+        { 0x0C, 0xB4 },
+        { 0x0D, 0x1D },
+        { 0x10, 0xC2 },
+    }
+};
+
+// ******************************************************************
 // * D3DDevice_SetRenderState_StencilFail
 // ******************************************************************
 SOOVPA<8> D3DDevice_SetRenderState_StencilFail_1_0_5849 = 
@@ -2611,6 +2633,15 @@ OOVPATable D3D8_1_0_5849[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_GetGammaRamp"
+        #endif
+    },
+	// D3DDevice_SetSwapCallback
+    {
+        (OOVPA*)&D3DDevice_SetSwapCallback_1_0_5849,
+        XTL::EmuIDirect3DDevice8_SetSwapCallback,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetSwapCallback"
         #endif
     },
 	// IDirect3DDevice8::GetRenderTarget2 (* unchanged since 5233 *)
