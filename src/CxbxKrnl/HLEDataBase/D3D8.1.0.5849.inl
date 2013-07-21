@@ -2747,6 +2747,16 @@ OOVPATable D3D8_1_0_5849[] =
         "EmuIDirect3DDevice8_SetTextureState_ColorKeyColor"
         #endif
     },
+	// IDirect3DDevice8::EnableOverlay (* unchanged since 4361 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_EnableOverlay_1_0_4361,
+
+        XTL::EmuIDirect3DDevice8_EnableOverlay,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_EnableOverlay"
+        #endif
+    },
 	// D3DDevice_SetRenderState_MultiSampleMask
     {
         (OOVPA*)&D3DDevice_SetRenderState_MultiSampleMask_1_0_5849,
