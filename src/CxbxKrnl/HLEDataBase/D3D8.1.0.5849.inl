@@ -1048,6 +1048,43 @@ SOOVPA<7> D3DDevice_SetRenderState_VertexBlend_1_0_5849 =
 };
 
 // ******************************************************************
+// * D3DDevice8::SetRenderState_LineWidth
+// ******************************************************************
+SOOVPA<13> D3DDevice_SetRenderState_LineWidth_1_0_5849 =
+{
+    0,  // Large == 0
+    13, // Count == 13
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetRenderState_LineWidth+0x00 : push ebx
+        { 0x00, 0x53 }, // (Offset,Value)-Pair #1
+
+        // IDirect3DDevice8_SetRenderState_LineWidth+0x0C : mov [esp+8+argo_0], ebx
+        { 0x0C, 0x89 }, // (Offset,Value)-Pair #2
+        { 0x0D, 0x5C }, // (Offset,Value)-Pair #3
+        { 0x0E, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x0F, 0x0C }, // (Offset,Value)-Pair #5
+
+        // IDirect3DDevice8_SetRenderState_LineWidth+0x28 : fstp [esp+10h+var_10]
+        { 0x28, 0xD9 }, // (Offset,Value)-Pair #6
+        { 0x29, 0x1C }, // (Offset,Value)-Pair #7
+        { 0x2A, 0x24 }, // (Offset,Value)-Pair #8
+
+        // IDirect3DDevice8_SetRenderState_LineWidth+0x30 : mov edi, eax
+        { 0x30, 0x8B }, // (Offset,Value)-Pair #9
+        { 0x31, 0xF8 }, // (Offset,Value)-Pair #10
+
+        // IDirect3DDevice8_SetRenderState_LineWidth+0x41 : cmp eax, [esi+4]
+        { 0x41, 0x3B }, // (Offset,Value)-Pair #11
+        { 0x42, 0x46 }, // (Offset,Value)-Pair #12
+        { 0x43, 0x04 }, // (Offset,Value)-Pair #13
+    }
+};
+
+// ******************************************************************
 // * D3DDevice_SetPalette
 // ******************************************************************
 SOOVPA<7> D3DDevice_SetPalette_1_0_5849 = 
@@ -2679,6 +2716,15 @@ OOVPATable D3D8_1_0_5849[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetRenderState_VertexBlend"
+        #endif
+    },
+	// D3DDevice::SetRenderState_LineWidth
+    {
+        (OOVPA*)&D3DDevice_SetRenderState_LineWidth_1_0_5849,  
+        XTL::EmuIDirect3DDevice8_SetRenderState_LineWidth,
+            
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_LineWidth"
         #endif
     },
 	// D3DDevice_SetRenderState_MultiSampleMask
