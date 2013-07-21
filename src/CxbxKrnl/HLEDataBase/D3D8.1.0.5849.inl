@@ -2757,6 +2757,16 @@ OOVPATable D3D8_1_0_5849[] =
         "EmuIDirect3DDevice8_EnableOverlay"
         #endif
     },
+	// D3DDevice_SetRenderState_LogicOp (* unchanged since 5558 *)
+	{
+		(OOVPA*)&D3DDevice_SetRenderState_LogicOp_1_0_5558,
+
+		XTL::EmuIDirect3DDevice8_SetRenderState_LogicOp,
+
+		#ifdef _DEBUG_TRACE
+		"EmuIDirect3DDevice8_SetRenderState_LogicOp"
+		#endif
+	},
 	// D3DDevice_SetRenderState_MultiSampleMask
     {
         (OOVPA*)&D3DDevice_SetRenderState_MultiSampleMask_1_0_5849,
