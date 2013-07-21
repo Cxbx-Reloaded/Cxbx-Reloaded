@@ -2727,6 +2727,16 @@ OOVPATable D3D8_1_0_5849[] =
         "EmuIDirect3DDevice8_SetRenderState_LineWidth"
         #endif
     },
+	// D3DDevice_SetRenderState_SampleAlpha (* unchanged since 5233 *)
+	{
+		(OOVPA*)&D3DDevice_SetRenderState_SampleAlpha_1_0_5233,
+
+		XTL::EmuIDirect3DDevice8_SetRenderState_SampleAlpha,
+
+		#ifdef _DEBUG_TRACE
+		"EmuIDirect3DDevice8_SetRenderState_SampleAlpha"
+		#endif
+	},
 	// D3DDevice_SetRenderState_MultiSampleMask
     {
         (OOVPA*)&D3DDevice_SetRenderState_MultiSampleMask_1_0_5849,
