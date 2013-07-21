@@ -2603,6 +2603,16 @@ OOVPATable D3D8_1_0_5849[] =
         "EmuIDirect3DDevice8_SetGammaRamp"
         #endif
     },
+	// IDirect3DDevice8::GetGammaRamp (* unchanged since 4034 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_GetGammaRamp_1_0_4034,
+
+        XTL::EmuIDirect3DDevice8_GetGammaRamp,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetGammaRamp"
+        #endif
+    },
 	// IDirect3DDevice8::GetRenderTarget2 (* unchanged since 5233 *)
     {
         (OOVPA*)&IDirect3DDevice8_GetRenderTarget2_1_0_5233,
