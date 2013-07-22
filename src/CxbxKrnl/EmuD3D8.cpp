@@ -5838,9 +5838,15 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_LockRect
             NewFlags |= D3DLOCK_READONLY;
 
         if(Flags & 0x40)
-            EmuWarning("D3DLOCK_TILED ignored!");        
+            EmuWarning("D3DLOCK_TILED ignored!"); 
 
-        if(!(Flags & 0x80) && !(Flags & 0x40) && Flags != 0)
+        if(Flags & 0x20)
+            NewFlags |= D3DLOCK_NOOVERWRITE;
+
+        if(Flags & 0x10)
+            EmuWarning("D3DLOCK_NOFLUSH ignored!");
+
+        if(!(Flags & 0x80) && !(Flags & 0x40) && !(Flags & 0x20) && !(Flags & 0x10) && Flags != 0)
             CxbxKrnlCleanup("EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)", Flags);
 
         // Remove old lock(s)
