@@ -2752,6 +2752,16 @@ OOVPATable D3D8_1_0_5849[] =
         "EmuIDirect3DDevice8_SetRenderState_VertexBlend"
         #endif
     },
+	// IDirect3DDevice8::Reset (* unchanged since 4134 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_Reset_1_0_4134,
+
+        XTL::EmuIDirect3DDevice8_Reset,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_Reset"
+        #endif
+    },
 	// IDirect3DDevice8_InsertCallback (* unchanged since 5558 *)
 	{
 		(OOVPA*)&D3DDevice_InsertCallback_1_0_5558,
