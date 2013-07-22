@@ -1521,6 +1521,16 @@ HRESULT WINAPI EmuIDirect3DDevice8_GetVertexShaderFunction
 );
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetDepthClipPlanes
+// ******************************************************************
+HRESULT WINAPI EmuIDirect3DDevice8_SetDepthClipPlanes
+(
+    FLOAT Near,
+    FLOAT Far,
+    DWORD Flags
+);
+
+// ******************************************************************
 // * func: EmuIDirect3D8_AllocContiguousMemory
 // ******************************************************************
 PVOID WINAPI EmuIDirect3D8_AllocContiguousMemory

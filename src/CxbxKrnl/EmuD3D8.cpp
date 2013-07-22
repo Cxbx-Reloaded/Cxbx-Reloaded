@@ -8942,6 +8942,78 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetVertexShaderFunction
 }
 
 // ******************************************************************
+// * func: EmuIDirect3DDevice8_SetDepthClipPlanes
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetDepthClipPlanes
+(
+    FLOAT Near,
+    FLOAT Far,
+    DWORD Flags
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    // debug trace
+    DbgPrintf( "EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetDepthClipPlanes\n"
+               "(\n"
+               "   Near                : 0x%.08X\n"
+               "   Far                 : 0x%.08X\n"
+               "   Flags               : 0x%.08X\n"
+               ");\n",
+               GetCurrentThreadId(), Near, Far, Flags);
+
+    HRESULT hRet = D3D_OK;
+
+    switch(Flags) // Member of X_D3DSET_DEPTH_CLIP_PLANES_FLAGS enum
+    {
+        case X_D3DSDCP_SET_VERTEXPROGRAM_PLANES:
+        {
+            // Sets the depth-clipping planes used whenever vertex shader programs are active
+            // TODO
+
+            // pDevice->fNear = Near
+            // pDevice->fFar  = Far
+        }
+        break;
+
+        case X_D3DSDCP_SET_FIXEDFUNCTION_PLANES:
+        {
+            // Sets the depth-clipping planes used whenever the fixed-function pipeline is in use. 
+            // TODO
+
+            // pDevice->fNear = Near
+            // pDevice->fFar  = Far
+        }
+        break;
+
+        case X_D3DSDCP_USE_DEFAULT_VERTEXPROGRAM_PLANES:
+        {
+            // Causes Direct3D to disregard the depth-clipping planes set when using X_D3DSDCP_SET_VERTEXPROGRAM_PLANE. 
+            // Direct3D will resume using its own internally calculated clip planes when vertex shader programs are active. 
+            // TODO
+        }
+        break;
+
+        case X_D3DSDCP_USE_DEFAULT_FIXEDFUNCTION_PLANES:
+        {
+            // Causes Direct3D to disregard the depth-clipping planes set when using X_D3DSDCP_SET_FIXEDFUNCTION_PLANES. 
+            // Direct3D will resume using its own internally calculated clip planes when the fixed-function pipeline is active.
+            // TODO
+        }
+        break;
+
+        default:
+            EmuWarning("Unknown SetDepthClipPlanes Flags provided");;
+    }
+
+    // TODO
+
+    EmuSwapFS();   // XBox FS
+
+    return hRet;
+}
+
+// ******************************************************************
 // * func: EmuIDirect3D8_AllocContiguousMemory
 // ******************************************************************
 PVOID WINAPI XTL::EmuIDirect3D8_AllocContiguousMemory

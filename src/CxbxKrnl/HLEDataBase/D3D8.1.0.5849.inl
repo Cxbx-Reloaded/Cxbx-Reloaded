@@ -1084,6 +1084,40 @@ SOOVPA<13> D3DDevice_SetRenderState_LineWidth_1_0_5849 =
     }
 };
 
+
+// ******************************************************************
+// * D3DDevice8::SetDepthClipPlanes
+// ******************************************************************
+SOOVPA<13> D3DDevice_SetDepthClipPlanes_1_0_5849 =
+{
+    0,  // Large == 0
+    13, // Count == 13
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // _D3DDevice_SetDepthClipPlanes+0x00 : mov eax, [esp+Flags]
+        { 0x00, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x01, 0x44 }, // (Offset,Value)-Pair #2
+        { 0x02, 0x24 }, // (Offset,Value)-Pair #3
+        { 0x03, 0x0C }, // (Offset,Value)-Pair #4
+
+        // _D3DDevice_SetDepthClipPlanes+0x00 : ja short loc_27ABD0 ; jumptable 0027AB71 default case
+        { 0x0F, 0x77 }, // (Offset,Value)-Pair #5
+        { 0x10, 0x5F }, // (Offset,Value)-Pair #6
+
+        // _D3DDevice_SetDepthClipPlanes+0x00 : jmp ds:off_27ABEC[eax*4] ; switch jump
+        { 0x11, 0xFF }, // (Offset,Value)-Pair #7
+        { 0x12, 0x24 }, // (Offset,Value)-Pair #8
+        { 0x13, 0x85 }, // (Offset,Value)-Pair #9
+        { 0x14, 0xEC }, // (Offset,Value)-Pair #10
+        { 0x15, 0xAB }, // (Offset,Value)-Pair #11
+        { 0x16, 0x27 }, // (Offset,Value)-Pair #12
+        { 0x17, 0x00 }, // (Offset,Value)-Pair #13
+    }
+};
+
 // ******************************************************************
 // * D3DDevice_SetPalette
 // ******************************************************************
@@ -2767,6 +2801,15 @@ OOVPATable D3D8_1_0_5849[] =
 		"EmuIDirect3DDevice8_SetRenderState_LogicOp"
 		#endif
 	},
+	// D3DDevice::SetDepthClipPlanes
+    {
+        (OOVPA*)&D3DDevice_SetDepthClipPlanes_1_0_5849,  
+        XTL::EmuIDirect3DDevice8_SetDepthClipPlanes,
+            
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetDepthClipPlanes"
+        #endif
+    },
 	// D3DDevice_SetRenderState_MultiSampleMask
     {
         (OOVPA*)&D3DDevice_SetRenderState_MultiSampleMask_1_0_5849,
