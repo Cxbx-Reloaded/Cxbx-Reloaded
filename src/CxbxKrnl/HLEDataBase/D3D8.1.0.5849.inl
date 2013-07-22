@@ -934,6 +934,29 @@ SOOVPA<8> D3DDevice_SetRenderState_TwoSidedLighting_1_0_5849 =
 };
 
 // ******************************************************************
+// * IDirectD3DDevice8_Release
+// ******************************************************************
+SOOVPA<8> IDirect3DDevice8_Release_1_0_5849 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x07, 0x8B },
+        { 0x0C, 0x00 },
+        { 0x13, 0xCF },
+        { 0x1A, 0x28 },
+        { 0x21, 0x05 },  
+        { 0x28, 0x00 }, 
+        { 0x2F, 0x89 },
+        { 0x36, 0xC3 },
+    }
+};
+
+// ******************************************************************
 // * D3D::KickOffAndWaitForIdle
 // ******************************************************************
 /*SOOVPA<5> D3D_KickOffAndWaitForIdle_1_0_5849 = 
@@ -2760,6 +2783,15 @@ OOVPATable D3D8_1_0_5849[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_Reset"
+        #endif
+    },
+	// IDirect3DDevice::Release
+    {
+        (OOVPA*)&IDirect3DDevice8_Release_1_0_5849,
+        XTL::EmuIDirect3DDevice8_Release,
+
+        #ifdef _DEBUG_TRACE
+        "D3DDevice_Release"
         #endif
     },
 	// IDirect3DDevice8_InsertCallback (* unchanged since 5558 *)
