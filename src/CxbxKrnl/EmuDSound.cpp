@@ -1451,7 +1451,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Play
            ");\n",
            GetCurrentThreadId(), pThis, dwReserved1, dwReserved2, dwFlags);
 
-    if(dwFlags & ~(X_DSBPLAY_LOOPING | X_DSBPLAY_FROMSTART))
+    if(dwFlags & ~(X_DSBPLAY_LOOPING | X_DSBPLAY_FROMSTART | X_DSBPLAY_SYNCHPLAYBACK))
         CxbxKrnlCleanup("Unsupported Playing Flags");
 
     // rewind buffer

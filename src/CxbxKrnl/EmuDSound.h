@@ -44,6 +44,7 @@
 // EmuIDirectSoundBuffer8_Play flags
 #define X_DSBPLAY_LOOPING       0x00000001
 #define X_DSBPLAY_FROMSTART     0x00000002
+#define X_DSBPLAY_SYNCHPLAYBACK 0x00000004
 
 // EmuIDirectSoundBuffer8_Pause flags
 #define X_DSBPAUSE_RESUME             0x00000000
