@@ -2594,6 +2594,31 @@ XBSYSAPI EXPORTNUM(182) VOID NTAPI xboxkrnl::MmSetAddressProtect
 }
 
 // ******************************************************************
+// * 0x00B7 - MmUnmapIoSpace
+// ******************************************************************
+XBSYSAPI EXPORTNUM(183) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmUnmapIoSpace
+(
+    IN PVOID BaseAddress,
+    IN ULONG NumberOfBytes
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): MmUnmapIoSpace\n"
+           "(\n"
+           "   BaseAddress              : 0x%.08X\n"
+           "   NumberOfBytes            : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), BaseAddress, NumberOfBytes);
+
+    CxbxFree(BaseAddress);
+
+    EmuSwapFS();   // Xbox FS
+
+    return STATUS_SUCCESS;
+}
+
+// ******************************************************************
 // * 0x00B8 - NtAllocateVirtualMemory
 // ******************************************************************
 XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemory

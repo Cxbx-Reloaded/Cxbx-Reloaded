@@ -113,7 +113,7 @@ XBSYSAPI EXPORTNUM(177) PVOID NTAPI MmMapIoSpace
 (
     IN PHYSICAL_ADDRESS PhysicalAddress,
     IN ULONG            NumberOfBytes,
-    IN ULONG            Protect
+    IN ULONG            ProtectionType
 );
 
 // ******************************************************************
@@ -154,7 +154,14 @@ XBSYSAPI EXPORTNUM(182) VOID NTAPI MmSetAddressProtect
     IN ULONG NewProtect
 );
 
-XBSYSAPI VOID *MmUnmapIoSpace;
+// ******************************************************************
+// * MmUnmapIoSpace
+// ******************************************************************
+XBSYSAPI EXPORTNUM(183) NTSTATUS NTAPI MmUnmapIoSpace
+(
+    IN PVOID BaseAddress,
+    IN ULONG NumberOfBytes
+);
 
 #endif
 
