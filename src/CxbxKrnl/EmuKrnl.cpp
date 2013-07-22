@@ -2413,6 +2413,34 @@ XBSYSAPI EXPORTNUM(172) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmFreeSystemMemory
 }
 
 // ******************************************************************
+// * 0x00B1 - MmMapIoSpace
+// ******************************************************************
+XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
+(
+    IN PHYSICAL_ADDRESS PhysicalAddress,
+    IN ULONG            NumberOfBytes,
+    IN ULONG            ProtectionType
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): MmMapIoSpace\n"
+           "(\n"
+           "   PhysicalAddress          : 0x%.08X\n"
+           "   NumberOfBytes            : 0x%.08X\n"
+           "   ProtectionType           : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), PhysicalAddress, NumberOfBytes, ProtectionType);
+
+    // TODO: should this be aligned?
+    PVOID pRet = CxbxMalloc(NumberOfBytes);
+
+    EmuSwapFS();   // Xbox FS
+
+    return pRet;
+}
+
+// ******************************************************************
 // * 0x00B2 - MmPersistContiguousMemory
 // ******************************************************************
 XBSYSAPI EXPORTNUM(178) VOID NTAPI xboxkrnl::MmPersistContiguousMemory

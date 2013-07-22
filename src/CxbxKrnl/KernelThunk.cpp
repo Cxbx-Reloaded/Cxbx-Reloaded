@@ -234,7 +234,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367] =
     (uint32)PANIC(0x00AE),                          // 0x00AE (174) MmIsAddressValid
     (uint32)PANIC(0x00AF),                          // 0x00AF (175) MmLockUnlockBufferPages
     (uint32)PANIC(0x00B0),                          // 0x00B0 (176) MmLockUnlockPhysicalPage
-    (uint32)PANIC(0x00B1),                          // 0x00B1 (177) MmMapIoSpace
+    (uint32)&xboxkrnl::MmMapIoSpace,                // 0x00B1 (177) MmMapIoSpace
     (uint32)&xboxkrnl::MmPersistContiguousMemory,   // 0x00B2 (178)
     (uint32)PANIC(0x00B3),                          // 0x00B3 (179) MmQueryAddressProtect
     (uint32)&xboxkrnl::MmQueryAllocationSize,       // 0x00B4 (180)
