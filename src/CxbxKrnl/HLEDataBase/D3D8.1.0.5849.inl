@@ -1791,6 +1791,35 @@ SOOVPA<8> D3DDevice_CaptureStateBlock_1_0_5849 =
 };
 
 // ******************************************************************
+// * D3DDevice_DeleteStateBlock
+// ******************************************************************
+SOOVPA<9> D3DDevice_DeleteStateBlock_1_0_5849 = 
+{
+    0,  // Large == 0
+    9,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        // D3DDevice_DeleteStateBlock(x)+26: mov eax, [esi+4]
+        { 0x13, 0x8B },
+        { 0x14, 0x46 },  
+        { 0x15, 0x04 },
+
+        // D3DDevice_DeleteStateBlock(x)+1B: 
+        { 0x23, 0x43 }, // inc ebx
+        { 0x24, 0x3B }, // cmp ebx, [edi]
+        { 0x25, 0x1F },
+
+        // D3DDevice_DeleteStateBlock(x)+34: cmp [edi+8], ebp
+        { 0x3C, 0x39 },
+        { 0x3D, 0x6F },
+        { 0x3E, 0x08 },
+    }
+};
+
+// ******************************************************************
 // * D3DDevice_SetRenderState_RopZCmpAlwaysRead
 // ******************************************************************
 SOOVPA<7> D3DDevice_SetRenderState_RopZCmpAlwaysRead_1_0_5849 = 
@@ -3245,6 +3274,16 @@ OOVPATable D3D8_1_0_5849[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_CaptureStateBlock"
+        #endif
+    },
+	// IDirect3DDevice8::DeleteStateBlock
+    {
+        (OOVPA*)&D3DDevice_DeleteStateBlock_1_0_5849,
+
+        XTL::EmuIDirect3DDevice8_DeleteStateBlock,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_DeleteStateBlock"
         #endif
     },
 	// IDirect3DDevice8::SetRenderState_StencilCullEnable (* unchanged since 4134 *)
