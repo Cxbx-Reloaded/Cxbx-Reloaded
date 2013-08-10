@@ -312,6 +312,38 @@ SOOVPA<7> IDirect3DDevice8_SetRenderState_Dxt1NoiseEnable_1_0_5233 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetRenderState_Dxt1NoiseEnable
+// ******************************************************************
+SOOVPA<10> IDirect3DDevice8_SetRenderState_Dxt1NoiseEnable_1_0_5344 =
+{
+    0,  // Large == 0
+    10,  // Count == 10
+
+    -1, // XRef Not Saved
+    0,  // XRef Not Used
+
+    {
+        // IDirect3DDevice8_SetRenderState_Dxt1NoiseEnable+0D : mov eax, [edi+XXXXh]
+        { 0x0D, 0x8B },
+        { 0x0E, 0x87 },
+
+        // IDirect3DDevice8_SetRenderState_Dxt1NoiseEnable+1D : and dl, 3Ch
+        { 0x1D, 0x80 },
+        { 0x1E, 0xE2 },
+        { 0x1F, 0x3C },
+
+        // IDirect3DDevice8_SetRenderState_Dxt1NoiseEnable+20 : xor esi, esi
+        { 0x20, 0x33 },
+        { 0x21, 0xF6 },
+
+        // IDirect3DDevice8_SetRenderState_Dxt1NoiseEnable+22 : cmp dl, 20h
+        { 0x22, 0x80 },
+        { 0x23, 0xFA },
+        { 0x24, 0x20 },
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_SetRenderState_TextureFactor
 // ******************************************************************
 SOOVPA<9> IDirect3DDevice8_SetRenderState_TextureFactor_1_0_5233 =
@@ -2635,6 +2667,20 @@ OOVPATable D3D8_1_0_5233[] =
     // IDirect3DDevice8::SetRenderState_Dxt1NoiseEnable
     {
         (OOVPA*)&IDirect3DDevice8_SetRenderState_Dxt1NoiseEnable_1_0_5233,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable"
+        #endif
+    },
+    // *******
+    // Duplicated functions generally dangerous, but until such time as XDK 5344
+    // has it's own OOVP's, fine here
+    // *******
+    // IDirect3DDevice8::SetRenderState_Dxt1NoiseEnable
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_Dxt1NoiseEnable_1_0_5344,
 
         XTL::EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable,
 
