@@ -3363,6 +3363,10 @@ OOVPATable D3D8_1_0_5233[] =
         "EmuIDirect3DDevice8_SetViewport_5344"
         #endif
     },
+	/**
+	 * Having two versions of D3Device::SetTransform in this file creates problems,
+	 * in order to support Futurama, this second verison (added for Whacked support)
+	 * has been disabled.
 	// IDirect3DDevice8::SetTransform
     {
         (OOVPA*)&D3DDevice_SetTransform_1_0_5344,
@@ -3372,7 +3376,7 @@ OOVPATable D3D8_1_0_5233[] =
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_SetTransform_5344"
         #endif
-    },
+    },**/
 	// IDirect3DDevice8::GetBackBuffer2
     {
         (OOVPA*)&D3DDevice_GetBackBuffer2_1_0_5344,
