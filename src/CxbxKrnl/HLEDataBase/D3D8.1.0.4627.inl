@@ -3023,20 +3023,18 @@ SOOVPA<8> X_D3DDevice_Release_1_0_4627 =
 // ******************************************************************
 // * IDirect3DDevice8_SetRenderState_LineWidth
 // ******************************************************************
-SOOVPA<10> IDirect3DDevice8_SetRenderState_LineWidth_1_0_4627 =
+SOOVPA<8> IDirect3DDevice8_SetRenderState_LineWidth_1_0_4627 =
 {
     0,  // Large == 0
-    10, // Count == 10
+    8, // Count == 10
 
     -1, // XRef Not Saved
     0,  // XRef Not Used
 
     {
-        // IDirect3DDevice8_SetRenderState_LineWidth+0x15 : fmul dword ptr [esi+0x460]
+        // IDirect3DDevice8_SetRenderState_LineWidth+0x15 : fmul dword ptr [esi+0xXXXX]
         { 0x15, 0xD8 }, // (Offset,Value)-Pair #1
         { 0x16, 0x8E }, // (Offset,Value)-Pair #2
-        { 0x17, 0x20 }, // (Offset,Value)-Pair #3
-        { 0x18, 0x05 }, // (Offset,Value)-Pair #4
 
         // IDirect3DDevice8_SetRenderState_LineWidth+0x32 : cmp edi, 0x1FF
         { 0x32, 0x81 }, // (Offset,Value)-Pair #5
