@@ -1219,24 +1219,39 @@ SOOVPA<8> IDirect3DDevice8_SetScreenSpaceOffset_1_0_5233 =
 // ******************************************************************
 // * IDirect3DDevice8_SetRenderState_MultiSampleMode
 // ******************************************************************
-SOOVPA<8> IDirect3DDevice8_SetRenderState_MultiSampleMode_1_0_5233 =
+SOOVPA<13> IDirect3DDevice8_SetRenderState_MultiSampleMode_1_0_5233 =
 {
     0,  // Large == 0
-    8,  // Count == 8
+    13,  // Count == 8
 
     -1, // XRef Not Saved
-    1,  // XRef Is  Used
+    0,  // XRef Not Used
 
     {
-        { 0x0B, XREF_D3DRS_MULTISAMPLEMODE },
+        // IDirect3DDevice8_SetRenderState_MultiSampleMode+0x04 : mov ecx, ds:dword_XXXX
+        { 0x04, 0x8B },
+        { 0x05, 0x0D },
 
-        { 0x03, 0x04 },
+        // IDirect3DDevice8_SetRenderState_MultiSampleMode+0x0F : mov edx, [ecx+XXXXh]
         { 0x0F, 0x8B },
+        { 0x10, 0x91 },
+
+        // IDirect3DDevice8_SetRenderState_MultiSampleMode+0x15 : cmp edx, [ecx+XXXXh]
         { 0x15, 0x3B },
-        { 0x1C, 0x14 },
-        { 0x1D, 0x8D },
-        { 0x2C, 0xE8 },
-        { 0x32, 0x04 },
+        { 0x16, 0x91 },
+
+        // IDirect3DDevice8_SetRenderState_MultiSampleMode+0x1B : jnz short
+        { 0x1B, 0x75 },
+        { 0x1C, 0x07 },
+
+        // IDirect3DDevice8_SetRenderState_MultiSampleMode+0x1D : xor edx, edx
+        { 0x1D, 0x33 },
+        { 0x1E, 0xD2 },
+
+        // IDirect3DDevice8_SetRenderState_MultiSampleMode+0x24 : retn 4
+        { 0x24, 0xC2 },
+        { 0x25, 0x04 },
+        { 0x26, 0x00 },
     }
 };
 
