@@ -5193,29 +5193,32 @@ ULONG WINAPI XTL::EmuIDirect3DResource8_AddRef
 
     ULONG uRet = 0;
 
-    if (!pThis)
+    if (!pThis) {
         EmuWarning("IDirect3DResource8::AddRef() was not passed a valid pointer!");
-
-    if(IsSpecialResource(pThis->Data) && (pThis->Data & X_D3DRESOURCE_DATA_FLAG_YUVSURF))
-    {
-        DWORD  dwPtr = (DWORD)pThis->Lock;
-        DWORD *pRefCount = (DWORD*)(dwPtr + g_dwOverlayP*g_dwOverlayH);
-        ++(*pRefCount);
     }
-    else
+    else 
     {
-        IDirect3DResource8 *pResource8 = pThis->EmuResource8;
+        if(IsSpecialResource(pThis->Data) && (pThis->Data & X_D3DRESOURCE_DATA_FLAG_YUVSURF))
+        {
+            DWORD  dwPtr = (DWORD)pThis->Lock;
+            DWORD *pRefCount = (DWORD*)(dwPtr + g_dwOverlayP*g_dwOverlayH);
+            ++(*pRefCount);
+        }
+        else
+        {
+            IDirect3DResource8 *pResource8 = pThis->EmuResource8;
 
-        if(pThis->Lock == 0x8000BEEF)
-            uRet = ++pThis->Lock;
-        else if(pResource8 != 0)
-            uRet = pResource8->AddRef();
+            if(pThis->Lock == 0x8000BEEF)
+                uRet = ++pThis->Lock;
+            else if(pResource8 != 0)
+                uRet = pResource8->AddRef();
 
-		if(!pResource8)
-			__asm int 3;
-			//EmuWarning("EmuResource is not a valid pointer!");
+		    if(!pResource8)
+			    __asm int 3;
+			    //EmuWarning("EmuResource is not a valid pointer!");
 
-        pThis->Common = (pThis->Common & ~X_D3DCOMMON_REFCOUNT_MASK) | ((pThis->Common & X_D3DCOMMON_REFCOUNT_MASK) + 1);
+            pThis->Common = (pThis->Common & ~X_D3DCOMMON_REFCOUNT_MASK) | ((pThis->Common & X_D3DCOMMON_REFCOUNT_MASK) + 1);
+        }
     }
 
     EmuSwapFS();   // XBox FS
