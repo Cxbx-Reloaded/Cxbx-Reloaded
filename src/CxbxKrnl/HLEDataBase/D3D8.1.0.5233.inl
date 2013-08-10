@@ -1280,6 +1280,30 @@ SOOVPA<8> IDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode_1_0_5233 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode
+// ******************************************************************
+SOOVPA<8> IDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode_1_0_5344 =
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // XRef Not Saved
+    1,  // XRef Is  Used
+
+    {
+        { 0x0B, XREF_D3DRS_MULTISAMPLERENDERTARGETMODE },
+
+        { 0x03, 0x04 },
+        { 0x0F, 0x8B },
+        { 0x15, 0x3B },
+        { 0x1C, 0x07 }, // **
+        { 0x1D, 0x33 }, // **
+        { 0x1F, 0xE8 }, // **
+        { 0x25, 0x04 }, // **
+    }
+};
+
+// ******************************************************************
 // * D3D::CommonSetRenderTarget
 // ******************************************************************
 SOOVPA<8> D3D_CommonSetRenderTarget_1_0_5233 =
@@ -2741,6 +2765,20 @@ OOVPATable D3D8_1_0_5233[] =
     // IDirect3DDevice8::SetRenderState_MultiSampleRenderTargetMode
     {
         (OOVPA*)&IDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode_1_0_5233,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode"
+        #endif
+    },
+    // *******
+    // Duplicated functions generally dangerous, but until such time as XDK 5344
+    // has it's own OOVP's, fine here
+    // *******
+    // IDirect3DDevice8::SetRenderState_MultiSampleRenderTargetMode
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode_1_0_5344,
 
         XTL::EmuIDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode,
 
