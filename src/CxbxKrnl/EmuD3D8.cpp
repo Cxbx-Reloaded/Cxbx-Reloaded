@@ -2914,65 +2914,64 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreatePixelShader
     DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_CreatePixelShader\n"
            "(\n"
            "   pPSDef              : 0x%.08X\n"
-           "   pHandle             : 0x%.08X\n"
+           "   pHandle             : 0x%.08X (0x%.08X)\n"
            ");\n",
-           GetCurrentThreadId(), pPSDef, pHandle);
+           GetCurrentThreadId(), pPSDef, pHandle, *pHandle);
 
-	//HRESULT hRet = E_FAIL;
+	HRESULT hRet = E_FAIL;
 	DWORD* pFunction = NULL;
 	LPD3DXBUFFER pRecompiledBuffer = NULL;
-	DWORD Handle = 0;
+	// DWORD Handle = 0;
 
-	//hRet = CreatePixelShaderFunction(pPSDef, &pRecompiledBuffer);
+	hRet = CreatePixelShaderFunction(pPSDef, &pRecompiledBuffer);
 
-	//if (SUCCEEDED(hRet))
-	//{
-	//	pFunction = (DWORD*)pRecompiledBuffer->GetBufferPointer();
+	if (SUCCEEDED(hRet))
+	{
+		pFunction = (DWORD*)pRecompiledBuffer->GetBufferPointer();
 
-	//	// redirect to windows d3d
-	//	hRet = g_pD3DDevice8->CreatePixelShader
-	//	(
-	//		pFunction,
-	//		&Handle
-	//	);
-	//}
+		// Redirect to Windows D3D
+		hRet = g_pD3DDevice8->CreatePixelShader
+		(
+			pFunction,
+			pHandle
+			/*&Handle*/
+		);
+	}
 
-	//if (pRecompiledBuffer)
-	//{
-	//	pRecompiledBuffer->Release();
-	//}
+	if (pRecompiledBuffer)
+	{
+		pRecompiledBuffer->Release();
+	}
 
- //   if(FAILED(hRet))
- //   {
- //       Handle = X_PIXELSHADER_FAKE_HANDLE;
+	// This additional layer of Cxbx internal indirection seems problematic, as 
+	// CreatePixelShader() is expected to return a pHandle directly to a shader interface.
 
- //       EmuWarning("We're lying about the creation of a pixel shader!");
+	/*
+	PIXEL_SHADER *pPixelShader = (PIXEL_SHADER*)CxbxMalloc(sizeof(PIXEL_SHADER));
+	ZeroMemory(pPixelShader, sizeof(PIXEL_SHADER));
 
- //       hRet = D3D_OK;
- //   }
+	memcpy(&pPixelShader->PSDef, pPSDef, sizeof(X_D3DPIXELSHADERDEF));
 
-	//PIXEL_SHADER *pPixelShader = (PIXEL_SHADER*)CxbxMalloc(sizeof(PIXEL_SHADER));
-	//ZeroMemory(pPixelShader, sizeof(PIXEL_SHADER));
+	pPixelShader->Handle = Handle;
+	pPixelShader->dwStatus = hRet;
+	*pHandle = (DWORD)pPixelShader;
+	*/
 
-	//memcpy(&pPixelShader->PSDef, pPSDef, sizeof(X_D3DPIXELSHADERDEF));
-
-	//pPixelShader->Handle = Handle;
-	//pPixelShader->dwStatus = hRet;
-	//*pHandle = (DWORD)pPixelShader;
-
-#if 1
+#if 0
+    // ================================================================
 	pFunction = (DWORD*) pPSDef;
-#endif
 
 	// Attempt to recompile PixelShader
 	EmuRecompilePshDef( pPSDef, NULL );
 
     // redirect to windows d3d
-    HRESULT hRet = g_pD3DDevice8->CreatePixelShader
+    hRet = g_pD3DDevice8->CreatePixelShader
     (
         pFunction,
         pHandle
     );
+    // ================================================================
+#endif
 
     if(FAILED(hRet))
     {
@@ -2980,9 +2979,13 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreatePixelShader
 
 		// This is called too frequently as Azurik creates and destroys a
 		// pixel shader every frame, and makes debugging harder.
-    //    EmuWarning("We're lying about the creation of a pixel shader!");
+		// EmuWarning("We're lying about the creation of a pixel shader!");
 
         hRet = D3D_OK;
+    }
+    else
+    {
+        DbgPrintf("pHandle = 0x%.08X (0x%.08X)\n", pHandle, *pHandle);
     }
 
     EmuSwapFS();   // XBox FS
@@ -3002,11 +3005,11 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetPixelShader
 
     DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetPixelShader\n"
            "(\n"
-           "   Handle             : 0x%.08X\n"
+           "   Handle              : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), Handle);
 
-        // redirect to windows d3d
+    // Redirect to Windows D3D
     HRESULT hRet = D3D_OK;
 
     // Fake Programmable Pipeline
@@ -3049,11 +3052,12 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetPixelShader
         g_bFakePixelShaderLoaded = TRUE;
     }
     // Fixed Pipeline, or Recompiled Programmable Pipeline
-    else if(Handle == NULL)
+    else if(Handle != NULL)
     {
+        EmuWarning("Trying fixed or recompiled programmable pipeline pixel shader!");
         g_bFakePixelShaderLoaded = FALSE;
 		g_dwCurrentPixelShader = Handle;
-        g_pD3DDevice8->SetPixelShader(Handle);
+        hRet = g_pD3DDevice8->SetPixelShader(Handle);
     }
 
     if(FAILED(hRet))
