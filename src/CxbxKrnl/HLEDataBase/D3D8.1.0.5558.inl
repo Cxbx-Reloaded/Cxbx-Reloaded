@@ -3255,6 +3255,16 @@ OOVPATable D3D8_1_0_5558[] =
         "EmuIDirect3DDevice8_EndStateBlock"
         #endif
     },
+	// IDirect3DDevice8_GetDeviceCaps (* unchanged since 3925 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_GetDeviceCaps_1_0_3925, 
+        	
+        XTL::EmuIDirect3DDevice8_GetDeviceCaps,
+        
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetDeviceCaps"
+        #endif
+    },
 	// IDirect3DDevice8::SetRenderState_FrontFace (* unchanged since 4134 *)
     {
         (OOVPA*)&IDirect3DDevice8_SetRenderState_FrontFace_1_0_4134,
