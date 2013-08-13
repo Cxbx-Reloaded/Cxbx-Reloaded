@@ -507,6 +507,16 @@ OOVPATable XAPI_1_0_5558[] =
         "EmuSetThreadPriority"
         #endif
     },
+    // XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
+    {
+        (OOVPA*)&XRegisterThreadNotifyRoutine_1_0_3911,
+
+        XTL::EmuXRegisterThreadNotifyRoutine,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXRegisterThreadNotifyRoutine"
+        #endif
+    },
     // RtlCreateHeap
     {
         (OOVPA*)&RtlCreateHeap_1_0_5558,
