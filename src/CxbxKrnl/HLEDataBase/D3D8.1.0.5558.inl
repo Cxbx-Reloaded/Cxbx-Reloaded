@@ -950,9 +950,9 @@ SOOVPA<11> IDirect3DDevice8_CreatePixelShader_1_0_5558 =
     0,  // XRef Not Used
 
     {
-        // IDirect3DDevice8_CreatePixelShader+0x00 : push 0xFC
-        { 0x03, 0x68 }, // (Offset,Value)-Pair #1
-        { 0x04, 0xFC }, // (Offset,Value)-Pair #2
+        // IDirect3DDevice8_CreatePixelShader+0x05 : push 0xFC
+        { 0x05, 0x68 }, // (Offset,Value)-Pair #1
+        { 0x06, 0xFC }, // (Offset,Value)-Pair #2
 
         // IDirect3DDevice8_CreatePixelShader+0x10 : mov eax, 0x8007000E
         { 0x13, 0xB8 }, // (Offset,Value)-Pair #3
