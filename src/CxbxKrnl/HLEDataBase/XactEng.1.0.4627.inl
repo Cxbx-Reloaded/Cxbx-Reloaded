@@ -769,7 +769,7 @@ OOVPATable XactEng_1_0_4627[] =
 	},
 	// XACTEngineDoWork
 	{
-		(OOVPA*) &XACTEngineCreate_1_0_4627,
+		(OOVPA*) &XACTEngineDoWork_1_0_4627,
 	
 		XTL::EmuXACTEngineDoWork,
 
