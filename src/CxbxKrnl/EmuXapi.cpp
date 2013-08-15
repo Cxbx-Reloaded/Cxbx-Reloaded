@@ -1854,14 +1854,18 @@ DWORD WINAPI XTL::EmuXGetLaunchInfo
 			");\n",
 			GetCurrentThreadId(), pdwLaunchDataType, pLaunchData);
 	
-	DWORD dwRet = E_FAIL;
+	// The title was launched by turning on the Xbox console with the title disc already in the DVD drive
+	DWORD dwRet = ERROR_NOT_FOUND;
 
 	// Has XLaunchNewImage been called since we've started this round?
 	if(g_bXLaunchNewImageCalled)
 	{
-		// I don't think we'll be emulating any other xbox apps
-    	// other than games anytime soon...
-    	*pdwLaunchDataType = LDT_TITLE; 
+		// The title was launched by a call to XLaunchNewImage
+		// A title can pass data only to itself, not another title
+		//
+		// Other options include LDT_FROM_DASHBOARD, LDT_FROM_DEBUGGER_CMDLINE and LDT_FROM_UPDATE
+		//
+		*pdwLaunchDataType = LDT_TITLE; 
 
 		// Copy saved launch data
 		CopyMemory(pLaunchData, &g_SavedLaunchData, sizeof(LAUNCH_DATA));
@@ -1878,7 +1882,11 @@ DWORD WINAPI XTL::EmuXGetLaunchInfo
 	// If it does exist, load it.
 	if(fp)
 	{
-		// Data from Xbox game
+		// The title was launched by a call to XLaunchNewImage
+		// A title can pass data only to itself, not another title
+		//
+		// Other options include LDT_FROM_DASHBOARD, LDT_FROM_DEBUGGER_CMDLINE and LDT_FROM_UPDATE
+		//
 		*pdwLaunchDataType = LDT_TITLE; 
 
 		// Read in the contents.
@@ -1889,18 +1897,6 @@ DWORD WINAPI XTL::EmuXGetLaunchInfo
 
 		// Delete the file once we're done.
 		DeleteFile("CxbxLaunchData.bin");
-
-		//void* ptr = (void*) 0x416250;
-		//memcpy( ptr, &g_pph, sizeof( XTL::POLLING_PARAMETERS_HANDLE ) );
-		//ptr = (void*) &g_pph;
-
-		// HACK: Initialize XInput from restart
-		/*if(g_bXInputOpenCalled)
-		{
-			EmuSwapFS();
-			XTL::EmuXInputOpen( NULL, 0, 0, NULL );
-			EmuSwapFS();
-		}*/
 
 		dwRet = ERROR_SUCCESS;
 	}
