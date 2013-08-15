@@ -2856,7 +2856,9 @@ OOVPATable DSound_1_0_5849[] =
     },
 	// CDirectSound_CreateSoundStream
     {
-        (OOVPA*)&DirectSound_CDirectSound_CreateSoundStream_1_0_5849, 0,
+        (OOVPA*)&DirectSound_CDirectSound_CreateSoundStream_1_0_5849,
+            
+        XTL::EmuDirectSoundCreateStream,
 
         #ifdef _DEBUG_TRACE
         "CDirectSound::CreateSoundStream (XREF)"

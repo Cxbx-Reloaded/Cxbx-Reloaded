@@ -1618,10 +1618,10 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
 
     DbgPrintf("EmuDSound (0x%X): EmuDirectSoundCreateStream\n"
            "(\n"
-           "   pdssd                     : 0x%.08X\n"
+           "   pdssd                     : 0x%.08X (pdssd->dwFlags : 0x%.08X)\n"
            "   ppStream                  : 0x%.08X\n"
            ");\n",
-           GetCurrentThreadId(), pdssd, ppStream);
+           GetCurrentThreadId(), pdssd, pdssd->dwFlags, ppStream);
 
     // TODO: Garbage Collection
     *ppStream = new X_CDirectSoundStream();
