@@ -8426,7 +8426,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetPalette
 		if( pPalette->Data )
 		{
 			pCurrentPalette = (LPVOID) pPalette->Data;
-			dwCurrentPaletteSize = 256; //EmuCheckAllocationSize( (LPVOID) pPalette->Data, false );
+			dwCurrentPaletteSize = EmuCheckAllocationSize( (LPVOID) pPalette->Data, false );
 		}
 	}
 
