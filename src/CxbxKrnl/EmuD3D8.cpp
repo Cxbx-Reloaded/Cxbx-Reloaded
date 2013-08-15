@@ -8382,15 +8382,18 @@ XTL::X_D3DPalette * WINAPI XTL::EmuIDirect3DDevice8_CreatePalette2
         32*sizeof(D3DCOLOR)      // D3DPALETTE_32
     };
 
-    pPalette->Common = 0;
-    pPalette->Lock = 0x8000BEEF; // emulated reference count for palettes
+    pPalette->Common = (Size << 30) | 0x1030001;
     pPalette->Data = (DWORD)new uint08[lk[Size]];
+
+    pPalette->Lock = 0x8000BEEF; // emulated reference count for palettes
 
 	// TODO: Should't we register the palette with a call to
 	// EmuIDirect3DResource8_Register? So far, it doesn't look
 	// like the palette registration code gets used.  If not, then we
 	// need to cache the palette manually during any calls to
 	// EmuIDirect3DDevice8_SetPalette for 8-bit textures to work properly.
+
+    DbgPrintf("pPalette: = 0x%.08X\n", pPalette);
 
     EmuSwapFS();   // XBox FS
 
@@ -8500,7 +8503,7 @@ HRESULT WINAPI XTL::EmuIDirect3DPalette8_Lock
 		hRet = E_FAIL;
 	}
 
-    return D3D_OK;
+    return hRet;
 }
 
 // ******************************************************************
@@ -8520,6 +8523,12 @@ XTL::D3DCOLOR * WINAPI XTL::EmuIDirect3DPalette8_Lock2
            "   Flags               : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), pThis, pThis->Data, Flags);
+
+    // If X_D3DLOCK_READONLY and X_D3DLOCK_NOOVERWRITE bitflags not set
+    if( !(Flags & (X_D3DLOCK_READONLY | X_D3DLOCK_NOOVERWRITE)) )
+    {
+        EmuIDirect3DResource8_BlockUntilNotBusy(pThis);
+    }
 
     D3DCOLOR *pColors = (D3DCOLOR*)pThis->Data;
 
@@ -9295,7 +9304,7 @@ VOID WINAPI XTL::EmuIDirect3DResource8_BlockUntilNotBusy
     X_D3DResource *pThis
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    // EmuSwapFS();   // Win2k/XP FS
 
     DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DResource8_BlockUntilNotBusy\n"
            "(\n"
@@ -9305,7 +9314,9 @@ VOID WINAPI XTL::EmuIDirect3DResource8_BlockUntilNotBusy
 
     // TODO: Implement
 
-    EmuSwapFS();   // XBox FS
+    // EmuSwapFS();   // XBox FS
+
+    return;
 }
 
 // ******************************************************************
