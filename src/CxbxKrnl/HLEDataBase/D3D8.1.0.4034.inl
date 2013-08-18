@@ -2360,6 +2360,16 @@ OOVPATable D3D8_1_0_4034[] =
         "EmuIDirect3DDevice8_LoadVertexShader"
         #endif
     },
+	// D3DDevice_DeleteVertexShader (* unchanged since 3925 *)
+    {
+        (OOVPA*)&X_D3DDevice_DeleteVertexShader_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_DeleteVertexShader,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_DeleteVertexShader"
+        #endif
+    },
 	// D3DDevice_DrawRectPatch
     {
         (OOVPA*)&D3DDevice_DrawRectPatch_1_0_4034,

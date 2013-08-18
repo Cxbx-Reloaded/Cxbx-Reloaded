@@ -1934,27 +1934,6 @@ SOOVPA<13> IDirect3DDevice8_SetRenderState_CullModeB_1_0_4134 =
 };
 
 // ******************************************************************
-// * D3DDevice_DeleteVertexShader
-// ******************************************************************
-SOOVPA<6> X_D3DDevice_DeleteVertexShader_1_0_4134 =
-{
-    0,  // Large == 0
-    6,  // Count == 6
-
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
-
-    {
-        { 0x02, 0x24 },
-        { 0x06, 0xFF },
-        { 0x0A, 0x08 },
-        { 0x0E, 0x44 },
-        { 0x16, 0xC2 },
-        { 0x17, 0x04 },
-    }
-};
-
-// ******************************************************************
 // * IDirect3DDevice8_SetScreenSpaceOffset
 // ******************************************************************
 SOOVPA<7> IDirect3DDevice8_SetScreenSpaceOffset_1_0_4134 = 
@@ -3621,9 +3600,9 @@ OOVPATable D3D8_1_0_4134[] =
         "EmuIDirect3DDevice8_SetRenderState_CullModeB"
         #endif
     },
-	// D3DDevice_DeleteVertexShader (* unchanged since 4134 *)
+	// D3DDevice_DeleteVertexShader (* unchanged since 3925 *)
     {
-        (OOVPA*)&X_D3DDevice_DeleteVertexShader_1_0_4134,
+        (OOVPA*)&X_D3DDevice_DeleteVertexShader_1_0_3925,
 
         XTL::EmuIDirect3DDevice8_DeleteVertexShader,
 

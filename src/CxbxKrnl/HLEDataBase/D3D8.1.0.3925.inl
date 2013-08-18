@@ -4180,6 +4180,29 @@ SOOVPA<7> D3DDevice_LoadVertexShaderProgram_1_0_3925 =
 };
 
 // ******************************************************************
+// * D3DDevice_DeleteVertexShader
+// ******************************************************************
+SOOVPA<6> X_D3DDevice_DeleteVertexShader_1_0_3925 =
+{
+    0,  // Large == 0
+    6,  // Count == 6
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x02, 0x24 },
+        { 0x06, 0xFF },
+        { 0x0A, 0x08 },
+        { 0x0E, 0x44 },
+
+        // D3DDevice_DeleteVertexShader+0x16 : retn 4
+        { 0x16, 0xC2 },
+        { 0x17, 0x04 },
+    }
+};
+
+// ******************************************************************
 // * D3DDevice_RunPushBuffer
 // ******************************************************************
 SOOVPA<15> D3DDevice_RunPushBuffer_1_0_3925 = 
@@ -5800,6 +5823,16 @@ OOVPATable D3D8_1_0_3925[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_LoadVertexShaderProgram"
+        #endif
+    },
+	// D3DDevice_DeleteVertexShader
+    {
+        (OOVPA*)&X_D3DDevice_DeleteVertexShader_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_DeleteVertexShader,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_DeleteVertexShader"
         #endif
     },
 	// IDirect3DDevice8::RunPushBuffer
