@@ -250,7 +250,7 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         PresParam.SwapEffect = XTL::D3DSWAPEFFECT_DISCARD;
 
         EmuSwapFS();    // XBox FS
-        XTL::EmuIDirect3D8_CreateDevice(0, XTL::D3DDEVTYPE_HAL, 0, 0x00000040, &PresParam, &g_pD3DDevice8);
+        XTL::EmuIDirect3D8_CreateDevice(0, XTL::D3DDEVTYPE_HAL, 0, D3DCREATE_HARDWARE_VERTEXPROCESSING, &PresParam, &g_pD3DDevice8);
         EmuSwapFS();    // Win2k/XP FS
     }
 }
@@ -828,6 +828,12 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     g_EmuCDPD.BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
                     g_dwVertexShaderUsage = D3DUSAGE_SOFTWAREPROCESSING;
                 }
+   
+                // Address debug DirectX runtime warning in _DEBUG builds
+                // Direct3D8: (WARN) :Device that was created without D3DCREATE_MULTITHREADED is being used by a thread other than the creation thread.
+                #ifdef _DEBUG
+                    g_EmuCDPD.BehaviorFlags |= D3DCREATE_MULTITHREADED;
+                #endif
 
                 // redirect to windows Direct3D
                 g_EmuCDPD.hRet = g_pD3D8->CreateDevice
