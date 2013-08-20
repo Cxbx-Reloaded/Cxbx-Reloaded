@@ -101,6 +101,7 @@ static XTL::D3DSWAPCALLBACK			g_pSwapCallback = NULL;	// Swap/Present callback r
 static XTL::D3DCALLBACK				g_pCallback		= NULL;	// D3DDevice::InsertCallback routine
 static XTL::X_D3DCALLBACKTYPE		g_CallbackType;			// Callback type
 static DWORD						g_CallbackParam;		// Callback param
+static BOOL                         g_bHasZBuffer = FALSE;  // Does device have Z Buffer?
 //static DWORD						g_dwPrimPerFrame = 0;	// Number of primitives within one frame
 
 // wireframe toggle
@@ -948,8 +949,10 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 g_pCachedZStencilSurface = new XTL::X_D3DSurface();
                 g_pCachedZStencilSurface->Common = 0;
                 g_pCachedZStencilSurface->Data = X_D3DRESOURCE_DATA_FLAG_SPECIAL | X_D3DRESOURCE_DATA_FLAG_D3DSTEN;
-                g_pD3DDevice8->GetDepthStencilSurface(&g_pCachedZStencilSurface->EmuSurface8);
-
+                if (FAILED(g_pD3DDevice8->GetDepthStencilSurface(&g_pCachedZStencilSurface->EmuSurface8)))
+                    g_bHasZBuffer = FALSE;
+                else
+                    g_bHasZBuffer = TRUE;
 
                 (void)g_pD3DDevice8->CreateVertexBuffer
                 (
@@ -4287,6 +4290,10 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_Clear
 
         if(Flags & ~(0x000000f0 | 0x00000001 | 0x00000002))
             EmuWarning("Unsupported Flag(s) for IDirect3DDevice8_Clear : 0x%.08X", Flags & ~(0x000000f0 | 0x00000001 | 0x00000002));
+
+        // Regardless of above setting, do not needlessly clear Z Buffer
+        if (!g_bHasZBuffer)
+            newFlags &= ~D3DCLEAR_ZBUFFER;
 
         Flags = newFlags;
     }
