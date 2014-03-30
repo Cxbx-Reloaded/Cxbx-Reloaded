@@ -1467,6 +1467,16 @@ OOVPATable D3D8_1_0_4432[] =
         "EmuIDirect3DResource8_Release"
         #endif
     },
+    // IDirect3DResource8::IsBusy (* unchanged since 4361 *)
+    {
+        (OOVPA*)&IDirect3DResource8_IsBusy_1_0_4361,
+
+        XTL::EmuIDirect3DResource8_IsBusy,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DResource8_IsBusy"
+        #endif
+    },
     // IDirect3DTexture8::GetSurfaceLevel
     {
         (OOVPA*)&IDirect3DTexture8_GetSurfaceLevel_1_0_4432,
