@@ -721,7 +721,11 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
                     g_pD3DDevice8->EndScene();
 
-                    while(g_pD3DDevice8->Release() != 0);
+                    // Address DirectX Debug Runtime reported error in _DEBUG builds
+                    // Direct3D8: (ERROR) :Not all objects were freed: the following indicate the types of unfreed objects.
+                    #ifndef _DEBUG
+                        while(g_pD3DDevice8->Release() != 0);
+                    #endif
 
                     g_pD3DDevice8 = 0;
                 }
