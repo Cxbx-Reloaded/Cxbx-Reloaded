@@ -970,7 +970,15 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 }
 
                 // initially, show a black screen
-                g_pD3DDevice8->Clear(0, 0, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 0xFF000000, 1.0f, 0);
+                // Only clear depth buffer if present
+                //
+                // Avoids following DirectX Debug Runtime error report
+                //    [424] Direct3D8: (ERROR) :Invalid flag D3DCLEAR_ZBUFFER: no zbuffer is associated with device. Clear failed. 
+                //
+                if (g_bHasZBuffer)
+                    g_pD3DDevice8->Clear(0, 0, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 0xFF000000, 1.0f, 0);
+                else
+                    g_pD3DDevice8->Clear(0, 0, D3DCLEAR_TARGET, 0xFF000000, 0.0f, 0);
 				g_pD3DDevice8->BeginScene();
 				g_pD3DDevice8->EndScene();
                 g_pD3DDevice8->Present(0, 0, 0, 0);
