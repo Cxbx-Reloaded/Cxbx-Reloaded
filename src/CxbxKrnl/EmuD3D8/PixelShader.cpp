@@ -802,7 +802,7 @@ HRESULT XTL::CreatePixelShaderFunction(X_D3DPIXELSHADERDEF *pPSD, LPD3DXBUFFER* 
 
 		if (FAILED(hRet))
 		{
-			EmuWarning("Couldn't assemble recompiled vertex shader\n");
+			EmuWarning("Couldn't assemble recompiled pixel shader\n");
 			if (pCompilationErrors)
 			{
 				EmuWarning((const char*)pCompilationErrors->GetBufferPointer());
