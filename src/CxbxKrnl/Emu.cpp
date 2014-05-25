@@ -119,8 +119,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuWarning(const char *szWarningMessage, ...)
     if(szWarningMessage == NULL)
         return;
 
-    char szBuffer1[255];
-    char szBuffer2[255];
+    char szBuffer1[1024];
+    char szBuffer2[1024];
 
     va_list argp;
 
