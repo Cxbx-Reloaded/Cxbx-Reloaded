@@ -3120,7 +3120,7 @@ XTL::X_D3DResource * WINAPI XTL::EmuIDirect3DDevice8_CreateTexture2
         case 5: /*D3DRTYPE_CUBETEXTURE*/
             //DbgPrintf( "D3DDevice_CreateTexture2: Width = 0x%X, Height = 0x%X\n", Width, Height );
 			//CxbxKrnlCleanup("Cube textures temporarily not supported!");
-			EmuIDirect3DDevice8_CreateCubeTexture(Width, Levels, Usage, Format, D3DPOOL_DEFAULT, (X_D3DCubeTexture**) &pTexture);
+			EmuIDirect3DDevice8_CreateCubeTexture(Width, Levels, Usage, Format, D3DPOOL_MANAGED, (X_D3DCubeTexture**) &pTexture);
             break;
         default:
             CxbxKrnlCleanup("D3DResource = %d is not supported!", D3DResource);
@@ -3214,7 +3214,9 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
 
 //        if(Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL))
         if(Usage & (D3DUSAGE_RENDERTARGET))
+        {
 			PCPool = D3DPOOL_DEFAULT;
+        }
 
         hRet = g_pD3DDevice8->CreateTexture
         (
@@ -3232,6 +3234,15 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
         {
             D3DLOCKED_RECT LockedRect;
 
+            /**
+             * Note: If CreateTexture() called with D3DPOOL_DEFAULT then unable to Lock. 
+             * It will cause an Error with the DirectX Debug runtime.
+             *
+             * This is most commonly seen with
+             *      D3DUSAGE_RENDERTARGET or
+             *      D3DUSAGE_DEPTHSTENCIL
+             * that can only be used with D3DPOOL_DEFAULT per MSDN.
+             */
             (*ppTexture)->EmuTexture8->LockRect(0, &LockedRect, NULL, NULL);
 
             (*ppTexture)->Data = (DWORD)LockedRect.pBits;
