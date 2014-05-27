@@ -1061,7 +1061,9 @@ static unsigned int WINAPI PCSTProxy
     uint32 StartContext2 = (uint32)iPCSTProxyParam->StartContext2;
     uint32 StartRoutine  = (uint32)iPCSTProxyParam->StartRoutine;
     BOOL   StartSuspended = (BOOL)iPCSTProxyParam->StartSuspended;
+    HANDLE hStartedEvent = (HANDLE)iPCSTProxyParam->hStartedEvent;
 
+    // Once deleted, unable to directly access iPCSTProxyParam in remainder of function.
     delete iPCSTProxyParam;
 
     DbgPrintf("EmuKrnl (0x%X): PCSTProxy\n"
@@ -1101,7 +1103,7 @@ static unsigned int WINAPI PCSTProxy
     // use the special calling convention
     __try
     {
-        SetEvent(iPCSTProxyParam->hStartedEvent);
+        SetEvent(hStartedEvent);
 
         EmuSwapFS();   // Xbox FS
 
