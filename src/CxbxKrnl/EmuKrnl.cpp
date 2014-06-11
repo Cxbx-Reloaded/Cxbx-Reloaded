@@ -1090,7 +1090,7 @@ static unsigned int WINAPI PCSTProxy
 			if(pfnNotificationRoutine == NULL)
 				continue;
 
-			DbgPrintf("EmKrnl (0x%X): Calling pfnNotificationRoutine[%d] (0x%.08X)\n", g_iThreadNotificationCount, GetCurrentThreadId(), pfnNotificationRoutine);
+			DbgPrintf("EmuKrnl (0x%X): Calling pfnNotificationRoutine[%d] (0x%.08X)\n", g_iThreadNotificationCount, GetCurrentThreadId(), pfnNotificationRoutine);
 
 			EmuSwapFS();   // Xbox FS
 
@@ -1137,7 +1137,7 @@ callComplete:
 			if(pfnNotificationRoutine == NULL)
 				continue;
 
-			DbgPrintf("EmKrnl (0x%X): Calling pfnNotificationRoutine[%d] (0x%.08X)\n", g_iThreadNotificationCount, GetCurrentThreadId(), pfnNotificationRoutine);
+			DbgPrintf("EmuKrnl (0x%X): Calling pfnNotificationRoutine[%d] (0x%.08X)\n", g_iThreadNotificationCount, GetCurrentThreadId(), pfnNotificationRoutine);
 
 			EmuSwapFS();   // Xbox FS
 
@@ -4151,7 +4151,7 @@ XBSYSAPI EXPORTNUM(258) VOID NTAPI xboxkrnl::PsTerminateSystemThread(IN NTSTATUS
 			if(pfnNotificationRoutine == NULL)
 				continue;
 
-			DbgPrintf("EmKrnl (0x%X): Calling pfnNotificationRoutine[%d] (0x%.08X)\n", g_iThreadNotificationCount, GetCurrentThreadId(), pfnNotificationRoutine);
+			DbgPrintf("EmuKrnl (0x%X): Calling pfnNotificationRoutine[%d] (0x%.08X)\n", g_iThreadNotificationCount, GetCurrentThreadId(), pfnNotificationRoutine);
 
 			EmuSwapFS();   // Xbox FS
 

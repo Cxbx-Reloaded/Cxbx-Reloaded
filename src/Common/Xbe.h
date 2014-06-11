@@ -198,7 +198,7 @@ class Xbe : public Error
         {
             uint32 dwDataStartAddr;             // raw start address
             uint32 dwDataEndAddr;               // raw end address
-            uint32 dwTLSIndexAddr;              // tls index  address
+            uint32 dwTLSIndexAddr;              // tls index address
             uint32 dwTLSCallbackAddr;           // tls callback address
             uint32 dwSizeofZeroFill;            // size of zero fill
             uint32 dwCharacteristics;           // characteristics
