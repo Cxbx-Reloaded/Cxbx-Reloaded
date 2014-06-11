@@ -51,6 +51,8 @@ namespace NtDll
     #include "EmuNtDll.h"
 };
 
+#define LDT_ENTRY_NUM(x) ((((x) + 1) << 3) | 7)
+
 // ******************************************************************
 // * Table of free LDT entries
 // ******************************************************************
@@ -69,7 +71,7 @@ void EmuInitLDT()
     InitializeCriticalSection(&EmuLDTLock);
 
     for(uint32 v=0;v<MAXIMUM_XBOX_THREADS;v++)
-        FreeLDTEntries[v] = (uint16)((v*8) + 7 + 8);
+        FreeLDTEntries[v] = (uint16)LDT_ENTRY_NUM(v);
 }
 
 // ******************************************************************
@@ -127,7 +129,7 @@ uint16 EmuAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit)
     // * Allocate selector
     // ******************************************************************
     {
-        if(!NT_SUCCESS(NtDll::NtSetLdtEntries((x*8)+7+8, LDTEntry, 0, LDTEntry)))
+        if(!NT_SUCCESS(NtDll::NtSetLdtEntries(LDT_ENTRY_NUM(x), LDTEntry, 0, LDTEntry)))
         {
             LeaveCriticalSection(&EmuLDTLock);
 
@@ -141,7 +143,7 @@ uint16 EmuAllocateLDT(uint32 dwBaseAddr, uint32 dwLimit)
 
     FreeLDTEntries[x] = 0;
 
-    return (x*8)+7+8;
+    return LDT_ENTRY_NUM(x);
 }
 
 // ******************************************************************
