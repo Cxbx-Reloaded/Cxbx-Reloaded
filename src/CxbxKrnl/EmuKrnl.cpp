@@ -1470,6 +1470,7 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
             *Type = 0x04;
             *Value = 0;  // Stereo, no AC3, no DTS
         }
+        break;
 
         case EEPROM_MISC:
         {
