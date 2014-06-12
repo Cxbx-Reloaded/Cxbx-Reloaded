@@ -1545,7 +1545,7 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 {
 	EmuSwapFS();   // Win2k/XP FS
 
-    DbgPrintf("EmuKrnl (0x%X): ExQueryNonVolatileSetting\n"
+    DbgPrintf("EmuKrnl (0x%X): ExSaveNonVolatileSetting\n"
            "(\n"
            "   ValueIndex          : 0x%.08X\n"
            "   Type                : 0x%.08X\n"
