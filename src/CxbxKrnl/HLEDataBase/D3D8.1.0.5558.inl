@@ -318,31 +318,31 @@ SOOVPA<11> IDirect3DDevice8_UpdateOverlay_1_0_5558 =
 SOOVPA<12> IDirect3DDevice8_GetOverlayUpdateStatus_1_0_5558 =
 {
     0,  // Large == 0
-    12, // Count == 12
+    10, // Count == 10
 
     -1, // XRef Not Saved
     0,  // XRef Not Used
 
     {
-        // IDirect3DDevice8_GetOverlayUpdateStatus+0x05 : mov ecx, [eax+0x2400]
+        // IDirect3DDevice8_GetOverlayUpdateStatus+0x05 : mov ecx, [eax+0x24xx]
         { 0x05, 0x8B }, // (Offset,Value)-Pair #1
         { 0x06, 0x88 }, // (Offset,Value)-Pair #2
-        { 0x07, 0x00 }, // (Offset,Value)-Pair #3
-        { 0x08, 0x24 }, // (Offset,Value)-Pair #4
+     // { 0x07, 0x00 }, // The offset from EAX has been seen as 2400 (5558) and 2410 (5659)
+        { 0x08, 0x24 }, // (Offset,Value)-Pair #3
 
-        // IDirect3DDevice8_GetOverlayUpdateStatus+0x0C : mov esi, [eax+0x1DD8]
-        { 0x0C, 0x8B }, // (Offset,Value)-Pair #5
-        { 0x0D, 0xB0 }, // (Offset,Value)-Pair #6
-        { 0x0E, 0xD8 }, // (Offset,Value)-Pair #7
-        { 0x0F, 0x1D }, // (Offset,Value)-Pair #8
+        // IDirect3DDevice8_GetOverlayUpdateStatus+0x0C : mov esi, [eax+0x1Dxx]
+        { 0x0C, 0x8B }, // (Offset,Value)-Pair #4
+        { 0x0D, 0xB0 }, // (Offset,Value)-Pair #5
+     // { 0x0E, 0xD8 }, // // The offset from EAX has been seen as 0x1DD8 (5558) and 0x1DE8 (5659)
+        { 0x0F, 0x1D }, // (Offset,Value)-Pair #6
 
         // IDirect3DDevice8_GetOverlayUpdateStatus+0x16 : setnz dl
-        { 0x16, 0x0F }, // (Offset,Value)-Pair #9
-        { 0x17, 0x95 }, // (Offset,Value)-Pair #10
-        { 0x18, 0xC2 }, // (Offset,Value)-Pair #11
+        { 0x16, 0x0F }, // (Offset,Value)-Pair #7
+        { 0x17, 0x95 }, // (Offset,Value)-Pair #8
+        { 0x18, 0xC2 }, // (Offset,Value)-Pair #9
 
         // IDirect3DDevice8_GetOverlayUpdateStatus+0x1C : retn
-        { 0x1C, 0xC3 }, // (Offset,Value)-Pair #12
+        { 0x1C, 0xC3 }, // (Offset,Value)-Pair #10
     }
 };
 
