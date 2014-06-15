@@ -578,11 +578,12 @@ SOOVPA<10> IDirect3DDevice8_DrawIndexedVerticesUP_1_0_5558 =
         { 0x4C, 0x00 }, // (Offset,Value)-Pair #3
         { 0x4D, 0x08 }, // (Offset,Value)-Pair #4
 
-        // IDirect3DDevice8_DrawIndexedVerticesUP+0x5C : lea edx, [edi+0xBC4]
+        // IDirect3DDevice8_DrawIndexedVerticesUP+0x5C : lea edx, [edi+0xBxx]
         { 0x5C, 0x8D }, // (Offset,Value)-Pair #5
         { 0x5D, 0x96 }, // (Offset,Value)-Pair #6
-        { 0x5E, 0xC4 }, // (Offset,Value)-Pair #7
-        { 0x5F, 0x0B }, // (Offset,Value)-Pair #8
+     // { 0x5E, 0xC4 }, // The offset from EDI has been seen as BC4 (5558) and BD4 (5659)
+        { 0x5F, 0x0B }, // (Offset,Value)-Pair #7
+        { 0x60, 0x00 }, // (Offset,Value)-Pair #8
 
         // IDirect3DDevice8_DrawIndexedVerticesUP+0x6A : mov eax, 0x10
         { 0x6A, 0xB8 }, // (Offset,Value)-Pair #9
