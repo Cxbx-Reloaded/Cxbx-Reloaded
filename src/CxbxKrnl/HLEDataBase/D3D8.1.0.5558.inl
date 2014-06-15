@@ -3404,6 +3404,16 @@ OOVPATable D3D8_1_0_5558[] =
 		"EmuIDirect3DDevice8_FlushVertexCache"
 		#endif
 	},
+	// IDirect3DDevice8::EnableOverlay (* unchanged since 4361 *)
+	{
+		(OOVPA*)&IDirect3DDevice8_EnableOverlay_1_0_4361,
+		
+ 		XTL::EmuIDirect3DDevice8_EnableOverlay,
+		
+		#ifdef _DEBUG_TRACE
+		"EmuIDirect3DDevice8_EnableOverlay"
+		#endif
+	},
 	// D3DDevice_SetRenderState_LogicOp
 	{
 		(OOVPA*)&D3DDevice_SetRenderState_LogicOp_1_0_5558,
