@@ -3462,6 +3462,16 @@ OOVPATable D3D8_1_0_4361[] =
         "EmuIDirect3DDevice8_GetGammaRamp"
         #endif
     },
+	// IDirect3DDevice8::GetCreationParameters (* unchanged since 4034 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_GetCreationParameters_1_0_4034,
+
+        XTL::EmuIDirect3DDevice8_GetCreationParameters,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetCreationParameters"
+        #endif
+    },
 	// IDirect3DDevice8::SetShaderConstantMode
     {
         (OOVPA*)&IDirect3DDevice8_SetShaderConstantMode_1_0_4361,
