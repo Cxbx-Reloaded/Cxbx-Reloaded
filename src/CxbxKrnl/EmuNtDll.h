@@ -664,6 +664,14 @@ typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeStringToAnsiString)
 );
 
 // ******************************************************************
+// * RtlFreeAnsiString
+// ******************************************************************
+typedef VOID (NTAPI *FPTR_RtlFreeAnsiString)
+(
+  IN OUT PANSI_STRING   AnsiString
+);
+
+// ******************************************************************
 // * RtlEqualString
 // ******************************************************************
 typedef BOOLEAN (NTAPI *FPTR_RtlEqualString)
@@ -1077,6 +1085,7 @@ extern FPTR_RtlInitAnsiString              RtlInitAnsiString;
 extern FPTR_RtlInitUnicodeString           RtlInitUnicodeString;
 extern FPTR_RtlAnsiStringToUnicodeString   RtlAnsiStringToUnicodeString;
 extern FPTR_RtlUnicodeStringToAnsiString   RtlUnicodeStringToAnsiString;
+extern FPTR_RtlFreeAnsiString              RtlFreeAnsiString;
 extern FPTR_RtlNtStatusToDosError          RtlNtStatusToDosError;
 extern FPTR_RtlTimeFieldsToTime            RtlTimeFieldsToTime;
 extern FPTR_RtlTimeToTimeFields            RtlTimeToTimeFields;

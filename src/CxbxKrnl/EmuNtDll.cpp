@@ -53,6 +53,7 @@ NtDll::FPTR_RtlInitAnsiString              NtDll::RtlInitAnsiString            =
 NtDll::FPTR_RtlInitUnicodeString           NtDll::RtlInitUnicodeString         = (NtDll::FPTR_RtlInitUnicodeString)GetProcAddress(hNtDll, "RtlInitUnicodeString");
 NtDll::FPTR_RtlAnsiStringToUnicodeString   NtDll::RtlAnsiStringToUnicodeString = (NtDll::FPTR_RtlAnsiStringToUnicodeString)GetProcAddress(hNtDll, "RtlAnsiStringToUnicodeString");
 NtDll::FPTR_RtlUnicodeStringToAnsiString   NtDll::RtlUnicodeStringToAnsiString = (NtDll::FPTR_RtlUnicodeStringToAnsiString)GetProcAddress(hNtDll, "RtlUnicodeStringToAnsiString");
+NtDll::FPTR_RtlFreeAnsiString              NtDll::RtlFreeAnsiString            = (NtDll::FPTR_RtlFreeAnsiString)GetProcAddress(hNtDll, "RtlFreeAnsiString");
 NtDll::FPTR_RtlNtStatusToDosError          NtDll::RtlNtStatusToDosError        = (NtDll::FPTR_RtlNtStatusToDosError)GetProcAddress(hNtDll, "RtlNtStatusToDosError");
 NtDll::FPTR_RtlTimeFieldsToTime            NtDll::RtlTimeFieldsToTime          = (NtDll::FPTR_RtlTimeFieldsToTime)GetProcAddress(hNtDll, "RtlTimeFieldsToTime");
 NtDll::FPTR_RtlTimeToTimeFields            NtDll::RtlTimeToTimeFields          = (NtDll::FPTR_RtlTimeToTimeFields)GetProcAddress(hNtDll, "RtlTimeToTimeFields");

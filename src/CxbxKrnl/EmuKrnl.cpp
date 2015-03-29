@@ -4303,6 +4303,29 @@ XBSYSAPI EXPORTNUM(279) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualString
 }
 
 // ******************************************************************
+// * 0x011E - RtlFreeAnsiString
+// ******************************************************************
+XBSYSAPI EXPORTNUM(286) VOID NTAPI xboxkrnl::RtlFreeAnsiString
+(
+  IN OUT PANSI_STRING AnsiString
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): RtlFreeAnsiString\n"
+           "(\n"
+           "   AnsiString        : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), AnsiString);
+
+    NtDll::RtlFreeAnsiString((NtDll::PANSI_STRING)AnsiString);
+
+    EmuSwapFS();   // Xbox FS
+
+    return;
+}
+
+// ******************************************************************
 // * 0x0121 - RtlInitAnsiString
 // ******************************************************************
 XBSYSAPI EXPORTNUM(289) VOID NTAPI xboxkrnl::RtlInitAnsiString
