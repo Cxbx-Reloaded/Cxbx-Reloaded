@@ -128,7 +128,11 @@ XBSYSAPI EXPORTNUM(289) VOID NTAPI RtlInitAnsiString
   IN     PCSZ         SourceString
 );
 
-XBSYSAPI VOID *RtlInitUnicodeString;
+XBSYSAPI EXPORTNUM(290) VOID NTAPI RtlInitUnicodeString
+(
+  IN OUT PUNICODE_STRING DestinationString,
+  IN     PSTRING         SourceString
+);
 
 // ******************************************************************
 // * RtlInitializeCriticalSection

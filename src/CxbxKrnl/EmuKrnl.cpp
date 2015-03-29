@@ -4328,6 +4328,31 @@ XBSYSAPI EXPORTNUM(289) VOID NTAPI xboxkrnl::RtlInitAnsiString
 }
 
 // ******************************************************************
+// * 0x0122 - RtlInitUnicodeString
+// ******************************************************************
+XBSYSAPI EXPORTNUM(290) VOID NTAPI xboxkrnl::RtlInitUnicodeString
+(
+  IN OUT PUNICODE_STRING DestinationString,
+  IN     PSTRING         SourceString
+)
+{
+    EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): RtlInitUnicodeString\n"
+           "(\n"
+           "   DestinationString   : 0x%.08X\n"
+           "   SourceString        : 0x%.08X (\"%ls\")\n"
+           ");\n",
+           GetCurrentThreadId(), DestinationString, SourceString, SourceString);
+
+    NtDll::RtlInitUnicodeString((NtDll::PUNICODE_STRING)DestinationString, (NtDll::PCWSTR)SourceString);
+
+    EmuSwapFS();   // Xbox FS
+
+    return;
+}
+
+// ******************************************************************
 // * 0x0123 - RtlInitializeCriticalSection
 // ******************************************************************
 XBSYSAPI EXPORTNUM(291) VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
