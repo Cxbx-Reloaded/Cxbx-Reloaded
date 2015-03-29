@@ -43,7 +43,7 @@
 
   TODO:
   - fix BumpDemo
-  (after second recompilation the sahder does not work,
+  (after second recompilation the shader does not work,
   can also be something in CxbxKrnl because it looks like no
   textures are set. Check cubemap loading from resourcesd!!!)
   => seems to work now, the problem is that I don't know
@@ -77,7 +77,7 @@
 
 //#include "EmuD3DPixelShader.h"
 
-#define REVEL8N_PIXEL_SAHDER_CHANGES
+#define REVEL8N_PIXEL_SHADER_CHANGES
 
 // help functions
 char *pCodeBuffer=NULL;
@@ -935,7 +935,7 @@ inline void HandleInputOutput
 	if(szInput[2][0]) bInput[2]=TRUE;
 	if(szInput[3][0]) bInput[3]=TRUE;
 
-#ifdef REVEL8N_PIXEL_SAHDER_CHANGES
+#ifdef REVEL8N_PIXEL_SHADER_CHANGES
 	// Correct param if a constant is used!
 	if(!bInput[0])
 		CorrectConstToReg(szConst[0], iPSC0, iPSC1);
@@ -953,12 +953,12 @@ inline void HandleInputOutput
 	for(i=0; i<4; i++)
 	{
 		strcpy(szCompleteInput[i], szInputMapping[i]);
-#ifdef REVEL8N_PIXEL_SAHDER_CHANGES
+#ifdef REVEL8N_PIXEL_SHADER_CHANGES
 		if(bInput[i])
 		{
 #endif
 			strcat(szCompleteInput[i], szInput[i]);
-#ifdef REVEL8N_PIXEL_SAHDER_CHANGES
+#ifdef REVEL8N_PIXEL_SHADER_CHANGES
 			bEmptyChannel = bEmptyChannel || (szChannels[i][0] == 0);
 		}
 		else
@@ -1033,7 +1033,7 @@ inline void HandleInputOutput
 				bR1AWritten=TRUE;*/
 			}
 			else if(!bGlobalRGBA && !bAlpha
-#ifdef REVEL8N_PIXEL_SAHDER_CHANGES
+#ifdef REVEL8N_PIXEL_SHADER_CHANGES
 				&& !bEmptyChannel
 #endif
 				) 
@@ -1099,7 +1099,7 @@ inline void HandleInputOutput
 		if(szOutput[1][0])
 			strcpy(szOut1, szOutput[1]);
 
-#ifndef REVEL8N_PIXEL_SAHDER_CHANGES
+#ifndef REVEL8N_PIXEL_SHADER_CHANGES
 		if(szOutput[2][0]) 
 		{
 			/*
@@ -1193,7 +1193,7 @@ inline void HandleInputOutput
 			bVAccess[2] ? "" : szABCDOp, 
 			szOutputMod, 
 
-#ifdef REVEL8N_PIXEL_SAHDER_CHANGES
+#ifdef REVEL8N_PIXEL_SHADER_CHANGES
 			bInput[0] ? szInput[0] : szConst[0],
 			bInput[1] ? szInput[1] : szConst[1],
 			bInput[2] ? szInput[2] : szConst[2],
@@ -1206,7 +1206,7 @@ inline void HandleInputOutput
 #endif
 
 			// the real input now
-#ifdef REVEL8N_PIXEL_SAHDER_CHANGES
+#ifdef REVEL8N_PIXEL_SHADER_CHANGES
 			szCompleteInput[0],
 			szCompleteInput[1],
 			szCompleteInput[2],
@@ -1227,7 +1227,7 @@ inline void HandleInputOutput
 		// TODO: check for problems with strange bias stuff
 		//if(!bGlobalRGBA && bAlpha && (szOut[0] || szOut1[0] || szOutput[2][0]))
 		if (bLastOpRGB && (!bOpRGB_Current) && bCurrOpRealAlpha && 
-#ifdef REVEL8N_PIXEL_SAHDER_CHANGES
+#ifdef REVEL8N_PIXEL_SHADER_CHANGES
 			bOptimized &&
 #endif
 			(szCmd[0] || 
@@ -1235,7 +1235,7 @@ inline void HandleInputOutput
 			(szOut1[0] && !bVAccess[1]) || 
 			(szOutput[2][0] && !bVAccess[2]))) 
 		{
-//#ifndef REVEL8N_PIXEL_SAHDER_CHANGES
+//#ifndef REVEL8N_PIXEL_SHADER_CHANGES
 			WriteCode("+ ");
 //#endif
 		}
@@ -1866,7 +1866,7 @@ inline BOOL OptimizeOperation
 	szRealInputs[2] = szConstRegCD1;
 	szRealInputs[3] = szConstRegCD2;
 
-#ifdef REVEL8N_PIXEL_SAHDER_CHANGES
+#ifdef REVEL8N_PIXEL_SHADER_CHANGES
 	char *szOutputs[3];
 	szOutputs[0] = szOutAB;
 	szOutputs[1] = szOutCD;
@@ -1887,7 +1887,7 @@ inline BOOL OptimizeOperation
 			// If it is a mul, it can also be only a mov
 			if(strcmp(szInputs[i*2], "1")==0)  {
 				//strcpy(szABCDInput[i], szInputs[i*2+1]);
-#ifndef REVEL8N_PIXEL_SAHDER_CHANGES
+#ifndef REVEL8N_PIXEL_SHADER_CHANGES
 				strcpy(szABCDInput[i], szRealInputs[i*2+1]);
 #endif
 
@@ -1903,7 +1903,7 @@ inline BOOL OptimizeOperation
 
 			} else if(strcmp(szInputs[i*2+1], "1")==0) {
 				//strcpy(szABCDInput[i], szInputs[i*2]);
-#ifndef REVEL8N_PIXEL_SAHDER_CHANGES
+#ifndef REVEL8N_PIXEL_SHADER_CHANGES
 				strcpy(szABCDInput[i], szRealInputs[i*2]);
 #endif
 
@@ -1917,7 +1917,7 @@ inline BOOL OptimizeOperation
 		}
 	}
 
-#ifdef REVEL8N_PIXEL_SAHDER_CHANGES
+#ifdef REVEL8N_PIXEL_SHADER_CHANGES
 	OpType eOpTypes[3] = {OPTYPE_NOP, OPTYPE_NOP, OPTYPE_NOP};
 	for (i = 0; i < 3; ++i)
 	{
@@ -2519,7 +2519,7 @@ inline BOOL OptimizeOperation
 			}
 		}
 	} else if(strcmp(szOp2, "cnd")==0) {
-#ifdef REVEL8N_PIXEL_SAHDER_CHANGES
+#ifdef REVEL8N_PIXEL_SHADER_CHANGES
 		int iOffset = 0;
 		int i = 0;
 		for (i = 0; i < 2; ++i)
