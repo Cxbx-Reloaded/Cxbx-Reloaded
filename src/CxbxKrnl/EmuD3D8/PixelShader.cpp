@@ -440,7 +440,7 @@ HRESULT XTL::CreatePixelShaderFunction(X_D3DPIXELSHADERDEF *pPSD, LPD3DXBUFFER* 
 		wTexInput[0],wTexInput[1],wTexInput[2],wTexInput[3]);
 
 	printf("\n// --------------------------\n");
-	printf("// Terxture Modes\n");
+	printf("// Texture Modes\n");
 	printf("// --------------------------\n");
 	printf("pPSD.PSTextureModes = PS_TEXTUREMODES(\n");
 
