@@ -251,7 +251,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
         uint32 old_protection = 0;
 
-        VirtualProtect(MemXbeHeader, 0x1000, PAGE_READWRITE, &old_protection);
+		VirtualProtect(MemXbeHeader, pXbeHeader->dwSizeofImage, PAGE_READWRITE, &old_protection);
 
         // we sure hope we aren't corrupting anything necessary for an .exe to survive :]
         MemXbeHeader->dwSizeofHeaders   = pXbeHeader->dwSizeofHeaders;
@@ -394,16 +394,6 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
     }
 
     //
-    // initialize FS segment selector
-    //
-
-    {
-        EmuInitFS();
-
-        EmuGenerateFS(pTLS, pTLSData);
-    }
-
-    //
     // duplicate handle in order to retain Suspend/Resume thread rights from a remote thread
     //
 
@@ -426,6 +416,16 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
     XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
 
     EmuHLEIntercept(pLibraryVersion, pXbeHeader);
+
+	//
+	// initialize FS segment selector
+	//
+
+	{
+		EmuInitFS();
+
+		EmuGenerateFS(pTLS, pTLSData);
+	}
 
     DbgPrintf("EmuMain (0x%X): Initial thread starting.\n", GetCurrentThreadId());
 

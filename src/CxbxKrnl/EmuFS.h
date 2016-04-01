@@ -34,6 +34,7 @@
 #ifndef EMUFS_H
 #define EMUFS_H
 
+#include <vector>
 #include "Common/Xbe.h"
 
 // word @ FS:[0x14] := wSwapFS
@@ -54,15 +55,7 @@ extern void EmuCleanupFS();
 // is the current fs register the xbox emulation variety?
 static inline bool EmuIsXboxFS()
 {
-    unsigned char chk;
-
-    __asm
-    {
-        mov ah, fs:[0x16]
-        mov chk, ah
-    }
-
-    return (chk == 1);
+	return true;
 }
 
 //
@@ -85,33 +78,33 @@ extern uint32 EmuAutoSleepRate;
 //
 static inline void EmuSwapFS()
 {
-    // Note that this is only the *approximate* interception count,
-    // because not all interceptions swap the FS register, and some
-    // non-interception code uses it
-    static uint32 dwInterceptionCount = 0;
+	// Note that this is only the *approximate* interception count,
+	// because not all interceptions swap the FS register, and some
+	// non-interception code uses it
+	static uint32 dwInterceptionCount = 0;
 
-    __asm
-    {
-        mov ax, fs:[0x14]
-        mov fs, ax
-    }
+	// every 'N' interceptions, perform various periodic services
+	if (dwInterceptionCount++ >= EmuAutoSleepRate)
+	{
+		// If we're in the Xbox FS, wait until the next swap
+		if (EmuIsXboxFS())
+		{
+			dwInterceptionCount--;
+			return;
+		}
 
-    // every 'N' interceptions, perform various periodic services
-    if(dwInterceptionCount++ >= EmuAutoSleepRate)
-    {
-        // If we're in the Xbox FS, wait until the next swap
-        if(EmuIsXboxFS())
-        {
-            dwInterceptionCount--;
-            return;
-        }
+		// Yield!
+		Sleep(1);
 
-        // Yield!
-        Sleep(1);
-
-        // Back to Zero!
-        dwInterceptionCount = 0;
-    }
+		// Back to Zero!
+		dwInterceptionCount = 0;
+	}
 }
+
+typedef struct
+{
+	std::vector<uint08> data;
+	void* functionPtr;
+}fs_instruction_t;
 
 #endif
