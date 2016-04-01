@@ -93,6 +93,27 @@ SOOVPA<8> IDirect3D8_CheckDeviceFormat_1_0_4361 =
 };
 
 // ******************************************************************
+// * IDirect3DDevice8_SetVerticalBlankCallback
+// ******************************************************************
+SOOVPA<6> IDirect3DDevice8_SetVerticalBlankCallback_1_0_4361 =
+{
+	0,  // Large == 0
+	6,  // Count == 7
+
+	-1, // XRef Not Saved
+	0,  // XRef Is  Used
+
+	{
+		{ 0x01, 0x44 },
+		{ 0x03, 0x04 },
+		{ 0x05, 0x0D },
+		{ 0x0C, 0x30 },
+		{ 0x0D, 0x24 },
+		{ 0x11, 0x04 },
+	}
+};
+
+// ******************************************************************
 // * IDirect3D8_GetAdapterModeCount
 // ******************************************************************
 SOOVPA<12> IDirect3D8_GetAdapterModeCount_1_0_4361 =
@@ -394,6 +415,29 @@ SOOVPA<9> IDirect3DDevice8_CaptureStateBlock_1_0_4361 =
         { 0xAC, 0x00 }, // (Offset,Value)-Pair #9
     }
 };
+
+// ******************************************************************
+// * D3DDevice_DeleteStateBlock
+// ******************************************************************
+SOOVPA<7> D3DDevice_DeleteStateBlock_1_0_4361 =
+{
+	0,  // Large == 0
+	7,  // Count == 7
+
+	-1, // Xref Not Saved
+	0,  // Xref Not Used
+
+	{
+		{ 0x11, 0x76 },
+		{ 0x24, 0x3B },
+		{ 0x37, 0xE8 },
+		{ 0x4A, 0x50 },
+		{ 0x5D, 0x74 },
+		{ 0x70, 0x06 },
+		{ 0x83, 0xEB },
+	}
+};
+
 
 // ******************************************************************
 // * IDirect3DDevice8_ApplyStateBlock
@@ -2472,6 +2516,15 @@ OOVPATable D3D8_1_0_4361[] =
         "EmuIDirect3DDevice8_CaptureStateBlock"
         #endif
     },
+	// D3DDevice_DeleteStateBlock
+	{
+		(OOVPA*)&D3DDevice_DeleteStateBlock_1_0_4361,
+		XTL::EmuIDirect3DDevice8_DeleteStateBlock,
+
+		#ifdef _DEBUG_TRACE
+			"EmuIDirect3DDevice8_DeleteStateBlock"
+		#endif
+	},
     // IDirect3DDevice8::ApplyStateBlock
     {
         (OOVPA*)&IDirect3DDevice8_ApplyStateBlock_1_0_4361,
@@ -3549,6 +3602,16 @@ OOVPATable D3D8_1_0_4361[] =
         "EmuIDirect3DDevice8_End"
         #endif
     },
+	// IDirect3DDevice8::SetVerticalBlankCallback
+	{
+		(OOVPA*)&IDirect3DDevice8_SetVerticalBlankCallback_1_0_4361,
+
+		XTL::EmuIDirect3DDevice8_SetVerticalBlankCallback,
+
+		#ifdef _DEBUG_TRACE
+			"EmuIDirect3DDevice8_SetVerticalBlankCallback"
+		#endif
+	},
 	// IDirect3DDevice8::SetVertexData2f
     {
         (OOVPA*)&D3DDevice_SetVertexData2f_1_0_4361,
