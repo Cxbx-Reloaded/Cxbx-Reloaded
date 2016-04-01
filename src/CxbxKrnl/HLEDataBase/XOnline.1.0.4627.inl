@@ -147,7 +147,7 @@ OOVPATable XOnline_1_0_4627[] =
     {
         (OOVPA*)&socket_1_0_4361,
 
-        MFPtoFP<XTL::EmuThis>(XTL::EmuThis::Emusocket),
+        MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emusocket),
 
         #ifdef _DEBUG_TRACE
         "Emusocket"
@@ -157,7 +157,7 @@ OOVPATable XOnline_1_0_4627[] =
     {
         (OOVPA*)&bind_1_0_4361,
 
-        MFPtoFP<XTL::EmuThis>(XTL::EmuThis::Emubind),
+        MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emubind),
 
         #ifdef _DEBUG_TRACE
         "Emubind"
@@ -167,7 +167,7 @@ OOVPATable XOnline_1_0_4627[] =
     {
         (OOVPA*)&listen_1_0_4361,
 
-        MFPtoFP<XTL::EmuThis>(XTL::EmuThis::Emulisten),
+        MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emulisten),
 
         #ifdef _DEBUG_TRACE
         "Emulisten"
@@ -177,7 +177,7 @@ OOVPATable XOnline_1_0_4627[] =
     {
         (OOVPA*)&ioctlsocket_1_0_4361,
 
-        MFPtoFP<XTL::EmuThis>(XTL::EmuThis::Emuioctlsocket),
+        MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emuioctlsocket),
 
         #ifdef _DEBUG_TRACE
         "Emuioctlsocket"
