@@ -290,7 +290,7 @@ void EmuInitFS()
 
 			if (memcmp((void*)addr, &fsInstructions[i].data[0], sizeOfData) == 0)
 			{
-				DbgPrintf("Patching FS Instruction at 0x%08X", addr);
+				DbgPrintf("Patching FS Instruction at 0x%08X\n", addr);
 
 				// Write Call opcode
 				*(uint08*)addr = 0xE8;
