@@ -3261,7 +3261,7 @@ XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
 									(NtDll::PIO_STATUS_BLOCK) ApcStatusBlock, ApcReserved );
 	if( FAILED( ret ) )
 		EmuWarning( "NtQueueApcThread failed!" );
-
+		
 	EmuSwapFS();	// Xbox FS
 
 	return ret;
@@ -3567,10 +3567,6 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
            GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation,
            Length, FileInformationClass);
 
-    // Safety/Sanity Check
-    if(FileInformationClass != FileFsSizeInformation)
-        CxbxKrnlCleanup("NtQueryVolumeInformationFile: Unsupported FileInformationClass");
-
     NTSTATUS ret = NtDll::NtQueryVolumeInformationFile
     (
         FileHandle,
@@ -3579,17 +3575,25 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
         (NtDll::FS_INFORMATION_CLASS)FileInformationClass
     );
 
-    // NOTE: TODO: Dynamically fill in, or allow configuration?
-    if(FileInformationClass == FileFsSizeInformation)
-    {
-        FILE_FS_SIZE_INFORMATION *SizeInfo = (FILE_FS_SIZE_INFORMATION*)FileInformation;
+	if (ret == STATUS_SUCCESS)
+	{
+		// NOTE: TODO: Dynamically fill in, or allow configuration?
+		if (FileInformationClass == FileFsSizeInformation)
+		{
+			FILE_FS_SIZE_INFORMATION *SizeInfo = (FILE_FS_SIZE_INFORMATION*)FileInformation;
 
-        SizeInfo->TotalAllocationUnits.QuadPart     = 0x4C468;
-        SizeInfo->AvailableAllocationUnits.QuadPart = 0x2F125;
-        SizeInfo->SectorsPerAllocationUnit          = 32;
-        SizeInfo->BytesPerSector                    = 512;
-    }
+			SizeInfo->TotalAllocationUnits.QuadPart = 0x4C468;
+			SizeInfo->AvailableAllocationUnits.QuadPart = 0x2F125;
+			SizeInfo->SectorsPerAllocationUnit = 32;
+			SizeInfo->BytesPerSector = 512;
+		}
 
+	} 
+	else
+	{
+		EmuWarning("NtQueryInformationFile failed! (%s)\n", NtStatusToString(ret));
+	}
+    
     EmuSwapFS();   // Xbox FS
 
     return ret;
@@ -4264,6 +4268,7 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
 			CriticalSection->RecursionCount = GlobalCriticalSections[iSection].NativeCriticalSection.RecursionCount;
 			CriticalSection->OwningThread = GlobalCriticalSections[iSection].NativeCriticalSection.OwningThread;
 		}
+		
 		//if(CriticalSection->LockCount == -1)
 			//NtDll::RtlInitializeCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
 
