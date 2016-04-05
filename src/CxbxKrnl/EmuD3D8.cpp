@@ -5558,7 +5558,13 @@ VOID WINAPI XTL::EmuGet2DSurfaceDesc
 		}
 		else
 		{
-			hRet = pPixelContainer->EmuTexture8->GetLevelDesc(dwLevel, &SurfaceDesc);
+			hRet = E_FAIL;
+
+			// TODO: Find out why EmuTexture8 is NULL in Crazy Taxi 3
+			if (pPixelContainer->EmuTexture8 != nullptr) {
+				hRet = pPixelContainer->EmuTexture8->GetLevelDesc(dwLevel, &SurfaceDesc);
+			}
+			
 			if(FAILED(hRet))
 				EmuWarning("IDirect3DTexture8::GetSurfaceDesc failed!");
 		}
