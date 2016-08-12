@@ -220,11 +220,10 @@ __declspec(naked) void EmuMFs00Esp()
 	}
 }
 
-__declspec(thread) uint32 returnAddr;
-__declspec(thread) uint32 temp;
-
 __declspec(naked) void EmuPushDwordPtrFs00()
 {
+	uint32 returnAddr;
+	uint32 temp;
 	__asm
 	{
 		pop returnAddr
@@ -239,6 +238,9 @@ __declspec(naked) void EmuPushDwordPtrFs00()
 
 __declspec(naked) void EmuPopDwordPtrFs00()
 {
+	uint32 returnAddr;
+	uint32 temp;
+
 	__asm
 	{
 		pop returnAddr
