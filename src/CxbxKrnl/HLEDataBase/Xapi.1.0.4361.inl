@@ -589,56 +589,7 @@ SOOVPA<7> SetWaitableTimer_1_0_4361 =
 // ******************************************************************
 OOVPATable XAPI_1_0_4361[] =
 {
-    // RtlCreateHeap (* unchanged since 3911 *)
-    {
-        (OOVPA*)&RtlCreateHeap_1_0_3911,
-
-        XTL::EmuRtlCreateHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlCreateHeap"
-        #endif
-    },
-    // RtlAllocateHeap (* unchanged since 3911 *)
-    {
-        (OOVPA*)&RtlAllocateHeap_1_0_3911,
-
-        XTL::EmuRtlAllocateHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlAllocateHeap"
-        #endif
-    },
-    // RtlFreeHeap
-    {
-        (OOVPA*)&RtlFreeHeap_1_0_4361,
-
-        XTL::EmuRtlFreeHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlFreeHeap"
-        #endif
-    },
-	// RtlReAllocateHeap (* unchanged since 1.0.3911 *)
-    {
-        (OOVPA*)&RtlReAllocateHeap_1_0_3911,
-
-        XTL::EmuRtlReAllocateHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlReAllocateHeap"
-        #endif
-    },
-    // RtlSizeHeap (* unchanged since 1.0.3911 *)
-    {
-        (OOVPA*)&RtlSizeHeap_1_0_3911,
-
-        XTL::EmuRtlSizeHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlSizeHeap"
-        #endif
-    },
+  
     // QueryPerformanceCounter
     {
         (OOVPA*)&QueryPerformanceCounter_1_0_4361,
@@ -928,16 +879,6 @@ OOVPATable XAPI_1_0_4361[] =
        "EmuSetWaitableTimer"
        #endif
 	},
-	// RtlDestroyHeap (* unchanged since 4134 *)
-    {
-        (OOVPA*)&RtlDestroyHeap_1_0_4134,
-
-        XTL::EmuRtlDestroyHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlDestroyHeap"
-        #endif
-    },
 };
 
 // ******************************************************************

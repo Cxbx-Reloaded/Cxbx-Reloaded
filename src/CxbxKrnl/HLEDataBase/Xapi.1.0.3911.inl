@@ -1674,59 +1674,6 @@ OOVPATable XAPI_1_0_3911[] =
         "EmuGetExitCodeThread"
         #endif
     },
-    // RtlCreateHeap
-    {
-        (OOVPA*)&RtlCreateHeap_1_0_3911,
-
-        XTL::EmuRtlCreateHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlCreateHeap"
-        #endif
-    },
-    // RtlAllocateHeap
-    {
-        (OOVPA*)&RtlAllocateHeap_1_0_3911,
-
-        XTL::EmuRtlAllocateHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlAllocateHeap"
-        #endif
-    },
-    // RtlFreeHeap
-    {
-        (OOVPA*)&RtlFreeHeap_1_0_3911,
-
-        XTL::EmuRtlFreeHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlFreeHeap"
-        #endif
-    },
-    //*
-    // RtlReAllocateHeap
-    {
-        (OOVPA*)&RtlReAllocateHeap_1_0_3911,
-
-        XTL::EmuRtlReAllocateHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlReAllocateHeap"
-        #endif
-    },
-    //*/
-    //*
-    // RtlSizeHeap
-    {
-        (OOVPA*)&RtlSizeHeap_1_0_3911,
-
-        XTL::EmuRtlSizeHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlSizeHeap"
-        #endif
-    },
     //*/
     // XInitDevices
     {

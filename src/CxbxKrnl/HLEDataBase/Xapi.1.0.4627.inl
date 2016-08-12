@@ -1315,56 +1315,6 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXRegisterThreadNotifyRoutine"
         #endif
     },
-    // RtlCreateHeap (* unchanged since 1.0.3911 *)
-    {
-        (OOVPA*)&RtlCreateHeap_1_0_3911,
-
-        XTL::EmuRtlCreateHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlCreateHeap"
-        #endif
-    },
-    // RtlAllocateHeap (* unchanged since 1.0.3911 *)
-    {
-        (OOVPA*)&RtlAllocateHeap_1_0_3911,
-
-        XTL::EmuRtlAllocateHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlAllocateHeap"
-        #endif
-    },
-    // RtlFreeHeap
-    {
-        (OOVPA*)&RtlFreeHeap_1_0_4627,
-
-        XTL::EmuRtlFreeHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlFreeHeap"
-        #endif
-    },
-    // RtlReAllocateHeap
-    {
-        (OOVPA*)&RtlReAllocateHeap_1_0_4627,
-
-        XTL::EmuRtlReAllocateHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlReAllocateHeap"
-        #endif
-    },
-    // RtlSizeHeap (* unchanged since 3911 *)
-    {
-        (OOVPA*)&RtlSizeHeap_1_0_3911,
-
-        XTL::EmuRtlSizeHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlSizeHeap"
-        #endif
-    },
     // QueryPerformanceCounter (* unchanged since 4361 *)
     {
         (OOVPA*)&QueryPerformanceCounter_1_0_4361,
@@ -1797,16 +1747,6 @@ OOVPATable XAPI_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuGetExitCodeThread"
-        #endif
-    },
-	// RtlDestroyHeap (* unchanged since 4134 *)
-    {
-        (OOVPA*)&RtlDestroyHeap_1_0_4134,
-
-        XTL::EmuRtlDestroyHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlDestroyHeap"
         #endif
     },
 	// GetOverlappedResult

@@ -517,57 +517,7 @@ OOVPATable XAPI_1_0_5558[] =
         "EmuXRegisterThreadNotifyRoutine"
         #endif
     },
-    // RtlCreateHeap
-    {
-        (OOVPA*)&RtlCreateHeap_1_0_5558,
-
-        XTL::EmuRtlCreateHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlCreateHeap"
-        #endif
-    },
-    // RtlAllocateHeap
-    {
-        (OOVPA*)&RtlAllocateHeap_1_0_5558,
-
-        XTL::EmuRtlAllocateHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlAllocateHeap"
-        #endif
-    },
-    // RtlFreeHeap (* unchanged since 4627 *)
-    {
-        (OOVPA*)&RtlFreeHeap_1_0_4627,
-
-        XTL::EmuRtlFreeHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlFreeHeap"
-        #endif
-    },
-    // RtlReAllocateHeap (* unchanged since 4627 *)
-    {
-        (OOVPA*)&RtlReAllocateHeap_1_0_4627,
-
-        XTL::EmuRtlReAllocateHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlReAllocateHeap"
-        #endif
-    },
-    // RtlSizeHeap
-    {
-        (OOVPA*)&RtlSizeHeap_1_0_5558,
-
-        XTL::EmuRtlSizeHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlSizeHeap"
-        #endif
-    },
-    // QueryPerformanceCounter (* unchanged since 4361 *)
+	// QueryPerformanceCounter (* unchanged since 4361 *)
     {
         (OOVPA*)&QueryPerformanceCounter_1_0_4361,
 
@@ -903,16 +853,6 @@ OOVPATable XAPI_1_0_5558[] =
 	//	"XapiFiberStartup"
 	//	#endif
 	//},
-	// RtlDestroyHeap (* unchanged since 4134 *)
-    {
-        (OOVPA*)&RtlDestroyHeap_1_0_4134,
-
-        XTL::EmuRtlDestroyHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlDestroyHeap"
-        #endif
-    },
 	// XID_fCloseDevice
     {
         (OOVPA*)&XID_fCloseDevice_1_0_5558, 0,

@@ -391,59 +391,7 @@ OOVPATable XAPI_1_0_4034[] =
         "EmuXInputSetState"
         #endif
     },
-	// RtlCreateHeap (* unchanged since 3911 *)
-    {
-        (OOVPA*)&RtlCreateHeap_1_0_3911,
 
-        XTL::EmuRtlCreateHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlCreateHeap"
-        #endif
-    },
-    // RtlAllocateHeap (* unchanged since 3911 *)
-    {
-        (OOVPA*)&RtlAllocateHeap_1_0_3911,
-
-        XTL::EmuRtlAllocateHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlAllocateHeap"
-        #endif
-    },
-    // RtlFreeHeap (* unchanged since 3911 *)
-    {
-        (OOVPA*)&RtlFreeHeap_1_0_3911,
-
-        XTL::EmuRtlFreeHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlFreeHeap"
-        #endif
-    },
-    //*
-    // RtlReAllocateHeap (* unchanged since 3911 *)
-    {
-        (OOVPA*)&RtlReAllocateHeap_1_0_3911,
-
-        XTL::EmuRtlReAllocateHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlReAllocateHeap"
-        #endif
-    },
-    //*/
-    //*
-    // RtlSizeHeap (* unchanged since 3911 *)
-    {
-        (OOVPA*)&RtlSizeHeap_1_0_3911,
-
-        XTL::EmuRtlSizeHeap,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRtlSizeHeap"
-        #endif
-    },
 	// XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
     {
         (OOVPA*)&XRegisterThreadNotifyRoutine_1_0_3911,
