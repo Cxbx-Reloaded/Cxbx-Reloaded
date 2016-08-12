@@ -42,6 +42,11 @@
 
 #include <io.h>
 
+/**
+ * Silly little hack to fix link error with libjpeg on MSVC 2015
+ */
+FILE _iob[] = { *stdin, *stdout, *stderr };extern "C" FILE * __cdecl __iob_func(void) { return _iob; }
+
 WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m_Xbe(0), m_Exe(0), m_bExeChanged(false), m_bXbeChanged(false), m_bCanStart(true), m_hwndChild(NULL), m_AutoConvertToExe(AUTO_CONVERT_WINDOWS_TEMP), m_KrnlDebug(DM_NONE), m_CxbxDebug(DM_NONE), m_dwRecentXbe(0), m_dwRecentExe(0)
 {
     // initialize members
