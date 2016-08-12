@@ -502,18 +502,6 @@ DWORD WINAPI EmuXInputSetState
     IN OUT PXINPUT_FEEDBACK pFeedback
 );
 
-// ******************************************************************
-// * func: EmuCreateThread
-// ******************************************************************
-HANDLE WINAPI EmuCreateThread
-(
-    LPVOID				    lpThreadAttributes,
-    DWORD                   dwStackSize,
-    LPTHREAD_START_ROUTINE  lpStartAddress,
-    LPVOID                  lpParameter,
-    DWORD                   dwCreationFlags,
-    LPDWORD                 lpThreadId
-);
 
 // ******************************************************************
 // * func: EmuCreateMutex
@@ -531,30 +519,6 @@ HANDLE WINAPI EmuCreateMutex
 BOOL WINAPI EmuCloseHandle
 (
     HANDLE hObject
-);
-
-// ******************************************************************
-// * func: EmuExitThread
-// ******************************************************************
-VOID WINAPI EmuExitThread
-(
-	DWORD dwExitCode  
-);
-
-// ******************************************************************
-// * func: ResumeThread
-// ******************************************************************
-DWORD WINAPI EmuResumeThread
-(
-	HANDLE hThread 
-);
-
-// ******************************************************************
-// * func: SuspendThread
-// ******************************************************************
-DWORD WINAPI EmuSuspendThread
-(
-	HANDLE hThread 
 );
 
 // ******************************************************************

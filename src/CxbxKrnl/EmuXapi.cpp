@@ -2268,46 +2268,6 @@ DWORD WINAPI XTL::EmuXCalculateSignatureEnd
     return ERROR_SUCCESS;
 }
 //*/
-
-/* Yeah, I know these are too high level, but I'm just testing to see 
-   if adding these will fix some problems with multi-threaded games hanging
-   in WinXP (i.e. Panzer and Azurik). */
-
-// ******************************************************************
-// * func: EmuCreateThread
-// ******************************************************************
-HANDLE WINAPI XTL::EmuCreateThread
-(
-    LPVOID				    lpThreadAttributes,
-    DWORD                   dwStackSize,
-    LPTHREAD_START_ROUTINE  lpStartAddress,
-    LPVOID                  lpParameter,
-    DWORD                   dwCreationFlags,
-    LPDWORD                 lpThreadId
-)
-{
-	EmuSwapFS();   // Win2k/XP FS
-
-    DbgPrintf("EmuXapi (0x%X): EmuCreateThread\n"
-           "(\n"
-           "   lpThreadAttributes  : 0x%.08X\n"
-           "   dwStackSize         : 0x%.08X\n"
-		   "   lpStartAddress      : 0x%.08X\n"
-		   "   lpParameter         : 0x%.08X\n"
-		   "   dwCreationFlags     : 0x%.08X\n"
-		   "   lpThreadId          : 0x%.08X\n"
-           ");\n",
-            GetCurrentThreadId(), lpThreadAttributes, dwStackSize, lpStartAddress, 
-				lpParameter, dwCreationFlags, lpThreadId);
-
-	HANDLE hRet = CreateThread( (PSECURITY_ATTRIBUTES) lpThreadAttributes, dwStackSize, lpStartAddress,
-						lpParameter, dwCreationFlags, lpThreadId );
-
-    EmuSwapFS();   // XBox FS
-
-	return hRet;
-}
-
 // ******************************************************************
 // * func: EmuCreateMutex
 // ******************************************************************
@@ -2345,70 +2305,7 @@ HANDLE WINAPI EmuCreateMutex
 //	return bRet;
 //}
 
-// ******************************************************************
-// * func: EmuExitThread
-// ******************************************************************
-VOID WINAPI XTL::EmuExitThread
-(
-	DWORD dwExitCode  
-)
-{
-	DbgPrintf("EmuXapi (0x%X): EmuExitThread\n"
-           "(\n"
-           "   dwExitCode           : 0x%.08X\n"
-           ");\n",
-            GetCurrentThreadId(), dwExitCode);
 
-	ExitThread( dwExitCode );
-
-	EmuSwapFS();	// Xbox FS
-}
-
-// ******************************************************************
-// * func: ResumeThread
-// ******************************************************************
-DWORD WINAPI XTL::EmuResumeThread
-(
-	HANDLE hThread 
-)
-{
-	EmuSwapFS();   // Win2k/XP FS
-
-    DbgPrintf("EmuXapi (0x%X): EmuResumeThread\n"
-           "(\n"
-           "   hThread             : 0x%.08X\n"
-           ");\n",
-            GetCurrentThreadId(), hThread);
-
-	DWORD dwRet = ResumeThread( hThread );
-
-	EmuSwapFS();	// Xbox FS
-
-	return dwRet;
-}
-
-// ******************************************************************
-// * func: SuspendThread
-// ******************************************************************
-DWORD WINAPI XTL::EmuSuspendThread
-(
-	HANDLE hThread 
-)
-{
-	EmuSwapFS();   // Win2k/XP FS
-
-    DbgPrintf("EmuXapi (0x%X): EmuSuspendThread\n"
-           "(\n"
-           "   hThread             : 0x%.08X\n"
-           ");\n",
-            GetCurrentThreadId(), hThread);
-
-	DWORD dwRet = SuspendThread( hThread );
-
-	EmuSwapFS();	// Xbox FS
-
-	return dwRet;
-}
 
 // ******************************************************************
 // * func: EmuVirtualAlloc
