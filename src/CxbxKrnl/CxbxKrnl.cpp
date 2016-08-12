@@ -242,6 +242,8 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
         #endif
     }
 
+	SetProcessAffinityMask(GetCurrentProcess(), 1);
+
     //
     // load the necessary pieces of XbeHeader
     //
