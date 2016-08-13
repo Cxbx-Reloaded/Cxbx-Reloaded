@@ -39,6 +39,7 @@
 
 extern "C" const char *szHLELastCompileTime = __TIMESTAMP__;
 
+
 #include "Emu.h"
 #include "EmuXTL.h"
 #include "HLEDataBase.h"

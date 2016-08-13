@@ -1842,35 +1842,6 @@ OOVPATable XAPI_1_0_4627[] =
 		"EmuQueueUserAPC"
 		#endif
 	},
-	// VirtualProtect (* unchanged since 4627 *)
-    {
-        (OOVPA*)&VirtualProtect_1_0_4627,
-        XTL::EmuVirtualProtect,
-
-        #ifdef _DEBUG_TRACE
-        "VirtualProtect"
-        #endif
-    },
-	// CreateSemaphore
-	{
-		(OOVPA*)&CreateSemaphoreA_1_0_4627,
-
-		XTL::EmuCreateSemaphore,
-
-		#ifdef _DEBUG_TRACE
-		"EmuCreateSemaphoreA"
-		#endif
-	},
-	// ReleaseSemaphore
-	{
-		(OOVPA*)&ReleaseSemaphore_1_0_4627,
-
-		XTL::EmuReleaseSemaphore,
-
-		#ifdef _DEBUG_TRACE
-		"EmuReleaseSemaphore"
-		#endif
-	},
 	// XMountAlternateTitleA
 	{
 		(OOVPA*)&XMountAlternateTitleA_1_0_4627,

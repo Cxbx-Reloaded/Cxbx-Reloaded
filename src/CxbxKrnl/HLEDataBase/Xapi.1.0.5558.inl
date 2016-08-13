@@ -659,26 +659,6 @@ OOVPATable XAPI_1_0_5558[] =
         "EmuXapiBootDash"
         #endif
     },
-	// CreateSemaphore
-	{
-		(OOVPA*)&CreateSemaphoreA_1_0_5558,
-
-		XTL::EmuCreateSemaphore,
-
-		#ifdef _DEBUG_TRACE
-		"EmuCreateSemaphoreA"
-		#endif
-	},
-	// ReleaseSemaphore
-	{
-		(OOVPA*)&ReleaseSemaphore_1_0_5558,
-
-		XTL::EmuReleaseSemaphore,
-
-		#ifdef _DEBUG_TRACE
-		"EmuReleaseSemaphore"
-		#endif
-	},
 	// XLaunchNewImageA
     {
         (OOVPA*)&XLaunchNewImageA_1_0_5558,
@@ -714,15 +694,6 @@ OOVPATable XAPI_1_0_5558[] =
 
         #ifdef _DEBUG_TRACE
         "GetFileAttributesA"
-        #endif
-    },
-	// VirtualProtect (* unchanged since 4627 *)
-    {
-        (OOVPA*)&VirtualProtect_1_0_4627,
-        XTL::EmuVirtualProtect,
-
-        #ifdef _DEBUG_TRACE
-        "VirtualProtect"
         #endif
     },
 	// XGetSectionHandleA (* unchanged since 4134 *)

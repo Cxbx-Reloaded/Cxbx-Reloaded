@@ -452,15 +452,6 @@ OOVPATable XAPI_1_0_5233[] =
 		"EmuQueueUserAPC"
 		#endif
 	},
-	// VirtualProtect (* unchanged since 4627 *)
-    {
-        (OOVPA*)&VirtualProtect_1_0_4627,
-        XTL::EmuVirtualProtect,
-
-        #ifdef _DEBUG_TRACE
-        "VirtualProtect"
-        #endif
-    },
 	// GetFileAttributesA (* unchanged since 4134 *)
     {
         (OOVPA*)&GetFileAttributesA_1_0_4134,
