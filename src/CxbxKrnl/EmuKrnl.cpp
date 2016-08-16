@@ -1631,10 +1631,7 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
            ");\n",
            GetCurrentThreadId(), Routine);
 
-	if( ReturnFirmwareFatal )
-		EmuWarning("Stupid hack, lol" );
-	else
-		CxbxKrnlCleanup("Xbe has rebooted : HalReturnToFirmware(%d)", Routine);
+	CxbxKrnlCleanup("Xbe has rebooted : HalReturnToFirmware(%d)", Routine);
 
 	EmuSwapFS(); // Xbox FS
 }
