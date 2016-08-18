@@ -86,6 +86,15 @@ struct INTERNAL_CRITICAL_SECTION
 	NtDll::_RTL_CRITICAL_SECTION NativeCriticalSection;
 };
 
+struct NativeObjectAttributes {
+	wchar_t wszObjectName[160];
+	NtDll::UNICODE_STRING    NtUnicodeString;
+	NtDll::OBJECT_ATTRIBUTES NtObjAttr;
+	// This is what should be passed on to Windows
+	// after CxbxObjectAttributesToNT() has been called :
+	NtDll::POBJECT_ATTRIBUTES NtObjAttrPtr;
+};
+
 #define MAX_XBOX_CRITICAL_SECTIONS 1024
 INTERNAL_CRITICAL_SECTION GlobalCriticalSections[MAX_XBOX_CRITICAL_SECTIONS] = {0};
 
@@ -1153,6 +1162,135 @@ callComplete:
 }
 #pragma warning(pop)
 
+
+NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes, NativeObjectAttributes& nativeObjectAttributes, std::string aFileAPIName = "")
+{
+	NTSTATUS result = 0;
+	std::string OriginalPath;
+	std::string RelativePath;
+	std::string XboxFullPath;
+	std::string NativePath;
+	EmuNtSymbolicLinkObject* NtSymbolicLinkObject = NULL;
+	result = STATUS_SUCCESS;
+	if (ObjectAttributes == NULL)
+	{
+		// When the pointer is nil, make sure we pass nil to Windows too :
+		nativeObjectAttributes.NtObjAttrPtr = NULL;
+		return result;
+	}
+
+	// ObjectAttributes are given, so make sure the pointer we're going to pass to Windows is assigned :
+	nativeObjectAttributes.NtObjAttrPtr = &nativeObjectAttributes.NtObjAttr;
+	RelativePath = std::string(ObjectAttributes->ObjectName->Buffer, ObjectAttributes->ObjectName->Length);
+	OriginalPath = RelativePath;
+
+	// Always trim '\??\' off :
+	if ((RelativePath.length() >= 4) && (RelativePath[0] == '\\') && (RelativePath[1] == '?') && (RelativePath[2] == '?') && (RelativePath[3] == '\\'))
+		RelativePath.erase(0, 4);
+
+	// Check if we where called from a File-handling API :
+	if (!aFileAPIName.empty())
+	{
+		NtSymbolicLinkObject = NULL;
+		// Check if the path starts with a volume indicator :
+		if ((RelativePath.length() >= 2) && (RelativePath[1] == ':'))
+		{
+			// Look up the symbolic link information using the drive letter :
+			NtSymbolicLinkObject = FindNtSymbolicLinkObjectByVolumeLetter(RelativePath[0]);
+			RelativePath.erase(0, 2); // Remove 'C:'
+
+									  // If the remaining path starts with a ':', remove it (to prevent errors) :
+			if ((RelativePath.length() > 0) && (RelativePath[0] == ':'))
+				RelativePath.erase(0, 1);  // xbmp needs this, as it accesses 'e::\'
+		}
+		// Check if the path starts with a macro indicator :
+		else
+			if (RelativePath.compare(0, 1, "$") == 0)
+			{
+				if (RelativePath.compare(0, 5, "$HOME") == 0) // "xbmp" needs this
+				{
+					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
+					RelativePath.erase(0, 5); // Remove '$HOME'
+				}
+				else
+					CxbxKrnlCleanup(("Unsupported path macro : " + OriginalPath).c_str());
+			}
+		// Check if the path starts with a relative path indicator :
+			else
+				if (RelativePath.compare(0, 1, ".") == 0) // "4x4 Evo 2" needs this
+				{
+					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
+					RelativePath.erase(0, 1); // Remove the '.'
+				}
+				else
+				{
+					// The path seems to be a device path, look it up :
+					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByDevice(RelativePath);
+					// Fixup RelativePath path here
+					if ((NtSymbolicLinkObject != NULL))
+						RelativePath.erase(0, NtSymbolicLinkObject->XboxFullPath.length()); // Remove '\Device\Harddisk0\Partition2'
+				}
+		if ((NtSymbolicLinkObject != NULL))
+		{
+			// If the remaining path starts with a '\', remove it (to prevent working in a native root) :
+			if ((RelativePath.length() > 0) && (RelativePath[0] == '\\'))
+				RelativePath.erase(0, 1);
+			XboxFullPath = NtSymbolicLinkObject->XboxFullPath;
+			NativePath = NtSymbolicLinkObject->NativePath;
+			ObjectAttributes->RootDirectory = NtSymbolicLinkObject->RootDirectoryHandle;
+		}
+		else
+		{
+			// No symbolic link - as last resort, check if the path accesses a partition from Harddisk0 :
+			if (RelativePath.compare(0, (DeviceHarddisk0 + "\\partition").length(), DeviceHarddisk0 + "\\partition") != 0)
+			{
+				result = STATUS_UNRECOGNIZED_VOLUME; // TODO : Is this the correct error?
+				EmuWarning((("Path not available : ") + OriginalPath).c_str());
+				return result;
+			}
+			XboxFullPath = RelativePath;
+			// Remove Harddisk0 prefix, in the hope that the remaining path might work :
+			RelativePath.erase(0, DeviceHarddisk0.length() + 1);
+			// And set Root to the folder containing the partition-folders :
+			ObjectAttributes->RootDirectory = CxbxBasePathHandle;
+			NativePath = CxbxBasePath;
+		}
+
+		// Check for special case : Partition0
+		if (XboxFullPath.compare(DeviceHarddisk0Partition0) == 0)
+		{
+			CxbxKrnlCleanup("Partition0 access not implemented yet! Tell PatrickvL what title triggers this.");
+			// TODO : Redirect raw sector-access to the 'Partition0_ConfigData.bin' file
+			// (This file probably needs to be pre-initialized somehow too).
+		}
+
+		DbgPrintf("EmuKrnl : %s Corrected path...", aFileAPIName.c_str());
+		DbgPrintf("  Org:\"%s\"", OriginalPath.c_str());
+		if (NativePath.compare(CxbxBasePath) == 0)
+		{
+			DbgPrintf("  New:\"$CxbxPath\\EmuDisk%s%s\"", (NativePath.substr(CxbxBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());	
+		}
+		else
+			DbgPrintf("  New:\"$XbePath\\%s\"", RelativePath.c_str());
+
+	}
+	else
+	{
+		// For non-file API calls, prefix with '\??\' again :
+		RelativePath = "\\??\\" + RelativePath;
+		ObjectAttributes->RootDirectory = 0;
+	}
+
+	// Convert Ansi to Unicode :
+	mbstowcs(nativeObjectAttributes.wszObjectName, RelativePath.c_str(), 160);
+	NtDll::RtlInitUnicodeString(&nativeObjectAttributes.NtUnicodeString, nativeObjectAttributes.wszObjectName);
+
+	// Initialize the NT ObjectAttributes :
+	InitializeObjectAttributes(&nativeObjectAttributes.NtObjAttr, &nativeObjectAttributes.NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
+	return result;
+}
+
+
 using namespace xboxkrnl;
 
 // ******************************************************************
@@ -1729,8 +1867,7 @@ XBSYSAPI EXPORTNUM(67) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateSymbolicLink
            GetCurrentThreadId(), SymbolicLinkName, SymbolicLinkName->Buffer,
            DeviceName, DeviceName->Buffer);
 
-    // TODO: Actually um...implement this function
-    NTSTATUS ret = STATUS_OBJECT_NAME_COLLISION;
+	NTSTATUS ret = CxbxCreateSymbolicLink(SymbolicLinkName->Buffer, DeviceName->Buffer);
 
     EmuSwapFS();   // Xbox FS
 
@@ -1753,8 +1890,12 @@ XBSYSAPI EXPORTNUM(69) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDeleteSymbolicLink
            ");\n",
            GetCurrentThreadId(), SymbolicLinkName, SymbolicLinkName->Buffer);
 
-    // TODO: Actually um...implement this function
-    NTSTATUS ret = STATUS_OBJECT_NAME_NOT_FOUND;
+	EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByName(SymbolicLinkName->Buffer);
+    
+	NTSTATUS ret = STATUS_OBJECT_NAME_NOT_FOUND;
+
+	if ((symbolicLink != NULL))
+		ret = symbolicLink->NtClose();
 
     EmuSwapFS();   // Xbox FS
 
@@ -2727,6 +2868,49 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
 }
 
 // ******************************************************************
+// * 0x00BC - NtCreateDirectoryObject
+// ******************************************************************
+XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateDirectoryObject
+(
+	OUT PHANDLE             DirectoryHandle,
+	IN  POBJECT_ATTRIBUTES  ObjectAttributes
+)
+{
+	EmuSwapFS();   // Win2k/XP FS
+
+	DbgPrintf("EmuKrnl (0x%X): NtCreateDirectoryObject\n"
+		"(\n"
+		"   DirectoryHandle         : 0x%.08X\n"
+		"   ObjectAttributes    : 0x%.08X (\"%s\")\n"
+		");\n",
+		GetCurrentThreadId(), DirectoryHandle, ObjectAttributes);
+
+	NTSTATUS ret = 0;
+
+	NativeObjectAttributes nativeObjectAttributes;
+	ACCESS_MASK DesiredAccess = 0;
+
+	ret = CxbxObjectAttributesToNT(ObjectAttributes, nativeObjectAttributes, "NtCreateDirectoryObject"); 
+	if (ret == STATUS_SUCCESS)
+	{
+		// TODO -oDxbx : Is this the correct ACCESS_MASK? :
+		DesiredAccess = DIRECTORY_CREATE_OBJECT;
+
+		ret = /*# JwaNative::*/ NtDll::NtCreateDirectoryObject(DirectoryHandle, DesiredAccess, nativeObjectAttributes.NtObjAttrPtr);
+	}
+
+	if (FAILED(ret))
+		EmuWarning("NtCreateDirectoryObject Failed!");
+
+	DbgPrintf("EmuKrnl (0x%X): NtCreateDirectoryObject DirectoryHandle = 0x%.08X\n", GetCurrentThreadId(), *DirectoryHandle);
+
+	EmuSwapFS();   // Xbox FS
+
+	return ret;
+}
+
+
+// ******************************************************************
 // * 0x00BD - NtCreateEvent
 // ******************************************************************
 XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
@@ -2739,38 +2923,30 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 {
     EmuSwapFS();   // Win2k/XP FS
 
-    char *szBuffer = (ObjectAttributes != 0) ? ObjectAttributes->ObjectName->Buffer : 0;
-
     DbgPrintf("EmuKrnl (0x%X): NtCreateEvent\n"
            "(\n"
            "   EventHandle         : 0x%.08X\n"
-           "   ObjectAttributes    : 0x%.08X (\"%s\")\n"
+           "   ObjectAttributes    : 0x%.08X\n"
            "   EventType           : 0x%.08X\n"
            "   InitialState        : 0x%.08X\n"
            ");\n",
-           GetCurrentThreadId(), EventHandle, ObjectAttributes, szBuffer,
-           EventType, InitialState);
+           GetCurrentThreadId(), EventHandle, ObjectAttributes, EventType, InitialState);
 
-    wchar_t wszObjectName[160];
+	NativeObjectAttributes nativeObjectAttributes;
+	ACCESS_MASK DesiredAccess = 0;
 
-    NtDll::UNICODE_STRING    NtUnicodeString;
-    NtDll::OBJECT_ATTRIBUTES NtObjAttr;
+	// initialize object attributes
+	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, nativeObjectAttributes); /*var*/
+	if (ret == STATUS_SUCCESS)
+	{
+		// TODO -oDxbx : Is this the correct ACCESS_MASK? :
+		DesiredAccess = EVENT_ALL_ACCESS;
 
-    // initialize object attributes
-    if(szBuffer != 0)
-    {
-        mbstowcs(wszObjectName, "\\??\\", 4);
-        mbstowcs(wszObjectName+4, szBuffer, 160);
-
-        NtDll::RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
-
-        InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
-    }
-
-    NtObjAttr.RootDirectory = 0;
-
-    // redirect to NtCreateEvent
-    NTSTATUS ret = NtDll::NtCreateEvent(EventHandle, EVENT_ALL_ACCESS, (szBuffer != 0) ? &NtObjAttr : 0, (NtDll::EVENT_TYPE)EventType, InitialState);
+		// redirect to Win2k/XP
+		ret = NtDll::NtCreateEvent(EventHandle, DesiredAccess, nativeObjectAttributes.NtObjAttrPtr, (NtDll::EVENT_TYPE)EventType, InitialState);
+		// TODO : Instead of the above, we should consider using the Ke*Event APIs, but
+		// that would require us to create the event's kernel object with the Ob* api's too!
+	}
 
     if(FAILED(ret))
         EmuWarning("NtCreateEvent Failed!");
@@ -2815,170 +2991,12 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
            GetCurrentThreadId(), FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes->ObjectName->Buffer,
            IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions);
 
-    char ReplaceChar  = '\0';
-    int  ReplaceIndex = -1;
+	NativeObjectAttributes nativeObjectAttributes;
 
-    char *szBuffer = ObjectAttributes->ObjectName->Buffer;
-
-	if(szBuffer == (char*) 0xFFFFFFFF)
-		szBuffer = NULL;
-
-    if(szBuffer != NULL)
-    {
-        //printf("Orig : %s\n", szBuffer);
-
-        // trim this off
-        if(szBuffer[0] == '\\' && szBuffer[1] == '?' && szBuffer[2] == '?' && szBuffer[3] == '\\')
-        {
-            szBuffer += 4;
-        }
-
-        // D:\ should map to current directory
-        if( (szBuffer[0] == 'D' || szBuffer[0] == 'd') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-        {
-            szBuffer += 3;
-
-            ObjectAttributes->RootDirectory = g_hCurDir;
-
-            DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-            DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-            DbgPrintf("  New:\"$XbePath\\%s\"\n", szBuffer);
-        }
-		// Going to map Y:\ to current directory as well (dashboard test, 3944)
-        else if( (szBuffer[0] == 'Y' || szBuffer[0] == 'y') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-        {
-            szBuffer += 3;
-
-            ObjectAttributes->RootDirectory = g_hCurDir;
-
-            DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-            DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-            DbgPrintf("  New:\"$XbePath\\%s\"\n", szBuffer);
-        }
-        else if( (szBuffer[0] == 'T' || szBuffer[0] == 't') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-        {
-            szBuffer += 3;
-
-            ObjectAttributes->RootDirectory = g_hTDrive;
-
-            DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-            DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-            DbgPrintf("  New:\"$CxbxPath\\EmuDisk\\T\\%s\"\n", szBuffer);
-        }
-        else if( (szBuffer[0] == 'U' || szBuffer[0] == 'u') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-        {
-            szBuffer += 3;
-
-            ObjectAttributes->RootDirectory = g_hUDrive;
-
-            DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-            DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-            DbgPrintf("  New:\"$CxbxPath\\EmuDisk\\U\\%s\"\n", szBuffer);
-        }
-        else if( (szBuffer[0] == 'Z' || szBuffer[0] == 'z') && szBuffer[1] == ':' && szBuffer[2] == '\\')
-        {
-            szBuffer += 3;
-
-            ObjectAttributes->RootDirectory = g_hZDrive;
-
-            DbgPrintf("EmuKrnl (0x%X): NtCreateFile Corrected path...\n", GetCurrentThreadId());
-            DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-            DbgPrintf("  New:\"$CxbxPath\\EmuDisk\\Z\\%s\"\n", szBuffer);
-        }
-
-        // Ignore wildcards. Xapi FindFirstFile uses the same path buffer for
-        // NtOpenFile and NtQueryDirectoryFile. Wildcards are only parsed by
-        // the latter.
-        {
-            for(int v=0;szBuffer[v] != '\0';v++)
-            {
-                // FIXME: Fallback to parent directory if wildcard is found.
-                if(szBuffer[v] == '*')
-                {
-                    ReplaceIndex = v;
-                    break;
-                }
-            }
-        }
-
-        // Note: Hack: Not thread safe (if problems occur, create a temp buffer)
-        if(ReplaceIndex != -1)
-		{
-            ReplaceChar = szBuffer[ReplaceIndex];
-            szBuffer[ReplaceIndex] = '\0';
-        }
-
-        //printf("Aftr : %s\n", szBuffer);
-    }
-
-    wchar_t wszObjectName[160];
-
-    NtDll::UNICODE_STRING    NtUnicodeString;
-    NtDll::OBJECT_ATTRIBUTES NtObjAttr;
-
-    // initialize object attributes
-    if(szBuffer != NULL)
-    {
-        mbstowcs(wszObjectName, szBuffer, 160);
-    }
-    else
-    {
-        wszObjectName[0] = L'\0';
-    }
-
-    NtDll::RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
-
-    InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
-
+	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, nativeObjectAttributes, "NtCreateFile"); /*var*/
     // redirect to NtCreateFile
-    NTSTATUS ret = NtDll::NtCreateFile
-    (
-        FileHandle, DesiredAccess, &NtObjAttr, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock,
-        (NtDll::LARGE_INTEGER*)AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, 0
-    );
-
-    // If we're trying to open a regular file as a directory, fallback to
-    // parent directory. This behavior is required by Xapi FindFirstFile.
-    if(ret == STATUS_NOT_A_DIRECTORY)
-    {
-        DbgPrintf("EmuKrnl (0x%X): NtCreateFile fallback to parent directory\n", GetCurrentThreadId());
-
-        // Restore original buffer.
-        if(ReplaceIndex != -1)
-        {
-            szBuffer[ReplaceIndex] = ReplaceChar;
-        }
-
-        // Strip filename from path.
-        int CurIndex = strlen(szBuffer);
-        while(CurIndex--)
-        {
-            if(szBuffer[CurIndex] == '\\')
-            {
-                ReplaceIndex = CurIndex;
-                break;
-            }
-        }
-        if(CurIndex == -1)
-        {
-            ReplaceIndex = 0;
-        }
-
-        // Modify buffer again.
-        ReplaceChar = szBuffer[ReplaceIndex];
-        szBuffer[ReplaceIndex] = '\0';
-        DbgPrintf("  New:\"$CurRoot\\%s\"\n", szBuffer);
-
-        mbstowcs(wszObjectName, szBuffer, 160);
-        NtDll::RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
-
-        ret = NtDll::NtCreateFile
-        (
-            FileHandle, DesiredAccess, &NtObjAttr, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock,
-            (NtDll::LARGE_INTEGER*)AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, 0
-        );
-    }
-
+	ret = NtDll::NtCreateFile(FileHandle, DesiredAccess | GENERIC_READ, nativeObjectAttributes.NtObjAttrPtr, NtDll::PIO_STATUS_BLOCK(IoStatusBlock), NtDll::PLARGE_INTEGER(AllocationSize), FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, 0); 
+    
     if(FAILED(ret))
     {
         DbgPrintf("EmuKrnl (0x%X): NtCreateFile Failed! (0x%.08X)\n", GetCurrentThreadId(), ret);
@@ -2988,12 +3006,7 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
         DbgPrintf("EmuKrnl (0x%X): NtCreateFile = 0x%.08X\n", GetCurrentThreadId(), *FileHandle);
     }
 
-    // restore original buffer
-    if(ReplaceIndex != -1)
-    {
-        szBuffer[ReplaceIndex] = ReplaceChar;
-    }
-
+ 
     // NOTE: We can map this to IoCreateFile once implemented (if ever necessary)
     //       xboxkrnl::IoCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, 0);
 
@@ -4603,6 +4616,8 @@ XBSYSAPI EXPORTNUM(308) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToAns
 
     return ret;
 }
+
+
 
 // ******************************************************************
 // * 0x0142 - XboxHardwareInfo

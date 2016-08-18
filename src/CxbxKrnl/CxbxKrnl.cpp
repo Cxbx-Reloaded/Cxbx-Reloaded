@@ -43,6 +43,7 @@ namespace xboxkrnl
 
 #include "CxbxKrnl.h"
 #include "Emu.h"
+#include "EmuFile.h"
 #include "EmuFS.h"
 #include "EmuShared.h"
 #include "HLEIntercept.h"
@@ -67,6 +68,9 @@ extern CXBXKRNL_API HWND CxbxKrnl_hEmuParent = NULL;
 
 /*! thread handles */
 static HANDLE g_hThreads[MAXIMUM_XBOX_THREADS] = { 0 };
+
+std::string CxbxBasePath;
+HANDLE CxbxBasePathHandle;
 
 static uint32 funcAddr[]=
 {
@@ -159,6 +163,53 @@ extern "C" CXBXKRNL_API bool CxbxKrnlVerifyVersion(const char *szVersion)
     return true;
 }
 
+
+void CxbxLaunchXbe(void(*Entry)())
+{
+	//
+	// Xbe entry point
+	//
+
+	__try
+	{
+		EmuSwapFS();   // XBox FS
+
+					   // _USE_XGMATH Disabled in mesh :[
+					   // halo : dword_0_2E2D18
+					   // halo : 1744F0 (bink)
+					   //_asm int 3;
+
+					   /*
+					   for(int v=0;v<sizeof(funcAddr)/sizeof(uint32);v++)
+					   {
+					   bool bExclude = false;
+					   for(int r=0;r<sizeof(funcExclude)/sizeof(uint32);r++)
+					   {
+					   if(funcAddr[v] == funcExclude[r])
+					   {
+					   bExclude = true;
+					   break;
+					   }
+					   }
+
+					   if(!bExclude)
+					   {
+					   *(uint08*)(funcAddr[v]) = 0xCC;
+					   }
+					   }
+					   //*/
+
+		Entry();
+
+		EmuSwapFS();   // Win2k/XP FS
+	}
+	__except (EmuException(GetExceptionInformation()))
+	{
+		printf("Emu: WARNING!! Problem with ExceptionFilter\n");
+	}
+
+}
+
 extern "C" CXBXKRNL_API void CxbxKrnlInit
 (
     HWND                    hwndParent,
@@ -179,6 +230,10 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
     // for unicode conversions
     setlocale(LC_ALL, "English");
+
+#ifdef _DEBUG
+	MessageBoxA(NULL, "Attach a Debugger", "DEBUG", 0);
+#endif
 
     // debug console allocation (if configured)
     if(DbgMode == DM_CONSOLE)
@@ -264,134 +319,66 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
         memcpy((void*)pXbeHeader->dwCertificateAddr, &((uint08*)pXbeHeader)[pXbeHeader->dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
     }
 
-    //
-    // initialize current directory
-    //
+	// Initialize devices :
 
-    {
-        char szBuffer[260];
+	char szBuffer[260];
+	SHGetSpecialFolderPath(NULL, szBuffer, CSIDL_APPDATA, TRUE);
+    strcat(szBuffer, "\\Cxbx\\");
 
-        g_EmuShared->GetXbePath(szBuffer);
+	std::string basePath(szBuffer);
+	CxbxBasePath = basePath + "\\EmuDisk\\";
 
-        if(szBuffer && *szBuffer)
-            SetCurrentDirectory(szBuffer);
-        else
-            GetCurrentDirectory(260, szBuffer);
+	memset(szBuffer, 0, 260);
+	GetCurrentDirectory(260, szBuffer);
+	if (szBuffer[strlen(szBuffer)] != '\\')
+		szBuffer[strlen(szBuffer)+1] = '\\';
 
-        g_strCurDrive = _strdup(szBuffer);
+	std::string xbePath(szBuffer);
+		
+	CxbxBasePathHandle = CreateFile(CxbxBasePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
-        g_hCurDir = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+	memset(szBuffer, 0, 260);
+	sprintf(szBuffer, "%08X", ((Xbe::Certificate*)pXbeHeader->dwCertificateAddr)->dwTitleId);
 
-        if(g_hCurDir == INVALID_HANDLE_VALUE)
-            CxbxKrnlCleanup("Could not map D:\\\n");
+	std::string titleId(szBuffer);
 
-        DbgPrintf("EmuMain (0x%X): CurDir := %s\n", GetCurrentThreadId(), szBuffer);
-    }
+	// Games may assume they are running from CdRom :
+	CxbxRegisterDeviceNativePath(DeviceCdrom0, xbePath);
 
-    //
-    // initialize EmuDisk
-    //
+	// Partition 0 contains configuration data, and is accessed as a native file, instead as a folder :
+	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition0, CxbxBasePath + "Partition0_ConfigData.bin", true); /*IsFile=*/
+																												// The first two partitions are for Data and Shell files, respectively :
+	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition1, CxbxBasePath + "Partition1");
+	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition2, CxbxBasePath + "Partition2");
+	// The following partitions are for caching purposes - for now we allocate up to 7 (as xbmp needs that many) :
+	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition3, CxbxBasePath + "Partition3");
+	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition4, CxbxBasePath + "Partition4");
+	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition5, CxbxBasePath + "Partition5");
+	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition6, CxbxBasePath + "Partition6");
+	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition7, CxbxBasePath + "Partition7");
+	
 
-    {
-        char szBuffer[260];
+	DbgPrintf("EmuMain : Creating default symbolic links.\n");
 
-        SHGetSpecialFolderPath(NULL, szBuffer, CSIDL_APPDATA, TRUE);
+	// Create default symbolic links :
+	{
+		// Arrange that the Xbe path can reside outside the partitions, and put it to g_hCurDir :
+		CxbxCreateSymbolicLink(DriveC, (xbePath));
+		g_hCurDir = ((EmuNtSymbolicLinkObject*)FindNtSymbolicLinkObjectByVolumeLetter(CxbxDefaultXbeVolumeLetter))->RootDirectoryHandle;
+		// TODO -oDxbx: Make sure this path is set in g_EmuXbePath (xboxkrnl_XeImageFileName) too.
+		/*
+		CxbxCreateSymbolicLink(DriveD, DeviceCdrom0); // CdRom goes to D:
+		CxbxCreateSymbolicLink(DriveE, DeviceHarddisk0Partition1); // Partition1 goes to E: (Data files, savegames, etc.)
+		CxbxCreateSymbolicLink(DriveF, DeviceHarddisk0Partition2); // Partition2 goes to F: (Shell files, dashboard, etc.)
+		CxbxCreateSymbolicLink(DriveT, DeviceHarddisk0Partition1 + "\\TDATA\\" + titleId + "\\"); // Partition1\Title data goes to T:
+		CxbxCreateSymbolicLink(DriveU, DeviceHarddisk0Partition1 + "\\UDATA\\" + titleId + "\\"); // Partition1\User data goes to U:
+		CxbxCreateSymbolicLink(DriveX, DeviceHarddisk0Partition3); // Partition3 goes to X:
+		CxbxCreateSymbolicLink(DriveY, DeviceHarddisk0Partition4); // Partition4 goes to Y: */
 
-        strcat(szBuffer, "\\Cxbx\\");
-
-        CreateDirectory(szBuffer, NULL);
-
-        sint32 spot = -1;
-
-        for(int v=0;v<260;v++)
-        {
-            if(szBuffer[v] == '\\') { spot = v; }
-            else if(szBuffer[v] == '\0') { break; }
-        }
-
-        if(spot != -1) { szBuffer[spot] = '\0'; }
-
-        Xbe::Certificate *pCertificate = (Xbe::Certificate*)pXbeHeader->dwCertificateAddr;
-
-        //
-        // create EmuDisk directory
-        //
-
-        strcpy(&szBuffer[spot], "\\EmuDisk");
-
-        CreateDirectory(szBuffer, NULL);
-
-        //
-        // create T:\ directory
-        //
-
-        {
-            strcpy(&szBuffer[spot], "\\EmuDisk\\T");
-
-            CreateDirectory(szBuffer, NULL);
-
-            sprintf(&szBuffer[spot+10], "\\%08x", pCertificate->dwTitleId);
-
-            CreateDirectory(szBuffer, NULL);
-
-            g_strTDrive = _strdup(szBuffer);
-
-            g_hTDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-
-            if(g_hTDrive == INVALID_HANDLE_VALUE)
-                CxbxKrnlCleanup("Could not map T:\\\n");
-
-            DbgPrintf("EmuMain (0x%X): T Data := %s\n", GetCurrentThreadId(), szBuffer);
-        }
-
-        //
-        // create U:\ directory
-        //
-
-        {
-            strcpy(&szBuffer[spot], "\\EmuDisk\\U");
-
-            CreateDirectory(szBuffer, NULL);
-
-            sprintf(&szBuffer[spot+10], "\\%08x", pCertificate->dwTitleId);
-
-            CreateDirectory(szBuffer, NULL);
-
-            g_strUDrive = _strdup(szBuffer);
-
-            g_hUDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-
-            if(g_hUDrive == INVALID_HANDLE_VALUE)
-                CxbxKrnlCleanup("Could not map U:\\\n");
-
-            DbgPrintf("EmuMain (0x%X): U Data := %s\n", GetCurrentThreadId(), szBuffer);
-        }
-
-        //
-        // create Z:\ directory
-        //
-
-        {
-            strcpy(&szBuffer[spot], "\\EmuDisk\\Z");
-
-            CreateDirectory(szBuffer, NULL);
-
-            //* is it necessary to make this directory title unique?
-            sprintf(&szBuffer[spot+10], "\\%08x", pCertificate->dwTitleId);
-
-            CreateDirectory(szBuffer, NULL);
-            //*/
-
-            g_strZDrive = _strdup(szBuffer);
-
-            g_hZDrive = CreateFile(szBuffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-
-            if(g_hUDrive == INVALID_HANDLE_VALUE)
-                CxbxKrnlCleanup("Could not map Z:\\\n");
-
-            DbgPrintf("EmuMain (0x%X): Z Data := %s\n", GetCurrentThreadId(), szBuffer);
-        }
-    }
+																   // Mount the Utility drive (Z:) conditionally :
+		if (CxbxKrnl_XbeHeader->dwInitFlags.bMountUtilityDrive)
+			CxbxMountUtilityDrive(CxbxKrnl_XbeHeader->dwInitFlags.bFormatUtilityDrive);/*fFormatClean=*/
+	}
 
     //
     // duplicate handle in order to retain Suspend/Resume thread rights from a remote thread
@@ -429,47 +416,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
     DbgPrintf("EmuMain (0x%X): Initial thread starting.\n", GetCurrentThreadId());
 
-    //
-    // Xbe entry point
-    //
-
-    __try
-    {
-        EmuSwapFS();   // XBox FS
-
-        // _USE_XGMATH Disabled in mesh :[
-        // halo : dword_0_2E2D18
-        // halo : 1744F0 (bink)
-        //_asm int 3;
-
-        /*
-        for(int v=0;v<sizeof(funcAddr)/sizeof(uint32);v++)
-        {
-            bool bExclude = false;
-            for(int r=0;r<sizeof(funcExclude)/sizeof(uint32);r++)
-            {
-                if(funcAddr[v] == funcExclude[r])
-                {
-                    bExclude = true;
-                    break;
-                }
-            }
-
-            if(!bExclude)
-            {
-                *(uint08*)(funcAddr[v]) = 0xCC;
-            }
-        }
-        //*/
-
-        Entry();
-
-        EmuSwapFS();   // Win2k/XP FS
-    }
-    __except(EmuException(GetExceptionInformation()))
-    {
-        printf("Emu: WARNING!! Problem with ExceptionFilter\n");
-    }
+	CxbxLaunchXbe(Entry);
 
     DbgPrintf("EmuMain (0x%X): Initial thread ended.\n", GetCurrentThreadId());
 

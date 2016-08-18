@@ -116,6 +116,12 @@ typedef unsigned __int64                ULONGLONG;
 
 #define NT_SUCCESS(Status)              ((NTSTATUS) (Status) >= 0)
 
+#define DIRECTORY_QUERY 1
+#define DIRECTORY_TRAVERSE 2
+#define DIRECTORY_CREATE_OBJECT 4
+#define DIRECTORY_CREATE_SUBDIRECTORY 8
+
+
 // ******************************************************************
 // * calling conventions
 // ******************************************************************
@@ -882,6 +888,17 @@ typedef NTSTATUS (NTAPI *FPTR_NtCreateFile)
 );
 
 // ******************************************************************
+// * NtCreateDirectoryObject
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtCreateDirectoryObject)
+(
+	OUT PHANDLE            DirectoryHandle,
+	IN  ACCESS_MASK        DesiredAccess,
+	IN  POBJECT_ATTRIBUTES ObjectAttributes
+);
+
+
+// ******************************************************************
 // * NtClearEvent
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtClearEvent)
@@ -1119,6 +1136,7 @@ extern FPTR_NtCreateMutant                 NtCreateMutant;
 extern FPTR_NtReleaseMutant                NtReleaseMutant;
 extern FPTR_NtCreateSemaphore              NtCreateSemaphore;
 extern FPTR_NtReleaseSemaphore             NtReleaseSemaphore;
+extern FPTR_NtCreateDirectoryObject        NtCreateDirectoryObject;
 extern FPTR_NtCreateFile                   NtCreateFile;
 extern FPTR_NtReadFile                     NtReadFile;
 extern FPTR_NtWriteFile                    NtWriteFile;

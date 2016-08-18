@@ -43,6 +43,7 @@ namespace xboxkrnl
 };
 
 #include <cstdio>
+#include <string>
 
 // ******************************************************************
 // * prevent name collisions
@@ -54,10 +55,55 @@ namespace NtDll
 
 #include "Emu.h"
 
+extern std::string DriveSerial;
+extern std::string DriveCdRom0;
+extern std::string DriveMbfs;
+extern std::string DriveMbcom;
+extern std::string DriveMbrom;
+extern std::string DriveC;
+extern std::string DriveD;
+extern std::string DriveE;
+extern std::string DriveF;
+extern std::string DriveT;
+extern std::string DriveU;
+extern std::string DriveV;
+extern std::string DriveW;
+extern std::string DriveX;
+extern std::string DriveY;
+extern std::string DriveZ;
+extern std::string DeviceCdrom0;
+extern std::string DeviceHarddisk0;
+extern std::string DeviceHarddisk0Partition0;
+extern std::string DeviceHarddisk0Partition1;
+extern std::string DeviceHarddisk0Partition2;
+extern std::string DeviceHarddisk0Partition3;
+extern std::string DeviceHarddisk0Partition4;
+extern std::string DeviceHarddisk0Partition5;
+extern std::string DeviceHarddisk0Partition6;
+extern std::string DeviceHarddisk0Partition7;
+extern std::string DeviceHarddisk0Partition8;
+extern std::string DeviceHarddisk0Partition9;
+extern std::string DeviceHarddisk0Partition10;
+extern std::string DeviceHarddisk0Partition11;
+extern std::string DeviceHarddisk0Partition12;
+extern std::string DeviceHarddisk0Partition13;
+extern std::string DeviceHarddisk0Partition14;
+extern std::string DeviceHarddisk0Partition15;
+extern std::string DeviceHarddisk0Partition16;
+extern std::string DeviceHarddisk0Partition17;
+extern std::string DeviceHarddisk0Partition18;
+extern std::string DeviceHarddisk0Partition19;
+extern std::string DeviceHarddisk0Partition20;
+extern char CxbxDefaultXbeVolumeLetter;
+
+extern std::string CxbxBasePath;
+extern HANDLE CxbxBasePathHandle;
+
 // ******************************************************************
 // * Maximum number of open handles in the system
 // ******************************************************************
 #define EMU_MAX_HANDLES 1024
+
 
 // ******************************************************************
 // * Wrapper of a handle object
@@ -134,14 +180,14 @@ class EmuNtObject
 {
     public:
         // Decrements the reference count of this object (never override)
-        void NtClose(void);
+        NTSTATUS NtClose(void);
 
         // These functions mimic the Nt* calls
 
         // Increments the reference count of this object
         // For file handles, a whole new EmuFile structure is returned.
         // For other objects (the default implementation), "this" is returned.
-        virtual EmuNtObject *NtDuplicateObject(void);
+        EmuNtObject *NtDuplicateObject(DWORD options);
 
     protected:
         // Object name (Unicode, because we handle after-conversion strings)
@@ -152,10 +198,7 @@ class EmuNtObject
 
         // Called by close() when the reference count reaches zero
         virtual void Free(void) = 0;
-        // Constructor
-        EmuNtObject(void);
-        // Destructor
-        virtual ~EmuNtObject() = 0;
+
 
     private:
         // Reference count
@@ -175,6 +218,20 @@ class EmuNtFile : public EmuNtObject
         HANDLE File;
         // Pointer to the volume from which this came
         //EmuNtVolume *Volume;
+};
+
+// ******************************************************************
+// * Emulated symbolic link handle
+// ******************************************************************
+class EmuNtSymbolicLinkObject : public EmuNtObject {
+public:
+	char DriveLetter;
+	std::string SymbolicLinkName;
+	std::string XboxFullPath;
+	std::string NativePath;
+	HANDLE RootDirectoryHandle;
+	NTSTATUS Init(std::string aSymbolicLinkName, std::string aFullPath);
+	void Free();
 };
 
 // ******************************************************************
@@ -202,5 +259,16 @@ static inline HANDLE PtrToEmuHandle(EmuHandle *pEmuHandle)
 {
     return (HANDLE)((uint32)pEmuHandle + 0x80000000);
 }
+
+char SymbolicLinkToDriveLetter(std::string aSymbolicLinkName);
+EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByVolumeLetter(const char VolumeLetter);
+EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByName(std::string SymbolicLinkName);
+EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByDevice(std::string DeviceName);
+EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByRootHandle(HANDLE Handle);
+void CleanupSymbolicLinks();
+bool CxbxRegisterDeviceNativePath(std::string XboxFullPath, std::string NativePath, bool IsFile = false);
+HANDLE CxbxGetDeviceNativeRootHandle(std::string XboxFullPath);
+NTSTATUS CxbxCreateSymbolicLink(std::string SymbolicLinkName, std::string FullPath);
+bool CxbxMountUtilityDrive(bool formatClean);
 
 #endif

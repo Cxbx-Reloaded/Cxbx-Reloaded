@@ -245,7 +245,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367] =
     (uint32)PANIC(0x00B9),                          // 0x00B9 (185) NtCancelTimer
     (uint32)&xboxkrnl::NtClearEvent,                // 0x00BA (186)
     (uint32)&xboxkrnl::NtClose,                     // 0x00BB (187)
-    (uint32)PANIC(0x00BC),                          // 0x00BC (188) NtCreateDirectoryObject
+    (uint32)&xboxkrnl::NtCreateDirectoryObject,     // 0x00BC (188) NtCreateDirectoryObject
     (uint32)&xboxkrnl::NtCreateEvent,               // 0x00BD (189)
     (uint32)&xboxkrnl::NtCreateFile,                // 0x00BE (190)
     (uint32)PANIC(0x00BF),                          // 0x00BF (191) NtCreateIoCompletion

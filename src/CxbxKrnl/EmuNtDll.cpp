@@ -87,6 +87,7 @@ NtDll::FPTR_NtCreateMutant                 NtDll::NtCreateMutant               =
 NtDll::FPTR_NtReleaseMutant                NtDll::NtReleaseMutant              = (NtDll::FPTR_NtReleaseMutant)GetProcAddress(hNtDll, "NtReleaseMutant");
 NtDll::FPTR_NtCreateSemaphore              NtDll::NtCreateSemaphore            = (NtDll::FPTR_NtCreateSemaphore)GetProcAddress(hNtDll, "NtCreateSemaphore");
 NtDll::FPTR_NtReleaseSemaphore             NtDll::NtReleaseSemaphore           = (NtDll::FPTR_NtReleaseSemaphore)GetProcAddress(hNtDll, "NtReleaseSemaphore");
+NtDll::FPTR_NtCreateDirectoryObject        NtDll::NtCreateDirectoryObject	   = (NtDll::FPTR_NtCreateDirectoryObject)GetProcAddress(hNtDll, "NtCreateDirectoryObject");
 NtDll::FPTR_NtCreateFile                   NtDll::NtCreateFile                 = (NtDll::FPTR_NtCreateFile)GetProcAddress(hNtDll, "NtCreateFile");
 NtDll::FPTR_NtReadFile                     NtDll::NtReadFile                   = (NtDll::FPTR_NtReadFile)GetProcAddress(hNtDll, "NtReadFile");
 NtDll::FPTR_NtWriteFile                    NtDll::NtWriteFile                  = (NtDll::FPTR_NtWriteFile)GetProcAddress(hNtDll, "NtWriteFile");

@@ -68,9 +68,9 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
     {
         DbgPrintf("HLE: Detected Microsoft XDK application...\n");
 
-        uint32 dwLibraryVersions = pXbeHeader->dwLibraryVersions;
-    
-    
+        uint32 dwLibraryVersions = pXbeHeader->dwLibraryVersions;  
+  
+		// Find D3D Library Version, this is used within the HLE functions to account for minor differences between XDK revisions
 		for (uint32 v = 0;v < dwLibraryVersions;v++)
 		{
 			uint16 MajorVersion = pLibraryVersion[v].wMajorVersion;
@@ -92,9 +92,14 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
 				// Save D3D8 build version
 				g_BuildVersion = BuildVersion;
 				g_OrigBuildVersion = OrigBuildVersion;
+				break;
 			}
 		}
 
+
+		// Load StoredPatternTrie
+		// Perform symbol matching
+		// Install wrappers
     }
 
     DbgPrintf("\n");

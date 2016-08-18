@@ -46,7 +46,11 @@ XBSYSAPI EXPORTNUM(187) NTSTATUS NTAPI NtClose
     IN HANDLE Handle
 );
 
-XBSYSAPI VOID *NtCreateDirectoryObject;
+XBSYSAPI EXPORTNUM(188) NTSTATUS NTAPI NtCreateDirectoryObject
+(
+	OUT PHANDLE             DirectoryHandle,
+	IN  POBJECT_ATTRIBUTES  ObjectAttributes
+);
 
 // ******************************************************************
 // * NtCreateEvent
@@ -58,6 +62,8 @@ XBSYSAPI EXPORTNUM(189) NTSTATUS NTAPI NtCreateEvent
     IN  EVENT_TYPE          EventType,
     IN  BOOLEAN             InitialState
 );
+
+
 
 // ******************************************************************
 // * NtCreateFile
