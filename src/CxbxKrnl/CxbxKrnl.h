@@ -85,6 +85,8 @@ extern CXBXKRNL_API void *CxbxKrnl_TLSData;
 /*! xbe header structure */
 extern CXBXKRNL_API Xbe::Header *CxbxKrnl_XbeHeader;
 
+extern Exe* CxbxKrnl_Exe;
+
 /*! parent window handle */
 extern CXBXKRNL_API HWND CxbxKrnl_hEmuParent;
 

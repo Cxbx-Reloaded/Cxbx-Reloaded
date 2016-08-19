@@ -47,6 +47,7 @@ namespace xboxkrnl
 #include "EmuFS.h"
 #include "EmuShared.h"
 #include "HLEIntercept.h"
+#include "Exe.h"
 
 #include <shlobj.h>
 #include <clocale>
@@ -71,6 +72,7 @@ static HANDLE g_hThreads[MAXIMUM_XBOX_THREADS] = { 0 };
 
 std::string CxbxBasePath;
 HANDLE CxbxBasePathHandle;
+Exe* CxbxKrnl_Exe = NULL;
 
 static uint32 funcAddr[]=
 {
@@ -347,6 +349,13 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
         memcpy((void*)pXbeHeader->dwCertificateAddr, &((uint08*)pXbeHeader)[pXbeHeader->dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
     }
+
+	// Load EXE structure, this is used by Xapi Section functions
+	{
+		char szBuffer[260];
+		GetModuleFileNameA(NULL, szBuffer, 260);
+		CxbxKrnl_Exe = new Exe(szBuffer);
+	}
 
 	// Initialize devices :
 	char szBuffer[260];

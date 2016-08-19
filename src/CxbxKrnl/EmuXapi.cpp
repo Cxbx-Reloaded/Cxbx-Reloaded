@@ -43,6 +43,7 @@
 #include "Emu.h"
 #include "EmuFS.h"
 #include "EmuAlloc.h"
+#include "Exe.h"
 
 // XInputSetState status waiters
 extern XInputSetStateStatus g_pXInputSetStateStatus[XINPUT_SETSTATE_SLOTS] = {0};
@@ -1164,84 +1165,12 @@ HANDLE WINAPI XTL::EmuXGetSectionHandleA
 
 	void* pRet = NULL;
 
-	// TODO: Save the name and address of each section contained in 
-	// this .xbe instead of adding this stuff by hand because the section
-	// address can change from one game region to the next, and some games
-	// will use the same engine and section name, so accuracy is not
-	// guarunteed.
-
-	// Metal Gear Solid II (NTSC)
-	if( !strcmp( pSectionName, "Rev24b" ) )
-	{
-		pRet = (void*) 0xCE3E60;
-	}
-
-	// Metal Slug 3 (NTSC)
-	else if(!strcmp(pSectionName, "newpal"))
-	{
-		pRet = (void*) 0x2C79E0;
-	}
-	else if(!strcmp(pSectionName, "msg_font"))
-	{
-		pRet = (void*) 0x2CABC0;
-	}
-	else if(!strcmp(pSectionName, "se_all"))
-	{
-		pRet = (void*) 0x2CBD20;
-	}
-	else if(!strcmp(pSectionName, ".XTLID"))
-	{
-//		__asm int 3;
-		pRet = (void*) 0x91B0A0;
-	}
-
-	// Zapper (NTSC)
-	else if(!strcmp(pSectionName, "SYSFONT"))
-	{
-		pRet = (void*) 0x2CEC80;
-	}
-
-	// Conflict: Desert Storm (NTSC)
-	else if(!strcmp(pSectionName, "FONTIMG"))
-	{
-		pRet = (void*) 0x364580;
-	}
-	else if(!strcmp(pSectionName, "FONTT0"))
-	{
-		pRet = (void*) 0x37E620;
-	}
-	else if(!strcmp(pSectionName, "FONTT1"))
-	{
-		pRet = (void*) 0x38E6A0;
-	}
-
-	// Xbox Dashboard (3944)
-	else if(!strcmp(pSectionName, "EnglishXlate" ))
-	{
-		pRet = (void*) 0x140620;
-	}
-
-	// Forza Motorsport (ALL, XDK 5849)
-	else if(!strcmp(pSectionName, "DDERR" ))
-	{
-		pRet = (void*) 0x572000;    // Raw Address
-		// pRet = (void*) 0x5EBDA0;    // Virtual Address
-	}
-
-	// Taz Wanted (NTSC)
-	/*else if(!strcmp(pSectionName, "sig" ))
-	{
-		pRet = (void*) 0x*/
-
-	// Red Star (Unknown Region)
-	/*else if(!strcmp(pSectionName, "BINK32"))
-	{
-		pRet = (void*) 0x00366F60;
-	}*/
-
-	else
-	{
-		CxbxKrnlCleanup( "XGetSectionHandleA is not implemented for section '%s'", pSectionName );
+	// Iterate thrugh sections
+	for (int i = 0; i < CxbxKrnl_Exe->m_Header.m_sections; i++) {
+		if (!strcmp(pSectionName, CxbxKrnl_Exe->m_SectionHeader[i].m_name))	{
+			pRet = (void*)CxbxKrnl_Exe->m_SectionHeader[i].m_virtual_addr;
+			break;
+		}
 	}
 
 	EmuSwapFS();	// Xbox FS
