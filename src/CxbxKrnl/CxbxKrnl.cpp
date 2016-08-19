@@ -348,6 +348,10 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
         memcpy(&MemXbeHeader->dwInitFlags, &pXbeHeader->dwInitFlags, sizeof(pXbeHeader->dwInitFlags));
 
         memcpy((void*)pXbeHeader->dwCertificateAddr, &((uint08*)pXbeHeader)[pXbeHeader->dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
+
+		// Patch AllowedMediaTypes to prevent XapiVerifyMediaInDrive() being called
+		// This is necessary as we do not emulate XDVD verification
+		((Xbe::Certificate*)pXbeHeader->dwCertificateAddr)->dwAllowedMedia |= 0x00FFFFFF;
     }
 
 	// Load EXE structure, this is used by Xapi Section functions
