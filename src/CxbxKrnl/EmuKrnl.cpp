@@ -1264,14 +1264,14 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 			// (This file probably needs to be pre-initialized somehow too).
 		}
 
-		DbgPrintf("EmuKrnl : %s Corrected path...", aFileAPIName.c_str());
-		DbgPrintf("  Org:\"%s\"", OriginalPath.c_str());
+		DbgPrintf("EmuKrnl : %s Corrected path..\n.", aFileAPIName.c_str());
+		DbgPrintf("  Org:\"%s\"\n", OriginalPath.c_str());
 		if (NativePath.compare(CxbxBasePath) == 0)
 		{
-			DbgPrintf("  New:\"$CxbxPath\\EmuDisk%s%s\"", (NativePath.substr(CxbxBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());	
+			DbgPrintf("  New:\"$CxbxPath\\EmuDisk%s%s\"\n", (NativePath.substr(CxbxBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());	
 		}
 		else
-			DbgPrintf("  New:\"$XbePath\\%s\"", RelativePath.c_str());
+			DbgPrintf("  New:\"$XbePath\\%s\"\n", RelativePath.c_str());
 
 	}
 	else
@@ -3388,35 +3388,11 @@ XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributes
            GetCurrentThreadId(), ObjectAttributes, ObjectAttributes->ObjectName->Buffer, Attributes);
 
 //	__asm int 3;
-
-    char *szBuffer = ObjectAttributes->ObjectName->Buffer;
-
-    wchar_t wszObjectName[160];
-
-    NtDll::UNICODE_STRING    NtUnicodeString;
-    NtDll::OBJECT_ATTRIBUTES NtObjAttr;
-
-	// Ensure that we are in the current directory for D:\\.
-	// TODO: Other directories when needed.
-	if((szBuffer[0] == 'D' || szBuffer[0] == 'd') && szBuffer[1] == ':' || szBuffer[2] == '\\')
-	{
-		szBuffer += 3;
-
-		 DbgPrintf("EmuXapi (0x%X): NtQueryFullAttributesFile Corrected path...\n", GetCurrentThreadId());
-         DbgPrintf("  Org:\"%s\"\n", ObjectAttributes->ObjectName->Buffer);
-         DbgPrintf("  New:\"$XbePath\\%s\"\n", szBuffer);
-    }
-
-    // initialize object attributes
-    {
-        mbstowcs(wszObjectName, szBuffer, 160);
-
-        NtDll::RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
-
-        InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
-    }
-
-    NTSTATUS ret = NtDll::NtQueryFullAttributesFile(&NtObjAttr, Attributes);
+	NativeObjectAttributes nativeObjectAttributes;
+	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, nativeObjectAttributes, "NtQueryFullAttributesFile"); /*var*/
+	
+	if (ret == STATUS_SUCCESS)
+		ret = NtDll::NtQueryFullAttributesFile(nativeObjectAttributes.NtObjAttrPtr, Attributes);
 
 	if(FAILED(ret))
 		EmuWarning("NtQueryFullAttributesFile failed! (0x%.08X)\n", ret);
