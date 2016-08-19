@@ -102,7 +102,14 @@ XBSYSAPI EXPORTNUM(322) XBOX_HARDWARE_INFO XboxHardwareInfo;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(323) UCHAR XboxHDKey[16];
 
-XBSYSAPI VOID *XboxKrnlVersion;
+typedef struct _XBOX_KRNL_VERSION {
+    USHORT Major;
+    USHORT Minor;
+    USHORT Build;
+    USHORT Qfe;
+} XBOX_KRNL_VERSION;
+
+XBSYSAPI EXPORTNUM(324) XBOX_KRNL_VERSION XboxKrnlVersion;
 
 // ******************************************************************
 // * XboxSignatureKey

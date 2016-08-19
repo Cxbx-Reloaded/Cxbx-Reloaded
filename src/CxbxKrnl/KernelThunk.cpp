@@ -381,7 +381,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367] =
     (uint32)PANIC(0x0141),                          // 0x0141 (321) XboxEEPROMKey
     (uint32)&xboxkrnl::XboxHardwareInfo,            // 0x0142 (322)
     (uint32)&xboxkrnl::XboxHDKey,                   // 0x0143 (323)
-    (uint32)PANIC(0x0144),                          // 0x0144 (324) XboxKrnlVersion
+    (uint32)&xboxkrnl::XboxKrnlVersion,				// 0x0144 (324) XboxKrnlVersion
     (uint32)&xboxkrnl::XboxSignatureKey,            // 0x0145 (325)
     (uint32)PANIC(0x0146),                          // 0x0146 (326) XeImageFileName
     (uint32)PANIC(0x0147),                          // 0x0147 (327) XeLoadSection
