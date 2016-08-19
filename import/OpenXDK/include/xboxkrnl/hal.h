@@ -53,7 +53,21 @@ XBSYSAPI EXPORTNUM(46) VOID NTAPI HalReadWritePCISpace
   IN BOOLEAN WritePCISpace
 );
 
-XBSYSAPI VOID *HalRegisterShutdownNotification;
+typedef VOID (*PHAL_SHUTDOWN_NOTIFICATION)(
+    IN struct _HAL_SHUTDOWN_REGISTRATION *ShutdownRegistration
+);
+
+typedef struct {
+    PHAL_SHUTDOWN_NOTIFICATION NotificationRoutine;
+    LONG Priority;
+    LIST_ENTRY ListEntry;
+} HAL_SHUTDOWN_REGISTRATION, *PHAL_SHUTDOWN_REGISTRATION;
+
+XBSYSAPI EXPORTNUM(47) VOID HalRegisterShutdownNotification(
+    IN PHAL_SHUTDOWN_REGISTRATION ShutdownRegistration,
+    IN BOOLEAN Register
+);
+
 XBSYSAPI VOID *HalRequestSoftwareInterrupt;
 
 // ******************************************************************

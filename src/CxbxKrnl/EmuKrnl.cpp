@@ -1752,6 +1752,31 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
 	return STATUS_SUCCESS;
 }
 
+// ******************************************************************
+// * 0x002F - HalRegisterShutdownNotification
+// ******************************************************************
+XBSYSAPI EXPORTNUM(47) VOID xboxkrnl::HalRegisterShutdownNotification
+(
+	IN PHAL_SHUTDOWN_REGISTRATION ShutdownRegistration,
+	IN BOOLEAN Register
+)
+{
+	EmuSwapFS();   // Win2k/XP FS
+
+	DbgPrintf("EmuKrnl (0x%X): HalRegisterShutdownNotification\n"
+		"(\n"
+		"   ShutdownRegistration : 0x%.08X\n"
+		"   Register             : 0x%.08X\n"
+		");\n",
+		GetCurrentThreadId(), ShutdownRegistration, Register);
+
+	EmuWarning("HalRegisterShutdownNotification not implemented!\n");
+	
+	EmuSwapFS();	// Xbox FS
+
+	return;
+}
+
 
 // ******************************************************************
 // * 0x0031 - HalReturnToFirmware

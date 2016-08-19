@@ -104,7 +104,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367] =
     (uint32)PANIC(0x002C),                          // 0x002C (44)  HalGetInterruptVector
     (uint32)&xboxkrnl::HalReadSMBusValue,           // 0x002D (45)
     (uint32)PANIC(0x002E),                          // 0x002E (46)  HalReadWritePCISpace
-    (uint32)PANIC(0x002F),                          // 0x002F (47)  HalRegisterShutdownNotification
+    (uint32)&xboxkrnl::HalRegisterShutdownNotification, // 0x002F (47)  HalRegisterShutdownNotification
     (uint32)PANIC(0x0030),                          // 0x0030 (48)  HalRequestSoftwareInterrupt
     (uint32)&xboxkrnl::HalReturnToFirmware,         // 0x0031 (49)
     (uint32)&xboxkrnl::HalWriteSMBusValue,          // 0x0032 (50)
