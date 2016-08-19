@@ -61,7 +61,7 @@ EmuExe::EmuExe(Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename, HWND 
         m_Header.m_symbol_table_addr        = 0;                                        // unused
         m_Header.m_symbols                  = 0;                                        // unused
         m_Header.m_sizeof_optional_header   = sizeof(OptionalHeader);                   // size of optional header
-        m_Header.m_characteristics          = 0x010F;                                   // should be fine..
+        m_Header.m_characteristics          = 0x012F;                                   // should be fine..
 
         printf("OK\n");
     }

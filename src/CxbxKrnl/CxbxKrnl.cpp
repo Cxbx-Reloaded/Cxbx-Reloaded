@@ -297,6 +297,35 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
         #endif
     }
 
+	{
+		// Create a fake kernel header for XapiRestrictCodeSelectorLimit
+		// Thanks advancingdragon / DirtBox
+		typedef struct DUMMY_KERNEL
+		{
+			IMAGE_DOS_HEADER DosHeader;
+			DWORD Signature;
+			IMAGE_FILE_HEADER FileHeader;
+			IMAGE_SECTION_HEADER SectionHeader;
+		} *PDUMMY_KERNEL;
+
+		PDUMMY_KERNEL DummyKernel = (PDUMMY_KERNEL)VirtualAlloc(
+			(PVOID)0x80010000, sizeof(DUMMY_KERNEL),
+			MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE
+		);
+
+		if (DummyKernel == NULL)
+			CxbxKrnlCleanup("InitializeDummyKernel: Could not allocate dummy kernel.");
+		memset(DummyKernel, 0, sizeof(DUMMY_KERNEL));
+
+		// XapiRestrictCodeSelectorLimit only checks these fields.
+		DummyKernel->DosHeader.e_lfanew = sizeof(IMAGE_DOS_HEADER); // RVA of NtHeaders
+		DummyKernel->FileHeader.SizeOfOptionalHeader = 0;
+		DummyKernel->FileHeader.NumberOfSections = 1;
+		// as long as this doesn't start with "INIT"
+		strncpy_s((PSTR)DummyKernel->SectionHeader.Name, 8, "DONGS", 8);
+	}
+
+
     //
     // load the necessary pieces of XbeHeader
     //
@@ -320,7 +349,6 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
     }
 
 	// Initialize devices :
-
 	char szBuffer[260];
 	SHGetSpecialFolderPath(NULL, szBuffer, CSIDL_APPDATA, TRUE);
     strcat(szBuffer, "\\Cxbx\\");
