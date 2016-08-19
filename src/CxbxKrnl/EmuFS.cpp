@@ -292,7 +292,7 @@ void EmuInitFS()
 			continue;
 		}
 
-		DbgPrintf("Searching for FS Instruction in section %s 0x%08X\n", CxbxKrnl_Exe->m_SectionHeader[sectionIndex].m_name, CxbxKrnl_Exe->m_SectionHeader[sectionIndex].m_characteristics);
+		DbgPrintf("Searching for FS Instruction in section %s\n", CxbxKrnl_Exe->m_SectionHeader[sectionIndex].m_name);
 		uint32_t startAddr = CxbxKrnl_Exe->m_SectionHeader[sectionIndex].m_virtual_addr + CxbxKrnl_XbeHeader->dwBaseAddr;
 		for (uint32 addr = startAddr; addr < startAddr + CxbxKrnl_Exe->m_SectionHeader[sectionIndex].m_sizeof_raw; addr++)
 		{
