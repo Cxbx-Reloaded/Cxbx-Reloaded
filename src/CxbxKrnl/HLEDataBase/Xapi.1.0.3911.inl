@@ -1718,27 +1718,6 @@ OOVPATable XAPI_1_0_3911[] =
         "EmuSetThreadPriority"
         #endif
     },
-    //* Too High Level
-    // XapiInitProcess
-    {
-        (OOVPA*)&XapiInitProcess_1_0_3911,
-
-        XTL::EmuXapiInitProcess,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiInitProcess"
-        #endif
-    },
-	// XapiInitProcess
-    {
-        (OOVPA*)&XapiInitProcess_1_0_3950,
-
-        XTL::EmuXapiInitProcess,
-
-        #ifdef _DEBUG_TRACE
-		"EmuXapiInitProcess (3950)"
-        #endif
-    },
     //*/
     // GetTimeZoneInformation
     {

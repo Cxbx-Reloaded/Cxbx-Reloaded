@@ -698,17 +698,6 @@ OOVPATable XAPI_1_0_4361[] =
         "EmuXInputSetState"
         #endif
     },
-    //* Too High Level
-    // XapiInitProcess
-    {
-        (OOVPA*)&XapiInitProcess_1_0_4361,
-
-        XTL::EmuXapiInitProcess,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiInitProcess"
-        #endif
-    },
     //*/
     /*
     // XapiThreadStartup

@@ -511,17 +511,6 @@ OOVPATable XAPI_1_0_4134[] =
         "EmuXInitDevices"
         #endif
     },
-    //* Too High Level
-    // XapiInitProcess (* unchanged since 3911 *)
-    {
-        (OOVPA*)&XapiInitProcess_1_0_3911,
-
-        XTL::EmuXapiInitProcess,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiInitProcess"
-        #endif
-    },
     //*/
     // SetThreadPriority (* unchanged since 3911 *)
     {

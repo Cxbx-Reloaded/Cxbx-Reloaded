@@ -629,26 +629,6 @@ OOVPATable XAPI_1_0_5558[] =
         #endif
     },
     //*/
-    // XapiInitProcess
-    {
-        (OOVPA*)&XapiInitProcess_1_0_5558,
-
-        XTL::EmuXapiInitProcess,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiInitProcess"
-        #endif
-    },
-    // XapiInitProcess
-    {
-        (OOVPA*)&XapiInitProcess_1_0_5659,
-
-        XTL::EmuXapiInitProcess,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiInitProcess"
-        #endif
-    },
     // XapiBootToDash (* unchanged since 1.0.3911 *)
     {
         (OOVPA*)&XapiBootDash_1_0_3911,

@@ -279,17 +279,6 @@ OOVPATable XAPI_1_0_4034[] =
         #endif
     },
     */
-    //* Too High Level
-    // XapiInitProcess (* unchanged since 1.0.3911 *)
-    {
-        (OOVPA*)&XapiInitProcess_1_0_3911,
-
-        XTL::EmuXapiInitProcess,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiInitProcess"
-        #endif
-    },
     //*/
     // XapiBootToDash (* unchanged since 1.0.3911 *)
     {

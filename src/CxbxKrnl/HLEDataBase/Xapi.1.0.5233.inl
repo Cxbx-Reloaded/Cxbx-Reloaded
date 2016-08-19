@@ -234,26 +234,6 @@ OOVPATable XAPI_1_0_5233[] =
         "EmuXapiApplyKernelPatches"
         #endif
     },
-    // XapiInitProcess
-    {
-        (OOVPA*)&XapiInitProcess_1_0_5233,
-
-        XTL::EmuXapiInitProcess,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiInitProcess"
-        #endif
-    },
-	// XapiInitProcess
-    {
-        (OOVPA*)&XapiInitProcess_1_0_5344,
-
-        XTL::EmuXapiInitProcess,
-
-        #ifdef _DEBUG_TRACE
-		"EmuXapiInitProcess (5344)"
-        #endif
-    },
     // GetTimeZoneInformation (* unchanged since 3911 *)
     {
         (OOVPA*)&GetTimeZoneInformation_1_0_3911,

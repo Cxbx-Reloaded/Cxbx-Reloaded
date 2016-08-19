@@ -1235,36 +1235,6 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXapiApplyKernelPatches"
         #endif
     },
-    // XapiInitProcess
-    {
-        (OOVPA*)&XapiInitProcess_1_0_4928,
-
-        XTL::EmuXapiInitProcess,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiInitProcess"
-        #endif
-    },
-	// XapiInitProcess
-    {
-        (OOVPA*)&XapiInitProcess_1_0_4831,
-
-        XTL::EmuXapiInitProcess,
-
-        #ifdef _DEBUG_TRACE
-		"EmuXapiInitProcess (4831)"
-        #endif
-    },
-	// XapiInitProcess
-    {
-        (OOVPA*)&XapiInitProcess_1_0_5028,
-
-        XTL::EmuXapiInitProcess,
-
-        #ifdef _DEBUG_TRACE
-		"EmuXapiInitProcess (5028)"
-        #endif
-    },
     // XFormatUtilityDrive
     {
         (OOVPA*)&XFormatUtilityDrive_1_0_4627,
@@ -1523,17 +1493,6 @@ OOVPATable XAPI_1_0_4627[] =
         #endif
     },
     //*/
-    //* Too High Level
-    // XapiInitProcess (* unchanged since 1.0.4361 *)
-    {
-        (OOVPA*)&XapiInitProcess_1_0_4361,
-
-        XTL::EmuXapiInitProcess,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiInitProcess"
-        #endif
-    },
     //*/
     // XapiBootToDash (* unchanged since 1.0.3911 *)
     {

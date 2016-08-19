@@ -813,48 +813,6 @@ BOOL WINAPI XTL::EmuGetExitCodeThread
 }
 
 // ******************************************************************
-// * func: EmuXapiInitProcess
-// ******************************************************************
-VOID WINAPI XTL::EmuXapiInitProcess()
-{
-    EmuSwapFS();   // Win2k/XP FS
-
-    DbgPrintf("EmuXapi (0x%X): EmuXapiInitProcess();\n", GetCurrentThreadId());
-
-    // call RtlCreateHeap
-    {
-        RTL_HEAP_PARAMETERS HeapParameters;
-
-        ZeroMemory(&HeapParameters, sizeof(HeapParameters));
-
-        HeapParameters.Length = sizeof(HeapParameters);
-
-        EmuSwapFS();   // XBox FS
-
-        uint32 dwPeHeapReserve = CxbxKrnl_XbeHeader->dwPeHeapReserve;
-        uint32 dwPeHeapCommit  = CxbxKrnl_XbeHeader->dwPeHeapCommit;
-
-        PVOID dwResult = 0;
-
-        #define HEAP_GROWABLE 0x00000002
-
-        *XTL::EmuXapiProcessHeap = XTL::g_pRtlCreateHeap(HEAP_GROWABLE, 0, dwPeHeapReserve, dwPeHeapCommit, NULL, &HeapParameters);
-    }
-
-    return;
-}
-
-// ******************************************************************
-// * data: EmuXapiProcessHeap
-// ******************************************************************
-PVOID* XTL::EmuXapiProcessHeap;
-
-// ******************************************************************
-// * func: g_pRtlCreateHeap
-// ******************************************************************
-XTL::pfRtlCreateHeap XTL::g_pRtlCreateHeap;
-
-// ******************************************************************
 // * func: EmuXapiThreadStartup
 // ******************************************************************
 VOID WINAPI XTL::EmuXapiThreadStartup

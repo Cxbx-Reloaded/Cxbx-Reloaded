@@ -333,16 +333,6 @@ OOVPATable XAPI_1_0_5849[] =
         #endif
     },
     //*/
-    // XapiInitProcess
-    {
-        (OOVPA*)&XapiInitProcess_1_0_5849,
-
-        XTL::EmuXapiInitProcess,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiInitProcess"
-        #endif
-    },
     // XapiBootToDash (* unchanged since 1.0.3911 *)
     {
         (OOVPA*)&XapiBootDash_1_0_3911,
