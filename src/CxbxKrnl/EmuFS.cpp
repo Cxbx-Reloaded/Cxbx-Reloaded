@@ -43,6 +43,7 @@ namespace xboxkrnl
 #include "EmuFS.h"
 #include "EmuAlloc.h"
 #include "CxbxKrnl.h"
+#include "Exe.h"
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
@@ -284,29 +285,40 @@ void EmuInitFS()
 	DbgPrintf("Patching FS Register Accesses\n");
 	DWORD sizeOfImage = CxbxKrnl_XbeHeader->dwSizeofImage;
 	long numberOfInstructions = fsInstructions.size();
-	for (uint32 addr = CxbxKrnl_XbeHeader->dwBaseAddr; addr < sizeOfImage + CxbxKrnl_XbeHeader->dwBaseAddr; addr++)
-	{
-		for (int i = 0; i < numberOfInstructions; i++)
+
+	// Iterate through each CODE section
+	for (int sectionIndex = 0; sectionIndex < CxbxKrnl_Exe->m_Header.m_sections; sectionIndex++) {
+		if (CxbxKrnl_Exe->m_SectionHeader[sectionIndex].m_characteristics & IMAGE_SCN_CNT_CODE != IMAGE_SCN_CNT_CODE) {
+			continue;
+		}
+
+		DbgPrintf("Searching for FS Instruction in section %s 0x%08X\n", CxbxKrnl_Exe->m_SectionHeader[sectionIndex].m_name, CxbxKrnl_Exe->m_SectionHeader[sectionIndex].m_characteristics);
+		uint32_t startAddr = CxbxKrnl_Exe->m_SectionHeader[sectionIndex].m_virtual_addr + CxbxKrnl_XbeHeader->dwBaseAddr;
+		for (uint32 addr = startAddr; addr < startAddr + CxbxKrnl_Exe->m_SectionHeader[sectionIndex].m_sizeof_raw; addr++)
 		{
-			// Loop through the data, checking if we get an exact match
-			long sizeOfData = fsInstructions[i].data.size();
-
-			if (memcmp((void*)addr, &fsInstructions[i].data[0], sizeOfData) == 0)
+			for (int i = 0; i < numberOfInstructions; i++)
 			{
-				DbgPrintf("Patching FS Instruction at 0x%08X\n", addr);
+				// Loop through the data, checking if we get an exact match
+				long sizeOfData = fsInstructions[i].data.size();
 
-				// Write Call opcode
-				*(uint08*)addr = 0xE8;
-				*(uint32*)(addr + 1) = (uint32)fsInstructions[i].functionPtr - addr - 5;
+				if (memcmp((void*)addr, &fsInstructions[i].data[0], sizeOfData) == 0)
+				{
+					DbgPrintf("Patching FS Instruction at 0x%08X\n", addr);
 
-				// Fill the remaining bytes with nop instructions
-				int remaining_bytes = fsInstructions[i].data.size() - 5;
-				memset((void*)(addr + 5), 0x90, remaining_bytes);
-				addr += sizeOfData - 1;
-				break;
+					// Write Call opcode
+					*(uint08*)addr = 0xE8;
+					*(uint32*)(addr + 1) = (uint32)fsInstructions[i].functionPtr - addr - 5;
+
+					// Fill the remaining bytes with nop instructions
+					int remaining_bytes = fsInstructions[i].data.size() - 5;
+					memset((void*)(addr + 5), 0x90, remaining_bytes);
+					addr += sizeOfData - 1;
+					break;
+				}
 			}
 		}
 	}
+	
 	DbgPrintf("Done\n");
 }
 
