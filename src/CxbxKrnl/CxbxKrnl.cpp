@@ -407,6 +407,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		g_hCurDir = ((EmuNtSymbolicLinkObject*)FindNtSymbolicLinkObjectByVolumeLetter(CxbxDefaultXbeVolumeLetter))->RootDirectoryHandle;
 		// TODO -oDxbx: Make sure this path is set in g_EmuXbePath (xboxkrnl_XeImageFileName) too.
 		CxbxCreateSymbolicLink(DriveD, DeviceCdrom0); // CdRom goes to D:
+		/*
 		CxbxCreateSymbolicLink(DriveE, DeviceHarddisk0Partition1); // Partition1 goes to E: (Data files, savegames, etc.)
 		CxbxCreateSymbolicLink(DriveF, DeviceHarddisk0Partition2); // Partition2 goes to F: (Shell files, dashboard, etc.)
 		CxbxCreateSymbolicLink(DriveT, DeviceHarddisk0Partition1 + "\\TDATA\\" + titleId + "\\"); // Partition1\Title data goes to T:
