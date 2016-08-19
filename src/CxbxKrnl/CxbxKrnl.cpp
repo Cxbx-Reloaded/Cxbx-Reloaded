@@ -329,12 +329,15 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	CxbxBasePath = basePath + "\\EmuDisk\\";
 
 	memset(szBuffer, 0, 260);
-	GetCurrentDirectory(260, szBuffer);
-	if (szBuffer[strlen(szBuffer)] != '\\')
-		szBuffer[strlen(szBuffer)+1] = '\\';
+	g_EmuShared->GetXbePath(szBuffer);
+	
+	if (szBuffer && *szBuffer)
+		SetCurrentDirectory(szBuffer);
+	else
+		GetCurrentDirectory(260, szBuffer);
 
 	std::string xbePath(szBuffer);
-		
+
 	CxbxBasePathHandle = CreateFile(CxbxBasePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
 	memset(szBuffer, 0, 260);
