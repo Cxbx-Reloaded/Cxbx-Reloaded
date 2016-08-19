@@ -54,6 +54,7 @@ namespace NtDll
 
 #include "EmuXTL.h"
 #include "EmuShared.h"
+#include "HLEDataBase.h"
 #include "HLEIntercept.h"
 
 #ifdef _DEBUG
