@@ -4743,7 +4743,8 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 dwBPP = 4;
             }
             else if(X_Format == 0x11 /* D3DFMT_LIN_R5G6B5 */ || X_Format == 0x30 /* D3DFMT_LIN_D16 */
-				 || X_Format == 0x1D /* X_D3DFMT_LIN_A4R4G4B4 */ || X_Format == 0x10 /* X_D3DFMT_LIN_A1R5G5B5 */)
+				 || X_Format == 0x1D /* X_D3DFMT_LIN_A4R4G4B4 */ || X_Format == 0x10 /* X_D3DFMT_LIN_A1R5G5B5 */
+				 || X_Format == 0x1C /* X_D3DFMT_LIN_X1R5G5B5 */ )
             {
                 // Linear 16 Bit
                 dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
@@ -5801,11 +5802,17 @@ DWORD WINAPI XTL::EmuIDirect3DBaseTexture8_GetLevelCount
            ");\n",
            GetCurrentThreadId(), pThis);
 
-    EmuVerifyResourceIsRegistered(pThis);
+	DWORD dwRet = 0;
 
-    IDirect3DBaseTexture8 *pBaseTexture8 = pThis->EmuBaseTexture8;
+	if( pThis )
+	{
+		EmuVerifyResourceIsRegistered(pThis);
 
-    DWORD dwRet = pBaseTexture8->GetLevelCount();
+		IDirect3DBaseTexture8 *pBaseTexture8 = pThis->EmuBaseTexture8;
+
+		if( pBaseTexture8 )
+			dwRet = pBaseTexture8->GetLevelCount();
+	}
 
     EmuSwapFS();   // XBox FS
 
@@ -5946,8 +5953,8 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel
 
     EmuVerifyResourceIsRegistered(pThis);
 
-//	if(pThis)
-//	{
+	if(pThis)
+	{
 		// if highest bit is set, this is actually a raw memory pointer (for YUY2 simulation)
 		if(IsSpecialResource(pThis->Data) && (pThis->Data & X_D3DRESOURCE_DATA_FLAG_YUVSURF))
 		{
@@ -5984,7 +5991,7 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_GetSurfaceLevel
 				DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DTexture8_GetSurfaceLevel := 0x%.08X\n", GetCurrentThreadId(), (*ppSurfaceLevel)->EmuSurface8);
 			}
 		}
-//	}
+	}
 
     EmuSwapFS();   // XBox FS
 
@@ -7639,11 +7646,22 @@ BYTE* WINAPI XTL::EmuIDirect3DVertexBuffer8_Lock2
            ");\n",
            GetCurrentThreadId(), ppVertexBuffer, Flags);
 
-    IDirect3DVertexBuffer8 *pVertexBuffer8 = ppVertexBuffer->EmuVertexBuffer8;
+    IDirect3DVertexBuffer8 *pVertexBuffer8 = NULL;
 
     BYTE *pbData = NULL;
 
-    HRESULT hRet = pVertexBuffer8->Lock(0, 0, &pbData, EmuXB2PC_D3DLock(Flags));    // Fixed flags check, Battlestar Galactica now displays graphics correctly
+    HRESULT hRet = S_OK;
+	
+	if( ppVertexBuffer->EmuVertexBuffer8 )
+	{
+		pVertexBuffer8 = ppVertexBuffer->EmuVertexBuffer8;
+		hRet = pVertexBuffer8->Lock(0, 0, &pbData, EmuXB2PC_D3DLock(Flags));    // Fixed flags check, Battlestar Galactica now displays graphics correctly
+
+		if( FAILED( hRet ) )
+			EmuWarning( "Lock vertex buffer failed!" );
+	}
+	else
+		EmuWarning( "ppVertexBuffer->EmuVertexBuffer8 == NULL!" );
 
     EmuSwapFS();   // XBox FS
 
@@ -10583,6 +10601,45 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetBackMaterial(D3DMATERIAL8* pMaterial)
 	EmuWarning("GetBackMaterial is not supported!");
 
 	// TODO: HACK: This is wrong, but better than nothing, right?
+
+	if( pMaterial )
+		g_pD3DDevice8->GetMaterial( pMaterial );
+
+	EmuSwapFS();	// Xbox FS
+
+	return S_OK;
+}
+
+// ******************************************************************
+// * func: EmuD3D::LazySetPointParams
+// ******************************************************************
+void WINAPI XTL::EmuD3D_LazySetPointParams( void* Device )
+{
+	EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuD3D8 (0x%X): EmuD3D_LazySetPointParams\n"
+           "(\n"
+           "   Device              : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), Device);
+
+	// Don't emulate this! Just look at the stack trace and go from there!
+	__asm int 3;
+
+    EmuSwapFS();   // XBox FS
+}
+
+// ******************************************************************
+// * func: EmuIDirect3DDevice8_GetMaterial
+// ******************************************************************
+HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetMaterial(D3DMATERIAL8* pMaterial)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetMaterial\n"
+		   "(\n" 
+		   "   pMaterial         : 0x%.08X\n"
+		   ");\n", GetCurrentThreadId(), pMaterial);
 
 	if( pMaterial )
 		g_pD3DDevice8->GetMaterial( pMaterial );

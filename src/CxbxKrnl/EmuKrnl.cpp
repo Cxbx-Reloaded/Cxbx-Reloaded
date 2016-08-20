@@ -1702,6 +1702,22 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 }
 
 // ******************************************************************
+// * 0x0023 - FscGetCacheSize
+// ******************************************************************
+XBSYSAPI EXPORTNUM(35) xboxkrnl::DWORD NTAPI xboxkrnl::FscGetCacheSize()
+{
+	EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): FscGetCacheSize()", GetCurrentThreadId());
+
+    EmuWarning("FscGetCacheSize returning default 64kb");
+
+    EmuSwapFS();   // Xbox FS
+
+	return 64*1024;
+}
+
+// ******************************************************************
 // * 0x0025 - FscSetCacheSize
 // ******************************************************************
 XBSYSAPI EXPORTNUM(37) xboxkrnl::LONG NTAPI xboxkrnl::FscSetCacheSize(ULONG uCachePages)
@@ -1719,6 +1735,33 @@ XBSYSAPI EXPORTNUM(37) xboxkrnl::LONG NTAPI xboxkrnl::FscSetCacheSize(ULONG uCac
     EmuSwapFS();   // Xbox FS
 
     return 0;
+}
+
+// ******************************************************************
+// * HalGetInterruptVector
+// ******************************************************************
+XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG  NTAPI xboxkrnl::HalGetInterruptVector
+(
+    IN ULONG   InterruptLevel,
+    OUT CHAR*  Irql
+)
+{
+	EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): HalGetInterruptVector\n"
+           "(\n"
+           "   InterruptLevel      : 0x%.08X\n"
+		   "   Irql                : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), InterruptLevel, Irql);
+
+	// I'm only adding this for Virtua Cop 3 (Chihiro). Xbox games need not emulate this.
+
+	EmuWarning( "HalGetInterruptVector(): If this is NOT a Chihiro game, tell blueshogun!" );
+
+    EmuSwapFS();   // Xbox FS
+
+	return 1;
 }
 
 // ******************************************************************
@@ -1978,6 +2021,27 @@ XBSYSAPI EXPORTNUM(95) VOID NTAPI xboxkrnl::KeBugCheck
 }
 
 // ******************************************************************
+// * KeConnectInterrupt
+// ******************************************************************
+XBSYSAPI EXPORTNUM(98) xboxkrnl::LONG NTAPI xboxkrnl::KeConnectInterrupt
+(
+    IN PKINTERRUPT  InterruptObject
+)
+{
+	EmuSwapFS();	// Win2k/XP FS
+
+	DbgPrintf("EmuKrnl (0x%X): KeConnectInterrupt\n"
+			"(\n"
+			"   InterruptObject   : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), InterruptObject);
+
+	EmuSwapFS();	// Xbox FS
+
+	return 0;
+}
+
+// ******************************************************************
 // * 0x0063 - KeDelayExecutionThread
 // ******************************************************************
 XBSYSAPI EXPORTNUM(99) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeDelayExecutionThread
@@ -2033,6 +2097,37 @@ XBSYSAPI EXPORTNUM(107) VOID NTAPI xboxkrnl::KeInitializeDpc
     EmuSwapFS();   // Xbox FS
 
     return;
+}
+
+// ******************************************************************
+// * 0x006D - KeInitializeInterrupt
+// ******************************************************************
+XBSYSAPI EXPORTNUM(109) VOID NTAPI xboxkrnl::KeInitializeInterrupt
+(
+    OUT PKINTERRUPT Interrupt,
+    IN PKSERVICE_ROUTINE ServiceRoutine,
+    IN PVOID ServiceContext,
+    IN ULONG Vector,
+    IN KIRQL Irql,
+    IN KINTERRUPT_MODE InterruptMode,
+    IN BOOLEAN ShareVector
+)
+{
+	EmuSwapFS();   // Win2k/XP FS
+
+    DbgPrintf("EmuKrnl (0x%X): KeInitializeInterrupt\n"
+           "(\n"
+           "   Interrupt           : 0x%.08X\n"
+           "   ServiceRoutine      : 0x%.08X\n"
+           "   ServiceContext      : 0x%.08X\n"
+		   "   Vector              : 0x%.08X\n"
+		   "   Irql                : 0x%.08X\n"
+		   "   InterruptMode       : 0x%.08X\n"
+		   "   ShareVector         : 0x%.08X\n"
+           ");\n",
+           GetCurrentThreadId(), Interrupt, ServiceRoutine, ServiceContext, Vector, Irql, InterruptMode, ShareVector);
+
+    EmuSwapFS();   // Xbox FS
 }
 
 // ******************************************************************

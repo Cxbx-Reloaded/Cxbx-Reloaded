@@ -210,7 +210,7 @@ SOOVPA<11> XID_fCloseDevice_1_0_4361 =
         { 0x92, 0x86 }, // (Offset,Value)-Pair #8
         { 0x93, 0xA7 }, // (Offset,Value)-Pair #9
 
-        // XID_fCloseDevice+0x91 : leave; retn
+        // XID_fCloseDevice+0x9F : leave; retn
         { 0x9F, 0xC9 }, // (Offset,Value)-Pair #10
         { 0xA0, 0xC3 }, // (Offset,Value)-Pair #11
     }

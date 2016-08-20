@@ -3426,6 +3426,26 @@ SOOVPA<13> D3D_CDevice_KickOff_1_0_4627 =
 };
 
 // ******************************************************************
+// * D3DDevice_KickPushBuffer
+// ******************************************************************
+SOOVPA<4> D3DDevice_KickPushBuffer_1_0_4627 = 
+{
+    0,  // Large == 0
+    4,  // Count == 4
+
+    -1, // Xref Not Saved
+    1,  // Xref Not Used
+
+    {
+		{ 0x07, XREF_D3D_KickOff },
+
+        { 0x00, 0x8B },
+        { 0x01, 0x0D },
+        { 0x06, 0xE9 },
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8::GetTexture2
 // ******************************************************************
 SOOVPA<8> D3DDevice_GetTexture2_1_0_4627 = 
@@ -4110,6 +4130,142 @@ SOOVPA<7> D3DDevice_GetPersistedSurface2_1_0_4627 =
 };
 
 // ******************************************************************
+// * D3DDevice_SetModelView
+// ******************************************************************
+SOOVPA<7> D3DDevice_SetModelView_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x15, 0xFF },
+        { 0x2D, 0x81 },
+        { 0x43, 0x3B },
+        { 0x5A, 0xC1 },
+        { 0x71, 0x53 },
+        { 0x8A, 0x8B },
+        { 0x9F, 0x30 },
+    }
+};
+
+// ******************************************************************
+// * D3D::LazySetPointParams
+// ******************************************************************
+SOOVPA<7> D3D_LazySetPointParams_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x00, 0x83 },
+        { 0x01, 0xEC },
+        { 0x02, 0x14 },
+        { 0x4E, 0xE0 },
+        { 0x73, 0xF6 },
+        { 0x74, 0xC4 },
+        { 0x75, 0x41 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_SetDepthClipPlanes
+// ******************************************************************
+SOOVPA<7> D3DDevice_SetDepthClipPlanes_1_0_4627 = 
+{
+    0,  // Large == 0
+    7,  // Count == 7
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x12, 0x24 },
+        { 0x26, 0x8B },
+        { 0x3A, 0x0C },
+        { 0x4E, 0x17 },
+        { 0x62, 0x86 },
+        { 0x76, 0x05 },
+        { 0x8A, 0x00 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_GetMaterial
+// ******************************************************************
+SOOVPA<8> D3DDevice_GetMaterial_1_0_4627 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x05, 0x56 },
+        { 0x06, 0x57 },
+        { 0x0A, 0x0C },
+        { 0x0D, 0xB0 },
+        { 0x0E, 0x0A },
+        { 0x12, 0x11 },
+        { 0x16, 0xF3 },
+        { 0x1A, 0xC2 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_GetBackMaterial
+// ******************************************************************
+SOOVPA<8> D3DDevice_GetBackMaterial_1_0_4627 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x05, 0x56 },
+        { 0x06, 0x57 },
+        { 0x0A, 0x0C },
+        { 0x0D, 0xF4 },
+        { 0x0E, 0x0A },
+        { 0x12, 0x11 },
+        { 0x16, 0xF3 },
+        { 0x1A, 0xC2 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_SetBackMaterial
+// ******************************************************************
+SOOVPA<9> D3DDevice_SetBackMaterial_1_0_4627 = 
+{
+    0,  // Large == 0
+    9,  // Count == 9
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x04, 0x08 },
+        { 0x0C, 0x81 },
+        { 0x0E, 0xF4 },
+        { 0x10, 0x00 },
+        { 0x16, 0x00 },
+        { 0x1F, 0x81 },
+        { 0x22, 0x10 },
+        { 0x2C, 0x5E },
+        { 0x2E, 0x04 },
+    }
+};
+
+// ******************************************************************
 // * D3D8_1_0_4627
 // ******************************************************************
 OOVPATable D3D8_1_0_4627[] =
@@ -4132,16 +4288,6 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3D8_CreateDevice"
-        #endif
-    },
-	// IDirect3D8::CreateDevice
-    {
-        (OOVPA*)&IDirect3D8_CreateDevice_1_0_5028,
-
-        XTL::EmuIDirect3D8_CreateDevice,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirect3D8_CreateDevice_5028"
         #endif
     },
     // IDirect3D8::CheckDeviceFormat (* unchanged since 4361 *)
@@ -6114,6 +6260,84 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_GetPersistedSurface2 ***"
         #endif
     },
+	// D3DDevice_SetModelView
+	{
+		(OOVPA*)&D3DDevice_SetModelView_1_0_4627,
+		XTL::EmuIDirect3DDevice8_SetModelView,
+
+		#ifdef _DEBUG_TRACE
+		"EmuIDirect3DDevice8_SetModelView"
+		#endif
+	},
+	// D3D_LazySetPointParams_1_0_4627
+	{
+		(OOVPA*)&D3D_LazySetPointParams_1_0_4627, 
+		XTL::EmuD3D_LazySetPointParams,
+
+		#ifdef _DEBUG_TRACE
+		"D3D::LazySetPointParams (XRef)"
+		#endif
+	},
+	// D3DDevice_SetDepthClipPlanes
+	{
+       (OOVPA*)&D3DDevice_SetDepthClipPlanes_1_0_4627,
+       XTL::EmuIDirect3DDevice8_SetDepthClipPlanes,
+
+       #ifdef _DEBUG_TRACE
+       "EmuIDirect3DDevice8_SetDepthClipPlanes"
+       #endif
+    },
+	// IDirect3DDevice8::GetMaterial
+    {
+        (OOVPA*)&D3DDevice_GetMaterial_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_GetMaterial,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetMaterial"
+        #endif
+    },
+	// IDirect3DDevice8::KickPushBuffer
+    {
+        (OOVPA*)&D3DDevice_KickPushBuffer_1_0_4627,
+
+		XTL::EmuD3DDevice_KickOff,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_KickPushBuffer"
+        #endif
+    },
+	// IDirect3DDevice8::GetBackMaterial
+    {
+        (OOVPA*)&D3DDevice_GetBackMaterial_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_GetBackMaterial,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetBackMaterial"
+        #endif
+    },
+	// IDirect3DDevice8::SetBackMaterial
+    {
+        (OOVPA*)&D3DDevice_SetBackMaterial_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_SetBackMaterial,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetBackMaterial"
+        #endif
+    },
+	// IDirect3DCubeTexture8::LockRect
+	// TODO: This needs to be verified on 4361, not just 4242!
+    /*{
+        (OOVPA*)&IDirect3DCubeTexture8_LockRect_1_0_3925,
+
+        XTL::EmuIDirect3DCubeTexture8_LockRect,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DCubeTexture8_LockRect_4242" 
+        #endif
+    },*/
 };
 
 // ******************************************************************

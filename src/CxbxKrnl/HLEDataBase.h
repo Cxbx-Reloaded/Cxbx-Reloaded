@@ -73,6 +73,7 @@
 #include "HLEDataBase/XOnline.1.0.4361.h"
 #include "HLEDataBase/XOnline.1.0.4627.h"
 #include "HLEDataBase/XOnline.1.0.5233.h"
+#include "HLEDataBase/XOnline.1.0.5558.h"
 #include "HLEDataBase/XOnline.1.0.5849.h"
 #include "HLEDataBase/XactEng.1.0.4627.h"
 
@@ -135,6 +136,7 @@ enum XRefDataBaseOffset
     XREF_D3D_SETFENCE,
 	XREF_D3D_KickOffAndWaitForIdle,
 	XREF_D3D_MakeRequestedSpace,
+	XREF_D3D_KickOff,
     XREF_XNINIT,
     XREF_FCLOSEDEVICE,
     XREF_CLEARSTATEBLOCKFLAGS,

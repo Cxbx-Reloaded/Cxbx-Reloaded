@@ -87,13 +87,13 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367] =
     (uint32)PANIC(0x001B),                          // 0x001B (27)  ExRaiseStatus
     (uint32)PANIC(0x001C),                          // 0x001C (28)  ExReleaseReadWriteLock
     (uint32)&xboxkrnl::ExSaveNonVolatileSetting,    // 0x001D (29)
-    (uint32)PANIC(0x001E),                          // 0x001E (30)  ExSemaphoreObjectType
-    (uint32)PANIC(0x001F),                          // 0x001F (31)  ExTimerObjectType
-    (uint32)PANIC(0x0020),                          // 0x0020 (32)  ExfInterlockedInsertHeadList
-    (uint32)PANIC(0x0021),                          // 0x0021 (33)  ExfInterlockedInsertTailList
-    (uint32)PANIC(0x0022),                          // 0x0022 (34)  ExfInterlockedRemoveHeadList
-    (uint32)PANIC(0x0023),                          // 0x0023 (35)  FscGetCacheSize
-    (uint32)PANIC(0x0024),                          // 0x0024 (36)  FscInvalidateIdleBlocks
+    (uint32)PANIC(0x001E),                          // 0x001E (30)
+    (uint32)PANIC(0x001F),                          // 0x001F (31)
+    (uint32)PANIC(0x0020),                          // 0x0020 (32)
+    (uint32)PANIC(0x0021),                          // 0x0021 (33)
+    (uint32)PANIC(0x0022),                          // 0x0022 (34)
+    (uint32)&xboxkrnl::FscGetCacheSize,             // 0x0023 (35)
+    (uint32)PANIC(0x0024),                          // 0x0024 (36)
     (uint32)&xboxkrnl::FscSetCacheSize,             // 0x0025 (37)
     (uint32)PANIC(0x0026),                          // 0x0026 (38)  HalClearSoftwareInterrupt
     (uint32)PANIC(0x0027),                          // 0x0027 (39)  HalDisableSystemInterrupt
@@ -101,7 +101,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367] =
     (uint32)PANIC(0x0029),                          // 0x0029 (41)  HalDiskModelNumber
     (uint32)PANIC(0x002A),                          // 0x002A (42)  HalDiskSerialNumber
     (uint32)PANIC(0x002B),                          // 0x002B (43)  HalEnableSystemInterrupt
-    (uint32)PANIC(0x002C),                          // 0x002C (44)  HalGetInterruptVector
+    (uint32)&xboxkrnl::HalGetInterruptVector,       // 0x002C (44)
     (uint32)&xboxkrnl::HalReadSMBusValue,           // 0x002D (45)
     (uint32)PANIC(0x002E),                          // 0x002E (46)  HalReadWritePCISpace
     (uint32)&xboxkrnl::HalRegisterShutdownNotification, // 0x002F (47)  HalRegisterShutdownNotification
@@ -155,7 +155,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367] =
     (uint32)&xboxkrnl::KeBugCheck,                  // 0x005F (95)
     (uint32)PANIC(0x0060),                          // 0x0060 (96)  KeBugCheckEx
     (uint32)PANIC(0x0061),                          // 0x0061 (97)  KeCancelTimer
-    (uint32)PANIC(0x0062),                          // 0x0062 (98)  KeConnectInterrupt
+    (uint32)&xboxkrnl::KeConnectInterrupt,          // 0x0062 (98)
     (uint32)&xboxkrnl::KeDelayExecutionThread,      // 0x0063 (99)
     (uint32)PANIC(0x0064),                          // 0x0064 (100) KeDisconnectInterrupt
     (uint32)PANIC(0x0065),                          // 0x0065 (101) KeEnterCriticalRegion
@@ -165,11 +165,11 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367] =
     (uint32)PANIC(0x0069),                          // 0x0069 (105) KeInitializeApc
     (uint32)PANIC(0x006A),                          // 0x006A (106) KeInitializeDeviceQueue
     (uint32)&xboxkrnl::KeInitializeDpc,             // 0x006B (107)
-    (uint32)PANIC(0x006C),                          // 0x006C (108) KeInitializeEvent
-    (uint32)PANIC(0x006D),                          // 0x006D (109) KeInitializeInterrupt
-    (uint32)PANIC(0x006E),                          // 0x006E (110) KeInitializeMutant
-    (uint32)PANIC(0x006F),                          // 0x006F (111) KeInitializeQueue
-    (uint32)PANIC(0x0070),                          // 0x0070 (112) KeInitializeSemaphore
+    (uint32)PANIC(0x006C),                          // 0x006C (108)
+    (uint32)&xboxkrnl::KeInitializeInterrupt,       // 0x006D (109)
+    (uint32)PANIC(0x006E),                          // 0x006E (110)
+    (uint32)PANIC(0x006F),                          // 0x006F (111)
+    (uint32)PANIC(0x0070),                          // 0x0070 (112)
     (uint32)&xboxkrnl::KeInitializeTimerEx,         // 0x0071 (113)
     (uint32)PANIC(0x0072),                          // 0x0072 (114) KeInsertByKeyDeviceQueue
     (uint32)PANIC(0x0073),                          // 0x0073 (115) KeInsertDeviceQueue

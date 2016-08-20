@@ -49,7 +49,11 @@ XBSYSAPI EXPORTNUM(4) VOID NTAPI AvSetSavedDataAddress
     IN PVOID    Address
 );
 
-XBSYSAPI VOID *FscGetCacheSize;
+// ******************************************************************
+// * FscGetCacheSize
+// ******************************************************************
+XBSYSAPI EXPORTNUM(35) DWORD NTAPI FscGetCacheSize();
+
 XBSYSAPI VOID *FscInvalidateIdleBlocks;
 
 // ******************************************************************

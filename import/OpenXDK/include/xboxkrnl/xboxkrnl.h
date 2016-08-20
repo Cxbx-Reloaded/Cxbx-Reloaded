@@ -724,6 +724,36 @@ typedef enum _KOBJECTS
 KOBJECTS, *PKOBJECTS;
 
 // ******************************************************************
+// * KINTERRUPR
+// ******************************************************************
+typedef struct _KINTERRUPT
+{
+	unsigned char     UnknownA[0x0C];
+	unsigned char     KIRQL;
+	unsigned char     PaddingA[0x03];
+	unsigned char     UnknownB[0x08];
+	unsigned char     ISR[0x58];
+}
+KINTERRUPT, *PKINTERRUPT;
+
+// ******************************************************************
+// * PKSERVICE_ROUTINE
+// ******************************************************************
+typedef void* PKSERVICE_ROUTINE;
+
+typedef CHAR KIRQL;
+
+// ******************************************************************
+// * KINTERRUPT_MODE
+// ******************************************************************
+typedef enum _KINTERRUPT_MODE
+{
+	LevelSensitive,
+	Latched,
+}
+KINTERRUPT_MODE;
+
+// ******************************************************************
 // * RTL_CRITICAL_SECTION
 // ******************************************************************
 typedef struct _RTL_CRITICAL_SECTION

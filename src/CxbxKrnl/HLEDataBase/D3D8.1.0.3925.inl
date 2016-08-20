@@ -4470,6 +4470,48 @@ SOOVPA<9> D3D_BlockOnResource_1_0_3925 =
 };
 
 // ******************************************************************
+// * D3DDevice_BeginStateBlock
+// ******************************************************************
+SOOVPA<6> D3DDevice_BeginStateBlock_1_0_3925 = 
+{
+    0,  // Large == 0
+    6,  // Count == 6
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x00, 0xA1 },
+        { 0x05, 0x83 },
+        { 0x06, 0x48 },
+        { 0x07, 0x0C },
+        { 0x08, 0x20 },
+        { 0x09, 0xE9 },
+    }
+};
+
+// ******************************************************************
+// * D3DDevice_EndStateBlock
+// ******************************************************************
+SOOVPA<6> D3DDevice_EndStateBlock_1_0_3925 = 
+{
+    0,  // Large == 0
+    6,  // Count == 6
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x00, 0xA1 },
+        { 0x05, 0x83 },
+        { 0x06, 0x60 },
+        { 0x07, 0x0C },
+        { 0x08, 0xDF },
+        { 0x09, 0xE9 },
+    }
+};
+
+// ******************************************************************
 // * D3D8_1_0_3925
 // ******************************************************************
 OOVPATable D3D8_1_0_3925[] =
@@ -5935,6 +5977,24 @@ OOVPATable D3D8_1_0_3925[] =
 
         #ifdef _DEBUG_TRACE
         "D3D::BlockOnResource"
+        #endif
+    },
+	// D3DDevice_BeginStateBlock
+    {
+        (OOVPA*)&D3DDevice_BeginStateBlock_1_0_3925,
+        XTL::EmuIDirect3DDevice8_BeginStateBlock,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_BeginStateBlock"
+        #endif
+    },
+	// D3DDevice_EndStateBlock
+    {
+        (OOVPA*)&D3DDevice_EndStateBlock_1_0_3925,
+        XTL::EmuIDirect3DDevice8_EndStateBlock,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_EndStateBlock"
         #endif
     },
 };

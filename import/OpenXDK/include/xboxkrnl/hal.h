@@ -27,7 +27,15 @@ XBSYSAPI VOID *HalDiskCachePartitionCount;
 XBSYSAPI VOID *HalDiskModelNumber;
 XBSYSAPI VOID *HalDiskSerialNumber;
 XBSYSAPI VOID *HalEnableSystemInterrupt;
-XBSYSAPI VOID *HalGetInterruptVector;
+
+// ******************************************************************
+// * HalGetInterruptVector
+// ******************************************************************
+XBSYSAPI EXPORTNUM(44) ULONG  NTAPI HalGetInterruptVector
+(
+    IN ULONG   InterruptLevel,
+    OUT CHAR*  Irql
+);
 
 // ******************************************************************
 // * HalReadSMBusValue

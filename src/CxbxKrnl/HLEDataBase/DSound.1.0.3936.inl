@@ -4825,6 +4825,27 @@ SOOVPA<9> IDirectSoundBuffer_SetNotificationPositions_1_0_3936 =
 };
 
 // ******************************************************************
+// * CDirectSoundStream::Pause
+// ******************************************************************
+SOOVPA<6> CDirectSoundStream_Pause_1_0_3936 = 
+{
+    0,  // Large == 0
+    6,  // Count == 6
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x01, 0x44 },
+        { 0x04, 0xFF },
+        { 0x07, 0x08 },
+        { 0x0A, 0x24 },
+        { 0x10, 0xC2 },
+        { 0x11, 0x08 },
+    }
+};
+
+// ******************************************************************
 // * DirectSoundCreate_1_0_3936
 // ******************************************************************
 OOVPATable DSound_1_0_3936[] =
@@ -6150,6 +6171,16 @@ OOVPATable DSound_1_0_3936[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirectSoundBuffer_SetNotificationPositions"
+        #endif
+    },
+	// CDirectSoundStream::Pause
+    {
+        (OOVPA*)&CDirectSoundStream_Pause_1_0_3936,
+
+        XTL::EmuCDirectSoundStream_Pause,
+
+        #ifdef _DEBUG_TRACE
+        "CDirectSoundStream_Pause"
         #endif
     },
 };
