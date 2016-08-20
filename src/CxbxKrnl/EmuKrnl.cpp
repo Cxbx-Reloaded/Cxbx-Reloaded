@@ -3263,6 +3263,46 @@ XBSYSAPI EXPORTNUM(202) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenFile
     return NtCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, NULL, 0, ShareAccess, FILE_OPEN, OpenOptions);
 }
 
+
+// ******************************************************************
+// * 0x00CB - NtOpenSymbolicLinkObject
+// ******************************************************************
+XBSYSAPI EXPORTNUM(203) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenSymbolicLinkObject(
+	OUT PHANDLE LinkHandle,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+)
+{
+	EmuSwapFS();
+
+	DbgPrintf("EmuKrnl (0x%X): NtOpenSymbolicLinkObject\n"
+		"(\n"
+		"   LinkHandle         : 0x%.08X\n"
+		"   ObjectAttributes   : 0x%.08X\n"
+		");\n",
+		GetCurrentThreadId(), LinkHandle, ObjectAttributes);
+
+	NTSTATUS ret = 0;
+	EmuNtSymbolicLinkObject* symbolicLinkObject = NULL;
+
+ 																																																																										// Find the TEmuNtSymbolicLinkObject via the name in ObjectAttributes :
+	symbolicLinkObject = FindNtSymbolicLinkObjectByName(std::string(ObjectAttributes->ObjectName->Buffer, ObjectAttributes->ObjectName->Length));
+	if ((symbolicLinkObject != NULL))
+	{
+		// Return a new handle
+		*LinkHandle = EmuHandleToPtr(symbolicLinkObject);
+		ret = STATUS_SUCCESS;
+	}
+	else
+	if (ret != STATUS_SUCCESS)
+		EmuWarning("NtOpenSymbolicLinkObject failed! (%s)", (NtStatusToString(ret)));
+	else
+		DbgPrintf("EmuKrnl : NtOpenSymbolicLinkObject LinkHandle^ = 0x%.08X", *LinkHandle);
+	
+	EmuSwapFS();
+
+	return ret;
+}
+
 // ******************************************************************
 // * 0x00CE - NtQueueApcThread
 // ******************************************************************
@@ -3495,6 +3535,57 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 
     return ret;
 }
+
+// ******************************************************************
+// * 0x00D7 - NtQuerySymbolicLinkObject
+// ******************************************************************
+XBSYSAPI EXPORTNUM(215) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySymbolicLinkObject(
+	HANDLE LinkHandle,
+	OUT PSTRING LinkTarget,
+	OUT PULONG ReturnedLength OPTIONAL
+)
+{
+	EmuSwapFS();
+
+	DbgPrintf("EmuKrnl (0x%X): NtQuerySymbolicLinkObject\n"
+		"(\n"
+		"   LinkHandle         : 0x%.08X\n"
+		"   LinkTarget         : 0x%.08X\n"
+		"   ReturnedLength     : 0x%.08X\n"
+		");\n", LinkHandle, LinkTarget, ReturnedLength);
+
+	NTSTATUS result = 0;
+	EmuNtSymbolicLinkObject* symbolicLinkObject = NULL;
+
+	// Check that we actually got an EmuHandle :
+	result = STATUS_INVALID_HANDLE;
+
+	// Retrieve the NtSymbolicLinkObject and populate the output arguments :
+	result = STATUS_SUCCESS;
+	symbolicLinkObject = ((EmuNtSymbolicLinkObject*)PtrToEmuHandle((EmuHandle*)LinkHandle));
+	if ((LinkTarget != NULL)) {
+		if (LinkTarget->Length > LinkTarget->MaximumLength) {
+			result = STATUS_BUFFER_TOO_SMALL;
+			LinkTarget->Length = LinkTarget->MaximumLength;
+		}
+
+		memcpy(LinkTarget->Buffer, symbolicLinkObject->XboxFullPath.c_str(), LinkTarget->Length);
+	}
+
+	if ((ReturnedLength != NULL))
+	{
+		*ReturnedLength = symbolicLinkObject->XboxFullPath.length(); // Return full length (even if buffer was too small)
+	}
+
+	
+	if (result != STATUS_SUCCESS)
+		EmuWarning("NtQuerySymbolicLinkObject failed! (%s)", NtStatusToString(result));
+	
+	EmuSwapFS();
+
+	return result;
+}
+
 
 // ******************************************************************
 // * 0x00D9 - NtQueryVirtualMemory

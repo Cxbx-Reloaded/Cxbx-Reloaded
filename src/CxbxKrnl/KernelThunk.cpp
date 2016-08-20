@@ -260,7 +260,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367] =
     (uint32)PANIC(0x00C8),                          // 0x00C8 (200) NtFsControlFile
     (uint32)PANIC(0x00C9),                          // 0x00C9 (201) NtOpenDirectoryObject
     (uint32)&xboxkrnl::NtOpenFile,                  // 0x00CA (202)
-    (uint32)PANIC(0x00CB),                          // 0x00CB (203) NtOpenSymbolicLinkObject
+    (uint32)&xboxkrnl::NtOpenSymbolicLinkObject,    // 0x00CB (203) NtOpenSymbolicLinkObject
     (uint32)PANIC(0x00CC),                          // 0x00CC (204) NtProtectVirtualMemory
     (uint32)PANIC(0x00CD),                          // 0x00CD (205) NtPulseEvent
     (uint32)&xboxkrnl::NtQueueApcThread,            // 0x00CE (206)
@@ -272,7 +272,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367] =
     (uint32)PANIC(0x00D4),                          // 0x00D4 (212) NtQueryIoCompletion
     (uint32)PANIC(0x00D5),                          // 0x00D5 (213) NtQueryMutant
     (uint32)PANIC(0x00D6),                          // 0x00D6 (214) NtQuerySemaphore
-    (uint32)PANIC(0x00D7),                          // 0x00D7 (215) NtQuerySymbolicLinkObject
+    (uint32)&xboxkrnl::NtQuerySymbolicLinkObject,   // 0x00D7 (215) NtQuerySymbolicLinkObject
     (uint32)PANIC(0x00D8),                          // 0x00D8 (216) NtQueryTimer
     (uint32)&xboxkrnl::NtQueryVirtualMemory,        // 0x00D9 (217)
     (uint32)&xboxkrnl::NtQueryVolumeInformationFile,// 0x00DA (218)

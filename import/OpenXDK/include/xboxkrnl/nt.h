@@ -159,7 +159,11 @@ XBSYSAPI EXPORTNUM(202) NTSTATUS NTAPI NtOpenFile
     IN  ULONG               OpenOptions
 );
 
-XBSYSAPI VOID *NtOpenSymbolicLinkObject;
+XBSYSAPI EXPORTNUM(203) NTSTATUS NTAPI NtOpenSymbolicLinkObject(
+	OUT PHANDLE LinkHandle,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+);
+
 XBSYSAPI VOID *NtProtectVirtualMemory;
 XBSYSAPI VOID *NtPulseEvent;
 
@@ -223,7 +227,13 @@ XBSYSAPI EXPORTNUM(211) NTSTATUS NTAPI NtQueryInformationFile
 XBSYSAPI VOID *NtQueryIoCompletion;
 XBSYSAPI VOID *NtQueryMutant;
 XBSYSAPI VOID *NtQuerySemaphore;
-XBSYSAPI VOID *NtQuerySymbolicLinkObject;
+
+XBSYSAPI EXPORTNUM(215) NTSTATUS NTAPI NtQuerySymbolicLinkObject( 
+    HANDLE LinkHandle, 
+    OUT PSTRING LinkTarget, 
+    OUT PULONG ReturnedLength OPTIONAL
+);
+
 XBSYSAPI VOID *NtQueryTimer;
 
 // ******************************************************************
