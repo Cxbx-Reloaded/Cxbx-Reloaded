@@ -242,7 +242,7 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 
  		   // Make a distinction between Xbox paths (starting with '\Device'...) and Native paths :
 			std::string deviceString = "\\Device";
-			IsNativePath = aFullPath.compare(0, deviceString.length(), "\\Device") != 0;
+			IsNativePath = aFullPath.compare(0, deviceString.length(), deviceString) != 0;
 			if (IsNativePath)
 				DeviceIndex = 0;
 			else
