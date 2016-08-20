@@ -297,7 +297,10 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 
 void EmuNtSymbolicLinkObject::Free()
 {
-	return;
+	if (DriveLetter >= 'A' && DriveLetter <= 'Z') {
+		NtSymbolicLinkObjects[DriveLetter - 'A'] = NULL;
+		NtDll::NtClose(RootDirectoryHandle);
+	}
 }
 
 bool CxbxMountUtilityDrive(bool formatClean)

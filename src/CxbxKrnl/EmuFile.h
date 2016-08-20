@@ -202,7 +202,7 @@ class EmuNtObject
 
     private:
         // Reference count
-        ULONG RefCount;
+        LONG RefCount;
 };
 
 // ******************************************************************
