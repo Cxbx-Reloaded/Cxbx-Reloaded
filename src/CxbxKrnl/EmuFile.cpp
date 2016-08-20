@@ -240,16 +240,15 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 			// Look up the partition in the list of pre-registered devices :
 			result = STATUS_DEVICE_DOES_NOT_EXIST; // TODO : Is this the correct error?
 
-												   // Make a distinction between Xbox paths (starting with '\Device'...) and Native paths :
+ 		   // Make a distinction between Xbox paths (starting with '\Device'...) and Native paths :
 			std::string deviceString = "\\Device";
-			IsNativePath = aFullPath.compare(0, deviceString.length(), deviceString) != 0;
+			IsNativePath = aFullPath.compare(0, deviceString.length(), "\\Device") != 0;
 			if (IsNativePath)
 				DeviceIndex = 0;
 			else
 			{
 				DeviceIndex = -1;
 				for (int i = 0; i < Devices.size(); i++) {
-					int compare = aFullPath.compare(Devices[i].XboxFullPath);
 					if (aFullPath.compare(0, Devices[i].XboxFullPath.length(), Devices[i].XboxFullPath) == 0)
 					{
 						DeviceIndex = i;
@@ -336,21 +335,19 @@ char SymbolicLinkToDriveLetter(std::string SymbolicLinkName)
 		result = SymbolicLinkName[4];
 		switch (result)
 		{
-		case /*# 'A' .. 'Z' */ 'A':
-		case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K':
-		case 'L': case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U':
-		case 'V': case 'W': case 'X': case 'Y': case 'Z':
-			return result;
-			break;
-		case /*# 'a' .. 'z' */ 'a':
-		case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k':
-		case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u':
-		case 'v': case 'w': case 'x': case 'y': case 'z':
-		{
-			result = (int(result) + int('A') - int('a'));
-			return result;
-		}
-		break;
+			case /*# 'A' .. 'Z' */ 'A':
+			case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K':
+			case 'L': case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U':
+			case 'V': case 'W': case 'X': case 'Y': case 'Z':
+				return result;
+			case /*# 'a' .. 'z' */ 'a':
+			case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k':
+			case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u':
+			case 'v': case 'w': case 'x': case 'y': case 'z':
+			{
+				result = (int(result) + int('A') - int('a'));
+				return result;
+			}
 		}
 	}
 	result = '\x00';
@@ -366,7 +363,7 @@ EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByVolumeLetter(const char Volum
 	case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K':
 	case 'L': case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U':
 	case 'V': case 'W': case 'X': case 'Y': case 'Z':
-		result = NtSymbolicLinkObjects[VolumeLetter - 65];
+		result = NtSymbolicLinkObjects[VolumeLetter - 'A'];
 		break;
 	case /*# 'a' .. 'z' */ 'a':
 	case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k':
@@ -395,7 +392,7 @@ EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByDevice(std::string DeviceName
 	char VolumeLetter = '\0';
 	for (int stop = 'Z', VolumeLetter = 'A'; VolumeLetter <= stop; VolumeLetter++)
 	{
-		result = NtSymbolicLinkObjects[VolumeLetter - 65];
+		result = NtSymbolicLinkObjects[VolumeLetter - 'A'];
 		if ((result != NULL) && DeviceName.compare(0, result->XboxFullPath.length(), result->XboxFullPath) == 0)
 			return result;
 	}
@@ -410,7 +407,7 @@ EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByRootHandle(const HANDLE Handl
 	char VolumeLetter = '\0';
 	for (int stop = 'Z', VolumeLetter = 'A'; VolumeLetter <= stop; VolumeLetter++)
 	{
-		result = NtSymbolicLinkObjects[VolumeLetter - 65];
+		result = NtSymbolicLinkObjects[VolumeLetter - 'A'];
 		if ((result != NULL) && (Handle == result->RootDirectoryHandle))
 			return result;
 	}

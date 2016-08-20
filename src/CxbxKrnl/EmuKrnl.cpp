@@ -1268,7 +1268,7 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 		DbgPrintf("  Org:\"%s\"\n", OriginalPath.c_str());
 		if (NativePath.compare(0, CxbxBasePath.length(), CxbxBasePath) == 0)
 		{
-			DbgPrintf("  New:\"$CxbxPath\\EmuDisk%s%s\"\n", (NativePath.substr(CxbxBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());	
+			DbgPrintf("  New:\"$CxbxPath\\EmuDisk\\%s%s\"\n", (NativePath.substr(CxbxBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());	
 		}
 		else
 			DbgPrintf("  New:\"$XbePath\\%s\"\n", RelativePath.c_str());
