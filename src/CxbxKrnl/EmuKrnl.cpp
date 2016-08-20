@@ -1796,7 +1796,10 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
            ");\n",
            GetCurrentThreadId(), Routine);
 
-	CxbxKrnlCleanup("Xbe has rebooted : HalReturnToFirmware(%d)", Routine);
+	// Prevent the dashboard from rebooting due to unimplemented crypto routines
+	if ((uint32_t)Routine != 4) {
+		CxbxKrnlCleanup("Xbe has rebooted : HalReturnToFirmware(%d)", Routine);
+	}
 
 	EmuSwapFS(); // Xbox FS
 }
@@ -4811,7 +4814,7 @@ XBSYSAPI EXPORTNUM(337) VOID NTAPI xboxkrnl::XcSHAFinal(UCHAR *pbSHAContext, UCH
     {
         pbDigest[v] = 0;
     }
-
+	 
     EmuSwapFS();   // Xbox FS
 
     return;

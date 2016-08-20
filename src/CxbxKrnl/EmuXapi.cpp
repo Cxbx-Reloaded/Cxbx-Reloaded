@@ -1135,7 +1135,7 @@ HANDLE WINAPI XTL::EmuXGetSectionHandleA
 	// Iterate thrugh sections
 	for (int i = 0; i < CxbxKrnl_Exe->m_Header.m_sections; i++) {
 		if (!strncmp(pSectionName, CxbxKrnl_Exe->m_SectionHeader[i].m_name, 8))	{
-			pRet = (void*)CxbxKrnl_Exe->m_SectionHeader[i].m_virtual_addr;
+			pRet = (void*)(CxbxKrnl_Exe->m_SectionHeader[i].m_virtual_addr + CxbxKrnl_XbeHeader->dwBaseAddr);
 			break;
 		}
 	}
