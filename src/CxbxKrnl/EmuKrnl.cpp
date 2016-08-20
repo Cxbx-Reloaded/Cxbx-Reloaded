@@ -1266,7 +1266,7 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 
 		DbgPrintf("EmuKrnl : %s Corrected path..\n.", aFileAPIName.c_str());
 		DbgPrintf("  Org:\"%s\"\n", OriginalPath.c_str());
-		if (NativePath.compare(CxbxBasePath) == 0)
+		if (NativePath.compare(0, CxbxBasePath.length(), CxbxBasePath) == 0)
 		{
 			DbgPrintf("  New:\"$CxbxPath\\EmuDisk%s%s\"\n", (NativePath.substr(CxbxBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());	
 		}
@@ -1438,7 +1438,9 @@ XBSYSAPI EXPORTNUM(9) VOID NTAPI xboxkrnl::HalReadSMCTrayState
 	// TODO: Make this configurable?
 	// TODO: What is the count parameter for??
 
-	*State = TRAY_CLOSED_NO_MEDIA;
+	// Pretent the tray is closed and media is present
+	// If we report TRAY_CLOSED_NO_MEDIA, dashboard will attempt DeviceIoControl
+	*State = TRAY_CLOSED_MEDIA_PRESENT;
 //	*Count = 1;
 
 	EmuSwapFS();	// Xbox FS

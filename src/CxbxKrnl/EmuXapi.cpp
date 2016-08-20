@@ -88,21 +88,6 @@ XFIBER g_Fibers[256];
 // Number of fiber routines queued
 int	   g_FiberCount = 0;
 
-// ******************************************************************
-// * func: EmuXapiApplyKernelPatches
-// ******************************************************************
-VOID WINAPI XTL::EmuXapiApplyKernelPatches()
-{
-    #ifdef _DEBUG_TRACE
-    EmuSwapFS();   // Win2k/XP FS
-    DbgPrintf("EmuXapi (0x%X): EmuXapiApplyKernelPatches()\n", GetCurrentThreadId());
-    EmuSwapFS();   // XBox FS
-    #endif
-
-    // we dont really feel like patching, now do we?
-
-    return;
-}
 
 // ******************************************************************
 // * func: EmuXFormatUtilityDrive
@@ -1096,28 +1081,10 @@ LPVOID WINAPI XTL::EmuXLoadSectionA
 			");\n",
 			GetCurrentThreadId(), pSectionName, pSectionName );
 
-	// TODO: Search this .xbe for the section it wants to load.
-	// If we find it, return the address of it.
-	LPVOID pRet = NULL;
 
-	// Xbox Dashboard (3944)
-	if(strcmp("XIPS", pSectionName)==0)
-		pRet = (void*) 0x13B500;
-
-	// Blade II NTSC
-	else if(!strcmp(pSectionName, "DSPImage"))
-		pRet = (void*) 0x41F900;
-
-	// Zapper (NTSC)
-//	else if(!strcmp(pSectionName, "sig"))
-//		pRet = (void*) 0x41F900;
-
-	else
-	{
-		EmuWarning( "Section %s not found!", pSectionName );
-	//	__asm int 3;
-	}
-
+	EmuWarning("Redirecting EmuXLoadSectionA to EmuXGetSectionHandleA\n");
+	LPVOID pRet = EmuXGetSectionHandleA(pSectionName);
+	
 	EmuSwapFS();	// Xbox FS
 
 	return pRet;
@@ -1167,7 +1134,7 @@ HANDLE WINAPI XTL::EmuXGetSectionHandleA
 
 	// Iterate thrugh sections
 	for (int i = 0; i < CxbxKrnl_Exe->m_Header.m_sections; i++) {
-		if (!strcmp(pSectionName, CxbxKrnl_Exe->m_SectionHeader[i].m_name))	{
+		if (!strncmp(pSectionName, CxbxKrnl_Exe->m_SectionHeader[i].m_name, 8))	{
 			pRet = (void*)CxbxKrnl_Exe->m_SectionHeader[i].m_virtual_addr;
 			break;
 		}

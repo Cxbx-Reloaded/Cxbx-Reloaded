@@ -211,16 +211,6 @@ SOOVPA<6> SwitchToThread_1_0_5849 =
 // ******************************************************************
 OOVPATable XAPI_1_0_5849[] =
 {
-    // XapiApplyKernelPatches (* unchanged since 5233 *)
-    {
-        (OOVPA*)&XapiApplyKernelPatches_1_0_5233,
-
-        XTL::EmuXapiApplyKernelPatches,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiApplyKernelPatches"
-        #endif
-    },
     // SetThreadPriority (* unchanged since 3911 *)
     {
         (OOVPA*)&SetThreadPriority_1_0_3911,

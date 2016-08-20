@@ -32,110 +32,6 @@
 // *
 // ******************************************************************
 
-// NOTE: This function actually came in with 4831, not 4928!
-// ******************************************************************
-// * XapiApplyKernelPatches
-// ******************************************************************
-SOOVPA<7> XapiApplyKernelPatches_1_0_4928 =
-{
-    0,  // Large == 0
-    7,  // Count == 7
-
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
-
-    {
-        { 0x17, 0x81 },
-        { 0x2A, 0x81 },
-        { 0x4B, 0x05 },
-        { 0x5F, 0x1B },
-        { 0x7C, 0xFF },
-        { 0x88, 0x6A },
-        { 0x92, 0xC7 },
-    }
-};
-
-// NOTE: This function actually came in with 4928
-// ******************************************************************
-// * XapiInitProcess
-// ******************************************************************
-SOOVPA<7> XapiInitProcess_1_0_4928 =
-{
-    0,  // Large == 0
-    7,  // Count == 7
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        { 0x22, 0xC7 }, // (Offset,Value)-Pair #1
-        { 0x23, 0x45 }, // (Offset,Value)-Pair #2
-        { 0x24, 0xCC }, // (Offset,Value)-Pair #3
-        { 0x25, 0x30 }, // (Offset,Value)-Pair #4
-        { 0x4A, 0xA1 }, // (Offset,Value)-Pair #5
-        { 0x4B, 0x18 }, // (Offset,Value)-Pair #6
-        { 0x4C, 0x01 }, // (Offset,Value)-Pair #7
-    }
-};
-
-// ******************************************************************
-// * XapiInitProcess
-// ******************************************************************
-SOOVPA<7> XapiInitProcess_1_0_4831 = 
-{
-    0,  // Large == 0
-    7,  // Count == 7
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        // XapiInitProcess+0x03 : sub esp, 0x34
-        { 0x05, 0x34 }, // (Offset,Value)-Pair #1
-
-        // XapiInitProcess+0x13 : push 0x0C
-        { 0x13, 0x6A }, // (Offset,Value)-Pair #2
-        { 0x14, 0x0C }, // (Offset,Value)-Pair #3
-
-        // XapiInitProcess+0x2A : repe stosd
-        { 0x1B, 0xF3 }, // (Offset,Value)-Pair #4
-        { 0x1C, 0xAB }, // (Offset,Value)-Pair #5
-
-        // XapiInitProcess+0x55 : jz +0x0B
-        { 0x48, 0x74 }, // (Offset,Value)-Pair #6
-        { 0x49, 0x4A }, // (Offset,Value)-Pair #7
-    }
-};
-
-// ******************************************************************
-// * XapiInitProcess
-// ******************************************************************
-SOOVPA<7> XapiInitProcess_1_0_5028 = 
-{
-    0,  // Large == 0
-    7,  // Count == 7
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        // XapiInitProcess+0x03 : sub esp, 0x34
-        { 0x05, 0x34 }, // (Offset,Value)-Pair #1
-
-        // XapiInitProcess+0x22 : push 0x0C
-        { 0x22, 0x6A }, // (Offset,Value)-Pair #2
-        { 0x23, 0x0C }, // (Offset,Value)-Pair #3
-
-        // XapiInitProcess+0x2A : repe stosd
-        { 0x2A, 0xF3 }, // (Offset,Value)-Pair #4
-        { 0x2B, 0xAB }, // (Offset,Value)-Pair #5
-
-        // XapiInitProcess+0x55 : jz +0x0B
-        { 0x55, 0x74 }, // (Offset,Value)-Pair #6
-        { 0x56, 0x5F }, // (Offset,Value)-Pair #7
-    }
-};
-
 // ******************************************************************
 // * XFormatUtilityDrive
 // ******************************************************************
@@ -592,31 +488,6 @@ SOOVPA<12> XInputGetCapabilities6_1_0_4928 =
         { 0x90, 0xBF }, // (Offset,Value)-Pair #10
         { 0x91, 0xE5 }, // (Offset,Value)-Pair #11
         { 0x92, 0xCF }, // (Offset,Value)-Pair #12
-    }
-};
-
-// Blueshogun96 11/27/08
-// This function actually began in 4831 XDKs.  Since 4831 is a
-// rare XDK, I'm assuming no one paid much attention to it.
-// ******************************************************************
-// * XapiApplyKernelPatches
-// ******************************************************************
-SOOVPA<7> XapiApplyKernelPatches_1_0_4831 =
-{
-    0,  // Large == 0
-    7,  // Count == 7
-
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
-
-    {
-        { 0x17, 0x81 },
-        { 0x2A, 0x81 },
-        { 0x4B, 0x05 },
-        { 0x64, 0x1B },
-		{ 0x94, 0xFF },
-		{ 0x96, 0xFA },
-        { 0xA2, 0xFF },
     }
 };
 
@@ -1225,16 +1096,6 @@ SOOVPA<9> XInputGetDeviceDescription_1_0_4831 =
 // ******************************************************************
 OOVPATable XAPI_1_0_4627[] =
 {
-    // XapiApplyKernelPatches
-    {
-        (OOVPA*)&XapiApplyKernelPatches_1_0_4928,
-
-        XTL::EmuXapiApplyKernelPatches,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiApplyKernelPatches"
-        #endif
-    },
     // XFormatUtilityDrive
     {
         (OOVPA*)&XFormatUtilityDrive_1_0_4627,
@@ -1502,16 +1363,6 @@ OOVPATable XAPI_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXapiBootDash"
-        #endif
-    },
-	// XapiApplyKernelPatches
-    {
-        (OOVPA*)&XapiApplyKernelPatches_1_0_4831,
-
-        XTL::EmuXapiApplyKernelPatches,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiApplyKernelPatches_4831"
         #endif
     },
 	// XInputGetCapabilities

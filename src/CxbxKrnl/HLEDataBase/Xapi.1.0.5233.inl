@@ -32,79 +32,6 @@
 // *
 // ******************************************************************
 
-// ******************************************************************
-// * XapiApplyKernelPatches
-// ******************************************************************
-SOOVPA<7> XapiApplyKernelPatches_1_0_5233 =
-{
-    0,  // Large == 0
-    7,  // Count == 7
-
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
-
-    {
-        { 0x17, 0x81 },
-        { 0x30, 0x81 },
-        { 0x49, 0x05 },
-        { 0x62, 0x1B },
-        { 0x7B, 0x85 },
-        { 0x96, 0x6A },
-        { 0xAD, 0x5F },
-    }
-};
-
-// ******************************************************************
-// * XapiInitProcess
-// ******************************************************************
-SOOVPA<7> XapiInitProcess_1_0_5233 =
-{
-    0,  // Large == 0
-    7,  // Count == 7
-
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
-
-    {
-        // XapiInitProcess+0x03 : sub esp, 0x34
-        { 0x05, 0x34 }, // (Offset,Value)-Pair #1
-
-        // XapiInitProcess+0x22 : push 0x0C
-        { 0x22, 0x6A }, // (Offset,Value)-Pair #2
-        { 0x23, 0x0C }, // (Offset,Value)-Pair #3
-
-        // XapiInitProcess+0x2A : repe stosd
-        { 0x2A, 0xF3 }, // (Offset,Value)-Pair #4
-        { 0x2B, 0xAB }, // (Offset,Value)-Pair #5
-
-        // XapiInitProcess+0x55 : jz +0x0B
-        { 0x55, 0x74 }, // (Offset,Value)-Pair #6
-        { 0x56, 0x4B }, // (Offset,Value)-Pair #7
-    }
-};
-
-// ******************************************************************
-// * XapiInitProcess
-// ******************************************************************
-SOOVPA<8> XapiInitProcess_1_0_5344 = 
-{
-    0,  // Large == 0
-    8,  // Count == 8
-
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
-
-    {
-        { 0x22, 0x6A },
-        { 0x3E, 0x01 },
-        { 0x5E, 0x7D },
-        { 0x7E, 0x8B },
-        { 0x9F, 0x68 },
-        { 0xBE, 0x01 },
-        { 0xDE, 0x6A },
-        { 0xFE, 0x02 },
-    }
-};
 
 // ******************************************************************
 // * XInitDevices
@@ -224,16 +151,6 @@ SOOVPA<6> XGetFileCacheSize_1_0_5344 =
 // ******************************************************************
 OOVPATable XAPI_1_0_5233[] =
 {
-    // XapiApplyKernelPatches
-    {
-        (OOVPA*)&XapiApplyKernelPatches_1_0_5233,
-
-        XTL::EmuXapiApplyKernelPatches,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiApplyKernelPatches"
-        #endif
-    },
     // GetTimeZoneInformation (* unchanged since 3911 *)
     {
         (OOVPA*)&GetTimeZoneInformation_1_0_3911,

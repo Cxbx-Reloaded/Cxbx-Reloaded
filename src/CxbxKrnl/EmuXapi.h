@@ -326,11 +326,6 @@ LAUNCH_DATA, *PLAUNCH_DATA;
 #define XDEVICE_ENUMERATION_BUSY 1
 
 // ******************************************************************
-// * func: EmuXapiApplyKernelPatches
-// ******************************************************************
-VOID WINAPI EmuXapiApplyKernelPatches();
-
-// ******************************************************************
 // * func: EmuXFormatUtilityDrive
 // ******************************************************************
 BOOL WINAPI EmuXFormatUtilityDrive();
