@@ -105,16 +105,16 @@ std::vector<XboxDevice> Devices;
 
 bool CxbxRegisterDeviceNativePath(std::string XboxFullPath, std::string NativePath, bool IsFile)
 {
-	bool result = false;
-	int i = 0;
+	bool result;
 	if (IsFile) {
-		result = true; // Actually, this is the Config sectors partition (partition0) registered as a file
+		return true; // Actually, this is the Config sectors partition (partition0) registered as a file
 	}
 	else
 	{
 		int status = SHCreateDirectoryEx(NULL, NativePath.c_str(), NULL);
 		result = status == STATUS_SUCCESS || ERROR_ALREADY_EXISTS;
 	}
+
 	if (result)
 	{
 		XboxDevice newDevice;
@@ -122,6 +122,7 @@ bool CxbxRegisterDeviceNativePath(std::string XboxFullPath, std::string NativePa
 		newDevice.NativePath = NativePath;
 		Devices.push_back(newDevice);
 	}
+
 	return result;
 }
 
@@ -333,86 +334,59 @@ char SymbolicLinkToDriveLetter(std::string SymbolicLinkName)
 	if ((SymbolicLinkName.size() == 6) && (SymbolicLinkName[0] == '\\') && (SymbolicLinkName[1] == '?') && (SymbolicLinkName[2] == '?') && (SymbolicLinkName[3] == '\\') && (SymbolicLinkName[5] == ':'))
 	{
 		result = SymbolicLinkName[4];
-		switch (result)
-		{
-			case /*# 'A' .. 'Z' */ 'A':
-			case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K':
-			case 'L': case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U':
-			case 'V': case 'W': case 'X': case 'Y': case 'Z':
-				return result;
-			case /*# 'a' .. 'z' */ 'a':
-			case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k':
-			case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u':
-			case 'v': case 'w': case 'x': case 'y': case 'z':
-			{
-				result = (int(result) + int('A') - int('a'));
-				return result;
-			}
+		if (result >= 'A' && result <= 'Z')
+			return result;
+
+		if (result >= 'a' && result <= 'z') {
+			return result;
 		}
 	}
-	result = '\x00';
-	return result;
+	
+	return NULL;
 }
 
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByVolumeLetter(const char VolumeLetter)
 {
 	EmuNtSymbolicLinkObject* result = NULL;
-	switch (VolumeLetter)
-	{
-	case /*# 'A' .. 'Z' */ 'A':
-	case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K':
-	case 'L': case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U':
-	case 'V': case 'W': case 'X': case 'Y': case 'Z':
-		result = NtSymbolicLinkObjects[VolumeLetter - 'A'];
-		break;
-	case /*# 'a' .. 'z' */ 'a':
-	case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k':
-	case 'l': case 'm': case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u':
-	case 'v': case 'w': case 'x': case 'y': case 'z':
-		result = NtSymbolicLinkObjects[VolumeLetter + 'A' - 'a' - 65];
-		break;
-	default:
-		result = NULL;
-	}
-	return result;
+	if (VolumeLetter >= 'A' && VolumeLetter <= 'Z')
+		return NtSymbolicLinkObjects[VolumeLetter - 'A'];
+		
+	if (VolumeLetter >= 'a' && VolumeLetter <= 'z')
+		return NtSymbolicLinkObjects[VolumeLetter - 'a'];
+
+	return NULL;
 }
 
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByName(std::string SymbolicLinkName)
 {
-	EmuNtSymbolicLinkObject* result = NULL;
-	result = FindNtSymbolicLinkObjectByVolumeLetter(SymbolicLinkToDriveLetter(SymbolicLinkName));
-	return result;
+	return FindNtSymbolicLinkObjectByVolumeLetter(SymbolicLinkToDriveLetter(SymbolicLinkName));
 }
 
 
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByDevice(std::string DeviceName)
-
 {
-	EmuNtSymbolicLinkObject* result = NULL;
-	char VolumeLetter = '\0';
-	for (int stop = 'Z', VolumeLetter = 'A'; VolumeLetter <= stop; VolumeLetter++)
+	for (char VolumeLetter = 'A';  VolumeLetter <= 'Z'; VolumeLetter++)
 	{
-		result = NtSymbolicLinkObjects[VolumeLetter - 'A'];
+		EmuNtSymbolicLinkObject* result = NtSymbolicLinkObjects[VolumeLetter - 'A'];
 		if ((result != NULL) && DeviceName.compare(0, result->XboxFullPath.length(), result->XboxFullPath) == 0)
 			return result;
 	}
-	result = NULL;
-	return result;
+
+	return NULL;
 }
 
 
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByRootHandle(const HANDLE Handle)
 {
-	EmuNtSymbolicLinkObject* result = NULL;
-	char VolumeLetter = '\0';
-	for (int stop = 'Z', VolumeLetter = 'A'; VolumeLetter <= stop; VolumeLetter++)
+	for (char VolumeLetter = 'A'; VolumeLetter <= 'Z'; VolumeLetter++)
 	{
+		EmuNtSymbolicLinkObject* result = NtSymbolicLinkObjects[VolumeLetter - 'A'];
 		result = NtSymbolicLinkObjects[VolumeLetter - 'A'];
 		if ((result != NULL) && (Handle == result->RootDirectoryHandle))
 			return result;
 	}
-	result = NULL;
-	return result;
+	
+	return NULL;
 }
 
 NTSTATUS EmuNtObject::NtClose()

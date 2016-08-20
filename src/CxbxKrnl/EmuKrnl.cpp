@@ -1203,33 +1203,31 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 			if ((RelativePath.length() > 0) && (RelativePath[0] == ':'))
 				RelativePath.erase(0, 1);  // xbmp needs this, as it accesses 'e::\'
 		}
-		// Check if the path starts with a macro indicator :
-		else
-			if (RelativePath.compare(0, 1, "$") == 0)
+		else if (RelativePath.compare(0, 1, "$") == 0)
+		{
+			if (RelativePath.compare(0, 5, "$HOME") == 0) // "xbmp" needs this
 			{
-				if (RelativePath.compare(0, 5, "$HOME") == 0) // "xbmp" needs this
-				{
-					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
-					RelativePath.erase(0, 5); // Remove '$HOME'
-				}
-				else
-					CxbxKrnlCleanup(("Unsupported path macro : " + OriginalPath).c_str());
+				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
+				RelativePath.erase(0, 5); // Remove '$HOME'
 			}
-		// Check if the path starts with a relative path indicator :
 			else
-				if (RelativePath.compare(0, 1, ".") == 0) // "4x4 Evo 2" needs this
-				{
-					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
-					RelativePath.erase(0, 1); // Remove the '.'
-				}
-				else
-				{
-					// The path seems to be a device path, look it up :
-					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByDevice(RelativePath);
-					// Fixup RelativePath path here
-					if ((NtSymbolicLinkObject != NULL))
-						RelativePath.erase(0, NtSymbolicLinkObject->XboxFullPath.length()); // Remove '\Device\Harddisk0\Partition2'
-				}
+				CxbxKrnlCleanup(("Unsupported path macro : " + OriginalPath).c_str());
+		}
+		// Check if the path starts with a relative path indicator :
+		else if (RelativePath.compare(0, 1, ".") == 0) // "4x4 Evo 2" needs this
+		{
+			NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
+			RelativePath.erase(0, 1); // Remove the '.'
+		}
+		else
+		{
+			// The path seems to be a device path, look it up :
+			NtSymbolicLinkObject = FindNtSymbolicLinkObjectByDevice(RelativePath);
+			// Fixup RelativePath path here
+			if ((NtSymbolicLinkObject != NULL))
+				RelativePath.erase(0, NtSymbolicLinkObject->XboxFullPath.length()); // Remove '\Device\Harddisk0\Partition2'
+		}
+	
 		if ((NtSymbolicLinkObject != NULL))
 		{
 			// If the remaining path starts with a '\', remove it (to prevent working in a native root) :
@@ -1248,6 +1246,7 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 				EmuWarning((("Path not available : ") + OriginalPath).c_str());
 				return result;
 			}
+
 			XboxFullPath = RelativePath;
 			// Remove Harddisk0 prefix, in the hope that the remaining path might work :
 			RelativePath.erase(0, DeviceHarddisk0.length() + 1);
@@ -1895,10 +1894,10 @@ XBSYSAPI EXPORTNUM(67) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateSymbolicLink
            "   SymbolicLinkName    : 0x%.08X (%s)\n"
            "   DeviceName          : 0x%.08X (%s)\n"
            ");\n",
-           GetCurrentThreadId(), SymbolicLinkName, SymbolicLinkName->Buffer,
+           GetCurrentThreadId(), SymbolicLinkName->Buffer, SymbolicLinkName->Buffer,
            DeviceName, DeviceName->Buffer);
 
-	NTSTATUS ret = CxbxCreateSymbolicLink(SymbolicLinkName->Buffer, DeviceName->Buffer);
+	NTSTATUS ret = CxbxCreateSymbolicLink(std::string(SymbolicLinkName->Buffer, SymbolicLinkName->Length), std::string(DeviceName->Buffer, DeviceName->Length));
 
     EmuSwapFS();   // Xbox FS
 
@@ -1921,7 +1920,7 @@ XBSYSAPI EXPORTNUM(69) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDeleteSymbolicLink
            ");\n",
            GetCurrentThreadId(), SymbolicLinkName, SymbolicLinkName->Buffer);
 
-	EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByName(SymbolicLinkName->Buffer);
+	EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByName(std::string(SymbolicLinkName->Buffer, SymbolicLinkName->Length));
     
 	NTSTATUS ret = STATUS_OBJECT_NAME_NOT_FOUND;
 
