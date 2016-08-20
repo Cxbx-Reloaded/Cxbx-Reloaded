@@ -1438,9 +1438,10 @@ XBSYSAPI EXPORTNUM(9) VOID NTAPI xboxkrnl::HalReadSMCTrayState
 	// TODO: Make this configurable?
 	// TODO: What is the count parameter for??
 
-	// Pretent the tray is closed and media is present
-	// If we report TRAY_CLOSED_NO_MEDIA, dashboard will attempt DeviceIoControl
-	*State = TRAY_CLOSED_MEDIA_PRESENT;
+	// Pretend the tray is open
+	// TRAY_CLOSED_NO_MEDIA causes Dashboard to call DeviceIoControl, which we do not implement
+	// TRAY_CLOSED_MEDIA_PRESENT causes Dashboard to attempt to launch media, causing errors.
+	*State = TRAY_OPEN;
 //	*Count = 1;
 
 	EmuSwapFS();	// Xbox FS
