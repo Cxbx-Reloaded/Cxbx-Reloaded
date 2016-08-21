@@ -59,6 +59,7 @@ extern int g_NumSections;
 bool g_bXLaunchNewImageCalled = false;
 bool g_bXInputOpenCalled = false;
 
+bool CxbxMountUtilityDrive(bool formatClean);
 
 // ******************************************************************
 // * prevent name collisions
@@ -196,6 +197,8 @@ BOOL WINAPI XTL::EmuXMountUtilityDrive
         EmuSwapFS();   // XBox FS
     }
     #endif
+
+	CxbxMountUtilityDrive(fFormatClean);
 
     return TRUE;
 }
