@@ -233,7 +233,7 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 	int DeviceIndex = 0;
 	result = STATUS_OBJECT_NAME_INVALID;
 	DriveLetter = SymbolicLinkToDriveLetter(aSymbolicLinkName);
-	if (DriveLetter > 'A' && DriveLetter < 'Z')
+	if (DriveLetter >= 'A' && DriveLetter <= 'Z')
 	{
 		result = STATUS_OBJECT_NAME_COLLISION;
 		if (FindNtSymbolicLinkObjectByVolumeLetter(DriveLetter) == NULL)
