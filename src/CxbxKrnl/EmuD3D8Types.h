@@ -51,6 +51,92 @@ typedef DWORD X_D3DSTENCILOP;
 typedef DWORD X_D3DTEXTURESTAGESTATETYPE;
 typedef PVOID X_D3DCALLBACK;
 
+const int X_D3DFMT_L8 = 0x00;
+const int X_D3DFMT_AL8 = 0x01;
+const int X_D3DFMT_A1R5G5B5 = 0x02;
+const int X_D3DFMT_X1R5G5B5 = 0x03;
+const int X_D3DFMT_A4R4G4B4 = 0x04;
+const int X_D3DFMT_R5G6B5 = 0x05;
+const int X_D3DFMT_A8R8G8B8 = 0x06;
+const int X_D3DFMT_X8R8G8B8 = 0x07;
+const int X_D3DFMT_X8L8V8U8 = 0x07; // Alias
+
+const int X_D3DFMT_P8 = 0x0b; // 8-bit Palletized
+
+const int X_D3DFMT_A8 = 0x19;
+const int X_D3DFMT_A8L8 = 0x1a;
+const int X_D3DFMT_R6G5B5 = 0x27;
+const int X_D3DFMT_L6V5U5 = 0x27; // Alias
+
+const int X_D3DFMT_G8B8 = 0x28;
+const int X_D3DFMT_V8U8 = 0x28; // Alias
+
+const int X_D3DFMT_R8B8 = 0x29;
+const int X_D3DFMT_D24S8 = 0x2a;
+const int X_D3DFMT_F24S8 = 0x2b;
+const int X_D3DFMT_D16 = 0x2c;
+const int X_D3DFMT_D16_LOCKABLE = 0x2c; // Alias
+
+const int X_D3DFMT_F16 = 0x2d;
+const int X_D3DFMT_L16 = 0x32;
+const int X_D3DFMT_V16U16 = 0x33;
+const int X_D3DFMT_R5G5B5A1 = 0x38;
+const int X_D3DFMT_R4G4B4A4 = 0x39;
+const int X_D3DFMT_A8B8G8R8 = 0x3A;
+const int X_D3DFMT_Q8W8V8U8 = 0x3A; // Alias
+
+const int X_D3DFMT_B8G8R8A8 = 0x3B;
+const int X_D3DFMT_R8G8B8A8 = 0x3C;
+
+// YUV Formats
+
+const int X_D3DFMT_YUY2 = 0x24;
+const int X_D3DFMT_UYVY = 0x25;
+
+// Compressed Formats
+
+const int X_D3DFMT_DXT1 = 0x0C; // opaque/one-bit alpha
+
+const int X_D3DFMT_DXT2 = 0x0E;
+const int X_D3DFMT_DXT3 = 0x0E; // linear alpha
+
+const int X_D3DFMT_DXT4 = 0x0F;
+const int X_D3DFMT_DXT5 = 0x0F; // interpolated alpha
+
+								// Linear Formats
+
+const int X_D3DFMT_LIN_A1R5G5B5 = 0x10;
+const int X_D3DFMT_LIN_R5G6B5 = 0x11;
+const int X_D3DFMT_LIN_A8R8G8B8 = 0x12;
+const int X_D3DFMT_LIN_L8 = 0x13;
+const int X_D3DFMT_LIN_R8B8 = 0x16;
+const int X_D3DFMT_LIN_G8B8 = 0x17;
+const int X_D3DFMT_LIN_V8U8 = 0x17; // Alias
+
+const int X_D3DFMT_LIN_AL8 = 0x1b;
+const int X_D3DFMT_LIN_X1R5G5B5 = 0x1c;
+const int X_D3DFMT_LIN_A4R4G4B4 = 0x1d;
+const int X_D3DFMT_LIN_X8R8G8B8 = 0x1e;
+const int X_D3DFMT_LIN_X8L8V8U8 = 0x1e; // Alias
+
+const int X_D3DFMT_LIN_A8 = 0x1f;
+const int X_D3DFMT_LIN_A8L8 = 0x20;
+const int X_D3DFMT_LIN_D24S8 = 0x2E;
+const int X_D3DFMT_LIN_F24S8 = 0x2f;
+const int X_D3DFMT_LIN_D16 = 0x30;
+const int X_D3DFMT_LIN_F16 = 0x31;
+const int X_D3DFMT_LIN_L16 = 0x35;
+const int X_D3DFMT_LIN_V16U16 = 0x36;
+const int X_D3DFMT_LIN_R6G5B5 = 0x37;
+const int X_D3DFMT_LIN_L6V5U5 = 0x37; // Alias
+
+const int X_D3DFMT_LIN_R5G5B5A1 = 0x3D;
+const int X_D3DFMT_LIN_R4G4B4A4 = 0x3e;
+const int X_D3DFMT_LIN_A8B8G8R8 = 0x3f;
+const int X_D3DFMT_LIN_B8G8R8A8 = 0x40;
+const int X_D3DFMT_LIN_R8G8B8A8 = 0x41;
+const int X_D3DFMT_VERTEXDATA = 0x64;
+
 // Primitives supported by draw-primitive API
 typedef enum _X_D3DPRIMITIVETYPE
 {
@@ -303,6 +389,18 @@ struct X_D3DResource
 #define X_D3DLOCK_NOOVERWRITE           0x00000020
 #define X_D3DLOCK_TILED                 0x00000040 // Xbox extension
 #define X_D3DLOCK_READONLY              0x00000080
+
+const int X_D3DMULTISAMPLE_NONE = 0x0011;
+const int X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR = 0x1021;
+const int X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX = 0x1121;
+const int X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR = 0x2021;
+const int X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_VERTICAL_LINEAR = 0x2012;
+const int X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR = 0x1022;
+const int X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN = 0x1222;
+const int X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR = 0x2022;
+const int X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_GAUSSIAN = 0x2222;
+const int X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN = 0x1233;
+const int X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN = 0x2233;
 
 struct X_D3DVertexBuffer : public X_D3DResource
 {

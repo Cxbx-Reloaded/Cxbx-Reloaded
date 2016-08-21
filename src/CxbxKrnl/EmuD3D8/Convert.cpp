@@ -42,23 +42,37 @@ BOOL XTL::EmuXBFormatIsSwizzled(X_D3DFORMAT Format, DWORD *pBPP)
 {
     switch(Format)
     {
-        case 0x00:
-        case 0x01:
-        case 0x0B:
-        case 0x19: // X_D3DFMT_A8
-            *pBPP = 1;
-            return TRUE;
-        case 0x02:
-        case 0x03:
-        case 0x04:
-        case 0x05:
-        case 0x1A:
-            *pBPP = 2;
-            return TRUE;
-        case 0x06:
-        case 0x07:
-            *pBPP = 4;
-            return TRUE;
+	case X_D3DFMT_L8:
+	case X_D3DFMT_AL8:
+	case X_D3DFMT_P8:
+	case X_D3DFMT_A8:
+		*pBPP = 1;
+		return true;
+	case X_D3DFMT_A1R5G5B5:
+	case X_D3DFMT_X1R5G5B5:
+	case X_D3DFMT_A4R4G4B4:
+	case X_D3DFMT_R5G6B5:
+	case X_D3DFMT_A8L8:
+	case X_D3DFMT_R6G5B5:
+	case X_D3DFMT_G8B8:
+	case X_D3DFMT_R8B8:
+	case X_D3DFMT_D16:
+	case X_D3DFMT_F16:
+	case X_D3DFMT_L16:
+	case X_D3DFMT_R5G5B5A1:
+	case X_D3DFMT_R4G4B4A4:
+		*pBPP = 2;
+		return true;
+	case X_D3DFMT_A8R8G8B8:
+	case X_D3DFMT_X8R8G8B8: 
+	case X_D3DFMT_D24S8:
+	case X_D3DFMT_F24S8:
+	case X_D3DFMT_V16U16:
+	case X_D3DFMT_A8B8G8R8:
+	case X_D3DFMT_B8G8R8A8:
+	case X_D3DFMT_R8G8B8A8:
+		*pBPP = 4;
+		return true;
     }
 
     return FALSE;
@@ -68,19 +82,32 @@ BOOL XTL::EmuXBFormatIsLinear(X_D3DFORMAT Format)
 {
     switch(Format)
     {
-        case 0x10: // X_D3DFMT_LIN_A1R5G5B5
-        case 0x11: // X_D3DFMT_LIN_R5G6B5
-        case 0x12: // X_D3DFMT_LIN_A8R8G8B8
-        case 0x16: // X_D3DFMT_LIN_R8B8
-		case 0x17: // X_D3DFMT_LIN_G8B8
-		case 0x1C: // X_D3DFMT_LIN_X1R5G5B5
-        case 0x1D: // X_D3DFMT_LIN_A4R4G4B4
-        case 0x1E: // X_D3DFMT_LIN_X8R8G8B8
-        case 0x2E: // X_D3DFMT_LIN_D24S8
-        case 0x30: // X_D3DFMT_LIN_D16
-        case 0x3F: // X_D3DFMT_LIN_A8B8G8R8
-		case 0x41: // X_D3DFMT_LIN_R8G8B8A8
-            return TRUE;
+	case X_D3DFMT_LIN_L8: 
+	case X_D3DFMT_LIN_A8:
+	case X_D3DFMT_LIN_A1R5G5B5:
+	case X_D3DFMT_LIN_R5G6B5:
+	case X_D3DFMT_LIN_R8B8:
+	case X_D3DFMT_LIN_G8B8:
+	case X_D3DFMT_LIN_AL8:
+	case X_D3DFMT_LIN_X1R5G5B5:
+	case X_D3DFMT_LIN_A4R4G4B4:
+	case X_D3DFMT_LIN_A8L8:
+	case X_D3DFMT_LIN_D16:
+	case X_D3DFMT_LIN_F16:
+	case X_D3DFMT_LIN_L16:
+	case X_D3DFMT_LIN_R6G5B5:
+	case X_D3DFMT_LIN_R5G5B5A1:
+	case X_D3DFMT_LIN_R4G4B4A4:
+	case X_D3DFMT_LIN_A8R8G8B8:
+	case X_D3DFMT_LIN_X8R8G8B8:
+	case X_D3DFMT_LIN_D24S8:
+	case X_D3DFMT_LIN_F24S8:
+	case X_D3DFMT_LIN_V16U16:
+	case X_D3DFMT_LIN_A8B8G8R8:
+	case X_D3DFMT_LIN_B8G8R8A8:
+	case X_D3DFMT_LIN_R8G8B8A8:
+	case X_D3DFMT_VERTEXDATA:
+       return TRUE;
     }
 
     return FALSE;
@@ -88,211 +115,239 @@ BOOL XTL::EmuXBFormatIsLinear(X_D3DFORMAT Format)
 
 XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 {
+	D3DFORMAT result;
+
     switch(Format)
     {
-        case 0x00: // Swizzled   (X_D3DFMT_L8)
-            return D3DFMT_L8;
+	case X_D3DFMT_L8: // Swizzled
+		result = D3DFMT_L8;
+		break;
+	case X_D3DFMT_AL8: // Swizzled    // Cxbx NOTE: Hack: Alpha ignored, basically
+	{
+		EmuWarning("X_D3DFMT_AL8 -> D3DFMT_L8");
+		result = D3DFMT_L8;
+	}
+	break;
+	case X_D3DFMT_LIN_A1R5G5B5: case // Linear
+		X_D3DFMT_A1R5G5B5: // Swizzled
+			result = D3DFMT_A1R5G5B5;
+			break;
+	case X_D3DFMT_X1R5G5B5: // Swizzled
+		result = D3DFMT_X1R5G5B5;
+		break;
+	case X_D3DFMT_A8L8: // Swizzled
+	{
+		EmuWarning("X_D3DFMT_A8L8 -> D3DFMT_R5G6B5");
+		result = D3DFMT_R5G6B5; // Cxbx NOTE: HACK: Totally and utterly wrong :)
+	}
+	break;
+	case X_D3DFMT_A8: // Swizzled
+		result = D3DFMT_A8;
+		break;
+	case X_D3DFMT_LIN_A4R4G4B4: case // Linear
+		X_D3DFMT_A4R4G4B4: // Swizzled
+			result = D3DFMT_A4R4G4B4;
+			break;
+	case X_D3DFMT_LIN_R5G6B5: case // Linear
+		X_D3DFMT_R5G6B5: // Swizzled
+			result = D3DFMT_R5G6B5;
+			break;
+	case X_D3DFMT_LIN_A8R8G8B8: case // Linear
+		X_D3DFMT_A8R8G8B8: // Swizzled
+			result = D3DFMT_A8R8G8B8;
+			break;
+	case X_D3DFMT_LIN_R8B8: // Linear
+	{
+		EmuWarning("X_D3DFMT_LIN_R8B8 -> D3DFMT_R5G6B5");
+		result = D3DFMT_R5G6B5; // Cxbx NOTE: HACK: Totally and utterly wrong :)
+	}
+	break;
+	case X_D3DFMT_LIN_G8B8: // Linear
+	{
+		EmuWarning("X_D3DFMT_LIN_G8B8 -> D3DFMT_R5G6B5");
+		result = D3DFMT_R5G6B5; // Cxbx NOTE: HACK: Totally and utterly wrong :)
+	}
+	break;
+	case X_D3DFMT_A8B8G8R8: // Swizzled
+	{
+		EmuWarning("X_D3DFMT_A8B8G8R8 -> D3DFMT_A8R8G8B8");
+		result = D3DFMT_A8R8G8B8; // Cxbx NOTE: HACK: R<->B Swapped!
+	}
+	break;
+	case X_D3DFMT_LIN_A8B8G8R8: // Linear
+	{
+		EmuWarning("X_D3DFMT_LIN_A8B8G8R8 -> D3DFMT_A8R8G8B8");
+		result = D3DFMT_A8R8G8B8; // Cxbx NOTE: HACK: R<->B Swapped!
+	}
+	break;
+	case X_D3DFMT_LIN_X8R8G8B8: case // Linear
+		X_D3DFMT_X8R8G8B8: // Swizzled
+			result = D3DFMT_X8R8G8B8;
+			break;
+	case X_D3DFMT_P8: // Swizzled
+		result = D3DFMT_P8;
+		break;
+	case X_D3DFMT_DXT1: // Compressed
+		result = D3DFMT_DXT1;
+		break;
 
-        case 0x01: // Swizzled   (X_D3DFMT_AL8) // NOTE: Hack: Alpha ignored, basically
-        {
-            EmuWarning("X_D3DFMT_AL8 -> D3DFMT_L8");
-            return D3DFMT_L8;
-        }
-        case 0x10: // Linear     (X_D3DFMT_LIN_A1R5G5B5)
-        case 0x02: // Swizzled   (X_D3DFMT_A1R5G5B5)
-            return D3DFMT_A1R5G5B5;
+		//X_D3DFMT_DXT2,
 
-		case 0x38: // Swizzled   (X_D3DFMT_R5G5B5A1)
-		{
-			EmuWarning("X_D3DFMT_R6G6B5A1 -> D3DFMT_A1R5R6R5");
-            return D3DFMT_A1R5G5B5;
-		}
+	case X_D3DFMT_DXT3: // Compressed
+		result = D3DFMT_DXT3;
+		break;
 
-        case 0x03: // Swizzled   (X_D3DFMT_X1R5G5B5)
-		case 0x1C: // Linear     (X_D3DFMT_LIN_X1R5G5B5)
-            return D3DFMT_X1R5G5B5;
+		//X_D3DFMT_DXT4,
 
-        case 0x1A: // Swizzled   (X_D3DFMT_A8L8)
-        {
-            EmuWarning("X_D3DFMT_A8L8 -> D3DFMT_R5G6B5");
-            return D3DFMT_R5G6B5;   // NOTE: HACK: Totally and utterly wrong :)
-        }
-        case 0x19: // Swizzled   (X_D3DFMT_A8)
-		case 0x1F: // Linear	 (X_D3DFMT_LIN_A8)
-            return D3DFMT_A8;
+	case X_D3DFMT_DXT5: // Compressed
+		result = D3DFMT_DXT5;
+		break;
+	case X_D3DFMT_YUY2: // Swizzled
+		result = D3DFMT_YUY2;
+		break;
+	case X_D3DFMT_UYVY: // Swizzled
+		result = D3DFMT_UYVY;
+		break;
+	case X_D3DFMT_LIN_D24S8: case // Linear
+		X_D3DFMT_D24S8: // Swizzled
+			result = D3DFMT_D24S8;
+			break;
+	case X_D3DFMT_LIN_F24S8: case // Linear - Dxbx addition
+		X_D3DFMT_F24S8: // Swizzled
+	{
+		EmuWarning("X_D3DFMT_F24S8 -> D3DFMT_D24S8");
+		result = D3DFMT_D24S8; // NOTE: Hack!! PC does not have D3DFMT_F24S8 (Float vs Int)
+	}
+	break;
+	case X_D3DFMT_LIN_F16: case // Linear - Dxbx addition
+		X_D3DFMT_F16: // Swizzled - Dxbx addition
+	{
+		EmuWarning("X_D3DFMT_F16 -> D3DFMT_D16");
+		result = D3DFMT_D16; // NOTE: Hack!! PC does not have D3DFMT_F16 (Float vs Int)
+	}
+	break;
+	case X_D3DFMT_LIN_D16: case // Linear
+		X_D3DFMT_D16: // Swizzled
+			result = D3DFMT_D16;
+			break; // TODO -oCXBX: D3DFMT_D16 on Xbox is always lockable
 
-        case 0x1D: // Linear     (X_D3DFMT_LIN_A4R4G4B4)
-        case 0x04: // Swizzled   (X_D3DFMT_A4R4G4B4)
-            return D3DFMT_A4R4G4B4;
-
-		case 0x39: // Swizzled	 (X_D3DFMT_R4G4B4A4)
-		{
-			EmuWarning("X_D3DFMT_R4G4B4A4 -> D3DFMT_A4R4G4B4");
-			return D3DFMT_A4R4G4B4;
-		}
-
-        case 0x11: // Linear     (X_D3DFMT_LIN_R5G6B5)
-        case 0x05: // Swizzled   (X_D3DFMT_R5G6B5)
-            return D3DFMT_R5G6B5;
-
-        case 0x12: // Linear     (X_D3DFMT_LIN_A8R8G8B8)
-        case 0x06: // Swizzled   (X_D3DFMT_A8R8G8B8)
-            return D3DFMT_A8R8G8B8;
-
-		case 0x41: // Linear	 (X_D3DFMT_LIN_R8G8B8A8)
-		case 0x3C: // Swizzled   (X_D3DFMT_R8G8B8A8)
-		{
-			EmuWarning("X_D3DFMT_R8G8B8A8 -> D3DFMT_A8R8G8B8");
-            return D3DFMT_A8R8G8B8;
-		}
-
-		case 0x29: // Swizzled     (X_D3DFMT_R8B8)
-        {
-            EmuWarning("X_D3DFMT_R8B8 -> D3DFMT_R5G6B5");
-            return D3DFMT_R5G6B5;   // NOTE: HACK: Totally and utterly wrong :)
-        }
-
-        case 0x16: // Linear     (X_D3DFMT_LIN_R8B8)
-        {
-            EmuWarning("X_D3DFMT_LIN_R8B8 -> D3DFMT_R5G6B5");
-            return D3DFMT_R5G6B5;   // NOTE: HACK: Totally and utterly wrong :)
-        }
-
-		/*case 0x28: // Swizzled     (X_D3DFMT_G8B8)
-        {
-            EmuWarning("X_D3DFMT_G8B8 -> D3DFMT_R5G6B5");
-            return D3DFMT_R5G6B5;   // NOTE: HACK: Totally and utterly wrong :)
-        }*/	// Same as D3DFMT_V8U8
-
-		case 0x17: // Linear     (X_D3DFMT_LIN_G8B8)
-        {
-            EmuWarning("X_D3DFMT_LIN_G8B8 -> D3DFMT_R5G6B5");
-            return D3DFMT_R5G6B5;   // NOTE: HACK: Totally and utterly wrong :)
-        }
-
-		case 0x3A: // Swizzled	 (X_D3DFMT_Q8W8V8U8)
-		{
-        //    EmuWarning("X_D3DFMT_A8B8G8R8 -> D3DFMT_A8R8G8B8");
-            return D3DFMT_Q8W8V8U8; // NOTE: HACK: R<->B Swapped!
-        }
-
-		case 0x3B: // Swizzled	 (X_D3DFMT_A8B8G8R8)
-		{
-            EmuWarning("X_D3DFMT_B8G8R8A8 -> D3DFMT_A8R8G8B8");
-            return D3DFMT_A8R8G8B8; // NOTE: HACK: ARGB -> RGBA!
-        }
-
-        case 0x3F: // Linear     (X_D3DFMT_LIN_A8B8G8R8)
-        {
-            EmuWarning("X_D3DFMT_LIN_A8B8G8R8 -> D3DFMT_A8R8G8B8");
-            return D3DFMT_A8R8G8B8; // NOTE: HACK: R<->B Swapped!
-        }
-
-        case 0x1E: // Linear     (X_D3DFMT_LIN_X8R8G8B8)
-        case 0x07: // Swizzled   (X_D3DFMT_X8R8G8B8)
-            return D3DFMT_X8R8G8B8;
-
-        case 0x0B: // Swizzled   (X_D3DFMT_P8)
-            return D3DFMT_P8;
-
-        case 0x0C: // Compressed (X_D3DFMT_DXT1)
-            return D3DFMT_DXT1;
-
-        case 0x0E: // Compressed (X_D3DFMT_DXT2)
-            return D3DFMT_DXT2;
-
-        case 0x0F: // Compressed (X_D3DFMT_DXT3)
-            return D3DFMT_DXT3;
-
-        case 0x24: // Swizzled   (X_D3DFMT_YUV2)
-            return D3DFMT_YUY2;
-
-		case 0x25: // Swizzled	 (X_D3DFMT_UYVY)
-			return D3DFMT_UYVY;
-
-        case 0x2E: // Linear     (X_D3DFMT_LIN_D24S8)
-        case 0x2A: // Swizzled   (X_D3DFMT_D24S8)
-            return D3DFMT_D24S8;
-
-        case 0x2B: // Swizzled   (X_D3DFMT_F24S8)
-        {
-            EmuWarning("X_D3DFMT_F24S8 -> D3DFMT_D24S8");
-            return D3DFMT_D24S8;    // NOTE: Hack!! PC does not have D3DFMT_F24S8 (Float vs Int)
-        }
-
-        case 0x30: // Linear     (X_D3DFMT_LIN_D16)
-        case 0x2C: // Swizzled   (X_D3DFMT_D16)
-            return D3DFMT_D16;		// TODO: D3DDMT_D16 on Xbox is always lockable
-
-        case 0x27: // Swizzled   (X_D3DFMT_L6V5U5)
-            return D3DFMT_L6V5U5;
-
-        case 0x28: // Swizzled   (X_D3DFMT_V8U8)
-            return D3DFMT_V8U8;
-
-        case 0x33: // Swizzled   (X_D3DFMT_V16U16)
-            return D3DFMT_V16U16;
-
-        case 0x64:
-            return D3DFMT_VERTEXDATA;
-
-		case 0xFFFFFFFF:
-			return D3DFMT_UNKNOWN;	// TODO: Not sure if this counts as swizzled or not...
+	case X_D3DFMT_L6V5U5: // Swizzled
+		result = D3DFMT_L6V5U5;
+		break;
+	case X_D3DFMT_V8U8: // Swizzled
+		result = D3DFMT_V8U8;
+		break;
+	case X_D3DFMT_V16U16: // Swizzled
+		result = D3DFMT_V16U16;
+		break;
+	case X_D3DFMT_VERTEXDATA:
+		result = D3DFMT_VERTEXDATA;
+		break;
+	case ((X_D3DFORMAT)0xffffffff):
+		result = D3DFMT_UNKNOWN;
+		break; // TODO -oCXBX: Not sure if this counts as swizzled or not...
+	default:
+		CxbxKrnlCleanup("EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)", Format);
     }
 
-    CxbxKrnlCleanup("EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)", Format);
-
-    return (D3DFORMAT)Format;
+    return result;
 }
 
 XTL::X_D3DFORMAT XTL::EmuPC2XB_D3DFormat(D3DFORMAT Format)
 {
+	X_D3DFORMAT result;
     switch(Format)
     {
-        case D3DFMT_YUY2:
-            return 0x24;
-		case D3DFMT_UYVY:
-			return 0x25;
-        case D3DFMT_R5G6B5:
-            return 0x11;        // Linear
-//            return 0x05;      // Swizzled
-        case D3DFMT_D24S8:
-            return 0x2A;
-        case D3DFMT_DXT3:
-            return 0x0F;
-        case D3DFMT_DXT2:
-            return 0x0E;
-        case D3DFMT_DXT1:
-            return 0x0C;
-        case D3DFMT_A1R5G5B5:   // Linear (X_D3DFMT_LIN_A1R5G5B5)
-            return 0x10;
-        case D3DFMT_X8R8G8B8:
-            return 0x1E;        // Linear (X_D3DFMT_LIN_X8R8G8B8)
-//            return 0x07;      // Swizzled
-        case D3DFMT_A8R8G8B8:
-            return 0x12;      // Linear (X_D3DFMT_LIN_A8R8G8B8)
-//            return 0x06;
+	case D3DFMT_YUY2:
+		result = X_D3DFMT_YUY2;
+		break;
+	case D3DFMT_UYVY:
+		result = X_D3DFMT_UYVY;
+		break;
+	case D3DFMT_R5G6B5:
+		result = X_D3DFMT_LIN_R5G6B5;
+		break; // Linear
+			   //      Result := X_D3DFMT_R5G6B5; // Swizzled
 
-        case D3DFMT_A4R4G4B4:
-            return 0x1D;        // Linear
-//            return 0x04;      // Swizzled
-        case D3DFMT_L8:
-            return 0x13;        // Linear
-//            return 0x00;      // Swizzled
-		case D3DFMT_D16:
-		case D3DFMT_D16_LOCKABLE:
-			return 0x2C;
+	case D3DFMT_D24S8:
+		result = X_D3DFMT_D24S8;
+		break; // Swizzled
 
-		case D3DFMT_Q8W8V8U8:
-			return 0x3A;
+	case D3DFMT_DXT5:
+		result = X_D3DFMT_DXT5;
+		break; // Compressed
 
-		case D3DFMT_UNKNOWN:
-			return 0xFFFFFFFF;
+	case D3DFMT_DXT4:
+		result = X_D3DFMT_DXT4;
+		break;
+	case D3DFMT_DXT3:
+		result = X_D3DFMT_DXT3;
+		break; // Compressed
+
+	case D3DFMT_DXT2:
+		result = X_D3DFMT_DXT2;
+		break;
+	case D3DFMT_DXT1:
+		result = X_D3DFMT_DXT1;
+		break; // Compressed
+
+	case D3DFMT_A1R5G5B5:
+		result = X_D3DFMT_LIN_A1R5G5B5;
+		break; // Linear
+
+	case D3DFMT_X8R8G8B8:
+		result = X_D3DFMT_LIN_X8R8G8B8;
+		break; // Linear
+			   //      Result := X_D3DFMT_X8R8G8B8; // Swizzled
+
+	case D3DFMT_A8R8G8B8:
+		//      Result := X_D3DFMT_LIN_A8R8G8B8; // Linear
+		result = X_D3DFMT_A8R8G8B8;
+		break;
+	case D3DFMT_A4R4G4B4:
+		result = X_D3DFMT_LIN_A4R4G4B4;
+		break; // Linear
+			   //      Result := X_D3DFMT_A4R4G4B4; // Swizzled
+
+	case D3DFMT_A8:
+		result = X_D3DFMT_A8;
+		break;
+	case D3DFMT_L8:
+		result = X_D3DFMT_LIN_L8;
+		break; // Linear
+			   //        Result := X_D3DFMT_L8; // Swizzled
+
+	case D3DFMT_D16: case D3DFMT_D16_LOCKABLE:
+		result = X_D3DFMT_D16_LOCKABLE;
+		break; // Swizzled
+
+	case D3DFMT_UNKNOWN:
+		result = ((X_D3DFORMAT)0xffffffff);
+		break;
+
+		// Dxbx additions :
+
+	case D3DFMT_L6V5U5:
+		result = X_D3DFMT_L6V5U5;
+		break; // Swizzled
+
+	case D3DFMT_V8U8:
+		result = X_D3DFMT_V8U8;
+		break; // Swizzled
+
+	case D3DFMT_V16U16:
+		result = X_D3DFMT_V16U16;
+		break; // Swizzled
+
+	case D3DFMT_VERTEXDATA:
+		result = X_D3DFMT_VERTEXDATA;
+		break;
+
+	default:
+		CxbxKrnlCleanup("EmuPC2XB_D3DFormat: Unknown Format (%d)", Format);
     }
 
-    CxbxKrnlCleanup("EmuPC2XB_D3DFormat: Unknown Format (%d)", Format);
-
-    return Format;
+    return result;
 }
 
 DWORD XTL::EmuXB2PC_D3DLock(DWORD Flags)
@@ -323,32 +378,33 @@ DWORD XTL::EmuXB2PC_D3DLock(DWORD Flags)
 // convert from xbox to pc multisample formats
 XTL::D3DMULTISAMPLE_TYPE XTL::EmuXB2PC_D3DMultiSampleFormat(DWORD Type)
 {
-	switch(Type)
+	D3DMULTISAMPLE_TYPE result;
+	switch (Type & 0xFFFF)
 	{
-	case 0x0011:
-		return D3DMULTISAMPLE_NONE;
-
-	case 0x1021:
-	case 0x1121:
-	case 0x2021:
-	case 0x2012:
-		return D3DMULTISAMPLE_2_SAMPLES;
-
-	case 0x1022:
-	case 0x1222:
-	case 0x2022:
-	case 0x2222:
-		return D3DMULTISAMPLE_4_SAMPLES;
-
-	case 0x1233:
-	case 0x2233:
-		return D3DMULTISAMPLE_9_SAMPLES;
+	case X_D3DMULTISAMPLE_NONE:
+		result = D3DMULTISAMPLE_NONE;
+		break;
+	case X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR: 
+	case X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX: 
+	case X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR: 
+	case X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_VERTICAL_LINEAR:
+		result = D3DMULTISAMPLE_2_SAMPLES;
+		break;
+	case X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR: 
+	case X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN: 
+	case X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR: 
+	case X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_GAUSSIAN:
+		result = D3DMULTISAMPLE_4_SAMPLES;
+		break;
+	case X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN: 
+	case X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN:
+		result = D3DMULTISAMPLE_9_SAMPLES;
+		break;
+	default:
+		EmuWarning("Unknown Multisample Type (0x%X)!\x0d\x0a. If this value is greater than 0xFFFF contact blueshogun!", Type);
+		result = D3DMULTISAMPLE_NONE;
 	}
-
-	CxbxKrnlCleanup( "Unknown Multisample Type (0x%X)!\n"
-		             "If this value is greater than 0xFFFF contact blueshogun!" );
-
-	return D3DMULTISAMPLE_NONE;
+	return result;
 }
 
 // lookup table for converting vertex count to primitive count
