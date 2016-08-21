@@ -247,6 +247,8 @@ typedef struct _STRING
 }
 STRING, ANSI_STRING, *PSTRING, *PANSI_STRING;
 
+typedef STRING OBJECT_STRING;
+
 // ******************************************************************
 // * UNICODE_STRING
 // ******************************************************************

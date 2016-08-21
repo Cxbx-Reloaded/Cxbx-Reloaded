@@ -51,6 +51,7 @@ namespace xboxkrnl
 
 #include <shlobj.h>
 #include <clocale>
+#include <Shlwapi.h>
 
 /* prevent name collisions */
 namespace NtDll
@@ -356,8 +357,8 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 	// Load EXE structure, this is used by Xapi Section functions
 	{
-		char szBuffer[260];
-		GetModuleFileNameA(NULL, szBuffer, 260);
+		char szBuffer[MAX_PATH];
+		GetModuleFileNameA(NULL, szBuffer, MAX_PATH);
 		CxbxKrnl_Exe = new Exe(szBuffer);
 	}
 
@@ -389,6 +390,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	// Games may assume they are running from CdRom :
 	CxbxRegisterDeviceNativePath(DeviceCdrom0, xbePath);
 
+	
 	// Partition 0 contains configuration data, and is accessed as a native file, instead as a folder :
 	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition0, CxbxBasePath + "Partition0_ConfigData.bin", true); /*IsFile=*/
 																												// The first two partitions are for Data and Shell files, respectively :
@@ -408,8 +410,23 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	{
 		// Arrange that the Xbe path can reside outside the partitions, and put it to g_hCurDir :
 		CxbxCreateSymbolicLink(DriveC, (xbePath));
-		g_hCurDir = ((EmuNtSymbolicLinkObject*)FindNtSymbolicLinkObjectByVolumeLetter(CxbxDefaultXbeVolumeLetter))->RootDirectoryHandle;
-		// TODO -oDxbx: Make sure this path is set in g_EmuXbePath (xboxkrnl_XeImageFileName) too.
+		EmuNtSymbolicLinkObject* xbePathSymbolicLinkObject = FindNtSymbolicLinkObjectByVolumeLetter(CxbxDefaultXbeVolumeLetter);
+		g_hCurDir = xbePathSymbolicLinkObject->RootDirectoryHandle;
+
+		// Determine Xbox path to XBE and place it in XeImageFileName
+		// This path is determined by taking the EXE path and replacing the suffix with .xbe
+		char szBuffer[MAX_PATH];
+		GetModuleFileNameA(NULL, szBuffer, MAX_PATH);
+		std::string fileName(PathFindFileNameA(szBuffer));
+		fileName.replace(fileName.length() - 3, 3, "xbe");
+
+		xboxkrnl::XeImageFileName.Buffer = (PCHAR)malloc(MAX_PATH);
+		sprintf(xboxkrnl::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeVolumeLetter, fileName.c_str());
+		xboxkrnl::XeImageFileName.Length = strlen(xboxkrnl::XeImageFileName.Buffer);
+		xboxkrnl::XeImageFileName.MaximumLength = MAX_PATH;
+
+		DbgPrintf("EmuMain : XeImageFileName = %s\n", xboxkrnl::XeImageFileName.Buffer);
+		
 		CxbxCreateSymbolicLink(DriveD, DeviceCdrom0); // CdRom goes to D:
 		CxbxCreateSymbolicLink(DriveE, DeviceHarddisk0Partition1); // Partition1 goes to E: (Data files, savegames, etc.)
 		CxbxCreateSymbolicLink(DriveF, DeviceHarddisk0Partition2); // Partition2 goes to F: (Shell files, dashboard, etc.)
