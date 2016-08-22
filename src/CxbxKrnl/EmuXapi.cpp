@@ -1212,21 +1212,19 @@ DWORD WINAPI XTL::EmuXGetSectionSize
 			");\n",
 			GetCurrentThreadId(), hSection );
 
-	DWORD dwSize = 0;
 
-	// Metal Slug 3 (NTSC)
-	if(hSection == (HANDLE) 0x26C000)	// newpal
-		dwSize = 0x31DA;
-	else if(hSection == (HANDLE) 0x270000)	// msg_fong
-		dwSize = 0x115F;
-	else if(hSection == (HANDLE) 0x272000)	// se_all
-		dwSize = 0x64F37E;
-	else if(hSection == (HANDLE) 0x8C5000)	// .XTLID
-		dwSize = 0x480;
+	// Iterate thrugh sections
+	for (int i = 0; i < CxbxKrnl_Exe->m_Header.m_sections; i++) {
+		if ((HANDLE)(CxbxKrnl_Exe->m_SectionHeader[i].m_virtual_addr + CxbxKrnl_XbeHeader->dwBaseAddr) == hSection) {
+			return CxbxKrnl_Exe->m_SectionHeader[i].m_sizeof_raw;
+		}
+	}
 
 	EmuSwapFS();
 
-	return dwSize;
+	EmuWarning("EmuXApi : EmuXGetSectionSize : Could not determine section size: %x08X", hSection);
+
+	return 0;
 }
 
 
