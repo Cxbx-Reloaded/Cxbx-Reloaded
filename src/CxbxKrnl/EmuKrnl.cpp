@@ -2977,7 +2977,11 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
     {
         EmuHandle *iEmuHandle = EmuHandleToPtr(Handle);
 
-        delete iEmuHandle;
+		// HACK: Do not delete emuhandle
+		// There is an issue with EmuHandle/EmuNtObject causing referencing counting to not function
+		// Consider translating the entirity of EmuFile & EmuKrnl from Dxbx
+        //delete iEmuHandle;
+		EmuWarning("EmuKrnl::NtClose : EmuHandle not deleted");
 
         ret = STATUS_SUCCESS;
     }
