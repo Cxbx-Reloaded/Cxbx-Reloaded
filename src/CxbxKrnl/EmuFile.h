@@ -99,125 +99,35 @@ extern char CxbxDefaultXbeVolumeLetter;
 extern std::string CxbxBasePath;
 extern HANDLE CxbxBasePathHandle;
 
-// ******************************************************************
-// * Maximum number of open handles in the system
-// ******************************************************************
-#define EMU_MAX_HANDLES 1024
-
+class EmuNtObject;
 
 // ******************************************************************
 // * Wrapper of a handle object
 // ******************************************************************
 class EmuHandle
 {
-    public:
-        // Type of handle
-        volatile enum _EmuHandleType m_Type;
-
-        // To keep the size 8 bytes, these 2 items are in a union
-        union
-        {
-            // Pointer to actual object (when handle is valid)
-            volatile class EmuNtObject *m_Object;
-
-            // Pointer to next free handle
-            volatile EmuHandle *m_NextFree;
-        };
-
-        // Close this handle
-        NtDll::NTSTATUS Close(void);
-
-        // Initialize the EmuHandle system
-        static bool Initialize();
-
-        // Close all open handles
-        static void CloseAll(void);
-
-        // Allocate an empty handle
-        static volatile EmuHandle *Allocate(void);
-
-    private:
-        // Array of EmuHandles in the system
-        static EmuHandle Handles[EMU_MAX_HANDLES];
-
-        // Pointer to first free handle in array, or NULL if none
-        volatile static EmuHandle *FirstFree;
-
-        // Pointer to last free handle in array, or NULL if none
-        volatile static EmuHandle *LastFree;
-
-        // Lock on the handle system
-        static CRITICAL_SECTION HandleLock;
-
-        // Quick functions to lock/unlock
-        inline static void Lock(void);
-        inline static void Unlock(void);
+public:
+	EmuHandle(EmuNtObject* ntObject);
+	NTSTATUS NtClose();
+	NTSTATUS NtDuplicateObject(PHANDLE TargetHandle, DWORD Options);
+	EmuNtObject* NtObject;
 };
-
-// ******************************************************************
-// * Various "special" handle types
-// ******************************************************************
-typedef enum _EmuHandleType
-{
-    // Unallocated handle
-    EMUHANDLE_TYPE_EMPTY = 0,
-
-    // Allocated but so far unused handle
-    EMUHANDLE_TYPE_ALLOCATED,
-
-    // File handle with no really special features
-    EMUHANDLE_TYPE_FILE,
-
-    // Fake file/directory/directory object/partition handle
-    EMUHANDLE_TYPE_OBJECT
-}
-EmuHandleType;
 
 // ******************************************************************
 // * An NT fake object
 // ******************************************************************
 class EmuNtObject
 {
-    public:
-        // Decrements the reference count of this object (never override)
-        NTSTATUS NtClose(void);
+public:
+	EmuNtObject();
+	HANDLE NewHandle();
+	NTSTATUS NtClose();
+	EmuNtObject* NtDuplicateObject(DWORD Options);
+protected:
+	virtual ~EmuNtObject() {};
+private:
+	ULONG RefCount;
 
-        // These functions mimic the Nt* calls
-
-        // Increments the reference count of this object
-        // For file handles, a whole new EmuFile structure is returned.
-        // For other objects (the default implementation), "this" is returned.
-        EmuNtObject *NtDuplicateObject(DWORD options);
-
-    protected:
-        // Object name (Unicode, because we handle after-conversion strings)
-        const WCHAR *Name;
-        ULONG NameLength;
-        // Permanent status
-        bool PermanentFlag;
-
-        // Called by close() when the reference count reaches zero
-        virtual void Free(void) = 0;
-
-
-    private:
-        // Reference count
-        LONG RefCount;
-};
-
-// ******************************************************************
-// * Emulated file handle
-// ******************************************************************
-class EmuNtFile : public EmuNtObject
-{
-    public:
-        // We need to override NtDuplicateObject in this case
-
-    private:
-        // The Windows file handle
-        HANDLE File;
-        // Pointer to the volume from which this came
-        //EmuNtVolume *Volume;
 };
 
 // ******************************************************************
@@ -231,34 +141,15 @@ public:
 	std::string NativePath;
 	HANDLE RootDirectoryHandle;
 	NTSTATUS Init(std::string aSymbolicLinkName, std::string aFullPath);
-	void Free();
+	~EmuNtSymbolicLinkObject();
 };
 
 // ******************************************************************
 // * is hFile a 'special' emulated handle?
 // ******************************************************************
-static inline bool IsEmuHandle(xboxkrnl::HANDLE hFile)
-{
-    bool ret = ((uint32)hFile > 0x80000000) && ((uint32)hFile != -1);
+bool IsEmuHandle(HANDLE Handle);
+EmuHandle* HandleToEmuHandle(HANDLE Handle);HANDLE EmuHandleToHandle(EmuHandle* emuHandle);
 
-    return ret;
-}
-
-// ******************************************************************
-// * convert from 'special' emulated handle to a pointer
-// ******************************************************************
-static inline EmuHandle *EmuHandleToPtr(xboxkrnl::HANDLE hFile)
-{
-    return (EmuHandle*)((uint32)hFile - 0x80000000);
-}
-
-// ******************************************************************
-// * convert from 'special' emulated handle to a pointer
-// ******************************************************************
-static inline HANDLE PtrToEmuHandle(EmuHandle *pEmuHandle)
-{
-    return (HANDLE)((uint32)pEmuHandle + 0x80000000);
-}
 
 char SymbolicLinkToDriveLetter(std::string aSymbolicLinkName);
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByVolumeLetter(const char VolumeLetter);

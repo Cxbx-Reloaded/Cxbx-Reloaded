@@ -2975,15 +2975,8 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
     // delete 'special' handles
     if(IsEmuHandle(Handle))
     {
-        EmuHandle *iEmuHandle = EmuHandleToPtr(Handle);
-
-		// HACK: Do not delete emuhandle
-		// There is an issue with EmuHandle/EmuNtObject causing referencing counting to not function
-		// Consider translating the entirity of EmuFile & EmuKrnl from Dxbx
-        //delete iEmuHandle;
-		EmuWarning("EmuKrnl::NtClose : EmuHandle not deleted");
-
-        ret = STATUS_SUCCESS;
+        EmuHandle *iEmuHandle = HandleToEmuHandle(Handle);
+		ret = iEmuHandle->NtClose();
     }
     // close normal handles
     else
@@ -3260,15 +3253,24 @@ XBSYSAPI EXPORTNUM(197) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
            ");\n",
            GetCurrentThreadId(), SourceHandle, TargetHandle, Options);
 
-    // redirect to Win2k/XP
-    NTSTATUS ret = NtDll::NtDuplicateObject
-    (
-        GetCurrentProcess(),
-        SourceHandle,
-        GetCurrentProcess(),
-        TargetHandle,
-        0, 0, Options
-    );
+	NTSTATUS ret;
+
+	if (IsEmuHandle(SourceHandle)) {
+		EmuHandle* iEmuHandle = HandleToEmuHandle(SourceHandle);
+		ret = iEmuHandle->NtDuplicateObject(TargetHandle, Options);
+	}
+	else {
+		// redirect to Win2k/XP
+		ret = NtDll::NtDuplicateObject
+		(
+			GetCurrentProcess(),
+			SourceHandle,
+			GetCurrentProcess(),
+			TargetHandle,
+			0, 0, Options
+		);
+	}
+   
 
     if(ret != STATUS_SUCCESS)
         EmuWarning("Object was not duplicated!");
@@ -3393,7 +3395,7 @@ XBSYSAPI EXPORTNUM(203) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenSymbolicLinkObj
 	if ((symbolicLinkObject != NULL))
 	{
 		// Return a new handle
-		*LinkHandle = EmuHandleToPtr(symbolicLinkObject);
+		*LinkHandle = symbolicLinkObject->NewHandle();
 		ret = STATUS_SUCCESS;
 	}
 	else
@@ -3664,9 +3666,10 @@ XBSYSAPI EXPORTNUM(215) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySymbolicLinkOb
 	// Check that we actually got an EmuHandle :
 	result = STATUS_INVALID_HANDLE;
 
+	EmuHandle* iEmuHandle = HandleToEmuHandle(LinkHandle);
 	// Retrieve the NtSymbolicLinkObject and populate the output arguments :
 	result = STATUS_SUCCESS;
-	symbolicLinkObject = ((EmuNtSymbolicLinkObject*)PtrToEmuHandle((EmuHandle*)LinkHandle));
+	symbolicLinkObject = (EmuNtSymbolicLinkObject*)iEmuHandle->NtObject;
 	if ((LinkTarget != NULL)) {
 		if (LinkTarget->Length > LinkTarget->MaximumLength) {
 			result = STATUS_BUFFER_TOO_SMALL;
@@ -4157,9 +4160,21 @@ XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
            ");\n",
            GetCurrentThreadId(), Handle, WaitMode, Alertable, Timeout, Timeout == 0 ? 0 : Timeout->QuadPart);
 
-    NTSTATUS ret = NtDll::NtWaitForSingleObject(Handle, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
+	NTSTATUS ret;
 
-    DbgPrintf("Finished waiting for 0x%.08X\n", Handle);
+	if (IsEmuHandle(Handle))
+	{
+		ret = WAIT_FAILED;
+		EmuWarning("WaitFor EmuHandle not supported!");
+	}
+	else
+	{
+		ret = NtDll::NtWaitForSingleObject(Handle, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
+		DbgPrintf("Finished waiting for 0x%.08X\n", Handle);
+	}
+    
+	if (ret == WAIT_FAILED) 
+		EmuWarning("NtWaitForSingleObjectEx failed! (%s)", NtStatusToString(ret));
 
     EmuSwapFS();   // Xbox FS
 
@@ -4193,6 +4208,7 @@ XBSYSAPI EXPORTNUM(235) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForMultipleObje
            GetCurrentThreadId(), Count, Handles, WaitType, WaitMode, Alertable,
            Timeout, Timeout == 0 ? 0 : Timeout->QuadPart);
 
+	// TODO: Process EmuHandle
     NTSTATUS ret = NtDll::NtWaitForMultipleObjects(Count, Handles, (NtDll::OBJECT_WAIT_TYPE)WaitType, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
 
     EmuSwapFS();   // Xbox FS

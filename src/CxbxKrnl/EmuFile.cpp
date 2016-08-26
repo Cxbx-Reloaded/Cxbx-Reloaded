@@ -81,19 +81,6 @@ std::string DeviceHarddisk0Partition18 = "\\Device\\Harddisk0\\partition18";
 std::string DeviceHarddisk0Partition19 = "\\Device\\Harddisk0\\partition19";
 std::string DeviceHarddisk0Partition20 = "\\Device\\Harddisk0\\partition20"; // 20 = Largest possible partition number
 char CxbxDefaultXbeVolumeLetter = 'C';
-
-// Array of EmuHandles in the system
-EmuHandle EmuHandle::Handles[EMU_MAX_HANDLES];
-
-// Pointer to first free handle in array, or NULL if none
-volatile EmuHandle *EmuHandle::FirstFree;
-
-// Pointer to last free handle in array, or NULL if none
-volatile EmuHandle *EmuHandle::LastFree;
-
-// Lock on the handle system
-CRITICAL_SECTION EmuHandle::HandleLock;
-
 EmuNtSymbolicLinkObject* NtSymbolicLinkObjects[26];
 
 struct XboxDevice {
@@ -102,6 +89,60 @@ struct XboxDevice {
 	HANDLE NativeRootHandle;
 };
 std::vector<XboxDevice> Devices;
+
+EmuHandle::EmuHandle(EmuNtObject* ntObject)
+{
+	NtObject = ntObject;
+}
+
+NTSTATUS EmuHandle::NtClose()
+{
+	return NtObject->NtClose();
+}
+
+NTSTATUS EmuHandle::NtDuplicateObject(PHANDLE TargetHandle, DWORD Options)
+{
+	*TargetHandle = NtObject->NtDuplicateObject(Options)->NewHandle();
+	return STATUS_SUCCESS;
+}
+
+EmuNtObject::EmuNtObject()
+{
+	RefCount = 1;
+}
+
+HANDLE EmuNtObject::NewHandle()
+{
+	RefCount++;
+	return EmuHandleToHandle(new EmuHandle(this));
+}
+
+NTSTATUS EmuNtObject::NtClose()
+{
+	RefCount--;
+
+	if (RefCount <= 0) {
+		delete this;
+	}
+
+	return STATUS_SUCCESS;
+}
+
+EmuNtObject* EmuNtObject::NtDuplicateObject(DWORD Options)
+{
+	RefCount++;
+	return this;
+}
+
+bool IsEmuHandle(HANDLE Handle)
+{
+	return (uint32_t)Handle > 0x80000000;
+}
+
+EmuHandle* HandleToEmuHandle(HANDLE Handle){	return (EmuHandle*)((uint32_t)Handle & 0x7FFFFFFF);}HANDLE EmuHandleToHandle(EmuHandle* emuHandle)
+{
+	return (HANDLE)((uint32_t)emuHandle | 0x80000000);
+}
 
 bool CxbxRegisterDeviceNativePath(std::string XboxFullPath, std::string NativePath, bool IsFile)
 {
@@ -147,82 +188,6 @@ NTSTATUS CxbxCreateSymbolicLink(std::string SymbolicLinkName, std::string FullPa
 	return result;
 }
 
-// ******************************************************************
-// * Initialize the handle database
-// ******************************************************************
-bool EmuHandle::Initialize()
-{
-    size_t x;
-
-    // Initialize the critical section
-    InitializeCriticalSection(&HandleLock);
-
-    // Mark all handles as free.  We also set up the linked list of
-    // free handles here.
-    for (x = 0; x < EMU_MAX_HANDLES; x++)
-    {
-        Handles[x].m_Type = EMUHANDLE_TYPE_EMPTY;
-        Handles[x].m_NextFree = &Handles[x + 1];
-    }
-
-    // The last entry should have a NULL next entry
-    Handles[EMU_MAX_HANDLES - 1].m_NextFree = NULL;
-
-    // Set up the head and tail pointers
-    FirstFree = &Handles[0];
-    LastFree = &Handles[EMU_MAX_HANDLES];
-
-    return true;
-}
-
-// ******************************************************************
-// * func: EmuHandle::Lock
-// *    Locks the handle database
-// ******************************************************************
-inline void EmuHandle::Lock(void)
-{
-    EnterCriticalSection(&HandleLock);
-}
-
-// ******************************************************************
-// * func: EmuHandle::Unlock
-// *    Unlocks the handle database
-// ******************************************************************
-inline void EmuHandle::Unlock(void)
-{
-    LeaveCriticalSection(&HandleLock);
-}
-
-// ******************************************************************
-// * func: EmuHandle::Allocate
-// *    Allocates a new handle
-// ******************************************************************
-EmuHandle volatile *EmuHandle::Allocate(void)
-{
-    volatile EmuHandle *Handle;
-
-    // Lock the database
-    Lock();
-
-    // Get the first free entry
-    Handle = FirstFree;
-
-    // Remove it from the list
-    FirstFree = Handle->m_NextFree;
-
-    // If it was the last handle, clear LastFree
-    if (!Handle->m_NextFree)
-        LastFree = NULL;
-
-    // Initialize the handle's fields
-    Handle->m_Type = EMUHANDLE_TYPE_ALLOCATED;
-    Handle->m_Object = NULL;
-
-    // Unlock the database
-    Unlock();
-
-    return Handle;
-}
 
 NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::string aFullPath)
 {
@@ -295,7 +260,7 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 	return result;
 }
 
-void EmuNtSymbolicLinkObject::Free()
+ EmuNtSymbolicLinkObject::~EmuNtSymbolicLinkObject()
 {
 	if (DriveLetter >= 'A' && DriveLetter <= 'Z') {
 		NtSymbolicLinkObjects[DriveLetter - 'A'] = NULL;
@@ -387,22 +352,4 @@ EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByRootHandle(const HANDLE Handl
 	}
 	
 	return NULL;
-}
-
-NTSTATUS EmuNtObject::NtClose()
-{
-	NTSTATUS result = 0;
-	RefCount--;
-	if (RefCount <= 0)
-		Free();
-	result = STATUS_SUCCESS;
-	return result;
-}
-
-EmuNtObject* EmuNtObject::NtDuplicateObject(DWORD Options)
-{
-	EmuNtObject* result = NULL;
-	RefCount++;
-	result = this;
-	return result;
 }
