@@ -1989,7 +1989,7 @@ XBSYSAPI EXPORTNUM(91) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDismountVolumeByName
 			"(\n"
 			"   VolumeName        : 0x%.08X (%s)\n"
 			");\n",
-			GetCurrentThreadId(), VolumeName, VolumeName);
+			GetCurrentThreadId(), VolumeName, VolumeName->Buffer);
 
 	// TODO: Anything?
 	NTSTATUS ret = STATUS_SUCCESS;
@@ -3005,7 +3005,7 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateDirectoryObje
 		"   DirectoryHandle         : 0x%.08X\n"
 		"   ObjectAttributes    : 0x%.08X (\"%s\")\n"
 		");\n",
-		GetCurrentThreadId(), DirectoryHandle, ObjectAttributes);
+		GetCurrentThreadId(), DirectoryHandle, ObjectAttributes, ObjectAttributes);
 
 	NTSTATUS ret = 0;
 
@@ -4330,6 +4330,9 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 
         *ThreadHandle = (HANDLE)_beginthreadex(NULL, NULL, PCSTProxy, iPCSTProxyParam, NULL, (uint*)&dwThreadId);
 
+		// Make sure Xbox1 code runs on one core :
+		SetThreadAffinityMask(ThreadHandle, g_CPUXbox);
+
         WaitForSingleObject(iPCSTProxyParam->hStartedEvent, 1000);
 
 //        *ThreadHandle = CreateThread(NULL, NULL, PCSTProxy, iPCSTProxyParam, NULL, &dwThreadId);
@@ -4520,7 +4523,7 @@ XBSYSAPI EXPORTNUM(279) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualString
 			"	String2            : 0x%.08X (\"%s\")\n"
 			"	CaseSensitive      : 0x%.08X\n"
 			");\n",
-			GetCurrentThreadId(), String1, String1, String2, String2, CaseSensitive );
+			GetCurrentThreadId(), String1, String1->Buffer, String2, String2->Buffer, CaseSensitive );
 
 	BOOLEAN bRet = NtDll::RtlEqualString( (NtDll::PSTRING)String1, (NtDll::PSTRING)String2, (NtDll::BOOLEAN)CaseSensitive );
 
@@ -4593,7 +4596,7 @@ XBSYSAPI EXPORTNUM(290) VOID NTAPI xboxkrnl::RtlInitUnicodeString
            "   DestinationString   : 0x%.08X\n"
            "   SourceString        : 0x%.08X (\"%ls\")\n"
            ");\n",
-           GetCurrentThreadId(), DestinationString, SourceString, SourceString);
+           GetCurrentThreadId(), DestinationString, SourceString, SourceString->Buffer);
 
     NtDll::RtlInitUnicodeString((NtDll::PUNICODE_STRING)DestinationString, (NtDll::PCWSTR)SourceString);
 

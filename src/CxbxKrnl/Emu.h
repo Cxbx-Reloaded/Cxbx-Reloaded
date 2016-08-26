@@ -86,6 +86,9 @@ extern HWND   g_hEmuWindow;
 extern PVOID g_pfnThreadNotification[16];
 extern int g_iThreadNotificationCount;
 
+extern DWORD_PTR g_CPUXbox;
+extern DWORD_PTR g_CPUOthers;
+
 // NOTE: this is an arbitrary latency
 #define XINPUT_SETSTATE_LATENCY 4
 #define XINPUT_SETSTATE_SLOTS 16

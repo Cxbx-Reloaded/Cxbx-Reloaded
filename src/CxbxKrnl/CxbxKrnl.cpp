@@ -75,6 +75,9 @@ std::string CxbxBasePath;
 HANDLE CxbxBasePathHandle;
 Exe* CxbxKrnl_Exe = NULL;
 
+DWORD_PTR g_CPUXbox = 0;
+DWORD_PTR g_CPUOthers = 0;
+
 static uint32 funcAddr[]=
 {
     0x001396D1, // -> 0x00139709 (Size : 56 bytes)
@@ -215,90 +218,90 @@ void CxbxLaunchXbe(void(*Entry)())
 
 extern "C" CXBXKRNL_API void CxbxKrnlInit
 (
-    HWND                    hwndParent,
-    void                   *pTLSData,
-    Xbe::TLS               *pTLS,
-    Xbe::LibraryVersion    *pLibraryVersion,
-    DebugMode               DbgMode,
-    char                   *szDebugFilename,
-    Xbe::Header            *pXbeHeader,
-    uint32                  dwXbeHeaderSize,
-    void                  (*Entry)())
+	HWND                    hwndParent,
+	void                   *pTLSData,
+	Xbe::TLS               *pTLS,
+	Xbe::LibraryVersion    *pLibraryVersion,
+	DebugMode               DbgMode,
+	char                   *szDebugFilename,
+	Xbe::Header            *pXbeHeader,
+	uint32                  dwXbeHeaderSize,
+	void(*Entry)())
 {
-    // update caches
-    CxbxKrnl_TLS = pTLS;
-    CxbxKrnl_TLSData = pTLSData;
-    CxbxKrnl_XbeHeader = pXbeHeader;
-    CxbxKrnl_hEmuParent = IsWindow(hwndParent) ? hwndParent : NULL;
+	// update caches
+	CxbxKrnl_TLS = pTLS;
+	CxbxKrnl_TLSData = pTLSData;
+	CxbxKrnl_XbeHeader = pXbeHeader;
+	CxbxKrnl_hEmuParent = IsWindow(hwndParent) ? hwndParent : NULL;
 
-    // for unicode conversions
-    setlocale(LC_ALL, "English");
+	// for unicode conversions
+	setlocale(LC_ALL, "English");
 
 #ifdef _DEBUG
 	MessageBoxA(NULL, "Attach a Debugger", "DEBUG", 0);
 #endif
 
-    // debug console allocation (if configured)
-    if(DbgMode == DM_CONSOLE)
-    {
-        if(AllocConsole())
-        {
-            freopen("CONOUT$", "wt", stdout);
-            freopen("CONIN$", "rt", stdin);
+	// debug console allocation (if configured)
+	if (DbgMode == DM_CONSOLE)
+	{
+		if (AllocConsole())
+		{
+			freopen("CONOUT$", "wt", stdout);
+			freopen("CONIN$", "rt", stdin);
 
-            SetConsoleTitle("Cxbx : Kernel Debug Console");
+			SetConsoleTitle("Cxbx : Kernel Debug Console");
 
-            SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
+			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
 
-            printf("EmuMain (0x%X): Cxbx Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
-            printf("EmuMain (0x%X): Debug Console Allocated (DM_CONSOLE).\n", GetCurrentThreadId());
-        }
-    }
-    else if(DbgMode == DM_FILE)
-    {
-        FreeConsole();
+			printf("EmuMain (0x%X): Cxbx Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
+			printf("EmuMain (0x%X): Debug Console Allocated (DM_CONSOLE).\n", GetCurrentThreadId());
+		}
+	}
+	else if (DbgMode == DM_FILE)
+	{
+		FreeConsole();
 
-        freopen(szDebugFilename, "wt", stdout);
+		freopen(szDebugFilename, "wt", stdout);
 
-        printf("EmuMain (0x%X): Cxbx Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
-        printf("EmuMain (0x%X): Debug Console Allocated (DM_FILE).\n", GetCurrentThreadId());
-    }
-    else
-    {
-        FreeConsole();
+		printf("EmuMain (0x%X): Cxbx Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
+		printf("EmuMain (0x%X): Debug Console Allocated (DM_FILE).\n", GetCurrentThreadId());
+	}
+	else
+	{
+		FreeConsole();
 
-        char buffer[16];
+		char buffer[16];
 
-        if(GetConsoleTitle(buffer, 16) != NULL)
-            freopen("nul", "w", stdout);
-    }
+		if (GetConsoleTitle(buffer, 16) != NULL)
+			freopen("nul", "w", stdout);
+	}
 
-    //
-    // debug trace
-    //
+	//
+	// debug trace
+	//
 
-    {
-        #ifdef _DEBUG_TRACE
-        printf("EmuMain (0x%X): Debug Trace Enabled.\n", GetCurrentThreadId());
+	{
+#ifdef _DEBUG_TRACE
+		printf("EmuMain (0x%X): Debug Trace Enabled.\n", GetCurrentThreadId());
 
-        printf("EmuMain (0x%X): CxbxKrnlInit\n"
-               "(\n"
-               "   hwndParent          : 0x%.08X\n"
-               "   pTLSData            : 0x%.08X\n"
-               "   pTLS                : 0x%.08X\n"
-               "   pLibraryVersion     : 0x%.08X\n"
-               "   DebugConsole        : 0x%.08X\n"
-               "   DebugFilename       : \"%s\"\n"
-               "   pXBEHeader          : 0x%.08X\n"
-               "   pXBEHeaderSize      : 0x%.08X\n"
-               "   Entry               : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), hwndParent, pTLSData, pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
+		printf("EmuMain (0x%X): CxbxKrnlInit\n"
+			"(\n"
+			"   hwndParent          : 0x%.08X\n"
+			"   pTLSData            : 0x%.08X\n"
+			"   pTLS                : 0x%.08X\n"
+			"   pLibraryVersion     : 0x%.08X\n"
+			"   DebugConsole        : 0x%.08X\n"
+			"   DebugFilename       : \"%s\"\n"
+			"   pXBEHeader          : 0x%.08X\n"
+			"   pXBEHeaderSize      : 0x%.08X\n"
+			"   Entry               : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), hwndParent, pTLSData, pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
 
-        #else
-        printf("EmuMain (0x%X): Debug Trace Disabled.\n", GetCurrentThreadId());
-        #endif
-    }
+#else
+		printf("EmuMain (0x%X): Debug Trace Disabled.\n", GetCurrentThreadId());
+#endif
+	}
 
 	{
 		// Create a fake kernel header for XapiRestrictCodeSelectorLimit
@@ -329,31 +332,31 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	}
 
 
-    //
-    // load the necessary pieces of XbeHeader
-    //
+	//
+	// load the necessary pieces of XbeHeader
+	//
 
-    {
-        Xbe::Header *MemXbeHeader = (Xbe::Header*)0x00010000;
+	{
+		Xbe::Header *MemXbeHeader = (Xbe::Header*)0x00010000;
 
-        uint32 old_protection = 0;
+		uint32 old_protection = 0;
 
 		VirtualProtect(MemXbeHeader, pXbeHeader->dwSizeofImage, PAGE_READWRITE, &old_protection);
 
-        // we sure hope we aren't corrupting anything necessary for an .exe to survive :]
-        MemXbeHeader->dwSizeofHeaders   = pXbeHeader->dwSizeofHeaders;
-        MemXbeHeader->dwCertificateAddr = pXbeHeader->dwCertificateAddr;
-        MemXbeHeader->dwPeHeapReserve   = pXbeHeader->dwPeHeapReserve;
-        MemXbeHeader->dwPeHeapCommit    = pXbeHeader->dwPeHeapCommit;
+		// we sure hope we aren't corrupting anything necessary for an .exe to survive :]
+		MemXbeHeader->dwSizeofHeaders = pXbeHeader->dwSizeofHeaders;
+		MemXbeHeader->dwCertificateAddr = pXbeHeader->dwCertificateAddr;
+		MemXbeHeader->dwPeHeapReserve = pXbeHeader->dwPeHeapReserve;
+		MemXbeHeader->dwPeHeapCommit = pXbeHeader->dwPeHeapCommit;
 
-        memcpy(&MemXbeHeader->dwInitFlags, &pXbeHeader->dwInitFlags, sizeof(pXbeHeader->dwInitFlags));
+		memcpy(&MemXbeHeader->dwInitFlags, &pXbeHeader->dwInitFlags, sizeof(pXbeHeader->dwInitFlags));
 
-        memcpy((void*)pXbeHeader->dwCertificateAddr, &((uint08*)pXbeHeader)[pXbeHeader->dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
+		memcpy((void*)pXbeHeader->dwCertificateAddr, &((uint08*)pXbeHeader)[pXbeHeader->dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
 
 		// Patch AllowedMediaTypes to prevent XapiVerifyMediaInDrive() being called
 		// This is necessary as we do not emulate XDVD verification
 		((Xbe::Certificate*)pXbeHeader->dwCertificateAddr)->dwAllowedMedia |= 0x00FFFFFF;
-    }
+	}
 
 	// Load EXE structure, this is used by Xapi Section functions
 	{
@@ -365,14 +368,14 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	// Initialize devices :
 	char szBuffer[260];
 	SHGetSpecialFolderPath(NULL, szBuffer, CSIDL_APPDATA, TRUE);
-    strcat(szBuffer, "\\Cxbx\\");
+	strcat(szBuffer, "\\Cxbx\\");
 
 	std::string basePath(szBuffer);
 	CxbxBasePath = basePath + "\\EmuDisk\\";
 
 	memset(szBuffer, 0, 260);
 	g_EmuShared->GetXbePath(szBuffer);
-	
+
 	if (szBuffer && *szBuffer)
 		SetCurrentDirectory(szBuffer);
 	else
@@ -390,7 +393,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	// Games may assume they are running from CdRom :
 	CxbxRegisterDeviceNativePath(DeviceCdrom0, xbePath);
 
-	
+
 	// Partition 0 contains configuration data, and is accessed as a native file, instead as a folder :
 	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition0, CxbxBasePath + "Partition0_ConfigData.bin", true); /*IsFile=*/
 																												// The first two partitions are for Data and Shell files, respectively :
@@ -402,7 +405,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition5, CxbxBasePath + "Partition5");
 	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition6, CxbxBasePath + "Partition6");
 	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition7, CxbxBasePath + "Partition7");
-	
+
 
 	DbgPrintf("EmuMain : Creating default symbolic links.\n");
 
@@ -426,7 +429,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		xboxkrnl::XeImageFileName.MaximumLength = MAX_PATH;
 
 		DbgPrintf("EmuMain : XeImageFileName = %s\n", xboxkrnl::XeImageFileName.Buffer);
-		
+
 		CxbxCreateSymbolicLink(DriveD, DeviceCdrom0); // CdRom goes to D:
 		CxbxCreateSymbolicLink(DriveE, DeviceHarddisk0Partition1); // Partition1 goes to E: (Data files, savegames, etc.)
 		CxbxCreateSymbolicLink(DriveF, DeviceHarddisk0Partition2); // Partition2 goes to F: (Shell files, dashboard, etc.)
@@ -440,17 +443,17 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 			CxbxMountUtilityDrive(CxbxKrnl_XbeHeader->dwInitFlags.bFormatUtilityDrive);/*fFormatClean=*/
 	}
 
-    //
-    // duplicate handle in order to retain Suspend/Resume thread rights from a remote thread
-    //
+	//
+	// duplicate handle in order to retain Suspend/Resume thread rights from a remote thread
+	//
 
-    {
-        HANDLE hDupHandle = NULL;
+	{
+		HANDLE hDupHandle = NULL;
 
-        DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
+		DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
 
-        CxbxKrnlRegisterThread(hDupHandle);
-    }
+		CxbxKrnlRegisterThread(hDupHandle);
+	}
 
 	//
 	// Clear critical section list
@@ -458,11 +461,11 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	//extern void InitializeSectionStructures(void); 
 	InitializeSectionStructures();
 
-    DbgPrintf("EmuMain (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
+	DbgPrintf("EmuMain (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
 
-    XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
+	XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
 
-    EmuHLEIntercept(pLibraryVersion, pXbeHeader);
+	EmuHLEIntercept(pLibraryVersion, pXbeHeader);
 
 	//
 	// initialize FS segment selector
@@ -473,6 +476,21 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 		EmuGenerateFS(pTLS, pTLSData);
 	}
+
+	
+	DbgPrintf("EmuMain : Determining CPU affinity.");	// Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
+	// this will better aproximate the environment with regard to multi-threading) :
+	{		GetProcessAffinityMask(GetCurrentProcess(), &g_CPUXbox, &g_CPUOthers);
+		// For the other threads, remove one bit from the processor mask:
+		g_CPUOthers = ((g_CPUXbox - 1) & g_CPUXbox);
+		// Test if there are any other cores available :
+		if (g_CPUOthers > 0) {
+			// If so, make sure the Xbox threads run on the core NOT running Xbox code :
+			g_CPUXbox = g_CPUXbox & (~g_CPUOthers);		} else {			// Else the other threads must run on the same core as the Xbox code :
+			g_CPUOthers = g_CPUXbox;		}
+
+	// Make sure Xbox1 code runs on one core :
+	SetThreadAffinityMask(GetCurrentThread(), g_CPUXbox);}
 
     DbgPrintf("EmuMain (0x%X): Initial thread starting.\n", GetCurrentThreadId());
 
