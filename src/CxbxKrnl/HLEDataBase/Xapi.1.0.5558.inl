@@ -666,9 +666,9 @@ OOVPATable XAPI_1_0_5558[] =
         "GetFileAttributesA"
         #endif
     },
-	// XGetSectionHandleA (* unchanged since 4134 *)
+	// XGetSectionHandleA (* unchanged since 3911 *)
 	{
-		(OOVPA*)&XGetSectionHandleA_1_0_4134, 
+		(OOVPA*)&XGetSectionHandleA_1_0_3911, 
 			
 		XTL::EmuXGetSectionHandleA,
 
@@ -676,9 +676,9 @@ OOVPATable XAPI_1_0_5558[] =
 		"EmuXGetSectionHandleA"
 		#endif
 	},
-	// XLoadSectionByHandle (* unchanged since 4134 *)
+	// XLoadSectionByHandle (* unchanged since 3911 *)
 	{
-		(OOVPA*)&XLoadSectionByHandle_1_0_4134, 
+		(OOVPA*)&XLoadSectionByHandle_1_0_3911, 
 			
 		XTL::EmuXLoadSectionByHandle,
 
@@ -686,9 +686,9 @@ OOVPATable XAPI_1_0_5558[] =
 		"EmuXLoadSectionByHandle"
 		#endif
 	},
-	// XFreeSectionByHandle (* unchanged since 4134 *)
+	// XFreeSectionByHandle (* unchanged since 3911 *)
 	{
-		(OOVPA*)&XFreeSectionByHandle_1_0_4134, 
+		(OOVPA*)&XFreeSectionByHandle_1_0_3911, 
 			
 		XTL::EmuXFreeSectionByHandle,
 

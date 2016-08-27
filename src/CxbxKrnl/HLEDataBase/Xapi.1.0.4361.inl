@@ -772,6 +772,36 @@ OOVPATable XAPI_1_0_4361[] =
 		"EmuXFreeSectionA"
 		#endif
 	},
+	// XGetSectionHandleA
+	{
+		(OOVPA*)&XGetSectionHandleA_1_0_3911,
+
+		XTL::EmuXGetSectionHandleA,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXGetSectionHandleA"
+		#endif
+	},
+	// XLoadSectionByHandle 
+	{
+		(OOVPA*)&XLoadSectionByHandle_1_0_3911,
+
+		XTL::EmuXLoadSectionByHandle,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXLoadSectionByHandle"
+		#endif
+	},
+	// XFreeSectionByHandle
+	{
+		(OOVPA*)&XFreeSectionByHandle_1_0_3911,
+
+		XTL::EmuXFreeSectionByHandle,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXFreeSectionByHandle"
+		#endif
+	},
 	// GetTimeZoneInformation (* unchanged since 3911 *)
     {
         (OOVPA*)&GetTimeZoneInformation_1_0_3911,

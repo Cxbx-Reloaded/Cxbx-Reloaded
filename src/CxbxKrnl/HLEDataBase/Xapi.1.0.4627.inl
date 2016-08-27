@@ -635,77 +635,6 @@ SOOVPA<12> XInputGetCapabilities5_1_0_4831 =
 };
 
 // ******************************************************************
-// * XLoadSectionA
-// ******************************************************************
-SOOVPA<10> XLoadSectionA_1_0_4627 = 
-{
-	0,	// Large == 0
-	10,	// Count == 10
-
-	-1,	// XRef not saved
-	0,	// XRef not used
-
-	{
-		// XLoadSectionA+0x0F : call XLoadSectionByHandle
-//		{ 0x10, XREF_XLoadSectionByHandle },
-
-		// XLoadSectionA+0x0: push dword ptr [esp+4]
-		{ 0x00, 0xFF },
-		{ 0x01, 0x74 },
-		{ 0x02, 0x24 },
-		{ 0x03, 0x04 },
-
-		// XLoadSectionA+0x9: cmp eax, 0xFFFFFFFF
-		{ 0x09, 0x83 },
-		{ 0x0A, 0xF8 },
-		{ 0x0B, 0xFF },
-
-		// XLoadSectionA+0xE: push eax
-		{ 0x0E, 0x50 },
-
-		// XLoadSectionA+0x18: ret 4
-		{ 0x18, 0xC2 },
-		{ 0x19, 0x04 },
-	}
-};
-
-// ******************************************************************
-// * XFreeSectionA
-// ******************************************************************
-SOOVPA<11> XFreeSectionA_1_0_4627 = 
-{
-	0,	// Large == 0
-	11,	// Count == 11
-
-	-1,	// XRef not saved
-	0,	// XRef not used
-
-	{
-		// XFreeSectionA+0x0F : call XFreeSectionByHandle
-//		{ 0x10, XREF_XFreeSectionByHandle },
-
-		// XLoadSectionA+0x0: push dword ptr [esp+4]
-		{ 0x00, 0xFF },
-		{ 0x01, 0x74 },
-		{ 0x02, 0x24 },
-		{ 0x03, 0x04 },
-
-		// XLoadSectionA+0x9: cmp eax, 0xFFFFFFFF
-		{ 0x09, 0x83 },
-		{ 0x0A, 0xF8 },
-		{ 0x0B, 0xFF },
-
-		// XLoadSectionA+0x14: jz 0x2
-		{ 0x14, 0xEB },
-		{ 0x15, 0x02 },
-
-		// XLoadSectionA+0x18: ret 4
-		{ 0x18, 0xC2 },
-		{ 0x19, 0x04 },
-	}
-};
-
-// ******************************************************************
 // * GetOverlappedResult
 // ******************************************************************
 SOOVPA<7> GetOverlappedResult_1_0_4627 = 
@@ -1425,9 +1354,9 @@ OOVPATable XAPI_1_0_4627[] =
         "EmuXInputGetCapabilities6_4928"
         #endif
     },
-	// XGetSectionHandleA (* unchanged since 4134 *)
+	// XGetSectionHandleA (* unchanged since 3911 *)
 	{
-		(OOVPA*)&XGetSectionHandleA_1_0_4134, 
+		(OOVPA*)&XGetSectionHandleA_1_0_3911, 
 			
 		XTL::EmuXGetSectionHandleA,
 
@@ -1435,9 +1364,9 @@ OOVPATable XAPI_1_0_4627[] =
 		"EmuXGetSectionHandleA"
 		#endif
 	},
-	// XLoadSectionByHandle (* unchanged since 4134 *)
+	// XLoadSectionByHandle (* unchanged since 3911 *)
 	{
-		(OOVPA*)&XLoadSectionByHandle_1_0_4134, 
+		(OOVPA*)&XLoadSectionByHandle_1_0_3911, 
 			
 		XTL::EmuXLoadSectionByHandle,
 
@@ -1445,9 +1374,9 @@ OOVPATable XAPI_1_0_4627[] =
 		"EmuXLoadSectionByHandle"
 		#endif
 	},
-	// XFreeSectionByHandle (* unchanged since 4134 *)
+	// XFreeSectionByHandle (* unchanged since 3911 *)
 	{
-		(OOVPA*)&XFreeSectionByHandle_1_0_4134, 
+		(OOVPA*)&XFreeSectionByHandle_1_0_3911, 
 			
 		XTL::EmuXFreeSectionByHandle,
 
@@ -1457,7 +1386,7 @@ OOVPATable XAPI_1_0_4627[] =
 	},
 	// XLoadSectionA
 	{
-		(OOVPA*)&XLoadSectionA_1_0_4627, 
+		(OOVPA*)&XLoadSectionA_1_0_3911, 
 			
 		XTL::EmuXLoadSectionA,
 
@@ -1467,7 +1396,7 @@ OOVPATable XAPI_1_0_4627[] =
 	},
 	// XFreeSectionA
 	{
-		(OOVPA*)&XFreeSectionA_1_0_4627, 
+		(OOVPA*)&XFreeSectionA_1_0_3911, 
 			
 		XTL::EmuXFreeSectionA,
 
