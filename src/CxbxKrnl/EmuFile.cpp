@@ -208,14 +208,14 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 
  		   // Make a distinction between Xbox paths (starting with '\Device'...) and Native paths :
 			std::string deviceString = "\\Device";
-			IsNativePath = aFullPath.compare(0, deviceString.length(), deviceString) != 0;
+			IsNativePath = strnicmp(aFullPath.c_str(), deviceString.c_str(), deviceString.length()) != 0;
 			if (IsNativePath)
 				DeviceIndex = 0;
 			else
 			{
 				DeviceIndex = -1;
 				for (int i = 0; i < Devices.size(); i++) {
-					if (aFullPath.compare(0, Devices[i].XboxFullPath.length(), Devices[i].XboxFullPath) == 0)
+					if (strnicmp(aFullPath.c_str(), Devices[i].XboxFullPath.c_str(), Devices[i].XboxFullPath.length()) == 0)
 					{
 						DeviceIndex = i;
 						break;
@@ -303,7 +303,7 @@ char SymbolicLinkToDriveLetter(std::string SymbolicLinkName)
 			return result;
 
 		if (result >= 'a' && result <= 'z') {
-			return result;
+			return result + 'A' - 'a';
 		}
 	}
 	
@@ -333,9 +333,10 @@ EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByDevice(std::string DeviceName
 	for (char VolumeLetter = 'A';  VolumeLetter <= 'Z'; VolumeLetter++)
 	{
 		EmuNtSymbolicLinkObject* result = NtSymbolicLinkObjects[VolumeLetter - 'A'];
-		if ((result != NULL) && DeviceName.compare(0, result->XboxFullPath.length(), result->XboxFullPath) == 0)
+		if ((result != NULL) && strnicmp(DeviceName.c_str(), result->XboxFullPath.c_str(), result->XboxFullPath.length()) == 0)
 			return result;
 	}
+
 
 	return NULL;
 }

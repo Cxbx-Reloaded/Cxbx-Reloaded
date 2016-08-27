@@ -1240,7 +1240,7 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 		else
 		{
 			// No symbolic link - as last resort, check if the path accesses a partition from Harddisk0 :
-			if (RelativePath.compare(0, (DeviceHarddisk0 + "\\partition").length(), DeviceHarddisk0 + "\\partition") != 0)
+			if (strnicmp(RelativePath.c_str(), (DeviceHarddisk0 + "\\partition").c_str() ,(DeviceHarddisk0 + "\\partition").length()) != 0)
 			{
 				result = STATUS_UNRECOGNIZED_VOLUME; // TODO : Is this the correct error?
 				EmuWarning((("Path not available : ") + OriginalPath).c_str());
@@ -1256,7 +1256,7 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 		}
 
 		// Check for special case : Partition0
-		if (XboxFullPath.compare(DeviceHarddisk0Partition0) == 0)
+		if (stricmp(XboxFullPath.c_str(), DeviceHarddisk0Partition0.c_str())== 0)
 		{
 			CxbxKrnlCleanup("Partition0 access not implemented yet! Tell PatrickvL what title triggers this.");
 			// TODO : Redirect raw sector-access to the 'Partition0_ConfigData.bin' file
@@ -1265,7 +1265,7 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 
 		DbgPrintf("EmuKrnl : %s Corrected path..\n.", aFileAPIName.c_str());
 		DbgPrintf("  Org:\"%s\"\n", OriginalPath.c_str());
-		if (NativePath.compare(0, CxbxBasePath.length(), CxbxBasePath) == 0)
+		if (strnicmp(NativePath.c_str(), CxbxBasePath.c_str(), CxbxBasePath.length()) == 0)
 		{
 			DbgPrintf("  New:\"$CxbxPath\\EmuDisk\\%s%s\"\n", (NativePath.substr(CxbxBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());	
 		}
