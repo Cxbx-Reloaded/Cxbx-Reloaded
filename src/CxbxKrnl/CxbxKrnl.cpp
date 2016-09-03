@@ -348,6 +348,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		MemXbeHeader->dwCertificateAddr = pXbeHeader->dwCertificateAddr;
 		MemXbeHeader->dwPeHeapReserve = pXbeHeader->dwPeHeapReserve;
 		MemXbeHeader->dwPeHeapCommit = pXbeHeader->dwPeHeapCommit;
+		MemXbeHeader->dwPeStackCommit = pXbeHeader->dwPeStackCommit;
 
 		memcpy(&MemXbeHeader->dwInitFlags, &pXbeHeader->dwInitFlags, sizeof(pXbeHeader->dwInitFlags));
 

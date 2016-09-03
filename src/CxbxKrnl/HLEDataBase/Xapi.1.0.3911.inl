@@ -1867,46 +1867,6 @@ OOVPATable XAPI_1_0_3911[] =
 		"EmuXGetDevices"
 		#endif
 	},
-	// CreateFiber
-	{
-		(OOVPA*)&CreateFiber_1_0_3911,
-
-		XTL::EmuCreateFiber,
-
-		#ifdef _DEBUG_TRACE
-		"EmuCreateFiber"
-		#endif
-	},
-	// DeleteFiber
-	{
-		(OOVPA*)&DeleteFiber_1_0_3911,
-
-		XTL::EmuDeleteFiber,
-
-		#ifdef _DEBUG_TRACE
-		"EmuDeleteFiber"
-		#endif
-	},
-	// SwitchToFiber
-	{
-		(OOVPA*)&SwitchToFiber_1_0_3911,
-
-		XTL::EmuSwitchToFiber,
-
-		#ifdef _DEBUG_TRACE
-		"EmuSwitchToFiber"
-		#endif
-	},
-	// ConvertThreadToFiber
-	{
-		(OOVPA*)&ConvertThreadToFiber_1_0_3911,
-
-		XTL::EmuConvertThreadToFiber,
-
-		#ifdef _DEBUG_TRACE
-		"EmuConvertThreadToFiber"
-		#endif
-	},
 	// XInputGetCapabilities
 	{
 		(OOVPA*)&XInputGetCapabilities_1_0_3911,
