@@ -139,6 +139,24 @@ OOVPATable XAPI_1_0_4432[] =
         "EmuXInputOpen"
         #endif
     },
+	// XID_fCloseDevice
+	{
+		(OOVPA*)&XID_fCloseDevice_1_0_4361, 0,
+
+		#ifdef _DEBUG_TRACE
+		"XID_fCloseDevice (XREF)"
+		#endif
+	},
+	// XInputClose (* unchanged since 1.0.3911 *)
+	{
+		(OOVPA*)&XInputClose_1_0_3911,
+
+		XTL::EmuXInputClose,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXInputClose"
+		#endif
+	},
     // XInputGetCapabilities (* unchanged since 1.0.4361 *)
     {
         (OOVPA*)&XInputGetCapabilities_1_0_4361,
@@ -351,6 +369,33 @@ OOVPATable XAPI_1_0_4432[] =
         "EmuGetFileAttributesA"
         #endif
     },
+	// timeSetEvent
+	{
+		(OOVPA*)&timeSetEvent_1_0_4134,
+		XTL::EmutimeSetEvent,
+
+		#ifdef _DEBUG_TRACE
+		"EmutimeSetEvent"
+		#endif
+	},
+	// timeKillEvent
+	{
+		(OOVPA*)&timeKillEvent_1_0_4134,
+		XTL::EmutimeKillEvent,
+
+		#ifdef _DEBUG_TRACE
+		"EmutimeKillEvent"
+		#endif
+	},
+	// XLaunchNewImageA
+	{
+		(OOVPA*)&XLaunchNewImageA_1_0_3911,
+		XTL::EmuXLaunchNewImage,
+		
+		#ifdef _DEBUG_TRACE
+		"EmuXLaunchNewImageA"
+		#endif
+	},
 };
 
 // ******************************************************************

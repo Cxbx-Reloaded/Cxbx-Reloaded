@@ -701,6 +701,15 @@ OOVPATable XAPI_1_0_4134[] =
         "EmutimeKillEvent"
         #endif
     },
+	// XLaunchNewImageA
+	{
+		(OOVPA*)&XLaunchNewImageA_1_0_3911,
+		XTL::EmuXLaunchNewImage,
+
+		#ifdef _DEBUG_TRACE
+		"EmuXLaunchNewImageA"
+		#endif
+	},
 };
 
 // ******************************************************************
