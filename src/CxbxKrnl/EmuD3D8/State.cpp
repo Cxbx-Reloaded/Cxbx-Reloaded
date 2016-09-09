@@ -225,25 +225,93 @@ void XTL::EmuUpdateDeferredStates()
             if(pCur[8+Adjust2] != X_D3DTSS_UNK)
                 g_pD3DDevice8->SetTextureStageState(v, D3DTSS_MAXANISOTROPY, pCur[8+Adjust2]);
 
-            // TODO: Use a lookup table, this is not always a 1:1 map
             if(pCur[12-Adjust1] != X_D3DTSS_UNK)
             {
-                if(pCur[12-Adjust1] > 12 && !(pCur[12-Adjust1] >= 17 && pCur[12-Adjust1] <= 21) && 
-					(pCur[12-Adjust1] != 22) && (pCur[12-Adjust1] != 14) &&
-					(pCur[12-Adjust1] != 15) && (pCur[12-Adjust1] != 13))
-                    CxbxKrnlCleanup("(Temporarily) Unsupported D3DTSS_COLOROP Value (%d)", pCur[12-Adjust1]);
-
-				// Dirty Hack: 22 == D3DTOP_DOTPRODUCT3
-				if( pCur[12-Adjust1] == 22 )
-					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_DOTPRODUCT3);
-				else if( pCur[12-Adjust1] == 14 )
-					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_BLENDTEXTUREALPHA);
-				else if( pCur[12-Adjust1] == 15 )
-					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_BLENDFACTORALPHA);
-				else if( pCur[12-Adjust1] == 13 )
+				// TODO: This would be better split into it's own function, or a lookup array
+				switch (pCur[12 - Adjust1]) 
+				{
+				case X_D3DTOP_DISABLE: 
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_DISABLE);
+					break;
+				case X_D3DTOP_SELECTARG1:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+					break;
+				case X_D3DTOP_SELECTARG2:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_SELECTARG2);
+					break;
+				case X_D3DTOP_MODULATE:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_MODULATE);
+					break;
+				case X_D3DTOP_MODULATE2X:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_MODULATE2X);
+					break;
+				case X_D3DTOP_MODULATE4X:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_MODULATE4X);
+					break;
+				case X_D3DTOP_ADD:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_ADD);
+					break;
+				case X_D3DTOP_ADDSIGNED:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_ADDSIGNED);
+					break;
+				case X_D3DTOP_ADDSIGNED2X:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_ADDSIGNED2X);
+					break;
+				case X_D3DTOP_SUBTRACT:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_SUBTRACT);
+					break;
+				case X_D3DTOP_ADDSMOOTH:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_ADDSMOOTH);
+					break;
+				case X_D3DTOP_BLENDDIFFUSEALPHA:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_BLENDDIFFUSEALPHA);
+					break;
+				case X_D3DTOP_BLENDCURRENTALPHA:
 					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_BLENDCURRENTALPHA);
-				else
-					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, pCur[12-Adjust1]);
+					break;
+				case X_D3DTOP_BLENDTEXTUREALPHA:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_BLENDTEXTUREALPHA);
+					break;
+				case X_D3DTOP_BLENDFACTORALPHA:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_BLENDFACTORALPHA);
+					break;
+				case X_D3DTOP_BLENDTEXTUREALPHAPM:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_BLENDTEXTUREALPHAPM);
+					break;
+				case X_D3DTOP_PREMODULATE:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_PREMODULATE);
+					break;
+				case X_D3DTOP_MODULATEALPHA_ADDCOLOR:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_MODULATEALPHA_ADDCOLOR);
+					break;
+				case X_D3DTOP_MODULATECOLOR_ADDALPHA:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_MODULATECOLOR_ADDALPHA);
+					break;
+				case X_D3DTOP_MODULATEINVALPHA_ADDCOLOR:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_MODULATEINVALPHA_ADDCOLOR);
+					break;
+				case X_D3DTOP_MODULATEINVCOLOR_ADDALPHA:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_MODULATEINVCOLOR_ADDALPHA);
+					break;
+				case X_D3DTOP_DOTPRODUCT3:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_DOTPRODUCT3);
+					break;
+				case X_D3DTOP_MULTIPLYADD:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_MULTIPLYADD);
+					break;
+				case X_D3DTOP_LERP:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_LERP);
+					break;
+				case X_D3DTOP_BUMPENVMAP:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_MULTIPLYADD);
+					break;
+				case X_D3DTOP_BUMPENVMAPLUMINANCE:
+					g_pD3DDevice8->SetTextureStageState(v, D3DTSS_COLOROP, D3DTOP_BUMPENVMAPLUMINANCE);
+					break;
+				default:
+					CxbxKrnlCleanup("(Temporarily) Unsupported D3DTSS_COLOROP Value (%d)", pCur[12 - Adjust1]);
+					break;
+				}
             }
 
             if(pCur[13-Adjust1] != X_D3DTSS_UNK)
