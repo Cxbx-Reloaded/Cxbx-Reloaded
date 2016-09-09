@@ -1,7 +1,17 @@
-Cxbx-Reloaded
-=============
+# Cxbx-Reloaded - An Xbox Emulator
 
-A branch of the Cxbx source code with support for 64-bit operating systems (Tested on Windows 10 64-bit)
+Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro) games on Microsoft Windows.
 
-Screenshot Gallery:
+The project began life as a fork of Cxbx with added 64-bit support. Work is currently underway to backport some of the improvements from Dxbx.
+
+Cxbx-Reloaded is still pretty unstable, don't expect it to run much at this point.
+
+## System Requirements
+  * Windows 10 64-bit (May work on other versions, but this has not been tested).
+  * A graphics card that supports Direct3D 8.
+
+## Screenshot Gallary
 http://imgur.com/a/Bzvti
+
+## Special Thanks
+All contributers to the original Cxbx and Dxbx projects, without which Cxbx-Reloaded would not exist at all
