@@ -170,6 +170,35 @@ struct EmuD3D8CreateDeviceProxyData
 }
 g_EmuCDPD = {0};
 
+typedef struct
+{
+	int W;
+	int H;
+	unsigned long PCMode;
+	char N[6];
+} XboxResolution;
+
+std::vector<XboxResolution> XboxResolutions = {
+	{ 640, 480, 0, "NTSC"},
+	{ 640, 576, 0, "PAL" },
+	{ 720, 480, 0, "480p" },
+	{ 720, 576, 0, "PAL2" },
+	{ 1280, 720, 0, "720p" },
+	{ 1920, 1080, 0, "1080i" }
+};
+
+bool IsValidXboxDisplayMode(XTL::D3DDISPLAYMODE PCDisplayMode, int PCModeNr)
+{
+	for (int i = 0; i < XboxResolutions.size(); i++) {
+		if (XboxResolutions[i].W == PCDisplayMode.Width && XboxResolutions[i].H == PCDisplayMode.Height) {
+			XboxResolutions[i].PCMode = PCModeNr;
+			return true;
+		}
+	}
+
+	return false;
+}
+
 // Direct3D initialization (called before emulation begins)
 VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 {
@@ -1621,21 +1650,22 @@ UINT WINAPI XTL::EmuIDirect3D8_GetAdapterModeCount
            "   Adapter                   : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), Adapter);
+	
+	D3DDISPLAYMODE PCDisplayMode;
 
     UINT ret = g_pD3D8->GetAdapterModeCount(g_XBVideo.GetDisplayAdapter());
 
-    D3DDISPLAYMODE Mode;
+	for (uint32 v = 0;v<ret;v++)
+	{
+		HRESULT hRet = g_pD3D8->EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), v, &PCDisplayMode);
 
-    for(uint32 v=0;v<ret;v++)
-    {
-        HRESULT hRet = g_pD3D8->EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), v, &Mode);
+		if (hRet != D3D_OK)
+			break;
 
-        if(hRet != D3D_OK)
-            break;
-
-        if(Mode.Width != 640 || Mode.Height != 480)
-            ret--;
-    }
+		// Dxbx addition: Only count valid Xbox resultions :
+		if (!IsValidXboxDisplayMode(PCDisplayMode, v))
+			ret--;
+	}
 
     EmuSwapFS();   // XBox FS
 
@@ -1711,23 +1741,12 @@ HRESULT WINAPI XTL::EmuIDirect3D8_EnumAdapterModes
 
     HRESULT hRet;
 
-    static int ModeAdder = 0;
-
-    if(Mode == 0)
-        ModeAdder = 0;
-
     D3DDISPLAYMODE PCMode;
 
-    do
-    {
-        hRet = g_pD3D8->EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), Mode+ModeAdder, (D3DDISPLAYMODE*)&PCMode);
-
-        if(hRet != D3D_OK || (PCMode.Width == 640 && PCMode.Height == 480))
-            break;
-
-        ModeAdder++;
-    }
-    while(true);
+	if (Mode < XboxResolutions.size()) 
+		hRet = g_pD3D8->EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), XboxResolutions[Mode].PCMode, (D3DDISPLAYMODE*)&PCMode);
+	else
+		hRet = D3DERR_INVALIDCALL;
 
     // make adjustments to parameters to make sense with windows direct3d
     if(hRet == D3D_OK)
