@@ -296,12 +296,18 @@ void EmuInitFS()
 
 		DbgPrintf("Searching for FS Instruction in section %s\n", sectionName.c_str());
 		uint32_t startAddr = CxbxKrnl_Exe->m_SectionHeader[sectionIndex].m_virtual_addr + CxbxKrnl_XbeHeader->dwBaseAddr;
-		for (uint32 addr = startAddr; addr < startAddr + CxbxKrnl_Exe->m_SectionHeader[sectionIndex].m_sizeof_raw; addr++)
+		uint32_t endAddr = startAddr + CxbxKrnl_Exe->m_SectionHeader[sectionIndex].m_sizeof_raw;
+		for (uint32 addr = startAddr; addr < endAddr; addr++)
 		{
 			for (int i = 0; i < numberOfInstructions; i++)
 			{
 				// Loop through the data, checking if we get an exact match
 				long sizeOfData = fsInstructions[i].data.size();
+
+				if (addr + sizeOfData >= endAddr)
+				{
+					continue;
+				}
 
 				if (memcmp((void*)addr, &fsInstructions[i].data[0], sizeOfData) == 0)
 				{
