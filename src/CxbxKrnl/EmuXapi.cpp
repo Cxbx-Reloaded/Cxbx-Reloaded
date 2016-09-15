@@ -834,17 +834,17 @@ VOID WINAPI XTL::EmuXapiThreadStartup
 // ******************************************************************
 // * func: EmuXapiBootDash
 // ******************************************************************
-VOID WINAPI XTL::EmuXapiBootDash(DWORD UnknownA, DWORD UnknownB, DWORD UnknownC)
+VOID WINAPI XTL::EmuXapiBootDash(DWORD dwReason, DWORD dwParameter1, DWORD dwParameter2)
 {
     EmuSwapFS();   // Win2k/XP FS
 
     DbgPrintf("EmuXapi (0x%X): EmuXapiBootDash\n"
            "(\n"
-           "   UnknownA            : 0x%.08X\n"
-           "   UnknownB            : 0x%.08X\n"
-           "   UnknownC            : 0x%.08X\n"
+           "   dwReason            : 0x%.08X\n"
+           "   dwParameter1        : 0x%.08X\n"
+           "   dwParameter2        : 0x%.08X\n"
            ");\n",
-            GetCurrentThreadId(), UnknownA, UnknownB, UnknownC);
+            GetCurrentThreadId(), dwReason, dwParameter1, dwParameter2);
 
     CxbxKrnlCleanup("Emulation Terminated (XapiBootDash)");
 
