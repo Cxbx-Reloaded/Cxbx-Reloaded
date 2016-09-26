@@ -63,13 +63,13 @@ PVOID WINAPI XTL::EmuXGIsSwizzledFormat
     // ******************************************************************
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuXapi (0x%X): EmuXGIsSwizzledFormat\n"
                "(\n"
                "   Format              : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), Format);
-        EmuSwapFS();   // Xbox FS
+        
     }
     #endif
 
@@ -91,7 +91,7 @@ VOID WINAPI XTL::EmuXGSwizzleRect
     DWORD         BytesPerPixel
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuXGSwizzleRect\n"
            "(\n"
@@ -139,7 +139,7 @@ VOID WINAPI XTL::EmuXGSwizzleRect
         }
     }
 
-    EmuSwapFS();   // Xbox FS
+    
 
     return;
 }
@@ -161,7 +161,7 @@ VOID WINAPI XTL::EmuXGSwizzleBox
     DWORD            BytesPerPixel
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuXGSwizzleBox\n"
            "(\n"
@@ -215,7 +215,7 @@ VOID WINAPI XTL::EmuXGSwizzleBox
         }
 	}
 
-    EmuSwapFS();   // Xbox FS
+    
 
     return;
 }
@@ -337,7 +337,7 @@ HRESULT WINAPI XTL::EmuXGWriteSurfaceOrTextureToXPR
 	BOOL			bWriteSurfaceAsTexture
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuXGWriteSurfaceOrTextureToXPR\n"
            "(\n"
@@ -353,7 +353,7 @@ HRESULT WINAPI XTL::EmuXGWriteSurfaceOrTextureToXPR
 
 	EmuWarning("(Temporarily) ignoring EmuXGWriteSurfaceOrTextureToXPR. Need file specs.");
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return S_OK;
 }
@@ -374,7 +374,7 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 	UINT			Pitch
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuXGSetTextureHeader\n"
            "(\n"
@@ -408,10 +408,10 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 
 	// Generate a temporary texture and fill in the necessary fields within
 	// the X_D3DTexture interface (lazy, I know).
-	EmuSwapFS();
+	
 	pTempTexture = (X_D3DTexture*) XTL::EmuIDirect3DDevice8_CreateTexture2(Width, Height, 0, Levels, Usage, Format, 
 		XTL::D3DRTYPE_TEXTURE);
-	EmuSwapFS();
+	
 
 	pTexture->Data		= pTempTexture->Data;
 	pTexture->Common	= X_D3DCOMMON_TYPE_TEXTURE; //pTempTexture->Common;
@@ -419,9 +419,9 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 	pTexture->Lock		= pTempTexture->Lock; // 0;
 	pTexture->Size		= pTempTexture->Size;
 
-	EmuSwapFS();
+	
 	XTL::EmuIDirect3DResource8_Release(pTempTexture);
-	EmuSwapFS();
+	
 
 	// Manually fill in Format parameters
 	/*pTexture->Format |= ( ( ( Width >> 1 ) & 0xF ) << X_D3DFORMAT_USIZE_SHIFT ) |	// Width
@@ -439,7 +439,7 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 //	D3DCOLOR_XRGB(
 	DbgPrintf( "pTexture->Format:= 0x%.08X\n", pTexture->Format );
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 }
 
 // ******************************************************************
@@ -452,7 +452,7 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 //	void			**ppFont
 //)
 //{
-//	EmuSwapFS();	// Win2k/XP FS
+//		// Win2k/XP FS
 //
 //	DbgPrintf("EmuXapi (0x%X): EmuXFONT_OpenBitmapFontFromMemory\n"
 //           "(\n"
@@ -464,7 +464,7 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 //
 //	__asm int 3;
 //
-//	EmuSwapFS(); // Xbox FS
+//	 // Xbox FS
 //
 //	return E_FAIL;
 //}

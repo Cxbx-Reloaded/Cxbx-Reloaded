@@ -85,9 +85,9 @@ XTL::LAUNCH_DATA g_SavedLaunchData;
 BOOL WINAPI XTL::EmuXFormatUtilityDrive()
 {
     #ifdef _DEBUG_TRACE
-    EmuSwapFS();   // Win2k/XP FS
+    
     DbgPrintf("EmuXapi (0x%X): EmuXFormatUtilityDrive()\n", GetCurrentThreadId());
-    EmuSwapFS();   // XBox FS
+    
     #endif
 
     // TODO: yeah... we'll format... riiiiight
@@ -103,7 +103,7 @@ DWORD WINAPI XTL::EmuGetTimeZoneInformation
     OUT LPTIME_ZONE_INFORMATION lpTimeZoneInformation
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuGetTimeZoneInformation\n"
            "(\n"
@@ -113,7 +113,7 @@ DWORD WINAPI XTL::EmuGetTimeZoneInformation
 
     DWORD dwRet = GetTimeZoneInformation(lpTimeZoneInformation);
 
-    EmuSwapFS();   // XBox FS
+    
 
     return dwRet;
 }
@@ -126,7 +126,7 @@ BOOL WINAPI XTL::EmuQueryPerformanceCounter
     PLARGE_INTEGER lpPerformanceCount
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuQueryPerformanceCounter\n"
            "(\n"
@@ -139,7 +139,7 @@ BOOL WINAPI XTL::EmuQueryPerformanceCounter
     // debug - 4x speed
     //lpPerformanceCount->QuadPart *= 4;
 
-    EmuSwapFS();   // XBox FS
+    
 
     return bRet;
 }
@@ -152,7 +152,7 @@ BOOL WINAPI XTL::EmuQueryPerformanceFrequency
     PLARGE_INTEGER lpFrequency
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuQueryPerformanceFrequency\n"
            "(\n"
@@ -162,7 +162,7 @@ BOOL WINAPI XTL::EmuQueryPerformanceFrequency
 
     BOOL bRet = QueryPerformanceFrequency(lpFrequency);
 
-    EmuSwapFS();   // XBox FS
+    
 
     return bRet;
 }
@@ -177,13 +177,13 @@ BOOL WINAPI XTL::EmuXMountUtilityDrive
 {
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuXapi (0x%X): EmuXMountUtilityDrive\n"
                "(\n"
                "   fFormatClean        : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), fFormatClean);
-        EmuSwapFS();   // XBox FS
+        
     }
     #endif
 
@@ -201,7 +201,7 @@ VOID WINAPI XTL::EmuXInitDevices
 	PXDEVICE_PREALLOC_TYPE	PreallocTypes
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuXInitDevices\n"
            "(\n"
@@ -232,7 +232,7 @@ VOID WINAPI XTL::EmuXInitDevices
         g_hInputHandle[v] = 0;
     }
 
-    EmuSwapFS();   // XBox FS
+    
 
     return;
 }
@@ -245,7 +245,7 @@ DWORD WINAPI XTL::EmuXGetDevices
     PXPP_DEVICE_TYPE DeviceType
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuXGetDevices\n"
            "(\n"
@@ -260,7 +260,7 @@ DWORD WINAPI XTL::EmuXGetDevices
     else
         EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X)\n", DeviceType->Reserved[0], DeviceType->Reserved[1], DeviceType->Reserved[2]);
 
-    EmuSwapFS();   // XBox FS
+    
 
     return ret;
 }
@@ -275,7 +275,7 @@ BOOL WINAPI XTL::EmuXGetDeviceChanges
     PDWORD           pdwRemovals
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuXGetDeviceChanges\n"
            "(\n"
@@ -310,7 +310,7 @@ BOOL WINAPI XTL::EmuXGetDeviceChanges
         *pdwRemovals   = 0;
     }
 
-    EmuSwapFS();   // XBox FS
+    
 
     return TRUE; //bRet;
 }
@@ -326,7 +326,7 @@ HANDLE WINAPI XTL::EmuXInputOpen
     IN PXINPUT_POLLING_PARAMETERS   pPollingParameters OPTIONAL
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuXInputOpen\n"
            "(\n"
@@ -387,7 +387,7 @@ HANDLE WINAPI XTL::EmuXInputOpen
 
 	g_bXInputOpenCalled = true;
 
-    EmuSwapFS();   // XBox FS
+    
 
     return (HANDLE)pph;
 }
@@ -400,7 +400,7 @@ VOID WINAPI XTL::EmuXInputClose
     IN HANDLE hDevice
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuXInputClose\n"
            "(\n"
@@ -435,7 +435,7 @@ VOID WINAPI XTL::EmuXInputClose
     }
     //*/
 
-    EmuSwapFS();   // XBox FS
+    
 
     return;
 }
@@ -448,7 +448,7 @@ DWORD WINAPI XTL::EmuXInputPoll
     IN HANDLE hDevice
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuXInputPoll\n"
            "(\n"
@@ -495,7 +495,7 @@ DWORD WINAPI XTL::EmuXInputPoll
         }
     }
 
-    EmuSwapFS();   // XBox FS
+    
 
     return ERROR_SUCCESS;
 }
@@ -509,7 +509,7 @@ DWORD WINAPI XTL::EmuXInputGetCapabilities
     OUT PXINPUT_CAPABILITIES pCapabilities
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuXInputGetCapabilities\n"
            "(\n"
@@ -536,7 +536,7 @@ DWORD WINAPI XTL::EmuXInputGetCapabilities
         }
     }
 
-    EmuSwapFS();   // XBox FS
+    
 
     return ret;
 }
@@ -550,7 +550,7 @@ DWORD WINAPI XTL::EmuXInputGetState
     OUT PXINPUT_STATE  pState
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuXInputGetState\n"
            "(\n"
@@ -594,7 +594,7 @@ DWORD WINAPI XTL::EmuXInputGetState
 	else
 		EmuWarning( "EmuXInputGetState(): pph == NULL!" );
 
-    EmuSwapFS();   // XBox FS
+    
 
     return ret;
 }
@@ -608,7 +608,7 @@ DWORD WINAPI XTL::EmuXInputSetState
     IN OUT PXINPUT_FEEDBACK pFeedback
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuXInputSetState\n"
            "(\n"
@@ -676,7 +676,7 @@ DWORD WINAPI XTL::EmuXInputSetState
         }
     }
 
-    EmuSwapFS();   // XBox FS
+    
 
     return ret;
 }
@@ -691,7 +691,7 @@ BOOL WINAPI XTL::EmuSetThreadPriorityBoost
     BOOL    DisablePriorityBoost
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuSetThreadPriorityBoost\n"
            "(\n"
@@ -705,7 +705,7 @@ BOOL WINAPI XTL::EmuSetThreadPriorityBoost
     if(bRet == FALSE)
         EmuWarning("SetThreadPriorityBoost Failed!");
 
-    EmuSwapFS();   // XBox FS
+    
 
     return bRet;
 }
@@ -719,7 +719,7 @@ BOOL WINAPI XTL::EmuSetThreadPriority
     int     nPriority
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuSetThreadPriority\n"
            "(\n"
@@ -733,7 +733,7 @@ BOOL WINAPI XTL::EmuSetThreadPriority
     if(bRet == FALSE)
         EmuWarning("SetThreadPriority Failed!");
 
-    EmuSwapFS();   // XBox FS
+    
 
     return bRet;
 }
@@ -747,7 +747,7 @@ int WINAPI XTL::EmuGetThreadPriority
     HANDLE  hThread
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuGetThreadPriority\n"
            "(\n"
@@ -760,7 +760,7 @@ int WINAPI XTL::EmuGetThreadPriority
     if(iRet == THREAD_PRIORITY_ERROR_RETURN)
         EmuWarning("GetThreadPriority Failed!");
 
-    EmuSwapFS();   // XBox FS
+    
 
     return iRet;
 }
@@ -774,7 +774,7 @@ BOOL WINAPI XTL::EmuGetExitCodeThread
     LPDWORD lpExitCode
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuGetExitCodeThread\n"
            "(\n"
@@ -785,7 +785,7 @@ BOOL WINAPI XTL::EmuGetExitCodeThread
 
     BOOL bRet = GetExitCodeThread(hThread, lpExitCode);
 
-    EmuSwapFS();   // XBox FS
+    
 
     return bRet;
 }
@@ -799,7 +799,7 @@ VOID WINAPI XTL::EmuXapiThreadStartup
     DWORD dwDummy2
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuXapiThreadStartup\n"
            "(\n"
@@ -808,7 +808,7 @@ VOID WINAPI XTL::EmuXapiThreadStartup
            ");\n",
             GetCurrentThreadId(), dwDummy1, dwDummy2);
 
-    EmuSwapFS();   // XBox FS
+    
 
     typedef int (__stdcall *pfDummyFunc)(DWORD dwDummy);
 
@@ -836,7 +836,7 @@ VOID WINAPI XTL::EmuXapiThreadStartup
 // ******************************************************************
 VOID WINAPI XTL::EmuXapiBootDash(DWORD dwReason, DWORD dwParameter1, DWORD dwParameter2)
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuXapiBootDash\n"
            "(\n"
@@ -848,7 +848,7 @@ VOID WINAPI XTL::EmuXapiBootDash(DWORD dwReason, DWORD dwParameter1, DWORD dwPar
 
     CxbxKrnlCleanup("Emulation Terminated (XapiBootDash)");
 
-    EmuSwapFS();   // XBox FS
+    
 
     return;
 }
@@ -862,7 +862,7 @@ VOID WINAPI XTL::EmuXRegisterThreadNotifyRoutine
     BOOL                    fRegister
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuXRegisterThreadNotifyRoutine\n"
            "(\n"
@@ -905,7 +905,7 @@ VOID WINAPI XTL::EmuXRegisterThreadNotifyRoutine
 		}
     }
 
-    EmuSwapFS();   // XBox FS
+    
 }
 
 // ******************************************************************
@@ -916,7 +916,7 @@ LPVOID WINAPI XTL::EmuXLoadSectionA
 	LPCSTR					pSectionName
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuXLoadSectionA\n"
 			"(\n"
@@ -928,7 +928,7 @@ LPVOID WINAPI XTL::EmuXLoadSectionA
 	EmuWarning("Redirecting EmuXLoadSectionA to EmuXGetSectionHandleA\n");
 	LPVOID pRet = EmuXGetSectionHandleA(pSectionName);
 	
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return pRet;
 }
@@ -941,7 +941,7 @@ BOOL WINAPI XTL::EmuXFreeSectionA
 	LPCSTR					pSectionName
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuXFreeSectionA\n"
 			"(\n"
@@ -952,7 +952,7 @@ BOOL WINAPI XTL::EmuXFreeSectionA
 	// TODO: Implement (if necessary)?
 //	CxbxKrnlCleanup( "XFreeSectionA is not implemented" );
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return TRUE;
 }
@@ -965,7 +965,7 @@ HANDLE WINAPI XTL::EmuXGetSectionHandleA
 	LPCSTR					pSectionName
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuXGetSectionHandleA\n"
 			"(\n"
@@ -983,7 +983,7 @@ HANDLE WINAPI XTL::EmuXGetSectionHandleA
 		}
 	}
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return (LPVOID) pRet;
 }
@@ -996,7 +996,7 @@ LPVOID WINAPI XTL::EmuXLoadSectionByHandle
 	HANDLE					hSection
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuXLoadSectionByHandle\n"
 			"(\n"
@@ -1007,7 +1007,7 @@ LPVOID WINAPI XTL::EmuXLoadSectionByHandle
 	// The handle should contain the address of this section by the hack
 	// used in EmuXGetSectionHandleA.
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return (LPVOID) hSection;
 }
@@ -1020,7 +1020,7 @@ BOOL WINAPI XTL::EmuXFreeSectionByHandle
 	HANDLE					hSection
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuXFreeSectionByHandle\n"
 			"(\n"
@@ -1031,7 +1031,7 @@ BOOL WINAPI XTL::EmuXFreeSectionByHandle
 	// TODO: Implement (if necessary)?
 //	CxbxKrnlCleanup( "XFreeSectionByHandle is not implemented" );
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return TRUE;
 }
@@ -1044,7 +1044,7 @@ DWORD WINAPI XTL::EmuXGetSectionSize
 	HANDLE hSection                       
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuXGetSectionSize\n"
 			"(\n"
@@ -1060,7 +1060,7 @@ DWORD WINAPI XTL::EmuXGetSectionSize
 		}
 	}
 
-	EmuSwapFS();
+	
 
 	EmuWarning("EmuXApi : EmuXGetSectionSize : Could not determine section size: %x08X", hSection);
 
@@ -1078,7 +1078,7 @@ DWORD WINAPI XTL::EmuQueueUserAPC
 	DWORD		dwData
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuQueueUserAPC\n"
 			"(\n"
@@ -1101,7 +1101,7 @@ DWORD WINAPI XTL::EmuQueueUserAPC
 	if(!dwRet)
 		EmuWarning("QueueUserAPC failed!");
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return dwRet;
 }
@@ -1117,7 +1117,7 @@ BOOL WINAPI XTL::EmuGetOverlappedResult
 	BOOL			bWait
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuGetOverlappedResult\n"
 			"(\n"
@@ -1133,7 +1133,7 @@ BOOL WINAPI XTL::EmuGetOverlappedResult
 //	if(bWait)
 //		bRet = TRUE; // Sucker...
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return bRet;
 }
@@ -1147,7 +1147,7 @@ DWORD WINAPI XTL::EmuXLaunchNewImage
 	PLAUNCH_DATA	pLaunchData
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuXLaunchNewImage\n"
 			"(\n"
@@ -1212,7 +1212,7 @@ DWORD WINAPI XTL::EmuXLaunchNewImage
 	// Temporary Hack (Unreal): Jump back to the entry point
 //	uint32* start = (uint32*) 0x21C13B;
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	/*__asm
 	{
@@ -1235,7 +1235,7 @@ DWORD WINAPI XTL::EmuXGetLaunchInfo
 	PLAUNCH_DATA	pLaunchData
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuXGetLaunchInfo\n"
 			"(\n"
@@ -1291,7 +1291,7 @@ DWORD WINAPI XTL::EmuXGetLaunchInfo
 		dwRet = ERROR_SUCCESS;
 	}
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return dwRet;
 }
@@ -1304,7 +1304,7 @@ VOID WINAPI XTL::EmuXSetProcessQuantumLength
     DWORD dwMilliseconds
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuXSetProcessQuantumLength\n"
 			"(\n"
@@ -1315,7 +1315,7 @@ VOID WINAPI XTL::EmuXSetProcessQuantumLength
 	// TODO: Implement?
 	EmuWarning("XSetProcessQuantumLength is being ignored!");
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 }
 	
 // ******************************************************************
@@ -1323,7 +1323,7 @@ VOID WINAPI XTL::EmuXSetProcessQuantumLength
 // ******************************************************************
 DWORD WINAPI XTL::EmuXGetFileCacheSize()
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuXGetFileCacheSize()\n", GetCurrentThreadId());
 
@@ -1331,7 +1331,7 @@ DWORD WINAPI XTL::EmuXGetFileCacheSize()
 	// TODO: Save the file cache size if/when set.
 	DWORD dwRet = 64 * 1024;
 
-	EmuSwapFS();
+	
 
 	return dwRet;
 }
@@ -1347,7 +1347,7 @@ DWORD WINAPI XTL::EmuSignalObjectAndWait
 	BOOL	bAlertable
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuSignalObjectAndWait\n"
 			"(\n"
@@ -1360,7 +1360,7 @@ DWORD WINAPI XTL::EmuSignalObjectAndWait
 
 	DWORD dwRet = SignalObjectAndWait( hObjectToSignal, hObjectToWaitOn, dwMilliseconds, bAlertable ); 
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return dwRet;
 }
@@ -1370,7 +1370,7 @@ DWORD WINAPI XTL::EmuSignalObjectAndWait
 // ******************************************************************
 BOOL WINAPI XTL::EmuPulseEvent( HANDLE hEvent )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuPulseEvent\n"
 			"(\n"
@@ -1383,7 +1383,7 @@ BOOL WINAPI XTL::EmuPulseEvent( HANDLE hEvent )
 
 	BOOL bRet = PulseEvent( hEvent );
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return bRet;
 }
@@ -1400,7 +1400,7 @@ MMRESULT WINAPI XTL::EmutimeSetEvent
 	UINT			fuEvent
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmutimeSetEvent\n"
 			"(\n"
@@ -1414,7 +1414,7 @@ MMRESULT WINAPI XTL::EmutimeSetEvent
 
 	MMRESULT Ret = timeSetEvent( uDelay, uResolution, fptc, (DWORD_PTR) dwUser, fuEvent );
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return Ret;
 }
@@ -1427,7 +1427,7 @@ MMRESULT WINAPI XTL::EmutimeKillEvent
 	UINT uTimerID  
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuReleaseSemaphore\n"
 			"(\n"
@@ -1437,7 +1437,7 @@ MMRESULT WINAPI XTL::EmutimeKillEvent
 
 	MMRESULT Ret = timeKillEvent( uTimerID );
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return Ret;
 }
@@ -1453,7 +1453,7 @@ VOID WINAPI XTL::EmuRaiseException
 	CONST ULONG_PTR *lpArguments		   // array of arguments
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuRaiseException\n"
 			"(\n"
@@ -1467,7 +1467,7 @@ VOID WINAPI XTL::EmuRaiseException
 	// TODO: Implement or not?
 //	RaiseException(dwExceptionCode, dwExceptionFlags, nNumberOfArguments, (*(ULONG_PTR**) &lpArguments));
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 }
 
 // ******************************************************************
@@ -1478,7 +1478,7 @@ DWORD WINAPI XTL::EmuGetFileAttributesA
 	LPCSTR			lpFileName    // name of file or directory
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuGetFileAttributesA\n"
 			"(\n"
@@ -1506,7 +1506,7 @@ DWORD WINAPI XTL::EmuGetFileAttributesA
 	if(FAILED(dwRet))
 		EmuWarning("GetFileAttributes(\"%s\") failed!", szBuffer);
 
-	EmuSwapFS();
+	
 
 	return dwRet;
 }
@@ -1521,7 +1521,7 @@ DWORD WINAPI XTL::EmuXMountMUA
 	PCHAR pchDrive               
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuXMountMUA\n"
 			"(\n"
@@ -1534,7 +1534,7 @@ DWORD WINAPI XTL::EmuXMountMUA
 	// TODO: Actually allow memory card emulation? This might make transferring
 	// game saves a bit easier if the memory card directory was configurable. =]
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return E_FAIL;
 }
@@ -1549,7 +1549,7 @@ HANDLE WINAPI XTL::EmuCreateWaitableTimerA
 	LPCSTR					lpTimerName        // object name
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuCreateWaitableTimerA\n"
 			"(\n"
@@ -1565,7 +1565,7 @@ HANDLE WINAPI XTL::EmuCreateWaitableTimerA
 
 	HANDLE hRet = CreateWaitableTimerA( NULL, bManualReset, lpTimerName );
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return hRet;
 }
@@ -1584,7 +1584,7 @@ BOOL WINAPI XTL::EmuSetWaitableTimer
 )
 {
 	
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuSetWaitableTimer\n"
 			"(\n"
@@ -1603,7 +1603,7 @@ BOOL WINAPI XTL::EmuSetWaitableTimer
 	if(!Ret)
 		EmuWarning("SetWaitableTimer failed!");
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return Ret;
 }
@@ -1618,7 +1618,7 @@ DWORD WINAPI XTL::EmuXMountAlternateTitle
 	PCHAR		pchDrive               
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuXMountAlternateTitle\n"
 			"(\n"
@@ -1630,7 +1630,7 @@ DWORD WINAPI XTL::EmuXMountAlternateTitle
 
 	// TODO: Anything?
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return ERROR_SUCCESS;
 }
@@ -1640,7 +1640,7 @@ DWORD WINAPI XTL::EmuXMountAlternateTitle
 // ******************************************************************
 DWORD WINAPI XTL::EmuXUnmountAlternateTitle(CHAR chDrive)
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuXUnmountAlternativeTitle\n"
 			"(\n"
@@ -1648,7 +1648,7 @@ DWORD WINAPI XTL::EmuXUnmountAlternateTitle(CHAR chDrive)
 			");\n",
 			GetCurrentThreadId(), chDrive, chDrive);
 
-	EmuSwapFS();
+	
 
 	return ERROR_SUCCESS;
 }
@@ -1658,11 +1658,11 @@ DWORD WINAPI XTL::EmuXUnmountAlternateTitle(CHAR chDrive)
 // ******************************************************************
 DWORD WINAPI XTL::EmuXGetDeviceEnumerationStatus()
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuXGetDeviceEnumerationStatus()\n", GetCurrentThreadId());
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return XDEVICE_ENUMERATION_IDLE;
 }
@@ -1676,7 +1676,7 @@ DWORD WINAPI XTL::EmuXInputGetDeviceDescription
     PVOID	pDescription
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuXInputGetDeviceDescription\n"
            "(\n"
@@ -1687,7 +1687,7 @@ DWORD WINAPI XTL::EmuXInputGetDeviceDescription
 
 	// TODO: Lightgun support?
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return ERROR_NOT_SUPPORTED; // ERROR_DEVICE_NOT_CONNECTED;
 }
@@ -1697,14 +1697,14 @@ DWORD WINAPI XTL::EmuXInputGetDeviceDescription
 // ******************************************************************
 int WINAPI XTL::EmuXAutoPowerDownResetTimer()
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuXAutoPowerDownResetTimer()\n",
             GetCurrentThreadId());
 
 	// Meh, that's what the 'X' is for! =]
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return TRUE;
 }
@@ -1720,7 +1720,7 @@ DWORD WINAPI XTL::EmuXMountMURootA
 )
 {
 	
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXapi (0x%X): EmuXMountMURootA\n"
 			"(\n"
@@ -1732,7 +1732,7 @@ DWORD WINAPI XTL::EmuXMountMURootA
 
 	// TODO: The params are probably wrong...
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return ERROR_SUCCESS;
 }

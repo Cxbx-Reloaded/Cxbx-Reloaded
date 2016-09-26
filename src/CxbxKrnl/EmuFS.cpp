@@ -49,9 +49,6 @@ namespace xboxkrnl
 #include <windows.h>
 #include <cstdio>
 
-// automatically insert after this many EmuFS() swaps
-uint32 EmuAutoSleepRate = -1;
-
 __declspec(naked) void EmuCmpEsiFs00()
 {
 	__asm

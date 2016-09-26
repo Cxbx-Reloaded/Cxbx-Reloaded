@@ -56,7 +56,7 @@ int WINAPI XTL::EmuWSAStartup
     WSADATA    *lpWSAData
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuWSAStartup\n"
            "(\n"
@@ -67,7 +67,7 @@ int WINAPI XTL::EmuWSAStartup
 
     int ret = WSAStartup(wVersionRequested, lpWSAData);
 
-    EmuSwapFS();   // XBox FS
+    
 
     return ret;
 }
@@ -80,7 +80,7 @@ INT WINAPI XTL::EmuXNetStartup
     const PVOID pDummy
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuXNetStartup\n"
            "(\n"
@@ -88,7 +88,7 @@ INT WINAPI XTL::EmuXNetStartup
            ");\n",
            GetCurrentThreadId(), pDummy);
 
-    EmuSwapFS();   // XBox FS
+    
 
     // Fake Successfull...hehehe...sucker...hehehehehe
     return 0;
@@ -99,11 +99,11 @@ INT WINAPI XTL::EmuXNetStartup
 // ******************************************************************
 DWORD WINAPI XTL::EmuXNetGetEthernetLinkStatus()
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuXNetGetEthernetLinkStatus();\n", GetCurrentThreadId());
 
-    EmuSwapFS();   // XBox FS
+    
 
     // for now, no ethernet connection is available
     return XNET_ETHERNET_LINK_ACTIVE | XNET_ETHERNET_LINK_100MBPS;
@@ -119,7 +119,7 @@ SOCKET XTL::EmuThis::Emusocket
     int   protocol
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuThis::Emusocket\n"
            "(\n"
@@ -132,7 +132,7 @@ SOCKET XTL::EmuThis::Emusocket
 
     SOCKET ret = socket(af, type, protocol);
 
-    EmuSwapFS();   // XBox FS
+    
 
     return ret;
 }
@@ -142,7 +142,7 @@ SOCKET XTL::EmuThis::Emusocket
 // ******************************************************************
 int XTL::EmuThis::Emubind(SOCKET s, const struct sockaddr FAR *name, int namelen)
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuThis::Emubind\n"
            "(\n"
@@ -157,7 +157,7 @@ int XTL::EmuThis::Emubind(SOCKET s, const struct sockaddr FAR *name, int namelen
 
     int ret = bind(s, name, namelen);
 
-    EmuSwapFS();   // XBox FS
+    
 
     return ret;
 }
@@ -167,7 +167,7 @@ int XTL::EmuThis::Emubind(SOCKET s, const struct sockaddr FAR *name, int namelen
 // ******************************************************************
 int XTL::EmuThis::Emulisten(SOCKET s, int backlog)
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuThis::Emulisten\n"
            "(\n"
@@ -181,7 +181,7 @@ int XTL::EmuThis::Emulisten(SOCKET s, int backlog)
 
     int ret = listen(s, backlog);
 
-    EmuSwapFS();   // XBox FS
+    
 
     return ret;
 }
@@ -191,7 +191,7 @@ int XTL::EmuThis::Emulisten(SOCKET s, int backlog)
 // ******************************************************************
 int XTL::EmuThis::Emuioctlsocket(SOCKET s, long cmd, u_long FAR *argp)
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuXapi (0x%X): EmuThis::Emuioctlsocket\n"
            "(\n"
@@ -204,7 +204,7 @@ int XTL::EmuThis::Emuioctlsocket(SOCKET s, long cmd, u_long FAR *argp)
 
     int ret = ioctlsocket(s, cmd, argp);
 
-    EmuSwapFS();   // XBox FS
+    
 
     return ret;
 }
@@ -218,7 +218,7 @@ HRESULT WINAPI XOnlineLaunchNewImage
     LPVOID	pLaunchData
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("XOnline (0x%X): EmuXOnlineLaunchNewImage\n"
 		"(\n"
@@ -229,7 +229,7 @@ HRESULT WINAPI XOnlineLaunchNewImage
 
 	// TODO: Launch another .xbe from Cxbx someday?
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return E_FAIL;
 }
@@ -246,7 +246,7 @@ HRESULT WINAPI XTL::EmuXOnlineLogon
     HANDLE	pHandle
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("XOnline (0x%X): EmuXOnlineLogon\n"
 		"(\n"
@@ -260,7 +260,7 @@ HRESULT WINAPI XTL::EmuXOnlineLogon
 
 	// TODO: What will it take to log on to Xbox Live?
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return HRESULT(0x80151000L);	// XONLINE_E_LOGON_NO_NETWORK_CONNECTION
 }

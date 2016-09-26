@@ -2131,9 +2131,9 @@ extern boolean XTL::IsValidCurrentShader(void)
 {
     DWORD Handle;
 
-    EmuSwapFS();
+    
     EmuIDirect3DDevice8_GetVertexShader(&Handle);
-    EmuSwapFS();
+    
 
 	//printf( "VS = 0x%.08X\n", Handle );
 

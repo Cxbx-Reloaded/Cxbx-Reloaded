@@ -178,8 +178,6 @@ void CxbxLaunchXbe(void(*Entry)())
 
 	__try
 	{
-		EmuSwapFS();   // XBox FS
-
 					   // _USE_XGMATH Disabled in mesh :[
 					   // halo : dword_0_2E2D18
 					   // halo : 1744F0 (bink)
@@ -207,7 +205,7 @@ void CxbxLaunchXbe(void(*Entry)())
 
 		Entry();
 
-		EmuSwapFS();   // Win2k/XP FS
+		
 	}
 	__except (EmuException(GetExceptionInformation()))
 	{
@@ -657,9 +655,6 @@ extern "C" CXBXKRNL_API void CxbxKrnlResume()
 
 extern "C" CXBXKRNL_API void CxbxKrnlTerminateThread()
 {
-    if(EmuIsXboxFS())
-        EmuSwapFS();    // Win2k/XP FS
-
     EmuCleanupFS();
 
     TerminateThread(GetCurrentThread(), 0);
@@ -667,21 +662,12 @@ extern "C" CXBXKRNL_API void CxbxKrnlTerminateThread()
 
 extern "C" CXBXKRNL_API void CxbxKrnlPanic()
 {
-    if(EmuIsXboxFS())
-        EmuSwapFS();   // Win2k/XP FS
-
     DbgPrintf("EmuMain (0x%X): CxbxKrnlPanic()\n", GetCurrentThreadId());
 
     CxbxKrnlCleanup("Kernel Panic!");
-
-    EmuSwapFS();   // XBox FS
 }
 
 extern "C" CXBXKRNL_API void CxbxKrnlNoFunc()
 {
-    EmuSwapFS();   // Win2k/XP FS
-
     DbgPrintf("EmuMain (0x%X): CxbxKrnlNoFunc()\n", GetCurrentThreadId());
-
-    EmuSwapFS();   // XBox FS
 }

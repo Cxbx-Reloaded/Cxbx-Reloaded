@@ -68,7 +68,7 @@ HRESULT WINAPI XTL::EmuXACTEngineCreate
 	X_XACTEngine** ppEngine
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXactEng (0x%X): EmuXACTEngineCreate\n"
            "(\n"
@@ -81,7 +81,7 @@ HRESULT WINAPI XTL::EmuXACTEngineCreate
 
 	*ppEngine = (X_XACTEngine*) CxbxMalloc( sizeof( X_XACTEngine ) );
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 	
 	return S_OK;
 }
@@ -91,18 +91,18 @@ HRESULT WINAPI XTL::EmuXACTEngineCreate
 // ******************************************************************
 void WINAPI XTL::EmuXACTEngineDoWork()
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXactEng (0x%X): EmuXACTEngineCreate()\n", GetCurrentThreadId() );
 
 	// TODO: Anything else required here?
 	// AFAIK, this function just calls DirectSoundDoWork()
 
-	//EmuSwapFS();
+	//
 	//EmuDirectSoundDoWork();
-	//EmuSwapFS();
+	//
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 }
 
 // ******************************************************************
@@ -116,7 +116,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_RegisterWaveBank
 	X_XACTWaveBank**	ppWaveBank
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_RegisterWaveBank\n"
            "(\n"
@@ -131,7 +131,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_RegisterWaveBank
 
 	*ppWaveBank = (X_XACTWaveBank*) CxbxMalloc( sizeof( X_XACTWaveBank ) );
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return S_OK;
 }
@@ -146,7 +146,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_RegisterStreamedWaveBank
 	X_XACTWaveBank**						ppWaveBank
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_RegisterWaveBank\n"
            "(\n"
@@ -160,7 +160,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_RegisterStreamedWaveBank
 
 	*ppWaveBank = (X_XACTWaveBank*) CxbxMalloc( sizeof( X_XACTWaveBank ) );
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return S_OK;
 }
@@ -176,7 +176,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_CreateSoundBank
 	X_XACTSoundBank**	ppSoundBank
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_CreateSoundBank\n"
            "(\n"
@@ -191,7 +191,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_CreateSoundBank
 
 	*ppSoundBank = (X_XACTSoundBank*) CxbxMalloc( sizeof( X_XACTSoundBank ) );
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return S_OK;
 }
@@ -208,7 +208,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_DownloadEffectsImage
 	LPVOID*				ppImageDesc
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_DownloadEffectsImage\n"
            "(\n"
@@ -222,7 +222,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_DownloadEffectsImage
 
 	// TODO: Implement
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return S_OK;
 }
@@ -237,7 +237,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_CreateSoundSource
 	X_XACTSoundSource** ppSoundSource
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_CreateSoundSource\n"
            "(\n"
@@ -249,7 +249,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_CreateSoundSource
 
 	*ppSoundSource = (X_XACTSoundSource*) CxbxMalloc( sizeof( X_XACTSoundSource ) );
 
-	EmuSwapFS();
+	
 
 	return S_OK;
 }
@@ -263,7 +263,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_EnableHeadphones
 	BOOL				fEnabled
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_EnableHeadphones\n"
            "(\n"
@@ -272,7 +272,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_EnableHeadphones
            ");\n",
            GetCurrentThreadId(), pThis, fEnabled);
 
-	EmuSwapFS();
+	
 
 	return S_OK;
 }
@@ -292,7 +292,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetListenerOrientation
 	DWORD			dwApply
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_SetListenerOrientation\n"
            "(\n"
@@ -307,7 +307,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetListenerOrientation
            ");\n",
            GetCurrentThreadId(), pThis, xFront, yFront, zFront, xTop, yTop, zTop, dwApply);
 
-	EmuSwapFS();
+	
 
 	return S_OK;
 }
@@ -324,7 +324,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetListenerPosition
 	DWORD			dwApply
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_SetListenerPosition\n"
            "(\n"
@@ -336,7 +336,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetListenerPosition
            ");\n",
            GetCurrentThreadId(), pThis, x, y, z, dwApply);
 
-	EmuSwapFS();
+	
 
 	return S_OK;
 }
@@ -353,7 +353,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetListenerVelocity
 	DWORD			dwApply
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_SetListenerVelocity\n"
            "(\n"
@@ -365,7 +365,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetListenerVelocity
            ");\n",
            GetCurrentThreadId(), pThis, x, y, z, dwApply);
 
-	EmuSwapFS();
+	
 
 	return S_OK;
 }
@@ -380,7 +380,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetMasterVolume
     LONG			lVolume
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_SetMasterVolume\n"
            "(\n"
@@ -390,7 +390,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetMasterVolume
            ");\n",
            GetCurrentThreadId(), pThis, wCategory, lVolume);
 
-	EmuSwapFS();
+	
 
 	return S_OK;
 }
@@ -400,7 +400,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetMasterVolume
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIXACTEngine_CommitDeferredSettings(X_XACTEngine* pThis)
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_CommitDeferredSettings\n"
            "(\n"
@@ -408,7 +408,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_CommitDeferredSettings(X_XACTEngine* pThis)
            ");\n",
            GetCurrentThreadId(), pThis);
 
-	EmuSwapFS();
+	
 
 	return S_OK;
 }
@@ -423,7 +423,7 @@ HRESULT WINAPI XTL::EmuIXACTSoundBank_GetSoundCueIndexFromFriendlyName
 	DWORD*				pdwSoundCueIndex
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXactEng (0x%X): EmuIXACTSoundBank_GetSoundCueIndexFromFriendlyName\n"
            "(\n"
@@ -433,7 +433,7 @@ HRESULT WINAPI XTL::EmuIXACTSoundBank_GetSoundCueIndexFromFriendlyName
            ");\n",
            GetCurrentThreadId(), pThis, pFriendlyName, pdwSoundCueIndex);
 
-	EmuSwapFS();
+	
 
 	return S_OK;
 }
@@ -450,7 +450,7 @@ HRESULT WINAPI XTL::EmuIXACTSoundBank_Play
 	X_XACTSoundCue**	ppSoundCue
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXactEng (0x%X): EmuIXACTSoundBank_Play\n"
            "(\n"
@@ -462,7 +462,7 @@ HRESULT WINAPI XTL::EmuIXACTSoundBank_Play
            ");\n",
            GetCurrentThreadId(), pThis, dwSoundCueIndex, pSoundSource, dwFlags, ppSoundCue);
 
-	EmuSwapFS();
+	
 
 	return S_OK;
 }
@@ -478,7 +478,7 @@ HRESULT WINAPI XTL::EmuIXACTSoundBank_Stop
 	X_XACTSoundCue*		pSoundCue
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXactEng (0x%X): EmuIXACTSoundBank_Stop\n"
            "(\n"
@@ -489,7 +489,7 @@ HRESULT WINAPI XTL::EmuIXACTSoundBank_Stop
            ");\n",
            GetCurrentThreadId(), pThis, dwSoundCueIndex, dwFlags, pSoundCue);
 
-	EmuSwapFS();
+	
 
 	return S_OK;
 }
@@ -506,7 +506,7 @@ HRESULT WINAPI XTL::EmuIXACTSoundSource_SetPosition
     DWORD				dwApply
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXactEng (0x%X): EmuIXACTSoundSource_SetPosition\n"
            "(\n"
@@ -518,7 +518,7 @@ HRESULT WINAPI XTL::EmuIXACTSoundSource_SetPosition
            ");\n",
            GetCurrentThreadId(), pThis, x, y, z, dwApply);
 
-	EmuSwapFS();
+	
 
 	return S_OK;
 }
@@ -535,7 +535,7 @@ HRESULT WINAPI XTL::EmuIXACTSoundSource_SetVelocity
     DWORD				dwApply
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXactEng (0x%X): EmuIXACTSoundSource_SetVelocity\n"
            "(\n"
@@ -547,7 +547,7 @@ HRESULT WINAPI XTL::EmuIXACTSoundSource_SetVelocity
            ");\n",
            GetCurrentThreadId(), pThis, x, y, z, dwApply);
 
-	EmuSwapFS();
+	
 
 	return S_OK;
 }
@@ -561,7 +561,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_RegisterNotification
     PCXACT_NOTIFICATION_DESCRIPTION pNotificationDesc
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_RegisterNotification\n"
            "(\n"
@@ -570,7 +570,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_RegisterNotification
            ");\n",
            GetCurrentThreadId(), pThis, pNotificationDesc);
 
-	EmuSwapFS();
+	
 
 	return S_OK;
 }
@@ -585,7 +585,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_GetNotification
     LPVOID						    pNotification
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_GetNotification\n"
            "(\n"
@@ -598,7 +598,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_GetNotification
 	// TODO: The contents of XACT_NOTIFICATION can vary from one XDK to the next.
 	// The definition for 4627 is different than 5558.
 
-	EmuSwapFS();
+	
 
 	return S_OK;
 }
@@ -612,7 +612,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_UnRegisterWaveBank
     X_XACTWaveBank*	pWaveBank
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_UnRegisterWaveBank\n"
            "(\n"
@@ -628,7 +628,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_UnRegisterWaveBank
 //	if(pWaveBank)
 //		free(pWaveBank);
 
-	EmuSwapFS();
+	
 
 	return S_OK;
 }

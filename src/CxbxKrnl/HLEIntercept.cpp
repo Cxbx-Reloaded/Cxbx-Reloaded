@@ -793,8 +793,6 @@ static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xb
 static void EmuXRefFailure()
 {
     _asm int 3;
-    EmuSwapFS();    // Win2k/XP FS
-
     CxbxKrnlCleanup("XRef-only function body reached. Fatal Error.");
 }
 

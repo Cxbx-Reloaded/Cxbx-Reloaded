@@ -254,7 +254,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreate
     LPUNKNOWN       pUnknown
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuDirectSoundCreate\n"
            "(\n"
@@ -304,7 +304,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreate
 
     g_pDSound8RefCount = 1;
 
-    EmuSwapFS();   // XBox FS
+    
 
     return hRet;
 }
@@ -317,7 +317,7 @@ ULONG WINAPI XTL::EmuIDirectSound8_AddRef
     LPDIRECTSOUND8          pThis
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_AddRef\n"
            "(\n"
@@ -327,7 +327,7 @@ ULONG WINAPI XTL::EmuIDirectSound8_AddRef
 
     ULONG uRet = g_pDSound8RefCount++;
 
-    EmuSwapFS();   // XBox FS
+    
 
     return uRet;
 }
@@ -340,7 +340,7 @@ ULONG WINAPI XTL::EmuIDirectSound8_Release
     LPDIRECTSOUND8          pThis
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_Release\n"
            "(\n"
@@ -355,7 +355,7 @@ ULONG WINAPI XTL::EmuIDirectSound8_Release
         pThis->Release();
     //*/
 
-    EmuSwapFS();   // XBox FS
+    
 
     return uRet;
 }
@@ -369,7 +369,7 @@ HRESULT WINAPI XTL::EmuCDirectSound_GetSpeakerConfig
     PDWORD                  pdwSpeakerConfig
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSound_GetSpeakerConfig\n"
            "(\n"
@@ -380,7 +380,7 @@ HRESULT WINAPI XTL::EmuCDirectSound_GetSpeakerConfig
 
     *pdwSpeakerConfig = 0; // STEREO
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -394,7 +394,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_EnableHeadphones
     BOOL                    fEnabled
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_EnableHeadphones\n"
            "(\n"
@@ -405,7 +405,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_EnableHeadphones
 
     EmuWarning("EmuIDirectSound8_EnableHeadphones ignored");
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -418,7 +418,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SynchPlayback
     LPDIRECTSOUND8          pThis
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SynchPlayback\n"
            "(\n"
@@ -428,7 +428,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SynchPlayback
 
     EmuWarning("EmuIDirectSound8_SynchPlayback ignored");
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -445,7 +445,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_DownloadEffectsImage
     PVOID                  *ppImageDesc     // TODO: Use this param
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_DownloadEffectsImage\n"
            "(\n"
@@ -459,7 +459,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_DownloadEffectsImage
 
     // TODO: Actually implement this
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -469,14 +469,14 @@ HRESULT WINAPI XTL::EmuIDirectSound8_DownloadEffectsImage
 // ******************************************************************
 VOID WINAPI XTL::EmuDirectSoundDoWork()
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuDirectSoundDoWork();\n", GetCurrentThreadId());
 
     HackUpdateSoundBuffers();
     HackUpdateSoundStreams();
 
-    EmuSwapFS();   // XBox FS
+    
 
     return;
 }
@@ -496,7 +496,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetOrientation
     DWORD           dwApply
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetOrientation\n"
            "(\n"
@@ -513,7 +513,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetOrientation
 
     // TODO: Actually implement this
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -528,7 +528,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetDistanceFactor
     DWORD           dwApply
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetDistanceFactor\n"
            "(\n"
@@ -540,7 +540,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetDistanceFactor
 
     // TODO: Actually implement this
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -555,7 +555,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetRolloffFactor
     DWORD           dwApply
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetRolloffFactor\n"
            "(\n"
@@ -567,7 +567,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetRolloffFactor
 
     // TODO: Actually implement this
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -582,7 +582,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetDopplerFactor
     DWORD           dwApply
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetDopplerFactor\n"
            "(\n"
@@ -594,7 +594,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetDopplerFactor
 
     // TODO: Actually implement this
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -612,7 +612,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetI3DL2Listener
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetI3DL2Listener\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -620,7 +620,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetI3DL2Listener
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, pDummy, dwApply);
-        EmuSwapFS();   // XBox FS
+        
     }
     #endif
 
@@ -642,7 +642,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetMixBinHeadroom
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetMixBinHeadroom\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -650,7 +650,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetMixBinHeadroom
                "   dwHeadroom                : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, dwMixBinMask, dwHeadroom);
-        EmuSwapFS();   // XBox FS
+        
     }
     #endif
 
@@ -671,14 +671,14 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMixBins
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetMixBins\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   pMixBins                  : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, pMixBins);
-        EmuSwapFS();   // XBox FS
+        
     }
     #endif
 
@@ -699,14 +699,14 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMixBinVolumes
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetMixBinVolumes\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   pMixBins                  : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, pMixBins);
-        EmuSwapFS();   // XBox FS
+        
     }
     #endif
 
@@ -730,7 +730,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetPosition
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetPosition\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -740,7 +740,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetPosition
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, x, y, z, dwApply);
-        EmuSwapFS();   // XBox FS
+        
     }
     #endif
 
@@ -764,7 +764,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetVelocity
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetVelocity\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -774,7 +774,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetVelocity
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, x, y, z, dwApply);
-        EmuSwapFS();   // XBox FS
+        
     }
     #endif
 
@@ -796,7 +796,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetAllParameters
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetAllParameters\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -804,7 +804,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetAllParameters
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, pTodo, dwApply);
-        EmuSwapFS();   // XBox FS
+        
     }
     #endif
 
@@ -821,7 +821,7 @@ HRESULT WINAPI XTL::EmuCDirectSound_CommitDeferredSettings
     X_CDirectSound         *pThis
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSound_CommitDeferredSettings\n"
            "(\n"
@@ -831,7 +831,7 @@ HRESULT WINAPI XTL::EmuCDirectSound_CommitDeferredSettings
 
     // TODO: Translate params, then make the PC DirectSound call
 
-    EmuSwapFS();   // XBox FS
+    
 
     return DS_OK;
 }
@@ -845,7 +845,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
     X_CDirectSoundBuffer  **ppBuffer
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuDirectSoundCreateBuffer\n"
            "(\n"
@@ -1005,7 +1005,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
             CxbxKrnlCleanup("SoundBuffer cache out of slots!");
     }
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -1024,7 +1024,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateBuffer
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-       EmuSwapFS();   // Win2k/XP FS
+       
        DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_CreateBuffer\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -1033,7 +1033,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateBuffer
                "   pUnknown                  : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, pdssd, ppBuffer, pUnknown);
-       EmuSwapFS();   // XBox FS
+       
     }
     #endif
 
@@ -1056,7 +1056,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateSoundBuffer
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_CreateSoundBuffer\n"
                "(\n"
                "   pdsbd                     : 0x%.08X\n"
@@ -1064,7 +1064,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateSoundBuffer
                "   pUnkOuter                 : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pdsbd, ppBuffer, pUnkOuter);
-        EmuSwapFS();   // XBox FS
+        
     }
     #endif
 
@@ -1081,7 +1081,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetBufferData
     DWORD                   dwBufferBytes
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetBufferData\n"
            "(\n"
@@ -1096,7 +1096,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetBufferData
 
     EmuResizeIDirectSoundBuffer8(pThis, dwBufferBytes);
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -1111,7 +1111,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPlayRegion
     DWORD                   dwPlayLength
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetPlayRegion\n"
            "(\n"
@@ -1126,7 +1126,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPlayRegion
     // TODO: Ensure that 4627 & 4361 are intercepting far enough back
     // (otherwise pThis is manipulated!)
 
-    EmuSwapFS();   // XBox FS
+    
 
     return DS_OK;
 }
@@ -1146,7 +1146,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Lock
     DWORD                   dwFlags
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_Lock\n"
            "(\n"
@@ -1189,7 +1189,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Lock
         pThis->EmuLockBytes2 = (pdwAudioBytes2 != NULL) ? *pdwAudioBytes2 : NULL;
     }
 
-    EmuSwapFS();   // XBox FS
+    
 
     return hRet;
 }
@@ -1203,7 +1203,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetHeadroom
     DWORD                  dwHeadroom
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetHeadroom\n"
            "(\n"
@@ -1214,7 +1214,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetHeadroom
 
     // TODO: Actually implement this
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -1229,7 +1229,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetLoopRegion
     DWORD                   dwLoopLength
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetLoopRegion\n"
            "(\n"
@@ -1244,7 +1244,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetLoopRegion
 
     //EmuResizeIDirectSoundBuffer8(pThis, dwLoopLength);
 
-    EmuSwapFS();   // XBox FS
+    
 
     return DS_OK;
 }
@@ -1257,7 +1257,7 @@ ULONG WINAPI XTL::EmuIDirectSoundBuffer8_Release
     X_CDirectSoundBuffer   *pThis
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_Release\n"
            "(\n"
@@ -1292,7 +1292,7 @@ ULONG WINAPI XTL::EmuIDirectSoundBuffer8_Release
 		}
     }
 
-    EmuSwapFS();   // XBox FS
+    
 
     return uRet;
 }
@@ -1306,7 +1306,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPitch
     LONG                    lPitch
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetPitch\n"
            "(\n"
@@ -1317,7 +1317,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPitch
 
     // TODO: Translate params, then make the PC DirectSound call
 
-    EmuSwapFS();   // XBox FS
+    
 
     return DS_OK;
 }
@@ -1331,7 +1331,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_GetStatus
     LPDWORD                 pdwStatus
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_GetStatus\n"
            "(\n"
@@ -1351,7 +1351,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_GetStatus
         *pdwStatus = 0;
     }
 
-    EmuSwapFS();   // XBox FS
+    
 
     return hRet;
 }
@@ -1365,7 +1365,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetCurrentPosition
     DWORD                   dwNewPosition
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetCurrentPosition\n"
            "(\n"
@@ -1380,7 +1380,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetCurrentPosition
     if(FAILED(hRet))
         EmuWarning("SetCurrentPosition Failed!");
 
-    EmuSwapFS();   // XBox FS
+    
 
     return hRet;
 }
@@ -1395,7 +1395,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_GetCurrentPosition
     PDWORD                  pdwCurrentWriteCursor
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_GetCurrentPosition\n"
            "(\n"
@@ -1424,7 +1424,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_GetCurrentPosition
 		}
 	}
 
-    EmuSwapFS();   // XBox FS
+    
 
     return hRet;
 }
@@ -1440,7 +1440,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Play
     DWORD                   dwFlags
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_Play\n"
            "(\n"
@@ -1492,7 +1492,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Play
 
     pThis->EmuPlayFlags = dwFlags;
 
-    EmuSwapFS();   // XBox FS
+    
 
     return hRet;
 }
@@ -1505,7 +1505,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Stop
     X_CDirectSoundBuffer   *pThis
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_Stop\n"
            "(\n"
@@ -1515,7 +1515,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Stop
 
     HRESULT hRet = pThis->EmuDirectSoundBuffer8->Stop();
 
-    EmuSwapFS();   // XBox FS
+    
 
     return hRet;
 }
@@ -1530,7 +1530,7 @@ extern "C" HRESULT __stdcall XTL::EmuIDirectSoundBuffer8_StopEx
     DWORD                 dwFlags
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_StopEx\n"
            "(\n"
@@ -1545,7 +1545,7 @@ extern "C" HRESULT __stdcall XTL::EmuIDirectSoundBuffer8_StopEx
 
     EmuWarning("StopEx not yet implemented!");
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -1559,7 +1559,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetVolume
     LONG                    lVolume
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetVolume\n"
            "(\n"
@@ -1573,7 +1573,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetVolume
 
 //    HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetVolume(lVolume);
 
-    EmuSwapFS();   // XBox FS
+    
 
 //    return hRet;
     return S_OK;
@@ -1588,7 +1588,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetFrequency
     DWORD                   dwFrequency
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetFrequency\n"
            "(\n"
@@ -1599,7 +1599,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetFrequency
 
 //    HRESULT hRet = pThis->EmuDirectSoundBuffer8->SetFrequency(dwFrequency);
 
-    EmuSwapFS();   // XBox FS
+    
 
 //    return hRet;
     return S_OK;
@@ -1614,7 +1614,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
     X_CDirectSoundStream  **ppStream
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuDirectSoundCreateStream\n"
            "(\n"
@@ -1658,7 +1658,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
 
             (*ppStream)->EmuDirectSoundBuffer8 = 0;
 
-            EmuSwapFS();   // XBox FS
+            
 
             return DS_OK;
         }
@@ -1740,7 +1740,7 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
             CxbxKrnlCleanup("SoundStream cache out of slots!");
     }
 
-    EmuSwapFS();   // XBox FS
+    
 
     return DS_OK;
 }
@@ -1759,7 +1759,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateStream
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_CreateStream\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -1768,7 +1768,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateStream
                "   pUnknown                  : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, pdssd, ppStream, pUnknown);
-        EmuSwapFS();   // XBox FS
+        
     }
     #endif
 
@@ -1793,7 +1793,7 @@ VOID WINAPI XTL::EmuCMcpxStream_Dummy_0x10(DWORD dwDummy1, DWORD dwDummy2)
 // ******************************************************************
 ULONG WINAPI XTL::EmuCDirectSoundStream_SetVolume(X_CDirectSoundStream *pThis, LONG lVolume)
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetVolume\n"
            "(\n"
@@ -1804,7 +1804,7 @@ ULONG WINAPI XTL::EmuCDirectSoundStream_SetVolume(X_CDirectSoundStream *pThis, L
 
     // TODO: Actually SetVolume
 
-    EmuSwapFS();   // XBox FS
+    
 
     return DS_OK;
 }
@@ -1819,7 +1819,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetRolloffFactor
     DWORD                 dwApply
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetRolloffFactor\n"
            "(\n"
@@ -1831,7 +1831,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetRolloffFactor
 
     // TODO: Actually SetRolloffFactor
 
-    EmuSwapFS();   // XBox FS
+    
 
     return DS_OK;
 }
@@ -1841,7 +1841,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetRolloffFactor
 // ******************************************************************
 ULONG WINAPI XTL::EmuCDirectSoundStream_AddRef(X_CDirectSoundStream *pThis)
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_AddRef\n"
            "(\n"
@@ -1853,7 +1853,7 @@ ULONG WINAPI XTL::EmuCDirectSoundStream_AddRef(X_CDirectSoundStream *pThis)
         if(pThis->EmuDirectSoundBuffer8 != 0) // HACK: Ignore unsupported codecs.
             pThis->EmuDirectSoundBuffer8->AddRef();
 
-    EmuSwapFS();   // XBox FS
+    
 
     return DS_OK;
 }
@@ -1863,7 +1863,7 @@ ULONG WINAPI XTL::EmuCDirectSoundStream_AddRef(X_CDirectSoundStream *pThis)
 // ******************************************************************
 ULONG WINAPI XTL::EmuCDirectSoundStream_Release(X_CDirectSoundStream *pThis)
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_Release\n"
            "(\n"
@@ -1895,7 +1895,7 @@ ULONG WINAPI XTL::EmuCDirectSoundStream_Release(X_CDirectSoundStream *pThis)
         }
     }
 
-    EmuSwapFS();   // XBox FS
+    
 
     return uRet;
 }
@@ -1909,7 +1909,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_GetInfo
 	LPXMEDIAINFO			pInfo
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_GetInfo\n"
            "(\n"
@@ -1929,7 +1929,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_GetInfo
 		pInfo->dwMaxLookahead = 0x4000;
 	}
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return DS_OK;
 }
@@ -1943,7 +1943,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_GetStatus
     DWORD                  *pdwStatus
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_GetStatus\n"
            "(\n"
@@ -1956,7 +1956,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_GetStatus
 
     *pdwStatus = DSBSTATUS_PLAYING;
 
-    EmuSwapFS();   // XBox FS
+    
 
     return DS_OK;
 }
@@ -1971,7 +1971,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Process
     PXMEDIAPACKET           pOutputBuffer
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_Process\n"
            "(\n"
@@ -1999,7 +1999,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Process
             *pInputBuffer->pdwStatus = S_OK;
     }
 
-    EmuSwapFS();   // XBox FS
+    
 
     return DS_OK;
 }
@@ -2009,7 +2009,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Process
 // ******************************************************************
 HRESULT WINAPI XTL::EmuCDirectSoundStream_Discontinuity(X_CDirectSoundStream *pThis)
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_Discontinuity\n"
            "(\n"
@@ -2019,7 +2019,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Discontinuity(X_CDirectSoundStream *pT
 
     // TODO: Actually Process
 
-    EmuSwapFS();   // XBox FS
+    
 
     return DS_OK;
 }
@@ -2029,7 +2029,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Discontinuity(X_CDirectSoundStream *pT
 // ******************************************************************
 HRESULT WINAPI XTL::EmuCDirectSoundStream_Flush(X_CDirectSoundStream *pThis)
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_Flush\n"
 		   "(\n"
@@ -2039,7 +2039,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Flush(X_CDirectSoundStream *pThis)
 
     // TODO: Actually Flush
 
-    EmuSwapFS();   // XBox FS
+    
 
     return DS_OK;
 }
@@ -2049,7 +2049,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Flush(X_CDirectSoundStream *pThis)
 // ******************************************************************
 HRESULT WINAPI XTL::EmuCDirectSound_SynchPlayback(PVOID pUnknown)
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSound_SynchPlayback\n"
 		   "(\n"
@@ -2057,7 +2057,7 @@ HRESULT WINAPI XTL::EmuCDirectSound_SynchPlayback(PVOID pUnknown)
 		   ");\n",
 		   GetCurrentThreadId(), pUnknown);
 
-    EmuSwapFS();   // XBox FS
+    
 
     return DS_OK;
 }
@@ -2071,7 +2071,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Pause
     DWORD   dwPause
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_Pause\n"
            "(\n"
@@ -2080,7 +2080,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Pause
            ");\n",
            GetCurrentThreadId(), pStream, dwPause);
 
-    EmuSwapFS();   // XBox FS
+    
 
     return DS_OK;
 }
@@ -2094,7 +2094,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_SetHeadroom
     DWORD   dwHeadroom
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundStream_SetHeadroom\n"
            "(\n"
@@ -2105,7 +2105,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_SetHeadroom
 
     // TODO: Actually implement this
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -2121,7 +2121,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetConeAngles
     DWORD   dwApply
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetConeAngles\n"
            "(\n"
@@ -2134,7 +2134,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetConeAngles
 
     // TODO: Actually implement this
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -2149,7 +2149,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetConeOutsideVolume
     DWORD   dwApply
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetConeOutsideVolume\n"
            "(\n"
@@ -2161,7 +2161,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetConeOutsideVolume
 
     // TODO: Actually implement this
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -2176,7 +2176,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetAllParameters
     DWORD    dwApply
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetAllParameters\n"
            "(\n"
@@ -2188,7 +2188,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetAllParameters
 
     // TODO: Actually implement this
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -2203,7 +2203,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMaxDistance
     DWORD    dwApply
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetMaxDistance\n"
            "(\n"
@@ -2215,7 +2215,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMaxDistance
 
     // TODO: Actually implement this
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -2230,7 +2230,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMinDistance
     DWORD    dwApply
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetMinDistance\n"
            "(\n"
@@ -2242,7 +2242,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMinDistance
 
     // TODO: Actually implement this
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -2259,7 +2259,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetVelocity
     DWORD    dwApply
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetVelocity\n"
            "(\n"
@@ -2273,7 +2273,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetVelocity
 
     // TODO: Actually implement this
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -2290,7 +2290,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetConeOrientation
     DWORD    dwApply
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetConeOrientation\n"
            "(\n"
@@ -2304,7 +2304,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetConeOrientation
 
     // TODO: Actually implement this
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -2321,7 +2321,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetPosition
     DWORD    dwApply
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetPosition\n"
            "(\n"
@@ -2335,7 +2335,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetPosition
 
     // TODO: Actually implement this
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -2349,7 +2349,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetFrequency
     DWORD   dwFrequency
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetFrequency\n"
            "(\n"
@@ -2360,7 +2360,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetFrequency
 
     // TODO: Actually implement this
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -2375,7 +2375,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_SetI3DL2Source
     DWORD   dwApply
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundStream_SetI3DL2Source\n"
            "(\n"
@@ -2387,7 +2387,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_SetI3DL2Source
 
     // TODO: Actually implement this
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -2401,7 +2401,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMixBins
     PVOID   pMixBins
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetMixBins\n"
             "(\n"
@@ -2412,7 +2412,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMixBins
 
     // TODO: Actually implement this.
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -2426,7 +2426,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_Unknown1
     DWORD   dwUnknown1
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundStream_Unknown1\n"
            "(\n"
@@ -2437,7 +2437,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_Unknown1
 
     // TODO: Actually implement this
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -2456,7 +2456,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMaxDistance
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetMaxDistance\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -2464,7 +2464,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMaxDistance
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, flMaxDistance, dwApply);
-        EmuSwapFS();   // XBox FS
+        
     }
     #endif
 
@@ -2486,7 +2486,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMinDistance
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetMinDistance\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -2494,7 +2494,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMinDistance
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, flMinDistance, dwApply);
-        EmuSwapFS();   // XBox FS
+        
     }
     #endif
 
@@ -2516,7 +2516,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetRolloffFactor
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetRolloffFactor\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -2524,7 +2524,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetRolloffFactor
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, flRolloffFactor, dwApply);
-        EmuSwapFS();   // XBox FS
+        
     }
     #endif
 
@@ -2546,7 +2546,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetDistanceFactor
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetDistanceFactor\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -2554,7 +2554,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetDistanceFactor
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, flDistanceFactor, dwApply);
-        EmuSwapFS();   // XBox FS
+        
     }
     #endif
 
@@ -2577,7 +2577,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetConeAngles
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetConeAngles\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -2587,7 +2587,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetConeAngles
                ");\n",
                GetCurrentThreadId(), pThis, dwInsideConeAngle,
                dwOutsideConeAngle, dwApply);
-        EmuSwapFS();   // XBox FS
+        
     }
     #endif
 
@@ -2611,7 +2611,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetConeOrientation
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetConeOrientation\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -2621,7 +2621,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetConeOrientation
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, x, y, z, dwApply);
-        EmuSwapFS();   // XBox FS
+        
     }
     #endif
 
@@ -2643,7 +2643,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetConeOutsideVolume
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetConeOutsideVolume\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -2651,7 +2651,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetConeOutsideVolume
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, lConeOutsideVolume, dwApply);
-        EmuSwapFS();   // XBox FS
+        
     }
     #endif
 
@@ -2675,7 +2675,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPosition
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetPosition\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -2685,7 +2685,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPosition
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, x, y, z, dwApply);
-        EmuSwapFS();   // XBox FS
+        
     }
     #endif
 
@@ -2709,7 +2709,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetVelocity
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetVelocity\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -2719,7 +2719,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetVelocity
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, x, y, z, dwApply);
-        EmuSwapFS();   // XBox FS
+        
     }
     #endif
 
@@ -2741,7 +2741,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetDopplerFactor
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetConeOutsideVolume\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -2749,7 +2749,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetDopplerFactor
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, flDopplerFactor, dwApply);
-        EmuSwapFS();   // XBox FS
+        
     }
     #endif
 
@@ -2771,7 +2771,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetI3DL2Source
     // debug trace
     #ifdef _DEBUG_TRACE
     {
-        EmuSwapFS();   // Win2k/XP FS
+        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetI3DL2Source\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -2779,7 +2779,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetI3DL2Source
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, pds3db, dwApply);
-        EmuSwapFS();   // XBox FS
+        
     }
     #endif
 
@@ -2798,7 +2798,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMode
     DWORD                   dwApply
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetFormat\n"
            "(\n"
@@ -2812,7 +2812,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMode
 
     EmuWarning("EmuIDirectSoundBuffer8_SetMode ignored");
 
-    EmuSwapFS();   // XBox FS
+    
 
     return hRet;
 }
@@ -2827,7 +2827,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetFormat
     LPCWAVEFORMATEX pwfxFormat
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     // debug trace
     #ifdef _DEBUG_TRACE
@@ -2843,7 +2843,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetFormat
 
     HRESULT hRet = DS_OK;
 
-    EmuSwapFS();   // XBox FS
+    
 
     return hRet;
 }
@@ -2856,13 +2856,13 @@ STDAPI_(void) EmuDirectSoundUseFullHRTF
     void
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuDirectSoundUseFullHRTF()\n", GetCurrentThreadId());
 
     // TODO: Actually implement this
 
-    EmuSwapFS();   // XBox FS
+    
 }
 
 // ******************************************************************
@@ -2874,7 +2874,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetLFO
     LPCDSLFODESC         pLFODesc
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetLFO\n"
            "(\n"
@@ -2885,7 +2885,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetLFO
 
     // TODO: Implement
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -2900,7 +2900,7 @@ VOID WINAPI XTL::EmuXAudioCreateAdpcmFormat
     LPXBOXADPCMWAVEFORMAT  pwfx
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuXAudioCreateAdpcmFormat\n"
            "(\n"
@@ -2920,7 +2920,7 @@ VOID WINAPI XTL::EmuXAudioCreateAdpcmFormat
     pwfx->wfx.cbSize            = 2;
     pwfx->wSamplesPerBlock      = 64;
 
-    EmuSwapFS();   // XBox FS
+    
 }
 
 // ******************************************************************
@@ -2934,7 +2934,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetRolloffCurve
     DWORD                dwApply
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetRolloffCurve\n"
            "(\n"
@@ -2947,7 +2947,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetRolloffCurve
 
     // TODO: Implement
 
-    EmuSwapFS();   // XBox FS
+    
 
     return DS_OK;
 }
@@ -2961,7 +2961,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_SetVolume
     LONG                lVolume
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundStream_SetVolume\n"
            "(\n"
@@ -2972,7 +2972,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_SetVolume
 
     // TODO: Implement
 
-    EmuSwapFS();   // XBox FS
+    
 
     return DS_OK;
 }
@@ -2987,7 +2987,7 @@ HRESULT WINAPI XTL::EmuIDirectSound_EnableHeadphones
 	BOOL				fEnabled
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuIDirectSound_EnableHeadphones\n"
 			"(\n"
@@ -2996,7 +2996,7 @@ HRESULT WINAPI XTL::EmuIDirectSound_EnableHeadphones
 			");\n",
 			GetCurrentThreadId(), pThis, fEnabled);
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return DS_OK;
 }
@@ -3009,7 +3009,7 @@ ULONG WINAPI XTL::EmuIDirectSoundBuffer8_AddRef
     X_CDirectSoundBuffer   *pThis
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer_AddRef\n"
 			"(\n"
@@ -3033,7 +3033,7 @@ ULONG WINAPI XTL::EmuIDirectSoundBuffer8_AddRef
 		}
 	}
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return ret;
 }
@@ -3047,7 +3047,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Pause
 	DWORD					dwPause
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer_Pause\n"
 			"(\n"
@@ -3076,7 +3076,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Pause
 		}
 	}*/
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return ret;
 }
@@ -3091,7 +3091,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Pause
 //	DWORD					dwPause
 //)
 //{
-//	EmuSwapFS();	// Win2k/XP FS
+//		// Win2k/XP FS
 //
 //	DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer_PauseEx\n"
 //			"(\n"
@@ -3123,7 +3123,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Pause
 //		}
 //	}
 //
-//	EmuSwapFS();	// Xbox FS
+//		// Xbox FS
 //
 //	return ret;
 //}
@@ -3138,7 +3138,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_GetOutputLevels
 	BOOL					bResetPeakValues
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_GetOutputLevels\n"
 			"(\n"
@@ -3150,7 +3150,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_GetOutputLevels
 
 	// TODO: Anything?  Either way, I've never seen a game to date use this...
 
-	EmuSwapFS();
+	
 
 	return S_OK;
 }
@@ -3164,7 +3164,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetEG
 	LPVOID		pEnvelopeDesc
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetEG\n"
 			"(\n"
@@ -3175,7 +3175,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetEG
 
 	// TODO: Implement this...
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return S_OK;
 }
@@ -3185,13 +3185,13 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetEG
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirectSoundStream_Flush()
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundStream_Flush()\n", GetCurrentThreadId() );
 
 	// TODO: Actually implement
 
-	EmuSwapFS();
+	
 
 	return S_OK;
 }
@@ -3206,7 +3206,7 @@ extern "C" HRESULT WINAPI XTL::EmuIDirectSoundStream_FlushEx
 	DWORD					dwFlags
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundStream_FlushEx\n"
 			"(\n"
@@ -3218,7 +3218,7 @@ extern "C" HRESULT WINAPI XTL::EmuIDirectSoundStream_FlushEx
 
 	// TODO: Actually implement
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return S_OK;
 }
@@ -3233,7 +3233,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMode
     DWORD                   dwApply
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetFormat\n"
            "(\n"
@@ -3247,7 +3247,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMode
 
     EmuWarning("EmuCDirectSoundStream_SetMode ignored");
 
-    EmuSwapFS();   // XBox FS
+    
 
     return hRet;
 }
@@ -3263,7 +3263,7 @@ HRESULT WINAPI XTL::EmuXAudioDownloadEffectsImage
     LPVOID	   *ppImageDesc
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuXAudioDownloadEffectsImage\n"
            "(\n"
@@ -3274,7 +3274,7 @@ HRESULT WINAPI XTL::EmuXAudioDownloadEffectsImage
 		   ");\n",
 		   GetCurrentThreadId(), pszImageName, pImageLoc, dwFlags, ppImageDesc );
 
-	 EmuSwapFS();	// Xbox FS
+	 	// Xbox FS
 
 	 return S_OK;
 }
@@ -3288,7 +3288,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetFilter
 	X_DSFILTERDESC* pFilterDesc
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetFilter\n"
            "(\n"
@@ -3301,7 +3301,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetFilter
 
 	EmuWarning("IDirectSoundBuffer8_SetFilter not yet supported!");
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return S_OK;
 }
@@ -3315,7 +3315,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetFilter
 	X_DSFILTERDESC*			pFilterDesc
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetFilter\n"
            "(\n"
@@ -3328,7 +3328,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetFilter
 
 	EmuWarning("CDirectSoundStream_SetFilter not yet supported!");
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return S_OK;
 }
@@ -3344,7 +3344,7 @@ extern "C" HRESULT __stdcall XTL::EmuIDirectSoundBuffer8_PlayEx
     DWORD                 dwFlags
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_PlayEx\n"
            "(\n"
@@ -3363,7 +3363,7 @@ extern "C" HRESULT __stdcall XTL::EmuIDirectSoundBuffer8_PlayEx
 	DWORD dwPCFlags = ( dwFlags & DSBPLAY_LOOPING ) ? DSBPLAY_LOOPING : 0;
 	HRESULT hr = pBuffer->EmuDirectSoundBuffer8->Play( 0, 0, dwPCFlags );
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -3377,7 +3377,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_GetCaps
     X_DSCAPS*		pDSCaps
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_GetCaps\n"
            "(\n"
@@ -3404,7 +3404,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_GetCaps
 		pDSCaps->dwMemoryAllocated	= DSCapsPC.dwFreeHwMemBytes;	// TODO: Bytes or MegaBytes?
 	}	
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return S_OK;
 }
@@ -3418,7 +3418,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetPitch
     LONG					lPitch
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundStream_SetPitch\n"
            "(\n"
@@ -3431,7 +3431,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetPitch
 
 	EmuWarning("IDirectSoundStream_SetPitch not yet implemented!");
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return hRet;
 }
@@ -3441,7 +3441,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetPitch
 // ******************************************************************
 DWORD WINAPI XTL::EmuDirectSoundGetSampleTime()
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 	
 	DbgPrintf("EmuDSound (0x%X): EmuDirectSoundGetSampleTime();\n", GetCurrentThreadId());
 
@@ -3455,7 +3455,7 @@ DWORD WINAPI XTL::EmuDirectSoundGetSampleTime()
 	static DWORD dwStart = GetTickCount();
 	DWORD dwRet = GetTickCount() - dwStart;
 
-	EmuSwapFS();
+	
 
 	return 0;
 }
@@ -3470,7 +3470,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMixBinVolumes
     const LONG*				alVolumes
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetMixBinVolumes\n"
            "(\n"
@@ -3483,7 +3483,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMixBinVolumes
 	// NOTE: Use this function for XDK 3911 only because the implementation was changed
 	// somewhere around the March 2002 (4361) update (or earlier, maybe).
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return S_OK;
 }
@@ -3497,7 +3497,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMixBinVolumes2
     LPVOID					pMixBins
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetMixBinVolumes\n"
            "(\n"
@@ -3508,7 +3508,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMixBinVolumes2
 
 	// NOTE: Read the above notes, and the rest is self explanitory...
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return S_OK;
 }
@@ -3523,7 +3523,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetI3DL2Source
     DWORD   dwApply
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetI3DL2Source\n"
            "(\n"
@@ -3535,7 +3535,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetI3DL2Source
 
     // TODO: Actually implement this
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -3550,7 +3550,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetAllParameters
     DWORD					dwApply
 )
 {
-	EmuSwapFS();   // Win2k/XP FS
+	
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetAllParameters\n"
            "(\n"
@@ -3562,7 +3562,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetAllParameters
 
     // TODO: Actually implement this
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -3576,7 +3576,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetFormat
     LPCWAVEFORMATEX			pwfxFormat
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetFormat\n"
            "(\n"
@@ -3594,7 +3594,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetFormat
 //	if(pThis)
 //		pThis->EmuDirectSoundBuffer8->SetFormat(pwfxFormat);
 
-    EmuSwapFS();   // XBox FS
+    
 
     return S_OK;
 }
@@ -3608,7 +3608,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetOutputBuffer
     X_CDirectSoundBuffer*	pOutputBuffer
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetOutputBuffer\n"
            "(\n"
@@ -3619,7 +3619,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetOutputBuffer
 
 	// TODO: Implement
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return S_OK;
 }
@@ -3633,7 +3633,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetOutputBuffer
 	X_CDirectSoundBuffer*	pOutputBuffer
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetOutputBuffer\n"
            "(\n"
@@ -3644,7 +3644,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetOutputBuffer
 
 	// TODO: Implement
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return S_OK;
 }
@@ -3658,7 +3658,7 @@ HRESULT WINAPI XTL::EmuXFileCreateMediaObjectEx
     void**	ppMediaObject
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuXFileCreateMediaObjectEx\n"
            "(\n"
@@ -3669,7 +3669,7 @@ HRESULT WINAPI XTL::EmuXFileCreateMediaObjectEx
 
 	// TODO: Implement
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return E_FAIL;
 }
@@ -3684,7 +3684,7 @@ HRESULT WINAPI XTL::EmuXWaveFileCreateMediaObject
     void			**ppMediaObject
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuXWaveFileCreateMediaObject\n"
            "(\n"
@@ -3696,7 +3696,7 @@ HRESULT WINAPI XTL::EmuXWaveFileCreateMediaObject
 
 	// TODO: Implement
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return E_FAIL;
 }
@@ -3710,7 +3710,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetEG
     LPVOID					pEnvelopeDesc
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetEG\n"
            "(\n"
@@ -3721,7 +3721,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetEG
 
 	// TODO: Implement
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return S_OK;
 }
@@ -3738,7 +3738,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_GetEffectData
     DWORD			dwDataSize
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_GetEffectData\n"
            "(\n"
@@ -3754,7 +3754,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_GetEffectData
 	if( !pvData )
 		pvData = CxbxMalloc( dwDataSize );
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return S_OK;
 }
@@ -3769,7 +3769,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetNotificationPositions
     LPCDSBPOSITIONNOTIFY	paNotifies
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetNotificationPositions\n"
            "(\n"
@@ -3806,7 +3806,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetNotificationPositions
 		}
 	}
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return hr;
 }
@@ -3822,7 +3822,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetRolloffCurve
     DWORD					dwApply
 )
 {
-    EmuSwapFS();   // Win2k/XP FS
+    
 
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSoundStream_SetRolloffCurve\n"
            "(\n"
@@ -3835,7 +3835,7 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetRolloffCurve
 
     // TODO: Implement
 
-    EmuSwapFS();   // XBox FS
+    
 
     return DS_OK;
 }
@@ -3853,7 +3853,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetEffectData
     DWORD dwApply
 )
 {
-	EmuSwapFS();   // Win2k/XP FS
+	
 
     DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetEffectData\n"
            "(\n"
@@ -3868,7 +3868,7 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetEffectData
 
     // TODO: Implement
 
-    EmuSwapFS();   // XBox FS
+    
 
     return DS_OK;
 }
@@ -3883,7 +3883,7 @@ HRESULT WINAPI XTL::EmuXFileCreateMediaObjectAsync
     void	**ppMediaObject
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuXFileCreateMediaObjectAsync\n"
            "(\n"
@@ -3899,7 +3899,7 @@ HRESULT WINAPI XTL::EmuXFileCreateMediaObjectAsync
 
 	*ppMediaObject = new X_XFileMediaObject();
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return S_OK;
 }
@@ -3915,7 +3915,7 @@ HRESULT WINAPI XTL::EmuXFileMediaObject_Seek
     LPDWORD				pdwAbsolute
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuXFileMediaObject_Seek\n"
            "(\n"
@@ -3928,7 +3928,7 @@ HRESULT WINAPI XTL::EmuXFileMediaObject_Seek
 
 	// TODO: Implement
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return S_OK;
 }
@@ -3938,7 +3938,7 @@ HRESULT WINAPI XTL::EmuXFileMediaObject_Seek
 // ******************************************************************
 VOID WINAPI XTL::EmuXFileMediaObject_DoWork(X_XFileMediaObject* pThis)
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuXFileMediaObject_DoWork\n"
            "(\n"
@@ -3948,7 +3948,7 @@ VOID WINAPI XTL::EmuXFileMediaObject_DoWork(X_XFileMediaObject* pThis)
 
 	// TODO: Implement
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 }
 
 // ******************************************************************
@@ -3960,7 +3960,7 @@ HRESULT WINAPI XTL::EmuXFileMediaObject_GetStatus
     LPDWORD				pdwStatus
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuXFileMediaObject_GetStatus\n"
            "(\n"
@@ -3971,7 +3971,7 @@ HRESULT WINAPI XTL::EmuXFileMediaObject_GetStatus
 
 	// TODO: Implement
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return DS_OK;
 }
@@ -3985,7 +3985,7 @@ HRESULT WINAPI XTL::EmuXFileMediaObject_GetInfo
 	XMEDIAINFO			   *pInfo
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuXFileMediaObject_GetStatus\n"
            "(\n"
@@ -3996,7 +3996,7 @@ HRESULT WINAPI XTL::EmuXFileMediaObject_GetInfo
 
 	// TODO: Implement
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return DS_OK;
 }
@@ -4011,7 +4011,7 @@ HRESULT WINAPI XTL::EmuXFileMediaObject_Process
     LPXMEDIAPACKET			pOutputBuffer
 )
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuXFileMediaObject_Process\n"
            "(\n"
@@ -4023,7 +4023,7 @@ HRESULT WINAPI XTL::EmuXFileMediaObject_Process
 
 	// TODO: Implement
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return DS_OK;
 }
@@ -4033,7 +4033,7 @@ HRESULT WINAPI XTL::EmuXFileMediaObject_Process
 // ******************************************************************
 ULONG WINAPI XTL::EmuXFileMediaObject_AddRef(X_XFileMediaObject *pThis)
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuXFileMediaObject_AddRef\n"
            "(\n"
@@ -4049,7 +4049,7 @@ ULONG WINAPI XTL::EmuXFileMediaObject_AddRef(X_XFileMediaObject *pThis)
 		Ret = pThis->EmuRefCount;
 	}
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return Ret;
 }
@@ -4059,7 +4059,7 @@ ULONG WINAPI XTL::EmuXFileMediaObject_AddRef(X_XFileMediaObject *pThis)
 // ******************************************************************
 ULONG WINAPI XTL::EmuXFileMediaObject_Release(X_XFileMediaObject *pThis)
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuXFileMediaObject_Release\n"
            "(\n"
@@ -4079,7 +4079,7 @@ ULONG WINAPI XTL::EmuXFileMediaObject_Release(X_XFileMediaObject *pThis)
 		Ret = pThis->EmuRefCount;
 	}
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return Ret;
 }
@@ -4089,7 +4089,7 @@ ULONG WINAPI XTL::EmuXFileMediaObject_Release(X_XFileMediaObject *pThis)
 // ******************************************************************
 HRESULT WINAPI XTL::EmuXFileMediaObject_Discontinuity(X_XFileMediaObject *pThis)
 {
-	EmuSwapFS();	// Win2k/XP FS
+		// Win2k/XP FS
 
 	DbgPrintf("EmuDSound (0x%X): EmuXFileMediaObject_Discontinuity\n"
            "(\n"
@@ -4097,7 +4097,7 @@ HRESULT WINAPI XTL::EmuXFileMediaObject_Discontinuity(X_XFileMediaObject *pThis)
            ");\n",
            GetCurrentThreadId(), pThis);
 
-	EmuSwapFS();	// Xbox FS
+		// Xbox FS
 
 	return DS_OK;
 }

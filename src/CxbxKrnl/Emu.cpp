@@ -148,8 +148,8 @@ extern "C" CXBXKRNL_API void NTAPI EmuWarning(const char *szWarningMessage, ...)
 // exception handler
 extern int EmuException(LPEXCEPTION_POINTERS e)
 {
-    if(EmuIsXboxFS())
-        EmuSwapFS();
+    
+        
 
     g_bEmuException = true;
 
@@ -868,9 +868,6 @@ extern int EmuCheckAllocationSize(LPVOID pBase, bool largeBound)
 // exception handle for that tough final exit :)
 int ExitException(LPEXCEPTION_POINTERS e)
 {
-    if(EmuIsXboxFS())
-        EmuSwapFS();
-
     static int count = 0;
 
     // debug information
