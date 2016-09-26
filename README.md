@@ -10,8 +10,9 @@ Cxbx-Reloaded is still pretty unstable, don't expect it to run much at this poin
   * Windows 10 64-bit (May work on other versions, but this has not been tested).
   * A graphics card that supports Direct3D 8.
 
-## Screenshot Gallary
+## Screenshot Gallery
 http://imgur.com/a/Bzvti
+The screenshot gallery is regularly updated
 
 ## Special Thanks
 All contributers to the original Cxbx and Dxbx projects, without which Cxbx-Reloaded would not exist at all
