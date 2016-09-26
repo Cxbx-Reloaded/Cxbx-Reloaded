@@ -2479,6 +2479,16 @@ OOVPATable D3D8_1_0_5849[] =
         "EmuIDirect3DDevice8_CopyRects"
         #endif
     },
+    // IDirect3DPalette8::Lock2 (* unchanged since 5233 *)
+    {
+        (OOVPA*)&IDirect3DPalette8_Lock2_1_0_5233,
+
+        XTL::EmuIDirect3DPalette8_Lock2,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DPalette8_Lock2"
+        #endif
+    },    
     // IDirect3DTexture8::LockRect
     {
         (OOVPA*)&IDirect3DTexture8_LockRect_1_0_5849,
