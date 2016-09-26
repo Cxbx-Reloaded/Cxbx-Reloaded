@@ -164,7 +164,14 @@ XBSYSAPI EXPORTNUM(203) NTSTATUS NTAPI NtOpenSymbolicLinkObject(
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
-XBSYSAPI VOID *NtProtectVirtualMemory;
+XBSYSAPI EXPORTNUM(205) NTSTATUS NTAPI NtProtectVirtualMemory(
+    IN OUT PVOID *BaseAddress,
+    IN OUT PSIZE_T RegionSize,
+    IN ULONG NewProtect,
+    OUT PULONG OldProtect
+);
+
+
 XBSYSAPI VOID *NtPulseEvent;
 
 // ******************************************************************

@@ -3399,6 +3399,32 @@ XBSYSAPI EXPORTNUM(203) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenSymbolicLinkObj
 }
 
 // ******************************************************************
+// * 0x00CC - NtProtectVirtualMemory
+// ******************************************************************
+XBSYSAPI EXPORTNUM(205) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtProtectVirtualMemory
+(
+	IN OUT PVOID *BaseAddress,
+	IN OUT PSIZE_T RegionSize,
+	IN ULONG NewProtect,
+	OUT PULONG OldProtect
+)
+{
+	DbgPrintf("EmuKrnl (0x%X): NtProtectVirtualMemory\n"
+		"(\n"
+		"   BaseAddress         : 0x%.08X\n"
+		"   RegionSize           : 0x%.08X\n"
+		"   NewProtect    : 0x%.08X\n"
+		"   OldProtect       : 0x%.08X\n"
+		");\n",
+		GetCurrentThreadId(), BaseAddress, RegionSize, NewProtect,
+		OldProtect);
+
+	EmuWarning("NtProtectVirtualMemory Ignored!");
+
+	return STATUS_SUCCESS;
+}
+
+// ******************************************************************
 // * 0x00CE - NtQueueApcThread
 // ******************************************************************
 XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
