@@ -337,7 +337,7 @@ HRESULT WINAPI XTL::EmuXGWriteSurfaceOrTextureToXPR
 	BOOL			bWriteSurfaceAsTexture
 )
 {
-		// Win2k/XP FS
+		
 
 	DbgPrintf("EmuXapi (0x%X): EmuXGWriteSurfaceOrTextureToXPR\n"
            "(\n"
@@ -353,7 +353,7 @@ HRESULT WINAPI XTL::EmuXGWriteSurfaceOrTextureToXPR
 
 	EmuWarning("(Temporarily) ignoring EmuXGWriteSurfaceOrTextureToXPR. Need file specs.");
 
-		// Xbox FS
+		
 
 	return S_OK;
 }
@@ -374,7 +374,7 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 	UINT			Pitch
 )
 {
-		// Win2k/XP FS
+		
 
 	DbgPrintf("EmuXapi (0x%X): EmuXGSetTextureHeader\n"
            "(\n"
@@ -439,7 +439,7 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 //	D3DCOLOR_XRGB(
 	DbgPrintf( "pTexture->Format:= 0x%.08X\n", pTexture->Format );
 
-		// Xbox FS
+		
 }
 
 // ******************************************************************
@@ -452,7 +452,7 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 //	void			**ppFont
 //)
 //{
-//		// Win2k/XP FS
+//		
 //
 //	DbgPrintf("EmuXapi (0x%X): EmuXFONT_OpenBitmapFontFromMemory\n"
 //           "(\n"
@@ -464,7 +464,7 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 //
 //	__asm int 3;
 //
-//	 // Xbox FS
+//	 
 //
 //	return E_FAIL;
 //}

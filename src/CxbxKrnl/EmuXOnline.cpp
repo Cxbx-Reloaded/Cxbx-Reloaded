@@ -218,7 +218,7 @@ HRESULT WINAPI XOnlineLaunchNewImage
     LPVOID	pLaunchData
 )
 {
-		// Win2k/XP FS
+		
 
 	DbgPrintf("XOnline (0x%X): EmuXOnlineLaunchNewImage\n"
 		"(\n"
@@ -229,7 +229,7 @@ HRESULT WINAPI XOnlineLaunchNewImage
 
 	// TODO: Launch another .xbe from Cxbx someday?
 
-		// Xbox FS
+		
 
 	return E_FAIL;
 }
@@ -246,7 +246,7 @@ HRESULT WINAPI XTL::EmuXOnlineLogon
     HANDLE	pHandle
 )
 {
-		// Win2k/XP FS
+		
 
 	DbgPrintf("XOnline (0x%X): EmuXOnlineLogon\n"
 		"(\n"
@@ -260,7 +260,7 @@ HRESULT WINAPI XTL::EmuXOnlineLogon
 
 	// TODO: What will it take to log on to Xbox Live?
 
-		// Xbox FS
+		
 
 	return HRESULT(0x80151000L);	// XONLINE_E_LOGON_NO_NETWORK_CONNECTION
 }

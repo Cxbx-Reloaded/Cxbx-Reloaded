@@ -1133,7 +1133,7 @@ static unsigned int WINAPI PCSTProxy
 
 callComplete:
 
-        // Win2k/XP FS
+        
 
     // call thread notification routine(s)
     if(g_iThreadNotificationCount != 0)
@@ -1297,7 +1297,7 @@ using namespace xboxkrnl;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress()
 {
-		// Win2k/XP FS
+		
 
 	DbgPrintf("EmuKrnl (0x%X): AvGetSavedDataAddress();\n", GetCurrentThreadId() );
 
@@ -1341,7 +1341,7 @@ XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress()
 		fclose(fp);
 	}*/
 
-		// Xbox FS
+		
 
 	return NULL;//g_pPersistedData;
 }
@@ -1357,7 +1357,7 @@ XBSYSAPI EXPORTNUM(2) VOID NTAPI xboxkrnl::AvSendTVEncoderOption
     OUT ULONG   *Result
 )
 {
-		// Win2k/XP FS
+		
 
 	DbgPrintf("EmuKrnl (0x%X): AvSendTVEncoderOption\n"
            "(\n"
@@ -1421,7 +1421,7 @@ XBSYSAPI EXPORTNUM(9) VOID NTAPI xboxkrnl::HalReadSMCTrayState
 	DWORD*	Count
 )
 {
-		// Win2k/XP FS
+		
 	
 	DbgPrintf("EmuKrnl (0x%X): HalReadSMCTrayState\n"
            "(\n"
@@ -1443,7 +1443,7 @@ XBSYSAPI EXPORTNUM(9) VOID NTAPI xboxkrnl::HalReadSMCTrayState
 	*State = TRAY_OPEN;
 //	*Count = 1;
 
-		// Xbox FS
+		
 }
 
 // ******************************************************************
@@ -1506,7 +1506,7 @@ XBSYSAPI EXPORTNUM(17) VOID NTAPI xboxkrnl::ExFreePool
 	IN PVOID	P
 )
 {
-		// Win2k/XP FS
+		
 	
 	DbgPrintf("EmuKrnl (0x%X): ExFreePool\n"
            "(\n"
@@ -1516,7 +1516,7 @@ XBSYSAPI EXPORTNUM(17) VOID NTAPI xboxkrnl::ExFreePool
 
 	CxbxFree(P);
 
-		// Xbox FS
+		
 }
 
 // ******************************************************************
@@ -1667,7 +1667,7 @@ XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
 	// TODO: What does this do?
 	EmuWarning( "ExReadWriteRefurbInfo ignored!" );
 
-		// Xbox FS
+		
 
 	return STATUS_SUCCESS;
 }
@@ -1696,7 +1696,7 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 
 	// TODO: Later.
 
-		// Xbox FS
+		
 
 	return STATUS_SUCCESS;
 }
@@ -1792,7 +1792,7 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
         // Write BYTE
     }
 
-		// Xbox FS
+		
 
 	return STATUS_SUCCESS;
 }
@@ -1817,7 +1817,7 @@ XBSYSAPI EXPORTNUM(47) VOID xboxkrnl::HalRegisterShutdownNotification
 
 	EmuWarning("HalRegisterShutdownNotification not implemented!\n");
 	
-		// Xbox FS
+		
 
 	return;
 }
@@ -1844,7 +1844,7 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
 		CxbxKrnlCleanup("Xbe has rebooted : HalReturnToFirmware(%d)", Routine);
 	}
 
-	 // Xbox FS
+	 
 }
 
 // ******************************************************************
@@ -1871,7 +1871,7 @@ XBSYSAPI EXPORTNUM(50) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMBusValue
 
 	// TODO: Later.
 
-		// Xbox FS
+		
 
 	return STATUS_SUCCESS;
 }
@@ -1983,7 +1983,7 @@ XBSYSAPI EXPORTNUM(91) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDismountVolumeByName
 	IN PSTRING VolumeName
 )
 {
-		// Win2k/XP FS
+		
 
 	DbgPrintf("EmuKrnl (0x%X): IoDismountVolumeByName\n"
 			"(\n"
@@ -1994,7 +1994,7 @@ XBSYSAPI EXPORTNUM(91) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDismountVolumeByName
 	// TODO: Anything?
 	NTSTATUS ret = STATUS_SUCCESS;
 
-		// Xbox FS
+		
 
 	return ret;
 }
@@ -2007,7 +2007,7 @@ XBSYSAPI EXPORTNUM(95) VOID NTAPI xboxkrnl::KeBugCheck
 	IN ULONG BugCheckMode
 )
 {
-		// Win2k/XP FS
+		
 
 	DbgPrintf("EmuKrnl (0x%X): KeBugCheck\n"
 			"(\n"
@@ -2017,7 +2017,7 @@ XBSYSAPI EXPORTNUM(95) VOID NTAPI xboxkrnl::KeBugCheck
 
 	// TODO: Investigate XapiFiberStartup maybe?
 
-		// Xbox FS
+		
 }
 
 // ******************************************************************
@@ -2028,7 +2028,7 @@ XBSYSAPI EXPORTNUM(98) xboxkrnl::LONG NTAPI xboxkrnl::KeConnectInterrupt
     IN PKINTERRUPT  InterruptObject
 )
 {
-		// Win2k/XP FS
+		
 
 	DbgPrintf("EmuKrnl (0x%X): KeConnectInterrupt\n"
 			"(\n"
@@ -2036,7 +2036,7 @@ XBSYSAPI EXPORTNUM(98) xboxkrnl::LONG NTAPI xboxkrnl::KeConnectInterrupt
 			");\n",
 			GetCurrentThreadId(), InterruptObject);
 
-		// Xbox FS
+		
 
 	return 0;
 }
@@ -3421,7 +3421,7 @@ XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
 	IN ULONG                ApcReserved OPTIONAL 
 )
 {
-		// Win2k/XP FS
+		
 
 	DbgPrintf("EmuKrnl (0x%X): NtQueueApcThread\n"
            "(\n"
@@ -3443,7 +3443,7 @@ XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
 	if( FAILED( ret ) )
 		EmuWarning( "NtQueueApcThread failed!" );
 		
-		// Xbox FS
+		
 
 	return ret;
 }
@@ -4515,7 +4515,7 @@ XBSYSAPI EXPORTNUM(279) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualString
   IN BOOLEAN CaseSensitive
 )
 {
-		// Win2k/XP FS
+		
 
 	DbgPrintf("EmuKrnl (0x%X): RtlEqualString\n"
 			"(\n"
@@ -4527,7 +4527,7 @@ XBSYSAPI EXPORTNUM(279) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualString
 
 	BOOLEAN bRet = NtDll::RtlEqualString( (NtDll::PSTRING)String1, (NtDll::PSTRING)String2, (NtDll::BOOLEAN)CaseSensitive );
 
-		// Xbox FS
+		
 
 	return bRet;
 }
