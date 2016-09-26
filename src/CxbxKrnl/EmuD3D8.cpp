@@ -4550,21 +4550,12 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
 				if(FAILED(hRet))
 				{
-					// TODO: Hack for Crazy Taxi 3?
 					char szString[256];
 					sprintf( szString, "CreateVertexBuffer Failed!\n\nVB Size = 0x%X\n\nError: \nDesc: ", dwSize/*,
 						DXGetErrorString8A(hRet)*//*, DXGetErrorDescription8A(hRet)*/);
 					
-					if( dwSize != 0 )
-						CxbxKrnlCleanup( szString );
-					else
-					{
-						EmuWarning( szString );
-
-							
-
-						return hRet;
-					}
+					EmuWarning( szString );
+					return hRet;
 				}
 
                 #ifdef _DEBUG_TRACK_VB
@@ -6163,7 +6154,7 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EmuIDirect3DDevice8_CreateVertexBuffer2
     );
 
     if(FAILED(hRet))
-        CxbxKrnlCleanup("CreateVertexBuffer Failed!");
+        EmuWarning("CreateVertexBuffer Failed!");
 
     #ifdef _DEBUG_TRACK_VB
     g_VBTrackTotal.insert(pD3DVertexBuffer->EmuVertexBuffer8);
