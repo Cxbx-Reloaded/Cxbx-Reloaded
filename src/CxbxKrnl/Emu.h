@@ -63,12 +63,6 @@ extern volatile bool g_bEmuException;
 extern volatile bool g_bEmuSuspended;
 
 // global exception patching address
-extern uint32 g_HaloHack[4];
-
-// Dead to Rights hack
-extern uint32 g_DeadToRightsHack[2];
-
-// global exception patching address
 extern uint32 funcExclude[2048];
 
 // partition emulation directory handles

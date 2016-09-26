@@ -34,11 +34,6 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
-// Disable overlay updates for Unreal Championship...
-// TODO: Find out why a crash occurs playing the second
-// intro video.
-//#define UnrealChampionshipHack
-
 // prevent name collisions
 namespace xboxkrnl
 {
@@ -6274,7 +6269,6 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
            ");\n",
            GetCurrentThreadId(), pSurface, SrcRect, DstRect, EnableColorKey, ColorKey);
 
-#ifndef UnrealChampionshipHack
 	if(pSurface)
 	{
 		// manually copy data over to overlay
@@ -6449,10 +6443,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
 	else
 	{
 		EmuWarning("pSurface == NULL!");
-	}
-#endif
-
-    
+	}   
 
     return;
 }

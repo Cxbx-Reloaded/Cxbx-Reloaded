@@ -2502,9 +2502,6 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 
     static int count = 0;
 
-    if(count++ < 4)
-        g_HaloHack[count-1] = (uint32)pRet;
-
     DbgPrintf("EmuKrnl (0x%X): MmAllocateContiguousEx returned 0x%.08X\n", GetCurrentThreadId(), pRet);
 
     
@@ -2838,14 +2835,6 @@ XBSYSAPI EXPORTNUM(182) VOID NTAPI xboxkrnl::MmSetAddressProtect
            "   NewProtect               : 0x%.08X\n"
            ");\n",
            GetCurrentThreadId(), BaseAddress, NumberOfBytes, NewProtect);
-
-    // Halo Hack
-    if(BaseAddress == (PVOID)0x80366000)
-    {
-        BaseAddress = (PVOID)(g_HaloHack[0] + (0x80366000 - 0x80061000));
-
-        DbgPrintf("EmuKrnl (0x%X): Halo Access Adjust 3 was applied! (0x%.08X)\n", GetCurrentThreadId(), BaseAddress);
-    }
 
     DWORD dwOldProtect;
 
