@@ -117,6 +117,7 @@ class Xbe : public Error
 
         // Xbe header extra byte (used to preserve unknown data)
         char *m_HeaderEx;
+		uint32 m_ExSize;
 
         // Xbe certificate
         #include "AlignPrefix1.h"

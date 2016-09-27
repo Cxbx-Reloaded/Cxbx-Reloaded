@@ -45,7 +45,8 @@
 /**
  * Silly little hack to fix link error with libjpeg on MSVC 2015
  */
-FILE _iob[] = { *stdin, *stdout, *stderr };extern "C" FILE * __cdecl __iob_func(void) { return _iob; }
+FILE _iob[] = { *stdin, *stdout, *stderr };
+extern "C" FILE * __cdecl __iob_func(void) { return _iob; }
 
 WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m_Xbe(0), m_Exe(0), m_bExeChanged(false), m_bXbeChanged(false), m_bCanStart(true), m_hwndChild(NULL), m_AutoConvertToExe(AUTO_CONVERT_WINDOWS_TEMP), m_KrnlDebug(DM_NONE), m_CxbxDebug(DM_NONE), m_dwRecentXbe(0), m_dwRecentExe(0)
 {
@@ -1832,45 +1833,6 @@ void WndMain::StartEmulation(EnumAutoConvert x_AutoConvert, HWND hwndParent)
 {
     char szBuffer[260];
 
-    // convert xbe to exe, if necessary
-    if(m_ExeFilename[0] == '\0' || m_bExeChanged)
-    {
-        if(x_AutoConvert == AUTO_CONVERT_WINDOWS_TEMP)
-        {
-            char szTempPath[260];
-
-            GetTempPath(259, szTempPath);
-
-            SuggestFilename(m_XbeFilename, szBuffer, ".exe");
-
-            int v=0, c=0;
-
-            while(szBuffer[v] != '\0')
-            {
-                if(szBuffer[v] == '\\')
-                    c = v+1;
-                v++;
-            }
-
-            strcat(szTempPath, &szBuffer[c]);
-
-            if(!ConvertToExe(szTempPath, false, hwndParent))
-                return;
-        }
-        else if(x_AutoConvert == AUTO_CONVERT_XBE_PATH)
-        {
-            SuggestFilename(m_XbeFilename, szBuffer, ".exe");
-
-            if(!ConvertToExe(szBuffer, false, hwndParent))
-                return;
-        }
-        else
-        {
-            if(!ConvertToExe(NULL, true, hwndParent))
-                return;
-        }
-    }
-
     // register xbe path with CxbxKrnl.dll
     g_EmuShared->SetXbePath(m_Xbe->m_szPath);
 
@@ -1890,10 +1852,12 @@ void WndMain::StartEmulation(EnumAutoConvert x_AutoConvert, HWND hwndParent)
         if(spot != -1)
             szBuffer[spot] = '\0';
 
+		// std::string args = "/load " + std::string("\"") + std::string(m_Xbe->m_szPath) + std::string(itoa(0));
+
         if((int)ShellExecute(NULL, "open", m_ExeFilename, NULL, szBuffer, SW_SHOWDEFAULT) <= 32)
         {
             m_bCanStart = true;
-            MessageBox(m_hwnd, "Emulation failed.\n\nTry converting again. If this message repeats, the Xbe is not supported.", "Cxbx", MB_ICONSTOP | MB_OK);
+            MessageBox(m_hwnd, "Emulation failed.\n\n If this message repeats, the Xbe is not supported.", "Cxbx", MB_ICONSTOP | MB_OK);
 
             printf("WndMain: %s shell failed.\n", m_Xbe->m_szAsciiTitle);
         }

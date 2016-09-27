@@ -40,6 +40,8 @@
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuShared.h"
 
+unsigned char memory[XBOX_MEMORY_SIZE];
+
 /*! program entry point */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -49,6 +51,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         MessageBox(NULL, "CxbxKrnl.dll is the incorrect version", "Cxbx", MB_OK);
         return 1;
     }
+
+	if (__argc >= 2 && strcmp(__argv[1], "/load") == 0 && strlen(__argv[2]) > 0)  {
+		CxbxKrnlMain(__argc, __argv);
+		return 0;
+	}
 
     /*! initialize shared memory */
     EmuShared::Init();

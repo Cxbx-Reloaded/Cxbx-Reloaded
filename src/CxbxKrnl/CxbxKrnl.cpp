@@ -73,7 +73,7 @@ static HANDLE g_hThreads[MAXIMUM_XBOX_THREADS] = { 0 };
 
 std::string CxbxBasePath;
 HANDLE CxbxBasePathHandle;
-Exe* CxbxKrnl_Exe = NULL;
+Xbe* CxbxKrnl_Xbe = NULL;
 
 DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
@@ -214,6 +214,80 @@ void CxbxLaunchXbe(void(*Entry)())
 
 }
 
+extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
+{
+	std::string xbePath = argv[2];
+
+	MessageBoxA(NULL, xbePath.c_str(), "", 0);
+	HWND hWnd = (HWND)StrToInt(argv[3]);
+	DebugMode DbgMode = (DebugMode)StrToInt(argv[4]);
+	std::string DebugFileName = argv[5];
+
+	// Backup the area of the EXE required for WinAPI
+	Exe::DOSHeader* header = (Exe::DOSHeader*)0x10000;
+	DWORD magic = header->m_magic;
+	DWORD lfaNew = header->m_lfanew;
+
+	DWORD OldProtection;
+	VirtualProtect((void*)0x10000, XBOX_MEMORY_SIZE, PAGE_EXECUTE_READWRITE, &OldProtection);
+	ZeroMemory((void*)0x10000, XBOX_MEMORY_SIZE);
+
+	g_EmuShared->SetXbePath(xbePath.c_str());
+
+	CxbxKrnl_Xbe = new Xbe(xbePath.c_str());
+	
+	// Load Xbe Headers
+	memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));	
+	memcpy((void*)(CxbxKrnl_Xbe->m_Header.dwBaseAddr + sizeof(Xbe::Header)), CxbxKrnl_Xbe->m_HeaderEx, CxbxKrnl_Xbe->m_ExSize);
+	
+	// Load Sections
+	for (int i = 0; i < CxbxKrnl_Xbe->m_Header.dwSections; i++) {
+		memcpy((void*)CxbxKrnl_Xbe->m_SectionHeader[i].dwVirtualAddr, CxbxKrnl_Xbe->m_bzSection[i], CxbxKrnl_Xbe->m_SectionHeader[i].dwSizeofRaw);
+	}
+
+	// Fixup Kernel Imports
+	uint32 kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
+
+	if ((kt ^ XOR_KT_DEBUG) > 0x01000000)
+		kt ^= XOR_KT_RETAIL;
+	else
+		kt ^= XOR_KT_DEBUG;
+
+	uint32_t* kt_tbl = (uint32_t*)kt;
+
+	int i = 0;
+	while (kt_tbl[i] != 0) {
+		int t = kt_tbl[i] & 0x7FFFFFFF;
+		kt_tbl[i] = CxbxKrnl_KernelThunkTable[t];
+		i++;
+	}
+
+	// Load TLS
+	Xbe::TLS* XbeTls = (Xbe::TLS*)CxbxKrnl_Xbe->m_Header.dwTLSAddr;
+	void* XbeTlsData = nullptr;
+
+	if (XbeTls != nullptr) {
+		XbeTlsData = (void*)CxbxKrnl_Xbe->m_TLS->dwDataStartAddr;
+	}
+
+	// Decode Entry Point
+	uint32_t EntryPoint = CxbxKrnl_Xbe->m_Header.dwEntryAddr;
+	if ((EntryPoint ^ XOR_EP_DEBUG) > 0x01000000)
+		EntryPoint ^= XOR_EP_RETAIL;
+	else
+		EntryPoint ^= XOR_EP_DEBUG;
+
+	// Restore the area of the EXE required for WinAPI
+	header->m_magic = magic;
+	header->m_lfanew = lfaNew;
+
+	// Launch XBE
+	CxbxKrnlInit(
+		hWnd, XbeTlsData, XbeTls, CxbxKrnl_Xbe->m_LibraryVersion, DbgMode, 
+		DebugFileName.c_str(), &CxbxKrnl_Xbe->m_Header, CxbxKrnl_Xbe->m_Header.dwSizeofHeaders, (void(*)())EntryPoint
+	);
+}
+
 extern "C" CXBXKRNL_API void CxbxKrnlInit
 (
 	HWND                    hwndParent,
@@ -221,7 +295,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	Xbe::TLS               *pTLS,
 	Xbe::LibraryVersion    *pLibraryVersion,
 	DebugMode               DbgMode,
-	char                   *szDebugFilename,
+	const char             *szDebugFilename,
 	Xbe::Header            *pXbeHeader,
 	uint32                  dwXbeHeaderSize,
 	void(*Entry)())
@@ -357,13 +431,6 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		((Xbe::Certificate*)pXbeHeader->dwCertificateAddr)->dwAllowedMedia |= 0x00FFFFFF;
 	}
 
-	// Load EXE structure, this is used by Xapi Section functions
-	{
-		char szBuffer[MAX_PATH];
-		GetModuleFileNameA(NULL, szBuffer, MAX_PATH);
-		CxbxKrnl_Exe = new Exe(szBuffer);
-	}
-
 	// Initialize devices :
 	char szBuffer[260];
 	SHGetSpecialFolderPath(NULL, szBuffer, CSIDL_APPDATA, TRUE);
@@ -477,19 +544,27 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	}
 
 	
-	DbgPrintf("EmuMain : Determining CPU affinity.");	// Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
+	DbgPrintf("EmuMain : Determining CPU affinity.");
+
+	// Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
 	// this will better aproximate the environment with regard to multi-threading) :
-	{		GetProcessAffinityMask(GetCurrentProcess(), &g_CPUXbox, &g_CPUOthers);
+	{
+		GetProcessAffinityMask(GetCurrentProcess(), &g_CPUXbox, &g_CPUOthers);
 		// For the other threads, remove one bit from the processor mask:
-		g_CPUOthers = ((g_CPUXbox - 1) & g_CPUXbox);
+		g_CPUOthers = ((g_CPUXbox - 1) & g_CPUXbox);
+
 		// Test if there are any other cores available :
 		if (g_CPUOthers > 0) {
 			// If so, make sure the Xbox threads run on the core NOT running Xbox code :
-			g_CPUXbox = g_CPUXbox & (~g_CPUOthers);		} else {			// Else the other threads must run on the same core as the Xbox code :
-			g_CPUOthers = g_CPUXbox;		}
+			g_CPUXbox = g_CPUXbox & (~g_CPUOthers);
+		} else {
+			// Else the other threads must run on the same core as the Xbox code :
+			g_CPUOthers = g_CPUXbox;
+		}
 
 	// Make sure Xbox1 code runs on one core :
-	SetThreadAffinityMask(GetCurrentThread(), g_CPUXbox);}
+	SetThreadAffinityMask(GetCurrentThread(), g_CPUXbox);
+}
 
     DbgPrintf("EmuMain (0x%X): Initial thread starting.\n", GetCurrentThreadId());
 

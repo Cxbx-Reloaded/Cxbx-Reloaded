@@ -46,11 +46,16 @@
 extern "C" {
 #endif
 
+#define XBOX_MEMORY_SIZE 128 * 1024 * 1024
+
 /*! validate version string match */
 CXBXKRNL_API bool CxbxKrnlVerifyVersion(const char *szVersion);
 
+/*! Cxbx Kernel Entry Point */
+CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[]);
+
 /*! initialize emulation */
-CXBXKRNL_API void CxbxKrnlInit(HWND hwndParent, void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
+CXBXKRNL_API void CxbxKrnlInit(HWND hwndParent, void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32 XbeHeaderSize, void (*Entry)());
 
 /*! cleanup emulation */
 CXBXKRNL_API void CxbxKrnlCleanup(const char *szErrorMessage, ...);
@@ -85,7 +90,7 @@ extern CXBXKRNL_API void *CxbxKrnl_TLSData;
 /*! xbe header structure */
 extern CXBXKRNL_API Xbe::Header *CxbxKrnl_XbeHeader;
 
-extern Exe* CxbxKrnl_Exe;
+extern Xbe *CxbxKrnl_Xbe;
 
 /*! parent window handle */
 extern CXBXKRNL_API HWND CxbxKrnl_hEmuParent;

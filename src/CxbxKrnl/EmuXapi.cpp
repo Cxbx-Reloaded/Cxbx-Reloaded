@@ -976,14 +976,12 @@ HANDLE WINAPI XTL::EmuXGetSectionHandleA
 	void* pRet = NULL;
 
 	// Iterate thrugh sections
-	for (int i = 0; i < CxbxKrnl_Exe->m_Header.m_sections; i++) {
-		if (!strncmp(pSectionName, CxbxKrnl_Exe->m_SectionHeader[i].m_name, 8))	{
-			pRet = (void*)(CxbxKrnl_Exe->m_SectionHeader[i].m_virtual_addr + CxbxKrnl_XbeHeader->dwBaseAddr);
+	for (int i = 0; i < CxbxKrnl_Xbe->m_Header.dwSections; i++) {
+		if (!strncmp(pSectionName, (char*)CxbxKrnl_Xbe->m_SectionHeader[i].dwSectionNameAddr, 8))	{
+			pRet = (void*)(CxbxKrnl_Xbe->m_SectionHeader[i].dwVirtualAddr + CxbxKrnl_XbeHeader->dwBaseAddr);
 			break;
 		}
 	}
-
-		
 
 	return (LPVOID) pRet;
 }
@@ -1054,13 +1052,12 @@ DWORD WINAPI XTL::EmuXGetSectionSize
 
 
 	// Iterate thrugh sections
-	for (int i = 0; i < CxbxKrnl_Exe->m_Header.m_sections; i++) {
-		if ((HANDLE)(CxbxKrnl_Exe->m_SectionHeader[i].m_virtual_addr + CxbxKrnl_XbeHeader->dwBaseAddr) == hSection) {
-			return CxbxKrnl_Exe->m_SectionHeader[i].m_sizeof_raw;
+	for (int i = 0; i < CxbxKrnl_Xbe->m_Header.dwSections; i++) {
+		if ((HANDLE)(CxbxKrnl_Xbe->m_SectionHeader[i].dwVirtualAddr + CxbxKrnl_XbeHeader->dwBaseAddr) == hSection) {
+			return CxbxKrnl_Xbe->m_SectionHeader[i].dwRawAddr;
 		}
 	}
 
-	
 
 	EmuWarning("EmuXApi : EmuXGetSectionSize : Could not determine section size: %x08X", hSection);
 

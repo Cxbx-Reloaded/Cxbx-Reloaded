@@ -284,16 +284,16 @@ void EmuInitFS()
 	long numberOfInstructions = fsInstructions.size();
 
 	// Iterate through each CODE section
-	for (int sectionIndex = 0; sectionIndex < CxbxKrnl_Exe->m_Header.m_sections; sectionIndex++) {
-		if (CxbxKrnl_Exe->m_SectionHeader[sectionIndex].m_characteristics & IMAGE_SCN_CNT_CODE != IMAGE_SCN_CNT_CODE) {
+	for (int sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
+		if (!CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwFlags.bExecutable) {
 			continue;
 		}
 
-		std::string sectionName(CxbxKrnl_Exe->m_SectionHeader[sectionIndex].m_name, 8);
+		std::string sectionName(CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSectionNameAddr, 8);
 
 		DbgPrintf("Searching for FS Instruction in section %s\n", sectionName.c_str());
-		uint32_t startAddr = CxbxKrnl_Exe->m_SectionHeader[sectionIndex].m_virtual_addr + CxbxKrnl_XbeHeader->dwBaseAddr;
-		uint32_t endAddr = startAddr + CxbxKrnl_Exe->m_SectionHeader[sectionIndex].m_sizeof_raw;
+		uint32_t startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr + CxbxKrnl_XbeHeader->dwBaseAddr;
+		uint32_t endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
 		for (uint32 addr = startAddr; addr < endAddr; addr++)
 		{
 			for (int i = 0; i < numberOfInstructions; i++)

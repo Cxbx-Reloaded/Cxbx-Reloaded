@@ -105,11 +105,11 @@ Xbe::Xbe(const char *x_szFilename)
     {
         printf("Xbe::Xbe: Reading Image Header Extra Bytes...");
 
-        uint32 ExSize = RoundUp(m_Header.dwSizeofHeaders, 0x1000) - sizeof(m_Header);
+        m_ExSize = RoundUp(m_Header.dwSizeofHeaders, 0x1000) - sizeof(m_Header);
 
-        m_HeaderEx = new char[ExSize];
+        m_HeaderEx = new char[m_ExSize];
 
-        if(fread(m_HeaderEx, ExSize, 1, XbeFile) != 1)
+        if(fread(m_HeaderEx, m_ExSize, 1, XbeFile) != 1)
         {
             SetError("Unexpected end of file while reading Xbe Image Header (Ex)", true);
             goto cleanup;
