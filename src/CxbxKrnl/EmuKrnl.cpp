@@ -4898,6 +4898,26 @@ XBSYSAPI EXPORTNUM(326) xboxkrnl::OBJECT_STRING xboxkrnl::XeImageFileName = {
 
 };
 
+XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection(void* section)
+{
+	if (((Xbe::SectionHeader*)section)->dwSectionRefCount > 0) {
+		((Xbe::SectionHeader*)section)->dwSectionRefCount++;
+		return STATUS_SUCCESS;
+	}
+
+	EmuWarning("XeLoadSection lied");
+	return STATUS_SUCCESS;
+}
+
+XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection(void* section)
+{
+	if (((Xbe::SectionHeader*)section)->dwSectionRefCount == 0) {
+		return STATUS_INVALID_PARAMETER;
+	}
+
+	EmuWarning("XeUnloadSection lied");
+	return STATUS_SUCCESS;
+}
 
 // ******************************************************************
 // * XcSHAInit

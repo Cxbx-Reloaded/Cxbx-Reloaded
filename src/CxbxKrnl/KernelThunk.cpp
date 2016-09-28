@@ -384,8 +384,8 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367] =
     (uint32)&xboxkrnl::XboxKrnlVersion,				// 0x0144 (324) XboxKrnlVersion
     (uint32)&xboxkrnl::XboxSignatureKey,            // 0x0145 (325)
     (uint32)&xboxkrnl::XeImageFileName,             // 0x0146 (326) XeImageFileName
-    (uint32)PANIC(0x0147),                          // 0x0147 (327) XeLoadSection
-    (uint32)PANIC(0x0148),                          // 0x0148 (328) XeUnloadSection
+    (uint32)&xboxkrnl::XeLoadSection,               // 0x0147 (327) XeLoadSection
+	(uint32)&xboxkrnl::XeUnloadSection,				// 0x0148 (328) XeUnloadSection
     (uint32)PANIC(0x0149),                          // 0x0149 (329) READ_PORT_BUFFER_UCHAR
     (uint32)PANIC(0x014A),                          // 0x014A (330) READ_PORT_BUFFER_USHORT
     (uint32)PANIC(0x014B),                          // 0x014B (331) READ_PORT_BUFFER_ULONG

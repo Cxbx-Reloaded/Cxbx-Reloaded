@@ -121,9 +121,8 @@ XBSYSAPI EXPORTNUM(324) XBOX_KRNL_VERSION XboxKrnlVersion;
 XBSYSAPI EXPORTNUM(325) BYTE XboxSignatureKey[16];
 
 XBSYSAPI EXPORTNUM(326) OBJECT_STRING XeImageFileName;
-
-XBSYSAPI VOID *XeLoadSection;
-XBSYSAPI VOID *XeUnloadSection;
+XBSYSAPI EXPORTNUM(327) NTSTATUS NTAPI XeLoadSection(void* section);
+XBSYSAPI EXPORTNUM(328) NTSTATUS NTAPI XeUnloadSection(void* section);
 
 // ******************************************************************
 // * XcSHAInit

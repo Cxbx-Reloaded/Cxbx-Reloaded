@@ -527,7 +527,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	// Create default symbolic links :
 	{
 		// Arrange that the Xbe path can reside outside the partitions, and put it to g_hCurDir :
-		CxbxCreateSymbolicLink(DriveC, (xbeDirectory));
+		CxbxCreateSymbolicLink(DriveC, xbeDirectory);
 		EmuNtSymbolicLinkObject* xbePathSymbolicLinkObject = FindNtSymbolicLinkObjectByVolumeLetter(CxbxDefaultXbeVolumeLetter);
 		g_hCurDir = xbePathSymbolicLinkObject->RootDirectoryHandle;
 
