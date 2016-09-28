@@ -1014,23 +1014,6 @@ DWORD WINAPI XTL::EmuXLaunchNewImage
 		CxbxKrnlCleanup("The xbe rebooted to Dashboard and xboxdash.xbe could not be found");
 	}
 		
-	// Save the launch data
-	if(pLaunchData != NULL)
-	{
-		CopyMemory(&g_SavedLaunchData, pLaunchData, sizeof(LAUNCH_DATA));
-
-		// Save the launch data parameters to disk for later.
-		DbgPrintf("Saving launch data as CxbxLaunchData.bin...\n");
-
-		FILE* fp = fopen("CxbxLaunchData.bin", "wb");
-
-		fseek(fp, 0, SEEK_SET);
-		fwrite(pLaunchData, sizeof( LAUNCH_DATA ), 1, fp);
-		fclose(fp);
-	}
-
-	g_bXLaunchNewImageCalled = true;
-	
 	char szExeFileName[MAX_PATH];
 	GetModuleFileName(GetModuleHandle(NULL), szExeFileName, MAX_PATH);
 
@@ -1045,6 +1028,26 @@ DWORD WINAPI XTL::EmuXLaunchNewImage
 	strncpy_s(szWorkingDirectoy, szXbePath, MAX_PATH);
 	PathRemoveFileSpec(szWorkingDirectoy);
 
+	// Save the launch data
+	if (pLaunchData != NULL)
+	{
+		CopyMemory(&g_SavedLaunchData, pLaunchData, sizeof(LAUNCH_DATA));
+
+		// Save the launch data parameters to disk for later.
+		char szLaunchDataPath[MAX_PATH];
+		snprintf(szLaunchDataPath, MAX_PATH, "%s\\CxbxLaunchData.bin", szWorkingDirectoy);
+
+		DbgPrintf("Saving launch data to %s\n", szLaunchDataPath);
+
+		FILE* fp = fopen(szLaunchDataPath, "wb");
+		fseek(fp, 0, SEEK_SET);
+		fwrite(pLaunchData, sizeof(LAUNCH_DATA), 1, fp);
+		fclose(fp);
+	}
+
+	g_bXLaunchNewImageCalled = true;
+
+	// Launch the new Xbe	
 	char szArgsBuffer[4096];
 	snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", szXbePath, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName);
 
