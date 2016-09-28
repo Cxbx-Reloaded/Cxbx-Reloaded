@@ -269,7 +269,6 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 	ZeroMemory((void*)0x10000, XBOX_MEMORY_SIZE);
 
 	g_EmuShared->SetXbePath(xbePath.c_str());
-
 	CxbxKrnl_Xbe = new Xbe(xbePath.c_str());
 	
 	// Load Xbe Headers
@@ -320,7 +319,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 	// Launch XBE
 	CxbxKrnlInit(
 		hWnd, XbeTlsData, XbeTls, CxbxKrnl_Xbe->m_LibraryVersion, DbgMode, 
-		DebugFileName.c_str(), &CxbxKrnl_Xbe->m_Header, CxbxKrnl_Xbe->m_Header.dwSizeofHeaders, (void(*)())EntryPoint
+		DebugFileName.c_str(), (Xbe::Header*)0x10000, CxbxKrnl_Xbe->m_Header.dwSizeofHeaders, (void(*)())EntryPoint
 	);
 }
 
@@ -476,15 +475,12 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	std::string basePath(szBuffer);
 	CxbxBasePath = basePath + "\\EmuDisk\\";
 
+	// Determine XBE Path
 	memset(szBuffer, 0, 260);
 	g_EmuShared->GetXbePath(szBuffer);
-
-	if (szBuffer && *szBuffer)
-		SetCurrentDirectory(szBuffer);
-	else
-		GetCurrentDirectory(260, szBuffer);
-
 	std::string xbePath(szBuffer);
+	PathRemoveFileSpec(szBuffer);
+	std::string xbeDirectory(szBuffer);
 
 	CxbxBasePathHandle = CreateFile(CxbxBasePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
@@ -494,7 +490,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	std::string titleId(szBuffer);
 
 	// Games may assume they are running from CdRom :
-	CxbxRegisterDeviceNativePath(DeviceCdrom0, xbePath);
+	CxbxRegisterDeviceNativePath(DeviceCdrom0, xbeDirectory);
 
 
 	// Partition 0 contains configuration data, and is accessed as a native file, instead as a folder :
@@ -515,17 +511,12 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	// Create default symbolic links :
 	{
 		// Arrange that the Xbe path can reside outside the partitions, and put it to g_hCurDir :
-		CxbxCreateSymbolicLink(DriveC, (xbePath));
+		CxbxCreateSymbolicLink(DriveC, (xbeDirectory));
 		EmuNtSymbolicLinkObject* xbePathSymbolicLinkObject = FindNtSymbolicLinkObjectByVolumeLetter(CxbxDefaultXbeVolumeLetter);
 		g_hCurDir = xbePathSymbolicLinkObject->RootDirectoryHandle;
 
 		// Determine Xbox path to XBE and place it in XeImageFileName
-		// This path is determined by taking the EXE path and replacing the suffix with .xbe
-		char szBuffer[MAX_PATH];
-		GetModuleFileNameA(NULL, szBuffer, MAX_PATH);
-		std::string fileName(PathFindFileNameA(szBuffer));
-		fileName.replace(fileName.length() - 3, 3, "xbe");
-
+		std::string fileName(xbePath);
 		xboxkrnl::XeImageFileName.Buffer = (PCHAR)malloc(MAX_PATH);
 		sprintf(xboxkrnl::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeVolumeLetter, fileName.c_str());
 		xboxkrnl::XeImageFileName.Length = strlen(xboxkrnl::XeImageFileName.Buffer);
