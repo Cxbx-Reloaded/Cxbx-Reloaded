@@ -666,36 +666,6 @@ OOVPATable XAPI_1_0_5558[] =
         "GetFileAttributesA"
         #endif
     },
-	// XGetSectionHandleA (* unchanged since 3911 *)
-	{
-		(OOVPA*)&XGetSectionHandleA_1_0_3911, 
-			
-		XTL::EmuXGetSectionHandleA,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXGetSectionHandleA"
-		#endif
-	},
-	// XLoadSectionByHandle (* unchanged since 3911 *)
-	{
-		(OOVPA*)&XLoadSectionByHandle_1_0_3911, 
-			
-		XTL::EmuXLoadSectionByHandle,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXLoadSectionByHandle"
-		#endif
-	},
-	// XFreeSectionByHandle (* unchanged since 3911 *)
-	{
-		(OOVPA*)&XFreeSectionByHandle_1_0_3911, 
-			
-		XTL::EmuXFreeSectionByHandle,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXFreeSectionByHandle"
-		#endif
-	},
 	// SetThreadPriorityBoost (* unchanged since 4627 *)
     {
         (OOVPA*)&SetThreadPriorityBoost_1_0_4627,

@@ -290,56 +290,6 @@ OOVPATable XAPI_1_0_4034[] =
         "EmuXapiBootDash"
         #endif
     },
-	// XLoadSectionA (* unchanged since 3911 *)
-	{
-		(OOVPA*)&XLoadSectionA_1_0_3911, 
-			
-		XTL::EmuXLoadSectionA,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXLoadSectionA"
-		#endif
-	},
-	// XFreeSectionA (* unchanged since 3911 *)
-	{
-		(OOVPA*)&XFreeSectionA_1_0_3911, 
-			
-		XTL::EmuXFreeSectionA,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXFreeSectionA"
-		#endif
-	},
-	// XGetSectionHandleA (* unchanged since 3911 *)
-	{
-		(OOVPA*)&XGetSectionHandleA_1_0_3911,
-
-		XTL::EmuXGetSectionHandleA,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXGetSectionHandleA"
-		#endif
-	},
-	// XLoadSectionByHandle (* unchanged since 3911 *)
-	{
-		(OOVPA*)&XLoadSectionByHandle_1_0_3911,
-
-		XTL::EmuXLoadSectionByHandle,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXLoadSectionByHandle"
-		#endif
-	},
-	// XFreeSectionByHandle (* unchanged since 3911 *)
-	{
-		(OOVPA*)&XFreeSectionByHandle_1_0_3911,
-
-		XTL::EmuXFreeSectionByHandle,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXFreeSectionByHandle"
-		#endif
-	},
 	// GetTimeZoneInformation (* unchanged since 3911 *)
     {
         (OOVPA*)&GetTimeZoneInformation_1_0_3911,

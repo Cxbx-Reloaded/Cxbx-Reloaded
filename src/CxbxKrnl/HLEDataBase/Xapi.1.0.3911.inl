@@ -1056,78 +1056,6 @@ SOOVPA<7> ConvertThreadToFiber_1_0_3911 =
 //    }
 //};
 
-// ******************************************************************
-// * XLoadSectionA
-//   FF742404E8........83F8FF740850E8........EB0233C0C20400..........
-// ******************************************************************
-SOOVPA<10> XLoadSectionA_1_0_3911 = 
-{
-	0,	// Large == 0
-	10,	// Count == 10
-
-	-1,	// XRef not saved
-	0,	// XRef not used
-
-	{
-		// XLoadSectionA+0x0F : call XLoadSectionByHandle
-//		{ 0x10, XREF_XLoadSectionByHandle },
-
-		// XLoadSectionA+0x0: push dword ptr [esp+4]
-		{ 0x00, 0xFF },
-		{ 0x01, 0x74 },
-		{ 0x02, 0x24 },
-		{ 0x03, 0x04 },
-
-		// XLoadSectionA+0x9: cmp eax, 0xFFFFFFFF
-		{ 0x09, 0x83 },
-		{ 0x0A, 0xF8 },
-		{ 0x0B, 0xFF },
-
-		// XLoadSectionA+0xE: push eax
-		{ 0x0E, 0x50 },
-
-		// XLoadSectionA+0x18: ret 4
-		{ 0x18, 0xC2 },
-		{ 0x19, 0x04 },
-	}
-};
-
-// ******************************************************************
-// * XFreeSectionA
-// FF742404E8........83F8FF740850E8........EB0233C0C20400.......... 
-// ******************************************************************
-SOOVPA<11> XFreeSectionA_1_0_3911 = 
-{
-	0,	// Large == 0
-	11,	// Count == 11
-
-	-1,	// XRef not saved
-	0,	// XRef not used
-
-	{
-		// XFreeSectionA+0x0F : call XFreeSectionByHandle
-//		{ 0x10, XREF_XFreeSectionByHandle },
-
-		// XLoadSectionA+0x0: push dword ptr [esp+4]
-		{ 0x00, 0xFF },
-		{ 0x01, 0x74 },
-		{ 0x02, 0x24 },
-		{ 0x03, 0x04 },
-
-		// XLoadSectionA+0x9: cmp eax, 0xFFFFFFFF
-		{ 0x09, 0x83 },
-		{ 0x0A, 0xF8 },
-		{ 0x0B, 0xFF },
-
-		// XLoadSectionA+0x14: jz 0x2
-		{ 0x14, 0xEB },
-		{ 0x15, 0x02 },
-
-		// XLoadSectionA+0x18: ret 4
-		{ 0x18, 0xC2 },
-		{ 0x19, 0x04 },
-	}
-};
 
 // ******************************************************************
 // * SignalObjectAndWait
@@ -1877,26 +1805,6 @@ OOVPATable XAPI_1_0_3911[] =
 		"EmuXInputGetCapabilities"
 		#endif
 	},
-	// XLoadSectionA
-	{
-		(OOVPA*)&XLoadSectionA_1_0_3911, 
-			
-		XTL::EmuXLoadSectionA,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXLoadSectionA"
-		#endif
-	},
-	// XFreeSectionA
-	{
-		(OOVPA*)&XFreeSectionA_1_0_3911, 
-			
-		XTL::EmuXFreeSectionA,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXFreeSectionA"
-		#endif
-	},
 	// SignalObjectAndWait
 	{
 		(OOVPA*)&SignalObjectAndWait_1_0_3911, 
@@ -1982,36 +1890,6 @@ OOVPATable XAPI_1_0_3911[] =
         "EmuXGetLaunchInfo"
         #endif
     },
-	// XGetSectionHandleA
-	{
-		(OOVPA*)&XGetSectionHandleA_1_0_3911, 
-			
-		XTL::EmuXGetSectionHandleA,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXGetSectionHandleA"
-		#endif
-	},
-	// XLoadSectionByHandle 
-	{
-		(OOVPA*)&XLoadSectionByHandle_1_0_3911, 
-			
-		XTL::EmuXLoadSectionByHandle,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXLoadSectionByHandle"
-		#endif
-	},
-	// XFreeSectionByHandle
-	{
-		(OOVPA*)&XFreeSectionByHandle_1_0_3911, 
-			
-		XTL::EmuXFreeSectionByHandle,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXFreeSectionByHandle"
-		#endif
-	},
 	// XAutoPowerDownResetTimer
 	{
 		(OOVPA*)&XAutoPowerDownResetTimer_1_0_3911,

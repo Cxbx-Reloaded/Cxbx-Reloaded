@@ -582,54 +582,6 @@ VOID WINAPI EmuXRegisterThreadNotifyRoutine
 );
 
 // ******************************************************************
-// * func: EmuXLoadSectionA
-// ******************************************************************
-LPVOID WINAPI EmuXLoadSectionA
-(
-	LPCSTR pSectionName
-);
-
-// ******************************************************************
-// * func: EmuXFreeSectionA
-// ******************************************************************
-BOOL WINAPI EmuXFreeSectionA
-(
-	LPCSTR pSectionName
-);
-
-// ******************************************************************
-// * func: EmuXGetSectionHandleA
-// ******************************************************************
-HANDLE WINAPI EmuXGetSectionHandleA
-(
-	LPCSTR pSectionName
-);
-
-// ******************************************************************
-// * func: EmuXLoadSectionByHandle
-// ******************************************************************
-LPVOID WINAPI EmuXLoadSectionByHandle
-(
-	HANDLE hSection
-);
-
-// ******************************************************************
-// * func: EmuXFreeSectionByHandle
-// ******************************************************************
-BOOL WINAPI EmuXFreeSectionByHandle
-(
-	HANDLE hSection
-);
-
-// ******************************************************************
-// * func: EmuXGetSectionSize
-// ******************************************************************
-DWORD WINAPI EmuXGetSectionSize
-(
-	HANDLE hSection                       
-);
-
-// ******************************************************************
 // * func: EmuRtlDestroyHeap
 // ******************************************************************
 PVOID WINAPI EmuRtlDestroyHeap

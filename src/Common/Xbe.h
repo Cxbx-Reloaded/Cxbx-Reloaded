@@ -257,14 +257,6 @@ class Xbe : public Error
         };
 };
 
-// A list of sections in this Xbe used for section loading
-struct SectionList
-{
-	char	szSectionName[9];
-	uint32	dwSectionAddr;
-	uint32	dwSectionSize;
-};
-
 // debug/retail XOR keys
 const uint32 XOR_EP_DEBUG                            = 0x94859D4B; // Entry Point (Debug)
 const uint32 XOR_EP_RETAIL                           = 0xA8FC57AB; // Entry Point (Retail)

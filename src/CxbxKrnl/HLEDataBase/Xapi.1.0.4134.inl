@@ -477,26 +477,6 @@ OOVPATable XAPI_1_0_4134[] =
         "EmuXMountUtilityDrive"
         #endif
     },
-	// XLoadSectionA (* unchanged since 3911 *)
-	{
-		(OOVPA*)&XLoadSectionA_1_0_3911, 
-			
-		XTL::EmuXLoadSectionA,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXLoadSectionA"
-		#endif
-	},
-	// XFreeSectionA (* unchanged since 3911 *)
-	{
-		(OOVPA*)&XFreeSectionA_1_0_3911, 
-			
-		XTL::EmuXFreeSectionA,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXFreeSectionA"
-		#endif
-	},
 	// GetTimeZoneInformation (* unchanged since 3911 *)
     {
         (OOVPA*)&GetTimeZoneInformation_1_0_3911,
@@ -596,43 +576,13 @@ OOVPATable XAPI_1_0_4134[] =
         #endif
     },
 	// XInputPoll
-    {
-        (OOVPA*)&XInputPoll_1_0_4134,
-
-        XTL::EmuXInputPoll,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputPoll"
-        #endif
-    },
-	// XGetSectionHandleA
 	{
-		(OOVPA*)&XGetSectionHandleA_1_0_3911, 
-			
-		XTL::EmuXGetSectionHandleA,
+		(OOVPA*)&XInputPoll_1_0_4134,
+
+		XTL::EmuXInputPoll,
 
 		#ifdef _DEBUG_TRACE
-		"EmuXGetSectionHandleA"
-		#endif
-	},
-	// XLoadSectionByHandle
-	{
-		(OOVPA*)&XLoadSectionByHandle_1_0_3911, 
-			
-		XTL::EmuXLoadSectionByHandle,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXLoadSectionByHandle"
-		#endif
-	},
-	// XFreeSectionByHandle
-	{
-		(OOVPA*)&XFreeSectionByHandle_1_0_3911, 
-			
-		XTL::EmuXFreeSectionByHandle,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXFreeSectionByHandle"
+		"EmuXInputPoll"
 		#endif
 	},
 	// SetThreadPriorityBoost (* unchanged since 3911 *)

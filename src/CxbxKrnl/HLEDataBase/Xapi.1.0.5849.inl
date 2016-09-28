@@ -370,45 +370,6 @@ OOVPATable XAPI_1_0_5849[] =
         "GetThreadPriorityBoost"
         #endif
     },*/
-	// XGetSectionHandleA (* unchanged since 3911 *)
-	{
-		(OOVPA*)&XGetSectionHandleA_1_0_3911, 
-			
-		XTL::EmuXGetSectionHandleA,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXGetSectionHandleA"
-		#endif
-	},
-	// XLoadSectionByHandle (* unchanged since 3911 *)
-	{
-		(OOVPA*)&XLoadSectionByHandle_1_0_3911, 
-			
-		XTL::EmuXLoadSectionByHandle,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXLoadSectionByHandle"
-		#endif
-	},
-	// XFreeSectionByHandle (* unchanged since 3911 *)
-	{
-		(OOVPA*)&XFreeSectionByHandle_1_0_3911, 
-			
-		XTL::EmuXFreeSectionByHandle,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXFreeSectionByHandle"
-		#endif
-	},
-	// XGetSectionSize
-    {
-        (OOVPA*)&XGetSectionSize_1_0_5849,
-        XTL::EmuXGetSectionSize,
-
-        #ifdef _DEBUG_TRACE
-        "XGetSectionSize"
-        #endif
-    },
 	// RaiseException
     {
         (OOVPA*)&RaiseException_1_0_5849,
