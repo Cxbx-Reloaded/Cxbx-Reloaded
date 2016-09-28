@@ -94,6 +94,8 @@ extern Xbe *CxbxKrnl_Xbe;
 
 /*! parent window handle */
 extern CXBXKRNL_API HWND CxbxKrnl_hEmuParent;
+extern CXBXKRNL_API DebugMode CxbxKrnl_DebugMode;
+extern CXBXKRNL_API char* CxbxKrnl_DebugFileName;
 
 #ifdef __cplusplus
 }

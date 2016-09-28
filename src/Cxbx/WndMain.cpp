@@ -1114,7 +1114,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 break;
 
                 case ID_HELP_HOMEPAGE:
-                    ShellExecute(NULL, "open", "http://www.caustik.com/cxbx/", NULL, NULL, SW_SHOWNORMAL);
+                    ShellExecute(NULL, "open", "http://www.github.com/LukeUsher/Cxbx-Reloaded/", NULL, NULL, SW_SHOWNORMAL);
                     break;
             }
 
@@ -1852,9 +1852,13 @@ void WndMain::StartEmulation(EnumAutoConvert x_AutoConvert, HWND hwndParent)
         if(spot != -1)
             szBuffer[spot] = '\0';
 
-		// std::string args = "/load " + std::string("\"") + std::string(m_Xbe->m_szPath) + std::string(itoa(0));
+		char szExeFileName[MAX_PATH];
+		GetModuleFileName(GetModuleHandle(NULL), szExeFileName, MAX_PATH);
 
-        if((int)ShellExecute(NULL, "open", m_ExeFilename, NULL, szBuffer, SW_SHOWDEFAULT) <= 32)
+		char szArgsBuffer[4096];
+		snprintf(szArgsBuffer, 4096, "/load \"%s\" %d %d \"%s\"", m_XbeFilename, hwndParent, m_KrnlDebug, m_KrnlDebugFilename);
+
+        if((int)ShellExecute(NULL, "open", szExeFileName, szArgsBuffer, szBuffer, SW_SHOWDEFAULT) <= 32)
         {
             m_bCanStart = true;
             MessageBox(m_hwnd, "Emulation failed.\n\n If this message repeats, the Xbe is not supported.", "Cxbx", MB_ICONSTOP | MB_OK);

@@ -35,14 +35,19 @@
 #define _XBOXKRNL_DEFEXTRN_
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
-#include <windows.h>
-//#include <xinput.h>
+/* prevent name collisions */
+namespace xboxkrnl
+{
+	#include <xboxkrnl/xboxkrnl.h>
+};
 
-#include "CxbxUtil.h"
+#include <Shlwapi.h>
 #include "CxbxKrnl.h"
 #include "Emu.h"
+#include "EmuFile.h"
 #include "EmuFS.h"
-#include "EmuAlloc.h"
+#include "EmuShared.h"
+#include "HLEIntercept.h"
 #include "Exe.h"
 
 // XInputSetState status waiters
@@ -995,13 +1000,11 @@ DWORD WINAPI XTL::EmuXLaunchNewImage
 	DWORD dwRet = ERROR_GEN_FAILURE;
 
 	// If no path is specified, then the xbe is rebooting to dashboard
-	if(!lpTitlePath)
+	if (!lpTitlePath) {
+		// TODO: Check for C:\xboxdash.xbe and launch it if present
 		CxbxKrnlCleanup("The xbe is rebooting (XLaunchNewImage)");
-
-	// Ignore any other attempts to execute other .xbe files (for now).
-	EmuWarning("Not executing the xbe!");
-//	CxbxKrnlCleanup("XLaunchNewImage(): Attempting to launch %s", lpTitlePath);
-
+	}
+		
 	// Save the launch data
 	if(pLaunchData != NULL)
 	{
@@ -1018,45 +1021,31 @@ DWORD WINAPI XTL::EmuXLaunchNewImage
 	}
 
 	g_bXLaunchNewImageCalled = true;
+	
+	char szExeFileName[MAX_PATH];
+	GetModuleFileName(GetModuleHandle(NULL), szExeFileName, MAX_PATH);
 
-	// Hey, let's try executing the .exe instead of the .xbe!
-	/*{
-		char* szExePath = (char*) lpTitlePath;
-		int len = strlen( lpTitlePath );
+	// Convert Xbox XBE Path to Windows Path
+	char szXbePath[MAX_PATH];
 
-		strcpy( szExePath, lpTitlePath );
-		szExePath[len-3] = 'e';
-		szExePath[len-2] = 'x';
-		szExePath[len-1] = 'e';
-		
-		if( szExePath[0] == 'D' && szExePath[1] == ':' && szExePath[2] == '\\' )
-			szExePath += 3;
+	EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByVolumeLetter(lpTitlePath[0]);
+	snprintf(szXbePath, MAX_PATH, "%s%s", symbolicLink->NativePath.c_str(), &lpTitlePath[2]);
 
-		DbgPrintf( "Attempting to execute %s instead of the equivelant .xbe\n", szExePath );
+	// Determine Working Directory
+	char szWorkingDirectoy[MAX_PATH];
+	strncpy_s(szWorkingDirectoy, szXbePath, MAX_PATH);
+	PathRemoveFileSpec(szWorkingDirectoy);
 
-		if((int)ShellExecute(NULL, "open", szExePath, NULL, ".\\", SW_SHOWDEFAULT) <= 32)
-		{
-			EmuWarning( "Could not launch %s", szExePath );
-		}
-		else
-		{
-			CxbxKrnlCleanup( "New emulation session has begun.\nTODO: Use a more graceful method..." );
-		}
-	}*/
+	char szArgsBuffer[4096];
+	snprintf(szArgsBuffer, 4096, "/load \"%s\" %u %d \"%s\"", szXbePath, CxbxKrnl_hEmuParent, CxbxKrnl_DebugMode, CxbxKrnl_DebugFileName);
 
-	// Temporary Hack (Unreal): Jump back to the entry point
-//	uint32* start = (uint32*) 0x21C13B;
-
-		
-
-	/*__asm
+	if ((int)ShellExecute(NULL, "open", szExeFileName, szArgsBuffer, szWorkingDirectoy, SW_SHOWDEFAULT) <= 32)
 	{
-		mov esi, 0;
-		mov edi, 0;
-		mov esp, 0;
-		mov ebp, 0;
-		jmp start;
-	}*/
+		CxbxKrnlCleanup("Could not launch %s", lpTitlePath);
+	}
+
+	ExitProcess(EXIT_SUCCESS);
+	
 
 	return dwRet;
 }

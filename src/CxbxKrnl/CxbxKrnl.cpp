@@ -66,7 +66,10 @@ extern CXBXKRNL_API void *CxbxKrnl_TLSData = NULL;
 /*! xbe header structure */
 extern CXBXKRNL_API Xbe::Header *CxbxKrnl_XbeHeader = NULL;
 /*! parent window handle */
-extern CXBXKRNL_API HWND CxbxKrnl_hEmuParent = NULL;
+
+CXBXKRNL_API HWND CxbxKrnl_hEmuParent = NULL;
+CXBXKRNL_API DebugMode CxbxKrnl_DebugMode = DebugMode::DM_NONE;
+CXBXKRNL_API char* CxbxKrnl_DebugFileName = NULL;
 
 /*! thread handles */
 static HANDLE g_hThreads[MAXIMUM_XBOX_THREADS] = { 0 };
@@ -351,6 +354,8 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	CxbxKrnl_TLSData = pTLSData;
 	CxbxKrnl_XbeHeader = pXbeHeader;
 	CxbxKrnl_hEmuParent = IsWindow(hwndParent) ? hwndParent : NULL;
+	CxbxKrnl_DebugMode = DbgMode;
+	CxbxKrnl_DebugFileName = (char*)szDebugFilename;
 
 	// for unicode conversions
 	setlocale(LC_ALL, "English");
