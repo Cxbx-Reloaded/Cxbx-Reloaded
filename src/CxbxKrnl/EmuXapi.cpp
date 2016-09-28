@@ -1001,8 +1001,17 @@ DWORD WINAPI XTL::EmuXLaunchNewImage
 
 	// If no path is specified, then the xbe is rebooting to dashboard
 	if (!lpTitlePath) {
-		// TODO: Check for C:\xboxdash.xbe and launch it if present
-		CxbxKrnlCleanup("The xbe is rebooting (XLaunchNewImage)");
+		char szDashboardPath[MAX_PATH];
+		EmuNtSymbolicLinkObject* symbolicLinkObject = FindNtSymbolicLinkObjectByDevice(DeviceHarddisk0Partition2);
+		sprintf(szDashboardPath, "%s\\xboxdash.xbe", symbolicLinkObject->NativePath.c_str());
+		
+		if (PathFileExists(szDashboardPath)) {
+			char szXboxDashboardPath[MAX_PATH];
+			sprintf(szXboxDashboardPath, "%c:\\xboxdash.xbe", symbolicLinkObject->DriveLetter);
+			EmuXLaunchNewImage(szXboxDashboardPath, pLaunchData);
+		}
+			
+		CxbxKrnlCleanup("The xbe rebooted to Dashboard and xboxdash.xbe could not be found");
 	}
 		
 	// Save the launch data
