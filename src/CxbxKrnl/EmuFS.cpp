@@ -289,9 +289,7 @@ void EmuInitFS()
 			continue;
 		}
 
-		std::string sectionName(CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSectionNameAddr, 8);
-
-		DbgPrintf("Searching for FS Instruction in section %s\n", sectionName.c_str());
+		DbgPrintf("Searching for FS Instruction in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
 		uint32_t startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
 		uint32_t endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
 		for (uint32 addr = startAddr; addr < endAddr; addr++)

@@ -218,10 +218,21 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 {
 	std::string xbePath = argv[2];
 
-	MessageBoxA(NULL, xbePath.c_str(), "", 0);
-	HWND hWnd = (HWND)StrToInt(argv[3]);
-	DebugMode DbgMode = (DebugMode)StrToInt(argv[4]);
-	std::string DebugFileName = argv[5];
+	HWND hWnd = 0;
+	if (argc > 2) {
+		hWnd = (HWND)StrToInt(argv[3]);
+	}
+	
+	DebugMode DbgMode = DebugMode::DM_NONE;
+	if (argc > 3) {
+		DbgMode = (DebugMode)StrToInt(argv[4]);
+	}
+
+	std::string DebugFileName;
+	if (argc > 4) {
+		DebugFileName = argv[5];
+	}
+	
 
 	// Read EXE Header Data
 	Exe::DOSHeader* ExeDosHeader = (Exe::DOSHeader*)0x10000;
