@@ -235,7 +235,14 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 
         g_bRenderWindowActive = false;
 
-        CreateThread(NULL, NULL, EmuRenderWindow, NULL, NULL, &dwThreadId);
+        HANDLE hRenderWindowThread = CreateThread(NULL, NULL, EmuRenderWindow, NULL, NULL, &dwThreadId);
+		if (hRenderWindowThread == NULL) {
+			char szBuffer[1024] = { 0 };
+			sprintf(szBuffer, "Creating EmuRenderWindowThread Failed: %08X", GetLastError());
+			MessageBoxA(NULL, szBuffer, "CreateThread Failed", 0);
+			ExitProcess(0);
+		}
+
 
         while(!g_bRenderWindowActive)
             Sleep(10);

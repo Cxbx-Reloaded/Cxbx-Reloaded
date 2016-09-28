@@ -223,13 +223,49 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 	DebugMode DbgMode = (DebugMode)StrToInt(argv[4]);
 	std::string DebugFileName = argv[5];
 
-	// Backup the area of the EXE required for WinAPI
-	Exe::DOSHeader* header = (Exe::DOSHeader*)0x10000;
-	DWORD magic = header->m_magic;
-	DWORD lfaNew = header->m_lfanew;
+	// Read EXE Header Data
+	Exe::DOSHeader* ExeDosHeader = (Exe::DOSHeader*)0x10000;
+	Exe::Header* ExeNtHeader = (Exe::Header*)((uint32)ExeDosHeader + ExeDosHeader->m_lfanew);
+	Exe::OptionalHeader* ExeOptionalHeader = (Exe::OptionalHeader*)((uint32)ExeNtHeader + sizeof(Exe::Header));
+	DWORD ExeHeaderSize = ExeOptionalHeader->m_sizeof_headers;
+
+	// Create a safe copy of the complete EXE header:
+	Exe::DOSHeader* NewDosHeader = (Exe::DOSHeader*)malloc(ExeHeaderSize);
+	Exe::Header* NewNtHeader = (Exe::Header*)((uint32)NewDosHeader + ExeDosHeader->m_lfanew);
+	Exe::OptionalHeader* NewOptionalHeader = (Exe::OptionalHeader*)((uint32)NewNtHeader + sizeof(Exe::Header));
+	memcpy(NewDosHeader, ExeDosHeader, ExeHeaderSize);
+
+	// Make sure the new DOS header points to the new relative NtHeader location:
+	NewDosHeader->m_lfanew = (uint32)NewNtHeader - 0x10000;
+
+	// Create safe copies of all EXE sections that could get overwritten:
+	Exe::SectionHeader* ExeSectionHeaders = (Exe::SectionHeader*)((uint32)ExeOptionalHeader + ExeNtHeader->m_sizeof_optional_header);
+	Exe::SectionHeader* NewSectionHeaders = (Exe::SectionHeader*)((uint32)NewOptionalHeader + NewNtHeader->m_sizeof_optional_header);
+
+	for (int i = 0; i < ExeNtHeader->m_sections; i++)
+	{
+		// Check if this section will be overwritten:
+		if (ExeSectionHeaders[i].m_virtual_addr + ExeSectionHeaders[i].m_virtual_size < XBOX_MEMORY_SIZE) {
+			char* NewSection = (char*)malloc(ExeSectionHeaders[i].m_virtual_size);
+			memcpy(NewSection, (void*)(ExeSectionHeaders[i].m_virtual_addr + (uint32)ExeDosHeader), ExeSectionHeaders[i].m_virtual_size);
+			NewSectionHeaders[i].m_virtual_addr = (uint32)NewSection - (uint32)ExeDosHeader;
+			
+
+			if (NewOptionalHeader->m_data_base == ExeSectionHeaders[i].m_virtual_addr) {
+				NewOptionalHeader->m_data_base = NewSectionHeaders[i].m_virtual_addr;
+			}
+		}
+	}
+
+
 
 	DWORD OldProtection;
 	VirtualProtect((void*)0x10000, XBOX_MEMORY_SIZE, PAGE_EXECUTE_READWRITE, &OldProtection);
+
+	// TODO TLS
+
+
+	// Clear out entire memory range
 	ZeroMemory((void*)0x10000, XBOX_MEMORY_SIZE);
 
 	g_EmuShared->SetXbePath(xbePath.c_str());
@@ -278,8 +314,8 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 		EntryPoint ^= XOR_EP_DEBUG;
 
 	// Restore the area of the EXE required for WinAPI
-	header->m_magic = magic;
-	header->m_lfanew = lfaNew;
+	ExeDosHeader->m_magic = NewDosHeader->m_magic;
+	ExeDosHeader->m_lfanew = NewDosHeader->m_lfanew;
 
 	// Launch XBE
 	CxbxKrnlInit(
@@ -407,8 +443,9 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	//
 	// load the necessary pieces of XbeHeader
 	//
-
+	
 	{
+		/*
 		Xbe::Header *MemXbeHeader = (Xbe::Header*)0x00010000;
 
 		uint32 old_protection = 0;
@@ -424,7 +461,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 		memcpy(&MemXbeHeader->dwInitFlags, &pXbeHeader->dwInitFlags, sizeof(pXbeHeader->dwInitFlags));
 
-		memcpy((void*)pXbeHeader->dwCertificateAddr, &((uint08*)pXbeHeader)[pXbeHeader->dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate));
+		memcpy((void*)pXbeHeader->dwCertificateAddr, &((uint08*)pXbeHeader)[pXbeHeader->dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate)); */
 
 		// Patch AllowedMediaTypes to prevent XapiVerifyMediaInDrive() being called
 		// This is necessary as we do not emulate XDVD verification
