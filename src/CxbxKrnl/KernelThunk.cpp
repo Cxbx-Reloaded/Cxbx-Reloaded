@@ -97,7 +97,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367] =
     (uint32)&xboxkrnl::FscSetCacheSize,             // 0x0025 (37)
     (uint32)PANIC(0x0026),                          // 0x0026 (38)  HalClearSoftwareInterrupt
     (uint32)PANIC(0x0027),                          // 0x0027 (39)  HalDisableSystemInterrupt
-    (uint32)PANIC(0x0028),                          // 0x0028 (40)  HalDiskCachePartitionCount
+    (uint32)&xboxkrnl::HalDiskCachePartitionCount,  // 0x0028 (40)  HalDiskCachePartitionCount
     (uint32)PANIC(0x0029),                          // 0x0029 (41)  HalDiskModelNumber
     (uint32)PANIC(0x002A),                          // 0x002A (42)  HalDiskSerialNumber
     (uint32)PANIC(0x002B),                          // 0x002B (43)  HalEnableSystemInterrupt
@@ -253,7 +253,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367] =
     (uint32)&xboxkrnl::NtCreateSemaphore,           // 0x00C1 (193)
     (uint32)PANIC(0x00C2),                          // 0x00C2 (194) NtCreateTimer
     (uint32)PANIC(0x00C3),                          // 0x00C3 (195) NtDeleteFile
-    (uint32)PANIC(0x00C4),                          // 0x00C4 (196) NtDeviceIoControlFile
+    (uint32)&xboxkrnl::NtDeviceIoControlFile,	    // 0x00C4 (196) NtDeviceIoControlFile
     (uint32)&xboxkrnl::NtDuplicateObject,           // 0x00C5 (197)
     (uint32)&xboxkrnl::NtFlushBuffersFile,          // 0x00C6 (198)
     (uint32)&xboxkrnl::NtFreeVirtualMemory,         // 0x00C7 (199)

@@ -38,6 +38,7 @@
 #include <vector>
 #include <string>
 #include <Shlobj.h>
+#include <Shlwapi.h>
 #include <ntstatus.h>
 #include "CxbxKrnl.h"
 
@@ -148,6 +149,13 @@ bool CxbxRegisterDeviceNativePath(std::string XboxFullPath, std::string NativePa
 {
 	bool result;
 	if (IsFile) {
+		if (!PathFileExists(NativePath.c_str())) {
+			HANDLE hf = CreateFile(NativePath.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS,	0, 0);
+			SetFilePointer(hf, 512 * 1024, 0, FILE_BEGIN);
+			SetEndOfFile(hf);
+			CloseHandle(hf);
+		}
+
 		return true; // Actually, this is the Config sectors partition (partition0) registered as a file
 	}
 	else

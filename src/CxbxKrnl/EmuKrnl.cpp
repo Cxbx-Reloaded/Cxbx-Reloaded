@@ -1255,14 +1255,6 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 			NativePath = CxbxBasePath;
 		}
 
-		// Check for special case : Partition0
-		if (stricmp(XboxFullPath.c_str(), DeviceHarddisk0Partition0.c_str())== 0)
-		{
-			CxbxKrnlCleanup("Partition0 access not implemented yet! Tell PatrickvL what title triggers this.");
-			// TODO : Redirect raw sector-access to the 'Partition0_ConfigData.bin' file
-			// (This file probably needs to be pre-initialized somehow too).
-		}
-
 		DbgPrintf("EmuKrnl : %s Corrected path..\n.", aFileAPIName.c_str());
 		DbgPrintf("  Org:\"%s\"\n", OriginalPath.c_str());
 		if (strnicmp(NativePath.c_str(), CxbxBasePath.c_str(), CxbxBasePath.length()) == 0)
@@ -2365,6 +2357,9 @@ LAUNCH_DATA_PAGE xLaunchDataPage =
     }
 };
 
+// TODO: Verify this is the correct amount
+xboxkrnl::ULONG xboxkrnl::HalDiskCachePartitionCount = 3;
+
 // ******************************************************************
 // * 0x00A0 - KfRaiseIrql
 // ******************************************************************
@@ -3220,6 +3215,39 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
     
 
     return ret;
+}
+
+XBSYSAPI EXPORTNUM(196) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeviceIoControlFile(
+	IN HANDLE FileHandle,
+	IN HANDLE Event OPTIONAL,
+	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+	IN PVOID ApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN ULONG IoControlCode,
+	IN PVOID InputBuffer OPTIONAL,
+	IN ULONG InputBufferLength,
+	OUT PVOID OutputBuffer OPTIONAL,
+	IN ULONG OutputBufferLength
+)
+{
+	DbgPrintf("EmuKrnl (0x%X): NtDeviceIoControlFile\n"
+		"(\n"
+		"   FileHandle          : 0x%.08X\n"
+		"   Event               : 0x%.08X\n"
+		"   ApcRoutine          : 0x%.08X\n"
+		"   ApcContext          : 0x%.08X\n"
+		"   IoStatusBlock       : 0x%.08X\n"
+		"   IoControlCode       : 0x%.08X\n"
+		"   InputBuffer         : 0x%.08X\n"
+		"   InputBufferLength   : 0x%.08X\n"
+		"   OutputBuffer        : 0x%.08X\n"
+		"   OutputBufferLength  : 0x%.08X\n"
+		");\n",
+		GetCurrentThreadId(), FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, IoControlCode, InputBufferLength, OutputBuffer, OutputBufferLength);
+
+	CxbxKrnlCleanup("NtDeviceIoControlFile Not Implemented");
+
+	return STATUS_SUCCESS;
 }
 
 // ******************************************************************

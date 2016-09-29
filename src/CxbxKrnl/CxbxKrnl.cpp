@@ -510,8 +510,8 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 
 	// Partition 0 contains configuration data, and is accessed as a native file, instead as a folder :
-	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition0, CxbxBasePath + "Partition0_ConfigData.bin", true); /*IsFile=*/
-																												// The first two partitions are for Data and Shell files, respectively :
+	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition0, CxbxBasePath + "Partition0", true); /*IsFile=*/
+	// The first two partitions are for Data and Shell files, respectively :
 	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition1, CxbxBasePath + "Partition1");
 	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition2, CxbxBasePath + "Partition2");
 	// The following partitions are for caching purposes - for now we allocate up to 7 (as xbmp needs that many) :

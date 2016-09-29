@@ -112,7 +112,19 @@ XBSYSAPI EXPORTNUM(193) NTSTATUS NTAPI NtCreateSemaphore
 
 XBSYSAPI VOID *NtCreateTimer;
 XBSYSAPI VOID *NtDeleteFile;
-XBSYSAPI VOID *NtDeviceIoControlFile;
+
+XBSYSAPI EXPORTNUM(196) NTSTATUS NTAPI NtDeviceIoControlFile(
+    IN HANDLE FileHandle,
+    IN HANDLE Event OPTIONAL,
+    IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+    IN PVOID ApcContext OPTIONAL,
+    OUT PIO_STATUS_BLOCK IoStatusBlock,
+    IN ULONG IoControlCode,
+    IN PVOID InputBuffer OPTIONAL,
+    IN ULONG InputBufferLength,
+    OUT PVOID OutputBuffer OPTIONAL,
+    IN ULONG OutputBufferLength
+);
 
 // ******************************************************************
 // * NtDuplicateObject
