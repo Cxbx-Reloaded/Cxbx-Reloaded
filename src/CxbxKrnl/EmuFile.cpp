@@ -136,13 +136,7 @@ EmuNtObject* EmuNtObject::NtDuplicateObject(DWORD Options)
 
 bool IsEmuHandle(HANDLE Handle)
 {
-	// HACK: Return false for invalid handles (HANDLE INVALID VALUE)
-	// TODO: Find out where invalid handles are coming from!
-	if (Handle == (HANDLE)-1) {
-		return false;
-	}
-
-	return (uint32_t)Handle > 0x80000000;
+	return ((uint32)Handle > 0x80000000) && ((uint32)Handle != 0xFFFFFFFE);
 }
 
 EmuHandle* HandleToEmuHandle(HANDLE Handle){	return (EmuHandle*)((uint32_t)Handle & 0x7FFFFFFF);}HANDLE EmuHandleToHandle(EmuHandle* emuHandle)
