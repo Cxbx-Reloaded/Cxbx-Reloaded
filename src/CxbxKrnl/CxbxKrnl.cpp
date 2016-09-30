@@ -454,35 +454,6 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		strncpy_s((PSTR)DummyKernel->SectionHeader.Name, 8, "DONGS", 8);
 	}
 
-
-	//
-	// load the necessary pieces of XbeHeader
-	//
-	
-	{
-		/*
-		Xbe::Header *MemXbeHeader = (Xbe::Header*)0x00010000;
-
-		uint32 old_protection = 0;
-
-		VirtualProtect(MemXbeHeader, pXbeHeader->dwSizeofImage, PAGE_READWRITE, &old_protection);
-
-		// we sure hope we aren't corrupting anything necessary for an .exe to survive :]
-		MemXbeHeader->dwSizeofHeaders = pXbeHeader->dwSizeofHeaders;
-		MemXbeHeader->dwCertificateAddr = pXbeHeader->dwCertificateAddr;
-		MemXbeHeader->dwPeHeapReserve = pXbeHeader->dwPeHeapReserve;
-		MemXbeHeader->dwPeHeapCommit = pXbeHeader->dwPeHeapCommit;
-		MemXbeHeader->dwPeStackCommit = pXbeHeader->dwPeStackCommit;
-
-		memcpy(&MemXbeHeader->dwInitFlags, &pXbeHeader->dwInitFlags, sizeof(pXbeHeader->dwInitFlags));
-
-		memcpy((void*)pXbeHeader->dwCertificateAddr, &((uint08*)pXbeHeader)[pXbeHeader->dwCertificateAddr - 0x00010000], sizeof(Xbe::Certificate)); */
-
-		// Patch AllowedMediaTypes to prevent XapiVerifyMediaInDrive() being called
-		// This is necessary as we do not emulate XDVD verification
-		((Xbe::Certificate*)pXbeHeader->dwCertificateAddr)->dwAllowedMedia |= 0x00FFFFFF;
-	}
-
 	// Initialize devices :
 	char szBuffer[260];
 	SHGetSpecialFolderPath(NULL, szBuffer, CSIDL_APPDATA, TRUE);

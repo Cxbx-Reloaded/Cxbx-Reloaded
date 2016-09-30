@@ -1008,6 +1008,44 @@ static VOID WRITE_REGISTER_ULONG(PVOID Address, ULONG Value)
     };
 }
 
+typedef struct _SCSI_PASS_THROUGH_DIRECT {
+	USHORT Length;
+	UCHAR ScsiStatus;
+	UCHAR PathId;
+	UCHAR TargetId;
+	UCHAR Lun;
+	UCHAR CdbLength;
+	UCHAR SenseInfoLength;
+	UCHAR DataIn;
+	ULONG DataTransferLength;
+	ULONG TimeOutValue;
+	PVOID DataBuffer;
+	ULONG SenseInfoOffset;
+	UCHAR Cdb[16];
+}SCSI_PASS_THROUGH_DIRECT, *PSCSI_PASS_THROUGH_DIRECT;
+
+typedef struct _MODE_PARAMETER_HEADER10 {
+	UCHAR ModeDataLength[2];
+	UCHAR MediumType;
+	UCHAR DeviceSpecificParameter;
+	UCHAR Reserved[2];
+	UCHAR BlockDescriptorLength[2];
+}MODE_PARAMETER_HEADER10, *PMODE_PARAMETER_HEADER10;
+
+typedef struct _DVDX2_AUTHENTICATION_PAGE {
+	UCHAR Unknown[2];
+    UCHAR PartitionArea;
+    UCHAR CDFValid;
+    UCHAR Authentication;
+	UCHAR Unknown2[3];
+	ULONG Unknown3[3];
+} DVDX2_AUTHENTICATION_PAGE, *PDVDX2_AUTHENTICATION_PAGE;
+
+typedef struct _DVDX2_AUTHENTICATION {
+    MODE_PARAMETER_HEADER10 Header;
+    DVDX2_AUTHENTICATION_PAGE AuthenticationPage;
+} DVDX2_AUTHENTICATION, *PDVDX2_AUTHENTICATION;
+
 // ******************************************************************
 // * Debug
 // ******************************************************************

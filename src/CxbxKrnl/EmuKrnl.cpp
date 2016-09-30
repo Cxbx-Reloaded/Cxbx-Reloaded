@@ -3245,7 +3245,24 @@ XBSYSAPI EXPORTNUM(196) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeviceIoControlFile
 		");\n",
 		GetCurrentThreadId(), FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, IoControlCode, InputBufferLength, OutputBuffer, OutputBufferLength);
 
-	CxbxKrnlCleanup("NtDeviceIoControlFile Not Implemented");
+	switch (IoControlCode)
+	{
+	// IOCTL_SCSI_PASS_THROUGH_DIRECT
+	case 0x4D014:
+	{
+		PSCSI_PASS_THROUGH_DIRECT PassThrough = (PSCSI_PASS_THROUGH_DIRECT)InputBuffer;
+		PDVDX2_AUTHENTICATION Authentication = (PDVDX2_AUTHENTICATION)PassThrough->DataBuffer;
+
+		// Should be just enough info to pass XapiVerifyMediaInDrive
+		Authentication->AuthenticationPage.CDFValid = 1;
+		Authentication->AuthenticationPage.PartitionArea = 1;
+		Authentication->AuthenticationPage.Authentication = 1;
+		break;
+	}
+	default:
+		CxbxKrnlCleanup("NtDeviceIoControlFile Not Implemented");
+	}
+	
 
 	return STATUS_SUCCESS;
 }
