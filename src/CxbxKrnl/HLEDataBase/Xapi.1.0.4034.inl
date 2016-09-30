@@ -280,16 +280,6 @@ OOVPATable XAPI_1_0_4034[] =
     },
     */
     //*/
-    // XapiBootToDash (* unchanged since 1.0.3911 *)
-    {
-        (OOVPA*)&XapiBootDash_1_0_3911,
-
-        XTL::EmuXapiBootDash,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiBootDash"
-        #endif
-    },
 	// GetTimeZoneInformation (* unchanged since 3911 *)
     {
         (OOVPA*)&GetTimeZoneInformation_1_0_3911,

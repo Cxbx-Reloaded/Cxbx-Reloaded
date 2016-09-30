@@ -568,11 +568,6 @@ NTSTATUS CDECL XapiSetupPerTitleDriveLetters(DWORD dwTitleId, LPCWSTR wszTitleNa
 */
 
 // ******************************************************************
-// * func: EmuXapiBootDash
-// ******************************************************************
-VOID WINAPI EmuXapiBootDash(DWORD UnknownA, DWORD UnknownB, DWORD UnknownC);
-
-// ******************************************************************
 // * func: EmuXRegisterThreadNotifyRoutine
 // ******************************************************************
 VOID WINAPI EmuXRegisterThreadNotifyRoutine

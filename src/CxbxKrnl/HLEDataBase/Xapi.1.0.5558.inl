@@ -619,16 +619,6 @@ OOVPATable XAPI_1_0_5558[] =
         #endif
     },
     //*/
-    // XapiBootToDash (* unchanged since 1.0.3911 *)
-    {
-        (OOVPA*)&XapiBootDash_1_0_3911,
-
-        XTL::EmuXapiBootDash,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiBootDash"
-        #endif
-    },
 	// XLaunchNewImageA
     {
         (OOVPA*)&XLaunchNewImageA_1_0_5558,

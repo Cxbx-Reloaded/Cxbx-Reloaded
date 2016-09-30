@@ -1655,16 +1655,6 @@ OOVPATable XAPI_1_0_3911[] =
         "GetTimeZoneInformation"
         #endif
     },
-    // XapiBootToDash
-    {
-        (OOVPA*)&XapiBootDash_1_0_3911,
-
-        XTL::EmuXapiBootDash,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiBootDash"
-        #endif
-    },
     // XRegisterThreadNotifyRoutine
     {
         (OOVPA*)&XRegisterThreadNotifyRoutine_1_0_3911,

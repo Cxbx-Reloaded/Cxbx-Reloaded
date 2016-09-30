@@ -320,16 +320,6 @@ OOVPATable XAPI_1_0_5233[] =
         "EmuXInputSetState"
         #endif
     },
-    // XapiBootToDash (* unchanged since 1.0.3911 *)
-    {
-        (OOVPA*)&XapiBootDash_1_0_3911,
-
-        XTL::EmuXapiBootDash,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiBootDash"
-        #endif
-    },
 	// XGetFileCacheSize
     {
         (OOVPA*)&XGetFileCacheSize_1_0_5344,

@@ -832,28 +832,6 @@ VOID WINAPI XTL::EmuXapiThreadStartup
 }
 
 // ******************************************************************
-// * func: EmuXapiBootDash
-// ******************************************************************
-VOID WINAPI XTL::EmuXapiBootDash(DWORD dwReason, DWORD dwParameter1, DWORD dwParameter2)
-{
-    
-
-    DbgPrintf("EmuXapi (0x%X): EmuXapiBootDash\n"
-           "(\n"
-           "   dwReason            : 0x%.08X\n"
-           "   dwParameter1        : 0x%.08X\n"
-           "   dwParameter2        : 0x%.08X\n"
-           ");\n",
-            GetCurrentThreadId(), dwReason, dwParameter1, dwParameter2);
-
-    CxbxKrnlCleanup("Emulation Terminated (XapiBootDash)");
-
-    
-
-    return;
-}
-
-// ******************************************************************
 // * func: EmuXRegisterThreadNotifyRoutine
 // ******************************************************************
 VOID WINAPI XTL::EmuXRegisterThreadNotifyRoutine

@@ -711,16 +711,6 @@ OOVPATable XAPI_1_0_4361[] =
         #endif
     },
     //*/
-    // XapiBootToDash (* unchanged since 1.0.3911 *)
-    {
-        (OOVPA*)&XapiBootDash_1_0_3911,
-
-        XTL::EmuXapiBootDash,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiBootDash"
-        #endif
-    },
 	// XMountUtilityDrive
 	// TODO: This needs to be verified on 4361, not just 4242!
     {
