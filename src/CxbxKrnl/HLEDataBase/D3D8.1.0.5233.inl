@@ -2226,6 +2226,16 @@ OOVPATable D3D8_1_0_5233[] =
         "EmuIDirect3DDevice8_SetGammaRamp"
         #endif
     },
+    // IDirect3DDevice8_GetDeviceCaps (* unchanged since 3925 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_GetDeviceCaps_1_0_3925, 
+            
+        XTL::EmuIDirect3DDevice8_GetDeviceCaps,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetDeviceCaps"
+        #endif
+    },    
     // IDirect3DDevice8::SetShaderConstantMode
     {
         (OOVPA*)&IDirect3DDevice8_SetShaderConstantMode_1_0_5233,
@@ -2324,6 +2334,46 @@ OOVPATable D3D8_1_0_5233[] =
         "EmuIDirect3DDevice8_CreateVertexShader"
         #endif
     },
+    // IDirect3DDevice8::BeginStateBlock
+    {
+        (OOVPA*)&IDirect3DDevice8_BeginStateBlock_1_0_4361,
+
+        XTL::EmuIDirect3DDevice8_BeginStateBlock,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_BeginStateBlock"
+        #endif
+    },
+    // IDirect3DDevice8::EndStateBlock
+    {
+        (OOVPA*)&IDirect3DDevice8_EndStateBlock_1_0_4361,
+
+        XTL::EmuIDirect3DDevice8_EndStateBlock,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_EndStateBlock"
+        #endif
+    },        
+    // D3DDevice_RunVertexStateShader (* unchanged since 4627 *)
+    {
+       (OOVPA*)&X_D3DDevice_RunVertexStateShader_1_0_4627,
+
+       XTL::EmuIDirect3DDevice8_RunVertexStateShader,
+
+       #ifdef _DEBUG_TRACE
+       "D3DDevice_RunVertexStateShader"
+       #endif
+    },    
+    // D3DDevice_GetVertexShaderSize (* unchanged since 3925 *)
+    {
+        (OOVPA*)&X_D3DDevice_GetVertexShaderSize_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_GetVertexShaderSize,
+
+        #ifdef _DEBUG_TRACE
+        "D3DDevice_GetVertexShaderSize"
+        #endif
+    },    
     // IDirect3DDevice8::SetVertexShaderConstant1 (* unchanged since 4627 *)
     {
         (OOVPA*)&IDirect3DDevice8_SetVertexShaderConstant1_1_0_4627,
@@ -2454,6 +2504,16 @@ OOVPATable D3D8_1_0_5233[] =
         "EmuIDirect3DDevice8_GetDisplayMode"
         #endif
     },
+    // IDirect3DDevice8::SetVertexData2f (* unchanged since 4627 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetVertexData2f_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_SetVertexData2f,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetVertexData2f"
+        #endif
+    },    
     // IDirect3DDevice8::Begin
     {
         (OOVPA*)&IDirect3DDevice8_Begin_1_0_5233,
@@ -2842,6 +2902,16 @@ OOVPATable D3D8_1_0_5233[] =
         "EmuIDirect3DDevice8_SetRenderState_ShadowFunc"
         #endif
     },
+    // IDirect3DDevice8::SwitchTexture (* unchanged since 4361 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SwitchTexture_1_0_4361,
+
+        XTL::EmuIDirect3DDevice8_SwitchTexture,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SwitchTexture"
+        #endif
+    },    
     // IDirect3DDevice8::SetRenderState_YuvEnable (* unchanged since 4134 *)
     {
         (OOVPA*)&IDirect3DDevice8_SetRenderState_YuvEnable_1_0_4134,
@@ -3422,6 +3492,16 @@ OOVPATable D3D8_1_0_5233[] =
         "EmuIDirect3DDevice8_BeginPush"
         #endif
     },
+    // IDirect3DDevice8::BeginVisibilityTest (* unchanged since 4627 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_BeginVisibilityTest_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_BeginVisibilityTest,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_BeginVisibilityTest"
+        #endif
+    },    
     // IDirect3DDevice8::EndPush
     {
         (OOVPA*)&D3DDevice_EndPush_1_0_5344,
@@ -3432,6 +3512,16 @@ OOVPATable D3D8_1_0_5233[] =
         "EmuIDirect3DDevice8_EndPush"
         #endif
     },
+    // IDirect3DDevice8::EndPush (* unchanged since 4627 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_EndPush_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_EndPush,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_EndPush"
+        #endif
+    },    
 	// IDirect3DDevice8::SetVerticalBlankCallback
     {
         (OOVPA*)&IDirect3DDevice8_SetVerticalBlankCallback_1_0_5233,
@@ -3482,6 +3572,16 @@ OOVPATable D3D8_1_0_5233[] =
         "EmuIDirect3D8_EnumAdapterModes"
         #endif
     },
+    // IDirect3D8::EnumAdapterModes (* unchanged since 4361 *)
+    {
+        (OOVPA*)&IDirect3D8_EnumAdapterModes_1_0_4361,
+
+        XTL::EmuIDirect3D8_EnumAdapterModes,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3D8_EnumAdapterModes"
+        #endif
+    },    
 	// IDirect3DDevice8::SetVertexData4ub (* unchanged since 4361 *)
     {
         (OOVPA*)&D3DDevice_SetVertexData4ub_1_0_4361,
@@ -3606,6 +3706,16 @@ OOVPATable D3D8_1_0_5233[] =
         "EmuIDirect3DCubeTexture8_GetCubeMapSurface2"
         #endif
     }, 
+    // IDirect3DDevice8::ApplyStateBlock (* unchanged since 4627 *)
+    {
+        (OOVPA*)&D3DDevice_ApplyStateBlock_1_0_4627,
+
+        XTL::EmuIDirect3DDevice8_ApplyStateBlock,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_ApplyStateBlock"
+        #endif
+    },    
 };
 
 // ******************************************************************

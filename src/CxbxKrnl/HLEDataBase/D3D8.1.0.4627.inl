@@ -4299,7 +4299,7 @@ OOVPATable D3D8_1_0_4627[] =
         #ifdef _DEBUG_TRACE
         "EmuIDirect3D8_CheckDeviceFormat"
         #endif
-    },
+    }, 
     // IDirect3DDevice8::BeginVisibilityTest
     {
         (OOVPA*)&IDirect3DDevice8_BeginVisibilityTest_1_0_4627,
@@ -4310,6 +4310,16 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_BeginVisibilityTest"
         #endif
     },
+    // IDirect3DDevice8::GetCreationParameters (* unchanged since 4034 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_GetCreationParameters_1_0_4034,
+
+        XTL::EmuIDirect3DDevice8_GetCreationParameters,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetCreationParameters"
+        #endif
+    },    
     // IDirect3DDevice8::EndVisibilityTest
     {
         (OOVPA*)&IDirect3DDevice8_EndVisibilityTest_1_0_4627,
@@ -5036,6 +5046,16 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_SetRenderState_FillMode"
         #endif
     },
+    // IDirect3DDevice8::SetRenderState_BackFillMode (* unchanged since 4134 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SetRenderState_BackFillMode_1_0_4134,
+
+        XTL::EmuIDirect3DDevice8_SetRenderState_BackFillMode,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetRenderState_BackFillMode"
+        #endif
+    },    
     // IDirect3DDevice8::SetRenderState_FogColor (* unchanged since 4134 *)
     {
         (OOVPA*)&IDirect3DDevice8_SetRenderState_FogColor_1_0_4134,
@@ -5156,6 +5176,16 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_SetRenderState_ShadowFunc"
         #endif
     },
+    // IDirect3DDevice8::SwitchTexture (* unchanged since 4361 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_SwitchTexture_1_0_4361,
+
+        XTL::EmuIDirect3DDevice8_SwitchTexture,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SwitchTexture"
+        #endif
+    },    
     // IDirect3DDevice8::SetRenderState_YuvEnable (* unchanged since 4134 *)
     {
         (OOVPA*)&IDirect3DDevice8_SetRenderState_YuvEnable_1_0_4134,
@@ -5626,6 +5656,26 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_GetVertexShaderSize"
         #endif
     },
+    // IDirect3DDevice8::BeginStateBlock
+    {
+        (OOVPA*)&IDirect3DDevice8_BeginStateBlock_1_0_4361,
+
+        XTL::EmuIDirect3DDevice8_BeginStateBlock,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_BeginStateBlock"
+        #endif
+    },
+    // IDirect3DDevice8::EndStateBlock
+    {
+        (OOVPA*)&IDirect3DDevice8_EndStateBlock_1_0_4361,
+
+        XTL::EmuIDirect3DDevice8_EndStateBlock,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_EndStateBlock"
+        #endif
+    },        
     // D3DDevice_GetVertexShaderType
     {
         (OOVPA*)&X_D3DDevice_GetVertexShaderType_1_0_4627,
@@ -6122,6 +6172,16 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_SetVertexData4ub"
         #endif
     },
+    // IDirect3DDevice8::SetVertexData4f
+    {
+        (OOVPA*)&D3DDevice_SetVertexData4f_1_0_4361,
+
+        XTL::EmuIDirect3DDevice8_SetVertexData4f,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_SetVertexData4f"
+        #endif
+    },    
 	// D3D_BlockOnTime
 	{
         (OOVPA*)&D3D_BlockOnTime_1_0_4627, 0,

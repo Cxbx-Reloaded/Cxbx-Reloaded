@@ -3166,6 +3166,16 @@ OOVPATable D3D8_1_0_4361[] =
         "EmuIDirect3DResource8_AddRef"
         #endif
     },
+    // IDirect3DResource8::Release
+    {
+        (OOVPA*)&IDirect3DResource8_Release_1_0_3925,
+
+        XTL::EmuIDirect3DResource8_Release,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DResource8_Release"
+        #endif
+    },    
 	// IDirect3DPalette8::Lock (* unchanged since 3925 *)
     {
         (OOVPA*)&IDirect3DPalette8_Lock_1_0_3925,
@@ -3525,6 +3535,16 @@ OOVPATable D3D8_1_0_4361[] =
         "EmuIDirect3DDevice8_GetCreationParameters"
         #endif
     },
+    // IDirect3DDevice8::GetVisibilityTestResult (* unchanged since 3925 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_GetVisibilityTestResult_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_GetVisibilityTestResult,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetVisibilityTestResult"
+        #endif
+    },    
 	// IDirect3DDevice8::SetShaderConstantMode
     {
         (OOVPA*)&IDirect3DDevice8_SetShaderConstantMode_1_0_4361,
@@ -3718,7 +3738,7 @@ OOVPATable D3D8_1_0_4361[] =
         XTL::EmuIDirect3DDevice8_GetPushBufferOffset,
 
         #ifdef _DEBUG_TRACE
-        "EmuIDirect3DDevice8_GetPushBufferOffset"
+        "EmuIDirect3DDevice8_GetPushBufferOffset"3
         #endif
     },
 	// IDirect3DDevice8::CreateCubeTexture

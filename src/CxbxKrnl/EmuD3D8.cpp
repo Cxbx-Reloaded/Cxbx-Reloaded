@@ -187,6 +187,7 @@ bool IsValidXboxDisplayMode(XTL::D3DDISPLAYMODE PCDisplayMode, int PCModeNr)
 	for (int i = 0; i < XboxResolutions.size(); i++) {
 		if (XboxResolutions[i].W == PCDisplayMode.Width && XboxResolutions[i].H == PCDisplayMode.Height) {
 			XboxResolutions[i].PCMode = PCModeNr;
+				
 			return true;
 		}
 	}
@@ -5919,24 +5920,10 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_LockRect
         if(!(Flags & 0x80) && !(Flags & 0x40) && !(Flags & 0x20) && !(Flags & 0x10) && Flags != 0)
             CxbxKrnlCleanup("EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)", Flags);
 
-        // Remove old lock(s)
-		if(Level == 6 || Level == 7 || Level == 8 || Level == 9)
-		{
-			// HACK: Unreal Championship crashes when the texture level reaches 9...
-			EmuWarning("Unreal Championship texture hack applied!");
-			hRet = D3DERR_INVALIDCALL;
-		}
-		else
-		{
-			pTexture8->UnlockRect(Level);
-
-			hRet = pTexture8->LockRect(Level, pLockedRect, pRect, NewFlags);
-
-			pThis->Common |= X_D3DCOMMON_ISLOCKED;
-		}
-    }
-
-    
+		pTexture8->UnlockRect(Level);
+		hRet = pTexture8->LockRect(Level, pLockedRect, pRect, NewFlags);
+		pThis->Common |= X_D3DCOMMON_ISLOCKED;
+	}
 
     return hRet;
 }

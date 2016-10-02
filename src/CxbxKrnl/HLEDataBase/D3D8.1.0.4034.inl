@@ -1531,6 +1531,26 @@ OOVPATable D3D8_1_0_4034[] =
         "EmuIDirect3DDevice8_Clear"
         #endif
     },
+    // IDirect3DResource8::Register
+    {
+        (OOVPA*)&IDirect3DResource8_Register_1_0_3925,
+
+        XTL::EmuIDirect3DResource8_Register,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DResource8_Register"
+        #endif
+    },    
+    // IDirect3DDevice8::CreatePalette
+    {
+        (OOVPA*)&IDirect3DDevice8_CreatePalette_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_CreatePalette,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_CreatePalette"
+        #endif
+    },
 
     // ********************** BEG WARNING UNTESTED!!! *******************
 
@@ -1755,16 +1775,6 @@ OOVPATable D3D8_1_0_4034[] =
         "EmuIDirect3DDevice8_Clear"
         #endif
     },
-    // IDirect3DDevice8::CreatePalette
-    {
-        (OOVPA*)&IDirect3DDevice8_CreatePalette_1_0_3925,
-
-        XTL::EmuIDirect3DDevice8_CreatePalette,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirect3DDevice8_CreatePalette"
-        #endif
-    },
     // IDirect3DDevice8::SetPalette
     {
         (OOVPA*)&IDirect3DDevice8_SetPalette_1_0_3925,
@@ -1963,16 +1973,6 @@ OOVPATable D3D8_1_0_4034[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DVertexBuffer8_Lock"
-        #endif
-    },
-    // IDirect3DResource8::Register
-    {
-        (OOVPA*)&IDirect3DResource8_Register_1_0_3925,
-
-        XTL::EmuIDirect3DResource8_Register,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirect3DResource8_Register"
         #endif
     },
     // IDirect3DResource8::IsBusy
@@ -2360,6 +2360,16 @@ OOVPATable D3D8_1_0_4034[] =
         "EmuIDirect3DDevice8_LoadVertexShader"
         #endif
     },
+    // IDirect3DDevice8::GetVisibilityTestResult (* unchanged since 3925 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_GetVisibilityTestResult_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_GetVisibilityTestResult,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetVisibilityTestResult"
+        #endif
+    },    
 	// D3DDevice_DeleteVertexShader (* unchanged since 3925 *)
     {
         (OOVPA*)&X_D3DDevice_DeleteVertexShader_1_0_3925,

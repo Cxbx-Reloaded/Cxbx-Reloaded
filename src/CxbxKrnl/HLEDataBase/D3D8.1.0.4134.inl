@@ -2498,6 +2498,16 @@ OOVPATable D3D8_1_0_4134[] =
         "EmuIDirect3DDevice8_LoadVertexShader"
         #endif
     },
+    // IDirect3DDevice8::LoadVertexShader (* unchanged since 4034 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_LoadVertexShader_1_0_4034,
+
+        XTL::EmuIDirect3DDevice8_LoadVertexShader,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_LoadVertexShader"
+        #endif
+    },    
     // IDirect3DDevice8::SelectVertexShader
     {
         (OOVPA*)&IDirect3DDevice8_SelectVertexShader_1_0_3925,
@@ -3062,6 +3072,16 @@ OOVPATable D3D8_1_0_4134[] =
         "EmuIDirect3DSurface8_LockRect"
         #endif
     },
+    // D3DDevice_DeleteVertexShader (* unchanged since 3925 *)
+    {
+        (OOVPA*)&X_D3DDevice_DeleteVertexShader_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_DeleteVertexShader,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_DeleteVertexShader"
+        #endif
+    },    
 	// Lock2DSurface (* unchanged since 3925 *)
     {
         (OOVPA*)&Lock2DSurface_1_0_3925,
@@ -3809,6 +3829,26 @@ OOVPATable D3D8_1_0_4134[] =
         "EmuIDirect3DDevice8_SetShaderConstantMode"
         #endif
     },
+    // IDirect3DDevice8::GetCreationParameters (* unchanged since 4034 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_GetCreationParameters_1_0_4034,
+
+        XTL::EmuIDirect3DDevice8_GetCreationParameters,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetCreationParameters"
+        #endif
+    },    
+    // IDirect3DDevice8::GetVisibilityTestResult (* unchanged since 3925 *)
+    {
+        (OOVPA*)&IDirect3DDevice8_GetVisibilityTestResult_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_GetVisibilityTestResult,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetVisibilityTestResult"
+        #endif
+    },    
 };
 
 // ******************************************************************
