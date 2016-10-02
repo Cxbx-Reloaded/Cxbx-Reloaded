@@ -3738,7 +3738,7 @@ OOVPATable D3D8_1_0_4361[] =
         XTL::EmuIDirect3DDevice8_GetPushBufferOffset,
 
         #ifdef _DEBUG_TRACE
-        "EmuIDirect3DDevice8_GetPushBufferOffset"3
+        "EmuIDirect3DDevice8_GetPushBufferOffset"
         #endif
     },
 	// IDirect3DDevice8::CreateCubeTexture
