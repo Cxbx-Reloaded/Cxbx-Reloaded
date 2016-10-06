@@ -153,6 +153,30 @@ SOOVPA<11> IDirect3DDevice8_BeginVisibilityTest_1_0_3925 =
 };
 
 // ******************************************************************
+// * D3DDevice_GetMaterial
+// ******************************************************************
+SOOVPA<9> D3DDevice_GetMaterial_1_0_3925 = 
+{
+    0,  // Large == 0
+    9,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x05, 0x56 },
+        { 0x06, 0x57 },
+        { 0x0A, 0x0C },
+        { 0x0C, 0xB0 },
+        { 0x0D, 0x18 },
+        { 0x0E, 0x0B },
+        { 0x11, 0xB9 },
+        { 0x16, 0xF3 },
+        { 0x1A, 0xC2 },
+    }
+};
+
+// ******************************************************************
 // * IDirect3DDevice8_EndVisibilityTest
 // ******************************************************************
 SOOVPA<13> IDirect3DDevice8_EndVisibilityTest_1_0_3925 =
@@ -3665,6 +3689,29 @@ SOOVPA<7> D3DDevice_DeleteStateBlock_1_0_3925 =
 };
 
 // ******************************************************************
+// * D3DDevice_GetBackMaterial
+// ******************************************************************
+SOOVPA<8> D3DDevice_GetBackMaterial_1_0_3925 = 
+{
+    0,  // Large == 0
+    8,  // Count == 8
+
+    -1, // Xref Not Saved
+    0,  // Xref Not Used
+
+    {
+        { 0x05, 0x56 },
+        { 0x06, 0x57 },
+        { 0x0A, 0x0C },
+        { 0x0D, 0x5C },
+        { 0x0E, 0x0B },
+        { 0x12, 0x11 },
+        { 0x16, 0xF3 },
+        { 0x1A, 0xC2 },
+    }
+};
+
+// ******************************************************************
 // * D3DDevice_CreateStateBlock
 // ******************************************************************
 SOOVPA<8> D3DDevice_CreateStateBlock_1_0_3925 = 
@@ -4586,6 +4633,26 @@ OOVPATable D3D8_1_0_3925[] =
         "EmuIDirect3D8_KickOffAndWaitForIdle"
         #endif
     },
+    // IDirect3DDevice8::GetMaterial
+    {
+        (OOVPA*)&D3DDevice_GetMaterial_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_GetMaterial,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetMaterial"
+        #endif
+    },    
+    // IDirect3DDevice8::GetBackMaterial
+    {
+        (OOVPA*)&D3DDevice_GetBackMaterial_1_0_3925,
+
+        XTL::EmuIDirect3DDevice8_GetBackMaterial,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirect3DDevice8_GetBackMaterial"
+        #endif
+    },    
     // IDirect3DDevice8::LoadVertexShader
     {
         (OOVPA*)&IDirect3DDevice8_LoadVertexShader_1_0_3925,
