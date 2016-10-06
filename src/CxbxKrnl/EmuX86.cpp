@@ -43,7 +43,7 @@
 bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 {
 	// Only decode instructions within Xbox memory space
-	if (e->ContextRecord->Eip > XBOX_MEMORY_SIZE) {
+	if (e->ContextRecord->Eip > XBOX_MEMORY_SIZE && e->ContextRecord->Eip < 0x10000) {
 		return false;
 	}
 
