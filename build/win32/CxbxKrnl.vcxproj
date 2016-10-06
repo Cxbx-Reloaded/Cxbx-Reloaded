@@ -68,7 +68,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..\..\import\OpenXDK;..\..\src;..\..\src\Common;..\..\src\Common\Win32;..\..\import\OpenXDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\import\OpenXDK;..\..\import\zydis\Zydis;..\..\src;..\..\src\Common;..\..\src\Common\Win32;..\..\import\OpenXDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;CXBXKRNL_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -82,7 +82,7 @@
       <AdditionalIncludeDirectories>Include\Win32\CxbxKrnl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>Shlwapi.lib;legacy_stdio_definitions.lib;dxerr8.lib;xinput.lib;ws2_32.lib;dsound.lib;winmm.lib;ddraw.lib;d3dx8.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Shlwapi.lib;Zydis.lib;legacy_stdio_definitions.lib;dxerr8.lib;xinput.lib;ws2_32.lib;dsound.lib;winmm.lib;ddraw.lib;d3dx8.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>libci.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -91,6 +91,7 @@
       <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <LargeAddressAware>false</LargeAddressAware>
+      <AdditionalLibraryDirectories>..\..\import\zydis\Build\$(Configuration)\</AdditionalLibraryDirectories>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -112,7 +113,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\src\Common;..\..\import\OpenXDK\include;..\..\src;..\..\src\Common\Win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src\Common;..\..\import\zydis\Zydis;..\..\import\OpenXDK\include;..\..\src;..\..\src\Common\Win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;CXBXKRNL_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -127,7 +128,7 @@
       <AdditionalIncludeDirectories>Include\Win32\CxbxKrnl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>Shlwapi.lib;legacy_stdio_definitions.lib;dxerr8.lib;xinput.lib;ws2_32.lib;dsound.lib;winmm.lib;ddraw.lib;d3dx8.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;dbghelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Shlwapi.lib;Zydis.lib;legacy_stdio_definitions.lib;dxerr8.lib;xinput.lib;ws2_32.lib;dsound.lib;winmm.lib;ddraw.lib;d3dx8.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;dbghelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>libci.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -139,6 +140,7 @@
       <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <LargeAddressAware>false</LargeAddressAware>
+      <AdditionalLibraryDirectories>..\..\import\zydis\Build\$(Configuration)\</AdditionalLibraryDirectories>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -164,6 +166,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuFS.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuNtDll.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuShared.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuX86.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXactEng.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXapi.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXG.h" />
@@ -480,6 +483,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuX86.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuXactEng.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuXapi.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

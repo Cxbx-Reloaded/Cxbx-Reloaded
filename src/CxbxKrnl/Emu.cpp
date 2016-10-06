@@ -43,6 +43,7 @@ namespace xboxkrnl
 #include "CxbxKrnl.h"
 #define COMPILE_MULTIMON_STUBS
 #include "Emu.h"
+#include "EmuX86.h"
 #include "EmuFS.h"
 #include "EmuAlloc.h"
 
@@ -144,38 +145,35 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
 {
     g_bEmuException = true;
 
-    // print debug information
-    {
-        if(e->ExceptionRecord->ExceptionCode == 0x80000003)
-            printf("EmuMain (0x%X): Recieved Breakpoint Exception (int 3)\n", GetCurrentThreadId());
-        else
-            printf("EmuMain (0x%X): Recieved Exception (Code := 0x%.08X)\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
-
-        printf("\n"
-            " EIP := 0x%.08X EFL := 0x%.08X\n"
-            " EAX := 0x%.08X EBX := 0x%.08X ECX := 0x%.08X EDX := 0x%.08X\n"
-            " ESI := 0x%.08X EDI := 0x%.08X ESP := 0x%.08X EBP := 0x%.08X\n"
-			" CR2 := 0x%.08X\n"
-            "\n",
-            e->ContextRecord->Eip, e->ContextRecord->EFlags,
-            e->ContextRecord->Eax, e->ContextRecord->Ebx, e->ContextRecord->Ecx, e->ContextRecord->Edx,
-            e->ContextRecord->Esi, e->ContextRecord->Edi, e->ContextRecord->Esp, e->ContextRecord->Ebp,
-			e->ContextRecord->Dr2);
-
-#ifdef _DEBUG
-        CONTEXT Context = *(e->ContextRecord);
-        EmuPrintStackTrace(&Context);
-#endif
-    }
-
-    fflush(stdout);
-
     // notify user
     {
         char buffer[256];
 
         if(e->ExceptionRecord->ExceptionCode == 0x80000003)
         {
+			// print debug information
+			{
+				printf("EmuMain (0x%X): Recieved Breakpoint Exception (int 3)\n", GetCurrentThreadId());
+
+				printf("\n"
+					" EIP := 0x%.08X EFL := 0x%.08X\n"
+					" EAX := 0x%.08X EBX := 0x%.08X ECX := 0x%.08X EDX := 0x%.08X\n"
+					" ESI := 0x%.08X EDI := 0x%.08X ESP := 0x%.08X EBP := 0x%.08X\n"
+					" CR2 := 0x%.08X\n"
+					"\n",
+					e->ContextRecord->Eip, e->ContextRecord->EFlags,
+					e->ContextRecord->Eax, e->ContextRecord->Ebx, e->ContextRecord->Ecx, e->ContextRecord->Edx,
+					e->ContextRecord->Esi, e->ContextRecord->Edi, e->ContextRecord->Esp, e->ContextRecord->Ebp,
+					e->ContextRecord->Dr2);
+
+#ifdef _DEBUG
+				CONTEXT Context = *(e->ContextRecord);
+				EmuPrintStackTrace(&Context);
+#endif
+			}
+
+			fflush(stdout);
+
             sprintf(buffer,
                 "Recieved Breakpoint Exception (int 3) @ EIP := 0x%.08X\n"
                 "\n"
@@ -209,6 +207,37 @@ extern int EmuException(LPEXCEPTION_POINTERS e)
         }
         else
         {
+			// Pass the exception to our X86 implementation, to try and execute the failing instruction
+			if (EmuX86_DecodeException(e))
+			{
+				g_bEmuException = false;
+				return EXCEPTION_CONTINUE_EXECUTION;
+			}
+
+
+			// print debug information
+			{
+				printf("EmuMain (0x%X): Recieved Exception (Code := 0x%.08X)\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
+
+				printf("\n"
+					" EIP := 0x%.08X EFL := 0x%.08X\n"
+					" EAX := 0x%.08X EBX := 0x%.08X ECX := 0x%.08X EDX := 0x%.08X\n"
+					" ESI := 0x%.08X EDI := 0x%.08X ESP := 0x%.08X EBP := 0x%.08X\n"
+					" CR2 := 0x%.08X\n"
+					"\n",
+					e->ContextRecord->Eip, e->ContextRecord->EFlags,
+					e->ContextRecord->Eax, e->ContextRecord->Ebx, e->ContextRecord->Ecx, e->ContextRecord->Edx,
+					e->ContextRecord->Esi, e->ContextRecord->Edi, e->ContextRecord->Esp, e->ContextRecord->Ebp,
+					e->ContextRecord->Dr2);
+
+#ifdef _DEBUG
+				CONTEXT Context = *(e->ContextRecord);
+				EmuPrintStackTrace(&Context);
+#endif
+			}
+
+			fflush(stdout);
+
             sprintf(buffer,
                 "Recieved Exception Code 0x%.08X @ EIP := 0x%.08X\n"
                 "\n"
