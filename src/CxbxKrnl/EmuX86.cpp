@@ -43,7 +43,7 @@
 bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 {
 	// Only decode instructions within Xbox memory space
-	if (e->ContextRecord->Eip > XBOX_MEMORY_SIZE && e->ContextRecord->Eip < 0x10000) {
+	if (e->ContextRecord->Eip > XBOX_MEMORY_SIZE || e->ContextRecord->Eip < 0x10000) {
 		return false;
 	}
 
@@ -60,11 +60,11 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	
 	if (info.flags & Zydis::IF_ERROR_MASK)
 	{
-		EmuWarning("EmuX86: Error decoding opcode at 0x%08X\n", info.instrAddress);
+		EmuWarning("EmuX86: Error decoding opcode at 0x%08X\n", e->ContextRecord->Eip);
 	}
 	else
 	{
-		EmuWarning("EmuX86: %s Ignored\n", formatter.formatInstruction(info));
+		EmuWarning("EmuX86: 0x%08X: %s Ignored\n", e->ContextRecord->Eip, formatter.formatInstruction(info));
 		e->ContextRecord->Eip += info.length;
 		return true;
 	}
