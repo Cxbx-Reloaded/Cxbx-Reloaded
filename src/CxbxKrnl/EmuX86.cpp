@@ -86,6 +86,12 @@ bool EmuX86_DecodeMemoryOperand(uint32_t* output, LPEXCEPTION_POINTERS e, Zydis:
 	}
 
 	switch (operand.index) {
+		case Zydis::Register::EDI:
+			index = e->ContextRecord->Edi;
+			break;
+		case Zydis::Register::ESI:
+			index = e->ContextRecord->Esi;
+			break;
 		case Zydis::Register::NONE:
 			break;
 		default:
@@ -115,6 +121,12 @@ bool EmuX86_MOV(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
 				break;
 			case Zydis::Register::EDX:
 				pDstReg = &e->ContextRecord->Edx;
+				break;
+			case Zydis::Register::EDI:
+				pDstReg = &e->ContextRecord->Edi;
+				break;
+			case Zydis::Register::ESI:
+				pDstReg = &e->ContextRecord->Esi;
 				break;
 			default:
 				return false;
@@ -147,6 +159,12 @@ bool EmuX86_MOV(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
 				break;
 			case Zydis::Register::EDX:
 				value = e->ContextRecord->Edx;
+				break;
+			case Zydis::Register::EDI:
+				value = e->ContextRecord->Edi;
+				break;
+			case Zydis::Register::ESI:
+				value = e->ContextRecord->Esi;
 				break;
 			default:
 				return false;
