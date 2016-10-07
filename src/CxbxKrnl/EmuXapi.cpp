@@ -984,7 +984,7 @@ DWORD WINAPI XTL::EmuXLaunchNewImage
 		sprintf(szDashboardPath, "%s\\xboxdash.xbe", symbolicLinkObject->NativePath.c_str());
 		
 		if (PathFileExists(szDashboardPath)) {
-			MessageBox(CxbxKrnl_hEmuParent, "The title is rebooting to dashboard", "Cxbx", 0);
+			MessageBox(CxbxKrnl_hEmuParent, "The title is rebooting to dashboard", "Cxbx-Reloaded", 0);
 			char szXboxDashboardPath[MAX_PATH];
 			sprintf(szXboxDashboardPath, "%c:\\xboxdash.xbe", symbolicLinkObject->DriveLetter);
 			EmuXLaunchNewImage(szXboxDashboardPath, pLaunchData);
