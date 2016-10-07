@@ -179,6 +179,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEIntercept.h" />
     <ClInclude Include="..\..\src\Common\Win32\Mutex.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\nv2a_int.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\OOVPA.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ResourceTracker.h" />
     <ClInclude Include="..\..\src\Common\Win32\XBController.h" />

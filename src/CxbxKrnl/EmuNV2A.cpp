@@ -39,9 +39,41 @@
 #include "CxbxKrnl.h"
 #include "Emu.h"
 #include "EmuNV2A.h"
+#include "nv2a_int.h"
+
+uint32_t EmuNV2A_PMC_Read32(uint32_t addr)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_PMC_Read32: Unknown Read Address %08X", addr);
+	}
+	
+	return 0;
+}
+
+uint32_t EmuNV2A_PBUS_Read32(uint32_t addr)
+{
+	switch (addr) {
+	case NV_PBUS_PCI_NV_0:
+		return 0x10de;	// PCI_VENDOR_ID_NVIDIA	
+		break;
+	default:
+		EmuWarning("EmuNV2A_PBUS_Read32: Unknown Read Address %08X", addr);
+	}
+
+	return 0;
+}
+
 
 uint32_t EmuNV2A_Read32(uint32_t addr)
 {
+	if (addr <= 0x1000) {
+		return EmuNV2A_PMC_Read32(addr);
+	}
+	else if (addr <= 0x2000) {
+		return EmuNV2A_PBUS_Read32(addr - 0x1000);
+	}
+
 	EmuWarning("EmuNV2A_Read32: Unknown Read Address %08X", addr);
 	return 0;
 }

@@ -61,43 +61,109 @@ void EmuX86_Write32(uint32_t addr, uint32_t value)
 	EmuWarning("EmuX86_Write32: Unknown Write Address %08X", addr);
 }
 
+bool EmuX86_DecodeMemoryOperand(uint32_t* output, LPEXCEPTION_POINTERS e, Zydis::OperandInfo& operand)
+{
+	uint32_t base = 0;
+	uint32_t index = 0;
+	
+	switch (operand.base) {
+		case Zydis::Register::EAX:
+			base = e->ContextRecord->Eax;
+			break;
+		case Zydis::Register::EBX:
+			base = e->ContextRecord->Ebx;
+			break;
+		case Zydis::Register::ECX:
+			base = e->ContextRecord->Ecx;
+			break;
+		case Zydis::Register::EDX:
+			base = e->ContextRecord->Edx;
+			break;
+		case Zydis::Register::NONE:
+			break;
+		default:
+			return false;
+	}
+
+	switch (operand.index) {
+		case Zydis::Register::NONE:
+			break;
+		default:
+			return false;
+	}
+
+	*output = base + index + operand.lval.udword;
+	return true;
+}
+
 bool EmuX86_MOV(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
 {
 	if (info.operand[0].type == Zydis::OperandType::REGISTER && info.operand[1].type == Zydis::OperandType::MEMORY) 
 	{
+		DWORD* pDstReg = nullptr;
+		uint32_t srcAddr = 0;
+
 		switch (info.operand[0].base) {
 			case Zydis::Register::EAX:
-				e->ContextRecord->Eax = EmuX86_Read32(info.operand[1].lval.udword);
-				return true;
+				pDstReg = &e->ContextRecord->Eax;
+				break;
 			case Zydis::Register::EBX:
-				e->ContextRecord->Ebx = EmuX86_Read32(info.operand[1].lval.udword);
-				return true;
+				pDstReg = &e->ContextRecord->Ebx;
+				break;
 			case Zydis::Register::ECX:
-				e->ContextRecord->Ebx = EmuX86_Read32(info.operand[1].lval.udword);
-				return true;
+				pDstReg = &e->ContextRecord->Ecx;
+				break;
+			case Zydis::Register::EDX:
+				pDstReg = &e->ContextRecord->Edx;
+				break;
 			default:
 				return false;
 		}
+
+		if (!EmuX86_DecodeMemoryOperand(&srcAddr, e, info.operand[1])) {
+			return false;
+		}
+		*pDstReg = EmuX86_Read32(srcAddr);
+		return true;
 	}
 	else if (info.operand[0].type == Zydis::OperandType::MEMORY && info.operand[1].type == Zydis::OperandType::REGISTER)
 	{
+		uint32_t addr = 0;
+		uint32_t value = 0;
+
+		if (!EmuX86_DecodeMemoryOperand(&addr, e, info.operand[0])) {
+			return false;
+		}
+
 		switch (info.operand[1].base) {
 			case Zydis::Register::EAX:
-				EmuX86_Write32(info.operand[1].lval.udword, e->ContextRecord->Eax);
-				return true;
+				value = e->ContextRecord->Eax;
+				break;
 			case Zydis::Register::EBX:
-				EmuX86_Write32(info.operand[1].lval.udword, e->ContextRecord->Ebx);
-				return true;
+				value = e->ContextRecord->Ebx;
+				break;
 			case Zydis::Register::ECX:
-				EmuX86_Write32(info.operand[1].lval.udword, e->ContextRecord->Ecx);
-				return true;
+				value = e->ContextRecord->Ecx;
+				break;
+			case Zydis::Register::EDX:
+				value = e->ContextRecord->Edx;
+				break;
 			default:
 				return false;
 		}
+
+		EmuX86_Write32(addr, value);
+		return true;
 	}
 	else if (info.operand[0].type == Zydis::OperandType::MEMORY && info.operand[1].type == Zydis::OperandType::IMMEDIATE)
 	{
-		EmuX86_Write32(info.operand[0].lval.udword, info.operand[1].lval.udword);
+		uint32_t addr = 0;
+
+		if (!EmuX86_DecodeMemoryOperand(&addr, e, info.operand[1])) {
+			return false;
+		}
+
+		EmuX86_Write32(addr, info.operand[1].lval.udword);
 		return true;
 	}
 }
