@@ -364,7 +364,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
             wcstombs(tAsciiTitle, XbeCert->wszTitleName, 40);
         }
 
-        sprintf(AsciiTitle, "Cxbx : Emulating %s", tAsciiTitle);
+        sprintf(AsciiTitle, "Cxbx-Reloaded : Emulating %s", tAsciiTitle);
     }
 
     // create the window

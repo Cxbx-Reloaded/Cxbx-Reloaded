@@ -80,7 +80,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
     {
         SHGetSpecialFolderPath(NULL, szCacheFileName, CSIDL_APPDATA, TRUE);
 
-        strcat(szCacheFileName, "\\Cxbx\\");
+        strcat(szCacheFileName, "\\Cxbx-Reloaded\\");
 
         CreateDirectory(szCacheFileName, NULL);
 
