@@ -39,7 +39,7 @@
 #include "CxbxKrnl.h"
 #include "Emu.h"
 #include "EmuNV2A.h"
-#include "nv2a_int.h"
+#include "nv2a_int.h" // from https://github.com/espes/xqemu/tree/xbox/hw/xbox
 
 uint32_t EmuNV2A_PMC_Read32(uint32_t addr)
 {
@@ -80,5 +80,5 @@ uint32_t EmuNV2A_Read32(uint32_t addr)
 
 void EmuNV2A_Write32(uint32_t addr, uint32_t value)
 {
-	EmuWarning("EmuNV2A_Write32: Unknown Write Address %08X", addr);
+	EmuWarning("EmuNV2A_Write32: Unknown Write Address %08X (value %08X)", addr, value);
 }

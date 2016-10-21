@@ -58,7 +58,7 @@ void EmuX86_Write32(uint32_t addr, uint32_t value)
 		return;
 	}
 
-	EmuWarning("EmuX86_Write32: Unknown Write Address %08X", addr);
+	EmuWarning("EmuX86_Write32: Unknown Write Address %08X (value %08X)", addr, value);
 }
 
 bool EmuX86_GetRegisterValue(uint32_t* output, LPEXCEPTION_POINTERS e, Zydis::Register reg)
