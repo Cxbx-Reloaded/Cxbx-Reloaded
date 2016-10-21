@@ -44,7 +44,7 @@
 uint32_t EmuX86_Read32(uint32_t addr)
 {
 	if (addr >= 0xFD000000 && addr <= 0xFE000000) {
-		return EmuNV2A_Read32(addr - 0xFD000000);
+		return EmuNV2A_Read32(addr & 0x00FFFFFF);
 	}
 
 	EmuWarning("EmuX86_Read32: Unknown Read Address %08X", addr);
@@ -54,45 +54,11 @@ uint32_t EmuX86_Read32(uint32_t addr)
 void EmuX86_Write32(uint32_t addr, uint32_t value)
 {
 	if (addr >= 0xFD000000 && addr <= 0xFE000000) {
-		EmuNV2A_Write32(addr - 0xFD000000, value);
+		EmuNV2A_Write32(addr & 0x00FFFFFF, value);
 		return;
 	}
 
 	EmuWarning("EmuX86_Write32: Unknown Write Address %08X (value %08X)", addr, value);
-}
-
-bool EmuX86_GetRegisterValue(uint32_t* output, LPEXCEPTION_POINTERS e, Zydis::Register reg)
-{
-	uint32_t value = 0;
-
-	switch (reg) {
-		case Zydis::Register::EAX:
-			value = e->ContextRecord->Eax;
-			break;
-		case Zydis::Register::EBX:
-			value = e->ContextRecord->Ebx;
-			break;
-		case Zydis::Register::ECX:
-			value = e->ContextRecord->Ecx;
-			break;
-		case Zydis::Register::EDX:
-			value = e->ContextRecord->Edx;
-			break;
-		case Zydis::Register::EDI:
-			value = e->ContextRecord->Edi;
-			break;
-		case Zydis::Register::ESI:
-			value = e->ContextRecord->Esi;
-			break;
-		case Zydis::Register::NONE:
-			value = 0;
-			break;
-		default:
-			return false;
-	}
-
-	*output = value;
-	return true;
 }
 
 DWORD* EmuX86_GetRegisterPointer(LPEXCEPTION_POINTERS e, Zydis::Register reg)
@@ -113,6 +79,23 @@ DWORD* EmuX86_GetRegisterPointer(LPEXCEPTION_POINTERS e, Zydis::Register reg)
 	}
 
 	return nullptr;
+}
+
+bool EmuX86_GetRegisterValue(uint32_t* output, LPEXCEPTION_POINTERS e, Zydis::Register reg)
+{
+	uint32_t value = 0;
+
+	if (reg != Zydis::Register::NONE)
+	{
+		DWORD* regptr = EmuX86_GetRegisterPointer(e, reg);
+		if (regptr == nullptr)
+			return false;
+
+		value = *regptr;
+	}
+
+	*output = value;
+	return true;
 }
 
 bool EmuX86_DecodeMemoryOperand(uint32_t* output, LPEXCEPTION_POINTERS e, Zydis::OperandInfo& operand)
