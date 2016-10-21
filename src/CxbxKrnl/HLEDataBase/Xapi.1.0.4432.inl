@@ -40,8 +40,8 @@ SOOVPA<9> RtlFreeHeap_1_0_4432 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // RtlFreeHeap+0x1F : test ecx, ecx
@@ -71,8 +71,8 @@ SOOVPA<8> XMountUtilityDrive_1_0_4432 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XapiUnknownBad1+0x51 : push 0x0104

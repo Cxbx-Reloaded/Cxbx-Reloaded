@@ -40,8 +40,8 @@ SOOVPA<10> XGSwizzleBox_1_0_5558 =
     0,  // Large == 0
     10, // Count == 10
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XGSwizzleBox+0x60 : sub ecx, [eax]
@@ -72,8 +72,8 @@ SOOVPA<8> XGSwizzleRect_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1E, 0x03 },
@@ -95,8 +95,8 @@ SOOVPA<8> XGUnswizzleRect_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1E, 0x03 },
@@ -118,8 +118,8 @@ SOOVPA<8> XGUnswizzleRect_1_0_5558 =
 //    0,  // Large == 0
 //    8,  // Count == 8
 //
-//    -1, // Xref Not Saved
-//    0,  // Xref Not Used
+//    XRefNotSaved,
+//    XRefNotUsed,
 //
 //    {
 //        { 0x1E, 0x75 },
@@ -141,8 +141,8 @@ SOOVPA<8> XGUnswizzleBox_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1E, 0x26 },

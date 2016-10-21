@@ -40,7 +40,7 @@ SOOVPA<8> XNetStartup_1_0_4361 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // XRef Not Saved
+    XRefNotSaved,
     1,  // XRef Is  Used
 
     {
@@ -74,7 +74,7 @@ SOOVPA<9> WSAStartup_1_0_4361 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // XRef Not Saved
+    XRefNotSaved,
     1,  // XRef Is  Used
 
     {
@@ -133,8 +133,8 @@ SOOVPA<9> socket_1_0_4361 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // socket+0x10 : push 0x276D
@@ -162,8 +162,8 @@ SOOVPA<10> bind_1_0_4361 =
     0,  // Large == 0
     10, // Count == 10
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // bind+0x11 : push 0x276D
@@ -194,8 +194,8 @@ SOOVPA<9> listen_1_0_4361 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // listen+0x10 : push 0x276D
@@ -225,8 +225,8 @@ SOOVPA<10> ioctlsocket_1_0_4361 =
     0,  // Large == 0
     10, // Count == 10
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // ioctlsocket+0x12 : push 0x276D

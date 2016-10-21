@@ -98,6 +98,10 @@ enum DebugMode { DM_NONE, DM_CONSOLE, DM_FILE };
 /*! runtime DbgPrintf toggle boolean */
 extern volatile bool g_bPrintfOn;
 
+#ifdef _MSC_VER
+#pragma warning(disable : 4477)
+#endif
+
 /*! DbgPrintf enabled if _DEBUG_TRACE is set */
 #ifdef _DEBUG_TRACE
 #define DbgPrintf if(g_bPrintfOn) printf

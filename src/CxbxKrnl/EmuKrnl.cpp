@@ -1240,7 +1240,7 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 		else
 		{
 			// No symbolic link - as last resort, check if the path accesses a partition from Harddisk0 :
-			if (strnicmp(RelativePath.c_str(), (DeviceHarddisk0 + "\\partition").c_str() ,(DeviceHarddisk0 + "\\partition").length()) != 0)
+			if (_strnicmp(RelativePath.c_str(), (DeviceHarddisk0 + "\\partition").c_str() ,(DeviceHarddisk0 + "\\partition").length()) != 0)
 			{
 				result = STATUS_UNRECOGNIZED_VOLUME; // TODO : Is this the correct error?
 				EmuWarning((("Path not available : ") + OriginalPath).c_str());
@@ -1257,7 +1257,7 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 
 		DbgPrintf("EmuKrnl : %s Corrected path..\n.", aFileAPIName.c_str());
 		DbgPrintf("  Org:\"%s\"\n", OriginalPath.c_str());
-		if (strnicmp(NativePath.c_str(), CxbxBasePath.c_str(), CxbxBasePath.length()) == 0)
+		if (_strnicmp(NativePath.c_str(), CxbxBasePath.c_str(), CxbxBasePath.length()) == 0)
 		{
 			DbgPrintf("  New:\"$CxbxPath\\EmuDisk\\%s%s\"\n", (NativePath.substr(CxbxBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());	
 		}
@@ -3243,7 +3243,7 @@ XBSYSAPI EXPORTNUM(196) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeviceIoControlFile
 		"   OutputBuffer        : 0x%.08X\n"
 		"   OutputBufferLength  : 0x%.08X\n"
 		");\n",
-		GetCurrentThreadId(), FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, IoControlCode, InputBufferLength, OutputBuffer, OutputBufferLength);
+		GetCurrentThreadId(), FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, IoControlCode, InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength);
 
 	switch (IoControlCode)
 	{
@@ -3718,7 +3718,7 @@ XBSYSAPI EXPORTNUM(215) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySymbolicLinkOb
 		"   LinkHandle         : 0x%.08X\n"
 		"   LinkTarget         : 0x%.08X\n"
 		"   ReturnedLength     : 0x%.08X\n"
-		");\n", LinkHandle, LinkTarget, ReturnedLength);
+		");\n", GetCurrentThreadId(), LinkHandle, LinkTarget, ReturnedLength);
 
 	NTSTATUS result = 0;
 	EmuNtSymbolicLinkObject* symbolicLinkObject = NULL;

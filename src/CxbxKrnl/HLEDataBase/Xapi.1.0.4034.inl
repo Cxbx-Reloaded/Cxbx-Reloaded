@@ -42,8 +42,8 @@ SOOVPA<14> XInputGetCapabilities_1_0_4361 =
     0,  // Large == 0
     14, // Count == 14
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XInputGetCapabilities+0x03 : sub esp, 0x48
@@ -80,8 +80,8 @@ SOOVPA<12> XInputGetState_1_0_4361 =
     0,  // Large == 0
     12, // Count == 12
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XInputGetState+0x0E : mov ecx, [edx+0x0A3]
@@ -116,8 +116,8 @@ SOOVPA<8> CreateThread_1_0_4361 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // CreateThread+0x0A : mov eax, ds:10130h
@@ -144,8 +144,8 @@ SOOVPA<10> CloseHandle_1_0_4361 =
     0,  // Large == 0
     10, // Count == 10
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // CloseHandle+0x00 : push [esp+4]
@@ -176,8 +176,8 @@ SOOVPA<7> XapiInitProcess_1_0_4361 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XapiInitProcess+0x00 : sub esp, 30h
