@@ -105,16 +105,6 @@ uint32_t EmuNV2A_PVIDEO_Read32(uint32_t addr)
 	return 0;
 }
 
-uint32_t EmuNV2A_PTIMER_Read32(uint32_t addr)
-{
-	switch (addr) {
-	default:
-		EmuWarning("EmuNV2A_PTIMER_Read32: Unknown Read Address %08X", addr);
-	}
-	
-	return 0;
-}
-
 uint32_t EmuNV2A_PCOUNTER_Read32(uint32_t addr)
 {
 	switch (addr) {
