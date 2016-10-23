@@ -2361,14 +2361,71 @@ LAUNCH_DATA_PAGE xLaunchDataPage =
 xboxkrnl::ULONG xboxkrnl::HalDiskCachePartitionCount = 3;
 
 // ******************************************************************
+// * 0x009E - KeWaitForMultipleObjects
+// ******************************************************************
+XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForMultipleObjects
+(
+	IN ULONG Count,
+	IN PVOID Object[],
+	IN WAIT_TYPE WaitType,
+	IN int WaitReason,
+	IN KPROCESSOR_MODE WaitMode,
+	IN BOOLEAN Alertable,
+	IN PLARGE_INTEGER Timeout OPTIONAL,
+	IN VOID* WaitBlockArray
+) {
+	DbgPrintf("EmuKrnl (0x%X): KeWaitForMultipleObjects\n"
+		"(\n"
+		"   Count            : 0x%.08X\n"
+		"   Object           : 0x%.08X\n"
+		"   WaitType         : 0x%.08X\n"
+		"   WaitReason       : 0x%.08X\n"
+		"   WaitMode         : 0x%.08X\n"
+		"   Alertable        : 0x%.08X\n"
+		"   Timeout          : 0x%.08X\n"
+		"   WaitBlockArray   : 0x%.08X\n"
+		");\n",
+		GetCurrentThreadId(), Count, Object, WaitType, WaitReason, WaitMode, Alertable, Timeout, WaitBlockArray);
+
+	EmuWarning("EmuKrnl: Redirecting KeWaitForMultipleObjects to NtWaitForMultipleObjectsEx");
+	return NtWaitForMultipleObjectsEx(Count, Object, WaitType, WaitMode, Alertable, Timeout);
+}
+
+// ******************************************************************
+// * 0x009F - KeWaitForSingleObject
+// ******************************************************************
+XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForSingleObject
+(
+	IN PVOID Object,
+	IN int WaitReason,
+	IN KPROCESSOR_MODE WaitMode,
+	IN BOOLEAN Alertable,
+	IN PLARGE_INTEGER Timeout OPTIONAL
+) {
+	DbgPrintf("EmuKrnl (0x%X): KeWaitForSingleObject\n"
+		"(\n"
+		"   Object           : 0x%.08X\n"
+		"   WaitReason       : 0x%.08X\n"
+		"   WaitMode         : 0x%.08X\n"
+		"   Alertable        : 0x%.08X\n"
+		"   Timeout          : 0x%.08X\n"
+		");\n",
+		GetCurrentThreadId(), Object, WaitReason, WaitMode, Alertable, Timeout);
+
+	EmuWarning("EmuKrnl: Redirecting KeWaitForSingleObject to NtWaitForSingleObjectEx");
+	return NtWaitForSingleObjectEx(Object, WaitMode, Alertable, Timeout);
+}
+
+// ******************************************************************
 // * 0x00A0 - KfRaiseIrql
 // ******************************************************************
-XBSYSAPI EXPORTNUM(160) xboxkrnl::UCHAR NTAPI xboxkrnl::KfRaiseIrql
+XBSYSAPI EXPORTNUM(160) xboxkrnl::UCHAR* NTAPI xboxkrnl::KfRaiseIrql
 (
     IN UCHAR NewIrql
 )
 {
-    
+	// HACK: Not thread safe!
+	static xboxkrnl::UCHAR previousIrqlValue = 0;
 
     DbgPrintf("EmuKrnl (0x%X): KfRaiseIrql\n"
            "(\n"
@@ -2377,14 +2434,14 @@ XBSYSAPI EXPORTNUM(160) xboxkrnl::UCHAR NTAPI xboxkrnl::KfRaiseIrql
            GetCurrentThreadId(), NewIrql);
 
     
-
-    return 0;
+	// Return addr where old irq level should be stored
+    return &previousIrqlValue;
 }
 
 // ******************************************************************
 // * 0x00A1 - KfLowerIrql
 // ******************************************************************
-XBSYSAPI EXPORTNUM(161) xboxkrnl::UCHAR NTAPI xboxkrnl::KfLowerIrql
+XBSYSAPI EXPORTNUM(161) VOID NTAPI xboxkrnl::KfLowerIrql
 (
     IN UCHAR NewIrql
 )
@@ -2399,7 +2456,6 @@ XBSYSAPI EXPORTNUM(161) xboxkrnl::UCHAR NTAPI xboxkrnl::KfLowerIrql
 
     
 
-    return 0;
 }
 
 // ******************************************************************
@@ -4673,7 +4729,9 @@ XBSYSAPI EXPORTNUM(291) VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
   IN PRTL_CRITICAL_SECTION CriticalSection
 )
 {
-    
+	if (CriticalSection == nullptr) {
+		return;
+	}
 
     /*
     DbgPrintf("EmuKrnl (0x%X): RtlInitializeCriticalSection\n"
@@ -4708,7 +4766,9 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
   IN PRTL_CRITICAL_SECTION CriticalSection
 )
 {
-    
+	if (CriticalSection == nullptr) {
+		return;
+	}
 
 	int iSection = FindCriticalSection(CriticalSection);
 
@@ -4835,6 +4895,9 @@ XBSYSAPI EXPORTNUM(306) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTryEnterCriticalSec
 )
 {
     
+	if (CriticalSection == nullptr) {
+		return;
+	}
 
     DbgPrintf("EmuKrnl (0x%X): RtlTryEnterCriticalSection\n"
            "(\n"

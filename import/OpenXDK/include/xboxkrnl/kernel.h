@@ -201,8 +201,27 @@ XBSYSAPI VOID *KeTestAlertThread;
 XBSYSAPI EXPORTNUM(156) volatile DWORD KeTickCount;
 
 XBSYSAPI VOID *KeTimeIncrement;
-XBSYSAPI VOID *KeWaitForMultipleObjects;
-XBSYSAPI VOID *KeWaitForSingleObject;
+
+XBSYSAPI EXPORTNUM(158) NTSTATUS KeWaitForMultipleObjects
+(
+    IN ULONG Count,
+    IN PVOID Object[],
+    IN WAIT_TYPE WaitType,
+    IN int WaitReason,
+    IN KPROCESSOR_MODE WaitMode,
+    IN BOOLEAN Alertable,
+    IN PLARGE_INTEGER Timeout OPTIONAL,
+    IN VOID* WaitBlockArray
+);
+
+XBSYSAPI EXPORTNUM(159) NTSTATUS KeWaitForSingleObject
+(
+    IN PVOID Object,
+    IN int WaitReason,
+    IN KPROCESSOR_MODE WaitMode,
+    IN BOOLEAN Alertable,
+    IN PLARGE_INTEGER Timeout OPTIONAL
+);
 
 #endif
 
