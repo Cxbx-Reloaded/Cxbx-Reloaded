@@ -4896,7 +4896,7 @@ XBSYSAPI EXPORTNUM(306) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTryEnterCriticalSec
 {
     
 	if (CriticalSection == nullptr) {
-		return;
+		return false;
 	}
 
     DbgPrintf("EmuKrnl (0x%X): RtlTryEnterCriticalSection\n"
