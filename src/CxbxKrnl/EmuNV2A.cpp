@@ -306,33 +306,220 @@ uint32_t EmuNV2A_Read32(uint32_t addr)
 	return 0;
 }
 
+void EmuNV2A_PMC_Write32(uint32_t addr, uint32_t value)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_PMC_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	}
+}
+
+void EmuNV2A_PBUS_Write32(uint32_t addr, uint32_t value)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_PBUS_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	}
+}
+
+void EmuNV2A_PFIFO_Write32(uint32_t addr, uint32_t value)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_PFIFO_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	}
+}
+
+void EmuNV2A_PFIFO_CACHE_Write32(uint32_t addr, uint32_t value)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_PFIFO_CACHE_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	}
+
+}
+
+void EmuNV2A_PRMA_Write32(uint32_t addr, uint32_t value)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_PRMA_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	}
+}
+
+void EmuNV2A_PVIDEO_Write32(uint32_t addr, uint32_t value)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_PVIDEO_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	}
+}
+
+void EmuNV2A_PCOUNTER_Write32(uint32_t addr, uint32_t value)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_PCOUNTER_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	}
+}
+
+void EmuNV2A_PTIMER_Write32(uint32_t addr, uint32_t value)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_PTIMER_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	}
+}
+
+void EmuNV2A_PVPE_Write32(uint32_t addr, uint32_t value)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_PVPE_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	}
+}
+
+void EmuNV2A_PTV_Write32(uint32_t addr, uint32_t value)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_PTV_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	}
+}
+
+void EmuNV2A_PRMFB_Write32(uint32_t addr, uint32_t value)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_PRMFB_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	}
+}
+
+void EmuNV2A_PRMVIO_Write32(uint32_t addr, uint32_t value)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_PRMVIO_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	}
+}
+
+void EmuNV2A_PFB_Write32(uint32_t addr, uint32_t value)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_PFB_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	}
+}
+
+void EmuNV2A_PSTRAPS_Write32(uint32_t addr, uint32_t value)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_PSTRAPS_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	}
+}
+
+void EmuNV2A_PGRAPH_Write32(uint32_t addr, uint32_t value)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_PGRAPH_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	}
+}
+
+void EmuNV2A_PCRTC_Write32(uint32_t addr, uint32_t value)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_PCRTC_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	}
+}
+
+void EmuNV2A_PRMCIO_Write32(uint32_t addr, uint32_t value)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_PRMCIO_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	}
+}
+
+void EmuNV2A_PRAMDAC_Write32(uint32_t addr, uint32_t value)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_PRAMDAC_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	}
+}
+
+void EmuNV2A_PRMDIO_Write32(uint32_t addr, uint32_t value)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_PRMDIO_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	}
+}
+
+void EmuNV2A_PRAMIN_Write32(uint32_t addr, uint32_t value)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_PRAMIN_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	}
+}
+
+void EmuNV2A_USER_Write32(uint32_t addr, uint32_t value)
+{
+	switch (addr) {
+	default:
+		EmuWarning("EmuNV2A_USER_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	}
+}
+
 void EmuNV2A_Write32(uint32_t addr, uint32_t value)
 {
 	switch ((addr >> 12) & 31) {
-//	case NV_PMC          :  /* card master control */
-//		return EmuNV2A_PMC_Read32(addr & 0x0FFF);
-//	case NV_PBUS         :  /* bus control */
-//		return EmuNV2A_PBUS_Read32(addr & 0x0FFF);
-
-//	case NV_PFIFO        :  /* MMIO and DMA FIFO submission to PGRAPH and VPE */
-//	case NV_PFIFO_CACHE  :
-//	case NV_PRMA         :  /* access to BAR0/BAR1 from real mode */
-//	case NV_PVIDEO       :  /* video overlay */
-//	case NV_PTIMER       :  /* time measurement and time-based alarms */
-//	case NV_PCOUNTER     :  /* performance monitoring counters */
-//	case NV_PVPE         :  /* MPEG2 decoding engine */
-//	case NV_PTV          :  /* TV encoder */
-//	case NV_PRMFB        :  /* aliases VGA memory window */
-//	case NV_PRMVIO       :  /* aliases VGA sequencer and graphics controller registers */
-//	case NV_PFB          :  /* memory interface */
-//	case NV_PSTRAPS      :  /* straps readout / override */
-//	case NV_PGRAPH       :  /* accelerated 2d/3d drawing engine */
-//	case NV_PCRTC        :  /* more CRTC controls */
-//	case NV_PRMCIO       :  /* aliases VGA CRTC and attribute controller registers */
-//	case NV_PRAMDAC      :  /* RAMDAC, cursor, and PLL control */
-//	case NV_PRMDIO       :  /* aliases VGA palette registers */
-//	case NV_PRAMIN       :  /* RAMIN access */
-//	case NV_USER         :  /* PFIFO MMIO and DMA submission area */
+	case NV_PMC:  /* card master control */
+		EmuNV2A_PMC_Write32(addr & 0x0FFF, value);
+	case NV_PBUS:  /* bus control */
+		EmuNV2A_PBUS_Write32(addr & 0x0FFF, value);
+	case NV_PFIFO:  /* MMIO and DMA FIFO submission to PGRAPH and VPE */
+		EmuNV2A_PFIFO_Write32(addr & 0x0FFF, value);
+	case NV_PFIFO_CACHE:
+		EmuNV2A_PFIFO_CACHE_Write32(addr & 0x0FFF, value);
+	case NV_PRMA:  /* access to BAR0/BAR1 from real mode */
+		EmuNV2A_PRMA_Write32(addr & 0x0FFF, value);
+	case NV_PVIDEO:  /* video overlay */
+		EmuNV2A_PVIDEO_Write32(addr & 0x0FFF, value);
+	case NV_PTIMER:  /* time measurement and time-based alarms */
+		EmuNV2A_PTIMER_Write32(addr & 0x0FFF, value);
+	case NV_PCOUNTER:  /* performance monitoring counters */
+		EmuNV2A_PCOUNTER_Write32(addr & 0x0FFF, value);
+	case NV_PVPE:  /* MPEG2 decoding engine */
+		EmuNV2A_PVPE_Write32(addr & 0x0FFF, value);
+	case NV_PTV:  /* TV encoder */
+		EmuNV2A_PTV_Write32(addr & 0x0FFF, value);
+	case NV_PRMFB:  /* aliases VGA memory window */
+		EmuNV2A_PRMFB_Write32(addr & 0x0FFF, value);
+	case NV_PRMVIO:  /* aliases VGA sequencer and graphics controller registers */
+		EmuNV2A_PRMVIO_Write32(addr & 0x0FFF, value);
+	case NV_PFB:  /* memory interface */
+		EmuNV2A_PFB_Write32(addr & 0x0FFF, value);
+	case NV_PSTRAPS:  /* straps readout / override */
+		EmuNV2A_PSTRAPS_Write32(addr & 0x0FFF, value);
+	case NV_PGRAPH:  /* accelerated 2d/3d drawing engine */
+		EmuNV2A_PGRAPH_Write32(addr & 0x0FFF, value);
+	case NV_PCRTC:  /* more CRTC controls */
+		EmuNV2A_PCRTC_Write32(addr & 0x0FFF, value);
+	case NV_PRMCIO:  /* aliases VGA CRTC and attribute controller registers */
+		EmuNV2A_PRMCIO_Write32(addr & 0x0FFF, value);
+	case NV_PRAMDAC:  /* RAMDAC, cursor, and PLL control */
+		EmuNV2A_PRAMDAC_Write32(addr & 0x0FFF, value);
+	case NV_PRMDIO:  /* aliases VGA palette registers */
+		EmuNV2A_PRMDIO_Write32(addr & 0x0FFF, value);
+	case NV_PRAMIN:  /* RAMIN access */
+		EmuNV2A_PRAMIN_Write32(addr & 0x0FFF, value);
+	case NV_USER:  /* PFIFO MMIO and DMA submission area */
+		EmuNV2A_USER_Write32(addr & 0x0FFF, value);
 	default:
 		EmuWarning("EmuNV2A_Write32: Unknown Write Address %08X (value %08X)", addr, value);
 	}
