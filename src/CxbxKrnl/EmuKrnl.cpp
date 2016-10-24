@@ -1507,8 +1507,24 @@ XBSYSAPI EXPORTNUM(17) VOID NTAPI xboxkrnl::ExFreePool
            GetCurrentThreadId(), P);
 
 	CxbxFree(P);
+}
 
-		
+// ******************************************************************
+// * 0x0017 ExQueryPoolBlockSize
+// ******************************************************************
+XBSYSAPI EXPORTNUM(23) xboxkrnl::ULONG NTAPI xboxkrnl::ExQueryPoolBlockSize
+(
+	IN PVOID PoolBlock
+)
+{
+	DbgPrintf("EmuKrnl (0x%X): ExQueryPoolBlockSize\n"
+		"(\n"
+		"   PoolBlock          : 0x%.08X\n"
+		");\n",
+		GetCurrentThreadId(), PoolBlock);
+
+	// Not strictly correct, but it will do for now
+	return MmQueryAllocationSize(PoolBlock);
 }
 
 // ******************************************************************
