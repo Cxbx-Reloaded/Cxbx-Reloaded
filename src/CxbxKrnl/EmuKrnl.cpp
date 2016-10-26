@@ -2743,6 +2743,28 @@ XBSYSAPI EXPORTNUM(172) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmFreeSystemMemory
 }
 
 // ******************************************************************
+// * 0x00AF - MmLockUnlockBufferPages
+// ******************************************************************
+XBSYSAPI EXPORTNUM(175) void NTAPI xboxkrnl::MmLockUnlockBufferPages
+(
+	IN PHYSICAL_ADDRESS	BaseAddress,
+	IN ULONG			NumberOfBytes,
+	IN ULONG			Protect
+)
+{
+	DbgPrintf("EmuKrnl (0x%X): MmLockUnlockBufferPages\n"
+		"(\n"
+		"   BaseAddress          : 0x%.08X\n"
+		"   NumberOfBytes        : 0x%.08X\n"
+		"   Protect				 : 0x%.08X\n"
+		");\n",
+		GetCurrentThreadId(), BaseAddress, NumberOfBytes, Protect);
+
+
+	EmuWarning("EmuKrnl: MmLockUnlockBufferPages ignored");
+}
+
+// ******************************************************************
 // * 0x00B1 - MmMapIoSpace
 // ******************************************************************
 XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
