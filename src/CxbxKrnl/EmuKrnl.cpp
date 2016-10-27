@@ -1507,8 +1507,24 @@ XBSYSAPI EXPORTNUM(17) VOID NTAPI xboxkrnl::ExFreePool
            GetCurrentThreadId(), P);
 
 	CxbxFree(P);
+}
 
-		
+// ******************************************************************
+// * 0x0017 ExQueryPoolBlockSize
+// ******************************************************************
+XBSYSAPI EXPORTNUM(23) xboxkrnl::ULONG NTAPI xboxkrnl::ExQueryPoolBlockSize
+(
+	IN PVOID PoolBlock
+)
+{
+	DbgPrintf("EmuKrnl (0x%X): ExQueryPoolBlockSize\n"
+		"(\n"
+		"   PoolBlock          : 0x%.08X\n"
+		");\n",
+		GetCurrentThreadId(), PoolBlock);
+
+	// Not strictly correct, but it will do for now
+	return MmQueryAllocationSize(PoolBlock);
 }
 
 // ******************************************************************
@@ -2724,6 +2740,28 @@ XBSYSAPI EXPORTNUM(172) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmFreeSystemMemory
     
 
     return STATUS_SUCCESS;
+}
+
+// ******************************************************************
+// * 0x00AF - MmLockUnlockBufferPages
+// ******************************************************************
+XBSYSAPI EXPORTNUM(175) void NTAPI xboxkrnl::MmLockUnlockBufferPages
+(
+	IN PHYSICAL_ADDRESS	BaseAddress,
+	IN ULONG			NumberOfBytes,
+	IN ULONG			Protect
+)
+{
+	DbgPrintf("EmuKrnl (0x%X): MmLockUnlockBufferPages\n"
+		"(\n"
+		"   BaseAddress          : 0x%.08X\n"
+		"   NumberOfBytes        : 0x%.08X\n"
+		"   Protect				 : 0x%.08X\n"
+		");\n",
+		GetCurrentThreadId(), BaseAddress, NumberOfBytes, Protect);
+
+
+	EmuWarning("EmuKrnl: MmLockUnlockBufferPages ignored");
 }
 
 // ******************************************************************

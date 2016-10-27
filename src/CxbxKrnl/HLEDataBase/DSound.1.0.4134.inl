@@ -664,6 +664,16 @@ OOVPATable DSound_1_0_4134[] =
         "IDirectSoundBuffer8_SetBufferData"
         #endif
     },
+    // IDirectSound8_CreateStream
+    {
+        (OOVPA*)&IDirectSound8_CreateStream_1_0_3936,
+
+        XTL::EmuIDirectSound8_CreateStream,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSound8_CreateStream"
+        #endif
+    },      
 	// CDirectSoundVoiceSettings::SetMixBins
     {
         (OOVPA*)&DirectSound_CDirectSoundVoiceSettings_SetMixBins_1_0_4134, 0,

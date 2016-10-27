@@ -80,7 +80,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367] =
     (uint32)PANIC(0x0014),                          // 0x0014 (20)  ExInterlockedAddLargeStatistic
     (uint32)PANIC(0x0015),                          // 0x0015 (21)  ExInterlockedCompareExchange64
     (uint32)PANIC(0x0016),                          // 0x0016 (22)  ExMutantObjectType
-    (uint32)PANIC(0x0017),                          // 0x0017 (23)  ExQueryPoolBlockSize
+    (uint32)&xboxkrnl::ExQueryPoolBlockSize,        // 0x0017 (23)  ExQueryPoolBlockSize
     (uint32)&xboxkrnl::ExQueryNonVolatileSetting,   // 0x0018 (24)
     (uint32)&xboxkrnl::ExReadWriteRefurbInfo,       // 0x0019 (25)
     (uint32)PANIC(0x001A),                          // 0x001A (26)  ExQueryPoolBlockSize
@@ -232,7 +232,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367] =
     (uint32)&xboxkrnl::MmFreeSystemMemory,          // 0x00AC (172)
     (uint32)PANIC(0x00AD),                          // 0x00AD (173) MmGetPhysicalAddress
     (uint32)PANIC(0x00AE),                          // 0x00AE (174) MmIsAddressValid
-    (uint32)PANIC(0x00AF),                          // 0x00AF (175) MmLockUnlockBufferPages
+    (uint32)&xboxkrnl::MmLockUnlockBufferPages,     // 0x00AF (175) MmLockUnlockBufferPages
     (uint32)PANIC(0x00B0),                          // 0x00B0 (176) MmLockUnlockPhysicalPage
     (uint32)&xboxkrnl::MmMapIoSpace,                // 0x00B1 (177)
     (uint32)&xboxkrnl::MmPersistContiguousMemory,   // 0x00B2 (178)
