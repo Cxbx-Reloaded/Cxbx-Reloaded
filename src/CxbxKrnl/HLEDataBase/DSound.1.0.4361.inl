@@ -988,6 +988,16 @@ OOVPATable DSound_1_0_4361[] =
         "CDirectSound::CreateSoundStream (XREF)"
         #endif
     },
+    // IDirectSound8_CreateStream
+    {
+        (OOVPA*)&IDirectSound8_CreateStream_1_0_3936,
+
+        XTL::EmuIDirectSound8_CreateStream,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSound8_CreateStream"
+        #endif
+    },      
     // DirectSoundCreateStream
     {
         (OOVPA*)&DirectSoundCreateStream_1_0_4361,
