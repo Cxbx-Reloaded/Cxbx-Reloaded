@@ -72,8 +72,8 @@ SOOVPA<8> XNetGetEthernetLinkStatus_1_0_4627 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x08, 0x33 },
@@ -96,7 +96,7 @@ SOOVPA<8> XoUpdateLaunchNewImageInternal_1_0_4627 =
     8,  // Count == 8
 
     XREF_XoUpdateLaunchNewImageInternal, // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x1E, 0xDB },

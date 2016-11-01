@@ -41,8 +41,8 @@ SOOVPA<7> XGIsSwizzledFormat_1_0_3911 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x07, 0x7F },
@@ -63,8 +63,8 @@ SOOVPA<8> XGSwizzleRect_1_0_3911 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1E, 0x03 },
@@ -86,8 +86,8 @@ SOOVPA<8> XGSwizzleBox_1_0_3911 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1E, 0x75 },
@@ -109,8 +109,8 @@ SOOVPA<8> XGUnswizzleRect_1_0_3911 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1E, 0x03 },
@@ -132,8 +132,8 @@ SOOVPA<7> XGWriteSurfaceOrTextureToXPR_1_0_3911 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1E, 0x3D },
