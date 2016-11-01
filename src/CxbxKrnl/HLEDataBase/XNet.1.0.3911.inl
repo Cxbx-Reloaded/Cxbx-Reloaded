@@ -40,7 +40,7 @@ SOOVPA<9> XNetStartup_1_0_3911 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // XRef Not Saved
+    XRefNotSaved,
     1,  // XRef Is  Used
 
     {
@@ -71,7 +71,7 @@ SOOVPA<11> WSAStartup_1_0_3911 =
     0,  // Large == 0
     11, // Count == 11
 
-    -1, // XRef Not Saved
+    XRefNotSaved,
     1,  // XRef Is  Used
 
     {
@@ -133,8 +133,8 @@ SOOVPA<8> XNetGetEthernetLinkStatus_1_0_3911 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XNetGetEthernetLinkStatus+0x12 : cmpxchg [ecx], edx

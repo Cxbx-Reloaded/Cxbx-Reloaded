@@ -40,8 +40,8 @@ SOOVPA<12> XGIsSwizzledFormat_1_0_4361 =
     0,  // Large == 0
     12, // Count == 12
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XGIsSwizzledFormat+0x04 : cmp eax, 0x2D
@@ -76,8 +76,8 @@ SOOVPA<10> XGSwizzleRect_1_0_4361 =
     0,  // Large == 0
     10, // Count == 10
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XGSwizzleRect+0x2E : pop eax
@@ -108,8 +108,8 @@ SOOVPA<8> XGUnswizzleRect_1_0_4361 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1E, 0x03 },
@@ -131,8 +131,8 @@ SOOVPA<8> XGSetVertexBufferHeader_1_0_4361 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x01, 0x44 },
@@ -154,8 +154,8 @@ SOOVPA<8> XGCompressRect_1_0_4361 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1E, 0x00 },
@@ -177,8 +177,8 @@ SOOVPA<8> XGSetIndexBufferHeader_1_0_4361 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x01, 0x44 },

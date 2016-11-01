@@ -82,11 +82,13 @@ typedef signed long    sint32;
 /*! define this to dump textures that are registered */
 //#define _DEBUG_DUMP_TEXTURE_REGISTER   "D:\\cxbx\\_textures\\"
 
+#include "Version.h"
+
 /*! version string dependent on trace flag */
 #ifndef _DEBUG_TRACE
-#define _CXBX_VERSION "0.0.1-POC"
+#define _CXBX_VERSION _GIT_VERSION " ("__DATE__ ")"
 #else
-#define _CXBX_VERSION "0.0.1-POC-Trace"
+#define _CXBX_VERSION _GIT_VERSION "-Trace ("__DATE__ ")"
 #endif
 
 /*! debug mode choices */
@@ -97,6 +99,10 @@ enum DebugMode { DM_NONE, DM_CONSOLE, DM_FILE };
 
 /*! runtime DbgPrintf toggle boolean */
 extern volatile bool g_bPrintfOn;
+
+#ifdef _MSC_VER
+#pragma warning(disable : 4477)
+#endif
 
 /*! DbgPrintf enabled if _DEBUG_TRACE is set */
 #ifdef _DEBUG_TRACE

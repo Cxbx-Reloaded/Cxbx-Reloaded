@@ -40,8 +40,8 @@ SOOVPA<14> XGetDevices_1_0_4134 =
     0,  // Large == 0
     14, // Count == 14
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XGetDevices+0x07 : mov edx, [esp+arg_0]
@@ -78,8 +78,8 @@ SOOVPA<12> XInputOpen_1_0_4134 =
     0,  // Large == 0
     12, // Count == 12
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XInputOpen+0x13 : jmp +0x18
@@ -116,8 +116,8 @@ SOOVPA<12> XInputGetState_1_0_4134 =
     0,  // Large == 0
     12, // Count == 12
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XInputGetState+0x0E : cmp byte ptr [edx+0xA3], 1
@@ -152,8 +152,8 @@ SOOVPA<10> XMountUtilityDrive_1_0_4134 =
     0,  // Large == 0
     10, // Count == 10
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XMountUtilityDrive+0x03 : sub esp, 0x0114
@@ -182,8 +182,8 @@ SOOVPA<12> QueryPerformanceCounter_1_0_4134 =
     0,  // Large == 0
     12, // Count == 12
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // QueryPerformanceCounter+0x04 : rdtsc
@@ -220,8 +220,8 @@ SOOVPA<15> QueryPerformanceFrequency_1_0_4134 =
     0,  // Large == 0
     15, // Count == 15
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // QueryPerformanceFrequency+0x04 : and dword ptr [eax+4], 0
@@ -259,7 +259,7 @@ SOOVPA<10> XInputPoll_1_0_4134 =
     0,  // Large == 0
     10, // Count == 10
 
-    -1, // XRef Not Saved
+    XRefNotSaved,
     0,  // XRef Is Used
 
     {
@@ -286,8 +286,8 @@ SOOVPA<8> RtlDestroyHeap_1_0_4134 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x10, 0x56 },
@@ -309,8 +309,8 @@ SOOVPA<8> XMountMUA_1_0_4134 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x22, 0x8A },
@@ -332,8 +332,8 @@ SOOVPA<7> GetFileAttributesA_1_0_4134 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x08, 0x08 },
@@ -354,8 +354,8 @@ SOOVPA<7> timeSetEvent_1_0_4134 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1E, 0x8D },
@@ -376,8 +376,8 @@ SOOVPA<8> timeKillEvent_1_0_4134 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x0E, 0x8B },

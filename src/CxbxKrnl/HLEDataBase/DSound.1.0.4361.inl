@@ -40,8 +40,8 @@ SOOVPA<9> DirectSoundCreate_1_0_4361 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // DirectSoundCreate+0x0B : movzx esi, al
@@ -73,8 +73,8 @@ SOOVPA<9> IDirectSound8_CreateSoundBuffer_1_0_4361 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // IDirectSound8_CreateSoundBuffer+0x2A : push 0x24
@@ -138,7 +138,7 @@ SOOVPA<12> DirectSoundCreateStream_1_0_4361 =
     0,  // Large == 0
     12, // Count == 12
 
-    -1, // XRef Not Saved
+    XRefNotSaved,
     1,  // XRef Is  Used
 
     {
@@ -207,7 +207,7 @@ SOOVPA<11> CDirectSoundStream_Pause_1_0_4361 =
     0,  // Large == 0
     11, // Count == 11
 
-    -1, // XRef Not Saved
+    XRefNotSaved,
     1,  // XRef Is  Used
 
     {
@@ -242,8 +242,8 @@ SOOVPA<10> IDirectSoundBuffer8_SetPlayRegion_1_0_4361 =
 
     // NOTE: This is actually intercepting CDirectSoundBuffer::SetPlayRegion(ULONG, ULONG)
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // IDirectSoundBuffer8_SetPlayRegion+0x10 : movzx edi, al
@@ -274,8 +274,8 @@ SOOVPA<11> IDirectSoundBuffer8_SetLoopRegion_1_0_4361 =
 
     // NOTE: This is actually intercepting CDirectSoundBuffer::SetLoopRegion(ULONG, ULONG)
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // IDirectSoundBuffer8_SetLoopRegion+0x24 : mov eax, 0x80004005
@@ -309,8 +309,8 @@ SOOVPA<11> IDirectSoundBuffer8_SetVolume_1_0_4361 =
 
     // NOTE: This is actually intercepting CDirectSoundBuffer::SetVolume(ULONG)
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // IDirectSoundBuffer8_SetVolume+0x0D : movzx esi, al
@@ -405,7 +405,7 @@ SOOVPA<8> IDirectSoundBuffer8_SetBufferData_1_0_4361 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // XRef Not Saved
+    XRefNotSaved,
     1,  // XRef Is  Used
 
     {
@@ -496,7 +496,7 @@ SOOVPA<8> IDirectSoundBuffer8_SetCurrentPosition_1_0_4361 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // XRef Not Saved
+    XRefNotSaved,
     1,  // XRef Is  Used
 
     {
@@ -656,7 +656,7 @@ SOOVPA<9> IDirectSoundBuffer8_Play_1_0_4361 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // XRef Not Saved
+    XRefNotSaved,
     1,  // XRef Is  Used
 
     {
@@ -748,7 +748,7 @@ SOOVPA<8> IDirectSoundBuffer8_Stop_1_0_4361 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // XRef Not Saved
+    XRefNotSaved,
     1,  // XRef Is  Used
 
     {
@@ -779,7 +779,7 @@ SOOVPA<7> DirectSound_CDirectSoundVoiceSettings_SetMixBinVolumes_1_0_4361 =
     7,  // Count == 7
 
     XREF_DSSETMIXBINVOLUMESC,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x03, 0x24 },
@@ -872,7 +872,7 @@ SOOVPA<8> IDirectSoundBuffer_PlayEx_1_0_4361 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -897,7 +897,7 @@ SOOVPA<10> CMcpxBuffer_Stop2_1_0_4361 =
 	10,	// Count == 10
 
 	XREF_CMcpxBuffer_Stop2,	// XRef Is Saved
-	0,	// XRef Is Not Used
+	XRefNotUsed,
 
 	{
 		// CMcpxBuffer_Stop2+0x03 : mov eax, [ebp+arg_0]
@@ -949,7 +949,7 @@ SOOVPA<8> IDirectSoundBuffer_StopEx_1_0_4361 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -988,6 +988,16 @@ OOVPATable DSound_1_0_4361[] =
         "CDirectSound::CreateSoundStream (XREF)"
         #endif
     },
+    // IDirectSound8_CreateStream
+    {
+        (OOVPA*)&IDirectSound8_CreateStream_1_0_3936,
+
+        XTL::EmuIDirectSound8_CreateStream,
+
+        #ifdef _DEBUG_TRACE
+        "EmuIDirectSound8_CreateStream"
+        #endif
+    },      
     // DirectSoundCreateStream
     {
         (OOVPA*)&DirectSoundCreateStream_1_0_4361,

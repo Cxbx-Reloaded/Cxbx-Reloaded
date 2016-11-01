@@ -284,7 +284,7 @@ void EmuInitFS()
 	long numberOfInstructions = fsInstructions.size();
 
 	// Iterate through each CODE section
-	for (int sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
+	for (uint32 sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
 		if (!CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwFlags.bExecutable) {
 			continue;
 		}

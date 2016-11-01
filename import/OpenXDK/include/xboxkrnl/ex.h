@@ -59,7 +59,14 @@ XBSYSAPI VOID *ExInterlockedAddLargeInteger;
 XBSYSAPI VOID *ExInterlockedAddLargeStatistic;
 XBSYSAPI VOID *ExInterlockedCompareExchange64;
 XBSYSAPI VOID *ExMutantObjectType;
-XBSYSAPI VOID *ExQueryPoolBlockSize;
+
+// ******************************************************************
+// * ExQueryPoolBlockSize
+// ******************************************************************
+XBSYSAPI EXPORTNUM(23) ULONG NTAPI ExQueryPoolBlockSize 
+(
+    IN PVOID PoolBlock
+);
 
 // ******************************************************************
 // * ExQueryNonVolatileSetting

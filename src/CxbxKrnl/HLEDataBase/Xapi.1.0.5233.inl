@@ -44,8 +44,8 @@ SOOVPA<7> XInitDevices_1_0_5233 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x0E, 0x75 },
@@ -66,8 +66,8 @@ SOOVPA<8> XInputGetCapabilities_1_0_5233 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1D, 0x85 },
@@ -89,8 +89,8 @@ SOOVPA<7> XGetDeviceChanges_1_0_5233 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x0C, 0x75 },
@@ -111,8 +111,8 @@ SOOVPA<7> XInputSetState_1_0_5233 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x05, 0x81 },
@@ -133,8 +133,8 @@ SOOVPA<6> XGetFileCacheSize_1_0_5344 =
     0,  // Large == 0
     6,  // Count == 6
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x00, 0xFF },

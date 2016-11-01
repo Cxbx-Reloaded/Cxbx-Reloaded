@@ -40,8 +40,8 @@ SOOVPA<7> CDirectSound_SynchPlayback_1_0_5558 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x0C, 0x00 },
@@ -95,8 +95,8 @@ SOOVPA<11> CDirectSound_CommitDeferredSettings_1_0_5558 =
     0,  // Large == 0
     11, // Count == 11
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // CDirectSound_CommitDeferredSettings+0x10 : movzx eax, al
@@ -226,7 +226,7 @@ SOOVPA<9> IDirectSound8_SetMixBinHeadroom_1_0_5558 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -252,7 +252,7 @@ SOOVPA<8> CDirectSound_SetI3DL2Listener_1_0_5558 =
     8,  // Count == 8
 
     XREF_DSSETI3DL2LISTENER,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x1D, 0xFF },
@@ -274,7 +274,7 @@ SOOVPA<9> IDirectSound8_SetI3DL2Listener_1_0_5558 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -299,7 +299,7 @@ SOOVPA<7> DirectSound_CFullHRTFSource_GetCenterVolume_1_0_5558 =
     7,  // Count == 7
 
     XREF_DirectSound_CFullHRTFSource_GetCenterVolume,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x13, 0xD9 },
@@ -345,7 +345,7 @@ SOOVPA<8> DirectSoundUseFullHRTF_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -369,8 +369,8 @@ SOOVPA<7> DirectSoundDoWork_1_0_5558 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x06, 0x0F },
@@ -392,7 +392,7 @@ SOOVPA<7> CDirectSoundBuffer_SetBufferData_1_0_5558 =
     7,  // Count == 7
 
     XREF_DSSETBUFFERDATA,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x14, 0x0C },
@@ -413,7 +413,7 @@ SOOVPA<9> IDirectSoundBuffer8_SetBufferData_1_0_5558 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -439,7 +439,7 @@ SOOVPA<7> CMcpxBuffer_SetCurrentPosition_1_0_5558 =
     7,  // Count == 7
 
     XREF_SETCURRENTPOSITION,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x1D, 0x00 },
@@ -484,7 +484,7 @@ SOOVPA<8> IDirectSoundBuffer8_SetCurrentPosition_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -509,7 +509,7 @@ SOOVPA<8> CMcpxVoiceClient_SetLFO_1_0_5558 =
     8,  // Count == 8
 
     XREF_DirectSound_CMcpxVoiceClient_SetLFO,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x1E, 0x48 },
@@ -577,7 +577,7 @@ SOOVPA<8> IDirectSoundBuffer8_SetLFO_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -637,7 +637,7 @@ SOOVPA<7> CDirectSoundVoiceSettings_SetMixBins_1_0_5558 =
     7,  // Count == 7
 
     XREF_DSSETMIXBINSC,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x1B, 0xEB },
@@ -706,7 +706,7 @@ SOOVPA<8> IDirectSoundBuffer8_SetMixBins_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -731,7 +731,7 @@ SOOVPA<8> CDirectSoundBuffer_SetPlayRegion_1_0_5558 =
     8,  // Count == 8
 
     XREF_DSBUFFERSETPLAYREGIONA,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x0F, 0x00 },
@@ -753,7 +753,7 @@ SOOVPA<9> IDirectSoundBuffer8_SetPlayRegion_1_0_5558 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -778,7 +778,7 @@ SOOVPA<7> CDirectSoundBuffer_SetLoopRegion_1_0_5558 =
     7,  // Count == 7
 
     XREF_DirectSound_CDirectSoundBuffer_SetLoopRegion,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x0F, 0x00 },
@@ -798,7 +798,7 @@ SOOVPA<9> IDirectSoundBuffer8_SetLoopRegion_1_0_5558 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -824,7 +824,7 @@ SOOVPA<8> CMcpxBuffer_Play_1_0_5558 =
     8,  // Count == 8
 
     XREF_DSOUNDPLAY,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x06, 0x56 },
@@ -872,7 +872,7 @@ SOOVPA<8> IDirectSoundBuffer8_Play_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -930,7 +930,7 @@ SOOVPA<7> WaveFormat_CreateXboxAdpcmFormat_1_0_5558 =
     7,  // Count == 7
 
     XREF_DirectSound_WaveFormat_CreateXboxAdpcmFormat,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x07, 0x08 },
@@ -951,7 +951,7 @@ SOOVPA<2> XAudioCreateAdpcmFormat_1_0_5558 =
     0,  // Large == 0
     2,  // Count == 2
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -970,7 +970,7 @@ SOOVPA<7> CDirectSoundVoice_SetFormat_1_0_5558 =
     7,  // Count == 7
 
     XREF_DirectSound_CDirectSoundVoice_SetFormat,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x07, 0x10 },
@@ -1015,7 +1015,7 @@ SOOVPA<8> IDirectSoundBuffer8_SetFormat_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -1040,7 +1040,7 @@ SOOVPA<8> CDirectSoundVoice_SetConeAngles_1_0_5558 =
     8,  // Count == 8
 
     XREF_DirectSound_CDirectSoundVoice_SetConeAngles,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x07, 0x8B },
@@ -1086,7 +1086,7 @@ SOOVPA<8> IDirectSoundBuffer8_SetConeAngles_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -1111,7 +1111,7 @@ SOOVPA<7> CDirectSoundVoice_SetMaxDistance_1_0_5558 =
     7,  // Count == 7
 
     XREF_DSVOICESETMAXDISTANCE,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x05, 0x41 },
@@ -1164,7 +1164,7 @@ SOOVPA<11> IDirectSoundBuffer_SetMaxDistance_1_0_5558 =
     0,  // Large == 0
     11, // Count == 11
 
-    -1, // XRef Not Saved
+    XRefNotSaved,
     1,  // XRef Is Used
 
     {
@@ -1198,7 +1198,7 @@ SOOVPA<7> CDirectSoundVoice_SetMinDistance_1_0_5558 =
     7,  // Count == 7
 
     XREF_DSVOICESETMINDISTANCE,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x05, 0x41 },
@@ -1251,7 +1251,7 @@ SOOVPA<8> DirectSound_CDirectSoundStream_SetMinDistance_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -1275,7 +1275,7 @@ SOOVPA<11> IDirectSoundBuffer_SetMinDistance_1_0_5558 =
     0,  // Large == 0
     11, // Count == 11
 
-    -1, // XRef Not Saved
+    XRefNotSaved,
     1,  // XRef Is Used
 
     {
@@ -1309,7 +1309,7 @@ SOOVPA<6> CDirectSoundVoice_CommitDeferredSettings_1_0_5558 =
     6,  // Count == 6
 
     XREF_DirectSound_CDirectSoundVoice_CommitDeferredSettings,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x01, 0x44 },
@@ -1383,7 +1383,7 @@ SOOVPA<9> IDirectSoundBuffer8_SetAllParameters_1_0_5558 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -1409,7 +1409,7 @@ SOOVPA<7> CDirectSoundVoice_SetPosition_1_0_5558 =
     7,  // Count == 7
 
     XREF_DSVOICESETPOSITION,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x09, 0x8B },
@@ -1455,7 +1455,7 @@ SOOVPA<8> IDirectSoundBuffer8_SetPosition_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -1479,7 +1479,7 @@ SOOVPA<7> CDirectSoundVoice_SetVelocity_1_0_5558 =
     7,  // Count == 7
 
     XREF_DSVOICESETVELOCITY,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x09, 0x8B },
@@ -1524,7 +1524,7 @@ SOOVPA<8> IDirectSoundBuffer8_SetVelocity_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -1549,7 +1549,7 @@ SOOVPA<7> DirectSound_CMcpxStream_Pause_1_0_5558 =
     7,  // Count == 7
 
     XREF_DirectSound_CMcpxStream_Pause,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x10, 0x07 },
@@ -1570,7 +1570,7 @@ SOOVPA<8> CDirectSoundStream_Pause_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1,  // Xref Is Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -1595,7 +1595,7 @@ SOOVPA<7> CDirectSoundVoice_SetDistanceFactor_1_0_5558 =
     7,  // Count == 7
 
     XREF_DSVOICESETDISTANCEFACTOR,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x05, 0x41 },
@@ -1640,7 +1640,7 @@ SOOVPA<8> IDirectSoundBuffer8_SetDistanceFactor_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -1665,7 +1665,7 @@ SOOVPA<7> CDirectSoundVoice_SetDopplerFactor_1_0_5558 =
     7,  // Count == 7
 
     XREF_DSVOICESETDOPPLERFACTOR,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x05, 0x41 },
@@ -1710,7 +1710,7 @@ SOOVPA<8> IDirectSoundBuffer8_SetDopplerFactor_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -1733,8 +1733,8 @@ SOOVPA<8> IDirectSoundBuffer_Lock_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x04, 0x75 },
@@ -1757,7 +1757,7 @@ SOOVPA<7> DirectSound_CDirectSoundVoice_SetI3DL2Source_1_0_5558 =
     7,  // Count == 7
 
     XREF_DSVOICESETI3DL2SOURCE,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x18, 0x00 },
@@ -1802,7 +1802,7 @@ SOOVPA<9> IDirectSoundBuffer_SetI3DL2Source_1_0_5558 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -1878,7 +1878,7 @@ SOOVPA<9> IDirectSoundBuffer_SetAllParameters_1_0_5558 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -1904,7 +1904,7 @@ SOOVPA<7> DirectSound_CDirectSoundVoice_SetHeadroom_1_0_5558 =
     7,  // Count == 7
 
     XREF_DirectSound_CDirectSoundVoice_SetHeadroom,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x03, 0x04 },
@@ -1949,7 +1949,7 @@ SOOVPA<9> DirectSound_CDirectSoundStream_SetHeadroom_1_0_5558 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -1974,7 +1974,7 @@ SOOVPA<8> IDirectSoundBuffer_SetHeadroom_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -1999,7 +1999,7 @@ SOOVPA<7> DirectSound_CDirectSoundBuffer_GetCurrentPosition_1_0_5558 =
     7,  // Count == 7
 
     XREF_GETCURRENTPOSITION,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x0C, 0x00 },
@@ -2020,7 +2020,7 @@ SOOVPA<9> IDirectSoundBuffer_GetCurrentPosition_1_0_5558 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -2045,7 +2045,7 @@ SOOVPA<9> DirectSound_CDirectSoundStream_SetFormat_1_0_5558 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1,  // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -2070,7 +2070,7 @@ SOOVPA<9> DirectSound_CDirectSoundStream_SetMixBins_1_0_5558 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1,  // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -2096,7 +2096,7 @@ SOOVPA<8> DirectSound_CDirectSound_SetMixBinHeadroom_1_0_5558 =
     8,  // Count == 8
 
     XREF_DSSETMIXBINHEADROOMA,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x0C, 0x00 },
@@ -2118,7 +2118,7 @@ SOOVPA<9> IDirectSound_SetMixBinHeadroom_1_0_5558 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -2144,7 +2144,7 @@ SOOVPA<8> DirectSound_CDirectSound_EnableHeadphones_1_0_5558 =
     8,  // Count == 8
 
     XREF_DSENABLEHEADPHONES,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x1E, 0x3B },
@@ -2166,7 +2166,7 @@ SOOVPA<8> IDirectSound_EnableHeadphones_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -2191,7 +2191,7 @@ SOOVPA<7> DirectSound_CDirectSound_GetOutputLevels_1_0_5558 =
     7,  // Count == 7
 
     XREF_DirectSound_CDirectSound_GetOutputLevels,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x07, 0x10 },
@@ -2212,7 +2212,7 @@ SOOVPA<9> IDirectSound_GetOutputLevels_1_0_5558 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -2237,8 +2237,8 @@ SOOVPA<8> XAudioDownloadEffectsImage_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1E, 0xB6 },
@@ -2261,7 +2261,7 @@ SOOVPA<7> DirectSound_CDirectSound_SetPosition_1_0_5558 =
     7,  // Count == 7
 
     XREF_DSSETPOSITIONA,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x0F, 0x00 },
@@ -2282,7 +2282,7 @@ SOOVPA<8> IDirectSound_SetPosition_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -2307,7 +2307,7 @@ SOOVPA<7> DirectSound_CDirectSound_SetVelocity_1_0_5558 =
     7,  // Count == 7
 
     XREF_DSSETVELOCITYA,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x0F, 0x00 },
@@ -2328,7 +2328,7 @@ SOOVPA<8> IDirectSound_SetVelocity_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -2353,7 +2353,7 @@ SOOVPA<7> DirectSound_CDirectSound_CreateSoundStream_1_0_5558 =
     7,  // Count == 7
 
     XREF_DSCREATESOUNDSTREAM,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x11, 0xD8 },
@@ -2374,7 +2374,7 @@ SOOVPA<8> IDirectSound_CreateSoundStream_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -2398,7 +2398,7 @@ SOOVPA<8> DirectSound_CDirectSoundStream_SetRolloffCurve_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
@@ -2422,7 +2422,7 @@ SOOVPA<9> DirectSound_CDirectSoundStream_SetFrequency_1_0_5558 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {
