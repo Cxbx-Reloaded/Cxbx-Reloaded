@@ -40,8 +40,8 @@ SOOVPA<12> IDirectSound8_Release_1_0_4432 =
     0,  // Large == 0
     12, // Count == 12
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // IDirectSound8_Release+0x04 : lea ecx, [eax-8]
@@ -137,7 +137,7 @@ SOOVPA<10> IDirectSoundBuffer_SetMaxDistance_1_0_4432 =
     0,  // Large == 0
     10, // Count == 10
 
-    -1, // XRef Not Saved
+    XRefNotSaved,
     1,  // XRef Is Used
 
     {
@@ -230,7 +230,7 @@ SOOVPA<10> IDirectSoundBuffer_SetMinDistance_1_0_4432 =
     0,  // Large == 0
     10, // Count == 10
 
-    -1, // XRef Not Saved
+    XRefNotSaved,
     1,  // XRef Is Used
 
     {
@@ -293,7 +293,7 @@ SOOVPA<12> IDirectSound8_SetI3DL2Listener_1_0_4432 =
     0,  // Large == 0
     12, // Count == 12
 
-    -1, // XRef Not Saved
+    XRefNotSaved,
     1,  // XRef Is  Used
 
     {
@@ -445,7 +445,7 @@ SOOVPA<12> IDirectSoundBuffer8_SetMixBins_1_0_4432 =
     0,  // Large == 0
     12, // Count == 12
 
-    -1, // XRef Not Saved
+    XRefNotSaved,
     1,  // XRef Is  Used
 
     {
@@ -481,8 +481,8 @@ SOOVPA<11> CDirectSound_CommitDeferredSettings_1_0_4432 =
     0,  // Large == 0
     11, // Count == 11
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // CDirectSound_CommitDeferredSettings+0x10 : movzx eax, al
@@ -545,7 +545,7 @@ SOOVPA<11> IDirectSound8_SetDistanceFactor_1_0_4432 =
     0,  // Large == 0
     11, // Count == 11
 
-    -1, // XRef Not Saved
+    XRefNotSaved,
     1,  // XRef Is  Used
 
     {

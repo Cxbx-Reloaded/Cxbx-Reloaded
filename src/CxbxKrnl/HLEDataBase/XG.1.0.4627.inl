@@ -40,8 +40,8 @@ SOOVPA<10> XGSwizzleBox_1_0_4627 =
     0,  // Large == 0
     10, // Count == 10
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XGSwizzleBox+0x60 : sub ecx, [eax]
@@ -72,8 +72,8 @@ SOOVPA<7> XGWriteSurfaceOrTextureToXPR_1_0_4627 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1E, 0x3D },
@@ -94,8 +94,8 @@ SOOVPA<8> XGUnswizzleRect_1_0_4627 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1E, 0x03 },

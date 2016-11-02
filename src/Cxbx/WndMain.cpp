@@ -1856,7 +1856,7 @@ void WndMain::StartEmulation(EnumAutoConvert x_AutoConvert, HWND hwndParent)
 		GetModuleFileName(GetModuleHandle(NULL), szExeFileName, MAX_PATH);
 
 		char szArgsBuffer[4096];
-		snprintf(szArgsBuffer, 4096, "/load \"%s\" %d %d \"%s\"", m_XbeFilename, hwndParent, m_KrnlDebug, m_KrnlDebugFilename);
+		snprintf(szArgsBuffer, 4096, "/load \"%s\" %d %d \"%s\"", m_XbeFilename, (int)hwndParent, (int)m_KrnlDebug, m_KrnlDebugFilename);
 
         if((int)ShellExecute(NULL, "open", szExeFileName, szArgsBuffer, szBuffer, SW_SHOWDEFAULT) <= 32)
         {

@@ -40,8 +40,8 @@ SOOVPA<8> XapiInitProcess_1_0_5849 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x22, 0x6A },
@@ -63,8 +63,8 @@ SOOVPA<7> XGetDeviceChanges_1_0_5849 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x0C, 0x75 },
@@ -85,8 +85,8 @@ SOOVPA<7> GetThreadPriority_1_0_5849 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x0D, 0xFF },
@@ -107,8 +107,8 @@ SOOVPA<7> SetThreadPriorityBoost_1_0_5849 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x07, 0xFF },
@@ -129,8 +129,8 @@ SOOVPA<5> XGetSectionSize_1_0_5849 =
     0,  // Large == 0
     5,  // Count == 5
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x00, 0x8B },
@@ -149,8 +149,8 @@ SOOVPA<7> RaiseException_1_0_5849 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x09, 0x83 },
@@ -171,8 +171,8 @@ SOOVPA<7> XGetDeviceEnumerationStatus_1_0_5849 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x04, 0x15 },
@@ -193,8 +193,8 @@ SOOVPA<6> SwitchToThread_1_0_5849 =
     0,  // Large == 0
     6,  // Count == 6
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x01, 0x15 },

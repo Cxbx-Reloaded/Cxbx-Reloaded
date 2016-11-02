@@ -184,7 +184,7 @@ std::vector<XboxResolution> XboxResolutions = {
 
 bool IsValidXboxDisplayMode(XTL::D3DDISPLAYMODE PCDisplayMode, int PCModeNr)
 {
-	for (int i = 0; i < XboxResolutions.size(); i++) {
+	for (size_t i = 0; i < XboxResolutions.size(); i++) {
 		if (XboxResolutions[i].W == PCDisplayMode.Width && XboxResolutions[i].H == PCDisplayMode.Height) {
 			XboxResolutions[i].PCMode = PCModeNr;
 				
@@ -6297,7 +6297,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_UpdateOverlay
 		// update overlay!
 		if(g_bSupportsYUY2)
 		{
-			RECT SourRect = {0, 0, g_dwOverlayW, g_dwOverlayH}, DestRect;
+			RECT SourRect = {0, 0, (LONG)g_dwOverlayW, (LONG)g_dwOverlayH}, DestRect;
 			MONITORINFO MonitorInfo = {0};
 
 			int nTitleHeight  = 0;//GetSystemMetrics(SM_CYCAPTION);

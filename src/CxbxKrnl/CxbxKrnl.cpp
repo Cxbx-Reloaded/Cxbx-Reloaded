@@ -290,7 +290,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 	memcpy((void*)(CxbxKrnl_Xbe->m_Header.dwBaseAddr + sizeof(Xbe::Header)), CxbxKrnl_Xbe->m_HeaderEx, CxbxKrnl_Xbe->m_ExSize);
 	
 	// Load Sections
-	for (int i = 0; i < CxbxKrnl_Xbe->m_Header.dwSections; i++) {
+	for (uint32 i = 0; i < CxbxKrnl_Xbe->m_Header.dwSections; i++) {
 		memcpy((void*)CxbxKrnl_Xbe->m_SectionHeader[i].dwVirtualAddr, CxbxKrnl_Xbe->m_bzSection[i], CxbxKrnl_Xbe->m_SectionHeader[i].dwSizeofRaw);
 	}
 
@@ -506,7 +506,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		std::string fileName(xbePath);
 		xboxkrnl::XeImageFileName.Buffer = (PCHAR)malloc(MAX_PATH);
 		sprintf(xboxkrnl::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeVolumeLetter, fileName.c_str());
-		xboxkrnl::XeImageFileName.Length = strlen(xboxkrnl::XeImageFileName.Buffer);
+		xboxkrnl::XeImageFileName.Length = (USHORT)strlen(xboxkrnl::XeImageFileName.Buffer);
 		xboxkrnl::XeImageFileName.MaximumLength = MAX_PATH;
 
 		DbgPrintf("EmuMain : XeImageFileName = %s\n", xboxkrnl::XeImageFileName.Buffer);
