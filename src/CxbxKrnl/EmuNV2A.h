@@ -34,6 +34,9 @@
 #ifndef EMUNV2A_H
 #define EMUNV2A_H
 
+// Valid after PCI init :
+#define NV20_REG_BASE_KERNEL 0xFD000000
+
 uint32_t EmuNV2A_Read32(uint32_t addr);
 void EmuNV2A_Write32(uint32_t addr, uint32_t value);
 

@@ -50,6 +50,7 @@ struct {
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;
 } pmc;
+
 struct {
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;
@@ -58,9 +59,11 @@ struct {
 	// Cache1State cache1;
 	uint32_t regs[0x2000];
 } pfifo;
+
 struct {
 	uint32_t regs[0x1000];
 } pvideo;
+
 struct {
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;
@@ -72,11 +75,13 @@ struct {
 struct {
 	uint32_t regs[0x1000];
 } pfb;
+
 struct {
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;
 	uint32_t start;
 } pcrtc;
+
 struct {
 	uint32_t core_clock_coeff;
 	uint64_t core_clock_freq;
@@ -352,7 +357,7 @@ DEBUG_END(USER)
 
 #define READ32_START(DEV) uint32_t EmuNV2A_##DEV##_Read32(uint32_t addr) { uint32_t result = 0; switch (addr) {
 #define READ32_UNHANDLED(DEV) default: EmuWarning("EmuNV2A_" #DEV "_Read32 Unhandled");
-#define READ32_END(DEV) DEBUG_READ32(DEV); } return result; }
+#define READ32_END(DEV) } DEBUG_READ32(DEV); return result; }
 
 #define WRITE32_START(DEV) void EmuNV2A_##DEV##_Write32(uint32_t addr, uint32_t value) { DEBUG_WRITE32(DEV); switch (addr) {
 #define WRITE32_UNHANDLED(DEV) default: EmuWarning("EmuNV2A_" #DEV "_Write32 Unhandled");
@@ -368,6 +373,9 @@ READ32_START(PMC)
 		break;
 	case NV_PMC_INTR_EN_0:
 		result = pmc.enabled_interrupts;
+		break;
+	case 0x0000020C: // What's this address? What does the xbe expect to read here? The Kernel base address perhaps?
+		result = NV20_REG_BASE_KERNEL;
 		break;
 	READ32_UNHANDLED(PMC)
 READ32_END(PMC)
@@ -387,7 +395,7 @@ WRITE32_END(PMC)
 
 READ32_START(PBUS)
 	case NV_PBUS_PCI_NV_0:
-		result = 0x10de;	// PCI_VENDOR_ID_NVIDIA	
+		result = 0x10de;	// PCI_VENDOR_ID_NVIDIA	(?where to return PCI_DEVICE_ID_NVIDIA_NV2A = 0x01b7)
 		break;
 	case NV_PBUS_PCI_NV_1:
 		result = 1; // NV_PBUS_PCI_NV_1_IO_SPACE_ENABLED
@@ -399,6 +407,7 @@ READ32_START(PBUS)
 READ32_END(PBUS)
 
 WRITE32_START(PBUS)
+	// TODO : Handle write on NV_PBUS_PCI_NV_1 with  1 (NV_PBUS_PCI_NV_1_IO_SPACE_ENABLED) + 4 (NV_PBUS_PCI_NV_1_BUS_MASTER_ENABLED)
 	WRITE32_UNHANDLED(PBUS)
 WRITE32_END(PBUS)
 

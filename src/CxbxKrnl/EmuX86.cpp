@@ -43,7 +43,7 @@
 
 uint32_t EmuX86_Read32(uint32_t addr)
 {
-	if (addr >= 0xFD000000 && addr <= 0xFE000000) {
+	if (addr >= NV20_REG_BASE_KERNEL && addr <= 0xFE000000) {
 		return EmuNV2A_Read32(addr & 0x00FFFFFF);
 	}
 
@@ -53,7 +53,7 @@ uint32_t EmuX86_Read32(uint32_t addr)
 
 void EmuX86_Write32(uint32_t addr, uint32_t value)
 {
-	if (addr >= 0xFD000000 && addr <= 0xFE000000) {
+	if (addr >= NV20_REG_BASE_KERNEL && addr <= 0xFE000000) {
 		EmuNV2A_Write32(addr & 0x00FFFFFF, value);
 		return;
 	}
