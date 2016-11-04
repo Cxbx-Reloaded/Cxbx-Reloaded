@@ -200,6 +200,7 @@
     <ClInclude Include="..\..\src\Cxbx.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\CxbxKrnl.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\DbgConsole.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\device.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\Emu.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuAlloc.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8.h" />
@@ -469,6 +470,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\device.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\Emu.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
