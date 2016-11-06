@@ -2515,7 +2515,7 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
         pRet = (PVOID)dwRet;
     }
 
-    DbgPrintf("EmuKrnl (0x%X): MmAllocateContiguous returned 0x%.08X\n", GetCurrentThreadId(), pRet);
+    DbgPrintf("EmuKrnl (0x%X): MmAllocateContiguousMemory returned 0x%.08X\n", GetCurrentThreadId(), pRet);
 
     
 
@@ -2587,7 +2587,7 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): MmAllocateContiguousMemoryEx\n"
+    DbgPrintf("EmuKrnl (0x%X): MmAllocateSystemMemory\n"
            "(\n"
            "   NumberOfBytes            : 0x%.08X\n"
            "   Protect                  : 0x%.08X\n"
@@ -3954,7 +3954,7 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 	} 
 	else
 	{
-		EmuWarning("NtQueryInformationFile failed! (%s)\n", NtStatusToString(ret));
+		EmuWarning("NtQueryVolumeInformationFile failed! (%s)\n", NtStatusToString(ret));
 	}
     
     
@@ -4164,7 +4164,7 @@ XBSYSAPI EXPORTNUM(228) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetSystemTime
 {
 	
 
-    DbgPrintf("EmuKrnl (0x%X): NtSetInformationFile\n"
+    DbgPrintf("EmuKrnl (0x%X): NtSetSystemTime\n"
            "(\n"
            "   SystemTime           : 0x%.08X\n"
            "   PreviousTime         : 0x%.08X\n"
