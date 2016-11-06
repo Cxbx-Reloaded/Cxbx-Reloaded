@@ -2569,7 +2569,7 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 
     static int count = 0;
 
-    DbgPrintf("EmuKrnl (0x%X): MmAllocateContiguousEx returned 0x%.08X\n", GetCurrentThreadId(), pRet);
+    DbgPrintf("EmuKrnl (0x%X): MmAllocateContiguousMemoryEx returned 0x%.08X\n", GetCurrentThreadId(), pRet);
 
     
 
