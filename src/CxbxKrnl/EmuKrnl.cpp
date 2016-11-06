@@ -1099,7 +1099,7 @@ static unsigned int WINAPI PCSTProxy
 			if(pfnNotificationRoutine == NULL)
 				continue;
 
-			DbgPrintf("EmuKrnl (0x%X): Calling pfnNotificationRoutine[%d] (0x%.08X)\n", g_iThreadNotificationCount, GetCurrentThreadId(), pfnNotificationRoutine);
+			DbgPrintf("EmuKrnl (0x%X): Calling pfnNotificationRoutine[%d] (0x%.08X)\n", GetCurrentThreadId(), g_iThreadNotificationCount, pfnNotificationRoutine);
 
 			
 
@@ -1146,7 +1146,7 @@ callComplete:
 			if(pfnNotificationRoutine == NULL)
 				continue;
 
-			DbgPrintf("EmuKrnl (0x%X): Calling pfnNotificationRoutine[%d] (0x%.08X)\n", g_iThreadNotificationCount, GetCurrentThreadId(), pfnNotificationRoutine);
+			DbgPrintf("EmuKrnl (0x%X): Calling pfnNotificationRoutine[%d] (0x%.08X)\n", GetCurrentThreadId(), g_iThreadNotificationCount, pfnNotificationRoutine);
 
 			
 
@@ -1700,7 +1700,7 @@ XBSYSAPI EXPORTNUM(35) xboxkrnl::DWORD NTAPI xboxkrnl::FscGetCacheSize()
 {
 	
 
-    DbgPrintf("EmuKrnl (0x%X): FscGetCacheSize()", GetCurrentThreadId());
+	DbgPrintf("EmuKrnl (0x%X): FscGetCacheSize();\n", GetCurrentThreadId());
 
     EmuWarning("FscGetCacheSize returning default 64kb");
 
@@ -4441,7 +4441,7 @@ XBSYSAPI EXPORTNUM(258) VOID NTAPI xboxkrnl::PsTerminateSystemThread(IN NTSTATUS
 			if(pfnNotificationRoutine == NULL)
 				continue;
 
-			DbgPrintf("EmuKrnl (0x%X): Calling pfnNotificationRoutine[%d] (0x%.08X)\n", g_iThreadNotificationCount, GetCurrentThreadId(), pfnNotificationRoutine);
+			DbgPrintf("EmuKrnl (0x%X): Calling pfnNotificationRoutine[%d] (0x%.08X)\n", GetCurrentThreadId(), g_iThreadNotificationCount, pfnNotificationRoutine);
 
 			
 
