@@ -82,8 +82,6 @@ typedef signed long    sint32;
 /*! define this to dump textures that are registered */
 //#define _DEBUG_DUMP_TEXTURE_REGISTER   "D:\\cxbx\\_textures\\"
 
-#include "Version.h"
-
 /*! version string dependent on trace flag */
 #ifndef _DEBUG_TRACE
 #define _CXBX_VERSION _GIT_VERSION " ("__DATE__ ")"
@@ -105,11 +103,13 @@ extern volatile bool g_bPrintfOn;
 #endif
 
 /*! DbgPrintf enabled if _DEBUG_TRACE is set */
-#ifdef _DEBUG_TRACE
-#define DbgPrintf if(g_bPrintfOn) printf
-#else
-inline void null_func(...) { }
-#define DbgPrintf null_func
-#endif
+#define DbgPrintf(fmt, ...) do { if (_DEBUG_TRACE) if(g_bPrintfOn) printf(fmt, __VA_ARGS__); } while (0)
+
+// See http://stackoverflow.com/questions/1644868/c-define-macro-for-debug-printing
+// TODO : print each argument indented on a separate line
+#define DbgFuncArgs(fmt, ...) \
+	do { if (_DEBUG_TRACE) if(g_bPrintfOn) \
+	printf(__FILE__ " (0x%X): " __func__ "(" fmt ");\n", GetCurrentThreadID(), __VA_ARGS__); \
+	} while (0)
 
 #endif

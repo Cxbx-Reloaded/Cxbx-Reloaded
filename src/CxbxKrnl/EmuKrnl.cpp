@@ -1075,13 +1075,11 @@ static unsigned int WINAPI PCSTProxy
     // Once deleted, unable to directly access iPCSTProxyParam in remainder of function.
     delete iPCSTProxyParam;
 
-    DbgPrintf("EmuKrnl (0x%X): PCSTProxy\n"
-           "(\n"
+	DbgFuncArgs(
            "   StartContext1       : 0x%.08X\n"
            "   StartContext2       : 0x%.08X\n"
-           "   StartRoutine        : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), StartContext1, StartContext2, StartRoutine);
+           "   StartRoutine        : 0x%.08X\n",
+           StartContext1, StartContext2, StartRoutine);
 
     if(StartSuspended == TRUE)
         SuspendThread(GetCurrentThread());
@@ -1289,9 +1287,9 @@ using namespace xboxkrnl;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress()
 {
-		
+	
 
-	DbgPrintf("EmuKrnl (0x%X): AvGetSavedDataAddress();\n", GetCurrentThreadId() );
+	DbgFuncArgs();
 
 	__asm int 3;
 
@@ -1351,14 +1349,12 @@ XBSYSAPI EXPORTNUM(2) VOID NTAPI xboxkrnl::AvSendTVEncoderOption
 {
 		
 
-	DbgPrintf("EmuKrnl (0x%X): AvSendTVEncoderOption\n"
-           "(\n"
+	DbgFuncArgs(
            "   RegisterBase       : 0x%.08X\n"
 		   "   Option             : 0x%.08X\n"
 		   "   Param              : 0x%.08X\n"
-		   "   Result             : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), RegisterBase, Option, Param, Result);
+		   "   Result             : 0x%.08X\n",
+           RegisterBase, Option, Param, Result);
 
 	// TODO: What does this do?
 	EmuWarning( "AvSendTVEncoderOption ignored!" );
@@ -1376,12 +1372,10 @@ XBSYSAPI EXPORTNUM(8) xboxkrnl::ULONG _cdecl xboxkrnl::DbgPrint
 {
 	
 
-	DbgPrintf( "EmuKrnl (0x%X): DbgPrint\n"
-		"(\n"
+	DbgFuncArgs(
 		"   Format              : 0x%.08X\n"
-		"   ...\n"
-		");\n",
-		GetCurrentThreadId(), Format);
+		"   ...\n",
+		Format);
 
 	if(Format != NULL) 
 	{
@@ -1415,12 +1409,10 @@ XBSYSAPI EXPORTNUM(9) VOID NTAPI xboxkrnl::HalReadSMCTrayState
 {
 		
 	
-	DbgPrintf("EmuKrnl (0x%X): HalReadSMCTrayState\n"
-           "(\n"
+	DbgFuncArgs(
            "   State              : 0x%.08X\n"
-		   "   Count              : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), State, Count);
+		   "   Count              : 0x%.08X\n",
+           State, Count);
 
 #define TRAY_CLOSED_MEDIA_PRESENT 96
 #define TRAY_CLOSED_NO_MEDIA 64
@@ -1448,11 +1440,9 @@ XBSYSAPI EXPORTNUM(14) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePool
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): ExAllocatePool\n"
-           "(\n"
-           "   NumberOfBytes       : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), NumberOfBytes);
+    DbgFuncArgs(
+           "   NumberOfBytes       : 0x%.08X\n",
+           NumberOfBytes);
 
     PVOID pRet = ExAllocatePoolWithTag(NumberOfBytes, (ULONG)"enoN");
 
@@ -1475,12 +1465,10 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): ExAllocatePoolWithTag\n"
-           "(\n"
+    DbgFuncArgs(
            "   NumberOfBytes       : 0x%.08X\n"
-           "   Tag                 : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), NumberOfBytes, Tag);
+           "   Tag                 : 0x%.08X\n",
+		   NumberOfBytes, Tag);
 
     // TODO: Actually implement this
     PVOID pRet = CxbxMalloc(NumberOfBytes);
@@ -1500,11 +1488,9 @@ XBSYSAPI EXPORTNUM(17) VOID NTAPI xboxkrnl::ExFreePool
 {
 		
 	
-	DbgPrintf("EmuKrnl (0x%X): ExFreePool\n"
-           "(\n"
-           "   P                  : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), P);
+	DbgFuncArgs(
+           "   P                  : 0x%.08X\n",
+           P);
 
 	CxbxFree(P);
 }
@@ -1517,11 +1503,9 @@ XBSYSAPI EXPORTNUM(23) xboxkrnl::ULONG NTAPI xboxkrnl::ExQueryPoolBlockSize
 	IN PVOID PoolBlock
 )
 {
-	DbgPrintf("EmuKrnl (0x%X): ExQueryPoolBlockSize\n"
-		"(\n"
-		"   PoolBlock          : 0x%.08X\n"
-		");\n",
-		GetCurrentThreadId(), PoolBlock);
+	DbgFuncArgs(
+		"   PoolBlock          : 0x%.08X\n",
+		PoolBlock);
 
 	// Not strictly correct, but it will do for now
 	return MmQueryAllocationSize(PoolBlock);
@@ -1541,15 +1525,13 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): ExQueryNonVolatileSetting\n"
-           "(\n"
+    DbgFuncArgs(
            "   ValueIndex          : 0x%.08X\n"
            "   Type                : 0x%.08X\n"
            "   Value               : 0x%.08X\n"
            "   ValueLength         : 0x%.08X\n"
-           "   ResultLength        : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), ValueIndex, Type, Value, ValueLength, ResultLength);
+           "   ResultLength        : 0x%.08X\n",
+           ValueIndex, Type, Value, ValueLength, ResultLength);
 
     if (!Type || !Value)
         CxbxKrnlCleanup("Assertion in ExQueryNonVolatileSetting()");
@@ -1664,13 +1646,11 @@ XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
 {
 	
 
-    DbgPrintf("EmuKrnl (0x%X): ExReadWriteRefurbInfo\n"
-           "(\n"
+    DbgFuncArgs(
            "   Unknown1            : 0x%.08X\n"
            "   Unknown2            : 0x%.08X\n"
-           "   Unknown3            : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), Unknown1, Unknown2, Unknown3);
+           "   Unknown3            : 0x%.08X\n",
+           Unknown1, Unknown2, Unknown3);
 
 	// TODO: What does this do?
 	EmuWarning( "ExReadWriteRefurbInfo ignored!" );
@@ -1693,14 +1673,12 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 {
 	
 
-    DbgPrintf("EmuKrnl (0x%X): ExSaveNonVolatileSetting\n"
-           "(\n"
+    DbgFuncArgs(
            "   ValueIndex          : 0x%.08X\n"
            "   Type                : 0x%.08X\n"
            "   Value               : 0x%.08X\n"
-           "   ValueLength         : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), ValueIndex, Type, Value, ValueLength);
+           "   ValueLength         : 0x%.08X\n",
+           ValueIndex, Type, Value, ValueLength);
 
 	// TODO: Later.
 
@@ -1716,7 +1694,7 @@ XBSYSAPI EXPORTNUM(35) xboxkrnl::DWORD NTAPI xboxkrnl::FscGetCacheSize()
 {
 	
 
-	DbgPrintf("EmuKrnl (0x%X): FscGetCacheSize();\n", GetCurrentThreadId());
+	DbgFuncArgs();
 
     EmuWarning("FscGetCacheSize returning default 64kb");
 
@@ -1732,11 +1710,9 @@ XBSYSAPI EXPORTNUM(37) xboxkrnl::LONG NTAPI xboxkrnl::FscSetCacheSize(ULONG uCac
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): FscSetCacheSize\n"
-           "(\n"
-           "   uCachePages         : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), uCachePages);
+    DbgFuncArgs(
+           "   uCachePages         : 0x%.08X\n",
+           uCachePages);
 
     EmuWarning("FscSetCacheSize is being ignored");
 
@@ -1756,12 +1732,10 @@ XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG  NTAPI xboxkrnl::HalGetInterruptVector
 {
 	
 
-    DbgPrintf("EmuKrnl (0x%X): HalGetInterruptVector\n"
-           "(\n"
+    DbgFuncArgs(
            "   InterruptLevel      : 0x%.08X\n"
-		   "   Irql                : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), InterruptLevel, Irql);
+		   "   Irql                : 0x%.08X\n",
+           InterruptLevel, Irql);
 
 	// I'm only adding this for Virtua Cop 3 (Chihiro). Xbox games need not emulate this.
 
@@ -1785,14 +1759,12 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
 {
 	
 
-    DbgPrintf("EmuKrnl (0x%X): HalReadSMBusValue\n"
-           "(\n"
+    DbgFuncArgs(
            "   Address             : 0x%.08X\n"
            "   Command             : 0x%.08X\n"
            "   ReadWord            : 0x%.08X\n"
-           "   DataValue           : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), Address, Command, ReadWord, DataValue);
+           "   DataValue           : 0x%.08X\n",
+           Address, Command, ReadWord, DataValue);
 
     if (ReadWord) {
         // Write UCHAR
@@ -1816,12 +1788,10 @@ XBSYSAPI EXPORTNUM(47) VOID xboxkrnl::HalRegisterShutdownNotification
 {
 	
 
-	DbgPrintf("EmuKrnl (0x%X): HalRegisterShutdownNotification\n"
-		"(\n"
+	DbgFuncArgs(
 		"   ShutdownRegistration : 0x%.08X\n"
-		"   Register             : 0x%.08X\n"
-		");\n",
-		GetCurrentThreadId(), ShutdownRegistration, Register);
+		"   Register             : 0x%.08X\n",
+		ShutdownRegistration, Register);
 
 	EmuWarning("HalRegisterShutdownNotification not implemented!\n");
 	
@@ -1841,11 +1811,9 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): HalReturnToFirmware\n"
-           "(\n"
-           "   Routine             : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), Routine);
+    DbgFuncArgs(
+           "   Routine             : 0x%.08X\n",
+           Routine);
 
 	// Prevent the dashboard from rebooting due to unimplemented crypto routines
 	if ((uint32_t)Routine != 4) {
@@ -1868,14 +1836,12 @@ XBSYSAPI EXPORTNUM(50) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMBusValue
 {
 	
 
-    DbgPrintf("EmuKrnl (0x%X): HalWriteSMBusValue\n"
-           "(\n"
+    DbgFuncArgs(
            "   Address             : 0x%.08X\n"
            "   Command             : 0x%.08X\n"
            "   WriteWord           : 0x%.08X\n"
-           "   DataValue           : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), Address, Command, WriteWord, DataValue);
+           "   DataValue           : 0x%.08X\n",
+           Address, Command, WriteWord, DataValue);
 
 	// TODO: Later.
 
@@ -1903,8 +1869,7 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): IoCreateFile\n"
-           "(\n"
+    DbgFuncArgs(
            "   FileHandle          : 0x%.08X\n"
            "   DesiredAccess       : 0x%.08X\n"
            "   ObjectAttributes    : 0x%.08X (%s)\n"
@@ -1914,9 +1879,8 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
            "   ShareAccess         : 0x%.08X\n"
            "   Disposition         : 0x%.08X\n"
            "   CreateOptions       : 0x%.08X\n"
-           "   Options             : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes->ObjectName->Buffer,
+           "   Options             : 0x%.08X\n",
+           FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes->ObjectName->Buffer,
            IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, Disposition, CreateOptions, Options);
 
     NTSTATUS ret = STATUS_SUCCESS;
@@ -1940,12 +1904,10 @@ XBSYSAPI EXPORTNUM(67) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateSymbolicLink
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): IoCreateSymbolicLink\n"
-           "(\n"
+    DbgFuncArgs(
            "   SymbolicLinkName    : 0x%.08X (%s)\n"
-           "   DeviceName          : 0x%.08X (%s)\n"
-           ");\n",
-           GetCurrentThreadId(), SymbolicLinkName->Buffer, SymbolicLinkName->Buffer,
+           "   DeviceName          : 0x%.08X (%s)\n",
+           SymbolicLinkName->Buffer, SymbolicLinkName->Buffer,
            DeviceName, DeviceName->Buffer);
 
 	NTSTATUS ret = CxbxCreateSymbolicLink(std::string(SymbolicLinkName->Buffer, SymbolicLinkName->Length), std::string(DeviceName->Buffer, DeviceName->Length));
@@ -1965,11 +1927,9 @@ XBSYSAPI EXPORTNUM(69) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDeleteSymbolicLink
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): IoDeleteSymbolicLink\n"
-           "(\n"
-           "   SymbolicLinkName    : 0x%.08X (%s)\n"
-           ");\n",
-           GetCurrentThreadId(), SymbolicLinkName, SymbolicLinkName->Buffer);
+    DbgFuncArgs(
+           "   SymbolicLinkName    : 0x%.08X (%s)\n",
+           SymbolicLinkName, SymbolicLinkName->Buffer);
 
 	EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByName(std::string(SymbolicLinkName->Buffer, SymbolicLinkName->Length));
     
@@ -1993,11 +1953,9 @@ XBSYSAPI EXPORTNUM(91) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDismountVolumeByName
 {
 		
 
-	DbgPrintf("EmuKrnl (0x%X): IoDismountVolumeByName\n"
-			"(\n"
-			"   VolumeName        : 0x%.08X (%s)\n"
-			");\n",
-			GetCurrentThreadId(), VolumeName, VolumeName->Buffer);
+	DbgFuncArgs(
+			"   VolumeName        : 0x%.08X (%s)\n",
+			VolumeName, VolumeName->Buffer);
 
 	// TODO: Anything?
 	NTSTATUS ret = STATUS_SUCCESS;
@@ -2017,11 +1975,9 @@ XBSYSAPI EXPORTNUM(95) VOID NTAPI xboxkrnl::KeBugCheck
 {
 		
 
-	DbgPrintf("EmuKrnl (0x%X): KeBugCheck\n"
-			"(\n"
-			"   BugCheckMode      : 0x%.08X\n"
-			");\n",
-			GetCurrentThreadId(), BugCheckMode);
+	DbgFuncArgs(
+			"   BugCheckMode      : 0x%.08X\n",
+			BugCheckMode);
 
 	// TODO: Investigate XapiFiberStartup maybe?
 
@@ -2038,11 +1994,9 @@ XBSYSAPI EXPORTNUM(98) xboxkrnl::LONG NTAPI xboxkrnl::KeConnectInterrupt
 {
 		
 
-	DbgPrintf("EmuKrnl (0x%X): KeConnectInterrupt\n"
-			"(\n"
-			"   InterruptObject   : 0x%.08X\n"
-			");\n",
-			GetCurrentThreadId(), InterruptObject);
+	DbgFuncArgs(
+			"   InterruptObject   : 0x%.08X\n",
+			InterruptObject);
 
 		
 
@@ -2061,13 +2015,11 @@ XBSYSAPI EXPORTNUM(99) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeDelayExecutionThread
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): KeDelayExecutionThread\n"
-           "(\n"
+    DbgFuncArgs(
            "   WaitMode            : 0x%.08X\n"
            "   Alertable           : 0x%.08X\n"
-           "   Interval            : 0x%.08X (%I64d)\n"
-           ");\n",
-           GetCurrentThreadId(), WaitMode, Alertable, Interval, Interval == 0 ? 0 : Interval->QuadPart);
+           "   Interval            : 0x%.08X (%I64d)\n",
+           WaitMode, Alertable, Interval, Interval == 0 ? 0 : Interval->QuadPart);
 
     NTSTATUS ret = NtDll::NtDelayExecution(Alertable, (NtDll::LARGE_INTEGER*)Interval);
 
@@ -2088,13 +2040,11 @@ XBSYSAPI EXPORTNUM(107) VOID NTAPI xboxkrnl::KeInitializeDpc
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): KeInitializeDpc\n"
-           "(\n"
+    DbgFuncArgs(
            "   Dpc                 : 0x%.08X\n"
            "   DeferredRoutine     : 0x%.08X\n"
-           "   DeferredContext     : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), Dpc, DeferredRoutine, DeferredContext);
+           "   DeferredContext     : 0x%.08X\n",
+           Dpc, DeferredRoutine, DeferredContext);
 
     // inialize Dpc field values
     Dpc->DeferredRoutine = DeferredRoutine;
@@ -2123,17 +2073,15 @@ XBSYSAPI EXPORTNUM(109) VOID NTAPI xboxkrnl::KeInitializeInterrupt
 {
 	
 
-    DbgPrintf("EmuKrnl (0x%X): KeInitializeInterrupt\n"
-           "(\n"
+    DbgFuncArgs(
            "   Interrupt           : 0x%.08X\n"
            "   ServiceRoutine      : 0x%.08X\n"
            "   ServiceContext      : 0x%.08X\n"
 		   "   Vector              : 0x%.08X\n"
 		   "   Irql                : 0x%.08X\n"
 		   "   InterruptMode       : 0x%.08X\n"
-		   "   ShareVector         : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), Interrupt, ServiceRoutine, ServiceContext, Vector, Irql, InterruptMode, ShareVector);
+		   "   ShareVector         : 0x%.08X\n",
+           Interrupt, ServiceRoutine, ServiceContext, Vector, Irql, InterruptMode, ShareVector);
 
     
 }
@@ -2149,12 +2097,10 @@ XBSYSAPI EXPORTNUM(113) VOID NTAPI xboxkrnl::KeInitializeTimerEx
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): KeInitializeTimerEx\n"
-           "(\n"
+    DbgFuncArgs(
            "   Timer               : 0x%.08X\n"
-           "   Type                : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), Timer, Type);
+           "   Type                : 0x%.08X\n",
+           Timer, Type);
 
     Timer->Header.Type               = Type + 8;  // 8 = TimerNotificationObject 
     Timer->Header.Inserted           = 0;
@@ -2181,7 +2127,7 @@ XBSYSAPI EXPORTNUM(126) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceCo
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): KeQueryPerformanceCounter();\n", GetCurrentThreadId());
+    DbgFuncArgs();
 
     ::LARGE_INTEGER Counter;
 
@@ -2199,7 +2145,7 @@ XBSYSAPI EXPORTNUM(127) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceFr
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): KeQueryPerformanceFrequency();\n", GetCurrentThreadId());
+    DbgFuncArgs();
 
     // Xbox Performance Counter Frequency := 337F98h
     ::LARGE_INTEGER Frequency;
@@ -2221,11 +2167,9 @@ XBSYSAPI EXPORTNUM(128) VOID NTAPI xboxkrnl::KeQuerySystemTime
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): KeQuerySystemTime\n"
-           "(\n"
-           "   CurrentTime         : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), CurrentTime);
+    DbgFuncArgs(
+           "   CurrentTime         : 0x%.08X\n",
+           CurrentTime);
 
     // TODO: optimize for WinXP if speed ever becomes important here
 
@@ -2247,7 +2191,7 @@ XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): KeRaiseIrqlToDpcLevel()\n", GetCurrentThreadId());
+    DbgFuncArgs();
 
 	// I really tried to avoid adding this...
 //	__asm int 3;
@@ -2270,13 +2214,11 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): KeSetTimer\n"
-           "(\n"
+    DbgFuncArgs(
            "   Timer               : 0x%.08X\n"
            "   DueTime             : 0x%.16X\n"
-           "   Dpc                 : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), Timer, DueTime.QuadPart, Dpc);
+           "   Dpc                 : 0x%.08X\n",
+           Timer, DueTime.QuadPart, Dpc);
 
     // Call KeSetTimerEx with a period of zero
     BOOLEAN bRet = KeSetTimerEx(Timer, DueTime, 0, Dpc);
@@ -2299,14 +2241,12 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): KeSetTimerEx\n"
-           "(\n"
+    DbgFuncArgs(
            "   Timer               : 0x%.08X\n"
            "   DueTime             : 0x%.16X\n"
            "   Period              : 0x%.08X\n"
-           "   Dpc                 : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), Timer, DueTime.QuadPart, Period, Dpc);
+           "   Dpc                 : 0x%.08X\n",
+           Timer, DueTime.QuadPart, Period, Dpc);
 
     BOOLEAN Inserted;
     LARGE_INTEGER Interval;
@@ -2390,8 +2330,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForMultipleObjects
 	IN PLARGE_INTEGER Timeout OPTIONAL,
 	IN VOID* WaitBlockArray
 ) {
-	DbgPrintf("EmuKrnl (0x%X): KeWaitForMultipleObjects\n"
-		"(\n"
+	DbgFuncArgs(
 		"   Count            : 0x%.08X\n"
 		"   Object           : 0x%.08X\n"
 		"   WaitType         : 0x%.08X\n"
@@ -2399,9 +2338,8 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForMultipleObjects
 		"   WaitMode         : 0x%.08X\n"
 		"   Alertable        : 0x%.08X\n"
 		"   Timeout          : 0x%.08X\n"
-		"   WaitBlockArray   : 0x%.08X\n"
-		");\n",
-		GetCurrentThreadId(), Count, Object, WaitType, WaitReason, WaitMode, Alertable, Timeout, WaitBlockArray);
+		"   WaitBlockArray   : 0x%.08X\n",
+		Count, Object, WaitType, WaitReason, WaitMode, Alertable, Timeout, WaitBlockArray);
 
 	EmuWarning("EmuKrnl: Redirecting KeWaitForMultipleObjects to NtWaitForMultipleObjectsEx");
 	return NtWaitForMultipleObjectsEx(Count, Object, WaitType, WaitMode, Alertable, Timeout);
@@ -2418,15 +2356,13 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForSingleObject
 	IN BOOLEAN Alertable,
 	IN PLARGE_INTEGER Timeout OPTIONAL
 ) {
-	DbgPrintf("EmuKrnl (0x%X): KeWaitForSingleObject\n"
-		"(\n"
+	DbgFuncArgs(
 		"   Object           : 0x%.08X\n"
 		"   WaitReason       : 0x%.08X\n"
 		"   WaitMode         : 0x%.08X\n"
 		"   Alertable        : 0x%.08X\n"
-		"   Timeout          : 0x%.08X\n"
-		");\n",
-		GetCurrentThreadId(), Object, WaitReason, WaitMode, Alertable, Timeout);
+		"   Timeout          : 0x%.08X\n",
+		Object, WaitReason, WaitMode, Alertable, Timeout);
 
 	EmuWarning("EmuKrnl: Redirecting KeWaitForSingleObject to NtWaitForSingleObjectEx");
 	return NtWaitForSingleObjectEx(Object, WaitMode, Alertable, Timeout);
@@ -2443,11 +2379,9 @@ XBSYSAPI EXPORTNUM(160) xboxkrnl::UCHAR* NTAPI xboxkrnl::KfRaiseIrql
 	// HACK: Not thread safe!
 	static xboxkrnl::UCHAR previousIrqlValue = 0;
 
-    DbgPrintf("EmuKrnl (0x%X): KfRaiseIrql\n"
-           "(\n"
-           "   NewIrql            : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), NewIrql);
+    DbgFuncArgs(
+           "   NewIrql            : 0x%.08X\n",
+           NewIrql);
 
     
 	// Return addr where old irq level should be stored
@@ -2464,11 +2398,9 @@ XBSYSAPI EXPORTNUM(161) VOID NTAPI xboxkrnl::KfLowerIrql
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): KfLowerIrql\n"
-           "(\n"
-           "   NewIrql            : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), NewIrql);
+    DbgFuncArgs(
+           "   NewIrql            : 0x%.08X\n",
+           NewIrql);
 
     
 
@@ -2489,11 +2421,9 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): MmAllocateContiguousMemory\n"
-           "(\n"
-           "   NumberOfBytes            : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), NumberOfBytes);
+    DbgFuncArgs(
+           "   NumberOfBytes            : 0x%.08X\n",
+           NumberOfBytes);
 
     //
     // NOTE: Kludgey (but necessary) solution:
@@ -2536,15 +2466,13 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): MmAllocateContiguousMemoryEx\n"
-           "(\n"
+    DbgFuncArgs(
            "   NumberOfBytes            : 0x%.08X\n"
            "   LowestAcceptableAddress  : 0x%.08X\n"
            "   HighestAcceptableAddress : 0x%.08X\n"
            "   Alignment                : 0x%.08X\n"
-           "   ProtectionType           : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress,
+           "   ProtectionType           : 0x%.08X\n",
+           NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress,
            Alignment, ProtectionType);
 
     //
@@ -2587,12 +2515,10 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): MmAllocateSystemMemory\n"
-           "(\n"
+    DbgFuncArgs(
            "   NumberOfBytes            : 0x%.08X\n"
-           "   Protect                  : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), NumberOfBytes, Protect);
+           "   Protect                  : 0x%.08X\n",
+           NumberOfBytes, Protect);
 
     // TODO: should this be aligned?
     PVOID pRet = CxbxMalloc(NumberOfBytes);
@@ -2615,12 +2541,10 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): MmCreateKernelStack\n"
-           "(\n"
+    DbgFuncArgs(
            "   NumberOfBytes            : 0x%.08X\n"
-           "   DebuggerThread           : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), NumberOfBytes, DebuggerThread);
+           "   DebuggerThread           : 0x%.08X\n",
+           NumberOfBytes, DebuggerThread);
 	
 	NtDll::PVOID pRet = NULL;
 
@@ -2662,12 +2586,10 @@ XBSYSAPI EXPORTNUM(170) VOID NTAPI xboxkrnl::MmDeleteKernelStack
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): MmDeleteKernelStack\n"
-           "(\n"
+    DbgFuncArgs(
            "   EndAddress               : 0x%.08X\n"
-           "   BaseAddress              : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), EndAddress, BaseAddress);
+           "   BaseAddress              : 0x%.08X\n",
+           EndAddress, BaseAddress);
 
    /* __asm int 3;
 	CxbxKrnlCleanup( "MmDeleteKernelStack unimplemented (check call stack)" );*/
@@ -2688,11 +2610,9 @@ XBSYSAPI EXPORTNUM(171) VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): MmFreeContiguousMemory\n"
-           "(\n"
-           "   BaseAddress              : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), BaseAddress);
+    DbgFuncArgs(
+           "   BaseAddress              : 0x%.08X\n",
+           BaseAddress);
 
     PVOID OrigBaseAddress = BaseAddress;
 
@@ -2728,12 +2648,10 @@ XBSYSAPI EXPORTNUM(172) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmFreeSystemMemory
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): MmFreeSystemMemory\n"
-           "(\n"
+    DbgFuncArgs(
            "   BaseAddress              : 0x%.08X\n"
-           "   NumberOfBytes            : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), BaseAddress, NumberOfBytes);
+           "   NumberOfBytes            : 0x%.08X\n",
+           BaseAddress, NumberOfBytes);
 
     CxbxFree(BaseAddress);
 
@@ -2752,13 +2670,11 @@ XBSYSAPI EXPORTNUM(175) void NTAPI xboxkrnl::MmLockUnlockBufferPages
 	IN ULONG			Protect
 )
 {
-	DbgPrintf("EmuKrnl (0x%X): MmLockUnlockBufferPages\n"
-		"(\n"
+	DbgFuncArgs(
 		"   BaseAddress          : 0x%.08X\n"
 		"   NumberOfBytes        : 0x%.08X\n"
-		"   Protect				 : 0x%.08X\n"
-		");\n",
-		GetCurrentThreadId(), BaseAddress, NumberOfBytes, Protect);
+		"   Protect				 : 0x%.08X\n",
+		BaseAddress, NumberOfBytes, Protect);
 
 
 	EmuWarning("EmuKrnl: MmLockUnlockBufferPages ignored");
@@ -2776,13 +2692,11 @@ XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): MmMapIoSpace\n"
-           "(\n"
+    DbgFuncArgs(
            "   PhysicalAddress          : 0x%.08X\n"
            "   NumberOfBytes            : 0x%.08X\n"
-           "   ProtectionType           : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), PhysicalAddress, NumberOfBytes, ProtectionType);
+           "   ProtectionType           : 0x%.08X\n",
+           PhysicalAddress, NumberOfBytes, ProtectionType);
 
     // TODO: should this be aligned?
     PVOID pRet = CxbxMalloc(NumberOfBytes);
@@ -2804,13 +2718,11 @@ XBSYSAPI EXPORTNUM(178) VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): MmPersistContiguousMemory\n"
-           "(\n"
+    DbgFuncArgs(
            "   BaseAddress              : 0x%.08X\n"
            "   NumberOfBytes            : 0x%.08X\n"
-           "   Persist                  : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), BaseAddress, NumberOfBytes, Persist);
+           "   Persist                  : 0x%.08X\n",
+           BaseAddress, NumberOfBytes, Persist);
 
     // TODO: Actually set this up to be remember across a "reboot"
     EmuWarning("MmPersistContiguousMemory is being ignored\n");
@@ -2828,11 +2740,9 @@ XBSYSAPI EXPORTNUM(180) XTL::ULONG NTAPI xboxkrnl::MmQueryAllocationSize
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): MmQueryAllocationSize\n"
-           "(\n"
-           "   BaseAddress              : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), BaseAddress);
+    DbgFuncArgs(
+           "   BaseAddress              : 0x%.08X\n",
+           BaseAddress);
 
     ULONG uiSize = EmuCheckAllocationSize(BaseAddress, false);
 
@@ -2851,11 +2761,9 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): MmQueryStatistics\n"
-           "(\n"
+    DbgFuncArgs(
            "   MemoryStatistics         : 0x%.08X (MemoryStatistics->Length = 0x%.08X)\n"
-           ");\n",
-           GetCurrentThreadId(), MemoryStatistics, MemoryStatistics->Length);
+           MemoryStatistics, MemoryStatistics->Length);
 
     MEMORYSTATUS MemoryStatus;
     SYSTEM_INFO SysInfo;
@@ -2917,13 +2825,11 @@ XBSYSAPI EXPORTNUM(182) VOID NTAPI xboxkrnl::MmSetAddressProtect
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): MmSetAddressProtect\n"
-           "(\n"
+    DbgFuncArgs(
            "   BaseAddress              : 0x%.08X\n"
            "   NumberOfBytes            : 0x%.08X\n"
-           "   NewProtect               : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), BaseAddress, NumberOfBytes, NewProtect);
+           "   NewProtect               : 0x%.08X\n",
+           BaseAddress, NumberOfBytes, NewProtect);
 
     DWORD dwOldProtect;
 
@@ -2948,12 +2854,10 @@ XBSYSAPI EXPORTNUM(183) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmUnmapIoSpace
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): MmUnmapIoSpace\n"
-           "(\n"
+    DbgFuncArgs(
            "   BaseAddress              : 0x%.08X\n"
-           "   NumberOfBytes            : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), BaseAddress, NumberOfBytes);
+           "   NumberOfBytes            : 0x%.08X\n",
+           BaseAddress, NumberOfBytes);
 
     CxbxFree(BaseAddress);
 
@@ -2976,15 +2880,13 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtAllocateVirtualMemory\n"
-           "(\n"
+    DbgFuncArgs(
            "   BaseAddress         : 0x%.08X (0x%.08X)\n"
            "   ZeroBits            : 0x%.08X\n"
            "   AllocationSize      : 0x%.08X (0x%.08X)\n"
            "   AllocationType      : 0x%.08X\n"
-           "   Protect             : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), BaseAddress, *BaseAddress, ZeroBits, AllocationSize, *AllocationSize, AllocationType, Protect);
+           "   Protect             : 0x%.08X\n",
+           BaseAddress, *BaseAddress, ZeroBits, AllocationSize, *AllocationSize, AllocationType, Protect);
 	
 	// TODO: The flag known as MEM_NOZERO (which appears to be exclusive to Xbox) has the exact
 	// same value as MEM_ROTATE which causes problems for Windows XP, but not Vista.  Removing
@@ -3016,11 +2918,9 @@ XBSYSAPI EXPORTNUM(186) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClearEvent
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtClearEvent\n"
-           "(\n"
-           "   EventHandle         : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), EventHandle);
+    DbgFuncArgs(
+           "   EventHandle         : 0x%.08X\n",
+           EventHandle);
 
     NTSTATUS ret = NtDll::NtClearEvent(EventHandle);
 
@@ -3042,11 +2942,9 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtClose\n"
-           "(\n"
-           "   Handle              : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), Handle);
+    DbgFuncArgs(
+           "   Handle              : 0x%.08X\n",
+           Handle);
 
     NTSTATUS ret = STATUS_SUCCESS;
 
@@ -3078,12 +2976,10 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateDirectoryObje
 {
 	
 
-	DbgPrintf("EmuKrnl (0x%X): NtCreateDirectoryObject\n"
-		"(\n"
+	DbgFuncArgs(
 		"   DirectoryHandle         : 0x%.08X\n"
-		"   ObjectAttributes    : 0x%.08X (\"%s\")\n"
-		");\n",
-		GetCurrentThreadId(), DirectoryHandle, ObjectAttributes, ObjectAttributes);
+		"   ObjectAttributes    : 0x%.08X (\"%s\")\n",
+		DirectoryHandle, ObjectAttributes, ObjectAttributes);
 
 	NTSTATUS ret = 0;
 
@@ -3123,14 +3019,12 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtCreateEvent\n"
-           "(\n"
+    DbgFuncArgs(
            "   EventHandle         : 0x%.08X\n"
            "   ObjectAttributes    : 0x%.08X\n"
            "   EventType           : 0x%.08X\n"
-           "   InitialState        : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), EventHandle, ObjectAttributes, EventType, InitialState);
+           "   InitialState        : 0x%.08X\n",
+           EventHandle, ObjectAttributes, EventType, InitialState);
 
 	NativeObjectAttributes nativeObjectAttributes;
 	ACCESS_MASK DesiredAccess = 0;
@@ -3176,8 +3070,7 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtCreateFile\n"
-           "(\n"
+    DbgFuncArgs(
            "   FileHandle          : 0x%.08X\n"
            "   DesiredAccess       : 0x%.08X\n"
            "   ObjectAttributes    : 0x%.08X (\"%s\")\n"
@@ -3186,9 +3079,8 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
            "   FileAttributes      : 0x%.08X\n"
            "   ShareAccess         : 0x%.08X\n"
            "   CreateDisposition   : 0x%.08X\n"
-           "   CreateOptions       : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes->ObjectName->Buffer,
+           "   CreateOptions       : 0x%.08X\n",
+           FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes->ObjectName->Buffer,
            IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions);
 
 	NativeObjectAttributes nativeObjectAttributes;
@@ -3229,13 +3121,11 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 
     char *szBuffer = (ObjectAttributes != 0) ? ObjectAttributes->ObjectName->Buffer : 0;
 
-    DbgPrintf("EmuKrnl (0x%X): NtCreateMutant\n"
-           "(\n"
+    DbgFuncArgs(
            "   MutantHandle        : 0x%.08X\n"
            "   ObjectAttributes    : 0x%.08X (\"%s\")\n"
-           "   InitialOwner        : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), MutantHandle, ObjectAttributes, szBuffer, InitialOwner);
+           "   InitialOwner        : 0x%.08X\n",
+           MutantHandle, ObjectAttributes, szBuffer, InitialOwner);
 
     wchar_t wszObjectName[160];
 
@@ -3281,14 +3171,12 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtCreateSemaphore\n"
-           "(\n"
+    DbgFuncArgs(
            "   SemaphoreHandle     : 0x%.08X\n"
            "   ObjectAttributes    : 0x%.08X\n"
            "   InitialCount        : 0x%.08X\n"
-           "   MaximumCount        : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), SemaphoreHandle, ObjectAttributes,
+           "   MaximumCount        : 0x%.08X\n",
+           SemaphoreHandle, ObjectAttributes,
            InitialCount, MaximumCount);
 
     // redirect to Win2k/XP
@@ -3324,8 +3212,7 @@ XBSYSAPI EXPORTNUM(196) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeviceIoControlFile
 	IN ULONG OutputBufferLength
 )
 {
-	DbgPrintf("EmuKrnl (0x%X): NtDeviceIoControlFile\n"
-		"(\n"
+	DbgFuncArgs(
 		"   FileHandle          : 0x%.08X\n"
 		"   Event               : 0x%.08X\n"
 		"   ApcRoutine          : 0x%.08X\n"
@@ -3335,9 +3222,8 @@ XBSYSAPI EXPORTNUM(196) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeviceIoControlFile
 		"   InputBuffer         : 0x%.08X\n"
 		"   InputBufferLength   : 0x%.08X\n"
 		"   OutputBuffer        : 0x%.08X\n"
-		"   OutputBufferLength  : 0x%.08X\n"
-		");\n",
-		GetCurrentThreadId(), FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, IoControlCode, InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength);
+		"   OutputBufferLength  : 0x%.08X\n",
+		FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, IoControlCode, InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength);
 
 	switch (IoControlCode)
 	{
@@ -3373,13 +3259,11 @@ XBSYSAPI EXPORTNUM(197) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtDuplicateObject\n"
-           "(\n"
+    DbgFuncArgs(
            "   SourceHandle        : 0x%.08X\n"
            "   TargetHandle        : 0x%.08X\n"
-           "   Options             : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), SourceHandle, TargetHandle, Options);
+           "   Options             : 0x%.08X\n",
+           SourceHandle, TargetHandle, Options);
 
 	NTSTATUS ret;
 
@@ -3419,12 +3303,10 @@ XBSYSAPI EXPORTNUM(198) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFlushBuffersFile
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtFlushBuffersFile\n"
-           "(\n"
+    DbgFuncArgs(
            "   FileHandle          : 0x%.08X\n"
-           "   IoStatusBlock       : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), FileHandle, IoStatusBlock);
+           "   IoStatusBlock       : 0x%.08X\n",
+           FileHandle, IoStatusBlock);
 
     NTSTATUS ret = NtDll::NtFlushBuffersFile(FileHandle, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock);
 
@@ -3445,13 +3327,11 @@ XBSYSAPI EXPORTNUM(199) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtFreeVirtualMemory\n"
-           "(\n"
+    DbgFuncArgs(
            "   BaseAddress         : 0x%.08X\n"
            "   FreeSize            : 0x%.08X\n"
-           "   FreeType            : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), BaseAddress, FreeSize, FreeType);
+           "   FreeType            : 0x%.08X\n",
+           BaseAddress, FreeSize, FreeType);
 
     NTSTATUS ret = NtDll::NtFreeVirtualMemory(GetCurrentProcess(), BaseAddress, FreeSize, FreeType);
 
@@ -3473,25 +3353,17 @@ XBSYSAPI EXPORTNUM(202) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenFile
     IN  ULONG               OpenOptions
 )
 {
-    // debug trace
     /* Redundant
-    #ifdef _DEBUG_TRACE
-    {
-        
-        DbgPrintf("EmuKrnl (0x%X): NtOpenFile\n"
-               "(\n"
+	    DbgFuncArgs(
                "   FileHandle          : 0x%.08X\n"
                "   DesiredAccess       : 0x%.08X\n"
                "   ObjectAttributes    : 0x%.08X (\"%s\")\n"
                "   IoStatusBlock       : 0x%.08X\n"
                "   ShareAccess         : 0x%.08X\n"
-               "   CreateOptions       : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes->ObjectName->Buffer,
+               "   CreateOptions       : 0x%.08X\n",
+               FileHandle, DesiredAccess, ObjectAttributes, ObjectAttributes->ObjectName->Buffer,
                IoStatusBlock, ShareAccess, OpenOptions);
         
-    }
-    #endif
     //*/
 
     return NtCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, NULL, 0, ShareAccess, FILE_OPEN, OpenOptions);
@@ -3508,12 +3380,10 @@ XBSYSAPI EXPORTNUM(203) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenSymbolicLinkObj
 {
 	
 
-	DbgPrintf("EmuKrnl (0x%X): NtOpenSymbolicLinkObject\n"
-		"(\n"
+    DbgFuncArgs(
 		"   LinkHandle         : 0x%.08X\n"
-		"   ObjectAttributes   : 0x%.08X\n"
-		");\n",
-		GetCurrentThreadId(), LinkHandle, ObjectAttributes);
+		"   ObjectAttributes   : 0x%.08X\n",
+		LinkHandle, ObjectAttributes);
 
 	NTSTATUS ret = 0;
 	EmuNtSymbolicLinkObject* symbolicLinkObject = NULL;
@@ -3548,14 +3418,12 @@ XBSYSAPI EXPORTNUM(205) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtProtectVirtualMemor
 	OUT PULONG OldProtect
 )
 {
-	DbgPrintf("EmuKrnl (0x%X): NtProtectVirtualMemory\n"
-		"(\n"
+    DbgFuncArgs(
 		"   BaseAddress         : 0x%.08X\n"
 		"   RegionSize           : 0x%.08X\n"
 		"   NewProtect    : 0x%.08X\n"
-		"   OldProtect       : 0x%.08X\n"
-		");\n",
-		GetCurrentThreadId(), BaseAddress, RegionSize, NewProtect,
+		"   OldProtect       : 0x%.08X\n",
+		BaseAddress, RegionSize, NewProtect,
 		OldProtect);
 
 	EmuWarning("NtProtectVirtualMemory Ignored!");
@@ -3577,15 +3445,13 @@ XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
 {
 		
 
-	DbgPrintf("EmuKrnl (0x%X): NtQueueApcThread\n"
-           "(\n"
+    DbgFuncArgs(
            "   ThreadHandle         : 0x%.08X\n"
            "   ApcRoutine           : 0x%.08X\n"
            "   ApcRoutineContext    : 0x%.08X\n"
            "   ApcStatusBlock       : 0x%.08X\n"
-           "   ApcReserved          : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), ThreadHandle, ApcRoutine, ApcRoutineContext,
+           "   ApcReserved          : 0x%.08X\n",
+           ThreadHandle, ApcRoutine, ApcRoutineContext,
 		   ApcStatusBlock, ApcReserved);
 
 	NTSTATUS ret;
@@ -3621,8 +3487,7 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtQueryDirectoryFile\n"
-           "(\n"
+    DbgFuncArgs(
            "   FileHandle           : 0x%.08X\n"
            "   Event                : 0x%.08X\n"
            "   ApcRoutine           : 0x%.08X\n"
@@ -3632,9 +3497,8 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
            "   Length               : 0x%.08X\n"
            "   FileInformationClass : 0x%.08X\n"
            "   FileMask             : 0x%.08X (%s)\n"
-           "   RestartScan          : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock,
+           "   RestartScan          : 0x%.08X\n",
+           FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock,
            FileInformation, Length, FileInformationClass, FileMask,
            (FileMask != 0) ? FileMask->Buffer : "", RestartScan);
 
@@ -3705,12 +3569,10 @@ XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributes
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtQueryFullAttributesFile\n"
-           "(\n"
+    DbgFuncArgs(
            "   ObjectAttributes    : 0x%.08X (%s)\n"
-           "   Attributes          : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), ObjectAttributes, ObjectAttributes->ObjectName->Buffer, Attributes);
+           "   Attributes          : 0x%.08X\n",
+           ObjectAttributes, ObjectAttributes->ObjectName->Buffer, Attributes);
 
 //	__asm int 3;
 	NativeObjectAttributes nativeObjectAttributes;
@@ -3741,15 +3603,13 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtQueryInformationFile\n"
-           "(\n"
+    DbgFuncArgs(
            "   FileHandle          : 0x%.08X\n"
            "   IoStatusBlock       : 0x%.08X\n"
            "   FileInformation     : 0x%.08X\n"
            "   Length              : 0x%.08X\n"
-           "   FileInformationClass: 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation,
+           "   FileInformationClass: 0x%.08X\n",
+           FileHandle, IoStatusBlock, FileInformation,
            Length, FileInfo);
 
 	// TODO: IIRC, this function is depreciated.  Maybe we should just use
@@ -3807,12 +3667,11 @@ XBSYSAPI EXPORTNUM(215) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySymbolicLinkOb
 {
 	
 
-	DbgPrintf("EmuKrnl (0x%X): NtQuerySymbolicLinkObject\n"
-		"(\n"
+    DbgFuncArgs(
 		"   LinkHandle         : 0x%.08X\n"
 		"   LinkTarget         : 0x%.08X\n"
-		"   ReturnedLength     : 0x%.08X\n"
-		");\n", GetCurrentThreadId(), LinkHandle, LinkTarget, ReturnedLength);
+		"   ReturnedLength     : 0x%.08X\n",
+		LinkHandle, LinkTarget, ReturnedLength);
 
 	NTSTATUS result = 0;
 	EmuNtSymbolicLinkObject* symbolicLinkObject = NULL;
@@ -3859,12 +3718,10 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtQueryVirtualMemory\n"
-           "(\n"
+    DbgFuncArgs(
            "   BaseAddress         : 0x%.08X\n"
-           "   Buffer              : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), BaseAddress, Buffer);
+           "   Buffer              : 0x%.08X\n",
+           BaseAddress, Buffer);
 
     NTSTATUS ret = NtDll::NtQueryVirtualMemory
     (
@@ -3919,15 +3776,13 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtQueryVolumeInformationFile\n"
-           "(\n"
+    DbgFuncArgs(
            "   FileHandle          : 0x%.08X\n"
            "   IoStatusBlock       : 0x%.08X\n"
            "   FileInformation     : 0x%.08X\n"
            "   Length              : 0x%.08X\n"
-           "   FileInformationClass: 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation,
+           "   FileInformationClass: 0x%.08X\n",
+           FileHandle, IoStatusBlock, FileInformation,
            Length, FileInformationClass);
 
     NTSTATUS ret = NtDll::NtQueryVolumeInformationFile
@@ -3979,8 +3834,7 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtReadFile\n"
-           "(\n"
+    DbgFuncArgs(
            "   FileHandle          : 0x%.08X\n"
            "   Event               : 0x%.08X\n"
            "   ApcRoutine          : 0x%.08X\n"
@@ -3988,9 +3842,8 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
            "   IoStatusBlock       : 0x%.08X\n"
            "   Buffer              : 0x%.08X\n"
            "   Length              : 0x%.08X\n"
-           "   ByteOffset          : 0x%.08X (0x%.08X)\n"
-           ");\n",
-           GetCurrentThreadId(), FileHandle, Event, ApcRoutine,
+           "   ByteOffset          : 0x%.08X (0x%.08X)\n",
+           FileHandle, Event, ApcRoutine,
            ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, ByteOffset == 0 ? 0 : ByteOffset->QuadPart);
 
 // Halo...
@@ -4018,12 +3871,10 @@ XBSYSAPI EXPORTNUM(221) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseMutant
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtReleaseMutant\n"
-           "(\n"
+    DbgFuncArgs(
            "   MutantHandle         : 0x%.08X\n"
-           "   PreviousCount        : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), MutantHandle, PreviousCount);
+           "   PreviousCount        : 0x%.08X\n",
+           MutantHandle, PreviousCount);
 
     // redirect to NtCreateMutant
     NTSTATUS ret = NtDll::NtReleaseMutant(MutantHandle, PreviousCount);
@@ -4048,13 +3899,11 @@ XBSYSAPI EXPORTNUM(222) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseSemaphore
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtReleaseSemaphore\n"
-           "(\n"
+    DbgFuncArgs(
            "   SemaphoreHandle      : 0x%.08X\n"
            "   ReleaseCount         : 0x%.08X\n"
-           "   PreviousCount        : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), SemaphoreHandle, ReleaseCount, PreviousCount);
+           "   PreviousCount        : 0x%.08X\n",
+           SemaphoreHandle, ReleaseCount, PreviousCount);
 
     NTSTATUS ret = NtDll::NtReleaseSemaphore(SemaphoreHandle, ReleaseCount, PreviousCount);
 
@@ -4077,12 +3926,10 @@ XBSYSAPI EXPORTNUM(224) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtResumeThread
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtResumeThread\n"
-           "(\n"
+    DbgFuncArgs(
            "   ThreadHandle         : 0x%.08X\n"
-           "   PreviousSuspendCount : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), ThreadHandle, PreviousSuspendCount);
+           "   PreviousSuspendCount : 0x%.08X\n",
+           ThreadHandle, PreviousSuspendCount);
 
     NTSTATUS ret = NtDll::NtResumeThread(ThreadHandle, PreviousSuspendCount);
 
@@ -4104,12 +3951,10 @@ XBSYSAPI EXPORTNUM(225) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetEvent
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtSetEvent\n"
-           "(\n"
+    DbgFuncArgs(
            "   EventHandle          : 0x%.08X\n"
-           "   PreviousState        : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), EventHandle, PreviousState);
+           "   PreviousState        : 0x%.08X\n",
+           EventHandle, PreviousState);
 
     NTSTATUS ret = NtDll::NtSetEvent(EventHandle, PreviousState);
 
@@ -4135,15 +3980,13 @@ XBSYSAPI EXPORTNUM(226) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtSetInformationFile\n"
-           "(\n"
+    DbgFuncArgs(
            "   FileHandle           : 0x%.08X\n"
            "   IoStatusBlock        : 0x%.08X\n"
            "   FileInformation      : 0x%.08X\n"
            "   Length               : 0x%.08X\n"
-           "   FileInformationClass : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), FileHandle, IoStatusBlock, FileInformation,
+           "   FileInformationClass : 0x%.08X\n",
+           FileHandle, IoStatusBlock, FileInformation,
            Length, FileInformationClass);
 
     NTSTATUS ret = NtDll::NtSetInformationFile(FileHandle, IoStatusBlock, FileInformation, Length, FileInformationClass);
@@ -4164,12 +4007,10 @@ XBSYSAPI EXPORTNUM(228) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetSystemTime
 {
 	
 
-    DbgPrintf("EmuKrnl (0x%X): NtSetSystemTime\n"
-           "(\n"
+    DbgFuncArgs(
            "   SystemTime           : 0x%.08X\n"
-           "   PreviousTime         : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), SystemTime, PreviousTime);
+           "   PreviousTime         : 0x%.08X\n",
+           SystemTime, PreviousTime);
 
 	// Maybe it's not such a good idea to allow Cxbx to change your time 
 	// clock.  Might need admin privileges to do this.... dunno.
@@ -4192,12 +4033,10 @@ XBSYSAPI EXPORTNUM(231) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSuspendThread
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtSuspendThread\n"
-           "(\n"
+    DbgFuncArgs(
            "   ThreadHandle         : 0x%.08X\n"
-           "   PreviousSuspendCount : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), ThreadHandle, PreviousSuspendCount);
+           "   PreviousSuspendCount : 0x%.08X\n",
+           ThreadHandle, PreviousSuspendCount);
 
     NTSTATUS ret = NtDll::NtSuspendThread(ThreadHandle, PreviousSuspendCount);
 
@@ -4216,15 +4055,11 @@ XBSYSAPI EXPORTNUM(232) VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
     ULONG            Reserved
 )
 {
-    // Note: This function is called within Win2k/XP context, so no EmuSwapFS here
-
-    DbgPrintf("EmuKrnl (0x%X): NtUserIoApcDispatcher\n"
-           "(\n"
+    DbgFuncArgs(
            "   ApcContext           : 0x%.08X\n"
            "   IoStatusBlock        : 0x%.08X\n"
-           "   Reserved             : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), ApcContext, IoStatusBlock, Reserved);
+           "   Reserved             : 0x%.08X\n",
+           ApcContext, IoStatusBlock, Reserved);
 
     DbgPrintf("IoStatusBlock->Pointer     : 0x%.08X\n"
               "IoStatusBlock->Information : 0x%.08X\n", IoStatusBlock->u1.Pointer, IoStatusBlock->Information);
@@ -4305,14 +4140,12 @@ XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtWaitForSingleObjectEx\n"
-           "(\n"
+    DbgFuncArgs(
            "   Handle               : 0x%.08X\n"
            "   WaitMode             : 0x%.08X\n"
            "   Alertable            : 0x%.08X\n"
-           "   Timeout              : 0x%.08X (%d)\n"
-           ");\n",
-           GetCurrentThreadId(), Handle, WaitMode, Alertable, Timeout, Timeout == 0 ? 0 : Timeout->QuadPart);
+           "   Timeout              : 0x%.08X (%d)\n",
+           Handle, WaitMode, Alertable, Timeout, Timeout == 0 ? 0 : Timeout->QuadPart);
 
 	NTSTATUS ret;
 
@@ -4350,16 +4183,14 @@ XBSYSAPI EXPORTNUM(235) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForMultipleObje
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtWaitForMultipleObjectsEx\n"
-           "(\n"
+    DbgFuncArgs(
            "   Count                : 0x%.08X\n"
            "   Handles              : 0x%.08X\n"
            "   WaitType             : 0x%.08X\n"
            "   WaitMode             : 0x%.08X\n"
            "   Alertable            : 0x%.08X\n"
-           "   Timeout              : 0x%.08X (%d)\n"
-           ");\n",
-           GetCurrentThreadId(), Count, Handles, WaitType, WaitMode, Alertable,
+           "   Timeout              : 0x%.08X (%d)\n",
+           Count, Handles, WaitType, WaitMode, Alertable,
            Timeout, Timeout == 0 ? 0 : Timeout->QuadPart);
 
 	// TODO: Process EmuHandle
@@ -4387,8 +4218,7 @@ XBSYSAPI EXPORTNUM(236) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFile
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): NtWriteFile\n"
-           "(\n"
+    DbgFuncArgs(
            "   FileHandle          : 0x%.08X\n"
            "   Event               : 0x%.08X\n"
            "   ApcRoutine          : 0x%.08X\n"
@@ -4396,9 +4226,8 @@ XBSYSAPI EXPORTNUM(236) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFile
            "   IoStatusBlock       : 0x%.08X\n"
            "   Buffer              : 0x%.08X\n"
            "   Length              : 0x%.08X\n"
-           "   ByteOffset          : 0x%.08X (0x%.08X)\n"
-           ");\n",
-           GetCurrentThreadId(), FileHandle, Event, ApcRoutine,
+           "   ByteOffset          : 0x%.08X (0x%.08X)\n",
+           FileHandle, Event, ApcRoutine,
            ApcContext, IoStatusBlock, Buffer, Length, ByteOffset, ByteOffset == 0 ? 0 : ByteOffset->QuadPart);
 
 // Halo..
@@ -4423,7 +4252,7 @@ XBSYSAPI EXPORTNUM(238) VOID NTAPI xboxkrnl::NtYieldExecution()
     
 
     // NOTE: this eats up the debug log far too quickly
-    //DbgPrintf("EmuKrnl (0x%X): NtYieldExecution();\n", GetCurrentThreadId());
+    //DbgFuncArgs();
 
     NtDll::NtYieldExecution();
 
@@ -4451,8 +4280,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): PsCreateSystemThreadEx\n"
-           "(\n"
+    DbgFuncArgs(
            "   ThreadHandle        : 0x%.08X\n"
            "   ThreadExtraSize     : 0x%.08X\n"
            "   KernelStackSize     : 0x%.08X\n"
@@ -4462,9 +4290,8 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
            "   StartContext2       : 0x%.08X\n"
            "   CreateSuspended     : 0x%.08X\n"
            "   DebugStack          : 0x%.08X\n"
-           "   StartRoutine        : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), ThreadHandle, ThreadExtraSize, KernelStackSize, TlsDataSize, ThreadId,
+           "   StartRoutine        : 0x%.08X\n",
+           ThreadHandle, ThreadExtraSize, KernelStackSize, TlsDataSize, ThreadId,
            StartContext1, StartContext2, CreateSuspended, DebugStack, StartRoutine);
 
 	static bool bFirstTime = false;
@@ -4518,11 +4345,9 @@ XBSYSAPI EXPORTNUM(258) VOID NTAPI xboxkrnl::PsTerminateSystemThread(IN NTSTATUS
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): PsTerminateSystemThread\n"
-           "(\n"
-           "   ExitStatus          : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), ExitStatus);
+    DbgFuncArgs(
+           "   ExitStatus          : 0x%.08X\n",
+           ExitStatus);
 
     // call thread notification routine(s)
     if(g_iThreadNotificationCount != 0)
@@ -4567,13 +4392,11 @@ XBSYSAPI EXPORTNUM(260) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAnsiStringToUnicod
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): RtlAnsiStringToUnicodeString\n"
-           "(\n"
+    DbgFuncArgs(
            "   DestinationString         : 0x%.08X\n"
            "   SourceString              : 0x%.08X\n"
-           "   AllocateDestinationString : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), DestinationString, SourceString, AllocateDestinationString);
+           "   AllocateDestinationString : 0x%.08X\n",
+           DestinationString, SourceString, AllocateDestinationString);
 
     NTSTATUS ret = NtDll::RtlAnsiStringToUnicodeString((NtDll::UNICODE_STRING*)DestinationString, (NtDll::STRING*)SourceString, AllocateDestinationString);
 
@@ -4594,14 +4417,12 @@ XBSYSAPI EXPORTNUM(264) VOID NTAPI xboxkrnl::RtlAssert
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): RtlAssert\n"
-           "(\n"
+    DbgFuncArgs(
            "   FailedAssertion           : 0x%.08X (\"%s\")\n"
            "   FileName                  : 0x%.08X (\"%s\")\n"
            "   LineNumber                : 0x%.08X (\"%lu\")\n"
-           "   Message                   : 0x%.08X (\"%s\")\n"
-           ");\n",
-           GetCurrentThreadId(), FailedAssertion, FailedAssertion, FileName, FileName, LineNumber, LineNumber, Message, Message);
+           "   Message                   : 0x%.08X (\"%s\")\n",
+           FailedAssertion, FailedAssertion, FileName, FileName, LineNumber, LineNumber, Message, Message);
 
     CxbxKrnlCleanup("RtlAssert() raised by emulated program - consult Debug log");
 
@@ -4621,11 +4442,9 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
     
 
     /** sorta pointless
-    DbgPrintf("EmuKrnl (0x%X): RtlEnterCriticalSection\n"
-           "(\n"
-           "   CriticalSection     : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), CriticalSection);
+    DbgFuncArgs(
+           "   CriticalSection     : 0x%.08X\n",
+           CriticalSection);
     //*/
 
     //printf("CriticalSection->LockCount : %d\n", CriticalSection->LockCount);
@@ -4671,13 +4490,11 @@ XBSYSAPI EXPORTNUM(279) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualString
 {
 		
 
-	DbgPrintf("EmuKrnl (0x%X): RtlEqualString\n"
-			"(\n"
+    DbgFuncArgs(
 			"	String1            : 0x%.08X (\"%s\")\n"
 			"	String2            : 0x%.08X (\"%s\")\n"
-			"	CaseSensitive      : 0x%.08X\n"
-			");\n",
-			GetCurrentThreadId(), String1, String1->Buffer, String2, String2->Buffer, CaseSensitive );
+			"	CaseSensitive      : 0x%.08X\n",
+			String1, String1->Buffer, String2, String2->Buffer, CaseSensitive );
 
 	BOOLEAN bRet = NtDll::RtlEqualString( (NtDll::PSTRING)String1, (NtDll::PSTRING)String2, (NtDll::BOOLEAN)CaseSensitive );
 
@@ -4696,11 +4513,9 @@ XBSYSAPI EXPORTNUM(286) VOID NTAPI xboxkrnl::RtlFreeAnsiString
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): RtlFreeAnsiString\n"
-           "(\n"
-           "   AnsiString        : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), AnsiString);
+    DbgFuncArgs(
+           "   AnsiString        : 0x%.08X\n",
+           AnsiString);
 
     NtDll::RtlFreeAnsiString((NtDll::PANSI_STRING)AnsiString);
 
@@ -4720,12 +4535,10 @@ XBSYSAPI EXPORTNUM(289) VOID NTAPI xboxkrnl::RtlInitAnsiString
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): RtlInitAnsiString\n"
-           "(\n"
+    DbgFuncArgs(
            "   DestinationString   : 0x%.08X\n"
-           "   SourceString        : 0x%.08X (\"%s\")\n"
-           ");\n",
-           GetCurrentThreadId(), DestinationString, SourceString, SourceString);
+           "   SourceString        : 0x%.08X (\"%s\")\n",
+           DestinationString, SourceString, SourceString);
 
     NtDll::RtlInitAnsiString((NtDll::PANSI_STRING)DestinationString, (NtDll::PCSZ)SourceString);
 
@@ -4745,12 +4558,10 @@ XBSYSAPI EXPORTNUM(290) VOID NTAPI xboxkrnl::RtlInitUnicodeString
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): RtlInitUnicodeString\n"
-           "(\n"
+    DbgFuncArgs(
            "   DestinationString   : 0x%.08X\n"
-           "   SourceString        : 0x%.08X (\"%ls\")\n"
-           ");\n",
-           GetCurrentThreadId(), DestinationString, SourceString, SourceString->Buffer);
+           "   SourceString        : 0x%.08X (\"%ls\")\n",
+           DestinationString, SourceString, SourceString->Buffer);
 
     NtDll::RtlInitUnicodeString((NtDll::PUNICODE_STRING)DestinationString, (NtDll::PCWSTR)SourceString);
 
@@ -4772,11 +4583,9 @@ XBSYSAPI EXPORTNUM(291) VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
 	}
 
     /*
-    DbgPrintf("EmuKrnl (0x%X): RtlInitializeCriticalSection\n"
-           "(\n"
-           "   CriticalSection     : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), CriticalSection);
+    DbgFuncArgs(
+           "   CriticalSection     : 0x%.08X\n",
+           CriticalSection);
     //*/
 	int iSection = FindCriticalSection(CriticalSection);
 
@@ -4823,11 +4632,9 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
 	//NtDll::RtlLeaveCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
 
     /* sorta pointless
-    DbgPrintf("EmuKrnl (0x%X): RtlLeaveCriticalSection\n"
-           "(\n"
-           "   CriticalSection     : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), CriticalSection);
+    DbgFuncArgs(
+           "   CriticalSection     : 0x%.08X\n",
+           CriticalSection);
     //*/
 
     
@@ -4842,7 +4649,9 @@ XBSYSAPI EXPORTNUM(296) xboxkrnl::CHAR NTAPI xboxkrnl::RtlLowerChar(CHAR Charact
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): RtlLowerChar(%c)\n", GetCurrentThreadId(), Character);
+    DbgFuncArgs(
+           "   Character           : %c\n",
+           Character);
 
     CHAR ret = tolower(Character);
 
@@ -4861,11 +4670,9 @@ XBSYSAPI EXPORTNUM(301) xboxkrnl::ULONG NTAPI xboxkrnl::RtlNtStatusToDosError
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): RtlNtStatusToDosError\n"
-           "(\n"
-           "   Status              : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), Status);
+    DbgFuncArgs(
+           "   Status              : 0x%.08X\n",
+           Status);
 
     ULONG ret = NtDll::RtlNtStatusToDosError(Status);
 
@@ -4885,12 +4692,10 @@ XBSYSAPI EXPORTNUM(304) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTimeFieldsToTime
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): RtlTimeFieldsToTime\n"
-           "(\n"
+    DbgFuncArgs(
            "   TimeFields          : 0x%.08X\n"
-           "   Time                : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), TimeFields, Time);
+           "   Time                : 0x%.08X\n",
+           TimeFields, Time);
 
     BOOLEAN bRet = NtDll::RtlTimeFieldsToTime((NtDll::TIME_FIELDS*)TimeFields, (NtDll::LARGE_INTEGER*)Time);
 
@@ -4910,12 +4715,10 @@ XBSYSAPI EXPORTNUM(305) VOID NTAPI xboxkrnl::RtlTimeToTimeFields
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): RtlTimeToTimeFields\n"
-           "(\n"
+    DbgFuncArgs(
            "   Time                : 0x%.08X\n"
-           "   TimeFields          : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), Time, TimeFields);
+           "   TimeFields          : 0x%.08X\n",
+           Time, TimeFields);
 
     NtDll::RtlTimeToTimeFields((NtDll::LARGE_INTEGER*)Time, (NtDll::TIME_FIELDS*)TimeFields);
 
@@ -4937,11 +4740,9 @@ XBSYSAPI EXPORTNUM(306) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTryEnterCriticalSec
 		return false;
 	}
 
-    DbgPrintf("EmuKrnl (0x%X): RtlTryEnterCriticalSection\n"
-           "(\n"
-           "   CriticalSection     : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), CriticalSection);
+    DbgFuncArgs(
+           "   CriticalSection     : 0x%.08X\n",
+           CriticalSection);
 
 	BOOL bRet = FALSE;
 	
@@ -4978,13 +4779,11 @@ XBSYSAPI EXPORTNUM(308) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToAns
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): RtlUnicodeStringToAnsiString\n"
-           "(\n"
+    DbgFuncArgs(
            "   DestinationString         : 0x%.08X\n"
            "   SourceString              : 0x%.08X\n"
-           "   AllocateDestinationString : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), DestinationString, SourceString, AllocateDestinationString);
+           "   AllocateDestinationString : 0x%.08X\n",
+           DestinationString, SourceString, AllocateDestinationString);
 
     NTSTATUS ret = NtDll::RtlUnicodeStringToAnsiString((NtDll::STRING*)DestinationString, (NtDll::UNICODE_STRING*)SourceString, AllocateDestinationString);
 
@@ -5072,11 +4871,9 @@ XBSYSAPI EXPORTNUM(335) VOID NTAPI xboxkrnl::XcSHAInit(UCHAR *pbSHAContext)
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): XcSHAInit\n"
-           "(\n"
-           "   pbSHAContext        : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pbSHAContext);
+    DbgFuncArgs(
+           "   pbSHAContext        : 0x%.08X\n",
+           pbSHAContext);
 
     
 
@@ -5090,13 +4887,11 @@ XBSYSAPI EXPORTNUM(336) VOID NTAPI xboxkrnl::XcSHAUpdate(UCHAR *pbSHAContext, UC
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): XcSHAUpdate\n"
-           "(\n"
+    DbgFuncArgs(
            "   pbSHAContext        : 0x%.08X\n"
            "   pbInput             : 0x%.08X\n"
-           "   dwInputLength       : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pbSHAContext, pbInput, dwInputLength);
+           "   dwInputLength       : 0x%.08X\n",
+           pbSHAContext, pbInput, dwInputLength);
 
     
 
@@ -5110,12 +4905,10 @@ XBSYSAPI EXPORTNUM(337) VOID NTAPI xboxkrnl::XcSHAFinal(UCHAR *pbSHAContext, UCH
 {
     
 
-    DbgPrintf("EmuKrnl (0x%X): XcSHAFinal\n"
-           "(\n"
+    DbgFuncArgs(
            "   pbSHAContext        : 0x%.08X\n"
-           "   pbDigest            : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pbSHAContext, pbDigest);
+           "   pbDigest            : 0x%.08X\n",
+           pbSHAContext, pbDigest);
 
     // for now, we dont care about the digest
     for(int v=0;v<20;v++)
