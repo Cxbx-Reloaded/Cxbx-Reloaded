@@ -58,20 +58,9 @@ PVOID WINAPI XTL::EmuXGIsSwizzledFormat
     XTL::D3DFORMAT Format
 )
 {
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        
-        DbgPrintf("EmuXapi (0x%X): EmuXGIsSwizzledFormat\n"
-               "(\n"
-               "   Format              : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), Format);
-        
-    }
-    #endif
+	DbgFuncArgs(
+               "   Format              : 0x%.08X\n",
+			   Format);
 
     return FALSE;
 }
@@ -93,8 +82,7 @@ VOID WINAPI XTL::EmuXGSwizzleRect
 {
     
 
-    DbgPrintf("EmuXapi (0x%X): EmuXGSwizzleRect\n"
-           "(\n"
+	DbgFuncArgs(
            "   pSource             : 0x%.08X\n"
            "   Pitch               : 0x%.08X\n"
            "   pRect               : 0x%.08X\n"
@@ -102,9 +90,8 @@ VOID WINAPI XTL::EmuXGSwizzleRect
            "   Width               : 0x%.08X\n"
            "   Height              : 0x%.08X\n"
            "   pPoint              : 0x%.08X\n"
-           "   BytesPerPixel       : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pSource, Pitch, pRect, pDest, Width, Height,
+           "   BytesPerPixel       : 0x%.08X\n",
+		   pSource, Pitch, pRect, pDest, Width, Height,
            pPoint, BytesPerPixel);
 
     if(pRect == NULL && pPoint == NULL && Pitch == 0)
@@ -163,8 +150,7 @@ VOID WINAPI XTL::EmuXGSwizzleBox
 {
     
 
-    DbgPrintf("EmuXapi (0x%X): EmuXGSwizzleBox\n"
-           "(\n"
+	DbgFuncArgs(
            "   pSource             : 0x%.08X\n"
            "   RowPitch            : 0x%.08X\n"
            "   SlicePitch          : 0x%.08X\n"
@@ -174,9 +160,8 @@ VOID WINAPI XTL::EmuXGSwizzleBox
            "   Height              : 0x%.08X\n"
            "   Depth               : 0x%.08X\n"
            "   pPoint              : 0x%.08X\n"
-           "   BytesPerPixel       : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pSource, RowPitch, SlicePitch, pBox, pDest, Width, Height,
+           "   BytesPerPixel       : 0x%.08X\n",
+		   pSource, RowPitch, SlicePitch, pBox, pDest, Width, Height,
            Depth, pPoint, BytesPerPixel);
 
 	if(pDest != (LPVOID) 0x80000000)
@@ -339,13 +324,11 @@ HRESULT WINAPI XTL::EmuXGWriteSurfaceOrTextureToXPR
 {
 		
 
-	DbgPrintf("EmuXapi (0x%X): EmuXGWriteSurfaceOrTextureToXPR\n"
-           "(\n"
+	DbgFuncArgs(
            "   pResource              : 0x%.08X\n"
 		   "   cPath                  : 0x%.08X\n"
-		   "   bWriteSurfaceAsTexture : 0x%.08X\n"
-		   ");\n",
-		   GetCurrentThreadId(), pResource, cPath, bWriteSurfaceAsTexture);
+		   "   bWriteSurfaceAsTexture : 0x%.08X\n",
+		   pResource, cPath, bWriteSurfaceAsTexture);
 
 	// TODO: If necessary, either reverse the .xbx and .xpr file formats
 	// and write the surface/texture to a file, or output a generic .xbx
@@ -376,8 +359,7 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 {
 		
 
-	DbgPrintf("EmuXapi (0x%X): EmuXGSetTextureHeader\n"
-           "(\n"
+	DbgFuncArgs(
            "   Width                  : 0x%.08X\n"
 		   "   Height                 : 0x%.08X\n"
 		   "   Levels                 : 0x%.08X\n"
@@ -386,9 +368,8 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 		   "   Pool                   : 0x%.08X\n"
 		   "   pTexture               : 0x%.08X\n"
 		   "   Data                   : 0x%.08X\n"
-		   "   Pitch                  : 0x%.08X\n"
-		   ");\n",
-		   GetCurrentThreadId(), Width, Height, Levels, Usage, 
+		   "   Pitch                  : 0x%.08X\n",
+		   Width, Height, Levels, Usage, 
 				Format, Pool, pTexture, Data, Pitch);
 
 	// NOTES: This function simply creates a texture that needs to be registered
@@ -454,13 +435,11 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 //{
 //		
 //
-//	DbgPrintf("EmuXapi (0x%X): EmuXFONT_OpenBitmapFontFromMemory\n"
-//           "(\n"
+//	DbgFuncArgs(
 //		   "   pFontData              : 0x%.08X\n"
 //		   "   uFontDataSize          : 0x%.08X\n"
-//		   "   ppFont                 : 0x%.08X\n"
-//		   ");\n",
-//		   GetCurrentThreadId(), pFontData, uFontDataSize, ppFont);
+//		   "   ppFont                 : 0x%.08X\n",
+//		   pFontData, uFontDataSize, ppFont);
 //
 //	__asm int 3;
 //

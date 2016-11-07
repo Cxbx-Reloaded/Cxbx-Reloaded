@@ -70,12 +70,10 @@ HRESULT WINAPI XTL::EmuXACTEngineCreate
 {
 		
 
-	DbgPrintf("EmuXactEng (0x%X): EmuXACTEngineCreate\n"
-           "(\n"
+	DbgFuncArgs(
            "   pParams                   : 0x%.08X\n"
-           "   ppEngine                  : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pParams, ppEngine);
+           "   ppEngine                  : 0x%.08X\n",
+           pParams, ppEngine);
 
 	// TODO: Any other form of initialization?
 
@@ -93,7 +91,7 @@ void WINAPI XTL::EmuXACTEngineDoWork()
 {
 		
 
-	DbgPrintf("EmuXactEng (0x%X): EmuXACTEngineCreate()\n", GetCurrentThreadId() );
+	DbgFuncArgs();
 
 	// TODO: Anything else required here?
 	// AFAIK, this function just calls DirectSoundDoWork()
@@ -118,14 +116,12 @@ HRESULT WINAPI XTL::EmuIXACTEngine_RegisterWaveBank
 {
 		
 
-	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_RegisterWaveBank\n"
-           "(\n"
+	DbgFuncArgs(
            "   pThis                     : 0x%.08X\n"
            "   pvData                    : 0x%.08X\n"
 		   "   dwSize                    : 0x%.08X\n"
-		   "   ppWaveBank                : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pThis, pvData, dwSize, ppWaveBank);
+		   "   ppWaveBank                : 0x%.08X\n",
+           pThis, pvData, dwSize, ppWaveBank);
 
 	// TODO: Implement
 
@@ -148,13 +144,11 @@ HRESULT WINAPI XTL::EmuIXACTEngine_RegisterStreamedWaveBank
 {
 		
 
-	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_RegisterWaveBank\n"
-           "(\n"
+	DbgFuncArgs(
            "   pThis                     : 0x%.08X\n"
            "   pParams                   : 0x%.08X\n"
-		   "   ppWaveBank                : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pThis, pParams, ppWaveBank);
+		   "   ppWaveBank                : 0x%.08X\n",
+           pThis, pParams, ppWaveBank);
 
 	// TODO: Implement
 
@@ -178,14 +172,12 @@ HRESULT WINAPI XTL::EmuIXACTEngine_CreateSoundBank
 {
 		
 
-	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_CreateSoundBank\n"
-           "(\n"
+	DbgFuncArgs(
            "   pThis                     : 0x%.08X\n"
            "   pvData                    : 0x%.08X\n"
 		   "   dwSize                    : 0x%.08X\n"
-		   "   ppSoundBank               : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pThis, pvData, dwSize, ppSoundBank);
+		   "   ppSoundBank               : 0x%.08X\n",
+           pThis, pvData, dwSize, ppSoundBank);
 
 	// TODO: Implement
 
@@ -210,15 +202,13 @@ HRESULT WINAPI XTL::EmuIXACTEngine_DownloadEffectsImage
 {
 		
 
-	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_DownloadEffectsImage\n"
-           "(\n"
+	DbgFuncArgs(
            "   pThis                     : 0x%.08X\n"
 		   "   pvData                    : 0x%.08X\n"
 		   "   dwSize                    : 0x%.08X\n"
 		   "   pEffectLoc                : 0x%.08X\n"
-		   "   ppImageDesc               : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pThis, pvData, dwSize, pEffectLoc, ppImageDesc);
+		   "   ppImageDesc               : 0x%.08X\n",
+           pThis, pvData, dwSize, pEffectLoc, ppImageDesc);
 
 	// TODO: Implement
 
@@ -239,13 +229,11 @@ HRESULT WINAPI XTL::EmuIXACTEngine_CreateSoundSource
 {
 		
 
-	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_CreateSoundSource\n"
-           "(\n"
+	DbgFuncArgs(
            "   pThis                     : 0x%.08X\n"
 		   "   dwFlags                   : 0x%.08X\n"
-		   "   ppSoundSource             : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pThis, dwFlags, ppSoundSource);
+		   "   ppSoundSource             : 0x%.08X\n",
+           pThis, dwFlags, ppSoundSource);
 
 	*ppSoundSource = (X_XACTSoundSource*) CxbxMalloc( sizeof( X_XACTSoundSource ) );
 
@@ -265,12 +253,10 @@ HRESULT WINAPI XTL::EmuIXACTEngine_EnableHeadphones
 {
 		
 
-	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_EnableHeadphones\n"
-           "(\n"
+	DbgFuncArgs(
            "   pThis                     : 0x%.08X\n"
-		   "   fEnabled                  : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pThis, fEnabled);
+		   "   fEnabled                  : 0x%.08X\n",
+           pThis, fEnabled);
 
 	
 
@@ -294,8 +280,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetListenerOrientation
 {
 		
 
-	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_SetListenerOrientation\n"
-           "(\n"
+	DbgFuncArgs(
            "   pThis                     : 0x%.08X\n"
 		   "   xFront                    : %f"
 		   "   yFront                    : %f"
@@ -303,9 +288,8 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetListenerOrientation
 		   "   xTop                      : %f"
 		   "   yTop                      : %f"
 		   "   zTop                      : %f"
-		   "   dwApply                   : 0x%.08X"
-           ");\n",
-           GetCurrentThreadId(), pThis, xFront, yFront, zFront, xTop, yTop, zTop, dwApply);
+		   "   dwApply                   : 0x%.08X",
+		   pThis, xFront, yFront, zFront, xTop, yTop, zTop, dwApply);
 
 	
 
@@ -326,15 +310,13 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetListenerPosition
 {
 		
 
-	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_SetListenerPosition\n"
-           "(\n"
+	DbgFuncArgs(
            "   pThis                     : 0x%.08X\n"
 		   "   x                         : %f"
 		   "   y                         : %f"
 		   "   z                         : %f"
-		   "   dwApply                   : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pThis, x, y, z, dwApply);
+		   "   dwApply                   : 0x%.08X\n",
+		   pThis, x, y, z, dwApply);
 
 	
 
@@ -355,15 +337,13 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetListenerVelocity
 {
 		
 
-	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_SetListenerVelocity\n"
-           "(\n"
+	DbgFuncArgs(
            "   pThis                     : 0x%.08X\n"
 		   "   x                         : %f"
 		   "   y                         : %f"
 		   "   z                         : %f"
-		   "   dwApply                   : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pThis, x, y, z, dwApply);
+		   "   dwApply                   : 0x%.08X\n",
+		   pThis, x, y, z, dwApply);
 
 	
 
@@ -382,13 +362,11 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetMasterVolume
 {
 		
 
-	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_SetMasterVolume\n"
-           "(\n"
+	DbgFuncArgs(
            "   pThis                     : 0x%.08X\n"
 		   "   wCategory                 : 0x%.08X\n"
-		   "   lVolume                   : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pThis, wCategory, lVolume);
+		   "   lVolume                   : 0x%.08X\n",
+		   pThis, wCategory, lVolume);
 
 	
 
@@ -402,11 +380,9 @@ HRESULT WINAPI XTL::EmuIXACTEngine_CommitDeferredSettings(X_XACTEngine* pThis)
 {
 		
 
-	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_CommitDeferredSettings\n"
-           "(\n"
-           "   pThis                     : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pThis);
+	DbgFuncArgs(
+           "   pThis                     : 0x%.08X\n",
+		   pThis);
 
 	
 
@@ -425,13 +401,11 @@ HRESULT WINAPI XTL::EmuIXACTSoundBank_GetSoundCueIndexFromFriendlyName
 {
 		
 
-	DbgPrintf("EmuXactEng (0x%X): EmuIXACTSoundBank_GetSoundCueIndexFromFriendlyName\n"
-           "(\n"
+	DbgFuncArgs(
            "   pThis                     : 0x%.08X\n"
 		   "   pFriendlyName             : (%s)\n"
-		   "   pdwSoundCueIndex          : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pThis, pFriendlyName, pdwSoundCueIndex);
+		   "   pdwSoundCueIndex          : 0x%.08X\n",
+		   pThis, pFriendlyName, pdwSoundCueIndex);
 
 	
 
@@ -452,15 +426,13 @@ HRESULT WINAPI XTL::EmuIXACTSoundBank_Play
 {
 		
 
-	DbgPrintf("EmuXactEng (0x%X): EmuIXACTSoundBank_Play\n"
-           "(\n"
+	DbgFuncArgs(
            "   pThis                     : 0x%.08X\n"
 		   "   dwSoundCueIndex           : 0x%.08X\n"
 		   "   pSoundSource              : 0x%.08X\n"
 		   "   dwFlags                   : 0x%.08X\n"
-		   "   ppSoundCue                : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pThis, dwSoundCueIndex, pSoundSource, dwFlags, ppSoundCue);
+		   "   ppSoundCue                : 0x%.08X\n",
+		   pThis, dwSoundCueIndex, pSoundSource, dwFlags, ppSoundCue);
 
 	
 
@@ -480,14 +452,12 @@ HRESULT WINAPI XTL::EmuIXACTSoundBank_Stop
 {
 		
 
-	DbgPrintf("EmuXactEng (0x%X): EmuIXACTSoundBank_Stop\n"
-           "(\n"
+	DbgFuncArgs(
            "   pThis                     : 0x%.08X\n"
 		   "   dwSoundCueIndex           : 0x%.08X\n"
 		   "   dwFlags                   : 0x%.08X\n"
-		   "   pSoundCue                 : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pThis, dwSoundCueIndex, dwFlags, pSoundCue);
+		   "   pSoundCue                 : 0x%.08X\n",
+		   pThis, dwSoundCueIndex, dwFlags, pSoundCue);
 
 	
 
@@ -508,15 +478,13 @@ HRESULT WINAPI XTL::EmuIXACTSoundSource_SetPosition
 {
 		
 
-	DbgPrintf("EmuXactEng (0x%X): EmuIXACTSoundSource_SetPosition\n"
-           "(\n"
+	DbgFuncArgs(
            "   pThis                     : 0x%.08X\n"
 		   "   x                         : %f\n"
 		   "   y                         : %f\n"
 		   "   z                         : %f\n"
-		   "   dwApply                   : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pThis, x, y, z, dwApply);
+		   "   dwApply                   : 0x%.08X\n",
+		   pThis, x, y, z, dwApply);
 
 	
 
@@ -537,15 +505,13 @@ HRESULT WINAPI XTL::EmuIXACTSoundSource_SetVelocity
 {
 		
 
-	DbgPrintf("EmuXactEng (0x%X): EmuIXACTSoundSource_SetVelocity\n"
-           "(\n"
+	DbgFuncArgs(
            "   pThis                     : 0x%.08X\n"
 		   "   x                         : %f\n"
 		   "   y                         : %f\n"
 		   "   z                         : %f\n"
-		   "   dwApply                   : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pThis, x, y, z, dwApply);
+		   "   dwApply                   : 0x%.08X\n",
+		   pThis, x, y, z, dwApply);
 
 	
 
@@ -563,12 +529,10 @@ HRESULT WINAPI XTL::EmuIXACTEngine_RegisterNotification
 {
 		
 
-	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_RegisterNotification\n"
-           "(\n"
+	DbgFuncArgs(
            "   pThis                     : 0x%.08X\n"
-		   "   pNotificationDesc         : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pThis, pNotificationDesc);
+		   "   pNotificationDesc         : 0x%.08X\n",
+		   pThis, pNotificationDesc);
 
 	
 
@@ -587,13 +551,11 @@ HRESULT WINAPI XTL::EmuIXACTEngine_GetNotification
 {
 		
 
-	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_GetNotification\n"
-           "(\n"
+	DbgFuncArgs(
            "   pThis                     : 0x%.08X\n"
 		   "   pNotificationDesc         : 0x%.08X\n"
-		   "   pNotification             : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pThis, pNotificationDesc, pNotification);
+		   "   pNotification             : 0x%.08X\n",
+		   pThis, pNotificationDesc, pNotification);
 
 	// TODO: The contents of XACT_NOTIFICATION can vary from one XDK to the next.
 	// The definition for 4627 is different than 5558.
@@ -614,12 +576,10 @@ HRESULT WINAPI XTL::EmuIXACTEngine_UnRegisterWaveBank
 {
 		
 
-	DbgPrintf("EmuXactEng (0x%X): EmuIXACTEngine_UnRegisterWaveBank\n"
-           "(\n"
+	DbgFuncArgs(
            "   pThis                     : 0x%.08X\n"
-		   "   pWaveBank                 : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pThis, pWaveBank);
+		   "   pWaveBank                 : 0x%.08X\n",
+		   pThis, pWaveBank);
 
 	// Even though the documentation doesn't tell us much, I'm
 	// assuming that after this function is called, the pointer
