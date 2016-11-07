@@ -2172,10 +2172,6 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_GetBackBuffer
     X_D3DSurface      **ppBackBuffer
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetBackBuffer\n"
                "(\n"
                "   BackBuffer          : 0x%.08X\n"
@@ -2183,9 +2179,6 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_GetBackBuffer
                "   ppBackBuffer        : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), BackBuffer, Type, ppBackBuffer);
-        
-    }
-    #endif
 
     *ppBackBuffer = EmuIDirect3DDevice8_GetBackBuffer2(BackBuffer);
 
@@ -2825,19 +2818,12 @@ VOID __fastcall XTL::EmuIDirect3DDevice8_SetVertexShaderConstant1
     CONST PVOID pConstantData
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexShaderConstant1\n"
                "(\n"
                "   Register            : 0x%.08X\n"
                "   pConstantData       : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), Register, pConstantData);
-        
-    }
-    #endif
 
     XTL::EmuIDirect3DDevice8_SetVertexShaderConstant(Register, pConstantData, 1);
 
@@ -2853,19 +2839,12 @@ VOID __fastcall XTL::EmuIDirect3DDevice8_SetVertexShaderConstant4
     CONST PVOID pConstantData
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexShaderConstant4\n"
                "(\n"
                "   Register            : 0x%.08X\n"
                "   pConstantData       : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), Register, pConstantData);
-        
-    }
-    #endif
 
     XTL::EmuIDirect3DDevice8_SetVertexShaderConstant(Register, pConstantData, 4);
 
@@ -2882,10 +2861,6 @@ VOID __fastcall XTL::EmuIDirect3DDevice8_SetVertexShaderConstantNotInline
     DWORD       ConstantCount
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexShaderConstantNotInline\n"
                "(\n"
                "   Register            : 0x%.08X\n"
@@ -2893,9 +2868,6 @@ VOID __fastcall XTL::EmuIDirect3DDevice8_SetVertexShaderConstantNotInline
                "   ConstantCount       : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), Register, pConstantData, ConstantCount);
-        
-    }
-    #endif
 
     XTL::EmuIDirect3DDevice8_SetVertexShaderConstant(Register, pConstantData, ConstantCount / 4);
 
@@ -3914,10 +3886,6 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData2f
     FLOAT   b
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexData2f >>\n"
                "(\n"
                "   Register            : 0x%.08X\n"
@@ -3925,9 +3893,6 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData2f
                "   b                   : %f\n"
                ");\n",
                GetCurrentThreadId(), Register, a, b);
-        
-    }
-    #endif
 
     return EmuIDirect3DDevice8_SetVertexData4f(Register, a, b, 0.0f, 1.0f);
 }
@@ -3945,10 +3910,6 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData2s
     SHORT   b
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexData2s >>\n"
                "(\n"
                "   Register            : 0x%.08X\n"
@@ -3956,9 +3917,6 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexData2s
                "   b                   : %d\n"
                ");\n",
                GetCurrentThreadId(), Register, a, b);
-        
-    }
-    #endif
 
     DWORD dwA = a, dwB = b;
 
@@ -4224,19 +4182,12 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetVertexDataColor
     D3DCOLOR    Color
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DDevice8_SetVertexDataColor >>\n"
                "(\n"
                "   Register            : 0x%.08X\n"
                "   Color               : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), Register, Color);
-        
-    }
-    #endif
 
     FLOAT a = DWtoF((Color & 0xFF000000) >> 24);
     FLOAT r = DWtoF((Color & 0x00FF0000) >> 16);
@@ -5631,10 +5582,6 @@ VOID WINAPI XTL::EmuGet2DSurfaceDescD
     X_D3DSURFACE_DESC   *pDesc
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuD3D8 (0x%X): EmuGet2DSurfaceDescD\n"
                "(\n"
                "   pPixelContainer     : 0x%.08X\n"
@@ -5642,9 +5589,6 @@ VOID WINAPI XTL::EmuGet2DSurfaceDescD
                ");\n",
                GetCurrentThreadId(), pPixelContainer, pDesc);
         
-    }
-    #endif
-
     EmuGet2DSurfaceDesc(pPixelContainer, 0xFEFEFEFE, pDesc);
 
     return;
@@ -8700,8 +8644,6 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_GetShaderConstantMode
     DWORD *pMode
 )
 {
-    #ifdef _DEBUG_TRACE
-    {
         
         DbgPrintf( "EmuD3D8 (0x%X): EmuIDirect3DDevice8_GetShaderConstantMode\n"
                    "(\n"
@@ -8709,9 +8651,6 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_GetShaderConstantMode
                    ");\n",
                    GetCurrentThreadId(), pMode);
         
-    }
-    #endif
-
     if(pMode)
     {
         *pMode = g_VertexShaderConstantMode;
