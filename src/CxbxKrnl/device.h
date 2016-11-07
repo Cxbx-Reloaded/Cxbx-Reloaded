@@ -142,7 +142,7 @@ protected:
 		void set_vector(int vector) { m_stored_vector = vector; }
 		int default_irq_callback();
 
-		//device_execute_interface *m_execute;// pointer to the execute interface
+//		device_execute_interface *m_execute;// pointer to the execute interface
 		int             m_linenum;          // which input line we are
 
 		int32_t           m_stored_vector;    // most recently written vector
@@ -152,11 +152,11 @@ protected:
 		int             m_qindex;           // index within the queue
 
 	private:
-		//TIMER_CALLBACK_MEMBER(empty_event_queue);
+//		TIMER_CALLBACK_MEMBER(empty_event_queue);
 	};
 
 	// input states and IRQ callbacks
-	//device_irq_acknowledge_delegate m_driver_irq;       // driver-specific IRQ callback
+//	device_irq_acknowledge_delegate m_driver_irq;       // driver-specific IRQ callback
 	device_input            m_input[MAX_INPUT_LINES];   // data about inputs
 };
 

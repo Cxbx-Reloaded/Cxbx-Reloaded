@@ -90,6 +90,11 @@ struct {
 	uint32_t video_clock_coeff;
 } pramdac;
 
+struct {
+	uint32_t pending_interrupts;
+	uint32_t enabled_interrupts;
+} pgraph;
+
 static void update_irq()
 {
 	/* PFIFO */
@@ -99,20 +104,39 @@ static void update_irq()
 	else {
 		pmc.pending_interrupts &= ~NV_PMC_INTR_0_PFIFO;
 	}
+
+	/* PCRTC */
 	if (pcrtc.pending_interrupts & pcrtc.enabled_interrupts) {
 		pmc.pending_interrupts |= NV_PMC_INTR_0_PCRTC;
 	}
 	else {
 		pmc.pending_interrupts &= ~NV_PMC_INTR_0_PCRTC;
 	}
-	/* TODO PGRAPH */
-	/*
+
+	/* PGRAPH */
 	if (pgraph.pending_interrupts & pgraph.enabled_interrupts) {
 		pmc.pending_interrupts |= NV_PMC_INTR_0_PGRAPH;
 	}
 	else {
 		pmc.pending_interrupts &= ~NV_PMC_INTR_0_PGRAPH;
+	}
+
+	/* TODO : PBUS * /
+	if (pbus.pending_interrupts & pbus.enabled_interrupts) {
+		pmc.pending_interrupts |= NV_PMC_INTR_0_PBUS;
+	}
+	else {
+		pmc.pending_interrupts &= ~NV_PMC_INTR_0_PBUS;
 	} */
+
+	/* TODO : SOFTWARE * /
+	if (user.pending_interrupts & user.enabled_interrupts) {
+		pmc.pending_interrupts |= NV_PMC_INTR_0_SOFTWARE;
+	}
+	else {
+		pmc.pending_interrupts &= ~NV_PMC_INTR_0_SOFTWARE;
+	} */
+
 	if (pmc.pending_interrupts && pmc.enabled_interrupts) {
 		// TODO Raise IRQ
 		EmuWarning("EmuNV2A: update_irq : Raise IRQ Not Implemented");
@@ -713,6 +737,14 @@ DEVICE_READ32(PGRAPH)
 DEVICE_WRITE32(PGRAPH)
 {
 	DEVICE_WRITE32_SWITCH(PGRAPH, addr) {
+	case NV_PGRAPH_INTR:
+		pgraph.pending_interrupts &= ~value;
+		update_irq();
+		break;
+	case NV_PGRAPH_INTR_EN:
+		pgraph.enabled_interrupts = value;
+		update_irq();
+		break;
 	default: 
 		DEBUG_WRITE32_UNHANDLED(PGRAPH);
 	}

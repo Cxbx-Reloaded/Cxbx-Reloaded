@@ -122,13 +122,13 @@ if (TEMPLOG) printf("setline(%s,%d,%d,%d)\n", m_execute->device().tag(), m_linen
 
 	// if we're full of events, flush the queue and log a message
 	int event_index = m_qindex++;
-/*
+
 	if (event_index >= ARRAY_LENGTH(m_queue))
 	{
 		m_qindex--;
-		empty_event_queue(nullptr,0);
+//		empty_event_queue(nullptr,0);
 		event_index = m_qindex++;
-		m_execute->device().logerror("Exceeded pending input line event queue on device '%s'!\n", m_execute->device().tag());
+//		m_execute->device().logerror("Exceeded pending input line event queue on device '%s'!\n", m_execute->device().tag());
 	}
 
 	// enqueue the event
@@ -140,8 +140,7 @@ if (TEMPLOG) printf("setline(%s,%d,%d,%d)\n", m_execute->device().tag(), m_linen
 
 		// if this is the first one, set the timer
 		if (event_index == 0)
-			m_execute->scheduler().synchronize(timer_expired_delegate(FUNC(device_execute_interface::device_input::empty_event_queue),this), 0, this);
+;//			m_execute->scheduler().synchronize(timer_expired_delegate(FUNC(device_execute_interface::device_input::empty_event_queue),this), 0, this);
 	}
-*/
 }
 
