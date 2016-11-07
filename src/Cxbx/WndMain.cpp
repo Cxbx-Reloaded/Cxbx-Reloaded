@@ -53,7 +53,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m
     // initialize members
     {
         m_classname = "WndMain";
-        m_wndname   = "Cxbx-Reloaded " _CXBX_VERSION;
+        m_wndname   = "Cxbx " _CXBX_VERSION;
 
         m_w         = 640;
         m_h         = 480;
@@ -315,7 +315,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                     char AsciiTitle[255];
 
-                    sprintf(AsciiTitle, "Cxbx-Reloaded : Emulating %s...", m_Xbe->m_szAsciiTitle);
+                    sprintf(AsciiTitle, "Cxbx : Emulating %s...", m_Xbe->m_szAsciiTitle);
 
                     SetWindowText(m_hwnd, AsciiTitle);
 
@@ -326,7 +326,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 case WM_DESTROY:
                 {
                     m_hwndChild = NULL;
-                    SetWindowText(m_hwnd, "Cxbx-Reloaded " _CXBX_VERSION);
+                    SetWindowText(m_hwnd, "Cxbx " _CXBX_VERSION);
                     RefreshMenus();
                 }
                 break;
@@ -386,7 +386,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 if(m_Xbe != 0 && m_Xbe->GetError() == 0)
                     sprintf(buffer, "%s Loaded!", m_Xbe->m_szAsciiTitle);
                 else
-                    sprintf(buffer, "%s", "Disclaimer: Cxbx-Reloaded has no affiliation with Microsoft");
+                    sprintf(buffer, "%s", "Disclaimer: Cxbx has no affiliation with Microsoft");
 
                 RECT rect = {0, 480-15-5, 640-100-4-69, 480-5};
 
@@ -615,7 +615,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                         // ask permission to overwrite if file already exists
                         if(_access(ofn.lpstrFile, 0) != -1)
                         {
-                            if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx-Reloaded", MB_ICONQUESTION | MB_YESNO) != IDYES)
+                            if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx", MB_ICONQUESTION | MB_YESNO) != IDYES)
                                 return TRUE;
                         }
 
@@ -686,14 +686,14 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                             }
 
                             if(m_Xbe->GetError() != 0)
-                                MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+                                MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
                             else
                             {
                                 char buffer[255];
 
                                 sprintf(buffer, "%s's logo bitmap was successfully exported.", m_Xbe->m_szAsciiTitle);
 
-                                MessageBox(m_hwnd, buffer, "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
+                                MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
 
                                 printf("WndMain: %s\n", buffer);
                             }
@@ -772,7 +772,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                                 if(bmp_err != 0)
                                 {
-                                    MessageBox(m_hwnd, bmp_err, "Cxbx-Reloaded", MB_OK | MB_ICONEXCLAMATION);
+                                    MessageBox(m_hwnd, bmp_err, "Cxbx", MB_OK | MB_ICONEXCLAMATION);
                                     break;
                                 }
                             }
@@ -781,7 +781,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                             if(m_Xbe->GetError() != 0)
                             {
-                                MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+                                MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
 
                                 if(m_Xbe->IsFatal())
                                     CloseXbe();
@@ -801,7 +801,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                                 printf("WndMain: %s\n", buffer);
 
-                                MessageBox(m_hwnd, buffer, "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
+                                MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
                             }
                         }
                     }
@@ -883,7 +883,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                         // ask permission to overwrite if file exists
                         if(_access(ofn.lpstrFile, 0) != -1)
                         {
-                            if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx-Reloaded", MB_ICONQUESTION | MB_YESNO) != IDYES)
+                            if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx", MB_ICONQUESTION | MB_YESNO) != IDYES)
                                 return TRUE;
                         }
 
@@ -893,7 +893,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                             // verify file was opened
                             if(TxtFile == 0)
-                                MessageBox(m_hwnd, "Could not open text file.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+                                MessageBox(m_hwnd, "Could not open text file.", "Cxbx", MB_ICONSTOP | MB_OK);
                             else
                             {
                                 m_Xbe->DumpInformation(TxtFile);
@@ -902,7 +902,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                                 if(m_Xbe->GetError())
                                 {
-                                    MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+                                    MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
                                 }
                                 else
                                 {
@@ -912,7 +912,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                                     printf("WndMain: %s\n", buffer);
 
-                                    MessageBox(m_hwnd, buffer, "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
+                                    MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
                                 }
                             }
                         }
@@ -927,7 +927,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                     if(m_Xbe->GetError())
                     {
-                        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+                        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
                     }
                     else
                     {
@@ -955,7 +955,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     else
                         m_KrnlDebug = DM_NONE;
 
-                    MessageBox(m_hwnd, "This will not take effect until the next time emulation is started.\n", "Cxbx-Reloaded", MB_OK);
+                    MessageBox(m_hwnd, "This will not take effect until the next time emulation is started.\n", "Cxbx", MB_OK);
 
                     m_bExeChanged = true;
 
@@ -995,7 +995,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                         if(GetSaveFileName(&ofn) != FALSE)
                         {
-                            MessageBox(m_hwnd, "This will not take effect until emulation is (re)started.\n", "Cxbx-Reloaded", MB_OK);
+                            MessageBox(m_hwnd, "This will not take effect until emulation is (re)started.\n", "Cxbx", MB_OK);
 
                             strncpy(m_KrnlDebugFilename, ofn.lpstrFile, 259);
 
@@ -1107,7 +1107,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                         Sleep(10);
 
                     if(AboutWnd->GetError() != 0)
-                        MessageBox(m_hwnd, AboutWnd->GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+                        MessageBox(m_hwnd, AboutWnd->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
 
                     delete AboutWnd;
                 }
@@ -1219,7 +1219,7 @@ void WndMain::LoadLogo()
 
     if(m_Xbe->GetError() != 0)
     {
-        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
+        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONEXCLAMATION | MB_OK);
 
         if(m_Xbe->IsFatal())
             CloseXbe();
@@ -1405,7 +1405,7 @@ void WndMain::UpdateDebugConsoles()
         {
             freopen("CONOUT$", "wt", stdout);
 
-            SetConsoleTitle("Cxbx-Reloaded : Debug Console");
+            SetConsoleTitle("Cxbx : Debug Console");
 
             SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
 
@@ -1510,7 +1510,7 @@ void WndMain::OpenXbe(const char *x_filename)
 
     if(m_Xbe->GetError() != 0)
     {
-        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
 
         delete m_Xbe; m_Xbe = 0;
 
@@ -1588,7 +1588,7 @@ void WndMain::CloseXbe()
 
     if(m_bXbeChanged)
     {
-        int ret = MessageBox(m_hwnd, "Changes have been made, do you wish to save?", "Cxbx-Reloaded", MB_ICONQUESTION | MB_YESNOCANCEL);
+        int ret = MessageBox(m_hwnd, "Changes have been made, do you wish to save?", "Cxbx", MB_ICONQUESTION | MB_YESNOCANCEL);
 
         if(ret == IDYES)
             SaveXbeAs();
@@ -1626,7 +1626,7 @@ void WndMain::SaveXbe(const char *x_filename)
     // ask permission to overwrite if the file already exists
     if(_access(x_filename, 0) != -1)
     {
-        if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx-Reloaded", MB_ICONQUESTION | MB_YESNO) != IDYES)
+        if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx", MB_ICONQUESTION | MB_YESNO) != IDYES)
             return;
     }
 
@@ -1635,7 +1635,7 @@ void WndMain::SaveXbe(const char *x_filename)
         m_Xbe->Export(x_filename);
 
         if(m_Xbe->GetError() != 0)
-            MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+            MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
         else
         {
             char buffer[255];
@@ -1644,7 +1644,7 @@ void WndMain::SaveXbe(const char *x_filename)
 
             printf("WndMain: %s was successfully saved.\n", m_Xbe->m_szAsciiTitle);
 
-            MessageBox(m_hwnd, buffer, "Cxbx-Reloaded", MB_ICONINFORMATION | MB_OK);
+            MessageBox(m_hwnd, buffer, "Cxbx", MB_ICONINFORMATION | MB_OK);
 
             m_bXbeChanged = false;
         }
@@ -1685,7 +1685,7 @@ void WndMain::ImportExe(const char *x_filename)
 
     if(i_exe->GetError() != 0)
     {
-        MessageBox(m_hwnd, i_exe->GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+        MessageBox(m_hwnd, i_exe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
 
         delete i_exe;
 
@@ -1696,7 +1696,7 @@ void WndMain::ImportExe(const char *x_filename)
 
     if(m_Xbe->GetError() != 0)
     {
-        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
 
         delete m_Xbe; m_Xbe = 0;
 
@@ -1799,7 +1799,7 @@ bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists, HWND 
     {
         if(_access(filename, 0) != -1)
         {
-            if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx-Reloaded", MB_ICONQUESTION | MB_YESNO) != IDYES)
+            if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx", MB_ICONQUESTION | MB_YESNO) != IDYES)
                 return false;
         }
     }
@@ -1812,7 +1812,7 @@ bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists, HWND 
 
         if(i_EmuExe.GetError() != 0)
         {
-            MessageBox(m_hwnd, i_EmuExe.GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+            MessageBox(m_hwnd, i_EmuExe.GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
             return false;
         }
         else
@@ -1861,7 +1861,7 @@ void WndMain::StartEmulation(EnumAutoConvert x_AutoConvert, HWND hwndParent)
         if((int)ShellExecute(NULL, "open", szExeFileName, szArgsBuffer, szBuffer, SW_SHOWDEFAULT) <= 32)
         {
             m_bCanStart = true;
-            MessageBox(m_hwnd, "Emulation failed.\n\n If this message repeats, the Xbe is not supported.", "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+            MessageBox(m_hwnd, "Emulation failed.\n\n If this message repeats, the Xbe is not supported.", "Cxbx", MB_ICONSTOP | MB_OK);
 
             printf("WndMain: %s shell failed.\n", m_Xbe->m_szAsciiTitle);
         }
@@ -1878,7 +1878,7 @@ void WndMain::StopEmulation()
     if(!IsWindow(m_hwndChild))
     {
         m_hwndChild = NULL;
-        SetWindowText(m_hwnd, "Cxbx-Reloaded " _CXBX_VERSION);
+        SetWindowText(m_hwnd, "Cxbx " _CXBX_VERSION);
         RefreshMenus();
     }
 

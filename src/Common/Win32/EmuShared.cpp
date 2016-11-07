@@ -136,8 +136,8 @@ CXBXKRNL_API void EmuShared::Cleanup()
 // ******************************************************************
 CXBXKRNL_API EmuShared::EmuShared()
 {
-    m_XBController.Load("Software\\Cxbx-Reloaded\\XBController");
-    m_XBVideo.Load("Software\\Cxbx-Reloaded\\XBVideo");
+    m_XBController.Load("Software\\Cxbx\\XBController");
+    m_XBVideo.Load("Software\\Cxbx\\XBVideo");
 }
 
 // ******************************************************************
@@ -145,6 +145,6 @@ CXBXKRNL_API EmuShared::EmuShared()
 // ******************************************************************
 CXBXKRNL_API EmuShared::~EmuShared()
 {
-    m_XBController.Save("Software\\Cxbx-Reloaded\\XBController");
-    m_XBVideo.Save("Software\\Cxbx-Reloaded\\XBVideo");
+    m_XBController.Save("Software\\Cxbx\\XBController");
+    m_XBVideo.Save("Software\\Cxbx\\XBVideo");
 }
