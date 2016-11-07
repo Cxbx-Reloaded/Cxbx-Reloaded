@@ -58,9 +58,7 @@ PVOID WINAPI XTL::EmuXGIsSwizzledFormat
     XTL::D3DFORMAT Format
 )
 {
-	DbgFuncArgs(
-               "   Format              : 0x%.08X\n",
-			   Format);
+	DbgFuncHexArgs(Format);
 
     return FALSE;
 }
@@ -80,18 +78,7 @@ VOID WINAPI XTL::EmuXGSwizzleRect
     DWORD         BytesPerPixel
 )
 {
-    
-
-	DbgFuncArgs(
-           "   pSource             : 0x%.08X\n"
-           "   Pitch               : 0x%.08X\n"
-           "   pRect               : 0x%.08X\n"
-           "   pDest               : 0x%.08X\n"
-           "   Width               : 0x%.08X\n"
-           "   Height              : 0x%.08X\n"
-           "   pPoint              : 0x%.08X\n"
-           "   BytesPerPixel       : 0x%.08X\n",
-		   pSource, Pitch, pRect, pDest, Width, Height,
+	DbgFuncHexArgs(pSource, Pitch, pRect, pDest, Width, Height,
            pPoint, BytesPerPixel);
 
     if(pRect == NULL && pPoint == NULL && Pitch == 0)
@@ -148,20 +135,7 @@ VOID WINAPI XTL::EmuXGSwizzleBox
     DWORD            BytesPerPixel
 )
 {
-    
-
-	DbgFuncArgs(
-           "   pSource             : 0x%.08X\n"
-           "   RowPitch            : 0x%.08X\n"
-           "   SlicePitch          : 0x%.08X\n"
-           "   pBox                : 0x%.08X\n"
-           "   pDest               : 0x%.08X\n"
-           "   Width               : 0x%.08X\n"
-           "   Height              : 0x%.08X\n"
-           "   Depth               : 0x%.08X\n"
-           "   pPoint              : 0x%.08X\n"
-           "   BytesPerPixel       : 0x%.08X\n",
-		   pSource, RowPitch, SlicePitch, pBox, pDest, Width, Height,
+	DbgFuncHexArgs(pSource, RowPitch, SlicePitch, pBox, pDest, Width, Height,
            Depth, pPoint, BytesPerPixel);
 
 	if(pDest != (LPVOID) 0x80000000)
@@ -322,21 +296,13 @@ HRESULT WINAPI XTL::EmuXGWriteSurfaceOrTextureToXPR
 	BOOL			bWriteSurfaceAsTexture
 )
 {
-		
-
-	DbgFuncArgs(
-           "   pResource              : 0x%.08X\n"
-		   "   cPath                  : 0x%.08X\n"
-		   "   bWriteSurfaceAsTexture : 0x%.08X\n",
-		   pResource, cPath, bWriteSurfaceAsTexture);
+	DbgFuncHexArgs(pResource, cPath, bWriteSurfaceAsTexture);
 
 	// TODO: If necessary, either reverse the .xbx and .xpr file formats
 	// and write the surface/texture to a file, or output a generic .xbx
 	// file and be done with it.
 
 	EmuWarning("(Temporarily) ignoring EmuXGWriteSurfaceOrTextureToXPR. Need file specs.");
-
-		
 
 	return S_OK;
 }
@@ -357,19 +323,7 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 	UINT			Pitch
 )
 {
-		
-
-	DbgFuncArgs(
-           "   Width                  : 0x%.08X\n"
-		   "   Height                 : 0x%.08X\n"
-		   "   Levels                 : 0x%.08X\n"
-		   "   Usage                  : 0x%.08X\n"
-		   "   Format                 : 0x%.08X\n"
-		   "   Pool                   : 0x%.08X\n"
-		   "   pTexture               : 0x%.08X\n"
-		   "   Data                   : 0x%.08X\n"
-		   "   Pitch                  : 0x%.08X\n",
-		   Width, Height, Levels, Usage, 
+	DbgFuncHexArgs(Width, Height, Levels, Usage, 
 				Format, Pool, pTexture, Data, Pitch);
 
 	// NOTES: This function simply creates a texture that needs to be registered
@@ -420,7 +374,6 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 //	D3DCOLOR_XRGB(
 	DbgPrintf( "pTexture->Format:= 0x%.08X\n", pTexture->Format );
 
-		
 }
 
 // ******************************************************************
@@ -435,11 +388,7 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 //{
 //		
 //
-//	DbgFuncArgs(
-//		   "   pFontData              : 0x%.08X\n"
-//		   "   uFontDataSize          : 0x%.08X\n"
-//		   "   ppFont                 : 0x%.08X\n",
-//		   pFontData, uFontDataSize, ppFont);
+//	DbgFuncHexArgs(pFontData, uFontDataSize, ppFont);
 //
 //	__asm int 3;
 //

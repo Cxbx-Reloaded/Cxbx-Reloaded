@@ -56,18 +56,11 @@ int WINAPI XTL::EmuWSAStartup
     WSADATA    *lpWSAData
 )
 {
-    
-
-	DbgFuncArgs(
-           "   wVersionRequested   : 0x%.08X\n"
-           "   lpWSAData           : 0x%.08X\n",
-		   wVersionRequested, lpWSAData);
+	DbgFuncHexArgs(wVersionRequested, lpWSAData);
 
     int ret = WSAStartup(wVersionRequested, lpWSAData);
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
@@ -78,15 +71,9 @@ INT WINAPI XTL::EmuXNetStartup
     const PVOID pDummy
 )
 {
-    
+	DbgFuncHexArgs(pDummy);
 
-	DbgFuncArgs(
-           "   pDummy              : 0x%.08X\n",
-		   pDummy);
-
-    
-
-    // Fake Successfull...hehehe...sucker...hehehehehe
+	// Fake Successfull...hehehe...sucker...hehehehehe
     return 0;
 }
 
@@ -95,13 +82,9 @@ INT WINAPI XTL::EmuXNetStartup
 // ******************************************************************
 DWORD WINAPI XTL::EmuXNetGetEthernetLinkStatus()
 {
-    
+	DbgFuncHexArgs();
 
-	DbgFuncArgs();
-
-    
-
-    // for now, no ethernet connection is available
+	// for now, no ethernet connection is available
     return XNET_ETHERNET_LINK_ACTIVE | XNET_ETHERNET_LINK_100MBPS;
 }
 
@@ -115,20 +98,11 @@ SOCKET XTL::EmuThis::Emusocket
     int   protocol
 )
 {
-    
-
-	DbgFuncArgs(
-           "   this                : 0x%.08X\n"
-           "   af                  : 0x%.08X\n"
-           "   type                : 0x%.08X\n"
-           "   protocol            : 0x%.08X\n",
-		   this, af, type, protocol);
+	DbgFuncHexArgs(this, af, type, protocol);
 
     SOCKET ret = socket(af, type, protocol);
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
@@ -136,22 +110,13 @@ SOCKET XTL::EmuThis::Emusocket
 // ******************************************************************
 int XTL::EmuThis::Emubind(SOCKET s, const struct sockaddr FAR *name, int namelen)
 {
-    
-
-	DbgFuncArgs(
-           "   this                : 0x%.08X\n"
-           "   s                   : 0x%.08X\n"
-           "   name                : 0x%.08X\n"
-           "   namelen             : 0x%.08X\n",
-		   this, s, name, namelen);
+    DbgFuncHexArgs(this, s, name, namelen);
 
     // TODO: Host-To-Network order if necessary (probably not?)
 
     int ret = bind(s, name, namelen);
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
@@ -159,21 +124,13 @@ int XTL::EmuThis::Emubind(SOCKET s, const struct sockaddr FAR *name, int namelen
 // ******************************************************************
 int XTL::EmuThis::Emulisten(SOCKET s, int backlog)
 {
-    
-
-	DbgFuncArgs(
-           "   this                : 0x%.08X\n"
-           "   s                   : 0x%.08X\n"
-           "   listen              : 0x%.08X\n",
-		   this, s, backlog);
+    DbgFuncHexArgs(this, s, backlog);
 
     // TODO: Host-To-Network order if necessary (probably not?)
 
     int ret = listen(s, backlog);
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
@@ -181,20 +138,11 @@ int XTL::EmuThis::Emulisten(SOCKET s, int backlog)
 // ******************************************************************
 int XTL::EmuThis::Emuioctlsocket(SOCKET s, long cmd, u_long FAR *argp)
 {
-    
-
-	DbgFuncArgs(
-           "   this                : 0x%.08X\n"
-           "   s                   : 0x%.08X\n"
-           "   cmd                 : 0x%.08X\n"
-           "   argp                : 0x%.08X\n",
-		   this, s, cmd, argp);
+	DbgFuncHexArgs(this, s, cmd, argp);
 
     int ret = ioctlsocket(s, cmd, argp);
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
@@ -208,7 +156,7 @@ HRESULT WINAPI XOnlineLaunchNewImage
 {
 		
 
-	DbgFuncArgs(
+	DbgFuncFmtArgs(
 		"   lpImagePath           : 0x%.08X (%s)\n"
 		"   pLaunchData           : 0x%.08X\n",
 		lpImagePath, lpImagePath, pLaunchData);
@@ -232,19 +180,9 @@ HRESULT WINAPI XTL::EmuXOnlineLogon
     HANDLE	pHandle
 )
 {
-		
-
-	DbgFuncArgs(
-		"   pUsers                : 0x%.08X\n"
-		"   pdwServiceIDs         : 0x%.08X\n"
-		"   dwServices            : 0x%.08X\n"
-		"   hEvent                : 0x%.08X\n"
-		"   pHandle               : 0x%.08X\n",
-		pUsers, pdwServiceIDs, dwServices, hEvent, pHandle);
+	DbgFuncHexArgs(pUsers, pdwServiceIDs, dwServices, hEvent, pHandle);
 
 	// TODO: What will it take to log on to Xbox Live?
-
-		
 
 	return HRESULT(0x80151000L);	// XONLINE_E_LOGON_NO_NETWORK_CONNECTION
 }
