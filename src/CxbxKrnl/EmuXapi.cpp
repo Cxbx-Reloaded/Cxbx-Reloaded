@@ -84,7 +84,7 @@ XTL::LAUNCH_DATA g_SavedLaunchData;
 // ******************************************************************
 BOOL WINAPI XTL::EmuXFormatUtilityDrive()
 {
-	DbgFuncArgs();
+	DbgFuncHexArgs();
 
     // TODO: yeah... we'll format... riiiiight
 
@@ -99,17 +99,11 @@ DWORD WINAPI XTL::EmuGetTimeZoneInformation
     OUT LPTIME_ZONE_INFORMATION lpTimeZoneInformation
 )
 {
-    
-
-	DbgFuncArgs(
-           "   lpTimeZoneInformation : 0x%.08X\n",
-		   lpTimeZoneInformation);
+	DbgFuncHexArgs(lpTimeZoneInformation);
 
     DWORD dwRet = GetTimeZoneInformation(lpTimeZoneInformation);
 
-    
-
-    return dwRet;
+	return dwRet;
 }
 
 // ******************************************************************
@@ -120,20 +114,14 @@ BOOL WINAPI XTL::EmuQueryPerformanceCounter
     PLARGE_INTEGER lpPerformanceCount
 )
 {
-    
-
-	DbgFuncArgs(
-           "   lpPerformanceCount  : 0x%.08X\n",
-		   lpPerformanceCount);
+	DbgFuncHexArgs(lpPerformanceCount);
 
     BOOL bRet = QueryPerformanceCounter(lpPerformanceCount);
 
     // debug - 4x speed
     //lpPerformanceCount->QuadPart *= 4;
 
-    
-
-    return bRet;
+	return bRet;
 }
 
 // ******************************************************************
@@ -144,17 +132,11 @@ BOOL WINAPI XTL::EmuQueryPerformanceFrequency
     PLARGE_INTEGER lpFrequency
 )
 {
-    
-
-	DbgFuncArgs(
-           "   lpFrequency         : 0x%.08X\n",
-		   lpFrequency);
+	DbgFuncHexArgs(lpFrequency);
 
     BOOL bRet = QueryPerformanceFrequency(lpFrequency);
 
-    
-
-    return bRet;
+	return bRet;
 }
 
 // ******************************************************************
@@ -165,9 +147,7 @@ BOOL WINAPI XTL::EmuXMountUtilityDrive
     BOOL    fFormatClean
 )
 {
-	DbgFuncArgs(
-               "   fFormatClean        : 0x%.08X\n",
-			   fFormatClean);
+	DbgFuncHexArgs(fFormatClean);
 
 	CxbxMountUtilityDrive(fFormatClean);
 
@@ -183,12 +163,7 @@ VOID WINAPI XTL::EmuXInitDevices
 	PXDEVICE_PREALLOC_TYPE	PreallocTypes
 )
 {
-    
-
-	DbgFuncArgs(
-           "   dwPreallocTypeCount : 0x%.08X\n"
-           "   PreallocTypes       : 0x%.08X\n",
-		   dwPreallocTypeCount, PreallocTypes);
+	DbgFuncHexArgs(dwPreallocTypeCount, PreallocTypes);
 
 	/*for( DWORD i = 0; i < dwPreallocTypeCount; i++ )
 	{
@@ -225,11 +200,7 @@ DWORD WINAPI XTL::EmuXGetDevices
     PXPP_DEVICE_TYPE DeviceType
 )
 {
-    
-
-	DbgFuncArgs(
-           "   DeviceType          : 0x%.08X\n",
-		   DeviceType);
+	DbgFuncHexArgs(DeviceType);
 
     DWORD ret = 0;
 
@@ -253,13 +224,7 @@ BOOL WINAPI XTL::EmuXGetDeviceChanges
     PDWORD           pdwRemovals
 )
 {
-    
-
-	DbgFuncArgs(
-           "   DeviceType          : 0x%.08X\n"
-           "   pdwInsertions       : 0x%.08X\n"
-           "   pdwRemovals         : 0x%.08X\n",
-		   DeviceType, pdwInsertions, pdwRemovals);
+	DbgFuncHexArgs(DeviceType, pdwInsertions, pdwRemovals);
 
     BOOL bRet = FALSE;
     static BOOL bFirst = TRUE;
@@ -302,14 +267,7 @@ HANDLE WINAPI XTL::EmuXInputOpen
     IN PXINPUT_POLLING_PARAMETERS   pPollingParameters OPTIONAL
 )
 {
-    
-
-	DbgFuncArgs(
-           "   DeviceType          : 0x%.08X\n"
-           "   dwPort              : 0x%.08X\n"
-           "   dwSlot              : 0x%.08X\n"
-           "   pPollingParameters  : 0x%.08X\n",
-		   DeviceType, dwPort, dwSlot, pPollingParameters);
+	DbgFuncHexArgs(DeviceType, dwPort, dwSlot, pPollingParameters);
 
     POLLING_PARAMETERS_HANDLE *pph = 0;
 
@@ -374,11 +332,7 @@ VOID WINAPI XTL::EmuXInputClose
     IN HANDLE hDevice
 )
 {
-    
-
-	DbgFuncArgs(
-           "   hDevice             : 0x%.08X\n",
-		   hDevice);
+	DbgFuncHexArgs(hDevice);
 
     POLLING_PARAMETERS_HANDLE *pph = (POLLING_PARAMETERS_HANDLE*)hDevice;
 
@@ -407,9 +361,7 @@ VOID WINAPI XTL::EmuXInputClose
     }
     //*/
 
-    
-
-    return;
+	return;
 }
 
 // ******************************************************************
@@ -420,11 +372,7 @@ DWORD WINAPI XTL::EmuXInputPoll
     IN HANDLE hDevice
 )
 {
-    
-
-	DbgFuncArgs(
-           "   hDevice             : 0x%.08X\n",
-		   hDevice);
+	DbgFuncHexArgs(hDevice);
 
     POLLING_PARAMETERS_HANDLE *pph = (POLLING_PARAMETERS_HANDLE*)hDevice;
 
@@ -479,12 +427,7 @@ DWORD WINAPI XTL::EmuXInputGetCapabilities
     OUT PXINPUT_CAPABILITIES pCapabilities
 )
 {
-    
-
-	DbgFuncArgs(
-           "   hDevice             : 0x%.08X\n"
-           "   pCapabilities       : 0x%.08X\n",
-		   hDevice, pCapabilities);
+	DbgFuncHexArgs(hDevice, pCapabilities);
 
     DWORD ret = ERROR_INVALID_HANDLE;
 
@@ -518,12 +461,7 @@ DWORD WINAPI XTL::EmuXInputGetState
     OUT PXINPUT_STATE  pState
 )
 {
-    
-
-	DbgFuncArgs(
-           "   hDevice             : 0x%.08X\n"
-           "   pState              : 0x%.08X\n",
-		   hDevice, pState);
+	DbgFuncHexArgs(hDevice, pState);
 
     DWORD ret = ERROR_INVALID_HANDLE;
 
@@ -574,12 +512,7 @@ DWORD WINAPI XTL::EmuXInputSetState
     IN OUT PXINPUT_FEEDBACK pFeedback
 )
 {
-    
-
-	DbgFuncArgs(
-           "   hDevice             : 0x%.08X\n"
-           "   pFeedback           : 0x%.08X\n",
-		   hDevice, pFeedback);
+	DbgFuncHexArgs(hDevice, pFeedback);
 
     DWORD ret = ERROR_IO_PENDING;
 
@@ -655,21 +588,14 @@ BOOL WINAPI XTL::EmuSetThreadPriorityBoost
     BOOL    DisablePriorityBoost
 )
 {
-    
-
-	DbgFuncArgs(
-           "   hThread             : 0x%.08X\n"
-           "   DisablePriorityBoost: 0x%.08X\n",
-		   hThread, DisablePriorityBoost);
+	DbgFuncHexArgs(hThread, DisablePriorityBoost);
 
     BOOL bRet = SetThreadPriorityBoost(hThread, DisablePriorityBoost);
 
     if(bRet == FALSE)
         EmuWarning("SetThreadPriorityBoost Failed!");
 
-    
-
-    return bRet;
+	return bRet;
 }
 
 // ******************************************************************
@@ -681,21 +607,14 @@ BOOL WINAPI XTL::EmuSetThreadPriority
     int     nPriority
 )
 {
-    
-
-	DbgFuncArgs(
-           "   hThread             : 0x%.08X\n"
-           "   nPriority           : 0x%.08X\n",
-		   hThread, nPriority);
+	DbgFuncHexArgs(hThread, nPriority);
 
     BOOL bRet = SetThreadPriority(hThread, nPriority);
 
     if(bRet == FALSE)
         EmuWarning("SetThreadPriority Failed!");
 
-    
-
-    return bRet;
+	return bRet;
 }
 
 
@@ -707,20 +626,14 @@ int WINAPI XTL::EmuGetThreadPriority
     HANDLE  hThread
 )
 {
-    
-
-	DbgFuncArgs(
-           "   hThread             : 0x%.08X\n",
-		   hThread);
+	DbgFuncHexArgs(hThread);
 
     int iRet = GetThreadPriority(hThread);
 
     if(iRet == THREAD_PRIORITY_ERROR_RETURN)
         EmuWarning("GetThreadPriority Failed!");
 
-    
-
-    return iRet;
+	return iRet;
 }
 
 // ******************************************************************
@@ -732,18 +645,11 @@ BOOL WINAPI XTL::EmuGetExitCodeThread
     LPDWORD lpExitCode
 )
 {
-    
-
-	DbgFuncArgs(
-           "   hThread             : 0x%.08X\n"
-           "   lpExitCode          : 0x%.08X\n",
-		   hThread, lpExitCode);
+	DbgFuncHexArgs(hThread, lpExitCode);
 
     BOOL bRet = GetExitCodeThread(hThread, lpExitCode);
 
-    
-
-    return bRet;
+	return bRet;
 }
 
 // ******************************************************************
@@ -755,16 +661,9 @@ VOID WINAPI XTL::EmuXapiThreadStartup
     DWORD dwDummy2
 )
 {
-    
+	DbgDbgFuncNewFuncArgs(dwDummy1, dwDummy2);
 
-	DbgFuncArgs(
-           "   dwDummy1            : 0x%.08X\n"
-           "   dwDummy2            : 0x%.08X\n",
-		   dwDummy1, dwDummy2);
-
-    
-
-    typedef int (__stdcall *pfDummyFunc)(DWORD dwDummy);
+	typedef int (__stdcall *pfDummyFunc)(DWORD dwDummy);
 
     pfDummyFunc func = (pfDummyFunc)dwDummy1;
 
@@ -796,7 +695,7 @@ VOID WINAPI XTL::EmuXRegisterThreadNotifyRoutine
 {
     
 
-	DbgFuncArgs(
+	DbgFuncFmtArgs(
            "   pThreadNotification : 0x%.08X (0x%.08X)\n"
            "   fRegister           : 0x%.08X\n",
 		   pThreadNotification, pThreadNotification->pfnNotifyRoutine, fRegister);
@@ -848,13 +747,7 @@ DWORD WINAPI XTL::EmuQueueUserAPC
 	DWORD		dwData
 )
 {
-		
-
-	DbgFuncArgs(
-			"   pfnAPC           : 0x%.08X\n"
-			"   hThread          : 0x%.08X\n"
-			"   dwData           : 0x%.08X\n",
-			pfnAPC, hThread, dwData);
+	DbgFuncHexArgs(pfnAPC, hThread, dwData);
 
 	DWORD dwRet = 0;
 
@@ -868,8 +761,6 @@ DWORD WINAPI XTL::EmuQueueUserAPC
 	dwRet = QueueUserAPC(pfnAPC, hApcThread, dwData);
 	if(!dwRet)
 		EmuWarning("QueueUserAPC failed!");
-
-		
 
 	return dwRet;
 }
@@ -885,21 +776,12 @@ BOOL WINAPI XTL::EmuGetOverlappedResult
 	BOOL			bWait
 )
 {
-		
-
-	DbgFuncArgs(
-			"   hFile            : 0x%.08X\n"
-			"   lpOverlapped     : 0x%.08X\n"
-			"   lpNumberOfBytesTransformed : 0x%.08X\n"
-			"   bWait            : 0x%.08X\n",
-			hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait);
+	DbgFuncHexArgs(hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait);
 
 	BOOL bRet = GetOverlappedResult( hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait );
 
 //	if(bWait)
 //		bRet = TRUE; // Sucker...
-
-		
 
 	return bRet;
 }
@@ -915,7 +797,7 @@ DWORD WINAPI XTL::EmuXLaunchNewImage
 {
 		
 
-	DbgFuncArgs(
+	DbgFuncFmtArgs(
 			"   lpTitlePath      : 0x%.08X (%s)\n"
 			"   pLaunchData      : 0x%.08X\n",
 			lpTitlePath, lpTitlePath, pLaunchData);
@@ -996,12 +878,7 @@ DWORD WINAPI XTL::EmuXGetLaunchInfo
 	PLAUNCH_DATA	pLaunchData
 )
 {
-		
-
-	DbgFuncArgs(
-			"   pdwLaunchDataType : 0x%.08X\n"
-			"   pLaunchData       : 0x%.08X\n",
-			pdwLaunchDataType, pLaunchData);
+	DbgFuncHexArgs(pdwLaunchDataType, pLaunchData);
 	
 	// The title was launched by turning on the Xbox console with the title disc already in the DVD drive
 	DWORD dwRet = ERROR_NOT_FOUND;
@@ -1063,16 +940,10 @@ VOID WINAPI XTL::EmuXSetProcessQuantumLength
     DWORD dwMilliseconds
 )
 {
-		
-
-	DbgFuncArgs(
-			"   dwMilliseconds    : 0x%.08X\n",
-			dwMilliseconds);
+	DbgFuncHexArgs(dwMilliseconds);
 
 	// TODO: Implement?
 	EmuWarning("XSetProcessQuantumLength is being ignored!");
-
-		
 }
 	
 // ******************************************************************
@@ -1080,15 +951,11 @@ VOID WINAPI XTL::EmuXSetProcessQuantumLength
 // ******************************************************************
 DWORD WINAPI XTL::EmuXGetFileCacheSize()
 {
-		
-
-	DbgFuncArgs();
+	DbgFuncHexArgs();
 
 	// Return the default cache size for now.
 	// TODO: Save the file cache size if/when set.
 	DWORD dwRet = 64 * 1024;
-
-	
 
 	return dwRet;
 }
@@ -1104,18 +971,9 @@ DWORD WINAPI XTL::EmuSignalObjectAndWait
 	BOOL	bAlertable
 )
 {
-		
-
-	DbgFuncArgs(
-			"   hObjectToSignal   : 0x%.08X\n"
-			"   hObjectToWaitOn   : 0x%.08X\n"
-			"   dwMilliseconds    : 0x%.08X\n"
-			"   bAlertable        : 0x%.08X\n",
-			hObjectToSignal, hObjectToWaitOn, dwMilliseconds, bAlertable);
+	DbgFuncHexArgs(hObjectToSignal, hObjectToWaitOn, dwMilliseconds, bAlertable);
 
 	DWORD dwRet = SignalObjectAndWait( hObjectToSignal, hObjectToWaitOn, dwMilliseconds, bAlertable ); 
-
-		
 
 	return dwRet;
 }
@@ -1125,18 +983,12 @@ DWORD WINAPI XTL::EmuSignalObjectAndWait
 // ******************************************************************
 BOOL WINAPI XTL::EmuPulseEvent( HANDLE hEvent )
 {
-		
-
-	DbgFuncArgs(
-			"   hEvent            : 0x%.08X\n",
-			hEvent);
+	DbgFuncHexArgs(hEvent);
 
 	// TODO: This function might be a bit too high level.  If it is,
 	// feel free to implement NtPulseEvent in EmuKrnl.cpp
 
 	BOOL bRet = PulseEvent( hEvent );
-
-		
 
 	return bRet;
 }
@@ -1153,19 +1005,9 @@ MMRESULT WINAPI XTL::EmutimeSetEvent
 	UINT			fuEvent
 )
 {
-		
-
-	DbgFuncArgs(
-			"   uDelay            : 0x%.08X\n"
-			"   uResolution       : 0x%.08X\n"
-			"   fptc              : 0x%.08X\n"
-			"   dwUser            : 0x%.08X\n"
-			"   fuEvent           : 0x%.08X\n",
-			uDelay, uResolution, fptc, dwUser, fuEvent);
+	DbgFuncHexArgs(uDelay, uResolution, fptc, dwUser, fuEvent);
 
 	MMRESULT Ret = timeSetEvent( uDelay, uResolution, fptc, (DWORD_PTR) dwUser, fuEvent );
-
-		
 
 	return Ret;
 }
@@ -1178,15 +1020,9 @@ MMRESULT WINAPI XTL::EmutimeKillEvent
 	UINT uTimerID  
 )
 {
-		
-
-	DbgFuncArgs(
-			"   uTimerID          : 0x%.08X\n",
-			uTimerID);
+	DbgFuncHexArgs(uTimerID);
 
 	MMRESULT Ret = timeKillEvent( uTimerID );
-
-		
 
 	return Ret;
 }
@@ -1202,19 +1038,10 @@ VOID WINAPI XTL::EmuRaiseException
 	CONST ULONG_PTR *lpArguments		   // array of arguments
 )
 {
-		
-
-	DbgFuncArgs(
-			"   dwExceptionCode   : 0x%.08X\n"
-			"   dwExceptionFlags  : 0x%.08X\n"
-			"   nNumberOfArguments: 0x%.08X\n"
-			"   lpArguments       : 0x%.08X\n",
-			dwExceptionCode, dwExceptionFlags, nNumberOfArguments, lpArguments);
+	DbgFuncHexArgs(dwExceptionCode, dwExceptionFlags, nNumberOfArguments, lpArguments);
 
 	// TODO: Implement or not?
 //	RaiseException(dwExceptionCode, dwExceptionFlags, nNumberOfArguments, (*(ULONG_PTR**) &lpArguments));
-
-		
 }
 
 // ******************************************************************
@@ -1227,7 +1054,7 @@ DWORD WINAPI XTL::EmuGetFileAttributesA
 {
 		
 
-	DbgFuncArgs(
+	DbgFuncFmtArgs(
 			"   lpFileName        : (%s)\n",
 			lpFileName);
 
@@ -1268,7 +1095,7 @@ DWORD WINAPI XTL::EmuXMountMUA
 {
 		
 
-	DbgFuncArgs(
+	DbgFuncFmtArgs(
 			"   dwPort            : 0x%.08X\n"
 			"   dwSlot            : 0x%.08X\n"
 			"   pchDrive          : 0x%.08X (%s)\n",
@@ -1294,7 +1121,7 @@ HANDLE WINAPI XTL::EmuCreateWaitableTimerA
 {
 		
 
-	DbgFuncArgs(
+	DbgFuncFmtArgs(
 			"   lpTimerAttributes : 0x%.08X\n"
 			"   bManualReset      : 0x%.08X\n"
 			"   lpTimerName       : 0x%.08X (%s)\n",
@@ -1324,25 +1151,13 @@ BOOL WINAPI XTL::EmuSetWaitableTimer
 	BOOL				fResume                     // resume state
 )
 {
-	
-		
-
-	DbgFuncArgs(
-			"   hTimer            : 0x%.08X\n"
-			"   pDueTime          : 0x%.08X\n"
-			"   lPeriod           : 0x%.08X\n"
-			"   pfnCompletionRoutine : 0x%.08X\n"
-			"   lpArgToCompletionRoutine : 0x%.08X\n"
-			"   fResume           : 0x%.08X\n",
-			hTimer, pDueTime, lPeriod, pfnCompletionRoutine,
+	DbgFuncHexArgs(hTimer, pDueTime, lPeriod, pfnCompletionRoutine,
 				lpArgToCompletionRoutine, fResume);
 
 	BOOL Ret = SetWaitableTimer( hTimer, pDueTime, lPeriod, pfnCompletionRoutine,
 							lpArgToCompletionRoutine, fResume );
 	if(!Ret)
 		EmuWarning("SetWaitableTimer failed!");
-
-		
 
 	return Ret;
 }
@@ -1359,7 +1174,7 @@ DWORD WINAPI XTL::EmuXMountAlternateTitle
 {
 		
 
-	DbgFuncArgs(
+	DbgFuncFmtArgs(
 			"   lpRootPath         : 0x%.08X (%s)\n"
 			"   dwAltTitleId       : 0x%.08X\n"
 			"   pchDrive           : 0x%.08X (%s)\n",
@@ -1379,7 +1194,7 @@ DWORD WINAPI XTL::EmuXUnmountAlternateTitle(CHAR chDrive)
 {
 		
 
-	DbgFuncArgs(
+	DbgFuncFmtArgs(
 			"   chDrive           : 0x%.08X (%c)\n",
 			chDrive, chDrive);
 
@@ -1393,11 +1208,7 @@ DWORD WINAPI XTL::EmuXUnmountAlternateTitle(CHAR chDrive)
 // ******************************************************************
 DWORD WINAPI XTL::EmuXGetDeviceEnumerationStatus()
 {
-		
-
-	DbgFuncArgs();
-
-		
+	DbgFuncHexArgs();
 
 	return XDEVICE_ENUMERATION_IDLE;
 }
@@ -1411,16 +1222,9 @@ DWORD WINAPI XTL::EmuXInputGetDeviceDescription
     PVOID	pDescription
 )
 {
-		
-
-	DbgFuncArgs(
-           "   hDevice             : 0x%.08X\n"
-		   "   pDescription        : 0x%.08X\n",
-		   hDevice, pDescription);
+	DbgFuncHexArgs(hDevice, pDescription);
 
 	// TODO: Lightgun support?
-
-		
 
 	return ERROR_NOT_SUPPORTED; // ERROR_DEVICE_NOT_CONNECTED;
 }
@@ -1430,14 +1234,9 @@ DWORD WINAPI XTL::EmuXInputGetDeviceDescription
 // ******************************************************************
 int WINAPI XTL::EmuXAutoPowerDownResetTimer()
 {
-		
-
-	DbgFuncArgs();
-
+	DbgFuncHexArgs();
 
 	// Meh, that's what the 'X' is for! =]
-
-		
 
 	return TRUE;
 }
@@ -1455,7 +1254,7 @@ DWORD WINAPI XTL::EmuXMountMURootA
 	
 		
 
-	DbgFuncArgs(
+	DbgFuncFmtArgs(
 			"   dwPort            : 0x%.08X\n"
 			"   dwSlot            : 0x%.08X\n"
 			"   pchDrive          : 0x%.08X (%s)\n",

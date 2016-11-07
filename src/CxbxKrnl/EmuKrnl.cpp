@@ -1075,11 +1075,7 @@ static unsigned int WINAPI PCSTProxy
     // Once deleted, unable to directly access iPCSTProxyParam in remainder of function.
     delete iPCSTProxyParam;
 
-	DbgFuncArgs(
-           "   StartContext1       : 0x%.08X\n"
-           "   StartContext2       : 0x%.08X\n"
-           "   StartRoutine        : 0x%.08X\n",
-           StartContext1, StartContext2, StartRoutine);
+	DbgFuncHexArgs(StartContext1, StartContext2, StartRoutine);
 
     if(StartSuspended == TRUE)
         SuspendThread(GetCurrentThread());
@@ -1287,9 +1283,7 @@ using namespace xboxkrnl;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress()
 {
-	
-
-	DbgFuncArgs();
+	DbgFuncHexArgs();
 
 	__asm int 3;
 
@@ -1347,14 +1341,7 @@ XBSYSAPI EXPORTNUM(2) VOID NTAPI xboxkrnl::AvSendTVEncoderOption
     OUT ULONG   *Result
 )
 {
-		
-
-	DbgFuncArgs(
-           "   RegisterBase       : 0x%.08X\n"
-		   "   Option             : 0x%.08X\n"
-		   "   Param              : 0x%.08X\n"
-		   "   Result             : 0x%.08X\n",
-           RegisterBase, Option, Param, Result);
+	DbgFuncHexArgs(RegisterBase, Option, Param, Result);
 
 	// TODO: What does this do?
 	EmuWarning( "AvSendTVEncoderOption ignored!" );
@@ -1372,7 +1359,7 @@ XBSYSAPI EXPORTNUM(8) xboxkrnl::ULONG _cdecl xboxkrnl::DbgPrint
 {
 	
 
-	DbgFuncArgs(
+	DbgFuncFmtArgs(
 		"   Format              : 0x%.08X\n"
 		"   ...\n",
 		Format);
@@ -1407,12 +1394,7 @@ XBSYSAPI EXPORTNUM(9) VOID NTAPI xboxkrnl::HalReadSMCTrayState
 	DWORD*	Count
 )
 {
-		
-	
-	DbgFuncArgs(
-           "   State              : 0x%.08X\n"
-		   "   Count              : 0x%.08X\n",
-           State, Count);
+	DbgFuncHexArgs(State, Count);
 
 #define TRAY_CLOSED_MEDIA_PRESENT 96
 #define TRAY_CLOSED_NO_MEDIA 64
@@ -1438,11 +1420,7 @@ XBSYSAPI EXPORTNUM(14) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePool
     IN ULONG NumberOfBytes
 )
 {
-    
-
-    DbgFuncArgs(
-           "   NumberOfBytes       : 0x%.08X\n",
-           NumberOfBytes);
+    DbgFuncHexArgs(NumberOfBytes);
 
     PVOID pRet = ExAllocatePoolWithTag(NumberOfBytes, (ULONG)"enoN");
 
@@ -1463,12 +1441,7 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
     IN ULONG Tag
 )
 {
-    
-
-    DbgFuncArgs(
-           "   NumberOfBytes       : 0x%.08X\n"
-           "   Tag                 : 0x%.08X\n",
-		   NumberOfBytes, Tag);
+    DbgFuncHexArgs(NumberOfBytes, Tag);
 
     // TODO: Actually implement this
     PVOID pRet = CxbxMalloc(NumberOfBytes);
@@ -1486,11 +1459,7 @@ XBSYSAPI EXPORTNUM(17) VOID NTAPI xboxkrnl::ExFreePool
 	IN PVOID	P
 )
 {
-		
-	
-	DbgFuncArgs(
-           "   P                  : 0x%.08X\n",
-           P);
+	DbgFuncHexArgs(P);
 
 	CxbxFree(P);
 }
@@ -1503,9 +1472,7 @@ XBSYSAPI EXPORTNUM(23) xboxkrnl::ULONG NTAPI xboxkrnl::ExQueryPoolBlockSize
 	IN PVOID PoolBlock
 )
 {
-	DbgFuncArgs(
-		"   PoolBlock          : 0x%.08X\n",
-		PoolBlock);
+	DbgFuncHexArgs(PoolBlock);
 
 	// Not strictly correct, but it will do for now
 	return MmQueryAllocationSize(PoolBlock);
@@ -1523,15 +1490,7 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
     OUT PSIZE_T             ResultLength OPTIONAL
 )
 {
-    
-
-    DbgFuncArgs(
-           "   ValueIndex          : 0x%.08X\n"
-           "   Type                : 0x%.08X\n"
-           "   Value               : 0x%.08X\n"
-           "   ValueLength         : 0x%.08X\n"
-           "   ResultLength        : 0x%.08X\n",
-           ValueIndex, Type, Value, ValueLength, ResultLength);
+    DbgFuncHexArgs(ValueIndex, Type, Value, ValueLength, ResultLength);
 
     if (!Type || !Value)
         CxbxKrnlCleanup("Assertion in ExQueryNonVolatileSetting()");
@@ -1644,18 +1603,10 @@ XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
 	DWORD	Unknown3
 )
 {
-	
-
-    DbgFuncArgs(
-           "   Unknown1            : 0x%.08X\n"
-           "   Unknown2            : 0x%.08X\n"
-           "   Unknown3            : 0x%.08X\n",
-           Unknown1, Unknown2, Unknown3);
+    DbgFuncHexArgs(Unknown1, Unknown2, Unknown3);
 
 	// TODO: What does this do?
 	EmuWarning( "ExReadWriteRefurbInfo ignored!" );
-
-		
 
 	return STATUS_SUCCESS;
 }
@@ -1671,18 +1622,9 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
     IN  SIZE_T              ValueLength
 )
 {
-	
-
-    DbgFuncArgs(
-           "   ValueIndex          : 0x%.08X\n"
-           "   Type                : 0x%.08X\n"
-           "   Value               : 0x%.08X\n"
-           "   ValueLength         : 0x%.08X\n",
-           ValueIndex, Type, Value, ValueLength);
+	DbgFuncHexArgs(ValueIndex, Type, Value, ValueLength);
 
 	// TODO: Later.
-
-		
 
 	return STATUS_SUCCESS;
 }
@@ -1692,13 +1634,9 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 // ******************************************************************
 XBSYSAPI EXPORTNUM(35) xboxkrnl::DWORD NTAPI xboxkrnl::FscGetCacheSize()
 {
-	
-
-	DbgFuncArgs();
+	DbgFuncHexArgs();
 
     EmuWarning("FscGetCacheSize returning default 64kb");
-
-    
 
 	return 64*1024;
 }
@@ -1708,15 +1646,9 @@ XBSYSAPI EXPORTNUM(35) xboxkrnl::DWORD NTAPI xboxkrnl::FscGetCacheSize()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(37) xboxkrnl::LONG NTAPI xboxkrnl::FscSetCacheSize(ULONG uCachePages)
 {
-    
-
-    DbgFuncArgs(
-           "   uCachePages         : 0x%.08X\n",
-           uCachePages);
+    DbgFuncHexArgs(uCachePages);
 
     EmuWarning("FscSetCacheSize is being ignored");
-
-    
 
     return 0;
 }
@@ -1730,18 +1662,11 @@ XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG  NTAPI xboxkrnl::HalGetInterruptVector
     OUT CHAR*  Irql
 )
 {
-	
-
-    DbgFuncArgs(
-           "   InterruptLevel      : 0x%.08X\n"
-		   "   Irql                : 0x%.08X\n",
-           InterruptLevel, Irql);
+    DbgFuncHexArgs(InterruptLevel, Irql);
 
 	// I'm only adding this for Virtua Cop 3 (Chihiro). Xbox games need not emulate this.
 
 	EmuWarning( "HalGetInterruptVector(): If this is NOT a Chihiro game, tell blueshogun!" );
-
-    
 
 	return 1;
 }
@@ -1757,14 +1682,7 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
     OUT PULONG              DataValue
 )
 {
-	
-
-    DbgFuncArgs(
-           "   Address             : 0x%.08X\n"
-           "   Command             : 0x%.08X\n"
-           "   ReadWord            : 0x%.08X\n"
-           "   DataValue           : 0x%.08X\n",
-           Address, Command, ReadWord, DataValue);
+    DbgFuncHexArgs(Address, Command, ReadWord, DataValue);
 
     if (ReadWord) {
         // Write UCHAR
@@ -1772,7 +1690,6 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
         // Write BYTE
     }
 
-		
 
 	return STATUS_SUCCESS;
 }
@@ -1786,12 +1703,7 @@ XBSYSAPI EXPORTNUM(47) VOID xboxkrnl::HalRegisterShutdownNotification
 	IN BOOLEAN Register
 )
 {
-	
-
-	DbgFuncArgs(
-		"   ShutdownRegistration : 0x%.08X\n"
-		"   Register             : 0x%.08X\n",
-		ShutdownRegistration, Register);
+	DbgFuncHexArgs(ShutdownRegistration, Register);
 
 	EmuWarning("HalRegisterShutdownNotification not implemented!\n");
 	
@@ -1809,18 +1721,12 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
     RETURN_FIRMWARE Routine
 )
 {
-    
-
-    DbgFuncArgs(
-           "   Routine             : 0x%.08X\n",
-           Routine);
+    DbgFuncHexArgs(Routine);
 
 	// Prevent the dashboard from rebooting due to unimplemented crypto routines
 	if ((uint32_t)Routine != 4) {
 		CxbxKrnlCleanup("Xbe has rebooted : HalReturnToFirmware(%d)", Routine);
 	}
-
-	 
 }
 
 // ******************************************************************
@@ -1834,18 +1740,9 @@ XBSYSAPI EXPORTNUM(50) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMBusValue
     IN  ULONG               DataValue
 )
 {
-	
-
-    DbgFuncArgs(
-           "   Address             : 0x%.08X\n"
-           "   Command             : 0x%.08X\n"
-           "   WriteWord           : 0x%.08X\n"
-           "   DataValue           : 0x%.08X\n",
-           Address, Command, WriteWord, DataValue);
+    DbgFuncHexArgs(Address, Command, WriteWord, DataValue);
 
 	// TODO: Later.
-
-		
 
 	return STATUS_SUCCESS;
 }
@@ -1869,7 +1766,7 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 {
     
 
-    DbgFuncArgs(
+    DbgFuncFmtArgs(
            "   FileHandle          : 0x%.08X\n"
            "   DesiredAccess       : 0x%.08X\n"
            "   ObjectAttributes    : 0x%.08X (%s)\n"
@@ -1904,7 +1801,7 @@ XBSYSAPI EXPORTNUM(67) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateSymbolicLink
 {
     
 
-    DbgFuncArgs(
+    DbgFuncFmtArgs(
            "   SymbolicLinkName    : 0x%.08X (%s)\n"
            "   DeviceName          : 0x%.08X (%s)\n",
            SymbolicLinkName->Buffer, SymbolicLinkName->Buffer,
@@ -1927,7 +1824,7 @@ XBSYSAPI EXPORTNUM(69) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDeleteSymbolicLink
 {
     
 
-    DbgFuncArgs(
+    DbgFuncFmtArgs(
            "   SymbolicLinkName    : 0x%.08X (%s)\n",
            SymbolicLinkName, SymbolicLinkName->Buffer);
 
@@ -1953,7 +1850,7 @@ XBSYSAPI EXPORTNUM(91) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDismountVolumeByName
 {
 		
 
-	DbgFuncArgs(
+	DbgFuncFmtArgs(
 			"   VolumeName        : 0x%.08X (%s)\n",
 			VolumeName, VolumeName->Buffer);
 
@@ -1973,15 +1870,9 @@ XBSYSAPI EXPORTNUM(95) VOID NTAPI xboxkrnl::KeBugCheck
 	IN ULONG BugCheckMode
 )
 {
-		
-
-	DbgFuncArgs(
-			"   BugCheckMode      : 0x%.08X\n",
-			BugCheckMode);
+	DbgFuncHexArgs(BugCheckMode);
 
 	// TODO: Investigate XapiFiberStartup maybe?
-
-		
 }
 
 // ******************************************************************
@@ -1992,13 +1883,8 @@ XBSYSAPI EXPORTNUM(98) xboxkrnl::LONG NTAPI xboxkrnl::KeConnectInterrupt
     IN PKINTERRUPT  InterruptObject
 )
 {
-		
+	DbgFuncHexArgs(InterruptObject);
 
-	DbgFuncArgs(
-			"   InterruptObject   : 0x%.08X\n",
-			InterruptObject);
-
-		
 
 	return 0;
 }
@@ -2015,7 +1901,7 @@ XBSYSAPI EXPORTNUM(99) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeDelayExecutionThread
 {
     
 
-    DbgFuncArgs(
+    DbgFuncFmtArgs(
            "   WaitMode            : 0x%.08X\n"
            "   Alertable           : 0x%.08X\n"
            "   Interval            : 0x%.08X (%I64d)\n",
@@ -2038,21 +1924,13 @@ XBSYSAPI EXPORTNUM(107) VOID NTAPI xboxkrnl::KeInitializeDpc
     PVOID                DeferredContext
 )
 {
-    
-
-    DbgFuncArgs(
-           "   Dpc                 : 0x%.08X\n"
-           "   DeferredRoutine     : 0x%.08X\n"
-           "   DeferredContext     : 0x%.08X\n",
-           Dpc, DeferredRoutine, DeferredContext);
+    DbgFuncHexArgs(Dpc, DeferredRoutine, DeferredContext);
 
     // inialize Dpc field values
     Dpc->DeferredRoutine = DeferredRoutine;
     Dpc->Type = DpcObject;
     Dpc->DeferredContext = DeferredContext;
     Dpc->Inserted = FALSE;
-
-    
 
     return;
 }
@@ -2071,19 +1949,8 @@ XBSYSAPI EXPORTNUM(109) VOID NTAPI xboxkrnl::KeInitializeInterrupt
     IN BOOLEAN ShareVector
 )
 {
-	
+    DbgFuncHexArgs(Interrupt, ServiceRoutine, ServiceContext, Vector, Irql, InterruptMode, ShareVector);
 
-    DbgFuncArgs(
-           "   Interrupt           : 0x%.08X\n"
-           "   ServiceRoutine      : 0x%.08X\n"
-           "   ServiceContext      : 0x%.08X\n"
-		   "   Vector              : 0x%.08X\n"
-		   "   Irql                : 0x%.08X\n"
-		   "   InterruptMode       : 0x%.08X\n"
-		   "   ShareVector         : 0x%.08X\n",
-           Interrupt, ServiceRoutine, ServiceContext, Vector, Irql, InterruptMode, ShareVector);
-
-    
 }
 
 // ******************************************************************
@@ -2095,12 +1962,7 @@ XBSYSAPI EXPORTNUM(113) VOID NTAPI xboxkrnl::KeInitializeTimerEx
     IN TIMER_TYPE   Type
 )
 {
-    
-
-    DbgFuncArgs(
-           "   Timer               : 0x%.08X\n"
-           "   Type                : 0x%.08X\n",
-           Timer, Type);
+    DbgFuncHexArgs(Timer, Type);
 
     Timer->Header.Type               = Type + 8;  // 8 = TimerNotificationObject 
     Timer->Header.Inserted           = 0;
@@ -2125,9 +1987,7 @@ XBSYSAPI EXPORTNUM(113) VOID NTAPI xboxkrnl::KeInitializeTimerEx
 // ******************************************************************
 XBSYSAPI EXPORTNUM(126) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceCounter()
 {
-    
-
-    DbgFuncArgs();
+    DbgFuncHexArgs();
 
     ::LARGE_INTEGER Counter;
 
@@ -2143,9 +2003,7 @@ XBSYSAPI EXPORTNUM(126) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceCo
 // ******************************************************************
 XBSYSAPI EXPORTNUM(127) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceFrequency()
 {
-    
-
-    DbgFuncArgs();
+    DbgFuncHexArgs();
 
     // Xbox Performance Counter Frequency := 337F98h
     ::LARGE_INTEGER Frequency;
@@ -2165,11 +2023,7 @@ XBSYSAPI EXPORTNUM(128) VOID NTAPI xboxkrnl::KeQuerySystemTime
     PLARGE_INTEGER CurrentTime
 )
 {
-    
-
-    DbgFuncArgs(
-           "   CurrentTime         : 0x%.08X\n",
-           CurrentTime);
+    DbgFuncHexArgs(CurrentTime);
 
     // TODO: optimize for WinXP if speed ever becomes important here
 
@@ -2189,9 +2043,7 @@ XBSYSAPI EXPORTNUM(128) VOID NTAPI xboxkrnl::KeQuerySystemTime
 // ******************************************************************
 XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 {
-    
-
-    DbgFuncArgs();
+    DbgFuncHexArgs();
 
 	// I really tried to avoid adding this...
 //	__asm int 3;
@@ -2214,7 +2066,7 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
 {
     
 
-    DbgFuncArgs(
+    DbgFuncFmtArgs(
            "   Timer               : 0x%.08X\n"
            "   DueTime             : 0x%.16X\n"
            "   Dpc                 : 0x%.08X\n",
@@ -2241,7 +2093,7 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 {
     
 
-    DbgFuncArgs(
+    DbgFuncFmtArgs(
            "   Timer               : 0x%.08X\n"
            "   DueTime             : 0x%.16X\n"
            "   Period              : 0x%.08X\n"
@@ -2330,18 +2182,10 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForMultipleObjects
 	IN PLARGE_INTEGER Timeout OPTIONAL,
 	IN VOID* WaitBlockArray
 ) {
-	DbgFuncArgs(
-		"   Count            : 0x%.08X\n"
-		"   Object           : 0x%.08X\n"
-		"   WaitType         : 0x%.08X\n"
-		"   WaitReason       : 0x%.08X\n"
-		"   WaitMode         : 0x%.08X\n"
-		"   Alertable        : 0x%.08X\n"
-		"   Timeout          : 0x%.08X\n"
-		"   WaitBlockArray   : 0x%.08X\n",
-		Count, Object, WaitType, WaitReason, WaitMode, Alertable, Timeout, WaitBlockArray);
+	DbgFuncHexArgs(Count, Object, WaitType, WaitReason, WaitMode, Alertable, Timeout, WaitBlockArray);
 
 	EmuWarning("EmuKrnl: Redirecting KeWaitForMultipleObjects to NtWaitForMultipleObjectsEx");
+
 	return NtWaitForMultipleObjectsEx(Count, Object, WaitType, WaitMode, Alertable, Timeout);
 }
 
@@ -2356,15 +2200,10 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForSingleObject
 	IN BOOLEAN Alertable,
 	IN PLARGE_INTEGER Timeout OPTIONAL
 ) {
-	DbgFuncArgs(
-		"   Object           : 0x%.08X\n"
-		"   WaitReason       : 0x%.08X\n"
-		"   WaitMode         : 0x%.08X\n"
-		"   Alertable        : 0x%.08X\n"
-		"   Timeout          : 0x%.08X\n",
-		Object, WaitReason, WaitMode, Alertable, Timeout);
+	DbgFuncHexArgs(Object, WaitReason, WaitMode, Alertable, Timeout);
 
 	EmuWarning("EmuKrnl: Redirecting KeWaitForSingleObject to NtWaitForSingleObjectEx");
+
 	return NtWaitForSingleObjectEx(Object, WaitMode, Alertable, Timeout);
 }
 
@@ -2379,10 +2218,7 @@ XBSYSAPI EXPORTNUM(160) xboxkrnl::UCHAR* NTAPI xboxkrnl::KfRaiseIrql
 	// HACK: Not thread safe!
 	static xboxkrnl::UCHAR previousIrqlValue = 0;
 
-    DbgFuncArgs(
-           "   NewIrql            : 0x%.08X\n",
-           NewIrql);
-
+    DbgFuncHexArgs(NewIrql);
     
 	// Return addr where old irq level should be stored
     return &previousIrqlValue;
@@ -2396,13 +2232,7 @@ XBSYSAPI EXPORTNUM(161) VOID NTAPI xboxkrnl::KfLowerIrql
     IN UCHAR NewIrql
 )
 {
-    
-
-    DbgFuncArgs(
-           "   NewIrql            : 0x%.08X\n",
-           NewIrql);
-
-    
+    DbgFuncHexArgs(NewIrql);
 
 }
 
@@ -2419,11 +2249,7 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
     IN ULONG NumberOfBytes
 )
 {
-    
-
-    DbgFuncArgs(
-           "   NumberOfBytes            : 0x%.08X\n",
-           NumberOfBytes);
+    DbgFuncHexArgs(NumberOfBytes);
 
     //
     // NOTE: Kludgey (but necessary) solution:
@@ -2464,15 +2290,7 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
     IN ULONG            ProtectionType
 )
 {
-    
-
-    DbgFuncArgs(
-           "   NumberOfBytes            : 0x%.08X\n"
-           "   LowestAcceptableAddress  : 0x%.08X\n"
-           "   HighestAcceptableAddress : 0x%.08X\n"
-           "   Alignment                : 0x%.08X\n"
-           "   ProtectionType           : 0x%.08X\n",
-           NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress,
+    DbgFuncHexArgs(NumberOfBytes, LowestAcceptableAddress, HighestAcceptableAddress,
            Alignment, ProtectionType);
 
     //
@@ -2513,17 +2331,10 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
     ULONG Protect
 )
 {
-    
-
-    DbgFuncArgs(
-           "   NumberOfBytes            : 0x%.08X\n"
-           "   Protect                  : 0x%.08X\n",
-           NumberOfBytes, Protect);
+    DbgFuncHexArgs(NumberOfBytes, Protect);
 
     // TODO: should this be aligned?
     PVOID pRet = CxbxMalloc(NumberOfBytes);
-
-    
 
     return pRet;
 }
@@ -2539,12 +2350,7 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
     IN BOOLEAN  DebuggerThread
 )
 {
-    
-
-    DbgFuncArgs(
-           "   NumberOfBytes            : 0x%.08X\n"
-           "   DebuggerThread           : 0x%.08X\n",
-           NumberOfBytes, DebuggerThread);
+    DbgFuncHexArgs(NumberOfBytes, DebuggerThread);
 	
 	NtDll::PVOID pRet = NULL;
 
@@ -2584,12 +2390,7 @@ XBSYSAPI EXPORTNUM(170) VOID NTAPI xboxkrnl::MmDeleteKernelStack
     PVOID BaseAddress
 )
 {
-    
-
-    DbgFuncArgs(
-           "   EndAddress               : 0x%.08X\n"
-           "   BaseAddress              : 0x%.08X\n",
-           EndAddress, BaseAddress);
+    DbgFuncHexArgs(EndAddress, BaseAddress);
 
    /* __asm int 3;
 	CxbxKrnlCleanup( "MmDeleteKernelStack unimplemented (check call stack)" );*/
@@ -2608,11 +2409,7 @@ XBSYSAPI EXPORTNUM(171) VOID NTAPI xboxkrnl::MmFreeContiguousMemory
     IN PVOID BaseAddress
 )
 {
-    
-
-    DbgFuncArgs(
-           "   BaseAddress              : 0x%.08X\n",
-           BaseAddress);
+    DbgFuncHexArgs(BaseAddress);
 
     PVOID OrigBaseAddress = BaseAddress;
 
@@ -2632,8 +2429,6 @@ XBSYSAPI EXPORTNUM(171) VOID NTAPI xboxkrnl::MmFreeContiguousMemory
         DbgPrintf("Ignored MmFreeContiguousMemory(&xLaunchDataPage)\n");
     }
 
-    
-
     return;
 }
 
@@ -2646,16 +2441,9 @@ XBSYSAPI EXPORTNUM(172) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmFreeSystemMemory
     ULONG NumberOfBytes
 )
 {
-    
-
-    DbgFuncArgs(
-           "   BaseAddress              : 0x%.08X\n"
-           "   NumberOfBytes            : 0x%.08X\n",
-           BaseAddress, NumberOfBytes);
+    DbgFuncHexArgs(BaseAddress, NumberOfBytes);
 
     CxbxFree(BaseAddress);
-
-    
 
     return STATUS_SUCCESS;
 }
@@ -2670,12 +2458,7 @@ XBSYSAPI EXPORTNUM(175) void NTAPI xboxkrnl::MmLockUnlockBufferPages
 	IN ULONG			Protect
 )
 {
-	DbgFuncArgs(
-		"   BaseAddress          : 0x%.08X\n"
-		"   NumberOfBytes        : 0x%.08X\n"
-		"   Protect				 : 0x%.08X\n",
-		BaseAddress, NumberOfBytes, Protect);
-
+	DbgFuncHexArgs(BaseAddress, NumberOfBytes, Protect);
 
 	EmuWarning("EmuKrnl: MmLockUnlockBufferPages ignored");
 }
@@ -2690,20 +2473,12 @@ XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
     IN ULONG            ProtectionType
 )
 {
-    
-
-    DbgFuncArgs(
-           "   PhysicalAddress          : 0x%.08X\n"
-           "   NumberOfBytes            : 0x%.08X\n"
-           "   ProtectionType           : 0x%.08X\n",
-           PhysicalAddress, NumberOfBytes, ProtectionType);
+    DbgFuncHexArgs(PhysicalAddress, NumberOfBytes, ProtectionType);
 
     // TODO: should this be aligned?
     PVOID pRet = CxbxMalloc(NumberOfBytes);
 
-    
-
-    return pRet;
+	return pRet;
 }
 
 // ******************************************************************
@@ -2716,18 +2491,10 @@ XBSYSAPI EXPORTNUM(178) VOID NTAPI xboxkrnl::MmPersistContiguousMemory
     IN BOOLEAN Persist
 )
 {
-    
-
-    DbgFuncArgs(
-           "   BaseAddress              : 0x%.08X\n"
-           "   NumberOfBytes            : 0x%.08X\n"
-           "   Persist                  : 0x%.08X\n",
-           BaseAddress, NumberOfBytes, Persist);
+    DbgFuncHexArgs(BaseAddress, NumberOfBytes, Persist);
 
     // TODO: Actually set this up to be remember across a "reboot"
     EmuWarning("MmPersistContiguousMemory is being ignored\n");
-
-    
 }
 
 // ******************************************************************
@@ -2738,17 +2505,11 @@ XBSYSAPI EXPORTNUM(180) XTL::ULONG NTAPI xboxkrnl::MmQueryAllocationSize
     IN PVOID   BaseAddress
 )
 {
-    
+    DbgFuncHexArgs(BaseAddress);
 
-    DbgFuncArgs(
-           "   BaseAddress              : 0x%.08X\n",
-           BaseAddress);
+	ULONG uiSize = EmuCheckAllocationSize(BaseAddress, false);
 
-    ULONG uiSize = EmuCheckAllocationSize(BaseAddress, false);
-
-    
-
-    return uiSize;
+	return uiSize;
 }
 
 // ******************************************************************
@@ -2761,7 +2522,7 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 {
     
 
-    DbgFuncArgs(
+    DbgFuncFmtArgs(
            "   MemoryStatistics         : 0x%.08X (MemoryStatistics->Length = 0x%.08X)\n"
            MemoryStatistics, MemoryStatistics->Length);
 
@@ -2823,13 +2584,7 @@ XBSYSAPI EXPORTNUM(182) VOID NTAPI xboxkrnl::MmSetAddressProtect
     IN ULONG NewProtect
 )
 {
-    
-
-    DbgFuncArgs(
-           "   BaseAddress              : 0x%.08X\n"
-           "   NumberOfBytes            : 0x%.08X\n"
-           "   NewProtect               : 0x%.08X\n",
-           BaseAddress, NumberOfBytes, NewProtect);
+    DbgFuncHexArgs(BaseAddress, NumberOfBytes, NewProtect);
 
     DWORD dwOldProtect;
 
@@ -2837,8 +2592,6 @@ XBSYSAPI EXPORTNUM(182) VOID NTAPI xboxkrnl::MmSetAddressProtect
         EmuWarning("VirtualProtect Failed!");
 
     DbgPrintf("EmuKrnl (0x%X): VirtualProtect was 0x%.08X -> 0x%.08X\n", GetCurrentThreadId(), dwOldProtect, NewProtect & (~PAGE_WRITECOMBINE));
-
-    
 
     return;
 }
@@ -2852,18 +2605,11 @@ XBSYSAPI EXPORTNUM(183) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmUnmapIoSpace
     IN ULONG NumberOfBytes
 )
 {
-    
+    DbgFuncHexArgs(BaseAddress, NumberOfBytes);
 
-    DbgFuncArgs(
-           "   BaseAddress              : 0x%.08X\n"
-           "   NumberOfBytes            : 0x%.08X\n",
-           BaseAddress, NumberOfBytes);
+	CxbxFree(BaseAddress);
 
-    CxbxFree(BaseAddress);
-
-    
-
-    return STATUS_SUCCESS;
+	return STATUS_SUCCESS;
 }
 
 // ******************************************************************
@@ -2880,7 +2626,7 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 {
     
 
-    DbgFuncArgs(
+    DbgFuncFmtArgs(
            "   BaseAddress         : 0x%.08X (0x%.08X)\n"
            "   ZeroBits            : 0x%.08X\n"
            "   AllocationSize      : 0x%.08X (0x%.08X)\n"
@@ -2916,18 +2662,12 @@ XBSYSAPI EXPORTNUM(186) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClearEvent
     IN HANDLE EventHandle
 )
 {
-    
-
-    DbgFuncArgs(
-           "   EventHandle         : 0x%.08X\n",
-           EventHandle);
+    DbgFuncHexArgs(EventHandle);
 
     NTSTATUS ret = NtDll::NtClearEvent(EventHandle);
 
     if(FAILED(ret))
         EmuWarning("NtClearEvent Failed!");
-
-    
 
     return ret;
 }
@@ -2940,11 +2680,7 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
     IN HANDLE Handle
 )
 {
-    
-
-    DbgFuncArgs(
-           "   Handle              : 0x%.08X\n",
-           Handle);
+    DbgFuncHexArgs(Handle);
 
     NTSTATUS ret = STATUS_SUCCESS;
 
@@ -2960,8 +2696,6 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
         ret = NtDll::NtClose(Handle);
     }
 
-    
-
     return ret;
 }
 
@@ -2976,7 +2710,7 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateDirectoryObje
 {
 	
 
-	DbgFuncArgs(
+	DbgFuncFmtArgs(
 		"   DirectoryHandle         : 0x%.08X\n"
 		"   ObjectAttributes    : 0x%.08X (\"%s\")\n",
 		DirectoryHandle, ObjectAttributes, ObjectAttributes);
@@ -3017,14 +2751,7 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
     IN  BOOLEAN             InitialState
 )
 {
-    
-
-    DbgFuncArgs(
-           "   EventHandle         : 0x%.08X\n"
-           "   ObjectAttributes    : 0x%.08X\n"
-           "   EventType           : 0x%.08X\n"
-           "   InitialState        : 0x%.08X\n",
-           EventHandle, ObjectAttributes, EventType, InitialState);
+    DbgFuncHexArgs(EventHandle, ObjectAttributes, EventType, InitialState);
 
 	NativeObjectAttributes nativeObjectAttributes;
 	ACCESS_MASK DesiredAccess = 0;
@@ -3047,8 +2774,6 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 
     DbgPrintf("EmuKrnl (0x%X): NtCreateEvent EventHandle = 0x%.08X\n", GetCurrentThreadId(), *EventHandle);
 
-    
-
     return ret;
 }
 
@@ -3070,7 +2795,7 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
 {
     
 
-    DbgFuncArgs(
+    DbgFuncFmtArgs(
            "   FileHandle          : 0x%.08X\n"
            "   DesiredAccess       : 0x%.08X\n"
            "   ObjectAttributes    : 0x%.08X (\"%s\")\n"
@@ -3121,7 +2846,7 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 
     char *szBuffer = (ObjectAttributes != 0) ? ObjectAttributes->ObjectName->Buffer : 0;
 
-    DbgFuncArgs(
+    DbgFuncFmtArgs(
            "   MutantHandle        : 0x%.08X\n"
            "   ObjectAttributes    : 0x%.08X (\"%s\")\n"
            "   InitialOwner        : 0x%.08X\n",
@@ -3169,14 +2894,7 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
     IN  ULONG               MaximumCount
 )
 {
-    
-
-    DbgFuncArgs(
-           "   SemaphoreHandle     : 0x%.08X\n"
-           "   ObjectAttributes    : 0x%.08X\n"
-           "   InitialCount        : 0x%.08X\n"
-           "   MaximumCount        : 0x%.08X\n",
-           SemaphoreHandle, ObjectAttributes,
+    DbgFuncHexArgs(SemaphoreHandle, ObjectAttributes,
            InitialCount, MaximumCount);
 
     // redirect to Win2k/XP
@@ -3194,8 +2912,6 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 
     DbgPrintf("EmuKrnl (0x%X): NtCreateSemaphore SemaphoreHandle = 0x%.08X\n", GetCurrentThreadId(), *SemaphoreHandle);
 
-    
-
     return ret;
 }
 
@@ -3212,18 +2928,7 @@ XBSYSAPI EXPORTNUM(196) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeviceIoControlFile
 	IN ULONG OutputBufferLength
 )
 {
-	DbgFuncArgs(
-		"   FileHandle          : 0x%.08X\n"
-		"   Event               : 0x%.08X\n"
-		"   ApcRoutine          : 0x%.08X\n"
-		"   ApcContext          : 0x%.08X\n"
-		"   IoStatusBlock       : 0x%.08X\n"
-		"   IoControlCode       : 0x%.08X\n"
-		"   InputBuffer         : 0x%.08X\n"
-		"   InputBufferLength   : 0x%.08X\n"
-		"   OutputBuffer        : 0x%.08X\n"
-		"   OutputBufferLength  : 0x%.08X\n",
-		FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, IoControlCode, InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength);
+	DbgFuncHexArgs(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, IoControlCode, InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength);
 
 	switch (IoControlCode)
 	{
@@ -3257,13 +2962,7 @@ XBSYSAPI EXPORTNUM(197) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
     DWORD   Options
 )
 {
-    
-
-    DbgFuncArgs(
-           "   SourceHandle        : 0x%.08X\n"
-           "   TargetHandle        : 0x%.08X\n"
-           "   Options             : 0x%.08X\n",
-           SourceHandle, TargetHandle, Options);
+    DbgFuncHexArgs(SourceHandle, TargetHandle, Options);
 
 	NTSTATUS ret;
 
@@ -3287,9 +2986,7 @@ XBSYSAPI EXPORTNUM(197) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
     if(ret != STATUS_SUCCESS)
         EmuWarning("Object was not duplicated!");
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
@@ -3301,18 +2998,11 @@ XBSYSAPI EXPORTNUM(198) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFlushBuffersFile
     OUT PIO_STATUS_BLOCK IoStatusBlock
 )
 {
-    
-
-    DbgFuncArgs(
-           "   FileHandle          : 0x%.08X\n"
-           "   IoStatusBlock       : 0x%.08X\n",
-           FileHandle, IoStatusBlock);
+    DbgFuncHexArgs(FileHandle, IoStatusBlock);
 
     NTSTATUS ret = NtDll::NtFlushBuffersFile(FileHandle, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock);
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
@@ -3325,19 +3015,11 @@ XBSYSAPI EXPORTNUM(199) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
     IN ULONG      FreeType
 )
 {
-    
-
-    DbgFuncArgs(
-           "   BaseAddress         : 0x%.08X\n"
-           "   FreeSize            : 0x%.08X\n"
-           "   FreeType            : 0x%.08X\n",
-           BaseAddress, FreeSize, FreeType);
+    DbgFuncHexArgs(BaseAddress, FreeSize, FreeType);
 
     NTSTATUS ret = NtDll::NtFreeVirtualMemory(GetCurrentProcess(), BaseAddress, FreeSize, FreeType);
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
@@ -3354,7 +3036,7 @@ XBSYSAPI EXPORTNUM(202) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenFile
 )
 {
     /* Redundant
-	    DbgFuncArgs(
+	    DbgFuncFmtArgs(
                "   FileHandle          : 0x%.08X\n"
                "   DesiredAccess       : 0x%.08X\n"
                "   ObjectAttributes    : 0x%.08X (\"%s\")\n"
@@ -3378,12 +3060,7 @@ XBSYSAPI EXPORTNUM(203) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenSymbolicLinkObj
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 )
 {
-	
-
-    DbgFuncArgs(
-		"   LinkHandle         : 0x%.08X\n"
-		"   ObjectAttributes   : 0x%.08X\n",
-		LinkHandle, ObjectAttributes);
+    DbgFuncHexArgs(LinkHandle, ObjectAttributes);
 
 	NTSTATUS ret = 0;
 	EmuNtSymbolicLinkObject* symbolicLinkObject = NULL;
@@ -3401,8 +3078,6 @@ XBSYSAPI EXPORTNUM(203) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenSymbolicLinkObj
 		EmuWarning("NtOpenSymbolicLinkObject failed! (%s)", (NtStatusToString(ret)));
 	else
 		DbgPrintf("EmuKrnl : NtOpenSymbolicLinkObject LinkHandle^ = 0x%.08X", *LinkHandle);
-	
-	
 
 	return ret;
 }
@@ -3418,13 +3093,7 @@ XBSYSAPI EXPORTNUM(205) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtProtectVirtualMemor
 	OUT PULONG OldProtect
 )
 {
-    DbgFuncArgs(
-		"   BaseAddress         : 0x%.08X\n"
-		"   RegionSize           : 0x%.08X\n"
-		"   NewProtect    : 0x%.08X\n"
-		"   OldProtect       : 0x%.08X\n",
-		BaseAddress, RegionSize, NewProtect,
-		OldProtect);
+    DbgFuncHexArgs(BaseAddress, RegionSize, NewProtect, OldProtect);
 
 	EmuWarning("NtProtectVirtualMemory Ignored!");
 
@@ -3443,15 +3112,7 @@ XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
 	IN ULONG                ApcReserved OPTIONAL 
 )
 {
-		
-
-    DbgFuncArgs(
-           "   ThreadHandle         : 0x%.08X\n"
-           "   ApcRoutine           : 0x%.08X\n"
-           "   ApcRoutineContext    : 0x%.08X\n"
-           "   ApcStatusBlock       : 0x%.08X\n"
-           "   ApcReserved          : 0x%.08X\n",
-           ThreadHandle, ApcRoutine, ApcRoutineContext,
+    DbgFuncHexArgs(ThreadHandle, ApcRoutine, ApcRoutineContext,
 		   ApcStatusBlock, ApcReserved);
 
 	NTSTATUS ret;
@@ -3462,8 +3123,6 @@ XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
 									(NtDll::PIO_STATUS_BLOCK) ApcStatusBlock, ApcReserved );
 	if( FAILED( ret ) )
 		EmuWarning( "NtQueueApcThread failed!" );
-		
-		
 
 	return ret;
 }
@@ -3487,7 +3146,7 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 {
     
 
-    DbgFuncArgs(
+    DbgFuncFmtArgs(
            "   FileHandle           : 0x%.08X\n"
            "   Event                : 0x%.08X\n"
            "   ApcRoutine           : 0x%.08X\n"
@@ -3569,7 +3228,7 @@ XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributes
 {
     
 
-    DbgFuncArgs(
+    DbgFuncFmtArgs(
            "   ObjectAttributes    : 0x%.08X (%s)\n"
            "   Attributes          : 0x%.08X\n",
            ObjectAttributes, ObjectAttributes->ObjectName->Buffer, Attributes);
@@ -3601,15 +3260,7 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
     IN  FILE_INFORMATION_CLASS      FileInfo
 )
 {
-    
-
-    DbgFuncArgs(
-           "   FileHandle          : 0x%.08X\n"
-           "   IoStatusBlock       : 0x%.08X\n"
-           "   FileInformation     : 0x%.08X\n"
-           "   Length              : 0x%.08X\n"
-           "   FileInformationClass: 0x%.08X\n",
-           FileHandle, IoStatusBlock, FileInformation,
+    DbgFuncHexArgs(FileHandle, IoStatusBlock, FileInformation,
            Length, FileInfo);
 
 	// TODO: IIRC, this function is depreciated.  Maybe we should just use
@@ -3651,9 +3302,7 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
     if(FAILED(ret))
         EmuWarning("NtQueryInformationFile failed! (0x%.08X)", ret);
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
@@ -3665,13 +3314,7 @@ XBSYSAPI EXPORTNUM(215) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySymbolicLinkOb
 	OUT PULONG ReturnedLength OPTIONAL
 )
 {
-	
-
-    DbgFuncArgs(
-		"   LinkHandle         : 0x%.08X\n"
-		"   LinkTarget         : 0x%.08X\n"
-		"   ReturnedLength     : 0x%.08X\n",
-		LinkHandle, LinkTarget, ReturnedLength);
+    DbgFuncHexArgs(LinkHandle, LinkTarget, ReturnedLength);
 
 	NTSTATUS result = 0;
 	EmuNtSymbolicLinkObject* symbolicLinkObject = NULL;
@@ -3700,8 +3343,6 @@ XBSYSAPI EXPORTNUM(215) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySymbolicLinkOb
 	
 	if (result != STATUS_SUCCESS)
 		EmuWarning("NtQuerySymbolicLinkObject failed! (%s)", NtStatusToString(result));
-	
-	
 
 	return result;
 }
@@ -3716,12 +3357,7 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
     OUT PMEMORY_BASIC_INFORMATION   Buffer
 )
 {
-    
-
-    DbgFuncArgs(
-           "   BaseAddress         : 0x%.08X\n"
-           "   Buffer              : 0x%.08X\n",
-           BaseAddress, Buffer);
+    DbgFuncHexArgs(BaseAddress, Buffer);
 
     NTSTATUS ret = NtDll::NtQueryVirtualMemory
     (
@@ -3757,9 +3393,7 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
         }
     }
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
@@ -3774,15 +3408,7 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
     IN  FS_INFORMATION_CLASS        FileInformationClass
 )
 {
-    
-
-    DbgFuncArgs(
-           "   FileHandle          : 0x%.08X\n"
-           "   IoStatusBlock       : 0x%.08X\n"
-           "   FileInformation     : 0x%.08X\n"
-           "   Length              : 0x%.08X\n"
-           "   FileInformationClass: 0x%.08X\n",
-           FileHandle, IoStatusBlock, FileInformation,
+    DbgFuncHexArgs(FileHandle, IoStatusBlock, FileInformation,
            Length, FileInformationClass);
 
     NTSTATUS ret = NtDll::NtQueryVolumeInformationFile
@@ -3811,10 +3437,8 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 	{
 		EmuWarning("NtQueryVolumeInformationFile failed! (%s)\n", NtStatusToString(ret));
 	}
-    
-    
 
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
@@ -3834,7 +3458,7 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 {
     
 
-    DbgFuncArgs(
+    DbgFuncFmtArgs(
            "   FileHandle          : 0x%.08X\n"
            "   Event               : 0x%.08X\n"
            "   ApcRoutine          : 0x%.08X\n"
@@ -3869,12 +3493,7 @@ XBSYSAPI EXPORTNUM(221) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseMutant
     OUT PLONG   PreviousCount
 )
 {
-    
-
-    DbgFuncArgs(
-           "   MutantHandle         : 0x%.08X\n"
-           "   PreviousCount        : 0x%.08X\n",
-           MutantHandle, PreviousCount);
+    DbgFuncHexArgs(MutantHandle, PreviousCount);
 
     // redirect to NtCreateMutant
     NTSTATUS ret = NtDll::NtReleaseMutant(MutantHandle, PreviousCount);
@@ -3882,9 +3501,7 @@ XBSYSAPI EXPORTNUM(221) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseMutant
     if(FAILED(ret))
         EmuWarning("NtReleaseMutant Failed!");
 
-    
-
-    return STATUS_SUCCESS;
+	return STATUS_SUCCESS;
 }
 
 // ******************************************************************
@@ -3897,22 +3514,14 @@ XBSYSAPI EXPORTNUM(222) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseSemaphore
     OUT PULONG              PreviousCount
 )
 {
-    
-
-    DbgFuncArgs(
-           "   SemaphoreHandle      : 0x%.08X\n"
-           "   ReleaseCount         : 0x%.08X\n"
-           "   PreviousCount        : 0x%.08X\n",
-           SemaphoreHandle, ReleaseCount, PreviousCount);
+    DbgFuncHexArgs(SemaphoreHandle, ReleaseCount, PreviousCount);
 
     NTSTATUS ret = NtDll::NtReleaseSemaphore(SemaphoreHandle, ReleaseCount, PreviousCount);
 
     if(FAILED(ret))
         EmuWarning("NtReleaseSemaphore failed!");
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
@@ -3924,20 +3533,13 @@ XBSYSAPI EXPORTNUM(224) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtResumeThread
     OUT PULONG PreviousSuspendCount
 )
 {
-    
-
-    DbgFuncArgs(
-           "   ThreadHandle         : 0x%.08X\n"
-           "   PreviousSuspendCount : 0x%.08X\n",
-           ThreadHandle, PreviousSuspendCount);
+    DbgFuncHexArgs(ThreadHandle, PreviousSuspendCount);
 
     NTSTATUS ret = NtDll::NtResumeThread(ThreadHandle, PreviousSuspendCount);
 
     Sleep(10);
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
@@ -3949,21 +3551,14 @@ XBSYSAPI EXPORTNUM(225) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetEvent
     OUT PLONG  PreviousState
 )
 {
-    
-
-    DbgFuncArgs(
-           "   EventHandle          : 0x%.08X\n"
-           "   PreviousState        : 0x%.08X\n",
-           EventHandle, PreviousState);
+    DbgFuncHexArgs(EventHandle, PreviousState);
 
     NTSTATUS ret = NtDll::NtSetEvent(EventHandle, PreviousState);
 
     if(FAILED(ret))
         EmuWarning("NtSetEvent Failed!");
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
@@ -3978,20 +3573,10 @@ XBSYSAPI EXPORTNUM(226) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
     IN  ULONG   FileInformationClass
 )
 {
-    
-
-    DbgFuncArgs(
-           "   FileHandle           : 0x%.08X\n"
-           "   IoStatusBlock        : 0x%.08X\n"
-           "   FileInformation      : 0x%.08X\n"
-           "   Length               : 0x%.08X\n"
-           "   FileInformationClass : 0x%.08X\n",
-           FileHandle, IoStatusBlock, FileInformation,
+    DbgFuncHexArgs(FileHandle, IoStatusBlock, FileInformation,
            Length, FileInformationClass);
 
     NTSTATUS ret = NtDll::NtSetInformationFile(FileHandle, IoStatusBlock, FileInformation, Length, FileInformationClass);
-
-    
 
     return ret;
 }
@@ -4005,19 +3590,12 @@ XBSYSAPI EXPORTNUM(228) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetSystemTime
 	OUT PLARGE_INTEGER			PreviousTime OPTIONAL 
 )
 {
-	
-
-    DbgFuncArgs(
-           "   SystemTime           : 0x%.08X\n"
-           "   PreviousTime         : 0x%.08X\n",
-           SystemTime, PreviousTime);
+    DbgFuncHexArgs(SystemTime, PreviousTime);
 
 	// Maybe it's not such a good idea to allow Cxbx to change your time 
 	// clock.  Might need admin privileges to do this.... dunno.
 
     NTSTATUS ret = STATUS_SUCCESS;
-
-    
 
     return ret;
 }
@@ -4031,18 +3609,11 @@ XBSYSAPI EXPORTNUM(231) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSuspendThread
     OUT PULONG  PreviousSuspendCount OPTIONAL
 )
 {
-    
-
-    DbgFuncArgs(
-           "   ThreadHandle         : 0x%.08X\n"
-           "   PreviousSuspendCount : 0x%.08X\n",
-           ThreadHandle, PreviousSuspendCount);
+    DbgFuncHexArgs(ThreadHandle, PreviousSuspendCount);
 
     NTSTATUS ret = NtDll::NtSuspendThread(ThreadHandle, PreviousSuspendCount);
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
@@ -4055,11 +3626,7 @@ XBSYSAPI EXPORTNUM(232) VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
     ULONG            Reserved
 )
 {
-    DbgFuncArgs(
-           "   ApcContext           : 0x%.08X\n"
-           "   IoStatusBlock        : 0x%.08X\n"
-           "   Reserved             : 0x%.08X\n",
-           ApcContext, IoStatusBlock, Reserved);
+    DbgFuncHexArgs(ApcContext, IoStatusBlock, Reserved);
 
     DbgPrintf("IoStatusBlock->Pointer     : 0x%.08X\n"
               "IoStatusBlock->Information : 0x%.08X\n", IoStatusBlock->u1.Pointer, IoStatusBlock->Information);
@@ -4140,7 +3707,7 @@ XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 {
     
 
-    DbgFuncArgs(
+    DbgFuncFmtArgs(
            "   Handle               : 0x%.08X\n"
            "   WaitMode             : 0x%.08X\n"
            "   Alertable            : 0x%.08X\n"
@@ -4183,7 +3750,7 @@ XBSYSAPI EXPORTNUM(235) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForMultipleObje
 {
     
 
-    DbgFuncArgs(
+    DbgFuncFmtArgs(
            "   Count                : 0x%.08X\n"
            "   Handles              : 0x%.08X\n"
            "   WaitType             : 0x%.08X\n"
@@ -4218,7 +3785,7 @@ XBSYSAPI EXPORTNUM(236) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFile
 {
     
 
-    DbgFuncArgs(
+    DbgFuncFmtArgs(
            "   FileHandle          : 0x%.08X\n"
            "   Event               : 0x%.08X\n"
            "   ApcRoutine          : 0x%.08X\n"
@@ -4252,7 +3819,7 @@ XBSYSAPI EXPORTNUM(238) VOID NTAPI xboxkrnl::NtYieldExecution()
     
 
     // NOTE: this eats up the debug log far too quickly
-    //DbgFuncArgs();
+    //DbgFuncHexArgs();
 
     NtDll::NtYieldExecution();
 
@@ -4278,19 +3845,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
     IN  PKSTART_ROUTINE StartRoutine
 )
 {
-    
-
-    DbgFuncArgs(
-           "   ThreadHandle        : 0x%.08X\n"
-           "   ThreadExtraSize     : 0x%.08X\n"
-           "   KernelStackSize     : 0x%.08X\n"
-           "   TlsDataSize         : 0x%.08X\n"
-           "   ThreadId            : 0x%.08X\n"
-           "   StartContext1       : 0x%.08X\n"
-           "   StartContext2       : 0x%.08X\n"
-           "   CreateSuspended     : 0x%.08X\n"
-           "   DebugStack          : 0x%.08X\n"
-           "   StartRoutine        : 0x%.08X\n",
+    DbgFuncHexArgs(
            ThreadHandle, ThreadExtraSize, KernelStackSize, TlsDataSize, ThreadId,
            StartContext1, StartContext2, CreateSuspended, DebugStack, StartRoutine);
 
@@ -4333,21 +3888,17 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
             *ThreadId = dwThreadId;
     }
 
-    
-
-    return STATUS_SUCCESS;
+	return STATUS_SUCCESS;
 }
 
 // ******************************************************************
 // * 0x0102 - PsTerminateSystemThread
 // ******************************************************************
-XBSYSAPI EXPORTNUM(258) VOID NTAPI xboxkrnl::PsTerminateSystemThread(IN NTSTATUS ExitStatus)
+XBSYSAPI EXPORTNUM(258) VOID NTAPI xboxkrnl::PsTerminateSystemThread(
+	IN NTSTATUS ExitStatus
+)
 {
-    
-
-    DbgFuncArgs(
-           "   ExitStatus          : 0x%.08X\n",
-           ExitStatus);
+    DbgFuncHexArgs(ExitStatus);
 
     // call thread notification routine(s)
     if(g_iThreadNotificationCount != 0)
@@ -4362,11 +3913,7 @@ XBSYSAPI EXPORTNUM(258) VOID NTAPI xboxkrnl::PsTerminateSystemThread(IN NTSTATUS
 
 			DbgPrintf("EmuKrnl (0x%X): Calling pfnNotificationRoutine[%d] (0x%.08X)\n", GetCurrentThreadId(), g_iThreadNotificationCount, pfnNotificationRoutine);
 
-			
-
 			pfnNotificationRoutine(FALSE);
-
-			
 		}
     }
 
@@ -4390,20 +3937,13 @@ XBSYSAPI EXPORTNUM(260) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAnsiStringToUnicod
     UCHAR           AllocateDestinationString
 )
 {
-    
-
-    DbgFuncArgs(
-           "   DestinationString         : 0x%.08X\n"
-           "   SourceString              : 0x%.08X\n"
-           "   AllocateDestinationString : 0x%.08X\n",
-           DestinationString, SourceString, AllocateDestinationString);
+    DbgFuncHexArgs(DestinationString, SourceString, AllocateDestinationString);
 
     NTSTATUS ret = NtDll::RtlAnsiStringToUnicodeString((NtDll::UNICODE_STRING*)DestinationString, (NtDll::STRING*)SourceString, AllocateDestinationString);
 
-    
-
-    return ret;
+	return ret;
 }
+
 // ******************************************************************
 // * 0x0108 - RtlAssert - Debug API?
 // ******************************************************************
@@ -4417,7 +3957,7 @@ XBSYSAPI EXPORTNUM(264) VOID NTAPI xboxkrnl::RtlAssert
 {
     
 
-    DbgFuncArgs(
+    DbgFuncFmtArgs(
            "   FailedAssertion           : 0x%.08X (\"%s\")\n"
            "   FileName                  : 0x%.08X (\"%s\")\n"
            "   LineNumber                : 0x%.08X (\"%lu\")\n"
@@ -4442,9 +3982,7 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
     
 
     /** sorta pointless
-    DbgFuncArgs(
-           "   CriticalSection     : 0x%.08X\n",
-           CriticalSection);
+    DbgFuncHexArgs(CriticalSection);
     //*/
 
     //printf("CriticalSection->LockCount : %d\n", CriticalSection->LockCount);
@@ -4490,7 +4028,7 @@ XBSYSAPI EXPORTNUM(279) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualString
 {
 		
 
-    DbgFuncArgs(
+    DbgFuncFmtArgs(
 			"	String1            : 0x%.08X (\"%s\")\n"
 			"	String2            : 0x%.08X (\"%s\")\n"
 			"	CaseSensitive      : 0x%.08X\n",
@@ -4511,17 +4049,11 @@ XBSYSAPI EXPORTNUM(286) VOID NTAPI xboxkrnl::RtlFreeAnsiString
   IN OUT PANSI_STRING AnsiString
 )
 {
-    
-
-    DbgFuncArgs(
-           "   AnsiString        : 0x%.08X\n",
-           AnsiString);
+    DbgFuncHexArgs(AnsiString);
 
     NtDll::RtlFreeAnsiString((NtDll::PANSI_STRING)AnsiString);
 
-    
-
-    return;
+	return;
 }
 
 // ******************************************************************
@@ -4535,7 +4067,7 @@ XBSYSAPI EXPORTNUM(289) VOID NTAPI xboxkrnl::RtlInitAnsiString
 {
     
 
-    DbgFuncArgs(
+    DbgFuncFmtArgs(
            "   DestinationString   : 0x%.08X\n"
            "   SourceString        : 0x%.08X (\"%s\")\n",
            DestinationString, SourceString, SourceString);
@@ -4558,7 +4090,7 @@ XBSYSAPI EXPORTNUM(290) VOID NTAPI xboxkrnl::RtlInitUnicodeString
 {
     
 
-    DbgFuncArgs(
+    DbgFuncFmtArgs(
            "   DestinationString   : 0x%.08X\n"
            "   SourceString        : 0x%.08X (\"%ls\")\n",
            DestinationString, SourceString, SourceString->Buffer);
@@ -4583,9 +4115,7 @@ XBSYSAPI EXPORTNUM(291) VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
 	}
 
     /*
-    DbgFuncArgs(
-           "   CriticalSection     : 0x%.08X\n",
-           CriticalSection);
+    DbgFuncHexArgs(CriticalSection);
     //*/
 	int iSection = FindCriticalSection(CriticalSection);
 
@@ -4632,9 +4162,7 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
 	//NtDll::RtlLeaveCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
 
     /* sorta pointless
-    DbgFuncArgs(
-           "   CriticalSection     : 0x%.08X\n",
-           CriticalSection);
+    DbgFuncHexArgs(CriticalSection);
     //*/
 
     
@@ -4649,7 +4177,7 @@ XBSYSAPI EXPORTNUM(296) xboxkrnl::CHAR NTAPI xboxkrnl::RtlLowerChar(CHAR Charact
 {
     
 
-    DbgFuncArgs(
+    DbgFuncFmtArgs(
            "   Character           : %c\n",
            Character);
 
@@ -4668,17 +4196,11 @@ XBSYSAPI EXPORTNUM(301) xboxkrnl::ULONG NTAPI xboxkrnl::RtlNtStatusToDosError
     IN NTSTATUS Status
 )
 {
-    
-
-    DbgFuncArgs(
-           "   Status              : 0x%.08X\n",
-           Status);
+    DbgFuncHexArgs(Status);
 
     ULONG ret = NtDll::RtlNtStatusToDosError(Status);
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
@@ -4690,18 +4212,11 @@ XBSYSAPI EXPORTNUM(304) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTimeFieldsToTime
     OUT PLARGE_INTEGER  Time
 )
 {
-    
-
-    DbgFuncArgs(
-           "   TimeFields          : 0x%.08X\n"
-           "   Time                : 0x%.08X\n",
-           TimeFields, Time);
+    DbgFuncHexArgs(TimeFields, Time);
 
     BOOLEAN bRet = NtDll::RtlTimeFieldsToTime((NtDll::TIME_FIELDS*)TimeFields, (NtDll::LARGE_INTEGER*)Time);
 
-    
-
-    return bRet;
+	return bRet;
 }
 
 // ******************************************************************
@@ -4713,18 +4228,11 @@ XBSYSAPI EXPORTNUM(305) VOID NTAPI xboxkrnl::RtlTimeToTimeFields
     OUT PTIME_FIELDS    TimeFields
 )
 {
-    
-
-    DbgFuncArgs(
-           "   Time                : 0x%.08X\n"
-           "   TimeFields          : 0x%.08X\n",
-           Time, TimeFields);
+    DbgFuncHexArgs(Time, TimeFields);
 
     NtDll::RtlTimeToTimeFields((NtDll::LARGE_INTEGER*)Time, (NtDll::TIME_FIELDS*)TimeFields);
 
-    
-
-    return;
+	return;
 }
 
 // ******************************************************************
@@ -4735,14 +4243,11 @@ XBSYSAPI EXPORTNUM(306) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTryEnterCriticalSec
     IN PRTL_CRITICAL_SECTION CriticalSection
 )
 {
-    
 	if (CriticalSection == nullptr) {
 		return false;
 	}
 
-    DbgFuncArgs(
-           "   CriticalSection     : 0x%.08X\n",
-           CriticalSection);
+    DbgFuncHexArgs(CriticalSection);
 
 	BOOL bRet = FALSE;
 	
@@ -4760,11 +4265,10 @@ XBSYSAPI EXPORTNUM(306) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTryEnterCriticalSec
 		CriticalSection->RecursionCount = GlobalCriticalSections[iSection].NativeCriticalSection.RecursionCount;
 		CriticalSection->OwningThread = GlobalCriticalSections[iSection].NativeCriticalSection.OwningThread;
 	}
+
 	//bRet = NtDll::RtlTryEnterCriticalSection((NtDll::PRTL_CRITICAL_SECTION)CriticalSection);
 
-    
-
-    return bRet;
+	return bRet;
 }
 
 // ******************************************************************
@@ -4777,19 +4281,11 @@ XBSYSAPI EXPORTNUM(308) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToAns
     IN     BOOLEAN         AllocateDestinationString
 )
 {
-    
-
-    DbgFuncArgs(
-           "   DestinationString         : 0x%.08X\n"
-           "   SourceString              : 0x%.08X\n"
-           "   AllocateDestinationString : 0x%.08X\n",
-           DestinationString, SourceString, AllocateDestinationString);
+    DbgFuncHexArgs(DestinationString, SourceString, AllocateDestinationString);
 
     NTSTATUS ret = NtDll::RtlUnicodeStringToAnsiString((NtDll::STRING*)DestinationString, (NtDll::UNICODE_STRING*)SourceString, AllocateDestinationString);
 
-    
-
-    return ret;
+	return ret;
 }
 
 
@@ -4839,11 +4335,15 @@ XBSYSAPI EXPORTNUM(325) xboxkrnl::BYTE xboxkrnl::XboxSignatureKey[16] =
 // ******************************************************************
 // * XeImageFileName
 // ******************************************************************
-XBSYSAPI EXPORTNUM(326) xboxkrnl::OBJECT_STRING xboxkrnl::XeImageFileName = {
+XBSYSAPI EXPORTNUM(326) xboxkrnl::OBJECT_STRING xboxkrnl::XeImageFileName = 
+{
 
 };
 
-XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection(void* section)
+XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
+(
+	void* section
+)
 {
 	if (((Xbe::SectionHeader*)section)->dwSectionRefCount > 0) {
 		((Xbe::SectionHeader*)section)->dwSectionRefCount++;
@@ -4854,7 +4354,10 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection(void* s
 	return STATUS_SUCCESS;
 }
 
-XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection(void* section)
+XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection
+(
+	void* section
+)
 {
 	if (((Xbe::SectionHeader*)section)->dwSectionRefCount == 0) {
 		return STATUS_INVALID_PARAMETER;
@@ -4867,58 +4370,49 @@ XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection(void*
 // ******************************************************************
 // * XcSHAInit
 // ******************************************************************
-XBSYSAPI EXPORTNUM(335) VOID NTAPI xboxkrnl::XcSHAInit(UCHAR *pbSHAContext)
+XBSYSAPI EXPORTNUM(335) VOID NTAPI xboxkrnl::XcSHAInit
+(
+	UCHAR *pbSHAContext
+)
 {
-    
+    DbgFuncHexArgs(pbSHAContext);
 
-    DbgFuncArgs(
-           "   pbSHAContext        : 0x%.08X\n",
-           pbSHAContext);
-
-    
-
-    return;
+	return;
 }
 
 // ******************************************************************
 // * XcSHAUpdate
 // ******************************************************************
-XBSYSAPI EXPORTNUM(336) VOID NTAPI xboxkrnl::XcSHAUpdate(UCHAR *pbSHAContext, UCHAR *pbInput, ULONG dwInputLength)
+XBSYSAPI EXPORTNUM(336) VOID NTAPI xboxkrnl::XcSHAUpdate
+(
+	UCHAR *pbSHAContext, 
+	UCHAR *pbInput, 
+	ULONG dwInputLength
+)
 {
-    
+    DbgFuncHexArgs(pbSHAContext, pbInput, dwInputLength);
 
-    DbgFuncArgs(
-           "   pbSHAContext        : 0x%.08X\n"
-           "   pbInput             : 0x%.08X\n"
-           "   dwInputLength       : 0x%.08X\n",
-           pbSHAContext, pbInput, dwInputLength);
-
-    
-
-    return;
+	return;
 }
 
 // ******************************************************************
 // * XcSHAFinal
 // ******************************************************************
-XBSYSAPI EXPORTNUM(337) VOID NTAPI xboxkrnl::XcSHAFinal(UCHAR *pbSHAContext, UCHAR *pbDigest)
+XBSYSAPI EXPORTNUM(337) VOID NTAPI xboxkrnl::XcSHAFinal
+(
+	UCHAR *pbSHAContext, 
+	UCHAR *pbDigest
+)
 {
-    
-
-    DbgFuncArgs(
-           "   pbSHAContext        : 0x%.08X\n"
-           "   pbDigest            : 0x%.08X\n",
-           pbSHAContext, pbDigest);
+    DbgFuncHexArgs(pbSHAContext, pbDigest);
 
     // for now, we dont care about the digest
     for(int v=0;v<20;v++)
     {
         pbDigest[v] = 0;
     }
-	 
-    
 
-    return;
+	return;
 }
 
 // ******************************************************************
