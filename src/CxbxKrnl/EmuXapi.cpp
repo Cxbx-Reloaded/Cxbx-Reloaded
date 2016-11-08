@@ -661,7 +661,7 @@ VOID WINAPI XTL::EmuXapiThreadStartup
     DWORD dwDummy2
 )
 {
-	DbgDbgFuncNewFuncArgs(dwDummy1, dwDummy2);
+	DbgFuncHexArgs(dwDummy1, dwDummy2);
 
 	typedef int (__stdcall *pfDummyFunc)(DWORD dwDummy);
 

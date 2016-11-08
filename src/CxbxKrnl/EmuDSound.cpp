@@ -2377,12 +2377,13 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMaxDistance
     DWORD                   dwApply
 )
 {
-        DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetMaxDistance\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   flMaxDistance             : %f\n"
-               "   dwApply                   : 0x%.08X\n"
-               ");\n",
+	DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetMaxDistance\n"
+		"(\n"
+		"   pThis                     : 0x%.08X\n"
+		"   flMaxDistance             : %f\n"
+		"   dwApply                   : 0x%.08X\n"
+		");\n",
+		GetCurrentThreadId(), pThis, flMaxDistance, dwApply);
 
     // TODO: Actually do something
 

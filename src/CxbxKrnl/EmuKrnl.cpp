@@ -2523,7 +2523,7 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
     
 
     DbgFuncFmtArgs(
-           "   MemoryStatistics         : 0x%.08X (MemoryStatistics->Length = 0x%.08X)\n"
+           "   MemoryStatistics         : 0x%.08X (MemoryStatistics->Length = 0x%.08X)\n",
            MemoryStatistics, MemoryStatistics->Length);
 
     MEMORYSTATUS MemoryStatus;
