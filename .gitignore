@@ -77,3 +77,4 @@ packages/
 #Test files
 *.testsettings
 src/Version.h
+*.opendb

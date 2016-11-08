@@ -39,7 +39,9 @@
 #include <string>
 #include <Shlobj.h>
 #include <Shlwapi.h>
+#pragma warning(disable:4005) // Ignore redefined status values
 #include <ntstatus.h>
+#pragma warning(default:4005)
 #include "CxbxKrnl.h"
 
 std::string DriveSerial = "\\??\\serial:";
