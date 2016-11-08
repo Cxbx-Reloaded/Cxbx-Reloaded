@@ -104,8 +104,30 @@ extern volatile bool g_bPrintfOn;
 #pragma warning(disable : 4477)
 #endif
 
+// From http://stackoverflow.com/questions/31050113/how-to-extract-the-source-filename-without-path-and-suffix-at-compile-time
+constexpr const char* str_end(const char *str) {
+	return *str ? str_end(str + 1) : str;
+}
+
+constexpr bool str_slant(const char *str) {
+	return *str == '\\' ? true : (*str ? str_slant(str + 1) : false);
+}
+
+constexpr const char* r_slant(const char* str) {
+	return *str == '\\' ? (str + 1) : r_slant(str - 1);
+}
+constexpr const char* file_name(const char* str) {
+	return str_slant(str) ? r_slant(str_end(str)) : str;
+}
+
+#define __FILENAME__ file_name(__FILE__)
+
 /*! DbgPrintf enabled if _DEBUG_TRACE is set */
 #define DbgPrintf(fmt, ...) do { if (_DEBUG_TRACE) if(g_bPrintfOn) printf(fmt, ##__VA_ARGS__); } while (0)
+
+// http://stackoverflow.com/questions/5134523/msvc-doesnt-expand-va-args-correctly
+// MSVC_EXPAND works around a Visual C++ problem, expanding __VA_ARGS__ incorrectly:
+#define MSVC_EXPAND( x ) x
 
 // From https://codecraft.co/2014/11/25/variadic-macros-tricks/
 // And https://groups.google.com/d/msg/comp.std.c/d-6Mj5Lko_s/jqonQLK20HcJ
@@ -116,22 +138,9 @@ extern volatile bool g_bPrintfOn;
 // an underscore--it's an implementation detail, not something we expect people
 // to call directly.
 #define _GET_NTH_ARG( \
-	_01,_02,_03,_04,_05,_06,_07,_08,_09,_10, \
-	_11,_12,_13,_14,_15,_16,_17,_18,_19,_20, \
-	_21,_22,_23,_24,_25,_26,_27,_28,_29,_30, \
-	_31,_32,_33,_34,_35,_36,_37,_38,_39,_40, \
-	_41,_42,_43,_44,_45,_46,_47,_48,_49,_50, \
-	_51,_52,_53,_54,_55,_56,_57,_58,_59,_60, \
-	_61,_62,_63,N,...) N
-
-#define __RSEQ_N() \
-								62, 61, 60, \
-	59, 58, 57, 56, 55, 54, 53, 52, 51, 50, \
-    49, 48, 47, 46, 45, 44, 43, 42, 41, 40, \
-    39, 38, 37, 36, 35, 34, 33, 32, 31, 30, \
-    29, 28, 27, 26, 25, 24, 23, 22, 21, 20, \
-    19, 18, 17, 16, 15, 14, 13, 12, 11, 10, \
-    9,  8,  7,  6,  5,  4,  3,  2,  1,  0
+	_19, _18, _17, _16, _15, _14, _13, _12, _11, _10, \
+	 _9,  _8,  _7,  _6,  _5,  _4,  _3,  _2,  _1,  _0, \
+	N, ...) N
 
 // COUNT_VARARGS returns the number of arguments that have been passed to it.
 // Count how many args are in a variadic macro. We now use GCC/Clang's extension to
@@ -139,7 +148,9 @@ extern volatile bool g_bPrintfOn;
 // ##__VA_ARGS__ (its value is totally irrelevant, but it's necessary to preserve
 // the shifting offset we want). In addition, we must add 0 as a valid value to be in
 // the N position.
-#define COUNT_VARARGS(...) (_GET_NTH_ARG(_00, ##__VA_ARGS__, __RSEQ_N()))
+#define COUNT_VARARGS(...) MSVC_EXPAND(_GET_NTH_ARG("ignored", ##__VA_ARGS__, \
+	19, 18, 17, 16, 15, 14, 13, 12, 11, 10, \
+	 9,  8,  7,  6,  5,  4,  3,  2,  1,  0) )
 
 // Define some macros to help us create overrides based on the
 // arity of a for-each-style macro.
@@ -156,6 +167,13 @@ extern volatile bool g_bPrintfOn;
 #define _fe_10(_call, x, ...) _call(x) _fe_9(_call, __VA_ARGS__)
 #define _fe_11(_call, x, ...) _call(x) _fe_10(_call, __VA_ARGS__)
 #define _fe_12(_call, x, ...) _call(x) _fe_11(_call, __VA_ARGS__)
+#define _fe_13(_call, x, ...) _call(x) _fe_12(_call, __VA_ARGS__)
+#define _fe_14(_call, x, ...) _call(x) _fe_13(_call, __VA_ARGS__)
+#define _fe_15(_call, x, ...) _call(x) _fe_14(_call, __VA_ARGS__)
+#define _fe_16(_call, x, ...) _call(x) _fe_15(_call, __VA_ARGS__)
+#define _fe_17(_call, x, ...) _call(x) _fe_16(_call, __VA_ARGS__)
+#define _fe_18(_call, x, ...) _call(x) _fe_17(_call, __VA_ARGS__)
+#define _fe_19(_call, x, ...) _call(x) _fe_18(_call, __VA_ARGS__)
 
 /**
  * Provide a for-each construct for variadic macros. Supports up
@@ -173,30 +191,33 @@ extern volatile bool g_bPrintfOn;
  *     typedef foo int;
  *     CALL_MACRO_X_FOR_EACH(END_NS, MY_NAMESPACES)
  */
-#define CALL_MACRO_X_FOR_EACH(x, ...) \
-    _GET_NTH_ARG("ignored", ##__VA_ARGS__, \
-    _fe_10, _fe_9, _fe_8, _fe_7, _fe_6, _fe_5, \
-	_fe_4, _fe_3, _fe_2, _fe_1, _fe_0)(x, ##__VA_ARGS__)
+#define CALL_MACRO_X_FOR_EACH(x, ...) MSVC_EXPAND(_GET_NTH_ARG("ignored", ##__VA_ARGS__, \
+    _fe_19, _fe_18,_fe_17,_fe_16,_fe_15,_fe_14,_fe_13,_fe_12,_fe_11,_fe_10, \
+	_fe_9, _fe_8, _fe_7, _fe_6, _fe_5, _fe_4, _fe_3, _fe_2, _fe_1, _fe_0)(x, ##__VA_ARGS__))
 
 #define DBG_ARG_WIDTH 18
 
 #define DbgPrintHexArg(arg) printf("\n   %*s : 0x%.08X", DBG_ARG_WIDTH, #arg, arg);
 
- // See https://gcc.gnu.org/onlinedocs/gcc/Variadic-Macros.html
+// See https://gcc.gnu.org/onlinedocs/gcc/Variadic-Macros.html
+// TODO : change multiple printf calls into 1, to avoid mixing output of multiple threads
+// perhaps via http://stackoverflow.com/a/2342176/12170
 #define DbgFuncHexArgs(...) do { if (_DEBUG_TRACE) if(g_bPrintfOn) \
-	printf("%s (0x%X): %s(", __FILE__, GetCurrentThreadId(), __func__); \
+	printf("%s (0x%X): %s(", __FILENAME__, GetCurrentThreadId(), __func__); \
 	if (COUNT_VARARGS(##__VA_ARGS__) > 0) { \
-		CALL_MACRO_X_FOR_EACH(DbgPrintHexArg, __VA_ARGS__); \
-		printf("\n"); \
 	} \
 	printf(");\n"); \
 	} while (0)
+/* TODO : Get this going inside DbgFuncHexArgs :
+		CALL_MACRO_X_FOR_EACH(DbgPrintHexArg, __VA_ARGS__); \
+		printf("\n"); \
+*/
 
 // See https://gcc.gnu.org/onlinedocs/gcc/Variadic-Macros.html
 // See http://stackoverflow.com/questions/1644868/c-define-macro-for-debug-printing
 #define DbgFuncFmtArgs(fmt, ...) \
 	do { if (_DEBUG_TRACE) if(g_bPrintfOn) \
-	printf("%s (0x%X): %s(" fmt ");\n", __FILE__, GetCurrentThreadId(), __func__, __VA_ARGS__); \
+	printf("%s (0x%X): %s(\n" fmt ");\n", __FILENAME__, GetCurrentThreadId(), __func__, __VA_ARGS__); \
 	} while (0)
 
 #endif

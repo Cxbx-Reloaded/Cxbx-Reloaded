@@ -1249,7 +1249,7 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 			NativePath = CxbxBasePath;
 		}
 
-		DbgPrintf("EmuKrnl : %s Corrected path..\n.", aFileAPIName.c_str());
+		DbgPrintf("EmuKrnl : %s Corrected path...\n", aFileAPIName.c_str());
 		DbgPrintf("  Org:\"%s\"\n", OriginalPath.c_str());
 		if (_strnicmp(NativePath.c_str(), CxbxBasePath.c_str(), CxbxBasePath.length()) == 0)
 		{
