@@ -1741,8 +1741,6 @@ XBSYSAPI EXPORTNUM(47) VOID xboxkrnl::HalRegisterShutdownNotification
 		LOG_FUNC_END;
 
 	EmuWarning("HalRegisterShutdownNotification not implemented!\n");
-	
-		
 
 	return;
 }
@@ -2682,9 +2680,9 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG_OUT(BaseAddress)
+		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(ZeroBits)
-		LOG_FUNC_ARG_OUT(AllocationSize)
+		LOG_FUNC_ARG(AllocationSize)
 		LOG_FUNC_ARG(AllocationType)
 		LOG_FUNC_ARG(Protect)
 		LOG_FUNC_END;
@@ -3083,8 +3081,8 @@ XBSYSAPI EXPORTNUM(199) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG_OUT(BaseAddress)
-		LOG_FUNC_ARG_OUT(FreeSize)
+		LOG_FUNC_ARG(BaseAddress)
+		LOG_FUNC_ARG(FreeSize)
 		LOG_FUNC_ARG(FreeType)
 		LOG_FUNC_END;
 
@@ -3167,8 +3165,8 @@ XBSYSAPI EXPORTNUM(205) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtProtectVirtualMemor
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG_OUT(BaseAddress)
-		LOG_FUNC_ARG_OUT(RegionSize)
+		LOG_FUNC_ARG(BaseAddress)
+		LOG_FUNC_ARG(RegionSize)
 		LOG_FUNC_ARG(NewProtect)
 		LOG_FUNC_ARG_OUT(OldProtect)
 		LOG_FUNC_END;

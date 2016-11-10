@@ -333,7 +333,10 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetMasterVolume
 // ******************************************************************
 // * EmuIXACTEngine_CommitDeferredSettings
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIXACTEngine_CommitDeferredSettings(X_XACTEngine* pThis)
+HRESULT WINAPI XTL::EmuIXACTEngine_CommitDeferredSettings
+(
+	X_XACTEngine* pThis
+)
 {
 	LOG_FUNC_ONE_ARG(pThis);
 

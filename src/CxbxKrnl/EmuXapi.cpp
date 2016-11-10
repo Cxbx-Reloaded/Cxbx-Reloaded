@@ -190,10 +190,8 @@ VOID WINAPI XTL::EmuXInitDevices
     {
         g_hInputHandle[v] = 0;
     }
-
-    
-
-    return;
+	
+	return;
 }
 
 // ******************************************************************
@@ -213,9 +211,7 @@ DWORD WINAPI XTL::EmuXGetDevices
     else
         EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X)\n", DeviceType->Reserved[0], DeviceType->Reserved[1], DeviceType->Reserved[2]);
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
@@ -259,9 +255,7 @@ BOOL WINAPI XTL::EmuXGetDeviceChanges
         *pdwRemovals   = 0;
     }
 
-    
-
-    return TRUE; //bRet;
+	return TRUE; //bRet;
 }
 
 // ******************************************************************
@@ -332,9 +326,7 @@ HANDLE WINAPI XTL::EmuXInputOpen
 
 	g_bXInputOpenCalled = true;
 
-    
-
-    return (HANDLE)pph;
+	return (HANDLE)pph;
 }
 
 // ******************************************************************
@@ -463,9 +455,7 @@ DWORD WINAPI XTL::EmuXInputGetCapabilities
         }
     }
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
@@ -517,9 +507,7 @@ DWORD WINAPI XTL::EmuXInputGetState
 	else
 		EmuWarning( "EmuXInputGetState(): pph == NULL!" );
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
@@ -533,7 +521,7 @@ DWORD WINAPI XTL::EmuXInputSetState
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(hDevice)
-		LOG_FUNC_ARG_OUT(pFeedback)
+		LOG_FUNC_ARG(pFeedback)
 		LOG_FUNC_END;
 
     DWORD ret = ERROR_IO_PENDING;
@@ -595,9 +583,7 @@ DWORD WINAPI XTL::EmuXInputSetState
         }
     }
 
-    
-
-    return ret;
+	return ret;
 }
 
 
@@ -1028,7 +1014,10 @@ DWORD WINAPI XTL::EmuSignalObjectAndWait
 // ******************************************************************
 // * func: EmuPulseEvent
 // ******************************************************************
-BOOL WINAPI XTL::EmuPulseEvent( HANDLE hEvent )
+BOOL WINAPI XTL::EmuPulseEvent
+( 
+	HANDLE hEvent 
+)
 {
 	LOG_FUNC_ONE_ARG(hEvent);
 
