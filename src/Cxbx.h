@@ -97,30 +97,14 @@ enum DebugMode { DM_NONE, DM_CONSOLE, DM_FILE };
 /*! maximum number of threads cxbx can handle */
 #define MAXIMUM_XBOX_THREADS 256
 
+#include "Logging.h"
+
 /*! runtime DbgPrintf toggle boolean */
 extern volatile bool g_bPrintfOn;
 
 #ifdef _MSC_VER
 #pragma warning(disable : 4477)
 #endif
-
-// From http://stackoverflow.com/questions/31050113/how-to-extract-the-source-filename-without-path-and-suffix-at-compile-time
-constexpr const char* str_end(const char *str) {
-	return *str ? str_end(str + 1) : str;
-}
-
-constexpr bool str_slant(const char *str) {
-	return *str == '\\' ? true : (*str ? str_slant(str + 1) : false);
-}
-
-constexpr const char* r_slant(const char* str) {
-	return *str == '\\' ? (str + 1) : r_slant(str - 1);
-}
-constexpr const char* file_name(const char* str) {
-	return str_slant(str) ? r_slant(str_end(str)) : str;
-}
-
-#define __FILENAME__ file_name(__FILE__)
 
 /*! DbgPrintf enabled if _DEBUG_TRACE is set */
 #define DbgPrintf(fmt, ...) do { if (_DEBUG_TRACE) if(g_bPrintfOn) printf(fmt, ##__VA_ARGS__); } while (0)

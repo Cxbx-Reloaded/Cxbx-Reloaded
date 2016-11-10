@@ -35,6 +35,7 @@
 #define _XBOXKRNL_DEFEXTRN_
 
 #include "Emu.h"
+#include "Logging.h"
 #include "EmuFS.h"
 
 // ******************************************************************
@@ -56,7 +57,10 @@ int WINAPI XTL::EmuWSAStartup
     WSADATA    *lpWSAData
 )
 {
-	DbgFuncHexArgs(wVersionRequested, lpWSAData);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(wVersionRequested)
+		LOG_FUNC_ARG(lpWSAData)
+		LOG_FUNC_END;
 
     int ret = WSAStartup(wVersionRequested, lpWSAData);
 
@@ -71,10 +75,12 @@ INT WINAPI XTL::EmuXNetStartup
     const PVOID pDummy
 )
 {
-	DbgFuncHexArgs(pDummy);
+	LOG_FUNC_ONE_ARG(pDummy);
 
 	// Fake Successfull...hehehe...sucker...hehehehehe
-    return 0;
+	INT ret = 0;
+
+	return ret;
 }
 
 // ******************************************************************
@@ -82,10 +88,12 @@ INT WINAPI XTL::EmuXNetStartup
 // ******************************************************************
 DWORD WINAPI XTL::EmuXNetGetEthernetLinkStatus()
 {
-	DbgFuncHexArgs();
+	LOG_FUNC();
 
 	// for now, no ethernet connection is available
-    return XNET_ETHERNET_LINK_ACTIVE | XNET_ETHERNET_LINK_100MBPS;
+	DWORD ret = XNET_ETHERNET_LINK_ACTIVE | XNET_ETHERNET_LINK_100MBPS;
+
+	return ret;
 }
 
 // ******************************************************************
@@ -98,7 +106,12 @@ SOCKET XTL::EmuThis::Emusocket
     int   protocol
 )
 {
-	DbgFuncHexArgs(this, af, type, protocol);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(this)
+		LOG_FUNC_ARG(af)
+		LOG_FUNC_ARG(type)
+		LOG_FUNC_ARG(protocol)
+		LOG_FUNC_END;
 
     SOCKET ret = socket(af, type, protocol);
 
@@ -108,9 +121,19 @@ SOCKET XTL::EmuThis::Emusocket
 // ******************************************************************
 // * func: EmuThis::Emubind
 // ******************************************************************
-int XTL::EmuThis::Emubind(SOCKET s, const struct sockaddr FAR *name, int namelen)
+int XTL::EmuThis::Emubind
+(
+	SOCKET s, 
+	const struct sockaddr FAR *name, 
+	int namelen
+)
 {
-    DbgFuncHexArgs(this, s, name, namelen);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(this)
+		LOG_FUNC_ARG(s)
+		LOG_FUNC_ARG(name)
+		LOG_FUNC_ARG(namelen)
+		LOG_FUNC_END;
 
     // TODO: Host-To-Network order if necessary (probably not?)
 
@@ -122,9 +145,17 @@ int XTL::EmuThis::Emubind(SOCKET s, const struct sockaddr FAR *name, int namelen
 // ******************************************************************
 // * func: EmuThis::Emulisten
 // ******************************************************************
-int XTL::EmuThis::Emulisten(SOCKET s, int backlog)
+int XTL::EmuThis::Emulisten
+(
+	SOCKET s, 
+	int backlog
+)
 {
-    DbgFuncHexArgs(this, s, backlog);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(this)
+		LOG_FUNC_ARG(s)
+		LOG_FUNC_ARG(backlog)
+		LOG_FUNC_END;
 
     // TODO: Host-To-Network order if necessary (probably not?)
 
@@ -136,9 +167,19 @@ int XTL::EmuThis::Emulisten(SOCKET s, int backlog)
 // ******************************************************************
 // * func: EmuThis::Emuioctlsocket
 // ******************************************************************
-int XTL::EmuThis::Emuioctlsocket(SOCKET s, long cmd, u_long FAR *argp)
+int XTL::EmuThis::Emuioctlsocket
+(
+	SOCKET s, 
+	long cmd, 
+	u_long FAR *argp
+)
 {
-	DbgFuncHexArgs(this, s, cmd, argp);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(this)
+		LOG_FUNC_ARG(s)
+		LOG_FUNC_ARG(cmd)
+		LOG_FUNC_ARG(argp)
+		LOG_FUNC_END;
 
     int ret = ioctlsocket(s, cmd, argp);
 
@@ -154,18 +195,16 @@ HRESULT WINAPI XOnlineLaunchNewImage
     LPVOID	pLaunchData
 )
 {
-		
-
-	DbgFuncFmtArgs(
-		"   lpImagePath           : 0x%.08X (%s)\n"
-		"   pLaunchData           : 0x%.08X\n",
-		lpImagePath, lpImagePath, pLaunchData);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(lpImagePath)
+		LOG_FUNC_ARG(pLaunchData)
+		LOG_FUNC_END;
 
 	// TODO: Launch another .xbe from Cxbx someday?
 
-		
+	HRESULT ret = E_FAIL;
 
-	return E_FAIL;
+	return ret;
 }
 
 // ******************************************************************
@@ -180,9 +219,17 @@ HRESULT WINAPI XTL::EmuXOnlineLogon
     HANDLE	pHandle
 )
 {
-	DbgFuncHexArgs(pUsers, pdwServiceIDs, dwServices, hEvent, pHandle);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pUsers)
+		LOG_FUNC_ARG(pdwServiceIDs)
+		LOG_FUNC_ARG(dwServices)
+		LOG_FUNC_ARG(hEvent)
+		LOG_FUNC_ARG(pHandle)
+		LOG_FUNC_END;
 
 	// TODO: What will it take to log on to Xbox Live?
 
-	return HRESULT(0x80151000L);	// XONLINE_E_LOGON_NO_NETWORK_CONNECTION
+	HRESULT ret = HRESULT(0x80151000L);	// XONLINE_E_LOGON_NO_NETWORK_CONNECTION
+
+	return ret;
 }
