@@ -107,10 +107,20 @@ extern thread_local std::string _logPrefix;
 
 // TODO : 
 // LPCSTR
-// PLARGE_INTEGER
+// PULONG value, *value
+// POBJECT_ATTRIBUTES ->ObjectName->Buffer
+// PVOID    * value, *value
+// PLARGE_INTEGER ->QuadPart
+// LARGE_INTEGER.QuadPart
 // PXDEVICE_PREALLOC_TYPE
 // PXPP_DEVICE_TYPE
 // PXINPUT_CAPABILITIES
 // PXINPUT_STATE
 // PXTHREAD_NOTIFICATION -> pfnNotifyRoutine
+// PMM_STATISTICS->Length
+// PIO_STATUS_BLOCK ->u1.Pointer, ->Information
+// PUNICODE_STRING
+// PSTRING (value != 0) ? value->Buffer : ""
+// UCHAR
+
 #endif _LOGGING_H
