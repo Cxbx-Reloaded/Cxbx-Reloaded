@@ -35,9 +35,49 @@
 #include <Windows.h>
 
 #include "Logging.h"
+//#include "EmuNtDll.h"
 
 // For thread_local, see : http://en.cppreference.com/w/cpp/language/storage_duration
 thread_local const DWORD _CurrentThreadId = GetCurrentThreadId();
 
 // TODO : Use Boost.Format http://www.boost.org/doc/libs/1_53_0/libs/format/index.html
 thread_local std::string _logPrefix;
+
+std::ostream& operator<<(std::ostream& os, const LARGE_INTEGER& value);
+{
+	return os << value.QuadPart;
+}
+
+//std::ostream& operator<<(std::ostream& os, const LPCSTR& value);
+
+std::ostream& operator<<(std::ostream& os, const PULONG& value)
+{
+	os << "0x" << (void*)value;
+	if (value)
+		os << " (->0x" << (void*)*value << ");
+
+	return os;
+}
+
+// std::ostream& operator<<(std::ostream& os, const PMM_STATISTICS& value); // ->Length
+// std::ostream& operator<<(std::ostream& os, const POBJECT_ATTRIBUTES& value); // ->ObjectName->Buffer
+// std::ostream& operator<<(std::ostream& os, const PIO_STATUS_BLOCK& value); // ->u1.Pointer, ->Information
+// std::ostream& operator<<(std::ostream& os, const PSTRING& value); // (value != 0) ? value->Buffer : ""
+
+std::ostream& operator<<(std::ostream& os, const PLARGE_INTEGER& value)
+{
+	os << "0x" << (void*)value;
+	if (value)
+		os << " (->0x" << value->QuadPart << ");
+
+	return os;
+}
+
+// std::ostream& operator<<(std::ostream& os, const PUNICODE_STRING& value);
+// std::ostream& operator<<(std::ostream& os, const PVOID*& value); // * value, *value
+// std::ostream& operator<<(std::ostream& os, const PXDEVICE_PREALLOC_TYPE& value);
+// std::ostream& operator<<(std::ostream& os, const PXINPUT_CAPABILITIES& value);
+// std::ostream& operator<<(std::ostream& os, const PXINPUT_STATE& value);
+// std::ostream& operator<<(std::ostream& os, const PXPP_DEVICE_TYPE& value);
+// std::ostream& operator<<(std::ostream& os, const PXTHREAD_NOTIFICATION& value); // -> pfnNotifyRoutine
+// std::ostream& operator<<(std::ostream& os, const UCHAR& value);

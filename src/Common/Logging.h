@@ -104,23 +104,25 @@ extern thread_local std::string _logPrefix;
 // Log function with one out argument
 #define LOG_FUNC_ONE_ARG_OUT(arg) LOG_FUNC_BEGIN LOG_FUNC_ARG_OUT(arg) LOG_FUNC_END 
 
+//#include "EmuNtDll.h"
 
 // TODO : 
-// LPCSTR
-// PULONG value, *value
-// POBJECT_ATTRIBUTES ->ObjectName->Buffer
-// PVOID    * value, *value
-// PLARGE_INTEGER ->QuadPart
-// LARGE_INTEGER.QuadPart
-// PXDEVICE_PREALLOC_TYPE
-// PXPP_DEVICE_TYPE
-// PXINPUT_CAPABILITIES
-// PXINPUT_STATE
-// PXTHREAD_NOTIFICATION -> pfnNotifyRoutine
-// PMM_STATISTICS->Length
-// PIO_STATUS_BLOCK ->u1.Pointer, ->Information
-// PUNICODE_STRING
-// PSTRING (value != 0) ? value->Buffer : ""
-// UCHAR
+//std::ostream& operator<<(std::ostream&, const LARGE_INTEGER&); // .QuadPart
+//std::ostream& operator<<(std::ostream&, const LPCSTR&);
+std::ostream& operator<<(std::ostream&, const PLARGE_INTEGER&);
+// std::ostream& operator<<(std::ostream&, const PMM_STATISTICS&); // ->Length
+// std::ostream& operator<<(std::ostream&, const POBJECT_ATTRIBUTES&); // ->ObjectName->Buffer
+// std::ostream& operator<<(std::ostream&, const PIO_STATUS_BLOCK&); // ->u1.Pointer, ->Information
+// std::ostream& operator<<(std::ostream&, const PSTRING&); // (value != 0) ? value->Buffer : ""
+std::ostream& operator<<(std::ostream&, const PULONG&);
+// std::ostream& operator<<(std::ostream&, const PUNICODE_STRING&);
+// std::ostream& operator<<(std::ostream&, const PVOID*&); // * value, *value
+// std::ostream& operator<<(std::ostream&, const PXDEVICE_PREALLOC_TYPE&);
+// std::ostream& operator<<(std::ostream&, const PXINPUT_CAPABILITIES&);
+// std::ostream& operator<<(std::ostream&, const PXINPUT_STATE&);
+// std::ostream& operator<<(std::ostream&, const PXPP_DEVICE_TYPE&);
+// std::ostream& operator<<(std::ostream&, const PXTHREAD_NOTIFICATION&); // -> pfnNotifyRoutine
+// std::ostream& operator<<(std::ostream&, const UCHAR&);
+
 
 #endif _LOGGING_H
