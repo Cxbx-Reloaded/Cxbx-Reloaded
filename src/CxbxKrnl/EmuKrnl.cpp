@@ -2755,7 +2755,7 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
 // ******************************************************************
 // * 0x00BC - NtCreateDirectoryObject
 // ******************************************************************
-XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateDirectoryObject
+XBSYSAPI EXPORTNUM(188) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateDirectoryObject
 (
 	OUT PHANDLE             DirectoryHandle,
 	IN  POBJECT_ATTRIBUTES  ObjectAttributes
