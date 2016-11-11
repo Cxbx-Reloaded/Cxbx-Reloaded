@@ -559,7 +559,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	}
 
 	
-	DbgPrintf("EmuMain : Determining CPU affinity.");
+	DbgPrintf("EmuMain : Determining CPU affinity.\n");
 
 	// Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
 	// this will better aproximate the environment with regard to multi-threading) :
