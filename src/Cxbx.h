@@ -97,8 +97,6 @@ enum DebugMode { DM_NONE, DM_CONSOLE, DM_FILE };
 /*! maximum number of threads cxbx can handle */
 #define MAXIMUM_XBOX_THREADS 256
 
-#include "Logging.h"
-
 /*! runtime DbgPrintf toggle boolean */
 extern volatile bool g_bPrintfOn;
 
@@ -109,8 +107,4 @@ extern volatile bool g_bPrintfOn;
 /*! DbgPrintf enabled if _DEBUG_TRACE is set */
 #define DbgPrintf(fmt, ...) do { if (_DEBUG_TRACE) if(g_bPrintfOn) printf(fmt, ##__VA_ARGS__); } while (0)
 
-// http://stackoverflow.com/questions/5134523/msvc-doesnt-expand-va-args-correctly
-// MSVC_EXPAND works around a Visual C++ problem, expanding __VA_ARGS__ incorrectly:
-#define MSVC_EXPAND( x ) x
-
-#endif
+#endif CXBX_H
