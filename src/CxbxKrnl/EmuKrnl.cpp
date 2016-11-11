@@ -45,6 +45,8 @@ namespace xboxkrnl
 #include <clocale>
 #include <process.h>
 
+#include "Logging.h"
+
 // prevent name collisions
 namespace NtDll
 {
@@ -52,7 +54,6 @@ namespace NtDll
 };
 
 #include "CxbxKrnl.h"
-#include "Logging.h"
 #include "Emu.h"
 #include "EmuFS.h"
 #include "EmuFile.h"
@@ -63,6 +64,71 @@ namespace NtDll
 #pragma warning(disable:4005) // Ignore redefined status values
 #include <ntstatus.h>
 #pragma warning(default:4005)
+
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::PSTRING& value); // forward
+
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::LARGE_INTEGER& value)
+{
+	return os << value.QuadPart;
+}
+
+//std::ostream& operator<<(std::ostream& os, const xboxkrnl::LPCSTR& value);
+
+std::ostream& operator<<(std::ostream& os, const PULONG& value)
+{
+	os << "0x" << (void*)value;
+	if (value)
+		os << " (*value: " << (void*)*value << ")";
+
+	return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::PMM_STATISTICS& value)
+{
+	os << "0x" << (void*)value;
+	if (value)
+		os << " (->Length: " << value->Length << ")";
+
+	return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::POBJECT_ATTRIBUTES& value)
+{
+	os << "0x" << (void*)value;
+	if (value)
+		os << " (->ObjectName: " << value->ObjectName << ")";
+
+	return os;
+}
+
+// std::ostream& operator<<(std::ostream& os, const xboxkrnl::PIO_STATUS_BLOCK& value); // ->u1.Pointer, ->Information
+
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::PSTRING& value)
+{
+	os << "0x" << (void*)value;
+	if (value)
+		os << " (->Buffer: \"" << value->Buffer << "\")";
+
+	return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::PLARGE_INTEGER& value)
+{
+	os << "0x" << (void*)value;
+	if (value)
+		os << " (->QuadPart: " << value->QuadPart << ")";
+
+	return os;
+}
+
+// std::ostream& operator<<(std::ostream& os, const xboxkrnl::PUNICODE_STRING& value);
+// std::ostream& operator<<(std::ostream& os, const PVOID*& value); // * value, *value
+// std::ostream& operator<<(std::ostream& os, const xboxkrnl::PXDEVICE_PREALLOC_TYPE& value);
+// std::ostream& operator<<(std::ostream& os, const xboxkrnl::PXINPUT_CAPABILITIES& value);
+// std::ostream& operator<<(std::ostream& os, const xboxkrnl::PXINPUT_STATE& value);
+// std::ostream& operator<<(std::ostream& os, const xboxkrnl::PXPP_DEVICE_TYPE& value);
+// std::ostream& operator<<(std::ostream& os, const xboxkrnl::PXTHREAD_NOTIFICATION& value); // -> pfnNotifyRoutine
+// std::ostream& operator<<(std::ostream& os, const xboxkrnl::UCHAR& value);
 
 // PsCreateSystemThread proxy parameters
 typedef struct _PCSTProxyParam
@@ -1059,6 +1125,23 @@ static CHAR* NtStatusToString ( IN NTSTATUS Status )
     }
 }
 
+// Separate function for logging, otherwise in PCSTProxy __try wont work (Compiler Error C2712)
+void PCSTProxy_log
+(
+	uint32 StartContext1,
+	uint32 StartContext2,
+	uint32 StartRoutine,
+	BOOL   StartSuspended,
+	HANDLE hStartedEvent
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(StartContext1)
+		LOG_FUNC_ARG(StartContext2)
+		LOG_FUNC_ARG(StartRoutine)
+		LOG_FUNC_END;
+}
+
 // PsCreateSystemThread proxy procedure
 #pragma warning(push)
 #pragma warning(disable: 4731)  // disable ebp modification warning
@@ -1078,11 +1161,7 @@ static unsigned int WINAPI PCSTProxy
     // Once deleted, unable to directly access iPCSTProxyParam in remainder of function.
     delete iPCSTProxyParam;
 
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(StartContext1)
-		LOG_FUNC_ARG(StartContext2)
-		LOG_FUNC_ARG(StartRoutine)
-		LOG_FUNC_END;
+	PCSTProxy_log(StartContext1, StartContext2, StartRoutine, StartSuspended, hStartedEvent);
 
     if(StartSuspended == TRUE)
         SuspendThread(GetCurrentThread());
@@ -1115,9 +1194,7 @@ static unsigned int WINAPI PCSTProxy
     {
         SetEvent(hStartedEvent);
 
-        
-
-        __asm
+		__asm
         {
             mov         esi, StartRoutine
             push        StartContext2

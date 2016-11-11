@@ -74,21 +74,20 @@ extern thread_local std::string _logPrefix;
 			tmp << __FILENAME__ << " (0x" << std::hex << std::uppercase << _CurrentThreadId << "): "; \
 			_logPrefix = tmp.str(); \
 		}; \
-		bool had_args = false; \
 		std::stringstream msg; \
 		msg << _logPrefix << __func__ << "(";
 
 // LOG_FUNC_ARG_OUT writes output via all available ostream << operator overloads, adding detail where possible
 #define LOG_FUNC_ARG(arg) \
-		had_args = true; \
-		msg << "\n   " << std::setw(18) << std::left << std::setfill(' ') << #arg << " : " << arg;
+		msg << "\n   " << std::setw(26) << std::left << std::setfill(' ') << #arg << " : " << arg;
 
 // LOG_FUNC_ARG_OUT prevents expansion of types, by only rendering as a pointer
 #define LOG_FUNC_ARG_OUT(arg) \
-		msg << "\n   " << std::setw(18) << std::left << std::setfill(' ') << #arg << " : 0x" << (void*)arg;
+		msg << "\n   " << std::setw(26) << std::left << std::setfill(' ') << #arg << " : 0x" << (void*)arg;
 
+// LOG_FUNC_END closes off function and optional argument logging
 #define LOG_FUNC_END \
-		if (had_args) msg << "\n"; \
+		msg.seekg(-1, std::ios::end); if (msg.get() != '(') msg << '\n'; \
 		msg << ");\n"; \
 		std::cout << msg.str(); \
 	} } while (0)
@@ -103,26 +102,5 @@ extern thread_local std::string _logPrefix;
 
 // Log function with one out argument
 #define LOG_FUNC_ONE_ARG_OUT(arg) LOG_FUNC_BEGIN LOG_FUNC_ARG_OUT(arg) LOG_FUNC_END 
-
-//#include "EmuNtDll.h"
-
-// TODO : 
-//std::ostream& operator<<(std::ostream&, const LARGE_INTEGER&); // .QuadPart
-//std::ostream& operator<<(std::ostream&, const LPCSTR&);
-std::ostream& operator<<(std::ostream&, const PLARGE_INTEGER&);
-// std::ostream& operator<<(std::ostream&, const PMM_STATISTICS&); // ->Length
-// std::ostream& operator<<(std::ostream&, const POBJECT_ATTRIBUTES&); // ->ObjectName->Buffer
-// std::ostream& operator<<(std::ostream&, const PIO_STATUS_BLOCK&); // ->u1.Pointer, ->Information
-// std::ostream& operator<<(std::ostream&, const PSTRING&); // (value != 0) ? value->Buffer : ""
-std::ostream& operator<<(std::ostream&, const PULONG&);
-// std::ostream& operator<<(std::ostream&, const PUNICODE_STRING&);
-// std::ostream& operator<<(std::ostream&, const PVOID*&); // * value, *value
-// std::ostream& operator<<(std::ostream&, const PXDEVICE_PREALLOC_TYPE&);
-// std::ostream& operator<<(std::ostream&, const PXINPUT_CAPABILITIES&);
-// std::ostream& operator<<(std::ostream&, const PXINPUT_STATE&);
-// std::ostream& operator<<(std::ostream&, const PXPP_DEVICE_TYPE&);
-// std::ostream& operator<<(std::ostream&, const PXTHREAD_NOTIFICATION&); // -> pfnNotifyRoutine
-// std::ostream& operator<<(std::ostream&, const UCHAR&);
-
 
 #endif _LOGGING_H
