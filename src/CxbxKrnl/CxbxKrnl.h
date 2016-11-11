@@ -79,7 +79,7 @@ CXBXKRNL_API void CxbxKrnlPanic();
 CXBXKRNL_API void CxbxKrnlNoFunc();
 
 /*! kernel thunk table */
-extern CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367];
+extern CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379];
 
 /*! thread local storage structure */
 extern CXBXKRNL_API Xbe::TLS *CxbxKrnl_TLS;
