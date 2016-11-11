@@ -41,6 +41,7 @@ namespace xboxkrnl
 };
 
 #include "CxbxKrnl.h"
+#include "Logging.h"
 #include "Emu.h"
 #include "EmuFS.h"
 #include "EmuShared.h"
@@ -68,7 +69,10 @@ HRESULT WINAPI XTL::EmuXACTEngineCreate
 	X_XACTEngine** ppEngine
 )
 {
-	DbgFuncHexArgs(pParams, ppEngine);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pParams)
+		LOG_FUNC_ARG(ppEngine)
+		LOG_FUNC_END;
 
 	// TODO: Any other form of initialization?
 
@@ -84,7 +88,7 @@ HRESULT WINAPI XTL::EmuXACTEngineCreate
 // ******************************************************************
 void WINAPI XTL::EmuXACTEngineDoWork()
 {
-	DbgFuncHexArgs();
+	LOG_FUNC();
 
 	// TODO: Anything else required here?
 	// AFAIK, this function just calls DirectSoundDoWork()
@@ -107,7 +111,12 @@ HRESULT WINAPI XTL::EmuIXACTEngine_RegisterWaveBank
 	X_XACTWaveBank**	ppWaveBank
 )
 {
-	DbgFuncHexArgs(pThis, pvData, dwSize, ppWaveBank);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(pvData)
+		LOG_FUNC_ARG(dwSize)
+		LOG_FUNC_ARG(ppWaveBank)
+		LOG_FUNC_END;
 
 	// TODO: Implement
 
@@ -126,7 +135,11 @@ HRESULT WINAPI XTL::EmuIXACTEngine_RegisterStreamedWaveBank
 	X_XACTWaveBank**						ppWaveBank
 )
 {
-	DbgFuncHexArgs(pThis, pParams, ppWaveBank);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(pParams)
+		LOG_FUNC_ARG(ppWaveBank)
+		LOG_FUNC_END;
 
 	// TODO: Implement
 
@@ -146,7 +159,12 @@ HRESULT WINAPI XTL::EmuIXACTEngine_CreateSoundBank
 	X_XACTSoundBank**	ppSoundBank
 )
 {
-	DbgFuncHexArgs(pThis, pvData, dwSize, ppSoundBank);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(pvData)
+		LOG_FUNC_ARG(dwSize)
+		LOG_FUNC_ARG(ppSoundBank)
+		LOG_FUNC_END;
 
 	// TODO: Implement
 
@@ -167,7 +185,13 @@ HRESULT WINAPI XTL::EmuIXACTEngine_DownloadEffectsImage
 	LPVOID*				ppImageDesc
 )
 {
-	DbgFuncHexArgs(pThis, pvData, dwSize, pEffectLoc, ppImageDesc);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(pvData)
+		LOG_FUNC_ARG(dwSize)
+		LOG_FUNC_ARG(pEffectLoc)
+		LOG_FUNC_ARG(ppImageDesc)
+		LOG_FUNC_END;
 
 	// TODO: Implement
 
@@ -184,7 +208,11 @@ HRESULT WINAPI XTL::EmuIXACTEngine_CreateSoundSource
 	X_XACTSoundSource** ppSoundSource
 )
 {
-	DbgFuncHexArgs(pThis, dwFlags, ppSoundSource);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(dwFlags)
+		LOG_FUNC_ARG(ppSoundSource)
+		LOG_FUNC_END;
 
 	*ppSoundSource = (X_XACTSoundSource*) CxbxMalloc( sizeof( X_XACTSoundSource ) );
 
@@ -200,7 +228,10 @@ HRESULT WINAPI XTL::EmuIXACTEngine_EnableHeadphones
 	BOOL				fEnabled
 )
 {
-	DbgFuncHexArgs(pThis, fEnabled);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(fEnabled)
+		LOG_FUNC_END;
 
 	return S_OK;
 }
@@ -220,20 +251,16 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetListenerOrientation
 	DWORD			dwApply
 )
 {
-		
-
-	DbgFuncFmtArgs(
-           "   pThis                     : 0x%.08X\n"
-		   "   xFront                    : %f"
-		   "   yFront                    : %f"
-		   "   zFront                    : %f"
-		   "   xTop                      : %f"
-		   "   yTop                      : %f"
-		   "   zTop                      : %f"
-		   "   dwApply                   : 0x%.08X",
-		   pThis, xFront, yFront, zFront, xTop, yTop, zTop, dwApply);
-
-	
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(xFront)
+		LOG_FUNC_ARG(yFront)
+		LOG_FUNC_ARG(zFront)
+		LOG_FUNC_ARG(xTop)
+		LOG_FUNC_ARG(yTop)
+		LOG_FUNC_ARG(zTop)
+		LOG_FUNC_ARG(dwApply)
+		LOG_FUNC_END;
 
 	return S_OK;
 }
@@ -250,17 +277,13 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetListenerPosition
 	DWORD			dwApply
 )
 {
-		
-
-	DbgFuncFmtArgs(
-           "   pThis                     : 0x%.08X\n"
-		   "   x                         : %f"
-		   "   y                         : %f"
-		   "   z                         : %f"
-		   "   dwApply                   : 0x%.08X\n",
-		   pThis, x, y, z, dwApply);
-
-	
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(x)
+		LOG_FUNC_ARG(y)
+		LOG_FUNC_ARG(z)
+		LOG_FUNC_ARG(dwApply)
+		LOG_FUNC_END;
 
 	return S_OK;
 }
@@ -277,17 +300,13 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetListenerVelocity
 	DWORD			dwApply
 )
 {
-		
-
-	DbgFuncFmtArgs(
-           "   pThis                     : 0x%.08X\n"
-		   "   x                         : %f"
-		   "   y                         : %f"
-		   "   z                         : %f"
-		   "   dwApply                   : 0x%.08X\n",
-		   pThis, x, y, z, dwApply);
-
-	
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(x)
+		LOG_FUNC_ARG(y)
+		LOG_FUNC_ARG(z)
+		LOG_FUNC_ARG(dwApply)
+		LOG_FUNC_END;
 
 	return S_OK;
 }
@@ -302,7 +321,11 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetMasterVolume
     LONG			lVolume
 )
 {
-	DbgFuncHexArgs(pThis, wCategory, lVolume);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(wCategory)
+		LOG_FUNC_ARG(lVolume)
+		LOG_FUNC_END;
 
 	return S_OK;
 }
@@ -310,9 +333,12 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetMasterVolume
 // ******************************************************************
 // * EmuIXACTEngine_CommitDeferredSettings
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIXACTEngine_CommitDeferredSettings(X_XACTEngine* pThis)
+HRESULT WINAPI XTL::EmuIXACTEngine_CommitDeferredSettings
+(
+	X_XACTEngine* pThis
+)
 {
-	DbgFuncHexArgs(pThis);
+	LOG_FUNC_ONE_ARG(pThis);
 
 	return S_OK;
 }
@@ -327,15 +353,11 @@ HRESULT WINAPI XTL::EmuIXACTSoundBank_GetSoundCueIndexFromFriendlyName
 	DWORD*				pdwSoundCueIndex
 )
 {
-		
-
-	DbgFuncFmtArgs(
-           "   pThis                     : 0x%.08X\n"
-		   "   pFriendlyName             : (%s)\n"
-		   "   pdwSoundCueIndex          : 0x%.08X\n",
-		   pThis, pFriendlyName, pdwSoundCueIndex);
-
-	
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(pFriendlyName)
+		LOG_FUNC_ARG(pdwSoundCueIndex)
+		LOG_FUNC_END;
 
 	return S_OK;
 }
@@ -352,7 +374,13 @@ HRESULT WINAPI XTL::EmuIXACTSoundBank_Play
 	X_XACTSoundCue**	ppSoundCue
 )
 {
-	DbgFuncHexArgs(pThis, dwSoundCueIndex, pSoundSource, dwFlags, ppSoundCue);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(dwSoundCueIndex)
+		LOG_FUNC_ARG(pSoundSource)
+		LOG_FUNC_ARG(dwFlags)
+		LOG_FUNC_ARG(ppSoundCue)
+		LOG_FUNC_END;
 
 	return S_OK;
 }
@@ -368,7 +396,12 @@ HRESULT WINAPI XTL::EmuIXACTSoundBank_Stop
 	X_XACTSoundCue*		pSoundCue
 )
 {
-	DbgFuncHexArgs(pThis, dwSoundCueIndex, dwFlags, pSoundCue);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(dwSoundCueIndex)
+		LOG_FUNC_ARG(dwFlags)
+		LOG_FUNC_ARG(pSoundCue)
+		LOG_FUNC_END;
 
 	return S_OK;
 }
@@ -385,17 +418,13 @@ HRESULT WINAPI XTL::EmuIXACTSoundSource_SetPosition
     DWORD				dwApply
 )
 {
-		
-
-	DbgFuncFmtArgs(
-           "   pThis                     : 0x%.08X\n"
-		   "   x                         : %f\n"
-		   "   y                         : %f\n"
-		   "   z                         : %f\n"
-		   "   dwApply                   : 0x%.08X\n",
-		   pThis, x, y, z, dwApply);
-
-	
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(x)
+		LOG_FUNC_ARG(y)
+		LOG_FUNC_ARG(z)
+		LOG_FUNC_ARG(dwApply)
+		LOG_FUNC_END;
 
 	return S_OK;
 }
@@ -412,17 +441,13 @@ HRESULT WINAPI XTL::EmuIXACTSoundSource_SetVelocity
     DWORD				dwApply
 )
 {
-		
-
-	DbgFuncFmtArgs(
-           "   pThis                     : 0x%.08X\n"
-		   "   x                         : %f\n"
-		   "   y                         : %f\n"
-		   "   z                         : %f\n"
-		   "   dwApply                   : 0x%.08X\n",
-		   pThis, x, y, z, dwApply);
-
-	
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(x)
+		LOG_FUNC_ARG(y)
+		LOG_FUNC_ARG(z)
+		LOG_FUNC_ARG(dwApply)
+		LOG_FUNC_END;
 
 	return S_OK;
 }
@@ -436,7 +461,10 @@ HRESULT WINAPI XTL::EmuIXACTEngine_RegisterNotification
     PCXACT_NOTIFICATION_DESCRIPTION pNotificationDesc
 )
 {
-	DbgFuncHexArgs(pThis, pNotificationDesc);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(pNotificationDesc)
+		LOG_FUNC_END;
 
 	return S_OK;
 }
@@ -451,7 +479,11 @@ HRESULT WINAPI XTL::EmuIXACTEngine_GetNotification
     LPVOID						    pNotification
 )
 {
-	DbgFuncHexArgs(pThis, pNotificationDesc, pNotification);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(pNotificationDesc)
+		LOG_FUNC_ARG(pNotification)
+		LOG_FUNC_END;
 
 	// TODO: The contents of XACT_NOTIFICATION can vary from one XDK to the next.
 	// The definition for 4627 is different than 5558.
@@ -468,7 +500,11 @@ HRESULT WINAPI XTL::EmuIXACTEngine_UnRegisterWaveBank
     X_XACTWaveBank*	pWaveBank
 )
 {
-	DbgFuncHexArgs(pThis, pWaveBank);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThis)
+		LOG_FUNC_ARG(pWaveBank)
+		LOG_FUNC_END;
+
 
 	// Even though the documentation doesn't tell us much, I'm
 	// assuming that after this function is called, the pointer

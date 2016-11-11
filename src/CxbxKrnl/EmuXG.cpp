@@ -39,6 +39,7 @@
 
 #include "Emu.h"
 #include "EmuFS.h"
+#include "Logging.h"
 
 // ******************************************************************
 // * prevent name collisions
@@ -58,7 +59,7 @@ PVOID WINAPI XTL::EmuXGIsSwizzledFormat
     XTL::D3DFORMAT Format
 )
 {
-	DbgFuncHexArgs(Format);
+	LOG_FUNC_ONE_ARG(Format);
 
     return FALSE;
 }
@@ -78,8 +79,16 @@ VOID WINAPI XTL::EmuXGSwizzleRect
     DWORD         BytesPerPixel
 )
 {
-	DbgFuncHexArgs(pSource, Pitch, pRect, pDest, Width, Height,
-           pPoint, BytesPerPixel);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pSource)
+		LOG_FUNC_ARG(Pitch)
+		LOG_FUNC_ARG(pRect)
+		LOG_FUNC_ARG(pDest)
+		LOG_FUNC_ARG(Width)
+		LOG_FUNC_ARG(Height)
+		LOG_FUNC_ARG(pPoint)
+		LOG_FUNC_ARG(BytesPerPixel)
+		LOG_FUNC_END;
 
     if(pRect == NULL && pPoint == NULL && Pitch == 0)
     {
@@ -135,8 +144,18 @@ VOID WINAPI XTL::EmuXGSwizzleBox
     DWORD            BytesPerPixel
 )
 {
-	DbgFuncHexArgs(pSource, RowPitch, SlicePitch, pBox, pDest, Width, Height,
-           Depth, pPoint, BytesPerPixel);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pSource)
+		LOG_FUNC_ARG(RowPitch)
+		LOG_FUNC_ARG(SlicePitch)
+		LOG_FUNC_ARG(pBox)
+		LOG_FUNC_ARG(pDest)
+		LOG_FUNC_ARG(Width)
+		LOG_FUNC_ARG(Height)
+		LOG_FUNC_ARG(Depth)
+		LOG_FUNC_ARG(pPoint)
+		LOG_FUNC_ARG(BytesPerPixel)
+		LOG_FUNC_END;
 
 	if(pDest != (LPVOID) 0x80000000)
 	{
@@ -296,7 +315,11 @@ HRESULT WINAPI XTL::EmuXGWriteSurfaceOrTextureToXPR
 	BOOL			bWriteSurfaceAsTexture
 )
 {
-	DbgFuncHexArgs(pResource, cPath, bWriteSurfaceAsTexture);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pResource)
+		LOG_FUNC_ARG(cPath)
+		LOG_FUNC_ARG(bWriteSurfaceAsTexture)
+		LOG_FUNC_END;
 
 	// TODO: If necessary, either reverse the .xbx and .xpr file formats
 	// and write the surface/texture to a file, or output a generic .xbx
@@ -323,8 +346,17 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 	UINT			Pitch
 )
 {
-	DbgFuncHexArgs(Width, Height, Levels, Usage, 
-				Format, Pool, pTexture, Data, Pitch);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Width)
+		LOG_FUNC_ARG(Height)
+		LOG_FUNC_ARG(Levels)
+		LOG_FUNC_ARG(Usage)
+		LOG_FUNC_ARG(Format)
+		LOG_FUNC_ARG(Pool)
+		LOG_FUNC_ARG(pTexture)
+		LOG_FUNC_ARG(Data)
+		LOG_FUNC_ARG(Pitch)
+		LOG_FUNC_END;
 
 	// NOTES: This function simply creates a texture that needs to be registered
 	// via D3DDevice_Register afterwards.  So, do I just create the texture via
@@ -388,7 +420,11 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 //{
 //		
 //
-//	DbgFuncHexArgs(pFontData, uFontDataSize, ppFont);
+//		LOG_FUNC_BEGIN
+//			LOG_FUNC_ARG(pFontData)
+//			LOG_FUNC_ARG(uFontDataSize)
+//			LOG_FUNC_ARG(ppFont)
+//			LOG_FUNC_END;
 //
 //	__asm int 3;
 //
