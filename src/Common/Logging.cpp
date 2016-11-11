@@ -43,7 +43,7 @@ thread_local const DWORD _CurrentThreadId = GetCurrentThreadId();
 // TODO : Use Boost.Format http://www.boost.org/doc/libs/1_53_0/libs/format/index.html
 thread_local std::string _logPrefix;
 
-std::ostream& operator<<(std::ostream& os, const LARGE_INTEGER& value);
+std::ostream& operator<<(std::ostream& os, const LARGE_INTEGER& value)
 {
 	return os << value.QuadPart;
 }
@@ -54,7 +54,7 @@ std::ostream& operator<<(std::ostream& os, const PULONG& value)
 {
 	os << "0x" << (void*)value;
 	if (value)
-		os << " (->0x" << (void*)*value << ");
+		os << " (->0x" << (void*)*value << ")";
 
 	return os;
 }
@@ -68,7 +68,7 @@ std::ostream& operator<<(std::ostream& os, const PLARGE_INTEGER& value)
 {
 	os << "0x" << (void*)value;
 	if (value)
-		os << " (->0x" << value->QuadPart << ");
+		os << " (->0x" << value->QuadPart << ")";
 
 	return os;
 }
