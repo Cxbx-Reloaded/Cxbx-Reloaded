@@ -200,7 +200,7 @@ XBSYSAPI VOID *KeTestAlertThread;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(156) volatile DWORD KeTickCount;
 
-XBSYSAPI VOID *KeTimeIncrement;
+XBSYSAPI EXPORTNUM(157) ULONG KeTimeIncrement;
 
 XBSYSAPI EXPORTNUM(158) NTSTATUS KeWaitForMultipleObjects
 (

@@ -61,8 +61,6 @@ XBSYSAPI VOID *FscInvalidateIdleBlocks;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(37) LONG NTAPI FscSetCacheSize(ULONG uCachePages);
 
-XBSYSAPI VOID *KdDebuggerEnabled;
-XBSYSAPI VOID *KdDebuggerNotPresent;
 
 // ******************************************************************
 // * KfRaiseIrql

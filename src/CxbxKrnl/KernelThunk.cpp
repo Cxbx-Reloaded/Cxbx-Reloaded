@@ -101,8 +101,8 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0026),                                    // 0x0026 (38)  HalClearSoftwareInterrupt
 	(uint32)PANIC(0x0027),                                    // 0x0027 (39)  HalDisableSystemInterrupt
 	(uint32)VARIABLE(&xboxkrnl::HalDiskCachePartitionCount),  // 0x0028 (40)  A.k.a. "IdexDiskPartitionPrefixBuffer"
-	(uint32)VARIABLE(0x0029),                                 // 0x0029 (41)  HalDiskModelNumber
-	(uint32)VARIABLE(0x002A),                                 // 0x002A (42)  HalDiskSerialNumber
+	(uint32)VARIABLE(&xboxkrnl::HalDiskModelNumber),          // 0x0029 (41)
+	(uint32)VARIABLE(&xboxkrnl::HalDiskSerialNumber),         // 0x002A (42)
 	(uint32)PANIC(0x002B),                                    // 0x002B (43)  HalEnableSystemInterrupt
 	(uint32)FUNC(&xboxkrnl::HalGetInterruptVector),           // 0x002C (44)
 	(uint32)FUNC(&xboxkrnl::HalReadSMBusValue),               // 0x002D (45)
@@ -148,8 +148,8 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0055),                                    // 0x0055 (85)  IoSynchronousFsdRequest
 	(uint32)PANIC(0x0056),                                    // 0x0056 (86)  IofCallDriver
 	(uint32)PANIC(0x0057),                                    // 0x0057 (87)  IofCompleteRequest
-	(uint32)VARIABLE(0x0058),                                 // 0x0058 (88)  KdDebuggerEnabled
-	(uint32)VARIABLE(0x0059),                                 // 0x0059 (89)  KdDebuggerNotPresent
+	(uint32)VARIABLE(&xboxkrnl::KdDebuggerEnabled),           // 0x0058 (88)
+	(uint32)VARIABLE(&xboxkrnl::KdDebuggerNotPresent),        // 0x0059 (89)
 	(uint32)PANIC(0x005A),                                    // 0x005A (90)  IoDismountVolume
 	(uint32)FUNC(&xboxkrnl::IoDismountVolumeByName),          // 0x005B (91)
 	(uint32)PANIC(0x005C),                                    // 0x005C (92)  KeAlertResumeThread

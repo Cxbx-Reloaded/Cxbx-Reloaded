@@ -24,8 +24,8 @@ XBSYSAPI EXPORTNUM(9) VOID NTAPI HalReadSMCTrayState
 XBSYSAPI VOID *HalClearSoftwareInterrupt;
 XBSYSAPI VOID *HalDisableSystemInterrupt;
 XBSYSAPI ULONG HalDiskCachePartitionCount;
-XBSYSAPI VOID *HalDiskModelNumber;
-XBSYSAPI VOID *HalDiskSerialNumber;
+XBSYSAPI EXPORTNUM(41) PANSI_STRING HalDiskModelNumber;
+XBSYSAPI EXPORTNUM(42) PANSI_STRING HalDiskSerialNumber;
 XBSYSAPI VOID *HalEnableSystemInterrupt;
 
 // ******************************************************************

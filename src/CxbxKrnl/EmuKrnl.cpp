@@ -1772,14 +1772,11 @@ XBSYSAPI EXPORTNUM(37) xboxkrnl::LONG NTAPI xboxkrnl::FscSetCacheSize
 // This enables Partition3..7  Source:OpenXDK  TODO : Make this configurable
 XBSYSAPI EXPORTNUM(40) xboxkrnl::DWORD xboxkrnl::HalDiskCachePartitionCount = 4; // Was 3
 
-/* Clashes with OpenXDK declaration :
-
 // Source:OpenXDK  TODO : Fill this with something sensible
 XBSYSAPI EXPORTNUM(41) xboxkrnl::PANSI_STRING xboxkrnl::HalDiskModelNumber = 0;
 
 // Source:OpenXDK  TODO : Fill this with something sensible
 XBSYSAPI EXPORTNUM(42) xboxkrnl::PANSI_STRING xboxkrnl::HalDiskSerialNumber = 0;
-*/
 
 // ******************************************************************
 // * HalGetInterruptVector
@@ -1976,13 +1973,11 @@ XBSYSAPI EXPORTNUM(70) xboxkrnl::POBJECT_TYPE xboxkrnl::IoDeviceObjectType = NUL
 // TODO : What should we initialize this to?
 XBSYSAPI EXPORTNUM(71) xboxkrnl::POBJECT_TYPE xboxkrnl::IoFileObjectType = NULL; 
 
-/* Clashes with OpenXDK declaration
 // TODO : What should we initialize this to?
 XBSYSAPI EXPORTNUM(88) xboxkrnl::BOOLEAN xboxkrnl::KdDebuggerEnabled = false;
 
 // Source:ReactOS  TODO : What should we initialize this to?
 XBSYSAPI EXPORTNUM(89) xboxkrnl::BOOLEAN xboxkrnl::KdDebuggerNotPresent = true;
-*/
 
 // ******************************************************************
 // * IoDismountVolumeByName
@@ -2294,10 +2289,8 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 // ******************************************************************
 XBSYSAPI EXPORTNUM(156) volatile xboxkrnl::DWORD xboxkrnl::KeTickCount = 0;
 
-/* Clashes with OpenXDK declaration
 const xboxkrnl::ULONG CLOCK_TIME_INCREMENT = 0x2710;
 XBSYSAPI EXPORTNUM(157) xboxkrnl::ULONG xboxkrnl::KeTimeIncrement = CLOCK_TIME_INCREMENT;
-*/
 
 // ******************************************************************
 // * 0x009E - KeWaitForMultipleObjects
