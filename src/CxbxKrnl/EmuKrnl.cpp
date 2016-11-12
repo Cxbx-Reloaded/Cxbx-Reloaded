@@ -1363,6 +1363,7 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 
 using namespace xboxkrnl;
 
+
 // ******************************************************************
 // * 0x0001 AvGetSavedDataAddress()
 // ******************************************************************
@@ -2005,6 +2006,8 @@ XBSYSAPI EXPORTNUM(99) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeDelayExecutionThread
 
 	return ret;
 }
+
+XBSYSAPI EXPORTNUM(102) xboxkrnl::PVOID xboxkrnl::MmGlobalData[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
 // ******************************************************************
 // * 0x006B - KeInitializeDpc

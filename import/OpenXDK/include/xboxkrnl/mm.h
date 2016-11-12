@@ -12,7 +12,7 @@
 #ifndef XBOXKRNL_MM_H
 #define XBOXKRNL_MM_H
 
-XBSYSAPI VOID *MmGlobalData;
+XBSYSAPI EXPORTNUM(102) PVOID MmGlobalData[8];
 
 // ******************************************************************
 // * MmAllocateContiguousMemory
