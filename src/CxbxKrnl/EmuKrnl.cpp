@@ -38,6 +38,11 @@
 namespace xboxkrnl
 {
     #include <xboxkrnl/xboxkrnl.h>
+
+	// ******************************************************************
+	// * POBJECT_TYPE
+	// ******************************************************************
+	typedef void* POBJECT_TYPE; // TODO : How is this defined?
 };
 
 #include <cstdio>
@@ -1363,7 +1368,6 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 
 using namespace xboxkrnl;
 
-
 // ******************************************************************
 // * 0x0001 AvGetSavedDataAddress()
 // ******************************************************************
@@ -1537,6 +1541,8 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
 	return pRet;
 }
 
+XBSYSAPI EXPORTNUM(16) xboxkrnl::POBJECT_TYPE xboxkrnl::ExEventObjectType = NULL; // TODO : What should we initialize this to?
+
 // ******************************************************************
 // * 0x0011 ExFreePool
 // ******************************************************************
@@ -1549,6 +1555,8 @@ XBSYSAPI EXPORTNUM(17) VOID NTAPI xboxkrnl::ExFreePool
 
 	CxbxFree(P);
 }
+
+XBSYSAPI EXPORTNUM(22) xboxkrnl::POBJECT_TYPE xboxkrnl::ExMutantObjectType = NULL; // TODO : What should we initialize this to?
 
 // ******************************************************************
 // * 0x0017 ExQueryPoolBlockSize
@@ -1730,6 +1738,10 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 	return STATUS_SUCCESS;
 }
 
+XBSYSAPI EXPORTNUM(30) xboxkrnl::POBJECT_TYPE xboxkrnl::ExSemaphoreObjectType = NULL; // TODO : What should we initialize this to?
+
+XBSYSAPI EXPORTNUM(31) xboxkrnl::POBJECT_TYPE xboxkrnl::ExTimerObjectType = NULL; // TODO : What should we initialize this to?
+
 // ******************************************************************
 // * 0x0023 - FscGetCacheSize
 // ******************************************************************
@@ -1756,6 +1768,18 @@ XBSYSAPI EXPORTNUM(37) xboxkrnl::LONG NTAPI xboxkrnl::FscSetCacheSize
 
     return 0;
 }
+
+// This enables Partition3..7  Source:OpenXDK  TODO : Make this configurable
+XBSYSAPI EXPORTNUM(40) xboxkrnl::DWORD xboxkrnl::HalDiskCachePartitionCount = 4; // Was 3
+
+/* Clashes with OpenXDK declaration :
+
+// Source:OpenXDK  TODO : Fill this with something sensible
+XBSYSAPI EXPORTNUM(41) xboxkrnl::PANSI_STRING xboxkrnl::HalDiskModelNumber = 0;
+
+// Source:OpenXDK  TODO : Fill this with something sensible
+XBSYSAPI EXPORTNUM(42) xboxkrnl::PANSI_STRING xboxkrnl::HalDiskSerialNumber = 0;
+*/
 
 // ******************************************************************
 // * HalGetInterruptVector
@@ -1865,6 +1889,8 @@ XBSYSAPI EXPORTNUM(50) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMBusValue
 	return STATUS_SUCCESS;
 }
 
+XBSYSAPI EXPORTNUM(64) xboxkrnl::POBJECT_TYPE xboxkrnl::IoCompletionObjectType = NULL; // TODO : What should we initialize this to?
+
 // ******************************************************************
 // * 0x0042 - IoCreateFile
 // ******************************************************************
@@ -1943,6 +1969,20 @@ XBSYSAPI EXPORTNUM(69) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDeleteSymbolicLink
 
 	return ret;
 }
+
+// TODO : What should we initialize this to?
+XBSYSAPI EXPORTNUM(70) xboxkrnl::POBJECT_TYPE xboxkrnl::IoDeviceObjectType = NULL;
+
+// TODO : What should we initialize this to?
+XBSYSAPI EXPORTNUM(71) xboxkrnl::POBJECT_TYPE xboxkrnl::IoFileObjectType = NULL; 
+
+/* Clashes with OpenXDK declaration
+// TODO : What should we initialize this to?
+XBSYSAPI EXPORTNUM(88) xboxkrnl::BOOLEAN xboxkrnl::KdDebuggerEnabled = false;
+
+// Source:ReactOS  TODO : What should we initialize this to?
+XBSYSAPI EXPORTNUM(89) xboxkrnl::BOOLEAN xboxkrnl::KdDebuggerNotPresent = true;
+*/
 
 // ******************************************************************
 // * IoDismountVolumeByName
@@ -2091,6 +2131,10 @@ XBSYSAPI EXPORTNUM(113) VOID NTAPI xboxkrnl::KeInitializeTimerEx
 
     return;
 }
+
+// Dxbx note : This was once a value, but instead we now point to
+// the native Windows versions (see ConnectWindowsTimersToThunkTable) :
+// XBSYSAPI EXPORTNUM(120) xboxkrnl::PKSYSTEM_TIME xboxkrnl::KeInterruptTimePtr; // Used for KernelThunk[120]
 
 // ******************************************************************
 // * KeQueryPerformanceCounter
@@ -2241,26 +2285,19 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 	return Inserted;
 }
 
+// Dxbx note : This was once a value, but instead we now point to
+// the native Windows versions (see ConnectWindowsTimersToThunkTable) :
+// XBSYSAPI EXPORTNUM(154) xboxkrnl::PKSYSTEM_TIME xboxkrnl::KeSystemTimePtr; // Used for KernelThunk[154]
+
 // ******************************************************************
 // * 0x009C - KeTickCount
 // ******************************************************************
 XBSYSAPI EXPORTNUM(156) volatile xboxkrnl::DWORD xboxkrnl::KeTickCount = 0;
 
-// ******************************************************************
-// * xLaunchDataPage (pointed to by LaunchDataPage)
-// ******************************************************************
-LAUNCH_DATA_PAGE xLaunchDataPage =
-{
-    {   // header
-        2,  // 2: dashboard, 0: title
-        0,
-        "D:\\default.xbe",
-        0
-    }
-};
-
-// TODO: Verify this is the correct amount
-xboxkrnl::ULONG xboxkrnl::HalDiskCachePartitionCount = 3;
+/* Clashes with OpenXDK declaration
+const xboxkrnl::ULONG CLOCK_TIME_INCREMENT = 0x2710;
+XBSYSAPI EXPORTNUM(157) xboxkrnl::ULONG xboxkrnl::KeTimeIncrement = CLOCK_TIME_INCREMENT;
+*/
 
 // ******************************************************************
 // * 0x009E - KeWaitForMultipleObjects
@@ -2346,6 +2383,19 @@ XBSYSAPI EXPORTNUM(161) VOID NTAPI xboxkrnl::KfLowerIrql
 	LOG_FUNC_ONE_ARG(NewIrql);
 
 }
+
+// ******************************************************************
+// * xLaunchDataPage (pointed to by LaunchDataPage)
+// ******************************************************************
+LAUNCH_DATA_PAGE xLaunchDataPage =
+{
+	{   // header
+		2,  // 2: dashboard, 0: title
+		0,
+		"D:\\default.xbe",
+		0
+	}
+};
 
 // ******************************************************************
 // * 0x00A4 - LaunchDataPage (actually a pointer)

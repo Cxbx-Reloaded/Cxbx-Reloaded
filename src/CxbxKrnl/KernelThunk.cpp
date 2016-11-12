@@ -76,13 +76,13 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x000D),                                    // 0x000D (13)  ExAcquireReadWriteLockShared
 	(uint32)FUNC(&xboxkrnl::ExAllocatePool),                  // 0x000E (14)
 	(uint32)FUNC(&xboxkrnl::ExAllocatePoolWithTag),           // 0x000F (15)
-	(uint32)VARIABLE(0x0010),                                 // 0x0010 (16)  ExEventObjectType
+	(uint32)VARIABLE(&xboxkrnl::ExEventObjectType),           // 0x0010 (16)  
 	(uint32)FUNC(&xboxkrnl::ExFreePool),                      // 0x0011 (17)
 	(uint32)PANIC(0x0012),                                    // 0x0012 (18)  ExInitializeReadWriteLock
 	(uint32)PANIC(0x0013),                                    // 0x0013 (19)  ExInterlockedAddLargeInteger
 	(uint32)PANIC(0x0014),                                    // 0x0014 (20)  ExInterlockedAddLargeStatistic
 	(uint32)PANIC(0x0015),                                    // 0x0015 (21)  ExInterlockedCompareExchange64
-	(uint32)VARIABLE(0x0016),                                 // 0x0016 (22)  ExMutantObjectType
+	(uint32)VARIABLE(&xboxkrnl::ExMutantObjectType),          // 0x0016 (22)  
 	(uint32)FUNC(&xboxkrnl::ExQueryPoolBlockSize),            // 0x0017 (23)  
 	(uint32)FUNC(&xboxkrnl::ExQueryNonVolatileSetting),       // 0x0018 (24)
 	(uint32)FUNC(&xboxkrnl::ExReadWriteRefurbInfo),           // 0x0019 (25)
@@ -90,8 +90,8 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x001B),                                    // 0x001B (27)  ExRaiseStatus
 	(uint32)PANIC(0x001C),                                    // 0x001C (28)  ExReleaseReadWriteLock
 	(uint32)FUNC(&xboxkrnl::ExSaveNonVolatileSetting),        // 0x001D (29)
-	(uint32)VARIABLE(0x001E),                                 // 0x001E (30)  ExSemaphoreObjectType
-	(uint32)VARIABLE(0x001F),                                 // 0x001F (31)  ExTimerObjectType
+	(uint32)VARIABLE(&xboxkrnl::ExSemaphoreObjectType),       // 0x001E (30)
+	(uint32)VARIABLE(&xboxkrnl::ExTimerObjectType),           // 0x001F (31)
 	(uint32)PANIC(0x0020),                                    // 0x0020 (32)  ExfInterlockedInsertHeadList
 	(uint32)PANIC(0x0021),                                    // 0x0021 (33)  ExfInterlockedInsertTailList
 	(uint32)PANIC(0x0022),                                    // 0x0022 (34)  ExfInterlockedRemoveHeadList
@@ -124,14 +124,14 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x003D),                                    // 0x003D (61)  IoBuildDeviceIoControlRequest
 	(uint32)PANIC(0x003E),                                    // 0x003E (62)  IoBuildSynchronousFsdRequest
 	(uint32)PANIC(0x003F),                                    // 0x003F (63)  IoCheckShareAccess
-	(uint32)VARIABLE(0x0040),                                 // 0x0040 (64)  IoCompletionObjectType
+	(uint32)VARIABLE(&xboxkrnl::IoCompletionObjectType),      // 0x0040 (64)
 	(uint32)PANIC(0x0041),                                    // 0x0041 (65)  IoCreateDevice
 	(uint32)FUNC(&xboxkrnl::IoCreateFile),                    // 0x0042 (66)
 	(uint32)FUNC(&xboxkrnl::IoCreateSymbolicLink),            // 0x0043 (67)
 	(uint32)PANIC(0x0044),                                    // 0x0044 (68)  IoDeleteDevice
 	(uint32)FUNC(&xboxkrnl::IoDeleteSymbolicLink),            // 0x0045 (69)
-	(uint32)VARIABLE(0x0046),                                 // 0x0046 (70)  IoDeviceObjectType
-	(uint32)VARIABLE(0x0047),                                 // 0x0047 (71)  IoFileObjectType
+	(uint32)VARIABLE(&xboxkrnl::IoDeviceObjectType),          // 0x0046 (70)
+	(uint32)VARIABLE(&xboxkrnl::IoFileObjectType),            // 0x0047 (71)
 	(uint32)PANIC(0x0048),                                    // 0x0048 (72)  IoFreeIrp
 	(uint32)PANIC(0x0049),                                    // 0x0049 (73)  IoInitializeIrp
 	(uint32)PANIC(0x004A),                                    // 0x004A (74)  IoInvalidDeviceRequest
@@ -217,7 +217,6 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)VARIABLE(0x009A),                                 // 0x009A (154) KeSystemTime
 	(uint32)PANIC(0x009B),                                    // 0x009B (155) KeTestAlertThread
 	(uint32)VARIABLE(&xboxkrnl::KeTickCount),                 // 0x009C (156)
-	(uint32)VARIABLE(0x009D),                                 // 0x009D (157) KeTimeIncrement
 	(uint32)FUNC(&xboxkrnl::KeWaitForMultipleObjects),        // 0x009E (158) 
 	(uint32)FUNC(&xboxkrnl::KeWaitForSingleObject),           // 0x009F (159) 
 	(uint32)FUNC(&xboxkrnl::KfRaiseIrql),                     // 0x00A0 (160)
