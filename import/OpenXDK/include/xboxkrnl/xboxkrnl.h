@@ -386,6 +386,15 @@ typedef struct _OBJECT_ATTRIBUTES
 OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 
 // ******************************************************************
+// * OBJECT_TYPE
+// ******************************************************************
+typedef struct _OBJECT_TYPE
+{
+	// TODO : How is this defined?
+}
+OBJECT_TYPE, *POBJECT_TYPE;
+
+// ******************************************************************
 // * FSINFOCLASS
 // ******************************************************************
 typedef enum _FSINFOCLASS
@@ -895,6 +904,9 @@ typedef struct _XBOX_HARDWARE_INFO
     UCHAR Unknown4;
 }
 XBOX_HARDWARE_INFO;
+
+const int XBOX_KEY_LENGTH = 16;
+typedef UCHAR XBOX_KEY_DATA[XBOX_KEY_LENGTH];
 
 // ******************************************************************
 // * TIME_FIELDS

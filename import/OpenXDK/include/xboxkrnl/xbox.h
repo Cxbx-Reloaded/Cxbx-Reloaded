@@ -80,7 +80,7 @@ XBSYSAPI EXPORTNUM(161) VOID NTAPI KfLowerIrql
     IN UCHAR    NewIrql
 );
 
-XBSYSAPI VOID *KiBugCheckData;
+XBSYSAPI EXPORTNUM(162) ULONG_PTR KiBugCheckData[5];
 XBSYSAPI VOID *KiUnlockDispatcherDatabase;
 
 // ******************************************************************
@@ -157,7 +157,7 @@ XBSYSAPI EXPORTNUM(353) VOID *XboxLANKey;
 XBSYSAPI EXPORTNUM(354) VOID *XboxAlternateSignatureKeys;
 XBSYSAPI EXPORTNUM(355) VOID *XePublicKeyData;
 
-XBSYSAPI EXPORTNUM(357) VOID *IdexChannelObject;
+XBSYSAPI EXPORTNUM(357) BYTE IdexChannelObject[0x100];
 
 XBSYSAPI EXPORTNUM(361) VOID *xsnprintf;     // prefixed with "x" to avoid xlibc collisions
 XBSYSAPI EXPORTNUM(362) VOID *xsprintf;      // ""

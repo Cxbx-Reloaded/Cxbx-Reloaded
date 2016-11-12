@@ -38,11 +38,6 @@
 namespace xboxkrnl
 {
     #include <xboxkrnl/xboxkrnl.h>
-
-	// ******************************************************************
-	// * POBJECT_TYPE
-	// ******************************************************************
-	typedef void* POBJECT_TYPE; // TODO : How is this defined?
 };
 
 #include <cstdio>
@@ -1368,6 +1363,7 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 
 using namespace xboxkrnl;
 
+
 // ******************************************************************
 // * 0x0001 AvGetSavedDataAddress()
 // ******************************************************************
@@ -1541,7 +1537,8 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
 	return pRet;
 }
 
-XBSYSAPI EXPORTNUM(16) xboxkrnl::POBJECT_TYPE xboxkrnl::ExEventObjectType = NULL; // TODO : What should we initialize this to?
+// TODO : What should we initialize this to?
+XBSYSAPI EXPORTNUM(16) xboxkrnl::POBJECT_TYPE xboxkrnl::ExEventObjectType = NULL;
 
 // ******************************************************************
 // * 0x0011 ExFreePool
@@ -1556,7 +1553,8 @@ XBSYSAPI EXPORTNUM(17) VOID NTAPI xboxkrnl::ExFreePool
 	CxbxFree(P);
 }
 
-XBSYSAPI EXPORTNUM(22) xboxkrnl::POBJECT_TYPE xboxkrnl::ExMutantObjectType = NULL; // TODO : What should we initialize this to?
+// TODO : What should we initialize this to?
+XBSYSAPI EXPORTNUM(22) xboxkrnl::POBJECT_TYPE xboxkrnl::ExMutantObjectType = NULL;
 
 // ******************************************************************
 // * 0x0017 ExQueryPoolBlockSize
@@ -1738,9 +1736,11 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 	return STATUS_SUCCESS;
 }
 
-XBSYSAPI EXPORTNUM(30) xboxkrnl::POBJECT_TYPE xboxkrnl::ExSemaphoreObjectType = NULL; // TODO : What should we initialize this to?
+// TODO : What should we initialize this to?
+XBSYSAPI EXPORTNUM(30) xboxkrnl::POBJECT_TYPE xboxkrnl::ExSemaphoreObjectType = NULL;
 
-XBSYSAPI EXPORTNUM(31) xboxkrnl::POBJECT_TYPE xboxkrnl::ExTimerObjectType = NULL; // TODO : What should we initialize this to?
+// TODO : What should we initialize this to?
+XBSYSAPI EXPORTNUM(31) xboxkrnl::POBJECT_TYPE xboxkrnl::ExTimerObjectType = NULL;
 
 // ******************************************************************
 // * 0x0023 - FscGetCacheSize
@@ -1886,7 +1886,8 @@ XBSYSAPI EXPORTNUM(50) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMBusValue
 	return STATUS_SUCCESS;
 }
 
-XBSYSAPI EXPORTNUM(64) xboxkrnl::POBJECT_TYPE xboxkrnl::IoCompletionObjectType = NULL; // TODO : What should we initialize this to?
+// TODO : What should we initialize this to?
+XBSYSAPI EXPORTNUM(64) xboxkrnl::POBJECT_TYPE xboxkrnl::IoCompletionObjectType = NULL;
 
 // ******************************************************************
 // * 0x0042 - IoCreateFile
@@ -2376,6 +2377,9 @@ XBSYSAPI EXPORTNUM(161) VOID NTAPI xboxkrnl::KfLowerIrql
 	LOG_FUNC_ONE_ARG(NewIrql);
 
 }
+
+// Source:ReactOS
+XBSYSAPI EXPORTNUM(162) xboxkrnl::ULONG_PTR xboxkrnl::KiBugCheckData[5] = { NULL, NULL, NULL, NULL, NULL };
 
 // ******************************************************************
 // * xLaunchDataPage (pointed to by LaunchDataPage)
@@ -4041,6 +4045,15 @@ XBSYSAPI EXPORTNUM(238) VOID NTAPI xboxkrnl::NtYieldExecution()
 	return;
 }
 
+// TODO : What should we initialize this to?
+XBSYSAPI EXPORTNUM(240) xboxkrnl::POBJECT_TYPE xboxkrnl::ObDirectoryObjectType = NULL;
+
+// TODO : Determine size. What should we initialize this to?
+XBSYSAPI EXPORTNUM(249) xboxkrnl::DWORD xboxkrnl::ObpObjectHandleTable[1] = {};
+
+// TODO : What should we initialize this to?
+XBSYSAPI EXPORTNUM(249) xboxkrnl::POBJECT_TYPE xboxkrnl::ObSymbolicLinkObjectType = NULL;
+
 // ******************************************************************
 // * 0x00FF - PsCreateSystemThreadEx
 // ******************************************************************
@@ -4501,6 +4514,9 @@ XBSYSAPI EXPORTNUM(308) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToAns
 }
 
 
+// TODO : What should we initialize this to?
+XBSYSAPI EXPORTNUM(321) XBOX_KEY_DATA xboxkrnl::XboxEEPROMKey = {};
+
 
 // ******************************************************************
 // * 0x0142 - XboxHardwareInfo
@@ -4530,7 +4546,6 @@ XBSYSAPI EXPORTNUM(324) xboxkrnl::XBOX_KRNL_VERSION xboxkrnl::XboxKrnlVersion =
 {
 	1, 0, 5838, 1
 };
-
 
 
 // ******************************************************************
@@ -4649,3 +4664,6 @@ XBSYSAPI EXPORTNUM(337) VOID NTAPI xboxkrnl::XcSHAFinal
 // ******************************************************************
 // TODO: Verify this!
 XBSYSAPI EXPORTNUM(356) xboxkrnl::DWORD xboxkrnl::HalBootSMCVideoMode = 1;
+
+// TODO : Determine size, structure & filling behind this
+XBSYSAPI EXPORTNUM(357) xboxkrnl::BYTE xboxkrnl::IdexChannelObject[0x100] = { };

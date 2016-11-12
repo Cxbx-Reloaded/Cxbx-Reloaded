@@ -217,12 +217,12 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)VARIABLE(0x009A),                                 // 0x009A (154) KeSystemTime
 	(uint32)PANIC(0x009B),                                    // 0x009B (155) KeTestAlertThread
 	(uint32)VARIABLE(&xboxkrnl::KeTickCount),                 // 0x009C (156)
-	(uint32)VARIABLE(0x009D),                                 // 0x009D (157)  KeTimeIncrement
+	(uint32)VARIABLE(&xboxkrnl::KeTimeIncrement),             // 0x009D (157)
 	(uint32)FUNC(&xboxkrnl::KeWaitForMultipleObjects),        // 0x009E (158) 
 	(uint32)FUNC(&xboxkrnl::KeWaitForSingleObject),           // 0x009F (159) 
 	(uint32)FUNC(&xboxkrnl::KfRaiseIrql),                     // 0x00A0 (160)
 	(uint32)FUNC(&xboxkrnl::KfLowerIrql),                     // 0x00A1 (161) 
-	(uint32)VARIABLE(0x00A2),                                 // 0x00A2 (162) KiBugCheckData
+	(uint32)VARIABLE(&xboxkrnl::KiBugCheckData),              // 0x00A2 (162)
 	(uint32)PANIC(0x00A3),                                    // 0x00A3 (163) KiUnlockDispatcherDatabase
 	(uint32)VARIABLE(&xboxkrnl::LaunchDataPage),              // 0x00A4 (164)
 	(uint32)FUNC(&xboxkrnl::MmAllocateContiguousMemory),      // 0x00A5 (165)
@@ -300,16 +300,16 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x00ED),                                    // 0x00ED (237) NtWriteFileGather
 	(uint32)FUNC(&xboxkrnl::NtYieldExecution),                // 0x00EE (238)
 	(uint32)PANIC(0x00EF),                                    // 0x00EF (239) ObCreateObject
-	(uint32)VARIABLE(0x00F0),                                 // 0x00F0 (240) ObDirectoryObjectType
+	(uint32)VARIABLE(&xboxkrnl::ObDirectoryObjectType),       // 0x00F0 (240) 
 	(uint32)PANIC(0x00F1),                                    // 0x00F1 (241) ObInsertObject
 	(uint32)PANIC(0x00F2),                                    // 0x00F2 (242) ObMakeTemporaryObject 
 	(uint32)PANIC(0x00F3),                                    // 0x00F3 (243) ObOpenObjectByName
 	(uint32)PANIC(0x00F4),                                    // 0x00F4 (244) ObOpenObjectByPointer
-	(uint32)VARIABLE(0x00F5),                                 // 0x00F5 (245) ObpObjectHandleTable
+	(uint32)VARIABLE(&xboxkrnl::ObpObjectHandleTable),        // 0x00F5 (245)
 	(uint32)PANIC(0x00F6),                                    // 0x00F6 (246) ObReferenceObjectByHandle
 	(uint32)PANIC(0x00F7),                                    // 0x00F7 (247) ObReferenceObjectByName
 	(uint32)PANIC(0x00F8),                                    // 0x00F8 (248) ObReferenceObjectByPointer
-	(uint32)VARIABLE(0x00F9),                                 // 0x00F9 (249) ObSymbolicLinkObjectType
+	(uint32)VARIABLE(&xboxkrnl::ObSymbolicLinkObjectType),    // 0x00F9 (249)
 	(uint32)PANIC(0x00FA),                                    // 0x00FA (250) ObfDereferenceObject
 	(uint32)PANIC(0x00FB),                                    // 0x00FB (251) ObfReferenceObject
 	(uint32)PANIC(0x00FC),                                    // 0x00FC (252) PhyGetLinkState
@@ -381,7 +381,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x013E),                                    // 0x013E (318) RtlUshortByteSwap
 	(uint32)PANIC(0x013F),                                    // 0x013F (319) RtlWalkFrameChain
 	(uint32)PANIC(0x0140),                                    // 0x0140 (320) RtlZeroMemory
-	(uint32)VARIABLE(0x0141),                                 // 0x0141 (321) XboxEEPROMKey
+	(uint32)VARIABLE(&xboxkrnl::XboxEEPROMKey),               // 0x0141 (321)
 	(uint32)VARIABLE(&xboxkrnl::XboxHardwareInfo),            // 0x0142 (322)
 	(uint32)VARIABLE(&xboxkrnl::XboxHDKey),                   // 0x0143 (323)
 	(uint32)VARIABLE(&xboxkrnl::XboxKrnlVersion),             // 0x0144 (324)
@@ -417,7 +417,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)VARIABLE(0x0162),                                 // 0x0162 (354) XboxAlternateSignatureKeys
 	(uint32)VARIABLE(0x0163),                                 // 0x0163 (355) XePublicKeyData
 	(uint32)VARIABLE(&xboxkrnl::HalBootSMCVideoMode),         // 0x0164 (356)
-	(uint32)VARIABLE(0x0165),                                 // 0x0165 (357) IdexChannelObject
+	(uint32)VARIABLE(&xboxkrnl::IdexChannelObject),           // 0x0165 (357)
 	(uint32)PANIC(0x0166),                                    // 0x0166 (358) HalIsResetOrShutdownPending
 	(uint32)PANIC(0x0167),                                    // 0x0167 (359) IoMarkIrpMustComplete
 	(uint32)PANIC(0x0168),                                    // 0x0168 (360) HalInitiateShutdown

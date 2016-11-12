@@ -13,15 +13,13 @@
 #define XBOXKRNL_OB_H
 
 XBSYSAPI VOID *ObCreateObject;
-XBSYSAPI VOID *ObDirectoryObjectType;
+XBSYSAPI EXPORTNUM(240) POBJECT_TYPE ObDirectoryObjectType;
 XBSYSAPI VOID *ObInsertObject;
 XBSYSAPI VOID *ObMakeTemporaryObject;
 XBSYSAPI VOID *ObOpenObjectByName;
 XBSYSAPI VOID *ObOpenObjectByPointer;
-XBSYSAPI VOID *ObpObjectHandleTable;
+XBSYSAPI EXPORTNUM(245) DWORD ObpObjectHandleTable[1];
 
-
-//XBSYSAPI VOID *ObReferenceObjectByHandle;
 XBSYSAPI EXPORTNUM(246) BOOLEAN NTAPI ObReferenceObjectByHandle
 ( unsigned int a,
   unsigned int b,
@@ -31,7 +29,7 @@ XBSYSAPI EXPORTNUM(246) BOOLEAN NTAPI ObReferenceObjectByHandle
 
 XBSYSAPI VOID *ObReferenceObjectByName;
 XBSYSAPI VOID *ObReferenceObjectByPointer;
-XBSYSAPI VOID *ObSymbolicLinkObjectType;
+XBSYSAPI EXPORTNUM(249) POBJECT_TYPE ObSymbolicLinkObjectType;
 XBSYSAPI VOID *ObfDereferenceObject;
 XBSYSAPI VOID *ObfReferenceObject;
 
