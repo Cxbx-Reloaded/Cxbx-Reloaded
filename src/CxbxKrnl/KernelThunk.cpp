@@ -413,9 +413,9 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x015E),                                    // 0x015E (350) XcCryptService
 	(uint32)PANIC(0x015F),                                    // 0x015F (351) XcUpdateCrypto
 	(uint32)PANIC(0x0160),                                    // 0x0160 (352) RtlRip
-	(uint32)VARIABLE(0x0161),                                 // 0x0161 (353) XboxLANKey
-	(uint32)VARIABLE(0x0162),                                 // 0x0162 (354) XboxAlternateSignatureKeys
-	(uint32)VARIABLE(0x0163),                                 // 0x0163 (355) XePublicKeyData
+	(uint32)VARIABLE(&xboxkrnl::XboxLANKey),                  // 0x0161 (353)
+	(uint32)VARIABLE(&xboxkrnl::XboxAlternateSignatureKeys),  // 0x0162 (354)
+	(uint32)VARIABLE(&xboxkrnl::XePublicKeyData),             // 0x0163 (355)
 	(uint32)VARIABLE(&xboxkrnl::HalBootSMCVideoMode),         // 0x0164 (356)
 	(uint32)VARIABLE(&xboxkrnl::IdexChannelObject),           // 0x0165 (357)
 	(uint32)PANIC(0x0166),                                    // 0x0166 (358) HalIsResetOrShutdownPending

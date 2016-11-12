@@ -4515,13 +4515,13 @@ XBSYSAPI EXPORTNUM(308) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToAns
 
 
 // TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(321) XBOX_KEY_DATA xboxkrnl::XboxEEPROMKey = {};
+XBSYSAPI EXPORTNUM(321) xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxEEPROMKey = {};
 
 
 // ******************************************************************
 // * 0x0142 - XboxHardwareInfo
 // ******************************************************************
-XBSYSAPI EXPORTNUM(322) XBOX_HARDWARE_INFO xboxkrnl::XboxHardwareInfo =
+XBSYSAPI EXPORTNUM(322) xboxkrnl::XBOX_HARDWARE_INFO xboxkrnl::XboxHardwareInfo =
 {
     0xC0000035,
     0,0,0,0
@@ -4664,6 +4664,15 @@ XBSYSAPI EXPORTNUM(337) VOID NTAPI xboxkrnl::XcSHAFinal
 // ******************************************************************
 // TODO: Verify this!
 XBSYSAPI EXPORTNUM(356) xboxkrnl::DWORD xboxkrnl::HalBootSMCVideoMode = 1;
+
+// TODO : What should we initialize this to?
+XBSYSAPI EXPORTNUM(353) xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxLANKey = {};
+
+// TODO : What should we initialize this to?
+XBSYSAPI EXPORTNUM(354) xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxAlternateSignatureKeys = {};
+
+// TODO : What should we initialize this to?
+XBSYSAPI EXPORTNUM(355) xboxkrnl::DWORD xboxkrnl::XePublicKeyData = 0;
 
 // TODO : Determine size, structure & filling behind this
 XBSYSAPI EXPORTNUM(357) xboxkrnl::BYTE xboxkrnl::IdexChannelObject[0x100] = { };
