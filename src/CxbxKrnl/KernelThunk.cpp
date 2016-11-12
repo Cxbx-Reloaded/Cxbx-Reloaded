@@ -217,6 +217,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)VARIABLE(0x009A),                                 // 0x009A (154) KeSystemTime
 	(uint32)PANIC(0x009B),                                    // 0x009B (155) KeTestAlertThread
 	(uint32)VARIABLE(&xboxkrnl::KeTickCount),                 // 0x009C (156)
+	(uint32)VARIABLE(0x009D),                                 // 0x009D (157)  KeTimeIncrement
 	(uint32)FUNC(&xboxkrnl::KeWaitForMultipleObjects),        // 0x009E (158) 
 	(uint32)FUNC(&xboxkrnl::KeWaitForSingleObject),           // 0x009F (159) 
 	(uint32)FUNC(&xboxkrnl::KfRaiseIrql),                     // 0x00A0 (160)
