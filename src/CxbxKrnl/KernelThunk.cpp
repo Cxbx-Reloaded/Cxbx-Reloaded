@@ -440,3 +440,39 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0179),                                    // 0x017A (377) MmDbgReleaseAddress
 	(uint32)PANIC(0x017A),                                    // 0x017A (378) MmDbgWriteCheck
 };
+
+// Virtual memory location of KUSER_SHARED_DATA :
+// See http://research.microsoft.com/en-us/um/redmond/projects/invisible/src/base/md/i386/sim/_pertest2.c.htm
+const UINT_PTR MM_SHARED_USER_DATA_VA = (UINT_PTR)0x7FFE0000;
+
+// KUSER_SHARED_DATA Offsets
+// See http://native-nt-toolkit.googlecode.com/svn/trunk/ndk/asm.h
+const UINT USER_SHARED_DATA_TICK_COUNT_LOW_DEPRECATED = 0x0;
+const UINT USER_SHARED_DATA_INTERRUPT_TIME = 0x8;
+const UINT USER_SHARED_DATA_SYSTEM_TIME = 0x14;
+const UINT USER_SHARED_DATA_TICK_COUNT = 0x320;
+
+
+// Here we define the addresses of the native Windows timers :
+// Source: Dxbx
+const xboxkrnl::PKSYSTEM_TIME CxbxNtInterruptTime = (xboxkrnl::PKSYSTEM_TIME)(MM_SHARED_USER_DATA_VA + USER_SHARED_DATA_INTERRUPT_TIME);
+const xboxkrnl::PKSYSTEM_TIME CxbxNtSystemTime = (xboxkrnl::PKSYSTEM_TIME)(MM_SHARED_USER_DATA_VA + USER_SHARED_DATA_SYSTEM_TIME);
+const PDWORD CxbxNtTickCountLowDeprecated = (PDWORD)(MM_SHARED_USER_DATA_VA + USER_SHARED_DATA_TICK_COUNT_LOW_DEPRECATED);
+const xboxkrnl::PKSYSTEM_TIME CxbxNtTickCount = (xboxkrnl::PKSYSTEM_TIME)(MM_SHARED_USER_DATA_VA + USER_SHARED_DATA_TICK_COUNT);
+
+void ConnectWindowsTimersToThunkTable()
+{
+	// Couple the xbox thunks for xboxkrnl::KeInterruptTime and xboxkrnl::KeSystemTime
+	// to their actual counterparts on Windows, this way we won't have to spend any
+	// time on updating them ourselves, and still get highly accurate timers!
+	// See http://www.dcl.hpi.uni-potsdam.de/research/WRK/2007/08/getting-os-information-the-kuser_shared_data-structure/
+
+//	xboxkrnl::KeInterruptTimePtr = CxbxNtSystemTime;
+//	xboxkrnl::KeSystemTimePtr = CxbxNtInterruptTime;
+
+	CxbxKrnl_KernelThunkTable[120] = (uint32)CxbxNtSystemTime; // xboxkrnl_KeInterruptTimePtr;
+	CxbxKrnl_KernelThunkTable[154] = (uint32)CxbxNtInterruptTime; // xboxkrnl_KeSystemTimePtr;
+
+	// Note that we can't do the same for TickCount, as that timer
+	// updates slower on the xbox. See EmuThreadUpdateTickCount().
+}

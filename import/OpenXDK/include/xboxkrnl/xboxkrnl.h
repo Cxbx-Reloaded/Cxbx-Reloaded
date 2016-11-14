@@ -431,6 +431,17 @@ typedef struct _FILE_DIRECTORY_INFORMATION
 FILE_DIRECTORY_INFORMATION;
 
 // ******************************************************************
+// * KSYSTEM_TIME
+// ******************************************************************
+typedef struct _KSYSTEM_TIME
+{
+	/* 0x00 */ ULONG LowPart;
+	/* 0x04 */ LONG High1Time;
+	/* 0x08 */ LONG High2Time;
+} // Size = 0x0C
+KSYSTEM_TIME, *PKSYSTEM_TIME;
+
+// ******************************************************************
 // * MM_STATISTICS
 // ******************************************************************
 typedef struct _MM_STATISTICS

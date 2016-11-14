@@ -294,6 +294,8 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 		memcpy((void*)CxbxKrnl_Xbe->m_SectionHeader[i].dwVirtualAddr, CxbxKrnl_Xbe->m_bzSection[i], CxbxKrnl_Xbe->m_SectionHeader[i].dwSizeofRaw);
 	}
 
+	ConnectWindowsTimersToThunkTable();
+
 	// Fixup Kernel Imports
 	uint32 kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
 
