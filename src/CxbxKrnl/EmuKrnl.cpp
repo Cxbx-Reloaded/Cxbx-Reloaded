@@ -4049,7 +4049,7 @@ XBSYSAPI EXPORTNUM(238) VOID NTAPI xboxkrnl::NtYieldExecution()
 XBSYSAPI EXPORTNUM(240) xboxkrnl::POBJECT_TYPE xboxkrnl::ObDirectoryObjectType = NULL;
 
 // TODO : Determine size. What should we initialize this to?
-XBSYSAPI EXPORTNUM(249) xboxkrnl::DWORD xboxkrnl::ObpObjectHandleTable[1] = {};
+XBSYSAPI EXPORTNUM(245) xboxkrnl::DWORD xboxkrnl::ObpObjectHandleTable[1] = {};
 
 // TODO : What should we initialize this to?
 XBSYSAPI EXPORTNUM(249) xboxkrnl::POBJECT_TYPE xboxkrnl::ObSymbolicLinkObjectType = NULL;
@@ -4659,12 +4659,6 @@ XBSYSAPI EXPORTNUM(337) VOID NTAPI xboxkrnl::XcSHAFinal
 	return;
 }
 
-// ******************************************************************
-// * HalBootSMCVideoMode
-// ******************************************************************
-// TODO: Verify this!
-XBSYSAPI EXPORTNUM(356) xboxkrnl::DWORD xboxkrnl::HalBootSMCVideoMode = 1;
-
 // TODO : What should we initialize this to?
 XBSYSAPI EXPORTNUM(353) xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxLANKey = {};
 
@@ -4673,6 +4667,12 @@ XBSYSAPI EXPORTNUM(354) xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxAlternateSignature
 
 // TODO : What should we initialize this to?
 XBSYSAPI EXPORTNUM(355) xboxkrnl::DWORD xboxkrnl::XePublicKeyData = 0;
+
+// ******************************************************************
+// * HalBootSMCVideoMode
+// ******************************************************************
+// TODO: Verify this!
+XBSYSAPI EXPORTNUM(356) xboxkrnl::DWORD xboxkrnl::HalBootSMCVideoMode = 1;
 
 // TODO : Determine size, structure & filling behind this
 XBSYSAPI EXPORTNUM(357) xboxkrnl::BYTE xboxkrnl::IdexChannelObject[0x100] = { };
