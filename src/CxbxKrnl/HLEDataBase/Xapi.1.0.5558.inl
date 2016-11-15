@@ -40,8 +40,8 @@ SOOVPA<8> RtlCreateHeap_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1E, 0x45 },
@@ -63,8 +63,8 @@ SOOVPA<8> RtlAllocateHeap_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1E, 0x8B },
@@ -86,8 +86,8 @@ SOOVPA<8> RtlSizeHeap_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x04, 0x8A },
@@ -109,8 +109,8 @@ SOOVPA<8> XInputGetCapabilities_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1D, 0x85 },
@@ -132,8 +132,8 @@ SOOVPA<7> XInputGetState_1_0_5558 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x0D, 0x0C },
@@ -154,8 +154,8 @@ SOOVPA<8> XapiInitProcess_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x22, 0x6A },
@@ -177,8 +177,8 @@ SOOVPA<8> XapiInitProcess_1_0_5659 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x22, 0x6A },
@@ -200,8 +200,8 @@ SOOVPA<7> CreateSemaphoreA_1_0_5558 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x0A, 0x74 },
@@ -222,8 +222,8 @@ SOOVPA<7> ReleaseSemaphore_1_0_5558 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x03, 0x0C },
@@ -244,8 +244,8 @@ SOOVPA<7> XLaunchNewImageA_1_0_5558 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x07, 0xF0 },
@@ -266,8 +266,8 @@ SOOVPA<7> XGetLaunchInfo_1_0_5558 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x0B, 0x8B },
@@ -288,8 +288,8 @@ SOOVPA<7> GetFileAttributesA_1_0_5558 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x08, 0x08 },
@@ -310,8 +310,8 @@ SOOVPA<8> XMountMUA_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x22, 0x8A },
@@ -333,8 +333,8 @@ SOOVPA<7> CreateFiber_1_0_5558 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x10, 0x00 },
@@ -355,8 +355,8 @@ SOOVPA<6> DeleteFiber_1_0_5558 =
     0,  // Large == 0
     6,  // Count == 6
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x01, 0x44 },
@@ -376,8 +376,8 @@ SOOVPA<8> SwitchToFiber_1_0_5558 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x06, 0x64 },
@@ -399,8 +399,8 @@ SOOVPA<7> ConvertThreadToFiber_1_0_5558 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x05, 0x64 },
@@ -421,8 +421,8 @@ SOOVPA<7> XapiFiberStartup_1_0_5558 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x07, 0xE8 },
@@ -444,7 +444,7 @@ SOOVPA<7> XID_fCloseDevice_1_0_5558 =
     7,  // Count == 7
 
     XREF_FCLOSEDEVICE,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x11, 0x45 },
@@ -465,7 +465,7 @@ SOOVPA<9> XInputClose_1_0_5558 =
     0,  // Large == 0
     9,  // Count == 9
 
-    -1, // Xref Not Saved
+    XRefNotSaved,
     1,  // Xref Is Used
 
     {

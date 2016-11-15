@@ -386,6 +386,15 @@ typedef struct _OBJECT_ATTRIBUTES
 OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 
 // ******************************************************************
+// * OBJECT_TYPE
+// ******************************************************************
+typedef struct _OBJECT_TYPE
+{
+	// TODO : How is this defined?
+}
+OBJECT_TYPE, *POBJECT_TYPE;
+
+// ******************************************************************
 // * FSINFOCLASS
 // ******************************************************************
 typedef enum _FSINFOCLASS
@@ -420,6 +429,17 @@ typedef struct _FILE_DIRECTORY_INFORMATION
     CHAR            FileName[1];        // Offset: 0x40
 }
 FILE_DIRECTORY_INFORMATION;
+
+// ******************************************************************
+// * KSYSTEM_TIME
+// ******************************************************************
+typedef struct _KSYSTEM_TIME
+{
+	/* 0x00 */ ULONG LowPart;
+	/* 0x04 */ LONG High1Time;
+	/* 0x08 */ LONG High2Time;
+} // Size = 0x0C
+KSYSTEM_TIME, *PKSYSTEM_TIME;
 
 // ******************************************************************
 // * MM_STATISTICS
@@ -895,6 +915,9 @@ typedef struct _XBOX_HARDWARE_INFO
     UCHAR Unknown4;
 }
 XBOX_HARDWARE_INFO;
+
+const int XBOX_KEY_LENGTH = 16;
+typedef UCHAR XBOX_KEY_DATA[XBOX_KEY_LENGTH];
 
 // ******************************************************************
 // * TIME_FIELDS

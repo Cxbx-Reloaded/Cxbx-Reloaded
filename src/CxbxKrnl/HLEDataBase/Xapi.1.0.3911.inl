@@ -40,8 +40,8 @@ SOOVPA<11> GetExitCodeThread_1_0_3911 =
     0,  // Large == 0
     11, // Count == 11
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+	XRefNotSaved,
+    XRefNotUsed,
 
     {
         // GetExitCodeThread+0x03 : lea eax, [ebp+0x08]
@@ -73,8 +73,8 @@ SOOVPA<10> RtlCreateHeap_1_0_3911 =
     0,  // Large == 0
     10, // Count == 10
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // RtlCreateHeap+0x13 : push 0x0C
@@ -107,8 +107,8 @@ SOOVPA<11> RtlAllocateHeap_1_0_3911 =
     0,  // Large == 0
     11, // Count == 11
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // RtlAllocateHeap+0x1E : or ecx, [esi+0x18]
@@ -142,8 +142,8 @@ SOOVPA<10> RtlFreeHeap_1_0_3911 =
     0,  // Large == 0
     10, // Count == 10
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // RtlFreeHeap+0x1F : test ecx, ecx
@@ -174,8 +174,8 @@ SOOVPA<10> RtlReAllocateHeap_1_0_3911 =
     0,  // Large == 0
     10,  // Count == 10
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // RtlReAllocateHeap+0x1C : test esi, esi
@@ -204,8 +204,8 @@ SOOVPA<11> RtlSizeHeap_1_0_3911 =
     0,  // Large == 0
     11, // Count == 11
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // RtlSizeHeap+0x04 : mov al, [ecx-0x0B]
@@ -240,8 +240,8 @@ SOOVPA<10> XInitDevices_1_0_3911 =
     0,  // Large == 0
     10, // Count == 10
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XInitDevices+0x03 : push 0xB4
@@ -272,8 +272,8 @@ SOOVPA<13> CreateMutex_1_0_3911 =
     0,  // Large == 0
     13,  // Count == 13
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // CreateMutex+0x03 : sub esp, 0x14
@@ -307,8 +307,8 @@ SOOVPA<8> CreateThread_1_0_3911 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // CreateThread+0x0A : mov eax, ds:10130h
@@ -335,8 +335,8 @@ SOOVPA<10> SetThreadPriority_1_0_3911 =
     0,  // Large == 0
     10, // Count == 10
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // SetThreadPriority+0x0D : push [ebp+0x08]
@@ -367,8 +367,8 @@ SOOVPA<7> XapiInitProcess_1_0_3911 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XapiInitProcess+0x03 : sub esp, 30h
@@ -396,8 +396,8 @@ SOOVPA<7> XapiInitProcess_1_0_3950 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XapiInitProcess+0x03 : sub esp, 30h
@@ -425,8 +425,8 @@ SOOVPA<11> XapiBootDash_1_0_3911 =
     0,  // Large == 0
     11, // Count == 11
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XapiBootDash+0x03 : sub esp, 0x0C00
@@ -458,8 +458,8 @@ SOOVPA<11> XRegisterThreadNotifyRoutine_1_0_3911 =
     0,  // Large == 0
     11, // Count == 11
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XRegisterThreadNotifyRoutine+0x0D : cmp [esp+0x0C], 0
@@ -491,8 +491,8 @@ SOOVPA<7> GetTimeZoneInformation_1_0_3911 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x05, 0x28 },
@@ -514,8 +514,8 @@ SOOVPA<10> XCalculateSignatureBegin_1_0_3911 =
     0,  // Large == 0
     10, // Count == 10
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XCalculateSignatureBegin+0x01 : push 0x7C; push 0
@@ -547,8 +547,8 @@ SOOVPA<14> XGetDevices_1_0_3911 =
     0,  // Large == 0
     14, // Count == 14
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XGetDevices+0x07 : mov edx, [esp+arg_0]
@@ -585,8 +585,8 @@ SOOVPA<8> XGetDeviceChanges_1_0_3911 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XGetDeviceChanges+0x07 : xor eax, eax
@@ -615,8 +615,8 @@ SOOVPA<11> XInputOpen_1_0_3911 =
     0,  // Large == 0
     11, // Count == 11
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XInputOpen+0x20 : jmp +0x0B
@@ -682,8 +682,8 @@ SOOVPA<8> XInputClose_1_0_3911 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // XRef Not Saved
-    1,  // XRef Is Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XInputClose+0x05 : call [fCloseDevice]
@@ -712,8 +712,8 @@ SOOVPA<14> XInputGetCapabilities_1_0_3911 =
     0,  // Large == 0
     14, // Count == 14
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XInputGetCapabilities+0x03 : sub esp, 0x48
@@ -750,8 +750,8 @@ SOOVPA<13> XInputGetState_1_0_3911 =
     0,  // Large == 0
     13, // Count == 13
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XInputGetState+0x0E : cmp byte ptr [edx+0x0A3], 1
@@ -787,8 +787,8 @@ SOOVPA<12> XInputSetState_1_0_3911 =
     0,  // Large == 0
     12, // Count == 12
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // XInputSetState+0x04 : lea eax, [ecx+0x0A3]
@@ -823,8 +823,8 @@ SOOVPA<10> SetThreadPriorityBoost_1_0_3911 =
     0,  // Large == 0
     10, // Count == 10
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // SetThreadPriorityBoost+0x0D : push [ebp+0x08]
@@ -855,8 +855,8 @@ SOOVPA<10> GetThreadPriority_1_0_3911 =
     0,  // Large == 0
     10, // Count == 10
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         // GetThreadPriority+0x0D : push [ebp+0x08]
@@ -887,8 +887,8 @@ SOOVPA<10> GetThreadPriority_1_0_3911 =
 //    0,  // Large == 0
 //    14, // Count == 14
 //
-//    -1, // XRef Not Saved
-//    0,  // XRef Not Used
+//    XRefNotSaved,
+//    XRefNotUsed,
 //
 //    {
 //        // XGetDevices+0x07 : mov edx, [esp+arg_0]
@@ -925,8 +925,8 @@ SOOVPA<11> CreateFiber_1_0_3911 =
 	0,  // Large == 0
     11, // Count == 11
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
 		// CreateFiber+0x11 : mov ecx, 0x3000
@@ -954,8 +954,8 @@ SOOVPA<9> DeleteFiber_1_0_3911 =
 	0,  // Large == 0
     9,  // Count == 9
 
-    -1, // XRef Not Saved
-    0,  // XRef Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
 		// DeleteFiber+0x0A : call ds:MmDeleteKernelStack
@@ -981,8 +981,8 @@ SOOVPA<8> SwitchToFiber_1_0_3911 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x06, 0x64 },
@@ -1004,8 +1004,8 @@ SOOVPA<7> ConvertThreadToFiber_1_0_3911 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x05, 0x64 },
@@ -1026,8 +1026,8 @@ SOOVPA<7> ConvertThreadToFiber_1_0_3911 =
 //    0,  // Large == 0
 //    14, // Count == 14
 //
-//    -1, // XRef Not Saved
-//    0,  // XRef Not Used
+//    XRefNotSaved,
+//    XRefNotUsed,
 //
 //    {
 //        // XInputGetCapabilities+0x03 : sub esp, 0x48
@@ -1065,8 +1065,8 @@ SOOVPA<8> SignalObjectAndWait_1_0_3911 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x07, 0x75 },
@@ -1088,8 +1088,8 @@ SOOVPA<11> PulseEvent_1_0_3911 =
     0,  // Large == 0
     11, // Count == 11
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
 		// PulseEvent+0x00 : push 0
@@ -1118,8 +1118,8 @@ SOOVPA<7> QueueUserAPC_1_0_3911 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x03, 0x74 },
@@ -1140,8 +1140,8 @@ SOOVPA<8> lstrcmpiW_1_0_3911 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x07, 0x56 },
@@ -1163,8 +1163,8 @@ SOOVPA<7> XMountAlternateTitleA_1_0_3911 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1E, 0x0F },
@@ -1185,8 +1185,8 @@ SOOVPA<7> XUnmountAlternateTitleA_1_0_3911 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x0A, 0x65 },
@@ -1207,8 +1207,8 @@ SOOVPA<7> XMountMUA_1_0_3911 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1E, 0x0C },
@@ -1229,8 +1229,8 @@ SOOVPA<8> CloseHandle_1_0_3911 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x02, 0x24 },
@@ -1252,8 +1252,8 @@ SOOVPA<5> ExitThread_1_0_3911 =
     0,  // Large == 0
     5,  // Count == 5
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x01, 0x00 },
@@ -1272,8 +1272,8 @@ SOOVPA<7> VirtualAlloc_1_0_3911 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1,  // Xref Not Saved
-    0,   // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x04, 0x75 },
@@ -1294,8 +1294,8 @@ SOOVPA<7> VirtualFree_1_0_3911 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1,  // Xref Not Saved
-    0,   // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x06, 0x80 },
@@ -1316,8 +1316,8 @@ SOOVPA<8> XLaunchNewImageA_1_0_3911 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1E, 0x80 },
@@ -1339,8 +1339,8 @@ SOOVPA<7> XGetLaunchInfo_1_0_3911 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x0B, 0x8B },
@@ -1362,8 +1362,8 @@ SOOVPA<12> XGetSectionHandleA_1_0_3911 =
 	0,	// Large == 0
 	12,	// Count == 0
 
-	-1,	// XRef not saved
-	0,	// XRef not used
+	XRefNotSaved,
+	XRefNotUsed,
 
 	{
 		{ 0x00, 0x55 },
@@ -1391,8 +1391,8 @@ SOOVPA<11> XLoadSectionByHandle_1_0_3911 =
 	0,	// Large == 0
 	11,	// Count == 11
 
-	-1,	// XRef not saved
-	0,	// XRef not used
+	XRefNotSaved,
+	XRefNotUsed,
 
 	{
 		// XLoadSectionByHandle+0x01 : mov esi, [esp+4+arg_0]
@@ -1425,8 +1425,8 @@ SOOVPA<11> XFreeSectionByHandle_1_0_3911 =
 	0,	// Large == 0
 	11,	// Count == 11
 
-	-1,	// XRef not saved
-	0,	// XRef not used
+	XRefNotSaved,
+	XRefNotUsed,
 
 	{
 		// XFreeSectionByHandle+0x00 : push esp
@@ -1460,8 +1460,8 @@ SOOVPA<6> XAutoPowerDownResetTimer_1_0_3911 =
     0,  // Large == 0
     6,  // Count == 6
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x02, 0x59 },
@@ -1481,8 +1481,8 @@ SOOVPA<7> XMountMURootA_1_0_3911 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1E, 0x0C },
@@ -1503,8 +1503,8 @@ SOOVPA<7> XMountUtilityDrive_1_0_3911 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x1C, 0x85 },
@@ -1525,8 +1525,8 @@ SOOVPA<7> GetFileAttributesA_1_0_3911 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x08, 0x08 },
@@ -1547,8 +1547,8 @@ SOOVPA<8> ReadFileEx_1_0_3911 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x09, 0x48 },
@@ -1570,8 +1570,8 @@ SOOVPA<8> WriteFileEx_1_0_3911 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x09, 0x48 },

@@ -67,6 +67,9 @@ struct OOVPA
     uint08 XRefCount;
 };
 
+const uint08 XRefNotSaved = (uint08)-1;
+const uint08 XRefNotUsed = (uint08)0;
+
 // ******************************************************************
 // * Large Optimized (Offset,Value)-Pair Array
 // ******************************************************************

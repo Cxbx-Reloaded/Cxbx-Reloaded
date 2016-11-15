@@ -79,7 +79,7 @@ CXBXKRNL_API void CxbxKrnlPanic();
 CXBXKRNL_API void CxbxKrnlNoFunc();
 
 /*! kernel thunk table */
-extern CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[367];
+extern CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379];
 
 /*! thread local storage structure */
 extern CXBXKRNL_API Xbe::TLS *CxbxKrnl_TLS;
@@ -96,6 +96,8 @@ extern Xbe *CxbxKrnl_Xbe;
 extern CXBXKRNL_API HWND CxbxKrnl_hEmuParent;
 extern CXBXKRNL_API DebugMode CxbxKrnl_DebugMode;
 extern CXBXKRNL_API char* CxbxKrnl_DebugFileName;
+
+extern void ConnectWindowsTimersToThunkTable();
 
 #ifdef __cplusplus
 }

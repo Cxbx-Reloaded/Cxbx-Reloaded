@@ -609,10 +609,6 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetI3DL2Listener
     DWORD                   dwApply
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetI3DL2Listener\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -620,9 +616,6 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetI3DL2Listener
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, pDummy, dwApply);
-        
-    }
-    #endif
 
     // TODO: Actually do something
 
@@ -639,10 +632,6 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetMixBinHeadroom
     DWORD                   dwHeadroom
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetMixBinHeadroom\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -650,9 +639,6 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetMixBinHeadroom
                "   dwHeadroom                : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, dwMixBinMask, dwHeadroom);
-        
-    }
-    #endif
 
     // TODO: Actually do something
 
@@ -668,19 +654,12 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMixBins
     PVOID                   pMixBins
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetMixBins\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   pMixBins                  : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, pMixBins);
-        
-    }
-    #endif
 
     // TODO: Actually do something
 
@@ -696,19 +675,12 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMixBinVolumes
     PVOID                   pMixBins
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetMixBinVolumes\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   pMixBins                  : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, pMixBins);
-        
-    }
-    #endif
 
     // TODO: Actually do something
 
@@ -727,10 +699,6 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetPosition
     DWORD                   dwApply
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetPosition\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -740,9 +708,6 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetPosition
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, x, y, z, dwApply);
-        
-    }
-    #endif
 
     // TODO: Actually do something
 
@@ -761,10 +726,6 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetVelocity
     DWORD                   dwApply
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetVelocity\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -774,9 +735,6 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetVelocity
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, x, y, z, dwApply);
-        
-    }
-    #endif
 
     // TODO: Actually do something
 
@@ -793,10 +751,6 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetAllParameters
     DWORD                   dwApply
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_SetAllParameters\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -804,9 +758,6 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetAllParameters
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, pTodo, dwApply);
-        
-    }
-    #endif
 
     // TODO: Actually do something
 
@@ -821,8 +772,6 @@ HRESULT WINAPI XTL::EmuCDirectSound_CommitDeferredSettings
     X_CDirectSound         *pThis
 )
 {
-    
-
     DbgPrintf("EmuDSound (0x%X): EmuCDirectSound_CommitDeferredSettings\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
@@ -830,8 +779,6 @@ HRESULT WINAPI XTL::EmuCDirectSound_CommitDeferredSettings
            GetCurrentThreadId(), pThis);
 
     // TODO: Translate params, then make the PC DirectSound call
-
-    
 
     return DS_OK;
 }
@@ -845,8 +792,6 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
     X_CDirectSoundBuffer  **ppBuffer
 )
 {
-    
-
     DbgPrintf("EmuDSound (0x%X): EmuDirectSoundCreateBuffer\n"
            "(\n"
            "   pdsbd                     : 0x%.08X\n"
@@ -1021,10 +966,6 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateBuffer
     PVOID                   pUnknown
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-       
        DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_CreateBuffer\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -1033,9 +974,6 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateBuffer
                "   pUnknown                  : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, pdssd, ppBuffer, pUnknown);
-       
-    }
-    #endif
 
     EmuDirectSoundCreateBuffer(pdssd, ppBuffer);
 
@@ -1053,10 +991,6 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateSoundBuffer
     LPUNKNOWN               pUnkOuter
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_CreateSoundBuffer\n"
                "(\n"
                "   pdsbd                     : 0x%.08X\n"
@@ -1064,9 +998,6 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateSoundBuffer
                "   pUnkOuter                 : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pdsbd, ppBuffer, pUnkOuter);
-        
-    }
-    #endif
 
     return EmuDirectSoundCreateBuffer(pdsbd, ppBuffer);
 }
@@ -1756,10 +1687,6 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateStream
     PVOID                   pUnknown
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSound8_CreateStream\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -1768,9 +1695,6 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateStream
                "   pUnknown                  : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, pdssd, ppStream, pUnknown);
-        
-    }
-    #endif
 
     EmuDirectSoundCreateStream(pdssd, ppStream);
 
@@ -2453,20 +2377,13 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMaxDistance
     DWORD                   dwApply
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
-        DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetMaxDistance\n"
-               "(\n"
-               "   pThis                     : 0x%.08X\n"
-               "   flMaxDistance             : %f\n"
-               "   dwApply                   : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), pThis, flMaxDistance, dwApply);
-        
-    }
-    #endif
+	DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetMaxDistance\n"
+		"(\n"
+		"   pThis                     : 0x%.08X\n"
+		"   flMaxDistance             : %f\n"
+		"   dwApply                   : 0x%.08X\n"
+		");\n",
+		GetCurrentThreadId(), pThis, flMaxDistance, dwApply);
 
     // TODO: Actually do something
 
@@ -2483,10 +2400,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMinDistance
     DWORD                   dwApply
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetMinDistance\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -2494,9 +2407,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMinDistance
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, flMinDistance, dwApply);
-        
-    }
-    #endif
 
     // TODO: Actually do something
 
@@ -2513,10 +2423,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetRolloffFactor
     DWORD                   dwApply
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetRolloffFactor\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -2524,9 +2430,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetRolloffFactor
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, flRolloffFactor, dwApply);
-        
-    }
-    #endif
 
     // TODO: Actually do something
 
@@ -2543,10 +2446,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetDistanceFactor
     DWORD                   dwApply
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetDistanceFactor\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -2554,9 +2453,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetDistanceFactor
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, flDistanceFactor, dwApply);
-        
-    }
-    #endif
 
     // TODO: Actually do something
 
@@ -2574,10 +2470,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetConeAngles
     DWORD                   dwApply
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetConeAngles\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -2587,9 +2479,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetConeAngles
                ");\n",
                GetCurrentThreadId(), pThis, dwInsideConeAngle,
                dwOutsideConeAngle, dwApply);
-        
-    }
-    #endif
 
     // TODO: Actually do something
 
@@ -2608,10 +2497,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetConeOrientation
     DWORD                   dwApply
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetConeOrientation\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -2621,9 +2506,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetConeOrientation
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, x, y, z, dwApply);
-        
-    }
-    #endif
 
     // TODO: Actually do something
 
@@ -2640,10 +2522,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetConeOutsideVolume
     DWORD                   dwApply
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetConeOutsideVolume\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -2651,9 +2529,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetConeOutsideVolume
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, lConeOutsideVolume, dwApply);
-        
-    }
-    #endif
 
     // TODO: Actually do something
 
@@ -2672,10 +2547,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPosition
     DWORD                   dwApply
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetPosition\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -2685,9 +2556,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPosition
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, x, y, z, dwApply);
-        
-    }
-    #endif
 
     // TODO: Actually do something
 
@@ -2706,10 +2574,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetVelocity
     DWORD                   dwApply
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetVelocity\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
@@ -2719,9 +2583,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetVelocity
                "   dwApply                   : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pThis, x, y, z, dwApply);
-        
-    }
-    #endif
 
     // TODO: Actually do something
 
@@ -2738,9 +2599,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetDopplerFactor
     DWORD                   dwApply
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
         
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetConeOutsideVolume\n"
                "(\n"
@@ -2750,8 +2608,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetDopplerFactor
                ");\n",
                GetCurrentThreadId(), pThis, flDopplerFactor, dwApply);
         
-    }
-    #endif
 
     // TODO: Actually do something
 
@@ -2768,9 +2624,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetI3DL2Source
     DWORD                   dwApply
 )
 {
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
         
         DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetI3DL2Source\n"
                "(\n"
@@ -2780,8 +2633,6 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetI3DL2Source
                ");\n",
                GetCurrentThreadId(), pThis, pds3db, dwApply);
         
-    }
-    #endif
 
     // TODO: Actually do something
 
@@ -2829,17 +2680,12 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetFormat
 {
     
 
-    // debug trace
-    #ifdef _DEBUG_TRACE
-    {
-        printf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetFormat\n"
+        DbgPrintf("EmuDSound (0x%X): EmuIDirectSoundBuffer8_SetFormat\n"
                "(\n"
                "   pBuffer                   : 0x%.08X\n"
                "   pwfxFormat                : 0x%.08X\n"
                ");\n",
                GetCurrentThreadId(), pBuffer,pwfxFormat);
-    }
-    #endif
 
     HRESULT hRet = DS_OK;
 

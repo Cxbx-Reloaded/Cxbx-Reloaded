@@ -39,7 +39,9 @@
 #include <string>
 #include <Shlobj.h>
 #include <Shlwapi.h>
+#pragma warning(disable:4005) // Ignore redefined status values
 #include <ntstatus.h>
+#pragma warning(default:4005)
 #include "CxbxKrnl.h"
 
 std::string DriveSerial = "\\??\\serial:";
@@ -140,7 +142,12 @@ bool IsEmuHandle(HANDLE Handle)
 	return ((uint32)Handle > 0x80000000) && ((uint32)Handle < 0xFFFFFFFE);
 }
 
-EmuHandle* HandleToEmuHandle(HANDLE Handle){	return (EmuHandle*)((uint32_t)Handle & 0x7FFFFFFF);}HANDLE EmuHandleToHandle(EmuHandle* emuHandle)
+EmuHandle* HandleToEmuHandle(HANDLE Handle)
+{
+	return (EmuHandle*)((uint32_t)Handle & 0x7FFFFFFF);
+}
+
+HANDLE EmuHandleToHandle(EmuHandle* emuHandle)
 {
 	return (HANDLE)((uint32_t)emuHandle | 0x80000000);
 }
@@ -216,14 +223,14 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 
  		   // Make a distinction between Xbox paths (starting with '\Device'...) and Native paths :
 			std::string deviceString = "\\Device";
-			IsNativePath = strnicmp(aFullPath.c_str(), deviceString.c_str(), deviceString.length()) != 0;
+			IsNativePath = _strnicmp(aFullPath.c_str(), deviceString.c_str(), deviceString.length()) != 0;
 			if (IsNativePath)
 				DeviceIndex = 0;
 			else
 			{
 				DeviceIndex = -1;
-				for (int i = 0; i < Devices.size(); i++) {
-					if (strnicmp(aFullPath.c_str(), Devices[i].XboxFullPath.c_str(), Devices[i].XboxFullPath.length()) == 0)
+				for (size_t i = 0; i < Devices.size(); i++) {
+					if (_strnicmp(aFullPath.c_str(), Devices[i].XboxFullPath.c_str(), Devices[i].XboxFullPath.length()) == 0)
 					{
 						DeviceIndex = i;
 						break;
@@ -341,7 +348,7 @@ EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByDevice(std::string DeviceName
 	for (char VolumeLetter = 'A';  VolumeLetter <= 'Z'; VolumeLetter++)
 	{
 		EmuNtSymbolicLinkObject* result = NtSymbolicLinkObjects[VolumeLetter - 'A'];
-		if ((result != NULL) && strnicmp(DeviceName.c_str(), result->XboxFullPath.c_str(), result->XboxFullPath.length()) == 0)
+		if ((result != NULL) && _strnicmp(DeviceName.c_str(), result->XboxFullPath.c_str(), result->XboxFullPath.length()) == 0)
 			return result;
 	}
 

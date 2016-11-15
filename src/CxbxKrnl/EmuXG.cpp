@@ -39,6 +39,7 @@
 
 #include "Emu.h"
 #include "EmuFS.h"
+#include "Logging.h"
 
 // ******************************************************************
 // * prevent name collisions
@@ -58,20 +59,7 @@ PVOID WINAPI XTL::EmuXGIsSwizzledFormat
     XTL::D3DFORMAT Format
 )
 {
-    // ******************************************************************
-    // * debug trace
-    // ******************************************************************
-    #ifdef _DEBUG_TRACE
-    {
-        
-        DbgPrintf("EmuXapi (0x%X): EmuXGIsSwizzledFormat\n"
-               "(\n"
-               "   Format              : 0x%.08X\n"
-               ");\n",
-               GetCurrentThreadId(), Format);
-        
-    }
-    #endif
+	LOG_FUNC_ONE_ARG(Format);
 
     return FALSE;
 }
@@ -91,21 +79,16 @@ VOID WINAPI XTL::EmuXGSwizzleRect
     DWORD         BytesPerPixel
 )
 {
-    
-
-    DbgPrintf("EmuXapi (0x%X): EmuXGSwizzleRect\n"
-           "(\n"
-           "   pSource             : 0x%.08X\n"
-           "   Pitch               : 0x%.08X\n"
-           "   pRect               : 0x%.08X\n"
-           "   pDest               : 0x%.08X\n"
-           "   Width               : 0x%.08X\n"
-           "   Height              : 0x%.08X\n"
-           "   pPoint              : 0x%.08X\n"
-           "   BytesPerPixel       : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pSource, Pitch, pRect, pDest, Width, Height,
-           pPoint, BytesPerPixel);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pSource)
+		LOG_FUNC_ARG(Pitch)
+		LOG_FUNC_ARG(pRect)
+		LOG_FUNC_ARG(pDest)
+		LOG_FUNC_ARG(Width)
+		LOG_FUNC_ARG(Height)
+		LOG_FUNC_ARG(pPoint)
+		LOG_FUNC_ARG(BytesPerPixel)
+		LOG_FUNC_END;
 
     if(pRect == NULL && pPoint == NULL && Pitch == 0)
     {
@@ -161,23 +144,18 @@ VOID WINAPI XTL::EmuXGSwizzleBox
     DWORD            BytesPerPixel
 )
 {
-    
-
-    DbgPrintf("EmuXapi (0x%X): EmuXGSwizzleBox\n"
-           "(\n"
-           "   pSource             : 0x%.08X\n"
-           "   RowPitch            : 0x%.08X\n"
-           "   SlicePitch          : 0x%.08X\n"
-           "   pBox                : 0x%.08X\n"
-           "   pDest               : 0x%.08X\n"
-           "   Width               : 0x%.08X\n"
-           "   Height              : 0x%.08X\n"
-           "   Depth               : 0x%.08X\n"
-           "   pPoint              : 0x%.08X\n"
-           "   BytesPerPixel       : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pSource, RowPitch, SlicePitch, pBox, pDest, Width, Height,
-           Depth, pPoint, BytesPerPixel);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pSource)
+		LOG_FUNC_ARG(RowPitch)
+		LOG_FUNC_ARG(SlicePitch)
+		LOG_FUNC_ARG(pBox)
+		LOG_FUNC_ARG(pDest)
+		LOG_FUNC_ARG(Width)
+		LOG_FUNC_ARG(Height)
+		LOG_FUNC_ARG(Depth)
+		LOG_FUNC_ARG(pPoint)
+		LOG_FUNC_ARG(BytesPerPixel)
+		LOG_FUNC_END;
 
 	if(pDest != (LPVOID) 0x80000000)
 	{
@@ -337,23 +315,18 @@ HRESULT WINAPI XTL::EmuXGWriteSurfaceOrTextureToXPR
 	BOOL			bWriteSurfaceAsTexture
 )
 {
-		
-
-	DbgPrintf("EmuXapi (0x%X): EmuXGWriteSurfaceOrTextureToXPR\n"
-           "(\n"
-           "   pResource              : 0x%.08X\n"
-		   "   cPath                  : 0x%.08X\n"
-		   "   bWriteSurfaceAsTexture : 0x%.08X\n"
-		   ");\n",
-		   GetCurrentThreadId(), pResource, cPath, bWriteSurfaceAsTexture);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pResource)
+		LOG_FUNC_ARG(cPath)
+		LOG_FUNC_ARG(bWriteSurfaceAsTexture)
+		LOG_FUNC_END;
 
 	// TODO: If necessary, either reverse the .xbx and .xpr file formats
 	// and write the surface/texture to a file, or output a generic .xbx
 	// file and be done with it.
 
-	EmuWarning("(Temporarily) ignoring EmuXGWriteSurfaceOrTextureToXPR. Need file specs.");
-
-		
+	UNIMPLEMENTED();
+	// (Temporarily) ignoring EmuXGWriteSurfaceOrTextureToXPR. Need file specs.
 
 	return S_OK;
 }
@@ -374,22 +347,17 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 	UINT			Pitch
 )
 {
-		
-
-	DbgPrintf("EmuXapi (0x%X): EmuXGSetTextureHeader\n"
-           "(\n"
-           "   Width                  : 0x%.08X\n"
-		   "   Height                 : 0x%.08X\n"
-		   "   Levels                 : 0x%.08X\n"
-		   "   Usage                  : 0x%.08X\n"
-		   "   Format                 : 0x%.08X\n"
-		   "   Pool                   : 0x%.08X\n"
-		   "   pTexture               : 0x%.08X\n"
-		   "   Data                   : 0x%.08X\n"
-		   "   Pitch                  : 0x%.08X\n"
-		   ");\n",
-		   GetCurrentThreadId(), Width, Height, Levels, Usage, 
-				Format, Pool, pTexture, Data, Pitch);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Width)
+		LOG_FUNC_ARG(Height)
+		LOG_FUNC_ARG(Levels)
+		LOG_FUNC_ARG(Usage)
+		LOG_FUNC_ARG(Format)
+		LOG_FUNC_ARG(Pool)
+		LOG_FUNC_ARG(pTexture)
+		LOG_FUNC_ARG(Data)
+		LOG_FUNC_ARG(Pitch)
+		LOG_FUNC_END;
 
 	// NOTES: This function simply creates a texture that needs to be registered
 	// via D3DDevice_Register afterwards.  So, do I just create the texture via
@@ -439,7 +407,6 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 //	D3DCOLOR_XRGB(
 	DbgPrintf( "pTexture->Format:= 0x%.08X\n", pTexture->Format );
 
-		
 }
 
 // ******************************************************************
@@ -454,13 +421,11 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 //{
 //		
 //
-//	DbgPrintf("EmuXapi (0x%X): EmuXFONT_OpenBitmapFontFromMemory\n"
-//           "(\n"
-//		   "   pFontData              : 0x%.08X\n"
-//		   "   uFontDataSize          : 0x%.08X\n"
-//		   "   ppFont                 : 0x%.08X\n"
-//		   ");\n",
-//		   GetCurrentThreadId(), pFontData, uFontDataSize, ppFont);
+//		LOG_FUNC_BEGIN
+//			LOG_FUNC_ARG(pFontData)
+//			LOG_FUNC_ARG(uFontDataSize)
+//			LOG_FUNC_ARG(ppFont)
+//			LOG_FUNC_END;
 //
 //	__asm int 3;
 //

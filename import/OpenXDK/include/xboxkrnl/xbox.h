@@ -31,7 +31,7 @@ XBSYSAPI EXPORTNUM(2) VOID NTAPI AvSendTVEncoderOption
 // ******************************************************************
 // * AvSetDisplayMode
 // ******************************************************************
-XBSYSAPI EXPORTNUM(4) ULONG NTAPI AvSetDisplayMode
+XBSYSAPI EXPORTNUM(3) ULONG NTAPI AvSetDisplayMode
 (
     IN PVOID    RegisterBase,
     IN ULONG    Step,
@@ -61,8 +61,8 @@ XBSYSAPI VOID *FscInvalidateIdleBlocks;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(37) LONG NTAPI FscSetCacheSize(ULONG uCachePages);
 
-XBSYSAPI VOID *KdDebuggerEnabled;
-XBSYSAPI VOID *KdDebuggerNotPresent;
+XBSYSAPI EXPORTNUM(88) BOOLEAN KdDebuggerEnabled;
+XBSYSAPI EXPORTNUM(89) BOOLEAN KdDebuggerNotPresent;
 
 // ******************************************************************
 // * KfRaiseIrql
@@ -80,7 +80,7 @@ XBSYSAPI EXPORTNUM(161) VOID NTAPI KfLowerIrql
     IN UCHAR    NewIrql
 );
 
-XBSYSAPI VOID *KiBugCheckData;
+XBSYSAPI EXPORTNUM(162) ULONG_PTR KiBugCheckData[5];
 XBSYSAPI VOID *KiUnlockDispatcherDatabase;
 
 // ******************************************************************
@@ -139,28 +139,30 @@ XBSYSAPI EXPORTNUM(336) VOID NTAPI XcSHAUpdate(UCHAR *pbSHAContext, UCHAR *pbInp
 // ******************************************************************
 XBSYSAPI EXPORTNUM(337) VOID NTAPI XcSHAFinal(UCHAR *pbSHAContext, UCHAR *pbDigest);
 
-XBSYSAPI VOID *XcRC4Key;
-XBSYSAPI VOID *XcRC4Crypt;
-XBSYSAPI VOID *XcHMAC;
-XBSYSAPI VOID *XcPKEncPublic;
-XBSYSAPI VOID *XcPKDecPrivate;
-XBSYSAPI VOID *XcPKGetKeyLen;
-XBSYSAPI VOID *XcVerifyPKCS1Signature;
-XBSYSAPI VOID *XcModExp;
-XBSYSAPI VOID *XcDESKeyParity;
-XBSYSAPI VOID *XcKeyTable;
-XBSYSAPI VOID *XcBlockCrypt;
-XBSYSAPI VOID *XcBlockCryptCBC;
-XBSYSAPI VOID *XcCryptService;
-XBSYSAPI VOID *XcUpdateCrypto;
-XBSYSAPI VOID *XboxLANKey;
-XBSYSAPI VOID *XboxAlternateSignatureKeys;
-XBSYSAPI VOID *XePublicKeyData;
-XBSYSAPI VOID *IdexChannelObject;
-XBSYSAPI VOID *xsnprintf;     // prefixed with "x" to avoid xlibc collisions
-XBSYSAPI VOID *xsprintf;      // ""
-XBSYSAPI VOID *xvsnprintf;    // ""
-XBSYSAPI VOID *xvsprintf;     // ""
+XBSYSAPI EXPORTNUM(338) VOID *XcRC4Key;
+XBSYSAPI EXPORTNUM(339) VOID *XcRC4Crypt;
+XBSYSAPI EXPORTNUM(340) VOID *XcHMAC;
+XBSYSAPI EXPORTNUM(341) VOID *XcPKEncPublic;
+XBSYSAPI EXPORTNUM(342) VOID *XcPKDecPrivate;
+XBSYSAPI EXPORTNUM(343) VOID *XcPKGetKeyLen;
+XBSYSAPI EXPORTNUM(344) VOID *XcVerifyPKCS1Signature;
+XBSYSAPI EXPORTNUM(345) VOID *XcModExp;
+XBSYSAPI EXPORTNUM(346) VOID *XcDESKeyParity;
+XBSYSAPI EXPORTNUM(347) VOID *XcKeyTable;
+XBSYSAPI EXPORTNUM(348) VOID *XcBlockCrypt;
+XBSYSAPI EXPORTNUM(349) VOID *XcBlockCryptCBC;
+XBSYSAPI EXPORTNUM(350) VOID *XcCryptService;
+XBSYSAPI EXPORTNUM(351) VOID *XcUpdateCrypto;
+XBSYSAPI EXPORTNUM(353) XBOX_KEY_DATA XboxLANKey;
+XBSYSAPI EXPORTNUM(354) XBOX_KEY_DATA XboxAlternateSignatureKeys;
+XBSYSAPI EXPORTNUM(355) DWORD XePublicKeyData;
+
+XBSYSAPI EXPORTNUM(357) BYTE IdexChannelObject[0x100];
+
+XBSYSAPI EXPORTNUM(361) VOID *xsnprintf;     // prefixed with "x" to avoid xlibc collisions
+XBSYSAPI EXPORTNUM(362) VOID *xsprintf;      // ""
+XBSYSAPI EXPORTNUM(363) VOID *xvsnprintf;    // ""
+XBSYSAPI EXPORTNUM(364) VOID *xvsprintf;     // ""
 
 #endif
 

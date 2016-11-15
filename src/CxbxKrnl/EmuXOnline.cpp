@@ -35,6 +35,7 @@
 #define _XBOXKRNL_DEFEXTRN_
 
 #include "Emu.h"
+#include "Logging.h"
 #include "EmuFS.h"
 
 // ******************************************************************
@@ -56,20 +57,14 @@ int WINAPI XTL::EmuWSAStartup
     WSADATA    *lpWSAData
 )
 {
-    
-
-    DbgPrintf("EmuXapi (0x%X): EmuWSAStartup\n"
-           "(\n"
-           "   wVersionRequested   : 0x%.08X\n"
-           "   lpWSAData           : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), wVersionRequested, lpWSAData);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(wVersionRequested)
+		LOG_FUNC_ARG(lpWSAData)
+		LOG_FUNC_END;
 
     int ret = WSAStartup(wVersionRequested, lpWSAData);
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
@@ -80,18 +75,12 @@ INT WINAPI XTL::EmuXNetStartup
     const PVOID pDummy
 )
 {
-    
+	LOG_FUNC_ONE_ARG(pDummy);
 
-    DbgPrintf("EmuXapi (0x%X): EmuXNetStartup\n"
-           "(\n"
-           "   pDummy              : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), pDummy);
+	// Fake Successfull...hehehe...sucker...hehehehehe
+	INT ret = 0;
 
-    
-
-    // Fake Successfull...hehehe...sucker...hehehehehe
-    return 0;
+	return ret;
 }
 
 // ******************************************************************
@@ -99,14 +88,12 @@ INT WINAPI XTL::EmuXNetStartup
 // ******************************************************************
 DWORD WINAPI XTL::EmuXNetGetEthernetLinkStatus()
 {
-    
+	LOG_FUNC();
 
-    DbgPrintf("EmuXapi (0x%X): EmuXNetGetEthernetLinkStatus();\n", GetCurrentThreadId());
+	// for now, no ethernet connection is available
+	DWORD ret = XNET_ETHERNET_LINK_ACTIVE | XNET_ETHERNET_LINK_100MBPS;
 
-    
-
-    // for now, no ethernet connection is available
-    return XNET_ETHERNET_LINK_ACTIVE | XNET_ETHERNET_LINK_100MBPS;
+	return ret;
 }
 
 // ******************************************************************
@@ -119,94 +106,84 @@ SOCKET XTL::EmuThis::Emusocket
     int   protocol
 )
 {
-    
-
-    DbgPrintf("EmuXapi (0x%X): EmuThis::Emusocket\n"
-           "(\n"
-           "   this                : 0x%.08X\n"
-           "   af                  : 0x%.08X\n"
-           "   type                : 0x%.08X\n"
-           "   protocol            : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), this, af, type, protocol);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(this)
+		LOG_FUNC_ARG(af)
+		LOG_FUNC_ARG(type)
+		LOG_FUNC_ARG(protocol)
+		LOG_FUNC_END;
 
     SOCKET ret = socket(af, type, protocol);
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
 // * func: EmuThis::Emubind
 // ******************************************************************
-int XTL::EmuThis::Emubind(SOCKET s, const struct sockaddr FAR *name, int namelen)
+int XTL::EmuThis::Emubind
+(
+	SOCKET s, 
+	const struct sockaddr FAR *name, 
+	int namelen
+)
 {
-    
-
-    DbgPrintf("EmuXapi (0x%X): EmuThis::Emubind\n"
-           "(\n"
-           "   this                : 0x%.08X\n"
-           "   s                   : 0x%.08X\n"
-           "   name                : 0x%.08X\n"
-           "   namelen             : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), this, s, name, namelen);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(this)
+		LOG_FUNC_ARG(s)
+		LOG_FUNC_ARG(name)
+		LOG_FUNC_ARG(namelen)
+		LOG_FUNC_END;
 
     // TODO: Host-To-Network order if necessary (probably not?)
 
     int ret = bind(s, name, namelen);
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
 // * func: EmuThis::Emulisten
 // ******************************************************************
-int XTL::EmuThis::Emulisten(SOCKET s, int backlog)
+int XTL::EmuThis::Emulisten
+(
+	SOCKET s, 
+	int backlog
+)
 {
-    
-
-    DbgPrintf("EmuXapi (0x%X): EmuThis::Emulisten\n"
-           "(\n"
-           "   this                : 0x%.08X\n"
-           "   s                   : 0x%.08X\n"
-           "   listen              : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), this, s, backlog);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(this)
+		LOG_FUNC_ARG(s)
+		LOG_FUNC_ARG(backlog)
+		LOG_FUNC_END;
 
     // TODO: Host-To-Network order if necessary (probably not?)
 
     int ret = listen(s, backlog);
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
 // * func: EmuThis::Emuioctlsocket
 // ******************************************************************
-int XTL::EmuThis::Emuioctlsocket(SOCKET s, long cmd, u_long FAR *argp)
+int XTL::EmuThis::Emuioctlsocket
+(
+	SOCKET s, 
+	long cmd, 
+	u_long FAR *argp
+)
 {
-    
-
-    DbgPrintf("EmuXapi (0x%X): EmuThis::Emuioctlsocket\n"
-           "(\n"
-           "   this                : 0x%.08X\n"
-           "   s                   : 0x%.08X\n"
-           "   cmd                 : 0x%.08X\n"
-           "   argp                : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), this, s, cmd, argp);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(this)
+		LOG_FUNC_ARG(s)
+		LOG_FUNC_ARG(cmd)
+		LOG_FUNC_ARG(argp)
+		LOG_FUNC_END;
 
     int ret = ioctlsocket(s, cmd, argp);
 
-    
-
-    return ret;
+	return ret;
 }
 
 // ******************************************************************
@@ -218,20 +195,16 @@ HRESULT WINAPI XOnlineLaunchNewImage
     LPVOID	pLaunchData
 )
 {
-		
-
-	DbgPrintf("XOnline (0x%X): EmuXOnlineLaunchNewImage\n"
-		"(\n"
-		"   lpImagePath           : 0x%.08X (%s)\n"
-		"   pLaunchData           : 0x%.08X\n"
-		");\n",
-		GetCurrentThreadId(), lpImagePath, lpImagePath, pLaunchData);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(lpImagePath)
+		LOG_FUNC_ARG(pLaunchData)
+		LOG_FUNC_END;
 
 	// TODO: Launch another .xbe from Cxbx someday?
 
-		
+	HRESULT ret = E_FAIL;
 
-	return E_FAIL;
+	return ret;
 }
 
 // ******************************************************************
@@ -246,21 +219,17 @@ HRESULT WINAPI XTL::EmuXOnlineLogon
     HANDLE	pHandle
 )
 {
-		
-
-	DbgPrintf("XOnline (0x%X): EmuXOnlineLogon\n"
-		"(\n"
-		"   pUsers                : 0x%.08X\n"
-		"   pdwServiceIDs         : 0x%.08X\n"
-		"   dwServices            : 0x%.08X\n"
-		"   hEvent                : 0x%.08X\n"
-		"   pHandle               : 0x%.08X\n"
-		");\n",
-		GetCurrentThreadId(), pUsers, pdwServiceIDs, dwServices, hEvent, pHandle);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pUsers)
+		LOG_FUNC_ARG(pdwServiceIDs)
+		LOG_FUNC_ARG(dwServices)
+		LOG_FUNC_ARG(hEvent)
+		LOG_FUNC_ARG(pHandle)
+		LOG_FUNC_END;
 
 	// TODO: What will it take to log on to Xbox Live?
 
-		
+	HRESULT ret = HRESULT(0x80151000L);	// XONLINE_E_LOGON_NO_NETWORK_CONNECTION
 
-	return HRESULT(0x80151000L);	// XONLINE_E_LOGON_NO_NETWORK_CONNECTION
+	return ret;
 }

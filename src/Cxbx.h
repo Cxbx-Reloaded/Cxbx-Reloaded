@@ -70,7 +70,7 @@ typedef signed long    sint32;
 #endif
 /*! define this to trace intercepted function calls */
 #ifdef _DEBUG
-#define _DEBUG_TRACE
+#define _DEBUG_TRACE 1
 #endif
 /*! define this to trace warnings */
 #define _DEBUG_WARNINGS
@@ -100,12 +100,11 @@ enum DebugMode { DM_NONE, DM_CONSOLE, DM_FILE };
 /*! runtime DbgPrintf toggle boolean */
 extern volatile bool g_bPrintfOn;
 
-/*! DbgPrintf enabled if _DEBUG_TRACE is set */
-#ifdef _DEBUG_TRACE
-#define DbgPrintf if(g_bPrintfOn) printf
-#else
-inline void null_func(...) { }
-#define DbgPrintf null_func
+#ifdef _MSC_VER
+#pragma warning(disable : 4477)
 #endif
 
-#endif
+/*! DbgPrintf enabled if _DEBUG_TRACE is set */
+#define DbgPrintf(fmt, ...) do { if (_DEBUG_TRACE) if(g_bPrintfOn) printf(fmt, ##__VA_ARGS__); } while (0)
+
+#endif CXBX_H

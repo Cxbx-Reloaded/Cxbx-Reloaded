@@ -49,6 +49,8 @@ Mutex::Mutex()
 // ******************************************************************
 void Mutex::Lock()
 {
+    LONG _CurrentProcessId = (LONG) GetCurrentProcessId();
+    LONG _CurrentThreadId = (LONG) GetCurrentThreadId();
     while(true)
     {
         // Grab the lock, letting us look at the variables
@@ -63,8 +65,8 @@ void Mutex::Lock()
         if (!m_OwnerProcess)
         {
             // Take ownership
-            InterlockedExchange(&m_OwnerProcess, (LONG)GetCurrentProcessId());
-            InterlockedExchange(&m_OwnerThread, (LONG)GetCurrentThreadId());
+            InterlockedExchange(&m_OwnerProcess, _CurrentProcessId);
+            InterlockedExchange(&m_OwnerThread, _CurrentThreadId);
             InterlockedExchange(&m_LockCount, 1);
 
             // Unlock the mutex itself
@@ -76,13 +78,14 @@ void Mutex::Lock()
         // If a different process owns this mutex right now, unlock
         // the mutex lock and wait.  The reading need not be
         // interlocked.
-        if ((m_OwnerProcess != (LONG) GetCurrentProcessId()) ||
-            (m_OwnerThread  != (LONG) GetCurrentThreadId()))
+        if ((m_OwnerProcess != _CurrentProcessId) ||
+            (m_OwnerThread  != _CurrentThreadId))
         {
             // Unlock the mutex itself
             InterlockedExchange(&m_MutexLock, 0);
 
             // Wait and try again
+			// TODO : Improve performance replacing Sleep(1) with YieldProcessor and perhaps an optional SpinLock
             Sleep(1);
             continue;
         }

@@ -80,7 +80,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
     {
         SHGetSpecialFolderPath(NULL, szCacheFileName, CSIDL_APPDATA, TRUE);
 
-        strcat(szCacheFileName, "\\Cxbx-Reloaded\\");
+        strcat(szCacheFileName, "\\Cxbx\\");
 
         CreateDirectory(szCacheFileName, NULL);
 
@@ -608,7 +608,7 @@ static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
     uint32 count = Oovpa->Count;
 
     // Skip out if this is an unnecessary search
-    if(!bXRefFirstPass && Oovpa->XRefCount == 0 && Oovpa->XRefSaveIndex == (uint08)-1)
+    if(!bXRefFirstPass && Oovpa->XRefCount == 0 && Oovpa->XRefSaveIndex == XRefNotSaved)
         return 0;
 
     // large
@@ -653,7 +653,7 @@ static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
             // success if we found all pairs
             if(v == count)
             {
-                if(Loovpa->XRefSaveIndex != (uint08)-1)
+                if(Loovpa->XRefSaveIndex != XRefNotSaved)
                 {
                     if(XRefDataBase[Loovpa->XRefSaveIndex] == -1)
                     {
@@ -720,7 +720,7 @@ static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
             // success if we found all pairs
             if(v == count)
             {
-                if(Soovpa->XRefSaveIndex != (uint08)-1)
+                if(Soovpa->XRefSaveIndex != XRefNotSaved)
                 {
                     if(XRefDataBase[Soovpa->XRefSaveIndex] == -1)
                     {

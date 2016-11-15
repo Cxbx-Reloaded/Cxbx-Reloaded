@@ -290,9 +290,11 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 	memcpy((void*)(CxbxKrnl_Xbe->m_Header.dwBaseAddr + sizeof(Xbe::Header)), CxbxKrnl_Xbe->m_HeaderEx, CxbxKrnl_Xbe->m_ExSize);
 	
 	// Load Sections
-	for (int i = 0; i < CxbxKrnl_Xbe->m_Header.dwSections; i++) {
+	for (uint32 i = 0; i < CxbxKrnl_Xbe->m_Header.dwSections; i++) {
 		memcpy((void*)CxbxKrnl_Xbe->m_SectionHeader[i].dwVirtualAddr, CxbxKrnl_Xbe->m_bzSection[i], CxbxKrnl_Xbe->m_SectionHeader[i].dwSizeofRaw);
 	}
+
+	ConnectWindowsTimersToThunkTable();
 
 	// Fixup Kernel Imports
 	uint32 kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
@@ -372,7 +374,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 			freopen("CONOUT$", "wt", stdout);
 			freopen("CONIN$", "rt", stdin);
 
-			SetConsoleTitle("Cxbx-Reloaded : Kernel Debug Console");
+			SetConsoleTitle("Cxbx : Kernel Debug Console");
 
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
 
@@ -457,7 +459,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	// Initialize devices :
 	char szBuffer[260];
 	SHGetSpecialFolderPath(NULL, szBuffer, CSIDL_APPDATA, TRUE);
-	strcat(szBuffer, "\\Cxbx-Reloaded\\");
+	strcat(szBuffer, "\\Cxbx\\");
 
 	std::string basePath(szBuffer);
 	CxbxBasePath = basePath + "\\EmuDisk\\";
@@ -506,7 +508,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		std::string fileName(xbePath);
 		xboxkrnl::XeImageFileName.Buffer = (PCHAR)malloc(MAX_PATH);
 		sprintf(xboxkrnl::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeVolumeLetter, fileName.c_str());
-		xboxkrnl::XeImageFileName.Length = strlen(xboxkrnl::XeImageFileName.Buffer);
+		xboxkrnl::XeImageFileName.Length = (USHORT)strlen(xboxkrnl::XeImageFileName.Buffer);
 		xboxkrnl::XeImageFileName.MaximumLength = MAX_PATH;
 
 		DbgPrintf("EmuMain : XeImageFileName = %s\n", xboxkrnl::XeImageFileName.Buffer);
@@ -559,7 +561,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	}
 
 	
-	DbgPrintf("EmuMain : Determining CPU affinity.");
+	DbgPrintf("EmuMain : Determining CPU affinity.\n");
 
 	// Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
 	// this will better aproximate the environment with regard to multi-threading) :

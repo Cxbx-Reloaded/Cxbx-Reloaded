@@ -145,7 +145,7 @@ public:
 };
 
 // ******************************************************************
-// * is hFile a 'special' emulated handle?
+// * is Handle a 'special' emulated handle?
 // ******************************************************************
 bool IsEmuHandle(HANDLE Handle);
 EmuHandle* HandleToEmuHandle(HANDLE Handle);HANDLE EmuHandleToHandle(EmuHandle* emuHandle);

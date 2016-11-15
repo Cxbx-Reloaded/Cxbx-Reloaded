@@ -41,8 +41,8 @@ SOOVPA<8> XNetStartup_1_0_5344 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x01, 0xC0 },
@@ -64,8 +64,8 @@ SOOVPA<8> XNetGetEthernetLinkStatus_1_0_5344 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x08, 0x33 },
@@ -88,7 +88,7 @@ SOOVPA<8> CXo_XOnlineLogon_1_0_5344 =
     8,  // Count == 8
 
     XREF_CXo_XOnlineLogon,  // Xref Is Saved
-    0,  // Xref Not Used
+    XRefNotUsed,
 
     {
         { 0x21, 0xA8 },
@@ -110,8 +110,8 @@ SOOVPA<8> XOnlineLogon_1_0_5344 =
     0,  // Large == 0
     8,  // Count == 8
 
-    -1, // Xref Not Saved
-    1,  // Xref Is Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x0B, XREF_CXo_XOnlineLogon },
@@ -135,8 +135,8 @@ SOOVPA<7> WSAStartup_1_0_5558 =
     0,  // Large == 0
     7,  // Count == 7
 
-    -1, // Xref Not Saved
-    0,  // Xref Not Used
+    XRefNotSaved,
+    XRefNotUsed,
 
     {
         { 0x02, 0x24 },
