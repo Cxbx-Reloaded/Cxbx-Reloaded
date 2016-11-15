@@ -40,7 +40,7 @@
 Wnd::Wnd(HINSTANCE x_hInstance) : m_hInstance(x_hInstance)
 {
     m_classname   = "CxbxWnd";
-    m_wndname     = "Cxbx Generic Window";
+    m_wndname     = "Cxbx-Reloaded Generic Window";
     m_x           = 150;
     m_y           = 150;
     m_w           = 320;

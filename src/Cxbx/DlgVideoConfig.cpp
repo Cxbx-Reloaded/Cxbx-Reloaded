@@ -149,7 +149,7 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
             /*! if changes have been made, check if the user wants to save them */
             if(g_bHasChanges)
             {
-                int ret = MessageBox(hWndDlg, "Do you wish to apply your changes?", "Cxbx", MB_ICONQUESTION | MB_YESNOCANCEL);
+                int ret = MessageBox(hWndDlg, "Do you wish to apply your changes?", "Cxbx-Reloaded", MB_ICONQUESTION | MB_YESNOCANCEL);
 
                 switch(ret)
                 {

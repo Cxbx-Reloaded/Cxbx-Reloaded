@@ -374,11 +374,11 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 			freopen("CONOUT$", "wt", stdout);
 			freopen("CONIN$", "rt", stdin);
 
-			SetConsoleTitle("Cxbx : Kernel Debug Console");
+			SetConsoleTitle("Cxbx-Reloaded : Kernel Debug Console");
 
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
 
-			printf("EmuMain (0x%X): Cxbx Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
+			printf("EmuMain (0x%X): Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
 			printf("EmuMain (0x%X): Debug Console Allocated (DM_CONSOLE).\n", GetCurrentThreadId());
 		}
 	}
@@ -459,7 +459,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	// Initialize devices :
 	char szBuffer[260];
 	SHGetSpecialFolderPath(NULL, szBuffer, CSIDL_APPDATA, TRUE);
-	strcat(szBuffer, "\\Cxbx\\");
+	strcat(szBuffer, "\\Cxbx-Reloaded\\");
 
 	std::string basePath(szBuffer);
 	CxbxBasePath = basePath + "\\EmuDisk\\";

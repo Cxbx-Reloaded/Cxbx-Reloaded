@@ -40,7 +40,7 @@
 WndAbout::WndAbout(HINSTANCE x_hInstance, HWND x_parent) : Wnd(x_hInstance)
 {
     m_classname = "WndAbout";
-    m_wndname   = "Cxbx : About";
+    m_wndname   = "Cxbx-Reloaded : About";
 
     m_w         = 400;
     m_h         = 300;

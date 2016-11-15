@@ -48,7 +48,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     /*! verify CxbxKrnl.dll is the same version as Cxbx.exe */
     if(!CxbxKrnlVerifyVersion(_CXBX_VERSION))
     {
-        MessageBox(NULL, "CxbxKrnl.dll is the incorrect version", "Cxbx", MB_OK);
+        MessageBox(NULL, "CxbxKrnl.dll is the incorrect version", "Cxbx-Reloaded", MB_OK);
         return 1;
     }
 
@@ -85,7 +85,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     /*! if an error occurred, notify user */
     if(MainWindow->GetError() != 0)
     {
-        MessageBox(NULL, MainWindow->GetError(), "Cxbx", MB_ICONSTOP | MB_OK);
+        MessageBox(NULL, MainWindow->GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
     }
 
     delete MainWindow;
