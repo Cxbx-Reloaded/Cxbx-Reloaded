@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuKrnlAv.cpp
+// *   Cxbx->Win32->CxbxKrnl->EmuKrnlDbg.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -38,88 +38,42 @@
 // prevent name collisions
 namespace xboxkrnl
 {
-	#include <xboxkrnl/xboxkrnl.h> // For AvGetSavedDataAddress, etc.
+#include <xboxkrnl/xboxkrnl.h> // For DbgPrint, etc.
 };
 
 #include "Logging.h" // For LOG_FUNC()
 #include "Emu.h" // For EmuWarning()
-#include "EmuAlloc.h" // For CxbxFree(), CxbxMalloc(), etc.
-
-// Global Variable(s)
-PVOID g_pPersistedData = NULL;
 
 using namespace xboxkrnl;
 
 // ******************************************************************
-// * 0x0001 AvGetSavedDataAddress()
+// * 0x0008 DbgPrint
 // ******************************************************************
-XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress()
-{
-	LOG_FUNC();
-
-	__asm int 3;
-
-	// Allocate a buffer the size of the screen buffer and return that.
-	// TODO: Fill this buffer with the contents of the front buffer.
-	// TODO: This isn't always the size we need...
-
-	if (g_pPersistedData)
-	{
-		CxbxFree(g_pPersistedData);
-		g_pPersistedData = NULL;
-	}
-
-	g_pPersistedData = CxbxMalloc(640 * 480 * 4);
-
-#if 0
-	// Get a copy of the front buffer
-	IDirect3DSurface8* pFrontBuffer = NULL;
-
-	if (SUCCEEDED(g_pD3DDevice8->GetFrontBuffer(pFrontBuffer)))
-	{
-		D3DLOCKED_RECT LockedRect;
-		pFrontBuffer->LockRect(0, NULL, &LockedRect);
-
-		CopyMemory(g_pPersistedData, LockRect.pBits, 640 * 480 * 4);
-
-		pFrontBuffer->UnlockRect();
-	}
-#endif
-
-	// TODO: We might want to return something sometime...
-	/*if( !g_pPersistedData )
-	{
-	FILE* fp = fopen( "PersistedSurface.bin", "rb" );
-	fseek( fp, 0, SEEK_END );
-	long size = ftell( fp );
-	g_pPersistedData = malloc( size );
-	fread( g_pPersistedData, size, 1, fp );
-	fclose(fp);
-	}*/
-
-	return NULL;//g_pPersistedData;
-}
-
-// ******************************************************************
-// * 0x0002 AvSendTVEncoderOption()
-// ******************************************************************
-XBSYSAPI EXPORTNUM(2) VOID NTAPI xboxkrnl::AvSendTVEncoderOption
+XBSYSAPI EXPORTNUM(8) xboxkrnl::ULONG _cdecl xboxkrnl::DbgPrint
 (
-	IN  PVOID   RegisterBase,
-	IN  ULONG   Option,
-	IN  ULONG   Param,
-	OUT ULONG   *Result
+	PCHAR  Format, ...
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(RegisterBase)
-		LOG_FUNC_ARG(Option)
-		LOG_FUNC_ARG(Param)
-		LOG_FUNC_ARG_OUT(Result)
+		LOG_FUNC_ARG(Format)
+		LOG_FUNC_ARG("...")
 		LOG_FUNC_END;
 
-	// TODO: What does this do?
+	if (Format != NULL)
+	{
+		char szBuffer[MAX_PATH];
 
-	UNIMPLEMENTED();
+		va_list argp;
+		va_start(argp, Format);
+
+		vsprintf(szBuffer, Format, argp);
+		va_end(argp);
+
+		//LogPrintf("[EmuKrnl] DbgPrint: %s", szBuffer);
+
+		EmuWarning(szBuffer);
+		//DbgPrintf(szBuffer);
+	}
+
+	return STATUS_SUCCESS;
 }
-
