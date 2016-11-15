@@ -103,4 +103,9 @@ extern thread_local std::string _logPrefix;
 // Log function with one out argument
 #define LOG_FUNC_ONE_ARG_OUT(arg) LOG_FUNC_BEGIN LOG_FUNC_ARG_OUT(arg) LOG_FUNC_END 
 
+#define UNIMPLEMENTED() \
+	do { if (_DEBUG_TRACE) if(g_bPrintfOn) { \
+		std::cout << __func__ << " ignored!\n"; \
+	} } while (0)
+
 #endif _LOGGING_H

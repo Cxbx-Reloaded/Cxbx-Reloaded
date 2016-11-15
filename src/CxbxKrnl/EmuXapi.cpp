@@ -971,7 +971,7 @@ VOID WINAPI XTL::EmuXSetProcessQuantumLength
 	LOG_FUNC_ONE_ARG(dwMilliseconds);
 
 	// TODO: Implement?
-	EmuWarning("XSetProcessQuantumLength is being ignored!");
+	UNIMPLEMENTED();
 }
 	
 // ******************************************************************

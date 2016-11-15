@@ -119,6 +119,6 @@ XBSYSAPI EXPORTNUM(2) VOID NTAPI xboxkrnl::AvSendTVEncoderOption
 
 	// TODO: What does this do?
 
-	EmuWarning("AvSendTVEncoderOption ignored!");
+	UNIMPLEMENTED();
 }
 

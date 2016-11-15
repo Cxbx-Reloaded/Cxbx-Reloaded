@@ -1634,7 +1634,7 @@ XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
 		LOG_FUNC_END;
 
 	// TODO: What does this do?
-	EmuWarning( "ExReadWriteRefurbInfo ignored!" );
+	UNIMPLEMENTED();
 
 	return STATUS_SUCCESS;
 }
@@ -1690,7 +1690,7 @@ XBSYSAPI EXPORTNUM(37) xboxkrnl::LONG NTAPI xboxkrnl::FscSetCacheSize
 {
 	LOG_FUNC_ONE_ARG(uCachePages);
 
-    EmuWarning("FscSetCacheSize is being ignored");
+	UNIMPLEMENTED();
 
     return 0;
 }
@@ -2559,7 +2559,7 @@ XBSYSAPI EXPORTNUM(175) void NTAPI xboxkrnl::MmLockUnlockBufferPages
 		LOG_FUNC_ARG(Protect)
 		LOG_FUNC_END;
 
-	EmuWarning("EmuKrnl: MmLockUnlockBufferPages ignored");
+	UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -2601,7 +2601,7 @@ XBSYSAPI EXPORTNUM(178) VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 		LOG_FUNC_END;
 
     // TODO: Actually set this up to be remember across a "reboot"
-    EmuWarning("MmPersistContiguousMemory is being ignored\n");
+	UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -3226,7 +3226,7 @@ XBSYSAPI EXPORTNUM(205) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtProtectVirtualMemor
 		LOG_FUNC_ARG_OUT(OldProtect)
 		LOG_FUNC_END;
 
-	EmuWarning("NtProtectVirtualMemory Ignored!");
+	UNIMPLEMENTED();
 
 	return STATUS_SUCCESS;
 }

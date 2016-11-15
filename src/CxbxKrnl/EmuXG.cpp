@@ -325,7 +325,8 @@ HRESULT WINAPI XTL::EmuXGWriteSurfaceOrTextureToXPR
 	// and write the surface/texture to a file, or output a generic .xbx
 	// file and be done with it.
 
-	EmuWarning("(Temporarily) ignoring EmuXGWriteSurfaceOrTextureToXPR. Need file specs.");
+	UNIMPLEMENTED();
+	// (Temporarily) ignoring EmuXGWriteSurfaceOrTextureToXPR. Need file specs.
 
 	return S_OK;
 }
