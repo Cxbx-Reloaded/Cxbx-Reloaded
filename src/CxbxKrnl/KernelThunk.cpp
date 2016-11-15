@@ -180,7 +180,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0075),                                    // 0x0075 (117) KeInsertQueue
 	(uint32)PANIC(0x0076),                                    // 0x0076 (118) KeInsertQueueApc
 	(uint32)PANIC(0x0077),                                    // 0x0077 (119) KeInsertQueueDpc
-	(uint32)VARIABLE(0x0078),                                 // 0x0078 (120) KeInterruptTime
+	(uint32)VARIABLE(0x0078),                                 // 0x0078 (120) KeInterruptTime (Set by ConnectWindowsTimersToThunkTable)
 	(uint32)PANIC(0x0079),                                    // 0x0079 (121) KeIsExecutingDpc
 	(uint32)PANIC(0x007A),                                    // 0x007A (122) KeLeaveCriticalRegion
 	(uint32)PANIC(0x007B),                                    // 0x007B (123) KePulseEvent
@@ -214,7 +214,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0097),                                    // 0x0097 (151) KeStallExecutionProcessor
 	(uint32)PANIC(0x0098),                                    // 0x0098 (152) KeSuspendThread
 	(uint32)PANIC(0x0099),                                    // 0x0099 (153) KeSynchronizeExecution
-	(uint32)VARIABLE(0x009A),                                 // 0x009A (154) KeSystemTime
+	(uint32)VARIABLE(0x009A),                                 // 0x009A (154) KeSystemTime (Set by ConnectWindowsTimersToThunkTable)
 	(uint32)PANIC(0x009B),                                    // 0x009B (155) KeTestAlertThread
 	(uint32)VARIABLE(&xboxkrnl::KeTickCount),                 // 0x009C (156)
 	(uint32)VARIABLE(&xboxkrnl::KeTimeIncrement),             // 0x009D (157)
@@ -441,23 +441,47 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x017A),                                    // 0x017A (378) MmDbgWriteCheck
 };
 
+/*******************************************************************/
+/* Internal NT Stuff */
+/*******************************************************************/
+typedef struct _KSYSTEM_TIME {
+	ULONG LowPart;
+	LONG High1Time;
+	LONG High2Time;
+} KSYSTEM_TIME, *PKSYSTEM_TIME;
+
+typedef struct _KUSER_SHARED_DATA {
+	/* Current low 32-bit of tick count and tick count multiplier.
+	* N.B. The tick count is updated each time the clock ticks.
+	*/
+	volatile ULONG TickCountLow;
+	UINT32 TickCountMultiplier;
+
+	/* Current 64-bit interrupt time in 100ns units. */
+	volatile KSYSTEM_TIME InterruptTime;
+
+	/* Current 64-bit system time in 100ns units. */
+	volatile KSYSTEM_TIME SystemTime;
+
+	/* Current 64-bit time zone bias. */
+	volatile KSYSTEM_TIME TimeZoneBias;
+} KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
+
 // Virtual memory location of KUSER_SHARED_DATA :
 // See http://research.microsoft.com/en-us/um/redmond/projects/invisible/src/base/md/i386/sim/_pertest2.c.htm
-const UINT_PTR MM_SHARED_USER_DATA_VA = (UINT_PTR)0x7FFE0000;
+// and http://research.microsoft.com/en-us/um/redmond/projects/invisible/src/base/md/i386/sim/_glue.c.htm
+// and http://processhacker.sourceforge.net/doc/ntexapi_8h_source.html
+// and http://forum.sysinternals.com/0x7ffe0000-what-is-in-it_topic10012.html
+#define MM_SHARED_USER_DATA_VA      0x7FFE0000
+#define USER_SHARED_DATA ((KUSER_SHARED_DATA * const)MM_SHARED_USER_DATA_VA)
 
 // KUSER_SHARED_DATA Offsets
 // See http://native-nt-toolkit.googlecode.com/svn/trunk/ndk/asm.h
-const UINT USER_SHARED_DATA_TICK_COUNT_LOW_DEPRECATED = 0x0;
-const UINT USER_SHARED_DATA_INTERRUPT_TIME = 0x8;
-const UINT USER_SHARED_DATA_SYSTEM_TIME = 0x14;
+// Note : KUSER_SHARED_DATA.TickCountLow seems deprecated
 const UINT USER_SHARED_DATA_TICK_COUNT = 0x320;
-
 
 // Here we define the addresses of the native Windows timers :
 // Source: Dxbx
-const xboxkrnl::PKSYSTEM_TIME CxbxNtInterruptTime = (xboxkrnl::PKSYSTEM_TIME)(MM_SHARED_USER_DATA_VA + USER_SHARED_DATA_INTERRUPT_TIME);
-const xboxkrnl::PKSYSTEM_TIME CxbxNtSystemTime = (xboxkrnl::PKSYSTEM_TIME)(MM_SHARED_USER_DATA_VA + USER_SHARED_DATA_SYSTEM_TIME);
-const PDWORD CxbxNtTickCountLowDeprecated = (PDWORD)(MM_SHARED_USER_DATA_VA + USER_SHARED_DATA_TICK_COUNT_LOW_DEPRECATED);
 const xboxkrnl::PKSYSTEM_TIME CxbxNtTickCount = (xboxkrnl::PKSYSTEM_TIME)(MM_SHARED_USER_DATA_VA + USER_SHARED_DATA_TICK_COUNT);
 
 void ConnectWindowsTimersToThunkTable()
@@ -467,11 +491,8 @@ void ConnectWindowsTimersToThunkTable()
 	// time on updating them ourselves, and still get highly accurate timers!
 	// See http://www.dcl.hpi.uni-potsdam.de/research/WRK/2007/08/getting-os-information-the-kuser_shared_data-structure/
 
-//	xboxkrnl::KeInterruptTimePtr = CxbxNtSystemTime;
-//	xboxkrnl::KeSystemTimePtr = CxbxNtInterruptTime;
-
-	CxbxKrnl_KernelThunkTable[120] = (uint32)CxbxNtSystemTime; // xboxkrnl_KeInterruptTimePtr;
-	CxbxKrnl_KernelThunkTable[154] = (uint32)CxbxNtInterruptTime; // xboxkrnl_KeSystemTimePtr;
+	CxbxKrnl_KernelThunkTable[120] = (uint32)&(USER_SHARED_DATA->InterruptTime);
+	CxbxKrnl_KernelThunkTable[154] = (uint32)&(USER_SHARED_DATA->SystemTime);
 
 	// Note that we can't do the same for TickCount, as that timer
 	// updates slower on the xbox. See EmuThreadUpdateTickCount().
