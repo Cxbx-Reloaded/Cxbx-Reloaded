@@ -144,7 +144,6 @@ PCSTProxyParam;
 // Global Variable(s)
 extern PVOID g_pfnThreadNotification[16] = { NULL };
 extern int g_iThreadNotificationCount = 0;
-PVOID g_pPersistedData = NULL;
 
 // A critical section containing the PC and Xbox equivalent
 struct INTERNAL_CRITICAL_SECTION
@@ -1363,79 +1362,6 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 
 using namespace xboxkrnl;
 
-
-// ******************************************************************
-// * 0x0001 AvGetSavedDataAddress()
-// ******************************************************************
-XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress()
-{
-	LOG_FUNC();
-
-	__asm int 3;
-
-	// Allocate a buffer the size of the screen buffer and return that.
-	// TODO: Fill this buffer with the contents of the front buffer.
-	// TODO: This isn't always the size we need...
-
-	if( g_pPersistedData )
-	{
-		CxbxFree( g_pPersistedData );
-		g_pPersistedData = NULL;
-	}
-
-	g_pPersistedData = CxbxMalloc( 640*480*4 );
-
-#if 0
-	// Get a copy of the front buffer
-	IDirect3DSurface8* pFrontBuffer = NULL;
-
-	if( SUCCEEDED(g_pD3DDevice8->GetFrontBuffer(pFrontBuffer)))
-	{
-		D3DLOCKED_RECT LockedRect;
-		pFrontBuffer->LockRect( 0, NULL, &LockedRect );
-
-		CopyMemory( g_pPersistedData, LockRect.pBits, 640*480*4 );
-
-		pFrontBuffer->UnlockRect();
-	}
-#endif
-
-	// TODO: We might want to return something sometime...
-	/*if( !g_pPersistedData )
-	{
-		FILE* fp = fopen( "PersistedSurface.bin", "rb" );
-		fseek( fp, 0, SEEK_END );
-		long size = ftell( fp );
-		g_pPersistedData = malloc( size );
-		fread( g_pPersistedData, size, 1, fp );
-		fclose(fp);
-	}*/
-
-	return NULL;//g_pPersistedData;
-}
-
-// ******************************************************************
-// * 0x0002 AvSendTVEncoderOption()
-// ******************************************************************
-XBSYSAPI EXPORTNUM(2) VOID NTAPI xboxkrnl::AvSendTVEncoderOption
-(
-    IN  PVOID   RegisterBase,
-    IN  ULONG   Option,
-    IN  ULONG   Param,
-    OUT ULONG   *Result
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(RegisterBase)
-		LOG_FUNC_ARG(Option)
-		LOG_FUNC_ARG(Param)
-		LOG_FUNC_ARG_OUT(Result)
-		LOG_FUNC_END;
-
-	// TODO: What does this do?
-
-	EmuWarning( "AvSendTVEncoderOption ignored!" );
-}
 
 // ******************************************************************
 // * 0x0008 DbgPrint
