@@ -83,6 +83,9 @@ typedef unsigned long       PHYSICAL_ADDRESS;
 typedef long                INT_PTR;
 typedef int                 BOOL;
 
+
+typedef unsigned long       UINT32;
+
 // ******************************************************************
 // * Pointer types
 // ******************************************************************
@@ -527,6 +530,39 @@ typedef struct _TIME_FIELDS
     USHORT  Weekday;
 }
 TIME_FIELDS, *PTIME_FIELDS;
+
+// ******************************************************************
+// * KSYSTEM_TIME
+// ******************************************************************
+typedef struct _KSYSTEM_TIME {
+	ULONG LowPart;
+	LONG High1Time;
+	LONG High2Time;
+} KSYSTEM_TIME, *PKSYSTEM_TIME;
+
+// ******************************************************************
+// * KUSER_SHARED_DATA
+// ******************************************************************
+typedef struct _KUSER_SHARED_DATA
+{
+	/* Current low 32-bit of tick count and tick count multiplier.
+	* N.B. The tick count is updated each time the clock ticks.
+	*/
+	volatile ULONG TickCountLow;
+	UINT32 TickCountMultiplier;
+
+	/* Current 64-bit interrupt time in 100ns units. */
+	volatile KSYSTEM_TIME InterruptTime;
+
+	/* Current 64-bit system time in 100ns units. */
+	volatile KSYSTEM_TIME SystemTime;
+
+	/* Current 64-bit time zone bias. */
+	volatile KSYSTEM_TIME TimeZoneBias;
+}
+KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
+// This is only the top of the actual definition. For the complete version,
+// see http://processhacker.sourceforge.net/doc/ntexapi_8h_source.html
 
 // ******************************************************************
 // * KeDelayExecutionThread
