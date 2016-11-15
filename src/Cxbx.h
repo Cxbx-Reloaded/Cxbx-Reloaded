@@ -105,6 +105,11 @@ extern volatile bool g_bPrintfOn;
 #endif
 
 /*! DbgPrintf enabled if _DEBUG_TRACE is set */
-#define DbgPrintf(fmt, ...) do { if (_DEBUG_TRACE) if(g_bPrintfOn) printf(fmt, ##__VA_ARGS__); } while (0)
+#ifdef _DEBUG_TRACE
+	#define DbgPrintf(fmt, ...) do { if(g_bPrintfOn) printf(fmt, ##__VA_ARGS__); } while (0)
+#else
+	inline void null_func(...) { }
+	#define DbgPrintf null_func
+#endif
 
 #endif CXBX_H
