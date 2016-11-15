@@ -107,6 +107,13 @@ typedef void               *HANDLE;
 typedef HANDLE             *PHANDLE;
 
 // ******************************************************************
+// ANSI (Multi-byte Character) types
+// ******************************************************************
+typedef CHAR *PCHAR, *LPCH, *PCH;
+typedef CONST CHAR *LPCCH, *PCCH;
+
+
+// ******************************************************************
 // * LPSECURITY_ATTRIBUTES
 // ******************************************************************
 typedef void* LPSECURITY_ATTRIBUTES;

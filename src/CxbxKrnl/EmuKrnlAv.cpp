@@ -118,8 +118,46 @@ XBSYSAPI EXPORTNUM(2) VOID NTAPI xboxkrnl::AvSendTVEncoderOption
 		LOG_FUNC_ARG_OUT(Result)
 		LOG_FUNC_END;
 
+	// "Run Like Hell" (5233) calls this from a routine at 0x11FCD0 - See XTL_EmuIDirect3DDevice_Unknown1
 	// TODO: What does this do?
 
 	UNIMPLEMENTED();
 }
 
+XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
+(
+	IN  PVOID   RegisterBase,
+	IN  ULONG   Step,
+	IN  ULONG   Mode,
+	IN  ULONG   Format,
+	IN  ULONG   Pitch,
+	IN  ULONG   FrameBuffer
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(RegisterBase)
+		LOG_FUNC_ARG(Step)
+		LOG_FUNC_ARG(Mode)
+		LOG_FUNC_ARG(Format)
+		LOG_FUNC_ARG(Pitch)
+		LOG_FUNC_ARG(FrameBuffer)
+		LOG_FUNC_END;
+
+	ULONG result = S_OK;
+
+	UNIMPLEMENTED();
+
+	return result;
+}
+
+XBSYSAPI EXPORTNUM(4) VOID NTAPI xboxkrnl::AvSetSavedDataAddress
+(
+	IN  PVOID   Address
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Address)
+		LOG_FUNC_END;
+
+	UNIMPLEMENTED();
+}

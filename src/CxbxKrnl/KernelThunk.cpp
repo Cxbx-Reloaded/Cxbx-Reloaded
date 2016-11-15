@@ -63,15 +63,15 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0000),                                    // 0x0000 (0)   NULL
 	(uint32)FUNC(&xboxkrnl::AvGetSavedDataAddress),           // 0x0001 (1)
 	(uint32)FUNC(&xboxkrnl::AvSendTVEncoderOption),           // 0x0002 (2)
-	(uint32)PANIC(0x0003),                                    // 0x0003 (3)   AvSetDisplayMode
-	(uint32)PANIC(0x0004),                                    // 0x0004 (4)   AvSetSavedDataAddress
-	(uint32)PANIC(0x0005),                                    // 0x0005 (5)   DbgBreakPoint
-	(uint32)PANIC(0x0006),                                    // 0x0006 (6)   DbgBreakPointWithStatus
-	(uint32)PANIC(0x0007),                                    // 0x0007 (7)   DbgLoadImageSymbols
+	(uint32)FUNC(&xboxkrnl::AvSetDisplayMode),                // 0x0003 (3)
+	(uint32)FUNC(&xboxkrnl::AvSetSavedDataAddress),           // 0x0004 (4)
+	(uint32)FUNC(&xboxkrnl::DbgBreakPoint),                   // 0x0005 (5)
+	(uint32)FUNC(&xboxkrnl::DbgBreakPointWithStatus),         // 0x0006 (6)
+	(uint32)FUNC(&xboxkrnl::DbgLoadImageSymbols),             // 0x0007 (7)
 	(uint32)FUNC(&xboxkrnl::DbgPrint),                        // 0x0008 (8)
 	(uint32)FUNC(&xboxkrnl::HalReadSMCTrayState),             // 0x0009 (9)
-	(uint32)PANIC(0x000A),                                    // 0x000A (10)  DbgPrompt
-	(uint32)PANIC(0x000B),                                    // 0x000B (11)  DbgUnLoadImageSymbols
+	(uint32)FUNC(&xboxkrnl::DbgPrompt),                       // 0x000A (10)
+	(uint32)FUNC(&xboxkrnl::DbgUnLoadImageSymbols),           // 0x000B (11)
 	(uint32)PANIC(0x000C),                                    // 0x000C (12)  ExAcquireReadWriteLockExclusive
 	(uint32)PANIC(0x000D),                                    // 0x000D (13)  ExAcquireReadWriteLockShared
 	(uint32)FUNC(&xboxkrnl::ExAllocatePool),                  // 0x000E (14)
