@@ -96,7 +96,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0021),                                    // 0x0021 (33)  ExfInterlockedInsertTailList
 	(uint32)PANIC(0x0022),                                    // 0x0022 (34)  ExfInterlockedRemoveHeadList
 	(uint32)FUNC(&xboxkrnl::FscGetCacheSize),                 // 0x0023 (35)
-	(uint32)PANIC(0x0024),                                    // 0x0024 (36)  FscInvalidateIdleBlocks
+	(uint32)FUNC(&xboxkrnl::FscInvalidateIdleBlocks),         // 0x0024 (36)
 	(uint32)FUNC(&xboxkrnl::FscSetCacheSize),                 // 0x0025 (37)
 	(uint32)PANIC(0x0026),                                    // 0x0026 (38)  HalClearSoftwareInterrupt
 	(uint32)PANIC(0x0027),                                    // 0x0027 (39)  HalDisableSystemInterrupt
@@ -321,9 +321,9 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::PsTerminateSystemThread),         // 0x0102 (258)
 	(uint32)PANIC(0x0103),                                    // 0x0103 (259) PsThreadObjectType
 	(uint32)FUNC(&xboxkrnl::RtlAnsiStringToUnicodeString),    // 0x0104 (260)
-	(uint32)PANIC(0x0105),                                    // 0x0105 (261) RtlAppendStringToString
-	(uint32)PANIC(0x0106),                                    // 0x0106 (262) RtlAppendUnicodeStringToString
-	(uint32)PANIC(0x0107),                                    // 0x0107 (263) RtlAppendUnicodeToString
+	(uint32)FUNC(&xboxkrnl::RtlAppendStringToString),         // 0x0105 (261)
+	(uint32)FUNC(&xboxkrnl::RtlAppendUnicodeStringToString),  // 0x0106 (262)
+	(uint32)FUNC(&xboxkrnl::RtlAppendUnicodeToString),        // 0x0107 (263)
 	(uint32)FUNC(&xboxkrnl::RtlAssert),                       // 0x0108 (264)
 	(uint32)PANIC(0x0109),                                    // 0x0109 (265) RtlCaptureContext
 	(uint32)PANIC(0x010A),                                    // 0x010A (266) RtlCaptureStackBackTrace

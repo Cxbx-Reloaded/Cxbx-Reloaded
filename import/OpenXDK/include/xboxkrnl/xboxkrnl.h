@@ -112,6 +112,8 @@ typedef HANDLE             *PHANDLE;
 typedef CHAR *PCHAR, *LPCH, *PCH;
 typedef CONST CHAR *LPCCH, *PCCH;
 
+typedef /*_Null_terminated_*/ CONST WCHAR *LPCWSTR, *PCWSTR;
+
 
 // ******************************************************************
 // * LPSECURITY_ATTRIBUTES

@@ -696,6 +696,15 @@ typedef NTSTATUS (NTAPI *FPTR_RtlAnsiStringToUnicodeString)
 );
 
 // ******************************************************************
+// * RtlAppendStringToString
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_RtlAppendStringToString)
+(
+	IN OUT PSTRING    Destination,
+	IN     PSTRING    Source
+);
+
+// ******************************************************************
 // * RtlUnicodeStringToAnsiString
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeStringToAnsiString)
@@ -1137,6 +1146,7 @@ typedef PVOID (NTAPI *FPTR_RtlDestroyHeap)
 extern FPTR_RtlInitAnsiString              RtlInitAnsiString;
 extern FPTR_RtlInitUnicodeString           RtlInitUnicodeString;
 extern FPTR_RtlAnsiStringToUnicodeString   RtlAnsiStringToUnicodeString;
+extern FPTR_RtlAppendStringToString        RtlAppendStringToString;
 extern FPTR_RtlUnicodeStringToAnsiString   RtlUnicodeStringToAnsiString;
 extern FPTR_RtlFreeAnsiString              RtlFreeAnsiString;
 extern FPTR_RtlNtStatusToDosError          RtlNtStatusToDosError;

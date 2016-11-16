@@ -27,12 +27,21 @@ XBSYSAPI EXPORTNUM(260) NTSTATUS NTAPI RtlAnsiStringToUnicodeString
 // ******************************************************************
 XBSYSAPI EXPORTNUM(261) NTSTATUS NTAPI RtlAppendStringToString
 (
-  IN PSTRING    Destination,
+  IN OUT PSTRING    Destination,
   IN PSTRING    Source
 );
 
-XBSYSAPI VOID *RtlAppendUnicodeStringToString;
-XBSYSAPI VOID *RtlAppendUnicodeToString;
+XBSYSAPI EXPORTNUM(262) NTSTATUS NTAPI RtlAppendUnicodeStringToString
+(
+	IN OUT PUNICODE_STRING Destination,
+	IN PUNICODE_STRING Source
+);
+
+XBSYSAPI EXPORTNUM(263) NTSTATUS NTAPI RtlAppendUnicodeToString
+(
+	IN OUT PUNICODE_STRING Destination,
+	IN LPCWSTR Source
+);
 
 // ******************************************************************
 // * RtlAssert

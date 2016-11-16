@@ -58,6 +58,14 @@ XBSYSAPI EXPORTNUM(35) xboxkrnl::DWORD NTAPI xboxkrnl::FscGetCacheSize()
 	return 64 * 1024;
 }
 
+XBSYSAPI EXPORTNUM(36) VOID NTAPI xboxkrnl::FscInvalidateIdleBlocks()
+{
+	LOG_FUNC();
+
+	UNIMPLEMENTED();
+}
+
+
 // ******************************************************************
 // * 0x0025 - FscSetCacheSize
 // ******************************************************************
