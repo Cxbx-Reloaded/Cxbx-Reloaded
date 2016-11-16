@@ -46,7 +46,7 @@ namespace xboxkrnl
 // prevent name collisions
 namespace NtDll
 {
-#include "EmuNtDll.h"
+	#include "EmuNtDll.h"
 };
 
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup()
@@ -93,7 +93,9 @@ int FindCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION CriticalSection)
 	return FreeSection;
 }
 
+
 using namespace xboxkrnl;
+
 
 // ******************************************************************
 // * 0x0104 - RtlAnsiStringToUnicodeString
@@ -114,6 +116,58 @@ XBSYSAPI EXPORTNUM(260) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAnsiStringToUnicod
 	NTSTATUS ret = NtDll::RtlAnsiStringToUnicodeString((NtDll::UNICODE_STRING*)DestinationString, (NtDll::STRING*)SourceString, AllocateDestinationString);
 
 	return ret;
+}
+
+XBSYSAPI EXPORTNUM(261) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendStringToString
+(
+	IN OUT PSTRING Destination,
+	IN PSTRING Source
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Destination)
+		LOG_FUNC_ARG(Source)
+		LOG_FUNC_END;
+
+	NTSTATUS result = NtDll::RtlAppendStringToString((NtDll::PSTRING)Destination, (NtDll::PSTRING)Source);
+
+	return result;
+}
+
+XBSYSAPI EXPORTNUM(262) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeStringToString
+(
+	IN OUT PUNICODE_STRING Destination,
+	IN PUNICODE_STRING Source
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Destination)
+		LOG_FUNC_ARG(Source)
+		LOG_FUNC_END;
+
+	NTSTATUS result = 0; //  TODO : NtDll::RtlAppendUnicodeStringToString(Destination, Source);
+
+	UNIMPLEMENTED();
+
+	return result;
+}
+
+XBSYSAPI EXPORTNUM(263) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeToString
+(
+	IN OUT PUNICODE_STRING Destination,
+	IN LPCWSTR Source
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Destination)
+		LOG_FUNC_ARG(Source)
+		LOG_FUNC_END;
+
+	NTSTATUS result = 0; // TODO : NtDll::RtlAppendUnicodeToString(Destination, Source);
+
+	UNIMPLEMENTED();
+
+	return result;
 }
 
 // ******************************************************************
