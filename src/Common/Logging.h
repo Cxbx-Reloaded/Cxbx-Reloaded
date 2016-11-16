@@ -67,33 +67,39 @@ extern thread_local const DWORD _CurrentThreadId;
 // TODO : Use Boost.Format http://www.boost.org/doc/libs/1_53_0/libs/format/index.html
 extern thread_local std::string _logPrefix;
 
-#define LOG_FUNC_BEGIN \
-	do { if (_DEBUG_TRACE) if(g_bPrintfOn) { \
-		if (_logPrefix.empty()) { \
-			std::stringstream tmp; \
-			tmp << __FILENAME__ << " (0x" << std::hex << std::uppercase << _CurrentThreadId << "): "; \
-			_logPrefix = tmp.str(); \
-		}; \
-		std::stringstream msg; \
-		msg << _logPrefix << __func__ << "(";
+#ifdef _DEBUG_TRACE
+	#define LOG_FUNC_BEGIN \
+		do { if(g_bPrintfOn) { \
+			if (_logPrefix.empty()) { \
+				std::stringstream tmp; \
+				tmp << __FILENAME__ << " (0x" << std::hex << std::uppercase << _CurrentThreadId << "): "; \
+				_logPrefix = tmp.str(); \
+			}; \
+			std::stringstream msg; \
+			msg << _logPrefix << __func__ << "(";
 
-// LOG_FUNC_ARG_OUT writes output via all available ostream << operator overloads, adding detail where possible
-#define LOG_FUNC_ARG(arg) \
-		msg << "\n   " << std::setw(26) << std::left << std::setfill(' ') << #arg << " : " << arg;
+	// LOG_FUNC_ARG_OUT writes output via all available ostream << operator overloads, adding detail where possible
+	#define LOG_FUNC_ARG(arg) \
+			msg << "\n   " << std::setw(26) << std::left << std::setfill(' ') << #arg << " : " << arg;
 
-// LOG_FUNC_ARG_OUT prevents expansion of types, by only rendering as a pointer
-#define LOG_FUNC_ARG_OUT(arg) \
-		msg << "\n   " << std::setw(26) << std::left << std::setfill(' ') << #arg << " : 0x" << (void*)arg;
+	// LOG_FUNC_ARG_OUT prevents expansion of types, by only rendering as a pointer
+	#define LOG_FUNC_ARG_OUT(arg) \
+			msg << "\n   " << std::setw(26) << std::left << std::setfill(' ') << #arg << " : 0x" << (void*)arg;
 
-// LOG_FUNC_END closes off function and optional argument logging
-#define LOG_FUNC_END \
-		msg.seekg(-1, std::ios::end); if (msg.get() != '(') msg << '\n'; \
-		msg << ");\n"; \
-		std::cout << msg.str(); \
-	} } while (0)
+	// LOG_FUNC_END closes off function and optional argument logging
+	#define LOG_FUNC_END \
+			msg.seekg(-1, std::ios::end); if (msg.get() != '(') msg << '\n'; \
+			msg << ");\n"; \
+			std::cout << msg.str(); \
+		} } while (0)
+#else
+	#define LOG_FUNC_BEGIN ;
+	#define LOG_FUNC_ARG(arg);
+	#define LOG_FUNC_ARG_OUT(arg);
+	#define LOG_FUNC_END ;
+#endif
 
 // Short hand defines :
-
 // Log function without arguments
 #define LOG_FUNC() LOG_FUNC_BEGIN LOG_FUNC_END
 
@@ -104,7 +110,7 @@ extern thread_local std::string _logPrefix;
 #define LOG_FUNC_ONE_ARG_OUT(arg) LOG_FUNC_BEGIN LOG_FUNC_ARG_OUT(arg) LOG_FUNC_END 
 
 #define UNIMPLEMENTED() \
-	do { if (_DEBUG_TRACE) if(g_bPrintfOn) { \
+	do { if(g_bPrintfOn) { \
 		std::cout << __func__ << " ignored!\n"; \
 	} } while (0)
 

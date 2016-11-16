@@ -371,7 +371,7 @@ bool XBController::ConfigPoll(char *szStatus)
 
                 Map(CurConfigObject, DeviceInstance.tszInstanceName, dwHow, dwFlags);
 
-                printf("Cxbx: Detected %s%s on %s%lu\n", szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType);
+                printf("Cxbx-Reloaded: Detected %s%s on %s%lu\n", szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName, ObjectInstance.dwType);
 
                 sprintf(szStatus, "Success: %s Mapped to '%s%s' on '%s'!", m_DeviceNameLookup[CurConfigObject], szDirection, ObjectInstance.tszName, DeviceInstance.tszInstanceName);
 
@@ -408,7 +408,7 @@ bool XBController::ConfigPoll(char *szStatus)
             {
                 Map(CurConfigObject, "SysKeyboard", dwHow, dwFlags);
 
-                printf("Cxbx: Detected Key %d on SysKeyboard\n", dwHow);
+                printf("Cxbx-Reloaded: Detected Key %d on SysKeyboard\n", dwHow);
 
                 sprintf(szStatus, "Success: %s Mapped to Key %d on SysKeyboard", m_DeviceNameLookup[CurConfigObject], dwHow);
 
@@ -446,7 +446,7 @@ bool XBController::ConfigPoll(char *szStatus)
             {
                 Map(CurConfigObject, "SysMouse", dwHow, dwFlags);
 
-                printf("Cxbx: Detected Button %d on SysMouse\n", dwHow);
+                printf("Cxbx-Reloaded: Detected Button %d on SysMouse\n", dwHow);
 
                 sprintf(szStatus, "Success: %s Mapped to Button %d on SysMouse", m_DeviceNameLookup[CurConfigObject], dwHow);
 
@@ -518,7 +518,7 @@ bool XBController::ConfigPoll(char *szStatus)
 
                     Map(CurConfigObject, "SysMouse", dwHow, dwFlags);
 
-                    printf("Cxbx: Detected Movement on the %s%s on SysMouse\n", szDirection, szObjName);
+                    printf("Cxbx-Reloaded: Detected Movement on the %s%s on SysMouse\n", szDirection, szObjName);
 
                     sprintf(szStatus, "Success: %s Mapped to %s%s on SysMouse", m_DeviceNameLookup[CurConfigObject], szDirection, szObjName);
 
@@ -1064,7 +1064,7 @@ int XBController::Insert(const char *szDeviceName)
         }
     }
 
-    MessageBox(NULL, "Unexpected Circumstance (Too Many Controller Devices)! Please contact caustik!", "Cxbx", MB_OK | MB_ICONEXCLAMATION);
+    MessageBox(NULL, "Unexpected Circumstance (Too Many Controller Devices)! Please contact caustik!", "Cxbx-Reloaded", MB_OK | MB_ICONEXCLAMATION);
 
     ExitProcess(1);
 
