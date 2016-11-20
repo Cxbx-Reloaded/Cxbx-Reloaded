@@ -76,7 +76,7 @@ XBSYSAPI EXPORTNUM(37) xboxkrnl::LONG NTAPI xboxkrnl::FscSetCacheSize
 {
 	LOG_FUNC_ONE_ARG(uCachePages);
 
-	LOG_UNIMPLEMENTED();
+	LOG_IGNORED();
 
 	RETURN(0);
 }

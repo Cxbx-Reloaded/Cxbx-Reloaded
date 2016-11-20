@@ -960,7 +960,7 @@ VOID WINAPI XTL::EmuXSetProcessQuantumLength
 	LOG_FUNC_ONE_ARG(dwMilliseconds);
 
 	// TODO: Implement?
-	LOG_UNIMPLEMENTED();
+	LOG_IGNORED();
 }
 	
 // ******************************************************************

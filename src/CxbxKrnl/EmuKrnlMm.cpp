@@ -306,7 +306,7 @@ XBSYSAPI EXPORTNUM(175) void NTAPI xboxkrnl::MmLockUnlockBufferPages
 		LOG_FUNC_ARG(Protect)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	LOG_IGNORED();
 }
 
 // ******************************************************************
@@ -348,7 +348,7 @@ XBSYSAPI EXPORTNUM(178) VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 		LOG_FUNC_END;
 
 	// TODO: Actually set this up to be remember across a "reboot"
-	LOG_UNIMPLEMENTED();
+	LOG_IGNORED();
 }
 
 // ******************************************************************

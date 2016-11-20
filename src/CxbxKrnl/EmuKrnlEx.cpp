@@ -258,7 +258,7 @@ XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
 		LOG_FUNC_END;
 
 	// TODO: What does this do?
-	LOG_UNIMPLEMENTED();
+	LOG_IGNORED();
 
 	RETURN(STATUS_SUCCESS);
 }
