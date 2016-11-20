@@ -59,9 +59,9 @@ XBSYSAPI EXPORTNUM(14) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePool
 {
 	LOG_FUNC_ONE_ARG(NumberOfBytes);
 
-	PVOID pRet = ExAllocatePoolWithTag(NumberOfBytes, (ULONG)"enoN");
+	PVOID pRet = ExAllocatePoolWithTag(NumberOfBytes, (ULONG)"enoN"); // "None" in reverse?
 
-	return pRet;
+	RETURN(pRet);
 }
 
 // ******************************************************************
@@ -84,7 +84,7 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
 	// TODO: Actually implement this
 	PVOID pRet = CxbxMalloc(NumberOfBytes);
 
-	return pRet;
+	RETURN(pRet);
 }
 
 // TODO : What should we initialize this to?
@@ -117,7 +117,9 @@ XBSYSAPI EXPORTNUM(23) xboxkrnl::ULONG NTAPI xboxkrnl::ExQueryPoolBlockSize
 	LOG_FUNC_ONE_ARG(PoolBlock);
 
 	// Not strictly correct, but it will do for now
-	return MmQueryAllocationSize(PoolBlock);
+	ULONG ret = MmQueryAllocationSize(PoolBlock);
+
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -236,9 +238,7 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 		break;
 	}
 
-
-
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -258,9 +258,9 @@ XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
 		LOG_FUNC_END;
 
 	// TODO: What does this do?
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 
-	return STATUS_SUCCESS;
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -283,7 +283,7 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 
 	// TODO: Later.
 
-	return STATUS_SUCCESS;
+	RETURN(STATUS_SUCCESS);
 }
 
 // TODO : What should we initialize this to?

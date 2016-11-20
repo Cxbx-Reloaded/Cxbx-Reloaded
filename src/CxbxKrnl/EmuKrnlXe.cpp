@@ -65,12 +65,12 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 
 	if (((Xbe::SectionHeader*)section)->dwSectionRefCount > 0) {
 		((Xbe::SectionHeader*)section)->dwSectionRefCount++;
-		return STATUS_SUCCESS;
+		RETURN(STATUS_SUCCESS);
 	}
 
 	EmuWarning("XeLoadSection lied");
 
-	return STATUS_SUCCESS;
+	RETURN(STATUS_SUCCESS);
 }
 
 XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection
@@ -83,12 +83,12 @@ XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection
 		LOG_FUNC_END;
 
 	if (((Xbe::SectionHeader*)section)->dwSectionRefCount == 0) {
-		return STATUS_INVALID_PARAMETER;
+		RETURN(STATUS_INVALID_PARAMETER);
 	}
 
 	EmuWarning("XeUnloadSection lied");
 
-	return STATUS_SUCCESS;
+	RETURN(STATUS_SUCCESS);
 }
 
 // TODO : What should we initialize this to?

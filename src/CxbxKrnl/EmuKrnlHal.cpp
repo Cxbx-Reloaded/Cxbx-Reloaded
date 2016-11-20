@@ -103,7 +103,7 @@ XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG  NTAPI xboxkrnl::HalGetInterruptVector
 
 	EmuWarning("HalGetInterruptVector(): If this is NOT a Chihiro game, tell blueshogun!");
 
-	return 1;
+	RETURN(1);
 }
 
 // ******************************************************************
@@ -131,8 +131,7 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
 		// Write BYTE
 	}
 
-
-	return STATUS_SUCCESS;
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -149,9 +148,7 @@ XBSYSAPI EXPORTNUM(47) VOID xboxkrnl::HalRegisterShutdownNotification
 		LOG_FUNC_ARG(Register)
 		LOG_FUNC_END;
 
-		UNIMPLEMENTED();
-
-	return;
+	LOG_UNIMPLEMENTED();
 }
 
 
@@ -170,7 +167,7 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
 		CxbxKrnlCleanup("Xbe has rebooted : HalReturnToFirmware(%d)", Routine);
 	}
 
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -192,8 +189,9 @@ XBSYSAPI EXPORTNUM(50) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMBusValue
 		LOG_FUNC_END;
 
 	// TODO: Later.
+	LOG_UNIMPLEMENTED();
 
-	return STATUS_SUCCESS;
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************

@@ -86,9 +86,9 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 
 	// TODO: Try redirecting to NtCreateFile if this function ever is run into
 	CxbxKrnlCleanup("IoCreateFile not implemented");
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -107,7 +107,7 @@ XBSYSAPI EXPORTNUM(67) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateSymbolicLink
 
 	NTSTATUS ret = CxbxCreateSymbolicLink(std::string(SymbolicLinkName->Buffer, SymbolicLinkName->Length), std::string(DeviceName->Buffer, DeviceName->Length));
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -127,7 +127,7 @@ XBSYSAPI EXPORTNUM(69) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDeleteSymbolicLink
 	if ((symbolicLink != NULL))
 		ret = symbolicLink->NtClose();
 
-	return ret;
+	RETURN(ret);
 }
 
 // TODO : What should we initialize this to?
@@ -149,8 +149,8 @@ XBSYSAPI EXPORTNUM(91) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDismountVolumeByName
 	NTSTATUS ret = STATUS_SUCCESS;
 
 	// TODO: Anything?
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 
-	return ret;
+	RETURN(ret);
 }
 

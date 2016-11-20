@@ -97,7 +97,7 @@ XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress()
 	fclose(fp);
 	}*/
 
-	return NULL;//g_pPersistedData;
+	RETURN (NULL); //g_pPersistedData;
 }
 
 // ******************************************************************
@@ -121,7 +121,7 @@ XBSYSAPI EXPORTNUM(2) VOID NTAPI xboxkrnl::AvSendTVEncoderOption
 	// "Run Like Hell" (5233) calls this from a routine at 0x11FCD0 - See XTL_EmuIDirect3DDevice_Unknown1
 	// TODO: What does this do?
 
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 }
 
 XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
@@ -145,9 +145,9 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 
 	ULONG result = S_OK;
 
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 
-	return result;
+	RETURN(result);
 }
 
 XBSYSAPI EXPORTNUM(4) VOID NTAPI xboxkrnl::AvSetSavedDataAddress
@@ -159,5 +159,5 @@ XBSYSAPI EXPORTNUM(4) VOID NTAPI xboxkrnl::AvSetSavedDataAddress
 		LOG_FUNC_ARG(Address)
 		LOG_FUNC_END;
 
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 }

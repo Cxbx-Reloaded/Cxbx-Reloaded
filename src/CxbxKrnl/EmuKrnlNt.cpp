@@ -1009,7 +1009,7 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 	{
 		// When the pointer is nil, make sure we pass nil to Windows too :
 		nativeObjectAttributes.NtObjAttrPtr = NULL;
-		return result;
+		RETURN(result);
 	}
 
 	// ObjectAttributes are given, so make sure the pointer we're going to pass to Windows is assigned :
@@ -1077,7 +1077,7 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 			{
 				result = STATUS_UNRECOGNIZED_VOLUME; // TODO : Is this the correct error?
 				EmuWarning((("Path not available : ") + OriginalPath).c_str());
-				return result;
+				RETURN(result);
 			}
 
 			XboxFullPath = RelativePath;
@@ -1112,7 +1112,7 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 	// Initialize the NT ObjectAttributes :
 	InitializeObjectAttributes(&nativeObjectAttributes.NtObjAttr, &nativeObjectAttributes.NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
 
-	return result;
+	RETURN(result);
 }
 
 
@@ -1154,7 +1154,7 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 	if (ret == 0xC00000F3)
 		EmuWarning("Invalid Param!");
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1172,7 +1172,7 @@ XBSYSAPI EXPORTNUM(186) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClearEvent
 	if (FAILED(ret))
 		EmuWarning("NtClearEvent Failed!");
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1199,7 +1199,7 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
 		ret = NtDll::NtClose(Handle);
 	}
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1235,7 +1235,7 @@ XBSYSAPI EXPORTNUM(188) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateDirectoryObje
 
 	DbgPrintf("EmuKrnl (0x%X): NtCreateDirectoryObject DirectoryHandle = 0x%.08X\n", GetCurrentThreadId(), *DirectoryHandle);
 
-	return ret;
+	RETURN(ret);
 }
 
 
@@ -1278,7 +1278,7 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 
 	DbgPrintf("EmuKrnl (0x%X): NtCreateEvent EventHandle = 0x%.08X\n", GetCurrentThreadId(), *EventHandle);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1330,7 +1330,7 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
 
 
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1376,7 +1376,7 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 
 	DbgPrintf("EmuKrnl (0x%X): NtCreateMutant MutantHandle = 0x%.08X\n", GetCurrentThreadId(), *MutantHandle);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1412,7 +1412,7 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 
 	DbgPrintf("EmuKrnl (0x%X): NtCreateSemaphore SemaphoreHandle = 0x%.08X\n", GetCurrentThreadId(), *SemaphoreHandle);
 
-	return ret;
+	RETURN(ret);
 }
 
 XBSYSAPI EXPORTNUM(196) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeviceIoControlFile
@@ -1457,10 +1457,10 @@ XBSYSAPI EXPORTNUM(196) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeviceIoControlFile
 		break;
 	}
 	default:
-		UNIMPLEMENTED();
+		LOG_UNIMPLEMENTED();
 	}
 
-	return STATUS_SUCCESS;
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1500,7 +1500,7 @@ XBSYSAPI EXPORTNUM(197) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
 	if (ret != STATUS_SUCCESS)
 		EmuWarning("Object was not duplicated!");
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1519,7 +1519,7 @@ XBSYSAPI EXPORTNUM(198) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFlushBuffersFile
 
 	NTSTATUS ret = NtDll::NtFlushBuffersFile(FileHandle, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1540,7 +1540,7 @@ XBSYSAPI EXPORTNUM(199) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
 
 	NTSTATUS ret = NtDll::NtFreeVirtualMemory(GetCurrentProcess(), BaseAddress, FreeSize, FreeType);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1568,7 +1568,9 @@ XBSYSAPI EXPORTNUM(202) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenFile
 
 	//*/
 
-	return NtCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, NULL, 0, ShareAccess, FILE_OPEN, OpenOptions);
+	NTSTATUS ret = NtCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, NULL, 0, ShareAccess, FILE_OPEN, OpenOptions);
+
+	RETURN(ret);
 }
 
 
@@ -1602,7 +1604,7 @@ XBSYSAPI EXPORTNUM(203) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenSymbolicLinkObj
 		else
 			DbgPrintf("EmuKrnl : NtOpenSymbolicLinkObject LinkHandle^ = 0x%.08X", *LinkHandle);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1623,9 +1625,9 @@ XBSYSAPI EXPORTNUM(205) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtProtectVirtualMemor
 		LOG_FUNC_ARG_OUT(OldProtect)
 		LOG_FUNC_END;
 
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 
-	return STATUS_SUCCESS;
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1658,7 +1660,7 @@ XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
 	if (FAILED(ret))
 		EmuWarning("NtQueueApcThread failed!");
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1742,7 +1744,7 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 	// TODO: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
 	CxbxFree(FileDirInfo);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1769,7 +1771,7 @@ XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributes
 	if (FAILED(ret))
 		EmuWarning("NtQueryFullAttributesFile failed! (0x%.08X)\n", ret);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1831,7 +1833,7 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 	if (FAILED(ret))
 		EmuWarning("NtQueryInformationFile failed! (0x%.08X)", ret);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1879,7 +1881,7 @@ XBSYSAPI EXPORTNUM(215) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySymbolicLinkOb
 	if (result != STATUS_SUCCESS)
 		EmuWarning("NtQuerySymbolicLinkObject failed! (%s)", NtStatusToString(result));
 
-	return result;
+	RETURN(result);
 }
 
 
@@ -1931,7 +1933,7 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
 		}
 	}
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1981,7 +1983,7 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 		EmuWarning("NtQueryVolumeInformationFile failed! (%s)\n", NtStatusToString(ret));
 	}
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -2019,7 +2021,7 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 	if (FAILED(ret))
 		EmuWarning("NtReadFile Failed! (0x%.08X)", ret);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -2042,7 +2044,7 @@ XBSYSAPI EXPORTNUM(221) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseMutant
 	if (FAILED(ret))
 		EmuWarning("NtReleaseMutant Failed!");
 
-	return STATUS_SUCCESS;
+	RETURN(STATUS_SUCCESS); // TODO : RETURN(ret);
 }
 
 // ******************************************************************
@@ -2066,7 +2068,7 @@ XBSYSAPI EXPORTNUM(222) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseSemaphore
 	if (FAILED(ret))
 		EmuWarning("NtReleaseSemaphore failed!");
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -2087,7 +2089,7 @@ XBSYSAPI EXPORTNUM(224) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtResumeThread
 
 	Sleep(10);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -2109,7 +2111,7 @@ XBSYSAPI EXPORTNUM(225) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetEvent
 	if (FAILED(ret))
 		EmuWarning("NtSetEvent Failed!");
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -2134,7 +2136,7 @@ XBSYSAPI EXPORTNUM(226) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
 
 	NTSTATUS ret = NtDll::NtSetInformationFile(FileHandle, IoStatusBlock, FileInformation, Length, FileInformationClass);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -2154,11 +2156,11 @@ XBSYSAPI EXPORTNUM(228) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetSystemTime
 	// Maybe it's not such a good idea to allow Cxbx to change your time 
 	// clock.  Might need admin privileges to do this.... dunno.
 
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 
 	NTSTATUS ret = STATUS_SUCCESS;
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -2177,7 +2179,7 @@ XBSYSAPI EXPORTNUM(231) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSuspendThread
 
 	NTSTATUS ret = NtDll::NtSuspendThread(ThreadHandle, PreviousSuspendCount);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -2251,8 +2253,6 @@ XBSYSAPI EXPORTNUM(232) VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
 	}
 
 	DbgPrintf("EmuKrnl (0x%X): NtUserIoApcDispatcher Completed\n", GetCurrentThreadId());
-
-	return;
 }
 
 // ******************************************************************
@@ -2289,7 +2289,7 @@ XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 	if (ret == WAIT_FAILED)
 		EmuWarning("NtWaitForSingleObjectEx failed! (%s)", NtStatusToString(ret));
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -2317,7 +2317,7 @@ XBSYSAPI EXPORTNUM(235) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForMultipleObje
 	// TODO: Process EmuHandle
 	NTSTATUS ret = NtDll::NtWaitForMultipleObjects(Count, Handles, (NtDll::OBJECT_WAIT_TYPE)WaitType, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -2355,7 +2355,7 @@ XBSYSAPI EXPORTNUM(236) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFile
 	if (FAILED(ret))
 		EmuWarning("NtWriteFile Failed! (0x%.08X)", ret);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -2367,7 +2367,5 @@ XBSYSAPI EXPORTNUM(238) VOID NTAPI xboxkrnl::NtYieldExecution()
 	//LOG_FUNC();
 
 	NtDll::NtYieldExecution();
-
-	return;
 }
 

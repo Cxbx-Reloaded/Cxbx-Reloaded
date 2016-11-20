@@ -137,7 +137,7 @@ XBSYSAPI EXPORTNUM(160) xboxkrnl::UCHAR* NTAPI xboxkrnl::KfRaiseIrql
 	LOG_FUNC_ONE_ARG(NewIrql);
     
 	// Return addr where old irq level should be stored
-    return &previousIrqlValue;
+    RETURN(&previousIrqlValue);
 }
 
 // ******************************************************************
@@ -150,7 +150,7 @@ XBSYSAPI EXPORTNUM(161) VOID NTAPI xboxkrnl::KfLowerIrql
 {
 	LOG_FUNC_ONE_ARG(NewIrql);
 
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 }
 
 // Source:ReactOS

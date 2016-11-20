@@ -110,7 +110,7 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 
 	DbgPrintf("EmuKrnl (0x%X): MmAllocateContiguousMemory returned 0x%.08X\n", GetCurrentThreadId(), pRet);
 
-	return pRet;
+	RETURN(pRet);
 }
 
 // ******************************************************************
@@ -155,9 +155,7 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 
 	static int count = 0;
 
-	DbgPrintf("EmuKrnl (0x%X): MmAllocateContiguousMemoryEx returned 0x%.08X\n", GetCurrentThreadId(), pRet);
-
-	return pRet;
+	RETURN(pRet);
 }
 
 // ******************************************************************
@@ -177,7 +175,7 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
 	// TODO: should this be aligned?
 	PVOID pRet = CxbxMalloc(NumberOfBytes);
 
-	return pRet;
+	RETURN(pRet);
 }
 
 // ******************************************************************
@@ -220,7 +218,7 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 	else
 		pRet = (PVOID)((ULONG)pRet + NumberOfBytes);
 
-	return pRet;
+	RETURN(pRet);
 }
 
 // ******************************************************************
@@ -242,8 +240,6 @@ XBSYSAPI EXPORTNUM(170) VOID NTAPI xboxkrnl::MmDeleteKernelStack
 	ULONG RegionSize = 0;
 	if (FAILED(NtDll::NtFreeVirtualMemory(GetCurrentProcess(), &BaseAddress, &RegionSize, MEM_RELEASE)))
 		EmuWarning("MmDeleteKernelStack failed!\n");
-
-
 }
 
 // ******************************************************************
@@ -273,8 +269,6 @@ XBSYSAPI EXPORTNUM(171) VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 	{
 		DbgPrintf("Ignored MmFreeContiguousMemory(&xLaunchDataPage)\n");
 	}
-
-	return;
 }
 
 // ******************************************************************
@@ -293,7 +287,7 @@ XBSYSAPI EXPORTNUM(172) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmFreeSystemMemory
 
 	CxbxFree(BaseAddress);
 
-	return STATUS_SUCCESS;
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -312,7 +306,7 @@ XBSYSAPI EXPORTNUM(175) void NTAPI xboxkrnl::MmLockUnlockBufferPages
 		LOG_FUNC_ARG(Protect)
 		LOG_FUNC_END;
 
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -334,7 +328,7 @@ XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
 	// TODO: should this be aligned?
 	PVOID pRet = CxbxMalloc(NumberOfBytes);
 
-	return pRet;
+	RETURN(pRet);
 }
 
 // ******************************************************************
@@ -354,7 +348,7 @@ XBSYSAPI EXPORTNUM(178) VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 		LOG_FUNC_END;
 
 	// TODO: Actually set this up to be remember across a "reboot"
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -369,7 +363,7 @@ XBSYSAPI EXPORTNUM(180) xboxkrnl::ULONG NTAPI xboxkrnl::MmQueryAllocationSize
 
 	ULONG uiSize = EmuCheckAllocationSize(BaseAddress, false);
 
-	return uiSize;
+	RETURN(uiSize);
 }
 
 // ******************************************************************
@@ -425,9 +419,7 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 		ret = STATUS_INVALID_PARAMETER;
 	}
 
-
-
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -452,8 +444,6 @@ XBSYSAPI EXPORTNUM(182) VOID NTAPI xboxkrnl::MmSetAddressProtect
 		EmuWarning("VirtualProtect Failed!");
 
 	DbgPrintf("EmuKrnl (0x%X): VirtualProtect was 0x%.08X -> 0x%.08X\n", GetCurrentThreadId(), dwOldProtect, NewProtect & (~PAGE_WRITECOMBINE));
-
-	return;
 }
 
 // ******************************************************************
@@ -472,6 +462,6 @@ XBSYSAPI EXPORTNUM(183) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmUnmapIoSpace
 
 	CxbxFree(BaseAddress);
 
-	return STATUS_SUCCESS;
+	RETURN(STATUS_SUCCESS);
 }
 

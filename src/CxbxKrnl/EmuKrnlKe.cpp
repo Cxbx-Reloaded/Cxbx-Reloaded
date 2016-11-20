@@ -72,7 +72,7 @@ XBSYSAPI EXPORTNUM(95) VOID NTAPI xboxkrnl::KeBugCheck
 	LOG_FUNC_ONE_ARG(BugCheckMode);
 
 	// TODO: Investigate XapiFiberStartup maybe?
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -85,9 +85,9 @@ XBSYSAPI EXPORTNUM(98) xboxkrnl::LONG NTAPI xboxkrnl::KeConnectInterrupt
 {
 	LOG_FUNC_ONE_ARG(InterruptObject);
 
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 
-	return 0;
+	RETURN(0);
 }
 
 // ******************************************************************
@@ -108,7 +108,7 @@ XBSYSAPI EXPORTNUM(99) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeDelayExecutionThread
 
 	NTSTATUS ret = NtDll::NtDelayExecution(Alertable, (NtDll::LARGE_INTEGER*)Interval);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -132,8 +132,6 @@ XBSYSAPI EXPORTNUM(107) VOID NTAPI xboxkrnl::KeInitializeDpc
 	Dpc->Type = DpcObject;
 	Dpc->DeferredContext = DeferredContext;
 	Dpc->Inserted = FALSE;
-
-	return;
 }
 
 // ******************************************************************
@@ -160,7 +158,7 @@ XBSYSAPI EXPORTNUM(109) VOID NTAPI xboxkrnl::KeInitializeInterrupt
 		LOG_FUNC_ARG(ShareVector)
 		LOG_FUNC_END;
 
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -189,10 +187,6 @@ XBSYSAPI EXPORTNUM(113) VOID NTAPI xboxkrnl::KeInitializeTimerEx
 
 	Timer->DueTime.QuadPart = 0;
 	Timer->Period = 0;
-
-
-
-	return;
 }
 
 // Dxbx note : This was once a value, but instead we now point to
@@ -210,7 +204,7 @@ XBSYSAPI EXPORTNUM(126) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceCo
 
 	QueryPerformanceCounter(&Counter);
 
-	return Counter.QuadPart;
+	RETURN(Counter.QuadPart);
 }
 
 // ******************************************************************
@@ -225,7 +219,7 @@ XBSYSAPI EXPORTNUM(127) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceFr
 
 	QueryPerformanceFrequency(&Frequency);
 
-	return Frequency.QuadPart;
+	RETURN(Frequency.QuadPart);
 }
 
 // ******************************************************************
@@ -245,8 +239,6 @@ XBSYSAPI EXPORTNUM(128) VOID NTAPI xboxkrnl::KeQuerySystemTime
 	GetSystemTime(&SystemTime);
 
 	SystemTimeToFileTime(&SystemTime, (FILETIME*)CurrentTime);
-
-	return;
 }
 
 // ******************************************************************
@@ -259,9 +251,9 @@ XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 	// I really tried to avoid adding this...
 	//	__asm int 3;
 	//	CxbxKrnlCleanup("KeRaiseIrqlToDpcLevel not implemented! (Tell blueshogun -_-)");
-	// UNIMPLEMENTED();
+	// LOG_UNIMPLEMENTED();
 
-	return 0;
+	RETURN(0);
 }
 
 // ******************************************************************
@@ -283,7 +275,7 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
 	// Call KeSetTimerEx with a period of zero
 	BOOLEAN bRet = KeSetTimerEx(Timer, DueTime, 0, Dpc);
 
-	return bRet;
+	RETURN(bRet);
 }
 
 // ******************************************************************
@@ -346,7 +338,7 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 		}
 	}
 
-	return Inserted;
+	RETURN(Inserted);
 }
 
 // Dxbx note : This was once a value, but instead we now point to
@@ -389,7 +381,9 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForMultipleObjects
 
 	EmuWarning("EmuKrnl: Redirecting KeWaitForMultipleObjects to NtWaitForMultipleObjectsEx");
 
-	return NtWaitForMultipleObjectsEx(Count, Object, WaitType, WaitMode, Alertable, Timeout);
+	NTSTATUS ret = NtWaitForMultipleObjectsEx(Count, Object, WaitType, WaitMode, Alertable, Timeout);
+
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -414,6 +408,8 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForSingleObject
 
 	EmuWarning("EmuKrnl: Redirecting KeWaitForSingleObject to NtWaitForSingleObjectEx");
 
-	return NtWaitForSingleObjectEx(Object, WaitMode, Alertable, Timeout);
+	NTSTATUS ret = NtWaitForSingleObjectEx(Object, WaitMode, Alertable, Timeout);
+
+	RETURN(ret);
 }
 

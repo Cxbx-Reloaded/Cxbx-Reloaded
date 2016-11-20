@@ -55,14 +55,14 @@ XBSYSAPI EXPORTNUM(35) xboxkrnl::DWORD NTAPI xboxkrnl::FscGetCacheSize()
 
 	EmuWarning("FscGetCacheSize returning default 64kb");
 
-	return 64 * 1024;
+	RETURN(64 * 1024);
 }
 
 XBSYSAPI EXPORTNUM(36) VOID NTAPI xboxkrnl::FscInvalidateIdleBlocks()
 {
 	LOG_FUNC();
 
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 }
 
 
@@ -76,8 +76,8 @@ XBSYSAPI EXPORTNUM(37) xboxkrnl::LONG NTAPI xboxkrnl::FscSetCacheSize
 {
 	LOG_FUNC_ONE_ARG(uCachePages);
 
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 
-	return 0;
+	RETURN(0);
 }
 

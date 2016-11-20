@@ -50,7 +50,7 @@ XBSYSAPI EXPORTNUM(5) VOID NTAPI xboxkrnl::DbgBreakPoint()
 {
 	LOG_FUNC();
 
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 }
 
 XBSYSAPI EXPORTNUM(6) VOID NTAPI xboxkrnl::DbgBreakPointWithStatus
@@ -60,7 +60,7 @@ XBSYSAPI EXPORTNUM(6) VOID NTAPI xboxkrnl::DbgBreakPointWithStatus
 {
 	LOG_FUNC_ONE_ARG(Status);
 
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 }
 
 XBSYSAPI EXPORTNUM(7) xboxkrnl::NTSTATUS NTAPI xboxkrnl::DbgLoadImageSymbols
@@ -78,9 +78,9 @@ XBSYSAPI EXPORTNUM(7) xboxkrnl::NTSTATUS NTAPI xboxkrnl::DbgLoadImageSymbols
 
 	NTSTATUS result = S_OK;
 
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 
-	return result;
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -112,7 +112,7 @@ XBSYSAPI EXPORTNUM(8) xboxkrnl::ULONG _cdecl xboxkrnl::DbgPrint
 		//DbgPrintf(szBuffer);
 	}
 
-	return STATUS_SUCCESS;
+	RETURN(STATUS_SUCCESS);
 }
 
 // Source:ReactOS
@@ -131,9 +131,9 @@ XBSYSAPI EXPORTNUM(10) xboxkrnl::ULONG NTAPI xboxkrnl::DbgPrompt
 
 	NTSTATUS result = S_OK;
 
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 
-	return result;
+	RETURN(result);
 }
 
 // Source:ReactOS
@@ -150,5 +150,5 @@ XBSYSAPI EXPORTNUM(11) VOID NTAPI xboxkrnl::DbgUnLoadImageSymbols
 		LOG_FUNC_ARG(ProcessId)
 		LOG_FUNC_END;
 
-	UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 }
