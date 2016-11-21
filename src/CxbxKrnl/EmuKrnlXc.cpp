@@ -54,7 +54,7 @@ XBSYSAPI EXPORTNUM(335) VOID NTAPI xboxkrnl::XcSHAInit
 	UCHAR *pbSHAContext
 )
 {
-	LOG_FUNC_ONE_ARG(pbSHAContext);
+	LOG_FUNC_ONE_ARG_OUT(pbSHAContext);
 
 	UNIMPLEMENTED();
 
@@ -72,8 +72,8 @@ XBSYSAPI EXPORTNUM(336) VOID NTAPI xboxkrnl::XcSHAUpdate
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pbSHAContext)
-		LOG_FUNC_ARG(pbInput)
+		LOG_FUNC_ARG_OUT(pbSHAContext)
+		LOG_FUNC_ARG_OUT(pbInput)
 		LOG_FUNC_ARG(dwInputLength)
 		LOG_FUNC_END;
 
@@ -92,8 +92,8 @@ XBSYSAPI EXPORTNUM(337) VOID NTAPI xboxkrnl::XcSHAFinal
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pbSHAContext)
-		LOG_FUNC_ARG(pbDigest)
+		LOG_FUNC_ARG_OUT(pbSHAContext)
+		LOG_FUNC_ARG_OUT(pbDigest)
 		LOG_FUNC_END;
 
 	// for now, we dont care about the digest
