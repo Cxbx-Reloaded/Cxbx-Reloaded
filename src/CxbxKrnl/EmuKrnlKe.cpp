@@ -238,7 +238,7 @@ XBSYSAPI EXPORTNUM(128) VOID NTAPI xboxkrnl::KeQuerySystemTime
 
 	GetSystemTime(&SystemTime);
 
-	SystemTimeToFileTime(&SystemTime, (FILETIME*)CurrentTime);
+	SystemTimeToFileTime(&SystemTime, (LPFILETIME)CurrentTime);
 }
 
 // ******************************************************************

@@ -80,7 +80,7 @@ HRESULT WINAPI XTL::EmuXACTEngineCreate
 
 		
 	
-	return S_OK;
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -122,7 +122,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_RegisterWaveBank
 
 	*ppWaveBank = (X_XACTWaveBank*) CxbxMalloc( sizeof( X_XACTWaveBank ) );
 
-	return S_OK;
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -145,7 +145,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_RegisterStreamedWaveBank
 
 	*ppWaveBank = (X_XACTWaveBank*) CxbxMalloc( sizeof( X_XACTWaveBank ) );
 
-	return S_OK;
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -170,7 +170,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_CreateSoundBank
 
 	*ppSoundBank = (X_XACTSoundBank*) CxbxMalloc( sizeof( X_XACTSoundBank ) );
 
-	return S_OK;
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -195,7 +195,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_DownloadEffectsImage
 
 	// TODO: Implement
 
-	return S_OK;
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -216,7 +216,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_CreateSoundSource
 
 	*ppSoundSource = (X_XACTSoundSource*) CxbxMalloc( sizeof( X_XACTSoundSource ) );
 
-	return S_OK;
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -233,7 +233,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_EnableHeadphones
 		LOG_FUNC_ARG(fEnabled)
 		LOG_FUNC_END;
 
-	return S_OK;
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -262,7 +262,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetListenerOrientation
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-	return S_OK;
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -285,7 +285,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetListenerPosition
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-	return S_OK;
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -308,7 +308,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetListenerVelocity
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-	return S_OK;
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -327,7 +327,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_SetMasterVolume
 		LOG_FUNC_ARG(lVolume)
 		LOG_FUNC_END;
 
-	return S_OK;
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -340,7 +340,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_CommitDeferredSettings
 {
 	LOG_FUNC_ONE_ARG(pThis);
 
-	return S_OK;
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -359,7 +359,7 @@ HRESULT WINAPI XTL::EmuIXACTSoundBank_GetSoundCueIndexFromFriendlyName
 		LOG_FUNC_ARG(pdwSoundCueIndex)
 		LOG_FUNC_END;
 
-	return S_OK;
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -382,7 +382,7 @@ HRESULT WINAPI XTL::EmuIXACTSoundBank_Play
 		LOG_FUNC_ARG(ppSoundCue)
 		LOG_FUNC_END;
 
-	return S_OK;
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -403,7 +403,7 @@ HRESULT WINAPI XTL::EmuIXACTSoundBank_Stop
 		LOG_FUNC_ARG(pSoundCue)
 		LOG_FUNC_END;
 
-	return S_OK;
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -426,7 +426,7 @@ HRESULT WINAPI XTL::EmuIXACTSoundSource_SetPosition
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-	return S_OK;
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -449,7 +449,7 @@ HRESULT WINAPI XTL::EmuIXACTSoundSource_SetVelocity
 		LOG_FUNC_ARG(dwApply)
 		LOG_FUNC_END;
 
-	return S_OK;
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -466,7 +466,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_RegisterNotification
 		LOG_FUNC_ARG(pNotificationDesc)
 		LOG_FUNC_END;
 
-	return S_OK;
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -488,7 +488,7 @@ HRESULT WINAPI XTL::EmuIXACTEngine_GetNotification
 	// TODO: The contents of XACT_NOTIFICATION can vary from one XDK to the next.
 	// The definition for 4627 is different than 5558.
 
-	return S_OK;
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -513,5 +513,5 @@ HRESULT WINAPI XTL::EmuIXACTEngine_UnRegisterWaveBank
 //	if(pWaveBank)
 //		free(pWaveBank);
 
-	return S_OK;
+	RETURN(S_OK);
 }

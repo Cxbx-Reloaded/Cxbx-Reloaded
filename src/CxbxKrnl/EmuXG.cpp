@@ -422,5 +422,5 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 //
 //	 
 //
-//	return E_FAIL;
+//	RETURN(E_FAIL);
 //}

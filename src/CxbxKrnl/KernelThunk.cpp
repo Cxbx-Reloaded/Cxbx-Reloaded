@@ -72,29 +72,29 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::HalReadSMCTrayState),             // 0x0009 (9)
 	(uint32)FUNC(&xboxkrnl::DbgPrompt),                       // 0x000A (10)
 	(uint32)FUNC(&xboxkrnl::DbgUnLoadImageSymbols),           // 0x000B (11)
-	(uint32)PANIC(0x000C),                                    // 0x000C (12)  ExAcquireReadWriteLockExclusive
-	(uint32)PANIC(0x000D),                                    // 0x000D (13)  ExAcquireReadWriteLockShared
+	(uint32)FUNC(&xboxkrnl::ExAcquireReadWriteLockExclusive), // 0x000C (12)
+	(uint32)FUNC(&xboxkrnl::ExAcquireReadWriteLockShared),    // 0x000D (13)
 	(uint32)FUNC(&xboxkrnl::ExAllocatePool),                  // 0x000E (14)
 	(uint32)FUNC(&xboxkrnl::ExAllocatePoolWithTag),           // 0x000F (15)
 	(uint32)VARIABLE(&xboxkrnl::ExEventObjectType),           // 0x0010 (16)  
 	(uint32)FUNC(&xboxkrnl::ExFreePool),                      // 0x0011 (17)
-	(uint32)PANIC(0x0012),                                    // 0x0012 (18)  ExInitializeReadWriteLock
-	(uint32)PANIC(0x0013),                                    // 0x0013 (19)  ExInterlockedAddLargeInteger
-	(uint32)PANIC(0x0014),                                    // 0x0014 (20)  ExInterlockedAddLargeStatistic
-	(uint32)PANIC(0x0015),                                    // 0x0015 (21)  ExInterlockedCompareExchange64
+	(uint32)FUNC(&xboxkrnl::ExInitializeReadWriteLock),       // 0x0012 (18)
+	(uint32)FUNC(&xboxkrnl::ExInterlockedAddLargeInteger),    // 0x0013 (19)
+	(uint32)FUNC(&xboxkrnl::ExInterlockedAddLargeStatistic),  // 0x0014 (20)
+	(uint32)FUNC(&xboxkrnl::ExInterlockedCompareExchange64),  // 0x0015 (21)
 	(uint32)VARIABLE(&xboxkrnl::ExMutantObjectType),          // 0x0016 (22)  
 	(uint32)FUNC(&xboxkrnl::ExQueryPoolBlockSize),            // 0x0017 (23)  
 	(uint32)FUNC(&xboxkrnl::ExQueryNonVolatileSetting),       // 0x0018 (24)
 	(uint32)FUNC(&xboxkrnl::ExReadWriteRefurbInfo),           // 0x0019 (25)
-	(uint32)PANIC(0x001A),                                    // 0x001A (26)  ExQueryPoolBlockSize
-	(uint32)PANIC(0x001B),                                    // 0x001B (27)  ExRaiseStatus
-	(uint32)PANIC(0x001C),                                    // 0x001C (28)  ExReleaseReadWriteLock
+	(uint32)FUNC(&xboxkrnl::ExQueryPoolBlockSize),            // 0x001A (26)
+	(uint32)FUNC(&xboxkrnl::ExRaiseStatus),                   // 0x001B (27)
+	(uint32)FUNC(&xboxkrnl::ExReleaseReadWriteLock),          // 0x001C (28)
 	(uint32)FUNC(&xboxkrnl::ExSaveNonVolatileSetting),        // 0x001D (29)
 	(uint32)VARIABLE(&xboxkrnl::ExSemaphoreObjectType),       // 0x001E (30)
 	(uint32)VARIABLE(&xboxkrnl::ExTimerObjectType),           // 0x001F (31)
-	(uint32)PANIC(0x0020),                                    // 0x0020 (32)  ExfInterlockedInsertHeadList
-	(uint32)PANIC(0x0021),                                    // 0x0021 (33)  ExfInterlockedInsertTailList
-	(uint32)PANIC(0x0022),                                    // 0x0022 (34)  ExfInterlockedRemoveHeadList
+	(uint32)FUNC(&xboxkrnl::ExfInterlockedInsertHeadList),    // 0x0020 (32)
+	(uint32)FUNC(&xboxkrnl::ExfInterlockedInsertTailList),    // 0x0021 (33)
+	(uint32)FUNC(&xboxkrnl::ExfInterlockedRemoveHeadList),    // 0x0022 (34)
 	(uint32)FUNC(&xboxkrnl::FscGetCacheSize),                 // 0x0023 (35)
 	(uint32)FUNC(&xboxkrnl::FscInvalidateIdleBlocks),         // 0x0024 (36)
 	(uint32)FUNC(&xboxkrnl::FscSetCacheSize),                 // 0x0025 (37)
