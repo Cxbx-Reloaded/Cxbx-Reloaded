@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuX86.cpp
+// *   Cxbx->Win32->CxbxKrnl->EmuX86.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,28 +31,10 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUX86_H
-#define EMUX86_H
+#ifndef EMUNV2A_H
+#define EMUNV2A_H
 
-#define EMUX86_EFLAG_CF 0
-#define EMUX86_EFLAG_PF 2
-#define EMUX86_EFLAG_AF 4
-#define EMUX86_EFLAG_ZF 6
-#define EMUX86_EFLAG_SF 7
-#define EMUX86_EFLAG_TF 8
-#define EMUX86_EFLAG_IF 9
-#define EMUX86_EFLAG_DF 10
-#define EMUX86_EFLAG_OF 11
-#define EMUX86_EFLAG_IOPL1 12
-#define EMUX86_EFLAG_IOPL2 13
-#define EMUX86_EFLAG_NT 14
-#define EMUX86_EFLAG_RF 16
-#define EMUX86_EFLAG_VM 17
-#define EMUX86_EFLAG_AC 18
-#define EMUX86_EFLAG_VIF 19
-#define EMUX86_EFLAG_VIP 20
-#define EMUX86_EFLAG_ID 21
-
-bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e);
+uint32_t EmuNV2A_Read32(uint32_t addr);
+void EmuNV2A_Write32(uint32_t addr, uint32_t value);
 
 #endif
