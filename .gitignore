@@ -78,3 +78,4 @@ packages/
 *.testsettings
 src/Version.h
 *.opendb
+build/win32/Cxbx.VC.db
