@@ -280,6 +280,62 @@ HLEData HLEDataBase[] =
         DSound_1_0_5849,
         DSound_1_0_5849_SIZE
     },
+	// XG Version 1.0.3911
+    {
+        "XGRAPHC",
+        1, 0, 3911,
+        XG_1_0_3911,
+        XG_1_0_3911_SIZE
+    },
+	// XG Version 1.0.4034
+    {
+        "XGRAPHC",
+        1, 0, 4034,
+        XG_1_0_4034,
+        XG_1_0_4034_SIZE
+    },
+    // XG Version 1.0.4361
+    {
+        "XGRAPHC",
+        1, 0, 4361,
+        XG_1_0_4361,
+        XG_1_0_4361_SIZE
+    },
+	// XG Version 1.0.4432
+    {
+        "XGRAPHC",
+        1, 0, 4432,
+        XG_1_0_4432,
+        XG_1_0_4432_SIZE
+    },
+    // XG Version 1.0.4627
+    {
+        "XGRAPHC",
+        1, 0, 4627,
+        XG_1_0_4627,
+        XG_1_0_4627_SIZE
+    },
+    // XG Version 1.0.5233
+    {
+        "XGRAPHC",
+        1, 0, 5233,
+        XG_1_0_5233,
+        XG_1_0_5233_SIZE
+    },
+    // XG Version 1.0.5558
+    {
+        "XGRAPHC",
+        1, 0, 5558,
+        XG_1_0_5558,
+        XG_1_0_5558_SIZE
+    },
+	// XG Version 1.0.5849
+    {
+        "XGRAPHC",
+        1, 0, 5849,
+        XG_1_0_5849,
+        XG_1_0_5849_SIZE
+    },
     // XNet Version 1.0.3911
     {
         "XNETS",
