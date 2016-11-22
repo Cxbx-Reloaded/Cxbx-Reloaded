@@ -101,9 +101,9 @@ XBSYSAPI EXPORTNUM(99) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeDelayExecutionThread
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(WaitMode)
+		LOG_FUNC_ARG_OUT(WaitMode)
 		LOG_FUNC_ARG(Alertable)
-		LOG_FUNC_ARG(Interval)
+		LOG_FUNC_ARG_OUT(Interval)
 		LOG_FUNC_END;
 
 	NTSTATUS ret = NtDll::NtDelayExecution(Alertable, (NtDll::LARGE_INTEGER*)Interval);

@@ -386,7 +386,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 if(m_Xbe != 0 && m_Xbe->GetError() == 0)
                     sprintf(buffer, "%s Loaded!", m_Xbe->m_szAsciiTitle);
                 else
-                    sprintf(buffer, "%s", "Disclaimer: Cxbx has no affiliation with Microsoft");
+                    sprintf(buffer, "%s", "Disclaimer: Cxbx-Reloaded has no affiliation with Microsoft");
 
                 RECT rect = {0, 480-15-5, 640-100-4-69, 480-5};
 
@@ -902,7 +902,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                                 if(m_Xbe->GetError())
                                 {
-                                    MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx-Reloadedd", MB_ICONSTOP | MB_OK);
+                                    MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
                                 }
                                 else
                                 {
