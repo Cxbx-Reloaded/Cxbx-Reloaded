@@ -389,12 +389,12 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)VARIABLE(&xboxkrnl::XeImageFileName),             // 0x0146 (326)
 	(uint32)FUNC(&xboxkrnl::XeLoadSection),                   // 0x0147 (327) 
 	(uint32)FUNC(&xboxkrnl::XeUnloadSection),                 // 0x0148 (328) 
-	(uint32)PANIC(0x0149),                                    // 0x0149 (329) READ_PORT_BUFFER_UCHAR
-	(uint32)PANIC(0x014A),                                    // 0x014A (330) READ_PORT_BUFFER_USHORT
-	(uint32)PANIC(0x014B),                                    // 0x014B (331) READ_PORT_BUFFER_ULONG
-	(uint32)PANIC(0x014C),                                    // 0x014C (332) WRITE_PORT_BUFFER_UCHAR
-	(uint32)PANIC(0x014D),                                    // 0x014D (333) WRITE_PORT_BUFFER_USHORT
-	(uint32)PANIC(0x014E),                                    // 0x014E (334) WRITE_PORT_BUFFER_ULONG
+	(uint32)FUNC(&xboxkrnl::READ_PORT_BUFFER_UCHAR),          // 0x0149 (329)
+	(uint32)FUNC(&xboxkrnl::READ_PORT_BUFFER_USHORT),         // 0x014A (330)
+	(uint32)FUNC(&xboxkrnl::READ_PORT_BUFFER_ULONG),          // 0x014B (331)
+	(uint32)FUNC(&xboxkrnl::WRITE_PORT_BUFFER_UCHAR),         // 0x014C (332)
+	(uint32)FUNC(&xboxkrnl::WRITE_PORT_BUFFER_USHORT),        // 0x014D (333)
+	(uint32)FUNC(&xboxkrnl::WRITE_PORT_BUFFER_ULONG),         // 0x014E (334)
 	(uint32)FUNC(&xboxkrnl::XcSHAInit),                       // 0x014F (335)
 	(uint32)FUNC(&xboxkrnl::XcSHAUpdate),                     // 0x0150 (336)
 	(uint32)FUNC(&xboxkrnl::XcSHAFinal),                      // 0x0151 (337)

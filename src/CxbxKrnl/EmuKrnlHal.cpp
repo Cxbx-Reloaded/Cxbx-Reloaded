@@ -276,6 +276,120 @@ XBSYSAPI EXPORTNUM(50) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMBusValue
 }
 
 // ******************************************************************
+// * READ_PORT_BUFFER_UCHAR
+// ******************************************************************
+XBSYSAPI EXPORTNUM(329) VOID NTAPI xboxkrnl::READ_PORT_BUFFER_UCHAR
+(
+	IN PUCHAR Port,
+	IN PUCHAR Buffer,
+	IN ULONG  Count
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Port)
+		LOG_FUNC_ARG(Buffer)
+		LOG_FUNC_ARG(Count)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * READ_PORT_BUFFER_USHORT
+// ******************************************************************
+XBSYSAPI EXPORTNUM(330) VOID NTAPI xboxkrnl::READ_PORT_BUFFER_USHORT
+(
+	IN PUSHORT Port,
+	IN PUSHORT Buffer,
+	IN ULONG   Count
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Port)
+		LOG_FUNC_ARG(Buffer)
+		LOG_FUNC_ARG(Count)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * READ_PORT_BUFFER_ULONG
+// ******************************************************************
+XBSYSAPI EXPORTNUM(331) VOID NTAPI xboxkrnl::READ_PORT_BUFFER_ULONG
+(
+	IN PULONG Port,
+	IN PULONG Buffer,
+	IN ULONG  Count
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Port)
+		LOG_FUNC_ARG(Buffer)
+		LOG_FUNC_ARG(Count)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * WRITE_PORT_BUFFER_UCHAR
+// ******************************************************************
+XBSYSAPI EXPORTNUM(332) VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_UCHAR
+(
+	IN PUCHAR Port,
+	IN PUCHAR Buffer,
+	IN ULONG  Count
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Port)
+		LOG_FUNC_ARG(Buffer)
+		LOG_FUNC_ARG(Count)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * WRITE_PORT_BUFFER_USHORT
+// ******************************************************************
+XBSYSAPI EXPORTNUM(333) VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_USHORT
+(
+	IN PUSHORT Port,
+	IN PUSHORT Buffer,
+	IN ULONG   Count
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Port)
+		LOG_FUNC_ARG(Buffer)
+		LOG_FUNC_ARG(Count)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * WRITE_PORT_BUFFER_ULONG
+// ******************************************************************
+XBSYSAPI EXPORTNUM(334) VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_ULONG
+(
+	IN PULONG Port,
+	IN PULONG Buffer,
+	IN ULONG  Count
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Port)
+		LOG_FUNC_ARG(Buffer)
+		LOG_FUNC_ARG(Count)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
 // * HalBootSMCVideoMode
 // ******************************************************************
 // TODO: Verify this!
