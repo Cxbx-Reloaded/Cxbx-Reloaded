@@ -159,7 +159,7 @@ XBSYSAPI EXPORTNUM(19) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::ExInterlockedAddL
 		LOG_FUNC_END;
 
 	LARGE_INTEGER OldValue;
-	BOOLEAN Enable;
+// TODO :	BOOLEAN Enable;
 
 	/* Disable interrupts and acquire the spinlock */
 // TODO :	Enable = _ExiDisableInterruptsAndAcquireSpinlock(Lock);
@@ -178,8 +178,7 @@ XBSYSAPI EXPORTNUM(19) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::ExInterlockedAddL
 }
 
 // Source:ReactOS
-// TODO : fastcall?
-XBSYSAPI EXPORTNUM(20) VOID NTAPI xboxkrnl::ExInterlockedAddLargeStatistic
+XBSYSAPI EXPORTNUM(20) VOID __fastcall xboxkrnl::ExInterlockedAddLargeStatistic
 (
 	PLARGE_INTEGER Addend,
 	ULONG Increment
@@ -194,8 +193,7 @@ XBSYSAPI EXPORTNUM(20) VOID NTAPI xboxkrnl::ExInterlockedAddLargeStatistic
 }
 
 // Source:ReactOS
-// TODO : fastcall?
-XBSYSAPI EXPORTNUM(21) xboxkrnl::LONGLONG NTAPI xboxkrnl::ExInterlockedCompareExchange64
+XBSYSAPI EXPORTNUM(21) xboxkrnl::LONGLONG __fastcall xboxkrnl::ExInterlockedCompareExchange64
 (
 	OUT PLONGLONG Destination,
 	PLONGLONG Exchange,
@@ -502,8 +500,7 @@ XBSYSAPI EXPORTNUM(30) xboxkrnl::POBJECT_TYPE xboxkrnl::ExSemaphoreObjectType = 
 XBSYSAPI EXPORTNUM(31) xboxkrnl::POBJECT_TYPE xboxkrnl::ExTimerObjectType = NULL;
 
 // Source:ReactOS
-// TODO : fastcall?
-XBSYSAPI EXPORTNUM(32) xboxkrnl::PLIST_ENTRY NTAPI xboxkrnl::ExfInterlockedInsertHeadList
+XBSYSAPI EXPORTNUM(32) xboxkrnl::PLIST_ENTRY __fastcall xboxkrnl::ExfInterlockedInsertHeadList
 (
 	IN PLIST_ENTRY ListHead,
 	IN PLIST_ENTRY ListEntry,
@@ -523,8 +520,7 @@ XBSYSAPI EXPORTNUM(32) xboxkrnl::PLIST_ENTRY NTAPI xboxkrnl::ExfInterlockedInser
 
 
 // Source:ReactOS
-// TODO : fastcall?
-XBSYSAPI EXPORTNUM(33) xboxkrnl::PLIST_ENTRY NTAPI xboxkrnl::ExfInterlockedInsertTailList
+XBSYSAPI EXPORTNUM(33) xboxkrnl::PLIST_ENTRY __fastcall xboxkrnl::ExfInterlockedInsertTailList
 (
 	IN PLIST_ENTRY ListHead,	
 	IN PLIST_ENTRY ListEntry,
@@ -544,8 +540,7 @@ XBSYSAPI EXPORTNUM(33) xboxkrnl::PLIST_ENTRY NTAPI xboxkrnl::ExfInterlockedInser
 
 
 // Source:ReactOS
-// TODO : fastcall?
-XBSYSAPI EXPORTNUM(34) xboxkrnl::PLIST_ENTRY NTAPI xboxkrnl::ExfInterlockedRemoveHeadList
+XBSYSAPI EXPORTNUM(34) xboxkrnl::PLIST_ENTRY __fastcall xboxkrnl::ExfInterlockedRemoveHeadList
 (
 	IN PKSPIN_LOCK Lock,
 	IN PLIST_ENTRY ListHead

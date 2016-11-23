@@ -75,16 +75,14 @@ XBSYSAPI EXPORTNUM(19) LARGE_INTEGER NTAPI ExInterlockedAddLargeInteger
 );
 
 // Source:ReactOS
-// TODO : fastcall?
-XBSYSAPI EXPORTNUM(20) VOID NTAPI ExInterlockedAddLargeStatistic
+XBSYSAPI EXPORTNUM(20) VOID __fastcall ExInterlockedAddLargeStatistic
 (
 	IN PLARGE_INTEGER Addend,
 	IN ULONG Increment
 );
 
 // Source:ReactOS
-// TODO : fastcall?
-XBSYSAPI EXPORTNUM(21) LONGLONG NTAPI ExInterlockedCompareExchange64
+XBSYSAPI EXPORTNUM(21) LONGLONG __fastcall ExInterlockedCompareExchange64
 (
 	IN OUT PLONGLONG Destination,
 	IN PLONGLONG Exchange,
@@ -153,24 +151,21 @@ XBSYSAPI EXPORTNUM(29) NTSTATUS NTAPI ExSaveNonVolatileSetting
 XBSYSAPI EXPORTNUM(30) POBJECT_TYPE ExSemaphoreObjectType;
 XBSYSAPI EXPORTNUM(31) POBJECT_TYPE ExTimerObjectType;
 
-// TODO : fastcall?
-XBSYSAPI EXPORTNUM(32) PLIST_ENTRY NTAPI ExfInterlockedInsertHeadList
+XBSYSAPI EXPORTNUM(32) PLIST_ENTRY __fastcall ExfInterlockedInsertHeadList
 (
 	IN PLIST_ENTRY ListHead,
 	IN PLIST_ENTRY ListEntry,
 	IN PKSPIN_LOCK Lock
 );
 
-// TODO : fastcall?
-XBSYSAPI EXPORTNUM(33) PLIST_ENTRY NTAPI ExfInterlockedInsertTailList
+XBSYSAPI EXPORTNUM(33) PLIST_ENTRY __fastcall ExfInterlockedInsertTailList
 (
 	IN PLIST_ENTRY ListHead,
 	IN PLIST_ENTRY ListEntry,
 	IN PKSPIN_LOCK Lock
 );
 
-// TODO : fastcall?
-XBSYSAPI EXPORTNUM(34) PLIST_ENTRY NTAPI ExfInterlockedRemoveHeadList
+XBSYSAPI EXPORTNUM(34) PLIST_ENTRY __fastcall ExfInterlockedRemoveHeadList
 (
 	IN PKSPIN_LOCK Lock,
 	IN PLIST_ENTRY ListHead
