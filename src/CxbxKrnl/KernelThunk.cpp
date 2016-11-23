@@ -152,11 +152,11 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)VARIABLE(&xboxkrnl::KdDebuggerNotPresent),        // 0x0059 (89)
 	(uint32)PANIC(0x005A),                                    // 0x005A (90)  IoDismountVolume
 	(uint32)FUNC(&xboxkrnl::IoDismountVolumeByName),          // 0x005B (91)
-	(uint32)PANIC(0x005C),                                    // 0x005C (92)  KeAlertResumeThread
-	(uint32)PANIC(0x005D),                                    // 0x005D (93)  KeAlertThread
-	(uint32)PANIC(0x005E),                                    // 0x005E (94)  KeBoostPriorityThread
+	(uint32)FUNC(&xboxkrnl::KeAlertResumeThread),             // 0x005C (92)
+	(uint32)FUNC(&xboxkrnl::KeAlertThread),                   // 0x005D (93)
+	(uint32)FUNC(&xboxkrnl::KeBoostPriorityThread),           // 0x005E (94)
 	(uint32)FUNC(&xboxkrnl::KeBugCheck),                      // 0x005F (95)
-	(uint32)PANIC(0x0060),                                    // 0x0060 (96)  KeBugCheckEx
+	(uint32)FUNC(&xboxkrnl::KeBugCheckEx),                    // 0x0060 (96)
 	(uint32)PANIC(0x0061),                                    // 0x0061 (97)  KeCancelTimer
 	(uint32)FUNC(&xboxkrnl::KeConnectInterrupt),              // 0x0062 (98)
 	(uint32)FUNC(&xboxkrnl::KeDelayExecutionThread),          // 0x0063 (99)
