@@ -64,7 +64,7 @@ int WINAPI XTL::EmuWSAStartup
 
     int ret = WSAStartup(wVersionRequested, lpWSAData);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -80,7 +80,7 @@ INT WINAPI XTL::EmuXNetStartup
 	// Fake Successfull...hehehe...sucker...hehehehehe
 	INT ret = 0;
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -93,7 +93,7 @@ DWORD WINAPI XTL::EmuXNetGetEthernetLinkStatus()
 	// for now, no ethernet connection is available
 	DWORD ret = XNET_ETHERNET_LINK_ACTIVE | XNET_ETHERNET_LINK_100MBPS;
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -115,7 +115,7 @@ SOCKET XTL::EmuThis::Emusocket
 
     SOCKET ret = socket(af, type, protocol);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -139,7 +139,7 @@ int XTL::EmuThis::Emubind
 
     int ret = bind(s, name, namelen);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -161,7 +161,7 @@ int XTL::EmuThis::Emulisten
 
     int ret = listen(s, backlog);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -183,7 +183,7 @@ int XTL::EmuThis::Emuioctlsocket
 
     int ret = ioctlsocket(s, cmd, argp);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -204,7 +204,7 @@ HRESULT WINAPI XOnlineLaunchNewImage
 
 	HRESULT ret = E_FAIL;
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -231,5 +231,5 @@ HRESULT WINAPI XTL::EmuXOnlineLogon
 
 	HRESULT ret = HRESULT(0x80151000L);	// XONLINE_E_LOGON_NO_NETWORK_CONNECTION
 
-	return ret;
+	RETURN(ret);
 }

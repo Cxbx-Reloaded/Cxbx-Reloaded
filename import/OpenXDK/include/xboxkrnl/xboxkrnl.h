@@ -85,7 +85,7 @@ typedef unsigned long       PHYSICAL_ADDRESS;
 typedef long                INT_PTR;
 typedef signed __int64      LONGLONG;
 typedef unsigned __int64    ULONGLONG;
-typedef unsigned short      WCHAR;
+typedef wchar_t             WCHAR;
 
 // ******************************************************************
 // * Pointer types
@@ -99,12 +99,26 @@ typedef USHORT             *PUSHORT;
 typedef ULONG              *PULONG;
 typedef DWORD              *PDWORD, *LPDWORD;
 typedef ACCESS_MASK        *PACCESS_MASK;
-typedef LONG               *PLONG, *LONG_PTR;
-typedef ULONG              *ULONG_PTR;
-typedef INT_PTR            *PINT_PTR;
+typedef LONG               *PLONG;
+typedef long               *PINT_PTR;
 typedef VOID               *PVOID, *LPVOID;
 typedef void               *HANDLE;
 typedef HANDLE             *PHANDLE;
+
+// Additional basic and pointer types :
+typedef __int32				LONG_PTR; // TODO : Update this declaration for 64 bit
+typedef unsigned __int32	ULONG_PTR; // TODO : Update this declaration for 64 bit
+
+typedef LONGLONG            *PLONGLONG;
+
+// ******************************************************************
+// ANSI (Multi-byte Character) types
+// ******************************************************************
+typedef CHAR *PCHAR, *LPCH, *PCH;
+typedef CONST CHAR *LPCCH, *PCCH;
+
+typedef /*_Null_terminated_*/ CONST WCHAR *LPCWSTR, *PCWSTR;
+
 
 // ******************************************************************
 // * LPSECURITY_ATTRIBUTES
@@ -386,6 +400,50 @@ typedef struct _OBJECT_ATTRIBUTES
 OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 
 // ******************************************************************
+// * OBJECT_TYPE
+// ******************************************************************
+typedef struct _OBJECT_TYPE
+{
+	// TODO : How is this defined?
+}
+OBJECT_TYPE, *POBJECT_TYPE;
+
+// Source : DXBX
+typedef ULONG_PTR KSPIN_LOCK;
+typedef KSPIN_LOCK *PKSPIN_LOCK;
+
+// Source : DXBX
+typedef struct _FILETIME
+{
+	DWORD dwLowDateTime;
+	DWORD dwHighDateTime;
+}
+FILETIME, *PFILETIME;
+
+// Source : DXBX (Xbox Refurb Info)
+typedef struct _XBOX_REFURB_INFO
+{
+	DWORD Signature;
+	DWORD PowerCycleCount;
+	FILETIME FirstBootTime;
+}
+XBOX_REFURB_INFO, *PXBOX_REFURB_INFO;
+
+int const EXCEPTION_MAXIMUM_PARAMETERS = 15; // maximum number of exception parameters
+
+// Source : DXBX
+typedef struct _EXCEPTION_RECORD
+{
+	DWORD ExceptionCode;
+	DWORD ExceptionFlags;
+	_EXCEPTION_RECORD *ExceptionRecord;
+	VOID *ExceptionAddress;
+	DWORD NumberParameters;
+	ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+}
+EXCEPTION_RECORD, *PEXCEPTION_RECORD;
+
+// ******************************************************************
 // * FSINFOCLASS
 // ******************************************************************
 typedef enum _FSINFOCLASS
@@ -420,6 +478,17 @@ typedef struct _FILE_DIRECTORY_INFORMATION
     CHAR            FileName[1];        // Offset: 0x40
 }
 FILE_DIRECTORY_INFORMATION;
+
+// ******************************************************************
+// * KSYSTEM_TIME
+// ******************************************************************
+typedef struct _KSYSTEM_TIME
+{
+	/* 0x00 */ ULONG LowPart;
+	/* 0x04 */ LONG High1Time;
+	/* 0x08 */ LONG High2Time;
+} // Size = 0x0C
+KSYSTEM_TIME, *PKSYSTEM_TIME;
 
 // ******************************************************************
 // * MM_STATISTICS
@@ -895,6 +964,9 @@ typedef struct _XBOX_HARDWARE_INFO
     UCHAR Unknown4;
 }
 XBOX_HARDWARE_INFO;
+
+const int XBOX_KEY_LENGTH = 16;
+typedef UCHAR XBOX_KEY_DATA[XBOX_KEY_LENGTH];
 
 // ******************************************************************
 // * TIME_FIELDS

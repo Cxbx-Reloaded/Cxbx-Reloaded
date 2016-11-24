@@ -54,15 +54,15 @@ XBSYSAPI EXPORTNUM(4) VOID NTAPI AvSetSavedDataAddress
 // ******************************************************************
 XBSYSAPI EXPORTNUM(35) DWORD NTAPI FscGetCacheSize();
 
-XBSYSAPI VOID *FscInvalidateIdleBlocks;
+XBSYSAPI EXPORTNUM(36) VOID NTAPI FscInvalidateIdleBlocks();
 
 // ******************************************************************
 // * FscSetCacheSize
 // ******************************************************************
 XBSYSAPI EXPORTNUM(37) LONG NTAPI FscSetCacheSize(ULONG uCachePages);
 
-XBSYSAPI VOID *KdDebuggerEnabled;
-XBSYSAPI VOID *KdDebuggerNotPresent;
+XBSYSAPI EXPORTNUM(88) BOOLEAN KdDebuggerEnabled;
+XBSYSAPI EXPORTNUM(89) BOOLEAN KdDebuggerNotPresent;
 
 // ******************************************************************
 // * KfRaiseIrql
@@ -80,7 +80,7 @@ XBSYSAPI EXPORTNUM(161) VOID NTAPI KfLowerIrql
     IN UCHAR    NewIrql
 );
 
-XBSYSAPI VOID *KiBugCheckData;
+XBSYSAPI EXPORTNUM(162) ULONG_PTR KiBugCheckData[5];
 XBSYSAPI VOID *KiUnlockDispatcherDatabase;
 
 // ******************************************************************
@@ -153,11 +153,11 @@ XBSYSAPI EXPORTNUM(348) VOID *XcBlockCrypt;
 XBSYSAPI EXPORTNUM(349) VOID *XcBlockCryptCBC;
 XBSYSAPI EXPORTNUM(350) VOID *XcCryptService;
 XBSYSAPI EXPORTNUM(351) VOID *XcUpdateCrypto;
-XBSYSAPI EXPORTNUM(353) VOID *XboxLANKey;
-XBSYSAPI EXPORTNUM(354) VOID *XboxAlternateSignatureKeys;
-XBSYSAPI EXPORTNUM(355) VOID *XePublicKeyData;
+XBSYSAPI EXPORTNUM(353) XBOX_KEY_DATA XboxLANKey;
+XBSYSAPI EXPORTNUM(354) XBOX_KEY_DATA XboxAlternateSignatureKeys;
+XBSYSAPI EXPORTNUM(355) DWORD XePublicKeyData;
 
-XBSYSAPI EXPORTNUM(357) VOID *IdexChannelObject;
+XBSYSAPI EXPORTNUM(357) BYTE IdexChannelObject[0x100];
 
 XBSYSAPI EXPORTNUM(361) VOID *xsnprintf;     // prefixed with "x" to avoid xlibc collisions
 XBSYSAPI EXPORTNUM(362) VOID *xsprintf;      // ""

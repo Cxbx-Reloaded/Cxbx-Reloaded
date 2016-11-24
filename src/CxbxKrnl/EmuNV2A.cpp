@@ -65,6 +65,7 @@ struct {
 	uint32_t regs[0x1000];
 } pvideo;
 
+
 struct {
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;
@@ -95,6 +96,7 @@ struct {
 	uint32_t enabled_interrupts;
 } pgraph;
 
+
 static void update_irq()
 {
 	/* PFIFO */
@@ -104,7 +106,6 @@ static void update_irq()
 	else {
 		pmc.pending_interrupts &= ~NV_PMC_INTR_0_PFIFO;
 	}
-
 	/* PCRTC */
 	if (pcrtc.pending_interrupts & pcrtc.enabled_interrupts) {
 		pmc.pending_interrupts |= NV_PMC_INTR_0_PCRTC;
@@ -112,13 +113,13 @@ static void update_irq()
 	else {
 		pmc.pending_interrupts &= ~NV_PMC_INTR_0_PCRTC;
 	}
-
 	/* PGRAPH */
 	if (pgraph.pending_interrupts & pgraph.enabled_interrupts) {
 		pmc.pending_interrupts |= NV_PMC_INTR_0_PGRAPH;
 	}
 	else {
 		pmc.pending_interrupts &= ~NV_PMC_INTR_0_PGRAPH;
+
 	}
 
 	/* TODO : PBUS * /
@@ -146,6 +147,7 @@ static void update_irq()
 		EmuWarning("EmuNV2A: update_irq : Cancel IRQ Not Implemented");
 	}
 }
+
 
 #define DEBUG_START(DEV) \
 const char *DebugNV_##DEV##(uint32_t addr) \
@@ -232,6 +234,7 @@ DEBUG_START(PTIMER)
 	DEBUG_CASE(NV_PTIMER_TIME_0);
 	DEBUG_CASE(NV_PTIMER_TIME_1);
 	DEBUG_CASE(NV_PTIMER_ALARM_0);
+
 DEBUG_END(PTIMER)
 
 DEBUG_START(PCOUNTER)
@@ -250,6 +253,7 @@ DEBUG_START(PRMVIO)
 DEBUG_END(PRMVIO)
 
 DEBUG_START(PFB)
+
 	DEBUG_CASE(NV_PFB_CFG0);
 	DEBUG_CASE(NV_PFB_CSTATUS);
 	DEBUG_CASE(NV_PFB_WBC);
@@ -360,6 +364,7 @@ DEBUG_START(PCRTC)
 	DEBUG_CASE(NV_PCRTC_INTR_EN_0);
 	DEBUG_CASE(NV_PCRTC_START);
 	DEBUG_CASE(NV_PCRTC_CONFIG);
+
 DEBUG_END(PCRTC)
 
 DEBUG_START(PRMCIO)
@@ -370,6 +375,7 @@ DEBUG_START(PRAMDAC)
 	DEBUG_CASE(NV_PRAMDAC_MPLL_COEFF);
 	DEBUG_CASE(NV_PRAMDAC_VPLL_COEFF);
 	DEBUG_CASE(NV_PRAMDAC_PLL_TEST_COUNTER);
+
 DEBUG_END(PRAMDAC)
 
 DEBUG_START(PRMDIO)
@@ -379,9 +385,11 @@ DEBUG_START(PRAMIN)
 DEBUG_END(PRAMIN)
 
 DEBUG_START(USER)
+
 	DEBUG_CASE(NV_USER_DMA_PUT);
 	DEBUG_CASE(NV_USER_DMA_GET);
 	DEBUG_CASE(NV_USER_REF);
+
 DEBUG_END(USER)
 
 
@@ -401,6 +409,7 @@ DEBUG_END(USER)
 DEVICE_READ32(PMC)
 {
 	DEVICE_READ32_SWITCH(addr) {
+
 	case NV_PMC_BOOT_0:	// chipset and stepping: NV2A, A02, Rev 0
 		result = 0x02A000A2;
 		break;
@@ -410,6 +419,7 @@ DEVICE_READ32(PMC)
 	case NV_PMC_INTR_EN_0:
 		result = pmc.enabled_interrupts;
 		break;
+
 	case 0x0000020C: // What's this address? What does the xbe expect to read here? The Kernel base address perhaps?
 		result = NV20_REG_BASE_KERNEL;
 		break;
@@ -423,6 +433,7 @@ DEVICE_READ32(PMC)
 DEVICE_WRITE32(PMC)
 {
 	DEVICE_WRITE32_SWITCH(PMC, addr) {
+
 	case NV_PMC_INTR_0:
 		pmc.pending_interrupts &= ~value;
 		update_irq();
@@ -431,6 +442,7 @@ DEVICE_WRITE32(PMC)
 		pmc.enabled_interrupts = value;
 		update_irq();
 		break;
+
 	default: 
 		DEBUG_WRITE32_UNHANDLED(PMC);
 	}
@@ -442,6 +454,7 @@ DEVICE_READ32(PBUS)
 	DEVICE_READ32_SWITCH(addr) {
 	case NV_PBUS_PCI_NV_0:
 		result = 0x10de;	// PCI_VENDOR_ID_NVIDIA	(?where to return PCI_DEVICE_ID_NVIDIA_NV2A = 0x01b7)
+
 		break;
 	case NV_PBUS_PCI_NV_1:
 		result = 1; // NV_PBUS_PCI_NV_1_IO_SPACE_ENABLED
@@ -449,6 +462,7 @@ DEVICE_READ32(PBUS)
 	case NV_PBUS_PCI_NV_2:
 		result = (0x02 << 24) | 161; // PCI_CLASS_DISPLAY_3D (0x02) Rev 161 (0xA1) 
 		break;
+
 	default: 
 		DEBUG_READ32_UNHANDLED(PBUS);
 	}
@@ -526,6 +540,7 @@ DEVICE_WRITE32(PRMA)
 DEVICE_READ32(PVIDEO)
 {
 	DEVICE_READ32_SWITCH(addr) {
+
 	case NV_PVIDEO_STOP:
 		result = 0;
 		break;
@@ -566,6 +581,7 @@ DEVICE_WRITE32(PCOUNTER)
 DEVICE_READ32(PTIMER)
 {
 	DEVICE_READ32_SWITCH(addr) {
+
 	case NV_PTIMER_DENOMINATOR:
 		result = ptimer.denominator;
 		break;
@@ -586,6 +602,7 @@ DEVICE_READ32(PTIMER)
 DEVICE_WRITE32(PTIMER)
 {
 	DEVICE_WRITE32_SWITCH(PTIMER, addr) {
+
 	case NV_PTIMER_INTR_0:
 		ptimer.pending_interrupts &= ~value;
 		update_irq();
@@ -603,6 +620,7 @@ DEVICE_WRITE32(PTIMER)
 	case NV_PTIMER_ALARM_0:
 		ptimer.alarm_time = value;
 		break;
+
 	default: 
 		DEBUG_WRITE32_UNHANDLED(PTIMER);
 	}
@@ -754,6 +772,7 @@ DEVICE_WRITE32(PGRAPH)
 DEVICE_READ32(PCRTC)
 {
 	DEVICE_READ32_SWITCH(addr) {
+
 	case NV_PCRTC_INTR_0:
 		result = pcrtc.pending_interrupts;
 		break;
@@ -773,6 +792,7 @@ DEVICE_READ32(PCRTC)
 DEVICE_WRITE32(PCRTC)
 {
 	DEVICE_WRITE32_SWITCH(PCRTC, addr) {
+
 	case NV_PCRTC_INTR_0:
 		pcrtc.pending_interrupts &= ~value;
 		update_irq();
@@ -784,6 +804,7 @@ DEVICE_WRITE32(PCRTC)
 	case NV_PCRTC_START:
 		pcrtc.start = value &= 0x07FFFFFF;
 		break;
+
 	default: 
 		DEBUG_WRITE32_UNHANDLED(PCRTC);
 	}
@@ -812,6 +833,7 @@ DEVICE_WRITE32(PRMCIO)
 DEVICE_READ32(PRAMDAC)
 {
 	DEVICE_READ32_SWITCH(addr) {
+
 	case NV_PRAMDAC_NVPLL_COEFF:
 		result = pramdac.core_clock_coeff;
 		break;
@@ -828,6 +850,7 @@ DEVICE_READ32(PRAMDAC)
 			| NV_PRAMDAC_PLL_TEST_COUNTER_MPLL_LOCK
 			| NV_PRAMDAC_PLL_TEST_COUNTER_VPLL_LOCK;
 		break;
+
 	default: 
 		DEBUG_READ32_UNHANDLED(PRAMDAC);
 	}
@@ -838,6 +861,7 @@ DEVICE_READ32(PRAMDAC)
 DEVICE_WRITE32(PRAMDAC)
 {
 	DEVICE_WRITE32_SWITCH(PRAMDAC, addr) {
+
 	case NV_PRAMDAC_NVPLL_COEFF:
 		pramdac.core_clock_coeff = value;
 		break;
@@ -847,6 +871,7 @@ DEVICE_WRITE32(PRAMDAC)
 	case NV_PRAMDAC_VPLL_COEFF:
 		pramdac.video_clock_coeff = value;
 		break;
+
 	default: 
 		DEBUG_WRITE32_UNHANDLED(PRAMDAC);
 	}
@@ -908,6 +933,7 @@ DEVICE_WRITE32(USER)
 		DEBUG_WRITE32_UNHANDLED(USER);
 	}
 }
+
 
 
 uint32_t EmuNV2A_Read32(uint32_t addr)

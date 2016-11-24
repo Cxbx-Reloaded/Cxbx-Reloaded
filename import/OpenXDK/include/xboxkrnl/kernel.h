@@ -12,9 +12,20 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 
-XBSYSAPI VOID *KeAlertResumeThread;
-XBSYSAPI VOID *KeAlertThread;
-XBSYSAPI VOID *KeBoostPriorityThread;
+XBSYSAPI EXPORTNUM(92) NTSTATUS NTAPI KeAlertResumeThread
+(
+	IN HANDLE ThreadHandle,
+	IN OUT PULONG PreviousSuspendCount
+);
+
+XBSYSAPI EXPORTNUM(93) NTSTATUS NTAPI KeAlertThread
+(
+	IN HANDLE ThreadHandle
+);
+
+XBSYSAPI EXPORTNUM(94) NTSTATUS NTAPI KeBoostPriorityThread
+(
+);
 
 // ******************************************************************
 // * KeBugCheck
@@ -24,7 +35,15 @@ XBSYSAPI EXPORTNUM(95) VOID NTAPI KeBugCheck
 	IN ULONG BugCheckMode
 );
 
-XBSYSAPI VOID *KeBugCheckEx;
+XBSYSAPI EXPORTNUM(96) NTSTATUS NTAPI KeBugCheckEx
+(
+	IN DWORD BugCheckCode,
+	IN PVOID BugCheckParameter1,
+	IN PVOID BugCheckParameter2,
+	IN PVOID BugCheckParameter3,
+	IN PVOID BugCheckParameter4
+);
+
 XBSYSAPI VOID *KeCancelTimer;
 
 // ******************************************************************
@@ -200,7 +219,7 @@ XBSYSAPI VOID *KeTestAlertThread;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(156) volatile DWORD KeTickCount;
 
-XBSYSAPI VOID *KeTimeIncrement;
+XBSYSAPI EXPORTNUM(157) ULONG KeTimeIncrement;
 
 XBSYSAPI EXPORTNUM(158) NTSTATUS KeWaitForMultipleObjects
 (

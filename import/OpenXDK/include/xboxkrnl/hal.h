@@ -21,12 +21,26 @@ XBSYSAPI EXPORTNUM(9) VOID NTAPI HalReadSMCTrayState
 	DWORD*	Count
 );
 
-XBSYSAPI VOID *HalClearSoftwareInterrupt;
-XBSYSAPI VOID *HalDisableSystemInterrupt;
-XBSYSAPI ULONG HalDiskCachePartitionCount;
-XBSYSAPI VOID *HalDiskModelNumber;
-XBSYSAPI VOID *HalDiskSerialNumber;
-XBSYSAPI VOID *HalEnableSystemInterrupt;
+XBSYSAPI EXPORTNUM(38) VOID __fastcall HalClearSoftwareInterrupt
+(
+	KIRQL Request
+);
+
+XBSYSAPI EXPORTNUM(39) VOID NTAPI HalDisableSystemInterrupt
+(
+	ULONG Vector,
+	KIRQL Irql
+);
+
+XBSYSAPI EXPORTNUM(40) ULONG HalDiskCachePartitionCount;
+XBSYSAPI EXPORTNUM(41) PANSI_STRING HalDiskModelNumber;
+XBSYSAPI EXPORTNUM(42) PANSI_STRING HalDiskSerialNumber;
+XBSYSAPI EXPORTNUM(43) BOOLEAN NTAPI HalEnableSystemInterrupt
+(
+	ULONG Vector,
+	KIRQL Irql,
+	KINTERRUPT_MODE InterruptMode
+);
 
 // ******************************************************************
 // * HalGetInterruptVector
@@ -71,12 +85,16 @@ typedef struct {
     LIST_ENTRY ListEntry;
 } HAL_SHUTDOWN_REGISTRATION, *PHAL_SHUTDOWN_REGISTRATION;
 
+// TODO : NTAPI or __fastcall ?
 XBSYSAPI EXPORTNUM(47) VOID HalRegisterShutdownNotification(
     IN PHAL_SHUTDOWN_REGISTRATION ShutdownRegistration,
     IN BOOLEAN Register
 );
 
-XBSYSAPI VOID *HalRequestSoftwareInterrupt;
+XBSYSAPI EXPORTNUM(46) VOID __fastcall HalRequestSoftwareInterrupt
+(
+	IN KIRQL Request
+);
 
 // ******************************************************************
 // * HalReturnToFirmware
@@ -100,16 +118,6 @@ XBSYSAPI EXPORTNUM(50) NTSTATUS NTAPI HalWriteSMBusValue
     BOOLEAN WriteWord,
     ULONG   DataValue
 );
-
-// ******************************************************************
-// * HalBootSMCVideoMode
-// ******************************************************************
-XBSYSAPI EXPORTNUM(356) DWORD HalBootSMCVideoMode;
-
-XBSYSAPI VOID *HalIsResetOrShutdownPending;
-XBSYSAPI VOID *HalInitiateShutdown;
-XBSYSAPI VOID *HalEnableSecureTrayEject;
-XBSYSAPI VOID *HalWriteSMCScratchRegister;
 
 // ******************************************************************
 // * READ_PORT_BUFFER_UCHAR
@@ -169,6 +177,28 @@ XBSYSAPI EXPORTNUM(334) VOID NTAPI WRITE_PORT_BUFFER_ULONG
     IN PULONG Port,
     IN PULONG Buffer,
     IN ULONG  Count
+);
+
+// ******************************************************************
+// * HalBootSMCVideoMode
+// ******************************************************************
+XBSYSAPI EXPORTNUM(356) DWORD HalBootSMCVideoMode;
+
+XBSYSAPI EXPORTNUM(358) BOOLEAN NTAPI HalIsResetOrShutdownPending
+(
+);
+
+XBSYSAPI EXPORTNUM(360) NTSTATUS NTAPI HalInitiateShutdown
+(
+);
+
+XBSYSAPI EXPORTNUM(365) VOID NTAPI HalEnableSecureTrayEject
+(
+);
+
+XBSYSAPI EXPORTNUM(366) NTSTATUS NTAPI HalWriteSMCScratchRegister
+(
+	IN DWORD ScratchRegister
 );
 
 #endif

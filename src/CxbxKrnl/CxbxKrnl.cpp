@@ -294,6 +294,8 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 		memcpy((void*)CxbxKrnl_Xbe->m_SectionHeader[i].dwVirtualAddr, CxbxKrnl_Xbe->m_bzSection[i], CxbxKrnl_Xbe->m_SectionHeader[i].dwSizeofRaw);
 	}
 
+	ConnectWindowsTimersToThunkTable();
+
 	// Fixup Kernel Imports
 	uint32 kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
 
@@ -376,7 +378,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
 
-			printf("EmuMain (0x%X): Cxbx Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
+			printf("EmuMain (0x%X): Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
 			printf("EmuMain (0x%X): Debug Console Allocated (DM_CONSOLE).\n", GetCurrentThreadId());
 		}
 	}
@@ -559,7 +561,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	}
 
 	
-	DbgPrintf("EmuMain : Determining CPU affinity.");
+	DbgPrintf("EmuMain : Determining CPU affinity.\n");
 
 	// Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
 	// this will better aproximate the environment with regard to multi-threading) :

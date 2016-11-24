@@ -88,7 +88,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m
         DWORD   dwDisposition, dwType, dwSize;
         HKEY    hKey;
 
-        if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
+        if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
         {
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_CxbxDebug, &dwSize);
@@ -151,7 +151,7 @@ WndMain::~WndMain()
         DWORD   dwDisposition, dwType, dwSize;
         HKEY    hKey;
 
-        if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
+        if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
         {
             int v=0;
 

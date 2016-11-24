@@ -63,52 +63,52 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0000),                                    // 0x0000 (0)   NULL
 	(uint32)FUNC(&xboxkrnl::AvGetSavedDataAddress),           // 0x0001 (1)
 	(uint32)FUNC(&xboxkrnl::AvSendTVEncoderOption),           // 0x0002 (2)
-	(uint32)PANIC(0x0003),                                    // 0x0003 (3)   AvSetDisplayMode
-	(uint32)PANIC(0x0004),                                    // 0x0004 (4)   AvSetSavedDataAddress
-	(uint32)PANIC(0x0005),                                    // 0x0005 (5)   DbgBreakPoint
-	(uint32)PANIC(0x0006),                                    // 0x0006 (6)   DbgBreakPointWithStatus
-	(uint32)PANIC(0x0007),                                    // 0x0007 (7)   DbgLoadImageSymbols
+	(uint32)FUNC(&xboxkrnl::AvSetDisplayMode),                // 0x0003 (3)
+	(uint32)FUNC(&xboxkrnl::AvSetSavedDataAddress),           // 0x0004 (4)
+	(uint32)FUNC(&xboxkrnl::DbgBreakPoint),                   // 0x0005 (5)
+	(uint32)FUNC(&xboxkrnl::DbgBreakPointWithStatus),         // 0x0006 (6)
+	(uint32)FUNC(&xboxkrnl::DbgLoadImageSymbols),             // 0x0007 (7)
 	(uint32)FUNC(&xboxkrnl::DbgPrint),                        // 0x0008 (8)
 	(uint32)FUNC(&xboxkrnl::HalReadSMCTrayState),             // 0x0009 (9)
-	(uint32)PANIC(0x000A),                                    // 0x000A (10)  DbgPrompt
-	(uint32)PANIC(0x000B),                                    // 0x000B (11)  DbgUnLoadImageSymbols
-	(uint32)PANIC(0x000C),                                    // 0x000C (12)  ExAcquireReadWriteLockExclusive
-	(uint32)PANIC(0x000D),                                    // 0x000D (13)  ExAcquireReadWriteLockShared
+	(uint32)FUNC(&xboxkrnl::DbgPrompt),                       // 0x000A (10)
+	(uint32)FUNC(&xboxkrnl::DbgUnLoadImageSymbols),           // 0x000B (11)
+	(uint32)FUNC(&xboxkrnl::ExAcquireReadWriteLockExclusive), // 0x000C (12)
+	(uint32)FUNC(&xboxkrnl::ExAcquireReadWriteLockShared),    // 0x000D (13)
 	(uint32)FUNC(&xboxkrnl::ExAllocatePool),                  // 0x000E (14)
 	(uint32)FUNC(&xboxkrnl::ExAllocatePoolWithTag),           // 0x000F (15)
-	(uint32)VARIABLE(0x0010),                                 // 0x0010 (16)  ExEventObjectType
+	(uint32)VARIABLE(&xboxkrnl::ExEventObjectType),           // 0x0010 (16)  
 	(uint32)FUNC(&xboxkrnl::ExFreePool),                      // 0x0011 (17)
-	(uint32)PANIC(0x0012),                                    // 0x0012 (18)  ExInitializeReadWriteLock
-	(uint32)PANIC(0x0013),                                    // 0x0013 (19)  ExInterlockedAddLargeInteger
-	(uint32)PANIC(0x0014),                                    // 0x0014 (20)  ExInterlockedAddLargeStatistic
-	(uint32)PANIC(0x0015),                                    // 0x0015 (21)  ExInterlockedCompareExchange64
-	(uint32)VARIABLE(0x0016),                                 // 0x0016 (22)  ExMutantObjectType
+	(uint32)FUNC(&xboxkrnl::ExInitializeReadWriteLock),       // 0x0012 (18)
+	(uint32)FUNC(&xboxkrnl::ExInterlockedAddLargeInteger),    // 0x0013 (19)
+	(uint32)FUNC(&xboxkrnl::ExInterlockedAddLargeStatistic),  // 0x0014 (20)
+	(uint32)FUNC(&xboxkrnl::ExInterlockedCompareExchange64),  // 0x0015 (21)
+	(uint32)VARIABLE(&xboxkrnl::ExMutantObjectType),          // 0x0016 (22)  
 	(uint32)FUNC(&xboxkrnl::ExQueryPoolBlockSize),            // 0x0017 (23)  
 	(uint32)FUNC(&xboxkrnl::ExQueryNonVolatileSetting),       // 0x0018 (24)
 	(uint32)FUNC(&xboxkrnl::ExReadWriteRefurbInfo),           // 0x0019 (25)
-	(uint32)PANIC(0x001A),                                    // 0x001A (26)  ExQueryPoolBlockSize
-	(uint32)PANIC(0x001B),                                    // 0x001B (27)  ExRaiseStatus
-	(uint32)PANIC(0x001C),                                    // 0x001C (28)  ExReleaseReadWriteLock
+	(uint32)FUNC(&xboxkrnl::ExQueryPoolBlockSize),            // 0x001A (26)
+	(uint32)FUNC(&xboxkrnl::ExRaiseStatus),                   // 0x001B (27)
+	(uint32)FUNC(&xboxkrnl::ExReleaseReadWriteLock),          // 0x001C (28)
 	(uint32)FUNC(&xboxkrnl::ExSaveNonVolatileSetting),        // 0x001D (29)
-	(uint32)VARIABLE(0x001E),                                 // 0x001E (30)  ExSemaphoreObjectType
-	(uint32)VARIABLE(0x001F),                                 // 0x001F (31)  ExTimerObjectType
-	(uint32)PANIC(0x0020),                                    // 0x0020 (32)  ExfInterlockedInsertHeadList
-	(uint32)PANIC(0x0021),                                    // 0x0021 (33)  ExfInterlockedInsertTailList
-	(uint32)PANIC(0x0022),                                    // 0x0022 (34)  ExfInterlockedRemoveHeadList
+	(uint32)VARIABLE(&xboxkrnl::ExSemaphoreObjectType),       // 0x001E (30)
+	(uint32)VARIABLE(&xboxkrnl::ExTimerObjectType),           // 0x001F (31)
+	(uint32)FUNC(&xboxkrnl::ExfInterlockedInsertHeadList),    // 0x0020 (32)
+	(uint32)FUNC(&xboxkrnl::ExfInterlockedInsertTailList),    // 0x0021 (33)
+	(uint32)FUNC(&xboxkrnl::ExfInterlockedRemoveHeadList),    // 0x0022 (34)
 	(uint32)FUNC(&xboxkrnl::FscGetCacheSize),                 // 0x0023 (35)
-	(uint32)PANIC(0x0024),                                    // 0x0024 (36)  FscInvalidateIdleBlocks
+	(uint32)FUNC(&xboxkrnl::FscInvalidateIdleBlocks),         // 0x0024 (36)
 	(uint32)FUNC(&xboxkrnl::FscSetCacheSize),                 // 0x0025 (37)
-	(uint32)PANIC(0x0026),                                    // 0x0026 (38)  HalClearSoftwareInterrupt
-	(uint32)PANIC(0x0027),                                    // 0x0027 (39)  HalDisableSystemInterrupt
+	(uint32)FUNC(&xboxkrnl::HalClearSoftwareInterrupt),       // 0x0026 (38)
+	(uint32)FUNC(&xboxkrnl::HalDisableSystemInterrupt),       // 0x0027 (39)
 	(uint32)VARIABLE(&xboxkrnl::HalDiskCachePartitionCount),  // 0x0028 (40)  A.k.a. "IdexDiskPartitionPrefixBuffer"
-	(uint32)VARIABLE(0x0029),                                 // 0x0029 (41)  HalDiskModelNumber
-	(uint32)VARIABLE(0x002A),                                 // 0x002A (42)  HalDiskSerialNumber
-	(uint32)PANIC(0x002B),                                    // 0x002B (43)  HalEnableSystemInterrupt
+	(uint32)VARIABLE(&xboxkrnl::HalDiskModelNumber),          // 0x0029 (41)
+	(uint32)VARIABLE(&xboxkrnl::HalDiskSerialNumber),         // 0x002A (42)
+	(uint32)FUNC(&xboxkrnl::HalEnableSystemInterrupt),        // 0x002B (43)
 	(uint32)FUNC(&xboxkrnl::HalGetInterruptVector),           // 0x002C (44)
 	(uint32)FUNC(&xboxkrnl::HalReadSMBusValue),               // 0x002D (45)
-	(uint32)PANIC(0x002E),                                    // 0x002E (46)  HalReadWritePCISpace
+	(uint32)FUNC(&xboxkrnl::HalReadWritePCISpace),            // 0x002E (46)
 	(uint32)FUNC(&xboxkrnl::HalRegisterShutdownNotification), // 0x002F (47)
-	(uint32)PANIC(0x0030),                                    // 0x0030 (48)  HalRequestSoftwareInterrupt
+	(uint32)FUNC(&xboxkrnl::HalRequestSoftwareInterrupt),     // 0x0030 (48)
 	(uint32)FUNC(&xboxkrnl::HalReturnToFirmware),             // 0x0031 (49)
 	(uint32)FUNC(&xboxkrnl::HalWriteSMBusValue),              // 0x0032 (50)
 	(uint32)PANIC(0x0033),                                    // 0x0033 (51)  InterlockedCompareExchange
@@ -124,14 +124,14 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x003D),                                    // 0x003D (61)  IoBuildDeviceIoControlRequest
 	(uint32)PANIC(0x003E),                                    // 0x003E (62)  IoBuildSynchronousFsdRequest
 	(uint32)PANIC(0x003F),                                    // 0x003F (63)  IoCheckShareAccess
-	(uint32)VARIABLE(0x0040),                                 // 0x0040 (64)  IoCompletionObjectType
+	(uint32)VARIABLE(&xboxkrnl::IoCompletionObjectType),      // 0x0040 (64)
 	(uint32)PANIC(0x0041),                                    // 0x0041 (65)  IoCreateDevice
 	(uint32)FUNC(&xboxkrnl::IoCreateFile),                    // 0x0042 (66)
 	(uint32)FUNC(&xboxkrnl::IoCreateSymbolicLink),            // 0x0043 (67)
 	(uint32)PANIC(0x0044),                                    // 0x0044 (68)  IoDeleteDevice
 	(uint32)FUNC(&xboxkrnl::IoDeleteSymbolicLink),            // 0x0045 (69)
-	(uint32)VARIABLE(0x0046),                                 // 0x0046 (70)  IoDeviceObjectType
-	(uint32)VARIABLE(0x0047),                                 // 0x0047 (71)  IoFileObjectType
+	(uint32)VARIABLE(&xboxkrnl::IoDeviceObjectType),          // 0x0046 (70)
+	(uint32)VARIABLE(&xboxkrnl::IoFileObjectType),            // 0x0047 (71)
 	(uint32)PANIC(0x0048),                                    // 0x0048 (72)  IoFreeIrp
 	(uint32)PANIC(0x0049),                                    // 0x0049 (73)  IoInitializeIrp
 	(uint32)PANIC(0x004A),                                    // 0x004A (74)  IoInvalidDeviceRequest
@@ -148,21 +148,21 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0055),                                    // 0x0055 (85)  IoSynchronousFsdRequest
 	(uint32)PANIC(0x0056),                                    // 0x0056 (86)  IofCallDriver
 	(uint32)PANIC(0x0057),                                    // 0x0057 (87)  IofCompleteRequest
-	(uint32)VARIABLE(0x0058),                                 // 0x0058 (88)  KdDebuggerEnabled
-	(uint32)VARIABLE(0x0059),                                 // 0x0059 (89)  KdDebuggerNotPresent
+	(uint32)VARIABLE(&xboxkrnl::KdDebuggerEnabled),           // 0x0058 (88)
+	(uint32)VARIABLE(&xboxkrnl::KdDebuggerNotPresent),        // 0x0059 (89)
 	(uint32)PANIC(0x005A),                                    // 0x005A (90)  IoDismountVolume
 	(uint32)FUNC(&xboxkrnl::IoDismountVolumeByName),          // 0x005B (91)
-	(uint32)PANIC(0x005C),                                    // 0x005C (92)  KeAlertResumeThread
-	(uint32)PANIC(0x005D),                                    // 0x005D (93)  KeAlertThread
-	(uint32)PANIC(0x005E),                                    // 0x005E (94)  KeBoostPriorityThread
+	(uint32)FUNC(&xboxkrnl::KeAlertResumeThread),             // 0x005C (92)
+	(uint32)FUNC(&xboxkrnl::KeAlertThread),                   // 0x005D (93)
+	(uint32)FUNC(&xboxkrnl::KeBoostPriorityThread),           // 0x005E (94)
 	(uint32)FUNC(&xboxkrnl::KeBugCheck),                      // 0x005F (95)
-	(uint32)PANIC(0x0060),                                    // 0x0060 (96)  KeBugCheckEx
+	(uint32)FUNC(&xboxkrnl::KeBugCheckEx),                    // 0x0060 (96)
 	(uint32)PANIC(0x0061),                                    // 0x0061 (97)  KeCancelTimer
 	(uint32)FUNC(&xboxkrnl::KeConnectInterrupt),              // 0x0062 (98)
 	(uint32)FUNC(&xboxkrnl::KeDelayExecutionThread),          // 0x0063 (99)
 	(uint32)PANIC(0x0064),                                    // 0x0064 (100) KeDisconnectInterrupt
 	(uint32)PANIC(0x0065),                                    // 0x0065 (101) KeEnterCriticalRegion
-	(uint32)VARIABLE(0x0066),                                 // 0x0066 (102) MmGlobalData
+	(uint32)VARIABLE(&xboxkrnl::MmGlobalData),                // 0x0066 (102) 
 	(uint32)PANIC(0x0067),                                    // 0x0067 (103) KeGetCurrentIrql
 	(uint32)PANIC(0x0068),                                    // 0x0068 (104) KeGetCurrentThread
 	(uint32)PANIC(0x0069),                                    // 0x0069 (105) KeInitializeApc
@@ -180,7 +180,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0075),                                    // 0x0075 (117) KeInsertQueue
 	(uint32)PANIC(0x0076),                                    // 0x0076 (118) KeInsertQueueApc
 	(uint32)PANIC(0x0077),                                    // 0x0077 (119) KeInsertQueueDpc
-	(uint32)VARIABLE(0x0078),                                 // 0x0078 (120) KeInterruptTime
+	(uint32)VARIABLE(0x0078),                                 // 0x0078 (120) KeInterruptTime (Set by ConnectWindowsTimersToThunkTable)
 	(uint32)PANIC(0x0079),                                    // 0x0079 (121) KeIsExecutingDpc
 	(uint32)PANIC(0x007A),                                    // 0x007A (122) KeLeaveCriticalRegion
 	(uint32)PANIC(0x007B),                                    // 0x007B (123) KePulseEvent
@@ -214,15 +214,15 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0097),                                    // 0x0097 (151) KeStallExecutionProcessor
 	(uint32)PANIC(0x0098),                                    // 0x0098 (152) KeSuspendThread
 	(uint32)PANIC(0x0099),                                    // 0x0099 (153) KeSynchronizeExecution
-	(uint32)VARIABLE(0x009A),                                 // 0x009A (154) KeSystemTime
+	(uint32)VARIABLE(0x009A),                                 // 0x009A (154) KeSystemTime (Set by ConnectWindowsTimersToThunkTable)
 	(uint32)PANIC(0x009B),                                    // 0x009B (155) KeTestAlertThread
 	(uint32)VARIABLE(&xboxkrnl::KeTickCount),                 // 0x009C (156)
-	(uint32)VARIABLE(0x009D),                                 // 0x009D (157) KeTimeIncrement
+	(uint32)VARIABLE(&xboxkrnl::KeTimeIncrement),             // 0x009D (157)
 	(uint32)FUNC(&xboxkrnl::KeWaitForMultipleObjects),        // 0x009E (158) 
 	(uint32)FUNC(&xboxkrnl::KeWaitForSingleObject),           // 0x009F (159) 
 	(uint32)FUNC(&xboxkrnl::KfRaiseIrql),                     // 0x00A0 (160)
 	(uint32)FUNC(&xboxkrnl::KfLowerIrql),                     // 0x00A1 (161) 
-	(uint32)VARIABLE(0x00A2),                                 // 0x00A2 (162) KiBugCheckData
+	(uint32)VARIABLE(&xboxkrnl::KiBugCheckData),              // 0x00A2 (162)
 	(uint32)PANIC(0x00A3),                                    // 0x00A3 (163) KiUnlockDispatcherDatabase
 	(uint32)VARIABLE(&xboxkrnl::LaunchDataPage),              // 0x00A4 (164)
 	(uint32)FUNC(&xboxkrnl::MmAllocateContiguousMemory),      // 0x00A5 (165)
@@ -300,16 +300,16 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x00ED),                                    // 0x00ED (237) NtWriteFileGather
 	(uint32)FUNC(&xboxkrnl::NtYieldExecution),                // 0x00EE (238)
 	(uint32)PANIC(0x00EF),                                    // 0x00EF (239) ObCreateObject
-	(uint32)VARIABLE(0x00F0),                                 // 0x00F0 (240) ObDirectoryObjectType
+	(uint32)VARIABLE(&xboxkrnl::ObDirectoryObjectType),       // 0x00F0 (240) 
 	(uint32)PANIC(0x00F1),                                    // 0x00F1 (241) ObInsertObject
 	(uint32)PANIC(0x00F2),                                    // 0x00F2 (242) ObMakeTemporaryObject 
 	(uint32)PANIC(0x00F3),                                    // 0x00F3 (243) ObOpenObjectByName
 	(uint32)PANIC(0x00F4),                                    // 0x00F4 (244) ObOpenObjectByPointer
-	(uint32)VARIABLE(0x00F5),                                 // 0x00F5 (245) ObpObjectHandleTable
+	(uint32)VARIABLE(&xboxkrnl::ObpObjectHandleTable),        // 0x00F5 (245)
 	(uint32)PANIC(0x00F6),                                    // 0x00F6 (246) ObReferenceObjectByHandle
 	(uint32)PANIC(0x00F7),                                    // 0x00F7 (247) ObReferenceObjectByName
 	(uint32)PANIC(0x00F8),                                    // 0x00F8 (248) ObReferenceObjectByPointer
-	(uint32)VARIABLE(0x00F9),                                 // 0x00F9 (249) ObSymbolicLinkObjectType
+	(uint32)VARIABLE(&xboxkrnl::ObSymbolicLinkObjectType),    // 0x00F9 (249)
 	(uint32)PANIC(0x00FA),                                    // 0x00FA (250) ObfDereferenceObject
 	(uint32)PANIC(0x00FB),                                    // 0x00FB (251) ObfReferenceObject
 	(uint32)PANIC(0x00FC),                                    // 0x00FC (252) PhyGetLinkState
@@ -321,9 +321,9 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::PsTerminateSystemThread),         // 0x0102 (258)
 	(uint32)PANIC(0x0103),                                    // 0x0103 (259) PsThreadObjectType
 	(uint32)FUNC(&xboxkrnl::RtlAnsiStringToUnicodeString),    // 0x0104 (260)
-	(uint32)PANIC(0x0105),                                    // 0x0105 (261) RtlAppendStringToString
-	(uint32)PANIC(0x0106),                                    // 0x0106 (262) RtlAppendUnicodeStringToString
-	(uint32)PANIC(0x0107),                                    // 0x0107 (263) RtlAppendUnicodeToString
+	(uint32)FUNC(&xboxkrnl::RtlAppendStringToString),         // 0x0105 (261)
+	(uint32)FUNC(&xboxkrnl::RtlAppendUnicodeStringToString),  // 0x0106 (262)
+	(uint32)FUNC(&xboxkrnl::RtlAppendUnicodeToString),        // 0x0107 (263)
 	(uint32)FUNC(&xboxkrnl::RtlAssert),                       // 0x0108 (264)
 	(uint32)PANIC(0x0109),                                    // 0x0109 (265) RtlCaptureContext
 	(uint32)PANIC(0x010A),                                    // 0x010A (266) RtlCaptureStackBackTrace
@@ -381,7 +381,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x013E),                                    // 0x013E (318) RtlUshortByteSwap
 	(uint32)PANIC(0x013F),                                    // 0x013F (319) RtlWalkFrameChain
 	(uint32)PANIC(0x0140),                                    // 0x0140 (320) RtlZeroMemory
-	(uint32)VARIABLE(0x0141),                                 // 0x0141 (321) XboxEEPROMKey
+	(uint32)VARIABLE(&xboxkrnl::XboxEEPROMKey),               // 0x0141 (321)
 	(uint32)VARIABLE(&xboxkrnl::XboxHardwareInfo),            // 0x0142 (322)
 	(uint32)VARIABLE(&xboxkrnl::XboxHDKey),                   // 0x0143 (323)
 	(uint32)VARIABLE(&xboxkrnl::XboxKrnlVersion),             // 0x0144 (324)
@@ -389,12 +389,12 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)VARIABLE(&xboxkrnl::XeImageFileName),             // 0x0146 (326)
 	(uint32)FUNC(&xboxkrnl::XeLoadSection),                   // 0x0147 (327) 
 	(uint32)FUNC(&xboxkrnl::XeUnloadSection),                 // 0x0148 (328) 
-	(uint32)PANIC(0x0149),                                    // 0x0149 (329) READ_PORT_BUFFER_UCHAR
-	(uint32)PANIC(0x014A),                                    // 0x014A (330) READ_PORT_BUFFER_USHORT
-	(uint32)PANIC(0x014B),                                    // 0x014B (331) READ_PORT_BUFFER_ULONG
-	(uint32)PANIC(0x014C),                                    // 0x014C (332) WRITE_PORT_BUFFER_UCHAR
-	(uint32)PANIC(0x014D),                                    // 0x014D (333) WRITE_PORT_BUFFER_USHORT
-	(uint32)PANIC(0x014E),                                    // 0x014E (334) WRITE_PORT_BUFFER_ULONG
+	(uint32)FUNC(&xboxkrnl::READ_PORT_BUFFER_UCHAR),          // 0x0149 (329)
+	(uint32)FUNC(&xboxkrnl::READ_PORT_BUFFER_USHORT),         // 0x014A (330)
+	(uint32)FUNC(&xboxkrnl::READ_PORT_BUFFER_ULONG),          // 0x014B (331)
+	(uint32)FUNC(&xboxkrnl::WRITE_PORT_BUFFER_UCHAR),         // 0x014C (332)
+	(uint32)FUNC(&xboxkrnl::WRITE_PORT_BUFFER_USHORT),        // 0x014D (333)
+	(uint32)FUNC(&xboxkrnl::WRITE_PORT_BUFFER_ULONG),         // 0x014E (334)
 	(uint32)FUNC(&xboxkrnl::XcSHAInit),                       // 0x014F (335)
 	(uint32)FUNC(&xboxkrnl::XcSHAUpdate),                     // 0x0150 (336)
 	(uint32)FUNC(&xboxkrnl::XcSHAFinal),                      // 0x0151 (337)
@@ -413,20 +413,20 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x015E),                                    // 0x015E (350) XcCryptService
 	(uint32)PANIC(0x015F),                                    // 0x015F (351) XcUpdateCrypto
 	(uint32)PANIC(0x0160),                                    // 0x0160 (352) RtlRip
-	(uint32)VARIABLE(0x0161),                                 // 0x0161 (353) XboxLANKey
-	(uint32)VARIABLE(0x0162),                                 // 0x0162 (354) XboxAlternateSignatureKeys
-	(uint32)VARIABLE(0x0163),                                 // 0x0163 (355) XePublicKeyData
+	(uint32)VARIABLE(&xboxkrnl::XboxLANKey),                  // 0x0161 (353)
+	(uint32)VARIABLE(&xboxkrnl::XboxAlternateSignatureKeys),  // 0x0162 (354)
+	(uint32)VARIABLE(&xboxkrnl::XePublicKeyData),             // 0x0163 (355)
 	(uint32)VARIABLE(&xboxkrnl::HalBootSMCVideoMode),         // 0x0164 (356)
-	(uint32)VARIABLE(0x0165),                                 // 0x0165 (357) IdexChannelObject
-	(uint32)PANIC(0x0166),                                    // 0x0166 (358) HalIsResetOrShutdownPending
+	(uint32)VARIABLE(&xboxkrnl::IdexChannelObject),           // 0x0165 (357)
+	(uint32)FUNC(&xboxkrnl::HalIsResetOrShutdownPending),     // 0x0166 (358)
 	(uint32)PANIC(0x0167),                                    // 0x0167 (359) IoMarkIrpMustComplete
-	(uint32)PANIC(0x0168),                                    // 0x0168 (360) HalInitiateShutdown
+	(uint32)FUNC(&xboxkrnl::HalInitiateShutdown),             // 0x0168 (360)
 	(uint32)PANIC(0x0169),                                    // 0x0169 (361) RtlSnprintf
 	(uint32)PANIC(0x016A),                                    // 0x016A (362) RtlSprintf
 	(uint32)PANIC(0x016B),                                    // 0x016B (363) RtlVsnprintf
 	(uint32)PANIC(0x016C),                                    // 0x016C (364) RtlVsprintf
-	(uint32)PANIC(0x016D),                                    // 0x016D (365) HalEnableSecureTrayEject
-	(uint32)PANIC(0x016E),                                    // 0x016E (366) HalWriteSMCScratchRegister
+	(uint32)FUNC(&xboxkrnl::HalEnableSecureTrayEject),        // 0x016D (365)
+	(uint32)FUNC(&xboxkrnl::HalWriteSMCScratchRegister),      // 0x016E (366)
 	(uint32)PANIC(0x016F),                                    // 0x016F (367) UnknownAPI367
 	(uint32)PANIC(0x0170),                                    // 0x0170 (368) UnknownAPI368
 	(uint32)PANIC(0x0171),                                    // 0x0171 (369) UnknownAPI369
@@ -440,3 +440,40 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0179),                                    // 0x017A (377) MmDbgReleaseAddress
 	(uint32)PANIC(0x017A),                                    // 0x017A (378) MmDbgWriteCheck
 };
+
+/* prevent name collisions */
+namespace NtDll
+{
+	#include "EmuNtDll.h"
+};
+
+// Virtual memory location of KUSER_SHARED_DATA :
+// See http://research.microsoft.com/en-us/um/redmond/projects/invisible/src/base/md/i386/sim/_pertest2.c.htm
+// and http://research.microsoft.com/en-us/um/redmond/projects/invisible/src/base/md/i386/sim/_glue.c.htm
+// and http://processhacker.sourceforge.net/doc/ntexapi_8h_source.html
+// and http://forum.sysinternals.com/0x7ffe0000-what-is-in-it_topic10012.html
+#define MM_SHARED_USER_DATA_VA      0x7FFE0000
+#define USER_SHARED_DATA ((NtDll::KUSER_SHARED_DATA * const)MM_SHARED_USER_DATA_VA)
+
+// KUSER_SHARED_DATA Offsets
+// See http://native-nt-toolkit.googlecode.com/svn/trunk/ndk/asm.h
+// Note : KUSER_SHARED_DATA.TickCountLow seems deprecated
+const UINT USER_SHARED_DATA_TICK_COUNT = 0x320;
+
+// Here we define the addresses of the native Windows timers :
+// Source: Dxbx
+const xboxkrnl::PKSYSTEM_TIME CxbxNtTickCount = (xboxkrnl::PKSYSTEM_TIME)(MM_SHARED_USER_DATA_VA + USER_SHARED_DATA_TICK_COUNT);
+
+void ConnectWindowsTimersToThunkTable()
+{
+	// Couple the xbox thunks for xboxkrnl::KeInterruptTime and xboxkrnl::KeSystemTime
+	// to their actual counterparts on Windows, this way we won't have to spend any
+	// time on updating them ourselves, and still get highly accurate timers!
+	// See http://www.dcl.hpi.uni-potsdam.de/research/WRK/2007/08/getting-os-information-the-kuser_shared_data-structure/
+
+	CxbxKrnl_KernelThunkTable[120] = (uint32)&(USER_SHARED_DATA->InterruptTime);
+	CxbxKrnl_KernelThunkTable[154] = (uint32)&(USER_SHARED_DATA->SystemTime);
+
+	// Note that we can't do the same for TickCount, as that timer
+	// updates slower on the xbox. See EmuThreadUpdateTickCount().
+}

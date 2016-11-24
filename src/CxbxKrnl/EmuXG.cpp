@@ -61,7 +61,7 @@ PVOID WINAPI XTL::EmuXGIsSwizzledFormat
 {
 	LOG_FUNC_ONE_ARG(Format);
 
-    return FALSE;
+	RETURN(FALSE);
 }
 
 // ******************************************************************
@@ -121,10 +121,6 @@ VOID WINAPI XTL::EmuXGSwizzleRect
             pDst += Pitch;
         }
     }
-
-    
-
-    return;
 }
 
 // ******************************************************************
@@ -192,10 +188,6 @@ VOID WINAPI XTL::EmuXGSwizzleBox
 			}
         }
 	}
-
-    
-
-    return;
 }
 
 // ******************************************************************
@@ -325,9 +317,9 @@ HRESULT WINAPI XTL::EmuXGWriteSurfaceOrTextureToXPR
 	// and write the surface/texture to a file, or output a generic .xbx
 	// file and be done with it.
 
-	EmuWarning("(Temporarily) ignoring EmuXGWriteSurfaceOrTextureToXPR. Need file specs.");
+	LOG_IGNORED(); // (Temporarily) ignoring EmuXGWriteSurfaceOrTextureToXPR. Need file specs.
 
-	return S_OK;
+	RETURN(S_OK);
 }
 
 // ******************************************************************
@@ -430,5 +422,5 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 //
 //	 
 //
-//	return E_FAIL;
+//	RETURN(E_FAIL);
 //}

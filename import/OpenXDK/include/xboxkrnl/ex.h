@@ -12,8 +12,15 @@
 #ifndef XBOXKRNL_EX_H
 #define XBOXKRNL_EX_H
 
-XBSYSAPI VOID *ExAcquireReadWriteLockExclusive;
-XBSYSAPI VOID *ExAcquireReadWriteLockShared;
+XBSYSAPI EXPORTNUM(12) NTSTATUS NTAPI ExAcquireReadWriteLockExclusive
+(
+	IN DWORD Arg1
+);
+
+XBSYSAPI EXPORTNUM(13) NTSTATUS NTAPI ExAcquireReadWriteLockShared
+(
+	IN DWORD Arg1
+);
 
 // ******************************************************************
 // * ExAllocatePool
@@ -40,7 +47,7 @@ XBSYSAPI EXPORTNUM(15) PVOID NTAPI ExAllocatePoolWithTag
     IN ULONG Tag
 );
 
-XBSYSAPI VOID *ExEventObjectType;
+XBSYSAPI EXPORTNUM(16) POBJECT_TYPE ExEventObjectType;
 
 // ******************************************************************
 // * ExFreePool
@@ -54,16 +61,41 @@ XBSYSAPI EXPORTNUM(17) VOID NTAPI ExFreePool
     IN PVOID P
 );
 
-XBSYSAPI VOID *ExInitializeReadWriteLock;
-XBSYSAPI VOID *ExInterlockedAddLargeInteger;
-XBSYSAPI VOID *ExInterlockedAddLargeStatistic;
-XBSYSAPI VOID *ExInterlockedCompareExchange64;
-XBSYSAPI VOID *ExMutantObjectType;
+XBSYSAPI EXPORTNUM(18) NTSTATUS NTAPI ExInitializeReadWriteLock
+(
+	IN DWORD Arg1
+);
+
+// Source:APILogger - Uncertain
+XBSYSAPI EXPORTNUM(19) LARGE_INTEGER NTAPI ExInterlockedAddLargeInteger
+(
+	IN OUT PLARGE_INTEGER Addend,
+	IN LARGE_INTEGER Increment,
+	IN OUT PKSPIN_LOCK Lock
+);
+
+// Source:ReactOS
+XBSYSAPI EXPORTNUM(20) VOID __fastcall ExInterlockedAddLargeStatistic
+(
+	IN PLARGE_INTEGER Addend,
+	IN ULONG Increment
+);
+
+// Source:ReactOS
+XBSYSAPI EXPORTNUM(21) LONGLONG __fastcall ExInterlockedCompareExchange64
+(
+	IN OUT PLONGLONG Destination,
+	IN PLONGLONG Exchange,
+	IN PLONGLONG Comparand,
+	IN PKSPIN_LOCK Lock
+);
+
+XBSYSAPI EXPORTNUM(22) POBJECT_TYPE ExMutantObjectType;
 
 // ******************************************************************
 // * ExQueryPoolBlockSize
 // ******************************************************************
-XBSYSAPI EXPORTNUM(23) ULONG NTAPI ExQueryPoolBlockSize 
+XBSYSAPI EXPORTNUM(23) ULONG NTAPI ExQueryPoolBlockSize
 (
     IN PVOID PoolBlock
 );
@@ -85,14 +117,25 @@ XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI ExQueryNonVolatileSetting
 // ******************************************************************
 XBSYSAPI EXPORTNUM(25) NTSTATUS NTAPI ExReadWriteRefurbInfo
 (
-	PVOID	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3
+	IN OUT PXBOX_REFURB_INFO	pRefurbInfo,
+	IN ULONG	dwBufferSize,
+	IN BOOLEAN	bIsWriteMode
 );
 
-XBSYSAPI VOID *ExRaiseException;
-XBSYSAPI VOID *ExRaiseStatus;
-XBSYSAPI VOID *ExReleaseReadWriteLock;
+XBSYSAPI EXPORTNUM(26) VOID NTAPI ExRaiseException
+(
+	IN PEXCEPTION_RECORD ExceptionRecord
+);
+
+XBSYSAPI EXPORTNUM(27) VOID NTAPI ExRaiseStatus
+(
+	IN NTSTATUS Status
+);
+
+XBSYSAPI EXPORTNUM(28) NTSTATUS NTAPI ExReleaseReadWriteLock
+(
+	IN DWORD Arg1
+);
 
 // ******************************************************************
 // * ExSaveNonVolatileSetting
@@ -105,11 +148,29 @@ XBSYSAPI EXPORTNUM(29) NTSTATUS NTAPI ExSaveNonVolatileSetting
     IN  SIZE_T              ValueLength
 );
 
-XBSYSAPI VOID *ExSemaphoreObjectType;
-XBSYSAPI VOID *ExTimerObjectType;
-XBSYSAPI VOID *ExfInterlockedInsertHeadList;
-XBSYSAPI VOID *ExfInterlockedInsertTailList;
-XBSYSAPI VOID *ExfInterlockedRemoveHeadList;
+XBSYSAPI EXPORTNUM(30) POBJECT_TYPE ExSemaphoreObjectType;
+XBSYSAPI EXPORTNUM(31) POBJECT_TYPE ExTimerObjectType;
+
+XBSYSAPI EXPORTNUM(32) PLIST_ENTRY __fastcall ExfInterlockedInsertHeadList
+(
+	IN PLIST_ENTRY ListHead,
+	IN PLIST_ENTRY ListEntry,
+	IN PKSPIN_LOCK Lock
+);
+
+XBSYSAPI EXPORTNUM(33) PLIST_ENTRY __fastcall ExfInterlockedInsertTailList
+(
+	IN PLIST_ENTRY ListHead,
+	IN PLIST_ENTRY ListEntry,
+	IN PKSPIN_LOCK Lock
+);
+
+XBSYSAPI EXPORTNUM(34) PLIST_ENTRY __fastcall ExfInterlockedRemoveHeadList
+(
+	IN PKSPIN_LOCK Lock,
+	IN PLIST_ENTRY ListHead
+);
+
 XBSYSAPI VOID *InterlockedCompareExchange;
 XBSYSAPI VOID *InterlockedDecrement;
 XBSYSAPI VOID *InterlockedIncrement;
