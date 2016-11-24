@@ -186,7 +186,6 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
 
             LastUnResolvedXRefs = UnResolvedXRefs;
 
-            bool bFoundD3D = false;
             for(uint32 v=0;v<dwLibraryVersions;v++)
             {
                 uint16 MajorVersion = pLibraryVersion[v].wMajorVersion;
@@ -233,24 +232,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                     szLibraryName[c] = pLibraryVersion[v].szName[c];
 					szOrigLibraryName[c] = pLibraryVersion[v].szName[c];
                 }
-
-				// Test
-				if(strcmp(szLibraryName, "XGRAPHC") == 0)
-				{
-				//	if(BuildVersion == 4432)
-				//		BuildVersion = 4361;
-					if(BuildVersion == 3944)
-						BuildVersion = 3911;
-					if(OrigBuildVersion == 4531)
-						BuildVersion = 4361;
-					// Quick test (JSRF)
-					if(OrigBuildVersion == 4134)
-						BuildVersion = 4361;
-					// Quick test (Simpsons: RoadRage)
-				//	if(BuildVersion == 4034)
-				//		BuildVersion = 3911;
-				}
-
+				
                 // Several 3911 titles has different DSound builds.
                 if(strcmp(szLibraryName, "DSOUND") == 0)
                 {
@@ -264,6 +246,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
 						BuildVersion == 4531 )
 						BuildVersion = 4627;
                 }
+
 
 				// Change a few XAPILIB versions to similar counterparts
 				if(strcmp(szLibraryName, "XAPILIB") == 0)
