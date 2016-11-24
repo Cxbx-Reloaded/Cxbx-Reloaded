@@ -87,8 +87,6 @@ typedef signed __int64      LONGLONG;
 typedef unsigned __int64    ULONGLONG;
 typedef wchar_t             WCHAR;
 
-typedef bool LONGBOOL; // TODO : Find and apply correct definition
-
 // ******************************************************************
 // * Pointer types
 // ******************************************************************

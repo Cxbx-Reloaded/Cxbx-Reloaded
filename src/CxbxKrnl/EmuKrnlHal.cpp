@@ -88,7 +88,7 @@ XBSYSAPI EXPORTNUM(38) VOID __fastcall xboxkrnl::HalClearSoftwareInterrupt
 }
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(39) xboxkrnl::LONGBOOL NTAPI xboxkrnl::HalDisableSystemInterrupt
+XBSYSAPI EXPORTNUM(39) VOID NTAPI xboxkrnl::HalDisableSystemInterrupt
 (
 	ULONG Vector,
 	KIRQL Irql
@@ -100,8 +100,6 @@ XBSYSAPI EXPORTNUM(39) xboxkrnl::LONGBOOL NTAPI xboxkrnl::HalDisableSystemInterr
 		LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
-
-	RETURN(FALSE);
 }
 
 
@@ -115,7 +113,7 @@ XBSYSAPI EXPORTNUM(41) xboxkrnl::PANSI_STRING xboxkrnl::HalDiskModelNumber = 0;
 XBSYSAPI EXPORTNUM(42) xboxkrnl::PANSI_STRING xboxkrnl::HalDiskSerialNumber = 0;	
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(43) xboxkrnl::LONGBOOL NTAPI xboxkrnl::HalEnableSystemInterrupt
+XBSYSAPI EXPORTNUM(43) xboxkrnl::BOOLEAN NTAPI xboxkrnl::HalEnableSystemInterrupt
 (
 	ULONG Vector,
 	KIRQL Irql,
