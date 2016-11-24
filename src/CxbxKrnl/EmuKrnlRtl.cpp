@@ -163,7 +163,7 @@ XBSYSAPI EXPORTNUM(263) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeToStr
 		LOG_FUNC_ARG(Source)
 		LOG_FUNC_END;
 
-	NTSTATUS result = 0; // TODO : NtDll::RtlAppendUnicodeToString(Destination, Source);
+	NTSTATUS result = NtDll::RtlAppendUnicodeToString((NtDll::PUNICODE_STRING)Destination, (NtDll::PCWSTR)Source);
 
 	LOG_UNIMPLEMENTED();
 

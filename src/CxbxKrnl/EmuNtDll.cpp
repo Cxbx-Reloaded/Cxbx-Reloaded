@@ -57,6 +57,7 @@ IMPORT(RtlInitUnicodeString);
 IMPORT(RtlAnsiStringToUnicodeString);
 IMPORT(RtlAppendStringToString);
 IMPORT(RtlAppendUnicodeStringToString);
+IMPORT(RtlAppendUnicodeToString);
 IMPORT(RtlUnicodeStringToAnsiString);
 IMPORT(RtlFreeAnsiString);
 IMPORT(RtlNtStatusToDosError);

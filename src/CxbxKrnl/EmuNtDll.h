@@ -714,6 +714,15 @@ typedef NTSTATUS(NTAPI *FPTR_RtlAppendUnicodeStringToString)
 );
 
 // ******************************************************************
+// * RtlAppendUnicodeToString
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_RtlAppendUnicodeToString)
+(
+	IN OUT PUNICODE_STRING  Destination,
+	IN     PCWSTR  Source
+);
+
+// ******************************************************************
 // * RtlUnicodeStringToAnsiString
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeStringToAnsiString)
@@ -1160,6 +1169,7 @@ EXTERN(RtlInitUnicodeString);
 EXTERN(RtlAnsiStringToUnicodeString);
 EXTERN(RtlAppendStringToString);
 EXTERN(RtlAppendUnicodeStringToString);
+EXTERN(RtlAppendUnicodeToString);
 EXTERN(RtlUnicodeStringToAnsiString);
 EXTERN(RtlFreeAnsiString);
 EXTERN(RtlNtStatusToDosError);
