@@ -102,13 +102,13 @@ using namespace xboxkrnl;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(260) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAnsiStringToUnicodeString
 (
-	PUNICODE_STRING DestinationString,
-	PSTRING         SourceString,
-	UCHAR           AllocateDestinationString
+	OUT PUNICODE_STRING DestinationString,
+	IN PSTRING         SourceString,
+	IN UCHAR           AllocateDestinationString
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(DestinationString)
+		LOG_FUNC_ARG_OUT(DestinationString)
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_ARG(AllocateDestinationString)
 		LOG_FUNC_END;
@@ -120,7 +120,7 @@ XBSYSAPI EXPORTNUM(260) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAnsiStringToUnicod
 
 XBSYSAPI EXPORTNUM(261) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendStringToString
 (
-	IN OUT PSTRING Destination,
+	IN PSTRING Destination,
 	IN PSTRING Source
 )
 {
@@ -136,7 +136,7 @@ XBSYSAPI EXPORTNUM(261) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendStringToStri
 
 XBSYSAPI EXPORTNUM(262) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeStringToString
 (
-	IN OUT PUNICODE_STRING Destination,
+	IN PUNICODE_STRING Destination,
 	IN PUNICODE_STRING Source
 )
 {
@@ -145,7 +145,7 @@ XBSYSAPI EXPORTNUM(262) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeStrin
 		LOG_FUNC_ARG(Source)
 		LOG_FUNC_END;
 
-	NTSTATUS result = 0; //  TODO : NtDll::RtlAppendUnicodeStringToString(Destination, Source);
+	NTSTATUS result = NtDll::RtlAppendUnicodeStringToString((NtDll::PUNICODE_STRING)Destination, (NtDll::PUNICODE_STRING)Source);
 
 	LOG_UNIMPLEMENTED();
 

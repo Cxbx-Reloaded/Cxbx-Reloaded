@@ -98,17 +98,17 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::FscGetCacheSize),                 // 0x0023 (35)
 	(uint32)FUNC(&xboxkrnl::FscInvalidateIdleBlocks),         // 0x0024 (36)
 	(uint32)FUNC(&xboxkrnl::FscSetCacheSize),                 // 0x0025 (37)
-	(uint32)PANIC(0x0026),                                    // 0x0026 (38)  HalClearSoftwareInterrupt
-	(uint32)PANIC(0x0027),                                    // 0x0027 (39)  HalDisableSystemInterrupt
+	(uint32)FUNC(&xboxkrnl::HalClearSoftwareInterrupt),       // 0x0026 (38)
+	(uint32)FUNC(&xboxkrnl::HalDisableSystemInterrupt),       // 0x0027 (39)
 	(uint32)VARIABLE(&xboxkrnl::HalDiskCachePartitionCount),  // 0x0028 (40)  A.k.a. "IdexDiskPartitionPrefixBuffer"
 	(uint32)VARIABLE(&xboxkrnl::HalDiskModelNumber),          // 0x0029 (41)
 	(uint32)VARIABLE(&xboxkrnl::HalDiskSerialNumber),         // 0x002A (42)
-	(uint32)PANIC(0x002B),                                    // 0x002B (43)  HalEnableSystemInterrupt
+	(uint32)FUNC(&xboxkrnl::HalEnableSystemInterrupt),        // 0x002B (43)
 	(uint32)FUNC(&xboxkrnl::HalGetInterruptVector),           // 0x002C (44)
 	(uint32)FUNC(&xboxkrnl::HalReadSMBusValue),               // 0x002D (45)
-	(uint32)PANIC(0x002E),                                    // 0x002E (46)  HalReadWritePCISpace
+	(uint32)FUNC(&xboxkrnl::HalReadWritePCISpace),            // 0x002E (46)
 	(uint32)FUNC(&xboxkrnl::HalRegisterShutdownNotification), // 0x002F (47)
-	(uint32)PANIC(0x0030),                                    // 0x0030 (48)  HalRequestSoftwareInterrupt
+	(uint32)FUNC(&xboxkrnl::HalRequestSoftwareInterrupt),     // 0x0030 (48)
 	(uint32)FUNC(&xboxkrnl::HalReturnToFirmware),             // 0x0031 (49)
 	(uint32)FUNC(&xboxkrnl::HalWriteSMBusValue),              // 0x0032 (50)
 	(uint32)PANIC(0x0033),                                    // 0x0033 (51)  InterlockedCompareExchange
@@ -152,11 +152,11 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)VARIABLE(&xboxkrnl::KdDebuggerNotPresent),        // 0x0059 (89)
 	(uint32)PANIC(0x005A),                                    // 0x005A (90)  IoDismountVolume
 	(uint32)FUNC(&xboxkrnl::IoDismountVolumeByName),          // 0x005B (91)
-	(uint32)PANIC(0x005C),                                    // 0x005C (92)  KeAlertResumeThread
-	(uint32)PANIC(0x005D),                                    // 0x005D (93)  KeAlertThread
-	(uint32)PANIC(0x005E),                                    // 0x005E (94)  KeBoostPriorityThread
+	(uint32)FUNC(&xboxkrnl::KeAlertResumeThread),             // 0x005C (92)
+	(uint32)FUNC(&xboxkrnl::KeAlertThread),                   // 0x005D (93)
+	(uint32)FUNC(&xboxkrnl::KeBoostPriorityThread),           // 0x005E (94)
 	(uint32)FUNC(&xboxkrnl::KeBugCheck),                      // 0x005F (95)
-	(uint32)PANIC(0x0060),                                    // 0x0060 (96)  KeBugCheckEx
+	(uint32)FUNC(&xboxkrnl::KeBugCheckEx),                    // 0x0060 (96)
 	(uint32)PANIC(0x0061),                                    // 0x0061 (97)  KeCancelTimer
 	(uint32)FUNC(&xboxkrnl::KeConnectInterrupt),              // 0x0062 (98)
 	(uint32)FUNC(&xboxkrnl::KeDelayExecutionThread),          // 0x0063 (99)
@@ -389,12 +389,12 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)VARIABLE(&xboxkrnl::XeImageFileName),             // 0x0146 (326)
 	(uint32)FUNC(&xboxkrnl::XeLoadSection),                   // 0x0147 (327) 
 	(uint32)FUNC(&xboxkrnl::XeUnloadSection),                 // 0x0148 (328) 
-	(uint32)PANIC(0x0149),                                    // 0x0149 (329) READ_PORT_BUFFER_UCHAR
-	(uint32)PANIC(0x014A),                                    // 0x014A (330) READ_PORT_BUFFER_USHORT
-	(uint32)PANIC(0x014B),                                    // 0x014B (331) READ_PORT_BUFFER_ULONG
-	(uint32)PANIC(0x014C),                                    // 0x014C (332) WRITE_PORT_BUFFER_UCHAR
-	(uint32)PANIC(0x014D),                                    // 0x014D (333) WRITE_PORT_BUFFER_USHORT
-	(uint32)PANIC(0x014E),                                    // 0x014E (334) WRITE_PORT_BUFFER_ULONG
+	(uint32)FUNC(&xboxkrnl::READ_PORT_BUFFER_UCHAR),          // 0x0149 (329)
+	(uint32)FUNC(&xboxkrnl::READ_PORT_BUFFER_USHORT),         // 0x014A (330)
+	(uint32)FUNC(&xboxkrnl::READ_PORT_BUFFER_ULONG),          // 0x014B (331)
+	(uint32)FUNC(&xboxkrnl::WRITE_PORT_BUFFER_UCHAR),         // 0x014C (332)
+	(uint32)FUNC(&xboxkrnl::WRITE_PORT_BUFFER_USHORT),        // 0x014D (333)
+	(uint32)FUNC(&xboxkrnl::WRITE_PORT_BUFFER_ULONG),         // 0x014E (334)
 	(uint32)FUNC(&xboxkrnl::XcSHAInit),                       // 0x014F (335)
 	(uint32)FUNC(&xboxkrnl::XcSHAUpdate),                     // 0x0150 (336)
 	(uint32)FUNC(&xboxkrnl::XcSHAFinal),                      // 0x0151 (337)
@@ -418,15 +418,15 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)VARIABLE(&xboxkrnl::XePublicKeyData),             // 0x0163 (355)
 	(uint32)VARIABLE(&xboxkrnl::HalBootSMCVideoMode),         // 0x0164 (356)
 	(uint32)VARIABLE(&xboxkrnl::IdexChannelObject),           // 0x0165 (357)
-	(uint32)PANIC(0x0166),                                    // 0x0166 (358) HalIsResetOrShutdownPending
+	(uint32)FUNC(&xboxkrnl::HalIsResetOrShutdownPending),     // 0x0166 (358)
 	(uint32)PANIC(0x0167),                                    // 0x0167 (359) IoMarkIrpMustComplete
-	(uint32)PANIC(0x0168),                                    // 0x0168 (360) HalInitiateShutdown
+	(uint32)FUNC(&xboxkrnl::HalInitiateShutdown),             // 0x0168 (360)
 	(uint32)PANIC(0x0169),                                    // 0x0169 (361) RtlSnprintf
 	(uint32)PANIC(0x016A),                                    // 0x016A (362) RtlSprintf
 	(uint32)PANIC(0x016B),                                    // 0x016B (363) RtlVsnprintf
 	(uint32)PANIC(0x016C),                                    // 0x016C (364) RtlVsprintf
-	(uint32)PANIC(0x016D),                                    // 0x016D (365) HalEnableSecureTrayEject
-	(uint32)PANIC(0x016E),                                    // 0x016E (366) HalWriteSMCScratchRegister
+	(uint32)FUNC(&xboxkrnl::HalEnableSecureTrayEject),        // 0x016D (365)
+	(uint32)FUNC(&xboxkrnl::HalWriteSMCScratchRegister),      // 0x016E (366)
 	(uint32)PANIC(0x016F),                                    // 0x016F (367) UnknownAPI367
 	(uint32)PANIC(0x0170),                                    // 0x0170 (368) UnknownAPI368
 	(uint32)PANIC(0x0171),                                    // 0x0171 (369) UnknownAPI369

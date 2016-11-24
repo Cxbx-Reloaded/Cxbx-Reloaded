@@ -60,6 +60,49 @@ std::ostream& operator<<(std::ostream& os, const xboxkrnl::LARGE_INTEGER& value)
 	return os << value.QuadPart;
 }
 
+// Source:Dxbx
+XBSYSAPI EXPORTNUM(92) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeAlertResumeThread
+(
+	IN HANDLE ThreadHandle,
+	IN OUT PULONG PreviousSuspendCount
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(ThreadHandle)
+		LOG_FUNC_ARG_OUT(PreviousSuspendCount)
+		LOG_FUNC_END;
+
+	// TODO : Result = NtDll::NtAlertResumeThread(ThreadHandle, PreviousSuspendCount);
+	LOG_UNIMPLEMENTED();
+
+	RETURN(S_OK);
+}
+
+// Source:Dxbx
+XBSYSAPI EXPORTNUM(93) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeAlertThread
+(
+	IN HANDLE ThreadHandle
+)
+{
+	LOG_FUNC_ONE_ARG(ThreadHandle);
+
+// TODO : Result = NtDll::NtAlertThread(ThreadHandle);
+	LOG_UNIMPLEMENTED();
+
+	RETURN(S_OK);
+}
+
+// Source:Dxbx
+XBSYSAPI EXPORTNUM(94) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeBoostPriorityThread
+(
+)
+{
+	LOG_FUNC();
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(S_OK);
+}
 
 // ******************************************************************
 // * KeBugCheck
@@ -71,8 +114,30 @@ XBSYSAPI EXPORTNUM(95) VOID NTAPI xboxkrnl::KeBugCheck
 {
 	LOG_FUNC_ONE_ARG(BugCheckMode);
 
-	// TODO: Investigate XapiFiberStartup maybe?
+	KeBugCheckEx(BugCheckMode, 0, 0, 0, 0);
+}
+
+// Source:Dxbx
+XBSYSAPI EXPORTNUM(96) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeBugCheckEx
+(
+	IN DWORD BugCheckCode,
+	IN PVOID BugCheckParameter1,
+	IN PVOID BugCheckParameter2,
+	IN PVOID BugCheckParameter3,
+	IN PVOID BugCheckParameter4
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(BugCheckCode)
+		LOG_FUNC_ARG(BugCheckParameter1)
+		LOG_FUNC_ARG(BugCheckParameter2)
+		LOG_FUNC_ARG(BugCheckParameter3)
+		LOG_FUNC_ARG(BugCheckParameter4)
+		LOG_FUNC_END;
+
 	LOG_UNIMPLEMENTED();
+
+	RETURN(S_OK);
 }
 
 // ******************************************************************

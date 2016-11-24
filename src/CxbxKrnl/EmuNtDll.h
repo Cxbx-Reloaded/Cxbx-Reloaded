@@ -705,6 +705,15 @@ typedef NTSTATUS(NTAPI *FPTR_RtlAppendStringToString)
 );
 
 // ******************************************************************
+// * RtlAppendUnicodeStringToString
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_RtlAppendUnicodeStringToString)
+(
+	IN OUT PUNICODE_STRING  Destination,
+	IN     PUNICODE_STRING  Source
+);
+
+// ******************************************************************
 // * RtlUnicodeStringToAnsiString
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeStringToAnsiString)
@@ -1143,56 +1152,60 @@ typedef PVOID (NTAPI *FPTR_RtlDestroyHeap)
 // ******************************************************************
 // * Exported API
 // ******************************************************************
-extern FPTR_RtlInitAnsiString              RtlInitAnsiString;
-extern FPTR_RtlInitUnicodeString           RtlInitUnicodeString;
-extern FPTR_RtlAnsiStringToUnicodeString   RtlAnsiStringToUnicodeString;
-extern FPTR_RtlAppendStringToString        RtlAppendStringToString;
-extern FPTR_RtlUnicodeStringToAnsiString   RtlUnicodeStringToAnsiString;
-extern FPTR_RtlFreeAnsiString              RtlFreeAnsiString;
-extern FPTR_RtlNtStatusToDosError          RtlNtStatusToDosError;
-extern FPTR_RtlTimeFieldsToTime            RtlTimeFieldsToTime;
-extern FPTR_RtlTimeToTimeFields            RtlTimeToTimeFields;
-extern FPTR_RtlTryEnterCriticalSection     RtlTryEnterCriticalSection;
-extern FPTR_RtlInitializeCriticalSection   RtlInitializeCriticalSection;
-extern FPTR_RtlEnterCriticalSection        RtlEnterCriticalSection;
-extern FPTR_RtlLeaveCriticalSection        RtlLeaveCriticalSection;
-extern FPTR_NtWaitForSingleObject          NtWaitForSingleObject;
-extern FPTR_NtWaitForMultipleObjects       NtWaitForMultipleObjects;
-extern FPTR_RtlCreateHeap                  RtlCreateHeap;
-extern FPTR_RtlAllocateHeap                RtlAllocateHeap;
-extern FPTR_RtlFreeHeap                    RtlFreeHeap;
-extern FPTR_RtlReAllocateHeap              RtlReAllocateHeap;
-extern FPTR_RtlSizeHeap                    RtlSizeHeap;
-extern FPTR_RtlDestroyHeap				   RtlDestroyHeap;
-extern FPTR_RtlEqualString				   RtlEqualString;
-extern FPTR_NtAllocateVirtualMemory        NtAllocateVirtualMemory;
-extern FPTR_NtFreeVirtualMemory            NtFreeVirtualMemory;
-extern FPTR_NtQueryVirtualMemory           NtQueryVirtualMemory;
-extern FPTR_NtClearEvent                   NtClearEvent;
-extern FPTR_NtClose                        NtClose;
-extern FPTR_NtDelayExecution               NtDelayExecution;
-extern FPTR_NtDuplicateObject              NtDuplicateObject;
-extern FPTR_NtFlushBuffersFile             NtFlushBuffersFile;
-extern FPTR_NtQueryInformationFile         NtQueryInformationFile;
-extern FPTR_NtQueryDirectoryFile           NtQueryDirectoryFile;
-extern FPTR_NtQueryFullAttributesFile      NtQueryFullAttributesFile;
-extern FPTR_NtQueryVolumeInformationFile   NtQueryVolumeInformationFile;
-extern FPTR_NtCreateEvent                  NtCreateEvent;
-extern FPTR_NtCreateMutant                 NtCreateMutant;
-extern FPTR_NtReleaseMutant                NtReleaseMutant;
-extern FPTR_NtCreateSemaphore              NtCreateSemaphore;
-extern FPTR_NtReleaseSemaphore             NtReleaseSemaphore;
-extern FPTR_NtCreateDirectoryObject        NtCreateDirectoryObject;
-extern FPTR_NtCreateFile                   NtCreateFile;
-extern FPTR_NtReadFile                     NtReadFile;
-extern FPTR_NtWriteFile                    NtWriteFile;
-extern FPTR_NtYieldExecution               NtYieldExecution;
-extern FPTR_NtSetInformationFile           NtSetInformationFile;
-extern FPTR_NtSetEvent                     NtSetEvent;
-extern FPTR_NtSuspendThread                NtSuspendThread;
-extern FPTR_NtResumeThread                 NtResumeThread;
-extern FPTR_NtSetLdtEntries                NtSetLdtEntries;
-extern FPTR_NtQueueApcThread			   NtQueueApcThread;
+#define EXTERN(API) \
+extern FPTR_##API                          API
+
+EXTERN(RtlInitAnsiString);
+EXTERN(RtlInitUnicodeString);
+EXTERN(RtlAnsiStringToUnicodeString);
+EXTERN(RtlAppendStringToString);
+EXTERN(RtlAppendUnicodeStringToString);
+EXTERN(RtlUnicodeStringToAnsiString);
+EXTERN(RtlFreeAnsiString);
+EXTERN(RtlNtStatusToDosError);
+EXTERN(RtlTimeFieldsToTime);
+EXTERN(RtlTimeToTimeFields);
+EXTERN(RtlTryEnterCriticalSection);
+EXTERN(RtlInitializeCriticalSection);
+EXTERN(RtlEnterCriticalSection);
+EXTERN(RtlLeaveCriticalSection);
+EXTERN(NtWaitForSingleObject);
+EXTERN(NtWaitForMultipleObjects);
+EXTERN(RtlCreateHeap);
+EXTERN(RtlAllocateHeap);
+EXTERN(RtlFreeHeap);
+EXTERN(RtlReAllocateHeap);
+EXTERN(RtlSizeHeap);
+EXTERN(RtlDestroyHeap);
+EXTERN(RtlEqualString);
+EXTERN(NtAllocateVirtualMemory);
+EXTERN(NtFreeVirtualMemory);
+EXTERN(NtQueryVirtualMemory);
+EXTERN(NtClearEvent);
+EXTERN(NtClose);
+EXTERN(NtDelayExecution);
+EXTERN(NtDuplicateObject);
+EXTERN(NtFlushBuffersFile);
+EXTERN(NtQueryInformationFile);
+EXTERN(NtQueryDirectoryFile);
+EXTERN(NtQueryFullAttributesFile);
+EXTERN(NtQueryVolumeInformationFile);
+EXTERN(NtCreateEvent);
+EXTERN(NtCreateMutant);
+EXTERN(NtReleaseMutant);
+EXTERN(NtCreateSemaphore);
+EXTERN(NtReleaseSemaphore);
+EXTERN(NtCreateDirectoryObject);
+EXTERN(NtCreateFile);
+EXTERN(NtReadFile);
+EXTERN(NtWriteFile);
+EXTERN(NtYieldExecution);
+EXTERN(NtSetInformationFile);
+EXTERN(NtSetEvent);
+EXTERN(NtSuspendThread);
+EXTERN(NtResumeThread);
+EXTERN(NtSetLdtEntries);
+EXTERN(NtQueueApcThread);
 
 #if defined(__cplusplus)
 }
