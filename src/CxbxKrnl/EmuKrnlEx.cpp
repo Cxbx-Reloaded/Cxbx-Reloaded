@@ -180,8 +180,8 @@ XBSYSAPI EXPORTNUM(19) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::ExInterlockedAddL
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(20) VOID __fastcall xboxkrnl::ExInterlockedAddLargeStatistic
 (
-	PLARGE_INTEGER Addend,
-	ULONG Increment
+	IN PLARGE_INTEGER Addend,
+	IN ULONG Increment
 )
 {
 	LOG_FUNC_BEGIN
@@ -195,10 +195,10 @@ XBSYSAPI EXPORTNUM(20) VOID __fastcall xboxkrnl::ExInterlockedAddLargeStatistic
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(21) xboxkrnl::LONGLONG __fastcall xboxkrnl::ExInterlockedCompareExchange64
 (
-	OUT PLONGLONG Destination,
-	PLONGLONG Exchange,
-	PLONGLONG Comparand,
-	PKSPIN_LOCK Lock
+	IN OUT PLONGLONG Destination,
+	IN PLONGLONG Exchange,
+	IN PLONGLONG Comparand,
+	IN PKSPIN_LOCK Lock
 )
 {
 	LOG_FUNC_BEGIN
@@ -222,7 +222,6 @@ XBSYSAPI EXPORTNUM(22) xboxkrnl::POBJECT_TYPE xboxkrnl::ExMutantObjectType = NUL
 XBSYSAPI EXPORTNUM(23) xboxkrnl::ULONG NTAPI xboxkrnl::ExQueryPoolBlockSize
 (
 	IN PVOID PoolBlock
-	// TODO : Add 'OUT PBOOLEAN QuotaCharged' ?
 )
 {
 	LOG_FUNC_ONE_ARG(PoolBlock);
@@ -379,18 +378,18 @@ XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
 		{
 			// Open partition 0 directly :
 			_STRING FileName;
-			RtlInitAnsiString(@FileName, PCSZ(PAnsiChar(DeviceHarddisk0Partition0)));
+			RtlInitAnsiString(&FileName, PCSZ(PAnsiChar(DeviceHarddisk0Partition0)));
 
 			OBJECT_ATTRIBUTES ObjectAttributes;
-			InitializeObjectAttributes(@ObjectAttributes, @FileName, OBJ_CASE_INSENSITIVE, 0, NULL);
+			InitializeObjectAttributes(&ObjectAttributes, &FileName, OBJ_CASE_INSENSITIVE, 0, NULL);
 
 			Handle ConfigPartitionHandle;
 			IO_STATUS_BLOCK IoStatusBlock;
 			Result = xboxkrnl_NtOpenFile(
-				@ConfigPartitionHandle,
+				&ConfigPartitionHandle,
 				GENERIC_READ or DWORD(iif(aIsWriteMode, GENERIC_WRITE, 0)) or SYNCHRONIZE,
-				@ObjectAttributes,
-				@IoStatusBlock,
+				&ObjectAttributes,
+				&IoStatusBlock,
 				FILE_SHARE_READ or FILE_SHARE_WRITE,
 				FILE_SYNCHRONOUS_IO_ALERT);
 			if (NT_SUCCESS(Result))
@@ -403,18 +402,18 @@ XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
 				{
 					RefurbInfoCopy = *pRefurbInfo;
 					RefurbInfoCopy.Signature_ = XBOX_REFURB_INFO_SIGNATURE;
-					Result = xboxkrnl_NtWriteFile(ConfigPartitionHandle, 0, NULL, NULL, @IoStatusBlock, @RefurbInfoCopy, XBOX_HD_SECTOR_SIZE, @ByteOffset);
+					Result = xboxkrnl_NtWriteFile(ConfigPartitionHandle, 0, NULL, NULL, &IoStatusBlock, &RefurbInfoCopy, XBOX_HD_SECTOR_SIZE, &ByteOffset);
 				}
 				else
 				{
-					Result = xboxkrnl::NtReadFile(ConfigPartitionHandle, 0, NULL, NULL, @IoStatusBlock, @RefurbInfoCopy, XBOX_HD_SECTOR_SIZE, @ByteOffset);
+					Result = xboxkrnl::NtReadFile(ConfigPartitionHandle, 0, NULL, NULL, &IoStatusBlock, &RefurbInfoCopy, XBOX_HD_SECTOR_SIZE, &ByteOffset);
 					if (NT_SUCCESS(Result)) 
 					{
 						if (RefurbInfoCopy.Signature_ == XBOX_REFURB_INFO_SIGNATURE)
 							// No signature - clear output buffer :
 							ZeroMemory(pRefurbInfo, SizeOf(XBOX_REFURB_INFO))
 						else
-							*pRefurbInfo = RefurbInfoCopy;
+							CopyMem(pRefurbInfo, RefurbInfoCopy, SizeOf(XBOX_REFURB_INFO));
 					}
 				}
 
@@ -542,13 +541,13 @@ XBSYSAPI EXPORTNUM(33) xboxkrnl::PLIST_ENTRY __fastcall xboxkrnl::ExfInterlocked
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(34) xboxkrnl::PLIST_ENTRY __fastcall xboxkrnl::ExfInterlockedRemoveHeadList
 (
-	IN PKSPIN_LOCK Lock,
-	IN PLIST_ENTRY ListHead
+	IN PLIST_ENTRY ListHead,
+	IN PKSPIN_LOCK Lock
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Lock)
 		LOG_FUNC_ARG(ListHead)
+		LOG_FUNC_ARG(Lock)
 		LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();

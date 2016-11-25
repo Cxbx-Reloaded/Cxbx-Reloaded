@@ -167,8 +167,8 @@ XBSYSAPI EXPORTNUM(33) PLIST_ENTRY __fastcall ExfInterlockedInsertTailList
 
 XBSYSAPI EXPORTNUM(34) PLIST_ENTRY __fastcall ExfInterlockedRemoveHeadList
 (
-	IN PKSPIN_LOCK Lock,
-	IN PLIST_ENTRY ListHead
+	IN PLIST_ENTRY ListHead,
+	IN PKSPIN_LOCK Lock
 );
 
 XBSYSAPI VOID *InterlockedCompareExchange;
