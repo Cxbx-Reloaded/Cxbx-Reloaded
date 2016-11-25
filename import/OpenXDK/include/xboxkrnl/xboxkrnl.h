@@ -420,6 +420,16 @@ typedef struct _FILETIME
 }
 FILETIME, *PFILETIME;
 
+typedef struct _ERWLOCK {
+	LONG LockCount;
+	ULONG WritersWaitingCount;
+	ULONG ReadersWaitingCount;
+	ULONG ReadersEntryCount;
+// TODO : Enable once KEVENT and KSEMAPHORE are defined :
+//	KEVENT WriterEvent;
+//	KSEMAPHORE ReaderSemaphore;
+} ERWLOCK, *PERWLOCK;
+
 // Source : DXBX (Xbox Refurb Info)
 typedef struct _XBOX_REFURB_INFO
 {
