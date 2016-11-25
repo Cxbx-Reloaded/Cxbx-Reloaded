@@ -14,12 +14,12 @@
 
 XBSYSAPI EXPORTNUM(12) NTSTATUS NTAPI ExAcquireReadWriteLockExclusive
 (
-	IN DWORD Arg1
+	IN PERWLOCK ReadWriteLock
 );
 
 XBSYSAPI EXPORTNUM(13) NTSTATUS NTAPI ExAcquireReadWriteLockShared
 (
-	IN DWORD Arg1
+	IN PERWLOCK ReadWriteLock
 );
 
 // ******************************************************************
@@ -31,7 +31,7 @@ XBSYSAPI EXPORTNUM(13) NTSTATUS NTAPI ExAcquireReadWriteLockShared
 // ******************************************************************
 XBSYSAPI EXPORTNUM(14) PVOID NTAPI ExAllocatePool
 (
-    IN ULONG NumberOfBytes
+    IN SIZE_T NumberOfBytes
 );
 
 // ******************************************************************
@@ -63,7 +63,7 @@ XBSYSAPI EXPORTNUM(17) VOID NTAPI ExFreePool
 
 XBSYSAPI EXPORTNUM(18) NTSTATUS NTAPI ExInitializeReadWriteLock
 (
-	IN DWORD Arg1
+	IN PERWLOCK ReadWriteLock
 );
 
 // Source:APILogger - Uncertain
@@ -134,7 +134,7 @@ XBSYSAPI EXPORTNUM(27) VOID NTAPI ExRaiseStatus
 
 XBSYSAPI EXPORTNUM(28) NTSTATUS NTAPI ExReleaseReadWriteLock
 (
-	IN DWORD Arg1
+	IN PERWLOCK ReadWriteLock
 );
 
 // ******************************************************************

@@ -52,10 +52,10 @@ using namespace xboxkrnl;
 // Source:APILogger - Uncertain
 XBSYSAPI EXPORTNUM(12) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExAcquireReadWriteLockExclusive
 (
-	DWORD Arg1
+	IN PERWLOCK ReadWriteLock
 )
 {
-	LOG_FUNC_ONE_ARG(Arg1);
+	LOG_FUNC_ONE_ARG(ReadWriteLock);
 
 	// KeWaitForSingleObject
 	LOG_UNIMPLEMENTED();
@@ -66,10 +66,10 @@ XBSYSAPI EXPORTNUM(12) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExAcquireReadWriteLock
 // Source:APILogger - Uncertain
 XBSYSAPI EXPORTNUM(13) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExAcquireReadWriteLockShared
 (
-	DWORD Arg1
+	IN PERWLOCK ReadWriteLock
 )
 {
-	LOG_FUNC_ONE_ARG(Arg1);
+	LOG_FUNC_ONE_ARG(ReadWriteLock);
 
 	// KeWaitForSingleObject
 	LOG_UNIMPLEMENTED();
@@ -82,7 +82,7 @@ XBSYSAPI EXPORTNUM(13) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExAcquireReadWriteLock
 // ******************************************************************
 XBSYSAPI EXPORTNUM(14) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePool
 (
-	IN ULONG NumberOfBytes
+	IN SIZE_T NumberOfBytes
 )
 {
 	LOG_FUNC_ONE_ARG(NumberOfBytes);
@@ -134,10 +134,10 @@ XBSYSAPI EXPORTNUM(17) VOID NTAPI xboxkrnl::ExFreePool
 // Source:APILogger - Uncertain
 XBSYSAPI EXPORTNUM(18) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExInitializeReadWriteLock
 (
-	DWORD Arg1
+	IN PERWLOCK ReadWriteLock
 )
 {
-	LOG_FUNC_ONE_ARG(Arg1);
+	LOG_FUNC_ONE_ARG(ReadWriteLock);
 
 	LOG_UNIMPLEMENTED();
 
@@ -458,10 +458,10 @@ XBSYSAPI EXPORTNUM(27) VOID NTAPI xboxkrnl::ExRaiseStatus
 // Source:APILogger - Uncertain
 XBSYSAPI EXPORTNUM(28) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReleaseReadWriteLock
 (
-	IN DWORD Arg1
+	IN PERWLOCK ReadWriteLock
 )
 {
-	LOG_FUNC_ONE_ARG(Arg1);
+	LOG_FUNC_ONE_ARG(ReadWriteLock);
 
 	LOG_UNIMPLEMENTED();
 
