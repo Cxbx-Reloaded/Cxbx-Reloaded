@@ -295,3 +295,5 @@ XBSYSAPI EXPORTNUM(258) VOID NTAPI xboxkrnl::PsTerminateSystemThread
 	//ExitThread(ExitStatus);
 }
 
+// TODO : What should we initialize this to?
+XBSYSAPI EXPORTNUM(259) volatile xboxkrnl::POBJECT_TYPE xboxkrnl::PsThreadObjectType = NULL;
