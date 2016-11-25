@@ -57,6 +57,10 @@ namespace xboxkrnl
 #define FUNC(f) f
 #define VARIABLE(v) v
 
+#define DEVKIT // developer kit only functions
+#define PROFILING // private kernel profiling functions
+// A.k.a. _XBOX_ENABLE_PROFILING
+
 // kernel thunk table
 extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 {
@@ -67,11 +71,11 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::AvSetSavedDataAddress),           // 0x0004 (4)
 	(uint32)FUNC(&xboxkrnl::DbgBreakPoint),                   // 0x0005 (5)
 	(uint32)FUNC(&xboxkrnl::DbgBreakPointWithStatus),         // 0x0006 (6)
-	(uint32)FUNC(&xboxkrnl::DbgLoadImageSymbols),             // 0x0007 (7)
+	(uint32)FUNC(&xboxkrnl::DbgLoadImageSymbols),             // 0x0007 (7) DEVKIT
 	(uint32)FUNC(&xboxkrnl::DbgPrint),                        // 0x0008 (8)
 	(uint32)FUNC(&xboxkrnl::HalReadSMCTrayState),             // 0x0009 (9)
 	(uint32)FUNC(&xboxkrnl::DbgPrompt),                       // 0x000A (10)
-	(uint32)FUNC(&xboxkrnl::DbgUnLoadImageSymbols),           // 0x000B (11)
+	(uint32)FUNC(&xboxkrnl::DbgUnLoadImageSymbols),           // 0x000B (11) DEVKIT
 	(uint32)FUNC(&xboxkrnl::ExAcquireReadWriteLockExclusive), // 0x000C (12)
 	(uint32)FUNC(&xboxkrnl::ExAcquireReadWriteLockShared),    // 0x000D (13)
 	(uint32)FUNC(&xboxkrnl::ExAllocatePool),                  // 0x000E (14)
@@ -86,7 +90,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::ExQueryPoolBlockSize),            // 0x0017 (23)  
 	(uint32)FUNC(&xboxkrnl::ExQueryNonVolatileSetting),       // 0x0018 (24)
 	(uint32)FUNC(&xboxkrnl::ExReadWriteRefurbInfo),           // 0x0019 (25)
-	(uint32)FUNC(&xboxkrnl::ExQueryPoolBlockSize),            // 0x001A (26)
+	(uint32)FUNC(&xboxkrnl::ExRaiseException),                // 0x001A (26)
 	(uint32)FUNC(&xboxkrnl::ExRaiseStatus),                   // 0x001B (27)
 	(uint32)FUNC(&xboxkrnl::ExReleaseReadWriteLock),          // 0x001C (28)
 	(uint32)FUNC(&xboxkrnl::ExSaveNonVolatileSetting),        // 0x001D (29)
@@ -319,7 +323,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0100),                                    // 0x0100 (256) PsQueryStatistics
 	(uint32)PANIC(0x0101),                                    // 0x0101 (257) PsSetCreateThreadNotifyRoutine
 	(uint32)FUNC(&xboxkrnl::PsTerminateSystemThread),         // 0x0102 (258)
-	(uint32)PANIC(0x0103),                                    // 0x0103 (259) PsThreadObjectType
+	(uint32)VARIABLE(&xboxkrnl::PsThreadObjectType),          // 0x0103 (259)
 	(uint32)FUNC(&xboxkrnl::RtlAnsiStringToUnicodeString),    // 0x0104 (260)
 	(uint32)FUNC(&xboxkrnl::RtlAppendStringToString),         // 0x0105 (261)
 	(uint32)FUNC(&xboxkrnl::RtlAppendUnicodeStringToString),  // 0x0106 (262)
@@ -430,15 +434,15 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x016F),                                    // 0x016F (367) UnknownAPI367
 	(uint32)PANIC(0x0170),                                    // 0x0170 (368) UnknownAPI368
 	(uint32)PANIC(0x0171),                                    // 0x0171 (369) UnknownAPI369
-	(uint32)PANIC(0x0172),                                    // 0x0172 (370) UnknownAPI370
-	(uint32)PANIC(0x0173),                                    // 0x0173 (371) UnknownAPI371
-	(uint32)PANIC(0x0174),                                    // 0x0174 (372) UnknownAPI372
-	(uint32)PANIC(0x0175),                                    // 0x0175 (373) UnknownAPI373
-	(uint32)PANIC(0x0176),                                    // 0x0177 (374) MmDbgAllocateMemory
-	(uint32)PANIC(0x0177),                                    // 0x0178 (375) MmDbgFreeMemory - Returns number of pages released.
-	(uint32)PANIC(0x0178),                                    // 0x0179 (376) MmDbgQueryAvailablePages
-	(uint32)PANIC(0x0179),                                    // 0x017A (377) MmDbgReleaseAddress
-	(uint32)PANIC(0x017A),                                    // 0x017A (378) MmDbgWriteCheck
+	(uint32)PANIC(0x0172),                                    // 0x0172 (370) PROFILING XProfpControl
+	(uint32)PANIC(0x0173),                                    // 0x0173 (371) PROFILING XProfpGetData
+	(uint32)PANIC(0x0174),                                    // 0x0174 (372) PROFILING IrtClientInitFast
+	(uint32)PANIC(0x0175),                                    // 0x0175 (373) PROFILING IrtSweep
+	(uint32)PANIC(0x0176),                                    // 0x0177 (374) DEVKIT MmDbgAllocateMemory
+	(uint32)PANIC(0x0177),                                    // 0x0178 (375) DEVKIT MmDbgFreeMemory - Returns number of pages released.
+	(uint32)PANIC(0x0178),                                    // 0x0179 (376) DEVKIT MmDbgQueryAvailablePages
+	(uint32)PANIC(0x0179),                                    // 0x017A (377) DEVKIT MmDbgReleaseAddress
+	(uint32)PANIC(0x017A),                                    // 0x017A (378) DEVKIT MmDbgWriteCheck
 };
 
 /* prevent name collisions */
