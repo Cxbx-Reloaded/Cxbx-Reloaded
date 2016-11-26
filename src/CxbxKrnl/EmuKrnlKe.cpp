@@ -316,7 +316,7 @@ XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 	// I really tried to avoid adding this...
 	//	__asm int 3;
 	//	CxbxKrnlCleanup("KeRaiseIrqlToDpcLevel not implemented! (Tell blueshogun -_-)");
-	// LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED();
 
 	RETURN(0);
 }
