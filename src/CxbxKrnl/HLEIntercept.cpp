@@ -157,16 +157,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
         }
     }
 
-    //
-    // initialize openxdk emulation (TODO)
-    //
-
-    if(pLibraryVersion == 0)
-    {
-        DbgPrintf("HLE: Detected OpenXDK application...\n");
-    }
-
-    //
+	//
     // initialize Microsoft XDK emulation
     //
 
@@ -796,3 +787,4 @@ static void EmuXRefFailure()
     CxbxKrnlCleanup("XRef-only function body reached. Fatal Error.");
 }
 
+	
