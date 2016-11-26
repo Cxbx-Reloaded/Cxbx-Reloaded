@@ -328,6 +328,10 @@ void EmuInitFS()
 // generate fs segment selector
 void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 {
+	// Make sure the TLS Start and End addresses are within Xbox Memory
+	if (pTLS->dwDataStartAddr > XBOX_MEMORY_SIZE || pTLS->dwDataEndAddr > XBOX_MEMORY_SIZE) {
+		return;
+	}
 
 	NT_TIB         *OrgNtTib;
 	xboxkrnl::KPCR *NewPcr;
