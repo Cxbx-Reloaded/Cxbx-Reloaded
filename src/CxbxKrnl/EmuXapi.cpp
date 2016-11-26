@@ -89,7 +89,7 @@ BOOL WINAPI XTL::EmuXFormatUtilityDrive()
 
     // TODO: yeah... we'll format... riiiiight
 
-    return TRUE;
+	RETURN(TRUE);
 }
 
 // ******************************************************************
@@ -104,7 +104,7 @@ DWORD WINAPI XTL::EmuGetTimeZoneInformation
 
     DWORD dwRet = GetTimeZoneInformation(lpTimeZoneInformation);
 
-	return dwRet;
+	RETURN(dwRet);
 }
 
 // ******************************************************************
@@ -122,7 +122,7 @@ BOOL WINAPI XTL::EmuQueryPerformanceCounter
     // debug - 4x speed
     //lpPerformanceCount->QuadPart *= 4;
 
-	return bRet;
+	RETURN(bRet);
 }
 
 // ******************************************************************
@@ -137,7 +137,7 @@ BOOL WINAPI XTL::EmuQueryPerformanceFrequency
 
     BOOL bRet = QueryPerformanceFrequency(lpFrequency);
 
-	return bRet;
+	RETURN(bRet);
 }
 
 // ******************************************************************
@@ -152,7 +152,7 @@ BOOL WINAPI XTL::EmuXMountUtilityDrive
 
 	CxbxMountUtilityDrive(fFormatClean);
 
-    return TRUE;
+	RETURN(TRUE);
 }
 
 // ******************************************************************
@@ -190,8 +190,6 @@ VOID WINAPI XTL::EmuXInitDevices
     {
         g_hInputHandle[v] = 0;
     }
-	
-	return;
 }
 
 // ******************************************************************
@@ -211,7 +209,7 @@ DWORD WINAPI XTL::EmuXGetDevices
     else
         EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X)\n", DeviceType->Reserved[0], DeviceType->Reserved[1], DeviceType->Reserved[2]);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -255,7 +253,7 @@ BOOL WINAPI XTL::EmuXGetDeviceChanges
         *pdwRemovals   = 0;
     }
 
-	return TRUE; //bRet;
+	RETURN(TRUE); // TODO : RETURN(bRet);
 }
 
 // ******************************************************************
@@ -326,7 +324,7 @@ HANDLE WINAPI XTL::EmuXInputOpen
 
 	g_bXInputOpenCalled = true;
 
-	return (HANDLE)pph;
+	RETURN((HANDLE)pph);
 }
 
 // ******************************************************************
@@ -365,8 +363,6 @@ VOID WINAPI XTL::EmuXInputClose
         delete pph;
     }
     //*/
-
-	return;
 }
 
 // ******************************************************************
@@ -418,9 +414,7 @@ DWORD WINAPI XTL::EmuXInputPoll
         }
     }
 
-    
-
-    return ERROR_SUCCESS;
+	RETURN(ERROR_SUCCESS);
 }
 
 // ******************************************************************
@@ -455,7 +449,7 @@ DWORD WINAPI XTL::EmuXInputGetCapabilities
         }
     }
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -507,7 +501,7 @@ DWORD WINAPI XTL::EmuXInputGetState
 	else
 		EmuWarning( "EmuXInputGetState(): pph == NULL!" );
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -583,7 +577,7 @@ DWORD WINAPI XTL::EmuXInputSetState
         }
     }
 
-	return ret;
+	RETURN(ret);
 }
 
 
@@ -606,7 +600,7 @@ BOOL WINAPI XTL::EmuSetThreadPriorityBoost
     if(bRet == FALSE)
         EmuWarning("SetThreadPriorityBoost Failed!");
 
-	return bRet;
+	RETURN(bRet);
 }
 
 // ******************************************************************
@@ -628,7 +622,7 @@ BOOL WINAPI XTL::EmuSetThreadPriority
     if(bRet == FALSE)
         EmuWarning("SetThreadPriority Failed!");
 
-	return bRet;
+	RETURN(bRet);
 }
 
 
@@ -647,7 +641,7 @@ int WINAPI XTL::EmuGetThreadPriority
     if(iRet == THREAD_PRIORITY_ERROR_RETURN)
         EmuWarning("GetThreadPriority Failed!");
 
-	return iRet;
+	RETURN(iRet);
 }
 
 // ******************************************************************
@@ -666,7 +660,7 @@ BOOL WINAPI XTL::EmuGetExitCodeThread
 
     BOOL bRet = GetExitCodeThread(hThread, lpExitCode);
 
-	return bRet;
+	RETURN(bRet);
 }
 
 // ******************************************************************
@@ -700,8 +694,6 @@ VOID WINAPI XTL::EmuXapiThreadStartup
     */
 
     //_asm int 3;
-
-    return;
 }
 
 // ******************************************************************
@@ -784,7 +776,7 @@ DWORD WINAPI XTL::EmuQueueUserAPC
 	if(!dwRet)
 		EmuWarning("QueueUserAPC failed!");
 
-	return dwRet;
+	RETURN(dwRet);
 }
 
 // ******************************************************************
@@ -810,7 +802,7 @@ BOOL WINAPI XTL::EmuGetOverlappedResult
 //	if(bWait)
 //		bRet = TRUE; // Sucker...
 
-	return bRet;
+	RETURN(bRet);
 }
 
 // ******************************************************************
@@ -889,9 +881,8 @@ DWORD WINAPI XTL::EmuXLaunchNewImage
 	}
 
 	ExitProcess(EXIT_SUCCESS);
-	
 
-	return dwRet;
+	RETURN(dwRet);
 }
 
 // ******************************************************************
@@ -955,9 +946,7 @@ DWORD WINAPI XTL::EmuXGetLaunchInfo
 		dwRet = ERROR_SUCCESS;
 	}
 
-		
-
-	return dwRet;
+	RETURN(dwRet);
 }
 
 // ******************************************************************
@@ -971,7 +960,7 @@ VOID WINAPI XTL::EmuXSetProcessQuantumLength
 	LOG_FUNC_ONE_ARG(dwMilliseconds);
 
 	// TODO: Implement?
-	UNIMPLEMENTED();
+	LOG_IGNORED();
 }
 	
 // ******************************************************************
@@ -985,7 +974,7 @@ DWORD WINAPI XTL::EmuXGetFileCacheSize()
 	// TODO: Save the file cache size if/when set.
 	DWORD dwRet = 64 * 1024;
 
-	return dwRet;
+	RETURN(dwRet);
 }
 
 // ******************************************************************
@@ -1008,7 +997,7 @@ DWORD WINAPI XTL::EmuSignalObjectAndWait
 
 	DWORD dwRet = SignalObjectAndWait( hObjectToSignal, hObjectToWaitOn, dwMilliseconds, bAlertable ); 
 
-	return dwRet;
+	RETURN(dwRet);
 }
 
 // ******************************************************************
@@ -1026,7 +1015,7 @@ BOOL WINAPI XTL::EmuPulseEvent
 
 	BOOL bRet = PulseEvent( hEvent );
 
-	return bRet;
+	RETURN(bRet);
 }
 
 // ******************************************************************
@@ -1051,7 +1040,7 @@ MMRESULT WINAPI XTL::EmutimeSetEvent
 
 	MMRESULT Ret = timeSetEvent( uDelay, uResolution, fptc, (DWORD_PTR) dwUser, fuEvent );
 
-	return Ret;
+	RETURN(Ret);
 }
 
 // ******************************************************************
@@ -1066,7 +1055,7 @@ MMRESULT WINAPI XTL::EmutimeKillEvent
 
 	MMRESULT Ret = timeKillEvent( uTimerID );
 
-	return Ret;
+	RETURN(Ret);
 }
 
 // ******************************************************************
@@ -1089,6 +1078,8 @@ VOID WINAPI XTL::EmuRaiseException
 
 	// TODO: Implement or not?
 //	RaiseException(dwExceptionCode, dwExceptionFlags, nNumberOfArguments, (*(ULONG_PTR**) &lpArguments));
+
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -1125,7 +1116,7 @@ DWORD WINAPI XTL::EmuGetFileAttributesA
 
 	
 
-	return dwRet;
+	RETURN(dwRet);
 }
 
 // ******************************************************************
@@ -1147,7 +1138,7 @@ DWORD WINAPI XTL::EmuXMountMUA
 	// TODO: Actually allow memory card emulation? This might make transferring
 	// game saves a bit easier if the memory card directory was configurable. =]
 
-	return E_FAIL;
+	RETURN(E_FAIL);
 }
 
 // ******************************************************************
@@ -1172,9 +1163,7 @@ HANDLE WINAPI XTL::EmuCreateWaitableTimerA
 
 	HANDLE hRet = CreateWaitableTimerA( NULL, bManualReset, lpTimerName );
 
-		
-
-	return hRet;
+	RETURN(hRet);
 }
 
 // ******************************************************************
@@ -1204,7 +1193,7 @@ BOOL WINAPI XTL::EmuSetWaitableTimer
 	if(!Ret)
 		EmuWarning("SetWaitableTimer failed!");
 
-	return Ret;
+	RETURN(Ret);
 }
 
 // ******************************************************************
@@ -1224,8 +1213,9 @@ DWORD WINAPI XTL::EmuXMountAlternateTitle
 		LOG_FUNC_END;
 
 	// TODO: Anything?
+	LOG_UNIMPLEMENTED();
 
-	return ERROR_SUCCESS;
+	RETURN(ERROR_SUCCESS);
 }
 
 // ******************************************************************
@@ -1238,7 +1228,9 @@ DWORD WINAPI XTL::EmuXUnmountAlternateTitle
 {
 	LOG_FUNC_ONE_ARG(chDrive);
 
-	return ERROR_SUCCESS;
+	LOG_UNIMPLEMENTED();
+
+	RETURN(ERROR_SUCCESS);
 }
 
 // ******************************************************************
@@ -1248,7 +1240,9 @@ DWORD WINAPI XTL::EmuXGetDeviceEnumerationStatus()
 {
 	LOG_FUNC();
 
-	return XDEVICE_ENUMERATION_IDLE;
+	LOG_UNIMPLEMENTED();
+
+	RETURN(XDEVICE_ENUMERATION_IDLE);
 }
 
 // ******************************************************************
@@ -1266,8 +1260,9 @@ DWORD WINAPI XTL::EmuXInputGetDeviceDescription
 		LOG_FUNC_END;
 
 	// TODO: Lightgun support?
+	LOG_UNIMPLEMENTED();
 
-	return ERROR_NOT_SUPPORTED; // ERROR_DEVICE_NOT_CONNECTED;
+	RETURN(ERROR_NOT_SUPPORTED); // ERROR_DEVICE_NOT_CONNECTED;
 }
 
 // ******************************************************************
@@ -1278,8 +1273,9 @@ int WINAPI XTL::EmuXAutoPowerDownResetTimer()
 	LOG_FUNC();
 
 	// Meh, that's what the 'X' is for! =]
+	LOG_UNIMPLEMENTED();
 
-	return TRUE;
+	RETURN(TRUE);
 }
 
 // ******************************************************************
@@ -1299,6 +1295,7 @@ DWORD WINAPI XTL::EmuXMountMURootA
 		LOG_FUNC_END;
 
 	// TODO: The params are probably wrong...
+	LOG_UNIMPLEMENTED();
 
-	return ERROR_SUCCESS;
+	RETURN(ERROR_SUCCESS);
 }

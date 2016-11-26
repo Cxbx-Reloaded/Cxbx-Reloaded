@@ -46,6 +46,43 @@ namespace xboxkrnl
 
 using namespace xboxkrnl;
 
+XBSYSAPI EXPORTNUM(5) VOID NTAPI xboxkrnl::DbgBreakPoint()
+{
+	LOG_FUNC();
+
+	LOG_UNIMPLEMENTED();
+}
+
+XBSYSAPI EXPORTNUM(6) VOID NTAPI xboxkrnl::DbgBreakPointWithStatus
+(
+	IN ULONG Status 
+)
+{
+	LOG_FUNC_ONE_ARG(Status);
+
+	LOG_UNIMPLEMENTED();
+}
+
+XBSYSAPI EXPORTNUM(7) xboxkrnl::NTSTATUS NTAPI xboxkrnl::DbgLoadImageSymbols
+(
+	IN PANSI_STRING Name,
+	IN PVOID Base,
+	IN ULONG_PTR ProcessId
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Name)
+		LOG_FUNC_ARG(Base)
+		LOG_FUNC_ARG(ProcessId)
+		LOG_FUNC_END;
+
+	NTSTATUS result = S_OK;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(result);
+}
+
 // ******************************************************************
 // * 0x0008 DbgPrint
 // ******************************************************************
@@ -75,5 +112,43 @@ XBSYSAPI EXPORTNUM(8) xboxkrnl::ULONG _cdecl xboxkrnl::DbgPrint
 		//DbgPrintf(szBuffer);
 	}
 
-	return STATUS_SUCCESS;
+	RETURN(STATUS_SUCCESS);
+}
+
+// Source:ReactOS
+XBSYSAPI EXPORTNUM(10) xboxkrnl::ULONG NTAPI xboxkrnl::DbgPrompt
+(
+	IN PCCH Prompt,
+	OUT PCH Response,
+	IN ULONG MaximumResponseLength
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Prompt)
+		LOG_FUNC_ARG_OUT(Response)
+		LOG_FUNC_ARG(MaximumResponseLength)
+		LOG_FUNC_END;
+
+	NTSTATUS result = S_OK;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(result);
+}
+
+// Source:ReactOS
+XBSYSAPI EXPORTNUM(11) VOID NTAPI xboxkrnl::DbgUnLoadImageSymbols
+(
+	IN PANSI_STRING Name,
+	IN PVOID Base,
+	IN ULONG_PTR ProcessId
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Name)
+		LOG_FUNC_ARG(Base)
+		LOG_FUNC_ARG(ProcessId)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
 }

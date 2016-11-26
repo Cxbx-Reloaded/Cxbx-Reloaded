@@ -46,7 +46,7 @@ namespace xboxkrnl
 // prevent name collisions
 namespace NtDll
 {
-#include "EmuNtDll.h"
+	#include "EmuNtDll.h"
 };
 
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup()
@@ -93,27 +93,81 @@ int FindCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION CriticalSection)
 	return FreeSection;
 }
 
+
 using namespace xboxkrnl;
+
 
 // ******************************************************************
 // * 0x0104 - RtlAnsiStringToUnicodeString
 // ******************************************************************
 XBSYSAPI EXPORTNUM(260) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAnsiStringToUnicodeString
 (
-	PUNICODE_STRING DestinationString,
-	PSTRING         SourceString,
-	UCHAR           AllocateDestinationString
+	OUT PUNICODE_STRING DestinationString,
+	IN PSTRING         SourceString,
+	IN UCHAR           AllocateDestinationString
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(DestinationString)
+		LOG_FUNC_ARG_OUT(DestinationString)
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_ARG(AllocateDestinationString)
 		LOG_FUNC_END;
 
 	NTSTATUS ret = NtDll::RtlAnsiStringToUnicodeString((NtDll::UNICODE_STRING*)DestinationString, (NtDll::STRING*)SourceString, AllocateDestinationString);
 
-	return ret;
+	RETURN(ret);
+}
+
+XBSYSAPI EXPORTNUM(261) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendStringToString
+(
+	IN PSTRING Destination,
+	IN PSTRING Source
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Destination)
+		LOG_FUNC_ARG(Source)
+		LOG_FUNC_END;
+
+	NTSTATUS result = NtDll::RtlAppendStringToString((NtDll::PSTRING)Destination, (NtDll::PSTRING)Source);
+
+	RETURN(result);
+}
+
+XBSYSAPI EXPORTNUM(262) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeStringToString
+(
+	IN PUNICODE_STRING Destination,
+	IN PUNICODE_STRING Source
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Destination)
+		LOG_FUNC_ARG(Source)
+		LOG_FUNC_END;
+
+	NTSTATUS result = NtDll::RtlAppendUnicodeStringToString((NtDll::PUNICODE_STRING)Destination, (NtDll::PUNICODE_STRING)Source);
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(result);
+}
+
+XBSYSAPI EXPORTNUM(263) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeToString
+(
+	IN OUT PUNICODE_STRING Destination,
+	IN LPCWSTR Source
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Destination)
+		LOG_FUNC_ARG(Source)
+		LOG_FUNC_END;
+
+	NTSTATUS result = NtDll::RtlAppendUnicodeToString((NtDll::PUNICODE_STRING)Destination, (NtDll::PCWSTR)Source);
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -135,8 +189,6 @@ XBSYSAPI EXPORTNUM(264) VOID NTAPI xboxkrnl::RtlAssert
 		LOG_FUNC_END;
 
 	CxbxKrnlCleanup("RtlAssert() raised by emulated program - consult Debug log");
-
-	return;
 }
 
 // ******************************************************************
@@ -176,8 +228,6 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
 
 		//NtDll::RtlEnterCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
 	}
-
-	return;
 }
 
 // ******************************************************************
@@ -198,7 +248,7 @@ XBSYSAPI EXPORTNUM(279) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualString
 
 	BOOLEAN bRet = NtDll::RtlEqualString((NtDll::PSTRING)String1, (NtDll::PSTRING)String2, (NtDll::BOOLEAN)CaseSensitive);
 
-	return bRet;
+	RETURN(bRet);
 }
 
 // ******************************************************************
@@ -212,8 +262,6 @@ XBSYSAPI EXPORTNUM(286) VOID NTAPI xboxkrnl::RtlFreeAnsiString
 	LOG_FUNC_ONE_ARG(AnsiString);
 
 	NtDll::RtlFreeAnsiString((NtDll::PANSI_STRING)AnsiString);
-
-	return;
 }
 
 // ******************************************************************
@@ -231,8 +279,6 @@ XBSYSAPI EXPORTNUM(289) VOID NTAPI xboxkrnl::RtlInitAnsiString
 		LOG_FUNC_END;
 
 	NtDll::RtlInitAnsiString((NtDll::PANSI_STRING)DestinationString, (NtDll::PCSZ)SourceString);
-
-	return;
 }
 
 // ******************************************************************
@@ -250,8 +296,6 @@ XBSYSAPI EXPORTNUM(290) VOID NTAPI xboxkrnl::RtlInitUnicodeString
 		LOG_FUNC_END;
 
 	NtDll::RtlInitUnicodeString((NtDll::PUNICODE_STRING)DestinationString, (NtDll::PCWSTR)SourceString);
-
-	return;
 }
 
 // ******************************************************************
@@ -282,8 +326,6 @@ XBSYSAPI EXPORTNUM(291) VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
 	}
 
 	//NtDll::RtlInitializeCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
-
-	return;
 }
 
 // ******************************************************************
@@ -315,8 +357,6 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
 	/* sorta pointless
 	LOG_FUNC_ONE_ARG(CriticalSection);
 	//*/
-
-	return;
 }
 
 // ******************************************************************
@@ -331,7 +371,7 @@ XBSYSAPI EXPORTNUM(296) xboxkrnl::CHAR NTAPI xboxkrnl::RtlLowerChar
 
 	CHAR ret = tolower(Character);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -346,7 +386,7 @@ XBSYSAPI EXPORTNUM(301) xboxkrnl::ULONG NTAPI xboxkrnl::RtlNtStatusToDosError
 
 	ULONG ret = NtDll::RtlNtStatusToDosError(Status);
 
-	return ret;
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -365,7 +405,7 @@ XBSYSAPI EXPORTNUM(304) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTimeFieldsToTime
 
 	BOOLEAN bRet = NtDll::RtlTimeFieldsToTime((NtDll::TIME_FIELDS*)TimeFields, (NtDll::LARGE_INTEGER*)Time);
 
-	return bRet;
+	RETURN(bRet);
 }
 
 // ******************************************************************
@@ -383,8 +423,6 @@ XBSYSAPI EXPORTNUM(305) VOID NTAPI xboxkrnl::RtlTimeToTimeFields
 		LOG_FUNC_END;
 
 	NtDll::RtlTimeToTimeFields((NtDll::LARGE_INTEGER*)Time, (NtDll::TIME_FIELDS*)TimeFields);
-
-	return;
 }
 
 // ******************************************************************
@@ -421,7 +459,7 @@ XBSYSAPI EXPORTNUM(306) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTryEnterCriticalSec
 
 	//bRet = NtDll::RtlTryEnterCriticalSection((NtDll::PRTL_CRITICAL_SECTION)CriticalSection);
 
-	return bRet;
+	RETURN(bRet);
 }
 
 // ******************************************************************
@@ -442,6 +480,6 @@ XBSYSAPI EXPORTNUM(308) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToAns
 
 	NTSTATUS ret = NtDll::RtlUnicodeStringToAnsiString((NtDll::STRING*)DestinationString, (NtDll::UNICODE_STRING*)SourceString, AllocateDestinationString);
 
-	return ret;
+	RETURN(ret);
 }
 

@@ -56,9 +56,7 @@ XBSYSAPI EXPORTNUM(335) VOID NTAPI xboxkrnl::XcSHAInit
 {
 	LOG_FUNC_ONE_ARG_OUT(pbSHAContext);
 
-	UNIMPLEMENTED();
-
-	return;
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -77,9 +75,7 @@ XBSYSAPI EXPORTNUM(336) VOID NTAPI xboxkrnl::XcSHAUpdate
 		LOG_FUNC_ARG(dwInputLength)
 		LOG_FUNC_END;
 
-	UNIMPLEMENTED();
-
-	return;
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -101,7 +97,5 @@ XBSYSAPI EXPORTNUM(337) VOID NTAPI xboxkrnl::XcSHAFinal
 	{
 		pbDigest[v] = 0;
 	}
-
-	return;
 }
 

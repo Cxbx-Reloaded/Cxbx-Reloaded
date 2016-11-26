@@ -69,7 +69,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
 
     DbgPrintf("\n");
     DbgPrintf("*******************************************************************************\n");
-    DbgPrintf("* Cxbx High Level Emulation database last modified %s\n", szHLELastCompileTime);
+    DbgPrintf("* Cxbx-Reloaded High Level Emulation database last modified %s\n", szHLELastCompileTime);
     DbgPrintf("*******************************************************************************\n");
     DbgPrintf("\n");
 

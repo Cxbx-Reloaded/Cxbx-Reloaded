@@ -92,11 +92,16 @@ extern thread_local std::string _logPrefix;
 			msg << ");\n"; \
 			std::cout << msg.str(); \
 		} } while (0)
+
+	// LOG_FUNC_RESULT logs the function return result
+	#define LOG_FUNC_RESULT(r) \
+		std::cout << _logPrefix << " returns " << r;
 #else
-	#define LOG_FUNC_BEGIN ;
-	#define LOG_FUNC_ARG(arg);
-	#define LOG_FUNC_ARG_OUT(arg);
-	#define LOG_FUNC_END ;
+	#define LOG_FUNC_BEGIN 
+	#define LOG_FUNC_ARG(arg)
+	#define LOG_FUNC_ARG_OUT(arg)
+	#define LOG_FUNC_END
+	#define LOG_FUNC_RESULT(r)
 #endif
 
 // Short hand defines :
@@ -109,9 +114,16 @@ extern thread_local std::string _logPrefix;
 // Log function with one out argument
 #define LOG_FUNC_ONE_ARG_OUT(arg) LOG_FUNC_BEGIN LOG_FUNC_ARG_OUT(arg) LOG_FUNC_END 
 
-#define UNIMPLEMENTED() \
+#define LOG_IGNORED() \
 	do { if(g_bPrintfOn) { \
 		std::cout << __func__ << " ignored!\n"; \
 	} } while (0)
+
+#define LOG_UNIMPLEMENTED() \
+	do { if(g_bPrintfOn) { \
+		std::cout << __func__ << " unimplemented!\n"; \
+	} } while (0)
+
+#define RETURN(r) do { LOG_FUNC_RESULT(r) return r; } while (0)
 
 #endif _LOGGING_H

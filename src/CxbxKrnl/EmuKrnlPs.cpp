@@ -257,7 +257,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 			*ThreadId = dwThreadId;
 	}
 
-	return STATUS_SUCCESS;
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -293,7 +293,7 @@ XBSYSAPI EXPORTNUM(258) VOID NTAPI xboxkrnl::PsTerminateSystemThread
 
 	_endthreadex(ExitStatus);
 	//ExitThread(ExitStatus);
-
-	return;
 }
 
+// TODO : What should we initialize this to?
+XBSYSAPI EXPORTNUM(259) volatile xboxkrnl::POBJECT_TYPE xboxkrnl::PsThreadObjectType = NULL;
