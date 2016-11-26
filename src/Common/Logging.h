@@ -95,7 +95,7 @@ extern thread_local std::string _logPrefix;
 
 	// LOG_FUNC_RESULT logs the function return result
 	#define LOG_FUNC_RESULT(r) \
-		std::cout << _logPrefix << " returns " << r;
+		std::cout << _logPrefix << " returns " << r << "\n";
 #else
 	#define LOG_FUNC_BEGIN 
 	#define LOG_FUNC_ARG(arg)
