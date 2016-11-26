@@ -776,7 +776,11 @@ static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xb
             DbgPrintf("HLE: 0x%.08X -> %s\n", pFunc, OovpaTable[a].szFuncName);
             #endif
 
-            if(OovpaTable[a].lpRedirect != 0)
+            if(OovpaTable[a].lpRedirect == 0)
+            {
+                EmuInstallWrapper(pFunc, EmuXRefFailure);
+            }
+            else
             {
                 EmuInstallWrapper(pFunc, OovpaTable[a].lpRedirect);
                 funcExclude[fcount++] = (uint32)pFunc;
