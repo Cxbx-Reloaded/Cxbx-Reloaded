@@ -147,6 +147,9 @@ XTL::D3DFORMAT XTL::EmuXB2PC_D3DFormat(X_D3DFORMAT Format)
 	case X_D3DFMT_A8: // Swizzled
 		result = D3DFMT_A8;
 		break;
+	case X_D3DFMT_LIN_X1R5G5B5:	// Linear
+		result = D3DFMT_X1R5G5B5;
+		break;
 	case X_D3DFMT_LIN_A4R4G4B4: case // Linear
 		X_D3DFMT_A4R4G4B4: // Swizzled
 			result = D3DFMT_A4R4G4B4;
@@ -311,7 +314,9 @@ XTL::X_D3DFORMAT XTL::EmuPC2XB_D3DFormat(D3DFORMAT Format)
 		result = X_D3DFMT_LIN_A4R4G4B4;
 		break; // Linear
 			   //      Result := X_D3DFMT_A4R4G4B4; // Swizzled
-
+	case D3DFMT_X1R5G5B5:	// Linear
+		result = X_D3DFMT_LIN_X1R5G5B5;
+		break;
 	case D3DFMT_A8:
 		result = X_D3DFMT_A8;
 		break;

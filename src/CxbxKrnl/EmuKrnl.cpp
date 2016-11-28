@@ -47,6 +47,8 @@ namespace xboxkrnl
 
 #include "Logging.h"
 
+#include "CxbxKrnl.h"
+
 // prevent name collisions
 namespace NtDll
 {
@@ -126,24 +128,42 @@ using namespace xboxkrnl;
 // ******************************************************************
 // * 0x00A0 - KfRaiseIrql
 // ******************************************************************
-XBSYSAPI EXPORTNUM(160) xboxkrnl::UCHAR* NTAPI xboxkrnl::KfRaiseIrql
+XBSYSAPI EXPORTNUM(160) xboxkrnl::UCHAR _fastcall xboxkrnl::KfRaiseIrql
 (
     IN UCHAR NewIrql
 )
 {
-	// HACK: Not thread safe!
-	static xboxkrnl::UCHAR previousIrqlValue = 0;
-
 	LOG_FUNC_ONE_ARG(NewIrql);
-    
-	// Return addr where old irq level should be stored
-    RETURN(&previousIrqlValue);
+
+	UCHAR OldIrql;
+	KPCR* Pcr = nullptr;
+
+	// Fetch KPCR data structure
+	__asm {
+		push eax
+		mov eax, fs:[0x14]
+		mov Pcr, eax
+		pop eax
+	}
+
+	if (NewIrql < Pcr->Irql)	{
+		// TODO: Enable this after KeBugCheck is implemented
+		//KeBugCheck(IRQL_NOT_GREATER_OR_EQUAL);
+		// for (;;);
+
+		CxbxKrnlCleanup("IRQL_NOT_GREATER_OR_EQUAL");
+	}
+	
+	OldIrql = Pcr->Irql;
+	Pcr->Irql = NewIrql;
+	
+	RETURN(OldIrql);
 }
 
 // ******************************************************************
 // * 0x00A1 - KfLowerIrql
 // ******************************************************************
-XBSYSAPI EXPORTNUM(161) VOID NTAPI xboxkrnl::KfLowerIrql
+XBSYSAPI EXPORTNUM(161) VOID _fastcall xboxkrnl::KfLowerIrql
 (
     IN UCHAR NewIrql
 )

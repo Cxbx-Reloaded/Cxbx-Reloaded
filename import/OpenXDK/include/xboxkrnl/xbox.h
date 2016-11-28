@@ -67,7 +67,7 @@ XBSYSAPI EXPORTNUM(89) BOOLEAN KdDebuggerNotPresent;
 // ******************************************************************
 // * KfRaiseIrql
 // ******************************************************************
-XBSYSAPI EXPORTNUM(160) UCHAR* NTAPI KfRaiseIrql
+XBSYSAPI EXPORTNUM(160) UCHAR _fastcall KfRaiseIrql
 (
     IN UCHAR    NewIrql
 );
@@ -75,7 +75,7 @@ XBSYSAPI EXPORTNUM(160) UCHAR* NTAPI KfRaiseIrql
 // ******************************************************************
 // * KfLowerIrql
 // ******************************************************************
-XBSYSAPI EXPORTNUM(161) VOID NTAPI KfLowerIrql
+XBSYSAPI EXPORTNUM(161) VOID _fastcall KfLowerIrql
 (
     IN UCHAR    NewIrql
 );

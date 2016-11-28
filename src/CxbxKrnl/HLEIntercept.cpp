@@ -157,16 +157,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
         }
     }
 
-    //
-    // initialize openxdk emulation (TODO)
-    //
-
-    if(pLibraryVersion == 0)
-    {
-        DbgPrintf("HLE: Detected OpenXDK application...\n");
-    }
-
-    //
+	//
     // initialize Microsoft XDK emulation
     //
 
@@ -776,7 +767,11 @@ static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xb
             DbgPrintf("HLE: 0x%.08X -> %s\n", pFunc, OovpaTable[a].szFuncName);
             #endif
 
-            if(OovpaTable[a].lpRedirect != 0)
+            if(OovpaTable[a].lpRedirect == 0)
+            {
+                EmuInstallWrapper(pFunc, EmuXRefFailure);
+            }
+            else
             {
                 EmuInstallWrapper(pFunc, OovpaTable[a].lpRedirect);
                 funcExclude[fcount++] = (uint32)pFunc;
@@ -792,3 +787,4 @@ static void EmuXRefFailure()
     CxbxKrnlCleanup("XRef-only function body reached. Fatal Error.");
 }
 
+	

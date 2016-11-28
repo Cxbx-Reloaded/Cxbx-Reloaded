@@ -76,6 +76,8 @@ DWORD* EmuX86_GetRegisterPointer(LPEXCEPTION_POINTERS e, Zydis::Register reg)
 			return &e->ContextRecord->Edi;
 		case Zydis::Register::ESI:
 			return &e->ContextRecord->Esi;
+		case Zydis::Register::EBP:
+			return &e->ContextRecord->Ebp;
 	}
 
 	return nullptr;
