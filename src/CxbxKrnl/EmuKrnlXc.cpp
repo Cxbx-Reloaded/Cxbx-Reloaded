@@ -96,3 +96,60 @@ XBSYSAPI EXPORTNUM(337) VOID NTAPI xboxkrnl::XcSHAFinal
 	A_SHAFinal((SHA_CTX*)pbSHAContext, pbDigest);
 }
 
+XBSYSAPI EXPORTNUM(340) VOID NTAPI xboxkrnl::XcHMAC(
+	IN PBYTE pbKeyMaterial,
+	IN ULONG cbKeyMaterial,
+	IN PBYTE pbData,
+	IN ULONG cbData,
+	IN PBYTE pbData2,
+	IN ULONG cbData2,
+	OUT PBYTE HmacData
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_OUT(pbKeyMaterial)
+		LOG_FUNC_ARG(cbKeyMaterial)
+		LOG_FUNC_ARG_OUT(pbData)
+		LOG_FUNC_ARG(cbData)
+		LOG_FUNC_ARG_OUT(pbData2)
+		LOG_FUNC_ARG(cbData2)
+		LOG_FUNC_ARG_OUT(HmacData)
+		LOG_FUNC_END;
+
+	if (cbKeyMaterial > 64)	{
+		cbKeyMaterial = 64;
+	}
+
+	BYTE Pad1[64];
+	RtlZeroMemory(Pad1, 64);
+	RtlCopyMemory(Pad1, pbKeyMaterial, cbKeyMaterial);
+
+	BYTE Pad2[64];
+	RtlZeroMemory(Pad2, 64);
+	RtlCopyMemory(Pad2, pbKeyMaterial, cbKeyMaterial);
+
+	for (ULONG dwBlock = 0; dwBlock< 64 / sizeof(DWORD); dwBlock++) {
+		((DWORD*)Pad1)[dwBlock] ^= ((DWORD)0x36363636);
+		((DWORD*)Pad2)[dwBlock] ^= ((DWORD)0x5C5C5C5C);
+	}
+
+	SHA_CTX ShaContext;
+	A_SHAInit(&ShaContext);
+	A_SHAUpdate(&ShaContext, Pad1, 64);
+
+	if (cbData != 0) {
+		A_SHAUpdate(&ShaContext, pbData, cbData);
+	}
+
+	if (cbData2 != 0) {
+		A_SHAUpdate(&ShaContext, pbData2, cbData2);
+	}
+
+	BYTE Temp[64 + A_SHA_DIGEST_LEN];
+	A_SHAFinal(&ShaContext, Temp + 64);
+	RtlCopyMemory(Temp, Pad2, 64);
+
+	A_SHAInit(&ShaContext);
+	A_SHAUpdate(&ShaContext, Temp, sizeof(Temp));
+	A_SHAFinal(&ShaContext, HmacData);
+}

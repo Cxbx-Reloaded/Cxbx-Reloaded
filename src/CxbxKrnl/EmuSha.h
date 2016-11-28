@@ -41,6 +41,8 @@ extern "C"
 
 #include <Windows.h>
 
+#define A_SHA_DIGEST_LEN 20
+
 typedef struct {
 	ULONG Unknown[6];
 	ULONG State[5];
