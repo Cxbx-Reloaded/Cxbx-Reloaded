@@ -41,6 +41,19 @@
 #include "EmuX86.h"
 #include "EmuNV2A.h"
 
+
+uint8_t EmuX86_Read8(uint32_t addr)
+{
+	EmuWarning("EmuX86_Read8: Unknown Read Address %02X", addr);
+	return 0;
+}
+
+uint16_t EmuX86_Read16(uint32_t addr)
+{
+	EmuWarning("EmuX86_Read16: Unknown Read Address %04X", addr);
+	return 0;
+}
+
 uint32_t EmuX86_Read32(uint32_t addr)
 {
 	if (addr >= 0xFD000000 && addr <= 0xFE000000) {
@@ -49,6 +62,16 @@ uint32_t EmuX86_Read32(uint32_t addr)
 
 	EmuWarning("EmuX86_Read32: Unknown Read Address %08X", addr);
 	return 0;
+}
+
+void EmuX86_Write8(uint32_t addr, uint8_t value)
+{
+	EmuWarning("EmuX86_Write8: Unknown Write Address %08X (value %02X)", addr, value);
+}
+
+void EmuX86_Write16(uint32_t addr, uint16_t value)
+{
+	EmuWarning("EmuX86_Write8: Unknown Write Address %08X (value %04X)", addr, value);
 }
 
 void EmuX86_Write32(uint32_t addr, uint32_t value)
@@ -64,12 +87,24 @@ void EmuX86_Write32(uint32_t addr, uint32_t value)
 DWORD* EmuX86_GetRegisterPointer(LPEXCEPTION_POINTERS e, Zydis::Register reg)
 {
 	switch (reg) {
+		case Zydis::Register::AL:
+		case Zydis::Register::AH:
+		case Zydis::Register::AX:
 		case Zydis::Register::EAX:
 			return &e->ContextRecord->Eax;
+		case Zydis::Register::BL:
+		case Zydis::Register::BH:
+		case Zydis::Register::BX:
 		case Zydis::Register::EBX:
 			return &e->ContextRecord->Ebx;
+		case Zydis::Register::CL:
+		case Zydis::Register::CH:
+		case Zydis::Register::CX:
 		case Zydis::Register::ECX:
 			return &e->ContextRecord->Ecx;
+		case Zydis::Register::DL:
+		case Zydis::Register::DH:
+		case Zydis::Register::DX:
 		case Zydis::Register::EDX:
 			return &e->ContextRecord->Edx;
 		case Zydis::Register::EDI:
@@ -128,7 +163,21 @@ bool EmuX86_MOV(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
 		if (!EmuX86_DecodeMemoryOperand(&srcAddr, e, info.operand[1])) {
 			return false;
 		}
-		*pDstReg = EmuX86_Read32(srcAddr);
+
+		switch (info.operand[0].size) {
+			case 8:
+				*((uint8_t*)pDstReg + 3) = EmuX86_Read8(srcAddr);;
+				break;
+			case 16:
+				*((uint16_t*)pDstReg + 2) = EmuX86_Read16(srcAddr);
+				break;
+			case 32:
+				*pDstReg = EmuX86_Read32(srcAddr);
+				break;
+			default:
+				return false;
+		}
+	
 		return true;
 	}
 	else if (info.operand[0].type == Zydis::OperandType::MEMORY && info.operand[1].type == Zydis::OperandType::REGISTER)
@@ -144,7 +193,20 @@ bool EmuX86_MOV(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
 			return false;
 		}
 
-		EmuX86_Write32(addr, value);
+		switch (info.operand[0].size) {
+			case 8:
+				EmuX86_Write8(addr, value & 0xFF);
+				break;
+			case 16:
+				EmuX86_Write16(addr, value & 0xFFFF);
+				break;
+			case 32:
+				EmuX86_Write32(addr, value);
+				break;
+			default:
+				return false;
+		}
+
 		return true;
 	}
 	else if (info.operand[0].type == Zydis::OperandType::MEMORY && info.operand[1].type == Zydis::OperandType::IMMEDIATE)
@@ -155,7 +217,20 @@ bool EmuX86_MOV(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
 			return false;
 		}
 
-		EmuX86_Write32(addr, info.operand[1].lval.udword);
+		switch (info.operand[0].size) {
+		case 8:
+			EmuX86_Write8(addr, info.operand[1].lval.ubyte);
+			break;
+		case 16:
+			EmuX86_Write16(addr, info.operand[1].lval.uword);
+			break;
+		case 32:
+			EmuX86_Write32(addr, info.operand[1].lval.udword);
+			break;
+		default:
+			return false;
+		}
+	
 		return true;
 	}
 
@@ -221,6 +296,7 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	}
 	else
 	{
+		DbgPrintf("EmuX86: 0x%08X: %s\n", e->ContextRecord->Eip, formatter.formatInstruction(info));
 		switch (info.mnemonic) 
 		{	
 			case Zydis::InstructionMnemonic::MOV:
