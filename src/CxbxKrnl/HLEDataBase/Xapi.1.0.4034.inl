@@ -255,71 +255,6 @@ OOVPATable XAPI_1_0_4034[] =
         #endif
     },
     */
-    /* Too High Level
-    // CreateThread (* unchanged since 1.0.3911 *)
-    {
-        (OOVPA*)&CreateThread_1_0_3911,
-
-        XTL::EmuCreateThread,
-
-        #ifdef _DEBUG_TRACE
-        "EmuCreateThread"
-        #endif
-    },
-    */
-    /*
-    // CloseHandle (*???*)
-    {
-        (OOVPA*)&CloseHandle_1_0_(???),
-
-        XTL::EmuCloseHandle,
-
-        #ifdef _DEBUG_TRACE
-        "EmuCloseHandle"
-        #endif
-    },
-    */
-    //*/
-	// GetTimeZoneInformation (* unchanged since 3911 *)
-    {
-        (OOVPA*)&GetTimeZoneInformation_1_0_3911,
-
-        XTL::EmuGetTimeZoneInformation,
-
-        #ifdef _DEBUG_TRACE
-        "GetTimeZoneInformation"
-        #endif
-    },
-    // SetThreadPriority (* unchanged since 3911 *)
-    {
-        (OOVPA*)&SetThreadPriority_1_0_3911,
-
-        XTL::EmuSetThreadPriority,
-
-        #ifdef _DEBUG_TRACE
-        "EmuSetThreadPriority"
-        #endif
-    },
-	// SignalObjectAndWait (* unchanged since 3911 *)
-	{
-		(OOVPA*)&SignalObjectAndWait_1_0_3911, 
-			
-		XTL::EmuSignalObjectAndWait,
-
-		#ifdef _DEBUG_TRACE
-		"EmuSignalObjectAndWait"
-		#endif
-	},
-	// QueueUserAPC (* unchanged since 3911 *)
-	{ 
-		(OOVPA*)&QueueUserAPC_1_0_3911,
-
-		XTL::EmuQueueUserAPC,
-			
-		#ifdef _DEBUG_TRACE
-		"EmuQueueUserAPC"
-		#endif
-	},
 	// XInputSetState (* unchanged since 3911 *)
     {
         (OOVPA*)&XInputSetState_1_0_3911,
@@ -328,17 +263,6 @@ OOVPATable XAPI_1_0_4034[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXInputSetState"
-        #endif
-    },
-
-	// XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
-    {
-        (OOVPA*)&XRegisterThreadNotifyRoutine_1_0_3911,
-
-        XTL::EmuXRegisterThreadNotifyRoutine,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXRegisterThreadNotifyRoutine"
         #endif
     },
 	// XGetDeviceChanges (* unchanged since 3911 *)
@@ -379,16 +303,6 @@ OOVPATable XAPI_1_0_4034[] =
         "EmuXInputGetCapabilities"
         #endif
     },
-	// GetThreadPriority (* unchanged since 3911 *)
-	{
-		(OOVPA*)&GetThreadPriority_1_0_3911,
-
-		XTL::EmuGetThreadPriority,
-
-		#ifdef _DEBUG_TRACE
-		"EmuGetThreadPriority"
-		#endif
-	},
 	// XInputOpen (* unchanged since 3911 *)
     {
         (OOVPA*)&XInputOpen_1_0_3911,

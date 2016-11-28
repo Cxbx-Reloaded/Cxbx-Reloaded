@@ -211,36 +211,6 @@ SOOVPA<6> SwitchToThread_1_0_5849 =
 // ******************************************************************
 OOVPATable XAPI_1_0_5849[] =
 {
-    // SetThreadPriority (* unchanged since 3911 *)
-    {
-        (OOVPA*)&SetThreadPriority_1_0_3911,
-
-        XTL::EmuSetThreadPriority,
-
-        #ifdef _DEBUG_TRACE
-        "EmuSetThreadPriority"
-        #endif
-    },
-    // QueryPerformanceCounter (* unchanged since 4361 *)
-    {
-        (OOVPA*)&QueryPerformanceCounter_1_0_4361,
-
-        XTL::EmuQueryPerformanceCounter,
-
-        #ifdef _DEBUG_TRACE
-        "EmuQueryPerformanceCounter"
-        #endif
-    },
-    // QueryPerformanceFrequency (* unchanged since 4361 *)
-    {
-        (OOVPA*)&QueryPerformanceFrequency_1_0_4361,
-
-        XTL::EmuQueryPerformanceFrequency,
-
-        #ifdef _DEBUG_TRACE
-        "EmuQueryPerformanceFrequency"
-        #endif
-    },
     // XMountUtilityDrive (* unchanged since 4432 *)
     {
         (OOVPA*)&XMountUtilityDrive_1_0_4432,
@@ -323,52 +293,6 @@ OOVPATable XAPI_1_0_5849[] =
         #endif
     },
     //*/
-	// QueueUserAPC (* unchanged since 3911 *)
-	{ 
-		(OOVPA*)&QueueUserAPC_1_0_3911,
-
-		XTL::EmuQueueUserAPC,
-			
-		#ifdef _DEBUG_TRACE
-		"EmuQueueUserAPC"
-		#endif
-	},
-	// GetThreadPriority
-    {
-        (OOVPA*)&GetThreadPriority_1_0_5849,
-        XTL::EmuGetThreadPriority,
-
-        #ifdef _DEBUG_TRACE
-        "GetThreadPriority"
-        #endif
-    },
-    // SetThreadPriorityBoost
-    {
-        (OOVPA*)&SetThreadPriorityBoost_1_0_5849,
-        XTL::EmuSetThreadPriorityBoost,
-
-        #ifdef _DEBUG_TRACE
-        "SetThreadPriorityBoost"
-        #endif
-    },
-    // GetThreadPriorityBoost
-    /*{
-        (OOVPA*)&GetThreadPriorityBoost_1_0_5849,
-        XTL::EmuGetThreadPriorityBoost,
-
-        #ifdef _DEBUG_TRACE
-        "GetThreadPriorityBoost"
-        #endif
-    },*/
-	// RaiseException
-    {
-        (OOVPA*)&RaiseException_1_0_5849,
-        XTL::EmuRaiseException,
-
-        #ifdef _DEBUG_TRACE
-        "RaiseException"
-        #endif
-    },
 	// XLaunchNewImageA (* unchanged since 5558 *)
     {
         (OOVPA*)&XLaunchNewImageA_1_0_5558,
