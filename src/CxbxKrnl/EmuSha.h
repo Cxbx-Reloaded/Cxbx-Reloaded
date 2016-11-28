@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuKrnlXc.cpp
+// *   Cxbx->Win32->CxbxKrnl->EmuSha.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -27,72 +27,57 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
-// *  (c) 2016 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
-#define _XBOXKRNL_DEFEXTRN_
+#ifndef EMUSHA_H
+#define EMUSHA_H
 
-// prevent name collisions
-namespace xboxkrnl
+#if defined(__cplusplus)
+extern "C"
 {
-#include <xboxkrnl/xboxkrnl.h> // For XcSHAInit, etc.
-};
+#endif
 
-#include "Logging.h" // For LOG_FUNC()
-#include "Emu.h" // For EmuWarning()
-#include "EmuSha.h"
+#include <Windows.h>
 
-using namespace xboxkrnl;
+typedef struct {
+	ULONG Unknown[6];
+	ULONG State[5];
+	ULONG Count[2];
+	UCHAR Buffer[64];
+} SHA_CTX, *PSHA_CTX;
 
-// ******************************************************************
-// * XcSHAInit
-// ******************************************************************
-XBSYSAPI EXPORTNUM(335) VOID NTAPI xboxkrnl::XcSHAInit
+typedef VOID (WINAPI *FPTR_A_SHAInit)
 (
-	UCHAR *pbSHAContext
-)
-{
-	LOG_FUNC_ONE_ARG_OUT(pbSHAContext);
+	PSHA_CTX
+);
 
-	A_SHAInit((SHA_CTX*)pbSHAContext);
-}
-
-// ******************************************************************
-// * XcSHAUpdate
-// ******************************************************************
-XBSYSAPI EXPORTNUM(336) VOID NTAPI xboxkrnl::XcSHAUpdate
+typedef VOID(WINAPI *FPTR_A_SHAUpdate)
 (
-	UCHAR *pbSHAContext,
-	UCHAR *pbInput,
-	ULONG dwInputLength
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG_OUT(pbSHAContext)
-		LOG_FUNC_ARG_OUT(pbInput)
-		LOG_FUNC_ARG(dwInputLength)
-		LOG_FUNC_END;
+	PSHA_CTX,
+	const unsigned char *,
+	UINT
+);
 
-	A_SHAUpdate((SHA_CTX*)pbSHAContext, pbInput, dwInputLength);
-}
-
-// ******************************************************************
-// * XcSHAFinal
-// ******************************************************************
-XBSYSAPI EXPORTNUM(337) VOID NTAPI xboxkrnl::XcSHAFinal
+typedef VOID(WINAPI *FPTR_A_SHAFinal)
 (
-	UCHAR *pbSHAContext,
-	UCHAR *pbDigest
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG_OUT(pbSHAContext)
-		LOG_FUNC_ARG_OUT(pbDigest)
-		LOG_FUNC_END;
+	PSHA_CTX,
+	PUCHAR
+);
 
-	A_SHAFinal((SHA_CTX*)pbSHAContext, pbDigest);
+// ******************************************************************
+// * Exported API
+// ******************************************************************
+#define EXTERN(API) \
+extern FPTR_##API                          API
+
+EXTERN(A_SHAInit);
+EXTERN(A_SHAUpdate);
+EXTERN(A_SHAFinal);
+
+#if defined(__cplusplus)
 }
+#endif
 
+#endif

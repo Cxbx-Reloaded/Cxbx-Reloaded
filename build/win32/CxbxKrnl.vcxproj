@@ -211,6 +211,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuFS.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuNtDll.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuNV2A.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuSha.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuShared.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuX86.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXactEng.h" />
@@ -548,6 +549,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\EmuNV2A.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuSha.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuX86.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuXactEng.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuXapi.cpp">

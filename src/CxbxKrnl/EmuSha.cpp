@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuKrnlXc.cpp
+// *   Cxbx->Win32->CxbxKrnl->EmuSha.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -27,7 +27,6 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
-// *  (c) 2016 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
 // *
@@ -35,64 +34,17 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
-// prevent name collisions
-namespace xboxkrnl
-{
-#include <xboxkrnl/xboxkrnl.h> // For XcSHAInit, etc.
-};
-
-#include "Logging.h" // For LOG_FUNC()
-#include "Emu.h" // For EmuWarning()
+#include <Windows.h>
 #include "EmuSha.h"
 
-using namespace xboxkrnl;
-
 // ******************************************************************
-// * XcSHAInit
+// * Loaded at run-time to avoid linker conflicts
 // ******************************************************************
-XBSYSAPI EXPORTNUM(335) VOID NTAPI xboxkrnl::XcSHAInit
-(
-	UCHAR *pbSHAContext
-)
-{
-	LOG_FUNC_ONE_ARG_OUT(pbSHAContext);
+static HMODULE hDll = GetModuleHandle("advapi32.dll");
 
-	A_SHAInit((SHA_CTX*)pbSHAContext);
-}
+#define IMPORT(API) \
+FPTR_##API                          API                          = (FPTR_##API)GetProcAddress(hDll, #API)
 
-// ******************************************************************
-// * XcSHAUpdate
-// ******************************************************************
-XBSYSAPI EXPORTNUM(336) VOID NTAPI xboxkrnl::XcSHAUpdate
-(
-	UCHAR *pbSHAContext,
-	UCHAR *pbInput,
-	ULONG dwInputLength
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG_OUT(pbSHAContext)
-		LOG_FUNC_ARG_OUT(pbInput)
-		LOG_FUNC_ARG(dwInputLength)
-		LOG_FUNC_END;
-
-	A_SHAUpdate((SHA_CTX*)pbSHAContext, pbInput, dwInputLength);
-}
-
-// ******************************************************************
-// * XcSHAFinal
-// ******************************************************************
-XBSYSAPI EXPORTNUM(337) VOID NTAPI xboxkrnl::XcSHAFinal
-(
-	UCHAR *pbSHAContext,
-	UCHAR *pbDigest
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG_OUT(pbSHAContext)
-		LOG_FUNC_ARG_OUT(pbDigest)
-		LOG_FUNC_END;
-
-	A_SHAFinal((SHA_CTX*)pbSHAContext, pbDigest);
-}
-
+IMPORT(A_SHAInit);
+IMPORT(A_SHAUpdate);
+IMPORT(A_SHAFinal);
