@@ -714,6 +714,25 @@ typedef NTSTATUS(NTAPI *FPTR_RtlAppendUnicodeStringToString)
 );
 
 // ******************************************************************
+// * RtlAppendUnicodeToString
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_RtlAppendUnicodeToString)
+(
+	IN OUT PUNICODE_STRING  Destination,
+	IN     PCWSTR  Source
+);
+
+// ******************************************************************
+// * RtlCharToInteger
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_RtlCharToInteger)
+(
+	IN     PCSZ   String,
+	IN     ULONG  Base OPTIONAL,
+	OUT    PULONG Value
+);
+
+// ******************************************************************
 // * RtlUnicodeStringToAnsiString
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeStringToAnsiString)
@@ -1152,60 +1171,62 @@ typedef PVOID (NTAPI *FPTR_RtlDestroyHeap)
 // ******************************************************************
 // * Exported API
 // ******************************************************************
-#define EXTERN(API) \
-extern FPTR_##API                          API
+#define EXTERN(API)  extern FPTR_##API API
 
-EXTERN(RtlInitAnsiString);
-EXTERN(RtlInitUnicodeString);
-EXTERN(RtlAnsiStringToUnicodeString);
-EXTERN(RtlAppendStringToString);
-EXTERN(RtlAppendUnicodeStringToString);
-EXTERN(RtlUnicodeStringToAnsiString);
-EXTERN(RtlFreeAnsiString);
-EXTERN(RtlNtStatusToDosError);
-EXTERN(RtlTimeFieldsToTime);
-EXTERN(RtlTimeToTimeFields);
-EXTERN(RtlTryEnterCriticalSection);
-EXTERN(RtlInitializeCriticalSection);
-EXTERN(RtlEnterCriticalSection);
-EXTERN(RtlLeaveCriticalSection);
-EXTERN(NtWaitForSingleObject);
-EXTERN(NtWaitForMultipleObjects);
-EXTERN(RtlCreateHeap);
-EXTERN(RtlAllocateHeap);
-EXTERN(RtlFreeHeap);
-EXTERN(RtlReAllocateHeap);
-EXTERN(RtlSizeHeap);
-EXTERN(RtlDestroyHeap);
-EXTERN(RtlEqualString);
+// Note : Keep EXTERN's sorted, to ease future sync's (and compares with IMPORT's):
 EXTERN(NtAllocateVirtualMemory);
-EXTERN(NtFreeVirtualMemory);
-EXTERN(NtQueryVirtualMemory);
 EXTERN(NtClearEvent);
 EXTERN(NtClose);
+EXTERN(NtCreateDirectoryObject);
+EXTERN(NtCreateEvent);
+EXTERN(NtCreateFile);
+EXTERN(NtCreateMutant);
+EXTERN(NtCreateSemaphore);
 EXTERN(NtDelayExecution);
 EXTERN(NtDuplicateObject);
 EXTERN(NtFlushBuffersFile);
-EXTERN(NtQueryInformationFile);
+EXTERN(NtFreeVirtualMemory);
 EXTERN(NtQueryDirectoryFile);
 EXTERN(NtQueryFullAttributesFile);
+EXTERN(NtQueryInformationFile);
+EXTERN(NtQueryVirtualMemory);
 EXTERN(NtQueryVolumeInformationFile);
-EXTERN(NtCreateEvent);
-EXTERN(NtCreateMutant);
-EXTERN(NtReleaseMutant);
-EXTERN(NtCreateSemaphore);
-EXTERN(NtReleaseSemaphore);
-EXTERN(NtCreateDirectoryObject);
-EXTERN(NtCreateFile);
+EXTERN(NtQueueApcThread);
 EXTERN(NtReadFile);
+EXTERN(NtReleaseMutant);
+EXTERN(NtReleaseSemaphore);
+EXTERN(NtResumeThread);
+EXTERN(NtSetEvent);
+EXTERN(NtSetInformationFile);
+EXTERN(NtSetLdtEntries);
+EXTERN(NtSuspendThread);
+EXTERN(NtWaitForMultipleObjects);
+EXTERN(NtWaitForSingleObject);
 EXTERN(NtWriteFile);
 EXTERN(NtYieldExecution);
-EXTERN(NtSetInformationFile);
-EXTERN(NtSetEvent);
-EXTERN(NtSuspendThread);
-EXTERN(NtResumeThread);
-EXTERN(NtSetLdtEntries);
-EXTERN(NtQueueApcThread);
+EXTERN(RtlAllocateHeap);
+EXTERN(RtlAnsiStringToUnicodeString);
+EXTERN(RtlAppendStringToString);
+EXTERN(RtlAppendUnicodeStringToString);
+EXTERN(RtlAppendUnicodeToString);
+EXTERN(RtlCharToInteger);
+EXTERN(RtlCreateHeap);
+EXTERN(RtlDestroyHeap);
+EXTERN(RtlEnterCriticalSection);
+EXTERN(RtlEqualString);
+EXTERN(RtlFreeAnsiString);
+EXTERN(RtlFreeHeap);
+EXTERN(RtlInitAnsiString);
+EXTERN(RtlInitializeCriticalSection);
+EXTERN(RtlInitUnicodeString);
+EXTERN(RtlLeaveCriticalSection);
+EXTERN(RtlNtStatusToDosError);
+EXTERN(RtlReAllocateHeap);
+EXTERN(RtlSizeHeap);
+EXTERN(RtlTimeFieldsToTime);
+EXTERN(RtlTimeToTimeFields);
+EXTERN(RtlTryEnterCriticalSection);
+EXTERN(RtlUnicodeStringToAnsiString);
 
 #if defined(__cplusplus)
 }

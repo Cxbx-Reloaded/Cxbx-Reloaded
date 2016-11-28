@@ -187,7 +187,7 @@ void DbgConsole::ParseCommand()
     if(_stricmp(szCmd, "h") == 0 || _stricmp(szCmd, "help") == 0)
     {
         printf("CxbxDbg: \n");
-        printf("CxbxDbg: Cxbx Debug Command List:\n");
+        printf("CxbxDbg: Cxbx-Reloaded Debug Command List:\n");
         printf("CxbxDbg: \n");
         printf("CxbxDbg:  Help            [H]     : Show Command List\n");
         printf("CxbxDbg:  Quit/Exit       [Q]     : Stop Emulation\n");

@@ -56,7 +56,16 @@ XBSYSAPI EXPORTNUM(264) VOID NTAPI RtlAssert
 
 XBSYSAPI VOID *RtlCaptureContext;
 XBSYSAPI VOID *RtlCaptureStackBackTrace;
-XBSYSAPI VOID *RtlCharToInteger;
+
+// ******************************************************************
+// * RtlCharToInteger
+// ******************************************************************
+XBSYSAPI EXPORTNUM(267) NTSTATUS NTAPI RtlCharToInteger
+(
+	IN     PCSZ   String,
+	IN     ULONG  Base OPTIONAL,
+	OUT    PULONG Value
+);
 
 // ******************************************************************
 // * RtlCompareMemory

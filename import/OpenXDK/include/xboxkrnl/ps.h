@@ -50,8 +50,7 @@ XBSYSAPI VOID *PsSetCreateThreadNotifyRoutine;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(258) VOID NTAPI PsTerminateSystemThread(IN NTSTATUS ExitStatus);
 
-//XBSYSAPI VOID *PsThreadObjectType;
-XBSYSAPI EXPORTNUM(259) volatile DWORD PsThreadObjectType;
+XBSYSAPI EXPORTNUM(259) volatile POBJECT_TYPE PsThreadObjectType;
 
 #endif
 

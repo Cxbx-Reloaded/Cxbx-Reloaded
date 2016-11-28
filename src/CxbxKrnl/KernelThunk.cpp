@@ -57,6 +57,10 @@ namespace xboxkrnl
 #define FUNC(f) f
 #define VARIABLE(v) v
 
+#define DEVKIT // developer kit only functions
+#define PROFILING // private kernel profiling functions
+// A.k.a. _XBOX_ENABLE_PROFILING
+
 // kernel thunk table
 extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 {
@@ -67,26 +71,26 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::AvSetSavedDataAddress),           // 0x0004 (4)
 	(uint32)FUNC(&xboxkrnl::DbgBreakPoint),                   // 0x0005 (5)
 	(uint32)FUNC(&xboxkrnl::DbgBreakPointWithStatus),         // 0x0006 (6)
-	(uint32)FUNC(&xboxkrnl::DbgLoadImageSymbols),             // 0x0007 (7)
+	(uint32)FUNC(&xboxkrnl::DbgLoadImageSymbols),             // 0x0007 (7) DEVKIT
 	(uint32)FUNC(&xboxkrnl::DbgPrint),                        // 0x0008 (8)
 	(uint32)FUNC(&xboxkrnl::HalReadSMCTrayState),             // 0x0009 (9)
 	(uint32)FUNC(&xboxkrnl::DbgPrompt),                       // 0x000A (10)
-	(uint32)FUNC(&xboxkrnl::DbgUnLoadImageSymbols),           // 0x000B (11)
+	(uint32)FUNC(&xboxkrnl::DbgUnLoadImageSymbols),           // 0x000B (11) DEVKIT
 	(uint32)FUNC(&xboxkrnl::ExAcquireReadWriteLockExclusive), // 0x000C (12)
 	(uint32)FUNC(&xboxkrnl::ExAcquireReadWriteLockShared),    // 0x000D (13)
 	(uint32)FUNC(&xboxkrnl::ExAllocatePool),                  // 0x000E (14)
 	(uint32)FUNC(&xboxkrnl::ExAllocatePoolWithTag),           // 0x000F (15)
-	(uint32)VARIABLE(&xboxkrnl::ExEventObjectType),           // 0x0010 (16)  
+	(uint32)VARIABLE(&xboxkrnl::ExEventObjectType),           // 0x0010 (16)
 	(uint32)FUNC(&xboxkrnl::ExFreePool),                      // 0x0011 (17)
 	(uint32)FUNC(&xboxkrnl::ExInitializeReadWriteLock),       // 0x0012 (18)
 	(uint32)FUNC(&xboxkrnl::ExInterlockedAddLargeInteger),    // 0x0013 (19)
 	(uint32)FUNC(&xboxkrnl::ExInterlockedAddLargeStatistic),  // 0x0014 (20)
 	(uint32)FUNC(&xboxkrnl::ExInterlockedCompareExchange64),  // 0x0015 (21)
-	(uint32)VARIABLE(&xboxkrnl::ExMutantObjectType),          // 0x0016 (22)  
-	(uint32)FUNC(&xboxkrnl::ExQueryPoolBlockSize),            // 0x0017 (23)  
+	(uint32)VARIABLE(&xboxkrnl::ExMutantObjectType),          // 0x0016 (22)
+	(uint32)FUNC(&xboxkrnl::ExQueryPoolBlockSize),            // 0x0017 (23)
 	(uint32)FUNC(&xboxkrnl::ExQueryNonVolatileSetting),       // 0x0018 (24)
 	(uint32)FUNC(&xboxkrnl::ExReadWriteRefurbInfo),           // 0x0019 (25)
-	(uint32)FUNC(&xboxkrnl::ExQueryPoolBlockSize),            // 0x001A (26)
+	(uint32)FUNC(&xboxkrnl::ExRaiseException),                // 0x001A (26)
 	(uint32)FUNC(&xboxkrnl::ExRaiseStatus),                   // 0x001B (27)
 	(uint32)FUNC(&xboxkrnl::ExReleaseReadWriteLock),          // 0x001C (28)
 	(uint32)FUNC(&xboxkrnl::ExSaveNonVolatileSetting),        // 0x001D (29)
@@ -162,7 +166,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::KeDelayExecutionThread),          // 0x0063 (99)
 	(uint32)PANIC(0x0064),                                    // 0x0064 (100) KeDisconnectInterrupt
 	(uint32)PANIC(0x0065),                                    // 0x0065 (101) KeEnterCriticalRegion
-	(uint32)VARIABLE(&xboxkrnl::MmGlobalData),                // 0x0066 (102) 
+	(uint32)VARIABLE(&xboxkrnl::MmGlobalData),                // 0x0066 (102)
 	(uint32)PANIC(0x0067),                                    // 0x0067 (103) KeGetCurrentIrql
 	(uint32)PANIC(0x0068),                                    // 0x0068 (104) KeGetCurrentThread
 	(uint32)PANIC(0x0069),                                    // 0x0069 (105) KeInitializeApc
@@ -218,10 +222,10 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x009B),                                    // 0x009B (155) KeTestAlertThread
 	(uint32)VARIABLE(&xboxkrnl::KeTickCount),                 // 0x009C (156)
 	(uint32)VARIABLE(&xboxkrnl::KeTimeIncrement),             // 0x009D (157)
-	(uint32)FUNC(&xboxkrnl::KeWaitForMultipleObjects),        // 0x009E (158) 
-	(uint32)FUNC(&xboxkrnl::KeWaitForSingleObject),           // 0x009F (159) 
+	(uint32)FUNC(&xboxkrnl::KeWaitForMultipleObjects),        // 0x009E (158)
+	(uint32)FUNC(&xboxkrnl::KeWaitForSingleObject),           // 0x009F (159)
 	(uint32)FUNC(&xboxkrnl::KfRaiseIrql),                     // 0x00A0 (160)
-	(uint32)FUNC(&xboxkrnl::KfLowerIrql),                     // 0x00A1 (161) 
+	(uint32)FUNC(&xboxkrnl::KfLowerIrql),                     // 0x00A1 (161)
 	(uint32)VARIABLE(&xboxkrnl::KiBugCheckData),              // 0x00A2 (162)
 	(uint32)PANIC(0x00A3),                                    // 0x00A3 (163) KiUnlockDispatcherDatabase
 	(uint32)VARIABLE(&xboxkrnl::LaunchDataPage),              // 0x00A4 (164)
@@ -235,7 +239,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::MmFreeSystemMemory),              // 0x00AC (172)
 	(uint32)PANIC(0x00AD),                                    // 0x00AD (173) MmGetPhysicalAddress
 	(uint32)PANIC(0x00AE),                                    // 0x00AE (174) MmIsAddressValid
-	(uint32)FUNC(&xboxkrnl::MmLockUnlockBufferPages),         // 0x00AF (175) 
+	(uint32)FUNC(&xboxkrnl::MmLockUnlockBufferPages),         // 0x00AF (175)
 	(uint32)PANIC(0x00B0),                                    // 0x00B0 (176) MmLockUnlockPhysicalPage
 	(uint32)FUNC(&xboxkrnl::MmMapIoSpace),                    // 0x00B1 (177)
 	(uint32)FUNC(&xboxkrnl::MmPersistContiguousMemory),       // 0x00B2 (178)
@@ -248,7 +252,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x00B9),                                    // 0x00B9 (185) NtCancelTimer
 	(uint32)FUNC(&xboxkrnl::NtClearEvent),                    // 0x00BA (186)
 	(uint32)FUNC(&xboxkrnl::NtClose),                         // 0x00BB (187)
-	(uint32)FUNC(&xboxkrnl::NtCreateDirectoryObject),         // 0x00BC (188) 
+	(uint32)FUNC(&xboxkrnl::NtCreateDirectoryObject),         // 0x00BC (188)
 	(uint32)FUNC(&xboxkrnl::NtCreateEvent),                   // 0x00BD (189)
 	(uint32)FUNC(&xboxkrnl::NtCreateFile),                    // 0x00BE (190)
 	(uint32)PANIC(0x00BF),                                    // 0x00BF (191) NtCreateIoCompletion
@@ -256,15 +260,15 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::NtCreateSemaphore),               // 0x00C1 (193)
 	(uint32)PANIC(0x00C2),                                    // 0x00C2 (194) NtCreateTimer
 	(uint32)PANIC(0x00C3),                                    // 0x00C3 (195) NtDeleteFile
-	(uint32)FUNC(&xboxkrnl::NtDeviceIoControlFile),           // 0x00C4 (196) 
+	(uint32)FUNC(&xboxkrnl::NtDeviceIoControlFile),           // 0x00C4 (196)
 	(uint32)FUNC(&xboxkrnl::NtDuplicateObject),               // 0x00C5 (197)
 	(uint32)FUNC(&xboxkrnl::NtFlushBuffersFile),              // 0x00C6 (198)
 	(uint32)FUNC(&xboxkrnl::NtFreeVirtualMemory),             // 0x00C7 (199)
 	(uint32)PANIC(0x00C8),                                    // 0x00C8 (200) NtFsControlFile
 	(uint32)PANIC(0x00C9),                                    // 0x00C9 (201) NtOpenDirectoryObject
 	(uint32)FUNC(&xboxkrnl::NtOpenFile),                      // 0x00CA (202)
-	(uint32)FUNC(&xboxkrnl::NtOpenSymbolicLinkObject),        // 0x00CB (203) 
-	(uint32)FUNC(&xboxkrnl::NtProtectVirtualMemory),          // 0x00CC (204) 
+	(uint32)FUNC(&xboxkrnl::NtOpenSymbolicLinkObject),        // 0x00CB (203)
+	(uint32)FUNC(&xboxkrnl::NtProtectVirtualMemory),          // 0x00CC (204)
 	(uint32)PANIC(0x00CD),                                    // 0x00CD (205) NtPulseEvent
 	(uint32)FUNC(&xboxkrnl::NtQueueApcThread),                // 0x00CE (206)
 	(uint32)FUNC(&xboxkrnl::NtQueryDirectoryFile),            // 0x00CF (207)
@@ -275,7 +279,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x00D4),                                    // 0x00D4 (212) NtQueryIoCompletion
 	(uint32)PANIC(0x00D5),                                    // 0x00D5 (213) NtQueryMutant
 	(uint32)PANIC(0x00D6),                                    // 0x00D6 (214) NtQuerySemaphore
-	(uint32)FUNC(&xboxkrnl::NtQuerySymbolicLinkObject),       // 0x00D7 (215) 
+	(uint32)FUNC(&xboxkrnl::NtQuerySymbolicLinkObject),       // 0x00D7 (215)
 	(uint32)PANIC(0x00D8),                                    // 0x00D8 (216) NtQueryTimer
 	(uint32)FUNC(&xboxkrnl::NtQueryVirtualMemory),            // 0x00D9 (217)
 	(uint32)FUNC(&xboxkrnl::NtQueryVolumeInformationFile),    // 0x00DA (218)
@@ -300,7 +304,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x00ED),                                    // 0x00ED (237) NtWriteFileGather
 	(uint32)FUNC(&xboxkrnl::NtYieldExecution),                // 0x00EE (238)
 	(uint32)PANIC(0x00EF),                                    // 0x00EF (239) ObCreateObject
-	(uint32)VARIABLE(&xboxkrnl::ObDirectoryObjectType),       // 0x00F0 (240) 
+	(uint32)VARIABLE(&xboxkrnl::ObDirectoryObjectType),       // 0x00F0 (240)
 	(uint32)PANIC(0x00F1),                                    // 0x00F1 (241) ObInsertObject
 	(uint32)PANIC(0x00F2),                                    // 0x00F2 (242) ObMakeTemporaryObject 
 	(uint32)PANIC(0x00F3),                                    // 0x00F3 (243) ObOpenObjectByName
@@ -315,11 +319,11 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x00FC),                                    // 0x00FC (252) PhyGetLinkState
 	(uint32)PANIC(0x00FD),                                    // 0x00FD (253) PhyInitialize
 	(uint32)PANIC(0x00FE),                                    // 0x00FE (254) PsCreateSystemThread
-	(uint32)FUNC(&xboxkrnl::PsCreateSystemThreadEx),          // 0x00FF (255) 
+	(uint32)FUNC(&xboxkrnl::PsCreateSystemThreadEx),          // 0x00FF (255)
 	(uint32)PANIC(0x0100),                                    // 0x0100 (256) PsQueryStatistics
 	(uint32)PANIC(0x0101),                                    // 0x0101 (257) PsSetCreateThreadNotifyRoutine
 	(uint32)FUNC(&xboxkrnl::PsTerminateSystemThread),         // 0x0102 (258)
-	(uint32)PANIC(0x0103),                                    // 0x0103 (259) PsThreadObjectType
+	(uint32)VARIABLE(&xboxkrnl::PsThreadObjectType),          // 0x0103 (259)
 	(uint32)FUNC(&xboxkrnl::RtlAnsiStringToUnicodeString),    // 0x0104 (260)
 	(uint32)FUNC(&xboxkrnl::RtlAppendStringToString),         // 0x0105 (261)
 	(uint32)FUNC(&xboxkrnl::RtlAppendUnicodeStringToString),  // 0x0106 (262)
@@ -327,7 +331,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::RtlAssert),                       // 0x0108 (264)
 	(uint32)PANIC(0x0109),                                    // 0x0109 (265) RtlCaptureContext
 	(uint32)PANIC(0x010A),                                    // 0x010A (266) RtlCaptureStackBackTrace
-	(uint32)PANIC(0x010B),                                    // 0x010B (267) RtlCharToInteger
+	(uint32)FUNC(&xboxkrnl::RtlCharToInteger),                // 0x010B (267)
 	(uint32)PANIC(0x010C),                                    // 0x010C (268) RtlCompareMemory
 	(uint32)PANIC(0x010D),                                    // 0x010D (269) RtlCompareMemoryUlong
 	(uint32)PANIC(0x010E),                                    // 0x010E (270) RtlCompareString
@@ -387,8 +391,8 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)VARIABLE(&xboxkrnl::XboxKrnlVersion),             // 0x0144 (324)
 	(uint32)VARIABLE(&xboxkrnl::XboxSignatureKey),            // 0x0145 (325)
 	(uint32)VARIABLE(&xboxkrnl::XeImageFileName),             // 0x0146 (326)
-	(uint32)FUNC(&xboxkrnl::XeLoadSection),                   // 0x0147 (327) 
-	(uint32)FUNC(&xboxkrnl::XeUnloadSection),                 // 0x0148 (328) 
+	(uint32)FUNC(&xboxkrnl::XeLoadSection),                   // 0x0147 (327)
+	(uint32)FUNC(&xboxkrnl::XeUnloadSection),                 // 0x0148 (328)
 	(uint32)FUNC(&xboxkrnl::READ_PORT_BUFFER_UCHAR),          // 0x0149 (329)
 	(uint32)FUNC(&xboxkrnl::READ_PORT_BUFFER_USHORT),         // 0x014A (330)
 	(uint32)FUNC(&xboxkrnl::READ_PORT_BUFFER_ULONG),          // 0x014B (331)
@@ -430,15 +434,15 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x016F),                                    // 0x016F (367) UnknownAPI367
 	(uint32)PANIC(0x0170),                                    // 0x0170 (368) UnknownAPI368
 	(uint32)PANIC(0x0171),                                    // 0x0171 (369) UnknownAPI369
-	(uint32)PANIC(0x0172),                                    // 0x0172 (370) UnknownAPI370
-	(uint32)PANIC(0x0173),                                    // 0x0173 (371) UnknownAPI371
-	(uint32)PANIC(0x0174),                                    // 0x0174 (372) UnknownAPI372
-	(uint32)PANIC(0x0175),                                    // 0x0175 (373) UnknownAPI373
-	(uint32)PANIC(0x0176),                                    // 0x0177 (374) MmDbgAllocateMemory
-	(uint32)PANIC(0x0177),                                    // 0x0178 (375) MmDbgFreeMemory - Returns number of pages released.
-	(uint32)PANIC(0x0178),                                    // 0x0179 (376) MmDbgQueryAvailablePages
-	(uint32)PANIC(0x0179),                                    // 0x017A (377) MmDbgReleaseAddress
-	(uint32)PANIC(0x017A),                                    // 0x017A (378) MmDbgWriteCheck
+	(uint32)PANIC(0x0172),                                    // 0x0172 (370) PROFILING XProfpControl
+	(uint32)PANIC(0x0173),                                    // 0x0173 (371) PROFILING XProfpGetData
+	(uint32)PANIC(0x0174),                                    // 0x0174 (372) PROFILING IrtClientInitFast
+	(uint32)PANIC(0x0175),                                    // 0x0175 (373) PROFILING IrtSweep
+	(uint32)PANIC(0x0176),                                    // 0x0177 (374) DEVKIT MmDbgAllocateMemory
+	(uint32)PANIC(0x0177),                                    // 0x0178 (375) DEVKIT MmDbgFreeMemory - Returns number of pages released.
+	(uint32)PANIC(0x0178),                                    // 0x0179 (376) DEVKIT MmDbgQueryAvailablePages
+	(uint32)PANIC(0x0179),                                    // 0x017A (377) DEVKIT MmDbgReleaseAddress
+	(uint32)PANIC(0x017A),                                    // 0x017A (378) DEVKIT MmDbgWriteCheck
 };
 
 /* prevent name collisions */
