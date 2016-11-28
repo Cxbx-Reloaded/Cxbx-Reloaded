@@ -147,8 +147,6 @@ XBSYSAPI EXPORTNUM(262) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeStrin
 
 	NTSTATUS result = NtDll::RtlAppendUnicodeStringToString((NtDll::PUNICODE_STRING)Destination, (NtDll::PUNICODE_STRING)Source);
 
-	LOG_UNIMPLEMENTED();
-
 	RETURN(result);
 }
 
@@ -164,8 +162,6 @@ XBSYSAPI EXPORTNUM(263) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeToStr
 		LOG_FUNC_END;
 
 	NTSTATUS result = NtDll::RtlAppendUnicodeToString((NtDll::PUNICODE_STRING)Destination, (NtDll::PCWSTR)Source);
-
-	LOG_UNIMPLEMENTED();
 
 	RETURN(result);
 }
@@ -189,6 +185,27 @@ XBSYSAPI EXPORTNUM(264) VOID NTAPI xboxkrnl::RtlAssert
 		LOG_FUNC_END;
 
 	CxbxKrnlCleanup("RtlAssert() raised by emulated program - consult Debug log");
+}
+
+// ******************************************************************
+// * 0x010B - RtlCharToInteger
+// ******************************************************************
+XBSYSAPI EXPORTNUM(267) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlCharToInteger
+(
+	IN     PCSZ   String,
+	IN     ULONG  Base OPTIONAL,
+	OUT    PULONG Value
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(String)
+		LOG_FUNC_ARG(Base)
+		LOG_FUNC_ARG(Value)
+		LOG_FUNC_END;
+
+	NTSTATUS result = NtDll::RtlCharToInteger((NtDll::PCSZ)String, (NtDll::ULONG)Base, (NtDll::PULONG)Value);
+
+	RETURN(result);
 }
 
 // ******************************************************************
