@@ -340,6 +340,24 @@ XBSYSAPI EXPORTNUM(143) xboxkrnl::LONG NTAPI xboxkrnl::KeSetBasePriorityThread
 	RETURN(1);
 }
 
+// ******************************************************************
+// * 0x0096 - KeSetPriorityThread
+// ******************************************************************
+XBSYSAPI EXPORTNUM(148) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetPriorityThread
+(
+    IN PKTHREAD  Thread,
+    IN PVOID  Priority
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_OUT(Thread)
+		LOG_FUNC_ARG_OUT(Priority)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(1);
+}
 
 // ******************************************************************
 // * 0x0095 - KeSetTimer

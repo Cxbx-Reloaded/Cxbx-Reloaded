@@ -2256,6 +2256,41 @@ XBSYSAPI EXPORTNUM(232) VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
 }
 
 // ******************************************************************
+// * 0x00E9 - NtWaitForSingleObject
+// ******************************************************************
+XBSYSAPI EXPORTNUM(233) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
+(
+    IN  HANDLE  Handle,
+    IN  BOOLEAN Alertable,
+    IN  PVOID   Timeout
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Handle)
+		LOG_FUNC_ARG(Alertable)
+		LOG_FUNC_ARG(Timeout)
+		LOG_FUNC_END;
+
+	NTSTATUS ret;
+
+	if (IsEmuHandle(Handle))
+	{
+		ret = WAIT_FAILED;
+		EmuWarning("WaitFor EmuHandle not supported!");
+	}
+	else
+	{
+		ret = NtDll::NtWaitForSingleObject(Handle, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
+		DbgPrintf("Finished waiting for 0x%.08X\n", Handle);
+	}
+
+	if (ret == WAIT_FAILED)
+		EmuWarning("NtWaitForSingleObject failed! (%s)", NtStatusToString(ret));
+
+	RETURN(ret);
+}
+
+// ******************************************************************
 // * 0x00EA - NtWaitForSingleObjectEx
 // ******************************************************************
 XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObjectEx
