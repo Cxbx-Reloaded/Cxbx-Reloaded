@@ -55,3 +55,32 @@ XBSYSAPI EXPORTNUM(245) xboxkrnl::DWORD xboxkrnl::ObpObjectHandleTable[1] = {};
 // TODO : What should we initialize this to?
 XBSYSAPI EXPORTNUM(249) xboxkrnl::POBJECT_TYPE xboxkrnl::ObSymbolicLinkObjectType = NULL;
 
+XBSYSAPI EXPORTNUM(246) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByHandle
+(
+	IN HANDLE Handle,
+	IN POBJECT_TYPE ObjectType OPTIONAL,
+	OUT PVOID *ReturnedObject
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Handle)
+		LOG_FUNC_ARG_OUT(ObjectType)
+		LOG_FUNC_ARG_OUT(ReturnedObject)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	// This is probably incorrect
+	*ReturnedObject = Handle;
+	RETURN(STATUS_SUCCESS);
+}
+
+XBSYSAPI EXPORTNUM(250) VOID __fastcall xboxkrnl::ObfDereferenceObject
+(
+	IN PVOID Object
+)
+{
+	LOG_FUNC_ONE_ARG_OUT(Object);
+
+	LOG_UNIMPLEMENTED();
+}
