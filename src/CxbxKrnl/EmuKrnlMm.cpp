@@ -291,6 +291,20 @@ XBSYSAPI EXPORTNUM(172) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmFreeSystemMemory
 }
 
 // ******************************************************************
+// * 0x00AD - MmGetPhysicalAddress
+// ******************************************************************
+XBSYSAPI EXPORTNUM(173) PHYSICAL_ADDRESS NTAPI xboxkrnl::MmGetPhysicalAddress
+(
+	IN PVOID   BaseAddress
+)
+{
+	LOG_FUNC_ONE_ARG_OUT(BaseAddress);
+	
+	// We emulate Virtual/Physical memory 1:1	
+	return (PHYSICAL_ADDRESS)BaseAddress;
+}
+
+// ******************************************************************
 // * 0x00AF - MmLockUnlockBufferPages
 // ******************************************************************
 XBSYSAPI EXPORTNUM(175) void NTAPI xboxkrnl::MmLockUnlockBufferPages

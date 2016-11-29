@@ -175,7 +175,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x006C),                                    // 0x006C (108) KeInitializeEvent
 	(uint32)FUNC(&xboxkrnl::KeInitializeInterrupt),           // 0x006D (109)
 	(uint32)PANIC(0x006E),                                    // 0x006E (110) KeInitializeMutant
-	(uint32)PANIC(0x006F),                                    // 0x006F (111) KeInitializeQueue
+	(uint32)PANIC(0x006F),                                    // 0x006F (111) KeInitializeQueue	
 	(uint32)PANIC(0x0070),                                    // 0x0070 (112) KeInitializeSemaphore
 	(uint32)FUNC(&xboxkrnl::KeInitializeTimerEx),             // 0x0071 (113)
 	(uint32)PANIC(0x0072),                                    // 0x0072 (114) KeInsertByKeyDeviceQueue
@@ -207,7 +207,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x008C),                                    // 0x008C (140) KeResumeThread
 	(uint32)PANIC(0x008D),                                    // 0x008D (141) KeRundownQueue
 	(uint32)PANIC(0x008E),                                    // 0x008E (142) KeSaveFloatingPointState
-	(uint32)PANIC(0x008F),                                    // 0x008F (143) KeSetBasePriorityThread
+	(uint32)FUNC(&xboxkrnl::KeSetBasePriorityThread),         // 0x008F (143)
 	(uint32)PANIC(0x0090),                                    // 0x0090 (144) KeSetDisableBoostThread
 	(uint32)PANIC(0x0091),                                    // 0x0091 (145) KeSetEvent
 	(uint32)PANIC(0x0092),                                    // 0x0092 (146) KeSetEventBoostPriority
@@ -237,7 +237,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::MmDeleteKernelStack),             // 0x00AA (170)
 	(uint32)FUNC(&xboxkrnl::MmFreeContiguousMemory),          // 0x00AB (171)
 	(uint32)FUNC(&xboxkrnl::MmFreeSystemMemory),              // 0x00AC (172)
-	(uint32)PANIC(0x00AD),                                    // 0x00AD (173) MmGetPhysicalAddress
+	(uint32)FUNC(&xboxkrnl::MmGetPhysicalAddress),            // 0x00AD (173)
 	(uint32)PANIC(0x00AE),                                    // 0x00AE (174) MmIsAddressValid
 	(uint32)FUNC(&xboxkrnl::MmLockUnlockBufferPages),         // 0x00AF (175)
 	(uint32)PANIC(0x00B0),                                    // 0x00B0 (176) MmLockUnlockPhysicalPage
@@ -310,11 +310,11 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x00F3),                                    // 0x00F3 (243) ObOpenObjectByName
 	(uint32)PANIC(0x00F4),                                    // 0x00F4 (244) ObOpenObjectByPointer
 	(uint32)VARIABLE(&xboxkrnl::ObpObjectHandleTable),        // 0x00F5 (245)
-	(uint32)PANIC(0x00F6),                                    // 0x00F6 (246) ObReferenceObjectByHandle
+	(uint32)FUNC(&xboxkrnl::ObReferenceObjectByHandle),       // 0x00F6 (246)
 	(uint32)PANIC(0x00F7),                                    // 0x00F7 (247) ObReferenceObjectByName
 	(uint32)PANIC(0x00F8),                                    // 0x00F8 (248) ObReferenceObjectByPointer
 	(uint32)VARIABLE(&xboxkrnl::ObSymbolicLinkObjectType),    // 0x00F9 (249)
-	(uint32)PANIC(0x00FA),                                    // 0x00FA (250) ObfDereferenceObject
+	(uint32)FUNC(&xboxkrnl::ObfDereferenceObject),            // 0x00FA (250)
 	(uint32)PANIC(0x00FB),                                    // 0x00FB (251) ObfReferenceObject
 	(uint32)PANIC(0x00FC),                                    // 0x00FC (252) PhyGetLinkState
 	(uint32)PANIC(0x00FD),                                    // 0x00FD (253) PhyInitialize
@@ -404,7 +404,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::XcSHAFinal),                      // 0x0151 (337)
 	(uint32)PANIC(0x0152),                                    // 0x0152 (338) XcRC4Key
 	(uint32)PANIC(0x0153),                                    // 0x0153 (339) XcRC4Crypt
-	(uint32)PANIC(0x0154),                                    // 0x0154 (340) XcHMAC
+	(uint32)FUNC(&xboxkrnl::XcHMAC),                          // 0x0154 (340)
 	(uint32)PANIC(0x0155),                                    // 0x0155 (341) XcPKEncPublic
 	(uint32)PANIC(0x0156),                                    // 0x0156 (342) XcPKDecPrivate
 	(uint32)PANIC(0x0157),                                    // 0x0157 (343) XcPKGetKeyLen

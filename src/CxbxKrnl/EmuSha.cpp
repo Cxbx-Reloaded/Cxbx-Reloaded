@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuKrnlOb.cpp
+// *   Cxbx->Win32->CxbxKrnl->EmuSha.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -27,7 +27,6 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
-// *  (c) 2016 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
 // *
@@ -35,52 +34,17 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
-// prevent name collisions
-namespace xboxkrnl
-{
-#include <xboxkrnl/xboxkrnl.h> // For ObDirectoryObjectType, etc.
-};
+#include <Windows.h>
+#include "EmuSha.h"
 
-#include "Logging.h" // For LOG_FUNC()
-#include "Emu.h" // For EmuWarning()
+// ******************************************************************
+// * Loaded at run-time to avoid linker conflicts
+// ******************************************************************
+static HMODULE hDll = GetModuleHandle("advapi32.dll");
 
-using namespace xboxkrnl;
+#define IMPORT(API) \
+FPTR_##API                          API                          = (FPTR_##API)GetProcAddress(hDll, #API)
 
-// TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(240) xboxkrnl::POBJECT_TYPE xboxkrnl::ObDirectoryObjectType = NULL;
-
-// TODO : Determine size. What should we initialize this to?
-XBSYSAPI EXPORTNUM(245) xboxkrnl::DWORD xboxkrnl::ObpObjectHandleTable[1] = {};
-
-// TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(249) xboxkrnl::POBJECT_TYPE xboxkrnl::ObSymbolicLinkObjectType = NULL;
-
-XBSYSAPI EXPORTNUM(246) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByHandle
-(
-	IN HANDLE Handle,
-	IN POBJECT_TYPE ObjectType OPTIONAL,
-	OUT PVOID *ReturnedObject
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Handle)
-		LOG_FUNC_ARG_OUT(ObjectType)
-		LOG_FUNC_ARG_OUT(ReturnedObject)
-		LOG_FUNC_END;
-
-	LOG_UNIMPLEMENTED();
-
-	// This is probably incorrect
-	*ReturnedObject = Handle;
-	RETURN(STATUS_SUCCESS);
-}
-
-XBSYSAPI EXPORTNUM(250) VOID __fastcall xboxkrnl::ObfDereferenceObject
-(
-	IN PVOID Object
-)
-{
-	LOG_FUNC_ONE_ARG_OUT(Object);
-
-	LOG_UNIMPLEMENTED();
-}
+IMPORT(A_SHAInit);
+IMPORT(A_SHAUpdate);
+IMPORT(A_SHAFinal);

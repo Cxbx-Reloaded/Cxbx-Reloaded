@@ -167,7 +167,7 @@ XBSYSAPI VOID *KeRundownQueue;
 XBSYSAPI VOID *KeSaveFloatingPointState;
 
 //XBSYSAPI VOID *KeSetBasePriorityThread;
-XBSYSAPI EXPORTNUM(143) BOOLEAN NTAPI KeSetBasePriorityThread
+XBSYSAPI EXPORTNUM(143) LONG NTAPI KeSetBasePriorityThread
 (
     IN PKTHREAD  Thread,
     IN PVOID  Priority

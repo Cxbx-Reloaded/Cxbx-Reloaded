@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuKrnlOb.cpp
+// *   Cxbx->Win32->CxbxKrnl->EmuSha.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -27,60 +27,59 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
-// *  (c) 2016 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
-#define _XBOXKRNL_DEFEXTRN_
+#ifndef EMUSHA_H
+#define EMUSHA_H
 
-// prevent name collisions
-namespace xboxkrnl
+#if defined(__cplusplus)
+extern "C"
 {
-#include <xboxkrnl/xboxkrnl.h> // For ObDirectoryObjectType, etc.
-};
+#endif
 
-#include "Logging.h" // For LOG_FUNC()
-#include "Emu.h" // For EmuWarning()
+#include <Windows.h>
 
-using namespace xboxkrnl;
+#define A_SHA_DIGEST_LEN 20
 
-// TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(240) xboxkrnl::POBJECT_TYPE xboxkrnl::ObDirectoryObjectType = NULL;
+typedef struct {
+	ULONG Unknown[6];
+	ULONG State[5];
+	ULONG Count[2];
+	UCHAR Buffer[64];
+} SHA_CTX, *PSHA_CTX;
 
-// TODO : Determine size. What should we initialize this to?
-XBSYSAPI EXPORTNUM(245) xboxkrnl::DWORD xboxkrnl::ObpObjectHandleTable[1] = {};
-
-// TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(249) xboxkrnl::POBJECT_TYPE xboxkrnl::ObSymbolicLinkObjectType = NULL;
-
-XBSYSAPI EXPORTNUM(246) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByHandle
+typedef VOID (WINAPI *FPTR_A_SHAInit)
 (
-	IN HANDLE Handle,
-	IN POBJECT_TYPE ObjectType OPTIONAL,
-	OUT PVOID *ReturnedObject
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Handle)
-		LOG_FUNC_ARG_OUT(ObjectType)
-		LOG_FUNC_ARG_OUT(ReturnedObject)
-		LOG_FUNC_END;
+	PSHA_CTX
+);
 
-	LOG_UNIMPLEMENTED();
-
-	// This is probably incorrect
-	*ReturnedObject = Handle;
-	RETURN(STATUS_SUCCESS);
-}
-
-XBSYSAPI EXPORTNUM(250) VOID __fastcall xboxkrnl::ObfDereferenceObject
+typedef VOID(WINAPI *FPTR_A_SHAUpdate)
 (
-	IN PVOID Object
-)
-{
-	LOG_FUNC_ONE_ARG_OUT(Object);
+	PSHA_CTX,
+	const unsigned char *,
+	UINT
+);
 
-	LOG_UNIMPLEMENTED();
+typedef VOID(WINAPI *FPTR_A_SHAFinal)
+(
+	PSHA_CTX,
+	PUCHAR
+);
+
+// ******************************************************************
+// * Exported API
+// ******************************************************************
+#define EXTERN(API) \
+extern FPTR_##API                          API
+
+EXTERN(A_SHAInit);
+EXTERN(A_SHAUpdate);
+EXTERN(A_SHAFinal);
+
+#if defined(__cplusplus)
 }
+#endif
+
+#endif

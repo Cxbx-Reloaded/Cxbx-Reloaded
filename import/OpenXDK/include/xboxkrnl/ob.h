@@ -20,17 +20,23 @@ XBSYSAPI VOID *ObOpenObjectByName;
 XBSYSAPI VOID *ObOpenObjectByPointer;
 XBSYSAPI EXPORTNUM(245) DWORD ObpObjectHandleTable[1];
 
-XBSYSAPI EXPORTNUM(246) BOOLEAN NTAPI ObReferenceObjectByHandle
-( unsigned int a,
-  unsigned int b,
-  unsigned int c
+XBSYSAPI EXPORTNUM(246) NTSTATUS NTAPI ObReferenceObjectByHandle
+(
+    IN HANDLE Handle,
+    IN POBJECT_TYPE ObjectType OPTIONAL,
+    OUT PVOID *ReturnedObject
 );
 
 
 XBSYSAPI VOID *ObReferenceObjectByName;
 XBSYSAPI VOID *ObReferenceObjectByPointer;
 XBSYSAPI EXPORTNUM(249) POBJECT_TYPE ObSymbolicLinkObjectType;
-XBSYSAPI VOID *ObfDereferenceObject;
+
+XBSYSAPI EXPORTNUM(250) VOID __fastcall ObfDereferenceObject
+(
+	IN PVOID Object
+);
+
 XBSYSAPI VOID *ObfReferenceObject;
 
 #endif
