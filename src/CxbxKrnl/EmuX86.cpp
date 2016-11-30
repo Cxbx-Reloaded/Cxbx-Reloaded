@@ -84,7 +84,7 @@ void EmuX86_Write32(uint32_t addr, uint32_t value)
 	EmuWarning("EmuX86_Write32: Unknown Write Address %08X (value %08X)", addr, value);
 }
 
-DWORD* EmuX86_GetRegisterPointer(LPEXCEPTION_POINTERS e, Zydis::Register reg)
+inline DWORD* EmuX86_GetRegisterPointer(LPEXCEPTION_POINTERS e, Zydis::Register reg)
 {
 	switch (reg) {
 		case Zydis::Register::AL: case Zydis::Register::AH:	case Zydis::Register::AX: case Zydis::Register::EAX:
@@ -106,7 +106,7 @@ DWORD* EmuX86_GetRegisterPointer(LPEXCEPTION_POINTERS e, Zydis::Register reg)
 	return nullptr;
 }
 
-bool EmuX86_GetRegisterValue(uint32_t* output, LPEXCEPTION_POINTERS e, Zydis::Register reg)
+inline bool EmuX86_GetRegisterValue(uint32_t* output, LPEXCEPTION_POINTERS e, Zydis::Register reg)
 {
 	uint32_t value = 0;
 
@@ -123,7 +123,7 @@ bool EmuX86_GetRegisterValue(uint32_t* output, LPEXCEPTION_POINTERS e, Zydis::Re
 	return true;
 }
 
-bool EmuX86_DecodeMemoryOperand(uint32_t* output, LPEXCEPTION_POINTERS e, Zydis::OperandInfo& operand)
+inline bool EmuX86_DecodeMemoryOperand(uint32_t* output, LPEXCEPTION_POINTERS e, Zydis::OperandInfo& operand)
 {
 	uint32_t base = 0;
 	uint32_t index = 0;
@@ -225,13 +225,16 @@ bool EmuX86_MOV(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
 	return false;
 }
 
-void EmuX86_SetFlag(LPEXCEPTION_POINTERS e, int flag, int value)
+inline void EmuX86_SetFlag(LPEXCEPTION_POINTERS e, int flag, int value)
 {
 	e->ContextRecord->EFlags ^= (-value ^ e->ContextRecord->EFlags) & (1 << flag);
 }
 
 bool EmuX86_TEST(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
 {
+	uint32_t result = 0;
+	bool handled = false;
+
 	if (info.operand[0].type == Zydis::OperandType::MEMORY && info.operand[1].type == Zydis::OperandType::IMMEDIATE)
 	{
 		uint32_t addr = 0;
@@ -243,21 +246,41 @@ bool EmuX86_TEST(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
 		uint32_t value = EmuX86_Read32(addr);
 
 		// Perform bitwise AND
-		uint32_t result = value & info.operand[1].lval.udword;
+		result = value & info.operand[1].lval.udword;
+		handled = true;
+	}
+	else if (info.operand[0].type == Zydis::OperandType::MEMORY && info.operand[1].type == Zydis::OperandType::REGISTER)
+	{
+		uint32_t addr = 0;
+		uint32_t value = 0;
 
-		// Set CF/OF to 0
-		EmuX86_SetFlag(e, EMUX86_EFLAG_CF, 0);
-		EmuX86_SetFlag(e, EMUX86_EFLAG_OF, 0);
+		if (!EmuX86_DecodeMemoryOperand(&addr, e, info.operand[0])) {
+			return false;
+		}
 
-		EmuX86_SetFlag(e, EMUX86_EFLAG_SF, result >> 31);
-		EmuX86_SetFlag(e, EMUX86_EFLAG_ZF, result == 0 ? 1 : 0);
+		if (!EmuX86_GetRegisterValue(&value, e, info.operand[1].base)) {
+			return false;
+		}
 
-		// TODO: Parity Flag
-
-		return true;
+		// Perform bitwise AND
+		
+		result = EmuX86_Read32(addr) & value;
+		handled = true;
 	}
 
-	return false;
+	if (!handled) {
+		return false;
+	}
+
+	// Set CF/OF to 0
+	EmuX86_SetFlag(e, EMUX86_EFLAG_CF, 0);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_OF, 0);
+
+	EmuX86_SetFlag(e, EMUX86_EFLAG_SF, result >> 31);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_ZF, result == 0 ? 1 : 0);
+
+	// TODO: Parity Flag
+	return true;
 }
 
 bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
@@ -284,7 +307,6 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	}
 	else
 	{
-		DbgPrintf("EmuX86: 0x%08X: %s\n", e->ContextRecord->Eip, formatter.formatInstruction(info));
 		switch (info.mnemonic) 
 		{	
 			case Zydis::InstructionMnemonic::MOV:
