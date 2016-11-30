@@ -240,13 +240,7 @@ XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
 )
 {
 	LOG_FUNC_ONE_ARG(Routine);
-
-	// Prevent the dashboard from rebooting due to unimplemented crypto routines
-	if ((uint32_t)Routine != 4) {
-		CxbxKrnlCleanup("Xbe has rebooted : HalReturnToFirmware(%d)", Routine);
-	}
-
-	LOG_UNIMPLEMENTED();
+	CxbxKrnlCleanup("Xbe has rebooted : HalReturnToFirmware(%d)", Routine);
 }
 
 // ******************************************************************
