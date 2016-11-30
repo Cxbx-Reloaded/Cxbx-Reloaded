@@ -212,7 +212,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0091),                                    // 0x0091 (145) KeSetEvent
 	(uint32)PANIC(0x0092),                                    // 0x0092 (146) KeSetEventBoostPriority
 	(uint32)PANIC(0x0093),                                    // 0x0093 (147) KeSetPriorityProcess
-	(uint32)PANIC(0x0094),                                    // 0x0094 (148) KeSetPriorityThread
+	(uint32)FUNC(&xboxkrnl::KeSetPriorityThread),             // 0x0094 (148)
 	(uint32)FUNC(&xboxkrnl::KeSetTimer),                      // 0x0095 (149)
 	(uint32)FUNC(&xboxkrnl::KeSetTimerEx),                    // 0x0096 (150)
 	(uint32)PANIC(0x0097),                                    // 0x0097 (151) KeStallExecutionProcessor
@@ -297,7 +297,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x00E6),                                    // 0x00E6 (230) NtSignalAndWaitForSingleObjectEx
 	(uint32)FUNC(&xboxkrnl::NtSuspendThread),                 // 0x00E7 (231)
 	(uint32)FUNC(&xboxkrnl::NtUserIoApcDispatcher),           // 0x00E8 (232)
-	(uint32)PANIC(0x00E9),                                    // 0x00E9 (233) NtWaitForSingleObject
+	(uint32)FUNC(&xboxkrnl::NtWaitForSingleObject),           // 0x00E9 (233)
 	(uint32)FUNC(&xboxkrnl::NtWaitForSingleObjectEx),         // 0x00EA (234)
 	(uint32)FUNC(&xboxkrnl::NtWaitForMultipleObjectsEx),      // 0x00EB (235)
 	(uint32)FUNC(&xboxkrnl::NtWriteFile),                     // 0x00EC (236)

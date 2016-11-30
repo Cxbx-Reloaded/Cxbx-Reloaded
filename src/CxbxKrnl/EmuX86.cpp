@@ -87,25 +87,13 @@ void EmuX86_Write32(uint32_t addr, uint32_t value)
 DWORD* EmuX86_GetRegisterPointer(LPEXCEPTION_POINTERS e, Zydis::Register reg)
 {
 	switch (reg) {
-		case Zydis::Register::AL:
-		case Zydis::Register::AH:
-		case Zydis::Register::AX:
-		case Zydis::Register::EAX:
+		case Zydis::Register::AL: case Zydis::Register::AH:	case Zydis::Register::AX: case Zydis::Register::EAX:
 			return &e->ContextRecord->Eax;
-		case Zydis::Register::BL:
-		case Zydis::Register::BH:
-		case Zydis::Register::BX:
-		case Zydis::Register::EBX:
+		case Zydis::Register::BL: case Zydis::Register::BH:	case Zydis::Register::BX: case Zydis::Register::EBX:
 			return &e->ContextRecord->Ebx;
-		case Zydis::Register::CL:
-		case Zydis::Register::CH:
-		case Zydis::Register::CX:
-		case Zydis::Register::ECX:
+		case Zydis::Register::CL: case Zydis::Register::CH:	case Zydis::Register::CX: case Zydis::Register::ECX:
 			return &e->ContextRecord->Ecx;
-		case Zydis::Register::DL:
-		case Zydis::Register::DH:
-		case Zydis::Register::DX:
-		case Zydis::Register::EDX:
+		case Zydis::Register::DL: case Zydis::Register::DH: case Zydis::Register::DX: case Zydis::Register::EDX:
 			return &e->ContextRecord->Edx;
 		case Zydis::Register::EDI:
 			return &e->ContextRecord->Edi;

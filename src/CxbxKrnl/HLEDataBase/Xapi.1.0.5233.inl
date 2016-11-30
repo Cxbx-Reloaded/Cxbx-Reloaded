@@ -151,6 +151,77 @@ SOOVPA<6> XGetFileCacheSize_1_0_5344 =
 // ******************************************************************
 OOVPATable XAPI_1_0_5233[] =
 {
+    // GetTimeZoneInformation (* unchanged since 3911 *)
+    {
+        (OOVPA*)&GetTimeZoneInformation_1_0_3911,
+
+        XTL::EmuGetTimeZoneInformation,
+
+        #ifdef _DEBUG_TRACE
+        "GetTimeZoneInformation"
+        #endif
+    },
+    // SetThreadPriority (* unchanged since 3911 *)
+    {
+        (OOVPA*)&SetThreadPriority_1_0_3911,
+
+        XTL::EmuSetThreadPriority,
+
+        #ifdef _DEBUG_TRACE
+        "EmuSetThreadPriority"
+        #endif
+    },
+    // SetThreadPriorityBoost (* unchanged since 4627 *)
+    {
+        (OOVPA*)&SetThreadPriorityBoost_1_0_4627,
+
+        XTL::EmuSetThreadPriorityBoost,
+
+        #ifdef _DEBUG_TRACE
+        "EmuSetThreadPriorityBoost"
+        #endif
+    },
+	// GetThreadPriority (* unchanged since 4627 *)
+    {
+        (OOVPA*)&GetThreadPriority_1_0_4627,
+
+        XTL::EmuGetThreadPriority,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGetThreadPriority"
+        #endif
+    },
+    // XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
+    {
+        (OOVPA*)&XRegisterThreadNotifyRoutine_1_0_3911,
+
+        XTL::EmuXRegisterThreadNotifyRoutine,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXRegisterThreadNotifyRoutine"
+        #endif
+    },
+  
+    // QueryPerformanceCounter (* unchanged since 4361 *)
+    {
+        (OOVPA*)&QueryPerformanceCounter_1_0_4361,
+
+        XTL::EmuQueryPerformanceCounter,
+
+        #ifdef _DEBUG_TRACE
+        "EmuQueryPerformanceCounter"
+        #endif
+    },
+    // QueryPerformanceFrequency (* unchanged since 4361 *)
+    {
+        (OOVPA*)&QueryPerformanceFrequency_1_0_4361,
+
+        XTL::EmuQueryPerformanceFrequency,
+
+        #ifdef _DEBUG_TRACE
+        "EmuQueryPerformanceFrequency"
+        #endif
+    },
     // XMountUtilityDrive (* unchanged since 4432 *)
     {
         (OOVPA*)&XMountUtilityDrive_1_0_4432,
@@ -247,6 +318,34 @@ OOVPATable XAPI_1_0_5233[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXInputSetState"
+        #endif
+    },
+	// XGetFileCacheSize
+    {
+        (OOVPA*)&XGetFileCacheSize_1_0_5344,
+        XTL::EmuXGetFileCacheSize,
+
+        #ifdef _DEBUG_TRACE
+        "XGetFileCacheSize"
+        #endif
+	},
+	// QueueUserAPC (* unchanged since 3911 *)
+	{ 
+		(OOVPA*)&QueueUserAPC_1_0_3911,
+
+		XTL::EmuQueueUserAPC,
+			
+		#ifdef _DEBUG_TRACE
+		"EmuQueueUserAPC"
+		#endif
+	},
+	// GetFileAttributesA (* unchanged since 4134 *)
+    {
+        (OOVPA*)&GetFileAttributesA_1_0_4134,
+        XTL::EmuGetFileAttributesA,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGetFileAttributesA"
         #endif
     },
 };

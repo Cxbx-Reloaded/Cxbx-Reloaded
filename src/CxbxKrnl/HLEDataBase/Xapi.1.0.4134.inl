@@ -406,6 +406,27 @@ OOVPATable XAPI_1_0_4134[] =
         "EmuXInitDevices"
         #endif
     },
+    //*/
+    // SetThreadPriority (* unchanged since 3911 *)
+    {
+        (OOVPA*)&SetThreadPriority_1_0_3911,
+
+        XTL::EmuSetThreadPriority,
+
+        #ifdef _DEBUG_TRACE
+        "EmuSetThreadPriority"
+        #endif
+    },
+    // GetExitCodeThread (* unchanged since 3911 *)
+    {
+        (OOVPA*)&GetExitCodeThread_1_0_3911,
+
+        XTL::EmuGetExitCodeThread,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGetExitCodeThread"
+        #endif
+    },
     // XGetDevices
     {
         (OOVPA*)&XGetDevices_1_0_4134,
@@ -456,6 +477,26 @@ OOVPATable XAPI_1_0_4134[] =
         "EmuXMountUtilityDrive"
         #endif
     },
+	// GetTimeZoneInformation (* unchanged since 3911 *)
+    {
+        (OOVPA*)&GetTimeZoneInformation_1_0_3911,
+
+        XTL::EmuGetTimeZoneInformation,
+
+        #ifdef _DEBUG_TRACE
+        "GetTimeZoneInformation"
+        #endif
+    },
+    // XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
+    {
+        (OOVPA*)&XRegisterThreadNotifyRoutine_1_0_3911,
+
+        XTL::EmuXRegisterThreadNotifyRoutine,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXRegisterThreadNotifyRoutine"
+        #endif
+    },
 	// XGetDeviceChanges (* unchanged since 3911 *)
     {
         (OOVPA*)&XGetDeviceChanges_1_0_3911,
@@ -494,6 +535,36 @@ OOVPATable XAPI_1_0_4134[] =
         "EmuXInputGetCapabilities"
         #endif
     },
+	// GetThreadPriority (* unchanged since 3911 *)
+	{
+		(OOVPA*)&GetThreadPriority_1_0_3911,
+
+		XTL::EmuGetThreadPriority,
+
+		#ifdef _DEBUG_TRACE
+		"EmuGetThreadPriority"
+		#endif
+	},
+	// QueryPerformanceCounter
+    {
+        (OOVPA*)&QueryPerformanceCounter_1_0_4134,
+
+        XTL::EmuQueryPerformanceCounter,
+
+        #ifdef _DEBUG_TRACE
+        "EmuQueryPerformanceCounter"
+        #endif
+    },
+    // QueryPerformanceFrequency
+    {
+        (OOVPA*)&QueryPerformanceFrequency_1_0_4134,
+
+        XTL::EmuQueryPerformanceFrequency,
+
+        #ifdef _DEBUG_TRACE
+        "EmuQueryPerformanceFrequency"
+        #endif
+    },
 	// XInputPoll
 	{
 		(OOVPA*)&XInputPoll_1_0_4134,
@@ -504,6 +575,36 @@ OOVPATable XAPI_1_0_4134[] =
 		"EmuXInputPoll"
 		#endif
 	},
+	// SetThreadPriorityBoost (* unchanged since 3911 *)
+	{
+		(OOVPA*)&SetThreadPriorityBoost_1_0_3911,
+
+		XTL::EmuSetThreadPriorityBoost,
+
+		#ifdef _DEBUG_TRACE
+		"EmuSetThreadPriorityBoost"
+		#endif
+	},
+	// SignalObjectAndWait (* unchanged since 3911 *)
+	{
+		(OOVPA*)&SignalObjectAndWait_1_0_3911, 
+			
+		XTL::EmuSignalObjectAndWait,
+
+		#ifdef _DEBUG_TRACE
+		"EmuSignalObjectAndWait"
+		#endif
+	},
+	// QueueUserAPC (* unchanged since 3911 *)
+	{ 
+		(OOVPA*)&QueueUserAPC_1_0_3911,
+
+		XTL::EmuQueueUserAPC,
+			
+		#ifdef _DEBUG_TRACE
+		"EmuQueueUserAPC"
+		#endif
+	},
 	// XMountMUA
     {
         (OOVPA*)&XMountMUA_1_0_4134,
@@ -511,6 +612,33 @@ OOVPATable XAPI_1_0_4134[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXMountMUA"
+        #endif
+    },
+	// GetFileAttributesA
+    {
+        (OOVPA*)&GetFileAttributesA_1_0_4134,
+        XTL::EmuGetFileAttributesA,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGetFileAttributesA"
+        #endif
+    },
+	// timeSetEvent
+    {
+        (OOVPA*)&timeSetEvent_1_0_4134,
+        XTL::EmutimeSetEvent,
+
+        #ifdef _DEBUG_TRACE
+        "EmutimeSetEvent"
+        #endif
+    },
+    // timeKillEvent
+    {
+        (OOVPA*)&timeKillEvent_1_0_4134,
+        XTL::EmutimeKillEvent,
+
+        #ifdef _DEBUG_TRACE
+        "EmutimeKillEvent"
         #endif
     },
 	// XLaunchNewImageA

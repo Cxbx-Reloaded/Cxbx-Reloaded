@@ -1590,6 +1590,16 @@ SOOVPA<8> WriteFileEx_1_0_3911 =
 // ******************************************************************
 OOVPATable XAPI_1_0_3911[] =
 {
+    // GetExitCodeThread
+    {
+        (OOVPA*)&GetExitCodeThread_1_0_3911,
+
+        XTL::EmuGetExitCodeThread,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGetExitCodeThread"
+        #endif
+    },
     //*/
     // XInitDevices
     {
@@ -1599,6 +1609,60 @@ OOVPATable XAPI_1_0_3911[] =
 
         #ifdef _DEBUG_TRACE
         "EmuXInitDevices"
+        #endif
+    },
+    /* Too High Level
+    // CreateMutex
+    {
+        (OOVPA*)&CreateMutex_1_0_3911,
+
+        XTL::EmuCreateMutex,
+
+        #ifdef _DEBUG_TRACE
+        "EmuCreateMutex"
+        #endif
+    },
+    //*/
+    /* Too High Level */
+    // CreateThread
+   /* {
+        (OOVPA*)&CreateThread_1_0_3911,
+
+        XTL::EmuCreateThread,
+
+        #ifdef _DEBUG_TRACE
+        "EmuCreateThread"
+        #endif
+    },*/
+    // SetThreadPriority
+    {
+        (OOVPA*)&SetThreadPriority_1_0_3911,
+
+        XTL::EmuSetThreadPriority,
+
+        #ifdef _DEBUG_TRACE
+        "EmuSetThreadPriority"
+        #endif
+    },
+    //*/
+    // GetTimeZoneInformation
+    {
+        (OOVPA*)&GetTimeZoneInformation_1_0_3911,
+
+        XTL::EmuGetTimeZoneInformation,
+
+        #ifdef _DEBUG_TRACE
+        "GetTimeZoneInformation"
+        #endif
+    },
+    // XRegisterThreadNotifyRoutine
+    {
+        (OOVPA*)&XRegisterThreadNotifyRoutine_1_0_3911,
+
+        XTL::EmuXRegisterThreadNotifyRoutine,
+
+        #ifdef _DEBUG_TRACE
+        "EmuXRegisterThreadNotifyRoutine"
         #endif
     },
     /*
@@ -1691,6 +1755,26 @@ OOVPATable XAPI_1_0_3911[] =
         "EmuXInputSetState"
         #endif
     },
+	// SetThreadPriorityBoost
+	{
+		(OOVPA*)&SetThreadPriorityBoost_1_0_3911,
+
+		XTL::EmuSetThreadPriorityBoost,
+
+		#ifdef _DEBUG_TRACE
+		"EmuSetThreadPriorityBoost"
+		#endif
+	},
+	// GetThreadPriority
+	{
+		(OOVPA*)&GetThreadPriority_1_0_3911,
+
+		XTL::EmuGetThreadPriority,
+
+		#ifdef _DEBUG_TRACE
+		"EmuGetThreadPriority"
+		#endif
+	},
 	// XGetDevices
 	{
 		(OOVPA*)&XGetDevices_1_0_3911,
@@ -1709,6 +1793,64 @@ OOVPATable XAPI_1_0_3911[] =
 
 		#ifdef _DEBUG_TRACE
 		"EmuXInputGetCapabilities"
+		#endif
+	},
+	// SignalObjectAndWait
+	{
+		(OOVPA*)&SignalObjectAndWait_1_0_3911, 
+			
+		XTL::EmuSignalObjectAndWait,
+
+		#ifdef _DEBUG_TRACE
+		"EmuSignalObjectAndWait"
+		#endif
+	},
+	// PulseEvent
+	{
+		(OOVPA*)&PulseEvent_1_0_3911, 
+			
+		XTL::EmuPulseEvent,
+
+		#ifdef _DEBUG_TRACE
+		"EmuPulseEvent"
+		#endif
+	},
+	// QueueUserAPC
+	{ 
+		(OOVPA*)&QueueUserAPC_1_0_3911,
+
+		XTL::EmuQueueUserAPC,
+			
+		#ifdef _DEBUG_TRACE
+		"EmuQueueUserAPC"
+		#endif
+	},
+	// lstrcmpiW
+	/*{ 
+		(OOVPA*)&lstrcmpiW_1_0_3911,
+
+		XTL::EmulstrcmpiW,
+			
+		#ifdef _DEBUG_TRACE
+		"EmulstrcmpiW"
+		#endif
+	},*/
+	// XMountAlternateTitleA
+	{
+		(OOVPA*)&XMountAlternateTitleA_1_0_3911,
+		XTL::EmuXMountAlternateTitle,
+
+		#ifdef _DEBUG_TRACE
+		"XMountAlternateTitleA"
+		#endif
+	},
+	// XUnmountAlternateTitleA
+	{
+		(OOVPA*)&XUnmountAlternateTitleA_1_0_3911,
+	    XTL::EmuXUnmountAlternateTitle,
+
+		#ifdef _DEBUG_TRACE
+		"XUnmountAlternateTitleA"
 		#endif
 	},
 	// XMountMUA
@@ -1767,6 +1909,69 @@ OOVPATable XAPI_1_0_3911[] =
         "EmuXMountUtilityDrive" 
         #endif
     },
+	// GetFileAttributesA
+    {
+        (OOVPA*)&GetFileAttributesA_1_0_3911,
+        XTL::EmuGetFileAttributesA,
+
+        #ifdef _DEBUG_TRACE
+        "EmuGetFileAttributesA"
+        #endif
+    },
+	// ReadFileEx
+	/*{
+        (OOVPA*)&ReadFileEx_1_0_3911,
+        XTL::EmuReadFileEx,
+
+        #ifdef _DEBUG_TRACE
+        "EmuReadFileEx"
+        #endif
+    },
+	// WriteFileEx
+	{
+        (OOVPA*)&WriteFileEx_1_0_3911,
+        XTL::EmuWriteFileEx,
+
+        #ifdef _DEBUG_TRACE
+        "EmuWriteFileEx"
+        #endif
+    },*/
+	// CloseHandle
+    /*{
+	   (OOVPA*)&CloseHandle_1_0_3911,
+	   XTL::EmuCloseHandle,
+
+	   #ifdef _DEBUG_TRACE
+	   "CloseHandle"
+	   #endif
+    },*/
+	// ExitThread
+    /*{
+       (OOVPA*)&ExitThread_1_0_3911,
+       XTL::EmuExitThread,
+
+       #ifdef _DEBUG_TRACE
+       "ExitThread"
+       #endif
+    },*/
+	// VirtualAlloc@16
+    //{
+    //   (OOVPA*)&VirtualAlloc_1_0_3911,
+    //   XTL::EmuVirtualAlloc,
+
+    //   #ifdef _DEBUG_TRACE
+    //   "EmuVirtualAlloc"
+    //   #endif
+    //},
+    //// VirtualFree@12
+    //{
+    //   (OOVPA*)&VirtualFree_1_0_3911,
+    //   XTL::EmuVirtualFree,
+
+    //   #ifdef _DEBUG_TRACE
+    //   "EmuVirtualFree"
+    //   #endif
+    //},
 };
 
 // ******************************************************************
