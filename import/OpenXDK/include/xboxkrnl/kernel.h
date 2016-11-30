@@ -208,7 +208,11 @@ XBSYSAPI EXPORTNUM(150) BOOLEAN NTAPI KeSetTimerEx
     IN PKDPC          Dpc OPTIONAL
 );
 
-XBSYSAPI VOID *KeStallExecutionProcessor;
+XBSYSAPI EXPORTNUM(151) VOID NTAPI KeStallExecutionProcessor
+(
+	IN ULONG MicroSeconds
+);
+
 XBSYSAPI VOID *KeSuspendThread;
 XBSYSAPI VOID *KeSynchronizeExecution;
 XBSYSAPI VOID *KeSystemTime;
