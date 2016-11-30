@@ -161,7 +161,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::KeBoostPriorityThread),           // 0x005E (94)
 	(uint32)FUNC(&xboxkrnl::KeBugCheck),                      // 0x005F (95)
 	(uint32)FUNC(&xboxkrnl::KeBugCheckEx),                    // 0x0060 (96)
-	(uint32)PANIC(0x0061),                                    // 0x0061 (97)  KeCancelTimer
+	(uint32)FUNC(&xboxkrnl::KeCancelTimer),                   // 0x0061 (97)
 	(uint32)FUNC(&xboxkrnl::KeConnectInterrupt),              // 0x0062 (98)
 	(uint32)FUNC(&xboxkrnl::KeDelayExecutionThread),          // 0x0063 (99)
 	(uint32)PANIC(0x0064),                                    // 0x0064 (100) KeDisconnectInterrupt
@@ -215,7 +215,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::KeSetPriorityThread),             // 0x0094 (148)
 	(uint32)FUNC(&xboxkrnl::KeSetTimer),                      // 0x0095 (149)
 	(uint32)FUNC(&xboxkrnl::KeSetTimerEx),                    // 0x0096 (150)
-	(uint32)FUNC(&xboxkrnl::KeStallExecutionProcessor),       // 0x0097 (151) KeStallExecutionProcessor
+	(uint32)FUNC(&xboxkrnl::KeStallExecutionProcessor),       // 0x0097 (151)
 	(uint32)PANIC(0x0098),                                    // 0x0098 (152) KeSuspendThread
 	(uint32)PANIC(0x0099),                                    // 0x0099 (153) KeSynchronizeExecution
 	(uint32)VARIABLE(0x009A),                                 // 0x009A (154) KeSystemTime (Set by ConnectWindowsTimersToThunkTable)

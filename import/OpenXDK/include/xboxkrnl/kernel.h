@@ -44,7 +44,10 @@ XBSYSAPI EXPORTNUM(96) NTSTATUS NTAPI KeBugCheckEx
 	IN PVOID BugCheckParameter4
 );
 
-XBSYSAPI VOID *KeCancelTimer;
+XBSYSAPI EXPORTNUM(97) BOOLEAN NTAPI KeCancelTimer
+(
+	IN PKTIMER
+);
 
 // ******************************************************************
 // * KeConnectInterrupt

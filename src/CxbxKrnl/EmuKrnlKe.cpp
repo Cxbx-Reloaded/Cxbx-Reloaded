@@ -144,6 +144,21 @@ XBSYSAPI EXPORTNUM(96) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeBugCheckEx
 }
 
 // ******************************************************************
+// * 0x0061 KeCancelTimer
+// ******************************************************************
+XBSYSAPI EXPORTNUM(96) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeCancelTimer
+(
+	IN PKTIMER Timer
+)
+{
+	LOG_FUNC_ONE_ARG(Timer);
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(TRUE);
+}
+
+// ******************************************************************
 // * KeConnectInterrupt
 // ******************************************************************
 XBSYSAPI EXPORTNUM(98) xboxkrnl::LONG NTAPI xboxkrnl::KeConnectInterrupt
