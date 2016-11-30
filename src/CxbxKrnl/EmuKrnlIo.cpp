@@ -85,7 +85,6 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 	NTSTATUS ret = STATUS_SUCCESS;
 
 	// TODO: Try redirecting to NtCreateFile if this function ever is run into
-	CxbxKrnlCleanup("IoCreateFile not implemented");
 	LOG_UNIMPLEMENTED();
 
 	RETURN(ret);
