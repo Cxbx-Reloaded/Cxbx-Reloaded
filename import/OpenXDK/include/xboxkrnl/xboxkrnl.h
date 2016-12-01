@@ -287,8 +287,12 @@ LIST_ENTRY, *PLIST_ENTRY;
 
 typedef struct _SINGLE_LIST_ENTRY {
 	struct _SINGLE_LIST_ENTRY  *Next;
-} SINGLE_LIST_ENTRY, *PSINGLE_LIST_ENTRY;
+} SINGLE_LIST_ENTRY, *PSINGLE_LIST_ENTRY, SLIST_ENTRY, *PSLIST_ENTRY;
 
+/*
+ * Disabled as Cxbx-Reloaded does not support Win64 compilation
+ * Win64 is not possible while using direct code execution, unless we add
+ * X86-X64 translation
 #if defined(_WIN64)
 
 //
@@ -311,10 +315,13 @@ typedef struct DECLSPEC_ALIGN(16) _SLIST_ENTRY {
 
 #else
 
-typedef struct _SINGLE_LIST_ENTRY SLIST_ENTRY, *PSLIST_ENTRY;
+typedef _SLIST_ENTRY {
+	struct _SLIST_ENTRY *Next;
+} SLIST_ENTRY, *PSLIST_ENTRY;
 
 #endif // _WIN64
 
+*/
 typedef union _SLIST_HEADER {
 	ULONGLONG Alignment;
 	struct {

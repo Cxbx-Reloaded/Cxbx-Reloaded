@@ -115,24 +115,14 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::HalRequestSoftwareInterrupt),     // 0x0030 (48)
 	(uint32)FUNC(&xboxkrnl::HalReturnToFirmware),             // 0x0031 (49)
 	(uint32)FUNC(&xboxkrnl::HalWriteSMBusValue),              // 0x0032 (50)
-	(uint32)PANIC(0x0033),                                    // 0x0033 (51)  InterlockedCompareExchange
-	(uint32)PANIC(0x0034),                                    // 0x0034 (52)  InterlockedDecrement
-	(uint32)PANIC(0x0035),                                    // 0x0035 (53)  InterlockedIncrement
-	(uint32)PANIC(0x0036),                                    // 0x0036 (54)  InterlockedExchange
-	(uint32)PANIC(0x0037),                                    // 0x0037 (55)  InterlockedExchangeAdd
-	(uint32)PANIC(0x0038),                                    // 0x0038 (56)  InterlockedFlushSList
-	(uint32)PANIC(0x0039),                                    // 0x0039 (57)  InterlockedPopEntrySList
-	(uint32)PANIC(0x003A),                                    // 0x003A (58)  InterlockedPushEntrySList
-/*
-	(uint32)FUNC(&xboxkrnl::InterlockedCompareExchange),      // 0x0033 (51)
-	(uint32)FUNC(&xboxkrnl::InterlockedDecrement),            // 0x0034 (52)
-	(uint32)FUNC(&xboxkrnl::InterlockedIncrement),            // 0x0035 (53)
-	(uint32)FUNC(&xboxkrnl::InterlockedExchange),             // 0x0036 (54)
-	(uint32)FUNC(&xboxkrnl::InterlockedExchangeAdd),          // 0x0037 (55)
-	(uint32)FUNC(&xboxkrnl::InterlockedFlushSList),           // 0x0038 (56)
-	(uint32)FUNC(&xboxkrnl::InterlockedPopEntrySList),        // 0x0039 (57)
-	(uint32)FUNC(&xboxkrnl::InterlockedPushEntrySList),       // 0x003A (58)
-*/
+	(uint32)FUNC(&xboxkrnl::XbInterlockedCompareExchange),    // 0x0033 (51)
+	(uint32)FUNC(&xboxkrnl::XbInterlockedDecrement),          // 0x0034 (52)
+	(uint32)FUNC(&xboxkrnl::XbInterlockedIncrement),          // 0x0035 (53)
+	(uint32)FUNC(&xboxkrnl::XbInterlockedExchange),           // 0x0036 (54)
+	(uint32)FUNC(&xboxkrnl::XbInterlockedExchangeAdd),        // 0x0037 (55)
+	(uint32)FUNC(&xboxkrnl::XbInterlockedFlushSList),         // 0x0038 (56)
+	(uint32)FUNC(&xboxkrnl::XbInterlockedPopEntrySList),      // 0x0039 (57)
+	(uint32)FUNC(&xboxkrnl::XbInterlockedPushEntrySList),     // 0x003A (58)
 	(uint32)PANIC(0x003B),                                    // 0x003B (59)  IoAllocateIrp
 	(uint32)PANIC(0x003C),                                    // 0x003C (60)  IoBuildAsynchronousFsdRequest
 	(uint32)PANIC(0x003D),                                    // 0x003D (61)  IoBuildDeviceIoControlRequest

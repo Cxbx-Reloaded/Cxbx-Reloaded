@@ -565,52 +565,6 @@ KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 // This is only the top of the actual definition. For the complete version,
 // see http://processhacker.sourceforge.net/doc/ntexapi_8h_source.html
 
-/*
-typedef LONG(FASTCALL *FPTR_InterlockedCompareExchange)
-(
-	IN OUT volatile PLONG Destination,
-	IN LONG  Exchange,
-	IN LONG  Comparand
-);
-
-typedef LONG(FASTCALL *FPTR_InterlockedDecrement)
-(
-	IN OUT PLONG Addend
-);
-
-typedef LONG(FASTCALL *FPTR_InterlockedExchange)
-(
-	IN volatile PLONG Destination,
-	IN LONG Value
-);
-
-typedef LONG(FASTCALL *FPTR_InterlockedExchangeAdd)
-(
-	IN volatile PLONG Addend,
-	IN LONG	Value
-);
-
-typedef PSINGLE_LIST_ENTRY(FASTCALL *FPTR_InterlockedFlushSList)
-(
-	IN PSLIST_HEADER ListHead
-);
-
-typedef LONG(FASTCALL *FPTR_InterlockedIncrement)
-(
-	IN OUT PLONG Addend
-);
-
-typedef PSLIST_ENTRY(FASTCALL *FPTR_InterlockedPopEntrySList)
-(
-	IN PSLIST_HEADER ListHead
-);
-
-typedef PSLIST_ENTRY(FASTCALL *FPTR_InterlockedPushEntrySList)
-(
-	IN PSLIST_HEADER ListHead,
-	IN PSLIST_ENTRY ListEntry
-);
-*/
 
 // ******************************************************************
 // * KeDelayExecutionThread

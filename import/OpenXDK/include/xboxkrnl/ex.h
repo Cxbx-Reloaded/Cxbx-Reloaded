@@ -172,47 +172,47 @@ XBSYSAPI EXPORTNUM(34) PLIST_ENTRY FASTCALL ExfInterlockedRemoveHeadList
 	IN PKSPIN_LOCK Lock
 );
 
-XBSYSAPI EXPORTNUM(51) LONG FASTCALL InterlockedCompareExchange
+XBSYSAPI EXPORTNUM(51) LONG FASTCALL XbInterlockedCompareExchange
 (
 	IN OUT volatile PLONG Destination,
 	IN LONG  Exchange,
 	IN LONG  Comparand
 );
 
-XBSYSAPI EXPORTNUM(52) LONG FASTCALL InterlockedDecrement
+XBSYSAPI EXPORTNUM(52) LONG FASTCALL XbInterlockedDecrement
 (
 	IN OUT PLONG Addend
 );
 
-XBSYSAPI EXPORTNUM(53) LONG FASTCALL InterlockedIncrement
+XBSYSAPI EXPORTNUM(53) LONG FASTCALL XbInterlockedIncrement
 (
 	IN OUT PLONG Addend
 );
 
-XBSYSAPI EXPORTNUM(54) LONG FASTCALL InterlockedExchange
+XBSYSAPI EXPORTNUM(54) LONG FASTCALL XbInterlockedExchange
 (
 	IN volatile PLONG Destination,
 	IN LONG Value
 );
 
-XBSYSAPI EXPORTNUM(55) LONG FASTCALL InterlockedExchangeAdd
+XBSYSAPI EXPORTNUM(55) LONG FASTCALL XbInterlockedExchangeAdd
 (
 	IN volatile PLONG Addend,
 	IN LONG	Value
 );
 
 // Dxbx Note : The Xbox1 SINGLE_LIST strucures are the same as in WinNT
-XBSYSAPI EXPORTNUM(56) SINGLE_LIST_ENTRY * FASTCALL InterlockedFlushSList
+XBSYSAPI EXPORTNUM(56) SINGLE_LIST_ENTRY * FASTCALL XbInterlockedFlushSList
 (
 	IN PSLIST_HEADER ListHead
 );
 
-XBSYSAPI EXPORTNUM(57) SLIST_ENTRY * FASTCALL InterlockedPopEntrySList
+XBSYSAPI EXPORTNUM(57) SLIST_ENTRY * FASTCALL XbInterlockedPopEntrySList
 (
 	IN PSLIST_HEADER ListHead
 );
 
-XBSYSAPI EXPORTNUM(58) SLIST_ENTRY * FASTCALL InterlockedPushEntrySList
+XBSYSAPI EXPORTNUM(58) SLIST_ENTRY * FASTCALL XbInterlockedPushEntrySList
 (
 	IN PSLIST_HEADER ListHead,
 	IN PSLIST_ENTRY ListEntry

@@ -123,9 +123,9 @@ std::ostream& operator<<(std::ostream& os, const xboxkrnl::PLARGE_INTEGER& value
 
 using namespace xboxkrnl;
 
-/*
+
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(51) xboxkrnl::LONG FASTCALL xboxkrnl::InterlockedCompareExchange
+XBSYSAPI EXPORTNUM(51) xboxkrnl::LONG FASTCALL xboxkrnl::XbInterlockedCompareExchange
 (
 	IN OUT volatile PLONG Destination,
 	IN LONG  Exchange,
@@ -138,33 +138,33 @@ XBSYSAPI EXPORTNUM(51) xboxkrnl::LONG FASTCALL xboxkrnl::InterlockedCompareExcha
 		LOG_FUNC_ARG(Comparand)
 		LOG_FUNC_END;
 
-	RETURN(NtDll::InterlockedCompareExchange((NtDll::PLONG)Destination, (NtDll::LONG)Exchange, (NtDll::LONG)Comparand));
+	RETURN(InterlockedCompareExchange((NtDll::PLONG)Destination, (NtDll::LONG)Exchange, (NtDll::LONG)Comparand));
 }
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(52) xboxkrnl::LONG FASTCALL xboxkrnl::InterlockedDecrement
+XBSYSAPI EXPORTNUM(52) xboxkrnl::LONG FASTCALL xboxkrnl::XbInterlockedDecrement
 (
 	IN OUT PLONG Addend
 )
 {
 	LOG_FUNC_ONE_ARG(Addend);
 
-	RETURN(NtDll::InterlockedDecrement((NtDll::PLONG)Addend));
+	RETURN(InterlockedDecrement((NtDll::PLONG)Addend));
 }
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(53) xboxkrnl::LONG FASTCALL xboxkrnl::InterlockedIncrement
+XBSYSAPI EXPORTNUM(53) xboxkrnl::LONG FASTCALL xboxkrnl::XbInterlockedIncrement
 (
 	IN OUT PLONG Addend
 )
 {
 	LOG_FUNC_ONE_ARG(Addend);
 
-	RETURN(NtDll::InterlockedIncrement((NtDll::PLONG)Addend));
+	RETURN(InterlockedIncrement((NtDll::PLONG)Addend));
 }
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(54) xboxkrnl::LONG FASTCALL xboxkrnl::InterlockedExchange
+XBSYSAPI EXPORTNUM(54) xboxkrnl::LONG FASTCALL xboxkrnl::XbInterlockedExchange
 (
 	IN volatile PLONG Destination,
 	IN LONG Value
@@ -175,11 +175,11 @@ XBSYSAPI EXPORTNUM(54) xboxkrnl::LONG FASTCALL xboxkrnl::InterlockedExchange
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_END;
 
-	RETURN(NtDll::InterlockedExchange((NtDll::PLONG)Destination, (NtDll::LONG)Value));
+	RETURN(InterlockedExchange((NtDll::PLONG)Destination, (NtDll::LONG)Value));
 }
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(55) xboxkrnl::LONG FASTCALL xboxkrnl::InterlockedExchangeAdd
+XBSYSAPI EXPORTNUM(55) xboxkrnl::LONG FASTCALL xboxkrnl::XbInterlockedExchangeAdd
 (
 	IN volatile PLONG Addend,
 	IN LONG	Value
@@ -190,34 +190,34 @@ XBSYSAPI EXPORTNUM(55) xboxkrnl::LONG FASTCALL xboxkrnl::InterlockedExchangeAdd
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_END;
 
-	RETURN(NtDll::InterlockedExchangeAdd((NtDll::PLONG)Addend, (NtDll::LONG)Value));
+	RETURN(InterlockedExchangeAdd((NtDll::PLONG)Addend, (NtDll::LONG)Value));
 }
 
 // Source:ReactOS
 // Dxbx Note : The Xbox1 SINGLE_LIST strucures are the same as in WinNT
-XBSYSAPI EXPORTNUM(56) xboxkrnl::PSINGLE_LIST_ENTRY FASTCALL xboxkrnl::InterlockedFlushSList
+XBSYSAPI EXPORTNUM(56) xboxkrnl::PSINGLE_LIST_ENTRY FASTCALL xboxkrnl::XbInterlockedFlushSList
 (
 	IN xboxkrnl::PSLIST_HEADER ListHead
 )
 {
 	LOG_FUNC_ONE_ARG(ListHead);
 
-	RETURN(NtDll::InterlockedFlushSList((NtDll::PSLIST_HEADER)ListHead));
+	RETURN((xboxkrnl::PSINGLE_LIST_ENTRY)InterlockedFlushSList((::PSLIST_HEADER)ListHead));
 }
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(57) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::InterlockedPopEntrySList
+XBSYSAPI EXPORTNUM(57) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::XbInterlockedPopEntrySList
 (
 	IN PSLIST_HEADER ListHead
 )
 {
 	LOG_FUNC_ONE_ARG(ListHead);
 
-	RETURN(NtDll::InterlockedPopEntrySList((NtDll::PSLIST_HEADER)ListHead));
+	RETURN((PSLIST_ENTRY)InterlockedPopEntrySList((::PSLIST_HEADER)ListHead));
 }
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(58) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::InterlockedPushEntrySList
+XBSYSAPI EXPORTNUM(58) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::XbInterlockedPushEntrySList
 (
 	IN PSLIST_HEADER ListHead,
 	IN PSLIST_ENTRY ListEntry
@@ -228,9 +228,9 @@ XBSYSAPI EXPORTNUM(58) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::InterlockedPush
 		LOG_FUNC_ARG(ListEntry)
 		LOG_FUNC_END;
 
-	RETURN(NtDll::InterlockedPushEntrySList((NtDll::PSLIST_HEADER)ListHead, (NtDll::PSLIST_ENTRY)ListEntry));
+	RETURN((xboxkrnl::PSLIST_ENTRY)InterlockedPushEntrySList((::PSLIST_HEADER)ListHead, (::PSLIST_ENTRY)ListEntry));
 }
-*/
+
 
 // ******************************************************************
 // * 0x00A0 - KfRaiseIrql
