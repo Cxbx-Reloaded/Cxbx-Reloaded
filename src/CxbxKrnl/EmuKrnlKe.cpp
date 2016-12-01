@@ -52,6 +52,9 @@ namespace NtDll
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 
+#include <chrono>
+#include <thread>
+
 using namespace xboxkrnl;
 
 // TODO : Move operator<< to a central place
@@ -138,6 +141,21 @@ XBSYSAPI EXPORTNUM(96) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeBugCheckEx
 	LOG_UNIMPLEMENTED();
 
 	RETURN(S_OK);
+}
+
+// ******************************************************************
+// * 0x0061 KeCancelTimer
+// ******************************************************************
+XBSYSAPI EXPORTNUM(96) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeCancelTimer
+(
+	IN PKTIMER Timer
+)
+{
+	LOG_FUNC_ONE_ARG(Timer);
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(TRUE);
 }
 
 // ******************************************************************
@@ -442,6 +460,24 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 	}
 
 	RETURN(Inserted);
+}
+
+// ******************************************************************
+// * 0x0097 - KeTickCount
+// ******************************************************************
+XBSYSAPI EXPORTNUM(151) xboxkrnl::VOID NTAPI xboxkrnl::KeStallExecutionProcessor
+(
+	IN ULONG MicroSeconds
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(MicroSeconds)
+		LOG_FUNC_END;
+
+	// WinAPI Sleep usually sleeps for a minimum of 15ms, we want us. 
+	// Thanks to C++11, we can do this in a nice way without resorting to
+	// QueryPerformanceCounter
+	std::this_thread::sleep_for(std::chrono::microseconds(MicroSeconds));
 }
 
 // Dxbx note : This was once a value, but instead we now point to

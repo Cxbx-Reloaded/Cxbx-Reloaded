@@ -39,6 +39,8 @@
 
 extern "C" const char *szHLELastCompileTime = __TIMESTAMP__;
 
+// Uncomment this line for experimental DSOUND LLE
+// #define DSOUND_LLE 
 
 #include "Emu.h"
 #include "EmuXTL.h"
@@ -224,6 +226,7 @@ HLEData HLEDataBase[] =
         D3D8LTCG_1_0_5849,
         D3D8LTCG_1_0_5849_SIZE
     },
+#ifndef DSOUND_LLE
     // DSound Version 1.0.3936
     {
         "DSOUND",
@@ -280,6 +283,7 @@ HLEData HLEDataBase[] =
         DSound_1_0_5849,
         DSound_1_0_5849_SIZE
     },
+#endif
 	// XG Version 1.0.3911
     {
         "XGRAPHC",
