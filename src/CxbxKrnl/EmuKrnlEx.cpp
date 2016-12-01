@@ -178,7 +178,7 @@ XBSYSAPI EXPORTNUM(19) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::ExInterlockedAddL
 }
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(20) VOID __fastcall xboxkrnl::ExInterlockedAddLargeStatistic
+XBSYSAPI EXPORTNUM(20) VOID FASTCALL xboxkrnl::ExInterlockedAddLargeStatistic
 (
 	IN PLARGE_INTEGER Addend,
 	IN ULONG Increment
@@ -193,7 +193,7 @@ XBSYSAPI EXPORTNUM(20) VOID __fastcall xboxkrnl::ExInterlockedAddLargeStatistic
 }
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(21) xboxkrnl::LONGLONG __fastcall xboxkrnl::ExInterlockedCompareExchange64
+XBSYSAPI EXPORTNUM(21) xboxkrnl::LONGLONG FASTCALL xboxkrnl::ExInterlockedCompareExchange64
 (
 	IN OUT PLONGLONG Destination,
 	IN PLONGLONG Exchange,
@@ -499,7 +499,7 @@ XBSYSAPI EXPORTNUM(30) xboxkrnl::POBJECT_TYPE xboxkrnl::ExSemaphoreObjectType = 
 XBSYSAPI EXPORTNUM(31) xboxkrnl::POBJECT_TYPE xboxkrnl::ExTimerObjectType = NULL;
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(32) xboxkrnl::PLIST_ENTRY __fastcall xboxkrnl::ExfInterlockedInsertHeadList
+XBSYSAPI EXPORTNUM(32) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedInsertHeadList
 (
 	IN PLIST_ENTRY ListHead,
 	IN PLIST_ENTRY ListEntry,
@@ -519,7 +519,7 @@ XBSYSAPI EXPORTNUM(32) xboxkrnl::PLIST_ENTRY __fastcall xboxkrnl::ExfInterlocked
 
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(33) xboxkrnl::PLIST_ENTRY __fastcall xboxkrnl::ExfInterlockedInsertTailList
+XBSYSAPI EXPORTNUM(33) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedInsertTailList
 (
 	IN PLIST_ENTRY ListHead,	
 	IN PLIST_ENTRY ListEntry,
@@ -539,7 +539,7 @@ XBSYSAPI EXPORTNUM(33) xboxkrnl::PLIST_ENTRY __fastcall xboxkrnl::ExfInterlocked
 
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(34) xboxkrnl::PLIST_ENTRY __fastcall xboxkrnl::ExfInterlockedRemoveHeadList
+XBSYSAPI EXPORTNUM(34) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedRemoveHeadList
 (
 	IN PLIST_ENTRY ListHead,
 	IN PKSPIN_LOCK Lock

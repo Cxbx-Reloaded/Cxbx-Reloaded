@@ -121,152 +121,115 @@ std::ostream& operator<<(std::ostream& os, const xboxkrnl::PLARGE_INTEGER& value
 // std::ostream& operator<<(std::ostream& os, const xboxkrnl::PXTHREAD_NOTIFICATION& value); // -> pfnNotifyRoutine
 // std::ostream& operator<<(std::ostream& os, const xboxkrnl::UCHAR& value);
 
-
 using namespace xboxkrnl;
 
 /*
-XBSYSAPI EXPORTNUM(51) __fastcall xboxkrnl::InterlockedCompareExchange(
-{0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-{2 EDX}Exchange: LONG;
-{1 ECX}Destination: PLONG;
-{3 stack}Comparand: LONG
-): LONG; register; // fastcall simulation - See Translation guide
-// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
+// Source:ReactOS
+XBSYSAPI EXPORTNUM(51) xboxkrnl::LONG FASTCALL xboxkrnl::InterlockedCompareExchange
+(
+	IN OUT volatile PLONG Destination,
+	IN LONG  Exchange,
+	IN LONG  Comparand
+)
 {
-if MayLog(lfUnit) then
-DbgPrintf('EmuKrnl : InterlockedCompareExchange' +
-#13#10'(' +
-#13#10'   Exchange           : 0x%.08X' +
-#13#10'   Destination        : 0x%.08X' +
-#13#10'   Comparand          : 0x%.08X' +
-#13#10');',
-[Exchange, Destination, Comparand]);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Destination)
+		LOG_FUNC_ARG(Exchange)
+		LOG_FUNC_ARG(Comparand)
+		LOG_FUNC_END;
 
-  RETURN(InterlockedCompareExchange({var}Destination^, Exchange, Comparand);
-};
+	RETURN(NtDll::InterlockedCompareExchange((NtDll::PLONG)Destination, (NtDll::LONG)Exchange, (NtDll::LONG)Comparand));
+}
 
-XBSYSAPI EXPORTNUM(52) __fastcall xboxkrnl::InterlockedDecrement(
-{0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-{2 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
-{1 ECX}Addend: PLONG // OUT, volatile
-): LONG; register; // fastcall simulation - See Translation guide
-// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
+// Source:ReactOS
+XBSYSAPI EXPORTNUM(52) xboxkrnl::LONG FASTCALL xboxkrnl::InterlockedDecrement
+(
+	IN OUT PLONG Addend
+)
 {
-if MayLog(lfUnit) then
-DbgPrintf('EmuKrnl : InterlockedDecrement' +
-#13#10'(' +
-#13#10'   Addend             : 0x%.08X' +
-#13#10');',
-[Addend]);
+	LOG_FUNC_ONE_ARG(Addend);
 
-  RETURN(InterlockedDecrement({var}Addend^);
-};
+	RETURN(NtDll::InterlockedDecrement((NtDll::PLONG)Addend));
+}
 
-XBSYSAPI EXPORTNUM(53) __fastcall xboxkrnl::InterlockedIncrement(
-{0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-{2 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
-{1 ECX}Addend: PLONG // OUT, volatile
-): LONG; register; // fastcall simulation - See Translation guide
-// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
+// Source:ReactOS
+XBSYSAPI EXPORTNUM(53) xboxkrnl::LONG FASTCALL xboxkrnl::InterlockedIncrement
+(
+	IN OUT PLONG Addend
+)
 {
-if MayLog(lfUnit) then
-DbgPrintf('EmuKrnl : InterlockedIncrement' +
-#13#10'(' +
-#13#10'   Addend             : 0x%.08X' +
-#13#10');',
-[Addend]);
+	LOG_FUNC_ONE_ARG(Addend);
 
-  RETURN(InterlockedIncrement({var}Addend^);
-};
+	RETURN(NtDll::InterlockedIncrement((NtDll::PLONG)Addend));
+}
 
-XBSYSAPI EXPORTNUM(54) __fastcall xboxkrnl::InterlockedExchange(
-{0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-{2 EDX}Value: LONG;
-{1 ECX}Destination: PLONG
-): LONG; register; // fastcall simulation - See Translation guide
-// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
+// Source:ReactOS
+XBSYSAPI EXPORTNUM(54) xboxkrnl::LONG FASTCALL xboxkrnl::InterlockedExchange
+(
+	IN volatile PLONG Destination,
+	IN LONG Value
+)
 {
-if MayLog(lfUnit) then
-DbgPrintf('EmuKrnl : InterlockedExchange' +
-#13#10'(' +
-#13#10'   Value              : 0x%.08X' +
-#13#10'   Destination        : 0x%.08X' +
-#13#10');',
-[Value, Destination]);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Destination)
+		LOG_FUNC_ARG(Value)
+		LOG_FUNC_END;
 
-  RETURN(InterlockedExchange({var}Destination^, Value);
-};
+	RETURN(NtDll::InterlockedExchange((NtDll::PLONG)Destination, (NtDll::LONG)Value));
+}
 
-XBSYSAPI EXPORTNUM(55) __fastcall xboxkrnl::InterlockedExchangeAdd(
-{0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-{2 EDX}Value: LONG;
-{1 ECX}Addend: PLONG
-): LONG; register; // fastcall simulation - See Translation guide
-// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
+// Source:ReactOS
+XBSYSAPI EXPORTNUM(55) xboxkrnl::LONG FASTCALL xboxkrnl::InterlockedExchangeAdd
+(
+	IN volatile PLONG Addend,
+	IN LONG	Value
+)
 {
-if MayLog(lfUnit) then
-DbgPrintf('EmuKrnl : InterlockedExchangeAdd' +
-#13#10'(' +
-#13#10'   Value              : 0x%.08X' +
-#13#10'   Addend             : 0x%.08X' +
-#13#10');',
-[Value, Addend]);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Addend)
+		LOG_FUNC_ARG(Value)
+		LOG_FUNC_END;
 
-  RETURN(InterlockedExchangeAdd({var}Addend^, Value);
-};
+	RETURN(NtDll::InterlockedExchangeAdd((NtDll::PLONG)Addend, (NtDll::LONG)Value));
+}
 
+// Source:ReactOS
 // Dxbx Note : The Xbox1 SINGLE_LIST strucures are the same as in WinNT
-XBSYSAPI EXPORTNUM(56) __fastcall xboxkrnl::InterlockedFlushSList(
-{0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-{2 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
-{1 ECX}ListHead: PSLIST_HEADER
-): PSINGLE_LIST_ENTRY; register; // fastcall simulation - See Translation guide
-// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
+XBSYSAPI EXPORTNUM(56) xboxkrnl::PSINGLE_LIST_ENTRY FASTCALL xboxkrnl::InterlockedFlushSList
+(
+	IN xboxkrnl::PSLIST_HEADER ListHead
+)
 {
-if MayLog(lfUnit) then
-DbgPrintf('EmuKrnl : InterlockedFlushSList' +
-#13#10'(' +
-#13#10'   ListHead           : 0x%.08X' +
-#13#10');',
-[ListHead]);
+	LOG_FUNC_ONE_ARG(ListHead);
 
-  RETURN(InterlockedFlushSList(ListHead);
-};
+	RETURN(NtDll::InterlockedFlushSList((NtDll::PSLIST_HEADER)ListHead));
+}
 
-XBSYSAPI EXPORTNUM(57) __fastcall xboxkrnl::InterlockedPopEntrySList(
-{0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-{2 EDX}FASTCALL_FIX_ARGUMENT_TAKING_EDX: DWORD;
-{1 ECX}ListHead: PSLIST_HEADER
-): PSLIST_ENTRY; register; // fastcall simulation - See Translation guide
-// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
+// Source:ReactOS
+XBSYSAPI EXPORTNUM(57) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::InterlockedPopEntrySList
+(
+	IN PSLIST_HEADER ListHead
+)
 {
-if MayLog(lfUnit) then
-DbgPrintf('EmuKrnl : InterlockedPopEntrySList' +
-#13#10'(' +
-#13#10'   ListHead           : 0x%.08X' +
-#13#10');',
-[ListHead]);
+	LOG_FUNC_ONE_ARG(ListHead);
 
-  RETURN(InterlockedPopEntrySList(ListHead);
-};
+	RETURN(NtDll::InterlockedPopEntrySList((NtDll::PSLIST_HEADER)ListHead));
+}
 
-XBSYSAPI EXPORTNUM(58) __fastcall xboxkrnl::InterlockedPushEntrySList(
-{0 EAX}FASTCALL_FIX_ARGUMENT_TAKING_EAX: DWORD;
-{2 EDX}ListEntry: PSLIST_ENTRY;
-{1 ECX}ListHead: PSLIST_HEADER
-): PSLIST_ENTRY; register; // fastcall simulation - See Translation guide
-// Source:ReactOS  Branch:Dxbx  Translator:PatrickvL  Done:100
+// Source:ReactOS
+XBSYSAPI EXPORTNUM(58) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::InterlockedPushEntrySList
+(
+	IN PSLIST_HEADER ListHead,
+	IN PSLIST_ENTRY ListEntry
+)
 {
-if MayLog(lfUnit) then
-DbgPrintf('EmuKrnl : InterlockedPopEntrySList' +
-#13#10'(' +
-#13#10'   ListEntry          : 0x%.08X' +
-#13#10'   ListHead           : 0x%.08X' +
-#13#10');',
-[ListEntry, ListHead]);
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(ListHead)
+		LOG_FUNC_ARG(ListEntry)
+		LOG_FUNC_END;
 
-  RETURN(InterlockedPushEntrySList(ListHead, ListEntry);
-};
+	RETURN(NtDll::InterlockedPushEntrySList((NtDll::PSLIST_HEADER)ListHead, (NtDll::PSLIST_ENTRY)ListEntry));
+}
 */
 
 // ******************************************************************
@@ -275,7 +238,7 @@ DbgPrintf('EmuKrnl : InterlockedPopEntrySList' +
 // Raises the hardware priority (irql)
 // NewIrql = Irql to raise to
 // RETURN VALUE previous irq level
-XBSYSAPI EXPORTNUM(160) xboxkrnl::UCHAR _fastcall xboxkrnl::KfRaiseIrql
+XBSYSAPI EXPORTNUM(160) xboxkrnl::UCHAR FASTCALL xboxkrnl::KfRaiseIrql
 (
     IN UCHAR NewIrql
 )
@@ -312,7 +275,7 @@ XBSYSAPI EXPORTNUM(160) xboxkrnl::UCHAR _fastcall xboxkrnl::KfRaiseIrql
 // ******************************************************************
 // Restores the irq level on the current processor
 // ARGUMENTS NewIrql = Irql to lower to
-XBSYSAPI EXPORTNUM(161) VOID _fastcall xboxkrnl::KfLowerIrql
+XBSYSAPI EXPORTNUM(161) xboxkrnl::VOID FASTCALL xboxkrnl::KfLowerIrql
 (
     IN UCHAR NewIrql
 )
@@ -325,79 +288,121 @@ XBSYSAPI EXPORTNUM(161) VOID _fastcall xboxkrnl::KfLowerIrql
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(162) xboxkrnl::ULONG_PTR xboxkrnl::KiBugCheckData[5] = { NULL, NULL, NULL, NULL, NULL };
 
-/*
-XBSYSAPI EXPORTNUM(163) xboxkrnl::KiUnlockDispatcherDatabase(): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+XBSYSAPI EXPORTNUM(163) xboxkrnl::VOID FASTCALL xboxkrnl::KiUnlockDispatcherDatabase
+(
+	IN KIRQL OldIrql
+)
 {
-Unimplemented('KiUnlockDispatcherDatabase');
-  RETURN(S_OK;
-};
+	LOG_FUNC_ONE_ARG(OldIrql);
 
-XBSYSAPI EXPORTNUM(252) xboxkrnl::PhyGetLinkState(): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
-{
-Unimplemented('PhyGetLinkState');
-  RETURN(S_OK;
-};
+	LOG_UNIMPLEMENTED();
+}
 
-XBSYSAPI EXPORTNUM(253) xboxkrnl::PhyInitialize(): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+XBSYSAPI EXPORTNUM(252) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PhyGetLinkState
+(
+)
 {
-Unimplemented('PhyInitialize');
-  RETURN(S_OK;
-};
-*/
+	LOG_FUNC();
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(S_OK);
+}
+
+XBSYSAPI EXPORTNUM(253) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PhyInitialize
+(
+)
+{
+	LOG_FUNC();
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(S_OK);
+}
 
 // TODO : Determine size, structure & filling behind this
 XBSYSAPI EXPORTNUM(357) xboxkrnl::BYTE xboxkrnl::IdexChannelObject[0x100] = { };
 
-/*
-XBSYSAPI EXPORTNUM(367) xboxkrnl::UnknownAPI367(): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+XBSYSAPI EXPORTNUM(367) xboxkrnl::NTSTATUS NTAPI xboxkrnl::UnknownAPI367
+(
+	// UNKNOWN ARGUMENTS
+)
 {
-Unimplemented('UnknownAPI367');
-  RETURN(S_OK;
-};
+	LOG_FUNC();
 
-XBSYSAPI EXPORTNUM(368) xboxkrnl::UnknownAPI368(): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
-{
-Unimplemented('UnknownAPI368');
-  RETURN(S_OK;
-};
+	LOG_UNIMPLEMENTED();
 
-XBSYSAPI EXPORTNUM(369) xboxkrnl::UnknownAPI369(): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
-{
-Unimplemented('UnknownAPI369');
-  RETURN(S_OK;
-};
+	RETURN(S_OK);
+}
 
-XBSYSAPI EXPORTNUM(370} PROFILING XProfpControl(): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+XBSYSAPI EXPORTNUM(368) xboxkrnl::NTSTATUS NTAPI xboxkrnl::UnknownAPI368
+(
+	// UNKNOWN ARGUMENTS
+)
 {
-Unimplemented('UnknownAPI370');
-  RETURN(S_OK;
-};
+	LOG_FUNC();
 
-XBSYSAPI EXPORTNUM(371} PROFILING XProfpGetData(): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
-{
-Unimplemented('UnknownAPI371');
-  RETURN(S_OK;
-};
+	LOG_UNIMPLEMENTED();
 
-XBSYSAPI EXPORTNUM(372} PROFILING IrtClientInitFast(): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
-{
-Unimplemented('UnknownAPI372');
-  RETURN(S_OK;
-};
+	RETURN(S_OK);
+}
 
-XBSYSAPI EXPORTNUM(373} PROFILING IrtSweep(): NTSTATUS; stdcall;
-// Branch:Dxbx  Translator:PatrickvL  Done:0
+XBSYSAPI EXPORTNUM(369) xboxkrnl::NTSTATUS NTAPI xboxkrnl::UnknownAPI369
+(
+	// UNKNOWN ARGUMENTS
+)
 {
-Unimplemented('UnknownAPI373');
-  RETURN(S_OK;
-};
-*/
+	LOG_FUNC();
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(S_OK);
+}
+
+XBSYSAPI EXPORTNUM(370) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XProfpControl // PROFILING
+(
+	// UNKNOWN ARGUMENTS
+)
+{
+	LOG_FUNC();
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(S_OK);
+}
+
+XBSYSAPI EXPORTNUM(371) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XProfpGetData // PROFILING 
+(
+	// UNKNOWN ARGUMENTS
+)
+{
+	LOG_FUNC();
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(S_OK);
+}
+
+XBSYSAPI EXPORTNUM(372) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IrtClientInitFast // PROFILING
+(
+	// UNKNOWN ARGUMENTS
+)
+{
+	LOG_FUNC();
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(S_OK);
+}
+
+XBSYSAPI EXPORTNUM(373) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IrtSweep // PROFILING
+(
+	// UNKNOWN ARGUMENTS
+)
+{
+	LOG_FUNC();
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(S_OK);
+}

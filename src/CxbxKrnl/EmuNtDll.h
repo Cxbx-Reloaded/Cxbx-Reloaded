@@ -132,6 +132,7 @@ typedef unsigned __int64                ULONGLONG;
 #ifndef CDECL
 #define CDECL               __cdecl
 #endif
+#define FASTCALL            __fastcall
 #define INLINE              __inline
 #define DECLSPEC_NORETURN   __declspec(noreturn)
 
@@ -564,10 +565,57 @@ KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 // This is only the top of the actual definition. For the complete version,
 // see http://processhacker.sourceforge.net/doc/ntexapi_8h_source.html
 
+/*
+typedef LONG(FASTCALL *FPTR_InterlockedCompareExchange)
+(
+	IN OUT volatile PLONG Destination,
+	IN LONG  Exchange,
+	IN LONG  Comparand
+);
+
+typedef LONG(FASTCALL *FPTR_InterlockedDecrement)
+(
+	IN OUT PLONG Addend
+);
+
+typedef LONG(FASTCALL *FPTR_InterlockedExchange)
+(
+	IN volatile PLONG Destination,
+	IN LONG Value
+);
+
+typedef LONG(FASTCALL *FPTR_InterlockedExchangeAdd)
+(
+	IN volatile PLONG Addend,
+	IN LONG	Value
+);
+
+typedef PSINGLE_LIST_ENTRY(FASTCALL *FPTR_InterlockedFlushSList)
+(
+	IN PSLIST_HEADER ListHead
+);
+
+typedef LONG(FASTCALL *FPTR_InterlockedIncrement)
+(
+	IN OUT PLONG Addend
+);
+
+typedef PSLIST_ENTRY(FASTCALL *FPTR_InterlockedPopEntrySList)
+(
+	IN PSLIST_HEADER ListHead
+);
+
+typedef PSLIST_ENTRY(FASTCALL *FPTR_InterlockedPushEntrySList)
+(
+	IN PSLIST_HEADER ListHead,
+	IN PSLIST_ENTRY ListEntry
+);
+*/
+
 // ******************************************************************
 // * KeDelayExecutionThread
 // ******************************************************************
-typedef NTSTATUS (NTAPI *KeDelayExecutionThread)
+typedef NTSTATUS (NTAPI *FPTR_KeDelayExecutionThread)
 (
     IN KPROCESSOR_MODE  WaitMode,
     IN BOOLEAN          Alertable,
@@ -1174,6 +1222,16 @@ typedef PVOID (NTAPI *FPTR_RtlDestroyHeap)
 #define EXTERN(API)  extern FPTR_##API API
 
 // Note : Keep EXTERN's sorted, to ease future sync's (and compares with IMPORT's):
+/*
+EXTERN(InterlockedCompareExchange);
+EXTERN(InterlockedDecrement);
+EXTERN(InterlockedExchange);
+EXTERN(InterlockedExchangeAdd);
+EXTERN(InterlockedFlushSList);
+EXTERN(InterlockedIncrement);
+EXTERN(InterlockedPopEntrySList);
+EXTERN(InterlockedPushEntrySList);
+*/
 EXTERN(NtAllocateVirtualMemory);
 EXTERN(NtClearEvent);
 EXTERN(NtClose);

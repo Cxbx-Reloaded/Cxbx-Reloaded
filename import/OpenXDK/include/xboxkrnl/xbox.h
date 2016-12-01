@@ -67,7 +67,7 @@ XBSYSAPI EXPORTNUM(89) BOOLEAN KdDebuggerNotPresent;
 // ******************************************************************
 // * KfRaiseIrql
 // ******************************************************************
-XBSYSAPI EXPORTNUM(160) UCHAR _fastcall KfRaiseIrql
+XBSYSAPI EXPORTNUM(160) UCHAR FASTCALL KfRaiseIrql
 (
     IN UCHAR    NewIrql
 );
@@ -75,21 +75,30 @@ XBSYSAPI EXPORTNUM(160) UCHAR _fastcall KfRaiseIrql
 // ******************************************************************
 // * KfLowerIrql
 // ******************************************************************
-XBSYSAPI EXPORTNUM(161) VOID _fastcall KfLowerIrql
+XBSYSAPI EXPORTNUM(161) VOID FASTCALL KfLowerIrql
 (
     IN UCHAR    NewIrql
 );
 
 XBSYSAPI EXPORTNUM(162) ULONG_PTR KiBugCheckData[5];
-XBSYSAPI VOID *KiUnlockDispatcherDatabase;
+
+XBSYSAPI EXPORTNUM(163) VOID FASTCALL KiUnlockDispatcherDatabase
+(
+	IN KIRQL OldIrql
+);
 
 // ******************************************************************
 // * LaunchDataPage (actually a pointer)
 // ******************************************************************
 XBSYSAPI EXPORTNUM(164) PLAUNCH_DATA_PAGE LaunchDataPage;
 
-XBSYSAPI VOID *PhyGetLinkState;
-XBSYSAPI VOID *PhyInitialize;
+XBSYSAPI EXPORTNUM(252) NTSTATUS NTAPI PhyGetLinkState
+(
+);
+
+XBSYSAPI EXPORTNUM(253) NTSTATUS NTAPI PhyInitialize
+(
+);
 
 // ******************************************************************
 // * XboxEEPROMKey
@@ -174,6 +183,41 @@ XBSYSAPI EXPORTNUM(361) VOID *xsnprintf;     // prefixed with "x" to avoid xlibc
 XBSYSAPI EXPORTNUM(362) VOID *xsprintf;      // ""
 XBSYSAPI EXPORTNUM(363) VOID *xvsnprintf;    // ""
 XBSYSAPI EXPORTNUM(364) VOID *xvsprintf;     // ""
+
+XBSYSAPI EXPORTNUM(367) NTSTATUS NTAPI UnknownAPI367
+(
+	// UNKNOWN ARGUMENTS
+);
+
+XBSYSAPI EXPORTNUM(368) NTSTATUS NTAPI UnknownAPI368
+(
+	// UNKNOWN ARGUMENTS
+);
+
+XBSYSAPI EXPORTNUM(369) NTSTATUS NTAPI UnknownAPI369
+(
+	// UNKNOWN ARGUMENTS
+);
+
+XBSYSAPI EXPORTNUM(370) NTSTATUS NTAPI XProfpControl // PROFILING
+(
+	// UNKNOWN ARGUMENTS
+);
+
+XBSYSAPI EXPORTNUM(371) NTSTATUS NTAPI XProfpGetData // PROFILING 
+(
+	// UNKNOWN ARGUMENTS
+);
+
+XBSYSAPI EXPORTNUM(372) NTSTATUS NTAPI IrtClientInitFast // PROFILING
+(
+	// UNKNOWN ARGUMENTS
+);
+
+XBSYSAPI EXPORTNUM(373) NTSTATUS NTAPI IrtSweep // PROFILING
+(
+	// UNKNOWN ARGUMENTS
+);
 
 #endif
 

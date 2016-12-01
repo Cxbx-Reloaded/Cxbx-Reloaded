@@ -77,7 +77,7 @@ XBSYSAPI EXPORTNUM(9) VOID NTAPI xboxkrnl::HalReadSMCTrayState
 }
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(38) VOID __fastcall xboxkrnl::HalClearSoftwareInterrupt
+XBSYSAPI EXPORTNUM(38) VOID FASTCALL xboxkrnl::HalClearSoftwareInterrupt
 (
 	KIRQL Request
 )
@@ -221,7 +221,7 @@ XBSYSAPI EXPORTNUM(47) VOID xboxkrnl::HalRegisterShutdownNotification
 }
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(48) VOID __fastcall xboxkrnl::HalRequestSoftwareInterrupt
+XBSYSAPI EXPORTNUM(48) VOID FASTCALL xboxkrnl::HalRequestSoftwareInterrupt
 (
 	IN KIRQL Request
 )

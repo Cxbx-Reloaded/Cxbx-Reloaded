@@ -173,6 +173,7 @@ typedef long                            NTSTATUS;
 // ******************************************************************
 #define NTAPI               __stdcall
 #define CDECL               __cdecl
+#define FASTCALL            __fastcall
 #define INLINE              __inline
 #define DECLSPEC_NORETURN   __declspec(noreturn)
 
@@ -283,6 +284,45 @@ typedef struct _LIST_ENTRY
     struct _LIST_ENTRY *Blink;
 }
 LIST_ENTRY, *PLIST_ENTRY;
+
+typedef struct _SINGLE_LIST_ENTRY {
+	struct _SINGLE_LIST_ENTRY  *Next;
+} SINGLE_LIST_ENTRY, *PSINGLE_LIST_ENTRY;
+
+#if defined(_WIN64)
+
+//
+// The type SINGLE_LIST_ENTRY is not suitable for use with SLISTs.  For
+// WIN64, an entry on an SLIST is required to be 16-byte aligned, while a
+// SINGLE_LIST_ENTRY structure has only 8 byte alignment.
+//
+// Therefore, all SLIST code should use the SLIST_ENTRY type instead of the
+// SINGLE_LIST_ENTRY type.
+//
+
+#pragma warning(push)
+#pragma warning(disable:4324)   // structure padded due to align()
+
+typedef struct DECLSPEC_ALIGN(16) _SLIST_ENTRY {
+	struct _SLIST_ENTRY *Next;
+} SLIST_ENTRY, *PSLIST_ENTRY;
+
+#pragma warning(pop)
+
+#else
+
+typedef struct _SINGLE_LIST_ENTRY SLIST_ENTRY, *PSLIST_ENTRY;
+
+#endif // _WIN64
+
+typedef union _SLIST_HEADER {
+	ULONGLONG Alignment;
+	struct {
+		SLIST_ENTRY Next;
+		WORD   Depth;
+		WORD   CpuId;
+	} DUMMYSTRUCTNAME;
+} SLIST_HEADER, *PSLIST_HEADER;
 
 // ******************************************************************
 // * FILE_FS_SIZE_INFORMATION

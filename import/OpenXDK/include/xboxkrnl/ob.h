@@ -32,7 +32,7 @@ XBSYSAPI VOID *ObReferenceObjectByName;
 XBSYSAPI VOID *ObReferenceObjectByPointer;
 XBSYSAPI EXPORTNUM(249) POBJECT_TYPE ObSymbolicLinkObjectType;
 
-XBSYSAPI EXPORTNUM(250) VOID __fastcall ObfDereferenceObject
+XBSYSAPI EXPORTNUM(250) VOID FASTCALL ObfDereferenceObject
 (
 	IN PVOID Object
 );

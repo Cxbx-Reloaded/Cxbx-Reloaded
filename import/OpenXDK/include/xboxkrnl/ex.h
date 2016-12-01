@@ -75,14 +75,14 @@ XBSYSAPI EXPORTNUM(19) LARGE_INTEGER NTAPI ExInterlockedAddLargeInteger
 );
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(20) VOID __fastcall ExInterlockedAddLargeStatistic
+XBSYSAPI EXPORTNUM(20) VOID FASTCALL ExInterlockedAddLargeStatistic
 (
 	IN PLARGE_INTEGER Addend,
 	IN ULONG Increment
 );
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(21) LONGLONG __fastcall ExInterlockedCompareExchange64
+XBSYSAPI EXPORTNUM(21) LONGLONG FASTCALL ExInterlockedCompareExchange64
 (
 	IN OUT PLONGLONG Destination,
 	IN PLONGLONG Exchange,
@@ -149,36 +149,74 @@ XBSYSAPI EXPORTNUM(29) NTSTATUS NTAPI ExSaveNonVolatileSetting
 );
 
 XBSYSAPI EXPORTNUM(30) POBJECT_TYPE ExSemaphoreObjectType;
+
 XBSYSAPI EXPORTNUM(31) POBJECT_TYPE ExTimerObjectType;
 
-XBSYSAPI EXPORTNUM(32) PLIST_ENTRY __fastcall ExfInterlockedInsertHeadList
+XBSYSAPI EXPORTNUM(32) PLIST_ENTRY FASTCALL ExfInterlockedInsertHeadList
 (
 	IN PLIST_ENTRY ListHead,
 	IN PLIST_ENTRY ListEntry,
 	IN PKSPIN_LOCK Lock
 );
 
-XBSYSAPI EXPORTNUM(33) PLIST_ENTRY __fastcall ExfInterlockedInsertTailList
+XBSYSAPI EXPORTNUM(33) PLIST_ENTRY FASTCALL ExfInterlockedInsertTailList
 (
 	IN PLIST_ENTRY ListHead,
 	IN PLIST_ENTRY ListEntry,
 	IN PKSPIN_LOCK Lock
 );
 
-XBSYSAPI EXPORTNUM(34) PLIST_ENTRY __fastcall ExfInterlockedRemoveHeadList
+XBSYSAPI EXPORTNUM(34) PLIST_ENTRY FASTCALL ExfInterlockedRemoveHeadList
 (
 	IN PLIST_ENTRY ListHead,
 	IN PKSPIN_LOCK Lock
 );
 
-XBSYSAPI VOID *InterlockedCompareExchange;
-XBSYSAPI VOID *InterlockedDecrement;
-XBSYSAPI VOID *InterlockedIncrement;
-XBSYSAPI VOID *InterlockedExchange;
-XBSYSAPI VOID *InterlockedExchangeAdd;
-XBSYSAPI VOID *InterlockedFlushSList;
-XBSYSAPI VOID *InterlockedPopEntrySList;
-XBSYSAPI VOID *InterlockedPushEntrySList;
+XBSYSAPI EXPORTNUM(51) LONG FASTCALL InterlockedCompareExchange
+(
+	IN OUT volatile PLONG Destination,
+	IN LONG  Exchange,
+	IN LONG  Comparand
+);
+
+XBSYSAPI EXPORTNUM(52) LONG FASTCALL InterlockedDecrement
+(
+	IN OUT PLONG Addend
+);
+
+XBSYSAPI EXPORTNUM(53) LONG FASTCALL InterlockedIncrement
+(
+	IN OUT PLONG Addend
+);
+
+XBSYSAPI EXPORTNUM(54) LONG FASTCALL InterlockedExchange
+(
+	IN volatile PLONG Destination,
+	IN LONG Value
+);
+
+XBSYSAPI EXPORTNUM(55) LONG FASTCALL InterlockedExchangeAdd
+(
+	IN volatile PLONG Addend,
+	IN LONG	Value
+);
+
+// Dxbx Note : The Xbox1 SINGLE_LIST strucures are the same as in WinNT
+XBSYSAPI EXPORTNUM(56) SINGLE_LIST_ENTRY * FASTCALL InterlockedFlushSList
+(
+	IN PSLIST_HEADER ListHead
+);
+
+XBSYSAPI EXPORTNUM(57) SLIST_ENTRY * FASTCALL InterlockedPopEntrySList
+(
+	IN PSLIST_HEADER ListHead
+);
+
+XBSYSAPI EXPORTNUM(58) SLIST_ENTRY * FASTCALL InterlockedPushEntrySList
+(
+	IN PSLIST_HEADER ListHead,
+	IN PSLIST_ENTRY ListEntry
+);
 
 #endif
 

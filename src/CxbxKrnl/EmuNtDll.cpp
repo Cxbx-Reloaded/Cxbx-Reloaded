@@ -52,6 +52,16 @@ static HMODULE hNtDll = GetModuleHandle("ntdll");
 #define IMPORT(API) NtDll::FPTR_##API NtDll::API = (NtDll::FPTR_##API)GetProcAddress(hNtDll, #API)
 
 // Note : Keep IMPORT's sorted, to ease future sync's (and compares with EXTERN's):
+/*
+IMPORT(InterlockedCompareExchange);
+IMPORT(InterlockedDecrement);
+IMPORT(InterlockedExchange);
+IMPORT(InterlockedExchangeAdd);
+IMPORT(InterlockedFlushSList);
+IMPORT(InterlockedIncrement);
+IMPORT(InterlockedPopEntrySList);
+IMPORT(InterlockedPushEntrySList);
+*/
 IMPORT(NtAllocateVirtualMemory);
 IMPORT(NtClearEvent);
 IMPORT(NtClose);

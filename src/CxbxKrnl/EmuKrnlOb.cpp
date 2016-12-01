@@ -75,7 +75,7 @@ XBSYSAPI EXPORTNUM(246) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByHa
 	RETURN(STATUS_SUCCESS);
 }
 
-XBSYSAPI EXPORTNUM(250) VOID __fastcall xboxkrnl::ObfDereferenceObject
+XBSYSAPI EXPORTNUM(250) VOID FASTCALL xboxkrnl::ObfDereferenceObject
 (
 	IN PVOID Object
 )
