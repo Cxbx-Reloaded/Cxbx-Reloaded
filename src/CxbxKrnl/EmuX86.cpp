@@ -279,7 +279,15 @@ bool EmuX86_TEST(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
 	EmuX86_SetFlag(e, EMUX86_EFLAG_SF, result >> 31);
 	EmuX86_SetFlag(e, EMUX86_EFLAG_ZF, result == 0 ? 1 : 0);
 
-	// TODO: Parity Flag
+	// Set Parity Flag using "Compute parity in parallel" :
+	// Source : http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
+	uint32_t v = result;  // word value to compute the parity of
+	v ^= v >> 16;
+	v ^= v >> 8;
+	v ^= v >> 4;
+	v &= 0xf;
+	EmuX86_SetFlag(e, EMUX86_EFLAG_PF, (0x6996 >> v) & 1);
+
 	return true;
 }
 
