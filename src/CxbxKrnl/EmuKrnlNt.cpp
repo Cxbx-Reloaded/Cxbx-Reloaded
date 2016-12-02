@@ -1115,10 +1115,6 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 	RETURN(result);
 }
 
-
-using namespace xboxkrnl;
-
-
 // ******************************************************************
 // * 0x00B8 - NtAllocateVirtualMemory
 // ******************************************************************
@@ -2185,7 +2181,7 @@ XBSYSAPI EXPORTNUM(231) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSuspendThread
 // ******************************************************************
 // * 0x00E8 - NtUserIoApcDispatcher
 // ******************************************************************
-XBSYSAPI EXPORTNUM(232) VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
+XBSYSAPI EXPORTNUM(232) xboxkrnl::VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
 (
 	PVOID            ApcContext,
 	PIO_STATUS_BLOCK IoStatusBlock,
@@ -2396,7 +2392,7 @@ XBSYSAPI EXPORTNUM(236) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFile
 // ******************************************************************
 // * 0x00EE - NtYieldExecution
 // ******************************************************************
-XBSYSAPI EXPORTNUM(238) VOID NTAPI xboxkrnl::NtYieldExecution()
+XBSYSAPI EXPORTNUM(238) xboxkrnl::VOID NTAPI xboxkrnl::NtYieldExecution()
 {
 	// NOTE: this eats up the debug log far too quickly
 	//LOG_FUNC();

@@ -93,10 +93,6 @@ int FindCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION CriticalSection)
 	return FreeSection;
 }
 
-
-using namespace xboxkrnl;
-
-
 // ******************************************************************
 // * 0x0104 - RtlAnsiStringToUnicodeString
 // ******************************************************************
@@ -169,7 +165,7 @@ XBSYSAPI EXPORTNUM(263) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeToStr
 // ******************************************************************
 // * 0x0108 - RtlAssert - Debug API?
 // ******************************************************************
-XBSYSAPI EXPORTNUM(264) VOID NTAPI xboxkrnl::RtlAssert
+XBSYSAPI EXPORTNUM(264) xboxkrnl::VOID NTAPI xboxkrnl::RtlAssert
 (
 	PVOID   FailedAssertion, // PCHAR
 	PVOID   FileName, // PCHAR
@@ -211,7 +207,7 @@ XBSYSAPI EXPORTNUM(267) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlCharToInteger
 // ******************************************************************
 // * 0x0115 RtlEnterCriticalSection
 // ******************************************************************
-XBSYSAPI EXPORTNUM(277) VOID NTAPI xboxkrnl::RtlEnterCriticalSection
+XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection
 (
 	IN PRTL_CRITICAL_SECTION CriticalSection
 )
@@ -271,7 +267,7 @@ XBSYSAPI EXPORTNUM(279) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualString
 // ******************************************************************
 // * 0x011E - RtlFreeAnsiString
 // ******************************************************************
-XBSYSAPI EXPORTNUM(286) VOID NTAPI xboxkrnl::RtlFreeAnsiString
+XBSYSAPI EXPORTNUM(286) xboxkrnl::VOID NTAPI xboxkrnl::RtlFreeAnsiString
 (
 	IN OUT PANSI_STRING AnsiString
 )
@@ -284,7 +280,7 @@ XBSYSAPI EXPORTNUM(286) VOID NTAPI xboxkrnl::RtlFreeAnsiString
 // ******************************************************************
 // * 0x0121 - RtlInitAnsiString
 // ******************************************************************
-XBSYSAPI EXPORTNUM(289) VOID NTAPI xboxkrnl::RtlInitAnsiString
+XBSYSAPI EXPORTNUM(289) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitAnsiString
 (
 	IN OUT PANSI_STRING DestinationString,
 	IN     PCSZ         SourceString
@@ -301,7 +297,7 @@ XBSYSAPI EXPORTNUM(289) VOID NTAPI xboxkrnl::RtlInitAnsiString
 // ******************************************************************
 // * 0x0122 - RtlInitUnicodeString
 // ******************************************************************
-XBSYSAPI EXPORTNUM(290) VOID NTAPI xboxkrnl::RtlInitUnicodeString
+XBSYSAPI EXPORTNUM(290) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitUnicodeString
 (
 	IN OUT PUNICODE_STRING DestinationString,
 	IN     PSTRING         SourceString
@@ -318,7 +314,7 @@ XBSYSAPI EXPORTNUM(290) VOID NTAPI xboxkrnl::RtlInitUnicodeString
 // ******************************************************************
 // * 0x0123 - RtlInitializeCriticalSection
 // ******************************************************************
-XBSYSAPI EXPORTNUM(291) VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
+XBSYSAPI EXPORTNUM(291) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
 (
 	IN PRTL_CRITICAL_SECTION CriticalSection
 )
@@ -348,7 +344,7 @@ XBSYSAPI EXPORTNUM(291) VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
 // ******************************************************************
 // * 0x0126 RtlEnterCriticalSection
 // ******************************************************************
-XBSYSAPI EXPORTNUM(294) VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
+XBSYSAPI EXPORTNUM(294) xboxkrnl::VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
 (
 	IN PRTL_CRITICAL_SECTION CriticalSection
 )
@@ -428,7 +424,7 @@ XBSYSAPI EXPORTNUM(304) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTimeFieldsToTime
 // ******************************************************************
 // * 0x0131 - RtlTimeToTimeFields
 // ******************************************************************
-XBSYSAPI EXPORTNUM(305) VOID NTAPI xboxkrnl::RtlTimeToTimeFields
+XBSYSAPI EXPORTNUM(305) xboxkrnl::VOID NTAPI xboxkrnl::RtlTimeToTimeFields
 (
 	IN  PLARGE_INTEGER  Time,
 	OUT PTIME_FIELDS    TimeFields

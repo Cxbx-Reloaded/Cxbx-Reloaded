@@ -47,8 +47,6 @@ namespace xboxkrnl
 #include "Emu.h" // For EmuWarning()
 #include "EmuFile.h" // For CxbxCreateSymbolicLink(), etc.
 
-using namespace xboxkrnl;
-
 // TODO : What should we initialize this to?
 XBSYSAPI EXPORTNUM(64) xboxkrnl::POBJECT_TYPE xboxkrnl::IoCompletionObjectType = NULL;
 

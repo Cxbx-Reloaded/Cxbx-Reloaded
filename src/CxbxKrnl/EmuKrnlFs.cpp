@@ -42,9 +42,14 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
-#include "Emu.h" // For EmuWarning()
 
-using namespace xboxkrnl;
+// prevent name collisions
+namespace NtDll
+{
+#include "EmuNtDll.h"
+};
+
+#include "Emu.h" // For EmuWarning()
 
 // ******************************************************************
 // * 0x0023 - FscGetCacheSize
@@ -58,7 +63,7 @@ XBSYSAPI EXPORTNUM(35) xboxkrnl::DWORD NTAPI xboxkrnl::FscGetCacheSize()
 	RETURN(64 * 1024);
 }
 
-XBSYSAPI EXPORTNUM(36) VOID NTAPI xboxkrnl::FscInvalidateIdleBlocks()
+XBSYSAPI EXPORTNUM(36) xboxkrnl::VOID NTAPI xboxkrnl::FscInvalidateIdleBlocks()
 {
 	LOG_FUNC();
 

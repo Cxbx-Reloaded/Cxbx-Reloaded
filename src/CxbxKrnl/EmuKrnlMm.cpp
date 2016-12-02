@@ -42,28 +42,23 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
-
-// prevent name collisions
-namespace NtDll
-{
-	#include "EmuNtDll.h" // For NtAllocateVirtualMemory(), etc.
-};
-
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuAlloc.h" // For CxbxFree(), CxbxMalloc(), etc.
 #include "ResourceTracker.h" // For g_AlignCache
 
-
-using namespace xboxkrnl;
-
+// prevent name collisions
+namespace NtDll
+{
+#include "EmuNtDll.h" // For NtAllocateVirtualMemory(), etc.
+};
 
 XBSYSAPI EXPORTNUM(102) xboxkrnl::PVOID xboxkrnl::MmGlobalData[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
 // ******************************************************************
 // * xLaunchDataPage (pointed to by LaunchDataPage)
 // ******************************************************************
-LAUNCH_DATA_PAGE xLaunchDataPage =
+xboxkrnl::LAUNCH_DATA_PAGE xLaunchDataPage =
 {
 	{   // header
 		2,  // 2: dashboard, 0: title
@@ -224,7 +219,7 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 // ******************************************************************
 // * 0x00AA - MmDeleteKernelStack
 // ******************************************************************
-XBSYSAPI EXPORTNUM(170) VOID NTAPI xboxkrnl::MmDeleteKernelStack
+XBSYSAPI EXPORTNUM(170) xboxkrnl::VOID NTAPI xboxkrnl::MmDeleteKernelStack
 (
 	PVOID EndAddress,
 	PVOID BaseAddress
@@ -245,7 +240,7 @@ XBSYSAPI EXPORTNUM(170) VOID NTAPI xboxkrnl::MmDeleteKernelStack
 // ******************************************************************
 // * 0x00AB - MmFreeContiguousMemory
 // ******************************************************************
-XBSYSAPI EXPORTNUM(171) VOID NTAPI xboxkrnl::MmFreeContiguousMemory
+XBSYSAPI EXPORTNUM(171) xboxkrnl::VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 (
 	IN PVOID BaseAddress
 )
@@ -293,7 +288,7 @@ XBSYSAPI EXPORTNUM(172) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmFreeSystemMemory
 // ******************************************************************
 // * 0x00AD - MmGetPhysicalAddress
 // ******************************************************************
-XBSYSAPI EXPORTNUM(173) PHYSICAL_ADDRESS NTAPI xboxkrnl::MmGetPhysicalAddress
+XBSYSAPI EXPORTNUM(173) xboxkrnl::PHYSICAL_ADDRESS NTAPI xboxkrnl::MmGetPhysicalAddress
 (
 	IN PVOID   BaseAddress
 )
@@ -305,9 +300,24 @@ XBSYSAPI EXPORTNUM(173) PHYSICAL_ADDRESS NTAPI xboxkrnl::MmGetPhysicalAddress
 }
 
 // ******************************************************************
+// * 0x00AE - MmIsAddressValid
+// ******************************************************************
+XBSYSAPI EXPORTNUM(174) xboxkrnl::BOOLEAN NTAPI xboxkrnl::MmIsAddressValid
+(
+	IN PVOID   VirtualAddress
+)
+{
+	LOG_FUNC_ONE_ARG_OUT(VirtualAddress);
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(TRUE);
+}
+
+// ******************************************************************
 // * 0x00AF - MmLockUnlockBufferPages
 // ******************************************************************
-XBSYSAPI EXPORTNUM(175) void NTAPI xboxkrnl::MmLockUnlockBufferPages
+XBSYSAPI EXPORTNUM(175) xboxkrnl::VOID NTAPI xboxkrnl::MmLockUnlockBufferPages
 (
 	IN PHYSICAL_ADDRESS	BaseAddress,
 	IN ULONG			NumberOfBytes,
@@ -318,6 +328,23 @@ XBSYSAPI EXPORTNUM(175) void NTAPI xboxkrnl::MmLockUnlockBufferPages
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(NumberOfBytes)
 		LOG_FUNC_ARG(Protect)
+		LOG_FUNC_END;
+
+	LOG_IGNORED();
+}
+
+// ******************************************************************
+// * 0x00B0 - MmLockUnlockPhysicalPage
+// ******************************************************************
+XBSYSAPI EXPORTNUM(176) xboxkrnl::VOID NTAPI xboxkrnl::MmLockUnlockPhysicalPage
+(
+	IN ULONG_PTR PhysicalAddress,
+	IN BOOLEAN UnlockPage
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(PhysicalAddress)
+		LOG_FUNC_ARG(UnlockPage)
 		LOG_FUNC_END;
 
 	LOG_IGNORED();
@@ -348,7 +375,7 @@ XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
 // ******************************************************************
 // * 0x00B2 - MmPersistContiguousMemory
 // ******************************************************************
-XBSYSAPI EXPORTNUM(178) VOID NTAPI xboxkrnl::MmPersistContiguousMemory
+XBSYSAPI EXPORTNUM(178) xboxkrnl::VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 (
 	IN PVOID   BaseAddress,
 	IN ULONG   NumberOfBytes,
@@ -363,6 +390,25 @@ XBSYSAPI EXPORTNUM(178) VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 
 	// TODO: Actually set this up to be remember across a "reboot"
 	LOG_IGNORED();
+}
+
+// ******************************************************************
+// * 0x00B3 - MmQueryAddressProtect
+// ******************************************************************
+XBSYSAPI EXPORTNUM(179) xboxkrnl::ULONG NTAPI xboxkrnl::MmQueryAddressProtect
+(
+	IN PVOID VirtualAddress
+)
+{
+	LOG_FUNC_ONE_ARG(VirtualAddress);
+
+	// Assume read/write when page is allocated :
+	ULONG Result = PAGE_NOACCESS;
+	if (EmuCheckAllocationSize(VirtualAddress, false))
+		Result = PAGE_READWRITE;
+
+	// TODO : Improve this implementation
+	RETURN(Result);
 }
 
 // ******************************************************************
@@ -439,7 +485,7 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 // ******************************************************************
 // * 0x00B6 - MmSetAddressProtect
 // ******************************************************************
-XBSYSAPI EXPORTNUM(182) VOID NTAPI xboxkrnl::MmSetAddressProtect
+XBSYSAPI EXPORTNUM(182) xboxkrnl::VOID NTAPI xboxkrnl::MmSetAddressProtect
 (
 	IN PVOID BaseAddress,
 	IN ULONG NumberOfBytes,

@@ -42,18 +42,24 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
+
+// prevent name collisions
+namespace NtDll
+{
+#include "EmuNtDll.h"
+};
+
+
 #include "Emu.h" // For EmuWarning()
 
-using namespace xboxkrnl;
-
-XBSYSAPI EXPORTNUM(5) VOID NTAPI xboxkrnl::DbgBreakPoint()
+XBSYSAPI EXPORTNUM(5) xboxkrnl::VOID NTAPI xboxkrnl::DbgBreakPoint()
 {
 	LOG_FUNC();
 
 	LOG_UNIMPLEMENTED();
 }
 
-XBSYSAPI EXPORTNUM(6) VOID NTAPI xboxkrnl::DbgBreakPointWithStatus
+XBSYSAPI EXPORTNUM(6) xboxkrnl::VOID NTAPI xboxkrnl::DbgBreakPointWithStatus
 (
 	IN ULONG Status 
 )
@@ -137,7 +143,7 @@ XBSYSAPI EXPORTNUM(10) xboxkrnl::ULONG NTAPI xboxkrnl::DbgPrompt
 }
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(11) VOID NTAPI xboxkrnl::DbgUnLoadImageSymbols
+XBSYSAPI EXPORTNUM(11) xboxkrnl::VOID NTAPI xboxkrnl::DbgUnLoadImageSymbols
 (
 	IN PANSI_STRING Name,
 	IN PVOID Base,

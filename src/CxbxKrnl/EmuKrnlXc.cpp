@@ -42,15 +42,18 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
-#include "Emu.h" // For EmuWarning()
-#include "EmuSha.h"
+#include "EmuSha.h" // For A_SHAInit, etc.
 
-using namespace xboxkrnl;
+// prevent name collisions
+namespace NtDll
+{
+#include "EmuNtDll.h"
+};
 
 // ******************************************************************
 // * XcSHAInit
 // ******************************************************************
-XBSYSAPI EXPORTNUM(335) VOID NTAPI xboxkrnl::XcSHAInit
+XBSYSAPI EXPORTNUM(335) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAInit
 (
 	UCHAR *pbSHAContext
 )
@@ -63,7 +66,7 @@ XBSYSAPI EXPORTNUM(335) VOID NTAPI xboxkrnl::XcSHAInit
 // ******************************************************************
 // * XcSHAUpdate
 // ******************************************************************
-XBSYSAPI EXPORTNUM(336) VOID NTAPI xboxkrnl::XcSHAUpdate
+XBSYSAPI EXPORTNUM(336) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAUpdate
 (
 	UCHAR *pbSHAContext,
 	UCHAR *pbInput,
@@ -82,7 +85,7 @@ XBSYSAPI EXPORTNUM(336) VOID NTAPI xboxkrnl::XcSHAUpdate
 // ******************************************************************
 // * XcSHAFinal
 // ******************************************************************
-XBSYSAPI EXPORTNUM(337) VOID NTAPI xboxkrnl::XcSHAFinal
+XBSYSAPI EXPORTNUM(337) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAFinal
 (
 	UCHAR *pbSHAContext,
 	UCHAR *pbDigest
@@ -96,7 +99,7 @@ XBSYSAPI EXPORTNUM(337) VOID NTAPI xboxkrnl::XcSHAFinal
 	A_SHAFinal((SHA_CTX*)pbSHAContext, pbDigest);
 }
 
-XBSYSAPI EXPORTNUM(340) VOID NTAPI xboxkrnl::XcHMAC(
+XBSYSAPI EXPORTNUM(340) xboxkrnl::VOID NTAPI xboxkrnl::XcHMAC(
 	IN PBYTE pbKeyMaterial,
 	IN ULONG cbKeyMaterial,
 	IN PBYTE pbData,

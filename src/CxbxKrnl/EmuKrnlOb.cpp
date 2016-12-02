@@ -42,9 +42,14 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
-#include "Emu.h" // For EmuWarning()
 
-using namespace xboxkrnl;
+// prevent name collisions
+namespace NtDll
+{
+#include "EmuNtDll.h"
+};
+
+#include "Emu.h" // For EmuWarning()
 
 // TODO : What should we initialize this to?
 XBSYSAPI EXPORTNUM(240) xboxkrnl::POBJECT_TYPE xboxkrnl::ObDirectoryObjectType = NULL;
@@ -75,7 +80,7 @@ XBSYSAPI EXPORTNUM(246) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByHa
 	RETURN(STATUS_SUCCESS);
 }
 
-XBSYSAPI EXPORTNUM(250) VOID FASTCALL xboxkrnl::ObfDereferenceObject
+XBSYSAPI EXPORTNUM(250) xboxkrnl::VOID FASTCALL xboxkrnl::ObfDereferenceObject
 (
 	IN PVOID Object
 )

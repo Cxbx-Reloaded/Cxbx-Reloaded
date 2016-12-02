@@ -59,11 +59,17 @@ extern "C"
 #define CONST               const
 
 // ******************************************************************
+// * VOLATILE
+// ******************************************************************
+#undef VOLATILE
+#define VOLATILE            volatile
+
+// ******************************************************************
 // * VOID
 // ******************************************************************
 #ifndef VOID
-typedef void                VOID;
-    //#define VOID                void
+	typedef void                VOID;
+	//#define VOID                void
 #endif
 
 // ******************************************************************
@@ -172,7 +178,9 @@ typedef long                            NTSTATUS;
 // * calling conventions
 // ******************************************************************
 #define NTAPI               __stdcall
+#ifndef CDECL
 #define CDECL               __cdecl
+#endif
 #define FASTCALL            __fastcall
 #define INLINE              __inline
 #define DECLSPEC_NORETURN   __declspec(noreturn)
@@ -486,7 +494,7 @@ typedef struct _XBOX_REFURB_INFO
 }
 XBOX_REFURB_INFO, *PXBOX_REFURB_INFO;
 
-int const EXCEPTION_MAXIMUM_PARAMETERS = 15; // maximum number of exception parameters
+#define EXCEPTION_MAXIMUM_PARAMETERS 15 // maximum number of exception parameters
 
 // Source : DXBX
 typedef struct _EXCEPTION_RECORD

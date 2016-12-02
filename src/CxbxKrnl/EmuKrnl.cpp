@@ -121,13 +121,10 @@ std::ostream& operator<<(std::ostream& os, const xboxkrnl::PLARGE_INTEGER& value
 // std::ostream& operator<<(std::ostream& os, const xboxkrnl::PXTHREAD_NOTIFICATION& value); // -> pfnNotifyRoutine
 // std::ostream& operator<<(std::ostream& os, const xboxkrnl::UCHAR& value);
 
-using namespace xboxkrnl;
-
-
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(51) xboxkrnl::LONG FASTCALL xboxkrnl::XbInterlockedCompareExchange
 (
-	IN OUT volatile PLONG Destination,
+	IN OUT PLONG VOLATILE Destination,
 	IN LONG  Exchange,
 	IN LONG  Comparand
 )
@@ -166,7 +163,7 @@ XBSYSAPI EXPORTNUM(53) xboxkrnl::LONG FASTCALL xboxkrnl::XbInterlockedIncrement
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(54) xboxkrnl::LONG FASTCALL xboxkrnl::XbInterlockedExchange
 (
-	IN volatile PLONG Destination,
+	IN PLONG VOLATILE Destination,
 	IN LONG Value
 )
 {
@@ -181,7 +178,7 @@ XBSYSAPI EXPORTNUM(54) xboxkrnl::LONG FASTCALL xboxkrnl::XbInterlockedExchange
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(55) xboxkrnl::LONG FASTCALL xboxkrnl::XbInterlockedExchangeAdd
 (
-	IN volatile PLONG Addend,
+	IN PLONG VOLATILE Addend,
 	IN LONG	Value
 )
 {

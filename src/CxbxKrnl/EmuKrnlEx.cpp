@@ -43,11 +43,15 @@ namespace xboxkrnl
 
 #include "Logging.h" // For LOG_FUNC()
 
+// prevent name collisions
+namespace NtDll
+{
+#include "EmuNtDll.h" // For NtDelayExecution(), etc.
+};
+
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuAlloc.h" // For CxbxFree(), CxbxMalloc(), etc.
-
-using namespace xboxkrnl;
 
 // Source:APILogger - Uncertain
 XBSYSAPI EXPORTNUM(12) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExAcquireReadWriteLockExclusive
@@ -121,7 +125,7 @@ XBSYSAPI EXPORTNUM(16) xboxkrnl::POBJECT_TYPE xboxkrnl::ExEventObjectType = NULL
 // ******************************************************************
 // * 0x0011 ExFreePool
 // ******************************************************************
-XBSYSAPI EXPORTNUM(17) VOID NTAPI xboxkrnl::ExFreePool
+XBSYSAPI EXPORTNUM(17) xboxkrnl::VOID NTAPI xboxkrnl::ExFreePool
 (
 	IN PVOID	P
 )
@@ -178,7 +182,7 @@ XBSYSAPI EXPORTNUM(19) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::ExInterlockedAddL
 }
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(20) VOID FASTCALL xboxkrnl::ExInterlockedAddLargeStatistic
+XBSYSAPI EXPORTNUM(20) xboxkrnl::VOID FASTCALL xboxkrnl::ExInterlockedAddLargeStatistic
 (
 	IN PLARGE_INTEGER Addend,
 	IN ULONG Increment
@@ -431,7 +435,7 @@ XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
 }
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(26) VOID NTAPI xboxkrnl::ExRaiseException
+XBSYSAPI EXPORTNUM(26) xboxkrnl::VOID NTAPI xboxkrnl::ExRaiseException
 (
 	IN PEXCEPTION_RECORD ExceptionRecord
 )
@@ -444,7 +448,7 @@ XBSYSAPI EXPORTNUM(26) VOID NTAPI xboxkrnl::ExRaiseException
 
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(27) VOID NTAPI xboxkrnl::ExRaiseStatus
+XBSYSAPI EXPORTNUM(27) xboxkrnl::VOID NTAPI xboxkrnl::ExRaiseStatus
 (
 	IN NTSTATUS Status
 )

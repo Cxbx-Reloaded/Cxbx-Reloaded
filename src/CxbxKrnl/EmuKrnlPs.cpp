@@ -44,17 +44,16 @@ namespace xboxkrnl
 #include <process.h> // For __beginthreadex(), etc.
 
 #include "Logging.h" // For LOG_FUNC()
+#include "CxbxKrnl.h" // For CxbxKrnl_TLS
+#include "Emu.h" // For EmuWarning()
+#include "EmuFS.h" // For EmuGenerateFS
+#include "EmuXTL.h"
 
 // prevent name collisions
 namespace NtDll
 {
 #include "EmuNtDll.h"
 };
-
-#include "CxbxKrnl.h" // For CxbxKrnl_TLS
-#include "Emu.h" // For EmuWarning()
-#include "EmuFS.h" // For EmuGenerateFS
-#include "EmuXTL.h"
 
 // PsCreateSystemThread proxy parameters
 typedef struct _PCSTProxyParam
@@ -186,8 +185,6 @@ callComplete:
 }
 #pragma warning(pop)
 
-using namespace xboxkrnl;
-
 // ******************************************************************
 // * 0x00FF - PsCreateSystemThreadEx
 // ******************************************************************
@@ -263,7 +260,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 // ******************************************************************
 // * 0x0102 - PsTerminateSystemThread
 // ******************************************************************
-XBSYSAPI EXPORTNUM(258) VOID NTAPI xboxkrnl::PsTerminateSystemThread
+XBSYSAPI EXPORTNUM(258) xboxkrnl::VOID NTAPI xboxkrnl::PsTerminateSystemThread
 (
 	IN NTSTATUS ExitStatus
 )
@@ -296,4 +293,4 @@ XBSYSAPI EXPORTNUM(258) VOID NTAPI xboxkrnl::PsTerminateSystemThread
 }
 
 // TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(259) volatile xboxkrnl::POBJECT_TYPE xboxkrnl::PsThreadObjectType = NULL;
+XBSYSAPI EXPORTNUM(259) xboxkrnl::POBJECT_TYPE VOLATILE xboxkrnl::PsThreadObjectType = NULL;

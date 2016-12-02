@@ -44,11 +44,8 @@ namespace xboxkrnl
 #include "Logging.h" // For LOG_FUNC()
 #include "Emu.h" // For EmuWarning()
 
-using namespace xboxkrnl;
-
 // TODO : What should we initialize this to?
 XBSYSAPI EXPORTNUM(321) xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxEEPROMKey = {};
-
 
 // ******************************************************************
 // * 0x0142 - XboxHardwareInfo

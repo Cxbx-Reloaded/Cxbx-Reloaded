@@ -150,7 +150,7 @@ BOOL WINAPI XTL::EmuXMountUtilityDrive
 {
 	LOG_FUNC_ONE_ARG(fFormatClean);
 
-	CxbxMountUtilityDrive(fFormatClean);
+	CxbxMountUtilityDrive(fFormatClean == TRUE);
 
 	RETURN(TRUE);
 }

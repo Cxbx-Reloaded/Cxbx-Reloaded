@@ -55,8 +55,6 @@ namespace NtDll
 #include <chrono>
 #include <thread>
 
-using namespace xboxkrnl;
-
 // TODO : Move operator<< to a central place
 std::ostream& operator<<(std::ostream& os, const xboxkrnl::LARGE_INTEGER& value)
 {
@@ -110,7 +108,7 @@ XBSYSAPI EXPORTNUM(94) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeBoostPriorityThread
 // ******************************************************************
 // * KeBugCheck
 // ******************************************************************
-XBSYSAPI EXPORTNUM(95) VOID NTAPI xboxkrnl::KeBugCheck
+XBSYSAPI EXPORTNUM(95) xboxkrnl::VOID NTAPI xboxkrnl::KeBugCheck
 (
 	IN ULONG BugCheckMode
 )
@@ -197,7 +195,7 @@ XBSYSAPI EXPORTNUM(99) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeDelayExecutionThread
 // ******************************************************************
 // * 0x006B - KeInitializeDpc
 // ******************************************************************
-XBSYSAPI EXPORTNUM(107) VOID NTAPI xboxkrnl::KeInitializeDpc
+XBSYSAPI EXPORTNUM(107) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeDpc
 (
 	KDPC                *Dpc,
 	PKDEFERRED_ROUTINE   DeferredRoutine,
@@ -220,7 +218,7 @@ XBSYSAPI EXPORTNUM(107) VOID NTAPI xboxkrnl::KeInitializeDpc
 // ******************************************************************
 // * 0x006D - KeInitializeInterrupt
 // ******************************************************************
-XBSYSAPI EXPORTNUM(109) VOID NTAPI xboxkrnl::KeInitializeInterrupt
+XBSYSAPI EXPORTNUM(109) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeInterrupt
 (
 	OUT PKINTERRUPT Interrupt,
 	IN PKSERVICE_ROUTINE ServiceRoutine,
@@ -247,7 +245,7 @@ XBSYSAPI EXPORTNUM(109) VOID NTAPI xboxkrnl::KeInitializeInterrupt
 // ******************************************************************
 // * 0x0071 - KeInitializeTimerEx
 // ******************************************************************
-XBSYSAPI EXPORTNUM(113) VOID NTAPI xboxkrnl::KeInitializeTimerEx
+XBSYSAPI EXPORTNUM(113) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeTimerEx
 (
 	IN PKTIMER      Timer,
 	IN TIMER_TYPE   Type
@@ -308,7 +306,7 @@ XBSYSAPI EXPORTNUM(127) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceFr
 // ******************************************************************
 // * 0x0080 - KeQuerySystemTime
 // ******************************************************************
-XBSYSAPI EXPORTNUM(128) VOID NTAPI xboxkrnl::KeQuerySystemTime
+XBSYSAPI EXPORTNUM(128) xboxkrnl::VOID NTAPI xboxkrnl::KeQuerySystemTime
 (
 	PLARGE_INTEGER CurrentTime
 )
@@ -487,7 +485,7 @@ XBSYSAPI EXPORTNUM(151) xboxkrnl::VOID NTAPI xboxkrnl::KeStallExecutionProcessor
 // ******************************************************************
 // * 0x009C - KeTickCount
 // ******************************************************************
-XBSYSAPI EXPORTNUM(156) volatile xboxkrnl::DWORD xboxkrnl::KeTickCount = 0;
+XBSYSAPI EXPORTNUM(156) xboxkrnl::DWORD VOLATILE xboxkrnl::KeTickCount = 0;
 
 const xboxkrnl::ULONG CLOCK_TIME_INCREMENT = 0x2710;
 XBSYSAPI EXPORTNUM(157) xboxkrnl::ULONG xboxkrnl::KeTimeIncrement = CLOCK_TIME_INCREMENT;

@@ -44,8 +44,6 @@ namespace xboxkrnl
 #include "Logging.h" // For LOG_FUNC()
 #include "Emu.h" // For EmuWarning()
 
-using namespace xboxkrnl;
-
 // ******************************************************************
 // * XeImageFileName
 // ******************************************************************
