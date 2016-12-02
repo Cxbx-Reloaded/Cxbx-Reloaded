@@ -62,6 +62,7 @@ namespace xboxkrnl
 // A.k.a. _XBOX_ENABLE_PROFILING
 
 // kernel thunk table
+// Note : Names that collide with other symbols, use the KRNL() macro.
 extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 {
 	(uint32)PANIC(0x0000),                                    // 0x0000 (0)   NULL
@@ -115,14 +116,14 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::HalRequestSoftwareInterrupt),     // 0x0030 (48)
 	(uint32)FUNC(&xboxkrnl::HalReturnToFirmware),             // 0x0031 (49)
 	(uint32)FUNC(&xboxkrnl::HalWriteSMBusValue),              // 0x0032 (50)
-	(uint32)FUNC(&xboxkrnl::XbInterlockedCompareExchange),    // 0x0033 (51)
-	(uint32)FUNC(&xboxkrnl::XbInterlockedDecrement),          // 0x0034 (52)
-	(uint32)FUNC(&xboxkrnl::XbInterlockedIncrement),          // 0x0035 (53)
-	(uint32)FUNC(&xboxkrnl::XbInterlockedExchange),           // 0x0036 (54)
-	(uint32)FUNC(&xboxkrnl::XbInterlockedExchangeAdd),        // 0x0037 (55)
-	(uint32)FUNC(&xboxkrnl::XbInterlockedFlushSList),         // 0x0038 (56)
-	(uint32)FUNC(&xboxkrnl::XbInterlockedPopEntrySList),      // 0x0039 (57)
-	(uint32)FUNC(&xboxkrnl::XbInterlockedPushEntrySList),     // 0x003A (58)
+	(uint32)FUNC(&xboxkrnl::KRNL(InterlockedCompareExchange)),// 0x0033 (51)
+	(uint32)FUNC(&xboxkrnl::KRNL(InterlockedDecrement)),      // 0x0034 (52)
+	(uint32)FUNC(&xboxkrnl::KRNL(InterlockedIncrement)),      // 0x0035 (53)
+	(uint32)FUNC(&xboxkrnl::KRNL(InterlockedExchange)),       // 0x0036 (54)
+	(uint32)FUNC(&xboxkrnl::KRNL(InterlockedExchangeAdd)),    // 0x0037 (55)
+	(uint32)FUNC(&xboxkrnl::KRNL(InterlockedFlushSList)),     // 0x0038 (56)
+	(uint32)FUNC(&xboxkrnl::KRNL(InterlockedPopEntrySList)),  // 0x0039 (57)
+	(uint32)FUNC(&xboxkrnl::KRNL(InterlockedPushEntrySList)), // 0x003A (58)
 	(uint32)PANIC(0x003B),                                    // 0x003B (59)  IoAllocateIrp
 	(uint32)PANIC(0x003C),                                    // 0x003C (60)  IoBuildAsynchronousFsdRequest
 	(uint32)PANIC(0x003D),                                    // 0x003D (61)  IoBuildDeviceIoControlRequest
@@ -425,10 +426,10 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::HalIsResetOrShutdownPending),     // 0x0166 (358)
 	(uint32)PANIC(0x0167),                                    // 0x0167 (359) IoMarkIrpMustComplete
 	(uint32)FUNC(&xboxkrnl::HalInitiateShutdown),             // 0x0168 (360)
-	(uint32)PANIC(0x0169),                                    // 0x0169 (361) RtlSnprintf
-	(uint32)PANIC(0x016A),                                    // 0x016A (362) RtlSprintf
-	(uint32)PANIC(0x016B),                                    // 0x016B (363) RtlVsnprintf
-	(uint32)PANIC(0x016C),                                    // 0x016C (364) RtlVsprintf
+	(uint32)PANIC(0x0169),                                    // 0x0169 (361) KRNL(_snprintf)
+	(uint32)PANIC(0x016A),                                    // 0x016A (362) KRNL(_sprintf)
+	(uint32)PANIC(0x016B),                                    // 0x016B (363) KRNL(_vsnprintf)
+	(uint32)PANIC(0x016C),                                    // 0x016C (364) KRNL(_vsprintf)
 	(uint32)FUNC(&xboxkrnl::HalEnableSecureTrayEject),        // 0x016D (365)
 	(uint32)FUNC(&xboxkrnl::HalWriteSMCScratchRegister),      // 0x016E (366)
 	(uint32)FUNC(&xboxkrnl::UnknownAPI367),                   // 0x016F (367)

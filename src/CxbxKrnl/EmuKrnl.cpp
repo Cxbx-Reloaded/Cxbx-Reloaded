@@ -122,7 +122,7 @@ std::ostream& operator<<(std::ostream& os, const xboxkrnl::PLARGE_INTEGER& value
 // std::ostream& operator<<(std::ostream& os, const xboxkrnl::UCHAR& value);
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(51) xboxkrnl::LONG FASTCALL xboxkrnl::XbInterlockedCompareExchange
+XBSYSAPI EXPORTNUM(51) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedCompareExchange)
 (
 	IN OUT PLONG VOLATILE Destination,
 	IN LONG  Exchange,
@@ -139,7 +139,7 @@ XBSYSAPI EXPORTNUM(51) xboxkrnl::LONG FASTCALL xboxkrnl::XbInterlockedCompareExc
 }
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(52) xboxkrnl::LONG FASTCALL xboxkrnl::XbInterlockedDecrement
+XBSYSAPI EXPORTNUM(52) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedDecrement)
 (
 	IN OUT PLONG Addend
 )
@@ -150,7 +150,7 @@ XBSYSAPI EXPORTNUM(52) xboxkrnl::LONG FASTCALL xboxkrnl::XbInterlockedDecrement
 }
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(53) xboxkrnl::LONG FASTCALL xboxkrnl::XbInterlockedIncrement
+XBSYSAPI EXPORTNUM(53) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedIncrement)
 (
 	IN OUT PLONG Addend
 )
@@ -161,7 +161,7 @@ XBSYSAPI EXPORTNUM(53) xboxkrnl::LONG FASTCALL xboxkrnl::XbInterlockedIncrement
 }
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(54) xboxkrnl::LONG FASTCALL xboxkrnl::XbInterlockedExchange
+XBSYSAPI EXPORTNUM(54) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedExchange)
 (
 	IN PLONG VOLATILE Destination,
 	IN LONG Value
@@ -176,7 +176,7 @@ XBSYSAPI EXPORTNUM(54) xboxkrnl::LONG FASTCALL xboxkrnl::XbInterlockedExchange
 }
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(55) xboxkrnl::LONG FASTCALL xboxkrnl::XbInterlockedExchangeAdd
+XBSYSAPI EXPORTNUM(55) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedExchangeAdd)
 (
 	IN PLONG VOLATILE Addend,
 	IN LONG	Value
@@ -192,7 +192,7 @@ XBSYSAPI EXPORTNUM(55) xboxkrnl::LONG FASTCALL xboxkrnl::XbInterlockedExchangeAd
 
 // Source:ReactOS
 // Dxbx Note : The Xbox1 SINGLE_LIST strucures are the same as in WinNT
-XBSYSAPI EXPORTNUM(56) xboxkrnl::PSINGLE_LIST_ENTRY FASTCALL xboxkrnl::XbInterlockedFlushSList
+XBSYSAPI EXPORTNUM(56) xboxkrnl::PSINGLE_LIST_ENTRY FASTCALL xboxkrnl::KRNL(InterlockedFlushSList)
 (
 	IN xboxkrnl::PSLIST_HEADER ListHead
 )
@@ -203,7 +203,7 @@ XBSYSAPI EXPORTNUM(56) xboxkrnl::PSINGLE_LIST_ENTRY FASTCALL xboxkrnl::XbInterlo
 }
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(57) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::XbInterlockedPopEntrySList
+XBSYSAPI EXPORTNUM(57) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::KRNL(InterlockedPopEntrySList)
 (
 	IN PSLIST_HEADER ListHead
 )
@@ -214,7 +214,7 @@ XBSYSAPI EXPORTNUM(57) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::XbInterlockedPo
 }
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(58) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::XbInterlockedPushEntrySList
+XBSYSAPI EXPORTNUM(58) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::KRNL(InterlockedPushEntrySList)
 (
 	IN PSLIST_HEADER ListHead,
 	IN PSLIST_ENTRY ListEntry

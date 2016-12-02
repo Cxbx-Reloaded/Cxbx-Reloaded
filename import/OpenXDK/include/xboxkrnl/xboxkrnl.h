@@ -30,10 +30,13 @@ extern "C"
 #ifdef _XBOXKRNL_INTERNAL_
 #undef  XBSYSAPI
 #define XBSYSAPI DECLSPEC_EXPORT
+#define KRNL(API) API
 #endif
 #ifdef _XBOXKRNL_DEFEXTRN_
 #undef  XBSYSAPI
 #define XBSYSAPI extern
+// The KRNL macro prevents naming collisions
+#define KRNL(API) KRNL##API
 #endif
 
 // ******************************************************************
