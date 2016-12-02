@@ -175,6 +175,7 @@ bool EmuX86_MOV(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
 		default:
 			return false;
 		}
+		break;
 	}
 	default:
 		return false;
@@ -201,6 +202,7 @@ bool EmuX86_MOV(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
 		default:
 			return false;
 		}
+		break;
 	}
 	case Zydis::OperandType::MEMORY:
 	{
@@ -221,6 +223,7 @@ bool EmuX86_MOV(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
 		default:
 			return false;
 		}
+		break;
 	}
 	default:
 		return false;
