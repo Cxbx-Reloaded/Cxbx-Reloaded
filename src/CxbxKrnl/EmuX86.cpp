@@ -138,94 +138,96 @@ inline bool EmuX86_DecodeMemoryOperand(uint32_t* output, LPEXCEPTION_POINTERS e,
 
 bool EmuX86_MOV(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
 {
-	if (info.operand[0].type == Zydis::OperandType::REGISTER && info.operand[1].type == Zydis::OperandType::MEMORY) 
+	// TODO : Test this refactoring
+	
+	// Retrieve source value :
+	uint32_t value = 0;
+	switch (info.operand[1].type) {
+	// TODO : case Zydis::OperandType::CONSTANT:
+	// TODO : case Zydis::OperandType::POINTER:
+	// TODO : case Zydis::OperandType::REL_IMMEDIATE:
+	case Zydis::OperandType::IMMEDIATE:
+		value = info.operand[1].lval.udword;
+		break;
+	case Zydis::OperandType::REGISTER:
 	{
-		DWORD* pDstReg = nullptr;
+		if (!EmuX86_GetRegisterValue(&value, e, info.operand[1].base))
+			return false;
+
+		break;
+	}
+	case Zydis::OperandType::MEMORY:
+	{
 		uint32_t srcAddr = 0;
-
-		pDstReg = EmuX86_GetRegisterPointer(e, info.operand[0].base);
-		if (pDstReg == nullptr) {
+		if (!EmuX86_DecodeMemoryOperand(&srcAddr, e, info.operand[1]))
 			return false;
-		}
-
-		if (!EmuX86_DecodeMemoryOperand(&srcAddr, e, info.operand[1])) {
-			return false;
-		}
-
-		switch (info.operand[0].size) {
-			case 8:
-				*((uint8_t*)pDstReg + 3) = EmuX86_Read8(srcAddr);;
-				break;
-			case 16:
-				*((uint16_t*)pDstReg + 2) = EmuX86_Read16(srcAddr);
-				break;
-			case 32:
-				*pDstReg = EmuX86_Read32(srcAddr);
-				break;
-			default:
-				return false;
-		}
-	}
-	else if (info.operand[0].type == Zydis::OperandType::MEMORY && info.operand[1].type == Zydis::OperandType::REGISTER)
-	{
-		uint32_t addr = 0;
-		uint32_t value = 0;
-
-		if (!EmuX86_DecodeMemoryOperand(&addr, e, info.operand[0])) {
-			return false;
-		}
-
-		if (!EmuX86_GetRegisterValue(&value, e, info.operand[1].base)) {
-			return false;
-		}
-
-		switch (info.operand[0].size) {
-			case 8:
-				EmuX86_Write8(addr, value & 0xFF);
-				break;
-			case 16:
-				EmuX86_Write16(addr, value & 0xFFFF);
-				break;
-			case 32:
-				EmuX86_Write32(addr, value);
-				break;
-			default:
-				return false;
-		}
-	}
-	else if (info.operand[0].type == Zydis::OperandType::MEMORY && info.operand[1].type == Zydis::OperandType::IMMEDIATE)
-	{
-		uint32_t addr = 0;
-
-		if (!EmuX86_DecodeMemoryOperand(&addr, e, info.operand[0])) {
-			return false;
-		}
 
 		switch (info.operand[0].size) {
 		case 8:
-			EmuX86_Write8(addr, info.operand[1].lval.ubyte);
+			value = EmuX86_Read8(srcAddr);;
 			break;
 		case 16:
-			EmuX86_Write16(addr, info.operand[1].lval.uword);
+			value = EmuX86_Read16(srcAddr);
 			break;
 		case 32:
-			EmuX86_Write32(addr, info.operand[1].lval.udword);
+			value = EmuX86_Read32(srcAddr);
 			break;
 		default:
 			return false;
 		}
 	}
-	else
+	default:
 		return false;
-		
-/*  TODO : What flags need to be set at a successfull MOV ?
+	}
 
-	EmuX86_SetFlag(e, EMUX86_EFLAG_CF, 0);
-	EmuX86_SetFlag(e, EMUX86_EFLAG_OF, 0);
-	EmuX86_SetFlag(e, EMUX86_EFLAG_SF, 0);
-	EmuX86_SetFlag(e, EMUX86_EFLAG_ZF, 0);
-	EmuX86_SetFlag(e, EMUX86_EFLAG_PF, 0);
-*/
+	// Write value to destination :
+	switch (info.operand[0].type) {
+	case Zydis::OperandType::REGISTER:
+	{
+		DWORD* pDstReg = EmuX86_GetRegisterPointer(e, info.operand[0].base);
+		if (pDstReg == nullptr)
+			return false;
+
+		switch (info.operand[0].size) {
+		case 8:
+			*((uint8_t*)pDstReg + 3) = value & 0xFF;
+			break;
+		case 16:
+			*((uint16_t*)pDstReg + 2) = value & 0xFFFF;
+			break;
+		case 32:
+			*pDstReg = value;
+			break;
+		default:
+			return false;
+		}
+	}
+	case Zydis::OperandType::MEMORY:
+	{
+		uint32_t destAddr = 0;
+		if (!EmuX86_DecodeMemoryOperand(&destAddr, e, info.operand[0]))
+			return false;
+
+		switch (info.operand[0].size) {
+		case 8:
+			EmuX86_Write8(destAddr, value & 0xFF);
+			break;
+		case 16:
+			EmuX86_Write16(destAddr, value & 0xFFFF);
+			break;
+		case 32:
+			EmuX86_Write32(destAddr, value);
+			break;
+		default:
+			return false;
+		}
+	}
+	default:
+		return false;
+	}
+
+	// Note : MOV instructions never update CPU flags
+
 	return true;
 }
 
@@ -237,27 +239,21 @@ inline void EmuX86_SetFlag(LPEXCEPTION_POINTERS e, int flag, int value)
 bool EmuX86_TEST(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
 {
 	uint32_t result = 0;
-	bool handled = false;
+	uint32_t value = 0;
 
 	if (info.operand[0].type == Zydis::OperandType::MEMORY && info.operand[1].type == Zydis::OperandType::IMMEDIATE)
 	{
 		uint32_t addr = 0;
-
 		if (!EmuX86_DecodeMemoryOperand(&addr, e, info.operand[0])) {
 			return false;
 		}
 
-		uint32_t value = EmuX86_Read32(addr);
-
-		// Perform bitwise AND
-		result = value & info.operand[1].lval.udword;
-		handled = true;
+		value = EmuX86_Read32(addr);
+		result = info.operand[1].lval.udword;
 	}
 	else if (info.operand[0].type == Zydis::OperandType::MEMORY && info.operand[1].type == Zydis::OperandType::REGISTER)
 	{
 		uint32_t addr = 0;
-		uint32_t value = 0;
-
 		if (!EmuX86_DecodeMemoryOperand(&addr, e, info.operand[0])) {
 			return false;
 		}
@@ -266,30 +262,28 @@ bool EmuX86_TEST(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
 			return false;
 		}
 
-		// Perform bitwise AND
-		
-		result = EmuX86_Read32(addr) & value;
-		handled = true;
+		result = EmuX86_Read32(addr);
 	}
-
-	if (!handled) {
+	else
 		return false;
-	}
 
+	// Perform bitwise AND
+	result &= value;
+
+	// https://en.wikipedia.org/wiki/TEST_(x86_instruction)
 	// Set CF/OF to 0
-	// TODO FIXME using http://www.emulators.com/docs/nx11_flags.htm#Faster_Lazy_Evaluation
 	EmuX86_SetFlag(e, EMUX86_EFLAG_CF, 0);
 	EmuX86_SetFlag(e, EMUX86_EFLAG_OF, 0);
-
 	EmuX86_SetFlag(e, EMUX86_EFLAG_SF, result >> 31);
 	EmuX86_SetFlag(e, EMUX86_EFLAG_ZF, result == 0 ? 1 : 0);
-
 	// Set Parity flag, based on "Compute parity in parallel" method from
 	// http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
 	uint32_t v = 255 & result;
 	v ^= v >> 4;
 	v &= 0xf;
 	EmuX86_SetFlag(e, EMUX86_EFLAG_PF, (0x6996 >> v) & 1);
+
+	// result is thrown away
 
 	return true;
 }
