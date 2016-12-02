@@ -71,9 +71,11 @@ XBSYSAPI EXPORTNUM(323) xboxkrnl::UCHAR xboxkrnl::XboxHDKey[16] =
 // ******************************************************************
 // * 0x0144 - XboxKrnlVersion
 // ******************************************************************
+// Xbox Kernel version (part of kernel thunk table)
 XBSYSAPI EXPORTNUM(324) xboxkrnl::XBOX_KRNL_VERSION xboxkrnl::XboxKrnlVersion =
 {
-	1, 0, 5838, 1
+	// Default Cxbx to emulating kernel version 5838 :
+	1, 0, 5838, 1 // TODO : Make this configurable
 };
 
 

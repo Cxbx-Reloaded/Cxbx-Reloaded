@@ -48,10 +48,19 @@ namespace xboxkrnl
 // * XeImageFileName
 // ******************************************************************
 XBSYSAPI EXPORTNUM(326) xboxkrnl::OBJECT_STRING xboxkrnl::XeImageFileName =
+// XeImageFileName.Buffer points to path of XBE
+//
+// Format is like this: \Device\Harddisk0\Partition1\bla.xbe
+// Size of XeImageFileName.Buffer is stored in XeImageFileName.Length
 {
 
 };
 
+// XeLoadSection:
+// Adds one to the reference count of the specified section and loads if the
+// count is now above zero.
+//
+// New to the XBOX.
 XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 (
 	void* section
@@ -71,6 +80,11 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 	RETURN(STATUS_SUCCESS);
 }
 
+// XeUnloadSection:
+// Subtracts one from the reference count of the specified section and unloads
+// if the count is now zero.
+//
+// New to the XBOX.
 XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection
 (
 	void* section

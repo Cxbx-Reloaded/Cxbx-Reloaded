@@ -76,6 +76,11 @@ XBSYSAPI EXPORTNUM(164) xboxkrnl::PLAUNCH_DATA_PAGE xboxkrnl::LaunchDataPage = &
 // ******************************************************************
 // * 0x00A5 - MmAllocateContiguousMemory
 // ******************************************************************
+// Allocates a range of physically contiguous, cache-aligned memory from the
+// non-paged pool (= main pool on XBOX).
+//
+// Differences from NT: HighestAcceptableAddress was deleted, opting instead
+//     to not care about the highest address.
 XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemory
 (
 	IN ULONG NumberOfBytes
@@ -269,6 +274,9 @@ XBSYSAPI EXPORTNUM(170) xboxkrnl::VOID NTAPI xboxkrnl::MmDeleteKernelStack
 // ******************************************************************
 // * 0x00AB - MmFreeContiguousMemory
 // ******************************************************************
+// Frees memory allocated with MmAllocateContiguousMemory.
+//
+// Differences from NT: None.
 XBSYSAPI EXPORTNUM(171) xboxkrnl::VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 (
 	IN PVOID BaseAddress
@@ -293,6 +301,11 @@ XBSYSAPI EXPORTNUM(171) xboxkrnl::VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 	{
 		DbgPrintf("Ignored MmFreeContiguousMemory(&xLaunchDataPage)\n");
 	}
+
+  // TODO -oDxbx: Sokoban crashes after this, at reset time (press Black + White to hit this).
+  // Tracing in assembly shows the crash takes place quite a while further, so it's probably
+  // not related to this call per-se. The strangest thing is, that if we let the debugger step
+  // all the way through, the crash doesn't occur. Adding a Sleep(100) here doesn't help though.
 }
 
 // ******************************************************************
@@ -317,6 +330,9 @@ XBSYSAPI EXPORTNUM(172) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmFreeSystemMemory
 // ******************************************************************
 // * 0x00AD - MmGetPhysicalAddress
 // ******************************************************************
+// Translates a virtual address into a physical address.
+//
+// Differences from NT: PhysicalAddress is 32 bit, not 64.
 XBSYSAPI EXPORTNUM(173) xboxkrnl::PHYSICAL_ADDRESS NTAPI xboxkrnl::MmGetPhysicalAddress
 (
 	IN PVOID   BaseAddress
@@ -382,6 +398,14 @@ XBSYSAPI EXPORTNUM(176) xboxkrnl::VOID NTAPI xboxkrnl::MmLockUnlockPhysicalPage
 // ******************************************************************
 // * 0x00B1 - MmMapIoSpace
 // ******************************************************************
+// Maps a physical address area into the virtual address space.
+// DO NOT USE MEMORY MAPPED WITH THIS AS A BUFFER TO OTHER CALLS.  For
+// example, don't WriteFile or NtWriteFile these buffers.  Copy them first.
+//
+// Differences from NT: PhysicalAddress is 32 bit, not 64.  ProtectionType
+//     specifies the page protections, but it's a Win32 PAGE_ macro instead
+//     of the normal NT enumeration.  PAGE_READWRITE is probably what you
+//     want...
 XBSYSAPI EXPORTNUM(177) xboxkrnl::PVOID NTAPI xboxkrnl::MmMapIoSpace
 (
 	IN PHYSICAL_ADDRESS PhysicalAddress,
@@ -419,6 +443,18 @@ XBSYSAPI EXPORTNUM(178) xboxkrnl::VOID NTAPI xboxkrnl::MmPersistContiguousMemory
 
 	// TODO: Actually set this up to be remember across a "reboot"
 	LOG_IGNORED();
+
+  // [PatrickvL] Shared memory would be a perfect fit for this,
+  // but the supplied pointer is already allocated. In order to
+  // change the 'shared' state of this memory, we would have to
+  // obtain the complete memory range (via CreateFileMapping)
+  // in one go, and use this for all allocation (much work, this).
+  // Another way would be assume 'contiguous memory' is the
+  // only type of memory being persisted, which would simplify
+  // the allocation procedure significantly.
+  // Another way could be to persist all registered blocks
+  // of memory at application shutdown, but restoring it in
+  // the next run at the same addresses could be troublesome.
 }
 
 // ******************************************************************
@@ -538,6 +574,9 @@ XBSYSAPI EXPORTNUM(182) xboxkrnl::VOID NTAPI xboxkrnl::MmSetAddressProtect
 // ******************************************************************
 // * 0x00B7 - MmUnmapIoSpace
 // ******************************************************************
+// Unmaps a virtual address mapping made by MmMapIoSpace.
+//
+// Differences from NT: None.
 XBSYSAPI EXPORTNUM(183) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmUnmapIoSpace
 (
 	IN PVOID BaseAddress,

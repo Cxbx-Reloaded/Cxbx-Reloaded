@@ -90,6 +90,7 @@ void PCSTProxy_log
 // PsCreateSystemThread proxy procedure
 #pragma warning(push)
 #pragma warning(disable: 4731)  // disable ebp modification warning
+// Dxbx Note : The signature of this function should conform to System.TThreadFunc !
 static unsigned int WINAPI PCSTProxy
 (
 	IN PVOID Parameter
@@ -188,6 +189,19 @@ callComplete:
 // ******************************************************************
 // * 0x00FF - PsCreateSystemThreadEx
 // ******************************************************************
+// Creates a system thread.
+// ThreadHandle: Receives the thread handle
+// ObjectAttributes: Unsure how this works (everything I've seen uses NULL)
+// KernelStackSize: Size of the allocation for both stack and TLS data
+// TlsDataSize: Size within KernelStackSize to use as TLS data
+// ThreadId: Receives the thread ID number
+// StartContext1: Parameter 1 to StartRoutine
+// StartContext2: Parameter 2 to StartRoutine
+// CreateSuspended: TRUE to create the thread as a suspended thread
+// DebugStack: TRUE to allocate the stack from Debug Kit memory
+// StartRoutine: Called when the thread is created
+//
+// New to the XBOX.
 XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
 (
 	OUT PHANDLE         ThreadHandle,
@@ -260,6 +274,9 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 // ******************************************************************
 // * 0x0102 - PsTerminateSystemThread
 // ******************************************************************
+// Exits the current system thread.  Must be called from a system thread.
+//
+// Differences from NT: None.
 XBSYSAPI EXPORTNUM(258) xboxkrnl::VOID NTAPI xboxkrnl::PsTerminateSystemThread
 (
 	IN NTSTATUS ExitStatus

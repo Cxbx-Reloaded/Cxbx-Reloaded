@@ -1088,6 +1088,16 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 			NativePath = CxbxBasePath;
 		}
 
+        // Check for special case : Partition0
+/* TODO : Translate this Dxbx code :
+        if (StartsWithText(XboxFullPath, DeviceHarddisk0Partition0))
+	    {
+	      CxbxKrnlCleanup("Partition0 access not implemented yet! Tell PatrickvL what title triggers this.");
+	      // TODO : Redirect raw sector-access to the 'Partition0_ConfigData.bin' file
+	      // (This file probably needs to be pre-initialized somehow too).
+    	}
+*/
+
 		DbgPrintf("EmuKrnl : %s Corrected path...\n", aFileAPIName.c_str());
 		DbgPrintf("  Org:\"%s\"\n", OriginalPath.c_str());
 		if (_strnicmp(NativePath.c_str(), CxbxBasePath.c_str(), CxbxBasePath.length()) == 0)
@@ -1521,6 +1531,9 @@ XBSYSAPI EXPORTNUM(198) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFlushBuffersFile
 // ******************************************************************
 // * 0x00C7 - NtFreeVirtualMemory
 // ******************************************************************
+// Frees virtual memory.
+//
+// Differences from NT: There is no ProcessHandle parameter.
 XBSYSAPI EXPORTNUM(199) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
 (
 	IN OUT PVOID *BaseAddress,
@@ -1542,6 +1555,11 @@ XBSYSAPI EXPORTNUM(199) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
 // ******************************************************************
 // * 0x00CA - NtOpenFile
 // ******************************************************************
+// Opens a file or device object.  Same as calling:
+//   NtCreateFile(FileHandle, DesiredAccess, ObjectAttributes,
+//     IoStatusBlock, NULL, 0, ShareAccess, OPEN_EXISTING, OpenOptions);
+//
+// Differences from NT: See NtCreateFile.
 XBSYSAPI EXPORTNUM(202) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenFile
 (
 	OUT PHANDLE             FileHandle,
@@ -1590,7 +1608,7 @@ XBSYSAPI EXPORTNUM(203) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenSymbolicLinkObj
 	symbolicLinkObject = FindNtSymbolicLinkObjectByName(std::string(ObjectAttributes->ObjectName->Buffer, ObjectAttributes->ObjectName->Length));
 	if (symbolicLinkObject != NULL)
 	{
-		// Return a new handle
+        // Return a new handle (which is an EmuHandle, actually) :
 		*LinkHandle = symbolicLinkObject->NewHandle();
 		ret = STATUS_SUCCESS;
 	}
@@ -2151,7 +2169,7 @@ XBSYSAPI EXPORTNUM(228) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetSystemTime
 
 	// Maybe it's not such a good idea to allow Cxbx to change your time 
 	// clock.  Might need admin privileges to do this.... dunno.
-
+    // TODO -oDxbx: Surely, we won't set the system time here, but we CAN remember a delta (and apply that in KeQuerySystemTime)
 	LOG_UNIMPLEMENTED();
 
 	NTSTATUS ret = STATUS_SUCCESS;
@@ -2305,7 +2323,7 @@ XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 		LOG_FUNC_END;
 
 	NTSTATUS ret;
-
+    // TODO -oDxbx : What should we do with the (currently ignored) WaitMode?
 	if (IsEmuHandle(Handle))
 	{
 		ret = WAIT_FAILED;
@@ -2354,16 +2372,19 @@ XBSYSAPI EXPORTNUM(235) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForMultipleObje
 // ******************************************************************
 // * 0x00EC - NtWriteFile
 // ******************************************************************
+// Writes a file.
+//
+// Differences from NT: There is no Key parameter.
 XBSYSAPI EXPORTNUM(236) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFile
 (
-	IN  HANDLE          FileHandle,            // TODO: correct paramters
-	IN  PVOID           Event,
-	IN  PVOID           ApcRoutine,
-	IN  PVOID           ApcContext,
-	OUT PVOID           IoStatusBlock,
+	IN  HANDLE          FileHandle,
+	IN  HANDLE          Event,
+	IN  PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+	IN  PVOID           ApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	IN  PVOID           Buffer,
 	IN  ULONG           Length,
-	IN  PLARGE_INTEGER  ByteOffset
+	IN  PLARGE_INTEGER  ByteOffset OPTIONAL
 )
 {
 	LOG_FUNC_BEGIN

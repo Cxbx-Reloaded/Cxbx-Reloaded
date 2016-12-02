@@ -60,6 +60,13 @@ XBSYSAPI EXPORTNUM(245) xboxkrnl::DWORD xboxkrnl::ObpObjectHandleTable[1] = {};
 // TODO : What should we initialize this to?
 XBSYSAPI EXPORTNUM(249) xboxkrnl::POBJECT_TYPE xboxkrnl::ObSymbolicLinkObjectType = NULL;
 
+// ObReferenceObjectByHandle:
+// Turns a handle into a kernel object pointer.  The ObjectType parameter
+// specifies what type of object it is.  This function also increments the
+// object's reference count.
+//
+// Differences from NT: There are no DesiredAccess, AccessMode, or
+//     HandleInformation parameters.
 XBSYSAPI EXPORTNUM(246) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByHandle
 (
 	IN HANDLE Handle,
