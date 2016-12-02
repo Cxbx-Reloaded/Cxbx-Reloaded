@@ -175,6 +175,28 @@ typedef long                            NTSTATUS;
 #define PAGE_WRITECOMBINE      0x400
 
 // ******************************************************************
+// * memory
+// ******************************************************************
+
+// Define virtual base and alternate virtual base of kernel.
+#define KSEG0_BASE                  0x80000000
+
+// Define virtual base addresses for physical memory windows.
+#define MM_SYSTEM_PHYSICAL_MAP      KSEG0_BASE
+
+#define MM_HIGHEST_PHYSICAL_PAGE    0x07FFF
+#define MM_64M_PHYSICAL_PAGE        0x04000
+#define MM_INSTANCE_PHYSICAL_PAGE   0x03FE0 // Chihiro arcade should use 0x07FF0
+
+#define MM_INSTANCE_PAGE_COUNT      16
+
+#define PAGE_SHIFT                  12
+
+// Convert a physical frame number to its corresponding physical address.
+#define MI_CONVERT_PFN_TO_PHYSICAL(Pfn) \
+	((PCHAR)MM_SYSTEM_PHYSICAL_MAP + ((ULONG)(Pfn) << PAGE_SHIFT))
+
+// ******************************************************************
 // * calling conventions
 // ******************************************************************
 #define NTAPI               __stdcall

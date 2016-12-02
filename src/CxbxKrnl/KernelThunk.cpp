@@ -232,7 +232,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::MmAllocateContiguousMemory),      // 0x00A5 (165)
 	(uint32)FUNC(&xboxkrnl::MmAllocateContiguousMemoryEx),    // 0x00A6 (166)
 	(uint32)FUNC(&xboxkrnl::MmAllocateSystemMemory),          // 0x00A7 (167)
-	(uint32)PANIC(0x00A8),                                    // 0x00A8 (168) MmClaimGpuInstanceMemory
+	(uint32)FUNC(&xboxkrnl::MmClaimGpuInstanceMemory),        // 0x00A8 (168)
 	(uint32)FUNC(&xboxkrnl::MmCreateKernelStack),             // 0x00A9 (169)
 	(uint32)FUNC(&xboxkrnl::MmDeleteKernelStack),             // 0x00AA (170)
 	(uint32)FUNC(&xboxkrnl::MmFreeContiguousMemory),          // 0x00AB (171)

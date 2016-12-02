@@ -174,6 +174,35 @@ XBSYSAPI EXPORTNUM(167) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateSystemMemory
 }
 
 // ******************************************************************
+// * 0x00A8 - MmClaimGpuInstanceMemory
+// ******************************************************************
+XBSYSAPI EXPORTNUM(168) xboxkrnl::PVOID NTAPI xboxkrnl::MmClaimGpuInstanceMemory
+(
+	IN SIZE_T NumberOfBytes,
+	OUT SIZE_T *NumberOfPaddingBytes
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(NumberOfBytes)
+		LOG_FUNC_ARG_OUT(NumberOfPaddingBytes)
+		LOG_FUNC_END;
+
+	*NumberOfPaddingBytes = MI_CONVERT_PFN_TO_PHYSICAL(MM_64M_PHYSICAL_PAGE) -
+		MI_CONVERT_PFN_TO_PHYSICAL(MM_INSTANCE_PHYSICAL_PAGE + MM_INSTANCE_PAGE_COUNT);
+	// Chihiro arcade should use *NumberOfPaddingBytes = 0;
+
+	if (NumberOfBytes != MAXULONG_PTR)
+	{
+		LOG_UNIMPLEMENTED();
+	}
+
+	PVOID Result = (PUCHAR)MI_CONVERT_PFN_TO_PHYSICAL(MM_HIGHEST_PHYSICAL_PAGE + 1)
+		- *NumberOfPaddingBytes;
+
+	RETURN(Result);
+}
+
+// ******************************************************************
 // * 0x00A9 - MmCreateKernelStack
 // ******************************************************************
 // * Differences from NT: Custom stack size.

@@ -48,7 +48,11 @@ XBSYSAPI EXPORTNUM(167) PVOID NTAPI MmAllocateSystemMemory
     ULONG Protect
 );
 
-XBSYSAPI VOID *MmClaimGpuInstanceMemory;
+XBSYSAPI EXPORTNUM(168) PVOID NTAPI MmClaimGpuInstanceMemory
+(
+	IN SIZE_T NumberOfBytes,
+	OUT SIZE_T *NumberOfPaddingBytes
+);
 
 // ******************************************************************
 // * MmCreateKernelStack
