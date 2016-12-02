@@ -165,8 +165,6 @@ bool EmuX86_MOV(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
 			default:
 				return false;
 		}
-	
-		return true;
 	}
 	else if (info.operand[0].type == Zydis::OperandType::MEMORY && info.operand[1].type == Zydis::OperandType::REGISTER)
 	{
@@ -194,8 +192,6 @@ bool EmuX86_MOV(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
 			default:
 				return false;
 		}
-
-		return true;
 	}
 	else if (info.operand[0].type == Zydis::OperandType::MEMORY && info.operand[1].type == Zydis::OperandType::IMMEDIATE)
 	{
@@ -218,11 +214,19 @@ bool EmuX86_MOV(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
 		default:
 			return false;
 		}
-	
-		return true;
 	}
+	else
+		return false;
+		
+/*  TODO : What flags need to be set at a successfull MOV ?
 
-	return false;
+	EmuX86_SetFlag(e, EMUX86_EFLAG_CF, 0);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_OF, 0);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_SF, 0);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_ZF, 0);
+	EmuX86_SetFlag(e, EMUX86_EFLAG_PF, 0);
+*/
+	return true;
 }
 
 inline void EmuX86_SetFlag(LPEXCEPTION_POINTERS e, int flag, int value)
@@ -273,17 +277,16 @@ bool EmuX86_TEST(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
 	}
 
 	// Set CF/OF to 0
+	// TODO FIXME using http://www.emulators.com/docs/nx11_flags.htm#Faster_Lazy_Evaluation
 	EmuX86_SetFlag(e, EMUX86_EFLAG_CF, 0);
 	EmuX86_SetFlag(e, EMUX86_EFLAG_OF, 0);
 
 	EmuX86_SetFlag(e, EMUX86_EFLAG_SF, result >> 31);
 	EmuX86_SetFlag(e, EMUX86_EFLAG_ZF, result == 0 ? 1 : 0);
 
-	// Set Parity Flag using "Compute parity in parallel" :
-	// Source : http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
-	uint32_t v = result;  // word value to compute the parity of
-	v ^= v >> 16;
-	v ^= v >> 8;
+	// Set Parity flag, based on "Compute parity in parallel" method from
+	// http://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
+	uint32_t v = 255 & result;
 	v ^= v >> 4;
 	v &= 0xf;
 	EmuX86_SetFlag(e, EMUX86_EFLAG_PF, (0x6996 >> v) & 1);
