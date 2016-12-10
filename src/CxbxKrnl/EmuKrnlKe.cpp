@@ -193,6 +193,31 @@ XBSYSAPI EXPORTNUM(99) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeDelayExecutionThread
 }
 
 // ******************************************************************
+// * 0x0064 - KeDisconnectInterrupt
+// ******************************************************************
+XBSYSAPI EXPORTNUM(100) xboxkrnl::VOID NTAPI xboxkrnl::KeDisconnectInterrupt
+(
+	IN PKINTERRUPT  InterruptObject
+) 
+{
+	LOG_FUNC_ONE_ARG(InterruptObject);
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * 0x0068 - KeGetCurrentThread
+// ******************************************************************
+XBSYSAPI EXPORTNUM(104) xboxkrnl::PKTHREAD NTAPI xboxkrnl::KeGetCurrentThread(void)
+{
+	LOG_FUNC();
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(NULL);
+}
+
+// ******************************************************************
 // * 0x006B - KeInitializeDpc
 // ******************************************************************
 XBSYSAPI EXPORTNUM(107) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeDpc
@@ -268,6 +293,27 @@ XBSYSAPI EXPORTNUM(113) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeTimerEx
 
 	Timer->DueTime.QuadPart = 0;
 	Timer->Period = 0;
+}
+
+// ******************************************************************
+// * 0x0077 - KeInsertQueueDpc
+// ******************************************************************
+XBSYSAPI EXPORTNUM(119) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertQueueDpc
+(
+	IN PKDPC        Dpc,
+	IN PVOID        SystemArgument1,
+	IN PVOID        SystemArgument2
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Dpc)
+		LOG_FUNC_ARG(SystemArgument1)
+		LOG_FUNC_ARG(SystemArgument2)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(TRUE);
 }
 
 // Dxbx note : This was once a value, but instead we now point to

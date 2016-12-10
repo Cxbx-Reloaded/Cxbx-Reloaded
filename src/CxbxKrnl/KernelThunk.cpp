@@ -165,11 +165,11 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::KeCancelTimer),                   // 0x0061 (97)
 	(uint32)FUNC(&xboxkrnl::KeConnectInterrupt),              // 0x0062 (98)
 	(uint32)FUNC(&xboxkrnl::KeDelayExecutionThread),          // 0x0063 (99)
-	(uint32)PANIC(0x0064),                                    // 0x0064 (100) KeDisconnectInterrupt
+	(uint32)FUNC(&xboxkrnl::KeDisconnectInterrupt),           // 0x0064 (100
 	(uint32)PANIC(0x0065),                                    // 0x0065 (101) KeEnterCriticalRegion
 	(uint32)VARIABLE(&xboxkrnl::MmGlobalData),                // 0x0066 (102)
 	(uint32)PANIC(0x0067),                                    // 0x0067 (103) KeGetCurrentIrql
-	(uint32)PANIC(0x0068),                                    // 0x0068 (104) KeGetCurrentThread
+	(uint32)FUNC(&xboxkrnl::KeGetCurrentThread),              // 0x0068 (104)
 	(uint32)PANIC(0x0069),                                    // 0x0069 (105) KeInitializeApc
 	(uint32)PANIC(0x006A),                                    // 0x006A (106) KeInitializeDeviceQueue
 	(uint32)FUNC(&xboxkrnl::KeInitializeDpc),                 // 0x006B (107)
@@ -184,7 +184,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0074),                                    // 0x0074 (116) KeInsertHeadQueue
 	(uint32)PANIC(0x0075),                                    // 0x0075 (117) KeInsertQueue
 	(uint32)PANIC(0x0076),                                    // 0x0076 (118) KeInsertQueueApc
-	(uint32)PANIC(0x0077),                                    // 0x0077 (119) KeInsertQueueDpc
+	(uint32)FUNC(&xboxkrnl::KeInsertQueueDpc),                // 0x0077 (119)
 	(uint32)VARIABLE(0x0078),                                 // 0x0078 (120) KeInterruptTime (Set by ConnectWindowsTimersToThunkTable)
 	(uint32)PANIC(0x0079),                                    // 0x0079 (121) KeIsExecutingDpc
 	(uint32)PANIC(0x007A),                                    // 0x007A (122) KeLeaveCriticalRegion
