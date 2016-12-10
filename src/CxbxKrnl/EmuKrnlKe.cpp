@@ -313,13 +313,14 @@ XBSYSAPI EXPORTNUM(128) xboxkrnl::VOID NTAPI xboxkrnl::KeQuerySystemTime
 {
 	LOG_FUNC_ONE_ARG(CurrentTime);
 
-	// TODO: optimize for WinXP if speed ever becomes important here
+	if (CurrentTime != NULL)
+	{
+		LARGE_INTEGER HostSystemTime;
+		GetSystemTimeAsFileTime((LPFILETIME)&HostSystemTime); // Available since Windows 2000 (NOT on XP!)
 
-	SYSTEMTIME SystemTime;
-
-	GetSystemTime(&SystemTime);
-
-	SystemTimeToFileTime(&SystemTime, (LPFILETIME)CurrentTime);
+		// Apply the delta set in xboxkrnl::NtSetSystemTime to get the Xbox system time :
+		CurrentTime->QuadPart = HostSystemTime.QuadPart + HostSystemTimeDelta.QuadPart;
+	}
 }
 
 // ******************************************************************

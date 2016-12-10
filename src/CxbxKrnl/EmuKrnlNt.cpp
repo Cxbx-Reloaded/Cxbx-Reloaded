@@ -1808,7 +1808,7 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 		LOG_FUNC_ARG(FileInfo)
 		LOG_FUNC_END;
 
-	// TODO: IIRC, this function is depreciated.  Maybe we should just use
+	// TODO: IIRC, this function is deprecated.  Maybe we should just use
 	// ZwQueryInformationFile instead?
 
 	//    if(FileInfo != FilePositionInformation && FileInfo != FileNetworkOpenInformation)
@@ -2167,12 +2167,31 @@ XBSYSAPI EXPORTNUM(228) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetSystemTime
 		LOG_FUNC_ARG_OUT(PreviousTime)
 		LOG_FUNC_END;
 
-	// Maybe it's not such a good idea to allow Cxbx to change your time 
-	// clock.  Might need admin privileges to do this.... dunno.
-    // TODO -oDxbx: Surely, we won't set the system time here, but we CAN remember a delta (and apply that in KeQuerySystemTime)
-	LOG_UNIMPLEMENTED();
+	NTSTATUS ret = STATUS_SUCCESS; // TODO : Does Xbox returns STATUS_PRIVILEGE_NOT_HELD (supports SeSystemtimePrivlege)?
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	if (PreviousTime == NULL && SystemTime == NULL)
+		ret = STATUS_ACCESS_VIOLATION;
+	else
+	{
+		// Surely, we won't set the system time here, but we CAN remember a delta to the host system time;
+		LARGE_INTEGER HostSystemTime;
+		GetSystemTimeAsFileTime((LPFILETIME)&HostSystemTime); // Available since Windows 2000 (NOT on XP!)
+
+		// Is the previous time requested?
+		if (PreviousTime != NULL)
+			// Apply current HostSystemTimeDelta, same as in xboxkrnl::KeQuerySystemTime :
+			PreviousTime->QuadPart = HostSystemTime.QuadPart + HostSystemTimeDelta.QuadPart;
+
+		// Is a new time given?
+		if (SystemTime != NULL)
+		{
+			if (SystemTime->QuadPart > 0)
+				// Calculate new HostSystemTimeDelta, to be used in xboxkrnl::KeQuerySystemTime :
+				HostSystemTimeDelta.QuadPart = HostSystemTime.QuadPart - SystemTime->QuadPart;
+			else
+				ret = STATUS_INVALID_PARAMETER;
+		}
+	}
 
 	RETURN(ret);
 }

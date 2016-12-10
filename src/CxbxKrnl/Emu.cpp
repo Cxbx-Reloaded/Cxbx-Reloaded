@@ -76,6 +76,9 @@ volatile bool    g_bEmuException = false;
 volatile bool    g_bEmuSuspended = false;
 volatile bool    g_bPrintfOn = true;
 
+// Delta added to host SystemTime, used in xboxkrnl::KeQuerySystemTime and xboxkrnl::NtSetSystemTime
+LARGE_INTEGER	HostSystemTimeDelta = {};
+
 // Static Function(s)
 static int ExitException(LPEXCEPTION_POINTERS e);
 
