@@ -48,7 +48,7 @@ XBSYSAPI EXPORTNUM(43) BOOLEAN NTAPI HalEnableSystemInterrupt
 XBSYSAPI EXPORTNUM(44) ULONG  NTAPI HalGetInterruptVector
 (
     IN ULONG   InterruptLevel,
-    OUT CHAR*  Irql
+    OUT PKIRQL Irql
 );
 
 // ******************************************************************

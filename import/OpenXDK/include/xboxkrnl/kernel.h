@@ -67,14 +67,21 @@ XBSYSAPI EXPORTNUM(99) NTSTATUS NTAPI KeDelayExecutionThread
     IN PLARGE_INTEGER   Interval
 );
 
-XBSYSAPI VOID *KeDisconnectInterrupt;
+// ******************************************************************
+// * KeDisconnectInterrupt
+// ******************************************************************
+XBSYSAPI EXPORTNUM(100) VOID NTAPI KeDisconnectInterrupt
+(
+    IN PKINTERRUPT  InterruptObject
+);
+
 XBSYSAPI VOID *KeEnterCriticalRegion;
 XBSYSAPI VOID *KeGetCurrentIrql;
 
 // ******************************************************************
 // * KeGetCurrentThread
 // ******************************************************************
-XBSYSAPI VOID *KeGetCurrentThread;
+XBSYSAPI EXPORTNUM(104) PKTHREAD NTAPI KeGetCurrentThread(void);
 
 XBSYSAPI VOID *KeInitializeApc;
 XBSYSAPI VOID *KeInitializeDeviceQueue;
@@ -124,7 +131,17 @@ XBSYSAPI VOID *KeInsertDeviceQueue;
 XBSYSAPI VOID *KeInsertHeadQueue;
 XBSYSAPI VOID *KeInsertQueue;
 XBSYSAPI VOID *KeInsertQueueApc;
-XBSYSAPI VOID *KeInsertQueueDpc;
+
+// ******************************************************************
+// * KeInsertQueueDpc
+// ******************************************************************
+XBSYSAPI EXPORTNUM(119) BOOLEAN NTAPI KeInsertQueueDpc
+(
+    IN PKDPC        Dpc,
+    IN PVOID        SystemArgument1,
+    IN PVOID        SystemArgument2
+);
+
 XBSYSAPI VOID *KeInterruptTime;
 XBSYSAPI VOID *KeIsExecutingDpc;
 XBSYSAPI VOID *KeLeaveCriticalRegion;
@@ -135,12 +152,12 @@ XBSYSAPI VOID *KeQueryInterruptTime;
 // ******************************************************************
 // * KeQueryPerformanceCounter
 // ******************************************************************
-XBSYSAPI EXPORTNUM(126) ULONGLONG NTAPI KeQueryPerformanceCounter();
+XBSYSAPI EXPORTNUM(126) ULONGLONG NTAPI KeQueryPerformanceCounter(void);
 
 // ******************************************************************
 // * KeQueryPerformanceFrequency
 // ******************************************************************
-XBSYSAPI EXPORTNUM(127) ULONGLONG NTAPI KeQueryPerformanceFrequency();
+XBSYSAPI EXPORTNUM(127) ULONGLONG NTAPI KeQueryPerformanceFrequency(void);
 
 // ******************************************************************
 // * KeQuerySystemTime
@@ -211,6 +228,9 @@ XBSYSAPI EXPORTNUM(150) BOOLEAN NTAPI KeSetTimerEx
     IN PKDPC          Dpc OPTIONAL
 );
 
+// ******************************************************************
+// * KeStallExecutionProcessor
+// ******************************************************************
 XBSYSAPI EXPORTNUM(151) VOID NTAPI KeStallExecutionProcessor
 (
 	IN ULONG MicroSeconds

@@ -15,7 +15,7 @@
 // ******************************************************************
 // * AvGetSavedDataAddress
 // ******************************************************************
-XBSYSAPI EXPORTNUM(1) PVOID NTAPI AvGetSavedDataAddress();
+XBSYSAPI EXPORTNUM(1) PVOID NTAPI AvGetSavedDataAddress(void);
 
 // ******************************************************************
 // * AvSendTVEncoderOption
@@ -94,10 +94,13 @@ XBSYSAPI EXPORTNUM(164) PLAUNCH_DATA_PAGE LaunchDataPage;
 
 XBSYSAPI EXPORTNUM(252) NTSTATUS NTAPI PhyGetLinkState
 (
+	IN ULONG	Mode
 );
 
 XBSYSAPI EXPORTNUM(253) NTSTATUS NTAPI PhyInitialize
 (
+	IN ULONG	Parameter1,
+	IN ULONG	Parameter2
 );
 
 // ******************************************************************

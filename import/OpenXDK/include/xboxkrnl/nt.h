@@ -105,7 +105,7 @@ XBSYSAPI EXPORTNUM(192) NTSTATUS NTAPI NtCreateMutant
 XBSYSAPI EXPORTNUM(193) NTSTATUS NTAPI NtCreateSemaphore
 (
     OUT PHANDLE             SemaphoreHandle,
-    IN  POBJECT_ATTRIBUTES  ObjectAttributes,
+    IN  POBJECT_ATTRIBUTES  ObjectAttributes OPTIONAL,
     IN  ULONG               InitialCount,
     IN  ULONG               MaximumCount
 );
@@ -184,7 +184,14 @@ XBSYSAPI EXPORTNUM(205) NTSTATUS NTAPI NtProtectVirtualMemory(
 );
 
 
-XBSYSAPI VOID *NtPulseEvent;
+// ******************************************************************
+// * NtPulseEvent
+// ******************************************************************
+XBSYSAPI EXPORTNUM(205) NTSTATUS NTAPI NtPulseEvent
+(
+    IN HANDLE                       EventHandle,
+    OUT PLONG                       PreviousState OPTIONAL
+);
 
 // ******************************************************************
 // * NtQueueApcThread
@@ -313,7 +320,7 @@ XBSYSAPI EXPORTNUM(222) NTSTATUS NTAPI NtReleaseSemaphore
 (
     IN  HANDLE  SemaphoreHandle,
     IN  ULONG   ReleaseCount,
-    OUT PULONG  PreviousCount
+    OUT PULONG  PreviousCount OPTIONAL
 );
 
 XBSYSAPI VOID *NtRemoveIoCompletion;
@@ -398,7 +405,7 @@ XBSYSAPI EXPORTNUM(233) NTSTATUS NTAPI NtWaitForSingleObject
 (
     IN  HANDLE  Handle,
     IN  BOOLEAN Alertable,
-    IN  PVOID   Timeout
+	IN	PLARGE_INTEGER Timeout
 );
 
 // ******************************************************************
@@ -449,7 +456,7 @@ XBSYSAPI VOID *NtWriteFileGather;
 // ******************************************************************
 // * NtYieldExecution
 // ******************************************************************
-XBSYSAPI EXPORTNUM(238) VOID NTAPI NtYieldExecution();
+XBSYSAPI EXPORTNUM(238) VOID NTAPI NtYieldExecution(void);
 
 #endif
 

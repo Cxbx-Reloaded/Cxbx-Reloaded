@@ -270,7 +270,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::NtOpenFile),                      // 0x00CA (202)
 	(uint32)FUNC(&xboxkrnl::NtOpenSymbolicLinkObject),        // 0x00CB (203)
 	(uint32)FUNC(&xboxkrnl::NtProtectVirtualMemory),          // 0x00CC (204)
-	(uint32)PANIC(0x00CD),                                    // 0x00CD (205) NtPulseEvent
+	(uint32)FUNC(&xboxkrnl::NtPulseEvent),                    // 0x00CD (205)
 	(uint32)FUNC(&xboxkrnl::NtQueueApcThread),                // 0x00CE (206)
 	(uint32)FUNC(&xboxkrnl::NtQueryDirectoryFile),            // 0x00CF (207)
 	(uint32)PANIC(0x00D0),                                    // 0x00D0 (208) NtQueryDirectoryObject

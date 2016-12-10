@@ -22,11 +22,13 @@ extern "C"
 // ******************************************************************
 #define DECLSPEC_IMPORT __declspec(dllimport)
 #define DECLSPEC_EXPORT __declspec(dllexport)
+#define DECLSPEC_EXTERN extern
 
 // ******************************************************************
 // * kernel exports, others either import or link locally
 // ******************************************************************
 #define XBSYSAPI DECLSPEC_IMPORT
+
 #ifdef _XBOXKRNL_INTERNAL_
 #undef  XBSYSAPI
 #define XBSYSAPI DECLSPEC_EXPORT
@@ -34,7 +36,7 @@ extern "C"
 #endif
 #ifdef _XBOXKRNL_DEFEXTRN_
 #undef  XBSYSAPI
-#define XBSYSAPI extern
+#define XBSYSAPI DECLSPEC_EXTERN
 // The KRNL macro prevents naming collisions
 #define KRNL(API) KRNL##API
 #endif
@@ -215,11 +217,11 @@ typedef long                            NTSTATUS;
 // ******************************************************************
 // * documentation purposes only
 // ******************************************************************
-#define EXPORTNUM(a)
-#define UNALIGNED
-#define OPTIONAL
+#define EXPORTNUM(ordinal)
 #define IN
 #define OUT
+#define OPTIONAL
+#define UNALIGNED
 
 // ******************************************************************
 // * KPROCESSOR_MODE
@@ -940,6 +942,7 @@ KINTERRUPT, *PKINTERRUPT;
 typedef void* PKSERVICE_ROUTINE;
 
 typedef CHAR KIRQL;
+typedef KIRQL* PKIRQL;
 
 // ******************************************************************
 // * KINTERRUPT_MODE

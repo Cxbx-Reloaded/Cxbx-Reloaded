@@ -1391,7 +1391,7 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 (
 	OUT PHANDLE             SemaphoreHandle,
-	IN  POBJECT_ATTRIBUTES  ObjectAttributes,
+	IN  POBJECT_ATTRIBUTES  ObjectAttributes OPTIONAL,
 	IN  ULONG               InitialCount,
 	IN  ULONG               MaximumCount
 )
@@ -1624,7 +1624,7 @@ XBSYSAPI EXPORTNUM(203) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenSymbolicLinkObj
 // ******************************************************************
 // * 0x00CC - NtProtectVirtualMemory
 // ******************************************************************
-XBSYSAPI EXPORTNUM(205) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtProtectVirtualMemory
+XBSYSAPI EXPORTNUM(204) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtProtectVirtualMemory
 (
 	IN OUT PVOID *BaseAddress,
 	IN OUT PSIZE_T RegionSize,
@@ -1640,6 +1640,22 @@ XBSYSAPI EXPORTNUM(205) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtProtectVirtualMemor
 		LOG_FUNC_END;
 
 	LOG_IGNORED();
+
+	RETURN(STATUS_SUCCESS);
+}
+
+XBSYSAPI EXPORTNUM(205) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtPulseEvent
+(
+	IN HANDLE                       EventHandle,
+	OUT PLONG                       PreviousState OPTIONAL
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(EventHandle)
+		LOG_FUNC_ARG_OUT(PreviousState)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
 
 	RETURN(STATUS_SUCCESS);
 }
@@ -2068,7 +2084,7 @@ XBSYSAPI EXPORTNUM(222) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseSemaphore
 (
 	IN  HANDLE              SemaphoreHandle,
 	IN  ULONG               ReleaseCount,
-	OUT PULONG              PreviousCount
+	OUT PULONG              PreviousCount OPTIONAL
 )
 {
 	LOG_FUNC_BEGIN
@@ -2295,7 +2311,7 @@ XBSYSAPI EXPORTNUM(233) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 (
     IN  HANDLE  Handle,
     IN  BOOLEAN Alertable,
-    IN  PVOID   Timeout
+    IN  PLARGE_INTEGER   Timeout
 )
 {
 	LOG_FUNC_BEGIN

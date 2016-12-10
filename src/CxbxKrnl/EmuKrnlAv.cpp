@@ -58,7 +58,7 @@ PVOID g_pPersistedData = NULL;
 // ******************************************************************
 // * 0x0001 AvGetSavedDataAddress()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress()
+XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress(void)
 {
 	LOG_FUNC();
 

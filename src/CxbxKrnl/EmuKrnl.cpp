@@ -297,9 +297,10 @@ XBSYSAPI EXPORTNUM(163) xboxkrnl::VOID FASTCALL xboxkrnl::KiUnlockDispatcherData
 
 XBSYSAPI EXPORTNUM(252) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PhyGetLinkState
 (
+	IN ULONG	Mode
 )
 {
-	LOG_FUNC();
+	LOG_FUNC_ONE_ARG(Mode);
 
 	LOG_UNIMPLEMENTED();
 
@@ -308,9 +309,14 @@ XBSYSAPI EXPORTNUM(252) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PhyGetLinkState
 
 XBSYSAPI EXPORTNUM(253) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PhyInitialize
 (
+	IN ULONG	Parameter1,
+	IN ULONG	Parameter2
 )
 {
-	LOG_FUNC();
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Parameter1)
+		LOG_FUNC_ARG(Parameter2)
+		LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
 

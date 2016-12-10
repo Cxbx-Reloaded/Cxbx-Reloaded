@@ -141,7 +141,7 @@ XBSYSAPI EXPORTNUM(43) xboxkrnl::BOOLEAN NTAPI xboxkrnl::HalEnableSystemInterrup
 XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG  NTAPI xboxkrnl::HalGetInterruptVector
 (
 	IN ULONG   InterruptLevel,
-	OUT CHAR*  Irql
+	OUT PKIRQL  Irql
 )
 {
 	LOG_FUNC_BEGIN
