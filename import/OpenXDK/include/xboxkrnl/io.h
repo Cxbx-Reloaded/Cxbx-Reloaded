@@ -74,7 +74,11 @@ XBSYSAPI VOID *IoSynchronousDeviceIoControlRequest;
 XBSYSAPI VOID *IoSynchronousFsdRequest;
 XBSYSAPI VOID *IofCallDriver;
 XBSYSAPI VOID *IofCompleteRequest;
-XBSYSAPI VOID *IoDismountVolume;
+
+XBSYSAPI EXPORTNUM(90) NTSTATUS NTAPI IoDismountVolume
+(
+	IN PDEVICE_OBJECT DeviceObject
+);
 
 // ******************************************************************
 // * IoDismountVolumeByName

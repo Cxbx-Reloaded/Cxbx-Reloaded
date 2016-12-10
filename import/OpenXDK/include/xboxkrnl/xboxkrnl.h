@@ -38,6 +38,8 @@ extern "C"
 // The KRNL macro prevents naming collisions
 #define KRNL(API) KRNL##API
 #endif
+#define RESTRICTED_POINTER
+//TODO : When #define RESTRICTED_POINTER __restrict
 
 // ******************************************************************
 // * Null
@@ -500,16 +502,6 @@ typedef struct _FILETIME
 }
 FILETIME, *PFILETIME;
 
-typedef struct _ERWLOCK {
-	LONG LockCount;
-	ULONG WritersWaitingCount;
-	ULONG ReadersWaitingCount;
-	ULONG ReadersEntryCount;
-// TODO : Enable once KEVENT and KSEMAPHORE are defined :
-//	KEVENT WriterEvent;
-//	KSEMAPHORE ReaderSemaphore;
-} ERWLOCK, *PERWLOCK;
-
 // Source : DXBX (Xbox Refurb Info)
 typedef struct _XBOX_REFURB_INFO
 {
@@ -805,6 +797,51 @@ typedef struct _DISPATCHER_HEADER
     LIST_ENTRY  WaitListHead;   // 0x08
 }
 DISPATCHER_HEADER;
+
+typedef struct _KEVENT {
+	DISPATCHER_HEADER Header;
+} KEVENT, *PKEVENT, *RESTRICTED_POINTER PRKEVENT;
+
+typedef struct _KSEMAPHORE {
+	DISPATCHER_HEADER Header;
+	LONG Limit;
+} KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
+
+typedef struct _ERWLOCK {
+	LONG LockCount;
+	ULONG WritersWaitingCount;
+	ULONG ReadersWaitingCount;
+	ULONG ReadersEntryCount;
+	KEVENT WriterEvent;
+	KSEMAPHORE ReaderSemaphore;
+} ERWLOCK, *PERWLOCK;
+
+typedef struct _KDEVICE_QUEUE {
+	CSHORT Type;
+	UCHAR Size;
+	BOOLEAN Busy;
+	LIST_ENTRY DeviceListHead;
+} KDEVICE_QUEUE, *PKDEVICE_QUEUE, *RESTRICTED_POINTER PRKDEVICE_QUEUE;
+
+typedef struct _DEVICE_OBJECT {
+	CSHORT Type;
+	USHORT Size;
+	LONG ReferenceCount;
+	struct _DRIVER_OBJECT *DriverObject;
+	struct _DEVICE_OBJECT *MountedOrSelfDevice;
+	struct _IRP *CurrentIrp;
+	ULONG Flags;
+	PVOID DeviceExtension;
+	UCHAR DeviceType;
+	UCHAR StartIoFlags;
+	CCHAR StackSize;
+	BOOLEAN DeletePending;
+	ULONG SectorSize;
+	ULONG AlignmentRequirement;
+	KDEVICE_QUEUE DeviceQueue;
+	KEVENT DeviceLock;
+	ULONG StartIoKey;
+} DEVICE_OBJECT, *PDEVICE_OBJECT;
 
 // ******************************************************************
 // * TIMER_TYPE

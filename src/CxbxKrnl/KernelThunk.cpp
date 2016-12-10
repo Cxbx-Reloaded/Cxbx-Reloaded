@@ -155,7 +155,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0057),                                    // 0x0057 (87)  IofCompleteRequest
 	(uint32)VARIABLE(&xboxkrnl::KdDebuggerEnabled),           // 0x0058 (88)
 	(uint32)VARIABLE(&xboxkrnl::KdDebuggerNotPresent),        // 0x0059 (89)
-	(uint32)PANIC(0x005A),                                    // 0x005A (90)  IoDismountVolume
+	(uint32)FUNC(&xboxkrnl::IoDismountVolume),                // 0x005A (90)
 	(uint32)FUNC(&xboxkrnl::IoDismountVolumeByName),          // 0x005B (91)
 	(uint32)FUNC(&xboxkrnl::KeAlertResumeThread),             // 0x005C (92)
 	(uint32)FUNC(&xboxkrnl::KeAlertThread),                   // 0x005D (93)

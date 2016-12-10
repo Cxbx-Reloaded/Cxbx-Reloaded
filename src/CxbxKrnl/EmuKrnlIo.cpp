@@ -133,6 +133,19 @@ XBSYSAPI EXPORTNUM(70) xboxkrnl::POBJECT_TYPE xboxkrnl::IoDeviceObjectType = NUL
 // TODO : What should we initialize this to?
 XBSYSAPI EXPORTNUM(71) xboxkrnl::POBJECT_TYPE xboxkrnl::IoFileObjectType = NULL;
 
+XBSYSAPI EXPORTNUM(90) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDismountVolume
+(
+	IN PDEVICE_OBJECT DeviceObject
+)
+{
+	LOG_FUNC_ONE_ARG(DeviceObject);
+
+	NTSTATUS ret = STATUS_SUCCESS;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(ret);
+}
 // ******************************************************************
 // * IoDismountVolumeByName
 // ******************************************************************
