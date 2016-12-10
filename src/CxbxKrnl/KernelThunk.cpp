@@ -476,7 +476,11 @@ void ConnectWindowsTimersToThunkTable()
 	// time on updating them ourselves, and still get highly accurate timers!
 	// See http://www.dcl.hpi.uni-potsdam.de/research/WRK/2007/08/getting-os-information-the-kuser_shared_data-structure/
 
+	// Point Xbox KeInterruptTime to host InterruptTime:
 	CxbxKrnl_KernelThunkTable[120] = (uint32)&(USER_SHARED_DATA->InterruptTime);
+
+	// Point Xbox KeSystemTime to host SystemTime; If read directly (thus skipping
+	// KeQuerySystemTime), this value is not adjusted with HostSystemTimeDelta!
 	CxbxKrnl_KernelThunkTable[154] = (uint32)&(USER_SHARED_DATA->SystemTime);
 
 	// Note that we can't do the same for TickCount, as that timer
