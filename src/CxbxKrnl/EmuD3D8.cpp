@@ -866,6 +866,9 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     g_dwVertexShaderUsage = D3DUSAGE_SOFTWAREPROCESSING;
                 }
    
+				// Dxbx addition : Prevent Direct3D from changing the FPU Control word :
+				g_EmuCDPD.BehaviorFlags |= D3DCREATE_FPU_PRESERVE;
+
                 // Address debug DirectX runtime warning in _DEBUG builds
                 // Direct3D8: (WARN) :Device that was created without D3DCREATE_MULTITHREADED is being used by a thread other than the creation thread.
                 #ifdef _DEBUG
