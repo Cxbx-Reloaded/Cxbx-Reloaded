@@ -170,6 +170,7 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 
 	// ObjectAttributes are given, so make sure the pointer we're going to pass to Windows is assigned :
 	nativeObjectAttributes.NtObjAttrPtr = &nativeObjectAttributes.NtObjAttr;
+
 	RelativePath = std::string(ObjectAttributes->ObjectName->Buffer, ObjectAttributes->ObjectName->Length);
 	OriginalPath = RelativePath;
 
@@ -188,7 +189,7 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 			NtSymbolicLinkObject = FindNtSymbolicLinkObjectByVolumeLetter(RelativePath[0]);
 			RelativePath.erase(0, 2); // Remove 'C:'
 
-									  // If the remaining path starts with a ':', remove it (to prevent errors) :
+			// If the remaining path starts with a ':', remove it (to prevent errors) :
 			if ((RelativePath.length() > 0) && (RelativePath[0] == ':'))
 				RelativePath.erase(0, 1);  // xbmp needs this, as it accesses 'e::\'
 		}
@@ -215,15 +216,23 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 			// Fixup RelativePath path here
 			if ((NtSymbolicLinkObject != NULL))
 				RelativePath.erase(0, NtSymbolicLinkObject->XboxFullPath.length()); // Remove '\Device\Harddisk0\Partition2'
+			// else TODO : Turok requests 'gamedata.dat' without a preceding path, we probably need 'CurrentDir'-functionality
 		}
 
 		if ((NtSymbolicLinkObject != NULL))
 		{
+			NativePath = NtSymbolicLinkObject->NativePath;
+
 			// If the remaining path starts with a '\', remove it (to prevent working in a native root) :
 			if ((RelativePath.length() > 0) && (RelativePath[0] == '\\'))
+			{
 				RelativePath.erase(0, 1);
+				// And if needed, add it to the Native path instead :
+				if (NativePath.back() != '\\')
+					NativePath.append(1, '\\');
+			}
+
 			XboxFullPath = NtSymbolicLinkObject->XboxFullPath;
-			NativePath = NtSymbolicLinkObject->NativePath;
 			ObjectAttributes->RootDirectory = NtSymbolicLinkObject->RootDirectoryHandle;
 		}
 		else
