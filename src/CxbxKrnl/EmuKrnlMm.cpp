@@ -86,31 +86,10 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 	IN ULONG NumberOfBytes
 )
 {
-	LOG_FUNC_ONE_ARG(NumberOfBytes);
+	LOG_FUNC_FORWARD("MmAllocateContiguousMemoryEx");
 
-	//
-	// NOTE: Kludgey (but necessary) solution:
-	//
-	// Since this memory must be aligned on a page boundary, we must allocate an extra page
-	// so that we can return a valid page aligned pointer
-	//
-
-	PVOID pRet = CxbxMalloc(NumberOfBytes + 0x1000);
-
-	// align to page boundary
-	{
-		DWORD dwRet = (DWORD)pRet;
-
-		dwRet += 0x1000 - dwRet % 0x1000;
-
-		g_AlignCache.insert(dwRet, pRet);
-
-		pRet = (PVOID)dwRet;
-	}
-
-	DbgPrintf("EmuKrnl (0x%X): MmAllocateContiguousMemory returned 0x%.08X\n", GetCurrentThreadId(), pRet);
-
-	RETURN(pRet);
+	return MmAllocateContiguousMemoryEx(NumberOfBytes, 0, MAXULONG_PTR, 0,
+		PAGE_READWRITE);
 }
 
 // ******************************************************************
@@ -152,8 +131,6 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 
 		pRet = (PVOID)dwRet;
 	}
-
-	static int count = 0;
 
 	RETURN(pRet);
 }

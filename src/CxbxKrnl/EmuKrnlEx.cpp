@@ -89,11 +89,9 @@ XBSYSAPI EXPORTNUM(14) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePool
 	IN SIZE_T NumberOfBytes
 )
 {
-	LOG_FUNC_ONE_ARG(NumberOfBytes);
+	LOG_FUNC_FORWARD("ExAllocatePoolWithTag");
 
-	PVOID pRet = ExAllocatePoolWithTag(NumberOfBytes, (ULONG)"enoN"); // "None" in reverse?
-
-	RETURN(pRet);
+	return ExAllocatePoolWithTag(NumberOfBytes, (ULONG)"enoN"); // = "None" in reverse
 }
 
 // ******************************************************************
@@ -120,7 +118,7 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
 }
 
 // TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(16) xboxkrnl::POBJECT_TYPE xboxkrnl::ExEventObjectType = NULL;
+XBSYSAPI EXPORTNUM(16) xboxkrnl::OBJECT_TYPE xboxkrnl::ExEventObjectType = {};
 
 // ******************************************************************
 // * 0x0011 ExFreePool
@@ -218,7 +216,7 @@ XBSYSAPI EXPORTNUM(21) xboxkrnl::LONGLONG FASTCALL xboxkrnl::ExInterlockedCompar
 }
 
 // TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(22) xboxkrnl::POBJECT_TYPE xboxkrnl::ExMutantObjectType = NULL;
+XBSYSAPI EXPORTNUM(22) xboxkrnl::OBJECT_TYPE xboxkrnl::ExMutantObjectType = {};
 
 // ******************************************************************
 // * 0x0017 ExQueryPoolBlockSize
@@ -497,10 +495,10 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 }
 
 // TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(30) xboxkrnl::POBJECT_TYPE xboxkrnl::ExSemaphoreObjectType = NULL;
+XBSYSAPI EXPORTNUM(30) xboxkrnl::OBJECT_TYPE xboxkrnl::ExSemaphoreObjectType = {};
 
 // TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(31) xboxkrnl::POBJECT_TYPE xboxkrnl::ExTimerObjectType = NULL;
+XBSYSAPI EXPORTNUM(31) xboxkrnl::OBJECT_TYPE xboxkrnl::ExTimerObjectType = {};
 
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(32) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedInsertHeadList

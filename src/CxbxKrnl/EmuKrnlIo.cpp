@@ -48,7 +48,7 @@ namespace xboxkrnl
 #include "EmuFile.h" // For CxbxCreateSymbolicLink(), etc.
 
 // TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(64) xboxkrnl::POBJECT_TYPE xboxkrnl::IoCompletionObjectType = NULL;
+XBSYSAPI EXPORTNUM(64) xboxkrnl::OBJECT_TYPE xboxkrnl::IoCompletionObjectType = {};
 
 // ******************************************************************
 // * 0x0042 - IoCreateFile
@@ -150,10 +150,10 @@ XBSYSAPI EXPORTNUM(69) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDeleteSymbolicLink
 }
 
 // TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(70) xboxkrnl::POBJECT_TYPE xboxkrnl::IoDeviceObjectType = NULL;
+XBSYSAPI EXPORTNUM(70) xboxkrnl::OBJECT_TYPE xboxkrnl::IoDeviceObjectType = {};
 
 // TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(71) xboxkrnl::POBJECT_TYPE xboxkrnl::IoFileObjectType = NULL;
+XBSYSAPI EXPORTNUM(71) xboxkrnl::OBJECT_TYPE xboxkrnl::IoFileObjectType = {};
 
 XBSYSAPI EXPORTNUM(90) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDismountVolume
 (

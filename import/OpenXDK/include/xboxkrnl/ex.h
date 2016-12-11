@@ -47,7 +47,7 @@ XBSYSAPI EXPORTNUM(15) PVOID NTAPI ExAllocatePoolWithTag
     IN ULONG Tag
 );
 
-XBSYSAPI EXPORTNUM(16) POBJECT_TYPE ExEventObjectType;
+XBSYSAPI EXPORTNUM(16) OBJECT_TYPE ExEventObjectType;
 
 // ******************************************************************
 // * ExFreePool
@@ -90,7 +90,7 @@ XBSYSAPI EXPORTNUM(21) LONGLONG FASTCALL ExInterlockedCompareExchange64
 	IN PKSPIN_LOCK Lock
 );
 
-XBSYSAPI EXPORTNUM(22) POBJECT_TYPE ExMutantObjectType;
+XBSYSAPI EXPORTNUM(22) OBJECT_TYPE ExMutantObjectType;
 
 // ******************************************************************
 // * ExQueryPoolBlockSize
@@ -148,9 +148,9 @@ XBSYSAPI EXPORTNUM(29) NTSTATUS NTAPI ExSaveNonVolatileSetting
     IN  SIZE_T              ValueLength
 );
 
-XBSYSAPI EXPORTNUM(30) POBJECT_TYPE ExSemaphoreObjectType;
+XBSYSAPI EXPORTNUM(30) OBJECT_TYPE ExSemaphoreObjectType;
 
-XBSYSAPI EXPORTNUM(31) POBJECT_TYPE ExTimerObjectType;
+XBSYSAPI EXPORTNUM(31) OBJECT_TYPE ExTimerObjectType;
 
 XBSYSAPI EXPORTNUM(32) PLIST_ENTRY FASTCALL ExfInterlockedInsertHeadList
 (

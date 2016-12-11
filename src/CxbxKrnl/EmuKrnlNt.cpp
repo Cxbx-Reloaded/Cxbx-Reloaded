@@ -1394,6 +1394,20 @@ XBSYSAPI EXPORTNUM(199) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
 }
 
 // ******************************************************************
+// * 0x00C9 - NtOpenDirectoryObject
+// ******************************************************************
+XBSYSAPI EXPORTNUM(201) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenDirectoryObject
+(
+	OUT PHANDLE DirectoryHandle,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+)
+{
+	LOG_FUNC_FORWARD("ObOpenObjectByName");
+
+	return ObOpenObjectByName(ObjectAttributes, &ObDirectoryObjectType, NULL, DirectoryHandle);
+}
+
+// ******************************************************************
 // * 0x00CA - NtOpenFile
 // ******************************************************************
 // Opens a file or device object.  Same as calling:
@@ -2153,29 +2167,9 @@ XBSYSAPI EXPORTNUM(233) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
     IN  PLARGE_INTEGER   Timeout
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Handle)
-		LOG_FUNC_ARG(Alertable)
-		LOG_FUNC_ARG(Timeout)
-		LOG_FUNC_END;
-
-	NTSTATUS ret;
-
-	if (IsEmuHandle(Handle))
-	{
-		ret = WAIT_FAILED;
-		EmuWarning("WaitFor EmuHandle not supported!");
-	}
-	else
-	{
-		ret = NtDll::NtWaitForSingleObject(Handle, Alertable, (NtDll::PLARGE_INTEGER)Timeout);
-		DbgPrintf("Finished waiting for 0x%.08X\n", Handle);
-	}
-
-	if (ret == WAIT_FAILED)
-		EmuWarning("NtWaitForSingleObject failed! (%s)", NtStatusToString(ret));
-
-	RETURN(ret);
+	LOG_FUNC_FORWARD("NtWaitForSingleObjectEx");
+	
+	return NtWaitForSingleObjectEx(Handle, KernelMode, Alertable, Timeout);
 }
 
 // ******************************************************************

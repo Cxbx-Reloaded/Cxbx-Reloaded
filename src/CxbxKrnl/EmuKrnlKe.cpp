@@ -432,16 +432,10 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
 	IN PKDPC          Dpc OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Timer)
-		LOG_FUNC_ARG(DueTime)
-		LOG_FUNC_ARG(Dpc)
-		LOG_FUNC_END;
+	LOG_FUNC_FORWARD("KeSetTimerEx");
 
 	// Call KeSetTimerEx with a period of zero
-	BOOLEAN bRet = KeSetTimerEx(Timer, DueTime, 0, Dpc);
-
-	RETURN(bRet);
+	return KeSetTimerEx(Timer, DueTime, 0, Dpc);
 }
 
 // ******************************************************************

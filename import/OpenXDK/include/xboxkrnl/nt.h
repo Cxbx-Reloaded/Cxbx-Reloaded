@@ -156,7 +156,12 @@ XBSYSAPI EXPORTNUM(199) NTSTATUS NTAPI NtFreeVirtualMemory
 );
 
 XBSYSAPI VOID *NtFsControlFile;
-XBSYSAPI VOID *NtOpenDirectoryObject;
+
+XBSYSAPI EXPORTNUM(201) NTSTATUS NTAPI NtOpenDirectoryObject
+(
+	OUT PHANDLE DirectoryHandle,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+);
 
 // ******************************************************************
 // * NtOpenFile

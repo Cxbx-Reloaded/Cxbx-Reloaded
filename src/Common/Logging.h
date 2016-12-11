@@ -80,7 +80,7 @@ extern thread_local std::string _logPrefix;
 
 	// LOG_FUNC_ARG_OUT writes output via all available ostream << operator overloads, adding detail where possible
 	#define LOG_FUNC_ARG(arg) \
-			msg << "\n   " << std::setw(26) << std::left << std::setfill(' ') << #arg << " : " << arg;
+			msg << "\n   " << std::setw(26) << std::left << std::setfill(' ') << #arg" : " << arg;
 
 	// LOG_FUNC_ARG_OUT prevents expansion of types, by only rendering as a pointer
 	#define LOG_FUNC_ARG_OUT(arg) \
@@ -94,12 +94,12 @@ extern thread_local std::string _logPrefix;
 		} } while (0)
 
 	// LOG_FUNC_FORWARD indicates that an api is implemented by a forward to another API
-	// TODO : Add a log message for this 
-	#define LOG_FUNC_FORWARD(api)
+	#define LOG_FUNC_FORWARD(api) \
+		std::cout << _logPrefix << __func__ << " forwarding to  "#api"...\n";
 
 	// LOG_FUNC_RESULT logs the function return result
 	#define LOG_FUNC_RESULT(r) \
-		std::cout << _logPrefix << " returns " << r << "\n";
+		std::cout << _logPrefix << __func__ << " returns " << r << "\n";
 #else
 	#define LOG_FUNC_BEGIN 
 	#define LOG_FUNC_ARG(arg)

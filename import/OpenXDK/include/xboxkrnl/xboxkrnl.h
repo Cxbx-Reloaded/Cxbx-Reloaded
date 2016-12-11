@@ -488,7 +488,15 @@ OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 // ******************************************************************
 typedef struct _OBJECT_TYPE
 {
-	// TODO : How is this defined?
+	/* TODO : Declare missing types and enable corresponding members :
+	OB_ALLOCATE_METHOD AllocateProcedure;
+    OB_FREE_METHOD FreeProcedure;
+    OB_CLOSE_METHOD CloseProcedure;
+    OB_DELETE_METHOD DeleteProcedure;
+    OB_PARSE_METHOD ParseProcedure;
+	*/
+	PVOID DefaultObject;
+	ULONG PoolTag;
 }
 OBJECT_TYPE, *POBJECT_TYPE;
 

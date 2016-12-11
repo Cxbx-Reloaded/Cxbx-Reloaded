@@ -266,7 +266,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::NtFlushBuffersFile),              // 0x00C6 (198)
 	(uint32)FUNC(&xboxkrnl::NtFreeVirtualMemory),             // 0x00C7 (199)
 	(uint32)PANIC(0x00C8),                                    // 0x00C8 (200) NtFsControlFile
-	(uint32)PANIC(0x00C9),                                    // 0x00C9 (201) NtOpenDirectoryObject
+	(uint32)FUNC(&xboxkrnl::NtOpenDirectoryObject),           // 0x00C9 (201)
 	(uint32)FUNC(&xboxkrnl::NtOpenFile),                      // 0x00CA (202)
 	(uint32)FUNC(&xboxkrnl::NtOpenSymbolicLinkObject),        // 0x00CB (203)
 	(uint32)FUNC(&xboxkrnl::NtProtectVirtualMemory),          // 0x00CC (204)
@@ -308,7 +308,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)VARIABLE(&xboxkrnl::ObDirectoryObjectType),       // 0x00F0 (240)
 	(uint32)PANIC(0x00F1),                                    // 0x00F1 (241) ObInsertObject
 	(uint32)PANIC(0x00F2),                                    // 0x00F2 (242) ObMakeTemporaryObject 
-	(uint32)PANIC(0x00F3),                                    // 0x00F3 (243) ObOpenObjectByName
+	(uint32)FUNC(&xboxkrnl::ObOpenObjectByName),              // 0x00F3 (243)
 	(uint32)PANIC(0x00F4),                                    // 0x00F4 (244) ObOpenObjectByPointer
 	(uint32)VARIABLE(&xboxkrnl::ObpObjectHandleTable),        // 0x00F5 (245)
 	(uint32)FUNC(&xboxkrnl::ObReferenceObjectByHandle),       // 0x00F6 (246)

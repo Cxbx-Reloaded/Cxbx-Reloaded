@@ -52,13 +52,47 @@ namespace NtDll
 #include "Emu.h" // For EmuWarning()
 
 // TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(240) xboxkrnl::POBJECT_TYPE xboxkrnl::ObDirectoryObjectType = NULL;
+XBSYSAPI EXPORTNUM(240) xboxkrnl::OBJECT_TYPE xboxkrnl::ObDirectoryObjectType = 
+{
+	/*
+	ExAllocatePoolWithTag,
+	ExFreePool,
+	NULL,
+	NULL,
+	NULL,
+	*/
+	NULL, // &ObpDefaultObject,
+	'eriD' // = first four characters of "Directory" in reverse
+};
+
+// ******************************************************************
+// * 0x00F3 - ObOpenObjectByName
+// ******************************************************************
+XBSYSAPI EXPORTNUM(243) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByName
+(
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN POBJECT_TYPE ObjectType,
+	IN OUT PVOID ParseContext OPTIONAL,
+	OUT PHANDLE Handle
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(ObjectAttributes)
+		LOG_FUNC_ARG(ObjectType)
+		LOG_FUNC_ARG(ParseContext)
+		LOG_FUNC_ARG_OUT(Handle)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(STATUS_SUCCESS);
+}
 
 // TODO : Determine size. What should we initialize this to?
 XBSYSAPI EXPORTNUM(245) xboxkrnl::DWORD xboxkrnl::ObpObjectHandleTable[1] = {};
 
 // TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(249) xboxkrnl::POBJECT_TYPE xboxkrnl::ObSymbolicLinkObjectType = NULL;
+XBSYSAPI EXPORTNUM(249) xboxkrnl::OBJECT_TYPE xboxkrnl::ObSymbolicLinkObjectType = {};
 
 // ObReferenceObjectByHandle:
 // Turns a handle into a kernel object pointer.  The ObjectType parameter
