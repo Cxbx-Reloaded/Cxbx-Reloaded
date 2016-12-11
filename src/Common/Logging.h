@@ -101,7 +101,6 @@ extern thread_local std::string _logPrefix;
 	#define LOG_FUNC_ARG(arg)
 	#define LOG_FUNC_ARG_OUT(arg)
 	#define LOG_FUNC_END
-	#define LOG_FUNC_FORWARD(api)
 	#define LOG_FUNC_RESULT(r)
 #endif
 
@@ -121,16 +120,19 @@ extern thread_local std::string _logPrefix;
 		std::cout << _logPrefix << __func__ << " forwarding to "#api"...\n"; \
 	} } while (0)
 
+// LOG_IGNORED indicates that Cxbx consiously ignores an api
 #define LOG_IGNORED() \
 	do { if(g_bPrintfOn) { \
 		std::cout << _logPrefix << __func__ << " ignored!\n"; \
 	} } while (0)
 
+// LOG_UNIMPLEMENTED indicates that Cxbx is missing an implementation of an api
 #define LOG_UNIMPLEMENTED() \
 	do { if(g_bPrintfOn) { \
 		std::cout << _logPrefix << __func__ << " unimplemented!\n"; \
 	} } while (0)
 
+// RETURN logs the given result and then returns it (so this should appear last in functions)
 #define RETURN(r) do { LOG_FUNC_RESULT(r) return r; } while (0)
 
 #endif _LOGGING_H
