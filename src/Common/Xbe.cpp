@@ -44,7 +44,7 @@
 // construct via Xbe file
 Xbe::Xbe(const char *x_szFilename)
 {
-    char szBuffer[260];
+    char szBuffer[MAX_PATH];
 
     ConstructorInit();
 
@@ -849,7 +849,7 @@ void Xbe::Export(const char *x_szXbeFilename)
     if(GetError() != 0)
         return;
 
-    char szBuffer[260];
+    char szBuffer[MAX_PATH];
 
     printf("Xbe::Export: Writing Xbe file...");
 
