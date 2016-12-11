@@ -95,7 +95,7 @@ extern thread_local std::string _logPrefix;
 
 	// LOG_FUNC_FORWARD indicates that an api is implemented by a forward to another API
 	#define LOG_FUNC_FORWARD(api) \
-		std::cout << _logPrefix << __func__ << " forwarding to  "#api"...\n";
+		std::cout << _logPrefix << __func__ << " forwarding to "#api"...\n";
 
 	// LOG_FUNC_RESULT logs the function return result
 	#define LOG_FUNC_RESULT(r) \

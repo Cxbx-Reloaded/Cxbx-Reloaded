@@ -82,7 +82,7 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 
 	NativeObjectAttributes nativeObjectAttributes;
 
-	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, nativeObjectAttributes, "NtCreateFile"); /*var*/
+	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, nativeObjectAttributes, "IoCreateFile"); /*var*/
 
 	// redirect to NtCreateFile
 	ret = NtDll::NtCreateFile(
