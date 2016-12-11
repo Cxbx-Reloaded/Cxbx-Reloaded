@@ -1169,32 +1169,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 // suggest a file name
 void WndMain::SuggestFilename(const char *x_orig_filename, char *x_filename, char x_extension[4])
 {
-    uint32 found = 0;
-    uint32 v = 0;
-
-    while(x_orig_filename[v] != '\0')
-    {
-        if(x_orig_filename[v] == '\\')
-            found = v;
-        v++;
-    }
-
-    if(found != 0)
+    if(strrchr(x_orig_filename, '\\') != NULL)
     {
         strcpy(x_filename, x_orig_filename);
-
-        uint32 loc = 0;
-        uint32 c = 0;
-
-        while(x_filename[c] != '\0')
-        {
-            if(x_filename[c] == '.')
-                loc = c;
-            c++;
-        }
-
-        if(loc != 0)
-            *(uint32*)&x_filename[loc] = *(uint32*)x_extension;
+		char *loc = strrchr(x_filename, '.');
+		if (loc != NULL)
+			strncpy(loc, &x_extension[0], 4);
     }
 }
 

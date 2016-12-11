@@ -67,16 +67,9 @@ Xbe::Xbe(const char *x_szFilename)
 
         strcpy(m_szPath, x_szFilename);
 
-        int v=0, c=0;
-
-        while(m_szPath[v] != '\0')
-        {
-            if(m_szPath[v] == '\\')
-                c = v+1;
-            v++;
-        }
-
-        m_szPath[c] = '\0';
+		char * c = strrchr(m_szPath, '\\');
+		if (c != NULL)
+			*(++c) = '\0';
     }
 
     printf("OK\n");
