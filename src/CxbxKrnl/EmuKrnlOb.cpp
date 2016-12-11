@@ -92,7 +92,18 @@ XBSYSAPI EXPORTNUM(243) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByName
 XBSYSAPI EXPORTNUM(245) xboxkrnl::DWORD xboxkrnl::ObpObjectHandleTable[1] = {};
 
 // TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(249) xboxkrnl::OBJECT_TYPE xboxkrnl::ObSymbolicLinkObjectType = {};
+XBSYSAPI EXPORTNUM(249) xboxkrnl::OBJECT_TYPE xboxkrnl::ObSymbolicLinkObjectType = 
+{
+	/*
+	ExAllocatePoolWithTag,
+	ExFreePool,
+	NULL,
+	ObpDeleteSymbolicLink,
+	NULL,
+	*/
+	NULL, // &ObpDefaultObject,
+	'bmyS' // = first four characters of "SymbolicLink" in reverse
+};
 
 // ObReferenceObjectByHandle:
 // Turns a handle into a kernel object pointer.  The ObjectType parameter

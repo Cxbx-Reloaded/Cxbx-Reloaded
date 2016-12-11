@@ -48,7 +48,18 @@ namespace xboxkrnl
 #include "EmuFile.h" // For CxbxCreateSymbolicLink(), etc.
 
 // TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(64) xboxkrnl::OBJECT_TYPE xboxkrnl::IoCompletionObjectType = {};
+XBSYSAPI EXPORTNUM(64) xboxkrnl::OBJECT_TYPE xboxkrnl::IoCompletionObjectType = 
+{
+	/*
+	ExAllocatePoolWithTag,
+	ExFreePool,
+	NULL,
+	IopDeleteIoCompletion,
+	NULL,
+	*/
+	NULL, // &ObpDefaultObject,
+	'pmoC' // = first four characters of "Completion" in reverse
+};
 
 // ******************************************************************
 // * 0x0042 - IoCreateFile
@@ -150,10 +161,32 @@ XBSYSAPI EXPORTNUM(69) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDeleteSymbolicLink
 }
 
 // TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(70) xboxkrnl::OBJECT_TYPE xboxkrnl::IoDeviceObjectType = {};
+XBSYSAPI EXPORTNUM(70) xboxkrnl::OBJECT_TYPE xboxkrnl::IoDeviceObjectType = 
+{
+	/*
+	ExAllocatePoolWithTag,
+	ExFreePool,
+	NULL,
+	NULL,
+	IoParseDevice,
+	*/
+	NULL, // &ObpDefaultObject,
+	'iveD' // = first four characters of "Device" in reverse
+};
 
 // TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(71) xboxkrnl::OBJECT_TYPE xboxkrnl::IoFileObjectType = {};
+XBSYSAPI EXPORTNUM(71) xboxkrnl::OBJECT_TYPE xboxkrnl::IoFileObjectType = 
+{
+	/*
+	ExAllocatePoolWithTag,
+	ExFreePool,
+	IopCloseFile,
+	IopDeleteFile,
+	IopParseFile,
+	*/
+	NULL, // (PVOID)FIELD_OFFSET(FILE_OBJECT, Event.Header),
+	'eliF' // = "File" in reverse
+};
 
 XBSYSAPI EXPORTNUM(90) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDismountVolume
 (

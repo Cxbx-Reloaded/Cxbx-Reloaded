@@ -86,7 +86,7 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 	IN ULONG NumberOfBytes
 )
 {
-	LOG_FUNC_FORWARD("MmAllocateContiguousMemoryEx");
+	LOG_FORWARD("MmAllocateContiguousMemoryEx");
 
 	return MmAllocateContiguousMemoryEx(NumberOfBytes, 0, MAXULONG_PTR, 0,
 		PAGE_READWRITE);

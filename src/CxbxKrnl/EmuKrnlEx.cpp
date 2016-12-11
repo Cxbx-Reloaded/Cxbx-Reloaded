@@ -89,7 +89,7 @@ XBSYSAPI EXPORTNUM(14) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePool
 	IN SIZE_T NumberOfBytes
 )
 {
-	LOG_FUNC_FORWARD("ExAllocatePoolWithTag");
+	LOG_FORWARD("ExAllocatePoolWithTag");
 
 	return ExAllocatePoolWithTag(NumberOfBytes, (ULONG)"enoN"); // = "None" in reverse
 }
@@ -118,7 +118,18 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
 }
 
 // TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(16) xboxkrnl::OBJECT_TYPE xboxkrnl::ExEventObjectType = {};
+XBSYSAPI EXPORTNUM(16) xboxkrnl::OBJECT_TYPE xboxkrnl::ExEventObjectType =
+{
+	/*
+	ExAllocatePoolWithTag,
+	ExFreePool,
+	NULL,
+	NULL,
+	NULL,
+	*/
+	NULL, // (PVOID)FIELD_OFFSET(KEVENT, Header),
+	'vevE' // = first four characters of "Event" in reverse
+};
 
 // ******************************************************************
 // * 0x0011 ExFreePool
@@ -216,7 +227,18 @@ XBSYSAPI EXPORTNUM(21) xboxkrnl::LONGLONG FASTCALL xboxkrnl::ExInterlockedCompar
 }
 
 // TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(22) xboxkrnl::OBJECT_TYPE xboxkrnl::ExMutantObjectType = {};
+XBSYSAPI EXPORTNUM(22) xboxkrnl::OBJECT_TYPE xboxkrnl::ExMutantObjectType = 
+{
+	/*
+	ExAllocatePoolWithTag,
+	ExFreePool,
+	NULL,
+	ExpDeleteMutant,
+	NULL,
+	*/
+	NULL, // (PVOID)FIELD_OFFSET(KMUTANT, Header),
+	'atuM' // = first four characters of "Mutant" in reverse
+};
 
 // ******************************************************************
 // * 0x0017 ExQueryPoolBlockSize
@@ -495,10 +517,32 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 }
 
 // TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(30) xboxkrnl::OBJECT_TYPE xboxkrnl::ExSemaphoreObjectType = {};
+XBSYSAPI EXPORTNUM(30) xboxkrnl::OBJECT_TYPE xboxkrnl::ExSemaphoreObjectType = 
+{
+	/*
+	ExAllocatePoolWithTag,
+	ExFreePool,
+	NULL,
+	NULL,
+	NULL,
+	*/
+	NULL, // (PVOID)FIELD_OFFSET(KSEMAPHORE, Header),
+	'ameS' // = first four characters of "Semaphore" in reverse
+};
 
 // TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(31) xboxkrnl::OBJECT_TYPE xboxkrnl::ExTimerObjectType = {};
+XBSYSAPI EXPORTNUM(31) xboxkrnl::OBJECT_TYPE xboxkrnl::ExTimerObjectType = 
+{
+	/*
+	ExAllocatePoolWithTag,
+	ExFreePool,
+	NULL,
+	ExpDeleteTimer,
+	NULL,
+	*/
+	NULL, // (PVOID)FIELD_OFFSET(KTIMER, Header),
+	'emiT' // = first four characters of "Timer" in reverse
+};
 
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(32) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedInsertHeadList

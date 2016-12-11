@@ -93,10 +93,6 @@ extern thread_local std::string _logPrefix;
 			std::cout << msg.str(); \
 		} } while (0)
 
-	// LOG_FUNC_FORWARD indicates that an api is implemented by a forward to another API
-	#define LOG_FUNC_FORWARD(api) \
-		std::cout << _logPrefix << __func__ << " forwarding to "#api"...\n";
-
 	// LOG_FUNC_RESULT logs the function return result
 	#define LOG_FUNC_RESULT(r) \
 		std::cout << _logPrefix << __func__ << " returns " << r << "\n";
@@ -119,14 +115,20 @@ extern thread_local std::string _logPrefix;
 // Log function with one out argument
 #define LOG_FUNC_ONE_ARG_OUT(arg) LOG_FUNC_BEGIN LOG_FUNC_ARG_OUT(arg) LOG_FUNC_END 
 
+// LOG_FORWARD indicates that an api is implemented by a forward to another API
+#define LOG_FORWARD(api) \
+	do { if(g_bPrintfOn) { \
+		std::cout << _logPrefix << __func__ << " forwarding to "#api"...\n"; \
+	} } while (0)
+
 #define LOG_IGNORED() \
 	do { if(g_bPrintfOn) { \
-		std::cout << __func__ << " ignored!\n"; \
+		std::cout << _logPrefix << __func__ << " ignored!\n"; \
 	} } while (0)
 
 #define LOG_UNIMPLEMENTED() \
 	do { if(g_bPrintfOn) { \
-		std::cout << __func__ << " unimplemented!\n"; \
+		std::cout << _logPrefix << __func__ << " unimplemented!\n"; \
 	} } while (0)
 
 #define RETURN(r) do { LOG_FUNC_RESULT(r) return r; } while (0)

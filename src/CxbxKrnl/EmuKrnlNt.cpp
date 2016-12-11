@@ -1165,7 +1165,7 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
 	IN  ULONG               CreateOptions
 )
 {
-	LOG_FUNC_FORWARD("IoCreateFile");
+	LOG_FORWARD("IoCreateFile");
 
 	return xboxkrnl::IoCreateFile(
 		FileHandle, 
@@ -1402,7 +1402,7 @@ XBSYSAPI EXPORTNUM(201) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenDirectoryObject
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 )
 {
-	LOG_FUNC_FORWARD("ObOpenObjectByName");
+	LOG_FORWARD("ObOpenObjectByName");
 
 	return ObOpenObjectByName(ObjectAttributes, &ObDirectoryObjectType, NULL, DirectoryHandle);
 }
@@ -1425,7 +1425,7 @@ XBSYSAPI EXPORTNUM(202) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenFile
 	IN  ULONG               OpenOptions
 )
 {
-	LOG_FUNC_FORWARD("IoCreateFile");
+	LOG_FORWARD("IoCreateFile");
 
 	return xboxkrnl::IoCreateFile(
 		FileHandle, 
@@ -1450,6 +1450,11 @@ XBSYSAPI EXPORTNUM(203) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenSymbolicLinkObj
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 )
 {
+	/* TODO :
+	LOG_FORWARD("ObOpenObjectByName");
+
+	return ObOpenObjectByName(ObjectAttributes, &ObSymbolicLinkObjectType, NULL, LinkHandle);
+	*/
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG_OUT(LinkHandle)
 		LOG_FUNC_ARG(ObjectAttributes)
@@ -2167,7 +2172,7 @@ XBSYSAPI EXPORTNUM(233) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
     IN  PLARGE_INTEGER   Timeout
 )
 {
-	LOG_FUNC_FORWARD("NtWaitForSingleObjectEx");
+	LOG_FORWARD("NtWaitForSingleObjectEx");
 	
 	return NtWaitForSingleObjectEx(Handle, KernelMode, Alertable, Timeout);
 }
