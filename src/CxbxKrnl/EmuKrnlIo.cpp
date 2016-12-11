@@ -59,7 +59,7 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 	IN  ACCESS_MASK         DesiredAccess,
 	IN  POBJECT_ATTRIBUTES  ObjectAttributes,
 	OUT PIO_STATUS_BLOCK    IoStatusBlock,
-	IN  PLARGE_INTEGER      AllocationSize,
+	IN  PLARGE_INTEGER      AllocationSize OPTIONAL,
 	IN  ULONG               FileAttributes,
 	IN  ULONG               ShareAccess,
 	IN  ULONG               Disposition,
@@ -80,10 +80,32 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 		LOG_FUNC_ARG(Options)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	NativeObjectAttributes nativeObjectAttributes;
 
-	// TODO: Try redirecting to NtCreateFile if this function ever is run into
-	LOG_UNIMPLEMENTED();
+	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, nativeObjectAttributes, "NtCreateFile"); /*var*/
+
+	// redirect to NtCreateFile
+	ret = NtDll::NtCreateFile(
+		FileHandle, 
+		DesiredAccess | GENERIC_READ, 
+		nativeObjectAttributes.NtObjAttrPtr, 
+		NtDll::PIO_STATUS_BLOCK(IoStatusBlock), 
+		NtDll::PLARGE_INTEGER(AllocationSize), 
+		FileAttributes, 
+		ShareAccess, 
+		Disposition, 
+		CreateOptions, 
+		NULL, 
+		0);
+
+	if (FAILED(ret))
+	{
+		DbgPrintf("EmuKrnl (0x%X): IoCreateFile Failed! (0x%.08X)\n", GetCurrentThreadId(), ret);
+	}
+	else
+	{
+		DbgPrintf("EmuKrnl (0x%X): IoCreateFile = 0x%.08X\n", GetCurrentThreadId(), *FileHandle);
+	}
 
 	RETURN(ret);
 }

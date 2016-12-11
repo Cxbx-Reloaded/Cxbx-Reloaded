@@ -93,6 +93,10 @@ extern thread_local std::string _logPrefix;
 			std::cout << msg.str(); \
 		} } while (0)
 
+	// LOG_FUNC_FORWARD indicates that an api is implemented by a forward to another API
+	// TODO : Add a log message for this 
+	#define LOG_FUNC_FORWARD(api)
+
 	// LOG_FUNC_RESULT logs the function return result
 	#define LOG_FUNC_RESULT(r) \
 		std::cout << _logPrefix << " returns " << r << "\n";
@@ -101,6 +105,7 @@ extern thread_local std::string _logPrefix;
 	#define LOG_FUNC_ARG(arg)
 	#define LOG_FUNC_ARG_OUT(arg)
 	#define LOG_FUNC_END
+	#define LOG_FUNC_FORWARD(api)
 	#define LOG_FUNC_RESULT(r)
 #endif
 

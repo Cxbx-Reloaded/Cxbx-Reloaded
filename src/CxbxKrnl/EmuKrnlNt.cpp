@@ -987,144 +987,6 @@ static CHAR* NtStatusToString(IN NTSTATUS Status)
 	}
 }
 
-struct NativeObjectAttributes {
-	wchar_t wszObjectName[160];
-	NtDll::UNICODE_STRING    NtUnicodeString;
-	NtDll::OBJECT_ATTRIBUTES NtObjAttr;
-	// This is what should be passed on to Windows
-	// after CxbxObjectAttributesToNT() has been called :
-	NtDll::POBJECT_ATTRIBUTES NtObjAttrPtr;
-};
-
-NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes, NativeObjectAttributes& nativeObjectAttributes, std::string aFileAPIName = "")
-{
-	NTSTATUS result = 0;
-	std::string OriginalPath;
-	std::string RelativePath;
-	std::string XboxFullPath;
-	std::string NativePath;
-	EmuNtSymbolicLinkObject* NtSymbolicLinkObject = NULL;
-	result = STATUS_SUCCESS;
-	if (ObjectAttributes == NULL)
-	{
-		// When the pointer is nil, make sure we pass nil to Windows too :
-		nativeObjectAttributes.NtObjAttrPtr = NULL;
-		RETURN(result);
-	}
-
-	// ObjectAttributes are given, so make sure the pointer we're going to pass to Windows is assigned :
-	nativeObjectAttributes.NtObjAttrPtr = &nativeObjectAttributes.NtObjAttr;
-	RelativePath = std::string(ObjectAttributes->ObjectName->Buffer, ObjectAttributes->ObjectName->Length);
-	OriginalPath = RelativePath;
-
-	// Always trim '\??\' off :
-	if ((RelativePath.length() >= 4) && (RelativePath[0] == '\\') && (RelativePath[1] == '?') && (RelativePath[2] == '?') && (RelativePath[3] == '\\'))
-		RelativePath.erase(0, 4);
-
-	// Check if we where called from a File-handling API :
-	if (!aFileAPIName.empty())
-	{
-		NtSymbolicLinkObject = NULL;
-		// Check if the path starts with a volume indicator :
-		if ((RelativePath.length() >= 2) && (RelativePath[1] == ':'))
-		{
-			// Look up the symbolic link information using the drive letter :
-			NtSymbolicLinkObject = FindNtSymbolicLinkObjectByVolumeLetter(RelativePath[0]);
-			RelativePath.erase(0, 2); // Remove 'C:'
-
-									  // If the remaining path starts with a ':', remove it (to prevent errors) :
-			if ((RelativePath.length() > 0) && (RelativePath[0] == ':'))
-				RelativePath.erase(0, 1);  // xbmp needs this, as it accesses 'e::\'
-		}
-		else if (RelativePath.compare(0, 1, "$") == 0)
-		{
-			if (RelativePath.compare(0, 5, "$HOME") == 0) // "xbmp" needs this
-			{
-				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
-				RelativePath.erase(0, 5); // Remove '$HOME'
-			}
-			else
-				CxbxKrnlCleanup(("Unsupported path macro : " + OriginalPath).c_str());
-		}
-		// Check if the path starts with a relative path indicator :
-		else if (RelativePath.compare(0, 1, ".") == 0) // "4x4 Evo 2" needs this
-		{
-			NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
-			RelativePath.erase(0, 1); // Remove the '.'
-		}
-		else
-		{
-			// The path seems to be a device path, look it up :
-			NtSymbolicLinkObject = FindNtSymbolicLinkObjectByDevice(RelativePath);
-			// Fixup RelativePath path here
-			if ((NtSymbolicLinkObject != NULL))
-				RelativePath.erase(0, NtSymbolicLinkObject->XboxFullPath.length()); // Remove '\Device\Harddisk0\Partition2'
-		}
-
-		if ((NtSymbolicLinkObject != NULL))
-		{
-			// If the remaining path starts with a '\', remove it (to prevent working in a native root) :
-			if ((RelativePath.length() > 0) && (RelativePath[0] == '\\'))
-				RelativePath.erase(0, 1);
-			XboxFullPath = NtSymbolicLinkObject->XboxFullPath;
-			NativePath = NtSymbolicLinkObject->NativePath;
-			ObjectAttributes->RootDirectory = NtSymbolicLinkObject->RootDirectoryHandle;
-		}
-		else
-		{
-			// No symbolic link - as last resort, check if the path accesses a partition from Harddisk0 :
-			if (_strnicmp(RelativePath.c_str(), (DeviceHarddisk0 + "\\partition").c_str(), (DeviceHarddisk0 + "\\partition").length()) != 0)
-			{
-				result = STATUS_UNRECOGNIZED_VOLUME; // TODO : Is this the correct error?
-				EmuWarning((("Path not available : ") + OriginalPath).c_str());
-				RETURN(result);
-			}
-
-			XboxFullPath = RelativePath;
-			// Remove Harddisk0 prefix, in the hope that the remaining path might work :
-			RelativePath.erase(0, DeviceHarddisk0.length() + 1);
-			// And set Root to the folder containing the partition-folders :
-			ObjectAttributes->RootDirectory = CxbxBasePathHandle;
-			NativePath = CxbxBasePath;
-		}
-
-        // Check for special case : Partition0
-/* TODO : Translate this Dxbx code :
-        if (StartsWithText(XboxFullPath, DeviceHarddisk0Partition0))
-	    {
-	      CxbxKrnlCleanup("Partition0 access not implemented yet! Tell PatrickvL what title triggers this.");
-	      // TODO : Redirect raw sector-access to the 'Partition0_ConfigData.bin' file
-	      // (This file probably needs to be pre-initialized somehow too).
-    	}
-*/
-
-		DbgPrintf("EmuKrnl : %s Corrected path...\n", aFileAPIName.c_str());
-		DbgPrintf("  Org:\"%s\"\n", OriginalPath.c_str());
-		if (_strnicmp(NativePath.c_str(), CxbxBasePath.c_str(), CxbxBasePath.length()) == 0)
-		{
-			DbgPrintf("  New:\"$CxbxPath\\EmuDisk\\%s%s\"\n", (NativePath.substr(CxbxBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());
-		}
-		else
-			DbgPrintf("  New:\"$XbePath\\%s\"\n", RelativePath.c_str());
-
-	}
-	else
-	{
-		// For non-file API calls, prefix with '\??\' again :
-		RelativePath = "\\??\\" + RelativePath;
-		ObjectAttributes->RootDirectory = 0;
-	}
-
-	// Convert Ansi to Unicode :
-	mbstowcs(nativeObjectAttributes.wszObjectName, RelativePath.c_str(), 160);
-	NtDll::RtlInitUnicodeString(&nativeObjectAttributes.NtUnicodeString, nativeObjectAttributes.wszObjectName);
-
-	// Initialize the NT ObjectAttributes :
-	InitializeObjectAttributes(&nativeObjectAttributes.NtObjAttr, &nativeObjectAttributes.NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
-
-	RETURN(result);
-}
-
 // ******************************************************************
 // * 0x00B8 - NtAllocateVirtualMemory
 // ******************************************************************
@@ -1303,40 +1165,19 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
 	IN  ULONG               CreateOptions
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG_OUT(FileHandle)
-		LOG_FUNC_ARG(DesiredAccess)
-		LOG_FUNC_ARG(ObjectAttributes)
-		LOG_FUNC_ARG_OUT(IoStatusBlock)
-		LOG_FUNC_ARG(AllocationSize)
-		LOG_FUNC_ARG(FileAttributes)
-		LOG_FUNC_ARG(ShareAccess)
-		LOG_FUNC_ARG(CreateDisposition)
-		LOG_FUNC_ARG(CreateOptions)
-		LOG_FUNC_END;
+	LOG_FUNC_FORWARD("IoCreateFile");
 
-	NativeObjectAttributes nativeObjectAttributes;
-
-	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, nativeObjectAttributes, "NtCreateFile"); /*var*/
-																									   // redirect to NtCreateFile
-	ret = NtDll::NtCreateFile(FileHandle, DesiredAccess | GENERIC_READ, nativeObjectAttributes.NtObjAttrPtr, NtDll::PIO_STATUS_BLOCK(IoStatusBlock), NtDll::PLARGE_INTEGER(AllocationSize), FileAttributes, ShareAccess, CreateDisposition, CreateOptions, NULL, 0);
-
-	if (FAILED(ret))
-	{
-		DbgPrintf("EmuKrnl (0x%X): NtCreateFile Failed! (0x%.08X)\n", GetCurrentThreadId(), ret);
-	}
-	else
-	{
-		DbgPrintf("EmuKrnl (0x%X): NtCreateFile = 0x%.08X\n", GetCurrentThreadId(), *FileHandle);
-	}
-
-
-	// NOTE: We can map this to IoCreateFile once implemented (if ever necessary)
-	//       xboxkrnl::IoCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, AllocationSize, FileAttributes, ShareAccess, CreateDisposition, CreateOptions, 0);
-
-
-
-	RETURN(ret);
+	return xboxkrnl::IoCreateFile(
+		FileHandle, 
+		DesiredAccess, 
+		ObjectAttributes, 
+		IoStatusBlock, 
+		AllocationSize, 
+		FileAttributes, 
+		ShareAccess, 
+		CreateDisposition, 
+		CreateOptions, 
+		0);
 }
 
 // ******************************************************************
@@ -1570,21 +1411,19 @@ XBSYSAPI EXPORTNUM(202) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenFile
 	IN  ULONG               OpenOptions
 )
 {
-	/* Redundant
-	LOG_FUNC_BEGIN
-	LOG_FUNC_ARG_OUT(FileHandle)
-	LOG_FUNC_ARG(DesiredAccess)
-	LOG_FUNC_ARG(ObjectAttributes)
-	LOG_FUNC_ARG_OUT(IoStatusBlock)
-	LOG_FUNC_ARG(ShareAccess)
-	LOG_FUNC_ARG(OpenOptions)
-	LOG_FUNC_END;
+	LOG_FUNC_FORWARD("IoCreateFile");
 
-	//*/
-
-	NTSTATUS ret = NtCreateFile(FileHandle, DesiredAccess, ObjectAttributes, IoStatusBlock, NULL, 0, ShareAccess, FILE_OPEN, OpenOptions);
-
-	RETURN(ret);
+	return xboxkrnl::IoCreateFile(
+		FileHandle, 
+		DesiredAccess, 
+		ObjectAttributes, 
+		IoStatusBlock, 
+		NULL, 
+		0, 
+		ShareAccess, 
+		FILE_OPEN, 
+		OpenOptions, 
+		0);
 }
 
 

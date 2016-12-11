@@ -389,7 +389,7 @@ XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
 
 			Handle ConfigPartitionHandle;
 			IO_STATUS_BLOCK IoStatusBlock;
-			Result = xboxkrnl_NtOpenFile(
+			Result = xboxkrnl::NtOpenFile(
 				&ConfigPartitionHandle,
 				GENERIC_READ or DWORD(iif(aIsWriteMode, GENERIC_WRITE, 0)) or SYNCHRONIZE,
 				&ObjectAttributes,
@@ -406,7 +406,7 @@ XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
 				{
 					RefurbInfoCopy = *pRefurbInfo;
 					RefurbInfoCopy.Signature_ = XBOX_REFURB_INFO_SIGNATURE;
-					Result = xboxkrnl_NtWriteFile(ConfigPartitionHandle, 0, NULL, NULL, &IoStatusBlock, &RefurbInfoCopy, XBOX_HD_SECTOR_SIZE, &ByteOffset);
+					Result = xboxkrnl::NtWriteFile(ConfigPartitionHandle, 0, NULL, NULL, &IoStatusBlock, &RefurbInfoCopy, XBOX_HD_SECTOR_SIZE, &ByteOffset);
 				}
 				else
 				{

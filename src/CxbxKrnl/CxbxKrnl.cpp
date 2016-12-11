@@ -440,8 +440,11 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 			IMAGE_SECTION_HEADER SectionHeader;
 		} *PDUMMY_KERNEL;
 
+#define XBOX_KERNEL_BASE 0x8001000
+#define XBOX_NV2A_INIT_VECTOR 0xFF000008
+
 		PDUMMY_KERNEL DummyKernel = (PDUMMY_KERNEL)VirtualAlloc(
-			(PVOID)0x80010000, sizeof(DUMMY_KERNEL),
+			(PVOID)XBOX_KERNEL_BASE, sizeof(DUMMY_KERNEL),
 			MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE
 		);
 
@@ -469,6 +472,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	memset(szBuffer, 0, MAX_PATH);
 	g_EmuShared->GetXbePath(szBuffer);
 	std::string xbePath(szBuffer);
+
 	PathRemoveFileSpec(szBuffer);
 	std::string xbeDirectory(szBuffer);
 
@@ -481,7 +485,6 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 	// Games may assume they are running from CdRom :
 	CxbxRegisterDeviceNativePath(DeviceCdrom0, xbeDirectory);
-
 
 	// Partition 0 contains configuration data, and is accessed as a native file, instead as a folder :
 	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition0, CxbxBasePath + "Partition0", true); /*IsFile=*/
