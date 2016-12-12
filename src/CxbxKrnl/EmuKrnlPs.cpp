@@ -138,31 +138,23 @@ static unsigned int WINAPI PCSTProxy
 	{
 		SetEvent(hStartedEvent);
 
-		if (SystemRoutine != NULL)
+		// Given the non-standard calling convention (requiring
+		// the first argument in ebp+4) we need the below __asm.
+		//
+		// Otherwise, this call would have looked something like this :
+		// ((xboxkrnl::PKSYSTEM_ROUTINE)SystemRoutine)(
+		//	  (xboxkrnl::PKSTART_ROUTINE)StartRoutine, 
+		//	  StartContext);
+		__asm
 		{
-			// Given the non-standard calling convention (requiring
-			// the first argument in ebp+4) we need the below __asm.
-			//
-			// Otherwise, this call would have looked something like this :
-			// ((xboxkrnl::PKSYSTEM_ROUTINE)SystemRoutine)(
-			//	  (xboxkrnl::PKSTART_ROUTINE)StartRoutine, 
-			//	  StartContext);
-			__asm
-			{
-				mov         esi, SystemRoutine
-				push        StartContext
-				push        StartRoutine
-				push        offset callComplete
-				lea         ebp, [esp - 4]
-				jmp near    esi
-			}
+			mov         esi, SystemRoutine
+			push        StartContext
+			push        StartRoutine
+			push        offset callComplete
+			lea         ebp, [esp - 4]
+			jmp near    esi
 		}
-		else
-			// Handle cases where we have a StartRoutine, not a SystemRoutine :
-			if (StartRoutine != NULL)
-				((xboxkrnl::PKSTART_ROUTINE)StartRoutine)(StartContext);
-			else
-				EmuWarning("No routines to start!");
+
 	}
 	__except (EmuException(GetExceptionInformation()))
 	{
@@ -171,28 +163,32 @@ static unsigned int WINAPI PCSTProxy
 
 callComplete:
 
-	// call thread notification routine(s)
-	if (g_iThreadNotificationCount != 0)
-	{
-		for (int i = 0; i < 16; i++)
-		{
-			XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification[i];
+	// This will also handle thread notification :
+	xboxkrnl::PsTerminateSystemThread(STATUS_SUCCESS);
 
-			// If the routine doesn't exist, don't execute it!
-			if (pfnNotificationRoutine == NULL)
-				continue;
-
-			DbgPrintf("EmuKrnl (0x%X): Calling pfnNotificationRoutine[%d] (0x%.08X)\n", GetCurrentThreadId(), g_iThreadNotificationCount, pfnNotificationRoutine);
-
-			pfnNotificationRoutine(FALSE);
-		}
-	}
-
-	CxbxKrnlTerminateThread();
-
-	return 0;
+	return 0; // will never be reached
 }
 #pragma warning(pop)
+
+// Placeholder system function, instead of XapiThreadStartup
+void PspSystemThreadStartup
+(
+	IN xboxkrnl::PKSTART_ROUTINE StartRoutine,
+	IN PVOID StartContext
+)
+{
+	__try
+	{
+		(StartRoutine)(StartContext);
+	}
+	__except (EmuException(GetExceptionInformation()))
+	// TODO : Call PspUnhandledExceptionInSystemThread(GetExceptionInformation())
+	{
+		EmuWarning("Problem with ExceptionFilter!"); // TODO : Disable?
+	}
+
+	xboxkrnl::PsTerminateSystemThread(STATUS_SUCCESS);
+}
 
 // ******************************************************************
 // * 0x00FE - PsCreateSystemThread
@@ -211,14 +207,14 @@ XBSYSAPI EXPORTNUM(254) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThread
 	return PsCreateSystemThreadEx(
 		/*OUT*/ThreadHandle,
 		/*ThreadExtensionSize=*/0,
-		/*KernelStackSize=*/0,
+		/*KernelStackSize=*/KERNEL_STACK_SIZE,
 		/*TlsDataSize=*/0,
 		/*OUT*/ThreadId,
 		/*StartRoutine=*/StartRoutine,
 		StartContext,
 		/*CreateSuspended=*/FALSE,
 		/*DebuggerThread=*/DebuggerThread,
-		/*SystemRoutine=*/NULL // This bypasses XapiThreadStartup - see usage in PCSTProxy
+		/*SystemRoutine=*/PspSystemThreadStartup // instead of XapiThreadStartup
 		);
 }
 
@@ -268,8 +264,10 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 	// TODO : Arguments to use : KernelStackSize, TlsDataSize, DebuggerThread
 
 	// TODO : Fill KernelStackSize like this :
-	//	if (KernelStackSize == 0)
-	//		KernelStackSize = XeImageHeader()->SizeOfStackCommit;
+	//	if (KernelStackSize < KERNEL_STACK_SIZE) 
+	//		KernelStackSize = KERNEL_STACK_SIZE;
+	//	else
+	//		KernelStackSize = round up;
 
 	static bool bFirstTime = false;
 
@@ -343,13 +341,21 @@ XBSYSAPI EXPORTNUM(258) xboxkrnl::VOID NTAPI xboxkrnl::PsTerminateSystemThread
 		}
 	}
 
-	//    CxbxKrnlTerminateThread();
-
-	EmuCleanupFS();
-
 	_endthreadex(ExitStatus);
-	//ExitThread(ExitStatus);
+	// ExitThread(ExitStatus);
+	// CxbxKrnlTerminateThread();
 }
 
 // TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(259) xboxkrnl::POBJECT_TYPE VOLATILE xboxkrnl::PsThreadObjectType = NULL;
+XBSYSAPI EXPORTNUM(259) xboxkrnl::OBJECT_TYPE VOLATILE xboxkrnl::PsThreadObjectType = 
+{
+	/*
+	ExAllocatePoolWithTag,
+	ExFreePool,
+	NULL,
+	NULL,
+	NULL,
+	*/
+	NULL, // (PVOID)FIELD_OFFSET(KTHREAD, Header),
+	'erhT' // = first four characters of "Thread" in reverse
+};

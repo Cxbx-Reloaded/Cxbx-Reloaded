@@ -203,6 +203,8 @@ typedef long                            NTSTATUS;
 #define MI_CONVERT_PFN_TO_PHYSICAL(Pfn) \
 	((PCHAR)MM_SYSTEM_PHYSICAL_MAP + ((ULONG)(Pfn) << PAGE_SHIFT))
 
+#define KERNEL_STACK_SIZE			12288 /* = 0x03000 */
+
 // ******************************************************************
 // * calling conventions
 // ******************************************************************

@@ -751,8 +751,6 @@ extern "C" CXBXKRNL_API void CxbxKrnlResume()
 
 extern "C" CXBXKRNL_API void CxbxKrnlTerminateThread()
 {
-    EmuCleanupFS();
-
     TerminateThread(GetCurrentThread(), 0);
 }
 

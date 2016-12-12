@@ -435,9 +435,3 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 
 	DbgPrintf("EmuFS (0x%X): OrgFS=%d NewFS=%d pTLS=0x%.08X\n", GetCurrentThreadId(), OrgFS, NewFS, pTLS);
 }
-
-// cleanup fs segment selector emulation
-void EmuCleanupFS()
-{
-
-}
