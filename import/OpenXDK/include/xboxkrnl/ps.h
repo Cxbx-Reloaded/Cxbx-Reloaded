@@ -41,14 +41,21 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI PsCreateSystemThreadEx
 );
 
 XBSYSAPI VOID *PsQueryStatistics;
-XBSYSAPI VOID *PsSetCreateThreadNotifyRoutine;
+
+// ******************************************************************
+// * PsSetCreateThreadNotifyRoutine
+// ******************************************************************
+XBSYSAPI EXPORTNUM(257) NTSTATUS NTAPI PsSetCreateThreadNotifyRoutine
+(
+	IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine
+);
 
 // ******************************************************************
 // * PsTerminateSystemThread
 // ******************************************************************
 XBSYSAPI EXPORTNUM(258) VOID NTAPI PsTerminateSystemThread(IN NTSTATUS ExitStatus);
 
-XBSYSAPI EXPORTNUM(259) volatile POBJECT_TYPE PsThreadObjectType;
+XBSYSAPI EXPORTNUM(259) volatile OBJECT_TYPE PsThreadObjectType;
 
 #endif
 

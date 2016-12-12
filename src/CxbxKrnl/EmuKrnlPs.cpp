@@ -67,7 +67,7 @@ typedef struct _PCSTProxyParam
 PCSTProxyParam;
 
 // Global Variable(s)
-extern PVOID g_pfnThreadNotification[16] = { NULL };
+extern PVOID g_pfnThreadNotification[PSP_MAX_CREATE_THREAD_NOTIFY] = { NULL };
 extern int g_iThreadNotificationCount = 0;
 
 // Separate function for logging, otherwise in PCSTProxy __try wont work (Compiler Error C2712)
@@ -309,6 +309,42 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 	}
 
 	RETURN(STATUS_SUCCESS);
+}
+
+// ******************************************************************
+// * 0x0101 - PsSetCreateThreadNotifyRoutine
+// ******************************************************************
+XBSYSAPI EXPORTNUM(257) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsSetCreateThreadNotifyRoutine
+(
+	IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine
+)
+{
+	LOG_FUNC_ONE_ARG(NotifyRoutine);
+
+	NTSTATUS ret = STATUS_INSUFFICIENT_RESOURCES;
+
+	// Taken from XTL::EmuXRegisterThreadNotifyRoutine (perhaps that can be removed now) :
+
+	// I honestly don't expect this to happen, but if it does...
+	if (g_iThreadNotificationCount >= PSP_MAX_CREATE_THREAD_NOTIFY)
+		CxbxKrnlCleanup("Too many thread notification routines installed\n"
+			"If you're reading this message than tell blueshogun you saw it!!!");
+
+	// Find an empty spot in the thread notification array
+	for (int i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++)
+	{
+		// If we find one, then add it to the array, and break the loop so
+		// that we don't accidently register the same routine twice!
+		if (g_pfnThreadNotification[i] == NULL)
+		{
+			g_pfnThreadNotification[i] = NotifyRoutine;
+			g_iThreadNotificationCount++;
+			ret = STATUS_SUCCESS;
+			break;
+		}
+	}
+
+	RETURN(ret);
 }
 
 // ******************************************************************

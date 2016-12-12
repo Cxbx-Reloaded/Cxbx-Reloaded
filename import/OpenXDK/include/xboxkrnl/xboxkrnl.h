@@ -205,6 +205,8 @@ typedef long                            NTSTATUS;
 
 #define KERNEL_STACK_SIZE			12288 /* = 0x03000 */
 
+#define PSP_MAX_CREATE_THREAD_NOTIFY 16 /* TODO : Should be 8 */
+
 // ******************************************************************
 // * calling conventions
 // ******************************************************************
@@ -1033,6 +1035,16 @@ typedef struct _ETHREAD
     DWORD           UniqueThread;   // 0x12C
 }
 ETHREAD, *PETHREAD;
+
+// ******************************************************************
+// * PCREATE_THREAD_NOTIFY_ROUTINE
+// ******************************************************************
+typedef VOID(*PCREATE_THREAD_NOTIFY_ROUTINE)
+(
+	IN PETHREAD Thread,
+	IN HANDLE ThreadId,
+	IN BOOLEAN Create
+);
 
 // ******************************************************************
 // * KPCRB
