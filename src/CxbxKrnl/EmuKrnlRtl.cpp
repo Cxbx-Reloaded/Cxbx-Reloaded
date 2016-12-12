@@ -496,3 +496,23 @@ XBSYSAPI EXPORTNUM(308) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToAns
 	RETURN(ret);
 }
 
+// Prevent errors compiling RtlZeroMemory (TODO : How should we really do this?)
+#undef RtlZeroMemory
+
+// ******************************************************************
+// * 0x0140 - RtlZeroMemory
+// ******************************************************************
+XBSYSAPI EXPORTNUM(320) xboxkrnl::VOID NTAPI xboxkrnl::RtlZeroMemory
+(
+	IN VOID UNALIGNED  *Destination,
+	IN SIZE_T           Length
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Destination)
+		LOG_FUNC_ARG(Length)
+		LOG_FUNC_END;
+
+	memset(Destination, 0, Length); // Don't bother with NtDll::RtlZeroMemory
+}
+

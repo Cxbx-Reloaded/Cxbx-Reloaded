@@ -385,7 +385,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x013D),                                    // 0x013D (317) RtlUpperString
 	(uint32)PANIC(0x013E),                                    // 0x013E (318) RtlUshortByteSwap
 	(uint32)PANIC(0x013F),                                    // 0x013F (319) RtlWalkFrameChain
-	(uint32)PANIC(0x0140),                                    // 0x0140 (320) RtlZeroMemory
+	(uint32)FUNC(&xboxkrnl::RtlZeroMemory),                   // 0x0140 (320)
 	(uint32)VARIABLE(&xboxkrnl::XboxEEPROMKey),               // 0x0141 (321)
 	(uint32)VARIABLE(&xboxkrnl::XboxHardwareInfo),            // 0x0142 (322)
 	(uint32)VARIABLE(&xboxkrnl::XboxHDKey),                   // 0x0143 (323)
