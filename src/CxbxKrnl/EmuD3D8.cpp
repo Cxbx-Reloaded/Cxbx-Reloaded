@@ -212,6 +212,11 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         DWORD dwThreadId;
 
         HANDLE hThread = CreateThread(NULL, NULL, EmuUpdateTickCount, NULL, NULL, &dwThreadId);
+		// Ported from Dxbx :
+        // If possible, assign this thread to another core than the one that runs Xbox1 code :
+        SetThreadAffinityMask(&dwThreadId, g_CPUOthers);
+        // We set the priority of this thread a bit higher, to assure reliable timing :
+        SetThreadPriority(hThread, THREAD_PRIORITY_ABOVE_NORMAL);
 
         // we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
         {
@@ -228,8 +233,20 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         DWORD dwThreadId;
 
         CreateThread(NULL, NULL, EmuCreateDeviceProxy, NULL, NULL, &dwThreadId);
+		// Ported from Dxbx :
+        // If possible, assign this thread to another core than the one that runs Xbox1 code :
+        SetThreadAffinityMask(&dwThreadId, g_CPUOthers);
     }
 
+/* TODO : Port this Dxbx code :
+  // create vblank handling thread
+    {
+        dwThreadId = 0;
+        {hThread :=} CreateThread(NULL, 0, EmuThreadHandleVBlank, NULL, 0, &dwThreadId);
+        // Make sure VBlank callbacks run on the same core as the one that runs Xbox1 code :
+        SetThreadAffinityMask(dwThreadId, g_CPUXbox);
+    }
+*/
     // create window message processing thread
     {
         DWORD dwThreadId;
@@ -237,6 +254,7 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         g_bRenderWindowActive = false;
 
         HANDLE hRenderWindowThread = CreateThread(NULL, NULL, EmuRenderWindow, NULL, NULL, &dwThreadId);
+
 		if (hRenderWindowThread == NULL) {
 			char szBuffer[1024] = { 0 };
 			sprintf(szBuffer, "Creating EmuRenderWindowThread Failed: %08X", GetLastError());
@@ -244,9 +262,12 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 			ExitProcess(0);
 		}
 
+		// Ported from Dxbx :
+		// If possible, assign this thread to another core than the one that runs Xbox1 code :
+		SetThreadAffinityMask(&dwThreadId, g_CPUOthers);
 
         while(!g_bRenderWindowActive)
-            Sleep(10);
+            Sleep(10); // Dxbx: Should we use SwitchToThread() or YieldProcessor() ?
 
         Sleep(50);
     }
@@ -403,7 +424,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
         );
     }
 
-    ShowWindow(g_hEmuWindow, (g_XBVideo.GetFullscreen() || (CxbxKrnl_hEmuParent == 0) ) ? SW_SHOWDEFAULT : SW_SHOWMAXIMIZED);
+    ShowWindow(g_hEmuWindow, ((CxbxKrnl_hEmuParent == 0) || g_XBVideo.GetFullscreen()) ? SW_SHOWDEFAULT : SW_SHOWMAXIMIZED);
     UpdateWindow(g_hEmuWindow);
 
     if(!g_XBVideo.GetFullscreen() && (CxbxKrnl_hEmuParent != NULL))
@@ -524,7 +545,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
         {
             DeleteObject(g_hBgBrush);
             PostQuitMessage(0);
-            return 0;
+            return D3D_OK; // = 0
         }
         break;
 
@@ -628,7 +649,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             if(g_XBVideo.GetFullscreen() || g_bIsFauxFullscreen)
             {
                 SetCursor(NULL);
-                return 0;
+                return D3D_OK; // = 0
             }
 
             return DefWindowProc(hWnd, msg, wParam, lParam);
@@ -639,7 +660,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             return DefWindowProc(hWnd, msg, wParam, lParam);
     }
 
-    return 0;
+    return D3D_OK; // = 0
 }
 
 // timing thread procedure
