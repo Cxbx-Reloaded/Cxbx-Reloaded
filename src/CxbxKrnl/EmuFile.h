@@ -162,6 +162,7 @@ bool IsEmuHandle(HANDLE Handle);
 EmuHandle* HandleToEmuHandle(HANDLE Handle);
 HANDLE EmuHandleToHandle(EmuHandle* emuHandle);
 
+CHAR* NtStatusToString(IN NTSTATUS Status);
 
 char SymbolicLinkToDriveLetter(std::string aSymbolicLinkName);
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByVolumeLetter(const char VolumeLetter);

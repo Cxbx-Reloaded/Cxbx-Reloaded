@@ -879,6 +879,14 @@ KTIMER, *PKTIMER;
 // ******************************************************************
 // * PKSTART_ROUTINE
 // ******************************************************************
+typedef VOID (NTAPI *PKSTART_ROUTINE)
+(
+    IN PVOID StartContext
+);
+
+// ******************************************************************
+// * PKSYSTEM_ROUTINE
+// ******************************************************************
 // *
 // * NOTE: Non-standard call. Similar to stdcall, but first argument
 // *       must be located at ebp+4 before calling.
@@ -887,10 +895,10 @@ KTIMER, *PKTIMER;
 // *       opposed to 1.
 // *
 // ******************************************************************
-typedef VOID (NTAPI *PKSTART_ROUTINE)
+typedef VOID (*PKSYSTEM_ROUTINE)
 (
-    IN PVOID StartContext1,
-    IN PVOID StartContext2
+	IN PKSTART_ROUTINE StartRoutine OPTIONAL,
+	IN PVOID StartContext OPTIONAL
 );
 
 struct _KDPC;

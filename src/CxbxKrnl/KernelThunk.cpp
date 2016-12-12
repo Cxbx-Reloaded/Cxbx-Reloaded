@@ -319,7 +319,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x00FB),                                    // 0x00FB (251) ObfReferenceObject
 	(uint32)FUNC(&xboxkrnl::PhyGetLinkState),                 // 0x00FC (252)
 	(uint32)FUNC(&xboxkrnl::PhyInitialize),                   // 0x00FD (253)
-	(uint32)PANIC(0x00FE),                                    // 0x00FE (254) PsCreateSystemThread
+	(uint32)FUNC(&xboxkrnl::PsCreateSystemThread),            // 0x00FE (254)
 	(uint32)FUNC(&xboxkrnl::PsCreateSystemThreadEx),          // 0x00FF (255)
 	(uint32)PANIC(0x0100),                                    // 0x0100 (256) PsQueryStatistics
 	(uint32)PANIC(0x0101),                                    // 0x0101 (257) PsSetCreateThreadNotifyRoutine

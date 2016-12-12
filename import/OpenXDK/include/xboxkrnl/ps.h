@@ -16,13 +16,11 @@
 
 XBSYSAPI EXPORTNUM(254) NTSTATUS NTAPI PsCreateSystemThread
 (
-   PULONG lpThreadAttributes,               // SD
-   DWORD dwStackSize,                       // initial stack size
-   PKSTART_ROUTINE lpStartAddress,          // thread function
-   VOID* lpParameter,                       // thread argument
-   DWORD dwCreationFlags,                   // creation option
-   DWORD* lpThreadId                        // thread identifier
-
+	OUT PHANDLE         ThreadHandle,
+	OUT PHANDLE         ThreadId OPTIONAL,
+	IN  PKSTART_ROUTINE StartRoutine,
+	IN  PVOID           StartContext,
+	IN  BOOLEAN         DebuggerThread
 );
 
 // ******************************************************************
@@ -30,16 +28,16 @@ XBSYSAPI EXPORTNUM(254) NTSTATUS NTAPI PsCreateSystemThread
 // ******************************************************************
 XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI PsCreateSystemThreadEx
 (
-    OUT PHANDLE         ThreadHandle,
-    IN  ULONG           ThreadExtraSize,
-    IN  ULONG           KernelStackSize,
-    IN  ULONG           TlsDataSize,
-    OUT PULONG          ThreadId OPTIONAL,
-    IN  PVOID           StartContext1,
-    IN  PVOID           StartContext2,
-    IN  BOOLEAN         CreateSuspended,
-    IN  BOOLEAN         DebugStack,
-    IN  PKSTART_ROUTINE StartRoutine
+	OUT PHANDLE         ThreadHandle,
+	IN  ULONG           ThreadExtensionSize,
+	IN  ULONG           KernelStackSize,
+	IN  ULONG           TlsDataSize,
+	OUT PHANDLE         ThreadId OPTIONAL,
+	IN  PKSTART_ROUTINE StartRoutine,
+	IN  PVOID           StartContext,
+	IN  BOOLEAN         CreateSuspended,
+	IN  BOOLEAN         DebuggerThread,
+	IN  PKSYSTEM_ROUTINE SystemRoutine OPTIONAL
 );
 
 XBSYSAPI VOID *PsQueryStatistics;

@@ -51,6 +51,7 @@ namespace NtDll
 
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
+#include "EmuFile.h" // For IsEmuHandle(), NtStatusToString()
 
 #include <chrono>
 #include <thread>
@@ -113,7 +114,7 @@ XBSYSAPI EXPORTNUM(95) xboxkrnl::VOID NTAPI xboxkrnl::KeBugCheck
 	IN ULONG BugCheckMode
 )
 {
-	LOG_FUNC_ONE_ARG(BugCheckMode);
+	LOG_FORWARD("KeBugCheckEx");
 
 	KeBugCheckEx(BugCheckMode, 0, 0, 0, 0);
 }
@@ -182,9 +183,9 @@ XBSYSAPI EXPORTNUM(99) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeDelayExecutionThread
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG_OUT(WaitMode)
+		LOG_FUNC_ARG(WaitMode)
 		LOG_FUNC_ARG(Alertable)
-		LOG_FUNC_ARG_OUT(Interval)
+		LOG_FUNC_ARG(Interval)
 		LOG_FUNC_END;
 
 	NTSTATUS ret = NtDll::NtDelayExecution(Alertable, (NtDll::LARGE_INTEGER*)Interval);
@@ -557,9 +558,35 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForMultipleObjects
 		LOG_FUNC_ARG(WaitBlockArray)
 		LOG_FUNC_END;
 
-	EmuWarning("EmuKrnl: Redirecting KeWaitForMultipleObjects to NtWaitForMultipleObjectsEx");
+	// Unused arguments : WaitReason, WaitMode, WaitBlockArray
 
-	NTSTATUS ret = NtWaitForMultipleObjectsEx(Count, Object, WaitType, WaitMode, Alertable, Timeout);
+	NTSTATUS ret = STATUS_SUCCESS;
+
+	for (uint i = 0; i < Count; i++)
+		if (IsEmuHandle(Object[i]))
+		{
+			ret = WAIT_FAILED;
+			EmuWarning("WaitFor EmuHandle not supported!");
+			break;
+		}
+
+	if (ret == STATUS_SUCCESS)
+	{
+		// TODO : What should we do with the (currently ignored) WaitMode?
+
+		ret = NtDll::NtWaitForMultipleObjects(
+			Count,
+			Object,
+			(NtDll::OBJECT_WAIT_TYPE)WaitType,
+			Alertable,
+			(NtDll::PLARGE_INTEGER)Timeout);
+
+		if (Count == 1)
+			DbgPrintf("Finished waiting for 0x%.08X\n", Object[0]);
+
+		if (ret == WAIT_FAILED)
+			EmuWarning("KeWaitForMultipleObjects failed! (%s)", NtStatusToString(ret));
+	}
 
 	RETURN(ret);
 }
@@ -590,5 +617,3 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForSingleObject
 
 	RETURN(ret);
 }
-
-
