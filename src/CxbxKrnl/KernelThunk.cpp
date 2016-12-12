@@ -46,7 +46,7 @@ namespace xboxkrnl
 //
 // Enable "#define PANIC(numb) numb" if you wish to find out what
 // kernel export the application is attempting to call. The app
-// will crash at the thunk number (i.e. PsCreateSystemThread:0xFF)
+// will crash at the thunk number (i.e. PsQueryStatistics:0x0100)
 //
 // For general use, you should probably just enable the other
 // option "#define PANIC(numb) cxbx_panic"
@@ -190,7 +190,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x007A),                                    // 0x007A (122) KeLeaveCriticalRegion
 	(uint32)PANIC(0x007B),                                    // 0x007B (123) KePulseEvent
 	(uint32)PANIC(0x007C),                                    // 0x007C (124) KeQueryBasePriorityThread
-	(uint32)PANIC(0x007D),                                    // 0x007D (125) KeQueryInterruptTime
+	(uint32)FUNC(&xboxkrnl::KeQueryInterruptTime),            // 0x007D (125)
 	(uint32)FUNC(&xboxkrnl::KeQueryPerformanceCounter),       // 0x007E (126)
 	(uint32)FUNC(&xboxkrnl::KeQueryPerformanceFrequency),     // 0x007F (127)
 	(uint32)FUNC(&xboxkrnl::KeQuerySystemTime),               // 0x0080 (128)

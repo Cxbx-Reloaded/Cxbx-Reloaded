@@ -12,8 +12,9 @@
 #ifndef XBOXKRNL_PS_H
 #define XBOXKRNL_PS_H
 
-//XBSYSAPI VOID *PsCreateSystemThread;
-
+// ******************************************************************
+// * PsCreateSystemThread
+// ******************************************************************
 XBSYSAPI EXPORTNUM(254) NTSTATUS NTAPI PsCreateSystemThread
 (
 	OUT PHANDLE         ThreadHandle,

@@ -147,7 +147,11 @@ XBSYSAPI VOID *KeIsExecutingDpc;
 XBSYSAPI VOID *KeLeaveCriticalRegion;
 XBSYSAPI VOID *KePulseEvent;
 XBSYSAPI VOID *KeQueryBasePriorityThread;
-XBSYSAPI VOID *KeQueryInterruptTime;
+
+// ******************************************************************
+// * KeQueryInterruptTime
+// ******************************************************************
+XBSYSAPI EXPORTNUM(125) ULONGLONG NTAPI KeQueryInterruptTime(void);
 
 // ******************************************************************
 // * KeQueryPerformanceCounter

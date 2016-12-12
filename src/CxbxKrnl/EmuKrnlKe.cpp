@@ -317,6 +317,29 @@ XBSYSAPI EXPORTNUM(119) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertQueueDpc
 	RETURN(TRUE);
 }
 
+// ******************************************************************
+// * 0x007D - KeQueryInterruptTime
+// ******************************************************************
+XBSYSAPI EXPORTNUM(125) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryInterruptTime(void)
+{
+	// TODO : Some software might call this often and fill the log quickly,
+	// in which case we should not LOG_FUNC nor RETURN (use normal return instead).
+	LOG_FUNC();
+
+	// Don't use NtDll::QueryInterruptTime, it's too new (Windows 10)
+	
+	// Instead, read KeInterruptTime from our kernel thunk table,
+	// which we coupled to the host InterruptTime in ConnectWindowsTimersToThunkTable:
+	ULONGLONG InterruptTime = *((PULONGLONG)CxbxKrnl_KernelThunkTable[120]);
+	
+	// TODO : Read InterruptTime atomically (or with a spinloop) to avoid errors
+	// when High1Time and High2Time differ (during unprocessed overflow in LowPart).
+	
+	// TODO : Should we apply HostSystemTimeDelta to InterruptTime too?
+
+	RETURN(InterruptTime);
+}
+
 // Dxbx note : This was once a value, but instead we now point to
 // the native Windows versions (see ConnectWindowsTimersToThunkTable) :
 // XBSYSAPI EXPORTNUM(120) xboxkrnl::PKSYSTEM_TIME xboxkrnl::KeInterruptTime; // Used for KernelThunk[120]
