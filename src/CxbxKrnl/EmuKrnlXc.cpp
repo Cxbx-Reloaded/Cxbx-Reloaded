@@ -51,7 +51,7 @@ namespace NtDll
 };
 
 // ******************************************************************
-// * XcSHAInit
+// * 0x014F - XcSHAInit()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(335) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAInit
 (
@@ -64,7 +64,7 @@ XBSYSAPI EXPORTNUM(335) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAInit
 }
 
 // ******************************************************************
-// * XcSHAUpdate
+// * 0x0150 - XcSHAUpdate()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(336) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAUpdate
 (
@@ -83,7 +83,7 @@ XBSYSAPI EXPORTNUM(336) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAUpdate
 }
 
 // ******************************************************************
-// * XcSHAFinal
+// * 0x0151 - XcSHAFinal()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(337) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAFinal
 (
@@ -99,6 +99,9 @@ XBSYSAPI EXPORTNUM(337) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAFinal
 	A_SHAFinal((SHA_CTX*)pbSHAContext, pbDigest);
 }
 
+// ******************************************************************
+// * 0x0154 - XcHMAC()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(340) xboxkrnl::VOID NTAPI xboxkrnl::XcHMAC(
 	IN PBYTE pbKeyMaterial,
 	IN ULONG cbKeyMaterial,

@@ -52,7 +52,7 @@ namespace NtDll
 #include "Emu.h" // For EmuWarning()
 
 // ******************************************************************
-// * 0x0023 - FscGetCacheSize
+// * 0x0023 - FscGetCacheSize()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(35) xboxkrnl::DWORD NTAPI xboxkrnl::FscGetCacheSize()
 {
@@ -63,6 +63,9 @@ XBSYSAPI EXPORTNUM(35) xboxkrnl::DWORD NTAPI xboxkrnl::FscGetCacheSize()
 	RETURN(64 * 1024);
 }
 
+// ******************************************************************
+// * 0x0024 - FscInvalidateIdleBlocks()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(36) xboxkrnl::VOID NTAPI xboxkrnl::FscInvalidateIdleBlocks()
 {
 	LOG_FUNC();
@@ -70,9 +73,8 @@ XBSYSAPI EXPORTNUM(36) xboxkrnl::VOID NTAPI xboxkrnl::FscInvalidateIdleBlocks()
 	LOG_UNIMPLEMENTED();
 }
 
-
 // ******************************************************************
-// * 0x0025 - FscSetCacheSize
+// * 0x0025 - FscSetCacheSize()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(37) xboxkrnl::LONG NTAPI xboxkrnl::FscSetCacheSize
 (

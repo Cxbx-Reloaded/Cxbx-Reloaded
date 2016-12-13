@@ -44,6 +44,9 @@ namespace xboxkrnl
 #include "Logging.h" // For LOG_FUNC()
 #include "Emu.h" // For EmuWarning()
 
+// ******************************************************************
+// * 0x0141 - XboxEEPROMKey
+// ******************************************************************
 // TODO : What should we initialize this to?
 XBSYSAPI EXPORTNUM(321) xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxEEPROMKey = {};
 
@@ -67,7 +70,6 @@ XBSYSAPI EXPORTNUM(323) xboxkrnl::UCHAR xboxkrnl::XboxHDKey[16] =
 	0x00, 0x00, 0x00, 0x00,
 };
 
-
 // ******************************************************************
 // * 0x0144 - XboxKrnlVersion
 // ******************************************************************
@@ -78,9 +80,8 @@ XBSYSAPI EXPORTNUM(324) xboxkrnl::XBOX_KRNL_VERSION xboxkrnl::XboxKrnlVersion =
 	1, 0, 5838, 1 // TODO : Make this configurable
 };
 
-
 // ******************************************************************
-// * XboxSignatureKey
+// * 0x0145 - XboxSignatureKey
 // ******************************************************************
 XBSYSAPI EXPORTNUM(325) xboxkrnl::BYTE xboxkrnl::XboxSignatureKey[16] =
 {
@@ -89,9 +90,15 @@ XBSYSAPI EXPORTNUM(325) xboxkrnl::BYTE xboxkrnl::XboxSignatureKey[16] =
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
+// ******************************************************************
+// * 0x0161 - XboxLANKey
+// ******************************************************************
 // TODO : What should we initialize this to?
 XBSYSAPI EXPORTNUM(353) xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxLANKey = {};
 
+// ******************************************************************
+// * 0x0162 - XboxAlternateSignatureKeys
+// ******************************************************************
 // TODO : What should we initialize this to?
 XBSYSAPI EXPORTNUM(354) xboxkrnl::XBOX_KEY_DATA xboxkrnl::XboxAlternateSignatureKeys = {};
 

@@ -51,8 +51,10 @@ namespace NtDll
 
 #include "Emu.h" // For EmuWarning()
 
-// TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(240) xboxkrnl::OBJECT_TYPE xboxkrnl::ObDirectoryObjectType = 
+// ******************************************************************
+// * 0x00F0 - ObDirectoryObjectType
+// ******************************************************************
+XBSYSAPI EXPORTNUM(240) xboxkrnl::OBJECT_TYPE xboxkrnl::ObDirectoryObjectType =
 {
 	/*
 	ExAllocatePoolWithTag,
@@ -66,7 +68,7 @@ XBSYSAPI EXPORTNUM(240) xboxkrnl::OBJECT_TYPE xboxkrnl::ObDirectoryObjectType =
 };
 
 // ******************************************************************
-// * 0x00F3 - ObOpenObjectByName
+// * 0x00F3 - ObOpenObjectByName()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(243) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByName
 (
@@ -88,24 +90,15 @@ XBSYSAPI EXPORTNUM(243) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByName
 	RETURN(STATUS_SUCCESS);
 }
 
+// ******************************************************************
+// * 0x00F5 - ObpObjectHandleTable
+// ******************************************************************
 // TODO : Determine size. What should we initialize this to?
 XBSYSAPI EXPORTNUM(245) xboxkrnl::DWORD xboxkrnl::ObpObjectHandleTable[1] = {};
 
-// TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(249) xboxkrnl::OBJECT_TYPE xboxkrnl::ObSymbolicLinkObjectType = 
-{
-	/*
-	ExAllocatePoolWithTag,
-	ExFreePool,
-	NULL,
-	ObpDeleteSymbolicLink,
-	NULL,
-	*/
-	NULL, // &ObpDefaultObject,
-	'bmyS' // = first four characters of "SymbolicLink" in reverse
-};
-
-// ObReferenceObjectByHandle:
+// ******************************************************************
+// * 0x00F6 - ObReferenceObjectByHandle()
+// ******************************************************************
 // Turns a handle into a kernel object pointer.  The ObjectType parameter
 // specifies what type of object it is.  This function also increments the
 // object's reference count.
@@ -132,6 +125,25 @@ XBSYSAPI EXPORTNUM(246) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByHa
 	RETURN(STATUS_SUCCESS);
 }
 
+// ******************************************************************
+// * 0x00F9 - ObSymbolicLinkObjectType
+// ******************************************************************
+XBSYSAPI EXPORTNUM(249) xboxkrnl::OBJECT_TYPE xboxkrnl::ObSymbolicLinkObjectType =
+{
+	/*
+	ExAllocatePoolWithTag,
+	ExFreePool,
+	NULL,
+	ObpDeleteSymbolicLink,
+	NULL,
+	*/
+	NULL, // &ObpDefaultObject,
+	'bmyS' // = first four characters of "SymbolicLink" in reverse
+};
+
+// ******************************************************************
+// * 0x00FA - ObfDereferenceObject()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(250) xboxkrnl::VOID FASTCALL xboxkrnl::ObfDereferenceObject
 (
 	IN PVOID Object

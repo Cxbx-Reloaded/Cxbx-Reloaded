@@ -44,8 +44,13 @@ namespace xboxkrnl
 #include "Logging.h" // For LOG_FUNC()
 #include "Emu.h" // For EmuWarning()
 
-// TODO : What should we initialize this to?
+// ******************************************************************
+// * 0x0058 - KdDebuggerEnabled
+// ******************************************************************
 XBSYSAPI EXPORTNUM(88) xboxkrnl::BOOLEAN xboxkrnl::KdDebuggerEnabled = false;
 
-// Source:ReactOS  TODO : What should we initialize this to?
+// ******************************************************************
+// * 0x0059 - KdDebuggerNotPresent
+// ******************************************************************
+// Source:ReactOS
 XBSYSAPI EXPORTNUM(89) xboxkrnl::BOOLEAN xboxkrnl::KdDebuggerNotPresent = true;
