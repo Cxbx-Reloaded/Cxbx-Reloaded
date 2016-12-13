@@ -53,11 +53,6 @@ namespace xboxkrnl
 #include "Logging.h"
 #include "EmuKrnlLogging.h"
 
-std::ostream& operator<<(std::ostream& os, const xboxkrnl::LARGE_INTEGER& value)
-{
-	return os << value.QuadPart;
-}
-
 std::ostream& operator<<(std::ostream& os, const PULONG& value)
 {
 	os << "0x" << (void*)value;
@@ -67,11 +62,90 @@ std::ostream& operator<<(std::ostream& os, const PULONG& value)
 	return os;
 }
 
+#define RENDER_MEMBER(Member) << " ."#Member":" << value.Member
+
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::LARGE_INTEGER& value)
+{
+	return os 
+		RENDER_MEMBER(QuadPart);
+}
+
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::MM_STATISTICS& value)
+{
+	return os
+		RENDER_MEMBER(Length)
+		RENDER_MEMBER(TotalPhysicalPages)
+		RENDER_MEMBER(AvailablePages)
+		RENDER_MEMBER(VirtualMemoryBytesCommitted)
+		RENDER_MEMBER(VirtualMemoryBytesCommitted)
+		RENDER_MEMBER(VirtualMemoryBytesReserved)
+		RENDER_MEMBER(CachePagesCommitted)
+		RENDER_MEMBER(PoolPagesCommitted)
+		RENDER_MEMBER(StackPagesCommitted)
+		RENDER_MEMBER(ImagePagesCommitted);
+}
+
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::OBJECT_ATTRIBUTES& value)
+{
+	return os
+		RENDER_MEMBER(RootDirectory)
+		RENDER_MEMBER(ObjectName)
+		RENDER_MEMBER(Attributes);
+}
+
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::STRING& value)
+{
+	return os
+		RENDER_MEMBER(Length)
+		RENDER_MEMBER(MaximumLength)
+		RENDER_MEMBER(Buffer);
+}
+
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::UNICODE_STRING& value)
+{
+	return os
+		RENDER_MEMBER(Length)
+		RENDER_MEMBER(MaximumLength)
+		RENDER_MEMBER(Buffer);
+}
+
+#undef RENDER_MEMBER
+
+// Pointers to all of the above :
+
+#define RENDER_POINTER(TYPE)                                                     \
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::P##TYPE& value)       \
+{                                                                                \
+	os << "0x" << (void*)value;                                                  \
+	if (value)                                                                   \
+		os << " (->"#TYPE":\n" << *value << ")";                                 \
+                                                                                 \
+	return os;                                                                   \
+}
+
+RENDER_POINTER(LARGE_INTEGER)
+RENDER_POINTER(MM_STATISTICS)
+RENDER_POINTER(OBJECT_ATTRIBUTES)
+RENDER_POINTER(STRING)
+RENDER_POINTER(UNICODE_STRING)
+
+#undef RENDER_POINTER
+
+/*
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::PLARGE_INTEGER& value)
+{
+	os << "0x" << (void*)value;
+	if (value)
+		os << " (->LARGE_INTEGER:\n" << *value << ")";
+
+	return os;
+}
+
 std::ostream& operator<<(std::ostream& os, const xboxkrnl::PMM_STATISTICS& value)
 {
 	os << "0x" << (void*)value;
 	if (value)
-		os << " (->Length: " << value->Length << ")";
+		os << " (->MM_STATISTICS:\n" << *value << ")";
 
 	return os;
 }
@@ -80,7 +154,7 @@ std::ostream& operator<<(std::ostream& os, const xboxkrnl::POBJECT_ATTRIBUTES& v
 {
 	os << "0x" << (void*)value;
 	if (value)
-		os << " (->ObjectName: " << value->ObjectName << ")";
+		os << " (->OBJECT_ATTRIBUTES:\n" << *value << ")";
 
 	return os;
 }
@@ -89,16 +163,9 @@ std::ostream& operator<<(std::ostream& os, const xboxkrnl::PSTRING& value)
 {
 	os << "0x" << (void*)value;
 	if (value)
-		os << " (->Buffer: \"" << value->Buffer << "\")";
+		os << " (->STRING:\n" << *value << ")";
+
 
 	return os;
 }
-
-std::ostream& operator<<(std::ostream& os, const xboxkrnl::PLARGE_INTEGER& value)
-{
-	os << "0x" << (void*)value;
-	if (value)
-		os << " (->QuadPart: " << value->QuadPart << ")";
-
-	return os;
-}
+*/

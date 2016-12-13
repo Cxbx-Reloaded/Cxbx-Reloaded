@@ -51,32 +51,92 @@ namespace xboxkrnl
 //?#include "Cxbx.h"
 //#include "Logging.h"
 
-// std::ostream& operator<<(std::ostream& os, const PVOID*& value); // * value, *value
-// TODO : KINTERRUPT_MODE
-// TODO : KIRQL
-// TODO : KPROCESSOR_MODE
-// TODO : LPCSTR
-// TODO : PIO_STATUS_BLOCK ->u1.Pointer, ->Information
-// TODO : PKDEFERRED_ROUTINE
-// TODO : PKDPC
-// TODO : PKINTERRUPT
-// TODO : PKSERVICE_ROUTINE
-// TODO : PKTIMER
-// TODO : PLARGE_INTEGER
-// TODO : PUNICODE_STRING
-// TODO : PXDEVICE_PREALLOC_TYPE
-// TODO : PXINPUT_CAPABILITIES
-// TODO : PXINPUT_STATE
-// TODO : PXPP_DEVICE_TYPE
-// TODO : PXTHREAD_NOTIFICATION -> pfnNotifyRoutine
-// TODO : TIMER_TYPE
-// TODO : UCHAR
+// TODO : Implement renderers for each usage of these types (and/or (P/LP) pointers to them)...
+// TODO : xboxkrnl::ANSI_STRING
+// TODO : xboxkrnl::BUS_DATA_TYPE
+// TODO : xboxkrnl::DEVICE_OBJECT
+// TODO : xboxkrnl::DISPATCHER_HEADER
+// TODO : xboxkrnl::DVDX2_AUTHENTICATION
+// TODO : xboxkrnl::DVDX2_AUTHENTICATION_PAGE
+// TODO : xboxkrnl::EEPROM_INDEX
+// TODO : xboxkrnl::ERWLOCK
+// TODO : xboxkrnl::ETHREAD
+// TODO : xboxkrnl::EVENT_TYPE
+// TODO : xboxkrnl::EXCEPTION_RECORD
+// TODO : xboxkrnl::FILE_DIRECTORY_INFORMATION
+// TODO : xboxkrnl::FILE_FS_SIZE_INFORMATION
+// TODO : xboxkrnl::FILE_INFORMATION_CLASS
+// TODO : xboxkrnl::FILETIME
+// TODO : xboxkrnl::FS_INFORMATION_CLASS
+// TODO : xboxkrnl::IO_STATUS_BLOCK / xboxkrnl::PIO_STATUS_BLOCK ->u1.Pointer, ->Information
+// TODO : xboxkrnl::KDEVICE_QUEUE
+// TODO : xboxkrnl::KDPC
+// TODO : xboxkrnl::KEVENT
+// TODO : xboxkrnl::KINTERRUPT
+// TODO : xboxkrnl::KINTERRUPT_MODE
+// TODO : xboxkrnl::KIRQL
+// TODO : xboxkrnl::KOBJECTS
+// TODO : xboxkrnl::KPCR
+// TODO : xboxkrnl::KPRCB
+// TODO : xboxkrnl::KPROCESSOR_MODE
+// TODO : xboxkrnl::KSEMAPHORE
+// TODO : xboxkrnl::KSPIN_LOCK
+// TODO : xboxkrnl::KSYSTEM_TIME
+// TODO : xboxkrnl::KTHREAD
+// TODO : xboxkrnl::KTIMER /xboxkrnl::PKTIMER
+// TODO : xboxkrnl::LAUNCH_DATA_HEADER
+// TODO : xboxkrnl::LAUNCH_DATA_PAGE
+// TODO : xboxkrnl::LIST_ENTRY
+// TODO : xboxkrnl::LPCCH
+// TODO : xboxkrnl::LPCSTR
+// TODO : xboxkrnl::LPCWSTR
+// TODO : xboxkrnl::MEMORY_BASIC_INFORMATION
+// TODO : xboxkrnl::MM_STATISTICS
+// TODO : xboxkrnl::MODE
+// TODO : xboxkrnl::MODE_PARAMETER_HEADER10
+// TODO : xboxkrnl::NT_TIB
+// TODO : xboxkrnl::NTSTATUS
+// TODO : xboxkrnl::OBJECT_ATTRIBUTES
+// TODO : xboxkrnl::OBJECT_STRING
+// TODO : xboxkrnl::OBJECT_TYPE
+// TODO : xboxkrnl::PCI_COMMON_CONFIG
+// TODO : xboxkrnl::PCI_SLOT_NUMBER
+// TODO : xboxkrnl::PCHAR
+// TODO : xboxkrnl::PKDEFERRED_ROUTINE
+// TODO : xboxkrnl::PKDPC
+// TODO : xboxkrnl::PKINTERRUPT
+// TODO : xboxkrnl::PKSERVICE_ROUTINE
+// TODO : xboxkrnl::PXDEVICE_PREALLOC_TYPE
+// TODO : xboxkrnl::PXINPUT_CAPABILITIES
+// TODO : xboxkrnl::PXINPUT_STATE
+// TODO : xboxkrnl::PXPP_DEVICE_TYPE
+// TODO : xboxkrnl::PXTHREAD_NOTIFICATION -> pfnNotifyRoutine
+// TODO : xboxkrnl::RETURN_FIRMWARE
+// TODO : xboxkrnl::RTL_CRITICAL_SECTION
+// TODO : xboxkrnl::SCSI_PASS_THROUGH_DIRECT
+// TODO : xboxkrnl::SINGLE_LIST_ENTRY
+// TODO : xboxkrnl::SLIST_HEADER
+// TODO : xboxkrnl::STRING
+// TODO : xboxkrnl::TIMER_TYPE
+// TODO : xboxkrnl::TIME_FIELDS
+// TODO : xboxkrnl::UCHAR
+// TODO : xboxkrnl::ULARGE_INTEGER
+// TODO : xboxkrnl::WAIT_TYPE
+// TODO : xboxkrnl::XBOX_HARDWARE_INFO
+// TODO : xboxkrnl::XBOX_REFURB_INFO
 
 std::ostream& operator<<(std::ostream& os, const PULONG& value);
+
 std::ostream& operator<<(std::ostream& os, const xboxkrnl::LARGE_INTEGER& value);
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::MM_STATISTICS& value);
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::OBJECT_ATTRIBUTES& value);
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::STRING& value);
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::UNICODE_STRING& value);
+
 std::ostream& operator<<(std::ostream& os, const xboxkrnl::PLARGE_INTEGER& value);
 std::ostream& operator<<(std::ostream& os, const xboxkrnl::PMM_STATISTICS& value);
 std::ostream& operator<<(std::ostream& os, const xboxkrnl::POBJECT_ATTRIBUTES& value);
 std::ostream& operator<<(std::ostream& os, const xboxkrnl::PSTRING& value);
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::PUNICODE_STRING& value);
 
 #endif _EMU_KERNEL_LOGGING_H
