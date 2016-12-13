@@ -52,14 +52,17 @@ XBSYSAPI EXPORTNUM(4) VOID NTAPI AvSetSavedDataAddress
 // ******************************************************************
 // * FscGetCacheSize
 // ******************************************************************
-XBSYSAPI EXPORTNUM(35) DWORD NTAPI FscGetCacheSize();
+XBSYSAPI EXPORTNUM(35) ULONG NTAPI FscGetCacheSize();
 
 XBSYSAPI EXPORTNUM(36) VOID NTAPI FscInvalidateIdleBlocks();
 
 // ******************************************************************
 // * FscSetCacheSize
 // ******************************************************************
-XBSYSAPI EXPORTNUM(37) LONG NTAPI FscSetCacheSize(ULONG uCachePages);
+XBSYSAPI EXPORTNUM(37) NTSTATUS NTAPI FscSetCacheSize
+(
+		ULONG NumberOfCachePages
+);
 
 XBSYSAPI EXPORTNUM(88) BOOLEAN KdDebuggerEnabled;
 XBSYSAPI EXPORTNUM(89) BOOLEAN KdDebuggerNotPresent;
