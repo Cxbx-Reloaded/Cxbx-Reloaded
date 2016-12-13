@@ -1444,10 +1444,12 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Stop
            ");\n",
            GetCurrentThreadId(), pThis);
 
-    HRESULT hRet = pThis->EmuDirectSoundBuffer8->Stop();
-
+	HRESULT hRet = D3D_OK;
     
-
+	if (pThis != nullptr) {
+		hRet = pThis->EmuDirectSoundBuffer8->Stop();
+	}
+   
     return hRet;
 }
 
