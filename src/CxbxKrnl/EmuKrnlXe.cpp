@@ -42,10 +42,11 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
+#include "EmuKrnlLogging.h"
 #include "Emu.h" // For EmuWarning()
 
 // ******************************************************************
-// * XeImageFileName
+// * 0x0146 - XeImageFileName
 // ******************************************************************
 XBSYSAPI EXPORTNUM(326) xboxkrnl::OBJECT_STRING xboxkrnl::XeImageFileName =
 // XeImageFileName.Buffer points to path of XBE
@@ -56,6 +57,9 @@ XBSYSAPI EXPORTNUM(326) xboxkrnl::OBJECT_STRING xboxkrnl::XeImageFileName =
 
 };
 
+// ******************************************************************
+// * 0x0147 - XeLoadSection()
+// ******************************************************************
 // XeLoadSection:
 // Adds one to the reference count of the specified section and loads if the
 // count is now above zero.
@@ -80,7 +84,9 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 	RETURN(STATUS_SUCCESS);
 }
 
-// XeUnloadSection:
+// ******************************************************************
+// * 0x0148 - XeUnloadSection()
+// ******************************************************************
 // Subtracts one from the reference count of the specified section and unloads
 // if the count is now zero.
 //
@@ -103,6 +109,9 @@ XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection
 	RETURN(STATUS_SUCCESS);
 }
 
+// ******************************************************************
+// * 0x0163 - XePublicKeyData
+// ******************************************************************
 // TODO : What should we initialize this to?
 XBSYSAPI EXPORTNUM(355) xboxkrnl::DWORD xboxkrnl::XePublicKeyData = 0;
 

@@ -42,6 +42,7 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
+#include "EmuKrnlLogging.h"
 
 // prevent name collisions
 namespace NtDll
@@ -56,7 +57,7 @@ namespace NtDll
 PVOID g_pPersistedData = NULL;
 
 // ******************************************************************
-// * 0x0001 AvGetSavedDataAddress()
+// * 0x0001 - AvGetSavedDataAddress()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress(void)
 {
@@ -106,7 +107,7 @@ XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress(void
 }
 
 // ******************************************************************
-// * 0x0002 AvSendTVEncoderOption()
+// * 0x0002 - AvSendTVEncoderOption()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(2) xboxkrnl::VOID NTAPI xboxkrnl::AvSendTVEncoderOption
 (
@@ -129,6 +130,9 @@ XBSYSAPI EXPORTNUM(2) xboxkrnl::VOID NTAPI xboxkrnl::AvSendTVEncoderOption
 	LOG_UNIMPLEMENTED();
 }
 
+// ******************************************************************
+// * 0x0003 - AvSetDisplayMode()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 (
 	IN  PVOID   RegisterBase,
@@ -155,6 +159,9 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 	RETURN(result);
 }
 
+// ******************************************************************
+// * 0x0004 - AvSetSavedDataAddress()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(4) xboxkrnl::VOID NTAPI xboxkrnl::AvSetSavedDataAddress
 (
 	IN  PVOID   Address

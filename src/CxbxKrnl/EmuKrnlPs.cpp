@@ -44,6 +44,7 @@ namespace xboxkrnl
 #include <process.h> // For __beginthreadex(), etc.
 
 #include "Logging.h" // For LOG_FUNC()
+#include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnl_TLS
 #include "Emu.h" // For EmuWarning()
 #include "EmuFS.h" // For EmuGenerateFS
@@ -191,7 +192,7 @@ void PspSystemThreadStartup
 }
 
 // ******************************************************************
-// * 0x00FE - PsCreateSystemThread
+// * 0x00FE - PsCreateSystemThread()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(254) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThread
 (
@@ -219,7 +220,7 @@ XBSYSAPI EXPORTNUM(254) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThread
 }
 
 // ******************************************************************
-// * 0x00FF - PsCreateSystemThreadEx
+// * 0x00FF - PsCreateSystemThreadEx()
 // ******************************************************************
 // Creates a system thread.
 // ThreadHandle: Receives the thread handle
@@ -312,7 +313,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 }
 
 // ******************************************************************
-// * 0x0101 - PsSetCreateThreadNotifyRoutine
+// * 0x0101 - PsSetCreateThreadNotifyRoutine()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(257) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsSetCreateThreadNotifyRoutine
 (
@@ -348,7 +349,7 @@ XBSYSAPI EXPORTNUM(257) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsSetCreateThreadNoti
 }
 
 // ******************************************************************
-// * 0x0102 - PsTerminateSystemThread
+// * 0x0102 - PsTerminateSystemThread()
 // ******************************************************************
 // Exits the current system thread.  Must be called from a system thread.
 //
@@ -382,8 +383,10 @@ XBSYSAPI EXPORTNUM(258) xboxkrnl::VOID NTAPI xboxkrnl::PsTerminateSystemThread
 	// CxbxKrnlTerminateThread();
 }
 
-// TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(259) xboxkrnl::OBJECT_TYPE VOLATILE xboxkrnl::PsThreadObjectType = 
+// ******************************************************************
+// * 0x0103 - PsThreadObjectType
+// ******************************************************************
+XBSYSAPI EXPORTNUM(259) xboxkrnl::OBJECT_TYPE VOLATILE xboxkrnl::PsThreadObjectType =
 {
 	/*
 	ExAllocatePoolWithTag,
