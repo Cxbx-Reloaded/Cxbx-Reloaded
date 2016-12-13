@@ -44,6 +44,7 @@ namespace xboxkrnl
 #include <process.h> // For __beginthreadex(), etc.
 
 #include "Logging.h" // For LOG_FUNC()
+#include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnl_TLS
 #include "Emu.h" // For EmuWarning()
 #include "EmuFS.h" // For EmuGenerateFS

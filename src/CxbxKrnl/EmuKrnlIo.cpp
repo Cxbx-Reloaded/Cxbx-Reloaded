@@ -42,7 +42,7 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
-
+#include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuFile.h" // For CxbxCreateSymbolicLink(), etc.

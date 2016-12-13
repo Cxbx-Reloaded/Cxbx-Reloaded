@@ -46,7 +46,7 @@ namespace xboxkrnl
 //#include <process.h>
 
 #include "Logging.h"
-
+#include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h"
 
 // prevent name collisions
@@ -54,72 +54,6 @@ namespace NtDll
 {
     #include "EmuNtDll.h"
 };
-
-// TODO : Move operator<< to a central place
-std::ostream& operator<<(std::ostream& os, const xboxkrnl::PSTRING& value); // forward
-
-//std::ostream& operator<<(std::ostream& os, const xboxkrnl::LARGE_INTEGER& value)
-//{
-//	return os << value.QuadPart;
-//}
-
-//std::ostream& operator<<(std::ostream& os, const xboxkrnl::LPCSTR& value);
-
-std::ostream& operator<<(std::ostream& os, const PULONG& value)
-{
-	os << "0x" << (void*)value;
-	if (value)
-		os << " (*value: " << (void*)*value << ")";
-
-	return os;
-}
-
-std::ostream& operator<<(std::ostream& os, const xboxkrnl::PMM_STATISTICS& value)
-{
-	os << "0x" << (void*)value;
-	if (value)
-		os << " (->Length: " << value->Length << ")";
-
-	return os;
-}
-
-std::ostream& operator<<(std::ostream& os, const xboxkrnl::POBJECT_ATTRIBUTES& value)
-{
-	os << "0x" << (void*)value;
-	if (value)
-		os << " (->ObjectName: " << value->ObjectName << ")";
-
-	return os;
-}
-
-// std::ostream& operator<<(std::ostream& os, const xboxkrnl::PIO_STATUS_BLOCK& value); // ->u1.Pointer, ->Information
-
-std::ostream& operator<<(std::ostream& os, const xboxkrnl::PSTRING& value)
-{
-	os << "0x" << (void*)value;
-	if (value)
-		os << " (->Buffer: \"" << value->Buffer << "\")";
-
-	return os;
-}
-
-std::ostream& operator<<(std::ostream& os, const xboxkrnl::PLARGE_INTEGER& value)
-{
-	os << "0x" << (void*)value;
-	if (value)
-		os << " (->QuadPart: " << value->QuadPart << ")";
-
-	return os;
-}
-
-// std::ostream& operator<<(std::ostream& os, const xboxkrnl::PUNICODE_STRING& value);
-// std::ostream& operator<<(std::ostream& os, const PVOID*& value); // * value, *value
-// std::ostream& operator<<(std::ostream& os, const xboxkrnl::PXDEVICE_PREALLOC_TYPE& value);
-// std::ostream& operator<<(std::ostream& os, const xboxkrnl::PXINPUT_CAPABILITIES& value);
-// std::ostream& operator<<(std::ostream& os, const xboxkrnl::PXINPUT_STATE& value);
-// std::ostream& operator<<(std::ostream& os, const xboxkrnl::PXPP_DEVICE_TYPE& value);
-// std::ostream& operator<<(std::ostream& os, const xboxkrnl::PXTHREAD_NOTIFICATION& value); // -> pfnNotifyRoutine
-// std::ostream& operator<<(std::ostream& os, const xboxkrnl::UCHAR& value);
 
 // ******************************************************************
 // * 0x0033 - InterlockedCompareExchange()

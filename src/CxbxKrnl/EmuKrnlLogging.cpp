@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuKrnlEx.cpp
+// *   Cxbx->EmuKrnlLogging.cpp
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -26,7 +26,6 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
 // *  (c) 2016 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
@@ -38,16 +37,68 @@
 // prevent name collisions
 namespace xboxkrnl
 {
-#include <xboxkrnl/xboxkrnl.h> // For KdDebuggerEnabled, etc.
+#include <xboxkrnl/xboxkrnl.h>
 };
 
-// ******************************************************************
-// * 0x0058 - KdDebuggerEnabled
-// ******************************************************************
-XBSYSAPI EXPORTNUM(88) xboxkrnl::BOOLEAN xboxkrnl::KdDebuggerEnabled = false;
 
-// ******************************************************************
-// * 0x0059 - KdDebuggerNotPresent
-// ******************************************************************
-// Source:ReactOS
-XBSYSAPI EXPORTNUM(89) xboxkrnl::BOOLEAN xboxkrnl::KdDebuggerNotPresent = true;
+//#include <cstdio>
+//#include <cctype>
+//#include <clocale>
+//
+//#include <windows.h> // for DWORD
+//#include <sstream> // for std::stringstream
+//#include <iostream> // For std::cout
+//#include <iomanip> // For std::setw
+
+#include "Logging.h"
+#include "EmuKrnlLogging.h"
+
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::LARGE_INTEGER& value)
+{
+	return os << value.QuadPart;
+}
+
+std::ostream& operator<<(std::ostream& os, const PULONG& value)
+{
+	os << "0x" << (void*)value;
+	if (value)
+		os << " (*value: " << (void*)*value << ")";
+
+	return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::PMM_STATISTICS& value)
+{
+	os << "0x" << (void*)value;
+	if (value)
+		os << " (->Length: " << value->Length << ")";
+
+	return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::POBJECT_ATTRIBUTES& value)
+{
+	os << "0x" << (void*)value;
+	if (value)
+		os << " (->ObjectName: " << value->ObjectName << ")";
+
+	return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::PSTRING& value)
+{
+	os << "0x" << (void*)value;
+	if (value)
+		os << " (->Buffer: \"" << value->Buffer << "\")";
+
+	return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::PLARGE_INTEGER& value)
+{
+	os << "0x" << (void*)value;
+	if (value)
+		os << " (->QuadPart: " << value->QuadPart << ")";
+
+	return os;
+}

@@ -42,6 +42,7 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
+#include "EmuKrnlLogging.h"
 
 // prevent name collisions
 namespace NtDll
@@ -55,12 +56,6 @@ namespace NtDll
 
 #include <chrono>
 #include <thread>
-
-// TODO : Move operator<< to a central place
-std::ostream& operator<<(std::ostream& os, const xboxkrnl::LARGE_INTEGER& value)
-{
-	return os << value.QuadPart;
-}
 
 // ******************************************************************
 // * 0x005C - KeAlertResumeThread()

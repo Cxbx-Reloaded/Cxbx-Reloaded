@@ -41,9 +41,6 @@ namespace xboxkrnl
 #include <xboxkrnl/xboxkrnl.h> // For XboxEEPROMKey, etc.
 };
 
-#include "Logging.h" // For LOG_FUNC()
-#include "Emu.h" // For EmuWarning()
-
 // ******************************************************************
 // * 0x0141 - XboxEEPROMKey
 // ******************************************************************

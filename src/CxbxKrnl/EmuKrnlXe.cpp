@@ -42,6 +42,7 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
+#include "EmuKrnlLogging.h"
 #include "Emu.h" // For EmuWarning()
 
 // ******************************************************************

@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuKrnlEx.cpp
+// *   Cxbx->EmuKrnlLogging.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -26,28 +26,57 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
 // *  (c) 2016 Patrick van Logchem <pvanlogchem@gmail.com>
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#define _CXBXKRNL_INTERNAL
-#define _XBOXKRNL_DEFEXTRN_
+#ifndef _EMU_KERNEL_LOGGING_H
+#define _EMU_KERNEL_LOGGING_H
+
+#pragma once
 
 // prevent name collisions
 namespace xboxkrnl
 {
-#include <xboxkrnl/xboxkrnl.h> // For KdDebuggerEnabled, etc.
+#include <xboxkrnl/xboxkrnl.h>
 };
 
-// ******************************************************************
-// * 0x0058 - KdDebuggerEnabled
-// ******************************************************************
-XBSYSAPI EXPORTNUM(88) xboxkrnl::BOOLEAN xboxkrnl::KdDebuggerEnabled = false;
 
-// ******************************************************************
-// * 0x0059 - KdDebuggerNotPresent
-// ******************************************************************
-// Source:ReactOS
-XBSYSAPI EXPORTNUM(89) xboxkrnl::BOOLEAN xboxkrnl::KdDebuggerNotPresent = true;
+#include <windows.h> // for PULONG
+#include <sstream> // for std::ostream
+//#include <iostream> // For std::cout
+//#include <iomanip> // For std::setw
+
+//?#include "Cxbx.h"
+//#include "Logging.h"
+
+// std::ostream& operator<<(std::ostream& os, const PVOID*& value); // * value, *value
+// TODO : KINTERRUPT_MODE
+// TODO : KIRQL
+// TODO : KPROCESSOR_MODE
+// TODO : LPCSTR
+// TODO : PIO_STATUS_BLOCK ->u1.Pointer, ->Information
+// TODO : PKDEFERRED_ROUTINE
+// TODO : PKDPC
+// TODO : PKINTERRUPT
+// TODO : PKSERVICE_ROUTINE
+// TODO : PKTIMER
+// TODO : PLARGE_INTEGER
+// TODO : PUNICODE_STRING
+// TODO : PXDEVICE_PREALLOC_TYPE
+// TODO : PXINPUT_CAPABILITIES
+// TODO : PXINPUT_STATE
+// TODO : PXPP_DEVICE_TYPE
+// TODO : PXTHREAD_NOTIFICATION -> pfnNotifyRoutine
+// TODO : TIMER_TYPE
+// TODO : UCHAR
+
+std::ostream& operator<<(std::ostream& os, const PULONG& value);
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::LARGE_INTEGER& value);
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::PLARGE_INTEGER& value);
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::PMM_STATISTICS& value);
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::POBJECT_ATTRIBUTES& value);
+std::ostream& operator<<(std::ostream& os, const xboxkrnl::PSTRING& value);
+
+#endif _EMU_KERNEL_LOGGING_H

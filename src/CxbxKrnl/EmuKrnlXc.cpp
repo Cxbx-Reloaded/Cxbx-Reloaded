@@ -42,6 +42,7 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
+#include "EmuKrnlLogging.h"
 #include "EmuSha.h" // For A_SHAInit, etc.
 
 // prevent name collisions
