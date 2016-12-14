@@ -267,7 +267,7 @@ NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes,
 		DbgPrintf("  Org:\"%s\"\n", OriginalPath.c_str());
 		if (_strnicmp(NativePath.c_str(), CxbxBasePath.c_str(), CxbxBasePath.length()) == 0)
 		{
-			DbgPrintf("  New:\"$CxbxPath\\EmuDisk\\%s%s\"\n", (NativePath.substr(CxbxBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());
+			DbgPrintf("  New:\"$CxbxPath\\EmuDisk\\%s\\%s\"\n", (NativePath.substr(CxbxBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());
 		}
 		else
 			DbgPrintf("  New:\"$XbePath\\%s\"\n", RelativePath.c_str());
@@ -423,22 +423,11 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 
 bool CxbxMountUtilityDrive(bool formatClean)
 {
-	Xbe::Certificate* pCertificate;
-	std::string TitleStr;
 	NTSTATUS status;
 	
 	// TODO -oDxbx : Select the oldest cache partition somehow.
 	// For now, select partition6 as 'Utility data' drive, and link it to Z:
-	pCertificate = (Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr;
-
-	char szBuffer[255];
-	sprintf(szBuffer, "%08X", ((Xbe::Certificate*)CxbxKrnl_XbeHeader->dwCertificateAddr)->dwTitleId);
-	TitleStr = szBuffer;
-	status = CxbxCreateSymbolicLink(DriveZ, DeviceHarddisk0Partition6 + "\\Cxbx_ZDATA_" + TitleStr + "\\");
-
-	// Dxbx note : The ZDATA convention is not actually what the Xbox does, but for now
-	// allows us to skip the partition-selection and formatting of the Utility drive,
-	// by creating a unique subfolder per title.
+	status = CxbxCreateSymbolicLink(DriveZ, DeviceHarddisk0Partition6);
 
 	// TODO -oDxbx : Implement 'formatting' (cleaning) of the Utility drive
 	

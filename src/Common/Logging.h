@@ -67,6 +67,19 @@ extern thread_local const DWORD _CurrentThreadId;
 // TODO : Use Boost.Format http://www.boost.org/doc/libs/1_53_0/libs/format/index.html
 extern thread_local std::string _logPrefix;
 
+// Data sanitization functions
+
+// Default sanitization functions simply returns the given argument
+template<class T>
+inline T _log_sanitize(T arg) { return arg; }
+
+// Sanitize C-style strings by converting NULL to "<nullptr>" to prevent null dereference
+inline const char * _log_sanitize(const char *arg) { return (NULL == arg) ? "<nullptr>" : arg; }
+inline const wchar_t * _log_sanitize(const wchar_t *arg) { return (NULL == arg) ? L"<nullptr>" : arg; }
+
+// Convert BOOLs to strings properly
+inline const char * _log_sanitize(BOOL value) { return value ? "TRUE" : "FALSE"; }
+
 #ifdef _DEBUG_TRACE
 	#define LOG_FUNC_BEGIN \
 		do { if(g_bPrintfOn) { \
@@ -80,7 +93,7 @@ extern thread_local std::string _logPrefix;
 
 	// LOG_FUNC_ARG_OUT writes output via all available ostream << operator overloads, adding detail where possible
 	#define LOG_FUNC_ARG(arg) \
-			msg << "\n   " << std::setw(26) << std::left << std::setfill(' ') << #arg" : " << arg;
+			msg << "\n   " << std::setw(26) << std::left << std::setfill(' ') << #arg" : " << _log_sanitize(arg);
 
 	// LOG_FUNC_ARG_OUT prevents expansion of types, by only rendering as a pointer
 	#define LOG_FUNC_ARG_OUT(arg) \
@@ -99,6 +112,7 @@ extern thread_local std::string _logPrefix;
 #else
 	#define LOG_FUNC_BEGIN 
 	#define LOG_FUNC_ARG(arg)
+	#define LOG_FUNC_ARG_STR(arg)
 	#define LOG_FUNC_ARG_OUT(arg)
 	#define LOG_FUNC_END
 	#define LOG_FUNC_RESULT(r)
