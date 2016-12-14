@@ -124,10 +124,14 @@ XBSYSAPI EXPORTNUM(2) xboxkrnl::VOID NTAPI xboxkrnl::AvSendTVEncoderOption
 		LOG_FUNC_ARG_OUT(Result)
 		LOG_FUNC_END;
 
-	// "Run Like Hell" (5233) calls this from a routine at 0x11FCD0 - See XTL_EmuIDirect3DDevice_Unknown1
-	// TODO: What does this do?
-
-	LOG_UNIMPLEMENTED();
+	switch (Option) {
+		case AV_QUERY_AV_CAPABILITIES:
+			// This is the only AV mode we currently emulate, so we can hardcode the return value
+			*Result = AV_PACK_HDTV | AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
+			break;
+		default:
+			LOG_UNIMPLEMENTED();
+	}
 }
 
 // ******************************************************************
