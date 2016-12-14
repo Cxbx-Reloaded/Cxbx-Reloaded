@@ -127,6 +127,9 @@ XBSYSAPI EXPORTNUM(2) xboxkrnl::VOID NTAPI xboxkrnl::AvSendTVEncoderOption
 	switch (Option) {
 		case AV_QUERY_AV_CAPABILITIES:
 			// This is the only AV mode we currently emulate, so we can hardcode the return value
+			// TODO: Once we allow the user to configure the connected AV pack, we should implement this proper
+			// This function should first query the AV Pack type, read the user's EEPROM settings and
+			// return the correct flags based on this.
 			*Result = AV_PACK_HDTV | AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
 			break;
 		default:
