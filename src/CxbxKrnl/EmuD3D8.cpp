@@ -176,22 +176,34 @@ typedef struct
 
 std::vector<XboxResolution> XboxResolutions = {
 	{ 640, 480, XTL::X_D3DFMT_LIN_X8R8G8B8, 0, "NTSC" },
+	{ 640, 480, XTL::X_D3DFMT_LIN_R5G6B5,   0, "NTSC" },
 	{ 640, 480, XTL::X_D3DFMT_LIN_X1R5G5B5, 0, "NTSC" },
+	{ 640, 480, XTL::X_D3DFMT_LIN_A8R8G8B8, 0, "NTSC" },
 
 	{ 640, 576, XTL::X_D3DFMT_LIN_X8R8G8B8, 0, "PAL" },
+	{ 640, 576, XTL::X_D3DFMT_LIN_R5G6B5,   0, "PAL" },
 	{ 640, 576, XTL::X_D3DFMT_LIN_X1R5G5B5, 0, "PAL" },
+	{ 640, 576, XTL::X_D3DFMT_LIN_A8R8G8B8, 0, "PAL" },
 
 	{ 720, 480, XTL::X_D3DFMT_LIN_X8R8G8B8, 0, "480p" },
+	{ 720, 480, XTL::X_D3DFMT_LIN_R5G6B5,   0, "480p" },
 	{ 720, 480, XTL::X_D3DFMT_LIN_X1R5G5B5, 0, "480p" },
+	{ 720, 480, XTL::X_D3DFMT_LIN_A8R8G8B8, 0, "480p" },
 
 	{ 720, 576, XTL::X_D3DFMT_LIN_X8R8G8B8, 0, "PAL2" },
+	{ 720, 576, XTL::X_D3DFMT_LIN_R5G6B5,   0, "PAL2" },
 	{ 720, 576, XTL::X_D3DFMT_LIN_X1R5G5B5, 0, "PAL2" },
+	{ 720, 576, XTL::X_D3DFMT_LIN_A8R8G8B8, 0, "PAL2" },
 
 	{ 1280, 720, XTL::X_D3DFMT_LIN_X8R8G8B8, 0, "720p" },
+	{ 1280, 720, XTL::X_D3DFMT_LIN_R5G6B5,   0, "720p" },
 	{ 1280, 720, XTL::X_D3DFMT_LIN_X1R5G5B5, 0, "720p" },
+	{ 1280, 720, XTL::X_D3DFMT_LIN_A8R8G8B8, 0, "720p" },
 
 	{ 1920, 1080, XTL::X_D3DFMT_LIN_X8R8G8B8, 0, "1080i" },
-	{ 1920, 1080, XTL::X_D3DFMT_LIN_X1R5G5B5, 0, "1080i" }
+	{ 1920, 1080, XTL::X_D3DFMT_LIN_R5G6B5,   0, "1080i" },
+	{ 1920, 1080, XTL::X_D3DFMT_LIN_X1R5G5B5, 0, "1080i" },
+	{ 1920, 1080, XTL::X_D3DFMT_LIN_A8R8G8B8, 0, "1080i" }
 };
 
 bool IsValidXboxDisplayMode(XTL::D3DDISPLAYMODE PCDisplayMode, int PCModeNr)
@@ -5861,8 +5873,11 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_LockRect
         if(!(Flags & 0x80) && !(Flags & 0x40) && !(Flags & 0x20) && !(Flags & 0x10) && Flags != 0)
             CxbxKrnlCleanup("EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)", Flags);
 
-		pTexture8->UnlockRect(Level);
-		hRet = pTexture8->LockRect(Level, pLockedRect, pRect, NewFlags);
+		if (pTexture8 != nullptr) {
+			pTexture8->UnlockRect(Level);
+			hRet = pTexture8->LockRect(Level, pLockedRect, pRect, NewFlags);
+		}
+
 		pThis->Common |= X_D3DCOMMON_ISLOCKED;
 	}
 

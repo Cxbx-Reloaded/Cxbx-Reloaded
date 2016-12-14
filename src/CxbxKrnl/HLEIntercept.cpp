@@ -760,7 +760,9 @@ static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xb
 
             if(OovpaTable[a].lpRedirect == 0)
             {
-                EmuInstallWrapper(pFunc, EmuXRefFailure);
+				// Insert breakpoint
+				*(uint8_t*)pFunc = 0xCC;
+                EmuInstallWrapper((void*)(((uint32_t)pFunc)+1), EmuXRefFailure);
             }
             else
             {
@@ -774,7 +776,6 @@ static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xb
 // alert for the situation where an Xref function body is hit
 static void EmuXRefFailure()
 {
-    _asm int 3;
     CxbxKrnlCleanup("XRef-only function body reached. Fatal Error.");
 }
 
