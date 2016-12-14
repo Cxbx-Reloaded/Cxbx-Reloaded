@@ -3552,36 +3552,6 @@ OOVPATable D3D8_1_0_5233[] =
 		"EmuIDirect3DDevice8_SetRenderState_MultiSampleMask"
 		#endif
 	},
-	// IDirect3D8::GetAdapterModeCount (* unchanged since 4361 *)
-    {
-        (OOVPA*)&IDirect3D8_GetAdapterModeCount_1_0_4361,
-
-        XTL::EmuIDirect3D8_GetAdapterModeCount,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirect3D8_GetAdapterModeCount"
-        #endif
-    },
-	// Direct3D_EnumAdapterModes
-	{
-        (OOVPA*)&Direct3D_EnumAdapterModes_1_0_5233,
-
-        XTL::EmuIDirect3D8_EnumAdapterModes,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirect3D8_EnumAdapterModes"
-        #endif
-    },
-    // IDirect3D8::EnumAdapterModes (* unchanged since 4361 *)
-    {
-        (OOVPA*)&IDirect3D8_EnumAdapterModes_1_0_4361,
-
-        XTL::EmuIDirect3D8_EnumAdapterModes,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirect3D8_EnumAdapterModes"
-        #endif
-    },    
 	// IDirect3DDevice8::SetVertexData4ub (* unchanged since 4361 *)
     {
         (OOVPA*)&D3DDevice_SetVertexData4ub_1_0_4361,

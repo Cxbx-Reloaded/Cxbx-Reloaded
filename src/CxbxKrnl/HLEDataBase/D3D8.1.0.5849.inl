@@ -3356,26 +3356,6 @@ OOVPATable D3D8_1_0_5849[] =
 		"EmuIDirect3DDevice8_SetRenderTargetFast"
         #endif
     },
-	// IDirect3D8::GetAdapterModeCount (* unchanged since 4361 *)
-    {
-        (OOVPA*)&IDirect3D8_GetAdapterModeCount_1_0_4361,
-
-        XTL::EmuIDirect3D8_GetAdapterModeCount,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirect3D8_GetAdapterModeCount"
-        #endif
-    },
-	// IDirect3D8::EnumAdapterModes (* unchanged since 4361 *)
-    {
-        (OOVPA*)&IDirect3D8_EnumAdapterModes_1_0_4361,
-
-        XTL::EmuIDirect3D8_EnumAdapterModes,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirect3D8_EnumAdapterModes"
-        #endif
-    },
 	// D3DDevice_SetDepthClipPlanes
 	{
        (OOVPA*)&D3DDevice_SetDepthClipPlanes_1_0_5849,
