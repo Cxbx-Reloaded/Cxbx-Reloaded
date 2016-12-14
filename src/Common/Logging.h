@@ -82,6 +82,10 @@ extern thread_local std::string _logPrefix;
 	#define LOG_FUNC_ARG(arg) \
 			msg << "\n   " << std::setw(26) << std::left << std::setfill(' ') << #arg" : " << arg;
 
+	// LOG_FUNC_ARG_STR writes a pointer-based string argument, rendering nulls as <nullptr>
+	#define LOG_FUNC_ARG_STR(arg) \
+			msg << "\n   " << std::setw(26) << std::left << std::setfill(' ') << #arg" : " << (arg == NULL ? "<nullptr>" : arg);
+
 	// LOG_FUNC_ARG_OUT prevents expansion of types, by only rendering as a pointer
 	#define LOG_FUNC_ARG_OUT(arg) \
 			msg << "\n   " << std::setw(26) << std::left << std::setfill(' ') << #arg << " : 0x" << (void*)arg;
@@ -99,6 +103,7 @@ extern thread_local std::string _logPrefix;
 #else
 	#define LOG_FUNC_BEGIN 
 	#define LOG_FUNC_ARG(arg)
+	#define LOG_FUNC_ARG_STR(arg)
 	#define LOG_FUNC_ARG_OUT(arg)
 	#define LOG_FUNC_END
 	#define LOG_FUNC_RESULT(r)
