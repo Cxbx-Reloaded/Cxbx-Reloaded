@@ -5873,8 +5873,11 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_LockRect
         if(!(Flags & 0x80) && !(Flags & 0x40) && !(Flags & 0x20) && !(Flags & 0x10) && Flags != 0)
             CxbxKrnlCleanup("EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)", Flags);
 
-		pTexture8->UnlockRect(Level);
-		hRet = pTexture8->LockRect(Level, pLockedRect, pRect, NewFlags);
+		if (pTexture8 != nullptr) {
+			pTexture8->UnlockRect(Level);
+			hRet = pTexture8->LockRect(Level, pLockedRect, pRect, NewFlags);
+		}
+
 		pThis->Common |= X_D3DCOMMON_ISLOCKED;
 	}
 
