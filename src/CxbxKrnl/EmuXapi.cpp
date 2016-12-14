@@ -815,7 +815,7 @@ DWORD WINAPI XTL::EmuXLaunchNewImage
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG_STR(lpTitlePath)
+		LOG_FUNC_ARG(lpTitlePath)
 		LOG_FUNC_ARG(pLaunchData)
 		LOG_FUNC_END;
 
