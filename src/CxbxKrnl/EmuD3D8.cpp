@@ -5838,7 +5838,7 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_LockRect
            ");\n",
            GetCurrentThreadId(), pThis, Level, pLockedRect, pRect, Flags);
 
-    HRESULT hRet;
+    HRESULT hRet = D3D_OK;
 
 	DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DTexture8_LockRect (pThis->Texture = 0x%8.8X)\n", GetCurrentThreadId(), pThis->EmuTexture8);
 
