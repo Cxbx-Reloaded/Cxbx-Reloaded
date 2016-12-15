@@ -2400,16 +2400,6 @@ OOVPATable D3D8_1_0_4361[] =
         "EmuIDirect3D8_CheckDeviceFormat"
         #endif
     },
-    // IDirect3D8::GetAdapterDisplayMode
-    {
-        (OOVPA*)&IDirect3D8_GetAdapterDisplayMode_1_0_4361,
-
-        XTL::EmuIDirect3D8_GetAdapterDisplayMode,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirect3D8_GetAdapterDisplayMode"
-        #endif
-    },
     // IDirect3DDevice8::LoadVertexShader (* unchanged since 4034 *)
     {
         (OOVPA*)&IDirect3DDevice8_LoadVertexShader_1_0_4034,

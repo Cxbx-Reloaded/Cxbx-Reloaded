@@ -4340,16 +4340,6 @@ OOVPATable D3D8_1_0_4627[] =
         "EmuIDirect3DDevice8_GetVisibilityTestResult"
         #endif
     },
-    // IDirect3D8::GetAdapterDisplayMode
-    {
-        (OOVPA*)&IDirect3D8_GetAdapterDisplayMode_1_0_4627,
-
-        XTL::EmuIDirect3D8_GetAdapterDisplayMode,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirect3D8_GetAdapterDisplayMode"
-        #endif
-    },
     // IDirect3D8::KickOffAndWaitForIdle
     {
         (OOVPA*)&IDirect3D8_KickOffAndWaitForIdle_1_0_4627,
