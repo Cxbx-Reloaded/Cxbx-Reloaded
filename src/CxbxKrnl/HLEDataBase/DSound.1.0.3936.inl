@@ -1319,7 +1319,7 @@ SOOVPA<12> IDirectSoundBuffer8_Play2_1_0_3936 =
     12, // Count == 12
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
 		// IDirectSoundBuffer8_Play+0x1D : call CDirectSoundBuffer::Play
