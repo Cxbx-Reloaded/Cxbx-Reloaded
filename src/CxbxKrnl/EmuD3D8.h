@@ -177,16 +177,6 @@ HRESULT WINAPI EmuIDirect3D8_GetAdapterDisplayMode
 );
 
 // ******************************************************************
-// * func: EmuIDirect3D8_EnumAdapterModes
-// ******************************************************************
-HRESULT WINAPI EmuIDirect3D8_EnumAdapterModes
-(
-    UINT                        Adapter,
-    UINT                        Mode,
-    X_D3DDISPLAYMODE           *pMode
-);
-
-// ******************************************************************
 // * func: EmuIDirect3D8_KickOffAndWaitForIdle
 // ******************************************************************
 VOID WINAPI EmuIDirect3D8_KickOffAndWaitForIdle();

@@ -5964,24 +5964,6 @@ OOVPATable D3D8_1_0_3925[] =
         "EmuIDirect3DDevice8_BlockOnFence"
         #endif
     },
-	// Direct3D_EnumAdapterModes
-	{
-		(OOVPA*)&Direct3D_EnumAdapterModes_1_0_3925,
-		XTL::EmuIDirect3D8_EnumAdapterModes,
-
-		#ifdef _DEBUG_TRACE
-		"EmuIDirect3D8_EnumAdapterModes"
-		#endif
-	},
-	// Direct3D_GetAdapterModeCount
-	{
-		(OOVPA*)&Direct3D_GetAdapterModeCount_1_0_3925,
-		XTL::EmuIDirect3D8_GetAdapterModeCount,
-
-		#ifdef _DEBUG_TRACE
-		"EmuIDirect3D8_GetAdapterModeCount"
-		#endif
-	},
 	// IDirect3DDevice8::Reset
     {
         (OOVPA*)&D3DDevice_Reset_1_0_3925,
