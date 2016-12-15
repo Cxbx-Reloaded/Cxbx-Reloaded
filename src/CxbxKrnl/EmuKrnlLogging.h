@@ -45,37 +45,27 @@ namespace xboxkrnl
 
 #include <windows.h> // for PULONG
 #include <sstream> // for std::ostream
-//#include <iostream> // For std::cout
-//#include <iomanip> // For std::setw
-
-//?#include "Cxbx.h"
-//#include "Logging.h"
+//?#include "Logging.h"
 
 // TODO : Implement renderers for each usage of these types (and/or (P/LP) pointers to them)...
+//
 // TODO : xboxkrnl::ANSI_STRING
-// TODO : xboxkrnl::BUS_DATA_TYPE
 // TODO : xboxkrnl::DEVICE_OBJECT
 // TODO : xboxkrnl::DISPATCHER_HEADER
 // TODO : xboxkrnl::DVDX2_AUTHENTICATION
 // TODO : xboxkrnl::DVDX2_AUTHENTICATION_PAGE
-// TODO : xboxkrnl::EEPROM_INDEX
 // TODO : xboxkrnl::ERWLOCK
 // TODO : xboxkrnl::ETHREAD
-// TODO : xboxkrnl::EVENT_TYPE
 // TODO : xboxkrnl::EXCEPTION_RECORD
 // TODO : xboxkrnl::FILE_DIRECTORY_INFORMATION
 // TODO : xboxkrnl::FILE_FS_SIZE_INFORMATION
-// TODO : xboxkrnl::FILE_INFORMATION_CLASS
 // TODO : xboxkrnl::FILETIME
-// TODO : xboxkrnl::FS_INFORMATION_CLASS
 // TODO : xboxkrnl::IO_STATUS_BLOCK / xboxkrnl::PIO_STATUS_BLOCK ->u1.Pointer, ->Information
 // TODO : xboxkrnl::KDEVICE_QUEUE
 // TODO : xboxkrnl::KDPC
 // TODO : xboxkrnl::KEVENT
 // TODO : xboxkrnl::KINTERRUPT
-// TODO : xboxkrnl::KINTERRUPT_MODE
 // TODO : xboxkrnl::KIRQL
-// TODO : xboxkrnl::KOBJECTS
 // TODO : xboxkrnl::KPCR
 // TODO : xboxkrnl::KPRCB
 // TODO : xboxkrnl::KPROCESSOR_MODE
@@ -92,7 +82,6 @@ namespace xboxkrnl
 // TODO : xboxkrnl::LPCWSTR
 // TODO : xboxkrnl::MEMORY_BASIC_INFORMATION
 // TODO : xboxkrnl::MM_STATISTICS
-// TODO : xboxkrnl::MODE
 // TODO : xboxkrnl::MODE_PARAMETER_HEADER10
 // TODO : xboxkrnl::NT_TIB
 // TODO : xboxkrnl::NTSTATUS
@@ -111,32 +100,50 @@ namespace xboxkrnl
 // TODO : xboxkrnl::PXINPUT_STATE
 // TODO : xboxkrnl::PXPP_DEVICE_TYPE
 // TODO : xboxkrnl::PXTHREAD_NOTIFICATION -> pfnNotifyRoutine
-// TODO : xboxkrnl::RETURN_FIRMWARE
 // TODO : xboxkrnl::RTL_CRITICAL_SECTION
 // TODO : xboxkrnl::SCSI_PASS_THROUGH_DIRECT
 // TODO : xboxkrnl::SINGLE_LIST_ENTRY
 // TODO : xboxkrnl::SLIST_HEADER
 // TODO : xboxkrnl::STRING
-// TODO : xboxkrnl::TIMER_TYPE
 // TODO : xboxkrnl::TIME_FIELDS
 // TODO : xboxkrnl::UCHAR
 // TODO : xboxkrnl::ULARGE_INTEGER
-// TODO : xboxkrnl::WAIT_TYPE
 // TODO : xboxkrnl::XBOX_HARDWARE_INFO
 // TODO : xboxkrnl::XBOX_REFURB_INFO
 
+// Headers for rendering non-Xbox types :
 std::ostream& operator<<(std::ostream& os, const PULONG& value);
 
-std::ostream& operator<<(std::ostream& os, const xboxkrnl::LARGE_INTEGER& value);
-std::ostream& operator<<(std::ostream& os, const xboxkrnl::MM_STATISTICS& value);
-std::ostream& operator<<(std::ostream& os, const xboxkrnl::OBJECT_ATTRIBUTES& value);
-std::ostream& operator<<(std::ostream& os, const xboxkrnl::STRING& value);
-std::ostream& operator<<(std::ostream& os, const xboxkrnl::UNICODE_STRING& value);
+// Macro to ease declaration of a render function per Xbox Type:
+#define LOGRENDER_HEADER(Type) std::ostream& operator<<(std::ostream& os, const xboxkrnl::Type& value)
 
-std::ostream& operator<<(std::ostream& os, const xboxkrnl::PLARGE_INTEGER& value);
-std::ostream& operator<<(std::ostream& os, const xboxkrnl::PMM_STATISTICS& value);
-std::ostream& operator<<(std::ostream& os, const xboxkrnl::POBJECT_ATTRIBUTES& value);
-std::ostream& operator<<(std::ostream& os, const xboxkrnl::PSTRING& value);
-std::ostream& operator<<(std::ostream& os, const xboxkrnl::PUNICODE_STRING& value);
+// Headers for rendering Xbox enum types :
+LOGRENDER_HEADER(BUS_DATA_TYPE);
+LOGRENDER_HEADER(EEPROM_INDEX);
+LOGRENDER_HEADER(EVENT_TYPE);
+LOGRENDER_HEADER(FILE_INFORMATION_CLASS);
+LOGRENDER_HEADER(FS_INFORMATION_CLASS);
+LOGRENDER_HEADER(KINTERRUPT_MODE);
+LOGRENDER_HEADER(KOBJECTS);
+LOGRENDER_HEADER(MODE);
+LOGRENDER_HEADER(RETURN_FIRMWARE);
+LOGRENDER_HEADER(TIMER_TYPE);
+LOGRENDER_HEADER(WAIT_TYPE);
+
+// Headers for rendering Xbox types without pointer-to-type :
+LOGRENDER_HEADER(BOOLEAN);
+
+// Macro to ease declaration of two render functions, for Xbox type and pointer-to-type :
+#define LOGRENDER_HEADERS(Type) LOGRENDER_HEADER(Type); LOGRENDER_HEADER(P##Type)
+
+// Headers for rendering functions of Xbox type and pointer-to-type :
+LOGRENDER_HEADERS(LARGE_INTEGER);
+LOGRENDER_HEADERS(MM_STATISTICS);
+LOGRENDER_HEADERS(OBJECT_ATTRIBUTES);
+LOGRENDER_HEADERS(STRING);
+LOGRENDER_HEADERS(UNICODE_STRING);
+
+#undef LOGRENDER_HEADERS
+// Don't #undef LOGRENDER_HEADER, because it's used in EmuKrnlLogging.cpp
 
 #endif _EMU_KERNEL_LOGGING_H
