@@ -683,7 +683,7 @@ SOOVPA<8> XInputClose_1_0_3911 =
     8,  // Count == 8
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
         // XInputClose+0x05 : call [fCloseDevice]

@@ -129,7 +129,7 @@ SOOVPA<8> IXACTEngine_RegisterWaveBank_1_0_4627 =
     8,  // Count == 8
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
         { 0x1D, XREF_XACT_CEngine_RegisterWaveBank },
@@ -230,7 +230,7 @@ SOOVPA<9> IXACTEngine_RegisterStreamedWaveBank_1_0_4627 =
     9,  // Count == 9
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
         { 0x19, XREF_XACT_CEngine_RegisterStreamedWaveBank },
@@ -255,7 +255,7 @@ SOOVPA<10> IXACTEngine_RegisterStreamedWaveBank_1_0_4928 =
     10,  // Count == 10
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
 		// IXACTEngine_RegisterStreamedWaveBank+0x22 : call XACT::CEngine::RegisterStreamedWaveBank
@@ -340,7 +340,7 @@ SOOVPA<8> IXACTEngine_CreateSoundBank_1_0_4627 =
     8,  // Count == 8
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
         { 0x1D, XREF_XACT_CEngine_CreateSoundBank },
@@ -364,7 +364,7 @@ SOOVPA<10> IXACTEngine_CreateSoundBank_1_0_4928 =
     10,  // Count == 10
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
         { 0x27, XREF_XACT_CEngine_CreateSoundBank },
@@ -415,7 +415,7 @@ SOOVPA<9> IXACTEngine_DownloadEffectsImage_1_0_4627 =
     9,  // Count == 9
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
         { 0x1F, XREF_XACT_CEngine_DownloadEffectsImage },
@@ -463,7 +463,7 @@ SOOVPA<9> IXACTEngine_CreateSoundSource_1_0_4627 =
     9,  // Count == 9
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
         { 0x19, XREF_XACT_CEngine_CreateSoundSource },
@@ -510,7 +510,7 @@ SOOVPA<9> IXACTSoundBank_GetSoundCueIndexFromFriendlyName_1_0_4627 =
     9,  // Count == 9
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
         { 0x19, XREF_XACT_CSoundBank_GetSoundCueIndexFromFriendlyName },
@@ -580,7 +580,7 @@ SOOVPA<8> IXACTEngine_RegisterNotification_1_0_4627 =
     8,  // Count == 8
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
         { 0x15, XREF_XACT_CEngine_RegisterNotification },
@@ -627,7 +627,7 @@ SOOVPA<9> IXACTEngine_GetNotification_1_0_4627 =
     9,  // Count == 9
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
         { 0x19, XREF_XACT_CEngine_GetNotification },
@@ -702,7 +702,7 @@ SOOVPA<8> IXACTEngine_UnRegisterWaveBank_1_0_4627 =
     8,  // Count == 8
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
         { 0x15, XREF_XACT_CEngine_UnRegisterWaveBank },
@@ -726,7 +726,7 @@ SOOVPA<8> IXACTEngine_UnRegisterWaveBank_1_0_4928 =
     8,  // Count == 8
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
 		// IXACTEngine_UnRegisterWaveBank+0x1E : call XACT::CEngine::UnRegisterWaveBank
