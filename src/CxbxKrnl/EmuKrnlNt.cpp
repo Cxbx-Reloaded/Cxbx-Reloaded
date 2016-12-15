@@ -939,6 +939,8 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 			SizeInfo->SectorsPerAllocationUnit = 32;
 			SizeInfo->BytesPerSector = 512;
 		}
+		else
+			LOG_UNIMPLEMENTED();
 
 	}
 	else
