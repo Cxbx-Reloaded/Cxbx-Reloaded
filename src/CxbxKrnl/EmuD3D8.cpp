@@ -1692,27 +1692,6 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SelectVertexShader
 }
 
 // ******************************************************************
-// * func: EmuIDirect3D8_GetAdapterModeCount
-// ******************************************************************
-UINT WINAPI XTL::EmuIDirect3D8_GetAdapterModeCount
-(
-    UINT                        Adapter
-)
-{
-    
-
-    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3D8_GetAdapterModeCount\n"
-           "(\n"
-           "   Adapter                   : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), Adapter);
-	
-	// NOTE: completely ignoring the Adapter parameter
-
-    return XboxResolutions.size();
-}
-
-// ******************************************************************
 // * func: EmuIDirect3D8_GetAdapterDisplayMode
 // ******************************************************************
 HRESULT WINAPI XTL::EmuIDirect3D8_GetAdapterDisplayMode
@@ -1745,48 +1724,6 @@ HRESULT WINAPI XTL::EmuIDirect3D8_GetAdapterDisplayMode
 	pMode->Flags = 0x000000A1;
 
 	hRet = D3D_OK;
-
-	return hRet;
-}
-
-// ******************************************************************
-// * func: EmuIDirect3D8_EnumAdapterModes
-// ******************************************************************
-HRESULT WINAPI XTL::EmuIDirect3D8_EnumAdapterModes
-(
-    UINT                        Adapter,
-    UINT                        Mode,
-    X_D3DDISPLAYMODE           *pMode
-)
-{
-    
-
-    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3D8_EnumAdapterModes\n"
-           "(\n"
-           "   Adapter                   : 0x%.08X\n"
-           "   Mode                      : 0x%.08X\n"
-           "   pMode                     : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), Adapter, Mode, pMode);
-
-    HRESULT hRet;
-
-	// NOTE: completely ignoring the Adapter parameter
-	if (Mode >= XboxResolutions.size())
-	{
-		hRet = D3DERR_INVALIDCALL;
-	}
-	else
-	{
-		pMode->Width = XboxResolutions[Mode].W;
-		pMode->Height = XboxResolutions[Mode].H;
-		pMode->RefreshRate = 60;
-		pMode->Format = XboxResolutions[Mode].F;
-		// D3DPRESENTFLAG_FIELD | D3DPRESENTFLAG_INTERLACED | D3DPRESENTFLAG_LOCKABLE_BACKBUFFER
-		pMode->Flags = 0x000000A1;
-
-		hRet = D3D_OK;
-	}
 
 	return hRet;
 }
@@ -5838,7 +5775,7 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_LockRect
            ");\n",
            GetCurrentThreadId(), pThis, Level, pLockedRect, pRect, Flags);
 
-    HRESULT hRet;
+    HRESULT hRet = D3D_OK;
 
 	DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DTexture8_LockRect (pThis->Texture = 0x%8.8X)\n", GetCurrentThreadId(), pThis->EmuTexture8);
 

@@ -932,16 +932,6 @@ OOVPATable D3D8_1_0_4432[] =
         "EmuIDirect3D8_CreateDevice"
         #endif
     },
-    // IDirect3D8::GetAdapterModeCount (* unchanged since 4361 *)
-    {
-        (OOVPA*)&IDirect3D8_GetAdapterModeCount_1_0_4361,
-
-        XTL::EmuIDirect3D8_GetAdapterModeCount,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirect3D8_GetAdapterModeCount"
-        #endif
-    },
     // IDirect3D8::CheckDeviceFormat (* unchanged since 4361 *)
     {
         (OOVPA*)&IDirect3D8_CheckDeviceFormat_1_0_4361,
@@ -952,16 +942,6 @@ OOVPATable D3D8_1_0_4432[] =
         "EmuIDirect3D8_CheckDeviceFormat"
         #endif
     },    
-    // IDirect3D8::EnumAdapterModes (* unchanged since 4361 *)
-    {
-        (OOVPA*)&IDirect3D8_EnumAdapterModes_1_0_4361,
-
-        XTL::EmuIDirect3D8_EnumAdapterModes,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirect3D8_EnumAdapterModes"
-        #endif
-    },
     // IDirect3DDevice8::SetRenderTarget (* unchanged since 4134 *)
     {
         (OOVPA*)&IDirect3DDevice8_SetRenderTarget_1_0_4134,

@@ -2373,26 +2373,6 @@ OOVPATable D3D8_1_0_4134[] =
         "EmuIDirect3D8_CheckDeviceFormat"
         #endif
     },
-    // IDirect3D8::GetAdapterModeCount
-    {
-        (OOVPA*)&IDirect3D8_GetAdapterModeCount_1_0_4134,
-
-        XTL::EmuIDirect3D8_GetAdapterModeCount,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirect3D8_GetAdapterModeCount"
-        #endif
-    },
-	// IDirect3D8::EnumAdapterModes
-    {
-        (OOVPA*)&IDirect3D8_EnumAdapterModes_1_0_4134,
-
-        XTL::EmuIDirect3D8_EnumAdapterModes,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirect3D8_EnumAdapterModes"
-        #endif
-    },
     // IDirect3DDevice8::SetRenderState_TexCoordIndex
     {
         (OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4134,
