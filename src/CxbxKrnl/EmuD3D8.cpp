@@ -165,60 +165,6 @@ struct EmuD3D8CreateDeviceProxyData
 }
 g_EmuCDPD = {0};
 
-typedef struct
-{
-	int W;
-	int H;
-	XTL::X_D3DFORMAT F;
-	unsigned long PCMode;
-	char N[6];
-} XboxResolution;
-
-std::vector<XboxResolution> XboxResolutions = {
-	{ 640, 480, XTL::X_D3DFMT_LIN_X8R8G8B8, 0, "NTSC" },
-	{ 640, 480, XTL::X_D3DFMT_LIN_R5G6B5,   0, "NTSC" },
-	{ 640, 480, XTL::X_D3DFMT_LIN_X1R5G5B5, 0, "NTSC" },
-	{ 640, 480, XTL::X_D3DFMT_LIN_A8R8G8B8, 0, "NTSC" },
-
-	{ 640, 576, XTL::X_D3DFMT_LIN_X8R8G8B8, 0, "PAL" },
-	{ 640, 576, XTL::X_D3DFMT_LIN_R5G6B5,   0, "PAL" },
-	{ 640, 576, XTL::X_D3DFMT_LIN_X1R5G5B5, 0, "PAL" },
-	{ 640, 576, XTL::X_D3DFMT_LIN_A8R8G8B8, 0, "PAL" },
-
-	{ 720, 480, XTL::X_D3DFMT_LIN_X8R8G8B8, 0, "480p" },
-	{ 720, 480, XTL::X_D3DFMT_LIN_R5G6B5,   0, "480p" },
-	{ 720, 480, XTL::X_D3DFMT_LIN_X1R5G5B5, 0, "480p" },
-	{ 720, 480, XTL::X_D3DFMT_LIN_A8R8G8B8, 0, "480p" },
-
-	{ 720, 576, XTL::X_D3DFMT_LIN_X8R8G8B8, 0, "PAL2" },
-	{ 720, 576, XTL::X_D3DFMT_LIN_R5G6B5,   0, "PAL2" },
-	{ 720, 576, XTL::X_D3DFMT_LIN_X1R5G5B5, 0, "PAL2" },
-	{ 720, 576, XTL::X_D3DFMT_LIN_A8R8G8B8, 0, "PAL2" },
-
-	{ 1280, 720, XTL::X_D3DFMT_LIN_X8R8G8B8, 0, "720p" },
-	{ 1280, 720, XTL::X_D3DFMT_LIN_R5G6B5,   0, "720p" },
-	{ 1280, 720, XTL::X_D3DFMT_LIN_X1R5G5B5, 0, "720p" },
-	{ 1280, 720, XTL::X_D3DFMT_LIN_A8R8G8B8, 0, "720p" },
-
-	{ 1920, 1080, XTL::X_D3DFMT_LIN_X8R8G8B8, 0, "1080i" },
-	{ 1920, 1080, XTL::X_D3DFMT_LIN_R5G6B5,   0, "1080i" },
-	{ 1920, 1080, XTL::X_D3DFMT_LIN_X1R5G5B5, 0, "1080i" },
-	{ 1920, 1080, XTL::X_D3DFMT_LIN_A8R8G8B8, 0, "1080i" }
-};
-
-bool IsValidXboxDisplayMode(XTL::D3DDISPLAYMODE PCDisplayMode, int PCModeNr)
-{
-	for (size_t i = 0; i < XboxResolutions.size(); i++) {
-		if (XboxResolutions[i].W == PCDisplayMode.Width && XboxResolutions[i].H == PCDisplayMode.Height) {
-			XboxResolutions[i].PCMode = PCModeNr;
-				
-			return true;
-		}
-	}
-
-	return false;
-}
-
 // Direct3D initialization (called before emulation begins)
 VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 {
@@ -1689,43 +1635,6 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SelectVertexShader
     
 
     return D3D_OK;
-}
-
-// ******************************************************************
-// * func: EmuIDirect3D8_GetAdapterDisplayMode
-// ******************************************************************
-HRESULT WINAPI XTL::EmuIDirect3D8_GetAdapterDisplayMode
-(
-    UINT                        Adapter,
-    X_D3DDISPLAYMODE           *pMode
-)
-{
-    
-
-    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3D8_GetAdapterDisplayMode\n"
-           "(\n"
-           "   Adapter                   : 0x%.08X\n"
-           "   pMode                     : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), Adapter, pMode);
-	
-	// NOTE: completely ignoring the Adapter parameter
-
-	HRESULT hRet;
-
-	// TODO: Retrieve from current CreateDevice settings?
-	pMode->Width = 640;
-	pMode->Height = 480;
-	pMode->RefreshRate = 60;
-	pMode->Format = X_D3DFMT_LIN_X8R8G8B8;
-
-	// TODO: Make this configurable in the future?
-	// D3DPRESENTFLAG_FIELD | D3DPRESENTFLAG_INTERLACED | D3DPRESENTFLAG_LOCKABLE_BACKBUFFER
-	pMode->Flags = 0x000000A1;
-
-	hRet = D3D_OK;
-
-	return hRet;
 }
 
 // ******************************************************************

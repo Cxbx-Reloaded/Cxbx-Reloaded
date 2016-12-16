@@ -233,6 +233,40 @@ typedef long                            NTSTATUS;
 typedef CCHAR KPROCESSOR_MODE;
 
 // ******************************************************************
+// * KWAIT_REASON
+// ******************************************************************
+typedef enum _KWAIT_REASON {
+	Executive,
+	FreePage,
+	PageIn,
+	PoolAllocation,
+	DelayExecution,
+	Suspended,
+	UserRequest,
+	WrExecutive,
+	WrFreePage,
+	WrPageIn,
+	WrPoolAllocation,
+	WrDelayExecution,
+	WrSuspended,
+	WrUserRequest,
+	WrEventPair,
+	WrQueue,
+	WrLpcReceive,
+	WrLpcReply,
+	WrVirtualMemory,
+	WrPageOut,
+	WrRendezvous,
+	WrFsCacheIn,
+	WrFsCacheOut,
+	Spare4,
+	Spare5,
+	Spare6,
+	WrKernel,
+	MaximumWaitReason
+} KWAIT_REASON;
+
+// ******************************************************************
 // * MODE
 // ******************************************************************
 typedef enum _MODE

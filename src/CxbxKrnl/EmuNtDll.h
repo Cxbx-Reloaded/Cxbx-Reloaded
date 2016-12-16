@@ -153,6 +153,50 @@ typedef unsigned __int64                ULONGLONG;
 typedef CCHAR KPROCESSOR_MODE;
 
 // ******************************************************************
+// * KWAIT_REASON
+// ******************************************************************
+typedef enum _KWAIT_REASON {
+	Executive,
+	FreePage,
+	PageIn,
+	PoolAllocation,
+	DelayExecution,
+	Suspended,
+	UserRequest,
+	WrExecutive,
+	WrFreePage,
+	WrPageIn,
+	WrPoolAllocation,
+	WrDelayExecution,
+	WrSuspended,
+	WrUserRequest,
+	WrEventPair,
+	WrQueue,
+	WrLpcReceive,
+	WrLpcReply,
+	WrVirtualMemory,
+	WrPageOut,
+	WrRendezvous,
+	Spare2,
+	Spare3,
+	Spare4,
+	Spare5,
+	WrCalloutStack,
+	WrKernel,
+	WrResource,
+	WrPushLock,
+	WrMutex,
+	WrQuantumEnd,
+	WrDispatchInt,
+	WrPreempted,
+	WrYieldExecution,
+	WrFastMutex,
+	WrGuardedMutex,
+	WrRundown,
+	MaximumWaitReason
+} KWAIT_REASON;
+
+// ******************************************************************
 // * MODE
 // ******************************************************************
 typedef enum _MODE
