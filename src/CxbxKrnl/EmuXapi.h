@@ -577,6 +577,45 @@ VOID WINAPI EmuXRegisterThreadNotifyRoutine
 );
 
 // ******************************************************************
+// * func: EmuCreateFiber
+// ******************************************************************
+LPVOID WINAPI EmuCreateFiber
+(
+	DWORD					dwStackSize,
+	LPFIBER_START_ROUTINE	lpStartRoutine,
+	LPVOID					lpParameter
+);
+
+// ******************************************************************
+// * func: EmuDeleteFiber
+// ******************************************************************
+VOID WINAPI EmuDeleteFiber
+(
+	LPVOID lpFiber
+);
+
+// ******************************************************************
+// * func: EmuSwitchToFiber
+// ******************************************************************
+VOID WINAPI EmuSwitchToFiber
+(
+	LPVOID lpFiber 
+);
+
+// ******************************************************************
+// * func: EmuConvertThreadToFiber
+// ******************************************************************
+LPVOID WINAPI EmuConvertThreadToFiber
+(
+	LPVOID lpParameter
+);
+
+// ******************************************************************
+// * func: EmuXapiFiberStartup
+// ******************************************************************
+VOID WINAPI EmuXapiFiberStartup(DWORD dwDummy);
+
+// ******************************************************************
 // * func: EmuRtlDestroyHeap
 // ******************************************************************
 PVOID WINAPI EmuRtlDestroyHeap
