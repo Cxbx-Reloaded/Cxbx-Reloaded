@@ -111,7 +111,7 @@ SOOVPA<8> XOnlineLogon_1_0_5344 =
     8,  // Count == 8
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
         { 0x0B, XREF_CXo_XOnlineLogon },

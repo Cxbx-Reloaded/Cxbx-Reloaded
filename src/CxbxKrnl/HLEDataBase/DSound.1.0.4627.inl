@@ -2213,7 +2213,7 @@ SOOVPA<12> CDirectSoundStream_SetMixBinVolumes_1_0_4627 =
 	12,	// Count == 0
 
 	XRefNotSaved,
-	XRefNotUsed,
+	1,
 
 	{
 		{ 0x36, XREF_DSSETMIXBINVOLUMESB },

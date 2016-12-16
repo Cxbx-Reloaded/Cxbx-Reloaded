@@ -79,6 +79,17 @@ XTL::XINPUT_POLLING_PARAMETERS g_pp;
 // Saved launch data
 XTL::LAUNCH_DATA g_SavedLaunchData;
 
+// Fiber function list
+typedef struct _XFIBER
+{
+	LPFIBER_START_ROUTINE pfnRoutine;
+	LPVOID				  pParam;
+}XFIBER;
+
+XFIBER g_Fibers[256];
+// Number of fiber routines queued
+int	   g_FiberCount = 0;
+
 
 // ******************************************************************
 // * func: EmuXFormatUtilityDrive
@@ -743,8 +754,141 @@ VOID WINAPI XTL::EmuXRegisterThreadNotifyRoutine
 			}
 		}
     }
+}
 
-    
+// ******************************************************************
+// * func: EmuCreateFiber
+// ******************************************************************
+LPVOID WINAPI XTL::EmuCreateFiber
+(
+	DWORD					dwStackSize,
+	LPFIBER_START_ROUTINE	lpStartRoutine,
+	LPVOID					lpParameter
+)
+{
+    DbgPrintf("EmuXapi (0x%X): EmuCreateFiber\n"
+           "(\n"
+		   "   dwStackSize         : 0x%.08X\n"
+           "   lpStartRoutine      : 0x%.08X\n"
+           "   lpParameter         : 0x%.08X\n"
+           ");\n",
+            GetCurrentThreadId(), dwStackSize, lpStartRoutine, lpParameter);
+
+	LPVOID pFiber = CreateFiber( dwStackSize, lpStartRoutine, lpParameter );
+	if( !pFiber )
+		EmuWarning( "CreateFiber failed!" );
+	else
+		DbgPrintf("CreateFiber returned 0x%X\n", pFiber);
+
+	// Add to list of queued fiber routines
+	g_Fibers[g_FiberCount].pfnRoutine = lpStartRoutine;
+	if( lpParameter ) g_Fibers[g_FiberCount].pParam = lpParameter;
+
+	g_FiberCount++;
+
+	return pFiber;
+}
+
+// ******************************************************************
+// * func: EmuDeleteFiber
+// ******************************************************************
+VOID WINAPI XTL::EmuDeleteFiber
+(
+	LPVOID					lpFiber
+)
+{
+
+	DbgPrintf("EmuXapi (0x%X): EmuDeleteFiber\n"
+			"(\n"
+			"	lpFiber            : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), lpFiber );
+
+	DeleteFiber( lpFiber );
+
+}
+
+// ******************************************************************
+// * func: EmuSwitchToFiber
+// ******************************************************************
+VOID WINAPI XTL::EmuSwitchToFiber
+(
+	LPVOID lpFiber 
+)
+{
+
+	DbgPrintf("EmuXapi (0x%X): EmuSwitchToFiber\n"
+			"(\n"
+			"	lpFiber            : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), lpFiber );
+
+//	SwitchToFiber( lpFiber );	// <- Hangs/crashes...
+
+	// Execute fiber routines
+	for( int i = 0; i < g_FiberCount; i++ )
+	{
+		if( g_Fibers[i].pfnRoutine )
+			g_Fibers[i].pfnRoutine(g_Fibers[i].pParam);
+	
+	}
+
+	g_FiberCount = 0;
+
+	DbgPrintf( "Finished executing fibers!\n" );
+
+}
+
+// ******************************************************************
+// * func: EmuConvertThreadToFiber
+// ******************************************************************
+LPVOID WINAPI XTL::EmuConvertThreadToFiber
+(
+	LPVOID lpParameter
+)
+{
+	DbgPrintf("EmuXapi (0x%X): EmuConvertThreadToFiber\n"
+			"(\n"
+			"	lpParameter        : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), lpParameter );
+
+	LPVOID pRet = ConvertThreadToFiber( lpParameter );
+	
+	DbgPrintf( "EmuConvertThreadToFiber returned 0x%X\n", pRet );
+
+
+	return pRet;
+}
+
+// ******************************************************************
+// * func: EmuXapiFiberStartup
+// ******************************************************************
+VOID WINAPI XTL::EmuXapiFiberStartup(DWORD dwDummy)
+{
+
+	DbgPrintf("EmuXapi (0x%X): EmuXapiFiberStarup()\n"
+			"(\n"
+			"	dwDummy            : 0x%.08X\n"
+			");\n",
+			GetCurrentThreadId(), dwDummy);
+
+
+	typedef void (__stdcall *pfDummyFunc)(DWORD dwDummy);
+	pfDummyFunc func = (pfDummyFunc)dwDummy;
+
+	void* TlsIndex = (void*) CxbxKrnl_TLS->dwTLSIndexAddr;
+
+	__asm 
+	{
+		mov     eax, TlsIndex
+		mov     ecx, fs:4
+		mov     eax, [ecx+eax*4]
+		mov     eax, [eax+8]
+		push    dword ptr [eax]
+		call    func
+	}
+
 }
 
 // ******************************************************************

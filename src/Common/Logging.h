@@ -127,8 +127,9 @@ inline T _log_sanitize(T arg) { return arg; }
 inline const char * _log_sanitize(const char *arg) { return (NULL == arg) ? "<nullptr>" : arg; }
 inline const wchar_t * _log_sanitize(const wchar_t *arg) { return (NULL == arg) ? L"<nullptr>" : arg; }
 
-// Convert BOOLs to strings properly
+// Convert booleans to strings properly
 inline const char * _log_sanitize(BOOL value) { return value ? "TRUE" : "FALSE"; }
+inline const char * _log_sanitize(BOOLEAN value) { return value ? "TRUE" : "FALSE"; }
 
 //
 // Logging defines

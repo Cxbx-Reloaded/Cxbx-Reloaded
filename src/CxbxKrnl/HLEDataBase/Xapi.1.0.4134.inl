@@ -477,6 +477,26 @@ OOVPATable XAPI_1_0_4134[] =
         "EmuXMountUtilityDrive"
         #endif
     },
+	// CreateFiber (* unchanged since 3911 *)
+	{
+		(OOVPA*)&CreateFiber_1_0_3911,
+
+		XTL::EmuCreateFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuCreateFiber"
+		#endif
+	},
+	// DeleteFiber (* unchanged since 3911 *)
+	{
+		(OOVPA*)&DeleteFiber_1_0_3911,
+
+		XTL::EmuDeleteFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuDeleteFiber"
+		#endif
+	},
 	// GetTimeZoneInformation (* unchanged since 3911 *)
     {
         (OOVPA*)&GetTimeZoneInformation_1_0_3911,

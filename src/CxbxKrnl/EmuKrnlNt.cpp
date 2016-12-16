@@ -1255,7 +1255,7 @@ XBSYSAPI EXPORTNUM(233) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 		/*Count=*/1,
 		&Handle,
 		/*WaitType=*/WaitAll,
-		/*WaitReason=*/0,
+		/*WaitReason=*/WrUserRequest,
 		/*WaitMode=*/KernelMode,
 		Alertable,
 		Timeout,
@@ -1269,7 +1269,7 @@ XBSYSAPI EXPORTNUM(233) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObjectEx
 (
 	IN  HANDLE          Handle,
-	IN  CHAR            WaitMode,
+	IN  KPROCESSOR_MODE WaitMode,
 	IN  BOOLEAN         Alertable,
 	IN  PLARGE_INTEGER  Timeout
 )
@@ -1280,7 +1280,7 @@ XBSYSAPI EXPORTNUM(234) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForSingleObject
 		/*Count=*/1,
 		&Handle,
 		/*WaitType=*/WaitAll,
-		/*WaitReason=*/0,
+		/*WaitReason=*/WrUserRequest,
 		WaitMode,
 		Alertable,
 		Timeout,
@@ -1307,7 +1307,7 @@ XBSYSAPI EXPORTNUM(235) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForMultipleObje
 		Count,
 		Handles,
 		WaitType,
-		/*WaitReason=*/0,
+		/*WaitReason=*/WrUserRequest,
 		WaitMode,
 		Alertable,
 		Timeout,

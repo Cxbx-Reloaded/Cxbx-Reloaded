@@ -580,7 +580,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForMultipleObjects
 	IN ULONG Count,
 	IN PVOID Object[],
 	IN WAIT_TYPE WaitType,
-	IN int WaitReason,
+	IN KWAIT_REASON WaitReason,
 	IN KPROCESSOR_MODE WaitMode,
 	IN BOOLEAN Alertable,
 	IN PLARGE_INTEGER Timeout OPTIONAL,
@@ -637,7 +637,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForMultipleObjects
 XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForSingleObject
 (
 	IN PVOID Object,
-	IN int WaitReason,
+	IN KWAIT_REASON WaitReason,
 	IN KPROCESSOR_MODE WaitMode,
 	IN BOOLEAN Alertable,
 	IN PLARGE_INTEGER Timeout OPTIONAL
