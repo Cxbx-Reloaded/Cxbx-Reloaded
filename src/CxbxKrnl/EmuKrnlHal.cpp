@@ -73,6 +73,9 @@ XBSYSAPI EXPORTNUM(9) xboxkrnl::VOID NTAPI xboxkrnl::HalReadSMCTrayState
 	// TODO: Make this configurable?
 	// TODO: What is the count parameter for??
 
+	if (Count)
+		*Count = 1;
+
 	// Pretend the tray is open
 	// TRAY_CLOSED_NO_MEDIA causes Dashboard to call DeviceIoControl, which we do not implement
 	// TRAY_CLOSED_MEDIA_PRESENT causes Dashboard to attempt to launch media, causing errors.
@@ -153,6 +156,41 @@ XBSYSAPI EXPORTNUM(43) xboxkrnl::BOOLEAN NTAPI xboxkrnl::HalEnableSystemInterrup
 	RETURN(FALSE);
 }
 
+#define MAX_BUS_INTERRUPT_LEVEL 27
+#ifdef _DEBUG_TRACE
+// Source : Xbox Linux
+char *IRQNames[MAX_BUS_INTERRUPT_LEVEL + 1] =
+{
+	"<unknown>",
+	"USB0", // IRQ 1 USB Controller: nVidia Corporation nForce USB Controller (rev d4) (prog-if 10 [OHCI])
+	"<unknown>",
+	"GPU", // IRQ 3 VGA compatible controller: nVidia Corporation: Unknown device 02a0 (rev a1) (prog-if 00 [VGA])
+	"NET", // IRQ 4 Ethernet controller: nVidia Corporation nForce Ethernet Controller (rev d2)
+	"<unknown>",
+	"APU", // IRQ 6 Multimedia audio controller: nVidia Corporation nForce Audio (rev d2)
+	"<unknown>",
+	"<unknown>",
+	"USB1", // IRQ 9 USB Controller : nVidia Corporation nForce USB Controller(rev d4) (prog - if 10[OHCI])
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>"
+};
+#endif
+
 // ******************************************************************
 // * 0x002C - HalGetInterruptVector()
 // ******************************************************************
@@ -167,11 +205,26 @@ XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG  NTAPI xboxkrnl::HalGetInterruptVector
 		LOG_FUNC_ARG_OUT(Irql)
 		LOG_FUNC_END;
 
-	// I'm only adding this for Virtua Cop 3 (Chihiro). Xbox games need not emulate this.
+	// -blueshogun : I'm only adding this for Virtua Cop 3 (Chihiro). Xbox games need not emulate this.
+	// EmuWarning("HalGetInterruptVector(): If this is NOT a Chihiro game, tell blueshogun!");
 
-	EmuWarning("HalGetInterruptVector(): If this is NOT a Chihiro game, tell blueshogun!");
+	ULONG dwVector = 0;
 
-	RETURN(1);
+	if((InterruptLevel >=0) && (InterruptLevel <= MAX_BUS_INTERRUPT_LEVEL))
+	{
+		// Why 0x30? On Win2k the vector is 0x30+IRQ, so it like that
+		dwVector = 0x30 + InterruptLevel;
+
+		if(Irql)
+			*Irql = (KIRQL)(MAX_BUS_INTERRUPT_LEVEL - InterruptLevel);
+
+#ifdef _DEBUG_TRACE
+		DbgPrintf("HalGetInterruptVector(): Interrupt vector requested for %d (%s)!\n", 
+			InterruptLevel, IRQNames[InterruptLevel]);
+#endif
+	}
+
+	RETURN(dwVector);
 }
 
 // ******************************************************************
@@ -192,11 +245,15 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
 		LOG_FUNC_ARG_OUT(DataValue)
 		LOG_FUNC_END;
 
+	LOG_UNIMPLEMENTED();
+
 	if (ReadWord) {
 		// Write UCHAR
 	}
 	else {
 		// Write BYTE
+		if (DataValue)
+			*DataValue = 1;
 	}
 
 	RETURN(STATUS_SUCCESS);

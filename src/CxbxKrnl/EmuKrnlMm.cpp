@@ -91,8 +91,7 @@ XBSYSAPI EXPORTNUM(165) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 {
 	LOG_FORWARD("MmAllocateContiguousMemoryEx");
 
-	return MmAllocateContiguousMemoryEx(NumberOfBytes, 0, MAXULONG_PTR, 0,
-		PAGE_READWRITE);
+	return MmAllocateContiguousMemoryEx(NumberOfBytes, 0, MAXULONG_PTR, 0, PAGE_READWRITE);
 }
 
 // ******************************************************************
@@ -115,6 +114,8 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 		LOG_FUNC_ARG(ProtectionType)
 		LOG_FUNC_END;
 
+	if(Alignment == 0)
+		Alignment = 0x1000; // page boundary at least
 	//
 	// NOTE: Kludgey (but necessary) solution:
 	//
@@ -122,13 +123,14 @@ XBSYSAPI EXPORTNUM(166) xboxkrnl::PVOID NTAPI xboxkrnl::MmAllocateContiguousMemo
 	// so that we can return a valid page aligned pointer
 	//
 
-	PVOID pRet = CxbxMalloc(NumberOfBytes + 0x1000);
+	// TODO : Allocate differently if(ProtectionType & PAGE_WRITECOMBINE)
+	PVOID pRet = CxbxMalloc(NumberOfBytes + Alignment);
 
 	// align to page boundary
 	{
 		DWORD dwRet = (DWORD)pRet;
 
-		dwRet += 0x1000 - dwRet % 0x1000;
+		dwRet += Alignment - dwRet % Alignment;
 
 		g_AlignCache.insert(dwRet, pRet);
 
@@ -275,6 +277,7 @@ XBSYSAPI EXPORTNUM(171) xboxkrnl::VOID NTAPI xboxkrnl::MmFreeContiguousMemory
 
 	if (OrigBaseAddress != &xLaunchDataPage)
 	{
+		// TODO : Free PAGE_WRITECOMBINE differently
 		CxbxFree(OrigBaseAddress);
 	}
 	else
@@ -320,6 +323,9 @@ XBSYSAPI EXPORTNUM(173) xboxkrnl::PHYSICAL_ADDRESS NTAPI xboxkrnl::MmGetPhysical
 {
 	LOG_FUNC_ONE_ARG_OUT(BaseAddress);
 	
+	// this will crash if the memory pages weren't unlocked with
+	// MmLockUnlockBufferPages, emulate this???
+
 	// We emulate Virtual/Physical memory 1:1	
 	return (PHYSICAL_ADDRESS)BaseAddress;
 }
@@ -466,6 +472,7 @@ XBSYSAPI EXPORTNUM(180) xboxkrnl::ULONG NTAPI xboxkrnl::MmQueryAllocationSize
 {
 	LOG_FUNC_ONE_ARG(BaseAddress);
 
+	// TODO : Free PAGE_WRITECOMBINE differently
 	ULONG uiSize = EmuCheckAllocationSize(BaseAddress, false);
 
 	RETURN(uiSize);

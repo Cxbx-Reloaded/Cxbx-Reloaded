@@ -76,7 +76,11 @@ XBSYSAPI EXPORTNUM(100) VOID NTAPI KeDisconnectInterrupt
 );
 
 XBSYSAPI VOID *KeEnterCriticalRegion;
-XBSYSAPI VOID *KeGetCurrentIrql;
+
+// ******************************************************************
+// * 0x0067 - KeGetCurrentIrql()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(103) KIRQL NTAPI KeGetCurrentIrql(void);
 
 // ******************************************************************
 // * KeGetCurrentThread
@@ -190,14 +194,14 @@ XBSYSAPI VOID *KeResumeThread;
 XBSYSAPI VOID *KeRundownQueue;
 XBSYSAPI VOID *KeSaveFloatingPointState;
 
-//XBSYSAPI VOID *KeSetBasePriorityThread;
+// ******************************************************************
+// * 0x008F - KeSetBasePriorityThread
+// ******************************************************************
 XBSYSAPI EXPORTNUM(143) LONG NTAPI KeSetBasePriorityThread
 (
     IN PKTHREAD  Thread,
-    IN PVOID  Priority
+    IN LONG	Priority
 );
-
-
 
 XBSYSAPI VOID *KeSetDisableBoostThread;
 
@@ -218,7 +222,7 @@ XBSYSAPI VOID *KeSetPriorityProcess;
 XBSYSAPI EXPORTNUM(148) BOOLEAN NTAPI KeSetPriorityThread
 (
     IN PKTHREAD  Thread,
-    IN PVOID  Priority
+    IN LONG  Priority
 );
 
 // ******************************************************************

@@ -214,6 +214,25 @@ XBSYSAPI EXPORTNUM(100) xboxkrnl::VOID NTAPI xboxkrnl::KeDisconnectInterrupt
 }
 
 // ******************************************************************
+// * 0x0067 - KeGetCurrentIrql()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(103) xboxkrnl::KIRQL NTAPI xboxkrnl::KeGetCurrentIrql(void)
+{
+	LOG_FUNC();
+
+	KIRQL Irql;
+
+	// TODO : Untested :
+	__asm
+	{
+		mov al, byte ptr fs : [24h]
+		mov Irql, al
+	}
+
+	RETURN(Irql);
+}
+
+// ******************************************************************
 // * 0x0068 - KeGetCurrentThread()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(104) xboxkrnl::PKTHREAD NTAPI xboxkrnl::KeGetCurrentThread(void)
@@ -272,7 +291,13 @@ XBSYSAPI EXPORTNUM(109) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeInterrupt
 		LOG_FUNC_ARG(ShareVector)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	// TODO : Untested :
+	Interrupt->ServiceRoutine = (PVOID)ServiceRoutine;
+	Interrupt->ServiceContext = ServiceContext;
+	Interrupt->BusInterruptLevel = Vector - 0x30;
+	Interrupt->Irql = Irql;
+	Interrupt->Mode = InterruptMode;
+	Interrupt->ShareVector = ShareVector;
 }
 
 // ******************************************************************
@@ -410,12 +435,27 @@ XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 {
 	LOG_FUNC();
 
-	// I really tried to avoid adding this...
-	//	__asm int 3;
-	//	CxbxKrnlCleanup("KeRaiseIrqlToDpcLevel not implemented! (Tell blueshogun -_-)");
-	LOG_UNIMPLEMENTED();
+	if(KeGetCurrentIrql() > DISPATCH_LEVEL)
+		CxbxKrnlCleanup("Bugcheck: Caller of KeRaiseIrqlToDpcLevel is higher than DISPATCH_LEVEL!");
 
-	RETURN(0);
+	KIRQL kRet = NULL;
+	__asm
+	{
+		mov al, byte ptr fs:[24h]
+		mov kRet, al
+		mov al, DISPATCH_LEVEL
+		mov byte ptr fs:[24h], al
+	}
+
+#ifdef _DEBUG_TRACE
+	DbgPrintf("Raised IRQL to DISPATCH_LEVEL (2).\n");
+	DbgPrintf("Old IRQL is %d.\n", kRet);
+#endif
+
+	// We reached the DISPATCH_LEVEL, so the queue can be processed now :
+	// TODO : ExecuteDpcQueue();
+	
+	RETURN(kRet);
 }
 
 // ******************************************************************
@@ -424,7 +464,7 @@ XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 XBSYSAPI EXPORTNUM(143) xboxkrnl::LONG NTAPI xboxkrnl::KeSetBasePriorityThread
 (
 	IN PKTHREAD  Thread,
-	IN PVOID  Priority
+	IN LONG  Priority
 )
 {
 	LOG_FUNC_BEGIN
@@ -432,9 +472,15 @@ XBSYSAPI EXPORTNUM(143) xboxkrnl::LONG NTAPI xboxkrnl::KeSetBasePriorityThread
 		LOG_FUNC_ARG_OUT(Priority)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	LONG ret = GetThreadPriority((HANDLE)Thread);
 
-	RETURN(1);
+	// This would work normally, but it will slow down the emulation, 
+	// don't do that if the priority is higher then normal (so our own)!
+	if((Priority <= THREAD_PRIORITY_NORMAL) && ((HANDLE)Thread != GetCurrentThread())) {
+		SetThreadPriority((HANDLE)Thread, Priority);
+	}
+
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -464,7 +510,7 @@ XBSYSAPI EXPORTNUM(145) xboxkrnl::LONG NTAPI xboxkrnl::KeSetEvent
 XBSYSAPI EXPORTNUM(148) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetPriorityThread
 (
     IN PKTHREAD  Thread,
-    IN PVOID  Priority
+    IN LONG  Priority
 )
 {
 	LOG_FUNC_BEGIN
