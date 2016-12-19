@@ -83,6 +83,9 @@ extern int g_iThreadNotificationCount;
 extern DWORD_PTR g_CPUXbox;
 extern DWORD_PTR g_CPUOthers;
 
+// Delta added to host SystemTime, used in xboxkrnl::KeQuerySystemTime and xboxkrnl::NtSetSystemTime
+extern LARGE_INTEGER HostSystemTimeDelta;
+
 // NOTE: this is an arbitrary latency
 #define XINPUT_SETSTATE_LATENCY 4
 #define XINPUT_SETSTATE_SLOTS 16
@@ -102,4 +105,5 @@ g_pXInputSetStateStatus[XINPUT_SETSTATE_SLOTS];
 extern HANDLE g_hInputHandle[XINPUT_HANDLE_SLOTS];
 
 extern void InitializeSectionStructures(void);
+
 #endif

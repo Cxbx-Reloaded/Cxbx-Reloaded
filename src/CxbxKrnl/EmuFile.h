@@ -101,6 +101,17 @@ extern HANDLE CxbxBasePathHandle;
 
 class EmuNtObject;
 
+struct NativeObjectAttributes {
+	wchar_t wszObjectName[160];
+	NtDll::UNICODE_STRING    NtUnicodeString;
+	NtDll::OBJECT_ATTRIBUTES NtObjAttr;
+	// This is what should be passed on to Windows
+	// after CxbxObjectAttributesToNT() has been called :
+	NtDll::POBJECT_ATTRIBUTES NtObjAttrPtr;
+};
+
+NTSTATUS CxbxObjectAttributesToNT(xboxkrnl::POBJECT_ATTRIBUTES ObjectAttributes, NativeObjectAttributes& nativeObjectAttributes, std::string aFileAPIName = "");
+
 // ******************************************************************
 // * Wrapper of a handle object
 // ******************************************************************
@@ -148,8 +159,10 @@ public:
 // * is Handle a 'special' emulated handle?
 // ******************************************************************
 bool IsEmuHandle(HANDLE Handle);
-EmuHandle* HandleToEmuHandle(HANDLE Handle);HANDLE EmuHandleToHandle(EmuHandle* emuHandle);
+EmuHandle* HandleToEmuHandle(HANDLE Handle);
+HANDLE EmuHandleToHandle(EmuHandle* emuHandle);
 
+CHAR* NtStatusToString(IN NTSTATUS Status);
 
 char SymbolicLinkToDriveLetter(std::string aSymbolicLinkName);
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByVolumeLetter(const char VolumeLetter);

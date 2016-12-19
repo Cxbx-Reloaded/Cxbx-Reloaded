@@ -171,6 +171,7 @@ bool EmuX86_ZydisReadValueFromSource(LPEXCEPTION_POINTERS e, Zydis::OperandInfo&
 		default:
 			return false;
 		}
+		break;
 	}
 	default:
 		return false;
@@ -201,6 +202,7 @@ bool EmuX86_ZydisWriteValueToDestination(LPEXCEPTION_POINTERS e, Zydis::OperandI
 		default:
 			return false;
 		}
+		break;
 	}
 	case Zydis::OperandType::MEMORY:
 	{
@@ -221,6 +223,7 @@ bool EmuX86_ZydisWriteValueToDestination(LPEXCEPTION_POINTERS e, Zydis::OperandI
 		default:
 			return false;
 		}
+		break;
 	}
 	default:
 		return false;

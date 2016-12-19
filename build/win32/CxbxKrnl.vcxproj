@@ -209,6 +209,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuDSound.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuFile.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuFS.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlLogging.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuNtDll.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuNV2A.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuSha.h" />
@@ -528,6 +529,7 @@
     <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlIo.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlKd.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlKe.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlLogging.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlMm.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlNt.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlOb.cpp" />

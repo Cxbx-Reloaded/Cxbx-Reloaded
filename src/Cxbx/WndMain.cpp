@@ -58,11 +58,11 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m
         m_w         = 640;
         m_h         = 480;
 
-        m_ExeFilename = (char*)calloc(1, 260);
-        m_XbeFilename = (char*)calloc(1, 260);
+        m_ExeFilename = (char*)calloc(1, MAX_PATH);
+        m_XbeFilename = (char*)calloc(1, MAX_PATH);
 
-        m_CxbxDebugFilename = (char*)calloc(1, 260);
-        m_KrnlDebugFilename = (char*)calloc(1, 260);
+        m_CxbxDebugFilename = (char*)calloc(1, MAX_PATH);
+        m_KrnlDebugFilename = (char*)calloc(1, MAX_PATH);
 
         int v=0;
 
@@ -105,10 +105,10 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegQueryValueEx(hKey, "AutoConvertToExe", NULL, &dwType, (PBYTE)&m_AutoConvertToExe, &dwSize);
 
-            dwType = REG_SZ; dwSize = 260;
+            dwType = REG_SZ; dwSize = MAX_PATH;
             RegQueryValueEx(hKey, "CxbxDebugFilename", NULL, &dwType, (PBYTE)m_CxbxDebugFilename, &dwSize);
 
-            dwType = REG_SZ; dwSize = 260;
+            dwType = REG_SZ; dwSize = MAX_PATH;
             RegQueryValueEx(hKey, "KrnlDebugFilename", NULL, &dwType, (PBYTE)m_KrnlDebugFilename, &dwSize);
 
             int v=0;
@@ -119,9 +119,9 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m
 
                 sprintf(buffer, "RecentXbe%d", v);
 
-                m_szRecentXbe[v] = (char*)calloc(1, 260);
+                m_szRecentXbe[v] = (char*)calloc(1, MAX_PATH);
 
-                dwType = REG_SZ; dwSize = 260;
+                dwType = REG_SZ; dwSize = MAX_PATH;
                 RegQueryValueEx(hKey, buffer, NULL, &dwType, (PBYTE)m_szRecentXbe[v], &dwSize);
             }
 
@@ -131,9 +131,9 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m
 
                 sprintf(buffer, "RecentExe%d", v);
 
-                m_szRecentExe[v] = (char*)calloc(1, 260);
+                m_szRecentExe[v] = (char*)calloc(1, MAX_PATH);
 
-                dwType = REG_SZ; dwSize = 260;
+                dwType = REG_SZ; dwSize = MAX_PATH;
                 RegQueryValueEx(hKey, buffer, NULL, &dwType, (PBYTE)m_szRecentExe[v], &dwSize);
             }
 
@@ -161,7 +161,7 @@ WndMain::~WndMain()
 
                 sprintf(buffer, "RecentXbe%d", v);
 
-                dwType = REG_SZ; dwSize = 260;
+                dwType = REG_SZ; dwSize = MAX_PATH;
 
                 RegSetValueEx(hKey, buffer, 0, dwType, (PBYTE)m_szRecentXbe[v], dwSize);
 
@@ -174,7 +174,7 @@ WndMain::~WndMain()
 
                 sprintf(buffer, "RecentExe%d", v);
 
-                dwType = REG_SZ; dwSize = 260;
+                dwType = REG_SZ; dwSize = MAX_PATH;
 
                 RegSetValueEx(hKey, buffer, 0, dwType, (PBYTE)m_szRecentExe[v], dwSize);
 
@@ -196,10 +196,10 @@ WndMain::~WndMain()
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegSetValueEx(hKey, "AutoConvertToExe", 0, dwType, (PBYTE)&m_AutoConvertToExe, dwSize);
 
-            dwType = REG_SZ; dwSize = 260;
+            dwType = REG_SZ; dwSize = MAX_PATH;
             RegSetValueEx(hKey, "CxbxDebugFilename", 0, dwType, (PBYTE)m_CxbxDebugFilename, dwSize);
 
-            dwType = REG_SZ; dwSize = 260;
+            dwType = REG_SZ; dwSize = MAX_PATH;
             RegSetValueEx(hKey, "KrnlDebugFilename", 0, dwType, (PBYTE)m_KrnlDebugFilename, dwSize);
         }
     }
@@ -446,13 +446,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 {
                     OPENFILENAME ofn = {0};
 
-                    char filename[260] = {0};
+                    char filename[MAX_PATH] = {0};
 
                     ofn.lStructSize     = sizeof(OPENFILENAME);
                     ofn.hwndOwner       = m_hwnd;
                     ofn.lpstrFilter     = "Xbox Executables (*.xbe)\0*.xbe\0";
                     ofn.lpstrFile       = filename;
-                    ofn.nMaxFile        = 260;
+                    ofn.nMaxFile        = MAX_PATH;
                     ofn.nFilterIndex    = 1;
                     ofn.lpstrFileTitle  = NULL;
                     ofn.nMaxFileTitle   = 0;
@@ -495,13 +495,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                     OPENFILENAME ofn = {0};
 
-                    char filename[260] = {0};
+                    char filename[MAX_PATH] = {0};
 
                     ofn.lStructSize     = sizeof(OPENFILENAME);
                     ofn.hwndOwner       = m_hwnd;
                     ofn.lpstrFilter     = "Windows Executables (*.exe)\0*.exe\0";
                     ofn.lpstrFile       = filename;
-                    ofn.nMaxFile        = 260;
+                    ofn.nMaxFile        = MAX_PATH;
                     ofn.nFilterIndex    = 1;
                     ofn.lpstrFileTitle  = NULL;
                     ofn.nMaxFileTitle   = 0;
@@ -595,13 +595,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 {
                     OPENFILENAME ofn = {0};
 
-                    char filename[260] = "logo.bmp";
+                    char filename[MAX_PATH] = "logo.bmp";
 
                     ofn.lStructSize     = sizeof(OPENFILENAME);
                     ofn.hwndOwner       = m_hwnd;
                     ofn.lpstrFilter     = "Bitmap Image Files (*.bmp)\0*.bmp\0";
                     ofn.lpstrFile       = filename;
-                    ofn.nMaxFile        = 260;
+                    ofn.nMaxFile        = MAX_PATH;
                     ofn.nFilterIndex    = 1;
                     ofn.lpstrFileTitle  = NULL;
                     ofn.nMaxFileTitle   = 0;
@@ -706,13 +706,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 {
                     OPENFILENAME ofn = {0};
 
-                    char filename[260] = "*.bmp";
+                    char filename[MAX_PATH] = "*.bmp";
 
                     ofn.lStructSize     = sizeof(OPENFILENAME);
                     ofn.hwndOwner       = m_hwnd;
                     ofn.lpstrFilter     = "Bitmap Image Files (*.bmp)\0*.bmp\0";
                     ofn.lpstrFile       = filename;
-                    ofn.nMaxFile        = 260;
+                    ofn.nMaxFile        = MAX_PATH;
                     ofn.nFilterIndex    = 1;
                     ofn.lpstrFileTitle  = NULL;
                     ofn.nMaxFileTitle   = 0;
@@ -864,13 +864,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 {
                     OPENFILENAME ofn = {0};
 
-                    char filename[260] = "Xbe.txt";
+                    char filename[MAX_PATH] = "Xbe.txt";
 
                     ofn.lStructSize     = sizeof(OPENFILENAME);
                     ofn.hwndOwner       = m_hwnd;
                     ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
                     ofn.lpstrFile       = filename;
-                    ofn.nMaxFile        = 260;
+                    ofn.nMaxFile        = MAX_PATH;
                     ofn.nFilterIndex    = 1;
                     ofn.lpstrFileTitle  = NULL;
                     ofn.nMaxFileTitle   = 0;
@@ -979,13 +979,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     {
                         OPENFILENAME ofn = {0};
 
-                        char filename[260] = "KrnlDebug.txt";
+                        char filename[MAX_PATH] = "KrnlDebug.txt";
 
                         ofn.lStructSize     = sizeof(OPENFILENAME);
                         ofn.hwndOwner       = m_hwnd;
                         ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
                         ofn.lpstrFile       = filename;
-                        ofn.nMaxFile        = 260;
+                        ofn.nMaxFile        = MAX_PATH;
                         ofn.nFilterIndex    = 1;
                         ofn.lpstrFileTitle  = NULL;
                         ofn.nMaxFileTitle   = 0;
@@ -997,7 +997,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                         {
                             MessageBox(m_hwnd, "This will not take effect until emulation is (re)started.\n", "Cxbx-Reloaded", MB_OK);
 
-                            strncpy(m_KrnlDebugFilename, ofn.lpstrFile, 259);
+                            strncpy(m_KrnlDebugFilename, ofn.lpstrFile, MAX_PATH-1);
 
                             m_bExeChanged = true;
 
@@ -1038,13 +1038,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     {
                         OPENFILENAME ofn = {0};
 
-                        char filename[260] = "CxbxDebug.txt";
+                        char filename[MAX_PATH] = "CxbxDebug.txt";
 
                         ofn.lStructSize     = sizeof(OPENFILENAME);
                         ofn.hwndOwner       = m_hwnd;
                         ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
                         ofn.lpstrFile       = filename;
-                        ofn.nMaxFile        = 260;
+                        ofn.nMaxFile        = MAX_PATH;
                         ofn.nFilterIndex    = 1;
                         ofn.lpstrFileTitle  = NULL;
                         ofn.nMaxFileTitle   = 0;
@@ -1054,7 +1054,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                         if(GetSaveFileName(&ofn) != FALSE)
                         {
-                            strncpy(m_CxbxDebugFilename, ofn.lpstrFile, 259);
+                            strncpy(m_CxbxDebugFilename, ofn.lpstrFile, MAX_PATH-1);
 
                             m_CxbxDebug = DM_FILE;
 
@@ -1169,32 +1169,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 // suggest a file name
 void WndMain::SuggestFilename(const char *x_orig_filename, char *x_filename, char x_extension[4])
 {
-    uint32 found = 0;
-    uint32 v = 0;
-
-    while(x_orig_filename[v] != '\0')
-    {
-        if(x_orig_filename[v] == '\\')
-            found = v;
-        v++;
-    }
-
-    if(found != 0)
+    if(strrchr(x_orig_filename, '\\') != NULL)
     {
         strcpy(x_filename, x_orig_filename);
-
-        uint32 loc = 0;
-        uint32 c = 0;
-
-        while(x_filename[c] != '\0')
-        {
-            if(x_filename[c] == '.')
-                loc = c;
-            c++;
-        }
-
-        if(loc != 0)
-            *(uint32*)&x_filename[loc] = *(uint32*)x_extension;
+		char *loc = strrchr(x_filename, '.');
+		if (loc != NULL)
+			strncpy(loc, &x_extension[0], 4);
     }
 }
 
@@ -1540,7 +1520,7 @@ void WndMain::OpenXbe(const char *x_filename)
                 }
                 else
                 {
-                    strncpy(m_szRecentXbe[c], m_szRecentXbe[r], 259);
+                    strncpy(m_szRecentXbe[c], m_szRecentXbe[r], MAX_PATH-1);
                 }
             }
         }
@@ -1559,15 +1539,15 @@ void WndMain::OpenXbe(const char *x_filename)
             else
             {
                 if(m_szRecentXbe[v] == 0)
-                    m_szRecentXbe[v] = (char*)calloc(1, 260);
-                strncpy(m_szRecentXbe[v], m_szRecentXbe[v-1], 259);
+                    m_szRecentXbe[v] = (char*)calloc(1, MAX_PATH);
+                strncpy(m_szRecentXbe[v], m_szRecentXbe[v-1], MAX_PATH-1);
             }
         }
 
         // add new item as first index
         {
             if(m_szRecentXbe[0] == 0)
-                m_szRecentXbe[0] = (char*)calloc(1, 260);
+                m_szRecentXbe[0] = (char*)calloc(1, MAX_PATH);
 
             strcpy(m_szRecentXbe[0], m_XbeFilename);
         }
@@ -1656,7 +1636,7 @@ void WndMain::SaveXbeAs()
 {
     OPENFILENAME ofn = {0};
 
-    char filename[260] = "default.xbe";
+    char filename[MAX_PATH] = "default.xbe";
 
     SuggestFilename(m_XbeFilename, filename, ".xbe");
 
@@ -1664,7 +1644,7 @@ void WndMain::SaveXbeAs()
     ofn.hwndOwner       = m_hwnd;
     ofn.lpstrFilter     = "Xbox Executables (*.xbe)\0*.xbe\0";
     ofn.lpstrFile       = filename;
-    ofn.nMaxFile        = 260;
+    ofn.nMaxFile        = MAX_PATH;
     ofn.nFilterIndex    = 1;
     ofn.lpstrFileTitle  = NULL;
     ofn.nMaxFileTitle   = 0;
@@ -1722,7 +1702,7 @@ void WndMain::ImportExe(const char *x_filename)
                 if(m_szRecentExe[r] == 0 || r > m_dwRecentExe - 1)
                     m_szRecentExe[c] = 0;
                 else
-                    strncpy(m_szRecentExe[c], m_szRecentExe[r], 259);
+                    strncpy(m_szRecentExe[c], m_szRecentExe[r], MAX_PATH-1);
             }
         }
 
@@ -1737,15 +1717,15 @@ void WndMain::ImportExe(const char *x_filename)
             else
             {
                 if(m_szRecentExe[v] == 0)
-                    m_szRecentExe[v] = (char*)calloc(1, 260);
-                strncpy(m_szRecentExe[v], m_szRecentExe[v-1], 259);
+                    m_szRecentExe[v] = (char*)calloc(1, MAX_PATH);
+                strncpy(m_szRecentExe[v], m_szRecentExe[v-1], MAX_PATH-1);
             }
         }
 
         // add new item as first index
         {
             if(m_szRecentExe[0] == 0)
-                m_szRecentExe[0] = (char*)calloc(1, 260);
+                m_szRecentExe[0] = (char*)calloc(1, MAX_PATH);
 
             strcpy(m_szRecentExe[0], m_ExeFilename);
         }
@@ -1764,7 +1744,7 @@ void WndMain::ImportExe(const char *x_filename)
 // convert to exe file
 bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists, HWND hwndParent)
 {
-    char filename[260] = "default.exe";
+    char filename[MAX_PATH] = "default.exe";
 
     if(x_filename == NULL)
     {
@@ -1776,7 +1756,7 @@ bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists, HWND 
         ofn.hwndOwner       = m_hwnd;
         ofn.lpstrFilter     = "Windows Executables (*.exe)\0*.exe\0";
         ofn.lpstrFile       = filename;
-        ofn.nMaxFile        = 260;
+        ofn.nMaxFile        = MAX_PATH;
         ofn.nFilterIndex    = 1;
         ofn.lpstrFileTitle  = NULL;
         ofn.nMaxFileTitle   = 0;
@@ -1831,26 +1811,18 @@ bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists, HWND 
 // start emulation
 void WndMain::StartEmulation(EnumAutoConvert x_AutoConvert, HWND hwndParent)
 {
-    char szBuffer[260];
+    char szBuffer[MAX_PATH];
 
     // register xbe path with CxbxKrnl.dll
     g_EmuShared->SetXbePath(m_Xbe->m_szPath);
 
     // shell exe
     {
-        GetModuleFileName(NULL, szBuffer, 260);
+        GetModuleFileName(NULL, szBuffer, MAX_PATH);
 
-        sint32 spot=-1;
-        for(int v=0;v<260;v++)
-        {
-            if(szBuffer[v] == '\\')
-                spot = v;
-            else if(szBuffer[v] == '\0')
-                break;
-        }
-
-        if(spot != -1)
-            szBuffer[spot] = '\0';
+		char *spot = strrchr(szBuffer, '\\');
+		if (spot != NULL)
+			*spot = '\0';
 
 		char szExeFileName[MAX_PATH];
 		GetModuleFileName(GetModuleHandle(NULL), szExeFileName, MAX_PATH);

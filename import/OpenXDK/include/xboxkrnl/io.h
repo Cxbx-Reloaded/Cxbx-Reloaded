@@ -17,7 +17,9 @@ XBSYSAPI VOID *IoBuildAsynchronousFsdRequest;
 XBSYSAPI VOID *IoBuildDeviceIoControlRequest;
 XBSYSAPI VOID *IoBuildSynchronousFsdRequest;
 XBSYSAPI VOID *IoCheckShareAccess;
-XBSYSAPI EXPORTNUM(64) POBJECT_TYPE IoCompletionObjectType;
+
+XBSYSAPI EXPORTNUM(64) OBJECT_TYPE IoCompletionObjectType;
+
 XBSYSAPI VOID *IoCreateDevice;
 
 // ******************************************************************
@@ -56,8 +58,9 @@ XBSYSAPI EXPORTNUM(69) NTSTATUS NTAPI IoDeleteSymbolicLink
     IN PSTRING SymbolicLinkName
 );
 
-XBSYSAPI EXPORTNUM(70) POBJECT_TYPE IoDeviceObjectType;
-XBSYSAPI EXPORTNUM(71) POBJECT_TYPE IoFileObjectType;
+XBSYSAPI EXPORTNUM(70) OBJECT_TYPE IoDeviceObjectType;
+XBSYSAPI EXPORTNUM(71) OBJECT_TYPE IoFileObjectType;
+
 XBSYSAPI VOID *IoFreeIrp;
 XBSYSAPI VOID *IoInitializeIrp;
 XBSYSAPI VOID *IoInvalidDeviceRequest;
@@ -74,7 +77,11 @@ XBSYSAPI VOID *IoSynchronousDeviceIoControlRequest;
 XBSYSAPI VOID *IoSynchronousFsdRequest;
 XBSYSAPI VOID *IofCallDriver;
 XBSYSAPI VOID *IofCompleteRequest;
-XBSYSAPI VOID *IoDismountVolume;
+
+XBSYSAPI EXPORTNUM(90) NTSTATUS NTAPI IoDismountVolume
+(
+	IN PDEVICE_OBJECT DeviceObject
+);
 
 // ******************************************************************
 // * IoDismountVolumeByName

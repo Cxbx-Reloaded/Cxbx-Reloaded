@@ -12,10 +12,28 @@
 #ifndef XBOX_H
 #define XBOX_H
 
+#define AV_FLAGS_60Hz                     0x00400000
+#define AV_FLAGS_50Hz                     0x00800000
+#define AV_PACK_NONE                      0x00000000
+#define AV_PACK_STANDARD                  0x00000001
+#define AV_PACK_RFU                       0x00000002
+#define AV_PACK_SCART                     0x00000003
+#define AV_PACK_HDTV                      0x00000004
+#define AV_PACK_VGA                       0x00000005
+#define AV_PACK_SVIDEO                    0x00000006
+#define AV_PACK_MAX                       0x00000007
+#define AV_PACK_MASK                      0x000000FF
+#define AV_STANDARD_NTSC_M                0x00000100
+#define AV_STANDARD_NTSC_J                0x00000200
+#define AV_STANDARD_PAL_I                 0x00000300
+#define AV_STANDARD_PAL_M                 0x00000400
+#define AV_STANDARD_MAX                   0x00000500
+#define AV_QUERY_AV_CAPABILITIES		  6
+
 // ******************************************************************
 // * AvGetSavedDataAddress
 // ******************************************************************
-XBSYSAPI EXPORTNUM(1) PVOID NTAPI AvGetSavedDataAddress();
+XBSYSAPI EXPORTNUM(1) PVOID NTAPI AvGetSavedDataAddress(void);
 
 // ******************************************************************
 // * AvSendTVEncoderOption
@@ -52,14 +70,17 @@ XBSYSAPI EXPORTNUM(4) VOID NTAPI AvSetSavedDataAddress
 // ******************************************************************
 // * FscGetCacheSize
 // ******************************************************************
-XBSYSAPI EXPORTNUM(35) DWORD NTAPI FscGetCacheSize();
+XBSYSAPI EXPORTNUM(35) ULONG NTAPI FscGetCacheSize();
 
 XBSYSAPI EXPORTNUM(36) VOID NTAPI FscInvalidateIdleBlocks();
 
 // ******************************************************************
 // * FscSetCacheSize
 // ******************************************************************
-XBSYSAPI EXPORTNUM(37) LONG NTAPI FscSetCacheSize(ULONG uCachePages);
+XBSYSAPI EXPORTNUM(37) NTSTATUS NTAPI FscSetCacheSize
+(
+		ULONG NumberOfCachePages
+);
 
 XBSYSAPI EXPORTNUM(88) BOOLEAN KdDebuggerEnabled;
 XBSYSAPI EXPORTNUM(89) BOOLEAN KdDebuggerNotPresent;
@@ -94,10 +115,13 @@ XBSYSAPI EXPORTNUM(164) PLAUNCH_DATA_PAGE LaunchDataPage;
 
 XBSYSAPI EXPORTNUM(252) NTSTATUS NTAPI PhyGetLinkState
 (
+	IN ULONG	Mode
 );
 
 XBSYSAPI EXPORTNUM(253) NTSTATUS NTAPI PhyInitialize
 (
+	IN ULONG	Parameter1,
+	IN ULONG	Parameter2
 );
 
 // ******************************************************************

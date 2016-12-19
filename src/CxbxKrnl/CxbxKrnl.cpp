@@ -363,7 +363,8 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	setlocale(LC_ALL, "English");
 
 #ifdef _DEBUG
-	MessageBoxA(NULL, "Attach a Debugger", "DEBUG", 0);
+//	MessageBoxA(NULL, "Attach a Debugger", "DEBUG", 0);
+//  Debug child processes using https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool
 #endif
 
 	// debug console allocation (if configured)
@@ -439,8 +440,11 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 			IMAGE_SECTION_HEADER SectionHeader;
 		} *PDUMMY_KERNEL;
 
+#define XBOX_KERNEL_BASE 0x80010000
+#define XBOX_NV2A_INIT_VECTOR 0xFF000008
+
 		PDUMMY_KERNEL DummyKernel = (PDUMMY_KERNEL)VirtualAlloc(
-			(PVOID)0x80010000, sizeof(DUMMY_KERNEL),
+			(PVOID)XBOX_KERNEL_BASE, sizeof(DUMMY_KERNEL),
 			MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE
 		);
 
@@ -457,7 +461,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	}
 
 	// Initialize devices :
-	char szBuffer[260];
+	char szBuffer[MAX_PATH];
 	SHGetSpecialFolderPath(NULL, szBuffer, CSIDL_APPDATA, TRUE);
 	strcat(szBuffer, "\\Cxbx-Reloaded\\");
 
@@ -465,22 +469,22 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	CxbxBasePath = basePath + "\\EmuDisk\\";
 
 	// Determine XBE Path
-	memset(szBuffer, 0, 260);
+	memset(szBuffer, 0, MAX_PATH);
 	g_EmuShared->GetXbePath(szBuffer);
 	std::string xbePath(szBuffer);
+
 	PathRemoveFileSpec(szBuffer);
 	std::string xbeDirectory(szBuffer);
 
 	CxbxBasePathHandle = CreateFile(CxbxBasePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
-	memset(szBuffer, 0, 260);
+	memset(szBuffer, 0, MAX_PATH);
 	sprintf(szBuffer, "%08X", ((Xbe::Certificate*)pXbeHeader->dwCertificateAddr)->dwTitleId);
 
 	std::string titleId(szBuffer);
 
 	// Games may assume they are running from CdRom :
 	CxbxRegisterDeviceNativePath(DeviceCdrom0, xbeDirectory);
-
 
 	// Partition 0 contains configuration data, and is accessed as a native file, instead as a folder :
 	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition0, CxbxBasePath + "Partition0", true); /*IsFile=*/
@@ -747,8 +751,6 @@ extern "C" CXBXKRNL_API void CxbxKrnlResume()
 
 extern "C" CXBXKRNL_API void CxbxKrnlTerminateThread()
 {
-    EmuCleanupFS();
-
     TerminateThread(GetCurrentThread(), 0);
 }
 

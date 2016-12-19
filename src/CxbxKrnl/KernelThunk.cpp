@@ -46,7 +46,7 @@ namespace xboxkrnl
 //
 // Enable "#define PANIC(numb) numb" if you wish to find out what
 // kernel export the application is attempting to call. The app
-// will crash at the thunk number (i.e. PsCreateSystemThread:0xFF)
+// will crash at the thunk number (i.e. PsQueryStatistics:0x0100)
 //
 // For general use, you should probably just enable the other
 // option "#define PANIC(numb) cxbx_panic"
@@ -155,7 +155,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0057),                                    // 0x0057 (87)  IofCompleteRequest
 	(uint32)VARIABLE(&xboxkrnl::KdDebuggerEnabled),           // 0x0058 (88)
 	(uint32)VARIABLE(&xboxkrnl::KdDebuggerNotPresent),        // 0x0059 (89)
-	(uint32)PANIC(0x005A),                                    // 0x005A (90)  IoDismountVolume
+	(uint32)FUNC(&xboxkrnl::IoDismountVolume),                // 0x005A (90)
 	(uint32)FUNC(&xboxkrnl::IoDismountVolumeByName),          // 0x005B (91)
 	(uint32)FUNC(&xboxkrnl::KeAlertResumeThread),             // 0x005C (92)
 	(uint32)FUNC(&xboxkrnl::KeAlertThread),                   // 0x005D (93)
@@ -165,11 +165,11 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::KeCancelTimer),                   // 0x0061 (97)
 	(uint32)FUNC(&xboxkrnl::KeConnectInterrupt),              // 0x0062 (98)
 	(uint32)FUNC(&xboxkrnl::KeDelayExecutionThread),          // 0x0063 (99)
-	(uint32)PANIC(0x0064),                                    // 0x0064 (100) KeDisconnectInterrupt
+	(uint32)FUNC(&xboxkrnl::KeDisconnectInterrupt),           // 0x0064 (100
 	(uint32)PANIC(0x0065),                                    // 0x0065 (101) KeEnterCriticalRegion
 	(uint32)VARIABLE(&xboxkrnl::MmGlobalData),                // 0x0066 (102)
 	(uint32)PANIC(0x0067),                                    // 0x0067 (103) KeGetCurrentIrql
-	(uint32)PANIC(0x0068),                                    // 0x0068 (104) KeGetCurrentThread
+	(uint32)FUNC(&xboxkrnl::KeGetCurrentThread),              // 0x0068 (104)
 	(uint32)PANIC(0x0069),                                    // 0x0069 (105) KeInitializeApc
 	(uint32)PANIC(0x006A),                                    // 0x006A (106) KeInitializeDeviceQueue
 	(uint32)FUNC(&xboxkrnl::KeInitializeDpc),                 // 0x006B (107)
@@ -184,13 +184,13 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0074),                                    // 0x0074 (116) KeInsertHeadQueue
 	(uint32)PANIC(0x0075),                                    // 0x0075 (117) KeInsertQueue
 	(uint32)PANIC(0x0076),                                    // 0x0076 (118) KeInsertQueueApc
-	(uint32)PANIC(0x0077),                                    // 0x0077 (119) KeInsertQueueDpc
+	(uint32)FUNC(&xboxkrnl::KeInsertQueueDpc),                // 0x0077 (119)
 	(uint32)VARIABLE(0x0078),                                 // 0x0078 (120) KeInterruptTime (Set by ConnectWindowsTimersToThunkTable)
 	(uint32)PANIC(0x0079),                                    // 0x0079 (121) KeIsExecutingDpc
 	(uint32)PANIC(0x007A),                                    // 0x007A (122) KeLeaveCriticalRegion
 	(uint32)PANIC(0x007B),                                    // 0x007B (123) KePulseEvent
 	(uint32)PANIC(0x007C),                                    // 0x007C (124) KeQueryBasePriorityThread
-	(uint32)PANIC(0x007D),                                    // 0x007D (125) KeQueryInterruptTime
+	(uint32)FUNC(&xboxkrnl::KeQueryInterruptTime),            // 0x007D (125)
 	(uint32)FUNC(&xboxkrnl::KeQueryPerformanceCounter),       // 0x007E (126)
 	(uint32)FUNC(&xboxkrnl::KeQueryPerformanceFrequency),     // 0x007F (127)
 	(uint32)FUNC(&xboxkrnl::KeQuerySystemTime),               // 0x0080 (128)
@@ -266,11 +266,11 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::NtFlushBuffersFile),              // 0x00C6 (198)
 	(uint32)FUNC(&xboxkrnl::NtFreeVirtualMemory),             // 0x00C7 (199)
 	(uint32)PANIC(0x00C8),                                    // 0x00C8 (200) NtFsControlFile
-	(uint32)PANIC(0x00C9),                                    // 0x00C9 (201) NtOpenDirectoryObject
+	(uint32)FUNC(&xboxkrnl::NtOpenDirectoryObject),           // 0x00C9 (201)
 	(uint32)FUNC(&xboxkrnl::NtOpenFile),                      // 0x00CA (202)
 	(uint32)FUNC(&xboxkrnl::NtOpenSymbolicLinkObject),        // 0x00CB (203)
 	(uint32)FUNC(&xboxkrnl::NtProtectVirtualMemory),          // 0x00CC (204)
-	(uint32)PANIC(0x00CD),                                    // 0x00CD (205) NtPulseEvent
+	(uint32)FUNC(&xboxkrnl::NtPulseEvent),                    // 0x00CD (205)
 	(uint32)FUNC(&xboxkrnl::NtQueueApcThread),                // 0x00CE (206)
 	(uint32)FUNC(&xboxkrnl::NtQueryDirectoryFile),            // 0x00CF (207)
 	(uint32)PANIC(0x00D0),                                    // 0x00D0 (208) NtQueryDirectoryObject
@@ -308,7 +308,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)VARIABLE(&xboxkrnl::ObDirectoryObjectType),       // 0x00F0 (240)
 	(uint32)PANIC(0x00F1),                                    // 0x00F1 (241) ObInsertObject
 	(uint32)PANIC(0x00F2),                                    // 0x00F2 (242) ObMakeTemporaryObject 
-	(uint32)PANIC(0x00F3),                                    // 0x00F3 (243) ObOpenObjectByName
+	(uint32)FUNC(&xboxkrnl::ObOpenObjectByName),              // 0x00F3 (243)
 	(uint32)PANIC(0x00F4),                                    // 0x00F4 (244) ObOpenObjectByPointer
 	(uint32)VARIABLE(&xboxkrnl::ObpObjectHandleTable),        // 0x00F5 (245)
 	(uint32)FUNC(&xboxkrnl::ObReferenceObjectByHandle),       // 0x00F6 (246)
@@ -319,10 +319,10 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x00FB),                                    // 0x00FB (251) ObfReferenceObject
 	(uint32)FUNC(&xboxkrnl::PhyGetLinkState),                 // 0x00FC (252)
 	(uint32)FUNC(&xboxkrnl::PhyInitialize),                   // 0x00FD (253)
-	(uint32)PANIC(0x00FE),                                    // 0x00FE (254) PsCreateSystemThread
+	(uint32)FUNC(&xboxkrnl::PsCreateSystemThread),            // 0x00FE (254)
 	(uint32)FUNC(&xboxkrnl::PsCreateSystemThreadEx),          // 0x00FF (255)
 	(uint32)PANIC(0x0100),                                    // 0x0100 (256) PsQueryStatistics
-	(uint32)PANIC(0x0101),                                    // 0x0101 (257) PsSetCreateThreadNotifyRoutine
+	(uint32)FUNC(&xboxkrnl::PsSetCreateThreadNotifyRoutine),  // 0x0101 (257)
 	(uint32)FUNC(&xboxkrnl::PsTerminateSystemThread),         // 0x0102 (258)
 	(uint32)VARIABLE(&xboxkrnl::PsThreadObjectType),          // 0x0103 (259)
 	(uint32)FUNC(&xboxkrnl::RtlAnsiStringToUnicodeString),    // 0x0104 (260)
@@ -385,7 +385,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x013D),                                    // 0x013D (317) RtlUpperString
 	(uint32)PANIC(0x013E),                                    // 0x013E (318) RtlUshortByteSwap
 	(uint32)PANIC(0x013F),                                    // 0x013F (319) RtlWalkFrameChain
-	(uint32)PANIC(0x0140),                                    // 0x0140 (320) RtlZeroMemory
+	(uint32)FUNC(&xboxkrnl::RtlZeroMemory),                   // 0x0140 (320)
 	(uint32)VARIABLE(&xboxkrnl::XboxEEPROMKey),               // 0x0141 (321)
 	(uint32)VARIABLE(&xboxkrnl::XboxHardwareInfo),            // 0x0142 (322)
 	(uint32)VARIABLE(&xboxkrnl::XboxHDKey),                   // 0x0143 (323)
@@ -476,7 +476,11 @@ void ConnectWindowsTimersToThunkTable()
 	// time on updating them ourselves, and still get highly accurate timers!
 	// See http://www.dcl.hpi.uni-potsdam.de/research/WRK/2007/08/getting-os-information-the-kuser_shared_data-structure/
 
+	// Point Xbox KeInterruptTime to host InterruptTime:
 	CxbxKrnl_KernelThunkTable[120] = (uint32)&(USER_SHARED_DATA->InterruptTime);
+
+	// Point Xbox KeSystemTime to host SystemTime; If read directly (thus skipping
+	// KeQuerySystemTime), this value is not adjusted with HostSystemTimeDelta!
 	CxbxKrnl_KernelThunkTable[154] = (uint32)&(USER_SHARED_DATA->SystemTime);
 
 	// Note that we can't do the same for TickCount, as that timer

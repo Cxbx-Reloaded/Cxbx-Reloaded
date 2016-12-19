@@ -42,6 +42,7 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
+#include "EmuKrnlLogging.h"
 
 // prevent name collisions
 namespace NtDll
@@ -94,7 +95,7 @@ int FindCriticalSection(xboxkrnl::PRTL_CRITICAL_SECTION CriticalSection)
 }
 
 // ******************************************************************
-// * 0x0104 - RtlAnsiStringToUnicodeString
+// * 0x0104 - RtlAnsiStringToUnicodeString()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(260) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAnsiStringToUnicodeString
 (
@@ -114,6 +115,9 @@ XBSYSAPI EXPORTNUM(260) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAnsiStringToUnicod
 	RETURN(ret);
 }
 
+// ******************************************************************
+// * 0x0105 - RtlAppendStringToString()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(261) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendStringToString
 (
 	IN PSTRING Destination,
@@ -130,6 +134,9 @@ XBSYSAPI EXPORTNUM(261) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendStringToStri
 	RETURN(result);
 }
 
+// ******************************************************************
+// * 0x0106 - RtlAppendUnicodeStringToString()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(262) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeStringToString
 (
 	IN PUNICODE_STRING Destination,
@@ -146,6 +153,9 @@ XBSYSAPI EXPORTNUM(262) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeStrin
 	RETURN(result);
 }
 
+// ******************************************************************
+// * 0x0107 - RtlAppendUnicodeToString()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(263) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeToString
 (
 	IN OUT PUNICODE_STRING Destination,
@@ -163,8 +173,9 @@ XBSYSAPI EXPORTNUM(263) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeToStr
 }
 
 // ******************************************************************
-// * 0x0108 - RtlAssert - Debug API?
+// * 0x0108 - RtlAssert()
 // ******************************************************************
+// Debug API?
 XBSYSAPI EXPORTNUM(264) xboxkrnl::VOID NTAPI xboxkrnl::RtlAssert
 (
 	PVOID   FailedAssertion, // PCHAR
@@ -184,7 +195,7 @@ XBSYSAPI EXPORTNUM(264) xboxkrnl::VOID NTAPI xboxkrnl::RtlAssert
 }
 
 // ******************************************************************
-// * 0x010B - RtlCharToInteger
+// * 0x010B - RtlCharToInteger()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(267) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlCharToInteger
 (
@@ -205,7 +216,7 @@ XBSYSAPI EXPORTNUM(267) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlCharToInteger
 }
 
 // ******************************************************************
-// * 0x0115 RtlEnterCriticalSection
+// * 0x0115 - RtlEnterCriticalSection()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection
 (
@@ -244,7 +255,7 @@ XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection
 }
 
 // ******************************************************************
-// * 0x0117 - RtlEqualString
+// * 0x0117 - RtlEqualString()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(279) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualString
 (
@@ -265,7 +276,7 @@ XBSYSAPI EXPORTNUM(279) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualString
 }
 
 // ******************************************************************
-// * 0x011E - RtlFreeAnsiString
+// * 0x011E - RtlFreeAnsiString()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(286) xboxkrnl::VOID NTAPI xboxkrnl::RtlFreeAnsiString
 (
@@ -278,7 +289,7 @@ XBSYSAPI EXPORTNUM(286) xboxkrnl::VOID NTAPI xboxkrnl::RtlFreeAnsiString
 }
 
 // ******************************************************************
-// * 0x0121 - RtlInitAnsiString
+// * 0x0121 - RtlInitAnsiString()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(289) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitAnsiString
 (
@@ -295,7 +306,7 @@ XBSYSAPI EXPORTNUM(289) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitAnsiString
 }
 
 // ******************************************************************
-// * 0x0122 - RtlInitUnicodeString
+// * 0x0122 - RtlInitUnicodeString()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(290) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitUnicodeString
 (
@@ -312,7 +323,7 @@ XBSYSAPI EXPORTNUM(290) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitUnicodeString
 }
 
 // ******************************************************************
-// * 0x0123 - RtlInitializeCriticalSection
+// * 0x0123 - RtlInitializeCriticalSection()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(291) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitializeCriticalSection
 (
@@ -342,7 +353,7 @@ XBSYSAPI EXPORTNUM(291) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitializeCriticalSect
 }
 
 // ******************************************************************
-// * 0x0126 RtlEnterCriticalSection
+// * 0x0126 - RtlEnterCriticalSection()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(294) xboxkrnl::VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
 (
@@ -373,7 +384,7 @@ XBSYSAPI EXPORTNUM(294) xboxkrnl::VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
 }
 
 // ******************************************************************
-// * RtlLowerChar
+// * 0x0128 - RtlLowerChar()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(296) xboxkrnl::CHAR NTAPI xboxkrnl::RtlLowerChar
 (
@@ -388,7 +399,7 @@ XBSYSAPI EXPORTNUM(296) xboxkrnl::CHAR NTAPI xboxkrnl::RtlLowerChar
 }
 
 // ******************************************************************
-// * 0x012D - RtlNtStatusToDosError
+// * 0x012D - RtlNtStatusToDosError()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(301) xboxkrnl::ULONG NTAPI xboxkrnl::RtlNtStatusToDosError
 (
@@ -403,7 +414,7 @@ XBSYSAPI EXPORTNUM(301) xboxkrnl::ULONG NTAPI xboxkrnl::RtlNtStatusToDosError
 }
 
 // ******************************************************************
-// * 0x0130 - RtlTimeFieldsToTime
+// * 0x0130 - RtlTimeFieldsToTime()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(304) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTimeFieldsToTime
 (
@@ -422,7 +433,7 @@ XBSYSAPI EXPORTNUM(304) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTimeFieldsToTime
 }
 
 // ******************************************************************
-// * 0x0131 - RtlTimeToTimeFields
+// * 0x0131 - RtlTimeToTimeFields()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(305) xboxkrnl::VOID NTAPI xboxkrnl::RtlTimeToTimeFields
 (
@@ -439,7 +450,7 @@ XBSYSAPI EXPORTNUM(305) xboxkrnl::VOID NTAPI xboxkrnl::RtlTimeToTimeFields
 }
 
 // ******************************************************************
-// * RtlTryEnterCriticalSection
+// * 0x0132 - RtlTryEnterCriticalSection()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(306) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTryEnterCriticalSection
 (
@@ -476,7 +487,7 @@ XBSYSAPI EXPORTNUM(306) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTryEnterCriticalSec
 }
 
 // ******************************************************************
-// * 0x0134 - RtlUnicodeStringToAnsiString
+// * 0x0134 - RtlUnicodeStringToAnsiString()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(308) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToAnsiString
 (
@@ -494,5 +505,25 @@ XBSYSAPI EXPORTNUM(308) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToAns
 	NTSTATUS ret = NtDll::RtlUnicodeStringToAnsiString((NtDll::STRING*)DestinationString, (NtDll::UNICODE_STRING*)SourceString, AllocateDestinationString);
 
 	RETURN(ret);
+}
+
+// Prevent errors compiling RtlZeroMemory (TODO : How should we really do this?)
+#undef RtlZeroMemory
+
+// ******************************************************************
+// * 0x0140 - RtlZeroMemory()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(320) xboxkrnl::VOID NTAPI xboxkrnl::RtlZeroMemory
+(
+	IN VOID UNALIGNED  *Destination,
+	IN SIZE_T           Length
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Destination)
+		LOG_FUNC_ARG(Length)
+		LOG_FUNC_END;
+
+	memset(Destination, 0, Length); // Don't bother with NtDll::RtlZeroMemory
 }
 

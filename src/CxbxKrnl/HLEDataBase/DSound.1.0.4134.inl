@@ -125,7 +125,7 @@ SOOVPA<8> DirectSound_CDirectSoundBuffer_SetHeadroom_1_0_4134 =
     8,  // Count == 8
 
     XREF_DirectSound_CDirectSoundBuffer_SetHeadroom,  // Xref Is Saved
-    XRefNotUsed,
+    1,
 
     {
         { 0x32, XREF_DirectSound_CDirectSoundVoice_SetHeadroom },
@@ -149,7 +149,7 @@ SOOVPA<8> IDirectSoundBuffer_SetHeadroom_1_0_4134 =
     8,  // Count == 8
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
         { 0x15, XREF_DirectSound_CDirectSoundBuffer_SetHeadroom },
@@ -218,7 +218,7 @@ SOOVPA<8> DirectSound_CDirectSoundBuffer_SetVolume_1_0_4134 =
     8,  // Count == 8
 
     XREF_DirectSound_CDirectSoundBuffer_SetVolume,  // Xref Is Saved
-    XRefNotUsed,
+    1,
 
     {
         { 0x32, XREF_DirectSound_CDirectSoundVoice_SetVolume },
@@ -242,7 +242,7 @@ SOOVPA<8> IDirectSoundBuffer_SetVolume_1_0_4134 =
     8,  // Count == 8
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
         { 0x15, XREF_DirectSound_CDirectSoundBuffer_SetVolume },
@@ -288,7 +288,7 @@ SOOVPA<9> IDirectSound_SetI3DL2Listener_1_0_4134 =
     9,  // Count == 9
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
         { 0x19, XREF_DSSETI3DL2LISTENER },
@@ -335,7 +335,7 @@ SOOVPA<9> IDirectSoundBuffer_SetBufferData_1_0_4134 =
     9,  // Count == 9
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
         { 0x19, XREF_DSSETBUFFERDATA2 },
@@ -383,7 +383,7 @@ SOOVPA<9> IDirectSound_GetEffectData_1_0_4134 =
     9,  // Count == 9
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
         { 0x1F, XREF_DirectSound_CDirectSound_GetEffectData },
@@ -430,7 +430,7 @@ SOOVPA<8> DirectSound_CDirectSoundVoice_SetMixBins_1_0_4134 =
     8,  // Count == 8
 
     XREF_DSSETMIXBINSB,  // Xref Is Saved
-    XRefNotUsed,
+    1,
 
     {
         { 0x0D, XREF_DSSETMIXBINSC },
@@ -454,7 +454,7 @@ SOOVPA<8> DirectSound_CDirectSoundBuffer_SetMixBins_1_0_4134 =
     8,  // Count == 8
 
     XREF_DSSETMIXBINSA,  // Xref Is Saved
-    XRefNotUsed,
+    1,
 
     {
         { 0x32, XREF_DSSETMIXBINSB },
@@ -478,7 +478,7 @@ SOOVPA<8> IDirectSoundBuffer_SetMixBins_1_0_4134 =
     8,  // Count == 8
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
         { 0x15, XREF_DSSETMIXBINSA },

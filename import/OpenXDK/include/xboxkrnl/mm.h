@@ -48,6 +48,9 @@ XBSYSAPI EXPORTNUM(167) PVOID NTAPI MmAllocateSystemMemory
     ULONG Protect
 );
 
+// ******************************************************************
+// * MmClaimGpuInstanceMemory;
+// ******************************************************************
 XBSYSAPI EXPORTNUM(168) PVOID NTAPI MmClaimGpuInstanceMemory
 (
 	IN SIZE_T NumberOfBytes,

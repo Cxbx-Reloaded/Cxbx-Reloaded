@@ -22,11 +22,13 @@ extern "C"
 // ******************************************************************
 #define DECLSPEC_IMPORT __declspec(dllimport)
 #define DECLSPEC_EXPORT __declspec(dllexport)
+#define DECLSPEC_EXTERN extern
 
 // ******************************************************************
 // * kernel exports, others either import or link locally
 // ******************************************************************
 #define XBSYSAPI DECLSPEC_IMPORT
+
 #ifdef _XBOXKRNL_INTERNAL_
 #undef  XBSYSAPI
 #define XBSYSAPI DECLSPEC_EXPORT
@@ -34,10 +36,12 @@ extern "C"
 #endif
 #ifdef _XBOXKRNL_DEFEXTRN_
 #undef  XBSYSAPI
-#define XBSYSAPI extern
+#define XBSYSAPI DECLSPEC_EXTERN
 // The KRNL macro prevents naming collisions
 #define KRNL(API) KRNL##API
 #endif
+#define RESTRICTED_POINTER
+//TODO : When #define RESTRICTED_POINTER __restrict
 
 // ******************************************************************
 // * Null
@@ -199,6 +203,10 @@ typedef long                            NTSTATUS;
 #define MI_CONVERT_PFN_TO_PHYSICAL(Pfn) \
 	((PCHAR)MM_SYSTEM_PHYSICAL_MAP + ((ULONG)(Pfn) << PAGE_SHIFT))
 
+#define KERNEL_STACK_SIZE			12288 /* = 0x03000 */
+
+#define PSP_MAX_CREATE_THREAD_NOTIFY 16 /* TODO : Should be 8 */
+
 // ******************************************************************
 // * calling conventions
 // ******************************************************************
@@ -213,16 +221,50 @@ typedef long                            NTSTATUS;
 // ******************************************************************
 // * documentation purposes only
 // ******************************************************************
-#define EXPORTNUM(a)
-#define UNALIGNED
-#define OPTIONAL
+#define EXPORTNUM(ordinal)
 #define IN
 #define OUT
+#define OPTIONAL
+#define UNALIGNED
 
 // ******************************************************************
 // * KPROCESSOR_MODE
 // ******************************************************************
 typedef CCHAR KPROCESSOR_MODE;
+
+// ******************************************************************
+// * KWAIT_REASON
+// ******************************************************************
+typedef enum _KWAIT_REASON {
+	Executive,
+	FreePage,
+	PageIn,
+	PoolAllocation,
+	DelayExecution,
+	Suspended,
+	UserRequest,
+	WrExecutive,
+	WrFreePage,
+	WrPageIn,
+	WrPoolAllocation,
+	WrDelayExecution,
+	WrSuspended,
+	WrUserRequest,
+	WrEventPair,
+	WrQueue,
+	WrLpcReceive,
+	WrLpcReply,
+	WrVirtualMemory,
+	WrPageOut,
+	WrRendezvous,
+	WrFsCacheIn,
+	WrFsCacheOut,
+	Spare4,
+	Spare5,
+	Spare6,
+	WrKernel,
+	MaximumWaitReason
+} KWAIT_REASON;
 
 // ******************************************************************
 // * MODE
@@ -484,7 +526,15 @@ OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 // ******************************************************************
 typedef struct _OBJECT_TYPE
 {
-	// TODO : How is this defined?
+	/* TODO : Declare missing types and enable corresponding members :
+	OB_ALLOCATE_METHOD AllocateProcedure;
+    OB_FREE_METHOD FreeProcedure;
+    OB_CLOSE_METHOD CloseProcedure;
+    OB_DELETE_METHOD DeleteProcedure;
+    OB_PARSE_METHOD ParseProcedure;
+	*/
+	PVOID DefaultObject;
+	ULONG PoolTag;
 }
 OBJECT_TYPE, *POBJECT_TYPE;
 
@@ -499,16 +549,6 @@ typedef struct _FILETIME
 	DWORD dwHighDateTime;
 }
 FILETIME, *PFILETIME;
-
-typedef struct _ERWLOCK {
-	LONG LockCount;
-	ULONG WritersWaitingCount;
-	ULONG ReadersWaitingCount;
-	ULONG ReadersEntryCount;
-// TODO : Enable once KEVENT and KSEMAPHORE are defined :
-//	KEVENT WriterEvent;
-//	KSEMAPHORE ReaderSemaphore;
-} ERWLOCK, *PERWLOCK;
 
 // Source : DXBX (Xbox Refurb Info)
 typedef struct _XBOX_REFURB_INFO
@@ -806,6 +846,51 @@ typedef struct _DISPATCHER_HEADER
 }
 DISPATCHER_HEADER;
 
+typedef struct _KEVENT {
+	DISPATCHER_HEADER Header;
+} KEVENT, *PKEVENT, *RESTRICTED_POINTER PRKEVENT;
+
+typedef struct _KSEMAPHORE {
+	DISPATCHER_HEADER Header;
+	LONG Limit;
+} KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
+
+typedef struct _ERWLOCK {
+	LONG LockCount;
+	ULONG WritersWaitingCount;
+	ULONG ReadersWaitingCount;
+	ULONG ReadersEntryCount;
+	KEVENT WriterEvent;
+	KSEMAPHORE ReaderSemaphore;
+} ERWLOCK, *PERWLOCK;
+
+typedef struct _KDEVICE_QUEUE {
+	CSHORT Type;
+	UCHAR Size;
+	BOOLEAN Busy;
+	LIST_ENTRY DeviceListHead;
+} KDEVICE_QUEUE, *PKDEVICE_QUEUE, *RESTRICTED_POINTER PRKDEVICE_QUEUE;
+
+typedef struct _DEVICE_OBJECT {
+	CSHORT Type;
+	USHORT Size;
+	LONG ReferenceCount;
+	struct _DRIVER_OBJECT *DriverObject;
+	struct _DEVICE_OBJECT *MountedOrSelfDevice;
+	struct _IRP *CurrentIrp;
+	ULONG Flags;
+	PVOID DeviceExtension;
+	UCHAR DeviceType;
+	UCHAR StartIoFlags;
+	CCHAR StackSize;
+	BOOLEAN DeletePending;
+	ULONG SectorSize;
+	ULONG AlignmentRequirement;
+	KDEVICE_QUEUE DeviceQueue;
+	KEVENT DeviceLock;
+	ULONG StartIoKey;
+} DEVICE_OBJECT, *PDEVICE_OBJECT;
+
 // ******************************************************************
 // * TIMER_TYPE
 // ******************************************************************
@@ -832,6 +917,14 @@ KTIMER, *PKTIMER;
 // ******************************************************************
 // * PKSTART_ROUTINE
 // ******************************************************************
+typedef VOID (NTAPI *PKSTART_ROUTINE)
+(
+    IN PVOID StartContext
+);
+
+// ******************************************************************
+// * PKSYSTEM_ROUTINE
+// ******************************************************************
 // *
 // * NOTE: Non-standard call. Similar to stdcall, but first argument
 // *       must be located at ebp+4 before calling.
@@ -840,10 +933,10 @@ KTIMER, *PKTIMER;
 // *       opposed to 1.
 // *
 // ******************************************************************
-typedef VOID (NTAPI *PKSTART_ROUTINE)
+typedef VOID (*PKSYSTEM_ROUTINE)
 (
-    IN PVOID StartContext1,
-    IN PVOID StartContext2
+	IN PKSTART_ROUTINE StartRoutine OPTIONAL,
+	IN PVOID StartContext OPTIONAL
 );
 
 struct _KDPC;
@@ -903,6 +996,7 @@ KINTERRUPT, *PKINTERRUPT;
 typedef void* PKSERVICE_ROUTINE;
 
 typedef CHAR KIRQL;
+typedef KIRQL* PKIRQL;
 
 // ******************************************************************
 // * KINTERRUPT_MODE
@@ -975,6 +1069,16 @@ typedef struct _ETHREAD
     DWORD           UniqueThread;   // 0x12C
 }
 ETHREAD, *PETHREAD;
+
+// ******************************************************************
+// * PCREATE_THREAD_NOTIFY_ROUTINE
+// ******************************************************************
+typedef VOID(*PCREATE_THREAD_NOTIFY_ROUTINE)
+(
+	IN PETHREAD Thread,
+	IN HANDLE ThreadId,
+	IN BOOLEAN Create
+);
 
 // ******************************************************************
 // * KPCRB

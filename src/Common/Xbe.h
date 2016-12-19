@@ -38,6 +38,11 @@
 
 #include <cstdio>
 
+
+//#include <windef.h> // For MAX_PATH
+// The above leads to 55 compile errors, so until we've sorted out why that happens, declare MAX_PATH ourselves for now :
+#define MAX_PATH 260
+
 // Xbe (Xbox Executable) file object
 class Xbe : public Error
 {
@@ -214,7 +219,7 @@ class Xbe : public Error
         uint08 **m_bzSection;
 
         // Xbe original path
-        char m_szPath[260];
+        char m_szPath[MAX_PATH];
 
         // Xbe ascii title, translated from certificate title
         char m_szAsciiTitle[40];

@@ -86,7 +86,7 @@ class EmuShared : public Mutex
         // ******************************************************************
         XBController m_XBController;
         XBVideo      m_XBVideo;
-        char         m_XbePath[260];
+        char         m_XbePath[MAX_PATH];
 };
 
 // ******************************************************************

@@ -44,6 +44,7 @@ namespace xboxkrnl
 #include <process.h> // For __beginthreadex(), etc.
 
 #include "Logging.h" // For LOG_FUNC()
+#include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnl_TLS
 #include "Emu.h" // For EmuWarning()
 #include "EmuFS.h" // For EmuGenerateFS
@@ -58,32 +59,34 @@ namespace NtDll
 // PsCreateSystemThread proxy parameters
 typedef struct _PCSTProxyParam
 {
-	IN PVOID  StartContext1;
-	IN PVOID  StartContext2;
 	IN PVOID  StartRoutine;
+	IN PVOID  StartContext;
+	IN PVOID  SystemRoutine;
 	IN BOOL   StartSuspended;
 	IN HANDLE hStartedEvent;
 }
 PCSTProxyParam;
 
 // Global Variable(s)
-extern PVOID g_pfnThreadNotification[16] = { NULL };
+extern PVOID g_pfnThreadNotification[PSP_MAX_CREATE_THREAD_NOTIFY] = { NULL };
 extern int g_iThreadNotificationCount = 0;
 
 // Separate function for logging, otherwise in PCSTProxy __try wont work (Compiler Error C2712)
 void PCSTProxy_log
 (
-	uint32 StartContext1,
-	uint32 StartContext2,
-	uint32 StartRoutine,
+	PVOID StartRoutine,
+	PVOID StartContext,
+	PVOID SystemRoutine,
 	BOOL   StartSuspended,
 	HANDLE hStartedEvent
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(StartContext1)
-		LOG_FUNC_ARG(StartContext2)
 		LOG_FUNC_ARG(StartRoutine)
+		LOG_FUNC_ARG(StartContext)
+		LOG_FUNC_ARG(SystemRoutine)
+		LOG_FUNC_ARG(StartSuspended)
+		LOG_FUNC_ARG(hStartedEvent)
 		LOG_FUNC_END;
 }
 
@@ -98,16 +101,16 @@ static unsigned int WINAPI PCSTProxy
 {
 	PCSTProxyParam *iPCSTProxyParam = (PCSTProxyParam*)Parameter;
 
-	uint32 StartContext1 = (uint32)iPCSTProxyParam->StartContext1;
-	uint32 StartContext2 = (uint32)iPCSTProxyParam->StartContext2;
-	uint32 StartRoutine = (uint32)iPCSTProxyParam->StartRoutine;
-	BOOL   StartSuspended = (BOOL)iPCSTProxyParam->StartSuspended;
-	HANDLE hStartedEvent = (HANDLE)iPCSTProxyParam->hStartedEvent;
+	PVOID StartRoutine = iPCSTProxyParam->StartRoutine;
+	PVOID StartContext = iPCSTProxyParam->StartContext;
+	PVOID SystemRoutine = iPCSTProxyParam->SystemRoutine;
+	BOOL StartSuspended = iPCSTProxyParam->StartSuspended;
+	HANDLE hStartedEvent = iPCSTProxyParam->hStartedEvent;
 
 	// Once deleted, unable to directly access iPCSTProxyParam in remainder of function.
 	delete iPCSTProxyParam;
 
-	PCSTProxy_log(StartContext1, StartContext2, StartRoutine, StartSuspended, hStartedEvent);
+	PCSTProxy_log(StartRoutine, StartContext, SystemRoutine, StartSuspended, hStartedEvent);
 
 	if (StartSuspended == TRUE)
 		SuspendThread(GetCurrentThread());
@@ -127,11 +130,7 @@ static unsigned int WINAPI PCSTProxy
 
 			DbgPrintf("EmuKrnl (0x%X): Calling pfnNotificationRoutine[%d] (0x%.08X)\n", GetCurrentThreadId(), g_iThreadNotificationCount, pfnNotificationRoutine);
 
-
-
 			pfnNotificationRoutine(TRUE);
-
-
 		}
 	}
 
@@ -140,15 +139,23 @@ static unsigned int WINAPI PCSTProxy
 	{
 		SetEvent(hStartedEvent);
 
+		// Given the non-standard calling convention (requiring
+		// the first argument in ebp+4) we need the below __asm.
+		//
+		// Otherwise, this call would have looked something like this :
+		// ((xboxkrnl::PKSYSTEM_ROUTINE)SystemRoutine)(
+		//	  (xboxkrnl::PKSTART_ROUTINE)StartRoutine, 
+		//	  StartContext);
 		__asm
 		{
-			mov         esi, StartRoutine
-			push        StartContext2
-			push        StartContext1
+			mov         esi, SystemRoutine
+			push        StartContext
+			push        StartRoutine
 			push        offset callComplete
 			lea         ebp, [esp - 4]
 			jmp near    esi
 		}
+
 	}
 	__except (EmuException(GetExceptionInformation()))
 	{
@@ -157,77 +164,111 @@ static unsigned int WINAPI PCSTProxy
 
 callComplete:
 
+	// This will also handle thread notification :
+	xboxkrnl::PsTerminateSystemThread(STATUS_SUCCESS);
 
-
-	// call thread notification routine(s)
-	if (g_iThreadNotificationCount != 0)
-	{
-		for (int i = 0; i < 16; i++)
-		{
-			XTL::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (XTL::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification[i];
-
-			// If the routine doesn't exist, don't execute it!
-			if (pfnNotificationRoutine == NULL)
-				continue;
-
-			DbgPrintf("EmuKrnl (0x%X): Calling pfnNotificationRoutine[%d] (0x%.08X)\n", GetCurrentThreadId(), g_iThreadNotificationCount, pfnNotificationRoutine);
-
-
-
-			pfnNotificationRoutine(FALSE);
-
-
-		}
-	}
-
-	CxbxKrnlTerminateThread();
-
-	return 0;
+	return 0; // will never be reached
 }
 #pragma warning(pop)
 
+// Placeholder system function, instead of XapiThreadStartup
+void PspSystemThreadStartup
+(
+	IN xboxkrnl::PKSTART_ROUTINE StartRoutine,
+	IN PVOID StartContext
+)
+{
+	__try
+	{
+		(StartRoutine)(StartContext);
+	}
+	__except (EmuException(GetExceptionInformation()))
+	// TODO : Call PspUnhandledExceptionInSystemThread(GetExceptionInformation())
+	{
+		EmuWarning("Problem with ExceptionFilter!"); // TODO : Disable?
+	}
+
+	xboxkrnl::PsTerminateSystemThread(STATUS_SUCCESS);
+}
+
 // ******************************************************************
-// * 0x00FF - PsCreateSystemThreadEx
+// * 0x00FE - PsCreateSystemThread()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(254) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThread
+(
+	OUT PHANDLE         ThreadHandle,
+	OUT PHANDLE         ThreadId OPTIONAL,
+	IN  PKSTART_ROUTINE StartRoutine,
+	IN  PVOID           StartContext,
+	IN  BOOLEAN         DebuggerThread
+)
+{
+	LOG_FORWARD("PsCreateSystemThreadEx");
+
+	return PsCreateSystemThreadEx(
+		/*OUT*/ThreadHandle,
+		/*ThreadExtensionSize=*/0,
+		/*KernelStackSize=*/KERNEL_STACK_SIZE,
+		/*TlsDataSize=*/0,
+		/*OUT*/ThreadId,
+		/*StartRoutine=*/StartRoutine,
+		StartContext,
+		/*CreateSuspended=*/FALSE,
+		/*DebuggerThread=*/DebuggerThread,
+		/*SystemRoutine=*/PspSystemThreadStartup // instead of XapiThreadStartup
+		);
+}
+
+// ******************************************************************
+// * 0x00FF - PsCreateSystemThreadEx()
 // ******************************************************************
 // Creates a system thread.
 // ThreadHandle: Receives the thread handle
-// ObjectAttributes: Unsure how this works (everything I've seen uses NULL)
+// ThreadExtensionSize: Unsure how this works (everything I've seen uses 0)
 // KernelStackSize: Size of the allocation for both stack and TLS data
 // TlsDataSize: Size within KernelStackSize to use as TLS data
 // ThreadId: Receives the thread ID number
-// StartContext1: Parameter 1 to StartRoutine
-// StartContext2: Parameter 2 to StartRoutine
+// StartRoutine: Called when the thread is created (by XapiThreadStartup)
+// StartContext: Parameter StartRoutine
 // CreateSuspended: TRUE to create the thread as a suspended thread
-// DebugStack: TRUE to allocate the stack from Debug Kit memory
-// StartRoutine: Called when the thread is created
+// DebuggerThread: TRUE to allocate the stack from Debug Kit memory
+// SystemRoutine: System function (normally XapiThreadStartup) called when the thread is created
 //
 // New to the XBOX.
 XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadEx
 (
 	OUT PHANDLE         ThreadHandle,
-	IN  ULONG           ThreadExtraSize,
+	IN  ULONG           ThreadExtensionSize,
 	IN  ULONG           KernelStackSize,
 	IN  ULONG           TlsDataSize,
-	OUT PULONG          ThreadId OPTIONAL,
-	IN  PVOID           StartContext1,
-	IN  PVOID           StartContext2,
+	OUT PHANDLE         ThreadId OPTIONAL,
+	IN  PKSTART_ROUTINE StartRoutine,
+	IN  PVOID           StartContext,
 	IN  BOOLEAN         CreateSuspended,
-	IN  BOOLEAN         DebugStack,
-	IN  PKSTART_ROUTINE StartRoutine
+	IN  BOOLEAN         DebuggerThread,
+	IN  PKSYSTEM_ROUTINE SystemRoutine OPTIONAL
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG_OUT(ThreadHandle)
-		LOG_FUNC_ARG(ThreadExtraSize)
+		LOG_FUNC_ARG(ThreadExtensionSize)
 		LOG_FUNC_ARG(KernelStackSize)
 		LOG_FUNC_ARG(TlsDataSize)
 		LOG_FUNC_ARG_OUT(ThreadId)
-		LOG_FUNC_ARG(StartContext1)
-		LOG_FUNC_ARG(StartContext2)
-		LOG_FUNC_ARG(CreateSuspended)
-		LOG_FUNC_ARG(DebugStack)
 		LOG_FUNC_ARG(StartRoutine)
+		LOG_FUNC_ARG(StartContext)
+		LOG_FUNC_ARG(CreateSuspended)
+		LOG_FUNC_ARG(DebuggerThread)
+		LOG_FUNC_ARG(SystemRoutine)
 		LOG_FUNC_END;
+
+	// TODO : Arguments to use : KernelStackSize, TlsDataSize, DebuggerThread
+
+	// TODO : Fill KernelStackSize like this :
+	//	if (KernelStackSize < KERNEL_STACK_SIZE) 
+	//		KernelStackSize = KERNEL_STACK_SIZE;
+	//	else
+	//		KernelStackSize = round up;
 
 	static bool bFirstTime = false;
 
@@ -238,9 +279,9 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 		// PCSTProxy is responsible for cleaning up this pointer
 		::PCSTProxyParam *iPCSTProxyParam = new ::PCSTProxyParam();
 
-		iPCSTProxyParam->StartContext1 = StartContext1;
-		iPCSTProxyParam->StartContext2 = StartContext2;
 		iPCSTProxyParam->StartRoutine = StartRoutine;
+		iPCSTProxyParam->StartContext = StartContext;
+		iPCSTProxyParam->SystemRoutine = SystemRoutine; // NULL, XapiThreadStartup or unknown?
 		iPCSTProxyParam->StartSuspended = CreateSuspended;
 		iPCSTProxyParam->hStartedEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
@@ -265,14 +306,50 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 		}
 
 		if (ThreadId != NULL)
-			*ThreadId = dwThreadId;
+			*ThreadId = (xboxkrnl::HANDLE)dwThreadId;
 	}
 
 	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
-// * 0x0102 - PsTerminateSystemThread
+// * 0x0101 - PsSetCreateThreadNotifyRoutine()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(257) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsSetCreateThreadNotifyRoutine
+(
+	IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine
+)
+{
+	LOG_FUNC_ONE_ARG(NotifyRoutine);
+
+	NTSTATUS ret = STATUS_INSUFFICIENT_RESOURCES;
+
+	// Taken from XTL::EmuXRegisterThreadNotifyRoutine (perhaps that can be removed now) :
+
+	// I honestly don't expect this to happen, but if it does...
+	if (g_iThreadNotificationCount >= PSP_MAX_CREATE_THREAD_NOTIFY)
+		CxbxKrnlCleanup("Too many thread notification routines installed\n"
+			"If you're reading this message than tell blueshogun you saw it!!!");
+
+	// Find an empty spot in the thread notification array
+	for (int i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++)
+	{
+		// If we find one, then add it to the array, and break the loop so
+		// that we don't accidently register the same routine twice!
+		if (g_pfnThreadNotification[i] == NULL)
+		{
+			g_pfnThreadNotification[i] = NotifyRoutine;
+			g_iThreadNotificationCount++;
+			ret = STATUS_SUCCESS;
+			break;
+		}
+	}
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x0102 - PsTerminateSystemThread()
 // ******************************************************************
 // Exits the current system thread.  Must be called from a system thread.
 //
@@ -301,13 +378,23 @@ XBSYSAPI EXPORTNUM(258) xboxkrnl::VOID NTAPI xboxkrnl::PsTerminateSystemThread
 		}
 	}
 
-	//    CxbxKrnlTerminateThread();
-
-	EmuCleanupFS();
-
 	_endthreadex(ExitStatus);
-	//ExitThread(ExitStatus);
+	// ExitThread(ExitStatus);
+	// CxbxKrnlTerminateThread();
 }
 
-// TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(259) xboxkrnl::POBJECT_TYPE VOLATILE xboxkrnl::PsThreadObjectType = NULL;
+// ******************************************************************
+// * 0x0103 - PsThreadObjectType
+// ******************************************************************
+XBSYSAPI EXPORTNUM(259) xboxkrnl::OBJECT_TYPE VOLATILE xboxkrnl::PsThreadObjectType =
+{
+	/*
+	ExAllocatePoolWithTag,
+	ExFreePool,
+	NULL,
+	NULL,
+	NULL,
+	*/
+	NULL, // (PVOID)FIELD_OFFSET(KTHREAD, Header),
+	'erhT' // = first four characters of "Thread" in reverse
+};

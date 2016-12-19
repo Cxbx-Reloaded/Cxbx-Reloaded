@@ -42,6 +42,7 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
+#include "EmuKrnlLogging.h"
 
 // prevent name collisions
 namespace NtDll
@@ -53,6 +54,9 @@ namespace NtDll
 #include "Emu.h" // For EmuWarning()
 #include "EmuAlloc.h" // For CxbxFree(), CxbxMalloc(), etc.
 
+// ******************************************************************
+// * 0x000C - ExAcquireReadWriteLockExclusive()
+// ******************************************************************
 // Source:APILogger - Uncertain
 XBSYSAPI EXPORTNUM(12) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExAcquireReadWriteLockExclusive
 (
@@ -67,6 +71,9 @@ XBSYSAPI EXPORTNUM(12) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExAcquireReadWriteLock
 	RETURN(S_OK);
 }
 
+// ******************************************************************
+// * 0x000D - ExAcquireReadWriteLockShared()
+// ******************************************************************
 // Source:APILogger - Uncertain
 XBSYSAPI EXPORTNUM(13) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExAcquireReadWriteLockShared
 (
@@ -82,22 +89,20 @@ XBSYSAPI EXPORTNUM(13) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExAcquireReadWriteLock
 }
 
 // ******************************************************************
-// * 0x000E ExAllocatePool
+// * 0x000E - ExAllocatePool()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(14) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePool
 (
 	IN SIZE_T NumberOfBytes
 )
 {
-	LOG_FUNC_ONE_ARG(NumberOfBytes);
+	LOG_FORWARD("ExAllocatePoolWithTag");
 
-	PVOID pRet = ExAllocatePoolWithTag(NumberOfBytes, (ULONG)"enoN"); // "None" in reverse?
-
-	RETURN(pRet);
+	return ExAllocatePoolWithTag(NumberOfBytes, (ULONG)"enoN"); // = "None" in reverse
 }
 
 // ******************************************************************
-// * 0x000F ExAllocatePoolWithTag
+// * 0x000F - ExAllocatePoolWithTag()
 // ******************************************************************
 // * Differences from NT: There is no PoolType field, as the XBOX
 // * only has 1 pool, the non-paged pool.
@@ -119,11 +124,24 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
 	RETURN(pRet);
 }
 
-// TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(16) xboxkrnl::POBJECT_TYPE xboxkrnl::ExEventObjectType = NULL;
+// ******************************************************************
+// * 0x0010 - ExEventObjectType
+// ******************************************************************
+XBSYSAPI EXPORTNUM(16) xboxkrnl::OBJECT_TYPE xboxkrnl::ExEventObjectType =
+{
+	/*
+	ExAllocatePoolWithTag,
+	ExFreePool,
+	NULL,
+	NULL,
+	NULL,
+	*/
+	NULL, // (PVOID)FIELD_OFFSET(KEVENT, Header),
+	'vevE' // = first four characters of "Event" in reverse
+};
 
 // ******************************************************************
-// * 0x0011 ExFreePool
+// * 0x0011 - ExFreePool()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(17) xboxkrnl::VOID NTAPI xboxkrnl::ExFreePool
 (
@@ -135,6 +153,9 @@ XBSYSAPI EXPORTNUM(17) xboxkrnl::VOID NTAPI xboxkrnl::ExFreePool
 	CxbxFree(P);
 }
 
+// ******************************************************************
+// * 0x0012 - ExInitializeReadWriteLock()
+// ******************************************************************
 // Source:APILogger - Uncertain
 XBSYSAPI EXPORTNUM(18) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExInitializeReadWriteLock
 (
@@ -148,6 +169,9 @@ XBSYSAPI EXPORTNUM(18) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExInitializeReadWriteL
 	RETURN(S_OK);
 }
 
+// ******************************************************************
+// * 0x0013 - ExInterlockedAddLargeInteger()
+// ******************************************************************
 // Source:ReactOS https://doxygen.reactos.org/d0/d35/ntoskrnl_2ex_2interlocked_8c_source.html#l00062
 XBSYSAPI EXPORTNUM(19) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::ExInterlockedAddLargeInteger
 (
@@ -181,6 +205,9 @@ XBSYSAPI EXPORTNUM(19) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::ExInterlockedAddL
 	return OldValue; // TODO : operator<<(LARGE_INTERGER) enables RETURN(OldValue);
 }
 
+// ******************************************************************
+// * 0x0014 - ExInterlockedAddLargeStatistic()
+// ******************************************************************
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(20) xboxkrnl::VOID FASTCALL xboxkrnl::ExInterlockedAddLargeStatistic
 (
@@ -196,6 +223,9 @@ XBSYSAPI EXPORTNUM(20) xboxkrnl::VOID FASTCALL xboxkrnl::ExInterlockedAddLargeSt
 	LOG_UNIMPLEMENTED();
 }
 
+// ******************************************************************
+// * 0x0015 - ExInterlockedCompareExchange64()
+// ******************************************************************
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(21) xboxkrnl::LONGLONG FASTCALL xboxkrnl::ExInterlockedCompareExchange64
 (
@@ -217,11 +247,24 @@ XBSYSAPI EXPORTNUM(21) xboxkrnl::LONGLONG FASTCALL xboxkrnl::ExInterlockedCompar
 	RETURN(0);
 }
 
-// TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(22) xboxkrnl::POBJECT_TYPE xboxkrnl::ExMutantObjectType = NULL;
+// ******************************************************************
+// * 0x0016 - ExMutantObjectType
+// ******************************************************************
+XBSYSAPI EXPORTNUM(22) xboxkrnl::OBJECT_TYPE xboxkrnl::ExMutantObjectType = 
+{
+	/*
+	ExAllocatePoolWithTag,
+	ExFreePool,
+	NULL,
+	ExpDeleteMutant,
+	NULL,
+	*/
+	NULL, // (PVOID)FIELD_OFFSET(KMUTANT, Header),
+	'atuM' // = first four characters of "Mutant" in reverse
+};
 
 // ******************************************************************
-// * 0x0017 ExQueryPoolBlockSize
+// * 0x0017 - ExQueryPoolBlockSize()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(23) xboxkrnl::ULONG NTAPI xboxkrnl::ExQueryPoolBlockSize
 (
@@ -237,7 +280,7 @@ XBSYSAPI EXPORTNUM(23) xboxkrnl::ULONG NTAPI xboxkrnl::ExQueryPoolBlockSize
 }
 
 // ******************************************************************
-// * 0x0018 ExQueryNonVolatileSetting
+// * 0x0018 - ExQueryNonVolatileSetting()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
 (
@@ -356,7 +399,7 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 }
 
 // ******************************************************************
-// * 0x0019 - ExReadWriteRefurbInfo
+// * 0x0019 - ExReadWriteRefurbInfo()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
 (
@@ -389,7 +432,7 @@ XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
 
 			Handle ConfigPartitionHandle;
 			IO_STATUS_BLOCK IoStatusBlock;
-			Result = xboxkrnl_NtOpenFile(
+			Result = xboxkrnl::NtOpenFile(
 				&ConfigPartitionHandle,
 				GENERIC_READ or DWORD(iif(aIsWriteMode, GENERIC_WRITE, 0)) or SYNCHRONIZE,
 				&ObjectAttributes,
@@ -406,7 +449,7 @@ XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
 				{
 					RefurbInfoCopy = *pRefurbInfo;
 					RefurbInfoCopy.Signature_ = XBOX_REFURB_INFO_SIGNATURE;
-					Result = xboxkrnl_NtWriteFile(ConfigPartitionHandle, 0, NULL, NULL, &IoStatusBlock, &RefurbInfoCopy, XBOX_HD_SECTOR_SIZE, &ByteOffset);
+					Result = xboxkrnl::NtWriteFile(ConfigPartitionHandle, 0, NULL, NULL, &IoStatusBlock, &RefurbInfoCopy, XBOX_HD_SECTOR_SIZE, &ByteOffset);
 				}
 				else
 				{
@@ -434,6 +477,9 @@ XBSYSAPI EXPORTNUM(25) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReadWriteRefurbInfo
 	RETURN(Result);
 }
 
+// ******************************************************************
+// * 0x001A - ExRaiseException()
+// ******************************************************************
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(26) xboxkrnl::VOID NTAPI xboxkrnl::ExRaiseException
 (
@@ -446,7 +492,9 @@ XBSYSAPI EXPORTNUM(26) xboxkrnl::VOID NTAPI xboxkrnl::ExRaiseException
 	LOG_UNIMPLEMENTED();
 }
 
-
+// ******************************************************************
+// * 0x001B - ExRaiseStatus()
+// ******************************************************************
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(27) xboxkrnl::VOID NTAPI xboxkrnl::ExRaiseStatus
 (
@@ -458,6 +506,9 @@ XBSYSAPI EXPORTNUM(27) xboxkrnl::VOID NTAPI xboxkrnl::ExRaiseStatus
 	LOG_UNIMPLEMENTED();
 }
 
+// ******************************************************************
+// * 0x001C - ExReleaseReadWriteLock()
+// ******************************************************************
 // Source:APILogger - Uncertain
 XBSYSAPI EXPORTNUM(28) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReleaseReadWriteLock
 (
@@ -471,9 +522,8 @@ XBSYSAPI EXPORTNUM(28) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExReleaseReadWriteLock
 	RETURN(S_OK);
 }
 
-
 // ******************************************************************
-// * 0x001D - ExSaveNonVolatileSetting
+// * 0x001D - ExSaveNonVolatileSetting()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetting
 (
@@ -496,12 +546,41 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 	RETURN(STATUS_SUCCESS);
 }
 
-// TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(30) xboxkrnl::POBJECT_TYPE xboxkrnl::ExSemaphoreObjectType = NULL;
+// ******************************************************************
+// * 0x001E - ExSemaphoreObjectType
+// ******************************************************************
+XBSYSAPI EXPORTNUM(30) xboxkrnl::OBJECT_TYPE xboxkrnl::ExSemaphoreObjectType = 
+{
+	/*
+	ExAllocatePoolWithTag,
+	ExFreePool,
+	NULL,
+	NULL,
+	NULL,
+	*/
+	NULL, // (PVOID)FIELD_OFFSET(KSEMAPHORE, Header),
+	'ameS' // = first four characters of "Semaphore" in reverse
+};
 
-// TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(31) xboxkrnl::POBJECT_TYPE xboxkrnl::ExTimerObjectType = NULL;
+// ******************************************************************
+// * 0x001F - ExTimerObjectType
+// ******************************************************************
+XBSYSAPI EXPORTNUM(31) xboxkrnl::OBJECT_TYPE xboxkrnl::ExTimerObjectType = 
+{
+	/*
+	ExAllocatePoolWithTag,
+	ExFreePool,
+	NULL,
+	ExpDeleteTimer,
+	NULL,
+	*/
+	NULL, // (PVOID)FIELD_OFFSET(KTIMER, Header),
+	'emiT' // = first four characters of "Timer" in reverse
+};
 
+// ******************************************************************
+// * 0x0020 - ExfInterlockedInsertHeadList()
+// ******************************************************************
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(32) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedInsertHeadList
 (
@@ -521,7 +600,9 @@ XBSYSAPI EXPORTNUM(32) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedIn
 	RETURN(ListHead);
 }
 
-
+// ******************************************************************
+// * 0x0021 - ExfInterlockedInsertTailList()
+// ******************************************************************
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(33) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedInsertTailList
 (
@@ -541,7 +622,9 @@ XBSYSAPI EXPORTNUM(33) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedIn
 	RETURN(ListHead);
 }
 
-
+// ******************************************************************
+// * 0x0022 - ExfInterlockedRemoveHeadList()
+// ******************************************************************
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(34) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedRemoveHeadList
 (

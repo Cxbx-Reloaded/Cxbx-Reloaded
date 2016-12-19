@@ -165,36 +165,6 @@ struct EmuD3D8CreateDeviceProxyData
 }
 g_EmuCDPD = {0};
 
-typedef struct
-{
-	int W;
-	int H;
-	unsigned long PCMode;
-	char N[6];
-} XboxResolution;
-
-std::vector<XboxResolution> XboxResolutions = {
-	{ 640, 480, 0, "NTSC"},
-	{ 640, 576, 0, "PAL" },
-	{ 720, 480, 0, "480p" },
-	{ 720, 576, 0, "PAL2" },
-	{ 1280, 720, 0, "720p" },
-	{ 1920, 1080, 0, "1080i" }
-};
-
-bool IsValidXboxDisplayMode(XTL::D3DDISPLAYMODE PCDisplayMode, int PCModeNr)
-{
-	for (size_t i = 0; i < XboxResolutions.size(); i++) {
-		if (XboxResolutions[i].W == PCDisplayMode.Width && XboxResolutions[i].H == PCDisplayMode.Height) {
-			XboxResolutions[i].PCMode = PCModeNr;
-				
-			return true;
-		}
-	}
-
-	return false;
-}
-
 // Direct3D initialization (called before emulation begins)
 VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 {
@@ -212,6 +182,11 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         DWORD dwThreadId;
 
         HANDLE hThread = CreateThread(NULL, NULL, EmuUpdateTickCount, NULL, NULL, &dwThreadId);
+		// Ported from Dxbx :
+        // If possible, assign this thread to another core than the one that runs Xbox1 code :
+        SetThreadAffinityMask(&dwThreadId, g_CPUOthers);
+        // We set the priority of this thread a bit higher, to assure reliable timing :
+        SetThreadPriority(hThread, THREAD_PRIORITY_ABOVE_NORMAL);
 
         // we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
         {
@@ -228,8 +203,20 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         DWORD dwThreadId;
 
         CreateThread(NULL, NULL, EmuCreateDeviceProxy, NULL, NULL, &dwThreadId);
+		// Ported from Dxbx :
+        // If possible, assign this thread to another core than the one that runs Xbox1 code :
+        SetThreadAffinityMask(&dwThreadId, g_CPUOthers);
     }
 
+/* TODO : Port this Dxbx code :
+  // create vblank handling thread
+    {
+        dwThreadId = 0;
+        {hThread :=} CreateThread(NULL, 0, EmuThreadHandleVBlank, NULL, 0, &dwThreadId);
+        // Make sure VBlank callbacks run on the same core as the one that runs Xbox1 code :
+        SetThreadAffinityMask(dwThreadId, g_CPUXbox);
+    }
+*/
     // create window message processing thread
     {
         DWORD dwThreadId;
@@ -237,6 +224,7 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         g_bRenderWindowActive = false;
 
         HANDLE hRenderWindowThread = CreateThread(NULL, NULL, EmuRenderWindow, NULL, NULL, &dwThreadId);
+
 		if (hRenderWindowThread == NULL) {
 			char szBuffer[1024] = { 0 };
 			sprintf(szBuffer, "Creating EmuRenderWindowThread Failed: %08X", GetLastError());
@@ -244,9 +232,12 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 			ExitProcess(0);
 		}
 
+		// Ported from Dxbx :
+		// If possible, assign this thread to another core than the one that runs Xbox1 code :
+		SetThreadAffinityMask(&dwThreadId, g_CPUOthers);
 
         while(!g_bRenderWindowActive)
-            Sleep(10);
+            Sleep(10); // Dxbx: Should we use SwitchToThread() or YieldProcessor() ?
 
         Sleep(50);
     }
@@ -403,7 +394,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
         );
     }
 
-    ShowWindow(g_hEmuWindow, (g_XBVideo.GetFullscreen() || (CxbxKrnl_hEmuParent == 0) ) ? SW_SHOWDEFAULT : SW_SHOWMAXIMIZED);
+    ShowWindow(g_hEmuWindow, ((CxbxKrnl_hEmuParent == 0) || g_XBVideo.GetFullscreen()) ? SW_SHOWDEFAULT : SW_SHOWMAXIMIZED);
     UpdateWindow(g_hEmuWindow);
 
     if(!g_XBVideo.GetFullscreen() && (CxbxKrnl_hEmuParent != NULL))
@@ -524,7 +515,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
         {
             DeleteObject(g_hBgBrush);
             PostQuitMessage(0);
-            return 0;
+            return D3D_OK; // = 0
         }
         break;
 
@@ -628,7 +619,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             if(g_XBVideo.GetFullscreen() || g_bIsFauxFullscreen)
             {
                 SetCursor(NULL);
-                return 0;
+                return D3D_OK; // = 0
             }
 
             return DefWindowProc(hWnd, msg, wParam, lParam);
@@ -639,7 +630,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             return DefWindowProc(hWnd, msg, wParam, lParam);
     }
 
-    return 0;
+    return D3D_OK; // = 0
 }
 
 // timing thread procedure
@@ -866,6 +857,14 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                     g_dwVertexShaderUsage = D3DUSAGE_SOFTWAREPROCESSING;
                 }
    
+				// Dxbx addition : Prevent Direct3D from changing the FPU Control word :
+				g_EmuCDPD.BehaviorFlags |= D3DCREATE_FPU_PRESERVE;
+
+				// Set Floating Point Control Word (FPCW) :
+				_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
+				_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
+				// TODO : Should we keep checking (and correcting) the FPCW during emulation?)
+
                 // Address debug DirectX runtime warning in _DEBUG builds
                 // Direct3D8: (WARN) :Device that was created without D3DCREATE_MULTITHREADED is being used by a thread other than the creation thread.
                 #ifdef _DEBUG
@@ -1636,150 +1635,6 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SelectVertexShader
     
 
     return D3D_OK;
-}
-
-// ******************************************************************
-// * func: EmuIDirect3D8_GetAdapterModeCount
-// ******************************************************************
-UINT WINAPI XTL::EmuIDirect3D8_GetAdapterModeCount
-(
-    UINT                        Adapter
-)
-{
-    
-
-    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3D8_GetAdapterModeCount\n"
-           "(\n"
-           "   Adapter                   : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), Adapter);
-	
-	D3DDISPLAYMODE PCDisplayMode;
-
-    UINT ret = g_pD3D8->GetAdapterModeCount(g_XBVideo.GetDisplayAdapter());
-
-	for (uint32 v = 0;v<ret;v++)
-	{
-		HRESULT hRet = g_pD3D8->EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), v, &PCDisplayMode);
-
-		if (hRet != D3D_OK)
-			break;
-
-		// Dxbx addition: Only count valid Xbox resultions :
-		if (!IsValidXboxDisplayMode(PCDisplayMode, v))
-			ret--;
-	}
-
-    
-
-    return ret;
-}
-
-// ******************************************************************
-// * func: EmuIDirect3D8_GetAdapterDisplayMode
-// ******************************************************************
-HRESULT WINAPI XTL::EmuIDirect3D8_GetAdapterDisplayMode
-(
-    UINT                        Adapter,
-    X_D3DDISPLAYMODE           *pMode
-)
-{
-    
-
-    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3D8_GetAdapterDisplayMode\n"
-           "(\n"
-           "   Adapter                   : 0x%.08X\n"
-           "   pMode                     : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), Adapter, pMode);
-
-    // NOTE: WARNING: We should cache the "Emulated" display mode and return
-    // This value. We can initialize the cache with the default Xbox mode data.
-    HRESULT hRet = g_pD3D8->GetAdapterDisplayMode
-    (
-        g_XBVideo.GetDisplayAdapter(),
-        (D3DDISPLAYMODE*)pMode
-    );
-
-    // make adjustments to the parameters to make sense with windows direct3d
-    {
-        D3DDISPLAYMODE *pPCMode = (D3DDISPLAYMODE*)pMode;
-
-        // Convert Format (PC->Xbox)
-        pMode->Format = EmuPC2XB_D3DFormat(pPCMode->Format);
-
-        // TODO: Make this configurable in the future?
-        // D3DPRESENTFLAG_FIELD | D3DPRESENTFLAG_INTERLACED | D3DPRESENTFLAG_LOCKABLE_BACKBUFFER
-        pMode->Flags  = 0x000000A1;
-
-        // TODO: Retrieve from current CreateDevice settings?
-        pMode->Width = 640;
-        pMode->Height = 480;
-    }
-
-    
-
-    return hRet;
-}
-
-// ******************************************************************
-// * func: EmuIDirect3D8_EnumAdapterModes
-// ******************************************************************
-HRESULT WINAPI XTL::EmuIDirect3D8_EnumAdapterModes
-(
-    UINT                        Adapter,
-    UINT                        Mode,
-    X_D3DDISPLAYMODE           *pMode
-)
-{
-    
-
-    DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3D8_EnumAdapterModes\n"
-           "(\n"
-           "   Adapter                   : 0x%.08X\n"
-           "   Mode                      : 0x%.08X\n"
-           "   pMode                     : 0x%.08X\n"
-           ");\n",
-           GetCurrentThreadId(), Adapter, Mode, pMode);
-
-    HRESULT hRet;
-
-    D3DDISPLAYMODE PCMode;
-
-	if (Mode < XboxResolutions.size()) 
-		hRet = g_pD3D8->EnumAdapterModes(g_XBVideo.GetDisplayAdapter(), XboxResolutions[Mode].PCMode, (D3DDISPLAYMODE*)&PCMode);
-	else
-		hRet = D3DERR_INVALIDCALL;
-
-    // make adjustments to parameters to make sense with windows direct3d
-    if(hRet == D3D_OK)
-    {
-        //
-        // NOTE: WARNING: PC D3DDISPLAYMODE is different than Xbox D3DDISPLAYMODE!
-        //
-
-        // Convert Format (PC->Xbox)
-        pMode->Width  = PCMode.Width;
-        pMode->Height = PCMode.Height;
-        pMode->RefreshRate = PCMode.RefreshRate;
-
-        // TODO: Make this configurable in the future?
-        // D3DPRESENTFLAG_FIELD | D3DPRESENTFLAG_INTERLACED | D3DPRESENTFLAG_LOCKABLE_BACKBUFFER
-        pMode->Flags  = 0x000000A1;
-
-        pMode->Format = EmuPC2XB_D3DFormat(PCMode.Format);
-    }
-    else
-    {
-//		hRet = S_OK;
-        hRet = D3DERR_INVALIDCALL;
-//		CxbxKrnlCleanup("EnumAdapterModes failed!");
-    }
-
-    
-
- //   return hRet;
-	return S_OK; // Hack
 }
 
 // ******************************************************************
@@ -5829,7 +5684,7 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_LockRect
            ");\n",
            GetCurrentThreadId(), pThis, Level, pLockedRect, pRect, Flags);
 
-    HRESULT hRet;
+    HRESULT hRet = D3D_OK;
 
 	DbgPrintf("EmuD3D8 (0x%X): EmuIDirect3DTexture8_LockRect (pThis->Texture = 0x%8.8X)\n", GetCurrentThreadId(), pThis->EmuTexture8);
 
@@ -5864,8 +5719,11 @@ HRESULT WINAPI XTL::EmuIDirect3DTexture8_LockRect
         if(!(Flags & 0x80) && !(Flags & 0x40) && !(Flags & 0x20) && !(Flags & 0x10) && Flags != 0)
             CxbxKrnlCleanup("EmuIDirect3DTexture8_LockRect: Unknown Flags! (0x%.08X)", Flags);
 
-		pTexture8->UnlockRect(Level);
-		hRet = pTexture8->LockRect(Level, pLockedRect, pRect, NewFlags);
+		if (pTexture8 != nullptr) {
+			pTexture8->UnlockRect(Level);
+			hRet = pTexture8->LockRect(Level, pLockedRect, pRect, NewFlags);
+		}
+
 		pThis->Common |= X_D3DCOMMON_ISLOCKED;
 	}
 

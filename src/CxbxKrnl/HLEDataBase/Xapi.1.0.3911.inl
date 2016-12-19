@@ -683,7 +683,7 @@ SOOVPA<8> XInputClose_1_0_3911 =
     8,  // Count == 8
 
     XRefNotSaved,
-    XRefNotUsed,
+    1,
 
     {
         // XInputClose+0x05 : call [fCloseDevice]
@@ -1783,6 +1783,46 @@ OOVPATable XAPI_1_0_3911[] =
 
 		#ifdef _DEBUG_TRACE
 		"EmuXGetDevices"
+		#endif
+	},
+	// CreateFiber
+	{
+		(OOVPA*)&CreateFiber_1_0_3911,
+
+		XTL::EmuCreateFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuCreateFiber"
+		#endif
+	},
+	// DeleteFiber
+	{
+		(OOVPA*)&DeleteFiber_1_0_3911,
+
+		XTL::EmuDeleteFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuDeleteFiber"
+		#endif
+	},
+	// SwitchToFiber
+	{
+		(OOVPA*)&SwitchToFiber_1_0_3911,
+
+		XTL::EmuSwitchToFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuSwitchToFiber"
+		#endif
+	},
+	// ConvertThreadToFiber
+	{
+		(OOVPA*)&ConvertThreadToFiber_1_0_3911,
+
+		XTL::EmuConvertThreadToFiber,
+
+		#ifdef _DEBUG_TRACE
+		"EmuConvertThreadToFiber"
 		#endif
 	},
 	// XInputGetCapabilities

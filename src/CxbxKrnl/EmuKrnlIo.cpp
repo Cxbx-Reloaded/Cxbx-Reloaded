@@ -42,16 +42,29 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
-
+#include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuFile.h" // For CxbxCreateSymbolicLink(), etc.
 
-// TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(64) xboxkrnl::POBJECT_TYPE xboxkrnl::IoCompletionObjectType = NULL;
+// ******************************************************************
+// * 0x0040 - IoCompletionObjectType
+// ******************************************************************
+XBSYSAPI EXPORTNUM(64) xboxkrnl::OBJECT_TYPE xboxkrnl::IoCompletionObjectType =
+{
+	/*
+	ExAllocatePoolWithTag,
+	ExFreePool,
+	NULL,
+	IopDeleteIoCompletion,
+	NULL,
+	*/
+	NULL, // &ObpDefaultObject,
+	'pmoC' // = first four characters of "Completion" in reverse
+};
 
 // ******************************************************************
-// * 0x0042 - IoCreateFile
+// * 0x0042 - IoCreateFile()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 (
@@ -59,7 +72,7 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 	IN  ACCESS_MASK         DesiredAccess,
 	IN  POBJECT_ATTRIBUTES  ObjectAttributes,
 	OUT PIO_STATUS_BLOCK    IoStatusBlock,
-	IN  PLARGE_INTEGER      AllocationSize,
+	IN  PLARGE_INTEGER      AllocationSize OPTIONAL,
 	IN  ULONG               FileAttributes,
 	IN  ULONG               ShareAccess,
 	IN  ULONG               Disposition,
@@ -80,16 +93,38 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 		LOG_FUNC_ARG(Options)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	NativeObjectAttributes nativeObjectAttributes;
 
-	// TODO: Try redirecting to NtCreateFile if this function ever is run into
-	LOG_UNIMPLEMENTED();
+	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, nativeObjectAttributes, "IoCreateFile"); /*var*/
+
+	// redirect to NtCreateFile
+	ret = NtDll::NtCreateFile(
+		FileHandle, 
+		DesiredAccess | GENERIC_READ, 
+		nativeObjectAttributes.NtObjAttrPtr, 
+		NtDll::PIO_STATUS_BLOCK(IoStatusBlock), 
+		NtDll::PLARGE_INTEGER(AllocationSize), 
+		FileAttributes, 
+		ShareAccess, 
+		Disposition, 
+		CreateOptions, 
+		NULL, 
+		0);
+
+	if (FAILED(ret))
+	{
+		DbgPrintf("EmuKrnl (0x%X): IoCreateFile Failed! (0x%.08X)\n", GetCurrentThreadId(), ret);
+	}
+	else
+	{
+		DbgPrintf("EmuKrnl (0x%X): IoCreateFile = 0x%.08X\n", GetCurrentThreadId(), *FileHandle);
+	}
 
 	RETURN(ret);
 }
 
 // ******************************************************************
-// * 0x0043 IoCreateSymbolicLink
+// * 0x0043 - IoCreateSymbolicLink()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(67) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateSymbolicLink
 (
@@ -108,7 +143,7 @@ XBSYSAPI EXPORTNUM(67) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateSymbolicLink
 }
 
 // ******************************************************************
-// * 0x0045 - IoDeleteSymbolicLink
+// * 0x0045 - IoDeleteSymbolicLink()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(69) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDeleteSymbolicLink
 (
@@ -127,14 +162,57 @@ XBSYSAPI EXPORTNUM(69) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDeleteSymbolicLink
 	RETURN(ret);
 }
 
-// TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(70) xboxkrnl::POBJECT_TYPE xboxkrnl::IoDeviceObjectType = NULL;
-
-// TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(71) xboxkrnl::POBJECT_TYPE xboxkrnl::IoFileObjectType = NULL;
+// ******************************************************************
+// * 0x0046 - IoDeviceObjectType
+// ******************************************************************
+XBSYSAPI EXPORTNUM(70) xboxkrnl::OBJECT_TYPE xboxkrnl::IoDeviceObjectType =
+{
+	/*
+	ExAllocatePoolWithTag,
+	ExFreePool,
+	NULL,
+	NULL,
+	IoParseDevice,
+	*/
+	NULL, // &ObpDefaultObject,
+	'iveD' // = first four characters of "Device" in reverse
+};
 
 // ******************************************************************
-// * IoDismountVolumeByName
+// * 0x0047 - IoFileObjectType
+// ******************************************************************
+XBSYSAPI EXPORTNUM(71) xboxkrnl::OBJECT_TYPE xboxkrnl::IoFileObjectType =
+{
+	/*
+	ExAllocatePoolWithTag,
+	ExFreePool,
+	IopCloseFile,
+	IopDeleteFile,
+	IopParseFile,
+	*/
+	NULL, // (PVOID)FIELD_OFFSET(FILE_OBJECT, Event.Header),
+	'eliF' // = "File" in reverse
+};
+
+// ******************************************************************
+// * 0x005A - IoDismountVolume()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(90) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDismountVolume
+(
+	IN PDEVICE_OBJECT DeviceObject
+)
+{
+	LOG_FUNC_ONE_ARG(DeviceObject);
+
+	NTSTATUS ret = STATUS_SUCCESS;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x005B - IoDismountVolumeByName()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(91) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDismountVolumeByName
 (

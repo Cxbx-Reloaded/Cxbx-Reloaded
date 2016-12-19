@@ -3434,7 +3434,7 @@ SOOVPA<4> D3DDevice_KickPushBuffer_1_0_4627 =
     4,  // Count == 4
 
     XRefNotSaved,
-    1,  // Xref Not Used
+    1,  // Xref Is Used
 
     {
 		{ 0x07, XREF_D3D_KickOff },
@@ -4338,36 +4338,6 @@ OOVPATable D3D8_1_0_4627[] =
 
         #ifdef _DEBUG_TRACE
         "EmuIDirect3DDevice8_GetVisibilityTestResult"
-        #endif
-    },
-    // IDirect3D8::GetAdapterModeCount (* unchanged since 4361 *)
-    {
-        (OOVPA*)&IDirect3D8_GetAdapterModeCount_1_0_4361,
-
-        XTL::EmuIDirect3D8_GetAdapterModeCount,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirect3D8_GetAdapterModeCount"
-        #endif
-    },
-    // IDirect3D8::GetAdapterDisplayMode
-    {
-        (OOVPA*)&IDirect3D8_GetAdapterDisplayMode_1_0_4627,
-
-        XTL::EmuIDirect3D8_GetAdapterDisplayMode,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirect3D8_GetAdapterDisplayMode"
-        #endif
-    },
-    // IDirect3D8::EnumAdapterModes (* unchanged since 4361 *)
-    {
-        (OOVPA*)&IDirect3D8_EnumAdapterModes_1_0_4361,
-
-        XTL::EmuIDirect3D8_EnumAdapterModes,
-
-        #ifdef _DEBUG_TRACE
-        "EmuIDirect3D8_EnumAdapterModes"
         #endif
     },
     // IDirect3D8::KickOffAndWaitForIdle

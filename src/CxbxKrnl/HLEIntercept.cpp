@@ -65,7 +65,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
 {
     Xbe::Certificate *pCertificate = (Xbe::Certificate*)pXbeHeader->dwCertificateAddr;
 
-    char szCacheFileName[260];
+    char szCacheFileName[MAX_PATH];
 
     DbgPrintf("\n");
     DbgPrintf("*******************************************************************************\n");
@@ -77,36 +77,27 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
     // initialize HLE cache file
     //
 
-    {
-        SHGetSpecialFolderPath(NULL, szCacheFileName, CSIDL_APPDATA, TRUE);
+	{
+		SHGetSpecialFolderPath(NULL, szCacheFileName, CSIDL_APPDATA, TRUE);
 
-        strcat(szCacheFileName, "\\Cxbx-Reloaded\\");
+		strcat(szCacheFileName, "\\Cxbx-Reloaded\\");
 
-        CreateDirectory(szCacheFileName, NULL);
+		CreateDirectory(szCacheFileName, NULL);
 
-        sint32 spot = -1;
+		char *spot = strrchr(szCacheFileName, '\\');
 
-        for(int v=0;v<260;v++)
-        {
-            if(szCacheFileName[v] == '\\') { spot = v; }
-            else if(szCacheFileName[v] == '\0') { break; }
-        }
+		//
+		// create HLECache directory
+		//
 
-        if(spot != -1) { szCacheFileName[spot] = '\0'; }
+		strcpy(spot, "\\HLECache");
 
-        //
-        // create HLECache directory
-        //
-
-        strcpy(&szCacheFileName[spot], "\\HLECache");
-
-        CreateDirectory(szCacheFileName, NULL);
-
-        //
+		CreateDirectory(szCacheFileName, NULL);
+		
+		//
         // open title's cache file
         //
-
-        sprintf(&szCacheFileName[spot+9], "\\%08x.dat", pCertificate->dwTitleId);
+		sprintf(spot+9, "\\%08x.dat", pCertificate->dwTitleId);
 
         FILE *pCacheFile = fopen(szCacheFileName, "rb");
 
@@ -769,7 +760,9 @@ static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xb
 
             if(OovpaTable[a].lpRedirect == 0)
             {
-                EmuInstallWrapper(pFunc, EmuXRefFailure);
+				// Insert breakpoint
+				*(uint8_t*)pFunc = 0xCC;
+                EmuInstallWrapper((void*)(((uint32_t)pFunc)+1), EmuXRefFailure);
             }
             else
             {
@@ -783,7 +776,6 @@ static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xb
 // alert for the situation where an Xref function body is hit
 static void EmuXRefFailure()
 {
-    _asm int 3;
     CxbxKrnlCleanup("XRef-only function body reached. Fatal Error.");
 }
 
