@@ -159,6 +159,11 @@ extern thread_local std::string _logPrefix;
 			_had_arg = true; \
 			msg << "\n   " << std::setw(25) << std::left << std::setfill(' ') << #arg << " : " << _log_sanitize(arg);
 
+	// LOG_FUNC_ARG_TYPE writes output using the overloaded << operator of the given type
+	#define LOG_FUNC_ARG_TYPE(type, arg) \
+			_had_arg = true; \
+			msg << "\n   " << std::setw(25) << std::left << std::setfill(' ') << #arg << " : " << (type)arg;
+
 	// LOG_FUNC_ARG_OUT prevents expansion of types, by only rendering as a pointer
 	#define LOG_FUNC_ARG_OUT(arg) \
 			_had_arg = true; \
@@ -177,6 +182,7 @@ extern thread_local std::string _logPrefix;
 #else
 	#define LOG_FUNC_BEGIN 
 	#define LOG_FUNC_ARG(arg)
+	#define LOG_FUNC_ARG_TYPE(type, arg)
 	#define LOG_FUNC_ARG_OUT(arg)
 	#define LOG_FUNC_END
 	#define LOG_FUNC_RESULT(r)
