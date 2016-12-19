@@ -280,7 +280,15 @@ XBSYSAPI EXPORTNUM(320) VOID NTAPI RtlZeroMemory
   IN SIZE_T           Length
 );
 
-XBSYSAPI VOID *RtlRip;
+// ******************************************************************
+// * 0x0160 - RtlRip
+// ******************************************************************
+XBSYSAPI EXPORTNUM(352) VOID NTAPI RtlRip
+(
+ PCHAR	ApiName,
+ PCHAR	Expression,
+ PCHAR	Message
+);
 
 #endif
 

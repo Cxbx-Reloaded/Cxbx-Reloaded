@@ -958,9 +958,9 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 (
 	IN  HANDLE          FileHandle,            // TODO: correct paramters
 	IN  HANDLE          Event OPTIONAL,
-	IN  PVOID           ApcRoutine OPTIONAL,
+	IN  PIO_APC_ROUTINE ApcRoutine OPTIONAL,
 	IN  PVOID           ApcContext,
-	OUT PVOID           IoStatusBlock,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	OUT PVOID           Buffer,
 	IN  ULONG           Length,
 	IN  PLARGE_INTEGER  ByteOffset OPTIONAL
@@ -1085,10 +1085,10 @@ XBSYSAPI EXPORTNUM(225) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetEvent
 XBSYSAPI EXPORTNUM(226) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
 (
 	IN  HANDLE  FileHandle,            // TODO: correct paramters
-	OUT PVOID   IoStatusBlock,
+	OUT PIO_STATUS_BLOCK   IoStatusBlock,
 	IN  PVOID   FileInformation,
 	IN  ULONG   Length,
-	IN  ULONG   FileInformationClass
+	IN  FILE_INFORMATION_CLASS   FileInformationClass
 )
 {
 	LOG_FUNC_BEGIN

@@ -120,8 +120,8 @@ XBSYSAPI EXPORTNUM(252) NTSTATUS NTAPI PhyGetLinkState
 
 XBSYSAPI EXPORTNUM(253) NTSTATUS NTAPI PhyInitialize
 (
-	IN ULONG	Parameter1,
-	IN ULONG	Parameter2
+	IN ULONG	forceReset,
+	IN PVOID	Parameter2
 );
 
 // ******************************************************************
@@ -154,8 +154,21 @@ XBSYSAPI EXPORTNUM(324) XBOX_KRNL_VERSION XboxKrnlVersion;
 XBSYSAPI EXPORTNUM(325) BYTE XboxSignatureKey[16];
 
 XBSYSAPI EXPORTNUM(326) OBJECT_STRING XeImageFileName;
-XBSYSAPI EXPORTNUM(327) NTSTATUS NTAPI XeLoadSection(void* section);
-XBSYSAPI EXPORTNUM(328) NTSTATUS NTAPI XeUnloadSection(void* section);
+// ******************************************************************
+// * 0x0147 - XeLoadSection
+// ******************************************************************
+XBSYSAPI EXPORTNUM(327) NTSTATUS NTAPI XeLoadSection
+(
+	IN PXBEIMAGE_SECTION Section
+);
+
+// ******************************************************************
+// * 0x0148 - XeUnloadSection
+// ******************************************************************
+XBSYSAPI EXPORTNUM(328) NTSTATUS NTAPI XeUnloadSection
+(
+	IN PXBEIMAGE_SECTION Section
+);
 
 // ******************************************************************
 // * XcSHAInit

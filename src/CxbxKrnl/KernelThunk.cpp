@@ -210,7 +210,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x008E),                                    // 0x008E (142) KeSaveFloatingPointState
 	(uint32)FUNC(&xboxkrnl::KeSetBasePriorityThread),         // 0x008F (143)
 	(uint32)PANIC(0x0090),                                    // 0x0090 (144) KeSetDisableBoostThread
-	(uint32)PANIC(0x0091),                                    // 0x0091 (145) KeSetEvent
+	(uint32)FUNC(&xboxkrnl::KeSetEvent),                      // 0x0091 (145)
 	(uint32)PANIC(0x0092),                                    // 0x0092 (146) KeSetEventBoostPriority
 	(uint32)PANIC(0x0093),                                    // 0x0093 (147) KeSetPriorityProcess
 	(uint32)FUNC(&xboxkrnl::KeSetPriorityThread),             // 0x0094 (148)

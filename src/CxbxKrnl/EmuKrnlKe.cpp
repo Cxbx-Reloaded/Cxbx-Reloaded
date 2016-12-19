@@ -438,6 +438,27 @@ XBSYSAPI EXPORTNUM(143) xboxkrnl::LONG NTAPI xboxkrnl::KeSetBasePriorityThread
 }
 
 // ******************************************************************
+// * 0x0091 - KeSetEvent()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(145) xboxkrnl::LONG NTAPI xboxkrnl::KeSetEvent
+(
+	IN PRKEVENT		Event,
+	IN LONG			Increment,
+	IN BOOLEAN		Wait
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Event)
+		LOG_FUNC_ARG(Increment)
+		LOG_FUNC_ARG(Wait)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(1);
+}
+
+// ******************************************************************
 // * 0x0094 - KeSetPriorityThread()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(148) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetPriorityThread
@@ -584,7 +605,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForMultipleObjects
 	IN KPROCESSOR_MODE WaitMode,
 	IN BOOLEAN Alertable,
 	IN PLARGE_INTEGER Timeout OPTIONAL,
-	IN VOID* WaitBlockArray
+	IN PKWAIT_BLOCK WaitBlockArray OPTIONAL
 )
 {
 	LOG_FUNC_BEGIN

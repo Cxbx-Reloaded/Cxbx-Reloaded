@@ -200,7 +200,17 @@ XBSYSAPI EXPORTNUM(143) LONG NTAPI KeSetBasePriorityThread
 
 
 XBSYSAPI VOID *KeSetDisableBoostThread;
-XBSYSAPI VOID *KeSetEvent;
+
+// ******************************************************************
+// * 0x0091 - KeSetEvent
+// ******************************************************************
+XBSYSAPI EXPORTNUM(145) LONG NTAPI KeSetEvent
+(
+	IN PRKEVENT		Event,
+	IN LONG			Increment,
+	IN BOOLEAN		Wait
+);
+ 
 XBSYSAPI VOID *KeSetEventBoostPriority;
 XBSYSAPI VOID *KeSetPriorityProcess;
 
@@ -261,7 +271,7 @@ XBSYSAPI EXPORTNUM(158) NTSTATUS KeWaitForMultipleObjects
     IN KPROCESSOR_MODE WaitMode,
     IN BOOLEAN Alertable,
     IN PLARGE_INTEGER Timeout OPTIONAL,
-    IN VOID* WaitBlockArray
+    IN PKWAIT_BLOCK	WaitBlockArray  OPTIONAL
 );
 
 XBSYSAPI EXPORTNUM(159) NTSTATUS KeWaitForSingleObject
