@@ -440,9 +440,6 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 			IMAGE_SECTION_HEADER SectionHeader;
 		} *PDUMMY_KERNEL;
 
-#define XBOX_KERNEL_BASE 0x80010000
-#define XBOX_NV2A_INIT_VECTOR 0xFF000008
-
 		PDUMMY_KERNEL DummyKernel = (PDUMMY_KERNEL)VirtualAlloc(
 			(PVOID)XBOX_KERNEL_BASE, sizeof(DUMMY_KERNEL),
 			MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE
@@ -487,7 +484,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	CxbxRegisterDeviceNativePath(DeviceCdrom0, xbeDirectory);
 
 	// Partition 0 contains configuration data, and is accessed as a native file, instead as a folder :
-	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition0, CxbxBasePath + "Partition0", true); /*IsFile=*/
+	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition0, CxbxBasePath + "Partition0", /*IsFile=*/true);
 	// The first two partitions are for Data and Shell files, respectively :
 	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition1, CxbxBasePath + "Partition1");
 	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition2, CxbxBasePath + "Partition2");
@@ -510,10 +507,14 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 		// Determine Xbox path to XBE and place it in XeImageFileName
 		std::string fileName(xbePath);
+
+		if (xboxkrnl::XeImageFileName.Buffer != NULL)
+			free(xboxkrnl::XeImageFileName.Buffer);
+
+		xboxkrnl::XeImageFileName.MaximumLength = MAX_PATH;
 		xboxkrnl::XeImageFileName.Buffer = (PCHAR)malloc(MAX_PATH);
 		sprintf(xboxkrnl::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeVolumeLetter, fileName.c_str());
 		xboxkrnl::XeImageFileName.Length = (USHORT)strlen(xboxkrnl::XeImageFileName.Buffer);
-		xboxkrnl::XeImageFileName.MaximumLength = MAX_PATH;
 
 		DbgPrintf("EmuMain : XeImageFileName = %s\n", xboxkrnl::XeImageFileName.Buffer);
 
@@ -527,7 +528,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 		// Mount the Utility drive (Z:) conditionally :
 		if (CxbxKrnl_XbeHeader->dwInitFlags.bMountUtilityDrive)
-			CxbxMountUtilityDrive(CxbxKrnl_XbeHeader->dwInitFlags.bFormatUtilityDrive);/*fFormatClean=*/
+			CxbxMountUtilityDrive(/*formatClean=*/CxbxKrnl_XbeHeader->dwInitFlags.bFormatUtilityDrive);
 	}
 
 	//
@@ -583,9 +584,9 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 			g_CPUOthers = g_CPUXbox;
 		}
 
-	// Make sure Xbox1 code runs on one core :
-	SetThreadAffinityMask(GetCurrentThread(), g_CPUXbox);
-}
+		// Make sure Xbox1 code runs on one core :
+		SetThreadAffinityMask(GetCurrentThread(), g_CPUXbox);
+	}
 
     DbgPrintf("EmuMain (0x%X): Initial thread starting.\n", GetCurrentThreadId());
 

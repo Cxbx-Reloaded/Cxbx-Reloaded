@@ -44,6 +44,7 @@ namespace xboxkrnl
 
 #include <cstdio>
 #include <string>
+#include <memory>
 
 // ******************************************************************
 // * prevent name collisions
@@ -55,46 +56,49 @@ namespace NtDll
 
 #include "Emu.h"
 
-extern std::string DriveSerial;
-extern std::string DriveCdRom0;
-extern std::string DriveMbfs;
-extern std::string DriveMbcom;
-extern std::string DriveMbrom;
-extern std::string DriveC;
-extern std::string DriveD;
-extern std::string DriveE;
-extern std::string DriveF;
-extern std::string DriveT;
-extern std::string DriveU;
-extern std::string DriveV;
-extern std::string DriveW;
-extern std::string DriveX;
-extern std::string DriveY;
-extern std::string DriveZ;
-extern std::string DeviceCdrom0;
-extern std::string DeviceHarddisk0;
-extern std::string DeviceHarddisk0Partition0;
-extern std::string DeviceHarddisk0Partition1;
-extern std::string DeviceHarddisk0Partition2;
-extern std::string DeviceHarddisk0Partition3;
-extern std::string DeviceHarddisk0Partition4;
-extern std::string DeviceHarddisk0Partition5;
-extern std::string DeviceHarddisk0Partition6;
-extern std::string DeviceHarddisk0Partition7;
-extern std::string DeviceHarddisk0Partition8;
-extern std::string DeviceHarddisk0Partition9;
-extern std::string DeviceHarddisk0Partition10;
-extern std::string DeviceHarddisk0Partition11;
-extern std::string DeviceHarddisk0Partition12;
-extern std::string DeviceHarddisk0Partition13;
-extern std::string DeviceHarddisk0Partition14;
-extern std::string DeviceHarddisk0Partition15;
-extern std::string DeviceHarddisk0Partition16;
-extern std::string DeviceHarddisk0Partition17;
-extern std::string DeviceHarddisk0Partition18;
-extern std::string DeviceHarddisk0Partition19;
-extern std::string DeviceHarddisk0Partition20;
-extern char CxbxDefaultXbeVolumeLetter;
+extern const std::string DrivePrefix;
+extern const std::string DriveSerial;
+extern const std::string DriveCdRom0;
+extern const std::string DriveMbfs;
+extern const std::string DriveMbcom;
+extern const std::string DriveMbrom;
+extern const std::string DriveC;
+extern const std::string DriveD;
+extern const std::string DriveE;
+extern const std::string DriveF;
+extern const std::string DriveT;
+extern const std::string DriveU;
+extern const std::string DriveV;
+extern const std::string DriveW;
+extern const std::string DriveX;
+extern const std::string DriveY;
+extern const std::string DriveZ;
+extern const std::string DevicePrefix;
+extern const std::string DeviceCdrom0;
+extern const std::string DeviceHarddisk0;
+extern const std::string DeviceHarddisk0PartitionPrefix;
+extern const std::string DeviceHarddisk0Partition0;
+extern const std::string DeviceHarddisk0Partition1;
+extern const std::string DeviceHarddisk0Partition2;
+extern const std::string DeviceHarddisk0Partition3;
+extern const std::string DeviceHarddisk0Partition4;
+extern const std::string DeviceHarddisk0Partition5;
+extern const std::string DeviceHarddisk0Partition6;
+extern const std::string DeviceHarddisk0Partition7;
+extern const std::string DeviceHarddisk0Partition8;
+extern const std::string DeviceHarddisk0Partition9;
+extern const std::string DeviceHarddisk0Partition10;
+extern const std::string DeviceHarddisk0Partition11;
+extern const std::string DeviceHarddisk0Partition12;
+extern const std::string DeviceHarddisk0Partition13;
+extern const std::string DeviceHarddisk0Partition14;
+extern const std::string DeviceHarddisk0Partition15;
+extern const std::string DeviceHarddisk0Partition16;
+extern const std::string DeviceHarddisk0Partition17;
+extern const std::string DeviceHarddisk0Partition18;
+extern const std::string DeviceHarddisk0Partition19;
+extern const std::string DeviceHarddisk0Partition20;
+extern const char CxbxDefaultXbeVolumeLetter;
 
 extern std::string CxbxBasePath;
 extern HANDLE CxbxBasePathHandle;
@@ -174,5 +178,49 @@ bool CxbxRegisterDeviceNativePath(std::string XboxFullPath, std::string NativePa
 HANDLE CxbxGetDeviceNativeRootHandle(std::string XboxFullPath);
 NTSTATUS CxbxCreateSymbolicLink(std::string SymbolicLinkName, std::string FullPath);
 bool CxbxMountUtilityDrive(bool formatClean);
+bool CxbxIsUtilityDrive(NtDll::HANDLE RootDirectory);
 
+std::wstring string_to_wstring(std::string const & src);
+std::wstring PUNICODE_STRING_to_wstring(NtDll::PUNICODE_STRING const & src);
+std::string PSTRING_to_string(xboxkrnl::PSTRING const & src);
+void copy_string_to_PSTRING_to(std::string const & src, const xboxkrnl::PSTRING & dest);
+
+static int NtFileDirectoryInformationSize = sizeof(NtDll::FILE_DIRECTORY_INFORMATION) - 1;
+static int NtPathBufferSize = MAX_PATH * sizeof(wchar_t);
+
+// Deletes structs created by the converters
+void _CxbxPVOIDDeleter(PVOID *ptr);
+
+// Creates a PVOID variable named var which takes the given value
+// and is automatically deleted when it goes out of scope
+#define SMART_PVOID(var, value, orig)                     \
+	PVOID var = value;                                    \
+	std::shared_ptr<PVOID> __var_shared_ptr;              \
+	if (NULL == var)                                      \
+	{                                                     \
+		__var_shared_ptr = NULL;                          \
+		var = orig;                                       \
+	}                                                     \
+	else                                                  \
+		__var_shared_ptr = std::shared_ptr<PVOID>(&var, _CxbxPVOIDDeleter);
+
+// Converts an Xbox FileInformation struct to the NT equivalent.
+// Used by NtSetInformationFile.
+#define XboxToNTFileInformation(var, i, c, l)  SMART_PVOID(var, _XboxToNTFileInformation(i, c, l), i)
+PVOID _XboxToNTFileInformation
+(
+	IN  PVOID xboxFileInformation,
+	IN  ULONG FileInformationClass,
+	OUT ULONG *Length
+);
+
+// Converts an NT FileInformation struct to the Xbox equivalent.
+// Used by NtQueryInformationFile and NtQueryDirectoryFile
+#define NTToXboxFileInformation(var, i, c, l)  SMART_PVOID(var, _NTToXboxFileInformation(i, c, l), i)
+PVOID _NTToXboxFileInformation
+(
+	IN  PVOID nativeFileInformation,
+	IN  ULONG FileInformationClass,
+	OUT ULONG *Length
+);
 #endif
