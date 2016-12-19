@@ -88,8 +88,8 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 		LOG_FUNC_ARG(AllocationSize)
 		LOG_FUNC_ARG(FileAttributes)
 		LOG_FUNC_ARG(ShareAccess)
-		LOG_FUNC_ARG(Disposition)
-		LOG_FUNC_ARG(CreateOptions)
+		LOG_FUNC_ARG_TYPE(CREATE_DISPOSITION, Disposition)
+		LOG_FUNC_ARG_TYPE(CREATE_OPTION, CreateOptions)
 		LOG_FUNC_ARG(Options)
 		LOG_FUNC_END;
 

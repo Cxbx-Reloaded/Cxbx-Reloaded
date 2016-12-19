@@ -43,6 +43,7 @@
 #include <ntstatus.h>
 #pragma warning(default:4005)
 #include "CxbxKrnl.h"
+//#include "Logging.h" // For hex4()
 
 std::string DriveSerial = "\\??\\serial:";
 std::string DriveCdRom0 = "\\??\\CdRom0:"; // CD-ROM device
@@ -498,6 +499,15 @@ EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByRootHandle(const HANDLE Handl
 }
 
 // TODO : Move to a better suited file
+/* TODO : Also, fix C2593: "'operator <<' is ambiguous" for this
+std::ostream& operator<<(std::ostream& os, const NtDll::NTSTATUS& value)
+{
+	os << hex4((uint32_t)value) << " = " << NtStatusToString(value);
+
+	return os;
+}
+*/
+
 // TODO : Create (and use) an Xbox version of this too
 CHAR* NtStatusToString(IN NTSTATUS Status)
 {
