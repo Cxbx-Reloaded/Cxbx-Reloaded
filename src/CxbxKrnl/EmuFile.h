@@ -55,6 +55,9 @@ namespace NtDll
 
 #include "Emu.h"
 
+// TODO : Move to a better suited file
+//std::ostream& operator<<(std::ostream& os, const NtDll::NTSTATUS& value);
+
 extern std::string DriveSerial;
 extern std::string DriveCdRom0;
 extern std::string DriveMbfs;
