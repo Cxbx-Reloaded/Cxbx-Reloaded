@@ -222,12 +222,17 @@ XBSYSAPI EXPORTNUM(103) xboxkrnl::KIRQL NTAPI xboxkrnl::KeGetCurrentIrql(void)
 
 	KIRQL Irql;
 
-	// TODO : Untested :
-	__asm
-	{
-		mov al, byte ptr fs : [24h]
-		mov Irql, al
+	KPCR* Pcr = nullptr;
+
+	// Fetch KPCR data structure
+	__asm {
+		push eax
+		mov eax, fs:[0x14]
+		mov Pcr, eax
+		pop eax
 	}
+
+	Irql = Pcr->Irql;
 
 	RETURN(Irql);
 }
@@ -439,13 +444,19 @@ XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 		CxbxKrnlCleanup("Bugcheck: Caller of KeRaiseIrqlToDpcLevel is higher than DISPATCH_LEVEL!");
 
 	KIRQL kRet = NULL;
-	__asm
-	{
-		mov al, byte ptr fs:[24h]
-		mov kRet, al
-		mov al, DISPATCH_LEVEL
-		mov byte ptr fs:[24h], al
+
+
+	KPCR* Pcr = nullptr;
+
+	// Fetch KPCR data structure
+	__asm {
+		push eax
+		mov eax, fs:[0x14]
+		mov Pcr, eax
+		pop eax
 	}
+
+	Pcr->Irql = DISPATCH_LEVEL;
 
 #ifdef _DEBUG_TRACE
 	DbgPrintf("Raised IRQL to DISPATCH_LEVEL (2).\n");
