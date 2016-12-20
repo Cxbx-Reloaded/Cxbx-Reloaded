@@ -654,6 +654,7 @@ xboxkrnl::FILE_BASIC_INFORMATION * _NTToXboxBasicInfo(NtDll::FILE_BASIC_INFORMAT
 
 xboxkrnl::FILE_NAME_INFORMATION * _NTToXboxNameInfo(NtDll::FILE_NAME_INFORMATION *ntNameInfo, ULONG *Length)
 {
+	// TODO: the FileName probably needs to be converted back to an Xbox path in some cases
 	// Determine new file name length
 	size_t convertedFileNameLength = ntNameInfo->FileNameLength * sizeof(xboxkrnl::CHAR) / sizeof(NtDll::WCHAR);
 
@@ -670,6 +671,7 @@ xboxkrnl::FILE_NAME_INFORMATION * _NTToXboxNameInfo(NtDll::FILE_NAME_INFORMATION
 
 xboxkrnl::FILE_ALL_INFORMATION * _NTToXboxAllInfo(NtDll::FILE_ALL_INFORMATION *ntAllInfo, ULONG *Length)
 {
+	// TODO: the FileName probably needs to be converted back to an Xbox path in some cases
 	// Determine new file name length
 	size_t convertedFileNameLength = ntAllInfo->NameInformation.FileNameLength * sizeof(xboxkrnl::CHAR) / sizeof(NtDll::WCHAR);
 
