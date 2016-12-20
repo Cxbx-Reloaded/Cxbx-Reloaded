@@ -44,6 +44,7 @@ namespace xboxkrnl
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 #include "EmuSha.h" // For A_SHAInit, etc.
+#include "LibRc4.h" // For RC4 Functions
 
 // prevent name collisions
 namespace NtDll
@@ -98,6 +99,44 @@ XBSYSAPI EXPORTNUM(337) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAFinal
 		LOG_FUNC_END;
 
 	A_SHAFinal((SHA_CTX*)pbSHAContext, pbDigest);
+}
+
+// ******************************************************************
+// * 0x0152 - XcRC4Key()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(338) xboxkrnl::VOID xboxkrnl::XcRC4Key
+(
+	IN PUCHAR pbKeyStruct,
+	IN ULONG dwKeyLength,
+	IN PUCHAR pbKey
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_OUT(pbKeyStruct)
+		LOG_FUNC_ARG(dwKeyLength)
+		LOG_FUNC_ARG_OUT(pbKey)
+		LOG_FUNC_END;
+
+	Rc4Initialise((Rc4Context*)pbKeyStruct, pbKey, dwKeyLength, 0);
+}
+
+// ******************************************************************
+// * 0x0153 - XcRC4Crypt
+// ******************************************************************
+XBSYSAPI EXPORTNUM(339) xboxkrnl::VOID xboxkrnl::XcRC4Crypt
+(
+	IN PUCHAR pbKeyStruct,
+	IN ULONG dwInputLength,
+	IN PUCHAR pbInput
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_OUT(pbKeyStruct)
+		LOG_FUNC_ARG(dwInputLength)
+		LOG_FUNC_ARG_OUT(pbInput)
+		LOG_FUNC_END;
+
+	Rc4Output((Rc4Context*)pbKeyStruct, pbInput, dwInputLength);
 }
 
 // ******************************************************************
