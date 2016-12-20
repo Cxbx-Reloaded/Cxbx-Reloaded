@@ -398,6 +398,28 @@ XBSYSAPI EXPORTNUM(296) xboxkrnl::CHAR NTAPI xboxkrnl::RtlLowerChar
 	RETURN(ret);
 }
 
+// Prevent errors compiling RtlMoveMemory (TODO : How should we really do this?)
+#undef RtlMoveMemory
+
+// ******************************************************************
+// * 0x012A - RtlMoveMemory
+// ******************************************************************
+XBSYSAPI EXPORTNUM(298) xboxkrnl::VOID NTAPI xboxkrnl::RtlMoveMemory
+(
+	IN VOID UNALIGNED       *Destination,
+	IN CONST VOID UNALIGNED *Source,
+	IN SIZE_T                Length
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Destination)
+		LOG_FUNC_ARG(Source)
+		LOG_FUNC_ARG(Length)
+		LOG_FUNC_END;
+
+	::memmove(Destination, Source, Length);
+}
+
 // ******************************************************************
 // * 0x012D - RtlNtStatusToDosError()
 // ******************************************************************
@@ -525,5 +547,25 @@ XBSYSAPI EXPORTNUM(320) xboxkrnl::VOID NTAPI xboxkrnl::RtlZeroMemory
 		LOG_FUNC_END;
 
 	memset(Destination, 0, Length); // Don't bother with NtDll::RtlZeroMemory
+}
+
+// ******************************************************************
+// * 0x0160 - RtlRip
+// ******************************************************************
+XBSYSAPI EXPORTNUM(352) xboxkrnl::VOID NTAPI xboxkrnl::RtlRip
+(
+	PCHAR	ApiName,
+	PCHAR	Expression,
+	PCHAR	Message
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(ApiName)
+		LOG_FUNC_ARG(Expression)
+		LOG_FUNC_ARG(Message)
+		LOG_FUNC_END;
+
+	EmuWarning("RtlRip@%s:\n\nASSERT FAILED:\n%s\n\nDescription:\n%s",
+		ApiName, Expression, Message);
 }
 

@@ -20,7 +20,15 @@ XBSYSAPI VOID *IoCheckShareAccess;
 
 XBSYSAPI EXPORTNUM(64) OBJECT_TYPE IoCompletionObjectType;
 
-XBSYSAPI VOID *IoCreateDevice;
+XBSYSAPI EXPORTNUM(65) NTSTATUS NTAPI IoCreateDevice
+(
+	IN  PDRIVER_OBJECT		DriverObject,
+	IN  ULONG				DeviceExtensionSize,
+	IN  PSTRING				DeviceName  OPTIONAL,
+	IN  ULONG				DeviceType,
+	IN  BOOLEAN				Exclusive,
+	OUT PDEVICE_OBJECT*		DeviceObject
+);
 
 // ******************************************************************
 // * IoCreateFile

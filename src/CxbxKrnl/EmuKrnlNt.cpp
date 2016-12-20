@@ -98,6 +98,34 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 }
 
 // ******************************************************************
+// * 0x00B9 - NtCancelTimer()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(185) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCancelTimer
+(
+	IN HANDLE TimerHandle,
+	OUT PBOOLEAN CurrentState OPTIONAL
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(TimerHandle)
+		LOG_FUNC_ARG(CurrentState)
+		LOG_FUNC_END;
+
+	// redirect to Windows NT
+	// TODO : Untested
+	NTSTATUS ret = NtDll::NtCancelTimer
+	(
+		TimerHandle,
+		/*OUT*/CurrentState
+	);
+
+	if (FAILED(ret))
+		EmuWarning("NtCancelTimer failed!");
+
+	RETURN(ret);
+}
+
+// ******************************************************************
 // * 0x00BA - NtClearEvent()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(186) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClearEvent
@@ -318,8 +346,8 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 	// redirect to Win2k/XP
 	NTSTATUS ret = NtDll::NtCreateSemaphore
 	(
-		SemaphoreHandle,
-		SEMAPHORE_ALL_ACCESS,
+		/*OUT*/SemaphoreHandle,
+		/*DesiredAccess=*/SEMAPHORE_ALL_ACCESS,
 		(NtDll::POBJECT_ATTRIBUTES)ObjectAttributes,
 		InitialCount,
 		MaximumCount
@@ -329,6 +357,40 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 		EmuWarning("NtCreateSemaphore failed!");
 
 	DbgPrintf("EmuKrnl (0x%X): NtCreateSemaphore SemaphoreHandle = 0x%.08X\n", GetCurrentThreadId(), *SemaphoreHandle);
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x00C2 - NtCreateTimer()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(194) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateTimer
+(
+	OUT PHANDLE TimerHandle,
+	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+	IN TIMER_TYPE TimerType
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_OUT(TimerHandle)
+		LOG_FUNC_ARG(ObjectAttributes)
+		LOG_FUNC_ARG(TimerType)
+		LOG_FUNC_END;
+
+	// redirect to Windows NT
+	// TODO : Untested
+	NTSTATUS ret = NtDll::NtCreateTimer
+	(
+		/*OUT*/TimerHandle,
+		/*DesiredAccess=*/TIMER_ALL_ACCESS,
+		(NtDll::POBJECT_ATTRIBUTES)ObjectAttributes,
+		(NtDll::TIMER_TYPE)TimerType
+	);
+
+	if (FAILED(ret))
+		EmuWarning("NtCreateTimer failed!");
+
+	DbgPrintf("EmuKrnl (0x%X): NtCreateTimer TimerHandle = 0x%.08X\n", GetCurrentThreadId(), *TimerHandle);
 
 	RETURN(ret);
 }
@@ -363,25 +425,41 @@ XBSYSAPI EXPORTNUM(196) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeviceIoControlFile
 		LOG_FUNC_ARG(OutputBufferLength)
 		LOG_FUNC_END;
 
-	switch (IoControlCode)
-	{
-		// IOCTL_SCSI_PASS_THROUGH_DIRECT
-	case 0x4D014:
-	{
-		PSCSI_PASS_THROUGH_DIRECT PassThrough = (PSCSI_PASS_THROUGH_DIRECT)InputBuffer;
-		PDVDX2_AUTHENTICATION Authentication = (PDVDX2_AUTHENTICATION)PassThrough->DataBuffer;
+	NTSTATUS ret = STATUS_SUCCESS;
 
-		// Should be just enough info to pass XapiVerifyMediaInDrive
-		Authentication->AuthenticationPage.CDFValid = 1;
-		Authentication->AuthenticationPage.PartitionArea = 1;
-		Authentication->AuthenticationPage.Authentication = 1;
-		break;
-	}
-	default:
-		LOG_UNIMPLEMENTED();
-	}
+	if (IsEmuHandle(FileHandle))
+	{
+		switch (IoControlCode)
+		{
+		case 0x4D014: // IOCTL_SCSI_PASS_THROUGH_DIRECT
+		{
+			PSCSI_PASS_THROUGH_DIRECT PassThrough = (PSCSI_PASS_THROUGH_DIRECT)InputBuffer;
+			PDVDX2_AUTHENTICATION Authentication = (PDVDX2_AUTHENTICATION)PassThrough->DataBuffer;
 
-	RETURN(STATUS_SUCCESS);
+			// Should be just enough info to pass XapiVerifyMediaInDrive
+			Authentication->AuthenticationPage.CDFValid = 1;
+			Authentication->AuthenticationPage.PartitionArea = 1;
+			Authentication->AuthenticationPage.Authentication = 1;
+			break;
+		}
+		default:
+			LOG_UNIMPLEMENTED();
+		}
+	}
+	else
+		ret = NtDll::NtDeviceIoControlFile(
+			FileHandle,
+			Event,
+			(NtDll::PIO_APC_ROUTINE)ApcRoutine,
+			ApcContext,
+			(NtDll::IO_STATUS_BLOCK*)IoStatusBlock,
+			IoControlCode,
+			InputBuffer,
+			InputBufferLength,
+			OutputBuffer,
+			OutputBufferLength);
+
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -400,7 +478,7 @@ XBSYSAPI EXPORTNUM(197) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
 		LOG_FUNC_ARG(Options)
 		LOG_FUNC_END;
 
-	NTSTATUS ret;
+	NTSTATUS ret = STATUS_SUCCESS;
 
 	if (IsEmuHandle(SourceHandle)) {
 		EmuHandle* iEmuHandle = HandleToEmuHandle(SourceHandle);
@@ -437,8 +515,12 @@ XBSYSAPI EXPORTNUM(198) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFlushBuffersFile
 		LOG_FUNC_ARG(FileHandle)
 		LOG_FUNC_ARG_OUT(IoStatusBlock)
 		LOG_FUNC_END;
-
-	NTSTATUS ret = NtDll::NtFlushBuffersFile(FileHandle, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock);
+	NTSTATUS ret = STATUS_SUCCESS;
+	
+	if (IsEmuHandle(FileHandle)) 
+		LOG_UNIMPLEMENTED();
+	else
+		ret = NtDll::NtFlushBuffersFile(FileHandle, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock);
 
 	RETURN(ret);
 }
@@ -463,6 +545,51 @@ XBSYSAPI EXPORTNUM(199) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
 		LOG_FUNC_END;
 
 	NTSTATUS ret = NtDll::NtFreeVirtualMemory(GetCurrentProcess(), BaseAddress, FreeSize, FreeType);
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x00C8 - NtFsControlFile
+// ******************************************************************
+XBSYSAPI EXPORTNUM(200) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFsControlFile
+(
+	IN HANDLE               FileHandle,
+	IN HANDLE               Event OPTIONAL,
+	IN PIO_APC_ROUTINE      ApcRoutine OPTIONAL,
+	IN PVOID                ApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK    IoStatusBlock,
+	IN ULONG                FsControlCode,
+	IN PVOID                InputBuffer OPTIONAL,
+	IN ULONG                InputBufferLength,
+	OUT PVOID               OutputBuffer OPTIONAL,
+	IN ULONG                OutputBufferLength
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(FileHandle)
+		LOG_FUNC_ARG(Event)
+		LOG_FUNC_ARG(ApcRoutine)
+		LOG_FUNC_ARG(ApcContext)
+		LOG_FUNC_ARG_OUT(IoStatusBlock)
+		LOG_FUNC_ARG(FsControlCode)
+		LOG_FUNC_ARG(InputBuffer)
+		LOG_FUNC_ARG(InputBufferLength)
+		LOG_FUNC_ARG(OutputBuffer)
+		LOG_FUNC_ARG(OutputBufferLength)
+		LOG_FUNC_END;
+
+	NTSTATUS ret = NtDll::NtFsControlFile(
+		FileHandle,
+		Event,
+		(NtDll::PIO_APC_ROUTINE)ApcRoutine,
+		ApcContext,
+		(NtDll::IO_STATUS_BLOCK*)IoStatusBlock,
+		FsControlCode,
+		InputBuffer,
+		InputBufferLength,
+		OutputBuffer,
+		OutputBufferLength);
 
 	RETURN(ret);
 }
@@ -849,6 +976,33 @@ XBSYSAPI EXPORTNUM(215) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySymbolicLinkOb
 }
 
 // ******************************************************************
+// * 0x00D8 - NtQueryTimer()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(216) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryTimer
+(
+	IN HANDLE TimerHandle,
+	OUT PTIMER_BASIC_INFORMATION TimerInformation
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(TimerHandle)
+		LOG_FUNC_ARG_OUT(TimerInformation)
+		LOG_FUNC_END;
+
+	// redirect to Windows NT
+	// TODO : Untested
+	NTSTATUS ret = NtDll::NtQueryTimer(
+		TimerHandle,
+		/*TIMER_INFORMATION_CLASS*/NtDll::TimerBasicInformation,
+		/*OUT*/TimerInformation,
+		/*TimerInformationLength=*/sizeof(TIMER_BASIC_INFORMATION),
+		/*OUT ReturnLength*/nullptr
+	);
+
+	RETURN(ret);
+}
+
+// ******************************************************************
 // * 0x00D9 - NtQueryVirtualMemory()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
@@ -958,9 +1112,9 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 (
 	IN  HANDLE          FileHandle,            // TODO: correct paramters
 	IN  HANDLE          Event OPTIONAL,
-	IN  PVOID           ApcRoutine OPTIONAL,
+	IN  PIO_APC_ROUTINE ApcRoutine OPTIONAL,
 	IN  PVOID           ApcContext,
-	OUT PVOID           IoStatusBlock,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	OUT PVOID           Buffer,
 	IN  ULONG           Length,
 	IN  PLARGE_INTEGER  ByteOffset OPTIONAL
@@ -1085,10 +1239,10 @@ XBSYSAPI EXPORTNUM(225) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetEvent
 XBSYSAPI EXPORTNUM(226) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
 (
 	IN  HANDLE  FileHandle,            // TODO: correct paramters
-	OUT PVOID   IoStatusBlock,
+	OUT PIO_STATUS_BLOCK   IoStatusBlock,
 	IN  PVOID   FileInformation,
 	IN  ULONG   Length,
-	IN  ULONG   FileInformationClass
+	IN  FILE_INFORMATION_CLASS   FileInformationClass
 )
 {
 	LOG_FUNC_BEGIN
@@ -1143,6 +1297,49 @@ XBSYSAPI EXPORTNUM(228) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetSystemTime
 				ret = STATUS_INVALID_PARAMETER;
 		}
 	}
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x00E5 - NtSetTimerEx()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(229) xboxkrnl::NTSTATUS xboxkrnl::NtSetTimerEx
+(
+	IN HANDLE TimerHandle,
+	IN PLARGE_INTEGER DueTime,
+	IN PTIMER_APC_ROUTINE TimerApcRoutine OPTIONAL,
+	IN KPROCESSOR_MODE ApcMode,
+	IN PVOID TimerContext OPTIONAL,
+	IN BOOLEAN WakeTimer,
+	IN LONG Period OPTIONAL,
+	OUT PBOOLEAN PreviousState OPTIONAL
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(TimerHandle)
+		LOG_FUNC_ARG(DueTime)
+		LOG_FUNC_ARG(TimerApcRoutine)
+		LOG_FUNC_ARG(ApcMode)
+		LOG_FUNC_ARG(TimerContext)
+		LOG_FUNC_ARG(WakeTimer)
+		LOG_FUNC_ARG(Period)
+		LOG_FUNC_ARG_OUT(PreviousState)
+		LOG_FUNC_END;
+
+	// redirect to Windows NT
+	// TODO : Untested
+	NTSTATUS ret = NtDll::NtSetTimer(
+		TimerHandle,
+		(NtDll::PLARGE_INTEGER)DueTime,
+		(NtDll::PTIMER_APC_ROUTINE)TimerApcRoutine,
+		(NtDll::PVOID)TimerContext,
+		WakeTimer,
+		Period,
+		/*OUT*/PreviousState);
+
+	if (FAILED(ret))
+		EmuWarning("NtSetTimerEx failed!");
 
 	RETURN(ret);
 }
