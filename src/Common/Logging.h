@@ -36,7 +36,15 @@
 
 #pragma once
 
-#include "Cxbx.h"
+#include <windows.h> // For DWORD
+#include <sstream> // For std::stringstream
+#include <iostream> // For std::cout
+#include <iomanip> // For std::setw
+#include "Cxbx.h" // For g_bPrintfOn
+
+//
+// __FILENAME__
+//
 
 // From http://stackoverflow.com/questions/31050113/how-to-extract-the-source-filename-without-path-and-suffix-at-compile-time
 constexpr const char* str_end(const char *str) {
@@ -55,11 +63,6 @@ constexpr const char* file_name(const char* str) {
 }
 
 #define __FILENAME__ file_name(__FILE__)
-
-#include <windows.h> // for DWORD
-#include <sstream> // for std::stringstream
-#include <iostream> // For std::cout
-#include <iomanip> // For std::setw
 
 //
 // Hex output (type safe)
@@ -141,7 +144,6 @@ extern thread_local const DWORD _CurrentThreadId;
 // TODO : Use Boost.Format http://www.boost.org/doc/libs/1_53_0/libs/format/index.html
 extern thread_local std::string _logPrefix;
 
-
 #ifdef _DEBUG_TRACE
 	#define LOG_FUNC_BEGIN \
 		do { if(g_bPrintfOn) { \
@@ -188,7 +190,10 @@ extern thread_local std::string _logPrefix;
 	#define LOG_FUNC_RESULT(r)
 #endif
 
+//
 // Short hand defines :
+//
+
 // Log function without arguments
 #define LOG_FUNC() LOG_FUNC_BEGIN LOG_FUNC_END
 
