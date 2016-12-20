@@ -843,6 +843,7 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 
 	// Short-hand pointer to Nt filename :
 	wchar_t *wcstr = NtFileDirInfo->FileName;
+	char    *mbstr = FileInformation->FileName;
 
 	// Go, query that directory :
 	do
@@ -872,6 +873,7 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 	{
 		// TODO : assert that NtDll::FILE_DIRECTORY_INFORMATION has same members and size as xboxkrnl::FILE_DIRECTORY_INFORMATION
 		memcpy(/*Dst=*/FileInformation, /*Src=*/NtFileDirInfo, /*Size=*/NtFileDirectoryInformationSize);
+		wcstombs(/*Dest=*/mbstr, /*Source=*/wcstr, MAX_PATH);
 		FileInformation->FileNameLength /= sizeof(wchar_t);
 	}
 
