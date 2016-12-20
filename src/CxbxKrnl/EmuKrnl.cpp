@@ -278,12 +278,12 @@ XBSYSAPI EXPORTNUM(252) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PhyGetLinkState
 // ******************************************************************
 XBSYSAPI EXPORTNUM(253) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PhyInitialize
 (
-	IN ULONG	Parameter1,
-	IN ULONG	Parameter2
+	IN ULONG	forceReset,
+	IN PVOID	Parameter2
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Parameter1)
+		LOG_FUNC_ARG(forceReset)
 		LOG_FUNC_ARG(Parameter2)
 		LOG_FUNC_END;
 

@@ -236,35 +236,37 @@ typedef CCHAR KPROCESSOR_MODE;
 // * KWAIT_REASON
 // ******************************************************************
 typedef enum _KWAIT_REASON {
-	Executive,
-	FreePage,
-	PageIn,
-	PoolAllocation,
-	DelayExecution,
-	Suspended,
-	UserRequest,
-	WrExecutive,
-	WrFreePage,
-	WrPageIn,
-	WrPoolAllocation,
-	WrDelayExecution,
-	WrSuspended,
-	WrUserRequest,
-	WrEventPair,
-	WrQueue,
-	WrLpcReceive,
-	WrLpcReply,
-	WrVirtualMemory,
-	WrPageOut,
-	WrRendezvous,
-	WrFsCacheIn,
-	WrFsCacheOut,
-	Spare4,
-	Spare5,
-	Spare6,
-	WrKernel,
-	MaximumWaitReason
+	Executive = 0,
+	FreePage = 1,
+	PageIn = 2,
+	PoolAllocation = 3,
+	DelayExecution = 4,
+	Suspended = 5,
+	UserRequest = 6,
+	WrExecutive = 7,
+	WrFreePage = 8,
+	WrPageIn = 9,
+	WrPoolAllocation = 10,
+	WrDelayExecution = 11,
+	WrSuspended = 12,
+	WrUserRequest = 13,
+	WrEventPair = 14,
+	WrQueue = 15,
+	WrLpcReceive = 16,
+	WrLpcReply = 17,
+	WrVirtualMemory = 18,
+	WrPageOut = 19,
+	WrRendezvous = 20,
+	WrFsCacheIn = 21,
+	WrFsCacheOut = 22,
+	Spare4 = 23,
+	Spare5 = 24,
+	Spare6 = 25,
+	WrKernel = 26,
+	MaximumWaitReason = 27
 } KWAIT_REASON;
+
+
 
 // ******************************************************************
 // * MODE
@@ -799,7 +801,7 @@ typedef struct _IO_STATUS_BLOCK
 IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 
 // ******************************************************************
-// * IO_APC_ROUTINE
+// * PIO_APC_ROUTINE
 // ******************************************************************
 typedef VOID (NTAPI *PIO_APC_ROUTINE)
 (
@@ -807,6 +809,26 @@ typedef VOID (NTAPI *PIO_APC_ROUTINE)
     IN PIO_STATUS_BLOCK IoStatusBlock,
     IN ULONG            Reserved
 );
+
+// ******************************************************************
+// * PTIMER_APC_ROUTINE *Same as Win2k/XP*
+// ******************************************************************
+typedef VOID(NTAPI *PTIMER_APC_ROUTINE)
+(
+	IN PVOID	TimerContext,
+	IN ULONG	TimerLowValue,
+	IN LONG		TimerHighValue
+);
+
+// ******************************************************************
+// * TIMER_BASIC_INFORMATION *Same as Win2k/XP*
+// ******************************************************************
+typedef struct _TIMER_BASIC_INFORMATION
+{
+	LARGE_INTEGER TimeRemaining;
+	BOOLEAN SignalState;
+}
+TIMER_BASIC_INFORMATION, *PTIMER_BASIC_INFORMATION;
 
 // ******************************************************************
 // * MEMORY_BASIC_INFORMATION *Same as Win2k/XP*
@@ -991,32 +1013,44 @@ typedef struct _DISPATCHER_HEADER
 }
 DISPATCHER_HEADER;
 
-typedef struct _KEVENT {
-	DISPATCHER_HEADER Header;
-} KEVENT, *PKEVENT, *RESTRICTED_POINTER PRKEVENT;
+typedef LONG KPRIORITY;
 
-typedef struct _KSEMAPHORE {
+typedef struct _KEVENT
+{
+	DISPATCHER_HEADER Header;
+}
+//KEVENT, *PKEVENT, *RESTRICTED_POINTER PRKEVENT;
+KEVENT, *PKEVENT, *PRKEVENT; // even with undefined RESTRICTED_POINTER, this doesn't compile
+
+typedef struct _KSEMAPHORE
+{
 	DISPATCHER_HEADER Header;
 	LONG Limit;
-} KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
+}
+KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
 
-typedef struct _ERWLOCK {
+typedef struct _ERWLOCK
+{
 	LONG LockCount;
 	ULONG WritersWaitingCount;
 	ULONG ReadersWaitingCount;
 	ULONG ReadersEntryCount;
 	KEVENT WriterEvent;
 	KSEMAPHORE ReaderSemaphore;
-} ERWLOCK, *PERWLOCK;
+}
+ERWLOCK, *PERWLOCK;
 
-typedef struct _KDEVICE_QUEUE {
+typedef struct _KDEVICE_QUEUE
+{
 	CSHORT Type;
 	UCHAR Size;
 	BOOLEAN Busy;
 	LIST_ENTRY DeviceListHead;
-} KDEVICE_QUEUE, *PKDEVICE_QUEUE, *RESTRICTED_POINTER PRKDEVICE_QUEUE;
+}
+KDEVICE_QUEUE, *PKDEVICE_QUEUE, *RESTRICTED_POINTER PRKDEVICE_QUEUE;
 
-typedef struct _DEVICE_OBJECT {
+typedef struct _DEVICE_OBJECT
+{
 	CSHORT Type;
 	USHORT Size;
 	LONG ReferenceCount;
@@ -1034,7 +1068,10 @@ typedef struct _DEVICE_OBJECT {
 	KDEVICE_QUEUE DeviceQueue;
 	KEVENT DeviceLock;
 	ULONG StartIoKey;
-} DEVICE_OBJECT, *PDEVICE_OBJECT;
+}
+DEVICE_OBJECT, *PDEVICE_OBJECT;
+
+typedef VOID *PDRIVER_OBJECT;
 
 // ******************************************************************
 // * TIMER_TYPE
@@ -1103,8 +1140,12 @@ typedef VOID (*PKDEFERRED_ROUTINE)
 typedef struct _KDPC
 {
     CSHORT              Type;               // 0x00
-    BOOLEAN             Inserted;           // 0x02
-    BYTE                Padding;            // 0x03
+	union
+	{
+		UCHAR           Number;             // 0x02
+		BOOLEAN         Inserted;           // 0x02
+	};
+	UCHAR               Importance;         // 0x03
     LIST_ENTRY          DpcListEntry;       // 0x04
     PKDEFERRED_ROUTINE  DeferredRoutine;    // 0x0C
     PVOID               DeferredContext;
@@ -1127,21 +1168,39 @@ KOBJECTS, *PKOBJECTS;
 // ******************************************************************
 typedef struct _KINTERRUPT
 {
-	unsigned char     UnknownA[0x0C];
-	unsigned char     KIRQL;
-	unsigned char     PaddingA[0x03];
-	unsigned char     UnknownB[0x08];
-	unsigned char     ISR[0x58];
+	/* 0x0/0 */ PVOID ServiceRoutine;
+	/* 0x4/4 */ PVOID ServiceContext;
+	/* 0x8/8 */ ULONG BusInterruptLevel;
+	/* 0xC/12 */ ULONG Irql; // Was : unsigned char     KIRQL; unsigned char     PaddingA[0x03];
+	/* 0x10/16 */ UCHAR Connected;
+	/* 0x11/17 */ UCHAR ShareVector;
+	/* 0x12/18 */ CHAR Mode;
+	/* 0x14/20 */ CHAR rsvd1;
+	/* 0x14/20 */ ULONG ServiceCount;
+	/* 0x18/24 */ ULONG DispatchCode[22]; // Was : unsigned char     ISR[0x58];
 }
 KINTERRUPT, *PKINTERRUPT;
 
 // ******************************************************************
 // * PKSERVICE_ROUTINE
 // ******************************************************************
-typedef void* PKSERVICE_ROUTINE;
+typedef BOOLEAN KSERVICE_ROUTINE
+(
+	IN PKINTERRUPT Interrupt,
+	IN PVOID ServiceContext
+);
 
-typedef CHAR KIRQL;
-typedef KIRQL* PKIRQL;
+typedef KSERVICE_ROUTINE *PKSERVICE_ROUTINE;
+
+// ******************************************************************
+// * IRQL (* same as on win *)
+// ******************************************************************
+typedef UCHAR KIRQL, *PKIRQL;
+	
+#define DISPATCH_LEVEL 2
+
+#define PROFILE_LEVEL 27
+
 
 // ******************************************************************
 // * KINTERRUPT_MODE
@@ -1185,6 +1244,165 @@ typedef struct _NT_TIB
 }
 NT_TIB, *PNT_TIB;
 
+// 	typedef struct _KGDTENTRY
+// 	{
+// 		WORD LimitLow;
+// 		WORD BaseLow;
+// 		ULONG HighWord;
+// 	}
+//  KGDTENTRY, *PKGDTENTRY;
+// 
+// 	typedef struct _KIDTENTRY
+// 	{
+// 		WORD Offset;
+// 		WORD Selector;
+// 		WORD Access;
+// 		WORD ExtendedOffset;
+// 	}
+//  KIDTENTRY, *PKIDTENTRY;
+// 
+// 	typedef struct _KEXECUTE_OPTIONS
+// 	{
+// 		ULONG ExecuteDisable: 1;
+// 		ULONG ExecuteEnable: 1;
+// 		ULONG DisableThunkEmulation: 1;
+// 		ULONG Permanent: 1;
+// 		ULONG ExecuteDispatchEnable: 1;
+// 		ULONG ImageDispatchEnable: 1;
+// 		ULONG Spare: 2;
+// 	}
+//  KEXECUTE_OPTIONS, *PKEXECUTE_OPTIONS;
+
+typedef struct _KPROCESS
+{
+	/* 0x0/0 */ LIST_ENTRY ReadyListHead;
+	/* 0x8/8 */ LIST_ENTRY ThreadListHead;
+	/* 0x10/16 */ ULONG StackCount;
+	/* 0x14/20 */ ULONG ThreadQuantum;
+	/* 0x18/24 */ CHAR BasePriority;
+	/* 0x19/25 */ CHAR DisableBoost;
+	/* 0x1A/26 */ CHAR DisableQuantum;
+	/* 0x1B/27 */ CHAR _padding;
+}
+KPROCESS, *PKPROCESS;
+
+typedef struct _KAPC_STATE
+{
+	LIST_ENTRY ApcListHead[2];
+	PKPROCESS Process;
+	UCHAR KernelApcInProgress;
+	UCHAR KernelApcPending;
+	UCHAR UserApcPending;
+	UCHAR ApcQueueable;
+}
+KAPC_STATE, *PKAPC_STATE;
+
+typedef struct _KGATE
+{
+	DISPATCHER_HEADER Header;
+}
+KGATE, *PKGATE;
+
+typedef struct _KQUEUE
+{
+	DISPATCHER_HEADER Header;
+	LIST_ENTRY EntryListHead;
+	ULONG CurrentCount;
+	ULONG MaximumCount;
+	LIST_ENTRY ThreadListHead;
+}
+KQUEUE, *PKQUEUE;
+
+typedef enum _EXCEPTION_DISPOSITION
+{
+	ExceptionContinueExecution = 0,
+	ExceptionContinueSearch = 1,
+	ExceptionNestedException = 2,
+	ExceptionCollidedUnwind = 3
+}
+EXCEPTION_DISPOSITION, *PEXCEPTION_DISPOSITION;
+
+typedef struct _EXCEPTION_REGISTRATION_RECORD *PEXCEPTION_REGISTRATION_RECORD;
+
+typedef struct _EXCEPTION_REGISTRATION_RECORD
+{
+	PEXCEPTION_REGISTRATION_RECORD Next;
+	PEXCEPTION_DISPOSITION Handler;
+}
+EXCEPTION_REGISTRATION_RECORD, *PEXCEPTION_REGISTRATION_RECORD;
+
+typedef struct _KTRAP_FRAME
+{
+	ULONG DbgEbp;
+	ULONG DbgEip;
+	ULONG DbgArgMark;
+	ULONG DbgArgPointer;
+	WORD TempSegCs;
+	UCHAR Logging;
+	UCHAR Reserved;
+	ULONG TempEsp;
+	ULONG Dr0;
+	ULONG Dr1;
+	ULONG Dr2;
+	ULONG Dr3;
+	ULONG Dr6;
+	ULONG Dr7;
+	ULONG SegGs;
+	ULONG SegEs;
+	ULONG SegDs;
+	ULONG Edx;
+	ULONG Ecx;
+	ULONG Eax;
+	ULONG PreviousPreviousMode;
+	PEXCEPTION_REGISTRATION_RECORD ExceptionList;
+	ULONG SegFs;
+	ULONG Edi;
+	ULONG Esi;
+	ULONG Ebx;
+	ULONG Ebp;
+	ULONG ErrCode;
+	ULONG Eip;
+	ULONG SegCs;
+	ULONG EFlags;
+	ULONG HardwareEsp;
+	ULONG HardwareSegSs;
+	ULONG V86Es;
+	ULONG V86Ds;
+	ULONG V86Fs;
+	ULONG V86Gs;
+}
+KTRAP_FRAME, *PKTRAP_FRAME;
+
+typedef struct _KTHREAD KTHREAD, *PKTHREAD;
+
+typedef struct _KWAIT_BLOCK
+{
+	LIST_ENTRY WaitListEntry;
+	PKTHREAD Thread;
+	PVOID Object;
+	struct _KWAIT_BLOCK *NextWaitBlock;
+	WORD WaitKey;
+	UCHAR WaitType;
+	UCHAR SpareByte;
+}
+KWAIT_BLOCK, *PKWAIT_BLOCK;
+
+typedef struct _KAPC
+{
+	/* 0x0/0 */ USHORT Type;
+	/* 0x2/2 */ UCHAR ApcMode;
+	/* 0x3/3 */ UCHAR Inserted;
+	/* 0x4/4 */ PKTHREAD Thread;
+	/* 0x8/8 */ LIST_ENTRY ApcListEntry;
+	/* 0x10/16 */ PVOID KernelRoutine;
+	/* 0x14/20 */ PVOID RundownRoutine;
+	/* 0x18/24 */ PVOID NormalRoutine;
+	/* 0x1C/28 */ PVOID NormalContext;
+	/* 0x20/32 */ PVOID SystemArgument1;
+	/* 0x24/36 */ PVOID SystemArgument2;
+}
+KAPC, *PKAPC;
+
 // ******************************************************************
 // * KTHREAD
 // ******************************************************************
@@ -1194,9 +1412,49 @@ NT_TIB, *PNT_TIB;
 // ******************************************************************
 typedef struct _KTHREAD
 {
-    UCHAR           UnknownA[0x28];
-    PVOID           TlsData;        // 0x28
-    UCHAR           UnknownB[0xE4]; // 0x2C
+	/* 0x0/0 */ DISPATCHER_HEADER Header;
+	/* 0x10/16 */ LIST_ENTRY MutantListHead;
+	/* 0x18/24 */ unsigned long KernelTime;
+	/* 0x1C/28 */ void *StackBase;
+	/* 0x20/32 */ void *StackLimit;
+	/* 0x24/36 */ void *KernelStack;
+	/* 0x28/40 */ void *TlsData;
+	/* 0x2C/44 */ CHAR State;
+	/* 0x2D/45 */ CHAR Alerted[2];
+	/* 0x2F/47 */ CHAR Alertable;
+	/* 0x30/48 */ CHAR NpxState;
+	/* 0x31/49 */ CHAR Saturation;
+	/* 0x32/50 */ CHAR Priority;
+	/* 0x33/51 */ CHAR Padding;
+	/* 0x34/52 */ KAPC_STATE ApcState;
+	/* 0x4C/76 */ ULONG ContextSwitches;
+	/* 0x50/80 */ ULONG WaitStatus;
+	/* 0x54/84 */ CHAR WaitIrql;
+	/* 0x55/85 */ CHAR WaitMode;
+	/* 0x56/86 */ CHAR WaitNext;
+	/* 0x57/87 */ CHAR WaitReason;
+	/* 0x58/88 */ PVOID WaitBlockList;
+	/* 0x5C/92 */ LIST_ENTRY WaitListEntry;
+	/* 0x64/100 */ ULONG WaitTime;
+	/* 0x68/104 */ ULONG KernelApcDisable;
+	/* 0x6C/108 */ ULONG Quantum;
+	/* 0x70/112 */ CHAR BasePriority;
+	/* 0x71/113 */ CHAR DecrementCount;
+	/* 0x72/114 */ CHAR PriorityDecrement;
+	/* 0x73/115 */ CHAR DisableBoost;
+	/* 0x74/116 */ CHAR NpxIrql;
+	/* 0x75/117 */ CHAR SuspendCount;
+	/* 0x76/118 */ CHAR Preempted;
+	/* 0x77/119 */ CHAR HasTerminated;
+	/* 0x78/120 */ PVOID Queue;
+	/* 0x7C/124 */ LIST_ENTRY QueueListEntry;
+	/* 0x88/136 */ UCHAR rsvd1[4];
+	/* 0x88/136 */ KTIMER Timer;
+	/* 0xB0/176 */ KWAIT_BLOCK TimerWaitBlock;
+	/* 0xC8/200 */ KAPC SuspendApc;
+	/* 0xF0/240 */ KSEMAPHORE SuspendSemaphore;
+	/* 0x104/260 */ LIST_ENTRY ThreadListEntry;
+	/* 0x10C/268 */ UCHAR _padding[4];
 }
 KTHREAD, *PKTHREAD;
 
@@ -1322,6 +1580,138 @@ typedef struct _TIME_FIELDS
     USHORT  Weekday;
 }
 TIME_FIELDS, *PTIME_FIELDS;
+
+/*
+typedef enum _KINTERRUPT_POLARITY
+{
+	InterruptPolarityUnknown = 0,
+	InterruptActiveHigh = 1,
+	InterruptActiveLow = 2
+}
+KINTERRUPT_POLARITY;
+
+typedef struct _OWNER_ENTRY
+{
+	ULONG OwnerThread;
+	union
+	{
+		LONG OwnerCount;
+		ULONG TableSize;
+	};
+}
+OWNER_ENTRY, *POWNER_ENTRY;
+
+typedef struct _ERESOURCE
+{
+	LIST_ENTRY SystemResourcesList;
+	POWNER_ENTRY OwnerTable;
+	SHORT ActiveCount;
+	WORD Flag;
+	PKSEMAPHORE SharedWaiters;
+	PKEVENT ExclusiveWaiters;
+	OWNER_ENTRY OwnerEntry;
+	ULONG ActiveEntries;
+	ULONG ContentionCount;
+	ULONG NumberOfSharedWaiters;
+	ULONG NumberOfExclusiveWaiters;
+	union
+	{
+		PVOID Address;
+		ULONG CreatorBackTraceIndex;
+	};
+	ULONG SpinLock;
+}
+ERESOURCE, *PERESOURCE;
+
+typedef enum _POOL_TYPE
+{
+	NonPagedPool = 0,
+	PagedPool = 1,
+	NonPagedPoolMustSucceed = 2,
+	DontUseThisType = 3,
+	NonPagedPoolCacheAligned = 4,
+	PagedPoolCacheAligned = 5,
+	NonPagedPoolCacheAlignedMustS = 6,
+	MaxPoolType = 7,
+	NonPagedPoolSession = 32,
+	PagedPoolSession = 33,
+	NonPagedPoolMustSucceedSession = 34,
+	DontUseThisTypeSession = 35,
+	NonPagedPoolCacheAlignedSession = 36,
+	PagedPoolCacheAlignedSession = 37,
+	NonPagedPoolCacheAlignedMustSSession = 38
+}
+POOL_TYPE;
+
+typedef struct _GENERIC_MAPPING
+{
+	ULONG GenericRead;
+	ULONG GenericWrite;
+	ULONG GenericExecute;
+	ULONG GenericAll;
+}
+GENERIC_MAPPING, *PGENERIC_MAPPING;
+
+typedef struct _OBJECT_TYPE_INITIALIZER
+{
+	WORD Length;
+	UCHAR ObjectTypeFlags;
+	ULONG CaseInsensitive: 1;
+	ULONG UnnamedObjectsOnly: 1;
+	ULONG UseDefaultObject: 1;
+	ULONG SecurityRequired: 1;
+	ULONG MaintainHandleCount: 1;
+	ULONG MaintainTypeList: 1;
+	ULONG ObjectTypeCode;
+	ULONG InvalidAttributes;
+	GENERIC_MAPPING GenericMapping;
+	ULONG ValidAccessMask;
+	POOL_TYPE PoolType;
+	ULONG DefaultPagedPoolCharge;
+	ULONG DefaultNonPagedPoolCharge;
+	PVOID DumpProcedure;
+	LONG * OpenProcedure;
+	PVOID CloseProcedure;
+	PVOID DeleteProcedure;
+	LONG * ParseProcedure;
+	LONG * SecurityProcedure;
+	LONG * QueryNameProcedure;
+	UCHAR * OkayToCloseProcedure;
+}
+OBJECT_TYPE_INITIALIZER, *POBJECT_TYPE_INITIALIZER;
+
+typedef struct _EX_PUSH_LOCK
+{
+	union
+	{
+		ULONG Locked: 1;
+		ULONG Waiting: 1;
+		ULONG Waking: 1;
+		ULONG MultipleShared: 1;
+		ULONG Shared: 28;
+		ULONG Value;
+		PVOID Ptr;
+	};
+}
+EX_PUSH_LOCK, *PEX_PUSH_LOCK;
+
+typedef struct _OBJECT_TYPE
+{
+	ERESOURCE Mutex;
+	LIST_ENTRY TypeList;
+	UNICODE_STRING Name;
+	PVOID DefaultObject;
+	ULONG Index;
+	ULONG TotalNumberOfObjects;
+	ULONG TotalNumberOfHandles;
+	ULONG HighWaterNumberOfObjects;
+	ULONG HighWaterNumberOfHandles;
+	OBJECT_TYPE_INITIALIZER TypeInfo;
+	ULONG Key;
+	EX_PUSH_LOCK ObjectLocks[32];
+}
+OBJECT_TYPE, *POBJECT_TYPE;
+*/
 
 // ******************************************************************
 // * READ_REGISTER_UCHAR
@@ -1456,6 +1846,23 @@ typedef struct _DVDX2_AUTHENTICATION {
     MODE_PARAMETER_HEADER10 Header;
     DVDX2_AUTHENTICATION_PAGE AuthenticationPage;
 } DVDX2_AUTHENTICATION, *PDVDX2_AUTHENTICATION;
+
+// Section headers - Source: XBMC
+// See Xbe.h struct SectionHeader
+typedef struct _XBE_SECTION // Was _XBE_SECTIONHEADER
+{
+	ULONG Flags;
+	PVOID VirtualAddress; // Virtual address (where this section loads in RAM)
+	ULONG VirtualSize; // Virtual size (size of section in RAM; after FileSize it's 00'd)
+	ULONG FileAddress; // File address (where in the file from which this section comes)
+	ULONG FileSize; // File size (size of the section in the XBE file)
+	PCSZ SectionName; // Pointer to section name
+	ULONG SectionReferenceCount; // Section reference count - when >= 1, section is loaded
+	ULONG HeadReferenceCount; // Pointer to head shared page reference count
+	ULONG TailReferenceCount; // Pointer to tail shared page reference count
+	BYTE ShaHash[20];         // SHA hash.  Hash DWORD containing FileSize, then hash section.
+}
+XBEIMAGE_SECTION, *PXBEIMAGE_SECTION;
 
 // ******************************************************************
 // * Debug

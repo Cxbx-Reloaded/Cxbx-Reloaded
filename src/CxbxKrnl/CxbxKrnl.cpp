@@ -81,6 +81,8 @@ Xbe* CxbxKrnl_Xbe = NULL;
 DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
 
+HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlInit
+
 static uint32 funcAddr[]=
 {
     0x001396D1, // -> 0x00139709 (Size : 56 bytes)
@@ -362,6 +364,8 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	// for unicode conversions
 	setlocale(LC_ALL, "English");
 
+	g_CurrentProcessHandle = GetCurrentProcess();
+
 #ifdef _DEBUG
 //	MessageBoxA(NULL, "Attach a Debugger", "DEBUG", 0);
 //  Debug child processes using https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool
@@ -538,7 +542,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	{
 		HANDLE hDupHandle = NULL;
 
-		DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
+		DuplicateHandle(g_CurrentProcessHandle, GetCurrentThread(), g_CurrentProcessHandle, &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
 
 		CxbxKrnlRegisterThread(hDupHandle);
 	}
@@ -571,7 +575,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	// Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
 	// this will better aproximate the environment with regard to multi-threading) :
 	{
-		GetProcessAffinityMask(GetCurrentProcess(), &g_CPUXbox, &g_CPUOthers);
+		GetProcessAffinityMask(g_CurrentProcessHandle, &g_CPUXbox, &g_CPUOthers);
 		// For the other threads, remove one bit from the processor mask:
 		g_CPUOthers = ((g_CPUXbox - 1) & g_CPUXbox);
 
@@ -647,7 +651,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlCleanup(const char *szErrorMessage, ...)
     if(CxbxKrnl_hEmuParent != NULL)
         SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
-    TerminateProcess(GetCurrentProcess(), 0);
+    TerminateProcess(g_CurrentProcessHandle, 0);
 
     return;
 }

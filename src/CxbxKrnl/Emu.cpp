@@ -333,7 +333,7 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
     IMAGEHLP_MODULE64 module = { sizeof(IMAGEHLP_MODULE) };
 
     BOOL fSymInitialized;
-    fSymInitialized = SymInitialize(GetCurrentProcess(), NULL, TRUE);
+    fSymInitialized = SymInitialize(g_CurrentProcessHandle, NULL, TRUE);
 
     STACKFRAME64 frame = { sizeof(STACKFRAME64) };
     frame.AddrPC.Offset    = ContextRecord->Eip;
@@ -347,7 +347,7 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
     {
         if(!StackWalk64(
             IMAGE_FILE_MACHINE_I386,
-            GetCurrentProcess(),
+			g_CurrentProcessHandle,
             GetCurrentThread(),
             &frame,
             ContextRecord,
@@ -361,7 +361,7 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
         PSYMBOL_INFO pSymbol = 0;
         BYTE symbol[sizeof(SYMBOL_INFO) + SYMBOL_MAXLEN];
 
-        SymGetModuleInfo64(GetCurrentProcess(), frame.AddrPC.Offset, &module);
+        SymGetModuleInfo64(g_CurrentProcessHandle, frame.AddrPC.Offset, &module);
 
         if(fSymInitialized)
         {
@@ -369,7 +369,7 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
             pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO) + SYMBOL_MAXLEN - 1;
             pSymbol->MaxNameLen = SYMBOL_MAXLEN;
 
-            if(!SymFromAddr(GetCurrentProcess(), frame.AddrPC.Offset, &dwDisplacement, pSymbol))
+            if(!SymFromAddr(g_CurrentProcessHandle, frame.AddrPC.Offset, &dwDisplacement, pSymbol))
                 pSymbol = 0;
         }
 
@@ -388,7 +388,7 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
     printf("\n");
 
     if(fSymInitialized)
-        SymCleanup(GetCurrentProcess());
+        SymCleanup(g_CurrentProcessHandle);
 
     LeaveCriticalSection(&dbgCritical);
 }

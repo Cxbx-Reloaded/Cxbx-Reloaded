@@ -37,6 +37,7 @@
 #include "EmuFile.h"
 #include <vector>
 #include <string>
+#include <cassert>
 #include <Shlobj.h>
 #include <Shlwapi.h>
 #pragma warning(disable:4005) // Ignore redefined status values
@@ -44,7 +45,8 @@
 #pragma warning(default:4005)
 #include "CxbxKrnl.h"
 #include "EmuAlloc.h"
-#include <cassert>
+//#include "Logging.h" // For hex4()
+
 
 const std::string DrivePrefix = "\\??\\";
 const std::string DriveSerial = DrivePrefix + "serial:";
@@ -840,6 +842,15 @@ PVOID _NTToXboxFileInformation
 // TODO: FS_INFORMATION_CLASS and its related structs most likely need to be converted too
 
 // TODO : Move to a better suited file
+/* TODO : Also, fix C2593: "'operator <<' is ambiguous" for this
+std::ostream& operator<<(std::ostream& os, const NtDll::NTSTATUS& value)
+{
+	os << hex4((uint32_t)value) << " = " << NtStatusToString(value);
+
+	return os;
+}
+*/
+
 // TODO : Create (and use) an Xbox version of this too
 CHAR* NtStatusToString(IN NTSTATUS Status)
 {

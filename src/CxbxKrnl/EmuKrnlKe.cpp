@@ -214,6 +214,25 @@ XBSYSAPI EXPORTNUM(100) xboxkrnl::VOID NTAPI xboxkrnl::KeDisconnectInterrupt
 }
 
 // ******************************************************************
+// * 0x0067 - KeGetCurrentIrql()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(103) xboxkrnl::KIRQL NTAPI xboxkrnl::KeGetCurrentIrql(void)
+{
+	LOG_FUNC();
+
+	KIRQL Irql;
+
+	// TODO : Untested :
+	__asm
+	{
+		mov al, byte ptr fs : [24h]
+		mov Irql, al
+	}
+
+	RETURN(Irql);
+}
+
+// ******************************************************************
 // * 0x0068 - KeGetCurrentThread()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(104) xboxkrnl::PKTHREAD NTAPI xboxkrnl::KeGetCurrentThread(void)
@@ -272,7 +291,13 @@ XBSYSAPI EXPORTNUM(109) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeInterrupt
 		LOG_FUNC_ARG(ShareVector)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	// TODO : Untested :
+	Interrupt->ServiceRoutine = (PVOID)ServiceRoutine;
+	Interrupt->ServiceContext = ServiceContext;
+	Interrupt->BusInterruptLevel = Vector - 0x30;
+	Interrupt->Irql = Irql;
+	Interrupt->Mode = InterruptMode;
+	Interrupt->ShareVector = ShareVector;
 }
 
 // ******************************************************************
@@ -410,12 +435,27 @@ XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 {
 	LOG_FUNC();
 
-	// I really tried to avoid adding this...
-	//	__asm int 3;
-	//	CxbxKrnlCleanup("KeRaiseIrqlToDpcLevel not implemented! (Tell blueshogun -_-)");
-	LOG_UNIMPLEMENTED();
+	if(KeGetCurrentIrql() > DISPATCH_LEVEL)
+		CxbxKrnlCleanup("Bugcheck: Caller of KeRaiseIrqlToDpcLevel is higher than DISPATCH_LEVEL!");
 
-	RETURN(0);
+	KIRQL kRet = NULL;
+	__asm
+	{
+		mov al, byte ptr fs:[24h]
+		mov kRet, al
+		mov al, DISPATCH_LEVEL
+		mov byte ptr fs:[24h], al
+	}
+
+#ifdef _DEBUG_TRACE
+	DbgPrintf("Raised IRQL to DISPATCH_LEVEL (2).\n");
+	DbgPrintf("Old IRQL is %d.\n", kRet);
+#endif
+
+	// We reached the DISPATCH_LEVEL, so the queue can be processed now :
+	// TODO : ExecuteDpcQueue();
+	
+	RETURN(kRet);
 }
 
 // ******************************************************************
@@ -424,7 +464,7 @@ XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 XBSYSAPI EXPORTNUM(143) xboxkrnl::LONG NTAPI xboxkrnl::KeSetBasePriorityThread
 (
 	IN PKTHREAD  Thread,
-	IN PVOID  Priority
+	IN LONG  Priority
 )
 {
 	LOG_FUNC_BEGIN
@@ -432,9 +472,38 @@ XBSYSAPI EXPORTNUM(143) xboxkrnl::LONG NTAPI xboxkrnl::KeSetBasePriorityThread
 		LOG_FUNC_ARG_OUT(Priority)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	LONG ret = GetThreadPriority((HANDLE)Thread);
 
-	RETURN(1);
+	// This would work normally, but it will slow down the emulation, 
+	// don't do that if the priority is higher then normal (so our own)!
+	if((Priority <= THREAD_PRIORITY_NORMAL) && ((HANDLE)Thread != GetCurrentThread())) {
+		SetThreadPriority((HANDLE)Thread, Priority);
+	}
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x0091 - KeSetEvent()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(145) xboxkrnl::LONG NTAPI xboxkrnl::KeSetEvent
+(
+	IN PRKEVENT		Event,
+	IN KPRIORITY	Increment,
+	IN BOOLEAN		Wait	
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Event)
+		LOG_FUNC_ARG(Increment)
+		LOG_FUNC_ARG(Wait)
+		LOG_FUNC_END;
+
+	// TODO : Untested & incomplete
+	LONG ret = Event->Header.SignalState;
+	Event->Header.SignalState = TRUE;
+
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -443,7 +512,7 @@ XBSYSAPI EXPORTNUM(143) xboxkrnl::LONG NTAPI xboxkrnl::KeSetBasePriorityThread
 XBSYSAPI EXPORTNUM(148) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetPriorityThread
 (
     IN PKTHREAD  Thread,
-    IN PVOID  Priority
+    IN LONG  Priority
 )
 {
 	LOG_FUNC_BEGIN
@@ -584,7 +653,7 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForMultipleObjects
 	IN KPROCESSOR_MODE WaitMode,
 	IN BOOLEAN Alertable,
 	IN PLARGE_INTEGER Timeout OPTIONAL,
-	IN VOID* WaitBlockArray
+	IN PKWAIT_BLOCK WaitBlockArray OPTIONAL
 )
 {
 	LOG_FUNC_BEGIN
@@ -598,8 +667,6 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForMultipleObjects
 		LOG_FUNC_ARG(WaitBlockArray)
 		LOG_FUNC_END;
 
-	// Unused arguments : WaitReason, WaitMode, WaitBlockArray
-
 	NTSTATUS ret = STATUS_SUCCESS;
 
 	for (uint i = 0; i < Count; i++)
@@ -612,19 +679,29 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForMultipleObjects
 
 	if (ret == STATUS_SUCCESS)
 	{
-		// TODO : What should we do with the (currently ignored) WaitMode?
-
-		ret = NtDll::NtWaitForMultipleObjects(
-			Count,
-			Object,
-			(NtDll::OBJECT_WAIT_TYPE)WaitType,
-			Alertable,
-			(NtDll::PLARGE_INTEGER)Timeout);
+		// TODO : What should we do with the (currently ignored)
+		//        WaitReason, WaitMode, WaitBlockArray?
 
 		if (Count == 1)
-			DbgPrintf("Finished waiting for 0x%.08X\n", Object[0]);
+		{
+			// Note : WaitType is irrelevant here
+			ret = NtDll::NtWaitForSingleObject(
+				Object[0],
+				Alertable,
+				(NtDll::PLARGE_INTEGER)Timeout);
 
-		if (ret == WAIT_FAILED)
+			DbgPrintf("Finished waiting for 0x%.08X\n", Object[0]);
+		}
+		else
+			// Unused arguments : WaitReason, WaitMode, WaitBlockArray
+			ret = NtDll::NtWaitForMultipleObjects(
+				Count,
+				Object,
+				(NtDll::OBJECT_WAIT_TYPE)WaitType,
+				Alertable,
+				(NtDll::PLARGE_INTEGER)Timeout);
+
+		if (FAILED(ret))
 			EmuWarning("KeWaitForMultipleObjects failed! (%s)", NtStatusToString(ret));
 	}
 
@@ -643,17 +720,16 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForSingleObject
 	IN PLARGE_INTEGER Timeout OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Object)
-		LOG_FUNC_ARG(WaitReason)
-		LOG_FUNC_ARG(WaitMode)
-		LOG_FUNC_ARG(Alertable)
-		LOG_FUNC_ARG(Timeout)
-		LOG_FUNC_END;
+	LOG_FORWARD("KeWaitForMultipleObjects");
 
-	EmuWarning("EmuKrnl: Redirecting KeWaitForSingleObject to NtWaitForSingleObjectEx");
-
-	NTSTATUS ret = NtWaitForSingleObjectEx(Object, WaitMode, Alertable, Timeout);
-
-	RETURN(ret);
+	return xboxkrnl::KeWaitForMultipleObjects(
+		/*Count=*/1,
+		&Object,
+		/*WaitType=*/WaitAll,
+		WaitReason,
+		WaitMode,
+		Alertable,
+		Timeout,
+		/*WaitBlockArray*/NULL
+	);
 }
