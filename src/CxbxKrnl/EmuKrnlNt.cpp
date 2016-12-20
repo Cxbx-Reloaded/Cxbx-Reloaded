@@ -448,37 +448,22 @@ XBSYSAPI EXPORTNUM(196) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeviceIoControlFile
 
 	NTSTATUS ret = STATUS_SUCCESS;
 
-	if (IsEmuHandle(FileHandle))
+	switch (IoControlCode)
 	{
-		switch (IoControlCode)
-		{
-		case 0x4D014: // IOCTL_SCSI_PASS_THROUGH_DIRECT
-		{
-			PSCSI_PASS_THROUGH_DIRECT PassThrough = (PSCSI_PASS_THROUGH_DIRECT)InputBuffer;
-			PDVDX2_AUTHENTICATION Authentication = (PDVDX2_AUTHENTICATION)PassThrough->DataBuffer;
+	case 0x4D014: // IOCTL_SCSI_PASS_THROUGH_DIRECT
+	{
+		PSCSI_PASS_THROUGH_DIRECT PassThrough = (PSCSI_PASS_THROUGH_DIRECT)InputBuffer;
+		PDVDX2_AUTHENTICATION Authentication = (PDVDX2_AUTHENTICATION)PassThrough->DataBuffer;
 
-			// Should be just enough info to pass XapiVerifyMediaInDrive
-			Authentication->AuthenticationPage.CDFValid = 1;
-			Authentication->AuthenticationPage.PartitionArea = 1;
-			Authentication->AuthenticationPage.Authentication = 1;
-			break;
-		}
-		default:
-			LOG_UNIMPLEMENTED();
-		}
+		// Should be just enough info to pass XapiVerifyMediaInDrive
+		Authentication->AuthenticationPage.CDFValid = 1;
+		Authentication->AuthenticationPage.PartitionArea = 1;
+		Authentication->AuthenticationPage.Authentication = 1;
+		break;
 	}
-	else
-		ret = NtDll::NtDeviceIoControlFile(
-			FileHandle,
-			Event,
-			(NtDll::PIO_APC_ROUTINE)ApcRoutine,
-			ApcContext,
-			(NtDll::IO_STATUS_BLOCK*)IoStatusBlock,
-			IoControlCode,
-			InputBuffer,
-			InputBufferLength,
-			OutputBuffer,
-			OutputBufferLength);
+	default:
+		LOG_UNIMPLEMENTED();
+	}
 
 	RETURN(ret);
 }
