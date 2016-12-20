@@ -511,6 +511,30 @@ FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
 #define FILE_VALID_SET_FLAGS                    0x00000036
 
 // ******************************************************************
+// * File attribute flags
+// ******************************************************************
+#define FILE_ATTRIBUTE_READONLY                 0x00000001
+#define FILE_ATTRIBUTE_HIDDEN                   0x00000002
+#define FILE_ATTRIBUTE_SYSTEM                   0x00000004
+#define FILE_ATTRIBUTE_DIRECTORY                0x00000010
+#define FILE_ATTRIBUTE_ARCHIVE                  0x00000020
+#define FILE_ATTRIBUTE_DEVICE                   0x00000040
+#define FILE_ATTRIBUTE_NORMAL                   0x00000080
+#define FILE_ATTRIBUTE_TEMPORARY                0x00000100
+#define FILE_ATTRIBUTE_SPARSE_FILE              0x00000200
+#define FILE_ATTRIBUTE_REPARSE_POINT            0x00000400
+#define FILE_ATTRIBUTE_COMPRESSED               0x00000800
+#define FILE_ATTRIBUTE_OFFLINE                  0x00001000
+#define FILE_ATTRIBUTE_NOT_CONTENT_INDEXED      0x00002000
+#define FILE_ATTRIBUTE_ENCRYPTED                0x00004000
+
+#define FILE_ATTRIBUTE_CONTENT_INDEXED          FILE_ATTRIBUTE_NOT_CONTENT_INDEXED
+
+#define FILE_ATTRIBUTE_VALID_FLAGS              0x00007fb7
+#define FILE_ATTRIBUTE_VALID_SET_FLAGS          0x000031a7
+
+
+// ******************************************************************
 // * OBJECT_ATTRIBUTES
 // ******************************************************************
 typedef struct _OBJECT_ATTRIBUTES
@@ -629,6 +653,106 @@ typedef struct _FILE_LINK_INFORMATION {
 	ULONG           FileNameLength;
 	CHAR            FileName[1];
 } FILE_LINK_INFORMATION, *PFILE_LINK_INFORMATION;
+
+// ******************************************************************
+// * FILE_NETWORK_OPEN_INFORMATION
+// ******************************************************************
+typedef struct _FILE_NETWORK_OPEN_INFORMATION {
+	LARGE_INTEGER   CreationTime;
+	LARGE_INTEGER   LastAccessTime;
+	LARGE_INTEGER   LastWriteTime;
+	LARGE_INTEGER   ChangeTime;
+	LARGE_INTEGER   AllocationSize;
+	LARGE_INTEGER   EndOfFile;
+	ULONG           FileAttributes;
+} FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;
+
+// ******************************************************************
+// * FILE_BASIC_INFORMATION
+// ******************************************************************
+typedef struct _FILE_BASIC_INFORMATION {
+	LARGE_INTEGER   CreationTime;
+	LARGE_INTEGER   LastAccessTime;
+	LARGE_INTEGER   LastWriteTime;
+	LARGE_INTEGER   ChangeTime;
+	ULONG           FileAttributes;
+} FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
+
+// ******************************************************************
+// * FILE_STANDARD_INFORMATION
+// ******************************************************************
+typedef struct _FILE_STANDARD_INFORMATION {
+	LARGE_INTEGER   AllocationSize;
+	LARGE_INTEGER   EndOfFile;
+	ULONG           NumberOfLinks;
+	BOOLEAN         DeletePending;
+	BOOLEAN         Directory;
+} FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;
+
+// ******************************************************************
+// * FILE_INTERNAL_INFORMATION
+// ******************************************************************
+typedef struct _FILE_INTERNAL_INFORMATION {
+	LARGE_INTEGER   IndexNumber;
+} FILE_INTERNAL_INFORMATION, *PFILE_INTERNAL_INFORMATION;
+
+// ******************************************************************
+// * FILE_EA_INFORMATION
+// ******************************************************************
+typedef struct _FILE_EA_INFORMATION {
+	ULONG           EaSize;
+} FILE_EA_INFORMATION, *PFILE_EA_INFORMATION;
+
+// ******************************************************************
+// * FILE_ACCESS_INFORMATION
+// ******************************************************************
+typedef struct _FILE_ACCESS_INFORMATION {
+	ACCESS_MASK     AccessFlags;
+} FILE_ACCESS_INFORMATION, *PFILE_ACCESS_INFORMATION;
+
+// ******************************************************************
+// * FILE_POSITION_INFORMATION
+// ******************************************************************
+typedef struct _FILE_POSITION_INFORMATION {
+	LARGE_INTEGER   CurrentByteOffset;
+} FILE_POSITION_INFORMATION, *PFILE_POSITION_INFORMATION;
+
+// ******************************************************************
+// * FILE_MODE_INFORMATION
+// ******************************************************************
+typedef struct _FILE_MODE_INFORMATION {
+	ULONG           Mode;
+} FILE_MODE_INFORMATION, *PFILE_MODE_INFORMATION;
+
+// ******************************************************************
+// * FILE_ALIGNMENT_INFORMATION
+// ******************************************************************
+typedef struct _FILE_ALIGNMENT_INFORMATION {
+	ULONG           AlignmentRequirement;
+} FILE_ALIGNMENT_INFORMATION, *PFILE_ALIGNMENT_INFORMATION;
+
+// ******************************************************************
+// * FILE_NAME_INFORMATION
+// ******************************************************************
+typedef struct _FILE_NAME_INFORMATION {
+	ULONG           FileNameLength;
+	CHAR            FileName[1];
+} FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;
+
+// ******************************************************************
+// * FILE_ALL_INFORMATION
+// ******************************************************************
+typedef struct _FILE_ALL_INFORMATION {
+	FILE_BASIC_INFORMATION     BasicInformation;
+	FILE_STANDARD_INFORMATION  StandardInformation;
+	FILE_INTERNAL_INFORMATION  InternalInformation;
+	FILE_EA_INFORMATION        EaInformation;
+	FILE_ACCESS_INFORMATION    AccessInformation;
+	FILE_POSITION_INFORMATION  PositionInformation;
+	FILE_MODE_INFORMATION      ModeInformation;
+	FILE_ALIGNMENT_INFORMATION AlignmentInformation;
+	FILE_NAME_INFORMATION      NameInformation;
+} FILE_ALL_INFORMATION, *PFILE_ALL_INFORMATION;
 
 // ******************************************************************
 // * KSYSTEM_TIME
