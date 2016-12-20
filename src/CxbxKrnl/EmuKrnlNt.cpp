@@ -467,20 +467,8 @@ XBSYSAPI EXPORTNUM(196) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeviceIoControlFile
 			LOG_UNIMPLEMENTED();
 		}
 	}
-	else
-		ret = NtDll::NtDeviceIoControlFile(
-			FileHandle,
-			Event,
-			(NtDll::PIO_APC_ROUTINE)ApcRoutine,
-			ApcContext,
-			(NtDll::IO_STATUS_BLOCK*)IoStatusBlock,
-			IoControlCode,
-			InputBuffer,
-			InputBufferLength,
-			OutputBuffer,
-			OutputBufferLength);
-
-	RETURN(ret);
+	
+	RETURN(STATUS_SUCCESS);
 }
 
 // ******************************************************************
