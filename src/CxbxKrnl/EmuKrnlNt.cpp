@@ -707,8 +707,8 @@ XBSYSAPI EXPORTNUM(204) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtProtectVirtualMemor
 // ******************************************************************
 XBSYSAPI EXPORTNUM(205) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtPulseEvent
 (
-	IN HANDLE                       EventHandle,
-	OUT PLONG                       PreviousState OPTIONAL
+	IN HANDLE	EventHandle,
+	OUT PLONG	PreviousState OPTIONAL
 )
 {
 	LOG_FUNC_BEGIN
@@ -716,9 +716,16 @@ XBSYSAPI EXPORTNUM(205) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtPulseEvent
 		LOG_FUNC_ARG_OUT(PreviousState)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	// redirect to Windows NT
+	// TODO : Untested
+	NTSTATUS ret = NtDll::NtPulseEvent(
+		EventHandle, 
+		/*OUT*/PreviousState);
 
-	RETURN(STATUS_SUCCESS);
+	if (FAILED(ret))
+		EmuWarning("NtPulseEvent failed!");
+
+	RETURN(ret);
 }
 
 // ******************************************************************
