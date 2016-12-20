@@ -24,7 +24,14 @@ XBSYSAPI EXPORTNUM(184) NTSTATUS NTAPI NtAllocateVirtualMemory
     IN DWORD         Protect
 );
 
-XBSYSAPI VOID *NtCancelTimer;
+// ******************************************************************
+// * 0x00B9 - NtCancelTimer()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(185) NTSTATUS NTAPI NtCancelTimer
+(
+	IN HANDLE TimerHandle,
+	OUT PBOOLEAN CurrentState OPTIONAL
+);
 
 // ******************************************************************
 // * NtClearEvent
@@ -110,7 +117,16 @@ XBSYSAPI EXPORTNUM(193) NTSTATUS NTAPI NtCreateSemaphore
     IN  ULONG               MaximumCount
 );
 
-XBSYSAPI VOID *NtCreateTimer;
+// ******************************************************************
+// * 0x00C2 - NtCreateTimer()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(194) NTSTATUS NTAPI NtCreateTimer
+(
+	OUT PHANDLE TimerHandle,
+	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+	IN TIMER_TYPE TimerType
+);
+
 XBSYSAPI VOID *NtDeleteFile;
 
 // ******************************************************************
@@ -278,13 +294,24 @@ XBSYSAPI VOID *NtQueryIoCompletion;
 XBSYSAPI VOID *NtQueryMutant;
 XBSYSAPI VOID *NtQuerySemaphore;
 
-XBSYSAPI EXPORTNUM(215) NTSTATUS NTAPI NtQuerySymbolicLinkObject( 
+// ******************************************************************
+// * 0x00D7 - NtQuerySymbolicLinkObject()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(215) NTSTATUS NTAPI NtQuerySymbolicLinkObject
+( 
     HANDLE LinkHandle, 
     OUT PSTRING LinkTarget, 
     OUT PULONG ReturnedLength OPTIONAL
 );
 
-XBSYSAPI VOID *NtQueryTimer;
+// ******************************************************************
+// * 0x00D8 - NtQueryTimer()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(216) NTSTATUS NTAPI NtQueryTimer
+(
+	IN HANDLE TimerHandle,
+	OUT PTIMER_BASIC_INFORMATION TimerInformation
+);
 
 // ******************************************************************
 // * NtQueryVirtualMemory
@@ -394,7 +421,21 @@ XBSYSAPI EXPORTNUM(228) NTSTATUS NTAPI NtSetSystemTime
 	OUT PLARGE_INTEGER			PreviousTime OPTIONAL 
 );
 
-XBSYSAPI VOID *NtSetTimerEx;
+// ******************************************************************
+// * 0x00E5 - NtSetTimerEx()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(229) NTSTATUS NtSetTimerEx
+(
+	IN HANDLE TimerHandle,
+	IN PLARGE_INTEGER DueTime,
+	IN PTIMER_APC_ROUTINE TimerApcRoutine OPTIONAL,
+	IN KPROCESSOR_MODE ApcMode,
+	IN PVOID TimerContext OPTIONAL,
+	IN BOOLEAN WakeTimer,
+	IN LONG Period OPTIONAL,
+	OUT PBOOLEAN PreviousState OPTIONAL
+);
+
 XBSYSAPI VOID *NtSignalAndWaitForSingleObjectEx;
 
 // ******************************************************************

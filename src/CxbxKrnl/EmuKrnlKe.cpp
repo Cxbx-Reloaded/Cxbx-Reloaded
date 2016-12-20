@@ -505,6 +505,29 @@ XBSYSAPI EXPORTNUM(145) xboxkrnl::LONG NTAPI xboxkrnl::KeSetEvent
 }
 
 // ******************************************************************
+// * 0x0091 - KeSetEvent()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(145) xboxkrnl::LONG NTAPI xboxkrnl::KeSetEvent
+(
+	IN PRKEVENT		Event,
+	IN KPRIORITY	Increment,
+	IN BOOLEAN		Wait	
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Event)
+		LOG_FUNC_ARG(Increment)
+		LOG_FUNC_ARG(Wait)
+		LOG_FUNC_END;
+
+	// TODO : Untested & incomplete
+	LONG ret = Event->Header.SignalState;
+	Event->Header.SignalState = TRUE;
+
+	RETURN(ret);
+}
+
+// ******************************************************************
 // * 0x0094 - KeSetPriorityThread()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(148) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetPriorityThread

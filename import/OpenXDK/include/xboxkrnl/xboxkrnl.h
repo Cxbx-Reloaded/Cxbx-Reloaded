@@ -656,7 +656,7 @@ typedef struct _IO_STATUS_BLOCK
 IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 
 // ******************************************************************
-// * IO_APC_ROUTINE
+// * PIO_APC_ROUTINE
 // ******************************************************************
 typedef VOID (NTAPI *PIO_APC_ROUTINE)
 (
@@ -664,6 +664,26 @@ typedef VOID (NTAPI *PIO_APC_ROUTINE)
     IN PIO_STATUS_BLOCK IoStatusBlock,
     IN ULONG            Reserved
 );
+
+// ******************************************************************
+// * PTIMER_APC_ROUTINE *Same as Win2k/XP*
+// ******************************************************************
+typedef VOID(NTAPI *PTIMER_APC_ROUTINE)
+(
+	IN PVOID	TimerContext,
+	IN ULONG	TimerLowValue,
+	IN LONG		TimerHighValue
+);
+
+// ******************************************************************
+// * TIMER_BASIC_INFORMATION *Same as Win2k/XP*
+// ******************************************************************
+typedef struct _TIMER_BASIC_INFORMATION
+{
+	LARGE_INTEGER TimeRemaining;
+	BOOLEAN SignalState;
+}
+TIMER_BASIC_INFORMATION, *PTIMER_BASIC_INFORMATION;
 
 // ******************************************************************
 // * MEMORY_BASIC_INFORMATION *Same as Win2k/XP*
@@ -848,7 +868,9 @@ typedef struct _DISPATCHER_HEADER
 }
 DISPATCHER_HEADER;
 
-typedef struct _KEVENT 
+typedef LONG KPRIORITY;
+
+typedef struct _KEVENT
 {
 	DISPATCHER_HEADER Header;
 }

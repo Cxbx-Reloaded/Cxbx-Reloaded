@@ -98,6 +98,34 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 }
 
 // ******************************************************************
+// * 0x00B9 - NtCancelTimer()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(185) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCancelTimer
+(
+	IN HANDLE TimerHandle,
+	OUT PBOOLEAN CurrentState OPTIONAL
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(TimerHandle)
+		LOG_FUNC_ARG(CurrentState)
+		LOG_FUNC_END;
+
+	// redirect to Windows NT
+	// TODO : Untested
+	NTSTATUS ret = NtDll::NtCancelTimer
+	(
+		TimerHandle,
+		/*OUT*/CurrentState
+	);
+
+	if (FAILED(ret))
+		EmuWarning("NtCancelTimer failed!");
+
+	RETURN(ret);
+}
+
+// ******************************************************************
 // * 0x00BA - NtClearEvent()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(186) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClearEvent
@@ -318,8 +346,8 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 	// redirect to Win2k/XP
 	NTSTATUS ret = NtDll::NtCreateSemaphore
 	(
-		SemaphoreHandle,
-		SEMAPHORE_ALL_ACCESS,
+		/*OUT*/SemaphoreHandle,
+		/*DesiredAccess=*/SEMAPHORE_ALL_ACCESS,
 		(NtDll::POBJECT_ATTRIBUTES)ObjectAttributes,
 		InitialCount,
 		MaximumCount
@@ -329,6 +357,40 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 		EmuWarning("NtCreateSemaphore failed!");
 
 	DbgPrintf("EmuKrnl (0x%X): NtCreateSemaphore SemaphoreHandle = 0x%.08X\n", GetCurrentThreadId(), *SemaphoreHandle);
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x00C2 - NtCreateTimer()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(194) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateTimer
+(
+	OUT PHANDLE TimerHandle,
+	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+	IN TIMER_TYPE TimerType
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_OUT(TimerHandle)
+		LOG_FUNC_ARG(ObjectAttributes)
+		LOG_FUNC_ARG(TimerType)
+		LOG_FUNC_END;
+
+	// redirect to Windows NT
+	// TODO : Untested
+	NTSTATUS ret = NtDll::NtCreateTimer
+	(
+		/*OUT*/TimerHandle,
+		/*DesiredAccess=*/TIMER_ALL_ACCESS,
+		(NtDll::POBJECT_ATTRIBUTES)ObjectAttributes,
+		(NtDll::TIMER_TYPE)TimerType
+	);
+
+	if (FAILED(ret))
+		EmuWarning("NtCreateTimer failed!");
+
+	DbgPrintf("EmuKrnl (0x%X): NtCreateTimer TimerHandle = 0x%.08X\n", GetCurrentThreadId(), *TimerHandle);
 
 	RETURN(ret);
 }
@@ -914,6 +976,33 @@ XBSYSAPI EXPORTNUM(215) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySymbolicLinkOb
 }
 
 // ******************************************************************
+// * 0x00D8 - NtQueryTimer()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(216) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryTimer
+(
+	IN HANDLE TimerHandle,
+	OUT PTIMER_BASIC_INFORMATION TimerInformation
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(TimerHandle)
+		LOG_FUNC_ARG_OUT(TimerInformation)
+		LOG_FUNC_END;
+
+	// redirect to Windows NT
+	// TODO : Untested
+	NTSTATUS ret = NtDll::NtQueryTimer(
+		TimerHandle,
+		/*TIMER_INFORMATION_CLASS*/NtDll::TimerBasicInformation,
+		/*OUT*/TimerInformation,
+		/*TimerInformationLength=*/sizeof(TIMER_BASIC_INFORMATION),
+		/*OUT ReturnLength*/nullptr
+	);
+
+	RETURN(ret);
+}
+
+// ******************************************************************
 // * 0x00D9 - NtQueryVirtualMemory()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
@@ -1208,6 +1297,49 @@ XBSYSAPI EXPORTNUM(228) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetSystemTime
 				ret = STATUS_INVALID_PARAMETER;
 		}
 	}
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x00E5 - NtSetTimerEx()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(229) xboxkrnl::NTSTATUS xboxkrnl::NtSetTimerEx
+(
+	IN HANDLE TimerHandle,
+	IN PLARGE_INTEGER DueTime,
+	IN PTIMER_APC_ROUTINE TimerApcRoutine OPTIONAL,
+	IN KPROCESSOR_MODE ApcMode,
+	IN PVOID TimerContext OPTIONAL,
+	IN BOOLEAN WakeTimer,
+	IN LONG Period OPTIONAL,
+	OUT PBOOLEAN PreviousState OPTIONAL
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(TimerHandle)
+		LOG_FUNC_ARG(DueTime)
+		LOG_FUNC_ARG(TimerApcRoutine)
+		LOG_FUNC_ARG(ApcMode)
+		LOG_FUNC_ARG(TimerContext)
+		LOG_FUNC_ARG(WakeTimer)
+		LOG_FUNC_ARG(Period)
+		LOG_FUNC_ARG_OUT(PreviousState)
+		LOG_FUNC_END;
+
+	// redirect to Windows NT
+	// TODO : Untested
+	NTSTATUS ret = NtDll::NtSetTimer(
+		TimerHandle,
+		(NtDll::PLARGE_INTEGER)DueTime,
+		(NtDll::PTIMER_APC_ROUTINE)TimerApcRoutine,
+		(NtDll::PVOID)TimerContext,
+		WakeTimer,
+		Period,
+		/*OUT*/PreviousState);
+
+	if (FAILED(ret))
+		EmuWarning("NtSetTimerEx failed!");
 
 	RETURN(ret);
 }
