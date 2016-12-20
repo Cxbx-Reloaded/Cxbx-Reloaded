@@ -58,6 +58,26 @@ namespace NtDll
 #include <thread>
 
 // ******************************************************************
+// * KeGetPcr()
+// * NOTE: This is a macro on the Xbox, however we implement it 
+// * as a function so it can suit our emulated KPCR structure
+// ******************************************************************
+xboxkrnl::KPCR* KeGetPcr()
+{
+	xboxkrnl::KPCR* Pcr = nullptr;
+
+	__asm {
+		push eax
+		mov eax, fs:[0x14]
+		mov Pcr, eax
+		pop eax
+	}
+
+	return Pcr;
+}
+
+
+// ******************************************************************
 // * 0x005C - KeAlertResumeThread()
 // ******************************************************************
 // Source:Dxbx
@@ -222,17 +242,7 @@ XBSYSAPI EXPORTNUM(103) xboxkrnl::KIRQL NTAPI xboxkrnl::KeGetCurrentIrql(void)
 
 	KIRQL Irql;
 
-	KPCR* Pcr = nullptr;
-
-	// Fetch KPCR data structure
-	__asm {
-		push eax
-		mov eax, fs:[0x14]
-		mov Pcr, eax
-		pop eax
-	}
-
-	Irql = Pcr->Irql;
+	Irql = KeGetPcr()->Irql;
 
 	RETURN(Irql);
 }
@@ -444,19 +454,7 @@ XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 		CxbxKrnlCleanup("Bugcheck: Caller of KeRaiseIrqlToDpcLevel is higher than DISPATCH_LEVEL!");
 
 	KIRQL kRet = NULL;
-
-
-	KPCR* Pcr = nullptr;
-
-	// Fetch KPCR data structure
-	__asm {
-		push eax
-		mov eax, fs:[0x14]
-		mov Pcr, eax
-		pop eax
-	}
-
-	Pcr->Irql = DISPATCH_LEVEL;
+	KeGetPcr()->Irql = DISPATCH_LEVEL;
 
 #ifdef _DEBUG_TRACE
 	DbgPrintf("Raised IRQL to DISPATCH_LEVEL (2).\n");
