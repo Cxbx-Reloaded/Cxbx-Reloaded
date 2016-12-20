@@ -667,8 +667,6 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForMultipleObjects
 		LOG_FUNC_ARG(WaitBlockArray)
 		LOG_FUNC_END;
 
-	// Unused arguments : WaitReason, WaitMode, WaitBlockArray
-
 	NTSTATUS ret = STATUS_SUCCESS;
 
 	for (uint i = 0; i < Count; i++)
@@ -681,19 +679,29 @@ XBSYSAPI EXPORTNUM(158) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForMultipleObjects
 
 	if (ret == STATUS_SUCCESS)
 	{
-		// TODO : What should we do with the (currently ignored) WaitMode?
-
-		ret = NtDll::NtWaitForMultipleObjects(
-			Count,
-			Object,
-			(NtDll::OBJECT_WAIT_TYPE)WaitType,
-			Alertable,
-			(NtDll::PLARGE_INTEGER)Timeout);
+		// TODO : What should we do with the (currently ignored)
+		//        WaitReason, WaitMode, WaitBlockArray?
 
 		if (Count == 1)
-			DbgPrintf("Finished waiting for 0x%.08X\n", Object[0]);
+		{
+			// Note : WaitType is irrelevant here
+			ret = NtDll::NtWaitForSingleObject(
+				Object[0],
+				Alertable,
+				(NtDll::PLARGE_INTEGER)Timeout);
 
-		if (ret == WAIT_FAILED)
+			DbgPrintf("Finished waiting for 0x%.08X\n", Object[0]);
+		}
+		else
+			// Unused arguments : WaitReason, WaitMode, WaitBlockArray
+			ret = NtDll::NtWaitForMultipleObjects(
+				Count,
+				Object,
+				(NtDll::OBJECT_WAIT_TYPE)WaitType,
+				Alertable,
+				(NtDll::PLARGE_INTEGER)Timeout);
+
+		if (FAILED(ret))
 			EmuWarning("KeWaitForMultipleObjects failed! (%s)", NtStatusToString(ret));
 	}
 
@@ -712,17 +720,16 @@ XBSYSAPI EXPORTNUM(159) xboxkrnl::NTSTATUS xboxkrnl::KeWaitForSingleObject
 	IN PLARGE_INTEGER Timeout OPTIONAL
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Object)
-		LOG_FUNC_ARG(WaitReason)
-		LOG_FUNC_ARG(WaitMode)
-		LOG_FUNC_ARG(Alertable)
-		LOG_FUNC_ARG(Timeout)
-		LOG_FUNC_END;
+	LOG_FORWARD("KeWaitForMultipleObjects");
 
-	EmuWarning("EmuKrnl: Redirecting KeWaitForSingleObject to NtWaitForSingleObjectEx");
-
-	NTSTATUS ret = NtWaitForSingleObjectEx(Object, WaitMode, Alertable, Timeout);
-
-	RETURN(ret);
+	return xboxkrnl::KeWaitForMultipleObjects(
+		/*Count=*/1,
+		&Object,
+		/*WaitType=*/WaitAll,
+		WaitReason,
+		WaitMode,
+		Alertable,
+		Timeout,
+		/*WaitBlockArray*/NULL
+	);
 }

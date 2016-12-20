@@ -192,7 +192,7 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         {
             HANDLE hDupHandle = NULL;
 
-            DuplicateHandle(GetCurrentProcess(), hThread, GetCurrentProcess(), &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
+            DuplicateHandle(g_CurrentProcessHandle, hThread, g_CurrentProcessHandle, &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
 
             CxbxKrnlRegisterThread(hDupHandle);
         }

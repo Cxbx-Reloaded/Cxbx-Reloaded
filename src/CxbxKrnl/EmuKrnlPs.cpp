@@ -300,7 +300,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 		{
 			HANDLE hDupHandle = NULL;
 
-			DuplicateHandle(GetCurrentProcess(), *ThreadHandle, GetCurrentProcess(), &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
+			DuplicateHandle(g_CurrentProcessHandle, *ThreadHandle, g_CurrentProcessHandle, &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
 
 			CxbxKrnlRegisterThread(hDupHandle);
 		}
