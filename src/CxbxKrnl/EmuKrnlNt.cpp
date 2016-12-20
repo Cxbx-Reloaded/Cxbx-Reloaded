@@ -839,7 +839,7 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 	}
 
 	NtDll::FILE_DIRECTORY_INFORMATION *NtFileDirInfo = 
-		CxbxMalloc(NtFileDirectoryInformationSize + NtPathBufferSize);
+		(NtDll::FILE_DIRECTORY_INFORMATION *) CxbxMalloc(NtFileDirectoryInformationSize + NtPathBufferSize);
 
 	// Short-hand pointer to Nt filename :
 	wchar_t *wcstr = NtFileDirInfo->FileName;
@@ -860,7 +860,7 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 			(NtDll::FILE_INFORMATION_CLASS)FileInformationClass, 
 			/*ReturnSingleEntry=*/TRUE,
 			&NtFileMask,
-			RestartScan);
+			RestartScan
 		);
 
 		RestartScan = FALSE;
@@ -870,10 +870,9 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 
 	// convert from PC to Xbox
 	{
-			// TODO : assert that NtDll::FILE_DIRECTORY_INFORMATION has same members and size as xboxkrnl::FILE_DIRECTORY_INFORMATION
-			memcpy(/*Dst=*/FileInformation, /*Src=*/NtFileDirInfo, /*Size=*/NtFileDirectoryInformationSize);
-			wcstombs(/*Dest=*/mbstr, /*Source=*/wcstr, MAX_PATH);
-			FileInformation->FileNameLength /= sizeof(wchar_t);
+		// TODO : assert that NtDll::FILE_DIRECTORY_INFORMATION has same members and size as xboxkrnl::FILE_DIRECTORY_INFORMATION
+		memcpy(/*Dst=*/FileInformation, /*Src=*/NtFileDirInfo, /*Size=*/NtFileDirectoryInformationSize);
+		FileInformation->FileNameLength /= sizeof(wchar_t);
 	}
 
 	// TODO: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
