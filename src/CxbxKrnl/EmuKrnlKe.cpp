@@ -489,27 +489,6 @@ XBSYSAPI EXPORTNUM(143) xboxkrnl::LONG NTAPI xboxkrnl::KeSetBasePriorityThread
 XBSYSAPI EXPORTNUM(145) xboxkrnl::LONG NTAPI xboxkrnl::KeSetEvent
 (
 	IN PRKEVENT		Event,
-	IN LONG			Increment,
-	IN BOOLEAN		Wait
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Event)
-		LOG_FUNC_ARG(Increment)
-		LOG_FUNC_ARG(Wait)
-		LOG_FUNC_END;
-
-	LOG_UNIMPLEMENTED();
-
-	RETURN(1);
-}
-
-// ******************************************************************
-// * 0x0091 - KeSetEvent()
-// ******************************************************************
-XBSYSAPI EXPORTNUM(145) xboxkrnl::LONG NTAPI xboxkrnl::KeSetEvent
-(
-	IN PRKEVENT		Event,
 	IN KPRIORITY	Increment,
 	IN BOOLEAN		Wait	
 )

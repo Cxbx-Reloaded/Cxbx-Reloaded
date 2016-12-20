@@ -988,6 +988,15 @@ typedef NTSTATUS (NTAPI *FPTR_NtCreateEvent)
 );
 
 // ******************************************************************
+// * NtPulseEvent
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtPulseEvent)
+(
+	IN HANDLE	EventHandle,
+	OUT PLONG	PreviousState OPTIONAL
+);
+
+// ******************************************************************
 // * NtCreateMutant
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtCreateMutant)
@@ -1345,11 +1354,6 @@ typedef NTSTATUS(NTAPI *FPTR_NtFsControlFile)
 	IN  ULONG				OutputBufferLength
 );
 
-typedef enum _TIMER_TYPE {
-	NotificationTimer,
-	SynchronizationTimer
-} TIMER_TYPE;
-
 // ******************************************************************
 // * NtCreateTimer
 // ******************************************************************
@@ -1359,14 +1363,6 @@ typedef NTSTATUS(NTAPI *FPTR_NtCreateTimer)
 	IN  ACCESS_MASK			DesiredAccess,
 	IN  POBJECT_ATTRIBUTES	ObjectAttributes OPTIONAL,
 	IN  TIMER_TYPE			TimerType
-);
-
-typedef
-VOID
-(*PTIMER_APC_ROUTINE) (
-	IN PVOID TimerContext,
-	IN ULONG TimerLowValue,
-	IN LONG TimerHighValue
 );
 
 // ******************************************************************
@@ -1425,6 +1421,7 @@ EXTERN(NtFlushBuffersFile);
 EXTERN(NtFreeVirtualMemory);
 EXTERN(NtFsControlFile);
 EXTERN(NtOpenSymbolicLinkObject);
+EXTERN(NtPulseEvent);
 EXTERN(NtQueryDirectoryFile);
 EXTERN(NtQueryFullAttributesFile);
 EXTERN(NtQueryInformationFile);
