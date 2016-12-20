@@ -42,8 +42,8 @@ namespace xboxkrnl
 #include <xboxkrnl/xboxkrnl.h>
 
 // Additional types, exclusively for logging :
-typedef enum  CREATE_DISPOSITION;
-typedef enum  CREATE_OPTION;
+enum  CREATE_DISPOSITION;
+enum  CREATE_OPTION;
 };
 
 

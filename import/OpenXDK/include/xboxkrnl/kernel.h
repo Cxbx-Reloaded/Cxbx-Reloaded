@@ -197,10 +197,18 @@ XBSYSAPI EXPORTNUM(143) LONG NTAPI KeSetBasePriorityThread
     IN PVOID  Priority
 );
 
-
-
 XBSYSAPI VOID *KeSetDisableBoostThread;
-XBSYSAPI VOID *KeSetEvent;
+
+// ******************************************************************
+// * 0x0091 - KeSetEvent()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(145) LONG NTAPI KeSetEvent
+(
+	IN PRKEVENT		Event,
+	IN KPRIORITY	Increment,
+	IN BOOLEAN		Wait
+);
+
 XBSYSAPI VOID *KeSetEventBoostPriority;
 XBSYSAPI VOID *KeSetPriorityProcess;
 
