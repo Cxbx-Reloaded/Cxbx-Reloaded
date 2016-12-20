@@ -1302,6 +1302,97 @@ typedef PVOID (NTAPI *FPTR_RtlDestroyHeap)
 );
 
 // ******************************************************************
+// * NtOpenSymbolicLinkObject
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtOpenSymbolicLinkObject)
+(
+	OUT PHANDLE				pHandle,
+	IN  ACCESS_MASK			DesiredAccess,
+	IN  POBJECT_ATTRIBUTES	ObjectAttributes
+);
+
+// ******************************************************************
+// * NtDeviceIoControlFile
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtDeviceIoControlFile)
+(
+	IN  HANDLE				FileHandle,
+	IN  HANDLE				Event OPTIONAL,
+	IN  PIO_APC_ROUTINE		ApcRoutine OPTIONAL,
+	IN  PVOID				ApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK	IoStatusBlock,
+	IN  ULONG				IoControlCode,
+	IN  PVOID				InputBuffer OPTIONAL,
+	IN  ULONG				InputBufferLength,
+	OUT PVOID				OutputBuffer OPTIONAL,
+	IN  ULONG				OutputBufferLength
+);
+
+// ******************************************************************
+// * NtFsControlFile
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtFsControlFile)
+(
+	IN  HANDLE				FileHandle,
+	IN  HANDLE				Event OPTIONAL,
+	IN  PIO_APC_ROUTINE		ApcRoutine OPTIONAL,
+	IN  PVOID				ApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK	IoStatusBlock,
+	IN  ULONG				FsControlCode,
+	IN  PVOID				InputBuffer OPTIONAL,
+	IN  ULONG				InputBufferLength,
+	OUT PVOID				OutputBuffer OPTIONAL,
+	IN  ULONG				OutputBufferLength
+);
+
+typedef enum _TIMER_TYPE {
+	NotificationTimer,
+	SynchronizationTimer
+} TIMER_TYPE;
+
+// ******************************************************************
+// * NtCreateTimer
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtCreateTimer)
+(
+	OUT PHANDLE				TimerHandle,
+	IN  ACCESS_MASK			DesiredAccess,
+	IN  POBJECT_ATTRIBUTES	ObjectAttributes OPTIONAL,
+	IN  TIMER_TYPE			TimerType
+);
+
+typedef
+VOID
+(*PTIMER_APC_ROUTINE) (
+	IN PVOID TimerContext,
+	IN ULONG TimerLowValue,
+	IN LONG TimerHighValue
+);
+
+// ******************************************************************
+// * NtSetTimer
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtSetTimer)
+(
+	IN  HANDLE				TimerHandle,
+	IN  PLARGE_INTEGER		DueTime,
+	IN  PTIMER_APC_ROUTINE	TimerApcRoutine OPTIONAL,
+	IN  PVOID				TimerContext OPTIONAL,
+	IN  BOOLEAN				ResumeTimer,
+	IN  LONG				Period OPTIONAL,
+	OUT PBOOLEAN			PreviousState OPTIONAL
+);
+
+// ******************************************************************
+// * NtCancelTimer
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtCancelTimer)
+(
+	IN  HANDLE				TimerHandle,
+	OUT PBOOLEAN			CurrentState OPTIONAL
+);
+
+// ******************************************************************
 // * Exported API
 // ******************************************************************
 #define EXTERN(API)  extern FPTR_##API API
@@ -1328,9 +1419,12 @@ EXTERN(NtCreateMutant);
 EXTERN(NtCreateSemaphore);
 EXTERN(NtCreateTimer);
 EXTERN(NtDelayExecution);
+EXTERN(NtDeviceIoControlFile);
 EXTERN(NtDuplicateObject);
 EXTERN(NtFlushBuffersFile);
 EXTERN(NtFreeVirtualMemory);
+EXTERN(NtFsControlFile);
+EXTERN(NtOpenSymbolicLinkObject);
 EXTERN(NtQueryDirectoryFile);
 EXTERN(NtQueryFullAttributesFile);
 EXTERN(NtQueryInformationFile);

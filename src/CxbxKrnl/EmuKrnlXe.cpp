@@ -67,21 +67,21 @@ XBSYSAPI EXPORTNUM(326) xboxkrnl::OBJECT_STRING xboxkrnl::XeImageFileName =
 // New to the XBOX.
 XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 (
-	void* section
+	IN PXBEIMAGE_SECTION Section
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(section)
+		LOG_FUNC_ARG(Section)
 		LOG_FUNC_END;
 
-	if (((Xbe::SectionHeader*)section)->dwSectionRefCount > 0) {
-		((Xbe::SectionHeader*)section)->dwSectionRefCount++;
-		RETURN(STATUS_SUCCESS);
-	}
+	NTSTATUS ret = STATUS_SUCCESS;
 
-	EmuWarning("XeLoadSection lied");
+	if (Section->SectionReferenceCount > 0)
+		Section->SectionReferenceCount++;
+	else
+		LOG_UNIMPLEMENTED();
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -93,20 +93,25 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 // New to the XBOX.
 XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection
 (
-	void* section
+	IN PXBEIMAGE_SECTION Section
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(section)
+		LOG_FUNC_ARG(Section)
 		LOG_FUNC_END;
 
-	if (((Xbe::SectionHeader*)section)->dwSectionRefCount == 0) {
-		RETURN(STATUS_INVALID_PARAMETER);
+	NTSTATUS ret = STATUS_SUCCESS;
+
+	if (Section->SectionReferenceCount > 0)
+		Section->SectionReferenceCount--;
+	else
+	{
+		LOG_UNIMPLEMENTED();
+		ret = STATUS_INVALID_PARAMETER;
 	}
 
-	EmuWarning("XeUnloadSection lied");
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(ret);
 }
 
 // ******************************************************************

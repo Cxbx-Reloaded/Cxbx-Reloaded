@@ -64,6 +64,33 @@ XBSYSAPI EXPORTNUM(64) xboxkrnl::OBJECT_TYPE xboxkrnl::IoCompletionObjectType =
 };
 
 // ******************************************************************
+// * 0x0041 - IoCreateDevice()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(65) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateDevice
+(
+	IN  PDRIVER_OBJECT		DriverObject,
+	IN  ULONG				DeviceExtensionSize,
+	IN  PSTRING				DeviceName  OPTIONAL,
+	IN  ULONG				DeviceType,
+	IN  BOOLEAN				Exclusive,
+	OUT PDEVICE_OBJECT*		DeviceObject
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_OUT(DriverObject)
+		LOG_FUNC_ARG(DeviceExtensionSize)
+		LOG_FUNC_ARG(DeviceName)
+		LOG_FUNC_ARG_OUT(DeviceType)
+		LOG_FUNC_ARG(Exclusive)
+		LOG_FUNC_ARG(DeviceObject)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(STATUS_SUCCESS);
+}
+
+// ******************************************************************
 // * 0x0042 - IoCreateFile()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile

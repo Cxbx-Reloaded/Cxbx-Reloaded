@@ -129,7 +129,11 @@ XBSYSAPI EXPORTNUM(194) NTSTATUS NTAPI NtCreateTimer
 
 XBSYSAPI VOID *NtDeleteFile;
 
-XBSYSAPI EXPORTNUM(196) NTSTATUS NTAPI NtDeviceIoControlFile(
+// ******************************************************************
+// * 0x00C4 - NtDeviceIoControlFile
+// ******************************************************************
+XBSYSAPI EXPORTNUM(196) NTSTATUS NTAPI NtDeviceIoControlFile
+(
     IN HANDLE FileHandle,
     IN HANDLE Event OPTIONAL,
     IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
@@ -171,7 +175,22 @@ XBSYSAPI EXPORTNUM(199) NTSTATUS NTAPI NtFreeVirtualMemory
     IN ULONG      FreeType
 );
 
-XBSYSAPI VOID *NtFsControlFile;
+// ******************************************************************
+// * 0x00C8 - NtFsControlFile
+// ******************************************************************
+XBSYSAPI EXPORTNUM(200) NTSTATUS NTAPI NtFsControlFile
+(
+	IN HANDLE               FileHandle,
+	IN HANDLE               Event OPTIONAL,
+	IN PIO_APC_ROUTINE      ApcRoutine OPTIONAL,
+	IN PVOID                ApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK    IoStatusBlock,
+	IN ULONG                FsControlCode,
+	IN PVOID                InputBuffer OPTIONAL,
+	IN ULONG                InputBufferLength,
+	OUT PVOID               OutputBuffer OPTIONAL,
+	IN ULONG                OutputBufferLength
+);
 
 XBSYSAPI EXPORTNUM(201) NTSTATUS NTAPI NtOpenDirectoryObject
 (
@@ -326,9 +345,9 @@ XBSYSAPI EXPORTNUM(219) NTSTATUS NTAPI NtReadFile
 (
     IN  HANDLE          FileHandle,            // TODO: correct paramters
     IN  HANDLE          Event OPTIONAL,
-    IN  PVOID           ApcRoutine OPTIONAL,
+    IN  PIO_APC_ROUTINE ApcRoutine OPTIONAL,
     IN  PVOID           ApcContext,
-    OUT PVOID           IoStatusBlock,
+    OUT PIO_STATUS_BLOCK IoStatusBlock,
     OUT PVOID           Buffer,
     IN  ULONG           Length,
     IN  PLARGE_INTEGER  ByteOffset OPTIONAL
@@ -385,10 +404,10 @@ XBSYSAPI EXPORTNUM(225) NTSTATUS NTAPI NtSetEvent
 XBSYSAPI EXPORTNUM(226) NTSTATUS NTAPI NtSetInformationFile
 (
     IN  HANDLE  FileHandle,            // TODO: correct paramters
-    OUT PVOID   IoStatusBlock,
+    OUT PIO_STATUS_BLOCK   IoStatusBlock,
     IN  PVOID   FileInformation,
     IN  ULONG   Length,
-    IN  ULONG   FileInformationClass
+    IN  FILE_INFORMATION_CLASS   FileInformationClass
 );
 
 XBSYSAPI VOID *NtSetIoCompletion;

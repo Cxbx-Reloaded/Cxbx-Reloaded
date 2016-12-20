@@ -425,25 +425,41 @@ XBSYSAPI EXPORTNUM(196) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeviceIoControlFile
 		LOG_FUNC_ARG(OutputBufferLength)
 		LOG_FUNC_END;
 
-	switch (IoControlCode)
-	{
-		// IOCTL_SCSI_PASS_THROUGH_DIRECT
-	case 0x4D014:
-	{
-		PSCSI_PASS_THROUGH_DIRECT PassThrough = (PSCSI_PASS_THROUGH_DIRECT)InputBuffer;
-		PDVDX2_AUTHENTICATION Authentication = (PDVDX2_AUTHENTICATION)PassThrough->DataBuffer;
+	NTSTATUS ret = STATUS_SUCCESS;
 
-		// Should be just enough info to pass XapiVerifyMediaInDrive
-		Authentication->AuthenticationPage.CDFValid = 1;
-		Authentication->AuthenticationPage.PartitionArea = 1;
-		Authentication->AuthenticationPage.Authentication = 1;
-		break;
-	}
-	default:
-		LOG_UNIMPLEMENTED();
-	}
+	if (IsEmuHandle(FileHandle))
+	{
+		switch (IoControlCode)
+		{
+		case 0x4D014: // IOCTL_SCSI_PASS_THROUGH_DIRECT
+		{
+			PSCSI_PASS_THROUGH_DIRECT PassThrough = (PSCSI_PASS_THROUGH_DIRECT)InputBuffer;
+			PDVDX2_AUTHENTICATION Authentication = (PDVDX2_AUTHENTICATION)PassThrough->DataBuffer;
 
-	RETURN(STATUS_SUCCESS);
+			// Should be just enough info to pass XapiVerifyMediaInDrive
+			Authentication->AuthenticationPage.CDFValid = 1;
+			Authentication->AuthenticationPage.PartitionArea = 1;
+			Authentication->AuthenticationPage.Authentication = 1;
+			break;
+		}
+		default:
+			LOG_UNIMPLEMENTED();
+		}
+	}
+	else
+		ret = NtDll::NtDeviceIoControlFile(
+			FileHandle,
+			Event,
+			(NtDll::PIO_APC_ROUTINE)ApcRoutine,
+			ApcContext,
+			(NtDll::IO_STATUS_BLOCK*)IoStatusBlock,
+			IoControlCode,
+			InputBuffer,
+			InputBufferLength,
+			OutputBuffer,
+			OutputBufferLength);
+
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -462,7 +478,7 @@ XBSYSAPI EXPORTNUM(197) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
 		LOG_FUNC_ARG(Options)
 		LOG_FUNC_END;
 
-	NTSTATUS ret;
+	NTSTATUS ret = STATUS_SUCCESS;
 
 	if (IsEmuHandle(SourceHandle)) {
 		EmuHandle* iEmuHandle = HandleToEmuHandle(SourceHandle);
@@ -499,8 +515,12 @@ XBSYSAPI EXPORTNUM(198) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFlushBuffersFile
 		LOG_FUNC_ARG(FileHandle)
 		LOG_FUNC_ARG_OUT(IoStatusBlock)
 		LOG_FUNC_END;
-
-	NTSTATUS ret = NtDll::NtFlushBuffersFile(FileHandle, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock);
+	NTSTATUS ret = STATUS_SUCCESS;
+	
+	if (IsEmuHandle(FileHandle)) 
+		LOG_UNIMPLEMENTED();
+	else
+		ret = NtDll::NtFlushBuffersFile(FileHandle, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock);
 
 	RETURN(ret);
 }
@@ -525,6 +545,51 @@ XBSYSAPI EXPORTNUM(199) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFreeVirtualMemory
 		LOG_FUNC_END;
 
 	NTSTATUS ret = NtDll::NtFreeVirtualMemory(GetCurrentProcess(), BaseAddress, FreeSize, FreeType);
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x00C8 - NtFsControlFile
+// ******************************************************************
+XBSYSAPI EXPORTNUM(200) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtFsControlFile
+(
+	IN HANDLE               FileHandle,
+	IN HANDLE               Event OPTIONAL,
+	IN PIO_APC_ROUTINE      ApcRoutine OPTIONAL,
+	IN PVOID                ApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK    IoStatusBlock,
+	IN ULONG                FsControlCode,
+	IN PVOID                InputBuffer OPTIONAL,
+	IN ULONG                InputBufferLength,
+	OUT PVOID               OutputBuffer OPTIONAL,
+	IN ULONG                OutputBufferLength
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(FileHandle)
+		LOG_FUNC_ARG(Event)
+		LOG_FUNC_ARG(ApcRoutine)
+		LOG_FUNC_ARG(ApcContext)
+		LOG_FUNC_ARG_OUT(IoStatusBlock)
+		LOG_FUNC_ARG(FsControlCode)
+		LOG_FUNC_ARG(InputBuffer)
+		LOG_FUNC_ARG(InputBufferLength)
+		LOG_FUNC_ARG(OutputBuffer)
+		LOG_FUNC_ARG(OutputBufferLength)
+		LOG_FUNC_END;
+
+	NTSTATUS ret = NtDll::NtFsControlFile(
+		FileHandle,
+		Event,
+		(NtDll::PIO_APC_ROUTINE)ApcRoutine,
+		ApcContext,
+		(NtDll::IO_STATUS_BLOCK*)IoStatusBlock,
+		FsControlCode,
+		InputBuffer,
+		InputBufferLength,
+		OutputBuffer,
+		OutputBufferLength);
 
 	RETURN(ret);
 }
@@ -1047,9 +1112,9 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 (
 	IN  HANDLE          FileHandle,            // TODO: correct paramters
 	IN  HANDLE          Event OPTIONAL,
-	IN  PVOID           ApcRoutine OPTIONAL,
+	IN  PIO_APC_ROUTINE ApcRoutine OPTIONAL,
 	IN  PVOID           ApcContext,
-	OUT PVOID           IoStatusBlock,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	OUT PVOID           Buffer,
 	IN  ULONG           Length,
 	IN  PLARGE_INTEGER  ByteOffset OPTIONAL
@@ -1174,10 +1239,10 @@ XBSYSAPI EXPORTNUM(225) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetEvent
 XBSYSAPI EXPORTNUM(226) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
 (
 	IN  HANDLE  FileHandle,            // TODO: correct paramters
-	OUT PVOID   IoStatusBlock,
+	OUT PIO_STATUS_BLOCK   IoStatusBlock,
 	IN  PVOID   FileInformation,
 	IN  ULONG   Length,
-	IN  ULONG   FileInformationClass
+	IN  FILE_INFORMATION_CLASS   FileInformationClass
 )
 {
 	LOG_FUNC_BEGIN
