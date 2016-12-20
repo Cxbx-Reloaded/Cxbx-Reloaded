@@ -185,8 +185,19 @@ XBSYSAPI EXPORTNUM(336) VOID NTAPI XcSHAUpdate(UCHAR *pbSHAContext, UCHAR *pbInp
 // ******************************************************************
 XBSYSAPI EXPORTNUM(337) VOID NTAPI XcSHAFinal(UCHAR *pbSHAContext, UCHAR *pbDigest);
 
-XBSYSAPI EXPORTNUM(338) VOID *XcRC4Key;
-XBSYSAPI EXPORTNUM(339) VOID *XcRC4Crypt;
+XBSYSAPI EXPORTNUM(338) VOID XcRC4Key
+(
+    IN PUCHAR pbKeyStruct,
+    IN ULONG dwKeyLength,
+    IN PUCHAR pbKey
+);
+
+XBSYSAPI EXPORTNUM(339) VOID XcRC4Crypt
+(
+    IN PUCHAR pbKeyStruct,
+    IN ULONG dwInputLength,
+    IN PUCHAR pbInput
+);
 
 XBSYSAPI EXPORTNUM(340) VOID NTAPI XcHMAC
 (
