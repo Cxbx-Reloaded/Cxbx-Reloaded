@@ -136,7 +136,7 @@ XBSYSAPI EXPORTNUM(339) xboxkrnl::VOID xboxkrnl::XcRC4Crypt
 		LOG_FUNC_ARG_OUT(pbInput)
 		LOG_FUNC_END;
 
-	Rc4Output((Rc4Context*)pbKeyStruct, pbInput, dwInputLength);
+	Rc4Xor((Rc4Context*)pbKeyStruct, pbInput, pbInput, dwInputLength);
 }
 
 // ******************************************************************
