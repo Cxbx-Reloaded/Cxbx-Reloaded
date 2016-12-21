@@ -893,6 +893,8 @@ XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributes
 		ret = NtDll::NtQueryFullAttributesFile(
 			nativeObjectAttributes.NtObjAttrPtr, 
 			Attributes);
+	
+	// TODO: Attributes must be converted!
 
 	if (FAILED(ret))
 		EmuWarning("NtQueryFullAttributesFile failed! (0x%.08X)\n", ret);

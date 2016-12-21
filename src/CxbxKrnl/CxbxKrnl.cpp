@@ -511,6 +511,10 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 		// Determine Xbox path to XBE and place it in XeImageFileName
 		std::string fileName(xbePath);
+		
+		// Strip out the path, leaving only the XBE file name
+		if (fileName.rfind('\\') >= 0)
+			fileName = fileName.substr(fileName.rfind('\\') + 1);
 
 		if (xboxkrnl::XeImageFileName.Buffer != NULL)
 			free(xboxkrnl::XeImageFileName.Buffer);
