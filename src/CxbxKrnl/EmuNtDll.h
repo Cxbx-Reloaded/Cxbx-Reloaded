@@ -611,8 +611,7 @@ typedef struct _FILE_LINK_INFORMATION {
 // ******************************************************************
 // * FILE_NETWORK_OPEN_INFORMATION
 // ******************************************************************
-typedef struct _FILE_NETWORK_OPEN_INFORMATION
-{
+typedef struct _FILE_NETWORK_OPEN_INFORMATION {
 	LARGE_INTEGER   CreationTime;
 	LARGE_INTEGER   LastAccessTime;
 	LARGE_INTEGER   LastWriteTime;
@@ -620,8 +619,8 @@ typedef struct _FILE_NETWORK_OPEN_INFORMATION
 	LARGE_INTEGER   AllocationSize;
 	LARGE_INTEGER   EndOfFile;
 	ULONG           FileAttributes;
-}
-FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;
+	ULONG           Reserved;
+} FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;
 
 // ******************************************************************
 // * FILE_BASIC_INFORMATION
@@ -1351,7 +1350,7 @@ typedef NTSTATUS (NTAPI *FPTR_NtQueryDirectoryFile)
 typedef NTSTATUS (NTAPI *FPTR_NtQueryFullAttributesFile)
 (
     IN  POBJECT_ATTRIBUTES          ObjectAttributes,
-    OUT PVOID                       Attributes
+    OUT PFILE_NETWORK_OPEN_INFORMATION  Attributes
 );
 
 // ******************************************************************
@@ -1361,7 +1360,7 @@ typedef NTSTATUS (NTAPI *FPTR_NtQueryInformationFile)
 (
     IN  HANDLE                      FileHandle,
     OUT PIO_STATUS_BLOCK            IoStatusBlock,
-    OUT PFILE_FS_SIZE_INFORMATION   FileInformation,
+    OUT PVOID                       FileInformation,
     IN  ULONG                       Length,
     IN  FILE_INFORMATION_CLASS      FileInfo
 );

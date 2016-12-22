@@ -608,88 +608,72 @@ void _ConvertXboxBasicInfo(xboxkrnl::FILE_BASIC_INFORMATION *xboxBasicInfo)
 	xboxBasicInfo->FileAttributes &= FILE_ATTRIBUTE_VALID_FLAGS;
 }
 
-void _ConvertXboxNameInfo(NtDll::FILE_NAME_INFORMATION *ntNameInfo, xboxkrnl::FILE_NAME_INFORMATION *xboxNameInfo, int convertedFileNameLength)
+NTSTATUS _ConvertXboxNameInfo(NtDll::FILE_NAME_INFORMATION *ntNameInfo, xboxkrnl::FILE_NAME_INFORMATION *xboxNameInfo, int convertedFileNameLength, ULONG Length)
 {
 	// Convert the file name to ANSI in-place
 	xboxNameInfo->FileNameLength = convertedFileNameLength;
-	size_t convertedChars;
-	wcstombs_s(&convertedChars, xboxNameInfo->FileName, convertedFileNameLength, ntNameInfo->FileName, ntNameInfo->FileNameLength);
 
-	// Ensure the string was properly converted
-	assert(convertedChars == ntNameInfo->FileNameLength * sizeof(xboxkrnl::CHAR) / sizeof(NtDll::WCHAR));
+	// Check if the new file name fits within the given struct size and copy as many chars as possible if not
+	int maxFileNameLength = Length - sizeof(xboxkrnl::FILE_NAME_INFORMATION);
+	size_t convertedChars;
+	wcstombs_s(&convertedChars, xboxNameInfo->FileName, maxFileNameLength, ntNameInfo->FileName, ntNameInfo->FileNameLength);
+
+	// Return the appropriate result depending on whether the string was fully copied
+	return convertedChars == ntNameInfo->FileNameLength / sizeof(NtDll::WCHAR)
+		? STATUS_SUCCESS
+		: STATUS_BUFFER_OVERFLOW;
 }
 
 // ----------------------------------------------------------------------------
 // NT to Xbox converters
 // ----------------------------------------------------------------------------
 
-xboxkrnl::FILE_NETWORK_OPEN_INFORMATION * _NTToXboxNetOpenInfo(NtDll::FILE_NETWORK_OPEN_INFORMATION *ntNetOpenInfo, ULONG *Length)
+NTSTATUS _NTToXboxNetOpenInfo(NtDll::FILE_NETWORK_OPEN_INFORMATION *ntNetOpenInfo, xboxkrnl::FILE_NETWORK_OPEN_INFORMATION *xboxNetOpenInfo, ULONG Length)
 {
-	// Create the Xbox FILE_NETWORK_OPEN_INFORMATION struct
-	*Length = sizeof(xboxkrnl::FILE_NETWORK_OPEN_INFORMATION);
-	xboxkrnl::FILE_NETWORK_OPEN_INFORMATION *xboxNetOpenInfo = (xboxkrnl::FILE_NETWORK_OPEN_INFORMATION *) CxbxMalloc(*Length);
-	ZeroMemory(xboxNetOpenInfo, *Length);
-
 	// Copy everything from the NT struct
-	memcpy_s(xboxNetOpenInfo, sizeof(xboxkrnl::FILE_NETWORK_OPEN_INFORMATION), ntNetOpenInfo, sizeof(NtDll::FILE_NETWORK_OPEN_INFORMATION));
+	memcpy_s(xboxNetOpenInfo, Length, ntNetOpenInfo, sizeof(NtDll::FILE_NETWORK_OPEN_INFORMATION));
 
 	// Fix up attributes
 	xboxNetOpenInfo->FileAttributes &= FILE_ATTRIBUTE_VALID_FLAGS;
 
-	return xboxNetOpenInfo;
+	return STATUS_SUCCESS;
 }
 
-xboxkrnl::FILE_BASIC_INFORMATION * _NTToXboxBasicInfo(NtDll::FILE_BASIC_INFORMATION *ntBasicInfo, ULONG *Length)
+NTSTATUS _NTToXboxBasicInfo(NtDll::FILE_BASIC_INFORMATION *ntBasicInfo, xboxkrnl::FILE_BASIC_INFORMATION *xboxBasicInfo, ULONG Length)
 {
-	// Create the Xbox FILE_BASIC_INFORMATION struct
-	*Length = sizeof(xboxkrnl::FILE_BASIC_INFORMATION);
-	xboxkrnl::FILE_BASIC_INFORMATION *xboxBasicInfo = (xboxkrnl::FILE_BASIC_INFORMATION *) CxbxMalloc(*Length);
-	ZeroMemory(xboxBasicInfo, *Length);
-
 	// Copy everything from the NT struct
 	memcpy_s(xboxBasicInfo, sizeof(xboxkrnl::FILE_BASIC_INFORMATION), ntBasicInfo, sizeof(NtDll::FILE_BASIC_INFORMATION));
 
 	_ConvertXboxBasicInfo(xboxBasicInfo);
 
-	return xboxBasicInfo;
+	return STATUS_SUCCESS;
 }
 
-xboxkrnl::FILE_NAME_INFORMATION * _NTToXboxNameInfo(NtDll::FILE_NAME_INFORMATION *ntNameInfo, ULONG *Length)
+NTSTATUS _NTToXboxNameInfo(NtDll::FILE_NAME_INFORMATION *ntNameInfo, xboxkrnl::FILE_NAME_INFORMATION *xboxNameInfo, ULONG Length)
 {
 	// TODO: the FileName probably needs to be converted back to an Xbox path in some cases
 	// Determine new file name length
-	size_t convertedFileNameLength = ntNameInfo->FileNameLength * sizeof(xboxkrnl::CHAR) / sizeof(NtDll::WCHAR);
+	size_t convertedFileNameLength = ntNameInfo->FileNameLength / sizeof(NtDll::WCHAR);
 
-	// Create the Xbox FILE_NAME_INFORMATION struct
-	*Length = sizeof(xboxkrnl::FILE_NAME_INFORMATION) + convertedFileNameLength;
-	xboxkrnl::FILE_NAME_INFORMATION *xboxNameInfo = (xboxkrnl::FILE_NAME_INFORMATION *) CxbxMalloc(*Length);
-	ZeroMemory(xboxNameInfo, *Length);
+	// Clean up the Xbox FILE_NAME_INFORMATION struct
+	ZeroMemory(xboxNameInfo, Length);
 
-	// Convert file name
-	_ConvertXboxNameInfo(ntNameInfo, xboxNameInfo, convertedFileNameLength);
-
-	return xboxNameInfo;
+	// Convert file name and return the result
+	return _ConvertXboxNameInfo(ntNameInfo, xboxNameInfo, convertedFileNameLength, Length);
 }
 
-xboxkrnl::FILE_ALL_INFORMATION * _NTToXboxAllInfo(NtDll::FILE_ALL_INFORMATION *ntAllInfo, ULONG *Length)
+NTSTATUS _NTToXboxAllInfo(NtDll::FILE_ALL_INFORMATION *ntAllInfo, xboxkrnl::FILE_ALL_INFORMATION *xboxAllInfo, ULONG Length)
 {
 	// TODO: the FileName probably needs to be converted back to an Xbox path in some cases
 	// Determine new file name length
-	size_t convertedFileNameLength = ntAllInfo->NameInformation.FileNameLength * sizeof(xboxkrnl::CHAR) / sizeof(NtDll::WCHAR);
-
-	// Create the Xbox FILE_ALL_INFORMATION struct
-	*Length = sizeof(xboxkrnl::FILE_ALL_INFORMATION) + convertedFileNameLength;
-	xboxkrnl::FILE_ALL_INFORMATION *xboxAllInfo = (xboxkrnl::FILE_ALL_INFORMATION *) CxbxMalloc(*Length);
-	ZeroMemory(xboxAllInfo, *Length);
+	size_t convertedFileNameLength = ntAllInfo->NameInformation.FileNameLength / sizeof(NtDll::WCHAR);
 
 	// Copy everything from the NT struct
-	memcpy_s(xboxAllInfo, sizeof(xboxkrnl::FILE_ALL_INFORMATION), ntAllInfo, sizeof(NtDll::FILE_ALL_INFORMATION));
+	memcpy_s(xboxAllInfo, Length, ntAllInfo, sizeof(NtDll::FILE_ALL_INFORMATION));
 
-	// Convert NT structs to Xbox where needed
+	// Convert NT structs to Xbox where needed and return the result
 	_ConvertXboxBasicInfo(&xboxAllInfo->BasicInformation);
-	_ConvertXboxNameInfo(&ntAllInfo->NameInformation, &xboxAllInfo->NameInformation, convertedFileNameLength);
-
-	return xboxAllInfo;
+	return _ConvertXboxNameInfo(&ntAllInfo->NameInformation, &xboxAllInfo->NameInformation, convertedFileNameLength, Length);
 }
 
 // ----------------------------------------------------------------------------
@@ -736,11 +720,12 @@ PVOID _XboxToNTFileInformation
 	return result;
 }
 
-PVOID _NTToXboxFileInformation
+NTSTATUS NTToXboxFileInformation
 (
 	IN  PVOID nativeFileInformation,
+	OUT PVOID xboxFileInformation,
 	IN  ULONG FileInformationClass,
-	OUT ULONG *Length
+	IN  ULONG Length
 )
 {
 	// The following classes of file information structs are identical between platforms:
@@ -753,32 +738,36 @@ PVOID _NTToXboxFileInformation
 	//   FileStandardInformation
 	//   FileReparsePointInformation
 
-	PVOID result = NULL;
+	NTSTATUS result = STATUS_SUCCESS;
 
 	switch (FileInformationClass)
 	{
 		case NtDll::FileAllInformation:
 		{
 			NtDll::FILE_ALL_INFORMATION *ntAllInfo = reinterpret_cast<NtDll::FILE_ALL_INFORMATION *>(nativeFileInformation);
-			result = _NTToXboxAllInfo(ntAllInfo, Length);
+			xboxkrnl::FILE_ALL_INFORMATION *xboxAllInfo = reinterpret_cast<xboxkrnl::FILE_ALL_INFORMATION *>(xboxFileInformation);
+			result = _NTToXboxAllInfo(ntAllInfo, xboxAllInfo, Length);
 			break;
 		}
 		case NtDll::FileBasicInformation:
 		{
 			NtDll::FILE_BASIC_INFORMATION *ntBasicInfo = reinterpret_cast<NtDll::FILE_BASIC_INFORMATION *>(nativeFileInformation);
-			result = _NTToXboxBasicInfo(ntBasicInfo, Length);
+			xboxkrnl::FILE_BASIC_INFORMATION *xboxBasicInfo = reinterpret_cast<xboxkrnl::FILE_BASIC_INFORMATION *>(xboxFileInformation);
+			result = _NTToXboxBasicInfo(ntBasicInfo, xboxBasicInfo, Length);
 			break;
 		}
 		case NtDll::FileNameInformation:
 		{
 			NtDll::FILE_NAME_INFORMATION *ntNameInfo = reinterpret_cast<NtDll::FILE_NAME_INFORMATION *>(nativeFileInformation);
-			result = _NTToXboxNameInfo(ntNameInfo, Length);
+			xboxkrnl::FILE_NAME_INFORMATION *xboxNameInfo = reinterpret_cast<xboxkrnl::FILE_NAME_INFORMATION *>(xboxFileInformation);
+			result = _NTToXboxNameInfo(ntNameInfo, xboxNameInfo, Length);
 			break;
 		}
 		case NtDll::FileNetworkOpenInformation:
 		{
 			NtDll::FILE_NETWORK_OPEN_INFORMATION *ntNetOpenInfo = reinterpret_cast<NtDll::FILE_NETWORK_OPEN_INFORMATION *>(nativeFileInformation);
-			result = _NTToXboxNetOpenInfo(ntNetOpenInfo, Length);
+			xboxkrnl::FILE_NETWORK_OPEN_INFORMATION *xboxNetOpenInfo = reinterpret_cast<xboxkrnl::FILE_NETWORK_OPEN_INFORMATION *>(xboxFileInformation);
+			result = _NTToXboxNetOpenInfo(ntNetOpenInfo, xboxNetOpenInfo, Length);
 			break;
 		}
 		case NtDll::FileBothDirectoryInformation:
@@ -792,7 +781,7 @@ PVOID _NTToXboxFileInformation
 			//   - WCHAR ShortName[12]
 			// - FileName on Xbox uses single-byte chars, NT uses wide chars
 
-			break;
+			//break;
 		}
 		case NtDll::FileDirectoryInformation:
 		{
@@ -800,7 +789,7 @@ PVOID _NTToXboxFileInformation
 			// - NextEntryOffset might be a problem
 			// - FileName on Xbox uses single-byte chars, NT uses wide chars
 
-			break;
+			//break;
 		}
 		case NtDll::FileFullDirectoryInformation:
 		{
@@ -811,7 +800,7 @@ PVOID _NTToXboxFileInformation
 			//   - ULONG EaSize
 			// - FileName on Xbox uses single-byte chars, NT uses wide chars
 
-			break;
+			//break;
 		}
 		case NtDll::FileNamesInformation:
 		{
@@ -819,7 +808,7 @@ PVOID _NTToXboxFileInformation
 			// - NextEntryOffset might be a problem
 			// - FileName on Xbox uses single-byte chars, NT uses wide chars
 
-			break;
+			//break;
 		}
 		case NtDll::FileObjectIdInformation:
 		{
@@ -827,11 +816,13 @@ PVOID _NTToXboxFileInformation
 			// - The LONGLONG FileReference field from NT can be ignored
 			// - ExtendedInfo is an union on NT, but is otherwise identical
 
-			break;
+			//break;
 		}
 		default:
 		{
-			result = NULL;
+			// No differences between structs; a simple copy should suffice
+			memcpy_s(xboxFileInformation, Length, nativeFileInformation, Length);
+			result = STATUS_SUCCESS;
 			break;
 		}
 	}

@@ -874,7 +874,7 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributesFile
 (
 	IN  POBJECT_ATTRIBUTES          ObjectAttributes,
-	OUT PVOID                       Attributes
+	OUT xboxkrnl::PFILE_NETWORK_OPEN_INFORMATION   Attributes
 )
 {
 	LOG_FUNC_BEGIN
@@ -884,6 +884,8 @@ XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributes
 
 	//	__asm int 3;
 	NativeObjectAttributes nativeObjectAttributes;
+	NtDll::FILE_NETWORK_OPEN_INFORMATION nativeNetOpenInfo;
+
 	NTSTATUS ret = CxbxObjectAttributesToNT(
 		ObjectAttributes, 
 		/*var*/nativeObjectAttributes, 
@@ -892,9 +894,10 @@ XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributes
 	if (ret == STATUS_SUCCESS)
 		ret = NtDll::NtQueryFullAttributesFile(
 			nativeObjectAttributes.NtObjAttrPtr, 
-			Attributes);
+			&nativeNetOpenInfo);
 	
-	// TODO: Attributes must be converted!
+	// Convert Attributes to Xbox
+	NTToXboxFileInformation(&nativeNetOpenInfo, Attributes, FileNetworkOpenInformation, sizeof(xboxkrnl::FILE_NETWORK_OPEN_INFORMATION));
 
 	if (FAILED(ret))
 		EmuWarning("NtQueryFullAttributesFile failed! (0x%.08X)\n", ret);
@@ -911,7 +914,7 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 	OUT PIO_STATUS_BLOCK            IoStatusBlock,
 	OUT PVOID                       FileInformation,
 	IN  ULONG                       Length,
-	IN  FILE_INFORMATION_CLASS      FileInfo
+	IN  FILE_INFORMATION_CLASS      FileInformationClass
 )
 {
 	LOG_FUNC_BEGIN
@@ -919,45 +922,54 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 		LOG_FUNC_ARG_OUT(IoStatusBlock)
 		LOG_FUNC_ARG_OUT(FileInformation)
 		LOG_FUNC_ARG(Length)
-		LOG_FUNC_ARG(FileInfo)
+		LOG_FUNC_ARG(FileInformationClass)
 		LOG_FUNC_END;
 
-	// TODO: IIRC, this function is deprecated.  Maybe we should just use
-	// ZwQueryInformationFile instead?
+	NTSTATUS ret;
+	PVOID ntFileInfo;
 
-	//    if(FileInfo != FilePositionInformation && FileInfo != FileNetworkOpenInformation)
-	//        CxbxKrnlCleanup("Unknown FILE_INFORMATION_CLASS 0x%.08X", FileInfo);
+	// Start with sizeof(corresponding struct)
+	size_t bufferSize = XboxFileInfoStructSizes[FileInformationClass];
 
-	NTSTATUS ret = NtDll::NtQueryInformationFile(
-		FileHandle,
-		(NtDll::PIO_STATUS_BLOCK)IoStatusBlock,
-		(NtDll::PFILE_FS_SIZE_INFORMATION)FileInformation,
-		Length,
-		(NtDll::FILE_INFORMATION_CLASS)FileInfo);
-
-	//
-	// DEBUGGING!
-	//
+	// We need to retry the operation in case the buffer is too small to fit the data
+	do
 	{
-		/*
-		_asm int 3;
-		NtDll::FILE_NETWORK_OPEN_INFORMATION *pInfo = (NtDll::FILE_NETWORK_OPEN_INFORMATION*)FileInformation;
+		ntFileInfo = CxbxMalloc(bufferSize);
 
-		if(FileInfo == FileNetworkOpenInformation && (pInfo->AllocationSize.LowPart == 57344))
+		ret = NtDll::NtQueryInformationFile(
+			FileHandle,
+			(NtDll::PIO_STATUS_BLOCK)IoStatusBlock,
+			ntFileInfo,
+			bufferSize,
+			(NtDll::FILE_INFORMATION_CLASS)FileInformationClass);
+
+		// Buffer is too small; make a larger one
+		if (ret == STATUS_BUFFER_OVERFLOW)
 		{
-		DbgPrintf("pInfo->AllocationSize : %d\n", pInfo->AllocationSize.LowPart);
-		DbgPrintf("pInfo->EndOfFile      : %d\n", pInfo->EndOfFile.LowPart);
+			CxbxFree(ntFileInfo);
 
-		pInfo->EndOfFile.LowPart = 0x1000;
-		pInfo->AllocationSize.LowPart = 0x1000;
-
-		fflush(stdout);
+			bufferSize *= 2;
+			// Bail out if the buffer gets too big
+			if (bufferSize > 65536)
+				return STATUS_INVALID_PARAMETER;   // TODO: what's the appropriate error code to return here?
+			
+			ntFileInfo = CxbxMalloc(bufferSize);
 		}
-		*/
-	}
+	} while (ret == STATUS_BUFFER_OVERFLOW);
+	
+	// Convert and copy NT data to the given Xbox struct
+	NTSTATUS convRet = NTToXboxFileInformation(ntFileInfo, FileInformation, FileInformationClass, Length);
+
+	// Make sure to free the memory first
+	CxbxFree(ntFileInfo);
 
 	if (FAILED(ret))
 		EmuWarning("NtQueryInformationFile failed! (0x%.08X)", ret);
+
+	// Prioritize the buffer overflow over real return code,
+	// in case the Xbox program decides to follow the same procedure above
+	if (convRet == STATUS_BUFFER_OVERFLOW)
+		return convRet;
 
 	RETURN(ret);
 }
@@ -1285,10 +1297,10 @@ XBSYSAPI EXPORTNUM(225) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetEvent
 // ******************************************************************
 XBSYSAPI EXPORTNUM(226) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
 (
-	IN  HANDLE  FileHandle,            // TODO: correct paramters
-	OUT PIO_STATUS_BLOCK   IoStatusBlock,
-	IN  PVOID   FileInformation,
-	IN  ULONG   Length,
+	IN  HANDLE                   FileHandle,
+	OUT PIO_STATUS_BLOCK         IoStatusBlock,
+	IN  PVOID                    FileInformation,
+	IN  ULONG                    Length,
 	IN  FILE_INFORMATION_CLASS   FileInformationClass
 )
 {
