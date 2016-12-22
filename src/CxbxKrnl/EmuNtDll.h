@@ -506,47 +506,47 @@ FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
 // ******************************************************************
 typedef enum _FILE_INFORMATION_CLASS
 {
-    FileDirectoryInformation=1,
-    FileFullDirectoryInformation,
-    FileBothDirectoryInformation,
-    FileBasicInformation,
-    FileStandardInformation,
-    FileInternalInformation,
-    FileEaInformation,
-    FileAccessInformation,
-    FileNameInformation,
-    FileRenameInformation,
-    FileLinkInformation,
-    FileNamesInformation,
-    FileDispositionInformation,
-    FilePositionInformation,
-    FileFullEaInformation,
-    FileModeInformation,
-    FileAlignmentInformation,
-    FileAllInformation,
-    FileAllocationInformation,
-    FileEndOfFileInformation,
-    FileAlternateNameInformation,
-    FileStreamInformation,
-    FilePipeInformation,
-    FilePipeLocalInformation,
-    FilePipeRemoteInformation,
-    FileMailslotQueryInformation,
-    FileMailslotSetInformation,
-    FileCompressionInformation,
-    FileCopyOnWriteInformation,
-    FileCompletionInformation,
-    FileMoveClusterInformation,
-    FileQuotaInformation,
-    FileReparsePointInformation,
-    FileNetworkOpenInformation,
-    FileObjectIdInformation,
-    FileTrackingInformation,
-    FileOleDirectoryInformation,
-    FileContentIndexInformation,
-    FileInheritContentIndexInformation,
-    FileOleInformation,
-    FileMaximumInformation
+	FileDirectoryInformation=1,
+	FileFullDirectoryInformation,
+	FileBothDirectoryInformation,
+	FileBasicInformation,
+	FileStandardInformation,
+	FileInternalInformation,
+	FileEaInformation,
+	FileAccessInformation,
+	FileNameInformation,
+	FileRenameInformation,
+	FileLinkInformation,
+	FileNamesInformation,
+	FileDispositionInformation,
+	FilePositionInformation,
+	FileFullEaInformation,
+	FileModeInformation,
+	FileAlignmentInformation,
+	FileAllInformation,
+	FileAllocationInformation,
+	FileEndOfFileInformation,
+	FileAlternateNameInformation,
+	FileStreamInformation,
+	FilePipeInformation,
+	FilePipeLocalInformation,
+	FilePipeRemoteInformation,
+	FileMailslotQueryInformation,
+	FileMailslotSetInformation,
+	FileCompressionInformation,
+	FileCopyOnWriteInformation,
+	FileCompletionInformation,
+	FileMoveClusterInformation,
+	FileQuotaInformation,
+	FileReparsePointInformation,
+	FileNetworkOpenInformation,
+	FileObjectIdInformation,
+	FileTrackingInformation,
+	FileOleDirectoryInformation,
+	FileContentIndexInformation,
+	FileInheritContentIndexInformation,
+	FileOleInformation,
+	FileMaximumInformation
 }
 FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
 
@@ -572,34 +572,142 @@ FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
 // ******************************************************************
 typedef struct _FILE_DIRECTORY_INFORMATION
 {
-    ULONG           NextEntryOffset;
-    ULONG           FileIndex;
-    LARGE_INTEGER   CreationTime;
-    LARGE_INTEGER   LastAccessTime;
-    LARGE_INTEGER   LastWriteTime;
-    LARGE_INTEGER   ChangeTime;
-    LARGE_INTEGER   EndOfFile;
-    LARGE_INTEGER   AllocationSize;
-    ULONG           FileAttributes;
-    ULONG           FileNameLength;
-    WCHAR           FileName[1];        // Offset: 0x40
+	ULONG           NextEntryOffset;
+	ULONG           FileIndex;
+	LARGE_INTEGER   CreationTime;
+	LARGE_INTEGER   LastAccessTime;
+	LARGE_INTEGER   LastWriteTime;
+	LARGE_INTEGER   ChangeTime;
+	LARGE_INTEGER   EndOfFile;
+	LARGE_INTEGER   AllocationSize;
+	ULONG           FileAttributes;
+	ULONG           FileNameLength;
+	WCHAR           FileName[1];        // Offset: 0x40
 }
 FILE_DIRECTORY_INFORMATION;
 
 // ******************************************************************
+// * FILE_RENAME_INFORMATION
+// ******************************************************************
+typedef struct _FILE_RENAME_INFORMATION
+{
+	BOOLEAN         ReplaceIfExists;
+	HANDLE          RootDirectory;
+	ULONG           FileNameLength;
+	WCHAR           FileName[1];
+}
+FILE_RENAME_INFORMATION, *PFILE_RENAME_INFORMATION;
+
+// ******************************************************************
+// * FILE_LINK_INFORMATION
+// ******************************************************************
+typedef struct _FILE_LINK_INFORMATION {
+	BOOLEAN         ReplaceIfExists;
+	HANDLE          RootDirectory;
+	ULONG           FileNameLength;
+	WCHAR           FileName[1];
+} FILE_LINK_INFORMATION, *PFILE_LINK_INFORMATION;
+
+// ******************************************************************
 // * FILE_NETWORK_OPEN_INFORMATION
 // ******************************************************************
-typedef struct _FILE_NETWORK_OPEN_INFORMATION
-{
-    LARGE_INTEGER   CreationTime;
-    LARGE_INTEGER   LastAccessTime;
-    LARGE_INTEGER   LastWriteTime;
-    LARGE_INTEGER   ChangeTime;
-    LARGE_INTEGER   AllocationSize;
-    LARGE_INTEGER   EndOfFile;
-    ULONG           FileAttributes;
-}
-FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;
+typedef struct _FILE_NETWORK_OPEN_INFORMATION {
+	LARGE_INTEGER   CreationTime;
+	LARGE_INTEGER   LastAccessTime;
+	LARGE_INTEGER   LastWriteTime;
+	LARGE_INTEGER   ChangeTime;
+	LARGE_INTEGER   AllocationSize;
+	LARGE_INTEGER   EndOfFile;
+	ULONG           FileAttributes;
+	ULONG           Reserved;
+} FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;
+
+// ******************************************************************
+// * FILE_BASIC_INFORMATION
+// ******************************************************************
+typedef struct _FILE_BASIC_INFORMATION {
+	LARGE_INTEGER   CreationTime;
+	LARGE_INTEGER   LastAccessTime;
+	LARGE_INTEGER   LastWriteTime;
+	LARGE_INTEGER   ChangeTime;
+	ULONG           FileAttributes;
+} FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
+
+// ******************************************************************
+// * FILE_STANDARD_INFORMATION
+// ******************************************************************
+typedef struct _FILE_STANDARD_INFORMATION {
+	LARGE_INTEGER   AllocationSize;
+	LARGE_INTEGER   EndOfFile;
+	ULONG           NumberOfLinks;
+	BOOLEAN         DeletePending;
+	BOOLEAN         Directory;
+} FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;
+
+// ******************************************************************
+// * FILE_INTERNAL_INFORMATION
+// ******************************************************************
+typedef struct _FILE_INTERNAL_INFORMATION {
+	LARGE_INTEGER   IndexNumber;
+} FILE_INTERNAL_INFORMATION, *PFILE_INTERNAL_INFORMATION;
+
+// ******************************************************************
+// * FILE_EA_INFORMATION
+// ******************************************************************
+typedef struct _FILE_EA_INFORMATION {
+	ULONG           EaSize;
+} FILE_EA_INFORMATION, *PFILE_EA_INFORMATION;
+
+// ******************************************************************
+// * FILE_ACCESS_INFORMATION
+// ******************************************************************
+typedef struct _FILE_ACCESS_INFORMATION {
+	ACCESS_MASK     AccessFlags;
+} FILE_ACCESS_INFORMATION, *PFILE_ACCESS_INFORMATION;
+
+// ******************************************************************
+// * FILE_POSITION_INFORMATION
+// ******************************************************************
+typedef struct _FILE_POSITION_INFORMATION {
+	LARGE_INTEGER   CurrentByteOffset;
+} FILE_POSITION_INFORMATION, *PFILE_POSITION_INFORMATION;
+
+// ******************************************************************
+// * FILE_MODE_INFORMATION
+// ******************************************************************
+typedef struct _FILE_MODE_INFORMATION {
+	ULONG           Mode;
+} FILE_MODE_INFORMATION, *PFILE_MODE_INFORMATION;
+
+// ******************************************************************
+// * FILE_ALIGNMENT_INFORMATION
+// ******************************************************************
+typedef struct _FILE_ALIGNMENT_INFORMATION {
+	ULONG           AlignmentRequirement;
+} FILE_ALIGNMENT_INFORMATION, *PFILE_ALIGNMENT_INFORMATION;
+
+// ******************************************************************
+// * FILE_NAME_INFORMATION
+// ******************************************************************
+typedef struct _FILE_NAME_INFORMATION {
+	ULONG           FileNameLength;
+	WCHAR           FileName[1];
+} FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;
+
+// ******************************************************************
+// * FILE_ALL_INFORMATION
+// ******************************************************************
+typedef struct _FILE_ALL_INFORMATION {
+	FILE_BASIC_INFORMATION     BasicInformation;
+	FILE_STANDARD_INFORMATION  StandardInformation;
+	FILE_INTERNAL_INFORMATION  InternalInformation;
+	FILE_EA_INFORMATION        EaInformation;
+	FILE_ACCESS_INFORMATION    AccessInformation;
+	FILE_POSITION_INFORMATION  PositionInformation;
+	FILE_MODE_INFORMATION      ModeInformation;
+	FILE_ALIGNMENT_INFORMATION AlignmentInformation;
+	FILE_NAME_INFORMATION      NameInformation;
+} FILE_ALL_INFORMATION, *PFILE_ALL_INFORMATION;
 
 // ******************************************************************
 // * TIME_FIELDS
@@ -1242,7 +1350,7 @@ typedef NTSTATUS (NTAPI *FPTR_NtQueryDirectoryFile)
 typedef NTSTATUS (NTAPI *FPTR_NtQueryFullAttributesFile)
 (
     IN  POBJECT_ATTRIBUTES          ObjectAttributes,
-    OUT PVOID                       Attributes
+    OUT PFILE_NETWORK_OPEN_INFORMATION  Attributes
 );
 
 // ******************************************************************
@@ -1252,7 +1360,7 @@ typedef NTSTATUS (NTAPI *FPTR_NtQueryInformationFile)
 (
     IN  HANDLE                      FileHandle,
     OUT PIO_STATUS_BLOCK            IoStatusBlock,
-    OUT PFILE_FS_SIZE_INFORMATION   FileInformation,
+    OUT PVOID                       FileInformation,
     IN  ULONG                       Length,
     IN  FILE_INFORMATION_CLASS      FileInfo
 );
