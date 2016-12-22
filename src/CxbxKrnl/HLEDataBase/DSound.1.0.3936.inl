@@ -35,7 +35,8 @@
 // ******************************************************************
 // * DirectSoundCreate
 // ******************************************************************
-OOVPA_NO_XREF(DirectSoundCreate_1_0_3936, 10) // TODO : Was 9 before, thus ignored the 10th entry
+OOVPA_NO_XREF(DirectSoundCreate_1_0_3936, 9)
+
         // DirectSoundCreate+0x23 : add eax, 8
         { 0x23, 0x83 }, // (Offset,Value)-Pair #1
         { 0x24, 0xC0 }, // (Offset,Value)-Pair #2
@@ -234,7 +235,7 @@ OOVPA_END;
 OOVPA_XREF(IDirectSound8_CreateBuffer_1_0_3936, 10,
 
     XRefNoSaveIndex,
-	XRefOne) // TODO : XREF_ missing, so shouldn't be this XRefZero?
+    XRefOne)
 
     // TODO: tidy up the xref names (are probably not accurate)
 
@@ -2476,8 +2477,9 @@ OOVPA_XREF(IDirectSoundStream_SetI3DL2Source_1_0_3936, 10,
         // IDirectSoundStream_SetI3DL2SourceB+0x15 : retn 0x0C
         { 0x15, 0xC2 }, // (Offset,Value)-Pair #9
         { 0x16, 0x0C }, // (Offset,Value)-Pair #10
-    }
-};*/
+OOVPA_END;
+*/
+
 /*
 // ******************************************************************
 // * IDirectSoundStream_Unknown1
@@ -3722,8 +3724,7 @@ OOVPA_XREF(CMcpxVoiceClient_Commit3dSettings_1_0_3936, 10,	// Small == 10
 		{ 0x3D, 0x0F },
 		{ 0x3E, 0xB1 },
 		{ 0x3F, 0x11 },
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * CMcpxVoiceClient::SetI3DL2Source
@@ -4027,7 +4028,9 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(CDirectSoundStream_Pause_1_0_3936, 6)
 
-        { 0x01, 0x44 }, { 0x04, 0xFF }, { 0x07, 0x08 },
+        { 0x01, 0x44 },
+        { 0x04, 0xFF },
+        { 0x07, 0x08 },
         { 0x0A, 0x24 },
         { 0x10, 0xC2 },
         { 0x11, 0x08 },

@@ -444,8 +444,7 @@ OOVPA_END;
 //        { 0x93, 0x85 },
 //        { 0xAA, 0xC6 },
 //        { 0xC9, 0x0A },
-//    }
-//};
+//OOVPA_END;
 
 /* Same as 4627
 // ******************************************************************
@@ -922,8 +921,7 @@ OOVPA_NO_XREF(IDirect3DDevice8_SetVertexShader_1_0_5849_LTCG, 10)
 		{ 0xCD, 0x83 },
 		{ 0xCE, 0xC0 },
 		{ 0xCF, 0x08 },
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * IDirect3DDevice8_DrawVertices

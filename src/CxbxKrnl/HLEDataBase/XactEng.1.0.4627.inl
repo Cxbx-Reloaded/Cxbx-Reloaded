@@ -55,8 +55,7 @@ OOVPA_NO_XREF(XACTEngineCreate_1_0_4627, 11)
 		// XACTEngineCreate+0x9A : retn 0x8
 		{ 0x9A, 0xC2 },
 		{ 0x9B, 0x08 },
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XACTEngineCreate
@@ -81,8 +80,7 @@ OOVPA_NO_XREF(XACTEngineCreate_1_0_4928, 11)
 		// XACTEngineCreate+0x9E : retn 0x8
 		{ 0x9E, 0xC2 },
 		{ 0x9F, 0x08 },
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XACT::CEngine::RegisterWaveBank

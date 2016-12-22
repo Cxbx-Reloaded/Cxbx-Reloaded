@@ -677,7 +677,8 @@ OOVPA_END;
         { 0xAE, 0xC2 }, // (Offset,Value)-Pair #9
         { 0xAF, 0x0C }, // (Offset,Value)-Pair #10
     }
-};*/
+OOVPA_END;
+*/
 
 // ******************************************************************
 // * IDirect3DDevice8_SetRenderState_ZEnable
@@ -1254,7 +1255,7 @@ OOVPATable D3D8_1_0_4034[] = {
 	// D3DDevice_CopyRects
 	OOVPA_TABLE_PATCH(D3DDevice_CopyRects_1_0_4034, XTL::EmuIDirect3DDevice8_CopyRects),
 	// D3DDevice_DeletePatch (TODO)
-    /*{
+	/*
 	OOVPA_TABLE_PATCH(D3DDevice_DeletePatch_1_0_4034, XTL::EmuIDirect3DDevice8_DeletePatch),
 	*/
 	// D3DDevice_SetStreamSource

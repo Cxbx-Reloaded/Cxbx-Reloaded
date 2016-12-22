@@ -752,8 +752,7 @@ OOVPA_XREF(CMcpxBuffer_Stop2_1_0_4361, 10,
 		// CMcpxBuffer_Stop2+0x36 : retn 0xC
 		{ 0x36, 0xC2 },
 		{ 0x37, 0x0C },
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * DirectSound::CDirectSoundBuffer::StopEx
@@ -782,7 +781,10 @@ OOVPA_XREF(IDirectSoundBuffer_StopEx_1_0_4361, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x1D, XREF_DirectSound_CDirectSoundBuffer_StopEx }, { 0x03, 0x10 }, { 0x08, 0xFF },
+        { 0x1D, XREF_DirectSound_CDirectSoundBuffer_StopEx },
+
+        { 0x03, 0x10 },
+        { 0x08, 0xFF },
         { 0x0D, 0xC8 },
         { 0x12, 0x83 },
         { 0x17, 0x1B },

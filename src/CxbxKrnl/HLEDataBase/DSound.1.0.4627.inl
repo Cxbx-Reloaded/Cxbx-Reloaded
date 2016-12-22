@@ -342,7 +342,7 @@ OOVPA_END;
 OOVPA_XREF(CDirectSoundBuffer_SetMixBinVolumes_1_0_4627, 17,
 
     XREF_DSSETMIXBINVOLUMESA,
-    XRefOne)                 // TODO : XRefZero)?
+    XRefOne)
 
         // CDirectSoundBuffer_SetMixBinVolumes+0x32 : call [CDirectSoundVoice::SetMixBinVolumes]
         { 0x32, XREF_DSSETMIXBINVOLUMESB }, // (Offset,Value)-Pair #1
@@ -751,8 +751,7 @@ OOVPA_END;
 //        { 0x3C, 0x0F }, // (Offset,Value)-Pair #9
 //        { 0x3D, 0xB7 }, // (Offset,Value)-Pair #10
 //        { 0x3E, 0x46 }, // (Offset,Value)-Pair #11
-//    }
-//};
+//OOVPA_END;
 
 // ******************************************************************
 // * CMcpxBuffer_GetStatusB
@@ -1872,8 +1871,7 @@ OOVPA_XREF(CDirectSoundStream_SetMixBinVolumes_1_0_4627, 12,
 		{ 0x4F, 0xC2 },
 		{ 0x50, 0x08 },
 		{ 0x51, 0x00 },
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * DirectSound::CDirectSound::EnableHeadphones (incorrect?)
@@ -1906,8 +1904,7 @@ OOVPA_XREF(X_DirectSound_CDirectSound_EnableHeadphones_1_0_4627, 15,
         //{ 0x97, 0xC9 }, // (Offset,Value)-Pair #14
 		{ 0x98, 0xC2 },
 		{ 0x99, 0x08 },
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * EmuIDirectSound_EnableHeadphones
@@ -1933,17 +1930,16 @@ OOVPA_XREF(EmuIDirectSound_EnableHeadphones_1_0_4627, 9,
 		{ 0x19, 0xC2 },
 		{ 0x1A, 0x08 },
 		{ 0x1B, 0x00 },
-	}
-};
+OOVPA_END;
 
 /*
 // ******************************************************************
 // * CDirectSoundVoice::SetHeadrom
 // ******************************************************************
-OOVPA_XREF(CDirectSoundVoice_SetHeadroom_1_0_4627, 9,	
+OOVPA_XREF(CDirectSoundVoice_SetHeadroom_1_0_4627, 9,
 
 	XREF_DirectSound_CDirectSoundVoice_SetHeadroom,
-	XRefOne) // TODO : Was -1, but, should it be that, this XRefOne, or XRefZero?
+	-1) // TODO : -1 is used nowhere else - should it stay that, or XRefOne?
 
 		{ 0x1B, XREF_DSSTREAMSETVOLUME },
 
@@ -1955,13 +1951,12 @@ OOVPA_XREF(CDirectSoundVoice_SetHeadroom_1_0_4627, 9,
 		{ 0x19, 0x0C },
 		{ 0x20, 0xC2 },
 		{ 0x21, 0x08 },
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * CDirectSoundStream::SetHeadroom
 // ******************************************************************
-OOVPA_NO_XREF(CDirectSoundStream_SetHeadroom_1_0_4627, 12,	
+OOVPA_NO_XREF(CDirectSoundStream_SetHeadroom_1_0_4627, 12,
 
 	XRefNoSaveIndex,
 	XRefOne)
@@ -1979,8 +1974,7 @@ OOVPA_NO_XREF(CDirectSoundStream_SetHeadroom_1_0_4627, 12,
 		{ 0x33, 0x04 },
 		{ 0x4F, 0xC2 },
 		{ 0x50, 0x08 },
-	}
-};
+OOVPA_END;
 */
 
 // ******************************************************************
@@ -2784,8 +2778,7 @@ OOVPA_NO_XREF(DirectSound_CMemoryManager_MemAlloc_1_0_4627, 10)
 		// DirectSound::CMemoryManager::PoolAlloc + 0x65: retn 0xC
 		{ 0x65, 0xC2 },
 		{ 0x66, 0x0C }
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XWaveFileCreateMediaObject
@@ -2840,7 +2833,10 @@ OOVPA_XREF(IDirectSoundBuffer_SetNotificationPositions_1_0_4627, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x19, XREF_DirectSound_CDirectSoundBuffer_SetNotificationPositions }, { 0x02, 0x24 }, { 0x06, 0x24 },
+        { 0x19, XREF_DirectSound_CDirectSoundBuffer_SetNotificationPositions },
+
+        { 0x02, 0x24 },
+        { 0x06, 0x24 },
         { 0x0A, 0xFF },
         { 0x0E, 0x83 },
         { 0x12, 0xD9 },

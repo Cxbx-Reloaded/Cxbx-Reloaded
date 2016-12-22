@@ -239,6 +239,7 @@ OOVPA_XREF(IDirectSound8_SetI3DL2Listener_1_0_5558, 9,
         { 0x1D, 0xC2 },
         { 0x1E, 0x0C },
 OOVPA_END;
+
 // ******************************************************************
 // * DirectSound::CFullHRTFSource::GetCenterVolume
 // ******************************************************************
@@ -418,6 +419,7 @@ OOVPA_XREF(CMcpxVoiceClient_SetLFO_1_0_5558, 8,
         { 0xDE, 0x05 },
         { 0xFE, 0x6C },
 OOVPA_END;
+
 // ******************************************************************
 // * CDirectSoundVoice::SetLFO
 // ******************************************************************
@@ -615,6 +617,7 @@ OOVPA_XREF(IDirectSoundBuffer8_SetPlayRegion_1_0_5558, 9,
         { 0x1D, 0xC2 },
         { 0x1E, 0x0C },
 OOVPA_END;
+
 // ******************************************************************
 // * CDirectSoundBuffer::SetLoopRegion
 // ******************************************************************
@@ -631,6 +634,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetLoopRegion_1_0_5558, 7,
         { 0x64, 0x8B },
         { 0x77, 0xFF },
 OOVPA_END;
+
 // ******************************************************************
 // * IDirectSoundBuffer_SetLoopRegion
 // ******************************************************************
@@ -675,7 +679,7 @@ OOVPA_END;
 OOVPA_XREF(CDirectSoundBuffer_Play_1_0_5558, 9,
 
     XREF_DSOUNDPLAY2,
-    XRefZero) // TODO : XRefOne?
+    XRefZero) // TODO : Use XRefOne here if XREF_DSOUNDPLAY is enabled below
 
         //{ 0x35, XREF_DSOUNDPLAY },
 
@@ -894,6 +898,7 @@ OOVPA_XREF(CDirectSoundVoice_SetMaxDistance_1_0_5558, 7,
         { 0x28, 0x51 },
         { 0x2F, 0xC0 },
 OOVPA_END;
+
 // ******************************************************************
 // * CDirectSoundBuffer::SetMaxDistance
 // ******************************************************************
@@ -966,6 +971,7 @@ OOVPA_XREF(CDirectSoundVoice_SetMinDistance_1_0_5558, 7,
         { 0x28, 0x51 },
         { 0x2F, 0xC0 },
 OOVPA_END;
+
 // ******************************************************************
 // * CDirectSoundBuffer::SetMinDistance
 // ******************************************************************
@@ -1176,6 +1182,7 @@ OOVPA_XREF(IDirectSoundBuffer8_SetPosition_1_0_5558, 8,
         { 0x28, 0xD9 },
         { 0x31, 0x5D },
 OOVPA_END;
+
 // ******************************************************************
 // * CDirectSoundVoice::SetVelocity
 // ******************************************************************
@@ -1377,6 +1384,7 @@ OOVPA_XREF(IDirectSoundBuffer8_SetDopplerFactor_1_0_5558, 8,
         { 0x1C, 0xE8 },
         { 0x21, 0xC2 },
 OOVPA_END;
+
 // ******************************************************************
 // * IDirectSoundBuffer_Lock
 // ******************************************************************
@@ -1454,7 +1462,7 @@ OOVPA_END;
 OOVPA_XREF(DirectSound_CDirectSoundVoice_SetAllParameters_1_0_5558, 10,
 
     XREF_DirectSound_CDirectSoundVoice_SetAllParameters,
-	XRefZero) // TODO : XRefOne?
+    XRefZero) // TODO : Use XRefOne here if XREF_DirectSound_CDirectSoundVoice_CommitDeferredSettings is enabled below
 
 //        { 0x12F, XREF_DirectSound_CDirectSoundVoice_CommitDeferredSettings },
 
@@ -1475,12 +1483,12 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(DirectSound_CDirectSoundBuffer_SetAllParameters_1_0_5558, 8,
 
-	XREF_DirectSound_CDirectSoundBuffer_SetAllParameters,
-	XRefOne)
+    XREF_DirectSound_CDirectSoundBuffer_SetAllParameters,
+    XRefOne)
 
-		{ 0x36, XREF_DirectSound_CDirectSoundVoice_SetAllParameters },
+        { 0x36, XREF_DirectSound_CDirectSoundVoice_SetAllParameters },
 
-		{ 0x0C, 0x00 },
+        { 0x0C, 0x00 },
         { 0x14, 0x74 },
         { 0x21, 0xB8 },
         { 0x2A, 0x74 },
@@ -1923,7 +1931,10 @@ OOVPA_XREF(DirectSound_CDirectSoundStream_SetFrequency_1_0_5558, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x36, XREF_DSBUFFERSETFREQUENCYB }, { 0x00, 0x56 }, { 0x0C, 0x00 },
+        { 0x36, XREF_DSBUFFERSETFREQUENCYB },
+
+        { 0x00, 0x56 },
+        { 0x0C, 0x00 },
         { 0x14, 0x74 },
         { 0x21, 0xB8 },
         { 0x2A, 0x24 },

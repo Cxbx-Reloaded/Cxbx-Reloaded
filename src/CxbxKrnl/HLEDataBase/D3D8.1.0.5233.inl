@@ -1225,8 +1225,7 @@ OOVPA_NO_XREF(IDirect3DDevice8_Unknown1_1_0_5233, 9)
 		{ 0x18, 0x00 },
 		// IDirect3DDevice8_Unknown1+0x1E : retn
 		{ 0x1E, 0xC3 },
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * D3DDevice_BeginPush
@@ -1517,7 +1516,9 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetMaterial_1_0_5344, 9)
 
-        { 0x04, 0x08 }, { 0x0C, 0x81 }, { 0x0E, 0xE0 },
+        { 0x04, 0x08 },
+        { 0x0C, 0x81 },
+        { 0x0E, 0xE0 },
         { 0x10, 0x00 },
         { 0x16, 0x00 },
         { 0x1F, 0x81 },

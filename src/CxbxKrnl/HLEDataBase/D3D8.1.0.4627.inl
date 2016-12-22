@@ -2342,7 +2342,7 @@ OOVPA_END;
 OOVPA_NO_XREF(IDirect3DDevice8_SetPixelShaderProgram_1_0_4627, 10)
 
 		{ 0x00, 0x8B },
-        { 0x01, 0x54 },
+                { 0x01, 0x54 },
 		{ 0x02, 0x24 },
 		{ 0x03, 0x04 },
 		{ 0x04, 0x85 },
@@ -2351,8 +2351,7 @@ OOVPA_NO_XREF(IDirect3DDevice8_SetPixelShaderProgram_1_0_4627, 10)
 		{ 0x2A, 0x4C },
 		{ 0x2B, 0x24 },
 		{ 0x2C, 0x04 },
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * IDirect3DDevice8_GetDisplayFieldStatus
@@ -2366,8 +2365,7 @@ OOVPA_NO_XREF(IDirect3DDevice8_GetDisplayFieldStatus_1_0_4627, 7)
 		{ 0x1E, 0x56 },
 		{ 0x25, 0x33 },
 		{ 0x26, 0xD2 },
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * IDirect3DDevice8_CreateStateBlock
@@ -2385,8 +2383,7 @@ OOVPA_NO_XREF(IDirect3DDevice8_CreateStateBlock_1_0_4627, 11)
 		{ 0x46, 0x00 },
 		{ 0x8B, 0x33 },
 		{ 0x8C, 0xC0 },
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * IDirect3DDevice8_InsertCallback
@@ -2557,8 +2554,7 @@ OOVPA_NO_XREF(D3D_CDevice_KickOff_1_0_4627, 13)
 
 		// D3D::CDevice::KickOff+0xE2 : retn
 		{ 0xE2, 0xC3 }
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * D3DDevice_KickPushBuffer
@@ -2636,8 +2632,7 @@ OOVPA_NO_XREF(D3D_CDevice_SetStateUP_1_0_4627, 11)
 		{ 0x27, 0x83 },
 		{ 0x28, 0xC8 },
 		{ 0x29, 0x50 },
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * IDirect3DDevice8_DrawIndexedVerticesUP
@@ -3121,7 +3116,9 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetBackMaterial_1_0_4627, 9)
 
-        { 0x04, 0x08 }, { 0x0C, 0x81 }, { 0x0E, 0xF4 },
+        { 0x04, 0x08 },
+        { 0x0C, 0x81 },
+        { 0x0E, 0xF4 },
         { 0x10, 0x00 },
         { 0x16, 0x00 },
         { 0x1F, 0x81 },

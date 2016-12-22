@@ -1508,8 +1508,7 @@ OOVPA_NO_XREF(IDirect3DDevice8_SetScreenSpaceOffset_1_0_4134, 7)
 		{ 0x0A, 0x08 },
 		{ 0x2E, 0x8B },
 		{ 0x2F, 0x06 },
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * D3D::SetFence
@@ -1679,8 +1678,7 @@ OOVPA_NO_XREF(D3D_CDevice_KickOff_1_0_4134, 12)
 		{ 0x28, 0xF8 },
 		// D3D::CDevice::KickOff+0xE3 : retn
 		{ 0xE3, 0xC3 }
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * D3DDevice_BlockOnFence
@@ -1770,7 +1768,9 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetShaderConstantMode_1_0_4134, 7)
 
-        { 0x1D, 0xFD }, { 0x3C, 0x8B }, { 0x5B, 0x0B },
+        { 0x1D, 0xFD },
+        { 0x3C, 0x8B },
+        { 0x5B, 0x0B },
         { 0x7A, 0x56 },
         { 0x99, 0xC0 },
         { 0xB8, 0x00 },

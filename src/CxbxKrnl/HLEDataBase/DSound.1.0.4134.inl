@@ -368,7 +368,10 @@ OOVPA_XREF(IDirectSoundBuffer_SetMixBins_1_0_4134, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x15, XREF_DSSETMIXBINSA }, { 0x02, 0x24 }, { 0x06, 0x24 },
+        { 0x15, XREF_DSSETMIXBINSA },
+
+        { 0x02, 0x24 },
+        { 0x06, 0x24 },
         { 0x0A, 0x83 },
         { 0x0E, 0xD9 },
         { 0x12, 0xC8 },

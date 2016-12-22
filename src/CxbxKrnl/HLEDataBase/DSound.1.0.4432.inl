@@ -553,7 +553,9 @@ OOVPA_XREF(CDirectSoundVoice_SetPosition_1_0_4432, 8,
     XRefZero)
 
         // CDirectSoundVoice_SetPosition+0x0F : mov edx, [ebp+arg_4]
-        { 0x0F, 0x8B }, { 0x10, 0x55 }, { 0x11, 0x0C },
+        { 0x0F, 0x8B },
+        { 0x10, 0x55 },
+        { 0x11, 0x0C },
 
         // CDirectSoundVoice_SetPosition+0x12 : mov [ecx+04h], edx
         { 0x12, 0x89 },

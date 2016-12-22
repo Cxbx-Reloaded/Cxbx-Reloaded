@@ -676,15 +676,8 @@ OOVPA_END;
 //// ******************************************************************
 //// * XGetDevices
 //// ******************************************************************
-//OOVPA_XREF(XGetDevices_1_0_3911,
-//{
+//OOVPA_NO_XREF(XGetDevices_1_0_3911, 14)
 //
-//    14,
-//
-//    XRefNoSaveIndex,
-//    XRefZero)
-//
-//    {
 //        // XGetDevices+0x07 : mov edx, [esp+arg_0]
 //        { 0x07, 0x8B }, // (Offset,Value)-Pair #1
 //        { 0x08, 0x54 }, // (Offset,Value)-Pair #2
@@ -708,8 +701,7 @@ OOVPA_END;
 //        // XGetDevices+0x1F : retn 4
 //        { 0x1F, 0xC2 }, // (Offset,Value)-Pair #13
 //        { 0x20, 0x04 }, // (Offset,Value)-Pair #14
-//    }
-//};
+//OOVPA_END;
 
 // ******************************************************************
 // * CreateFiber
@@ -730,8 +722,7 @@ OOVPA_NO_XREF(CreateFiber_1_0_3911, 11)
 		{ 0x2D, 0xD1 },
 		{ 0x2E, 0x1E },
 		{ 0x2F, 0x00 }
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * DeleteFiber
@@ -750,8 +741,7 @@ OOVPA_NO_XREF(DeleteFiber_1_0_3911, 9)
 		{ 0x10, 0xC2 },
 		{ 0x11, 0x04 },
 		{ 0x12, 0x00 },
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * SwitchToFiber
@@ -785,15 +775,8 @@ OOVPA_END;
 //// ******************************************************************
 //// * XInputGetCapabilities
 //// ******************************************************************
-//OOVPA_XREF(XInputGetCapabilities_1_0_3911,
-//{
+//OOVPA_NO_XREF(XInputGetCapabilities_1_0_3911, 14)
 //
-//    14,
-//
-//    XRefNoSaveIndex,
-//    XRefZero)
-//
-//    {
 //        // XInputGetCapabilities+0x03 : sub esp, 0x48
 //        { 0x03, 0x83 }, // (Offset,Value)-Pair #1
 //        { 0x04, 0xEC }, // (Offset,Value)-Pair #2
@@ -817,9 +800,7 @@ OOVPA_END;
 //        // XInputGetCapabilities+0xFB : cmp [eax], ebx
 //        { 0xFB, 0x39 }, // (Offset,Value)-Pair #13
 //        { 0xFC, 0x18 }, // (Offset,Value)-Pair #14
-//    }
-//};
-
+//OOVPA_END;
 
 // ******************************************************************
 // * SignalObjectAndWait
@@ -1032,8 +1013,7 @@ OOVPA_NO_XREF(XGetSectionHandleA_1_0_3911, 12)
 		{ 0x0D, 0x56 },
 		{ 0x0E, 0x57 },
 		{ 0x0F, 0xFF }
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XLoadSectionByHandle
@@ -1059,8 +1039,7 @@ OOVPA_NO_XREF(XLoadSectionByHandle_1_0_3911, 11)
 		// XLoadSectionByHandle+0x1E : retn 4
 		{ 0x1E, 0xC2 },
 		{ 0x1F, 0x04 }
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XFreeSectionByHandle
@@ -1088,8 +1067,7 @@ OOVPA_NO_XREF(XFreeSectionByHandle_1_0_3911, 11)
 		// XFreeSectionByHandle+0x1B : retn 4
 		{ 0x1B, 0xC2 },
 		{ 0x1C, 0x04 }
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XAutoPowerDownResetTimer

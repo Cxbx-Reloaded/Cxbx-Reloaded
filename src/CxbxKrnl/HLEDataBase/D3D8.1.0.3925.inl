@@ -1946,8 +1946,7 @@ OOVPA_NO_XREF(IDirect3DDevice8_Unknown1_1_0_3925, 9)
 		{ 0x18, 0x00 },
 		// IDirect3DDevice8_Unknown1+0x1E : retn
 		{ 0x1E, 0xC3 },
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * IDirect3DDevice8_GetViewport
@@ -2574,8 +2573,7 @@ OOVPA_NO_XREF(IDirect3DDevice8_SetRenderState_Deferred_1_0_3925, 9)
 		{ 0x0F, 0x8D },
 		// IDirect3DDevice8_SetRenderState_Deferred+0x14 : retn
 		{ 0x14, 0xC3 },
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * D3DDevice_SetLight
@@ -3008,8 +3006,7 @@ OOVPA_NO_XREF(XMETAL_StartPush_1_0_3925, 11)
 		// XMETAL_StartPush+0x10 : retn 4
 		{ 0x10, 0xC2 },
 		{ 0x11, 0x04 },
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * D3D::SetFence
@@ -3275,7 +3272,9 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_EndStateBlock_1_0_3925, 6)
 
-        { 0x00, 0xA1 }, { 0x05, 0x83 }, { 0x06, 0x60 },
+        { 0x00, 0xA1 },
+        { 0x05, 0x83 },
+        { 0x06, 0x60 },
         { 0x07, 0x0C },
         { 0x08, 0xDF },
         { 0x09, 0xE9 },

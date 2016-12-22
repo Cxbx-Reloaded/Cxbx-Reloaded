@@ -173,7 +173,7 @@ OOVPA_END;
 OOVPA_XREF(CDirectSound_SynchPlayback_1_0_5233, 10,
 
     XREF_DSSYNCHPLAYBACKA,
-	XRefOne) // TODO : XRefZero)?
+    XRefOne)
 
         { 0x08, XREF_DSSYNCHPLAYBACKB }, // (Offset,Value)-Pair #1
 
@@ -827,7 +827,10 @@ OOVPA_XREF(IDirectSound_SetDopplerFactor_1_0_5344, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x1D, XREF_SETDOPPLERFACTOR }, { 0x03, 0x0C }, { 0x08, 0x8B },
+        { 0x1D, XREF_SETDOPPLERFACTOR },
+
+        { 0x03, 0x0C },
+        { 0x08, 0x8B },
         { 0x0D, 0x8B },
         { 0x12, 0x83 },
         { 0x17, 0x1B },

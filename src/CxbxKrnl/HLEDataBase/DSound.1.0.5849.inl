@@ -1001,7 +1001,7 @@ OOVPA_END;
 //OOVPA_XREF(DirectSound_CDirectSoundStream_SetVolume_1_0_5849, 9,
 //
 //    XREF_DirectSound_CDirectSoundStream_SetVolume,
-//    XRefZero)
+//    XRefOne)
 //
 //        { 0x36, XREF_DirectSound_CDirectSoundVoice_SetVolume },
 //
@@ -1013,8 +1013,7 @@ OOVPA_END;
 //        { 0x35, 0xE8 },
 //        { 0x40, 0x68 },
 //        { 0x4B, 0x8B },
-//    }
-//};
+//OOVPA_END;
 
 // ******************************************************************
 // * IDirectSoundBuffer_SetVolume
@@ -1369,15 +1368,11 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSound_CreateSoundStream
 // ******************************************************************
-//OOVPA_XREF(IDirectSound_CreateSoundStream_1_0_5849,
-//{
-//
-//    8,
+//OOVPA_XREF(IDirectSound_CreateSoundStream_1_0_5849, 8,
 //
 //    XRefNoSaveIndex,
 //    XRefZero)
 //
-//    {
 //        { 0x1D, XREF_DirectSound_CDirectSound_CreateSoundStream },
 //
 //        { 0x03, 0x10 },
@@ -1387,8 +1382,7 @@ OOVPA_END;
 //        { 0x17, 0x1B },
 //        { 0x1C, 0xE8 },
 //        { 0x21, 0xC2 },
-//    }
-//};
+//OOVPA_END;
 
 // ******************************************************************
 // * DirectSoundCreateStream
@@ -1548,8 +1542,7 @@ OOVPA_NO_XREF(DirectSound_CMemoryManager_PoolAlloc_1_0_5849, 10)
 		{ 0x44, 0xC2 },
 		{ 0x45, 0x0C },
 		{ 0x46, 0x00 },
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XFileCreateMediaObjectAsync
@@ -1597,7 +1590,10 @@ OOVPA_XREF(DirectSound_CDirectSoundStream_SetHeadroom_1_0_5849, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x36, XREF_DirectSound_CDirectSoundVoice_SetHeadroom }, { 0x00, 0x56 }, { 0x0C, 0x00 },
+        { 0x36, XREF_DirectSound_CDirectSoundVoice_SetHeadroom },
+
+        { 0x00, 0x56 },
+        { 0x0C, 0x00 },
         { 0x14, 0x74 },
         { 0x21, 0xB8 },
         { 0x2A, 0x24 },

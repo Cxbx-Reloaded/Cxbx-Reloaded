@@ -78,7 +78,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirect3DDevice8_SetVerticalBlankCallback
 // ******************************************************************
-OOVPA_NO_XREF(IDirect3DDevice8_SetVerticalBlankCallback_1_0_4361, 6) // TODO : XRefOne?
+OOVPA_NO_XREF(IDirect3DDevice8_SetVerticalBlankCallback_1_0_4361, 6)
 
 		{ 0x01, 0x44 },
 		{ 0x03, 0x04 },
@@ -86,8 +86,7 @@ OOVPA_NO_XREF(IDirect3DDevice8_SetVerticalBlankCallback_1_0_4361, 6) // TODO : X
 		{ 0x0C, 0x30 },
 		{ 0x0D, 0x24 },
 		{ 0x11, 0x04 },
-	}
-};
+OOVPA_END;
 
 // ******************************************************************
 // * IDirect3D8_GetAdapterModeCount
@@ -325,9 +324,7 @@ OOVPA_NO_XREF(D3DDevice_DeleteStateBlock_1_0_4361, 7)
 		{ 0x5D, 0x74 },
 		{ 0x70, 0x06 },
 		{ 0x83, 0xEB },
-	}
-};
-
+OOVPA_END;
 
 // ******************************************************************
 // * IDirect3DDevice8_ApplyStateBlock
@@ -1756,7 +1753,9 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3DCubeTexture_GetCubeMapSurface_1_0_4361, 7)
 
-        { 0x09, 0x44 }, { 0x14, 0x24 }, { 0x1F, 0x50 },
+        { 0x09, 0x44 },
+        { 0x14, 0x24 },
+        { 0x1F, 0x50 },
         { 0x2A, 0x50 },
         { 0x35, 0x8B },
         { 0x40, 0x24 },
