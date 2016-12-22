@@ -403,8 +403,8 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::XcSHAInit),                       // 0x014F (335)
 	(uint32)FUNC(&xboxkrnl::XcSHAUpdate),                     // 0x0150 (336)
 	(uint32)FUNC(&xboxkrnl::XcSHAFinal),                      // 0x0151 (337)
-	(uint32)PANIC(0x0152),                                    // 0x0152 (338) XcRC4Key
-	(uint32)PANIC(0x0153),                                    // 0x0153 (339) XcRC4Crypt
+	(uint32)FUNC(&xboxkrnl::XcRC4Key),					      // 0x0152 (338)
+	(uint32)FUNC(&xboxkrnl::XcRC4Crypt),				      // 0x0153 (339)
 	(uint32)FUNC(&xboxkrnl::XcHMAC),                          // 0x0154 (340)
 	(uint32)PANIC(0x0155),                                    // 0x0155 (341) XcPKEncPublic
 	(uint32)PANIC(0x0156),                                    // 0x0156 (342) XcPKDecPrivate
