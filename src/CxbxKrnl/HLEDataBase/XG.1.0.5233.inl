@@ -35,28 +35,12 @@
 // ******************************************************************
 // * XG_1_0_5233
 // ******************************************************************
-OOVPATable XG_1_0_5233[] =
-{
+OOVPATable XG_1_0_5233[] = {
+
     // XGIsSwizzledFormat (* unchanged since 4361 *)
-    {
-        (OOVPA*)&XGIsSwizzledFormat_1_0_4361,
-
-        XTL::EmuXGIsSwizzledFormat,
-
-        #ifdef _DEBUG_TRACE
-        "XGIsSwizzledFormat"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XGIsSwizzledFormat_1_0_4361, XTL::EmuXGIsSwizzledFormat),
     // XGSwizzleRect (* unchanged since 4361 *)
-    {
-        (OOVPA*)&XGSwizzleRect_1_0_4361,
-
-        XTL::EmuXGSwizzleRect,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXGSwizzleRect"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XGSwizzleRect_1_0_4361, XTL::EmuXGSwizzleRect),
 };
 
 // ******************************************************************

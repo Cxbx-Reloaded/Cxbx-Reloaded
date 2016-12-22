@@ -36,15 +36,8 @@
 // ******************************************************************
 // * XNetStartup
 // ******************************************************************
-SOOVPA<8> XNetStartup_1_0_5344 = 
-{
-    0,  // Large == 0
-    8,  // Count == 8
+OOVPA_NO_XREF(XNetStartup_1_0_5344, 8)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x01, 0xC0 },
         { 0x04, 0x50 },
         { 0x07, 0x24 },
@@ -53,21 +46,13 @@ SOOVPA<8> XNetStartup_1_0_5344 =
         { 0x14, 0xC2 },
         { 0x15, 0x04 },
         { 0x16, 0x00 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XNetGetEthernetLinkStatus
 // ******************************************************************
-SOOVPA<8> XNetGetEthernetLinkStatus_1_0_5344 = 
-{
-    0,  // Large == 0
-    8,  // Count == 8
+OOVPA_NO_XREF(XNetGetEthernetLinkStatus_1_0_5344, 8)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x08, 0x33 },
         { 0x10, 0x8A },
         { 0x19, 0x00 },
@@ -76,21 +61,12 @@ SOOVPA<8> XNetGetEthernetLinkStatus_1_0_5344 =
         { 0x34, 0xF0 },
         { 0x3D, 0x24 },
         { 0x46, 0x5B },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * CXo::XOnlineLogon
 // ******************************************************************
-SOOVPA<8> CXo_XOnlineLogon_1_0_5344 = 
-{
-    0,  // Large == 0
-    8,  // Count == 8
-
-    XREF_CXo_XOnlineLogon,  // Xref Is Saved
-    XRefNotUsed,
-
-    {
+OOVPA_XREF(CXo_XOnlineLogon_1_0_5344, 8, XREF_CXo_XOnlineLogon, XRefZero)
         { 0x21, 0xA8 },
         { 0x3E, 0x80 },
         { 0x5E, 0x00 },
@@ -99,21 +75,16 @@ SOOVPA<8> CXo_XOnlineLogon_1_0_5344 =
         { 0xBE, 0xEC },
         { 0xDE, 0xF9 },
         { 0xFE, 0x33 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XOnlineLogon
 // ******************************************************************
-SOOVPA<8> XOnlineLogon_1_0_5344 = 
-{
-    0,  // Large == 0
-    8,  // Count == 8
+OOVPA_XREF(XOnlineLogon_1_0_5344, 8,
 
-    XRefNotSaved,
-    1,
+    XRefNoSaveIndex,
+    XRefOne)
 
-    {
         { 0x0B, XREF_CXo_XOnlineLogon },
 
         { 0x00, 0x55 },
@@ -123,22 +94,14 @@ SOOVPA<8> XOnlineLogon_1_0_5344 =
         { 0x04, 0x8B },
         { 0x05, 0x0D },
         { 0x0A, 0xE9 },
-    }
-};
+OOVPA_END;
 #endif
 
 // ******************************************************************
 // * WSAStartup
 // ******************************************************************
-SOOVPA<7> WSAStartup_1_0_5558 = 
-{
-    0,  // Large == 0
-    7,  // Count == 7
+OOVPA_NO_XREF(WSAStartup_1_0_5558, 7)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x02, 0x24 },
         { 0x06, 0x24 },
         { 0x0A, 0x6A },
@@ -146,93 +109,35 @@ SOOVPA<7> WSAStartup_1_0_5558 =
         { 0x13, 0xE8 },
         { 0x18, 0xC2 },
         { 0x1A, 0x00 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XOnline_1_0_5558
 // ******************************************************************
 // * TODO: Verify all of these
 // ******************************************************************
-OOVPATable XOnline_1_0_5558[] =
-{
+OOVPATable XOnline_1_0_5558[] = {
+
     // XNetStartup
-    {
-        (OOVPA*)&XNetStartup_1_0_5344,
-
-        XTL::EmuXNetStartup,
-
-        #ifdef _DEBUG_TRACE
-		"EmuXNetStartup (5344)"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XNetStartup_1_0_5344, XTL::EmuXNetStartup),
 	// WSAStartup
-    {
-        (OOVPA*)&WSAStartup_1_0_5558,
-
-        XTL::EmuWSAStartup,
-
-        #ifdef _DEBUG_TRACE
-        "EmuWSAStartup"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(WSAStartup_1_0_5558, XTL::EmuWSAStartup),
     // XnInit (XREF) (* unchanged since 4627 *)
-    {
-        (OOVPA*)&XnInit_1_0_4627, 0,
-
-        #ifdef _DEBUG_TRACE
-        "XnInit (XRef)"
-        #endif
-    },
-    // socket
-    /*{
-        (OOVPA*)&socket_1_0_4361,
-
-        MFPtoFP<XTL::EmuThis>(XTL::EmuThis::Emusocket),
-
-        #ifdef _DEBUG_TRACE
-        "Emusocket"
-        #endif
-    },*/
+	OOVPA_TABLE_XREF(XnInit_1_0_4627),
+	// socket
+    /*
+	OOVPA_TABLE_PATCH(socket_1_0_4361, MFPtoFP<XTL::EmuThis>(XTL::EmuThis::Emusocket)),
+	*/
     // bind (* unchanged since 4361 *)
-    {
-        (OOVPA*)&bind_1_0_4361,
-
-        MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emubind),
-
-        #ifdef _DEBUG_TRACE
-        "Emubind"
-        #endif
-    },
-    // listen
-    /*{
-        (OOVPA*)&listen_1_0_4361,
-
-        MFPtoFP<XTL::EmuThis>(XTL::EmuThis::Emulisten),
-
-        #ifdef _DEBUG_TRACE
-        "Emulisten"
-        #endif
-    },*/
+	OOVPA_TABLE_PATCH(bind_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emubind)),
+	// listen
+    /*
+	OOVPA_TABLE_PATCH(listen_1_0_4361, MFPtoFP<XTL::EmuThis>(XTL::EmuThis::Emulisten)),
+	*/
     // ioctlsocket (* unchanged since 4361 *)
-    {
-        (OOVPA*)&ioctlsocket_1_0_4361,
-
-        MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emuioctlsocket),
-
-        #ifdef _DEBUG_TRACE
-        "Emuioctlsocket"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(ioctlsocket_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emuioctlsocket)),
 	// XNetGetEthernetLinkStatus
-    {
-        (OOVPA*)&XNetGetEthernetLinkStatus_1_0_5344,
-        XTL::EmuXNetGetEthernetLinkStatus,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXNetGetEthernetLinkStatus (5344)"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XNetGetEthernetLinkStatus_1_0_5344, XTL::EmuXNetGetEthernetLinkStatus),
 };
 
 // ******************************************************************

@@ -35,15 +35,7 @@
 // ******************************************************************
 // * XnInit
 // ******************************************************************
-SOOVPA<8> XnInit_1_0_5849 = 
-{
-    0,  // Large == 0
-    8,  // Count == 8
-
-    XREF_XNINIT, // Xref Is Saved
-    XRefNotUsed,
-
-    {
+OOVPA_XREF(XnInit_1_0_5849, 8, XREF_XNINIT, XRefZero)
         { 0x1E, 0x3B },
         { 0x3E, 0x45 },
         { 0x5E, 0x00 },
@@ -52,21 +44,13 @@ SOOVPA<8> XnInit_1_0_5849 =
         { 0xC0, 0x33 },
         { 0xDE, 0xFE },
         { 0xFE, 0x48 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XNetStartup
 // ******************************************************************
-SOOVPA<8> XNetStartup_1_0_5849 = 
-{
-    0,  // Large == 0
-    8,  // Count == 8
+OOVPA_NO_XREF(XNetStartup_1_0_5849, 8)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x01, 0xC0 },
         { 0x04, 0x50 },
         { 0x07, 0x24 },
@@ -75,21 +59,13 @@ SOOVPA<8> XNetStartup_1_0_5849 =
         { 0x14, 0xC2 },
         { 0x15, 0x04 },
         { 0x16, 0x00 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * WSAStartup
 // ******************************************************************
-SOOVPA<7> WSAStartup_1_0_5849 = 
-{
-    0,  // Large == 0
-    7,  // Count == 7
+OOVPA_NO_XREF(WSAStartup_1_0_5849, 7)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x02, 0x24 },
         { 0x06, 0x24 },
         { 0x0A, 0x6A },
@@ -97,21 +73,13 @@ SOOVPA<7> WSAStartup_1_0_5849 =
         { 0x13, 0xE8 },
         { 0x18, 0xC2 },
         { 0x1A, 0x00 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XNetGetEthernetLinkStatus
 // ******************************************************************
-SOOVPA<8> XNetGetEthernetLinkStatus_1_0_5849 = 
-{
-    0,  // Large == 0
-    8,  // Count == 8
+OOVPA_NO_XREF(XNetGetEthernetLinkStatus_1_0_5849, 8)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x08, 0x33 },
         { 0x10, 0x8A },
         { 0x19, 0x00 },
@@ -120,51 +88,20 @@ SOOVPA<8> XNetGetEthernetLinkStatus_1_0_5849 =
         { 0x34, 0xF0 },
         { 0x3D, 0x24 },
         { 0x46, 0x5B },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XOnline_1_0_5849
 // ******************************************************************
-OOVPATable XOnline_1_0_5849[] =
-{
+OOVPATable XOnline_1_0_5849[] = {
     // XNetStartup
-    {
-        (OOVPA*)&XNetStartup_1_0_5849,
-
-        XTL::EmuXNetStartup,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXNetStartup"
-        #endif
-    },
-    // WSAStartup
-    {
-        (OOVPA*)&WSAStartup_1_0_5849,
-
-        XTL::EmuWSAStartup,
-
-        #ifdef _DEBUG_TRACE
-        "EmuWSAStartup"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XNetStartup_1_0_5849, XTL::EmuXNetStartup),
+	// WSAStartup
+	OOVPA_TABLE_PATCH(WSAStartup_1_0_5849, XTL::EmuWSAStartup),
     // XnInit (XREF)
-    {
-        (OOVPA*)&XnInit_1_0_5849, 0,
-
-        #ifdef _DEBUG_TRACE
-        "XnInit (XRef)"
-        #endif
-    },
+	OOVPA_TABLE_XREF(XnInit_1_0_5849),
 	// XNetGetEthernetLinkStatus
-    {
-        (OOVPA*)&XNetGetEthernetLinkStatus_1_0_5849,
-        XTL::EmuXNetGetEthernetLinkStatus,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXNetGetEthernetLinkStatus"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XNetGetEthernetLinkStatus_1_0_5849, XTL::EmuXNetGetEthernetLinkStatus),
 };
 
 // ******************************************************************

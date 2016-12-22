@@ -35,15 +35,8 @@
 // ******************************************************************
 // * XGSwizzleBox
 // ******************************************************************
-SOOVPA<10> XGSwizzleBox_1_0_5849 =
-{
-    0,  // Large == 0
-    10, // Count == 10
+OOVPA_NO_XREF(XGSwizzleBox_1_0_5849, 10)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         // XGSwizzleBox+0x60 : sub ecx, [eax]
         { 0x60, 0x2B }, // (Offset,Value)-Pair #1
         { 0x61, 0x08 }, // (Offset,Value)-Pair #2
@@ -61,21 +54,13 @@ SOOVPA<10> XGSwizzleBox_1_0_5849 =
         // XGSwizzleBox+0xE2 : test ebx, ebx
         { 0xE2, 0x85 }, // (Offset,Value)-Pair #9
         { 0xE3, 0xDB }, // (Offset,Value)-Pair #10
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XFONT_OpenBitmapFontFromMemory
 // ******************************************************************
-SOOVPA<8> XFONT_OpenBitmapFontFromMemory_1_0_5849 = 
-{
-    0,  // Large == 0
-    8,  // Count == 8
+OOVPA_NO_XREF(XFONT_OpenBitmapFontFromMemory_1_0_5849, 8)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x0B, 0x75 },
         { 0x1A, 0x8B },
         { 0x28, 0x8B },
@@ -84,54 +69,23 @@ SOOVPA<8> XFONT_OpenBitmapFontFromMemory_1_0_5849 =
         { 0x4C, 0x8B },
         { 0x59, 0x45 },
         { 0x66, 0x0C },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XG_1_0_5849
 // ******************************************************************
-OOVPATable XG_1_0_5849[] =
-{
+OOVPATable XG_1_0_5849[] = {
+
     // XGIsSwizzledFormat (* unchanged since 4361 *)
-    {
-        (OOVPA*)&XGIsSwizzledFormat_1_0_4361,
-
-        XTL::EmuXGIsSwizzledFormat,
-
-        #ifdef _DEBUG_TRACE
-        "XGIsSwizzledFormat"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XGIsSwizzledFormat_1_0_4361, XTL::EmuXGIsSwizzledFormat),
     // XGSwizzleRect (* unchanged since 5558 *)
-    {
-        (OOVPA*)&XGSwizzleRect_1_0_5558,
-
-        XTL::EmuXGSwizzleRect,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXGSwizzleRect"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XGSwizzleRect_1_0_5558, XTL::EmuXGSwizzleRect),
 	// XGUnswizzleRect (* unchanged since 5558 *)
-    {
-        (OOVPA*)&XGUnswizzleRect_1_0_5558,
-
-        XTL::EmuXGUnswizzleRect,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXGUnswizzleRect"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XGUnswizzleRect_1_0_5558, XTL::EmuXGUnswizzleRect),
 	// XFONT_OpenBitmapFontFromMemory
-    /*{
-        (OOVPA*)&XFONT_OpenBitmapFontFromMemory_1_0_5849,
-
-        XTL::EmuXFONT_OpenBitmapFontFromMemory,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXFONT_OpenBitmapFontFromMemory"
-        #endif
-    },*/
+    /*
+	OOVPA_TABLE_PATCH(XFONT_OpenBitmapFontFromMemory_1_0_5849, XTL::EmuXFONT_OpenBitmapFontFromMemory),
+	*/
 };
 
 // ******************************************************************
