@@ -56,6 +56,12 @@ namespace NtDll
 };
 
 // ******************************************************************
+// * Declaring this in a header causes errors with xboxkrnl
+// * namespace, so we must declare it within any file that uses it
+// ******************************************************************
+xboxkrnl::KPCR* KeGetPcr();
+
+// ******************************************************************
 // * 0x0033 - InterlockedCompareExchange()
 // ******************************************************************
 // Source:ReactOS
@@ -200,15 +206,8 @@ XBSYSAPI EXPORTNUM(160) xboxkrnl::UCHAR FASTCALL xboxkrnl::KfRaiseIrql
 	LOG_FUNC_ONE_ARG(NewIrql);
 
 	UCHAR OldIrql;
-	KPCR* Pcr = nullptr;
 
-	// Fetch KPCR data structure
-	__asm {
-		push eax
-		mov eax, fs:[0x14]
-		mov Pcr, eax
-		pop eax
-	}
+	KPCR* Pcr = KeGetPcr();
 
 	if (NewIrql < Pcr->Irql)	{
 		// TODO: Enable this after KeBugCheck is implemented
