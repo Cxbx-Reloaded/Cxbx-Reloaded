@@ -35,15 +35,8 @@
 // ******************************************************************
 // * XGSwizzleBox
 // ******************************************************************
-SOOVPA<10> XGSwizzleBox_1_0_5558 =
-{
-    0,  // Large == 0
-    10, // Count == 10
+OOVPA_NO_XREF(XGSwizzleBox_1_0_5558, 10)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         // XGSwizzleBox+0x60 : sub ecx, [eax]
         { 0x60, 0x2B }, // (Offset,Value)-Pair #1
         { 0x61, 0x08 }, // (Offset,Value)-Pair #2
@@ -61,21 +54,13 @@ SOOVPA<10> XGSwizzleBox_1_0_5558 =
         // XGSwizzleBox+0xE2 : test ebx, ebx
         { 0xE2, 0x85 }, // (Offset,Value)-Pair #9
         { 0xE3, 0xDB }, // (Offset,Value)-Pair #10
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XGSwizzleRect
 // ******************************************************************
-SOOVPA<8> XGSwizzleRect_1_0_5558 =
-{
-    0,  // Large == 0
-    8,  // Count == 8
+OOVPA_NO_XREF(XGSwizzleRect_1_0_5558, 8)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x1E, 0x03 },
         { 0x3E, 0x89 },
         { 0x5E, 0x83 },
@@ -84,21 +69,13 @@ SOOVPA<8> XGSwizzleRect_1_0_5558 =
         { 0xBE, 0xFF },
         { 0xDE, 0x89 },
         { 0xFE, 0x89 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XGUnswizzleRect
 // ******************************************************************
-SOOVPA<8> XGUnswizzleRect_1_0_5558 = 
-{
-    0,  // Large == 0
-    8,  // Count == 8
+OOVPA_NO_XREF(XGUnswizzleRect_1_0_5558, 8)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x1E, 0x03 },
         { 0x3E, 0x00 },
         { 0x5E, 0xD2 },
@@ -107,19 +84,18 @@ SOOVPA<8> XGUnswizzleRect_1_0_5558 =
         { 0xC1, 0xE9 },
         { 0xDE, 0x89 },
         { 0xFE, 0x60 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XGSwizzleBox
 // ******************************************************************
-//SOOVPA<8> XGSwizzleBox_1_0_5558 = 
+//OOVPA_XREF(XGSwizzleBox_1_0_5558,
 //{
-//    0,  // Large == 0
-//    8,  // Count == 8
 //
-//    XRefNotSaved,
-//    XRefNotUsed,
+//    8,
+//
+//    XRefNoSaveIndex,
+//    XRefZero)
 //
 //    {
 //        { 0x1E, 0x75 },
@@ -136,15 +112,8 @@ SOOVPA<8> XGUnswizzleRect_1_0_5558 =
 // ******************************************************************
 // * XGUnswizzleBox
 // ******************************************************************
-SOOVPA<8> XGUnswizzleBox_1_0_5558 = 
-{
-    0,  // Large == 0
-    8,  // Count == 8
+OOVPA_NO_XREF(XGUnswizzleBox_1_0_5558, 8)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x1E, 0x26 },
         { 0x3E, 0x55 },
         { 0x5E, 0x58 },
@@ -153,64 +122,25 @@ SOOVPA<8> XGUnswizzleBox_1_0_5558 =
         { 0xBE, 0x2C },
         { 0xDE, 0x24 },
         { 0xFE, 0x20 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XG_1_0_5558
 // ******************************************************************
-OOVPATable XG_1_0_5558[] =
-{
+OOVPATable XG_1_0_5558[] = {
+
     // XGIsSwizzledFormat (* unchanged since 4361 *)
-    {
-        (OOVPA*)&XGIsSwizzledFormat_1_0_4361,
-
-        XTL::EmuXGIsSwizzledFormat,
-
-        #ifdef _DEBUG_TRACE
-        "XGIsSwizzledFormat"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XGIsSwizzledFormat_1_0_4361, XTL::EmuXGIsSwizzledFormat),
     // XGSwizzleRect
-    {
-        (OOVPA*)&XGSwizzleRect_1_0_5558,
-
-        XTL::EmuXGSwizzleRect,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXGSwizzleRect"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XGSwizzleRect_1_0_5558, XTL::EmuXGSwizzleRect),
     // XGSwizzleBox (* UNTESTED *)
-    {
-        (OOVPA*)&XGSwizzleBox_1_0_5558,
-
-        XTL::EmuXGSwizzleBox,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXGSwizzleBox"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XGSwizzleBox_1_0_5558, XTL::EmuXGSwizzleBox),
 	// XGUnswizzleRect
-    {
-        (OOVPA*)&XGUnswizzleRect_1_0_5558,
-
-        XTL::EmuXGUnswizzleRect,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXGSwizzleRect"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XGUnswizzleRect_1_0_5558, XTL::EmuXGUnswizzleRect),
     // XGUnswizzleBox (* UNTESTED *)
-    /*{
-        (OOVPA*)&XGUnswizzleBox_1_0_5558,
-
-        XTL::EmuXGUnswizzleBox,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXGSwizzleBox"
-        #endif
-    },*/
+    /*
+	OOVPA_TABLE_PATCH(XGUnswizzleBox_1_0_5558, XTL::EmuXGUnswizzleBox),
+	*/
 };
 
 // ******************************************************************

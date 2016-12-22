@@ -35,15 +35,8 @@
 // ******************************************************************
 // * XFormatUtilityDrive
 // ******************************************************************
-SOOVPA<7> XFormatUtilityDrive_1_0_4627 =
-{
-    0,  // Large == 0
-    7,  // Count == 7
+OOVPA_NO_XREF(XFormatUtilityDrive_1_0_4627, 7)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x10, 0x50 },
         { 0x23, 0xFF },
         { 0x34, 0xC0 },
@@ -51,21 +44,13 @@ SOOVPA<7> XFormatUtilityDrive_1_0_4627 =
         { 0x58, 0xFF },
         { 0x6D, 0x33 },
         { 0x7C, 0x40 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * SetThreadPriorityBoost
 // ******************************************************************
-SOOVPA<10> SetThreadPriorityBoost_1_0_4627 =
-{
-    0,  // Large == 0
-    10, // Count == 10
+OOVPA_NO_XREF(SetThreadPriorityBoost_1_0_4627, 10)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         // SetThreadPriorityBoost+0x0D : push [ebp+0x08]
         { 0x0D, 0xFF }, // (Offset,Value)-Pair #1
         { 0x0E, 0x75 }, // (Offset,Value)-Pair #2
@@ -83,21 +68,13 @@ SOOVPA<10> SetThreadPriorityBoost_1_0_4627 =
         // SetThreadPriorityBoost+0x2C : mov ecx, [ebp+0x08]
         { 0x2C, 0x8B }, // (Offset,Value)-Pair #9
         { 0x2D, 0x4D }, // (Offset,Value)-Pair #10
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * GetThreadPriority
 // ******************************************************************
-SOOVPA<10> GetThreadPriority_1_0_4627 =
-{
-    0,  // Large == 0
-    10, // Count == 10
+OOVPA_NO_XREF(GetThreadPriority_1_0_4627, 10)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         // GetThreadPriority+0x0D : push [ebp+0x08]
         { 0x0D, 0xFF }, // (Offset,Value)-Pair #1
         { 0x0E, 0x75 }, // (Offset,Value)-Pair #2
@@ -115,21 +92,13 @@ SOOVPA<10> GetThreadPriority_1_0_4627 =
         // GetThreadPriority+0x37 : mov ecx, [ebp+0x08]
         { 0x37, 0x8B }, // (Offset,Value)-Pair #9
         { 0x38, 0x4D }, // (Offset,Value)-Pair #10
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * RtlFreeHeap
 // ******************************************************************
-SOOVPA<9> RtlFreeHeap_1_0_4627 =
-{
-    0,  // Large == 0
-    9,  // Count == 9
+OOVPA_NO_XREF(RtlFreeHeap_1_0_4627, 9)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         // RtlFreeHeap+0x1F : test edi, edi
         { 0x1F, 0x85 }, // (Offset,Value)-Pair #1
         { 0x20, 0xFF }, // (Offset,Value)-Pair #2
@@ -146,21 +115,13 @@ SOOVPA<9> RtlFreeHeap_1_0_4627 =
         // RtlFreeHeap+0x49 : push 0x0B
         { 0x49, 0x6A }, // (Offset,Value)-Pair #8
         { 0x4A, 0x0B }, // (Offset,Value)-Pair #9
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * RtlReAllocateHeap
 // ******************************************************************
-SOOVPA<10> RtlReAllocateHeap_1_0_4627 =
-{
-    0,  // Large == 0
-    10,  // Count == 10
+OOVPA_NO_XREF(RtlReAllocateHeap_1_0_4627, 10)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         // RtlReAllocateHeap+0x1C : test esi, esi
         { 0x1C, 0x85 }, // (Offset,Value)-Pair #1
         { 0x1D, 0xF6 }, // (Offset,Value)-Pair #2
@@ -176,21 +137,12 @@ SOOVPA<10> RtlReAllocateHeap_1_0_4627 =
         { 0x63, 0x83 }, // (Offset,Value)-Pair #8
         { 0x64, 0xC1 }, // (Offset,Value)-Pair #9
         { 0x65, 0x10 }, // (Offset,Value)-Pair #10
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XID_fCloseDevice
 // ******************************************************************
-SOOVPA<7> XID_fCloseDevice_1_0_4627 = 
-{
-    0,  // Large == 0
-    7,  // Count == 7
-
-    XREF_FCLOSEDEVICE,  // Xref Is Saved
-    XRefNotUsed,
-
-    {
+OOVPA_XREF(XID_fCloseDevice_1_0_4627, 7, XREF_FCLOSEDEVICE, XRefZero)
         { 0x13, 0x1E },
         { 0x28, 0x75 },
         { 0x3D, 0x01 },
@@ -198,21 +150,12 @@ SOOVPA<7> XID_fCloseDevice_1_0_4627 =
         { 0x67, 0xFF },
         { 0x7C, 0x06 },
         { 0x91, 0x89 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XID_fCloseDevice
 // ******************************************************************
-SOOVPA<11> XID_fCloseDevice_1_0_4928 =
-{
-    0,  // Large == 0
-    11, // Count == 11
-
-    XREF_FCLOSEDEVICE,  // XRef Is  Saved
-    0,                  // XRef Not Used
-
-    {
+OOVPA_XREF(XID_fCloseDevice_1_0_4928, 11, XREF_FCLOSEDEVICE, XRefZero)
         { 0x13, 0x8B }, // (Offset,Value)-Pair #1
         { 0x14, 0x86 }, // (Offset,Value)-Pair #2
         { 0x15, 0xA3 }, // (Offset,Value)-Pair #3
@@ -227,21 +170,16 @@ SOOVPA<11> XID_fCloseDevice_1_0_4928 =
 
         { 0x95, 0xC9 }, // (Offset,Value)-Pair #10
         { 0x96, 0xC3 }, // (Offset,Value)-Pair #11
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XInputClose
 // ******************************************************************
-SOOVPA<8> XInputClose_1_0_4928 =
-{
-    0,  // Large == 0
-    8,  // Count == 8
+OOVPA_XREF(XInputClose_1_0_4928, 8,
 
-    XRefNotSaved,
-    1,  // XRef Is Used
+    XRefNoSaveIndex,
+    XRefOne)
 
-    {
         // XInputClose+0x05 : call [fCloseDevice]
         { 0x05, XREF_FCLOSEDEVICE },  // (Offset,Value)-Pair #1
 
@@ -257,21 +195,13 @@ SOOVPA<8> XInputClose_1_0_4928 =
         // XInputClose+0x09 : retn 0x04
         { 0x09, 0xC2 }, // (Offset,Value)-Pair #7
         { 0x0A, 0x04 }, // (Offset,Value)-Pair #8
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XInputGetState
 // ******************************************************************
-SOOVPA<12> XInputGetState_1_0_4928 =
-{
-    0,  // Large == 0
-    12, // Count == 12
+OOVPA_NO_XREF(XInputGetState_1_0_4928, 12)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x0E, 0x8B }, // (Offset,Value)-Pair #1
         { 0x0F, 0x8A }, // (Offset,Value)-Pair #2
         { 0x10, 0xA3 }, // (Offset,Value)-Pair #3
@@ -288,21 +218,13 @@ SOOVPA<12> XInputGetState_1_0_4928 =
 
         { 0x69, 0xC2 }, // (Offset,Value)-Pair #11
         { 0x6A, 0x08 }, // (Offset,Value)-Pair #12
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XInputGetCapabilities
 // ******************************************************************
-SOOVPA<12> XInputGetCapabilities_1_0_4928 =
-{
-    0,  // Large == 0
-    12, // Count == 12
+OOVPA_NO_XREF(XInputGetCapabilities_1_0_4928, 12)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
         { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
         { 0x0D, 0xAC }, // (Offset,Value)-Pair #3
@@ -318,22 +240,14 @@ SOOVPA<12> XInputGetCapabilities_1_0_4928 =
         { 0x90, 0xBF }, // (Offset,Value)-Pair #10
         { 0x91, 0xE8 }, // (Offset,Value)-Pair #11
         { 0x92, 0x7B }, // (Offset,Value)-Pair #12
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XInputGetCapabilities2
 // ******************************************************************
 /* Unreal Championship's version is different */
-SOOVPA<12> XInputGetCapabilities2_1_0_4928 =
-{
-    0,  // Large == 0
-    12, // Count == 12
+OOVPA_NO_XREF(XInputGetCapabilities2_1_0_4928, 12)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
 		// mov     ebx, ds:KeRaiseIrqlToDpcLevel
         { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
         { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
@@ -353,21 +267,13 @@ SOOVPA<12> XInputGetCapabilities2_1_0_4928 =
         { 0x90, 0xBF }, // (Offset,Value)-Pair #10
         { 0x91, 0xCC }, // (Offset,Value)-Pair #11
         { 0x92, 0x5C }, // (Offset,Value)-Pair #12
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XInputGetCapabilities3
 // ******************************************************************
-SOOVPA<12> XInputGetCapabilities3_1_0_4928 =
-{
-    0,  // Large == 0
-    12, // Count == 12
+OOVPA_NO_XREF(XInputGetCapabilities3_1_0_4928, 12)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
         { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
         { 0x0D, 0xA4 }, // (Offset,Value)-Pair #3
@@ -383,22 +289,14 @@ SOOVPA<12> XInputGetCapabilities3_1_0_4928 =
         { 0x90, 0xBF }, // (Offset,Value)-Pair #10
         { 0x91, 0x8A }, // (Offset,Value)-Pair #11
         { 0x92, 0x2A }, // (Offset,Value)-Pair #12
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XInputGetCapabilities2
 // ******************************************************************
 /* Unreal Championship's version is different */
-SOOVPA<12> XInputGetCapabilities4_1_0_4928 =
-{
-    0,  // Large == 0
-    12, // Count == 12
+OOVPA_NO_XREF(XInputGetCapabilities4_1_0_4928, 12)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
 		// mov     ebx, ds:KeRaiseIrqlToDpcLevel
         { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
         { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
@@ -418,22 +316,14 @@ SOOVPA<12> XInputGetCapabilities4_1_0_4928 =
         { 0x90, 0xBF }, // (Offset,Value)-Pair #10
         { 0x91, 0x8C }, // (Offset,Value)-Pair #11
         { 0x92, 0x8C }, // (Offset,Value)-Pair #12
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XInputGetCapabilities5
 // ******************************************************************
 /* DOAV */
-SOOVPA<12> XInputGetCapabilities5_1_0_4928 =
-{
-    0,  // Large == 0
-    12, // Count == 12
+OOVPA_NO_XREF(XInputGetCapabilities5_1_0_4928, 12)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
 		// mov     ebx, ds:KeRaiseIrqlToDpcLevel
         { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
         { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
@@ -453,22 +343,14 @@ SOOVPA<12> XInputGetCapabilities5_1_0_4928 =
         { 0x90, 0xBF }, // (Offset,Value)-Pair #10
         { 0x91, 0x17 }, // (Offset,Value)-Pair #11
         { 0x92, 0xB7 }, // (Offset,Value)-Pair #12
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XInputGetCapabilities6
 // ******************************************************************
 /* Defender */
-SOOVPA<12> XInputGetCapabilities6_1_0_4928 =
-{
-    0,  // Large == 0
-    12, // Count == 12
+OOVPA_NO_XREF(XInputGetCapabilities6_1_0_4928, 12)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
 		// mov     ebx, ds:KeRaiseIrqlToDpcLevel
         { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
         { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
@@ -488,21 +370,13 @@ SOOVPA<12> XInputGetCapabilities6_1_0_4928 =
         { 0x90, 0xBF }, // (Offset,Value)-Pair #10
         { 0x91, 0xE5 }, // (Offset,Value)-Pair #11
         { 0x92, 0xCF }, // (Offset,Value)-Pair #12
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XInputGetCapabilities
 // ******************************************************************
-SOOVPA<12> XInputGetCapabilities_1_0_4831 =
-{
-    0,  // Large == 0
-    12, // Count == 12
+OOVPA_NO_XREF(XInputGetCapabilities_1_0_4831, 12)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
         { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
         { 0x0D, 0x88 }, // (Offset,Value)-Pair #3
@@ -518,21 +392,13 @@ SOOVPA<12> XInputGetCapabilities_1_0_4831 =
         { 0xAF, 0xC7 }, // (Offset,Value)-Pair #10
         { 0xB0, 0x45 }, // (Offset,Value)-Pair #11
         { 0xB1, 0xE2 }, // (Offset,Value)-Pair #12
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XInputGetCapabilities2
 // ******************************************************************
-SOOVPA<12> XInputGetCapabilities2_1_0_4831 =
-{
-    0,  // Large == 0
-    12, // Count == 12
+OOVPA_NO_XREF(XInputGetCapabilities2_1_0_4831, 12)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
         { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
         { 0x0D, 0x50 }, // (Offset,Value)-Pair #3
@@ -548,21 +414,13 @@ SOOVPA<12> XInputGetCapabilities2_1_0_4831 =
         { 0xAF, 0xC7 }, // (Offset,Value)-Pair #10
         { 0xB0, 0x45 }, // (Offset,Value)-Pair #11
         { 0xB1, 0xE2 }, // (Offset,Value)-Pair #12
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XInputGetCapabilities3
 // ******************************************************************
-SOOVPA<12> XInputGetCapabilities3_1_0_4831 =
-{
-    0,  // Large == 0
-    12, // Count == 12
+OOVPA_NO_XREF(XInputGetCapabilities3_1_0_4831, 12)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
         { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
         { 0x0D, 0x14 }, // (Offset,Value)-Pair #3
@@ -578,21 +436,13 @@ SOOVPA<12> XInputGetCapabilities3_1_0_4831 =
         { 0xAF, 0xC7 }, // (Offset,Value)-Pair #10
         { 0xB0, 0x45 }, // (Offset,Value)-Pair #11
         { 0xB1, 0xE2 }, // (Offset,Value)-Pair #12
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XInputGetCapabilities4
 // ******************************************************************
-SOOVPA<12> XInputGetCapabilities4_1_0_4831 =
-{
-    0,  // Large == 0
-    12, // Count == 12
+OOVPA_NO_XREF(XInputGetCapabilities4_1_0_4831, 12)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
         { 0x0C, 0x1D }, // (Offset,Value)-Pair #2
         { 0x0D, 0x9C }, // (Offset,Value)-Pair #3
@@ -608,21 +458,13 @@ SOOVPA<12> XInputGetCapabilities4_1_0_4831 =
         { 0xAF, 0xC7 }, // (Offset,Value)-Pair #10
         { 0xB0, 0x45 }, // (Offset,Value)-Pair #11
         { 0xB1, 0xE2 }, // (Offset,Value)-Pair #12
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XInputGetCapabilities5
 // ******************************************************************
-SOOVPA<12> XInputGetCapabilities5_1_0_4831 =
-{
-    0,  // Large == 0
-    8,	// Count == 8
+OOVPA_NO_XREF(XInputGetCapabilities5_1_0_4831, 8)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
 		{ 0x22, 0xF6 },
 		{ 0x23, 0x46 },
 		{ 0x24, 0x04 },
@@ -631,21 +473,13 @@ SOOVPA<12> XInputGetCapabilities5_1_0_4831 =
 		{ 0x45, 0x12 },
 		{ 0xF1, 0xC2 },
 		{ 0xF2, 0x08 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * GetOverlappedResult
 // ******************************************************************
-SOOVPA<7> GetOverlappedResult_1_0_4627 = 
-{
-    0,  // Large == 0
-    7,  // Count == 7
+OOVPA_NO_XREF(GetOverlappedResult_1_0_4627, 7)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x0B, 0x75 },
         { 0x18, 0xC0 },
         { 0x27, 0xEB },
@@ -653,21 +487,13 @@ SOOVPA<7> GetOverlappedResult_1_0_4627 =
         { 0x3F, 0xEB },
         { 0x4C, 0x89 },
         { 0x59, 0x56 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XLaunchNewImageA
 // ******************************************************************
-SOOVPA<8> XLaunchNewImageA_1_0_4627 = 
-{
-    0,  // Large == 0
-    8,  // Count == 8
+OOVPA_NO_XREF(XLaunchNewImageA_1_0_4627, 8)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x1E, 0x80 },
         { 0x3E, 0xC0 },
         { 0x5E, 0xFF },
@@ -676,21 +502,13 @@ SOOVPA<8> XLaunchNewImageA_1_0_4627 =
         { 0xBE, 0x50 },
         { 0xDE, 0x05 },
         { 0xFE, 0x85 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XLaunchNewImageA
 // ******************************************************************
-SOOVPA<12> XLaunchNewImageA_1_0_4928 = 
-{
-    0,   // Large == 0
-    12,  // Count == 12
+OOVPA_NO_XREF(XLaunchNewImageA_1_0_4928, 12)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         // XLaunchNewImageA+0x03 : sub esp, 0x384
 		{ 0x03, 0x81 },
 		{ 0x04, 0xEC },
@@ -706,21 +524,13 @@ SOOVPA<12> XLaunchNewImageA_1_0_4928 =
 		{ 0x42, 0x7E },
 		{ 0x43, 0x02 },
 		{ 0x44, 0x5C },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XGetLaunchInfo
 // ******************************************************************
-SOOVPA<7> XGetLaunchInfo_1_0_4627 = 
-{
-    0,  // Large == 0
-    7,  // Count == 7
+OOVPA_NO_XREF(XGetLaunchInfo_1_0_4627, 7)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x0B, 0x8B },
         { 0x18, 0x15 },
         { 0x25, 0x8B },
@@ -728,21 +538,13 @@ SOOVPA<7> XGetLaunchInfo_1_0_4627 =
         { 0x3F, 0x00 },
         { 0x4C, 0x83 },
         { 0x59, 0x5E },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XSetProcessQuantumLength
 // ******************************************************************
-SOOVPA<7> XSetProcessQuantumLength_1_0_4627 = 
-{
-    0,  // Large == 0
-    7,  // Count == 7
+OOVPA_NO_XREF(XSetProcessQuantumLength_1_0_4627, 7)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x01, 0xA1 },
         { 0x04, 0x00 },
         { 0x07, 0x4C },
@@ -750,21 +552,13 @@ SOOVPA<7> XSetProcessQuantumLength_1_0_4627 =
         { 0x0D, 0x8D },
         { 0x10, 0x89 },
         { 0x13, 0xC2 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * timeSetEvent
 // ******************************************************************
-SOOVPA<7> timeSetEvent_1_0_4627 = 
-{
-    0,  // Large == 0
-    7,  // Count == 7
+OOVPA_NO_XREF(timeSetEvent_1_0_4627, 7)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x1E, 0x8D },
         { 0x3E, 0x89 },
         { 0x5E, 0x15 },
@@ -772,21 +566,13 @@ SOOVPA<7> timeSetEvent_1_0_4627 =
         { 0x9E, 0x03 },
         { 0xBE, 0x32 },
         { 0xDE, 0x89 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * timeKillEvent
 // ******************************************************************
-SOOVPA<8> timeKillEvent_1_0_4627 = 
-{
-    0,  // Large == 0
-    8,  // Count == 8
+OOVPA_NO_XREF(timeKillEvent_1_0_4627, 8)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x0E, 0x8B },
         { 0x1A, 0xC2 },
         { 0x28, 0x8D },
@@ -795,21 +581,13 @@ SOOVPA<8> timeKillEvent_1_0_4627 =
         { 0x52, 0x00 },
         { 0x60, 0x5E },
         { 0x6E, 0x00 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * RaiseException
 // ******************************************************************
-SOOVPA<7> RaiseException_1_0_4627 = 
-{
-    0,  // Large == 0
-    7,  // Count == 7
+OOVPA_NO_XREF(RaiseException_1_0_4627, 7)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x09, 0x83 },
         { 0x14, 0x8B },
         { 0x1F, 0xC7 },
@@ -817,22 +595,13 @@ SOOVPA<7> RaiseException_1_0_4627 =
         { 0x35, 0x89 },
         { 0x40, 0x5F },
         { 0x4B, 0xFF },
-    }
-};
+OOVPA_END;
 
 
 // ******************************************************************
 // * VirtualProtect
 // ******************************************************************
-SOOVPA<7> VirtualProtect_1_0_4627 = 
-{
-    0,  // Large == 0
-    7,  // Count == 7
-
-    0/*XREF_VirtualProtect*/,  // Xref Is Saved
-    XRefNotUsed,
-
-    {
+OOVPA_XREF(VirtualProtect_1_0_4627, 7, 0/*XREF_VirtualProtect*/, XRefZero)
         { 0x04, 0x8D },
         { 0x0A, 0x24 },
         { 0x10, 0x10 },
@@ -840,21 +609,13 @@ SOOVPA<7> VirtualProtect_1_0_4627 =
         { 0x1C, 0x33 },
         { 0x22, 0xE8 },
         { 0x28, 0xC0 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * CreateSemaphoreA
 // ******************************************************************
-SOOVPA<7> CreateSemaphoreA_1_0_4627 = 
-{
-    0,  // Large == 0
-    7,  // Count == 7
+OOVPA_NO_XREF(CreateSemaphoreA_1_0_4627, 7)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x0A, 0x74 },
         { 0x16, 0x50 },
         { 0x22, 0x10 },
@@ -862,21 +623,13 @@ SOOVPA<7> CreateSemaphoreA_1_0_4627 =
         { 0x3A, 0x75 },
         { 0x4A, 0x8B },
         { 0x55, 0x33 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * ReleaseSemaphore
 // ******************************************************************
-SOOVPA<7> ReleaseSemaphore_1_0_4627 = 
-{
-    0,  // Large == 0
-    7,  // Count == 7
+OOVPA_NO_XREF(ReleaseSemaphore_1_0_4627, 7)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x03, 0x0C },
         { 0x08, 0xFF },
         { 0x0D, 0x15 },
@@ -884,21 +637,13 @@ SOOVPA<7> ReleaseSemaphore_1_0_4627 =
         { 0x17, 0xC0 },
         { 0x1C, 0xE8 },
         { 0x21, 0x33 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XMountAlternateTitleA
 // ******************************************************************
-SOOVPA<7> XMountAlternateTitleA_1_0_4627 = 
-{
-    0,  // Large == 0
-    7,  // Count == 7
+OOVPA_NO_XREF(XMountAlternateTitleA_1_0_4627, 7)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x1E, 0x0F },
         { 0x3E, 0x56 },
         { 0x5E, 0xFF },
@@ -906,21 +651,13 @@ SOOVPA<7> XMountAlternateTitleA_1_0_4627 =
         { 0x9E, 0x50 },
         { 0xBE, 0x66 },
         { 0xDE, 0xF0 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XMountAlternateTitleA
 // ******************************************************************
-SOOVPA<7> XMountAlternateTitleA_1_0_4928 = 
-{
-    0,  // Large == 0
-    7,  // Count == 7
+OOVPA_NO_XREF(XMountAlternateTitleA_1_0_4928, 7)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x1E, 0x0F },
         { 0x3E, 0x83 },
         { 0x5E, 0x03 },
@@ -928,21 +665,13 @@ SOOVPA<7> XMountAlternateTitleA_1_0_4928 =
         { 0x9E, 0x00 },
         { 0xBE, 0x01 },
         { 0xDE, 0x45 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XUnmountAlternateTitleA
 // ******************************************************************
-SOOVPA<7> XUnmountAlternateTitleA_1_0_4627 = 
-{
-    0,  // Large == 0
-    7,  // Count == 7
+OOVPA_NO_XREF(XUnmountAlternateTitleA_1_0_4627, 7)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x0A, 0x65 },
         { 0x16, 0xFF },
         { 0x23, 0x83 },
@@ -950,42 +679,26 @@ SOOVPA<7> XUnmountAlternateTitleA_1_0_4627 =
         { 0x3A, 0x50 },
         { 0x46, 0x0B },
         { 0x52, 0x50 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XGetFileCacheSize
 // ******************************************************************
-SOOVPA<6> XGetFileCacheSize_1_0_4627 = 
-{
-    0,  // Large == 0
-    6,  // Count == 6
+OOVPA_NO_XREF(XGetFileCacheSize_1_0_4627, 6)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x00, 0xFF },
         { 0x01, 0x15 },
         { 0x06, 0xC1 },
         { 0x07, 0xE0 },
         { 0x08, 0x0C },
         { 0x09, 0xC3 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * MoveFileA
 // ******************************************************************
-SOOVPA<7> MoveFileA_1_0_4627 = 
-{
-    0,  // Large == 0
-    7,  // Count == 7
+OOVPA_NO_XREF(MoveFileA_1_0_4627, 7)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x11, 0x8D },
         { 0x24, 0xE8 },
         { 0x37, 0x50 },
@@ -993,21 +706,13 @@ SOOVPA<7> MoveFileA_1_0_4627 =
         { 0x5D, 0xFF },
         { 0x74, 0xFF },
         { 0x83, 0x33 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XInputGetDeviceDescription
 // ******************************************************************
-SOOVPA<9> XInputGetDeviceDescription_1_0_4831 = 
-{
-	0,	// Large == 0
-	9,	// Count == 9
+OOVPA_NO_XREF(XInputGetDeviceDescription_1_0_4831, 9)
 
-	XRefNotSaved,
-	XRefNotUsed,
-
-	{
 		{ 0x03, 0x83 },
 		{ 0x04, 0xEC },
 		{ 0x05, 0x48 },
@@ -1023,567 +728,130 @@ SOOVPA<9> XInputGetDeviceDescription_1_0_4831 =
 // ******************************************************************
 // * XAPI_1_0_4627
 // ******************************************************************
-OOVPATable XAPI_1_0_4627[] =
-{
+OOVPATable XAPI_1_0_4627[] = {
+
     // XFormatUtilityDrive
-    {
-        (OOVPA*)&XFormatUtilityDrive_1_0_4627,
-
-        XTL::EmuXFormatUtilityDrive,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXFormatUtilityDrive"
-        #endif
-    },
-    // SetThreadPriorityBoost
-    {
-        (OOVPA*)&SetThreadPriorityBoost_1_0_4627,
-
-        XTL::EmuSetThreadPriorityBoost,
-
-        #ifdef _DEBUG_TRACE
-        "EmuSetThreadPriorityBoost"
-        #endif
-    },
-    // SetThreadPriority (* unchanged since 3911 *)
-    {
-        (OOVPA*)&SetThreadPriority_1_0_3911,
-
-        XTL::EmuSetThreadPriority,
-
-        #ifdef _DEBUG_TRACE
-        "EmuSetThreadPriority"
-        #endif
-    },
-    // GetThreadPriority
-    {
-        (OOVPA*)&GetThreadPriority_1_0_4627,
-
-        XTL::EmuGetThreadPriority,
-
-        #ifdef _DEBUG_TRACE
-        "EmuGetThreadPriority"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XFormatUtilityDrive_1_0_4627, XTL::EmuXFormatUtilityDrive),
+	// SetThreadPriorityBoost
+	OOVPA_TABLE_PATCH(SetThreadPriorityBoost_1_0_4627, XTL::EmuSetThreadPriorityBoost),
+	// SetThreadPriority (* unchanged since 3911 *)
+	OOVPA_TABLE_PATCH(SetThreadPriority_1_0_3911, XTL::EmuSetThreadPriority),
+	// GetThreadPriority
+	OOVPA_TABLE_PATCH(GetThreadPriority_1_0_4627, XTL::EmuGetThreadPriority),
     // XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
-    {
-        (OOVPA*)&XRegisterThreadNotifyRoutine_1_0_3911,
-
-        XTL::EmuXRegisterThreadNotifyRoutine,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXRegisterThreadNotifyRoutine"
-        #endif
-    },
-    // QueryPerformanceCounter (* unchanged since 4361 *)
-    {
-        (OOVPA*)&QueryPerformanceCounter_1_0_4361,
-
-        XTL::EmuQueryPerformanceCounter,
-
-        #ifdef _DEBUG_TRACE
-        "EmuQueryPerformanceCounter"
-        #endif
-    },
-    // QueryPerformanceFrequency (* unchanged since 4361 *)
-    {
-        (OOVPA*)&QueryPerformanceFrequency_1_0_4361,
-
-        XTL::EmuQueryPerformanceFrequency,
-
-        #ifdef _DEBUG_TRACE
-        "EmuQueryPerformanceFrequency"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XRegisterThreadNotifyRoutine_1_0_3911, XTL::EmuXRegisterThreadNotifyRoutine),
+	// QueryPerformanceCounter (* unchanged since 4361 *)
+	OOVPA_TABLE_PATCH(QueryPerformanceCounter_1_0_4361, XTL::EmuQueryPerformanceCounter),
+	// QueryPerformanceFrequency (* unchanged since 4361 *)
+	OOVPA_TABLE_PATCH(QueryPerformanceFrequency_1_0_4361, XTL::EmuQueryPerformanceFrequency),
     // XMountUtilityDrive (* unchanged since 4432 *)
-    {
-        (OOVPA*)&XMountUtilityDrive_1_0_4432,
-
-        XTL::EmuXMountUtilityDrive,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXMountUtilityDrive"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XMountUtilityDrive_1_0_4432, XTL::EmuXMountUtilityDrive),
     // XInitDevices (* unchanged since 1.0.3911 *)
-    {
-        (OOVPA*)&XInitDevices_1_0_3911,
-
-        XTL::EmuXInitDevices,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInitDevices"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInitDevices_1_0_3911, XTL::EmuXInitDevices),
     // XGetDevices (* unchanged since 1.0.4134 *)
-    {
-        (OOVPA*)&XGetDevices_1_0_4134,
-
-        XTL::EmuXGetDevices,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXGetDevices"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XGetDevices_1_0_4134, XTL::EmuXGetDevices),
     // XInputOpen (* unchanged since 1.0.4361 *)
-    {
-        (OOVPA*)&XInputOpen_1_0_4361,
-
-        XTL::EmuXInputOpen,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputOpen"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputOpen_1_0_4361, XTL::EmuXInputOpen),
     // XInputPoll (* unchanged since 4134 *)
-    {
-        (OOVPA*)&XInputPoll_1_0_4134,
-
-        XTL::EmuXInputPoll,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputPoll"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputPoll_1_0_4134, XTL::EmuXInputPoll),
 	// XID_fCloseDevice
-    {
-        (OOVPA*)&XID_fCloseDevice_1_0_4627, 0,
-
-        #ifdef _DEBUG_TRACE
-		"XID_fCloseDevice (4627) (XREF)"
-        #endif
-    },
-    // XID_fCloseDevice
-    {
-        (OOVPA*)&XID_fCloseDevice_1_0_4928, 0,
-
-        #ifdef _DEBUG_TRACE
-        "XID_fCloseDevice (XREF)"
-        #endif
-    },
-    // XInputClose
-    {
-        (OOVPA*)&XInputClose_1_0_4928,
-
-        XTL::EmuXInputClose,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputClose"
-        #endif
-    },
+	OOVPA_TABLE_XREF(XID_fCloseDevice_1_0_4627),
+	// XID_fCloseDevice
+	OOVPA_TABLE_XREF(XID_fCloseDevice_1_0_4928),
+	// XInputClose
+	OOVPA_TABLE_PATCH(XInputClose_1_0_4928, XTL::EmuXInputClose),
     // XInputGetCapabilities (* unchanged since 1.0.4361 *)
-    {
-        (OOVPA*)&XInputGetCapabilities_1_0_4361,
-
-        XTL::EmuXInputGetCapabilities,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputGetCapabilities"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputGetCapabilities_1_0_4361, XTL::EmuXInputGetCapabilities),
     // XInputGetState (* unchanged since 1.0.4361 *)
-    {
-        (OOVPA*)&XInputGetState_1_0_4361,
-
-        XTL::EmuXInputGetState,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputGetState"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputGetState_1_0_4361, XTL::EmuXInputGetState),
     // XInputGetState
-    {
-        (OOVPA*)&XInputGetState_1_0_4928,
-
-        XTL::EmuXInputGetState,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputGetState"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputGetState_1_0_4928, XTL::EmuXInputGetState),
     // XInputGetCapabilities
-    {
-        (OOVPA*)&XInputGetCapabilities_1_0_4928,
-
-        XTL::EmuXInputGetCapabilities,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputGetCapabilities"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputGetCapabilities_1_0_4928, XTL::EmuXInputGetCapabilities),
 	// XInputGetCapabilities2
-    {
-        (OOVPA*)&XInputGetCapabilities2_1_0_4928,
-
-        XTL::EmuXInputGetCapabilities,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputGetCapabilities2"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputGetCapabilities2_1_0_4928, XTL::EmuXInputGetCapabilities),
 	// XInputGetCapabilities3
-    {
-        (OOVPA*)&XInputGetCapabilities3_1_0_4928,
-
-        XTL::EmuXInputGetCapabilities,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputGetCapabilities3"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputGetCapabilities3_1_0_4928, XTL::EmuXInputGetCapabilities),
 	// XInputGetCapabilities4
-    {
-        (OOVPA*)&XInputGetCapabilities4_1_0_4928,
-
-        XTL::EmuXInputGetCapabilities,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputGetCapabilities4"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputGetCapabilities4_1_0_4928, XTL::EmuXInputGetCapabilities),
 	// XInputGetCapabilities5
-    {
-        (OOVPA*)&XInputGetCapabilities5_1_0_4928,
-
-        XTL::EmuXInputGetCapabilities,
-
-        #ifdef _DEBUG_TRACE
-		"EmuXInputGetCapabilities(5)"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputGetCapabilities5_1_0_4928, XTL::EmuXInputGetCapabilities),
     // XInputSetState (* unchanged since 1.0.4361 *)
-    {
-        (OOVPA*)&XInputSetState_1_0_4361,
-
-        XTL::EmuXInputSetState,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputSetState"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputSetState_1_0_4361, XTL::EmuXInputSetState),
 	// XInputSetState
-    {
-        (OOVPA*)&XInputSetState_1_0_4928,
-
-        XTL::EmuXInputSetState,
-
-        #ifdef _DEBUG_TRACE
-		"EmuXInputSetState (4928)"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputSetState_1_0_4928, XTL::EmuXInputSetState),
     /* obsolete?
     // XapiThreadStartup (* unchanged since 1.0.4361 *)
-    {
-        (OOVPA*)&XapiThreadStartup_1_0_4361,
-
-        XTL::EmuXapiThreadStartup,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiThreadStartup"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XapiThreadStartup_1_0_4361, XTL::EmuXapiThreadStartup),
     //*/
     //*/
 	// XInputGetCapabilities
-    {
-        (OOVPA*)&XInputGetCapabilities_1_0_4831,
-
-        XTL::EmuXInputGetCapabilities,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputGetCapabilities_4831"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputGetCapabilities_1_0_4831, XTL::EmuXInputGetCapabilities),
 	// XInputGetCapabilities2
-    {
-        (OOVPA*)&XInputGetCapabilities2_1_0_4831,
-
-        XTL::EmuXInputGetCapabilities,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputGetCapabilities2_4831"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputGetCapabilities2_1_0_4831, XTL::EmuXInputGetCapabilities),
 	// XInputGetCapabilities3
-    {
-        (OOVPA*)&XInputGetCapabilities3_1_0_4831,
-
-        XTL::EmuXInputGetCapabilities,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputGetCapabilities3_4831"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputGetCapabilities3_1_0_4831, XTL::EmuXInputGetCapabilities),
 	// XInputGetCapabilities4
-    {
-        (OOVPA*)&XInputGetCapabilities4_1_0_4831,
-
-        XTL::EmuXInputGetCapabilities,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputGetCapabilities4_4831"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputGetCapabilities4_1_0_4831, XTL::EmuXInputGetCapabilities),
 	// XInputGetCapabilities5
-    {
-        (OOVPA*)&XInputGetCapabilities5_1_0_4831,
-
-        XTL::EmuXInputGetCapabilities,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputGetCapabilities5_4831"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputGetCapabilities5_1_0_4831, XTL::EmuXInputGetCapabilities),
 	// XInputGetCapabilities6
-    {
-        (OOVPA*)&XInputGetCapabilities6_1_0_4928,
-
-        XTL::EmuXInputGetCapabilities,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputGetCapabilities6_4928"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputGetCapabilities6_1_0_4928, XTL::EmuXInputGetCapabilities),
     // +s
     /* not necessary?
     // XCalculateSignatureBeginEx
-    {
-        (OOVPA*)&XCalculateSignatureBeginEx_1_0_4627,
-
-        XTL::EmuXCalculateSignatureBeginEx,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXCalculateSignatureBeginEx (XREF&FUNC)"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XCalculateSignatureBeginEx_1_0_4627, XTL::EmuXCalculateSignatureBeginEx),
     // XCalculateSignatureBegin
-    {
-        (OOVPA*)&XCalculateSignatureBegin_1_0_4627,
-
-        XTL::EmuXCalculateSignatureBegin,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXCalculateSignatureBegin"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XCalculateSignatureBegin_1_0_4627, XTL::EmuXCalculateSignatureBegin),
     // XCalculateSignatureUpdate
-    {
-        (OOVPA*)&XCalculateSignatureUpdate_1_0_4627,
-
-        XTL::EmuXCalculateSignatureUpdate,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXCalculateSignatureUpdate"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XCalculateSignatureUpdate_1_0_4627, XTL::EmuXCalculateSignatureUpdate),
     // XCalculateSignatureEnd
-    {
-        (OOVPA*)&XCalculateSignatureEnd_1_0_4627,
-
-        XTL::EmuXCalculateSignatureEnd,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXCalculateSignatureEnd"
-        #endif
-    },
-    //*/
+	OOVPA_TABLE_PATCH(XCalculateSignatureEnd_1_0_4627, XTL::EmuXCalculateSignatureEnd), //*/
     // s+
 	// CreateFiber (* unchanged since 3911 *)
-	{
-		(OOVPA*)&CreateFiber_1_0_3911,
-
-		XTL::EmuCreateFiber,
-
-		#ifdef _DEBUG_TRACE
-		"EmuCreateFiber"
-		#endif
-	},
+	OOVPA_TABLE_PATCH(CreateFiber_1_0_3911, XTL::EmuCreateFiber),
 	// DeleteFiber (* unchanged since 3911 *)
-	{
-		(OOVPA*)&DeleteFiber_1_0_3911,
-
-		XTL::EmuDeleteFiber,
-
-		#ifdef _DEBUG_TRACE
-		"EmuDeleteFiber"
-		#endif
-	},
+	OOVPA_TABLE_PATCH(DeleteFiber_1_0_3911, XTL::EmuDeleteFiber),
 	// GetTimeZoneInformation (* unchanged since 3911 *)
-    {
-        (OOVPA*)&GetTimeZoneInformation_1_0_3911,
-
-        XTL::EmuGetTimeZoneInformation,
-
-        #ifdef _DEBUG_TRACE
-        "GetTimeZoneInformation"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(GetTimeZoneInformation_1_0_3911, XTL::EmuGetTimeZoneInformation),
 	// GetExitCodeThread (* unchanged since 3911 *)
-    {
-        (OOVPA*)&GetExitCodeThread_1_0_3911,
-
-        XTL::EmuGetExitCodeThread,
-
-        #ifdef _DEBUG_TRACE
-        "EmuGetExitCodeThread"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(GetExitCodeThread_1_0_3911, XTL::EmuGetExitCodeThread),
 	// GetOverlappedResult
-    {
-        (OOVPA*)&GetOverlappedResult_1_0_4627,
-
-        XTL::EmuGetOverlappedResult,
-
-        #ifdef _DEBUG_TRACE
-        "EmuGetOverlappedResult"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(GetOverlappedResult_1_0_4627, XTL::EmuGetOverlappedResult),
 	// XLaunchNewImageA
-    {
-        (OOVPA*)&XLaunchNewImageA_1_0_4627,
-        XTL::EmuXLaunchNewImage,
-
-        #ifdef _DEBUG_TRACE
-		"EmuXLaunchNewImageA"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XLaunchNewImageA_1_0_4627, XTL::EmuXLaunchNewImage),
 	// XLaunchNewImageA
-    {
-        (OOVPA*)&XLaunchNewImageA_1_0_4928,
-        XTL::EmuXLaunchNewImage,
-
-        #ifdef _DEBUG_TRACE
-		"EmuXLaunchNewImageA"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XLaunchNewImageA_1_0_4928, XTL::EmuXLaunchNewImage),
 	// XGetLaunchInfo
-    {
-        (OOVPA*)&XGetLaunchInfo_1_0_4627,
-        XTL::EmuXGetLaunchInfo,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXGetLaunchInfo"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XGetLaunchInfo_1_0_4627, XTL::EmuXGetLaunchInfo),
 	// XSetProcessQuantumLength
-    {
-        (OOVPA*)&XSetProcessQuantumLength_1_0_4627,
-		XTL::EmuXSetProcessQuantumLength,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXSetProcessQuantumLength"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XSetProcessQuantumLength_1_0_4627, XTL::EmuXSetProcessQuantumLength),
 	// SignalObjectAndWait (* unchanged since 3911 *)
-	{
-		(OOVPA*)&SignalObjectAndWait_1_0_3911, 
-			
-		XTL::EmuSignalObjectAndWait,
-
-		#ifdef _DEBUG_TRACE
-		"EmuSignalObjectAndWait"
-		#endif
-	},
+	OOVPA_TABLE_PATCH(SignalObjectAndWait_1_0_3911, XTL::EmuSignalObjectAndWait),
 	// timeSetEvent
-    {
-        (OOVPA*)&timeSetEvent_1_0_4627,
-        XTL::EmutimeSetEvent,
-
-        #ifdef _DEBUG_TRACE
-        "EmutimeSetEvent"
-        #endif
-    },
-    // timeKillEvent
-    {
-        (OOVPA*)&timeKillEvent_1_0_4627,
-        XTL::EmutimeKillEvent,
-
-        #ifdef _DEBUG_TRACE
-        "EmutimeKillEvent"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(timeSetEvent_1_0_4627, XTL::EmutimeSetEvent),
+	// timeKillEvent
+	OOVPA_TABLE_PATCH(timeKillEvent_1_0_4627, XTL::EmutimeKillEvent),
 	// RaiseException
-    {
-        (OOVPA*)&RaiseException_1_0_4627,
-        XTL::EmuRaiseException,
-
-        #ifdef _DEBUG_TRACE
-        "EmuRaiseException"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(RaiseException_1_0_4627, XTL::EmuRaiseException),
 	// QueueUserAPC (* unchanged since 3911 *)
-	{ 
-		(OOVPA*)&QueueUserAPC_1_0_3911,
-
-		XTL::EmuQueueUserAPC,
-			
-		#ifdef _DEBUG_TRACE
-		"EmuQueueUserAPC"
-		#endif
-	},
+	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, XTL::EmuQueueUserAPC),
 	// XMountAlternateTitleA
-	{
-		(OOVPA*)&XMountAlternateTitleA_1_0_4627,
-		XTL::EmuXMountAlternateTitle,
-
-		#ifdef _DEBUG_TRACE
-		"XMountAlternateTitleA"
-		#endif
-	},
+	OOVPA_TABLE_PATCH(XMountAlternateTitleA_1_0_4627, XTL::EmuXMountAlternateTitle),
 	// XMountAlternateTitleA
-	{
-		(OOVPA*)&XMountAlternateTitleA_1_0_4928,
-		XTL::EmuXMountAlternateTitle,
-
-		#ifdef _DEBUG_TRACE
-		"XMountAlternateTitleA (4928)"
-		#endif
-	},
+	OOVPA_TABLE_PATCH(XMountAlternateTitleA_1_0_4928, XTL::EmuXMountAlternateTitle),
 	// XUnmountAlternateTitleA
-	{
-		(OOVPA*)&XUnmountAlternateTitleA_1_0_4627,
-	    XTL::EmuXUnmountAlternateTitle,
-
-		#ifdef _DEBUG_TRACE
-		"XUnmountAlternateTitleA"
-		#endif
-	},
+	OOVPA_TABLE_PATCH(XUnmountAlternateTitleA_1_0_4627, XTL::EmuXUnmountAlternateTitle),
 	// GetFileAttributesA (* unchanged since 4134 *)
-    {
-        (OOVPA*)&GetFileAttributesA_1_0_4134,
-        XTL::EmuGetFileAttributesA,
-
-        #ifdef _DEBUG_TRACE
-        "EmuGetFileAttributesA"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(GetFileAttributesA_1_0_4134, XTL::EmuGetFileAttributesA),
 	// XGetFileCacheSize
-    {
-        (OOVPA*)&XGetFileCacheSize_1_0_4627,
-        XTL::EmuXGetFileCacheSize,
-
-        #ifdef _DEBUG_TRACE
-        "XGetFileCacheSize"
-        #endif
-	},
+	OOVPA_TABLE_PATCH(XGetFileCacheSize_1_0_4627, XTL::EmuXGetFileCacheSize),
 	// XInputGetDeviceDescription
-	{
-        (OOVPA*)&XInputGetDeviceDescription_1_0_4831,
-        XTL::EmuXInputGetDeviceDescription,
-
-        #ifdef _DEBUG_TRACE
-        "XInputGetDeviceDescription_4831"
-        #endif
-	},
+	OOVPA_TABLE_PATCH(XInputGetDeviceDescription_1_0_4831, XTL::EmuXInputGetDeviceDescription),
 	// MoveFileA
-	/*{
-		(OOVPA*)&MoveFileA_1_0_4627,
-		XTL::EmuMoveFileA,
-
-		#ifdef _DEBUG_TRACE
-		"MoveFileA"
-		#endif
-	},*/
+	/*
+	OOVPA_TABLE_PATCH(MoveFileA_1_0_4627, XTL::EmuMoveFileA),
+	*/
 };
 
 // ******************************************************************
