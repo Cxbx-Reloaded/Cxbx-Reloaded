@@ -513,6 +513,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		std::string fileName(xbePath);
 		
 		// Strip out the path, leaving only the XBE file name
+		// NOTE: we assume that the XBE is always on the root of the C: drive
 		if (fileName.rfind('\\') >= 0)
 			fileName = fileName.substr(fileName.rfind('\\') + 1);
 
