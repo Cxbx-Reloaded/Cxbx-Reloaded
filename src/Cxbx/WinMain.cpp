@@ -34,8 +34,6 @@
 
 #include "WndMain.h"
 
-#include "Cxbx/EmuExe.h"
-
 #include "CxbxKrnl/CxbxKrnl.h"
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuShared.h"
@@ -73,7 +71,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     {
         MainWindow->OpenXbe(__argv[1]);
 
-        MainWindow->StartEmulation(AUTO_CONVERT_WINDOWS_TEMP, MainWindow->GetHwnd());
+        MainWindow->StartEmulation(MainWindow->GetHwnd());
     }
 
     /*! wait for window to be closed, or failure */
