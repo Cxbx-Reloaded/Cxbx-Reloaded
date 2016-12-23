@@ -417,6 +417,34 @@ XBSYSAPI EXPORTNUM(194) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateTimer
 }
 
 // ******************************************************************
+// * 0x00C3 - NtDeleteFile()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(195) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeleteFile
+(
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+)
+{
+	LOG_FUNC_ONE_ARG(ObjectAttributes);
+
+	NativeObjectAttributes nativeObjectAttributes;
+	NTSTATUS ret = CxbxObjectAttributesToNT(
+		ObjectAttributes,
+		nativeObjectAttributes,
+		"NtDeleteFile");
+
+	if (ret == STATUS_SUCCESS)
+	{
+		ret = NtDll::NtDeleteFile(
+			nativeObjectAttributes.NtObjAttrPtr);
+	}
+
+	if (FAILED(ret))
+		EmuWarning("NtDeleteFile Failed!");
+	
+	RETURN(ret);
+}
+
+// ******************************************************************
 // * 0x00C4 - NtDeviceIoControlFile()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(196) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeviceIoControlFile

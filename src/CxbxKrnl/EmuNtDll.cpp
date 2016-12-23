@@ -73,6 +73,7 @@ IMPORT(NtCreateMutant);
 IMPORT(NtCreateSemaphore);
 IMPORT(NtCreateTimer);
 IMPORT(NtDelayExecution);
+IMPORT(NtDeleteFile);
 IMPORT(NtDeviceIoControlFile);
 IMPORT(NtDuplicateObject);
 IMPORT(NtFlushBuffersFile);

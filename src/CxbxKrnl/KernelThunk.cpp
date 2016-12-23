@@ -260,7 +260,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::NtCreateMutant),                  // 0x00C0 (192)
 	(uint32)FUNC(&xboxkrnl::NtCreateSemaphore),               // 0x00C1 (193)
 	(uint32)FUNC(&xboxkrnl::NtCreateTimer),                   // 0x00C2 (194)
-	(uint32)PANIC(0x00C3),                                    // 0x00C3 (195) NtDeleteFile
+	(uint32)FUNC(&xboxkrnl::NtDeleteFile),                    // 0x00C3 (195)
 	(uint32)FUNC(&xboxkrnl::NtDeviceIoControlFile),           // 0x00C4 (196)
 	(uint32)FUNC(&xboxkrnl::NtDuplicateObject),               // 0x00C5 (197)
 	(uint32)FUNC(&xboxkrnl::NtFlushBuffersFile),              // 0x00C6 (198)

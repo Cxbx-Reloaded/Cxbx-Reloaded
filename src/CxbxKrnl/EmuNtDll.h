@@ -1211,6 +1211,14 @@ typedef NTSTATUS (NTAPI *FPTR_NtCreateFile)
 );
 
 // ******************************************************************
+// * NtDeleteFile
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtDeleteFile)
+(
+	IN  POBJECT_ATTRIBUTES  ObjectAttributes
+);
+
+// ******************************************************************
 // * NtCreateDirectoryObject
 // ******************************************************************
 typedef NTSTATUS(NTAPI *FPTR_NtCreateDirectoryObject)
@@ -1523,6 +1531,7 @@ EXTERN(NtCreateMutant);
 EXTERN(NtCreateSemaphore);
 EXTERN(NtCreateTimer);
 EXTERN(NtDelayExecution);
+EXTERN(NtDeleteFile);
 EXTERN(NtDeviceIoControlFile);
 EXTERN(NtDuplicateObject);
 EXTERN(NtFlushBuffersFile);
