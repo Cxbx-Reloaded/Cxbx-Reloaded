@@ -831,7 +831,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(D3D_MakeRequestedSpace_1_0_5849, 9,
 
-	XREF_D3D_MakeRequestedSpace,
+    XREF_D3D_MakeRequestedSpace,
     XRefZero)
 
         { 0x32, 0xC2 },
@@ -841,8 +841,8 @@ OOVPA_XREF(D3D_MakeRequestedSpace_1_0_5849, 9,
         { 0x90, 0x04 },
         { 0xBD, 0xD1 },
         { 0xBE, 0xEB },
-		{ 0xBF, 0x03 },
-		{ 0xC0, 0xDF },
+	{ 0xBF, 0x03 },
+	{ 0xC0, 0xDF },
 OOVPA_END;
 
 // ******************************************************************
@@ -855,13 +855,13 @@ OOVPA_XREF(D3D_Unknown_1_0_5849, 6,
     XRefNoSaveIndex,
     XRefOne)
 
-		{ 0x0A, XREF_D3D_MakeRequestedSpace },
+	{ 0x0A, XREF_D3D_MakeRequestedSpace },
 
         { 0x05, 0x50 },
         { 0x06, 0xD1 },
         { 0x07, 0xE8 },
         { 0x08, 0x50 },
-		{ 0x0E, 0xC3 },
+	{ 0x0E, 0xC3 },
 OOVPA_END;
 
 // ******************************************************************
@@ -1258,7 +1258,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_RopZCmpAlwaysRead_1_0_5849, 7,
     XRefNoSaveIndex,
     XRefOne)
 
-		{ 0x05, XREF_D3DRS_ROPZCMPALWAYSREAD },
+	{ 0x05, XREF_D3DRS_ROPZCMPALWAYSREAD },
 
         { 0x01, 0x44 },
         { 0x04, 0xA3 },

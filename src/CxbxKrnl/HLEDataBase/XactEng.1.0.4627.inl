@@ -564,10 +564,10 @@ OOVPA_XREF(IXACTEngine_UnRegisterWaveBank_1_0_4928, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-		// IXACTEngine_UnRegisterWaveBank+0x1E : call XACT::CEngine::UnRegisterWaveBank
+	// IXACTEngine_UnRegisterWaveBank+0x1E : call XACT::CEngine::UnRegisterWaveBank
         { 0x1F, XREF_XACT_CEngine_UnRegisterWaveBank },
 
-		{ 0x07, 0xFF },
+	{ 0x07, 0xFF },
         { 0x0E, 0x8B },
         { 0x16, 0xF8 },
         { 0x1E, 0xE8 },
