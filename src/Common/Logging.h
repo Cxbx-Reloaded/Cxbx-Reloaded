@@ -139,8 +139,6 @@ inline const char * _log_sanitize(BOOLEAN value) { return value ? "TRUE" : "FALS
 //
 
 // For thread_local, see : http://en.cppreference.com/w/cpp/language/storage_duration
-extern thread_local const DWORD _CurrentThreadId;
-
 // TODO : Use Boost.Format http://www.boost.org/doc/libs/1_53_0/libs/format/index.html
 extern thread_local std::string _logPrefix;
 
@@ -148,11 +146,9 @@ extern thread_local std::string _logPrefix;
 	#define LOG_FUNC_BEGIN \
 		do { if(g_bPrintfOn) { \
 			bool _had_arg = false; \
-			if (_logPrefix.empty()) { \
-				std::stringstream tmp; \
-				tmp << __FILENAME__ << " (" << hex2((uint16_t)_CurrentThreadId) << "): "; \
-				_logPrefix = tmp.str(); \
-			}; \
+			std::stringstream tmp; \
+			tmp << __FILENAME__ << " (" << hex2((uint16_t)GetCurrentThreadId()) << "): "; \
+			_logPrefix = tmp.str(); \
 			std::stringstream msg; \
 			msg << _logPrefix << __func__ << "(";
 
