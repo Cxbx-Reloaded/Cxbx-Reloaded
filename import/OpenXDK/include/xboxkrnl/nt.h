@@ -270,8 +270,8 @@ XBSYSAPI VOID *NtQueryEvent;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(210) NTSTATUS NTAPI NtQueryFullAttributesFile
 (
-    IN  POBJECT_ATTRIBUTES          ObjectAttributes,
-    OUT PVOID                       Attributes
+	IN  POBJECT_ATTRIBUTES          ObjectAttributes,
+	OUT PFILE_NETWORK_OPEN_INFORMATION  Attributes
 );
 
 // ******************************************************************

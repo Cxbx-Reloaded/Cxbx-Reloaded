@@ -590,11 +590,11 @@ static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
     uint32 count = Oovpa->Count;
 
     // Skip out if this is an unnecessary search
-    if(!bXRefFirstPass && Oovpa->XRefCount == 0 && Oovpa->XRefSaveIndex == XRefNotSaved)
+    if(!bXRefFirstPass && Oovpa->XRefCount == XRefZero && Oovpa->XRefSaveIndex == XRefNoSaveIndex)
         return 0;
 
     // large
-    if(Oovpa->Large == 1)
+    if(Oovpa->Type == Large)
     {
         LOOVPA<1> *Loovpa = (LOOVPA<1>*)Oovpa;
 
@@ -606,7 +606,7 @@ static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
             uint32 v;
 
             // check all cross references
-            for(v=0;v<Loovpa->XRefCount;v++)
+            for(v=0;v<Oovpa->XRefCount;v++)
             {
                 uint32 Offset = Loovpa->Lovp[v].Offset;
                 uint32 Value  = Loovpa->Lovp[v].Value;
@@ -614,39 +614,45 @@ static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
                 uint32 RealValue = *(uint32*)(cur + Offset);
 
                 if(XRefDataBase[Value] == -1)
-                    goto skipout_L;   // unsatisfied Xref is not acceptable
+                    goto skipout_L;   // Unsatisfied XRef is not acceptable
 
                 if((RealValue + cur + Offset+4 != XRefDataBase[Value]) && (RealValue != XRefDataBase[Value]))
                     break;
             }
 
-            // check all pairs, moving on if any do not match
-            for(v=0;v<count;v++)
-            {
-                uint32 Offset = Loovpa->Lovp[v].Offset;
-                uint32 Value  = Loovpa->Lovp[v].Value;
+			// TODO : Should we do the following (to could prevent false positives), like the small case does?
+			// TODO : Even better would be to merge both paths into one, as this is the only difference...
+			// check OV pairs if all xrefs matched
+			// if (v == Oovpa->XRefCount)
+			{
+				// check all pairs, moving on if any do not match
+				for (v = 0; v < count; v++)
+				{
+					uint32 Offset = Loovpa->Lovp[v].Offset;
+					uint32 Value = Loovpa->Lovp[v].Value;
 
-                uint08 RealValue = *(uint08*)(cur + Offset);
+					uint08 RealValue = *(uint08*)(cur + Offset);
 
-                if(RealValue != Value)
-                    break;
-            }
+					if (RealValue != Value)
+						break;
+				}
+			}
 
             // success if we found all pairs
             if(v == count)
             {
-                if(Loovpa->XRefSaveIndex != XRefNotSaved)
+                if(Oovpa->XRefSaveIndex != XRefNoSaveIndex)
                 {
-                    if(XRefDataBase[Loovpa->XRefSaveIndex] == -1)
+                    if(XRefDataBase[Oovpa->XRefSaveIndex] == -1)
                     {
                         UnResolvedXRefs--;
-                        XRefDataBase[Loovpa->XRefSaveIndex] = cur;
+                        XRefDataBase[Oovpa->XRefSaveIndex] = cur;
 
                         return (void*)cur;
                     }
                     else
                     {
-                        return (void*)XRefDataBase[Loovpa->XRefSaveIndex];   // already Found, no bother patching again
+                        return (void*)XRefDataBase[Oovpa->XRefSaveIndex];   // already Found, no bother patching again
                     }
                 }
 
@@ -669,7 +675,7 @@ static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
             uint32 v;
 
             // check all cross references
-            for(v=0;v<Soovpa->XRefCount;v++)
+            for(v=0;v<Oovpa->XRefCount;v++)
             {
                 uint32 Offset = Soovpa->Sovp[v].Offset;
                 uint32 Value  = Soovpa->Sovp[v].Value;
@@ -684,9 +690,10 @@ static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
             }
 
             // check OV pairs if all xrefs matched
-            if(v == Soovpa->XRefCount)
+            if(v == Oovpa->XRefCount)
             {
                 // check all pairs, moving on if any do not match
+				// TODO : Why does this loop use v=Oovpa->XRefCount instead of starting with v=0 (like in large)?
                 for(;v<count;v++)
                 {
                     uint32 Offset = Soovpa->Sovp[v].Offset;
@@ -702,18 +709,18 @@ static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
             // success if we found all pairs
             if(v == count)
             {
-                if(Soovpa->XRefSaveIndex != XRefNotSaved)
+                if(Oovpa->XRefSaveIndex != XRefNoSaveIndex)
                 {
-                    if(XRefDataBase[Soovpa->XRefSaveIndex] == -1)
+                    if(XRefDataBase[Oovpa->XRefSaveIndex] == -1)
                     {
                         UnResolvedXRefs--;
-                        XRefDataBase[Soovpa->XRefSaveIndex] = cur;
+                        XRefDataBase[Oovpa->XRefSaveIndex] = cur;
 
                         return (void*)cur;
                     }
                     else
                     {
-                        return (void*)XRefDataBase[Soovpa->XRefSaveIndex];   // already Found, no bother patching again
+                        return (void*)XRefDataBase[Oovpa->XRefSaveIndex];   // already Found, no bother patching again
                     }
                 }
 

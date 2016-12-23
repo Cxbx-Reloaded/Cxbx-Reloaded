@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by C:\Users\Brandon\Desktop\Cxbx\dstien\wip\resource\Cxbx.rc
+// Used by S:\GitHub\Cxbx-Reloaded\resource\Cxbx.rc
 //
 #define IDI_CXBX                        101
 #define IDB_SPLASH                      102
@@ -52,7 +52,6 @@
 #define ID_FILE_EXIT                    40005
 #define ID_HELP_ABOUT                   40008
 #define ID_EMULATION_START              40009
-#define ID_FILE_EXPORTTOEXE             40011
 #define ID_FILE_OPEN_XBE                40013
 #define ID_FILE_CLOSE_XBE               40014
 #define ID_HELP_HOMEPAGE                40019
@@ -62,7 +61,6 @@
 #define ID_EDIT_LOGOBITMAP_IMPORT       40026
 #define ID_EDIT_PATCH_ALLOW64MB         40027
 #define ID_EDIT_PATCH_DEBUGMODE         40031
-#define ID_FILE_IMPORTFROMEXE           40032
 #define ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE 40035
 #define ID_EMULATION_DEBUGOUTPUTGUI_FILE 40036
 #define ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE 40037
@@ -80,22 +78,10 @@
 #define ID_FILE_RXBE_7                  40057
 #define ID_FILE_RXBE_8                  40058
 #define ID_FILE_RXBE_9                  40059
-#define ID_FILE_REXE_0                  40060
-#define ID_FILE_REXE_1                  40061
-#define ID_FILE_REXE_2                  40062
-#define ID_FILE_REXE_3                  40063
-#define ID_FILE_REXE_4                  40064
-#define ID_FILE_REXE_5                  40065
-#define ID_FILE_REXE_6                  40066
-#define ID_FILE_REXE_7                  40067
-#define ID_FILE_REXE_8                  40068
-#define ID_FILE_REXE_9                  40069
 #define ID_EDIT_DUMPXBEINFOTO_FILE      40071
 #define ID_EDIT_DUMPXBEINFOTO_DEBUGCONSOLE 40072
-#define ID_SETTINGS_GENXP               40078
-#define ID_SETTINGS_GENWT               40079
-#define ID_SETTINGS_GENMA               40080
 #define ID_EMULATION_STOP               40082
+#define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 

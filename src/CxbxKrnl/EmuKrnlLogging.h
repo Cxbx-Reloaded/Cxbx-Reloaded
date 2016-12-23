@@ -51,6 +51,7 @@ enum  CREATE_OPTION;
 #include <sstream> // for std::ostream
 //?#include "Logging.h"
 
+
 // Headers for rendering non-Xbox types :
 std::ostream& operator<<(std::ostream& os, const PULONG& value);
 

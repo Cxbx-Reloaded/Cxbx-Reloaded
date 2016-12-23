@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->Cxbx->EmuExe.h
+// *   Cxbx->Win32->CxbxKrnl->XactEng.1.0.4627.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -31,22 +31,12 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUEXE_H
-#define EMUEXE_H
+#ifndef XACTENG_1_0_4627_H
+#define XACTENG_1_0_4627_H
 
-#include "Common/Exe.h"
-#include <windows.h>
+#include "OOVPA.h"
 
-// ******************************************************************
-// * class : EmuExe
-// ******************************************************************
-class EmuExe : public Exe
-{
-    public:
-        // ******************************************************************
-        // * Construct via Xbe file object
-        // ******************************************************************
-        EmuExe(class Xbe *x_Xbe, DebugMode x_debug_mode, char *x_debug_filename, HWND hwndParent = NULL);
-};
+extern OOVPATable XactEng_1_0_4627[];
+extern uint32     XactEng_1_0_4627_SIZE;
 
 #endif
