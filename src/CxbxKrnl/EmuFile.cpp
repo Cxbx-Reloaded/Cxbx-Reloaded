@@ -92,7 +92,7 @@ const std::string DeviceHarddisk0Partition17 = DeviceHarddisk0PartitionPrefix + 
 const std::string DeviceHarddisk0Partition18 = DeviceHarddisk0PartitionPrefix + "18";
 const std::string DeviceHarddisk0Partition19 = DeviceHarddisk0PartitionPrefix + "19";
 const std::string DeviceHarddisk0Partition20 = DeviceHarddisk0PartitionPrefix + "20"; // 20 = Largest possible partition number
-const char CxbxDefaultXbeDriveLetter = 'C';
+const char CxbxDefaultXbeDriveLetter = 'D';
 
 int CxbxDefaultXbeDriveIndex = -1;
 EmuNtSymbolicLinkObject* NtSymbolicLinkObjects[26];
