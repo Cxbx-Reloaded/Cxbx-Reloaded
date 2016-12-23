@@ -112,7 +112,7 @@ XBSYSAPI EXPORTNUM(271) LONG NTAPI RtlCompareUnicodeString
 );
 
 // ******************************************************************
-// * RtlCopyString
+// * 0x0110 - RtlCopyString()
 // ******************************************************************
 // *
 // * Copy Source to Destination
@@ -120,8 +120,8 @@ XBSYSAPI EXPORTNUM(271) LONG NTAPI RtlCompareUnicodeString
 // ******************************************************************
 XBSYSAPI EXPORTNUM(272) VOID NTAPI RtlCopyString
 (
-  IN OUT PVOID  Destination,        // TODO: should be STRING
-  IN     PVOID  Source OPTIONAL     // TODO: should be STRING
+	OUT PSTRING DestinationString,
+	IN PSTRING SourceString OPTIONAL
 );
 
 XBSYSAPI VOID *RtlCopyUnicodeString;

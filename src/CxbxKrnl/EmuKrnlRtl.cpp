@@ -304,6 +304,23 @@ XBSYSAPI EXPORTNUM(271) xboxkrnl::LONG NTAPI xboxkrnl::RtlCompareUnicodeString
 }
 
 // ******************************************************************
+// * 0x0110 - RtlCopyString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(272) xboxkrnl::VOID NTAPI xboxkrnl::RtlCopyString
+(
+	OUT PSTRING DestinationString,
+	IN PSTRING SourceString OPTIONAL
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(DestinationString)
+		LOG_FUNC_ARG(SourceString)
+		LOG_FUNC_END;
+
+	NtDll::RtlCopyString((NtDll::PSTRING)DestinationString, (NtDll::PSTRING)SourceString);
+}
+
+// ******************************************************************
 // * 0x0115 - RtlEnterCriticalSection()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection

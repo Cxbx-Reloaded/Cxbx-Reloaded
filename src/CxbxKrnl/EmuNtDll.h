@@ -968,6 +968,15 @@ typedef LONG (NTAPI *FPTR_RtlCompareUnicodeString)
 );
 
 // ******************************************************************
+// * RtlCopyString
+// ******************************************************************
+typedef LONG(NTAPI *FPTR_RtlCopyString)
+(
+	OUT PSTRING DestinationString,
+	IN const STRING  *SourceString OPTIONAL
+);
+
+// ******************************************************************
 // * RtlUnicodeStringToAnsiString
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeStringToAnsiString)
@@ -1609,6 +1618,7 @@ EXTERN(RtlCompareMemory);
 EXTERN(RtlCompareMemoryUlong);
 EXTERN(RtlCompareString);
 EXTERN(RtlCompareUnicodeString);
+EXTERN(RtlCopyString);
 EXTERN(RtlCreateHeap);
 EXTERN(RtlDestroyHeap);
 EXTERN(RtlEnterCriticalSection);

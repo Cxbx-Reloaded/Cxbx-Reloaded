@@ -111,6 +111,7 @@ IMPORT(RtlCompareMemory);
 IMPORT(RtlCompareMemoryUlong);
 IMPORT(RtlCompareString);
 IMPORT(RtlCompareUnicodeString);
+IMPORT(RtlCopyString);
 IMPORT(RtlCreateHeap);
 IMPORT(RtlDestroyHeap);
 IMPORT(RtlEnterCriticalSection);
