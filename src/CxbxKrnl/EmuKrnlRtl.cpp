@@ -262,6 +262,27 @@ XBSYSAPI EXPORTNUM(269) xboxkrnl::SIZE_T NTAPI xboxkrnl::RtlCompareMemoryUlong
 }
 
 // ******************************************************************
+// * 0x010E - RtlCompareString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(270) xboxkrnl::LONG NTAPI xboxkrnl::RtlCompareString
+(
+	IN PSTRING String1,
+	IN PSTRING String2,
+	IN BOOLEAN CaseInSensitive
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(String1)
+		LOG_FUNC_ARG(String2)
+		LOG_FUNC_ARG(CaseInSensitive)
+		LOG_FUNC_END;
+
+	LONG result = NtDll::RtlCompareString((NtDll::STRING *)String1, (NtDll::STRING *)String2, CaseInSensitive);
+
+	RETURN(result);
+}
+
+// ******************************************************************
 // * 0x0115 - RtlEnterCriticalSection()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection

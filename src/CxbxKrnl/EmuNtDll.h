@@ -948,6 +948,16 @@ typedef NTSTATUS(NTAPI *FPTR_RtlCharToInteger)
 );
 
 // ******************************************************************
+// * RtlCompareString
+// ******************************************************************
+typedef LONG (NTAPI *FPTR_RtlCompareString)
+(
+	IN	const STRING  *String1,
+	IN	const STRING  *String2,
+	IN	      BOOLEAN CaseInSensitive
+);
+
+// ******************************************************************
 // * RtlUnicodeStringToAnsiString
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeStringToAnsiString)
@@ -1587,6 +1597,7 @@ EXTERN(RtlAppendUnicodeToString);
 EXTERN(RtlCharToInteger);
 EXTERN(RtlCompareMemory);
 EXTERN(RtlCompareMemoryUlong);
+EXTERN(RtlCompareString);
 EXTERN(RtlCreateHeap);
 EXTERN(RtlDestroyHeap);
 EXTERN(RtlEnterCriticalSection);

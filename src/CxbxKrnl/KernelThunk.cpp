@@ -335,7 +335,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::RtlCharToInteger),                // 0x010B (267)
 	(uint32)FUNC(&xboxkrnl::RtlCompareMemory),                // 0x010C (268)
 	(uint32)FUNC(&xboxkrnl::RtlCompareMemoryUlong),           // 0x010D (269)
-	(uint32)PANIC(0x010E),                                    // 0x010E (270) RtlCompareString
+	(uint32)FUNC(&xboxkrnl::RtlCompareString),                // 0x010E (270)
 	(uint32)PANIC(0x010F),                                    // 0x010F (271) RtlCompareUnicodeString
 	(uint32)PANIC(0x0110),                                    // 0x0110 (272) RtlCopyString
 	(uint32)PANIC(0x0111),                                    // 0x0111 (273) RtlCopyUnicodeString
