@@ -135,7 +135,11 @@ OOVPA_END;
 // ******************************************************************
 // * IDirect3DDevice8_SetRenderState_CullMode
 // ******************************************************************
-OOVPA_XREF(IDirect3DDevice8_SetRenderState_CullMode_1_0_4034, 14, XREF_DXSRSCULLMODE, XRefZero)
+OOVPA_XREF(IDirect3DDevice8_SetRenderState_CullMode_1_0_4034, 14,
+
+    XREF_DXSRSCULLMODE,
+    XRefZero)
+
         // IDirect3DDevice8_SetRenderState_CullMode+0x00 : push esi
         { 0x00, 0x56 }, // (Offset,Value)-Pair #1
 

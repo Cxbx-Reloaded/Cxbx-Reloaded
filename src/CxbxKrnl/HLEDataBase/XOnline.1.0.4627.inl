@@ -35,7 +35,11 @@
 // ******************************************************************
 // * XnInit
 // ******************************************************************
-OOVPA_XREF(XnInit_1_0_4627, 12, XREF_XNINIT, XRefZero)
+OOVPA_XREF(XnInit_1_0_4627, 12,
+
+    XREF_XNINIT,
+    XRefZero)
+
         // XnInit+0x03 : sub esp, 0x0218
         { 0x03, 0x81 }, // (Offset,Value)-Pair #1
         { 0x04, 0xEC }, // (Offset,Value)-Pair #2
@@ -50,9 +54,9 @@ OOVPA_XREF(XnInit_1_0_4627, 12, XREF_XNINIT, XRefZero)
         // XnInit+0x3C : push 0x4454454E
         { 0x3C, 0x68 }, // (Offset,Value)-Pair #8
         { 0x3D, 0x4E }, // (Offset,Value)-Pair #9
-		{ 0x3E, 0x45 }, // (Offset,Value)-Pair #10
-		{ 0x3F, 0x54 }, // (Offset,Value)-Pair #11
-		{ 0x40, 0x44 }, // (Offset,Value)-Pair #12
+	{ 0x3E, 0x45 }, // (Offset,Value)-Pair #10
+	{ 0x3F, 0x54 }, // (Offset,Value)-Pair #11
+	{ 0x40, 0x44 }, // (Offset,Value)-Pair #12
 OOVPA_END;
 
 // ******************************************************************
@@ -73,7 +77,11 @@ OOVPA_END;
 // ******************************************************************
 // * XoUpdateLaunchNewImageInternal
 // ******************************************************************
-OOVPA_XREF(XoUpdateLaunchNewImageInternal_1_0_4627, 8, XREF_XoUpdateLaunchNewImageInternal, XRefZero)
+OOVPA_XREF(XoUpdateLaunchNewImageInternal_1_0_4627, 8,
+
+    XREF_XoUpdateLaunchNewImageInternal,
+    XRefZero)
+
         { 0x1E, 0xDB },
         { 0x3E, 0x1B },
         { 0x5E, 0xF6 },

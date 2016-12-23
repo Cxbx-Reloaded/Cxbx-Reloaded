@@ -672,18 +672,18 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetTileNoWait_1_0_5849, 10)
 
-		// D3DDevice_SetTileNoWait+0x00: sub esp, 0x1C
-		{ 0x00, 0x83 },
-		{ 0x01, 0xEC },
-		{ 0x02, 0x1C },
-		// D3DDevice_SetTileNoWait+0x45: lea ebx, [ebx+ebp*8+0x1AC0]
-		{ 0x45, 0x8D },
-		{ 0x46, 0x9C },
-		{ 0x47, 0xEB },
-		{ 0x48, 0xC0 },
-		{ 0x49, 0x1A },
-		{ 0x4A, 0x00 },
-		{ 0x4B, 0x00 },
+	// D3DDevice_SetTileNoWait+0x00: sub esp, 0x1C
+	{ 0x00, 0x83 },
+	{ 0x01, 0xEC },
+	{ 0x02, 0x1C },
+	// D3DDevice_SetTileNoWait+0x45: lea ebx, [ebx+ebp*8+0x1AC0]
+	{ 0x45, 0x8D },
+	{ 0x46, 0x9C },
+	{ 0x47, 0xEB },
+	{ 0x48, 0xC0 },
+	{ 0x49, 0x1A },
+	{ 0x4A, 0x00 },
+	{ 0x4B, 0x00 },
 OOVPA_END;
 
 // ******************************************************************
@@ -831,7 +831,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_XREF(D3D_MakeRequestedSpace_1_0_5849, 9,
 
-	XREF_D3D_MakeRequestedSpace,
+    XREF_D3D_MakeRequestedSpace,
     XRefZero)
 
         { 0x32, 0xC2 },
@@ -841,8 +841,8 @@ OOVPA_XREF(D3D_MakeRequestedSpace_1_0_5849, 9,
         { 0x90, 0x04 },
         { 0xBD, 0xD1 },
         { 0xBE, 0xEB },
-		{ 0xBF, 0x03 },
-		{ 0xC0, 0xDF },
+	{ 0xBF, 0x03 },
+	{ 0xC0, 0xDF },
 OOVPA_END;
 
 // ******************************************************************
@@ -855,13 +855,13 @@ OOVPA_XREF(D3D_Unknown_1_0_5849, 6,
     XRefNoSaveIndex,
     XRefOne)
 
-		{ 0x0A, XREF_D3D_MakeRequestedSpace },
+	{ 0x0A, XREF_D3D_MakeRequestedSpace },
 
         { 0x05, 0x50 },
         { 0x06, 0xD1 },
         { 0x07, 0xE8 },
         { 0x08, 0x50 },
-		{ 0x0E, 0xC3 },
+	{ 0x0E, 0xC3 },
 OOVPA_END;
 
 // ******************************************************************
@@ -1031,26 +1031,26 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3D_CDevice_KickOff_1_0_5849, 13)
 
-		// D3D::CDevice::KickOff+0x0A : mov edx, [ecx+0x35C]
-		{ 0x0A, 0x8B },
-		{ 0x0B, 0x96 },
-		{ 0x0C, 0x70 },
-		{ 0x0D, 0x07 },
-		{ 0x0E, 0x00 },
-		{ 0x0F, 0x00 },
+	// D3D::CDevice::KickOff+0x0A : mov edx, [ecx+0x35C]
+	{ 0x0A, 0x8B },
+	{ 0x0B, 0x96 },
+	{ 0x0C, 0x70 },
+	{ 0x0D, 0x07 },
+	{ 0x0E, 0x00 },
+	{ 0x0F, 0x00 },
 
-		// D3D::CDevice::KickOff+0x14 : test ch, 0x20
-		{ 0x14, 0xF6 },
-		{ 0x15, 0xC4 },
-		{ 0x16, 0x20 },
+	// D3D::CDevice::KickOff+0x14 : test ch, 0x20
+	{ 0x14, 0xF6 },
+	{ 0x15, 0xC4 },
+	{ 0x16, 0x20 },
 
-		// D3D::CDevice::KickOff+0x24 : sfence
-		{ 0x24, 0x0F },
-		{ 0x25, 0xAE },
-		{ 0x26, 0xF8 },
+	// D3D::CDevice::KickOff+0x24 : sfence
+	{ 0x24, 0x0F },
+	{ 0x25, 0xAE },
+	{ 0x26, 0xF8 },
 
-		// D3D::CDevice::KickOff+0xAF : retn
-		{ 0xAF, 0xC3 }
+	// D3D::CDevice::KickOff+0xAF : retn
+	{ 0xAF, 0xC3 }
 OOVPA_END;
 
 // ******************************************************************
@@ -1258,7 +1258,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_RopZCmpAlwaysRead_1_0_5849, 7,
     XRefNoSaveIndex,
     XRefOne)
 
-		{ 0x05, XREF_D3DRS_ROPZCMPALWAYSREAD },
+	{ 0x05, XREF_D3DRS_ROPZCMPALWAYSREAD },
 
         { 0x01, 0x44 },
         { 0x04, 0xA3 },

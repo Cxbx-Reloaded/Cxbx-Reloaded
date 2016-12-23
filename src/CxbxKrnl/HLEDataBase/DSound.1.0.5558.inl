@@ -2023,13 +2023,13 @@ OOVPATable DSound_1_0_5558[] = {
 	// IDirectSoundBuffer_SetMinDistance
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetMinDistance_1_0_5558, XTL::EmuIDirectSoundBuffer8_SetMinDistance),
     // CDirectSoundVoice::SetRolloffFactor (XREF) (* unchanged since 4627 *)
-    /*{ THESE ARE NOT CORRECT
+    /* THESE ARE NOT CORRECT
 	OOVPA_TABLE_XREF(CDirectSoundVoice_SetRolloffFactor_1_0_4627),
     // CDirectSoundBuffer::SetRolloffFactor (XREF) (* unchanged since 4627 *)
 	OOVPA_TABLE_XREF(CDirectSoundBuffer_SetRolloffFactor_1_0_4627),
 	// IDirectSoundBuffer_SetRolloffFactor (* unchanged since 4627 *)
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetRolloffFactor_1_0_4627, XTL::EmuIDirectSoundBuffer8_SetRolloffFactor),
-	}*/
+	*/
     // CDirectSoundVoice::SetDopplerFactor (XREF)
 	OOVPA_TABLE_XREF(CDirectSoundVoice_SetDopplerFactor_1_0_5558),
     // CDirectSoundBuffer::SetDopplerFactor (XREF)
@@ -2140,7 +2140,7 @@ OOVPATable DSound_1_0_5558[] = {
     // CDirectSoundVoice::CommitDeferredSettings (XREF)
 	OOVPA_TABLE_XREF(CDirectSoundVoice_CommitDeferredSettings_1_0_5558),
     // CDirectSoundVoice::SetAllParameters (XREF)
-    /*{
+    /*
 	OOVPA_TABLE_XREF(CDirectSoundVoice_SetAllParameters_1_0_5558),
     // CDirectSoundBuffer::SetAllParameters (XREF)
 	OOVPA_TABLE_XREF(CDirectSoundBuffer_SetAllParameters_1_0_5558),

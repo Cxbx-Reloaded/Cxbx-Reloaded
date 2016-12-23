@@ -2753,7 +2753,11 @@ OOVPA_END;
 // ******************************************************************
 // * This is for the real D3D::KickOffAndWaitForIdle
 // ******************************************************************
-OOVPA_XREF(D3D_KickOffAndWaitForIdle_1_0_3925, 5, XREF_D3D_KickOffAndWaitForIdle, XRefZero)
+OOVPA_XREF(D3D_KickOffAndWaitForIdle_1_0_3925, 5,
+
+    XREF_D3D_KickOffAndWaitForIdle,
+    XRefZero)
+
         { 0x05, 0x8B },
         { 0x06, 0x48 },
         { 0x07, 0x1C },
@@ -3011,7 +3015,11 @@ OOVPA_END;
 // ******************************************************************
 // * D3D::SetFence
 // ******************************************************************
-OOVPA_XREF(D3D_SetFence_1_0_3925, 11, XREF_D3D_SETFENCE, XRefZero)
+OOVPA_XREF(D3D_SetFence_1_0_3925, 11,
+
+    XREF_D3D_SETFENCE,
+    XRefZero)
+
 		// D3D::SetFence+0x0F : mov edi, [esi+0x1C]
 		{ 0x0F, 0x8B },
 		{ 0x10, 0x7E },
@@ -3195,10 +3203,10 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3D_SetCommonDebugRegisters_1_0_3925, 10)
 
-		{ 0x07, 0x8B },
-		{ 0x08, 0x96 },
-		{ 0x09, 0x44 },
-		{ 0x0A, 0x2B },
+	{ 0x07, 0x8B },
+	{ 0x08, 0x96 },
+	{ 0x09, 0x44 },
+	{ 0x0A, 0x2B },
         { 0x31, 0x81 },
         { 0x32, 0xE2 },
         { 0x33, 0xFF },
@@ -3224,29 +3232,37 @@ OOVPA_END;
 // ******************************************************************
 // * D3D::BlockOnTime
 // ******************************************************************
-OOVPA_XREF(D3D_BlockOnTime_1_0_3925, 9, XREF_D3D_BLOCKONTIME, XRefZero)
+OOVPA_XREF(D3D_BlockOnTime_1_0_3925, 9,
+
+    XREF_D3D_BLOCKONTIME,
+    XRefZero)
+
         // D3D::BlockOnFence+0x0A : push edi
-		{ 0x0A, 0x57 },
-		// D3D::BlockOnFence+0x4E : cmp eax, 0x8000
-		{ 0x4E, 0x3D },
-		{ 0x4F, 0x00 },
-		{ 0x50, 0x80 },
-		{ 0x51, 0x00 },
-		// D3D::BlockOnFence+0x6E : mov ebp, 0x40100
-		{ 0x6E, 0xBD },
-		{ 0x6F, 0x00 },
-		{ 0x70, 0x01 },
-		{ 0x71, 0x04 }
+    	{ 0x0A, 0x57 },
+    	// D3D::BlockOnFence+0x4E : cmp eax, 0x8000
+    	{ 0x4E, 0x3D },
+    	{ 0x4F, 0x00 },
+    	{ 0x50, 0x80 },
+    	{ 0x51, 0x00 },
+    	// D3D::BlockOnFence+0x6E : mov ebp, 0x40100
+    	{ 0x6E, 0xBD },
+    	{ 0x6F, 0x00 },
+    	{ 0x70, 0x01 },
+    	{ 0x71, 0x04 }
 OOVPA_END;
 
 // ******************************************************************
 // * D3D::BlockOnResource
 // ******************************************************************
-OOVPA_XREF(D3D_BlockOnResource_1_0_3925, 9, XREF_D3D_BlockOnResource, XRefZero)
-		{ 0x34, 0x8B }, // mov edx, [ecx+0x1C]
-		{ 0x35, 0x51 },
-		{ 0x36, 0x1C },
-		{ 0x41, 0xC2 }, // retn 4
+OOVPA_XREF(D3D_BlockOnResource_1_0_3925, 9,
+
+    XREF_D3D_BlockOnResource,
+    XRefZero)
+
+	{ 0x34, 0x8B }, // mov edx, [ecx+0x1C]
+	{ 0x35, 0x51 },
+	{ 0x36, 0x1C },
+	{ 0x41, 0xC2 }, // retn 4
         { 0x42, 0x04 },
         { 0x43, 0x00 },
         { 0x7E, 0xC2 }, // retn 4
