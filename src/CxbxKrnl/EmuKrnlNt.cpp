@@ -90,7 +90,14 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 		AllocationType &= ~MEM_NOZERO;
 	}
 
-	NTSTATUS ret = NtDll::NtAllocateVirtualMemory(GetCurrentProcess(), BaseAddress, ZeroBits, AllocationSize, AllocationType, Protect);
+	NTSTATUS ret = NtDll::NtAllocateVirtualMemory(
+		/*ProcessHandle=*/g_CurrentProcessHandle,
+		BaseAddress,
+		ZeroBits,
+		/*RegionSize=*/AllocationSize,
+		AllocationType,
+		Protect);
+
 	if (ret == 0xC00000F3)
 		EmuWarning("Invalid Param!");
 
@@ -113,11 +120,9 @@ XBSYSAPI EXPORTNUM(185) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCancelTimer
 
 	// redirect to Windows NT
 	// TODO : Untested
-	NTSTATUS ret = NtDll::NtCancelTimer
-	(
+	NTSTATUS ret = NtDll::NtCancelTimer(
 		TimerHandle,
-		/*OUT*/CurrentState
-	);
+		/*OUT*/CurrentState);
 
 	if (FAILED(ret))
 		EmuWarning("NtCancelTimer failed!");
@@ -155,17 +160,15 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
 
 	NTSTATUS ret = STATUS_SUCCESS;
 
-	// delete 'special' handles
 	if (IsEmuHandle(Handle))
 	{
+		// delete 'special' handles
 		EmuHandle *iEmuHandle = HandleToEmuHandle(Handle);
 		ret = iEmuHandle->NtClose();
 	}
-	// close normal handles
 	else
-	{
+		// close normal handles
 		ret = NtDll::NtClose(Handle);
-	}
 
 	RETURN(ret);
 }
@@ -184,24 +187,27 @@ XBSYSAPI EXPORTNUM(188) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateDirectoryObje
 		LOG_FUNC_ARG(ObjectAttributes)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = 0;
-
 	NativeObjectAttributes nativeObjectAttributes;
-	ACCESS_MASK DesiredAccess = 0;
+	NTSTATUS ret = CxbxObjectAttributesToNT(
+		ObjectAttributes, 
+		nativeObjectAttributes,
+		"NtCreateDirectoryObject");
 
-	ret = CxbxObjectAttributesToNT(ObjectAttributes, nativeObjectAttributes, "NtCreateDirectoryObject");
 	if (ret == STATUS_SUCCESS)
 	{
-		// TODO -oDxbx : Is this the correct ACCESS_MASK? :
-		DesiredAccess = DIRECTORY_CREATE_OBJECT;
+		// TODO : Is this the correct ACCESS_MASK? :
+		const ACCESS_MASK DesiredAccess = DIRECTORY_CREATE_OBJECT;
 
-		ret = /*# JwaNative::*/ NtDll::NtCreateDirectoryObject(DirectoryHandle, DesiredAccess, nativeObjectAttributes.NtObjAttrPtr);
+		ret = NtDll::NtCreateDirectoryObject(
+			/*OUT*/DirectoryHandle,
+			DesiredAccess,
+			nativeObjectAttributes.NtObjAttrPtr);
 	}
 
 	if (FAILED(ret))
 		EmuWarning("NtCreateDirectoryObject Failed!");
-
-	DbgPrintf("EmuKrnl (0x%X): NtCreateDirectoryObject DirectoryHandle = 0x%.08X\n", GetCurrentThreadId(), *DirectoryHandle);
+	else
+		DbgPrintf("EmuKrnl (0x%X): NtCreateDirectoryObject DirectoryHandle = 0x%.08X\n", GetCurrentThreadId(), *DirectoryHandle);
 
 	RETURN(ret);
 }
@@ -224,26 +230,30 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 		LOG_FUNC_ARG(InitialState)
 		LOG_FUNC_END;
 
-	NativeObjectAttributes nativeObjectAttributes;
-	ACCESS_MASK DesiredAccess = 0;
-
 	// initialize object attributes
-	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, nativeObjectAttributes); /*var*/
+	NativeObjectAttributes nativeObjectAttributes;
+	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, /*var*/nativeObjectAttributes);
+
 	if (ret == STATUS_SUCCESS)
 	{
-		// TODO -oDxbx : Is this the correct ACCESS_MASK? :
-		DesiredAccess = EVENT_ALL_ACCESS;
+		// TODO : Is this the correct ACCESS_MASK? :
+		const ACCESS_MASK DesiredAccess = EVENT_ALL_ACCESS;
 
 		// redirect to Win2k/XP
-		ret = NtDll::NtCreateEvent(EventHandle, DesiredAccess, nativeObjectAttributes.NtObjAttrPtr, (NtDll::EVENT_TYPE)EventType, InitialState);
+		ret = NtDll::NtCreateEvent(
+			/*OUT*/EventHandle,
+			DesiredAccess,
+			nativeObjectAttributes.NtObjAttrPtr,
+			(NtDll::EVENT_TYPE)EventType,
+			InitialState);
 		// TODO : Instead of the above, we should consider using the Ke*Event APIs, but
 		// that would require us to create the event's kernel object with the Ob* api's too!
 	}
 
 	if (FAILED(ret))
 		EmuWarning("NtCreateEvent Failed!");
-
-	DbgPrintf("EmuKrnl (0x%X): NtCreateEvent EventHandle = 0x%.08X\n", GetCurrentThreadId(), *EventHandle);
+	else
+		DbgPrintf("EmuKrnl (0x%X): NtCreateEvent EventHandle = 0x%.08X\n", GetCurrentThreadId(), *EventHandle);
 
 	RETURN(ret);
 }
@@ -267,15 +277,15 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
 	LOG_FORWARD("IoCreateFile");
 
 	return xboxkrnl::IoCreateFile(
-		FileHandle, 
-		DesiredAccess, 
-		ObjectAttributes, 
-		IoStatusBlock, 
-		AllocationSize, 
-		FileAttributes, 
-		ShareAccess, 
-		CreateDisposition, 
-		CreateOptions, 
+		FileHandle,
+		DesiredAccess,
+		ObjectAttributes,
+		IoStatusBlock,
+		AllocationSize,
+		FileAttributes,
+		ShareAccess,
+		CreateDisposition,
+		CreateOptions,
 		0);
 }
 
@@ -295,32 +305,39 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 		LOG_FUNC_ARG(InitialOwner)
 		LOG_FUNC_END;
 
-	char *szBuffer = (ObjectAttributes != 0) ? ObjectAttributes->ObjectName->Buffer : 0;
-	wchar_t wszObjectName[160];
+	char *szBuffer = (ObjectAttributes != NULL) ? ObjectAttributes->ObjectName->Buffer : nullptr;
+	wchar_t wszObjectName[MAX_PATH];
 
 	NtDll::UNICODE_STRING    NtUnicodeString;
 	NtDll::OBJECT_ATTRIBUTES NtObjAttr;
 
 	// initialize object attributes
-	if (szBuffer != 0)
+	if (szBuffer != nullptr)
 	{
-		mbstowcs(wszObjectName, "\\??\\", 4);
-		mbstowcs(wszObjectName + 4, szBuffer, 160);
+		mbstowcs(/*Dest=*/wszObjectName, /*Source=*/DrivePrefix.c_str(), /*MaxCount=*/DrivePrefix.length());
+		mbstowcs(/*Dest=*/wszObjectName + DrivePrefix.length(), /*Source=*/szBuffer, /*MaxCount=*/MAX_PATH);
 
 		NtDll::RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
 
-		InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, NULL);
+		InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, nullptr);
 	}
 
 	NtObjAttr.RootDirectory = 0;
 
-	// redirect to NtCreateMutant
-	NTSTATUS ret = NtDll::NtCreateMutant(MutantHandle, MUTANT_ALL_ACCESS, (szBuffer != 0) ? &NtObjAttr : 0, InitialOwner);
+	// TODO : Is this the correct ACCESS_MASK? :
+	const ACCESS_MASK DesiredAccess = MUTANT_ALL_ACCESS;
+
+	// redirect to Windows Nt
+	NTSTATUS ret = NtDll::NtCreateMutant(
+		/*OUT*/MutantHandle, 
+		DesiredAccess,
+		(szBuffer != 0) ? &NtObjAttr : nullptr, 
+		InitialOwner);
 
 	if (FAILED(ret))
 		EmuWarning("NtCreateMutant Failed!");
-
-	DbgPrintf("EmuKrnl (0x%X): NtCreateMutant MutantHandle = 0x%.08X\n", GetCurrentThreadId(), *MutantHandle);
+	else
+		DbgPrintf("EmuKrnl (0x%X): NtCreateMutant MutantHandle = 0x%.08X\n", GetCurrentThreadId(), *MutantHandle);
 
 	RETURN(ret);
 }
@@ -343,20 +360,21 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 		LOG_FUNC_ARG(MaximumCount)
 		LOG_FUNC_END;
 
+	// TODO : Is this the correct ACCESS_MASK? :
+	const ACCESS_MASK DesiredAccess = SEMAPHORE_ALL_ACCESS;
+
 	// redirect to Win2k/XP
-	NTSTATUS ret = NtDll::NtCreateSemaphore
-	(
+	NTSTATUS ret = NtDll::NtCreateSemaphore(
 		/*OUT*/SemaphoreHandle,
-		/*DesiredAccess=*/SEMAPHORE_ALL_ACCESS,
+		DesiredAccess,
 		(NtDll::POBJECT_ATTRIBUTES)ObjectAttributes,
 		InitialCount,
-		MaximumCount
-	);
+		MaximumCount);
 
 	if (FAILED(ret))
 		EmuWarning("NtCreateSemaphore failed!");
-
-	DbgPrintf("EmuKrnl (0x%X): NtCreateSemaphore SemaphoreHandle = 0x%.08X\n", GetCurrentThreadId(), *SemaphoreHandle);
+	else
+		DbgPrintf("EmuKrnl (0x%X): NtCreateSemaphore SemaphoreHandle = 0x%.08X\n", GetCurrentThreadId(), *SemaphoreHandle);
 
 	RETURN(ret);
 }
@@ -377,20 +395,23 @@ XBSYSAPI EXPORTNUM(194) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateTimer
 		LOG_FUNC_ARG(TimerType)
 		LOG_FUNC_END;
 
+	// TODO : Is this the correct ACCESS_MASK? :
+	const ACCESS_MASK DesiredAccess = TIMER_ALL_ACCESS;
+
 	// redirect to Windows NT
 	// TODO : Untested
 	NTSTATUS ret = NtDll::NtCreateTimer
 	(
 		/*OUT*/TimerHandle,
-		/*DesiredAccess=*/TIMER_ALL_ACCESS,
+		DesiredAccess,
 		(NtDll::POBJECT_ATTRIBUTES)ObjectAttributes,
 		(NtDll::TIMER_TYPE)TimerType
 	);
 
 	if (FAILED(ret))
 		EmuWarning("NtCreateTimer failed!");
-
-	DbgPrintf("EmuKrnl (0x%X): NtCreateTimer TimerHandle = 0x%.08X\n", GetCurrentThreadId(), *TimerHandle);
+	else
+		DbgPrintf("EmuKrnl (0x%X): NtCreateTimer TimerHandle = 0x%.08X\n", GetCurrentThreadId(), *TimerHandle);
 
 	RETURN(ret);
 }
@@ -427,37 +448,22 @@ XBSYSAPI EXPORTNUM(196) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDeviceIoControlFile
 
 	NTSTATUS ret = STATUS_SUCCESS;
 
-	if (IsEmuHandle(FileHandle))
+	switch (IoControlCode)
 	{
-		switch (IoControlCode)
-		{
-		case 0x4D014: // IOCTL_SCSI_PASS_THROUGH_DIRECT
-		{
-			PSCSI_PASS_THROUGH_DIRECT PassThrough = (PSCSI_PASS_THROUGH_DIRECT)InputBuffer;
-			PDVDX2_AUTHENTICATION Authentication = (PDVDX2_AUTHENTICATION)PassThrough->DataBuffer;
+	case 0x4D014: // IOCTL_SCSI_PASS_THROUGH_DIRECT
+	{
+		PSCSI_PASS_THROUGH_DIRECT PassThrough = (PSCSI_PASS_THROUGH_DIRECT)InputBuffer;
+		PDVDX2_AUTHENTICATION Authentication = (PDVDX2_AUTHENTICATION)PassThrough->DataBuffer;
 
-			// Should be just enough info to pass XapiVerifyMediaInDrive
-			Authentication->AuthenticationPage.CDFValid = 1;
-			Authentication->AuthenticationPage.PartitionArea = 1;
-			Authentication->AuthenticationPage.Authentication = 1;
-			break;
-		}
-		default:
-			LOG_UNIMPLEMENTED();
-		}
+		// Should be just enough info to pass XapiVerifyMediaInDrive
+		Authentication->AuthenticationPage.CDFValid = 1;
+		Authentication->AuthenticationPage.PartitionArea = 1;
+		Authentication->AuthenticationPage.Authentication = 1;
+		break;
 	}
-	else
-		ret = NtDll::NtDeviceIoControlFile(
-			FileHandle,
-			Event,
-			(NtDll::PIO_APC_ROUTINE)ApcRoutine,
-			ApcContext,
-			(NtDll::IO_STATUS_BLOCK*)IoStatusBlock,
-			IoControlCode,
-			InputBuffer,
-			InputBufferLength,
-			OutputBuffer,
-			OutputBufferLength);
+	default:
+		LOG_UNIMPLEMENTED();
+	}
 
 	RETURN(ret);
 }
@@ -484,16 +490,21 @@ XBSYSAPI EXPORTNUM(197) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
 		EmuHandle* iEmuHandle = HandleToEmuHandle(SourceHandle);
 		ret = iEmuHandle->NtDuplicateObject(TargetHandle, Options);
 	}
-	else {
+	else
+	{
+		// TODO : What arguments should we use?
+		const ACCESS_MASK DesiredAccess = 0;
+		const ULONG Attributes = 0;
+
 		// redirect to Win2k/XP
-		ret = NtDll::NtDuplicateObject
-		(
-			GetCurrentProcess(),
+		ret = NtDll::NtDuplicateObject(
+			/*SourceProcessHandle=*/g_CurrentProcessHandle,
 			SourceHandle,
-			GetCurrentProcess(),
+			/*TargetProcessHandle=*/g_CurrentProcessHandle,
 			TargetHandle,
-			0, 0, Options
-		);
+			DesiredAccess,
+			Attributes,
+			Options);
 	}
 
 	if (ret != STATUS_SUCCESS)
@@ -629,16 +640,16 @@ XBSYSAPI EXPORTNUM(202) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenFile
 	LOG_FORWARD("IoCreateFile");
 
 	return xboxkrnl::IoCreateFile(
-		FileHandle, 
-		DesiredAccess, 
-		ObjectAttributes, 
-		IoStatusBlock, 
-		NULL, 
-		0, 
-		ShareAccess, 
-		FILE_OPEN, 
-		OpenOptions, 
-		0);
+		FileHandle,
+		DesiredAccess,
+		ObjectAttributes,
+		IoStatusBlock,
+		/*AllocationSize=*/NULL,
+		/*FileAttributes=*/0,
+		ShareAccess,
+		/*Disposition=*/FILE_OPEN,
+		/*CreateOptions=*/OpenOptions,
+		/*Options=*/0);
 }
 
 // ******************************************************************
@@ -660,21 +671,21 @@ XBSYSAPI EXPORTNUM(203) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtOpenSymbolicLinkObj
 		LOG_FUNC_ARG(ObjectAttributes)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = 0;
-	EmuNtSymbolicLinkObject* symbolicLinkObject = NULL;
+	NTSTATUS ret = STATUS_OBJECT_PATH_NOT_FOUND;
+	EmuNtSymbolicLinkObject* symbolicLinkObject =
+		FindNtSymbolicLinkObjectByName(PSTRING_to_string(ObjectAttributes->ObjectName));
 
-	symbolicLinkObject = FindNtSymbolicLinkObjectByName(std::string(ObjectAttributes->ObjectName->Buffer, ObjectAttributes->ObjectName->Length));
 	if (symbolicLinkObject != NULL)
 	{
-        // Return a new handle (which is an EmuHandle, actually) :
+		// Return a new handle (which is an EmuHandle, actually) :
 		*LinkHandle = symbolicLinkObject->NewHandle();
 		ret = STATUS_SUCCESS;
 	}
+
+	if (ret != STATUS_SUCCESS)
+		EmuWarning("NtOpenSymbolicLinkObject failed! (%s)", NtStatusToString(ret));
 	else
-		if (ret != STATUS_SUCCESS)
-			EmuWarning("NtOpenSymbolicLinkObject failed! (%s)", NtStatusToString(ret));
-		else
-			DbgPrintf("EmuKrnl : NtOpenSymbolicLinkObject LinkHandle^ = 0x%.08X", *LinkHandle);
+		DbgPrintf("EmuKrnl : NtOpenSymbolicLinkObject LinkHandle^ = 0x%.08X", *LinkHandle);
 
 	RETURN(ret);
 }
@@ -748,12 +759,14 @@ XBSYSAPI EXPORTNUM(206) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueueApcThread
 		LOG_FUNC_ARG(ApcReserved)
 		LOG_FUNC_END;
 
-	NTSTATUS ret;
-
 	// TODO: Not too sure how this one works.  If there's any special *magic* that needs to be
 	//		 done, let me know!
-	ret = NtDll::NtQueueApcThread((NtDll::HANDLE) ThreadHandle, (NtDll::PIO_APC_ROUTINE) ApcRoutine, ApcRoutineContext,
-		(NtDll::PIO_STATUS_BLOCK) ApcStatusBlock, ApcReserved);
+	NTSTATUS ret = NtDll::NtQueueApcThread(
+		(NtDll::HANDLE)ThreadHandle,
+		(NtDll::PIO_APC_ROUTINE)ApcRoutine,
+		ApcRoutineContext,
+		(NtDll::PIO_STATUS_BLOCK)ApcStatusBlock,
+		ApcReserved);
 
 	if (FAILED(ret))
 		EmuWarning("NtQueueApcThread failed!");
@@ -793,54 +806,64 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 
 	NTSTATUS ret;
 
-	if (FileInformationClass != 1)   // Due to unicode->string conversion
+	if (FileInformationClass != FileDirectoryInformation)   // Due to unicode->string conversion
 		CxbxKrnlCleanup("Unsupported FileInformationClass");
 
 	NtDll::UNICODE_STRING NtFileMask;
 
-	wchar_t wszObjectName[160];
+	wchar_t wszObjectName[MAX_PATH];
 
 	// initialize FileMask
 	{
 		if (FileMask != 0)
-			mbstowcs(wszObjectName, FileMask->Buffer, 160);
+			mbstowcs(/*Dest=*/wszObjectName, /*Source=*/FileMask->Buffer, /*MaxCount=*/MAX_PATH);
 		else
-			mbstowcs(wszObjectName, "", 160);
+			mbstowcs(/*Dest=*/wszObjectName, /*Source=*/"", /*MaxCount=*/MAX_PATH);
 
 		NtDll::RtlInitUnicodeString(&NtFileMask, wszObjectName);
 	}
 
-	NtDll::FILE_DIRECTORY_INFORMATION *FileDirInfo = (NtDll::FILE_DIRECTORY_INFORMATION*)CxbxMalloc(0x40 + 160 * 2);
+	NtDll::FILE_DIRECTORY_INFORMATION *NtFileDirInfo = 
+		(NtDll::FILE_DIRECTORY_INFORMATION *) CxbxMalloc(NtFileDirectoryInformationSize + NtPathBufferSize);
 
+	// Short-hand pointer to Nt filename :
+	wchar_t *wcstr = NtFileDirInfo->FileName;
 	char    *mbstr = FileInformation->FileName;
-	wchar_t *wcstr = FileDirInfo->FileName;
 
+	// Go, query that directory :
 	do
 	{
-		ZeroMemory(wcstr, 160 * 2);
+		ZeroMemory(wcstr, MAX_PATH * sizeof(wchar_t));
 
-		ret = NtDll::NtQueryDirectoryFile
-		(
-			FileHandle, Event, (NtDll::PIO_APC_ROUTINE)ApcRoutine, ApcContext, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock, FileDirInfo,
-			0x40 + 160 * 2, (NtDll::FILE_INFORMATION_CLASS)FileInformationClass, TRUE, &NtFileMask, RestartScan
+		ret = NtDll::NtQueryDirectoryFile(
+			FileHandle, 
+			Event, 
+			(NtDll::PIO_APC_ROUTINE)ApcRoutine, 
+			ApcContext, 
+			(NtDll::IO_STATUS_BLOCK*)IoStatusBlock, 
+			/*FileInformation=*/NtFileDirInfo,
+			NtFileDirectoryInformationSize + NtPathBufferSize,
+			(NtDll::FILE_INFORMATION_CLASS)FileInformationClass, 
+			/*ReturnSingleEntry=*/TRUE,
+			&NtFileMask,
+			RestartScan
 		);
-
-		// convert from PC to Xbox
-		{
-			memcpy(FileInformation, FileDirInfo, 0x40);
-
-			wcstombs(mbstr, wcstr, 160);
-
-			FileInformation->FileNameLength /= 2;
-		}
 
 		RestartScan = FALSE;
 	}
 	// Xbox does not return . and ..
-	while (strcmp(mbstr, ".") == 0 || strcmp(mbstr, "..") == 0);
+	while (wcscmp(wcstr, L".") == 0 || wcscmp(wcstr, L"..") == 0);
+
+	// convert from PC to Xbox
+	{
+		// TODO : assert that NtDll::FILE_DIRECTORY_INFORMATION has same members and size as xboxkrnl::FILE_DIRECTORY_INFORMATION
+		memcpy(/*Dst=*/FileInformation, /*Src=*/NtFileDirInfo, /*Size=*/NtFileDirectoryInformationSize);
+		wcstombs(/*Dest=*/mbstr, /*Source=*/wcstr, MAX_PATH);
+		FileInformation->FileNameLength /= sizeof(wchar_t);
+	}
 
 	// TODO: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
-	CxbxFree(FileDirInfo);
+	CxbxFree(NtFileDirInfo);
 
 	RETURN(ret);
 }
@@ -851,7 +874,7 @@ XBSYSAPI EXPORTNUM(207) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryDirectoryFile
 XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributesFile
 (
 	IN  POBJECT_ATTRIBUTES          ObjectAttributes,
-	OUT PVOID                       Attributes
+	OUT xboxkrnl::PFILE_NETWORK_OPEN_INFORMATION   Attributes
 )
 {
 	LOG_FUNC_BEGIN
@@ -861,10 +884,20 @@ XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributes
 
 	//	__asm int 3;
 	NativeObjectAttributes nativeObjectAttributes;
-	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, nativeObjectAttributes, "NtQueryFullAttributesFile"); /*var*/
+	NtDll::FILE_NETWORK_OPEN_INFORMATION nativeNetOpenInfo;
+
+	NTSTATUS ret = CxbxObjectAttributesToNT(
+		ObjectAttributes, 
+		/*var*/nativeObjectAttributes, 
+		"NtQueryFullAttributesFile");
 
 	if (ret == STATUS_SUCCESS)
-		ret = NtDll::NtQueryFullAttributesFile(nativeObjectAttributes.NtObjAttrPtr, Attributes);
+		ret = NtDll::NtQueryFullAttributesFile(
+			nativeObjectAttributes.NtObjAttrPtr, 
+			&nativeNetOpenInfo);
+	
+	// Convert Attributes to Xbox
+	NTToXboxFileInformation(&nativeNetOpenInfo, Attributes, FileNetworkOpenInformation, sizeof(xboxkrnl::FILE_NETWORK_OPEN_INFORMATION));
 
 	if (FAILED(ret))
 		EmuWarning("NtQueryFullAttributesFile failed! (0x%.08X)\n", ret);
@@ -881,7 +914,7 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 	OUT PIO_STATUS_BLOCK            IoStatusBlock,
 	OUT PVOID                       FileInformation,
 	IN  ULONG                       Length,
-	IN  FILE_INFORMATION_CLASS      FileInfo
+	IN  FILE_INFORMATION_CLASS      FileInformationClass
 )
 {
 	LOG_FUNC_BEGIN
@@ -889,47 +922,54 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 		LOG_FUNC_ARG_OUT(IoStatusBlock)
 		LOG_FUNC_ARG_OUT(FileInformation)
 		LOG_FUNC_ARG(Length)
-		LOG_FUNC_ARG(FileInfo)
+		LOG_FUNC_ARG(FileInformationClass)
 		LOG_FUNC_END;
 
-	// TODO: IIRC, this function is deprecated.  Maybe we should just use
-	// ZwQueryInformationFile instead?
+	NTSTATUS ret;
+	PVOID ntFileInfo;
 
-	//    if(FileInfo != FilePositionInformation && FileInfo != FileNetworkOpenInformation)
-	//        CxbxKrnlCleanup("Unknown FILE_INFORMATION_CLASS 0x%.08X", FileInfo);
+	// Start with sizeof(corresponding struct)
+	size_t bufferSize = XboxFileInfoStructSizes[FileInformationClass];
 
-	NTSTATUS ret = NtDll::NtQueryInformationFile
-	(
-		FileHandle,
-		(NtDll::PIO_STATUS_BLOCK)IoStatusBlock,
-		(NtDll::PFILE_FS_SIZE_INFORMATION)FileInformation,
-		Length,
-		(NtDll::FILE_INFORMATION_CLASS)FileInfo
-	);
-
-	//
-	// DEBUGGING!
-	//
+	// We need to retry the operation in case the buffer is too small to fit the data
+	do
 	{
-		/*
-		_asm int 3;
-		NtDll::FILE_NETWORK_OPEN_INFORMATION *pInfo = (NtDll::FILE_NETWORK_OPEN_INFORMATION*)FileInformation;
+		ntFileInfo = CxbxMalloc(bufferSize);
 
-		if(FileInfo == FileNetworkOpenInformation && (pInfo->AllocationSize.LowPart == 57344))
+		ret = NtDll::NtQueryInformationFile(
+			FileHandle,
+			(NtDll::PIO_STATUS_BLOCK)IoStatusBlock,
+			ntFileInfo,
+			bufferSize,
+			(NtDll::FILE_INFORMATION_CLASS)FileInformationClass);
+
+		// Buffer is too small; make a larger one
+		if (ret == STATUS_BUFFER_OVERFLOW)
 		{
-		DbgPrintf("pInfo->AllocationSize : %d\n", pInfo->AllocationSize.LowPart);
-		DbgPrintf("pInfo->EndOfFile      : %d\n", pInfo->EndOfFile.LowPart);
+			CxbxFree(ntFileInfo);
 
-		pInfo->EndOfFile.LowPart = 0x1000;
-		pInfo->AllocationSize.LowPart = 0x1000;
-
-		fflush(stdout);
+			bufferSize *= 2;
+			// Bail out if the buffer gets too big
+			if (bufferSize > 65536)
+				return STATUS_INVALID_PARAMETER;   // TODO: what's the appropriate error code to return here?
+			
+			ntFileInfo = CxbxMalloc(bufferSize);
 		}
-		*/
-	}
+	} while (ret == STATUS_BUFFER_OVERFLOW);
+	
+	// Convert and copy NT data to the given Xbox struct
+	NTSTATUS convRet = NTToXboxFileInformation(ntFileInfo, FileInformation, FileInformationClass, Length);
+
+	// Make sure to free the memory first
+	CxbxFree(ntFileInfo);
 
 	if (FAILED(ret))
 		EmuWarning("NtQueryInformationFile failed! (0x%.08X)", ret);
+
+	// Prioritize the buffer overflow over real return code,
+	// in case the Xbox program decides to follow the same procedure above
+	if (convRet == STATUS_BUFFER_OVERFLOW)
+		return convRet;
 
 	RETURN(ret);
 }
@@ -950,25 +990,25 @@ XBSYSAPI EXPORTNUM(215) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySymbolicLinkOb
 		LOG_FUNC_ARG_OUT(ReturnedLength)
 		LOG_FUNC_END;
 
-	NTSTATUS result = 0;
+	NTSTATUS ret = 0;
 	EmuNtSymbolicLinkObject* symbolicLinkObject = NULL;
 
 	// Check that we actually got an EmuHandle :
-	result = STATUS_INVALID_HANDLE;
+	ret = STATUS_INVALID_HANDLE;
 
 	EmuHandle* iEmuHandle = HandleToEmuHandle(LinkHandle);
 	// Retrieve the NtSymbolicLinkObject and populate the output arguments :
-	result = STATUS_SUCCESS;
+	ret = STATUS_SUCCESS;
 	symbolicLinkObject = (EmuNtSymbolicLinkObject*)iEmuHandle->NtObject;
 	if (LinkTarget != NULL)
 	{
 		if (LinkTarget->Length > LinkTarget->MaximumLength)
 		{
-			result = STATUS_BUFFER_TOO_SMALL;
+			ret = STATUS_BUFFER_TOO_SMALL;
 			LinkTarget->Length = LinkTarget->MaximumLength;
 		}
 
-		memcpy(LinkTarget->Buffer, symbolicLinkObject->XboxFullPath.c_str(), LinkTarget->Length);
+		copy_string_to_PSTRING_to(symbolicLinkObject->XboxFullPath, LinkTarget);
 	}
 
 	if (ReturnedLength != NULL)
@@ -976,10 +1016,10 @@ XBSYSAPI EXPORTNUM(215) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySymbolicLinkOb
 		*ReturnedLength = symbolicLinkObject->XboxFullPath.length(); // Return full length (even if buffer was too small)
 	}
 
-	if (result != STATUS_SUCCESS)
-		EmuWarning("NtQuerySymbolicLinkObject failed! (%s)", NtStatusToString(result));
+	if (ret != STATUS_SUCCESS)
+		EmuWarning("NtQuerySymbolicLinkObject failed! (%s)", NtStatusToString(ret));
 
-	RETURN(result);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1023,15 +1063,13 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
 		LOG_FUNC_ARG_OUT(Buffer)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtQueryVirtualMemory
-	(
-		GetCurrentProcess(),
+	NTSTATUS ret = NtDll::NtQueryVirtualMemory(
+		/*ProcessHandle=*/g_CurrentProcessHandle,
 		BaseAddress,
 		(NtDll::MEMORY_INFORMATION_CLASS)NtDll::MemoryBasicInformation,
 		(NtDll::PMEMORY_BASIC_INFORMATION)Buffer,
-		sizeof(MEMORY_BASIC_INFORMATION),
-		0
-	);
+		/*Length=*/sizeof(MEMORY_BASIC_INFORMATION),
+		/*ResultLength=*/nullptr);
 
 	if (FAILED(ret)) {
 		EmuWarning("NtQueryVirtualMemory failed (%s)!", NtStatusToString(ret));
@@ -1080,13 +1118,11 @@ XBSYSAPI EXPORTNUM(218) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVolumeInformat
 		LOG_FUNC_ARG(FileInformationClass)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtQueryVolumeInformationFile
-	(
+	NTSTATUS ret = NtDll::NtQueryVolumeInformationFile(
 		FileHandle,
 		(NtDll::PIO_STATUS_BLOCK)IoStatusBlock,
 		(NtDll::PFILE_FS_SIZE_INFORMATION)FileInformation, Length,
-		(NtDll::FS_INFORMATION_CLASS)FileInformationClass
-	);
+		(NtDll::FS_INFORMATION_CLASS)FileInformationClass);
 
 	if (ret == STATUS_SUCCESS)
 	{
@@ -1142,7 +1178,16 @@ XBSYSAPI EXPORTNUM(219) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReadFile
 	//    if(ByteOffset != 0 && ByteOffset->QuadPart == 0x00120800)
 	//        _asm int 3
 
-	NTSTATUS ret = NtDll::NtReadFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, (NtDll::LARGE_INTEGER*)ByteOffset, 0);
+	NTSTATUS ret = NtDll::NtReadFile(
+		FileHandle,
+		Event,
+		ApcRoutine,
+		ApcContext,
+		IoStatusBlock,
+		Buffer,
+		Length,
+		(NtDll::LARGE_INTEGER*)ByteOffset,
+		/*Key=*/nullptr);
 
 	if (FAILED(ret))
 		EmuWarning("NtReadFile Failed! (0x%.08X)", ret);
@@ -1189,7 +1234,10 @@ XBSYSAPI EXPORTNUM(222) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtReleaseSemaphore
 		LOG_FUNC_ARG_OUT(PreviousCount)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtReleaseSemaphore(SemaphoreHandle, ReleaseCount, PreviousCount);
+	NTSTATUS ret = NtDll::NtReleaseSemaphore(
+		SemaphoreHandle, 
+		ReleaseCount, 
+		PreviousCount);
 
 	if (FAILED(ret))
 		EmuWarning("NtReleaseSemaphore failed!");
@@ -1211,7 +1259,9 @@ XBSYSAPI EXPORTNUM(224) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtResumeThread
 		LOG_FUNC_ARG_OUT(PreviousSuspendCount)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtResumeThread(ThreadHandle, PreviousSuspendCount);
+	NTSTATUS ret = NtDll::NtResumeThread(
+		ThreadHandle, 
+		PreviousSuspendCount);
 
 	Sleep(10);
 
@@ -1232,7 +1282,9 @@ XBSYSAPI EXPORTNUM(225) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetEvent
 		LOG_FUNC_ARG_OUT(PreviousState)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtSetEvent(EventHandle, PreviousState);
+	NTSTATUS ret = NtDll::NtSetEvent(
+		EventHandle, 
+		PreviousState);
 
 	if (FAILED(ret))
 		EmuWarning("NtSetEvent Failed!");
@@ -1245,10 +1297,10 @@ XBSYSAPI EXPORTNUM(225) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetEvent
 // ******************************************************************
 XBSYSAPI EXPORTNUM(226) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
 (
-	IN  HANDLE  FileHandle,            // TODO: correct paramters
-	OUT PIO_STATUS_BLOCK   IoStatusBlock,
-	IN  PVOID   FileInformation,
-	IN  ULONG   Length,
+	IN  HANDLE                   FileHandle,
+	OUT PIO_STATUS_BLOCK         IoStatusBlock,
+	IN  PVOID                    FileInformation,
+	IN  ULONG                    Length,
 	IN  FILE_INFORMATION_CLASS   FileInformationClass
 )
 {
@@ -1259,8 +1311,15 @@ XBSYSAPI EXPORTNUM(226) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSetInformationFile
 		LOG_FUNC_ARG(Length)
 		LOG_FUNC_ARG(FileInformationClass)
 		LOG_FUNC_END;
+	
+	XboxToNTFileInformation(convertedFileInfo, FileInformation, FileInformationClass, &Length);
 
-	NTSTATUS ret = NtDll::NtSetInformationFile(FileHandle, IoStatusBlock, FileInformation, Length, FileInformationClass);
+	NTSTATUS ret = NtDll::NtSetInformationFile(
+		FileHandle,
+		IoStatusBlock,
+		convertedFileInfo,
+		Length,
+		FileInformationClass);
 
 	RETURN(ret);
 }
@@ -1365,7 +1424,9 @@ XBSYSAPI EXPORTNUM(231) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSuspendThread
 		LOG_FUNC_ARG_OUT(PreviousSuspendCount)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtSuspendThread(ThreadHandle, PreviousSuspendCount);
+	NTSTATUS ret = NtDll::NtSuspendThread(
+		ThreadHandle, 
+		PreviousSuspendCount);
 
 	RETURN(ret);
 }
@@ -1515,8 +1576,7 @@ XBSYSAPI EXPORTNUM(235) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWaitForMultipleObje
 		WaitMode,
 		Alertable,
 		Timeout,
-		/*WaitBlockArray*/NULL
-	);
+		/*WaitBlockArray*/NULL);
 }
 
 // ******************************************************************
@@ -1552,7 +1612,16 @@ XBSYSAPI EXPORTNUM(236) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtWriteFile
 	//    if(ByteOffset != 0 && ByteOffset->QuadPart == 0x01C00800)
 	//        _asm int 3
 
-	NTSTATUS ret = NtDll::NtWriteFile(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, Buffer, Length, (NtDll::LARGE_INTEGER*)ByteOffset, 0);
+	NTSTATUS ret = NtDll::NtWriteFile(
+		FileHandle,
+		Event,
+		ApcRoutine,
+		ApcContext,
+		IoStatusBlock,
+		Buffer,
+		Length,
+		(NtDll::LARGE_INTEGER*)ByteOffset,
+		/*Key=*/nullptr);
 
 	if (FAILED(ret))
 		EmuWarning("NtWriteFile Failed! (0x%.08X)", ret);

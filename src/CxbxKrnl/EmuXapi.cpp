@@ -913,7 +913,7 @@ DWORD WINAPI XTL::EmuQueueUserAPC
 	// I added this because NtQueueApcThread fails in Metal Slug 3.
 
 	HANDLE hApcThread = NULL;
-	if(!DuplicateHandle(GetCurrentProcess(),hThread,GetCurrentProcess(),&hApcThread,THREAD_SET_CONTEXT,FALSE,0))
+	if(!DuplicateHandle(g_CurrentProcessHandle, hThread, g_CurrentProcessHandle, &hApcThread, THREAD_SET_CONTEXT,FALSE,0))
 		EmuWarning("DuplicateHandle failed!");
 
 	dwRet = QueueUserAPC(pfnAPC, hApcThread, dwData);

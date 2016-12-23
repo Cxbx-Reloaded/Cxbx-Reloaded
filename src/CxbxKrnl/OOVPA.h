@@ -55,39 +55,90 @@ template <class BaseClass, typename MFT> inline void *MFPtoFP( MFT pMemFunc)
 
 #pragma pack(1)
 
+enum OOVPAType : uint16 {
+	Small,
+	Large,
+};
+
 // ******************************************************************
-// * Optimized (Order,Value)-Pair Array
+// * Optimized (Offset, Value)-Pair Array
 // ******************************************************************
 struct OOVPA
 {
-    uint16 Large : 1;
-    uint16 Count : 15;
+	// This OOVPA field (OOVPAType Type) indicates weither
+	// this struct needs to be cast to SOOVPA or LOOVPA,
+	// for OOVPATYPE.Small vs .Large
+	// SOOVPA uses bytes for offset in the {Offset, Value}-pairs.
+	// LOOVPA uses words for offset in the {Offset, Value}-pairs.
+	// The value field in the {Offset, Value}-pairs is of type byte.
+	OOVPAType Type : 1;
 
-    uint08 XRefSaveIndex;
-    uint08 XRefCount;
+	// This OOVPA field (uint16 Count) indicates the number of
+	// {Offset, Value}-pairs present in the Sovp or Lovp array,
+	// available after casting this OOVPA to SOOVPA or LOOVPA.
+	// (This Count INCLUDES optional leading {Offset, XREF_*-enum}-
+	// pairs - see comment at XRefCount.)
+	uint16 Count : 15;
+
+	// This OOVPA field (uint08 XRefSaveIndex) contains either an
+	// XREF_* enum value, or the XRefNoSaveIndex marker when there's
+	// no XREF_* enum defined for this OOVPA.
+	uint08 XRefSaveIndex;
+
+	// This OOVPA field (uint08 XRefCount) contains the number of
+	// {Offset, XREF_*-enum}-pairs that come before all other
+	// {Offset, Value}-pairs.
+	// (The {Offset, XREF_*-enum}-pairs are INCLUDED in OOVPA.Count)
+	// (Also, see comments at XRefZero and XRefOne.)
+	uint08 XRefCount;
+
+	// Define SOVP and LOVP here to reduce type definition complexity.
+	// (Otherwise, if defined in the template classes, that would mean
+	// that for each template instance, the type is redefined. Let's
+	// avoid that.)
+
+	// Small (Offset,Value)-Pair(s)
+	struct SOVP
+	{
+		uint08 Offset;
+		uint08 Value;
+	};
+
+	// Large (Offset,Value)-Pair(s)
+	struct LOVP
+	{
+		uint16 Offset;
+		uint08 Value;
+	};
 };
 
-const uint08 XRefNotSaved = (uint08)-1;
-const uint08 XRefNotUsed = (uint08)0;
+// This XRefNoSaveIndex constant, when set in the OOVPA.XRefSaveIndex
+// field, functions as a marker indicating there's no XREF_* enum
+// defined for the OOVPA.
+const uint08 XRefNoSaveIndex = (uint08)-1;
+
+// This XRefZero constant, when set in the OOVPA.XRefSaveIndex field,
+// indicates there are no {offset, XREF_*-enum} present in the OOVPA.
+const uint08 XRefZero = (uint08)0;
+
+// This XRefOne constant, when set in the OOVPA.XRefSaveIndex field,
+// indicates the OOVPA contains one (1) {offset, XREF_* enum} pair.
+const uint08 XRefOne = (uint08)1;
+
+// Note : Theoretically, there can be more than one {offset, XREF_*-enum}
+// pair at the start of the OOVPA's, but there are no examples of that yet.
+// (Also, EmuLocateFunction might not cater for this well enough?)
+
 
 // ******************************************************************
 // * Large Optimized (Offset,Value)-Pair Array
 // ******************************************************************
 template <uint16 COUNT> struct LOOVPA
 {
-    uint16 Large : 1;
-    uint16 Count : 15;
+	OOVPA Header;
 
-    uint08 XRefSaveIndex;
-    uint08 XRefCount;
-
-    // Large (Offset,Value)-Pair(s)
-    struct LOVP
-    {
-        uint16 Offset;
-        uint08 Value;
-    }
-    Lovp[COUNT];
+	// Large (Offset,Value)-Pair(s)
+	OOVPA::LOVP Lovp[COUNT];
 };
 
 // ******************************************************************
@@ -95,19 +146,10 @@ template <uint16 COUNT> struct LOOVPA
 // ******************************************************************
 template <uint16 COUNT> struct SOOVPA
 {
-    uint16 Large : 1;
-    uint16 Count : 15;
+	OOVPA Header;
 
-    uint08 XRefSaveIndex;
-    uint08 XRefCount;
-
-    // Small (Offset,Value)-Pair(s)
-    struct SOVP
-    {
-        uint08 Offset;
-        uint08 Value;
-    }
-    Sovp[COUNT];
+	// Small (Offset,Value)-Pair(s)
+	OOVPA::SOVP Sovp[COUNT];
 };
 
 // ******************************************************************
@@ -123,6 +165,36 @@ struct OOVPATable
     char  *szFuncName;
     #endif
 };
+
+#define OOVPA_XREF_LARGE(Name, Count, XRefSaveIndex, XRefCount)	\
+LOOVPA<Count> Name = { { /*OOVPAType*/Large, Count, XRefSaveIndex, XRefCount }, {
+
+#define OOVPA_XREF(Name, Count, XRefSaveIndex, XRefCount)	\
+SOOVPA<Count> Name = { { /*OOVPAType*/Small, Count, XRefSaveIndex, XRefCount }, {
+
+#define OOVPA_NO_XREF_LARGE(Name, Count) \
+OOVPA_XREF_LARGE(Name, Count, XRefNoSaveIndex, XRefZero)
+
+#define OOVPA_NO_XREF(Name, Count) \
+OOVPA_XREF(Name, Count, XRefNoSaveIndex, XRefZero)
+
+#define OOVPA_ENTRY(Offset, Value) { Offset, Value },
+#define OOVPA_END } }
+
+
+#if _DEBUG_TRACE
+#define OOVPA_TABLE_PATCH(Oovpa, Patch)	\
+	{&Oovpa.Header, Patch, #Patch}
+// TODO : _DEBUG_TRACE OOVPA_TABLE_* macro's :
+// Cut Version off of Oovpa, and log separatly as "("#Version")"
+#define OOVPA_TABLE_XREF(Oovpa)	\
+	{&Oovpa.Header, 0, #Oovpa" (XRef)"}
+#else
+#define OOVPA_TABLE_PATCH(Oovpa, Patch)	\
+	{&Oovpa.Header, Patch}
+#define OOVPA_TABLE_XREF(Oovpa)	\
+	{&Oovpa.Header, 0}
+#endif
 
 #pragma pack()
 

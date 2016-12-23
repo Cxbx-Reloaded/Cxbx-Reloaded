@@ -48,6 +48,10 @@ extern "C" {
 
 #define XBOX_MEMORY_SIZE 128 * 1024 * 1024
 
+#define XBOX_KERNEL_BASE 0x80010000
+#define XBOX_NV2A_INIT_VECTOR 0xFF000008
+
+
 /*! validate version string match */
 CXBXKRNL_API bool CxbxKrnlVerifyVersion(const char *szVersion);
 

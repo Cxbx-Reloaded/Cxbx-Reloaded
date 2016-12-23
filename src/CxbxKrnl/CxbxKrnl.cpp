@@ -81,6 +81,8 @@ Xbe* CxbxKrnl_Xbe = NULL;
 DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
 
+HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlInit
+
 static uint32 funcAddr[]=
 {
     0x001396D1, // -> 0x00139709 (Size : 56 bytes)
@@ -362,6 +364,8 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	// for unicode conversions
 	setlocale(LC_ALL, "English");
 
+	g_CurrentProcessHandle = GetCurrentProcess();
+
 #ifdef _DEBUG
 //	MessageBoxA(NULL, "Attach a Debugger", "DEBUG", 0);
 //  Debug child processes using https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool
@@ -440,9 +444,6 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 			IMAGE_SECTION_HEADER SectionHeader;
 		} *PDUMMY_KERNEL;
 
-#define XBOX_KERNEL_BASE 0x80010000
-#define XBOX_NV2A_INIT_VECTOR 0xFF000008
-
 		PDUMMY_KERNEL DummyKernel = (PDUMMY_KERNEL)VirtualAlloc(
 			(PVOID)XBOX_KERNEL_BASE, sizeof(DUMMY_KERNEL),
 			MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE
@@ -487,7 +488,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	CxbxRegisterDeviceNativePath(DeviceCdrom0, xbeDirectory);
 
 	// Partition 0 contains configuration data, and is accessed as a native file, instead as a folder :
-	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition0, CxbxBasePath + "Partition0", true); /*IsFile=*/
+	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition0, CxbxBasePath + "Partition0", /*IsFile=*/true);
 	// The first two partitions are for Data and Shell files, respectively :
 	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition1, CxbxBasePath + "Partition1");
 	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition2, CxbxBasePath + "Partition2");
@@ -510,10 +511,19 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 		// Determine Xbox path to XBE and place it in XeImageFileName
 		std::string fileName(xbePath);
+		
+		// Strip out the path, leaving only the XBE file name
+		// NOTE: we assume that the XBE is always on the root of the C: drive
+		if (fileName.rfind('\\') >= 0)
+			fileName = fileName.substr(fileName.rfind('\\') + 1);
+
+		if (xboxkrnl::XeImageFileName.Buffer != NULL)
+			free(xboxkrnl::XeImageFileName.Buffer);
+
+		xboxkrnl::XeImageFileName.MaximumLength = MAX_PATH;
 		xboxkrnl::XeImageFileName.Buffer = (PCHAR)malloc(MAX_PATH);
 		sprintf(xboxkrnl::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeVolumeLetter, fileName.c_str());
 		xboxkrnl::XeImageFileName.Length = (USHORT)strlen(xboxkrnl::XeImageFileName.Buffer);
-		xboxkrnl::XeImageFileName.MaximumLength = MAX_PATH;
 
 		DbgPrintf("EmuMain : XeImageFileName = %s\n", xboxkrnl::XeImageFileName.Buffer);
 
@@ -527,7 +537,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 		// Mount the Utility drive (Z:) conditionally :
 		if (CxbxKrnl_XbeHeader->dwInitFlags.bMountUtilityDrive)
-			CxbxMountUtilityDrive(CxbxKrnl_XbeHeader->dwInitFlags.bFormatUtilityDrive);/*fFormatClean=*/
+			CxbxMountUtilityDrive(/*formatClean=*/CxbxKrnl_XbeHeader->dwInitFlags.bFormatUtilityDrive);
 	}
 
 	//
@@ -537,7 +547,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	{
 		HANDLE hDupHandle = NULL;
 
-		DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
+		DuplicateHandle(g_CurrentProcessHandle, GetCurrentThread(), g_CurrentProcessHandle, &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
 
 		CxbxKrnlRegisterThread(hDupHandle);
 	}
@@ -570,7 +580,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	// Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
 	// this will better aproximate the environment with regard to multi-threading) :
 	{
-		GetProcessAffinityMask(GetCurrentProcess(), &g_CPUXbox, &g_CPUOthers);
+		GetProcessAffinityMask(g_CurrentProcessHandle, &g_CPUXbox, &g_CPUOthers);
 		// For the other threads, remove one bit from the processor mask:
 		g_CPUOthers = ((g_CPUXbox - 1) & g_CPUXbox);
 
@@ -583,9 +593,9 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 			g_CPUOthers = g_CPUXbox;
 		}
 
-	// Make sure Xbox1 code runs on one core :
-	SetThreadAffinityMask(GetCurrentThread(), g_CPUXbox);
-}
+		// Make sure Xbox1 code runs on one core :
+		SetThreadAffinityMask(GetCurrentThread(), g_CPUXbox);
+	}
 
     DbgPrintf("EmuMain (0x%X): Initial thread starting.\n", GetCurrentThreadId());
 
@@ -646,7 +656,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlCleanup(const char *szErrorMessage, ...)
     if(CxbxKrnl_hEmuParent != NULL)
         SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
-    TerminateProcess(GetCurrentProcess(), 0);
+    TerminateProcess(g_CurrentProcessHandle, 0);
 
     return;
 }

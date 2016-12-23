@@ -205,7 +205,7 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 		LOG_FUNC_ARG(DebuggerThread)
 		LOG_FUNC_END;
 
-	NtDll::PVOID pRet = NULL;
+	NtDll::PVOID BaseAddress = NULL;
 
 	if (!NumberOfBytes) {
 		// NumberOfBytes cannot be zero when passed to NtAllocateVirtualMemory() below
@@ -224,12 +224,20 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 	* - Treat DebuggerThread any differently
 	*/
 
-	if (FAILED(NtDll::NtAllocateVirtualMemory(GetCurrentProcess(), &pRet, 0, &NumberOfBytes, MEM_COMMIT, PAGE_READWRITE)))
+	NTSTATUS ret = NtDll::NtAllocateVirtualMemory(
+		/*ProcessHandle=*/g_CurrentProcessHandle,
+		/*BaseAddress=*/&BaseAddress,
+		/*ZeroBits=*/0,
+		/*RegionSize=*/&NumberOfBytes,
+		/*AllocationType=*/MEM_COMMIT,
+		/*Protect=*/PAGE_READWRITE);
+
+	if (FAILED(ret))
 		EmuWarning("MmCreateKernelStack failed!\n");
 	else
-		pRet = (PVOID)((ULONG)pRet + NumberOfBytes);
+		BaseAddress = (PVOID)((ULONG)BaseAddress + NumberOfBytes);
 
-	RETURN(pRet);
+	RETURN(BaseAddress);
 }
 
 // ******************************************************************
@@ -246,10 +254,15 @@ XBSYSAPI EXPORTNUM(170) xboxkrnl::VOID NTAPI xboxkrnl::MmDeleteKernelStack
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_END;
 
-	/* __asm int 3;
-	CxbxKrnlCleanup( "MmDeleteKernelStack unimplemented (check call stack)" );*/
+	// TODO : Untested
 	ULONG RegionSize = 0;
-	if (FAILED(NtDll::NtFreeVirtualMemory(GetCurrentProcess(), &BaseAddress, &RegionSize, MEM_RELEASE)))
+	NTSTATUS ret = NtDll::NtFreeVirtualMemory(
+		/*ProcessHandle=*/g_CurrentProcessHandle,
+		&BaseAddress,
+		&RegionSize,
+		/*FreeType=*/MEM_RELEASE);
+
+	if (FAILED(ret))
 		EmuWarning("MmDeleteKernelStack failed!\n");
 }
 
