@@ -863,6 +863,26 @@ typedef BOOL (NTAPI *FPTR_RtlTryEnterCriticalSection)
 );
 
 // ******************************************************************
+// * RtlCompareMemory
+// ******************************************************************
+typedef BOOL (NTAPI *FPTR_RtlCompareMemory)
+(
+	IN const VOID   *Source1,
+	IN const VOID   *Source2,
+	IN       SIZE_T Length
+);
+
+// ******************************************************************
+// * RtlCompareMemoryUlong
+// ******************************************************************
+typedef BOOL(NTAPI *FPTR_RtlCompareMemoryUlong)
+(
+	IN 	PVOID Source,
+	IN SIZE_T Length,
+	IN ULONG Pattern
+);
+
+// ******************************************************************
 // * RtlInitAnsiString
 // ******************************************************************
 typedef VOID (NTAPI *FPTR_RtlInitAnsiString)
@@ -925,6 +945,71 @@ typedef NTSTATUS(NTAPI *FPTR_RtlCharToInteger)
 	IN     PCSZ   String,
 	IN     ULONG  Base OPTIONAL,
 	OUT    PULONG Value
+);
+
+// ******************************************************************
+// * RtlCompareString
+// ******************************************************************
+typedef LONG (NTAPI *FPTR_RtlCompareString)
+(
+	IN	const STRING  *String1,
+	IN	const STRING  *String2,
+	IN	      BOOLEAN CaseInSensitive
+);
+
+// ******************************************************************
+// * RtlCompareUnicodeString
+// ******************************************************************
+typedef LONG (NTAPI *FPTR_RtlCompareUnicodeString)
+(
+	IN	PCUNICODE_STRING  String1,
+	IN	PCUNICODE_STRING  String2,
+	IN	BOOLEAN CaseInSensitive
+);
+
+// ******************************************************************
+// * RtlCopyString
+// ******************************************************************
+typedef LONG (NTAPI *FPTR_RtlCopyString)
+(
+	OUT PSTRING DestinationString,
+	IN const STRING  *SourceString OPTIONAL
+);
+
+// ******************************************************************
+// * RtlCopyUnicodeString
+// ******************************************************************
+typedef LONG (NTAPI *FPTR_RtlCopyUnicodeString)
+(
+	OUT PUNICODE_STRING DestinationString,
+	IN PUNICODE_STRING SourceString OPTIONAL
+);
+
+// ******************************************************************
+// * RtlCreateUnicodeString
+// ******************************************************************
+typedef BOOLEAN (NTAPI *FPTR_RtlCreateUnicodeString)
+(
+	OUT PUNICODE_STRING DestinationString,
+	IN PCWSTR           SourceString
+);
+
+// ******************************************************************
+// * RtlDowncaseUnicodeChar
+// ******************************************************************
+typedef WCHAR (NTAPI *FPTR_RtlDowncaseUnicodeChar)
+(
+	IN WCHAR    SourceCharacter
+);
+
+// ******************************************************************
+// * RtlDowncaseUnicodeString
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlDowncaseUnicodeString)
+(
+	OUT PUNICODE_STRING DestinationString,
+	IN PUNICODE_STRING SourceString,
+	IN BOOLEAN AllocateDestinationString
 );
 
 // ******************************************************************
@@ -1208,6 +1293,14 @@ typedef NTSTATUS (NTAPI *FPTR_NtCreateFile)
     IN  ULONG               CreateOptions,
     IN  PVOID               EaBuffer OPTIONAL,
     IN  ULONG               EaLength
+);
+
+// ******************************************************************
+// * NtDeleteFile
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtDeleteFile)
+(
+	IN  POBJECT_ATTRIBUTES  ObjectAttributes
 );
 
 // ******************************************************************
@@ -1523,6 +1616,7 @@ EXTERN(NtCreateMutant);
 EXTERN(NtCreateSemaphore);
 EXTERN(NtCreateTimer);
 EXTERN(NtDelayExecution);
+EXTERN(NtDeleteFile);
 EXTERN(NtDeviceIoControlFile);
 EXTERN(NtDuplicateObject);
 EXTERN(NtFlushBuffersFile);
@@ -1556,8 +1650,17 @@ EXTERN(RtlAppendStringToString);
 EXTERN(RtlAppendUnicodeStringToString);
 EXTERN(RtlAppendUnicodeToString);
 EXTERN(RtlCharToInteger);
+EXTERN(RtlCompareMemory);
+EXTERN(RtlCompareMemoryUlong);
+EXTERN(RtlCompareString);
+EXTERN(RtlCompareUnicodeString);
+EXTERN(RtlCopyString);
+EXTERN(RtlCopyUnicodeString);
 EXTERN(RtlCreateHeap);
+EXTERN(RtlCreateUnicodeString);
 EXTERN(RtlDestroyHeap);
+EXTERN(RtlDowncaseUnicodeChar);
+EXTERN(RtlDowncaseUnicodeString);
 EXTERN(RtlEnterCriticalSection);
 EXTERN(RtlEqualString);
 EXTERN(RtlFreeAnsiString);
