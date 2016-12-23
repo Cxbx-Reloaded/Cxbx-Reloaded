@@ -109,7 +109,7 @@ OOVPA_NO_XREF(CreateThread_1_0_4361, 8)
 
         // CreateThread+0x6B : retn 0x18
         { 0x6B, 0xC2 }, // (Offset,Value)-Pair #7
-        { 0x6C, 0x18 }  // (Offset,Value)-Pair #8
+        { 0x6C, 0x18 }, // (Offset,Value)-Pair #8
 OOVPA_END;
 
 // ******************************************************************
@@ -133,7 +133,7 @@ OOVPA_NO_XREF(CloseHandle_1_0_4361, 10)
 
         // CloseHandle+0x1B : retn 4
         { 0x1B, 0xC2 }, // (Offset,Value)-Pair #9
-        { 0x1C, 0x04 }  // (Offset,Value)-Pair #10
+        { 0x1C, 0x04 }, // (Offset,Value)-Pair #10
 OOVPA_END;
 
 // ******************************************************************

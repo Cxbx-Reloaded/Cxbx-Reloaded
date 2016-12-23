@@ -252,7 +252,7 @@ OOVPA_NO_XREF(CreateThread_1_0_3911, 8)
 
         // CreateThread+0x51 : retn 0x18
         { 0x51, 0xC2 }, // (Offset,Value)-Pair #7
-        { 0x52, 0x18 }  // (Offset,Value)-Pair #8
+        { 0x52, 0x18 }, // (Offset,Value)-Pair #8
 OOVPA_END;
 
 // ******************************************************************
@@ -493,7 +493,11 @@ OOVPA_END;
 // ******************************************************************
 // * XID_fCloseDevice
 // ******************************************************************
-OOVPA_XREF(XID_fCloseDevice_1_0_3911, 10, XREF_FCLOSEDEVICE, XRefZero)
+OOVPA_XREF(XID_fCloseDevice_1_0_3911, 10,
+
+    XREF_FCLOSEDEVICE,
+    XRefZero)
+
         // XID_fCloseDevice+0x19 : jz +0x5C
         { 0x19, 0x74 }, // (Offset,Value)-Pair #1
         { 0x1A, 0x5C }, // (Offset,Value)-Pair #2

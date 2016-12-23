@@ -122,21 +122,22 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 
 	NativeObjectAttributes nativeObjectAttributes;
 
-	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, nativeObjectAttributes, "IoCreateFile"); /*var*/
+	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, /*OUT*/nativeObjectAttributes, "IoCreateFile");
 
-	// redirect to NtCreateFile
-	ret = NtDll::NtCreateFile(
-		FileHandle, 
-		DesiredAccess | GENERIC_READ, 
-		nativeObjectAttributes.NtObjAttrPtr, 
-		NtDll::PIO_STATUS_BLOCK(IoStatusBlock), 
-		NtDll::PLARGE_INTEGER(AllocationSize), 
-		FileAttributes, 
-		ShareAccess, 
-		Disposition, 
-		CreateOptions, 
-		NULL, 
-		0);
+	if (!FAILED(ret))
+		// redirect to NtCreateFile
+		ret = NtDll::NtCreateFile(
+			FileHandle, 
+			DesiredAccess | GENERIC_READ, 
+			nativeObjectAttributes.NtObjAttrPtr, 
+			NtDll::PIO_STATUS_BLOCK(IoStatusBlock), 
+			NtDll::PLARGE_INTEGER(AllocationSize), 
+			FileAttributes, 
+			ShareAccess, 
+			Disposition, 
+			CreateOptions, 
+			NULL, 
+			0);
 
 	if (FAILED(ret))
 	{

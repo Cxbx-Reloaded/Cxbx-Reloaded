@@ -87,7 +87,11 @@ OOVPA_END;
 // ******************************************************************
 // * XnInit
 // ******************************************************************
-OOVPA_XREF(XnInit_1_0_3911, 11, XREF_XNINIT, XRefZero)
+OOVPA_XREF(XnInit_1_0_3911, 11,
+
+    XREF_XNINIT,
+    XRefZero)
+
         // XnInit+0x31 : push 0x3554454E
         { 0x31, 0x68 }, // (Offset,Value)-Pair #1
         { 0x32, 0x4E }, // (Offset,Value)-Pair #2

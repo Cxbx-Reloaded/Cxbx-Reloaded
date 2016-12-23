@@ -294,7 +294,11 @@ OOVPA_END;
 // ******************************************************************
 // * XID_fCloseDevice
 // ******************************************************************
-OOVPA_XREF(XID_fCloseDevice_1_0_5558, 7, XREF_FCLOSEDEVICE, XRefZero)
+OOVPA_XREF(XID_fCloseDevice_1_0_5558, 7,
+
+    XREF_FCLOSEDEVICE,
+    XRefZero)
+
         { 0x11, 0x45 },
         { 0x24, 0xFF },
         { 0x37, 0x89 },

@@ -1088,11 +1088,11 @@ OOVPA_XREF(IDirectSoundBuffer8_Play_1_0_3936, 16,
         { 0x02, 0x24 }, // (Offset,Value)-Pair #3
         { 0x03, 0x10 }, // (Offset,Value)-Pair #4
 
-		// IDirectSoundBuffer8_Play+0x04 : mov eax, [esp+4+arg_0]
-		{ 0x04, 0x8B }, // (Offset,Value)-Pair #5
-		{ 0x05, 0x44 }, // (Offset,Value)-Pair #6
-		{ 0x06, 0x24 }, // (Offset,Value)-Pair #7
-		{ 0x07, 0x08 }, // (Offset,Value)-Pair #8
+	// IDirectSoundBuffer8_Play+0x04 : mov eax, [esp+4+arg_0]
+	{ 0x04, 0x8B }, // (Offset,Value)-Pair #5
+	{ 0x05, 0x44 }, // (Offset,Value)-Pair #6
+	{ 0x06, 0x24 }, // (Offset,Value)-Pair #7
+	{ 0x07, 0x08 }, // (Offset,Value)-Pair #8
 
         // IDirectSoundBuffer8_Play+0x12 : and eax, [0xFFFFFFE4]
         { 0x12, 0x83 }, // (Offset,Value)-Pair #9
@@ -3706,24 +3706,24 @@ OOVPA_END;
 // ******************************************************************
 // * CMcpxVoiceClient::Commit3dSettings
 // ******************************************************************
-OOVPA_XREF(CMcpxVoiceClient_Commit3dSettings_1_0_3936, 10,	// Small == 10
+OOVPA_XREF(CMcpxVoiceClient_Commit3dSettings_1_0_3936, 10,
 
-	XREF_CMcpxVoiceClient_Commit3dSettings,
-	XRefZero)
+    XREF_CMcpxVoiceClient_Commit3dSettings,
+    XRefZero)
 
-		// CMcpxVoiceClient::Commit3dSettings+0x17 : or [eax+0x80], ecx
-		{ 0x17, 0x09 },
-		{ 0x18, 0x88 },
-		{ 0x19, 0x80 },
-		{ 0x1A, 0x00 },
-		// CMcpxVoiceClient::Commit3dSettings+0x2B : add eax, 0x80
-		{ 0x2B, 0x05 },
-		{ 0x2C, 0x80 },
-		{ 0x2D, 0x00 },
-		// CMcpxVoiceClient::Commit3dSettings+0x3D : cmpxchg [ecx], edx
-		{ 0x3D, 0x0F },
-		{ 0x3E, 0xB1 },
-		{ 0x3F, 0x11 },
+	// CMcpxVoiceClient::Commit3dSettings+0x17 : or [eax+0x80], ecx
+	{ 0x17, 0x09 },
+	{ 0x18, 0x88 },
+	{ 0x19, 0x80 },
+	{ 0x1A, 0x00 },
+	// CMcpxVoiceClient::Commit3dSettings+0x2B : add eax, 0x80
+	{ 0x2B, 0x05 },
+	{ 0x2C, 0x80 },
+	{ 0x2D, 0x00 },
+	// CMcpxVoiceClient::Commit3dSettings+0x3D : cmpxchg [ecx], edx
+	{ 0x3D, 0x0F },
+	{ 0x3E, 0xB1 },
+	{ 0x3F, 0x11 },
 OOVPA_END;
 
 // ******************************************************************

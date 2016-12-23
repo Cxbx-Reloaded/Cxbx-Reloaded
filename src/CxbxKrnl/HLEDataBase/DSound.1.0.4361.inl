@@ -733,25 +733,25 @@ OOVPA_END;
 // ******************************************************************
 // * CMcpxBuffer::Stop2
 // ******************************************************************
-OOVPA_XREF(CMcpxBuffer_Stop2_1_0_4361, 10,	
+OOVPA_XREF(CMcpxBuffer_Stop2_1_0_4361, 10,
 
-	XREF_CMcpxBuffer_Stop2,
-	XRefZero)
+    XREF_CMcpxBuffer_Stop2,
+    XRefZero)
 
-		// CMcpxBuffer_Stop2+0x03 : mov eax, [ebp+arg_0]
-		{ 0x03, 0x8B },
-		{ 0x04, 0x45 },
-		{ 0x05, 0x08 },
-		// CMcpxBuffer_Stop2+0x14 : mov eax, [esi]
-		{ 0x14, 0x8B },
-		{ 0x15, 0x06 },
-		// CMcpxBuffer_Stop2+0x25 : push [ebp+arg_8]
-		{ 0x25, 0xFF },
-		{ 0x26, 0x75 },
-		{ 0x27, 0x10 },
-		// CMcpxBuffer_Stop2+0x36 : retn 0xC
-		{ 0x36, 0xC2 },
-		{ 0x37, 0x0C },
+	// CMcpxBuffer_Stop2+0x03 : mov eax, [ebp+arg_0]
+	{ 0x03, 0x8B },
+	{ 0x04, 0x45 },
+	{ 0x05, 0x08 },
+	// CMcpxBuffer_Stop2+0x14 : mov eax, [esi]
+	{ 0x14, 0x8B },
+	{ 0x15, 0x06 },
+	// CMcpxBuffer_Stop2+0x25 : push [ebp+arg_8]
+	{ 0x25, 0xFF },
+	{ 0x26, 0x75 },
+	{ 0x27, 0x10 },
+	// CMcpxBuffer_Stop2+0x36 : retn 0xC
+	{ 0x36, 0xC2 },
+	{ 0x37, 0x0C },
 OOVPA_END;
 
 // ******************************************************************

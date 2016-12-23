@@ -88,7 +88,10 @@ OOVPA_END;
 // ******************************************************************
 // * XnInit
 // ******************************************************************
-OOVPA_XREF(XnInit_1_0_4361, 10, XREF_XNINIT, XRefZero)
+OOVPA_XREF(XnInit_1_0_4361, 10,
+
+    XREF_XNINIT,
+    XRefZero)
 
         // XnInit+0x03 : sub esp, 0x0214
         { 0x03, 0x81 }, // (Offset,Value)-Pair #1

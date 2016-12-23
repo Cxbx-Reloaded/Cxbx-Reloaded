@@ -1460,7 +1460,11 @@ OOVPA_END;
 // ******************************************************************
 // * IDirect3DDevice8_SetRenderState_CullModeB
 // ******************************************************************
-OOVPA_XREF(IDirect3DDevice8_SetRenderState_CullModeB_1_0_4134, 13, XREF_DXSRSCULLMODE, XRefZero)
+OOVPA_XREF(IDirect3DDevice8_SetRenderState_CullModeB_1_0_4134, 13,
+
+    XREF_DXSRSCULLMODE,
+    XRefZero)
+
         // IDirect3DDevice8_SetRenderState_CullModeB+0x22 : mov dword ptr [eax], 0x40308
         { 0x22, 0xC7 }, // (Offset,Value)-Pair #1
         { 0x24, 0x08 }, // (Offset,Value)-Pair #2
@@ -1501,31 +1505,35 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(IDirect3DDevice8_SetScreenSpaceOffset_1_0_4134, 7)
 
-		{ 0x06, 0x56 },
-		{ 0x07, 0xD8 },
-		{ 0x08, 0x44 },
-		{ 0x09, 0x24 },
-		{ 0x0A, 0x08 },
-		{ 0x2E, 0x8B },
-		{ 0x2F, 0x06 },
+	{ 0x06, 0x56 },
+	{ 0x07, 0xD8 },
+	{ 0x08, 0x44 },
+	{ 0x09, 0x24 },
+	{ 0x0A, 0x08 },
+	{ 0x2E, 0x8B },
+	{ 0x2F, 0x06 },
 OOVPA_END;
 
 // ******************************************************************
 // * D3D::SetFence
 // ******************************************************************
-OOVPA_XREF(D3D_SetFence_1_0_4134, 12, XREF_D3D_SETFENCE, XRefZero)
-		{ 0x0D, 0x72 },
-		{ 0x0E, 0x0E },
-		{ 0x31, 0xBA },
-		{ 0x32, 0x90 },
-		{ 0x33, 0x1D },
-		{ 0x34, 0x04 },
-		{ 0x35, 0x00 },
-		{ 0x45, 0x83 },
-		{ 0x46, 0xE1 },
-		{ 0x47, 0x3F },
+OOVPA_XREF(D3D_SetFence_1_0_4134, 12,
+
+    XREF_D3D_SETFENCE,
+    XRefZero)
+
+	{ 0x0D, 0x72 },
+	{ 0x0E, 0x0E },
+	{ 0x31, 0xBA },
+	{ 0x32, 0x90 },
+	{ 0x33, 0x1D },
+	{ 0x34, 0x04 },
+	{ 0x35, 0x00 },
+	{ 0x45, 0x83 },
+	{ 0x46, 0xE1 },
+	{ 0x47, 0x3F },
         { 0xAA, 0xC2 },
-		{ 0xAB, 0x04 },
+	{ 0xAB, 0x04 },
 OOVPA_END;
 
 // ******************************************************************
@@ -1662,22 +1670,22 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3D_CDevice_KickOff_1_0_4134, 12)
 
-		// D3D::CDevice::KickOff+0x0D : test al, 4
-		{ 0x0D, 0xA8 },
-		{ 0x0E, 0x04 },
-		// D3D::CDevice::KickOff+0x11 : mov ecx, [ecx+0x35C]
-		{ 0x11, 0x8B },
-		{ 0x12, 0x89 },
-		{ 0x13, 0x5C },
-		{ 0x14, 0x03 },
-		{ 0x15, 0x00 },
-		{ 0x16, 0x00 },
-		// D3D::CDevice::KickOff+0x26 : sfence
-		{ 0x26, 0x0F },
-		{ 0x27, 0xAE },
-		{ 0x28, 0xF8 },
-		// D3D::CDevice::KickOff+0xE3 : retn
-		{ 0xE3, 0xC3 }
+	// D3D::CDevice::KickOff+0x0D : test al, 4
+	{ 0x0D, 0xA8 },
+	{ 0x0E, 0x04 },
+	// D3D::CDevice::KickOff+0x11 : mov ecx, [ecx+0x35C]
+	{ 0x11, 0x8B },
+	{ 0x12, 0x89 },
+	{ 0x13, 0x5C },
+	{ 0x14, 0x03 },
+	{ 0x15, 0x00 },
+	{ 0x16, 0x00 },
+	// D3D::CDevice::KickOff+0x26 : sfence
+	{ 0x26, 0x0F },
+	{ 0x27, 0xAE },
+	{ 0x28, 0xF8 },
+	// D3D::CDevice::KickOff+0xE3 : retn
+	{ 0xE3, 0xC3 }
 OOVPA_END;
 
 // ******************************************************************
