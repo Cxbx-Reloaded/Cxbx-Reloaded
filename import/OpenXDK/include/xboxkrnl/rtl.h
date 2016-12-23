@@ -124,7 +124,15 @@ XBSYSAPI EXPORTNUM(272) VOID NTAPI RtlCopyString
 	IN PSTRING SourceString OPTIONAL
 );
 
-XBSYSAPI VOID *RtlCopyUnicodeString;
+// ******************************************************************
+// * 0x0111 - RtlCopyUnicodeString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(273) VOID NTAPI RtlCopyUnicodeString
+(
+	OUT PUNICODE_STRING DestinationString,
+	IN PUNICODE_STRING SourceString OPTIONAL
+);
+
 XBSYSAPI VOID *RtlCreateUnicodeString;
 XBSYSAPI VOID *RtlDowncaseUnicodeChar;
 XBSYSAPI VOID *RtlDowncaseUnicodeString;
