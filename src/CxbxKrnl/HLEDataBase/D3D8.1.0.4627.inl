@@ -1858,8 +1858,7 @@ OOVPA_END;
 // ******************************************************************
 // * Get2DSurfaceDescC
 // ******************************************************************
-OOVPA_XREF(Get2DSurfaceDescC_1_0_4627,
-10,
+OOVPA_XREF(Get2DSurfaceDescC_1_0_4627, 10,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -1886,8 +1885,7 @@ OOVPA_END;
 // ******************************************************************
 // * Get2DSurfaceDescD
 // ******************************************************************
-OOVPA_XREF(Get2DSurfaceDescD_1_0_4627,
-10,
+OOVPA_XREF(Get2DSurfaceDescD_1_0_4627, 10,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2095,8 +2093,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirect3DDevice8_EndPush
 // ******************************************************************
-OOVPA_XREF(IDirect3DDevice8_EndPush_1_0_4627,
-12,
+OOVPA_XREF(IDirect3DDevice8_EndPush_1_0_4627, 12,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2515,8 +2512,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_InsertFence
 // ******************************************************************
-OOVPA_XREF(D3DDevice_InsertFence_1_0_4627,
-5,
+OOVPA_XREF(D3DDevice_InsertFence_1_0_4627, 5,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -2559,13 +2555,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_KickPushBuffer
 // ******************************************************************
-OOVPA_XREF(D3DDevice_KickPushBuffer_1_0_4627,
-4,
+OOVPA_XREF(D3DDevice_KickPushBuffer_1_0_4627, 4,
 
     XRefNoSaveIndex,
     XRefOne)
 
-		{ 0x07, XREF_D3D_KickOff },
+	{ 0x07, XREF_D3D_KickOff },
 
         { 0x00, 0x8B },
         { 0x01, 0x0D },
@@ -2855,13 +2850,12 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_BlockOnFence
 // ******************************************************************
-OOVPA_XREF(D3DDevice_BlockOnFence_1_0_4627,
-8,
+OOVPA_XREF(D3DDevice_BlockOnFence_1_0_4627, 8,
 
     XRefNoSaveIndex,
     XRefOne)
 
-		{ 0x08, XREF_D3D_BLOCKONTIME },
+	{ 0x08, XREF_D3D_BLOCKONTIME },
 
         { 0x00, 0x8B },
         { 0x02, 0x24 },

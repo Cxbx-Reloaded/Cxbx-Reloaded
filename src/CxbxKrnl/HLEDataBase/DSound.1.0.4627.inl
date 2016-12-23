@@ -1939,7 +1939,7 @@ OOVPA_END;
 OOVPA_XREF(CDirectSoundVoice_SetHeadroom_1_0_4627, 9,
 
 	XREF_DirectSound_CDirectSoundVoice_SetHeadroom,
-	-1) // TODO : -1 is used nowhere else - should it stay that, or XRefOne?
+	XRefOne) // Note : This was -1, which is used nowhere else and probably an error.
 
 		{ 0x1B, XREF_DSSTREAMSETVOLUME },
 
@@ -2578,7 +2578,7 @@ OOVPA_XREF(DirectSound_CDirectSoundVoice_SetHeadroom_1_0_4627, 8,
     XREF_DirectSound_CDirectSoundVoice_SetHeadroom,
     XRefOne)
 
-		// CDirectSoundVoice_SetHeadroom+0x1B : call [CMcpxVoiceClient::SetVolume]
+	// CDirectSoundVoice_SetHeadroom+0x1B : call [CMcpxVoiceClient::SetVolume]
         { 0x1B, XREF_DSSTREAMSETVOLUME },
 
         { 0x03, 0x04 },

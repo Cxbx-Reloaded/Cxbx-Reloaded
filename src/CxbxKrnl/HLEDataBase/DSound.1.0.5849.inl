@@ -1371,7 +1371,7 @@ OOVPA_END;
 //OOVPA_XREF(IDirectSound_CreateSoundStream_1_0_5849, 8,
 //
 //    XRefNoSaveIndex,
-//    XRefZero)
+//    XRefOne)
 //
 //        { 0x1D, XREF_DirectSound_CDirectSound_CreateSoundStream },
 //
