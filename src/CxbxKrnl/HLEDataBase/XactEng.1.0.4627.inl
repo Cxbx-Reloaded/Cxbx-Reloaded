@@ -475,6 +475,7 @@ OOVPA_XREF(XACT_CEngine_GetNotification_1_0_4627, 8,
 
     XREF_XACT_CEngine_GetNotification,
     XRefZero)
+
         { 0x11, 0x8D },
         { 0x24, 0x5A },
         { 0x37, 0xC0 },
@@ -508,7 +509,11 @@ OOVPA_END;
 // ******************************************************************
 // * XACT::CEngine::UnRegisterWaveBank
 // ******************************************************************
-OOVPA_XREF(XACT_CEngine_UnRegisterWaveBank_1_0_4627, 8, XREF_XACT_CEngine_UnRegisterWaveBank, XRefZero)
+OOVPA_XREF(XACT_CEngine_UnRegisterWaveBank_1_0_4627, 8,
+
+    XREF_XACT_CEngine_UnRegisterWaveBank,
+    XRefZero)
+
         { 0x07, 0x8B },
         { 0x10, 0x58 },
         { 0x19, 0x8B },
@@ -522,18 +527,22 @@ OOVPA_END;
 // ******************************************************************
 // * XACT::CEngine::UnRegisterWaveBank
 // ******************************************************************
-OOVPA_XREF(XACT_CEngine_UnRegisterWaveBank_1_0_4928, 8, XREF_XACT_CEngine_UnRegisterWaveBank, XRefZero)
-		// XACT_CEngine_UnRegisterWaveBank+0x06 : lea eax, [ecx+0x58]
-		{ 0x06, 0x8D },
-		{ 0x07, 0x41 },
-		{ 0x08, 0x58 },
-		// XACT_CEngine_UnRegisterWaveBank+0x28 : lea edi, [ebx+0x4C]
-		{ 0x28, 0x8D },
-		{ 0x29, 0x7B },
-		{ 0x2A, 0x4C },
-		// XACT_CEngine_UnRegisterWaveBank+0xBF : retn 0x8
-		{ 0xBF, 0xC2 },
-		{ 0xC0, 0x08 },
+OOVPA_XREF(XACT_CEngine_UnRegisterWaveBank_1_0_4928, 8,
+
+    XREF_XACT_CEngine_UnRegisterWaveBank,
+    XRefZero)
+
+    	// XACT_CEngine_UnRegisterWaveBank+0x06 : lea eax, [ecx+0x58]
+    	{ 0x06, 0x8D },
+    	{ 0x07, 0x41 },
+    	{ 0x08, 0x58 },
+    	// XACT_CEngine_UnRegisterWaveBank+0x28 : lea edi, [ebx+0x4C]
+    	{ 0x28, 0x8D },
+    	{ 0x29, 0x7B },
+    	{ 0x2A, 0x4C },
+    	// XACT_CEngine_UnRegisterWaveBank+0xBF : retn 0x8
+    	{ 0xBF, 0xC2 },
+    	{ 0xC0, 0x08 },
 OOVPA_END;
 
 

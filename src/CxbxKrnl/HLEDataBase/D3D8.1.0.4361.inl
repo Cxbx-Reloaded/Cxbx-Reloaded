@@ -80,12 +80,12 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(IDirect3DDevice8_SetVerticalBlankCallback_1_0_4361, 6)
 
-		{ 0x01, 0x44 },
-		{ 0x03, 0x04 },
-		{ 0x05, 0x0D },
-		{ 0x0C, 0x30 },
-		{ 0x0D, 0x24 },
-		{ 0x11, 0x04 },
+	{ 0x01, 0x44 },
+	{ 0x03, 0x04 },
+	{ 0x05, 0x0D },
+	{ 0x0C, 0x30 },
+	{ 0x0D, 0x24 },
+	{ 0x11, 0x04 },
 OOVPA_END;
 
 // ******************************************************************
@@ -213,7 +213,11 @@ OOVPA_END;
 // ******************************************************************
 // * IDirect3D_ClearStateBlockFlags
 // ******************************************************************
-OOVPA_XREF(IDirect3D_ClearStateBlockFlags_1_0_4361, 9, XREF_CLEARSTATEBLOCKFLAGS, XRefZero)
+OOVPA_XREF(IDirect3D_ClearStateBlockFlags_1_0_4361, 9,
+
+    XREF_CLEARSTATEBLOCKFLAGS,
+    XRefZero)
+
         // IDirect3D_ClearStateBlockFlags+0x0A : movzx ecx, 0x82
         { 0x0A, 0xB9 }, // (Offset,Value)-Pair #1
         { 0x0B, 0x82 }, // (Offset,Value)-Pair #2
@@ -233,7 +237,11 @@ OOVPA_END;
 // ******************************************************************
 // * IDirect3D_RecordStateBlock
 // ******************************************************************
-OOVPA_XREF(IDirect3D_RecordStateBlock_1_0_4361, 10, XREF_RECORDSTATEBLOCK,  XRefZero)
+OOVPA_XREF(IDirect3D_RecordStateBlock_1_0_4361, 10,
+
+    XREF_RECORDSTATEBLOCK,
+    XRefZero)
+
         // IDirect3D_RecordStateBlock+0x0F : mov eax, [edi+0x0390]
         { 0x0F, 0x8B }, // (Offset,Value)-Pair #1
         { 0x10, 0x87 }, // (Offset,Value)-Pair #2
@@ -317,13 +325,13 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_DeleteStateBlock_1_0_4361, 7)
 
-		{ 0x11, 0x76 },
-		{ 0x24, 0x3B },
-		{ 0x37, 0xE8 },
-		{ 0x4A, 0x50 },
-		{ 0x5D, 0x74 },
-		{ 0x70, 0x06 },
-		{ 0x83, 0xEB },
+	{ 0x11, 0x76 },
+	{ 0x24, 0x3B },
+	{ 0x37, 0xE8 },
+	{ 0x4A, 0x50 },
+	{ 0x5D, 0x74 },
+	{ 0x70, 0x06 },
+	{ 0x83, 0xEB },
 OOVPA_END;
 
 // ******************************************************************

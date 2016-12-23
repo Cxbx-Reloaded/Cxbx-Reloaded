@@ -142,7 +142,11 @@ OOVPA_END;
 // ******************************************************************
 // * XID_fCloseDevice
 // ******************************************************************
-OOVPA_XREF(XID_fCloseDevice_1_0_4627, 7, XREF_FCLOSEDEVICE, XRefZero)
+OOVPA_XREF(XID_fCloseDevice_1_0_4627, 7,
+
+    XREF_FCLOSEDEVICE,
+    XRefZero)
+
         { 0x13, 0x1E },
         { 0x28, 0x75 },
         { 0x3D, 0x01 },
@@ -155,7 +159,11 @@ OOVPA_END;
 // ******************************************************************
 // * XID_fCloseDevice
 // ******************************************************************
-OOVPA_XREF(XID_fCloseDevice_1_0_4928, 11, XREF_FCLOSEDEVICE, XRefZero)
+OOVPA_XREF(XID_fCloseDevice_1_0_4928, 11,
+
+    XREF_FCLOSEDEVICE,
+    XRefZero)
+
         { 0x13, 0x8B }, // (Offset,Value)-Pair #1
         { 0x14, 0x86 }, // (Offset,Value)-Pair #2
         { 0x15, 0xA3 }, // (Offset,Value)-Pair #3
@@ -601,7 +609,8 @@ OOVPA_END;
 // ******************************************************************
 // * VirtualProtect
 // ******************************************************************
-OOVPA_XREF(VirtualProtect_1_0_4627, 7, 0/*XREF_VirtualProtect*/, XRefZero)
+OOVPA_NO_XREF(VirtualProtect_1_0_4627, 7) // XREF_VirtualProtect
+
         { 0x04, 0x8D },
         { 0x0A, 0x24 },
         { 0x10, 0x10 },

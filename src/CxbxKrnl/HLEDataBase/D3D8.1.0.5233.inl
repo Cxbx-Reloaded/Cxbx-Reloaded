@@ -1213,18 +1213,18 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(IDirect3DDevice8_Unknown1_1_0_5233, 9)
 
-		// IDirect3DDevice8_Unknown1+0x00 : xor eax, eax
-		{ 0x00, 0x33 },
-		{ 0x01, 0xC0 },
-		// IDirect3DDevice8_Unknown1+0x13 : call ds:AvSendTVEncoderOption
-		{ 0x13, 0xFF },
-		{ 0x14, 0x15 },
-		{ 0x15, 0x08 },
-		{ 0x16, 0x94 },
-		{ 0x17, 0x19 },
-		{ 0x18, 0x00 },
-		// IDirect3DDevice8_Unknown1+0x1E : retn
-		{ 0x1E, 0xC3 },
+	// IDirect3DDevice8_Unknown1+0x00 : xor eax, eax
+	{ 0x00, 0x33 },
+	{ 0x01, 0xC0 },
+	// IDirect3DDevice8_Unknown1+0x13 : call ds:AvSendTVEncoderOption
+	{ 0x13, 0xFF },
+	{ 0x14, 0x15 },
+	{ 0x15, 0x08 },
+	{ 0x16, 0x94 },
+	{ 0x17, 0x19 },
+	{ 0x18, 0x00 },
+	// IDirect3DDevice8_Unknown1+0x1E : retn
+	{ 0x1E, 0xC3 },
 OOVPA_END;
 
 // ******************************************************************

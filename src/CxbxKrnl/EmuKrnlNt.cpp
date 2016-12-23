@@ -1000,22 +1000,27 @@ XBSYSAPI EXPORTNUM(215) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySymbolicLinkOb
 	// Retrieve the NtSymbolicLinkObject and populate the output arguments :
 	ret = STATUS_SUCCESS;
 	symbolicLinkObject = (EmuNtSymbolicLinkObject*)iEmuHandle->NtObject;
-	if (LinkTarget != NULL)
-	{
-		if (LinkTarget->Length > LinkTarget->MaximumLength)
+
+	if (symbolicLinkObject->IsHostBasedPath) {
+		// TODO : What should we do with symbolic links 
+		ret = STATUS_UNRECOGNIZED_VOLUME;
+	} else {
+		if (LinkTarget != NULL)
 		{
-			ret = STATUS_BUFFER_TOO_SMALL;
-			LinkTarget->Length = LinkTarget->MaximumLength;
+			if (LinkTarget->Length > LinkTarget->MaximumLength)
+			{
+				ret = STATUS_BUFFER_TOO_SMALL;
+				LinkTarget->Length = LinkTarget->MaximumLength;
+			}
+
+			copy_string_to_PSTRING_to(symbolicLinkObject->XboxSymbolicLinkPath, LinkTarget);
 		}
 
-		copy_string_to_PSTRING_to(symbolicLinkObject->XboxFullPath, LinkTarget);
+		if (ReturnedLength != NULL)
+		{
+			*ReturnedLength = symbolicLinkObject->XboxSymbolicLinkPath.length(); // Return full length (even if buffer was too small)
+		}
 	}
-
-	if (ReturnedLength != NULL)
-	{
-		*ReturnedLength = symbolicLinkObject->XboxFullPath.length(); // Return full length (even if buffer was too small)
-	}
-
 	if (ret != STATUS_SUCCESS)
 		EmuWarning("NtQuerySymbolicLinkObject failed! (%s)", NtStatusToString(ret));
 

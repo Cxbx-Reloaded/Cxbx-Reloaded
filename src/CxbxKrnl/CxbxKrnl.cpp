@@ -467,7 +467,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	strcat(szBuffer, "\\Cxbx-Reloaded\\");
 
 	std::string basePath(szBuffer);
-	CxbxBasePath = basePath + "\\EmuDisk\\";
+	CxbxBasePath = basePath + "EmuDisk\\";
 
 	// Determine XBE Path
 	memset(szBuffer, 0, MAX_PATH);
@@ -485,19 +485,19 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	std::string titleId(szBuffer);
 
 	// Games may assume they are running from CdRom :
-	CxbxRegisterDeviceNativePath(DeviceCdrom0, xbeDirectory);
+	CxbxDefaultXbeDriveIndex = CxbxRegisterDeviceHostPath(DeviceCdrom0, xbeDirectory);
 
 	// Partition 0 contains configuration data, and is accessed as a native file, instead as a folder :
-	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition0, CxbxBasePath + "Partition0", /*IsFile=*/true);
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition0, CxbxBasePath + "Partition0", /*IsFile=*/true);
 	// The first two partitions are for Data and Shell files, respectively :
-	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition1, CxbxBasePath + "Partition1");
-	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition2, CxbxBasePath + "Partition2");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition1, CxbxBasePath + "Partition1");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition2, CxbxBasePath + "Partition2");
 	// The following partitions are for caching purposes - for now we allocate up to 7 (as xbmp needs that many) :
-	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition3, CxbxBasePath + "Partition3");
-	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition4, CxbxBasePath + "Partition4");
-	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition5, CxbxBasePath + "Partition5");
-	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition6, CxbxBasePath + "Partition6");
-	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition7, CxbxBasePath + "Partition7");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition3, CxbxBasePath + "Partition3");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition4, CxbxBasePath + "Partition4");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition5, CxbxBasePath + "Partition5");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition6, CxbxBasePath + "Partition6");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition7, CxbxBasePath + "Partition7");
 
 
 	DbgPrintf("EmuMain : Creating default symbolic links.\n");
@@ -506,7 +506,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	{
 		// Arrange that the Xbe path can reside outside the partitions, and put it to g_hCurDir :
 		CxbxCreateSymbolicLink(DriveC, xbeDirectory);
-		EmuNtSymbolicLinkObject* xbePathSymbolicLinkObject = FindNtSymbolicLinkObjectByVolumeLetter(CxbxDefaultXbeVolumeLetter);
+		EmuNtSymbolicLinkObject* xbePathSymbolicLinkObject = FindNtSymbolicLinkObjectByDriveLetter(CxbxDefaultXbeDriveLetter);
 		g_hCurDir = xbePathSymbolicLinkObject->RootDirectoryHandle;
 
 		// Determine Xbox path to XBE and place it in XeImageFileName
@@ -522,16 +522,20 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 		xboxkrnl::XeImageFileName.MaximumLength = MAX_PATH;
 		xboxkrnl::XeImageFileName.Buffer = (PCHAR)malloc(MAX_PATH);
-		sprintf(xboxkrnl::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeVolumeLetter, fileName.c_str());
+		sprintf(xboxkrnl::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeDriveLetter, fileName.c_str());
 		xboxkrnl::XeImageFileName.Length = (USHORT)strlen(xboxkrnl::XeImageFileName.Buffer);
 
 		DbgPrintf("EmuMain : XeImageFileName = %s\n", xboxkrnl::XeImageFileName.Buffer);
 
+		CxbxCreateSymbolicLink(DriveA, DeviceCdrom0); // CdRom could be read from A:
 		CxbxCreateSymbolicLink(DriveD, DeviceCdrom0); // CdRom goes to D:
 		CxbxCreateSymbolicLink(DriveE, DeviceHarddisk0Partition1); // Partition1 goes to E: (Data files, savegames, etc.)
+		//CxbxCreateSymbolicLink(DriveE, DeviceHarddisk0Partition1 + "\\DevKit"); // Partition1 goes to E: (Devkit)
 		CxbxCreateSymbolicLink(DriveF, DeviceHarddisk0Partition2); // Partition2 goes to F: (Shell files, dashboard, etc.)
-		CxbxCreateSymbolicLink(DriveT, DeviceHarddisk0Partition1 + "\\TDATA\\" + titleId + "\\"); // Partition1\Title data goes to T:
-		CxbxCreateSymbolicLink(DriveU, DeviceHarddisk0Partition1 + "\\UDATA\\" + titleId + "\\"); // Partition1\User data goes to U:
+		CxbxCreateSymbolicLink(DriveS, DeviceHarddisk0Partition1 + "\\TDATA"); // Partition1\TDATA data goes to S:
+		CxbxCreateSymbolicLink(DriveT, DeviceHarddisk0Partition1 + "\\TDATA\\" + titleId); // Partition1 Title data goes to T:
+		CxbxCreateSymbolicLink(DriveU, DeviceHarddisk0Partition1 + "\\UDATA\\" + titleId); // Partition1 User data goes to U:
+		CxbxCreateSymbolicLink(DriveV, DeviceHarddisk0Partition1 + "\\UDATA"); // Partition1\UDATA data goes to V:
 		CxbxCreateSymbolicLink(DriveX, DeviceHarddisk0Partition3); // Partition3 goes to X:
 		CxbxCreateSymbolicLink(DriveY, DeviceHarddisk0Partition4); // Partition4 goes to Y:
 
