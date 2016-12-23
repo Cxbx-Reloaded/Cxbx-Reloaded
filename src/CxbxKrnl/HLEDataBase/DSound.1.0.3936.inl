@@ -173,7 +173,7 @@ OOVPA_END;
 OOVPA_XREF(IDirectSound8_CreateStream_1_0_3936, 10,
 
     XRefNoSaveIndex,
-	XRefOne)
+    XRefOne)
 
     // TODO: tidy up the xref names (are probably not accurate)
 
@@ -1079,8 +1079,8 @@ OOVPA_XREF(IDirectSoundBuffer8_Play_1_0_3936, 16,
     XRefNoSaveIndex,
     XRefOne)
 
-		// IDirectSoundBuffer8_Play+0x1D : call CDirectSoundBuffer::Play
-		{ 0x1D, XREF_DSOUNDPLAY },
+	// IDirectSoundBuffer8_Play+0x1D : call CDirectSoundBuffer::Play
+	{ 0x1D, XREF_DSOUNDPLAY },
 
         // IDirectSoundBuffer8_Play+0x00 : push [esp+0x10]
         { 0x00, 0xFF }, // (Offset,Value)-Pair #1
@@ -1116,8 +1116,8 @@ OOVPA_XREF(IDirectSoundBuffer8_Play2_1_0_3936, 12,
     XRefNoSaveIndex,
     XRefOne)
 
-		// IDirectSoundBuffer8_Play+0x1D : call CDirectSoundBuffer::Play
-		{ 0x1D, XREF_DSOUNDPLAY },
+	// IDirectSoundBuffer8_Play+0x1D : call CDirectSoundBuffer::Play
+	{ 0x1D, XREF_DSOUNDPLAY },
 
         // IDirectSoundBuffer8_Play+0x00 : push [esp+0x10]
         { 0x00, 0xFF }, // (Offset,Value)-Pair #1
@@ -3972,11 +3972,14 @@ OOVPA_END;
 // ******************************************************************
 // * CDirectSoundStream::SetI3DL2Source
 // ******************************************************************
-OOVPA_NO_XREF(CDirectSoundStream_SetI3DL2Source_1_0_3936, 9)
+OOVPA_XREF(CDirectSoundStream_SetI3DL2Source_1_0_3936, 9,
+
+    XRefNoSaveIndex,
+    XRefOne)
 
         { 0x11, XREF_CDirectSoundVoice_SetI3DL2Source },
 
-		{ 0x01, 0x74 },
+	{ 0x01, 0x74 },
         { 0x04, 0x8B },
         { 0x07, 0x08 },
         { 0x0A, 0x24 },

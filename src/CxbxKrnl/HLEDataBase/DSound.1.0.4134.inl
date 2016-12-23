@@ -101,6 +101,7 @@ OOVPA_XREF(DirectSound_CDirectSoundBuffer_SetHeadroom_1_0_4134, 8,
 
     XREF_DirectSound_CDirectSoundBuffer_SetHeadroom,
     XRefOne)
+
         { 0x32, XREF_DirectSound_CDirectSoundVoice_SetHeadroom },
 
         { 0x0C, 0x00 },
@@ -169,6 +170,7 @@ OOVPA_XREF(DirectSound_CDirectSoundBuffer_SetVolume_1_0_4134, 8,
 
     XREF_DirectSound_CDirectSoundBuffer_SetVolume,
     XRefOne)
+
         { 0x32, XREF_DirectSound_CDirectSoundVoice_SetVolume },
 
         { 0x0C, 0x00 },
@@ -331,6 +333,7 @@ OOVPA_XREF(DirectSound_CDirectSoundVoice_SetMixBins_1_0_4134, 8,
 
     XREF_DSSETMIXBINSB,
     XRefOne)
+
         { 0x0D, XREF_DSSETMIXBINSC },
 
         { 0x02, 0x74 },
@@ -349,6 +352,7 @@ OOVPA_XREF(DirectSound_CDirectSoundBuffer_SetMixBins_1_0_4134, 8,
 
     XREF_DSSETMIXBINSA,
     XRefOne)
+
         { 0x32, XREF_DSSETMIXBINSB },
 
         { 0x0C, 0x00 },
