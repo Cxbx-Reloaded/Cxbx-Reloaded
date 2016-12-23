@@ -504,16 +504,22 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 	// Create default symbolic links :
 	{
+		// TODO: DriveD should always point to the Xbe Path
+		// This is the only symbolic link the Xbox Kernel sets, the rest are set by the application, usually via XAPI.
+		// If the Xbe is located outside of the emulated HDD, mounting it as DeviceCdrom0 is correct
+		// If the Xbe is located inside the emulated HDD, the full path should be used, eg: "\\Harddisk0\\partition2\\xboxdash.xbe"
+		CxbxCreateSymbolicLink(DriveD, DeviceCdrom0);
+
 		// Arrange that the Xbe path can reside outside the partitions, and put it to g_hCurDir :
-		CxbxCreateSymbolicLink(DriveC, xbeDirectory);
 		EmuNtSymbolicLinkObject* xbePathSymbolicLinkObject = FindNtSymbolicLinkObjectByDriveLetter(CxbxDefaultXbeDriveLetter);
 		g_hCurDir = xbePathSymbolicLinkObject->RootDirectoryHandle;
 
 		// Determine Xbox path to XBE and place it in XeImageFileName
 		std::string fileName(xbePath);
-		
+
 		// Strip out the path, leaving only the XBE file name
-		// NOTE: we assume that the XBE is always on the root of the C: drive
+		// NOTE: we assume that the XBE is always on the root of the D: drive
+		// This is a safe assumption as the Xbox kernel ALWAYS mounts D: as the Xbe Path
 		if (fileName.rfind('\\') >= 0)
 			fileName = fileName.substr(fileName.rfind('\\') + 1);
 
@@ -527,21 +533,6 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 		DbgPrintf("EmuMain : XeImageFileName = %s\n", xboxkrnl::XeImageFileName.Buffer);
 
-		CxbxCreateSymbolicLink(DriveA, DeviceCdrom0); // CdRom could be read from A:
-		CxbxCreateSymbolicLink(DriveD, DeviceCdrom0); // CdRom goes to D:
-		CxbxCreateSymbolicLink(DriveE, DeviceHarddisk0Partition1); // Partition1 goes to E: (Data files, savegames, etc.)
-		//CxbxCreateSymbolicLink(DriveE, DeviceHarddisk0Partition1 + "\\DevKit"); // Partition1 goes to E: (Devkit)
-		CxbxCreateSymbolicLink(DriveF, DeviceHarddisk0Partition2); // Partition2 goes to F: (Shell files, dashboard, etc.)
-		CxbxCreateSymbolicLink(DriveS, DeviceHarddisk0Partition1 + "\\TDATA"); // Partition1\TDATA data goes to S:
-		CxbxCreateSymbolicLink(DriveT, DeviceHarddisk0Partition1 + "\\TDATA\\" + titleId); // Partition1 Title data goes to T:
-		CxbxCreateSymbolicLink(DriveU, DeviceHarddisk0Partition1 + "\\UDATA\\" + titleId); // Partition1 User data goes to U:
-		CxbxCreateSymbolicLink(DriveV, DeviceHarddisk0Partition1 + "\\UDATA"); // Partition1\UDATA data goes to V:
-		CxbxCreateSymbolicLink(DriveX, DeviceHarddisk0Partition3); // Partition3 goes to X:
-		CxbxCreateSymbolicLink(DriveY, DeviceHarddisk0Partition4); // Partition4 goes to Y:
-
-		// Mount the Utility drive (Z:) conditionally :
-		if (CxbxKrnl_XbeHeader->dwInitFlags.bMountUtilityDrive)
-			CxbxMountUtilityDrive(/*formatClean=*/CxbxKrnl_XbeHeader->dwInitFlags.bFormatUtilityDrive);
 	}
 
 	//
