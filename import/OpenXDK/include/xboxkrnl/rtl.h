@@ -101,7 +101,15 @@ XBSYSAPI EXPORTNUM(270) LONG NTAPI RtlCompareString
 	IN BOOLEAN CaseInSensitive
 );
 
-XBSYSAPI VOID *RtlCompareUnicodeString;
+// ******************************************************************
+// * 0x010F - RtlCompareUnicodeString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(271) LONG NTAPI RtlCompareUnicodeString
+(
+	IN PUNICODE_STRING String1,
+	IN PUNICODE_STRING String2,
+	IN BOOLEAN CaseInSensitive
+);
 
 // ******************************************************************
 // * RtlCopyString

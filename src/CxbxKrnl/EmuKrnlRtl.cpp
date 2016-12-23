@@ -283,6 +283,27 @@ XBSYSAPI EXPORTNUM(270) xboxkrnl::LONG NTAPI xboxkrnl::RtlCompareString
 }
 
 // ******************************************************************
+// * 0x010F - RtlCompareUnicodeString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(271) xboxkrnl::LONG NTAPI xboxkrnl::RtlCompareUnicodeString
+(
+	IN PUNICODE_STRING String1,
+	IN PUNICODE_STRING String2,
+	IN BOOLEAN CaseInSensitive
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(String1)
+		LOG_FUNC_ARG(String2)
+		LOG_FUNC_ARG(CaseInSensitive)
+		LOG_FUNC_END;
+
+	LONG result = NtDll::RtlCompareUnicodeString((NtDll::PUNICODE_STRING)String1, (NtDll::PUNICODE_STRING)String2, CaseInSensitive);
+
+	RETURN(result);
+}
+
+// ******************************************************************
 // * 0x0115 - RtlEnterCriticalSection()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection
