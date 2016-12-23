@@ -114,6 +114,7 @@ IMPORT(RtlCompareUnicodeString);
 IMPORT(RtlCopyString);
 IMPORT(RtlCopyUnicodeString);
 IMPORT(RtlCreateHeap);
+IMPORT(RtlCreateUnicodeString);
 IMPORT(RtlDestroyHeap);
 IMPORT(RtlEnterCriticalSection);
 IMPORT(RtlEqualString);

@@ -986,6 +986,15 @@ typedef LONG (NTAPI *FPTR_RtlCopyUnicodeString)
 );
 
 // ******************************************************************
+// * RtlCreateUnicodeString
+// ******************************************************************
+typedef BOOLEAN (NTAPI *FPTR_RtlCreateUnicodeString)
+(
+	OUT PUNICODE_STRING DestinationString,
+	IN PCWSTR           SourceString
+);
+
+// ******************************************************************
 // * RtlUnicodeStringToAnsiString
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeStringToAnsiString)
@@ -1630,6 +1639,7 @@ EXTERN(RtlCompareUnicodeString);
 EXTERN(RtlCopyString);
 EXTERN(RtlCopyUnicodeString);
 EXTERN(RtlCreateHeap);
+EXTERN(RtlCreateUnicodeString);
 EXTERN(RtlDestroyHeap);
 EXTERN(RtlEnterCriticalSection);
 EXTERN(RtlEqualString);
