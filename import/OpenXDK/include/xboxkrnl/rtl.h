@@ -81,7 +81,16 @@ XBSYSAPI EXPORTNUM(268) BOOLEAN NTAPI RtlCompareMemory
   IN SIZE_T      Length
 );
 
-XBSYSAPI VOID *RtlCompareMemoryUlong;
+// ******************************************************************
+// * 0x010D - RtlCompareMemoryUlong()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(269) SIZE_T NTAPI RtlCompareMemoryUlong
+(
+	IN PVOID Source,
+	IN SIZE_T Length,
+	IN ULONG Pattern
+);
+
 XBSYSAPI VOID *RtlCompareString;
 XBSYSAPI VOID *RtlCompareUnicodeString;
 

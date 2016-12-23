@@ -873,6 +873,16 @@ typedef BOOL (NTAPI *FPTR_RtlCompareMemory)
 );
 
 // ******************************************************************
+// * RtlCompareMemoryUlong
+// ******************************************************************
+typedef BOOL(NTAPI *FPTR_RtlCompareMemoryUlong)
+(
+	IN 	PVOID Source,
+	IN SIZE_T Length,
+	IN ULONG Pattern
+);
+
+// ******************************************************************
 // * RtlInitAnsiString
 // ******************************************************************
 typedef VOID (NTAPI *FPTR_RtlInitAnsiString)
@@ -1576,6 +1586,7 @@ EXTERN(RtlAppendUnicodeStringToString);
 EXTERN(RtlAppendUnicodeToString);
 EXTERN(RtlCharToInteger);
 EXTERN(RtlCompareMemory);
+EXTERN(RtlCompareMemoryUlong);
 EXTERN(RtlCreateHeap);
 EXTERN(RtlDestroyHeap);
 EXTERN(RtlEnterCriticalSection);

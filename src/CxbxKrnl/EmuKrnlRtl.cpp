@@ -241,6 +241,27 @@ XBSYSAPI EXPORTNUM(268) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlCompareMemory
 }
 
 // ******************************************************************
+// * 0x010D - RtlCompareMemoryUlong()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(269) xboxkrnl::SIZE_T NTAPI xboxkrnl::RtlCompareMemoryUlong
+(
+	IN PVOID Source,
+	IN SIZE_T Length,
+	IN ULONG Pattern
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Source)
+		LOG_FUNC_ARG(Length)
+		LOG_FUNC_ARG(Pattern)
+		LOG_FUNC_END;
+
+	SIZE_T result = NtDll::RtlCompareMemoryUlong(Source, Length, Pattern);
+
+	RETURN(result);
+}
+
+// ******************************************************************
 // * 0x0115 - RtlEnterCriticalSection()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection
