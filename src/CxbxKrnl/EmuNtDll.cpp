@@ -117,6 +117,7 @@ IMPORT(RtlCreateHeap);
 IMPORT(RtlCreateUnicodeString);
 IMPORT(RtlDestroyHeap);
 IMPORT(RtlDowncaseUnicodeChar);
+IMPORT(RtlDowncaseUnicodeString);
 IMPORT(RtlEnterCriticalSection);
 IMPORT(RtlEqualString);
 IMPORT(RtlFreeAnsiString);

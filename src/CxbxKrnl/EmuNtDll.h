@@ -1003,6 +1003,16 @@ typedef WCHAR (NTAPI *FPTR_RtlDowncaseUnicodeChar)
 );
 
 // ******************************************************************
+// * RtlDowncaseUnicodeString
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlDowncaseUnicodeString)
+(
+	OUT PUNICODE_STRING DestinationString,
+	IN PUNICODE_STRING SourceString,
+	IN BOOLEAN AllocateDestinationString
+);
+
+// ******************************************************************
 // * RtlUnicodeStringToAnsiString
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeStringToAnsiString)
@@ -1650,6 +1660,7 @@ EXTERN(RtlCreateHeap);
 EXTERN(RtlCreateUnicodeString);
 EXTERN(RtlDestroyHeap);
 EXTERN(RtlDowncaseUnicodeChar);
+EXTERN(RtlDowncaseUnicodeString);
 EXTERN(RtlEnterCriticalSection);
 EXTERN(RtlEqualString);
 EXTERN(RtlFreeAnsiString);

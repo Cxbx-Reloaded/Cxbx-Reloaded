@@ -364,11 +364,33 @@ XBSYSAPI EXPORTNUM(275) xboxkrnl::WCHAR NTAPI xboxkrnl::RtlDowncaseUnicodeChar
 	IN WCHAR SourceCharacter
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(SourceCharacter)
-		LOG_FUNC_END;
+	LOG_FUNC_ONE_ARG(SourceCharacter);
 
 	WCHAR result = NtDll::RtlDowncaseUnicodeChar((NtDll::WCHAR)SourceCharacter);
+
+	RETURN(result);
+}
+
+// ******************************************************************
+// * 0x0114 - RtlDowncaseUnicodeString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(276) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlDowncaseUnicodeString
+(
+	OUT PUNICODE_STRING DestinationString,
+	IN PUNICODE_STRING SourceString,
+	IN BOOLEAN AllocateDestinationString
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(DestinationString)
+		LOG_FUNC_ARG(SourceString)
+		LOG_FUNC_ARG(AllocateDestinationString)
+		LOG_FUNC_END;
+
+	NTSTATUS result = NtDll::RtlDowncaseUnicodeString(
+		(NtDll::PUNICODE_STRING)DestinationString,
+		(NtDll::PUNICODE_STRING)SourceString,
+		AllocateDestinationString);
 
 	RETURN(result);
 }

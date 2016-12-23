@@ -150,7 +150,15 @@ XBSYSAPI EXPORTNUM(275) WCHAR NTAPI RtlDowncaseUnicodeChar
 	IN WCHAR SourceCharacter
 );
 
-XBSYSAPI VOID *RtlDowncaseUnicodeString;
+// ******************************************************************
+// * 0x0114 - RtlDowncaseUnicodeString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(276) NTSTATUS NTAPI RtlDowncaseUnicodeString
+(
+	OUT PUNICODE_STRING DestinationString,
+	IN PUNICODE_STRING SourceString,
+	IN BOOLEAN AllocateDestinationString
+);
 
 // ******************************************************************
 // * RtlEnterCriticalSection
