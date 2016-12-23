@@ -49,10 +49,7 @@ class Xbe : public Error
     public:
         // construct via Xbe file
         Xbe(const char *x_szFilename);
-
-        // construct via Exe file object
-        Xbe(class Exe *x_Exe, const char *x_szTitle, bool x_bRetail);
-
+		
         // deconstructor
        ~Xbe();
 

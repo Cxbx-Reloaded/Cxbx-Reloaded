@@ -50,7 +50,13 @@ namespace NtDll
 #include "EmuNtDll.h"
 };
 
+#include "CxbxKrnl.h" // For CxbxKrnlCleanup
+#include "EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
 #include "Emu.h" // For EmuWarning()
+
+#pragma warning(disable:4005) // Ignore redefined status values
+#include <ntstatus.h>
+#pragma warning(default:4005)
 
 // ******************************************************************
 // * 0x00F0 - ObDirectoryObjectType
@@ -86,9 +92,32 @@ XBSYSAPI EXPORTNUM(243) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByName
 		LOG_FUNC_ARG_OUT(Handle)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	NTSTATUS ret = STATUS_OBJECT_PATH_NOT_FOUND;
 
-	RETURN(STATUS_SUCCESS);
+	if (ObjectType == &xboxkrnl::ObSymbolicLinkObjectType)
+	{
+		EmuNtSymbolicLinkObject* symbolicLinkObject =
+			FindNtSymbolicLinkObjectByName(PSTRING_to_string(ObjectAttributes->ObjectName));
+
+		if (symbolicLinkObject != NULL)
+		{
+			// Return a new handle (which is an EmuHandle, actually) :
+			*Handle = symbolicLinkObject->NewHandle();
+			ret = STATUS_SUCCESS;
+		}
+	}
+	else
+	if (ObjectType == &xboxkrnl::ObDirectoryObjectType)
+		LOG_UNIMPLEMENTED();
+	else
+		LOG_UNIMPLEMENTED();
+
+	if (ret == STATUS_SUCCESS)
+		DbgPrintf("EmuKrnl : ObOpenObjectByName Handle^ = 0x%.08X", *Handle);
+	else
+		EmuWarning("ObOpenObjectByName failed! (%s)", NtStatusToString(ret));
+
+	RETURN(ret);
 }
 
 // ******************************************************************
