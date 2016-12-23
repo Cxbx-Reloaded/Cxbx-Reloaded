@@ -970,7 +970,7 @@ DWORD WINAPI XTL::EmuXLaunchNewImage
 	if (!lpTitlePath) {
 		char szDashboardPath[MAX_PATH];
 		EmuNtSymbolicLinkObject* symbolicLinkObject = FindNtSymbolicLinkObjectByDevice(DeviceHarddisk0Partition2);
-		sprintf(szDashboardPath, "%s\\xboxdash.xbe", symbolicLinkObject->NativePath.c_str());
+		sprintf(szDashboardPath, "%s\\xboxdash.xbe", symbolicLinkObject->HostSymbolicLinkPath.c_str());
 		
 		if (PathFileExists(szDashboardPath)) {
 			MessageBox(CxbxKrnl_hEmuParent, "The title is rebooting to dashboard", "Cxbx-Reloaded", 0);
@@ -988,8 +988,8 @@ DWORD WINAPI XTL::EmuXLaunchNewImage
 	// Convert Xbox XBE Path to Windows Path
 	char szXbePath[MAX_PATH];
 
-	EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByVolumeLetter(lpTitlePath[0]);
-	snprintf(szXbePath, MAX_PATH, "%s%s", symbolicLink->NativePath.c_str(), &lpTitlePath[2]);
+	EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByDriveLetter(lpTitlePath[0]);
+	snprintf(szXbePath, MAX_PATH, "%s%s", symbolicLink->HostSymbolicLinkPath.c_str(), &lpTitlePath[2]);
 
 	// Determine Working Directory
 	char szWorkingDirectoy[MAX_PATH];
