@@ -142,7 +142,14 @@ XBSYSAPI EXPORTNUM(274) BOOLEAN NTAPI RtlCreateUnicodeString
 	IN PCWSTR SourceString
 );
 
-XBSYSAPI VOID *RtlDowncaseUnicodeChar;
+// ******************************************************************
+// * 0x0113 - RtlDowncaseUnicodeChar()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(275) WCHAR NTAPI RtlDowncaseUnicodeChar
+(
+	IN WCHAR SourceCharacter
+);
+
 XBSYSAPI VOID *RtlDowncaseUnicodeString;
 
 // ******************************************************************

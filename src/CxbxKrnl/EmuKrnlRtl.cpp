@@ -357,6 +357,23 @@ XBSYSAPI EXPORTNUM(274) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlCreateUnicodeString
 }
 
 // ******************************************************************
+// * 0x0113 - RtlDowncaseUnicodeChar()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(275) xboxkrnl::WCHAR NTAPI xboxkrnl::RtlDowncaseUnicodeChar
+(
+	IN WCHAR SourceCharacter
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(SourceCharacter)
+		LOG_FUNC_END;
+
+	WCHAR result = NtDll::RtlDowncaseUnicodeChar((NtDll::WCHAR)SourceCharacter);
+
+	RETURN(result);
+}
+
+// ******************************************************************
 // * 0x0115 - RtlEnterCriticalSection()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection

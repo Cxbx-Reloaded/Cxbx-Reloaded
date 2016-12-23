@@ -995,6 +995,14 @@ typedef BOOLEAN (NTAPI *FPTR_RtlCreateUnicodeString)
 );
 
 // ******************************************************************
+// * RtlDowncaseUnicodeChar
+// ******************************************************************
+typedef WCHAR (NTAPI *FPTR_RtlDowncaseUnicodeChar)
+(
+	IN WCHAR    SourceCharacter
+);
+
+// ******************************************************************
 // * RtlUnicodeStringToAnsiString
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeStringToAnsiString)
@@ -1641,6 +1649,7 @@ EXTERN(RtlCopyUnicodeString);
 EXTERN(RtlCreateHeap);
 EXTERN(RtlCreateUnicodeString);
 EXTERN(RtlDestroyHeap);
+EXTERN(RtlDowncaseUnicodeChar);
 EXTERN(RtlEnterCriticalSection);
 EXTERN(RtlEqualString);
 EXTERN(RtlFreeAnsiString);
