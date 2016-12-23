@@ -863,6 +863,16 @@ typedef BOOL (NTAPI *FPTR_RtlTryEnterCriticalSection)
 );
 
 // ******************************************************************
+// * RtlCompareMemory
+// ******************************************************************
+typedef BOOL (NTAPI *FPTR_RtlCompareMemory)
+(
+	IN const VOID   *Source1,
+	IN const VOID   *Source2,
+	IN       SIZE_T Length
+);
+
+// ******************************************************************
 // * RtlInitAnsiString
 // ******************************************************************
 typedef VOID (NTAPI *FPTR_RtlInitAnsiString)
@@ -1565,6 +1575,7 @@ EXTERN(RtlAppendStringToString);
 EXTERN(RtlAppendUnicodeStringToString);
 EXTERN(RtlAppendUnicodeToString);
 EXTERN(RtlCharToInteger);
+EXTERN(RtlCompareMemory);
 EXTERN(RtlCreateHeap);
 EXTERN(RtlDestroyHeap);
 EXTERN(RtlEnterCriticalSection);

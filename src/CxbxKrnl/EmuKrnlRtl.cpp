@@ -216,6 +216,31 @@ XBSYSAPI EXPORTNUM(267) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlCharToInteger
 }
 
 // ******************************************************************
+// * 0x010C - RtlCompareMemory()
+// ******************************************************************
+// *
+// * compare block of memory, return number of equivalent bytes.
+// *
+// ******************************************************************
+XBSYSAPI EXPORTNUM(268) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlCompareMemory
+(
+	IN CONST VOID *Source1,
+	IN CONST VOID *Source2,
+	IN SIZE_T      Length
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Source1)
+		LOG_FUNC_ARG(Source2)
+		LOG_FUNC_ARG(Length)
+		LOG_FUNC_END;
+
+	BOOL result = NtDll::RtlCompareMemory(Source1, Source2, Length);
+
+	RETURN(result);
+}
+
+// ******************************************************************
 // * 0x0115 - RtlEnterCriticalSection()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection

@@ -107,6 +107,7 @@ IMPORT(RtlAppendStringToString);
 IMPORT(RtlAppendUnicodeStringToString);
 IMPORT(RtlAppendUnicodeToString);
 IMPORT(RtlCharToInteger);
+IMPORT(RtlCompareMemory);
 IMPORT(RtlCreateHeap);
 IMPORT(RtlDestroyHeap);
 IMPORT(RtlEnterCriticalSection);
