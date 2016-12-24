@@ -420,6 +420,13 @@ typedef enum _MEMORY_INFORMATION_CLASS
 MEMORY_INFORMATION_CLASS;
 
 // ******************************************************************
+// * SEMAPHORE_INFORMATION_CLASS
+// ******************************************************************
+typedef enum _SEMAPHORE_INFORMATION_CLASS {
+	SemaphoreBasicInformation
+} SEMAPHORE_INFORMATION_CLASS, *PSEMAPHORE_INFORMATION_CLASS;
+
+// ******************************************************************
 // * EVENT_TYPE
 // ******************************************************************
 typedef enum _EVENT_TYPE
@@ -1222,6 +1229,18 @@ typedef NTSTATUS (NTAPI *FPTR_NtCreateSemaphore)
 );
 
 // ******************************************************************
+// * NtQuerySemaphore
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtQuerySemaphore)
+(
+	IN HANDLE SemaphoreHandle,
+	IN SEMAPHORE_INFORMATION_CLASS SemaphoreInformationClass,
+	OUT PVOID SemaphoreInformation,
+	IN ULONG SemaphoreInformationLength,
+	OUT PULONG ReturnLength OPTIONAL
+);
+
+// ******************************************************************
 // * NtReleaseSemaphore
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtReleaseSemaphore)
@@ -1627,6 +1646,7 @@ EXTERN(NtPulseEvent);
 EXTERN(NtQueryDirectoryFile);
 EXTERN(NtQueryFullAttributesFile);
 EXTERN(NtQueryInformationFile);
+EXTERN(NtQuerySemaphore);
 EXTERN(NtQueryTimer);
 EXTERN(NtQueryVirtualMemory);
 EXTERN(NtQueryVolumeInformationFile);

@@ -298,7 +298,15 @@ XBSYSAPI EXPORTNUM(211) NTSTATUS NTAPI NtQueryInformationFile
 
 XBSYSAPI VOID *NtQueryIoCompletion;
 XBSYSAPI VOID *NtQueryMutant;
-XBSYSAPI VOID *NtQuerySemaphore;
+
+// ******************************************************************
+// * 0x00D6 - NtQuerySemaphore()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(214) NTSTATUS NTAPI NtQuerySemaphore
+(
+	IN HANDLE SemaphoreHandle,
+	OUT PSEMAPHORE_BASIC_INFORMATION SemaphoreInformation
+);
 
 // ******************************************************************
 // * 0x00D7 - NtQuerySymbolicLinkObject()

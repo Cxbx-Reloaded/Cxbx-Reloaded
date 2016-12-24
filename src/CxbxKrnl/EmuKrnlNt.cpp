@@ -1003,6 +1003,33 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 }
 
 // ******************************************************************
+// * 0x00D6 - NtQuerySemaphore()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(214) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySemaphore
+(
+	IN HANDLE SemaphoreHandle,
+	OUT PSEMAPHORE_BASIC_INFORMATION SemaphoreInformation
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(SemaphoreHandle)
+		LOG_FUNC_ARG_OUT(SemaphoreInformation)
+		LOG_FUNC_END;
+
+	NTSTATUS ret = NtDll::NtQuerySemaphore(
+		(NtDll::HANDLE)SemaphoreHandle,
+		/*SemaphoreInformationClass*/NtDll::SEMAPHORE_INFORMATION_CLASS::SemaphoreBasicInformation,
+		SemaphoreInformation,
+		sizeof(SEMAPHORE_BASIC_INFORMATION),
+		/*ReturnLength=*/nullptr);
+
+	if (ret != STATUS_SUCCESS)
+		EmuWarning("NtQuerySemaphore failed! (%s)", NtStatusToString(ret));
+
+	RETURN(ret);
+}
+
+// ******************************************************************
 // * 0x00D7 - NtQuerySymbolicLinkObject()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(215) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySymbolicLinkObject
