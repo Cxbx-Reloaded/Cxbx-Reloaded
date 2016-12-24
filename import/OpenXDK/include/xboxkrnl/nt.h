@@ -269,7 +269,15 @@ XBSYSAPI EXPORTNUM(207) NTSTATUS NTAPI NtQueryDirectoryFile
 );
 
 XBSYSAPI VOID *NtQueryDirectoryObject;
-XBSYSAPI VOID *NtQueryEvent;
+
+// ******************************************************************
+// * 0x00D1  - NtQueryEvent()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(209) NTSTATUS NTAPI NtQueryEvent
+(
+	IN HANDLE EventHandle,
+	OUT PEVENT_BASIC_INFORMATION EventInformation
+);
 
 // ******************************************************************
 // * NtQueryFullAttributesFile

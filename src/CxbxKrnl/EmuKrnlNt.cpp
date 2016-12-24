@@ -934,6 +934,33 @@ XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributes
 }
 
 // ******************************************************************
+// * 0x00D1  - NtQueryEvent()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(209) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryEvent
+(
+	IN HANDLE EventHandle,
+	OUT PEVENT_BASIC_INFORMATION EventInformation
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(EventHandle)
+		LOG_FUNC_ARG_OUT(EventInformation)
+		LOG_FUNC_END;
+
+	NTSTATUS ret = NtDll::NtQueryEvent(
+		(NtDll::HANDLE)EventHandle,
+		/*EventInformationClass*/NtDll::EVENT_INFORMATION_CLASS::EventBasicInformation,
+		EventInformation,
+		sizeof(EVENT_BASIC_INFORMATION),
+		/*ReturnLength=*/nullptr);
+
+	if (ret != STATUS_SUCCESS)
+		EmuWarning("NtQueryEvent failed! (%s)", NtStatusToString(ret));
+
+	RETURN(ret);
+}
+
+// ******************************************************************
 // * 0x00D3 - NtQueryInformationFile()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFile

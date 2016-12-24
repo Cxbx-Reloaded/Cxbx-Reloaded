@@ -82,6 +82,7 @@ IMPORT(NtFsControlFile);
 IMPORT(NtOpenSymbolicLinkObject);
 IMPORT(NtPulseEvent);
 IMPORT(NtQueryDirectoryFile);
+IMPORT(NtQueryEvent);
 IMPORT(NtQueryFullAttributesFile);
 IMPORT(NtQueryInformationFile);
 IMPORT(NtQuerySemaphore);

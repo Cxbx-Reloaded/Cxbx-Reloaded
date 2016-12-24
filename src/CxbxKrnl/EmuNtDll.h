@@ -437,6 +437,13 @@ typedef enum _EVENT_TYPE
 EVENT_TYPE;
 
 // ******************************************************************
+// * EVENT_INFORMATION_CLASS
+// ******************************************************************
+typedef enum _EVENT_INFORMATION_CLASS {
+	EventBasicInformation
+} EVENT_INFORMATION_CLASS, *PEVENT_INFORMATION_CLASS;
+
+// ******************************************************************
 // * TIMER_TYPE
 // ******************************************************************
 typedef enum _TIMER_TYPE
@@ -1188,6 +1195,18 @@ typedef NTSTATUS (NTAPI *FPTR_NtCreateEvent)
 );
 
 // ******************************************************************
+// * NtQueryEvent
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtQueryEvent)
+(
+	IN HANDLE EventHandle,
+	IN EVENT_INFORMATION_CLASS EventInformationClass,
+	OUT PVOID EventInformation,
+	IN ULONG EventInformationLength,
+	OUT PULONG ReturnLength OPTIONAL
+);
+
+// ******************************************************************
 // * NtPulseEvent
 // ******************************************************************
 typedef NTSTATUS(NTAPI *FPTR_NtPulseEvent)
@@ -1644,6 +1663,7 @@ EXTERN(NtFsControlFile);
 EXTERN(NtOpenSymbolicLinkObject);
 EXTERN(NtPulseEvent);
 EXTERN(NtQueryDirectoryFile);
+EXTERN(NtQueryEvent);
 EXTERN(NtQueryFullAttributesFile);
 EXTERN(NtQueryInformationFile);
 EXTERN(NtQuerySemaphore);

@@ -986,7 +986,7 @@ typedef struct _MEMORY_BASIC_INFORMATION
 MEMORY_BASIC_INFORMATION, *PMEMORY_BASIC_INFORMATION;
 
 // ******************************************************************
-// * EVENT_TYPE
+// * EVENT_TYPE - same as Windows
 // ******************************************************************
 typedef enum _EVENT_TYPE
 {
@@ -1162,6 +1162,13 @@ typedef struct _KEVENT
 //KEVENT, *PKEVENT, *RESTRICTED_POINTER PRKEVENT;
 KEVENT, *PKEVENT, *PRKEVENT; // even with undefined RESTRICTED_POINTER, this doesn't compile
 
+// EVENT_BASIC_INFORMATION - same as Windows
+typedef struct _EVENT_BASIC_INFORMATION {
+	EVENT_TYPE EventType;
+	LONG EventState;
+} EVENT_BASIC_INFORMATION, *PEVENT_BASIC_INFORMATION;
+
+// KSEMAPHORE
 typedef struct _KSEMAPHORE
 {
 	DISPATCHER_HEADER Header;
