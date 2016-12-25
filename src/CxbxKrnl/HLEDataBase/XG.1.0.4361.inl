@@ -35,15 +35,8 @@
 // ******************************************************************
 // * XGIsSwizzledFormat
 // ******************************************************************
-SOOVPA<12> XGIsSwizzledFormat_1_0_4361 =
-{
-    0,  // Large == 0
-    12, // Count == 12
+OOVPA_NO_XREF(XGIsSwizzledFormat_1_0_4361, 12)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         // XGIsSwizzledFormat+0x04 : cmp eax, 0x2D
         { 0x04, 0x83 }, // (Offset,Value)-Pair #1
         { 0x05, 0xF8 }, // (Offset,Value)-Pair #2
@@ -65,21 +58,13 @@ SOOVPA<12> XGIsSwizzledFormat_1_0_4361 =
         // XGIsSwizzledFormat+0x42 : jmp +0xE4
         { 0x42, 0xEB }, // (Offset,Value)-Pair #11
         { 0x43, 0xE4 }, // (Offset,Value)-Pair #12
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XGSwizzleRect
 // ******************************************************************
-SOOVPA<10> XGSwizzleRect_1_0_4361 =
-{
-    0,  // Large == 0
-    10, // Count == 10
+OOVPA_NO_XREF(XGSwizzleRect_1_0_4361, 10)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         // XGSwizzleRect+0x2E : pop eax
         { 0x2E, 0x58 }, // (Offset,Value)-Pair #1
 
@@ -97,21 +82,13 @@ SOOVPA<10> XGSwizzleRect_1_0_4361 =
         // XGSwizzleRect+0xEC : jmp +0x0B
         { 0xEC, 0xEB }, // (Offset,Value)-Pair #9
         { 0xED, 0x0B }, // (Offset,Value)-Pair #10
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XGUnswizzleRect
 // ******************************************************************
-SOOVPA<8> XGUnswizzleRect_1_0_4361 = 
-{
-    0,  // Large == 0
-    8,  // Count == 8
+OOVPA_NO_XREF(XGUnswizzleRect_1_0_4361, 8)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x1E, 0x03 },
         { 0x3E, 0x00 },
         { 0x5E, 0xD2 },
@@ -120,21 +97,13 @@ SOOVPA<8> XGUnswizzleRect_1_0_4361 =
         { 0xC1, 0xE9 },
         { 0xDE, 0x89 },
         { 0xFE, 0x60 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XGSetVertexBufferHeader
 // ******************************************************************
-SOOVPA<8> XGSetVertexBufferHeader_1_0_4361 = 
-{
-    0,  // Large == 0
-    8,  // Count == 8
+OOVPA_NO_XREF(XGSetVertexBufferHeader_1_0_4361, 8)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x01, 0x44 },
         { 0x04, 0x8B },
         { 0x07, 0x18 },
@@ -143,21 +112,13 @@ SOOVPA<8> XGSetVertexBufferHeader_1_0_4361 =
         { 0x10, 0x00 },
         { 0x13, 0x48 },
         { 0x16, 0x18 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XGCompressRect
 // ******************************************************************
-SOOVPA<8> XGCompressRect_1_0_4361 = 
-{
-    0,  // Large == 0
-    8,  // Count == 8
+OOVPA_NO_XREF(XGCompressRect_1_0_4361, 8)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x1E, 0x00 },
         { 0x3E, 0xA8 },
         { 0x5E, 0x85 },
@@ -166,21 +127,13 @@ SOOVPA<8> XGCompressRect_1_0_4361 =
         { 0xBE, 0x80 },
         { 0xDE, 0x74 },
         { 0xFE, 0x8B },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XGSetIndexBufferHeader
 // ******************************************************************
-SOOVPA<8> XGSetIndexBufferHeader_1_0_4361 = 
-{
-    0,  // Large == 0
-    8,  // Count == 8
+OOVPA_NO_XREF(XGSetIndexBufferHeader_1_0_4361, 8)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x01, 0x44 },
         { 0x04, 0x8B },
         { 0x07, 0x18 },
@@ -189,83 +142,27 @@ SOOVPA<8> XGSetIndexBufferHeader_1_0_4361 =
         { 0x10, 0x01 },
         { 0x13, 0x48 },
         { 0x16, 0x18 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XG_1_0_4361
 // ******************************************************************
-OOVPATable XG_1_0_4361[] =
-{
+OOVPATable XG_1_0_4361[] = {
+
     // XGIsSwizzledFormat
-    {
-        (OOVPA*)&XGIsSwizzledFormat_1_0_4361,
-
-        XTL::EmuXGIsSwizzledFormat,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXGIsSwizzledFormat"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XGIsSwizzledFormat_1_0_4361, XTL::EmuXGIsSwizzledFormat),
     // XGSwizzleRect
-    {
-        (OOVPA*)&XGSwizzleRect_1_0_4361,
-
-        XTL::EmuXGSwizzleRect,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXGSwizzleRect"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XGSwizzleRect_1_0_4361, XTL::EmuXGSwizzleRect),
 	// XGUnswizzleRect
-    {
-        (OOVPA*)&XGUnswizzleRect_1_0_4361,
-
-        XTL::EmuXGUnswizzleRect,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXGUnswizzleRect"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XGUnswizzleRect_1_0_4361, XTL::EmuXGUnswizzleRect),
 	// XGSetTextureHeader (* Unchanged since 3911 *)
-	{
-		(OOVPA*)&XGSetTextureHeader_1_0_3911,
-		XTL::EmuXGSetTextureHeader,
-
-		#ifdef _DEBUG_TRACE
-		"XGSetTextureHeader"
-		#endif
-	},
+	OOVPA_TABLE_PATCH(XGSetTextureHeader_1_0_3911, XTL::EmuXGSetTextureHeader),
 	// XGSetVertexBufferHeader
-    {
-        (OOVPA*)&XGSetVertexBufferHeader_1_0_4361,
-
-        0,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXGSetVertexBufferHeader"
-        #endif
-    },
+	OOVPA_TABLE_XREF(XGSetVertexBufferHeader_1_0_4361),
 	// XGSetIndexBufferHeader
-    {
-        (OOVPA*)&XGSetIndexBufferHeader_1_0_4361,
-
-        0,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXGSetIndexBufferHeader"
-        #endif
-    },
+	OOVPA_TABLE_XREF(XGSetIndexBufferHeader_1_0_4361),
 	// XGCompressRect
-    {
-        (OOVPA*)&XGCompressRect_1_0_4361,
-
-        0,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXGCompressRect"
-        #endif
-    },
+	OOVPA_TABLE_XREF(XGCompressRect_1_0_4361),
 };
 
 // ******************************************************************

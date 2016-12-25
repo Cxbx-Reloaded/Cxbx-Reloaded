@@ -122,21 +122,22 @@ XBSYSAPI EXPORTNUM(66) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateFile
 
 	NativeObjectAttributes nativeObjectAttributes;
 
-	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, nativeObjectAttributes, "IoCreateFile"); /*var*/
+	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, /*OUT*/nativeObjectAttributes, "IoCreateFile");
 
-	// redirect to NtCreateFile
-	ret = NtDll::NtCreateFile(
-		FileHandle, 
-		DesiredAccess | GENERIC_READ, 
-		nativeObjectAttributes.NtObjAttrPtr, 
-		NtDll::PIO_STATUS_BLOCK(IoStatusBlock), 
-		NtDll::PLARGE_INTEGER(AllocationSize), 
-		FileAttributes, 
-		ShareAccess, 
-		Disposition, 
-		CreateOptions, 
-		NULL, 
-		0);
+	if (!FAILED(ret))
+		// redirect to NtCreateFile
+		ret = NtDll::NtCreateFile(
+			FileHandle, 
+			DesiredAccess | GENERIC_READ, 
+			nativeObjectAttributes.NtObjAttrPtr, 
+			NtDll::PIO_STATUS_BLOCK(IoStatusBlock), 
+			NtDll::PLARGE_INTEGER(AllocationSize), 
+			FileAttributes, 
+			ShareAccess, 
+			Disposition, 
+			CreateOptions, 
+			NULL, 
+			0);
 
 	if (FAILED(ret))
 	{
@@ -164,7 +165,7 @@ XBSYSAPI EXPORTNUM(67) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateSymbolicLink
 		LOG_FUNC_ARG(DeviceName)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = CxbxCreateSymbolicLink(std::string(SymbolicLinkName->Buffer, SymbolicLinkName->Length), std::string(DeviceName->Buffer, DeviceName->Length));
+	NTSTATUS ret = CxbxCreateSymbolicLink(PSTRING_to_string(SymbolicLinkName), PSTRING_to_string(DeviceName));
 
 	RETURN(ret);
 }
@@ -179,11 +180,11 @@ XBSYSAPI EXPORTNUM(69) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDeleteSymbolicLink
 {
 	LOG_FUNC_ONE_ARG(SymbolicLinkName);
 
-	EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByName(std::string(SymbolicLinkName->Buffer, SymbolicLinkName->Length));
+	EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByName(PSTRING_to_string(SymbolicLinkName));
 
 	NTSTATUS ret = STATUS_OBJECT_NAME_NOT_FOUND;
 
-	if ((symbolicLink != NULL))
+	if (symbolicLink != NULL)
 		ret = symbolicLink->NtClose();
 
 	RETURN(ret);

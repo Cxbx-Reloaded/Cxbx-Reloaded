@@ -62,9 +62,9 @@ std::ostream& operator<<(std::ostream& os, const PULONG& value)
 	return os;
 }
 
-// Macro for implementation of rendering any Enum-ToString :
-#define LOGRENDER_ENUM(EnumType) LOGRENDER_HEADER(EnumType) \
-{ return os << "("#EnumType") " << EnumType##ToString(value) << " = " << hex4((int)value); }
+// Macro for implementation of rendering any Type-ToString :
+#define LOGRENDER_TYPE(Type) LOGRENDER_HEADER(Type) \
+{ return os << "("#Type") " << Type##ToString(value) << " = " << hex4((int)value); }
 
 // Macro's for Xbox Enum-ToString conversions :
 #define ENUM2STR_START(EnumType) const char * EnumType##ToString(const xboxkrnl::EnumType value) { switch (value) {
@@ -72,15 +72,17 @@ std::ostream& operator<<(std::ostream& os, const PULONG& value)
 // ENUM2STR_CASE_DEF is needed for #define'd symbols
 #define ENUM2STR_CASE_DEF(a) case a: return #a;
 #define ENUM2STR_END(EnumType) default: return "Unknown_"#EnumType; } }
-#define ENUM2STR_END_and_LOGRENDER(EnumType) ENUM2STR_END(EnumType) LOGRENDER_ENUM(EnumType)
+#define ENUM2STR_END_and_LOGRENDER(EnumType) ENUM2STR_END(EnumType) LOGRENDER_TYPE(EnumType)
 
-// Macro's for Xbo Flags-ToString conversions :
+// Macro's for Xbox Flags-ToString conversions :
 #define FLAGS2STR_START(Type) std::string Type##ToString(const xboxkrnl::Type value) { std::string res;
 #define FLAG2STR(f) if (((uint32)value & f) == f) res = res + #f"|";
 #define FLAGS2STR_END if (!res.empty()) res.pop_back(); return res; }
-#define FLAGS2STR_END_and_LOGRENDER(Type) FLAGS2STR_END LOGRENDER_ENUM(Type)
+#define FLAGS2STR_END_and_LOGRENDER(Type) FLAGS2STR_END LOGRENDER_TYPE(Type)
 
-// Xbox Enum-ToString conversions :
+//
+// Xbox (Enum)Type-ToString conversions :
+//
 
 ENUM2STR_START(BUS_DATA_TYPE)
 	ENUM2STR_CASE(ConfigurationSpaceUndefined)
@@ -318,7 +320,13 @@ ENUM2STR_END_and_LOGRENDER(WAIT_TYPE)
 #undef ENUM2STR_CASE
 #undef ENUM2STR_END
 #undef ENUM2STR_END_and_LOGRENDER
-#undef LOGRENDER_ENUM
+
+#undef FLAGS2STR_START
+#undef FLAG2STR
+#undef FLAGS2STR_END
+#undef FLAGS2STR_END_and_LOGRENDER
+
+#undef LOGRENDER_TYPE
 
 #define LOGRENDER_MEMBER(Member) << "\n   ."#Member": " << value.Member
 
@@ -340,7 +348,9 @@ LOGRENDER_HEADER(P##Type)                            \
                                                      \
 LOGRENDER_HEADER(Type)                               \
 
+//
 // Render Xbox types :
+//
 
 LOGRENDER_TYPE(FILETIME)
 {

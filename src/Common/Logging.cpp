@@ -35,7 +35,5 @@
 #include "Logging.h"
 
 // For thread_local, see : http://en.cppreference.com/w/cpp/language/storage_duration
-thread_local const DWORD _CurrentThreadId = GetCurrentThreadId();
-
 // TODO : Use Boost.Format http://www.boost.org/doc/libs/1_53_0/libs/format/index.html
 thread_local std::string _logPrefix;

@@ -260,7 +260,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::NtCreateMutant),                  // 0x00C0 (192)
 	(uint32)FUNC(&xboxkrnl::NtCreateSemaphore),               // 0x00C1 (193)
 	(uint32)FUNC(&xboxkrnl::NtCreateTimer),                   // 0x00C2 (194)
-	(uint32)PANIC(0x00C3),                                    // 0x00C3 (195) NtDeleteFile
+	(uint32)FUNC(&xboxkrnl::NtDeleteFile),                    // 0x00C3 (195)
 	(uint32)FUNC(&xboxkrnl::NtDeviceIoControlFile),           // 0x00C4 (196)
 	(uint32)FUNC(&xboxkrnl::NtDuplicateObject),               // 0x00C5 (197)
 	(uint32)FUNC(&xboxkrnl::NtFlushBuffersFile),              // 0x00C6 (198)
@@ -333,15 +333,15 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0109),                                    // 0x0109 (265) RtlCaptureContext
 	(uint32)PANIC(0x010A),                                    // 0x010A (266) RtlCaptureStackBackTrace
 	(uint32)FUNC(&xboxkrnl::RtlCharToInteger),                // 0x010B (267)
-	(uint32)PANIC(0x010C),                                    // 0x010C (268) RtlCompareMemory
-	(uint32)PANIC(0x010D),                                    // 0x010D (269) RtlCompareMemoryUlong
-	(uint32)PANIC(0x010E),                                    // 0x010E (270) RtlCompareString
-	(uint32)PANIC(0x010F),                                    // 0x010F (271) RtlCompareUnicodeString
-	(uint32)PANIC(0x0110),                                    // 0x0110 (272) RtlCopyString
-	(uint32)PANIC(0x0111),                                    // 0x0111 (273) RtlCopyUnicodeString
-	(uint32)PANIC(0x0112),                                    // 0x0112 (274) RtlCreateUnicodeString
-	(uint32)PANIC(0x0113),                                    // 0x0113 (275) RtlDowncaseUnicodeChar
-	(uint32)PANIC(0x0114),                                    // 0x0114 (276) RtlDowncaseUnicodeString
+	(uint32)FUNC(&xboxkrnl::RtlCompareMemory),                // 0x010C (268)
+	(uint32)FUNC(&xboxkrnl::RtlCompareMemoryUlong),           // 0x010D (269)
+	(uint32)FUNC(&xboxkrnl::RtlCompareString),                // 0x010E (270)
+	(uint32)FUNC(&xboxkrnl::RtlCompareUnicodeString),         // 0x010F (271)
+	(uint32)FUNC(&xboxkrnl::RtlCopyString),                   // 0x0110 (272)
+	(uint32)FUNC(&xboxkrnl::RtlCopyUnicodeString),            // 0x0111 (273)
+	(uint32)FUNC(&xboxkrnl::RtlCreateUnicodeString),          // 0x0112 (274)
+	(uint32)FUNC(&xboxkrnl::RtlDowncaseUnicodeChar),          // 0x0113 (275)
+	(uint32)FUNC(&xboxkrnl::RtlDowncaseUnicodeString),        // 0x0114 (276)
 	(uint32)FUNC(&xboxkrnl::RtlEnterCriticalSection),         // 0x0115 (277)
 	(uint32)PANIC(0x0116),                                    // 0x0116 (278) RtlEnterCriticalSectionAndRegion
 	(uint32)FUNC(&xboxkrnl::RtlEqualString),                  // 0x0117 (279)

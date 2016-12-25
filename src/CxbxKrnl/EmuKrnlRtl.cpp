@@ -216,6 +216,186 @@ XBSYSAPI EXPORTNUM(267) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlCharToInteger
 }
 
 // ******************************************************************
+// * 0x010C - RtlCompareMemory()
+// ******************************************************************
+// *
+// * compare block of memory, return number of equivalent bytes.
+// *
+// ******************************************************************
+XBSYSAPI EXPORTNUM(268) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlCompareMemory
+(
+	IN CONST VOID *Source1,
+	IN CONST VOID *Source2,
+	IN SIZE_T      Length
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Source1)
+		LOG_FUNC_ARG(Source2)
+		LOG_FUNC_ARG(Length)
+		LOG_FUNC_END;
+
+	BOOL result = NtDll::RtlCompareMemory(Source1, Source2, Length);
+
+	RETURN(result);
+}
+
+// ******************************************************************
+// * 0x010D - RtlCompareMemoryUlong()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(269) xboxkrnl::SIZE_T NTAPI xboxkrnl::RtlCompareMemoryUlong
+(
+	IN PVOID Source,
+	IN SIZE_T Length,
+	IN ULONG Pattern
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Source)
+		LOG_FUNC_ARG(Length)
+		LOG_FUNC_ARG(Pattern)
+		LOG_FUNC_END;
+
+	SIZE_T result = NtDll::RtlCompareMemoryUlong(Source, Length, Pattern);
+
+	RETURN(result);
+}
+
+// ******************************************************************
+// * 0x010E - RtlCompareString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(270) xboxkrnl::LONG NTAPI xboxkrnl::RtlCompareString
+(
+	IN PSTRING String1,
+	IN PSTRING String2,
+	IN BOOLEAN CaseInSensitive
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(String1)
+		LOG_FUNC_ARG(String2)
+		LOG_FUNC_ARG(CaseInSensitive)
+		LOG_FUNC_END;
+
+	LONG result = NtDll::RtlCompareString((NtDll::STRING *)String1, (NtDll::STRING *)String2, CaseInSensitive);
+
+	RETURN(result);
+}
+
+// ******************************************************************
+// * 0x010F - RtlCompareUnicodeString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(271) xboxkrnl::LONG NTAPI xboxkrnl::RtlCompareUnicodeString
+(
+	IN PUNICODE_STRING String1,
+	IN PUNICODE_STRING String2,
+	IN BOOLEAN CaseInSensitive
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(String1)
+		LOG_FUNC_ARG(String2)
+		LOG_FUNC_ARG(CaseInSensitive)
+		LOG_FUNC_END;
+
+	LONG result = NtDll::RtlCompareUnicodeString((NtDll::PUNICODE_STRING)String1, (NtDll::PUNICODE_STRING)String2, CaseInSensitive);
+
+	RETURN(result);
+}
+
+// ******************************************************************
+// * 0x0110 - RtlCopyString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(272) xboxkrnl::VOID NTAPI xboxkrnl::RtlCopyString
+(
+	OUT PSTRING DestinationString,
+	IN PSTRING SourceString OPTIONAL
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(DestinationString)
+		LOG_FUNC_ARG(SourceString)
+		LOG_FUNC_END;
+
+	NtDll::RtlCopyString((NtDll::PSTRING)DestinationString, (NtDll::PSTRING)SourceString);
+}
+
+// ******************************************************************
+// * 0x0111 - RtlCopyUnicodeString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(273) xboxkrnl::VOID NTAPI xboxkrnl::RtlCopyUnicodeString
+(
+	OUT PUNICODE_STRING DestinationString,
+	IN PUNICODE_STRING SourceString OPTIONAL
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(DestinationString)
+		LOG_FUNC_ARG(SourceString)
+		LOG_FUNC_END;
+
+	NtDll::RtlCopyUnicodeString((NtDll::PUNICODE_STRING)DestinationString, (NtDll::PUNICODE_STRING)SourceString);
+}
+
+// ******************************************************************
+// * 0x0112 - RtlCreateUnicodeString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(274) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlCreateUnicodeString
+(
+	OUT PUNICODE_STRING DestinationString,
+	IN PCWSTR SourceString
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(DestinationString)
+		LOG_FUNC_ARG(SourceString)
+		LOG_FUNC_END;
+
+	BOOLEAN result = NtDll::RtlCreateUnicodeString((NtDll::PUNICODE_STRING)DestinationString, (NtDll::PCWSTR)SourceString);
+
+	RETURN(result);
+}
+
+// ******************************************************************
+// * 0x0113 - RtlDowncaseUnicodeChar()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(275) xboxkrnl::WCHAR NTAPI xboxkrnl::RtlDowncaseUnicodeChar
+(
+	IN WCHAR SourceCharacter
+)
+{
+	LOG_FUNC_ONE_ARG(SourceCharacter);
+
+	WCHAR result = NtDll::RtlDowncaseUnicodeChar((NtDll::WCHAR)SourceCharacter);
+
+	RETURN(result);
+}
+
+// ******************************************************************
+// * 0x0114 - RtlDowncaseUnicodeString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(276) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlDowncaseUnicodeString
+(
+	OUT PUNICODE_STRING DestinationString,
+	IN PUNICODE_STRING SourceString,
+	IN BOOLEAN AllocateDestinationString
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(DestinationString)
+		LOG_FUNC_ARG(SourceString)
+		LOG_FUNC_ARG(AllocateDestinationString)
+		LOG_FUNC_END;
+
+	NTSTATUS result = NtDll::RtlDowncaseUnicodeString(
+		(NtDll::PUNICODE_STRING)DestinationString,
+		(NtDll::PUNICODE_STRING)SourceString,
+		AllocateDestinationString);
+
+	RETURN(result);
+}
+
+// ******************************************************************
 // * 0x0115 - RtlEnterCriticalSection()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection

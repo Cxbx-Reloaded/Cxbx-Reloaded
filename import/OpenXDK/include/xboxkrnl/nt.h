@@ -127,7 +127,13 @@ XBSYSAPI EXPORTNUM(194) NTSTATUS NTAPI NtCreateTimer
 	IN TIMER_TYPE TimerType
 );
 
-XBSYSAPI VOID *NtDeleteFile;
+// ******************************************************************
+// * 0x00C3 - NtDeleteFile()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(195) NTSTATUS NTAPI NtDeleteFile
+(
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+);
 
 // ******************************************************************
 // * 0x00C4 - NtDeviceIoControlFile
@@ -270,8 +276,8 @@ XBSYSAPI VOID *NtQueryEvent;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(210) NTSTATUS NTAPI NtQueryFullAttributesFile
 (
-    IN  POBJECT_ATTRIBUTES          ObjectAttributes,
-    OUT PVOID                       Attributes
+	IN  POBJECT_ATTRIBUTES          ObjectAttributes,
+	OUT PFILE_NETWORK_OPEN_INFORMATION  Attributes
 );
 
 // ******************************************************************

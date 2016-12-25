@@ -35,15 +35,11 @@
 // ******************************************************************
 // * XnInit
 // ******************************************************************
-SOOVPA<12> XnInit_1_0_4627 =
-{
-    0,  // Large == 0
-    12, // Count == 12
+OOVPA_XREF(XnInit_1_0_4627, 12,
 
-    XREF_XNINIT, // XRef Is Saved
-    0,           // XRef Not Used
+    XREF_XNINIT,
+    XRefZero)
 
-    {
         // XnInit+0x03 : sub esp, 0x0218
         { 0x03, 0x81 }, // (Offset,Value)-Pair #1
         { 0x04, 0xEC }, // (Offset,Value)-Pair #2
@@ -58,24 +54,16 @@ SOOVPA<12> XnInit_1_0_4627 =
         // XnInit+0x3C : push 0x4454454E
         { 0x3C, 0x68 }, // (Offset,Value)-Pair #8
         { 0x3D, 0x4E }, // (Offset,Value)-Pair #9
-		{ 0x3E, 0x45 }, // (Offset,Value)-Pair #10
-		{ 0x3F, 0x54 }, // (Offset,Value)-Pair #11
-		{ 0x40, 0x44 }, // (Offset,Value)-Pair #12
-    }
-};
+	{ 0x3E, 0x45 }, // (Offset,Value)-Pair #10
+	{ 0x3F, 0x54 }, // (Offset,Value)-Pair #11
+	{ 0x40, 0x44 }, // (Offset,Value)-Pair #12
+OOVPA_END;
 
 // ******************************************************************
 // * XNetGetEthernetLinkStatus
 // ******************************************************************
-SOOVPA<8> XNetGetEthernetLinkStatus_1_0_4627 = 
-{
-    0,  // Large == 0
-    8,  // Count == 8
+OOVPA_NO_XREF(XNetGetEthernetLinkStatus_1_0_4627, 8)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         { 0x08, 0x33 },
         { 0x10, 0x8A },
         { 0x19, 0x00 },
@@ -84,21 +72,16 @@ SOOVPA<8> XNetGetEthernetLinkStatus_1_0_4627 =
         { 0x34, 0xF0 },
         { 0x3D, 0x24 },
         { 0x46, 0x5B },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XoUpdateLaunchNewImageInternal
 // ******************************************************************
-SOOVPA<8> XoUpdateLaunchNewImageInternal_1_0_4627 = 
-{
-    0,  // Large == 0
-    8,  // Count == 8
+OOVPA_XREF(XoUpdateLaunchNewImageInternal_1_0_4627, 8,
 
-    XREF_XoUpdateLaunchNewImageInternal, // Xref Is Saved
-    XRefNotUsed,
+    XREF_XoUpdateLaunchNewImageInternal,
+    XRefZero)
 
-    {
         { 0x1E, 0xDB },
         { 0x3E, 0x1B },
         { 0x5E, 0xF6 },
@@ -107,99 +90,31 @@ SOOVPA<8> XoUpdateLaunchNewImageInternal_1_0_4627 =
         { 0xBE, 0x50 },
         { 0xDE, 0xE8 },
         { 0xFE, 0x15 },
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XOnline_1_0_4627
 // ******************************************************************
-OOVPATable XOnline_1_0_4627[] =
-{
+OOVPATable XOnline_1_0_4627[] ={
+
     // XNetStartup (* unchanged since 4361 *)
-    {
-        (OOVPA*)&XNetStartup_1_0_4361,
-
-        XTL::EmuXNetStartup,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXNetStartup"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XNetStartup_1_0_4361, XTL::EmuXNetStartup),
 	// WSAStartup
-    {
-        (OOVPA*)&WSAStartup_1_0_4361,
-
-        XTL::EmuWSAStartup,
-
-        #ifdef _DEBUG_TRACE
-        "EmuWSAStartup"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(WSAStartup_1_0_4361, XTL::EmuWSAStartup),
     // XnInit (XREF)
-    {
-        (OOVPA*)&XnInit_1_0_4627, 0,
-
-        #ifdef _DEBUG_TRACE
-        "XnInit (XRef)"
-        #endif
-    },
-    // socket
-    {
-        (OOVPA*)&socket_1_0_4361,
-
-        MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emusocket),
-
-        #ifdef _DEBUG_TRACE
-        "Emusocket"
-        #endif
-    },
-    // bind (* unchanged since 4361 *)
-    {
-        (OOVPA*)&bind_1_0_4361,
-
-        MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emubind),
-
-        #ifdef _DEBUG_TRACE
-        "Emubind"
-        #endif
-    },
-    // listen
-    {
-        (OOVPA*)&listen_1_0_4361,
-
-        MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emulisten),
-
-        #ifdef _DEBUG_TRACE
-        "Emulisten"
-        #endif
-    },
-    // ioctlsocket (* unchanged since 4361 *)
-    {
-        (OOVPA*)&ioctlsocket_1_0_4361,
-
-        MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emuioctlsocket),
-
-        #ifdef _DEBUG_TRACE
-        "Emuioctlsocket"
-        #endif
-    },
+	OOVPA_TABLE_XREF(XnInit_1_0_4627),
+	// socket
+	OOVPA_TABLE_PATCH(socket_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emusocket)),
+	// bind (* unchanged since 4361 *)
+	OOVPA_TABLE_PATCH(bind_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emubind)),
+	// listen
+	OOVPA_TABLE_PATCH(listen_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emulisten)),
+	// ioctlsocket (* unchanged since 4361 *)
+	OOVPA_TABLE_PATCH(ioctlsocket_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emuioctlsocket)),
 	// XNetGetEthernetLinkStatus
-    {
-        (OOVPA*)&XNetGetEthernetLinkStatus_1_0_4627,
-        XTL::EmuXNetGetEthernetLinkStatus,
-
-        #ifdef _DEBUG_TRACE
-        "XNetGetEthernetLinkStatus"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XNetGetEthernetLinkStatus_1_0_4627, XTL::EmuXNetGetEthernetLinkStatus),
 	// XoUpdateLaunchNewImageInternal (XREF)
-    {
-        (OOVPA*)&XoUpdateLaunchNewImageInternal_1_0_4627, 0,
-
-        #ifdef _DEBUG_TRACE
-		"XoUpdateLaunchNewImageInternal (XREF)"
-        #endif
-    },
+	OOVPA_TABLE_XREF(XoUpdateLaunchNewImageInternal_1_0_4627),
 };
 
 // ******************************************************************

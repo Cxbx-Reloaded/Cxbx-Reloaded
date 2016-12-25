@@ -35,15 +35,8 @@
 // ******************************************************************
 // * RtlFreeHeap
 // ******************************************************************
-SOOVPA<9> RtlFreeHeap_1_0_4432 =
-{
-    0,  // Large == 0
-    9,  // Count == 9
+OOVPA_NO_XREF(RtlFreeHeap_1_0_4432, 9)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         // RtlFreeHeap+0x1F : test ecx, ecx
         { 0x1F, 0x85 }, // (Offset,Value)-Pair #1
         { 0x20, 0xC9 }, // (Offset,Value)-Pair #2
@@ -60,21 +53,13 @@ SOOVPA<9> RtlFreeHeap_1_0_4432 =
         // RtlFreeHeap+0x6E : cmp ecx, 0x80
         { 0x6E, 0x81 }, // (Offset,Value)-Pair #8
         { 0x6F, 0xF9 }, // (Offset,Value)-Pair #9
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XMountUtilityDrive
 // ******************************************************************
-SOOVPA<8> XMountUtilityDrive_1_0_4432 =
-{
-    0,  // Large == 0
-    8,  // Count == 8
+OOVPA_NO_XREF(XMountUtilityDrive_1_0_4432, 8)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         // XapiUnknownBad1+0x51 : push 0x0104
         { 0x51, 0x68 }, // (Offset,Value)-Pair #1
         { 0x52, 0x04 }, // (Offset,Value)-Pair #2
@@ -90,222 +75,56 @@ SOOVPA<8> XMountUtilityDrive_1_0_4432 =
         { 0xEA, 0xC0 }, // (Offset,Value)-Pair #8
 
         // TODO: Finish signature, toss out function call basically
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XAPI_1_0_4432
 // ******************************************************************
-OOVPATable XAPI_1_0_4432[] =
-{
-
+OOVPATable XAPI_1_0_4432[] = {
     // XMountUtilityDrive
-    {
-        (OOVPA*)&XMountUtilityDrive_1_0_4432,
-
-        XTL::EmuXMountUtilityDrive,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXMountUtilityDrive"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XMountUtilityDrive_1_0_4432, XTL::EmuXMountUtilityDrive),
     // XInitDevices (* unchanged since 1.0.3911 *)
-    {
-        (OOVPA*)&XInitDevices_1_0_3911,
-
-        XTL::EmuXInitDevices,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInitDevices"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInitDevices_1_0_3911, XTL::EmuXInitDevices),
     // XGetDevices (* unchanged since 1.0.4134 *)
-    {
-        (OOVPA*)&XGetDevices_1_0_4134,
-
-        XTL::EmuXGetDevices,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXGetDevices"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XGetDevices_1_0_4134, XTL::EmuXGetDevices),
     // XInputOpen (* unchanged since 1.0.4361 *)
-    {
-        (OOVPA*)&XInputOpen_1_0_4361,
-
-        XTL::EmuXInputOpen,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputOpen"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputOpen_1_0_4361, XTL::EmuXInputOpen),
 	// XID_fCloseDevice
-	{
-		(OOVPA*)&XID_fCloseDevice_1_0_4361, 0,
-
-		#ifdef _DEBUG_TRACE
-		"XID_fCloseDevice (XREF)"
-		#endif
-	},
+	OOVPA_TABLE_XREF(XID_fCloseDevice_1_0_4361),
 	// XInputClose (* unchanged since 1.0.3911 *)
-	{
-		(OOVPA*)&XInputClose_1_0_3911,
-
-		XTL::EmuXInputClose,
-
-		#ifdef _DEBUG_TRACE
-		"EmuXInputClose"
-		#endif
-	},
+	OOVPA_TABLE_PATCH(XInputClose_1_0_3911, XTL::EmuXInputClose),
     // XInputGetCapabilities (* unchanged since 1.0.4361 *)
-    {
-        (OOVPA*)&XInputGetCapabilities_1_0_4361,
-
-        XTL::EmuXInputGetCapabilities,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputGetCapabilities"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputGetCapabilities_1_0_4361, XTL::EmuXInputGetCapabilities),
     // XInputGetState (* unchanged since 1.0.4361 *)
-    {
-        (OOVPA*)&XInputGetState_1_0_4361,
-
-        XTL::EmuXInputGetState,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputGetState"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputGetState_1_0_4361, XTL::EmuXInputGetState),
     // XInputSetState (* unchanged since 1.0.4361 *)
-    {
-        (OOVPA*)&XInputSetState_1_0_4361,
-
-        XTL::EmuXInputSetState,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXInputSetState"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XInputSetState_1_0_4361, XTL::EmuXInputSetState),
     /*
     // XapiThreadStartup (* unchanged since 1.0.4361 *)
-    {
-        (OOVPA*)&XapiThreadStartup_1_0_4361,
-
-        XTL::EmuXapiThreadStartup,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXapiThreadStartup"
-        #endif
-    },
-    //*/
+	OOVPA_TABLE_PATCH(XapiThreadStartup_1_0_4361, XTL::EmuXapiThreadStartup), //*/
     //*/
 	// GetExitCodeThread (* unchanged since 3911 *)
-    {
-        (OOVPA*)&GetExitCodeThread_1_0_3911,
-
-        XTL::EmuGetExitCodeThread,
-
-        #ifdef _DEBUG_TRACE
-        "EmuGetExitCodeThread"
-        #endif
-    },
- // GetTimeZoneInformation (* unchanged since 3911 *)
-    {
-        (OOVPA*)&GetTimeZoneInformation_1_0_3911,
-
-        XTL::EmuGetTimeZoneInformation,
-
-        #ifdef _DEBUG_TRACE
-        "GetTimeZoneInformation"
-        #endif
-    },
-    // SetThreadPriority (* unchanged since 3911 *)
-    {
-        (OOVPA*)&SetThreadPriority_1_0_3911,
-
-        XTL::EmuSetThreadPriority,
-
-        #ifdef _DEBUG_TRACE
-        "EmuSetThreadPriority"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(GetExitCodeThread_1_0_3911, XTL::EmuGetExitCodeThread),
+	// GetTimeZoneInformation (* unchanged since 3911 *)
+	OOVPA_TABLE_PATCH(GetTimeZoneInformation_1_0_3911, XTL::EmuGetTimeZoneInformation),
+	// SetThreadPriority (* unchanged since 3911 *)
+	OOVPA_TABLE_PATCH(SetThreadPriority_1_0_3911, XTL::EmuSetThreadPriority),
 	// SignalObjectAndWait (* unchanged since 3911 *)
-	{
-		(OOVPA*)&SignalObjectAndWait_1_0_3911, 
-			
-		XTL::EmuSignalObjectAndWait,
-
-		#ifdef _DEBUG_TRACE
-		"EmuSignalObjectAndWait"
-		#endif
-	},
+	OOVPA_TABLE_PATCH(SignalObjectAndWait_1_0_3911, XTL::EmuSignalObjectAndWait),
 	// CreateFiber (* unchanged since 3911 *)
-	{
-		(OOVPA*)&CreateFiber_1_0_3911,
-
-		XTL::EmuCreateFiber,
-
-		#ifdef _DEBUG_TRACE
-		"EmuCreateFiber"
-		#endif
-	},
+	OOVPA_TABLE_PATCH(CreateFiber_1_0_3911, XTL::EmuCreateFiber),
 	// DeleteFiber (* unchanged since 3911 *)
-	{
-		(OOVPA*)&DeleteFiber_1_0_3911,
-
-		XTL::EmuDeleteFiber,
-
-		#ifdef _DEBUG_TRACE
-		"EmuDeleteFiber"
-		#endif
-	},
+	OOVPA_TABLE_PATCH(DeleteFiber_1_0_3911, XTL::EmuDeleteFiber),
 	// QueueUserAPC (* unchanged since 3911 *)
-	{ 
-		(OOVPA*)&QueueUserAPC_1_0_3911,
-
-		XTL::EmuQueueUserAPC,
-			
-		#ifdef _DEBUG_TRACE
-		"EmuQueueUserAPC"
-		#endif
-	},
+	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, XTL::EmuQueueUserAPC),
 	// GetFileAttributesA (* unchanged since 4134 *)
-    {
-        (OOVPA*)&GetFileAttributesA_1_0_4134,
-        XTL::EmuGetFileAttributesA,
-
-        #ifdef _DEBUG_TRACE
-        "EmuGetFileAttributesA"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(GetFileAttributesA_1_0_4134, XTL::EmuGetFileAttributesA),
 	// timeSetEvent
-	{
-		(OOVPA*)&timeSetEvent_1_0_4134,
-		XTL::EmutimeSetEvent,
-
-		#ifdef _DEBUG_TRACE
-		"EmutimeSetEvent"
-		#endif
-	},
+	OOVPA_TABLE_PATCH(timeSetEvent_1_0_4134, XTL::EmutimeSetEvent),
 	// timeKillEvent
-	{
-		(OOVPA*)&timeKillEvent_1_0_4134,
-		XTL::EmutimeKillEvent,
-
-		#ifdef _DEBUG_TRACE
-		"EmutimeKillEvent"
-		#endif
-	},
+	OOVPA_TABLE_PATCH(timeKillEvent_1_0_4134, XTL::EmutimeKillEvent),
 	// XLaunchNewImageA
-	{
-		(OOVPA*)&XLaunchNewImageA_1_0_3911,
-		XTL::EmuXLaunchNewImage,
-		
-		#ifdef _DEBUG_TRACE
-		"EmuXLaunchNewImageA"
-		#endif
-	},
+	OOVPA_TABLE_PATCH(XLaunchNewImageA_1_0_3911, XTL::EmuXLaunchNewImage),
 };
 
 // ******************************************************************
