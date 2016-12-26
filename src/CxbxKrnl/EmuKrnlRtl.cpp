@@ -1161,6 +1161,23 @@ XBSYSAPI EXPORTNUM(316) xboxkrnl::CHAR NTAPI xboxkrnl::RtlUpperChar
 	RETURN(ret);
 }
 
+// ******************************************************************
+// * 0x013D - RtlUpperString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(317) xboxkrnl::VOID NTAPI xboxkrnl::RtlUpperString
+(
+	OUT PSTRING DestinationString,
+	IN  PSTRING SourceString
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_OUT(DestinationString)
+		LOG_FUNC_ARG(SourceString)
+		LOG_FUNC_END;
+
+	NtDll::RtlUpperString((NtDll::PSTRING)DestinationString, (NtDll::PSTRING)SourceString);
+}
+
 // Prevent errors compiling RtlZeroMemory (TODO : How should we really do this?)
 #undef RtlZeroMemory
 

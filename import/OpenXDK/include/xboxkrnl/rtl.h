@@ -493,7 +493,15 @@ XBSYSAPI EXPORTNUM(316) CHAR NTAPI RtlUpperChar
 	CHAR Character
 );
 
-XBSYSAPI VOID *RtlUpperString;
+// ******************************************************************
+// * 0x013D - RtlUpperString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(317) VOID NTAPI RtlUpperString
+(
+	OUT PSTRING DestinationString,
+	IN  PSTRING SourceString
+);
+
 XBSYSAPI VOID *RtlUshortByteSwap;
 XBSYSAPI VOID *RtlWalkFrameChain;
 
