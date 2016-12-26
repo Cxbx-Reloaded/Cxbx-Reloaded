@@ -504,6 +504,35 @@ XBSYSAPI EXPORTNUM(281) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedInteg
 }
 
 // ******************************************************************
+// * 0x011A - RtlExtendedLargeIntegerDivide()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(282) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedLargeIntegerDivide
+(
+	IN	LARGE_INTEGER Dividend,
+	IN	ULONG Divisor,
+	IN	PULONG Remainder // OUT? OPTIONAL?
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Dividend)
+		LOG_FUNC_ARG(Divisor)
+		LOG_FUNC_ARG(Remainder)
+		LOG_FUNC_END;
+
+	LARGE_INTEGER ret;
+
+	// As long as there are no type casts for NtDll::LARGE_INTEGER to xboxkrnl::LARGE_INTEGER
+	// and back, just copy the only member manually :
+	// TODO : Simplify this by adding typecasts between NtDll and xboxkrnl versions of LARGE_INTEGER
+	NtDll::LARGE_INTEGER NtDividend;
+	NtDividend.QuadPart = Dividend.QuadPart;
+
+	ret.QuadPart = NtDll::RtlExtendedLargeIntegerDivide(NtDividend, (NtDll::ULONG)Divisor, (NtDll::PULONG)Remainder).QuadPart;
+
+	RETURN(ret);
+}
+
+// ******************************************************************
 // * 0x011E - RtlFreeAnsiString()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(286) xboxkrnl::VOID NTAPI xboxkrnl::RtlFreeAnsiString

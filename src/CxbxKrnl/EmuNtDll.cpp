@@ -124,6 +124,7 @@ IMPORT(RtlEnterCriticalSection);
 IMPORT(RtlEqualString);
 IMPORT(RtlEqualUnicodeString);
 IMPORT(RtlExtendedIntegerMultiply);
+IMPORT(RtlExtendedLargeIntegerDivide);
 IMPORT(RtlFreeAnsiString);
 IMPORT(RtlFreeHeap);
 IMPORT(RtlInitAnsiString);

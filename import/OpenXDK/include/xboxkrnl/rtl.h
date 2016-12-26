@@ -199,7 +199,16 @@ XBSYSAPI EXPORTNUM(281) LARGE_INTEGER NTAPI RtlExtendedIntegerMultiply
 	IN LONG Multiplier
 );
 
-XBSYSAPI VOID *RtlExtendedLargeIntegerDivide;
+// ******************************************************************
+// * 0x011A - RtlExtendedLargeIntegerDivide()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(282) LARGE_INTEGER NTAPI RtlExtendedLargeIntegerDivide
+(
+	IN	LARGE_INTEGER Dividend,
+	IN	ULONG Divisor,
+	IN	PULONG Remainder // OUT? OPTIONAL?
+);
+
 XBSYSAPI VOID *RtlExtendedMagicDivide;
 XBSYSAPI VOID *RtlFillMemory;
 XBSYSAPI VOID *RtlFillMemoryUlong;

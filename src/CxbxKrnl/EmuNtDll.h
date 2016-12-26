@@ -1073,12 +1073,22 @@ typedef BOOLEAN (NTAPI *FPTR_RtlEqualUnicodeString)
 );
 
 // ******************************************************************
-// * RtlEqualUnicodeString
+// * RtlExtendedIntegerMultiply
 // ******************************************************************
 typedef LARGE_INTEGER (NTAPI *FPTR_RtlExtendedIntegerMultiply)
 (
 	IN LARGE_INTEGER Multiplicand,
 	IN LONG          Multiplier
+	);
+
+// ******************************************************************
+// * RtlExtendedLargeIntegerDivide
+// ******************************************************************
+typedef LARGE_INTEGER (NTAPI *FPTR_RtlExtendedLargeIntegerDivide)
+(
+	IN LARGE_INTEGER Dividend,
+	IN ULONG         Divisor,
+	OUT PULONG		 Remainder
 );
 
 // ******************************************************************
@@ -1732,6 +1742,7 @@ EXTERN(RtlEnterCriticalSection);
 EXTERN(RtlEqualString);
 EXTERN(RtlEqualUnicodeString);
 EXTERN(RtlExtendedIntegerMultiply);
+EXTERN(RtlExtendedLargeIntegerDivide);
 EXTERN(RtlFreeAnsiString);
 EXTERN(RtlFreeHeap);
 EXTERN(RtlInitAnsiString);
