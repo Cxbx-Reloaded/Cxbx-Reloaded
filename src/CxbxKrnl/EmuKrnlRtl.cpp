@@ -477,6 +477,33 @@ XBSYSAPI EXPORTNUM(280) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualUnicodeString
 }
 
 // ******************************************************************
+// * 0x0119 - RtlExtendedIntegerMultiply()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(281) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedIntegerMultiply
+(
+	IN LARGE_INTEGER Multiplicand,
+	IN LONG Multiplier
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Multiplicand)
+		LOG_FUNC_ARG(Multiplier)
+		LOG_FUNC_END;
+
+	LARGE_INTEGER ret;
+
+	// As long as there are no type casts for NtDll::LARGE_INTEGER to xboxkrnl::LARGE_INTEGER
+	// and back, just copy the only member manually :
+	// TODO : Simplify this by adding typecasts between NtDll and xboxkrnl versions of LARGE_INTEGER
+	NtDll::LARGE_INTEGER NtMultiplicand;
+	NtMultiplicand.QuadPart = Multiplicand.QuadPart;
+
+	ret.QuadPart = NtDll::RtlExtendedIntegerMultiply(NtMultiplicand, (NtDll::LONG)Multiplier).QuadPart;
+
+	RETURN(ret);
+}
+
+// ******************************************************************
 // * 0x011E - RtlFreeAnsiString()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(286) xboxkrnl::VOID NTAPI xboxkrnl::RtlFreeAnsiString

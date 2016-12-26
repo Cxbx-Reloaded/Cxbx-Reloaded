@@ -123,6 +123,7 @@ IMPORT(RtlDowncaseUnicodeString);
 IMPORT(RtlEnterCriticalSection);
 IMPORT(RtlEqualString);
 IMPORT(RtlEqualUnicodeString);
+IMPORT(RtlExtendedIntegerMultiply);
 IMPORT(RtlFreeAnsiString);
 IMPORT(RtlFreeHeap);
 IMPORT(RtlInitAnsiString);

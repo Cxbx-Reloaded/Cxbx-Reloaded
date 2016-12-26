@@ -115,6 +115,7 @@ typedef CONST WCHAR        *LPCWSTR, *PCWSTR;
 // * NTSTATUS
 // ******************************************************************
 typedef long                            NTSTATUS;
+typedef __int64							LONGLONG;
 typedef unsigned __int64                ULONGLONG;
 
 #define NT_SUCCESS(Status)              ((NTSTATUS) (Status) >= 0)
@@ -210,10 +211,17 @@ MODE;
 // ******************************************************************
 // * LARGE_INTEGER
 // ******************************************************************
-typedef struct _LARGE_INTEGER
+typedef union _LARGE_INTEGER
 {
-    DWORD   LowPart;
-    LONG    HighPart;
+	struct {
+		DWORD LowPart;
+		LONG  HighPart;
+	};
+	struct {
+		DWORD LowPart;
+		LONG  HighPart;
+	} u;
+	LONGLONG QuadPart;
 }
 LARGE_INTEGER, *PLARGE_INTEGER;
 
@@ -1065,6 +1073,15 @@ typedef BOOLEAN (NTAPI *FPTR_RtlEqualUnicodeString)
 );
 
 // ******************************************************************
+// * RtlEqualUnicodeString
+// ******************************************************************
+typedef LARGE_INTEGER (NTAPI *FPTR_RtlExtendedIntegerMultiply)
+(
+	IN LARGE_INTEGER Multiplicand,
+	IN LONG          Multiplier
+);
+
+// ******************************************************************
 // * NtDelayExecution
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtDelayExecution)
@@ -1714,6 +1731,7 @@ EXTERN(RtlDowncaseUnicodeString);
 EXTERN(RtlEnterCriticalSection);
 EXTERN(RtlEqualString);
 EXTERN(RtlEqualUnicodeString);
+EXTERN(RtlExtendedIntegerMultiply);
 EXTERN(RtlFreeAnsiString);
 EXTERN(RtlFreeHeap);
 EXTERN(RtlInitAnsiString);

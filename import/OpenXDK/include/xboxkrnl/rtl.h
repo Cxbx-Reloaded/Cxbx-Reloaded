@@ -190,7 +190,15 @@ XBSYSAPI EXPORTNUM(280) BOOLEAN NTAPI RtlEqualUnicodeString
 	IN BOOLEAN CaseSensitive
 );
 
-XBSYSAPI VOID *RtlExtendedIntegerMultiply;
+// ******************************************************************
+// * 0x0119 - RtlExtendedIntegerMultiply()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(281) LARGE_INTEGER NTAPI RtlExtendedIntegerMultiply
+(
+	IN LARGE_INTEGER Multiplicand,
+	IN LONG Multiplier
+);
+
 XBSYSAPI VOID *RtlExtendedLargeIntegerDivide;
 XBSYSAPI VOID *RtlExtendedMagicDivide;
 XBSYSAPI VOID *RtlFillMemory;
