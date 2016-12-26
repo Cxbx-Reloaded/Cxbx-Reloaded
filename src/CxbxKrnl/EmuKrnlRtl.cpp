@@ -1023,6 +1023,36 @@ XBSYSAPI EXPORTNUM(309) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToInt
 	RETURN(ret);
 }
 
+// ******************************************************************
+// * 0x0136 - RtlUnicodeToMultiByteN()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(310) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeToMultiByteN
+(
+	IN PCHAR MultiByteString,
+	IN ULONG MaxBytesInMultiByteString,
+	IN PULONG BytesInMultiByteString,
+	IN PWSTR UnicodeString,
+	IN ULONG BytesInUnicodeString
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_OUT(MultiByteString)
+		LOG_FUNC_ARG(MaxBytesInMultiByteString)
+		LOG_FUNC_ARG(BytesInMultiByteString)
+		LOG_FUNC_ARG(UnicodeString)
+		LOG_FUNC_ARG(BytesInUnicodeString)
+		LOG_FUNC_END;
+
+	NTSTATUS ret = NtDll::RtlUnicodeToMultiByteN(
+		MultiByteString,
+		MaxBytesInMultiByteString,
+		BytesInMultiByteString,
+		UnicodeString,
+		BytesInUnicodeString);
+
+	RETURN(ret);
+}
+
 // Prevent errors compiling RtlZeroMemory (TODO : How should we really do this?)
 #undef RtlZeroMemory
 

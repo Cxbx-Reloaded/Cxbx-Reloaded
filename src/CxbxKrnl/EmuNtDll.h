@@ -926,6 +926,18 @@ typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeStringToInteger)
 );
 
 // ******************************************************************
+// * RtlUnicodeToMultiByteN
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeToMultiByteN)
+(
+	OUT PCHAR  MultiByteString,
+	IN  ULONG  MaxBytesInMultiByteString,
+	OUT PULONG BytesInMultiByteString OPTIONAL,
+	IN  PCWCH  UnicodeString,
+	IN  ULONG  BytesInUnicodeString
+);
+
+// ******************************************************************
 // * RtlCompareMemory
 // ******************************************************************
 typedef BOOL (NTAPI *FPTR_RtlCompareMemory)
@@ -1889,6 +1901,7 @@ EXTERN(RtlTryEnterCriticalSection);
 EXTERN(RtlUlongByteSwap);
 EXTERN(RtlUnicodeStringToAnsiString);
 EXTERN(RtlUnicodeStringToInteger);
+EXTERN(RtlUnicodeToMultiByteN);
 
 #if defined(__cplusplus)
 }

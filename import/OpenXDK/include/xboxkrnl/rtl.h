@@ -431,7 +431,18 @@ XBSYSAPI EXPORTNUM(309) NTSTATUS NTAPI RtlUnicodeStringToInteger
 	IN     PULONG Value
 );
 
-XBSYSAPI VOID *RtlUnicodeToMultiByteN;
+// ******************************************************************
+// * 0x0136 - RtlUnicodeToMultiByteN()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(310) NTSTATUS NTAPI RtlUnicodeToMultiByteN
+(
+	IN PCHAR MultiByteString,
+	IN ULONG MaxBytesInMultiByteString,
+	IN PULONG BytesInMultiByteString,
+	IN PWSTR UnicodeString,
+	IN ULONG BytesInUnicodeString
+);
+
 XBSYSAPI VOID *RtlUnicodeToMultiByteSize;
 XBSYSAPI VOID *RtlUnwind;
 XBSYSAPI VOID *RtlUpcaseUnicodeChar;
