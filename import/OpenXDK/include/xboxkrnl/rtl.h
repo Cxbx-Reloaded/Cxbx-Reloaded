@@ -443,7 +443,16 @@ XBSYSAPI EXPORTNUM(310) NTSTATUS NTAPI RtlUnicodeToMultiByteN
 	IN ULONG BytesInUnicodeString
 );
 
-XBSYSAPI VOID *RtlUnicodeToMultiByteSize;
+// ******************************************************************
+// * 0x0137 - RtlUnicodeToMultiByteSize()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(311) NTSTATUS NTAPI RtlUnicodeToMultiByteSize
+(
+	IN PULONG BytesInMultiByteString,
+	IN PWSTR UnicodeString,
+	IN ULONG BytesInUnicodeString
+);
+
 XBSYSAPI VOID *RtlUnwind;
 XBSYSAPI VOID *RtlUpcaseUnicodeChar;
 XBSYSAPI VOID *RtlUpcaseUnicodeString;

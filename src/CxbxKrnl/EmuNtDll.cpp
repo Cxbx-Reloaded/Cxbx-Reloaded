@@ -150,3 +150,4 @@ IMPORT(RtlUlongByteSwap);
 IMPORT(RtlUnicodeStringToAnsiString);
 IMPORT(RtlUnicodeStringToInteger); 
 IMPORT(RtlUnicodeToMultiByteN);
+IMPORT(RtlUnicodeToMultiByteSize);
