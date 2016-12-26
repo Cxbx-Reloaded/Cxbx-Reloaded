@@ -1002,6 +1002,27 @@ XBSYSAPI EXPORTNUM(308) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToAns
 	RETURN(ret);
 }
 
+// ******************************************************************
+// * 0x0135 - RtlUnicodeStringToInteger()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(309) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToInteger
+(
+	IN     PUNICODE_STRING String,
+	IN     ULONG Base,
+	IN     PULONG Value
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(String)
+		LOG_FUNC_ARG(Base)
+		LOG_FUNC_ARG(Value)
+		LOG_FUNC_END;
+
+	NTSTATUS ret = NtDll::RtlUnicodeStringToInteger((NtDll::PUNICODE_STRING)String, Base, Value);
+
+	RETURN(ret);
+}
+
 // Prevent errors compiling RtlZeroMemory (TODO : How should we really do this?)
 #undef RtlZeroMemory
 

@@ -916,6 +916,16 @@ typedef ULONG (NTAPI *FPTR_RtlUlongByteSwap)
 );
 
 // ******************************************************************
+// * RtlUnicodeStringToInteger
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeStringToInteger)
+(
+	IN  PCUNICODE_STRING String,
+	IN  ULONG            Base OPTIONAL,
+	OUT PULONG           Value
+);
+
+// ******************************************************************
 // * RtlCompareMemory
 // ******************************************************************
 typedef BOOL (NTAPI *FPTR_RtlCompareMemory)
@@ -1878,6 +1888,7 @@ EXTERN(RtlTimeToTimeFields);
 EXTERN(RtlTryEnterCriticalSection);
 EXTERN(RtlUlongByteSwap);
 EXTERN(RtlUnicodeStringToAnsiString);
+EXTERN(RtlUnicodeStringToInteger);
 
 #if defined(__cplusplus)
 }

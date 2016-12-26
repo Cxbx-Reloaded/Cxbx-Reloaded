@@ -421,7 +421,16 @@ XBSYSAPI EXPORTNUM(308) NTSTATUS NTAPI RtlUnicodeStringToAnsiString
     IN     BOOLEAN         AllocateDestinationString
 );
 
-XBSYSAPI VOID *RtlUnicodeStringToInteger;
+// ******************************************************************
+// * 0x0135 - RtlUnicodeStringToInteger()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(309) NTSTATUS NTAPI RtlUnicodeStringToInteger
+(
+	IN     PUNICODE_STRING String,
+	IN     ULONG Base,
+	IN     PULONG Value
+);
+
 XBSYSAPI VOID *RtlUnicodeToMultiByteN;
 XBSYSAPI VOID *RtlUnicodeToMultiByteSize;
 XBSYSAPI VOID *RtlUnwind;
