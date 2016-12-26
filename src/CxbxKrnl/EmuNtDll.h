@@ -908,6 +908,14 @@ typedef BOOL (NTAPI *FPTR_RtlTryEnterCriticalSection)
 );
 
 // ******************************************************************
+// * RtlUlongByteSwap
+// ******************************************************************
+typedef ULONG (NTAPI *FPTR_RtlUlongByteSwap)
+(
+	IN ULONG Source
+);
+
+// ******************************************************************
 // * RtlCompareMemory
 // ******************************************************************
 typedef BOOL (NTAPI *FPTR_RtlCompareMemory)
@@ -1868,6 +1876,7 @@ EXTERN(RtlSizeHeap);
 EXTERN(RtlTimeFieldsToTime);
 EXTERN(RtlTimeToTimeFields);
 EXTERN(RtlTryEnterCriticalSection);
+EXTERN(RtlUlongByteSwap);
 EXTERN(RtlUnicodeStringToAnsiString);
 
 #if defined(__cplusplus)

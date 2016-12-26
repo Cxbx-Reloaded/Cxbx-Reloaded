@@ -967,6 +967,21 @@ XBSYSAPI EXPORTNUM(306) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlTryEnterCriticalSec
 }
 
 // ******************************************************************
+// * 0x0133 - RtlUlongByteSwap()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(307) xboxkrnl::ULONG FASTCALL xboxkrnl::RtlUlongByteSwap
+(
+	IN ULONG Source
+)
+{
+	LOG_FUNC_ONE_ARG(Source);
+
+	ULONG ret = NtDll::RtlUlongByteSwap(Source);
+
+	RETURN(ret);
+}
+
+// ******************************************************************
 // * 0x0134 - RtlUnicodeStringToAnsiString()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(308) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeStringToAnsiString

@@ -403,7 +403,13 @@ XBSYSAPI EXPORTNUM(306) BOOLEAN NTAPI RtlTryEnterCriticalSection
     IN PRTL_CRITICAL_SECTION CriticalSection
 );
 
-XBSYSAPI VOID *RtlUlongByteSwap;
+// ******************************************************************
+// * 0x0133 - RtlUlongByteSwap()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(307) ULONG FASTCALL RtlUlongByteSwap
+(
+	IN ULONG Source
+);
 
 // ******************************************************************
 // * RtlUnicodeStringToAnsiString

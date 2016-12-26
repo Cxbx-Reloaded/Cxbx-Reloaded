@@ -146,4 +146,5 @@ IMPORT(RtlSizeHeap);
 IMPORT(RtlTimeFieldsToTime);
 IMPORT(RtlTimeToTimeFields);
 IMPORT(RtlTryEnterCriticalSection);
+IMPORT(RtlUlongByteSwap);
 IMPORT(RtlUnicodeStringToAnsiString);
