@@ -1130,6 +1130,16 @@ typedef VOID (NTAPI *FPTR_RtlFillMemoryUlong)
 ); 
 
 // ******************************************************************
+// * RtlIntegerToChar
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_RtlIntegerToChar)
+(
+	IN ULONG Value,
+	IN ULONG Base,
+	IN ULONG Length,
+	IN PCHAR Str
+);
+// ******************************************************************
 // * NtDelayExecution
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtDelayExecution)
@@ -1787,6 +1797,7 @@ EXTERN(RtlFillMemoryUlong);
 EXTERN(RtlFreeAnsiString);
 EXTERN(RtlFreeHeap);
 EXTERN(RtlFreeUnicodeString);
+EXTERN(RtlIntegerToChar);
 EXTERN(RtlInitAnsiString);
 EXTERN(RtlInitializeCriticalSection);
 EXTERN(RtlInitUnicodeString);

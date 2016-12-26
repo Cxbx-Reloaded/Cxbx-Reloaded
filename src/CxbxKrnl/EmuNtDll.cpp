@@ -131,6 +131,7 @@ IMPORT(RtlFillMemoryUlong);
 IMPORT(RtlFreeAnsiString);
 IMPORT(RtlFreeHeap);
 IMPORT(RtlFreeUnicodeString);
+IMPORT(RtlIntegerToChar);
 IMPORT(RtlInitAnsiString);
 IMPORT(RtlInitializeCriticalSection);
 IMPORT(RtlInitUnicodeString);

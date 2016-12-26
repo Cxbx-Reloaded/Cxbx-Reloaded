@@ -284,7 +284,17 @@ XBSYSAPI EXPORTNUM(291) VOID NTAPI RtlInitializeCriticalSection
   IN PRTL_CRITICAL_SECTION CriticalSection
 );
 
-XBSYSAPI VOID *RtlIntegerToChar;
+// ******************************************************************
+// * 0x0124 - RtlIntegerToChar()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(292) NTSTATUS NTAPI RtlIntegerToChar
+(
+	IN ULONG Value,
+	IN ULONG Base,
+	IN LONG OutputLength,
+	IN PSZ String
+);
+
 XBSYSAPI VOID *RtlIntegerToUnicodeString;
 
 // ******************************************************************

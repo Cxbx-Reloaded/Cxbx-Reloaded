@@ -696,6 +696,29 @@ XBSYSAPI EXPORTNUM(291) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitializeCriticalSect
 }
 
 // ******************************************************************
+// * 0x0124 - RtlIntegerToChar()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(292) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlIntegerToChar
+(
+	IN ULONG Value,
+	IN ULONG Base,
+	IN LONG OutputLength,
+	IN PSZ String
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Value)
+		LOG_FUNC_ARG(Base)
+		LOG_FUNC_ARG(OutputLength)
+		LOG_FUNC_ARG(String)
+		LOG_FUNC_END;
+
+	NTSTATUS result = NtDll::RtlIntegerToChar(Value, Base, OutputLength, String);
+
+	RETURN(result);
+}
+
+// ******************************************************************
 // * 0x0126 - RtlEnterCriticalSection()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(294) xboxkrnl::VOID NTAPI xboxkrnl::RtlLeaveCriticalSection

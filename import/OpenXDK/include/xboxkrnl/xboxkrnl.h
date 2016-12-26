@@ -104,6 +104,7 @@ typedef wchar_t             WCHAR;
 // * Pointer types
 // ******************************************************************
 typedef CHAR               *PCHAR;
+typedef char               *PSZ;
 typedef CHAR               *PCSZ;
 typedef BYTE               *PBYTE;
 typedef BOOLEAN            *PBOOLEAN;
