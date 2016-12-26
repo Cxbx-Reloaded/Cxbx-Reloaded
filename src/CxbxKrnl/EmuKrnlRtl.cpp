@@ -1146,6 +1146,21 @@ XBSYSAPI EXPORTNUM(315) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUpcaseUnicodeToMul
 	RETURN(result);
 }
 
+// ******************************************************************
+// * 0x013C - RtlUpperChar()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(316) xboxkrnl::CHAR NTAPI xboxkrnl::RtlUpperChar
+(
+	CHAR Character
+)
+{
+	LOG_FUNC_ONE_ARG(Character);
+
+	CHAR ret = toupper(Character);
+
+	RETURN(ret);
+}
+
 // Prevent errors compiling RtlZeroMemory (TODO : How should we really do this?)
 #undef RtlZeroMemory
 
