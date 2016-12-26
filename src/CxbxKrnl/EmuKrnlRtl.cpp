@@ -456,6 +456,27 @@ XBSYSAPI EXPORTNUM(279) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualString
 }
 
 // ******************************************************************
+// * 0x0118 - RtlEqualUnicodeString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(280) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualUnicodeString
+(
+	IN PUNICODE_STRING String1,
+	IN PUNICODE_STRING String2,
+	IN BOOLEAN CaseSensitive
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(String1)
+		LOG_FUNC_ARG(String2)
+		LOG_FUNC_ARG(CaseSensitive)
+		LOG_FUNC_END;
+
+	BOOLEAN bRet = NtDll::RtlEqualUnicodeString((NtDll::PUNICODE_STRING)String1, (NtDll::PUNICODE_STRING)String2, (NtDll::BOOLEAN)CaseSensitive);
+
+	RETURN(bRet);
+}
+
+// ******************************************************************
 // * 0x011E - RtlFreeAnsiString()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(286) xboxkrnl::VOID NTAPI xboxkrnl::RtlFreeAnsiString

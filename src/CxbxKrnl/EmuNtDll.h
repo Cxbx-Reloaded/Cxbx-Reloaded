@@ -1055,6 +1055,16 @@ typedef BOOLEAN (NTAPI *FPTR_RtlEqualString)
 );
 
 // ******************************************************************
+// * RtlEqualUnicodeString
+// ******************************************************************
+typedef BOOLEAN (NTAPI *FPTR_RtlEqualUnicodeString)
+(
+	IN PUNICODE_STRING String1,
+	IN PUNICODE_STRING String2,
+	IN BOOLEAN CaseSensitive
+);
+
+// ******************************************************************
 // * NtDelayExecution
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtDelayExecution)
@@ -1703,6 +1713,7 @@ EXTERN(RtlDowncaseUnicodeChar);
 EXTERN(RtlDowncaseUnicodeString);
 EXTERN(RtlEnterCriticalSection);
 EXTERN(RtlEqualString);
+EXTERN(RtlEqualUnicodeString);
 EXTERN(RtlFreeAnsiString);
 EXTERN(RtlFreeHeap);
 EXTERN(RtlInitAnsiString);

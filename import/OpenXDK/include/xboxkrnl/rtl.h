@@ -171,7 +171,7 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI RtlEnterCriticalSection
 XBSYSAPI VOID *RtlEnterCriticalSectionAndRegion;
 
 // ******************************************************************
-// * RtlEnterCriticalSection
+// * 0x0117 - RtlEqualString()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(279) BOOLEAN NTAPI RtlEqualString
 (
@@ -180,7 +180,16 @@ XBSYSAPI EXPORTNUM(279) BOOLEAN NTAPI RtlEqualString
   IN BOOLEAN CaseSensitive
 );
 
-XBSYSAPI VOID *RtlEqualUnicodeString;
+// ******************************************************************
+// * 0x0118 - RtlEqualUnicodeString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(280) BOOLEAN NTAPI RtlEqualUnicodeString
+(
+	IN PUNICODE_STRING String1,
+	IN PUNICODE_STRING String2,
+	IN BOOLEAN CaseSensitive
+);
+
 XBSYSAPI VOID *RtlExtendedIntegerMultiply;
 XBSYSAPI VOID *RtlExtendedLargeIntegerDivide;
 XBSYSAPI VOID *RtlExtendedMagicDivide;
