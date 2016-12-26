@@ -473,7 +473,18 @@ XBSYSAPI EXPORTNUM(314) NTSTATUS NTAPI RtlUpcaseUnicodeString
 	IN  BOOLEAN AllocateDestinationString
 );
 
-XBSYSAPI VOID *RtlUpcaseUnicodeToMultiByteN;
+// ******************************************************************
+// * 0x013B - RtlUpcaseUnicodeToMultiByteN()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(315) NTSTATUS NTAPI RtlUpcaseUnicodeToMultiByteN
+(
+	IN OUT PCHAR MultiByteString,
+	IN ULONG MaxBytesInMultiByteString,
+	IN PULONG BytesInMultiByteString,
+	IN PWSTR UnicodeString,
+	IN ULONG BytesInUnicodeString
+);
+
 XBSYSAPI VOID *RtlUpperChar;
 XBSYSAPI VOID *RtlUpperString;
 XBSYSAPI VOID *RtlUshortByteSwap;
