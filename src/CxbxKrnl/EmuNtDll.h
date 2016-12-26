@@ -780,6 +780,17 @@ KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 // This is only the top of the actual definition. For the complete version,
 // see http://processhacker.sourceforge.net/doc/ntexapi_8h_source.html
 
+// ******************************************************************
+// * GENERIC_MAPPING
+// ******************************************************************
+typedef struct _GENERIC_MAPPING
+{
+	ACCESS_MASK GenericRead;
+	ACCESS_MASK GenericWrite;
+	ACCESS_MASK GenericExecute;
+	ACCESS_MASK GenericAll;
+}
+GENERIC_MAPPING, *PGENERIC_MAPPING;
 
 // ******************************************************************
 // * KeDelayExecutionThread
@@ -854,9 +865,21 @@ typedef SIZE_T (NTAPI *FPTR_RtlSizeHeap)
 );
 
 // ******************************************************************
+// * RtlMapGenericMask
+// ******************************************************************
+typedef VOID (NTAPI *FPTR_RtlMapGenericMask)
+(
+	IN OUT PACCESS_MASK     AccessMask,
+	IN     PGENERIC_MAPPING GenericMapping
+);
+
+// ******************************************************************
 // * RtlNtStatusToDosError
 // ******************************************************************
-typedef ULONG (NTAPI *FPTR_RtlNtStatusToDosError)(NTSTATUS Status);
+typedef ULONG (NTAPI *FPTR_RtlNtStatusToDosError)
+(
+    IN NTSTATUS Status
+);
 
 // ******************************************************************
 // * RtlTimeToTimeFields
@@ -1814,6 +1837,7 @@ EXTERN(RtlInitAnsiString);
 EXTERN(RtlInitializeCriticalSection);
 EXTERN(RtlInitUnicodeString);
 EXTERN(RtlLeaveCriticalSection);
+EXTERN(RtlMapGenericMask);
 EXTERN(RtlNtStatusToDosError);
 EXTERN(RtlReAllocateHeap);
 EXTERN(RtlSizeHeap);

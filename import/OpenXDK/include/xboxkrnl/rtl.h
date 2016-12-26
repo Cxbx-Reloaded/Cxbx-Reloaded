@@ -320,7 +320,14 @@ XBSYSAPI VOID *RtlLeaveCriticalSectionAndRegion;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(296) CHAR NTAPI RtlLowerChar(CHAR Character);
 
-XBSYSAPI VOID *RtlMapGenericMask;
+// ******************************************************************
+// * 0x0129 - RtlMapGenericMask()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(297) VOID NTAPI RtlMapGenericMask
+(
+	IN PACCESS_MASK AccessMask,
+	IN PGENERIC_MAPPING GenericMapping
+);
 
 // ******************************************************************
 // * RtlMoveMemory

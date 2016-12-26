@@ -538,6 +538,18 @@ FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
 
 
 // ******************************************************************
+// * GENERIC_MAPPING
+// ******************************************************************
+typedef struct _GENERIC_MAPPING
+{
+	ACCESS_MASK GenericRead;
+	ACCESS_MASK GenericWrite;
+	ACCESS_MASK GenericExecute;
+	ACCESS_MASK GenericAll;
+}
+GENERIC_MAPPING, *PGENERIC_MAPPING;
+
+// ******************************************************************
 // * OBJECT_ATTRIBUTES
 // ******************************************************************
 typedef struct _OBJECT_ATTRIBUTES

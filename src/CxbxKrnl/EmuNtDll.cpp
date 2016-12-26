@@ -137,6 +137,7 @@ IMPORT(RtlInitAnsiString);
 IMPORT(RtlInitializeCriticalSection);
 IMPORT(RtlInitUnicodeString);
 IMPORT(RtlLeaveCriticalSection);
+IMPORT(RtlMapGenericMask);
 IMPORT(RtlNtStatusToDosError);
 IMPORT(RtlReAllocateHeap);
 IMPORT(RtlSizeHeap);

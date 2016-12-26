@@ -785,6 +785,23 @@ XBSYSAPI EXPORTNUM(296) xboxkrnl::CHAR NTAPI xboxkrnl::RtlLowerChar
 	RETURN(ret);
 }
 
+// ******************************************************************
+// * 0x0129 - RtlMapGenericMask()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(297) xboxkrnl::VOID NTAPI xboxkrnl::RtlMapGenericMask
+(
+	IN PACCESS_MASK AccessMask,
+	IN PGENERIC_MAPPING GenericMapping
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(AccessMask)
+		LOG_FUNC_ARG(GenericMapping)
+		LOG_FUNC_END;
+
+	NtDll::RtlMapGenericMask(AccessMask, (NtDll::PGENERIC_MAPPING)GenericMapping);
+}
+
 // Prevent errors compiling RtlMoveMemory (TODO : How should we really do this?)
 #undef RtlMoveMemory
 
