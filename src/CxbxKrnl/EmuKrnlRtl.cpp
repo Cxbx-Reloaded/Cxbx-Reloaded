@@ -1188,7 +1188,7 @@ XBSYSAPI EXPORTNUM(318) xboxkrnl::USHORT FASTCALL xboxkrnl::RtlUshortByteSwap
 {
 	LOG_FUNC_ONE_ARG(Source);
 
-	ULONG ret = NtDll::RtlUshortByteSwap(Source);
+	USHORT ret = NtDll::RtlUshortByteSwap(Source);
 
 	RETURN(ret);
 }
