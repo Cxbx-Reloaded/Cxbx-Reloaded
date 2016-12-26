@@ -295,7 +295,15 @@ XBSYSAPI EXPORTNUM(292) NTSTATUS NTAPI RtlIntegerToChar
 	IN PSZ String
 );
 
-XBSYSAPI VOID *RtlIntegerToUnicodeString;
+// ******************************************************************
+// * 0x0125 - RtlIntegerToUnicodeString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(293) NTSTATUS NTAPI RtlIntegerToUnicodeString
+(
+	IN     ULONG Value,
+	IN     ULONG Base,
+	IN     PUNICODE_STRING String
+);
 
 // ******************************************************************
 // * RtlLeaveCriticalSection

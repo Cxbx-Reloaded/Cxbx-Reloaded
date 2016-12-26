@@ -358,7 +358,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::RtlInitUnicodeString),            // 0x0122 (290)
 	(uint32)FUNC(&xboxkrnl::RtlInitializeCriticalSection),    // 0x0123 (291)
 	(uint32)FUNC(&xboxkrnl::RtlIntegerToChar),                // 0x0124 (292)
-	(uint32)PANIC(0x0125),                                    // 0x0125 (293) RtlIntegerToUnicodeString
+	(uint32)FUNC(&xboxkrnl::RtlIntegerToUnicodeString),       // 0x0125 (293)
 	(uint32)FUNC(&xboxkrnl::RtlLeaveCriticalSection),         // 0x0126 (294)
 	(uint32)PANIC(0x0127),                                    // 0x0127 (295) RtlLeaveCriticalSectionAndRegion
 	(uint32)FUNC(&xboxkrnl::RtlLowerChar),                    // 0x0128 (296)

@@ -719,6 +719,27 @@ XBSYSAPI EXPORTNUM(292) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlIntegerToChar
 }
 
 // ******************************************************************
+// * 0x0125 - RtlIntegerToUnicodeString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(293) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlIntegerToUnicodeString
+(
+	IN     ULONG Value,
+	IN     ULONG Base,
+	IN     PUNICODE_STRING String
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Value)
+		LOG_FUNC_ARG(Base)
+		LOG_FUNC_ARG_OUT(String)
+		LOG_FUNC_END;
+
+	NTSTATUS result = NtDll::RtlIntegerToUnicodeString(Value, Base, (NtDll::PUNICODE_STRING)String);
+
+	RETURN(result);
+}
+
+// ******************************************************************
 // * 0x0126 - RtlEnterCriticalSection()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(294) xboxkrnl::VOID NTAPI xboxkrnl::RtlLeaveCriticalSection

@@ -132,6 +132,7 @@ IMPORT(RtlFreeAnsiString);
 IMPORT(RtlFreeHeap);
 IMPORT(RtlFreeUnicodeString);
 IMPORT(RtlIntegerToChar);
+IMPORT(RtlIntegerToUnicodeString);
 IMPORT(RtlInitAnsiString);
 IMPORT(RtlInitializeCriticalSection);
 IMPORT(RtlInitUnicodeString);
