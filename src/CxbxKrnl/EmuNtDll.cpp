@@ -139,6 +139,7 @@ IMPORT(RtlInitUnicodeString);
 IMPORT(RtlLeaveCriticalSection);
 IMPORT(RtlMapGenericMask);
 IMPORT(RtlMultiByteToUnicodeN);
+IMPORT(RtlMultiByteToUnicodeSize);
 IMPORT(RtlNtStatusToDosError);
 IMPORT(RtlReAllocateHeap);
 IMPORT(RtlSizeHeap);

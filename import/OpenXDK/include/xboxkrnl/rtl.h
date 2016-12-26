@@ -356,7 +356,15 @@ XBSYSAPI EXPORTNUM(299) NTSTATUS NTAPI RtlMultiByteToUnicodeN
 	IN     ULONG BytesInMultiByteString
 );
 
-XBSYSAPI VOID *RtlMultiByteToUnicodeSize;
+// ******************************************************************
+// * 0x012C - RtlMultiByteToUnicodeSize()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(300) NTSTATUS NTAPI RtlMultiByteToUnicodeSize
+(
+	IN PULONG BytesInUnicodeString,
+	IN PCHAR MultiByteString,
+	IN ULONG BytesInMultiByteString
+);
 
 // ******************************************************************
 // * RtlNtStatusToDosError

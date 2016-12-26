@@ -855,6 +855,30 @@ XBSYSAPI EXPORTNUM(299) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlMultiByteToUnicode
 }
 
 // ******************************************************************
+// * 0x012C - RtlMultiByteToUnicodeSize()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(300) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlMultiByteToUnicodeSize
+(
+	IN PULONG BytesInUnicodeString,
+	IN PCHAR MultiByteString,
+	IN ULONG BytesInMultiByteString
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(BytesInUnicodeString)
+		LOG_FUNC_ARG(MultiByteString);
+		LOG_FUNC_ARG(BytesInMultiByteString)
+		LOG_FUNC_END;
+
+	NTSTATUS result = NtDll::RtlMultiByteToUnicodeSize(
+		BytesInUnicodeString,
+		MultiByteString,
+		BytesInMultiByteString);
+
+	RETURN(result);
+}
+
+// ******************************************************************
 // * 0x012D - RtlNtStatusToDosError()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(301) xboxkrnl::ULONG NTAPI xboxkrnl::RtlNtStatusToDosError

@@ -365,7 +365,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::RtlMapGenericMask),               // 0x0129 (297)
 	(uint32)FUNC(&xboxkrnl::RtlMoveMemory),                   // 0x012A (298)
 	(uint32)FUNC(&xboxkrnl::RtlMultiByteToUnicodeN),          // 0x012B (299)
-	(uint32)PANIC(0x012C),                                    // 0x012C (300) RtlMultiByteToUnicodeSize
+	(uint32)FUNC(&xboxkrnl::RtlMultiByteToUnicodeSize),       // 0x012C (300)
 	(uint32)FUNC(&xboxkrnl::RtlNtStatusToDosError),           // 0x012D (301)
 	(uint32)PANIC(0x012E),                                    // 0x012E (302) RtlRaiseException
 	(uint32)PANIC(0x012F),                                    // 0x012F (303) RtlRaiseStatus

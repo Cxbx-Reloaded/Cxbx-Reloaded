@@ -1186,6 +1186,16 @@ typedef NTSTATUS (NTAPI *FPTR_RtlMultiByteToUnicodeN)
 );
 
 // ******************************************************************
+// * RtlMultiByteToUnicodeSize
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlMultiByteToUnicodeSize)
+(
+	OUT       PULONG BytesInUnicodeString,
+	IN  const CHAR   *MultiByteString,
+	IN        ULONG  BytesInMultiByteString
+);
+
+// ******************************************************************
 // * NtDelayExecution
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtDelayExecution)
@@ -1851,6 +1861,7 @@ EXTERN(RtlInitUnicodeString);
 EXTERN(RtlLeaveCriticalSection);
 EXTERN(RtlMapGenericMask);
 EXTERN(RtlMultiByteToUnicodeN);
+EXTERN(RtlMultiByteToUnicodeSize);
 EXTERN(RtlNtStatusToDosError);
 EXTERN(RtlReAllocateHeap);
 EXTERN(RtlSizeHeap);
