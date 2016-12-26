@@ -1053,6 +1053,14 @@ typedef VOID (NTAPI *FPTR_RtlFreeAnsiString)
 );
 
 // ******************************************************************
+// * RtlFreeUnicodeString
+// ******************************************************************
+typedef VOID(NTAPI *FPTR_RtlFreeUnicodeString)
+(
+	IN OUT PUNICODE_STRING   UnicodeString
+);
+
+// ******************************************************************
 // * RtlEqualString
 // ******************************************************************
 typedef BOOLEAN (NTAPI *FPTR_RtlEqualString)
@@ -1778,6 +1786,7 @@ EXTERN(RtlFillMemory);
 EXTERN(RtlFillMemoryUlong);
 EXTERN(RtlFreeAnsiString);
 EXTERN(RtlFreeHeap);
+EXTERN(RtlFreeUnicodeString);
 EXTERN(RtlInitAnsiString);
 EXTERN(RtlInitializeCriticalSection);
 EXTERN(RtlInitUnicodeString);

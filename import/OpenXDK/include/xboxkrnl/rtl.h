@@ -247,7 +247,14 @@ XBSYSAPI EXPORTNUM(286) VOID NTAPI RtlFreeAnsiString
   IN OUT PANSI_STRING AnsiString
 );
 
-XBSYSAPI VOID *RtlFreeUnicodeString;
+// ******************************************************************
+// * 0x011F - RtlFreeUnicodeString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(287) VOID NTAPI RtlFreeUnicodeString
+(
+	IN OUT PUNICODE_STRING UnicodeString
+);
+
 XBSYSAPI VOID *RtlGetCallersAddress;
 
 // ******************************************************************

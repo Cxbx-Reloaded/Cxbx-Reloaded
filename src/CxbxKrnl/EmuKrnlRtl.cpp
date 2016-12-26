@@ -619,6 +619,19 @@ XBSYSAPI EXPORTNUM(286) xboxkrnl::VOID NTAPI xboxkrnl::RtlFreeAnsiString
 }
 
 // ******************************************************************
+// * 0x011F - RtlFreeUnicodeString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(287) xboxkrnl::VOID NTAPI xboxkrnl::RtlFreeUnicodeString
+(
+	IN OUT PUNICODE_STRING UnicodeString
+)
+{
+	LOG_FUNC_ONE_ARG(UnicodeString);
+
+	NtDll::RtlFreeUnicodeString((NtDll::PUNICODE_STRING)UnicodeString);
+}
+
+// ******************************************************************
 // * 0x0121 - RtlInitAnsiString()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(289) xboxkrnl::VOID NTAPI xboxkrnl::RtlInitAnsiString
