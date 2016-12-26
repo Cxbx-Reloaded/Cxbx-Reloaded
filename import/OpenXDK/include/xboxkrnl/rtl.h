@@ -463,7 +463,16 @@ XBSYSAPI EXPORTNUM(313) WCHAR NTAPI RtlUpcaseUnicodeChar
 	IN WCHAR SourceCharacter
 );
 
-XBSYSAPI VOID *RtlUpcaseUnicodeString;
+// ******************************************************************
+// * 0x013A - RtlUpcaseUnicodeString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(314) NTSTATUS NTAPI RtlUpcaseUnicodeString
+(
+	OUT PUNICODE_STRING DestinationString,
+	IN  PUNICODE_STRING SourceString,
+	IN  BOOLEAN AllocateDestinationString
+);
+
 XBSYSAPI VOID *RtlUpcaseUnicodeToMultiByteN;
 XBSYSAPI VOID *RtlUpperChar;
 XBSYSAPI VOID *RtlUpperString;

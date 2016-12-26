@@ -313,7 +313,7 @@ XBSYSAPI EXPORTNUM(272) xboxkrnl::VOID NTAPI xboxkrnl::RtlCopyString
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(DestinationString)
+		LOG_FUNC_ARG_OUT(DestinationString)
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_END;
 
@@ -330,7 +330,7 @@ XBSYSAPI EXPORTNUM(273) xboxkrnl::VOID NTAPI xboxkrnl::RtlCopyUnicodeString
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(DestinationString)
+		LOG_FUNC_ARG_OUT(DestinationString)
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_END;
 
@@ -347,7 +347,7 @@ XBSYSAPI EXPORTNUM(274) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlCreateUnicodeString
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(DestinationString)
+		LOG_FUNC_ARG_OUT(DestinationString)
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_END;
 
@@ -382,7 +382,7 @@ XBSYSAPI EXPORTNUM(276) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlDowncaseUnicodeStr
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(DestinationString)
+		LOG_FUNC_ARG_OUT(DestinationString)
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_ARG(AllocateDestinationString)
 		LOG_FUNC_END;
@@ -1088,6 +1088,30 @@ XBSYSAPI EXPORTNUM(313) xboxkrnl::WCHAR NTAPI xboxkrnl::RtlUpcaseUnicodeChar
 	LOG_FUNC_ONE_ARG(SourceCharacter);
 
 	WCHAR result = NtDll::RtlUpcaseUnicodeChar((NtDll::WCHAR)SourceCharacter);
+
+	RETURN(result);
+}
+
+// ******************************************************************
+// * 0x013A - RtlUpcaseUnicodeString()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(314) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUpcaseUnicodeString
+(
+	OUT PUNICODE_STRING DestinationString,
+	IN  PUNICODE_STRING SourceString,
+	IN  BOOLEAN AllocateDestinationString
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_OUT(DestinationString)
+		LOG_FUNC_ARG(SourceString)
+		LOG_FUNC_ARG(AllocateDestinationString)
+		LOG_FUNC_END;
+
+	NTSTATUS result = NtDll::RtlUpcaseUnicodeString(
+		(NtDll::PUNICODE_STRING)DestinationString,
+		(NtDll::PUNICODE_STRING)SourceString,
+		AllocateDestinationString);
 
 	RETURN(result);
 }

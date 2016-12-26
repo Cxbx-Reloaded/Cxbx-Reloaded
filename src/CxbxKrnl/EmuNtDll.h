@@ -956,6 +956,16 @@ typedef WCHAR (NTAPI *FPTR_RtlUpcaseUnicodeChar)
 );
 
 // ******************************************************************
+// * RtlUpcaseUnicodeString
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlUpcaseUnicodeString)
+(
+	OUT PUNICODE_STRING DestinationString,
+	IN PUNICODE_STRING SourceString,
+	IN BOOLEAN AllocateDestinationString
+);
+
+// ******************************************************************
 // * RtlCompareMemory
 // ******************************************************************
 typedef BOOL (NTAPI *FPTR_RtlCompareMemory)
@@ -1922,6 +1932,7 @@ EXTERN(RtlUnicodeStringToInteger);
 EXTERN(RtlUnicodeToMultiByteN);
 EXTERN(RtlUnicodeToMultiByteSize);
 EXTERN(RtlUpcaseUnicodeChar);
+EXTERN(RtlUpcaseUnicodeString);
 
 #if defined(__cplusplus)
 }
