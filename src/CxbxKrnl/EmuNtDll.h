@@ -948,6 +948,14 @@ typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeToMultiByteSize)
 );
 
 // ******************************************************************
+// * RtlUpcaseUnicodeChar
+// ******************************************************************
+typedef WCHAR (NTAPI *FPTR_RtlUpcaseUnicodeChar)
+(
+	IN WCHAR    SourceCharacter
+);
+
+// ******************************************************************
 // * RtlCompareMemory
 // ******************************************************************
 typedef BOOL (NTAPI *FPTR_RtlCompareMemory)
@@ -1913,6 +1921,7 @@ EXTERN(RtlUnicodeStringToAnsiString);
 EXTERN(RtlUnicodeStringToInteger);
 EXTERN(RtlUnicodeToMultiByteN);
 EXTERN(RtlUnicodeToMultiByteSize);
+EXTERN(RtlUpcaseUnicodeChar);
 
 #if defined(__cplusplus)
 }

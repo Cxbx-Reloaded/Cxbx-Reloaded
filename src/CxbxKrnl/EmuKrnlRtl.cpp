@@ -1077,6 +1077,21 @@ XBSYSAPI EXPORTNUM(311) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlUnicodeToMultiByte
 	RETURN(ret);
 }
 
+// ******************************************************************
+// * 0x0139 - RtlUpcaseUnicodeChar()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(313) xboxkrnl::WCHAR NTAPI xboxkrnl::RtlUpcaseUnicodeChar
+(
+	IN WCHAR SourceCharacter
+)
+{
+	LOG_FUNC_ONE_ARG(SourceCharacter);
+
+	WCHAR result = NtDll::RtlUpcaseUnicodeChar((NtDll::WCHAR)SourceCharacter);
+
+	RETURN(result);
+}
+
 // Prevent errors compiling RtlZeroMemory (TODO : How should we really do this?)
 #undef RtlZeroMemory
 

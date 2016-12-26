@@ -151,3 +151,4 @@ IMPORT(RtlUnicodeStringToAnsiString);
 IMPORT(RtlUnicodeStringToInteger); 
 IMPORT(RtlUnicodeToMultiByteN);
 IMPORT(RtlUnicodeToMultiByteSize);
+IMPORT(RtlUpcaseUnicodeChar);

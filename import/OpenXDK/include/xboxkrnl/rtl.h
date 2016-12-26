@@ -454,7 +454,15 @@ XBSYSAPI EXPORTNUM(311) NTSTATUS NTAPI RtlUnicodeToMultiByteSize
 );
 
 XBSYSAPI VOID *RtlUnwind;
-XBSYSAPI VOID *RtlUpcaseUnicodeChar;
+
+// ******************************************************************
+// * 0x0139 - RtlUpcaseUnicodeChar()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(313) WCHAR NTAPI RtlUpcaseUnicodeChar
+(
+	IN WCHAR SourceCharacter
+);
+
 XBSYSAPI VOID *RtlUpcaseUnicodeString;
 XBSYSAPI VOID *RtlUpcaseUnicodeToMultiByteN;
 XBSYSAPI VOID *RtlUpperChar;
