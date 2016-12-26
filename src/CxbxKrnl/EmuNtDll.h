@@ -1112,6 +1112,16 @@ typedef VOID (NTAPI *FPTR_RtlFillMemory)
 );
 
 // ******************************************************************
+// * RtlFillMemoryUlong
+// ******************************************************************
+typedef VOID (NTAPI *FPTR_RtlFillMemoryUlong)
+(
+	OUT PVOID  Destination,
+	IN  SIZE_T Length,
+	IN	ULONG  Pattern
+); 
+
+// ******************************************************************
 // * NtDelayExecution
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtDelayExecution)
@@ -1765,6 +1775,7 @@ EXTERN(RtlExtendedIntegerMultiply);
 EXTERN(RtlExtendedLargeIntegerDivide);
 EXTERN(RtlExtendedMagicDivide);
 EXTERN(RtlFillMemory);
+EXTERN(RtlFillMemoryUlong);
 EXTERN(RtlFreeAnsiString);
 EXTERN(RtlFreeHeap);
 EXTERN(RtlInitAnsiString);

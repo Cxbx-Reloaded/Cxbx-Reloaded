@@ -229,7 +229,15 @@ XBSYSAPI EXPORTNUM(284) VOID NTAPI RtlFillMemory
 	IN BYTE  Fill
 );
 
-XBSYSAPI VOID *RtlFillMemoryUlong;
+// ******************************************************************
+// * 0x011D - RtlFillMemoryUlong()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(285) VOID NTAPI RtlFillMemoryUlong
+(
+	IN PVOID Destination,
+	IN SIZE_T Length,
+	IN ULONG Pattern
+);
 
 // ******************************************************************
 // * RtlFreeAnsiString

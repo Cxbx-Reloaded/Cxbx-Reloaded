@@ -587,6 +587,25 @@ XBSYSAPI EXPORTNUM(284) xboxkrnl::VOID NTAPI xboxkrnl::RtlFillMemory
 }
 
 // ******************************************************************
+// * 0x011D - RtlFillMemoryUlong()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(285) xboxkrnl::VOID NTAPI xboxkrnl::RtlFillMemoryUlong
+(
+	IN PVOID Destination,
+	IN SIZE_T Length,
+	IN ULONG Pattern
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Destination)
+		LOG_FUNC_ARG(Length)
+		LOG_FUNC_ARG(Pattern)
+		LOG_FUNC_END;
+
+	NtDll::RtlFillMemoryUlong(Destination, Length, Pattern);
+}
+
+// ******************************************************************
 // * 0x011E - RtlFreeAnsiString()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(286) xboxkrnl::VOID NTAPI xboxkrnl::RtlFreeAnsiString

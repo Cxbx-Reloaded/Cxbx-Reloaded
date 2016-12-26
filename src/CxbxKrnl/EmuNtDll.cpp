@@ -127,6 +127,7 @@ IMPORT(RtlExtendedIntegerMultiply);
 IMPORT(RtlExtendedLargeIntegerDivide);
 IMPORT(RtlExtendedMagicDivide);
 IMPORT(RtlFillMemory);
+IMPORT(RtlFillMemoryUlong);
 IMPORT(RtlFreeAnsiString);
 IMPORT(RtlFreeHeap);
 IMPORT(RtlInitAnsiString);
