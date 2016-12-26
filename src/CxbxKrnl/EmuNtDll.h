@@ -1102,6 +1102,16 @@ typedef LARGE_INTEGER (NTAPI *FPTR_RtlExtendedMagicDivide)
 );
 
 // ******************************************************************
+// * RtlFillMemory
+// ******************************************************************
+typedef VOID (NTAPI *FPTR_RtlFillMemory)
+(
+	OUT VOID UNALIGNED *Destination,
+	IN  SIZE_T         Length,
+	IN	UCHAR          Fill
+);
+
+// ******************************************************************
 // * NtDelayExecution
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtDelayExecution)
@@ -1754,6 +1764,7 @@ EXTERN(RtlEqualUnicodeString);
 EXTERN(RtlExtendedIntegerMultiply);
 EXTERN(RtlExtendedLargeIntegerDivide);
 EXTERN(RtlExtendedMagicDivide);
+EXTERN(RtlFillMemory);
 EXTERN(RtlFreeAnsiString);
 EXTERN(RtlFreeHeap);
 EXTERN(RtlInitAnsiString);

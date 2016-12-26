@@ -564,6 +564,28 @@ XBSYSAPI EXPORTNUM(283) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedMagic
 	RETURN(ret);
 }
 
+// Prevent errors compiling RtlFillMemory (TODO : How should we really do this?)
+#undef RtlFillMemory
+
+// ******************************************************************
+// * 0x011C - RtlFillMemory()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(284) xboxkrnl::VOID NTAPI xboxkrnl::RtlFillMemory
+(
+	IN VOID UNALIGNED *Destination,
+	IN DWORD Length,
+	IN BYTE  Fill
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Destination)
+		LOG_FUNC_ARG(Length)
+		LOG_FUNC_ARG(Fill)
+		LOG_FUNC_END;
+
+	NtDll::RtlFillMemory(Destination, Length, Fill);
+}
+
 // ******************************************************************
 // * 0x011E - RtlFreeAnsiString()
 // ******************************************************************

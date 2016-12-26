@@ -219,7 +219,16 @@ XBSYSAPI EXPORTNUM(283) LARGE_INTEGER NTAPI RtlExtendedMagicDivide
 	IN	CCHAR ShiftCount
 );
 
-XBSYSAPI VOID *RtlFillMemory;
+// ******************************************************************
+// * 0x011C - RtlFillMemory()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(284) VOID NTAPI RtlFillMemory
+(
+	IN VOID UNALIGNED *Destination,
+	IN DWORD Length,
+	IN BYTE  Fill
+);
+
 XBSYSAPI VOID *RtlFillMemoryUlong;
 
 // ******************************************************************
