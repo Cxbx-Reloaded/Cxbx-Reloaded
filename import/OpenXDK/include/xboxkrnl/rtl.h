@@ -502,7 +502,14 @@ XBSYSAPI EXPORTNUM(317) VOID NTAPI RtlUpperString
 	IN  PSTRING SourceString
 );
 
-XBSYSAPI VOID *RtlUshortByteSwap;
+// ******************************************************************
+// * 0x013E - RtlUshortByteSwap()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(318) USHORT FASTCALL RtlUshortByteSwap
+(
+	IN USHORT Source
+);
+
 XBSYSAPI VOID *RtlWalkFrameChain;
 
 // ******************************************************************

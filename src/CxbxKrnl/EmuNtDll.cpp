@@ -155,3 +155,4 @@ IMPORT(RtlUpcaseUnicodeChar);
 IMPORT(RtlUpcaseUnicodeString);
 IMPORT(RtlUpcaseUnicodeToMultiByteN);
 IMPORT(RtlUpperString);
+IMPORT(RtlUshortByteSwap);

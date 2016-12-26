@@ -987,6 +987,14 @@ typedef VOID (NTAPI *FPTR_RtlUpperString)
 );
 
 // ******************************************************************
+// * RtlUshortByteSwap
+// ******************************************************************
+typedef USHORT (FASTCALL *FPTR_RtlUshortByteSwap)
+(
+	IN USHORT Source
+);
+
+// ******************************************************************
 // * RtlCompareMemory
 // ******************************************************************
 typedef BOOL (NTAPI *FPTR_RtlCompareMemory)
@@ -1956,6 +1964,7 @@ EXTERN(RtlUpcaseUnicodeChar);
 EXTERN(RtlUpcaseUnicodeString);
 EXTERN(RtlUpcaseUnicodeToMultiByteN);
 EXTERN(RtlUpperString);
+EXTERN(RtlUshortByteSwap);
 
 #if defined(__cplusplus)
 }

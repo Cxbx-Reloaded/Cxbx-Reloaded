@@ -1178,6 +1178,21 @@ XBSYSAPI EXPORTNUM(317) xboxkrnl::VOID NTAPI xboxkrnl::RtlUpperString
 	NtDll::RtlUpperString((NtDll::PSTRING)DestinationString, (NtDll::PSTRING)SourceString);
 }
 
+// ******************************************************************
+// * 0x013E - RtlUshortByteSwap()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(318) xboxkrnl::USHORT FASTCALL xboxkrnl::RtlUshortByteSwap
+(
+	IN USHORT Source
+)
+{
+	LOG_FUNC_ONE_ARG(Source);
+
+	ULONG ret = NtDll::RtlUshortByteSwap(Source);
+
+	RETURN(ret);
+}
+
 // Prevent errors compiling RtlZeroMemory (TODO : How should we really do this?)
 #undef RtlZeroMemory
 
