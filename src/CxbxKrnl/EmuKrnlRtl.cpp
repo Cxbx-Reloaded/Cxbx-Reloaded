@@ -806,7 +806,7 @@ XBSYSAPI EXPORTNUM(297) xboxkrnl::VOID NTAPI xboxkrnl::RtlMapGenericMask
 #undef RtlMoveMemory
 
 // ******************************************************************
-// * 0x012A - RtlMoveMemory
+// * 0x012A - RtlMoveMemory()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(298) xboxkrnl::VOID NTAPI xboxkrnl::RtlMoveMemory
 (
@@ -822,6 +822,36 @@ XBSYSAPI EXPORTNUM(298) xboxkrnl::VOID NTAPI xboxkrnl::RtlMoveMemory
 		LOG_FUNC_END;
 
 	::memmove(Destination, Source, Length);
+}
+
+// ******************************************************************
+// * 0x012B - RtlMultiByteToUnicodeN()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(299) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlMultiByteToUnicodeN
+(
+	IN     PWSTR UnicodeString,
+	IN     ULONG MaxBytesInUnicodeString,
+	IN     PULONG BytesInUnicodeString,
+	IN     PCHAR MultiByteString,
+	IN     ULONG BytesInMultiByteString
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(UnicodeString)
+		LOG_FUNC_ARG(MaxBytesInUnicodeString);
+		LOG_FUNC_ARG(BytesInUnicodeString);
+		LOG_FUNC_ARG(MultiByteString);
+		LOG_FUNC_ARG(BytesInMultiByteString)
+		LOG_FUNC_END;
+
+	NTSTATUS result = NtDll::RtlMultiByteToUnicodeN(
+		UnicodeString,
+		MaxBytesInUnicodeString,
+		BytesInUnicodeString,
+		MultiByteString,
+		BytesInMultiByteString);
+
+	RETURN(result);
 }
 
 // ******************************************************************

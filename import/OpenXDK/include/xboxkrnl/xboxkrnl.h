@@ -130,6 +130,7 @@ typedef LONGLONG            *PLONGLONG;
 // ******************************************************************
 typedef CHAR *PCHAR, *LPCH, *PCH;
 typedef CONST CHAR *LPCCH, *PCCH;
+typedef WCHAR *LPWSTR, *PWSTR;
 
 typedef /*_Null_terminated_*/ CONST WCHAR *LPCWSTR, *PCWSTR;
 

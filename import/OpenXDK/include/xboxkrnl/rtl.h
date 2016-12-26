@@ -330,7 +330,7 @@ XBSYSAPI EXPORTNUM(297) VOID NTAPI RtlMapGenericMask
 );
 
 // ******************************************************************
-// * RtlMoveMemory
+// * 0x012A - RtlMoveMemory()
 // ******************************************************************
 // *
 // * Move memory either forward or backward, aligned or unaligned,
@@ -344,7 +344,18 @@ XBSYSAPI EXPORTNUM(298) VOID NTAPI RtlMoveMemory
   IN SIZE_T                Length
 );
 
-XBSYSAPI VOID *RtlMultiByteToUnicodeN;
+// ******************************************************************
+// * 0x012B - RtlMultiByteToUnicodeN()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(299) NTSTATUS NTAPI RtlMultiByteToUnicodeN
+(
+	IN     PWSTR UnicodeString,
+	IN     ULONG MaxBytesInUnicodeString,
+	IN     PULONG BytesInUnicodeString,
+	IN     PCHAR MultiByteString,
+	IN     ULONG BytesInMultiByteString
+);
+
 XBSYSAPI VOID *RtlMultiByteToUnicodeSize;
 
 // ******************************************************************
