@@ -910,7 +910,7 @@ typedef BOOL (NTAPI *FPTR_RtlTryEnterCriticalSection)
 // ******************************************************************
 // * RtlUlongByteSwap
 // ******************************************************************
-typedef ULONG (NTAPI *FPTR_RtlUlongByteSwap)
+typedef ULONG (FASTCALL *FPTR_RtlUlongByteSwap)
 (
 	IN ULONG Source
 );
