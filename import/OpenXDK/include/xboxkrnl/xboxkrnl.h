@@ -104,6 +104,7 @@ typedef wchar_t             WCHAR;
 // * Pointer types
 // ******************************************************************
 typedef CHAR               *PCHAR;
+typedef char               *PSZ;
 typedef CHAR               *PCSZ;
 typedef BYTE               *PBYTE;
 typedef BOOLEAN            *PBOOLEAN;
@@ -129,6 +130,7 @@ typedef LONGLONG            *PLONGLONG;
 // ******************************************************************
 typedef CHAR *PCHAR, *LPCH, *PCH;
 typedef CONST CHAR *LPCCH, *PCCH;
+typedef WCHAR *LPWSTR, *PWSTR;
 
 typedef /*_Null_terminated_*/ CONST WCHAR *LPCWSTR, *PCWSTR;
 
@@ -535,6 +537,18 @@ FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
 #define FILE_ATTRIBUTE_VALID_FLAGS              0x00007fb7
 #define FILE_ATTRIBUTE_VALID_SET_FLAGS          0x000031a7
 
+
+// ******************************************************************
+// * GENERIC_MAPPING
+// ******************************************************************
+typedef struct _GENERIC_MAPPING
+{
+	ACCESS_MASK GenericRead;
+	ACCESS_MASK GenericWrite;
+	ACCESS_MASK GenericExecute;
+	ACCESS_MASK GenericAll;
+}
+GENERIC_MAPPING, *PGENERIC_MAPPING;
 
 // ******************************************************************
 // * OBJECT_ATTRIBUTES
@@ -986,7 +1000,7 @@ typedef struct _MEMORY_BASIC_INFORMATION
 MEMORY_BASIC_INFORMATION, *PMEMORY_BASIC_INFORMATION;
 
 // ******************************************************************
-// * EVENT_TYPE
+// * EVENT_TYPE - same as Windows
 // ******************************************************************
 typedef enum _EVENT_TYPE
 {
@@ -1162,12 +1176,25 @@ typedef struct _KEVENT
 //KEVENT, *PKEVENT, *RESTRICTED_POINTER PRKEVENT;
 KEVENT, *PKEVENT, *PRKEVENT; // even with undefined RESTRICTED_POINTER, this doesn't compile
 
+// EVENT_BASIC_INFORMATION - same as Windows
+typedef struct _EVENT_BASIC_INFORMATION {
+	EVENT_TYPE EventType;
+	LONG EventState;
+} EVENT_BASIC_INFORMATION, *PEVENT_BASIC_INFORMATION;
+
+// KSEMAPHORE
 typedef struct _KSEMAPHORE
 {
 	DISPATCHER_HEADER Header;
 	LONG Limit;
 }
 KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
+
+// SEMAPHORE_BASIC_INFORMATION - same as Windows
+typedef struct _SEMAPHORE_BASIC_INFORMATION {
+	LONG CurrentCount;
+	LONG MaximumCount;
+} SEMAPHORE_BASIC_INFORMATION, *PSEMAPHORE_BASIC_INFORMATION;
 
 typedef struct _ERWLOCK
 {
