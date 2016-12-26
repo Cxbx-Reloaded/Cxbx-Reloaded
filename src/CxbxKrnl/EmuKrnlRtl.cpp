@@ -533,6 +533,38 @@ XBSYSAPI EXPORTNUM(282) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedLarge
 }
 
 // ******************************************************************
+// * 0x011B - RtlExtendedMagicDivide()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(283) xboxkrnl::LARGE_INTEGER NTAPI xboxkrnl::RtlExtendedMagicDivide
+(
+	IN	LARGE_INTEGER Dividend,
+	IN	LARGE_INTEGER MagicDivisor,
+	IN	CCHAR ShiftCount
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Dividend)
+		LOG_FUNC_ARG(MagicDivisor)
+		LOG_FUNC_ARG(ShiftCount)
+		LOG_FUNC_END;
+
+	LARGE_INTEGER ret;
+
+	// As long as there are no type casts for NtDll::LARGE_INTEGER to xboxkrnl::LARGE_INTEGER
+	// and back, just copy the only member manually :
+	// TODO : Simplify this by adding typecasts between NtDll and xboxkrnl versions of LARGE_INTEGER
+	NtDll::LARGE_INTEGER NtDividend;
+	NtDividend.QuadPart = Dividend.QuadPart;
+
+	NtDll::LARGE_INTEGER NtMagicDivisor;
+	NtMagicDivisor.QuadPart = MagicDivisor.QuadPart;
+
+	ret.QuadPart = NtDll::RtlExtendedMagicDivide(NtDividend, NtMagicDivisor, (NtDll::CCHAR)ShiftCount).QuadPart;
+
+	RETURN(ret);
+}
+
+// ******************************************************************
 // * 0x011E - RtlFreeAnsiString()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(286) xboxkrnl::VOID NTAPI xboxkrnl::RtlFreeAnsiString

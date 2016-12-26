@@ -1092,6 +1092,16 @@ typedef LARGE_INTEGER (NTAPI *FPTR_RtlExtendedLargeIntegerDivide)
 );
 
 // ******************************************************************
+// * RtlExtendedMagicDivide
+// ******************************************************************
+typedef LARGE_INTEGER (NTAPI *FPTR_RtlExtendedMagicDivide)
+(
+	IN LARGE_INTEGER Dividend,
+	IN LARGE_INTEGER MagicDivisor,
+	IN CCHAR		 ShiftCount
+);
+
+// ******************************************************************
 // * NtDelayExecution
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtDelayExecution)
@@ -1743,6 +1753,7 @@ EXTERN(RtlEqualString);
 EXTERN(RtlEqualUnicodeString);
 EXTERN(RtlExtendedIntegerMultiply);
 EXTERN(RtlExtendedLargeIntegerDivide);
+EXTERN(RtlExtendedMagicDivide);
 EXTERN(RtlFreeAnsiString);
 EXTERN(RtlFreeHeap);
 EXTERN(RtlInitAnsiString);
