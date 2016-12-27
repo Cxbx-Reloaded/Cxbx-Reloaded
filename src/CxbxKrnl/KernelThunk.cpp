@@ -274,12 +274,12 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::NtQueueApcThread),                // 0x00CE (206)
 	(uint32)FUNC(&xboxkrnl::NtQueryDirectoryFile),            // 0x00CF (207)
 	(uint32)PANIC(0x00D0),                                    // 0x00D0 (208) NtQueryDirectoryObject
-	(uint32)PANIC(0x00D1),                                    // 0x00D1 (209) NtQueryEvent
+	(uint32)FUNC(&xboxkrnl::NtQueryEvent),                    // 0x00D1 (209)
 	(uint32)FUNC(&xboxkrnl::NtQueryFullAttributesFile),       // 0x00D2 (210)
 	(uint32)FUNC(&xboxkrnl::NtQueryInformationFile),          // 0x00D3 (211)
 	(uint32)PANIC(0x00D4),                                    // 0x00D4 (212) NtQueryIoCompletion
 	(uint32)PANIC(0x00D5),                                    // 0x00D5 (213) NtQueryMutant
-	(uint32)PANIC(0x00D6),                                    // 0x00D6 (214) NtQuerySemaphore
+	(uint32)FUNC(&xboxkrnl::NtQuerySemaphore),                // 0x00D6 (214)
 	(uint32)FUNC(&xboxkrnl::NtQuerySymbolicLinkObject),       // 0x00D7 (215)
 	(uint32)FUNC(&xboxkrnl::NtQueryTimer),                    // 0x00D8 (216)
 	(uint32)FUNC(&xboxkrnl::NtQueryVirtualMemory),            // 0x00D9 (217)
@@ -345,45 +345,45 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::RtlEnterCriticalSection),         // 0x0115 (277)
 	(uint32)PANIC(0x0116),                                    // 0x0116 (278) RtlEnterCriticalSectionAndRegion
 	(uint32)FUNC(&xboxkrnl::RtlEqualString),                  // 0x0117 (279)
-	(uint32)PANIC(0x0118),                                    // 0x0118 (280) RtlEqualUnicodeString
-	(uint32)PANIC(0x0119),                                    // 0x0119 (281) RtlExtendedIntegerMultiply
-	(uint32)PANIC(0x011A),                                    // 0x011A (282) RtlExtendedLargeIntegerDivide
-	(uint32)PANIC(0x011B),                                    // 0x011B (283) RtlExtendedMagicDivide
-	(uint32)PANIC(0x011C),                                    // 0x011C (284) RtlFillMemory
-	(uint32)PANIC(0x011D),                                    // 0x011D (285) RtlFillMemoryUlong
+	(uint32)FUNC(&xboxkrnl::RtlEqualUnicodeString),           // 0x0118 (280)
+	(uint32)FUNC(&xboxkrnl::RtlExtendedIntegerMultiply),      // 0x0119 (281)
+	(uint32)FUNC(&xboxkrnl::RtlExtendedLargeIntegerDivide),   // 0x011A (282)
+	(uint32)FUNC(&xboxkrnl::RtlExtendedMagicDivide),          // 0x011B (283)
+	(uint32)FUNC(&xboxkrnl::RtlFillMemory),                   // 0x011C (284)
+	(uint32)FUNC(&xboxkrnl::RtlFillMemoryUlong),              // 0x011D (285)
 	(uint32)FUNC(&xboxkrnl::RtlFreeAnsiString),               // 0x011E (286)
-	(uint32)PANIC(0x011F),                                    // 0x011F (287) RtlFreeUnicodeString
+	(uint32)FUNC(&xboxkrnl::RtlFreeUnicodeString),            // 0x011F (287)
 	(uint32)PANIC(0x0120),                                    // 0x0120 (288) RtlGetCallersAddress
 	(uint32)FUNC(&xboxkrnl::RtlInitAnsiString),               // 0x0121 (289)
 	(uint32)FUNC(&xboxkrnl::RtlInitUnicodeString),            // 0x0122 (290)
 	(uint32)FUNC(&xboxkrnl::RtlInitializeCriticalSection),    // 0x0123 (291)
-	(uint32)PANIC(0x0124),                                    // 0x0124 (292) RtlIntegerToChar
-	(uint32)PANIC(0x0125),                                    // 0x0125 (293) RtlIntegerToUnicodeString
+	(uint32)FUNC(&xboxkrnl::RtlIntegerToChar),                // 0x0124 (292)
+	(uint32)FUNC(&xboxkrnl::RtlIntegerToUnicodeString),       // 0x0125 (293)
 	(uint32)FUNC(&xboxkrnl::RtlLeaveCriticalSection),         // 0x0126 (294)
 	(uint32)PANIC(0x0127),                                    // 0x0127 (295) RtlLeaveCriticalSectionAndRegion
 	(uint32)FUNC(&xboxkrnl::RtlLowerChar),                    // 0x0128 (296)
-	(uint32)PANIC(0x0129),                                    // 0x0129 (297) RtlMapGenericMask
+	(uint32)FUNC(&xboxkrnl::RtlMapGenericMask),               // 0x0129 (297)
 	(uint32)FUNC(&xboxkrnl::RtlMoveMemory),                   // 0x012A (298)
-	(uint32)PANIC(0x012B),                                    // 0x012B (299) RtlMultiByteToUnicodeN
-	(uint32)PANIC(0x012C),                                    // 0x012C (300) RtlMultiByteToUnicodeSize
+	(uint32)FUNC(&xboxkrnl::RtlMultiByteToUnicodeN),          // 0x012B (299)
+	(uint32)FUNC(&xboxkrnl::RtlMultiByteToUnicodeSize),       // 0x012C (300)
 	(uint32)FUNC(&xboxkrnl::RtlNtStatusToDosError),           // 0x012D (301)
 	(uint32)PANIC(0x012E),                                    // 0x012E (302) RtlRaiseException
 	(uint32)PANIC(0x012F),                                    // 0x012F (303) RtlRaiseStatus
 	(uint32)FUNC(&xboxkrnl::RtlTimeFieldsToTime),             // 0x0130 (304)
 	(uint32)FUNC(&xboxkrnl::RtlTimeToTimeFields),             // 0x0131 (305)
 	(uint32)FUNC(&xboxkrnl::RtlTryEnterCriticalSection),      // 0x0132 (306)
-	(uint32)PANIC(0x0133),                                    // 0x0133 (307) RtlUlongByteSwap
+	(uint32)FUNC(&xboxkrnl::RtlUlongByteSwap),                // 0x0133 (307)
 	(uint32)FUNC(&xboxkrnl::RtlUnicodeStringToAnsiString),    // 0x0134 (308)
-	(uint32)PANIC(0x0135),                                    // 0x0135 (309) RtlUnicodeStringToInteger
-	(uint32)PANIC(0x0136),                                    // 0x0136 (310) RtlUnicodeToMultiByteN
-	(uint32)PANIC(0x0137),                                    // 0x0137 (311) RtlUnicodeToMultiByteSize
+	(uint32)FUNC(&xboxkrnl::RtlUnicodeStringToInteger),       // 0x0135 (309)
+	(uint32)FUNC(&xboxkrnl::RtlUnicodeToMultiByteN),          // 0x0136 (310)
+	(uint32)FUNC(&xboxkrnl::RtlUnicodeToMultiByteSize),       // 0x0137 (311)
 	(uint32)PANIC(0x0138),                                    // 0x0138 (312) RtlUnwind
-	(uint32)PANIC(0x0139),                                    // 0x0139 (313) RtlUpcaseUnicodeChar
-	(uint32)PANIC(0x013A),                                    // 0x013A (314) RtlUpcaseUnicodeString
-	(uint32)PANIC(0x013B),                                    // 0x013B (315) RtlUpcaseUnicodeToMultiByteN
-	(uint32)PANIC(0x013C),                                    // 0x013C (316) RtlUpperChar
-	(uint32)PANIC(0x013D),                                    // 0x013D (317) RtlUpperString
-	(uint32)PANIC(0x013E),                                    // 0x013E (318) RtlUshortByteSwap
+	(uint32)FUNC(&xboxkrnl::RtlUpcaseUnicodeChar),            // 0x0139 (313)
+	(uint32)FUNC(&xboxkrnl::RtlUpcaseUnicodeString),          // 0x013A (314)
+	(uint32)FUNC(&xboxkrnl::RtlUpcaseUnicodeToMultiByteN),    // 0x013B (315)
+	(uint32)FUNC(&xboxkrnl::RtlUpperChar),                    // 0x013C (316)
+	(uint32)FUNC(&xboxkrnl::RtlUpperString),                  // 0x013D (317)
+	(uint32)FUNC(&xboxkrnl::RtlUshortByteSwap),               // 0x013E (318)
 	(uint32)PANIC(0x013F),                                    // 0x013F (319) RtlWalkFrameChain
 	(uint32)FUNC(&xboxkrnl::RtlZeroMemory),                   // 0x0140 (320)
 	(uint32)VARIABLE(&xboxkrnl::XboxEEPROMKey),               // 0x0141 (321)

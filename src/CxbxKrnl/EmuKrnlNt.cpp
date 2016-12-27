@@ -934,6 +934,33 @@ XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributes
 }
 
 // ******************************************************************
+// * 0x00D1  - NtQueryEvent()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(209) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryEvent
+(
+	IN HANDLE EventHandle,
+	OUT PEVENT_BASIC_INFORMATION EventInformation
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(EventHandle)
+		LOG_FUNC_ARG_OUT(EventInformation)
+		LOG_FUNC_END;
+
+	NTSTATUS ret = NtDll::NtQueryEvent(
+		(NtDll::HANDLE)EventHandle,
+		/*EventInformationClass*/NtDll::EVENT_INFORMATION_CLASS::EventBasicInformation,
+		EventInformation,
+		sizeof(EVENT_BASIC_INFORMATION),
+		/*ReturnLength=*/nullptr);
+
+	if (ret != STATUS_SUCCESS)
+		EmuWarning("NtQueryEvent failed! (%s)", NtStatusToString(ret));
+
+	RETURN(ret);
+}
+
+// ******************************************************************
 // * 0x00D3 - NtQueryInformationFile()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFile
@@ -998,6 +1025,33 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 	// in case the Xbox program decides to follow the same procedure above
 	if (convRet == STATUS_BUFFER_OVERFLOW)
 		return convRet;
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x00D6 - NtQuerySemaphore()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(214) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySemaphore
+(
+	IN HANDLE SemaphoreHandle,
+	OUT PSEMAPHORE_BASIC_INFORMATION SemaphoreInformation
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(SemaphoreHandle)
+		LOG_FUNC_ARG_OUT(SemaphoreInformation)
+		LOG_FUNC_END;
+
+	NTSTATUS ret = NtDll::NtQuerySemaphore(
+		(NtDll::HANDLE)SemaphoreHandle,
+		/*SemaphoreInformationClass*/NtDll::SEMAPHORE_INFORMATION_CLASS::SemaphoreBasicInformation,
+		SemaphoreInformation,
+		sizeof(SEMAPHORE_BASIC_INFORMATION),
+		/*ReturnLength=*/nullptr);
+
+	if (ret != STATUS_SUCCESS)
+		EmuWarning("NtQuerySemaphore failed! (%s)", NtStatusToString(ret));
 
 	RETURN(ret);
 }
