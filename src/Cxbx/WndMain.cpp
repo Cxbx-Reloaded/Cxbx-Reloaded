@@ -47,7 +47,17 @@
 FILE _iob[] = { *stdin, *stdout, *stderr };
 extern "C" FILE * __cdecl __iob_func(void) { return _iob; }
 
-WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m_Xbe(0), m_bXbeChanged(false), m_bCanStart(true), m_hwndChild(NULL), m_KrnlDebug(DM_NONE), m_CxbxDebug(DM_NONE), m_dwRecentXbe(0)
+WndMain::WndMain(HINSTANCE x_hInstance) : 
+	Wnd(x_hInstance), 
+	m_bCreated(false), 
+	m_Xbe(0), 
+	m_bXbeChanged(false), 
+	m_bCanStart(true), 
+	m_hwndChild(NULL), 
+	m_KrnlDebug(DM_NONE), 
+	m_CxbxDebug(DM_NONE), 
+	m_FlagsLLE(0),
+	m_dwRecentXbe(0)
 {
     // initialize members
     {
@@ -83,10 +93,13 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m
 
         if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
         {
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_CxbxDebug, &dwSize);
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			RegQueryValueEx(hKey, "LLEFLAGS", NULL, &dwType, (PBYTE)&m_FlagsLLE, &dwSize);
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_CxbxDebug, &dwSize);
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegQueryValueEx(hKey, "KrnlDebug", NULL, &dwType, (PBYTE)&m_KrnlDebug, &dwSize);
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
@@ -143,7 +156,10 @@ WndMain::~WndMain()
                 free(m_szRecentXbe[v]);
             }
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			RegSetValueEx(hKey, "LLEFLAGS", 0, dwType, (PBYTE)&m_FlagsLLE, dwSize);
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegSetValueEx(hKey, "CxbxDebug", 0, dwType, (PBYTE)&m_CxbxDebug, dwSize);
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
