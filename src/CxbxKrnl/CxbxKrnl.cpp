@@ -461,6 +461,12 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		strncpy_s((PSTR)DummyKernel->SectionHeader.Name, 8, "DONGS", 8);
 	}
 
+	// Read which components need to be LLE'ed :
+	int CxbxLLE_Flags;
+	g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
+	bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
+	bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
+
 	// Initialize devices :
 	char szBuffer[MAX_PATH];
 	SHGetSpecialFolderPath(NULL, szBuffer, CSIDL_APPDATA, TRUE);
