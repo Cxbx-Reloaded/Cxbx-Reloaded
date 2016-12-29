@@ -61,6 +61,10 @@ static bool bCacheInp = false;
 static std::vector<void *> vCacheInp;
 static std::vector<void*>::const_iterator vCacheInpIter;
 
+// Set these for experimental APU(sound) / GPU (graphics) LLE
+bool bLLE_APU = false;
+bool bLLE_GPU = false;
+
 void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHeader)
 {
     Xbe::Certificate *pCertificate = (Xbe::Certificate*)pXbeHeader->dwCertificateAddr;
@@ -161,10 +165,6 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
 
         uint32 LastUnResolvedXRefs = UnResolvedXRefs+1;
         uint32 OrigUnResolvedXRefs = UnResolvedXRefs;
-
-		// Set these for experimental APU(sound) / GPU (graphics) LLE
-		bool bLLE_APU = false;
-		bool bLLE_GPU = false;
 
 		for(int p=0;UnResolvedXRefs < LastUnResolvedXRefs;p++)
         {

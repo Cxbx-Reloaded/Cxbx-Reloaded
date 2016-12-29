@@ -47,7 +47,17 @@
 FILE _iob[] = { *stdin, *stdout, *stderr };
 extern "C" FILE * __cdecl __iob_func(void) { return _iob; }
 
-WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m_Xbe(0), m_bXbeChanged(false), m_bCanStart(true), m_hwndChild(NULL), m_KrnlDebug(DM_NONE), m_CxbxDebug(DM_NONE), m_dwRecentXbe(0)
+WndMain::WndMain(HINSTANCE x_hInstance) : 
+	Wnd(x_hInstance), 
+	m_bCreated(false), 
+	m_Xbe(0), 
+	m_bXbeChanged(false), 
+	m_bCanStart(true), 
+	m_hwndChild(NULL), 
+	m_KrnlDebug(DM_NONE), 
+	m_CxbxDebug(DM_NONE), 
+	m_FlagsLLE(0),
+	m_dwRecentXbe(0)
 {
     // initialize members
     {
@@ -83,10 +93,13 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m
 
         if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
         {
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_CxbxDebug, &dwSize);
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			RegQueryValueEx(hKey, "LLEFLAGS", NULL, &dwType, (PBYTE)&m_FlagsLLE, &dwSize);
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_CxbxDebug, &dwSize);
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegQueryValueEx(hKey, "KrnlDebug", NULL, &dwType, (PBYTE)&m_KrnlDebug, &dwSize);
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
@@ -143,7 +156,10 @@ WndMain::~WndMain()
                 free(m_szRecentXbe[v]);
             }
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			RegSetValueEx(hKey, "LLEFLAGS", 0, dwType, (PBYTE)&m_FlagsLLE, dwSize);
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegSetValueEx(hKey, "CxbxDebug", 0, dwType, (PBYTE)&m_CxbxDebug, dwSize);
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
@@ -947,7 +963,23 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
                 break;
 
-                case ID_EMULATION_START:
+				case ID_EMULATION_LLE_APU:
+				{
+					m_FlagsLLE = m_FlagsLLE ^ LLE_APU;
+
+					RefreshMenus();
+				}
+				break;
+
+				case ID_EMULATION_LLE_GPU:
+				{
+					m_FlagsLLE = m_FlagsLLE ^ LLE_GPU;
+
+					RefreshMenus();
+				}
+				break;
+
+				case ID_EMULATION_START:
                     StartEmulation(hwnd);
                     break;
 
@@ -1143,43 +1175,55 @@ void WndMain::RefreshMenus()
         }
 
         // view menu
-        {
-            HMENU view_menu = GetSubMenu(menu, 2);
-            HMENU emul_debg = GetSubMenu(view_menu, 0);
-            HMENU emul_krnl = GetSubMenu(view_menu, 1);
+		{
+			HMENU view_menu = GetSubMenu(menu, 2);
+			HMENU emul_debg = GetSubMenu(view_menu, 0);
+			HMENU emul_krnl = GetSubMenu(view_menu, 1);
 
-            if(m_KrnlDebug == DM_CONSOLE)
-            {
-                CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_CHECKED);
-                CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_UNCHECKED);
-            }
-            else if(m_KrnlDebug == DM_FILE)
-            {
-                CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_UNCHECKED);
-                CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_CHECKED);
-            }
-            else
-            {
-                CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_UNCHECKED);
-                CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_UNCHECKED);
-            }
+			if (m_KrnlDebug == DM_CONSOLE)
+			{
+				CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_CHECKED);
+				CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_UNCHECKED);
+			}
+			else if (m_KrnlDebug == DM_FILE)
+			{
+				CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_UNCHECKED);
+				CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_CHECKED);
+			}
+			else
+			{
+				CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_UNCHECKED);
+				CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_UNCHECKED);
+			}
 
-            if(m_CxbxDebug == DM_CONSOLE)
-            {
-                CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_CHECKED);
-                CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
-            }
-            else if(m_CxbxDebug == DM_FILE)
-            {
-                CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_UNCHECKED);
-                CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_CHECKED);
-            }
-            else
-            {
-                CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_UNCHECKED);
-                CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
-            }
-        }
+			if (m_CxbxDebug == DM_CONSOLE)
+			{
+				CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_CHECKED);
+				CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
+			}
+			else if (m_CxbxDebug == DM_FILE)
+			{
+				CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_UNCHECKED);
+				CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_CHECKED);
+			}
+			else
+			{
+				CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_UNCHECKED);
+				CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
+			}
+		}
+
+		// settings menu
+		{
+			HMENU settings_menu = GetSubMenu(menu, 3);
+			HMENU lle_submenu = GetSubMenu(settings_menu, 4);
+
+			UINT chk_flag = (m_FlagsLLE & LLE_APU) ? MF_CHECKED : MF_UNCHECKED;
+			CheckMenuItem(lle_submenu, ID_EMULATION_LLE_APU, chk_flag);
+
+			chk_flag = (m_FlagsLLE & LLE_GPU) ? MF_CHECKED : MF_UNCHECKED;
+			CheckMenuItem(lle_submenu, ID_EMULATION_LLE_GPU, chk_flag);
+		}
 
         // emulation menu
         {
@@ -1454,7 +1498,10 @@ void WndMain::StartEmulation(HWND hwndParent)
     // register xbe path with CxbxKrnl.dll
     g_EmuShared->SetXbePath(m_Xbe->m_szPath);
 
-    // shell exe
+	// register LLE flags with CxbxKrnl.dll
+	g_EmuShared->SetFlagsLLE(&m_FlagsLLE);
+
+	// shell exe
     {
         GetModuleFileName(NULL, szBuffer, MAX_PATH);
 
