@@ -94,6 +94,8 @@ XBSYSAPI EXPORTNUM(243) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByName
 
 	NTSTATUS ret = STATUS_OBJECT_PATH_NOT_FOUND;
 
+	// TODO : Call CxbxObjectAttributesToNT on ObjectAttributes?
+
 	if (ObjectType == &xboxkrnl::ObSymbolicLinkObjectType)
 	{
 		EmuNtSymbolicLinkObject* symbolicLinkObject =

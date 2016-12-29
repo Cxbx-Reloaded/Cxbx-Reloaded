@@ -324,6 +324,15 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 
 	NtObjAttr.RootDirectory = 0;
 
+	// TODO : Replace above with :
+	//
+	//	// initialize object attributes
+	//	NativeObjectAttributes nativeObjectAttributes;
+	//	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, /*var*/nativeObjectAttributes);
+
+	//	if (ret == STATUS_SUCCESS)
+	//	{
+
 	// TODO : Is this the correct ACCESS_MASK? :
 	const ACCESS_MASK DesiredAccess = MUTANT_ALL_ACCESS;
 
@@ -363,6 +372,8 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 	// TODO : Is this the correct ACCESS_MASK? :
 	const ACCESS_MASK DesiredAccess = SEMAPHORE_ALL_ACCESS;
 
+	// TODO : Call CxbxObjectAttributesToNT on ObjectAttributes?
+
 	// redirect to Win2k/XP
 	NTSTATUS ret = NtDll::NtCreateSemaphore(
 		/*OUT*/SemaphoreHandle,
@@ -397,6 +408,8 @@ XBSYSAPI EXPORTNUM(194) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateTimer
 
 	// TODO : Is this the correct ACCESS_MASK? :
 	const ACCESS_MASK DesiredAccess = TIMER_ALL_ACCESS;
+
+	// TODO : Call CxbxObjectAttributesToNT on ObjectAttributes?
 
 	// redirect to Windows NT
 	// TODO : Untested
