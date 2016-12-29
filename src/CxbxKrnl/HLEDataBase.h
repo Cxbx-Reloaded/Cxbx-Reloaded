@@ -82,12 +82,23 @@
 // ******************************************************************
 extern "C" const char *szHLELastCompileTime;
 
+extern const char *Lib_D3D8;
+extern const char *Lib_D3D8LTCG;
+extern const char *Lib_D3DX8;
+extern const char *Lib_DSOUND;
+extern const char *Lib_XACTENG;
+extern const char *Lib_XAPILIB;
+extern const char *Lib_XGRAPHC;
+extern const char *Lib_XNETS;
+extern const char *Lib_XONLINE; // TODO : Typo for XONLINES?
+extern const char *Lib_XONLINES;
+
 // ******************************************************************
 // * HLEDataBase
 // ******************************************************************
 extern struct HLEData
 {
-    char       *Library;
+    const char *Library;
 
     uint16      MajorVersion;
     uint16      MinorVersion;
