@@ -105,7 +105,7 @@ XBSYSAPI EXPORTNUM(23) ULONG NTAPI ExQueryPoolBlockSize
 // ******************************************************************
 XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI ExQueryNonVolatileSetting
 (
-    IN  EEPROM_INDEX        ValueIndex,
+    IN  XC_VALUE_INDEX      ValueIndex,
     OUT DWORD              *Type,
     OUT PUCHAR              Value,
     IN  SIZE_T              ValueLength,

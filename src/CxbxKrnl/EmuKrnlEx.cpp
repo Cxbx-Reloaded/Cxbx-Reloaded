@@ -284,7 +284,7 @@ XBSYSAPI EXPORTNUM(23) xboxkrnl::ULONG NTAPI xboxkrnl::ExQueryPoolBlockSize
 // ******************************************************************
 XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
 (
-	IN  EEPROM_INDEX        ValueIndex,
+	IN  XC_VALUE_INDEX      ValueIndex,
 	OUT DWORD              *Type,
 	OUT PUCHAR              Value,
 	IN  SIZE_T              ValueLength,
@@ -308,7 +308,7 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 	switch (ValueIndex)
 	{
 		// Factory Game Region
-	case EEPROM_FACTORY_GAME_REGION:
+	case XC_FACTORY_GAME_REGION:
 	{
 		// TODO: configurable region or autodetect of some sort
 		if (ResultLength != 0)
@@ -322,7 +322,7 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 	break;
 
 	// Factory AV Region
-	case EEPROM_FACTORY_AV_REGION:
+	case XC_FACTORY_AV_REGION:
 	{
 		// TODO: configurable region or autodetect of some sort
 		if (ResultLength != 0)
@@ -334,7 +334,7 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 	break;
 
 	// Language
-	case EEPROM_LANGUAGE:
+	case XC_LANGUAGE:
 	{
 		// TODO: configurable language or autodetect of some sort
 		if (ResultLength != 0)
@@ -346,7 +346,7 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 	break;
 
 	// Video Flag
-	case EEPROM_VIDEO:
+	case XC_VIDEO:
 	{
 		// TODO: configurable video flags or autodetect of some sort
 		if (ResultLength != 0)
@@ -358,7 +358,7 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 	break;
 
 	// Audio Flags
-	case EEPROM_AUDIO:
+	case XC_AUDIO:
 	{
 		if (ResultLength != 0)
 			*ResultLength = 0x04;
@@ -368,7 +368,17 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 	}
 	break;
 
-	case EEPROM_MISC:
+	case XC_P_CONTROL_GAMES: // Zapper queries this
+	{
+		*Type = 0;
+		*Value = 0; // = XC_PC_ESRB_ALL;
+
+		if (ResultLength != 0) 
+			*ResultLength = 0x04;
+	}
+	break;
+
+	case XC_MISC:
 	{
 		if (ResultLength != 0)
 			*ResultLength = 0x04;
@@ -378,7 +388,7 @@ XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSett
 	}
 	break;
 
-	case EEPROM_MAX_OS:
+	case XC_MAX_OS:
 	{
 		// This is called to return a complete XBOX_USER_SETTINGS structure
 		//

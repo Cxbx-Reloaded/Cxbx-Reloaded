@@ -1686,35 +1686,43 @@ typedef struct _KPCR
 KPCR, *PKPCR;
 
 // ******************************************************************
-// * EEPROM_INDEX
+// * XC_VALUE_INDEX
 // ******************************************************************
-typedef enum _EEPROM_INDEX
+typedef enum _XC_VALUE_INDEX
 {
-    EEPROM_LANGUAGE				= 0x7,
-    EEPROM_VIDEO				= 0x8,
-    EEPROM_AUDIO				= 0x9,
-    EEPROM_P_CONTROL_GAMES		= 0xA,
-    EEPROM_P_CONTROL_PASSWORD	= 0xB,
-    EEPROM_P_CONTROL_MOVIES		= 0xC,
-    EEPROM_ONLINE_IP_ADDRESS	= 0xD,
-    EEPROM_ONLINE_DNS_ADDRESS	= 0xE,
-    EEPROM_ONLINE_DEFAULT_GATEWAY_ADDRESS = 0xF,
-    EEPROM_ONLINE_SUBNET_ADDRESS= 0x10,
-    EEPROM_MISC					= 0x11,
-    EEPROM_DVD_REGION			= 0x12,
-    EEPROM_MAX_OS				= 0xFF,
+	XC_TIMEZONE_BIAS         = 0,
+	XC_TZ_STD_NAME           = 1,
+	XC_TZ_STD_DATE           = 2,
+	XC_TZ_STD_BIAS           = 3,
+	XC_TZ_DLT_NAME           = 4,
+	XC_TZ_DLT_DATE           = 5,
+	XC_TZ_DLT_BIAS           = 6,
+	XC_LANGUAGE				 = 7,
+    XC_VIDEO				 = 8,
+    XC_AUDIO				 = 9,
+    XC_P_CONTROL_GAMES		 = 0xA,
+    XC_P_CONTROL_PASSWORD	 = 0xB,
+    XC_P_CONTROL_MOVIES		 = 0xC,
+    XC_ONLINE_IP_ADDRESS	 = 0xD,
+    XC_ONLINE_DNS_ADDRESS	 = 0xE,
+    XC_ONLINE_DEFAULT_GATEWAY_ADDRESS = 0xF,
+    XC_ONLINE_SUBNET_ADDRESS = 0x10,
+    XC_MISC					 = 0x11,
+    XC_DVD_REGION			 = 0x12,
+    XC_MAX_OS				 = 0xFF,
     // Break
-    EEPROM_FACTORY_SERIAL_NUMBER= 0x100,
-    EEPROM_FACTORY_ETHERNET_ADDR= 0x101,
-    EEPROM_FACTORY_ONLINE_KEY	= 0x102,
-    EEPROM_FACTORY_AV_REGION	= 0x103,
-    EEPROM_FACTORY_GAME_REGION	= 0x104,
-    EEPROM_MAX_FACTORY			= 0x1FF,
+	XC_FACTORY_START_INDEX   = 0x100,
+	XC_FACTORY_SERIAL_NUMBER = XC_FACTORY_START_INDEX,
+    XC_FACTORY_ETHERNET_ADDR = 0x101,
+    XC_FACTORY_ONLINE_KEY	 = 0x102,
+    XC_FACTORY_AV_REGION	 = 0x103,
+    XC_FACTORY_GAME_REGION	 = 0x104,
+    XC_MAX_FACTORY			 = 0x1FF,
     // Break
-    EEPROM_ENCRYPTED_SECTION	= 0xFFFE,
-    EEPROM_MAX_ALL				= 0xFFFF
+    XC_ENCRYPTED_SECTION	 = 0xFFFE,
+    XC_MAX_ALL				 = 0xFFFF
 }
-EEPROM_INDEX, *PEEPROM_INDEX;
+XC_VALUE_INDEX, *PXC_VALUE_INDEX;
 
 // ******************************************************************
 // * XBOX_HARDWARE_INFO
