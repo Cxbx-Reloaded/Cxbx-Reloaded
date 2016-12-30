@@ -34,7 +34,11 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
-#include <Zydis.hpp>
+#include "distorm.h"
+#include "mnemonics.h"
+
+// Link the library into our project.
+#pragma comment(lib, "../../distorm.lib")
 
 #include "CxbxKrnl.h"
 #include "Emu.h"
@@ -84,32 +88,32 @@ void EmuX86_Write32(uint32_t addr, uint32_t value)
 	EmuWarning("EmuX86_Write32: Unknown Write Address %08X (value %08X)", addr, value);
 }
 
-inline DWORD* EmuX86_GetRegisterPointer(LPEXCEPTION_POINTERS e, Zydis::Register reg)
+inline DWORD* EmuX86_GetRegisterPointer(LPEXCEPTION_POINTERS e, uint8_t reg)
 {
 	switch (reg) {
-		case Zydis::Register::AL: case Zydis::Register::AH:	case Zydis::Register::AX: case Zydis::Register::EAX:
+		case R_AL: case R_AH:	case R_AX: case R_EAX:
 			return &e->ContextRecord->Eax;
-		case Zydis::Register::BL: case Zydis::Register::BH:	case Zydis::Register::BX: case Zydis::Register::EBX:
+		case R_BL: case R_BH:	case R_BX: case R_EBX:
 			return &e->ContextRecord->Ebx;
-		case Zydis::Register::CL: case Zydis::Register::CH:	case Zydis::Register::CX: case Zydis::Register::ECX:
+		case R_CL: case R_CH:	case R_CX: case R_ECX:
 			return &e->ContextRecord->Ecx;
-		case Zydis::Register::DL: case Zydis::Register::DH: case Zydis::Register::DX: case Zydis::Register::EDX:
+		case R_DL: case R_DH: case R_DX: case R_EDX:
 			return &e->ContextRecord->Edx;
-		case Zydis::Register::EDI:
+		case R_EDI:
 			return &e->ContextRecord->Edi;
-		case Zydis::Register::ESI:
+		case R_ESI:
 			return &e->ContextRecord->Esi;
-		case Zydis::Register::EBP:
+		case R_EBP:
 			return &e->ContextRecord->Ebp;
 	}
 
 	return nullptr;
 }
 
-inline bool EmuX86_GetRegisterValue(uint32_t* output, LPEXCEPTION_POINTERS e, Zydis::Register reg)
+inline bool EmuX86_GetRegisterValue(uint32_t* output, LPEXCEPTION_POINTERS e, uint8_t reg)
 {
 	uint32_t value = 0;
-	if (reg != Zydis::Register::NONE)
+	if (reg != R_NONE)
 	{
 		DWORD* regptr = EmuX86_GetRegisterPointer(e, reg);
 		if (regptr == nullptr)
@@ -122,43 +126,41 @@ inline bool EmuX86_GetRegisterValue(uint32_t* output, LPEXCEPTION_POINTERS e, Zy
 	return true;
 }
 
-inline bool EmuX86_DecodeMemoryOperand(uint32_t* output, LPEXCEPTION_POINTERS e, Zydis::OperandInfo& operand)
+inline bool EmuX86_DecodeMemoryOperand(uint32_t* output, LPEXCEPTION_POINTERS e, _DInst& info, int operand)
 {
 	uint32_t base = 0;
 	uint32_t index = 0;	
-	if (!EmuX86_GetRegisterValue(&base, e, operand.base) || !EmuX86_GetRegisterValue(&index, e, operand.base)) {
+	if (!EmuX86_GetRegisterValue(&base, e, info.ops[operand].index) || !EmuX86_GetRegisterValue(&index, e, info.ops[operand].index)) {
 		return false;
 	}
 
-	*output = base + (index * operand.scale) + operand.lval.udword;
+	*output = base + (index * info.scale) + info.imm.dword;
 	return true;
 }
 
-bool EmuX86_ZydisReadValueFromSource(LPEXCEPTION_POINTERS e, Zydis::OperandInfo& operand, OUT uint32_t *value)
+bool EmuX86_ReadValueFromSource(LPEXCEPTION_POINTERS e, _DInst& info, int operand, OUT uint32_t *value)
 {
-	switch (operand.type) {
-	// TODO : case Zydis::OperandType::CONSTANT:
-	// TODO : case Zydis::OperandType::POINTER:
-	// TODO : case Zydis::OperandType::REL_IMMEDIATE:
-	case Zydis::OperandType::IMMEDIATE:
+	switch (info.ops[operand].type) {
+	// TODO : other operand.type
+	case O_IMM:
 	{
-		*value = operand.lval.udword;
+		*value = info.imm.dword;
 		break;
 	}
-	case Zydis::OperandType::REGISTER:
+	case O_REG:
 	{
-		if (!EmuX86_GetRegisterValue(value, e, operand.base))
+		if (!EmuX86_GetRegisterValue(value, e, info.ops[operand].index))
 			return false;
 
 		break;
 	}
-	case Zydis::OperandType::MEMORY:
+	case O_MEM:
 	{
 		uint32_t srcAddr = 0;
-		if (!EmuX86_DecodeMemoryOperand(&srcAddr, e, operand))
+		if (!EmuX86_DecodeMemoryOperand(&srcAddr, e, info, operand))
 			return false;
 
-		switch (operand.size) {
+		switch (info.ops[operand].size) {
 		case 8:
 			*value = EmuX86_Read8(srcAddr);
 			break;
@@ -180,16 +182,16 @@ bool EmuX86_ZydisReadValueFromSource(LPEXCEPTION_POINTERS e, Zydis::OperandInfo&
 	return true;
 }
 
-bool EmuX86_ZydisWriteValueToDestination(LPEXCEPTION_POINTERS e, Zydis::OperandInfo& operand, uint32_t value)
+bool EmuX86_WriteValueToDestination(LPEXCEPTION_POINTERS e, _DInst& info, int operand, uint32_t value)
 {
-	switch (operand.type) {
-	case Zydis::OperandType::REGISTER:
+	switch (info.ops[operand].type) {
+	case O_REG:
 	{
-		DWORD* pDstReg = EmuX86_GetRegisterPointer(e, operand.base);
+		DWORD* pDstReg = EmuX86_GetRegisterPointer(e, info.ops[operand].index);
 		if (pDstReg == nullptr)
 			return false;
 
-		switch (operand.size) {
+		switch (info.ops[operand].size) {
 		case 8:
 			*((uint8_t*)pDstReg + 3) = value & 0xFF;
 			break;
@@ -204,13 +206,13 @@ bool EmuX86_ZydisWriteValueToDestination(LPEXCEPTION_POINTERS e, Zydis::OperandI
 		}
 		break;
 	}
-	case Zydis::OperandType::MEMORY:
+	case O_MEM:
 	{
 		uint32_t destAddr = 0;
-		if (!EmuX86_DecodeMemoryOperand(&destAddr, e, operand))
+		if (!EmuX86_DecodeMemoryOperand(&destAddr, e, info, operand))
 			return false;
 
-		switch (operand.size) {
+		switch (info.ops[operand].size) {
 		case 8:
 			EmuX86_Write8(destAddr, value & 0xFF);
 			break;
@@ -232,17 +234,17 @@ bool EmuX86_ZydisWriteValueToDestination(LPEXCEPTION_POINTERS e, Zydis::OperandI
 	return true;
 }
 
-bool EmuX86_MOV(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
+bool EmuX86_MOV(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// TODO : Test this refactoring
 	
 	// MOV reads value from source :
 	uint32_t value = 0;
-	if (!EmuX86_ZydisReadValueFromSource(e, info.operand[1], &value))
+	if (!EmuX86_ReadValueFromSource(e, info, 1, &value))
 		return false;
 
 	// MOV writes value to destination :
-	if (!EmuX86_ZydisWriteValueToDestination(e, info.operand[0], value))
+	if (!EmuX86_WriteValueToDestination(e, info, 0, value))
 		return false;
 
 	// Note : MOV instructions never update CPU flags
@@ -255,16 +257,16 @@ inline void EmuX86_SetFlag(LPEXCEPTION_POINTERS e, int flag, int value)
 	e->ContextRecord->EFlags ^= (-value ^ e->ContextRecord->EFlags) & (1 << flag);
 }
 
-bool EmuX86_TEST(LPEXCEPTION_POINTERS e, Zydis::InstructionInfo& info)
+bool EmuX86_TEST(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// TEST reads first value :
 	uint32_t result = 0;
-	if (!EmuX86_ZydisReadValueFromSource(e, info.operand[0], &result))
+	if (!EmuX86_ReadValueFromSource(e, info, 0, &result))
 		return false;
 
 	// TEST reads second value :
 	uint32_t value = 0;
-	if (!EmuX86_ZydisReadValueFromSource(e, info.operand[1], &value))
+	if (!EmuX86_ReadValueFromSource(e, info, 1, &value))
 		return false;
 
 	// TEST performs bitwise AND between first and second value :
@@ -295,50 +297,48 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 		return false;
 	}
 
-	Zydis::MemoryInput input((uint8_t*)e->ContextRecord->Eip, XBOX_MEMORY_SIZE - e->ContextRecord->Eip);
-	Zydis::InstructionInfo info;
-	Zydis::InstructionDecoder decoder;
-	decoder.setDisassemblerMode(Zydis::DisassemblerMode::M32BIT);
-	decoder.setDataSource(&input);
-	decoder.setInstructionPointer(e->ContextRecord->Eip);
-	Zydis::IntelInstructionFormatter formatter;
+	// Decoded instruction information.
+	_DInst info;
+	unsigned int decodedInstructionsCount = 0;
 
-	// Decode a single instruction
-	decoder.decodeInstruction(info);
-	
-	if (info.flags & Zydis::IF_ERROR_MASK)
+	_CodeInfo ci;
+	ci.code = (uint8_t*)e->ContextRecord->Eip;
+	ci.codeLen = 20;
+	ci.codeOffset = 0;
+	ci.dt = (_DecodeType)Decode32Bits;
+	ci.features = DF_NONE;
+	if (DECRES_SUCCESS != distorm_decompose(&ci, &info, 1, &decodedInstructionsCount))
 	{
 		EmuWarning("EmuX86: Error decoding opcode at 0x%08X\n", e->ContextRecord->Eip);
 	}
 	else
 	{
-		switch (info.mnemonic) 
-		{	
-			case Zydis::InstructionMnemonic::MOV:
-				if (EmuX86_MOV(e, info)) {
-					break;
-				}
-
-				goto unimplemented_opcode;
-			case Zydis::InstructionMnemonic::TEST:
-				if (EmuX86_TEST(e, info)) {
-					break;
-				}
-
-				goto unimplemented_opcode;
-			case Zydis::InstructionMnemonic::WBINVD:
-				// We can safely ignore this
+		switch (info.opcode)
+		{
+		case I_MOV:
+			if (EmuX86_MOV(e, info)) {
 				break;
+			}
+
+			goto unimplemented_opcode;
+		case I_TEST:
+			if (EmuX86_TEST(e, info)) {
+				break;
+			}
+
+			goto unimplemented_opcode;
+		case I_WBINVD:
+			// We can safely ignore this
+			break;
 		}
 
-		e->ContextRecord->Eip += info.length;
+		e->ContextRecord->Eip += info.size;
 		return true;
 
 unimplemented_opcode:
-		EmuWarning("EmuX86: 0x%08X: %s Not Implemented\n", e->ContextRecord->Eip, formatter.formatInstruction(info));
-		e->ContextRecord->Eip += info.length;
-		return false;
+		EmuWarning("EmuX86: 0x%08X: Not Implemented\n", e->ContextRecord->Eip);	// TODO : format decodedInstructions[0]
+		e->ContextRecord->Eip += info.size;
 	}
-
+	
 	return false;
 }
