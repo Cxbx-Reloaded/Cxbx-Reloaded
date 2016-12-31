@@ -82,6 +82,8 @@ CXBXKRNL_API void CxbxKrnlPanic();
 /*! empty function */
 CXBXKRNL_API void CxbxKrnlNoFunc();
 
+CXBXKRNL_API void CxbxInitPerformanceCounters(); // Implemented in EmuKrnlKe.cpp
+
 /*! kernel thunk table */
 extern CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379];
 
