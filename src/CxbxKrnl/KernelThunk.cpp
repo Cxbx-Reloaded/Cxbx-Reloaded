@@ -187,7 +187,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::KeInsertQueueDpc),                // 0x0077 (119)
 	(uint32)VARIABLE(0x0078),                                 // 0x0078 (120) KeInterruptTime (Set by ConnectWindowsTimersToThunkTable)
 	(uint32)PANIC(0x0079),                                    // 0x0079 (121) KeIsExecutingDpc
-	(uint32)PANIC(0x007A),                                    // 0x007A (122) KeLeaveCriticalRegion
+	(uint32)FUNC(&xboxkrnl::KeLeaveCriticalRegion),           // 0x007A (122)
 	(uint32)PANIC(0x007B),                                    // 0x007B (123) KePulseEvent
 	(uint32)PANIC(0x007C),                                    // 0x007C (124) KeQueryBasePriorityThread
 	(uint32)FUNC(&xboxkrnl::KeQueryInterruptTime),            // 0x007D (125)

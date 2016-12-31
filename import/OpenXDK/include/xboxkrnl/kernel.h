@@ -154,7 +154,15 @@ XBSYSAPI EXPORTNUM(119) BOOLEAN NTAPI KeInsertQueueDpc
 
 XBSYSAPI VOID *KeInterruptTime;
 XBSYSAPI VOID *KeIsExecutingDpc;
-XBSYSAPI VOID *KeLeaveCriticalRegion;
+
+// ******************************************************************
+// * 0x007A - KeLeaveCriticalRegion()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(122) VOID NTAPI KeLeaveCriticalRegion
+(
+	VOID
+);
+
 XBSYSAPI VOID *KePulseEvent;
 XBSYSAPI VOID *KeQueryBasePriorityThread;
 

@@ -387,6 +387,21 @@ XBSYSAPI EXPORTNUM(119) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertQueueDpc
 // XBSYSAPI EXPORTNUM(120) xboxkrnl::PKSYSTEM_TIME xboxkrnl::KeInterruptTime; // Used for KernelThunk[120]
 
 // ******************************************************************
+// * 0x007A - KeLeaveCriticalRegion()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(122) xboxkrnl::VOID NTAPI xboxkrnl::KeLeaveCriticalRegion
+(
+	VOID
+)
+{
+	LOG_FUNC();
+
+	// TODO : Enable kernel APCs
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
 // * 0x007D - KeQueryInterruptTime()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(125) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryInterruptTime(void)
