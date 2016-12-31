@@ -96,12 +96,6 @@ const char CxbxDefaultXbeDriveLetter = 'D';
 
 int CxbxDefaultXbeDriveIndex = -1;
 EmuNtSymbolicLinkObject* NtSymbolicLinkObjects[26];
-
-struct XboxDevice {
-	std::string XboxDevicePath;
-	std::string HostDevicePath;
-	HANDLE HostRootHandle;
-};
 std::vector<XboxDevice> Devices;
 
 EmuHandle::EmuHandle(EmuNtObject* ntObject)
@@ -353,6 +347,24 @@ NTSTATUS CxbxObjectAttributesToNT(
 	return result;
 }
 
+int CxbxDeviceIndexByDevicePath(const char *XboxDevicePath)
+{
+	for (size_t i = 0; i < Devices.size(); i++)
+		if (_strnicmp(XboxDevicePath, Devices[i].XboxDevicePath.c_str(), Devices[i].XboxDevicePath.length()) == 0)
+			return(i);
+
+	return -1;
+}
+
+XboxDevice *CxbxDeviceByDevicePath(const std::string XboxDevicePath)
+{
+	int DeviceIndex = CxbxDeviceIndexByDevicePath(XboxDevicePath.c_str());
+	if (DeviceIndex >= 0)
+		return &Devices[DeviceIndex];
+
+	return nullptr;
+}
+
 int CxbxRegisterDeviceHostPath(std::string XboxDevicePath, std::string HostDevicePath, bool IsFile)
 {
 	int result = -1;
@@ -426,16 +438,7 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 			if (IsHostBasedPath)
 				DeviceIndex = CxbxDefaultXbeDriveIndex;
 			else
-			{
-				DeviceIndex = -1;
-				for (size_t i = 0; i < Devices.size(); i++) {
-					if (_strnicmp(aFullPath.c_str(), Devices[i].XboxDevicePath.c_str(), Devices[i].XboxDevicePath.length()) == 0)
-					{
-						DeviceIndex = i;
-						break;
-					}
-				}
-			}
+				DeviceIndex = CxbxDeviceIndexByDevicePath(aFullPath.c_str());
 
 			if (DeviceIndex >= 0)
 			{
