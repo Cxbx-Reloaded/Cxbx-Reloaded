@@ -85,6 +85,7 @@ IMPORT(NtQueryDirectoryFile);
 IMPORT(NtQueryEvent);
 IMPORT(NtQueryFullAttributesFile);
 IMPORT(NtQueryInformationFile);
+IMPORT(NtQueryMutant);
 IMPORT(NtQuerySemaphore);
 IMPORT(NtQueryTimer);
 IMPORT(NtQueryVirtualMemory);

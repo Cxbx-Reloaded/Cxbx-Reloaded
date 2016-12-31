@@ -1043,6 +1043,33 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 }
 
 // ******************************************************************
+// * 0x00D5 - NtQueryMutant()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(213) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryMutant
+(
+	IN HANDLE MutantHandle,
+	OUT PMUTANT_BASIC_INFORMATION MutantInformation
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(MutantHandle)
+		LOG_FUNC_ARG_OUT(MutantInformation)
+		LOG_FUNC_END;
+
+	NTSTATUS ret = NtDll::NtQueryMutant(
+		(NtDll::HANDLE)MutantHandle,
+		/*MutantInformationClass*/NtDll::MUTANT_INFORMATION_CLASS::MutantBasicInformation,
+		MutantInformation,
+		sizeof(MUTANT_BASIC_INFORMATION),
+		/*ReturnLength=*/nullptr);
+
+	if (ret != STATUS_SUCCESS)
+		EmuWarning("NtQueryMutant failed! (%s)", NtStatusToString(ret));
+
+	RETURN(ret);
+}
+
+// ******************************************************************
 // * 0x00D6 - NtQuerySemaphore()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(214) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySemaphore

@@ -428,6 +428,13 @@ typedef enum _MEMORY_INFORMATION_CLASS
 MEMORY_INFORMATION_CLASS;
 
 // ******************************************************************
+// * MUTANT_INFORMATION_CLASS
+// ******************************************************************
+typedef enum _MUTANT_INFORMATION_CLASS {
+	MutantBasicInformation
+} MUTANT_INFORMATION_CLASS, *PMUTANT_INFORMATION_CLASS;
+
+// ******************************************************************
 // * SEMAPHORE_INFORMATION_CLASS
 // ******************************************************************
 typedef enum _SEMAPHORE_INFORMATION_CLASS {
@@ -1455,6 +1462,18 @@ typedef NTSTATUS (NTAPI *FPTR_NtCreateMutant)
 );
 
 // ******************************************************************
+// * NtQueryMutant
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtQueryMutant)
+(
+	IN HANDLE MutantHandle,
+	IN MUTANT_INFORMATION_CLASS MutantInformationClass,
+	OUT PVOID MutantInformation,
+	IN ULONG MutantInformationLength,
+	OUT PULONG ReturnLength OPTIONAL
+);
+
+// ******************************************************************
 // * NtReleaseMutant
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtReleaseMutant)
@@ -1894,6 +1913,7 @@ EXTERN(NtQueryDirectoryFile);
 EXTERN(NtQueryEvent);
 EXTERN(NtQueryFullAttributesFile);
 EXTERN(NtQueryInformationFile);
+EXTERN(NtQueryMutant);
 EXTERN(NtQuerySemaphore);
 EXTERN(NtQueryTimer);
 EXTERN(NtQueryVirtualMemory);

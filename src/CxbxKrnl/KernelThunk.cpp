@@ -278,7 +278,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::NtQueryFullAttributesFile),       // 0x00D2 (210)
 	(uint32)FUNC(&xboxkrnl::NtQueryInformationFile),          // 0x00D3 (211)
 	(uint32)PANIC(0x00D4),                                    // 0x00D4 (212) NtQueryIoCompletion
-	(uint32)PANIC(0x00D5),                                    // 0x00D5 (213) NtQueryMutant
+	(uint32)FUNC(&xboxkrnl::NtQueryMutant),                   // 0x00D5 (213)
 	(uint32)FUNC(&xboxkrnl::NtQuerySemaphore),                // 0x00D6 (214)
 	(uint32)FUNC(&xboxkrnl::NtQuerySymbolicLinkObject),       // 0x00D7 (215)
 	(uint32)FUNC(&xboxkrnl::NtQueryTimer),                    // 0x00D8 (216)
