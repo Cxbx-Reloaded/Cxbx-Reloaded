@@ -75,7 +75,13 @@ XBSYSAPI EXPORTNUM(100) VOID NTAPI KeDisconnectInterrupt
     IN PKINTERRUPT  InterruptObject
 );
 
-XBSYSAPI VOID *KeEnterCriticalRegion;
+// ******************************************************************
+// * 0x0065 - KeEnterCriticalRegion()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(101) VOID NTAPI KeEnterCriticalRegion
+(
+	VOID
+);
 
 // ******************************************************************
 // * 0x0067 - KeGetCurrentIrql()

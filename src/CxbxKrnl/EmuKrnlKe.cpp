@@ -234,6 +234,21 @@ XBSYSAPI EXPORTNUM(100) xboxkrnl::VOID NTAPI xboxkrnl::KeDisconnectInterrupt
 }
 
 // ******************************************************************
+// * 0x0065 - KeEnterCriticalRegion()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(101) xboxkrnl::VOID NTAPI xboxkrnl::KeEnterCriticalRegion
+(
+	VOID
+)
+{
+	LOG_FUNC();
+
+	// TODO : Disable kernel APCs
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
 // * 0x0067 - KeGetCurrentIrql()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(103) xboxkrnl::KIRQL NTAPI xboxkrnl::KeGetCurrentIrql(void)
