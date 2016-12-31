@@ -409,7 +409,8 @@ XBSYSAPI EXPORTNUM(194) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateTimer
 	// TODO : Is this the correct ACCESS_MASK? :
 	const ACCESS_MASK DesiredAccess = TIMER_ALL_ACCESS;
 
-	// TODO : Call CxbxObjectAttributesToNT on ObjectAttributes?
+	NativeObjectAttributes nativeObjectAttributes;
+	CxbxObjectAttributesToNT(ObjectAttributes, nativeObjectAttributes, "NtCreateTimer");
 
 	// redirect to Windows NT
 	// TODO : Untested
@@ -417,7 +418,7 @@ XBSYSAPI EXPORTNUM(194) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateTimer
 	(
 		/*OUT*/TimerHandle,
 		DesiredAccess,
-		(NtDll::POBJECT_ATTRIBUTES)ObjectAttributes,
+		(NtDll::POBJECT_ATTRIBUTES)&nativeObjectAttributes,
 		(NtDll::TIMER_TYPE)TimerType
 	);
 
