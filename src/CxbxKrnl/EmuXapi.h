@@ -591,27 +591,6 @@ DWORD WINAPI EmuSignalObjectAndWait
 );
 
 // ******************************************************************
-// * func: EmuCreateSemaphore
-// ******************************************************************
-HANDLE WINAPI EmuCreateSemaphore
-(
-	LPVOID	lpSemaphoreAttributes, 
-	LONG	lInitialCount,
-	LONG	lMaximumCount,
-	LPSTR	lpName
-);
-
-// ******************************************************************
-// * func: EmuReleaseSemaphore
-// ******************************************************************
-BOOL WINAPI EmuReleaseSemaphore
-(
-	HANDLE	hSemaphore,
-	LONG	lReleaseCount,
-	LPLONG	lpPreviousCount
-);
-
-// ******************************************************************
 // * func: timeSetEvent
 // ******************************************************************
 MMRESULT WINAPI EmutimeSetEvent
