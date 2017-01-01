@@ -428,10 +428,6 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XAPI_1_0_4361[] = {
 
-    // QueryPerformanceCounter
-	OOVPA_TABLE_PATCH(QueryPerformanceCounter_1_0_4361, XTL::EmuQueryPerformanceCounter),
-	// QueryPerformanceFrequency
-	OOVPA_TABLE_PATCH(QueryPerformanceFrequency_1_0_4361, XTL::EmuQueryPerformanceFrequency),
     // XInitDevices (* unchanged since 1.0.3911 *)
 	OOVPA_TABLE_PATCH(XInitDevices_1_0_3911, XTL::EmuXInitDevices),
     // XGetDevices (* unchanged since 4134 *)

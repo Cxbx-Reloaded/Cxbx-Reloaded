@@ -393,22 +393,6 @@ SIZE_T WINAPI EmuRtlSizeHeap
 );
 
 // ******************************************************************
-// * func: EmuQueryPerformanceCounter
-// ******************************************************************
-BOOL WINAPI EmuQueryPerformanceCounter
-(
-    PLARGE_INTEGER lpPerformanceCount
-);
-
-// ******************************************************************
-// * func: EmuQueryPerformanceCounter
-// ******************************************************************
-BOOL WINAPI EmuQueryPerformanceFrequency
-(
-    PLARGE_INTEGER lpFrequency
-);
-
-// ******************************************************************
 // * func: EmuXMountUtilityDrive
 // ******************************************************************
 BOOL WINAPI EmuXMountUtilityDrive

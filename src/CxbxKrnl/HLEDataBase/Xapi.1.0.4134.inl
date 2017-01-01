@@ -334,10 +334,6 @@ OOVPATable XAPI_1_0_4134[] = {
 	OOVPA_TABLE_PATCH(XInputGetCapabilities_1_0_3911, XTL::EmuXInputGetCapabilities),
 	// GetThreadPriority (* unchanged since 3911 *)
 	OOVPA_TABLE_PATCH(GetThreadPriority_1_0_3911, XTL::EmuGetThreadPriority),
-	// QueryPerformanceCounter
-	OOVPA_TABLE_PATCH(QueryPerformanceCounter_1_0_4134, XTL::EmuQueryPerformanceCounter),
-	// QueryPerformanceFrequency
-	OOVPA_TABLE_PATCH(QueryPerformanceFrequency_1_0_4134, XTL::EmuQueryPerformanceFrequency),
 	// XInputPoll
 	OOVPA_TABLE_PATCH(XInputPoll_1_0_4134, XTL::EmuXInputPoll),
 	// SetThreadPriorityBoost (* unchanged since 3911 *)

@@ -119,39 +119,6 @@ DWORD WINAPI XTL::EmuGetTimeZoneInformation
 }
 
 // ******************************************************************
-// * func: EmuQueryPerformanceCounter
-// ******************************************************************
-BOOL WINAPI XTL::EmuQueryPerformanceCounter
-(
-    PLARGE_INTEGER lpPerformanceCount
-)
-{
-	LOG_FUNC_ONE_ARG(lpPerformanceCount);
-
-    BOOL bRet = QueryPerformanceCounter(lpPerformanceCount);
-
-    // debug - 4x speed
-    //lpPerformanceCount->QuadPart *= 4;
-
-	RETURN(bRet);
-}
-
-// ******************************************************************
-// * func: EmuQueryPerformanceFrequency
-// ******************************************************************
-BOOL WINAPI XTL::EmuQueryPerformanceFrequency
-(
-    PLARGE_INTEGER lpFrequency
-)
-{
-	LOG_FUNC_ONE_ARG(lpFrequency);
-
-    BOOL bRet = QueryPerformanceFrequency(lpFrequency);
-
-	RETURN(bRet);
-}
-
-// ******************************************************************
 // * func: EmuXMountUtilityDrive
 // ******************************************************************
 BOOL WINAPI XTL::EmuXMountUtilityDrive

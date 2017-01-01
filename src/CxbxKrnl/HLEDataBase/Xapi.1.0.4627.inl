@@ -748,10 +748,6 @@ OOVPATable XAPI_1_0_4627[] = {
 	OOVPA_TABLE_PATCH(GetThreadPriority_1_0_4627, XTL::EmuGetThreadPriority),
     // XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
 	OOVPA_TABLE_PATCH(XRegisterThreadNotifyRoutine_1_0_3911, XTL::EmuXRegisterThreadNotifyRoutine),
-	// QueryPerformanceCounter (* unchanged since 4361 *)
-	OOVPA_TABLE_PATCH(QueryPerformanceCounter_1_0_4361, XTL::EmuQueryPerformanceCounter),
-	// QueryPerformanceFrequency (* unchanged since 4361 *)
-	OOVPA_TABLE_PATCH(QueryPerformanceFrequency_1_0_4361, XTL::EmuQueryPerformanceFrequency),
     // XMountUtilityDrive (* unchanged since 4432 *)
 	OOVPA_TABLE_PATCH(XMountUtilityDrive_1_0_4432, XTL::EmuXMountUtilityDrive),
     // XInitDevices (* unchanged since 1.0.3911 *)
