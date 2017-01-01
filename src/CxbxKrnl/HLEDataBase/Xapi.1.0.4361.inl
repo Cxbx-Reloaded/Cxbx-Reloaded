@@ -61,67 +61,6 @@ OOVPA_NO_XREF(RtlFreeHeap_1_0_4361, 12)
 OOVPA_END;
 
 // ******************************************************************
-// * QueryPerformanceCounter
-// ******************************************************************
-OOVPA_NO_XREF(QueryPerformanceCounter_1_0_4361, 12)
-
-        // QueryPerformanceCounter+0x04 : rdtsc
-        { 0x04, 0x0F }, // (Offset,Value)-Pair #1
-        { 0x05, 0x31 }, // (Offset,Value)-Pair #2
-
-        // QueryPerformanceCounter+0x06 : mov [ecx], eax
-        { 0x06, 0x89 }, // (Offset,Value)-Pair #3
-        { 0x07, 0x01 }, // (Offset,Value)-Pair #4
-
-        // QueryPerformanceCounter+0x08 : mov [ecx+4], eax
-        { 0x08, 0x89 }, // (Offset,Value)-Pair #5
-        { 0x09, 0x51 }, // (Offset,Value)-Pair #6
-        { 0x0A, 0x04 }, // (Offset,Value)-Pair #7
-
-        // QueryPerformanceCounter+0x0B : xor eax, eax
-        { 0x0B, 0x33 }, // (Offset,Value)-Pair #8
-        { 0x0C, 0xC0 }, // (Offset,Value)-Pair #9
-
-        // QueryPerformanceCounter+0x0D : inc eax
-        { 0x0D, 0x40 }, // (Offset,Value)-Pair #10
-
-        // QueryPerformanceCounter+0x0E : retn 0x04
-        { 0x0E, 0xC2 }, // (Offset,Value)-Pair #11
-        { 0x0F, 0x04 }, // (Offset,Value)-Pair #12
-OOVPA_END;
-
-// ******************************************************************
-// * QueryPerformanceFrequency
-// ******************************************************************
-OOVPA_NO_XREF(QueryPerformanceFrequency_1_0_4361, 15)
-
-        // QueryPerformanceFrequency+0x04 : and dword ptr [eax+4], 0
-        { 0x04, 0x83 }, // (Offset,Value)-Pair #1
-        { 0x05, 0x60 }, // (Offset,Value)-Pair #2
-        { 0x06, 0x04 }, // (Offset,Value)-Pair #3
-        { 0x07, 0x00 }, // (Offset,Value)-Pair #4
-
-        // QueryPerformanceFrequency+0x06 : mov dword ptr [eax], 0x2BB5C755
-        { 0x08, 0xC7 }, // (Offset,Value)-Pair #5
-        { 0x09, 0x00 }, // (Offset,Value)-Pair #6
-        { 0x0A, 0x55 }, // (Offset,Value)-Pair #7
-        { 0x0B, 0xC7 }, // (Offset,Value)-Pair #8
-        { 0x0C, 0xB5 }, // (Offset,Value)-Pair #9
-        { 0x0D, 0x2B }, // (Offset,Value)-Pair #10
-
-        // QueryPerformanceFrequency+0x0E : xor eax, eax
-        { 0x0E, 0x33 }, // (Offset,Value)-Pair #11
-        { 0x0F, 0xC0 }, // (Offset,Value)-Pair #12
-
-        // QueryPerformanceFrequency+0x10 : inc eax
-        { 0x10, 0x40 }, // (Offset,Value)-Pair #13
-
-        // QueryPerformanceFrequency+0x11 : retn 0x04
-        { 0x11, 0xC2 }, // (Offset,Value)-Pair #14
-        { 0x12, 0x04 }, // (Offset,Value)-Pair #15
-OOVPA_END;
-
-// ******************************************************************
 // * XInputOpen
 // ******************************************************************
 OOVPA_NO_XREF(XInputOpen_1_0_4361, 12)

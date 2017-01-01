@@ -454,6 +454,8 @@ XBSYSAPI EXPORTNUM(126) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceCo
 
 	::LARGE_INTEGER PerformanceCounter;
 
+	// TODO : When Cxbx emulates the RDTSC opcode, use the same handling here.
+
 	// Dxbx note : Xbox actually uses the RDTSC machine code instruction for this,
 	// and we we're bound to a single core, so we could do that too, but on Windows
 	// rdtsc is not a very stable counter, so instead, we'll use the native PeformanceCounter :

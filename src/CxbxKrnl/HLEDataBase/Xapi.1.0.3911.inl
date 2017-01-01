@@ -822,28 +822,6 @@ OOVPA_NO_XREF(SignalObjectAndWait_1_0_3911, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * PulseEvent
-// ******************************************************************
-OOVPA_NO_XREF(PulseEvent_1_0_3911, 11)
-
-		// PulseEvent+0x00 : push 0
-		{ 0x00, 0x6A },
-		{ 0x01, 0x00 },
-        // PulseEvent+0x02 : push [esp+8]
-		{ 0x02, 0xFF },
-		{ 0x03, 0x74 },
-		{ 0x04, 0x24 },
-		{ 0x05, 0x08 },
-		// PulseEvent+0x06 : call ds:NtPulseEvent
-		{ 0x06, 0xFF },
-		{ 0x07, 0x15 },
-		{ 0x08, 0x54 },
-		// PulseEvent+0x12 : test eax, eax
-		{ 0x0C, 0x85 },
-		{ 0x0D, 0xC0 },
-OOVPA_END;
-
-// ******************************************************************
 // * QueueUserAPC
 // ******************************************************************
 OOVPA_NO_XREF(QueueUserAPC_1_0_3911, 7)
