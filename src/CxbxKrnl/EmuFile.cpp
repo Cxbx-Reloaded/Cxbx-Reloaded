@@ -317,34 +317,38 @@ NTSTATUS CxbxObjectAttributesToNT(
 	OUT NativeObjectAttributes& nativeObjectAttributes, 
 	const std::string aFileAPIName)
 {
-	NTSTATUS result = STATUS_SUCCESS;
-	std::string RelativeXboxPath;
-	std::wstring RelativeHostPath;
-	NtDll::HANDLE RootDirectory;
-
 	if (ObjectAttributes == NULL)
 	{
 		// When the pointer is nil, make sure we pass nil to Windows too :
-		nativeObjectAttributes.NtObjAttrPtr = NULL;
-		return result;
+		nativeObjectAttributes.NtObjAttrPtr = nullptr;
+		return STATUS_SUCCESS;
 	}
 
+	// Pick up the ObjectName, and let's see what to make of it :
+	std::string ObjectName = PSTRING_to_string(ObjectAttributes->ObjectName);
+	std::wstring RelativeHostPath;
+	NtDll::HANDLE RootDirectory = ObjectAttributes->RootDirectory;
+	// Is there a filename API given?
+	if (aFileAPIName.size() > 0)
+	{
+		// Then interpret the ObjectName as a filename, and update it to host relative :
+		NTSTATUS result = _CxbxConvertFilePath(ObjectName, /*OUT*/RelativeHostPath, /*OUT*/&RootDirectory, aFileAPIName);
+		if (FAILED(result))
+			return result;
+	}
+	else
+		// When not called from a file-handling API, just convert the ObjectName to a wide string :
+		RelativeHostPath = string_to_wstring(ObjectName);
+
+	// Copy the wide string to the unicode string
+	wcscpy_s(nativeObjectAttributes.wszObjectName, RelativeHostPath.c_str());
+	NtDll::RtlInitUnicodeString(&nativeObjectAttributes.NtUnicodeString, nativeObjectAttributes.wszObjectName);
+	// And initialize the NT ObjectAttributes with that :
+	InitializeObjectAttributes(&nativeObjectAttributes.NtObjAttr, &nativeObjectAttributes.NtUnicodeString, ObjectAttributes->Attributes, RootDirectory, NULL);
 	// ObjectAttributes are given, so make sure the pointer we're going to pass to Windows is assigned :
 	nativeObjectAttributes.NtObjAttrPtr = &nativeObjectAttributes.NtObjAttr;
 
-	RelativeXboxPath = PSTRING_to_string(ObjectAttributes->ObjectName);
-	result = _CxbxConvertFilePath(RelativeXboxPath, /*OUT*/RelativeHostPath, /*OUT*/&RootDirectory, aFileAPIName);
-	if (!FAILED(result))
-	{
-		// Copy relative path string to the unicode string
-		wcscpy_s(nativeObjectAttributes.wszObjectName, RelativeHostPath.c_str());
-		NtDll::RtlInitUnicodeString(&nativeObjectAttributes.NtUnicodeString, nativeObjectAttributes.wszObjectName);
-
-		// Initialize the NT ObjectAttributes
-		InitializeObjectAttributes(&nativeObjectAttributes.NtObjAttr, &nativeObjectAttributes.NtUnicodeString, ObjectAttributes->Attributes, RootDirectory, NULL);
-	}
-
-	return result;
+	return STATUS_SUCCESS;
 }
 
 int CxbxDeviceIndexByDevicePath(const char *XboxDevicePath)
