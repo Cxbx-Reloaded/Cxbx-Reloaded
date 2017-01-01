@@ -666,27 +666,6 @@ DWORD WINAPI EmuXMountAlternateTitle
 DWORD WINAPI EmuXUnmountAlternateTitle(CHAR chDrive);
 
 // ******************************************************************
-// * func: EmuVirtualAlloc
-// ******************************************************************
-LPVOID WINAPI EmuVirtualAlloc
-(
-	LPVOID lpAddress,        
-	SIZE_T dwSize,           
-	DWORD flAllocationType,  
-	DWORD flProtect          
-);
-
-// ******************************************************************
-// * func: EmuVirtualAlloc
-// ******************************************************************
-BOOL WINAPI EmuVirtualFree
-(
-	LPVOID lpAddress,   
-	SIZE_T dwSize,      
-	DWORD dwFreeType    
-);
-
-// ******************************************************************
 // * func: EmuMoveFileA
 // ******************************************************************
 BOOL WINAPI EmuMoveFileA
