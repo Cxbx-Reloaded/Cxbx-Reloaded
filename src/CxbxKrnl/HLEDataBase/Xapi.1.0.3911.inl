@@ -1219,8 +1219,6 @@ OOVPATable XAPI_1_0_3911[] = {
 	OOVPA_TABLE_PATCH(XInputGetCapabilities_1_0_3911, XTL::EmuXInputGetCapabilities),
 	// SignalObjectAndWait
 	OOVPA_TABLE_PATCH(SignalObjectAndWait_1_0_3911, XTL::EmuSignalObjectAndWait),
-	// PulseEvent
-	OOVPA_TABLE_PATCH(PulseEvent_1_0_3911, XTL::EmuPulseEvent),
 	// QueueUserAPC
 	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, XTL::EmuQueueUserAPC),
 	// lstrcmpiW

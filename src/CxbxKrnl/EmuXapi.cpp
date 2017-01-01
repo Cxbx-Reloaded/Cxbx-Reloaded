@@ -1112,24 +1112,6 @@ DWORD WINAPI XTL::EmuSignalObjectAndWait
 }
 
 // ******************************************************************
-// * func: EmuPulseEvent
-// ******************************************************************
-BOOL WINAPI XTL::EmuPulseEvent
-( 
-	HANDLE hEvent 
-)
-{
-	LOG_FUNC_ONE_ARG(hEvent);
-
-	// TODO: This function might be a bit too high level.  If it is,
-	// feel free to implement NtPulseEvent in EmuKrnl.cpp
-
-	BOOL bRet = PulseEvent( hEvent );
-
-	RETURN(bRet);
-}
-
-// ******************************************************************
 // * func: timeSetEvent
 // ******************************************************************
 MMRESULT WINAPI XTL::EmutimeSetEvent

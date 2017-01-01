@@ -671,11 +671,6 @@ DWORD WINAPI EmuSignalObjectAndWait
 );
 
 // ******************************************************************
-// * func: EmuPulseEvent
-// ******************************************************************
-BOOL WINAPI EmuPulseEvent( HANDLE hEvent );
-
-// ******************************************************************
 // * func: EmuCreateSemaphore
 // ******************************************************************
 HANDLE WINAPI EmuCreateSemaphore
