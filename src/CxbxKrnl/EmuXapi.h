@@ -651,17 +651,6 @@ DWORD WINAPI EmuGetFileAttributesA
 );
 
 // ******************************************************************
-// * func: EmuVirtualProtect
-// ******************************************************************
-BOOL WINAPI EmuVirtualProtect
-(
-	LPVOID	lpAddress,       // region of committed pages
-	SIZE_T	dwSize,          // size of the region
-	DWORD	flNewProtect,    // desired access protection
-	PDWORD	lpflOldProtect   // old protection
-);
-
-// ******************************************************************
 // * func: EmulstrcmpiW
 // ******************************************************************
 int WINAPI EmulstrcmpiW
