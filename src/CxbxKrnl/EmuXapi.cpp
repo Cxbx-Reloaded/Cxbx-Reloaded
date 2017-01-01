@@ -1286,61 +1286,6 @@ DWORD WINAPI XTL::EmuXMountMUA
 }
 
 // ******************************************************************
-// func: EmuCreateWaitableTimer
-// ******************************************************************
-HANDLE WINAPI XTL::EmuCreateWaitableTimerA
-(
-	LPVOID					lpTimerAttributes, // SD
-	BOOL					bManualReset,      // reset type
-	LPCSTR					lpTimerName        // object name
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(lpTimerAttributes)
-		LOG_FUNC_ARG(bManualReset)
-		LOG_FUNC_ARG(lpTimerName)
-		LOG_FUNC_END;
-
-	// For Xbox titles, this param should always be NULL.
-	if(lpTimerAttributes)
-		EmuWarning("lpTimerAttributes != NULL");
-
-	HANDLE hRet = CreateWaitableTimerA( NULL, bManualReset, lpTimerName );
-
-	RETURN(hRet);
-}
-
-// ******************************************************************
-// func: EmuSetWaitableTimer
-// ******************************************************************
-BOOL WINAPI XTL::EmuSetWaitableTimer
-(
-	HANDLE				hTimer,                     // handle to timer
-	const LARGE_INTEGER *pDueTime,					// timer due time
-	LONG				lPeriod,                    // timer interval
-	PTIMERAPCROUTINE	pfnCompletionRoutine,		// completion routine
-	LPVOID				lpArgToCompletionRoutine,   // completion routine parameter
-	BOOL				fResume                     // resume state
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(hTimer)
-		LOG_FUNC_ARG(pDueTime)
-		LOG_FUNC_ARG(lPeriod)
-		LOG_FUNC_ARG(pfnCompletionRoutine)
-		LOG_FUNC_ARG(lpArgToCompletionRoutine)
-		LOG_FUNC_ARG(fResume)
-		LOG_FUNC_END;
-
-	BOOL Ret = SetWaitableTimer( hTimer, pDueTime, lPeriod, pfnCompletionRoutine,
-							lpArgToCompletionRoutine, fResume );
-	if(!Ret)
-		EmuWarning("SetWaitableTimer failed!");
-
-	RETURN(Ret);
-}
-
-// ******************************************************************
 // * func: EmuXMountAlternateTitle
 // ******************************************************************
 DWORD WINAPI XTL::EmuXMountAlternateTitle

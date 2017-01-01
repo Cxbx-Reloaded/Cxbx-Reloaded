@@ -792,29 +792,6 @@ DWORD WINAPI EmuXMountMURootA
 );
 
 // ******************************************************************
-// * func: EmuCreateWaitableTimerA
-// ******************************************************************
-HANDLE WINAPI EmuCreateWaitableTimerA
-(
-	LPVOID					lpTimerAttributes, // SD
-	BOOL					bManualReset,      // reset type
-	LPCSTR					lpTimerName        // object name
-);
-
-// ******************************************************************
-// * func: EmuSetWaitableTimer
-// ******************************************************************
-BOOL WINAPI EmuSetWaitableTimer
-(
-	HANDLE				hTimer,                     // handle to timer
-	const LARGE_INTEGER *pDueTime,					// timer due time
-	LONG				lPeriod,                    // timer interval
-	PTIMERAPCROUTINE	pfnCompletionRoutine,		// completion routine
-	LPVOID				lpArgToCompletionRoutine,   // completion routine parameter
-	BOOL				fResume                     // resume state
-);
-
-// ******************************************************************
 // * func: EmuXMountAlternateTitle
 // ******************************************************************
 DWORD WINAPI EmuXMountAlternateTitle

@@ -424,34 +424,6 @@ OOVPA_NO_XREF(XMountMUA_1_0_4361, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * CreateWaitableTimerA
-// ******************************************************************
-OOVPA_NO_XREF(CreateWaitableTimerA_1_0_4361, 7)
-
-        { 0x0A, 0x74 },
-        { 0x16, 0x50 },
-        { 0x22, 0x39 },
-        { 0x2E, 0xFF },
-        { 0x3A, 0x00 },
-        { 0x46, 0x6A },
-        { 0x52, 0x50 },
-OOVPA_END;
-
-// ******************************************************************
-// * SetWaitableTimer
-// ******************************************************************
-OOVPA_NO_XREF(SetWaitableTimer_1_0_4361, 7)
-
-        { 0x07, 0x10 },
-        { 0x10, 0xFF },
-        { 0x19, 0xFF },
-        { 0x22, 0x0A },
-        { 0x2B, 0xEB },
-        { 0x34, 0x6A },
-        { 0x3F, 0x33 },
-OOVPA_END;
-
-// ******************************************************************
 // * XAPI_1_0_4361
 // ******************************************************************
 OOVPATable XAPI_1_0_4361[] = {
@@ -506,10 +478,6 @@ OOVPATable XAPI_1_0_4361[] = {
 	OOVPA_TABLE_PATCH(GetFileAttributesA_1_0_4134, XTL::EmuGetFileAttributesA),
 	// XMountMUA
 	OOVPA_TABLE_PATCH(XMountMUA_1_0_4361, XTL::EmuXMountMUA),
-	// CreateWaitableTimerA
-	OOVPA_TABLE_PATCH(CreateWaitableTimerA_1_0_4361, XTL::EmuCreateWaitableTimerA),
-	// SetWaitableTimer
-	OOVPA_TABLE_PATCH(SetWaitableTimer_1_0_4361, XTL::EmuSetWaitableTimer),
 };
 
 // ******************************************************************
