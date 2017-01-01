@@ -120,20 +120,6 @@ OOVPA_NO_XREF(XGetLaunchInfo_1_0_5558, 7)
 OOVPA_END;
 
 // ******************************************************************
-// * GetFileAttributesA
-// ******************************************************************
-OOVPA_NO_XREF(GetFileAttributesA_1_0_5558, 7)
-
-        { 0x08, 0x08 },
-        { 0x13, 0x8D },
-        { 0x1C, 0x50 },
-        { 0x26, 0xFF },
-        { 0x30, 0x15 },
-        { 0x3A, 0x45 },
-        { 0x44, 0x83 },
-OOVPA_END;
-
-// ******************************************************************
 // * XMountMUA
 // ******************************************************************
 OOVPA_NO_XREF(XMountMUA_1_0_5558, 8)
@@ -290,8 +276,6 @@ OOVPATable XAPI_1_0_5558[] = {
 	OOVPA_TABLE_PATCH(XGetLaunchInfo_1_0_5558, XTL::EmuXGetLaunchInfo),
 	// QueueUserAPC (* unchanged since 3911 *)
 	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, XTL::EmuQueueUserAPC),
-	// GetFileAttributesA
-	OOVPA_TABLE_PATCH(GetFileAttributesA_1_0_5558, XTL::EmuGetFileAttributesA),
 	// SetThreadPriorityBoost (* unchanged since 4627 *)
 	OOVPA_TABLE_PATCH(SetThreadPriorityBoost_1_0_4627, XTL::EmuSetThreadPriorityBoost),
 	// GetThreadPriority (* unchanged since 4627 *)

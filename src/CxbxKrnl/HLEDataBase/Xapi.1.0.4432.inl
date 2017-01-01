@@ -94,8 +94,6 @@ OOVPATable XAPI_1_0_4432[] = {
 	OOVPA_TABLE_PATCH(DeleteFiber_1_0_3911, XTL::EmuDeleteFiber),
 	// QueueUserAPC (* unchanged since 3911 *)
 	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, XTL::EmuQueueUserAPC),
-	// GetFileAttributesA (* unchanged since 4134 *)
-	OOVPA_TABLE_PATCH(GetFileAttributesA_1_0_4134, XTL::EmuGetFileAttributesA),
 	// timeSetEvent
 	OOVPA_TABLE_PATCH(timeSetEvent_1_0_4134, XTL::EmutimeSetEvent),
 	// timeKillEvent

@@ -746,8 +746,6 @@ OOVPATable XAPI_1_0_4627[] = {
 	OOVPA_TABLE_PATCH(XMountAlternateTitleA_1_0_4928, XTL::EmuXMountAlternateTitle),
 	// XUnmountAlternateTitleA
 	OOVPA_TABLE_PATCH(XUnmountAlternateTitleA_1_0_4627, XTL::EmuXUnmountAlternateTitle),
-	// GetFileAttributesA (* unchanged since 4134 *)
-	OOVPA_TABLE_PATCH(GetFileAttributesA_1_0_4134, XTL::EmuGetFileAttributesA),
 	// XInputGetDeviceDescription
 	OOVPA_TABLE_PATCH(XInputGetDeviceDescription_1_0_4831, XTL::EmuXInputGetDeviceDescription),
 	// MoveFileA

@@ -177,20 +177,6 @@ OOVPA_NO_XREF(XMountMUA_1_0_4134, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * GetFileAttributesA
-// ******************************************************************
-OOVPA_NO_XREF(GetFileAttributesA_1_0_4134, 7)
-
-        { 0x08, 0x08 },
-        { 0x13, 0x8D },
-        { 0x1C, 0x50 },
-        { 0x26, 0xFF },
-        { 0x30, 0x15 },
-        { 0x3A, 0x45 },
-        { 0x44, 0x83 },
-OOVPA_END;
-
-// ******************************************************************
 // * timeSetEvent
 // ******************************************************************
 OOVPA_NO_XREF(timeSetEvent_1_0_4134, 7)
@@ -268,8 +254,6 @@ OOVPATable XAPI_1_0_4134[] = {
 	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, XTL::EmuQueueUserAPC),
 	// XMountMUA
 	OOVPA_TABLE_PATCH(XMountMUA_1_0_4134, XTL::EmuXMountMUA),
-	// GetFileAttributesA
-	OOVPA_TABLE_PATCH(GetFileAttributesA_1_0_4134, XTL::EmuGetFileAttributesA),
 	// timeSetEvent
 	OOVPA_TABLE_PATCH(timeSetEvent_1_0_4134, XTL::EmutimeSetEvent),
 	// timeKillEvent

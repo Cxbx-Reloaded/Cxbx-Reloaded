@@ -1162,43 +1162,6 @@ VOID WINAPI XTL::EmuRaiseException
 }
 
 // ******************************************************************
-// * func: EmuGetFileAttributesA
-// ******************************************************************
-DWORD WINAPI XTL::EmuGetFileAttributesA
-(
-	LPCSTR			lpFileName    // name of file or directory
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(lpFileName)
-		LOG_FUNC_END;
-
-	// Deus Ex...
-
-	// Shave off the D:\ and default to the current directory.
-	// TODO: Other directories (i.e. Utility)?
-
-	char* szBuffer = (char*) lpFileName;
-
-	if((szBuffer[0] == 'D' || szBuffer[0] == 'd') && szBuffer[1] == ':' || szBuffer[2] == '\\')
-	{
-		szBuffer += 3;
-
-		 DbgPrintf("EmuXapi (0x%X): GetFileAttributesA Corrected path...\n", GetCurrentThreadId());
-         DbgPrintf("  Org:\"%s\"\n", lpFileName);
-         DbgPrintf("  New:\"$XbePath\\%s\"\n", szBuffer);
-    }
-
-	DWORD dwRet = GetFileAttributesA(szBuffer);
-	if(FAILED(dwRet))
-		EmuWarning("GetFileAttributes(\"%s\") failed!", szBuffer);
-
-	
-
-	RETURN(dwRet);
-}
-
-// ******************************************************************
 // func: XMountMUA
 // ******************************************************************
 DWORD WINAPI XTL::EmuXMountMUA

@@ -969,20 +969,6 @@ OOVPA_NO_XREF(XMountUtilityDrive_1_0_3911, 7)
 OOVPA_END;
 
 // ******************************************************************
-// * GetFileAttributesA
-// ******************************************************************
-OOVPA_NO_XREF(GetFileAttributesA_1_0_3911, 7)
-
-        { 0x08, 0x08 },
-        { 0x13, 0x8D },
-        { 0x1C, 0x50 },
-        { 0x26, 0xFF },
-        { 0x30, 0x15 },
-        { 0x3A, 0x45 },
-        { 0x44, 0x83 },
-OOVPA_END;
-
-// ******************************************************************
 // * ReadFileEx@20
 // ******************************************************************
 OOVPA_NO_XREF(ReadFileEx_1_0_3911, 8)
@@ -1095,8 +1081,6 @@ OOVPATable XAPI_1_0_3911[] = {
 	OOVPA_TABLE_PATCH(XMountMURootA_1_0_3911, XTL::EmuXMountMURootA),
 	// XMountUtilityDrive
 	OOVPA_TABLE_PATCH(XMountUtilityDrive_1_0_3911, XTL::EmuXMountUtilityDrive),
-	// GetFileAttributesA
-	OOVPA_TABLE_PATCH(GetFileAttributesA_1_0_3911, XTL::EmuGetFileAttributesA),
 	// ReadFileEx
 	/*
 	OOVPA_TABLE_PATCH(ReadFileEx_1_0_3911, XTL::EmuReadFileEx),

@@ -622,14 +622,6 @@ VOID WINAPI EmuRaiseException
 );
 
 // ******************************************************************
-// * func: EmuGetFileAttributesA
-// ******************************************************************
-DWORD WINAPI EmuGetFileAttributesA
-(
-	LPCSTR			lpFileName    // name of file or directory
-);
-
-// ******************************************************************
 // * func: EmulstrcmpiW
 // ******************************************************************
 int WINAPI EmulstrcmpiW

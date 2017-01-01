@@ -381,8 +381,6 @@ OOVPATable XAPI_1_0_4361[] = {
 	OOVPA_TABLE_PATCH(SignalObjectAndWait_1_0_3911, XTL::EmuSignalObjectAndWait),
 	// QueueUserAPC (* unchanged since 3911 *)
 	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, XTL::EmuQueueUserAPC),
-	// GetFileAttributesA (* unchanged since 4134 *)
-	OOVPA_TABLE_PATCH(GetFileAttributesA_1_0_4134, XTL::EmuGetFileAttributesA),
 	// XMountMUA
 	OOVPA_TABLE_PATCH(XMountMUA_1_0_4361, XTL::EmuXMountMUA),
 };
