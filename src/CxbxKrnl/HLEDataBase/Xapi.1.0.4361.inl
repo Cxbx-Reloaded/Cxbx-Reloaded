@@ -33,34 +33,6 @@
 // ******************************************************************
 
 // ******************************************************************
-// * RtlFreeHeap
-// ******************************************************************
-OOVPA_NO_XREF(RtlFreeHeap_1_0_4361, 12)
-
-        // RtlFreeHeap+0x1F : test ecx, ecx
-        { 0x1F, 0x85 }, // (Offset,Value)-Pair #1
-        { 0x20, 0xC9 }, // (Offset,Value)-Pair #2
-
-        // RtlFreeHeap+0x4B : test byte ptr [edi+5], 0x08
-        { 0x4B, 0xF6 }, // (Offset,Value)-Pair #3
-        { 0x4C, 0x47 }, // (Offset,Value)-Pair #4
-        { 0x4D, 0x05 }, // (Offset,Value)-Pair #5
-        { 0x4E, 0x08 }, // (Offset,Value)-Pair #6
-
-        // RtlFreeHeap+0x5B : push 0
-        { 0x5B, 0x6A }, // (Offset,Value)-Pair #7
-        { 0x5C, 0x00 }, // (Offset,Value)-Pair #8
-
-        // RtlFreeHeap+0x8F : cmp [edx], edx
-        { 0x8F, 0x39 }, // (Offset,Value)-Pair #9
-        { 0x90, 0x12 }, // (Offset,Value)-Pair #10
-
-        // RtlFreeHeap+0xA4 : shl ebx, cl
-        { 0xA4, 0xD3 }, // (Offset,Value)-Pair #11
-        { 0xA5, 0xE3 }, // (Offset,Value)-Pair #12
-OOVPA_END;
-
-// ******************************************************************
 // * XInputOpen
 // ******************************************************************
 OOVPA_NO_XREF(XInputOpen_1_0_4361, 12)

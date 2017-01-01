@@ -33,29 +33,6 @@
 // ******************************************************************
 
 // ******************************************************************
-// * RtlFreeHeap
-// ******************************************************************
-OOVPA_NO_XREF(RtlFreeHeap_1_0_4432, 9)
-
-        // RtlFreeHeap+0x1F : test ecx, ecx
-        { 0x1F, 0x85 }, // (Offset,Value)-Pair #1
-        { 0x20, 0xC9 }, // (Offset,Value)-Pair #2
-
-        // RtlFreeHeap+0x23 : mov al, 1
-        { 0x23, 0xB0 }, // (Offset,Value)-Pair #3
-        { 0x24, 0x01 }, // (Offset,Value)-Pair #4
-
-        // RtlFreeHeap+0x4B : test byte ptr [edi+5], 8
-        { 0x4B, 0xF6 }, // (Offset,Value)-Pair #5
-        { 0x4C, 0x47 }, // (Offset,Value)-Pair #6
-        { 0x4D, 0x05 }, // (Offset,Value)-Pair #7
-
-        // RtlFreeHeap+0x6E : cmp ecx, 0x80
-        { 0x6E, 0x81 }, // (Offset,Value)-Pair #8
-        { 0x6F, 0xF9 }, // (Offset,Value)-Pair #9
-OOVPA_END;
-
-// ******************************************************************
 // * XMountUtilityDrive
 // ******************************************************************
 OOVPA_NO_XREF(XMountUtilityDrive_1_0_4432, 8)

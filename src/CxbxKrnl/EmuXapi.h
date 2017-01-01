@@ -113,19 +113,6 @@ typedef DWORD (WINAPI *PTHREAD_START_ROUTINE)
 typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
 
 // ******************************************************************
-// * pfRtlCreateHeap
-// ******************************************************************
-typedef PVOID (WINAPI *pfRtlCreateHeap)
-(
-    IN ULONG   Flags,
-    IN PVOID   Base OPTIONAL,
-    IN ULONG   Reserve OPTIONAL,
-    IN ULONG   Commit,
-    IN PVOID   Lock OPTIONAL,
-    IN PVOID   RtlHeapParams OPTIONAL
-);
-
-// ******************************************************************
 // * XINPUT_POLLING_PARAMETERS
 // ******************************************************************
 typedef struct _XINPUT_POLLING_PARAMETERS
@@ -339,60 +326,6 @@ DWORD WINAPI EmuGetTimeZoneInformation
 );
 
 // ******************************************************************
-// * func: EmuRtlCreateHeap
-// ******************************************************************
-PVOID WINAPI EmuRtlCreateHeap
-(
-    IN ULONG   Flags,
-    IN PVOID   Base OPTIONAL,
-    IN ULONG   Reserve OPTIONAL,
-    IN ULONG   Commit,
-    IN PVOID   Lock OPTIONAL,
-    IN PVOID   RtlHeapParams OPTIONAL
-);
-
-// ******************************************************************
-// * func: EmuRtlAllocateHeap
-// ******************************************************************
-PVOID WINAPI EmuRtlAllocateHeap
-(
-    IN HANDLE hHeap,
-    IN DWORD  dwFlags,
-    IN SIZE_T dwBytes
-);
-
-// ******************************************************************
-// * func: EmuRtlFreeHeap
-// ******************************************************************
-BOOL WINAPI EmuRtlFreeHeap
-(
-    IN HANDLE hHeap,
-    IN DWORD  dwFlags,
-    IN PVOID  lpMem
-);
-
-// ******************************************************************
-// * func: EmuRtlReAllocateHeap
-// ******************************************************************
-PVOID WINAPI EmuRtlReAllocateHeap
-(
-    IN HANDLE hHeap,
-    IN DWORD  dwFlags,
-    IN PVOID  lpMem,
-    IN SIZE_T dwBytes
-);
-
-// ******************************************************************
-// * func: EmuRtlSizeHeap
-// ******************************************************************
-SIZE_T WINAPI EmuRtlSizeHeap
-(
-    IN HANDLE hHeap,
-    IN DWORD  dwFlags,
-    IN PVOID  lpMem
-);
-
-// ******************************************************************
 // * func: EmuXMountUtilityDrive
 // ******************************************************************
 BOOL WINAPI EmuXMountUtilityDrive
@@ -598,14 +531,6 @@ LPVOID WINAPI EmuConvertThreadToFiber
 // * func: EmuXapiFiberStartup
 // ******************************************************************
 VOID WINAPI EmuXapiFiberStartup(DWORD dwDummy);
-
-// ******************************************************************
-// * func: EmuRtlDestroyHeap
-// ******************************************************************
-PVOID WINAPI EmuRtlDestroyHeap
-(
-    IN HANDLE HeapHandle
-);
 
 // ******************************************************************
 // * func: EmuQueueUserAPC

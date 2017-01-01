@@ -95,51 +95,6 @@ OOVPA_NO_XREF(GetThreadPriority_1_0_4627, 10)
 OOVPA_END;
 
 // ******************************************************************
-// * RtlFreeHeap
-// ******************************************************************
-OOVPA_NO_XREF(RtlFreeHeap_1_0_4627, 9)
-
-        // RtlFreeHeap+0x1F : test edi, edi
-        { 0x1F, 0x85 }, // (Offset,Value)-Pair #1
-        { 0x20, 0xFF }, // (Offset,Value)-Pair #2
-
-        // RtlFreeHeap+0x23 : mov al, 1
-        { 0x23, 0xB0 }, // (Offset,Value)-Pair #3
-        { 0x24, 0x01 }, // (Offset,Value)-Pair #4
-
-        // RtlFreeHeap+0x35 : mov eax, fs:[0x20]
-        { 0x35, 0x64 }, // (Offset,Value)-Pair #5
-        { 0x36, 0xA1 }, // (Offset,Value)-Pair #6
-        { 0x37, 0x20 }, // (Offset,Value)-Pair #7
-
-        // RtlFreeHeap+0x49 : push 0x0B
-        { 0x49, 0x6A }, // (Offset,Value)-Pair #8
-        { 0x4A, 0x0B }, // (Offset,Value)-Pair #9
-OOVPA_END;
-
-// ******************************************************************
-// * RtlReAllocateHeap
-// ******************************************************************
-OOVPA_NO_XREF(RtlReAllocateHeap_1_0_4627, 10)
-
-        // RtlReAllocateHeap+0x1C : test esi, esi
-        { 0x1C, 0x85 }, // (Offset,Value)-Pair #1
-        { 0x1D, 0xF6 }, // (Offset,Value)-Pair #2
-
-        // RtlReAllocateHeap+0x26 : or [ebp+0x0C], ecx
-        { 0x26, 0x09 }, // (Offset,Value)-Pair #3
-        { 0x27, 0x4D }, // (Offset,Value)-Pair #4
-        { 0x28, 0x0C }, // (Offset,Value)-Pair #5
-
-        // RtlReAllocateHeap+0x61 : jz +0x06; add ecx, 0x10
-        { 0x61, 0x74 }, // (Offset,Value)-Pair #6
-        { 0x62, 0x06 }, // (Offset,Value)-Pair #7
-        { 0x63, 0x83 }, // (Offset,Value)-Pair #8
-        { 0x64, 0xC1 }, // (Offset,Value)-Pair #9
-        { 0x65, 0x10 }, // (Offset,Value)-Pair #10
-OOVPA_END;
-
-// ******************************************************************
 // * XID_fCloseDevice
 // ******************************************************************
 OOVPA_XREF(XID_fCloseDevice_1_0_4627, 7,
