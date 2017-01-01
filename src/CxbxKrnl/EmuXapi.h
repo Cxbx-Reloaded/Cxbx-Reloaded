@@ -655,11 +655,6 @@ VOID WINAPI EmuXSetProcessQuantumLength
 );
 
 // ******************************************************************
-// * func: EmuXGetFileCacheSize
-// ******************************************************************
-DWORD WINAPI EmuXGetFileCacheSize();
-
-// ******************************************************************
 // * func: EmuSignalObjectAndWait
 // ******************************************************************
 DWORD WINAPI EmuSignalObjectAndWait

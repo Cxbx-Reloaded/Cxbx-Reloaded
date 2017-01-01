@@ -141,8 +141,6 @@ OOVPATable XAPI_1_0_5233[] = {
 	OOVPA_TABLE_PATCH(XInputGetState_1_0_4928, XTL::EmuXInputGetState),
     // XInputSetState
 	OOVPA_TABLE_PATCH(XInputSetState_1_0_5233, XTL::EmuXInputSetState),
-	// XGetFileCacheSize
-	OOVPA_TABLE_PATCH(XGetFileCacheSize_1_0_5344, XTL::EmuXGetFileCacheSize),
 	// QueueUserAPC (* unchanged since 3911 *)
 	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, XTL::EmuQueueUserAPC),
 	// GetFileAttributesA (* unchanged since 4134 *)

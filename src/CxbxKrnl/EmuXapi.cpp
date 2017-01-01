@@ -1075,20 +1075,6 @@ VOID WINAPI XTL::EmuXSetProcessQuantumLength
 }
 	
 // ******************************************************************
-// * func: EmuXGetFileCacheSize
-// ******************************************************************
-DWORD WINAPI XTL::EmuXGetFileCacheSize()
-{
-	LOG_FUNC();
-
-	// Return the default cache size for now.
-	// TODO: Save the file cache size if/when set.
-	DWORD dwRet = 64 * 1024;
-
-	RETURN(dwRet);
-}
-
-// ******************************************************************
 // * func: EmuSignalObjectAndWait
 // ******************************************************************
 DWORD WINAPI XTL::EmuSignalObjectAndWait
