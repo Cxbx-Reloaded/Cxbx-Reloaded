@@ -75,7 +75,7 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(ZeroBits)
 		LOG_FUNC_ARG(AllocationSize)
-		LOG_FUNC_ARG(AllocationType)
+		LOG_FUNC_ARG_TYPE(ALLOCATION_TYPE, AllocationType)
 		LOG_FUNC_ARG(Protect)
 		LOG_FUNC_END;
 

@@ -42,6 +42,7 @@ namespace xboxkrnl
 #include <xboxkrnl/xboxkrnl.h>
 
 // Additional types, exclusively for logging :
+enum  ALLOCATION_TYPE;
 enum  CREATE_DISPOSITION;
 enum  CREATE_OPTION;
 };
@@ -60,6 +61,7 @@ std::ostream& operator<<(std::ostream& os, const PULONG& value);
 
 // Headers for rendering Xbox enum types :
 
+LOGRENDER_HEADER(ALLOCATION_TYPE); // Not really an enum
 LOGRENDER_HEADER(BUS_DATA_TYPE);
 LOGRENDER_HEADER(CREATE_DISPOSITION); // Not really an enum
 LOGRENDER_HEADER(CREATE_OPTION); // Not really an enum
