@@ -649,125 +649,153 @@ WRITE32_START(USER)
 	WRITE32_UNHANDLED(USER)
 WRITE32_END(USER)
 
+typedef struct NV2ABlockInfo {
+		uint32_t offset;
+		uint32_t size;
+		uint32_t(*read)(uint32_t addr);
+		void(*write)(uint32_t addr, uint32_t value);
+} NV2ABlockInfo;
+
+static const NV2ABlockInfo regions[] = {{
+		0x000000,
+		0x001000,
+		EmuNV2A_PMC_Read32,
+		EmuNV2A_PMC_Write32,
+	}, {
+		0x001000,
+		0x001000,
+		EmuNV2A_PBUS_Read32,
+		EmuNV2A_PBUS_Write32,
+	}, {
+		0x002000,
+		0x002000,
+		EmuNV2A_PFIFO_Read32,
+		EmuNV2A_PFIFO_Write32,
+	}, {
+		0x007000,
+		0x001000,
+		EmuNV2A_PRMA_Read32,
+		EmuNV2A_PRMA_Write32,
+	}, {
+		0x008000,
+		0x001000,
+		EmuNV2A_PVIDEO_Read32,
+		EmuNV2A_PVIDEO_Write32,
+	}, {
+		0x009000,
+		0x001000,
+		EmuNV2A_PTIMER_Read32,
+		EmuNV2A_PTIMER_Write32,
+	}, {
+		0x00a000,
+		0x001000,
+		EmuNV2A_PCOUNTER_Read32,
+		EmuNV2A_PCOUNTER_Write32,
+	}, {
+		0x00b000,
+		0x001000,
+		EmuNV2A_PVPE_Read32,
+		EmuNV2A_PVPE_Write32,
+	},	{
+		0x00d000,
+		0x001000,
+		EmuNV2A_PTV_Read32,
+		EmuNV2A_PTV_Write32,
+	}, {
+		0x0a0000,
+		0x020000,
+		EmuNV2A_PRMFB_Read32,
+		EmuNV2A_PRMFB_Write32,
+	}, {
+		0x0c0000,
+		0x001000,
+		EmuNV2A_PRMVIO_Read32,
+		EmuNV2A_PRMVIO_Write32,
+	},{
+		0x100000,
+		0x001000,
+		EmuNV2A_PFB_Read32,
+		EmuNV2A_PFB_Write32,
+	}, {
+		0x101000,
+		0x001000,
+		EmuNV2A_PSTRAPS_Read32,
+		EmuNV2A_PSTRAPS_Write32,
+	}, {
+		0x400000,
+		0x002000,
+		EmuNV2A_PGRAPH_Read32,
+		EmuNV2A_PGRAPH_Write32,
+	}, {
+		0x600000,
+		0x001000,
+		EmuNV2A_PCRTC_Read32,
+		EmuNV2A_PCRTC_Write32,
+	}, {
+		0x601000,
+		0x001000,
+		EmuNV2A_PRMCIO_Read32,
+		EmuNV2A_PRMCIO_Write32,
+	}, {
+		0x680000,
+		0x001000,
+		EmuNV2A_PRAMDAC_Read32,
+		EmuNV2A_PRAMDAC_Write32,
+	}, {
+		0x681000,
+		0x001000,
+		EmuNV2A_PRMDIO_Read32,
+		EmuNV2A_PRMDIO_Write32,
+	}, {
+		0x800000,
+		0x800000,
+		EmuNV2A_USER_Read32,
+		EmuNV2A_USER_Write32,
+	}, {
+		0xFFFFFFFF,
+		0,
+		nullptr,
+		nullptr,
+	},
+};
+
+const NV2ABlockInfo* EmuNV2A_Block(uint32_t addr) 
+{
+	// Find the block in the block table
+	const NV2ABlockInfo* block = &regions[0];
+	int i = 0;
+
+	while (block->read != nullptr) {
+		if (addr >= block->offset && addr < block->offset + block->size) {
+			return block;
+		}
+
+		block = &regions[++i];
+	}
+
+	return nullptr;
+}
 
 uint32_t EmuNV2A_Read32(uint32_t addr)
 {
-	switch ((addr >> 12) & 31) {
-	case NV_PMC          :  /* card master control */
-		return EmuNV2A_PMC_Read32(addr & 0x0FFF);
-	case NV_PBUS         :  /* bus control */
-		return EmuNV2A_PBUS_Read32(addr & 0x0FFF);
-	case NV_PFIFO        :  /* MMIO and DMA FIFO submission to PGRAPH and VPE */
-		return EmuNV2A_PFIFO_Read32(addr & 0x0FFF);
-	case NV_PFIFO_CACHE  :
-		return EmuNV2A_PFIFO_CACHE_Read32(addr & 0x0FFF);
-	case NV_PRMA         :  /* access to BAR0/BAR1 from real mode */
-		return EmuNV2A_PRMA_Read32(addr & 0x0FFF);
-	case NV_PVIDEO       :  /* video overlay */
-		return EmuNV2A_PVIDEO_Read32(addr & 0x0FFF);
-	case NV_PTIMER       :  /* time measurement and time-based alarms */
-		return EmuNV2A_PTIMER_Read32(addr & 0x0FFF);
-	case NV_PCOUNTER     :  /* performance monitoring counters */
-		return EmuNV2A_PCOUNTER_Read32(addr & 0x0FFF);
-	case NV_PVPE         :  /* MPEG2 decoding engine */
-		return EmuNV2A_PVPE_Read32(addr & 0x0FFF);
-	case NV_PTV          :  /* TV encoder */
-		return EmuNV2A_PTV_Read32(addr & 0x0FFF);
-	case NV_PRMFB        :  /* aliases VGA memory window */
-		return EmuNV2A_PRMFB_Read32(addr & 0x0FFF);
-	case NV_PRMVIO       :  /* aliases VGA sequencer and graphics controller registers */
-		return EmuNV2A_PRMVIO_Read32(addr & 0x0FFF);
-	case NV_PFB          :  /* memory interface */
-		return EmuNV2A_PFB_Read32(addr & 0x0FFF);
-	case NV_PSTRAPS      :  /* straps readout / override */
-		return EmuNV2A_PSTRAPS_Read32(addr & 0x0FFF);
-	case NV_PGRAPH       :  /* accelerated 2d/3d drawing engine */
-		return EmuNV2A_PGRAPH_Read32(addr & 0x0FFF);
-	case NV_PCRTC        :  /* more CRTC controls */
-		return EmuNV2A_PCRTC_Read32(addr & 0x0FFF);
-	case NV_PRMCIO       :  /* aliases VGA CRTC and attribute controller registers */
-		return EmuNV2A_PRMCIO_Read32(addr & 0x0FFF);
-    case NV_PRAMDAC      :  /* RAMDAC, cursor, and PLL control */
-		return EmuNV2A_PRAMDAC_Read32(addr & 0x0FFF);
-	case NV_PRMDIO       :  /* aliases VGA palette registers */
-		return EmuNV2A_PRMDIO_Read32(addr & 0x0FFF);
-	case NV_PRAMIN       :  /* RAMIN access */
-		return EmuNV2A_PRAMIN_Read32(addr & 0x0FFF);
-	case NV_USER         :  /* PFIFO MMIO and DMA submission area */
-		return EmuNV2A_USER_Read32(addr & 0x0FFF);
-	default:
-		EmuWarning("EmuNV2A_Read32: Unhandled Read Address %08X", addr);
+	const NV2ABlockInfo* block = EmuNV2A_Block(addr);
+
+	if (block != nullptr) {
+		return block->read(addr - block->offset);
 	}
+
+	EmuWarning("EmuNV2A_Write32: Unhandled Read Address %08X", addr);
 	return 0;
 }
 
 void EmuNV2A_Write32(uint32_t addr, uint32_t value)
 {
-	switch ((addr >> 12) & 31) {
-	case NV_PMC:  /* card master control */
-		EmuNV2A_PMC_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PBUS:  /* bus control */
-		EmuNV2A_PBUS_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PFIFO:  /* MMIO and DMA FIFO submission to PGRAPH and VPE */
-		EmuNV2A_PFIFO_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PFIFO_CACHE:
-		EmuNV2A_PFIFO_CACHE_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PRMA:  /* access to BAR0/BAR1 from real mode */
-		EmuNV2A_PRMA_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PVIDEO:  /* video overlay */
-		EmuNV2A_PVIDEO_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PTIMER:  /* time measurement and time-based alarms */
-		EmuNV2A_PTIMER_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PCOUNTER:  /* performance monitoring counters */
-		EmuNV2A_PCOUNTER_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PVPE:  /* MPEG2 decoding engine */
-		EmuNV2A_PVPE_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PTV:  /* TV encoder */
-		EmuNV2A_PTV_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PRMFB:  /* aliases VGA memory window */
-		EmuNV2A_PRMFB_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PRMVIO:  /* aliases VGA sequencer and graphics controller registers */
-		EmuNV2A_PRMVIO_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PFB:  /* memory interface */
-		EmuNV2A_PFB_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PSTRAPS:  /* straps readout / override */
-		EmuNV2A_PSTRAPS_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PGRAPH:  /* accelerated 2d/3d drawing engine */
-		EmuNV2A_PGRAPH_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PCRTC:  /* more CRTC controls */
-		EmuNV2A_PCRTC_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PRMCIO:  /* aliases VGA CRTC and attribute controller registers */
-		EmuNV2A_PRMCIO_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PRAMDAC:  /* RAMDAC, cursor, and PLL control */
-		EmuNV2A_PRAMDAC_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PRMDIO:  /* aliases VGA palette registers */
-		EmuNV2A_PRMDIO_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PRAMIN:  /* RAMIN access */
-		EmuNV2A_PRAMIN_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_USER:  /* PFIFO MMIO and DMA submission area */
-		EmuNV2A_USER_Write32(addr & 0x0FFF, value);
-		break;
-	default:
-		EmuWarning("EmuNV2A_Write32: Unhandled Write Address %08X (value %08X)", addr, value);
+	const NV2ABlockInfo* block = EmuNV2A_Block(addr);
+
+	if (block != nullptr) {
+		block->write(addr - block->offset, value);
 	}
+
+	EmuWarning("EmuNV2A_Write32: Unhandled Write Address %08X (value %08X)", addr, value);
+	return;
 }
