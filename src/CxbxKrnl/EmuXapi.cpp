@@ -943,7 +943,7 @@ DWORD WINAPI XTL::EmuXLaunchNewImage
 		if (PathFileExists(szDashboardPath))
 		{
 			MessageBox(CxbxKrnl_hEmuParent, "The title is rebooting to dashboard", "Cxbx-Reloaded", 0);
-			EmuXLaunchNewImage("C:\xboxdash.xbe", pLaunchData);
+			EmuXLaunchNewImage("C:\\xboxdash.xbe", pLaunchData);
 		}
 			
 		CxbxKrnlCleanup("The xbe rebooted to Dashboard and xboxdash.xbe could not be found");
