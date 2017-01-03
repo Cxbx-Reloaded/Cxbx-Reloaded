@@ -95,51 +95,6 @@ OOVPA_NO_XREF(GetThreadPriority_1_0_4627, 10)
 OOVPA_END;
 
 // ******************************************************************
-// * RtlFreeHeap
-// ******************************************************************
-OOVPA_NO_XREF(RtlFreeHeap_1_0_4627, 9)
-
-        // RtlFreeHeap+0x1F : test edi, edi
-        { 0x1F, 0x85 }, // (Offset,Value)-Pair #1
-        { 0x20, 0xFF }, // (Offset,Value)-Pair #2
-
-        // RtlFreeHeap+0x23 : mov al, 1
-        { 0x23, 0xB0 }, // (Offset,Value)-Pair #3
-        { 0x24, 0x01 }, // (Offset,Value)-Pair #4
-
-        // RtlFreeHeap+0x35 : mov eax, fs:[0x20]
-        { 0x35, 0x64 }, // (Offset,Value)-Pair #5
-        { 0x36, 0xA1 }, // (Offset,Value)-Pair #6
-        { 0x37, 0x20 }, // (Offset,Value)-Pair #7
-
-        // RtlFreeHeap+0x49 : push 0x0B
-        { 0x49, 0x6A }, // (Offset,Value)-Pair #8
-        { 0x4A, 0x0B }, // (Offset,Value)-Pair #9
-OOVPA_END;
-
-// ******************************************************************
-// * RtlReAllocateHeap
-// ******************************************************************
-OOVPA_NO_XREF(RtlReAllocateHeap_1_0_4627, 10)
-
-        // RtlReAllocateHeap+0x1C : test esi, esi
-        { 0x1C, 0x85 }, // (Offset,Value)-Pair #1
-        { 0x1D, 0xF6 }, // (Offset,Value)-Pair #2
-
-        // RtlReAllocateHeap+0x26 : or [ebp+0x0C], ecx
-        { 0x26, 0x09 }, // (Offset,Value)-Pair #3
-        { 0x27, 0x4D }, // (Offset,Value)-Pair #4
-        { 0x28, 0x0C }, // (Offset,Value)-Pair #5
-
-        // RtlReAllocateHeap+0x61 : jz +0x06; add ecx, 0x10
-        { 0x61, 0x74 }, // (Offset,Value)-Pair #6
-        { 0x62, 0x06 }, // (Offset,Value)-Pair #7
-        { 0x63, 0x83 }, // (Offset,Value)-Pair #8
-        { 0x64, 0xC1 }, // (Offset,Value)-Pair #9
-        { 0x65, 0x10 }, // (Offset,Value)-Pair #10
-OOVPA_END;
-
-// ******************************************************************
 // * XID_fCloseDevice
 // ******************************************************************
 OOVPA_XREF(XID_fCloseDevice_1_0_4627, 7,
@@ -607,48 +562,6 @@ OOVPA_END;
 
 
 // ******************************************************************
-// * VirtualProtect
-// ******************************************************************
-OOVPA_NO_XREF(VirtualProtect_1_0_4627, 7) // XREF_VirtualProtect
-
-        { 0x04, 0x8D },
-        { 0x0A, 0x24 },
-        { 0x10, 0x10 },
-        { 0x18, 0x85 },
-        { 0x1C, 0x33 },
-        { 0x22, 0xE8 },
-        { 0x28, 0xC0 },
-OOVPA_END;
-
-// ******************************************************************
-// * CreateSemaphoreA
-// ******************************************************************
-OOVPA_NO_XREF(CreateSemaphoreA_1_0_4627, 7)
-
-        { 0x0A, 0x74 },
-        { 0x16, 0x50 },
-        { 0x22, 0x10 },
-        { 0x31, 0x85 },
-        { 0x3A, 0x75 },
-        { 0x4A, 0x8B },
-        { 0x55, 0x33 },
-OOVPA_END;
-
-// ******************************************************************
-// * ReleaseSemaphore
-// ******************************************************************
-OOVPA_NO_XREF(ReleaseSemaphore_1_0_4627, 7)
-
-        { 0x03, 0x0C },
-        { 0x08, 0xFF },
-        { 0x0D, 0x15 },
-        { 0x12, 0x85 },
-        { 0x17, 0xC0 },
-        { 0x1C, 0xE8 },
-        { 0x21, 0x33 },
-OOVPA_END;
-
-// ******************************************************************
 // * XMountAlternateTitleA
 // ******************************************************************
 OOVPA_NO_XREF(XMountAlternateTitleA_1_0_4627, 7)
@@ -688,19 +601,6 @@ OOVPA_NO_XREF(XUnmountAlternateTitleA_1_0_4627, 7)
         { 0x3A, 0x50 },
         { 0x46, 0x0B },
         { 0x52, 0x50 },
-OOVPA_END;
-
-// ******************************************************************
-// * XGetFileCacheSize
-// ******************************************************************
-OOVPA_NO_XREF(XGetFileCacheSize_1_0_4627, 6)
-
-        { 0x00, 0xFF },
-        { 0x01, 0x15 },
-        { 0x06, 0xC1 },
-        { 0x07, 0xE0 },
-        { 0x08, 0x0C },
-        { 0x09, 0xC3 },
 OOVPA_END;
 
 // ******************************************************************
@@ -748,10 +648,6 @@ OOVPATable XAPI_1_0_4627[] = {
 	OOVPA_TABLE_PATCH(GetThreadPriority_1_0_4627, XTL::EmuGetThreadPriority),
     // XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
 	OOVPA_TABLE_PATCH(XRegisterThreadNotifyRoutine_1_0_3911, XTL::EmuXRegisterThreadNotifyRoutine),
-	// QueryPerformanceCounter (* unchanged since 4361 *)
-	OOVPA_TABLE_PATCH(QueryPerformanceCounter_1_0_4361, XTL::EmuQueryPerformanceCounter),
-	// QueryPerformanceFrequency (* unchanged since 4361 *)
-	OOVPA_TABLE_PATCH(QueryPerformanceFrequency_1_0_4361, XTL::EmuQueryPerformanceFrequency),
     // XMountUtilityDrive (* unchanged since 4432 *)
 	OOVPA_TABLE_PATCH(XMountUtilityDrive_1_0_4432, XTL::EmuXMountUtilityDrive),
     // XInitDevices (* unchanged since 1.0.3911 *)
@@ -850,10 +746,6 @@ OOVPATable XAPI_1_0_4627[] = {
 	OOVPA_TABLE_PATCH(XMountAlternateTitleA_1_0_4928, XTL::EmuXMountAlternateTitle),
 	// XUnmountAlternateTitleA
 	OOVPA_TABLE_PATCH(XUnmountAlternateTitleA_1_0_4627, XTL::EmuXUnmountAlternateTitle),
-	// GetFileAttributesA (* unchanged since 4134 *)
-	OOVPA_TABLE_PATCH(GetFileAttributesA_1_0_4134, XTL::EmuGetFileAttributesA),
-	// XGetFileCacheSize
-	OOVPA_TABLE_PATCH(XGetFileCacheSize_1_0_4627, XTL::EmuXGetFileCacheSize),
 	// XInputGetDeviceDescription
 	OOVPA_TABLE_PATCH(XInputGetDeviceDescription_1_0_4831, XTL::EmuXInputGetDeviceDescription),
 	// MoveFileA

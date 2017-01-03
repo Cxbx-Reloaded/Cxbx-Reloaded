@@ -75,7 +75,13 @@ XBSYSAPI EXPORTNUM(100) VOID NTAPI KeDisconnectInterrupt
     IN PKINTERRUPT  InterruptObject
 );
 
-XBSYSAPI VOID *KeEnterCriticalRegion;
+// ******************************************************************
+// * 0x0065 - KeEnterCriticalRegion()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(101) VOID NTAPI KeEnterCriticalRegion
+(
+	VOID
+);
 
 // ******************************************************************
 // * 0x0067 - KeGetCurrentIrql()
@@ -148,7 +154,15 @@ XBSYSAPI EXPORTNUM(119) BOOLEAN NTAPI KeInsertQueueDpc
 
 XBSYSAPI VOID *KeInterruptTime;
 XBSYSAPI VOID *KeIsExecutingDpc;
-XBSYSAPI VOID *KeLeaveCriticalRegion;
+
+// ******************************************************************
+// * 0x007A - KeLeaveCriticalRegion()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(122) VOID NTAPI KeLeaveCriticalRegion
+(
+	VOID
+);
+
 XBSYSAPI VOID *KePulseEvent;
 XBSYSAPI VOID *KeQueryBasePriorityThread;
 

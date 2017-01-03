@@ -305,7 +305,15 @@ XBSYSAPI EXPORTNUM(211) NTSTATUS NTAPI NtQueryInformationFile
 );
 
 XBSYSAPI VOID *NtQueryIoCompletion;
-XBSYSAPI VOID *NtQueryMutant;
+
+// ******************************************************************
+// * 0x00D5 - NtQueryMutant()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(213) NTSTATUS NTAPI NtQueryMutant
+(
+	IN HANDLE MutantHandle,
+	OUT PMUTANT_BASIC_INFORMATION MutantInformation
+);
 
 // ******************************************************************
 // * 0x00D6 - NtQuerySemaphore()

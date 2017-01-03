@@ -234,6 +234,21 @@ XBSYSAPI EXPORTNUM(100) xboxkrnl::VOID NTAPI xboxkrnl::KeDisconnectInterrupt
 }
 
 // ******************************************************************
+// * 0x0065 - KeEnterCriticalRegion()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(101) xboxkrnl::VOID NTAPI xboxkrnl::KeEnterCriticalRegion
+(
+	VOID
+)
+{
+	LOG_FUNC();
+
+	// TODO : Disable kernel APCs
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
 // * 0x0067 - KeGetCurrentIrql()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(103) xboxkrnl::KIRQL NTAPI xboxkrnl::KeGetCurrentIrql(void)
@@ -372,6 +387,21 @@ XBSYSAPI EXPORTNUM(119) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertQueueDpc
 // XBSYSAPI EXPORTNUM(120) xboxkrnl::PKSYSTEM_TIME xboxkrnl::KeInterruptTime; // Used for KernelThunk[120]
 
 // ******************************************************************
+// * 0x007A - KeLeaveCriticalRegion()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(122) xboxkrnl::VOID NTAPI xboxkrnl::KeLeaveCriticalRegion
+(
+	VOID
+)
+{
+	LOG_FUNC();
+
+	// TODO : Enable kernel APCs
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
 // * 0x007D - KeQueryInterruptTime()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(125) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryInterruptTime(void)
@@ -394,6 +424,27 @@ XBSYSAPI EXPORTNUM(125) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryInterruptTime
 	RETURN(InterruptTime);
 }
 
+// Xbox Performance Counter Frequency = 337F98 = ACPI timer frequency (3.375000 Mhz)
+#define XBOX_PERFORMANCE_FREQUENCY 3375000 
+
+LARGE_INTEGER NativePerformanceCounter = { 0 };
+LARGE_INTEGER NativePerformanceFrequency = { 0 };
+double NativeToXbox_FactorForPerformanceFrequency;
+
+CXBXKRNL_API void CxbxInitPerformanceCounters()
+{
+	//BootTickCount = GetTickCount();
+
+	// Measure current host performance counter and frequency
+	QueryPerformanceCounter(&NativePerformanceCounter);
+	QueryPerformanceFrequency(&NativePerformanceFrequency);
+	// TODO : If anything like speed-stepping influences this, prevent or fix it here
+
+	// Calculate the host-to-xbox performance frequency factor,
+	// used the return Xbox-like results in KeQueryPerformanceCounter:
+	NativeToXbox_FactorForPerformanceFrequency = (double)XBOX_PERFORMANCE_FREQUENCY / NativePerformanceFrequency.QuadPart;
+}
+
 // ******************************************************************
 // * 0x007E - KeQueryPerformanceCounter()
 // ******************************************************************
@@ -401,11 +452,21 @@ XBSYSAPI EXPORTNUM(126) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceCo
 {
 	LOG_FUNC();
 
-	::LARGE_INTEGER Counter;
+	::LARGE_INTEGER PerformanceCounter;
 
-	QueryPerformanceCounter(&Counter);
+	// TODO : When Cxbx emulates the RDTSC opcode, use the same handling here.
 
-	RETURN(Counter.QuadPart);
+	// Dxbx note : Xbox actually uses the RDTSC machine code instruction for this,
+	// and we we're bound to a single core, so we could do that too, but on Windows
+	// rdtsc is not a very stable counter, so instead, we'll use the native PeformanceCounter :
+	QueryPerformanceCounter(&PerformanceCounter);
+
+	// Re-base the performance counter to increase accuracy of the following conversion :
+	PerformanceCounter.QuadPart -= NativePerformanceCounter.QuadPart;
+	// We appy a conversion factor here, to fake Xbox1-like increment-speed behaviour :
+	PerformanceCounter.QuadPart = (ULONGLONG)(NativeToXbox_FactorForPerformanceFrequency * PerformanceCounter.QuadPart);
+
+	RETURN(PerformanceCounter.QuadPart);
 }
 
 // ******************************************************************
@@ -415,12 +476,11 @@ XBSYSAPI EXPORTNUM(127) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceFr
 {
 	LOG_FUNC();
 
-	// Xbox Performance Counter Frequency := 337F98h
-	::LARGE_INTEGER Frequency;
+	// Dxbx note : We return the real Xbox1 frequency here,
+	// to make subsequent calculations behave the same as on the real Xbox1 :
+	ULONGLONG ret = XBOX_PERFORMANCE_FREQUENCY;
 
-	QueryPerformanceFrequency(&Frequency);
-
-	RETURN(Frequency.QuadPart);
+	RETURN(ret);
 }
 
 // ******************************************************************

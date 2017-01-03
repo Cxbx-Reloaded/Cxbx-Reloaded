@@ -366,6 +366,8 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 	g_CurrentProcessHandle = GetCurrentProcess();
 
+	CxbxInitPerformanceCounters();
+
 #ifdef _DEBUG
 //	MessageBoxA(NULL, "Attach a Debugger", "DEBUG", 0);
 //  Debug child processes using https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool

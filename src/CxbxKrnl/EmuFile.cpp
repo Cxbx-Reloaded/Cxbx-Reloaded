@@ -96,12 +96,6 @@ const char CxbxDefaultXbeDriveLetter = 'D';
 
 int CxbxDefaultXbeDriveIndex = -1;
 EmuNtSymbolicLinkObject* NtSymbolicLinkObjects[26];
-
-struct XboxDevice {
-	std::string XboxDevicePath;
-	std::string HostDevicePath;
-	HANDLE HostRootHandle;
-};
 std::vector<XboxDevice> Devices;
 
 EmuHandle::EmuHandle(EmuNtObject* ntObject)
@@ -323,34 +317,56 @@ NTSTATUS CxbxObjectAttributesToNT(
 	OUT NativeObjectAttributes& nativeObjectAttributes, 
 	const std::string aFileAPIName)
 {
-	NTSTATUS result = STATUS_SUCCESS;
-	std::string RelativeXboxPath;
-	std::wstring RelativeHostPath;
-	NtDll::HANDLE RootDirectory;
-
 	if (ObjectAttributes == NULL)
 	{
 		// When the pointer is nil, make sure we pass nil to Windows too :
-		nativeObjectAttributes.NtObjAttrPtr = NULL;
-		return result;
+		nativeObjectAttributes.NtObjAttrPtr = nullptr;
+		return STATUS_SUCCESS;
 	}
 
+	// Pick up the ObjectName, and let's see what to make of it :
+	std::string ObjectName = PSTRING_to_string(ObjectAttributes->ObjectName);
+	std::wstring RelativeHostPath;
+	NtDll::HANDLE RootDirectory = ObjectAttributes->RootDirectory;
+	// Is there a filename API given?
+	if (aFileAPIName.size() > 0)
+	{
+		// Then interpret the ObjectName as a filename, and update it to host relative :
+		NTSTATUS result = _CxbxConvertFilePath(ObjectName, /*OUT*/RelativeHostPath, /*OUT*/&RootDirectory, aFileAPIName);
+		if (FAILED(result))
+			return result;
+	}
+	else
+		// When not called from a file-handling API, just convert the ObjectName to a wide string :
+		RelativeHostPath = string_to_wstring(ObjectName);
+
+	// Copy the wide string to the unicode string
+	wcscpy_s(nativeObjectAttributes.wszObjectName, RelativeHostPath.c_str());
+	NtDll::RtlInitUnicodeString(&nativeObjectAttributes.NtUnicodeString, nativeObjectAttributes.wszObjectName);
+	// And initialize the NT ObjectAttributes with that :
+	InitializeObjectAttributes(&nativeObjectAttributes.NtObjAttr, &nativeObjectAttributes.NtUnicodeString, ObjectAttributes->Attributes, RootDirectory, NULL);
 	// ObjectAttributes are given, so make sure the pointer we're going to pass to Windows is assigned :
 	nativeObjectAttributes.NtObjAttrPtr = &nativeObjectAttributes.NtObjAttr;
 
-	RelativeXboxPath = PSTRING_to_string(ObjectAttributes->ObjectName);
-	result = _CxbxConvertFilePath(RelativeXboxPath, /*OUT*/RelativeHostPath, /*OUT*/&RootDirectory, aFileAPIName);
-	if (!FAILED(result))
-	{
-		// Copy relative path string to the unicode string
-		wcscpy_s(nativeObjectAttributes.wszObjectName, RelativeHostPath.c_str());
-		NtDll::RtlInitUnicodeString(&nativeObjectAttributes.NtUnicodeString, nativeObjectAttributes.wszObjectName);
+	return STATUS_SUCCESS;
+}
 
-		// Initialize the NT ObjectAttributes
-		InitializeObjectAttributes(&nativeObjectAttributes.NtObjAttr, &nativeObjectAttributes.NtUnicodeString, ObjectAttributes->Attributes, RootDirectory, NULL);
-	}
+int CxbxDeviceIndexByDevicePath(const char *XboxDevicePath)
+{
+	for (size_t i = 0; i < Devices.size(); i++)
+		if (_strnicmp(XboxDevicePath, Devices[i].XboxDevicePath.c_str(), Devices[i].XboxDevicePath.length()) == 0)
+			return(i);
 
-	return result;
+	return -1;
+}
+
+XboxDevice *CxbxDeviceByDevicePath(const std::string XboxDevicePath)
+{
+	int DeviceIndex = CxbxDeviceIndexByDevicePath(XboxDevicePath.c_str());
+	if (DeviceIndex >= 0)
+		return &Devices[DeviceIndex];
+
+	return nullptr;
 }
 
 int CxbxRegisterDeviceHostPath(std::string XboxDevicePath, std::string HostDevicePath, bool IsFile)
@@ -426,16 +442,7 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 			if (IsHostBasedPath)
 				DeviceIndex = CxbxDefaultXbeDriveIndex;
 			else
-			{
-				DeviceIndex = -1;
-				for (size_t i = 0; i < Devices.size(); i++) {
-					if (_strnicmp(aFullPath.c_str(), Devices[i].XboxDevicePath.c_str(), Devices[i].XboxDevicePath.length()) == 0)
-					{
-						DeviceIndex = i;
-						break;
-					}
-				}
-			}
+				DeviceIndex = CxbxDeviceIndexByDevicePath(aFullPath.c_str());
 
 			if (DeviceIndex >= 0)
 			{

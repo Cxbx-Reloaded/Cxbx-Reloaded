@@ -94,19 +94,6 @@ OOVPA_NO_XREF(XInputSetState_1_0_5233, 7)
 OOVPA_END;
 
 // ******************************************************************
-// * XGetFileCacheSize
-// ******************************************************************
-OOVPA_NO_XREF(XGetFileCacheSize_1_0_5344, 6)
-
-        { 0x00, 0xFF },
-        { 0x01, 0x15 },
-        { 0x06, 0xC1 },
-        { 0x07, 0xE0 },
-        { 0x08, 0x0C },
-        { 0x09, 0xC3 },
-OOVPA_END;
-
-// ******************************************************************
 // * XAPI_1_0_5233
 // ******************************************************************
 OOVPATable XAPI_1_0_5233[] = {
@@ -121,10 +108,6 @@ OOVPATable XAPI_1_0_5233[] = {
 	OOVPA_TABLE_PATCH(GetThreadPriority_1_0_4627, XTL::EmuGetThreadPriority),
     // XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
 	OOVPA_TABLE_PATCH(XRegisterThreadNotifyRoutine_1_0_3911, XTL::EmuXRegisterThreadNotifyRoutine),
-	// QueryPerformanceCounter (* unchanged since 4361 *)
-	OOVPA_TABLE_PATCH(QueryPerformanceCounter_1_0_4361, XTL::EmuQueryPerformanceCounter),
-	// QueryPerformanceFrequency (* unchanged since 4361 *)
-	OOVPA_TABLE_PATCH(QueryPerformanceFrequency_1_0_4361, XTL::EmuQueryPerformanceFrequency),
     // XMountUtilityDrive (* unchanged since 4432 *)
 	OOVPA_TABLE_PATCH(XMountUtilityDrive_1_0_4432, XTL::EmuXMountUtilityDrive),
     // XInitDevices
@@ -145,12 +128,8 @@ OOVPATable XAPI_1_0_5233[] = {
 	OOVPA_TABLE_PATCH(XInputGetState_1_0_4928, XTL::EmuXInputGetState),
     // XInputSetState
 	OOVPA_TABLE_PATCH(XInputSetState_1_0_5233, XTL::EmuXInputSetState),
-	// XGetFileCacheSize
-	OOVPA_TABLE_PATCH(XGetFileCacheSize_1_0_5344, XTL::EmuXGetFileCacheSize),
 	// QueueUserAPC (* unchanged since 3911 *)
 	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, XTL::EmuQueueUserAPC),
-	// GetFileAttributesA (* unchanged since 4134 *)
-	OOVPA_TABLE_PATCH(GetFileAttributesA_1_0_4134, XTL::EmuGetFileAttributesA),
 };
 
 // ******************************************************************

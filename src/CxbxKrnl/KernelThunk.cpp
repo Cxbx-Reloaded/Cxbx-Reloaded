@@ -166,7 +166,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::KeConnectInterrupt),              // 0x0062 (98)
 	(uint32)FUNC(&xboxkrnl::KeDelayExecutionThread),          // 0x0063 (99)
 	(uint32)FUNC(&xboxkrnl::KeDisconnectInterrupt),           // 0x0064 (100
-	(uint32)PANIC(0x0065),                                    // 0x0065 (101) KeEnterCriticalRegion
+	(uint32)FUNC(&xboxkrnl::KeEnterCriticalRegion),           // 0x0065 (101)
 	(uint32)VARIABLE(&xboxkrnl::MmGlobalData),                // 0x0066 (102)
 	(uint32)FUNC(&xboxkrnl::KeGetCurrentIrql),                // 0x0067 (103)
 	(uint32)FUNC(&xboxkrnl::KeGetCurrentThread),              // 0x0068 (104)
@@ -187,7 +187,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::KeInsertQueueDpc),                // 0x0077 (119)
 	(uint32)VARIABLE(0x0078),                                 // 0x0078 (120) KeInterruptTime (Set by ConnectWindowsTimersToThunkTable)
 	(uint32)PANIC(0x0079),                                    // 0x0079 (121) KeIsExecutingDpc
-	(uint32)PANIC(0x007A),                                    // 0x007A (122) KeLeaveCriticalRegion
+	(uint32)FUNC(&xboxkrnl::KeLeaveCriticalRegion),           // 0x007A (122)
 	(uint32)PANIC(0x007B),                                    // 0x007B (123) KePulseEvent
 	(uint32)PANIC(0x007C),                                    // 0x007C (124) KeQueryBasePriorityThread
 	(uint32)FUNC(&xboxkrnl::KeQueryInterruptTime),            // 0x007D (125)
@@ -278,7 +278,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::NtQueryFullAttributesFile),       // 0x00D2 (210)
 	(uint32)FUNC(&xboxkrnl::NtQueryInformationFile),          // 0x00D3 (211)
 	(uint32)PANIC(0x00D4),                                    // 0x00D4 (212) NtQueryIoCompletion
-	(uint32)PANIC(0x00D5),                                    // 0x00D5 (213) NtQueryMutant
+	(uint32)FUNC(&xboxkrnl::NtQueryMutant),                   // 0x00D5 (213)
 	(uint32)FUNC(&xboxkrnl::NtQuerySemaphore),                // 0x00D6 (214)
 	(uint32)FUNC(&xboxkrnl::NtQuerySymbolicLinkObject),       // 0x00D7 (215)
 	(uint32)FUNC(&xboxkrnl::NtQueryTimer),                    // 0x00D8 (216)
