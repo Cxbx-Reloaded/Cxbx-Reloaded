@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -198,4 +200,205 @@ XBSYSAPI EXPORTNUM(340) xboxkrnl::VOID NTAPI xboxkrnl::XcHMAC(
 	A_SHAInit(&ShaContext);
 	A_SHAUpdate(&ShaContext, Temp, sizeof(Temp));
 	A_SHAFinal(&ShaContext, HmacData);
+}
+
+// ******************************************************************
+// * 0x0155 - XcPKEncPublic()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(341) xboxkrnl::VOID xboxkrnl::XcPKEncPublic(
+	IN PBYTE pbPubKey,
+	IN PBYTE pbInput,
+	OUT PBYTE pbOutput
+	)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_OUT(pbPubKey)
+		LOG_FUNC_ARG_OUT(pbInput)
+		LOG_FUNC_ARG_OUT(pbOutput)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * 0x0156 - XcPKDecPrivate()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(342) xboxkrnl::VOID xboxkrnl::XcPKDecPrivate(
+	IN PBYTE pbPrvKey,
+	IN PBYTE pbInput,
+	OUT PBYTE pbOutput
+	)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_OUT(pbPrvKey)
+		LOG_FUNC_ARG_OUT(pbInput)
+		LOG_FUNC_ARG_OUT(pbOutput)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * 0x0157 - XcPKGetKeyLen()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(343) xboxkrnl::VOID xboxkrnl::XcPKGetKeyLen(
+	OUT PBYTE pbPubKey
+	)
+{
+	LOG_FUNC_ONE_ARG(pbPubKey);
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * 0x0158 - XcVerifyPKCS1Signature()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(344) xboxkrnl::VOID xboxkrnl::XcVerifyPKCS1Signature(
+	IN PBYTE pbSig,
+	IN PBYTE pbPubKey,
+	IN PBYTE pbDigest
+	)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_OUT(pbSig)
+		LOG_FUNC_ARG_OUT(pbPubKey)
+		LOG_FUNC_ARG_OUT(pbDigest)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * 0x0159 - XcModExp()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(345) xboxkrnl::VOID xboxkrnl::XcModExp(
+	IN PULONG pA,
+	IN PULONG pB,
+	IN PULONG pC,
+	IN PULONG pD,
+	IN ULONG dwN
+	)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_OUT(pA)
+		LOG_FUNC_ARG_OUT(pB)
+		LOG_FUNC_ARG_OUT(pC)
+		LOG_FUNC_ARG_OUT(pD)
+		LOG_FUNC_ARG(dwN)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * 0x015A - XcDESKeyParity()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(346) xboxkrnl::VOID xboxkrnl::XcDESKeyParity(
+	IN PBYTE pbKey,
+	IN ULONG dwKeyLength
+	)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_OUT(pbKey)
+		LOG_FUNC_ARG(dwKeyLength)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * 0x015B - XcKeyTable()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(347) xboxkrnl::VOID xboxkrnl::XcKeyTable(
+	IN ULONG dwCipher,
+	IN PBYTE pbKeyTable,
+	IN PBYTE pbKey
+	)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(dwCipher)
+		LOG_FUNC_ARG_OUT(pbKeyTable)
+		LOG_FUNC_ARG_OUT(pbKey)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * 0x015C - XcBlockCrypt()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(348) xboxkrnl::VOID xboxkrnl::XcBlockCrypt(
+	IN ULONG dwCipher,
+	OUT PBYTE pbOutput,
+	IN PBYTE pbInput,
+	IN PBYTE pbKeyTable,
+	IN ULONG dwOp
+	)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(dwCipher)
+		LOG_FUNC_ARG_OUT(pbOutput)
+		LOG_FUNC_ARG_OUT(pbInput)
+		LOG_FUNC_ARG_OUT(pbKeyTable)
+		LOG_FUNC_ARG(dwOp)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * 0x015D - XcBlockCryptCBC()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(349) xboxkrnl::VOID xboxkrnl::XcBlockCryptCBC(
+	IN ULONG dwCipher,
+	IN ULONG dwInputLength,
+	OUT PBYTE pbOutput,
+	IN PBYTE pbInput,
+	IN PBYTE pbKeyTable,
+	IN ULONG dwOp,
+	OUT PBYTE pbFeedback
+	)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(dwCipher)
+		LOG_FUNC_ARG(dwInputLength)
+		LOG_FUNC_ARG_OUT(pbOutput)
+		LOG_FUNC_ARG_OUT(pbInput)
+		LOG_FUNC_ARG_OUT(pbKeyTable)
+		LOG_FUNC_ARG(dwOp)
+		LOG_FUNC_ARG_OUT(pbFeedback)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * 0x015E - XcCryptService()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(350) xboxkrnl::VOID xboxkrnl::XcCryptService(
+	IN ULONG dwOp,
+	...
+	)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(dwOp)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * 0x015F - XcUpdateCrypto()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(351) xboxkrnl::VOID xboxkrnl::XcUpdateCrypto(
+	IN PVOID pNewVector,
+	IN PVOID pROMVector
+	)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_OUT(pNewVector)
+		LOG_FUNC_ARG_OUT(pROMVector)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
 }
