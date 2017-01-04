@@ -37,4 +37,6 @@
 uint32_t EmuNV2A_Read32(uint32_t addr);
 void EmuNV2A_Write32(uint32_t addr, uint32_t value);
 
+void InitOpenGLContext();
+
 #endif

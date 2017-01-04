@@ -39,12 +39,23 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
+#ifdef _MSC_VER                         // Check if MS Visual C compiler
+#  pragma comment(lib, "opengl32.lib")  // Compiler-specific directive to avoid manually configuration
+//#  pragma comment(lib, "glu32.lib")     // Link libraries
+#  pragma comment(lib, "glew32.lib")
+#endif
+
 #include <Zydis.hpp>
 
 #include "CxbxKrnl.h"
 #include "Emu.h"
 #include "EmuNV2A.h"
 #include "nv2a_int.h" // from https://github.com/espes/xqemu/tree/xbox/hw/xbox
+
+#include <gl\glew.h>
+#include <gl\GL.h>
+#include <gl\GLU.h>
+//#include <gl\glut.h>
 
 struct {
 	uint32_t pending_interrupts;
@@ -798,4 +809,271 @@ void EmuNV2A_Write32(uint32_t addr, uint32_t value)
 
 	EmuWarning("EmuNV2A_Write32: Unhandled Write Address %08X (value %08X)", addr, value);
 	return;
+}
+
+//
+// OPENGL
+//
+
+// 
+#define X_D3DTS_STAGECOUNT 4
+
+HDC g_EmuWindowsDC = 0;
+GLuint VertexProgramIDs[4] = { 0, 0, 0, 0 };
+uint ActiveVertexProgramID = 0;
+GLuint TextureIDs[X_D3DTS_STAGECOUNT]= { 0, 0, 0, 0 };
+
+// Vertex shader header, mapping Xbox1 registers to the ARB syntax (original version by KingOfC).
+// Note about the use of 'conventional' attributes in here: Since we prefer to use only one shader
+// for both immediate and deferred mode rendering, we alias all attributes to conventional inputs
+// as much as possible. Only when there's no conventional attribute available, we use generic attributes.
+// So in the following header, we use conventional attributes first, and generic attributes for the
+// rest of the vertex attribute slots. This makes it possible to support immediate and deferred mode
+// rendering with the same shader, and the use of the OpenGL fixed-function pipeline without a shader.
+std::string DxbxVertexShaderHeader =
+    "!!ARBvp1.0\n"
+    "TEMP R0,R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12;\n"
+    "ADDRESS A0;\n"
+#ifdef DXBX_OPENGL_CONVENTIONAL
+    "ATTRIB v0 = vertex.position;\n" // Was: vertex.attrib[0] (See "conventional" note above)
+    "ATTRIB v1 = vertex.%s;\n" // Note : We replace this with "weight" or "attrib[1]" depending GL_ARB_vertex_blend
+    "ATTRIB v2 = vertex.normal;\n" // Was: vertex.attrib[2]
+    "ATTRIB v3 = vertex.color.primary;\n" // Was: vertex.attrib[3]
+    "ATTRIB v4 = vertex.color.secondary;\n" // Was: vertex.attrib[4]
+    "ATTRIB v5 = vertex.fogcoord;\n" // Was: vertex.attrib[5]
+    "ATTRIB v6 = vertex.attrib[6];\n"
+    "ATTRIB v7 = vertex.attrib[7];\n"
+    "ATTRIB v8 = vertex.texcoord[0];\n" // Was: vertex.attrib[8]
+    "ATTRIB v9 = vertex.texcoord[1];\n" // Was: vertex.attrib[9]
+    "ATTRIB v10 = vertex.texcoord[2];\n" // Was: vertex.attrib[10]
+    "ATTRIB v11 = vertex.texcoord[3];\n" // Was: vertex.attrib[11]
+#else
+    "ATTRIB v0 = vertex.attrib[0];\n"
+    "ATTRIB v1 = vertex.attrib[1];\n"
+    "ATTRIB v2 = vertex.attrib[2];\n"
+    "ATTRIB v3 = vertex.attrib[3];\n"
+    "ATTRIB v4 = vertex.attrib[4];\n"
+    "ATTRIB v5 = vertex.attrib[5];\n"
+    "ATTRIB v6 = vertex.attrib[6];\n"
+    "ATTRIB v7 = vertex.attrib[7];\n"
+    "ATTRIB v8 = vertex.attrib[8];\n"
+    "ATTRIB v9 = vertex.attrib[9];\n"
+    "ATTRIB v10 = vertex.attrib[10];\n"
+    "ATTRIB v11 = vertex.attrib[11];\n"
+#endif
+    "ATTRIB v12 = vertex.attrib[12];\n"
+    "ATTRIB v13 = vertex.attrib[13];\n"
+    "ATTRIB v14 = vertex.attrib[14];\n"
+    "ATTRIB v15 = vertex.attrib[15];\n"
+    "OUTPUT oPos = result.position;\n"
+    "OUTPUT oD0 = result.color.front.primary;\n"
+    "OUTPUT oD1 = result.color.front.secondary;\n"
+    "OUTPUT oB0 = result.color.back.primary;\n"
+    "OUTPUT oB1 = result.color.back.secondary;\n"
+    "OUTPUT oPts = result.pointsize;\n"
+    "OUTPUT oFog = result.fogcoord;\n"
+    "OUTPUT oT0 = result.texcoord[0];\n"
+    "OUTPUT oT1 = result.texcoord[1];\n"
+    "OUTPUT oT2 = result.texcoord[2];\n"
+    "OUTPUT oT3 = result.texcoord[3];\n"
+    "PARAM c[] = { program.env[0..191] };\n" // All constants in 1 array declaration (requires NV_gpu_program4?)
+    "PARAM mvp[4] = { state.matrix.mvp };\n";
+
+void SetupPixelFormat(HDC DC)
+{
+	const PIXELFORMATDESCRIPTOR pfd = {
+		 /* .nSize = */ sizeof(PIXELFORMATDESCRIPTOR), // size
+		 /* .nVersion = */ 1,   // version
+		 /* .dwFlags = */ PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER, // support double-buffering
+		 /* .iPixelType = */ PFD_TYPE_RGBA, // color type
+		 /* .cColorBits = */ 32,   // preferred color depth
+		 /* .cRedBits = */ 0,
+		 /* .cRedShift = */ 0, // color bits (ignored)
+		 /* .cGreenBits = */ 0,
+		 /* .cGreenShift = */ 0,
+		 /* .cBlueBits = */ 0,
+		 /* .cBlueShift = */ 0,
+		 /* .cAlphaBits = */ 0,
+		 /* .cAlphaShift = */ 0,   // no alpha buffer
+		 /* .cAccumBits = */ 0,
+		 /* .cAccumRedBits = */ 0,    // no accumulation buffer,
+		 /* .cAccumGreenBits = */ 0,      // accum bits (ignored)
+		 /* .cAccumBlueBits = */ 0,
+		 /* .cAccumAlphaBits = */ 0,
+		 /* .cDepthBits = */ 16,   // depth buffer
+		 /* .cStencilBits = */ 0,   // no stencil buffer
+		 /* .cAuxBuffers = */ 0,   // no auxiliary buffers
+		 /* .iLayerType= */ PFD_MAIN_PLANE,   // main layer
+		 /* .bReserved = */ 0,
+		 /* .dwLayerMask = */ 0,
+		 /* .dwVisibleMask = */ 0,
+		 /* .dwDamageMask = */ 0                    // no layer, visible, damage masks
+	};
+
+	int PixelFormat = ChoosePixelFormat(DC, &pfd);
+	if (PixelFormat == 0)
+		return;
+
+	if (SetPixelFormat(DC, PixelFormat, &pfd) != TRUE)
+		return;
+}
+
+// From https://github.com/inolen/redream/blob/master/src/video/gl_backend.c
+static int rb_compile_shader(const char *source, GLenum shader_type, GLuint *shader)
+{
+	size_t sourceLength = strlen(source);
+
+	*shader = glCreateShader(shader_type);
+	glShaderSource(*shader, 1, (const GLchar **)&source,
+		(const GLint *)&sourceLength);
+	glCompileShader(*shader);
+
+	GLint compiled;
+	glGetShaderiv(*shader, GL_COMPILE_STATUS, &compiled);
+
+	if (!compiled) {
+//		rb_print_shader_log(*shader);
+		glDeleteShader(*shader);
+		return 0;
+	}
+
+	return 1;
+}
+
+void DxbxCompileShader(std::string Shader)
+{
+	int GLErrorPos;
+
+//	if (MayLog(lfUnit))
+//		DbgPrintf("  NV2A: New vertex program :\n" + Shader);
+
+/*
+glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, Shader.size(), Shader.c_str());
+
+	// errors are catched
+	glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &GLErrorPos);
+	*/
+	GLuint shader;
+
+	GLErrorPos = rb_compile_shader(Shader.c_str(), GL_VERTEX_SHADER, &shader); // TODO : GL_VERTEX_SHADER_ARB ??
+	/*
+	if (GLErrorPos > 0) 
+	{
+		Shader.insert(GLErrorPos, "{ERROR}");
+		EmuWarning("Program error at position %d:", GLErrorPos);
+		EmuWarning((char*)glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+		EmuWarning(Shader.c_str());
+	}
+	*/
+}
+void InitOpenGLContext()
+{
+	HGLRC RC;
+	std::string szCode;
+
+	//glutInit();
+	{ // rb_init_context();
+	/* link in gl functions at runtime */
+		glewExperimental = GL_TRUE;
+		GLenum err = glewInit();
+		if (err != GLEW_OK) {
+			//LOG_WARNING("GLEW initialization failed: %s", glewGetErrorString(err));
+			return;
+		}
+	}
+	g_EmuWindowsDC = GetDC(g_hEmuWindow); // Actually, you can use any windowed control here
+	SetupPixelFormat(g_EmuWindowsDC);
+
+	RC = wglCreateContext(g_EmuWindowsDC); // makes OpenGL window out of DC
+	wglMakeCurrent(g_EmuWindowsDC, RC);   // makes OpenGL window active
+	//ReadImplementationProperties(); // Determine a set of booleans indicating which OpenGL extensions are available
+	//ReadExtensions(); // Assign all OpenGL extension API's (DON'T call them if the extension is not available!)
+
+	// Initialize the viewport :
+	//Viewport.X = 0;
+	//Viewport.Y = 0;
+	//Viewport.Width = g_EmuCDPD.pPresentationParameters.BackBufferWidth;
+	//Viewport.Height = g_EmuCDPD.pPresentationParameters.BackBufferHeight;
+	//Viewport.MinZ = -1.0;
+	//Viewport.MaxZ = 1.0;
+
+	//DxbxUpdateTransformProjection();
+	//DxbxUpdateViewport();
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	// Switch to left-handed coordinate space (as per http://www.opengl.org/resources/faq/technical/transformations.htm) :
+	//  glScalef(1.0, 1.0, -1.0);
+
+	// Set some defaults :
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL); // Nearer Z coordinates cover further Z
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glAlphaFunc(GL_GEQUAL, 0.5);
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // GL_LINE for wireframe
+
+/*
+	// TODO : The following code only works on cards that support the
+	// vertex program extensions (NVidia cards mainly); So for ATI we
+	// have to come up with another solution !!!
+	glGenProgramsARB(4, &VertexProgramIDs[0]);
+*/
+
+#ifdef DXBX_OPENGL_CONVENTIONAL
+	if (GL_ARB_vertex_blend)
+		DxbxVertexShaderHeader = sprintf(DxbxVertexShaderHeader, "weight");
+	else
+		DxbxVertexShaderHeader = sprintf(DxbxVertexShaderHeader, "attrib[1]");
+#endif
+
+	// Precompiled shader for the fixed function pipeline :
+	szCode = DxbxVertexShaderHeader +
+		"# This part adjusts the vertex position by the super-sampling scale & offset :\n"
+		"MOV R0, v0;\n"
+		"RCP R0.w, R0.w;\n"
+		"MUL R0, R0, c[0];\n" // c[-96] in D3D speak - applies SuperSampleScale
+								// Note : Use R12 instead of oPos because this is not yet the final assignment :
+		"ADD R12, R0, c[1];\n" // c[-95] in D3D speak - applies SuperSampleOffset
+
+		"# This part just reads all other components and passes them to the output :\n"
+		"MOV oD0, v3;\n"
+		"MOV oD1, v4;\n"
+		"MOV oFog, v4.w;\n" // specular fog
+							  //    "MOV oFog, v0.z;\n" // z fog
+							  //    "RCP oFog, v0.w;\n" // w fog
+		"MOV oPts, v1.x;\n"
+		"MOV oB0, v7;\n"
+		"MOV oB1, v8;\n"
+		"MOV oT0, v9;\n"
+		"MOV oT1, v10;\n"
+		"MOV oT2, v11;\n"
+		"MOV oT3, v12;\n"
+
+		"# This part applies the screen-space transform (not present when '#pragma screenspace' was used) :\n"
+		"MUL R12.xyz, R12, c[58];\n" // c[-38] in D3D speak - see EmuNV2A_ViewportScale,
+		"RCP R1.x, R12.w;\n" // Originally RCC, but that"s not supported in ARBvp1.0 (use "MIN R1, R1, 0" and "MAX R1, R1, 1"?)
+		"MAD R12.xyz, R12, R1.x, c[59];\n" // c[-37] in D3D speak - see EmuNV2A_ViewportOffset
+
+		"# Dxbx addition : Transform the vertex to clip coordinates :\n"
+		"DP4 R0.x, mvp[0], R12;\n"
+		"DP4 R0.y, mvp[1], R12;\n"
+		"DP4 R0.z, mvp[2], R12;\n"
+		"DP4 R0.w, mvp[3], R12;\n"
+		"MOV R12, R0;\n"
+
+		"# Apply Z coord mapping\n"
+		"ADD R12.z, R12.z, R12.z;\n"
+		"ADD R12.z, R12.z, -R12.w;\n"
+
+		"# Here""s the final assignment to oPos :\n"
+		"MOV oPos, R12;\n"
+		"END\n"; // TODO : Check if newline is required?
+
+//	glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[0]);
+	DxbxCompileShader(szCode);
 }
