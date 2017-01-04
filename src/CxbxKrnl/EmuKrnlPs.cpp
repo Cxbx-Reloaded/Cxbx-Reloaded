@@ -290,7 +290,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 		*ThreadHandle = (HANDLE)_beginthreadex(NULL, NULL, PCSTProxy, iPCSTProxyParam, NULL, (uint*)&dwThreadId);
 
 		// Make sure Xbox1 code runs on one core :
-		SetThreadAffinityMask(ThreadHandle, g_CPUXbox);
+		SetThreadAffinityMask(*ThreadHandle, g_CPUXbox);
 
 		WaitForSingleObject(iPCSTProxyParam->hStartedEvent, 1000);
 
