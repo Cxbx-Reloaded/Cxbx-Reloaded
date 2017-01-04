@@ -204,10 +204,10 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
     {
         DWORD dwThreadId;
 
-        CreateThread(NULL, NULL, EmuCreateDeviceProxy, NULL, NULL, &dwThreadId);
+        HANDLE hEmuCreateDeviceProxyThread = CreateThread(NULL, NULL, EmuCreateDeviceProxy, NULL, NULL, &dwThreadId);
 		// Ported from Dxbx :
         // If possible, assign this thread to another core than the one that runs Xbox1 code :
-        SetThreadAffinityMask(&dwThreadId, g_CPUOthers);
+        SetThreadAffinityMask(hEmuCreateDeviceProxyThread, g_CPUOthers);
     }
 
 /* TODO : Port this Dxbx code :
@@ -236,7 +236,7 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 
 		// Ported from Dxbx :
 		// If possible, assign this thread to another core than the one that runs Xbox1 code :
-		SetThreadAffinityMask(&dwThreadId, g_CPUOthers);
+		SetThreadAffinityMask(hRenderWindowThread, g_CPUOthers);
 
         while(!g_bRenderWindowActive)
             Sleep(10); // Dxbx: Should we use SwitchToThread() or YieldProcessor() ?
