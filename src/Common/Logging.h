@@ -127,8 +127,8 @@ template<class T>
 inline T _log_sanitize(T arg) { return arg; }
 
 // Sanitize C-style strings by converting NULL to "<nullptr>" to prevent null dereference
-inline const char * _log_sanitize(const char *arg) { return (NULL == arg) ? "<nullptr>" : arg; }
-inline const wchar_t * _log_sanitize(const wchar_t *arg) { return (NULL == arg) ? L"<nullptr>" : arg; }
+inline const char * _log_sanitize(char *arg) { return (NULL == arg) ? "<nullptr>" : arg; }
+inline const wchar_t * _log_sanitize(wchar_t *arg) { return (NULL == arg) ? L"<nullptr>" : arg; }
 
 // Convert booleans to strings properly
 inline const char * _log_sanitize(BOOL value) { return value ? "TRUE" : "FALSE"; }
