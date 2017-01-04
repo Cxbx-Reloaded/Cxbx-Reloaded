@@ -563,23 +563,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	//extern void InitializeSectionStructures(void); 
 	InitializeSectionStructures();
 
-	DbgPrintf("EmuMain (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
 
-	XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
-
-	EmuHLEIntercept(pLibraryVersion, pXbeHeader);
-
-	//
-	// initialize FS segment selector
-	//
-
-	{
-		EmuInitFS();
-
-		EmuGenerateFS(pTLS, pTLSData);
-	}
-
-	
 	DbgPrintf("EmuMain : Determining CPU affinity.\n");
 
 	// Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
@@ -601,6 +585,23 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		// Make sure Xbox1 code runs on one core :
 		SetThreadAffinityMask(GetCurrentThread(), g_CPUXbox);
 	}
+
+	DbgPrintf("EmuMain (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
+
+	XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
+
+	EmuHLEIntercept(pLibraryVersion, pXbeHeader);
+
+	//
+	// initialize FS segment selector
+	//
+
+	{
+		EmuInitFS();
+
+		EmuGenerateFS(pTLS, pTLSData);
+	}
+
 
     DbgPrintf("EmuMain (0x%X): Initial thread starting.\n", GetCurrentThreadId());
 
