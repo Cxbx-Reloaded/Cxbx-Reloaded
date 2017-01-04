@@ -119,6 +119,9 @@ static unsigned int WINAPI PCSTProxy
 
 	EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
 
+	_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
+	_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
+
 	// call thread notification routine(s)
 	if (g_iThreadNotificationCount != 0)
 	{
