@@ -104,7 +104,7 @@ XBSYSAPI EXPORTNUM(14) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePool
 {
 	LOG_FORWARD("ExAllocatePoolWithTag");
 
-	return ExAllocatePoolWithTag(NumberOfBytes, (ULONG)"enoN"); // = "None" in reverse
+	return ExAllocatePoolWithTag(NumberOfBytes, 'enoN'); // = "None" in reverse
 }
 
 // ******************************************************************
