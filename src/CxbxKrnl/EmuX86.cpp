@@ -44,36 +44,41 @@
 #include "EmuNV2A.h"
 
 
-uint8_t EmuX86_Read8(uint32_t addr)
+uint32_t EmuX86_Read32(uint32_t addr)
 {
-	EmuWarning("EmuX86_Read8: Unknown Read Address %02X", addr);
-	return 0;
+	uint32_t value = 0;
+	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE)
+		value = EmuNV2A_Read32(addr - NV2A_ADDR);
+	else
+		EmuWarning("EmuX86_Read32(0x%08X) = 0x%08X [Unknown address]", addr, value);
+
+	return value;
 }
 
 uint16_t EmuX86_Read16(uint32_t addr)
 {
-	EmuWarning("EmuX86_Read16: Unknown Read Address %04X", addr);
-	return 0;
+	EmuWarning("EmuX86_Read16(0x%08X) Forwarding to EmuX86_Read32...", addr);
+	uint16_t value;
+	if (addr & 2)
+		value = (uint16_t)EmuX86_Read32(addr - 2);
+	else
+		value = (uint16_t)(EmuX86_Read32(addr) >> 16);
+
+	EmuWarning("EmuX86_Read16(0x%08X) = 0x%04X", addr, value);
+	return value;
 }
 
-uint32_t EmuX86_Read32(uint32_t addr)
+uint8_t EmuX86_Read8(uint32_t addr)
 {
-	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
-		return EmuNV2A_Read32(addr - NV2A_ADDR);
-	}
+	EmuWarning("EmuX86_Read8(0x%08X) Forwarding to EmuX86_Read16...", addr);
+	uint8_t value;
+	if (addr & 1)
+		value = (uint8_t)EmuX86_Read16(addr - 1);
+	else
+		value = (uint8_t)(EmuX86_Read16(addr) >> 8);
 
-	EmuWarning("EmuX86_Read32: Unknown Read Address %08X", addr);
-	return 0;
-}
-
-void EmuX86_Write8(uint32_t addr, uint8_t value)
-{
-	EmuWarning("EmuX86_Write8: Unknown Write Address %08X (value %02X)", addr, value);
-}
-
-void EmuX86_Write16(uint32_t addr, uint16_t value)
-{
-	EmuWarning("EmuX86_Write8: Unknown Write Address %08X (value %04X)", addr, value);
+	EmuWarning("EmuX86_Read8(0x%08X) = 0x%02X", addr, value);
+	return value;
 }
 
 void EmuX86_Write32(uint32_t addr, uint32_t value)
@@ -83,7 +88,17 @@ void EmuX86_Write32(uint32_t addr, uint32_t value)
 		return;
 	}
 
-	EmuWarning("EmuX86_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	EmuWarning("EmuX86_Write32(0x%08X, 0x%04X) [Unknown address]", addr, value);
+}
+
+void EmuX86_Write16(uint32_t addr, uint16_t value)
+{
+	EmuWarning("EmuX86_Write16(0x%08X, 0x%04X) [Unknown address]", addr, value);
+}
+
+void EmuX86_Write8(uint32_t addr, uint8_t value)
+{
+	EmuWarning("EmuX86_Write8(0x%08X, 0x%02X) [Unknown address]", addr, value);
 }
 
 inline DWORD* EmuX86_GetRegisterPointer(LPEXCEPTION_POINTERS e, Zydis::Register reg)

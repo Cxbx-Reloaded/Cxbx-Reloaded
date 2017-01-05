@@ -473,12 +473,12 @@ DEBUG_END(USER)
 
 
 #define READ32_START(DEV) uint32_t EmuNV2A_##DEV##_Read32(uint32_t addr) { uint32_t result = 0; switch (addr) {
-#define READ32_UNHANDLED(DEV) default: EmuWarning("EmuNV2A_" #DEV "_Read32(0x%08X) = 0x%08X [Unhandled, %s]", addr, result, DebugNV_##DEV##(addr)); return result;
-#define READ32_END(DEV) } EmuWarning("EmuNV2A_" #DEV "_Read32(0x%08X) = 0x%08X [Handled, %s]", addr, result, DebugNV_##DEV##(addr)); return result; }
+#define READ32_UNHANDLED(DEV) default: EmuWarning("EmuX86_Read32 NV2A_" #DEV "(0x%08X) = 0x%08X [Unhandled, %s]", addr, result, DebugNV_##DEV##(addr)); return result;
+#define READ32_END(DEV) } EmuWarning("EmuX86_Read32 NV2A_" #DEV "(0x%08X) = 0x%08X [Handled, %s]", addr, result, DebugNV_##DEV##(addr)); return result; }
 
 #define WRITE32_START(DEV) void EmuNV2A_##DEV##_Write32(uint32_t addr, uint32_t value) { switch (addr) {
-#define WRITE32_UNHANDLED(DEV) default: EmuWarning("EmuNV2A_" #DEV "_Write32(0x%08X, 0x%08X) [Unhandled, %s]", addr, value, DebugNV_##DEV##(addr)); return;
-#define WRITE32_END(DEV) } EmuWarning("EmuNV2A_" #DEV "_Write32(0x%08X, 0x%08X) [Handled, %s]", addr, value, DebugNV_##DEV##(addr)); }  
+#define WRITE32_UNHANDLED(DEV) default: EmuWarning("EmuX86_Write32 NV2A_" #DEV "(0x%08X, 0x%08X) [Unhandled, %s]", addr, value, DebugNV_##DEV##(addr)); return;
+#define WRITE32_END(DEV) } EmuWarning("EmuX86_Write32 NV2A_" #DEV "(0x%08X, 0x%08X) [Handled, %s]", addr, value, DebugNV_##DEV##(addr)); }  
 
 
 READ32_START(PMC)
