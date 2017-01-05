@@ -862,12 +862,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 				// Dxbx addition : Prevent Direct3D from changing the FPU Control word :
 				g_EmuCDPD.BehaviorFlags |= D3DCREATE_FPU_PRESERVE;
 
-				// Set Floating Point Control Word (FPCW) :
-				_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
-				_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
-				// TODO : Should we keep checking (and correcting) the FPCW during emulation?)
-
-                // Address debug DirectX runtime warning in _DEBUG builds
+	            // Address debug DirectX runtime warning in _DEBUG builds
                 // Direct3D8: (WARN) :Device that was created without D3DCREATE_MULTITHREADED is being used by a thread other than the creation thread.
                 #ifdef _DEBUG
                     g_EmuCDPD.BehaviorFlags |= D3DCREATE_MULTITHREADED;
