@@ -78,6 +78,10 @@ struct {
 } pvideo;
 
 struct {
+	uint32_t regs[0x100000 / sizeof(uint32_t)];
+} pramin;
+
+struct {
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;
 	uint32_t numerator;
@@ -111,12 +115,14 @@ static void update_irq()
 	else {
 		pmc.pending_interrupts &= ~NV_PMC_INTR_0_PFIFO;
 	}
+
 	if (pcrtc.pending_interrupts & pcrtc.enabled_interrupts) {
 		pmc.pending_interrupts |= NV_PMC_INTR_0_PCRTC;
 	}
 	else {
 		pmc.pending_interrupts &= ~NV_PMC_INTR_0_PCRTC;
 	}
+
 	/* TODO PGRAPH */
 	/*
 	if (pgraph.pending_interrupts & pgraph.enabled_interrupts) {
@@ -125,18 +131,19 @@ static void update_irq()
 	else {
 		pmc.pending_interrupts &= ~NV_PMC_INTR_0_PGRAPH;
 	} */
+
 	if (pmc.pending_interrupts && pmc.enabled_interrupts) {
 		// TODO Raise IRQ
-		EmuWarning("EmuNV2A: update_irq : Raise IRQ Not Implemented");
+		EmuWarning("EmuNV2A update_irq() : Raise IRQ Not Implemented");
 	}
 	else {
 		// TODO: Cancel IRQ
-		EmuWarning("EmuNV2A: update_irq : Cancel IRQ Not Implemented");
+		EmuWarning("EmuNV2A update_irq() : Cancel IRQ Not Implemented");
 	}
 }
 
 #define DEBUG_START(DEV) const char *DebugNV_##DEV##(uint32_t addr) { switch (addr) {
-#define CASE(a, c) case a: return #a##c
+#define CASE(a, c) case a: return #a##c;
 #define DEBUG_END(DEV) default: return "Unknown " #DEV " Address"; } }
 
 DEBUG_START(PMC)
@@ -251,9 +258,43 @@ DEBUG_START(PRMVIO)
 DEBUG_END(PRMVIO)
 
 DEBUG_START(PFB)
-	CASE(NV_PFB_CFG0);
-	CASE(NV_PFB_CSTATUS);
-	CASE(NV_PFB_WBC);
+	CASE(NV_PFB_CFG0)
+	CASE(NV_PFB_CSTATUS)
+	CASE(NV_PFB_REFCTRL)
+	CASE(NV_PFB_NVM) // 	NV_PFB_NVM_MODE_DISABLE 
+	CASE(NV_PFB_PIN)
+	CASE(NV_PFB_PAD)
+	CASE(NV_PFB_TIMING0)
+	CASE(NV_PFB_TIMING1)
+	CASE(NV_PFB_TIMING2)
+	CASE(NV_PFB_TILE)
+	CASE(NV_PFB_TLIMIT)
+	CASE(NV_PFB_TSIZE)
+	CASE(NV_PFB_TSTATUS)
+	CASE(NV_PFB_MRS)
+	CASE(NV_PFB_EMRS)
+	CASE(NV_PFB_MRS_EXT)
+	CASE(NV_PFB_EMRS_EXT)
+	CASE(NV_PFB_REF)
+	CASE(NV_PFB_PRE)
+	CASE(NV_PFB_ZCOMP)
+	CASE(NV_PFB_ARB_PREDIVIDER)
+	CASE(NV_PFB_ARB_TIMEOUT)
+	CASE(NV_PFB_ARB_XFER_REM)
+	CASE(NV_PFB_ARB_DIFF_BANK)
+	CASE(NV_PFB_CLOSE_PAGE0)
+	CASE(NV_PFB_CLOSE_PAGE1)
+	CASE(NV_PFB_CLOSE_PAGE2)
+	CASE(NV_PFB_BPARB)
+	CASE(NV_PFB_CMDQ0)
+	CASE(NV_PFB_CMDQ1)
+	CASE(NV_PFB_ILL_INSTR)
+	CASE(NV_PFB_RT)
+	CASE(NV_PFB_AUTOCLOSE)
+	CASE(NV_PFB_WBC)
+	CASE(NV_PFB_CMDQ_PRT)
+	CASE(NV_PFB_CPU_RRQ)
+	CASE(NV_PFB_BYPASS);
 DEBUG_END(PFB)
 
 DEBUG_START(PSTRAPS)
@@ -383,7 +424,7 @@ DEBUG_START(USER)
 	CASE(NV_USER_DMA_PUT);
 	CASE(NV_USER_DMA_GET);
 	CASE(NV_USER_REF);
-	DEBUG_END(USER)
+DEBUG_END(USER)
 
 
 #define READ32_START(DEV) uint32_t EmuNV2A_##DEV##_Read32(uint32_t addr) { uint32_t result = 0; switch (addr) {
@@ -440,6 +481,10 @@ WRITE32_END(PBUS)
 
 
 READ32_START(PFIFO)
+	case NV_PFIFO_RAMHT:
+		result = 0x03000100; // = NV_PFIFO_RAMHT_SIZE_4K | NV_PFIFO_RAMHT_BASE_ADDRESS(NumberOfPaddingBytes >> 12) | NV_PFIFO_RAMHT_SEARCH_128
+	case NV_PFIFO_RAMFC:
+		result = 0x00890110; // = ? | NV_PFIFO_RAMFC_SIZE_2K | ?
 	READ32_UNHANDLED(PFIFO)
 READ32_END(PFIFO)
 
@@ -559,6 +604,8 @@ WRITE32_END(PRMVIO)
 
 
 READ32_START(PFB)
+	case NV_PFB_CFG0:
+		result = 3; // = NV_PFB_CFG0_PART_4
 	default:
 		result = pfb.regs[addr];
 READ32_END(PFB)
@@ -669,11 +716,13 @@ WRITE32_END(PRMDIO)
 
 
 READ32_START(PRAMIN)
-	READ32_UNHANDLED(PRAMIN)
+	default:
+		result = pramin.regs[addr];
 READ32_END(PRAMIN)
 
 WRITE32_START(PRAMIN)
-	WRITE32_UNHANDLED(PRAMIN)
+	default:
+		pramin.regs[addr] = value;
 WRITE32_END(PRAMIN)
 
 
@@ -783,6 +832,11 @@ static const NV2ABlockInfo regions[] = {{
 		EmuNV2A_PRMDIO_Read32,
 		EmuNV2A_PRMDIO_Write32,
 	}, {
+		00710000,
+		0x100000,
+		EmuNV2A_PRAMIN_Read32,
+		EmuNV2A_PRAMIN_Write32,
+	},{
 		0x800000,
 		0x800000,
 		EmuNV2A_USER_Read32,

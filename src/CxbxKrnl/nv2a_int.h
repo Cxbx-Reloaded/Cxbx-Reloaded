@@ -616,8 +616,42 @@
 #define NV_PFB_CFG0                                      0x00000200
 #   define NV_PFB_CFG0_PART                                   0x00000003
 #define NV_PFB_CSTATUS                                   0x0000020C
+#define NV_PFB_REFCTRL                                   0x00000210
+#define NV_PFB_NVM                                       0x00000214 // 	NV_PFB_NVM_MODE_DISABLE 
+#define NV_PFB_PIN                                       0x00000218
+#define NV_PFB_PAD                                       0x0000021C
+#define NV_PFB_TIMING0                                   0x00000220
+#define NV_PFB_TIMING1                                   0x00000224
+#define NV_PFB_TIMING2                                   0x00000228
+#define NV_PFB_TILE							0x00000240
+#define NV_PFB_TLIMIT                       0x00000244
+#define NV_PFB_TSIZE                        0x00000248
+#define NV_PFB_TSTATUS                      0x0000024C
+#define NV_PFB_MRS                                       0x000002C0
+#define NV_PFB_EMRS                                      0x000002C4
+#define NV_PFB_MRS_EXT                                   0x000002C8
+#define NV_PFB_EMRS_EXT                                  0x000002CC
+#define NV_PFB_REF                                       0x000002D0
+#define NV_PFB_PRE                                       0x000002D4
+#define NV_PFB_ZCOMP                        0x00000300
+#define NV_PFB_ARB_PREDIVIDER                            0x00000328
+#define NV_PFB_ARB_TIMEOUT                               0x0000032C
+#define NV_PFB_ARB_XFER_REM                              0x00000334
+#define NV_PFB_ARB_DIFF_BANK                             0x00000338
+#define NV_PFB_CLOSE_PAGE0                               0x00000340
+#define NV_PFB_CLOSE_PAGE1                               0x00000344
+#define NV_PFB_CLOSE_PAGE2                               0x00000348
+#define NV_PFB_BPARB                                     0x0000034C
+#define NV_PFB_CMDQ0                                     0x00000350
+#define NV_PFB_CMDQ1                                     0x00000354
+#define NV_PFB_ILL_INSTR                    0x00000360
+#define NV_PFB_RT                                        0x00000400
+#define NV_PFB_AUTOCLOSE                                 0x00000404
 #define NV_PFB_WBC                                       0x00000410
 #   define NV_PFB_WBC_FLUSH                                     (1 << 16)
+#define NV_PFB_CMDQ_PRT                                  0x00000418
+#define NV_PFB_CPU_RRQ                                   0x00000420
+#define NV_PFB_BYPASS                                    0x00000424
 
 
 #define NV_PRAMDAC_NVPLL_COEFF                           0x00000500
