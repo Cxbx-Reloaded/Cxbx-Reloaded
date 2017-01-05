@@ -48,8 +48,8 @@ XBSYSAPI EXPORTNUM(263) NTSTATUS NTAPI RtlAppendUnicodeToString
 // ******************************************************************
 XBSYSAPI EXPORTNUM(264) VOID NTAPI RtlAssert
 (
-    PVOID   FailedAssertion,
-    PVOID   FileName,
+    PCHAR   FailedAssertion,
+	PCHAR   FileName,
     ULONG   LineNumber,
     PCHAR   Message
 );

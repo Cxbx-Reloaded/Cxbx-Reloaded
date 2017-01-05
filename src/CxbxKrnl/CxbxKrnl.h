@@ -51,6 +51,8 @@ extern "C" {
 #define XBOX_KERNEL_BASE 0x80010000
 #define XBOX_NV2A_INIT_VECTOR 0xFF000008
 
+#define MAX_BUS_INTERRUPT_LEVEL 27
+#define MAX_NUM_INTERRUPTS 256
 
 /*! validate version string match */
 CXBXKRNL_API bool CxbxKrnlVerifyVersion(const char *szVersion);

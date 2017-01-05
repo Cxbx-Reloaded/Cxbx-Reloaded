@@ -31,12 +31,12 @@
 #define AV_QUERY_AV_CAPABILITIES		  6
 
 // ******************************************************************
-// * AvGetSavedDataAddress
+// * 0x0001 - AvGetSavedDataAddress()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(1) PVOID NTAPI AvGetSavedDataAddress(void);
 
 // ******************************************************************
-// * AvSendTVEncoderOption
+// * 0x0002 - AvSendTVEncoderOption()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(2) VOID NTAPI AvSendTVEncoderOption
 (
@@ -47,7 +47,7 @@ XBSYSAPI EXPORTNUM(2) VOID NTAPI AvSendTVEncoderOption
 );
 
 // ******************************************************************
-// * AvSetDisplayMode
+// * 0x0003 - AvSetDisplayMode()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(3) ULONG NTAPI AvSetDisplayMode
 (
@@ -60,7 +60,7 @@ XBSYSAPI EXPORTNUM(3) ULONG NTAPI AvSetDisplayMode
 );
 
 // ******************************************************************
-// * AvSetSavedDataAddress
+// * 0x0004 - AvSetSavedDataAddress()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(4) VOID NTAPI AvSetSavedDataAddress
 (
@@ -68,25 +68,35 @@ XBSYSAPI EXPORTNUM(4) VOID NTAPI AvSetSavedDataAddress
 );
 
 // ******************************************************************
-// * FscGetCacheSize
+// * 0x0023 - FscGetCacheSize()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(35) ULONG NTAPI FscGetCacheSize();
 
+// ******************************************************************
+// * 0x0024 - FscInvalidateIdleBlocks()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(36) VOID NTAPI FscInvalidateIdleBlocks();
 
 // ******************************************************************
-// * FscSetCacheSize
+// * 0x0025 - FscSetCacheSize()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(37) NTSTATUS NTAPI FscSetCacheSize
 (
 		ULONG NumberOfCachePages
 );
 
+// ******************************************************************
+// * 0x0058 - KdDebuggerEnabled
+// ******************************************************************
 XBSYSAPI EXPORTNUM(88) BOOLEAN KdDebuggerEnabled;
+
+// ******************************************************************
+// * 0x0059 - KdDebuggerNotPresent
+// ******************************************************************
 XBSYSAPI EXPORTNUM(89) BOOLEAN KdDebuggerNotPresent;
 
 // ******************************************************************
-// * KfRaiseIrql
+// * 0x00A0 - KfRaiseIrql()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(160) UCHAR FASTCALL KfRaiseIrql
 (
@@ -94,30 +104,42 @@ XBSYSAPI EXPORTNUM(160) UCHAR FASTCALL KfRaiseIrql
 );
 
 // ******************************************************************
-// * KfLowerIrql
+// * 0x00A1 - KfLowerIrql()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(161) VOID FASTCALL KfLowerIrql
 (
     IN UCHAR    NewIrql
 );
 
+// ******************************************************************
+// * 0x00A2 - KiBugCheckData
+// ******************************************************************
 XBSYSAPI EXPORTNUM(162) ULONG_PTR KiBugCheckData[5];
 
+// ******************************************************************
+// * 0x00A3 - KiUnlockDispatcherDatabase()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(163) VOID FASTCALL KiUnlockDispatcherDatabase
 (
 	IN KIRQL OldIrql
 );
 
 // ******************************************************************
-// * LaunchDataPage (actually a pointer)
+// * 0x00A4 - LaunchDataPage (actually a pointer)
 // ******************************************************************
 XBSYSAPI EXPORTNUM(164) PLAUNCH_DATA_PAGE LaunchDataPage;
 
+// ******************************************************************
+// * 0x00FC - PhyGetLinkState()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(252) NTSTATUS NTAPI PhyGetLinkState
 (
 	IN ULONG	Mode
 );
 
+// ******************************************************************
+// * 0x00FD - PhyInitialize()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(253) NTSTATUS NTAPI PhyInitialize
 (
 	IN ULONG	forceReset,
@@ -125,17 +147,17 @@ XBSYSAPI EXPORTNUM(253) NTSTATUS NTAPI PhyInitialize
 );
 
 // ******************************************************************
-// * XboxEEPROMKey
+// * 0x0141 - XboxEEPROMKey
 // ******************************************************************
 XBSYSAPI EXPORTNUM(321) UCHAR XboxEEPROMKey[16];
 
 // ******************************************************************
-// * XboxHardwareInfo
+// * 0x0142 - XboxHardwareInfo
 // ******************************************************************
 XBSYSAPI EXPORTNUM(322) XBOX_HARDWARE_INFO XboxHardwareInfo;
 
 // ******************************************************************
-// * XboxHDKey
+// * 0x0143 - XboxHDKey
 // ******************************************************************
 XBSYSAPI EXPORTNUM(323) UCHAR XboxHDKey[16];
 
@@ -146,16 +168,23 @@ typedef struct _XBOX_KRNL_VERSION {
     USHORT Qfe;
 } XBOX_KRNL_VERSION;
 
+// ******************************************************************
+// * 0x0144 - XboxKrnlVersion
+// ******************************************************************
 XBSYSAPI EXPORTNUM(324) XBOX_KRNL_VERSION XboxKrnlVersion;
 
 // ******************************************************************
-// * XboxSignatureKey
+// * 0x0145 - XboxSignatureKey
 // ******************************************************************
 XBSYSAPI EXPORTNUM(325) BYTE XboxSignatureKey[16];
 
-XBSYSAPI EXPORTNUM(326) OBJECT_STRING XeImageFileName;
 // ******************************************************************
-// * 0x0147 - XeLoadSection
+// * 0x0146 - XeImageFileName
+// ******************************************************************
+XBSYSAPI EXPORTNUM(326) OBJECT_STRING XeImageFileName;
+
+// ******************************************************************
+// * 0x0147 - XeLoadSection()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(327) NTSTATUS NTAPI XeLoadSection
 (
@@ -163,7 +192,7 @@ XBSYSAPI EXPORTNUM(327) NTSTATUS NTAPI XeLoadSection
 );
 
 // ******************************************************************
-// * 0x0148 - XeUnloadSection
+// * 0x0148 - XeUnloadSection()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(328) NTSTATUS NTAPI XeUnloadSection
 (
@@ -171,34 +200,55 @@ XBSYSAPI EXPORTNUM(328) NTSTATUS NTAPI XeUnloadSection
 );
 
 // ******************************************************************
-// * XcSHAInit
+// * 0x014F - XcSHAInit()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(335) VOID NTAPI XcSHAInit(UCHAR *pbSHAContext);
-
-// ******************************************************************
-// * XcSHAUpdate
-// ******************************************************************
-XBSYSAPI EXPORTNUM(336) VOID NTAPI XcSHAUpdate(UCHAR *pbSHAContext, UCHAR *pbInput, ULONG dwInputLength);
-
-// ******************************************************************
-// * XcSHAFinal
-// ******************************************************************
-XBSYSAPI EXPORTNUM(337) VOID NTAPI XcSHAFinal(UCHAR *pbSHAContext, UCHAR *pbDigest);
-
-XBSYSAPI EXPORTNUM(338) VOID XcRC4Key
+XBSYSAPI EXPORTNUM(335) VOID NTAPI XcSHAInit
 (
-    IN PUCHAR pbKeyStruct,
-    IN ULONG dwKeyLength,
-    IN PUCHAR pbKey
+	IN PUCHAR pbSHAContext
 );
 
-XBSYSAPI EXPORTNUM(339) VOID XcRC4Crypt
+// ******************************************************************
+// * 0x0150 - XcSHAUpdate()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(336) VOID NTAPI XcSHAUpdate
 (
-    IN PUCHAR pbKeyStruct,
-    IN ULONG dwInputLength,
-    IN PUCHAR pbInput
+	IN PUCHAR pbSHAContext,
+	IN PUCHAR pbInput,
+	IN ULONG dwInputLength
 );
 
+// ******************************************************************
+// * 0x0151 - XcSHAFinal()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(337) VOID NTAPI XcSHAFinal
+(
+	IN PUCHAR pbSHAContext,
+	IN PUCHAR pbDigest
+);
+
+// ******************************************************************
+// * 0x0152 - XcRC4Key()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(338) VOID NTAPI XcRC4Key
+(
+	IN PUCHAR pbKeyStruct,
+	IN ULONG dwKeyLength,
+	IN PUCHAR pbKey
+);
+
+// ******************************************************************
+// * 0x0153 - XcRC4Crypt()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(339) VOID NTAPI XcRC4Crypt
+(
+	IN PUCHAR pbKeyStruct,
+	IN ULONG dwInputLength,
+	IN PUCHAR pbInput
+);
+
+// ******************************************************************
+// * 0x0154 - XcHMAC()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(340) VOID NTAPI XcHMAC
 (
 	IN PBYTE pbKeyMaterial,
@@ -210,90 +260,139 @@ XBSYSAPI EXPORTNUM(340) VOID NTAPI XcHMAC
 	OUT PBYTE HmacData
 );
 
-XBSYSAPI EXPORTNUM(341) VOID XcPKEncPublic
+// ******************************************************************
+// * 0x0155 - XcPKEncPublic()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(341) ULONG NTAPI XcPKEncPublic
 (
-	IN PBYTE pbPubKey,
-	IN PBYTE pbInput,
-	OUT PBYTE pbOutput
+	IN PUCHAR pbPubKey,
+	IN PUCHAR pbInput,
+	OUT PUCHAR pbOutput
 );
 
-XBSYSAPI EXPORTNUM(342) VOID XcPKDecPrivate
+// ******************************************************************
+// * 0x0156 - XcPKDecPrivate()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(342) ULONG NTAPI XcPKDecPrivate
 (
-	IN PBYTE pbPrvKey,
-	IN PBYTE pbInput,
-	OUT PBYTE pbOutput
+	IN PUCHAR pbPrvKey,
+	IN PUCHAR pbInput,
+	OUT PUCHAR pbOutput
 );
 
-XBSYSAPI EXPORTNUM(343) VOID XcPKGetKeyLen
+// ******************************************************************
+// * 0x0157 - XcPKGetKeyLen()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(343) ULONG NTAPI XcPKGetKeyLen
 (
-	OUT PBYTE pbPubKey
+	OUT PUCHAR pbPubKey
 );
 
-XBSYSAPI EXPORTNUM(344) VOID XcVerifyPKCS1Signature
+// ******************************************************************
+// * 0x0158 - XcVerifyPKCS1Signature()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(344) BOOLEAN NTAPI XcVerifyPKCS1Signature
 (
-	IN PBYTE pbSig,
-	IN PBYTE pbPubKey,
-	IN PBYTE pbDigest
+	IN PUCHAR pbSig,
+	IN PUCHAR pbPubKey,
+	IN PUCHAR pbDigest
 );
 
-XBSYSAPI EXPORTNUM(345) VOID XcModExp
+// ******************************************************************
+// * 0x0159 - XcModExp()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(345) ULONG NTAPI XcModExp
 (
-	IN PULONG pA,
-	IN PULONG pB,
-	IN PULONG pC,
-	IN PULONG pD,
+	IN LPDWORD pA,
+	IN LPDWORD pB,
+	IN LPDWORD pC,
+	IN LPDWORD pD,
 	IN ULONG dwN
 );
 
-XBSYSAPI EXPORTNUM(346) VOID XcDESKeyParity
+// ******************************************************************
+// * 0x015A - XcDESKeyParity()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(346) VOID NTAPI XcDESKeyParity
 (
-	IN PBYTE pbKey,
+	IN PUCHAR pbKey,
 	IN ULONG dwKeyLength
 );
 
-XBSYSAPI EXPORTNUM(347) VOID XcKeyTable
+// ******************************************************************
+// * 0x015B - XcKeyTable()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(347) VOID NTAPI XcKeyTable
 (
 	IN ULONG dwCipher,
-	IN PBYTE pbKeyTable,
-	IN PBYTE pbKey
+	OUT PUCHAR pbKeyTable,
+	IN PUCHAR pbKey
 );
 
-XBSYSAPI EXPORTNUM(348) VOID XcBlockCrypt
+// ******************************************************************
+// * 0x015C - XcBlockCrypt()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(348) VOID NTAPI XcBlockCrypt
 (
 	IN ULONG dwCipher,
-	OUT PBYTE pbOutput,
-	IN PBYTE pbInput,
-	IN PBYTE pbKeyTable,
+	OUT PUCHAR pbOutput,
+	IN PUCHAR pbInput,
+	IN PUCHAR pbKeyTable,
 	IN ULONG dwOp
 );
 
-XBSYSAPI EXPORTNUM(349) VOID XcBlockCryptCBC
+// ******************************************************************
+// * 0x015D - XcBlockCryptCBC()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(349) VOID NTAPI XcBlockCryptCBC
 (
 	IN ULONG dwCipher,
 	IN ULONG dwInputLength,
-	OUT PBYTE pbOutput,
-	IN PBYTE pbInput,
-	IN PBYTE pbKeyTable,
+	OUT PUCHAR pbOutput,
+	IN PUCHAR pbInput,
+	IN PUCHAR pbKeyTable,
 	IN ULONG dwOp,
-	OUT PBYTE pbFeedback
+	IN PUCHAR pbFeedback
 );
 
-XBSYSAPI EXPORTNUM(350) VOID XcCryptService
+// ******************************************************************
+// * 0x015E - XcCryptService()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(350) ULONG NTAPI XcCryptService
 (
 	IN ULONG dwOp,
-	...
+	IN PVOID pArgs
 );
 
-XBSYSAPI EXPORTNUM(351) VOID XcUpdateCrypto
+typedef PVOID PCRYPTO_VECTOR; // TODO : Expand
+
+// ******************************************************************
+// * 0x015F - XcUpdateCrypto()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(351) VOID NTAPI XcUpdateCrypto
 (
-	IN PVOID pNewVector,
-	IN PVOID pROMVector
+	IN PCRYPTO_VECTOR pNewVector,
+	OUT PCRYPTO_VECTOR pROMVector OPTIONAL
 );
 
+// ******************************************************************
+// * 0x0161 - XboxLANKey
+// ******************************************************************
 XBSYSAPI EXPORTNUM(353) XBOX_KEY_DATA XboxLANKey;
+
+// ******************************************************************
+// * 0x0162 - XboxAlternateSignatureKeys
+// ******************************************************************
 XBSYSAPI EXPORTNUM(354) XBOX_KEY_DATA XboxAlternateSignatureKeys;
+
+// ******************************************************************
+// * 0x0163 - XePublicKeyData
+// ******************************************************************
 XBSYSAPI EXPORTNUM(355) DWORD XePublicKeyData;
 
+// ******************************************************************
+// * 0x0165 - IdexChannelObject
+// ******************************************************************
 XBSYSAPI EXPORTNUM(357) BYTE IdexChannelObject[0x100];
 
 XBSYSAPI EXPORTNUM(361) VOID *xsnprintf;     // prefixed with "x" to avoid xlibc collisions
