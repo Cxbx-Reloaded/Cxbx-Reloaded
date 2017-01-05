@@ -807,6 +807,7 @@ void EmuNV2A_Write32(uint32_t addr, uint32_t value)
 
 	if (block != nullptr) {
 		block->write(addr - block->offset, value);
+		return;
 	}
 
 	EmuWarning("EmuNV2A_Write32: Unhandled Write Address %08X (value %08X)", addr, value);
