@@ -613,6 +613,7 @@
 #define NV_PTIMER_ALARM_0                                0x00000420
 
 
+#define NV_PFB_DEBUG_0                                   0x00000080
 #define NV_PFB_CFG0                                      0x00000200
 #   define NV_PFB_CFG0_PART                                   0x00000003
 #define NV_PFB_CSTATUS                                   0x0000020C

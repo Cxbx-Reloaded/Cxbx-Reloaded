@@ -59,9 +59,51 @@
 #include <gl\GLU.h>
 //#include <gl\glut.h>
 
+#define NV_PMC_ADDR      0x00000000
+#define NV_PMC_SIZE                 0x001000
+#define NV_PBUS_ADDR     0x00001000
+#define NV_PBUS_SIZE                0x001000
+#define NV_PFIFO_ADDR    0x00002000
+#define NV_PFIFO_SIZE               0x002000
+#define NV_PRMA_ADDR     0x00007000
+#define NV_PRMA_SIZE                0x001000
+#define NV_VIDEO_ADDR    0x00008000
+#define NV_PVIDEO_SIZE              0x001000
+#define NV_PTIMER_ADDR   0x00009000
+#define NV_PTIMER_SIZE              0x001000
+#define NV_PCOUNTER_ADDR 0x0000A000
+#define NV_PCOUNTER_SIZE            0x001000
+#define NV_PVPE_ADDR     0x0000B000
+#define NV_PVPE_SIZE                0x001000
+#define NV_PTV_ADDR      0x0000D000
+#define NV_PTV_SIZE                 0x001000
+#define NV_PRMFB_ADDR    0x000A0000
+#define NV_PRMFB_SIZE               0x020000
+#define NV_PRMVIO_ADDR   0x000C0000
+#define NV_PRMVIO_SIZE              0x001000
+#define NV_PFB_ADDR      0x00100000
+#define NV_PFB_SIZE                 0x001000
+#define NV_PSTRAPS_ADDR  0x00101000
+#define NV_PSTRAPS_SIZE             0x001000
+#define NV_PGRAPH_ADDR   0x00400000
+#define NV_PGRAPH_SIZE              0x002000
+#define NV_PCRTC_ADDR    0x00600000
+#define NV_PCRTC_SIZE               0x001000
+#define NV_PRMCIO_ADDR   0x00601000
+#define NV_PRMCIO_SIZE              0x001000
+#define NV_PRAMDAC_ADDR  0x00680000
+#define NV_PRAMDAC_SIZE             0x001000
+#define NV_PRMDIO_ADDR   0x00681000
+#define NV_PRMDIO_SIZE              0x001000
+#define NV_PRAMIN_ADDR   0x00710000
+#define NV_PRAMIN_SIZE              0x100000
+#define NV_USER_ADDR     0x00800000
+#define NV_USER_SIZE                0x800000
+
 struct {
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;
+	uint32_t regs[NV_PMC_SIZE / sizeof(uint32_t)]; // TODO : union
 } pmc;
 
 struct {
@@ -70,16 +112,12 @@ struct {
 	//TODO:
 	// QemuThread puller_thread;
 	// Cache1State cache1;
-	uint32_t regs[0x2000];
+	uint32_t regs[NV_PFIFO_SIZE / sizeof(uint32_t)]; // TODO : union
 } pfifo;
 
 struct {
-	uint32_t regs[0x1000];
+	uint32_t regs[NV_PVIDEO_SIZE / sizeof(uint32_t)]; // TODO : union
 } pvideo;
-
-struct {
-	uint32_t regs[0x100000 / sizeof(uint32_t)];
-} pramin;
 
 struct {
 	uint32_t pending_interrupts;
@@ -87,16 +125,18 @@ struct {
 	uint32_t numerator;
 	uint32_t denominator;
 	uint32_t alarm_time;
+	uint32_t regs[NV_PTIMER_SIZE / sizeof(uint32_t)]; // TODO : union
 } ptimer;
 
 struct {
-	uint32_t regs[0x1000];
+	uint32_t regs[NV_PFB_SIZE / sizeof(uint32_t)]; // TODO : union
 } pfb;
 
 struct {
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;
 	uint32_t start;
+	uint32_t regs[NV_PCRTC_SIZE / sizeof(uint32_t)]; // TODO : union
 } pcrtc;
 
 struct {
@@ -104,7 +144,12 @@ struct {
 	uint64_t core_clock_freq;
 	uint32_t memory_clock_coeff;
 	uint32_t video_clock_coeff;
+	uint32_t regs[NV_PRAMDAC_SIZE / sizeof(uint32_t)]; // TODO : union
 } pramdac;
+
+struct {
+	uint32_t regs[NV_PRAMIN_SIZE / sizeof(uint32_t)]; // TODO : union
+} pramin;
 
 static void update_irq()
 {
@@ -742,103 +787,103 @@ typedef struct NV2ABlockInfo {
 } NV2ABlockInfo;
 
 static const NV2ABlockInfo regions[] = {{
-		0x000000,
-		0x001000,
+		NV_PMC_ADDR, // = 0x000000
+		NV_PMC_SIZE, // = 0x001000
 		EmuNV2A_PMC_Read32,
 		EmuNV2A_PMC_Write32,
 	}, {
-		0x001000,
-		0x001000,
+		NV_PBUS_ADDR, // = 0x001000
+		NV_PBUS_SIZE, // = 0x001000
 		EmuNV2A_PBUS_Read32,
 		EmuNV2A_PBUS_Write32,
 	}, {
-		0x002000,
-		0x002000,
+		NV_PFIFO_ADDR, // = 0x002000
+		NV_PFIFO_SIZE, // = 0x002000
 		EmuNV2A_PFIFO_Read32,
 		EmuNV2A_PFIFO_Write32,
 	}, {
-		0x007000,
-		0x001000,
+		NV_PRMA_ADDR, // = 0x007000
+		NV_PRMA_SIZE, // = 0x001000
 		EmuNV2A_PRMA_Read32,
 		EmuNV2A_PRMA_Write32,
 	}, {
-		0x008000,
-		0x001000,
+		NV_VIDEO_ADDR, // = 0x008000
+		NV_PVIDEO_SIZE, // = 0x001000
 		EmuNV2A_PVIDEO_Read32,
 		EmuNV2A_PVIDEO_Write32,
 	}, {
-		0x009000,
-		0x001000,
+		NV_PTIMER_ADDR, // = 0x009000
+		NV_PTIMER_SIZE, // = 0x001000
 		EmuNV2A_PTIMER_Read32,
 		EmuNV2A_PTIMER_Write32,
 	}, {
-		0x00a000,
-		0x001000,
+		NV_PCOUNTER_ADDR, // = 0x00a000
+		NV_PCOUNTER_SIZE, // = 0x001000
 		EmuNV2A_PCOUNTER_Read32,
 		EmuNV2A_PCOUNTER_Write32,
 	}, {
-		0x00b000,
-		0x001000,
+		NV_PVPE_ADDR, // = 0x00b000
+		NV_PVPE_SIZE, // = 0x001000
 		EmuNV2A_PVPE_Read32,
 		EmuNV2A_PVPE_Write32,
 	},	{
-		0x00d000,
-		0x001000,
+		NV_PTV_ADDR, // = 0x00d000
+		NV_PTV_SIZE, // = 0x001000
 		EmuNV2A_PTV_Read32,
 		EmuNV2A_PTV_Write32,
 	}, {
-		0x0a0000,
-		0x020000,
+		NV_PRMFB_ADDR, // = 0x0a0000
+		NV_PRMFB_SIZE, // = 0x020000
 		EmuNV2A_PRMFB_Read32,
 		EmuNV2A_PRMFB_Write32,
 	}, {
-		0x0c0000,
-		0x001000,
+		NV_PRMVIO_ADDR, // = 0x0c0000
+		NV_PRMVIO_SIZE, // = 0x001000
 		EmuNV2A_PRMVIO_Read32,
 		EmuNV2A_PRMVIO_Write32,
 	},{
-		0x100000,
-		0x001000,
+		NV_PFB_ADDR, // = 0x100000
+		NV_PFB_SIZE, // = 0x001000
 		EmuNV2A_PFB_Read32,
 		EmuNV2A_PFB_Write32,
 	}, {
-		0x101000,
-		0x001000,
+		NV_PSTRAPS_ADDR, // = 0x101000
+		NV_PSTRAPS_SIZE, // = 0x001000
 		EmuNV2A_PSTRAPS_Read32,
 		EmuNV2A_PSTRAPS_Write32,
 	}, {
-		0x400000,
-		0x002000,
+		NV_PGRAPH_ADDR, // = 0x400000
+		NV_PGRAPH_SIZE, // = 0x002000
 		EmuNV2A_PGRAPH_Read32,
 		EmuNV2A_PGRAPH_Write32,
 	}, {
-		0x600000,
-		0x001000,
+		NV_PCRTC_ADDR, // = 0x600000
+		NV_PCRTC_SIZE, // = 0x001000
 		EmuNV2A_PCRTC_Read32,
 		EmuNV2A_PCRTC_Write32,
 	}, {
-		0x601000,
-		0x001000,
+		NV_PRMCIO_ADDR, // = 0x601000
+		NV_PRMCIO_SIZE, // = 0x001000
 		EmuNV2A_PRMCIO_Read32,
 		EmuNV2A_PRMCIO_Write32,
 	}, {
-		0x680000,
-		0x001000,
+		NV_PRAMDAC_ADDR, // = 0x680000
+		NV_PRAMDAC_SIZE, // = 0x001000
 		EmuNV2A_PRAMDAC_Read32,
 		EmuNV2A_PRAMDAC_Write32,
 	}, {
-		0x681000,
-		0x001000,
+		NV_PRMDIO_ADDR, // = 0x681000
+		NV_PRMDIO_SIZE, // = 0x001000
 		EmuNV2A_PRMDIO_Read32,
 		EmuNV2A_PRMDIO_Write32,
 	}, {
-		00710000,
-		0x100000,
+		NV_PRAMIN_ADDR, // = 0x710000
+		NV_PRAMIN_SIZE, // = 0x100000
 		EmuNV2A_PRAMIN_Read32,
 		EmuNV2A_PRAMIN_Write32,
 	},{
-		0x800000,
-		0x800000,
+		NV_USER_ADDR, // = 0x800000,
+		NV_USER_SIZE, // = 0x800000,
 		EmuNV2A_USER_Read32,
 		EmuNV2A_USER_Write32,
 	}, {
@@ -874,7 +919,7 @@ uint32_t EmuNV2A_Read32(uint32_t addr)
 		return block->read(addr - block->offset);
 	}
 
-	EmuWarning("EmuNV2A_Write32: Unhandled Read Address %08X", addr);
+	EmuWarning("EmuNV2A_Read32: Unhandled Read Address %08X", addr);
 	return 0;
 }
 

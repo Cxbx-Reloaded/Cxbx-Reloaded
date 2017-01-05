@@ -58,8 +58,8 @@ uint16_t EmuX86_Read16(uint32_t addr)
 
 uint32_t EmuX86_Read32(uint32_t addr)
 {
-	if (addr >= 0xFD000000 && addr <= 0xFE000000) {
-		return EmuNV2A_Read32(addr & 0x00FFFFFF);
+	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
+		return EmuNV2A_Read32(addr - NV2A_ADDR);
 	}
 
 	EmuWarning("EmuX86_Read32: Unknown Read Address %08X", addr);
@@ -78,8 +78,8 @@ void EmuX86_Write16(uint32_t addr, uint16_t value)
 
 void EmuX86_Write32(uint32_t addr, uint32_t value)
 {
-	if (addr >= 0xFD000000 && addr <= 0xFE000000) {
-		EmuNV2A_Write32(addr & 0x00FFFFFF, value);
+	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
+		EmuNV2A_Write32(addr - NV2A_ADDR, value);
 		return;
 	}
 
