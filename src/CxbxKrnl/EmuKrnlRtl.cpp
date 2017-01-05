@@ -180,8 +180,8 @@ XBSYSAPI EXPORTNUM(263) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeToStr
 // Debug API?
 XBSYSAPI EXPORTNUM(264) xboxkrnl::VOID NTAPI xboxkrnl::RtlAssert
 (
-	PVOID   FailedAssertion, // PCHAR
-	PVOID   FileName, // PCHAR
+	PCHAR   FailedAssertion,
+	PCHAR   FileName,
 	ULONG   LineNumber,
 	PCHAR   Message
 )

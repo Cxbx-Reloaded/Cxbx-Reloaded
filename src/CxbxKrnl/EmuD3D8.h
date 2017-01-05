@@ -42,6 +42,9 @@
 #define DIRECTDRAW_VERSION 0x0700
 #include <ddraw.h>
 
+// initialize render window
+extern VOID CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
+
 // initialize direct3d
 extern VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
 
