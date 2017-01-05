@@ -72,14 +72,14 @@ XBSYSAPI EXPORTNUM(335) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAInit
 // ******************************************************************
 XBSYSAPI EXPORTNUM(336) xboxkrnl::VOID NTAPI xboxkrnl::XcSHAUpdate
 (
-	IN PUCHAR pbSHAContext,
-	IN PUCHAR pbInput,
-	IN ULONG dwInputLength
+	PUCHAR pbSHAContext,
+	PUCHAR pbInput,
+	ULONG dwInputLength
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG_TYPE(PBYTE, pbSHAContext)
-		LOG_FUNC_ARG_TYPE(PBYTE, pbInput)
+		LOG_FUNC_ARG_OUT(pbSHAContext)
+		LOG_FUNC_ARG_OUT(pbInput)
 		LOG_FUNC_ARG(dwInputLength)
 		LOG_FUNC_END;
 
