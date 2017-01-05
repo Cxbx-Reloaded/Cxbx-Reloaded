@@ -180,9 +180,12 @@ XBSYSAPI EXPORTNUM(168) xboxkrnl::PVOID NTAPI xboxkrnl::MmClaimGpuInstanceMemory
 		MI_CONVERT_PFN_TO_PHYSICAL(MM_INSTANCE_PHYSICAL_PAGE + MM_INSTANCE_PAGE_COUNT);
 	// Chihiro arcade should use *NumberOfPaddingBytes = 0;
 
+	EmuWarning("*NumberOfPaddingBytes = 0x%08X\n", *NumberOfPaddingBytes);
+
 	if (NumberOfBytes != MAXULONG_PTR)
 	{
-		LOG_UNIMPLEMENTED();
+		if (NumberOfBytes != 20480)
+			LOG_IGNORED();
 	}
 
 	PVOID Result = (PUCHAR)MI_CONVERT_PFN_TO_PHYSICAL(MM_HIGHEST_PHYSICAL_PAGE + 1)

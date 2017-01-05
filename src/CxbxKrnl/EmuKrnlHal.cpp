@@ -158,7 +158,6 @@ XBSYSAPI EXPORTNUM(43) xboxkrnl::BOOLEAN NTAPI xboxkrnl::HalEnableSystemInterrup
 	RETURN(FALSE);
 }
 
-#define MAX_BUS_INTERRUPT_LEVEL 27
 #ifdef _DEBUG_TRACE
 // Source : Xbox Linux
 char *IRQNames[MAX_BUS_INTERRUPT_LEVEL + 1] =

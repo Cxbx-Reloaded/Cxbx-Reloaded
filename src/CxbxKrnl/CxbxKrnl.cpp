@@ -48,6 +48,7 @@ namespace xboxkrnl
 #include "EmuFile.h"
 #include "EmuFS.h"
 #include "EmuShared.h"
+#include "EmuNV2A.h" // For InitOpenGLContext
 #include "HLEIntercept.h"
 #include "Exe.h"
 
@@ -563,9 +564,22 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	//extern void InitializeSectionStructures(void); 
 	InitializeSectionStructures();
 
-	DbgPrintf("EmuMain (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
+	//
+	// initialize grapchics
+	//
+	DbgPrintf("EmuMain (0x%X): Initializing render window.\n", GetCurrentThreadId());
+	XTL::CxbxInitWindow(pXbeHeader, dwXbeHeaderSize);
 
-	XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
+	if (bLLE_GPU)
+	{
+		DbgPrintf("EmuMain (0x%X): Initializing OpenGL.\n", GetCurrentThreadId());
+		InitOpenGLContext();
+	}
+	else
+	{
+		DbgPrintf("EmuMain (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
+		XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
+	}
 
 	EmuHLEIntercept(pLibraryVersion, pXbeHeader);
 

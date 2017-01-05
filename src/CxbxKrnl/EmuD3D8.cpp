@@ -79,9 +79,7 @@ static inline void                  EmuVerifyResourceIsRegistered(XTL::X_D3DReso
 static void                         EmuAdjustPower2(UINT *dwWidth, UINT *dwHeight);
 
 // Static Variable(s)
-static GUID                         g_ddguid;               // DirectDraw driver GUID
 static HMONITOR                     g_hMonitor      = NULL; // Handle to DirectDraw monitor
-static XTL::LPDIRECT3D8             g_pD3D8         = NULL; // Direct3D8
 static BOOL                         g_bSupportsYUY2 = FALSE;// Does device support YUY2 overlays?
 static XTL::LPDIRECTDRAW7           g_pDD7          = NULL; // DirectDraw7
 static DWORD                        g_dwOverlayW    = 640;  // Cached Overlay Width
@@ -89,7 +87,6 @@ static DWORD                        g_dwOverlayH    = 480;  // Cached Overlay He
 static DWORD                        g_dwOverlayP    = 640;  // Cached Overlay Pitch
 static Xbe::Header                 *g_XbeHeader     = NULL; // XbeHeader
 static uint32                       g_XbeHeaderSize = 0;    // XbeHeaderSize
-static XTL::D3DCAPS8                g_D3DCaps;              // Direct3D8 Caps
 static HBRUSH                       g_hBgBrush      = NULL; // Background Brush
 static volatile bool                g_bRenderWindowActive = false;
 static XBVideo                      g_XBVideo;
@@ -100,6 +97,11 @@ static XTL::X_D3DCALLBACKTYPE		g_CallbackType;			// Callback type
 static DWORD						g_CallbackParam;		// Callback param
 static BOOL                         g_bHasZBuffer = FALSE;  // Does device have Z Buffer?
 //static DWORD						g_dwPrimPerFrame = 0;	// Number of primitives within one frame
+
+// D3D based variables
+static GUID                         g_ddguid;               // DirectDraw driver GUID
+static XTL::LPDIRECT3D8             g_pD3D8 = NULL;			// Direct3D8
+static XTL::D3DCAPS8                g_D3DCaps;              // Direct3D8 Caps
 
 // wireframe toggle
 static int                          g_iWireframe    = 0;
@@ -167,8 +169,7 @@ struct EmuD3D8CreateDeviceProxyData
 }
 g_EmuCDPD = {0};
 
-// Direct3D initialization (called before emulation begins)
-VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
+VOID XTL::CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 {
     g_EmuShared->GetXBVideo(&g_XBVideo);
 
@@ -198,16 +199,6 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 
             CxbxKrnlRegisterThread(hDupHandle);
         }
-    }
-
-    // create the create device proxy thread
-    {
-        DWORD dwThreadId;
-
-        CreateThread(NULL, NULL, EmuCreateDeviceProxy, NULL, NULL, &dwThreadId);
-		// Ported from Dxbx :
-        // If possible, assign this thread to another core than the one that runs Xbox1 code :
-        SetThreadAffinityMask(&dwThreadId, g_CPUOthers);
     }
 
 /* TODO : Port this Dxbx code :
@@ -244,7 +235,23 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         Sleep(50);
     }
 
-    // create Direct3D8 and retrieve caps
+	SetFocus(g_hEmuWindow);
+}
+
+// Direct3D initialization (called before emulation begins)
+VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
+{
+	// create the create device proxy thread
+	{
+		DWORD dwThreadId;
+
+		CreateThread(NULL, NULL, EmuCreateDeviceProxy, NULL, NULL, &dwThreadId);
+		// Ported from Dxbx :
+		// If possible, assign this thread to another core than the one that runs Xbox1 code :
+		SetThreadAffinityMask(&dwThreadId, g_CPUOthers);
+	}
+
+	// create Direct3D8 and retrieve caps
     {
         using namespace XTL;
 
@@ -258,8 +265,6 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 
         g_pD3D8->GetDeviceCaps(g_XBVideo.GetDisplayAdapter(), DevType, &g_D3DCaps);
     }
-
-    SetFocus(g_hEmuWindow);
 
     // create default device
     {
