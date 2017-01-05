@@ -186,19 +186,37 @@ XBSYSAPI EXPORTNUM(96) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeCancelTimer
 	RETURN(TRUE);
 }
 
+xboxkrnl::PKINTERRUPT EmuInterruptList[MAX_BUS_INTERRUPT_LEVEL + 1][MAX_NUM_INTERRUPTS] = { 0 };
+xboxkrnl::DWORD EmuFreeInterrupt[MAX_BUS_INTERRUPT_LEVEL + 1] = { 0 };
+
 // ******************************************************************
 // * 0x0062 - KeConnectInterrupt()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(98) xboxkrnl::LONG NTAPI xboxkrnl::KeConnectInterrupt
+XBSYSAPI EXPORTNUM(98) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeConnectInterrupt
 (
 	IN PKINTERRUPT  InterruptObject
 )
 {
 	LOG_FUNC_ONE_ARG(InterruptObject);
 
-	LOG_UNIMPLEMENTED();
+	BOOLEAN ret = FALSE;
 
-	RETURN(0);
+	// here we have to connect the interrupt object to the vector
+	// more than 1 interrupt object can be connected!
+	if (!InterruptObject->Connected)
+	{
+		if (EmuFreeInterrupt[InterruptObject->BusInterruptLevel] < MAX_NUM_INTERRUPTS)
+		{
+			InterruptObject->Connected = TRUE;
+			EmuInterruptList[InterruptObject->BusInterruptLevel][EmuFreeInterrupt[InterruptObject->BusInterruptLevel]++] = InterruptObject;
+			ret = TRUE;
+		}
+		else
+			EmuWarning("Out of interrupt places!");
+	}
+	// else do nothing
+
+	RETURN(ret);
 }
 
 // ******************************************************************
