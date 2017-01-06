@@ -298,6 +298,7 @@ XBSYSAPI EXPORTNUM(46) xboxkrnl::VOID NTAPI xboxkrnl::HalReadWritePCISpace
 
 	// TODO: Verify this calculation is actually correct
 	size_t Size = Length / sizeof(ULONG);
+	ULONG RegisterByteOffset = 0;
 
 	while (Length > 0) {
 		switch (Size) {
@@ -313,7 +314,7 @@ XBSYSAPI EXPORTNUM(46) xboxkrnl::VOID NTAPI xboxkrnl::HalReadWritePCISpace
 			}
 			break;
 		case 2:
-			ULONG RegisterByteOffset = RegisterNumber % sizeof(ULONG);
+			RegisterByteOffset = RegisterNumber % sizeof(ULONG);
 			CfgBits.u.bits.RegisterNumber = RegisterNumber / sizeof(ULONG);
 
 			EmuX86_IOWrite32((uint32_t)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
@@ -325,8 +326,8 @@ XBSYSAPI EXPORTNUM(46) xboxkrnl::VOID NTAPI xboxkrnl::HalReadWritePCISpace
 				*((PUSHORT)Buffer) = EmuX86_IORead16((uint32_t)PCI_TYPE1_DATA_PORT + RegisterByteOffset);
 			}
 			break;
-		case 1:
-			ULONG RegisterByteOffset = RegisterNumber % sizeof(ULONG);
+		case 1: {
+			RegisterByteOffset = RegisterNumber % sizeof(ULONG);
 			CfgBits.u.bits.RegisterNumber = RegisterNumber / sizeof(ULONG);
 
 			EmuX86_IOWrite32((uint32_t)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
@@ -337,6 +338,7 @@ XBSYSAPI EXPORTNUM(46) xboxkrnl::VOID NTAPI xboxkrnl::HalReadWritePCISpace
 			else {
 				*((PUCHAR)Buffer) = EmuX86_IORead8((uint32_t)PCI_TYPE1_DATA_PORT + RegisterByteOffset);
 			}
+		}
 			break;
 		}
 
