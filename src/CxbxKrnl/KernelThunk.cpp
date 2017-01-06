@@ -129,7 +129,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::IoAllocateIrp),                   // 0x003B (59)
 	(uint32)FUNC(&xboxkrnl::IoBuildAsynchronousFsdRequest),   // 0x003C (60)
 	(uint32)FUNC(&xboxkrnl::IoBuildDeviceIoControlRequest),   // 0x003D (61)
-	(uint32)PANIC(0x003E),                                    // 0x003E (62)  IoBuildSynchronousFsdRequest
+	(uint32)FUNC(&xboxkrnl::IoBuildSynchronousFsdRequest),    // 0x003E (62)
 	(uint32)PANIC(0x003F),                                    // 0x003F (63)  IoCheckShareAccess
 	(uint32)VARIABLE(&xboxkrnl::IoCompletionObjectType),      // 0x0040 (64)
 	(uint32)FUNC(&xboxkrnl::IoCreateDevice),                  // 0x0041 (65)

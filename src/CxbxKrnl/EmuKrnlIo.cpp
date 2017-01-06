@@ -105,7 +105,7 @@ XBSYSAPI EXPORTNUM(61) xboxkrnl::PVOID NTAPI xboxkrnl::IoBuildDeviceIoControlReq
 	IN PVOID InputBuffer OPTIONAL,
 	IN ULONG InputBufferLength,
 	OUT PVOID OutputBuffer OPTIONAL,
-	OUT ULONG OutputBufferLength,
+	IN ULONG OutputBufferLength OPTIONAL,
 	BOOLEAN InternalDeviceIoControl,
 	PKEVENT Event,
 	OUT PIO_STATUS_BLOCK IoStatusBlock OPTIONAL
@@ -130,17 +130,16 @@ XBSYSAPI EXPORTNUM(61) xboxkrnl::PVOID NTAPI xboxkrnl::IoBuildDeviceIoControlReq
 	RETURN(ret);
 }
 
-/*
 // ******************************************************************
 // * 0x003E - IoBuildSynchronousFsdRequest()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(62) xboxkrnl::PIRP NTAPI xboxkrnl::IoBuildSynchronousFsdRequest
+XBSYSAPI EXPORTNUM(62) xboxkrnl::PVOID NTAPI xboxkrnl::IoBuildSynchronousFsdRequest
 (
-	ULONG MajorFunction,
-	PDEVICE_OBJECT	DeviceObject,
-	OUT PVOID	Buffer OPTIONAL,
-	ULONG	Length OPTIONAL,
-	PLARGE_INTEGER	StartingOffset OPTIONAL,
+	IN ULONG MajorFunction,
+	IN PDEVICE_OBJECT DeviceObject,
+	OUT PVOID Buffer OPTIONAL,
+	IN ULONG Length OPTIONAL,
+	PLARGE_INTEGER StartingOffset OPTIONAL,
 	PKEVENT Event,
 	OUT PIO_STATUS_BLOCK IoStatusBlock
 )
@@ -155,11 +154,14 @@ XBSYSAPI EXPORTNUM(62) xboxkrnl::PIRP NTAPI xboxkrnl::IoBuildSynchronousFsdReque
 		LOG_FUNC_ARG_OUT(IoStatusBlock)
 		LOG_FUNC_END;
 
+	xboxkrnl::PVOID ret = nullptr;
+
 	LOG_UNIMPLEMENTED();
 
-	RETURN(nullptr);
+	RETURN(ret);
 }
 
+/*
 // ******************************************************************
 // * 0x003F - IoCheckShareAccess()
 // ******************************************************************

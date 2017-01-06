@@ -43,13 +43,26 @@ XBSYSAPI EXPORTNUM(61) PVOID NTAPI IoBuildDeviceIoControlRequest
 	IN PVOID InputBuffer OPTIONAL,
 	IN ULONG InputBufferLength,
 	OUT PVOID OutputBuffer OPTIONAL,
-	OUT ULONG OutputBufferLength,
+	IN ULONG OutputBufferLength OPTIONAL,
 	BOOLEAN InternalDeviceIoControl,
 	PKEVENT Event,
 	OUT PIO_STATUS_BLOCK IoStatusBlock OPTIONAL
 );
 
-XBSYSAPI VOID *IoBuildSynchronousFsdRequest;
+// ******************************************************************
+// * 0x003E - IoBuildSynchronousFsdRequest()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(62) PVOID NTAPI IoBuildSynchronousFsdRequest
+(
+	IN ULONG MajorFunction,
+	IN PDEVICE_OBJECT DeviceObject,
+	OUT PVOID Buffer OPTIONAL,
+	IN ULONG Length OPTIONAL,
+	PLARGE_INTEGER StartingOffset OPTIONAL,
+	PKEVENT Event,
+	OUT PIO_STATUS_BLOCK IoStatusBlock
+);
+
 XBSYSAPI VOID *IoCheckShareAccess;
 
 XBSYSAPI EXPORTNUM(64) OBJECT_TYPE IoCompletionObjectType;
