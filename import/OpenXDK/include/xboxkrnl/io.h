@@ -12,7 +12,14 @@
 #ifndef XBOXKRNL_IO_H
 #define XBOXKRNL_IO_H
 
-XBSYSAPI VOID *IoAllocateIrp;
+// ******************************************************************
+// * 0x003B - IoAllocateIrp()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(59) PVOID NTAPI IoAllocateIrp
+(
+	IN CHAR StackSize
+);
+
 XBSYSAPI VOID *IoBuildAsynchronousFsdRequest;
 XBSYSAPI VOID *IoBuildDeviceIoControlRequest;
 XBSYSAPI VOID *IoBuildSynchronousFsdRequest;

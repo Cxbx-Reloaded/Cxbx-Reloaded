@@ -49,22 +49,24 @@ namespace xboxkrnl
 #include "Emu.h" // For EmuWarning()
 #include "EmuFile.h" // For CxbxCreateSymbolicLink(), etc.
 
-/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x003B - IoAllocateIrp()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(59) xboxkrnl::PIRP NTAPI xboxkrnl::IoAllocateIrp
+XBSYSAPI EXPORTNUM(59) xboxkrnl::PVOID NTAPI xboxkrnl::IoAllocateIrp
 (
-	CCHAR	StackSize
+	IN CHAR StackSize
 )
 {
 	LOG_FUNC_ONE_ARG(StackSize);
 
 	LOG_UNIMPLEMENTED();
 
-	RETURN(nullptr);
+	xboxkrnl::PVOID ret = nullptr;
+
+	RETURN(ret);
 }
 
+/*
 // ******************************************************************
 // * 0x003C - IoBuildAsynchronousFsdRequest()
 // ******************************************************************
