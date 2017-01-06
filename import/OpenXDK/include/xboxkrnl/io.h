@@ -33,7 +33,22 @@ XBSYSAPI EXPORTNUM(60) PVOID NTAPI IoBuildAsynchronousFsdRequest
 	PIO_STATUS_BLOCK IoStatusBlock OPTIONAL
 );
 
-XBSYSAPI VOID *IoBuildDeviceIoControlRequest;
+// ******************************************************************
+// * 0x003D - IoBuildDeviceIoControlRequest()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(61) PVOID NTAPI IoBuildDeviceIoControlRequest
+(
+	IN ULONG IoControlCode,
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PVOID InputBuffer OPTIONAL,
+	IN ULONG InputBufferLength,
+	OUT PVOID OutputBuffer OPTIONAL,
+	OUT ULONG OutputBufferLength,
+	BOOLEAN InternalDeviceIoControl,
+	PKEVENT Event,
+	OUT PIO_STATUS_BLOCK IoStatusBlock OPTIONAL
+);
+
 XBSYSAPI VOID *IoBuildSynchronousFsdRequest;
 XBSYSAPI VOID *IoCheckShareAccess;
 
