@@ -66,13 +66,12 @@ XBSYSAPI EXPORTNUM(59) xboxkrnl::PVOID NTAPI xboxkrnl::IoAllocateIrp
 	RETURN(ret);
 }
 
-/*
 // ******************************************************************
 // * 0x003C - IoBuildAsynchronousFsdRequest()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(60) xboxkrnl::PIRP NTAPI xboxkrnl::IoBuildAsynchronousFsdRequest
+XBSYSAPI EXPORTNUM(60) xboxkrnl::PVOID NTAPI xboxkrnl::IoBuildAsynchronousFsdRequest
 (
-	ULONG	MajorFunction,
+	IN ULONG MajorFunction,
 	PDEVICE_OBJECT	DeviceObject,
 	OUT PVOID Buffer OPTIONAL,
 	ULONG Length OPTIONAL,
@@ -89,11 +88,14 @@ XBSYSAPI EXPORTNUM(60) xboxkrnl::PIRP NTAPI xboxkrnl::IoBuildAsynchronousFsdRequ
 		LOG_FUNC_ARG(IoStatusBlock)
 		LOG_FUNC_END;
 
+	xboxkrnl::PVOID ret = nullptr;
+
 	LOG_UNIMPLEMENTED();
 
-	RETURN(nullptr);
+	RETURN(ret);
 }
 
+/*
 // ******************************************************************
 // * 0x003D - IoBuildDeviceIoControlRequest()
 // ******************************************************************

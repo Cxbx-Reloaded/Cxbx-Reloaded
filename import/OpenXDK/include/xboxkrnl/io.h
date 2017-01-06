@@ -20,7 +20,19 @@ XBSYSAPI EXPORTNUM(59) PVOID NTAPI IoAllocateIrp
 	IN CHAR StackSize
 );
 
-XBSYSAPI VOID *IoBuildAsynchronousFsdRequest;
+// ******************************************************************
+// * 0x003C - IoBuildAsynchronousFsdRequest()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(60) PVOID NTAPI IoBuildAsynchronousFsdRequest
+(
+	IN ULONG MajorFunction,
+	PDEVICE_OBJECT	DeviceObject,
+	OUT PVOID Buffer OPTIONAL,
+	ULONG Length OPTIONAL,
+	PLARGE_INTEGER StartingOffset OPTIONAL,
+	PIO_STATUS_BLOCK IoStatusBlock OPTIONAL
+);
+
 XBSYSAPI VOID *IoBuildDeviceIoControlRequest;
 XBSYSAPI VOID *IoBuildSynchronousFsdRequest;
 XBSYSAPI VOID *IoCheckShareAccess;

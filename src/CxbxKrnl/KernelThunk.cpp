@@ -126,8 +126,8 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::KRNL(InterlockedFlushSList)),     // 0x0038 (56)
 	(uint32)FUNC(&xboxkrnl::KRNL(InterlockedPopEntrySList)),  // 0x0039 (57)
 	(uint32)FUNC(&xboxkrnl::KRNL(InterlockedPushEntrySList)), // 0x003A (58)
-	(uint32)PANIC(0x003B),                                    // 0x003B (59)  IoAllocateIrp
-	(uint32)PANIC(0x003C),                                    // 0x003C (60)  IoBuildAsynchronousFsdRequest
+	(uint32)FUNC(&xboxkrnl::IoAllocateIrp),                   // 0x003B (59)
+	(uint32)FUNC(&xboxkrnl::IoBuildAsynchronousFsdRequest),   // 0x003C (60)
 	(uint32)PANIC(0x003D),                                    // 0x003D (61)  IoBuildDeviceIoControlRequest
 	(uint32)PANIC(0x003E),                                    // 0x003E (62)  IoBuildSynchronousFsdRequest
 	(uint32)PANIC(0x003F),                                    // 0x003F (63)  IoCheckShareAccess
