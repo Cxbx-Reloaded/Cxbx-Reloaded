@@ -86,9 +86,9 @@ typedef signed long    sint32;
 
 /*! version string dependent on trace flag */
 #ifndef _DEBUG_TRACE
-#define _CXBX_VERSION _GIT_VERSION " ("__DATE__ ")"
+#define _CXBX_VERSION _GIT_VERSION " (" __DATE__  ")"
 #else
-#define _CXBX_VERSION _GIT_VERSION "-Trace ("__DATE__ ")"
+#define _CXBX_VERSION _GIT_VERSION "-Trace (" __DATE__  ")"
 #endif
 
 /*! debug mode choices */
@@ -112,4 +112,4 @@ extern volatile bool g_bPrintfOn;
 	#define DbgPrintf null_func
 #endif
 
-#endif CXBX_H
+#endif

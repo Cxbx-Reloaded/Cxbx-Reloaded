@@ -60,13 +60,13 @@ class XBVideo : public Error
         // * SetDirect3DDevice
         // ******************************************************************
         void  SetDirect3DDevice(DWORD dwDirect3DDevice) { m_dwDirect3DDevice = dwDirect3DDevice; }
-        DWORD GetDirect3DDevice() { return m_dwDirect3DDevice; }
+        DWORD GetDirect3DDevice() const { return m_dwDirect3DDevice; }
 
         // ******************************************************************
         // * SetDisplayAdapter
         // ******************************************************************
         void  SetDisplayAdapter(DWORD dwDisplayAdapter) { m_dwDisplayAdapter = dwDisplayAdapter; }
-        DWORD GetDisplayAdapter() { return m_dwDisplayAdapter; }
+        DWORD GetDisplayAdapter() const { return m_dwDisplayAdapter; }
 
         // ******************************************************************
         // * SetVideoResolution
@@ -78,19 +78,19 @@ class XBVideo : public Error
         // * Fullscreen Toggling
         // ******************************************************************
         void SetFullscreen(BOOL bFullscreen) { m_bFullscreen = bFullscreen; }
-        BOOL GetFullscreen() { return m_bFullscreen; }
+        BOOL GetFullscreen() const { return m_bFullscreen; }
 
         // ******************************************************************
         // * VSync Toggling
         // ******************************************************************
         void SetVSync(BOOL bVSync) { m_bVSync = bVSync; }
-        BOOL GetVSync() { return m_bVSync; }
+        BOOL GetVSync() const { return m_bVSync; }
 
 		// ******************************************************************
 		// * Hardware YUV Toggling
 		// ******************************************************************
 		void SetHardwareYUV(BOOL bHardwareYUV) { m_bHardwareYUV = bHardwareYUV; }
-		BOOL GetHardwareYUV() { return m_bHardwareYUV; }
+		BOOL GetHardwareYUV() const { return m_bHardwareYUV; }
 
     private:
         // ******************************************************************
@@ -99,9 +99,9 @@ class XBVideo : public Error
         char  m_szVideoResolution[100];
         DWORD m_dwDisplayAdapter;
         DWORD m_dwDirect3DDevice;
-        BOOL  m_bFullscreen;
         BOOL  m_bVSync;
-		BOOL  m_bHardwareYUV;
+        BOOL  m_bFullscreen;
+        BOOL  m_bHardwareYUV;
 };
 
 #endif
