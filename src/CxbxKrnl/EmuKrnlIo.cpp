@@ -311,6 +311,19 @@ XBSYSAPI EXPORTNUM(67) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateSymbolicLink
 }
 
 // ******************************************************************
+// * 0x0044 - IoDeleteDevice()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(68) xboxkrnl::VOID NTAPI xboxkrnl::IoDeleteDevice
+(
+	IN PDEVICE_OBJECT irql
+)
+{
+	LOG_FUNC_ONE_ARG(irql);
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
 // * 0x0045 - IoDeleteSymbolicLink()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(69) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDeleteSymbolicLink

@@ -119,7 +119,13 @@ XBSYSAPI EXPORTNUM(67) NTSTATUS NTAPI IoCreateSymbolicLink
     IN PSTRING DeviceName
 );
 
-XBSYSAPI VOID *IoDeleteDevice;
+// ******************************************************************
+// * 0x0044 - IoDeleteDevice()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(68) VOID NTAPI IoDeleteDevice
+(
+	IN PDEVICE_OBJECT irql
+);
 
 // ******************************************************************
 // * 0x0045 - IoDeleteSymbolicLink

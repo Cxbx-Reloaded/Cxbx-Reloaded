@@ -135,7 +135,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::IoCreateDevice),                  // 0x0041 (65)
 	(uint32)FUNC(&xboxkrnl::IoCreateFile),                    // 0x0042 (66)
 	(uint32)FUNC(&xboxkrnl::IoCreateSymbolicLink),            // 0x0043 (67)
-	(uint32)PANIC(0x0044),                                    // 0x0044 (68)  IoDeleteDevice
+	(uint32)FUNC(&xboxkrnl::IoDeleteDevice),                  // 0x0044 (68)
 	(uint32)FUNC(&xboxkrnl::IoDeleteSymbolicLink),            // 0x0045 (69)
 	(uint32)VARIABLE(&xboxkrnl::IoDeviceObjectType),          // 0x0046 (70)
 	(uint32)VARIABLE(&xboxkrnl::IoFileObjectType),            // 0x0047 (71)
