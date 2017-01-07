@@ -1068,9 +1068,29 @@ typedef struct _PCI_SLOT_NUMBER
 }
 PCI_SLOT_NUMBER, *PPCI_SLOT_NUMBER;
 
+
 #define PCI_TYPE0_ADDRESSES             6
 #define PCI_TYPE1_ADDRESSES             2
 #define PCI_TYPE2_ADDRESSES             5
+
+#define PCI_TYPE1_ADDR_PORT     ((PULONG) 0xCF8)
+#define PCI_TYPE1_DATA_PORT     0xCFC
+
+typedef struct _PCI_TYPE1_CFG_BITS {
+    union {
+        struct {
+            ULONG   Reserved1:2;
+            ULONG   RegisterNumber:6;
+            ULONG   FunctionNumber:3;
+            ULONG   DeviceNumber:5;
+            ULONG   BusNumber:8;
+            ULONG   Reserved2:7;
+            ULONG   Enable:1;
+        } bits;
+
+        ULONG   AsULONG;
+    } u;
+} PCI_TYPE1_CFG_BITS, *PPCI_TYPE1_CFG_BITS;
 
 // ******************************************************************
 // * PCI_COMMON_CONFIG
