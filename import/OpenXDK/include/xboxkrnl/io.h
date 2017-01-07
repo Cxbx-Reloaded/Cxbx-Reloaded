@@ -128,7 +128,7 @@ XBSYSAPI EXPORTNUM(68) VOID NTAPI IoDeleteDevice
 );
 
 // ******************************************************************
-// * 0x0045 - IoDeleteSymbolicLink
+// * 0x0045 - IoDeleteSymbolicLink()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(69) NTSTATUS NTAPI IoDeleteSymbolicLink
 (
@@ -184,7 +184,18 @@ XBSYSAPI EXPORTNUM(74) NTSTATUS NTAPI IoQueryFileInformation
 	OUT PULONG ReturnedLength
 );
 
-XBSYSAPI VOID *IoQueryVolumeInformation;
+// ******************************************************************
+// * 0x004C - IoQueryVolumeInformation()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(75) NTSTATUS NTAPI IoQueryVolumeInformation
+(
+	IN PFILE_OBJECT FileObject,
+	IN FS_INFORMATION_CLASS FsInformationClass,
+	IN ULONG Length,
+	OUT PVOID FsInformation,
+	OUT PULONG ReturnedLength
+);
+
 XBSYSAPI VOID *IoQueueThreadIrp;
 XBSYSAPI VOID *IoRemoveShareAccess;
 XBSYSAPI VOID *IoSetIoCompletion;

@@ -457,17 +457,16 @@ XBSYSAPI EXPORTNUM(75) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoQueryFileInformation
 	RETURN(S_OK);
 }
 
-/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x004C - IoQueryVolumeInformation()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(76) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoQueryVolumeInformation
 (
-	PFILE_OBJECT	FileObject,
-	FS_INFORMATION_CLASS	FsInformationClass,
-	ULONG	Length,
-	OUT PVOID	FsInformation,
-	OUT PULONG	ReturnedLength
+	IN PFILE_OBJECT FileObject,
+	IN FS_INFORMATION_CLASS FsInformationClass,
+	IN ULONG Length,
+	OUT PVOID FsInformation,
+	OUT PULONG ReturnedLength
 )
 {
 	LOG_FUNC_BEGIN
@@ -485,6 +484,7 @@ XBSYSAPI EXPORTNUM(76) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoQueryVolumeInformati
 	RETURN(S_OK);
 }
 
+/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x004D - IoQueueThreadIrp()
 // ******************************************************************
