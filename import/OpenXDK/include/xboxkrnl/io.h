@@ -204,7 +204,15 @@ XBSYSAPI EXPORTNUM(77) VOID NTAPI IoQueueThreadIrp
 	IN PIRP Irp
 );
 
-XBSYSAPI VOID *IoRemoveShareAccess;
+// ******************************************************************
+// * 0x004E - IoRemoveShareAccess()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(78) VOID NTAPI IoRemoveShareAccess
+(
+	IN PFILE_OBJECT FileObject,
+	IN PSHARE_ACCESS ShareAccess
+);
+
 XBSYSAPI VOID *IoSetIoCompletion;
 XBSYSAPI VOID *IoSetShareAccess;
 XBSYSAPI VOID *IoStartNextPacket;

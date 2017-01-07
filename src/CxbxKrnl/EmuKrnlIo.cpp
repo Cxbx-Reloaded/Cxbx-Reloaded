@@ -497,21 +497,24 @@ XBSYSAPI EXPORTNUM(77) xboxkrnl::VOID NTAPI xboxkrnl::IoQueueThreadIrp
 	LOG_UNIMPLEMENTED();
 }
 
-/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x004E - IoRemoveShareAccess()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(78) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoRemoveShareAccess
+XBSYSAPI EXPORTNUM(78) xboxkrnl::VOID NTAPI xboxkrnl::IoRemoveShareAccess
 (
+	IN PFILE_OBJECT FileObject,
+	IN PSHARE_ACCESS ShareAccess
 )
 {
-	LOG_FUNC();
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(FileObject)
+		LOG_FUNC_ARG(ShareAccess)
+		LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
-
-	RETURN(S_OK);
 }
 
+/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x004F - IoSetIoCompletion()
 // ******************************************************************
