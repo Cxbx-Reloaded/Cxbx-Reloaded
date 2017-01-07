@@ -74,7 +74,7 @@ XBSYSAPI EXPORTNUM(60) xboxkrnl::PVOID NTAPI xboxkrnl::IoBuildAsynchronousFsdReq
 	IN ULONG MajorFunction,
 	PDEVICE_OBJECT	DeviceObject,
 	OUT PVOID Buffer OPTIONAL,
-	ULONG Length OPTIONAL,
+	ULONG Length,
 	PLARGE_INTEGER StartingOffset OPTIONAL,
 	PIO_STATUS_BLOCK IoStatusBlock OPTIONAL
 )
@@ -138,7 +138,7 @@ XBSYSAPI EXPORTNUM(62) xboxkrnl::PVOID NTAPI xboxkrnl::IoBuildSynchronousFsdRequ
 	IN ULONG MajorFunction,
 	IN PDEVICE_OBJECT DeviceObject,
 	OUT PVOID Buffer OPTIONAL,
-	IN ULONG Length OPTIONAL,
+	IN ULONG Length,
 	PLARGE_INTEGER StartingOffset OPTIONAL,
 	PKEVENT Event,
 	OUT PIO_STATUS_BLOCK IoStatusBlock
@@ -638,9 +638,9 @@ XBSYSAPI EXPORTNUM(84) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoSynchronousDeviceIoC
 		LOG_FUNC_ARG(DeviceObject)
 		LOG_FUNC_ARG(InputBuffer)
 		LOG_FUNC_ARG(InputBufferLength)
-		LOG_FUNC_ARG(OutputBuffer)
+		LOG_FUNC_ARG_OUT(OutputBuffer)
 		LOG_FUNC_ARG(OutputBufferLength)
-		LOG_FUNC_ARG(ReturnedOutputBufferLength)
+		LOG_FUNC_ARG_OUT(ReturnedOutputBufferLength)
 		LOG_FUNC_ARG(InternalDeviceIoControl)
 		LOG_FUNC_END;
 
@@ -649,21 +649,32 @@ XBSYSAPI EXPORTNUM(84) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoSynchronousDeviceIoC
 	RETURN(S_OK);
 }
 
-/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x0055 - IoSynchronousFsdRequest()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(85) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoSynchronousFsdRequest
 (
+	IN ULONG MajorFunction,
+	IN PDEVICE_OBJECT DeviceObject,
+	OUT PVOID Buffer OPTIONAL,
+	IN ULONG Length,
+	IN PLARGE_INTEGER StartingOffset OPTIONAL
 )
 {
-	LOG_FUNC();
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(MajorFunction)
+		LOG_FUNC_ARG(DeviceObject)
+		LOG_FUNC_ARG_OUT(Buffer)
+		LOG_FUNC_ARG(Length)
+		LOG_FUNC_ARG(StartingOffset)
+		LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
 
 	RETURN(S_OK);
 }
 
+/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x0056 - IofCallDriver()
 // ******************************************************************

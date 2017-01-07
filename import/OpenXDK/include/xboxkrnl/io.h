@@ -278,7 +278,18 @@ XBSYSAPI EXPORTNUM(84) NTSTATUS NTAPI IoSynchronousDeviceIoControlRequest
 	IN BOOLEAN InternalDeviceIoControl
 );
 
-XBSYSAPI VOID *IoSynchronousFsdRequest;
+// ******************************************************************
+// * 0x0055 - IoSynchronousFsdRequest()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(85) NTSTATUS NTAPI IoSynchronousFsdRequest
+(
+	IN ULONG MajorFunction,
+	IN PDEVICE_OBJECT DeviceObject,
+	OUT PVOID Buffer OPTIONAL,
+	IN ULONG Length,
+	IN PLARGE_INTEGER StartingOffset OPTIONAL
+);
+
 XBSYSAPI VOID *IofCallDriver;
 XBSYSAPI VOID *IofCompleteRequest;
 
