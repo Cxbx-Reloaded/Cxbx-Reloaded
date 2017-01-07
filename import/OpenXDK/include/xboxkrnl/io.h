@@ -225,7 +225,17 @@ XBSYSAPI EXPORTNUM(79) NTSTATUS NTAPI IoSetIoCompletion
 	IN ULONG IoStatusInformation
 );
 
-XBSYSAPI VOID *IoSetShareAccess;
+// ******************************************************************
+// * 0x0050 - IoSetShareAccess()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(80) CCHAR NTAPI IoSetShareAccess
+(
+	IN ULONG DesiredAccess,
+	IN ULONG DesiredShareAccess,
+	IN PFILE_OBJECT FileObject,
+	OUT PSHARE_ACCESS ShareAccess
+);
+
 XBSYSAPI VOID *IoStartNextPacket;
 XBSYSAPI VOID *IoStartNextPacketByKey;
 XBSYSAPI VOID *IoStartPacket;

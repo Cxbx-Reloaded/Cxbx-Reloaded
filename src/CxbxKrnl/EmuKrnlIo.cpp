@@ -539,21 +539,32 @@ XBSYSAPI EXPORTNUM(79) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoSetIoCompletion
 	RETURN(S_OK);
 }
 
-/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x0050 - IoSetShareAccess()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(80) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoSetShareAccess
+XBSYSAPI EXPORTNUM(80) xboxkrnl::CCHAR NTAPI xboxkrnl::IoSetShareAccess
 (
+	IN ULONG DesiredAccess,
+	IN ULONG DesiredShareAccess,
+	IN PFILE_OBJECT FileObject,
+	OUT PSHARE_ACCESS ShareAccess
 )
 {
-	LOG_FUNC();
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(DesiredAccess)
+		LOG_FUNC_ARG(DesiredShareAccess)
+		LOG_FUNC_ARG(FileObject)
+		LOG_FUNC_ARG_OUT(ShareAccess)
+		LOG_FUNC_END;
+
+	xboxkrnl::CCHAR ret = 0; // ShareAccess->OpenCount;
 
 	LOG_UNIMPLEMENTED();
-
-	RETURN(S_OK);
+	
+	RETURN(ret);
 }
 
+/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x0051 - IoStartNextPacket()
 // ******************************************************************
