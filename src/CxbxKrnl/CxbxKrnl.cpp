@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -46,6 +48,7 @@ namespace xboxkrnl
 #include "EmuFile.h"
 #include "EmuFS.h"
 #include "EmuShared.h"
+#include "EmuNV2A.h" // For InitOpenGLContext
 #include "HLEIntercept.h"
 #include "Exe.h"
 
@@ -366,6 +369,8 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 	g_CurrentProcessHandle = GetCurrentProcess();
 
+	CxbxInitPerformanceCounters();
+
 #ifdef _DEBUG
 //	MessageBoxA(NULL, "Attach a Debugger", "DEBUG", 0);
 //  Debug child processes using https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool
@@ -461,6 +466,12 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		strncpy_s((PSTR)DummyKernel->SectionHeader.Name, 8, "DONGS", 8);
 	}
 
+	// Read which components need to be LLE'ed :
+	int CxbxLLE_Flags;
+	g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
+	bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
+	bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
+
 	// Initialize devices :
 	char szBuffer[MAX_PATH];
 	SHGetSpecialFolderPath(NULL, szBuffer, CSIDL_APPDATA, TRUE);
@@ -553,23 +564,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	//extern void InitializeSectionStructures(void); 
 	InitializeSectionStructures();
 
-	DbgPrintf("EmuMain (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
 
-	XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
-
-	EmuHLEIntercept(pLibraryVersion, pXbeHeader);
-
-	//
-	// initialize FS segment selector
-	//
-
-	{
-		EmuInitFS();
-
-		EmuGenerateFS(pTLS, pTLSData);
-	}
-
-	
 	DbgPrintf("EmuMain : Determining CPU affinity.\n");
 
 	// Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
@@ -591,6 +586,36 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		// Make sure Xbox1 code runs on one core :
 		SetThreadAffinityMask(GetCurrentThread(), g_CPUXbox);
 	}
+
+	//
+	// initialize grapchics
+	//
+	DbgPrintf("EmuMain (0x%X): Initializing render window.\n", GetCurrentThreadId());
+	XTL::CxbxInitWindow(pXbeHeader, dwXbeHeaderSize);
+
+	if (bLLE_GPU)
+	{
+		DbgPrintf("EmuMain (0x%X): Initializing OpenGL.\n", GetCurrentThreadId());
+		InitOpenGLContext();
+	}
+	else
+	{
+		DbgPrintf("EmuMain (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
+		XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
+	}
+
+	EmuHLEIntercept(pLibraryVersion, pXbeHeader);
+
+	//
+	// initialize FS segment selector
+	//
+
+	{
+		EmuInitFS();
+
+		EmuGenerateFS(pTLS, pTLSData);
+	}
+
 
     DbgPrintf("EmuMain (0x%X): Initial thread starting.\n", GetCurrentThreadId());
 

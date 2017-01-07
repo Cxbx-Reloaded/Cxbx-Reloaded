@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -93,6 +95,8 @@ XBSYSAPI EXPORTNUM(243) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByName
 		LOG_FUNC_END;
 
 	NTSTATUS ret = STATUS_OBJECT_PATH_NOT_FOUND;
+
+	// TODO : Call CxbxObjectAttributesToNT on ObjectAttributes?
 
 	if (ObjectType == &xboxkrnl::ObSymbolicLinkObjectType)
 	{

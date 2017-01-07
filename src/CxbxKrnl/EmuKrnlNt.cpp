@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -75,7 +77,7 @@ XBSYSAPI EXPORTNUM(184) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtAllocateVirtualMemo
 		LOG_FUNC_ARG(BaseAddress)
 		LOG_FUNC_ARG(ZeroBits)
 		LOG_FUNC_ARG(AllocationSize)
-		LOG_FUNC_ARG(AllocationType)
+		LOG_FUNC_ARG_TYPE(ALLOCATION_TYPE, AllocationType)
 		LOG_FUNC_ARG(Protect)
 		LOG_FUNC_END;
 
@@ -232,23 +234,21 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 
 	// initialize object attributes
 	NativeObjectAttributes nativeObjectAttributes;
-	NTSTATUS ret = CxbxObjectAttributesToNT(ObjectAttributes, /*var*/nativeObjectAttributes);
+	CxbxObjectAttributesToNT(ObjectAttributes, /*var*/nativeObjectAttributes);
 
-	if (ret == STATUS_SUCCESS)
-	{
-		// TODO : Is this the correct ACCESS_MASK? :
-		const ACCESS_MASK DesiredAccess = EVENT_ALL_ACCESS;
+	// TODO : Is this the correct ACCESS_MASK? :
+	const ACCESS_MASK DesiredAccess = EVENT_ALL_ACCESS;
 
-		// redirect to Win2k/XP
-		ret = NtDll::NtCreateEvent(
-			/*OUT*/EventHandle,
-			DesiredAccess,
-			nativeObjectAttributes.NtObjAttrPtr,
-			(NtDll::EVENT_TYPE)EventType,
-			InitialState);
-		// TODO : Instead of the above, we should consider using the Ke*Event APIs, but
-		// that would require us to create the event's kernel object with the Ob* api's too!
-	}
+	// redirect to Win2k/XP
+	NTSTATUS ret = NtDll::NtCreateEvent(
+		/*OUT*/EventHandle,
+		DesiredAccess,
+		nativeObjectAttributes.NtObjAttrPtr,
+		(NtDll::EVENT_TYPE)EventType,
+		InitialState);
+
+	// TODO : Instead of the above, we should consider using the Ke*Event APIs, but
+	// that would require us to create the event's kernel object with the Ob* api's too!
 
 	if (FAILED(ret))
 		EmuWarning("NtCreateEvent Failed!");
@@ -305,24 +305,9 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 		LOG_FUNC_ARG(InitialOwner)
 		LOG_FUNC_END;
 
-	char *szBuffer = (ObjectAttributes != NULL) ? ObjectAttributes->ObjectName->Buffer : nullptr;
-	wchar_t wszObjectName[MAX_PATH];
-
-	NtDll::UNICODE_STRING    NtUnicodeString;
-	NtDll::OBJECT_ATTRIBUTES NtObjAttr;
-
 	// initialize object attributes
-	if (szBuffer != nullptr)
-	{
-		mbstowcs(/*Dest=*/wszObjectName, /*Source=*/DrivePrefix.c_str(), /*MaxCount=*/DrivePrefix.length());
-		mbstowcs(/*Dest=*/wszObjectName + DrivePrefix.length(), /*Source=*/szBuffer, /*MaxCount=*/MAX_PATH);
-
-		NtDll::RtlInitUnicodeString(&NtUnicodeString, wszObjectName);
-
-		InitializeObjectAttributes(&NtObjAttr, &NtUnicodeString, ObjectAttributes->Attributes, ObjectAttributes->RootDirectory, nullptr);
-	}
-
-	NtObjAttr.RootDirectory = 0;
+	NativeObjectAttributes nativeObjectAttributes;
+	CxbxObjectAttributesToNT(ObjectAttributes, /*var*/nativeObjectAttributes);
 
 	// TODO : Is this the correct ACCESS_MASK? :
 	const ACCESS_MASK DesiredAccess = MUTANT_ALL_ACCESS;
@@ -331,7 +316,7 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 	NTSTATUS ret = NtDll::NtCreateMutant(
 		/*OUT*/MutantHandle, 
 		DesiredAccess,
-		(szBuffer != 0) ? &NtObjAttr : nullptr, 
+		nativeObjectAttributes.NtObjAttrPtr,
 		InitialOwner);
 
 	if (FAILED(ret))
@@ -363,11 +348,14 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 	// TODO : Is this the correct ACCESS_MASK? :
 	const ACCESS_MASK DesiredAccess = SEMAPHORE_ALL_ACCESS;
 
+	NativeObjectAttributes nativeObjectAttributes;
+	CxbxObjectAttributesToNT(ObjectAttributes, nativeObjectAttributes);
+
 	// redirect to Win2k/XP
 	NTSTATUS ret = NtDll::NtCreateSemaphore(
 		/*OUT*/SemaphoreHandle,
 		DesiredAccess,
-		(NtDll::POBJECT_ATTRIBUTES)ObjectAttributes,
+		(NtDll::POBJECT_ATTRIBUTES)nativeObjectAttributes.NtObjAttrPtr,
 		InitialCount,
 		MaximumCount);
 
@@ -398,13 +386,16 @@ XBSYSAPI EXPORTNUM(194) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateTimer
 	// TODO : Is this the correct ACCESS_MASK? :
 	const ACCESS_MASK DesiredAccess = TIMER_ALL_ACCESS;
 
+	NativeObjectAttributes nativeObjectAttributes;
+	CxbxObjectAttributesToNT(ObjectAttributes, nativeObjectAttributes);
+
 	// redirect to Windows NT
 	// TODO : Untested
 	NTSTATUS ret = NtDll::NtCreateTimer
 	(
 		/*OUT*/TimerHandle,
 		DesiredAccess,
-		(NtDll::POBJECT_ATTRIBUTES)ObjectAttributes,
+		(NtDll::POBJECT_ATTRIBUTES)nativeObjectAttributes.NtObjAttrPtr,
 		(NtDll::TIMER_TYPE)TimerType
 	);
 
@@ -935,6 +926,33 @@ XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributes
 }
 
 // ******************************************************************
+// * 0x00D1  - NtQueryEvent()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(209) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryEvent
+(
+	IN HANDLE EventHandle,
+	OUT PEVENT_BASIC_INFORMATION EventInformation
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(EventHandle)
+		LOG_FUNC_ARG_OUT(EventInformation)
+		LOG_FUNC_END;
+
+	NTSTATUS ret = NtDll::NtQueryEvent(
+		(NtDll::HANDLE)EventHandle,
+		/*EventInformationClass*/NtDll::EVENT_INFORMATION_CLASS::EventBasicInformation,
+		EventInformation,
+		sizeof(EVENT_BASIC_INFORMATION),
+		/*ReturnLength=*/nullptr);
+
+	if (ret != STATUS_SUCCESS)
+		EmuWarning("NtQueryEvent failed! (%s)", NtStatusToString(ret));
+
+	RETURN(ret);
+}
+
+// ******************************************************************
 // * 0x00D3 - NtQueryInformationFile()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFile
@@ -999,6 +1017,60 @@ XBSYSAPI EXPORTNUM(211) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryInformationFil
 	// in case the Xbox program decides to follow the same procedure above
 	if (convRet == STATUS_BUFFER_OVERFLOW)
 		return convRet;
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x00D5 - NtQueryMutant()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(213) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryMutant
+(
+	IN HANDLE MutantHandle,
+	OUT PMUTANT_BASIC_INFORMATION MutantInformation
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(MutantHandle)
+		LOG_FUNC_ARG_OUT(MutantInformation)
+		LOG_FUNC_END;
+
+	NTSTATUS ret = NtDll::NtQueryMutant(
+		(NtDll::HANDLE)MutantHandle,
+		/*MutantInformationClass*/NtDll::MUTANT_INFORMATION_CLASS::MutantBasicInformation,
+		MutantInformation,
+		sizeof(MUTANT_BASIC_INFORMATION),
+		/*ReturnLength=*/nullptr);
+
+	if (ret != STATUS_SUCCESS)
+		EmuWarning("NtQueryMutant failed! (%s)", NtStatusToString(ret));
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x00D6 - NtQuerySemaphore()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(214) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQuerySemaphore
+(
+	IN HANDLE SemaphoreHandle,
+	OUT PSEMAPHORE_BASIC_INFORMATION SemaphoreInformation
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(SemaphoreHandle)
+		LOG_FUNC_ARG_OUT(SemaphoreInformation)
+		LOG_FUNC_END;
+
+	NTSTATUS ret = NtDll::NtQuerySemaphore(
+		(NtDll::HANDLE)SemaphoreHandle,
+		/*SemaphoreInformationClass*/NtDll::SEMAPHORE_INFORMATION_CLASS::SemaphoreBasicInformation,
+		SemaphoreInformation,
+		sizeof(SEMAPHORE_BASIC_INFORMATION),
+		/*ReturnLength=*/nullptr);
+
+	if (ret != STATUS_SUCCESS)
+		EmuWarning("NtQuerySemaphore failed! (%s)", NtStatusToString(ret));
 
 	RETURN(ret);
 }

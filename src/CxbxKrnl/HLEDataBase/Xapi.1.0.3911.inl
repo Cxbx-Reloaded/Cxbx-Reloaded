@@ -58,130 +58,6 @@ OOVPA_NO_XREF(GetExitCodeThread_1_0_3911, 11)
 OOVPA_END;
 
 // ******************************************************************
-// * RtlCreateHeap
-// ******************************************************************
-OOVPA_NO_XREF(RtlCreateHeap_1_0_3911, 10)
-
-        // RtlCreateHeap+0x13 : push 0x0C
-        { 0x13, 0x6A }, // (Offset,Value)-Pair #1
-        { 0x14, 0x0C }, // (Offset,Value)-Pair #2
-
-        // RtlCreateHeap+0x1B : rep stosd
-        { 0x1B, 0xF3 }, // (Offset,Value)-Pair #3
-        { 0x1C, 0xAB }, // (Offset,Value)-Pair #4
-
-        // RtlCreateHeap+0x4E : retn
-        { 0x4E, 0xC3 }, // (Offset,Value)-Pair #5
-
-        // RtlCreateHeap+0x8D : jnz +0x08
-        { 0x8D, 0x75 }, // (Offset,Value)-Pair #6
-        { 0x8E, 0x08 }, // (Offset,Value)-Pair #7
-
-        // RtlCreateHeap+0xA4 : cmp [ebp-38h], esi
-        { 0xA4, 0x39 }, // (Offset,Value)-Pair #8
-        { 0xA5, 0x75 }, // (Offset,Value)-Pair #9
-        { 0xA6, 0xC8 }, // (Offset,Value)-Pair #10
-OOVPA_END;
-
-// ******************************************************************
-// * RtlAllocateHeap
-// ******************************************************************
-OOVPA_NO_XREF(RtlAllocateHeap_1_0_3911, 11)
-
-        // RtlAllocateHeap+0x1E : or ecx, [esi+0x18]
-        { 0x1E, 0x0B }, // (Offset,Value)-Pair #1
-        { 0x1F, 0x4E }, // (Offset,Value)-Pair #2
-        { 0x20, 0x18 }, // (Offset,Value)-Pair #3
-
-        // RtlAllocateHeap+0x29 : jnz +0x01
-        { 0x29, 0x75 }, // (Offset,Value)-Pair #4
-        { 0x2A, 0x01 }, // (Offset,Value)-Pair #5
-
-        // RtlAllocateHeap+0x2B : inc eax
-        { 0x2B, 0x40 }, // (Offset,Value)-Pair #6
-
-        // RtlAllocateHeap+0x73 : sub eax, 0x08
-        { 0x73, 0x83 }, // (Offset,Value)-Pair #7
-        { 0x74, 0xE8 }, // (Offset,Value)-Pair #8
-        { 0x75, 0x08 }, // (Offset,Value)-Pair #9
-
-        // RtlAllocateHeap+0xA5 : shl edi, cl
-        { 0xA5, 0xD3 }, // (Offset,Value)-Pair #10
-        { 0xA6, 0xE7 }, // (Offset,Value)-Pair #11
-OOVPA_END;
-
-// ******************************************************************
-// * RtlFreeHeap
-// ******************************************************************
-OOVPA_NO_XREF(RtlFreeHeap_1_0_3911, 10)
-
-        // RtlFreeHeap+0x1F : test ecx, ecx
-        { 0x1F, 0x85 }, // (Offset,Value)-Pair #1
-        { 0x20, 0xC9 }, // (Offset,Value)-Pair #2
-
-        // RtlFreeHeap+0x23 : mov al, 1
-        { 0x23, 0xB0 }, // (Offset,Value)-Pair #3
-        { 0x24, 0x01 }, // (Offset,Value)-Pair #4
-
-        // RtlFreeHeap+0x30 : lea edi, [ecx-0x10]
-        { 0x30, 0x8D }, // (Offset,Value)-Pair #5
-        { 0x31, 0x79 }, // (Offset,Value)-Pair #6
-        { 0x32, 0xF0 }, // (Offset,Value)-Pair #7
-
-        // RtlFreeHeap+0x7B : and ecx, 0x10
-        { 0x7B, 0x83 }, // (Offset,Value)-Pair #8
-        { 0x7C, 0xE1 }, // (Offset,Value)-Pair #9
-        { 0x7D, 0x10 }, // (Offset,Value)-Pair #10
-OOVPA_END;
-
-// ******************************************************************
-// * RtlReAllocateHeap
-// ******************************************************************
-OOVPA_NO_XREF(RtlReAllocateHeap_1_0_3911, 10)
-
-        // RtlReAllocateHeap+0x1C : test esi, esi
-        { 0x1C, 0x85 }, // (Offset,Value)-Pair #1
-        { 0x1D, 0xF6 }, // (Offset,Value)-Pair #2
-
-        // RtlReAllocateHeap+0x26 : mov edx, [ebp+0x14]
-        { 0x26, 0x8B }, // (Offset,Value)-Pair #3
-        { 0x27, 0x55 }, // (Offset,Value)-Pair #4
-        { 0x28, 0x14 }, // (Offset,Value)-Pair #5
-
-        // RtlReAllocateHeap+0x5E : jz +0x06; add ecx, 0x10
-        { 0x5E, 0x74 }, // (Offset,Value)-Pair #6
-        { 0x5F, 0x06 }, // (Offset,Value)-Pair #7
-        { 0x60, 0x83 }, // (Offset,Value)-Pair #8
-        { 0x61, 0xC1 }, // (Offset,Value)-Pair #9
-        { 0x62, 0x10 }, // (Offset,Value)-Pair #10
-OOVPA_END;
-
-// ******************************************************************
-// * RtlSizeHeap
-// ******************************************************************
-OOVPA_NO_XREF(RtlSizeHeap_1_0_3911, 11)
-
-        // RtlSizeHeap+0x04 : mov al, [ecx-0x0B]
-        { 0x04, 0x8A }, // (Offset,Value)-Pair #1
-        { 0x05, 0x41 }, // (Offset,Value)-Pair #2
-        { 0x06, 0xF5 }, // (Offset,Value)-Pair #3
-
-        // RtlSizeHeap+0x07 : test al, 1
-        { 0x07, 0xA8 }, // (Offset,Value)-Pair #4
-        { 0x08, 0x01 }, // (Offset,Value)-Pair #5
-
-        // RtlSizeHeap+0x14 : movzx edx, word ptr [ecx-0x10]
-        { 0x14, 0x0F }, // (Offset,Value)-Pair #6
-        { 0x15, 0xB7 }, // (Offset,Value)-Pair #7
-        { 0x16, 0x51 }, // (Offset,Value)-Pair #8
-        { 0x17, 0xF0 }, // (Offset,Value)-Pair #9
-
-        // RtlSizeHeap+0x2A : sub eax, ecx
-        { 0x2A, 0x2B }, // (Offset,Value)-Pair #10
-        { 0x2B, 0xC1 }, // (Offset,Value)-Pair #11
-OOVPA_END;
-
-// ******************************************************************
 // * XInitDevices
 // ******************************************************************
 // * NOTE: We are actually intercepting USBD_Init, because
@@ -822,28 +698,6 @@ OOVPA_NO_XREF(SignalObjectAndWait_1_0_3911, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * PulseEvent
-// ******************************************************************
-OOVPA_NO_XREF(PulseEvent_1_0_3911, 11)
-
-		// PulseEvent+0x00 : push 0
-		{ 0x00, 0x6A },
-		{ 0x01, 0x00 },
-        // PulseEvent+0x02 : push [esp+8]
-		{ 0x02, 0xFF },
-		{ 0x03, 0x74 },
-		{ 0x04, 0x24 },
-		{ 0x05, 0x08 },
-		// PulseEvent+0x06 : call ds:NtPulseEvent
-		{ 0x06, 0xFF },
-		{ 0x07, 0x15 },
-		{ 0x08, 0x54 },
-		// PulseEvent+0x12 : test eax, eax
-		{ 0x0C, 0x85 },
-		{ 0x0D, 0xC0 },
-OOVPA_END;
-
-// ******************************************************************
 // * QueueUserAPC
 // ******************************************************************
 OOVPA_NO_XREF(QueueUserAPC_1_0_3911, 7)
@@ -939,34 +793,6 @@ OOVPA_NO_XREF(ExitThread_1_0_3911, 5)
         { 0x08, 0x74 },
         { 0x0A, 0x04 },
         { 0x11, 0xCC },
-OOVPA_END;
-
-// ******************************************************************
-// * VirtualAlloc
-// ******************************************************************
-OOVPA_NO_XREF(VirtualAlloc_1_0_3911, 7)
-
-        { 0x04, 0x75 },
-        { 0x0A, 0x75 },
-        { 0x10, 0x45 },
-        { 0x19, 0x85 },
-        { 0x1C, 0x05 },
-        { 0x22, 0x50 },
-        { 0x28, 0x33 },
-OOVPA_END;
-
-// ******************************************************************
-// * VirtualFree
-// ******************************************************************
-OOVPA_NO_XREF(VirtualFree_1_0_3911, 7)
-
-        { 0x06, 0x80 },
-        { 0x0E, 0x07 },
-        { 0x16, 0xFF },
-        { 0x1E, 0x45 },
-        { 0x27, 0x85 },
-        { 0x2E, 0xEB },
-        { 0x36, 0x33 },
 OOVPA_END;
 
 // ******************************************************************
@@ -1115,20 +941,6 @@ OOVPA_NO_XREF(XMountUtilityDrive_1_0_3911, 7)
 OOVPA_END;
 
 // ******************************************************************
-// * GetFileAttributesA
-// ******************************************************************
-OOVPA_NO_XREF(GetFileAttributesA_1_0_3911, 7)
-
-        { 0x08, 0x08 },
-        { 0x13, 0x8D },
-        { 0x1C, 0x50 },
-        { 0x26, 0xFF },
-        { 0x30, 0x15 },
-        { 0x3A, 0x45 },
-        { 0x44, 0x83 },
-OOVPA_END;
-
-// ******************************************************************
 // * ReadFileEx@20
 // ******************************************************************
 OOVPA_NO_XREF(ReadFileEx_1_0_3911, 8)
@@ -1219,8 +1031,6 @@ OOVPATable XAPI_1_0_3911[] = {
 	OOVPA_TABLE_PATCH(XInputGetCapabilities_1_0_3911, XTL::EmuXInputGetCapabilities),
 	// SignalObjectAndWait
 	OOVPA_TABLE_PATCH(SignalObjectAndWait_1_0_3911, XTL::EmuSignalObjectAndWait),
-	// PulseEvent
-	OOVPA_TABLE_PATCH(PulseEvent_1_0_3911, XTL::EmuPulseEvent),
 	// QueueUserAPC
 	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, XTL::EmuQueueUserAPC),
 	// lstrcmpiW
@@ -1243,8 +1053,6 @@ OOVPATable XAPI_1_0_3911[] = {
 	OOVPA_TABLE_PATCH(XMountMURootA_1_0_3911, XTL::EmuXMountMURootA),
 	// XMountUtilityDrive
 	OOVPA_TABLE_PATCH(XMountUtilityDrive_1_0_3911, XTL::EmuXMountUtilityDrive),
-	// GetFileAttributesA
-	OOVPA_TABLE_PATCH(GetFileAttributesA_1_0_3911, XTL::EmuGetFileAttributesA),
 	// ReadFileEx
 	/*
 	OOVPA_TABLE_PATCH(ReadFileEx_1_0_3911, XTL::EmuReadFileEx),
@@ -1259,9 +1067,6 @@ OOVPATable XAPI_1_0_3911[] = {
     /*
 	OOVPA_TABLE_PATCH(ExitThread_1_0_3911, XTL::EmuExitThread),
 	*/
-	//// VirtualAlloc@16
-    //OOVPA_TABLE_PATCH(VirtualAlloc_1_0_3911, //   XTL::EmuVirtualAlloc), //// VirtualFree@12
-    //OOVPA_TABLE_PATCH(VirtualFree_1_0_3911, //   XTL::EmuVirtualFree),
 };
 
 // ******************************************************************

@@ -115,6 +115,7 @@ typedef CONST WCHAR        *LPCWSTR, *PCWSTR;
 // * NTSTATUS
 // ******************************************************************
 typedef long                            NTSTATUS;
+typedef __int64							LONGLONG;
 typedef unsigned __int64                ULONGLONG;
 
 #define NT_SUCCESS(Status)              ((NTSTATUS) (Status) >= 0)
@@ -210,10 +211,17 @@ MODE;
 // ******************************************************************
 // * LARGE_INTEGER
 // ******************************************************************
-typedef struct _LARGE_INTEGER
+typedef union _LARGE_INTEGER
 {
-    DWORD   LowPart;
-    LONG    HighPart;
+	struct {
+		DWORD LowPart;
+		LONG  HighPart;
+	};
+	struct {
+		DWORD LowPart;
+		LONG  HighPart;
+	} u;
+	LONGLONG QuadPart;
 }
 LARGE_INTEGER, *PLARGE_INTEGER;
 
@@ -420,6 +428,20 @@ typedef enum _MEMORY_INFORMATION_CLASS
 MEMORY_INFORMATION_CLASS;
 
 // ******************************************************************
+// * MUTANT_INFORMATION_CLASS
+// ******************************************************************
+typedef enum _MUTANT_INFORMATION_CLASS {
+	MutantBasicInformation
+} MUTANT_INFORMATION_CLASS, *PMUTANT_INFORMATION_CLASS;
+
+// ******************************************************************
+// * SEMAPHORE_INFORMATION_CLASS
+// ******************************************************************
+typedef enum _SEMAPHORE_INFORMATION_CLASS {
+	SemaphoreBasicInformation
+} SEMAPHORE_INFORMATION_CLASS, *PSEMAPHORE_INFORMATION_CLASS;
+
+// ******************************************************************
 // * EVENT_TYPE
 // ******************************************************************
 typedef enum _EVENT_TYPE
@@ -428,6 +450,13 @@ typedef enum _EVENT_TYPE
     SynchronizationEvent
 }
 EVENT_TYPE;
+
+// ******************************************************************
+// * EVENT_INFORMATION_CLASS
+// ******************************************************************
+typedef enum _EVENT_INFORMATION_CLASS {
+	EventBasicInformation
+} EVENT_INFORMATION_CLASS, *PEVENT_INFORMATION_CLASS;
 
 // ******************************************************************
 // * TIMER_TYPE
@@ -758,6 +787,17 @@ KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 // This is only the top of the actual definition. For the complete version,
 // see http://processhacker.sourceforge.net/doc/ntexapi_8h_source.html
 
+// ******************************************************************
+// * GENERIC_MAPPING
+// ******************************************************************
+typedef struct _GENERIC_MAPPING
+{
+	ACCESS_MASK GenericRead;
+	ACCESS_MASK GenericWrite;
+	ACCESS_MASK GenericExecute;
+	ACCESS_MASK GenericAll;
+}
+GENERIC_MAPPING, *PGENERIC_MAPPING;
 
 // ******************************************************************
 // * KeDelayExecutionThread
@@ -832,9 +872,21 @@ typedef SIZE_T (NTAPI *FPTR_RtlSizeHeap)
 );
 
 // ******************************************************************
+// * RtlMapGenericMask
+// ******************************************************************
+typedef VOID (NTAPI *FPTR_RtlMapGenericMask)
+(
+	IN OUT PACCESS_MASK     AccessMask,
+	IN     PGENERIC_MAPPING GenericMapping
+);
+
+// ******************************************************************
 // * RtlNtStatusToDosError
 // ******************************************************************
-typedef ULONG (NTAPI *FPTR_RtlNtStatusToDosError)(NTSTATUS Status);
+typedef ULONG (NTAPI *FPTR_RtlNtStatusToDosError)
+(
+    IN NTSTATUS Status
+);
 
 // ******************************************************************
 // * RtlTimeToTimeFields
@@ -860,6 +912,93 @@ typedef VOID (NTAPI *FPTR_RtlTimeToTimeFields)
 typedef BOOL (NTAPI *FPTR_RtlTryEnterCriticalSection)
 (
     IN PRTL_CRITICAL_SECTION CriticalSection
+);
+
+// ******************************************************************
+// * RtlUlongByteSwap
+// ******************************************************************
+typedef ULONG (FASTCALL *FPTR_RtlUlongByteSwap)
+(
+	IN ULONG Source
+);
+
+// ******************************************************************
+// * RtlUnicodeStringToInteger
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeStringToInteger)
+(
+	IN  PCUNICODE_STRING String,
+	IN  ULONG            Base OPTIONAL,
+	OUT PULONG           Value
+);
+
+// ******************************************************************
+// * RtlUnicodeToMultiByteN
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeToMultiByteN)
+(
+	OUT PCHAR  MultiByteString,
+	IN  ULONG  MaxBytesInMultiByteString,
+	OUT PULONG BytesInMultiByteString OPTIONAL,
+	IN  PCWCH  UnicodeString,
+	IN  ULONG  BytesInUnicodeString
+);
+
+// ******************************************************************
+// * RtlUnicodeToMultiByteSize
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeToMultiByteSize)
+(
+	OUT PULONG BytesInMultiByteString,
+	IN  PWCH   UnicodeString,
+	IN  ULONG  BytesInUnicodeString
+);
+
+// ******************************************************************
+// * RtlUpcaseUnicodeChar
+// ******************************************************************
+typedef WCHAR (NTAPI *FPTR_RtlUpcaseUnicodeChar)
+(
+	IN WCHAR    SourceCharacter
+);
+
+// ******************************************************************
+// * RtlUpcaseUnicodeString
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlUpcaseUnicodeString)
+(
+	OUT PUNICODE_STRING DestinationString,
+	IN PUNICODE_STRING SourceString,
+	IN BOOLEAN AllocateDestinationString
+);
+
+// ******************************************************************
+// * RtlUpcaseUnicodeToMultiByteN
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlUpcaseUnicodeToMultiByteN)
+(
+	OUT PCHAR  MultiByteString,
+	IN  ULONG  MaxBytesInMultiByteString,
+	OUT PULONG BytesInMultiByteString OPTIONAL,
+	IN  PCWCH  UnicodeString,
+	IN  ULONG  BytesInUnicodeString
+);
+
+// ******************************************************************
+// * RtlUpperString
+// ******************************************************************
+typedef VOID (NTAPI *FPTR_RtlUpperString)
+(
+	OUT PSTRING DestinationString,
+	IN const STRING  *SourceString
+);
+
+// ******************************************************************
+// * RtlUshortByteSwap
+// ******************************************************************
+typedef USHORT (FASTCALL *FPTR_RtlUshortByteSwap)
+(
+	IN USHORT Source
 );
 
 // ******************************************************************
@@ -1031,6 +1170,14 @@ typedef VOID (NTAPI *FPTR_RtlFreeAnsiString)
 );
 
 // ******************************************************************
+// * RtlFreeUnicodeString
+// ******************************************************************
+typedef VOID(NTAPI *FPTR_RtlFreeUnicodeString)
+(
+	IN OUT PUNICODE_STRING   UnicodeString
+);
+
+// ******************************************************************
 // * RtlEqualString
 // ******************************************************************
 typedef BOOLEAN (NTAPI *FPTR_RtlEqualString)
@@ -1038,6 +1185,108 @@ typedef BOOLEAN (NTAPI *FPTR_RtlEqualString)
 	IN PSTRING			String1,
 	IN PSTRING			String2,
 	IN BOOLEAN			CaseSensitive
+);
+
+// ******************************************************************
+// * RtlEqualUnicodeString
+// ******************************************************************
+typedef BOOLEAN (NTAPI *FPTR_RtlEqualUnicodeString)
+(
+	IN PUNICODE_STRING String1,
+	IN PUNICODE_STRING String2,
+	IN BOOLEAN CaseSensitive
+);
+
+// ******************************************************************
+// * RtlExtendedIntegerMultiply
+// ******************************************************************
+typedef LARGE_INTEGER (NTAPI *FPTR_RtlExtendedIntegerMultiply)
+(
+	IN LARGE_INTEGER Multiplicand,
+	IN LONG          Multiplier
+	);
+
+// ******************************************************************
+// * RtlExtendedLargeIntegerDivide
+// ******************************************************************
+typedef LARGE_INTEGER (NTAPI *FPTR_RtlExtendedLargeIntegerDivide)
+(
+	IN LARGE_INTEGER Dividend,
+	IN ULONG         Divisor,
+	OUT PULONG		 Remainder
+);
+
+// ******************************************************************
+// * RtlExtendedMagicDivide
+// ******************************************************************
+typedef LARGE_INTEGER (NTAPI *FPTR_RtlExtendedMagicDivide)
+(
+	IN LARGE_INTEGER Dividend,
+	IN LARGE_INTEGER MagicDivisor,
+	IN CCHAR		 ShiftCount
+);
+
+// ******************************************************************
+// * RtlFillMemory
+// ******************************************************************
+typedef VOID (NTAPI *FPTR_RtlFillMemory)
+(
+	OUT VOID UNALIGNED *Destination,
+	IN  SIZE_T         Length,
+	IN	UCHAR          Fill
+);
+
+// ******************************************************************
+// * RtlFillMemoryUlong
+// ******************************************************************
+typedef VOID (NTAPI *FPTR_RtlFillMemoryUlong)
+(
+	OUT PVOID  Destination,
+	IN  SIZE_T Length,
+	IN	ULONG  Pattern
+); 
+
+// ******************************************************************
+// * RtlIntegerToChar
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlIntegerToChar)
+(
+	IN ULONG Value,
+	IN ULONG Base,
+	IN ULONG Length,
+	IN PCHAR Str
+);
+
+// ******************************************************************
+// * RtlIntegerToUnicodeString
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlIntegerToUnicodeString)
+(
+	IN	ULONG           Value,
+	IN	ULONG           Base OPTIONAL,
+	IN OUT	PUNICODE_STRING String
+);
+
+// ******************************************************************
+// * RtlMultiByteToUnicodeN
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlMultiByteToUnicodeN)
+(
+	OUT PWCH   UnicodeString,
+	IN  ULONG  MaxBytesInUnicodeString,
+	OUT PULONG BytesInUnicodeString OPTIONAL,
+	IN  const CHAR   *MultiByteString,
+	IN  ULONG  BytesInMultiByteString
+);
+
+// ******************************************************************
+// * RtlMultiByteToUnicodeSize
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlMultiByteToUnicodeSize)
+(
+	OUT       PULONG BytesInUnicodeString,
+	IN  const CHAR   *MultiByteString,
+	IN        ULONG  BytesInMultiByteString
 );
 
 // ******************************************************************
@@ -1181,6 +1430,18 @@ typedef NTSTATUS (NTAPI *FPTR_NtCreateEvent)
 );
 
 // ******************************************************************
+// * NtQueryEvent
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtQueryEvent)
+(
+	IN HANDLE EventHandle,
+	IN EVENT_INFORMATION_CLASS EventInformationClass,
+	OUT PVOID EventInformation,
+	IN ULONG EventInformationLength,
+	OUT PULONG ReturnLength OPTIONAL
+);
+
+// ******************************************************************
 // * NtPulseEvent
 // ******************************************************************
 typedef NTSTATUS(NTAPI *FPTR_NtPulseEvent)
@@ -1198,6 +1459,18 @@ typedef NTSTATUS (NTAPI *FPTR_NtCreateMutant)
     IN  ACCESS_MASK         DesiredAccess,
     IN  POBJECT_ATTRIBUTES  ObjectAttributes OPTIONAL,
     IN  BOOLEAN             InitialOwner
+);
+
+// ******************************************************************
+// * NtQueryMutant
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtQueryMutant)
+(
+	IN HANDLE MutantHandle,
+	IN MUTANT_INFORMATION_CLASS MutantInformationClass,
+	OUT PVOID MutantInformation,
+	IN ULONG MutantInformationLength,
+	OUT PULONG ReturnLength OPTIONAL
 );
 
 // ******************************************************************
@@ -1219,6 +1492,18 @@ typedef NTSTATUS (NTAPI *FPTR_NtCreateSemaphore)
     IN  POBJECT_ATTRIBUTES  ObjectAttributes OPTIONAL,
     IN  ULONG               InitialCount,
     IN  ULONG               MaximumCount
+);
+
+// ******************************************************************
+// * NtQuerySemaphore
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtQuerySemaphore)
+(
+	IN HANDLE SemaphoreHandle,
+	IN SEMAPHORE_INFORMATION_CLASS SemaphoreInformationClass,
+	OUT PVOID SemaphoreInformation,
+	IN ULONG SemaphoreInformationLength,
+	OUT PULONG ReturnLength OPTIONAL
 );
 
 // ******************************************************************
@@ -1625,8 +1910,11 @@ EXTERN(NtFsControlFile);
 EXTERN(NtOpenSymbolicLinkObject);
 EXTERN(NtPulseEvent);
 EXTERN(NtQueryDirectoryFile);
+EXTERN(NtQueryEvent);
 EXTERN(NtQueryFullAttributesFile);
 EXTERN(NtQueryInformationFile);
+EXTERN(NtQueryMutant);
+EXTERN(NtQuerySemaphore);
 EXTERN(NtQueryTimer);
 EXTERN(NtQueryVirtualMemory);
 EXTERN(NtQueryVolumeInformationFile);
@@ -1663,19 +1951,40 @@ EXTERN(RtlDowncaseUnicodeChar);
 EXTERN(RtlDowncaseUnicodeString);
 EXTERN(RtlEnterCriticalSection);
 EXTERN(RtlEqualString);
+EXTERN(RtlEqualUnicodeString);
+EXTERN(RtlExtendedIntegerMultiply);
+EXTERN(RtlExtendedLargeIntegerDivide);
+EXTERN(RtlExtendedMagicDivide);
+EXTERN(RtlFillMemory);
+EXTERN(RtlFillMemoryUlong);
 EXTERN(RtlFreeAnsiString);
 EXTERN(RtlFreeHeap);
+EXTERN(RtlFreeUnicodeString);
+EXTERN(RtlIntegerToChar);
+EXTERN(RtlIntegerToUnicodeString);
 EXTERN(RtlInitAnsiString);
 EXTERN(RtlInitializeCriticalSection);
 EXTERN(RtlInitUnicodeString);
 EXTERN(RtlLeaveCriticalSection);
+EXTERN(RtlMapGenericMask);
+EXTERN(RtlMultiByteToUnicodeN);
+EXTERN(RtlMultiByteToUnicodeSize);
 EXTERN(RtlNtStatusToDosError);
 EXTERN(RtlReAllocateHeap);
 EXTERN(RtlSizeHeap);
 EXTERN(RtlTimeFieldsToTime);
 EXTERN(RtlTimeToTimeFields);
 EXTERN(RtlTryEnterCriticalSection);
+EXTERN(RtlUlongByteSwap);
 EXTERN(RtlUnicodeStringToAnsiString);
+EXTERN(RtlUnicodeStringToInteger);
+EXTERN(RtlUnicodeToMultiByteN);
+EXTERN(RtlUnicodeToMultiByteSize);
+EXTERN(RtlUpcaseUnicodeChar);
+EXTERN(RtlUpcaseUnicodeString);
+EXTERN(RtlUpcaseUnicodeToMultiByteN);
+EXTERN(RtlUpperString);
+EXTERN(RtlUshortByteSwap);
 
 #if defined(__cplusplus)
 }

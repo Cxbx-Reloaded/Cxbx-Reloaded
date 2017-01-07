@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -64,24 +66,22 @@ void XBVideo::Load(const char *szRegistryKey)
 
         if(RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
         {
-            int v=0;
-
-            dwType = REG_SZ; dwSize = 100;
+            dwType = REG_SZ; dwSize = sizeof(m_szVideoResolution);
             RegQueryValueEx(hKey, "VideoResolution", NULL, &dwType, (PBYTE)m_szVideoResolution, &dwSize);
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            dwType = REG_DWORD; dwSize = sizeof(m_dwDisplayAdapter);
             RegQueryValueEx(hKey, "DisplayAdapter", NULL, &dwType, (PBYTE)&m_dwDisplayAdapter, &dwSize);
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            dwType = REG_DWORD; dwSize = sizeof(m_dwDirect3DDevice);
             RegQueryValueEx(hKey, "Direct3DDevice", NULL, &dwType, (PBYTE)&m_dwDirect3DDevice, &dwSize);
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            dwType = REG_DWORD; dwSize = sizeof(m_bFullscreen);
             RegQueryValueEx(hKey, "Fullscreen", NULL, &dwType, (PBYTE)&m_bFullscreen, &dwSize);
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            dwType = REG_DWORD; dwSize = sizeof(m_bVSync);
             RegQueryValueEx(hKey, "VSync", NULL, &dwType, (PBYTE)&m_bVSync, &dwSize);
 
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            dwType = REG_DWORD; dwSize = sizeof(m_bHardwareYUV);
             RegQueryValueEx(hKey, "HardwareYUV", NULL, &dwType, (PBYTE)&m_bHardwareYUV, &dwSize);
 
             RegCloseKey(hKey);
@@ -103,24 +103,22 @@ void XBVideo::Save(const char *szRegistryKey)
 
         if(RegCreateKeyEx(HKEY_CURRENT_USER, szRegistryKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
         {
-            int v=0;
-
-            dwType = REG_SZ; dwSize = 100;
+            dwType = REG_SZ; dwSize = sizeof(m_szVideoResolution);
             RegSetValueEx(hKey, "VideoResolution", 0, dwType, (PBYTE)m_szVideoResolution, dwSize);
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            dwType = REG_DWORD; dwSize = sizeof(m_dwDisplayAdapter);
             RegSetValueEx(hKey, "DisplayAdapter", 0, dwType, (PBYTE)&m_dwDisplayAdapter, dwSize);
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            dwType = REG_DWORD; dwSize = sizeof(m_dwDirect3DDevice);
             RegSetValueEx(hKey, "Direct3DDevice", 0, dwType, (PBYTE)&m_dwDirect3DDevice, dwSize);
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            dwType = REG_DWORD; dwSize = sizeof(m_bFullscreen);
             RegSetValueEx(hKey, "Fullscreen", 0, dwType, (PBYTE)&m_bFullscreen, dwSize);
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            dwType = REG_DWORD; dwSize = sizeof(m_bVSync);
             RegSetValueEx(hKey, "VSync", 0, dwType, (PBYTE)&m_bVSync, dwSize);
 
-			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+            dwType = REG_DWORD; dwSize = sizeof(m_bHardwareYUV);
             RegSetValueEx(hKey, "HardwareYUV", 0, dwType, (PBYTE)&m_bHardwareYUV, dwSize);
 
             RegCloseKey(hKey);
