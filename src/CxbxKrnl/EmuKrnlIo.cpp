@@ -54,7 +54,7 @@ namespace xboxkrnl
 // ******************************************************************
 XBSYSAPI EXPORTNUM(59) xboxkrnl::PVOID NTAPI xboxkrnl::IoAllocateIrp
 (
-	IN CHAR StackSize
+	IN CCHAR StackSize
 )
 {
 	LOG_FUNC_ONE_ARG(StackSize);
@@ -395,7 +395,7 @@ XBSYSAPI EXPORTNUM(73) xboxkrnl::PVOID NTAPI xboxkrnl::IoInitializeIrp
 (
 	IN PIRP Irp,
 	IN USHORT PacketSize,
-	IN CHAR StackSize
+	IN CCHAR StackSize
 )
 {
 	LOG_FUNC_BEGIN
@@ -746,3 +746,19 @@ XBSYSAPI EXPORTNUM(91) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDismountVolumeByName
 	RETURN(ret);
 }
 
+// ******************************************************************
+// * 0x0167 - IoMarkIrpMustComplete()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(359) xboxkrnl::CCHAR NTAPI xboxkrnl::IoMarkIrpMustComplete
+(
+	IN PIRP Irp
+)
+{
+	LOG_FUNC_ONE_ARG(Irp);
+
+	xboxkrnl::CCHAR ret = 0; // ShareAccess->OpenCount;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(ret);
+}

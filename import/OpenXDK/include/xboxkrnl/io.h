@@ -17,7 +17,7 @@
 // ******************************************************************
 XBSYSAPI EXPORTNUM(59) PVOID NTAPI IoAllocateIrp
 (
-	IN CHAR StackSize
+	IN CCHAR StackSize
 );
 
 // ******************************************************************
@@ -160,7 +160,7 @@ XBSYSAPI EXPORTNUM(73) PVOID NTAPI IoInitializeIrp
 (
 	IN PIRP Irp,
 	IN USHORT PacketSize,
-	IN CHAR StackSize
+	IN CCHAR StackSize
 );
 
 // ******************************************************************
@@ -309,7 +309,13 @@ XBSYSAPI EXPORTNUM(91) NTSTATUS NTAPI IoDismountVolumeByName
 	IN PSTRING VolumeName
 );
 
-XBSYSAPI VOID *IoMarkIrpMustComplete;
+// ******************************************************************
+// * 0x0167 - IoMarkIrpMustComplete()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(359) CCHAR NTAPI IoMarkIrpMustComplete
+(
+	IN PIRP Irp
+);
 
 #endif
 

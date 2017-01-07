@@ -426,7 +426,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)VARIABLE(&xboxkrnl::HalBootSMCVideoMode),             // 0x0164 (356)
 	(uint32)VARIABLE(&xboxkrnl::IdexChannelObject),               // 0x0165 (357)
 	(uint32)FUNC(&xboxkrnl::HalIsResetOrShutdownPending),         // 0x0166 (358)
-	(uint32)PANIC(0x0167),                                        // 0x0167 (359) IoMarkIrpMustComplete
+	(uint32)FUNC(&xboxkrnl::IoMarkIrpMustComplete),               // 0x0167 (359)
 	(uint32)FUNC(&xboxkrnl::HalInitiateShutdown),                 // 0x0168 (360)
 	(uint32)PANIC(0x0169),                                        // 0x0169 (361) KRNL(_snprintf)
 	(uint32)PANIC(0x016A),                                        // 0x016A (362) KRNL(_sprintf)
