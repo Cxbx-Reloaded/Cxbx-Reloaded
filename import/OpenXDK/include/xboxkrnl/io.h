@@ -166,13 +166,24 @@ XBSYSAPI EXPORTNUM(73) PVOID NTAPI IoInitializeIrp
 // ******************************************************************
 // * 0x004A - IoInvalidDeviceRequest()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(73) NTSTATUS NTAPI IoInvalidDeviceRequest
+XBSYSAPI EXPORTNUM(74) NTSTATUS NTAPI IoInvalidDeviceRequest
 (
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp
 );
 
-XBSYSAPI VOID *IoQueryFileInformation;
+// ******************************************************************
+// * 0x004B - IoQueryFileInformation()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(74) NTSTATUS NTAPI IoQueryFileInformation
+(
+	IN PFILE_OBJECT FileObject,
+	IN FILE_INFORMATION_CLASS FileInformationClass,
+	IN ULONG Length,
+	OUT PVOID FileInformation,
+	OUT PULONG ReturnedLength
+);
+
 XBSYSAPI VOID *IoQueryVolumeInformation;
 XBSYSAPI VOID *IoQueueThreadIrp;
 XBSYSAPI VOID *IoRemoveShareAccess;

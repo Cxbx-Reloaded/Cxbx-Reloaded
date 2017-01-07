@@ -431,17 +431,16 @@ XBSYSAPI EXPORTNUM(74) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoInvalidDeviceRequest
 	RETURN(S_OK);
 }
 
-/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x004B - IoQueryFileInformation()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(75) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoQueryFileInformation
 (
-	PFILE_OBJECT	FileObject,
-	FILE_INFORMATION_CLASS FileInformationClass,
-	ULONG	Length,
+	IN PFILE_OBJECT FileObject,
+	IN FILE_INFORMATION_CLASS FileInformationClass,
+	IN ULONG Length,
 	OUT PVOID FileInformation,
-	OUT PULONG	ReturnedLength,
+	OUT PULONG ReturnedLength
 )
 {
 	LOG_FUNC_BEGIN
@@ -458,6 +457,7 @@ XBSYSAPI EXPORTNUM(75) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoQueryFileInformation
 	RETURN(S_OK);
 }
 
+/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x004C - IoQueryVolumeInformation()
 // ******************************************************************
