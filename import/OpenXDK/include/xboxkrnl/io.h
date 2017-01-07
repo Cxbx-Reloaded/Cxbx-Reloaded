@@ -299,7 +299,14 @@ XBSYSAPI EXPORTNUM(86) NTSTATUS FASTCALL IofCallDriver
 	IN PIRP Irp
 );
 
-XBSYSAPI VOID *IofCompleteRequest;
+// ******************************************************************
+// * 0x0057 - IofCompleteRequest()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(87) VOID FASTCALL IofCompleteRequest
+(
+	IN PIRP Irp,
+	IN CCHAR PriorityBoost
+);
 
 // ******************************************************************
 // * 0x005A - IoDismountVolume()

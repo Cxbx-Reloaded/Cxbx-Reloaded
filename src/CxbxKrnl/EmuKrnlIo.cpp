@@ -692,14 +692,13 @@ XBSYSAPI EXPORTNUM(86) xboxkrnl::NTSTATUS FASTCALL xboxkrnl::IofCallDriver
 	RETURN(S_OK);
 }
 
-/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x0057 - IofCompleteRequest()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(87) xboxkrnl::NTSTATUS FASTCALL xboxkrnl::IofCompleteRequest
+XBSYSAPI EXPORTNUM(87) xboxkrnl::VOID FASTCALL xboxkrnl::IofCompleteRequest
 (
-	PIRP	Irp
-	CCHAR	PriorityBoost
+	IN PIRP Irp,
+	IN CCHAR PriorityBoost
 )
 {
 	LOG_FUNC_BEGIN
@@ -709,7 +708,6 @@ XBSYSAPI EXPORTNUM(87) xboxkrnl::NTSTATUS FASTCALL xboxkrnl::IofCompleteRequest
 
 	LOG_UNIMPLEMENTED();
 }
-*/
 
 // ******************************************************************
 // * 0x005A - IoDismountVolume()
