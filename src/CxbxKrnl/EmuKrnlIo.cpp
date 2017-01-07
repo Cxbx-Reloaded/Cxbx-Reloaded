@@ -564,49 +564,56 @@ XBSYSAPI EXPORTNUM(80) xboxkrnl::CCHAR NTAPI xboxkrnl::IoSetShareAccess
 	RETURN(ret);
 }
 
-/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x0051 - IoStartNextPacket()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(81) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoStartNextPacket
+XBSYSAPI EXPORTNUM(81) xboxkrnl::VOID NTAPI xboxkrnl::IoStartNextPacket
 (
+	IN PDEVICE_OBJECT DeviceObject
 )
 {
-	LOG_FUNC();
+	LOG_FUNC_ONE_ARG(DeviceObject);
 
 	LOG_UNIMPLEMENTED();
-
-	RETURN(S_OK);
 }
 
 // ******************************************************************
 // * 0x0052 - IoStartNextPacketByKey()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(82) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoStartNextPacketByKey
+XBSYSAPI EXPORTNUM(82) xboxkrnl::VOID NTAPI xboxkrnl::IoStartNextPacketByKey
 (
+	IN PDEVICE_OBJECT DeviceObject,
+	IN ULONG Key
 )
 {
-	LOG_FUNC();
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(DeviceObject)
+		LOG_FUNC_ARG(Key)
+		LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
-
-	RETURN(S_OK);
 }
 
 // ******************************************************************
 // * 0x0053 - IoStartPacket()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(83) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoStartPacket
+XBSYSAPI EXPORTNUM(83) xboxkrnl::VOID NTAPI xboxkrnl::IoStartPacket
 (
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp,
+	OUT PULONG Key OPTIONAL
 )
 {
-	LOG_FUNC();
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(DeviceObject)
+		LOG_FUNC_ARG(Irp)
+		LOG_FUNC_ARG_OUT(Key)
+		LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
-
-	RETURN(S_OK);
 }
 
+/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x0054 - IoSynchronousDeviceIoControlRequest()
 // ******************************************************************

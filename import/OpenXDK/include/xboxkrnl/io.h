@@ -236,9 +236,33 @@ XBSYSAPI EXPORTNUM(80) CCHAR NTAPI IoSetShareAccess
 	OUT PSHARE_ACCESS ShareAccess
 );
 
-XBSYSAPI VOID *IoStartNextPacket;
-XBSYSAPI VOID *IoStartNextPacketByKey;
-XBSYSAPI VOID *IoStartPacket;
+// ******************************************************************
+// * 0x0051 - IoStartNextPacket()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(81) VOID NTAPI IoStartNextPacket
+(
+	IN PDEVICE_OBJECT DeviceObject
+);
+
+// ******************************************************************
+// * 0x0052 - IoStartNextPacketByKey()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(82) VOID NTAPI IoStartNextPacketByKey
+(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN ULONG Key
+);
+
+// ******************************************************************
+// * 0x0053 - IoStartPacket()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(83) VOID NTAPI IoStartPacket
+(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp,
+	OUT PULONG Key OPTIONAL
+);
+
 XBSYSAPI VOID *IoSynchronousDeviceIoControlRequest;
 XBSYSAPI VOID *IoSynchronousFsdRequest;
 XBSYSAPI VOID *IofCallDriver;
