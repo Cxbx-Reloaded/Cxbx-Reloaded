@@ -178,7 +178,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x006C),                                        // 0x006C (108) KeInitializeEvent
 	(uint32)FUNC(&xboxkrnl::KeInitializeInterrupt),               // 0x006D (109)
 	(uint32)PANIC(0x006E),                                        // 0x006E (110) KeInitializeMutant
-	(uint32)PANIC(0x006F),                                        // 0x006F (111) KeInitializeQueue	
+	(uint32)PANIC(0x006F),                                        // 0x006F (111) KeInitializeQueue
 	(uint32)PANIC(0x0070),                                        // 0x0070 (112) KeInitializeSemaphore
 	(uint32)FUNC(&xboxkrnl::KeInitializeTimerEx),                 // 0x0071 (113)
 	(uint32)PANIC(0x0072),                                        // 0x0072 (114) KeInsertByKeyDeviceQueue
@@ -405,18 +405,18 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::XcSHAInit),                           // 0x014F (335)
 	(uint32)FUNC(&xboxkrnl::XcSHAUpdate),                         // 0x0150 (336)
 	(uint32)FUNC(&xboxkrnl::XcSHAFinal),                          // 0x0151 (337)
-	(uint32)FUNC(&xboxkrnl::XcRC4Key),					          // 0x0152 (338)
-	(uint32)FUNC(&xboxkrnl::XcRC4Crypt),				          // 0x0153 (339)
+	(uint32)FUNC(&xboxkrnl::XcRC4Key),                            // 0x0152 (338)
+	(uint32)FUNC(&xboxkrnl::XcRC4Crypt),                          // 0x0153 (339)
 	(uint32)FUNC(&xboxkrnl::XcHMAC),                              // 0x0154 (340)
-	(uint32)FUNC(&xboxkrnl::XcPKEncPublic),			              // 0x0155 (341)
-	(uint32)FUNC(&xboxkrnl::XcPKDecPrivate),		              // 0x0156 (342)
-	(uint32)FUNC(&xboxkrnl::XcPKGetKeyLen),			              // 0x0157 (343)
+	(uint32)FUNC(&xboxkrnl::XcPKEncPublic),                       // 0x0155 (341)
+	(uint32)FUNC(&xboxkrnl::XcPKDecPrivate),                      // 0x0156 (342)
+	(uint32)FUNC(&xboxkrnl::XcPKGetKeyLen),                       // 0x0157 (343)
 	(uint32)FUNC(&xboxkrnl::XcVerifyPKCS1Signature),              // 0x0158 (344)
-	(uint32)FUNC(&xboxkrnl::XcModExp),				              // 0x0159 (345)
-	(uint32)FUNC(&xboxkrnl::XcDESKeyParity),		              // 0x015A (346)
-	(uint32)FUNC(&xboxkrnl::XcKeyTable),			              // 0x015B (347)
-	(uint32)FUNC(&xboxkrnl::XcBlockCrypt),			              // 0x015C (348)
-	(uint32)FUNC(&xboxkrnl::XcBlockCryptCBC),		              // 0x015D (349)
+	(uint32)FUNC(&xboxkrnl::XcModExp),                            // 0x0159 (345)
+	(uint32)FUNC(&xboxkrnl::XcDESKeyParity),                      // 0x015A (346)
+	(uint32)FUNC(&xboxkrnl::XcKeyTable),                          // 0x015B (347)
+	(uint32)FUNC(&xboxkrnl::XcBlockCrypt),                        // 0x015C (348)
+	(uint32)FUNC(&xboxkrnl::XcBlockCryptCBC),                     // 0x015D (349)
 	(uint32)FUNC(&xboxkrnl::XcCryptService),                      // 0x015E (350)
 	(uint32)FUNC(&xboxkrnl::XcUpdateCrypto),                      // 0x015F (351)
 	(uint32)FUNC(&xboxkrnl::RtlRip),                              // 0x0160 (352)

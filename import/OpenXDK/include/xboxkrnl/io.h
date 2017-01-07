@@ -26,11 +26,11 @@ XBSYSAPI EXPORTNUM(59) PVOID NTAPI IoAllocateIrp
 XBSYSAPI EXPORTNUM(60) PVOID NTAPI IoBuildAsynchronousFsdRequest
 (
 	IN ULONG MajorFunction,
-	PDEVICE_OBJECT	DeviceObject,
+	IN PDEVICE_OBJECT DeviceObject,
 	OUT PVOID Buffer OPTIONAL,
-	ULONG Length OPTIONAL,
-	PLARGE_INTEGER StartingOffset OPTIONAL,
-	PIO_STATUS_BLOCK IoStatusBlock OPTIONAL
+	IN ULONG Length,
+	OUT PLARGE_INTEGER StartingOffset OPTIONAL,
+	OUT PIO_STATUS_BLOCK IoStatusBlock OPTIONAL
 );
 
 // ******************************************************************
@@ -44,8 +44,8 @@ XBSYSAPI EXPORTNUM(61) PVOID NTAPI IoBuildDeviceIoControlRequest
 	IN ULONG InputBufferLength,
 	OUT PVOID OutputBuffer OPTIONAL,
 	IN ULONG OutputBufferLength OPTIONAL,
-	BOOLEAN InternalDeviceIoControl,
-	PKEVENT Event,
+	IN BOOLEAN InternalDeviceIoControl,
+	IN PKEVENT Event,
 	OUT PIO_STATUS_BLOCK IoStatusBlock OPTIONAL
 );
 
@@ -57,9 +57,9 @@ XBSYSAPI EXPORTNUM(62) PVOID NTAPI IoBuildSynchronousFsdRequest
 	IN ULONG MajorFunction,
 	IN PDEVICE_OBJECT DeviceObject,
 	OUT PVOID Buffer OPTIONAL,
-	IN ULONG Length OPTIONAL,
-	PLARGE_INTEGER StartingOffset OPTIONAL,
-	PKEVENT Event,
+	IN ULONG Length,
+	OUT PLARGE_INTEGER StartingOffset OPTIONAL,
+	IN PKEVENT Event,
 	OUT PIO_STATUS_BLOCK IoStatusBlock
 );
 
@@ -87,7 +87,7 @@ XBSYSAPI EXPORTNUM(65) NTSTATUS NTAPI IoCreateDevice
 (
 	IN  PDRIVER_OBJECT		DriverObject,
 	IN  ULONG				DeviceExtensionSize,
-	IN  PSTRING				DeviceName  OPTIONAL,
+	IN  PSTRING				DeviceName OPTIONAL,
 	IN  ULONG				DeviceType,
 	IN  BOOLEAN				Exclusive,
 	OUT PDEVICE_OBJECT*		DeviceObject

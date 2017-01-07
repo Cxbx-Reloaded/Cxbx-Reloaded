@@ -72,20 +72,20 @@ XBSYSAPI EXPORTNUM(59) xboxkrnl::PVOID NTAPI xboxkrnl::IoAllocateIrp
 XBSYSAPI EXPORTNUM(60) xboxkrnl::PVOID NTAPI xboxkrnl::IoBuildAsynchronousFsdRequest
 (
 	IN ULONG MajorFunction,
-	PDEVICE_OBJECT	DeviceObject,
+	IN PDEVICE_OBJECT DeviceObject,
 	OUT PVOID Buffer OPTIONAL,
-	ULONG Length,
-	PLARGE_INTEGER StartingOffset OPTIONAL,
-	PIO_STATUS_BLOCK IoStatusBlock OPTIONAL
+	IN ULONG Length,
+	OUT PLARGE_INTEGER StartingOffset OPTIONAL,
+	OUT PIO_STATUS_BLOCK IoStatusBlock OPTIONAL
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(MajorFunction)
 		LOG_FUNC_ARG(DeviceObject)
 		LOG_FUNC_ARG_OUT(Buffer)
-		LOG_FUNC_ARG_OUT(Length)
-		LOG_FUNC_ARG(StartingOffset)
-		LOG_FUNC_ARG(IoStatusBlock)
+		LOG_FUNC_ARG(Length)
+		LOG_FUNC_ARG_OUT(StartingOffset)
+		LOG_FUNC_ARG_OUT(IoStatusBlock)
 		LOG_FUNC_END;
 
 	xboxkrnl::PVOID ret = nullptr;
@@ -106,8 +106,8 @@ XBSYSAPI EXPORTNUM(61) xboxkrnl::PVOID NTAPI xboxkrnl::IoBuildDeviceIoControlReq
 	IN ULONG InputBufferLength,
 	OUT PVOID OutputBuffer OPTIONAL,
 	IN ULONG OutputBufferLength OPTIONAL,
-	BOOLEAN InternalDeviceIoControl,
-	PKEVENT Event,
+	IN BOOLEAN InternalDeviceIoControl,
+	IN PKEVENT Event,
 	OUT PIO_STATUS_BLOCK IoStatusBlock OPTIONAL
 )
 {
@@ -120,7 +120,7 @@ XBSYSAPI EXPORTNUM(61) xboxkrnl::PVOID NTAPI xboxkrnl::IoBuildDeviceIoControlReq
 		LOG_FUNC_ARG(OutputBufferLength)
 		LOG_FUNC_ARG(InternalDeviceIoControl)
 		LOG_FUNC_ARG(Event)
-		LOG_FUNC_ARG(IoStatusBlock)
+		LOG_FUNC_ARG_OUT(IoStatusBlock)
 		LOG_FUNC_END;
 
 	xboxkrnl::PVOID ret = nullptr;
@@ -139,8 +139,8 @@ XBSYSAPI EXPORTNUM(62) xboxkrnl::PVOID NTAPI xboxkrnl::IoBuildSynchronousFsdRequ
 	IN PDEVICE_OBJECT DeviceObject,
 	OUT PVOID Buffer OPTIONAL,
 	IN ULONG Length,
-	PLARGE_INTEGER StartingOffset OPTIONAL,
-	PKEVENT Event,
+	OUT PLARGE_INTEGER StartingOffset OPTIONAL,
+	IN PKEVENT Event,
 	OUT PIO_STATUS_BLOCK IoStatusBlock
 )
 {
@@ -149,7 +149,7 @@ XBSYSAPI EXPORTNUM(62) xboxkrnl::PVOID NTAPI xboxkrnl::IoBuildSynchronousFsdRequ
 		LOG_FUNC_ARG(DeviceObject)
 		LOG_FUNC_ARG_OUT(Buffer)
 		LOG_FUNC_ARG(Length)
-		LOG_FUNC_ARG(StartingOffset)
+		LOG_FUNC_ARG_OUT(StartingOffset)
 		LOG_FUNC_ARG(Event)
 		LOG_FUNC_ARG_OUT(IoStatusBlock)
 		LOG_FUNC_END;
@@ -209,20 +209,19 @@ XBSYSAPI EXPORTNUM(65) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCreateDevice
 (
 	IN  PDRIVER_OBJECT		DriverObject,
 	IN  ULONG				DeviceExtensionSize,
-	IN  PSTRING				DeviceName  OPTIONAL,
+	IN  PSTRING				DeviceName OPTIONAL,
 	IN  ULONG				DeviceType,
-	// TODO? : IN ULONG		DeviceCharacteristics,
 	IN  BOOLEAN				Exclusive,
 	OUT PDEVICE_OBJECT*		DeviceObject
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG_OUT(DriverObject)
+		LOG_FUNC_ARG(DriverObject)
 		LOG_FUNC_ARG(DeviceExtensionSize)
 		LOG_FUNC_ARG(DeviceName)
-		LOG_FUNC_ARG_OUT(DeviceType)
+		LOG_FUNC_ARG(DeviceType)
 		LOG_FUNC_ARG(Exclusive)
-		LOG_FUNC_ARG(DeviceObject)
+		LOG_FUNC_ARG_OUT(DeviceObject)
 		LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
@@ -379,7 +378,7 @@ XBSYSAPI EXPORTNUM(71) xboxkrnl::OBJECT_TYPE xboxkrnl::IoFileObjectType =
 // ******************************************************************
 // * 0x0048 - IoFreeIrp()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(72) void NTAPI xboxkrnl::IoFreeIrp
+XBSYSAPI EXPORTNUM(72) xboxkrnl::VOID NTAPI xboxkrnl::IoFreeIrp
 (
 	IN PIRP Irp
 )
