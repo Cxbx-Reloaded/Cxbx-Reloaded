@@ -153,7 +153,16 @@ XBSYSAPI EXPORTNUM(72) VOID NTAPI IoFreeIrp
 	IN PIRP Irp
 );
 
-XBSYSAPI VOID *IoInitializeIrp;
+// ******************************************************************
+// * 0x0049 - IoInitializeIrp()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(73) PVOID NTAPI IoInitializeIrp
+(
+	IN PIRP Irp,
+	IN USHORT PacketSize,
+	IN CHAR StackSize
+);
+
 XBSYSAPI VOID *IoInvalidDeviceRequest;
 XBSYSAPI VOID *IoQueryFileInformation;
 XBSYSAPI VOID *IoQueryVolumeInformation;

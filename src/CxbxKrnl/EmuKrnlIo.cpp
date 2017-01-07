@@ -389,21 +389,30 @@ XBSYSAPI EXPORTNUM(72) void NTAPI xboxkrnl::IoFreeIrp
 	LOG_UNIMPLEMENTED();
 }
 
-/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x0049 - IoInitializeIrp()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(73) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoInitializeIrp
+XBSYSAPI EXPORTNUM(73) xboxkrnl::PVOID NTAPI xboxkrnl::IoInitializeIrp
 (
+	IN PIRP Irp,
+	IN USHORT PacketSize,
+	IN CHAR StackSize
 )
 {
-	LOG_FUNC();
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Irp)
+		LOG_FUNC_ARG(PacketSize)
+		LOG_FUNC_ARG(StackSize)
+		LOG_FUNC_END;
+
+	xboxkrnl::PVOID ret = nullptr;
 
 	LOG_UNIMPLEMENTED();
 
-	RETURN(S_OK);
+	RETURN(ret);
 }
 
+/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x004A - IoInvalidDeviceRequest()
 // ******************************************************************
