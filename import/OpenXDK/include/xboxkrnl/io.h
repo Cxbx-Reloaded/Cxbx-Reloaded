@@ -163,7 +163,15 @@ XBSYSAPI EXPORTNUM(73) PVOID NTAPI IoInitializeIrp
 	IN CHAR StackSize
 );
 
-XBSYSAPI VOID *IoInvalidDeviceRequest;
+// ******************************************************************
+// * 0x004A - IoInvalidDeviceRequest()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(73) NTSTATUS NTAPI IoInvalidDeviceRequest
+(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp
+);
+
 XBSYSAPI VOID *IoQueryFileInformation;
 XBSYSAPI VOID *IoQueryVolumeInformation;
 XBSYSAPI VOID *IoQueueThreadIrp;

@@ -412,14 +412,13 @@ XBSYSAPI EXPORTNUM(73) xboxkrnl::PVOID NTAPI xboxkrnl::IoInitializeIrp
 	RETURN(ret);
 }
 
-/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x004A - IoInvalidDeviceRequest()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(74) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoInvalidDeviceRequest
 (
-	PDEVICE_OBJECT	DeviceObject,
-	PIRP	Irp
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp
 )
 {
 	LOG_FUNC_BEGIN
@@ -432,6 +431,7 @@ XBSYSAPI EXPORTNUM(74) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoInvalidDeviceRequest
 	RETURN(S_OK);
 }
 
+/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x004B - IoQueryFileInformation()
 // ******************************************************************
