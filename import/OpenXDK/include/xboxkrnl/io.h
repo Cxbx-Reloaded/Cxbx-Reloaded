@@ -263,7 +263,21 @@ XBSYSAPI EXPORTNUM(83) VOID NTAPI IoStartPacket
 	OUT PULONG Key OPTIONAL
 );
 
-XBSYSAPI VOID *IoSynchronousDeviceIoControlRequest;
+// ******************************************************************
+// * 0x0054 - IoSynchronousDeviceIoControlRequest()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(84) NTSTATUS NTAPI IoSynchronousDeviceIoControlRequest
+(
+	IN ULONG IoControlCode,
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PVOID InputBuffer OPTIONAL,
+	IN ULONG InputBufferLength,
+	OUT PVOID OutputBuffer OPTIONAL,
+	IN ULONG OutputBufferLength,
+	OUT PULONG ReturnedOutputBufferLength OPTIONAL,
+	IN BOOLEAN InternalDeviceIoControl
+);
+
 XBSYSAPI VOID *IoSynchronousFsdRequest;
 XBSYSAPI VOID *IofCallDriver;
 XBSYSAPI VOID *IofCompleteRequest;

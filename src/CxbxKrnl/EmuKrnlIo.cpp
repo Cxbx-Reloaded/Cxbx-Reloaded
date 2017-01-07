@@ -613,7 +613,6 @@ XBSYSAPI EXPORTNUM(83) xboxkrnl::VOID NTAPI xboxkrnl::IoStartPacket
 	LOG_UNIMPLEMENTED();
 }
 
-/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x0054 - IoSynchronousDeviceIoControlRequest()
 // ******************************************************************
@@ -624,14 +623,14 @@ XBSYSAPI EXPORTNUM(83) xboxkrnl::VOID NTAPI xboxkrnl::IoStartPacket
 // New to the XBOX.
 XBSYSAPI EXPORTNUM(84) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoSynchronousDeviceIoControlRequest
 (
-	ULONG	IoControlCode,
-	PDEVICE_OBJECT	DeviceObject,
-	PVOID	InputBuffer	OPTIONAL,
-	ULONG	InputBufferLength,
-	PVOID	OutputBuffer	OPTIONAL,
-	ULONG	OutputBufferLength,
-	PDWORD	unknown_use_zero	OPTIONAL,
-	BOOLEAN	InternalDeviceIoControl
+	IN ULONG IoControlCode,
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PVOID InputBuffer OPTIONAL,
+	IN ULONG InputBufferLength,
+	OUT PVOID OutputBuffer OPTIONAL,
+	IN ULONG OutputBufferLength,
+	OUT PULONG ReturnedOutputBufferLength OPTIONAL,
+	IN BOOLEAN InternalDeviceIoControl
 )
 {
 	LOG_FUNC_BEGIN
@@ -641,7 +640,7 @@ XBSYSAPI EXPORTNUM(84) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoSynchronousDeviceIoC
 		LOG_FUNC_ARG(InputBufferLength)
 		LOG_FUNC_ARG(OutputBuffer)
 		LOG_FUNC_ARG(OutputBufferLength)
-		LOG_FUNC_ARG(unknown_use_zero)
+		LOG_FUNC_ARG(ReturnedOutputBufferLength)
 		LOG_FUNC_ARG(InternalDeviceIoControl)
 		LOG_FUNC_END;
 
@@ -650,6 +649,7 @@ XBSYSAPI EXPORTNUM(84) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoSynchronousDeviceIoC
 	RETURN(S_OK);
 }
 
+/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x0055 - IoSynchronousFsdRequest()
 // ******************************************************************
