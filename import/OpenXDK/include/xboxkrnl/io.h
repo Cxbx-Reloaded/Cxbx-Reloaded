@@ -75,8 +75,14 @@ XBSYSAPI EXPORTNUM(63) NTSTATUS NTAPI IoCheckShareAccess
 	IN BOOLEAN Update
 );
 
+// ******************************************************************
+// * 0x0040 - IoCompletionObjectType
+// ******************************************************************
 XBSYSAPI EXPORTNUM(64) OBJECT_TYPE IoCompletionObjectType;
 
+// ******************************************************************
+// * 0x0041 - IoCreateDevice()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(65) NTSTATUS NTAPI IoCreateDevice
 (
 	IN  PDRIVER_OBJECT		DriverObject,
@@ -88,7 +94,7 @@ XBSYSAPI EXPORTNUM(65) NTSTATUS NTAPI IoCreateDevice
 );
 
 // ******************************************************************
-// * IoCreateFile
+// * 0x0042 - IoCreateFile()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(66) NTSTATUS NTAPI IoCreateFile
 (
@@ -105,7 +111,7 @@ XBSYSAPI EXPORTNUM(66) NTSTATUS NTAPI IoCreateFile
 );
 
 // ******************************************************************
-// * IoCreateSymbolicLink
+// * 0x0043 - IoCreateSymbolicLink()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(67) NTSTATUS NTAPI IoCreateSymbolicLink
 (
@@ -116,14 +122,21 @@ XBSYSAPI EXPORTNUM(67) NTSTATUS NTAPI IoCreateSymbolicLink
 XBSYSAPI VOID *IoDeleteDevice;
 
 // ******************************************************************
-// * IoDeleteSymbolicLink
+// * 0x0045 - IoDeleteSymbolicLink
 // ******************************************************************
 XBSYSAPI EXPORTNUM(69) NTSTATUS NTAPI IoDeleteSymbolicLink
 (
     IN PSTRING SymbolicLinkName
 );
 
+// ******************************************************************
+// * 0x0046 - IoDeviceObjectType
+// ******************************************************************
 XBSYSAPI EXPORTNUM(70) OBJECT_TYPE IoDeviceObjectType;
+
+// ******************************************************************
+// * 0x0047 - IoFileObjectType
+// ******************************************************************
 XBSYSAPI EXPORTNUM(71) OBJECT_TYPE IoFileObjectType;
 
 XBSYSAPI VOID *IoFreeIrp;
@@ -143,13 +156,16 @@ XBSYSAPI VOID *IoSynchronousFsdRequest;
 XBSYSAPI VOID *IofCallDriver;
 XBSYSAPI VOID *IofCompleteRequest;
 
+// ******************************************************************
+// * 0x005A - IoDismountVolume()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(90) NTSTATUS NTAPI IoDismountVolume
 (
 	IN PDEVICE_OBJECT DeviceObject
 );
 
 // ******************************************************************
-// * IoDismountVolumeByName
+// * 0x005B - IoDismountVolumeByName()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(91) NTSTATUS NTAPI IoDismountVolumeByName
 (
