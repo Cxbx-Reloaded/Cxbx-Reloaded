@@ -83,9 +83,9 @@
       <AdditionalIncludeDirectories>Include\Win32\Cxbx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;libjpeg.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;CxbxKrnl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;CxbxKrnl.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>..\..\import\libjpeg\win32\lib;$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>msvcrt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
@@ -132,9 +132,9 @@
       <AdditionalIncludeDirectories>Include\Win32\Cxbx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;libjpeg.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;CxbxKrnl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>legacy_stdio_definitions.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;CxbxKrnl.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>..\..\import\libjpeg\win32\lib;$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -183,10 +183,6 @@
     <ClInclude Include="..\..\src\Common\Win32\XBController.h" />
     <ClInclude Include="..\..\src\Common\Xbe.h" />
     <ClInclude Include="..\..\src\Common\Win32\XBVideo.h" />
-    <ClInclude Include="..\..\src\Cxbx\jpegdec\jconfig.h" />
-    <ClInclude Include="..\..\src\Cxbx\jpegdec\jmorecfg.h" />
-    <ClInclude Include="..\..\src\Cxbx\jpegdec\jpegdec.h" />
-    <ClInclude Include="..\..\src\Cxbx\jpegdec\jpeglib.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\About.jpg" />
@@ -282,12 +278,6 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\src\Common\Win32\XBVideo.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <ClCompile Include="..\..\src\Cxbx\jpegdec\jpegdec.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

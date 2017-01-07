@@ -39,7 +39,6 @@
 #include "DlgVideoConfig.h"
 #include "CxbxKrnl/EmuShared.h"
 #include "ResCxbx.h"
-#include "jpegdec/jpegdec.h"
 
 #include <io.h>
 
@@ -233,7 +232,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     uint32 bmpFileSize = 0;
                     uint32 bmpWidth, bmpHeight;
 
-                    uint08 *bmpBuff = jpeg2bmp(jpgData, jpgFileSize, &bmpFileSize, &bmpWidth, &bmpHeight);
+                    uint08 *bmpBuff = nullptr;// jpeg2bmp(jpgData, jpgFileSize, &bmpFileSize, &bmpWidth, &bmpHeight);
 
                     // create bitmap
                     {
