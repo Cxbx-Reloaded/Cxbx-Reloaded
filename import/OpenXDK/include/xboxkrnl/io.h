@@ -145,7 +145,14 @@ XBSYSAPI EXPORTNUM(70) OBJECT_TYPE IoDeviceObjectType;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(71) OBJECT_TYPE IoFileObjectType;
 
-XBSYSAPI VOID *IoFreeIrp;
+// ******************************************************************
+// * 0x0048 - IoFreeIrp()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(72) VOID NTAPI IoFreeIrp
+(
+	IN PIRP Irp
+);
+
 XBSYSAPI VOID *IoInitializeIrp;
 XBSYSAPI VOID *IoInvalidDeviceRequest;
 XBSYSAPI VOID *IoQueryFileInformation;

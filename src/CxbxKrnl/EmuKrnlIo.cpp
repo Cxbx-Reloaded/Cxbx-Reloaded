@@ -376,21 +376,20 @@ XBSYSAPI EXPORTNUM(71) xboxkrnl::OBJECT_TYPE xboxkrnl::IoFileObjectType =
 	'eliF' // = "File" in reverse
 };
 
-/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x0048 - IoFreeIrp()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(72) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoFreeIrp
+XBSYSAPI EXPORTNUM(72) void NTAPI xboxkrnl::IoFreeIrp
 (
+	IN PIRP Irp
 )
 {
-	LOG_FUNC();
+	LOG_FUNC_ONE_ARG(Irp);
 
 	LOG_UNIMPLEMENTED();
-
-	RETURN(S_OK);
 }
 
+/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x0049 - IoInitializeIrp()
 // ******************************************************************

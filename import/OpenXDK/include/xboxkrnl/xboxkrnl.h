@@ -1239,6 +1239,29 @@ typedef struct _KDEVICE_QUEUE
 }
 KDEVICE_QUEUE, *PKDEVICE_QUEUE, *RESTRICTED_POINTER PRKDEVICE_QUEUE;
 
+typedef PVOID PFILE_SEGMENT_ELEMENT;
+
+typedef struct _IRP
+{
+	CSHORT                 Type;                // 0x00
+	WORD                   Size;                // 0x02
+	ULONG                  Flags;               // 0x04
+	LIST_ENTRY             ThreadListEntry;     // 0x08
+	IO_STATUS_BLOCK        IoStatus;            // 0x10
+	CHAR                   StackCount;          // 0x18
+	CHAR                   CurrentLocation;	    // 0x19
+	UCHAR                  PendingReturned;     // 0x1A
+	UCHAR                  Cancel;              // 0x1B
+	PIO_STATUS_BLOCK       UserIosb;            // 0x1C
+	PKEVENT                UserEvent;           // 0x20
+	ULONGLONG              Overlay;	            // 0x28
+	PVOID                  UserBuffer;          // 0x30
+	PFILE_SEGMENT_ELEMENT  SegmentArray;        // 0x34
+	ULONG                  LockedBufferLength;  // 0x38
+	ULONGLONG              Tail;                // 0x3C
+}
+IRP, *PIRP;
+
 typedef struct _DEVICE_OBJECT
 {
 	CSHORT Type;
@@ -1246,7 +1269,7 @@ typedef struct _DEVICE_OBJECT
 	LONG ReferenceCount;
 	struct _DRIVER_OBJECT *DriverObject;
 	struct _DEVICE_OBJECT *MountedOrSelfDevice;
-	struct _IRP *CurrentIrp;
+	PIRP CurrentIrp;
 	ULONG Flags;
 	PVOID DeviceExtension;
 	UCHAR DeviceType;
@@ -1279,25 +1302,25 @@ typedef struct _FILE_OBJECT {
 	CSHORT                    Type;               // 0x00
 
 	BYTE                      DeletePending : 1;  // 0x02
-	BYTE                      ReadAccess : 1; 	  // 0x02
-	BYTE                      WriteAccess : 1;	  // 0x02
-	BYTE                      DeleteAccess : 1;	  // 0x02
-	BYTE                      SharedRead : 1; 	  // 0x02
-	BYTE                      SharedWrite : 1; 	  // 0x02
-	BYTE                      SharedDelete : 1;	  // 0x02
-	BYTE                      Reserved : 1;		  // 0x02
+	BYTE                      ReadAccess : 1;     // 0x02
+	BYTE                      WriteAccess : 1;    // 0x02
+	BYTE                      DeleteAccess : 1;   // 0x02
+	BYTE                      SharedRead : 1;     // 0x02
+	BYTE                      SharedWrite : 1;    // 0x02
+	BYTE                      SharedDelete : 1;   // 0x02
+	BYTE                      Reserved : 1;       // 0x02
 
-	BYTE                      Flags;			  // 0x03
-	PDEVICE_OBJECT            DeviceObject;		  // 0x04
-	PVOID                     FsContext;		  // 0x08
-	PVOID                     FsContext2;		  // 0x0C
-	NTSTATUS                  FinalStatus;		  // 0x10
+	BYTE                      Flags;              // 0x03
+	PDEVICE_OBJECT            DeviceObject;       // 0x04
+	PVOID                     FsContext;          // 0x08
+	PVOID                     FsContext2;         // 0x0C
+	NTSTATUS                  FinalStatus;        // 0x10
 	LARGE_INTEGER             CurrentByteOffset;  // 0x14
 	struct _FILE_OBJECT *     RelatedFileObject;  // 0x1C
 	PIO_COMPLETION_CONTEXT    CompletionContext;  // 0x20
 	LONG                      LockCount;          // 0x24
-	KEVENT                    Lock;				  // 0x28
-	KEVENT                    Event;			  // 0x38
+	KEVENT                    Lock;               // 0x28
+	KEVENT                    Event;              // 0x38
 } FILE_OBJECT, *PFILE_OBJECT;
 
 // ******************************************************************
