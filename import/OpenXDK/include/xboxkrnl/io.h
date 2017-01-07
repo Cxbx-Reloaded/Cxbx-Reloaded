@@ -63,7 +63,17 @@ XBSYSAPI EXPORTNUM(62) PVOID NTAPI IoBuildSynchronousFsdRequest
 	OUT PIO_STATUS_BLOCK IoStatusBlock
 );
 
-XBSYSAPI VOID *IoCheckShareAccess;
+// ******************************************************************
+// * 0x003F - IoCheckShareAccess()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(63) NTSTATUS NTAPI IoCheckShareAccess
+(
+	IN ACCESS_MASK DesiredAccess,
+	IN ULONG DesiredShareAccess,
+	OUT PFILE_OBJECT FileObject,
+	OUT PSHARE_ACCESS ShareAccess,
+	IN BOOLEAN Update
+);
 
 XBSYSAPI EXPORTNUM(64) OBJECT_TYPE IoCompletionObjectType;
 

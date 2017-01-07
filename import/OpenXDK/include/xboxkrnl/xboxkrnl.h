@@ -1264,6 +1264,56 @@ DEVICE_OBJECT, *PDEVICE_OBJECT;
 typedef VOID *PDRIVER_OBJECT;
 
 // ******************************************************************
+// * IO_COMPLETION_CONTEXT
+// ******************************************************************
+typedef struct _IO_COMPLETION_CONTEXT
+{
+	PVOID Port;
+	PVOID Key;
+} IO_COMPLETION_CONTEXT, *PIO_COMPLETION_CONTEXT;
+
+// ******************************************************************
+// * FILE_OBJECT
+// ******************************************************************
+typedef struct _FILE_OBJECT {
+	CSHORT                    Type;               // 0x00
+
+	BYTE                      DeletePending : 1;  // 0x02
+	BYTE                      ReadAccess : 1; 	  // 0x02
+	BYTE                      WriteAccess : 1;	  // 0x02
+	BYTE                      DeleteAccess : 1;	  // 0x02
+	BYTE                      SharedRead : 1; 	  // 0x02
+	BYTE                      SharedWrite : 1; 	  // 0x02
+	BYTE                      SharedDelete : 1;	  // 0x02
+	BYTE                      Reserved : 1;		  // 0x02
+
+	BYTE                      Flags;			  // 0x03
+	PDEVICE_OBJECT            DeviceObject;		  // 0x04
+	PVOID                     FsContext;		  // 0x08
+	PVOID                     FsContext2;		  // 0x0C
+	NTSTATUS                  FinalStatus;		  // 0x10
+	LARGE_INTEGER             CurrentByteOffset;  // 0x14
+	struct _FILE_OBJECT *     RelatedFileObject;  // 0x1C
+	PIO_COMPLETION_CONTEXT    CompletionContext;  // 0x20
+	LONG                      LockCount;          // 0x24
+	KEVENT                    Lock;				  // 0x28
+	KEVENT                    Event;			  // 0x38
+} FILE_OBJECT, *PFILE_OBJECT;
+
+// ******************************************************************
+// * SHARE_ACCESS
+// ******************************************************************
+typedef struct _SHARE_ACCESS {
+	BYTE OpenCount;
+	BYTE Readers;
+	BYTE Writers;
+	BYTE Deleters;
+	BYTE SharedRead;
+	BYTE SharedWrite;
+	BYTE SharedDelete;
+} SHARE_ACCESS, *PSHARE_ACCESS;
+
+// ******************************************************************
 // * TIMER_TYPE
 // ******************************************************************
 typedef enum _TIMER_TYPE

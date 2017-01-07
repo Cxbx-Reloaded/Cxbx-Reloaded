@@ -161,17 +161,16 @@ XBSYSAPI EXPORTNUM(62) xboxkrnl::PVOID NTAPI xboxkrnl::IoBuildSynchronousFsdRequ
 	RETURN(ret);
 }
 
-/*
 // ******************************************************************
 // * 0x003F - IoCheckShareAccess()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(63) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCheckShareAccess
 (
-	ACCESS_MASK DesiredAccess,
-	ULONG DesiredShareAccess,
+	IN ACCESS_MASK DesiredAccess,
+	IN ULONG DesiredShareAccess,
 	OUT PFILE_OBJECT FileObject,
 	OUT PSHARE_ACCESS ShareAccess,
-	BOOLEAN Update
+	IN BOOLEAN Update
 )
 {
 	LOG_FUNC_BEGIN
@@ -186,7 +185,6 @@ XBSYSAPI EXPORTNUM(63) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCheckShareAccess
 
 	RETURN(S_OK);
 }
-*/
 
 // ******************************************************************
 // * 0x0040 - IoCompletionObjectType
