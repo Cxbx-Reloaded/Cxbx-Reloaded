@@ -514,21 +514,32 @@ XBSYSAPI EXPORTNUM(78) xboxkrnl::VOID NTAPI xboxkrnl::IoRemoveShareAccess
 	LOG_UNIMPLEMENTED();
 }
 
-/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x004F - IoSetIoCompletion()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(79) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoSetIoCompletion
 (
+	IN PKQUEUE IoCompletion,
+	IN PVOID KeyContext,
+	IN PVOID ApcContext,
+	IN NTSTATUS IoStatus,
+	IN ULONG IoStatusInformation
 )
 {
-	LOG_FUNC();
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(IoCompletion)
+		LOG_FUNC_ARG(KeyContext)
+		LOG_FUNC_ARG(ApcContext)
+		LOG_FUNC_ARG(IoStatus)
+		LOG_FUNC_ARG(IoStatusInformation)
+		LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
 
 	RETURN(S_OK);
 }
 
+/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x0050 - IoSetShareAccess()
 // ******************************************************************

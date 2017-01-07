@@ -213,7 +213,18 @@ XBSYSAPI EXPORTNUM(78) VOID NTAPI IoRemoveShareAccess
 	IN PSHARE_ACCESS ShareAccess
 );
 
-XBSYSAPI VOID *IoSetIoCompletion;
+// ******************************************************************
+// * 0x004F - IoSetIoCompletion()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(79) NTSTATUS NTAPI IoSetIoCompletion
+(
+	IN PKQUEUE IoCompletion,
+	IN PVOID KeyContext,
+	IN PVOID ApcContext,
+	IN NTSTATUS IoStatus,
+	IN ULONG IoStatusInformation
+);
+
 XBSYSAPI VOID *IoSetShareAccess;
 XBSYSAPI VOID *IoStartNextPacket;
 XBSYSAPI VOID *IoStartNextPacketByKey;
