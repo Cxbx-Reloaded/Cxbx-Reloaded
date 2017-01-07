@@ -290,7 +290,15 @@ XBSYSAPI EXPORTNUM(85) NTSTATUS NTAPI IoSynchronousFsdRequest
 	IN PLARGE_INTEGER StartingOffset OPTIONAL
 );
 
-XBSYSAPI VOID *IofCallDriver;
+// ******************************************************************
+// * 0x0056 - IofCallDriver()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(86) NTSTATUS FASTCALL IofCallDriver
+(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp
+);
+
 XBSYSAPI VOID *IofCompleteRequest;
 
 // ******************************************************************

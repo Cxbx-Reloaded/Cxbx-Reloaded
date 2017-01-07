@@ -673,14 +673,13 @@ XBSYSAPI EXPORTNUM(85) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoSynchronousFsdReques
 	RETURN(S_OK);
 }
 
-/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x0056 - IofCallDriver()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(86) xboxkrnl::NTSTATUS FASTCALL xboxkrnl::IofCallDriver
 (
-	PDEVICE_OBJECT	DeviceObject,
-	PIRP	Irp
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp
 )
 {
 	LOG_FUNC_BEGIN
@@ -693,6 +692,7 @@ XBSYSAPI EXPORTNUM(86) xboxkrnl::NTSTATUS FASTCALL xboxkrnl::IofCallDriver
 	RETURN(S_OK);
 }
 
+/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x0057 - IofCompleteRequest()
 // ******************************************************************
