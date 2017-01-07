@@ -144,7 +144,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::IoInvalidDeviceRequest),          // 0x004A (74)
 	(uint32)FUNC(&xboxkrnl::IoQueryFileInformation),          // 0x004B (75)
 	(uint32)FUNC(&xboxkrnl::IoQueryVolumeInformation),        // 0x004C (76)
-	(uint32)PANIC(0x004D),                                    // 0x004D (77)  IoQueueThreadIrp
+	(uint32)FUNC(&xboxkrnl::IoQueueThreadIrp),                // 0x004D (77)
 	(uint32)PANIC(0x004E),                                    // 0x004E (78)  IoRemoveShareAccess
 	(uint32)PANIC(0x004F),                                    // 0x004F (79)  IoSetIoCompletion
 	(uint32)PANIC(0x0050),                                    // 0x0050 (80)  IoSetShareAccess

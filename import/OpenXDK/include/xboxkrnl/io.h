@@ -175,7 +175,7 @@ XBSYSAPI EXPORTNUM(74) NTSTATUS NTAPI IoInvalidDeviceRequest
 // ******************************************************************
 // * 0x004B - IoQueryFileInformation()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(74) NTSTATUS NTAPI IoQueryFileInformation
+XBSYSAPI EXPORTNUM(75) NTSTATUS NTAPI IoQueryFileInformation
 (
 	IN PFILE_OBJECT FileObject,
 	IN FILE_INFORMATION_CLASS FileInformationClass,
@@ -187,7 +187,7 @@ XBSYSAPI EXPORTNUM(74) NTSTATUS NTAPI IoQueryFileInformation
 // ******************************************************************
 // * 0x004C - IoQueryVolumeInformation()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(75) NTSTATUS NTAPI IoQueryVolumeInformation
+XBSYSAPI EXPORTNUM(76) NTSTATUS NTAPI IoQueryVolumeInformation
 (
 	IN PFILE_OBJECT FileObject,
 	IN FS_INFORMATION_CLASS FsInformationClass,
@@ -196,7 +196,14 @@ XBSYSAPI EXPORTNUM(75) NTSTATUS NTAPI IoQueryVolumeInformation
 	OUT PULONG ReturnedLength
 );
 
-XBSYSAPI VOID *IoQueueThreadIrp;
+// ******************************************************************
+// * 0x004D - IoQueueThreadIrp()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(77) VOID NTAPI IoQueueThreadIrp
+(
+	IN PIRP Irp
+);
+
 XBSYSAPI VOID *IoRemoveShareAccess;
 XBSYSAPI VOID *IoSetIoCompletion;
 XBSYSAPI VOID *IoSetShareAccess;

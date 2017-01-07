@@ -484,21 +484,20 @@ XBSYSAPI EXPORTNUM(76) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoQueryVolumeInformati
 	RETURN(S_OK);
 }
 
-/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x004D - IoQueueThreadIrp()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(77) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoQueueThreadIrp
+XBSYSAPI EXPORTNUM(77) xboxkrnl::VOID NTAPI xboxkrnl::IoQueueThreadIrp
 (
+	IN PIRP Irp
 )
 {
-	LOG_FUNC();
+	LOG_FUNC_ONE_ARG(Irp);
 
 	LOG_UNIMPLEMENTED();
-
-	RETURN(S_OK);
 }
 
+/* TODO : Finish of these Dxbx ported signatures :
 // ******************************************************************
 // * 0x004E - IoRemoveShareAccess()
 // ******************************************************************
