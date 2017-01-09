@@ -101,9 +101,9 @@ uint16_t EmuX86_Read16(uint32_t addr)
 	EmuWarning("EmuX86_Read16(0x%08X) Forwarding to EmuX86_Read32...", addr);
 	uint16_t value;
 	if (addr & 2)
-		value = (uint16_t)EmuX86_Read32(addr - 2);
+		value = (uint16_t)(EmuX86_Read32(addr - 2) >> 16);
 	else
-		value = (uint16_t)(EmuX86_Read32(addr) >> 16);
+		value = (uint16_t)EmuX86_Read32(addr);
 
 	EmuWarning("EmuX86_Read16(0x%08X) = 0x%04X", addr, value);
 	return value;
@@ -114,9 +114,9 @@ uint8_t EmuX86_Read8(uint32_t addr)
 	EmuWarning("EmuX86_Read8(0x%08X) Forwarding to EmuX86_Read16...", addr);
 	uint8_t value;
 	if (addr & 1)
-		value = (uint8_t)EmuX86_Read16(addr - 1);
+		value = (uint8_t)(EmuX86_Read16(addr - 1) >> 8);
 	else
-		value = (uint8_t)(EmuX86_Read16(addr) >> 8);
+		value = (uint8_t)EmuX86_Read16(addr);
 
 	EmuWarning("EmuX86_Read8(0x%08X) = 0x%02X", addr, value);
 	return value;
@@ -180,26 +180,70 @@ inline bool EmuX86_GetRegisterValue(uint32_t* output, LPEXCEPTION_POINTERS e, ui
 	return true;
 }
 
-inline bool EmuX86_DecodeMemoryOperand(uint32_t* output, LPEXCEPTION_POINTERS e, _DInst& info, int operand)
+uint32_t EmuX86_Distorm_O_SMEM_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int operand)
+{
+	uint32_t base;
+	EmuX86_GetRegisterValue(&base, e, info.ops[operand].index);
+
+	return base + info.disp;
+}
+
+uint32_t EmuX86_Distorm_O_MEM_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int operand)
 {
 	uint32_t base = 0;
-	uint32_t index = 0;	
-	if (!EmuX86_GetRegisterValue(&base, e, info.ops[operand].index) || !EmuX86_GetRegisterValue(&index, e, info.ops[operand].index)) {
-		return false;
-	}
+	EmuX86_GetRegisterValue(&base, e, info.base);
 
-	*output = base + (index * info.scale) + info.imm.dword;
-	return true;
+	uint32_t index = 0;
+	EmuX86_GetRegisterValue(&index, e, info.ops[operand].index);
+
+	if (info.scale >= 2)
+		return base + (index * info.scale) + info.disp;
+	else
+		return base + index + info.disp;
+}
+
+void EmuX86_ReadAddr(uint32_t srcAddr, uint16_t size, OUT uint32_t *value)
+{
+	switch (size) {
+	case 8:
+		*value = EmuX86_Read8(srcAddr);
+		break;
+	case 16:
+		*value = EmuX86_Read16(srcAddr);
+		break;
+	case 32:
+		*value = EmuX86_Read32(srcAddr);
+		break;
+	default:
+		// TODO : Handle other sizes?
+		break;
+	}
+}
+
+void EmuX86_WriteAddr(uint32_t destAddr, uint16_t size, uint32_t value)
+{
+	switch (size) {
+	case 8:
+		EmuX86_Write8(destAddr, value & 0xFF);
+		break;
+	case 16:
+		EmuX86_Write16(destAddr, value & 0xFFFF);
+		break;
+	case 32:
+		EmuX86_Write32(destAddr, value);
+		break;
+	default:
+		// TODO : Handle other sizes?
+		break;
+	}
 }
 
 bool EmuX86_ReadValueFromSource(LPEXCEPTION_POINTERS e, _DInst& info, int operand, OUT uint32_t *value)
 {
 	switch (info.ops[operand].type) {
-	// TODO : other operand.type
-	case O_IMM:
+	case O_NONE:
 	{
-		*value = info.imm.dword;
-		break;
+		// ignore operand
 	}
 	case O_REG:
 	{
@@ -208,26 +252,59 @@ bool EmuX86_ReadValueFromSource(LPEXCEPTION_POINTERS e, _DInst& info, int operan
 
 		break;
 	}
-	case O_MEM:
+	case O_IMM:
 	{
-		uint32_t srcAddr = 0;
-		if (!EmuX86_DecodeMemoryOperand(&srcAddr, e, info, operand))
-			return false;
-
 		switch (info.ops[operand].size) {
 		case 8:
-			*value = EmuX86_Read8(srcAddr);
+			*value = info.imm.byte;
 			break;
 		case 16:
-			*value = EmuX86_Read16(srcAddr);
+			*value = info.imm.word;
 			break;
 		case 32:
-			*value = EmuX86_Read32(srcAddr);
+			*value = info.imm.dword;
 			break;
-		default:
-			return false;
+			// TODO : Handle other sizes?
 		}
 		break;
+	}
+	case O_IMM1:
+	{
+		// TODO
+		return false;
+	}
+	case O_IMM2:
+	{
+		// TODO
+		return false;
+	}
+	case O_DISP:
+	{
+		uint32_t srcAddr = info.disp;
+		EmuX86_ReadAddr(srcAddr, info.ops[operand].size, value);
+		break;
+	}
+	case O_SMEM:
+	{
+		uint32_t srcAddr = EmuX86_Distorm_O_SMEM_Addr(e, info, operand);
+		EmuX86_ReadAddr(srcAddr, info.ops[operand].size, value);
+		break;
+	}
+	case O_MEM:
+	{
+		uint32_t srcAddr = EmuX86_Distorm_O_MEM_Addr(e, info, operand);
+		EmuX86_ReadAddr(srcAddr, info.ops[operand].size, value);
+		break;
+	}
+	case O_PC:
+	{
+		// TODO
+		return false;
+	}
+	case O_PTR:
+	{
+		// TODO
+		return false;
 	}
 	default:
 		return false;
@@ -239,6 +316,10 @@ bool EmuX86_ReadValueFromSource(LPEXCEPTION_POINTERS e, _DInst& info, int operan
 bool EmuX86_WriteValueToDestination(LPEXCEPTION_POINTERS e, _DInst& info, int operand, uint32_t value)
 {
 	switch (info.ops[operand].type) {
+	case O_NONE:
+	{
+		// ignore operand
+	}
 	case O_REG:
 	{
 		DWORD* pDstReg = EmuX86_GetRegisterPointer(e, info.ops[operand].index);
@@ -260,26 +341,48 @@ bool EmuX86_WriteValueToDestination(LPEXCEPTION_POINTERS e, _DInst& info, int op
 		}
 		break;
 	}
+	case O_IMM:
+	{
+		// TODO
+		return false;
+	}
+	case O_IMM1:
+	{
+		// TODO
+		return false;
+	}
+	case O_IMM2:
+	{
+		// TODO
+		return false;
+	}
+	case O_DISP:
+	{
+		uint32_t destAddr = info.disp;
+		EmuX86_WriteAddr(destAddr, info.ops[operand].size, value);
+		break;
+	}
+	case O_SMEM:
+	{
+		uint32_t destAddr = EmuX86_Distorm_O_SMEM_Addr(e, info, operand);
+		EmuX86_WriteAddr(destAddr, info.ops[operand].size, value);
+		break;
+	}
 	case O_MEM:
 	{
-		uint32_t destAddr = 0;
-		if (!EmuX86_DecodeMemoryOperand(&destAddr, e, info, operand))
-			return false;
-
-		switch (info.ops[operand].size) {
-		case 8:
-			EmuX86_Write8(destAddr, value & 0xFF);
-			break;
-		case 16:
-			EmuX86_Write16(destAddr, value & 0xFFFF);
-			break;
-		case 32:
-			EmuX86_Write32(destAddr, value);
-			break;
-		default:
-			return false;
-		}
+		uint32_t destAddr = EmuX86_Distorm_O_MEM_Addr(e, info, operand);
+		EmuX86_WriteAddr(destAddr, info.ops[operand].size, value);
 		break;
+	}
+	case O_PC:
+	{
+		// TODO
+		return false;
+	}
+	case O_PTR:
+	{
+		// TODO
+		return false;
 	}
 	default:
 		return false;
@@ -291,7 +394,25 @@ bool EmuX86_WriteValueToDestination(LPEXCEPTION_POINTERS e, _DInst& info, int op
 bool EmuX86_MOV(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// TODO : Test this refactoring
-	
+
+	// MOV reads value from source :
+	uint32_t value = 0;
+	if (!EmuX86_ReadValueFromSource(e, info, 1, &value))
+		return false;
+
+	// MOV writes value to destination :
+	if (!EmuX86_WriteValueToDestination(e, info, 0, value))
+		return false;
+
+	// Note : MOV instructions never update CPU flags
+
+	return true;
+}
+
+bool EmuX86_MOVZX(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// TODO : Test this refactoring
+
 	// MOV reads value from source :
 	uint32_t value = 0;
 	if (!EmuX86_ReadValueFromSource(e, info, 1, &value))
@@ -361,7 +482,13 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	ci.codeOffset = 0;
 	ci.dt = (_DecodeType)Decode32Bits;
 	ci.features = DF_NONE;
-	if (DECRES_SUCCESS != distorm_decompose(&ci, &info, 1, &decodedInstructionsCount))
+
+	// Checking for DECRES_SUCCESS won't work, since we're passing distorm_decompose
+	// a codeLen big enough to decode any instruction-length, plus distorm doesn't
+	// halt cleanly after reaching maxInstructions 1. So instead, just call distorm :
+	distorm_decompose(&ci, &info, /*maxInstructions=*/1, &decodedInstructionsCount);
+	// and check if it successfully decoded one instruction :
+	if (decodedInstructionsCount != 1)
 	{
 		EmuWarning("EmuX86: Error decoding opcode at 0x%08X\n", e->ContextRecord->Eip);
 	}
@@ -375,6 +502,12 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 			}
 
 			goto unimplemented_opcode;
+		case I_MOVZX:			
+			if (EmuX86_MOVZX(e, info)) {
+				break;
+			}
+
+			goto unimplemented_opcode;
 		case I_TEST:
 			if (EmuX86_TEST(e, info)) {
 				break;
@@ -384,8 +517,12 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 		case I_WBINVD:
 			// We can safely ignore this
 			break;
+		default:
+			goto unimplemented_opcode;
 		}
 
+		// When falling through here, the instruction was handled correctly,
+		// skip over the instruction and continue execution :
 		e->ContextRecord->Eip += info.size;
 		return true;
 
