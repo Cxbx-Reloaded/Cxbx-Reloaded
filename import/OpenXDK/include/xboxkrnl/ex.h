@@ -101,15 +101,15 @@ XBSYSAPI EXPORTNUM(23) ULONG NTAPI ExQueryPoolBlockSize
 );
 
 // ******************************************************************
-// * ExQueryNonVolatileSetting
+// * 0x0018 - ExQueryNonVolatileSetting()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI ExQueryNonVolatileSetting
 (
-    IN  XC_VALUE_INDEX      ValueIndex,
-    OUT DWORD              *Type,
-    OUT PUCHAR              Value,
-    IN  SIZE_T              ValueLength,
-    OUT PSIZE_T             ResultLength OPTIONAL
+	IN  DWORD               ValueIndex,
+	OUT DWORD              *Type,
+	OUT PVOID               Value,
+	IN  SIZE_T              ValueLength,
+	OUT PSIZE_T             ResultLength OPTIONAL
 );
 
 // ******************************************************************
@@ -138,14 +138,14 @@ XBSYSAPI EXPORTNUM(28) NTSTATUS NTAPI ExReleaseReadWriteLock
 );
 
 // ******************************************************************
-// * ExSaveNonVolatileSetting
+// * 0x001D - ExSaveNonVolatileSetting()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(29) NTSTATUS NTAPI ExSaveNonVolatileSetting
 (
-    IN  DWORD               ValueIndex,
-    OUT DWORD              *Type,
-    IN  PUCHAR              Value,
-    IN  SIZE_T              ValueLength
+	IN  DWORD               ValueIndex,
+	OUT DWORD              *Type,
+	IN  PVOID               Value,
+	IN  SIZE_T              ValueLength
 );
 
 XBSYSAPI EXPORTNUM(30) OBJECT_TYPE ExSemaphoreObjectType;

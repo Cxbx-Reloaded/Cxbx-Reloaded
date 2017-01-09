@@ -143,67 +143,6 @@ OOVPA_NO_XREF(XMountUtilityDrive_1_0_4134, 10)
 OOVPA_END;
 
 // ******************************************************************
-// * QueryPerformanceCounter
-// ******************************************************************
-OOVPA_NO_XREF(QueryPerformanceCounter_1_0_4134, 12)
-
-        // QueryPerformanceCounter+0x04 : rdtsc
-        { 0x04, 0x0F }, // (Offset,Value)-Pair #1
-        { 0x05, 0x31 }, // (Offset,Value)-Pair #2
-
-        // QueryPerformanceCounter+0x06 : mov [ecx], eax
-        { 0x06, 0x89 }, // (Offset,Value)-Pair #3
-        { 0x07, 0x01 }, // (Offset,Value)-Pair #4
-
-        // QueryPerformanceCounter+0x08 : mov [ecx+4], eax
-        { 0x08, 0x89 }, // (Offset,Value)-Pair #5
-        { 0x09, 0x51 }, // (Offset,Value)-Pair #6
-        { 0x0A, 0x04 }, // (Offset,Value)-Pair #7
-
-        // QueryPerformanceCounter+0x0B : xor eax, eax
-        { 0x0B, 0x33 }, // (Offset,Value)-Pair #8
-        { 0x0C, 0xC0 }, // (Offset,Value)-Pair #9
-
-        // QueryPerformanceCounter+0x0D : inc eax
-        { 0x0D, 0x40 }, // (Offset,Value)-Pair #10
-
-        // QueryPerformanceCounter+0x0E : retn 0x04
-        { 0x0E, 0xC2 }, // (Offset,Value)-Pair #11
-        { 0x0F, 0x04 }, // (Offset,Value)-Pair #12
-OOVPA_END;
-
-// ******************************************************************
-// * QueryPerformanceFrequency
-// ******************************************************************
-OOVPA_NO_XREF(QueryPerformanceFrequency_1_0_4134, 15)
-
-        // QueryPerformanceFrequency+0x04 : and dword ptr [eax+4], 0
-        { 0x04, 0x83 }, // (Offset,Value)-Pair #1
-        { 0x05, 0x60 }, // (Offset,Value)-Pair #2
-        { 0x06, 0x04 }, // (Offset,Value)-Pair #3
-        { 0x07, 0x00 }, // (Offset,Value)-Pair #4
-
-        // QueryPerformanceFrequency+0x06 : mov dword ptr [eax], 0x2BB5C755
-        { 0x08, 0xC7 }, // (Offset,Value)-Pair #5
-        { 0x09, 0x00 }, // (Offset,Value)-Pair #6
-        { 0x0A, 0x55 }, // (Offset,Value)-Pair #7
-        { 0x0B, 0xC7 }, // (Offset,Value)-Pair #8
-        { 0x0C, 0xB5 }, // (Offset,Value)-Pair #9
-        { 0x0D, 0x2B }, // (Offset,Value)-Pair #10
-
-        // QueryPerformanceFrequency+0x0E : xor eax, eax
-        { 0x0E, 0x33 }, // (Offset,Value)-Pair #11
-        { 0x0F, 0xC0 }, // (Offset,Value)-Pair #12
-
-        // QueryPerformanceFrequency+0x10 : inc eax
-        { 0x10, 0x40 }, // (Offset,Value)-Pair #13
-
-        // QueryPerformanceFrequency+0x11 : retn 0x04
-        { 0x11, 0xC2 }, // (Offset,Value)-Pair #14
-        { 0x12, 0x04 }, // (Offset,Value)-Pair #15
-OOVPA_END;
-
-// ******************************************************************
 // * XInputPoll
 // ******************************************************************
 OOVPA_NO_XREF(XInputPoll_1_0_4134, 10)
@@ -223,21 +162,6 @@ OOVPA_NO_XREF(XInputPoll_1_0_4134, 10)
 OOVPA_END;
 
 // ******************************************************************
-// * RtlDestroyHeap
-// ******************************************************************
-OOVPA_NO_XREF(RtlDestroyHeap_1_0_4134, 8)
-
-        { 0x10, 0x56 },
-        { 0x22, 0x75 },
-        { 0x34, 0xE0 },
-        { 0x46, 0x67 },
-        { 0x58, 0x75 },
-        { 0x6A, 0xE0 },
-        { 0x7C, 0x06 },
-        { 0x8E, 0x00 },
-OOVPA_END;
-
-// ******************************************************************
 // * XMountMUA
 // ******************************************************************
 OOVPA_NO_XREF(XMountMUA_1_0_4134, 8)
@@ -250,20 +174,6 @@ OOVPA_NO_XREF(XMountMUA_1_0_4134, 8)
         { 0xBE, 0xF8 },
         { 0xDE, 0x8D },
         { 0xFE, 0x09 },
-OOVPA_END;
-
-// ******************************************************************
-// * GetFileAttributesA
-// ******************************************************************
-OOVPA_NO_XREF(GetFileAttributesA_1_0_4134, 7)
-
-        { 0x08, 0x08 },
-        { 0x13, 0x8D },
-        { 0x1C, 0x50 },
-        { 0x26, 0xFF },
-        { 0x30, 0x15 },
-        { 0x3A, 0x45 },
-        { 0x44, 0x83 },
 OOVPA_END;
 
 // ******************************************************************
@@ -334,10 +244,6 @@ OOVPATable XAPI_1_0_4134[] = {
 	OOVPA_TABLE_PATCH(XInputGetCapabilities_1_0_3911, XTL::EmuXInputGetCapabilities),
 	// GetThreadPriority (* unchanged since 3911 *)
 	OOVPA_TABLE_PATCH(GetThreadPriority_1_0_3911, XTL::EmuGetThreadPriority),
-	// QueryPerformanceCounter
-	OOVPA_TABLE_PATCH(QueryPerformanceCounter_1_0_4134, XTL::EmuQueryPerformanceCounter),
-	// QueryPerformanceFrequency
-	OOVPA_TABLE_PATCH(QueryPerformanceFrequency_1_0_4134, XTL::EmuQueryPerformanceFrequency),
 	// XInputPoll
 	OOVPA_TABLE_PATCH(XInputPoll_1_0_4134, XTL::EmuXInputPoll),
 	// SetThreadPriorityBoost (* unchanged since 3911 *)
@@ -348,8 +254,6 @@ OOVPATable XAPI_1_0_4134[] = {
 	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, XTL::EmuQueueUserAPC),
 	// XMountMUA
 	OOVPA_TABLE_PATCH(XMountMUA_1_0_4134, XTL::EmuXMountMUA),
-	// GetFileAttributesA
-	OOVPA_TABLE_PATCH(GetFileAttributesA_1_0_4134, XTL::EmuGetFileAttributesA),
 	// timeSetEvent
 	OOVPA_TABLE_PATCH(timeSetEvent_1_0_4134, XTL::EmutimeSetEvent),
 	// timeKillEvent

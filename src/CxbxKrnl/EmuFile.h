@@ -41,6 +41,7 @@ namespace xboxkrnl
     #include <xboxkrnl/xboxkrnl.h>
 };
 
+#include <vector>
 #include <cstdio>
 #include <string>
 #include <memory>
@@ -210,6 +211,12 @@ public:
 	~EmuNtSymbolicLinkObject();
 };
 
+struct XboxDevice {
+	std::string XboxDevicePath;
+	std::string HostDevicePath;
+	HANDLE HostRootHandle;
+};
+
 // ******************************************************************
 // * is Handle a 'special' emulated handle?
 // ******************************************************************
@@ -219,13 +226,17 @@ HANDLE EmuHandleToHandle(EmuHandle* emuHandle);
 
 CHAR* NtStatusToString(IN NTSTATUS Status);
 
+int CxbxRegisterDeviceHostPath(std::string XboxFullPath, std::string HostDevicePath, bool IsFile = false);
+int CxbxDeviceIndexByDevicePath(const char *XboxDevicePath);
+XboxDevice *CxbxDeviceByDevicePath(const std::string XboxDevicePath);
+
 char SymbolicLinkToDriveLetter(std::string aSymbolicLinkName);
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByDriveLetter(const char DriveLetter);
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByName(std::string SymbolicLinkName);
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByDevice(std::string DeviceName);
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByRootHandle(HANDLE Handle);
 void CleanupSymbolicLinks();
-int CxbxRegisterDeviceHostPath(std::string XboxFullPath, std::string HostDevicePath, bool IsFile = false);
+
 HANDLE CxbxGetDeviceNativeRootHandle(std::string XboxFullPath);
 NTSTATUS CxbxCreateSymbolicLink(std::string SymbolicLinkName, std::string FullPath);
 bool CxbxMountUtilityDrive(bool formatClean);

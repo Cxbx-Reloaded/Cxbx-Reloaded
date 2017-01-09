@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -178,8 +180,8 @@ XBSYSAPI EXPORTNUM(263) xboxkrnl::NTSTATUS NTAPI xboxkrnl::RtlAppendUnicodeToStr
 // Debug API?
 XBSYSAPI EXPORTNUM(264) xboxkrnl::VOID NTAPI xboxkrnl::RtlAssert
 (
-	PVOID   FailedAssertion, // PCHAR
-	PVOID   FileName, // PCHAR
+	PCHAR   FailedAssertion,
+	PCHAR   FileName,
 	ULONG   LineNumber,
 	PCHAR   Message
 )

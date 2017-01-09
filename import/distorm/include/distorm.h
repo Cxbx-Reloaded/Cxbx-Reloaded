@@ -23,9 +23,6 @@ This library is licensed under the BSD license. See the file COPYING.
  * Turned on by default!
  */
 
-// Cxbx uses statis linking :
-#define DISTORM_STATIC
-
 #if !(defined(DISTORM_STATIC) || defined(DISTORM_DYNAMIC))
 	/* Define this macro for outer projects by default. */
 	#define SUPPORT_64BIT_OFFSET

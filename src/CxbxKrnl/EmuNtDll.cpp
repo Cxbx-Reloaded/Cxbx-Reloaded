@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -85,6 +87,7 @@ IMPORT(NtQueryDirectoryFile);
 IMPORT(NtQueryEvent);
 IMPORT(NtQueryFullAttributesFile);
 IMPORT(NtQueryInformationFile);
+IMPORT(NtQueryMutant);
 IMPORT(NtQuerySemaphore);
 IMPORT(NtQueryTimer);
 IMPORT(NtQueryVirtualMemory);

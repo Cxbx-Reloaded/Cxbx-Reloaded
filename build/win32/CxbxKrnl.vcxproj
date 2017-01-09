@@ -80,7 +80,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..\..\import\OpenXDK;..\..\import\distorm\include;..\..\src;..\..\src\Common;..\..\src\Common\Win32;..\..\import\OpenXDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\src;..\..\src\Common;..\..\src\Common\Win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;CXBXKRNL_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -103,14 +103,13 @@
       <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <LargeAddressAware>false</LargeAddressAware>
-      <AdditionalLibraryDirectories>..\..\import\distorm\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\import\distorm\lib\Win32\;..\..\import\glew-2.0.0\lib\Release\Win32\</AdditionalLibraryDirectories>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Bscmake>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy $(SolutionDir)..\..\import\glew-2.0.0\bin\Release\Win32\glew32.dll $(TargetDir)</Command>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -141,7 +140,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\src;..\..\src\Common;..\..\src\Common\Win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\src;..\..\src\Common;..\..\src\Common\Win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;CXBXKRNL_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -168,14 +167,13 @@
       <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <LargeAddressAware>false</LargeAddressAware>
-      <AdditionalLibraryDirectories>..\..\import\distorm\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\import\distorm\lib\Win32\;..\..\import\glew-2.0.0\lib\Release\Win32\</AdditionalLibraryDirectories>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Bscmake>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy $(SolutionDir)..\..\import\glew-2.0.0\bin\Release\Win32\glew32.dll $(TargetDir)</Command>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>

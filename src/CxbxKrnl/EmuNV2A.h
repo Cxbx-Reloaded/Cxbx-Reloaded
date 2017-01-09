@@ -34,7 +34,12 @@
 #ifndef EMUNV2A_H
 #define EMUNV2A_H
 
+#define NV2A_ADDR  0xFD000000
+#define NV2A_SIZE             0x01000000
+
 uint32_t EmuNV2A_Read32(uint32_t addr);
 void EmuNV2A_Write32(uint32_t addr, uint32_t value);
+
+void InitOpenGLContext();
 
 #endif

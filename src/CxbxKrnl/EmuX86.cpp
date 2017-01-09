@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -34,58 +36,110 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
+// Link the library into our project.
+#pragma comment(lib, "distorm.lib")
+
+// Cxbx uses dynamic linking of distorm, which by default chooses for 64 bits offsets :
+#define SUPPORT_64BIT_OFFSET
+
 #include "distorm.h"
 #include "mnemonics.h"
-
-// Link the library into our project.
-#pragma comment(lib, "../../distorm.lib")
 
 #include "CxbxKrnl.h"
 #include "Emu.h"
 #include "EmuX86.h"
 #include "EmuNV2A.h"
 
+_DecodeResult distorm_decompose64(_CodeInfo* ci, _DInst result[], unsigned int maxInstructions, unsigned int* usedInstructionsCount);
 
-uint8_t EmuX86_Read8(uint32_t addr)
+uint32_t EmuX86_IORead32(uint32_t addr)
 {
-	EmuWarning("EmuX86_Read8: Unknown Read Address %02X", addr);
+	EmuWarning("EmuX86_IORead32(0x%08X) Not Implemented", addr);
 	return 0;
 }
 
-uint16_t EmuX86_Read16(uint32_t addr)
+uint16_t EmuX86_IORead16(uint32_t addr)
 {
-	EmuWarning("EmuX86_Read16: Unknown Read Address %04X", addr);
+	EmuWarning("EmuX86_IORead16(0x%08X) Not Implemented", addr);
 	return 0;
+}
+
+uint8_t EmuX86_IORead8(uint32_t addr)
+{
+	EmuWarning("EmuX86_IORead8(0x%08X) Not Implemented", addr);
+	return 0;
+}
+
+void EmuX86_IOWrite32(uint32_t addr, uint32_t value)
+{
+	EmuWarning("EmuX86_IOWrite32(0x%08X, 0x%04X) [Unknown address]", addr, value);
+}
+
+void EmuX86_IOWrite16(uint32_t addr, uint16_t value)
+{
+	EmuWarning("EmuX86_IOWrite16(0x%08X, 0x%04X) [Unknown address]", addr, value);
+}
+
+void EmuX86_IOWrite8(uint32_t addr, uint8_t value)
+{
+	EmuWarning("EmuX86_IOWrite8(0x%08X, 0x%02X) [Unknown address]", addr, value);
 }
 
 uint32_t EmuX86_Read32(uint32_t addr)
 {
-	if (addr >= 0xFD000000 && addr <= 0xFE000000) {
-		return EmuNV2A_Read32(addr & 0x00FFFFFF);
-	}
+	uint32_t value = 0;
+	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE)
+		value = EmuNV2A_Read32(addr - NV2A_ADDR);
+	else
+		EmuWarning("EmuX86_Read32(0x%08X) = 0x%08X [Unknown address]", addr, value);
 
-	EmuWarning("EmuX86_Read32: Unknown Read Address %08X", addr);
-	return 0;
+	return value;
 }
 
-void EmuX86_Write8(uint32_t addr, uint8_t value)
+uint16_t EmuX86_Read16(uint32_t addr)
 {
-	EmuWarning("EmuX86_Write8: Unknown Write Address %08X (value %02X)", addr, value);
+	EmuWarning("EmuX86_Read16(0x%08X) Forwarding to EmuX86_Read32...", addr);
+	uint16_t value;
+	if (addr & 2)
+		value = (uint16_t)EmuX86_Read32(addr - 2);
+	else
+		value = (uint16_t)(EmuX86_Read32(addr) >> 16);
+
+	EmuWarning("EmuX86_Read16(0x%08X) = 0x%04X", addr, value);
+	return value;
 }
 
-void EmuX86_Write16(uint32_t addr, uint16_t value)
+uint8_t EmuX86_Read8(uint32_t addr)
 {
-	EmuWarning("EmuX86_Write8: Unknown Write Address %08X (value %04X)", addr, value);
+	EmuWarning("EmuX86_Read8(0x%08X) Forwarding to EmuX86_Read16...", addr);
+	uint8_t value;
+	if (addr & 1)
+		value = (uint8_t)EmuX86_Read16(addr - 1);
+	else
+		value = (uint8_t)(EmuX86_Read16(addr) >> 8);
+
+	EmuWarning("EmuX86_Read8(0x%08X) = 0x%02X", addr, value);
+	return value;
 }
 
 void EmuX86_Write32(uint32_t addr, uint32_t value)
 {
-	if (addr >= 0xFD000000 && addr <= 0xFE000000) {
-		EmuNV2A_Write32(addr & 0x00FFFFFF, value);
+	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
+		EmuNV2A_Write32(addr - NV2A_ADDR, value);
 		return;
 	}
 
-	EmuWarning("EmuX86_Write32: Unknown Write Address %08X (value %08X)", addr, value);
+	EmuWarning("EmuX86_Write32(0x%08X, 0x%04X) [Unknown address]", addr, value);
+}
+
+void EmuX86_Write16(uint32_t addr, uint16_t value)
+{
+	EmuWarning("EmuX86_Write16(0x%08X, 0x%04X) [Unknown address]", addr, value);
+}
+
+void EmuX86_Write8(uint32_t addr, uint8_t value)
+{
+	EmuWarning("EmuX86_Write8(0x%08X, 0x%02X) [Unknown address]", addr, value);
 }
 
 inline DWORD* EmuX86_GetRegisterPointer(LPEXCEPTION_POINTERS e, uint8_t reg)

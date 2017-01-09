@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -37,15 +39,13 @@
 #include "DlgVideoConfig.h"
 #include "CxbxKrnl/EmuShared.h"
 #include "ResCxbx.h"
-#include "jpegdec/jpegdec.h"
 
 #include <io.h>
 
-/**
- * Silly little hack to fix link error with libjpeg on MSVC 2015
- */
-FILE _iob[] = { *stdin, *stdout, *stderr };
-extern "C" FILE * __cdecl __iob_func(void) { return _iob; }
+#define STBI_ONLY_JPEG
+#define STBI_NO_LINEAR
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 WndMain::WndMain(HINSTANCE x_hInstance) : 
 	Wnd(x_hInstance), 
@@ -225,13 +225,25 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 {
                     HRSRC hSrc = FindResource(NULL, MAKEINTRESOURCE(IDR_JPEG_SPLASH), "JPEG");
                     HGLOBAL hRes = LoadResource(NULL, hSrc);
-                    uint08 *jpgData = (uint08*)LockResource(hRes);
 
+                    uint08 *jpgData = (uint08*)LockResource(hRes);
                     uint32 jpgFileSize = SizeofResource(NULL, hSrc);
                     uint32 bmpFileSize = 0;
-                    uint32 bmpWidth, bmpHeight;
+                    uint32 bmpWidth = 0;
+                    uint32 bmpHeight = 0;
 
-                    uint08 *bmpBuff = jpeg2bmp(jpgData, jpgFileSize, &bmpFileSize, &bmpWidth, &bmpHeight);
+                    uint08 *bmpBuff = reinterpret_cast<uint08*>
+                    (
+                        stbi_load_from_memory
+                        (
+                            reinterpret_cast<const stbi_uc*>(jpgData),
+                            static_cast<int>(jpgFileSize),
+                            reinterpret_cast<int*>(&bmpWidth),
+                            reinterpret_cast<int*>(&bmpHeight),
+                            nullptr,
+                            STBI_rgb
+                        )
+                    );
 
                     // create bitmap
                     {
@@ -239,7 +251,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                         BmpInfo.bmiHeader.biSize          = sizeof(BITMAPINFO) - sizeof(RGBQUAD);
                         BmpInfo.bmiHeader.biWidth         = bmpWidth;
-                        BmpInfo.bmiHeader.biHeight        = 0 - (int)bmpHeight;
+                        BmpInfo.bmiHeader.biHeight        = 0 - (long)bmpHeight;
                         BmpInfo.bmiHeader.biPlanes        = 1;
                         BmpInfo.bmiHeader.biBitCount      = 24;
                         BmpInfo.bmiHeader.biCompression   = BI_RGB;
@@ -252,8 +264,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                         SetDIBits(hDC, m_BackBmp, 0, bmpHeight, bmpBuff, &BmpInfo, DIB_RGB_COLORS);
                     }
 
-                    free(bmpBuff);
+                    stbi_image_free(bmpBuff);
 
+                    FreeResource(hRes);
                     UnlockResource(hRes);
                 }
 

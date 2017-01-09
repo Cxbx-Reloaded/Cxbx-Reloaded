@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -64,7 +66,7 @@ std::ostream& operator<<(std::ostream& os, const PULONG& value)
 
 // Macro for implementation of rendering any Type-ToString :
 #define LOGRENDER_TYPE(Type) LOGRENDER_HEADER(Type) \
-{ return os << "("#Type") " << Type##ToString(value) << " = " << hex4((int)value); }
+{ return os << "("#Type")" << hex4((int)value) << " = " << Type##ToString(value); }
 
 // Macro's for Xbox Enum-ToString conversions :
 #define ENUM2STR_START(EnumType) const char * EnumType##ToString(const xboxkrnl::EnumType value) { switch (value) {
@@ -110,6 +112,40 @@ ENUM2STR_START(CREATE_DISPOSITION)
 	ENUM2STR_CASE_DEF(FILE_OVERWRITE_IF)
 	// ENUM2STR_CASE_DEF(FILE_MAXIMUM_DISPOSITION) Skip, identical to FILE_OVERWRITE_IF
 ENUM2STR_END_and_LOGRENDER(CREATE_DISPOSITION)
+
+FLAGS2STR_START(ALLOCATION_TYPE)
+	FLAG2STR(PAGE_NOACCESS)
+	FLAG2STR(PAGE_READONLY)
+	FLAG2STR(PAGE_READWRITE)
+	FLAG2STR(PAGE_WRITECOPY)
+	FLAG2STR(PAGE_EXECUTE)
+	FLAG2STR(PAGE_EXECUTE_READ)
+	FLAG2STR(PAGE_EXECUTE_READWRITE)
+	FLAG2STR(PAGE_EXECUTE_WRITECOPY)
+	FLAG2STR(PAGE_GUARD)
+	FLAG2STR(PAGE_NOCACHE)
+	FLAG2STR(PAGE_WRITECOMBINE)
+	FLAG2STR(MEM_COMMIT)
+	FLAG2STR(MEM_RESERVE)
+	FLAG2STR(MEM_DECOMMIT)
+	FLAG2STR(MEM_RELEASE)
+	FLAG2STR(MEM_FREE)
+	FLAG2STR(MEM_PRIVATE)
+	FLAG2STR(MEM_MAPPED)
+	FLAG2STR(MEM_RESET)
+	FLAG2STR(MEM_TOP_DOWN)
+	FLAG2STR(MEM_WRITE_WATCH)
+	FLAG2STR(MEM_PHYSICAL)
+	FLAG2STR(SEC_FILE)
+	FLAG2STR(SEC_IMAGE)
+	FLAG2STR(SEC_RESERVE)
+	FLAG2STR(SEC_COMMIT)
+	FLAG2STR(SEC_NOCACHE)
+	FLAG2STR(MEM_LARGE_PAGES)
+	FLAG2STR(MEM_4MB_PAGES)
+//  MEM_IMAGE              = SEC_IMAGE;
+//  WRITE_WATCH_FLAG_RESET = $01;
+FLAGS2STR_END_and_LOGRENDER(ALLOCATION_TYPE)
 
 FLAGS2STR_START(CREATE_OPTION)
 /*
@@ -335,7 +371,9 @@ ENUM2STR_END_and_LOGRENDER(XC_VALUE_INDEX)
 
 #undef LOGRENDER_TYPE
 
-#define LOGRENDER_MEMBER(Member) << "\n   ."#Member": " << value.Member
+#define LOGRENDER_MEMBER_NAME(Member) << "\n   ."#Member": "
+#define LOGRENDER_MEMBER_VALUE(Member) << value.Member
+#define LOGRENDER_MEMBER(Member) LOGRENDER_MEMBER_NAME(Member) LOGRENDER_MEMBER_VALUE(Member)
 
 LOGRENDER_HEADER(BOOLEAN)
 {
@@ -370,6 +408,23 @@ LOGRENDER_TYPE(LARGE_INTEGER)
 {
 	return os 
 		LOGRENDER_MEMBER(QuadPart);
+}
+
+LOGRENDER_TYPE(LAUNCH_DATA_HEADER)
+{
+	return os
+		LOGRENDER_MEMBER(dwLaunchDataType)
+		LOGRENDER_MEMBER(dwTitleId)
+		LOGRENDER_MEMBER(szLaunchPath)
+		LOGRENDER_MEMBER(dwFlags);
+}
+
+LOGRENDER_TYPE(LAUNCH_DATA_PAGE)
+{
+	return os
+		LOGRENDER_MEMBER_NAME(Header) << &value.Header
+		LOGRENDER_MEMBER(Pad)
+		LOGRENDER_MEMBER(LaunchData);
 }
 
 LOGRENDER_TYPE(MM_STATISTICS)
