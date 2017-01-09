@@ -61,8 +61,8 @@ class Error
 
     private:
         // current error information
-        bool  m_bFatal;
         char *m_szError;
+        bool  m_bFatal;
 };
 
 #endif

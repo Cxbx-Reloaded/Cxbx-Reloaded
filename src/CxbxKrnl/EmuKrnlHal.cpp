@@ -47,6 +47,7 @@ namespace xboxkrnl
 #include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
+#include "EmuX86.h" // HalReadWritePciSpace needs this
 
 // prevent name collisions
 namespace NtDll
@@ -283,7 +284,71 @@ XBSYSAPI EXPORTNUM(46) xboxkrnl::VOID NTAPI xboxkrnl::HalReadWritePCISpace
 		LOG_FUNC_ARG(WritePCISpace)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	// TODO: Disable Interrupt Processing
+	
+	PCI_SLOT_NUMBER PCISlotNumber;
+	PCI_TYPE1_CFG_BITS CfgBits;
+
+	PCISlotNumber.u.AsULONG = SlotNumber;
+	CfgBits.u.AsULONG = 0;
+	CfgBits.u.bits.BusNumber = BusNumber;
+	CfgBits.u.bits.DeviceNumber = PCISlotNumber.u.bits.DeviceNumber;
+	CfgBits.u.bits.FunctionNumber = PCISlotNumber.u.bits.FunctionNumber;
+	CfgBits.u.bits.Enable = 1;
+
+	// TODO: Verify this calculation is actually correct
+	size_t Size = Length / sizeof(ULONG);
+	ULONG RegisterByteOffset = 0;
+
+	while (Length > 0) {
+		switch (Size) {
+		case 4:
+			CfgBits.u.bits.RegisterNumber = RegisterNumber / sizeof(ULONG);
+			EmuX86_IOWrite32((uint32_t)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
+
+			if (WritePCISpace) {
+				EmuX86_IOWrite32((uint32_t)PCI_TYPE1_DATA_PORT, *((PULONG)Buffer));
+			}
+			else {
+				*((PULONG)Buffer) = EmuX86_IORead32((uint32_t)PCI_TYPE1_DATA_PORT);
+			}
+			break;
+		case 2:
+			RegisterByteOffset = RegisterNumber % sizeof(ULONG);
+			CfgBits.u.bits.RegisterNumber = RegisterNumber / sizeof(ULONG);
+
+			EmuX86_IOWrite32((uint32_t)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
+
+			if (WritePCISpace) {
+				EmuX86_IOWrite16((uint32_t)PCI_TYPE1_DATA_PORT + RegisterByteOffset, *((PUSHORT)Buffer));
+			}
+			else {
+				*((PUSHORT)Buffer) = EmuX86_IORead16((uint32_t)PCI_TYPE1_DATA_PORT + RegisterByteOffset);
+			}
+			break;
+		case 1: {
+			RegisterByteOffset = RegisterNumber % sizeof(ULONG);
+			CfgBits.u.bits.RegisterNumber = RegisterNumber / sizeof(ULONG);
+
+			EmuX86_IOWrite32((uint32_t)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
+
+			if (WritePCISpace) {
+				EmuX86_IOWrite8((uint32_t)PCI_TYPE1_DATA_PORT + RegisterByteOffset, *((PUCHAR)Buffer));
+			}
+			else {
+				*((PUCHAR)Buffer) = EmuX86_IORead8((uint32_t)PCI_TYPE1_DATA_PORT + RegisterByteOffset);
+			}
+		}
+			break;
+		}
+
+		RegisterNumber += Size;
+		Buffer = (PUCHAR)Buffer + Size;
+		Length -= Size;
+	}
+
+	
+	// TODO: Enable Interrupt Processing1
 }
 
 // ******************************************************************

@@ -324,7 +324,7 @@ VOID RefreshDirect3DDevice()
             /*! enumerate through available adapter modes */
             for(uint32 v=0;v<dwAdapterModeCount;v++)
             {
-                char *szFormat = 0;
+                const char *szFormat = "<unknown>";
 
                 XTL::D3DDISPLAYMODE displayMode;
 

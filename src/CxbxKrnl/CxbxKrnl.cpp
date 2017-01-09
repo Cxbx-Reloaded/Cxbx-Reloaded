@@ -564,6 +564,29 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	//extern void InitializeSectionStructures(void); 
 	InitializeSectionStructures();
 
+
+	DbgPrintf("EmuMain : Determining CPU affinity.\n");
+
+	// Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
+	// this will better aproximate the environment with regard to multi-threading) :
+	{
+		GetProcessAffinityMask(g_CurrentProcessHandle, &g_CPUXbox, &g_CPUOthers);
+		// For the other threads, remove one bit from the processor mask:
+		g_CPUOthers = ((g_CPUXbox - 1) & g_CPUXbox);
+
+		// Test if there are any other cores available :
+		if (g_CPUOthers > 0) {
+			// If so, make sure the Xbox threads run on the core NOT running Xbox code :
+			g_CPUXbox = g_CPUXbox & (~g_CPUOthers);
+		} else {
+			// Else the other threads must run on the same core as the Xbox code :
+			g_CPUOthers = g_CPUXbox;
+		}
+
+		// Make sure Xbox1 code runs on one core :
+		SetThreadAffinityMask(GetCurrentThread(), g_CPUXbox);
+	}
+
 	//
 	// initialize grapchics
 	//
@@ -593,28 +616,6 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		EmuGenerateFS(pTLS, pTLSData);
 	}
 
-	
-	DbgPrintf("EmuMain : Determining CPU affinity.\n");
-
-	// Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
-	// this will better aproximate the environment with regard to multi-threading) :
-	{
-		GetProcessAffinityMask(g_CurrentProcessHandle, &g_CPUXbox, &g_CPUOthers);
-		// For the other threads, remove one bit from the processor mask:
-		g_CPUOthers = ((g_CPUXbox - 1) & g_CPUXbox);
-
-		// Test if there are any other cores available :
-		if (g_CPUOthers > 0) {
-			// If so, make sure the Xbox threads run on the core NOT running Xbox code :
-			g_CPUXbox = g_CPUXbox & (~g_CPUOthers);
-		} else {
-			// Else the other threads must run on the same core as the Xbox code :
-			g_CPUOthers = g_CPUXbox;
-		}
-
-		// Make sure Xbox1 code runs on one core :
-		SetThreadAffinityMask(GetCurrentThread(), g_CPUXbox);
-	}
 
     DbgPrintf("EmuMain (0x%X): Initial thread starting.\n", GetCurrentThreadId());
 

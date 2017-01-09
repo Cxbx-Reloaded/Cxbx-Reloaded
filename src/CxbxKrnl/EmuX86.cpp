@@ -43,6 +43,38 @@
 #include "EmuX86.h"
 #include "EmuNV2A.h"
 
+uint32_t EmuX86_IORead32(uint32_t addr)
+{
+	EmuWarning("EmuX86_IORead32(0x%08X) Not Implemented", addr);
+	return 0;
+}
+
+uint16_t EmuX86_IORead16(uint32_t addr)
+{
+	EmuWarning("EmuX86_IORead16(0x%08X) Not Implemented", addr);
+	return 0;
+}
+
+uint8_t EmuX86_IORead8(uint32_t addr)
+{
+	EmuWarning("EmuX86_IORead8(0x%08X) Not Implemented", addr);
+	return 0;
+}
+
+void EmuX86_IOWrite32(uint32_t addr, uint32_t value)
+{
+	EmuWarning("EmuX86_IOWrite32(0x%08X, 0x%04X) [Unknown address]", addr, value);
+}
+
+void EmuX86_IOWrite16(uint32_t addr, uint16_t value)
+{
+	EmuWarning("EmuX86_IOWrite16(0x%08X, 0x%04X) [Unknown address]", addr, value);
+}
+
+void EmuX86_IOWrite8(uint32_t addr, uint8_t value)
+{
+	EmuWarning("EmuX86_IOWrite8(0x%08X, 0x%02X) [Unknown address]", addr, value);
+}
 
 uint32_t EmuX86_Read32(uint32_t addr)
 {
