@@ -47,7 +47,8 @@
 #  pragma comment(lib, "glew32.lib")
 #endif
 
-#include <Zydis.hpp>
+#include <distorm.h> // For uint32_t
+#include <string> // For std::string
 
 #include "CxbxKrnl.h"
 #include "Emu.h"
