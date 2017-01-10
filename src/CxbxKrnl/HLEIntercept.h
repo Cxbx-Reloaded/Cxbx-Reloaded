@@ -36,6 +36,7 @@
 
 extern bool bLLE_APU;
 extern bool bLLE_GPU;
+extern bool bLLE_JIT;
 
 void EmuHLEIntercept(Xbe::LibraryVersion *LibraryVersion, Xbe::Header *XbeHeader);
 
