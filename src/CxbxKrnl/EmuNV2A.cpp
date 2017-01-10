@@ -69,7 +69,7 @@
 #define NV_PFIFO_SIZE               0x002000
 #define NV_PRMA_ADDR     0x00007000
 #define NV_PRMA_SIZE                0x001000
-#define NV_VIDEO_ADDR    0x00008000
+#define NV_PVIDEO_ADDR   0x00008000
 #define NV_PVIDEO_SIZE              0x001000
 #define NV_PTIMER_ADDR   0x00009000
 #define NV_PTIMER_SIZE              0x001000
@@ -1091,7 +1091,7 @@ static const NV2ABlockInfo regions[] = {{
 		EmuNV2A_PRMA_Write32,
 	}, {
 		/* video overlay */
-		NV_VIDEO_ADDR, // = 0x008000
+		NV_PVIDEO_ADDR, // = 0x008000
 		NV_PVIDEO_SIZE, // = 0x001000
 		EmuNV2A_PVIDEO_Read32,
 		EmuNV2A_PVIDEO_Write32,
