@@ -124,7 +124,7 @@ extern "C" CXBXKRNL_API void NTAPI EmuWarning(const char *szWarningMessage, ...)
 
     va_list argp;
 
-    sprintf(szBuffer1, "EmuWarn (0x%X): ", GetCurrentThreadId());
+    sprintf(szBuffer1, "[0x%X] EmuWarn: ", GetCurrentThreadId());
 
     va_start(argp, szWarningMessage);
 
@@ -150,9 +150,9 @@ void EmuExceptionPrintDebugInformation(LPEXCEPTION_POINTERS e, bool IsBreakpoint
 	// print debug information
 	{
 		if (IsBreakpointException)
-			printf("EmuMain (0x%X): Recieved Breakpoint Exception (int 3)\n", GetCurrentThreadId());
+			printf("[0x%X] EmuMain: Recieved Breakpoint Exception (int 3)\n", GetCurrentThreadId());
 		else
-			printf("EmuMain (0x%X): Recieved Exception (Code := 0x%.08X)\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
+			printf("[0x%X] EmuMain: Recieved Exception (Code := 0x%.08X)\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
 
 		printf("\n"
 			" EIP := 0x%.08X EFL := 0x%.08X\n"
@@ -176,7 +176,7 @@ void EmuExceptionPrintDebugInformation(LPEXCEPTION_POINTERS e, bool IsBreakpoint
 
 void EmuExceptionExitProcess()
 {
-	printf("EmuMain (0x%X): Aborting Emulation\n", GetCurrentThreadId());
+	printf("[0x%X] EmuMain: Aborting Emulation\n", GetCurrentThreadId());
 	fflush(stdout);
 
 	if (CxbxKrnl_hEmuParent != NULL)
@@ -205,7 +205,7 @@ bool EmuExceptionBreakpointAsk(LPEXCEPTION_POINTERS e)
 	}
 	else if (ret == IDIGNORE)
 	{
-		printf("EmuMain (0x%X): Ignored Breakpoint Exception\n", GetCurrentThreadId());
+		printf("[0x%X] EmuMain: Ignored Breakpoint Exception\n", GetCurrentThreadId());
 		fflush(stdout);
 
 		e->ContextRecord->Eip += 1; // TODO : Skip actual instruction size bytes
@@ -298,9 +298,9 @@ int ExitException(LPEXCEPTION_POINTERS e)
     static int count = 0;
 
     // debug information
-    printf("EmuMain (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
-    printf("EmuMain (0x%X): Recieved Exception [0x%.08X]@0x%.08X\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip);
-    printf("EmuMain (0x%X): * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
+    printf("[0x%X] EmuMain: * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
+    printf("[0x%X] EmuMain: Recieved Exception [0x%.08X]@0x%.08X\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip);
+    printf("[0x%X] EmuMain: * * * * * EXCEPTION * * * * *\n", GetCurrentThreadId());
 
     fflush(stdout);
 

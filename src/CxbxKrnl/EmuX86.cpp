@@ -96,27 +96,27 @@ uint32_t EmuX86_Read32(uint32_t addr)
 
 uint16_t EmuX86_Read16(uint32_t addr)
 {
-	EmuWarning("EmuX86_Read16(0x%08X) Forwarding to EmuX86_Read32...", addr);
+	DbgPrintf("EmuX86_Read16(0x%08X) Forwarding to EmuX86_Read32...", addr);
 	uint16_t value;
 	if (addr & 2)
 		value = (uint16_t)(EmuX86_Read32(addr - 2) >> 16);
 	else
 		value = (uint16_t)EmuX86_Read32(addr);
 
-	EmuWarning("EmuX86_Read16(0x%08X) = 0x%04X", addr, value);
+	DbgPrintf("EmuX86_Read16(0x%08X) = 0x%04X", addr, value);
 	return value;
 }
 
 uint8_t EmuX86_Read8(uint32_t addr)
 {
-	EmuWarning("EmuX86_Read8(0x%08X) Forwarding to EmuX86_Read16...", addr);
+	DbgPrintf("EmuX86_Read8(0x%08X) Forwarding to EmuX86_Read16...", addr);
 	uint8_t value;
 	if (addr & 1)
 		value = (uint8_t)(EmuX86_Read16(addr - 1) >> 8);
 	else
 		value = (uint8_t)EmuX86_Read16(addr);
 
-	EmuWarning("EmuX86_Read8(0x%08X) = 0x%02X", addr, value);
+	DbgPrintf("EmuX86_Read8(0x%08X) = 0x%02X", addr, value);
 	return value;
 }
 
@@ -716,7 +716,7 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	// and check if it successfully decoded one instruction :
 	if (decodedInstructionsCount != 1)
 	{
-		EmuWarning("EmuX86: Error decoding opcode at 0x%08X\n", e->ContextRecord->Eip);
+		EmuWarning("EmuX86: Error decoding opcode at 0x%08X", e->ContextRecord->Eip);
 	}
 	else
 	{
