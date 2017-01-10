@@ -133,7 +133,7 @@ static unsigned int WINAPI PCSTProxy
 			if (pfnNotificationRoutine == NULL)
 				continue;
 
-			DbgPrintf("EmuKrnl (0x%X): Calling pfnNotificationRoutine[%d] (0x%.08X)\n", GetCurrentThreadId(), g_iThreadNotificationCount, pfnNotificationRoutine);
+			DbgPrintf("EmuKrnl: Calling pfnNotificationRoutine[%d] (0x%.08X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
 
 			pfnNotificationRoutine(TRUE);
 		}
@@ -299,7 +299,7 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 
 		//        *ThreadHandle = CreateThread(NULL, NULL, PCSTProxy, iPCSTProxyParam, NULL, &dwThreadId);
 
-		DbgPrintf("EmuKrnl (0x%X): ThreadHandle : 0x%X, ThreadId : 0x%.08X\n", GetCurrentThreadId(), *ThreadHandle, dwThreadId);
+		DbgPrintf("EmuKrnl: ThreadHandle : 0x%X, ThreadId : 0x%.08X\n", *ThreadHandle, dwThreadId);
 
 		// we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
 		{
@@ -377,7 +377,7 @@ XBSYSAPI EXPORTNUM(258) xboxkrnl::VOID NTAPI xboxkrnl::PsTerminateSystemThread
 			if (pfnNotificationRoutine == NULL)
 				continue;
 
-			DbgPrintf("EmuKrnl (0x%X): Calling pfnNotificationRoutine[%d] (0x%.08X)\n", GetCurrentThreadId(), g_iThreadNotificationCount, pfnNotificationRoutine);
+			DbgPrintf("EmuKrnl: Calling pfnNotificationRoutine[%d] (0x%.08X)\n", g_iThreadNotificationCount, pfnNotificationRoutine);
 
 			pfnNotificationRoutine(FALSE);
 		}
