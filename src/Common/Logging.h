@@ -147,7 +147,7 @@ extern thread_local std::string _logPrefix;
 		do { if(g_bPrintfOn) { \
 			bool _had_arg = false; \
 			std::stringstream tmp; \
-			tmp << __FILENAME__ << " (" << hex2((uint16_t)GetCurrentThreadId()) << "): "; \
+			tmp << "[" << hex2((uint16_t)GetCurrentThreadId()) << "] " << __FILENAME__ << ": "; \
 			_logPrefix = tmp.str(); \
 			std::stringstream msg; \
 			msg << _logPrefix << __func__ << "(";

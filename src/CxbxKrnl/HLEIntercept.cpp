@@ -168,6 +168,8 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
         uint32 LastUnResolvedXRefs = UnResolvedXRefs+1;
         uint32 OrigUnResolvedXRefs = UnResolvedXRefs;
 
+		bool bFoundD3D = false;
+
 		for(int p=0;UnResolvedXRefs < LastUnResolvedXRefs;p++)
         {
             DbgPrintf("HLE: Starting pass #%d...\n", p+1);
@@ -287,6 +289,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
 						BuildVersion = 3911;
 					if(OrigBuildVersion == 4531)
 						BuildVersion = 4627;
+				}
 				else if (strcmp(szLibraryName, Lib_XGRAPHC) == 0)
 				{
 					// Skip scanning for XGRAPHC (XG) symbols when LLE GPU is selected

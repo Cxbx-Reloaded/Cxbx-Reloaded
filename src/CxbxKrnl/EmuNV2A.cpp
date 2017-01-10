@@ -510,16 +510,25 @@ DEBUG_START(USER)
 DEBUG_END(USER)
 
 
-#define READ32_START(DEV) uint32_t EmuNV2A_##DEV##_Read32(uint32_t addr) { uint32_t result = 0; switch (addr) {
-#define READ32_UNHANDLED(DEV) default: EmuWarning("EmuX86_Read32 NV2A_" #DEV "(0x%08X) = 0x%08X [Unhandled, %s]", addr, result, DebugNV_##DEV##(addr)); return result;
-#define READ32_END(DEV) } EmuWarning("EmuX86_Read32 NV2A_" #DEV "(0x%08X) = 0x%08X [Handled, %s]", addr, result, DebugNV_##DEV##(addr)); return result; }
-
-#define WRITE32_START(DEV) void EmuNV2A_##DEV##_Write32(uint32_t addr, uint32_t value) { switch (addr) {
-#define WRITE32_UNHANDLED(DEV) default: EmuWarning("EmuX86_Write32 NV2A_" #DEV "(0x%08X, 0x%08X) [Unhandled, %s]", addr, value, DebugNV_##DEV##(addr)); return;
-#define WRITE32_END(DEV) } EmuWarning("EmuX86_Write32 NV2A_" #DEV "(0x%08X, 0x%08X) [Handled, %s]", addr, value, DebugNV_##DEV##(addr)); }  
 
 
-READ32_START(PMC)
+#define DEBUG_READ32(DEV)            DbgPrintf("EmuX86_Read32 NV2A_" #DEV "(0x%08X) = 0x%08X [Handled, %s]\n", addr, result, DebugNV_##DEV##(addr));
+#define DEBUG_READ32_UNHANDLED(DEV)  DbgPrintf("EmuX86_Read32 NV2A_" #DEV "(0x%08X) = 0x%08X [Unhandled, %s]\n", addr, result, DebugNV_##DEV##(addr));
+
+#define DEBUG_WRITE32(DEV)           DbgPrintf("EmuX86_Write32 NV2A_" #DEV "(0x%08X, 0x%08X) [Handled, %s]\n", addr, value, DebugNV_##DEV##(addr));
+#define DEBUG_WRITE32_UNHANDLED(DEV) DbgPrintf("EmuX86_Write32 NV2A_" #DEV "(0x%08X, 0x%08X) [Unhandled, %s]\n", addr, value, DebugNV_##DEV##(addr));
+
+#define DEVICE_READ32(DEV) uint32_t EmuNV2A_##DEV##_Read32(uint32_t addr)
+#define DEVICE_READ32_SWITCH(addr) uint32_t result = 0; switch (addr) 
+#define DEVICE_READ32_END(DEV) DEBUG_READ32(DEV); return result
+
+#define DEVICE_WRITE32(DEV) void EmuNV2A_##DEV##_Write32(uint32_t addr, uint32_t value)
+#define DEVICE_WRITE32_SWITCH(DEV, addr) DEBUG_WRITE32(DEV); switch (addr)
+
+
+DEVICE_READ32(PMC)
+{
+	DEVICE_READ32_SWITCH(addr) {
 	case NV_PMC_BOOT_0:	// chipset and stepping: NV2A, A02, Rev 0
 		result = 0x02A000A2;
 		break;
@@ -529,7 +538,6 @@ READ32_START(PMC)
 	case NV_PMC_INTR_EN_0:
 		result = pmc.enabled_interrupts;
 		break;
-
 	case 0x0000020C: // What's this address? What does the xbe expect to read here? The Kernel base address perhaps?
 		result = NV20_REG_BASE_KERNEL;
 		break;
@@ -543,7 +551,6 @@ READ32_START(PMC)
 DEVICE_WRITE32(PMC)
 {
 	DEVICE_WRITE32_SWITCH(PMC, addr) {
-
 	case NV_PMC_INTR_0:
 		pmc.pending_interrupts &= ~value;
 		update_irq();
