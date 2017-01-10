@@ -50,8 +50,6 @@
 #include "EmuX86.h"
 #include "EmuNV2A.h"
 
-_DecodeResult distorm_decompose64(_CodeInfo* ci, _DInst result[], unsigned int maxInstructions, unsigned int* usedInstructionsCount);
-
 uint32_t EmuX86_IORead32(uint32_t addr)
 {
 	EmuWarning("EmuX86_IORead32(0x%08X) Not Implemented", addr);
@@ -142,59 +140,166 @@ void EmuX86_Write8(uint32_t addr, uint8_t value)
 	EmuWarning("EmuX86_Write8(0x%08X, 0x%02X) [Unknown address]", addr, value);
 }
 
-inline DWORD* EmuX86_GetRegisterPointer(LPEXCEPTION_POINTERS e, uint8_t reg)
+int ContextRecordOffsetByRegisterType[/*_RegisterType*/R_DR7 + 1] = { 0 };
+
+// Populate ContextRecordOffsetByRegisterType for each distorm::_RegisterType
+// supported by the Xbox1's Coppermine Pentium III.
+// Based on https://maximumcrack.wordpress.com/2011/08/07/fpu-mmx-xmm-and-bbq/
+void EmuX86_InitContextRecordOffsetByRegisterType()
 {
-	switch (reg) {
-		case R_AL: case R_AH:	case R_AX: case R_EAX:
-			return &e->ContextRecord->Eax;
-		case R_BL: case R_BH:	case R_BX: case R_EBX:
-			return &e->ContextRecord->Ebx;
-		case R_CL: case R_CH:	case R_CX: case R_ECX:
-			return &e->ContextRecord->Ecx;
-		case R_DL: case R_DH: case R_DX: case R_EDX:
-			return &e->ContextRecord->Edx;
-		case R_EDI:
-			return &e->ContextRecord->Edi;
-		case R_ESI:
-			return &e->ContextRecord->Esi;
-		case R_EBP:
-			return &e->ContextRecord->Ebp;
-	}
+	/* R_RAX, R_RCX, R_RDX, R_RBX, R_RSP, R_RBP, R_RSI, R_RDI, R_R8, R_R9, R_R10, R_R11, R_R12, R_R13, R_R14, R_R15,*/
+	ContextRecordOffsetByRegisterType[R_EAX] = offsetof(CONTEXT, Eax);
+	ContextRecordOffsetByRegisterType[R_ECX] = offsetof(CONTEXT, Ecx);
+	ContextRecordOffsetByRegisterType[R_EDX] = offsetof(CONTEXT, Edx);
+	ContextRecordOffsetByRegisterType[R_EBX] = offsetof(CONTEXT, Ebx);
+	ContextRecordOffsetByRegisterType[R_ESP] = offsetof(CONTEXT, Esp);
+	ContextRecordOffsetByRegisterType[R_EBP] = offsetof(CONTEXT, Ebp);
+	ContextRecordOffsetByRegisterType[R_ESI] = offsetof(CONTEXT, Esi);
+	ContextRecordOffsetByRegisterType[R_EDI] = offsetof(CONTEXT, Edi);
+	/* R_R8D, R_R9D, R_R10D, R_R11D, R_R12D, R_R13D, R_R14D, R_R15D,*/
+	ContextRecordOffsetByRegisterType[R_AX] = offsetof(CONTEXT, Eax);
+	ContextRecordOffsetByRegisterType[R_CX] = offsetof(CONTEXT, Ecx);
+	ContextRecordOffsetByRegisterType[R_DX] = offsetof(CONTEXT, Edx);
+	ContextRecordOffsetByRegisterType[R_BX] = offsetof(CONTEXT, Ebx);
+	ContextRecordOffsetByRegisterType[R_SP] = offsetof(CONTEXT, Esp); // ??
+	ContextRecordOffsetByRegisterType[R_BP] = offsetof(CONTEXT, Ebp); // ??
+	ContextRecordOffsetByRegisterType[R_SI] = offsetof(CONTEXT, Esi); // ??
+	ContextRecordOffsetByRegisterType[R_DI] = offsetof(CONTEXT, Edi); // ??
+	/* R_R8W, R_R9W, R_R10W, R_R11W, R_R12W, R_R13W, R_R14W, R_R15W, */
+	ContextRecordOffsetByRegisterType[R_AL] = offsetof(CONTEXT, Eax);
+	ContextRecordOffsetByRegisterType[R_CL] = offsetof(CONTEXT, Ecx);
+	ContextRecordOffsetByRegisterType[R_DL] = offsetof(CONTEXT, Edx);
+	ContextRecordOffsetByRegisterType[R_BL] = offsetof(CONTEXT, Ebx);
+	ContextRecordOffsetByRegisterType[R_AH] = offsetof(CONTEXT, Eax) + 1;
+	ContextRecordOffsetByRegisterType[R_CH] = offsetof(CONTEXT, Ecx) + 1;
+	ContextRecordOffsetByRegisterType[R_DH] = offsetof(CONTEXT, Edx) + 1;
+	ContextRecordOffsetByRegisterType[R_BH] = offsetof(CONTEXT, Ebx) + 1;
+	/* R_R8B, R_R9B, R_R10B, R_R11B, R_R12B, R_R13B, R_R14B, R_R15B, */
+	ContextRecordOffsetByRegisterType[R_SPL] = offsetof(CONTEXT, Esp); // ??
+	ContextRecordOffsetByRegisterType[R_BPL] = offsetof(CONTEXT, Ebp); // ??
+	ContextRecordOffsetByRegisterType[R_SIL] = offsetof(CONTEXT, Esi); // ??
+	ContextRecordOffsetByRegisterType[R_DIL] = offsetof(CONTEXT, Edi); // ??
+	ContextRecordOffsetByRegisterType[R_ES] = offsetof(CONTEXT, SegEs);
+	ContextRecordOffsetByRegisterType[R_CS] = offsetof(CONTEXT, SegCs);
+	ContextRecordOffsetByRegisterType[R_SS] = offsetof(CONTEXT, SegSs);
+	ContextRecordOffsetByRegisterType[R_DS] = offsetof(CONTEXT, SegDs);
+	ContextRecordOffsetByRegisterType[R_FS] = offsetof(CONTEXT, SegFs);
+	ContextRecordOffsetByRegisterType[R_GS] = offsetof(CONTEXT, SegGs);
+	/* R_RIP, R_ST0, R_ST1, R_ST2, R_ST3, R_ST4, R_ST5, R_ST6, R_ST7, */
+	ContextRecordOffsetByRegisterType[R_MM0] = offsetof(CONTEXT, ExtendedRegisters[(10 + 0) * 16]);
+	ContextRecordOffsetByRegisterType[R_MM1] = offsetof(CONTEXT, ExtendedRegisters[(10 + 1) * 16]);
+	ContextRecordOffsetByRegisterType[R_MM2] = offsetof(CONTEXT, ExtendedRegisters[(10 + 2) * 16]);
+	ContextRecordOffsetByRegisterType[R_MM3] = offsetof(CONTEXT, ExtendedRegisters[(10 + 3) * 16]);
+	ContextRecordOffsetByRegisterType[R_MM4] = offsetof(CONTEXT, ExtendedRegisters[(10 + 4) * 16]);
+	ContextRecordOffsetByRegisterType[R_MM5] = offsetof(CONTEXT, ExtendedRegisters[(10 + 5) * 16]);
+	ContextRecordOffsetByRegisterType[R_MM6] = offsetof(CONTEXT, ExtendedRegisters[(10 + 6) * 16]);
+	ContextRecordOffsetByRegisterType[R_MM7] = offsetof(CONTEXT, ExtendedRegisters[(10 + 7) * 16]);
+	/* R_XMM0, R_XMM1, R_XMM2, R_XMM3, R_XMM4, R_XMM5, R_XMM6, R_XMM7, R_XMM8, R_XMM9, R_XMM10, R_XMM11, R_XMM12, R_XMM13, R_XMM14, R_XMM15, */
+	/* R_YMM0, R_YMM1, R_YMM2, R_YMM3, R_YMM4, R_YMM5, R_YMM6, R_YMM7, R_YMM8, R_YMM9, R_YMM10, R_YMM11, R_YMM12, R_YMM13, R_YMM14, R_YMM15, */
+	/* R_CR0, R_UNUSED0, R_CR2, R_CR3, R_CR4, R_UNUSED1, R_UNUSED2, R_UNUSED3, R_CR8, */
+	ContextRecordOffsetByRegisterType[R_DR0] = offsetof(CONTEXT, Dr0);
+	ContextRecordOffsetByRegisterType[R_DR1] = offsetof(CONTEXT, Dr1);
+	ContextRecordOffsetByRegisterType[R_DR2] = offsetof(CONTEXT, Dr2);
+	ContextRecordOffsetByRegisterType[R_DR3] = offsetof(CONTEXT, Dr3);
+	/* R_UNUSED4, R_UNUSED5, */
+	ContextRecordOffsetByRegisterType[R_DR6] = offsetof(CONTEXT, Dr6);
+	ContextRecordOffsetByRegisterType[R_DR7] = offsetof(CONTEXT, Dr7);
+
+	/* struct CONTEXT { // ! markers below, are used in the above offsetof calls
+	DWORD ContextFlags;
+    !DWORD   Dr0;
+    !DWORD   Dr1;
+    !DWORD   Dr2;
+    !DWORD   Dr3;
+    !DWORD   Dr6;
+    !DWORD   Dr7;
+	struct _FLOATING_SAVE_AREA {
+	DWORD   ControlWord;
+	DWORD   StatusWord;
+	DWORD   TagWord;
+	DWORD   ErrorOffset;
+	DWORD   ErrorSelector;
+	DWORD   DataOffset;
+	DWORD   DataSelector;
+	BYTE    RegisterArea[SIZE_OF_80387_REGISTERS];
+	DWORD   Spare0;
+	} FLOATING_SAVE_AREA FloatSave;
+    !DWORD   SegGs;
+    !DWORD   SegFs;
+    !DWORD   SegEs;
+    !DWORD   SegDs;
+    !DWORD   Edi;
+    !DWORD   Esi;
+    !DWORD   Ebx;
+    !DWORD   Edx;
+    !DWORD   Ecx;
+    !DWORD   Eax;
+	!DWORD   Ebp;
+    DWORD   Eip;
+    !DWORD   SegCs;              // MUST BE SANITIZED
+    DWORD   EFlags;             // MUST BE SANITIZED
+    !DWORD   Esp;
+    !DWORD   SegSs;
+	!BYTE    ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];*/
+}
+
+inline void * EmuX86_GetRegisterPointer(LPEXCEPTION_POINTERS e, uint8_t reg)
+{
+	int offset = ContextRecordOffsetByRegisterType[reg];
+	if (offset > 0)
+		return (void*)((uintptr_t)(e->ContextRecord) + offset);
 
 	return nullptr;
 }
 
-inline bool EmuX86_GetRegisterValue(uint32_t* output, LPEXCEPTION_POINTERS e, uint8_t reg)
+inline uint32_t EmuX86_GetRegisterValue32(LPEXCEPTION_POINTERS e, uint8_t reg)
 {
-	uint32_t value = 0;
 	if (reg != R_NONE)
 	{
-		DWORD* regptr = EmuX86_GetRegisterPointer(e, reg);
-		if (regptr == nullptr)
-			return false;
-
-		value = *regptr;
+		void* regptr = EmuX86_GetRegisterPointer(e, reg);
+		if (regptr != nullptr)
+			return *(uint32_t *)regptr;
 	}
 
-	*output = value;
-	return true;
+	return 0;
+}
+
+inline uint16_t EmuX86_GetRegisterValue16(LPEXCEPTION_POINTERS e, uint8_t reg)
+{
+	if (reg != R_NONE)
+	{
+		void* regptr = EmuX86_GetRegisterPointer(e, reg);
+		if (regptr != nullptr)
+			return *(uint16_t *)regptr;
+	}
+
+	return 0;
+}
+
+inline uint8_t EmuX86_GetRegisterValue8(LPEXCEPTION_POINTERS e, uint8_t reg)
+{
+	if (reg != R_NONE)
+	{
+		void* regptr = EmuX86_GetRegisterPointer(e, reg);
+		if (regptr != nullptr)
+			return *(uint8_t *)regptr;
+	}
+
+	return 0;
 }
 
 uint32_t EmuX86_Distorm_O_SMEM_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int operand)
 {
-	uint32_t base;
-	EmuX86_GetRegisterValue(&base, e, info.ops[operand].index);
+	uint32_t base = EmuX86_GetRegisterValue32(e, info.ops[operand].index);
 
 	return base + info.disp;
 }
 
 uint32_t EmuX86_Distorm_O_MEM_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int operand)
 {
-	uint32_t base = 0;
-	EmuX86_GetRegisterValue(&base, e, info.base);
+	uint32_t base = EmuX86_GetRegisterValue32(e, info.base);
 
-	uint32_t index = 0;
-	EmuX86_GetRegisterValue(&index, e, info.ops[operand].index);
+	uint32_t index = EmuX86_GetRegisterValue32(e, info.ops[operand].index);
 
 	if (info.scale >= 2)
 		return base + (index * info.scale) + info.disp;
@@ -202,71 +307,75 @@ uint32_t EmuX86_Distorm_O_MEM_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int ope
 		return base + index + info.disp;
 }
 
-void EmuX86_ReadAddr(uint32_t srcAddr, uint16_t size, OUT uint32_t *value)
+void EmuX86_Addr_Read(uint32_t srcAddr, uint16_t size, OUT uint32_t *value)
 {
 	switch (size) {
 	case 8:
 		*value = EmuX86_Read8(srcAddr);
-		break;
+		return;
 	case 16:
 		*value = EmuX86_Read16(srcAddr);
-		break;
+		return;
 	case 32:
 		*value = EmuX86_Read32(srcAddr);
-		break;
-	default:
-		// TODO : Handle other sizes?
-		break;
 	}
 }
 
-void EmuX86_WriteAddr(uint32_t destAddr, uint16_t size, uint32_t value)
+void EmuX86_Addr_Write(uint32_t destAddr, uint16_t size, uint32_t value)
 {
 	switch (size) {
 	case 8:
 		EmuX86_Write8(destAddr, value & 0xFF);
-		break;
+		return;
 	case 16:
 		EmuX86_Write16(destAddr, value & 0xFFFF);
-		break;
+		return;
 	case 32:
 		EmuX86_Write32(destAddr, value);
-		break;
-	default:
-		// TODO : Handle other sizes?
-		break;
 	}
 }
 
-bool EmuX86_ReadValueFromSource(LPEXCEPTION_POINTERS e, _DInst& info, int operand, OUT uint32_t *value)
+bool EmuX86_Operand_Read(LPEXCEPTION_POINTERS e, _DInst& info, int operand, OUT uint32_t *value)
 {
 	switch (info.ops[operand].type) {
 	case O_NONE:
 	{
 		// ignore operand
+		return true;
 	}
 	case O_REG:
 	{
-		if (!EmuX86_GetRegisterValue(value, e, info.ops[operand].index))
+		void* regAddr = EmuX86_GetRegisterPointer(e, info.ops[operand].index);
+		if (regAddr == nullptr)
 			return false;
 
-		break;
+		switch (info.ops[operand].size) {
+		case 8:
+			*value = *((uint8_t*)regAddr);
+			return true;
+		case 16:
+			*value = *((uint16_t*)regAddr);
+			return true;
+		case 32:
+			*value = *((uint32_t*)regAddr);
+			return true;
+		}
+		return false;
 	}
 	case O_IMM:
 	{
 		switch (info.ops[operand].size) {
 		case 8:
 			*value = info.imm.byte;
-			break;
+			return true;
 		case 16:
 			*value = info.imm.word;
-			break;
+			return true;
 		case 32:
 			*value = info.imm.dword;
-			break;
-			// TODO : Handle other sizes?
+			return true;
 		}
-		break;
+		return false;
 	}
 	case O_IMM1:
 	{
@@ -281,20 +390,20 @@ bool EmuX86_ReadValueFromSource(LPEXCEPTION_POINTERS e, _DInst& info, int operan
 	case O_DISP:
 	{
 		uint32_t srcAddr = info.disp;
-		EmuX86_ReadAddr(srcAddr, info.ops[operand].size, value);
-		break;
+		EmuX86_Addr_Read(srcAddr, info.ops[operand].size, value);
+		return true;
 	}
 	case O_SMEM:
 	{
 		uint32_t srcAddr = EmuX86_Distorm_O_SMEM_Addr(e, info, operand);
-		EmuX86_ReadAddr(srcAddr, info.ops[operand].size, value);
-		break;
+		EmuX86_Addr_Read(srcAddr, info.ops[operand].size, value);
+		return true;
 	}
 	case O_MEM:
 	{
 		uint32_t srcAddr = EmuX86_Distorm_O_MEM_Addr(e, info, operand);
-		EmuX86_ReadAddr(srcAddr, info.ops[operand].size, value);
-		break;
+		EmuX86_Addr_Read(srcAddr, info.ops[operand].size, value);
+		return true;
 	}
 	case O_PC:
 	{
@@ -310,36 +419,37 @@ bool EmuX86_ReadValueFromSource(LPEXCEPTION_POINTERS e, _DInst& info, int operan
 		return false;
 	}
 
-	return true;
+	return false;
 }
 
-bool EmuX86_WriteValueToDestination(LPEXCEPTION_POINTERS e, _DInst& info, int operand, uint32_t value)
+bool EmuX86_Operand_Write(LPEXCEPTION_POINTERS e, _DInst& info, int operand, uint32_t value)
 {
 	switch (info.ops[operand].type) {
 	case O_NONE:
 	{
 		// ignore operand
+		return true;
 	}
 	case O_REG:
 	{
-		DWORD* pDstReg = EmuX86_GetRegisterPointer(e, info.ops[operand].index);
-		if (pDstReg == nullptr)
+		void* regAddr = EmuX86_GetRegisterPointer(e, info.ops[operand].index);
+		if (regAddr == nullptr)
 			return false;
 
 		switch (info.ops[operand].size) {
 		case 8:
-			*((uint8_t*)pDstReg + 3) = value & 0xFF;
-			break;
+			*((uint8_t*)regAddr) = (uint8_t)value;
+			return true;
 		case 16:
-			*((uint16_t*)pDstReg + 2) = value & 0xFFFF;
-			break;
+			*((uint16_t*)regAddr) = (uint16_t)value;
+			return true;
 		case 32:
-			*pDstReg = value;
-			break;
+			*((uint32_t*)regAddr) = value;
+			return true;
 		default:
 			return false;
 		}
-		break;
+		return false;
 	}
 	case O_IMM:
 	{
@@ -359,20 +469,20 @@ bool EmuX86_WriteValueToDestination(LPEXCEPTION_POINTERS e, _DInst& info, int op
 	case O_DISP:
 	{
 		uint32_t destAddr = info.disp;
-		EmuX86_WriteAddr(destAddr, info.ops[operand].size, value);
-		break;
+		EmuX86_Addr_Write(destAddr, info.ops[operand].size, value);
+		return true;
 	}
 	case O_SMEM:
 	{
 		uint32_t destAddr = EmuX86_Distorm_O_SMEM_Addr(e, info, operand);
-		EmuX86_WriteAddr(destAddr, info.ops[operand].size, value);
-		break;
+		EmuX86_Addr_Write(destAddr, info.ops[operand].size, value);
+		return true;
 	}
 	case O_MEM:
 	{
 		uint32_t destAddr = EmuX86_Distorm_O_MEM_Addr(e, info, operand);
-		EmuX86_WriteAddr(destAddr, info.ops[operand].size, value);
-		break;
+		EmuX86_Addr_Write(destAddr, info.ops[operand].size, value);
+		return true;
 	}
 	case O_PC:
 	{
@@ -388,20 +498,57 @@ bool EmuX86_WriteValueToDestination(LPEXCEPTION_POINTERS e, _DInst& info, int op
 		return false;
 	}
 
+	return false;
+}
+
+bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// ADD reads value from source :
+	uint32_t value;
+	if (!EmuX86_Operand_Read(e, info, 1, &value))
+		return false;
+
+	// ADD reads and writes destination :
+	uint32_t addr;
+	// TODO : Implement EmuX86_Operand_Addr, then enable the following line :
+	// if (!EmuX86_Operand_Addr(e, info, 0, &addr))
+		return false;
+
+	// TODO : Do this better
+	switch (info.ops[0].size) {
+	case 8: {
+		uint8_t current = EmuX86_Read8(addr);
+		EmuX86_Write8(addr, (uint8_t)current + value);
+		return true;
+	}
+	case 16: {
+		uint16_t current = EmuX86_Read16(addr);
+		EmuX86_Write16(addr, (uint16_t)current + value);
+		return true;
+	}
+	case 32: {
+		uint32_t current = EmuX86_Read32(addr);
+		EmuX86_Write32(addr, (uint32_t)current + value);
+		return true;
+	}
+	default:
+		return false;
+	}
+
+	// TODO : update CPU flags
+
 	return true;
 }
 
-bool EmuX86_MOV(LPEXCEPTION_POINTERS e, _DInst& info)
+bool  EmuX86_Opcode_MOV(LPEXCEPTION_POINTERS e, _DInst& info)
 {
-	// TODO : Test this refactoring
-
 	// MOV reads value from source :
 	uint32_t value = 0;
-	if (!EmuX86_ReadValueFromSource(e, info, 1, &value))
+	if (!EmuX86_Operand_Read(e, info, 1, &value))
 		return false;
 
 	// MOV writes value to destination :
-	if (!EmuX86_WriteValueToDestination(e, info, 0, value))
+	if (!EmuX86_Operand_Write(e, info, 0, value))
 		return false;
 
 	// Note : MOV instructions never update CPU flags
@@ -409,17 +556,17 @@ bool EmuX86_MOV(LPEXCEPTION_POINTERS e, _DInst& info)
 	return true;
 }
 
-bool EmuX86_MOVZX(LPEXCEPTION_POINTERS e, _DInst& info)
+bool  EmuX86_Opcode_MOVZX(LPEXCEPTION_POINTERS e, _DInst& info)
 {
-	// TODO : Test this refactoring
-
-	// MOV reads value from source :
+	// MOVZX reads value from source :
 	uint32_t value = 0;
-	if (!EmuX86_ReadValueFromSource(e, info, 1, &value))
+	if (!EmuX86_Operand_Read(e, info, 1, &value))
 		return false;
 
-	// MOV writes value to destination :
-	if (!EmuX86_WriteValueToDestination(e, info, 0, value))
+	// TODO : Implement MOVZX zero-extension!
+
+	// MOVZX writes value to destination :
+	if (!EmuX86_Operand_Write(e, info, 0, value))
 		return false;
 
 	// Note : MOV instructions never update CPU flags
@@ -432,16 +579,16 @@ inline void EmuX86_SetFlag(LPEXCEPTION_POINTERS e, int flag, int value)
 	e->ContextRecord->EFlags ^= (-value ^ e->ContextRecord->EFlags) & (1 << flag);
 }
 
-bool EmuX86_TEST(LPEXCEPTION_POINTERS e, _DInst& info)
+bool  EmuX86_Opcode_TEST(LPEXCEPTION_POINTERS e, _DInst& info)
 {
 	// TEST reads first value :
 	uint32_t result = 0;
-	if (!EmuX86_ReadValueFromSource(e, info, 0, &result))
+	if (!EmuX86_Operand_Read(e, info, 0, &result))
 		return false;
 
 	// TEST reads second value :
 	uint32_t value = 0;
-	if (!EmuX86_ReadValueFromSource(e, info, 1, &value))
+	if (!EmuX86_Operand_Read(e, info, 1, &value))
 		return false;
 
 	// TEST performs bitwise AND between first and second value :
@@ -463,6 +610,85 @@ bool EmuX86_TEST(LPEXCEPTION_POINTERS e, _DInst& info)
 	// result is thrown away
 
 	return true;
+}
+
+void  EmuX86_Opcode_CPUID(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// This CPUID emulation is based on :
+	// https://github.com/docbrown/vxb/wiki/Xbox-CPUID-Information
+	// https://github.com/docbrown/vxb/wiki/Xbox-Hardware-Information and
+	// http://www.sandpile.org/x86/cpuid.htm
+	switch (e->ContextRecord->Eax) // simpler than EmuX86_GetRegisterValue32(e, R_EAX)
+	{
+	case 0: // CPUID Function 0, return the maximum supported standard level and vendor ID string
+	{
+		// Maximum supported standard level
+		e->ContextRecord->Eax = 2;
+		// "GenuineIntel" Intel processor
+		e->ContextRecord->Ebx = (ULONG)'uneG';
+		e->ContextRecord->Edx = (ULONG)'Ieni';
+		e->ContextRecord->Ecx = (ULONG)'letn';
+		return;
+	}
+	case 1: // CPUID Function 1, Return the processor type / family / model / stepping and feature flags
+	{
+		// Family 6, Model 8, Stepping 10
+		e->ContextRecord->Eax = 0x68a;
+		e->ContextRecord->Ebx = 0;
+		e->ContextRecord->Ecx = 0;
+		// Feature Flags 
+		e->ContextRecord->Edx = 0x383F9FF; // FPU, VME, DE, PSE, TSC, MSR, PAE, MCE, CX8, SEP, MTRR, PGE, MCA, CMOV, PAT, PSE36, MMX, FXSR, SSE
+		return;
+	}
+	case 2: // CPUID Function 2, Return the processor configuration descriptors
+	{
+		// AL : 01 = number of times this level must be queried to obtain all configuration descriptors
+		// EAX nibble 1 = 01h : code TLB, 4K pages, 4 ways, 32 entries
+		// EAX nibble 2 = 02h : code TLB, 4M pages, fully, 2 entries
+		// EAX nibble 3 = 03h : data TLB, 4K pages, 4 ways, 64 entries
+		e->ContextRecord->Eax = 0x3020101;
+		// EBX and ECX nibbles = 00h : null descriptor (=unused descriptor)
+		e->ContextRecord->Ebx = 0;
+		e->ContextRecord->Ecx = 0;
+		// EDX nibble 0 = 41h : code and data L2 cache, 128 KB, 4 ways, 32 byte lines
+		// EDX nibble 1 = 08h : code L1 cache, 16 KB, 4 ways, 32 byte lines
+		// EDX nibble 2 = 04h : data TLB, 4M pages, 4 ways, 8 entries
+		// EDX nibble 3 = 0Ch : data L1 cache, 16 KB, 4 ways, 32 byte lines
+		e->ContextRecord->Edx = 0xC040841;
+		return;
+	}
+	}
+}
+
+bool  EmuX86_Opcode_OUT(LPEXCEPTION_POINTERS e, _DInst& info)
+{
+	// OUT will address the first operand :
+	uint32_t addr;
+	if (!EmuX86_Operand_Read(e, info, 0, &addr))
+		return false;
+
+	uint32_t value;
+	if (!EmuX86_Operand_Read(e, info, 1, &value))
+		return false;
+
+	// OUT does an I/O write on the address, using the value from the second operand :
+	switch (info.ops[1].size) {
+	case 8: {
+		EmuX86_IOWrite8(addr, (uint8_t)value);
+		return true;
+	}
+	case 16: {
+		EmuX86_IOWrite16(addr, (uint16_t)value);
+		return true;
+	}
+	case 32: {
+		EmuX86_IOWrite32(addr, value);
+		return true;
+	}
+	default:
+		return false;
+	}
+	return false;
 }
 
 bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
@@ -494,27 +720,40 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	}
 	else
 	{
-		switch (info.opcode)
+		switch (info.opcode) // Keep these cases alphabetically ordered
 		{
-		case I_MOV:
-			if (EmuX86_MOV(e, info)) {
+		case I_ADD:
+			if (EmuX86_Opcode_ADD(e, info))
 				break;
-			}
+
+			goto unimplemented_opcode;
+		case I_CPUID:
+			EmuX86_Opcode_CPUID(e, info);
+			break;
+		case I_INVD: // Flush internal caches; initiate flushing of external caches.
+			 // We can safely ignore this
+			break;
+		case I_MOV:
+			if (EmuX86_Opcode_MOV(e, info))
+				break;
 
 			goto unimplemented_opcode;
 		case I_MOVZX:			
-			if (EmuX86_MOVZX(e, info)) {
+			if (EmuX86_Opcode_MOVZX(e, info))
 				break;
-			}
+
+			goto unimplemented_opcode;
+		case I_OUT:
+			if (EmuX86_Opcode_OUT(e, info))
+				break;
 
 			goto unimplemented_opcode;
 		case I_TEST:
-			if (EmuX86_TEST(e, info)) {
+			if (EmuX86_Opcode_TEST(e, info))
 				break;
-			}
 
 			goto unimplemented_opcode;
-		case I_WBINVD:
+		case I_WBINVD: // Write back and flush internal caches; initiate writing-back and flushing of external caches.
 			// We can safely ignore this
 			break;
 		default:
@@ -533,3 +772,9 @@ unimplemented_opcode:
 	
 	return false;
 }
+
+void EmuX86_Init()
+{
+	EmuX86_InitContextRecordOffsetByRegisterType();
+}
+

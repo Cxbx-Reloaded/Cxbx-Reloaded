@@ -45,6 +45,7 @@ namespace xboxkrnl
 
 #include "CxbxKrnl.h"
 #include "Emu.h"
+#include "EmuX86.h"
 #include "EmuFile.h"
 #include "EmuFS.h"
 #include "EmuShared.h"
@@ -616,6 +617,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		EmuGenerateFS(pTLS, pTLSData);
 	}
 
+	EmuX86_Init();
 
     DbgPrintf("EmuMain (0x%X): Initial thread starting.\n", GetCurrentThreadId());
 
