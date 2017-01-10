@@ -66,6 +66,7 @@ static std::vector<void*>::const_iterator vCacheInpIter;
 // Set these for experimental APU(sound) / GPU (graphics) LLE
 bool bLLE_APU = false;
 bool bLLE_GPU = false;
+bool bLLE_JIT = false;
 
 void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHeader)
 {

@@ -480,6 +480,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
 	bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
 	bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
+	bLLE_JIT = (CxbxLLE_Flags & LLE_JIT) > 0;
 
 	// Initialize devices :
 	char szBuffer[MAX_PATH];
