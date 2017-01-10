@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -322,7 +324,7 @@ VOID RefreshDirect3DDevice()
             /*! enumerate through available adapter modes */
             for(uint32 v=0;v<dwAdapterModeCount;v++)
             {
-                char *szFormat = 0;
+                const char *szFormat = "<unknown>";
 
                 XTL::D3DDISPLAYMODE displayMode;
 

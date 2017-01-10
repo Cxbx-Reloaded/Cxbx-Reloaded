@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -42,42 +44,63 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
+#include "EmuKrnlLogging.h"
+
+// prevent name collisions
+namespace NtDll
+{
+#include "EmuNtDll.h"
+};
+
 #include "Emu.h" // For EmuWarning()
 
-using namespace xboxkrnl;
+#define FSCACHE_MAXIMUM_NUMBER_OF_CACHE_PAGES 2048
+
+// global variables
+xboxkrnl::LONG g_FscNumberOfCachePages = 16; // 16 = default number of file system cache pages
 
 // ******************************************************************
-// * 0x0023 - FscGetCacheSize
+// * 0x0023 - FscGetCacheSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(35) xboxkrnl::DWORD NTAPI xboxkrnl::FscGetCacheSize()
+XBSYSAPI EXPORTNUM(35) xboxkrnl::ULONG NTAPI xboxkrnl::FscGetCacheSize()
 {
 	LOG_FUNC();
 
-	EmuWarning("FscGetCacheSize returning default 64kb");
-
-	RETURN(64 * 1024);
+	RETURN(g_FscNumberOfCachePages);
 }
 
-XBSYSAPI EXPORTNUM(36) VOID NTAPI xboxkrnl::FscInvalidateIdleBlocks()
+// ******************************************************************
+// * 0x0024 - FscInvalidateIdleBlocks()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(36) xboxkrnl::VOID NTAPI xboxkrnl::FscInvalidateIdleBlocks()
 {
 	LOG_FUNC();
 
 	LOG_UNIMPLEMENTED();
 }
 
-
 // ******************************************************************
-// * 0x0025 - FscSetCacheSize
+// * 0x0025 - FscSetCacheSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(37) xboxkrnl::LONG NTAPI xboxkrnl::FscSetCacheSize
+XBSYSAPI EXPORTNUM(37) xboxkrnl::NTSTATUS NTAPI xboxkrnl::FscSetCacheSize
 (
-	ULONG uCachePages
+	ULONG NumberOfCachePages
 )
 {
-	LOG_FUNC_ONE_ARG(uCachePages);
+	LOG_FUNC_ONE_ARG(NumberOfCachePages);
 
-	LOG_IGNORED();
+	NTSTATUS ret = STATUS_SUCCESS;
 
-	RETURN(0);
+	if (NumberOfCachePages > FSCACHE_MAXIMUM_NUMBER_OF_CACHE_PAGES)
+		ret = STATUS_INVALID_PARAMETER;
+	else
+	{
+		// TODO : Actually allocate file system cache pages, for example do something like this :
+		// if (NumberOfCachePages < g_FscNumberOfCachePages) FscShrinkCacheSize(NumberOfCachePages)
+		// if (NumberOfCachePages > g_FscNumberOfCachePages) FscGrowCacheSize(NumberOfCachePages), possibly return STATUS_INSUFFICIENT_RESOURCES
+		g_FscNumberOfCachePages = NumberOfCachePages;
+	}
+
+	RETURN(ret);
 }
 

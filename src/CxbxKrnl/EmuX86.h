@@ -34,6 +34,8 @@
 #ifndef EMUX86_H
 #define EMUX86_H
 
+#include <cstdint>
+
 #define EMUX86_EFLAG_CF 0
 #define EMUX86_EFLAG_PF 2
 #define EMUX86_EFLAG_AF 4
@@ -53,6 +55,13 @@
 #define EMUX86_EFLAG_VIP 20
 #define EMUX86_EFLAG_ID 21
 
+void EmuX86_Init();
 bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e);
+uint32_t EmuX86_IORead32(uint32_t addr);
+uint16_t EmuX86_IORead16(uint32_t addr);
+uint8_t EmuX86_IORead8(uint32_t addr);
+void EmuX86_IOWrite32(uint32_t addr, uint32_t value);
+void EmuX86_IOWrite16(uint32_t addr, uint16_t value);
+void EmuX86_IOWrite8(uint32_t addr, uint8_t value);
 
 #endif

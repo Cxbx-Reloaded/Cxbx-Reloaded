@@ -115,6 +115,7 @@ typedef CONST WCHAR        *LPCWSTR, *PCWSTR;
 // * NTSTATUS
 // ******************************************************************
 typedef long                            NTSTATUS;
+typedef __int64							LONGLONG;
 typedef unsigned __int64                ULONGLONG;
 
 #define NT_SUCCESS(Status)              ((NTSTATUS) (Status) >= 0)
@@ -132,8 +133,11 @@ typedef unsigned __int64                ULONGLONG;
 #ifndef CDECL
 #define CDECL               __cdecl
 #endif
+#define FASTCALL            __fastcall
 #define INLINE              __inline
 #define DECLSPEC_NORETURN   __declspec(noreturn)
+
+#define VOLATILE            volatile
 
 // ******************************************************************
 // * documentation purposes only
@@ -150,6 +154,50 @@ typedef unsigned __int64                ULONGLONG;
 typedef CCHAR KPROCESSOR_MODE;
 
 // ******************************************************************
+// * KWAIT_REASON
+// ******************************************************************
+typedef enum _KWAIT_REASON {
+	Executive,
+	FreePage,
+	PageIn,
+	PoolAllocation,
+	DelayExecution,
+	Suspended,
+	UserRequest,
+	WrExecutive,
+	WrFreePage,
+	WrPageIn,
+	WrPoolAllocation,
+	WrDelayExecution,
+	WrSuspended,
+	WrUserRequest,
+	WrEventPair,
+	WrQueue,
+	WrLpcReceive,
+	WrLpcReply,
+	WrVirtualMemory,
+	WrPageOut,
+	WrRendezvous,
+	Spare2,
+	Spare3,
+	Spare4,
+	Spare5,
+	WrCalloutStack,
+	WrKernel,
+	WrResource,
+	WrPushLock,
+	WrMutex,
+	WrQuantumEnd,
+	WrDispatchInt,
+	WrPreempted,
+	WrYieldExecution,
+	WrFastMutex,
+	WrGuardedMutex,
+	WrRundown,
+	MaximumWaitReason
+} KWAIT_REASON;
+
+// ******************************************************************
 // * MODE
 // ******************************************************************
 typedef enum _MODE
@@ -163,10 +211,17 @@ MODE;
 // ******************************************************************
 // * LARGE_INTEGER
 // ******************************************************************
-typedef struct _LARGE_INTEGER
+typedef union _LARGE_INTEGER
 {
-    DWORD   LowPart;
-    LONG    HighPart;
+	struct {
+		DWORD LowPart;
+		LONG  HighPart;
+	};
+	struct {
+		DWORD LowPart;
+		LONG  HighPart;
+	} u;
+	LONGLONG QuadPart;
 }
 LARGE_INTEGER, *PLARGE_INTEGER;
 
@@ -373,6 +428,20 @@ typedef enum _MEMORY_INFORMATION_CLASS
 MEMORY_INFORMATION_CLASS;
 
 // ******************************************************************
+// * MUTANT_INFORMATION_CLASS
+// ******************************************************************
+typedef enum _MUTANT_INFORMATION_CLASS {
+	MutantBasicInformation
+} MUTANT_INFORMATION_CLASS, *PMUTANT_INFORMATION_CLASS;
+
+// ******************************************************************
+// * SEMAPHORE_INFORMATION_CLASS
+// ******************************************************************
+typedef enum _SEMAPHORE_INFORMATION_CLASS {
+	SemaphoreBasicInformation
+} SEMAPHORE_INFORMATION_CLASS, *PSEMAPHORE_INFORMATION_CLASS;
+
+// ******************************************************************
 // * EVENT_TYPE
 // ******************************************************************
 typedef enum _EVENT_TYPE
@@ -381,6 +450,52 @@ typedef enum _EVENT_TYPE
     SynchronizationEvent
 }
 EVENT_TYPE;
+
+// ******************************************************************
+// * EVENT_INFORMATION_CLASS
+// ******************************************************************
+typedef enum _EVENT_INFORMATION_CLASS {
+	EventBasicInformation
+} EVENT_INFORMATION_CLASS, *PEVENT_INFORMATION_CLASS;
+
+// ******************************************************************
+// * TIMER_TYPE
+// ******************************************************************
+typedef enum _TIMER_TYPE
+{
+	NotificationTimer,
+	SynchronizationTimer
+}
+TIMER_TYPE;
+
+// ******************************************************************
+// * TIMER_INFORMATION_CLASS
+// ******************************************************************
+typedef enum _TIMER_INFORMATION_CLASS
+{
+	TimerBasicInformation
+}
+TIMER_INFORMATION_CLASS, *PTIMER_INFORMATION_CLASS;
+
+// ******************************************************************
+// * TIMER_BASIC_INFORMATION
+// ******************************************************************
+typedef struct _TIMER_BASIC_INFORMATION
+{
+	LARGE_INTEGER TimeRemaining;
+	BOOLEAN SignalState;
+}
+TIMER_BASIC_INFORMATION, *PTIMER_BASIC_INFORMATION;
+
+// ******************************************************************
+// * PTIMER_APC_ROUTINE
+// ******************************************************************
+typedef VOID(NTAPI * PTIMER_APC_ROUTINE)
+(
+	IN PVOID TimerContext,
+	IN ULONG TimerLowValue,
+	IN LONG TimerHighValue
+);
 
 // ******************************************************************
 // * OBJECT_WAIT_TYPE
@@ -420,47 +535,47 @@ FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
 // ******************************************************************
 typedef enum _FILE_INFORMATION_CLASS
 {
-    FileDirectoryInformation=1,
-    FileFullDirectoryInformation,
-    FileBothDirectoryInformation,
-    FileBasicInformation,
-    FileStandardInformation,
-    FileInternalInformation,
-    FileEaInformation,
-    FileAccessInformation,
-    FileNameInformation,
-    FileRenameInformation,
-    FileLinkInformation,
-    FileNamesInformation,
-    FileDispositionInformation,
-    FilePositionInformation,
-    FileFullEaInformation,
-    FileModeInformation,
-    FileAlignmentInformation,
-    FileAllInformation,
-    FileAllocationInformation,
-    FileEndOfFileInformation,
-    FileAlternateNameInformation,
-    FileStreamInformation,
-    FilePipeInformation,
-    FilePipeLocalInformation,
-    FilePipeRemoteInformation,
-    FileMailslotQueryInformation,
-    FileMailslotSetInformation,
-    FileCompressionInformation,
-    FileCopyOnWriteInformation,
-    FileCompletionInformation,
-    FileMoveClusterInformation,
-    FileQuotaInformation,
-    FileReparsePointInformation,
-    FileNetworkOpenInformation,
-    FileObjectIdInformation,
-    FileTrackingInformation,
-    FileOleDirectoryInformation,
-    FileContentIndexInformation,
-    FileInheritContentIndexInformation,
-    FileOleInformation,
-    FileMaximumInformation
+	FileDirectoryInformation=1,
+	FileFullDirectoryInformation,
+	FileBothDirectoryInformation,
+	FileBasicInformation,
+	FileStandardInformation,
+	FileInternalInformation,
+	FileEaInformation,
+	FileAccessInformation,
+	FileNameInformation,
+	FileRenameInformation,
+	FileLinkInformation,
+	FileNamesInformation,
+	FileDispositionInformation,
+	FilePositionInformation,
+	FileFullEaInformation,
+	FileModeInformation,
+	FileAlignmentInformation,
+	FileAllInformation,
+	FileAllocationInformation,
+	FileEndOfFileInformation,
+	FileAlternateNameInformation,
+	FileStreamInformation,
+	FilePipeInformation,
+	FilePipeLocalInformation,
+	FilePipeRemoteInformation,
+	FileMailslotQueryInformation,
+	FileMailslotSetInformation,
+	FileCompressionInformation,
+	FileCopyOnWriteInformation,
+	FileCompletionInformation,
+	FileMoveClusterInformation,
+	FileQuotaInformation,
+	FileReparsePointInformation,
+	FileNetworkOpenInformation,
+	FileObjectIdInformation,
+	FileTrackingInformation,
+	FileOleDirectoryInformation,
+	FileContentIndexInformation,
+	FileInheritContentIndexInformation,
+	FileOleInformation,
+	FileMaximumInformation
 }
 FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
 
@@ -486,34 +601,142 @@ FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
 // ******************************************************************
 typedef struct _FILE_DIRECTORY_INFORMATION
 {
-    ULONG           NextEntryOffset;
-    ULONG           FileIndex;
-    LARGE_INTEGER   CreationTime;
-    LARGE_INTEGER   LastAccessTime;
-    LARGE_INTEGER   LastWriteTime;
-    LARGE_INTEGER   ChangeTime;
-    LARGE_INTEGER   EndOfFile;
-    LARGE_INTEGER   AllocationSize;
-    ULONG           FileAttributes;
-    ULONG           FileNameLength;
-    WCHAR           FileName[1];        // Offset: 0x40
+	ULONG           NextEntryOffset;
+	ULONG           FileIndex;
+	LARGE_INTEGER   CreationTime;
+	LARGE_INTEGER   LastAccessTime;
+	LARGE_INTEGER   LastWriteTime;
+	LARGE_INTEGER   ChangeTime;
+	LARGE_INTEGER   EndOfFile;
+	LARGE_INTEGER   AllocationSize;
+	ULONG           FileAttributes;
+	ULONG           FileNameLength;
+	WCHAR           FileName[1];        // Offset: 0x40
 }
 FILE_DIRECTORY_INFORMATION;
 
 // ******************************************************************
+// * FILE_RENAME_INFORMATION
+// ******************************************************************
+typedef struct _FILE_RENAME_INFORMATION
+{
+	BOOLEAN         ReplaceIfExists;
+	HANDLE          RootDirectory;
+	ULONG           FileNameLength;
+	WCHAR           FileName[1];
+}
+FILE_RENAME_INFORMATION, *PFILE_RENAME_INFORMATION;
+
+// ******************************************************************
+// * FILE_LINK_INFORMATION
+// ******************************************************************
+typedef struct _FILE_LINK_INFORMATION {
+	BOOLEAN         ReplaceIfExists;
+	HANDLE          RootDirectory;
+	ULONG           FileNameLength;
+	WCHAR           FileName[1];
+} FILE_LINK_INFORMATION, *PFILE_LINK_INFORMATION;
+
+// ******************************************************************
 // * FILE_NETWORK_OPEN_INFORMATION
 // ******************************************************************
-typedef struct _FILE_NETWORK_OPEN_INFORMATION
-{
-    LARGE_INTEGER   CreationTime;
-    LARGE_INTEGER   LastAccessTime;
-    LARGE_INTEGER   LastWriteTime;
-    LARGE_INTEGER   ChangeTime;
-    LARGE_INTEGER   AllocationSize;
-    LARGE_INTEGER   EndOfFile;
-    ULONG           FileAttributes;
-}
-FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;
+typedef struct _FILE_NETWORK_OPEN_INFORMATION {
+	LARGE_INTEGER   CreationTime;
+	LARGE_INTEGER   LastAccessTime;
+	LARGE_INTEGER   LastWriteTime;
+	LARGE_INTEGER   ChangeTime;
+	LARGE_INTEGER   AllocationSize;
+	LARGE_INTEGER   EndOfFile;
+	ULONG           FileAttributes;
+	ULONG           Reserved;
+} FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;
+
+// ******************************************************************
+// * FILE_BASIC_INFORMATION
+// ******************************************************************
+typedef struct _FILE_BASIC_INFORMATION {
+	LARGE_INTEGER   CreationTime;
+	LARGE_INTEGER   LastAccessTime;
+	LARGE_INTEGER   LastWriteTime;
+	LARGE_INTEGER   ChangeTime;
+	ULONG           FileAttributes;
+} FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
+
+// ******************************************************************
+// * FILE_STANDARD_INFORMATION
+// ******************************************************************
+typedef struct _FILE_STANDARD_INFORMATION {
+	LARGE_INTEGER   AllocationSize;
+	LARGE_INTEGER   EndOfFile;
+	ULONG           NumberOfLinks;
+	BOOLEAN         DeletePending;
+	BOOLEAN         Directory;
+} FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;
+
+// ******************************************************************
+// * FILE_INTERNAL_INFORMATION
+// ******************************************************************
+typedef struct _FILE_INTERNAL_INFORMATION {
+	LARGE_INTEGER   IndexNumber;
+} FILE_INTERNAL_INFORMATION, *PFILE_INTERNAL_INFORMATION;
+
+// ******************************************************************
+// * FILE_EA_INFORMATION
+// ******************************************************************
+typedef struct _FILE_EA_INFORMATION {
+	ULONG           EaSize;
+} FILE_EA_INFORMATION, *PFILE_EA_INFORMATION;
+
+// ******************************************************************
+// * FILE_ACCESS_INFORMATION
+// ******************************************************************
+typedef struct _FILE_ACCESS_INFORMATION {
+	ACCESS_MASK     AccessFlags;
+} FILE_ACCESS_INFORMATION, *PFILE_ACCESS_INFORMATION;
+
+// ******************************************************************
+// * FILE_POSITION_INFORMATION
+// ******************************************************************
+typedef struct _FILE_POSITION_INFORMATION {
+	LARGE_INTEGER   CurrentByteOffset;
+} FILE_POSITION_INFORMATION, *PFILE_POSITION_INFORMATION;
+
+// ******************************************************************
+// * FILE_MODE_INFORMATION
+// ******************************************************************
+typedef struct _FILE_MODE_INFORMATION {
+	ULONG           Mode;
+} FILE_MODE_INFORMATION, *PFILE_MODE_INFORMATION;
+
+// ******************************************************************
+// * FILE_ALIGNMENT_INFORMATION
+// ******************************************************************
+typedef struct _FILE_ALIGNMENT_INFORMATION {
+	ULONG           AlignmentRequirement;
+} FILE_ALIGNMENT_INFORMATION, *PFILE_ALIGNMENT_INFORMATION;
+
+// ******************************************************************
+// * FILE_NAME_INFORMATION
+// ******************************************************************
+typedef struct _FILE_NAME_INFORMATION {
+	ULONG           FileNameLength;
+	WCHAR           FileName[1];
+} FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;
+
+// ******************************************************************
+// * FILE_ALL_INFORMATION
+// ******************************************************************
+typedef struct _FILE_ALL_INFORMATION {
+	FILE_BASIC_INFORMATION     BasicInformation;
+	FILE_STANDARD_INFORMATION  StandardInformation;
+	FILE_INTERNAL_INFORMATION  InternalInformation;
+	FILE_EA_INFORMATION        EaInformation;
+	FILE_ACCESS_INFORMATION    AccessInformation;
+	FILE_POSITION_INFORMATION  PositionInformation;
+	FILE_MODE_INFORMATION      ModeInformation;
+	FILE_ALIGNMENT_INFORMATION AlignmentInformation;
+	FILE_NAME_INFORMATION      NameInformation;
+} FILE_ALL_INFORMATION, *PFILE_ALL_INFORMATION;
 
 // ******************************************************************
 // * TIME_FIELDS
@@ -548,26 +771,38 @@ typedef struct _KUSER_SHARED_DATA
 	/* Current low 32-bit of tick count and tick count multiplier.
 	* N.B. The tick count is updated each time the clock ticks.
 	*/
-	volatile ULONG TickCountLow;
+	ULONG VOLATILE TickCountLow;
 	UINT32 TickCountMultiplier;
 
 	/* Current 64-bit interrupt time in 100ns units. */
-	volatile KSYSTEM_TIME InterruptTime;
+	KSYSTEM_TIME VOLATILE InterruptTime;
 
 	/* Current 64-bit system time in 100ns units. */
-	volatile KSYSTEM_TIME SystemTime;
+	KSYSTEM_TIME VOLATILE SystemTime;
 
 	/* Current 64-bit time zone bias. */
-	volatile KSYSTEM_TIME TimeZoneBias;
+	KSYSTEM_TIME VOLATILE TimeZoneBias;
 }
 KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 // This is only the top of the actual definition. For the complete version,
 // see http://processhacker.sourceforge.net/doc/ntexapi_8h_source.html
 
 // ******************************************************************
+// * GENERIC_MAPPING
+// ******************************************************************
+typedef struct _GENERIC_MAPPING
+{
+	ACCESS_MASK GenericRead;
+	ACCESS_MASK GenericWrite;
+	ACCESS_MASK GenericExecute;
+	ACCESS_MASK GenericAll;
+}
+GENERIC_MAPPING, *PGENERIC_MAPPING;
+
+// ******************************************************************
 // * KeDelayExecutionThread
 // ******************************************************************
-typedef NTSTATUS (NTAPI *KeDelayExecutionThread)
+typedef NTSTATUS (NTAPI *FPTR_KeDelayExecutionThread)
 (
     IN KPROCESSOR_MODE  WaitMode,
     IN BOOLEAN          Alertable,
@@ -637,9 +872,21 @@ typedef SIZE_T (NTAPI *FPTR_RtlSizeHeap)
 );
 
 // ******************************************************************
+// * RtlMapGenericMask
+// ******************************************************************
+typedef VOID (NTAPI *FPTR_RtlMapGenericMask)
+(
+	IN OUT PACCESS_MASK     AccessMask,
+	IN     PGENERIC_MAPPING GenericMapping
+);
+
+// ******************************************************************
 // * RtlNtStatusToDosError
 // ******************************************************************
-typedef ULONG (NTAPI *FPTR_RtlNtStatusToDosError)(NTSTATUS Status);
+typedef ULONG (NTAPI *FPTR_RtlNtStatusToDosError)
+(
+    IN NTSTATUS Status
+);
 
 // ******************************************************************
 // * RtlTimeToTimeFields
@@ -665,6 +912,113 @@ typedef VOID (NTAPI *FPTR_RtlTimeToTimeFields)
 typedef BOOL (NTAPI *FPTR_RtlTryEnterCriticalSection)
 (
     IN PRTL_CRITICAL_SECTION CriticalSection
+);
+
+// ******************************************************************
+// * RtlUlongByteSwap
+// ******************************************************************
+typedef ULONG (FASTCALL *FPTR_RtlUlongByteSwap)
+(
+	IN ULONG Source
+);
+
+// ******************************************************************
+// * RtlUnicodeStringToInteger
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeStringToInteger)
+(
+	IN  PCUNICODE_STRING String,
+	IN  ULONG            Base OPTIONAL,
+	OUT PULONG           Value
+);
+
+// ******************************************************************
+// * RtlUnicodeToMultiByteN
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeToMultiByteN)
+(
+	OUT PCHAR  MultiByteString,
+	IN  ULONG  MaxBytesInMultiByteString,
+	OUT PULONG BytesInMultiByteString OPTIONAL,
+	IN  PCWCH  UnicodeString,
+	IN  ULONG  BytesInUnicodeString
+);
+
+// ******************************************************************
+// * RtlUnicodeToMultiByteSize
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeToMultiByteSize)
+(
+	OUT PULONG BytesInMultiByteString,
+	IN  PWCH   UnicodeString,
+	IN  ULONG  BytesInUnicodeString
+);
+
+// ******************************************************************
+// * RtlUpcaseUnicodeChar
+// ******************************************************************
+typedef WCHAR (NTAPI *FPTR_RtlUpcaseUnicodeChar)
+(
+	IN WCHAR    SourceCharacter
+);
+
+// ******************************************************************
+// * RtlUpcaseUnicodeString
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlUpcaseUnicodeString)
+(
+	OUT PUNICODE_STRING DestinationString,
+	IN PUNICODE_STRING SourceString,
+	IN BOOLEAN AllocateDestinationString
+);
+
+// ******************************************************************
+// * RtlUpcaseUnicodeToMultiByteN
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlUpcaseUnicodeToMultiByteN)
+(
+	OUT PCHAR  MultiByteString,
+	IN  ULONG  MaxBytesInMultiByteString,
+	OUT PULONG BytesInMultiByteString OPTIONAL,
+	IN  PCWCH  UnicodeString,
+	IN  ULONG  BytesInUnicodeString
+);
+
+// ******************************************************************
+// * RtlUpperString
+// ******************************************************************
+typedef VOID (NTAPI *FPTR_RtlUpperString)
+(
+	OUT PSTRING DestinationString,
+	IN const STRING  *SourceString
+);
+
+// ******************************************************************
+// * RtlUshortByteSwap
+// ******************************************************************
+typedef USHORT (FASTCALL *FPTR_RtlUshortByteSwap)
+(
+	IN USHORT Source
+);
+
+// ******************************************************************
+// * RtlCompareMemory
+// ******************************************************************
+typedef BOOL (NTAPI *FPTR_RtlCompareMemory)
+(
+	IN const VOID   *Source1,
+	IN const VOID   *Source2,
+	IN       SIZE_T Length
+);
+
+// ******************************************************************
+// * RtlCompareMemoryUlong
+// ******************************************************************
+typedef BOOL(NTAPI *FPTR_RtlCompareMemoryUlong)
+(
+	IN 	PVOID Source,
+	IN SIZE_T Length,
+	IN ULONG Pattern
 );
 
 // ******************************************************************
@@ -733,6 +1087,71 @@ typedef NTSTATUS(NTAPI *FPTR_RtlCharToInteger)
 );
 
 // ******************************************************************
+// * RtlCompareString
+// ******************************************************************
+typedef LONG (NTAPI *FPTR_RtlCompareString)
+(
+	IN	const STRING  *String1,
+	IN	const STRING  *String2,
+	IN	      BOOLEAN CaseInSensitive
+);
+
+// ******************************************************************
+// * RtlCompareUnicodeString
+// ******************************************************************
+typedef LONG (NTAPI *FPTR_RtlCompareUnicodeString)
+(
+	IN	PCUNICODE_STRING  String1,
+	IN	PCUNICODE_STRING  String2,
+	IN	BOOLEAN CaseInSensitive
+);
+
+// ******************************************************************
+// * RtlCopyString
+// ******************************************************************
+typedef LONG (NTAPI *FPTR_RtlCopyString)
+(
+	OUT PSTRING DestinationString,
+	IN const STRING  *SourceString OPTIONAL
+);
+
+// ******************************************************************
+// * RtlCopyUnicodeString
+// ******************************************************************
+typedef LONG (NTAPI *FPTR_RtlCopyUnicodeString)
+(
+	OUT PUNICODE_STRING DestinationString,
+	IN PUNICODE_STRING SourceString OPTIONAL
+);
+
+// ******************************************************************
+// * RtlCreateUnicodeString
+// ******************************************************************
+typedef BOOLEAN (NTAPI *FPTR_RtlCreateUnicodeString)
+(
+	OUT PUNICODE_STRING DestinationString,
+	IN PCWSTR           SourceString
+);
+
+// ******************************************************************
+// * RtlDowncaseUnicodeChar
+// ******************************************************************
+typedef WCHAR (NTAPI *FPTR_RtlDowncaseUnicodeChar)
+(
+	IN WCHAR    SourceCharacter
+);
+
+// ******************************************************************
+// * RtlDowncaseUnicodeString
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlDowncaseUnicodeString)
+(
+	OUT PUNICODE_STRING DestinationString,
+	IN PUNICODE_STRING SourceString,
+	IN BOOLEAN AllocateDestinationString
+);
+
+// ******************************************************************
 // * RtlUnicodeStringToAnsiString
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_RtlUnicodeStringToAnsiString)
@@ -751,6 +1170,14 @@ typedef VOID (NTAPI *FPTR_RtlFreeAnsiString)
 );
 
 // ******************************************************************
+// * RtlFreeUnicodeString
+// ******************************************************************
+typedef VOID(NTAPI *FPTR_RtlFreeUnicodeString)
+(
+	IN OUT PUNICODE_STRING   UnicodeString
+);
+
+// ******************************************************************
 // * RtlEqualString
 // ******************************************************************
 typedef BOOLEAN (NTAPI *FPTR_RtlEqualString)
@@ -758,6 +1185,108 @@ typedef BOOLEAN (NTAPI *FPTR_RtlEqualString)
 	IN PSTRING			String1,
 	IN PSTRING			String2,
 	IN BOOLEAN			CaseSensitive
+);
+
+// ******************************************************************
+// * RtlEqualUnicodeString
+// ******************************************************************
+typedef BOOLEAN (NTAPI *FPTR_RtlEqualUnicodeString)
+(
+	IN PUNICODE_STRING String1,
+	IN PUNICODE_STRING String2,
+	IN BOOLEAN CaseSensitive
+);
+
+// ******************************************************************
+// * RtlExtendedIntegerMultiply
+// ******************************************************************
+typedef LARGE_INTEGER (NTAPI *FPTR_RtlExtendedIntegerMultiply)
+(
+	IN LARGE_INTEGER Multiplicand,
+	IN LONG          Multiplier
+	);
+
+// ******************************************************************
+// * RtlExtendedLargeIntegerDivide
+// ******************************************************************
+typedef LARGE_INTEGER (NTAPI *FPTR_RtlExtendedLargeIntegerDivide)
+(
+	IN LARGE_INTEGER Dividend,
+	IN ULONG         Divisor,
+	OUT PULONG		 Remainder
+);
+
+// ******************************************************************
+// * RtlExtendedMagicDivide
+// ******************************************************************
+typedef LARGE_INTEGER (NTAPI *FPTR_RtlExtendedMagicDivide)
+(
+	IN LARGE_INTEGER Dividend,
+	IN LARGE_INTEGER MagicDivisor,
+	IN CCHAR		 ShiftCount
+);
+
+// ******************************************************************
+// * RtlFillMemory
+// ******************************************************************
+typedef VOID (NTAPI *FPTR_RtlFillMemory)
+(
+	OUT VOID UNALIGNED *Destination,
+	IN  SIZE_T         Length,
+	IN	UCHAR          Fill
+);
+
+// ******************************************************************
+// * RtlFillMemoryUlong
+// ******************************************************************
+typedef VOID (NTAPI *FPTR_RtlFillMemoryUlong)
+(
+	OUT PVOID  Destination,
+	IN  SIZE_T Length,
+	IN	ULONG  Pattern
+); 
+
+// ******************************************************************
+// * RtlIntegerToChar
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlIntegerToChar)
+(
+	IN ULONG Value,
+	IN ULONG Base,
+	IN ULONG Length,
+	IN PCHAR Str
+);
+
+// ******************************************************************
+// * RtlIntegerToUnicodeString
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlIntegerToUnicodeString)
+(
+	IN	ULONG           Value,
+	IN	ULONG           Base OPTIONAL,
+	IN OUT	PUNICODE_STRING String
+);
+
+// ******************************************************************
+// * RtlMultiByteToUnicodeN
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlMultiByteToUnicodeN)
+(
+	OUT PWCH   UnicodeString,
+	IN  ULONG  MaxBytesInUnicodeString,
+	OUT PULONG BytesInUnicodeString OPTIONAL,
+	IN  const CHAR   *MultiByteString,
+	IN  ULONG  BytesInMultiByteString
+);
+
+// ******************************************************************
+// * RtlMultiByteToUnicodeSize
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_RtlMultiByteToUnicodeSize)
+(
+	OUT       PULONG BytesInUnicodeString,
+	IN  const CHAR   *MultiByteString,
+	IN        ULONG  BytesInMultiByteString
 );
 
 // ******************************************************************
@@ -901,6 +1430,27 @@ typedef NTSTATUS (NTAPI *FPTR_NtCreateEvent)
 );
 
 // ******************************************************************
+// * NtQueryEvent
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtQueryEvent)
+(
+	IN HANDLE EventHandle,
+	IN EVENT_INFORMATION_CLASS EventInformationClass,
+	OUT PVOID EventInformation,
+	IN ULONG EventInformationLength,
+	OUT PULONG ReturnLength OPTIONAL
+);
+
+// ******************************************************************
+// * NtPulseEvent
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtPulseEvent)
+(
+	IN HANDLE	EventHandle,
+	OUT PLONG	PreviousState OPTIONAL
+);
+
+// ******************************************************************
 // * NtCreateMutant
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtCreateMutant)
@@ -909,6 +1459,18 @@ typedef NTSTATUS (NTAPI *FPTR_NtCreateMutant)
     IN  ACCESS_MASK         DesiredAccess,
     IN  POBJECT_ATTRIBUTES  ObjectAttributes OPTIONAL,
     IN  BOOLEAN             InitialOwner
+);
+
+// ******************************************************************
+// * NtQueryMutant
+// ******************************************************************
+typedef NTSTATUS (NTAPI *FPTR_NtQueryMutant)
+(
+	IN HANDLE MutantHandle,
+	IN MUTANT_INFORMATION_CLASS MutantInformationClass,
+	OUT PVOID MutantInformation,
+	IN ULONG MutantInformationLength,
+	OUT PULONG ReturnLength OPTIONAL
 );
 
 // ******************************************************************
@@ -933,6 +1495,18 @@ typedef NTSTATUS (NTAPI *FPTR_NtCreateSemaphore)
 );
 
 // ******************************************************************
+// * NtQuerySemaphore
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtQuerySemaphore)
+(
+	IN HANDLE SemaphoreHandle,
+	IN SEMAPHORE_INFORMATION_CLASS SemaphoreInformationClass,
+	OUT PVOID SemaphoreInformation,
+	IN ULONG SemaphoreInformationLength,
+	OUT PULONG ReturnLength OPTIONAL
+);
+
+// ******************************************************************
 // * NtReleaseSemaphore
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtReleaseSemaphore)
@@ -940,6 +1514,52 @@ typedef NTSTATUS (NTAPI *FPTR_NtReleaseSemaphore)
     IN  HANDLE              SemaphoreHandle,
     IN  ULONG               ReleaseCount,
     OUT PULONG              PreviousCount OPTIONAL
+);
+
+// ******************************************************************
+// * NtCreateTimer
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtCreateTimer)
+(
+	OUT PHANDLE             TimerHandle,
+	IN  ACCESS_MASK         DesiredAccess,
+	IN  POBJECT_ATTRIBUTES  ObjectAttributes OPTIONAL,
+	IN  TIMER_TYPE          TimerType
+);
+
+// ******************************************************************
+// * SetTimer
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtSetTimer)
+(
+	IN HANDLE 	TimerHandle,
+	IN PLARGE_INTEGER 	DueTime,
+	IN PTIMER_APC_ROUTINE TimerApcRoutine 	OPTIONAL,
+	IN PVOID TimerContext 	OPTIONAL,
+	IN BOOLEAN 	WakeTimer,
+	IN LONG Period 	OPTIONAL,
+	OUT PBOOLEAN PreviousState 	OPTIONAL
+);
+
+// ******************************************************************
+// * QueryTimer
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtQueryTimer)
+(
+	IN HANDLE 	TimerHandle,
+	IN TIMER_INFORMATION_CLASS 	TimerInformationClass,
+	OUT PVOID 	TimerInformation,
+	IN ULONG 	TimerInformationLength,
+	OUT PULONG ReturnLength 	OPTIONAL
+);
+
+// ******************************************************************
+// * NtCancelTimer
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtCancelTimer)
+(
+	IN HANDLE TimerHandle,
+	OUT PBOOLEAN CurrentState OPTIONAL
 );
 
 // ******************************************************************
@@ -958,6 +1578,14 @@ typedef NTSTATUS (NTAPI *FPTR_NtCreateFile)
     IN  ULONG               CreateOptions,
     IN  PVOID               EaBuffer OPTIONAL,
     IN  ULONG               EaLength
+);
+
+// ******************************************************************
+// * NtDeleteFile
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtDeleteFile)
+(
+	IN  POBJECT_ATTRIBUTES  ObjectAttributes
 );
 
 // ******************************************************************
@@ -1100,7 +1728,7 @@ typedef NTSTATUS (NTAPI *FPTR_NtQueryDirectoryFile)
 typedef NTSTATUS (NTAPI *FPTR_NtQueryFullAttributesFile)
 (
     IN  POBJECT_ATTRIBUTES          ObjectAttributes,
-    OUT PVOID                       Attributes
+    OUT PFILE_NETWORK_OPEN_INFORMATION  Attributes
 );
 
 // ******************************************************************
@@ -1110,7 +1738,7 @@ typedef NTSTATUS (NTAPI *FPTR_NtQueryInformationFile)
 (
     IN  HANDLE                      FileHandle,
     OUT PIO_STATUS_BLOCK            IoStatusBlock,
-    OUT PFILE_FS_SIZE_INFORMATION   FileInformation,
+    OUT PVOID                       FileInformation,
     IN  ULONG                       Length,
     IN  FILE_INFORMATION_CLASS      FileInfo
 );
@@ -1169,12 +1797,101 @@ typedef PVOID (NTAPI *FPTR_RtlDestroyHeap)
 );
 
 // ******************************************************************
+// * NtOpenSymbolicLinkObject
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtOpenSymbolicLinkObject)
+(
+	OUT PHANDLE				pHandle,
+	IN  ACCESS_MASK			DesiredAccess,
+	IN  POBJECT_ATTRIBUTES	ObjectAttributes
+);
+
+// ******************************************************************
+// * NtDeviceIoControlFile
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtDeviceIoControlFile)
+(
+	IN  HANDLE				FileHandle,
+	IN  HANDLE				Event OPTIONAL,
+	IN  PIO_APC_ROUTINE		ApcRoutine OPTIONAL,
+	IN  PVOID				ApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK	IoStatusBlock,
+	IN  ULONG				IoControlCode,
+	IN  PVOID				InputBuffer OPTIONAL,
+	IN  ULONG				InputBufferLength,
+	OUT PVOID				OutputBuffer OPTIONAL,
+	IN  ULONG				OutputBufferLength
+);
+
+// ******************************************************************
+// * NtFsControlFile
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtFsControlFile)
+(
+	IN  HANDLE				FileHandle,
+	IN  HANDLE				Event OPTIONAL,
+	IN  PIO_APC_ROUTINE		ApcRoutine OPTIONAL,
+	IN  PVOID				ApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK	IoStatusBlock,
+	IN  ULONG				FsControlCode,
+	IN  PVOID				InputBuffer OPTIONAL,
+	IN  ULONG				InputBufferLength,
+	OUT PVOID				OutputBuffer OPTIONAL,
+	IN  ULONG				OutputBufferLength
+);
+
+// ******************************************************************
+// * NtCreateTimer
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtCreateTimer)
+(
+	OUT PHANDLE				TimerHandle,
+	IN  ACCESS_MASK			DesiredAccess,
+	IN  POBJECT_ATTRIBUTES	ObjectAttributes OPTIONAL,
+	IN  TIMER_TYPE			TimerType
+);
+
+// ******************************************************************
+// * NtSetTimer
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtSetTimer)
+(
+	IN  HANDLE				TimerHandle,
+	IN  PLARGE_INTEGER		DueTime,
+	IN  PTIMER_APC_ROUTINE	TimerApcRoutine OPTIONAL,
+	IN  PVOID				TimerContext OPTIONAL,
+	IN  BOOLEAN				ResumeTimer,
+	IN  LONG				Period OPTIONAL,
+	OUT PBOOLEAN			PreviousState OPTIONAL
+);
+
+// ******************************************************************
+// * NtCancelTimer
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtCancelTimer)
+(
+	IN  HANDLE				TimerHandle,
+	OUT PBOOLEAN			CurrentState OPTIONAL
+);
+
+// ******************************************************************
 // * Exported API
 // ******************************************************************
 #define EXTERN(API)  extern FPTR_##API API
 
 // Note : Keep EXTERN's sorted, to ease future sync's (and compares with IMPORT's):
+/*
+EXTERN(InterlockedCompareExchange);
+EXTERN(InterlockedDecrement);
+EXTERN(InterlockedExchange);
+EXTERN(InterlockedExchangeAdd);
+EXTERN(InterlockedFlushSList);
+EXTERN(InterlockedIncrement);
+EXTERN(InterlockedPopEntrySList);
+EXTERN(InterlockedPushEntrySList);
+*/
 EXTERN(NtAllocateVirtualMemory);
+EXTERN(NtCancelTimer);
 EXTERN(NtClearEvent);
 EXTERN(NtClose);
 EXTERN(NtCreateDirectoryObject);
@@ -1182,13 +1899,23 @@ EXTERN(NtCreateEvent);
 EXTERN(NtCreateFile);
 EXTERN(NtCreateMutant);
 EXTERN(NtCreateSemaphore);
+EXTERN(NtCreateTimer);
 EXTERN(NtDelayExecution);
+EXTERN(NtDeleteFile);
+EXTERN(NtDeviceIoControlFile);
 EXTERN(NtDuplicateObject);
 EXTERN(NtFlushBuffersFile);
 EXTERN(NtFreeVirtualMemory);
+EXTERN(NtFsControlFile);
+EXTERN(NtOpenSymbolicLinkObject);
+EXTERN(NtPulseEvent);
 EXTERN(NtQueryDirectoryFile);
+EXTERN(NtQueryEvent);
 EXTERN(NtQueryFullAttributesFile);
 EXTERN(NtQueryInformationFile);
+EXTERN(NtQueryMutant);
+EXTERN(NtQuerySemaphore);
+EXTERN(NtQueryTimer);
 EXTERN(NtQueryVirtualMemory);
 EXTERN(NtQueryVolumeInformationFile);
 EXTERN(NtQueueApcThread);
@@ -1199,6 +1926,7 @@ EXTERN(NtResumeThread);
 EXTERN(NtSetEvent);
 EXTERN(NtSetInformationFile);
 EXTERN(NtSetLdtEntries);
+EXTERN(NtSetTimer);
 EXTERN(NtSuspendThread);
 EXTERN(NtWaitForMultipleObjects);
 EXTERN(NtWaitForSingleObject);
@@ -1210,23 +1938,53 @@ EXTERN(RtlAppendStringToString);
 EXTERN(RtlAppendUnicodeStringToString);
 EXTERN(RtlAppendUnicodeToString);
 EXTERN(RtlCharToInteger);
+EXTERN(RtlCompareMemory);
+EXTERN(RtlCompareMemoryUlong);
+EXTERN(RtlCompareString);
+EXTERN(RtlCompareUnicodeString);
+EXTERN(RtlCopyString);
+EXTERN(RtlCopyUnicodeString);
 EXTERN(RtlCreateHeap);
+EXTERN(RtlCreateUnicodeString);
 EXTERN(RtlDestroyHeap);
+EXTERN(RtlDowncaseUnicodeChar);
+EXTERN(RtlDowncaseUnicodeString);
 EXTERN(RtlEnterCriticalSection);
 EXTERN(RtlEqualString);
+EXTERN(RtlEqualUnicodeString);
+EXTERN(RtlExtendedIntegerMultiply);
+EXTERN(RtlExtendedLargeIntegerDivide);
+EXTERN(RtlExtendedMagicDivide);
+EXTERN(RtlFillMemory);
+EXTERN(RtlFillMemoryUlong);
 EXTERN(RtlFreeAnsiString);
 EXTERN(RtlFreeHeap);
+EXTERN(RtlFreeUnicodeString);
+EXTERN(RtlIntegerToChar);
+EXTERN(RtlIntegerToUnicodeString);
 EXTERN(RtlInitAnsiString);
 EXTERN(RtlInitializeCriticalSection);
 EXTERN(RtlInitUnicodeString);
 EXTERN(RtlLeaveCriticalSection);
+EXTERN(RtlMapGenericMask);
+EXTERN(RtlMultiByteToUnicodeN);
+EXTERN(RtlMultiByteToUnicodeSize);
 EXTERN(RtlNtStatusToDosError);
 EXTERN(RtlReAllocateHeap);
 EXTERN(RtlSizeHeap);
 EXTERN(RtlTimeFieldsToTime);
 EXTERN(RtlTimeToTimeFields);
 EXTERN(RtlTryEnterCriticalSection);
+EXTERN(RtlUlongByteSwap);
 EXTERN(RtlUnicodeStringToAnsiString);
+EXTERN(RtlUnicodeStringToInteger);
+EXTERN(RtlUnicodeToMultiByteN);
+EXTERN(RtlUnicodeToMultiByteSize);
+EXTERN(RtlUpcaseUnicodeChar);
+EXTERN(RtlUpcaseUnicodeString);
+EXTERN(RtlUpcaseUnicodeToMultiByteN);
+EXTERN(RtlUpperString);
+EXTERN(RtlUshortByteSwap);
 
 #if defined(__cplusplus)
 }

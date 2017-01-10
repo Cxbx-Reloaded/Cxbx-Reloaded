@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -33,8 +35,6 @@
 // ******************************************************************
 
 #include "WndMain.h"
-
-#include "Cxbx/EmuExe.h"
 
 #include "CxbxKrnl/CxbxKrnl.h"
 #include "CxbxKrnl/Emu.h"
@@ -73,7 +73,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     {
         MainWindow->OpenXbe(__argv[1]);
 
-        MainWindow->StartEmulation(AUTO_CONVERT_WINDOWS_TEMP, MainWindow->GetHwnd());
+        MainWindow->StartEmulation(MainWindow->GetHwnd());
     }
 
     /*! wait for window to be closed, or failure */

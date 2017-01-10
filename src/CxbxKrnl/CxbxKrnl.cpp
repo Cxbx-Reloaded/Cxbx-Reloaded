@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -43,9 +45,11 @@ namespace xboxkrnl
 
 #include "CxbxKrnl.h"
 #include "Emu.h"
+#include "EmuX86.h"
 #include "EmuFile.h"
 #include "EmuFS.h"
 #include "EmuShared.h"
+#include "EmuNV2A.h" // For InitOpenGLContext
 #include "HLEIntercept.h"
 #include "Exe.h"
 
@@ -80,6 +84,8 @@ Xbe* CxbxKrnl_Xbe = NULL;
 
 DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
+
+HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlInit
 
 static uint32 funcAddr[]=
 {
@@ -362,8 +368,13 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	// for unicode conversions
 	setlocale(LC_ALL, "English");
 
+	g_CurrentProcessHandle = GetCurrentProcess();
+
+	CxbxInitPerformanceCounters();
+
 #ifdef _DEBUG
-	MessageBoxA(NULL, "Attach a Debugger", "DEBUG", 0);
+//	MessageBoxA(NULL, "Attach a Debugger", "DEBUG", 0);
+//  Debug child processes using https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool
 #endif
 
 	// debug console allocation (if configured)
@@ -371,12 +382,20 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	{
 		if (AllocConsole())
 		{
+			HANDLE StdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+
+			// Maximise the console scroll buffer height :
+			CONSOLE_SCREEN_BUFFER_INFO coninfo;
+			GetConsoleScreenBufferInfo(StdHandle, &coninfo);
+			coninfo.dwSize.Y = SHRT_MAX - 1; // = 32767-1 = 32766 = maximum value that works
+			SetConsoleScreenBufferSize(StdHandle, coninfo.dwSize);
+
 			freopen("CONOUT$", "wt", stdout);
 			freopen("CONIN$", "rt", stdin);
 
 			SetConsoleTitle("Cxbx-Reloaded : Kernel Debug Console");
 
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
+			SetConsoleTextAttribute(StdHandle, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
 
 			printf("EmuMain (0x%X): Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
 			printf("EmuMain (0x%X): Debug Console Allocated (DM_CONSOLE).\n", GetCurrentThreadId());
@@ -440,7 +459,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		} *PDUMMY_KERNEL;
 
 		PDUMMY_KERNEL DummyKernel = (PDUMMY_KERNEL)VirtualAlloc(
-			(PVOID)0x80010000, sizeof(DUMMY_KERNEL),
+			(PVOID)XBOX_KERNEL_BASE, sizeof(DUMMY_KERNEL),
 			MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE
 		);
 
@@ -456,74 +475,84 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		strncpy_s((PSTR)DummyKernel->SectionHeader.Name, 8, "DONGS", 8);
 	}
 
+	// Read which components need to be LLE'ed :
+	int CxbxLLE_Flags;
+	g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
+	bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
+	bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
+
 	// Initialize devices :
-	char szBuffer[260];
+	char szBuffer[MAX_PATH];
 	SHGetSpecialFolderPath(NULL, szBuffer, CSIDL_APPDATA, TRUE);
 	strcat(szBuffer, "\\Cxbx-Reloaded\\");
 
 	std::string basePath(szBuffer);
-	CxbxBasePath = basePath + "\\EmuDisk\\";
+	CxbxBasePath = basePath + "EmuDisk\\";
 
 	// Determine XBE Path
-	memset(szBuffer, 0, 260);
+	memset(szBuffer, 0, MAX_PATH);
 	g_EmuShared->GetXbePath(szBuffer);
 	std::string xbePath(szBuffer);
+
 	PathRemoveFileSpec(szBuffer);
 	std::string xbeDirectory(szBuffer);
 
 	CxbxBasePathHandle = CreateFile(CxbxBasePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
-	memset(szBuffer, 0, 260);
+	memset(szBuffer, 0, MAX_PATH);
 	sprintf(szBuffer, "%08X", ((Xbe::Certificate*)pXbeHeader->dwCertificateAddr)->dwTitleId);
 
 	std::string titleId(szBuffer);
 
 	// Games may assume they are running from CdRom :
-	CxbxRegisterDeviceNativePath(DeviceCdrom0, xbeDirectory);
-
+	CxbxDefaultXbeDriveIndex = CxbxRegisterDeviceHostPath(DeviceCdrom0, xbeDirectory);
 
 	// Partition 0 contains configuration data, and is accessed as a native file, instead as a folder :
-	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition0, CxbxBasePath + "Partition0", true); /*IsFile=*/
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition0, CxbxBasePath + "Partition0", /*IsFile=*/true);
 	// The first two partitions are for Data and Shell files, respectively :
-	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition1, CxbxBasePath + "Partition1");
-	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition2, CxbxBasePath + "Partition2");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition1, CxbxBasePath + "Partition1");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition2, CxbxBasePath + "Partition2");
 	// The following partitions are for caching purposes - for now we allocate up to 7 (as xbmp needs that many) :
-	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition3, CxbxBasePath + "Partition3");
-	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition4, CxbxBasePath + "Partition4");
-	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition5, CxbxBasePath + "Partition5");
-	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition6, CxbxBasePath + "Partition6");
-	CxbxRegisterDeviceNativePath(DeviceHarddisk0Partition7, CxbxBasePath + "Partition7");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition3, CxbxBasePath + "Partition3");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition4, CxbxBasePath + "Partition4");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition5, CxbxBasePath + "Partition5");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition6, CxbxBasePath + "Partition6");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition7, CxbxBasePath + "Partition7");
 
 
 	DbgPrintf("EmuMain : Creating default symbolic links.\n");
 
 	// Create default symbolic links :
 	{
+		// TODO: DriveD should always point to the Xbe Path
+		// This is the only symbolic link the Xbox Kernel sets, the rest are set by the application, usually via XAPI.
+		// If the Xbe is located outside of the emulated HDD, mounting it as DeviceCdrom0 is correct
+		// If the Xbe is located inside the emulated HDD, the full path should be used, eg: "\\Harddisk0\\partition2\\xboxdash.xbe"
+		CxbxCreateSymbolicLink(DriveD, DeviceCdrom0);
+
 		// Arrange that the Xbe path can reside outside the partitions, and put it to g_hCurDir :
-		CxbxCreateSymbolicLink(DriveC, xbeDirectory);
-		EmuNtSymbolicLinkObject* xbePathSymbolicLinkObject = FindNtSymbolicLinkObjectByVolumeLetter(CxbxDefaultXbeVolumeLetter);
+		EmuNtSymbolicLinkObject* xbePathSymbolicLinkObject = FindNtSymbolicLinkObjectByDriveLetter(CxbxDefaultXbeDriveLetter);
 		g_hCurDir = xbePathSymbolicLinkObject->RootDirectoryHandle;
 
 		// Determine Xbox path to XBE and place it in XeImageFileName
 		std::string fileName(xbePath);
-		xboxkrnl::XeImageFileName.Buffer = (PCHAR)malloc(MAX_PATH);
-		sprintf(xboxkrnl::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeVolumeLetter, fileName.c_str());
-		xboxkrnl::XeImageFileName.Length = (USHORT)strlen(xboxkrnl::XeImageFileName.Buffer);
+
+		// Strip out the path, leaving only the XBE file name
+		// NOTE: we assume that the XBE is always on the root of the D: drive
+		// This is a safe assumption as the Xbox kernel ALWAYS mounts D: as the Xbe Path
+		if (fileName.rfind('\\') >= 0)
+			fileName = fileName.substr(fileName.rfind('\\') + 1);
+
+		if (xboxkrnl::XeImageFileName.Buffer != NULL)
+			free(xboxkrnl::XeImageFileName.Buffer);
+
 		xboxkrnl::XeImageFileName.MaximumLength = MAX_PATH;
+		xboxkrnl::XeImageFileName.Buffer = (PCHAR)malloc(MAX_PATH);
+		sprintf(xboxkrnl::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeDriveLetter, fileName.c_str());
+		xboxkrnl::XeImageFileName.Length = (USHORT)strlen(xboxkrnl::XeImageFileName.Buffer);
 
 		DbgPrintf("EmuMain : XeImageFileName = %s\n", xboxkrnl::XeImageFileName.Buffer);
 
-		CxbxCreateSymbolicLink(DriveD, DeviceCdrom0); // CdRom goes to D:
-		CxbxCreateSymbolicLink(DriveE, DeviceHarddisk0Partition1); // Partition1 goes to E: (Data files, savegames, etc.)
-		CxbxCreateSymbolicLink(DriveF, DeviceHarddisk0Partition2); // Partition2 goes to F: (Shell files, dashboard, etc.)
-		CxbxCreateSymbolicLink(DriveT, DeviceHarddisk0Partition1 + "\\TDATA\\" + titleId + "\\"); // Partition1\Title data goes to T:
-		CxbxCreateSymbolicLink(DriveU, DeviceHarddisk0Partition1 + "\\UDATA\\" + titleId + "\\"); // Partition1\User data goes to U:
-		CxbxCreateSymbolicLink(DriveX, DeviceHarddisk0Partition3); // Partition3 goes to X:
-		CxbxCreateSymbolicLink(DriveY, DeviceHarddisk0Partition4); // Partition4 goes to Y:
-
-		// Mount the Utility drive (Z:) conditionally :
-		if (CxbxKrnl_XbeHeader->dwInitFlags.bMountUtilityDrive)
-			CxbxMountUtilityDrive(CxbxKrnl_XbeHeader->dwInitFlags.bFormatUtilityDrive);/*fFormatClean=*/
 	}
 
 	//
@@ -533,7 +562,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	{
 		HANDLE hDupHandle = NULL;
 
-		DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
+		DuplicateHandle(g_CurrentProcessHandle, GetCurrentThread(), g_CurrentProcessHandle, &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS);
 
 		CxbxKrnlRegisterThread(hDupHandle);
 	}
@@ -544,9 +573,45 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	//extern void InitializeSectionStructures(void); 
 	InitializeSectionStructures();
 
-	DbgPrintf("EmuMain (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
 
-	XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
+	DbgPrintf("EmuMain : Determining CPU affinity.\n");
+
+	// Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
+	// this will better aproximate the environment with regard to multi-threading) :
+	{
+		GetProcessAffinityMask(g_CurrentProcessHandle, &g_CPUXbox, &g_CPUOthers);
+		// For the other threads, remove one bit from the processor mask:
+		g_CPUOthers = ((g_CPUXbox - 1) & g_CPUXbox);
+
+		// Test if there are any other cores available :
+		if (g_CPUOthers > 0) {
+			// If so, make sure the Xbox threads run on the core NOT running Xbox code :
+			g_CPUXbox = g_CPUXbox & (~g_CPUOthers);
+		} else {
+			// Else the other threads must run on the same core as the Xbox code :
+			g_CPUOthers = g_CPUXbox;
+		}
+
+		// Make sure Xbox1 code runs on one core :
+		SetThreadAffinityMask(GetCurrentThread(), g_CPUXbox);
+	}
+
+	//
+	// initialize grapchics
+	//
+	DbgPrintf("EmuMain (0x%X): Initializing render window.\n", GetCurrentThreadId());
+	XTL::CxbxInitWindow(pXbeHeader, dwXbeHeaderSize);
+
+	if (bLLE_GPU)
+	{
+		DbgPrintf("EmuMain (0x%X): Initializing OpenGL.\n", GetCurrentThreadId());
+		InitOpenGLContext();
+	}
+	else
+	{
+		DbgPrintf("EmuMain (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
+		XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
+	}
 
 	EmuHLEIntercept(pLibraryVersion, pXbeHeader);
 
@@ -560,28 +625,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		EmuGenerateFS(pTLS, pTLSData);
 	}
 
-	
-	DbgPrintf("EmuMain : Determining CPU affinity.\n");
-
-	// Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
-	// this will better aproximate the environment with regard to multi-threading) :
-	{
-		GetProcessAffinityMask(GetCurrentProcess(), &g_CPUXbox, &g_CPUOthers);
-		// For the other threads, remove one bit from the processor mask:
-		g_CPUOthers = ((g_CPUXbox - 1) & g_CPUXbox);
-
-		// Test if there are any other cores available :
-		if (g_CPUOthers > 0) {
-			// If so, make sure the Xbox threads run on the core NOT running Xbox code :
-			g_CPUXbox = g_CPUXbox & (~g_CPUOthers);
-		} else {
-			// Else the other threads must run on the same core as the Xbox code :
-			g_CPUOthers = g_CPUXbox;
-		}
-
-	// Make sure Xbox1 code runs on one core :
-	SetThreadAffinityMask(GetCurrentThread(), g_CPUXbox);
-}
+	EmuX86_Init();
 
     DbgPrintf("EmuMain (0x%X): Initial thread starting.\n", GetCurrentThreadId());
 
@@ -642,7 +686,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlCleanup(const char *szErrorMessage, ...)
     if(CxbxKrnl_hEmuParent != NULL)
         SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
-    TerminateProcess(GetCurrentProcess(), 0);
+    TerminateProcess(g_CurrentProcessHandle, 0);
 
     return;
 }
@@ -747,8 +791,6 @@ extern "C" CXBXKRNL_API void CxbxKrnlResume()
 
 extern "C" CXBXKRNL_API void CxbxKrnlTerminateThread()
 {
-    EmuCleanupFS();
-
     TerminateThread(GetCurrentThread(), 0);
 }
 

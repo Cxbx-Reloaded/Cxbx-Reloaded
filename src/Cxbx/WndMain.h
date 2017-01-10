@@ -35,24 +35,12 @@
 #define WNDMAIN_H
 
 #include "Wnd.h"
-#include "Common/Exe.h"
 #include "Common/Xbe.h"
 
 // ******************************************************************
 // * constants
 // ******************************************************************
 #define RECENT_XBE_SIZE 10
-#define RECENT_EXE_SIZE 10
-
-// ******************************************************************
-// * AutoConvert methods
-// ******************************************************************
-enum EnumAutoConvert
-{
-    AUTO_CONVERT_MANUAL       = 0,
-    AUTO_CONVERT_XBE_PATH     = 1,
-    AUTO_CONVERT_WINDOWS_TEMP = 2
-};
 
 // ******************************************************************
 // * class : WndMain
@@ -77,15 +65,9 @@ class WndMain : public Wnd
         void SaveXbeAs();
 
         // ******************************************************************
-        // * Exe operations
+        // * start emulation
         // ******************************************************************
-        void ImportExe(const char *x_filename);
-        bool ConvertToExe(const char *x_filename, bool x_bVerifyIfExists, HWND hwndParent);
-
-        // ******************************************************************
-        // * start emulation (converting to .exe if not done already)
-        // ******************************************************************
-        void StartEmulation(EnumAutoConvert x_bAutoConvert, HWND hwndParent);
+        void StartEmulation(HWND hwndParent);
 
         // ******************************************************************
         // * stop emulation (close existing child window)
@@ -139,23 +121,20 @@ class WndMain : public Wnd
         HBITMAP     m_LogoBmp;
 
         // ******************************************************************
-        // * Xbe/Exe objects
+        // * Xbe objects
         // ******************************************************************
         Xbe        *m_Xbe;
-        Exe        *m_Exe;
 
         // ******************************************************************
         // * changes remembered for internal purposes
         // ******************************************************************
         bool        m_bXbeChanged;
-        bool        m_bExeChanged;
         bool        m_bCanStart;
 
         // ******************************************************************
         // * cached filenames
         // ******************************************************************
         char       *m_XbeFilename;
-        char       *m_ExeFilename;
 
         // ******************************************************************
         // * cached child window handle
@@ -163,21 +142,10 @@ class WndMain : public Wnd
         HWND        m_hwndChild;
 
         // ******************************************************************
-        // * should emulation always auto-create the .exe?
-        // ******************************************************************
-        EnumAutoConvert m_AutoConvertToExe;
-
-        // ******************************************************************
         // * Recent Xbe files
         // ******************************************************************
         int         m_dwRecentXbe;
         char       *m_szRecentXbe[RECENT_XBE_SIZE];
-
-        // ******************************************************************
-        // * Recent Exe files
-        // ******************************************************************
-        int         m_dwRecentExe;
-        char       *m_szRecentExe[RECENT_EXE_SIZE];
 
         // ******************************************************************
         // * is this window fully initialized?
@@ -189,6 +157,11 @@ class WndMain : public Wnd
         // ******************************************************************
         DebugMode   m_CxbxDebug;
         DebugMode   m_KrnlDebug;
+
+		// ******************************************************************
+		// * LLE flags
+		// ******************************************************************
+		int         m_FlagsLLE;
 
         // ******************************************************************
         // * debug output filenames

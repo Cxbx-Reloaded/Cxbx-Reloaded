@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -42,16 +44,146 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
+#include "EmuKrnlLogging.h"
+
+// prevent name collisions
+namespace NtDll
+{
+#include "EmuNtDll.h"
+};
+
+#include "CxbxKrnl.h" // For CxbxKrnlCleanup
+#include "EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
 #include "Emu.h" // For EmuWarning()
 
-using namespace xboxkrnl;
+#pragma warning(disable:4005) // Ignore redefined status values
+#include <ntstatus.h>
+#pragma warning(default:4005)
 
-// TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(240) xboxkrnl::POBJECT_TYPE xboxkrnl::ObDirectoryObjectType = NULL;
+// ******************************************************************
+// * 0x00F0 - ObDirectoryObjectType
+// ******************************************************************
+XBSYSAPI EXPORTNUM(240) xboxkrnl::OBJECT_TYPE xboxkrnl::ObDirectoryObjectType =
+{
+	/*
+	ExAllocatePoolWithTag,
+	ExFreePool,
+	NULL,
+	NULL,
+	NULL,
+	*/
+	NULL, // &ObpDefaultObject,
+	'eriD' // = first four characters of "Directory" in reverse
+};
 
+// ******************************************************************
+// * 0x00F3 - ObOpenObjectByName()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(243) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByName
+(
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN POBJECT_TYPE ObjectType,
+	IN OUT PVOID ParseContext OPTIONAL,
+	OUT PHANDLE Handle
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(ObjectAttributes)
+		LOG_FUNC_ARG(ObjectType)
+		LOG_FUNC_ARG(ParseContext)
+		LOG_FUNC_ARG_OUT(Handle)
+		LOG_FUNC_END;
+
+	NTSTATUS ret = STATUS_OBJECT_PATH_NOT_FOUND;
+
+	// TODO : Call CxbxObjectAttributesToNT on ObjectAttributes?
+
+	if (ObjectType == &xboxkrnl::ObSymbolicLinkObjectType)
+	{
+		EmuNtSymbolicLinkObject* symbolicLinkObject =
+			FindNtSymbolicLinkObjectByName(PSTRING_to_string(ObjectAttributes->ObjectName));
+
+		if (symbolicLinkObject != NULL)
+		{
+			// Return a new handle (which is an EmuHandle, actually) :
+			*Handle = symbolicLinkObject->NewHandle();
+			ret = STATUS_SUCCESS;
+		}
+	}
+	else
+	if (ObjectType == &xboxkrnl::ObDirectoryObjectType)
+		LOG_UNIMPLEMENTED();
+	else
+		LOG_UNIMPLEMENTED();
+
+	if (ret == STATUS_SUCCESS)
+		DbgPrintf("EmuKrnl : ObOpenObjectByName Handle^ = 0x%.08X", *Handle);
+	else
+		EmuWarning("ObOpenObjectByName failed! (%s)", NtStatusToString(ret));
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x00F5 - ObpObjectHandleTable
+// ******************************************************************
 // TODO : Determine size. What should we initialize this to?
 XBSYSAPI EXPORTNUM(245) xboxkrnl::DWORD xboxkrnl::ObpObjectHandleTable[1] = {};
 
-// TODO : What should we initialize this to?
-XBSYSAPI EXPORTNUM(249) xboxkrnl::POBJECT_TYPE xboxkrnl::ObSymbolicLinkObjectType = NULL;
+// ******************************************************************
+// * 0x00F6 - ObReferenceObjectByHandle()
+// ******************************************************************
+// Turns a handle into a kernel object pointer.  The ObjectType parameter
+// specifies what type of object it is.  This function also increments the
+// object's reference count.
+//
+// Differences from NT: There are no DesiredAccess, AccessMode, or
+//     HandleInformation parameters.
+XBSYSAPI EXPORTNUM(246) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByHandle
+(
+	IN HANDLE Handle,
+	IN POBJECT_TYPE ObjectType OPTIONAL,
+	OUT PVOID *ReturnedObject
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Handle)
+		LOG_FUNC_ARG_OUT(ObjectType)
+		LOG_FUNC_ARG_OUT(ReturnedObject)
+		LOG_FUNC_END;
 
+	LOG_UNIMPLEMENTED();
+
+	// This is probably incorrect
+	*ReturnedObject = Handle;
+	RETURN(STATUS_SUCCESS);
+}
+
+// ******************************************************************
+// * 0x00F9 - ObSymbolicLinkObjectType
+// ******************************************************************
+XBSYSAPI EXPORTNUM(249) xboxkrnl::OBJECT_TYPE xboxkrnl::ObSymbolicLinkObjectType =
+{
+	/*
+	ExAllocatePoolWithTag,
+	ExFreePool,
+	NULL,
+	ObpDeleteSymbolicLink,
+	NULL,
+	*/
+	NULL, // &ObpDefaultObject,
+	'bmyS' // = first four characters of "SymbolicLink" in reverse
+};
+
+// ******************************************************************
+// * 0x00FA - ObfDereferenceObject()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(250) xboxkrnl::VOID FASTCALL xboxkrnl::ObfDereferenceObject
+(
+	IN PVOID Object
+)
+{
+	LOG_FUNC_ONE_ARG_OUT(Object);
+
+	LOG_UNIMPLEMENTED();
+}

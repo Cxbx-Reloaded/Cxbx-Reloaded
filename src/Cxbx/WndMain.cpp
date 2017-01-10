@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -37,18 +39,25 @@
 #include "DlgVideoConfig.h"
 #include "CxbxKrnl/EmuShared.h"
 #include "ResCxbx.h"
-#include "EmuExe.h"
-#include "jpegdec/jpegdec.h"
 
 #include <io.h>
 
-/**
- * Silly little hack to fix link error with libjpeg on MSVC 2015
- */
-FILE _iob[] = { *stdin, *stdout, *stderr };
-extern "C" FILE * __cdecl __iob_func(void) { return _iob; }
+#define STBI_ONLY_JPEG
+#define STBI_NO_LINEAR
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
-WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m_Xbe(0), m_Exe(0), m_bExeChanged(false), m_bXbeChanged(false), m_bCanStart(true), m_hwndChild(NULL), m_AutoConvertToExe(AUTO_CONVERT_WINDOWS_TEMP), m_KrnlDebug(DM_NONE), m_CxbxDebug(DM_NONE), m_dwRecentXbe(0), m_dwRecentExe(0)
+WndMain::WndMain(HINSTANCE x_hInstance) : 
+	Wnd(x_hInstance), 
+	m_bCreated(false), 
+	m_Xbe(0), 
+	m_bXbeChanged(false), 
+	m_bCanStart(true), 
+	m_hwndChild(NULL), 
+	m_KrnlDebug(DM_NONE), 
+	m_CxbxDebug(DM_NONE), 
+	m_FlagsLLE(0),
+	m_dwRecentXbe(0)
 {
     // initialize members
     {
@@ -58,19 +67,13 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m
         m_w         = 640;
         m_h         = 480;
 
-        m_ExeFilename = (char*)calloc(1, 260);
-        m_XbeFilename = (char*)calloc(1, 260);
+        m_XbeFilename = (char*)calloc(1, MAX_PATH);
 
-        m_CxbxDebugFilename = (char*)calloc(1, 260);
-        m_KrnlDebugFilename = (char*)calloc(1, 260);
+        m_CxbxDebugFilename = (char*)calloc(1, MAX_PATH);
+        m_KrnlDebugFilename = (char*)calloc(1, MAX_PATH);
 
-        int v=0;
-
-        for(v=0;v<RECENT_XBE_SIZE;v++)
+        for(int v=0;v<RECENT_XBE_SIZE;v++)
             m_szRecentXbe[v] = 0;
-
-        for(v=0;v<RECENT_EXE_SIZE;v++)
-            m_szRecentExe[v] = 0;
     }
 
     // center to desktop
@@ -90,25 +93,22 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m
 
         if(RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Cxbx-Reloaded", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
         {
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_CxbxDebug, &dwSize);
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			RegQueryValueEx(hKey, "LLEFLAGS", NULL, &dwType, (PBYTE)&m_FlagsLLE, &dwSize);
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			RegQueryValueEx(hKey, "CxbxDebug", NULL, &dwType, (PBYTE)&m_CxbxDebug, &dwSize);
+
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegQueryValueEx(hKey, "KrnlDebug", NULL, &dwType, (PBYTE)&m_KrnlDebug, &dwSize);
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegQueryValueEx(hKey, "RecentXbe", NULL, &dwType, (PBYTE)&m_dwRecentXbe, &dwSize);
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegQueryValueEx(hKey, "RecentExe", NULL, &dwType, (PBYTE)&m_dwRecentExe, &dwSize);
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegQueryValueEx(hKey, "AutoConvertToExe", NULL, &dwType, (PBYTE)&m_AutoConvertToExe, &dwSize);
-
-            dwType = REG_SZ; dwSize = 260;
+            dwType = REG_SZ; dwSize = MAX_PATH;
             RegQueryValueEx(hKey, "CxbxDebugFilename", NULL, &dwType, (PBYTE)m_CxbxDebugFilename, &dwSize);
 
-            dwType = REG_SZ; dwSize = 260;
+            dwType = REG_SZ; dwSize = MAX_PATH;
             RegQueryValueEx(hKey, "KrnlDebugFilename", NULL, &dwType, (PBYTE)m_KrnlDebugFilename, &dwSize);
 
             int v=0;
@@ -119,22 +119,10 @@ WndMain::WndMain(HINSTANCE x_hInstance) : Wnd(x_hInstance), m_bCreated(false), m
 
                 sprintf(buffer, "RecentXbe%d", v);
 
-                m_szRecentXbe[v] = (char*)calloc(1, 260);
+                m_szRecentXbe[v] = (char*)calloc(1, MAX_PATH);
 
-                dwType = REG_SZ; dwSize = 260;
+                dwType = REG_SZ; dwSize = MAX_PATH;
                 RegQueryValueEx(hKey, buffer, NULL, &dwType, (PBYTE)m_szRecentXbe[v], &dwSize);
-            }
-
-            for(v=0;v<m_dwRecentExe;v++)
-            {
-                char buffer[32];
-
-                sprintf(buffer, "RecentExe%d", v);
-
-                m_szRecentExe[v] = (char*)calloc(1, 260);
-
-                dwType = REG_SZ; dwSize = 260;
-                RegQueryValueEx(hKey, buffer, NULL, &dwType, (PBYTE)m_szRecentExe[v], &dwSize);
             }
 
             RegCloseKey(hKey);
@@ -161,27 +149,17 @@ WndMain::~WndMain()
 
                 sprintf(buffer, "RecentXbe%d", v);
 
-                dwType = REG_SZ; dwSize = 260;
+                dwType = REG_SZ; dwSize = MAX_PATH;
 
                 RegSetValueEx(hKey, buffer, 0, dwType, (PBYTE)m_szRecentXbe[v], dwSize);
 
                 free(m_szRecentXbe[v]);
             }
 
-            for(v=0;v<m_dwRecentExe;v++)
-            {
-                char buffer[32];
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			RegSetValueEx(hKey, "LLEFLAGS", 0, dwType, (PBYTE)&m_FlagsLLE, dwSize);
 
-                sprintf(buffer, "RecentExe%d", v);
-
-                dwType = REG_SZ; dwSize = 260;
-
-                RegSetValueEx(hKey, buffer, 0, dwType, (PBYTE)m_szRecentExe[v], dwSize);
-
-                free(m_szRecentExe[v]);
-            }
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
+			dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegSetValueEx(hKey, "CxbxDebug", 0, dwType, (PBYTE)&m_CxbxDebug, dwSize);
 
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
@@ -190,16 +168,10 @@ WndMain::~WndMain()
             dwType = REG_DWORD; dwSize = sizeof(DWORD);
             RegSetValueEx(hKey, "RecentXbe", 0, dwType, (PBYTE)&m_dwRecentXbe, dwSize);
 
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "RecentExe", 0, dwType, (PBYTE)&m_dwRecentExe, dwSize);
-
-            dwType = REG_DWORD; dwSize = sizeof(DWORD);
-            RegSetValueEx(hKey, "AutoConvertToExe", 0, dwType, (PBYTE)&m_AutoConvertToExe, dwSize);
-
-            dwType = REG_SZ; dwSize = 260;
+            dwType = REG_SZ; dwSize = MAX_PATH;
             RegSetValueEx(hKey, "CxbxDebugFilename", 0, dwType, (PBYTE)m_CxbxDebugFilename, dwSize);
 
-            dwType = REG_SZ; dwSize = 260;
+            dwType = REG_SZ; dwSize = MAX_PATH;
             RegSetValueEx(hKey, "KrnlDebugFilename", 0, dwType, (PBYTE)m_KrnlDebugFilename, dwSize);
         }
     }
@@ -207,10 +179,8 @@ WndMain::~WndMain()
     // cleanup allocations
     {
         delete m_Xbe;
-        delete m_Exe;
 
         free(m_XbeFilename);
-        free(m_ExeFilename);
 
         free(m_CxbxDebugFilename);
         free(m_KrnlDebugFilename);
@@ -255,13 +225,25 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 {
                     HRSRC hSrc = FindResource(NULL, MAKEINTRESOURCE(IDR_JPEG_SPLASH), "JPEG");
                     HGLOBAL hRes = LoadResource(NULL, hSrc);
-                    uint08 *jpgData = (uint08*)LockResource(hRes);
 
+                    uint08 *jpgData = (uint08*)LockResource(hRes);
                     uint32 jpgFileSize = SizeofResource(NULL, hSrc);
                     uint32 bmpFileSize = 0;
-                    uint32 bmpWidth, bmpHeight;
+                    uint32 bmpWidth = 0;
+                    uint32 bmpHeight = 0;
 
-                    uint08 *bmpBuff = jpeg2bmp(jpgData, jpgFileSize, &bmpFileSize, &bmpWidth, &bmpHeight);
+                    uint08 *bmpBuff = reinterpret_cast<uint08*>
+                    (
+                        stbi_load_from_memory
+                        (
+                            reinterpret_cast<const stbi_uc*>(jpgData),
+                            static_cast<int>(jpgFileSize),
+                            reinterpret_cast<int*>(&bmpWidth),
+                            reinterpret_cast<int*>(&bmpHeight),
+                            nullptr,
+                            STBI_rgb
+                        )
+                    );
 
                     // create bitmap
                     {
@@ -269,7 +251,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                         BmpInfo.bmiHeader.biSize          = sizeof(BITMAPINFO) - sizeof(RGBQUAD);
                         BmpInfo.bmiHeader.biWidth         = bmpWidth;
-                        BmpInfo.bmiHeader.biHeight        = 0 - (int)bmpHeight;
+                        BmpInfo.bmiHeader.biHeight        = 0 - (long)bmpHeight;
                         BmpInfo.bmiHeader.biPlanes        = 1;
                         BmpInfo.bmiHeader.biBitCount      = 24;
                         BmpInfo.bmiHeader.biCompression   = BI_RGB;
@@ -282,8 +264,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                         SetDIBits(hDC, m_BackBmp, 0, bmpHeight, bmpBuff, &BmpInfo, DIB_RGB_COLORS);
                     }
 
-                    free(bmpBuff);
+                    stbi_image_free(bmpBuff);
 
+                    FreeResource(hRes);
                     UnlockResource(hRes);
                 }
 
@@ -413,7 +396,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     if(m_Xbe != 0 && (m_hwndChild == NULL) && m_bCanStart)
                     {
                         m_bCanStart = false;
-                        StartEmulation(m_AutoConvertToExe, hwnd);
+                        StartEmulation(hwnd);
                     }
                 }
                 break;
@@ -446,13 +429,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 {
                     OPENFILENAME ofn = {0};
 
-                    char filename[260] = {0};
+                    char filename[MAX_PATH] = {0};
 
                     ofn.lStructSize     = sizeof(OPENFILENAME);
                     ofn.hwndOwner       = m_hwnd;
                     ofn.lpstrFilter     = "Xbox Executables (*.xbe)\0*.xbe\0";
                     ofn.lpstrFile       = filename;
-                    ofn.nMaxFile        = 260;
+                    ofn.nMaxFile        = MAX_PATH;
                     ofn.nFilterIndex    = 1;
                     ofn.lpstrFileTitle  = NULL;
                     ofn.nMaxFileTitle   = 0;
@@ -489,42 +472,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     SaveXbeAs();
                     break;
 
-                case ID_FILE_IMPORTFROMEXE:
-                {
-                    m_ExeFilename[0] = '\0';
-
-                    OPENFILENAME ofn = {0};
-
-                    char filename[260] = {0};
-
-                    ofn.lStructSize     = sizeof(OPENFILENAME);
-                    ofn.hwndOwner       = m_hwnd;
-                    ofn.lpstrFilter     = "Windows Executables (*.exe)\0*.exe\0";
-                    ofn.lpstrFile       = filename;
-                    ofn.nMaxFile        = 260;
-                    ofn.nFilterIndex    = 1;
-                    ofn.lpstrFileTitle  = NULL;
-                    ofn.nMaxFileTitle   = 0;
-                    ofn.lpstrInitialDir = NULL;
-                    ofn.Flags           = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-
-                    if(GetOpenFileName(&ofn) == TRUE)
-                    {
-                        if(m_Xbe != 0)
-                            CloseXbe();
-
-                        if(m_Xbe != 0)
-                            break;
-
-                        ImportExe(ofn.lpstrFile);
-                    }
-                }
-                break;
-
-                case ID_FILE_EXPORTTOEXE:
-                    ConvertToExe(NULL, true, hwnd);
-                    break;
-
                 case ID_FILE_RXBE_0:
                 case ID_FILE_RXBE_1:
                 case ID_FILE_RXBE_2:
@@ -544,7 +491,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                     HMENU menu = GetMenu(m_hwnd);
                     HMENU file_menu = GetSubMenu(menu, 0);
-                    HMENU rxbe_menu = GetSubMenu(file_menu, 9);
+                    HMENU rxbe_menu = GetSubMenu(file_menu, 6);
 
                     char szBuffer[270];
 
@@ -556,37 +503,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
                 break;
 
-                case ID_FILE_REXE_0:
-                case ID_FILE_REXE_1:
-                case ID_FILE_REXE_2:
-                case ID_FILE_REXE_3:
-                case ID_FILE_REXE_4:
-                case ID_FILE_REXE_5:
-                case ID_FILE_REXE_6:
-                case ID_FILE_REXE_7:
-                case ID_FILE_REXE_8:
-                case ID_FILE_REXE_9:
-                {
-                    if(m_Xbe != 0)
-                        CloseXbe();
-
-                    if(m_Xbe != 0)
-                        break;
-
-                    HMENU menu = GetMenu(m_hwnd);
-                    HMENU file_menu = GetSubMenu(menu, 0);
-                    HMENU rexe_menu = GetSubMenu(file_menu, 10);
-
-                    char szBuffer[270];
-
-                    GetMenuString(rexe_menu, LOWORD(wParam), szBuffer, 269, MF_BYCOMMAND);
-
-                    char *szFilename = (char*)((uint32)szBuffer + 5);
-
-                    ImportExe(szFilename);
-                }
-                break;
-
                 case ID_FILE_EXIT:
                     SendMessage(hwnd, WM_CLOSE, 0, 0);
                     break;
@@ -595,13 +511,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 {
                     OPENFILENAME ofn = {0};
 
-                    char filename[260] = "logo.bmp";
+                    char filename[MAX_PATH] = "logo.bmp";
 
                     ofn.lStructSize     = sizeof(OPENFILENAME);
                     ofn.hwndOwner       = m_hwnd;
                     ofn.lpstrFilter     = "Bitmap Image Files (*.bmp)\0*.bmp\0";
                     ofn.lpstrFile       = filename;
-                    ofn.nMaxFile        = 260;
+                    ofn.nMaxFile        = MAX_PATH;
                     ofn.nFilterIndex    = 1;
                     ofn.lpstrFileTitle  = NULL;
                     ofn.nMaxFileTitle   = 0;
@@ -706,13 +622,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 {
                     OPENFILENAME ofn = {0};
 
-                    char filename[260] = "*.bmp";
+                    char filename[MAX_PATH] = "*.bmp";
 
                     ofn.lStructSize     = sizeof(OPENFILENAME);
                     ofn.hwndOwner       = m_hwnd;
                     ofn.lpstrFilter     = "Bitmap Image Files (*.bmp)\0*.bmp\0";
                     ofn.lpstrFile       = filename;
-                    ofn.nMaxFile        = 260;
+                    ofn.nMaxFile        = MAX_PATH;
                     ofn.nFilterIndex    = 1;
                     ofn.lpstrFileTitle  = NULL;
                     ofn.nMaxFileTitle   = 0;
@@ -790,7 +706,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                             }
                             else
                             {
-                                m_bExeChanged = true;
                                 m_bXbeChanged = true;
 
                                 LoadLogo();
@@ -810,7 +725,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 case ID_EDIT_PATCH_ALLOW64MB:
                 {
-                    m_bExeChanged = true;
                     m_bXbeChanged = true;
 
                     m_Xbe->m_Header.dwInitFlags.bLimit64MB = !m_Xbe->m_Header.dwInitFlags.bLimit64MB;
@@ -826,7 +740,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 case ID_EDIT_PATCH_DEBUGMODE:
                 {
-                    m_bExeChanged = true;
                     m_bXbeChanged = true;
 
                     // patch to/from debug mode
@@ -864,13 +777,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 {
                     OPENFILENAME ofn = {0};
 
-                    char filename[260] = "Xbe.txt";
+                    char filename[MAX_PATH] = "Xbe.txt";
 
                     ofn.lStructSize     = sizeof(OPENFILENAME);
                     ofn.hwndOwner       = m_hwnd;
                     ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
                     ofn.lpstrFile       = filename;
-                    ofn.nMaxFile        = 260;
+                    ofn.nMaxFile        = MAX_PATH;
                     ofn.nFilterIndex    = 1;
                     ofn.lpstrFileTitle  = NULL;
                     ofn.nMaxFileTitle   = 0;
@@ -957,8 +870,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                     MessageBox(m_hwnd, "This will not take effect until the next time emulation is started.\n", "Cxbx-Reloaded", MB_OK);
 
-                    m_bExeChanged = true;
-
                     RefreshMenus();
 
                     UpdateDebugConsoles();
@@ -979,13 +890,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     {
                         OPENFILENAME ofn = {0};
 
-                        char filename[260] = "KrnlDebug.txt";
+                        char filename[MAX_PATH] = "KrnlDebug.txt";
 
                         ofn.lStructSize     = sizeof(OPENFILENAME);
                         ofn.hwndOwner       = m_hwnd;
                         ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
                         ofn.lpstrFile       = filename;
-                        ofn.nMaxFile        = 260;
+                        ofn.nMaxFile        = MAX_PATH;
                         ofn.nFilterIndex    = 1;
                         ofn.lpstrFileTitle  = NULL;
                         ofn.nMaxFileTitle   = 0;
@@ -997,9 +908,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                         {
                             MessageBox(m_hwnd, "This will not take effect until emulation is (re)started.\n", "Cxbx-Reloaded", MB_OK);
 
-                            strncpy(m_KrnlDebugFilename, ofn.lpstrFile, 259);
-
-                            m_bExeChanged = true;
+                            strncpy(m_KrnlDebugFilename, ofn.lpstrFile, MAX_PATH-1);
 
                             m_KrnlDebug = DM_FILE;
 
@@ -1038,13 +947,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     {
                         OPENFILENAME ofn = {0};
 
-                        char filename[260] = "CxbxDebug.txt";
+                        char filename[MAX_PATH] = "CxbxDebug.txt";
 
                         ofn.lStructSize     = sizeof(OPENFILENAME);
                         ofn.hwndOwner       = m_hwnd;
                         ofn.lpstrFilter     = "Text Documents (*.txt)\0*.txt\0";
                         ofn.lpstrFile       = filename;
-                        ofn.nMaxFile        = 260;
+                        ofn.nMaxFile        = MAX_PATH;
                         ofn.nFilterIndex    = 1;
                         ofn.lpstrFileTitle  = NULL;
                         ofn.nMaxFileTitle   = 0;
@@ -1054,7 +963,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                         if(GetSaveFileName(&ofn) != FALSE)
                         {
-                            strncpy(m_CxbxDebugFilename, ofn.lpstrFile, 259);
+                            strncpy(m_CxbxDebugFilename, ofn.lpstrFile, MAX_PATH-1);
 
                             m_CxbxDebug = DM_FILE;
 
@@ -1067,37 +976,29 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
                 break;
 
-                case ID_EMULATION_START:
-                    StartEmulation(m_AutoConvertToExe, hwnd);
+				case ID_EMULATION_LLE_APU:
+				{
+					m_FlagsLLE = m_FlagsLLE ^ LLE_APU;
+
+					RefreshMenus();
+				}
+				break;
+
+				case ID_EMULATION_LLE_GPU:
+				{
+					m_FlagsLLE = m_FlagsLLE ^ LLE_GPU;
+
+					RefreshMenus();
+				}
+				break;
+
+				case ID_EMULATION_START:
+                    StartEmulation(hwnd);
                     break;
 
                 case ID_EMULATION_STOP:
                     StopEmulation();
                     break;
-
-                case ID_SETTINGS_GENWT:
-                {
-                    m_AutoConvertToExe = AUTO_CONVERT_WINDOWS_TEMP;
-
-                    RefreshMenus();
-                }
-                break;
-
-                case ID_SETTINGS_GENXP:
-                {
-                    m_AutoConvertToExe = AUTO_CONVERT_XBE_PATH;
-
-                    RefreshMenus();
-                }
-                break;
-
-                case ID_SETTINGS_GENMA:
-                {
-                    m_AutoConvertToExe = AUTO_CONVERT_MANUAL;
-
-                    RefreshMenus();
-                }
-                break;
 
                 case ID_HELP_ABOUT:
                 {
@@ -1169,32 +1070,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 // suggest a file name
 void WndMain::SuggestFilename(const char *x_orig_filename, char *x_filename, char x_extension[4])
 {
-    uint32 found = 0;
-    uint32 v = 0;
-
-    while(x_orig_filename[v] != '\0')
-    {
-        if(x_orig_filename[v] == '\\')
-            found = v;
-        v++;
-    }
-
-    if(found != 0)
+    if(strrchr(x_orig_filename, '\\') != NULL)
     {
         strcpy(x_filename, x_orig_filename);
-
-        uint32 loc = 0;
-        uint32 c = 0;
-
-        while(x_filename[c] != '\0')
-        {
-            if(x_filename[c] == '.')
-                loc = c;
-            c++;
-        }
-
-        if(loc != 0)
-            *(uint32*)&x_filename[loc] = *(uint32*)x_extension;
+		char *loc = strrchr(x_filename, '.');
+		if (loc != NULL)
+			strncpy(loc, &x_extension[0], 4);
     }
 }
 
@@ -1259,26 +1140,14 @@ void WndMain::RefreshMenus()
 
             // enable/disable save .xbe file as
             EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILEAS, MF_BYCOMMAND | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
-
-            // enable/disable export to .exe
-            EnableMenuItem(file_menu, ID_FILE_EXPORTTOEXE, MF_BYCOMMAND | ((m_Xbe == 0) ? MF_GRAYED : MF_ENABLED));
-
+			
             // recent xbe files menu
             {
-                HMENU rxbe_menu = GetSubMenu(file_menu, 9);
+                HMENU rxbe_menu = GetSubMenu(file_menu, 6);
 
                 int max = m_dwRecentXbe;
                 for(int v=0;v<max;v++)
                     EnableMenuItem(rxbe_menu, ID_FILE_RXBE_0 + v, MF_BYCOMMAND | MF_ENABLED);
-            }
-
-            // recent exe files menu
-            {
-                HMENU rexe_menu = GetSubMenu(file_menu, 10);
-
-                int max = m_dwRecentExe;
-                for(int v=0;v<max;v++)
-                    EnableMenuItem(rexe_menu, ID_FILE_REXE_0 + v, MF_BYCOMMAND | MF_ENABLED);
             }
         }
 
@@ -1319,69 +1188,55 @@ void WndMain::RefreshMenus()
         }
 
         // view menu
-        {
-            HMENU view_menu = GetSubMenu(menu, 2);
-            HMENU emul_debg = GetSubMenu(view_menu, 0);
-            HMENU emul_krnl = GetSubMenu(view_menu, 1);
+		{
+			HMENU view_menu = GetSubMenu(menu, 2);
+			HMENU emul_debg = GetSubMenu(view_menu, 0);
+			HMENU emul_krnl = GetSubMenu(view_menu, 1);
 
-            if(m_KrnlDebug == DM_CONSOLE)
-            {
-                CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_CHECKED);
-                CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_UNCHECKED);
-            }
-            else if(m_KrnlDebug == DM_FILE)
-            {
-                CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_UNCHECKED);
-                CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_CHECKED);
-            }
-            else
-            {
-                CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_UNCHECKED);
-                CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_UNCHECKED);
-            }
+			if (m_KrnlDebug == DM_CONSOLE)
+			{
+				CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_CHECKED);
+				CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_UNCHECKED);
+			}
+			else if (m_KrnlDebug == DM_FILE)
+			{
+				CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_UNCHECKED);
+				CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_CHECKED);
+			}
+			else
+			{
+				CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_CONSOLE, MF_UNCHECKED);
+				CheckMenuItem(emul_krnl, ID_EMULATION_DEBUGOUTPUTKERNEL_FILE, MF_UNCHECKED);
+			}
 
-            if(m_CxbxDebug == DM_CONSOLE)
-            {
-                CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_CHECKED);
-                CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
-            }
-            else if(m_CxbxDebug == DM_FILE)
-            {
-                CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_UNCHECKED);
-                CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_CHECKED);
-            }
-            else
-            {
-                CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_UNCHECKED);
-                CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
-            }
-        }
+			if (m_CxbxDebug == DM_CONSOLE)
+			{
+				CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_CHECKED);
+				CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
+			}
+			else if (m_CxbxDebug == DM_FILE)
+			{
+				CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_UNCHECKED);
+				CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_CHECKED);
+			}
+			else
+			{
+				CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_CONSOLE, MF_UNCHECKED);
+				CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
+			}
+		}
 
-        // settings menu
-        {
-            HMENU sett_menu = GetSubMenu(menu, 3);
-            HMENU auto_menu = GetSubMenu(sett_menu, 4);
+		// settings menu
+		{
+			HMENU settings_menu = GetSubMenu(menu, 3);
+			HMENU lle_submenu = GetSubMenu(settings_menu, 4);
 
-            // check appropriate choice
-            if(m_AutoConvertToExe == AUTO_CONVERT_WINDOWS_TEMP)
-            {
-                CheckMenuItem(auto_menu, ID_SETTINGS_GENWT, MF_BYCOMMAND | MF_CHECKED);
-                CheckMenuItem(auto_menu, ID_SETTINGS_GENXP, MF_BYCOMMAND | MF_UNCHECKED);
-                CheckMenuItem(auto_menu, ID_SETTINGS_GENMA, MF_BYCOMMAND | MF_UNCHECKED);
-            }
-            else if(m_AutoConvertToExe == AUTO_CONVERT_XBE_PATH)
-            {
-                CheckMenuItem(auto_menu, ID_SETTINGS_GENWT, MF_BYCOMMAND | MF_UNCHECKED);
-                CheckMenuItem(auto_menu, ID_SETTINGS_GENXP, MF_BYCOMMAND | MF_CHECKED);
-                CheckMenuItem(auto_menu, ID_SETTINGS_GENMA, MF_BYCOMMAND | MF_UNCHECKED);
-            }
-            else
-            {
-                CheckMenuItem(auto_menu, ID_SETTINGS_GENWT, MF_BYCOMMAND | MF_UNCHECKED);
-                CheckMenuItem(auto_menu, ID_SETTINGS_GENXP, MF_BYCOMMAND | MF_UNCHECKED);
-                CheckMenuItem(auto_menu, ID_SETTINGS_GENMA, MF_BYCOMMAND | MF_CHECKED);
-            }
-        }
+			UINT chk_flag = (m_FlagsLLE & LLE_APU) ? MF_CHECKED : MF_UNCHECKED;
+			CheckMenuItem(lle_submenu, ID_EMULATION_LLE_APU, chk_flag);
+
+			chk_flag = (m_FlagsLLE & LLE_GPU) ? MF_CHECKED : MF_UNCHECKED;
+			CheckMenuItem(lle_submenu, ID_EMULATION_LLE_GPU, chk_flag);
+		}
 
         // emulation menu
         {
@@ -1437,8 +1292,7 @@ void WndMain::UpdateDebugConsoles()
 void WndMain::UpdateRecentFiles()
 {
     HMENU FileMenu = GetSubMenu(GetMenu(m_hwnd), 0);
-    HMENU RXbeMenu = GetSubMenu(FileMenu, 9);
-    HMENU RExeMenu = GetSubMenu(FileMenu, 10);
+    HMENU RXbeMenu = GetSubMenu(FileMenu, 6);
 
     // clear existing menu items
     {
@@ -1447,10 +1301,6 @@ void WndMain::UpdateRecentFiles()
         max = GetMenuItemCount(RXbeMenu);
         for(v=0;v<max;v++)
             RemoveMenu(RXbeMenu, 0, MF_BYPOSITION);
-
-        max = GetMenuItemCount(RExeMenu);
-        for(v=0;v<max;v++)
-            RemoveMenu(RExeMenu, 0, MF_BYPOSITION);
     }
 
     // insert recent xbe files
@@ -1473,27 +1323,6 @@ void WndMain::UpdateRecentFiles()
             AppendMenu(RXbeMenu, MF_STRING, ID_FILE_RXBE_0 + v, szBuffer);
         }
     }
-
-    // insert recent exe files
-    {
-        char szBuffer[270];
-
-        int max = m_dwRecentExe;
-
-        // if there are no recent files, throw in a disabled "(none)"
-        if(max == 0)
-        {
-            AppendMenu(RExeMenu, MF_STRING, ID_FILE_REXE_0, "(none)");
-            EnableMenuItem(RExeMenu, ID_FILE_REXE_0, MF_BYCOMMAND | MF_GRAYED);
-        }
-
-        // NOTE: Resource defines ID_FILE_REXE_0 through ID_FILE_REXE_9 must be in order
-        for(int v=0;v<max;v++)
-        {
-            sprintf(szBuffer, "&%d : %s", v, m_szRecentExe[v]);
-            AppendMenu(RExeMenu, MF_STRING, ID_FILE_REXE_0 + v, szBuffer);
-        }
-    }
 }
 
 // open an xbe file
@@ -1501,8 +1330,6 @@ void WndMain::OpenXbe(const char *x_filename)
 {
     if(m_Xbe != 0)
         return;
-
-    m_ExeFilename[0] = '\0';
 
     strcpy(m_XbeFilename, x_filename);
 
@@ -1540,7 +1367,7 @@ void WndMain::OpenXbe(const char *x_filename)
                 }
                 else
                 {
-                    strncpy(m_szRecentXbe[c], m_szRecentXbe[r], 259);
+                    strncpy(m_szRecentXbe[c], m_szRecentXbe[r], MAX_PATH-1);
                 }
             }
         }
@@ -1559,15 +1386,15 @@ void WndMain::OpenXbe(const char *x_filename)
             else
             {
                 if(m_szRecentXbe[v] == 0)
-                    m_szRecentXbe[v] = (char*)calloc(1, 260);
-                strncpy(m_szRecentXbe[v], m_szRecentXbe[v-1], 259);
+                    m_szRecentXbe[v] = (char*)calloc(1, MAX_PATH);
+                strncpy(m_szRecentXbe[v], m_szRecentXbe[v-1], MAX_PATH-1);
             }
         }
 
         // add new item as first index
         {
             if(m_szRecentXbe[0] == 0)
-                m_szRecentXbe[0] = (char*)calloc(1, 260);
+                m_szRecentXbe[0] = (char*)calloc(1, MAX_PATH);
 
             strcpy(m_szRecentXbe[0], m_XbeFilename);
         }
@@ -1656,7 +1483,7 @@ void WndMain::SaveXbeAs()
 {
     OPENFILENAME ofn = {0};
 
-    char filename[260] = "default.xbe";
+    char filename[MAX_PATH] = "default.xbe";
 
     SuggestFilename(m_XbeFilename, filename, ".xbe");
 
@@ -1664,7 +1491,7 @@ void WndMain::SaveXbeAs()
     ofn.hwndOwner       = m_hwnd;
     ofn.lpstrFilter     = "Xbox Executables (*.xbe)\0*.xbe\0";
     ofn.lpstrFile       = filename;
-    ofn.nMaxFile        = 260;
+    ofn.nMaxFile        = MAX_PATH;
     ofn.nFilterIndex    = 1;
     ofn.lpstrFileTitle  = NULL;
     ofn.nMaxFileTitle   = 0;
@@ -1676,181 +1503,24 @@ void WndMain::SaveXbeAs()
         SaveXbe(ofn.lpstrFile);
 }
 
-// import an exe file
-void WndMain::ImportExe(const char *x_filename)
-{
-    m_XbeFilename[0] = '\0';
-
-    Exe *i_exe = new Exe(x_filename);
-
-    if(i_exe->GetError() != 0)
-    {
-        MessageBox(m_hwnd, i_exe->GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-
-        delete i_exe;
-
-        return;
-    }
-
-    m_Xbe = new Xbe(i_exe, "Untitled", true);
-
-    if(m_Xbe->GetError() != 0)
-    {
-        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-
-        delete m_Xbe; m_Xbe = 0;
-
-        return;
-    }
-
-    // save this exe to the list of recent exe files
-    if(m_ExeFilename[0] != '\0')
-    {
-        bool found = false;
-
-        // if this filename already exists, temporarily remove it
-        for(int c=0, r=0;c<m_dwRecentExe;c++, r++)
-        {
-            if(strcmp(m_szRecentExe[c], m_ExeFilename) == 0)
-            {
-                found = true;
-                r++;
-            }
-
-            if(r != c)
-            {
-                if(m_szRecentExe[r] == 0 || r > m_dwRecentExe - 1)
-                    m_szRecentExe[c] = 0;
-                else
-                    strncpy(m_szRecentExe[c], m_szRecentExe[r], 259);
-            }
-        }
-
-        if(found)
-            m_dwRecentExe--;
-
-        // move all items down one, removing the last one if necessary
-        for(int v=RECENT_EXE_SIZE-1;v>0;v--)
-        {
-            if(m_szRecentExe[v-1] == 0)
-                m_szRecentExe[v] = 0;
-            else
-            {
-                if(m_szRecentExe[v] == 0)
-                    m_szRecentExe[v] = (char*)calloc(1, 260);
-                strncpy(m_szRecentExe[v], m_szRecentExe[v-1], 259);
-            }
-        }
-
-        // add new item as first index
-        {
-            if(m_szRecentExe[0] == 0)
-                m_szRecentExe[0] = (char*)calloc(1, 260);
-
-            strcpy(m_szRecentExe[0], m_ExeFilename);
-        }
-
-        if(m_dwRecentExe < RECENT_EXE_SIZE)
-            m_dwRecentExe++;
-    }
-
-    UpdateRecentFiles();
-
-    XbeLoaded();
-
-    m_bExeChanged = true;
-}
-
-// convert to exe file
-bool WndMain::ConvertToExe(const char *x_filename, bool x_bVerifyIfExists, HWND hwndParent)
-{
-    char filename[260] = "default.exe";
-
-    if(x_filename == NULL)
-    {
-        OPENFILENAME ofn = {0};
-
-        SuggestFilename(m_XbeFilename, filename, ".exe");
-
-        ofn.lStructSize     = sizeof(OPENFILENAME);
-        ofn.hwndOwner       = m_hwnd;
-        ofn.lpstrFilter     = "Windows Executables (*.exe)\0*.exe\0";
-        ofn.lpstrFile       = filename;
-        ofn.nMaxFile        = 260;
-        ofn.nFilterIndex    = 1;
-        ofn.lpstrFileTitle  = NULL;
-        ofn.nMaxFileTitle   = 0;
-        ofn.lpstrInitialDir = NULL;
-        ofn.lpstrDefExt     = "exe";
-        ofn.Flags           = OFN_PATHMUSTEXIST;
-
-        if(GetSaveFileName(&ofn) == FALSE)
-            return false;
-
-        strcpy(filename, ofn.lpstrFile);
-    }
-    else
-    {
-        strcpy(filename, x_filename);
-    }
-
-    // ask permission to overwrite if this file already exists
-    if(x_bVerifyIfExists)
-    {
-        if(_access(filename, 0) != -1)
-        {
-            if(MessageBox(m_hwnd, "Overwrite existing file?", "Cxbx-Reloaded", MB_ICONQUESTION | MB_YESNO) != IDYES)
-                return false;
-        }
-    }
-
-    // convert file
-    {
-        EmuExe i_EmuExe(m_Xbe, m_KrnlDebug, m_KrnlDebugFilename, hwndParent);
-
-        i_EmuExe.Export(filename);
-
-        if(i_EmuExe.GetError() != 0)
-        {
-            MessageBox(m_hwnd, i_EmuExe.GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
-            return false;
-        }
-        else
-        {
-            strcpy(m_ExeFilename, filename);
-
-            printf("WndMain: %s was converted to .exe.\n", m_Xbe->m_szAsciiTitle);
-
-            m_bExeChanged = false;
-        }
-    }
-
-    return true;
-}
-
 // start emulation
-void WndMain::StartEmulation(EnumAutoConvert x_AutoConvert, HWND hwndParent)
+void WndMain::StartEmulation(HWND hwndParent)
 {
-    char szBuffer[260];
+    char szBuffer[MAX_PATH];
 
     // register xbe path with CxbxKrnl.dll
     g_EmuShared->SetXbePath(m_Xbe->m_szPath);
 
-    // shell exe
+	// register LLE flags with CxbxKrnl.dll
+	g_EmuShared->SetFlagsLLE(&m_FlagsLLE);
+
+	// shell exe
     {
-        GetModuleFileName(NULL, szBuffer, 260);
+        GetModuleFileName(NULL, szBuffer, MAX_PATH);
 
-        sint32 spot=-1;
-        for(int v=0;v<260;v++)
-        {
-            if(szBuffer[v] == '\\')
-                spot = v;
-            else if(szBuffer[v] == '\0')
-                break;
-        }
-
-        if(spot != -1)
-            szBuffer[spot] = '\0';
+		char *spot = strrchr(szBuffer, '\\');
+		if (spot != NULL)
+			*spot = '\0';
 
 		char szExeFileName[MAX_PATH];
 		GetModuleFileName(GetModuleHandle(NULL), szExeFileName, MAX_PATH);

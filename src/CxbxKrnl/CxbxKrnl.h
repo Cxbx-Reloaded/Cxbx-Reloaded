@@ -48,6 +48,12 @@ extern "C" {
 
 #define XBOX_MEMORY_SIZE 128 * 1024 * 1024
 
+#define XBOX_KERNEL_BASE 0x80010000
+#define XBOX_NV2A_INIT_VECTOR 0xFF000008
+
+#define MAX_BUS_INTERRUPT_LEVEL 27
+#define MAX_NUM_INTERRUPTS 256
+
 /*! validate version string match */
 CXBXKRNL_API bool CxbxKrnlVerifyVersion(const char *szVersion);
 
@@ -77,6 +83,8 @@ CXBXKRNL_API void CxbxKrnlPanic();
 
 /*! empty function */
 CXBXKRNL_API void CxbxKrnlNoFunc();
+
+CXBXKRNL_API void CxbxInitPerformanceCounters(); // Implemented in EmuKrnlKe.cpp
 
 /*! kernel thunk table */
 extern CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379];

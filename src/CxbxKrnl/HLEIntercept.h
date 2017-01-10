@@ -34,6 +34,9 @@
 #ifndef HLEINTERCEPT_H
 #define HLEINTERCEPT_H
 
+extern bool bLLE_APU;
+extern bool bLLE_GPU;
+
 void EmuHLEIntercept(Xbe::LibraryVersion *LibraryVersion, Xbe::Header *XbeHeader);
 
 #endif

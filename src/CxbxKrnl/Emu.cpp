@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -76,6 +78,9 @@ volatile bool    g_bEmuException = false;
 volatile bool    g_bEmuSuspended = false;
 volatile bool    g_bPrintfOn = true;
 
+// Delta added to host SystemTime, used in xboxkrnl::KeQuerySystemTime and xboxkrnl::NtSetSystemTime
+LARGE_INTEGER	HostSystemTimeDelta = {};
+
 // Static Function(s)
 static int ExitException(LPEXCEPTION_POINTERS e);
 
@@ -140,126 +145,125 @@ extern "C" CXBXKRNL_API void NTAPI EmuWarning(const char *szWarningMessage, ...)
 }
 #endif
 
+void EmuExceptionPrintDebugInformation(LPEXCEPTION_POINTERS e, bool IsBreakpointException)
+{
+	// print debug information
+	{
+		if (IsBreakpointException)
+			printf("EmuMain (0x%X): Recieved Breakpoint Exception (int 3)\n", GetCurrentThreadId());
+		else
+			printf("EmuMain (0x%X): Recieved Exception (Code := 0x%.08X)\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
+
+		printf("\n"
+			" EIP := 0x%.08X EFL := 0x%.08X\n"
+			" EAX := 0x%.08X EBX := 0x%.08X ECX := 0x%.08X EDX := 0x%.08X\n"
+			" ESI := 0x%.08X EDI := 0x%.08X ESP := 0x%.08X EBP := 0x%.08X\n"
+			" CR2 := 0x%.08X\n"
+			"\n",
+			e->ContextRecord->Eip, e->ContextRecord->EFlags,
+			e->ContextRecord->Eax, e->ContextRecord->Ebx, e->ContextRecord->Ecx, e->ContextRecord->Edx,
+			e->ContextRecord->Esi, e->ContextRecord->Edi, e->ContextRecord->Esp, e->ContextRecord->Ebp,
+			e->ContextRecord->Dr2);
+
+#ifdef _DEBUG
+		CONTEXT Context = *(e->ContextRecord);
+		EmuPrintStackTrace(&Context);
+#endif
+	}
+
+	fflush(stdout);
+}
+
+void EmuExceptionExitProcess()
+{
+	printf("EmuMain (0x%X): Aborting Emulation\n", GetCurrentThreadId());
+	fflush(stdout);
+
+	if (CxbxKrnl_hEmuParent != NULL)
+		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
+
+	ExitProcess(1);
+}
+
+bool EmuExceptionBreakpointAsk(LPEXCEPTION_POINTERS e)
+{
+	EmuExceptionPrintDebugInformation(e, /*IsBreakpointException=*/true);
+
+	char buffer[256];
+	sprintf(buffer,
+		"Recieved Breakpoint Exception (int 3) @ EIP := 0x%.08X\n"
+		"\n"
+		"  Press Abort to terminate emulation.\n"
+		"  Press Retry to debug.\n"
+		"  Press Ignore to continue emulation.",
+		e->ContextRecord->Eip);
+
+	int ret = MessageBox(g_hEmuWindow, buffer, "Cxbx-Reloaded", MB_ICONSTOP | MB_ABORTRETRYIGNORE);
+	if (ret == IDABORT)
+	{
+		EmuExceptionExitProcess();
+	}
+	else if (ret == IDIGNORE)
+	{
+		printf("EmuMain (0x%X): Ignored Breakpoint Exception\n", GetCurrentThreadId());
+		fflush(stdout);
+
+		e->ContextRecord->Eip += 1; // TODO : Skip actual instruction size bytes
+
+		return true;
+	}
+
+	return false;
+}
+
+void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
+{
+	EmuExceptionPrintDebugInformation(e, /*IsBreakpointException=*/false);
+
+	char buffer[256];
+	sprintf(buffer,
+		"Recieved Exception Code 0x%.08X @ EIP := 0x%.08X\n"
+		"\n"
+		"  Press \"OK\" to terminate emulation.\n"
+		"  Press \"Cancel\" to debug.",
+		e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip);
+
+	if (MessageBox(g_hEmuWindow, buffer, "Cxbx-Reloaded", MB_ICONSTOP | MB_OKCANCEL) == IDOK)
+	{
+		EmuExceptionExitProcess();
+	}
+}
+
 // exception handler
 extern int EmuException(LPEXCEPTION_POINTERS e)
 {
     g_bEmuException = true;
+	if (e->ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT)
+	{
+		// notify user
+		if (EmuExceptionBreakpointAsk(e))
+		{
+			// We're allowed to continue :
+			g_bEmuException = false;
+			return EXCEPTION_CONTINUE_EXECUTION;
+		}
+	}
+	else
+	{
+		// Pass the exception to our X86 implementation, to try and execute the failing instruction
+		if (EmuX86_DecodeException(e))
+		{
+			// We're allowed to continue :
+			g_bEmuException = false;
+			return EXCEPTION_CONTINUE_EXECUTION;
+		}
 
-    // notify user
-    {
-        char buffer[256];
+		// notify user
+		EmuExceptionNonBreakpointUnhandledShow(e);
+	}
 
-        if(e->ExceptionRecord->ExceptionCode == 0x80000003)
-        {
-			// print debug information
-			{
-				printf("EmuMain (0x%X): Recieved Breakpoint Exception (int 3)\n", GetCurrentThreadId());
-
-				printf("\n"
-					" EIP := 0x%.08X EFL := 0x%.08X\n"
-					" EAX := 0x%.08X EBX := 0x%.08X ECX := 0x%.08X EDX := 0x%.08X\n"
-					" ESI := 0x%.08X EDI := 0x%.08X ESP := 0x%.08X EBP := 0x%.08X\n"
-					" CR2 := 0x%.08X\n"
-					"\n",
-					e->ContextRecord->Eip, e->ContextRecord->EFlags,
-					e->ContextRecord->Eax, e->ContextRecord->Ebx, e->ContextRecord->Ecx, e->ContextRecord->Edx,
-					e->ContextRecord->Esi, e->ContextRecord->Edi, e->ContextRecord->Esp, e->ContextRecord->Ebp,
-					e->ContextRecord->Dr2);
-
-#ifdef _DEBUG
-				CONTEXT Context = *(e->ContextRecord);
-				EmuPrintStackTrace(&Context);
-#endif
-			}
-
-			fflush(stdout);
-
-            sprintf(buffer,
-                "Recieved Breakpoint Exception (int 3) @ EIP := 0x%.08X\n"
-                "\n"
-                "  Press Abort to terminate emulation.\n"
-                "  Press Retry to debug.\n"
-                "  Press Ignore to continue emulation.",
-                e->ContextRecord->Eip);
-
-            e->ContextRecord->Eip += 1;
-
-            int ret = MessageBox(g_hEmuWindow, buffer, "Cxbx-Reloaded", MB_ICONSTOP | MB_ABORTRETRYIGNORE);
-
-            if(ret == IDABORT)
-            {
-                printf("EmuMain (0x%X): Aborting Emulation\n", GetCurrentThreadId());
-                fflush(stdout);
-
-                if(CxbxKrnl_hEmuParent != NULL)
-                    SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
-
-                ExitProcess(1);
-            }
-            else if(ret == IDIGNORE)
-            {
-                printf("EmuMain (0x%X): Ignored Breakpoint Exception\n", GetCurrentThreadId());
-
-                g_bEmuException = false;
-
-                return EXCEPTION_CONTINUE_EXECUTION;
-            }
-        }
-        else
-        {
-			// Pass the exception to our X86 implementation, to try and execute the failing instruction
-			if (EmuX86_DecodeException(e))
-			{
-				g_bEmuException = false;
-				return EXCEPTION_CONTINUE_EXECUTION;
-			}
-
-
-			// print debug information
-			{
-				printf("EmuMain (0x%X): Recieved Exception (Code := 0x%.08X)\n", GetCurrentThreadId(), e->ExceptionRecord->ExceptionCode);
-
-				printf("\n"
-					" EIP := 0x%.08X EFL := 0x%.08X\n"
-					" EAX := 0x%.08X EBX := 0x%.08X ECX := 0x%.08X EDX := 0x%.08X\n"
-					" ESI := 0x%.08X EDI := 0x%.08X ESP := 0x%.08X EBP := 0x%.08X\n"
-					" CR2 := 0x%.08X\n"
-					"\n",
-					e->ContextRecord->Eip, e->ContextRecord->EFlags,
-					e->ContextRecord->Eax, e->ContextRecord->Ebx, e->ContextRecord->Ecx, e->ContextRecord->Edx,
-					e->ContextRecord->Esi, e->ContextRecord->Edi, e->ContextRecord->Esp, e->ContextRecord->Ebp,
-					e->ContextRecord->Dr2);
-
-#ifdef _DEBUG
-				CONTEXT Context = *(e->ContextRecord);
-				EmuPrintStackTrace(&Context);
-#endif
-			}
-
-			fflush(stdout);
-
-            sprintf(buffer,
-                "Recieved Exception Code 0x%.08X @ EIP := 0x%.08X\n"
-                "\n"
-                "  Press \"OK\" to terminate emulation.\n"
-                "  Press \"Cancel\" to debug.",
-                e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip);
-
-            if(MessageBox(g_hEmuWindow, buffer, "Cxbx-Reloaded", MB_ICONSTOP | MB_OKCANCEL) == IDOK)
-            {
-                printf("EmuMain (0x%X): Aborting Emulation\n", GetCurrentThreadId());
-                fflush(stdout);
-
-                if(CxbxKrnl_hEmuParent != NULL)
-                    SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
-
-                ExitProcess(1);
-            }
-        }
-    }
-
-    g_bEmuException = false;
-
+	// Unhandled exception :
+	g_bEmuException = false;
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
@@ -330,7 +334,7 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
     IMAGEHLP_MODULE64 module = { sizeof(IMAGEHLP_MODULE) };
 
     BOOL fSymInitialized;
-    fSymInitialized = SymInitialize(GetCurrentProcess(), NULL, TRUE);
+    fSymInitialized = SymInitialize(g_CurrentProcessHandle, NULL, TRUE);
 
     STACKFRAME64 frame = { sizeof(STACKFRAME64) };
     frame.AddrPC.Offset    = ContextRecord->Eip;
@@ -344,7 +348,7 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
     {
         if(!StackWalk64(
             IMAGE_FILE_MACHINE_I386,
-            GetCurrentProcess(),
+			g_CurrentProcessHandle,
             GetCurrentThread(),
             &frame,
             ContextRecord,
@@ -358,7 +362,7 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
         PSYMBOL_INFO pSymbol = 0;
         BYTE symbol[sizeof(SYMBOL_INFO) + SYMBOL_MAXLEN];
 
-        SymGetModuleInfo64(GetCurrentProcess(), frame.AddrPC.Offset, &module);
+        SymGetModuleInfo64(g_CurrentProcessHandle, frame.AddrPC.Offset, &module);
 
         if(fSymInitialized)
         {
@@ -366,7 +370,7 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
             pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO) + SYMBOL_MAXLEN - 1;
             pSymbol->MaxNameLen = SYMBOL_MAXLEN;
 
-            if(!SymFromAddr(GetCurrentProcess(), frame.AddrPC.Offset, &dwDisplacement, pSymbol))
+            if(!SymFromAddr(g_CurrentProcessHandle, frame.AddrPC.Offset, &dwDisplacement, pSymbol))
                 pSymbol = 0;
         }
 
@@ -385,7 +389,7 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
     printf("\n");
 
     if(fSymInitialized)
-        SymCleanup(GetCurrentProcess());
+        SymCleanup(g_CurrentProcessHandle);
 
     LeaveCriticalSection(&dbgCritical);
 }

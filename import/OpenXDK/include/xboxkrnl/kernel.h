@@ -12,29 +12,41 @@
 #ifndef KERNEL_H
 #define KERNEL_H
 
+// ******************************************************************
+// * 0x005C - KeAlertResumeThread()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(92) NTSTATUS NTAPI KeAlertResumeThread
 (
 	IN HANDLE ThreadHandle,
 	IN OUT PULONG PreviousSuspendCount
 );
 
+// ******************************************************************
+// * 0x005D - KeAlertThread()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(93) NTSTATUS NTAPI KeAlertThread
 (
 	IN HANDLE ThreadHandle
 );
 
+// ******************************************************************
+// * 0x005E - KeBoostPriorityThread()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(94) NTSTATUS NTAPI KeBoostPriorityThread
 (
 );
 
 // ******************************************************************
-// * KeBugCheck
+// * 0x005F - KeBugCheck()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(95) VOID NTAPI KeBugCheck
 (
 	IN ULONG BugCheckMode
 );
 
+// ******************************************************************
+// * 0x0060 - KeBugCheckEx()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(96) NTSTATUS NTAPI KeBugCheckEx
 (
 	IN DWORD BugCheckCode,
@@ -44,18 +56,24 @@ XBSYSAPI EXPORTNUM(96) NTSTATUS NTAPI KeBugCheckEx
 	IN PVOID BugCheckParameter4
 );
 
-XBSYSAPI VOID *KeCancelTimer;
+// ******************************************************************
+// * 0x0061 - KeCancelTimer()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(97) BOOLEAN NTAPI KeCancelTimer
+(
+	IN PKTIMER
+);
 
 // ******************************************************************
-// * KeConnectInterrupt
+// * 0x0062 - KeConnectInterrupt()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(98) LONG NTAPI KeConnectInterrupt
+XBSYSAPI EXPORTNUM(98) BOOLEAN NTAPI KeConnectInterrupt
 (
     IN PKINTERRUPT  InterruptObject
 );
 
 // ******************************************************************
-// * KeDelayExecutionThread
+// * 0x0063 - KeDelayExecutionThread()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(99) NTSTATUS NTAPI KeDelayExecutionThread
 (
@@ -64,20 +82,37 @@ XBSYSAPI EXPORTNUM(99) NTSTATUS NTAPI KeDelayExecutionThread
     IN PLARGE_INTEGER   Interval
 );
 
-XBSYSAPI VOID *KeDisconnectInterrupt;
-XBSYSAPI VOID *KeEnterCriticalRegion;
-XBSYSAPI VOID *KeGetCurrentIrql;
+// ******************************************************************
+// * 0x0064 - KeDisconnectInterrupt()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(100) VOID NTAPI KeDisconnectInterrupt
+(
+    IN PKINTERRUPT  InterruptObject
+);
 
 // ******************************************************************
-// * KeGetCurrentThread
+// * 0x0065 - KeEnterCriticalRegion()
 // ******************************************************************
-XBSYSAPI VOID *KeGetCurrentThread;
+XBSYSAPI EXPORTNUM(101) VOID NTAPI KeEnterCriticalRegion
+(
+	VOID
+);
+
+// ******************************************************************
+// * 0x0067 - KeGetCurrentIrql()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(103) KIRQL NTAPI KeGetCurrentIrql(void);
+
+// ******************************************************************
+// * 0x0068 - KeGetCurrentThread()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(104) PKTHREAD NTAPI KeGetCurrentThread(void);
 
 XBSYSAPI VOID *KeInitializeApc;
 XBSYSAPI VOID *KeInitializeDeviceQueue;
 
 // ******************************************************************
-// * KeInitializeDpc
+// * 0x006B - KeInitializeDpc()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(107) VOID NTAPI KeInitializeDpc
 (
@@ -89,7 +124,7 @@ XBSYSAPI EXPORTNUM(107) VOID NTAPI KeInitializeDpc
 XBSYSAPI VOID *KeInitializeEvent;
 
 // ******************************************************************
-// * KeInitializeInterrupt
+// * 0x006D - KeInitializeInterrupt()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(109) VOID NTAPI KeInitializeInterrupt
 (
@@ -108,7 +143,7 @@ XBSYSAPI VOID *KeInitializeQueue;
 XBSYSAPI VOID *KeInitializeSemaphore;
 
 // ******************************************************************
-// * KeInitializeTimerEx
+// * 0x0071 - KeInitializeTimerEx()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(113) VOID NTAPI KeInitializeTimerEx
 (
@@ -121,26 +156,48 @@ XBSYSAPI VOID *KeInsertDeviceQueue;
 XBSYSAPI VOID *KeInsertHeadQueue;
 XBSYSAPI VOID *KeInsertQueue;
 XBSYSAPI VOID *KeInsertQueueApc;
-XBSYSAPI VOID *KeInsertQueueDpc;
+
+// ******************************************************************
+// * 0x0077 - KeInsertQueueDpc()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(119) BOOLEAN NTAPI KeInsertQueueDpc
+(
+    IN PKDPC        Dpc,
+    IN PVOID        SystemArgument1,
+    IN PVOID        SystemArgument2
+);
+
 XBSYSAPI VOID *KeInterruptTime;
 XBSYSAPI VOID *KeIsExecutingDpc;
-XBSYSAPI VOID *KeLeaveCriticalRegion;
+
+// ******************************************************************
+// * 0x007A - KeLeaveCriticalRegion()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(122) VOID NTAPI KeLeaveCriticalRegion
+(
+	VOID
+);
+
 XBSYSAPI VOID *KePulseEvent;
 XBSYSAPI VOID *KeQueryBasePriorityThread;
-XBSYSAPI VOID *KeQueryInterruptTime;
 
 // ******************************************************************
-// * KeQueryPerformanceCounter
+// * 0x007D - KeQueryInterruptTime()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(126) ULONGLONG NTAPI KeQueryPerformanceCounter();
+XBSYSAPI EXPORTNUM(125) ULONGLONG NTAPI KeQueryInterruptTime(void);
 
 // ******************************************************************
-// * KeQueryPerformanceFrequency
+// * 0x007E - KeQueryPerformanceCounter()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(127) ULONGLONG NTAPI KeQueryPerformanceFrequency();
+XBSYSAPI EXPORTNUM(126) ULONGLONG NTAPI KeQueryPerformanceCounter(void);
 
 // ******************************************************************
-// * KeQuerySystemTime
+// * 0x007F - KeQueryPerformanceFrequency()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(127) ULONGLONG NTAPI KeQueryPerformanceFrequency(void);
+
+// ******************************************************************
+// * 0x0080 - KeQuerySystemTime()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(128) VOID NTAPI KeQuerySystemTime
 (
@@ -148,7 +205,7 @@ XBSYSAPI EXPORTNUM(128) VOID NTAPI KeQuerySystemTime
 );
 
 // ******************************************************************
-// * KeRaiseIrqlToDpcLevel
+// * 0x0081 - KeRaiseIrqlToDpcLevel()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(129) UCHAR NTAPI KeRaiseIrqlToDpcLevel();
 
@@ -166,29 +223,41 @@ XBSYSAPI VOID *KeResumeThread;
 XBSYSAPI VOID *KeRundownQueue;
 XBSYSAPI VOID *KeSaveFloatingPointState;
 
-//XBSYSAPI VOID *KeSetBasePriorityThread;
-XBSYSAPI EXPORTNUM(143) BOOLEAN NTAPI KeSetBasePriorityThread
+// ******************************************************************
+// * 0x008F - KeSetBasePriorityThread()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(143) LONG NTAPI KeSetBasePriorityThread
 (
     IN PKTHREAD  Thread,
-    IN PVOID  Priority
+    IN LONG	Priority
 );
 
-
-
 XBSYSAPI VOID *KeSetDisableBoostThread;
-XBSYSAPI VOID *KeSetEvent;
+
+// ******************************************************************
+// * 0x0091 - KeSetEvent()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(145) LONG NTAPI KeSetEvent
+(
+	IN PRKEVENT		Event,
+	IN KPRIORITY	Increment,
+	IN BOOLEAN		Wait
+);
+
 XBSYSAPI VOID *KeSetEventBoostPriority;
 XBSYSAPI VOID *KeSetPriorityProcess;
 
-//XBSYSAPI VOID *KeSetPriorityThread;
+// ******************************************************************
+// * 0x0094 - KeSetPriorityThread()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(148) BOOLEAN NTAPI KeSetPriorityThread
 (
     IN PKTHREAD  Thread,
-    IN PVOID  Priority
+    IN LONG  Priority
 );
 
 // ******************************************************************
-// * KeSetTimer
+// * 0x0095 - KeSetTimer()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(149) BOOLEAN NTAPI KeSetTimer
 (
@@ -198,7 +267,7 @@ XBSYSAPI EXPORTNUM(149) BOOLEAN NTAPI KeSetTimer
 );
 
 // ******************************************************************
-// * KeSetTimerEx
+// * 0x0096 - KeSetTimerEx()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(150) BOOLEAN NTAPI KeSetTimerEx
 (
@@ -208,35 +277,51 @@ XBSYSAPI EXPORTNUM(150) BOOLEAN NTAPI KeSetTimerEx
     IN PKDPC          Dpc OPTIONAL
 );
 
-XBSYSAPI VOID *KeStallExecutionProcessor;
+// ******************************************************************
+// * 0x0097 - KeStallExecutionProcessor()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(151) VOID NTAPI KeStallExecutionProcessor
+(
+	IN ULONG MicroSeconds
+);
+
 XBSYSAPI VOID *KeSuspendThread;
 XBSYSAPI VOID *KeSynchronizeExecution;
 XBSYSAPI VOID *KeSystemTime;
 XBSYSAPI VOID *KeTestAlertThread;
 
 // ******************************************************************
-// * KeTickCount
+// * 0x009C - KeTickCount
 // ******************************************************************
 XBSYSAPI EXPORTNUM(156) volatile DWORD KeTickCount;
 
+// ******************************************************************
+// * 0x009D - KeTimeIncrement
+// ******************************************************************
 XBSYSAPI EXPORTNUM(157) ULONG KeTimeIncrement;
 
+// ******************************************************************
+// * 0x009E - KeWaitForMultipleObjects()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(158) NTSTATUS KeWaitForMultipleObjects
 (
     IN ULONG Count,
     IN PVOID Object[],
     IN WAIT_TYPE WaitType,
-    IN int WaitReason,
+    IN KWAIT_REASON WaitReason,
     IN KPROCESSOR_MODE WaitMode,
     IN BOOLEAN Alertable,
     IN PLARGE_INTEGER Timeout OPTIONAL,
-    IN VOID* WaitBlockArray
+    IN PKWAIT_BLOCK	WaitBlockArray  OPTIONAL
 );
 
+// ******************************************************************
+// * 0x009F - KeWaitForSingleObject()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(159) NTSTATUS KeWaitForSingleObject
 (
     IN PVOID Object,
-    IN int WaitReason,
+    IN KWAIT_REASON WaitReason,
     IN KPROCESSOR_MODE WaitMode,
     IN BOOLEAN Alertable,
     IN PLARGE_INTEGER Timeout OPTIONAL

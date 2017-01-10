@@ -35,15 +35,11 @@
 // ******************************************************************
 // * XNetStartup
 // ******************************************************************
-SOOVPA<8> XNetStartup_1_0_4361 =
-{
-    0,  // Large == 0
-    8,  // Count == 8
+OOVPA_XREF(XNetStartup_1_0_4361, 8,
 
-    XRefNotSaved,
-    1,  // XRef Is  Used
+    XRefNoSaveIndex,
+    XRefOne)
 
-    {
         // XNetStartup+0x0F : call [XnInit]
         { 0x10, XREF_XNINIT },  // (Offset,Value)-Pair #1
 
@@ -63,21 +59,16 @@ SOOVPA<8> XNetStartup_1_0_4361 =
         // XNetStartup+0x14 : retn 0x04
         { 0x14, 0xC2 }, // (Offset,Value)-Pair #7
         { 0x15, 0x04 }, // (Offset,Value)-Pair #8
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * WSAStartup
 // ******************************************************************
-SOOVPA<9> WSAStartup_1_0_4361 =
-{
-    0,  // Large == 0
-    9,  // Count == 9
+OOVPA_XREF(WSAStartup_1_0_4361, 9,
 
-    XRefNotSaved,
-    1,  // XRef Is  Used
+    XRefNoSaveIndex,
+    XRefOne)
 
-    {
         // WSAStartup+0x0F : call [XnInit]
         { 0x14, XREF_XNINIT },  // (Offset,Value)-Pair #1
 
@@ -92,21 +83,16 @@ SOOVPA<9> WSAStartup_1_0_4361 =
         { 0x05, 0x74 }, // (Offset,Value)-Pair #7
         { 0x06, 0x24 }, // (Offset,Value)-Pair #8
         { 0x07, 0x08 }, // (Offset,Value)-Pair #9
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XnInit
 // ******************************************************************
-SOOVPA<10> XnInit_1_0_4361 =
-{
-    0,  // Large == 0
-    10, // Count == 10
+OOVPA_XREF(XnInit_1_0_4361, 10,
 
-    XREF_XNINIT, // XRef Is Saved
-    0,           // XRef Not Used
+    XREF_XNINIT,
+    XRefZero)
 
-    {
         // XnInit+0x03 : sub esp, 0x0214
         { 0x03, 0x81 }, // (Offset,Value)-Pair #1
         { 0x04, 0xEC }, // (Offset,Value)-Pair #2
@@ -122,21 +108,13 @@ SOOVPA<10> XnInit_1_0_4361 =
         { 0xBC, 0x68 }, // (Offset,Value)-Pair #8
         { 0xBD, 0xEC }, // (Offset,Value)-Pair #9
         { 0xBE, 0x01 }, // (Offset,Value)-Pair #10
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * socket
 // ******************************************************************
-SOOVPA<9> socket_1_0_4361 =
-{
-    0,  // Large == 0
-    9,  // Count == 9
+OOVPA_NO_XREF(socket_1_0_4361, 9)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         // socket+0x10 : push 0x276D
         { 0x10, 0x68 }, // (Offset,Value)-Pair #1
         { 0x11, 0x6D }, // (Offset,Value)-Pair #2
@@ -151,21 +129,13 @@ SOOVPA<9> socket_1_0_4361 =
         { 0xD9, 0x89 }, // (Offset,Value)-Pair #7
         { 0xDA, 0x4E }, // (Offset,Value)-Pair #8
         { 0xDB, 0x04 }, // (Offset,Value)-Pair #9
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * bind
 // ******************************************************************
-SOOVPA<10> bind_1_0_4361 =
-{
-    0,  // Large == 0
-    10, // Count == 10
+OOVPA_NO_XREF(bind_1_0_4361, 10)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         // bind+0x11 : push 0x276D
         { 0x11, 0x68 }, // (Offset,Value)-Pair #1
         { 0x12, 0x6D }, // (Offset,Value)-Pair #2
@@ -183,21 +153,13 @@ SOOVPA<10> bind_1_0_4361 =
         // bind+0x80 : retn 0x0C
         { 0x80, 0xC2 }, // (Offset,Value)-Pair #9
         { 0x81, 0x0C }, // (Offset,Value)-Pair #10
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * listen
 // ******************************************************************
-SOOVPA<9> listen_1_0_4361 =
-{
-    0,  // Large == 0
-    9,  // Count == 9
+OOVPA_NO_XREF(listen_1_0_4361, 9)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         // listen+0x10 : push 0x276D
         { 0x10, 0x68 }, // (Offset,Value)-Pair #1
         { 0x11, 0x6D }, // (Offset,Value)-Pair #2
@@ -214,21 +176,13 @@ SOOVPA<9> listen_1_0_4361 =
         // listen+0x7F : retn 0x08
         { 0x7F, 0xC2 }, // (Offset,Value)-Pair #8
         { 0x80, 0x08 }, // (Offset,Value)-Pair #9
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * ioctlsocket
 // ******************************************************************
-SOOVPA<10> ioctlsocket_1_0_4361 =
-{
-    0,  // Large == 0
-    10, // Count == 10
+OOVPA_NO_XREF(ioctlsocket_1_0_4361, 10)
 
-    XRefNotSaved,
-    XRefNotUsed,
-
-    {
         // ioctlsocket+0x12 : push 0x276D
         { 0x12, 0x68 }, // (Offset,Value)-Pair #1
         { 0x13, 0x6D }, // (Offset,Value)-Pair #2
@@ -246,82 +200,27 @@ SOOVPA<10> ioctlsocket_1_0_4361 =
         // ioctlsocket+0xC5 : retn 0x0C
         { 0xC5, 0xC2 }, // (Offset,Value)-Pair #9
         { 0xC6, 0x0C }, // (Offset,Value)-Pair #10
-    }
-};
+OOVPA_END;
 
 // ******************************************************************
 // * XOnline_1_0_4361
 // ******************************************************************
-OOVPATable XOnline_1_0_4361[] =
-{
+OOVPATable XOnline_1_0_4361[] = {
+
     // XNetStartup
-    {
-        (OOVPA*)&XNetStartup_1_0_4361,
-
-        XTL::EmuXNetStartup,
-
-        #ifdef _DEBUG_TRACE
-        "EmuXNetStartup"
-        #endif
-    },
-    // WSAStartup
-    {
-        (OOVPA*)&WSAStartup_1_0_4361,
-
-        XTL::EmuWSAStartup,
-
-        #ifdef _DEBUG_TRACE
-        "EmuWSAStartup"
-        #endif
-    },
+	OOVPA_TABLE_PATCH(XNetStartup_1_0_4361, XTL::EmuXNetStartup),
+	// WSAStartup
+	OOVPA_TABLE_PATCH(WSAStartup_1_0_4361, XTL::EmuWSAStartup),
     // XnInit (XREF)
-    {
-        (OOVPA*)&XnInit_1_0_4361, 0,
-
-        #ifdef _DEBUG_TRACE
-        "XnInit (XRef)"
-        #endif
-    },
-    // socket
-    {
-        (OOVPA*)&socket_1_0_4361,
-
-        MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emusocket),
-
-        #ifdef _DEBUG_TRACE
-        "Emusocket"
-        #endif
-    },
-    // bind
-    {
-        (OOVPA*)&bind_1_0_4361,
-
-        MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emubind),
-
-        #ifdef _DEBUG_TRACE
-        "Emubind"
-        #endif
-    },
-    // listen
-    {
-        (OOVPA*)&listen_1_0_4361,
-
-        MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emulisten),
-
-        #ifdef _DEBUG_TRACE
-        "Emulisten"
-        #endif
-    },
-    // ioctlsocket
-    {
-        (OOVPA*)&ioctlsocket_1_0_4361,
-
-        MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emuioctlsocket),
-
-        #ifdef _DEBUG_TRACE
-        "Emuioctlsocket"
-        #endif
-    },
+	OOVPA_TABLE_XREF(XnInit_1_0_4361),
+	// socket
+	OOVPA_TABLE_PATCH(socket_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emusocket)),
+	// bind
+	OOVPA_TABLE_PATCH(bind_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emubind)),
+	// listen
+	OOVPA_TABLE_PATCH(listen_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emulisten)),
+	// ioctlsocket
+	OOVPA_TABLE_PATCH(ioctlsocket_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emuioctlsocket)),
 };
 
 // ******************************************************************

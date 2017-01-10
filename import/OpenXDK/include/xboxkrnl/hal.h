@@ -21,7 +21,7 @@ XBSYSAPI EXPORTNUM(9) VOID NTAPI HalReadSMCTrayState
 	DWORD*	Count
 );
 
-XBSYSAPI EXPORTNUM(38) VOID __fastcall HalClearSoftwareInterrupt
+XBSYSAPI EXPORTNUM(38) VOID FASTCALL HalClearSoftwareInterrupt
 (
 	KIRQL Request
 );
@@ -48,7 +48,7 @@ XBSYSAPI EXPORTNUM(43) BOOLEAN NTAPI HalEnableSystemInterrupt
 XBSYSAPI EXPORTNUM(44) ULONG  NTAPI HalGetInterruptVector
 (
     IN ULONG   InterruptLevel,
-    OUT CHAR*  Irql
+    OUT PKIRQL Irql
 );
 
 // ******************************************************************
@@ -85,13 +85,13 @@ typedef struct {
     LIST_ENTRY ListEntry;
 } HAL_SHUTDOWN_REGISTRATION, *PHAL_SHUTDOWN_REGISTRATION;
 
-// TODO : NTAPI or __fastcall ?
+// TODO : NTAPI or FASTCALL ?
 XBSYSAPI EXPORTNUM(47) VOID HalRegisterShutdownNotification(
     IN PHAL_SHUTDOWN_REGISTRATION ShutdownRegistration,
     IN BOOLEAN Register
 );
 
-XBSYSAPI EXPORTNUM(46) VOID __fastcall HalRequestSoftwareInterrupt
+XBSYSAPI EXPORTNUM(46) VOID FASTCALL HalRequestSoftwareInterrupt
 (
 	IN KIRQL Request
 );

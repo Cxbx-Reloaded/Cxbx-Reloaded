@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -61,11 +63,15 @@ static bool bCacheInp = false;
 static std::vector<void *> vCacheInp;
 static std::vector<void*>::const_iterator vCacheInpIter;
 
+// Set these for experimental APU(sound) / GPU (graphics) LLE
+bool bLLE_APU = false;
+bool bLLE_GPU = false;
+
 void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHeader)
 {
     Xbe::Certificate *pCertificate = (Xbe::Certificate*)pXbeHeader->dwCertificateAddr;
 
-    char szCacheFileName[260];
+    char szCacheFileName[MAX_PATH];
 
     DbgPrintf("\n");
     DbgPrintf("*******************************************************************************\n");
@@ -77,36 +83,27 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
     // initialize HLE cache file
     //
 
-    {
-        SHGetSpecialFolderPath(NULL, szCacheFileName, CSIDL_APPDATA, TRUE);
+	{
+		SHGetSpecialFolderPath(NULL, szCacheFileName, CSIDL_APPDATA, TRUE);
 
-        strcat(szCacheFileName, "\\Cxbx-Reloaded\\");
+		strcat(szCacheFileName, "\\Cxbx-Reloaded\\");
 
-        CreateDirectory(szCacheFileName, NULL);
+		CreateDirectory(szCacheFileName, NULL);
 
-        sint32 spot = -1;
+		char *spot = strrchr(szCacheFileName, '\\');
 
-        for(int v=0;v<260;v++)
-        {
-            if(szCacheFileName[v] == '\\') { spot = v; }
-            else if(szCacheFileName[v] == '\0') { break; }
-        }
+		//
+		// create HLECache directory
+		//
 
-        if(spot != -1) { szCacheFileName[spot] = '\0'; }
+		strcpy(spot, "\\HLECache");
 
-        //
-        // create HLECache directory
-        //
-
-        strcpy(&szCacheFileName[spot], "\\HLECache");
-
-        CreateDirectory(szCacheFileName, NULL);
-
-        //
+		CreateDirectory(szCacheFileName, NULL);
+		
+		//
         // open title's cache file
         //
-
-        sprintf(&szCacheFileName[spot+9], "\\%08x.dat", pCertificate->dwTitleId);
+		sprintf(spot+9, "\\%08x.dat", pCertificate->dwTitleId);
 
         FILE *pCacheFile = fopen(szCacheFileName, "rb");
 
@@ -171,7 +168,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
         uint32 LastUnResolvedXRefs = UnResolvedXRefs+1;
         uint32 OrigUnResolvedXRefs = UnResolvedXRefs;
 
-        for(int p=0;UnResolvedXRefs < LastUnResolvedXRefs;p++)
+		for(int p=0;UnResolvedXRefs < LastUnResolvedXRefs;p++)
         {
             DbgPrintf("HLE: Starting pass #%d...\n", p+1);
 
@@ -223,11 +220,55 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                     szLibraryName[c] = pLibraryVersion[v].szName[c];
 					szOrigLibraryName[c] = pLibraryVersion[v].szName[c];
                 }
+
+				// TODO: HACK: D3DX8 is packed into D3D8 database
+				if (strcmp(szLibraryName, Lib_D3DX8) == 0)
+				{
+					strcpy(szLibraryName, Lib_D3D8);
+				}
+
+				if(strcmp(szLibraryName, Lib_D3D8LTCG) == 0)
+				{
+					// Skip scanning for D3D8LTCG symbols when LLE GPU is selected
+					if (bLLE_GPU)
+						continue;
+
+					// Test (do not release uncommented!)
+					/*strcpy(szLibraryName, Lib_D3D8);*/
+				}
 				
-                // Several 3911 titles has different DSound builds.
-                if(strcmp(szLibraryName, "DSOUND") == 0)
+				if (strcmp(szLibraryName, Lib_D3D8) == 0)
+				{
+					// Skip scanning for D3D8 symbols when LLE GPU is selected
+					if (bLLE_GPU)
+						continue;
+
+					// Prevent scanning D3D8 again (since D3D8X is packed into it above)
+					if (bFoundD3D)
+					{
+						//DbgPrintf("Redundant\n");
+						continue;
+					}
+
+					bFoundD3D = true;
+
+					// Some 3911 titles have different D3D8 builds
+					if (BuildVersion <= 3948)
+						BuildVersion = 3925;
+
+					// Testing... don't release with this code in it!
+					// TODO: 5233 and 5558
+					//	if(BuildVersion == 4134)
+					//		BuildVersion = 4627;
+				}
+				else if(strcmp(szLibraryName, Lib_DSOUND) == 0)
                 {
-                    if(BuildVersion < 4034)
+					// Skip scanning for DSOUND symbols when LLE APU is selected
+					if (bLLE_APU)
+						continue;
+
+					// Several 3911 titles has different DSound builds.
+					if(BuildVersion < 4034)
                     {
                         BuildVersion = 3936;
                     }
@@ -237,22 +278,38 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
 						BuildVersion == 4531 )
 						BuildVersion = 4627;
                 }
-
-
-				// Change a few XAPILIB versions to similar counterparts
-				if(strcmp(szLibraryName, "XAPILIB") == 0)
+				else if(strcmp(szLibraryName, Lib_XAPILIB) == 0)
 				{
+					// Change a few XAPILIB versions to similar counterparts
 					if(BuildVersion == 3944)
 						BuildVersion = 3911;
 					if(BuildVersion == 3950)
 						BuildVersion = 3911;
 					if(OrigBuildVersion == 4531)
 						BuildVersion = 4627;
+				else if (strcmp(szLibraryName, Lib_XGRAPHC) == 0)
+				{
+					// Skip scanning for XGRAPHC (XG) symbols when LLE GPU is selected
+					if (bLLE_GPU)
+						continue;
+
+					//	if(BuildVersion == 4432)
+					//		BuildVersion = 4361;
+					if (BuildVersion == 3944)
+						BuildVersion = 3911;
+					if (OrigBuildVersion == 4531)
+						BuildVersion = 4361;
+					// Quick test (JSRF)
+					if (OrigBuildVersion == 4134)
+						BuildVersion = 4361;
+					// Quick test (Simpsons: RoadRage)
+					//	if(BuildVersion == 4034)
+					//		BuildVersion = 3911;
 				}
 
-                if(bXRefFirstPass)
+				if(bXRefFirstPass)
                 {
-                    if(strcmp("XAPILIB", szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 &&
+                    if(strcmp(Lib_XAPILIB, szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 &&
                         (BuildVersion == 3911 || BuildVersion == 4034 || BuildVersion == 4134 || BuildVersion == 4361
                       || BuildVersion == 4432 || BuildVersion == 4627 || BuildVersion == 5233 || BuildVersion == 5558
                       || BuildVersion == 5849))
@@ -260,6 +317,202 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                         uint32 lower = pXbeHeader->dwBaseAddr;
                         uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
                     }
+                    else if(strcmp(Lib_D3D8, szLibraryName) == 0 /*&& strcmp(Lib_D3D8LTCG, szOrigLibraryName)*/ && 
+						 MajorVersion == 1 && MinorVersion == 0 &&
+                        (BuildVersion == 3925 || BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4432
+                      || BuildVersion == 4627 || BuildVersion == 5233 || BuildVersion == 5558 || BuildVersion == 5849))
+                    {
+						// Save D3D8 build version
+						g_BuildVersion = BuildVersion;
+						g_OrigBuildVersion = OrigBuildVersion;
+
+                        uint32 lower = pXbeHeader->dwBaseAddr;
+                        uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
+
+                        void *pFunc = nullptr;
+
+                        if(BuildVersion == 3925)
+                            pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_3925, lower, upper);
+                        else if(BuildVersion < 5233)
+                            pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4034, lower, upper);
+                        else
+                            pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_5233, lower, upper);
+
+                        // locate D3DDeferredRenderState
+                        if(pFunc != nullptr)
+                        {
+                            // offset for stencil cull enable render state in the deferred render state buffer
+                            int patchOffset = 0;
+
+                            if(BuildVersion == 3925)
+							{
+								XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x25) - 0x1FC + 82*4);  // TODO: Clean up (?)
+								patchOffset = 142*4 - 82*4; // TODO: Verify
+								
+								//XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x25) - 0x19F + 72*4);  // TODO: Clean up (?)
+								//patchOffset = 142*4 - 72*4; // TODO: Verify
+                            }
+                            else if(BuildVersion == 4034 || BuildVersion == 4134)
+                            {
+                                XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x248 + 82*4);  // TODO: Verify
+                                patchOffset = 142*4 - 82*4;
+                            }
+                            else if(BuildVersion == 4361)
+                            {
+                                XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x200 + 82*4);
+                                patchOffset = 142*4 - 82*4;
+                            }
+                            else if(BuildVersion == 4432)
+                            {
+                                XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x204 + 83*4);
+                                patchOffset = 143*4 - 83*4;
+                            }
+                            else if(BuildVersion == 4627 || BuildVersion == 5233 || BuildVersion == 5558 || BuildVersion == 5849)
+                            {
+                                // WARNING: Not thoroughly tested (just seemed very correct right away)
+                                XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x24C + 92*4);
+                                patchOffset = 162*4 - 92*4;
+                            }
+
+                            XRefDataBase[XREF_D3DDEVICE]                   = *(DWORD*)((DWORD)pFunc + 0x03);
+                            XRefDataBase[XREF_D3DRS_MULTISAMPLEMODE]       = (uint32)XTL::EmuD3DDeferredRenderState + patchOffset - 8*4;
+                            XRefDataBase[XREF_D3DRS_MULTISAMPLERENDERTARGETMODE] = (uint32)XTL::EmuD3DDeferredRenderState + patchOffset - 7*4;
+                            XRefDataBase[XREF_D3DRS_STENCILCULLENABLE]     = (uint32)XTL::EmuD3DDeferredRenderState + patchOffset + 0*4;
+                            XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD]     = (uint32)XTL::EmuD3DDeferredRenderState + patchOffset + 1*4;
+                            XRefDataBase[XREF_D3DRS_ROPZREAD]              = (uint32)XTL::EmuD3DDeferredRenderState + patchOffset + 2*4;
+                            XRefDataBase[XREF_D3DRS_DONOTCULLUNCOMPRESSED] = (uint32)XTL::EmuD3DDeferredRenderState + patchOffset + 3*4;
+
+                            for(int v=0;v<44;v++)
+                            {
+                                XTL::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
+                            }
+
+                            DbgPrintf("HLE: 0x%.08X -> EmuD3DDeferredRenderState\n", XTL::EmuD3DDeferredRenderState);
+							//DbgPrintf("HLE: 0x%.08X -> XREF_D3DRS_ROPZCMPALWAYSREAD\n", XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD] );
+                        }
+                        else
+                        {
+                            XTL::EmuD3DDeferredRenderState = nullptr;
+                            CxbxKrnlCleanup("EmuD3DDeferredRenderState was not found!");
+                        }
+
+                        // locate D3DDeferredTextureState
+                        {
+                            pFunc = nullptr;
+
+                            if(BuildVersion == 3925)
+                                pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_3925, lower, upper);
+                            else if(BuildVersion == 4134)
+                                pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4134, lower, upper);
+                            else if(BuildVersion == 4361 || BuildVersion == 4432)
+                                pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361, lower, upper);
+                            else if(BuildVersion == 4627 || BuildVersion == 5233 || BuildVersion == 5558 || BuildVersion == 5849)
+                                pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4627, lower, upper);
+
+                            if(pFunc != nullptr)
+                            {
+                                if(BuildVersion == 3925) // 0x18F180
+                                    XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x11) - 0x70); // TODO: Verify
+                                else if(BuildVersion == 4134)
+                                    XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x18) - 0x70); // TODO: Verify
+                                else
+                                    XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x19) - 0x70);
+
+                                for(int s=0;s<4;s++)
+                                {
+                                    for(int v=0;v<32;v++)
+                                        XTL::EmuD3DDeferredTextureState[v+s*32] = X_D3DTSS_UNK;
+                                }
+
+                                DbgPrintf("HLE: 0x%.08X -> EmuD3DDeferredTextureState\n", XTL::EmuD3DDeferredTextureState);
+                            }
+                            else
+                            {
+                                XTL::EmuD3DDeferredTextureState = nullptr;
+                                CxbxKrnlCleanup("EmuD3DDeferredTextureState was not found!");
+                            }
+                        }
+                    }
+					//else if(strcmp(Lib_D3D8LTCG, szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 &&
+     //                   (BuildVersion == 5849))	// 5849 only so far...
+     //               {
+					//	// Save D3D8 build version
+					//	g_BuildVersion = BuildVersion;
+					//	g_OrigBuildVersion = OrigBuildVersion;
+
+     //                   uint32 lower = pXbeHeader->dwBaseAddr;
+     //                   uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
+
+     //                   void *pFunc = nullptr;
+
+     //                   if(BuildVersion == 5849)
+					//		pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_5849_LTCG, lower, upper);
+
+     //                   // locate D3DDeferredRenderState
+     //                   if(pFunc != nullptr)
+     //                   {
+     //                       // offset for stencil cull enable render state in the deferred render state buffer
+     //                       int patchOffset = 0;
+
+     //                       if(BuildVersion == 5849)
+     //                       {
+     //                           // WARNING: Not thoroughly tested (just seemed very correct right away)
+     //                           XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x24C + 92*4);
+     //                           patchOffset = 162*4 - 92*4;
+     //                       }
+
+     //                       XRefDataBase[XREF_D3DDEVICE]                   = *(DWORD*)((DWORD)pFunc + 0x03);
+     //                       XRefDataBase[XREF_D3DRS_MULTISAMPLEMODE]       = (uint32)XTL::EmuD3DDeferredRenderState + patchOffset - 8*4;
+     //                       XRefDataBase[XREF_D3DRS_MULTISAMPLERENDERTARGETMODE] = (uint32)XTL::EmuD3DDeferredRenderState + patchOffset - 7*4;
+     //                       XRefDataBase[XREF_D3DRS_STENCILCULLENABLE]     = (uint32)XTL::EmuD3DDeferredRenderState + patchOffset + 0*4;
+     //                       XRefDataBase[XREF_D3DRS_ROPZCMPALWAYSREAD]     = (uint32)XTL::EmuD3DDeferredRenderState + patchOffset + 1*4;
+     //                       XRefDataBase[XREF_D3DRS_ROPZREAD]              = (uint32)XTL::EmuD3DDeferredRenderState + patchOffset + 2*4;
+     //                       XRefDataBase[XREF_D3DRS_DONOTCULLUNCOMPRESSED] = (uint32)XTL::EmuD3DDeferredRenderState + patchOffset + 3*4;
+
+     //                       for(int v=0;v<44;v++)
+     //                       {
+     //                           XTL::EmuD3DDeferredRenderState[v] = X_D3DRS_UNK;
+     //                       }
+
+     //                       DbgPrintf("HLE: 0x%.08X -> EmuD3DDeferredRenderState\n", XTL::EmuD3DDeferredRenderState);
+     //                   }
+     //                   else
+     //                   {
+     //                       XTL::EmuD3DDeferredRenderState = nullptr;
+     //                       CxbxKrnlCleanup("EmuD3DDeferredRenderState was not found!");
+     //                   }
+
+     //                   // locate D3DDeferredTextureState
+     //                   {
+     //                       pFunc = nullptr;
+
+     //                       if(BuildVersion == 3925)
+					//			pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_5849_LTCG, lower, upper);
+
+     //                       if(pFunc != nullptr)
+     //                       {
+     //                           if(BuildVersion == 3925) // 0x18F180
+     //                               XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x11) - 0x70); // TODO: Verify
+     //                           else if(BuildVersion == 4134)
+     //                               XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x18) - 0x70); // TODO: Verify
+     //                           else
+     //                               XTL::EmuD3DDeferredTextureState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x19) - 0x70);
+
+     //                           for(int s=0;s<4;s++)
+     //                           {
+     //                               for(int v=0;v<32;v++)
+     //                                   XTL::EmuD3DDeferredTextureState[v+s*32] = X_D3DTSS_UNK;
+     //                           }
+
+     //                           DbgPrintf("HLE: 0x%.08X -> EmuD3DDeferredTextureState\n", XTL::EmuD3DDeferredTextureState);
+     //                       }
+     //                       else
+     //                       {
+     //                           XTL::EmuD3DDeferredTextureState = nullptr;
+     //                           CxbxKrnlCleanup("EmuD3DDeferredTextureState was not found!");
+     //                       }
+     //                   }
+     //               }
                 }
 
                 DbgPrintf("HLE: * Searching HLE database for %s %d.%d.%d...", szLibraryName, MajorVersion, MinorVersion, BuildVersion);
@@ -351,11 +604,11 @@ static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
     uint32 count = Oovpa->Count;
 
     // Skip out if this is an unnecessary search
-    if(!bXRefFirstPass && Oovpa->XRefCount == 0 && Oovpa->XRefSaveIndex == XRefNotSaved)
+    if(!bXRefFirstPass && Oovpa->XRefCount == XRefZero && Oovpa->XRefSaveIndex == XRefNoSaveIndex)
         return 0;
 
     // large
-    if(Oovpa->Large == 1)
+    if(Oovpa->Type == Large)
     {
         LOOVPA<1> *Loovpa = (LOOVPA<1>*)Oovpa;
 
@@ -367,7 +620,7 @@ static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
             uint32 v;
 
             // check all cross references
-            for(v=0;v<Loovpa->XRefCount;v++)
+            for(v=0;v<Oovpa->XRefCount;v++)
             {
                 uint32 Offset = Loovpa->Lovp[v].Offset;
                 uint32 Value  = Loovpa->Lovp[v].Value;
@@ -375,39 +628,45 @@ static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
                 uint32 RealValue = *(uint32*)(cur + Offset);
 
                 if(XRefDataBase[Value] == -1)
-                    goto skipout_L;   // unsatisfied Xref is not acceptable
+                    goto skipout_L;   // Unsatisfied XRef is not acceptable
 
                 if((RealValue + cur + Offset+4 != XRefDataBase[Value]) && (RealValue != XRefDataBase[Value]))
                     break;
             }
 
-            // check all pairs, moving on if any do not match
-            for(v=0;v<count;v++)
-            {
-                uint32 Offset = Loovpa->Lovp[v].Offset;
-                uint32 Value  = Loovpa->Lovp[v].Value;
+			// TODO : Should we do the following (to could prevent false positives), like the small case does?
+			// TODO : Even better would be to merge both paths into one, as this is the only difference...
+			// check OV pairs if all xrefs matched
+			// if (v == Oovpa->XRefCount)
+			{
+				// check all pairs, moving on if any do not match
+				for (v = 0; v < count; v++)
+				{
+					uint32 Offset = Loovpa->Lovp[v].Offset;
+					uint32 Value = Loovpa->Lovp[v].Value;
 
-                uint08 RealValue = *(uint08*)(cur + Offset);
+					uint08 RealValue = *(uint08*)(cur + Offset);
 
-                if(RealValue != Value)
-                    break;
-            }
+					if (RealValue != Value)
+						break;
+				}
+			}
 
             // success if we found all pairs
             if(v == count)
             {
-                if(Loovpa->XRefSaveIndex != XRefNotSaved)
+                if(Oovpa->XRefSaveIndex != XRefNoSaveIndex)
                 {
-                    if(XRefDataBase[Loovpa->XRefSaveIndex] == -1)
+                    if(XRefDataBase[Oovpa->XRefSaveIndex] == -1)
                     {
                         UnResolvedXRefs--;
-                        XRefDataBase[Loovpa->XRefSaveIndex] = cur;
+                        XRefDataBase[Oovpa->XRefSaveIndex] = cur;
 
                         return (void*)cur;
                     }
                     else
                     {
-                        return (void*)XRefDataBase[Loovpa->XRefSaveIndex];   // already Found, no bother patching again
+                        return (void*)XRefDataBase[Oovpa->XRefSaveIndex];   // already Found, no bother patching again
                     }
                 }
 
@@ -430,7 +689,7 @@ static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
             uint32 v;
 
             // check all cross references
-            for(v=0;v<Soovpa->XRefCount;v++)
+            for(v=0;v<Oovpa->XRefCount;v++)
             {
                 uint32 Offset = Soovpa->Sovp[v].Offset;
                 uint32 Value  = Soovpa->Sovp[v].Value;
@@ -445,9 +704,10 @@ static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
             }
 
             // check OV pairs if all xrefs matched
-            if(v == Soovpa->XRefCount)
+            if(v == Oovpa->XRefCount)
             {
                 // check all pairs, moving on if any do not match
+				// TODO : Why does this loop use v=Oovpa->XRefCount instead of starting with v=0 (like in large)?
                 for(;v<count;v++)
                 {
                     uint32 Offset = Soovpa->Sovp[v].Offset;
@@ -463,18 +723,18 @@ static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
             // success if we found all pairs
             if(v == count)
             {
-                if(Soovpa->XRefSaveIndex != XRefNotSaved)
+                if(Oovpa->XRefSaveIndex != XRefNoSaveIndex)
                 {
-                    if(XRefDataBase[Soovpa->XRefSaveIndex] == -1)
+                    if(XRefDataBase[Oovpa->XRefSaveIndex] == -1)
                     {
                         UnResolvedXRefs--;
-                        XRefDataBase[Soovpa->XRefSaveIndex] = cur;
+                        XRefDataBase[Oovpa->XRefSaveIndex] = cur;
 
                         return (void*)cur;
                     }
                     else
                     {
-                        return (void*)XRefDataBase[Soovpa->XRefSaveIndex];   // already Found, no bother patching again
+                        return (void*)XRefDataBase[Oovpa->XRefSaveIndex];   // already Found, no bother patching again
                     }
                 }
 
@@ -499,7 +759,7 @@ static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xb
     {
         OOVPA *Oovpa = OovpaTable[a].Oovpa;
 
-        void *pFunc = NULL;
+        void *pFunc = nullptr;
 
         if(bCacheInp && (vCacheInpIter != vCacheInp.end()))
         {
@@ -513,15 +773,17 @@ static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xb
             vCacheOut.push_back(pFunc);
         }
 
-        if(pFunc != 0)
+        if(pFunc != nullptr)
         {
             #ifdef _DEBUG_TRACE
             DbgPrintf("HLE: 0x%.08X -> %s\n", pFunc, OovpaTable[a].szFuncName);
             #endif
 
-            if(OovpaTable[a].lpRedirect == 0)
+            if(OovpaTable[a].lpRedirect == nullptr)
             {
-                EmuInstallWrapper(pFunc, EmuXRefFailure);
+				// Insert breakpoint
+				*(uint8_t*)pFunc = 0xCC;
+                EmuInstallWrapper((void*)(((uint32_t)pFunc)+1), EmuXRefFailure);
             }
             else
             {
@@ -535,7 +797,6 @@ static void EmuInstallWrappers(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xb
 // alert for the situation where an Xref function body is hit
 static void EmuXRefFailure()
 {
-    _asm int 3;
     CxbxKrnlCleanup("XRef-only function body reached. Fatal Error.");
 }
 

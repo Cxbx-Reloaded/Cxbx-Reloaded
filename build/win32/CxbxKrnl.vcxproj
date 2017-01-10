@@ -80,7 +80,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..\..\import\OpenXDK;..\..\import\zydis\Zydis;..\..\src;..\..\src\Common;..\..\src\Common\Win32;..\..\import\OpenXDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\src;..\..\src\Common;..\..\src\Common\Win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;CXBXKRNL_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -103,14 +103,13 @@
       <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <LargeAddressAware>false</LargeAddressAware>
-      <AdditionalLibraryDirectories>..\..\import\zydis\Build\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\import\distorm\lib\Win32\;..\..\import\glew-2.0.0\lib\Release\Win32\</AdditionalLibraryDirectories>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Bscmake>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy $(SolutionDir)..\..\import\glew-2.0.0\bin\Release\Win32\glew32.dll $(TargetDir)</Command>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -141,7 +140,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\src\Common;..\..\import\zydis\Zydis;..\..\import\OpenXDK\include;..\..\src;..\..\src\Common\Win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\src;..\..\src\Common;..\..\src\Common\Win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;CXBXKRNL_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -156,7 +155,7 @@
       <AdditionalIncludeDirectories>Include\Win32\CxbxKrnl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>Shlwapi.lib;Zydis.lib;legacy_stdio_definitions.lib;dxerr8.lib;xinput.lib;ws2_32.lib;dsound.lib;winmm.lib;ddraw.lib;d3dx8.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;dbghelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Shlwapi.lib;legacy_stdio_definitions.lib;dxerr8.lib;xinput.lib;ws2_32.lib;dsound.lib;winmm.lib;ddraw.lib;d3dx8.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;dbghelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>libci.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -168,14 +167,13 @@
       <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <LargeAddressAware>false</LargeAddressAware>
-      <AdditionalLibraryDirectories>..\..\import\zydis\Build\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\import\distorm\lib\Win32\;..\..\import\glew-2.0.0\lib\Release\Win32\</AdditionalLibraryDirectories>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Bscmake>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy $(SolutionDir)..\..\import\glew-2.0.0\bin\Release\Win32\glew32.dll $(TargetDir)</Command>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -210,8 +208,10 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuDSound.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuFile.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuFS.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuKrnlLogging.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuNtDll.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuNV2A.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\EmuSha.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuShared.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuX86.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXactEng.h" />
@@ -225,6 +225,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEIntercept.h" />
     <ClInclude Include="..\..\src\Common\Win32\Mutex.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\LibRc4.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\nv2a_int.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\OOVPA.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ResourceTracker.h" />
@@ -529,6 +530,7 @@
     <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlIo.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlKd.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlKe.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlLogging.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlMm.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlNt.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuKrnlOb.cpp" />
@@ -550,6 +552,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\EmuNV2A.cpp" />
+    <ClCompile Include="..\..\src\CxbxKrnl\EmuSha.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuX86.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuXactEng.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\EmuXapi.cpp">
@@ -607,6 +610,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\LibRc4.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\ResourceTracker.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>

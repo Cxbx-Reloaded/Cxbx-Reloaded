@@ -113,19 +113,6 @@ typedef DWORD (WINAPI *PTHREAD_START_ROUTINE)
 typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
 
 // ******************************************************************
-// * pfRtlCreateHeap
-// ******************************************************************
-typedef PVOID (WINAPI *pfRtlCreateHeap)
-(
-    IN ULONG   Flags,
-    IN PVOID   Base OPTIONAL,
-    IN ULONG   Reserve OPTIONAL,
-    IN ULONG   Commit,
-    IN PVOID   Lock OPTIONAL,
-    IN PVOID   RtlHeapParams OPTIONAL
-);
-
-// ******************************************************************
 // * XINPUT_POLLING_PARAMETERS
 // ******************************************************************
 typedef struct _XINPUT_POLLING_PARAMETERS
@@ -339,76 +326,6 @@ DWORD WINAPI EmuGetTimeZoneInformation
 );
 
 // ******************************************************************
-// * func: EmuRtlCreateHeap
-// ******************************************************************
-PVOID WINAPI EmuRtlCreateHeap
-(
-    IN ULONG   Flags,
-    IN PVOID   Base OPTIONAL,
-    IN ULONG   Reserve OPTIONAL,
-    IN ULONG   Commit,
-    IN PVOID   Lock OPTIONAL,
-    IN PVOID   RtlHeapParams OPTIONAL
-);
-
-// ******************************************************************
-// * func: EmuRtlAllocateHeap
-// ******************************************************************
-PVOID WINAPI EmuRtlAllocateHeap
-(
-    IN HANDLE hHeap,
-    IN DWORD  dwFlags,
-    IN SIZE_T dwBytes
-);
-
-// ******************************************************************
-// * func: EmuRtlFreeHeap
-// ******************************************************************
-BOOL WINAPI EmuRtlFreeHeap
-(
-    IN HANDLE hHeap,
-    IN DWORD  dwFlags,
-    IN PVOID  lpMem
-);
-
-// ******************************************************************
-// * func: EmuRtlReAllocateHeap
-// ******************************************************************
-PVOID WINAPI EmuRtlReAllocateHeap
-(
-    IN HANDLE hHeap,
-    IN DWORD  dwFlags,
-    IN PVOID  lpMem,
-    IN SIZE_T dwBytes
-);
-
-// ******************************************************************
-// * func: EmuRtlSizeHeap
-// ******************************************************************
-SIZE_T WINAPI EmuRtlSizeHeap
-(
-    IN HANDLE hHeap,
-    IN DWORD  dwFlags,
-    IN PVOID  lpMem
-);
-
-// ******************************************************************
-// * func: EmuQueryPerformanceCounter
-// ******************************************************************
-BOOL WINAPI EmuQueryPerformanceCounter
-(
-    PLARGE_INTEGER lpPerformanceCount
-);
-
-// ******************************************************************
-// * func: EmuQueryPerformanceCounter
-// ******************************************************************
-BOOL WINAPI EmuQueryPerformanceFrequency
-(
-    PLARGE_INTEGER lpFrequency
-);
-
-// ******************************************************************
 // * func: EmuXMountUtilityDrive
 // ******************************************************************
 BOOL WINAPI EmuXMountUtilityDrive
@@ -577,12 +494,43 @@ VOID WINAPI EmuXRegisterThreadNotifyRoutine
 );
 
 // ******************************************************************
-// * func: EmuRtlDestroyHeap
+// * func: EmuCreateFiber
 // ******************************************************************
-PVOID WINAPI EmuRtlDestroyHeap
+LPVOID WINAPI EmuCreateFiber
 (
-    IN HANDLE HeapHandle
+	DWORD					dwStackSize,
+	LPFIBER_START_ROUTINE	lpStartRoutine,
+	LPVOID					lpParameter
 );
+
+// ******************************************************************
+// * func: EmuDeleteFiber
+// ******************************************************************
+VOID WINAPI EmuDeleteFiber
+(
+	LPVOID lpFiber
+);
+
+// ******************************************************************
+// * func: EmuSwitchToFiber
+// ******************************************************************
+VOID WINAPI EmuSwitchToFiber
+(
+	LPVOID lpFiber 
+);
+
+// ******************************************************************
+// * func: EmuConvertThreadToFiber
+// ******************************************************************
+LPVOID WINAPI EmuConvertThreadToFiber
+(
+	LPVOID lpParameter
+);
+
+// ******************************************************************
+// * func: EmuXapiFiberStartup
+// ******************************************************************
+VOID WINAPI EmuXapiFiberStartup(DWORD dwDummy);
 
 // ******************************************************************
 // * func: EmuQueueUserAPC
@@ -632,11 +580,6 @@ VOID WINAPI EmuXSetProcessQuantumLength
 );
 
 // ******************************************************************
-// * func: EmuXGetFileCacheSize
-// ******************************************************************
-DWORD WINAPI EmuXGetFileCacheSize();
-
-// ******************************************************************
 // * func: EmuSignalObjectAndWait
 // ******************************************************************
 DWORD WINAPI EmuSignalObjectAndWait
@@ -645,32 +588,6 @@ DWORD WINAPI EmuSignalObjectAndWait
 	HANDLE	hObjectToWaitOn,
 	DWORD	dwMilliseconds,
 	BOOL	bAlertable
-);
-
-// ******************************************************************
-// * func: EmuPulseEvent
-// ******************************************************************
-BOOL WINAPI EmuPulseEvent( HANDLE hEvent );
-
-// ******************************************************************
-// * func: EmuCreateSemaphore
-// ******************************************************************
-HANDLE WINAPI EmuCreateSemaphore
-(
-	LPVOID	lpSemaphoreAttributes, 
-	LONG	lInitialCount,
-	LONG	lMaximumCount,
-	LPSTR	lpName
-);
-
-// ******************************************************************
-// * func: EmuReleaseSemaphore
-// ******************************************************************
-BOOL WINAPI EmuReleaseSemaphore
-(
-	HANDLE	hSemaphore,
-	LONG	lReleaseCount,
-	LPLONG	lpPreviousCount
 );
 
 // ******************************************************************
@@ -705,25 +622,6 @@ VOID WINAPI EmuRaiseException
 );
 
 // ******************************************************************
-// * func: EmuGetFileAttributesA
-// ******************************************************************
-DWORD WINAPI EmuGetFileAttributesA
-(
-	LPCSTR			lpFileName    // name of file or directory
-);
-
-// ******************************************************************
-// * func: EmuVirtualProtect
-// ******************************************************************
-BOOL WINAPI EmuVirtualProtect
-(
-	LPVOID	lpAddress,       // region of committed pages
-	SIZE_T	dwSize,          // size of the region
-	DWORD	flNewProtect,    // desired access protection
-	PDWORD	lpflOldProtect   // old protection
-);
-
-// ******************************************************************
 // * func: EmulstrcmpiW
 // ******************************************************************
 int WINAPI EmulstrcmpiW
@@ -753,29 +651,6 @@ DWORD WINAPI EmuXMountMURootA
 );
 
 // ******************************************************************
-// * func: EmuCreateWaitableTimerA
-// ******************************************************************
-HANDLE WINAPI EmuCreateWaitableTimerA
-(
-	LPVOID					lpTimerAttributes, // SD
-	BOOL					bManualReset,      // reset type
-	LPCSTR					lpTimerName        // object name
-);
-
-// ******************************************************************
-// * func: EmuSetWaitableTimer
-// ******************************************************************
-BOOL WINAPI EmuSetWaitableTimer
-(
-	HANDLE				hTimer,                     // handle to timer
-	const LARGE_INTEGER *pDueTime,					// timer due time
-	LONG				lPeriod,                    // timer interval
-	PTIMERAPCROUTINE	pfnCompletionRoutine,		// completion routine
-	LPVOID				lpArgToCompletionRoutine,   // completion routine parameter
-	BOOL				fResume                     // resume state
-);
-
-// ******************************************************************
 // * func: EmuXMountAlternateTitle
 // ******************************************************************
 DWORD WINAPI EmuXMountAlternateTitle
@@ -789,27 +664,6 @@ DWORD WINAPI EmuXMountAlternateTitle
 // * func: EmuXUnmountAlternateTitle
 // ******************************************************************
 DWORD WINAPI EmuXUnmountAlternateTitle(CHAR chDrive);
-
-// ******************************************************************
-// * func: EmuVirtualAlloc
-// ******************************************************************
-LPVOID WINAPI EmuVirtualAlloc
-(
-	LPVOID lpAddress,        
-	SIZE_T dwSize,           
-	DWORD flAllocationType,  
-	DWORD flProtect          
-);
-
-// ******************************************************************
-// * func: EmuVirtualAlloc
-// ******************************************************************
-BOOL WINAPI EmuVirtualFree
-(
-	LPVOID lpAddress,   
-	SIZE_T dwSize,      
-	DWORD dwFreeType    
-);
 
 // ******************************************************************
 // * func: EmuMoveFileA

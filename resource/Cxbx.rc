@@ -9,21 +9,15 @@
 //
 #include "WinResrc.h"
 
-#ifndef IDC_STATIC
-#define IDC_STATIC -1
-#endif // IDC_STATIC
-
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
-#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -53,7 +47,6 @@ END
 
 3 TEXTINCLUDE 
 BEGIN
-    "\r\n"
     "\0"
 END
 
@@ -72,15 +65,12 @@ IDB_LOGO                BITMAP                  "Logo.bmp"
 // Menu
 //
 
-IDR_MAINMENU MENU 
+IDR_MAINMENU MENU
 BEGIN
     POPUP "&File"
     BEGIN
         MENUITEM "&Open Xbe...",                ID_FILE_OPEN_XBE
-        MENUITEM "&Close xbe",                  ID_FILE_CLOSE_XBE, GRAYED
-        MENUITEM SEPARATOR
-        MENUITEM "&Import Exe...",              ID_FILE_IMPORTFROMEXE
-        MENUITEM "&Export Exe...",              ID_FILE_EXPORTTOEXE, GRAYED
+        MENUITEM "&Close Xbe",                  ID_FILE_CLOSE_XBE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Save Xbe",                   ID_FILE_SAVEXBEFILE, GRAYED
         MENUITEM "Save Xbe &As...",             ID_FILE_SAVEXBEFILEAS, GRAYED
@@ -97,19 +87,6 @@ BEGIN
             MENUITEM "&7 : Recent Placeholder",     ID_FILE_RXBE_7
             MENUITEM "&8 : Recent Placeholder",     ID_FILE_RXBE_8
             MENUITEM "&9 : Recent Placeholder",     ID_FILE_RXBE_9
-        END
-        POPUP "Recent Exe &Files"
-        BEGIN
-            MENUITEM "&0 : Recent Placeholder",     ID_FILE_REXE_0
-            MENUITEM "&1 : Recent Placeholder",     ID_FILE_REXE_1
-            MENUITEM "&2 : Recent Placeholder",     ID_FILE_REXE_2
-            MENUITEM "&3 : Recent Placeholder",     ID_FILE_REXE_3
-            MENUITEM "&4 : Recent Placeholder",     ID_FILE_REXE_4
-            MENUITEM "&5 : Recent Placeholder",     ID_FILE_REXE_5
-            MENUITEM "&6 : Recent Placeholder",     ID_FILE_REXE_6
-            MENUITEM "&7 : Recent Placeholder",     ID_FILE_REXE_7
-            MENUITEM "&8 : Recent Placeholder",     ID_FILE_REXE_8
-            MENUITEM "&9 : Recent Placeholder",     ID_FILE_REXE_9
         END
         MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_FILE_EXIT
@@ -151,14 +128,13 @@ BEGIN
         MENUITEM "Config &Controller...",       ID_SETTINGS_CONFIG_CONTROLLER
         MENUITEM "Config &Audio...",            ID_SETTINGS_CONFIGURESOUND, GRAYED
         MENUITEM "Config &Video...",            ID_SETTINGS_CONFIG_VIDEO
-        MENUITEM SEPARATOR
-        POPUP "Executable &Generation"
-        BEGIN
-            MENUITEM "&Automatic (&Windows Temp)",  ID_SETTINGS_GENWT
-            MENUITEM "Automatic (&Xbe Path)",       ID_SETTINGS_GENXP
-            MENUITEM "&Manual",                     ID_SETTINGS_GENMA
-        END
-    END
+		MENUITEM SEPARATOR
+		POPUP "&LLE (Experimental)"
+		BEGIN
+			MENUITEM "LLE &APU",				ID_EMULATION_LLE_APU
+			MENUITEM "LLE &GPU",				ID_EMULATION_LLE_GPU
+		END
+	END
     POPUP "E&mulation"
     BEGIN
         MENUITEM "&Start\tF5",                  ID_EMULATION_START, GRAYED
@@ -179,7 +155,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_CONTROLLER_CFG, DIALOG
     BEGIN
@@ -273,18 +249,7 @@ END
 
 IDR_JPEG_ABOUT          JPEG                    "About.jpg"
 IDR_JPEG_SPLASH         JPEG                    "Splash.jpg"
-#endif    // English (U.S.) resources
+#endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
-
-
-#ifndef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 3 resource.
-//
-
-
-/////////////////////////////////////////////////////////////////////////////
-#endif    // not APSTUDIO_INVOKED
 

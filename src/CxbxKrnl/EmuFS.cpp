@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -434,10 +436,4 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 	}
 
 	DbgPrintf("EmuFS (0x%X): OrgFS=%d NewFS=%d pTLS=0x%.08X\n", GetCurrentThreadId(), OrgFS, NewFS, pTLS);
-}
-
-// cleanup fs segment selector emulation
-void EmuCleanupFS()
-{
-
 }

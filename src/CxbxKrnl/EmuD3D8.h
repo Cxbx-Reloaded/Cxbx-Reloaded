@@ -42,6 +42,9 @@
 #define DIRECTDRAW_VERSION 0x0700
 #include <ddraw.h>
 
+// initialize render window
+extern VOID CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
+
 // initialize direct3d
 extern VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
 
@@ -157,33 +160,6 @@ HRESULT WINAPI EmuIDirect3DDevice8_SelectVertexShader
 (
     DWORD                       Handle,
     DWORD                       Address
-);
-
-// ******************************************************************
-// * func: EmuIDirect3D8_GetAdapterModeCount
-// ******************************************************************
-UINT WINAPI EmuIDirect3D8_GetAdapterModeCount
-(
-    UINT                        Adapter
-);
-
-// ******************************************************************
-// * func: EmuIDirect3D8_GetAdapterDisplayMode
-// ******************************************************************
-HRESULT WINAPI EmuIDirect3D8_GetAdapterDisplayMode
-(
-    UINT                        Adapter,
-    X_D3DDISPLAYMODE           *pMode
-);
-
-// ******************************************************************
-// * func: EmuIDirect3D8_EnumAdapterModes
-// ******************************************************************
-HRESULT WINAPI EmuIDirect3D8_EnumAdapterModes
-(
-    UINT                        Adapter,
-    UINT                        Mode,
-    X_D3DDISPLAYMODE           *pMode
 );
 
 // ******************************************************************

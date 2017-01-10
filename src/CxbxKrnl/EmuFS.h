@@ -45,9 +45,6 @@ extern void EmuInitFS();
 // generate fs segment selector
 extern void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData);
 
-// cleanup fs segment selector emulation
-extern void EmuCleanupFS();
-
 typedef struct
 {
 	std::vector<uint08> data;

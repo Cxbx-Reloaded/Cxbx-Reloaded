@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -42,18 +44,24 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
+#include "EmuKrnlLogging.h"
+
+// prevent name collisions
+namespace NtDll
+{
+#include "EmuNtDll.h"
+};
+
 #include "Emu.h" // For EmuWarning()
 #include "EmuAlloc.h" // For CxbxFree(), CxbxMalloc(), etc.
 
 // Global Variable(s)
 PVOID g_pPersistedData = NULL;
 
-using namespace xboxkrnl;
-
 // ******************************************************************
-// * 0x0001 AvGetSavedDataAddress()
+// * 0x0001 - AvGetSavedDataAddress()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress()
+XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress(void)
 {
 	LOG_FUNC();
 
@@ -101,9 +109,9 @@ XBSYSAPI EXPORTNUM(1) xboxkrnl::PVOID NTAPI xboxkrnl::AvGetSavedDataAddress()
 }
 
 // ******************************************************************
-// * 0x0002 AvSendTVEncoderOption()
+// * 0x0002 - AvSendTVEncoderOption()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(2) VOID NTAPI xboxkrnl::AvSendTVEncoderOption
+XBSYSAPI EXPORTNUM(2) xboxkrnl::VOID NTAPI xboxkrnl::AvSendTVEncoderOption
 (
 	IN  PVOID   RegisterBase,
 	IN  ULONG   Option,
@@ -118,12 +126,22 @@ XBSYSAPI EXPORTNUM(2) VOID NTAPI xboxkrnl::AvSendTVEncoderOption
 		LOG_FUNC_ARG_OUT(Result)
 		LOG_FUNC_END;
 
-	// "Run Like Hell" (5233) calls this from a routine at 0x11FCD0 - See XTL_EmuIDirect3DDevice_Unknown1
-	// TODO: What does this do?
-
-	LOG_UNIMPLEMENTED();
+	switch (Option) {
+		case AV_QUERY_AV_CAPABILITIES:
+			// This is the only AV mode we currently emulate, so we can hardcode the return value
+			// TODO: Once we allow the user to configure the connected AV pack, we should implement this proper
+			// This function should first query the AV Pack type, read the user's EEPROM settings and
+			// return the correct flags based on this.
+			*Result = AV_PACK_HDTV | AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
+			break;
+		default:
+			LOG_UNIMPLEMENTED();
+	}
 }
 
+// ******************************************************************
+// * 0x0003 - AvSetDisplayMode()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 (
 	IN  PVOID   RegisterBase,
@@ -150,7 +168,10 @@ XBSYSAPI EXPORTNUM(3) xboxkrnl::ULONG NTAPI xboxkrnl::AvSetDisplayMode
 	RETURN(result);
 }
 
-XBSYSAPI EXPORTNUM(4) VOID NTAPI xboxkrnl::AvSetSavedDataAddress
+// ******************************************************************
+// * 0x0004 - AvSetSavedDataAddress()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(4) xboxkrnl::VOID NTAPI xboxkrnl::AvSetSavedDataAddress
 (
 	IN  PVOID   Address
 )

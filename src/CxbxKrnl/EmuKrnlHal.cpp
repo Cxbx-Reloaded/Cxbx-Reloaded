@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -42,15 +44,21 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
+#include "EmuKrnlLogging.h"
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
+#include "EmuX86.h" // HalReadWritePciSpace needs this
 
-using namespace xboxkrnl;
+// prevent name collisions
+namespace NtDll
+{
+#include "EmuNtDll.h"
+};
 
 // ******************************************************************
-// * 0x0009 HalReadSMCTrayState
+// * 0x0009 - HalReadSMCTrayState()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(9) VOID NTAPI xboxkrnl::HalReadSMCTrayState
+XBSYSAPI EXPORTNUM(9) xboxkrnl::VOID NTAPI xboxkrnl::HalReadSMCTrayState
 (
 	DWORD*	State,
 	DWORD*	Count
@@ -68,6 +76,9 @@ XBSYSAPI EXPORTNUM(9) VOID NTAPI xboxkrnl::HalReadSMCTrayState
 	// TODO: Make this configurable?
 	// TODO: What is the count parameter for??
 
+	if (Count)
+		*Count = 1;
+
 	// Pretend the tray is open
 	// TRAY_CLOSED_NO_MEDIA causes Dashboard to call DeviceIoControl, which we do not implement
 	// TRAY_CLOSED_MEDIA_PRESENT causes Dashboard to attempt to launch media, causing errors.
@@ -76,8 +87,11 @@ XBSYSAPI EXPORTNUM(9) VOID NTAPI xboxkrnl::HalReadSMCTrayState
 	//	*Count = 1;
 }
 
+// ******************************************************************
+// * 0x0026 - HalClearSoftwareInterrupt()
+// ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(38) VOID __fastcall xboxkrnl::HalClearSoftwareInterrupt
+XBSYSAPI EXPORTNUM(38) xboxkrnl::VOID FASTCALL xboxkrnl::HalClearSoftwareInterrupt
 (
 	KIRQL Request
 )
@@ -87,8 +101,11 @@ XBSYSAPI EXPORTNUM(38) VOID __fastcall xboxkrnl::HalClearSoftwareInterrupt
 	LOG_UNIMPLEMENTED();
 }
 
+// ******************************************************************
+// * 0x0027 - HalDisableSystemInterrupt()
+// ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(39) VOID NTAPI xboxkrnl::HalDisableSystemInterrupt
+XBSYSAPI EXPORTNUM(39) xboxkrnl::VOID NTAPI xboxkrnl::HalDisableSystemInterrupt
 (
 	ULONG Vector,
 	KIRQL Irql
@@ -102,16 +119,27 @@ XBSYSAPI EXPORTNUM(39) VOID NTAPI xboxkrnl::HalDisableSystemInterrupt
 	LOG_UNIMPLEMENTED();
 }
 
-
+// ******************************************************************
+// * 0x0028 - HalDiskCachePartitionCount
+// ******************************************************************
 // This enables Partition3..7  Source:OpenXDK  TODO : Make this configurable
 XBSYSAPI EXPORTNUM(40) xboxkrnl::ULONG xboxkrnl::HalDiskCachePartitionCount = 4; // Was 3
 
+// ******************************************************************
+// * 0x0029 - HalDiskModelNumber
+// ******************************************************************
 // Source:OpenXDK  TODO : Fill this with something sensible
 XBSYSAPI EXPORTNUM(41) xboxkrnl::PANSI_STRING xboxkrnl::HalDiskModelNumber = 0;
 
+// ******************************************************************
+// * 0x002A - HalDiskSerialNumber
+// ******************************************************************
 // Source:OpenXDK  TODO : Fill this with something sensible
 XBSYSAPI EXPORTNUM(42) xboxkrnl::PANSI_STRING xboxkrnl::HalDiskSerialNumber = 0;	
 
+// ******************************************************************
+// * 0x002B - HalEnableSystemInterrupt()
+// ******************************************************************
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(43) xboxkrnl::BOOLEAN NTAPI xboxkrnl::HalEnableSystemInterrupt
 (
@@ -131,13 +159,47 @@ XBSYSAPI EXPORTNUM(43) xboxkrnl::BOOLEAN NTAPI xboxkrnl::HalEnableSystemInterrup
 	RETURN(FALSE);
 }
 
+#ifdef _DEBUG_TRACE
+// Source : Xbox Linux
+char *IRQNames[MAX_BUS_INTERRUPT_LEVEL + 1] =
+{
+	"<unknown>",
+	"USB0", // IRQ 1 USB Controller: nVidia Corporation nForce USB Controller (rev d4) (prog-if 10 [OHCI])
+	"<unknown>",
+	"GPU", // IRQ 3 VGA compatible controller: nVidia Corporation: Unknown device 02a0 (rev a1) (prog-if 00 [VGA])
+	"NET", // IRQ 4 Ethernet controller: nVidia Corporation nForce Ethernet Controller (rev d2)
+	"<unknown>",
+	"APU", // IRQ 6 Multimedia audio controller: nVidia Corporation nForce Audio (rev d2)
+	"<unknown>",
+	"<unknown>",
+	"USB1", // IRQ 9 USB Controller : nVidia Corporation nForce USB Controller(rev d4) (prog - if 10[OHCI])
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>",
+	"<unknown>"
+};
+#endif
+
 // ******************************************************************
-// * HalGetInterruptVector
+// * 0x002C - HalGetInterruptVector()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG  NTAPI xboxkrnl::HalGetInterruptVector
 (
 	IN ULONG   InterruptLevel,
-	OUT CHAR*  Irql
+	OUT PKIRQL  Irql
 )
 {
 	LOG_FUNC_BEGIN
@@ -145,15 +207,30 @@ XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG  NTAPI xboxkrnl::HalGetInterruptVector
 		LOG_FUNC_ARG_OUT(Irql)
 		LOG_FUNC_END;
 
-	// I'm only adding this for Virtua Cop 3 (Chihiro). Xbox games need not emulate this.
+	// -blueshogun : I'm only adding this for Virtua Cop 3 (Chihiro). Xbox games need not emulate this.
+	// EmuWarning("HalGetInterruptVector(): If this is NOT a Chihiro game, tell blueshogun!");
 
-	EmuWarning("HalGetInterruptVector(): If this is NOT a Chihiro game, tell blueshogun!");
+	ULONG dwVector = 0;
 
-	RETURN(1);
+	if((InterruptLevel >=0) && (InterruptLevel <= MAX_BUS_INTERRUPT_LEVEL))
+	{
+		// Why 0x30? On Win2k the vector is 0x30+IRQ, so it like that
+		dwVector = 0x30 + InterruptLevel;
+
+		if(Irql)
+			*Irql = (KIRQL)(MAX_BUS_INTERRUPT_LEVEL - InterruptLevel);
+
+#ifdef _DEBUG_TRACE
+		DbgPrintf("HalGetInterruptVector(): Interrupt vector requested for %d (%s)!\n", 
+			InterruptLevel, IRQNames[InterruptLevel]);
+#endif
+	}
+
+	RETURN(dwVector);
 }
 
 // ******************************************************************
-// * 0x002D - HalReadSMBusValue
+// * 0x002D - HalReadSMBusValue()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
 (
@@ -170,18 +247,25 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
 		LOG_FUNC_ARG_OUT(DataValue)
 		LOG_FUNC_END;
 
+	LOG_UNIMPLEMENTED();
+
 	if (ReadWord) {
 		// Write UCHAR
 	}
 	else {
 		// Write BYTE
+		if (DataValue)
+			*DataValue = 1;
 	}
 
 	RETURN(STATUS_SUCCESS);
 }
 
+// ******************************************************************
+// * 0x002E - HalReadWritePCISpace()
+// ******************************************************************
 // Source:OpenXDK
-XBSYSAPI EXPORTNUM(46) VOID NTAPI xboxkrnl::HalReadWritePCISpace
+XBSYSAPI EXPORTNUM(46) xboxkrnl::VOID NTAPI xboxkrnl::HalReadWritePCISpace
 (
 	IN ULONG   BusNumber,
 	IN ULONG   SlotNumber,
@@ -200,13 +284,77 @@ XBSYSAPI EXPORTNUM(46) VOID NTAPI xboxkrnl::HalReadWritePCISpace
 		LOG_FUNC_ARG(WritePCISpace)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	// TODO: Disable Interrupt Processing
+	
+	PCI_SLOT_NUMBER PCISlotNumber;
+	PCI_TYPE1_CFG_BITS CfgBits;
+
+	PCISlotNumber.u.AsULONG = SlotNumber;
+	CfgBits.u.AsULONG = 0;
+	CfgBits.u.bits.BusNumber = BusNumber;
+	CfgBits.u.bits.DeviceNumber = PCISlotNumber.u.bits.DeviceNumber;
+	CfgBits.u.bits.FunctionNumber = PCISlotNumber.u.bits.FunctionNumber;
+	CfgBits.u.bits.Enable = 1;
+
+	// TODO: Verify this calculation is actually correct
+	size_t Size = Length / sizeof(ULONG);
+	ULONG RegisterByteOffset = 0;
+
+	while (Length > 0) {
+		switch (Size) {
+		case 4:
+			CfgBits.u.bits.RegisterNumber = RegisterNumber / sizeof(ULONG);
+			EmuX86_IOWrite32((uint32_t)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
+
+			if (WritePCISpace) {
+				EmuX86_IOWrite32((uint32_t)PCI_TYPE1_DATA_PORT, *((PULONG)Buffer));
+			}
+			else {
+				*((PULONG)Buffer) = EmuX86_IORead32((uint32_t)PCI_TYPE1_DATA_PORT);
+			}
+			break;
+		case 2:
+			RegisterByteOffset = RegisterNumber % sizeof(ULONG);
+			CfgBits.u.bits.RegisterNumber = RegisterNumber / sizeof(ULONG);
+
+			EmuX86_IOWrite32((uint32_t)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
+
+			if (WritePCISpace) {
+				EmuX86_IOWrite16((uint32_t)PCI_TYPE1_DATA_PORT + RegisterByteOffset, *((PUSHORT)Buffer));
+			}
+			else {
+				*((PUSHORT)Buffer) = EmuX86_IORead16((uint32_t)PCI_TYPE1_DATA_PORT + RegisterByteOffset);
+			}
+			break;
+		case 1: {
+			RegisterByteOffset = RegisterNumber % sizeof(ULONG);
+			CfgBits.u.bits.RegisterNumber = RegisterNumber / sizeof(ULONG);
+
+			EmuX86_IOWrite32((uint32_t)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
+
+			if (WritePCISpace) {
+				EmuX86_IOWrite8((uint32_t)PCI_TYPE1_DATA_PORT + RegisterByteOffset, *((PUCHAR)Buffer));
+			}
+			else {
+				*((PUCHAR)Buffer) = EmuX86_IORead8((uint32_t)PCI_TYPE1_DATA_PORT + RegisterByteOffset);
+			}
+		}
+			break;
+		}
+
+		RegisterNumber += Size;
+		Buffer = (PUCHAR)Buffer + Size;
+		Length -= Size;
+	}
+
+	
+	// TODO: Enable Interrupt Processing1
 }
 
 // ******************************************************************
-// * 0x002F - HalRegisterShutdownNotification
+// * 0x002F - HalRegisterShutdownNotification()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(47) VOID xboxkrnl::HalRegisterShutdownNotification
+XBSYSAPI EXPORTNUM(47) xboxkrnl::VOID xboxkrnl::HalRegisterShutdownNotification
 (
 	IN PHAL_SHUTDOWN_REGISTRATION ShutdownRegistration,
 	IN BOOLEAN Register
@@ -220,8 +368,11 @@ XBSYSAPI EXPORTNUM(47) VOID xboxkrnl::HalRegisterShutdownNotification
 	LOG_UNIMPLEMENTED();
 }
 
+// ******************************************************************
+// * 0x0030 - HalRequestSoftwareInterrupt()
+// ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(48) VOID __fastcall xboxkrnl::HalRequestSoftwareInterrupt
+XBSYSAPI EXPORTNUM(48) xboxkrnl::VOID FASTCALL xboxkrnl::HalRequestSoftwareInterrupt
 (
 	IN KIRQL Request
 )
@@ -232,25 +383,19 @@ XBSYSAPI EXPORTNUM(48) VOID __fastcall xboxkrnl::HalRequestSoftwareInterrupt
 }
 
 // ******************************************************************
-// * 0x0031 - HalReturnToFirmware
+// * 0x0031 - HalReturnToFirmware()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(49) VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
+XBSYSAPI EXPORTNUM(49) xboxkrnl::VOID DECLSPEC_NORETURN xboxkrnl::HalReturnToFirmware
 (
 	RETURN_FIRMWARE Routine
 )
 {
 	LOG_FUNC_ONE_ARG(Routine);
-
-	// Prevent the dashboard from rebooting due to unimplemented crypto routines
-	if ((uint32_t)Routine != 4) {
-		CxbxKrnlCleanup("Xbe has rebooted : HalReturnToFirmware(%d)", Routine);
-	}
-
-	LOG_UNIMPLEMENTED();
+	CxbxKrnlCleanup("Xbe has rebooted : HalReturnToFirmware(%d)", Routine);
 }
 
 // ******************************************************************
-// * 0x0032 - HalWriteSMBusValue
+// * 0x0032 - HalWriteSMBusValue()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(50) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMBusValue
 (
@@ -274,9 +419,9 @@ XBSYSAPI EXPORTNUM(50) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMBusValue
 }
 
 // ******************************************************************
-// * READ_PORT_BUFFER_UCHAR
+// * 0x0149 - READ_PORT_BUFFER_UCHAR()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(329) VOID NTAPI xboxkrnl::READ_PORT_BUFFER_UCHAR
+XBSYSAPI EXPORTNUM(329) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_UCHAR
 (
 	IN PUCHAR Port,
 	IN PUCHAR Buffer,
@@ -293,9 +438,9 @@ XBSYSAPI EXPORTNUM(329) VOID NTAPI xboxkrnl::READ_PORT_BUFFER_UCHAR
 }
 
 // ******************************************************************
-// * READ_PORT_BUFFER_USHORT
+// * 0x014A - READ_PORT_BUFFER_USHORT()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(330) VOID NTAPI xboxkrnl::READ_PORT_BUFFER_USHORT
+XBSYSAPI EXPORTNUM(330) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_USHORT
 (
 	IN PUSHORT Port,
 	IN PUSHORT Buffer,
@@ -312,9 +457,9 @@ XBSYSAPI EXPORTNUM(330) VOID NTAPI xboxkrnl::READ_PORT_BUFFER_USHORT
 }
 
 // ******************************************************************
-// * READ_PORT_BUFFER_ULONG
+// * 0x014B - READ_PORT_BUFFER_ULONG()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(331) VOID NTAPI xboxkrnl::READ_PORT_BUFFER_ULONG
+XBSYSAPI EXPORTNUM(331) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_ULONG
 (
 	IN PULONG Port,
 	IN PULONG Buffer,
@@ -331,9 +476,9 @@ XBSYSAPI EXPORTNUM(331) VOID NTAPI xboxkrnl::READ_PORT_BUFFER_ULONG
 }
 
 // ******************************************************************
-// * WRITE_PORT_BUFFER_UCHAR
+// * 0x014C - WRITE_PORT_BUFFER_UCHAR()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(332) VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_UCHAR
+XBSYSAPI EXPORTNUM(332) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_UCHAR
 (
 	IN PUCHAR Port,
 	IN PUCHAR Buffer,
@@ -350,9 +495,9 @@ XBSYSAPI EXPORTNUM(332) VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_UCHAR
 }
 
 // ******************************************************************
-// * WRITE_PORT_BUFFER_USHORT
+// * 0x014D - WRITE_PORT_BUFFER_USHORT()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(333) VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_USHORT
+XBSYSAPI EXPORTNUM(333) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_USHORT
 (
 	IN PUSHORT Port,
 	IN PUSHORT Buffer,
@@ -369,9 +514,9 @@ XBSYSAPI EXPORTNUM(333) VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_USHORT
 }
 
 // ******************************************************************
-// * WRITE_PORT_BUFFER_ULONG
+// * 0x014E - WRITE_PORT_BUFFER_ULONG()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(334) VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_ULONG
+XBSYSAPI EXPORTNUM(334) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_ULONG
 (
 	IN PULONG Port,
 	IN PULONG Buffer,
@@ -388,11 +533,14 @@ XBSYSAPI EXPORTNUM(334) VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_ULONG
 }
 
 // ******************************************************************
-// * HalBootSMCVideoMode
+// * 0x0164 - HalBootSMCVideoMode
 // ******************************************************************
 // TODO: Verify this!
 XBSYSAPI EXPORTNUM(356) xboxkrnl::DWORD xboxkrnl::HalBootSMCVideoMode = 1;
 
+// ******************************************************************
+// * 0x0166 - HalIsResetOrShutdownPending()
+// ******************************************************************
 // Source:Dxbx
 XBSYSAPI EXPORTNUM(358) xboxkrnl::BOOLEAN NTAPI xboxkrnl::HalIsResetOrShutdownPending
 (
@@ -405,6 +553,9 @@ XBSYSAPI EXPORTNUM(358) xboxkrnl::BOOLEAN NTAPI xboxkrnl::HalIsResetOrShutdownPe
 	RETURN(FALSE);
 }
 
+// ******************************************************************
+// * 0x0168 - HalInitiateShutdown()
+// ******************************************************************
 // Source:Dxbx
 XBSYSAPI EXPORTNUM(360) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalInitiateShutdown
 (
@@ -417,13 +568,15 @@ XBSYSAPI EXPORTNUM(360) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalInitiateShutdown
 	RETURN(S_OK);
 }
 
-// HalEnableSecureTrayEject:
+// ******************************************************************
+// * 0x016D - HalEnableSecureTrayEject()
+// ******************************************************************
 // Notifies the SMBUS that ejecting the DVD-ROM should not reset the system.
 // Note that this function can't really be called directly...
 //
 // New to the XBOX.
 // Source:XBMC Undocumented.h
-XBSYSAPI EXPORTNUM(365) VOID NTAPI xboxkrnl::HalEnableSecureTrayEject
+XBSYSAPI EXPORTNUM(365) xboxkrnl::VOID NTAPI xboxkrnl::HalEnableSecureTrayEject
 (
 )
 {
@@ -432,6 +585,9 @@ XBSYSAPI EXPORTNUM(365) VOID NTAPI xboxkrnl::HalEnableSecureTrayEject
 	LOG_UNIMPLEMENTED();
 }
 
+// ******************************************************************
+// * 0x016E - HalWriteSMCScratchRegister()
+// ******************************************************************
 // Source:Dxbx
 XBSYSAPI EXPORTNUM(366) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalWriteSMCScratchRegister
 (

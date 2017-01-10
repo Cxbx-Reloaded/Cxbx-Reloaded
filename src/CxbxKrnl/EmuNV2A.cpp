@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -39,7 +41,14 @@
 #define _CXBXKRNL_INTERNAL
 #define _XBOXKRNL_DEFEXTRN_
 
-#include <Zydis.hpp>
+#ifdef _MSC_VER                         // Check if MS Visual C compiler
+#  pragma comment(lib, "opengl32.lib")  // Compiler-specific directive to avoid manually configuration
+//#  pragma comment(lib, "glu32.lib")     // Link libraries
+#  pragma comment(lib, "glew32.lib")
+#endif
+
+#include <distorm.h> // For uint32_t
+#include <string> // For std::string
 
 #include "CxbxKrnl.h"
 #include "device.h"
@@ -47,9 +56,56 @@
 #include "EmuNV2A.h"
 #include "nv2a_int.h" // from https://github.com/espes/xqemu/tree/xbox/hw/xbox
 
+#include <gl\glew.h>
+#include <gl\GL.h>
+#include <gl\GLU.h>
+//#include <gl\glut.h>
+
+#define NV_PMC_ADDR      0x00000000
+#define NV_PMC_SIZE                 0x001000
+#define NV_PBUS_ADDR     0x00001000
+#define NV_PBUS_SIZE                0x001000
+#define NV_PFIFO_ADDR    0x00002000
+#define NV_PFIFO_SIZE               0x002000
+#define NV_PRMA_ADDR     0x00007000
+#define NV_PRMA_SIZE                0x001000
+#define NV_VIDEO_ADDR    0x00008000
+#define NV_PVIDEO_SIZE              0x001000
+#define NV_PTIMER_ADDR   0x00009000
+#define NV_PTIMER_SIZE              0x001000
+#define NV_PCOUNTER_ADDR 0x0000A000
+#define NV_PCOUNTER_SIZE            0x001000
+#define NV_PVPE_ADDR     0x0000B000
+#define NV_PVPE_SIZE                0x001000
+#define NV_PTV_ADDR      0x0000D000
+#define NV_PTV_SIZE                 0x001000
+#define NV_PRMFB_ADDR    0x000A0000
+#define NV_PRMFB_SIZE               0x020000
+#define NV_PRMVIO_ADDR   0x000C0000
+#define NV_PRMVIO_SIZE              0x001000
+#define NV_PFB_ADDR      0x00100000
+#define NV_PFB_SIZE                 0x001000
+#define NV_PSTRAPS_ADDR  0x00101000
+#define NV_PSTRAPS_SIZE             0x001000
+#define NV_PGRAPH_ADDR   0x00400000
+#define NV_PGRAPH_SIZE              0x002000
+#define NV_PCRTC_ADDR    0x00600000
+#define NV_PCRTC_SIZE               0x001000
+#define NV_PRMCIO_ADDR   0x00601000
+#define NV_PRMCIO_SIZE              0x001000
+#define NV_PRAMDAC_ADDR  0x00680000
+#define NV_PRAMDAC_SIZE             0x001000
+#define NV_PRMDIO_ADDR   0x00681000
+#define NV_PRMDIO_SIZE              0x001000
+#define NV_PRAMIN_ADDR   0x00710000
+#define NV_PRAMIN_SIZE              0x100000
+#define NV_USER_ADDR     0x00800000
+#define NV_USER_SIZE                0x800000
+
 struct {
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;
+	uint32_t regs[NV_PMC_SIZE / sizeof(uint32_t)]; // TODO : union
 } pmc;
 
 struct {
@@ -58,11 +114,11 @@ struct {
 	//TODO:
 	// QemuThread puller_thread;
 	// Cache1State cache1;
-	uint32_t regs[0x2000];
+	uint32_t regs[NV_PFIFO_SIZE / sizeof(uint32_t)]; // TODO : union
 } pfifo;
 
 struct {
-	uint32_t regs[0x1000];
+	uint32_t regs[NV_PVIDEO_SIZE / sizeof(uint32_t)]; // TODO : union
 } pvideo;
 
 
@@ -72,16 +128,18 @@ struct {
 	uint32_t numerator;
 	uint32_t denominator;
 	uint32_t alarm_time;
+	uint32_t regs[NV_PTIMER_SIZE / sizeof(uint32_t)]; // TODO : union
 } ptimer;
 
 struct {
-	uint32_t regs[0x1000];
+	uint32_t regs[NV_PFB_SIZE / sizeof(uint32_t)]; // TODO : union
 } pfb;
 
 struct {
 	uint32_t pending_interrupts;
 	uint32_t enabled_interrupts;
 	uint32_t start;
+	uint32_t regs[NV_PCRTC_SIZE / sizeof(uint32_t)]; // TODO : union
 } pcrtc;
 
 struct {
@@ -89,7 +147,12 @@ struct {
 	uint64_t core_clock_freq;
 	uint32_t memory_clock_coeff;
 	uint32_t video_clock_coeff;
+	uint32_t regs[NV_PRAMDAC_SIZE / sizeof(uint32_t)]; // TODO : union
 } pramdac;
+
+struct {
+	uint32_t regs[NV_PRAMIN_SIZE / sizeof(uint32_t)]; // TODO : union
+} pramin;
 
 struct {
 	uint32_t pending_interrupts;
@@ -113,13 +176,13 @@ static void update_irq()
 	else {
 		pmc.pending_interrupts &= ~NV_PMC_INTR_0_PCRTC;
 	}
+
 	/* PGRAPH */
 	if (pgraph.pending_interrupts & pgraph.enabled_interrupts) {
 		pmc.pending_interrupts |= NV_PMC_INTR_0_PGRAPH;
 	}
 	else {
 		pmc.pending_interrupts &= ~NV_PMC_INTR_0_PGRAPH;
-
 	}
 
 	/* TODO : PBUS * /
@@ -140,11 +203,11 @@ static void update_irq()
 
 	if (pmc.pending_interrupts && pmc.enabled_interrupts) {
 		// TODO Raise IRQ
-		EmuWarning("EmuNV2A: update_irq : Raise IRQ Not Implemented");
+		EmuWarning("EmuNV2A update_irq() : Raise IRQ Not Implemented");
 	}
 	else {
 		// TODO: Cancel IRQ
-		EmuWarning("EmuNV2A: update_irq : Cancel IRQ Not Implemented");
+		EmuWarning("EmuNV2A update_irq() : Cancel IRQ Not Implemented");
 	}
 }
 
@@ -153,8 +216,8 @@ static void update_irq()
 const char *DebugNV_##DEV##(uint32_t addr) \
 { \
 	switch (addr) {
-#define DEBUG_CASE(a) \
-		case a: return #a
+#define DEBUG_CASE(a, c) \
+		case a: return #a##c;
 #define DEBUG_END(DEV) \
 		default: \
 			return "Unknown " #DEV " Address"; \
@@ -169,9 +232,30 @@ DEBUG_START(PMC)
 DEBUG_END(PMC)
 
 DEBUG_START(PBUS)
-	DEBUG_CASE(NV_PBUS_PCI_NV_0);
+	DEBUG_CASE(NV_PBUS_PCI_NV_0, "_VENDOR_ID");
 	DEBUG_CASE(NV_PBUS_PCI_NV_1);
-	DEBUG_CASE(NV_PBUS_PCI_NV_2);
+	DEBUG_CASE(NV_PBUS_PCI_NV_2, "_REVISION_ID");
+	DEBUG_CASE(NV_PBUS_PCI_NV_3, "_LATENCY_TIMER");
+	DEBUG_CASE(NV_PBUS_PCI_NV_4);
+	DEBUG_CASE(NV_PBUS_PCI_NV_5);
+	DEBUG_CASE(NV_PBUS_PCI_NV_6);
+	DEBUG_CASE(NV_PBUS_PCI_NV_7);
+	DEBUG_CASE(NV_PBUS_PCI_NV_11, "_SUBSYSTEM");
+	DEBUG_CASE(NV_PBUS_PCI_NV_12, "_ROM_BASE");
+	DEBUG_CASE(NV_PBUS_PCI_NV_13, "_CAP_PTR");
+	DEBUG_CASE(NV_PBUS_PCI_NV_14, "_RESERVED");
+	DEBUG_CASE(NV_PBUS_PCI_NV_15);
+	DEBUG_CASE(NV_PBUS_PCI_NV_16, "_SUBSYSTEM");
+	DEBUG_CASE(NV_PBUS_PCI_NV_17);
+	DEBUG_CASE(NV_PBUS_PCI_NV_18, "_AGP_STATUS");
+	DEBUG_CASE(NV_PBUS_PCI_NV_19, "_AGP_COMMAND");
+	DEBUG_CASE(NV_PBUS_PCI_NV_20, "_ROM_SHADOW");
+	DEBUG_CASE(NV_PBUS_PCI_NV_21, "_VGA");
+	DEBUG_CASE(NV_PBUS_PCI_NV_22, "_SCRATCH");
+	DEBUG_CASE(NV_PBUS_PCI_NV_23, "_DT_TIMEOUT");
+	DEBUG_CASE(NV_PBUS_PCI_NV_24, "_PME");
+	DEBUG_CASE(NV_PBUS_PCI_NV_25, "_POWER_STATE");
+	DEBUG_CASE(NV_PBUS_PCI_NV_26, "_RESERVED");
 DEBUG_END(PBUS)
 
 DEBUG_START(PFIFO)
@@ -253,10 +337,43 @@ DEBUG_START(PRMVIO)
 DEBUG_END(PRMVIO)
 
 DEBUG_START(PFB)
-
-	DEBUG_CASE(NV_PFB_CFG0);
-	DEBUG_CASE(NV_PFB_CSTATUS);
-	DEBUG_CASE(NV_PFB_WBC);
+	DEBUG_CASE(NV_PFB_CFG0)
+	DEBUG_CASE(NV_PFB_CSTATUS)
+	DEBUG_CASE(NV_PFB_REFCTRL)
+	DEBUG_CASE(NV_PFB_NVM) // 	NV_PFB_NVM_MODE_DISABLE 
+	DEBUG_CASE(NV_PFB_PIN)
+	DEBUG_CASE(NV_PFB_PAD)
+	DEBUG_CASE(NV_PFB_TIMING0)
+	DEBUG_CASE(NV_PFB_TIMING1)
+	DEBUG_CASE(NV_PFB_TIMING2)
+	DEBUG_CASE(NV_PFB_TILE)
+	DEBUG_CASE(NV_PFB_TLIMIT)
+	DEBUG_CASE(NV_PFB_TSIZE)
+	DEBUG_CASE(NV_PFB_TSTATUS)
+	DEBUG_CASE(NV_PFB_MRS)
+	DEBUG_CASE(NV_PFB_EMRS)
+	DEBUG_CASE(NV_PFB_MRS_EXT)
+	DEBUG_CASE(NV_PFB_EMRS_EXT)
+	DEBUG_CASE(NV_PFB_REF)
+	DEBUG_CASE(NV_PFB_PRE)
+	DEBUG_CASE(NV_PFB_ZCOMP)
+	DEBUG_CASE(NV_PFB_ARB_PREDIVIDER)
+	DEBUG_CASE(NV_PFB_ARB_TIMEOUT)
+	DEBUG_CASE(NV_PFB_ARB_XFER_REM)
+	DEBUG_CASE(NV_PFB_ARB_DIFF_BANK)
+	DEBUG_CASE(NV_PFB_CLOSE_PAGE0)
+	DEBUG_CASE(NV_PFB_CLOSE_PAGE1)
+	DEBUG_CASE(NV_PFB_CLOSE_PAGE2)
+	DEBUG_CASE(NV_PFB_BPARB)
+	DEBUG_CASE(NV_PFB_CMDQ0)
+	DEBUG_CASE(NV_PFB_CMDQ1)
+	DEBUG_CASE(NV_PFB_ILL_INSTR)
+	DEBUG_CASE(NV_PFB_RT)
+	DEBUG_CASE(NV_PFB_AUTOCLOSE)
+	DEBUG_CASE(NV_PFB_WBC)
+	DEBUG_CASE(NV_PFB_CMDQ_PRT)
+	DEBUG_CASE(NV_PFB_CPU_RRQ)
+	DEBUG_CASE(NV_PFB_BYPASS);
 DEBUG_END(PFB)
 
 DEBUG_START(PSTRAPS)
@@ -393,23 +510,16 @@ DEBUG_START(USER)
 DEBUG_END(USER)
 
 
-#define DEBUG_READ32(DEV) EmuWarning("EmuNV2A_" #DEV "_Read32($%08X) // %s = $%08X", addr, DebugNV_##DEV##(addr), result)
-#define DEBUG_WRITE32(DEV) EmuWarning("EmuNV2A_" #DEV "_Write32($%08X, $%08X) // %s ", addr, value, DebugNV_##DEV##(addr))
-#define DEBUG_READ32_UNHANDLED(DEV) EmuWarning("EmuNV2A_" #DEV "_Read32 Unhandled")
-#define DEBUG_WRITE32_UNHANDLED(DEV) EmuWarning("EmuNV2A_" #DEV "_Write32 Unhandled")
+#define READ32_START(DEV) uint32_t EmuNV2A_##DEV##_Read32(uint32_t addr) { uint32_t result = 0; switch (addr) {
+#define READ32_UNHANDLED(DEV) default: EmuWarning("EmuX86_Read32 NV2A_" #DEV "(0x%08X) = 0x%08X [Unhandled, %s]", addr, result, DebugNV_##DEV##(addr)); return result;
+#define READ32_END(DEV) } EmuWarning("EmuX86_Read32 NV2A_" #DEV "(0x%08X) = 0x%08X [Handled, %s]", addr, result, DebugNV_##DEV##(addr)); return result; }
 
-#define DEVICE_READ32(DEV) uint32_t EmuNV2A_##DEV##_Read32(uint32_t addr)
-#define DEVICE_READ32_SWITCH(addr) uint32_t result = 0; switch (addr) 
-#define DEVICE_READ32_END(DEV) DEBUG_READ32(DEV); return result
-
-#define DEVICE_WRITE32(DEV) void EmuNV2A_##DEV##_Write32(uint32_t addr, uint32_t value)
-#define DEVICE_WRITE32_SWITCH(DEV, addr) DEBUG_WRITE32(DEV); switch (addr)
+#define WRITE32_START(DEV) void EmuNV2A_##DEV##_Write32(uint32_t addr, uint32_t value) { switch (addr) {
+#define WRITE32_UNHANDLED(DEV) default: EmuWarning("EmuX86_Write32 NV2A_" #DEV "(0x%08X, 0x%08X) [Unhandled, %s]", addr, value, DebugNV_##DEV##(addr)); return;
+#define WRITE32_END(DEV) } EmuWarning("EmuX86_Write32 NV2A_" #DEV "(0x%08X, 0x%08X) [Handled, %s]", addr, value, DebugNV_##DEV##(addr)); }  
 
 
-DEVICE_READ32(PMC)
-{
-	DEVICE_READ32_SWITCH(addr) {
-
+READ32_START(PMC)
 	case NV_PMC_BOOT_0:	// chipset and stepping: NV2A, A02, Rev 0
 		result = 0x02A000A2;
 		break;
@@ -483,6 +593,10 @@ DEVICE_WRITE32(PBUS)
 DEVICE_READ32(PFIFO)
 {
 	DEVICE_READ32_SWITCH(addr) {
+	case NV_PFIFO_RAMHT:
+		result = 0x03000100; // = NV_PFIFO_RAMHT_SIZE_4K | NV_PFIFO_RAMHT_BASE_ADDRESS(NumberOfPaddingBytes >> 12) | NV_PFIFO_RAMHT_SEARCH_128
+	case NV_PFIFO_RAMFC:
+		result = 0x00890110; // = ? | NV_PFIFO_RAMFC_SIZE_2K | ?
 	default: 
 		DEBUG_READ32_UNHANDLED(PFIFO);
 	}
@@ -707,6 +821,8 @@ DEVICE_WRITE32(PRMVIO)
 DEVICE_READ32(PFB)
 {
 	DEVICE_READ32_SWITCH(addr) {
+	case NV_PFB_CFG0:
+		result = 3; // = NV_PFB_CFG0_PART_4
 	default:
 		result = pfb.regs[addr];
 	}
@@ -901,7 +1017,7 @@ DEVICE_READ32(PRAMIN)
 {
 	DEVICE_READ32_SWITCH(addr) {
 	default: 
-		DEBUG_READ32_UNHANDLED(PRAMIN);
+		result = pramin.regs[addr];
 	}
 
 	DEVICE_READ32_END(PRAMIN);
@@ -911,7 +1027,7 @@ DEVICE_WRITE32(PRAMIN)
 {
 	DEVICE_WRITE32_SWITCH(PRAMIN, addr) {
 	default: 
-		DEBUG_WRITE32_UNHANDLED(PRAMIN);
+		pramin.regs[addr] = value;
 	}
 }
 
@@ -935,125 +1051,446 @@ DEVICE_WRITE32(USER)
 }
 
 
+typedef struct NV2ABlockInfo {
+		uint32_t offset;
+		uint32_t size;
+		uint32_t(*read)(uint32_t addr);
+		void(*write)(uint32_t addr, uint32_t value);
+} NV2ABlockInfo;
+
+static const NV2ABlockInfo regions[] = {{
+		/* card master control */
+		NV_PMC_ADDR, // = 0x000000
+		NV_PMC_SIZE, // = 0x001000
+		EmuNV2A_PMC_Read32,
+		EmuNV2A_PMC_Write32,
+	}, {
+		/* bus control */
+		NV_PBUS_ADDR, // = 0x001000
+		NV_PBUS_SIZE, // = 0x001000
+		EmuNV2A_PBUS_Read32,
+		EmuNV2A_PBUS_Write32,
+	}, {
+		/* MMIO and DMA FIFO submission to PGRAPH and VPE */
+		NV_PFIFO_ADDR, // = 0x002000
+		NV_PFIFO_SIZE, // = 0x002000
+		EmuNV2A_PFIFO_Read32,
+		EmuNV2A_PFIFO_Write32,
+	}, {
+		/* access to BAR0/BAR1 from real mode */
+		NV_PRMA_ADDR, // = 0x007000
+		NV_PRMA_SIZE, // = 0x001000
+		EmuNV2A_PRMA_Read32,
+		EmuNV2A_PRMA_Write32,
+	}, {
+		/* video overlay */
+		NV_VIDEO_ADDR, // = 0x008000
+		NV_PVIDEO_SIZE, // = 0x001000
+		EmuNV2A_PVIDEO_Read32,
+		EmuNV2A_PVIDEO_Write32,
+	}, {
+		/* time measurement and time-based alarms */
+		NV_PTIMER_ADDR, // = 0x009000
+		NV_PTIMER_SIZE, // = 0x001000
+		EmuNV2A_PTIMER_Read32,
+		EmuNV2A_PTIMER_Write32,
+	}, {
+		/* performance monitoring counters */
+		NV_PCOUNTER_ADDR, // = 0x00a000
+		NV_PCOUNTER_SIZE, // = 0x001000
+		EmuNV2A_PCOUNTER_Read32,
+		EmuNV2A_PCOUNTER_Write32,
+	}, {
+		/* MPEG2 decoding engine */
+		NV_PVPE_ADDR, // = 0x00b000
+		NV_PVPE_SIZE, // = 0x001000
+		EmuNV2A_PVPE_Read32,
+		EmuNV2A_PVPE_Write32,
+	},	{
+		/* TV encoder */
+		NV_PTV_ADDR, // = 0x00d000
+		NV_PTV_SIZE, // = 0x001000
+		EmuNV2A_PTV_Read32,
+		EmuNV2A_PTV_Write32,
+	}, {
+		/* aliases VGA memory window */
+		NV_PRMFB_ADDR, // = 0x0a0000
+		NV_PRMFB_SIZE, // = 0x020000
+		EmuNV2A_PRMFB_Read32,
+		EmuNV2A_PRMFB_Write32,
+	}, {
+		/* aliases VGA sequencer and graphics controller registers */
+		NV_PRMVIO_ADDR, // = 0x0c0000
+		NV_PRMVIO_SIZE, // = 0x001000
+		EmuNV2A_PRMVIO_Read32,
+		EmuNV2A_PRMVIO_Write32,
+	},{
+		/* memory interface */
+		NV_PFB_ADDR, // = 0x100000
+		NV_PFB_SIZE, // = 0x001000
+		EmuNV2A_PFB_Read32,
+		EmuNV2A_PFB_Write32,
+	}, {
+		/* straps readout / override */
+		NV_PSTRAPS_ADDR, // = 0x101000
+		NV_PSTRAPS_SIZE, // = 0x001000
+		EmuNV2A_PSTRAPS_Read32,
+		EmuNV2A_PSTRAPS_Write32,
+	}, {
+		/* accelerated 2d/3d drawing engine */
+		NV_PGRAPH_ADDR, // = 0x400000
+		NV_PGRAPH_SIZE, // = 0x002000
+		EmuNV2A_PGRAPH_Read32,
+		EmuNV2A_PGRAPH_Write32,
+	}, {
+		/* more CRTC controls */
+		NV_PCRTC_ADDR, // = 0x600000
+		NV_PCRTC_SIZE, // = 0x001000
+		EmuNV2A_PCRTC_Read32,
+		EmuNV2A_PCRTC_Write32,
+	}, {
+		/* aliases VGA CRTC and attribute controller registers */
+		NV_PRMCIO_ADDR, // = 0x601000
+		NV_PRMCIO_SIZE, // = 0x001000
+		EmuNV2A_PRMCIO_Read32,
+		EmuNV2A_PRMCIO_Write32,
+	}, {
+		/* RAMDAC, cursor, and PLL control */
+		NV_PRAMDAC_ADDR, // = 0x680000
+		NV_PRAMDAC_SIZE, // = 0x001000
+		EmuNV2A_PRAMDAC_Read32,
+		EmuNV2A_PRAMDAC_Write32,
+	}, {
+		/* aliases VGA palette registers */
+		NV_PRMDIO_ADDR, // = 0x681000
+		NV_PRMDIO_SIZE, // = 0x001000
+		EmuNV2A_PRMDIO_Read32,
+		EmuNV2A_PRMDIO_Write32,
+	}, {
+		/* RAMIN access */
+		NV_PRAMIN_ADDR, // = 0x710000
+		NV_PRAMIN_SIZE, // = 0x100000
+		EmuNV2A_PRAMIN_Read32,
+		EmuNV2A_PRAMIN_Write32,
+	},{
+		/* PFIFO MMIO and DMA submission area */
+		NV_USER_ADDR, // = 0x800000,
+		NV_USER_SIZE, // = 0x800000,
+		EmuNV2A_USER_Read32,
+		EmuNV2A_USER_Write32,
+	}, {
+		0xFFFFFFFF,
+		0,
+		nullptr,
+		nullptr,
+	},
+};
+
+const NV2ABlockInfo* EmuNV2A_Block(uint32_t addr) 
+{
+	// Find the block in the block table
+	const NV2ABlockInfo* block = &regions[0];
+	int i = 0;
+
+	while (block->read != nullptr) {
+		if (addr >= block->offset && addr < block->offset + block->size) {
+			return block;
+		}
+
+		block = &regions[++i];
+	}
+
+	return nullptr;
+}
 
 uint32_t EmuNV2A_Read32(uint32_t addr)
 {
-	switch ((addr >> 12) & 31) {
-	case NV_PMC          :  /* card master control */
-		return EmuNV2A_PMC_Read32(addr & 0x0FFF);
-	case NV_PBUS         :  /* bus control */
-		return EmuNV2A_PBUS_Read32(addr & 0x0FFF);
-	case NV_PFIFO        :  /* MMIO and DMA FIFO submission to PGRAPH and VPE */
-		return EmuNV2A_PFIFO_Read32(addr & 0x0FFF);
-	case NV_PFIFO_CACHE  :
-		return EmuNV2A_PFIFO_CACHE_Read32(addr & 0x0FFF);
-	case NV_PRMA         :  /* access to BAR0/BAR1 from real mode */
-		return EmuNV2A_PRMA_Read32(addr & 0x0FFF);
-	case NV_PVIDEO       :  /* video overlay */
-		return EmuNV2A_PVIDEO_Read32(addr & 0x0FFF);
-	case NV_PTIMER       :  /* time measurement and time-based alarms */
-		return EmuNV2A_PTIMER_Read32(addr & 0x0FFF);
-	case NV_PCOUNTER     :  /* performance monitoring counters */
-		return EmuNV2A_PCOUNTER_Read32(addr & 0x0FFF);
-	case NV_PVPE         :  /* MPEG2 decoding engine */
-		return EmuNV2A_PVPE_Read32(addr & 0x0FFF);
-	case NV_PTV          :  /* TV encoder */
-		return EmuNV2A_PTV_Read32(addr & 0x0FFF);
-	case NV_PRMFB        :  /* aliases VGA memory window */
-		return EmuNV2A_PRMFB_Read32(addr & 0x0FFF);
-	case NV_PRMVIO       :  /* aliases VGA sequencer and graphics controller registers */
-		return EmuNV2A_PRMVIO_Read32(addr & 0x0FFF);
-	case NV_PFB          :  /* memory interface */
-		return EmuNV2A_PFB_Read32(addr & 0x0FFF);
-	case NV_PSTRAPS      :  /* straps readout / override */
-		return EmuNV2A_PSTRAPS_Read32(addr & 0x0FFF);
-	case NV_PGRAPH       :  /* accelerated 2d/3d drawing engine */
-		return EmuNV2A_PGRAPH_Read32(addr & 0x0FFF);
-	case NV_PCRTC        :  /* more CRTC controls */
-		return EmuNV2A_PCRTC_Read32(addr & 0x0FFF);
-	case NV_PRMCIO       :  /* aliases VGA CRTC and attribute controller registers */
-		return EmuNV2A_PRMCIO_Read32(addr & 0x0FFF);
-    case NV_PRAMDAC      :  /* RAMDAC, cursor, and PLL control */
-		return EmuNV2A_PRAMDAC_Read32(addr & 0x0FFF);
-	case NV_PRMDIO       :  /* aliases VGA palette registers */
-		return EmuNV2A_PRMDIO_Read32(addr & 0x0FFF);
-	case NV_PRAMIN       :  /* RAMIN access */
-		return EmuNV2A_PRAMIN_Read32(addr & 0x0FFF);
-	case NV_USER         :  /* PFIFO MMIO and DMA submission area */
-		return EmuNV2A_USER_Read32(addr & 0x0FFF);
-	default:
-		EmuWarning("EmuNV2A_Read32: Unhandled Read Address %08X", addr);
+	const NV2ABlockInfo* block = EmuNV2A_Block(addr);
+
+	if (block != nullptr) {
+		return block->read(addr - block->offset);
 	}
+
+	EmuWarning("EmuNV2A_Read32: Unhandled Read Address %08X", addr);
 	return 0;
 }
 
 void EmuNV2A_Write32(uint32_t addr, uint32_t value)
 {
-	switch ((addr >> 12) & 31) {
-	case NV_PMC:  /* card master control */
-		EmuNV2A_PMC_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PBUS:  /* bus control */
-		EmuNV2A_PBUS_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PFIFO:  /* MMIO and DMA FIFO submission to PGRAPH and VPE */
-		EmuNV2A_PFIFO_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PFIFO_CACHE:
-		EmuNV2A_PFIFO_CACHE_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PRMA:  /* access to BAR0/BAR1 from real mode */
-		EmuNV2A_PRMA_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PVIDEO:  /* video overlay */
-		EmuNV2A_PVIDEO_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PTIMER:  /* time measurement and time-based alarms */
-		EmuNV2A_PTIMER_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PCOUNTER:  /* performance monitoring counters */
-		EmuNV2A_PCOUNTER_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PVPE:  /* MPEG2 decoding engine */
-		EmuNV2A_PVPE_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PTV:  /* TV encoder */
-		EmuNV2A_PTV_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PRMFB:  /* aliases VGA memory window */
-		EmuNV2A_PRMFB_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PRMVIO:  /* aliases VGA sequencer and graphics controller registers */
-		EmuNV2A_PRMVIO_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PFB:  /* memory interface */
-		EmuNV2A_PFB_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PSTRAPS:  /* straps readout / override */
-		EmuNV2A_PSTRAPS_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PGRAPH:  /* accelerated 2d/3d drawing engine */
-		EmuNV2A_PGRAPH_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PCRTC:  /* more CRTC controls */
-		EmuNV2A_PCRTC_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PRMCIO:  /* aliases VGA CRTC and attribute controller registers */
-		EmuNV2A_PRMCIO_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PRAMDAC:  /* RAMDAC, cursor, and PLL control */
-		EmuNV2A_PRAMDAC_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PRMDIO:  /* aliases VGA palette registers */
-		EmuNV2A_PRMDIO_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_PRAMIN:  /* RAMIN access */
-		EmuNV2A_PRAMIN_Write32(addr & 0x0FFF, value);
-		break;
-	case NV_USER:  /* PFIFO MMIO and DMA submission area */
-		EmuNV2A_USER_Write32(addr & 0x0FFF, value);
-		break;
-	default:
-		EmuWarning("EmuNV2A_Write32: Unhandled Write Address %08X (value %08X)", addr, value);
+	const NV2ABlockInfo* block = EmuNV2A_Block(addr);
+
+	if (block != nullptr) {
+		block->write(addr - block->offset, value);
+		return;
 	}
+
+	EmuWarning("EmuNV2A_Write32: Unhandled Write Address %08X (value %08X)", addr, value);
+	return;
+}
+
+//
+// OPENGL
+//
+
+// 
+#define X_D3DTS_STAGECOUNT 4
+
+HDC g_EmuWindowsDC = 0;
+GLuint VertexProgramIDs[4] = { 0, 0, 0, 0 };
+uint ActiveVertexProgramID = 0;
+GLuint TextureIDs[X_D3DTS_STAGECOUNT]= { 0, 0, 0, 0 };
+
+// Vertex shader header, mapping Xbox1 registers to the ARB syntax (original version by KingOfC).
+// Note about the use of 'conventional' attributes in here: Since we prefer to use only one shader
+// for both immediate and deferred mode rendering, we alias all attributes to conventional inputs
+// as much as possible. Only when there's no conventional attribute available, we use generic attributes.
+// So in the following header, we use conventional attributes first, and generic attributes for the
+// rest of the vertex attribute slots. This makes it possible to support immediate and deferred mode
+// rendering with the same shader, and the use of the OpenGL fixed-function pipeline without a shader.
+std::string DxbxVertexShaderHeader =
+    "!!ARBvp1.0\n"
+    "TEMP R0,R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12;\n"
+    "ADDRESS A0;\n"
+#ifdef DXBX_OPENGL_CONVENTIONAL
+    "ATTRIB v0 = vertex.position;\n" // Was: vertex.attrib[0] (See "conventional" note above)
+    "ATTRIB v1 = vertex.%s;\n" // Note : We replace this with "weight" or "attrib[1]" depending GL_ARB_vertex_blend
+    "ATTRIB v2 = vertex.normal;\n" // Was: vertex.attrib[2]
+    "ATTRIB v3 = vertex.color.primary;\n" // Was: vertex.attrib[3]
+    "ATTRIB v4 = vertex.color.secondary;\n" // Was: vertex.attrib[4]
+    "ATTRIB v5 = vertex.fogcoord;\n" // Was: vertex.attrib[5]
+    "ATTRIB v6 = vertex.attrib[6];\n"
+    "ATTRIB v7 = vertex.attrib[7];\n"
+    "ATTRIB v8 = vertex.texcoord[0];\n" // Was: vertex.attrib[8]
+    "ATTRIB v9 = vertex.texcoord[1];\n" // Was: vertex.attrib[9]
+    "ATTRIB v10 = vertex.texcoord[2];\n" // Was: vertex.attrib[10]
+    "ATTRIB v11 = vertex.texcoord[3];\n" // Was: vertex.attrib[11]
+#else
+    "ATTRIB v0 = vertex.attrib[0];\n"
+    "ATTRIB v1 = vertex.attrib[1];\n"
+    "ATTRIB v2 = vertex.attrib[2];\n"
+    "ATTRIB v3 = vertex.attrib[3];\n"
+    "ATTRIB v4 = vertex.attrib[4];\n"
+    "ATTRIB v5 = vertex.attrib[5];\n"
+    "ATTRIB v6 = vertex.attrib[6];\n"
+    "ATTRIB v7 = vertex.attrib[7];\n"
+    "ATTRIB v8 = vertex.attrib[8];\n"
+    "ATTRIB v9 = vertex.attrib[9];\n"
+    "ATTRIB v10 = vertex.attrib[10];\n"
+    "ATTRIB v11 = vertex.attrib[11];\n"
+#endif
+    "ATTRIB v12 = vertex.attrib[12];\n"
+    "ATTRIB v13 = vertex.attrib[13];\n"
+    "ATTRIB v14 = vertex.attrib[14];\n"
+    "ATTRIB v15 = vertex.attrib[15];\n"
+    "OUTPUT oPos = result.position;\n"
+    "OUTPUT oD0 = result.color.front.primary;\n"
+    "OUTPUT oD1 = result.color.front.secondary;\n"
+    "OUTPUT oB0 = result.color.back.primary;\n"
+    "OUTPUT oB1 = result.color.back.secondary;\n"
+    "OUTPUT oPts = result.pointsize;\n"
+    "OUTPUT oFog = result.fogcoord;\n"
+    "OUTPUT oT0 = result.texcoord[0];\n"
+    "OUTPUT oT1 = result.texcoord[1];\n"
+    "OUTPUT oT2 = result.texcoord[2];\n"
+    "OUTPUT oT3 = result.texcoord[3];\n"
+    "PARAM c[] = { program.env[0..191] };\n" // All constants in 1 array declaration (requires NV_gpu_program4?)
+    "PARAM mvp[4] = { state.matrix.mvp };\n";
+
+void SetupPixelFormat(HDC DC)
+{
+	const PIXELFORMATDESCRIPTOR pfd = {
+		 /* .nSize = */ sizeof(PIXELFORMATDESCRIPTOR), // size
+		 /* .nVersion = */ 1,   // version
+		 /* .dwFlags = */ PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER, // support double-buffering
+		 /* .iPixelType = */ PFD_TYPE_RGBA, // color type
+		 /* .cColorBits = */ 32,   // preferred color depth
+		 /* .cRedBits = */ 0,
+		 /* .cRedShift = */ 0, // color bits (ignored)
+		 /* .cGreenBits = */ 0,
+		 /* .cGreenShift = */ 0,
+		 /* .cBlueBits = */ 0,
+		 /* .cBlueShift = */ 0,
+		 /* .cAlphaBits = */ 0,
+		 /* .cAlphaShift = */ 0,   // no alpha buffer
+		 /* .cAccumBits = */ 0,
+		 /* .cAccumRedBits = */ 0,    // no accumulation buffer,
+		 /* .cAccumGreenBits = */ 0,      // accum bits (ignored)
+		 /* .cAccumBlueBits = */ 0,
+		 /* .cAccumAlphaBits = */ 0,
+		 /* .cDepthBits = */ 16,   // depth buffer
+		 /* .cStencilBits = */ 0,   // no stencil buffer
+		 /* .cAuxBuffers = */ 0,   // no auxiliary buffers
+		 /* .iLayerType= */ PFD_MAIN_PLANE,   // main layer
+		 /* .bReserved = */ 0,
+		 /* .dwLayerMask = */ 0,
+		 /* .dwVisibleMask = */ 0,
+		 /* .dwDamageMask = */ 0                    // no layer, visible, damage masks
+	};
+
+	int PixelFormat = ChoosePixelFormat(DC, &pfd);
+	if (PixelFormat == 0)
+		return;
+
+	if (SetPixelFormat(DC, PixelFormat, &pfd) != TRUE)
+		return;
+}
+
+// From https://github.com/inolen/redream/blob/master/src/video/gl_backend.c
+static int rb_compile_shader(const char *source, GLenum shader_type, GLuint *shader)
+{
+	size_t sourceLength = strlen(source);
+
+	*shader = glCreateShader(shader_type);
+	glShaderSource(*shader, 1, (const GLchar **)&source,
+		(const GLint *)&sourceLength);
+	glCompileShader(*shader);
+
+	GLint compiled;
+	glGetShaderiv(*shader, GL_COMPILE_STATUS, &compiled);
+
+	if (!compiled) {
+//		rb_print_shader_log(*shader);
+		glDeleteShader(*shader);
+		return 0;
+	}
+
+	return 1;
+}
+
+void DxbxCompileShader(std::string Shader)
+{
+	int GLErrorPos;
+
+//	if (MayLog(lfUnit))
+//		DbgPrintf("  NV2A: New vertex program :\n" + Shader);
+
+/*
+glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, Shader.size(), Shader.c_str());
+
+	// errors are catched
+	glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &GLErrorPos);
+	*/
+	GLuint shader;
+
+	GLErrorPos = rb_compile_shader(Shader.c_str(), GL_VERTEX_SHADER, &shader); // TODO : GL_VERTEX_SHADER_ARB ??
+	/*
+	if (GLErrorPos > 0) 
+	{
+		Shader.insert(GLErrorPos, "{ERROR}");
+		EmuWarning("Program error at position %d:", GLErrorPos);
+		EmuWarning((char*)glGetString(GL_PROGRAM_ERROR_STRING_ARB));
+		EmuWarning(Shader.c_str());
+	}
+	*/
+}
+void InitOpenGLContext()
+{
+	HGLRC RC;
+	std::string szCode;
+
+	//glutInit();
+	{ // rb_init_context();
+	/* link in gl functions at runtime */
+		glewExperimental = GL_TRUE;
+		GLenum err = glewInit();
+		if (err != GLEW_OK) {
+			//LOG_WARNING("GLEW initialization failed: %s", glewGetErrorString(err));
+			return;
+		}
+	}
+	g_EmuWindowsDC = GetDC(g_hEmuWindow); // Actually, you can use any windowed control here
+	SetupPixelFormat(g_EmuWindowsDC);
+
+	RC = wglCreateContext(g_EmuWindowsDC); // makes OpenGL window out of DC
+	wglMakeCurrent(g_EmuWindowsDC, RC);   // makes OpenGL window active
+	//ReadImplementationProperties(); // Determine a set of booleans indicating which OpenGL extensions are available
+	//ReadExtensions(); // Assign all OpenGL extension API's (DON'T call them if the extension is not available!)
+
+	// Initialize the viewport :
+	//Viewport.X = 0;
+	//Viewport.Y = 0;
+	//Viewport.Width = g_EmuCDPD.pPresentationParameters.BackBufferWidth;
+	//Viewport.Height = g_EmuCDPD.pPresentationParameters.BackBufferHeight;
+	//Viewport.MinZ = -1.0;
+	//Viewport.MaxZ = 1.0;
+
+	//DxbxUpdateTransformProjection();
+	//DxbxUpdateViewport();
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	// Switch to left-handed coordinate space (as per http://www.opengl.org/resources/faq/technical/transformations.htm) :
+	//  glScalef(1.0, 1.0, -1.0);
+
+	// Set some defaults :
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL); // Nearer Z coordinates cover further Z
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glAlphaFunc(GL_GEQUAL, 0.5);
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // GL_LINE for wireframe
+
+/*
+	// TODO : The following code only works on cards that support the
+	// vertex program extensions (NVidia cards mainly); So for ATI we
+	// have to come up with another solution !!!
+	glGenProgramsARB(4, &VertexProgramIDs[0]);
+*/
+
+#ifdef DXBX_OPENGL_CONVENTIONAL
+	if (GL_ARB_vertex_blend)
+		DxbxVertexShaderHeader = sprintf(DxbxVertexShaderHeader, "weight");
+	else
+		DxbxVertexShaderHeader = sprintf(DxbxVertexShaderHeader, "attrib[1]");
+#endif
+
+	// Precompiled shader for the fixed function pipeline :
+	szCode = DxbxVertexShaderHeader +
+		"# This part adjusts the vertex position by the super-sampling scale & offset :\n"
+		"MOV R0, v0;\n"
+		"RCP R0.w, R0.w;\n"
+		"MUL R0, R0, c[0];\n" // c[-96] in D3D speak - applies SuperSampleScale
+								// Note : Use R12 instead of oPos because this is not yet the final assignment :
+		"ADD R12, R0, c[1];\n" // c[-95] in D3D speak - applies SuperSampleOffset
+
+		"# This part just reads all other components and passes them to the output :\n"
+		"MOV oD0, v3;\n"
+		"MOV oD1, v4;\n"
+		"MOV oFog, v4.w;\n" // specular fog
+							  //    "MOV oFog, v0.z;\n" // z fog
+							  //    "RCP oFog, v0.w;\n" // w fog
+		"MOV oPts, v1.x;\n"
+		"MOV oB0, v7;\n"
+		"MOV oB1, v8;\n"
+		"MOV oT0, v9;\n"
+		"MOV oT1, v10;\n"
+		"MOV oT2, v11;\n"
+		"MOV oT3, v12;\n"
+
+		"# This part applies the screen-space transform (not present when '#pragma screenspace' was used) :\n"
+		"MUL R12.xyz, R12, c[58];\n" // c[-38] in D3D speak - see EmuNV2A_ViewportScale,
+		"RCP R1.x, R12.w;\n" // Originally RCC, but that"s not supported in ARBvp1.0 (use "MIN R1, R1, 0" and "MAX R1, R1, 1"?)
+		"MAD R12.xyz, R12, R1.x, c[59];\n" // c[-37] in D3D speak - see EmuNV2A_ViewportOffset
+
+		"# Dxbx addition : Transform the vertex to clip coordinates :\n"
+		"DP4 R0.x, mvp[0], R12;\n"
+		"DP4 R0.y, mvp[1], R12;\n"
+		"DP4 R0.z, mvp[2], R12;\n"
+		"DP4 R0.w, mvp[3], R12;\n"
+		"MOV R12, R0;\n"
+
+		"# Apply Z coord mapping\n"
+		"ADD R12.z, R12.z, R12.z;\n"
+		"ADD R12.z, R12.z, -R12.w;\n"
+
+		"# Here""s the final assignment to oPos :\n"
+		"MOV oPos, R12;\n"
+		"END\n"; // TODO : Check if newline is required?
+
+//	glBindProgramARB(GL_VERTEX_PROGRAM_ARB, VertexProgramIDs[0]);
+	DxbxCompileShader(szCode);
 }

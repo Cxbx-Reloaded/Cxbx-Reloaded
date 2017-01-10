@@ -24,7 +24,14 @@ XBSYSAPI EXPORTNUM(184) NTSTATUS NTAPI NtAllocateVirtualMemory
     IN DWORD         Protect
 );
 
-XBSYSAPI VOID *NtCancelTimer;
+// ******************************************************************
+// * 0x00B9 - NtCancelTimer()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(185) NTSTATUS NTAPI NtCancelTimer
+(
+	IN HANDLE TimerHandle,
+	OUT PBOOLEAN CurrentState OPTIONAL
+);
 
 // ******************************************************************
 // * NtClearEvent
@@ -105,15 +112,34 @@ XBSYSAPI EXPORTNUM(192) NTSTATUS NTAPI NtCreateMutant
 XBSYSAPI EXPORTNUM(193) NTSTATUS NTAPI NtCreateSemaphore
 (
     OUT PHANDLE             SemaphoreHandle,
-    IN  POBJECT_ATTRIBUTES  ObjectAttributes,
+    IN  POBJECT_ATTRIBUTES  ObjectAttributes OPTIONAL,
     IN  ULONG               InitialCount,
     IN  ULONG               MaximumCount
 );
 
-XBSYSAPI VOID *NtCreateTimer;
-XBSYSAPI VOID *NtDeleteFile;
+// ******************************************************************
+// * 0x00C2 - NtCreateTimer()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(194) NTSTATUS NTAPI NtCreateTimer
+(
+	OUT PHANDLE TimerHandle,
+	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+	IN TIMER_TYPE TimerType
+);
 
-XBSYSAPI EXPORTNUM(196) NTSTATUS NTAPI NtDeviceIoControlFile(
+// ******************************************************************
+// * 0x00C3 - NtDeleteFile()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(195) NTSTATUS NTAPI NtDeleteFile
+(
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+);
+
+// ******************************************************************
+// * 0x00C4 - NtDeviceIoControlFile
+// ******************************************************************
+XBSYSAPI EXPORTNUM(196) NTSTATUS NTAPI NtDeviceIoControlFile
+(
     IN HANDLE FileHandle,
     IN HANDLE Event OPTIONAL,
     IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
@@ -155,8 +181,28 @@ XBSYSAPI EXPORTNUM(199) NTSTATUS NTAPI NtFreeVirtualMemory
     IN ULONG      FreeType
 );
 
-XBSYSAPI VOID *NtFsControlFile;
-XBSYSAPI VOID *NtOpenDirectoryObject;
+// ******************************************************************
+// * 0x00C8 - NtFsControlFile
+// ******************************************************************
+XBSYSAPI EXPORTNUM(200) NTSTATUS NTAPI NtFsControlFile
+(
+	IN HANDLE               FileHandle,
+	IN HANDLE               Event OPTIONAL,
+	IN PIO_APC_ROUTINE      ApcRoutine OPTIONAL,
+	IN PVOID                ApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK    IoStatusBlock,
+	IN ULONG                FsControlCode,
+	IN PVOID                InputBuffer OPTIONAL,
+	IN ULONG                InputBufferLength,
+	OUT PVOID               OutputBuffer OPTIONAL,
+	IN ULONG                OutputBufferLength
+);
+
+XBSYSAPI EXPORTNUM(201) NTSTATUS NTAPI NtOpenDirectoryObject
+(
+	OUT PHANDLE DirectoryHandle,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+);
 
 // ******************************************************************
 // * NtOpenFile
@@ -184,7 +230,14 @@ XBSYSAPI EXPORTNUM(205) NTSTATUS NTAPI NtProtectVirtualMemory(
 );
 
 
-XBSYSAPI VOID *NtPulseEvent;
+// ******************************************************************
+// * NtPulseEvent
+// ******************************************************************
+XBSYSAPI EXPORTNUM(205) NTSTATUS NTAPI NtPulseEvent
+(
+    IN HANDLE                       EventHandle,
+    OUT PLONG                       PreviousState OPTIONAL
+);
 
 // ******************************************************************
 // * NtQueueApcThread
@@ -216,15 +269,23 @@ XBSYSAPI EXPORTNUM(207) NTSTATUS NTAPI NtQueryDirectoryFile
 );
 
 XBSYSAPI VOID *NtQueryDirectoryObject;
-XBSYSAPI VOID *NtQueryEvent;
+
+// ******************************************************************
+// * 0x00D1  - NtQueryEvent()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(209) NTSTATUS NTAPI NtQueryEvent
+(
+	IN HANDLE EventHandle,
+	OUT PEVENT_BASIC_INFORMATION EventInformation
+);
 
 // ******************************************************************
 // * NtQueryFullAttributesFile
 // ******************************************************************
 XBSYSAPI EXPORTNUM(210) NTSTATUS NTAPI NtQueryFullAttributesFile
 (
-    IN  POBJECT_ATTRIBUTES          ObjectAttributes,
-    OUT PVOID                       Attributes
+	IN  POBJECT_ATTRIBUTES          ObjectAttributes,
+	OUT PFILE_NETWORK_OPEN_INFORMATION  Attributes
 );
 
 // ******************************************************************
@@ -244,16 +305,43 @@ XBSYSAPI EXPORTNUM(211) NTSTATUS NTAPI NtQueryInformationFile
 );
 
 XBSYSAPI VOID *NtQueryIoCompletion;
-XBSYSAPI VOID *NtQueryMutant;
-XBSYSAPI VOID *NtQuerySemaphore;
 
-XBSYSAPI EXPORTNUM(215) NTSTATUS NTAPI NtQuerySymbolicLinkObject( 
+// ******************************************************************
+// * 0x00D5 - NtQueryMutant()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(213) NTSTATUS NTAPI NtQueryMutant
+(
+	IN HANDLE MutantHandle,
+	OUT PMUTANT_BASIC_INFORMATION MutantInformation
+);
+
+// ******************************************************************
+// * 0x00D6 - NtQuerySemaphore()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(214) NTSTATUS NTAPI NtQuerySemaphore
+(
+	IN HANDLE SemaphoreHandle,
+	OUT PSEMAPHORE_BASIC_INFORMATION SemaphoreInformation
+);
+
+// ******************************************************************
+// * 0x00D7 - NtQuerySymbolicLinkObject()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(215) NTSTATUS NTAPI NtQuerySymbolicLinkObject
+( 
     HANDLE LinkHandle, 
     OUT PSTRING LinkTarget, 
     OUT PULONG ReturnedLength OPTIONAL
 );
 
-XBSYSAPI VOID *NtQueryTimer;
+// ******************************************************************
+// * 0x00D8 - NtQueryTimer()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(216) NTSTATUS NTAPI NtQueryTimer
+(
+	IN HANDLE TimerHandle,
+	OUT PTIMER_BASIC_INFORMATION TimerInformation
+);
 
 // ******************************************************************
 // * NtQueryVirtualMemory
@@ -287,9 +375,9 @@ XBSYSAPI EXPORTNUM(219) NTSTATUS NTAPI NtReadFile
 (
     IN  HANDLE          FileHandle,            // TODO: correct paramters
     IN  HANDLE          Event OPTIONAL,
-    IN  PVOID           ApcRoutine OPTIONAL,
+    IN  PIO_APC_ROUTINE ApcRoutine OPTIONAL,
     IN  PVOID           ApcContext,
-    OUT PVOID           IoStatusBlock,
+    OUT PIO_STATUS_BLOCK IoStatusBlock,
     OUT PVOID           Buffer,
     IN  ULONG           Length,
     IN  PLARGE_INTEGER  ByteOffset OPTIONAL
@@ -313,7 +401,7 @@ XBSYSAPI EXPORTNUM(222) NTSTATUS NTAPI NtReleaseSemaphore
 (
     IN  HANDLE  SemaphoreHandle,
     IN  ULONG   ReleaseCount,
-    OUT PULONG  PreviousCount
+    OUT PULONG  PreviousCount OPTIONAL
 );
 
 XBSYSAPI VOID *NtRemoveIoCompletion;
@@ -346,10 +434,10 @@ XBSYSAPI EXPORTNUM(225) NTSTATUS NTAPI NtSetEvent
 XBSYSAPI EXPORTNUM(226) NTSTATUS NTAPI NtSetInformationFile
 (
     IN  HANDLE  FileHandle,            // TODO: correct paramters
-    OUT PVOID   IoStatusBlock,
+    OUT PIO_STATUS_BLOCK   IoStatusBlock,
     IN  PVOID   FileInformation,
     IN  ULONG   Length,
-    IN  ULONG   FileInformationClass
+    IN  FILE_INFORMATION_CLASS   FileInformationClass
 );
 
 XBSYSAPI VOID *NtSetIoCompletion;
@@ -363,7 +451,21 @@ XBSYSAPI EXPORTNUM(228) NTSTATUS NTAPI NtSetSystemTime
 	OUT PLARGE_INTEGER			PreviousTime OPTIONAL 
 );
 
-XBSYSAPI VOID *NtSetTimerEx;
+// ******************************************************************
+// * 0x00E5 - NtSetTimerEx()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(229) NTSTATUS NtSetTimerEx
+(
+	IN HANDLE TimerHandle,
+	IN PLARGE_INTEGER DueTime,
+	IN PTIMER_APC_ROUTINE TimerApcRoutine OPTIONAL,
+	IN KPROCESSOR_MODE ApcMode,
+	IN PVOID TimerContext OPTIONAL,
+	IN BOOLEAN WakeTimer,
+	IN LONG Period OPTIONAL,
+	OUT PBOOLEAN PreviousState OPTIONAL
+);
+
 XBSYSAPI VOID *NtSignalAndWaitForSingleObjectEx;
 
 // ******************************************************************
@@ -398,7 +500,7 @@ XBSYSAPI EXPORTNUM(233) NTSTATUS NTAPI NtWaitForSingleObject
 (
     IN  HANDLE  Handle,
     IN  BOOLEAN Alertable,
-    IN  PVOID   Timeout
+	IN	PLARGE_INTEGER Timeout
 );
 
 // ******************************************************************
@@ -434,14 +536,14 @@ XBSYSAPI EXPORTNUM(235) NTSTATUS NTAPI NtWaitForMultipleObjectsEx
 // ******************************************************************
 XBSYSAPI EXPORTNUM(236) NTSTATUS NTAPI NtWriteFile
 (
-    IN  HANDLE          FileHandle,            // TODO: correct paramters
-    IN  PVOID           Event,
-    IN  PVOID           ApcRoutine,
-    IN  PVOID           ApcContext,
-    OUT PVOID           IoStatusBlock,
-    IN  PVOID           Buffer,
-    IN  ULONG           Length,
-    IN  PLARGE_INTEGER  ByteOffset
+	IN  HANDLE          FileHandle,
+	IN  HANDLE          Event,
+	IN  PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+	IN  PVOID           ApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN  PVOID           Buffer,
+	IN  ULONG           Length,
+	IN  PLARGE_INTEGER  ByteOffset OPTIONAL
 );
 
 XBSYSAPI VOID *NtWriteFileGather;
@@ -449,7 +551,7 @@ XBSYSAPI VOID *NtWriteFileGather;
 // ******************************************************************
 // * NtYieldExecution
 // ******************************************************************
-XBSYSAPI EXPORTNUM(238) VOID NTAPI NtYieldExecution();
+XBSYSAPI EXPORTNUM(238) VOID NTAPI NtYieldExecution(void);
 
 #endif
 

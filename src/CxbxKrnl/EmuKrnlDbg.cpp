@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -42,18 +44,31 @@ namespace xboxkrnl
 };
 
 #include "Logging.h" // For LOG_FUNC()
+#include "EmuKrnlLogging.h"
+
+// prevent name collisions
+namespace NtDll
+{
+#include "EmuNtDll.h"
+};
+
+
 #include "Emu.h" // For EmuWarning()
 
-using namespace xboxkrnl;
-
-XBSYSAPI EXPORTNUM(5) VOID NTAPI xboxkrnl::DbgBreakPoint()
+// ******************************************************************
+// * 0x0005 - DbgBreakPoint()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(5) xboxkrnl::VOID NTAPI xboxkrnl::DbgBreakPoint()
 {
 	LOG_FUNC();
 
 	LOG_UNIMPLEMENTED();
 }
 
-XBSYSAPI EXPORTNUM(6) VOID NTAPI xboxkrnl::DbgBreakPointWithStatus
+// ******************************************************************
+// * 0x0006 - DbgBreakPointWithStatus()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(6) xboxkrnl::VOID NTAPI xboxkrnl::DbgBreakPointWithStatus
 (
 	IN ULONG Status 
 )
@@ -63,6 +78,9 @@ XBSYSAPI EXPORTNUM(6) VOID NTAPI xboxkrnl::DbgBreakPointWithStatus
 	LOG_UNIMPLEMENTED();
 }
 
+// ******************************************************************
+// * 0x0007 - DbgLoadImageSymbols()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(7) xboxkrnl::NTSTATUS NTAPI xboxkrnl::DbgLoadImageSymbols
 (
 	IN PANSI_STRING Name,
@@ -84,7 +102,7 @@ XBSYSAPI EXPORTNUM(7) xboxkrnl::NTSTATUS NTAPI xboxkrnl::DbgLoadImageSymbols
 }
 
 // ******************************************************************
-// * 0x0008 DbgPrint
+// * 0x0008 - DbgPrint()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(8) xboxkrnl::ULONG _cdecl xboxkrnl::DbgPrint
 (
@@ -115,6 +133,9 @@ XBSYSAPI EXPORTNUM(8) xboxkrnl::ULONG _cdecl xboxkrnl::DbgPrint
 	RETURN(STATUS_SUCCESS);
 }
 
+// ******************************************************************
+// * 0x000A - DbgPrompt()
+// ******************************************************************
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(10) xboxkrnl::ULONG NTAPI xboxkrnl::DbgPrompt
 (
@@ -136,8 +157,11 @@ XBSYSAPI EXPORTNUM(10) xboxkrnl::ULONG NTAPI xboxkrnl::DbgPrompt
 	RETURN(result);
 }
 
+// ******************************************************************
+// * 0x000B - DbgUnLoadImageSymbols()
+// ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(11) VOID NTAPI xboxkrnl::DbgUnLoadImageSymbols
+XBSYSAPI EXPORTNUM(11) xboxkrnl::VOID NTAPI xboxkrnl::DbgUnLoadImageSymbols
 (
 	IN PANSI_STRING Name,
 	IN PVOID Base,
