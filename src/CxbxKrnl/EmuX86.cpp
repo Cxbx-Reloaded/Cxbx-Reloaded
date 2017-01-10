@@ -775,6 +775,7 @@ unimplemented_opcode:
 
 void EmuX86_Init()
 {
+	DbgPrintf("EmuX86: Initializing distorm version %d\n", distorm_version());
 	EmuX86_InitContextRecordOffsetByRegisterType();
 }
 

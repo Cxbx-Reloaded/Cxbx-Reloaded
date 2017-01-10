@@ -382,12 +382,20 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	{
 		if (AllocConsole())
 		{
+			HANDLE StdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+
+			// Maximise the console scroll buffer height :
+			CONSOLE_SCREEN_BUFFER_INFO coninfo;
+			GetConsoleScreenBufferInfo(StdHandle, &coninfo);
+			coninfo.dwSize.Y = SHRT_MAX - 1; // = 32767-1 = 32766 = maximum value that works
+			SetConsoleScreenBufferSize(StdHandle, coninfo.dwSize);
+
 			freopen("CONOUT$", "wt", stdout);
 			freopen("CONIN$", "rt", stdin);
 
 			SetConsoleTitle("Cxbx-Reloaded : Kernel Debug Console");
 
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
+			SetConsoleTextAttribute(StdHandle, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
 
 			printf("EmuMain (0x%X): Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
 			printf("EmuMain (0x%X): Debug Console Allocated (DM_CONSOLE).\n", GetCurrentThreadId());
