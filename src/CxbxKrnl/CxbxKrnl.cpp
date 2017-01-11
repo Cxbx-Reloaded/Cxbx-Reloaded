@@ -45,6 +45,7 @@ namespace xboxkrnl
 
 #include "CxbxKrnl.h"
 #include "Emu.h"
+#include "EmuX86.h"
 #include "EmuFile.h"
 #include "EmuFS.h"
 #include "EmuShared.h"
@@ -381,15 +382,23 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	{
 		if (AllocConsole())
 		{
+			HANDLE StdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+
+			// Maximise the console scroll buffer height :
+			CONSOLE_SCREEN_BUFFER_INFO coninfo;
+			GetConsoleScreenBufferInfo(StdHandle, &coninfo);
+			coninfo.dwSize.Y = SHRT_MAX - 1; // = 32767-1 = 32766 = maximum value that works
+			SetConsoleScreenBufferSize(StdHandle, coninfo.dwSize);
+
 			freopen("CONOUT$", "wt", stdout);
 			freopen("CONIN$", "rt", stdin);
 
 			SetConsoleTitle("Cxbx-Reloaded : Kernel Debug Console");
 
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
+			SetConsoleTextAttribute(StdHandle, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
 
-			printf("EmuMain (0x%X): Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
-			printf("EmuMain (0x%X): Debug Console Allocated (DM_CONSOLE).\n", GetCurrentThreadId());
+			printf("[0x%X] EmuMain: Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
+			printf("[0x%X] EmuMain: Debug Console Allocated (DM_CONSOLE).\n", GetCurrentThreadId());
 		}
 	}
 	else if (DbgMode == DM_FILE)
@@ -398,8 +407,8 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 		freopen(szDebugFilename, "wt", stdout);
 
-		printf("EmuMain (0x%X): Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
-		printf("EmuMain (0x%X): Debug Console Allocated (DM_FILE).\n", GetCurrentThreadId());
+		printf("[0x%X] EmuMain: Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
+		printf("[0x%X] EmuMain: Debug Console Allocated (DM_FILE).\n", GetCurrentThreadId());
 	}
 	else
 	{
@@ -417,9 +426,9 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 	{
 #ifdef _DEBUG_TRACE
-		printf("EmuMain (0x%X): Debug Trace Enabled.\n", GetCurrentThreadId());
+		printf("[0x%X] EmuMain: Debug Trace Enabled.\n", GetCurrentThreadId());
 
-		printf("EmuMain (0x%X): CxbxKrnlInit\n"
+		printf("[0x%X] EmuMain: CxbxKrnlInit\n"
 			"(\n"
 			"   hwndParent          : 0x%.08X\n"
 			"   pTLSData            : 0x%.08X\n"
@@ -434,7 +443,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 			GetCurrentThreadId(), hwndParent, pTLSData, pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
 
 #else
-		printf("EmuMain (0x%X): Debug Trace Disabled.\n", GetCurrentThreadId());
+		printf("[0x%X] EmuMain: Debug Trace Disabled.\n", GetCurrentThreadId());
 #endif
 	}
 
@@ -471,6 +480,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
 	bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
 	bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
+	bLLE_JIT = (CxbxLLE_Flags & LLE_JIT) > 0;
 
 	// Initialize devices :
 	char szBuffer[MAX_PATH];
@@ -590,17 +600,17 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	//
 	// initialize grapchics
 	//
-	DbgPrintf("EmuMain (0x%X): Initializing render window.\n", GetCurrentThreadId());
+	DbgPrintf("EmuMain: Initializing render window.\n");
 	XTL::CxbxInitWindow(pXbeHeader, dwXbeHeaderSize);
 
 	if (bLLE_GPU)
 	{
-		DbgPrintf("EmuMain (0x%X): Initializing OpenGL.\n", GetCurrentThreadId());
+		DbgPrintf("EmuMain: Initializing OpenGL.\n");
 		InitOpenGLContext();
 	}
 	else
 	{
-		DbgPrintf("EmuMain (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
+		DbgPrintf("EmuMain: Initializing Direct3D.\n");
 		XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
 	}
 
@@ -616,12 +626,13 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		EmuGenerateFS(pTLS, pTLSData);
 	}
 
+	EmuX86_Init();
 
-    DbgPrintf("EmuMain (0x%X): Initial thread starting.\n", GetCurrentThreadId());
+    DbgPrintf("EmuMain: Initial thread starting.\n");
 
 	CxbxLaunchXbe(Entry);
 
-    DbgPrintf("EmuMain (0x%X): Initial thread ended.\n", GetCurrentThreadId());
+    DbgPrintf("EmuMain: Initial thread ended.\n");
 
     fflush(stdout);
 
@@ -644,7 +655,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlCleanup(const char *szErrorMessage, ...)
 
         va_list argp;
 
-        sprintf(szBuffer1, "EmuMain (0x%X): Recieved Fatal Message:\n\n* ", GetCurrentThreadId());
+        sprintf(szBuffer1, "[0x%X] EmuMain: Recieved Fatal Message:\n\n* ", GetCurrentThreadId());
 
         va_start(argp, szErrorMessage);
 
@@ -786,12 +797,12 @@ extern "C" CXBXKRNL_API void CxbxKrnlTerminateThread()
 
 extern "C" CXBXKRNL_API void CxbxKrnlPanic()
 {
-    DbgPrintf("EmuMain (0x%X): CxbxKrnlPanic()\n", GetCurrentThreadId());
+    DbgPrintf("EmuMain: CxbxKrnlPanic()\n");
 
     CxbxKrnlCleanup("Kernel Panic!");
 }
 
 extern "C" CXBXKRNL_API void CxbxKrnlNoFunc()
 {
-    DbgPrintf("EmuMain (0x%X): CxbxKrnlNoFunc()\n", GetCurrentThreadId());
+    DbgPrintf("EmuMain: CxbxKrnlNoFunc()\n");
 }

@@ -66,6 +66,7 @@ static std::vector<void*>::const_iterator vCacheInpIter;
 // Set these for experimental APU(sound) / GPU (graphics) LLE
 bool bLLE_APU = false;
 bool bLLE_GPU = false;
+bool bLLE_JIT = false;
 
 void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHeader)
 {
@@ -168,13 +169,14 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
         uint32 LastUnResolvedXRefs = UnResolvedXRefs+1;
         uint32 OrigUnResolvedXRefs = UnResolvedXRefs;
 
+		bool bFoundD3D = false;
+
 		for(int p=0;UnResolvedXRefs < LastUnResolvedXRefs;p++)
         {
             DbgPrintf("HLE: Starting pass #%d...\n", p+1);
 
             LastUnResolvedXRefs = UnResolvedXRefs;
 
-            bool bFoundD3D = false;
             for(uint32 v=0;v<dwLibraryVersions;v++)
             {
                 uint16 MajorVersion = pLibraryVersion[v].wMajorVersion;

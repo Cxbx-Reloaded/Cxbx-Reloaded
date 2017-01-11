@@ -976,6 +976,14 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
                 break;
 
+				case ID_EMULATION_LLE_JIT:
+				{
+					m_FlagsLLE = m_FlagsLLE ^ LLE_JIT;
+
+					RefreshMenus();
+				}
+				break;
+
 				case ID_EMULATION_LLE_APU:
 				{
 					m_FlagsLLE = m_FlagsLLE ^ LLE_APU;
@@ -1231,7 +1239,10 @@ void WndMain::RefreshMenus()
 			HMENU settings_menu = GetSubMenu(menu, 3);
 			HMENU lle_submenu = GetSubMenu(settings_menu, 4);
 
-			UINT chk_flag = (m_FlagsLLE & LLE_APU) ? MF_CHECKED : MF_UNCHECKED;
+			UINT chk_flag = (m_FlagsLLE & LLE_JIT) ? MF_CHECKED : MF_UNCHECKED;
+			CheckMenuItem(lle_submenu, ID_EMULATION_LLE_JIT, chk_flag);
+			
+			chk_flag = (m_FlagsLLE & LLE_APU) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(lle_submenu, ID_EMULATION_LLE_APU, chk_flag);
 
 			chk_flag = (m_FlagsLLE & LLE_GPU) ? MF_CHECKED : MF_UNCHECKED;

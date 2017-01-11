@@ -55,6 +55,7 @@
 #define EMUX86_EFLAG_VIP 20
 #define EMUX86_EFLAG_ID 21
 
+void EmuX86_Init();
 bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e);
 uint32_t EmuX86_IORead32(uint32_t addr);
 uint16_t EmuX86_IORead16(uint32_t addr);
