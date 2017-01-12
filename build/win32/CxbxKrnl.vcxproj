@@ -122,10 +122,10 @@
       </TreatOutputAsContent>
     </CustomBuildStep>
     <PreBuildEvent>
-      <Command>$(SolutionDir)Version.bat $(SolutionDir)..\..\src\Version.h</Command>
+      <Command>CALL "$(SolutionDir)Version.bat" "$(SolutionDir)..\..\src\Version.h"</Command>
     </PreBuildEvent>
     <PreBuildEvent>
-      <Message>Build Version.ini</Message>
+      <Message>Generate version header</Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -186,10 +186,10 @@
       </TreatOutputAsContent>
     </CustomBuildStep>
     <PreBuildEvent>
-      <Command>$(SolutionDir)Version.bat $(SolutionDir)..\..\src\Version.h</Command>
+      <Command>CALL "$(SolutionDir)Version.bat" "$(SolutionDir)..\..\src\Version.h"</Command>
     </PreBuildEvent>
     <PreBuildEvent>
-      <Message>Build Version.ini</Message>
+      <Message>Generate version header</Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
