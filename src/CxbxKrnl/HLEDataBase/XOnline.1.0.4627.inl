@@ -33,31 +33,31 @@
 // ******************************************************************
 
 // ******************************************************************
-// * XnInit
+// * XnInit -> Belongs in XNet lib
 // ******************************************************************
-OOVPA_XREF(XnInit_1_0_4627, 12,
-
-    XREF_XNINIT,
-    XRefZero)
-
-        // XnInit+0x03 : sub esp, 0x0218
-        { 0x03, 0x81 }, // (Offset,Value)-Pair #1
-        { 0x04, 0xEC }, // (Offset,Value)-Pair #2
-        { 0x05, 0x18 }, // (Offset,Value)-Pair #3
-        { 0x06, 0x02 }, // (Offset,Value)-Pair #4
-
-        // XnInit+0x19 : cmpxchg [ecx], edx
-        { 0x19, 0x0F }, // (Offset,Value)-Pair #5
-        { 0x1A, 0xB1 }, // (Offset,Value)-Pair #6
-        { 0x1B, 0x11 }, // (Offset,Value)-Pair #7
-
-        // XnInit+0x3C : push 0x4454454E
-        { 0x3C, 0x68 }, // (Offset,Value)-Pair #8
-        { 0x3D, 0x4E }, // (Offset,Value)-Pair #9
-	{ 0x3E, 0x45 }, // (Offset,Value)-Pair #10
-	{ 0x3F, 0x54 }, // (Offset,Value)-Pair #11
-	{ 0x40, 0x44 }, // (Offset,Value)-Pair #12
-OOVPA_END;
+//OOVPA_XREF(XnInit_1_0_4627, 12,
+//
+//    XREF_XNINIT,
+//    XRefZero)
+//
+//        // XnInit+0x03 : sub esp, 0x0218
+//        { 0x03, 0x81 }, // (Offset,Value)-Pair #1
+//        { 0x04, 0xEC }, // (Offset,Value)-Pair #2
+//        { 0x05, 0x18 }, // (Offset,Value)-Pair #3
+//        { 0x06, 0x02 }, // (Offset,Value)-Pair #4
+//
+//        // XnInit+0x19 : cmpxchg [ecx], edx
+//        { 0x19, 0x0F }, // (Offset,Value)-Pair #5
+//        { 0x1A, 0xB1 }, // (Offset,Value)-Pair #6
+//        { 0x1B, 0x11 }, // (Offset,Value)-Pair #7
+//
+//        // XnInit+0x3C : push 0x4454454E
+//        { 0x3C, 0x68 }, // (Offset,Value)-Pair #8
+//        { 0x3D, 0x4E }, // (Offset,Value)-Pair #9
+//	{ 0x3E, 0x45 }, // (Offset,Value)-Pair #10
+//	{ 0x3F, 0x54 }, // (Offset,Value)-Pair #11
+//	{ 0x40, 0x44 }, // (Offset,Value)-Pair #12
+//OOVPA_END;
 
 // ******************************************************************
 // * XNetGetEthernetLinkStatus

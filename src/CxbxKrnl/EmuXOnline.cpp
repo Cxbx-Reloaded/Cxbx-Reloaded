@@ -121,6 +121,76 @@ SOCKET XTL::EmuThis::Emusocket
 }
 
 // ******************************************************************
+// * func: EmuThis::Emuconnect
+// ******************************************************************
+int XTL::EmuThis::Emuconnect
+(
+	SOCKET s,
+	const struct sockaddr FAR *name,
+	int namelen
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(this)
+		LOG_FUNC_ARG(s)
+		LOG_FUNC_ARG(name)
+		LOG_FUNC_ARG(namelen)
+		LOG_FUNC_END;
+
+	int ret = connect(s, name, namelen);
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * func: EmuThis::Emusend
+// ******************************************************************
+int XTL::EmuThis::Emusend
+(
+	SOCKET s,
+	const char FAR *buf,
+	int len,
+	int flags
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(this)
+		LOG_FUNC_ARG(s)
+		LOG_FUNC_ARG(buf)
+		LOG_FUNC_ARG(len)
+		LOG_FUNC_ARG(flags)
+		LOG_FUNC_END;
+
+	int ret = send(s, buf, len, flags);
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * func: EmuThis::Emurecv
+// ******************************************************************
+int XTL::EmuThis::Emurecv
+(
+	SOCKET s,
+	char FAR *buf,
+	int len,
+	int flags
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(this)
+		LOG_FUNC_ARG(s)
+		LOG_FUNC_ARG(buf)
+		LOG_FUNC_ARG(len)
+		LOG_FUNC_ARG(flags)
+		LOG_FUNC_END;
+
+	int ret = recv(s, buf, len, flags);
+
+	RETURN(ret);
+}
+
+// ******************************************************************
 // * func: EmuThis::Emubind
 // ******************************************************************
 int XTL::EmuThis::Emubind
