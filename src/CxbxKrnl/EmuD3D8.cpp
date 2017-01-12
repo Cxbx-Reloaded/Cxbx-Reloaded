@@ -4340,7 +4340,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
     {
         case X_D3DCOMMON_TYPE_VERTEXBUFFER:
         {
-            DbgPrintf("EmuIDirect3DResource8_Register (0x%X) : Creating VertexBuffer...\n");
+            DbgPrintf("EmuIDirect3DResource8_Register : Creating VertexBuffer...\n");
 
             X_D3DVertexBuffer *pVertexBuffer = (X_D3DVertexBuffer*)pResource;
 
@@ -4393,7 +4393,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 pResource->Data = (ULONG)pData;
             }
 
-            DbgPrintf("EmuIDirect3DResource8_Register (0x%X) : Successfully Created VertexBuffer (0x%.08X)\n", pResource->EmuVertexBuffer8);
+            DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created VertexBuffer (0x%.08X)\n", pResource->EmuVertexBuffer8);
         }
         break;
 
@@ -4445,7 +4445,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 pResource->Data = (ULONG)pData;
             }
 
-            DbgPrintf("EmuIDirect3DResource8_Register (0x%X) : Successfully Created IndexBuffer (0x%.08X)\n", pResource->EmuIndexBuffer8);
+            DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created IndexBuffer (0x%.08X)\n", pResource->EmuIndexBuffer8);
         }
         break;
 
@@ -4472,7 +4472,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 pResource->Data = (ULONG)pBase;
             }
 
-            DbgPrintf("EmuIDirect3DResource8_Register (0x%X) : Successfully Created PushBuffer (0x%.08X, 0x%.08X, 0x%.08X)\n", pResource->Data, pPushBuffer->Size, pPushBuffer->AllocationSize);
+            DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created PushBuffer (0x%.08X, 0x%.08X, 0x%.08X)\n", pResource->Data, pPushBuffer->Size, pPushBuffer->AllocationSize);
         }
         break;
 
@@ -4660,8 +4660,8 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 								DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet)*/);
 ;
 
-                    DbgPrintf("EmuIDirect3DResource8_Register (0x%X) : Successfully Created ImageSurface (0x%.08X, 0x%.08X)\n", pResource, pResource->EmuSurface8);
-                    DbgPrintf("EmuIDirect3DResource8_Register (0x%X) : Width : %d, Height : %d, Format : %d\n", dwWidth, dwHeight, Format);
+                    DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created ImageSurface (0x%.08X, 0x%.08X)\n", pResource, pResource->EmuSurface8);
+                    DbgPrintf("EmuIDirect3DResource8_Register : Width : %d, Height : %d, Format : %d\n", dwWidth, dwHeight, Format);
                 }
                 else
                 {
@@ -4714,7 +4714,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                             CxbxKrnlCleanup("CreateCubeTexture Failed!\n\nError: \nDesc: "/*,
 								DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet)*/);
 
-                        DbgPrintf("EmuIDirect3DResource8_Register (0x%X) : Successfully Created CubeTexture (0x%.08X, 0x%.08X)\n", pResource, pResource->EmuCubeTexture8);
+                        DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created CubeTexture (0x%.08X, 0x%.08X)\n", pResource, pResource->EmuCubeTexture8);
                     }
                     else
                     {
@@ -4747,7 +4747,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 							CxbxKrnlCleanup("CreateTexture Failed!\n\nError: \nDesc: "/*,
 								DXGetErrorString8A(hRet), DXGetErrorDescription8A(hRet)*/);
 
-                        DbgPrintf("EmuIDirect3DResource8_Register (0x%X) : Successfully Created Texture (0x%.08X, 0x%.08X)\n", pResource, pResource->EmuTexture8);
+                        DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created Texture (0x%.08X, 0x%.08X)\n", pResource, pResource->EmuTexture8);
                     }
                 }
 
@@ -5170,7 +5170,7 @@ ULONG WINAPI XTL::EmuIDirect3DResource8_Release
 
             if(uRet == 0)
             {
-                DbgPrintf("EmuIDirect3DResource8_Release (0x%X): Cleaned up a Resource!\n");
+                DbgPrintf("EmuIDirect3DResource8_Release : Cleaned up a Resource!\n");
 
                 #ifdef _DEBUG_TRACE_VB
                 if(Type == D3DRTYPE_VERTEXBUFFER)
@@ -7476,7 +7476,7 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EmuIDirect3DDevice8_GetStreamSource2
     
 
     // debug trace
-    DbgPrintf( "EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_GetStreamSource2\n"
+    DbgPrintf( "EmuD3D8 : EmuIDirect3DDevice8_GetStreamSource2\n"
                "(\n"
                "   StreamNumber               : 0x%.08X\n"
                "   pStride                    : 0x%.08X\n"
@@ -7503,7 +7503,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_SetStreamSource
 {
     
 
-    DbgPrintf("EmuD3D8: EmuIDirect3DDevice8_SetStreamSource\n"
+    DbgPrintf("EmuD3D8 : EmuIDirect3DDevice8_SetStreamSource\n"
            "(\n"
            "   StreamNumber        : 0x%.08X\n"
            "   pStreamData         : 0x%.08X (0x%.08X)\n"
@@ -8437,7 +8437,7 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_DeleteVertexShader
 {
     
 
-    DbgPrintf( "EmuD3D8 (0x%.08X): EmuIDirect3DDevice8_DeleteVertexShader\n"
+    DbgPrintf( "EmuD3D8: EmuIDirect3DDevice8_DeleteVertexShader\n"
                "(\n"
                "   Handle                : 0x%.08X\n"
                ");\n",
