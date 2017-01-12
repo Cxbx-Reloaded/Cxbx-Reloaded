@@ -61,6 +61,7 @@ const char *Lib_XONLINES = "XONLINES";
 #include "HLEDataBase/Xapi.1.0.4361.inl"
 #include "HLEDataBase/Xapi.1.0.4432.inl"
 #include "HLEDataBase/Xapi.1.0.4627.inl"
+#include "HLEDataBase/Xapi.1.0.4721.inl"
 #include "HLEDataBase/Xapi.1.0.5233.inl"
 #include "HLEDataBase/Xapi.1.0.5558.inl"
 #include "HLEDataBase/Xapi.1.0.5849.inl"
@@ -91,6 +92,7 @@ const char *Lib_XONLINES = "XONLINES";
 #include "HLEDataBase/XG.1.0.5558.inl"
 #include "HLEDataBase/XG.1.0.5849.inl"
 #include "HLEDataBase/XNet.1.0.3911.inl"
+#include "HLEDataBase/XNet.1.0.4627.inl"
 #include "HLEDataBase/XOnline.1.0.4361.inl"
 #include "HLEDataBase/XOnline.1.0.4627.inl"
 #include "HLEDataBase/XOnline.1.0.5233.inl"
@@ -145,7 +147,14 @@ HLEData HLEDataBase[] =
         XAPI_1_0_4627,
         XAPI_1_0_4627_SIZE
     },
-    // Xapilib Version 1.0.5233
+	// Xapilib Version 1.0.4721
+	{
+		Lib_XAPILIB,
+		1, 0, 4721,
+		XAPI_1_0_4721,
+		XAPI_1_0_4721_SIZE
+	},
+	// Xapilib Version 1.0.5233
     {
         Lib_XAPILIB,
         1, 0, 5233,
@@ -354,6 +363,13 @@ HLEData HLEDataBase[] =
         1, 0, 3911,
         XNet_1_0_3911,
         XNet_1_0_3911_SIZE
+    },
+    // XNet Version 1.0.4627
+    {
+		Lib_XNETS,
+		1, 0, 4627,
+		XNet_1_0_4627,
+		XNet_1_0_4627_SIZE
     },
     // XOnline Version 1.0.4361
     {
