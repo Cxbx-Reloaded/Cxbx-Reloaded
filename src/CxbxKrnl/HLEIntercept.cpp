@@ -524,7 +524,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
      //               }
                 }
 
-                DbgPrintf("HLE: * Searching HLE database for %s version 1.0.%d...\n", szLibraryName, BuildVersion);
+                DbgPrintf("HLE: * Searching HLE database for %s version 1.0.%d... ", szLibraryName, BuildVersion);
 
                 const HLEData *FoundHLEData = nullptr;
                 for(uint32 d = 0; d < HLEDataBaseCount; d++) {
@@ -535,10 +535,10 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                 }
 
 				if (FoundHLEData) {
-					DbgPrintf("Found\n");
+					if (g_bPrintfOn) printf("Found\n");
 					EmuInstallWrappers(FoundHLEData->OovpaTable, FoundHLEData->OovpaTableSize, pXbeHeader);
 				} else {
-					DbgPrintf("Skipped\n");
+					if (g_bPrintfOn) printf("Skipped\n");
 				}
 			}
 

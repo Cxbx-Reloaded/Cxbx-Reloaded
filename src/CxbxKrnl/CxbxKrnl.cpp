@@ -81,7 +81,7 @@ static HANDLE g_hThreads[MAXIMUM_XBOX_THREADS] = { 0 };
 std::string CxbxBasePath;
 HANDLE CxbxBasePathHandle;
 Xbe* CxbxKrnl_Xbe = NULL;
-
+XbeType g_XbeType = xtRetail;
 DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
 
@@ -178,6 +178,23 @@ extern "C" CXBXKRNL_API bool CxbxKrnlVerifyVersion(const char *szVersion)
     return true;
 }
 
+// ported from Dxbx's XbeExplorer
+XbeType GetXbeType(Xbe::Header *pXbeHeader)
+{
+	// Detect if the XBE is for Chihiro (Untested!) :
+	// This is based on https://github.com/radare/radare2/blob/master/libr/bin/p/bin_xbe.c#L45
+	if ((pXbeHeader->dwEntryAddr & 0xf0000000) == 0x40000000)
+		return xtChihiro;
+
+	// Check for Debug XBE, using high bit of the kernel thunk address :
+	// (DO NOT test like https://github.com/radare/radare2/blob/master/libr/bin/p/bin_xbe.c#L49 !)
+	if ((pXbeHeader->dwKernelImageThunkAddr & 0x80000000) > 0)
+		return xtDebug;
+
+	// Otherwise, the XBE is a Retail build :
+	return xtRetail;
+}
+
 
 void CxbxLaunchXbe(void(*Entry)())
 {
@@ -222,6 +239,11 @@ void CxbxLaunchXbe(void(*Entry)())
 	}
 
 }
+
+// Entry point address XOR keys per Xbe type (Retail, Debug or Chihiro) :
+const DWORD XOR_EP_KEY[3] = { XOR_EP_RETAIL, XOR_EP_DEBUG, XOR_EP_CHIHIRO };
+// Kernel thunk address XOR keys per Xbe type (Retail, Debug or Chihiro) :
+const DWORD XOR_KT_KEY[3] = { XOR_KT_RETAIL, XOR_KT_DEBUG, XOR_KT_CHIHIRO };
 
 extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 {
@@ -302,13 +324,13 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 
 	ConnectWindowsTimersToThunkTable();
 
-	// Fixup Kernel Imports
-	uint32 kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
+	// Detect XBE type :
+	g_XbeType = GetXbeType(&CxbxKrnl_Xbe->m_Header);
 
-	if ((kt ^ XOR_KT_DEBUG) > 0x01000000)
-		kt ^= XOR_KT_RETAIL;
-	else
-		kt ^= XOR_KT_DEBUG;
+	// Fixup Kernel Imports
+
+	uint32 kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
+	kt ^= XOR_KT_KEY[g_XbeType];
 
 	uint32_t* kt_tbl = (uint32_t*)kt;
 
@@ -329,10 +351,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 
 	// Decode Entry Point
 	uint32_t EntryPoint = CxbxKrnl_Xbe->m_Header.dwEntryAddr;
-	if ((EntryPoint ^ XOR_EP_DEBUG) > 0x01000000)
-		EntryPoint ^= XOR_EP_RETAIL;
-	else
-		EntryPoint ^= XOR_EP_DEBUG;
+	EntryPoint ^= XOR_EP_KEY[g_XbeType];
 
 	// Restore the area of the EXE required for WinAPI
 	ExeDosHeader->m_magic = NewDosHeader->m_magic;

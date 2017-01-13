@@ -94,6 +94,11 @@ typedef signed long    sint32;
 /*! debug mode choices */
 enum DebugMode { DM_NONE, DM_CONSOLE, DM_FILE };
 
+/*! type of Xbe */
+enum XbeType { xtRetail, xtDebug, xtChihiro };
+
+extern XbeType g_XbeType;
+
 /*! maximum number of threads cxbx can handle */
 #define MAXIMUM_XBOX_THREADS 256
 
