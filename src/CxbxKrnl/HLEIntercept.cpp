@@ -63,10 +63,12 @@ static bool bCacheInp = false;
 static std::vector<void *> vCacheInp;
 static std::vector<void*>::const_iterator vCacheInpIter;
 
-// Set these for experimental APU(sound) / GPU (graphics) LLE
-bool bLLE_APU = false;
-bool bLLE_GPU = false;
-bool bLLE_JIT = false;
+
+bool bLLE_APU = false; // Set this to true for experimental APU (sound) LLE
+bool bLLE_GPU = false; // Set this to true for experimental GPU (graphics) LLE
+bool bLLE_JIT = false; // Set this to true for experimental JIT
+
+bool bXRefFirstPass; // For search speed optimization, set in EmuHLEIntercept, read in EmuLocateFunction
 
 void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHeader)
 {
@@ -164,12 +166,15 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
         DbgPrintf("HLE: Detected Microsoft XDK application...\n");
 
         uint32 dwLibraryVersions = pXbeHeader->dwLibraryVersions;
-        uint32 dwHLEEntries = HLEDataBaseSize / sizeof(HLEData);
-
         uint32 LastUnResolvedXRefs = UnResolvedXRefs+1;
         uint32 OrigUnResolvedXRefs = UnResolvedXRefs;
 
 		bool bFoundD3D = false;
+
+		bXRefFirstPass = true; // Set to false for search speed optimization
+
+		memset((void*)XRefDataBase, -1, sizeof(XRefDataBase));
+
 
 		for(int p=0;UnResolvedXRefs < LastUnResolvedXRefs;p++)
         {
@@ -516,24 +521,23 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
      //               }
                 }
 
-                DbgPrintf("HLE: * Searching HLE database for %s 1.0.%d...", szLibraryName, BuildVersion);
+                DbgPrintf("HLE: * Searching HLE database for %s version 1.0.%d...", szLibraryName, BuildVersion);
 
-                bool found=false;
-
-                for(uint32 d=0;d<dwHLEEntries;d++)
-                {
-                    if(BuildVersion != HLEDataBase[d].BuildVersion || strcmp(szLibraryName, HLEDataBase[d].Library) != 0)
-                        continue;
-
-                    found = true;
-
-                    DbgPrintf("Found\n");
-
-                    EmuInstallWrappers(HLEDataBase[d].OovpaTable, HLEDataBase[d].OovpaTableSize, pXbeHeader);
+                const HLEData *FoundHLEData = nullptr;
+                for(uint32 d = 0; d < HLEDataBaseCount; d++) {
+					if (BuildVersion == HLEDataBase[d].BuildVersion && strcmp(szLibraryName, HLEDataBase[d].Library) == 0) {
+						FoundHLEData = &HLEDataBase[d];
+						break;
+					}
                 }
 
-                if(!found) { DbgPrintf("Skipped\n"); }
-            }
+				if (FoundHLEData) {
+					DbgPrintf("Found\n");
+					EmuInstallWrappers(FoundHLEData->OovpaTable, FoundHLEData->OovpaTableSize, pXbeHeader);
+				} else {
+					DbgPrintf("Skipped\n");
+				}
+			}
 
             bXRefFirstPass = false;
         }
@@ -606,7 +610,7 @@ static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
 
     // Skip out if this is an unnecessary search
     if(!bXRefFirstPass && Oovpa->XRefCount == XRefZero && Oovpa->XRefSaveIndex == XRefNoSaveIndex)
-        return 0;
+        return nullptr;
 
     // large
     if(Oovpa->Type == Large)
@@ -746,7 +750,7 @@ static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
         }
     }
 
-    return 0;
+    return nullptr;
 }
 
 // install function interception wrappers
