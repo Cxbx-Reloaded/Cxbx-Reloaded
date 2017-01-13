@@ -331,7 +331,7 @@ void EmuInitFS()
 void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 {
 	// Make sure the TLS Start and End addresses are within Xbox Memory
-	if (pTLS->dwDataStartAddr > XBOX_MEMORY_SIZE || pTLS->dwDataEndAddr > XBOX_MEMORY_SIZE) {
+	if (pTLS->dwDataStartAddr >= EMU_MAX_MEMORY_SIZE || pTLS->dwDataEndAddr >= EMU_MAX_MEMORY_SIZE) {
 		return;
 	}
 

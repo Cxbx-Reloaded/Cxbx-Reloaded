@@ -82,12 +82,13 @@ std::string CxbxBasePath;
 HANDLE CxbxBasePathHandle;
 Xbe* CxbxKrnl_Xbe = NULL;
 XbeType g_XbeType = xtRetail;
+bool g_bIsChihiro = false;
 DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
 
 HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlInit
 
-static uint32 funcAddr[]=
+static xbaddr funcAddr[]=
 {
     0x001396D1, // -> 0x00139709 (Size : 56 bytes)
     0x00139709, // -> 0x001397B3 (Size : 170 bytes)
@@ -265,7 +266,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 	}
 	
 
-	// Read EXE Header Data
+	// Read host EXE Header Data
 	Exe::DOSHeader* ExeDosHeader = (Exe::DOSHeader*)0x10000;
 	Exe::Header* ExeNtHeader = (Exe::Header*)((uint32)ExeDosHeader + ExeDosHeader->m_lfanew);
 	Exe::OptionalHeader* ExeOptionalHeader = (Exe::OptionalHeader*)((uint32)ExeNtHeader + sizeof(Exe::Header));
@@ -287,7 +288,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 	for (int i = 0; i < ExeNtHeader->m_sections; i++)
 	{
 		// Check if this section will be overwritten:
-		if (ExeSectionHeaders[i].m_virtual_addr + ExeSectionHeaders[i].m_virtual_size < XBOX_MEMORY_SIZE) {
+		if (ExeSectionHeaders[i].m_virtual_addr + ExeSectionHeaders[i].m_virtual_size < EMU_MAX_MEMORY_SIZE) {
 			char* NewSection = (char*)malloc(ExeSectionHeaders[i].m_virtual_size);
 			memcpy(NewSection, (void*)(ExeSectionHeaders[i].m_virtual_addr + (uint32)ExeDosHeader), ExeSectionHeaders[i].m_virtual_size);
 			NewSectionHeaders[i].m_virtual_addr = (uint32)NewSection - (uint32)ExeDosHeader;
@@ -299,21 +300,27 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 		}
 	}
 
-
-
-	DWORD OldProtection;
-	VirtualProtect((void*)0x10000, XBOX_MEMORY_SIZE, PAGE_EXECUTE_READWRITE, &OldProtection);
-
-	// TODO TLS
-
-
-	// Clear out entire memory range
-	ZeroMemory((void*)0x10000, XBOX_MEMORY_SIZE);
-
+	// Load Xbe (this will reside above WinMain's emulated_memory_placeholder) 
 	g_EmuShared->SetXbePath(xbePath.c_str());
 	CxbxKrnl_Xbe = new Xbe(xbePath.c_str());
 	
-	// Load Xbe Headers
+	// Detect XBE type :
+	g_XbeType = GetXbeType(&CxbxKrnl_Xbe->m_Header);
+
+	// Register if we're running an Chihiro executable (otherwise it's an Xbox executable)
+	g_bIsChihiro = (g_XbeType == xtChihiro);
+
+	// Determine memory size accordingly :
+	SIZE_T memorySize = (g_bIsChihiro ? CHIHRO_MEMORY_SIZE : XBOX_MEMORY_SIZE);
+
+	// Mark the entire emulated memory range accessable
+	DWORD OldProtection;
+	VirtualProtect((void*)XBOX_BASE_ADDR, memorySize - XBOX_BASE_ADDR, PAGE_EXECUTE_READWRITE, &OldProtection);
+
+	// Clear out entire memory range
+	ZeroMemory((void*)XBOX_BASE_ADDR, memorySize - XBOX_BASE_ADDR);
+
+	// Copy over loaded Xbe Header to specified base address
 	memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));	
 	memcpy((void*)(CxbxKrnl_Xbe->m_Header.dwBaseAddr + sizeof(Xbe::Header)), CxbxKrnl_Xbe->m_HeaderEx, CxbxKrnl_Xbe->m_ExSize);
 	
@@ -323,9 +330,6 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 	}
 
 	ConnectWindowsTimersToThunkTable();
-
-	// Detect XBE type :
-	g_XbeType = GetXbeType(&CxbxKrnl_Xbe->m_Header);
 
 	// Fixup Kernel Imports
 
@@ -360,7 +364,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 	// Launch XBE
 	CxbxKrnlInit(
 		hWnd, XbeTlsData, XbeTls, CxbxKrnl_Xbe->m_LibraryVersion, DbgMode, 
-		DebugFileName.c_str(), (Xbe::Header*)0x10000, CxbxKrnl_Xbe->m_Header.dwSizeofHeaders, (void(*)())EntryPoint
+		DebugFileName.c_str(), (Xbe::Header*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, CxbxKrnl_Xbe->m_Header.dwSizeofHeaders, (void(*)())EntryPoint
 	);
 }
 
