@@ -100,320 +100,70 @@ const char *Lib_XONLINES = "XONLINES";
 #include "HLEDataBase/XOnline.1.0.5849.inl"
 #include "HLEDataBase/XactEng.1.0.4627.inl"
 
+
 // ******************************************************************
 // * HLEDataBase
 // ******************************************************************
+#define HLE_ENTRY(Lib, DB, Version) \
+	{Lib, 1, 0, version, DB##_1_0_##Version, DB##_1_0_##Version##_SIZE }
+//  For example, HLE_ENTRY(Lib_XAPILIB, XAPI, 3911) results in:
+//  {Lib_XAPILIB, 1, 0, 3911, XAPI_1_0_3911, XAPI_1_0_3911_SIZE }
+
 HLEData HLEDataBase[] =
 {
-    // Xapilib Version 1.0.3911
-    {
-        Lib_XAPILIB,
-        1, 0, 3911,
-        XAPI_1_0_3911,
-        XAPI_1_0_3911_SIZE
-    },
-    // Xapilib Version 1.0.4034
-    {
-        Lib_XAPILIB,
-        1, 0, 4034,
-        XAPI_1_0_4034,
-        XAPI_1_0_4034_SIZE
-    },
-    // Xapilib Version 1.0.4134
-    {
-        Lib_XAPILIB,
-        1, 0, 4134,
-        XAPI_1_0_4134,
-        XAPI_1_0_4134_SIZE
-    },
-    // Xapilib Version 1.0.4361
-    {
-        Lib_XAPILIB,
-        1, 0, 4361,
-        XAPI_1_0_4361,
-        XAPI_1_0_4361_SIZE
-    },
-    // Xapilib Version 1.0.4432
-    {
-        Lib_XAPILIB,
-        1, 0, 4432,
-        XAPI_1_0_4432,
-        XAPI_1_0_4432_SIZE
-    },
-    // Xapilib Version 1.0.4627
-    {
-        Lib_XAPILIB,
-        1, 0, 4627,
-        XAPI_1_0_4627,
-        XAPI_1_0_4627_SIZE
-    },
-	// Xapilib Version 1.0.4721
-	{
-		Lib_XAPILIB,
-		1, 0, 4721,
-		XAPI_1_0_4721,
-		XAPI_1_0_4721_SIZE
-	},
-	// Xapilib Version 1.0.5233
-    {
-        Lib_XAPILIB,
-        1, 0, 5233,
-        XAPI_1_0_5233,
-        XAPI_1_0_5233_SIZE
-    },
-    // Xapilib Version 1.0.5558
-    {
-        Lib_XAPILIB,
-        1, 0, 5558,
-        XAPI_1_0_5558,
-        XAPI_1_0_5558_SIZE
-    },
-    // Xapilib Version 1.0.5849
-    {
-        Lib_XAPILIB,
-        1, 0, 5849,
-        XAPI_1_0_5849,
-        XAPI_1_0_5849_SIZE
-    },
-    // D3D8 Version 1.0.3925
-    {
-        Lib_D3D8,
-        1, 0, 3925,
-        D3D8_1_0_3925,
-        D3D8_1_0_3925_SIZE
-    },
-    // D3D8 Version 1.0.4034
-    {
-        Lib_D3D8,
-        1, 0, 4034,
-        D3D8_1_0_4034,
-        D3D8_1_0_4034_SIZE
-    },
-    // D3D8 Version 1.0.4134
-    {
-        Lib_D3D8,
-        1, 0, 4134,
-        D3D8_1_0_4134,
-        D3D8_1_0_4134_SIZE
-    },
-    // D3D8 Version 1.0.4361
-    {
-        Lib_D3D8,
-        1, 0, 4361,
-        D3D8_1_0_4361,
-        D3D8_1_0_4361_SIZE
-    },
-    // D3D8 Version 1.0.4432
-    {
-        Lib_D3D8,
-        1, 0, 4432,
-        D3D8_1_0_4432,
-        D3D8_1_0_4432_SIZE
-    },
-    // D3D8 Version 1.0.4627
-    {
-        Lib_D3D8,
-        1, 0, 4627,
-        D3D8_1_0_4627,
-        D3D8_1_0_4627_SIZE
-    },
-    // D3D8 Version 1.0.5233
-    {
-        Lib_D3D8,
-        1, 0, 5233,
-        D3D8_1_0_5233,
-        D3D8_1_0_5233_SIZE
-    },
-    // D3D8 Version 1.0.5558
-    {
-        Lib_D3D8,
-        1, 0, 5558,
-        D3D8_1_0_5558,
-        D3D8_1_0_5558_SIZE
-    },
-    // D3D8 Version 1.0.5849
-    {
-        Lib_D3D8,
-        1, 0, 5849,
-        D3D8_1_0_5849,
-        D3D8_1_0_5849_SIZE
-    },
-	// D3D8LTCG Version 1.0.5849
-    {
-        Lib_D3D8LTCG,
-        1, 0, 5849,
-        D3D8LTCG_1_0_5849,
-        D3D8LTCG_1_0_5849_SIZE
-    },
-    // DSound Version 1.0.3936
-    {
-        Lib_DSOUND,
-        1, 0, 3936,
-        DSound_1_0_3936,
-        DSound_1_0_3936_SIZE
-    },
-	// DSound Version 1.0.4134
-    {
-        Lib_DSOUND,
-        1, 0, 4134,
-        DSound_1_0_4134,
-        DSound_1_0_4134_SIZE
-    },
-    // DSound Version 1.0.4361
-    {
-        Lib_DSOUND,
-        1, 0, 4361,
-        DSound_1_0_4361,
-        DSound_1_0_4361_SIZE
-    },
-    // DSound Version 1.0.4432
-    {
-        Lib_DSOUND,
-        1, 0, 4432,
-        DSound_1_0_4432,
-        DSound_1_0_4432_SIZE
-    },
-    // DSound Version 1.0.4627
-    {
-        Lib_DSOUND,
-        1, 0, 4627,
-        DSound_1_0_4627,
-        DSound_1_0_4627_SIZE
-    },
-    // DSound Version 1.0.5233
-    {
-        Lib_DSOUND,
-        1, 0, 5233,
-        DSound_1_0_5233,
-        DSound_1_0_5233_SIZE
-    },
-    // DSound Version 1.0.5558
-    {
-        Lib_DSOUND,
-        1, 0, 5558,
-        DSound_1_0_5558,
-        DSound_1_0_5558_SIZE
-    },
-    // DSound Version 1.0.5849
-    {
-        Lib_DSOUND,
-        1, 0, 5849,
-        DSound_1_0_5849,
-        DSound_1_0_5849_SIZE
-    },
-	// XG Version 1.0.3911
-    {
-        Lib_XGRAPHC,
-        1, 0, 3911,
-        XG_1_0_3911,
-        XG_1_0_3911_SIZE
-    },
-	// XG Version 1.0.4034
-    {
-        Lib_XGRAPHC,
-        1, 0, 4034,
-        XG_1_0_4034,
-        XG_1_0_4034_SIZE
-    },
-    // XG Version 1.0.4361
-    {
-        Lib_XGRAPHC,
-        1, 0, 4361,
-        XG_1_0_4361,
-        XG_1_0_4361_SIZE
-    },
-	// XG Version 1.0.4432
-    {
-        Lib_XGRAPHC,
-        1, 0, 4432,
-        XG_1_0_4432,
-        XG_1_0_4432_SIZE
-    },
-    // XG Version 1.0.4627
-    {
-        Lib_XGRAPHC,
-        1, 0, 4627,
-        XG_1_0_4627,
-        XG_1_0_4627_SIZE
-    },
-    // XG Version 1.0.5233
-    {
-        Lib_XGRAPHC,
-        1, 0, 5233,
-        XG_1_0_5233,
-        XG_1_0_5233_SIZE
-    },
-    // XG Version 1.0.5558
-    {
-        Lib_XGRAPHC,
-        1, 0, 5558,
-        XG_1_0_5558,
-        XG_1_0_5558_SIZE
-    },
-	// XG Version 1.0.5849
-    {
-        Lib_XGRAPHC,
-        1, 0, 5849,
-        XG_1_0_5849,
-        XG_1_0_5849_SIZE
-    },
-    // XNet Version 1.0.3911
-    {
-		Lib_XNETS,
-        1, 0, 3911,
-        XNet_1_0_3911,
-        XNet_1_0_3911_SIZE
-    },
-    // XNet Version 1.0.4627
-    {
-		Lib_XNETS,
-		1, 0, 4627,
-		XNet_1_0_4627,
-		XNet_1_0_4627_SIZE
-    },
-    // XOnline Version 1.0.4361
-    {
-        Lib_XONLINE, // TODO : Typo for XONLINES?
-        1, 0, 4361,
-        XOnline_1_0_4361,
-        XOnline_1_0_4361_SIZE
-    },
-	// XOnline(s) Version 1.0.4627
+	HLE_ENTRY(Lib_XAPILIB, XAPI, 3911),
+	HLE_ENTRY(Lib_XAPILIB, XAPI, 4034),
+	HLE_ENTRY(Lib_XAPILIB, XAPI, 4134),
+	HLE_ENTRY(Lib_XAPILIB, XAPI, 4361),
+	HLE_ENTRY(Lib_XAPILIB, XAPI, 4432),
+	HLE_ENTRY(Lib_XAPILIB, XAPI, 4627),
+	HLE_ENTRY(Lib_XAPILIB, XAPI, 4721),
+	HLE_ENTRY(Lib_XAPILIB, XAPI, 5233),
+	HLE_ENTRY(Lib_XAPILIB, XAPI, 5558),
+	HLE_ENTRY(Lib_XAPILIB, XAPI, 5849),
+
+	HLE_ENTRY(Lib_D3D8, D3D8, 3925),
+	HLE_ENTRY(Lib_D3D8, D3D8, 4034),
+	HLE_ENTRY(Lib_D3D8, D3D8, 4134),
+	HLE_ENTRY(Lib_D3D8, D3D8, 4361),
+	HLE_ENTRY(Lib_D3D8, D3D8, 4432),
+	HLE_ENTRY(Lib_D3D8, D3D8, 4627),
+	HLE_ENTRY(Lib_D3D8, D3D8, 5233),
+	HLE_ENTRY(Lib_D3D8, D3D8, 5558),
+	HLE_ENTRY(Lib_D3D8, D3D8, 5849),
+
+	HLE_ENTRY(Lib_D3D8LTCG, D3D8LTCG, 5849),
+
+	HLE_ENTRY(Lib_DSOUND, DSound, 3936),
+	HLE_ENTRY(Lib_DSOUND, DSound, 4134),
+	HLE_ENTRY(Lib_DSOUND, DSound, 4361),
+	HLE_ENTRY(Lib_DSOUND, DSound, 4432),
+	HLE_ENTRY(Lib_DSOUND, DSound, 4627),
+	HLE_ENTRY(Lib_DSOUND, DSound, 5233),
+	HLE_ENTRY(Lib_DSOUND, DSound, 5558),
+	HLE_ENTRY(Lib_DSOUND, DSound, 5849),
+
+	HLE_ENTRY(Lib_XGRAPHC, XG, 3911),
+	HLE_ENTRY(Lib_XGRAPHC, XG, 4034),
+	HLE_ENTRY(Lib_XGRAPHC, XG, 4361),
+	HLE_ENTRY(Lib_XGRAPHC, XG, 4432),
+	HLE_ENTRY(Lib_XGRAPHC, XG, 4627),
+	HLE_ENTRY(Lib_XGRAPHC, XG, 5233),
+	HLE_ENTRY(Lib_XGRAPHC, XG, 5558),
+	HLE_ENTRY(Lib_XGRAPHC, XG, 5849),
+
+	HLE_ENTRY(Lib_XNETS, XNet, 3911),
+	HLE_ENTRY(Lib_XNETS, XNet, 4627),
+
+	HLE_ENTRY(Lib_XONLINE, XOnline, 4361), // TODO : Typo for XONLINES?
+
 	// TODO: Verify differences between XONLINE and XONLINES (if any)
-    {
-        Lib_XONLINES,
-        1, 0, 4627,
-        XOnline_1_0_4627,
-        XOnline_1_0_4627_SIZE
-    },
-	// XOnline(s) Version 1.0.5233
-	{
-        Lib_XONLINES,
-        1, 0, 5233,
-        XOnline_1_0_5233,
-        XOnline_1_0_5233_SIZE
-    },
-	// XOnline(s) Version 1.0.5558
-	{
-        Lib_XONLINES,
-        1, 0, 5558,
-        XOnline_1_0_5558,
-        XOnline_1_0_5558_SIZE
-    },
-	// XOnline(s) Version 1.0.5849
-	{
-        Lib_XONLINES,
-        1, 0, 5849,
-        XOnline_1_0_5849,
-        XOnline_1_0_5849_SIZE
-    },
-	// XactEng Version 1.0.4627
-	{
-		Lib_XACTENG,
-		1, 0, 4627,
-		XactEng_1_0_4627,
-		XactEng_1_0_4627_SIZE
-	},
+	HLE_ENTRY(Lib_XONLINES, XOnline, 4627),
+	HLE_ENTRY(Lib_XONLINES, XOnline, 5233),
+	HLE_ENTRY(Lib_XONLINES, XOnline, 5558),
+	HLE_ENTRY(Lib_XONLINES, XOnline, 5849),
+
+	HLE_ENTRY(Lib_XACTENG, XactEng, 4627),
 };
 
 // ******************************************************************
