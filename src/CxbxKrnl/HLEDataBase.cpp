@@ -175,8 +175,3 @@ extern const uint32 HLEDataBaseCount = sizeof(HLEDataBase) / sizeof(HLEData);
 // * XRefDataBase
 // ******************************************************************
 extern uint32 XRefDataBase[XREF_COUNT] = { 0 }; // Reset and populated by EmuHLEIntercept
-
-// ******************************************************************
-// * track XRef location
-// ******************************************************************
-extern uint32 UnResolvedXRefs = sizeof(XRefDataBase)/sizeof(uint32);

@@ -112,11 +112,6 @@ HLEDataBase[];
 extern const uint32 HLEDataBaseCount;
 
 // ******************************************************************
-// * UnResolvedXRefs
-// ******************************************************************
-extern uint32 UnResolvedXRefs;
-
-// ******************************************************************
 // * XRefDataBaseOffset
 // ******************************************************************
 enum XRefDataBaseOffset
@@ -334,7 +329,7 @@ enum XRefDataBaseOffset
 //	XREF_XLoadSectionByHandle,
 //	XREF_XFreeSectionByHandle,
 
-	XREF_COUNT // XREF_COUONT must always be last.
+	XREF_COUNT // XREF_COUNT must always be last.
 	// Also, if XREF_COUNT > sizeof(byte), enlarge struct OOVPA.XRefSaveIndex (and Value somehow)
 };
 

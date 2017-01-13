@@ -69,6 +69,7 @@ bool bLLE_GPU = false; // Set this to true for experimental GPU (graphics) LLE
 bool bLLE_JIT = false; // Set this to true for experimental JIT
 
 bool bXRefFirstPass; // For search speed optimization, set in EmuHLEIntercept, read in EmuLocateFunction
+uint32 UnResolvedXRefs; // Tracks XRef location, used (read/write) in EmuHLEIntercept and EmuLocateFunction
 
 void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHeader)
 {
@@ -164,6 +165,8 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
     if(pLibraryVersion != 0)
     {
         DbgPrintf("HLE: Detected Microsoft XDK application...\n");
+
+		UnResolvedXRefs = XREF_COUNT; // = sizeof(XRefDataBase) / sizeof(uint32)
 
         uint32 dwLibraryVersions = pXbeHeader->dwLibraryVersions;
         uint32 LastUnResolvedXRefs = UnResolvedXRefs+1;
@@ -521,7 +524,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
      //               }
                 }
 
-                DbgPrintf("HLE: * Searching HLE database for %s version 1.0.%d...", szLibraryName, BuildVersion);
+                DbgPrintf("HLE: * Searching HLE database for %s version 1.0.%d...\n", szLibraryName, BuildVersion);
 
                 const HLEData *FoundHLEData = nullptr;
                 for(uint32 d = 0; d < HLEDataBaseCount; d++) {
@@ -599,7 +602,7 @@ static inline void EmuInstallWrapper(void *FunctionAddr, void *WrapperAddr)
 {
     uint08 *FuncBytes = (uint08*)FunctionAddr;
 
-    *(uint08*)&FuncBytes[0] = 0xE9;
+    *(uint08*)&FuncBytes[0] = 0xE9; // = opcode for JMP rel32 (Jump near, relative, displacement relative to next instruction)
     *(uint32*)&FuncBytes[1] = (uint32)WrapperAddr - (uint32)FunctionAddr - 5;
 }
 
