@@ -105,9 +105,9 @@ const char *Lib_XONLINES = "XONLINES";
 // * HLEDataBase
 // ******************************************************************
 #define HLE_ENTRY(Lib, DB, Version) \
-	{Lib, 1, 0, version, DB##_1_0_##Version, DB##_1_0_##Version##_SIZE }
+	{Lib, Version, DB##_1_0_##Version, DB##_1_0_##Version##_SIZE }
 //  For example, HLE_ENTRY(Lib_XAPILIB, XAPI, 3911) results in:
-//  {Lib_XAPILIB, 1, 0, 3911, XAPI_1_0_3911, XAPI_1_0_3911_SIZE }
+//  {Lib_XAPILIB, 3911, XAPI_1_0_3911, XAPI_1_0_3911_SIZE }
 
 HLEData HLEDataBase[] =
 {

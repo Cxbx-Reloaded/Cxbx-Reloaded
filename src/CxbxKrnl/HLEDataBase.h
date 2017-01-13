@@ -100,10 +100,7 @@ extern struct HLEData
 {
     const char *Library;
 
-    uint16      MajorVersion;
-    uint16      MinorVersion;
     uint16      BuildVersion;
-
     OOVPATable *OovpaTable;
     uint32      OovpaTableSize;
 }

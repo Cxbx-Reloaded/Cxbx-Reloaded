@@ -179,8 +179,6 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
 
             for(uint32 v=0;v<dwLibraryVersions;v++)
             {
-                uint16 MajorVersion = pLibraryVersion[v].wMajorVersion;
-                uint16 MinorVersion = pLibraryVersion[v].wMinorVersion;
                 uint16 BuildVersion = pLibraryVersion[v].wBuildVersion;
                 uint16 OrigBuildVersion = BuildVersion;
 
@@ -313,7 +311,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
 
 				if(bXRefFirstPass)
                 {
-                    if(strcmp(Lib_XAPILIB, szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 &&
+                    if(strcmp(Lib_XAPILIB, szLibraryName) == 0 && 
                         (BuildVersion == 3911 || BuildVersion == 4034 || BuildVersion == 4134 || BuildVersion == 4361
                       || BuildVersion == 4432 || BuildVersion == 4627 || BuildVersion == 5233 || BuildVersion == 5558
                       || BuildVersion == 5849))
@@ -322,7 +320,6 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                         uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
                     }
                     else if(strcmp(Lib_D3D8, szLibraryName) == 0 /*&& strcmp(Lib_D3D8LTCG, szOrigLibraryName)*/ && 
-						 MajorVersion == 1 && MinorVersion == 0 &&
                         (BuildVersion == 3925 || BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4432
                       || BuildVersion == 4627 || BuildVersion == 5233 || BuildVersion == 5558 || BuildVersion == 5849))
                     {
@@ -437,7 +434,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                             }
                         }
                     }
-					//else if(strcmp(Lib_D3D8LTCG, szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 &&
+					//else if(strcmp(Lib_D3D8LTCG, szLibraryName) == 0 &&
      //                   (BuildVersion == 5849))	// 5849 only so far...
      //               {
 					//	// Save D3D8 build version
@@ -519,13 +516,13 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
      //               }
                 }
 
-                DbgPrintf("HLE: * Searching HLE database for %s %d.%d.%d...", szLibraryName, MajorVersion, MinorVersion, BuildVersion);
+                DbgPrintf("HLE: * Searching HLE database for %s 1.0.%d...", szLibraryName, BuildVersion);
 
                 bool found=false;
 
                 for(uint32 d=0;d<dwHLEEntries;d++)
                 {
-                    if(BuildVersion != HLEDataBase[d].BuildVersion || MinorVersion != HLEDataBase[d].MinorVersion || MajorVersion != HLEDataBase[d].MajorVersion || strcmp(szLibraryName, HLEDataBase[d].Library) != 0)
+                    if(BuildVersion != HLEDataBase[d].BuildVersion || strcmp(szLibraryName, HLEDataBase[d].Library) != 0)
                         continue;
 
                     found = true;
