@@ -99,6 +99,9 @@ enum XbeType { xtRetail, xtDebug, xtChihiro };
 
 extern XbeType g_XbeType;
 
+/*! indicates emulation of an Chihiro (arcade, instead of Xbox console) executable */
+extern bool g_bIsChihiro;
+
 /*! maximum number of threads cxbx can handle */
 #define MAXIMUM_XBOX_THREADS 256
 
