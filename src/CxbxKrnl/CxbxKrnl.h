@@ -46,8 +46,21 @@
 extern "C" {
 #endif
 
-#define XBOX_MEMORY_SIZE 128 * 1024 * 1024
+/*! xbaddr is the type of a physical address */
+typedef uint32 xbaddr;
 
+#define XBADDR_BITS 32
+#define XBADDR_MAX UINT32_MAX
+
+/*! memory size per system */
+#define XBOX_MEMORY_SIZE 64 * 1024 * 1024
+#define CHIHRO_MEMORY_SIZE 128 * 1024 * 1024
+
+/*! maximum memory size our emulator must support */
+#define EMU_MAX_MEMORY_SIZE CHIHRO_MEMORY_SIZE
+
+/*! base addresses of various components */
+#define XBOX_BASE_ADDR 0x10000
 #define XBOX_KERNEL_BASE 0x80010000
 #define XBOX_NV2A_INIT_VECTOR 0xFF000008
 

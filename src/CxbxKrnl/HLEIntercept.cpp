@@ -63,10 +63,13 @@ static bool bCacheInp = false;
 static std::vector<void *> vCacheInp;
 static std::vector<void*>::const_iterator vCacheInpIter;
 
-// Set these for experimental APU(sound) / GPU (graphics) LLE
-bool bLLE_APU = false;
-bool bLLE_GPU = false;
-bool bLLE_JIT = false;
+
+bool bLLE_APU = false; // Set this to true for experimental APU (sound) LLE
+bool bLLE_GPU = false; // Set this to true for experimental GPU (graphics) LLE
+bool bLLE_JIT = false; // Set this to true for experimental JIT
+
+bool bXRefFirstPass; // For search speed optimization, set in EmuHLEIntercept, read in EmuLocateFunction
+uint32 UnResolvedXRefs; // Tracks XRef location, used (read/write) in EmuHLEIntercept and EmuLocateFunction
 
 void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHeader)
 {
@@ -163,13 +166,18 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
     {
         DbgPrintf("HLE: Detected Microsoft XDK application...\n");
 
-        uint32 dwLibraryVersions = pXbeHeader->dwLibraryVersions;
-        uint32 dwHLEEntries = HLEDataBaseSize / sizeof(HLEData);
+		UnResolvedXRefs = XREF_COUNT; // = sizeof(XRefDataBase) / sizeof(uint32)
 
+        uint32 dwLibraryVersions = pXbeHeader->dwLibraryVersions;
         uint32 LastUnResolvedXRefs = UnResolvedXRefs+1;
         uint32 OrigUnResolvedXRefs = UnResolvedXRefs;
 
 		bool bFoundD3D = false;
+
+		bXRefFirstPass = true; // Set to false for search speed optimization
+
+		memset((void*)XRefDataBase, -1, sizeof(XRefDataBase));
+
 
 		for(int p=0;UnResolvedXRefs < LastUnResolvedXRefs;p++)
         {
@@ -179,8 +187,6 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
 
             for(uint32 v=0;v<dwLibraryVersions;v++)
             {
-                uint16 MajorVersion = pLibraryVersion[v].wMajorVersion;
-                uint16 MinorVersion = pLibraryVersion[v].wMinorVersion;
                 uint16 BuildVersion = pLibraryVersion[v].wBuildVersion;
                 uint16 OrigBuildVersion = BuildVersion;
 
@@ -313,7 +319,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
 
 				if(bXRefFirstPass)
                 {
-                    if(strcmp(Lib_XAPILIB, szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 &&
+                    if(strcmp(Lib_XAPILIB, szLibraryName) == 0 && 
                         (BuildVersion == 3911 || BuildVersion == 4034 || BuildVersion == 4134 || BuildVersion == 4361
                       || BuildVersion == 4432 || BuildVersion == 4627 || BuildVersion == 5233 || BuildVersion == 5558
                       || BuildVersion == 5849))
@@ -322,7 +328,6 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                         uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
                     }
                     else if(strcmp(Lib_D3D8, szLibraryName) == 0 /*&& strcmp(Lib_D3D8LTCG, szOrigLibraryName)*/ && 
-						 MajorVersion == 1 && MinorVersion == 0 &&
                         (BuildVersion == 3925 || BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4432
                       || BuildVersion == 4627 || BuildVersion == 5233 || BuildVersion == 5558 || BuildVersion == 5849))
                     {
@@ -437,7 +442,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                             }
                         }
                     }
-					//else if(strcmp(Lib_D3D8LTCG, szLibraryName) == 0 && MajorVersion == 1 && MinorVersion == 0 &&
+					//else if(strcmp(Lib_D3D8LTCG, szLibraryName) == 0 &&
      //                   (BuildVersion == 5849))	// 5849 only so far...
      //               {
 					//	// Save D3D8 build version
@@ -519,24 +524,23 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
      //               }
                 }
 
-                DbgPrintf("HLE: * Searching HLE database for %s %d.%d.%d...", szLibraryName, MajorVersion, MinorVersion, BuildVersion);
+                DbgPrintf("HLE: * Searching HLE database for %s version 1.0.%d... ", szLibraryName, BuildVersion);
 
-                bool found=false;
-
-                for(uint32 d=0;d<dwHLEEntries;d++)
-                {
-                    if(BuildVersion != HLEDataBase[d].BuildVersion || MinorVersion != HLEDataBase[d].MinorVersion || MajorVersion != HLEDataBase[d].MajorVersion || strcmp(szLibraryName, HLEDataBase[d].Library) != 0)
-                        continue;
-
-                    found = true;
-
-                    DbgPrintf("Found\n");
-
-                    EmuInstallWrappers(HLEDataBase[d].OovpaTable, HLEDataBase[d].OovpaTableSize, pXbeHeader);
+                const HLEData *FoundHLEData = nullptr;
+                for(uint32 d = 0; d < HLEDataBaseCount; d++) {
+					if (BuildVersion == HLEDataBase[d].BuildVersion && strcmp(szLibraryName, HLEDataBase[d].Library) == 0) {
+						FoundHLEData = &HLEDataBase[d];
+						break;
+					}
                 }
 
-                if(!found) { DbgPrintf("Skipped\n"); }
-            }
+				if (FoundHLEData) {
+					if (g_bPrintfOn) printf("Found\n");
+					EmuInstallWrappers(FoundHLEData->OovpaTable, FoundHLEData->OovpaTableSize, pXbeHeader);
+				} else {
+					if (g_bPrintfOn) printf("Skipped\n");
+				}
+			}
 
             bXRefFirstPass = false;
         }
@@ -598,7 +602,7 @@ static inline void EmuInstallWrapper(void *FunctionAddr, void *WrapperAddr)
 {
     uint08 *FuncBytes = (uint08*)FunctionAddr;
 
-    *(uint08*)&FuncBytes[0] = 0xE9;
+    *(uint08*)&FuncBytes[0] = 0xE9; // = opcode for JMP rel32 (Jump near, relative, displacement relative to next instruction)
     *(uint32*)&FuncBytes[1] = (uint32)WrapperAddr - (uint32)FunctionAddr - 5;
 }
 
@@ -609,7 +613,7 @@ static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
 
     // Skip out if this is an unnecessary search
     if(!bXRefFirstPass && Oovpa->XRefCount == XRefZero && Oovpa->XRefSaveIndex == XRefNoSaveIndex)
-        return 0;
+        return nullptr;
 
     // large
     if(Oovpa->Type == Large)
@@ -749,7 +753,7 @@ static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
         }
     }
 
-    return 0;
+    return nullptr;
 }
 
 // install function interception wrappers
