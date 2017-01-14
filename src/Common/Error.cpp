@@ -64,7 +64,6 @@ bool Error::ClearError()
 void Error::SetError(const std::string& strError)
 {
     m_strError = strError;
-    m_bFatal = false;
 }
 
 void Error::SetFatalError(const std::string& strError)

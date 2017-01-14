@@ -53,8 +53,8 @@ protected:
     // protected constructor so this class must be inherited from
     Error() : m_bFatal(false) { }
 
+    // protected so only derived class may set an error
     void SetError(const std::string& strStrError);
-
     void SetFatalError(const std::string& strError);
 
 private:
