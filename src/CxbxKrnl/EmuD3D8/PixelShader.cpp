@@ -804,7 +804,7 @@ HRESULT XTL::CreatePixelShaderFunction(X_D3DPIXELSHADERDEF *pPSD, LPD3DXBUFFER* 
 
 		if (FAILED(hRet))
 		{
-			EmuWarning("Couldn't assemble recompiled pixel shader\n");
+			EmuWarning("Couldn't assemble recompiled pixel shader");
 			if (pCompilationErrors)
 			{
 				EmuWarning((const char*)pCompilationErrors->GetBufferPointer());
@@ -813,7 +813,7 @@ HRESULT XTL::CreatePixelShaderFunction(X_D3DPIXELSHADERDEF *pPSD, LPD3DXBUFFER* 
 	}
 	__except(EXCEPTION_EXECUTE_HANDLER)
 	{
-		DbgPrintf("Pixel Shader : Exception while creating pixel shader 0x%.8X", pPSD);
+		DbgPrintf("Pixel Shader : Exception while creating pixel shader 0x%.8X\n", pPSD);
 	}
 	if (pCompilationErrors)
 	{
@@ -1426,7 +1426,7 @@ inline void HandleInputOutput
 
 			if (bEFProduct)
 			{
-				EmuWarning("EF Product and V1R0 register used at the same time!\n");
+				EmuWarning("EF Product and V1R0 register used at the same time!");
 			}
 			else
 			{
@@ -1947,7 +1947,7 @@ inline BOOL OptimizeOperation
 		{
 			if (szMod[0])
 			{
-				EmuWarning("Pixel Shader: Destination modifier present!\n");
+				EmuWarning("Pixel Shader: Destination modifier present!");
 			}
 			switch (eOpTypes[2])
 			{
@@ -2072,7 +2072,7 @@ inline BOOL OptimizeOperation
 					{
 						if (szOutputs[2][0] != 'r')
 						{
-							EmuWarning("Pixel Shader: Destination not temporary register!\n");
+							EmuWarning("Pixel Shader: Destination not temporary register!");
 						}
 						// ab input
 						iOffset += sprintf(szCommand + iOffset, "mul%s r1, %s, %s\n",
@@ -2404,7 +2404,7 @@ inline BOOL OptimizeOperation
 			}
 			if (!bHandled)
 			{
-				EmuWarning("Unhandled pixel shader instruction!\n");
+				EmuWarning("Unhandled pixel shader instruction!");
 			}
 // 			if (strcmp(szOps[2], "add") == 0)
 // 			{
@@ -2418,7 +2418,7 @@ inline BOOL OptimizeOperation
 // 				}
 // 				else
 // 				{
-// 					EmuWarning("Unhandled pixel shader instruction!\n");
+// 					EmuWarning("Unhandled pixel shader instruction!");
 // 				}
 // 			}
 // 			else if (strcmp(szOps[2], "cnd") == 0)
@@ -2433,12 +2433,12 @@ inline BOOL OptimizeOperation
 // 				}
 // 				else
 // 				{
-// 					EmuWarning("Unhandled pixel shader instruction!\n");
+// 					EmuWarning("Unhandled pixel shader instruction!");
 // 				}
 // 			}
 // 			else
 // 			{
-// 				EmuWarning("Unhandled pixel shader instruction!\n");
+// 				EmuWarning("Unhandled pixel shader instruction!");
 // 			}
 		}
 	}

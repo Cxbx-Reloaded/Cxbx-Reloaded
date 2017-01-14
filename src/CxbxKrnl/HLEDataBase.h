@@ -96,38 +96,20 @@ extern const char *Lib_XONLINES;
 // ******************************************************************
 // * HLEDataBase
 // ******************************************************************
-extern struct HLEData
+extern const struct HLEData
 {
     const char *Library;
 
-    uint16      MajorVersion;
-    uint16      MinorVersion;
     uint16      BuildVersion;
-
     OOVPATable *OovpaTable;
     uint32      OovpaTableSize;
 }
 HLEDataBase[];
 
 // ******************************************************************
-// * HLEDataBaseSize
+// * HLEDataBaseCount
 // ******************************************************************
-extern uint32 HLEDataBaseSize;
-
-// ******************************************************************
-// * XRefDataBase
-// ******************************************************************
-extern uint32 XRefDataBase[];
-
-// ******************************************************************
-// * UnResolvedXRefs
-// ******************************************************************
-extern uint32 UnResolvedXRefs;
-
-// ******************************************************************
-// * bXRefFirstPass
-// ******************************************************************
-extern bool bXRefFirstPass;
+extern const uint32 HLEDataBaseCount;
 
 // ******************************************************************
 // * XRefDataBaseOffset
@@ -346,6 +328,14 @@ enum XRefDataBaseOffset
     // +s
 //	XREF_XLoadSectionByHandle,
 //	XREF_XFreeSectionByHandle,
+
+	XREF_COUNT // XREF_COUNT must always be last.
+	// Also, if XREF_COUNT > sizeof(byte), enlarge struct OOVPA.XRefSaveIndex (and Value somehow)
 };
 
-#endif
+// ******************************************************************
+// * XRefDataBase
+// ******************************************************************
+extern uint32 XRefDataBase[XREF_COUNT];
+
+#endif /*HLEDATABASE_H*/

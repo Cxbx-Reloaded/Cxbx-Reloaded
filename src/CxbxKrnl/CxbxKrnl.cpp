@@ -45,6 +45,7 @@ namespace xboxkrnl
 
 #include "CxbxKrnl.h"
 #include "Emu.h"
+#include "EmuX86.h"
 #include "EmuFile.h"
 #include "EmuFS.h"
 #include "EmuShared.h"
@@ -80,13 +81,14 @@ static HANDLE g_hThreads[MAXIMUM_XBOX_THREADS] = { 0 };
 std::string CxbxBasePath;
 HANDLE CxbxBasePathHandle;
 Xbe* CxbxKrnl_Xbe = NULL;
-
+XbeType g_XbeType = xtRetail;
+bool g_bIsChihiro = false;
 DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
 
 HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlInit
 
-static uint32 funcAddr[]=
+static xbaddr funcAddr[]=
 {
     0x001396D1, // -> 0x00139709 (Size : 56 bytes)
     0x00139709, // -> 0x001397B3 (Size : 170 bytes)
@@ -177,6 +179,23 @@ extern "C" CXBXKRNL_API bool CxbxKrnlVerifyVersion(const char *szVersion)
     return true;
 }
 
+// ported from Dxbx's XbeExplorer
+XbeType GetXbeType(Xbe::Header *pXbeHeader)
+{
+	// Detect if the XBE is for Chihiro (Untested!) :
+	// This is based on https://github.com/radare/radare2/blob/master/libr/bin/p/bin_xbe.c#L45
+	if ((pXbeHeader->dwEntryAddr & 0xf0000000) == 0x40000000)
+		return xtChihiro;
+
+	// Check for Debug XBE, using high bit of the kernel thunk address :
+	// (DO NOT test like https://github.com/radare/radare2/blob/master/libr/bin/p/bin_xbe.c#L49 !)
+	if ((pXbeHeader->dwKernelImageThunkAddr & 0x80000000) > 0)
+		return xtDebug;
+
+	// Otherwise, the XBE is a Retail build :
+	return xtRetail;
+}
+
 
 void CxbxLaunchXbe(void(*Entry)())
 {
@@ -222,6 +241,11 @@ void CxbxLaunchXbe(void(*Entry)())
 
 }
 
+// Entry point address XOR keys per Xbe type (Retail, Debug or Chihiro) :
+const DWORD XOR_EP_KEY[3] = { XOR_EP_RETAIL, XOR_EP_DEBUG, XOR_EP_CHIHIRO };
+// Kernel thunk address XOR keys per Xbe type (Retail, Debug or Chihiro) :
+const DWORD XOR_KT_KEY[3] = { XOR_KT_RETAIL, XOR_KT_DEBUG, XOR_KT_CHIHIRO };
+
 extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 {
 	std::string xbePath = argv[2];
@@ -242,7 +266,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 	}
 	
 
-	// Read EXE Header Data
+	// Read host EXE Header Data
 	Exe::DOSHeader* ExeDosHeader = (Exe::DOSHeader*)0x10000;
 	Exe::Header* ExeNtHeader = (Exe::Header*)((uint32)ExeDosHeader + ExeDosHeader->m_lfanew);
 	Exe::OptionalHeader* ExeOptionalHeader = (Exe::OptionalHeader*)((uint32)ExeNtHeader + sizeof(Exe::Header));
@@ -264,7 +288,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 	for (int i = 0; i < ExeNtHeader->m_sections; i++)
 	{
 		// Check if this section will be overwritten:
-		if (ExeSectionHeaders[i].m_virtual_addr + ExeSectionHeaders[i].m_virtual_size < XBOX_MEMORY_SIZE) {
+		if (ExeSectionHeaders[i].m_virtual_addr + ExeSectionHeaders[i].m_virtual_size < EMU_MAX_MEMORY_SIZE) {
 			char* NewSection = (char*)malloc(ExeSectionHeaders[i].m_virtual_size);
 			memcpy(NewSection, (void*)(ExeSectionHeaders[i].m_virtual_addr + (uint32)ExeDosHeader), ExeSectionHeaders[i].m_virtual_size);
 			NewSectionHeaders[i].m_virtual_addr = (uint32)NewSection - (uint32)ExeDosHeader;
@@ -276,21 +300,27 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 		}
 	}
 
-
-
-	DWORD OldProtection;
-	VirtualProtect((void*)0x10000, XBOX_MEMORY_SIZE, PAGE_EXECUTE_READWRITE, &OldProtection);
-
-	// TODO TLS
-
-
-	// Clear out entire memory range
-	ZeroMemory((void*)0x10000, XBOX_MEMORY_SIZE);
-
+	// Load Xbe (this will reside above WinMain's emulated_memory_placeholder) 
 	g_EmuShared->SetXbePath(xbePath.c_str());
 	CxbxKrnl_Xbe = new Xbe(xbePath.c_str());
 	
-	// Load Xbe Headers
+	// Detect XBE type :
+	g_XbeType = GetXbeType(&CxbxKrnl_Xbe->m_Header);
+
+	// Register if we're running an Chihiro executable (otherwise it's an Xbox executable)
+	g_bIsChihiro = (g_XbeType == xtChihiro);
+
+	// Determine memory size accordingly :
+	SIZE_T memorySize = (g_bIsChihiro ? CHIHRO_MEMORY_SIZE : XBOX_MEMORY_SIZE);
+
+	// Mark the entire emulated memory range accessable
+	DWORD OldProtection;
+	VirtualProtect((void*)XBOX_BASE_ADDR, memorySize - XBOX_BASE_ADDR, PAGE_EXECUTE_READWRITE, &OldProtection);
+
+	// Clear out entire memory range
+	ZeroMemory((void*)XBOX_BASE_ADDR, memorySize - XBOX_BASE_ADDR);
+
+	// Copy over loaded Xbe Header to specified base address
 	memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));	
 	memcpy((void*)(CxbxKrnl_Xbe->m_Header.dwBaseAddr + sizeof(Xbe::Header)), CxbxKrnl_Xbe->m_HeaderEx, CxbxKrnl_Xbe->m_ExSize);
 	
@@ -302,12 +332,9 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 	ConnectWindowsTimersToThunkTable();
 
 	// Fixup Kernel Imports
-	uint32 kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
 
-	if ((kt ^ XOR_KT_DEBUG) > 0x01000000)
-		kt ^= XOR_KT_RETAIL;
-	else
-		kt ^= XOR_KT_DEBUG;
+	uint32 kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
+	kt ^= XOR_KT_KEY[g_XbeType];
 
 	uint32_t* kt_tbl = (uint32_t*)kt;
 
@@ -328,10 +355,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 
 	// Decode Entry Point
 	uint32_t EntryPoint = CxbxKrnl_Xbe->m_Header.dwEntryAddr;
-	if ((EntryPoint ^ XOR_EP_DEBUG) > 0x01000000)
-		EntryPoint ^= XOR_EP_RETAIL;
-	else
-		EntryPoint ^= XOR_EP_DEBUG;
+	EntryPoint ^= XOR_EP_KEY[g_XbeType];
 
 	// Restore the area of the EXE required for WinAPI
 	ExeDosHeader->m_magic = NewDosHeader->m_magic;
@@ -340,7 +364,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 	// Launch XBE
 	CxbxKrnlInit(
 		hWnd, XbeTlsData, XbeTls, CxbxKrnl_Xbe->m_LibraryVersion, DbgMode, 
-		DebugFileName.c_str(), (Xbe::Header*)0x10000, CxbxKrnl_Xbe->m_Header.dwSizeofHeaders, (void(*)())EntryPoint
+		DebugFileName.c_str(), (Xbe::Header*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, CxbxKrnl_Xbe->m_Header.dwSizeofHeaders, (void(*)())EntryPoint
 	);
 }
 
@@ -381,15 +405,23 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	{
 		if (AllocConsole())
 		{
+			HANDLE StdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+
+			// Maximise the console scroll buffer height :
+			CONSOLE_SCREEN_BUFFER_INFO coninfo;
+			GetConsoleScreenBufferInfo(StdHandle, &coninfo);
+			coninfo.dwSize.Y = SHRT_MAX - 1; // = 32767-1 = 32766 = maximum value that works
+			SetConsoleScreenBufferSize(StdHandle, coninfo.dwSize);
+
 			freopen("CONOUT$", "wt", stdout);
 			freopen("CONIN$", "rt", stdin);
 
 			SetConsoleTitle("Cxbx-Reloaded : Kernel Debug Console");
 
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
+			SetConsoleTextAttribute(StdHandle, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
 
-			printf("EmuMain (0x%X): Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
-			printf("EmuMain (0x%X): Debug Console Allocated (DM_CONSOLE).\n", GetCurrentThreadId());
+			printf("[0x%X] EmuMain: Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
+			printf("[0x%X] EmuMain: Debug Console Allocated (DM_CONSOLE).\n", GetCurrentThreadId());
 		}
 	}
 	else if (DbgMode == DM_FILE)
@@ -398,8 +430,8 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 		freopen(szDebugFilename, "wt", stdout);
 
-		printf("EmuMain (0x%X): Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
-		printf("EmuMain (0x%X): Debug Console Allocated (DM_FILE).\n", GetCurrentThreadId());
+		printf("[0x%X] EmuMain: Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
+		printf("[0x%X] EmuMain: Debug Console Allocated (DM_FILE).\n", GetCurrentThreadId());
 	}
 	else
 	{
@@ -417,9 +449,9 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 	{
 #ifdef _DEBUG_TRACE
-		printf("EmuMain (0x%X): Debug Trace Enabled.\n", GetCurrentThreadId());
+		printf("[0x%X] EmuMain: Debug Trace Enabled.\n", GetCurrentThreadId());
 
-		printf("EmuMain (0x%X): CxbxKrnlInit\n"
+		printf("[0x%X] EmuMain: CxbxKrnlInit\n"
 			"(\n"
 			"   hwndParent          : 0x%.08X\n"
 			"   pTLSData            : 0x%.08X\n"
@@ -434,7 +466,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 			GetCurrentThreadId(), hwndParent, pTLSData, pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
 
 #else
-		printf("EmuMain (0x%X): Debug Trace Disabled.\n", GetCurrentThreadId());
+		printf("[0x%X] EmuMain: Debug Trace Disabled.\n", GetCurrentThreadId());
 #endif
 	}
 
@@ -471,6 +503,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
 	bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
 	bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
+	bLLE_JIT = (CxbxLLE_Flags & LLE_JIT) > 0;
 
 	// Initialize devices :
 	char szBuffer[MAX_PATH];
@@ -590,17 +623,17 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	//
 	// initialize grapchics
 	//
-	DbgPrintf("EmuMain (0x%X): Initializing render window.\n", GetCurrentThreadId());
+	DbgPrintf("EmuMain: Initializing render window.\n");
 	XTL::CxbxInitWindow(pXbeHeader, dwXbeHeaderSize);
 
 	if (bLLE_GPU)
 	{
-		DbgPrintf("EmuMain (0x%X): Initializing OpenGL.\n", GetCurrentThreadId());
+		DbgPrintf("EmuMain: Initializing OpenGL.\n");
 		InitOpenGLContext();
 	}
 	else
 	{
-		DbgPrintf("EmuMain (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
+		DbgPrintf("EmuMain: Initializing Direct3D.\n");
 		XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
 	}
 
@@ -616,12 +649,13 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		EmuGenerateFS(pTLS, pTLSData);
 	}
 
+	EmuX86_Init();
 
-    DbgPrintf("EmuMain (0x%X): Initial thread starting.\n", GetCurrentThreadId());
+    DbgPrintf("EmuMain: Initial thread starting.\n");
 
 	CxbxLaunchXbe(Entry);
 
-    DbgPrintf("EmuMain (0x%X): Initial thread ended.\n", GetCurrentThreadId());
+    DbgPrintf("EmuMain: Initial thread ended.\n");
 
     fflush(stdout);
 
@@ -644,7 +678,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlCleanup(const char *szErrorMessage, ...)
 
         va_list argp;
 
-        sprintf(szBuffer1, "EmuMain (0x%X): Recieved Fatal Message:\n\n* ", GetCurrentThreadId());
+        sprintf(szBuffer1, "[0x%X] EmuMain: Recieved Fatal Message:\n\n* ", GetCurrentThreadId());
 
         va_start(argp, szErrorMessage);
 
@@ -786,12 +820,12 @@ extern "C" CXBXKRNL_API void CxbxKrnlTerminateThread()
 
 extern "C" CXBXKRNL_API void CxbxKrnlPanic()
 {
-    DbgPrintf("EmuMain (0x%X): CxbxKrnlPanic()\n", GetCurrentThreadId());
+    DbgPrintf("EmuMain: CxbxKrnlPanic()\n");
 
     CxbxKrnlCleanup("Kernel Panic!");
 }
 
 extern "C" CXBXKRNL_API void CxbxKrnlNoFunc()
 {
-    DbgPrintf("EmuMain (0x%X): CxbxKrnlNoFunc()\n", GetCurrentThreadId());
+    DbgPrintf("EmuMain: CxbxKrnlNoFunc()\n");
 }

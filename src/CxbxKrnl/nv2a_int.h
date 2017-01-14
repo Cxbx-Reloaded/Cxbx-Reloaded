@@ -18,28 +18,6 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
-#define NV_NUM_BLOCKS 21
-#define NV_PMC          0   /* card master control */
-#define NV_PBUS         1   /* bus control */
-#define NV_PFIFO        2   /* MMIO and DMA FIFO submission to PGRAPH and VPE */
-#define NV_PFIFO_CACHE  3
-#define NV_PRMA         4   /* access to BAR0/BAR1 from real mode */
-#define NV_PVIDEO       5   /* video overlay */
-#define NV_PTIMER       6   /* time measurement and time-based alarms */
-#define NV_PCOUNTER     7   /* performance monitoring counters */
-#define NV_PVPE         8   /* MPEG2 decoding engine */
-#define NV_PTV          9   /* TV encoder */
-#define NV_PRMFB        10  /* aliases VGA memory window */
-#define NV_PRMVIO       11  /* aliases VGA sequencer and graphics controller registers */
-#define NV_PFB          12  /* memory interface */
-#define NV_PSTRAPS      13  /* straps readout / override */
-#define NV_PGRAPH       14  /* accelerated 2d/3d drawing engine */
-#define NV_PCRTC        15  /* more CRTC controls */
-#define NV_PRMCIO       16  /* aliases VGA CRTC and attribute controller registers */
-#define NV_PRAMDAC      17  /* RAMDAC, cursor, and PLL control */
-#define NV_PRMDIO       18  /* aliases VGA palette registers */
-#define NV_PRAMIN       19  /* RAMIN access */
-#define NV_USER         20  /* PFIFO MMIO and DMA submission area */
 
 #define NV_PMC_BOOT_0                                    0x00000000
 #define NV_PMC_INTR_0                                    0x00000100

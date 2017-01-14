@@ -7,7 +7,7 @@
 // *  `88bo,__,o,    oP"``"Yo,  _88o,,od8P   oP"``"Yo,
 // *    "YUMMMMMP",m"       "Mm,""YUMMMP" ,m"       "Mm,
 // *
-// *   Cxbx->Win32->CxbxKrnl->EmuX86.h
+// *   Cxbx->Win32->CxbxKrnl->XNet.1.0.4627.h
 // *
 // *  This file is part of the Cxbx project.
 // *
@@ -27,22 +27,16 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
-// *  (c) 2016 Luke Usher <luke.usher@outlook.com>
+// *
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef EMUNV2A_H
-#define EMUNV2A_H
+#ifndef XNET_1_0_4627_H
+#define XNET_1_0_4627_H
 
-// Valid after PCI init :
-#define NV20_REG_BASE_KERNEL 0xFD000000
+#include "OOVPA.h"
 
-#define NV2A_ADDR  0xFD000000
-#define NV2A_SIZE             0x01000000
-
-uint32_t EmuNV2A_Read32(uint32_t addr);
-void EmuNV2A_Write32(uint32_t addr, uint32_t value);
-
-void InitOpenGLContext();
+extern OOVPATable XNet_1_0_4627[];
+extern uint32     XNet_1_0_4627_SIZE;
 
 #endif

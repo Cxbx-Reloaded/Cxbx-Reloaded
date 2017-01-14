@@ -187,7 +187,7 @@ DWORD WINAPI XTL::EmuXGetDevices
     if(DeviceType->Reserved[0] == 0 && DeviceType->Reserved[1] == 0 && DeviceType->Reserved[2] == 0)
         ret = (1 << 0);    // Return 1 Controller
     else
-        EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X)\n", DeviceType->Reserved[0], DeviceType->Reserved[1], DeviceType->Reserved[2]);
+        EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X)", DeviceType->Reserved[0], DeviceType->Reserved[1], DeviceType->Reserved[2]);
 
 	RETURN(ret);
 }
@@ -224,7 +224,7 @@ BOOL WINAPI XTL::EmuXGetDeviceChanges
 		else
 		{
 			// TODO: What if it's not a controller?
-			EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X)\n", DeviceType->Reserved[0], DeviceType->Reserved[1], DeviceType->Reserved[2]);
+			EmuWarning("Unknown DeviceType (0x%.08X, 0x%.08X, 0x%.08X)", DeviceType->Reserved[0], DeviceType->Reserved[1], DeviceType->Reserved[2]);
 		}
     }
     else
@@ -735,13 +735,13 @@ LPVOID WINAPI XTL::EmuCreateFiber
 	LPVOID					lpParameter
 )
 {
-    DbgPrintf("EmuXapi (0x%X): EmuCreateFiber\n"
+    DbgPrintf("EmuXapi: EmuCreateFiber\n"
            "(\n"
 		   "   dwStackSize         : 0x%.08X\n"
            "   lpStartRoutine      : 0x%.08X\n"
            "   lpParameter         : 0x%.08X\n"
            ");\n",
-            GetCurrentThreadId(), dwStackSize, lpStartRoutine, lpParameter);
+            dwStackSize, lpStartRoutine, lpParameter);
 
 	LPVOID pFiber = CreateFiber( dwStackSize, lpStartRoutine, lpParameter );
 	if( !pFiber )
@@ -767,11 +767,11 @@ VOID WINAPI XTL::EmuDeleteFiber
 )
 {
 
-	DbgPrintf("EmuXapi (0x%X): EmuDeleteFiber\n"
+	DbgPrintf("EmuXapi: EmuDeleteFiber\n"
 			"(\n"
 			"	lpFiber            : 0x%.08X\n"
 			");\n",
-			GetCurrentThreadId(), lpFiber );
+			lpFiber );
 
 	DeleteFiber( lpFiber );
 
@@ -786,11 +786,11 @@ VOID WINAPI XTL::EmuSwitchToFiber
 )
 {
 
-	DbgPrintf("EmuXapi (0x%X): EmuSwitchToFiber\n"
+	DbgPrintf("EmuXapi: EmuSwitchToFiber\n"
 			"(\n"
 			"	lpFiber            : 0x%.08X\n"
 			");\n",
-			GetCurrentThreadId(), lpFiber );
+			lpFiber );
 
 //	SwitchToFiber( lpFiber );	// <- Hangs/crashes...
 
@@ -816,11 +816,11 @@ LPVOID WINAPI XTL::EmuConvertThreadToFiber
 	LPVOID lpParameter
 )
 {
-	DbgPrintf("EmuXapi (0x%X): EmuConvertThreadToFiber\n"
+	DbgPrintf("EmuXapi: EmuConvertThreadToFiber\n"
 			"(\n"
 			"	lpParameter        : 0x%.08X\n"
 			");\n",
-			GetCurrentThreadId(), lpParameter );
+			lpParameter );
 
 	LPVOID pRet = ConvertThreadToFiber( lpParameter );
 	
@@ -836,11 +836,11 @@ LPVOID WINAPI XTL::EmuConvertThreadToFiber
 VOID WINAPI XTL::EmuXapiFiberStartup(DWORD dwDummy)
 {
 
-	DbgPrintf("EmuXapi (0x%X): EmuXapiFiberStarup()\n"
+	DbgPrintf("EmuXapi: EmuXapiFiberStarup()\n"
 			"(\n"
 			"	dwDummy            : 0x%.08X\n"
 			");\n",
-			GetCurrentThreadId(), dwDummy);
+			dwDummy);
 
 
 	typedef void (__stdcall *pfDummyFunc)(DWORD dwDummy);

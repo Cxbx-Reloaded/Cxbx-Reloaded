@@ -56,8 +56,8 @@ template <class BaseClass, typename MFT> inline void *MFPtoFP( MFT pMemFunc)
 #pragma pack(1)
 
 enum OOVPAType : uint16 {
-	Small,
-	Large,
+	Small, // Meaning, use SOVP, in which Offset is an uint08
+	Large, // Meaning, use LOVP, in which Offset is an uint16
 };
 
 // ******************************************************************
@@ -97,14 +97,14 @@ struct OOVPA
 	// that for each template instance, the type is redefined. Let's
 	// avoid that.)
 
-	// Small (Offset,Value)-Pair(s)
+	// Small (byte-sized) {Offset, Value}-pair(s)
 	struct SOVP
 	{
 		uint08 Offset;
 		uint08 Value;
 	};
 
-	// Large (Offset,Value)-Pair(s)
+	// Large (word-sized) {Offset, Value}-pair(s)
 	struct LOVP
 	{
 		uint16 Offset;

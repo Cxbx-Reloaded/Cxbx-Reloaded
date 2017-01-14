@@ -94,6 +94,14 @@ typedef signed long    sint32;
 /*! debug mode choices */
 enum DebugMode { DM_NONE, DM_CONSOLE, DM_FILE };
 
+/*! type of Xbe */
+enum XbeType { xtRetail, xtDebug, xtChihiro };
+
+extern XbeType g_XbeType;
+
+/*! indicates emulation of an Chihiro (arcade, instead of Xbox console) executable */
+extern bool g_bIsChihiro;
+
 /*! maximum number of threads cxbx can handle */
 #define MAXIMUM_XBOX_THREADS 256
 
@@ -106,7 +114,7 @@ extern volatile bool g_bPrintfOn;
 
 /*! DbgPrintf enabled if _DEBUG_TRACE is set */
 #ifdef _DEBUG_TRACE
-	#define DbgPrintf(fmt, ...) do { if(g_bPrintfOn) printf(fmt, ##__VA_ARGS__); } while (0)
+	#define DbgPrintf(fmt, ...) do { if(g_bPrintfOn) printf("[0x%X] "##fmt, GetCurrentThreadId(), ##__VA_ARGS__); } while (0)
 #else
 	inline void null_func(...) { }
 	#define DbgPrintf null_func

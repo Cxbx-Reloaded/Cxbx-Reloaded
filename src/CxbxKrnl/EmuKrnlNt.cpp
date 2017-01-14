@@ -209,7 +209,7 @@ XBSYSAPI EXPORTNUM(188) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateDirectoryObje
 	if (FAILED(ret))
 		EmuWarning("NtCreateDirectoryObject Failed!");
 	else
-		DbgPrintf("EmuKrnl (0x%X): NtCreateDirectoryObject DirectoryHandle = 0x%.08X\n", GetCurrentThreadId(), *DirectoryHandle);
+		DbgPrintf("EmuKrnl: NtCreateDirectoryObject DirectoryHandle = 0x%.08X\n", *DirectoryHandle);
 
 	RETURN(ret);
 }
@@ -253,7 +253,7 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 	if (FAILED(ret))
 		EmuWarning("NtCreateEvent Failed!");
 	else
-		DbgPrintf("EmuKrnl (0x%X): NtCreateEvent EventHandle = 0x%.08X\n", GetCurrentThreadId(), *EventHandle);
+		DbgPrintf("EmuKrnl: NtCreateEvent EventHandle = 0x%.08X\n", *EventHandle);
 
 	RETURN(ret);
 }
@@ -322,7 +322,7 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 	if (FAILED(ret))
 		EmuWarning("NtCreateMutant Failed!");
 	else
-		DbgPrintf("EmuKrnl (0x%X): NtCreateMutant MutantHandle = 0x%.08X\n", GetCurrentThreadId(), *MutantHandle);
+		DbgPrintf("EmuKrnl: NtCreateMutant MutantHandle = 0x%.08X\n", *MutantHandle);
 
 	RETURN(ret);
 }
@@ -362,7 +362,7 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 	if (FAILED(ret))
 		EmuWarning("NtCreateSemaphore failed!");
 	else
-		DbgPrintf("EmuKrnl (0x%X): NtCreateSemaphore SemaphoreHandle = 0x%.08X\n", GetCurrentThreadId(), *SemaphoreHandle);
+		DbgPrintf("EmuKrnl: NtCreateSemaphore SemaphoreHandle = 0x%.08X\n", *SemaphoreHandle);
 
 	RETURN(ret);
 }
@@ -402,7 +402,7 @@ XBSYSAPI EXPORTNUM(194) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateTimer
 	if (FAILED(ret))
 		EmuWarning("NtCreateTimer failed!");
 	else
-		DbgPrintf("EmuKrnl (0x%X): NtCreateTimer TimerHandle = 0x%.08X\n", GetCurrentThreadId(), *TimerHandle);
+		DbgPrintf("EmuKrnl: NtCreateTimer TimerHandle = 0x%.08X\n", *TimerHandle);
 
 	RETURN(ret);
 }
@@ -920,7 +920,7 @@ XBSYSAPI EXPORTNUM(210) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryFullAttributes
 	NTToXboxFileInformation(&nativeNetOpenInfo, Attributes, FileNetworkOpenInformation, sizeof(xboxkrnl::FILE_NETWORK_OPEN_INFORMATION));
 
 	if (FAILED(ret))
-		EmuWarning("NtQueryFullAttributesFile failed! (0x%.08X)\n", ret);
+		EmuWarning("NtQueryFullAttributesFile failed! (0x%.08X)", ret);
 
 	RETURN(ret);
 }
@@ -1197,7 +1197,7 @@ XBSYSAPI EXPORTNUM(217) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtQueryVirtualMemory
 
 			ret = STATUS_SUCCESS;
 
-			DbgPrintf("EmuKrnl (0x%X): NtQueryVirtualMemory: Applied fix for Forza Motorsport!\n", GetCurrentThreadId());
+			DbgPrintf("EmuKrnl: NtQueryVirtualMemory: Applied fix for Forza Motorsport!\n");
 		}
 	}
 
@@ -1607,7 +1607,7 @@ XBSYSAPI EXPORTNUM(232) xboxkrnl::VOID NTAPI xboxkrnl::NtUserIoApcDispatcher
 		popad
 	}
 
-	DbgPrintf("EmuKrnl (0x%X): NtUserIoApcDispatcher Completed\n", GetCurrentThreadId());
+	DbgPrintf("EmuKrnl: NtUserIoApcDispatcher Completed\n");
 }
 
 // ******************************************************************
