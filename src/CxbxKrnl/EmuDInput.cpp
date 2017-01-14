@@ -54,7 +54,7 @@ bool XTL::EmuDInputInit()
 
     g_XBController.ListenBegin(g_hEmuWindow);
 
-    if(g_XBController.GetError())
+    if(g_XBController.HasError())
         return false;
 
     return true;
@@ -75,8 +75,8 @@ void XTL::EmuDInputPoll(XTL::PXINPUT_STATE Controller)
 {
     g_XBController.ListenPoll(Controller);
 
-    if(g_XBController.GetError())
-        MessageBox(NULL, g_XBController.GetError(), "Cxbx-Reloaded [*UNHANDLED!*]", MB_OK);  // TODO: Handle this!
+    if(g_XBController.HasError())
+        MessageBox(NULL, g_XBController.GetError().c_str(), "Cxbx-Reloaded [*UNHANDLED!*]", MB_OK);  // TODO: Handle this!
 
     return;
 }

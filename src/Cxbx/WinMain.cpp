@@ -72,7 +72,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
 
     /*! optionally open xbe and start emulation, if command line parameter was specified */
-    if(__argc > 1 && MainWindow->GetError() == 0)
+    if(__argc > 1 && false == MainWindow->HasError())
     {
         MainWindow->OpenXbe(__argv[1]);
 
@@ -80,15 +80,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
 
     /*! wait for window to be closed, or failure */
-    while(MainWindow->GetError() == 0 && MainWindow->ProcessMessages())
+    while(!MainWindow->HasError() && MainWindow->ProcessMessages())
     {
         Sleep(10);
     }
 
     /*! if an error occurred, notify user */
-    if(MainWindow->GetError() != 0)
+    if(MainWindow->HasError())
     {
-        MessageBox(NULL, MainWindow->GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+        MessageBox(NULL, MainWindow->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
     }
 
     delete MainWindow;
