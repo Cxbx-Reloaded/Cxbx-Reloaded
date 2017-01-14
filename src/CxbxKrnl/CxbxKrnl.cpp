@@ -198,7 +198,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 	g_bIsChihiro = (g_XbeType == xtChihiro);
 
 	// Determine memory size accordingly :
-	SIZE_T memorySize = (g_bIsChihiro ? CHIHRO_MEMORY_SIZE : XBOX_MEMORY_SIZE);
+	SIZE_T memorySize = (g_bIsChihiro ? CHIHIRO_MEMORY_SIZE : XBOX_MEMORY_SIZE);
 
 	// Mark the entire emulated memory range accessable
 	DWORD OldProtection;
