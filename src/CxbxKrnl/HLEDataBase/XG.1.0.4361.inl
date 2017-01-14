@@ -85,21 +85,6 @@ OOVPA_NO_XREF(XGSwizzleRect_1_0_4361, 10)
 OOVPA_END;
 
 // ******************************************************************
-// * XGUnswizzleRect
-// ******************************************************************
-OOVPA_NO_XREF(XGUnswizzleRect_1_0_4361, 8)
-
-        { 0x1E, 0x03 },
-        { 0x3E, 0x00 },
-        { 0x5E, 0xD2 },
-        { 0x7E, 0x75 },
-        { 0x9E, 0x70 },
-        { 0xC1, 0xE9 },
-        { 0xDE, 0x89 },
-        { 0xFE, 0x60 },
-OOVPA_END;
-
-// ******************************************************************
 // * XGSetVertexBufferHeader
 // ******************************************************************
 OOVPA_NO_XREF(XGSetVertexBufferHeader_1_0_4361, 8)
@@ -153,8 +138,8 @@ OOVPATable XG_1_0_4361[] = {
 	OOVPA_TABLE_PATCH(XGIsSwizzledFormat_1_0_4361, XTL::EmuXGIsSwizzledFormat),
     // XGSwizzleRect
 	OOVPA_TABLE_PATCH(XGSwizzleRect_1_0_4361, XTL::EmuXGSwizzleRect),
-	// XGUnswizzleRect
-	OOVPA_TABLE_PATCH(XGUnswizzleRect_1_0_4361, XTL::EmuXGUnswizzleRect),
+	// XGUnswizzleRect (* Unchanged since 3911 *)
+	OOVPA_TABLE_PATCH(XGUnswizzleRect_1_0_3911, XTL::EmuXGUnswizzleRect),
 	// XGSetTextureHeader (* Unchanged since 3911 *)
 	OOVPA_TABLE_PATCH(XGSetTextureHeader_1_0_3911, XTL::EmuXGSetTextureHeader),
 	// XGSetVertexBufferHeader
