@@ -108,7 +108,7 @@ bool Wnd::ProcessMessages()
 
         if(m_hwnd == 0)
         {
-            SetError("Could not create window.", true);
+            SetFatalError("Could not create window.");
             UnregisterClass(m_classname, m_hInstance);
             goto cleanup;
         }

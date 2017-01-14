@@ -54,10 +54,14 @@ class Wnd : public Error
         // ******************************************************************
        ~Wnd();
 
+       void Initialize();
+
         // ******************************************************************
         // * Process Window Messages
         // ******************************************************************
         bool    ProcessMessages();
+
+private:
 
         // ******************************************************************
         // * Forward WndProc to thiscall member function
@@ -69,10 +73,11 @@ class Wnd : public Error
         // ******************************************************************
         virtual LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+public:
         // ******************************************************************
         // * Retrieve this window's handle
         // ******************************************************************
-        HWND GetHwnd() { return m_hwnd; }
+        HWND GetHwnd() const { return m_hwnd; }
 
     protected:
         // ******************************************************************

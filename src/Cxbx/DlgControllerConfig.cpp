@@ -301,7 +301,7 @@ VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object)
             SetWindowText(hWndButton, szBuffer);
         }
 
-        if(g_XBController.GetError())
+        if(g_XBController.HasError())
         {
             goto cleanup;
         }
@@ -314,7 +314,7 @@ VOID ConfigureInput(HWND hWndDlg, HWND hWndButton, XBCtrlObject object)
         Sleep(50);
     }
 
-    if(g_XBController.GetError())
+    if(g_XBController.HasError())
     {
         goto cleanup;
     }
@@ -330,7 +330,7 @@ cleanup:
 
     /*! update window with status */
     {
-        if(g_XBController.GetError())
+        if(g_XBController.HasError())
         {
             sprintf(szNewText, "%s", g_XBController.GetError());
         }
