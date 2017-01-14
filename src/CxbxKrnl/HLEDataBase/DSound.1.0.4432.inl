@@ -572,8 +572,8 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable DSound_1_0_4432[] = {
 
-    // DirectSoundCreate (* unchanged since 4361 *)
-	OOVPA_TABLE_PATCH(DirectSoundCreate_1_0_4361, XTL::EmuDirectSoundCreate),
+    // DirectSoundCreate (* unchanged since 4134 *)
+	OOVPA_TABLE_PATCH(DirectSoundCreate_1_0_4134, XTL::EmuDirectSoundCreate),
 	// IDirectSound8_CreateStream
 	OOVPA_TABLE_PATCH(IDirectSound8_CreateStream_1_0_3936, XTL::EmuIDirectSound8_CreateStream),
     // CDirectSound_CreateSoundStream (* unchanged since 4361 *)
@@ -588,8 +588,8 @@ OOVPATable DSound_1_0_4432[] = {
 	OOVPA_TABLE_PATCH(IDirectSound8_AddRef_1_0_3936, XTL::EmuIDirectSound8_AddRef),
 	// IDirectSound8::Release
 	OOVPA_TABLE_PATCH(IDirectSound8_Release_1_0_4432, XTL::EmuIDirectSound8_Release),
-	// IDirectSound8::CreateSoundBuffer (* unchanged since 4361 *)
-	OOVPA_TABLE_PATCH(IDirectSound8_CreateSoundBuffer_1_0_4361, XTL::EmuIDirectSound8_CreateSoundBuffer),
+	// IDirectSound8::CreateSoundBuffer (* unchanged since 4134 *)
+	OOVPA_TABLE_PATCH(IDirectSound8_CreateSoundBuffer_1_0_4134, XTL::EmuIDirectSound8_CreateSoundBuffer),
 	// IDirectSoundBuffer8::Release (* unchanged since 3936 *)
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer8_Release_1_0_3936, XTL::EmuIDirectSoundBuffer8_Release),
 	// IDirectSoundBuffer8::SetLoopRegion (* unchanged since 4361 *)

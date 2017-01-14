@@ -33,52 +33,6 @@
 // ******************************************************************
 
 // ******************************************************************
-// * DirectSoundCreate
-// ******************************************************************
-OOVPA_NO_XREF(DirectSoundCreate_1_0_4361, 9)
-
-        // DirectSoundCreate+0x0B : movzx esi, al
-        { 0x0B, 0x0F }, // (Offset,Value)-Pair #1
-        { 0x0C, 0xB6 }, // (Offset,Value)-Pair #2
-        { 0x0D, 0xF0 }, // (Offset,Value)-Pair #3
-
-        // DirectSoundCreate+0x12 : call [addr]
-        { 0x12, 0xE8 }, // (Offset,Value)-Pair #4
-
-        // DirectSoundCreate+0x1B : jl +0x13
-        { 0x1B, 0x7C }, // (Offset,Value)-Pair #5
-        { 0x1C, 0x13 }, // (Offset,Value)-Pair #6
-
-        // DirectSoundCreate+0x27 : sbb ecx, ecx
-        { 0x27, 0x1B }, // (Offset,Value)-Pair #7
-        { 0x28, 0xC9 }, // (Offset,Value)-Pair #8
-
-        // DirectSoundCreate+0x43 : leave
-        { 0x43, 0xC9 }, // (Offset,Value)-Pair #9
-OOVPA_END;
-
-// ******************************************************************
-// * IDirectSound8_CreateSoundBuffer
-// ******************************************************************
-OOVPA_NO_XREF(IDirectSound8_CreateSoundBuffer_1_0_4361, 9)
-
-        // IDirectSound8_CreateSoundBuffer+0x2A : push 0x24
-        { 0x2A, 0x6A }, // (Offset,Value)-Pair #1
-        { 0x2B, 0x24 }, // (Offset,Value)-Pair #2
-
-        // IDirectSound8_CreateSoundBuffer+0x3C : call [addr]
-        { 0x3C, 0xE8 }, // (Offset,Value)-Pair #3
-
-        // IDirectSound8_CreateSoundBuffer+0x4A : and esi, 0x7FF8FFF2
-        { 0x4A, 0x81 }, // (Offset,Value)-Pair #4
-        { 0x4B, 0xE6 }, // (Offset,Value)-Pair #5
-        { 0x4C, 0xF2 }, // (Offset,Value)-Pair #6
-        { 0x4D, 0xFF }, // (Offset,Value)-Pair #7
-        { 0x4E, 0xF8 }, // (Offset,Value)-Pair #8
-        { 0x4F, 0x7F }, // (Offset,Value)-Pair #9
-OOVPA_END;
-
-// ******************************************************************
 // * CDirectSound::CreateSoundStream
 // ******************************************************************
 OOVPA_XREF(CDirectSound_CreateSoundStream_1_0_4361, 14,
@@ -712,25 +666,6 @@ OOVPA_XREF(DirectSound_CDirectSoundBuffer_PlayEx_1_0_4361, 8,
 OOVPA_END;
 
 // ******************************************************************
-// * IDirectSoundBuffer_PlayEx
-// ******************************************************************
-OOVPA_XREF(IDirectSoundBuffer_PlayEx_1_0_4361, 8,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        { 0x1D, XREF_DirectSound_CDirectSoundBuffer_PlayEx },
-
-        { 0x03, 0x10 },
-        { 0x08, 0xFF },
-        { 0x0D, 0xC8 },
-        { 0x12, 0x83 },
-        { 0x17, 0x1B },
-        { 0x1C, 0xE8 },
-        { 0x21, 0xC2 },
-OOVPA_END;
-
-// ******************************************************************
 // * CMcpxBuffer::Stop2
 // ******************************************************************
 OOVPA_XREF(CMcpxBuffer_Stop2_1_0_4361, 10,
@@ -797,8 +732,8 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable DSound_1_0_4361[] = {
 
-    // DirectSoundCreate
-	OOVPA_TABLE_PATCH(DirectSoundCreate_1_0_4361, XTL::EmuDirectSoundCreate),
+    // DirectSoundCreate (* unchanged since 4134 *)
+	OOVPA_TABLE_PATCH(DirectSoundCreate_1_0_4134, XTL::EmuDirectSoundCreate),
     // CDirectSound_CreateSoundStream
 	OOVPA_TABLE_XREF(CDirectSound_CreateSoundStream_1_0_4361),
 	// IDirectSound8_CreateStream
@@ -811,8 +746,8 @@ OOVPATable DSound_1_0_4361[] = {
 	OOVPA_TABLE_PATCH(CDirectSoundStream_Pause_1_0_4361, XTL::EmuCDirectSoundStream_Pause),
 	// IDirectSound8::AddRef (* unchanged since 3936 *)
 	OOVPA_TABLE_PATCH(IDirectSound8_AddRef_1_0_3936, XTL::EmuIDirectSound8_AddRef),
-	// IDirectSound8::CreateSoundBuffer
-	OOVPA_TABLE_PATCH(IDirectSound8_CreateSoundBuffer_1_0_4361, XTL::EmuIDirectSound8_CreateSoundBuffer),
+	// IDirectSound8::CreateSoundBuffer (* unchanged since 4134 *)
+	OOVPA_TABLE_PATCH(IDirectSound8_CreateSoundBuffer_1_0_4134, XTL::EmuIDirectSound8_CreateSoundBuffer),
 	// IDirectSoundBuffer8::SetPlayRegion
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer8_SetPlayRegion_1_0_4361, XTL::EmuIDirectSoundBuffer8_SetPlayRegion),
 	// IDirectSoundBuffer8::SetLoopRegion
@@ -859,8 +794,8 @@ OOVPATable DSound_1_0_4361[] = {
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_SetMixBinVolumes_1_0_4361),
 	// DirectSound::CDirectSoundBuffer::PlayEx (XREF)
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_PlayEx_1_0_4361),
-	// IDirectSoundBuffer_PlayEx
-	OOVPA_TABLE_PATCH(IDirectSoundBuffer_PlayEx_1_0_4361, XTL::EmuIDirectSoundBuffer8_PlayEx),
+	// IDirectSoundBuffer_PlayEx (* unchanged since 3936 *)
+	OOVPA_TABLE_PATCH(IDirectSoundBuffer_PlayEx_1_0_3936, XTL::EmuIDirectSoundBuffer8_PlayEx),
 	// DirectSound::CDirectSoundBuffer::StopEx (XREF)
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_StopEx_1_0_4361),
 	// IDirectSoundBuffer_StopEx
