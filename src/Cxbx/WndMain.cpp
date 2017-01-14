@@ -212,14 +212,14 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 uint32 difW = (wRect.right  - wRect.left) - (cRect.right);
                 uint32 difH = (wRect.bottom - wRect.top)  - (cRect.bottom);
 
-                MoveWindow(hwnd, wRect.left, wRect.top, difW + 640, difH + 480, TRUE);
+                MoveWindow(hwnd, wRect.left, wRect.top, difW + m_w, difH + m_h, TRUE);
             }
 
             // initialize back buffer
             {
                 HDC hDC = GetDC(hwnd);
 
-                m_BackBmp = CreateCompatibleBitmap(hDC, 640, 480);
+                m_BackBmp = CreateCompatibleBitmap(hDC, m_w, m_h);
 
                 // decompress jpeg, convert to bitmap resource
                 {
@@ -350,9 +350,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 static const int nLogoBmpW = 100, nLogoBmpH = 17;
 
-                BitBlt(hDC, 0, 0, 640, 480, m_BackDC, 0, 0, SRCCOPY);
+                BitBlt(hDC, 0, 0, m_w, m_h, m_BackDC, 0, 0, SRCCOPY);
 //              BitBlt(hDC, 0, 10, 320, 160, m_BackDC, 0, 0, SRCCOPY);
-                BitBlt(hDC, 640-nLogoBmpW-4, 480-nLogoBmpH-4, nLogoBmpW, nLogoBmpH, m_LogoDC, 0, 0, SRCCOPY);
+                BitBlt(hDC, m_w-nLogoBmpW-4, m_h-nLogoBmpH-4, nLogoBmpW, nLogoBmpH, m_LogoDC, 0, 0, SRCCOPY);
 
                 int nHeight = -MulDiv(8, GetDeviceCaps(hDC, LOGPIXELSY), 72);
 
@@ -371,9 +371,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 else
                     sprintf(buffer, "%s", "Disclaimer: Cxbx-Reloaded has no affiliation with Microsoft");
 
-                RECT rect = {0, 480-15-5, 640-100-4-69, 480-5};
+                RECT rect = {0, m_h-15-5, m_w-100-4-69, m_h-5};
 
-                ExtTextOut(hDC, 4, 480-15-5, ETO_OPAQUE, &rect, buffer, strlen(buffer), 0);
+                ExtTextOut(hDC, 4, m_h-15-5, ETO_OPAQUE, &rect, buffer, strlen(buffer), 0);
 
                 SelectObject(hDC, tmpObj);
 
