@@ -87,7 +87,7 @@ void XBController::Load(const char *szRegistryKey)
 {
     if(m_CurrentState != XBCTRL_STATE_NONE)
     {
-        SetError("Invalid State", false);
+        SetError("Invalid State");
         return;
     }
 
@@ -152,7 +152,7 @@ void XBController::Save(const char *szRegistryKey)
 {
     if(m_CurrentState != XBCTRL_STATE_NONE)
     {
-        SetError("Invalid State", false);
+        SetError("Invalid State");
         return;
     }
 
@@ -215,7 +215,7 @@ void XBController::ConfigBegin(HWND hwnd, XBCtrlObject object)
 {
     if(m_CurrentState != XBCTRL_STATE_NONE)
     {
-        SetError("Invalid State", false);
+        SetError("Invalid State");
         return;
     }
 
@@ -223,7 +223,7 @@ void XBController::ConfigBegin(HWND hwnd, XBCtrlObject object)
 
     DInputInit(hwnd);
 
-    if(GetError() != 0)
+    if(HasError())
         return;
 
     lPrevMouseX = -1;
@@ -242,7 +242,7 @@ bool XBController::ConfigPoll(char *szStatus)
 {
     if(m_CurrentState != XBCTRL_STATE_CONFIG)
     {
-        SetError("Invalid State", false);
+        SetError("Invalid State");
         return false;
     }
 
@@ -540,7 +540,7 @@ void XBController::ConfigEnd()
 {
     if(m_CurrentState != XBCTRL_STATE_CONFIG)
     {
-        SetError("Invalid State", false);
+        SetError("Invalid State");
         return;
     }
 
@@ -560,7 +560,7 @@ void XBController::ListenBegin(HWND hwnd)
 
     if(m_CurrentState != XBCTRL_STATE_NONE)
     {
-        SetError("Invalid State", false);
+        SetError("Invalid State");
         return;
     }
 
@@ -866,7 +866,7 @@ void XBController::ListenEnd()
 {
     if(m_CurrentState != XBCTRL_STATE_LISTEN)
     {
-        SetError("Invalid State", false);
+        SetError("Invalid State");
         return;
     }
 
@@ -916,7 +916,7 @@ void XBController::DInputInit(HWND hwnd)
 
         if(FAILED(hRet))
         {
-            SetError("Could not initialized DirectInput8", true);
+            SetFatalError("Could not initialized DirectInput8");
             return;
         }
     }

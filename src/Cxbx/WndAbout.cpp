@@ -86,7 +86,7 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
                 uint32 difW = (wRect.right  - wRect.left) - (cRect.right);
                 uint32 difH = (wRect.bottom - wRect.top)  - (cRect.bottom);
 
-                MoveWindow(hwnd, wRect.left, wRect.top, difW + 400, difH + 300, TRUE);
+                MoveWindow(hwnd, wRect.left, wRect.top, difW + m_w, difH + m_h, TRUE);
             }
 
             EnableWindow(m_parent, FALSE);
@@ -97,7 +97,7 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
             m_hFont = CreateFont(nHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_ROMAN, "Verdana");
 
-            m_BackBmp = CreateCompatibleBitmap(hDC, 400, 300);
+            m_BackBmp = CreateCompatibleBitmap(hDC, m_w, m_h);
 
             // decompress jpeg, convert to bitmap resource
             {
@@ -169,7 +169,7 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
             HGDIOBJ OrgObj = SelectObject(hDC, m_hFont);
 
             // draw bitmap
-            BitBlt(hDC, 0, 0, 400, 300, m_BackDC, 0, 0, SRCCOPY);
+            BitBlt(hDC, 0, 0, m_w, m_h, m_BackDC, 0, 0, SRCCOPY);
 
             SelectObject(hDC, OrgObj);
 

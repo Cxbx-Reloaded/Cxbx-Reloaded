@@ -36,33 +36,30 @@
 
 #include "Cxbx.h"
 
+#include <string>
+
 // inherit from this class for handy error reporting capability
 class Error
 {
-    public:
-        // return current error (zero if there is none)
-        const char *GetError() const { return m_szError; }
+public:
+    const std::string& GetError();
 
-        // is the current error fatal? (class is "dead" on fatal errors)
-        bool IsFatal() const { return m_bFatal; }
+    bool HasError() const;
+    bool HasFatalError() const;
 
-        // clear the current error (returns false if error was fatal)
-        bool ClearError();
+    bool ClearError();
 
-    protected:
-        // protected constructor so this class must be inherited from
-        Error() : m_szError(0), m_bFatal(false) { }
+protected:
+    // protected constructor so this class must be inherited from
+    Error() : m_bFatal(false) { }
 
-        // protected deconstructor
-       ~Error() { delete[] m_szError; }
+    // protected so only derived class may set an error
+    void SetError(const std::string& strStrError);
+    void SetFatalError(const std::string& strError);
 
-        // protected so only derived class may set an error
-        void SetError(const char *x_szError, bool x_bFatal);
-
-    private:
-        // current error information
-        char *m_szError;
-        bool  m_bFatal;
+private:
+    std::string m_strError;
+    bool m_bFatal;
 };
 
 #endif
