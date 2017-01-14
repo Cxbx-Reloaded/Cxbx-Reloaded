@@ -1028,7 +1028,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 break;
 
                 case ID_HELP_HOMEPAGE:
-                    ShellExecute(NULL, "open", "http://www.github.com/LukeUsher/Cxbx-Reloaded/", NULL, NULL, SW_SHOWNORMAL);
+                    ShellExecute(NULL, "open", "https://github.com/Cxbx-Reloaded/Cxbx-Reloaded", NULL, NULL, SW_SHOWNORMAL);
                     break;
             }
 
