@@ -320,29 +320,14 @@ OOVPA_NO_XREF(XapiSetupPerTitleDriveLetters_1_0_4361, 10)
 OOVPA_END;
 
 // ******************************************************************
-// * XMountMUA
-// ******************************************************************
-OOVPA_NO_XREF(XMountMUA_1_0_4361, 8)
-
-        { 0x22, 0x8A },
-        { 0x3E, 0x89 },
-        { 0x5E, 0x5C },
-        { 0x7E, 0xF4 },
-        { 0x9E, 0x50 },
-        { 0xBE, 0xF8 },
-        { 0xDE, 0x8D },
-        { 0xFE, 0x09 },
-OOVPA_END;
-
-// ******************************************************************
 // * XAPI_1_0_4361
 // ******************************************************************
 OOVPATable XAPI_1_0_4361[] = {
 
     // XInitDevices (* unchanged since 1.0.3911 *)
 	OOVPA_TABLE_PATCH(XInitDevices_1_0_3911, XTL::EmuXInitDevices),
-    // XGetDevices (* unchanged since 4134 *)
-	OOVPA_TABLE_PATCH(XGetDevices_1_0_4134, XTL::EmuXGetDevices),
+    // XGetDevices (* unchanged since 3911 *)
+	OOVPA_TABLE_PATCH(XGetDevices_1_0_3911, XTL::EmuXGetDevices),
     // XGetDeviceChanges (* unchanged since 3911 *)
 	OOVPA_TABLE_PATCH(XGetDeviceChanges_1_0_3911, XTL::EmuXGetDeviceChanges),
     // XInputOpen
@@ -381,8 +366,8 @@ OOVPATable XAPI_1_0_4361[] = {
 	OOVPA_TABLE_PATCH(SignalObjectAndWait_1_0_3911, XTL::EmuSignalObjectAndWait),
 	// QueueUserAPC (* unchanged since 3911 *)
 	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, XTL::EmuQueueUserAPC),
-	// XMountMUA
-	OOVPA_TABLE_PATCH(XMountMUA_1_0_4361, XTL::EmuXMountMUA),
+	// XMountMUA (* unchanged since 4134 *)
+	OOVPA_TABLE_PATCH(XMountMUA_1_0_4134, XTL::EmuXMountMUA),
 };
 
 // ******************************************************************
