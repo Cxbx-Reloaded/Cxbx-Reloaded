@@ -1480,8 +1480,6 @@ OOVPATable D3D8_1_0_5558[] = {
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreateTexture2_1_0_5558, XTL::EmuIDirect3DDevice8_CreateTexture2),
 	// IDirect3DDevice8::GetDisplayMode (* unchanged since 4627 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetDisplayMode_1_0_4627, XTL::EmuIDirect3DDevice8_GetDisplayMode),
-	// IDirect3DDevice8::SetVertexData2f (* unchanged since 4627 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetVertexData2f_1_0_4627, XTL::EmuIDirect3DDevice8_SetVertexData2f),
 	// IDirect3DDevice8::End
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_End_1_0_5558, XTL::EmuIDirect3DDevice8_End),
 	// IDirect3DDevice8::SetTextureState_TexCoordIndex (* unchanged since 4627 *)
@@ -1530,8 +1528,8 @@ OOVPATable D3D8_1_0_5558[] = {
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetVertexShader_1_0_5558, XTL::EmuIDirect3DDevice8_SetVertexShader),
 	// IDirect3DDevice8::SetIndices (* unchanged since 5233 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetIndices_1_0_5233, XTL::EmuIDirect3DDevice8_SetIndices),
-	 // IDirect3DDevice8::SetIndices
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetIndices_1_0_5455, XTL::EmuIDirect3DDevice8_SetIndices),
+	//// IDirect3DDevice8::SetIndices
+	// TODO : Move to OOVPATable D3D8_1_0_5455 : OOVPA_TABLE_PATCH(D3DDevice_SetIndices_1_0_5455, XTL::EmuIDirect3DDevice8_SetIndices),
 	// IDirect3DDevice8::SetTexture (* unchanged since 5233 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetTexture_1_0_5233, XTL::EmuIDirect3DDevice8_SetTexture),
 	// IDirect3DDevice8::SwitchTexture (* unchanged since 4361 *)

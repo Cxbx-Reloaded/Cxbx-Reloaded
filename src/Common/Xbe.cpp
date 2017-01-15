@@ -56,7 +56,7 @@ Xbe::Xbe(const char *x_szFilename)
     // verify Xbe file was opened successfully
     if(XbeFile == 0)
     {
-        SetError("Could not open Xbe file.", true);
+        SetFatalError("Could not open Xbe file.");
         return;
     }
 
@@ -81,13 +81,13 @@ Xbe::Xbe(const char *x_szFilename)
 
         if(fread(&m_Header, sizeof(m_Header), 1, XbeFile) != 1)
         {
-            SetError("Unexpected end of file while reading Xbe Image Header", true);
+            SetFatalError("Unexpected end of file while reading Xbe Image Header");
             goto cleanup;
         }
 
         if(m_Header.dwMagic != *(uint32 *)"XBEH")
         {
-            SetError("Invalid magic number in Xbe file", true);
+            SetFatalError("Invalid magic number in Xbe file");
             goto cleanup;
         }
 
@@ -105,7 +105,7 @@ Xbe::Xbe(const char *x_szFilename)
 
         if(fread(m_HeaderEx, m_ExSize, 1, XbeFile) != 1)
         {
-            SetError("Unexpected end of file while reading Xbe Image Header (Ex)", true);
+            SetFatalError("Unexpected end of file while reading Xbe Image Header (Ex)");
             goto cleanup;
         }
 
@@ -120,7 +120,7 @@ Xbe::Xbe(const char *x_szFilename)
 
         if(fread(&m_Certificate, sizeof(m_Certificate), 1, XbeFile) != 1)
         {
-            SetError("Unexpected end of file while reading Xbe Certificate", true);
+            SetFatalError("Unexpected end of file while reading Xbe Certificate");
             goto cleanup;
         }
 
@@ -148,7 +148,7 @@ Xbe::Xbe(const char *x_szFilename)
             if(fread(&m_SectionHeader[v], sizeof(*m_SectionHeader), 1, XbeFile) != 1)
             {
                 sprintf(szBuffer, "Unexpected end of file while reading Xbe Section Header %d (%Xh)", v, v);
-                SetError(szBuffer, true);
+                SetFatalError(szBuffer);
                 goto cleanup;
             }
 
@@ -200,7 +200,7 @@ Xbe::Xbe(const char *x_szFilename)
             if(fread(&m_LibraryVersion[v], sizeof(*m_LibraryVersion), 1, XbeFile) != 1)
             {
                 sprintf(szBuffer, "Unexpected end of file while reading Xbe Library Version %d (%Xh)", v, v);
-                SetError(szBuffer, true);
+                SetFatalError(szBuffer);
                 goto cleanup;
             }
 
@@ -213,7 +213,7 @@ Xbe::Xbe(const char *x_szFilename)
 
             if(m_Header.dwKernelLibraryVersionAddr == 0)
             {
-                SetError("Could not locate kernel library version", true);
+                SetFatalError("Could not locate kernel library version");
                 goto cleanup;
             }
 
@@ -223,7 +223,7 @@ Xbe::Xbe(const char *x_szFilename)
 
             if(fread(m_KernelLibraryVersion, sizeof(*m_LibraryVersion), 1, XbeFile) != 1)
             {
-                SetError("Unexpected end of file while reading Xbe Kernel Version", true);
+                SetFatalError("Unexpected end of file while reading Xbe Kernel Version");
                 goto cleanup;
             }
 
@@ -236,7 +236,7 @@ Xbe::Xbe(const char *x_szFilename)
 
             if(m_Header.dwXAPILibraryVersionAddr == 0)
             {
-                SetError("Could not locate Xapi Library Version", true);
+                SetFatalError("Could not locate Xapi Library Version");
                 goto cleanup;
             }
 
@@ -246,7 +246,7 @@ Xbe::Xbe(const char *x_szFilename)
 
             if(fread(m_XAPILibraryVersion, sizeof(*m_LibraryVersion), 1, XbeFile) != 1)
             {
-                SetError("Unexpected end of file while reading Xbe Xapi Version", true);
+                SetFatalError("Unexpected end of file while reading Xbe Xapi Version");
                 goto cleanup;
             }
 
@@ -282,7 +282,7 @@ Xbe::Xbe(const char *x_szFilename)
             if(fread(m_bzSection[v], RawSize, 1, XbeFile) != 1)
             {
                 sprintf(szBuffer, "Unexpected end of file while reading Xbe Section %d (%Xh) (%s)", v, v, m_szSectionName[v]);
-                SetError(szBuffer, true);
+                SetFatalError(szBuffer);
                 goto cleanup;
             }
 
@@ -299,7 +299,7 @@ Xbe::Xbe(const char *x_szFilename)
 
         if(Addr == 0)
         {
-            SetError("Could not locate Thread Local Storage", true);
+            SetFatalError("Could not locate Thread Local Storage");
             goto cleanup;
         }
 
@@ -312,10 +312,10 @@ Xbe::Xbe(const char *x_szFilename)
 
 cleanup:
 
-    if(GetError() != 0)
+    if (HasError())
     {
         printf("FAILED!\n");
-        printf("Xbe::Xbe: ERROR -> %s\n", GetError());
+        printf("Xbe::Xbe: ERROR -> %s\n", GetError().c_str());
     }
 
     fclose(XbeFile);
@@ -346,7 +346,7 @@ Xbe::~Xbe()
 // export to Xbe file
 void Xbe::Export(const char *x_szXbeFilename)
 {
-    if(GetError() != 0)
+    if (HasError())
         return;
 
     char szBuffer[MAX_PATH];
@@ -358,7 +358,7 @@ void Xbe::Export(const char *x_szXbeFilename)
     // verify Xbe file was opened successfully
     if(XbeFile == 0)
     {
-        SetError("Could not open .xbe file.", false);
+        SetError("Could not open .xbe file.");
         return;
     }
 
@@ -370,7 +370,7 @@ void Xbe::Export(const char *x_szXbeFilename)
 
         if(fwrite(&m_Header, sizeof(m_Header), 1, XbeFile) != 1)
         {
-            SetError("Unexpected write error while writing Xbe Image Header", false);
+            SetError("Unexpected write error while writing Xbe Image Header");
             goto cleanup;
         }
 
@@ -380,7 +380,7 @@ void Xbe::Export(const char *x_szXbeFilename)
 
         if(fwrite(m_HeaderEx, m_Header.dwSizeofHeaders, 1, XbeFile) != 1)
         {
-            SetError("Unexpected write error while writing Xbe Image Header (Ex)", false);
+            SetError("Unexpected write error while writing Xbe Image Header (Ex)");
             goto cleanup;
         }
 
@@ -395,7 +395,7 @@ void Xbe::Export(const char *x_szXbeFilename)
 
         if(fwrite(&m_Certificate, sizeof(m_Certificate), 1, XbeFile) != 1)
         {
-            SetError("Unexpected write error while writing Xbe Certificate", false);
+            SetError("Unexpected write error while writing Xbe Certificate");
             goto cleanup;
         }
 
@@ -415,7 +415,7 @@ void Xbe::Export(const char *x_szXbeFilename)
             if(fwrite(&m_SectionHeader[v], sizeof(*m_SectionHeader), 1, XbeFile) != 1)
             {
                 sprintf(szBuffer, "Unexpected write error while writing Xbe Section %d (%Xh)", v, v);
-                SetError(szBuffer, false);
+                SetError(szBuffer);
                 goto cleanup;
             }
 
@@ -445,7 +445,7 @@ void Xbe::Export(const char *x_szXbeFilename)
             if(fwrite(m_bzSection[v], RawSize, 1, XbeFile) != 1)
             {
                 sprintf(szBuffer, "Unexpected write error while writing Xbe Section %d (%Xh) (%s)", v, v, m_szSectionName[v]);
-                SetError(szBuffer, false);
+                SetError(szBuffer);
                 goto cleanup;
             }
 
@@ -483,11 +483,11 @@ void Xbe::Export(const char *x_szXbeFilename)
 cleanup:
 
     // if we came across an error, delete the file we were creating
-    if(GetError() != 0)
+    if (HasError())
     {
         remove(x_szXbeFilename);
         printf("FAILED!\n");
-        printf("Xbe::Export: ERROR -> %s\n", GetError());
+        printf("Xbe::Export: ERROR -> %s\n", GetError().c_str());
     }
 
     fclose(XbeFile);
@@ -524,7 +524,7 @@ static char *BetterTime(uint32 x_timeDate)
 // dump Xbe information to text file
 void Xbe::DumpInformation(FILE *x_file)
 {
-    if(GetError() != 0)
+    if(HasError())
         return;
 
     fprintf(x_file, "XBE information generated by Cxbx-Reloaded (Version " _CXBX_VERSION ")\n");
@@ -838,8 +838,8 @@ void Xbe::ImportLogoBitmap(const uint08 x_Gray[100*17])
 
         if(RLE == 0)
         {
-            if(GetError() == 0)
-                SetError("Logo bitmap could not be imported (not enough space in file?)", false);
+            if (false == HasError())
+                SetError("Logo bitmap could not be imported (not enough space in file?)");
 
             return;
         }
@@ -875,7 +875,7 @@ void Xbe::ExportLogoBitmap(uint08 x_Gray[100*17])
 
     uint08 *RLE = GetAddr(m_Header.dwLogoBitmapAddr);
 
-    if(RLE == 0 || GetError())
+    if(RLE == nullptr || HasError())
         return;
 
     uint32 o = 0;

@@ -54,10 +54,10 @@ typedef uint32 xbaddr;
 
 /*! memory size per system */
 #define XBOX_MEMORY_SIZE 64 * 1024 * 1024
-#define CHIHRO_MEMORY_SIZE 128 * 1024 * 1024
+#define CHIHIRO_MEMORY_SIZE 128 * 1024 * 1024
 
 /*! maximum memory size our emulator must support */
-#define EMU_MAX_MEMORY_SIZE CHIHRO_MEMORY_SIZE
+#define EMU_MAX_MEMORY_SIZE CHIHIRO_MEMORY_SIZE
 
 /*! base addresses of various components */
 #define XBOX_BASE_ADDR 0x10000
