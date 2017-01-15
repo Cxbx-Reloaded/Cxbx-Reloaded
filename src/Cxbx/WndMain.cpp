@@ -212,14 +212,14 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 uint32 difW = (wRect.right  - wRect.left) - (cRect.right);
                 uint32 difH = (wRect.bottom - wRect.top)  - (cRect.bottom);
 
-                MoveWindow(hwnd, wRect.left, wRect.top, difW + 640, difH + 480, TRUE);
+                MoveWindow(hwnd, wRect.left, wRect.top, difW + m_w, difH + m_h, TRUE);
             }
 
             // initialize back buffer
             {
                 HDC hDC = GetDC(hwnd);
 
-                m_BackBmp = CreateCompatibleBitmap(hDC, 640, 480);
+                m_BackBmp = CreateCompatibleBitmap(hDC, m_w, m_h);
 
                 // decompress jpeg, convert to bitmap resource
                 {
@@ -350,9 +350,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 static const int nLogoBmpW = 100, nLogoBmpH = 17;
 
-                BitBlt(hDC, 0, 0, 640, 480, m_BackDC, 0, 0, SRCCOPY);
+                BitBlt(hDC, 0, 0, m_w, m_h, m_BackDC, 0, 0, SRCCOPY);
 //              BitBlt(hDC, 0, 10, 320, 160, m_BackDC, 0, 0, SRCCOPY);
-                BitBlt(hDC, 640-nLogoBmpW-4, 480-nLogoBmpH-4, nLogoBmpW, nLogoBmpH, m_LogoDC, 0, 0, SRCCOPY);
+                BitBlt(hDC, m_w-nLogoBmpW-4, m_h-nLogoBmpH-4, nLogoBmpW, nLogoBmpH, m_LogoDC, 0, 0, SRCCOPY);
 
                 int nHeight = -MulDiv(8, GetDeviceCaps(hDC, LOGPIXELSY), 72);
 
@@ -366,14 +366,14 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 char buffer[255];
 
-                if(m_Xbe != 0 && m_Xbe->GetError() == 0)
+                if(m_Xbe != 0 && m_Xbe->HasError())
                     sprintf(buffer, "%s Loaded!", m_Xbe->m_szAsciiTitle);
                 else
                     sprintf(buffer, "%s", "Disclaimer: Cxbx-Reloaded has no affiliation with Microsoft");
 
-                RECT rect = {0, 480-15-5, 640-100-4-69, 480-5};
+                RECT rect = {0, m_h-15-5, m_w-100-4-69, m_h-5};
 
-                ExtTextOut(hDC, 4, 480-15-5, ETO_OPAQUE, &rect, buffer, strlen(buffer), 0);
+                ExtTextOut(hDC, 4, m_h-15-5, ETO_OPAQUE, &rect, buffer, strlen(buffer), 0);
 
                 SelectObject(hDC, tmpObj);
 
@@ -541,7 +541,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                             m_Xbe->ExportLogoBitmap(i_gray);
 
-                            if(m_Xbe->GetError() == 0)
+                            if (false == m_Xbe->HasError())
                             {
                                 FILE *LogoBitmap = fopen(ofn.lpstrFile, "wb");
 
@@ -601,8 +601,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                                 fclose(LogoBitmap);
                             }
 
-                            if(m_Xbe->GetError() != 0)
-                                MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+                            if(m_Xbe->HasError())
+                                MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
                             else
                             {
                                 char buffer[255];
@@ -695,14 +695,19 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                             m_Xbe->ImportLogoBitmap(i_gray);
 
-                            if(m_Xbe->GetError() != 0)
+                            if(m_Xbe->HasError())
                             {
-                                MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+                                MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
 
-                                if(m_Xbe->IsFatal())
+                                if (m_Xbe->HasFatalError())
+                                {
                                     CloseXbe();
+                                }
                                 else
+                                {
                                     m_Xbe->ClearError();
+                                }
+                                    
                             }
                             else
                             {
@@ -813,9 +818,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                                 fclose(TxtFile);
 
-                                if(m_Xbe->GetError())
+                                if(m_Xbe->HasError())
                                 {
-                                    MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+                                    MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
                                 }
                                 else
                                 {
@@ -838,9 +843,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     // dump xbe information to debug console
                     m_Xbe->DumpInformation(stdout);
 
-                    if(m_Xbe->GetError())
+                    if(m_Xbe->HasError())
                     {
-                        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+                        MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
                     }
                     else
                     {
@@ -1012,18 +1017,18 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 {
                     WndAbout *AboutWnd = new WndAbout(m_hInstance, m_hwnd);
 
-                    while(AboutWnd->GetError() == 0 && AboutWnd->ProcessMessages())
+                    while(!AboutWnd->HasError() && AboutWnd->ProcessMessages())
                         Sleep(10);
 
-                    if(AboutWnd->GetError() != 0)
-                        MessageBox(m_hwnd, AboutWnd->GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+                    if(AboutWnd->HasError())
+                        MessageBox(m_hwnd, AboutWnd->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
 
                     delete AboutWnd;
                 }
                 break;
 
                 case ID_HELP_HOMEPAGE:
-                    ShellExecute(NULL, "open", "http://www.github.com/LukeUsher/Cxbx-Reloaded/", NULL, NULL, SW_SHOWNORMAL);
+                    ShellExecute(NULL, "open", "https://github.com/Cxbx-Reloaded/Cxbx-Reloaded", NULL, NULL, SW_SHOWNORMAL);
                     break;
             }
 
@@ -1106,12 +1111,14 @@ void WndMain::LoadLogo()
 
     m_Xbe->ExportLogoBitmap(i_gray);
 
-    if(m_Xbe->GetError() != 0)
+    if(m_Xbe->HasError())
     {
-        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
+        MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONEXCLAMATION | MB_OK);
 
-        if(m_Xbe->IsFatal())
+        if (m_Xbe->HasFatalError())
+        {
             CloseXbe();
+        }
 
         return;
     }
@@ -1346,9 +1353,9 @@ void WndMain::OpenXbe(const char *x_filename)
 
     m_Xbe = new Xbe(m_XbeFilename);
 
-    if(m_Xbe->GetError() != 0)
+    if(m_Xbe->HasError())
     {
-        MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+        MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
 
         delete m_Xbe; m_Xbe = 0;
 
@@ -1472,8 +1479,8 @@ void WndMain::SaveXbe(const char *x_filename)
     {
         m_Xbe->Export(x_filename);
 
-        if(m_Xbe->GetError() != 0)
-            MessageBox(m_hwnd, m_Xbe->GetError(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
+        if(m_Xbe->HasError())
+            MessageBox(m_hwnd, m_Xbe->GetError().c_str(), "Cxbx-Reloaded", MB_ICONSTOP | MB_OK);
         else
         {
             char buffer[255];
