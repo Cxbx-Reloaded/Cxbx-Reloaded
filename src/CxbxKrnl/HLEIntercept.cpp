@@ -759,7 +759,7 @@ static void EmuXRefFailure()
     CxbxKrnlCleanup("XRef-only function body reached. Fatal Error.");
 }
 
-void VerifyOOVPA(OOVPA *against, OOVPA *oovpa)
+void VerifyOOVPA(OOVPA *against, std::string info, OOVPA *oovpa)
 {
 	if (against == nullptr) {
 		// TODO : verify XRefSaveIndex and XRef's (how?)
@@ -772,8 +772,7 @@ void VerifyOOVPA(OOVPA *against, OOVPA *oovpa)
 			uint32 curr_offset;
 			GetOovpaEntry(oovpa, p, curr_offset, dummy_value);
 			if (!(curr_offset > prev_offset)) {
-				printf("Error in OOVPA %s at index %d : offset %d must be larger then previous offset (%d)\n",
-					"todo", p, curr_offset, prev_offset);
+				printf("Error in %s OOVPA at index %d : offset %d must be larger then previous offset (%d)\n",
 			}
 		}
 
@@ -840,10 +839,9 @@ void VerifyOOVPA(OOVPA *against, OOVPA *oovpa)
 	if (equal_offset_different_value == 0)
 		if (unique_offset_left < 3)
 			if (unique_offset_right < 3)
-				printf("Duplicate OOVPA found!");
 }
 
-void VerifyHLEDataEntry(OOVPA *against, const OOVPATable *mainTable, uint32 e, uint32 count)
+void VerifyHLEDataEntry(OOVPA *against, std::string info, const OOVPATable *mainTable, uint32 e, uint32 count)
 {
 	if (against == nullptr) {
 		// does this entry specify a redirection (patch)?
@@ -853,7 +851,7 @@ void VerifyHLEDataEntry(OOVPA *against, const OOVPATable *mainTable, uint32 e, u
 			for (uint32 t = e + 1; t < count; t++) {
 				if (entry_redirect == mainTable[t].lpRedirect) {
 					printf("Error in OOVPA Table %s at index %d : patch 0x%x (%s) occurs also at index %d (%s)\n",
-						mainTable->szFuncName, 
+						info, 
 						e,
 						mainTable[e].lpRedirect,
 						mainTable[e].szFuncName,
@@ -865,15 +863,16 @@ void VerifyHLEDataEntry(OOVPA *against, const OOVPATable *mainTable, uint32 e, u
 	}
 
 	// verify the OOVPA of this entry
-	VerifyOOVPA(against, mainTable[e].Oovpa);
+	VerifyOOVPA(against, info, mainTable[e].Oovpa);
 }
 
 void VerifyHLEData(OOVPA *against, const HLEData *mainData)
 {
 	// verify each entry in this HLEData
+	std::string info = mainData->Library; // + mainData->BuildVersion
 	uint32 count = mainData->OovpaTableSize / sizeof(OOVPATable);
 	for (uint32 e = 0; e < count; e++)
-		VerifyHLEDataEntry(against, mainData->OovpaTable, e, count);
+		VerifyHLEDataEntry(against, info, mainData->OovpaTable, e, count);
 }
 
 void VerifyHLEDataBase(OOVPA *against)
