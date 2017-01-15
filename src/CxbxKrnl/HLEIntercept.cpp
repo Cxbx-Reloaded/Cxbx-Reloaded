@@ -759,46 +759,125 @@ static void EmuXRefFailure()
     CxbxKrnlCleanup("XRef-only function body reached. Fatal Error.");
 }
 
-void VerifyOOVPA(OOVPA *Oovpa)
+void VerifyOOVPA(OOVPA *against, OOVPA *oovpa)
 {
-	uint08 dummy_value;
-	uint32 prev_offset;
-	GetOovpaEntry(Oovpa, Oovpa->XRefCount, prev_offset, dummy_value);
-	for (int p = Oovpa->XRefCount; p < Oovpa->Count; p++) {
-		uint32 curr_offset;
-		GetOovpaEntry(Oovpa, Oovpa->XRefCount, curr_offset, dummy_value);
-		if (curr_offset <= prev_offset) {
-			EmuWarning("Error in OOVPA %s at index %d : offset %d must be larger then previous offset (%d)\n",
-				p, curr_offset, prev_offset);
+	if (against == nullptr) {
+		// TODO : verify XRefSaveIndex and XRef's (how?)
+
+		// verify offsets are in increasing order
+		uint32 prev_offset;
+		uint08 dummy_value;
+		GetOovpaEntry(oovpa, oovpa->XRefCount, prev_offset, dummy_value);
+		for (int p = oovpa->XRefCount + 1; p < oovpa->Count; p++) {
+			uint32 curr_offset;
+			GetOovpaEntry(oovpa, p, curr_offset, dummy_value);
+			if (!(curr_offset > prev_offset)) {
+				printf("Error in OOVPA %s at index %d : offset %d must be larger then previous offset (%d)\n",
+					"todo", p, curr_offset, prev_offset);
+			}
+		}
+
+		// find duplicate OOVPA's across all other data-table-oovpa's
+		VerifyHLEDataBase(oovpa);
+		return;
+	}
+
+	// prevent checking an oovpa against itself
+	if (against == oovpa)
+		return;
+
+	// compare contents
+	OOVPA *left = against, *right = oovpa;
+	int l = 0, r = 0;
+	uint32 left_offset, right_offset;
+	uint08 left_value, right_value;
+	GetOovpaEntry(left, l, left_offset, left_value);
+	GetOovpaEntry(right, r, right_offset, right_value);
+	int unique_offset_left = 0;
+	int unique_offset_right = 0;
+	int equal_offset_value = 0;
+	int equal_offset_different_value = 0;
+	while (true) {
+		bool left_next = true;
+		bool right_next = true;
+
+		if (left_offset < right_offset) {
+			unique_offset_left++;
+			right_next = false;
+		}
+		else if (left_offset > right_offset) {
+			unique_offset_right++;
+			left_next = false;
+		}
+		else if (left_value == right_value) {
+			equal_offset_value++;
+		}
+		else {
+			equal_offset_different_value++;
+		}
+
+		if (left_next) {
+			l++;
+			if (l >= left->Count) {
+				unique_offset_right += right->Count - r;
+				break;
+			}
+
+			GetOovpaEntry(left, l, left_offset, left_value);
+		}
+
+		if (right_next) {
+			r++;
+			if (r >= right->Count) {
+				unique_offset_left += left->Count - l;
+				break;
+			}
+
+			GetOovpaEntry(right, r, right_offset, right_value);
 		}
 	}
+
+	if (equal_offset_different_value == 0)
+		if (unique_offset_left < 3)
+			if (unique_offset_right < 3)
+				printf("Duplicate OOVPA found!");
 }
 
-void VerifyHLEData()
+void VerifyHLEDataEntry(OOVPA *against, const OOVPATable *mainTable, uint32 e, uint32 count)
 {
-	for (uint32 d = 0; d < HLEDataBaseCount; d++) {
-		const HLEData *mainData = &HLEDataBase[d];
-		OOVPATable *mainTable = mainData->OovpaTable;
-		for (uint32 e = 0; e < mainData->OovpaTableSize / sizeof(OOVPATable); e++) {
-			void * entry_redirect = mainTable[e].lpRedirect;
-			// does this entry specify a redirection (patch)?
-			if (entry_redirect != nullptr) {
-				// check no patch occurs twice in this table
-				for (uint32 t = e + 1; t < mainData->OovpaTableSize / sizeof(OOVPATable); t++) {
-					if (entry_redirect == mainTable[t].lpRedirect) {
-						EmuWarning("Error in OOVPA Table %s at index %d : patch 0x%x (%s) occurs also at index %d (%s)\n",
-							mainTable->szFuncName,
-							e, mainTable[e].szFuncName,
-							t, mainTable[t].szFuncName);
-					}
+	if (against == nullptr) {
+		// does this entry specify a redirection (patch)?
+		void * entry_redirect = mainTable[e].lpRedirect;
+		if (entry_redirect != nullptr) {
+			// check no patch occurs twice in this table
+			for (uint32 t = e + 1; t < count; t++) {
+				if (entry_redirect == mainTable[t].lpRedirect) {
+					printf("Error in OOVPA Table %s at index %d : patch 0x%x (%s) occurs also at index %d (%s)\n",
+						mainTable->szFuncName, 
+						e,
+						mainTable[e].lpRedirect,
+						mainTable[e].szFuncName,
+						t,
+						mainTable[t].szFuncName);
 				}
 			}
-				
-			// Check each OOVPA in this table :
-			OOVPA *mainOovpa = mainTable[e].Oovpa;
-			VerifyOOVPA(mainOovpa);
-
-			// TODO : Find duplicates across all otherr data-table-oovpa's
 		}
 	}
+
+	// verify the OOVPA of this entry
+	VerifyOOVPA(against, mainTable[e].Oovpa);
+}
+
+void VerifyHLEData(OOVPA *against, const HLEData *mainData)
+{
+	// verify each entry in this HLEData
+	uint32 count = mainData->OovpaTableSize / sizeof(OOVPATable);
+	for (uint32 e = 0; e < count; e++)
+		VerifyHLEDataEntry(against, mainData->OovpaTable, e, count);
+}
+
+void VerifyHLEDataBase(OOVPA *against)
+{
+	for (uint32 d = 0; d < HLEDataBaseCount; d++)
+		VerifyHLEData(against, &HLEDataBase[d]);
 }
