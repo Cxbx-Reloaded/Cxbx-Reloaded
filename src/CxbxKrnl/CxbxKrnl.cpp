@@ -154,7 +154,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 	
 
 	// Read host EXE Header Data
-	Exe::DOSHeader* ExeDosHeader = (Exe::DOSHeader*)0x10000;
+	Exe::DOSHeader* ExeDosHeader = (Exe::DOSHeader*)CXBX_BASE_ADDR;
 	Exe::Header* ExeNtHeader = (Exe::Header*)((uint32)ExeDosHeader + ExeDosHeader->m_lfanew);
 	Exe::OptionalHeader* ExeOptionalHeader = (Exe::OptionalHeader*)((uint32)ExeNtHeader + sizeof(Exe::Header));
 	DWORD ExeHeaderSize = ExeOptionalHeader->m_sizeof_headers;

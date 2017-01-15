@@ -333,6 +333,8 @@ enum XRefDataBaseOffset
 	// Also, if XREF_COUNT > sizeof(byte), enlarge struct OOVPA.XRefSaveIndex (and Value somehow)
 };
 
+#define XREF_UNKNOWN -1
+
 // ******************************************************************
 // * XRefDataBase
 // ******************************************************************

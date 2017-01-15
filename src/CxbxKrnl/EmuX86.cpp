@@ -49,6 +49,7 @@
 #include "Emu.h"
 #include "EmuX86.h"
 #include "EmuNV2A.h"
+#include "HLEIntercept.h" // for bLLE_GPU
 
 uint32_t EmuX86_IORead32(uint32_t addr)
 {
@@ -86,9 +87,12 @@ void EmuX86_IOWrite8(uint32_t addr, uint8_t value)
 uint32_t EmuX86_Read32(uint32_t addr)
 {
 	uint32_t value = 0;
-	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE)
-		value = EmuNV2A_Read32(addr - NV2A_ADDR);
-	else
+	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
+		if (!bLLE_GPU) {
+			EmuWarning("EmuX86_Read32(0x%08X) Unexpected NV2A access, missing a HLE patch. Please notify Cxbx project which title raised this!", addr);
+		} else
+			value = EmuNV2A_Read32(addr - NV2A_ADDR);
+	} else
 		EmuWarning("EmuX86_Read32(0x%08X) = 0x%08X [Unknown address]", addr, value);
 
 	return value;
@@ -123,7 +127,11 @@ uint8_t EmuX86_Read8(uint32_t addr)
 void EmuX86_Write32(uint32_t addr, uint32_t value)
 {
 	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
-		EmuNV2A_Write32(addr - NV2A_ADDR, value);
+		if (!bLLE_GPU) {
+			EmuWarning("EmuX86_Write32(0x%08X, 0x%04X) Unexpected NV2A access, missing a HLE patch. Please notify Cxbx project which title raised this!", addr, value);
+		} else
+			EmuNV2A_Write32(addr - NV2A_ADDR, value);
+
 		return;
 	}
 
