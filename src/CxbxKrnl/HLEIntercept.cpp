@@ -773,6 +773,7 @@ void VerifyOOVPA(OOVPA *against, std::string info, OOVPA *oovpa)
 			GetOovpaEntry(oovpa, p, curr_offset, dummy_value);
 			if (!(curr_offset > prev_offset)) {
 				printf("Error in %s OOVPA at index %d : offset %d must be larger then previous offset (%d)\n",
+					info.c_str(), p, curr_offset, prev_offset);
 			}
 		}
 
@@ -839,6 +840,7 @@ void VerifyOOVPA(OOVPA *against, std::string info, OOVPA *oovpa)
 	if (equal_offset_different_value == 0)
 		if (unique_offset_left < 3)
 			if (unique_offset_right < 3)
+				printf("%s Duplicate OOVPA found!\n", info.c_str());
 }
 
 void VerifyHLEDataEntry(OOVPA *against, std::string info, const OOVPATable *mainTable, uint32 e, uint32 count)
