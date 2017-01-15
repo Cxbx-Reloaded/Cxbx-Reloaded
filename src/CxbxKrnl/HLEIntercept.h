@@ -40,4 +40,6 @@ extern bool bLLE_JIT; // Set this to true for experimental JIT
 
 void EmuHLEIntercept(Xbe::LibraryVersion *LibraryVersion, Xbe::Header *XbeHeader);
 
+void VerifyHLEData();
+
 #endif

@@ -759,3 +759,46 @@ static void EmuXRefFailure()
     CxbxKrnlCleanup("XRef-only function body reached. Fatal Error.");
 }
 
+void VerifyOOVPA(OOVPA *Oovpa)
+{
+	uint08 dummy_value;
+	uint32 prev_offset;
+	GetOovpaEntry(Oovpa, Oovpa->XRefCount, prev_offset, dummy_value);
+	for (int p = Oovpa->XRefCount; p < Oovpa->Count; p++) {
+		uint32 curr_offset;
+		GetOovpaEntry(Oovpa, Oovpa->XRefCount, curr_offset, dummy_value);
+		if (curr_offset <= prev_offset) {
+			EmuWarning("Error in OOVPA %s at index %d : offset %d must be larger then previous offset (%d)\n",
+				p, curr_offset, prev_offset);
+		}
+	}
+}
+
+void VerifyHLEData()
+{
+	for (uint32 d = 0; d < HLEDataBaseCount; d++) {
+		const HLEData *mainData = &HLEDataBase[d];
+		OOVPATable *mainTable = mainData->OovpaTable;
+		for (uint32 e = 0; e < mainData->OovpaTableSize / sizeof(OOVPATable); e++) {
+			void * entry_redirect = mainTable[e].lpRedirect;
+			// does this entry specify a redirection (patch)?
+			if (entry_redirect != nullptr) {
+				// check no patch occurs twice in this table
+				for (uint32 t = e + 1; t < mainData->OovpaTableSize / sizeof(OOVPATable); t++) {
+					if (entry_redirect == mainTable[t].lpRedirect) {
+						EmuWarning("Error in OOVPA Table %s at index %d : patch 0x%x (%s) occurs also at index %d (%s)\n",
+							mainTable->szFuncName,
+							e, mainTable[e].szFuncName,
+							t, mainTable[t].szFuncName);
+					}
+				}
+			}
+				
+			// Check each OOVPA in this table :
+			OOVPA *mainOovpa = mainTable[e].Oovpa;
+			VerifyOOVPA(mainOovpa);
+
+			// TODO : Find duplicates across all otherr data-table-oovpa's
+		}
+	}
+}
