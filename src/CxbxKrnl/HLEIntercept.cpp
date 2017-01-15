@@ -176,7 +176,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
 
 		bXRefFirstPass = true; // Set to false for search speed optimization
 
-		memset((void*)XRefDataBase, -1, sizeof(XRefDataBase));
+		memset((void*)XRefDataBase, XREF_UNKNOWN, sizeof(XRefDataBase));
 
 
 		for(int p=0;UnResolvedXRefs < LastUnResolvedXRefs;p++)
@@ -606,153 +606,104 @@ static inline void EmuInstallWrapper(void *FunctionAddr, void *WrapperAddr)
     *(uint32*)&FuncBytes[1] = (uint32)WrapperAddr - (uint32)FunctionAddr - 5;
 }
 
+static inline void GetOovpaEntry(OOVPA *oovpa, int index, OUT uint32 &offset, OUT uint08 &value)
+{
+	if (oovpa->Type == Large) {
+		offset = (uint32) ((LOOVPA<1>*)oovpa)->Lovp[index].Offset;
+		value = ((LOOVPA<1>*)oovpa)->Lovp[index].Value;
+	}
+	else {
+		offset = (uint32) ((SOOVPA<1>*)oovpa)->Sovp[index].Offset;
+		value = ((SOOVPA<1>*)oovpa)->Sovp[index].Value;
+	}
+}
+
 // locate the given function, searching within lower and upper bounds
 static void *EmuLocateFunction(OOVPA *Oovpa, uint32 lower, uint32 upper)
 {
-    uint32 count = Oovpa->Count;
-
-    // Skip out if this is an unnecessary search
-    if(!bXRefFirstPass && Oovpa->XRefCount == XRefZero && Oovpa->XRefSaveIndex == XRefNoSaveIndex)
+	uint32 xref_count = Oovpa->XRefCount;
+    // skip out if this is an unnecessary search
+    if(!bXRefFirstPass && xref_count == XRefZero && Oovpa->XRefSaveIndex == XRefNoSaveIndex)
         return nullptr;
 
-    // large
-    if(Oovpa->Type == Large)
-    {
-        LOOVPA<1> *Loovpa = (LOOVPA<1>*)Oovpa;
+	// correct upper bound with highest Oovpa offset
+	uint32 count = Oovpa->Count;
+	{
+		uint32 Offset;
+		uint08 Value; // ignored
 
-        upper -= Loovpa->Lovp[count-1].Offset;
+		GetOovpaEntry(Oovpa, count - 1, Offset, Value);
+		upper -= Offset;
+	}
 
-        // search all of the image memory
-        for(uint32 cur=lower;cur<upper;cur++)
-        {
-            uint32 v;
+	// search all of the image memory
+	for (uint32 cur = lower; cur < upper; cur++)
+	{
+		uint32 v; // verification counter
 
-            // check all cross references
-            for(v=0;v<Oovpa->XRefCount;v++)
-            {
-                uint32 Offset = Loovpa->Lovp[v].Offset;
-                uint32 Value  = Loovpa->Lovp[v].Value;
+		// check all cross references
+		for (v = 0; v < xref_count; v++)
+		{
+			uint32 Offset;
+			uint08 Value;
 
-                uint32 RealValue = *(uint32*)(cur + Offset);
+			// get XRef offset + value pair and currently registered (un)known address
+			GetOovpaEntry(Oovpa, v, Offset, Value);
+			uint32 XRefValue = XRefDataBase[Value];
 
-                if(XRefDataBase[Value] == -1)
-                    goto skipout_L;   // Unsatisfied XRef is not acceptable
+			// unknown XRef cannot be checked yet
+			if (XRefValue == XREF_UNKNOWN)
+				break;
 
-                if((RealValue + cur + Offset+4 != XRefDataBase[Value]) && (RealValue != XRefDataBase[Value]))
-                    break;
-            }
+			uint32 RealValue = *(uint32*)(cur + Offset);
+			// check if PC-relative or direct reference matches XRef
+			if ((RealValue + cur + Offset + 4 != XRefValue) && (RealValue != XRefValue))
+				break;
+		}
 
-			// TODO : Should we do the following (to could prevent false positives), like the small case does?
-			// TODO : Even better would be to merge both paths into one, as this is the only difference...
-			// check OV pairs if all xrefs matched
-			// if (v == Oovpa->XRefCount)
+		// did all xrefs match?
+		if (v == xref_count)
+		{
+			// check all OV pairs, moving on if any do not match
+			for (; v < count; v++)
 			{
-				// check all pairs, moving on if any do not match
-				for (v = 0; v < count; v++)
-				{
-					uint32 Offset = Loovpa->Lovp[v].Offset;
-					uint32 Value = Loovpa->Lovp[v].Value;
+				uint32 Offset;
+				uint08 Value;
 
-					uint08 RealValue = *(uint08*)(cur + Offset);
-
-					if (RealValue != Value)
-						break;
-				}
+				GetOovpaEntry(Oovpa, v, Offset, Value);
+				uint08 RealValue = *(uint08*)(cur + Offset);
+				if (RealValue != Value)
+					break;
 			}
 
-            // success if we found all pairs
-            if(v == count)
-            {
-                if(Oovpa->XRefSaveIndex != XRefNoSaveIndex)
-                {
-                    if(XRefDataBase[Oovpa->XRefSaveIndex] == -1)
-                    {
-                        UnResolvedXRefs--;
-                        XRefDataBase[Oovpa->XRefSaveIndex] = cur;
+			// success if we found all pairs
+			if (v == count)
+			{
+				// do we need to save the found address?
+				if (Oovpa->XRefSaveIndex != XRefNoSaveIndex)
+				{
+					// is the XRef not saved yet?
+					if (XRefDataBase[Oovpa->XRefSaveIndex] == XREF_UNKNOWN)
+					{
+						// save and count the found address
+						UnResolvedXRefs--;
+						XRefDataBase[Oovpa->XRefSaveIndex] = cur;
+					}
+					else
+					{
+						// TODO : Check identical result?
+						// already found, no bother patching again
+						return (void*)XRefDataBase[Oovpa->XRefSaveIndex];
+					}
+				}
 
-                        return (void*)cur;
-                    }
-                    else
-                    {
-                        return (void*)XRefDataBase[Oovpa->XRefSaveIndex];   // already Found, no bother patching again
-                    }
-                }
+				// return found address
+				return (void*)cur;
+			}
+		}
+	}
 
-                return (void*)cur;
-            }
-
-            skipout_L:;
-        }
-    }
-    // small
-    else
-    {
-        SOOVPA<1> *Soovpa = (SOOVPA<1>*)Oovpa;
-
-        upper -= Soovpa->Sovp[count-1].Offset;
-
-        // search all of the image memory
-        for(uint32 cur=lower;cur<upper;cur++)
-        {
-            uint32 v;
-
-            // check all cross references
-            for(v=0;v<Oovpa->XRefCount;v++)
-            {
-                uint32 Offset = Soovpa->Sovp[v].Offset;
-                uint32 Value  = Soovpa->Sovp[v].Value;
-
-                uint32 RealValue = *(uint32*)(cur + Offset);
-
-                if(XRefDataBase[Value] == -1)
-                    goto skipout_S;   // Unsatisfied XRef is not acceptable
-
-                if( (RealValue + cur + Offset + 4 != XRefDataBase[Value]) && (RealValue != XRefDataBase[Value]))
-                    break;
-            }
-
-            // check OV pairs if all xrefs matched
-            if(v == Oovpa->XRefCount)
-            {
-                // check all pairs, moving on if any do not match
-				// TODO : Why does this loop use v=Oovpa->XRefCount instead of starting with v=0 (like in large)?
-                for(;v<count;v++)
-                {
-                    uint32 Offset = Soovpa->Sovp[v].Offset;
-                    uint32 Value  = Soovpa->Sovp[v].Value;
-
-                    uint08 RealValue = *(uint08*)(cur + Offset);
-
-                    if(RealValue != Value)
-                        break;
-                }
-            }
-
-            // success if we found all pairs
-            if(v == count)
-            {
-                if(Oovpa->XRefSaveIndex != XRefNoSaveIndex)
-                {
-                    if(XRefDataBase[Oovpa->XRefSaveIndex] == -1)
-                    {
-                        UnResolvedXRefs--;
-                        XRefDataBase[Oovpa->XRefSaveIndex] = cur;
-
-                        return (void*)cur;
-                    }
-                    else
-                    {
-                        return (void*)XRefDataBase[Oovpa->XRefSaveIndex];   // already Found, no bother patching again
-                    }
-                }
-
-                return (void*)cur;
-            }
-
-            skipout_S:;
-        }
-    }
-
+	// found nothing
     return nullptr;
 }
 
@@ -808,4 +759,3 @@ static void EmuXRefFailure()
     CxbxKrnlCleanup("XRef-only function body reached. Fatal Error.");
 }
 
-	
