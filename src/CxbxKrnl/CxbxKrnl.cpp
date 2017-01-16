@@ -357,7 +357,9 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 #endif
 	}
 
+#ifdef _DEBUG_TRACE
 	VerifyHLEDataBase();
+#endif
 
 	{
 		// Create a fake kernel header for XapiRestrictCodeSelectorLimit
