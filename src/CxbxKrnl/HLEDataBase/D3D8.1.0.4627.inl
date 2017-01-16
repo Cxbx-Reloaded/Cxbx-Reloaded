@@ -1013,6 +1013,10 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(IDirect3DDevice8_Begin_1_0_4627, 14)
 
+        // IDirect3DDevice8_Begin+0x19 : shl edx, 6
+        { 0x19, 0xD1 }, // (Offset,Value)-Pair #7
+        { 0x1A, 0xE8 }, // (Offset,Value)-Pair #8
+
         // IDirect3DDevice8_Begin+0x25 : mov dword ptr [eax], 0x417FC
         { 0x25, 0xC7 }, // (Offset,Value)-Pair #1
         { 0x26, 0x00 }, // (Offset,Value)-Pair #2
@@ -1020,10 +1024,6 @@ OOVPA_NO_XREF(IDirect3DDevice8_Begin_1_0_4627, 14)
         { 0x28, 0x17 }, // (Offset,Value)-Pair #4
         { 0x29, 0x04 }, // (Offset,Value)-Pair #5
         { 0x2A, 0x00 }, // (Offset,Value)-Pair #6
-
-        // IDirect3DDevice8_Begin+0x19 : shl edx, 6
-        { 0x19, 0xD1 }, // (Offset,Value)-Pair #7
-        { 0x1A, 0xE8 }, // (Offset,Value)-Pair #8
 
         // IDirect3DDevice8_Begin+0x33 : or dword ptr [esi+8], 0x800
         { 0x33, 0x81 }, // (Offset,Value)-Pair #9
@@ -3479,8 +3479,6 @@ OOVPATable D3D8_1_0_4627[] = {
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_RopZRead_1_0_4134, XTL::EmuIDirect3DDevice8_SetRenderState_RopZRead),
 	// IDirect3DDevice8::SetRenderState_DoNotCullUncompressed (* unchanged since 4134 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_DoNotCullUncompressed_1_0_4134, XTL::EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed),
-	// IDirect3DDevice8::DeletePixelShader (* unchanged since 4134 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_DeletePixelShader_1_0_4134, XTL::EmuIDirect3DDevice8_DeletePixelShader),
 	// D3DDevice_PersistDisplay
 	OOVPA_TABLE_PATCH(D3DDevice_PersistDisplay_1_0_4627, XTL::EmuIDirect3DDevice8_PersistDisplay),
 	// D3DDevice_PersistDisplay
