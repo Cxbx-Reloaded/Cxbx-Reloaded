@@ -1763,6 +1763,11 @@ OOVPA_XREF(CDirectSoundStream_SetVelocityC_1_0_3936, 12,
     XREF_DSSTREAMSETVELOCITY1C,
     XRefZero)
 
+        // CDirectSoundStream_SetVelocityC+0x09 : movsd; movsd; movsd
+        { 0x09, 0xA5 }, // (Offset,Value)-Pair #8
+        { 0x0A, 0xA5 }, // (Offset,Value)-Pair #9
+        { 0x0B, 0xA5 }, // (Offset,Value)-Pair #10
+
         // CDirectSoundStream_SetVelocityC+0x0C : or byte ptr [ecx+0x80], 0x40
         { 0x0C, 0x83 }, // (Offset,Value)-Pair #1
         { 0x0D, 0x89 }, // (Offset,Value)-Pair #2
@@ -1771,11 +1776,6 @@ OOVPA_XREF(CDirectSoundStream_SetVelocityC_1_0_3936, 12,
         { 0x10, 0x00 }, // (Offset,Value)-Pair #5
         { 0x11, 0x00 }, // (Offset,Value)-Pair #6
         { 0x12, 0x40 }, // (Offset,Value)-Pair #7
-
-        // CDirectSoundStream_SetVelocityC+0x09 : movsd; movsd; movsd
-        { 0x09, 0xA5 }, // (Offset,Value)-Pair #8
-        { 0x0A, 0xA5 }, // (Offset,Value)-Pair #9
-        { 0x0B, 0xA5 }, // (Offset,Value)-Pair #10
 
         // CDirectSoundStream_SetVelocityC+0x25 : retn 0x08
         { 0x25, 0xC2 }, // (Offset,Value)-Pair #11
