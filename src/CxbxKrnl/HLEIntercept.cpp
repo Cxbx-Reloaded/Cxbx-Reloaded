@@ -884,9 +884,10 @@ void VerifyHLEOOVPA(HLEVerifyContext *context, OOVPA *oovpa)
 	if (equal_offset_different_value == 0)
 		if (unique_offset_left < 3)
 			if (unique_offset_right < 3)
-				HLEError(context, "Duplicate OOVPA found (left +%d, right +%d)", 
-					unique_offset_left,
-					unique_offset_right);
+				if (equal_offset_value > 3)
+					HLEError(context, "Duplicate OOVPA found (left +%d, right +%d)",
+						unique_offset_left,
+						unique_offset_right);
 }
 
 void VerifyHLEDataEntry(HLEVerifyContext *context, const OOVPATable *table, uint32 index, uint32 count)
