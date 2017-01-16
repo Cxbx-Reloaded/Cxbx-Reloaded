@@ -915,9 +915,13 @@ void VerifyHLEDataEntry(HLEVerifyContext *context, const OOVPATable *table, uint
 			// check no patch occurs twice in this table
 			for (uint32 t = index + 1; t < count; t++) {
 				if (entry_redirect == table[t].lpRedirect) {
-					HLEError(context, "Patch (0x%x) also occurs at index %d",
-						table[index].lpRedirect,
-						t);
+					if (table[index].Oovpa == table[t].Oovpa) {
+						HLEError(context, "Patch registered again (with same OOVPA) at index %d",
+							t);
+					} else {
+						HLEError(context, "Patch also used for another OOVPA at index %d",
+							t);
+					}
 				}
 			}
 		}

@@ -3479,8 +3479,6 @@ OOVPATable D3D8_1_0_4627[] = {
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_RopZRead_1_0_4134, XTL::EmuIDirect3DDevice8_SetRenderState_RopZRead),
 	// IDirect3DDevice8::SetRenderState_DoNotCullUncompressed (* unchanged since 4134 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_DoNotCullUncompressed_1_0_4134, XTL::EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed),
-	// IDirect3DDevice8::DeletePixelShader (* unchanged since 4134 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_DeletePixelShader_1_0_4134, XTL::EmuIDirect3DDevice8_DeletePixelShader),
 	// D3DDevice_PersistDisplay
 	OOVPA_TABLE_PATCH(D3DDevice_PersistDisplay_1_0_4627, XTL::EmuIDirect3DDevice8_PersistDisplay),
 	// D3DDevice_PersistDisplay
