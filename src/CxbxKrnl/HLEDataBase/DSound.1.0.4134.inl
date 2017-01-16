@@ -218,26 +218,6 @@ OOVPA_XREF(DirectSound_CDirectSound_SetI3DL2Listener_1_0_4134, 7,
 OOVPA_END;
 
 // ******************************************************************
-// * IDirectSound_SetI3DL2Listener
-// ******************************************************************
-OOVPA_XREF(IDirectSound_SetI3DL2Listener_1_0_4134, 9,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        { 0x19, XREF_DSSETI3DL2LISTENER },
-
-        { 0x02, 0x24 },
-        { 0x06, 0x24 },
-        { 0x0A, 0xFF },
-        { 0x0E, 0x83 },
-        { 0x12, 0xD9 },
-        { 0x16, 0xC8 },
-        { 0x1D, 0xC2 },
-        { 0x1E, 0x0C },
-OOVPA_END;
-
-// ******************************************************************
 // * DirectSound::CDirectSoundBuffer::SetBufferData
 // ******************************************************************
 OOVPA_XREF(DirectSound_CDirectSoundBuffer_SetBufferData_1_0_4134, 7,
@@ -414,8 +394,8 @@ OOVPATable DSound_1_0_4134[] = {
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetVolume_1_0_4134, XTL::EmuIDirectSoundBuffer8_SetVolume),
 	// CDirectSound_SetI3DL2Listener
 	OOVPA_TABLE_XREF(DirectSound_CDirectSound_SetI3DL2Listener_1_0_4134),
-	// IDirectSound8_SetI3DL2Listener
-	OOVPA_TABLE_PATCH(IDirectSound_SetI3DL2Listener_1_0_4134, XTL::EmuIDirectSound8_SetI3DL2Listener),
+	// IDirectSound8_SetI3DL2Listener (* unchanged since 3936 *)
+	OOVPA_TABLE_PATCH(IDirectSound_SetI3DL2Listener_1_0_3936, XTL::EmuIDirectSound8_SetI3DL2Listener),
 	// CDirectSound_GetEffectData
 	OOVPA_TABLE_XREF(DirectSound_CDirectSound_GetEffectData_1_0_4134),
 	// IDirectSound8_SetI3DL2Listener

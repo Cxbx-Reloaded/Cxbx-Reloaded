@@ -922,32 +922,6 @@ OOVPA_XREF(CDirectSound_SetDistanceFactorA_1_0_4627, 11,
 OOVPA_END;
 
 // ******************************************************************
-// * CDirectSound::SetDistanceFactorA
-// ******************************************************************
-OOVPA_XREF(CDirectSound_SetDistanceFactorA_1_0_4531, 11,
-
-    XREF_SETDISTANCEFACTORA,
-    XRefZero)
-
-        // CDirectSound_SetDistanceFactorA+0x21 : mov eax, 0x80004005
-        { 0x21, 0xB8 }, // (Offset,Value)-Pair #1
-        { 0x22, 0x05 }, // (Offset,Value)-Pair #2
-        { 0x23, 0x40 }, // (Offset,Value)-Pair #3
-        { 0x24, 0x00 }, // (Offset,Value)-Pair #4
-        { 0x25, 0x80 }, // (Offset,Value)-Pair #5
-
-        // CDirectSound_SetDistanceFactorA+0x39 : or dword ptr[eax+0xA4], 0x60
-        { 0x39, 0x83 }, // (Offset,Value)-Pair #6
-        { 0x3A, 0x88 }, // (Offset,Value)-Pair #7
-        { 0x3B, 0xA4 }, // (Offset,Value)-Pair #8
-        { 0x3F, 0x60 }, // (Offset,Value)-Pair #9
-
-        // CDirectSound_SetDistanceFactorA+0x4F : jz +0x0B
-        { 0x4F, 0x74 }, // (Offset,Value)-Pair #10
-        { 0x50, 0x0B }, // (Offset,Value)-Pair #11
-OOVPA_END;
-
-// ******************************************************************
 // * CDirectSound::SetRolloffFactor
 // ******************************************************************
 OOVPA_XREF(CDirectSound_SetRolloffFactor_1_0_4627, 11,
@@ -2850,8 +2824,8 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable DSound_1_0_4627[] = {
 
-    // DirectSoundCreate (* unchanged since 4361 *)
-	OOVPA_TABLE_PATCH(DirectSoundCreate_1_0_4361, XTL::EmuDirectSoundCreate),
+    // DirectSoundCreate (* unchanged since 4134 *)
+	OOVPA_TABLE_PATCH(DirectSoundCreate_1_0_4134, XTL::EmuDirectSoundCreate),
 	// DirectSoundDoWork
 	OOVPA_TABLE_PATCH(DirectSoundDoWork_1_0_4627, XTL::EmuDirectSoundDoWork),
     // CDirectSound_CreateSoundBuffer
@@ -2991,8 +2965,8 @@ OOVPATable DSound_1_0_4627[] = {
 	OOVPA_TABLE_PATCH(IDirectSound8_DownloadEffectsImage_1_0_3936, XTL::EmuIDirectSound8_DownloadEffectsImage),
 	// IDirectSound8::SetOrientation (* unchanged since 3936 *)
 	OOVPA_TABLE_PATCH(IDirectSound8_SetOrientation_1_0_3936, XTL::EmuIDirectSound8_SetOrientation),
-	// CDirectSound::SetDistanceFactorA (XREF)
-	OOVPA_TABLE_XREF(CDirectSound_SetDistanceFactorA_1_0_4531),
+	// CDirectSound::SetDistanceFactorA (XREF) (* unchanged since 4432 *)
+	OOVPA_TABLE_XREF(CDirectSound_SetDistanceFactorA_1_0_4432),
     // CDirectSound::SetDistanceFactorA (XREF)
 	OOVPA_TABLE_XREF(CDirectSound_SetDistanceFactorA_1_0_4627),
 	// IDirectSound8::SetDistanceFactor (* unchanged since 4432 *)
@@ -3159,8 +3133,8 @@ OOVPATable DSound_1_0_4627[] = {
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetFilter_1_0_4627, XTL::EmuIDirectSoundBuffer8_SetFilter),
 	// DirectSound::CDirectSoundBuffer::PlayEx (XREF) (* unchanged since 4361 *)
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_PlayEx_1_0_4361),
-	// IDirectSoundBuffer_PlayEx (* unchanged since 4361 *)
-	OOVPA_TABLE_PATCH(IDirectSoundBuffer_PlayEx_1_0_4361, XTL::EmuIDirectSoundBuffer8_PlayEx),
+	// IDirectSoundBuffer_PlayEx (* unchanged since 3936 *)
+	OOVPA_TABLE_PATCH(IDirectSoundBuffer_PlayEx_1_0_3936, XTL::EmuIDirectSoundBuffer8_PlayEx),
 	// CMcpxBuffer_Stop2
 	OOVPA_TABLE_XREF(CMcpxBuffer_Stop2_1_0_4361),
 	// DirectSound::CDirectSoundBuffer::StopEx (XREF) (* unchanged since 4361 *)

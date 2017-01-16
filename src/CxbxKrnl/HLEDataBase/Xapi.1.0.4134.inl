@@ -33,36 +33,6 @@
 // ******************************************************************
 
 // ******************************************************************
-// * XGetDevices
-// ******************************************************************
-OOVPA_NO_XREF(XGetDevices_1_0_4134, 14)
-
-        // XGetDevices+0x07 : mov edx, [esp+arg_0]
-        { 0x07, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x08, 0x54 }, // (Offset,Value)-Pair #2
-        { 0x09, 0x24 }, // (Offset,Value)-Pair #3
-        { 0x0A, 0x08 }, // (Offset,Value)-Pair #4
-
-        // XGetDevices+0x0D : and [edx+4], 0
-        { 0x0D, 0x83 }, // (Offset,Value)-Pair #5
-        { 0x0E, 0x62 }, // (Offset,Value)-Pair #6
-        { 0x0F, 0x04 }, // (Offset,Value)-Pair #7
-        { 0x10, 0x00 }, // (Offset,Value)-Pair #8
-
-        // XGetDevices+0x11 : mov cl, al
-        { 0x11, 0x8A }, // (Offset,Value)-Pair #9
-        { 0x12, 0xC8 }, // (Offset,Value)-Pair #10
-
-        // XGetDevices+0x16 : call KfLowerIrql
-        { 0x16, 0xFF }, // (Offset,Value)-Pair #11
-        { 0x17, 0x15 }, // (Offset,Value)-Pair #12
-
-        // XGetDevices+0x1F : retn 4
-        { 0x1F, 0xC2 }, // (Offset,Value)-Pair #13
-        { 0x20, 0x04 }, // (Offset,Value)-Pair #14
-OOVPA_END;
-
-// ******************************************************************
 // * XInputOpen
 // ******************************************************************
 OOVPA_NO_XREF(XInputOpen_1_0_4134, 12)
@@ -216,8 +186,8 @@ OOVPATable XAPI_1_0_4134[] = {
 	OOVPA_TABLE_PATCH(SetThreadPriority_1_0_3911, XTL::EmuSetThreadPriority),
 	// GetExitCodeThread (* unchanged since 3911 *)
 	OOVPA_TABLE_PATCH(GetExitCodeThread_1_0_3911, XTL::EmuGetExitCodeThread),
-    // XGetDevices
-	OOVPA_TABLE_PATCH(XGetDevices_1_0_4134, XTL::EmuXGetDevices),
+    // XGetDevices (* unchanged since 3911 *)
+	OOVPA_TABLE_PATCH(XGetDevices_1_0_3911, XTL::EmuXGetDevices),
     // XInputOpen
 	OOVPA_TABLE_PATCH(XInputOpen_1_0_4134, XTL::EmuXInputOpen),
     // XInputGetState

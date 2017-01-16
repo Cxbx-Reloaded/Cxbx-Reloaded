@@ -106,35 +106,6 @@ OOVPA_NO_XREF(XLaunchNewImageA_1_0_5558, 7)
 OOVPA_END;
 
 // ******************************************************************
-// * XGetLaunchInfo
-// ******************************************************************
-OOVPA_NO_XREF(XGetLaunchInfo_1_0_5558, 7)
-
-        { 0x0B, 0x8B },
-        { 0x18, 0x15 },
-        { 0x25, 0x8B },
-        { 0x32, 0x30 },
-        { 0x3F, 0x00 },
-        { 0x4C, 0x83 },
-        { 0x59, 0x5E },
-OOVPA_END;
-
-// ******************************************************************
-// * XMountMUA
-// ******************************************************************
-OOVPA_NO_XREF(XMountMUA_1_0_5558, 8)
-
-        { 0x22, 0x8A },
-        { 0x3E, 0x89 },
-        { 0x5E, 0x5C },
-        { 0x7E, 0xF4 },
-        { 0x9E, 0x50 },
-        { 0xBE, 0xF8 },
-        { 0xDE, 0x8D },
-        { 0xFE, 0x09 },
-OOVPA_END;
-
-// ******************************************************************
 // * CreateFiber
 // ******************************************************************
 OOVPA_NO_XREF(CreateFiber_1_0_5558, 7)
@@ -159,35 +130,6 @@ OOVPA_NO_XREF(DeleteFiber_1_0_5558, 6)
         { 0x0A, 0xFF },
         { 0x10, 0xC2 },
         { 0x11, 0x04 },
-OOVPA_END;
-
-// ******************************************************************
-// * SwitchToFiber
-// ******************************************************************
-OOVPA_NO_XREF(SwitchToFiber_1_0_5558, 8)
-
-        { 0x06, 0x64 },
-        { 0x0E, 0x44 },
-        { 0x16, 0xFF },
-        { 0x1E, 0x91 },
-        { 0x26, 0x61 },
-        { 0x31, 0x64 },
-        { 0x36, 0x00 },
-        { 0x3E, 0x00 },
-OOVPA_END;
-
-// ******************************************************************
-// * ConvertThreadToFiber
-// ******************************************************************
-OOVPA_NO_XREF(ConvertThreadToFiber_1_0_5558, 7)
-
-        { 0x05, 0x64 },
-        { 0x0C, 0x8B },
-        { 0x13, 0x8D },
-        { 0x1A, 0x01 },
-        { 0x21, 0x8B },
-        { 0x28, 0x89 },
-        { 0x31, 0x8B },
 OOVPA_END;
 
 // ******************************************************************
@@ -254,8 +196,8 @@ OOVPATable XAPI_1_0_5558[] = {
 	OOVPA_TABLE_PATCH(XMountUtilityDrive_1_0_4432, XTL::EmuXMountUtilityDrive),
     // XInitDevices (* unchanged since 5233 *)
 	OOVPA_TABLE_PATCH(XInitDevices_1_0_5233, XTL::EmuXInitDevices),
-    // XGetDevices (* unchanged since 1.0.4134 *)
-	OOVPA_TABLE_PATCH(XGetDevices_1_0_4134, XTL::EmuXGetDevices),
+    // XGetDevices (* unchanged since 3911 *)
+	OOVPA_TABLE_PATCH(XGetDevices_1_0_3911, XTL::EmuXGetDevices),
     // XGetDeviceChanges (* unchanged since 5233 *)
 	OOVPA_TABLE_PATCH(XGetDeviceChanges_1_0_5233, XTL::EmuXGetDeviceChanges),
     // XInputOpen (* unchanged since 1.0.4361 *)
@@ -272,8 +214,8 @@ OOVPATable XAPI_1_0_5558[] = {
     //*/
 	// XLaunchNewImageA
 	OOVPA_TABLE_PATCH(XLaunchNewImageA_1_0_5558, XTL::EmuXLaunchNewImage),
-    // XGetLaunchInfo
-	OOVPA_TABLE_PATCH(XGetLaunchInfo_1_0_5558, XTL::EmuXGetLaunchInfo),
+    // XGetLaunchInfo (* unchanged since 3911 *)
+	OOVPA_TABLE_PATCH(XGetLaunchInfo_1_0_3911, XTL::EmuXGetLaunchInfo),
 	// QueueUserAPC (* unchanged since 3911 *)
 	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, XTL::EmuQueueUserAPC),
 	// SetThreadPriorityBoost (* unchanged since 4627 *)
@@ -284,16 +226,16 @@ OOVPATable XAPI_1_0_5558[] = {
 	OOVPA_TABLE_PATCH(GetTimeZoneInformation_1_0_3911, XTL::EmuGetTimeZoneInformation),
 	// SetThreadPriority (* unchanged since 3911 *)
 	OOVPA_TABLE_PATCH(SetThreadPriority_1_0_3911, XTL::EmuSetThreadPriority),
-	// XMountMUA
-	OOVPA_TABLE_PATCH(XMountMUA_1_0_5558, XTL::EmuXMountMUA),
+	// XMountMUA (* unchanged since 4134 *)
+	OOVPA_TABLE_PATCH(XMountMUA_1_0_4134, XTL::EmuXMountMUA),
 	// CreateFiber
 	OOVPA_TABLE_PATCH(CreateFiber_1_0_5558, XTL::EmuCreateFiber),
 	// DeleteFiber
 	OOVPA_TABLE_PATCH(DeleteFiber_1_0_5558, XTL::EmuDeleteFiber),
-	// SwitchToFiber
-	OOVPA_TABLE_PATCH(SwitchToFiber_1_0_5558, XTL::EmuSwitchToFiber),
-	// ConvertThreadToFiber
-	OOVPA_TABLE_PATCH(ConvertThreadToFiber_1_0_5558, XTL::EmuConvertThreadToFiber),
+	// SwitchToFiber (* unchanged since 3911 *)
+	OOVPA_TABLE_PATCH(SwitchToFiber_1_0_3911, XTL::EmuSwitchToFiber),
+	// ConvertThreadToFiber (* unchanged since 3911 *)
+	OOVPA_TABLE_PATCH(ConvertThreadToFiber_1_0_3911, XTL::EmuConvertThreadToFiber),
 	//// XapiFiberStartup
 	//OOVPA_TABLE_PATCH(XapiFiberStartup_1_0_5558, XTL::EmuXapiFiberStartup),
 	// XID_fCloseDevice

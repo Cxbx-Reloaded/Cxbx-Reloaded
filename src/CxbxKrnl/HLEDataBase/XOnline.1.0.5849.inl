@@ -51,61 +51,17 @@ OOVPA_XREF(XnInit_1_0_5849, 8,
 OOVPA_END;
 
 // ******************************************************************
-// * XNetStartup
-// ******************************************************************
-OOVPA_NO_XREF(XNetStartup_1_0_5849, 8)
-
-        { 0x01, 0xC0 },
-        { 0x04, 0x50 },
-        { 0x07, 0x24 },
-        { 0x0A, 0x68 },
-        { 0x0F, 0xE8 },
-        { 0x14, 0xC2 },
-        { 0x15, 0x04 },
-        { 0x16, 0x00 },
-OOVPA_END;
-
-// ******************************************************************
-// * WSAStartup
-// ******************************************************************
-OOVPA_NO_XREF(WSAStartup_1_0_5849, 7)
-
-        { 0x02, 0x24 },
-        { 0x06, 0x24 },
-        { 0x0A, 0x6A },
-        { 0x0E, 0x68 },
-        { 0x13, 0xE8 },
-        { 0x18, 0xC2 },
-        { 0x1A, 0x00 },
-OOVPA_END;
-
-// ******************************************************************
-// * XNetGetEthernetLinkStatus
-// ******************************************************************
-OOVPA_NO_XREF(XNetGetEthernetLinkStatus_1_0_5849, 8)
-
-        { 0x08, 0x33 },
-        { 0x10, 0x8A },
-        { 0x19, 0x00 },
-        { 0x22, 0x56 },
-        { 0x2B, 0xFF },
-        { 0x34, 0xF0 },
-        { 0x3D, 0x24 },
-        { 0x46, 0x5B },
-OOVPA_END;
-
-// ******************************************************************
 // * XOnline_1_0_5849
 // ******************************************************************
 OOVPATable XOnline_1_0_5849[] = {
-    // XNetStartup
-	OOVPA_TABLE_PATCH(XNetStartup_1_0_5849, XTL::EmuXNetStartup),
-	// WSAStartup
-	OOVPA_TABLE_PATCH(WSAStartup_1_0_5849, XTL::EmuWSAStartup),
+    // XNetStartup (* unchanged since 5344 *)
+	OOVPA_TABLE_PATCH(XNetStartup_1_0_5344, XTL::EmuXNetStartup),
+	// WSAStartup (* unchanged since 5558 *)
+	OOVPA_TABLE_PATCH(WSAStartup_1_0_5558, XTL::EmuWSAStartup),
     // XnInit (XREF)
 	OOVPA_TABLE_XREF(XnInit_1_0_5849),
-	// XNetGetEthernetLinkStatus
-	OOVPA_TABLE_PATCH(XNetGetEthernetLinkStatus_1_0_5849, XTL::EmuXNetGetEthernetLinkStatus),
+	// XNetGetEthernetLinkStatus (* unchanged since 5344 *)
+	OOVPA_TABLE_PATCH(XNetGetEthernetLinkStatus_1_0_5344, XTL::EmuXNetGetEthernetLinkStatus),
 };
 
 // ******************************************************************

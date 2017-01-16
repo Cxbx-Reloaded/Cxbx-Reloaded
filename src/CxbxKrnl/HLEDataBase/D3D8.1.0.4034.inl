@@ -32,19 +32,6 @@
 // *
 // ******************************************************************
 
-// ******************************************************************
-// * IDirect3DDevice8_GetGammaRamp
-// ******************************************************************
-OOVPA_NO_XREF(IDirect3DDevice8_GetGammaRamp_1_0_4034, 7)
-        { 0x05, 0x8B },
-        { 0x0A, 0x00 },
-        { 0x10, 0xE1 },
-        { 0x16, 0x0C },
-        { 0x1C, 0x00 },
-        { 0x22, 0x00 },
-        { 0x28, 0x04 },
-OOVPA_END;
-
 
 // ******************************************************************
 // * IDirect3DDevice8_GetCreationParameters
@@ -647,20 +634,6 @@ OOVPA_NO_XREF(Direct3D_CheckDeviceFormat_1_0_4034, 7)
 OOVPA_END;
 
 // ******************************************************************
-// * Direct3D_SetPushBufferSize
-// ******************************************************************
-OOVPA_NO_XREF(Direct3D_SetPushBufferSize_1_0_4034, 7)
-
-        { 0x01, 0x44 },
-        { 0x04, 0x8B },
-        { 0x07, 0x08 },
-        { 0x0D, 0x89 },
-        { 0x0E, 0x0D },
-        { 0x13, 0xC2 },
-        { 0x14, 0x08 },
-OOVPA_END;
-
-// ******************************************************************
 // * Get2DSurfaceDesc
 // ******************************************************************
 /*OOVPA_NO_XREF(Get2DSurfaceDesc_1_0_4034, 10)
@@ -1194,8 +1167,8 @@ OOVPATable D3D8_1_0_4034[] = {
 	// ********************** END WARNING UNTESTED!!! *******************
 #endif
 
-	// IDirect3DDevice8::GetGammaRamp
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetGammaRamp_1_0_4034, XTL::EmuIDirect3DDevice8_GetGammaRamp),
+	// IDirect3DDevice8::GetGammaRamp (* unchanged since 3925 *)
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetGammaRamp_1_0_3925, XTL::EmuIDirect3DDevice8_GetGammaRamp),
 	// IDirect3DDevice8::GetCreationParameters
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetCreationParameters_1_0_4034, XTL::EmuIDirect3DDevice8_GetCreationParameters),
 	// IDirect3DDevice8::GetViewport
@@ -1312,8 +1285,8 @@ OOVPATable D3D8_1_0_4034[] = {
 	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_VertexBlend_1_0_4034, XTL::EmuIDirect3DDevice8_SetRenderState_VertexBlend),
 	// IDirect3D8_CheckDeviceFormat
 	OOVPA_TABLE_PATCH(Direct3D_CheckDeviceFormat_1_0_4034, XTL::EmuIDirect3D8_CheckDeviceFormat),
-	// IDirect3D8_SetPushBufferSize
-	OOVPA_TABLE_PATCH(Direct3D_SetPushBufferSize_1_0_4034, XTL::EmuIDirect3D8_SetPushBufferSize),
+	// IDirect3D8_SetPushBufferSize (* unchanged since 3925 *)
+	OOVPA_TABLE_PATCH(Direct3D_SetPushBufferSize_1_0_3925, XTL::EmuIDirect3D8_SetPushBufferSize),
 	// Get2DSurfacDesc
 	OOVPA_TABLE_PATCH(Get2DSurfaceDesc_1_0_4034, XTL::EmuGet2DSurfaceDesc),
 	// IDirect3DTexture8::GetSurfaceLevel (* unchanged since 3925 *)

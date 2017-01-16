@@ -62,8 +62,8 @@ OOVPATable XAPI_1_0_4432[] = {
 	OOVPA_TABLE_PATCH(XMountUtilityDrive_1_0_4432, XTL::EmuXMountUtilityDrive),
     // XInitDevices (* unchanged since 1.0.3911 *)
 	OOVPA_TABLE_PATCH(XInitDevices_1_0_3911, XTL::EmuXInitDevices),
-    // XGetDevices (* unchanged since 1.0.4134 *)
-	OOVPA_TABLE_PATCH(XGetDevices_1_0_4134, XTL::EmuXGetDevices),
+    // XGetDevices (* unchanged since 3911 *)
+	OOVPA_TABLE_PATCH(XGetDevices_1_0_3911, XTL::EmuXGetDevices),
     // XInputOpen (* unchanged since 1.0.4361 *)
 	OOVPA_TABLE_PATCH(XInputOpen_1_0_4361, XTL::EmuXInputOpen),
 	// XID_fCloseDevice

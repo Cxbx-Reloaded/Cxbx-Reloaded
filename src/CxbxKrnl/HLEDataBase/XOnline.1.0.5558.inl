@@ -49,21 +49,6 @@ OOVPA_NO_XREF(XNetStartup_1_0_5344, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * XNetGetEthernetLinkStatus
-// ******************************************************************
-OOVPA_NO_XREF(XNetGetEthernetLinkStatus_1_0_5344, 8)
-
-        { 0x08, 0x33 },
-        { 0x10, 0x8A },
-        { 0x19, 0x00 },
-        { 0x22, 0x56 },
-        { 0x2B, 0xFF },
-        { 0x34, 0xF0 },
-        { 0x3D, 0x24 },
-        { 0x46, 0x5B },
-OOVPA_END;
-
-// ******************************************************************
 // * CXo::XOnlineLogon
 // ******************************************************************
 OOVPA_XREF(CXo_XOnlineLogon_1_0_5344, 8,
@@ -140,8 +125,8 @@ OOVPATable XOnline_1_0_5558[] = {
 	*/
     // ioctlsocket (* unchanged since 4361 *)
 	OOVPA_TABLE_PATCH(ioctlsocket_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emuioctlsocket)),
-	// XNetGetEthernetLinkStatus
-	OOVPA_TABLE_PATCH(XNetGetEthernetLinkStatus_1_0_5344, XTL::EmuXNetGetEthernetLinkStatus),
+	// XNetGetEthernetLinkStatus (* unchanged since 4627 *)
+	OOVPA_TABLE_PATCH(XNetGetEthernetLinkStatus_1_0_4627, XTL::EmuXNetGetEthernetLinkStatus),
 };
 
 // ******************************************************************
