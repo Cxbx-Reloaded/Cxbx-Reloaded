@@ -830,7 +830,7 @@ void VerifyHLEOOVPA(HLEVerifyContext *context, OOVPA *oovpa)
 	if (context->against == oovpa)
 		return;
 
-	// compare contents
+	// compare {Offset, Value}-pairs between two OOVPA's
 	OOVPA *left = context->against, *right = oovpa;
 	int l = 0, r = 0;
 	uint32 left_offset, right_offset;
@@ -860,6 +860,10 @@ void VerifyHLEOOVPA(HLEVerifyContext *context, OOVPA *oovpa)
 			equal_offset_different_value++;
 		}
 
+		// increment r before use (in left_next)
+		if (right_next)
+			r++;
+
 		if (left_next) {
 			l++;
 			if (l >= left->Count) {
@@ -871,7 +875,6 @@ void VerifyHLEOOVPA(HLEVerifyContext *context, OOVPA *oovpa)
 		}
 
 		if (right_next) {
-			r++;
 			if (r >= right->Count) {
 				unique_offset_left += left->Count - l;
 				break;
@@ -881,13 +884,25 @@ void VerifyHLEOOVPA(HLEVerifyContext *context, OOVPA *oovpa)
 		}
 	}
 
+	// no mismatching values on identical offsets?
 	if (equal_offset_different_value == 0)
-		if (unique_offset_left < 3)
-			if (unique_offset_right < 3)
-				if (equal_offset_value > 3)
-					HLEError(context, "Duplicate OOVPA found (left +%d, right +%d)",
-						unique_offset_left,
-						unique_offset_right);
+		// enough matching OV-pairs?
+		if (equal_offset_value > 4)
+		{
+			// no unique OV-pairs on either side?
+			if (unique_offset_left + unique_offset_right == 0)
+				HLEError(context, "OOVPA's are identical",
+					unique_offset_left,
+					unique_offset_right);
+			else
+				// not too many new OV-pairs on the left side?
+				if (unique_offset_left < 6)
+					// not too many new OV-parirs on the right side?
+					if (unique_offset_right < 6)
+						HLEError(context, "OOVPA's are expanded (left +%d, right +%d)",
+							unique_offset_left,
+							unique_offset_right);
+		}
 }
 
 void VerifyHLEDataEntry(HLEVerifyContext *context, const OOVPATable *table, uint32 index, uint32 count)
@@ -900,7 +915,7 @@ void VerifyHLEDataEntry(HLEVerifyContext *context, const OOVPATable *table, uint
 			// check no patch occurs twice in this table
 			for (uint32 t = index + 1; t < count; t++) {
 				if (entry_redirect == table[t].lpRedirect) {
-					HLEError(context, "Duplicate patch (0x%x) also occurs at index %d",
+					HLEError(context, "Patch (0x%x) also occurs at index %d",
 						table[index].lpRedirect,
 						t);
 				}
