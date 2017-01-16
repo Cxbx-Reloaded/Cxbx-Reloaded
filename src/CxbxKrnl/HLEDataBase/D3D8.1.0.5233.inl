@@ -1168,12 +1168,12 @@ OOVPA_NO_XREF(IDirect3DDevice8_SetSoftDisplayFilter_1_0_5344, 12)
         { 0x28, 0x17 }, // (Offset,Value)-Pair #4
 
         // IDirect3DDevice8_SetSoftDisplayFilter+0x2B : push 0; push esi; push 0x0E; push edx
-        { 0x22, 0x6A }, // (Offset,Value)-Pair #5
-        { 0x23, 0x00 }, // (Offset,Value)-Pair #6
-        { 0x24, 0x56 }, // (Offset,Value)-Pair #7
-        { 0x25, 0x6A }, // (Offset,Value)-Pair #8
-        { 0x26, 0x0E }, // (Offset,Value)-Pair #9
-        { 0x27, 0x52 }, // (Offset,Value)-Pair #10
+        { 0x2B, 0x6A }, // (Offset,Value)-Pair #5
+        { 0x2C, 0x00 }, // (Offset,Value)-Pair #6
+        { 0x2D, 0x56 }, // (Offset,Value)-Pair #7
+        { 0x2E, 0x6A }, // (Offset,Value)-Pair #8
+        { 0x2F, 0x0E }, // (Offset,Value)-Pair #9
+        { 0x30, 0x52 }, // (Offset,Value)-Pair #10
 
         // IDirect3DDevice8_SetSoftDisplayFilter+0x4E : retn 0x04
         { 0x4E, 0xC2 }, // (Offset,Value)-Pair #11
