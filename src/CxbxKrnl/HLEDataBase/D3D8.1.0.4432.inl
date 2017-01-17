@@ -748,8 +748,6 @@ OOVPATable D3D8_1_0_4432[]  {
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetCreationParameters_1_0_4034, XTL::EmuIDirect3DDevice8_GetCreationParameters),
 	// IDirect3DDevice8::GetVisibilityTestResult (* unchanged since 3925 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetVisibilityTestResult_1_0_3925, XTL::EmuIDirect3DDevice8_GetVisibilityTestResult),
-	// IDirect3DDevice8::SetTextureState_BumpEnv (* unchanged since 4361 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetTextureState_BumpEnv_1_0_4361, XTL::EmuIDirect3DDevice8_SetTextureState_BumpEnv),
 	// IDirect3DDevice8::SetRenderState_EdgeAntiAlias (* unchanged since 4361 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_EdgeAntiAlias_1_0_4361, XTL::EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias),
 	// IDirect3DDevice8::SetRenderState_FillMode (* unchanged since 4361 *)

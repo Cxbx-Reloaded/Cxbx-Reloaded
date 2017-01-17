@@ -1096,8 +1096,6 @@ OOVPATable D3D8_1_0_4034[] = {
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_Clear_1_0_4034, XTL::EmuIDirect3DDevice8_Clear),
 	// IDirect3DResource8::Register
 	OOVPA_TABLE_PATCH(IDirect3DResource8_Register_1_0_3925, XTL::EmuIDirect3DResource8_Register),
-	// IDirect3DDevice8::CreatePalette
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreatePalette_1_0_3925, XTL::EmuIDirect3DDevice8_CreatePalette),
 	// ********************** BEG WARNING UNTESTED!!! *******************
 
 #if 0
@@ -1316,8 +1314,6 @@ OOVPATable D3D8_1_0_4034[] = {
 	OOVPA_TABLE_PATCH(Direct3D_SetPushBufferSize_1_0_4034, XTL::EmuIDirect3D8_SetPushBufferSize),
 	// Get2DSurfacDesc
 	OOVPA_TABLE_PATCH(Get2DSurfaceDesc_1_0_4034, XTL::EmuGet2DSurfaceDesc),
-	// IDirect3DTexture8::GetSurfaceLevel (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(IDirect3DTexture8_GetSurfaceLevel_1_0_3925, XTL::EmuIDirect3DTexture8_GetSurfaceLevel),
 	// D3DDevice_SetRenderState_ZEnable
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_ZEnable_1_0_4034, XTL::EmuIDirect3DDevice8_SetRenderState_ZEnable),
 	// D3DDevice_LightEnable
@@ -1328,8 +1324,6 @@ OOVPATable D3D8_1_0_4034[] = {
 	OOVPA_TABLE_PATCH(Direct3D_GetAdapterIdentifier_1_0_3925, XTL::EmuIDirect3D8_GetAdapterIdentifier),
 	// IDirect3DSurface8::GetDesc (* unchanged since 3925 *)
 	OOVPA_TABLE_PATCH(D3DSurface_GetDesc_1_0_3925, XTL::EmuIDirect3DSurface8_GetDesc),
-	// Get2DSurfacDesc
-	OOVPA_TABLE_PATCH(Get2DSurfaceDesc_1_0_4034, XTL::EmuGet2DSurfaceDesc),
 	// IDirect3DDevice8::SetLight
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetLight_1_0_4034, XTL::EmuIDirect3DDevice8_SetLight),
 	// IDirect3DVertexBuffer8::Lock

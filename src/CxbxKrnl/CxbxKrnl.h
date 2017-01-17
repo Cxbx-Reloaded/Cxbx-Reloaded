@@ -60,9 +60,12 @@ typedef uint32 xbaddr;
 #define EMU_MAX_MEMORY_SIZE CHIHIRO_MEMORY_SIZE
 
 /*! base addresses of various components */
-#define XBOX_BASE_ADDR 0x10000
+#define XBOX_BASE_ADDR 0x00010000
 #define XBOX_KERNEL_BASE 0x80010000
 #define XBOX_NV2A_INIT_VECTOR 0xFF000008
+
+/*! base address of Cxbx host executable, see Cxbx project options, Linker, Advanced, Base Address */
+#define CXBX_BASE_ADDR XBOX_BASE_ADDR
 
 #define MAX_BUS_INTERRUPT_LEVEL 27
 #define MAX_NUM_INTERRUPTS 256

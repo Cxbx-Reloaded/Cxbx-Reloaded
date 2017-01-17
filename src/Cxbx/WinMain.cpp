@@ -48,6 +48,16 @@ unsigned char emulated_memory_placeholder[EMU_MAX_MEMORY_SIZE];
 /*! program entry point */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+	/*! verify Cxbx.exe is loaded to base address 0x00010000 */
+	if ((UINT_PTR)GetModuleHandle(nullptr) != CXBX_BASE_ADDR)
+	{
+		/*! CXBX_BASE_ADDR is defined as 0x00010000, which is the base address of
+			the Cxbx.exe host executable.
+		    Set in Cxbx Project options, Linker, Advanced, Base Address */
+		MessageBox(NULL, "Cxbx.exe is not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)", "Cxbx-Reloaded", MB_OK);
+		return 1;
+	}
+
     /*! verify CxbxKrnl.dll is the same version as Cxbx.exe */
     if(!CxbxKrnlVerifyVersion(_CXBX_VERSION))
     {

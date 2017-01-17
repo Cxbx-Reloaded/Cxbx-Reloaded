@@ -1478,8 +1478,6 @@ OOVPATable D3D8_1_0_5849[] = {
 	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_StencilFail_1_0_5849, XTL::EmuIDirect3DDevice8_SetRenderState_StencilFail),
 	// D3DDevice_SetRenderState_VertexBlend
 	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_VertexBlend_1_0_5849, XTL::EmuIDirect3DDevice8_SetRenderState_VertexBlend),
-	// D3DDevice_SetRenderState_VertexBlend
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_VertexBlend_1_0_5849, XTL::EmuIDirect3DDevice8_SetRenderState_VertexBlend),
 	// IDirect3DDevice8::Reset (* unchanged since 4134 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_Reset_1_0_4134, XTL::EmuIDirect3DDevice8_Reset),
 	// IDirect3DDevice::Release
@@ -1580,14 +1578,8 @@ OOVPATable D3D8_1_0_5849[] = {
 	OOVPA_TABLE_PATCH(D3DDevice_DeleteStateBlock_1_0_5849, XTL::EmuIDirect3DDevice8_DeleteStateBlock),
 	// IDirect3DDevice8::SetRenderState_StencilCullEnable (* unchanged since 4134 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_StencilCullEnable_1_0_4134, XTL::EmuIDirect3DDevice8_SetRenderState_StencilCullEnable),
-	// IDirect3DDevice8::SetRenderState_OcclusionCullEnable (* unchanged since 4134 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_OcclusionCullEnable_1_0_4134, XTL::EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable),
 	// IDirect3DDevice8::SetRenderState_RopZCmpAlwaysRead
 	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_RopZCmpAlwaysRead_1_0_5849, XTL::EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead),
-	// IDirect3DDevice8::SetRenderState_RopZRead (* unchanged since 4134 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_RopZRead_1_0_4134, XTL::EmuIDirect3DDevice8_SetRenderState_RopZRead),
-	// IDirect3DDevice8::SetRenderState_DoNotCullUncompressed (* unchanged since 4134 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_DoNotCullUncompressed_1_0_4134, XTL::EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed),
 	// D3DDevice_GetTexture2
 	OOVPA_TABLE_PATCH(D3DDevice_GetTexture2_1_0_5849, XTL::EmuIDirect3DDevice8_GetTexture2),
 	// IDirect3DDevice8::SetRenderTargetFast (* unchanged since 5344 *)

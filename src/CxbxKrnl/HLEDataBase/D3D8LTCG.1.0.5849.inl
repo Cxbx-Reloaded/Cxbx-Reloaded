@@ -1033,10 +1033,6 @@ OOVPATable D3D8LTCG_1_0_5849[] = {
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetTextureState_ColorKeyColor_1_0_5849_LTCG, XTL::EmuIDirect3DDevice8_SetTextureState_ColorKeyColor),
 	// IDirect3DDevice8::Clear
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_Clear_1_0_5849_LTCG, XTL::EmuIDirect3DDevice8_Clear),
-	// IDirect3DVertexBuffer8::Lock2
-	OOVPA_TABLE_PATCH(IDirect3DVertexBuffer8_Lock2_1_0_5849_LTCG, XTL::EmuIDirect3DVertexBuffer8_Lock2),
-	// IDirect3DDevice8::SetVertexShader
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetVertexShader_1_0_5849_LTCG, XTL::EmuIDirect3DDevice8_SetVertexShader),
 };
 
 uint32 D3D8LTCG_1_0_5849_SIZE = sizeof(D3D8LTCG_1_0_5849);
