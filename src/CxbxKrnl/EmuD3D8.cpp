@@ -4689,14 +4689,10 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                     // ARGB texture format
                     if (Format == D3DFMT_P8) //Palette
                     {
-						/*EmuWarning("D3DFMT_P8 -> D3DFMT_A8R8G8B8");
+						EmuWarning("D3DFMT_P8 -> D3DFMT_A8R8G8B8");
 
                         CacheFormat = Format;       // Save this for later
-                        Format = D3DFMT_A8R8G8B8; */  // ARGB
-
-						// Temporarily use the LoveMhz hack
-						EmuWarning("D3DFMT_P8 -> D3DFMT_L8");
-						Format = D3DFMT_L8;
+                        Format = D3DFMT_A8R8G8B8;   // ARGB
                     }
 
                     if(bCubemap)
@@ -4815,7 +4811,15 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                                 }
                                 else
                                 {
-                                    if (CacheFormat == D3DFMT_P8) //Palette
+									//__asm int 3;
+									// First we need to unswizzle the texture data
+									XTL::EmuXGUnswizzleRect
+									(
+										pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits,
+										LockedRect.Pitch, iRect, iPoint, dwBPP
+									);
+
+									if (CacheFormat == D3DFMT_P8) //Palette
                                     {
                                         EmuWarning("Unsupported texture format D3DFMT_P8,\nexpanding to D3DFMT_A8R8G8B8");
 //#if 0
@@ -4824,70 +4828,37 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                                         //
 										//__asm int 3;
 
-										// Attempt to use correct palette sizes
-										DWORD dwPaletteAllocSize = (dwCurrentPaletteSize == -1) ? 256*4 : dwCurrentPaletteSize;
-
                                         BYTE *pPixelData = (BYTE*)LockedRect.pBits;
-                                        DWORD dwDataSize = dwMipWidth*dwMipHeight*4;
-                                        DWORD dwPaletteSize = dwPaletteAllocSize; //256*4;    // Note: This is not allways true, it can be 256- 128- 64- or 32*4
-
-                                        BYTE* pTextureCache = (BYTE*)CxbxMalloc(dwDataSize);
-                                        BYTE* pExpandedTexture = (BYTE*)CxbxMalloc(dwDataSize);
-                                        BYTE* pTexturePalette = (BYTE*)CxbxMalloc(dwPaletteAllocSize);
-	
-										//__asm int 3;
-                                        // First we need to unswizzle the texture data
-                                        XTL::EmuXGUnswizzleRect
-                                        (
-                                            pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits,
-                                            LockedRect.Pitch, iRect, iPoint, dwBPP
-                                        );
-
-										//__asm int 3;
-                                        // Copy the unswizzled data to a temporary buffer
-                                        memcpy(pTextureCache, pPixelData, dwDataSize);
-
-										//__asm int 3;
-                                        // Copy the currently selected palette's data to the buffer
-                                        memcpy(pTexturePalette, pCurrentPalette, dwPaletteSize);
+                                        DWORD dwDataSize = dwMipWidth*dwMipHeight;
+										DWORD* pExpandedTexture = (DWORD*)CxbxMalloc(dwDataSize * sizeof(DWORD));
+										DWORD* pTexturePalette = (DWORD*)pCurrentPalette;
 
 										//__asm int 3;
                                         unsigned int w = 0;
-                                        unsigned int c = 0;
-                                        unsigned char p = 0;
-                                        for (unsigned int y = 0;y < dwDataSize/4;y++)
+                                        unsigned int x = 0;
+                                        for (unsigned int y = 0;y < dwDataSize;y++)
                                         {
-                                            if(c == dwMipWidth)
+											// Read P8 pixel :
+											unsigned char p = (unsigned char)pPixelData[w++];
+											// Read the corresponding ARGB from the palette and store it in the new texture :
+											pExpandedTexture[y] = pTexturePalette[p];
+											// are we at the end of a line?
+                                            if(++x == dwMipWidth)
                                             {
-                                                w += dwMipWidth*3;
-                                                c = 0;
+                                                x = 0;
+												// Since P8 contains byte pixels instead of dword ARGB pixels,
+												// the next line resides 3 bytes additional per pixel further :
+                                                w += dwMipWidth * (sizeof(DWORD) - sizeof(BYTE));
                                             }
-                                            p = (unsigned char)pTextureCache[w];
-                                            pExpandedTexture[y*4+0] = pTexturePalette[p*4+0];
-                                            pExpandedTexture[y*4+1] = pTexturePalette[p*4+1];
-                                            pExpandedTexture[y*4+2] = pTexturePalette[p*4+2];
-                                            pExpandedTexture[y*4+3] = pTexturePalette[p*4+3];
-                                            w++;
-                                            c++;
                                         }
 
 										//__asm int 3;
                                         // Copy the expanded texture back to the buffer
-                                        memcpy(pPixelData, pExpandedTexture, dwDataSize);
+                                        memcpy(pPixelData, pExpandedTexture, dwDataSize * sizeof(DWORD));
 
                                         // Flush unused data buffers
-                                        CxbxFree(pTexturePalette);
                                         CxbxFree(pExpandedTexture);
-                                        CxbxFree(pTextureCache);
 //#endif
-                                    }
-                                    else
-                                    {
-                                        XTL::EmuXGUnswizzleRect
-                                        (
-                                            pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits,
-                                            LockedRect.Pitch, iRect, iPoint, dwBPP
-                                        );
                                     }
                                 }
                             }
@@ -5020,7 +4991,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
         {
             X_D3DFixup *pFixup = (X_D3DFixup*)pResource;
 
-            CxbxKrnlCleanup("IDirect3DReosurce8::Register -> X_D3DCOMMON_TYPE_FIXUP is not yet supported\n"
+            CxbxKrnlCleanup("IDirect3DResource8::Register -> X_D3DCOMMON_TYPE_FIXUP is not yet supported\n"
             "0x%.08X (pFixup->Common) \n"
             "0x%.08X (pFixup->Data)   \n"
             "0x%.08X (pFixup->Lock)   \n"
