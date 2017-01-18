@@ -58,7 +58,7 @@ namespace NtDll
 // ******************************************************************
 PVOID WINAPI XTL::EmuXGIsSwizzledFormat
 (
-    XTL::D3DFORMAT Format
+    X_D3DFORMAT Format
 )
 {
 	LOG_FUNC_ONE_ARG(Format);
@@ -333,7 +333,7 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 	UINT			Height,
 	UINT			Levels,
 	DWORD			Usage,
-	D3DFORMAT		Format,
+	X_D3DFORMAT		Format,
 	D3DPOOL			Pool,
 	X_D3DTexture*	pTexture,
 	UINT			Data,

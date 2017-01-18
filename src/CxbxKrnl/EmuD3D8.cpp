@@ -274,10 +274,10 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 
         PresParam.BackBufferWidth  = 640;
         PresParam.BackBufferHeight = 480;
-        PresParam.BackBufferFormat = 6; /* X_D3DFMT_A8R8G8B8 */
+        PresParam.BackBufferFormat = X_D3DFMT_A8R8G8B8;
         PresParam.BackBufferCount  = 1;
         PresParam.EnableAutoDepthStencil = TRUE;
-        PresParam.AutoDepthStencilFormat = 0x2A; /* X_D3DFMT_D24S8 */
+		PresParam.AutoDepthStencilFormat = X_D3DFMT_D24S8;
         PresParam.SwapEffect = XTL::D3DSWAPEFFECT_DISCARD;
 
             
@@ -745,7 +745,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
             {
                 // only one device should be created at once
                 // TODO: ensure all surfaces are somehow cleaned up?
-                if(g_pD3DDevice8 != 0)
+                if(g_pD3DDevice8 != nullptr)
                 {
                     DbgPrintf("EmuD3D8: CreateDevice proxy thread releasing old Device.\n");
 
@@ -757,7 +757,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                         while(g_pD3DDevice8->Release() != 0);
                     #endif
 
-                    g_pD3DDevice8 = 0;
+                    g_pD3DDevice8 = nullptr;
                 }
 
                 if(g_EmuCDPD.pPresentationParameters->BufferSurfaces[0] != NULL)
@@ -768,8 +768,8 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
                 // make adjustments to parameters to make sense with windows Direct3D
                 {
-                    g_EmuCDPD.DeviceType =(g_XBVideo.GetDirect3DDevice() == 0) ? XTL::D3DDEVTYPE_HAL : XTL::D3DDEVTYPE_REF;
-                    g_EmuCDPD.Adapter    = g_XBVideo.GetDisplayAdapter();
+                    g_EmuCDPD.DeviceType = (g_XBVideo.GetDirect3DDevice() == 0) ? XTL::D3DDEVTYPE_HAL : XTL::D3DDEVTYPE_REF;
+                    g_EmuCDPD.Adapter = g_XBVideo.GetDisplayAdapter();
 
                     g_EmuCDPD.pPresentationParameters->Windowed = !g_XBVideo.GetFullscreen();
 
@@ -778,8 +778,8 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
                     g_EmuCDPD.hFocusWindow = g_hEmuWindow;
 
-                    g_EmuCDPD.pPresentationParameters->BackBufferFormat       = XTL::EmuXB2PC_D3DFormat(g_EmuCDPD.pPresentationParameters->BackBufferFormat);
-                    g_EmuCDPD.pPresentationParameters->AutoDepthStencilFormat = XTL::EmuXB2PC_D3DFormat(g_EmuCDPD.pPresentationParameters->AutoDepthStencilFormat);
+                    g_EmuCDPD.pPresentationParameters->BackBufferFormat       = (XTL::X_D3DFORMAT)XTL::EmuXB2PC_D3DFormat(g_EmuCDPD.pPresentationParameters->BackBufferFormat);
+					g_EmuCDPD.pPresentationParameters->AutoDepthStencilFormat = (XTL::X_D3DFORMAT)XTL::EmuXB2PC_D3DFormat(g_EmuCDPD.pPresentationParameters->AutoDepthStencilFormat);
 
                     if(!g_XBVideo.GetVSync() && (g_D3DCaps.PresentationIntervals & D3DPRESENT_INTERVAL_IMMEDIATE) && g_XBVideo.GetFullscreen())
                         g_EmuCDPD.pPresentationParameters->FullScreen_PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
@@ -824,7 +824,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
 
                         g_pD3D8->GetAdapterDisplayMode(g_XBVideo.GetDisplayAdapter(), &D3DDisplayMode);
 
-                        g_EmuCDPD.pPresentationParameters->BackBufferFormat = D3DDisplayMode.Format;
+                        g_EmuCDPD.pPresentationParameters->BackBufferFormat = (XTL::X_D3DFORMAT)D3DDisplayMode.Format;
                         g_EmuCDPD.pPresentationParameters->FullScreen_RefreshRateInHz = 0;
                     }
                     else
@@ -838,13 +838,13 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                             &g_EmuCDPD.pPresentationParameters->FullScreen_RefreshRateInHz);
 
                         if(strcmp(szBackBufferFormat, "x1r5g5b5") == 0)
-                            g_EmuCDPD.pPresentationParameters->BackBufferFormat = XTL::D3DFMT_X1R5G5B5;
+							g_EmuCDPD.pPresentationParameters->BackBufferFormat = (XTL::X_D3DFORMAT)XTL::D3DFMT_X1R5G5B5;
                         else if(strcmp(szBackBufferFormat, "r5g6r5") == 0)
-                            g_EmuCDPD.pPresentationParameters->BackBufferFormat = XTL::D3DFMT_R5G6B5;
+							g_EmuCDPD.pPresentationParameters->BackBufferFormat = (XTL::X_D3DFORMAT)XTL::D3DFMT_R5G6B5;
                         else if(strcmp(szBackBufferFormat, "x8r8g8b8") == 0)
-                            g_EmuCDPD.pPresentationParameters->BackBufferFormat = XTL::D3DFMT_X8R8G8B8;
+							g_EmuCDPD.pPresentationParameters->BackBufferFormat = (XTL::X_D3DFORMAT)XTL::D3DFMT_X8R8G8B8;
                         else if(strcmp(szBackBufferFormat, "a8r8g8b8") == 0)
-                            g_EmuCDPD.pPresentationParameters->BackBufferFormat = XTL::D3DFMT_A8R8G8B8;
+							g_EmuCDPD.pPresentationParameters->BackBufferFormat = (XTL::X_D3DFORMAT)XTL::D3DFMT_A8R8G8B8;
                     }
                 }
 
@@ -1154,7 +1154,7 @@ static void EmuUnswizzleTextureStages()
 		if(pPixelContainer == NULL || !(pPixelContainer->Common & X_D3DCOMMON_ISLOCKED))
 			return;
 
-		DWORD XBFormat = (pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT;
+		XTL::X_D3DFORMAT XBFormat = (XTL::X_D3DFORMAT)((pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
 		DWORD dwBPP = 0;
 
 		if(!XTL::EmuXBFormatIsSwizzled(XBFormat, &dwBPP))
@@ -1339,7 +1339,7 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CheckDeviceFormat
 (
     UINT                        Adapter,
     D3DDEVTYPE                  DeviceType,
-    D3DFORMAT                   AdapterFormat,
+    X_D3DFORMAT                 AdapterFormat,
     DWORD                       Usage,
     X_D3DRESOURCETYPE           RType,
     X_D3DFORMAT                 CheckFormat
@@ -2953,7 +2953,7 @@ XTL::X_D3DResource * WINAPI XTL::EmuIDirect3DDevice8_CreateTexture2
     UINT                Depth,
     UINT                Levels,
     DWORD               Usage,
-    D3DFORMAT           Format,
+    X_D3DFORMAT         Format,
     D3DRESOURCETYPE     D3DResource
 )
 {
@@ -2988,7 +2988,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateTexture
     UINT            Height,
     UINT            Levels,
     DWORD           Usage,
-    D3DFORMAT       Format,
+    X_D3DFORMAT     Format,
     D3DPOOL         Pool,
     X_D3DTexture  **ppTexture
 )
@@ -3146,7 +3146,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateVolumeTexture
     UINT                 Depth,
     UINT                 Levels,
     DWORD                Usage,
-    D3DFORMAT            Format,
+    X_D3DFORMAT          Format,
     D3DPOOL              Pool,
     X_D3DVolumeTexture **ppVolumeTexture
 )
@@ -3248,7 +3248,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateCubeTexture
     UINT                 EdgeLength,
     UINT                 Levels,
     DWORD                Usage,
-    D3DFORMAT            Format,
+    X_D3DFORMAT          Format,
     D3DPOOL              Pool,
     X_D3DCubeTexture  **ppCubeTexture
 )
@@ -3316,7 +3316,7 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_CreateIndexBuffer
 (
     UINT                 Length,
     DWORD                Usage,
-    D3DFORMAT            Format,
+    X_D3DFORMAT          Format,
     D3DPOOL              Pool,
     X_D3DIndexBuffer   **ppIndexBuffer
 )
@@ -3373,7 +3373,7 @@ XTL::X_D3DIndexBuffer * WINAPI XTL::EmuIDirect3DDevice8_CreateIndexBuffer2(UINT 
     (
         Length,
         NULL,
-        D3DFMT_INDEX16,
+        X_D3DFMT_INDEX16,
         D3DPOOL_MANAGED,
         &pIndexBuffer
     );
@@ -4496,14 +4496,14 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
             if(X_Format == 0x2E)
             {
                 /*CxbxKrnlCleanup*/EmuWarning("D3DFMT_LIN_D24S8 not yet supported!");
-                X_Format = 0x12;
+                X_Format = X_D3DFMT_LIN_A8R8G8B8;
                 Format   = D3DFMT_A8R8G8B8;
             }
 
 			if(X_Format == 0x30)
             {
                 /*CxbxKrnlCleanup*/EmuWarning("D3DFMT_LIN_D16 not yet supported!");
-                X_Format = 0x11;
+                X_Format = X_D3DFMT_LIN_R5G6B5;
                 Format   = D3DFMT_R5G6B5;
             }
 
@@ -4512,8 +4512,8 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
             BOOL  bCubemap = pPixelContainer->Format & X_D3DFORMAT_CUBEMAP;
 
             // Interpret Width/Height/BPP
-            if(X_Format == 0x07 /* X_D3DFMT_X8R8G8B8 */ || X_Format == 0x06 /* X_D3DFMT_A8R8G8B8 */
-			|| X_Format == 0x3A /* X_D3DFMT_A8B8G8R8 */)
+            if(X_Format == X_D3DFMT_X8R8G8B8 || X_Format == X_D3DFMT_A8R8G8B8
+			|| X_Format == X_D3DFMT_A8B8G8R8)
             {
                 bSwizzled = TRUE;
 
@@ -4525,9 +4525,9 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 dwPitch  = dwWidth*4;
                 dwBPP = 4;
             }
-            else if(X_Format == 0x05 /* X_D3DFMT_R5G6B5 */ || X_Format == 0x04 /* X_D3DFMT_A4R4G4B4 */
-                 || X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */ || X_Format == 0x03 /* X_D3DFMT_X1R5G5B5 */
-                 || X_Format == 0x28 /* X_D3DFMT_G8B8 */ )
+            else if(X_Format == X_D3DFMT_R5G6B5 || X_Format == X_D3DFMT_A4R4G4B4
+                 || X_Format == X_D3DFMT_A1R5G5B5 || X_Format == X_D3DFMT_X1R5G5B5
+                 || X_Format == X_D3DFMT_G8B8 )
             {
                 bSwizzled = TRUE;
 
@@ -4539,9 +4539,9 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 dwPitch  = dwWidth*2;
                 dwBPP = 2;
             }
-            else if(X_Format == 0x00 /* X_D3DFMT_L8 */ || X_Format == 0x0B /* X_D3DFMT_P8 */
-                || X_Format == 0x01 /* X_D3DFMT_AL8 */ || X_Format == 0x1A /* X_D3DFMT_A8L8 */
-                || X_Format == 0x19 /* X_D3DFMT_A8 */)
+            else if(X_Format == X_D3DFMT_L8 || X_Format == X_D3DFMT_P8
+                || X_Format == X_D3DFMT_AL8 || X_Format == X_D3DFMT_A8L8
+                || X_Format == X_D3DFMT_A8)
             {
                 bSwizzled = TRUE;
 
@@ -4553,8 +4553,8 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 dwPitch  = dwWidth;
                 dwBPP = 1;
             }
-            else if(X_Format == 0x1E /* X_D3DFMT_LIN_X8R8G8B8 */ || X_Format == 0x12 /* X_D3DFMT_LIN_A8R8G8B8 */ 
-				 || X_Format == 0x2E /* D3DFMT_LIN_D24S8 */ || X_Format == 0x3F /* X_D3DFMT_LIN_A8B8G8R8 */)
+            else if(X_Format == X_D3DFMT_LIN_X8R8G8B8 || X_Format == X_D3DFMT_LIN_A8R8G8B8
+				 || X_Format == X_D3DFMT_LIN_D24S8 || X_Format == X_D3DFMT_LIN_A8B8G8R8)
             {
                 // Linear 32 Bit
                 dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
@@ -4562,9 +4562,9 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)+1)*64;
                 dwBPP = 4;
             }
-            else if(X_Format == 0x11 /* D3DFMT_LIN_R5G6B5 */ || X_Format == 0x30 /* D3DFMT_LIN_D16 */
-				 || X_Format == 0x1D /* X_D3DFMT_LIN_A4R4G4B4 */ || X_Format == 0x10 /* X_D3DFMT_LIN_A1R5G5B5 */
-				 || X_Format == 0x1C /* X_D3DFMT_LIN_X1R5G5B5 */ )
+            else if(X_Format == X_D3DFMT_LIN_R5G6B5 || X_Format == X_D3DFMT_LIN_D16
+				 || X_Format == X_D3DFMT_LIN_A4R4G4B4 || X_Format == X_D3DFMT_LIN_A1R5G5B5
+				 || X_Format == X_D3DFMT_LIN_X1R5G5B5 )
             {
                 // Linear 16 Bit
                 dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
@@ -4572,7 +4572,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)+1)*64;
                 dwBPP = 2;
             }
-            else if(X_Format == 0x0C /* D3DFMT_DXT1 */ || X_Format == 0x0E /* D3DFMT_DXT2 */ || X_Format == 0x0F /* D3DFMT_DXT3 */)
+            else if(X_Format == X_D3DFMT_DXT1 || X_Format == X_D3DFMT_DXT2 || X_Format == X_D3DFMT_DXT3)
             {
                 bCompressed = TRUE;
 
@@ -4590,7 +4590,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
                 dwBPP = 1;
             }
-            else if(X_Format == 0x24 /* D3DFMT_YUY2 */)
+            else if(X_Format == X_D3DFMT_YUY2)
             {
                 // Linear 32 Bit
                 dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
@@ -4602,7 +4602,7 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                 CxbxKrnlCleanup("0x%.08X is not a supported format!\n", X_Format);
             }
 
-            if(X_Format == 0x24 /* X_D3DFMT_YUY2 */)
+            if(X_Format == X_D3DFMT_YUY2)
             {
                 //
                 // cache the overlay size
@@ -8939,7 +8939,7 @@ HRESULT WINAPI XTL::EmuIDirect3D8_CheckDeviceMultiSampleType
 (
     UINT                 Adapter,
     D3DDEVTYPE           DeviceType,
-    D3DFORMAT            SurfaceFormat,
+    X_D3DFORMAT          SurfaceFormat,
     BOOL                 Windowed,
     D3DMULTISAMPLE_TYPE  MultiSampleType
 )
