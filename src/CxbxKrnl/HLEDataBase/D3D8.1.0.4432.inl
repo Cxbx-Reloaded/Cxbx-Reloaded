@@ -432,9 +432,9 @@ OOVPA_NO_XREF(IDirect3DDevice8_SetVerticalBlankCallback_1_0_4432, 12)
 OOVPA_END;
 
 // ******************************************************************
-// * IDirect3DDevice8_BackFillMode
+// * IDirect3DDevice8_SetRenderState_BackFillMode
 // ******************************************************************
-OOVPA_NO_XREF(IDirect3DDevice8_BackFillMode_1_0_4531, 9)
+OOVPA_NO_XREF(IDirect3DDevice8_SetRenderState_BackFillMode_1_0_4531, 9)
 
         { 0x04, 0x56 },
 	{ 0x10, 0x8B },
@@ -845,7 +845,7 @@ OOVPATable D3D8_1_0_4432[]  {
 	// IDirect3DDevice8_GetDeviceCaps (* unchanged since 3925 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetDeviceCaps_1_0_3925, XTL::EmuIDirect3DDevice8_GetDeviceCaps),
 	// IDirect3DDevice8_BackFillMode_4531
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_BackFillMode_1_0_4531, XTL::EmuIDirect3DDevice8_SetRenderState_BackFillMode),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_BackFillMode_1_0_4531, XTL::EmuIDirect3DDevice8_SetRenderState_BackFillMode),
 	// IDirect3DSurface8::GetDesc (* unchanged since 4361 *)
 	OOVPA_TABLE_PATCH(IDirect3DSurface8_GetDesc_1_0_4361, XTL::EmuIDirect3DSurface8_GetDesc),
 	// Get2DSurfacDesc (* unchanged since 4361 *)
