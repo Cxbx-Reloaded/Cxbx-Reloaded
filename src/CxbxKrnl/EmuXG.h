@@ -47,7 +47,7 @@ XGPOINT3D;
 // ******************************************************************
 PVOID WINAPI EmuXGIsSwizzledFormat
 (
-    D3DFORMAT       Format
+    X_D3DFORMAT     Format
 );
 
 // ******************************************************************
@@ -117,7 +117,7 @@ VOID	WINAPI EmuXGSetTextureHeader
 	UINT			Height,
 	UINT			Levels,
 	DWORD			Usage,
-	D3DFORMAT		Format,
+	X_D3DFORMAT		Format,
 	D3DPOOL			Pool,
 	X_D3DTexture*	pTexture,
 	UINT			Data,
