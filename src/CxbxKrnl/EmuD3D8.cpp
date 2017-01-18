@@ -6364,19 +6364,22 @@ VOID WINAPI XTL::EmuIDirect3DDevice8_SetRenderState_BackFillMode
     DWORD Value
 )
 {
-    
-
     DbgPrintf("EmuD3D8: EmuIDirect3DDevice8_SetRenderState_BackFillMode\n"
            "(\n"
            "   Value               : 0x%.08X\n"
            ");\n",
            Value);
 
-    EmuWarning("BackFillMode is not supported!");
-
-    
-
-    return;
+	// blueshogun96 12/4/07
+	// I haven't had access to Cxbx sources in a few months, great to be back :)
+	//
+	// Anyway, since standard Direct3D doesn't support the back fill mode
+	// operation, this function will be ignored.  Things like this make me
+	// think even more that an OpenGL port wouldn't hurt since OpenGL supports
+	// nearly all of the missing features that Direct3D lacks.  The Xbox's version
+	// of Direct3D was specifically created to take advantage of certain NVIDIA
+	// GPU registers and provide more OpenGL-like features IHMO.
+	EmuWarning("BackFillMode is not supported!");
 }
 
 // ******************************************************************
@@ -9451,38 +9454,6 @@ HRESULT WINAPI XTL::EmuIDirect3DDevice8_GetProjectionViewportMatrix
 	return S_OK;
 }
 #pragma warning(default:4244)
-
-// ******************************************************************
-// * func: EmuIDirect3DDevice8_BackFillMode
-// ******************************************************************
-HRESULT WINAPI XTL::EmuIDirect3DDevice8_BackFillMode
-(
-	DWORD Value
-)
-{
-		
-
-	DbgPrintf("EmuD3D8: EmuIDirect3DDevice8_BackFillMode\n"
-           "(\n"
-		   "   Value       : 0x%.08X\n"
-           ");\n",
-           Value);
-
-	
-	// blueshogun96 12/4/07
-	// I haven't had access to Cxbx sources in a few months, great to be back :)
-	//
-	// Anyway, since standard Direct3D doesn't support the back fill mode
-	// operation, this function will be ignored.  Things like this make me
-	// think even more that an OpenGL port wouldn't hurt since OpenGL supports
-	// nearly all of the missing features that Direct3D lacks.  The Xbox's version
-	// of Direct3D was specifically created to take advantage of certain NVIDIA
-	// GPU registers and provide more OpenGL-like features IHMO.
-
-		
-
-	return S_OK;
-}
 
 // ******************************************************************
 // * func: EmuD3DDevice_KickOff (D3D::CDevice::KickOff)

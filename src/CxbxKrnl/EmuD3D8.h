@@ -1707,14 +1707,6 @@ HRESULT WINAPI EmuIDirect3DDevice8_GetProjectionViewportMatrix
 );
 
 // ******************************************************************
-// * func: EmuIDirect3DDevice8_BackFillMode
-// ******************************************************************
-HRESULT WINAPI EmuIDirect3DDevice8_BackFillMode
-(
-	DWORD Value
-);
-
-// ******************************************************************
 // * func: EmuD3DDevice_KickOff (D3D::CDevice::KickOff)
 // ******************************************************************
 VOID WINAPI EmuD3DDevice_KickOff();
