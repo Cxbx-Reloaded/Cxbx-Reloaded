@@ -1873,6 +1873,10 @@ OOVPATable DSound_1_0_5788[] = {
 	OOVPA_TABLE_PATCH(DirectSoundDoWork_1_0_5788, XTL::EmuDirectSoundDoWork),
 	// CDirectSound::SynchPlayback (* unchanged since 5558 *)
 	OOVPA_TABLE_PATCH(CDirectSound_SynchPlayback_1_0_5558, XTL::EmuCDirectSound_SynchPlayback),
+	// DirectSound::CDirectSound::EnableHeadphones (XRef)
+	OOVPA_TABLE_XREF(DirectSound_CDirectSound_EnableHeadphones_1_0_5558),
+	// IDirectSound8::EnableHeadphones
+	OOVPA_TABLE_PATCH(IDirectSound_EnableHeadphones_1_0_5558, XTL::EmuIDirectSound8_EnableHeadphones),
 	// XAudioDownloadEffectsImage (* unchanged since 4627 *)
 	OOVPA_TABLE_PATCH(XAudioDownloadEffectsImage_1_0_4627, XTL::EmuXAudioDownloadEffectsImage),
 	// IDirectSoundStream_FlushEx
