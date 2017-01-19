@@ -106,6 +106,10 @@ OOVPATable XOnline_1_0_5788[] = {
 	OOVPA_TABLE_XREF(XnInit_1_0_5788),
 	// XNetGetEthernetLinkStatus
 	OOVPA_TABLE_PATCH(XNetGetEthernetLinkStatus_1_0_5788, XTL::EmuXNetGetEthernetLinkStatus),
+    // bind (* unchanged since 4361 *)
+	OOVPA_TABLE_PATCH(bind_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emubind)),
+    // ioctlsocket (* unchanged since 4361 *)
+	OOVPA_TABLE_PATCH(ioctlsocket_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emuioctlsocket)),
 };
 
 // ******************************************************************
