@@ -205,6 +205,10 @@ OOVPATable XAPI_1_0_5788[] = {
 	OOVPA_TABLE_PATCH(SwitchToFiber_1_0_5558, XTL::EmuSwitchToFiber),
 	// ConvertThreadToFiber
 	OOVPA_TABLE_PATCH(ConvertThreadToFiber_1_0_5558, XTL::EmuConvertThreadToFiber),
+	// XID_fCloseDevice (* unchanged since 5558 *)
+	OOVPA_TABLE_XREF(XID_fCloseDevice_1_0_5558),
+	// XInputClose (* unchanged since 5558 *)
+	OOVPA_TABLE_PATCH(XInputClose_1_0_5558, XTL::EmuXInputClose),
 };
 
 // ******************************************************************
