@@ -243,6 +243,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5233.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5788.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.5849.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.3936.h" />
@@ -251,6 +252,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4432.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4627.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5233.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5788.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5849.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4627.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.h" />
@@ -261,6 +263,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5233.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5558.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5788.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5849.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.3911.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4034.h" />
@@ -269,11 +272,13 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4627.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5233.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5558.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5788.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5849.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.3911.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4361.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4627.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5233.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5788.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5849.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\Convert.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\PixelShader.h" />
@@ -324,6 +329,11 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuildStep>
+    <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5788.inl">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuildStep>
     <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.inl">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -367,6 +377,11 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuildStep>
     <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5558.inl">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuildStep>
+    <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5788.inl">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -423,6 +438,11 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuildStep>
+    <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5788.inl">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuildStep>
     <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5849.inl">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -458,6 +478,11 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuildStep>
     <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5558.inl">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuildStep>
+    <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5788.inl">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
