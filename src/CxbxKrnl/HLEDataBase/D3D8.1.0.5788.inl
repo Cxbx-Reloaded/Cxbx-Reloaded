@@ -1399,6 +1399,12 @@ OOVPATable D3D8_1_0_5788[] = {
 	OOVPA_TABLE_PATCH(IDirect3DResource8_Release_1_0_3925, XTL::EmuIDirect3DResource8_Release),
 	// IDirect3DResource8::IsBusy (* unchanged since 4361 *)
 	OOVPA_TABLE_PATCH(IDirect3DResource8_IsBusy_1_0_4361, XTL::EmuIDirect3DResource8_IsBusy),
+    // D3D::BlockOnResource (XREF) (* unchanged since 5558 *)
+	OOVPA_TABLE_XREF(D3D_BlockOnResource_1_0_5558),
+	// IDirect3DResource8::BlockUntilNotBusy (* unchanged since 5558 *)
+	OOVPA_TABLE_PATCH(IDirect3DResource8_BlockUntilNotBusy_1_0_5558, XTL::EmuIDirect3DResource8_BlockUntilNotBusy),
+	// IDirect3DVertexBuffer8::GetDesc (* unchanged since 5233 *)
+	OOVPA_TABLE_PATCH(IDirect3DVertexBuffer8_GetDesc_1_0_5233, XTL::EmuIDirect3DVertexBuffer8_GetDesc),
 	// IDirect3DSurface8::GetDesc (* unchanged since 4361 *)
 	OOVPA_TABLE_PATCH(IDirect3DSurface8_GetDesc_1_0_4361, XTL::EmuIDirect3DSurface8_GetDesc),
 	// IDirect3DDevice8::CopyRects (* unchanged since 5233 *)
