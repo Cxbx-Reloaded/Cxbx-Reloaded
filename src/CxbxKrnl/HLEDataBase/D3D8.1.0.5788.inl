@@ -1511,6 +1511,8 @@ OOVPATable D3D8_1_0_5788[] = {
 	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_LogicOp_1_0_5558, XTL::EmuIDirect3DDevice8_SetRenderState_LogicOp),
 	// D3DDevice_SetRenderState_MultiSampleMask
 	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_MultiSampleMask_1_0_5788, XTL::EmuIDirect3DDevice8_SetRenderState_MultiSampleMask),
+	// IDirect3DDevice8::CreatePalette2 (* unchanged since 5558 *)
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreatePalette2_1_0_5558, XTL::EmuIDirect3DDevice8_CreatePalette2),
 	// D3DDevice_SetPalette
 	OOVPA_TABLE_PATCH(D3DDevice_SetPalette_1_0_5788, XTL::EmuIDirect3DDevice8_SetPalette),
 	// D3DDevice_LoadVertexShaderProgram
