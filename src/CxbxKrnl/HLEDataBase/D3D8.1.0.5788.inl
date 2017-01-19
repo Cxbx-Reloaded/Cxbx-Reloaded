@@ -1357,6 +1357,8 @@ OOVPATable D3D8_1_0_5788[] = {
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetIndices_1_0_5788, XTL::EmuIDirect3DDevice8_SetIndices),
 	// IDirect3DDevice8::SetTexture (* unchanged since 5233 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetTexture_1_0_5233, XTL::EmuIDirect3DDevice8_SetTexture),
+	// IDirect3DDevice8::SwitchTexture (* unchanged since 4361 *)
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SwitchTexture_1_0_4361, XTL::EmuIDirect3DDevice8_SwitchTexture),
     // D3D::CDevice::LazySetStateVB (XREF) (* unchanged since 5558 *)
 	OOVPA_TABLE_XREF(D3D_CDevice_LazySetStateVB_1_0_5558),
 	// IDirect3DDevice8::BeginPush (* unchanged since 5558 *)
