@@ -181,6 +181,8 @@ OOVPATable XAPI_1_0_5788[] = {
 	OOVPA_TABLE_PATCH(GetThreadPriorityBoost_1_0_5788, XTL::EmuGetThreadPriorityBoost),*/
 	// XMountMUA (* unchanged since 5558 *)
 	OOVPA_TABLE_PATCH(XMountMUA_1_0_5558, XTL::EmuXMountMUA),
+	// GetTimeZoneInformation (* unchanged since 3911 *)
+	OOVPA_TABLE_PATCH(GetTimeZoneInformation_1_0_3911, XTL::EmuGetTimeZoneInformation),
 	// RaiseException
 	OOVPA_TABLE_PATCH(RaiseException_1_0_5788, XTL::EmuRaiseException),
 	// XLaunchNewImageA (* unchanged since 5558 *)
