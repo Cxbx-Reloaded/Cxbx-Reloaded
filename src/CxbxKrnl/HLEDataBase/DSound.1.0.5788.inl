@@ -1652,6 +1652,14 @@ OOVPATable DSound_1_0_5788[] = {
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer8_SetMixBinVolumes_1_0_4627, XTL::EmuIDirectSoundBuffer8_SetMixBinVolumes),
 	// CDirectSoundStream_SetMixBinVolumes
 	OOVPA_TABLE_PATCH(DirectSound_CDirectSoundStream_SetMixBinVolumes_1_0_5788, XTL::EmuCDirectSoundStream_SetMixBinVolumes2),
+    // CDirectSoundVoice::SetRolloffCurve (XREF) (* unchanged since 5233 *)
+	OOVPA_TABLE_XREF(CDirectSoundVoice_SetRolloffCurve_1_0_5233),
+    // CDirectSoundBuffer::SetRolloffCurve (XREF) (* unchanged since 5233 *)
+	OOVPA_TABLE_XREF(CDirectSoundBuffer_SetRolloffCurve_1_0_5233),
+	// CDirectSoundStream::SetRolloffCurve
+	OOVPA_TABLE_PATCH(DirectSound_CDirectSoundStream_SetRolloffCurve_1_0_5558, XTL::EmuCDirectSoundStream_SetRolloffCurve),
+	// IDirectSoundBuffer8::SetRolloffCurve (* unchanged since 5233 *)
+	OOVPA_TABLE_PATCH(IDirectSoundBuffer8_SetRolloffCurve_1_0_5233, XTL::EmuIDirectSoundBuffer8_SetRolloffCurve),
 	// IDirectSound8::CreateSoundBuffer
 	OOVPA_TABLE_PATCH(IDirectSound8_CreateSoundBuffer_1_0_4627, XTL::EmuIDirectSound8_CreateSoundBuffer),
     // CDirectSoundVoice::SetFrequency (XREF)
