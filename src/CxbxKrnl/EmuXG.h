@@ -42,14 +42,17 @@ typedef struct _XGPOINT3D
 }
 XGPOINT3D;
 
+/* Leave unpatched
 // ******************************************************************
 // * func: EmuXGIsSwizzledFormat
 // ******************************************************************
 PVOID WINAPI EmuXGIsSwizzledFormat
 (
-    D3DFORMAT       Format
+    X_D3DFORMAT     Format
 );
+*/
 
+/* Leave unpatched
 // ******************************************************************
 // * func: EmuXGSwizzleRect
 // ******************************************************************
@@ -64,6 +67,7 @@ VOID WINAPI EmuXGSwizzleRect
     CONST LPPOINT pPoint,
     DWORD         BytesPerPixel
 );
+*/
 
 // ******************************************************************
 // * func: EmuXGSwizzleBox
@@ -80,22 +84,6 @@ VOID WINAPI EmuXGSwizzleBox
     DWORD            Depth,
     CONST XGPOINT3D *pPoint,
     DWORD            BytesPerPixel
-);
-
-// ******************************************************************
-// * func: EmuXGUnswizzleRect
-// ******************************************************************
-VOID WINAPI EmuXGUnswizzleRect
-(
-    PVOID           pSrcBuffer,
-    DWORD           dwWidth,
-    DWORD           dwHeight,
-    DWORD           dwDepth,
-    PVOID           pDstBuff,
-    DWORD           dwPitch,
-    RECT            rSrc,
-    POINT           poDst,
-    DWORD           dwBPP
 );
 
 // ******************************************************************
@@ -117,7 +105,7 @@ VOID	WINAPI EmuXGSetTextureHeader
 	UINT			Height,
 	UINT			Levels,
 	DWORD			Usage,
-	D3DFORMAT		Format,
+	X_D3DFORMAT		Format,
 	D3DPOOL			Pool,
 	X_D3DTexture*	pTexture,
 	UINT			Data,

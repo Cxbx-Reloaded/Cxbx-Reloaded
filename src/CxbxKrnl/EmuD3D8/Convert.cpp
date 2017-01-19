@@ -544,3 +544,101 @@ CONST DWORD XTL::EmuD3DRenderStateSimpleEncoded[174] =
     X_D3DRSSE_UNK,  0x00040350,     // 170
     X_D3DRSSE_UNK,  X_D3DRSSE_UNK,  // 172
 };
+
+void XTL::EmuUnswizzleRect
+(
+	PVOID pSrcBuff,
+	DWORD dwWidth,
+	DWORD dwHeight,
+	DWORD dwDepth,
+	PVOID pDstBuff,
+	DWORD dwPitch,
+	RECT rSrc, // Unused
+	POINT poDst, // Unused
+	DWORD dwBPP // expressed in Bytes Per Pixel
+) // Source : Dxbx
+{
+	// TODO : The following could be done using a lookup table :
+	DWORD dwMaskX = 0, dwMaskY = 0, dwMaskZ = 0;
+	for (uint i=1, j=1; (i <= dwWidth) || (i <= dwHeight) || (i <= dwDepth); i <<= 1) {
+		if (i < dwWidth) {
+			dwMaskX = dwMaskX | j;
+			j <<= 1;
+		};
+
+		if (i < dwHeight) {
+			dwMaskY = dwMaskY | j;
+			j <<= 1;
+		}
+
+		if (i < dwDepth) {
+			dwMaskZ = dwMaskZ | j;
+			j <<= 1;
+		}
+	}
+
+	// get the biggest mask
+	DWORD dwMaskMax;
+	if (dwMaskX > dwMaskY)
+		dwMaskMax = dwMaskX;
+	else
+		dwMaskMax = dwMaskY;
+
+	if (dwMaskZ > dwMaskMax)
+		dwMaskMax = dwMaskZ;
+
+	DWORD dwStartX = 0, dwOffsetX = 0;
+	DWORD dwStartY = 0, dwOffsetY = 0;
+	DWORD dwStartZ = 0, dwOffsetW = 0;
+	/* TODO : Use values from poDst and rSrc to initialize above values, after which the following makes more sense:
+	for (uint i=1; i <= dwMaskMax; i <<= 1) {
+		if (i <= dwMaskX) {
+			if (dwMaskX & i)
+				dwStartX |= (dwOffsetX & i);
+			else
+				dwOffsetX <<= 1;
+		}
+
+		if (i <= dwMaskY) {
+			if (dwMaskY & i)
+				dwStartY |= dwOffsetY & i;
+			else
+				dwOffsetY <<= 1;
+		}
+
+		if (i <= dwMaskZ) {
+			if (dwMaskZ & i)
+				dwStartZ |= dwOffsetZ & i;
+			else
+				dwOffsetZ <<= 1;
+		}
+	}*/
+
+	DWORD dwZ = dwStartZ;
+	for (uint z = 0; z < dwDepth; z++) {
+		DWORD dwY = dwStartY;
+		// TODO : How could we do one memcpy when lines AND pixels are next to eachother?
+		for (uint y = 0; y < dwHeight; y++) {
+			DWORD dwX = dwStartX;
+			// We use one memcpy for the entire line when pixels are next to eachother :
+			// TODO : How can we simplify the next check; (dwMaskX & 1) perhaps?
+			if (dwX + 1 == (dwX - dwMaskX) & dwMaskX) {
+				memcpy(pDstBuff, (PBYTE)pSrcBuff + (dwX | dwY | dwZ) * dwBPP, dwBPP * dwWidth); // copy one line
+				pDstBuff = (PBYTE)pDstBuff + dwBPP * dwWidth; // Step to next line in destination
+			}
+			else {
+				for (uint x = 0; x < dwWidth; x++) {
+					memcpy(pDstBuff, (PBYTE)pSrcBuff + (dwX | dwY | dwZ) * dwBPP, dwBPP); // copy one pixel
+					pDstBuff = (PBYTE)pDstBuff + dwBPP; // Step to next pixel in destination
+					dwX = (dwX - dwMaskX) & dwMaskX; // step to next pixel in source
+				}
+			}
+
+			pDstBuff = (PBYTE)pDstBuff + dwPitch - (dwWidth * dwBPP); // step to next line in destination
+			dwY = (dwY - dwMaskY) & dwMaskY; // step to next line in source
+		}
+
+		// TODO : How to step to next level in destination? Should X and Y be recalculated per level?
+		dwZ = (dwZ - dwMaskZ) & dwMaskZ; // step to next level in source
+	}
+} // EmuUnswizzleRect NOPATCH

@@ -71,6 +71,7 @@ OOVPA_NO_XREF(XGSwizzleRect_1_0_5558, 8)
         { 0xFE, 0x89 },
 OOVPA_END;
 
+/* Leave unpatched
 // ******************************************************************
 // * XGUnswizzleRect
 // ******************************************************************
@@ -85,6 +86,7 @@ OOVPA_NO_XREF(XGUnswizzleRect_1_0_5558, 8)
         { 0xDE, 0x89 },
         { 0xFE, 0x60 },
 OOVPA_END;
+*/
 
 // ******************************************************************
 // * XGSwizzleBox
@@ -122,14 +124,20 @@ OOVPA_END;
 OOVPATable XG_1_0_5558[] = {
 
     // XGIsSwizzledFormat (* unchanged since 4361 *)
+	/* Leave unpatched
 	OOVPA_TABLE_PATCH(XGIsSwizzledFormat_1_0_4361, XTL::EmuXGIsSwizzledFormat),
+	*/
     // XGSwizzleRect
+	/* Leave unpatched
 	OOVPA_TABLE_PATCH(XGSwizzleRect_1_0_5558, XTL::EmuXGSwizzleRect),
+	*/
     // XGSwizzleBox (* UNTESTED *)
 	OOVPA_TABLE_PATCH(XGSwizzleBox_1_0_5558, XTL::EmuXGSwizzleBox),
 	// XGUnswizzleRect
+	/* Leave unpatched
 	OOVPA_TABLE_PATCH(XGUnswizzleRect_1_0_5558, XTL::EmuXGUnswizzleRect),
-    // XGUnswizzleBox (* UNTESTED *)
+    */
+	// XGUnswizzleBox (* UNTESTED *)
     /*
 	OOVPA_TABLE_PATCH(XGUnswizzleBox_1_0_5558, XTL::EmuXGUnswizzleBox),
 	*/
