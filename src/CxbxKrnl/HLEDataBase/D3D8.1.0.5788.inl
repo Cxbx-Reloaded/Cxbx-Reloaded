@@ -1463,6 +1463,8 @@ OOVPATable D3D8_1_0_5788[] = {
 	OOVPA_TABLE_PATCH(D3DDevice_SetViewport_1_0_5788, XTL::EmuIDirect3DDevice8_SetViewport),
 	// IDirect3DDevice8::BlockUntilVerticalBlank
 	OOVPA_TABLE_PATCH(D3DDevice_BlockUntilVerticalBlank_1_0_5788, XTL::EmuIDirect3DDevice8_BlockUntilVerticalBlank),
+	// IDirect3DDevice8_GetDeviceCaps (* unchanged since 3925 *)
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetDeviceCaps_1_0_3925, XTL::EmuIDirect3DDevice8_GetDeviceCaps),
 	// IDirect3DDevice8::SetRenderState_FrontFace (* unchanged since 4134 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_FrontFace_1_0_4134, XTL::EmuIDirect3DDevice8_SetRenderState_FrontFace),
 	// IDirect3DDevice8::SetBackMaterial
