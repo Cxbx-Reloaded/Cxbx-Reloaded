@@ -1891,6 +1891,10 @@ OOVPATable DSound_1_0_5788[] = {
 	OOVPA_TABLE_XREF(DirectSound_CMemoryManager_PoolAlloc_1_0_5788),
 	// XFileCreateMediaObjectAsync
 	OOVPA_TABLE_PATCH(XFileCreateMediaObjectAsync_1_0_5788, XTL::EmuXFileCreateMediaObjectAsync),
+    // WaveFormat::CreateXboxAdpcmFormat (XREF)
+	OOVPA_TABLE_XREF(WaveFormat_CreateXboxAdpcmFormat_1_0_5558),
+    // XAudioCreateAdpcmFormat
+	OOVPA_TABLE_PATCH(XAudioCreateAdpcmFormat_1_0_5558, XTL::EmuXAudioCreateAdpcmFormat),
 	// CDirectSoundStream::SetFormat (* unchanged since 5558 *)
 	OOVPA_TABLE_PATCH(DirectSound_CDirectSoundStream_SetFormat_1_0_5558, XTL::EmuCDirectSoundStream_SetFormat),
 	// CDirectSoundStream::SetPitch
