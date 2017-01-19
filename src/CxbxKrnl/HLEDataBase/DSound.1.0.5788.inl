@@ -1748,6 +1748,12 @@ OOVPATable DSound_1_0_5788[] = {
 	OOVPA_TABLE_XREF(DirectSound_CDirectSound_SetVelocity_1_0_5788),
 	// IDirectSound8::SetVelocity
 	OOVPA_TABLE_PATCH(IDirectSound_SetVelocity_1_0_5788, XTL::EmuIDirectSound8_SetVelocity),
+    // CDirectSoundVoice::SetDistanceFactor (XREF)
+	OOVPA_TABLE_XREF(CDirectSoundVoice_SetDistanceFactor_1_0_5558),
+    // CDirectSoundBuffer::SetDistanceFactor (XREF)
+	OOVPA_TABLE_XREF(CDirectSoundBuffer_SetDistanceFactor_1_0_5558),
+	// IDirectSoundBuffer_SetDistanceFactor
+	OOVPA_TABLE_PATCH(IDirectSoundBuffer8_SetDistanceFactor_1_0_5558, XTL::EmuIDirectSoundBuffer8_SetDistanceFactor),
 	// CDirectSound::CommitDeferredSettings
 	OOVPA_TABLE_PATCH(DirectSound_CDirectSound_CommitDeferredSettings_1_0_5788, XTL::EmuCDirectSound_CommitDeferredSettings),
 	// DirectSoundCreateBuffer
