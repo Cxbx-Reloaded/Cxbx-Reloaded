@@ -1901,6 +1901,10 @@ OOVPATable DSound_1_0_5788[] = {
 	OOVPA_TABLE_PATCH(DirectSound_CDirectSoundStream_SetPitch_1_0_5788, XTL::EmuCDirectSoundStream_SetPitch),
 	// DirectSound::CDirectSoundStream::SetHeadroom
 	OOVPA_TABLE_PATCH(DirectSound_CDirectSoundStream_SetHeadroom_1_0_5788, XTL::EmuIDirectSoundStream_SetHeadroom),
+	// CDirectSound_CreateSoundStream
+	OOVPA_TABLE_XREF(DirectSound_CDirectSound_CreateSoundStream_1_0_5558),
+	// IDirectSound_CreateSoundStream
+	OOVPA_TABLE_PATCH(IDirectSound_CreateSoundStream_1_0_5558, XTL::EmuIDirectSound8_CreateStream),
 	// CMcpxBuffer::Play2
 	OOVPA_TABLE_XREF(DirectSound_CMcpxBuffer_Play2_1_0_5788),
 	// CDirectSoundBuffer::Play
