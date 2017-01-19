@@ -1790,6 +1790,10 @@ OOVPATable DSound_1_0_5788[] = {
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_StopEx_1_0_5788),
 	// CDirectSoundBuffer_Stop
 	OOVPA_TABLE_PATCH(DirectSound_CDirectSoundBuffer_StopEx_1_0_5788, XTL::EmuIDirectSoundBuffer8_StopEx),
+    // CDirectSound::SetDistanceFactorA (XREF)
+	OOVPA_TABLE_XREF(CDirectSound_SetDistanceFactorA_1_0_5558),
+	// IDirectSound8::SetDistanceFactor (* unchanged since 4432 *)
+	OOVPA_TABLE_PATCH(IDirectSound8_SetDistanceFactor_1_0_4432, XTL::EmuIDirectSound8_SetDistanceFactor),
 	// CDirectSound::SetRolloffFactor (XREF)
 	OOVPA_TABLE_XREF(DirectSound_CDirectSound_SetRolloffFactor_1_0_5788),
 	// IDirectSound8::SetRolloffFactor (* unchanged since 4627 *)
