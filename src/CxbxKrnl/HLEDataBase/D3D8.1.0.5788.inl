@@ -491,20 +491,6 @@ OOVPA_NO_XREF(IDirect3DDevice8_DrawVerticesUP_1_0_5788, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * IDirect3DTexture8_LockRect
-// ******************************************************************
-OOVPA_NO_XREF(IDirect3DTexture8_LockRect_1_0_5788, 7)
-
-        { 0x03, 0x14 },
-        { 0x08, 0x8B },
-        { 0x0D, 0x8B },
-        { 0x12, 0x8B },
-        { 0x17, 0x50 },
-        { 0x20, 0xC2 },
-        { 0x21, 0x14 },
-OOVPA_END;
-
-// ******************************************************************
 // * IDirect3DDevice8_BeginPushBuffer
 // ******************************************************************
 OOVPA_NO_XREF(IDirect3DDevice8_BeginPushBuffer_1_0_5788, 6)
