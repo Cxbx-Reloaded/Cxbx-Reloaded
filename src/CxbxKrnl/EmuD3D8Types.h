@@ -41,7 +41,6 @@
 #include <d3d8types.h>
 
 // TODO: fill out these enumeration tables for convienance
-typedef DWORD X_D3DFORMAT;
 typedef DWORD X_D3DBLENDOP;
 typedef DWORD X_D3DBLEND;
 typedef DWORD X_D3DCMPFUNC;
@@ -51,91 +50,131 @@ typedef DWORD X_D3DSTENCILOP;
 typedef DWORD X_D3DTEXTURESTAGESTATETYPE;
 typedef PVOID X_D3DCALLBACK;
 
-const int X_D3DFMT_L8 = 0x00;
-const int X_D3DFMT_AL8 = 0x01;
-const int X_D3DFMT_A1R5G5B5 = 0x02;
-const int X_D3DFMT_X1R5G5B5 = 0x03;
-const int X_D3DFMT_A4R4G4B4 = 0x04;
-const int X_D3DFMT_R5G6B5 = 0x05;
-const int X_D3DFMT_A8R8G8B8 = 0x06;
-const int X_D3DFMT_X8R8G8B8 = 0x07;
-const int X_D3DFMT_X8L8V8U8 = 0x07; // Alias
+typedef enum _X_D3DFORMAT
+{
+/*
+	Xbox1 D3DFORMAT notes
+	---------------------
 
-const int X_D3DFMT_P8 = 0x0b; // 8-bit Palletized
+	The Xbox1 D3DFORMAT type consists of 4 different format categories :
+	1. Swizzled (improves data locality, incompatible with native Direct3D)
+	2. Compressed (DXT compression, giving 4:1 reduction on 4x4 pixel blocks)
+	3. Linear (compatible with native Direct3D)
+	4. Depth (Fixed or Floating point, stored Linear or Swizzled)
 
-const int X_D3DFMT_A8 = 0x19;
-const int X_D3DFMT_A8L8 = 0x1a;
-const int X_D3DFMT_R6G5B5 = 0x27;
-const int X_D3DFMT_L6V5U5 = 0x27; // Alias
+	Requirements\Format      Swizzled  Compressed  Linear  Depth   Notes
 
-const int X_D3DFMT_G8B8 = 0x28;
-const int X_D3DFMT_V8U8 = 0x28; // Alias
+	Power-of-two required ?  YES       YES         NO      NO
+	Mipmap supported ?       YES       YES         NO      YES     Linear has MipmapLevels = 1
+	CubeMaps supported ?     YES       YES         NO      NO      Cubemaps have 6 faces
+	Supports volumes ?       YES       YES         NO      NO      Volumes have 3 dimensions, Textures have 2
+	Can be a rendertarget ?  YES       YES         YES     LINEAR  Depth buffers can only be rendered to if stored Linear
 
-const int X_D3DFMT_R8B8 = 0x29;
-const int X_D3DFMT_D24S8 = 0x2a;
-const int X_D3DFMT_F24S8 = 0x2b;
-const int X_D3DFMT_D16 = 0x2c;
-const int X_D3DFMT_D16_LOCKABLE = 0x2c; // Alias
+	Implications :
+	- CubeMaps must be square
+	- Volumes cannot be cube mapped and vice versa
 
-const int X_D3DFMT_F16 = 0x2d;
-const int X_D3DFMT_L16 = 0x32;
-const int X_D3DFMT_V16U16 = 0x33;
-const int X_D3DFMT_R5G5B5A1 = 0x38;
-const int X_D3DFMT_R4G4B4A4 = 0x39;
-const int X_D3DFMT_A8B8G8R8 = 0x3A;
-const int X_D3DFMT_Q8W8V8U8 = 0x3A; // Alias
+	Maximum dimensions :
+	2D : 4096 x 4096 (12 mipmap levels)
+	3D : 512 x 512 x 512 (9 mipmap levels)
 
-const int X_D3DFMT_B8G8R8A8 = 0x3B;
-const int X_D3DFMT_R8G8B8A8 = 0x3C;
+*/
 
-// YUV Formats
+	// Xbox D3DFORMAT types :
+	// See http://wiki.beyondunreal.com/Legacy:Texture_Format
 
-const int X_D3DFMT_YUY2 = 0x24;
-const int X_D3DFMT_UYVY = 0x25;
+	// Swizzled Formats
 
-// Compressed Formats
+	X_D3DFMT_L8 = 0x00,
+	X_D3DFMT_AL8 = 0x01,
+	X_D3DFMT_A1R5G5B5 = 0x02,
+	X_D3DFMT_X1R5G5B5 = 0x03,
+	X_D3DFMT_A4R4G4B4 = 0x04,
+	X_D3DFMT_R5G6B5 = 0x05,
+	X_D3DFMT_A8R8G8B8 = 0x06,
+	X_D3DFMT_X8R8G8B8 = 0x07,
+	X_D3DFMT_X8L8V8U8 = 0x07, // Alias
 
-const int X_D3DFMT_DXT1 = 0x0C; // opaque/one-bit alpha
+	X_D3DFMT_P8 = 0x0b, // 8-bit Palletized
 
-const int X_D3DFMT_DXT2 = 0x0E;
-const int X_D3DFMT_DXT3 = 0x0E; // linear alpha
+	X_D3DFMT_A8 = 0x19,
+	X_D3DFMT_A8L8 = 0x1a,
+	X_D3DFMT_R6G5B5 = 0x27,
+	X_D3DFMT_L6V5U5 = 0x27, // Alias
 
-const int X_D3DFMT_DXT4 = 0x0F;
-const int X_D3DFMT_DXT5 = 0x0F; // interpolated alpha
+	X_D3DFMT_G8B8 = 0x28,
+	X_D3DFMT_V8U8 = 0x28, // Alias
 
-								// Linear Formats
+	X_D3DFMT_R8B8 = 0x29,
+	X_D3DFMT_D24S8 = 0x2a,
+	X_D3DFMT_F24S8 = 0x2b,
+	X_D3DFMT_D16 = 0x2c,
+	X_D3DFMT_D16_LOCKABLE = 0x2c, // Alias
 
-const int X_D3DFMT_LIN_A1R5G5B5 = 0x10;
-const int X_D3DFMT_LIN_R5G6B5 = 0x11;
-const int X_D3DFMT_LIN_A8R8G8B8 = 0x12;
-const int X_D3DFMT_LIN_L8 = 0x13;
-const int X_D3DFMT_LIN_R8B8 = 0x16;
-const int X_D3DFMT_LIN_G8B8 = 0x17;
-const int X_D3DFMT_LIN_V8U8 = 0x17; // Alias
+	X_D3DFMT_F16 = 0x2d,
+	X_D3DFMT_L16 = 0x32,
+	X_D3DFMT_V16U16 = 0x33,
+	X_D3DFMT_R5G5B5A1 = 0x38,
+	X_D3DFMT_R4G4B4A4 = 0x39,
+	X_D3DFMT_A8B8G8R8 = 0x3A,
+	X_D3DFMT_Q8W8V8U8 = 0x3A, // Alias
 
-const int X_D3DFMT_LIN_AL8 = 0x1b;
-const int X_D3DFMT_LIN_X1R5G5B5 = 0x1c;
-const int X_D3DFMT_LIN_A4R4G4B4 = 0x1d;
-const int X_D3DFMT_LIN_X8R8G8B8 = 0x1e;
-const int X_D3DFMT_LIN_X8L8V8U8 = 0x1e; // Alias
+	X_D3DFMT_B8G8R8A8 = 0x3B,
+	X_D3DFMT_R8G8B8A8 = 0x3C,
 
-const int X_D3DFMT_LIN_A8 = 0x1f;
-const int X_D3DFMT_LIN_A8L8 = 0x20;
-const int X_D3DFMT_LIN_D24S8 = 0x2E;
-const int X_D3DFMT_LIN_F24S8 = 0x2f;
-const int X_D3DFMT_LIN_D16 = 0x30;
-const int X_D3DFMT_LIN_F16 = 0x31;
-const int X_D3DFMT_LIN_L16 = 0x35;
-const int X_D3DFMT_LIN_V16U16 = 0x36;
-const int X_D3DFMT_LIN_R6G5B5 = 0x37;
-const int X_D3DFMT_LIN_L6V5U5 = 0x37; // Alias
+	// YUV Formats
 
-const int X_D3DFMT_LIN_R5G5B5A1 = 0x3D;
-const int X_D3DFMT_LIN_R4G4B4A4 = 0x3e;
-const int X_D3DFMT_LIN_A8B8G8R8 = 0x3f;
-const int X_D3DFMT_LIN_B8G8R8A8 = 0x40;
-const int X_D3DFMT_LIN_R8G8B8A8 = 0x41;
-const int X_D3DFMT_VERTEXDATA = 0x64;
+	X_D3DFMT_YUY2 = 0x24,
+	X_D3DFMT_UYVY = 0x25,
+
+	// Compressed Formats
+
+	X_D3DFMT_DXT1 = 0x0C, // opaque/one-bit alpha
+	X_D3DFMT_DXT2 = 0x0E, // linear alpha
+	X_D3DFMT_DXT3 = 0x0E, // Alias
+	X_D3DFMT_DXT4 = 0x0F, // interpolated alpha
+	X_D3DFMT_DXT5 = 0x0F, // Alias
+
+	// Linear Formats
+
+	X_D3DFMT_LIN_A1R5G5B5 = 0x10,
+	X_D3DFMT_LIN_R5G6B5 = 0x11,
+	X_D3DFMT_LIN_A8R8G8B8 = 0x12,
+	X_D3DFMT_LIN_L8 = 0x13,
+	X_D3DFMT_LIN_R8B8 = 0x16,
+	X_D3DFMT_LIN_G8B8 = 0x17,
+	X_D3DFMT_LIN_V8U8 = 0x17, // Alias
+
+	X_D3DFMT_LIN_AL8 = 0x1b,
+	X_D3DFMT_LIN_X1R5G5B5 = 0x1c,
+	X_D3DFMT_LIN_A4R4G4B4 = 0x1d,
+	X_D3DFMT_LIN_X8R8G8B8 = 0x1e,
+	X_D3DFMT_LIN_X8L8V8U8 = 0x1e, // Alias
+
+	X_D3DFMT_LIN_A8 = 0x1f,
+	X_D3DFMT_LIN_A8L8 = 0x20,
+	X_D3DFMT_LIN_D24S8 = 0x2E,
+	X_D3DFMT_LIN_F24S8 = 0x2f,
+	X_D3DFMT_LIN_D16 = 0x30,
+	X_D3DFMT_LIN_F16 = 0x31,
+	X_D3DFMT_LIN_L16 = 0x35,
+	X_D3DFMT_LIN_V16U16 = 0x36,
+	X_D3DFMT_LIN_R6G5B5 = 0x37,
+	X_D3DFMT_LIN_L6V5U5 = 0x37, // Alias
+
+	X_D3DFMT_LIN_R5G5B5A1 = 0x3D,
+	X_D3DFMT_LIN_R4G4B4A4 = 0x3e,
+	X_D3DFMT_LIN_A8B8G8R8 = 0x3f,
+	X_D3DFMT_LIN_B8G8R8A8 = 0x40,
+	X_D3DFMT_LIN_R8G8B8A8 = 0x41,
+
+	X_D3DFMT_VERTEXDATA = 0x64,
+
+	X_D3DFMT_INDEX16 = 101/*=D3DFMT_INDEX16*/, // Dxbx addition : Not an Xbox format, used internally
+
+	X_D3DFMT_UNKNOWN = 0xFFFFFFFF - 3,  // Unique declaration to make overloads possible
+}
+X_D3DFORMAT, *PX_D3DFORMAT;
 
 // Primitives supported by draw-primitive API
 typedef enum _X_D3DPRIMITIVETYPE
@@ -441,7 +480,7 @@ X_D3DPALETTESIZE;
 
 struct X_D3DPixelContainer : public X_D3DResource
 {
-    X_D3DFORMAT Format;
+    DWORD		Format;
     DWORD       Size;
 };
 
@@ -556,7 +595,8 @@ typedef void (__cdecl * D3DSWAPCALLBACK)(D3DSWAPDATA *pData);
 // D3DCALLBACK
 typedef void (__cdecl * D3DCALLBACK)(DWORD Context);
 
-// X_D3DTEXTUREOP values :
+// X_D3DTEXTUREOP values :
+
 #define X_D3DTOP_DISABLE 1
 #define X_D3DTOP_SELECTARG1 2
 #define X_D3DTOP_SELECTARG2 3
