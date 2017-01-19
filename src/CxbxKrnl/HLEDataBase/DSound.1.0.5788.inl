@@ -1636,6 +1636,12 @@ OOVPATable DSound_1_0_5788[] = {
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_SetFormat_1_0_5788),
 	// IDirectSoundBuffer8_SetFormat
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer8_SetFormat_1_0_5788, XTL::EmuIDirectSoundBuffer8_SetFormat),
+    // CDirectSoundVoice::SetConeAngles (XREF)
+	OOVPA_TABLE_XREF(CDirectSoundVoice_SetConeAngles_1_0_5558),
+    // CDirectSoundBuffer::SetConeAngles (XREF)
+	OOVPA_TABLE_XREF(CDirectSoundBuffer_SetConeAngles_1_0_5558),
+	// IDirectSoundBuffer_SetConeAngles
+	OOVPA_TABLE_PATCH(IDirectSoundBuffer8_SetConeAngles_1_0_5558, XTL::EmuIDirectSoundBuffer8_SetConeAngles),
     // CDirectSoundVoiceSettings_SetMixBinVolumes
 	OOVPA_TABLE_XREF(CDirectSoundVoiceSettings_SetMixBinVolumes_1_0_4627),
     // CDirectSoundVoice_SetMixBinVolumes
