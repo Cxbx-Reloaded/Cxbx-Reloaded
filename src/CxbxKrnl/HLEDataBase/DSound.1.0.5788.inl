@@ -1911,6 +1911,16 @@ OOVPATable DSound_1_0_5788[] = {
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_Play_1_0_5788),
 	// IDirectSoundBuffer8::Play
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer_Play_1_0_5788, XTL::EmuIDirectSoundBuffer8_Play),
+	// CMcpxVoiceClient::SetEG
+	OOVPA_TABLE_XREF(DirectSound_CMcpxVoiceClient_SetEG_1_0_4627),
+	// CDirectSoundVoice::SetEG (XREF)
+	OOVPA_TABLE_XREF(DirectSound_CDirectSoundVoice_SetEG_1_0_4627),
+	// DirectSound::CDirectSoundStream::SetEG
+	OOVPA_TABLE_PATCH(DirectSound_CDirectSoundStream_SetEG_1_0_4627, XTL::EmuCDirectSoundStream_SetEG),
+	// DirectSound::CDirectSoundBuffer::SetEG (XREF)
+	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_SetEG_1_0_4627),
+	// IDirectSoundBuffer::SetEG
+	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetEG_1_0_4627, XTL::EmuIDirectSoundBuffer8_SetEG),
 };
 
 // ******************************************************************
