@@ -1412,7 +1412,7 @@ OOVPATable D3D8_1_0_5788[] = {
 	// IDirect3DPalette8::Lock2 (* unchanged since 5233 *)
 	OOVPA_TABLE_PATCH(IDirect3DPalette8_Lock2_1_0_5233, XTL::EmuIDirect3DPalette8_Lock2),
 	// IDirect3DTexture8::LockRect
-	OOVPA_TABLE_PATCH(IDirect3DTexture8_LockRect_1_0_5788, XTL::EmuIDirect3DTexture8_LockRect),
+	OOVPA_TABLE_PATCH(D3DTexture_LockRect_1_0_5558, XTL::EmuIDirect3DTexture8_LockRect),
 	// IDirect3DSurface8::LockRect (* unchanged since 3925 *)
 	OOVPA_TABLE_PATCH(IDirect3DSurface8_LockRect_1_0_3925, XTL::EmuIDirect3DSurface8_LockRect),
 	// IDirect3DBaseTexture8::GetLevelCount (* unchanged since 4361 *)
