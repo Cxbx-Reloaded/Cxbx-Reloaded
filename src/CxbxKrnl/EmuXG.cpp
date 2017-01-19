@@ -53,6 +53,7 @@ namespace NtDll
 
 #include "EmuXTL.h"
 
+/* Leave unpatched
 // ******************************************************************
 // * func: EmuXGIsSwizzledFormat
 // ******************************************************************
@@ -65,6 +66,7 @@ PVOID WINAPI XTL::EmuXGIsSwizzledFormat
 
 	RETURN(FALSE);
 }
+*/
 
 /* Leave unpatched
 // ******************************************************************

@@ -42,6 +42,7 @@ typedef struct _XGPOINT3D
 }
 XGPOINT3D;
 
+/* Leave unpatched
 // ******************************************************************
 // * func: EmuXGIsSwizzledFormat
 // ******************************************************************
@@ -49,6 +50,7 @@ PVOID WINAPI EmuXGIsSwizzledFormat
 (
     X_D3DFORMAT     Format
 );
+*/
 
 /* Leave unpatched
 // ******************************************************************
