@@ -1776,6 +1776,10 @@ OOVPATable DSound_1_0_5788[] = {
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_GetCurrentPosition_1_0_5788),
 	// IDirectSoundBuffer8::GetCurrentPosition
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer_GetCurrentPosition_1_0_5788, XTL::EmuIDirectSoundBuffer8_GetCurrentPosition),
+    // CDirectSoundBuffer::SetPlayRegion
+	OOVPA_TABLE_XREF(CDirectSoundBuffer_SetPlayRegion_1_0_5558),
+	// IDirectSoundBuffer8::SetPlayRegion
+	OOVPA_TABLE_PATCH(IDirectSoundBuffer8_SetPlayRegion_1_0_5558, XTL::EmuIDirectSoundBuffer8_SetPlayRegion),
 	// CDirectSoundBuffer::SetLoopRegion (XREF)
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_SetLoopRegion_1_0_5788),
 	// IDirectSoundBuffer8::SetLoopRegion
