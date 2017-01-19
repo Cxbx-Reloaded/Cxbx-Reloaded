@@ -1668,8 +1668,6 @@ OOVPATable DSound_1_0_5788[] = {
 	OOVPA_TABLE_XREF(CDirectSoundBuffer_SetFrequency_1_0_4627),
 	// IDirectSoundBuffer8::SetFrequency
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer8_SetFrequency_1_0_4627, XTL::EmuIDirectSoundBuffer8_SetFrequency),
-    // CMcpxVoiceClient_SetVolume
-	OOVPA_TABLE_XREF(CMcpxVoiceClient_SetVolume_1_0_4627),
 	// CDirectSoundStream_SetVolume
 	OOVPA_TABLE_PATCH(CDirectSoundStream_SetVolume_1_0_4627, XTL::EmuCDirectSoundStream_SetVolume),
 	// IDirectSound8::Release (* unchanged since 3936 *)
@@ -1808,12 +1806,17 @@ OOVPATable DSound_1_0_5788[] = {
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_SetPitch_1_0_5788),
 	// IDirectSoundBuffer8::SetPitch
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer8_SetPitch_1_0_5788, XTL::EmuIDirectSoundBuffer8_SetPitch),
-	// CDirectSoundVoice::SetVolume (XREF)
-	OOVPA_TABLE_XREF(DirectSound_CDirectSoundVoice_SetVolume_1_0_5788),
-    // CDirectSoundBuffer::SetVolume (XREF)
-	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_SetVolume_1_0_5788),
-	// IDirectSoundBuffer8::SetVolume
-	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetVolume_1_0_5788, XTL::EmuIDirectSoundBuffer8_SetVolume),
+    // CMcpxVoiceClient_SetVolume
+	OOVPA_TABLE_XREF(CMcpxVoiceClient_SetVolume_1_0_5558),
+   // CDirectSoundVoice::SetVolume (XREF) (* unchanged since 5233 *)
+	OOVPA_TABLE_XREF(CDirectSoundVoice_SetVolume_1_0_5233),
+    // CDirectSoundBuffer::SetVolume (XREF) (* unchanged since 5233 *)
+	OOVPA_TABLE_XREF(CDirectSoundBuffer_SetVolume_1_0_5233),
+	// IDirectSoundBuffer8::SetVolume (* unchanged since 5233 *)
+	OOVPA_TABLE_PATCH(IDirectSoundBuffer8_SetVolume_1_0_5233, XTL::EmuIDirectSoundBuffer8_SetVolume),
+    // IDirectSoundStream::SetVolume (* unchanged since 5233 *)
+    // (This is actually the XREF we are using)
+	OOVPA_TABLE_PATCH(CDirectSoundStream_SetVolume_1_0_5233, XTL::EmuIDirectSoundStream_SetVolume),
 	// DirectSound::CDirectSoundBuffer::PlayEx (XREF)
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_PlayEx_1_0_5788),
 	// IDirectSoundBuffer_PlayEx
