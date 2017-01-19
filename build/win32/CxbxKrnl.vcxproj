@@ -223,8 +223,10 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXOnline.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXTL.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5558.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4721.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.4627.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5558.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEIntercept.h" />
     <ClInclude Include="..\..\src\Common\Win32\Mutex.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\LibRc4.h" />
@@ -337,12 +339,22 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuildStep>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.3925.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4034.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4134.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4361.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4432.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5233.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.5849.inl" />
     <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.3936.inl">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuildStep>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.3936.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4134.inl" />
     <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4361.inl">
       <FileType>Document</FileType>
@@ -379,6 +391,12 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuildStep>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4361.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4432.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4627.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5233.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5558.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5849.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4627.inl" />
     <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.inl">
       <FileType>Document</FileType>
@@ -430,7 +448,16 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuildStep>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4034.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4134.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4361.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4432.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4721.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5233.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5558.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5849.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.3911.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4034.inl" />
     <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4361.inl">
@@ -438,6 +465,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuildStep>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4361.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4432.inl" />
     <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4627.inl">
       <FileType>Document</FileType>
@@ -459,6 +487,9 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuildStep>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4627.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5233.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5558.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5849.inl" />
     <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.3911.inl">
       <FileType>Document</FileType>
@@ -470,9 +501,12 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuildStep>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.3911.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.4627.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4361.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4627.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5233.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5558.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5849.inl" />
   </ItemGroup>
   <ItemGroup>

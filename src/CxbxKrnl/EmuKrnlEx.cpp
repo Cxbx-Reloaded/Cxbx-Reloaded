@@ -290,6 +290,7 @@ DWORD EEPROM_XboxLanguage = 0x01;  // = English
 DWORD EEPROM_XboxVideo = 0x10;  // = Letterbox
 DWORD EEPROM_XboxAudio = 0;  // = Stereo, no AC3, no DTS
 DWORD EEPROM_ParentalControlGames = 0; // = XC_PC_ESRB_ALL
+DWORD EEPROM_ParentalControlMovies = 0; // = XC_PC_ESRB_ALL
 DWORD EEPROM_XboxMisc = 0;  // No automatic power down
 DWORD EEPROM_XboxFactoryAvRegion = 0x01; // = NTSC_M
 DWORD EEPROM_XboxFactoryGameRegion = 1; // = North America
@@ -308,6 +309,7 @@ static const EEPROMInfo EEPROMInfos[] = {
 	{ xboxkrnl::XC_VIDEO,               &EEPROM_XboxVideo,             REG_DWORD, sizeof(DWORD) },
 	{ xboxkrnl::XC_AUDIO,               &EEPROM_XboxAudio,             REG_DWORD, sizeof(DWORD) },
 	{ xboxkrnl::XC_P_CONTROL_GAMES,     &EEPROM_ParentalControlGames,  REG_DWORD, sizeof(DWORD) }, // Zapper queries this. TODO : Should this be REG_NONE?
+	{ xboxkrnl::XC_P_CONTROL_MOVIES,    &EEPROM_ParentalControlMovies, REG_DWORD, sizeof(DWORD) }, // Xbox Dashboard queries this.
 	{ xboxkrnl::XC_MISC,                &EEPROM_XboxMisc,              REG_DWORD, sizeof(DWORD) },
 	{ xboxkrnl::XC_FACTORY_AV_REGION,   &EEPROM_XboxFactoryAvRegion,   REG_DWORD, sizeof(DWORD) },
 	{ xboxkrnl::XC_FACTORY_GAME_REGION, &EEPROM_XboxFactoryGameRegion, REG_DWORD, sizeof(DWORD) },

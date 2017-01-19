@@ -937,8 +937,6 @@ OOVPATable DSound_1_0_5233[] = {
 	OOVPA_TABLE_XREF(CDirectSoundStream_FlushEx_1_0_5233),
 	// IDirectSoundBuffer8::StopEx
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer8_StopEx_1_0_5233, XTL::EmuIDirectSoundBuffer8_StopEx),
-	// IDirectSound8::Release (* unchanged since 3936 *)
-	OOVPA_TABLE_PATCH(IDirectSound8_Release_1_0_3936, XTL::EmuIDirectSound8_Release),
     // DirectSound::CDirectSound::EnableHeadphones (XRef)
 	OOVPA_TABLE_XREF(CDirectSound_EnableHeadphones_1_0_5233),
 	// IDirectSound8::EnableHeadphones

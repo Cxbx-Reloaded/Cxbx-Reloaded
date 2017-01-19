@@ -282,8 +282,6 @@ OOVPATable XAPI_1_0_5558[] = {
 	OOVPA_TABLE_PATCH(GetThreadPriority_1_0_4627, XTL::EmuGetThreadPriority),
 	// GetTimeZoneInformation (* unchanged since 3911 *)
 	OOVPA_TABLE_PATCH(GetTimeZoneInformation_1_0_3911, XTL::EmuGetTimeZoneInformation),
-	// SetThreadPriority (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(SetThreadPriority_1_0_3911, XTL::EmuSetThreadPriority),
 	// XMountMUA
 	OOVPA_TABLE_PATCH(XMountMUA_1_0_5558, XTL::EmuXMountMUA),
 	// CreateFiber
