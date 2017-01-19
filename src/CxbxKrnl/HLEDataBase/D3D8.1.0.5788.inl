@@ -1255,6 +1255,29 @@ OOVPA_NO_XREF(D3DDevice_GetTexture2_1_0_5788, 8)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_GetVertexShaderSize
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_GetVertexShaderSize_1_0_5788, 13)
+
+        { 0x00, 0x8B },
+        { 0x01, 0x44 },
+        { 0x02, 0x24 },
+        { 0x03, 0x08 },
+
+        { 0x08, 0x8B },
+        { 0x09, 0x4C },
+        { 0x0A, 0x24 },
+        { 0x0B, 0x04 },
+
+        { 0x0C, 0x8B },
+        { 0x0D, 0x51 },
+        { 0x0E, 0x07 },
+
+        { 0x11, 0xC2 },
+        { 0x12, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_1_0_5788
 // ******************************************************************
 OOVPATable D3D8_1_0_5788[] = {
@@ -1495,8 +1518,6 @@ OOVPATable D3D8_1_0_5788[] = {
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_EnableOverlay_1_0_4361, XTL::EmuIDirect3DDevice8_EnableOverlay),
 	// D3DDevice_SetRenderState_LogicOp (* unchanged since 5558 *)
 	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_LogicOp_1_0_5558, XTL::EmuIDirect3DDevice8_SetRenderState_LogicOp),
-	// D3DDevice_SetRenderState_MultiSampleMask
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_MultiSampleMask_1_0_5788, XTL::EmuIDirect3DDevice8_SetRenderState_MultiSampleMask),
 	// IDirect3DDevice8::CreatePalette2 (* unchanged since 5558 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreatePalette2_1_0_5558, XTL::EmuIDirect3DDevice8_CreatePalette2),
 	// D3DDevice_SetPalette
@@ -1513,8 +1534,8 @@ OOVPATable D3D8_1_0_5788[] = {
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetVertexShaderConstantNotInline_1_0_5233, XTL::EmuIDirect3DDevice8_SetVertexShaderConstantNotInline),
 	// D3DDevice_FlushVertexCache
 	OOVPA_TABLE_PATCH(D3DDevice_FlushVertexCache_1_0_5788, XTL::EmuIDirect3DDevice8_FlushVertexCache),
-	// D3DDevice_GetVertexShaderSize (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(X_D3DDevice_GetVertexShaderSize_1_0_3925, XTL::EmuIDirect3DDevice8_GetVertexShaderSize),
+	// D3DDevice_GetVertexShaderSize
+	OOVPA_TABLE_PATCH(D3DDevice_GetVertexShaderSize_1_0_5788, XTL::EmuIDirect3DDevice8_GetVertexShaderSize),
 	// IDirect3DDevice8::LoadVertexShader (* unchanged since 5233 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_LoadVertexShader_1_0_5233, XTL::EmuIDirect3DDevice8_LoadVertexShader),
 	// IDirect3DDevice8::SelectVertexShader (* unchanged since 5558 *)
@@ -1556,7 +1577,7 @@ OOVPATable D3D8_1_0_5788[] = {
 	// IDirect3DDevice8::SetRenderState_MultiSampleAntiAlias
 	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_MultiSampleAntiAlias_1_0_5788, XTL::EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias),
 	// IDirect3DDevice8::SetRenderState_MultiSampleMask
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_MultiSampleMask_1_0_5788, XTL::EmuIDirect3DDevice8_SetRenderState_MultiSampleMode),
+	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_MultiSampleMask_1_0_5788, XTL::EmuIDirect3DDevice8_SetRenderState_MultiSampleMask),
 	// IDirect3DDevice8::SetPixelShaderConstant
 	OOVPA_TABLE_PATCH(D3DDevice_SetPixelShaderConstant_1_0_5788, XTL::EmuIDirect3DDevice8_SetPixelShaderConstant),
 	// D3DDevice_GetDisplayFieldStatus
