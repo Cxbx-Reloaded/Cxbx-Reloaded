@@ -1879,6 +1879,12 @@ OOVPATable DSound_1_0_5788[] = {
 	OOVPA_TABLE_PATCH(IDirectSound_EnableHeadphones_1_0_5558, XTL::EmuIDirectSound8_EnableHeadphones),
 	// XAudioDownloadEffectsImage (* unchanged since 4627 *)
 	OOVPA_TABLE_PATCH(XAudioDownloadEffectsImage_1_0_4627, XTL::EmuXAudioDownloadEffectsImage),
+	// DirectSound::CDirectSound::GetOutputLevels (XREF)
+	OOVPA_TABLE_XREF(DirectSound_CDirectSound_GetOutputLevels_1_0_5558),
+	// DirectSound::CDirectSound::GetOutputLevels (XREF)
+	OOVPA_TABLE_XREF(DirectSound_CDirectSound_GetOutputLevels_1_0_5558),
+	// IDirectSound_GetOutputLevels
+	OOVPA_TABLE_PATCH(IDirectSound_GetOutputLevels_1_0_5558, XTL::EmuIDirectSound8_GetOutputLevels),
 	// IDirectSoundStream_FlushEx
 	OOVPA_TABLE_PATCH(IDirectSound_SetEffectData_1_0_5788, XTL::EmuIDirectSound8_SetEffectData),
 	// DirectSound::CMemoryManager::PoolAlloc
