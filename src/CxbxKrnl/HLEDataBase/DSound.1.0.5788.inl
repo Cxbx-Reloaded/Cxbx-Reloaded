@@ -1827,6 +1827,12 @@ OOVPATable DSound_1_0_5788[] = {
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_SetRolloffFactor_1_0_5788),
 	// IDirectSoundBuffer_SetRolloffFactor
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetRolloffFactor_1_0_5788, XTL::EmuIDirectSoundBuffer8_SetRolloffFactor),
+    // CDirectSoundVoice::SetFrequency (XREF) (* unchanged since 4627 *)
+	OOVPA_TABLE_XREF(CDirectSoundVoice_SetFrequency_1_0_4627),
+    // CDirectSoundBuffer::SetFrequency (* unchanged since 4627 *)
+	OOVPA_TABLE_XREF(CDirectSoundBuffer_SetFrequency_1_0_4627),
+	// CDirectSoundStream::SetFrequency
+	OOVPA_TABLE_PATCH(DirectSound_CDirectSoundStream_SetFrequency_1_0_5558, XTL::EmuCDirectSoundStream_SetFrequency),
 	// CDirectSoundVoice::SetDopplerFactor (XREF)
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundVoice_SetDopplerFactor_1_0_5788),
     // CDirectSoundBuffer::SetDopplerFactor (XREF)
