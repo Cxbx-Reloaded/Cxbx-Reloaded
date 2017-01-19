@@ -1712,6 +1712,12 @@ OOVPATable DSound_1_0_5788[] = {
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_SetHeadroom_1_0_5788),
 	// IDirectSoundBuffer_SetHeadroom
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetHeadroom_1_0_5788, XTL::EmuIDirectSoundBuffer8_SetHeadroom),
+	// CDirectSoundVoice::SetAllParameters (XREF)
+	OOVPA_TABLE_XREF(DirectSound_CDirectSoundVoice_SetAllParameters_1_0_5558),
+    // CDirectSoundBuffer::SetAllParameters (XREF)
+	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_SetAllParameters_1_0_5558),
+	// IDirectSoundBuffer_SetAllParameters
+	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetAllParameters_1_0_5558, XTL::EmuIDirectSoundBuffer8_SetAllParameters),
 	// IDirectSoundBuffer_Lock
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer_Lock_1_0_5788, XTL::EmuIDirectSoundBuffer8_Lock),
 	// DirectSound::CDirectSoundVoiceSettings::SetMixBins (XREF)
