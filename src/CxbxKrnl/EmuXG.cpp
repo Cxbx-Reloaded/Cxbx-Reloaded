@@ -66,6 +66,7 @@ PVOID WINAPI XTL::EmuXGIsSwizzledFormat
 	RETURN(FALSE);
 }
 
+/* Leave unpatched
 // ******************************************************************
 // * func: EmuXGSwizzleRect
 // ******************************************************************
@@ -124,6 +125,7 @@ VOID WINAPI XTL::EmuXGSwizzleRect
         }
     }
 }
+*/
 
 // ******************************************************************
 // * func: EmuXGSwizzleBox

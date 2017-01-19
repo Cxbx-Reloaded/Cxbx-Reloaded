@@ -50,6 +50,7 @@ PVOID WINAPI EmuXGIsSwizzledFormat
     X_D3DFORMAT     Format
 );
 
+/* Leave unpatched
 // ******************************************************************
 // * func: EmuXGSwizzleRect
 // ******************************************************************
@@ -64,6 +65,7 @@ VOID WINAPI EmuXGSwizzleRect
     CONST LPPOINT pPoint,
     DWORD         BytesPerPixel
 );
+*/
 
 // ******************************************************************
 // * func: EmuXGSwizzleBox
