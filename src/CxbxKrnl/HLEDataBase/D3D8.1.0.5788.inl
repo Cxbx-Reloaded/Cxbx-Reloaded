@@ -1381,6 +1381,8 @@ OOVPATable D3D8_1_0_5788[] = {
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetTransform_1_0_4361, XTL::EmuIDirect3DDevice8_GetTransform),
 	// IDirect3DDevice8::SetTransform (* unchanged since 5558 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetTransform_1_0_5558, XTL::EmuIDirect3DDevice8_SetTransform),
+	// IDirect3DDevice8::CreateIndexBuffer2
+	OOVPA_TABLE_PATCH(D3DDevice_CreateIndexBuffer2_1_0_5558, XTL::EmuIDirect3DDevice8_CreateIndexBuffer2),
 	// IDirect3DDevice8::DrawIndexedVertices
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_DrawIndexedVertices_1_0_5788, XTL::EmuIDirect3DDevice8_DrawIndexedVertices),
 	// IDirect3DDevice8::DrawIndexedVerticesUP
