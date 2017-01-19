@@ -170,6 +170,8 @@ OOVPATable XAPI_1_0_5788[] = {
 	OOVPA_TABLE_PATCH(XGetLaunchInfo_1_0_5558, XTL::EmuXGetLaunchInfo),
 	// QueueUserAPC (* unchanged since 3911 *)
 	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, XTL::EmuQueueUserAPC),
+    // XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
+	OOVPA_TABLE_PATCH(XRegisterThreadNotifyRoutine_1_0_3911, XTL::EmuXRegisterThreadNotifyRoutine),
 	// GetThreadPriority
 	OOVPA_TABLE_PATCH(GetThreadPriority_1_0_5788, XTL::EmuGetThreadPriority),
 	// SetThreadPriorityBoost
