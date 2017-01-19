@@ -81,7 +81,9 @@ OOVPATable XG_1_0_5849[] = {
     // XGSwizzleRect (* unchanged since 5558 *)
 	OOVPA_TABLE_PATCH(XGSwizzleRect_1_0_5558, XTL::EmuXGSwizzleRect),
 	// XGUnswizzleRect (* unchanged since 5558 *)
+	/* Leave unpatched
 	OOVPA_TABLE_PATCH(XGUnswizzleRect_1_0_5558, XTL::EmuXGUnswizzleRect),
+	*/
 	// XFONT_OpenBitmapFontFromMemory
     /*
 	OOVPA_TABLE_PATCH(XFONT_OpenBitmapFontFromMemory_1_0_5849, XTL::EmuXFONT_OpenBitmapFontFromMemory),

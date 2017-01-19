@@ -205,4 +205,17 @@ inline D3DPRIMITIVETYPE EmuPrimitiveType(X_D3DPRIMITIVETYPE PrimitiveType)
     return EmuPrimitiveTypeLookup[PrimitiveType];
 }
 
+extern void EmuUnswizzleRect
+(
+	PVOID pSrcBuff,
+	DWORD dwWidth,
+	DWORD dwHeight,
+	DWORD dwDepth,
+	PVOID pDstBuff,
+	DWORD dwPitch,
+	RECT rSrc, // Unused
+	POINT poDst, // Unused
+	DWORD dwBPP // expressed in Bytes Per Pixel
+); // NOPATCH
+
 #endif

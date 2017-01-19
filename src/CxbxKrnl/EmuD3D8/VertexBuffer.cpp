@@ -1364,7 +1364,7 @@ VOID XTL::EmuFlushIVB()
     return;
 }
 
-VOID XTL::EmuUpdateActiveTexture()
+VOID XTL::EmuUpdateActiveTexture() // Never called!
 {
     //
     // DEBUGGING
@@ -1513,7 +1513,7 @@ VOID XTL::EmuUpdateActiveTexture()
                         }
                         else
                         {
-                            XTL::EmuXGUnswizzleRect
+                            XTL::EmuUnswizzleRect
                             (
                                 pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits,
                                 LockedRect.Pitch, iRect, iPoint, dwBPP

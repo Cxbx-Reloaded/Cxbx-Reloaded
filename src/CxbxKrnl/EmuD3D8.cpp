@@ -1209,7 +1209,7 @@ static void EmuUnswizzleTextureStages()
 
 					void *pTemp = malloc(dwHeight*dwPitch);
 
-					XTL::EmuXGUnswizzleRect
+					XTL::EmuUnswizzleRect
 					(
 						LockedRect.pBits, dwWidth, dwHeight, dwDepth,
 						pTemp, dwPitch, iRect, iPoint, dwBPP
@@ -4493,14 +4493,14 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
             // TODO: check for dimensions
 
             // TODO: HACK: Temporary?
-            if(X_Format == 0x2E)
+            if(X_Format == X_D3DFMT_LIN_D24S8)
             {
                 /*CxbxKrnlCleanup*/EmuWarning("D3DFMT_LIN_D24S8 not yet supported!");
                 X_Format = X_D3DFMT_LIN_A8R8G8B8;
                 Format   = D3DFMT_A8R8G8B8;
             }
 
-			if(X_Format == 0x30)
+			if(X_Format == X_D3DFMT_LIN_D16)
             {
                 /*CxbxKrnlCleanup*/EmuWarning("D3DFMT_LIN_D16 not yet supported!");
                 X_Format = X_D3DFMT_LIN_R5G6B5;
@@ -4811,9 +4811,8 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
                                 }
                                 else
                                 {
-									//__asm int 3;
 									// First we need to unswizzle the texture data
-									XTL::EmuXGUnswizzleRect
+									XTL::EmuUnswizzleRect
 									(
 										pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits,
 										LockedRect.Pitch, iRect, iPoint, dwBPP
@@ -4822,13 +4821,8 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 									if (CacheFormat == D3DFMT_P8) //Palette
                                     {
                                         EmuWarning("Unsupported texture format D3DFMT_P8,\nexpanding to D3DFMT_A8R8G8B8");
-//#if 0
-                                        //
-                                        // create texture resource
-                                        //
-										//__asm int 3;
 
-                                        BYTE *pPixelData = (BYTE*)LockedRect.pBits;
+										BYTE *pPixelData = (BYTE*)LockedRect.pBits;
                                         DWORD dwDataSize = dwMipWidth*dwMipHeight;
 										DWORD* pExpandedTexture = (DWORD*)CxbxMalloc(dwDataSize * sizeof(DWORD));
 										DWORD* pTexturePalette = (DWORD*)pCurrentPalette;
@@ -4858,7 +4852,6 @@ HRESULT WINAPI XTL::EmuIDirect3DResource8_Register
 
                                         // Flush unused data buffers
                                         CxbxFree(pExpandedTexture);
-//#endif
                                     }
                                 }
                             }

@@ -83,22 +83,6 @@ VOID WINAPI EmuXGSwizzleBox
 );
 
 // ******************************************************************
-// * func: EmuXGUnswizzleRect
-// ******************************************************************
-VOID WINAPI EmuXGUnswizzleRect
-(
-    PVOID           pSrcBuffer,
-    DWORD           dwWidth,
-    DWORD           dwHeight,
-    DWORD           dwDepth,
-    PVOID           pDstBuff,
-    DWORD           dwPitch,
-    RECT            rSrc,
-    POINT           poDst,
-    DWORD           dwBPP
-);
-
-// ******************************************************************
 // * func: EmuXGWriteSurfaceOrTextureToXPR
 // ******************************************************************
 HRESULT WINAPI EmuXGWriteSurfaceOrTextureToXPR

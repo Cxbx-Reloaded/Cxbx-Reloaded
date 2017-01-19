@@ -77,6 +77,7 @@ OOVPA_NO_XREF(XGSwizzleBox_1_0_3911, 8)
         { 0xFE, 0x45 },
 OOVPA_END;
 
+/* Leave unpatched
 // ******************************************************************
 // * XGUnswizzleRect
 // ******************************************************************
@@ -91,6 +92,7 @@ OOVPA_NO_XREF(XGUnswizzleRect_1_0_3911, 8)
         { 0xDE, 0x89 },
         { 0xFE, 0x60 },
 OOVPA_END;
+*/
 
 // ******************************************************************
 // * XGWriteSurfaceOrTextureToXPR

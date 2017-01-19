@@ -133,7 +133,7 @@ static void EmuUnswizzleActiveTexture()
 
                 void *pTemp = malloc(dwHeight*dwPitch);
 
-                XTL::EmuXGUnswizzleRect
+                XTL::EmuUnswizzleRect
                 (
                     LockedRect.pBits, dwWidth, dwHeight, dwDepth,
                     pTemp, dwPitch, iRect, iPoint, dwBPP
