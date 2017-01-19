@@ -1429,6 +1429,16 @@ OOVPATable D3D8_1_0_5788[] = {
 	OOVPA_TABLE_PATCH(IDirect3DVertexBuffer8_Lock2_1_0_5788, XTL::EmuIDirect3DVertexBuffer8_Lock2),
 	// IDirect3DDevice8_LightEnable
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_LightEnable_1_0_5788, XTL::EmuIDirect3DDevice8_LightEnable),
+	// D3DDevice_SetModelView (* unchanged since 5558 *)
+	OOVPA_TABLE_PATCH(D3DDevice_SetModelView_1_0_5558, XTL::EmuIDirect3DDevice8_SetModelView),
+	// D3DDevice_PersistDisplay (* unchanged since 5558 *)
+	OOVPA_TABLE_PATCH(D3DDevice_PersistDisplay_1_0_5558, XTL::EmuIDirect3DDevice8_PersistDisplay),
+	// IDirect3D8::SetPushBufferSize (* unchanged since 5558 *)
+	OOVPA_TABLE_PATCH(IDirect3D8_SetPushBufferSize_1_0_5558, XTL::EmuIDirect3D8_SetPushBufferSize),
+	// IDirect3D8::CheckDeviceMultiSampleType (* unchanged since 5558 *)
+	OOVPA_TABLE_PATCH(IDirect3D8_CheckDeviceMultiSampleType_1_0_5558, XTL::EmuIDirect3D8_CheckDeviceMultiSampleType),
+	// IDirect3D8::GetDeviceCaps (* unchanged since 5233 *)
+	OOVPA_TABLE_PATCH(IDirect3D8_GetDeviceCaps_1_0_5233, XTL::EmuIDirect3D8_GetDeviceCaps),
 	// IDirect3DDevice8_DrawVertices
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_DrawVertices_1_0_5788, XTL::EmuIDirect3DDevice8_DrawVertices),
 	// IDirect3D8_AllocContiguousMemory
