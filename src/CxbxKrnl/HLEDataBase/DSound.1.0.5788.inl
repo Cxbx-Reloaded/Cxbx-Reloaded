@@ -1720,6 +1720,12 @@ OOVPATable DSound_1_0_5788[] = {
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetAllParameters_1_0_5558, XTL::EmuIDirectSoundBuffer8_SetAllParameters),
 	// IDirectSoundBuffer_Lock
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer_Lock_1_0_5788, XTL::EmuIDirectSoundBuffer8_Lock),
+	// CDirectSoundVoice::SetI3DL2Source (XREF)
+	OOVPA_TABLE_XREF(DirectSound_CDirectSoundVoice_SetI3DL2Source_1_0_5558),
+    // CDirectSoundBuffer::SetI3DL2Source (XREF)
+	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_SetI3DL2Source_1_0_5558),
+	// IDirectSoundBuffer_SetI3DL2Source
+	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetI3DL2Source_1_0_5558, XTL::EmuIDirectSoundBuffer8_SetI3DL2Source),
 	// DirectSound::CDirectSoundVoiceSettings::SetMixBins (XREF)
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundVoiceSettings_SetMixBins_1_0_5788),
 	// DirectSound::CDirectSoundVoice::SetMixBins (XREF)
