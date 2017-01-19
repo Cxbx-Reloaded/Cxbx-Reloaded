@@ -1700,6 +1700,12 @@ OOVPATable DSound_1_0_5788[] = {
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer_Stop_1_0_4627, XTL::EmuIDirectSoundBuffer8_Stop),
 	// IDirectSoundBuffer8::Release (* unchanged since 3936 *)
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer8_Release_1_0_3936, XTL::EmuIDirectSoundBuffer8_Release),
+    // DirectSound::CFullHRTFSource::GetCenterVolume (XREF)
+	OOVPA_TABLE_XREF(DirectSound_CFullHRTFSource_GetCenterVolume_1_0_5558),
+    // DirectSound::CHRTFSource::SetFullHRTF5Channel (XREF)
+	OOVPA_TABLE_XREF(DirectSound_CHRTFSource_SetFullHRTF5Channel_1_0_5558),
+	// DirectSoundUseFullHRTF
+	OOVPA_TABLE_PATCH(DirectSoundUseFullHRTF_1_0_5558, XTL::EmuDirectSoundUseFullHRTF),
 	// DirectSound::CDirectSoundVoice::SetHeadroom (XREF)
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundVoice_SetHeadroom_1_0_5788),
 	// DirectSound::CDirectSoundBuffer::SetHeadroom (XREF)
