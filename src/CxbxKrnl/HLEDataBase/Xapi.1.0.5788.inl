@@ -166,6 +166,8 @@ OOVPATable XAPI_1_0_5788[] = {
     /* obsolete?
     // XapiThreadStartup (* unchanged since 1.0.4361 *)
 	OOVPA_TABLE_PATCH(XapiThreadStartup_1_0_4361, XTL::EmuXapiThreadStartup), //*/
+    // XGetLaunchInfo (* unchanged since 5558 *)
+	OOVPA_TABLE_PATCH(XGetLaunchInfo_1_0_5558, XTL::EmuXGetLaunchInfo),
 	// QueueUserAPC (* unchanged since 3911 *)
 	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, XTL::EmuQueueUserAPC),
 	// GetThreadPriority
