@@ -3441,7 +3441,7 @@ OOVPATable D3D8_1_0_4627[] = {
 	// IDirect3DDevice8_GetProjectionViewportMatrix
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetProjectionViewportMatrix_1_0_4627, XTL::EmuIDirect3DDevice8_GetProjectionViewportMatrix),
 	// IDirect3DDevice8_BackFillMode (* unchanged since 4531 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_BackFillMode_1_0_4531, XTL::EmuIDirect3DDevice8_BackFillMode),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_BackFillMode_1_0_4531, XTL::EmuIDirect3DDevice8_SetRenderState_BackFillMode),
 	// IDirect3DDevice8_GetDeviceCaps (* unchanged since 3925 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetDeviceCaps_1_0_3925, XTL::EmuIDirect3DDevice8_GetDeviceCaps),
 	// D3DDevice_SetRenderState_MultiSampleMask

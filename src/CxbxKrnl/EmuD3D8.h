@@ -87,7 +87,7 @@ HRESULT WINAPI EmuIDirect3D8_CheckDeviceFormat
 (
     UINT                        Adapter,
     D3DDEVTYPE                  DeviceType,
-    D3DFORMAT                   AdapterFormat,
+    X_D3DFORMAT                 AdapterFormat,
     DWORD                       Usage,
     X_D3DRESOURCETYPE           RType,
     X_D3DFORMAT                 CheckFormat
@@ -434,7 +434,7 @@ X_D3DResource * WINAPI EmuIDirect3DDevice8_CreateTexture2
     UINT                Depth,
     UINT                Levels,
     DWORD               Usage,
-    D3DFORMAT           Format,
+    X_D3DFORMAT         Format,
     D3DRESOURCETYPE     D3DResource
 );
 
@@ -447,7 +447,7 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreateTexture
     UINT                Height,
     UINT                Levels,
     DWORD               Usage,
-    D3DFORMAT           Format,
+    X_D3DFORMAT         Format,
     D3DPOOL             Pool,
     X_D3DTexture      **ppTexture
 );
@@ -462,7 +462,7 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreateVolumeTexture
     UINT                 Depth,
     UINT                 Levels,
     DWORD                Usage,
-    D3DFORMAT            Format,
+    X_D3DFORMAT          Format,
     D3DPOOL              Pool,
     X_D3DVolumeTexture **ppVolumeTexture
 );
@@ -475,7 +475,7 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreateCubeTexture
     UINT                 EdgeLength,
     UINT                 Levels,
     DWORD                Usage,
-    D3DFORMAT            Format,
+    X_D3DFORMAT          Format,
     D3DPOOL              Pool,
     X_D3DCubeTexture  **ppCubeTexture
 );
@@ -487,7 +487,7 @@ HRESULT WINAPI EmuIDirect3DDevice8_CreateIndexBuffer
 (
     UINT                 Length,
     DWORD                Usage,
-    D3DFORMAT            Format,
+    X_D3DFORMAT          Format,
     D3DPOOL              Pool,
     X_D3DIndexBuffer   **ppIndexBuffer
 );
@@ -1531,7 +1531,7 @@ HRESULT WINAPI EmuIDirect3D8_CheckDeviceMultiSampleType
 (
     UINT                 Adapter,
     D3DDEVTYPE           DeviceType,
-    D3DFORMAT            SurfaceFormat,
+    X_D3DFORMAT          SurfaceFormat,
     BOOL                 Windowed,
     D3DMULTISAMPLE_TYPE  MultiSampleType
 );
@@ -1704,14 +1704,6 @@ HRESULT WINAPI EmuIDirect3DDevice8_DrawRectPatch
 HRESULT WINAPI EmuIDirect3DDevice8_GetProjectionViewportMatrix
 (
 	D3DXMATRIX *pProjectionViewport
-);
-
-// ******************************************************************
-// * func: EmuIDirect3DDevice8_BackFillMode
-// ******************************************************************
-HRESULT WINAPI EmuIDirect3DDevice8_BackFillMode
-(
-	DWORD Value
 );
 
 // ******************************************************************
