@@ -1503,6 +1503,8 @@ OOVPATable D3D8_1_0_5788[] = {
 	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_SampleAlpha_1_0_5233, XTL::EmuIDirect3DDevice8_SetRenderState_SampleAlpha),
 	// IDirect3DDevice8::SetTextureState_ColorKeyColor (* unchanged since 4134 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetTextureState_ColorKeyColor_1_0_4134, XTL::EmuIDirect3DDevice8_SetTextureState_ColorKeyColor),
+	// IDirect3DDevice8::IsFencePending (* unchanged since 5558 *)
+	OOVPA_TABLE_PATCH(D3DDevice_IsFencePending_1_0_5558, XTL::EmuIDirect3DDevice8_IsFencePending),
 	// IDirect3DDevice8::EnableOverlay (* unchanged since 4361 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_EnableOverlay_1_0_4361, XTL::EmuIDirect3DDevice8_EnableOverlay),
 	// D3DDevice_SetRenderState_LogicOp (* unchanged since 5558 *)
