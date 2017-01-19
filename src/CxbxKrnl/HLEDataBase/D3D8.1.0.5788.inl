@@ -216,21 +216,6 @@ OOVPA_NO_XREF(IDirect3DDevice8_SetRenderState_TextureFactor_1_0_5788, 7)
 OOVPA_END;
 
 // ******************************************************************
-// * IDirect3DDevice8_SetRenderState_StencilEnable
-// ******************************************************************
-OOVPA_NO_XREF(IDirect3DDevice8_SetRenderState_StencilEnable_1_0_5788, 8)
-
-        { 0x12, 0x8B },
-        { 0x24, 0x33 },
-        { 0x37, 0x74 },
-        { 0x4A, 0x1E },
-        { 0x5D, 0x74 },
-        { 0x70, 0xB9 },
-        { 0x83, 0x40 },
-        { 0x96, 0x04 },
-OOVPA_END;
-
-// ******************************************************************
 // * IDirect3DDevice8_SetIndices
 // ******************************************************************
 OOVPA_NO_XREF(IDirect3DDevice8_SetIndices_1_0_5788, 7)
@@ -1354,8 +1339,8 @@ OOVPATable D3D8_1_0_5788[] = {
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_Simple_1_0_4361, XTL::EmuIDirect3DDevice8_SetRenderState_Simple),
 	// IDirect3DDevice8::SetRenderState_ZEnable (* unchanged since 5233 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_ZEnable_1_0_5233, XTL::EmuIDirect3DDevice8_SetRenderState_ZEnable),
-	// IDirect3DDevice8::SetRenderState_StencilEnable
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_StencilEnable_1_0_5788, XTL::EmuIDirect3DDevice8_SetRenderState_StencilEnable),
+	// IDirect3DDevice8::SetRenderState_StencilEnable (* unchanged since 4361 *)
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_StencilEnable_1_0_4361, XTL::EmuIDirect3DDevice8_SetRenderState_StencilEnable),
 	// IDirect3DDevice8::SetRenderState_OcclusionCullEnable (* unchanged since 4134 *)
 	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_OcclusionCullEnable_1_0_4134, XTL::EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable),
 	// IDirect3DDevice8::SetRenderState_MultiSampleAntiAlias (* unchanged since 4627 *)
