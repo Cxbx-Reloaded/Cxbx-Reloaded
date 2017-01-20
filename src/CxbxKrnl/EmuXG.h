@@ -44,9 +44,9 @@ XGPOINT3D;
 
 /* Leave unpatched
 // ******************************************************************
-// * func: EmuXGIsSwizzledFormat
+// * patch: XGIsSwizzledFormat
 // ******************************************************************
-PVOID WINAPI EmuXGIsSwizzledFormat
+PVOID WINAPI EMUPATCH(XGIsSwizzledFormat)
 (
     X_D3DFORMAT     Format
 );
@@ -54,9 +54,9 @@ PVOID WINAPI EmuXGIsSwizzledFormat
 
 /* Leave unpatched
 // ******************************************************************
-// * func: EmuXGSwizzleRect
+// * patch: XGSwizzleRect
 // ******************************************************************
-VOID WINAPI EmuXGSwizzleRect
+VOID WINAPI EMUPATCH(XGSwizzleRect)
 (
     LPCVOID       pSource,
     DWORD         Pitch,
@@ -70,9 +70,9 @@ VOID WINAPI EmuXGSwizzleRect
 */
 
 // ******************************************************************
-// * func: EmuXGSwizzleBox
+// * patch: XGSwizzleBox
 // ******************************************************************
-VOID WINAPI EmuXGSwizzleBox
+VOID WINAPI EMUPATCH(XGSwizzleBox)
 (
     LPCVOID          pSource,
     DWORD            RowPitch,
@@ -87,9 +87,9 @@ VOID WINAPI EmuXGSwizzleBox
 );
 
 // ******************************************************************
-// * func: EmuXGWriteSurfaceOrTextureToXPR
+// * patch: XGWriteSurfaceOrTextureToXPR
 // ******************************************************************
-HRESULT WINAPI EmuXGWriteSurfaceOrTextureToXPR
+HRESULT WINAPI EMUPATCH(XGWriteSurfaceOrTextureToXPR)
 ( 
 	LPVOID			pResource,
 	const char*		cPath,
@@ -97,9 +97,9 @@ HRESULT WINAPI EmuXGWriteSurfaceOrTextureToXPR
 );
 
 // ******************************************************************
-// * func: EmuXGSetTextureHeader
+// * patch: XGSetTextureHeader
 // ******************************************************************
-VOID	WINAPI EmuXGSetTextureHeader
+VOID	WINAPI EMUPATCH(XGSetTextureHeader)
 (
 	UINT			Width,
 	UINT			Height,
@@ -113,9 +113,9 @@ VOID	WINAPI EmuXGSetTextureHeader
 );
 
 // ******************************************************************
-// * func: EmuXFONT_OpenBitmapFontFromMemory 
+// * patch: XFONT_OpenBitmapFontFromMemory 
 // ******************************************************************
-HRESULT WINAPI EmuXFONT_OpenBitmapFontFromMemory 
+HRESULT WINAPI EMUPATCH(XFONT_OpenBitmapFontFromMemory) 
 (
 	CONST void		*pFontData,
 	unsigned		uFontDataSize,

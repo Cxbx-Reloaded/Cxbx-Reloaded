@@ -116,19 +116,19 @@ OOVPATable XG_1_0_4034[] = {
 
     // XGIsSwizzledFormat
     /*{
-	OOVPA_TABLE_PATCH(XGIsSwizzledFormat_1_0_3911, XTL::EmuXGIsSwizzledFormat),*/
+	OOVPA_TABLE_PATCH(XGIsSwizzledFormat_1_0_3911, XGIsSwizzledFormat),*/
     // XGSwizzleRect (* unchanged since 3911 *)
 	/* Leave unpatched
-	OOVPA_TABLE_PATCH(XGSwizzleRect_1_0_3911, XTL::EmuXGSwizzleRect),
+	OOVPA_TABLE_PATCH(XGSwizzleRect_1_0_3911, XGSwizzleRect),
 	*/
 	// XGUnswizzleRect
     /*{
-	OOVPA_TABLE_PATCH(XGUnswizzleRect_1_0_3911, XTL::EmuXGUnswizzleRect),*/
+	OOVPA_TABLE_PATCH(XGUnswizzleRect_1_0_3911, XGUnswizzleRect),*/
     // XGSwizzleBox (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(XGSwizzleBox_1_0_3911, XTL::EmuXGSwizzleBox),
+	OOVPA_TABLE_PATCH(XGSwizzleBox_1_0_3911, XGSwizzleBox),
 	// XGWriteSurfaceOrTextureToXPR
     /*{
-	OOVPA_TABLE_PATCH(XGWriteSurfaceOrTextureToXPR_1_0_3911, XTL::EmuXGWriteSurfaceOrTextureToXPR),*/
+	OOVPA_TABLE_PATCH(XGWriteSurfaceOrTextureToXPR_1_0_3911, XGWriteSurfaceOrTextureToXPR),*/
 };
 
 // ******************************************************************

@@ -208,19 +208,19 @@ OOVPA_END;
 OOVPATable XOnline_1_0_4361[] = {
 
     // XNetStartup
-	OOVPA_TABLE_PATCH(XNetStartup_1_0_4361, XTL::EmuXNetStartup),
+	OOVPA_TABLE_PATCH(XNetStartup_1_0_4361, XNetStartup),
 	// WSAStartup
-	OOVPA_TABLE_PATCH(WSAStartup_1_0_4361, XTL::EmuWSAStartup),
+	OOVPA_TABLE_PATCH(WSAStartup_1_0_4361, WSAStartup),
     // XnInit (XREF)
 	OOVPA_TABLE_XREF(XnInit_1_0_4361),
 	// socket
-	OOVPA_TABLE_PATCH(socket_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emusocket)),
+	OOVPA_TABLE_PATCH_EmuThis(socket_1_0_4361, socket),
 	// bind
-	OOVPA_TABLE_PATCH(bind_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emubind)),
+	OOVPA_TABLE_PATCH_EmuThis(bind_1_0_4361, bind),
 	// listen
-	OOVPA_TABLE_PATCH(listen_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emulisten)),
+	OOVPA_TABLE_PATCH_EmuThis(listen_1_0_4361, listen),
 	// ioctlsocket
-	OOVPA_TABLE_PATCH(ioctlsocket_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emuioctlsocket)),
+	OOVPA_TABLE_PATCH_EmuThis(ioctlsocket_1_0_4361, ioctlsocket),
 };
 
 // ******************************************************************

@@ -389,43 +389,43 @@ OOVPA_END;
 OOVPATable DSound_1_0_4134[] = {
 
     // DirectSoundCreate
-	OOVPA_TABLE_PATCH(DirectSoundCreate_1_0_4134, XTL::EmuDirectSoundCreate),
+	OOVPA_TABLE_PATCH(DirectSoundCreate_1_0_4134, DirectSoundCreate),
 	// IDirectSound8::AddRef (* unchanged since 3936 *)
-	OOVPA_TABLE_PATCH(IDirectSound8_AddRef_1_0_3936, XTL::EmuIDirectSound8_AddRef),
+	OOVPA_TABLE_PATCH(IDirectSound8_AddRef_1_0_3936, IDirectSound8_AddRef),
 	// IDirectSound8::Release (* unchanged since 3936 *)
-	OOVPA_TABLE_PATCH(IDirectSound8_Release_1_0_3936, XTL::EmuIDirectSound8_Release),
+	OOVPA_TABLE_PATCH(IDirectSound8_Release_1_0_3936, IDirectSound8_Release),
 	// IDirectSound8::DownloadEffectsImage (* unchanged since 3936 *)
-	OOVPA_TABLE_PATCH(IDirectSound8_DownloadEffectsImage_1_0_3936, XTL::EmuIDirectSound8_DownloadEffectsImage),
+	OOVPA_TABLE_PATCH(IDirectSound8_DownloadEffectsImage_1_0_3936, IDirectSound8_DownloadEffectsImage),
 	// IDirectSound8::CreateSoundBuffer
-	OOVPA_TABLE_PATCH(IDirectSound8_CreateSoundBuffer_1_0_4134, XTL::EmuIDirectSound8_CreateSoundBuffer),
+	OOVPA_TABLE_PATCH(IDirectSound8_CreateSoundBuffer_1_0_4134, IDirectSound8_CreateSoundBuffer),
 	// DirectSound::CDirectSoundVoice::SetHeadroom (XREF)
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundVoice_SetHeadroom_1_0_4134),
 	// DirectSound::CDirectSoundBuffer::SetHeadroom (XREF)
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_SetHeadroom_1_0_4134),
 	// IDirectSoundBuffer_SetHeadroom
-	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetHeadroom_1_0_4134, XTL::EmuIDirectSoundBuffer8_SetHeadroom),
+	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetHeadroom_1_0_4134, IDirectSoundBuffer8_SetHeadroom),
 	// IDirectSoundBuffer8::Lock
-	OOVPA_TABLE_PATCH(IDirectSoundBuffer_Lock_1_0_4134, XTL::EmuIDirectSoundBuffer8_Lock),
+	OOVPA_TABLE_PATCH(IDirectSoundBuffer_Lock_1_0_4134, IDirectSoundBuffer8_Lock),
 	// DirectSound::CDirectSoundVoice::SetVolume (XREF)
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundVoice_SetVolume_1_0_4134),
 	// DirectSound::CDirectSoundBuffer::SetVolume (XREF)
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_SetVolume_1_0_4134),
 	// IDirectSoundBuffer_SetVolume (XREF)
-	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetVolume_1_0_4134, XTL::EmuIDirectSoundBuffer8_SetVolume),
+	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetVolume_1_0_4134, IDirectSoundBuffer8_SetVolume),
 	// CDirectSound_SetI3DL2Listener
 	OOVPA_TABLE_XREF(DirectSound_CDirectSound_SetI3DL2Listener_1_0_4134),
 	// IDirectSound8_SetI3DL2Listener
-	OOVPA_TABLE_PATCH(IDirectSound_SetI3DL2Listener_1_0_4134, XTL::EmuIDirectSound8_SetI3DL2Listener),
+	OOVPA_TABLE_PATCH(IDirectSound_SetI3DL2Listener_1_0_4134, IDirectSound8_SetI3DL2Listener),
 	// CDirectSound_GetEffectData
 	OOVPA_TABLE_XREF(DirectSound_CDirectSound_GetEffectData_1_0_4134),
 	// IDirectSound8_SetI3DL2Listener
-	OOVPA_TABLE_PATCH(IDirectSound_GetEffectData_1_0_4134, XTL::EmuIDirectSound8_GetEffectData),
+	OOVPA_TABLE_PATCH(IDirectSound_GetEffectData_1_0_4134, IDirectSound8_GetEffectData),
 	// CDirectSoundBuffer::SetBufferData
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_SetBufferData_1_0_4134),
 	// IDirectSoundBuffer8::SetBufferData
-	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetBufferData_1_0_4134, XTL::EmuIDirectSoundBuffer8_SetBufferData),
+	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetBufferData_1_0_4134, IDirectSoundBuffer8_SetBufferData),
 	// IDirectSound8_CreateStream
-	OOVPA_TABLE_PATCH(IDirectSound8_CreateStream_1_0_3936, XTL::EmuIDirectSound8_CreateStream),
+	OOVPA_TABLE_PATCH(IDirectSound8_CreateStream_1_0_3936, IDirectSound8_CreateStream),
 	// CDirectSoundVoiceSettings::SetMixBins
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundVoiceSettings_SetMixBins_1_0_4134),
     // CDirectSoundVoice::SetMixBins
@@ -433,7 +433,7 @@ OOVPATable DSound_1_0_4134[] = {
     // CDirectSoundBuffer::SetMixBins
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_SetMixBins_1_0_4134),
 	// IDirectSoundBuffer8::SetMixBins
-	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetMixBins_1_0_4134, XTL::EmuIDirectSoundBuffer8_SetMixBins),
+	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetMixBins_1_0_4134, IDirectSoundBuffer8_SetMixBins),
 };
 
 // ******************************************************************

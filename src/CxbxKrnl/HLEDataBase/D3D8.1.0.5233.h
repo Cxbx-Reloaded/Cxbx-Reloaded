@@ -36,7 +36,7 @@
 
 #include "OOVPA.h"
 
-extern SOOVPA<13> IDirect3DDevice8_SetRenderState_CullMode_1_0_5233;
+extern SOOVPA<13> D3DDevice_SetRenderState_CullMode_1_0_5233;
 
 extern OOVPATable D3D8_1_0_5233[];
 extern uint32     D3D8_1_0_5233_SIZE;

@@ -128,22 +128,22 @@ OOVPATable XG_1_0_3911[] = {
 
     // XGIsSwizzledFormat
 	/* Leave unpatched
-	OOVPA_TABLE_PATCH(XGIsSwizzledFormat_1_0_3911, XTL::EmuXGIsSwizzledFormat),
+	OOVPA_TABLE_PATCH(XGIsSwizzledFormat_1_0_3911, XGIsSwizzledFormat),
     */
 	// XGSwizzleRect
 	/* Leave unpatched
-	OOVPA_TABLE_PATCH(XGSwizzleRect_1_0_3911, XTL::EmuXGSwizzleRect),
+	OOVPA_TABLE_PATCH(XGSwizzleRect_1_0_3911, XGSwizzleRect),
 	*/
 	// XGUnswizzleRect
 	/* Leave unpatched
-	OOVPA_TABLE_PATCH(XGUnswizzleRect_1_0_3911, XTL::EmuXGUnswizzleRect),
+	OOVPA_TABLE_PATCH(XGUnswizzleRect_1_0_3911, XGUnswizzleRect),
     */
 	// XGSwizzleBox
-	OOVPA_TABLE_PATCH(XGSwizzleBox_1_0_3911, XTL::EmuXGSwizzleBox),
+	OOVPA_TABLE_PATCH(XGSwizzleBox_1_0_3911, XGSwizzleBox),
 	// XGWriteSurfaceOrTextureToXPR
-	OOVPA_TABLE_PATCH(XGWriteSurfaceOrTextureToXPR_1_0_3911, XTL::EmuXGWriteSurfaceOrTextureToXPR),
+	OOVPA_TABLE_PATCH(XGWriteSurfaceOrTextureToXPR_1_0_3911, XGWriteSurfaceOrTextureToXPR),
 	// XGSetTextureHeader
-	OOVPA_TABLE_PATCH(XGSetTextureHeader_1_0_3911, XTL::EmuXGSetTextureHeader),
+	OOVPA_TABLE_PATCH(XGSetTextureHeader_1_0_3911, XGSetTextureHeader),
 };
 
 // ******************************************************************

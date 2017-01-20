@@ -98,21 +98,21 @@ OOVPA_END;
 OOVPATable XOnline_1_0_4627[] ={
 
     // XNetStartup (* unchanged since 4361 *)
-	OOVPA_TABLE_PATCH(XNetStartup_1_0_4361, XTL::EmuXNetStartup),
+	OOVPA_TABLE_PATCH(XNetStartup_1_0_4361, XNetStartup),
 	// WSAStartup
-	OOVPA_TABLE_PATCH(WSAStartup_1_0_4361, XTL::EmuWSAStartup),
+	OOVPA_TABLE_PATCH(WSAStartup_1_0_4361, WSAStartup),
     // XnInit (XREF)
 	OOVPA_TABLE_XREF(XnInit_1_0_4627),
 	// socket
-	OOVPA_TABLE_PATCH(socket_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emusocket)),
+	OOVPA_TABLE_PATCH_EmuThis(socket_1_0_4361, socket),
 	// bind (* unchanged since 4361 *)
-	OOVPA_TABLE_PATCH(bind_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emubind)),
+	OOVPA_TABLE_PATCH_EmuThis(bind_1_0_4361, bind),
 	// listen
-	OOVPA_TABLE_PATCH(listen_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emulisten)),
+	OOVPA_TABLE_PATCH_EmuThis(listen_1_0_4361, listen),
 	// ioctlsocket (* unchanged since 4361 *)
-	OOVPA_TABLE_PATCH(ioctlsocket_1_0_4361, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emuioctlsocket)),
+	OOVPA_TABLE_PATCH_EmuThis(ioctlsocket_1_0_4361, ioctlsocket),
 	// XNetGetEthernetLinkStatus
-	OOVPA_TABLE_PATCH(XNetGetEthernetLinkStatus_1_0_4627, XTL::EmuXNetGetEthernetLinkStatus),
+	OOVPA_TABLE_PATCH(XNetGetEthernetLinkStatus_1_0_4627, XNetGetEthernetLinkStatus),
 	// XoUpdateLaunchNewImageInternal (XREF)
 	OOVPA_TABLE_XREF(XoUpdateLaunchNewImageInternal_1_0_4627),
 };
