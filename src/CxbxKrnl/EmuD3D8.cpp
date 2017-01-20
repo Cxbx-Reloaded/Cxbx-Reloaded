@@ -5416,7 +5416,7 @@ VOID WINAPI XTL::EMUPATCH(Get2DSurfaceDescD)
 // ******************************************************************
 // * func: EmuIDirect3DSurface8_GetDesc
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirect3DSurface8_GetDesc)
+HRESULT WINAPI XTL::EMUPATCH(D3DSurface_GetDesc)
 (
     X_D3DResource      *pThis,
     X_D3DSURFACE_DESC  *pDesc
@@ -5486,7 +5486,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirect3DSurface8_GetDesc)
 // ******************************************************************
 // * func: EmuIDirect3DSurface8_LockRect
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirect3DSurface8_LockRect)
+HRESULT WINAPI XTL::EMUPATCH(D3DSurface_LockRect)
 (
     X_D3DResource      *pThis,
     D3DLOCKED_RECT     *pLockedRect,
