@@ -153,18 +153,18 @@ OOVPATable XG_1_0_4361[] = {
 
     // XGIsSwizzledFormat
 	/* Leave unpatched
-	OOVPA_TABLE_PATCH(XGIsSwizzledFormat_1_0_4361, XTL::EmuXGIsSwizzledFormat),
+	OOVPA_TABLE_PATCH(XGIsSwizzledFormat_1_0_4361, XGIsSwizzledFormat),
     */
 	// XGSwizzleRect
 	/* Leave unpatched
-	OOVPA_TABLE_PATCH(XGSwizzleRect_1_0_4361, XTL::EmuXGSwizzleRect),
+	OOVPA_TABLE_PATCH(XGSwizzleRect_1_0_4361, XGSwizzleRect),
 	*/
 	// XGUnswizzleRect
 	/* Leave unpatched
-	OOVPA_TABLE_PATCH(XGUnswizzleRect_1_0_4361, XTL::EmuXGUnswizzleRect),
+	OOVPA_TABLE_PATCH(XGUnswizzleRect_1_0_4361, XGUnswizzleRect),
 	*/
 	// XGSetTextureHeader (* Unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(XGSetTextureHeader_1_0_3911, XTL::EmuXGSetTextureHeader),
+	OOVPA_TABLE_PATCH(XGSetTextureHeader_1_0_3911, XGSetTextureHeader),
 	// XGSetVertexBufferHeader
 	OOVPA_TABLE_XREF(XGSetVertexBufferHeader_1_0_4361),
 	// XGSetIndexBufferHeader

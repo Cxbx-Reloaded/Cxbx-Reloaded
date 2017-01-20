@@ -148,55 +148,55 @@ OOVPA_END;
 OOVPATable XAPI_1_0_5849[] = {
 
     // SetThreadPriority (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(SetThreadPriority_1_0_3911, XTL::EmuSetThreadPriority),
+	OOVPA_TABLE_PATCH(SetThreadPriority_1_0_3911, SetThreadPriority),
     // XMountUtilityDrive (* unchanged since 4432 *)
-	OOVPA_TABLE_PATCH(XMountUtilityDrive_1_0_4432, XTL::EmuXMountUtilityDrive),
+	OOVPA_TABLE_PATCH(XMountUtilityDrive_1_0_4432, XMountUtilityDrive),
     // XInitDevices (* unchanged since 5233 *)
-	OOVPA_TABLE_PATCH(XInitDevices_1_0_5233, XTL::EmuXInitDevices),
+	OOVPA_TABLE_PATCH(XInitDevices_1_0_5233, XInitDevices),
     // XGetDevices (* unchanged since 1.0.4134 *)
-	OOVPA_TABLE_PATCH(XGetDevices_1_0_4134, XTL::EmuXGetDevices),
+	OOVPA_TABLE_PATCH(XGetDevices_1_0_4134, XGetDevices),
     // XInputOpen (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_PATCH(XInputOpen_1_0_4361, XTL::EmuXInputOpen),
+	OOVPA_TABLE_PATCH(XInputOpen_1_0_4361, XInputOpen),
     // XInputGetCapabilities (* unchanged since 5558 *)
-	OOVPA_TABLE_PATCH(XInputGetCapabilities_1_0_5558, XTL::EmuXInputGetCapabilities),
+	OOVPA_TABLE_PATCH(XInputGetCapabilities_1_0_5558, XInputGetCapabilities),
     // XInputGetState (* unchanged since 5558 *)
-	OOVPA_TABLE_PATCH(XInputGetState_1_0_5558, XTL::EmuXInputGetState),
+	OOVPA_TABLE_PATCH(XInputGetState_1_0_5558, XInputGetState),
     // XGetDeviceChanges
-	OOVPA_TABLE_PATCH(XGetDeviceChanges_1_0_5849, XTL::EmuXGetDeviceChanges),
+	OOVPA_TABLE_PATCH(XGetDeviceChanges_1_0_5849, XGetDeviceChanges),
     /* obsolete?
     // XapiThreadStartup (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_PATCH(XapiThreadStartup_1_0_4361, XTL::EmuXapiThreadStartup), //*/
+	OOVPA_TABLE_PATCH(XapiThreadStartup_1_0_4361, XapiThreadStartup), //*/
 	// QueueUserAPC (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, XTL::EmuQueueUserAPC),
+	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, QueueUserAPC),
 	// GetThreadPriority
-	OOVPA_TABLE_PATCH(GetThreadPriority_1_0_5849, XTL::EmuGetThreadPriority),
+	OOVPA_TABLE_PATCH(GetThreadPriority_1_0_5849, GetThreadPriority),
 	// SetThreadPriorityBoost
-	OOVPA_TABLE_PATCH(SetThreadPriorityBoost_1_0_5849, XTL::EmuSetThreadPriorityBoost),
+	OOVPA_TABLE_PATCH(SetThreadPriorityBoost_1_0_5849, SetThreadPriorityBoost),
 	// GetThreadPriorityBoost
     /*{
-	OOVPA_TABLE_PATCH(GetThreadPriorityBoost_1_0_5849, XTL::EmuGetThreadPriorityBoost),*/
+	OOVPA_TABLE_PATCH(GetThreadPriorityBoost_1_0_5849, GetThreadPriorityBoost),*/
 	// RaiseException
-	OOVPA_TABLE_PATCH(RaiseException_1_0_5849, XTL::EmuRaiseException),
+	OOVPA_TABLE_PATCH(RaiseException_1_0_5849, RaiseException),
 	// XLaunchNewImageA (* unchanged since 5558 *)
-	OOVPA_TABLE_PATCH(XLaunchNewImageA_1_0_5558, XTL::EmuXLaunchNewImage),
+	OOVPA_TABLE_PATCH(XLaunchNewImageA_1_0_5558, XLaunchNewImage),
 	// XInputSetState (* unchanged since 5233 *)
-	OOVPA_TABLE_PATCH(XInputSetState_1_0_5233, XTL::EmuXInputSetState),
+	OOVPA_TABLE_PATCH(XInputSetState_1_0_5233, XInputSetState),
 	// XGetDeviceEnumerationStatus
-	OOVPA_TABLE_PATCH(XGetDeviceEnumerationStatus_1_0_5849, XTL::EmuXGetDeviceEnumerationStatus),
+	OOVPA_TABLE_PATCH(XGetDeviceEnumerationStatus_1_0_5849, XGetDeviceEnumerationStatus),
 	// SwitchToThread
 	/*
-	OOVPA_TABLE_PATCH(SwitchToThread_1_0_5849, XTL::EmuSwitchToThread),
+	OOVPA_TABLE_PATCH(SwitchToThread_1_0_5849, SwitchToThread),
 	*/
 	// XFormatUtilityDrive (* unchanged since 4627 *)
-	OOVPA_TABLE_PATCH(XFormatUtilityDrive_1_0_4627, XTL::EmuXFormatUtilityDrive),
+	OOVPA_TABLE_PATCH(XFormatUtilityDrive_1_0_4627, XFormatUtilityDrive),
 	// CreateFiber
-	OOVPA_TABLE_PATCH(CreateFiber_1_0_5558, XTL::EmuCreateFiber),
+	OOVPA_TABLE_PATCH(CreateFiber_1_0_5558, CreateFiber),
 	// DeleteFiber
-	OOVPA_TABLE_PATCH(DeleteFiber_1_0_5558, XTL::EmuDeleteFiber),
+	OOVPA_TABLE_PATCH(DeleteFiber_1_0_5558, DeleteFiber),
 	// SwitchToFiber
-	OOVPA_TABLE_PATCH(SwitchToFiber_1_0_5558, XTL::EmuSwitchToFiber),
+	OOVPA_TABLE_PATCH(SwitchToFiber_1_0_5558, SwitchToFiber),
 	// ConvertThreadToFiber
-	OOVPA_TABLE_PATCH(ConvertThreadToFiber_1_0_5558, XTL::EmuConvertThreadToFiber),
+	OOVPA_TABLE_PATCH(ConvertThreadToFiber_1_0_5558, ConvertThreadToFiber),
 };
 
 // ******************************************************************

@@ -183,18 +183,20 @@ OOVPA_XREF(Name, Count, XRefNoSaveIndex, XRefZero)
 
 
 #if _DEBUG_TRACE
-#define OOVPA_TABLE_PATCH(Oovpa, Patch)	\
-	{&Oovpa.Header, Patch, #Patch}
+#define OOVPA_TABLE_ENTRY(Oovpa, Patch, Name) { Oovpa, Patch, #Name }
+#else                                              
+#define OOVPA_TABLE_ENTRY(Oovpa, Patch, Name) { Oovpa, Patch }
+#endif
+
+// Note : Space after :: is mandatory when the following symbol is ##-concatenated!
 // TODO : _DEBUG_TRACE OOVPA_TABLE_* macro's :
 // Cut Version off of Oovpa, and log separatly as "("#Version")"
-#define OOVPA_TABLE_XREF(Oovpa)	\
-	{&Oovpa.Header, 0, #Oovpa" (XRef)"}
-#else
 #define OOVPA_TABLE_PATCH(Oovpa, Patch)	\
-	{&Oovpa.Header, Patch}
+	OOVPA_TABLE_ENTRY(&Oovpa.Header, XTL:: Emu##Patch, #Patch)
+#define OOVPA_TABLE_PATCH_EmuThis(Oovpa, Patch)	\
+	OOVPA_TABLE_ENTRY(&Oovpa.Header, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis:: Emu##Patch), #Patch)
 #define OOVPA_TABLE_XREF(Oovpa)	\
-	{&Oovpa.Header, 0}
-#endif
+	OOVPA_TABLE_ENTRY(&Oovpa.Header, nullptr, #Oovpa" (XRef)")
 
 #pragma pack()
 

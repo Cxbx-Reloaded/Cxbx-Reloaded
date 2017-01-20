@@ -164,54 +164,54 @@ OOVPA_END;
 OOVPATable XAPI_1_0_4034[] = {
 
     // XInitDevices (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(XInitDevices_1_0_3911, XTL::EmuXInitDevices),
+	OOVPA_TABLE_PATCH(XInitDevices_1_0_3911, XInitDevices),
     // XGetDevices (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(XGetDevices_1_0_3911, XTL::EmuXGetDevices),
+	OOVPA_TABLE_PATCH(XGetDevices_1_0_3911, XGetDevices),
 /* These functions havent been rev'd yet (may be same as new/old)
     // XInputOpen
-	OOVPA_TABLE_PATCH(XInputOpen_1_0_4034, XTL::EmuXInputOpen),
+	OOVPA_TABLE_PATCH(XInputOpen_1_0_4034, XInputOpen),
     // XInputGetCapabilities
-	OOVPA_TABLE_PATCH(XInputGetCapabilities_1_0_4361, XTL::EmuXInputGetCapabilities),
+	OOVPA_TABLE_PATCH(XInputGetCapabilities_1_0_4361, XInputGetCapabilities),
     // XInputGetState
-	OOVPA_TABLE_PATCH(XInputGetState_1_0_4361, XTL::EmuXInputGetState), */
+	OOVPA_TABLE_PATCH(XInputGetState_1_0_4361, XInputGetState), */
     /* Too High Level
     // CreateThread (* unchanged since 1.0.3911 *)
-	OOVPA_TABLE_PATCH(CreateThread_1_0_3911, XTL::EmuCreateThread), */
+	OOVPA_TABLE_PATCH(CreateThread_1_0_3911, CreateThread), */
     /*
     // CloseHandle (*???*)
-	OOVPA_TABLE_PATCH(CloseHandle_1_0_(???), XTL::EmuCloseHandle), */
+	OOVPA_TABLE_PATCH(CloseHandle_1_0_(???), CloseHandle), */
     //*/
 	// CreateFiber (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(CreateFiber_1_0_3911, XTL::EmuCreateFiber),
+	OOVPA_TABLE_PATCH(CreateFiber_1_0_3911, CreateFiber),
 	// DeleteFiber (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(DeleteFiber_1_0_3911, XTL::EmuDeleteFiber),
+	OOVPA_TABLE_PATCH(DeleteFiber_1_0_3911, DeleteFiber),
 	// GetTimeZoneInformation (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(GetTimeZoneInformation_1_0_3911, XTL::EmuGetTimeZoneInformation),
+	OOVPA_TABLE_PATCH(GetTimeZoneInformation_1_0_3911, GetTimeZoneInformation),
 	// SetThreadPriority (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(SetThreadPriority_1_0_3911, XTL::EmuSetThreadPriority),
+	OOVPA_TABLE_PATCH(SetThreadPriority_1_0_3911, SetThreadPriority),
 	// SignalObjectAndWait (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(SignalObjectAndWait_1_0_3911, XTL::EmuSignalObjectAndWait),
+	OOVPA_TABLE_PATCH(SignalObjectAndWait_1_0_3911, SignalObjectAndWait),
 	// QueueUserAPC (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, XTL::EmuQueueUserAPC),
+	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, QueueUserAPC),
 	// XInputSetState (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(XInputSetState_1_0_3911, XTL::EmuXInputSetState),
+	OOVPA_TABLE_PATCH(XInputSetState_1_0_3911, XInputSetState),
 
 	// XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(XRegisterThreadNotifyRoutine_1_0_3911, XTL::EmuXRegisterThreadNotifyRoutine),
+	OOVPA_TABLE_PATCH(XRegisterThreadNotifyRoutine_1_0_3911, XRegisterThreadNotifyRoutine),
 	// XGetDeviceChanges (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(XGetDeviceChanges_1_0_3911, XTL::EmuXGetDeviceChanges),
+	OOVPA_TABLE_PATCH(XGetDeviceChanges_1_0_3911, XGetDeviceChanges),
 	// XID_fCloseDevice (* unchanged since 3911 *)
 	OOVPA_TABLE_XREF(XID_fCloseDevice_1_0_3911),
     // XInputClose (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(XInputClose_1_0_3911, XTL::EmuXInputClose),
+	OOVPA_TABLE_PATCH(XInputClose_1_0_3911, XInputClose),
     // XInputGetCapabilities (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(XInputGetCapabilities_1_0_3911, XTL::EmuXInputGetCapabilities),
+	OOVPA_TABLE_PATCH(XInputGetCapabilities_1_0_3911, XInputGetCapabilities),
 	// GetThreadPriority (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(GetThreadPriority_1_0_3911, XTL::EmuGetThreadPriority),
+	OOVPA_TABLE_PATCH(GetThreadPriority_1_0_3911, GetThreadPriority),
 	// XInputOpen (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(XInputOpen_1_0_3911, XTL::EmuXInputOpen),
+	OOVPA_TABLE_PATCH(XInputOpen_1_0_3911, XInputOpen),
 	// XInputGetState (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(XInputGetState_1_0_3911, XTL::EmuXInputGetState),
+	OOVPA_TABLE_PATCH(XInputGetState_1_0_3911, XInputGetState),
 };
 
 // ******************************************************************
