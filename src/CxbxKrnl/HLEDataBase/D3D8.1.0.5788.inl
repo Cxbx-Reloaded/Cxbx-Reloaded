@@ -639,7 +639,7 @@ OOVPA_END;
 */
 
 // ******************************************************************
-// * D3DDevice_SetTile
+// * D3DDevice_SetTileNoWait
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetTileNoWait, 5788, 10)
 
@@ -1000,7 +1000,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3D::CDevice::KickOff
 // ******************************************************************
-OOVPA_NO_XREF(D3D_CDevice_KickOff, 5788, 13)
+OOVPA_NO_XREF(D3DDevice_KickOff, 5788, 13)
 
 	// D3D::CDevice::KickOff+0x0A : mov edx, [ecx+0x35C]
 	{ 0x0A, 0x8B },
@@ -1369,7 +1369,7 @@ OOVPATable D3D8_5788[] = {
 	// D3DDevice8::SwitchTexture (* unchanged since 4361 *)
 	OOVPA_TABLE_ENTRY(D3DDevice_SwitchTexture, 4361),
     // D3D::CDevice::LazySetStateVB (XREF) (* unchanged since 5558 *)
-	OOVPA_TABLE_XREF(D3D_CDevice_LazySetStateVB, 5558),
+	OOVPA_TABLE_XREF(D3DDevice_LazySetStateVB, 5558),
 	// D3DDevice8::BeginPush (* unchanged since 5558 *)
 	OOVPA_TABLE_ENTRY(D3DDevice_BeginPush, 5558),
 	// D3DDevice8::EndPush (* unchanged since 4627 *)
@@ -1481,7 +1481,7 @@ OOVPATable D3D8_5788[] = {
 	// D3DDevice8::SetBackMaterial
 	OOVPA_TABLE_ENTRY(D3DDevice_SetBackMaterial, 5788),
 	// D3DDevice8::SetRenderState_TwoSidedLighting
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_TwoSidedLighting, 5788, D3DDevice_SetTextureState_TwoSidedLighting),
+	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderState_TwoSidedLighting, 5788),
 	// D3D8::KickOffAndWaitForIdle (* unchanged since 5233 *)
 	OOVPA_TABLE_ENTRY(D3D_KickOffAndWaitForIdle, 5233),
 	// D3D::SetTileNoWait
@@ -1559,7 +1559,7 @@ OOVPATable D3D8_5788[] = {
 	// D3DDevice_GetTile
 	OOVPA_TABLE_ENTRY(D3DDevice_GetTile, 5788),
 	// D3D::CDevice::KickOff
-	OOVPA_TABLE_PATCH(D3D_CDevice_KickOff, 5788, D3DDevice_KickOff),
+	OOVPA_TABLE_ENTRY(D3DDevice_KickOff, 5788),
 	// D3DDevice8::SetRenderState_RopZCmpAlwaysRead (* unchanged since 4134 *)
 	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderState_RopZCmpAlwaysRead, 4134),
 	// D3DDevice8::SetRenderState_RopZRead (* unchanged since 4134 *)

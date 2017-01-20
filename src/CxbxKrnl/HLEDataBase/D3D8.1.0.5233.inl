@@ -1181,21 +1181,21 @@ OOVPA_NO_XREF(D3DDevice_SetSoftDisplayFilter, 5344, 12)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_SetTextureState_TwoSidedLighting
+// * D3DDevice_SetRenderState_TwoSidedLighting
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetTextureState_TwoSidedLighting, 5344, 13)
+OOVPA_NO_XREF(D3DDevice_SetRenderState_TwoSidedLighting, 5344, 13)
 
-        // D3DDevice_SetTextureState_TwoSidedLighting+0x07 : mov eax, [esi]
+        // D3DDevice_SetRenderState_TwoSidedLighting+0x07 : mov eax, [esi]
         { 0x07, 0x8B }, // (Offset,Value)-Pair #1
         { 0x08, 0x06 }, // (Offset,Value)-Pair #2
 
-        // D3DDevice_SetTextureState_TwoSidedLighting+0x09 : cmp eax, [esi+4]
+        // D3DDevice_SetRenderState_TwoSidedLighting+0x09 : cmp eax, [esi+4]
         { 0x09, 0x3B }, // (Offset,Value)-Pair #3
         { 0x0A, 0x46 }, // (Offset,Value)-Pair #4
         { 0x0B, 0x04 }, // (Offset,Value)-Pair #5
 
         // ***
-        // D3DDevice_SetTextureState_TwoSidedLighting+0x18 : mov dword ptr [eax], 417C4h
+        // D3DDevice_SetRenderState_TwoSidedLighting+0x18 : mov dword ptr [eax], 417C4h
         { 0x18, 0xC7 }, // (Offset,Value)-Pair #6
         { 0x19, 0x00 }, // (Offset,Value)-Pair #7
         { 0x1A, 0xC4 }, // (Offset,Value)-Pair #8
@@ -1203,7 +1203,7 @@ OOVPA_NO_XREF(D3DDevice_SetTextureState_TwoSidedLighting, 5344, 13)
         { 0x1C, 0x04 }, // (Offset,Value)-Pair #10
         { 0x1D, 0x00 }, // (Offset,Value)-Pair #11
 
-        // D3DDevice_SetTextureState_TwoSidedLighting+0x7D : retn 0x04
+        // D3DDevice_SetRenderState_TwoSidedLighting+0x7D : retn 0x04
         { 0x7D, 0xC2 }, // (Offset,Value)-Pair #12
         { 0x7E, 0x04 }, // (Offset,Value)-Pair #13
 OOVPA_END;
@@ -1802,13 +1802,13 @@ OOVPATable D3D8_5233[] = {
 	*/
 	// IDirect3DDevice8::SetRenderState_TwoSidedLighting (* unchanged since 4134 *)
 	// Beware of the typo...
-	OOVPA_TABLE_ENTRY(D3DDevice_SetTextureState_TwoSidedLighting, 4134),
+	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderState_TwoSidedLighting, 4134),
     // ******
     // Duplicate references are normally bad, but this XDK is aliased to XDK 5344
     // until such time as a separate XDK file is generated for 5344, this will have to do
     // ******
 	// IDirect3DDevice8::SetRenderState_TwoSidedLighting (* targeting 5344 *)
-	OOVPA_TABLE_ENTRY(D3DDevice_SetTextureState_TwoSidedLighting, 5344),
+	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderState_TwoSidedLighting, 5344),
 	// IDirect3DDevice8::SetRenderState_FrontFace (* unchanged since 4134 *)
 	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderState_FrontFace, 4134),
 	// D3DDevice_SetRenderState_LogicOp (* unchanged since 4627 *)

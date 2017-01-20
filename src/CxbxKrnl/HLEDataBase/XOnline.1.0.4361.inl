@@ -214,13 +214,13 @@ OOVPATable XOnline_4361[] = {
     // XnInit (XREF)
 	OOVPA_TABLE_XREF(XnInit, 4361),
 	// socket
-	OOVPA_TABLE_PATCH_EmuThis(socket, 4361, socket),
+	OOVPA_TABLE_PATCH_EmuThis(socket, 4361),
 	// bind
-	OOVPA_TABLE_PATCH_EmuThis(bind, 4361, bind),
+	OOVPA_TABLE_PATCH_EmuThis(bind, 4361),
 	// listen
-	OOVPA_TABLE_PATCH_EmuThis(listen, 4361, listen),
+	OOVPA_TABLE_PATCH_EmuThis(listen, 4361),
 	// ioctlsocket
-	OOVPA_TABLE_PATCH_EmuThis(ioctlsocket, 4361, ioctlsocket),
+	OOVPA_TABLE_PATCH_EmuThis(ioctlsocket, 4361),
 };
 
 // ******************************************************************

@@ -33,9 +33,9 @@
 // ******************************************************************
 
 // ******************************************************************
-// * D3D_CDevice_LazySetStateVB
+// * D3DDevice_LazySetStateVB
 // ******************************************************************
-OOVPA_XREF(D3D_CDevice_LazySetStateVB, 5558, 12,
+OOVPA_XREF(D3DDevice_LazySetStateVB, 5558, 12,
 
     XREF_D3DCD_LAZYSETSTATEVB,
     XRefZero)
@@ -1516,7 +1516,7 @@ OOVPATable D3D8_5558[] = {
 	// IDirect3DDevice8::GetDisplayFieldStatus (* unchanged since 5233 *)
 	OOVPA_TABLE_ENTRY(D3DDevice_GetDisplayFieldStatus, 5233),
     // D3D::CDevice::LazySetStateVB (XREF)
-	OOVPA_TABLE_XREF(D3D_CDevice_LazySetStateVB, 5558),
+	OOVPA_TABLE_XREF(D3DDevice_LazySetStateVB, 5558),
 	// IDirect3DDevice8::BeginPush
 	OOVPA_TABLE_ENTRY(D3DDevice_BeginPush, 5558),
 	// IDirect3DDevice8::EndPush (* unchanged since 4627 *)
@@ -1734,7 +1734,7 @@ OOVPATable D3D8_5558[] = {
 	// IDirect3DDevice8::SetBackMaterial
 	OOVPA_TABLE_ENTRY(D3DDevice_SetBackMaterial, 5558),
 	// IDirect3DDevice8::SetRenderState_TwoSidedLighting
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_TwoSidedLighting, 5558, D3DDevice_SetTextureState_TwoSidedLighting),
+	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderState_TwoSidedLighting, 5558),
 	// IDirect3DDevice8::BeginStateBlock
 	OOVPA_TABLE_ENTRY(D3DDevice_BeginStateBlock, 5558),
 	// IDirect3DDevice8::EndStateBlock

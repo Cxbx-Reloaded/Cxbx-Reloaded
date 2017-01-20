@@ -6297,16 +6297,16 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex)
 }
 
 // ******************************************************************
-// * patch: D3DDevice_SetTextureState_TwoSidedLighting
+// * patch: D3DDevice_SetRenderState_TwoSidedLighting
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(D3DDevice_SetTextureState_TwoSidedLighting)
+VOID WINAPI XTL::EMUPATCH(D3DDevice_SetRenderState_TwoSidedLighting)
 (
     DWORD Value
 )
 {
     
 
-    DbgPrintf("EmuD3D8: EmuD3DDevice_SetTextureState_TwoSidedLighting\n"
+    DbgPrintf("EmuD3D8: EmuD3DDevice_SetRenderState_TwoSidedLighting\n"
            "(\n"
            "   Value               : 0x%.08X\n"
            ");\n",

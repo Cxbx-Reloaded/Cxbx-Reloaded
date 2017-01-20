@@ -926,28 +926,28 @@ OOVPA_NO_XREF(D3DDevice_Reset, 4134, 10)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_SetTextureState_TwoSidedLighting
+// * D3DDevice_SetRenderState_TwoSidedLighting
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetTextureState_TwoSidedLighting, 4134, 13)
+OOVPA_NO_XREF(D3DDevice_SetRenderState_TwoSidedLighting, 4134, 13)
 
-        // D3DDevice_SetTextureState_TwoSidedLighting+0x11 : or edx, 0x1000
+        // D3DDevice_SetRenderState_TwoSidedLighting+0x11 : or edx, 0x1000
         { 0x11, 0x81 }, // (Offset,Value)-Pair #1
         { 0x12, 0xCA }, // (Offset,Value)-Pair #2
         { 0x13, 0x00 }, // (Offset,Value)-Pair #3
         { 0x14, 0x10 }, // (Offset,Value)-Pair #4
 
-        // D3DDevice_SetTextureState_TwoSidedLighting+0x24 : cmp eax, [esi+4]; push edi
+        // D3DDevice_SetRenderState_TwoSidedLighting+0x24 : cmp eax, [esi+4]; push edi
         { 0x24, 0x3B }, // (Offset,Value)-Pair #5
         { 0x25, 0x46 }, // (Offset,Value)-Pair #6
         { 0x26, 0x04 }, // (Offset,Value)-Pair #7
         { 0x27, 0x57 }, // (Offset,Value)-Pair #8
 
-        // D3DDevice_SetTextureState_TwoSidedLighting+0x53 : add eax, 0x0C
+        // D3DDevice_SetRenderState_TwoSidedLighting+0x53 : add eax, 0x0C
         { 0x53, 0x83 }, // (Offset,Value)-Pair #9
         { 0x54, 0xC0 }, // (Offset,Value)-Pair #10
         { 0x55, 0x0C }, // (Offset,Value)-Pair #11
 
-        // D3DDevice_SetTextureState_TwoSidedLighting+0x60 : retn 0x04
+        // D3DDevice_SetRenderState_TwoSidedLighting+0x60 : retn 0x04
         { 0x60, 0xC2 }, // (Offset,Value)-Pair #12
         { 0x61, 0x04 }, // (Offset,Value)-Pair #13
 OOVPA_END;
@@ -1668,7 +1668,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3D::CDevice::KickOff
 // ******************************************************************
-OOVPA_NO_XREF(D3D_CDevice_KickOff, 4134, 12)
+OOVPA_NO_XREF(D3DDevice_KickOff, 4134, 12)
 
 	// D3D::CDevice::KickOff+0x0D : test al, 4
 	{ 0x0D, 0xA8 },
@@ -2026,7 +2026,7 @@ OOVPATable D3D8_4134[] = {
 	// IDirect3D8::KickOffAndWaitForIdle (* unchanged since 4034 *)
 	OOVPA_TABLE_ENTRY(D3D_KickOffAndWaitForIdle, 4034),
 	// IDirect3DDevice8::SetTextureState_TwoSidedLighting
-	OOVPA_TABLE_ENTRY(D3DDevice_SetTextureState_TwoSidedLighting, 4134),
+	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderState_TwoSidedLighting, 4134),
 	// IDirect3DDevice8::SetRenderState_BackFillMode
 	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderState_BackFillMode, 4134),
 	// IDirect3DDevice8::SetTextureState_ColorKeyColor
@@ -2091,7 +2091,7 @@ OOVPATable D3D8_4134[] = {
 	// D3DDevice_GetVertexShaderSize (* unchanged since 3925 *)
 	OOVPA_TABLE_PATCH(X_D3DDevice_GetVertexShaderSize, 3925, D3DDevice_GetVertexShaderSize),
 	// D3D::CDevice::KickOff
-	OOVPA_TABLE_PATCH(D3D_CDevice_KickOff, 4134, D3DDevice_KickOff),
+	OOVPA_TABLE_PATCH(D3DDevice_KickOff, 4134, D3DDevice_KickOff),
 	// IDirect3DDevice8::InsertFence (* unchanged since 3925 *)
 	OOVPA_TABLE_ENTRY(D3DDevice_InsertFence, 3925),
 	// IDirect3DDevice8::BlockOnFence

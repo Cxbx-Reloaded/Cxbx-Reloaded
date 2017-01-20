@@ -2076,28 +2076,28 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_BackFillMode, 3925, 12)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_SetTextureState_TwoSidedLighting
+// * D3DDevice_SetRenderState_TwoSidedLighting
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetTextureState_TwoSidedLighting, 3925, 13)
+OOVPA_NO_XREF(D3DDevice_SetRenderState_TwoSidedLighting, 3925, 13)
 
-        // D3DDevice_SetTextureState_TwoSidedLighting+0x06 : or dword ptr [eax+8], 0x20
+        // D3DDevice_SetRenderState_TwoSidedLighting+0x06 : or dword ptr [eax+8], 0x20
         { 0x06, 0x83 }, // (Offset,Value)-Pair #1
         { 0x07, 0x48 }, // (Offset,Value)-Pair #2
         { 0x08, 0x08 }, // (Offset,Value)-Pair #3
         { 0x09, 0x20 }, // (Offset,Value)-Pair #4
 
-        // D3DDevice_SetTextureState_TwoSidedLighting+0x3B : mov dword ptr [eax], 0x8038C
+        // D3DDevice_SetRenderState_TwoSidedLighting+0x3B : mov dword ptr [eax], 0x8038C
         { 0x3B, 0xC7 }, // (Offset,Value)-Pair #5
         { 0x3C, 0x00 }, // (Offset,Value)-Pair #6
         { 0x3D, 0x8C }, // (Offset,Value)-Pair #7
         { 0x3E, 0x03 }, // (Offset,Value)-Pair #8
 
-        // D3DDevice_SetTextureState_TwoSidedLighting+0x44 : add eax, 0x0C
+        // D3DDevice_SetRenderState_TwoSidedLighting+0x44 : add eax, 0x0C
         { 0x44, 0x83 }, // (Offset,Value)-Pair #9
         { 0x45, 0xC0 }, // (Offset,Value)-Pair #10
         { 0x46, 0x0C }, // (Offset,Value)-Pair #11
 
-        // D3DDevice_SetTextureState_TwoSidedLighting+0x51 : retn 0x04
+        // D3DDevice_SetRenderState_TwoSidedLighting+0x51 : retn 0x04
         { 0x51, 0xC2 }, // (Offset,Value)-Pair #12
         { 0x52, 0x04 }, // (Offset,Value)-Pair #13
 OOVPA_END;
@@ -3140,9 +3140,9 @@ OOVPA_NO_XREF(D3D_EnumAdapterModes, 3925, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * Direct3D_GetAdapterModeCount
+// * D3D_GetAdapterModeCount
 // ******************************************************************
-OOVPA_NO_XREF(Direct3D_GetAdapterModeCount, 3925, 8)
+OOVPA_NO_XREF(D3D_GetAdapterModeCount, 3925, 8)
 
         { 0x14, 0x8B },
         { 0x26, 0xE2 },
@@ -3183,9 +3183,9 @@ OOVPA_NO_XREF(D3D_GetAdapterIdentifier, 3925, 7)
 OOVPA_END;
 
 // ******************************************************************
-// * Direct3D_GetDeviceCaps
+// * D3D_GetDeviceCaps
 // ******************************************************************
-OOVPA_NO_XREF(Direct3D_GetDeviceCaps, 3925, 7)
+OOVPA_NO_XREF(D3D_GetDeviceCaps, 3925, 7)
 
         { 0x04, 0x85 },
         { 0x0A, 0x08 },
@@ -3468,7 +3468,7 @@ OOVPATable D3D8_3925[] = {
 	// IDirect3DDevice8::SetRenderState_BackFillMode
 	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderState_BackFillMode, 3925),
 	// IDirect3DDevice8::SetTextureState_TwoSidedLighting
-	OOVPA_TABLE_ENTRY(D3DDevice_SetTextureState_TwoSidedLighting, 3925),
+	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderState_TwoSidedLighting, 3925),
 	// D3DDevice_SetRenderState_NormalizeNormals
 	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderState_NormalizeNormals, 3925),
 	// IDirect3DDevice8::SetRenderState_FrontFace
@@ -3594,8 +3594,8 @@ OOVPATable D3D8_3925[] = {
 	OOVPA_TABLE_ENTRY(D3DDevice_Reset, 3925),
 	// D3D_GetAdapterIdentifier
 	OOVPA_TABLE_ENTRY(D3D_GetAdapterIdentifier, 3925),
-	// Direct3D_GetDeviceCaps
-	OOVPA_TABLE_PATCH(Direct3D_GetDeviceCaps, 3925, D3D_GetDeviceCaps),
+	// D3D_GetDeviceCaps
+	OOVPA_TABLE_ENTRY(D3D_GetDeviceCaps, 3925),
 	// D3D::SetCommonDebugRegisters
 	OOVPA_TABLE_ENTRY(D3D_SetCommonDebugRegisters, 3925),
 	// D3DDevice_CreateImageSurface

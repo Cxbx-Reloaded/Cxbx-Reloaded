@@ -633,9 +633,9 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_VertexBlend, 4034, 7)
 OOVPA_END;
 
 // ******************************************************************
-// * Direct3D_CheckDeviceFormat
+// * D3D_CheckDeviceFormat
 // ******************************************************************
-OOVPA_NO_XREF(Direct3D_CheckDeviceFormat, 4034, 7)
+OOVPA_NO_XREF(D3D_CheckDeviceFormat, 4034, 7)
 
         { 0x0E, 0x18 },
         { 0x1E, 0x00 },
@@ -1305,11 +1305,11 @@ OOVPATable D3D8_4034[] = {
 	// D3DDevice_SetRenderState_YuvEnable
 	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderState_YuvEnable, 4034),
 	// D3DDevice_SetRenderState_TwoSidedLighting
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_TwoSidedLighting, 4034, D3DDevice_SetTextureState_TwoSidedLighting),
+	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderState_TwoSidedLighting, 4034),
 	// D3DDevice_SetRenderState_VertexBlend
 	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderState_VertexBlend, 4034),
 	// D3D_CheckDeviceFormat
-	OOVPA_TABLE_PATCH(Direct3D_CheckDeviceFormat, 4034, D3D_CheckDeviceFormat),
+	OOVPA_TABLE_ENTRY(D3D_CheckDeviceFormat, 4034),
 	// D3D_SetPushBufferSize
 	OOVPA_TABLE_ENTRY(D3D_SetPushBufferSize, 4034),
 	// Get2DSurfacDesc

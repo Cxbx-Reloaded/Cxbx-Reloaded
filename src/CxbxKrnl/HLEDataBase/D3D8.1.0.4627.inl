@@ -2528,7 +2528,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3D::CDevice::KickOff
 // ******************************************************************
-OOVPA_NO_XREF(D3D_CDevice_KickOff, 4627, 13)
+OOVPA_NO_XREF(D3DDevice_KickOff, 4627, 13)
 
 		// D3D::CDevice::KickOff+0x0B : mov edx, [ecx+0x35C]
 		{ 0x0B, 0x8B },
@@ -2585,19 +2585,19 @@ OOVPA_END;
 // ******************************************************************
 // * D3D::CDevice::SetStateVB
 // ******************************************************************
-OOVPA_NO_XREF(D3D_CDevice_SetStateVB, 4627, 12)
+OOVPA_NO_XREF(D3DDevice_SetStateVB, 4627, 12)
 
-		// D3D_CDevice_SetStateVB+0x00 : sub esp, 0xC
+		// D3DDevice_SetStateVB+0x00 : sub esp, 0xC
 		{ 0x00, 0x83 },
 		{ 0x01, 0xEC },
 		{ 0x02, 0x0C },
 
-		// D3D_CDevice_SetStateVB+0x0D : and eax, 0xFFFFFFAF
+		// D3DDevice_SetStateVB+0x0D : and eax, 0xFFFFFFAF
 		{ 0x0D, 0x83 },
 		{ 0x0E, 0xE0 },
 		{ 0x0F, 0xAF },
 
-		// D3D_CDevice_SetStateVB+0x10 : test ebx, 0x3FFFFF8F
+		// D3DDevice_SetStateVB+0x10 : test ebx, 0x3FFFFF8F
 		{ 0x10, 0xF7 },
 		{ 0x11, 0xC3 },
 		{ 0x12, 0x8F },
@@ -2609,21 +2609,21 @@ OOVPA_END;
 // ******************************************************************
 // * D3D::CDevice::SetStateUP
 // ******************************************************************
-OOVPA_NO_XREF(D3D_CDevice_SetStateUP, 4627, 11)
+OOVPA_NO_XREF(D3DDevice_SetStateUP, 4627, 11)
 
-		// D3D_CDevice_SetStateUP+0x05 : sub esp, 0x14
+		// D3DDevice_SetStateUP+0x05 : sub esp, 0x14
 		{ 0x05, 0x83 },
 		{ 0x06, 0xEC },
 		{ 0x07, 0x14 },
 
-		// D3D_CDevice_SetStateUP+0x08 : test eax, 0x3FFFFF8F
+		// D3DDevice_SetStateUP+0x08 : test eax, 0x3FFFFF8F
 		{ 0x08, 0xA9 },
 		{ 0x09, 0x8F },
 		{ 0x0A, 0xFF },
 		{ 0x0B, 0xFF },
 		{ 0x0C, 0x3F },
 
-		// D3D_CDevice_SetStateUP+0x27 : or eax, 0x50
+		// D3DDevice_SetStateUP+0x27 : or eax, 0x50
 		{ 0x27, 0x83 },
 		{ 0x28, 0xC8 },
 		{ 0x29, 0x50 },
@@ -3453,21 +3453,21 @@ OOVPATable D3D8_4627[] = {
 	// IDirect3DDevice8::InsertFence
 	OOVPA_TABLE_ENTRY(D3DDevice_InsertFence, 4627),
 	// D3D::CDevice::KickOff
-	OOVPA_TABLE_PATCH(D3D_CDevice_KickOff, 4627, D3DDevice_KickOff),
+	OOVPA_TABLE_ENTRY(D3DDevice_KickOff, 4627),
 	// IDirect3DDevice8::SetPixelShaderConstant
 	OOVPA_TABLE_ENTRY(D3DDevice_SetPixelShaderConstant, 4928),
 	// IDirect3DDevice8::SetRenderState_TwoSidedLighting (* unchanged since 4134 *)
 	// Beware of the typo...
-	OOVPA_TABLE_ENTRY(D3DDevice_SetTextureState_TwoSidedLighting, 4134),
+	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderState_TwoSidedLighting, 4134),
 	// D3DDevice_GetTexture2
 	OOVPA_TABLE_ENTRY(D3DDevice_GetTexture2, 4627),
 	// D3D::CDevice::SetStateVB
 	/*
-	OOVPA_TABLE_PATCH(D3D_CDevice_SetStateVB, 4627, D3DDevice_SetStateVB),
+	OOVPA_TABLE_ENTRY(D3DDevice_SetStateVB, 4627),
 	*/
 	// D3D::CDevice::SetStateUP
 	/*
-	OOVPA_TABLE_PATCH(D3D_CDevice_SetStateUP, 4627, D3DDevice_SetStateUP),
+	OOVPA_TABLE_ENTRY(D3DDevice_SetStateUP, 4627),
     */
 	// IDirect3DDevice8::DrawIndexedVerticesUP
 	OOVPA_TABLE_ENTRY(D3DDevice_DrawIndexedVerticesUP, 4627),

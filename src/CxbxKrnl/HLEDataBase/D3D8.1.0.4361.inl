@@ -1942,7 +1942,7 @@ OOVPATable D3D8_4361[] = {
 	// IDirect3D8::KickOffAndWaitForIdle (* unchanged since 4034 *)
 	OOVPA_TABLE_ENTRY(D3D_KickOffAndWaitForIdle, 4034),
 	// IDirect3DDevice8::SetTextureState_TwoSidedLighting (* unchanged since 4134 *)
-	OOVPA_TABLE_ENTRY(D3DDevice_SetTextureState_TwoSidedLighting, 4134),
+	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderState_TwoSidedLighting, 4134),
 	// IDirect3DDevice8::SetRenderState_BackFillMode (* unchanged since 4134 *)
 	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderState_BackFillMode, 4134),
 	// IDirect3DDevice8::SetTextureState_ColorKeyColor (* unchanged since 4134 *)

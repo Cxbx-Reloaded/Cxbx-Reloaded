@@ -187,12 +187,12 @@ OOVPA_XREF(Name, Version, Count, XRefNoSaveIndex, XRefZero)
 #define OOVPA_TABLE_ENTRY_LONG(Oovpa, Version, Patch, Name) { &Oovpa ## _ ## Version.Header, Version, Patch }
 #endif
 
-#define OOVPA_TABLE_ENTRY(Function, Version) \
-	OOVPA_TABLE_PATCH(Function, Version, Function)
 #define OOVPA_TABLE_PATCH(Oovpa, Version, Patch)	\
 	OOVPA_TABLE_ENTRY_LONG(Oovpa, Version, XTL::EMUPATCH(Patch), #Patch ## "_" ## #Version)
-#define OOVPA_TABLE_PATCH_EmuThis(Oovpa, Version, Patch)	\
-	OOVPA_TABLE_ENTRY_LONG(Oovpa, Version, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::EMUPATCH(Patch)), #Patch ## "_" ## #Version)
+#define OOVPA_TABLE_ENTRY(Function, Version) \
+	OOVPA_TABLE_PATCH(Function, Version, Function)
+#define OOVPA_TABLE_PATCH_EmuThis(Function, Version)	\
+	OOVPA_TABLE_ENTRY_LONG(Function, Version, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::EMUPATCH(Function)), #Function ## "_" ## #Version)
 #define OOVPA_TABLE_XREF(Oovpa, Version)	\
 	OOVPA_TABLE_ENTRY_LONG(Oovpa, Version, nullptr, #Oovpa ## "_" ## #Version ## " (XRef)" )
 

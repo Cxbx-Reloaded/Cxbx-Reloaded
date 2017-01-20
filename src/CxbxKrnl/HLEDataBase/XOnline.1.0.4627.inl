@@ -104,13 +104,13 @@ OOVPATable XOnline_4627[] ={
     // XnInit (XREF)
 	OOVPA_TABLE_XREF(XnInit, 4627),
 	// socket
-	OOVPA_TABLE_PATCH_EmuThis(socket, 4361, socket),
+	OOVPA_TABLE_PATCH_EmuThis(socket, 4361),
 	// bind (* unchanged since 4361 *)
-	OOVPA_TABLE_PATCH_EmuThis(bind, 4361, bind),
+	OOVPA_TABLE_PATCH_EmuThis(bind, 4361),
 	// listen
-	OOVPA_TABLE_PATCH_EmuThis(listen, 4361, listen),
+	OOVPA_TABLE_PATCH_EmuThis(listen, 4361),
 	// ioctlsocket (* unchanged since 4361 *)
-	OOVPA_TABLE_PATCH_EmuThis(ioctlsocket, 4361, ioctlsocket),
+	OOVPA_TABLE_PATCH_EmuThis(ioctlsocket, 4361),
 	// XNetGetEthernetLinkStatus
 	OOVPA_TABLE_ENTRY(XNetGetEthernetLinkStatus, 4627),
 	// XoUpdateLaunchNewImageInternal (XREF)

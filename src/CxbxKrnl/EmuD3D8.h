@@ -889,9 +889,9 @@ VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex)
 );
 
 // ******************************************************************
-// * patch: D3DDevice_SetTextureState_TwoSidedLighting
+// * patch: D3DDevice_SetRenderState_TwoSidedLighting
 // ******************************************************************
-VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_TwoSidedLighting)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_TwoSidedLighting)
 (
     DWORD Value
 );
