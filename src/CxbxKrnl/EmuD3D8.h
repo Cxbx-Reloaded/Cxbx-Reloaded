@@ -760,7 +760,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DSurface8_LockRect)
 // ******************************************************************
 // * func: EmuIDirect3DBaseTexture8_GetLevelCount
 // ******************************************************************
-DWORD WINAPI EMUPATCH(IDirect3DBaseTexture8_GetLevelCount)
+DWORD WINAPI EMUPATCH(D3DBaseTexture_GetLevelCount)
 (
     X_D3DBaseTexture   *pThis
 );

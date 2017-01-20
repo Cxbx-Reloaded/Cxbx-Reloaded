@@ -5565,7 +5565,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirect3DSurface8_LockRect)
 // ******************************************************************
 // * func: EmuIDirect3DBaseTexture8_GetLevelCount
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(IDirect3DBaseTexture8_GetLevelCount)
+DWORD WINAPI XTL::EMUPATCH(D3DBaseTexture_GetLevelCount)
 (
     X_D3DBaseTexture   *pThis
 )
