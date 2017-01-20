@@ -60,7 +60,7 @@ extern X_D3DResource *EmuD3DActiveTexture[4];
 // ******************************************************************
 // * func: EmuIDirect3D8_CreateDevice
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3D8_CreateDevice)
+HRESULT WINAPI EMUPATCH(D3D_CreateDevice)
 (
     UINT                        Adapter,
     D3DDEVTYPE                  DeviceType,
@@ -83,7 +83,7 @@ VOID WINAPI EMUPATCH(D3DDevice_GetCreationParameters)(D3DDEVICE_CREATION_PARAMET
 // ******************************************************************
 // * func: EmuIDirect3D8_CheckDeviceFormat
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3D8_CheckDeviceFormat)
+HRESULT WINAPI EMUPATCH(D3D_CheckDeviceFormat)
 (
     UINT                        Adapter,
     D3DDEVTYPE                  DeviceType,
@@ -165,12 +165,12 @@ HRESULT WINAPI EMUPATCH(D3DDevice_SelectVertexShader)
 // ******************************************************************
 // * func: EmuIDirect3D8_KickOffAndWaitForIdle
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3D8_KickOffAndWaitForIdle)();
+VOID WINAPI EMUPATCH(D3D_KickOffAndWaitForIdle)();
 
 // ******************************************************************
 // * func: EmuIDirect3D8_KickOffAndWaitForIdle
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3D8_KickOffAndWaitForIdle2)(DWORD dwDummy1, DWORD dwDummy2);
+VOID WINAPI EMUPATCH(D3D_KickOffAndWaitForIdle2)(DWORD dwDummy1, DWORD dwDummy2);
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetGammaRamp
@@ -1509,7 +1509,7 @@ HRESULT WINAPI EMUPATCH(D3DDevice_SetDepthClipPlanes)
 // ******************************************************************
 // * func: EmuIDirect3D8_AllocContiguousMemory
 // ******************************************************************
-PVOID WINAPI EMUPATCH(IDirect3D8_AllocContiguousMemory)
+PVOID WINAPI EMUPATCH(D3D_AllocContiguousMemory)
 (
     SIZE_T dwSize,
     DWORD dwAllocAttributes
@@ -1527,7 +1527,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DTexture8_GetLevelDesc)
 // ******************************************************************
 // * func: EmuIDirect3D8_CheckDeviceMultiSampleType
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3D8_CheckDeviceMultiSampleType)
+HRESULT WINAPI EMUPATCH(D3D_CheckDeviceMultiSampleType)
 (
     UINT                 Adapter,
     D3DDEVTYPE           DeviceType,
@@ -1539,7 +1539,7 @@ HRESULT WINAPI EMUPATCH(IDirect3D8_CheckDeviceMultiSampleType)
 // ******************************************************************
 // * func: EmuIDirect3D8_GetDeviceCaps
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3D8_GetDeviceCaps)
+HRESULT WINAPI EMUPATCH(D3D_GetDeviceCaps)
 (
     UINT        Adapter,
     D3DDEVTYPE  DeviceType,
@@ -1549,7 +1549,7 @@ HRESULT WINAPI EMUPATCH(IDirect3D8_GetDeviceCaps)
 // ******************************************************************
 // * func: EmuIDirect3D8_SetPushBufferSize
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3D8_SetPushBufferSize)
+HRESULT WINAPI EMUPATCH(D3D_SetPushBufferSize)
 (
     DWORD PushBufferSize,
     DWORD KickOffSize
@@ -1835,7 +1835,7 @@ HRESULT WINAPI EMUPATCH(D3DDevice_SetBackMaterial)(D3DMATERIAL8* pMaterial);
 // ******************************************************************
 // * func: EmuIDirect3D8_GetAdapterIdentifier
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3D8_GetAdapterIdentifier)
+HRESULT WINAPI EMUPATCH(D3D_GetAdapterIdentifier)
 (
 	UINT					Adapter,
 	DWORD					Flags,

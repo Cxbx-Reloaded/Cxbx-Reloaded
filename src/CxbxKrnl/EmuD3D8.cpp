@@ -281,7 +281,7 @@ VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
         PresParam.SwapEffect = XTL::D3DSWAPEFFECT_DISCARD;
 
             
-        XTL::EMUPATCH(IDirect3D8_CreateDevice)(0, XTL::D3DDEVTYPE_HAL, 0, D3DCREATE_HARDWARE_VERTEXPROCESSING, &PresParam, &g_pD3DDevice8);
+        XTL::EMUPATCH(D3D_CreateDevice)(0, XTL::D3DDEVTYPE_HAL, 0, D3DCREATE_HARDWARE_VERTEXPROCESSING, &PresParam, &g_pD3DDevice8);
             
     }
 }
@@ -1230,7 +1230,7 @@ static void EmuUnswizzleTextureStages()
 // ******************************************************************
 // * func: EmuIDirect3D8_CreateDevice
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirect3D8_CreateDevice)
+HRESULT WINAPI XTL::EMUPATCH(D3D_CreateDevice)
 (
     UINT                        Adapter,
     D3DDEVTYPE                  DeviceType,
@@ -1334,7 +1334,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetCreationParameters)(D3DDEVICE_CREATION_PA
 // ******************************************************************
 // * func: EmuIDirect3D8_CheckDeviceFormat
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirect3D8_CheckDeviceFormat)
+HRESULT WINAPI XTL::EMUPATCH(D3D_CheckDeviceFormat)
 (
     UINT                        Adapter,
     D3DDEVTYPE                  DeviceType,
@@ -1640,7 +1640,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SelectVertexShader)
 // ******************************************************************
 // * func: EmuIDirect3D8_KickOffAndWaitForIdle
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(IDirect3D8_KickOffAndWaitForIdle)()
+VOID WINAPI XTL::EMUPATCH(D3D_KickOffAndWaitForIdle)()
 {
     
 
@@ -1656,7 +1656,7 @@ VOID WINAPI XTL::EMUPATCH(IDirect3D8_KickOffAndWaitForIdle)()
 // ******************************************************************
 // * func: EmuIDirect3D8_KickOffAndWaitForIdle2
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(IDirect3D8_KickOffAndWaitForIdle2)(DWORD dwDummy1, DWORD dwDummy2)
+VOID WINAPI XTL::EMUPATCH(D3D_KickOffAndWaitForIdle2)(DWORD dwDummy1, DWORD dwDummy2)
 {
     
 
@@ -8857,7 +8857,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetDepthClipPlanes)
 // ******************************************************************
 // * func: EmuIDirect3D8_AllocContiguousMemory
 // ******************************************************************
-PVOID WINAPI XTL::EMUPATCH(IDirect3D8_AllocContiguousMemory)
+PVOID WINAPI XTL::EMUPATCH(D3D_AllocContiguousMemory)
 (
     SIZE_T dwSize,
     DWORD dwAllocAttributes
@@ -8927,7 +8927,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirect3DTexture8_GetLevelDesc)
 // ******************************************************************
 // * func: EmuIDirect3D8_CheckDeviceMultiSampleType
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirect3D8_CheckDeviceMultiSampleType)
+HRESULT WINAPI XTL::EMUPATCH(D3D_CheckDeviceMultiSampleType)
 (
     UINT                 Adapter,
     D3DDEVTYPE           DeviceType,
@@ -9001,7 +9001,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirect3D8_CheckDeviceMultiSampleType)
 // ******************************************************************
 // * func: EmuIDirect3D8_GetDeviceCaps
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirect3D8_GetDeviceCaps)
+HRESULT WINAPI XTL::EMUPATCH(D3D_GetDeviceCaps)
 (
     UINT        Adapter,
     D3DDEVTYPE  DeviceType,
@@ -9030,7 +9030,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirect3D8_GetDeviceCaps)
 // ******************************************************************
 // * func: EmuIDirect3D8_SetPushBufferSize
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirect3D8_SetPushBufferSize)
+HRESULT WINAPI XTL::EMUPATCH(D3D_SetPushBufferSize)
 (
     DWORD PushBufferSize,
     DWORD KickOffSize
@@ -9920,7 +9920,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetBackMaterial)(D3DMATERIAL8* pMaterial)
 // ******************************************************************
 // * func: EmuIDirect3D8_GetAdapterIdentifier
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirect3D8_GetAdapterIdentifier)
+HRESULT WINAPI XTL::EMUPATCH(D3D_GetAdapterIdentifier)
 (
 	UINT					Adapter,
 	DWORD					Flags,
