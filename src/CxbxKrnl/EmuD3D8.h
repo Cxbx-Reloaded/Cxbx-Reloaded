@@ -811,7 +811,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DVolumeTexture8_LockBox)
 // ******************************************************************
 // * func: EmuIDirect3DCubeTexture8_LockRect
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DCubeTexture8_LockRect)
+HRESULT WINAPI EMUPATCH(D3DCubeTexture_LockRect)
 (
     X_D3DCubeTexture   *pThis,
     D3DCUBEMAP_FACES    FaceType,
@@ -1878,7 +1878,7 @@ HRESULT WINAPI EMUPATCH(D3DDevice_GetPushBufferOffset)
 // ******************************************************************
 // * func: EmuIDirect3DCubeTexture8_GetCubeMapSurface
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DCubeTexture8_GetCubeMapSurface)
+HRESULT WINAPI EMUPATCH(D3DCubeTexture_GetCubeMapSurface)
 (
 	X_D3DCubeTexture*	pThis,
 	D3DCUBEMAP_FACES	FaceType,
@@ -1889,7 +1889,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DCubeTexture8_GetCubeMapSurface)
 // ******************************************************************
 // * func: EmuIDirect3DCubeTexture8_GetCubeMapSurface2
 // ******************************************************************
-X_D3DSurface* WINAPI EMUPATCH(IDirect3DCubeTexture8_GetCubeMapSurface2)
+X_D3DSurface* WINAPI EMUPATCH(D3DCubeTexture_GetCubeMapSurface2)
 (
 	X_D3DCubeTexture*	pThis,
 	D3DCUBEMAP_FACES	FaceType,
