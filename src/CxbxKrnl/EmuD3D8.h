@@ -73,12 +73,12 @@ HRESULT WINAPI EMUPATCH(IDirect3D8_CreateDevice)
 // ******************************************************************
 // * func: EmuIDirect3DResource8_IsBusy
 // ******************************************************************
-BOOL WINAPI EMUPATCH(IDirect3DDevice8_IsBusy)();
+BOOL WINAPI EMUPATCH(D3DDevice_IsBusy)();
 
 // ******************************************************************
 // * func: EmuIDirect3D8_CheckDeviceFormat
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_GetCreationParameters)(D3DDEVICE_CREATION_PARAMETERS *pParameters);
+VOID WINAPI EMUPATCH(D3DDevice_GetCreationParameters)(D3DDEVICE_CREATION_PARAMETERS *pParameters);
 
 // ******************************************************************
 // * func: EmuIDirect3D8_CheckDeviceFormat
@@ -96,7 +96,7 @@ HRESULT WINAPI EMUPATCH(IDirect3D8_CheckDeviceFormat)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetDeviceCaps
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_GetDeviceCaps)
+VOID WINAPI EMUPATCH(D3DDevice_GetDeviceCaps)
 (
     D3DCAPS8                   *pCaps
 );
@@ -104,27 +104,27 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_GetDeviceCaps)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetDisplayFieldStatus
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_GetDisplayFieldStatus)(X_D3DFIELD_STATUS *pFieldStatus);
+VOID WINAPI EMUPATCH(D3DDevice_GetDisplayFieldStatus)(X_D3DFIELD_STATUS *pFieldStatus);
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_BeginPush
 // ******************************************************************
-PDWORD WINAPI EMUPATCH(IDirect3DDevice8_BeginPush)(DWORD Count);
+PDWORD WINAPI EMUPATCH(D3DDevice_BeginPush)(DWORD Count);
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_EndPush
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_EndPush)(DWORD *pPush);
+VOID WINAPI EMUPATCH(D3DDevice_EndPush)(DWORD *pPush);
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_BeginVisibilityTest
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_BeginVisibilityTest)();
+HRESULT WINAPI EMUPATCH(D3DDevice_BeginVisibilityTest)();
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_EndVisibilityTest
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_EndVisibilityTest)
+HRESULT WINAPI EMUPATCH(D3DDevice_EndVisibilityTest)
 (
     DWORD                       Index
 );
@@ -132,7 +132,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_EndVisibilityTest)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetVisibilityTestResult
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetVisibilityTestResult)
+HRESULT WINAPI EMUPATCH(D3DDevice_GetVisibilityTestResult)
 (
     DWORD                       Index,
     UINT                       *pResult,
@@ -142,12 +142,12 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetVisibilityTestResult)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetBackBufferScale
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetBackBufferScale)(FLOAT x, FLOAT y);
+VOID WINAPI EMUPATCH(D3DDevice_SetBackBufferScale)(FLOAT x, FLOAT y);
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_LoadVertexShader
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_LoadVertexShader)
+HRESULT WINAPI EMUPATCH(D3DDevice_LoadVertexShader)
 (
     DWORD                       Handle,
     DWORD                       Address
@@ -156,7 +156,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_LoadVertexShader)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SelectVertexShader
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SelectVertexShader)
+HRESULT WINAPI EMUPATCH(D3DDevice_SelectVertexShader)
 (
     DWORD                       Handle,
     DWORD                       Address
@@ -175,7 +175,7 @@ VOID WINAPI EMUPATCH(IDirect3D8_KickOffAndWaitForIdle2)(DWORD dwDummy1, DWORD dw
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetGammaRamp
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetGammaRamp)
+VOID WINAPI EMUPATCH(D3DDevice_SetGammaRamp)
 (
     DWORD                   dwFlags,
     CONST X_D3DGAMMARAMP   *pRamp
@@ -184,32 +184,32 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetGammaRamp)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_AddRef
 // ******************************************************************
-ULONG WINAPI EMUPATCH(IDirect3DDevice8_AddRef)();
+ULONG WINAPI EMUPATCH(D3DDevice_AddRef)();
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_BeginStateBlock
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_BeginStateBlock)();
+HRESULT WINAPI EMUPATCH(D3DDevice_BeginStateBlock)();
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CaptureStateBlock
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CaptureStateBlock)(DWORD Token);
+HRESULT WINAPI EMUPATCH(D3DDevice_CaptureStateBlock)(DWORD Token);
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_ApplyStateBlock
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_ApplyStateBlock)(DWORD Token);
+HRESULT WINAPI EMUPATCH(D3DDevice_ApplyStateBlock)(DWORD Token);
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_EndStateBlock
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_EndStateBlock)(DWORD *pToken);
+HRESULT WINAPI EMUPATCH(D3DDevice_EndStateBlock)(DWORD *pToken);
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CopyRects
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CopyRects)
+HRESULT WINAPI EMUPATCH(D3DDevice_CopyRects)
 (
     X_D3DSurface       *pSourceSurface,
     CONST RECT         *pSourceRectsArray,
@@ -221,7 +221,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CopyRects)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateImageSurface
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CreateImageSurface)
+HRESULT WINAPI EMUPATCH(D3DDevice_CreateImageSurface)
 (
     UINT                Width,
     UINT                Height,
@@ -232,7 +232,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CreateImageSurface)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetGammaRamp
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_GetGammaRamp)
+VOID WINAPI EMUPATCH(D3DDevice_GetGammaRamp)
 (
     X_D3DGAMMARAMP     *pRamp
 );
@@ -240,7 +240,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_GetGammaRamp)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetBackBuffer2
 // ******************************************************************
-X_D3DSurface* WINAPI EMUPATCH(IDirect3DDevice8_GetBackBuffer2)
+X_D3DSurface* WINAPI EMUPATCH(D3DDevice_GetBackBuffer2)
 (
     INT                 BackBuffer
 );
@@ -248,7 +248,7 @@ X_D3DSurface* WINAPI EMUPATCH(IDirect3DDevice8_GetBackBuffer2)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetBackBuffer
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_GetBackBuffer)
+VOID WINAPI EMUPATCH(D3DDevice_GetBackBuffer)
 (
     INT                 BackBuffer,
     D3DBACKBUFFER_TYPE  Type,
@@ -258,7 +258,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_GetBackBuffer)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetViewport
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetViewport)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetViewport)
 (
     CONST D3DVIEWPORT8 *pViewport
 );
@@ -266,7 +266,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetViewport)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetViewport
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetViewport)
+HRESULT WINAPI EMUPATCH(D3DDevice_GetViewport)
 (
     D3DVIEWPORT8 *pViewport
 );
@@ -274,7 +274,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetViewport)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetViewportOffsetAndScale
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_GetViewportOffsetAndScale)
+VOID WINAPI EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
 (
     D3DXVECTOR4 *pOffset,
     D3DXVECTOR4 *pScale
@@ -283,7 +283,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_GetViewportOffsetAndScale)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetShaderConstantMode
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetShaderConstantMode)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetShaderConstantMode)
 (
     XTL::X_VERTEXSHADERCONSTANTMODE Mode
 );
@@ -291,7 +291,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetShaderConstantMode)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_Reset
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_Reset)
+HRESULT WINAPI EMUPATCH(D3DDevice_Reset)
 (
     X_D3DPRESENT_PARAMETERS *pPresentationParameters
 );
@@ -299,7 +299,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_Reset)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetRenderTarget
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetRenderTarget)
+HRESULT WINAPI EMUPATCH(D3DDevice_GetRenderTarget)
 (
     X_D3DSurface  **ppRenderTarget
 );
@@ -307,12 +307,12 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetRenderTarget)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetRenderTarget
 // ******************************************************************
-X_D3DSurface * WINAPI EMUPATCH(IDirect3DDevice8_GetRenderTarget2)();
+X_D3DSurface * WINAPI EMUPATCH(D3DDevice_GetRenderTarget2)();
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetDepthStencilSurface
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetDepthStencilSurface)
+HRESULT WINAPI EMUPATCH(D3DDevice_GetDepthStencilSurface)
 (
     X_D3DSurface  **ppZStencilSurface
 );
@@ -320,12 +320,12 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetDepthStencilSurface)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetDepthStencilSurface
 // ******************************************************************
-X_D3DSurface * WINAPI EMUPATCH(IDirect3DDevice8_GetDepthStencilSurface2)();
+X_D3DSurface * WINAPI EMUPATCH(D3DDevice_GetDepthStencilSurface2)();
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetTile
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetTile)
+HRESULT WINAPI EMUPATCH(D3DDevice_GetTile)
 (
     DWORD           Index,
     X_D3DTILE      *pTile
@@ -334,7 +334,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetTile)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTileNoWait
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetTileNoWait)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetTileNoWait)
 (
     DWORD               Index,
     CONST X_D3DTILE    *pTile
@@ -343,7 +343,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetTileNoWait)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateVertexShader
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CreateVertexShader)
+HRESULT WINAPI EMUPATCH(D3DDevice_CreateVertexShader)
 (
     CONST DWORD    *pDeclaration,
     CONST DWORD    *pFunction,
@@ -354,7 +354,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CreateVertexShader)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetPixelShaderConstant
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetPixelShaderConstant)
+VOID WINAPI EMUPATCH(D3DDevice_SetPixelShaderConstant)
 (
     DWORD       Register,
     CONST PVOID pConstantData,
@@ -364,7 +364,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetPixelShaderConstant)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexShaderConstant
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetVertexShaderConstant)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetVertexShaderConstant)
 (
     INT         Register,
     CONST PVOID pConstantData,
@@ -374,7 +374,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetVertexShaderConstant)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexShaderConstant1
 // ******************************************************************
-VOID __fastcall EMUPATCH(IDirect3DDevice8_SetVertexShaderConstant1)
+VOID __fastcall EMUPATCH(D3DDevice_SetVertexShaderConstant1)
 (
     INT         Register,
     CONST PVOID pConstantData
@@ -383,7 +383,7 @@ VOID __fastcall EMUPATCH(IDirect3DDevice8_SetVertexShaderConstant1)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexShaderConstant4
 // ******************************************************************
-VOID __fastcall EMUPATCH(IDirect3DDevice8_SetVertexShaderConstant4)
+VOID __fastcall EMUPATCH(D3DDevice_SetVertexShaderConstant4)
 (
     INT         Register,
     CONST PVOID pConstantData
@@ -392,7 +392,7 @@ VOID __fastcall EMUPATCH(IDirect3DDevice8_SetVertexShaderConstant4)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexShaderConstantNotInline
 // ******************************************************************
-VOID __fastcall EMUPATCH(IDirect3DDevice8_SetVertexShaderConstantNotInline)
+VOID __fastcall EMUPATCH(D3DDevice_SetVertexShaderConstantNotInline)
 (
     INT         Register,
     CONST PVOID pConstantData,
@@ -402,7 +402,7 @@ VOID __fastcall EMUPATCH(IDirect3DDevice8_SetVertexShaderConstantNotInline)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_DeletePixelShader
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_DeletePixelShader)
+VOID WINAPI EMUPATCH(D3DDevice_DeletePixelShader)
 (
     DWORD          Handle
 );
@@ -410,7 +410,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_DeletePixelShader)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreatePixelShader
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CreatePixelShader)
+HRESULT WINAPI EMUPATCH(D3DDevice_CreatePixelShader)
 (
     X_D3DPIXELSHADERDEF    *pPSDef,
     DWORD				   *pHandle
@@ -419,7 +419,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CreatePixelShader)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetPixelShader
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetPixelShader)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetPixelShader)
 (
     DWORD           Handle
 );
@@ -427,7 +427,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetPixelShader)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateTexture2
 // ******************************************************************
-X_D3DResource * WINAPI EMUPATCH(IDirect3DDevice8_CreateTexture2)
+X_D3DResource * WINAPI EMUPATCH(D3DDevice_CreateTexture2)
 (
     UINT                Width,
     UINT                Height,
@@ -441,7 +441,7 @@ X_D3DResource * WINAPI EMUPATCH(IDirect3DDevice8_CreateTexture2)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateTexture
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CreateTexture)
+HRESULT WINAPI EMUPATCH(D3DDevice_CreateTexture)
 (
     UINT                Width,
     UINT                Height,
@@ -455,7 +455,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CreateTexture)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateVolumeTexture
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CreateVolumeTexture)
+HRESULT WINAPI EMUPATCH(D3DDevice_CreateVolumeTexture)
 (
     UINT                 Width,
     UINT                 Height,
@@ -470,7 +470,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CreateVolumeTexture)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateCubeTexture
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CreateCubeTexture)
+HRESULT WINAPI EMUPATCH(D3DDevice_CreateCubeTexture)
 (
     UINT                 EdgeLength,
     UINT                 Levels,
@@ -483,7 +483,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CreateCubeTexture)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateIndexBuffer
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CreateIndexBuffer)
+HRESULT WINAPI EMUPATCH(D3DDevice_CreateIndexBuffer)
 (
     UINT                 Length,
     DWORD                Usage,
@@ -495,12 +495,12 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CreateIndexBuffer)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateIndexBuffer2
 // ******************************************************************
-X_D3DIndexBuffer * WINAPI EMUPATCH(IDirect3DDevice8_CreateIndexBuffer2)(UINT Length);
+X_D3DIndexBuffer * WINAPI EMUPATCH(D3DDevice_CreateIndexBuffer2)(UINT Length);
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetIndices
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetIndices)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetIndices)
 (
     X_D3DIndexBuffer   *pIndexData,
     UINT                BaseVertexIndex
@@ -509,7 +509,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetIndices)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTexture
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetTexture)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetTexture)
 (
     DWORD           Stage,
     X_D3DResource  *pTexture
@@ -518,7 +518,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetTexture)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SwitchTexture
 // ******************************************************************
-VOID __fastcall EMUPATCH(IDirect3DDevice8_SwitchTexture)
+VOID __fastcall EMUPATCH(D3DDevice_SwitchTexture)
 (
     DWORD           Method,
     DWORD           Data,
@@ -528,7 +528,7 @@ VOID __fastcall EMUPATCH(IDirect3DDevice8_SwitchTexture)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetDisplayMode
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetDisplayMode)
+HRESULT WINAPI EMUPATCH(D3DDevice_GetDisplayMode)
 (
     X_D3DDISPLAYMODE         *pMode
 );
@@ -536,7 +536,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetDisplayMode)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_Begin
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_Begin)
+HRESULT WINAPI EMUPATCH(D3DDevice_Begin)
 (
     X_D3DPRIMITIVETYPE     PrimitiveType
 );
@@ -544,7 +544,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_Begin)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexData2f
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetVertexData2f)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetVertexData2f)
 (
     int     Register,
     FLOAT   a,
@@ -554,7 +554,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetVertexData2f)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexData2s
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetVertexData2s)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetVertexData2s)
 (
     int     Register,
     SHORT   a,
@@ -564,7 +564,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetVertexData2s)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexData4f
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetVertexData4f)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetVertexData4f)
 (
     int     Register,
     FLOAT   a,
@@ -576,7 +576,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetVertexData4f)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexData4ub
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetVertexData4ub)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetVertexData4ub)
 (
 	INT		Register,
 	BYTE	a,
@@ -588,7 +588,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetVertexData4ub)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexData4s
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetVertexData4s)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetVertexData4s)
 (
 	INT		Register,
 	SHORT	a,
@@ -600,7 +600,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetVertexData4s)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexDataColor
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetVertexDataColor)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetVertexDataColor)
 (
     int         Register,
     D3DCOLOR    Color
@@ -609,12 +609,12 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetVertexDataColor)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_End
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_End)();
+HRESULT WINAPI EMUPATCH(D3DDevice_End)();
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_RunPushBuffer
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_RunPushBuffer)
+VOID WINAPI EMUPATCH(D3DDevice_RunPushBuffer)
 (
     X_D3DPushBuffer       *pPushBuffer,
     X_D3DFixup            *pFixup
@@ -623,7 +623,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_RunPushBuffer)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_Clear
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_Clear)
+HRESULT WINAPI EMUPATCH(D3DDevice_Clear)
 (
     DWORD                  Count,
     CONST D3DRECT         *pRects,
@@ -636,7 +636,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_Clear)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_Present
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_Present)
+HRESULT WINAPI EMUPATCH(D3DDevice_Present)
 (
     CONST RECT* pSourceRect,
     CONST RECT* pDestRect,
@@ -647,7 +647,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_Present)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_Swap
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_Swap)
+HRESULT WINAPI EMUPATCH(D3DDevice_Swap)
 (
     DWORD Flags
 );
@@ -824,7 +824,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DCubeTexture8_LockRect)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateVertexBuffer
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CreateVertexBuffer)
+HRESULT WINAPI EMUPATCH(D3DDevice_CreateVertexBuffer)
 (
     UINT                Length,
     DWORD               Usage,
@@ -836,7 +836,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CreateVertexBuffer)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateVertexBuffer2
 // ******************************************************************
-X_D3DVertexBuffer* WINAPI EMUPATCH(IDirect3DDevice8_CreateVertexBuffer2)
+X_D3DVertexBuffer* WINAPI EMUPATCH(D3DDevice_CreateVertexBuffer2)
 (
     UINT Length
 );
@@ -844,7 +844,7 @@ X_D3DVertexBuffer* WINAPI EMUPATCH(IDirect3DDevice8_CreateVertexBuffer2)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_EnableOverlay
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_EnableOverlay)
+VOID WINAPI EMUPATCH(D3DDevice_EnableOverlay)
 (
     BOOL Enable
 );
@@ -852,7 +852,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_EnableOverlay)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_UpdateOverlay
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_UpdateOverlay)
+VOID WINAPI EMUPATCH(D3DDevice_UpdateOverlay)
 (
     X_D3DSurface *pSurface,
     CONST RECT   *SrcRect,
@@ -864,17 +864,17 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_UpdateOverlay)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetOverlayUpdateStatus
 // ******************************************************************
-BOOL WINAPI EMUPATCH(IDirect3DDevice8_GetOverlayUpdateStatus)();
+BOOL WINAPI EMUPATCH(D3DDevice_GetOverlayUpdateStatus)();
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_BlockUntilVerticalBlank
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_BlockUntilVerticalBlank)();
+VOID WINAPI EMUPATCH(D3DDevice_BlockUntilVerticalBlank)();
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVerticalBlankCallback
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetVerticalBlankCallback)
+VOID WINAPI EMUPATCH(D3DDevice_SetVerticalBlankCallback)
 (
     D3DVBLANKCALLBACK pCallback
 );
@@ -882,7 +882,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetVerticalBlankCallback)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTextureState_TexCoordIndex
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetTextureState_TexCoordIndex)
+VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_TexCoordIndex)
 (
     DWORD Stage,
     DWORD Value
@@ -891,7 +891,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetTextureState_TexCoordIndex)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTextureState_TwoSidedLighting
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetTextureState_TwoSidedLighting)
+VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_TwoSidedLighting)
 (
     DWORD Value
 );
@@ -899,7 +899,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetTextureState_TwoSidedLighting)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_BackFillMode
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_BackFillMode)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_BackFillMode)
 (
     DWORD Value
 );
@@ -907,7 +907,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_BackFillMode)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTextureState_BorderColor
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetTextureState_BorderColor)
+VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_BorderColor)
 (
     DWORD Stage,
     DWORD Value
@@ -916,7 +916,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetTextureState_BorderColor)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTextureState_ColorKeyColor
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetTextureState_ColorKeyColor)
+VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_ColorKeyColor)
 (
     DWORD Stage,
     DWORD Value
@@ -925,7 +925,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetTextureState_ColorKeyColor)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTextureState_BumpEnv
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetTextureState_BumpEnv)
+VOID WINAPI EMUPATCH(D3DDevice_SetTextureState_BumpEnv)
 (
     DWORD                      Stage,
     X_D3DTEXTURESTAGESTATETYPE Type,
@@ -935,7 +935,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetTextureState_BumpEnv)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_FrontFace
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_FrontFace)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_FrontFace)
 (
     DWORD Value
 );
@@ -943,7 +943,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_FrontFace)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_LogicOp
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_LogicOp)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_LogicOp)
 (
     DWORD Value
 );
@@ -951,7 +951,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_LogicOp)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_NormalizeNormals
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_NormalizeNormals)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_NormalizeNormals)
 (
     DWORD Value
 );
@@ -959,7 +959,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_NormalizeNormals)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_TextureFactor
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_TextureFactor)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_TextureFactor)
 (
     DWORD Value
 );
@@ -967,7 +967,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_TextureFactor)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_ZBias
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_ZBias)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_ZBias)
 (
     DWORD Value
 );
@@ -975,7 +975,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_ZBias)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_EdgeAntiAlias
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_EdgeAntiAlias)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_EdgeAntiAlias)
 (
     DWORD Value
 );
@@ -983,7 +983,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_EdgeAntiAlias)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_FillMode
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_FillMode)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_FillMode)
 (
     DWORD Value
 );
@@ -991,7 +991,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_FillMode)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_FogColor
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_FogColor)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_FogColor)
 (
     DWORD Value
 );
@@ -999,7 +999,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_FogColor)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_Dxt1NoiseEnable
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_Dxt1NoiseEnable)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_Dxt1NoiseEnable)
 (
     DWORD Value
 );
@@ -1007,7 +1007,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_Dxt1NoiseEnable)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_Simple
 // ******************************************************************
-VOID __fastcall EMUPATCH(IDirect3DDevice8_SetRenderState_Simple)
+VOID __fastcall EMUPATCH(D3DDevice_SetRenderState_Simple)
 (
     DWORD Method,
     DWORD Value
@@ -1016,7 +1016,7 @@ VOID __fastcall EMUPATCH(IDirect3DDevice8_SetRenderState_Simple)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_VertexBlend
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_VertexBlend)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_VertexBlend)
 (
     DWORD Value
 );
@@ -1024,7 +1024,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_VertexBlend)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_PSTextureModes
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_PSTextureModes)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_PSTextureModes)
 (
     DWORD Value
 );
@@ -1032,7 +1032,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_PSTextureModes)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_CullMode
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_CullMode)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_CullMode)
 (
     DWORD Value
 );
@@ -1040,7 +1040,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_CullMode)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_LineWidth
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_LineWidth)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_LineWidth)
 (
     DWORD Value
 );
@@ -1048,7 +1048,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_LineWidth)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_StencilFail
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_StencilFail)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_StencilFail)
 (
     DWORD Value
 );
@@ -1056,7 +1056,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_StencilFail)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_OcclusionCullEnable
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_OcclusionCullEnable)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_OcclusionCullEnable)
 (
     DWORD Value
 );
@@ -1064,7 +1064,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_OcclusionCullEnable)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_StencilCullEnable
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_StencilCullEnable)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_StencilCullEnable)
 (
     DWORD Value
 );
@@ -1072,7 +1072,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_StencilCullEnable)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_RopZCmpAlwaysRead)
 (
     DWORD Value
 );
@@ -1080,7 +1080,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_RopZCmpAlwaysRead)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_RopZRead
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_RopZRead)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_RopZRead)
 (
     DWORD Value
 );
@@ -1088,7 +1088,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_RopZRead)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_DoNotCullUncompressed
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_DoNotCullUncompressed)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_DoNotCullUncompressed)
 (
     DWORD Value
 );
@@ -1096,7 +1096,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_DoNotCullUncompressed)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_ZEnable
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_ZEnable)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_ZEnable)
 (
     DWORD Value
 );
@@ -1104,7 +1104,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_ZEnable)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_StencilEnable
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_StencilEnable)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_StencilEnable)
 (
     DWORD Value
 );
@@ -1112,7 +1112,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_StencilEnable)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_MultiSampleMask
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_MultiSampleMask)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_MultiSampleMask)
 (
     DWORD Value
 );
@@ -1120,7 +1120,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_MultiSampleMask)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_MultiSampleMode
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_MultiSampleMode)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_MultiSampleMode)
 (
     DWORD Value
 );
@@ -1128,7 +1128,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_MultiSampleMode)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_MultiSampleRenderTargetMode)
 (
     DWORD Value
 );
@@ -1136,7 +1136,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_MultiSampleRenderTargetMode
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_MultiSampleAntiAlias
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_MultiSampleAntiAlias)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_MultiSampleAntiAlias)
 (
     DWORD Value
 );
@@ -1144,7 +1144,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_MultiSampleAntiAlias)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_ShadowFunc
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_ShadowFunc)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_ShadowFunc)
 (
     DWORD Value
 );
@@ -1152,7 +1152,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_ShadowFunc)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_YuvEnable
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_YuvEnable)
+VOID WINAPI EMUPATCH(D3DDevice_SetRenderState_YuvEnable)
 (
     BOOL Enable
 );
@@ -1160,7 +1160,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_YuvEnable)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetTransform
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetTransform)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetTransform)
 (
     D3DTRANSFORMSTATETYPE State,
     CONST D3DMATRIX      *pMatrix
@@ -1169,7 +1169,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetTransform)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetTransform
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetTransform)
+HRESULT WINAPI EMUPATCH(D3DDevice_GetTransform)
 (
     D3DTRANSFORMSTATETYPE State,
     D3DMATRIX            *pMatrix
@@ -1199,7 +1199,7 @@ BYTE* WINAPI EMUPATCH(IDirect3DVertexBuffer8_Lock2)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetStreamSource2
 // ******************************************************************
-XTL::X_D3DVertexBuffer* WINAPI EMUPATCH(IDirect3DDevice8_GetStreamSource2)
+XTL::X_D3DVertexBuffer* WINAPI EMUPATCH(D3DDevice_GetStreamSource2)
 (
     UINT  StreamNumber,
     UINT *pStride
@@ -1208,7 +1208,7 @@ XTL::X_D3DVertexBuffer* WINAPI EMUPATCH(IDirect3DDevice8_GetStreamSource2)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetStreamSource
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetStreamSource)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetStreamSource)
 (
     UINT                StreamNumber,
     X_D3DVertexBuffer  *pStreamData,
@@ -1218,7 +1218,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetStreamSource)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexShader
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetVertexShader)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetVertexShader)
 (
     DWORD            Handle
 );
@@ -1226,7 +1226,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetVertexShader)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_DrawVertices
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_DrawVertices)
+VOID WINAPI EMUPATCH(D3DDevice_DrawVertices)
 (
     X_D3DPRIMITIVETYPE  PrimitiveType,
     UINT                StartVertex,
@@ -1236,7 +1236,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_DrawVertices)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_DrawVerticesUP
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_DrawVerticesUP)
+VOID WINAPI EMUPATCH(D3DDevice_DrawVerticesUP)
 (
     X_D3DPRIMITIVETYPE  PrimitiveType,
     UINT                VertexCount,
@@ -1247,7 +1247,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_DrawVerticesUP)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_DrawIndexedVertices
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_DrawIndexedVertices)
+HRESULT WINAPI EMUPATCH(D3DDevice_DrawIndexedVertices)
 (
     X_D3DPRIMITIVETYPE  PrimitiveType,
     UINT                VertexCount,
@@ -1257,7 +1257,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_DrawIndexedVertices)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_DrawIndexedVerticesUP
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_DrawIndexedVerticesUP)
+VOID WINAPI EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 (
     X_D3DPRIMITIVETYPE  PrimitiveType,
     UINT                VertexCount,
@@ -1269,7 +1269,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_DrawIndexedVerticesUP)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetLight
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetLight)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetLight)
 (
     DWORD            Index,
     CONST D3DLIGHT8 *pLight
@@ -1278,7 +1278,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetLight)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetMaterial
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetMaterial)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetMaterial)
 (
     CONST D3DMATERIAL8 *pMaterial
 );
@@ -1286,7 +1286,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetMaterial)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_LightEnable
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_LightEnable)
+HRESULT WINAPI EMUPATCH(D3DDevice_LightEnable)
 (
     DWORD            Index,
     BOOL             bEnable
@@ -1295,12 +1295,12 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_LightEnable)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_Release
 // ******************************************************************
-ULONG WINAPI EMUPATCH(IDirect3DDevice8_Release)();
+ULONG WINAPI EMUPATCH(D3DDevice_Release)();
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreatePalette
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CreatePalette)
+HRESULT WINAPI EMUPATCH(D3DDevice_CreatePalette)
 (
     X_D3DPALETTESIZE    Size,
     X_D3DPalette      **ppPalette
@@ -1309,7 +1309,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CreatePalette)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreatePalette2
 // ******************************************************************
-X_D3DPalette * WINAPI EMUPATCH(IDirect3DDevice8_CreatePalette2)
+X_D3DPalette * WINAPI EMUPATCH(D3DDevice_CreatePalette2)
 (
     X_D3DPALETTESIZE    Size
 );
@@ -1317,7 +1317,7 @@ X_D3DPalette * WINAPI EMUPATCH(IDirect3DDevice8_CreatePalette2)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderTarget
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetRenderTarget)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetRenderTarget)
 (
     X_D3DSurface    *pRenderTarget,
     X_D3DSurface    *pNewZStencil
@@ -1326,7 +1326,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetRenderTarget)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetPalette
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetPalette)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetPalette)
 (
     DWORD         Stage,
     X_D3DPalette *pPalette
@@ -1335,7 +1335,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetPalette)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetFlickerFilter
 // ******************************************************************
-void WINAPI EMUPATCH(IDirect3DDevice8_SetFlickerFilter)
+void WINAPI EMUPATCH(D3DDevice_SetFlickerFilter)
 (
     DWORD         Filter
 );
@@ -1343,7 +1343,7 @@ void WINAPI EMUPATCH(IDirect3DDevice8_SetFlickerFilter)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetSoftDisplayFilter
 // ******************************************************************
-void WINAPI EMUPATCH(IDirect3DDevice8_SetSoftDisplayFilter)
+void WINAPI EMUPATCH(D3DDevice_SetSoftDisplayFilter)
 (
     BOOL Enable
 );
@@ -1370,7 +1370,7 @@ D3DCOLOR * WINAPI EMUPATCH(IDirect3DPalette8_Lock2)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetVertexShaderSize
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_GetVertexShaderSize)
+VOID WINAPI EMUPATCH(D3DDevice_GetVertexShaderSize)
 (
     DWORD Handle,
     UINT* pSize
@@ -1379,7 +1379,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_GetVertexShaderSize)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_DeleteVertexShader
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_DeleteVertexShader)
+VOID WINAPI EMUPATCH(D3DDevice_DeleteVertexShader)
 (
     DWORD Handle
 );
@@ -1387,7 +1387,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_DeleteVertexShader)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SelectVertexShaderDirect
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_SelectVertexShaderDirect)
+VOID WINAPI EMUPATCH(D3DDevice_SelectVertexShaderDirect)
 (
     X_VERTEXATTRIBUTEFORMAT *pVAF,
     DWORD                    Address
@@ -1396,7 +1396,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_SelectVertexShaderDirect)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetShaderConstantMode
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_GetShaderConstantMode)
+VOID WINAPI EMUPATCH(D3DDevice_GetShaderConstantMode)
 (
     DWORD *pMode
 );
@@ -1404,7 +1404,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_GetShaderConstantMode)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetVertexShader
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_GetVertexShader)
+VOID WINAPI EMUPATCH(D3DDevice_GetVertexShader)
 (
     DWORD *pHandle
 );
@@ -1412,7 +1412,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_GetVertexShader)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetVertexShaderConstant
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_GetVertexShaderConstant)
+VOID WINAPI EMUPATCH(D3DDevice_GetVertexShaderConstant)
 (
     INT   Register,
     void  *pConstantData,
@@ -1422,7 +1422,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_GetVertexShaderConstant)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetVertexShaderInputDirect
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetVertexShaderInputDirect)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetVertexShaderInputDirect)
 (
     X_VERTEXATTRIBUTEFORMAT *pVAF,
     UINT                     StreamCount,
@@ -1432,7 +1432,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetVertexShaderInputDirect)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetVertexShaderInput
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetVertexShaderInput)
+HRESULT WINAPI EMUPATCH(D3DDevice_GetVertexShaderInput)
 (
     DWORD              *pHandle,
     UINT               *pStreamCount,
@@ -1442,7 +1442,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetVertexShaderInput)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetVertexShaderInput
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetVertexShaderInput)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetVertexShaderInput)
 (
     DWORD              Handle,
     UINT               StreamCount,
@@ -1452,7 +1452,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetVertexShaderInput)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_RunVertexStateShader
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_RunVertexStateShader)
+VOID WINAPI EMUPATCH(D3DDevice_RunVertexStateShader)
 (
     DWORD        Address,
     CONST FLOAT *pData
@@ -1461,7 +1461,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_RunVertexStateShader)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_LoadVertexShaderProgram
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_LoadVertexShaderProgram)
+VOID WINAPI EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 (
     CONST DWORD *pFunction,
     DWORD        Address
@@ -1470,7 +1470,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_LoadVertexShaderProgram)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetVertexShaderType
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_GetVertexShaderType)
+VOID WINAPI EMUPATCH(D3DDevice_GetVertexShaderType)
 (
     DWORD  Handle,
     DWORD *pType
@@ -1479,7 +1479,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_GetVertexShaderType)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetVertexShaderDeclaration
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetVertexShaderDeclaration)
+HRESULT WINAPI EMUPATCH(D3DDevice_GetVertexShaderDeclaration)
 (
     DWORD  Handle,
     PVOID  pData,
@@ -1489,7 +1489,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetVertexShaderDeclaration)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetVertexShaderFunction
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetVertexShaderFunction)
+HRESULT WINAPI EMUPATCH(D3DDevice_GetVertexShaderFunction)
 (
     DWORD  Handle,
     PVOID *pData,
@@ -1499,7 +1499,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetVertexShaderFunction)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetDepthClipPlanes
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetDepthClipPlanes)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetDepthClipPlanes)
 (
     FLOAT Near,
     FLOAT Far,
@@ -1558,12 +1558,12 @@ HRESULT WINAPI EMUPATCH(IDirect3D8_SetPushBufferSize)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_InsertFence
 // ******************************************************************
-DWORD WINAPI EMUPATCH(IDirect3DDevice8_InsertFence)();
+DWORD WINAPI EMUPATCH(D3DDevice_InsertFence)();
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_IsFencePending
 // ******************************************************************
-BOOL WINAPI EMUPATCH(IDirect3DDevice8_IsFencePending)
+BOOL WINAPI EMUPATCH(D3DDevice_IsFencePending)
 (
     DWORD Fence
 );
@@ -1571,7 +1571,7 @@ BOOL WINAPI EMUPATCH(IDirect3DDevice8_IsFencePending)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_BlockOnFence
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_BlockOnFence)
+VOID WINAPI EMUPATCH(D3DDevice_BlockOnFence)
 (
     DWORD Fence
 );
@@ -1596,7 +1596,7 @@ VOID WINAPI EMUPATCH(IDirect3DVertexBuffer8_GetDesc)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetScissors
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetScissors)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetScissors)
 (
     DWORD          Count,
     BOOL           Exclusive,
@@ -1606,7 +1606,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetScissors)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetScreenSpaceOffset
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetScreenSpaceOffset)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetScreenSpaceOffset)
 (
     FLOAT x,
     FLOAT y
@@ -1615,12 +1615,12 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetScreenSpaceOffset)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_InsertFence
 // ******************************************************************
-DWORD WINAPI EMUPATCH(IDirect3DDevice8_InsertFence)();
+DWORD WINAPI EMUPATCH(D3DDevice_InsertFence)();
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_BlockOnFence
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_BlockOnFence)
+VOID WINAPI EMUPATCH(D3DDevice_BlockOnFence)
 (
 	DWORD Fence
 );
@@ -1645,7 +1645,7 @@ VOID WINAPI EMUPATCH(IDirect3DVertexBuffer8_GetDesc)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetScissors
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetScissors)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetScissors)
 (
 	DWORD          Count, 
 	BOOL           Exclusive, 
@@ -1655,7 +1655,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetScissors)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetPixelShaderProgram
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetPixelShaderProgram)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetPixelShaderProgram)
 (
 	X_D3DPIXELSHADERDEF *pPSDef
 );
@@ -1663,7 +1663,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetPixelShaderProgram)
 // ******************************************************************
 // * func: EmuIDirect3DDevice_SetScreenSpaceOffset
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetScreenSpaceOffset)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetScreenSpaceOffset)
 (
 	FLOAT x,
 	FLOAT y
@@ -1672,7 +1672,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetScreenSpaceOffset)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_CreateStateBlock
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CreateStateBlock)
+HRESULT WINAPI EMUPATCH(D3DDevice_CreateStateBlock)
 (
 	D3DSTATEBLOCKTYPE Type,
 	DWORD			  *pToken
@@ -1681,7 +1681,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_CreateStateBlock)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_InsertCallback
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DDevice8_InsertCallback)
+VOID WINAPI EMUPATCH(D3DDevice_InsertCallback)
 (
 	X_D3DCALLBACKTYPE	Type,
 	X_D3DCALLBACK		pCallback,
@@ -1691,7 +1691,7 @@ VOID WINAPI EMUPATCH(IDirect3DDevice8_InsertCallback)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_DrawRectPatch
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_DrawRectPatch)
+HRESULT WINAPI EMUPATCH(D3DDevice_DrawRectPatch)
 (
 	UINT					Handle,
 	CONST FLOAT				*pNumSegs,
@@ -1701,7 +1701,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_DrawRectPatch)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetProjectionViewportMatrix
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetProjectionViewportMatrix)
+HRESULT WINAPI EMUPATCH(D3DDevice_GetProjectionViewportMatrix)
 (
 	D3DXMATRIX *pProjectionViewport
 );
@@ -1714,7 +1714,7 @@ VOID WINAPI EMUPATCH(D3DDevice_KickOff)();
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetTexture2
 // ******************************************************************
-X_D3DResource* WINAPI EMUPATCH(IDirect3DDevice8_GetTexture2)(DWORD Stage);
+X_D3DResource* WINAPI EMUPATCH(D3DDevice_GetTexture2)(DWORD Stage);
 
 // ******************************************************************
 // * func: EmuD3DDevice_SetStateVB (D3D::CDevice::SetStateVB)
@@ -1729,12 +1729,12 @@ VOID WINAPI EMUPATCH(D3DDevice_SetStateUP)();
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetStipple
 // ******************************************************************
-void WINAPI EMUPATCH(IDirect3DDevice8_SetStipple)( DWORD* pPattern );
+void WINAPI EMUPATCH(D3DDevice_SetStipple)( DWORD* pPattern );
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetSwapCallback
 // ******************************************************************
-void WINAPI EMUPATCH(IDirect3DDevice8_SetSwapCallback)
+void WINAPI EMUPATCH(D3DDevice_SetSwapCallback)
 (
 	D3DSWAPCALLBACK		pCallback
 );
@@ -1742,23 +1742,23 @@ void WINAPI EMUPATCH(IDirect3DDevice8_SetSwapCallback)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_PersistDisplay
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_PersistDisplay)();
+HRESULT WINAPI EMUPATCH(D3DDevice_PersistDisplay)();
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetPersistedSurface
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetPersistedSurface)(X_D3DSurface **ppSurface);
-X_D3DSurface* WINAPI EMUPATCH(IDirect3DDevice8_GetPersistedSurface2)();
+HRESULT WINAPI EMUPATCH(D3DDevice_GetPersistedSurface)(X_D3DSurface **ppSurface);
+X_D3DSurface* WINAPI EMUPATCH(D3DDevice_GetPersistedSurface2)();
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_Unknown1
 // ******************************************************************
-void WINAPI EMUPATCH(IDirect3DDevice8_Unknown1)();
+void WINAPI EMUPATCH(D3DDevice_Unknown1)();
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_PrimeVertexCache
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_PrimeVertexCache)
+HRESULT WINAPI EMUPATCH(D3DDevice_PrimeVertexCache)
 (
 	UINT VertexCount,
 	WORD *pIndexData
@@ -1767,7 +1767,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_PrimeVertexCache)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_SampleAlpha
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_SampleAlpha)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetRenderState_SampleAlpha)
 (
 	DWORD dwSampleAlpha
 );
@@ -1775,7 +1775,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetRenderState_SampleAlpha)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderState_Deferred
 // ******************************************************************
-VOID __fastcall EMUPATCH(IDirect3DDevice8_SetRenderState_Deferred)
+VOID __fastcall EMUPATCH(D3DDevice_SetRenderState_Deferred)
 (
 	DWORD State,
 	DWORD Value
@@ -1784,7 +1784,7 @@ VOID __fastcall EMUPATCH(IDirect3DDevice8_SetRenderState_Deferred)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_DeleteStateBlock
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_DeleteStateBlock)
+HRESULT WINAPI EMUPATCH(D3DDevice_DeleteStateBlock)
 (
 	DWORD Token
 );
@@ -1792,7 +1792,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_DeleteStateBlock)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetModelView
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetModelView)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetModelView)
 (
 	CONST D3DMATRIX *pModelView, 
 	CONST D3DMATRIX *pInverseModelView, 
@@ -1802,12 +1802,12 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetModelView)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_FlushVertexCache
 // ******************************************************************
-void WINAPI EMUPATCH(IDirect3DDevice8_FlushVertexCache)();
+void WINAPI EMUPATCH(D3DDevice_FlushVertexCache)();
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_BeginPushBuffer
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_BeginPushBuffer)
+HRESULT WINAPI EMUPATCH(D3DDevice_BeginPushBuffer)
 (
 	X_D3DPushBuffer *pPushBuffer
 );
@@ -1815,7 +1815,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_BeginPushBuffer)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_EndPushBuffer
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_EndPushBuffer)();
+HRESULT WINAPI EMUPATCH(D3DDevice_EndPushBuffer)();
 
 // ******************************************************************
 // * func: EmuXMETAL_StartPush
@@ -1825,12 +1825,12 @@ void WINAPI EMUPATCH(XMETAL_StartPush)(void* Unknown);
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetModelView
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetModelView)(D3DXMATRIX* pModelView);
+HRESULT WINAPI EMUPATCH(D3DDevice_GetModelView)(D3DXMATRIX* pModelView);
 
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetBackMaterial
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetBackMaterial)(D3DMATERIAL8* pMaterial);
+HRESULT WINAPI EMUPATCH(D3DDevice_SetBackMaterial)(D3DMATERIAL8* pMaterial);
 
 // ******************************************************************
 // * func: EmuIDirect3D8_GetAdapterIdentifier
@@ -1870,7 +1870,7 @@ void WINAPI EMUPATCH(D3D_BlockOnResource)( X_D3DResource* pResource );
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetPushBufferOffset
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetPushBufferOffset)
+HRESULT WINAPI EMUPATCH(D3DDevice_GetPushBufferOffset)
 (
 	DWORD *pOffset
 );
@@ -1899,7 +1899,7 @@ X_D3DSurface* WINAPI EMUPATCH(IDirect3DCubeTexture8_GetCubeMapSurface2)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetPixelShader
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetPixelShader)
+HRESULT WINAPI EMUPATCH(D3DDevice_GetPixelShader)
 (
 	DWORD  Name,
 	DWORD* pHandle
@@ -1908,7 +1908,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetPixelShader)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_SetRenderTargetFast
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetRenderTargetFast)
+HRESULT WINAPI EMUPATCH(D3DDevice_SetRenderTargetFast)
 (
     X_D3DSurface	*pRenderTarget,
     X_D3DSurface	*pNewZStencil,
@@ -1918,7 +1918,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_SetRenderTargetFast)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetScissors
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetScissors)
+HRESULT WINAPI EMUPATCH(D3DDevice_GetScissors)
 (
 	DWORD	*pCount, 
 	BOOL	*pExclusive, 
@@ -1927,7 +1927,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetScissors)
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetBackMaterial
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetBackMaterial)(D3DMATERIAL8* pMaterial);
+HRESULT WINAPI EMUPATCH(D3DDevice_GetBackMaterial)(D3DMATERIAL8* pMaterial);
 
 // ******************************************************************
 // * func: EmuD3D::LazySetPointParams
@@ -1937,6 +1937,6 @@ void WINAPI EMUPATCH(D3D_LazySetPointParams)( void* Device );
 // ******************************************************************
 // * func: EmuIDirect3DDevice8_GetMaterial
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DDevice8_GetMaterial)(D3DMATERIAL8* pMaterial);
+HRESULT WINAPI EMUPATCH(D3DDevice_GetMaterial)(D3DMATERIAL8* pMaterial);
 
 #endif

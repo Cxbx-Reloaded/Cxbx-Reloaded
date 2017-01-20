@@ -267,7 +267,7 @@ VOID WINAPI XTL::EMUPATCH(XGSetTextureHeader)
 	// Generate a temporary texture and fill in the necessary fields within
 	// the X_D3DTexture interface (lazy, I know).
 	
-	pTempTexture = (X_D3DTexture*) XTL::EMUPATCH(IDirect3DDevice8_CreateTexture2)(Width, Height, 0, Levels, Usage, Format,
+	pTempTexture = (X_D3DTexture*) XTL::EMUPATCH(D3DDevice_CreateTexture2)(Width, Height, 0, Levels, Usage, Format,
 		XTL::D3DRTYPE_TEXTURE);
 	
 
