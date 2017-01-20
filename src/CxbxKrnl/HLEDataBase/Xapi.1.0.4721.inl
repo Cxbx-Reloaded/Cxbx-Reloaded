@@ -33,54 +33,54 @@
 // ******************************************************************
 
 // ******************************************************************
-// * XAPI_1_0_4721
+// * XAPI_4721
 // ******************************************************************
-OOVPATable XAPI_1_0_4721[] = {
+OOVPATable XAPI_4721[] = {
 	/*
     // RtlCreateHeap (* unchanged since 1.0.4361 *) (* OR FARTHER *)
-    obsolete OOVPA_TABLE_PATCH(RtlCreateHeap_1_0_3911, RtlCreateHeap),
+    obsolete OOVPA_TABLE_PATCH(RtlCreateHeap, 3911, RtlCreateHeap),
     // RtlAllocateHeap (* unchanged since 1.0.4361 *) (* OR FARTHER *)
-    obsolete OOVPA_TABLE_PATCH(RtlAllocateHeap_1_0_3911, RtlAllocateHeap),
+    obsolete OOVPA_TABLE_PATCH(RtlAllocateHeap, 3911, RtlAllocateHeap),
 	// RtlReAllocateHeap
-    obsolete OOVPA_TABLE_PATCH(RtlReAllocateHeap_1_0_4627, RtlReAllocateHeap),
+    obsolete OOVPA_TABLE_PATCH(RtlReAllocateHeap, 4627, RtlReAllocateHeap),
     // RtlFreeHeap
-    obsolete OOVPA_TABLE_PATCH(RtlFreeHeap_1_0_4627, RtlFreeHeap),
+    obsolete OOVPA_TABLE_PATCH(RtlFreeHeap, 4627, RtlFreeHeap),
     // RtlSizeHeap
-    obsolete OOVPA_TABLE_PATCH(RtlSizeHeap_1_0_4627, RtlSizeHeap),
+    obsolete OOVPA_TABLE_PATCH(RtlSizeHeap, 4627, RtlSizeHeap),
 	// RtlDestroyHeap
-	obsolete OOVPA_TABLE_PATCH(RtlDestroyHeap_1_0_4627, RtlDestroyHeap),
+	obsolete OOVPA_TABLE_PATCH(RtlDestroyHeap, 4627, RtlDestroyHeap),
 	*/
     // XMountUtilityDrive
-	OOVPA_TABLE_PATCH(XMountUtilityDrive_1_0_4432, XMountUtilityDrive),
+	OOVPA_TABLE_PATCH(XMountUtilityDrive, 4432, XMountUtilityDrive),
     // XInitDevices (* unchanged since 1.0.3911 *)
-	OOVPA_TABLE_PATCH(XInitDevices_1_0_3911, XInitDevices),
+	OOVPA_TABLE_PATCH(XInitDevices, 3911, XInitDevices),
     // XGetDevices (* unchanged since 1.0.4134 *)
-	OOVPA_TABLE_PATCH(XGetDevices_1_0_4134, XGetDevices),
+	OOVPA_TABLE_PATCH(XGetDevices, 4134, XGetDevices),
     // XInputOpen (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_PATCH(XInputOpen_1_0_4361, XInputOpen),
+	OOVPA_TABLE_PATCH(XInputOpen, 4361, XInputOpen),
     // XInputGetCapabilities (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_PATCH(XInputGetCapabilities_1_0_4361, XInputGetCapabilities),
+	OOVPA_TABLE_PATCH(XInputGetCapabilities, 4361, XInputGetCapabilities),
     // XInputGetState (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_PATCH(XInputGetState_1_0_4361, XInputGetState),
+	OOVPA_TABLE_PATCH(XInputGetState, 4361, XInputGetState),
     // XInputSetState (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_PATCH(XInputSetState_1_0_4361, XInputSetState),
+	OOVPA_TABLE_PATCH(XInputSetState, 4361, XInputSetState),
 	// XID_fCloseDevice (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_XREF(XID_fCloseDevice_1_0_4361),
+	OOVPA_TABLE_XREF(XID_fCloseDevice, 4361),
 	// XInputClose (* unchanged since 1.0.3911 *)
-	OOVPA_TABLE_PATCH(XInputClose_1_0_3911, XInputClose),
+	OOVPA_TABLE_PATCH(XInputClose, 3911, XInputClose),
 	// XInputClose (* unchanged since 1.0.4361 *)
-	// OOVPA_TABLE_PATCH(XInputClose_1_0_4361, XInputClose),
+	// OOVPA_TABLE_PATCH(XInputClose, 4361, XInputClose),
     // XapiThreadStartup (* unchanged since 1.0.4361 *)
-	// obsolete OOVPA_TABLE_PATCH(XapiThreadStartup_1_0_4361, XapiThreadStartup),
+	// obsolete OOVPA_TABLE_PATCH(XapiThreadStartup, 4361, XapiThreadStartup),
     //* Too High Level
     // XapiInitProcess (* unchanged since 1.0.4361 *)
-	// obsolete OOVPA_TABLE_PATCH(XapiInitProcess_1_0_4361, XapiInitProcess),
+	// obsolete OOVPA_TABLE_PATCH(XapiInitProcess, 4361, XapiInitProcess),
     //*/
     // XapiBootToDash (* unchanged since 1.0.3911 *)
-    /* obsolete OOVPA_TABLE_PATCH(XapiBootDash_1_0_3911, XapiBootDash),*/
+    /* obsolete OOVPA_TABLE_PATCH(XapiBootDash, 3911, XapiBootDash),*/
 };
 
 // ******************************************************************
-// * XAPI_1_0_4721_SIZE
+// * XAPI_4721_SIZE
 // ******************************************************************
-uint32 XAPI_1_0_4721_SIZE = sizeof(XAPI_1_0_4721);
+uint32 XAPI_4721_SIZE = sizeof(XAPI_4721);

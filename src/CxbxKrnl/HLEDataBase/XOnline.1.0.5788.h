@@ -31,12 +31,12 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef XONLINE_1_0_5788_H
-#define XONLINE_1_0_5788_H
+#ifndef XONLINE_5788_H
+#define XONLINE_5788_H
 
 #include "OOVPA.h"
 
-extern OOVPATable XOnline_1_0_5788[];
-extern uint32     XOnline_1_0_5788_SIZE;
+extern OOVPATable XOnline_5788[];
+extern uint32     XOnline_5788_SIZE;
 
 #endif

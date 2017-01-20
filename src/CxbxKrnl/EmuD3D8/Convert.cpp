@@ -620,18 +620,11 @@ void XTL::EmuUnswizzleRect
 		// TODO : How could we do one memcpy when lines AND pixels are next to eachother?
 		for (uint y = 0; y < dwHeight; y++) {
 			DWORD dwX = dwStartX;
-			// We use one memcpy for the entire line when pixels are next to eachother :
-			// TODO : How can we simplify the next check; (dwMaskX & 1) perhaps?
-			if (dwX + 1 == ((dwX - dwMaskX) & dwMaskX)) {
-				memcpy(pDstBuff, (PBYTE)pSrcBuff + (dwX | dwY | dwZ) * dwBPP, dwBPP * dwWidth); // copy one line
-				pDstBuff = (PBYTE)pDstBuff + dwBPP * dwWidth; // Step to next line in destination
-			}
-			else {
-				for (uint x = 0; x < dwWidth; x++) {
-					memcpy(pDstBuff, (PBYTE)pSrcBuff + (dwX | dwY | dwZ) * dwBPP, dwBPP); // copy one pixel
-					pDstBuff = (PBYTE)pDstBuff + dwBPP; // Step to next pixel in destination
-					dwX = (dwX - dwMaskX) & dwMaskX; // step to next pixel in source
-				}
+			for (uint x = 0; x < dwWidth; x++) {
+				int delta = ((dwX | dwY | dwZ) * dwBPP);
+				memcpy(pDstBuff, (PBYTE)pSrcBuff + delta, dwBPP); // copy one pixel
+				pDstBuff = (PBYTE)pDstBuff + dwBPP; // Step to next pixel in destination
+				dwX = (dwX - dwMaskX) & dwMaskX; // step to next pixel in source
 			}
 
 			pDstBuff = (PBYTE)pDstBuff + dwPitch - (dwWidth * dwBPP); // step to next line in destination
