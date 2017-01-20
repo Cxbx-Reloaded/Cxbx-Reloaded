@@ -7357,7 +7357,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetTransform)
 // ******************************************************************
 // * func: EmuIDirect3DVertexBuffer8_Lock
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(IDirect3DVertexBuffer8_Lock)
+VOID WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock)
 (
     X_D3DVertexBuffer  *ppVertexBuffer,
     UINT                OffsetToLock,
@@ -7393,7 +7393,7 @@ VOID WINAPI XTL::EMUPATCH(IDirect3DVertexBuffer8_Lock)
 // ******************************************************************
 // * func: EmuIDirect3DVertexBuffer8_Lock2
 // ******************************************************************
-BYTE* WINAPI XTL::EMUPATCH(IDirect3DVertexBuffer8_Lock2)
+BYTE* WINAPI XTL::EMUPATCH(D3DVertexBuffer_Lock2)
 (
     X_D3DVertexBuffer  *ppVertexBuffer,
     DWORD               Flags
@@ -9141,7 +9141,7 @@ VOID WINAPI XTL::EMUPATCH(D3DResource_BlockUntilNotBusy)
 // ******************************************************************
 // * func: EmuIDirect3DVertexBuffer8_GetDesc
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(IDirect3DVertexBuffer8_GetDesc)
+VOID WINAPI XTL::EMUPATCH(D3DVertexBuffer_GetDesc)
 (
     X_D3DVertexBuffer    *pThis,
     D3DVERTEXBUFFER_DESC *pDesc
