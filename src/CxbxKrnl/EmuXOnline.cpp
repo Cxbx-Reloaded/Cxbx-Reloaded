@@ -53,7 +53,7 @@ namespace NtDll
 // ******************************************************************
 // * func: EmuWSAStartup
 // ******************************************************************
-int WINAPI XTL::EmuWSAStartup
+int WINAPI XTL::EMUPATCH(EmuWSAStartup)
 (
     WORD        wVersionRequested,
     WSADATA    *lpWSAData
@@ -72,7 +72,7 @@ int WINAPI XTL::EmuWSAStartup
 // ******************************************************************
 // * func: EmuXNetStartup
 // ******************************************************************
-INT WINAPI XTL::EmuXNetStartup
+INT WINAPI XTL::EMUPATCH(EmuXNetStartup)
 (
     const PVOID pDummy
 )
@@ -88,7 +88,7 @@ INT WINAPI XTL::EmuXNetStartup
 // ******************************************************************
 // * func: EmuXNetGetEthernetLinkStatus
 // ******************************************************************
-DWORD WINAPI XTL::EmuXNetGetEthernetLinkStatus()
+DWORD WINAPI XTL::EMUPATCH(EmuXNetGetEthernetLinkStatus)()
 {
 	LOG_FUNC();
 
@@ -101,7 +101,7 @@ DWORD WINAPI XTL::EmuXNetGetEthernetLinkStatus()
 // ******************************************************************
 // * func: EmuThis::Emusocket
 // ******************************************************************
-SOCKET XTL::EmuThis::Emusocket
+SOCKET XTL::EmuThis::EMUPATCH(Emusocket)
 (
     int   af,
     int   type,
@@ -123,7 +123,7 @@ SOCKET XTL::EmuThis::Emusocket
 // ******************************************************************
 // * func: EmuThis::Emuconnect
 // ******************************************************************
-int XTL::EmuThis::Emuconnect
+int XTL::EmuThis::EMUPATCH(Emuconnect)
 (
 	SOCKET s,
 	const struct sockaddr FAR *name,
@@ -145,7 +145,7 @@ int XTL::EmuThis::Emuconnect
 // ******************************************************************
 // * func: EmuThis::Emusend
 // ******************************************************************
-int XTL::EmuThis::Emusend
+int XTL::EmuThis::EMUPATCH(Emusend)
 (
 	SOCKET s,
 	const char FAR *buf,
@@ -169,7 +169,7 @@ int XTL::EmuThis::Emusend
 // ******************************************************************
 // * func: EmuThis::Emurecv
 // ******************************************************************
-int XTL::EmuThis::Emurecv
+int XTL::EmuThis::EMUPATCH(Emurecv)
 (
 	SOCKET s,
 	char FAR *buf,
@@ -193,7 +193,7 @@ int XTL::EmuThis::Emurecv
 // ******************************************************************
 // * func: EmuThis::Emubind
 // ******************************************************************
-int XTL::EmuThis::Emubind
+int XTL::EmuThis::EMUPATCH(Emubind)
 (
 	SOCKET s, 
 	const struct sockaddr FAR *name, 
@@ -217,7 +217,7 @@ int XTL::EmuThis::Emubind
 // ******************************************************************
 // * func: EmuThis::Emulisten
 // ******************************************************************
-int XTL::EmuThis::Emulisten
+int XTL::EmuThis::EMUPATCH(Emulisten)
 (
 	SOCKET s, 
 	int backlog
@@ -239,7 +239,7 @@ int XTL::EmuThis::Emulisten
 // ******************************************************************
 // * func: EmuThis::Emuioctlsocket
 // ******************************************************************
-int XTL::EmuThis::Emuioctlsocket
+int XTL::EmuThis::EMUPATCH(Emuioctlsocket)
 (
 	SOCKET s, 
 	long cmd, 
@@ -282,7 +282,7 @@ HRESULT WINAPI XOnlineLaunchNewImage
 // ******************************************************************
 // * func: EmuXOnlineLogon
 // ******************************************************************
-HRESULT WINAPI XTL::EmuXOnlineLogon
+HRESULT WINAPI XTL::EMUPATCH(EmuXOnlineLogon)
 (
     VOID*	pUsers,
     DWORD*	pdwServiceIDs,

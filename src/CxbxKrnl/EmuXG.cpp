@@ -57,7 +57,7 @@ namespace NtDll
 // ******************************************************************
 // * func: EmuXGIsSwizzledFormat
 // ******************************************************************
-PVOID WINAPI XTL::EmuXGIsSwizzledFormat
+PVOID WINAPI XTL::EMUPATCH(EmuXGIsSwizzledFormat)
 (
     X_D3DFORMAT Format
 )
@@ -72,7 +72,7 @@ PVOID WINAPI XTL::EmuXGIsSwizzledFormat
 // ******************************************************************
 // * func: EmuXGSwizzleRect
 // ******************************************************************
-VOID WINAPI XTL::EmuXGSwizzleRect
+VOID WINAPI XTL::EMUPATCH(EmuXGSwizzleRect)
 (
     LPCVOID       pSource,
     DWORD         Pitch,
@@ -132,7 +132,7 @@ VOID WINAPI XTL::EmuXGSwizzleRect
 // ******************************************************************
 // * func: EmuXGSwizzleBox
 // ******************************************************************
-VOID WINAPI XTL::EmuXGSwizzleBox
+VOID WINAPI XTL::EMUPATCH(EmuXGSwizzleBox)
 (
     LPCVOID          pSource,
     DWORD            RowPitch,
@@ -199,7 +199,7 @@ VOID WINAPI XTL::EmuXGSwizzleBox
 // ******************************************************************
 // * func: EmuXGWriteSurfaceOrTextureToXPR
 // ******************************************************************
-HRESULT WINAPI XTL::EmuXGWriteSurfaceOrTextureToXPR
+HRESULT WINAPI XTL::EMUPATCH(EmuXGWriteSurfaceOrTextureToXPR)
 ( 
 	LPVOID			pResource,
 	const char*		cPath,
@@ -224,7 +224,7 @@ HRESULT WINAPI XTL::EmuXGWriteSurfaceOrTextureToXPR
 // ******************************************************************
 // * func: EmuXGSetTextureHeader
 // ******************************************************************
-VOID WINAPI XTL::EmuXGSetTextureHeader
+VOID WINAPI XTL::EMUPATCH(EmuXGSetTextureHeader)
 (
 	UINT			Width,
 	UINT			Height,
@@ -267,7 +267,7 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 	// Generate a temporary texture and fill in the necessary fields within
 	// the X_D3DTexture interface (lazy, I know).
 	
-	pTempTexture = (X_D3DTexture*) XTL::EmuIDirect3DDevice8_CreateTexture2(Width, Height, 0, Levels, Usage, Format, 
+	pTempTexture = (X_D3DTexture*) XTL::EMUPATCH(EmuIDirect3DDevice8_CreateTexture2)(Width, Height, 0, Levels, Usage, Format,
 		XTL::D3DRTYPE_TEXTURE);
 	
 
@@ -278,7 +278,7 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 	pTexture->Size		= pTempTexture->Size;
 
 	
-	XTL::EmuIDirect3DResource8_Release(pTempTexture);
+	XTL::EMUPATCH(EmuIDirect3DResource8_Release)(pTempTexture);
 	
 
 	// Manually fill in Format parameters
@@ -302,7 +302,7 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 // ******************************************************************
 // * func: EmuXFONT_OpenBitmapFontFromMemory 
 // ******************************************************************
-//HRESULT WINAPI XTL::EmuXFONT_OpenBitmapFontFromMemory 
+//HRESULT WINAPI XTL::EMUPATCH(EmuXFONT_OpenBitmapFontFromMemory) 
 //(
 //	CONST void		*pFontData,
 //	unsigned		uFontDataSize,
