@@ -5598,7 +5598,7 @@ DWORD WINAPI XTL::EMUPATCH(IDirect3DBaseTexture8_GetLevelCount)
 // ******************************************************************
 // * func: EmuIDirect3DTexture8_GetSurfaceLevel2
 // ******************************************************************
-XTL::X_D3DResource * WINAPI XTL::EMUPATCH(IDirect3DTexture8_GetSurfaceLevel2)
+XTL::X_D3DResource * WINAPI XTL::EMUPATCH(D3DTexture_GetSurfaceLevel2)
 (
     X_D3DTexture   *pThis,
     UINT            Level
@@ -5619,7 +5619,7 @@ XTL::X_D3DResource * WINAPI XTL::EMUPATCH(IDirect3DTexture8_GetSurfaceLevel2)
         return pThis;
     }
 
-	EMUPATCH(IDirect3DTexture8_GetSurfaceLevel)(pThis, Level, &pSurfaceLevel);
+	EMUPATCH(D3DTexture_GetSurfaceLevel)(pThis, Level, &pSurfaceLevel);
 
     return pSurfaceLevel;
 }
@@ -5627,7 +5627,7 @@ XTL::X_D3DResource * WINAPI XTL::EMUPATCH(IDirect3DTexture8_GetSurfaceLevel2)
 // ******************************************************************
 // * func: EmuIDirect3DTexture8_LockRect
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirect3DTexture8_LockRect)
+HRESULT WINAPI XTL::EMUPATCH(D3DTexture_LockRect)
 (
     X_D3DTexture   *pThis,
     UINT            Level,
@@ -5697,7 +5697,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirect3DTexture8_LockRect)
 // ******************************************************************
 // * func: EmuIDirect3DTexture8_GetSurfaceLevel
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirect3DTexture8_GetSurfaceLevel)
+HRESULT WINAPI XTL::EMUPATCH(D3DTexture_GetSurfaceLevel)
 (
     X_D3DTexture       *pThis,
     UINT                Level,
@@ -8903,7 +8903,7 @@ PVOID WINAPI XTL::EMUPATCH(D3D_AllocContiguousMemory)
 // ******************************************************************
 // * func: EmuIDirect3DTexture8_GetLevelDesc
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirect3DTexture8_GetLevelDesc)
+HRESULT WINAPI XTL::EMUPATCH(D3DTexture_GetLevelDesc)
 (
     UINT Level,
     X_D3DSURFACE_DESC* pDesc

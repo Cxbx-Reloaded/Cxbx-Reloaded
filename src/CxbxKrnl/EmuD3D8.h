@@ -768,7 +768,7 @@ DWORD WINAPI EMUPATCH(IDirect3DBaseTexture8_GetLevelCount)
 // ******************************************************************
 // * func: EmuIDirect3DTexture8_GetSurfaceLevel
 // ******************************************************************
-X_D3DResource * WINAPI EMUPATCH(IDirect3DTexture8_GetSurfaceLevel2)
+X_D3DResource * WINAPI EMUPATCH(D3DTexture_GetSurfaceLevel2)
 (
     X_D3DTexture   *pThis,
     UINT            Level
@@ -777,7 +777,7 @@ X_D3DResource * WINAPI EMUPATCH(IDirect3DTexture8_GetSurfaceLevel2)
 // ******************************************************************
 // * func: EmuIDirect3DTexture8_LockRect
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DTexture8_LockRect)
+HRESULT WINAPI EMUPATCH(D3DTexture_LockRect)
 (
     X_D3DTexture   *pThis,
     UINT            Level,
@@ -789,7 +789,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DTexture8_LockRect)
 // ******************************************************************
 // * func: EmuIDirect3DTexture8_GetSurfaceLevel
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DTexture8_GetSurfaceLevel)
+HRESULT WINAPI EMUPATCH(D3DTexture_GetSurfaceLevel)
 (
     X_D3DTexture   *pThis,
     UINT            Level,
@@ -1518,7 +1518,7 @@ PVOID WINAPI EMUPATCH(D3D_AllocContiguousMemory)
 // ******************************************************************
 // * func: IDirect3DTexture8_GetLevelDesc
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DTexture8_GetLevelDesc)
+HRESULT WINAPI EMUPATCH(D3DTexture_GetLevelDesc)
 (
     UINT Level,
     X_D3DSURFACE_DESC* pDesc
