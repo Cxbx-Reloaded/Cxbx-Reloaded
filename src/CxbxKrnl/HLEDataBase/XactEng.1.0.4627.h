@@ -31,12 +31,12 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef XACTENG_1_0_4627_H
-#define XACTENG_1_0_4627_H
+#ifndef XACTENG_4627_H
+#define XACTENG_4627_H
 
 #include "OOVPA.h"
 
-extern OOVPATable XactEng_1_0_4627[];
-extern uint32     XactEng_1_0_4627_SIZE;
+extern OOVPATable XactEng_4627[];
+extern uint32     XactEng_4627_SIZE;
 
 #endif

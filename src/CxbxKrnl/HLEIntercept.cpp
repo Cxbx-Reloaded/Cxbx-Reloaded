@@ -341,11 +341,11 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                         void *pFunc = nullptr;
 
                         if(BuildVersion == 3925)
-                            pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_1_0_3925, lower, upper);
+                            pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_3925, lower, upper);
                         else if(BuildVersion < 5233)
-                            pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_1_0_4034, lower, upper);
+                            pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_4034, lower, upper);
                         else
-                            pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_1_0_5233, lower, upper);
+                            pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_5233, lower, upper);
 
                         // locate D3DDeferredRenderState
                         if(pFunc != nullptr)
@@ -411,14 +411,14 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                             pFunc = nullptr;
 
                             if(BuildVersion == 3925)
-                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_1_0_3925, lower, upper);
+                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_3925, lower, upper);
                             else if(BuildVersion == 4134)
-                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_1_0_4134, lower, upper);
+                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_4134, lower, upper);
                             else if(BuildVersion == 4361 || BuildVersion == 4432)
-                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_1_0_4361, lower, upper);
+                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_4361, lower, upper);
                             else if(BuildVersion == 4627 || BuildVersion == 5233 || BuildVersion == 5558 || BuildVersion == 5788
                                  || BuildVersion == 5849)
-                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_1_0_4627, lower, upper);
+                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_4627, lower, upper);
 
                             if(pFunc != nullptr)
                             {
@@ -457,7 +457,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
      //                   void *pFunc = nullptr;
 
      //                   if(BuildVersion == 5849)
-					//		pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_1_0_5849_LTCG, lower, upper);
+					//		pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_LTCG_5849, lower, upper);
 
      //                   // locate D3DDeferredRenderState
      //                   if(pFunc != nullptr)
@@ -498,7 +498,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
      //                       pFunc = nullptr;
 
      //                       if(BuildVersion == 3925)
-					//			pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_1_0_5849_LTCG, lower, upper);
+					//			pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_LTCG_5849, lower, upper);
 
      //                       if(pFunc != nullptr)
      //                       {
@@ -773,7 +773,7 @@ struct HLEVerifyContext {
 std::string HLEErrorString(const HLEData *data, uint32 index)
 {
 	std::string result = 
-		"OOVPATable " + (std::string)(data->Library) + "_1_0_" + std::to_string(data->BuildVersion)
+		"OOVPATable " + (std::string)(data->Library) + "_" + std::to_string(data->BuildVersion)
 		+ "[" + std::to_string(index) + "] " 
 		+ (std::string)(data->OovpaTable[index].szFuncName);
 

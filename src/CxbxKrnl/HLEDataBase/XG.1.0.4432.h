@@ -31,12 +31,12 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef XG_1_0_4432_H
-#define XG_1_0_4432_H
+#ifndef XG_4432_H
+#define XG_4432_H
 
 #include "OOVPA.h"
 
-extern OOVPATable XG_1_0_4432[];
-extern uint32     XG_1_0_4432_SIZE;
+extern OOVPATable XG_4432[];
+extern uint32     XG_4432_SIZE;
 
 #endif

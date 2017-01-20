@@ -39,7 +39,7 @@
 // * NOTE: We are actually intercepting USBD_Init, because
 // *       XInitDevices Simply redirects to that function
 // ******************************************************************
-OOVPA_NO_XREF(XInitDevices_1_0_5233, 7)
+OOVPA_NO_XREF(XInitDevices, 5233, 7)
 
         { 0x0E, 0x75 },
         { 0x20, 0xBE },
@@ -53,7 +53,7 @@ OOVPA_END;
 // ******************************************************************
 // * XInputGetCapabilities
 // ******************************************************************
-OOVPA_NO_XREF(XInputGetCapabilities_1_0_5233, 8)
+OOVPA_NO_XREF(XInputGetCapabilities, 5233, 8)
 
         { 0x1D, 0x85 },
         { 0x3C, 0x8A },
@@ -68,7 +68,7 @@ OOVPA_END;
 // ******************************************************************
 // * XGetDeviceChanges
 // ******************************************************************
-OOVPA_NO_XREF(XGetDeviceChanges_1_0_5233, 7)
+OOVPA_NO_XREF(XGetDeviceChanges, 5233, 7)
 
         { 0x0C, 0x75 },
         { 0x1A, 0x53 },
@@ -82,7 +82,7 @@ OOVPA_END;
 // ******************************************************************
 // * XInputSetState
 // ******************************************************************
-OOVPA_NO_XREF(XInputSetState_1_0_5233, 7)
+OOVPA_NO_XREF(XInputSetState, 5233, 7)
 
         { 0x05, 0x81 },
         { 0x0C, 0xF6 },
@@ -94,45 +94,45 @@ OOVPA_NO_XREF(XInputSetState_1_0_5233, 7)
 OOVPA_END;
 
 // ******************************************************************
-// * XAPI_1_0_5233
+// * XAPI_5233
 // ******************************************************************
-OOVPATable XAPI_1_0_5233[] = {
+OOVPATable XAPI_5233[] = {
 
     // GetTimeZoneInformation (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(GetTimeZoneInformation_1_0_3911, GetTimeZoneInformation),
+	OOVPA_TABLE_PATCH(GetTimeZoneInformation, 3911, GetTimeZoneInformation),
 	// SetThreadPriority (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(SetThreadPriority_1_0_3911, SetThreadPriority),
+	OOVPA_TABLE_PATCH(SetThreadPriority, 3911, SetThreadPriority),
 	// SetThreadPriorityBoost (* unchanged since 4627 *)
-	OOVPA_TABLE_PATCH(SetThreadPriorityBoost_1_0_4627, SetThreadPriorityBoost),
+	OOVPA_TABLE_PATCH(SetThreadPriorityBoost, 4627, SetThreadPriorityBoost),
 	// GetThreadPriority (* unchanged since 4627 *)
-	OOVPA_TABLE_PATCH(GetThreadPriority_1_0_4627, GetThreadPriority),
+	OOVPA_TABLE_PATCH(GetThreadPriority, 4627, GetThreadPriority),
     // XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(XRegisterThreadNotifyRoutine_1_0_3911, XRegisterThreadNotifyRoutine),
+	OOVPA_TABLE_PATCH(XRegisterThreadNotifyRoutine, 3911, XRegisterThreadNotifyRoutine),
     // XMountUtilityDrive (* unchanged since 4432 *)
-	OOVPA_TABLE_PATCH(XMountUtilityDrive_1_0_4432, XMountUtilityDrive),
+	OOVPA_TABLE_PATCH(XMountUtilityDrive, 4432, XMountUtilityDrive),
     // XInitDevices
-	OOVPA_TABLE_PATCH(XInitDevices_1_0_5233, XInitDevices),
+	OOVPA_TABLE_PATCH(XInitDevices, 5233, XInitDevices),
     // XGetDevices (* unchanged since 1.0.4134 *)
-	OOVPA_TABLE_PATCH(XGetDevices_1_0_4134, XGetDevices),
+	OOVPA_TABLE_PATCH(XGetDevices, 4134, XGetDevices),
     // XGetDeviceChanges
-	OOVPA_TABLE_PATCH(XGetDeviceChanges_1_0_5233, XGetDeviceChanges),
+	OOVPA_TABLE_PATCH(XGetDeviceChanges, 5233, XGetDeviceChanges),
     // XInputOpen (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_PATCH(XInputOpen_1_0_4361, XInputOpen),
+	OOVPA_TABLE_PATCH(XInputOpen, 4361, XInputOpen),
     // XInputGetCapabilities
-	OOVPA_TABLE_PATCH(XInputGetCapabilities_1_0_5233, XInputGetCapabilities),
+	OOVPA_TABLE_PATCH(XInputGetCapabilities, 5233, XInputGetCapabilities),
     // XID_fCloseDevice (* unchanged since 1.0.4928 *)
-	OOVPA_TABLE_XREF(XID_fCloseDevice_1_0_4928),
+	OOVPA_TABLE_XREF(XID_fCloseDevice, 4928),
     // XInputClose (* unchanged since 1.0.4928 *)
-	OOVPA_TABLE_PATCH(XInputClose_1_0_4928, XInputClose),
+	OOVPA_TABLE_PATCH(XInputClose, 4928, XInputClose),
     // XInputGetState (* unchanged since 1.0.4928 *)
-	OOVPA_TABLE_PATCH(XInputGetState_1_0_4928, XInputGetState),
+	OOVPA_TABLE_PATCH(XInputGetState, 4928, XInputGetState),
     // XInputSetState
-	OOVPA_TABLE_PATCH(XInputSetState_1_0_5233, XInputSetState),
+	OOVPA_TABLE_PATCH(XInputSetState, 5233, XInputSetState),
 	// QueueUserAPC (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, QueueUserAPC),
+	OOVPA_TABLE_PATCH(QueueUserAPC, 3911, QueueUserAPC),
 };
 
 // ******************************************************************
-// * XAPI_1_0_5233_SIZE
+// * XAPI_5233_SIZE
 // ******************************************************************
-uint32 XAPI_1_0_5233_SIZE = sizeof(XAPI_1_0_5233);
+uint32 XAPI_5233_SIZE = sizeof(XAPI_5233);

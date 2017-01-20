@@ -27,16 +27,16 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
-// *
+// *																								u
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef DSOUND_1_0_3936_H
-#define DSOUND_1_0_3936_H
+#ifndef DSOUND_3936_H
+#define DSOUND_3936_H
 
 #include "OOVPA.h"
 
-extern OOVPATable DSOUND_1_0_3936[];
-extern uint32     DSOUND_1_0_3936_SIZE;
+extern OOVPATable DSOUND_3936[];
+extern uint32     DSOUND_3936_SIZE;
 
 #endif
