@@ -278,7 +278,7 @@ VOID WINAPI XTL::EMUPATCH(XGSetTextureHeader)
 	pTexture->Size		= pTempTexture->Size;
 
 	
-	XTL::EMUPATCH(IDirect3DResource8_Release)(pTempTexture);
+	XTL::EMUPATCH(D3DResource_Release)(pTempTexture);
 	
 
 	// Manually fill in Format parameters

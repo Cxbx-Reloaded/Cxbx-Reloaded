@@ -1088,7 +1088,7 @@ static void EmuVerifyResourceIsRegistered(XTL::X_D3DResource *pResource)
         }
     }
 
-    XTL::EMUPATCH(IDirect3DResource8_Register)(pResource, 0/*(PVOID)pResource->Data*/);
+    XTL::EMUPATCH(D3DResource_Register)(pResource, 0/*(PVOID)pResource->Data*/);
         
 
     if(pResource->Lock != X_D3DRESOURCE_LOCK_FLAG_NOSIZE)
@@ -4310,7 +4310,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Swap)
 // ******************************************************************
 // * func: EmuIDirect3DResource8_Register
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirect3DResource8_Register)
+HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 (
     X_D3DResource      *pThis,
     PVOID               pBase
@@ -5004,7 +5004,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirect3DResource8_Register)
 // ******************************************************************
 // * func: EmuIDirect3DResource8_AddRef
 // ******************************************************************
-ULONG WINAPI XTL::EMUPATCH(IDirect3DResource8_AddRef)
+ULONG WINAPI XTL::EMUPATCH(D3DResource_AddRef)
 (
     X_D3DResource      *pThis
 )
@@ -5055,7 +5055,7 @@ ULONG WINAPI XTL::EMUPATCH(IDirect3DResource8_AddRef)
 // ******************************************************************
 // * func: EmuIDirect3DResource8_Release
 // ******************************************************************
-ULONG WINAPI XTL::EMUPATCH(IDirect3DResource8_Release)
+ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 (
     X_D3DResource      *pThis
 )
@@ -5159,7 +5159,7 @@ ULONG WINAPI XTL::EMUPATCH(IDirect3DResource8_Release)
 // ******************************************************************
 // * func: EmuIDirect3DResource8_IsBusy
 // ******************************************************************
-BOOL WINAPI XTL::EMUPATCH(IDirect3DResource8_IsBusy)
+BOOL WINAPI XTL::EMUPATCH(D3DResource_IsBusy)
 (
     X_D3DResource      *pThis
 )
@@ -5184,7 +5184,7 @@ BOOL WINAPI XTL::EMUPATCH(IDirect3DResource8_IsBusy)
 // ******************************************************************
 // * func: EmuIDirect3DResource8_GetType
 // ******************************************************************
-XTL::X_D3DRESOURCETYPE WINAPI XTL::EMUPATCH(IDirect3DResource8_GetType)
+XTL::X_D3DRESOURCETYPE WINAPI XTL::EMUPATCH(D3DResource_GetType)
 (
     X_D3DResource      *pThis
 )
@@ -8351,7 +8351,7 @@ XTL::D3DCOLOR * WINAPI XTL::EMUPATCH(IDirect3DPalette8_Lock2)
     // If X_D3DLOCK_READONLY and X_D3DLOCK_NOOVERWRITE bitflags not set
     if( !(Flags & (X_D3DLOCK_READONLY | X_D3DLOCK_NOOVERWRITE)) )
     {
-		EMUPATCH(IDirect3DResource8_BlockUntilNotBusy)(pThis);
+		EMUPATCH(D3DResource_BlockUntilNotBusy)(pThis);
     }
 
     D3DCOLOR *pColors = (D3DCOLOR*)pThis->Data;
@@ -9118,7 +9118,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_BlockOnFence)
 // ******************************************************************
 // * func: EmuIDirect3DResource8_BlockUntilNotBusy
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(IDirect3DResource8_BlockUntilNotBusy)
+VOID WINAPI XTL::EMUPATCH(D3DResource_BlockUntilNotBusy)
 (
     X_D3DResource *pThis
 )

@@ -655,7 +655,7 @@ HRESULT WINAPI EMUPATCH(D3DDevice_Swap)
 // ******************************************************************
 // * func: EmuIDirect3DResource8_Register
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DResource8_Register)
+HRESULT WINAPI EMUPATCH(D3DResource_Register)
 (
     X_D3DResource      *pThis,
     PVOID               pBase
@@ -664,7 +664,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DResource8_Register)
 // ******************************************************************
 // * func: EmuIDirect3DResource8_Release
 // ******************************************************************
-ULONG WINAPI EMUPATCH(IDirect3DResource8_Release)
+ULONG WINAPI EMUPATCH(D3DResource_Release)
 (
     X_D3DResource      *pThis
 );
@@ -672,7 +672,7 @@ ULONG WINAPI EMUPATCH(IDirect3DResource8_Release)
 // ******************************************************************
 // * func: EmuIDirect3DResource8_GetType
 // ******************************************************************
-X_D3DRESOURCETYPE WINAPI EMUPATCH(IDirect3DResource8_GetType)
+X_D3DRESOURCETYPE WINAPI EMUPATCH(D3DResource_GetType)
 (
     X_D3DResource      *pThis
 );
@@ -680,7 +680,7 @@ X_D3DRESOURCETYPE WINAPI EMUPATCH(IDirect3DResource8_GetType)
 // ******************************************************************
 // * func: EmuIDirect3DResource8_AddRef
 // ******************************************************************
-ULONG WINAPI EMUPATCH(IDirect3DResource8_AddRef)
+ULONG WINAPI EMUPATCH(D3DResource_AddRef)
 (
     X_D3DResource      *pThis
 );
@@ -688,7 +688,7 @@ ULONG WINAPI EMUPATCH(IDirect3DResource8_AddRef)
 // ******************************************************************
 // * func: EmuIDirect3DResource8_IsBusy
 // ******************************************************************
-BOOL WINAPI EMUPATCH(IDirect3DResource8_IsBusy)
+BOOL WINAPI EMUPATCH(D3DResource_IsBusy)
 (
     X_D3DResource      *pThis
 );
@@ -1579,7 +1579,7 @@ VOID WINAPI EMUPATCH(D3DDevice_BlockOnFence)
 // ******************************************************************
 // * func: EmuIDirect3DResource8_BlockUntilNotBusy
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DResource8_BlockUntilNotBusy)
+VOID WINAPI EMUPATCH(D3DResource_BlockUntilNotBusy)
 (
     X_D3DResource *pThis
 );
@@ -1628,7 +1628,7 @@ VOID WINAPI EMUPATCH(D3DDevice_BlockOnFence)
 // ******************************************************************
 // * func: EmuIDirect3DResource8_BlockUntilNotBusy
 // ******************************************************************
-VOID WINAPI EMUPATCH(IDirect3DResource8_BlockUntilNotBusy)
+VOID WINAPI EMUPATCH(D3DResource_BlockUntilNotBusy)
 (
 	X_D3DResource *pThis
 );
