@@ -98,9 +98,9 @@ OOVPA_END;
 OOVPATable XOnline_4627[] ={
 
     // XNetStartup (* unchanged since 4361 *)
-	OOVPA_TABLE_PATCH(XNetStartup, 4361, XNetStartup),
+	OOVPA_TABLE_ENTRY(XNetStartup, 4361),
 	// WSAStartup
-	OOVPA_TABLE_PATCH(WSAStartup, 4361, WSAStartup),
+	OOVPA_TABLE_ENTRY(WSAStartup, 4361),
     // XnInit (XREF)
 	OOVPA_TABLE_XREF(XnInit, 4627),
 	// socket
@@ -112,7 +112,7 @@ OOVPATable XOnline_4627[] ={
 	// ioctlsocket (* unchanged since 4361 *)
 	OOVPA_TABLE_PATCH_EmuThis(ioctlsocket, 4361, ioctlsocket),
 	// XNetGetEthernetLinkStatus
-	OOVPA_TABLE_PATCH(XNetGetEthernetLinkStatus, 4627, XNetGetEthernetLinkStatus),
+	OOVPA_TABLE_ENTRY(XNetGetEthernetLinkStatus, 4627),
 	// XoUpdateLaunchNewImageInternal (XREF)
 	OOVPA_TABLE_XREF(XoUpdateLaunchNewImageInternal, 4627),
 };

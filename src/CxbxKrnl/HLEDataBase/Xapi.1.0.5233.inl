@@ -99,37 +99,37 @@ OOVPA_END;
 OOVPATable XAPI_5233[] = {
 
     // GetTimeZoneInformation (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(GetTimeZoneInformation, 3911, GetTimeZoneInformation),
+	OOVPA_TABLE_ENTRY(GetTimeZoneInformation, 3911),
 	// SetThreadPriority (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(SetThreadPriority, 3911, SetThreadPriority),
+	OOVPA_TABLE_ENTRY(SetThreadPriority, 3911),
 	// SetThreadPriorityBoost (* unchanged since 4627 *)
-	OOVPA_TABLE_PATCH(SetThreadPriorityBoost, 4627, SetThreadPriorityBoost),
+	OOVPA_TABLE_ENTRY(SetThreadPriorityBoost, 4627),
 	// GetThreadPriority (* unchanged since 4627 *)
-	OOVPA_TABLE_PATCH(GetThreadPriority, 4627, GetThreadPriority),
+	OOVPA_TABLE_ENTRY(GetThreadPriority, 4627),
     // XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(XRegisterThreadNotifyRoutine, 3911, XRegisterThreadNotifyRoutine),
+	OOVPA_TABLE_ENTRY(XRegisterThreadNotifyRoutine, 3911),
     // XMountUtilityDrive (* unchanged since 4432 *)
-	OOVPA_TABLE_PATCH(XMountUtilityDrive, 4432, XMountUtilityDrive),
+	OOVPA_TABLE_ENTRY(XMountUtilityDrive, 4432),
     // XInitDevices
-	OOVPA_TABLE_PATCH(XInitDevices, 5233, XInitDevices),
+	OOVPA_TABLE_ENTRY(XInitDevices, 5233),
     // XGetDevices (* unchanged since 1.0.4134 *)
-	OOVPA_TABLE_PATCH(XGetDevices, 4134, XGetDevices),
+	OOVPA_TABLE_ENTRY(XGetDevices, 4134),
     // XGetDeviceChanges
-	OOVPA_TABLE_PATCH(XGetDeviceChanges, 5233, XGetDeviceChanges),
+	OOVPA_TABLE_ENTRY(XGetDeviceChanges, 5233),
     // XInputOpen (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_PATCH(XInputOpen, 4361, XInputOpen),
+	OOVPA_TABLE_ENTRY(XInputOpen, 4361),
     // XInputGetCapabilities
-	OOVPA_TABLE_PATCH(XInputGetCapabilities, 5233, XInputGetCapabilities),
+	OOVPA_TABLE_ENTRY(XInputGetCapabilities, 5233),
     // XID_fCloseDevice (* unchanged since 1.0.4928 *)
 	OOVPA_TABLE_XREF(XID_fCloseDevice, 4928),
     // XInputClose (* unchanged since 1.0.4928 *)
-	OOVPA_TABLE_PATCH(XInputClose, 4928, XInputClose),
+	OOVPA_TABLE_ENTRY(XInputClose, 4928),
     // XInputGetState (* unchanged since 1.0.4928 *)
-	OOVPA_TABLE_PATCH(XInputGetState, 4928, XInputGetState),
+	OOVPA_TABLE_ENTRY(XInputGetState, 4928),
     // XInputSetState
-	OOVPA_TABLE_PATCH(XInputSetState, 5233, XInputSetState),
+	OOVPA_TABLE_ENTRY(XInputSetState, 5233),
 	// QueueUserAPC (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(QueueUserAPC, 3911, QueueUserAPC),
+	OOVPA_TABLE_ENTRY(QueueUserAPC, 3911),
 };
 
 // ******************************************************************

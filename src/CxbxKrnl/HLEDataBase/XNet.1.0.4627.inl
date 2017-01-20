@@ -330,9 +330,9 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XNet_4627[] = {
 	// XNetStartup
-	OOVPA_TABLE_PATCH(XNetStartup, 4627, XNetStartup), // same as xonline 4361
+	OOVPA_TABLE_ENTRY(XNetStartup, 4627), // same as xonline 4361
 	// WSAStartup
-	OOVPA_TABLE_PATCH(WSAStartup, 4627, WSAStartup), // same as xonline 4361
+	OOVPA_TABLE_ENTRY(WSAStartup, 4627), // same as xonline 4361
 	// XnInit (XREF)
 	OOVPA_TABLE_XREF(XnInit, 4627),
 	// socket
