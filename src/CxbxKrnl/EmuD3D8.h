@@ -799,7 +799,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DTexture8_GetSurfaceLevel)
 // ******************************************************************
 // * func: EmuIDirect3DVolumeTexture8_LockBox
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DVolumeTexture8_LockBox)
+HRESULT WINAPI EMUPATCH(D3DVolumeTexture_LockBox)
 (
     X_D3DVolumeTexture *pThis,
     UINT                Level,
