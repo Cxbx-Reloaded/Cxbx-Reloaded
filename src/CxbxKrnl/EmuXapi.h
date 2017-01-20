@@ -315,7 +315,7 @@ LAUNCH_DATA, *PLAUNCH_DATA;
 // ******************************************************************
 // * macro: EMUPATCH - marker on patches on original Xbox functions
 // ******************************************************************
-#define EMUPATCH(Name) EmuPatch##Name
+#define EMUPATCH(Name) EmuPatch_##Name
 
 // ******************************************************************
 // * func: EmuXFormatUtilityDrive
