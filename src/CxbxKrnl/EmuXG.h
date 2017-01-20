@@ -44,7 +44,7 @@ XGPOINT3D;
 
 /* Leave unpatched
 // ******************************************************************
-// * func: EmuXGIsSwizzledFormat
+// * patch: XGIsSwizzledFormat
 // ******************************************************************
 PVOID WINAPI EMUPATCH(XGIsSwizzledFormat)
 (
@@ -54,7 +54,7 @@ PVOID WINAPI EMUPATCH(XGIsSwizzledFormat)
 
 /* Leave unpatched
 // ******************************************************************
-// * func: EmuXGSwizzleRect
+// * patch: XGSwizzleRect
 // ******************************************************************
 VOID WINAPI EMUPATCH(XGSwizzleRect)
 (
@@ -70,7 +70,7 @@ VOID WINAPI EMUPATCH(XGSwizzleRect)
 */
 
 // ******************************************************************
-// * func: EmuXGSwizzleBox
+// * patch: XGSwizzleBox
 // ******************************************************************
 VOID WINAPI EMUPATCH(XGSwizzleBox)
 (
@@ -87,7 +87,7 @@ VOID WINAPI EMUPATCH(XGSwizzleBox)
 );
 
 // ******************************************************************
-// * func: EmuXGWriteSurfaceOrTextureToXPR
+// * patch: XGWriteSurfaceOrTextureToXPR
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(XGWriteSurfaceOrTextureToXPR)
 ( 
@@ -97,7 +97,7 @@ HRESULT WINAPI EMUPATCH(XGWriteSurfaceOrTextureToXPR)
 );
 
 // ******************************************************************
-// * func: EmuXGSetTextureHeader
+// * patch: XGSetTextureHeader
 // ******************************************************************
 VOID	WINAPI EMUPATCH(XGSetTextureHeader)
 (
@@ -113,7 +113,7 @@ VOID	WINAPI EMUPATCH(XGSetTextureHeader)
 );
 
 // ******************************************************************
-// * func: EmuXFONT_OpenBitmapFontFromMemory 
+// * patch: XFONT_OpenBitmapFontFromMemory 
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(XFONT_OpenBitmapFontFromMemory) 
 (

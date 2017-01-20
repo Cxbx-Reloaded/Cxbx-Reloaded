@@ -49,43 +49,43 @@ class EmuThis
 {
     public:
         // ******************************************************************
-        // * func: Emusocket
+        // * patch: socket
         // ******************************************************************
         SOCKET EMUPATCH(socket)(int af, int type, int protocol);
 
 		// ******************************************************************
-		// * func: EmuThis::Emuconnect
+		// * patch: This::Emuconnect
 		// ******************************************************************
 		int EMUPATCH(connect)(SOCKET s, const struct sockaddr FAR *name, int namelen);
 
 		// ******************************************************************
-		// * func: EmuThis::Emusend
+		// * patch: This::Emusend
 		// ******************************************************************
 		int EMUPATCH(send)(SOCKET s, const char FAR *buf, int len, int flags);
 
 		// ******************************************************************
-		// * func: EmuThis::Emurecv
+		// * patch: This::Emurecv
 		// ******************************************************************
 		int EMUPATCH(recv)(SOCKET s, char FAR *buf, int len, int flags);
 
         // ******************************************************************
-        // * func: Emubind
+        // * patch: bind
         // ******************************************************************
         int EMUPATCH(bind)(SOCKET s, const struct sockaddr FAR *name, int namelen);
 
         // ******************************************************************
-        // * func: Emulisten
+        // * patch: listen
         // ******************************************************************
         int EMUPATCH(listen)(SOCKET s, int backlog);
 
         // ******************************************************************
-        // * func: Emuioctlsocket
+        // * patch: ioctlsocket
         // ******************************************************************
         int EMUPATCH(ioctlsocket)(SOCKET s, long cmd, u_long FAR *argp);
 };
 
 // ******************************************************************
-// * func: EmuWSAStartup
+// * patch: WSAStartup
 // ******************************************************************
 int WINAPI EMUPATCH(WSAStartup)
 (
@@ -94,7 +94,7 @@ int WINAPI EMUPATCH(WSAStartup)
 );
 
 // ******************************************************************
-// * func: EmuXNetStartup
+// * patch: XNetStartup
 // ******************************************************************
 INT WINAPI EMUPATCH(XNetStartup)
 (
@@ -102,12 +102,12 @@ INT WINAPI EMUPATCH(XNetStartup)
 );
 
 // ******************************************************************
-// * func: EmuXNetGetEthernetLinkStatus
+// * patch: XNetGetEthernetLinkStatus
 // ******************************************************************
 DWORD WINAPI EMUPATCH(XNetGetEthernetLinkStatus)();
 
 // ******************************************************************
-// * func: EmuXOnlineLaunchNewImage
+// * patch: XOnlineLaunchNewImage
 // ******************************************************************
 HRESULT WINAPI XOnlineLaunchNewImage
 (
@@ -116,7 +116,7 @@ HRESULT WINAPI XOnlineLaunchNewImage
 );
 
 // ******************************************************************
-// * func: EmuXOnlineLogon
+// * patch: XOnlineLogon
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(XOnlineLogon)
 (

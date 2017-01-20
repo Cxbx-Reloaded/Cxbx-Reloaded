@@ -63,7 +63,7 @@ namespace xboxkrnl
 
 
 // ******************************************************************
-// * func: EmuXACTEngineCreate
+// * patch: XACTEngineCreate
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(XACTEngineCreate)
 (

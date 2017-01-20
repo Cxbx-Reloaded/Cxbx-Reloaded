@@ -36,8 +36,8 @@
 
 #include "OOVPA.h"
 
-extern SOOVPA<13> IDirect3DDevice8_SetRenderState_CullMode_1_0_5849_LTCG;
-extern SOOVPA<10> IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_5849_LTCG;
+extern SOOVPA<13> D3DDevice_SetRenderState_CullMode_1_0_5849_LTCG;
+extern SOOVPA<10> D3DDevice_SetTextureState_TexCoordIndex_1_0_5849_LTCG;
 
 extern OOVPATable D3D8LTCG_1_0_5849[];
 extern uint32     D3D8LTCG_1_0_5849_SIZE;

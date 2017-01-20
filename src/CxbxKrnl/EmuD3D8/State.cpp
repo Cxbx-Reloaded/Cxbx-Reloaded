@@ -47,7 +47,7 @@ extern uint32 g_BuildVersion;
 extern uint32 g_OrigBuildVersion;
 
 // ******************************************************************
-// * func: EmuUpdateDeferredStates
+// * patch: UpdateDeferredStates
 // ******************************************************************
 void XTL::EmuUpdateDeferredStates()
 {

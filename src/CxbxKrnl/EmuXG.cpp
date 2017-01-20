@@ -55,7 +55,7 @@ namespace NtDll
 
 /* Leave unpatched
 // ******************************************************************
-// * func: EmuXGIsSwizzledFormat
+// * patch: XGIsSwizzledFormat
 // ******************************************************************
 PVOID WINAPI XTL::EMUPATCH(XGIsSwizzledFormat)
 (
@@ -70,7 +70,7 @@ PVOID WINAPI XTL::EMUPATCH(XGIsSwizzledFormat)
 
 /* Leave unpatched
 // ******************************************************************
-// * func: EmuXGSwizzleRect
+// * patch: XGSwizzleRect
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(XGSwizzleRect)
 (
@@ -130,7 +130,7 @@ VOID WINAPI XTL::EMUPATCH(XGSwizzleRect)
 */
 
 // ******************************************************************
-// * func: EmuXGSwizzleBox
+// * patch: XGSwizzleBox
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(XGSwizzleBox)
 (
@@ -197,7 +197,7 @@ VOID WINAPI XTL::EMUPATCH(XGSwizzleBox)
 }
 
 // ******************************************************************
-// * func: EmuXGWriteSurfaceOrTextureToXPR
+// * patch: XGWriteSurfaceOrTextureToXPR
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(XGWriteSurfaceOrTextureToXPR)
 ( 
@@ -222,7 +222,7 @@ HRESULT WINAPI XTL::EMUPATCH(XGWriteSurfaceOrTextureToXPR)
 }
 
 // ******************************************************************
-// * func: EmuXGSetTextureHeader
+// * patch: XGSetTextureHeader
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(XGSetTextureHeader)
 (
@@ -250,9 +250,9 @@ VOID WINAPI XTL::EMUPATCH(XGSetTextureHeader)
 		LOG_FUNC_END;
 
 	// NOTES: This function simply creates a texture that needs to be registered
-	// via D3DDevice_Register afterwards.  So, do I just create the texture via
-	// EmuIDirect3DDevice8_CreateTexture, or just fill in the interface and let
-	// EmuIDirect3DDevice8_Register do the rest?  Trial and error.
+	// via EMUPATCH(D3DDevice_Register) afterwards.  So, do I just create the texture via
+	// EMUPATCH(D3DDevice_CreateTexture), or just fill in the interface and let
+	// EMUPATCH(D3DDevice_Register) do the rest?  Trial and error.
 
 	X_D3DTexture* pTempTexture = NULL;
 	DWORD l2w = (DWORD) log( (float)Width ) / log(2.0f);
@@ -300,7 +300,7 @@ VOID WINAPI XTL::EMUPATCH(XGSetTextureHeader)
 }
 
 // ******************************************************************
-// * func: EmuXFONT_OpenBitmapFontFromMemory 
+// * patch: XFONT_OpenBitmapFontFromMemory 
 // ******************************************************************
 //HRESULT WINAPI XTL::EMUPATCH(XFONT_OpenBitmapFontFromMemory) 
 //(

@@ -51,7 +51,7 @@ namespace NtDll
 #include "EmuXTL.h"
 
 // ******************************************************************
-// * func: EmuWSAStartup
+// * patch: WSAStartup
 // ******************************************************************
 int WINAPI XTL::EMUPATCH(WSAStartup)
 (
@@ -70,7 +70,7 @@ int WINAPI XTL::EMUPATCH(WSAStartup)
 }
 
 // ******************************************************************
-// * func: EmuXNetStartup
+// * patch: XNetStartup
 // ******************************************************************
 INT WINAPI XTL::EMUPATCH(XNetStartup)
 (
@@ -86,7 +86,7 @@ INT WINAPI XTL::EMUPATCH(XNetStartup)
 }
 
 // ******************************************************************
-// * func: EmuXNetGetEthernetLinkStatus
+// * patch: XNetGetEthernetLinkStatus
 // ******************************************************************
 DWORD WINAPI XTL::EMUPATCH(XNetGetEthernetLinkStatus)()
 {
@@ -99,7 +99,7 @@ DWORD WINAPI XTL::EMUPATCH(XNetGetEthernetLinkStatus)()
 }
 
 // ******************************************************************
-// * func: EmuThis::Emusocket
+// * patch: This::Emusocket
 // ******************************************************************
 SOCKET XTL::EmuThis::EMUPATCH(socket)
 (
@@ -121,7 +121,7 @@ SOCKET XTL::EmuThis::EMUPATCH(socket)
 }
 
 // ******************************************************************
-// * func: EmuThis::Emuconnect
+// * patch: This::Emuconnect
 // ******************************************************************
 int XTL::EmuThis::EMUPATCH(connect)
 (
@@ -143,7 +143,7 @@ int XTL::EmuThis::EMUPATCH(connect)
 }
 
 // ******************************************************************
-// * func: EmuThis::Emusend
+// * patch: This::Emusend
 // ******************************************************************
 int XTL::EmuThis::EMUPATCH(send)
 (
@@ -167,7 +167,7 @@ int XTL::EmuThis::EMUPATCH(send)
 }
 
 // ******************************************************************
-// * func: EmuThis::Emurecv
+// * patch: This::Emurecv
 // ******************************************************************
 int XTL::EmuThis::EMUPATCH(recv)
 (
@@ -191,7 +191,7 @@ int XTL::EmuThis::EMUPATCH(recv)
 }
 
 // ******************************************************************
-// * func: EmuThis::Emubind
+// * patch: This::Emubind
 // ******************************************************************
 int XTL::EmuThis::EMUPATCH(bind)
 (
@@ -215,7 +215,7 @@ int XTL::EmuThis::EMUPATCH(bind)
 }
 
 // ******************************************************************
-// * func: EmuThis::Emulisten
+// * patch: This::Emulisten
 // ******************************************************************
 int XTL::EmuThis::EMUPATCH(listen)
 (
@@ -237,7 +237,7 @@ int XTL::EmuThis::EMUPATCH(listen)
 }
 
 // ******************************************************************
-// * func: EmuThis::Emuioctlsocket
+// * patch: This::Emuioctlsocket
 // ******************************************************************
 int XTL::EmuThis::EMUPATCH(ioctlsocket)
 (
@@ -259,7 +259,7 @@ int XTL::EmuThis::EMUPATCH(ioctlsocket)
 }
 
 // ******************************************************************
-// * func: EmuXOnlineLaunchNewImage
+// * patch: XOnlineLaunchNewImage
 // ******************************************************************
 HRESULT WINAPI XOnlineLaunchNewImage
 (
@@ -280,7 +280,7 @@ HRESULT WINAPI XOnlineLaunchNewImage
 }
 
 // ******************************************************************
-// * func: EmuXOnlineLogon
+// * patch: XOnlineLogon
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(XOnlineLogon)
 (

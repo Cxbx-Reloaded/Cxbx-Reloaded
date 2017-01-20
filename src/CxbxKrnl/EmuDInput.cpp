@@ -46,7 +46,7 @@
 static XBController g_XBController;
 
 // ******************************************************************
-// * func: XTL::EmuDInputInit
+// * XTL::EmuDInputInit
 // ******************************************************************
 bool XTL::EmuDInputInit()
 {
@@ -61,7 +61,7 @@ bool XTL::EmuDInputInit()
 }
 
 // ******************************************************************
-// * func: XTL::EmuDInputCleanup
+// * XTL::EmuDInputCleanup
 // ******************************************************************
 void XTL::EmuDInputCleanup()
 {
@@ -69,7 +69,7 @@ void XTL::EmuDInputCleanup()
 }
 
 // ******************************************************************
-// * func: XTL::EmuDInputPoll
+// * XTL::EmuDInputPoll
 // ******************************************************************
 void XTL::EmuDInputPoll(XTL::PXINPUT_STATE Controller)
 {
