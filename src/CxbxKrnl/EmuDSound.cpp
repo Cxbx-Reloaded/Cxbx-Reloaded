@@ -60,21 +60,21 @@ XTL::X_CMcpxStream::_vtbl XTL::X_CMcpxStream::vtbl =
     0xBEEFC002,                     // 0x04
     0xBEEFC003,                     // 0x08
     0xBEEFC004,                     // 0x0C
-    &XTL::EmuCMcpxStream_Dummy_0x10,// 0x10
+    &XTL::EMUPATCH(CMcpxStream_Dummy_0x10),// 0x10
 };
 
 XTL::X_CDirectSoundStream::_vtbl XTL::X_CDirectSoundStream::vtbl =
 {
-    &XTL::EmuCDirectSoundStream_AddRef,         // 0x00
-    &XTL::EmuCDirectSoundStream_Release,        // 0x04
+    &XTL::EMUPATCH(CDirectSoundStream_AddRef),         // 0x00
+    &XTL::EMUPATCH(CDirectSoundStream_Release),        // 0x04
 /*
     STDMETHOD(GetInfo)(THIS_ LPXMEDIAINFO pInfo) PURE;
 */
-	&XTL::EmuCDirectSoundStream_GetInfo,        // 0x08
-    &XTL::EmuCDirectSoundStream_GetStatus,      // 0x0C
-    &XTL::EmuCDirectSoundStream_Process,        // 0x10
-    &XTL::EmuCDirectSoundStream_Discontinuity,  // 0x14
-    &XTL::EmuCDirectSoundStream_Flush,          // 0x18
+	&XTL::EMUPATCH(CDirectSoundStream_GetInfo),        // 0x08
+    &XTL::EMUPATCH(CDirectSoundStream_GetStatus),      // 0x0C
+    &XTL::EMUPATCH(CDirectSoundStream_Process),        // 0x10
+    &XTL::EMUPATCH(CDirectSoundStream_Discontinuity),  // 0x14
+    &XTL::EMUPATCH(CDirectSoundStream_Flush),          // 0x18
     0xBEEFB003,                                 // 0x1C
     0xBEEFB004,                                 // 0x20
     0xBEEFB005,                                 // 0x24
@@ -87,16 +87,16 @@ XTL::X_CDirectSoundStream::_vtbl XTL::X_CDirectSoundStream::vtbl =
 
 XTL::X_XFileMediaObject::_vtbl XTL::X_XFileMediaObject::vtbl = 
 {
-	&XTL::EmuXFileMediaObject_AddRef,		// 0x00
-	&XTL::EmuXFileMediaObject_Release,		// 0x04
-	&XTL::EmuXFileMediaObject_GetInfo,		// 0x08
-	&XTL::EmuXFileMediaObject_GetStatus,	// 0x0C
-	&XTL::EmuXFileMediaObject_Process,		// 0x10
-	&XTL::EmuXFileMediaObject_Discontinuity,// 0x14
+	&XTL::EMUPATCH(XFileMediaObject_AddRef),		// 0x00
+	&XTL::EMUPATCH(XFileMediaObject_Release),		// 0x04
+	&XTL::EMUPATCH(XFileMediaObject_GetInfo),		// 0x08
+	&XTL::EMUPATCH(XFileMediaObject_GetStatus),	// 0x0C
+	&XTL::EMUPATCH(XFileMediaObject_Process),		// 0x10
+	&XTL::EMUPATCH(XFileMediaObject_Discontinuity),// 0x14
 	0xBEEFD007,								// 0x18
-	&XTL::EmuXFileMediaObject_Seek,			// 0x1C
+	&XTL::EMUPATCH(XFileMediaObject_Seek),			// 0x1C
 	0xBEEFD009,								// 0x20
-	&XTL::EmuXFileMediaObject_DoWork,		// 0x24
+	&XTL::EMUPATCH(XFileMediaObject_DoWork),		// 0x24
 };
 
 
@@ -247,9 +247,9 @@ static void EmuResizeIDirectSoundStream8(XTL::X_CDirectSoundStream *pThis, DWORD
 }
 
 // ******************************************************************
-// * func: EmuDirectSoundCreate
+// * patch: DirectSoundCreate
 // ******************************************************************
-HRESULT WINAPI XTL::EmuDirectSoundCreate
+HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreate)
 (
     LPVOID          pguidDeviceId,
     LPDIRECTSOUND8 *ppDirectSound,
@@ -312,9 +312,9 @@ HRESULT WINAPI XTL::EmuDirectSoundCreate
 }
 
 // ******************************************************************
-// * func: EmuIDirectSound8_AddRef
+// * patch: IDirectSound8_AddRef
 // ******************************************************************
-ULONG WINAPI XTL::EmuIDirectSound8_AddRef
+ULONG WINAPI XTL::EMUPATCH(IDirectSound8_AddRef)
 (
     LPDIRECTSOUND8          pThis
 )
@@ -335,9 +335,9 @@ ULONG WINAPI XTL::EmuIDirectSound8_AddRef
 }
 
 // ******************************************************************
-// * func: EmuIDirectSound8_Release
+// * patch: IDirectSound8_Release
 // ******************************************************************
-ULONG WINAPI XTL::EmuIDirectSound8_Release
+ULONG WINAPI XTL::EMUPATCH(IDirectSound8_Release)
 (
     LPDIRECTSOUND8          pThis
 )
@@ -363,9 +363,9 @@ ULONG WINAPI XTL::EmuIDirectSound8_Release
 }
 
 // ******************************************************************
-// * func: EmuCDirectSound_GetSpeakerConfig
+// * patch: CDirectSound_GetSpeakerConfig
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSound_GetSpeakerConfig
+HRESULT WINAPI XTL::EMUPATCH(CDirectSound_GetSpeakerConfig)
 (
     X_CDirectSound         *pThis,
     PDWORD                  pdwSpeakerConfig
@@ -388,9 +388,9 @@ HRESULT WINAPI XTL::EmuCDirectSound_GetSpeakerConfig
 }
 
 // ******************************************************************
-// * func: EmuIDirectSound8_EnableHeadphones
+// * patch: IDirectSound8_EnableHeadphones
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSound8_EnableHeadphones
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_EnableHeadphones)
 (
     LPDIRECTSOUND8          pThis,
     BOOL                    fEnabled
@@ -413,9 +413,9 @@ HRESULT WINAPI XTL::EmuIDirectSound8_EnableHeadphones
 }
 
 // ******************************************************************
-// * func: EmuIDirectSound8_SynchPlayback
+// * patch: IDirectSound8_SynchPlayback
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSound8_SynchPlayback
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SynchPlayback)
 (
     LPDIRECTSOUND8          pThis
 )
@@ -436,9 +436,9 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SynchPlayback
 }
 
 // ******************************************************************
-// * func: EmuIDirectSound8_DownloadEffectsImage
+// * patch: IDirectSound8_DownloadEffectsImage
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSound8_DownloadEffectsImage
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_DownloadEffectsImage)
 (
     LPDIRECTSOUND8          pThis,
     LPCVOID                 pvImageBuffer,
@@ -467,9 +467,9 @@ HRESULT WINAPI XTL::EmuIDirectSound8_DownloadEffectsImage
 }
 
 // ******************************************************************
-// * func: EmuDirectSoundDoWork
+// * patch: DirectSoundDoWork
 // ******************************************************************
-VOID WINAPI XTL::EmuDirectSoundDoWork()
+VOID WINAPI XTL::EMUPATCH(DirectSoundDoWork)()
 {
     
 
@@ -484,9 +484,9 @@ VOID WINAPI XTL::EmuDirectSoundDoWork()
 }
 
 // ******************************************************************
-// * func: EmuIDirectSound8_SetOrientation
+// * patch: IDirectSound8_SetOrientation
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSound8_SetOrientation
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetOrientation)
 (
     LPDIRECTSOUND8  pThis,
     FLOAT           xFront,
@@ -521,9 +521,9 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetOrientation
 }
 
 // ******************************************************************
-// * func: EmuIDirectSound8_SetDistanceFactor
+// * patch: IDirectSound8_SetDistanceFactor
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSound8_SetDistanceFactor
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetDistanceFactor)
 (
     LPDIRECTSOUND8  pThis,
     FLOAT           fDistanceFactor,
@@ -548,9 +548,9 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetDistanceFactor
 }
 
 // ******************************************************************
-// * func: EmuIDirectSound8_SetRolloffFactor
+// * patch: IDirectSound8_SetRolloffFactor
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSound8_SetRolloffFactor
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetRolloffFactor)
 (
     LPDIRECTSOUND8  pThis,
     FLOAT           fRolloffFactor,
@@ -575,9 +575,9 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetRolloffFactor
 }
 
 // ******************************************************************
-// * func: EmuIDirectSound8_SetDopplerFactor
+// * patch: IDirectSound8_SetDopplerFactor
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSound8_SetDopplerFactor
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetDopplerFactor)
 (
     LPDIRECTSOUND8  pThis,
     FLOAT           fDopplerFactor,
@@ -602,9 +602,9 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetDopplerFactor
 }
 
 // ******************************************************************
-// * func: EmuIDirectSound8_SetI3DL2Listener
+// * patch: IDirectSound8_SetI3DL2Listener
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSound8_SetI3DL2Listener
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetI3DL2Listener)
 (
     LPDIRECTSOUND8          pThis,
     PVOID                   pDummy, // TODO: fill this out
@@ -625,9 +625,9 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetI3DL2Listener
 }
 
 // ******************************************************************
-// * func: EmuIDirectSound8_SetMixBinHeadroom
+// * patch: IDirectSound8_SetMixBinHeadroom
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSound8_SetMixBinHeadroom
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetMixBinHeadroom)
 (
     LPDIRECTSOUND8          pThis,
     DWORD                   dwMixBinMask,
@@ -648,9 +648,9 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetMixBinHeadroom
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetMixBins
+// * patch: IDirectSoundBuffer8_SetMixBins
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMixBins
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetMixBins)
 (
     LPDIRECTSOUND8          pThis,
     PVOID                   pMixBins
@@ -669,9 +669,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMixBins
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetMixBinVolumes
+// * patch: IDirectSoundBuffer8_SetMixBinVolumes
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMixBinVolumes
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetMixBinVolumes)
 (
     LPDIRECTSOUND8          pThis,
     PVOID                   pMixBins
@@ -690,9 +690,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMixBinVolumes
 }
 
 // ******************************************************************
-// * func: EmuIDirectSound8_SetPosition
+// * patch: IDirectSound8_SetPosition
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSound8_SetPosition
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetPosition)
 (
     LPDIRECTSOUND8          pThis,
     FLOAT                   x,
@@ -717,9 +717,9 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetPosition
 }
 
 // ******************************************************************
-// * func: EmuIDirectSound8_SetPosition
+// * patch: IDirectSound8_SetPosition
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSound8_SetVelocity
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetVelocity)
 (
     LPDIRECTSOUND8          pThis,
     FLOAT                   x,
@@ -744,9 +744,9 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetVelocity
 }
 
 // ******************************************************************
-// * func: EmuIDirectSound8_SetAllParameters
+// * patch: IDirectSound8_SetAllParameters
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSound8_SetAllParameters
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetAllParameters)
 (
     LPDIRECTSOUND8          pThis,
     LPVOID                  pTodo,  // TODO: LPCDS3DLISTENER
@@ -767,9 +767,9 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetAllParameters
 }
 
 // ******************************************************************
-// * func: EmuCDirectSound_CommitDeferredSettings
+// * patch: CDirectSound_CommitDeferredSettings
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSound_CommitDeferredSettings
+HRESULT WINAPI XTL::EMUPATCH(CDirectSound_CommitDeferredSettings)
 (
     X_CDirectSound         *pThis
 )
@@ -786,9 +786,9 @@ HRESULT WINAPI XTL::EmuCDirectSound_CommitDeferredSettings
 }
 
 // ******************************************************************
-// * func: EmuDirectSoundCreateBuffer
+// * patch: DirectSoundCreateBuffer
 // ******************************************************************
-HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
+HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateBuffer)
 (
     X_DSBUFFERDESC         *pdsbd,
     X_CDirectSoundBuffer  **ppBuffer
@@ -958,9 +958,9 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateBuffer
 }
 
 // ******************************************************************
-// * func: EmuIDirectSound8_CreateBuffer
+// * patch: IDirectSound8_CreateBuffer
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSound8_CreateBuffer
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_CreateBuffer)
 (
     LPDIRECTSOUND8          pThis,
     X_DSBUFFERDESC         *pdssd,
@@ -977,15 +977,15 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateBuffer
                ");\n",
                pThis, pdssd, ppBuffer, pUnknown);
 
-    EmuDirectSoundCreateBuffer(pdssd, ppBuffer);
+	   EMUPATCH(DirectSoundCreateBuffer)(pdssd, ppBuffer);
 
     return DS_OK;
 }
 
 // ******************************************************************
-// * func: EmuIDirectSound8_CreateSoundBuffer
+// * patch: IDirectSound8_CreateSoundBuffer
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSound8_CreateSoundBuffer
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_CreateSoundBuffer)
 (
     LPDIRECTSOUND8          pThis,
     X_DSBUFFERDESC         *pdsbd,
@@ -1001,13 +1001,13 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateSoundBuffer
                ");\n",
                pdsbd, ppBuffer, pUnkOuter);
 
-    return EmuDirectSoundCreateBuffer(pdsbd, ppBuffer);
+    return EMUPATCH(DirectSoundCreateBuffer)(pdsbd, ppBuffer);
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetBufferData
+// * patch: IDirectSoundBuffer8_SetBufferData
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetBufferData
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetBufferData)
 (
     X_CDirectSoundBuffer   *pThis,
     LPVOID                  pvBufferData,
@@ -1027,7 +1027,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetBufferData
     // update buffer data cache
     pThis->EmuBuffer = pvBufferData;
 
-    EmuResizeIDirectSoundBuffer8(pThis, dwBufferBytes);
+	EmuResizeIDirectSoundBuffer8(pThis, dwBufferBytes);
 
     
 
@@ -1035,9 +1035,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetBufferData
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetPlayRegion
+// * patch: IDirectSoundBuffer8_SetPlayRegion
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPlayRegion
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetPlayRegion)
 (
     X_CDirectSoundBuffer   *pThis,
     DWORD                   dwPlayStart,
@@ -1065,9 +1065,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPlayRegion
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_Lock
+// * patch: IDirectSoundBuffer8_Lock
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Lock
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_Lock)
 (
     X_CDirectSoundBuffer   *pThis,
     DWORD                   dwOffset,
@@ -1105,7 +1105,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Lock
     else
     {
         if(dwBytes > pThis->EmuBufferDesc->dwBufferBytes)
-            EmuResizeIDirectSoundBuffer8(pThis, dwBytes);
+			EmuResizeIDirectSoundBuffer8(pThis, dwBytes);
 
         if(pThis->EmuLockPtr1 != 0)
             pThis->EmuDirectSoundBuffer8->Unlock(pThis->EmuLockPtr1, pThis->EmuLockBytes1, pThis->EmuLockPtr2, pThis->EmuLockBytes2);
@@ -1128,9 +1128,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Lock
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetHeadroom
+// * patch: IDirectSoundBuffer8_SetHeadroom
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetHeadroom
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetHeadroom)
 (
     X_CDirectSoundBuffer  *pThis,
     DWORD                  dwHeadroom
@@ -1153,9 +1153,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetHeadroom
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetLoopRegion
+// * patch: IDirectSoundBuffer8_SetLoopRegion
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetLoopRegion
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetLoopRegion)
 (
     X_CDirectSoundBuffer   *pThis,
     DWORD                   dwLoopStart,
@@ -1183,9 +1183,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetLoopRegion
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_Release
+// * patch: IDirectSoundBuffer8_Release
 // ******************************************************************
-ULONG WINAPI XTL::EmuIDirectSoundBuffer8_Release
+ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_Release)
 (
     X_CDirectSoundBuffer   *pThis
 )
@@ -1231,9 +1231,9 @@ ULONG WINAPI XTL::EmuIDirectSoundBuffer8_Release
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetPitch
+// * patch: IDirectSoundBuffer8_SetPitch
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPitch
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetPitch)
 (
     X_CDirectSoundBuffer   *pThis,
     LONG                    lPitch
@@ -1256,9 +1256,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPitch
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_GetStatus
+// * patch: IDirectSoundBuffer8_GetStatus
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_GetStatus
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_GetStatus)
 (
     X_CDirectSoundBuffer   *pThis,
     LPDWORD                 pdwStatus
@@ -1290,9 +1290,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_GetStatus
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetCurrentPosition
+// * patch: IDirectSoundBuffer8_SetCurrentPosition
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetCurrentPosition
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetCurrentPosition)
 (
     X_CDirectSoundBuffer   *pThis,
     DWORD                   dwNewPosition
@@ -1319,9 +1319,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetCurrentPosition
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_GetCurrentPosition
+// * patch: IDirectSoundBuffer8_GetCurrentPosition
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_GetCurrentPosition
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_GetCurrentPosition)
 (
     X_CDirectSoundBuffer   *pThis,
     PDWORD                  pdwCurrentPlayCursor,
@@ -1363,9 +1363,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_GetCurrentPosition
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_Play
+// * patch: IDirectSoundBuffer8_Play
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Play
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_Play)
 (
     X_CDirectSoundBuffer   *pThis,
     DWORD                   dwReserved1,
@@ -1431,9 +1431,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Play
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_Stop
+// * patch: IDirectSoundBuffer8_Stop
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Stop
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_Stop)
 (
     X_CDirectSoundBuffer   *pThis
 )
@@ -1456,9 +1456,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Stop
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_StopEx
+// * patch: IDirectSoundBuffer8_StopEx
 // ******************************************************************
-extern "C" HRESULT __stdcall XTL::EmuIDirectSoundBuffer8_StopEx
+extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer8_StopEx)
 (
     X_CDirectSoundBuffer *pBuffer,
     REFERENCE_TIME        rtTimeStamp,
@@ -1486,9 +1486,9 @@ extern "C" HRESULT __stdcall XTL::EmuIDirectSoundBuffer8_StopEx
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetVolume
+// * patch: IDirectSoundBuffer8_SetVolume
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetVolume
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetVolume)
 (
     X_CDirectSoundBuffer   *pThis,
     LONG                    lVolume
@@ -1515,9 +1515,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetVolume
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetFrequency
+// * patch: IDirectSoundBuffer8_SetFrequency
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetFrequency
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetFrequency)
 (
     X_CDirectSoundBuffer   *pThis,
     DWORD                   dwFrequency
@@ -1541,9 +1541,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetFrequency
 }
 
 // ******************************************************************
-// * func: EmuDirectSoundCreateStream
+// * patch: DirectSoundCreateStream
 // ******************************************************************
-HRESULT WINAPI XTL::EmuDirectSoundCreateStream
+HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 (
     X_DSSTREAMDESC         *pdssd,
     X_CDirectSoundStream  **ppStream
@@ -1681,9 +1681,9 @@ HRESULT WINAPI XTL::EmuDirectSoundCreateStream
 }
 
 // ******************************************************************
-// * func: EmuIDirectSound8_CreateStream
+// * patch: IDirectSound8_CreateStream
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSound8_CreateStream
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_CreateStream)
 (
     LPDIRECTSOUND8          pThis,
     X_DSSTREAMDESC         *pdssd,
@@ -1700,15 +1700,15 @@ HRESULT WINAPI XTL::EmuIDirectSound8_CreateStream
                ");\n",
                pThis, pdssd, ppStream, pUnknown);
 
-    EmuDirectSoundCreateStream(pdssd, ppStream);
+    EMUPATCH(DirectSoundCreateStream)(pdssd, ppStream);
 
     return DS_OK;
 }
 
 // ******************************************************************
-// * func: EmuCMcpxStream_Dummy_0x10
+// * patch: CMcpxStream_Dummy_0x10
 // ******************************************************************
-VOID WINAPI XTL::EmuCMcpxStream_Dummy_0x10(DWORD dwDummy1, DWORD dwDummy2)
+VOID WINAPI XTL::EMUPATCH(CMcpxStream_Dummy_0x10)(DWORD dwDummy1, DWORD dwDummy2)
 {
 	// Causes deadlock in Halo...
 	// TODO: Verify that this is a Vista related problem (I HATE Vista!)
@@ -1717,9 +1717,9 @@ VOID WINAPI XTL::EmuCMcpxStream_Dummy_0x10(DWORD dwDummy1, DWORD dwDummy2)
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_SetVolume
+// * patch: CDirectSoundStream_SetVolume
 // ******************************************************************
-ULONG WINAPI XTL::EmuCDirectSoundStream_SetVolume(X_CDirectSoundStream *pThis, LONG lVolume)
+ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_SetVolume)(X_CDirectSoundStream *pThis, LONG lVolume)
 {
     
 
@@ -1738,9 +1738,9 @@ ULONG WINAPI XTL::EmuCDirectSoundStream_SetVolume(X_CDirectSoundStream *pThis, L
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_SetRolloffFactor
+// * patch: CDirectSoundStream_SetRolloffFactor
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_SetRolloffFactor
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetRolloffFactor)
 (
     X_CDirectSoundStream *pThis,
     FLOAT                 fRolloffFactor,
@@ -1765,9 +1765,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetRolloffFactor
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_AddRef
+// * patch: CDirectSoundStream_AddRef
 // ******************************************************************
-ULONG WINAPI XTL::EmuCDirectSoundStream_AddRef(X_CDirectSoundStream *pThis)
+ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_AddRef)(X_CDirectSoundStream *pThis)
 {
     
 
@@ -1787,9 +1787,9 @@ ULONG WINAPI XTL::EmuCDirectSoundStream_AddRef(X_CDirectSoundStream *pThis)
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_Release
+// * patch: CDirectSoundStream_Release
 // ******************************************************************
-ULONG WINAPI XTL::EmuCDirectSoundStream_Release(X_CDirectSoundStream *pThis)
+ULONG WINAPI XTL::EMUPATCH(CDirectSoundStream_Release)(X_CDirectSoundStream *pThis)
 {
     
 
@@ -1829,9 +1829,9 @@ ULONG WINAPI XTL::EmuCDirectSoundStream_Release(X_CDirectSoundStream *pThis)
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_GetInfo
+// * patch: CDirectSoundStream_GetInfo
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_GetInfo
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetInfo)
 (
 	X_CDirectSoundStream*	pThis, 
 	LPXMEDIAINFO			pInfo
@@ -1863,9 +1863,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_GetInfo
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_GetStatus
+// * patch: CDirectSoundStream_GetStatus
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_GetStatus
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_GetStatus)
 (
     X_CDirectSoundStream   *pThis,
     DWORD                  *pdwStatus
@@ -1890,9 +1890,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_GetStatus
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_Process
+// * patch: CDirectSoundStream_Process
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_Process
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Process)
 (
     X_CDirectSoundStream   *pThis,
     PXMEDIAPACKET           pInputBuffer,
@@ -1933,9 +1933,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Process
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_Discontinuity
+// * patch: CDirectSoundStream_Discontinuity
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_Discontinuity(X_CDirectSoundStream *pThis)
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Discontinuity)(X_CDirectSoundStream *pThis)
 {
     
 
@@ -1953,9 +1953,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Discontinuity(X_CDirectSoundStream *pT
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_Flush
+// * patch: CDirectSoundStream_Flush
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_Flush(X_CDirectSoundStream *pThis)
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Flush)(X_CDirectSoundStream *pThis)
 {
     
 
@@ -1973,9 +1973,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Flush(X_CDirectSoundStream *pThis)
 }
 
 // ******************************************************************
-// * func: EmuCDirectSound_SynchPlayback
+// * patch: CDirectSound_SynchPlayback
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSound_SynchPlayback(PVOID pUnknown)
+HRESULT WINAPI XTL::EMUPATCH(CDirectSound_SynchPlayback)(PVOID pUnknown)
 {
     
 
@@ -1991,9 +1991,9 @@ HRESULT WINAPI XTL::EmuCDirectSound_SynchPlayback(PVOID pUnknown)
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_Pause
+// * patch: CDirectSoundStream_Pause
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_Pause
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_Pause)
 (
     PVOID   pStream,
     DWORD   dwPause
@@ -2014,9 +2014,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_Pause
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundStream_SetHeadroom
+// * patch: IDirectSoundStream_SetHeadroom
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundStream_SetHeadroom
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetHeadroom)
 (
     PVOID   pThis,
     DWORD   dwHeadroom
@@ -2039,9 +2039,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_SetHeadroom
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_SetConeAngles
+// * patch: CDirectSoundStream_SetConeAngles
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_SetConeAngles
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeAngles)
 (
     PVOID   pThis,
     DWORD   dwInsideConeAngle,
@@ -2068,9 +2068,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetConeAngles
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_SetConeOutsideVolume
+// * patch: CDirectSoundStream_SetConeOutsideVolume
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_SetConeOutsideVolume
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeOutsideVolume)
 (
     PVOID   pThis,
     LONG    lConeOutsideVolume,
@@ -2095,9 +2095,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetConeOutsideVolume
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_SetAllParameters
+// * patch: CDirectSoundStream_SetAllParameters
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_SetAllParameters
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetAllParameters)
 (
     PVOID    pThis,
     PVOID    pUnknown,
@@ -2122,9 +2122,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetAllParameters
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_SetMaxDistance
+// * patch: CDirectSoundStream_SetMaxDistance
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMaxDistance
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMaxDistance)
 (
     PVOID    pThis,
     D3DVALUE fMaxDistance,
@@ -2149,9 +2149,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMaxDistance
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_SetMinDistance
+// * patch: CDirectSoundStream_SetMinDistance
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMinDistance
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMinDistance)
 (
     PVOID    pThis,
     D3DVALUE fMinDistance,
@@ -2176,9 +2176,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMinDistance
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_SetVelocity
+// * patch: CDirectSoundStream_SetVelocity
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_SetVelocity
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetVelocity)
 (
     PVOID    pThis,
     D3DVALUE x,
@@ -2207,9 +2207,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetVelocity
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_SetConeOrientation
+// * patch: CDirectSoundStream_SetConeOrientation
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_SetConeOrientation
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetConeOrientation)
 (
     PVOID    pThis,
     D3DVALUE x,
@@ -2238,9 +2238,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetConeOrientation
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_SetPosition
+// * patch: CDirectSoundStream_SetPosition
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_SetPosition
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetPosition)
 (
     PVOID    pThis,
     D3DVALUE x,
@@ -2269,9 +2269,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetPosition
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_SetFrequency
+// * patch: CDirectSoundStream_SetFrequency
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_SetFrequency
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFrequency)
 (
     PVOID   pThis,
     DWORD   dwFrequency
@@ -2294,9 +2294,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetFrequency
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundStream_SetI3DL2Source
+// * patch: IDirectSoundStream_SetI3DL2Source
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundStream_SetI3DL2Source
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetI3DL2Source)
 (
     PVOID   pThis,
     PVOID   pds3db,
@@ -2321,9 +2321,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_SetI3DL2Source
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_SetMixBins
+// * patch: CDirectSoundStream_SetMixBins
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMixBins
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBins)
 (
     PVOID   pThis,
     PVOID   pMixBins
@@ -2346,9 +2346,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMixBins
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundStream_Unknown1
+// * patch: IDirectSoundStream_Unknown1
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundStream_Unknown1
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_Unknown1)
 (
     PVOID   pThis,
     DWORD   dwUnknown1
@@ -2372,9 +2372,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_Unknown1
 
 // s+
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetMaxDistance
+// * patch: IDirectSoundBuffer8_SetMaxDistance
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMaxDistance
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetMaxDistance)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     FLOAT                   flMaxDistance,
@@ -2395,9 +2395,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMaxDistance
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetMinDistance
+// * patch: IDirectSoundBuffer8_SetMinDistance
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMinDistance
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetMinDistance)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     FLOAT                   flMinDistance,
@@ -2418,9 +2418,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMinDistance
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetRolloffFactor
+// * patch: IDirectSoundBuffer8_SetRolloffFactor
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetRolloffFactor
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetRolloffFactor)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     FLOAT                   flRolloffFactor,
@@ -2441,9 +2441,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetRolloffFactor
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetDistanceFactor
+// * patch: IDirectSoundBuffer8_SetDistanceFactor
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetDistanceFactor
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetDistanceFactor)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     FLOAT                   flDistanceFactor,
@@ -2464,9 +2464,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetDistanceFactor
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetConeAngles
+// * patch: IDirectSoundBuffer8_SetConeAngles
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetConeAngles
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetConeAngles)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     DWORD                   dwInsideConeAngle,
@@ -2490,9 +2490,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetConeAngles
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetConeOrientation
+// * patch: IDirectSoundBuffer8_SetConeOrientation
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetConeOrientation
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetConeOrientation)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     FLOAT                   x,
@@ -2517,9 +2517,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetConeOrientation
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetConeOutsideVolume
+// * patch: IDirectSoundBuffer8_SetConeOutsideVolume
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetConeOutsideVolume
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetConeOutsideVolume)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     LONG                    lConeOutsideVolume,
@@ -2540,9 +2540,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetConeOutsideVolume
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetPosition
+// * patch: IDirectSoundBuffer8_SetPosition
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPosition
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetPosition)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     FLOAT                   x,
@@ -2567,9 +2567,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetPosition
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetVelocity
+// * patch: IDirectSoundBuffer8_SetVelocity
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetVelocity
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetVelocity)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     FLOAT                   x,
@@ -2594,9 +2594,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetVelocity
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetDopplerFactor
+// * patch: IDirectSoundBuffer8_SetDopplerFactor
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetDopplerFactor
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetDopplerFactor)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     FLOAT                   flDopplerFactor,
@@ -2619,9 +2619,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetDopplerFactor
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetI3DL2Source
+// * patch: IDirectSoundBuffer8_SetI3DL2Source
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetI3DL2Source
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetI3DL2Source)
 (
     LPDIRECTSOUNDBUFFER8    pThis,
     LPCDSI3DL2BUFFER        pds3db,
@@ -2644,9 +2644,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetI3DL2Source
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetMode
+// * patch: IDirectSoundBuffer8_SetMode
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMode
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetMode)
 (
     X_CDirectSoundBuffer   *pBuffer,
     DWORD                   dwMode,
@@ -2674,9 +2674,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetMode
 
 // +s
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetFormat
+// * patch: IDirectSoundBuffer8_SetFormat
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetFormat
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetFormat)
 (
     X_CDirectSoundBuffer *pBuffer,
     LPCWAVEFORMATEX pwfxFormat
@@ -2699,9 +2699,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetFormat
 }
 
 // ******************************************************************
-// * func: EmuDirectSoundUseFullHRTF
+// * patch: DirectSoundUseFullHRTF
 // ******************************************************************
-STDAPI_(void) EmuDirectSoundUseFullHRTF
+STDAPI_(void) EMUPATCH(DirectSoundUseFullHRTF)
 (
     void
 )
@@ -2716,9 +2716,9 @@ STDAPI_(void) EmuDirectSoundUseFullHRTF
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetLFO
+// * patch: IDirectSoundBuffer8_SetLFO
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetLFO
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetLFO)
 (
     LPDIRECTSOUNDBUFFER  pThis,
     LPCDSLFODESC         pLFODesc
@@ -2741,9 +2741,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetLFO
 }
 
 // ******************************************************************
-// * func: EmuXAudioCreateAdpcmFormat
+// * patch: XAudioCreateAdpcmFormat
 // ******************************************************************
-VOID WINAPI XTL::EmuXAudioCreateAdpcmFormat
+VOID WINAPI XTL::EMUPATCH(XAudioCreateAdpcmFormat)
 (
     WORD                   nChannels,
     DWORD                  nSamplesPerSec,
@@ -2774,9 +2774,9 @@ VOID WINAPI XTL::EmuXAudioCreateAdpcmFormat
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetRolloffCurve
+// * patch: IDirectSoundBuffer8_SetRolloffCurve
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetRolloffCurve
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetRolloffCurve)
 (
     LPDIRECTSOUNDBUFFER  pThis,
     const FLOAT         *pflPoints,
@@ -2803,9 +2803,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetRolloffCurve
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundStream_SetVolume
+// * patch: IDirectSoundStream_SetVolume
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundStream_SetVolume
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_SetVolume)
 (
     LPDIRECTSOUNDSTREAM pStream,
     LONG                lVolume
@@ -2829,9 +2829,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_SetVolume
 
 
 // ******************************************************************
-// * func: EmuIDirectSound_EnableHeadphones
+// * patch: IDirectSound_EnableHeadphones
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSound_EnableHeadphones
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_EnableHeadphones)
 (
 	LPDIRECTSOUND		pThis,
 	BOOL				fEnabled
@@ -2852,9 +2852,9 @@ HRESULT WINAPI XTL::EmuIDirectSound_EnableHeadphones
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_AddRef
+// * patch: IDirectSoundBuffer8_AddRef
 // ******************************************************************
-ULONG WINAPI XTL::EmuIDirectSoundBuffer8_AddRef
+ULONG WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_AddRef)
 (
     X_CDirectSoundBuffer   *pThis
 )
@@ -2889,9 +2889,9 @@ ULONG WINAPI XTL::EmuIDirectSoundBuffer8_AddRef
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_Pause
+// * patch: IDirectSoundBuffer8_Pause
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Pause
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_Pause)
 (
     X_CDirectSoundBuffer   *pThis,
 	DWORD					dwPause
@@ -2932,7 +2932,7 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Pause
 }
 
 //// ******************************************************************
-//// * func: EmuIDirectSoundBuffer_Pause
+//// * patch: IDirectSoundBuffer_Pause
 //// ******************************************************************
 //extern "C" HRESULT __stdcall XTL::EmuIDirectSoundBuffer_PauseEx
 //(
@@ -2979,9 +2979,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_Pause
 //}
 
 // ******************************************************************
-// * func: EmuIDirectSound8_GetOutputLevels
+// * patch: IDirectSound8_GetOutputLevels
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSound8_GetOutputLevels
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_GetOutputLevels)
 (
 	LPDIRECTSOUND8		   *pThis,
 	X_DSOUTPUTLEVELS	   *pOutputLevels,
@@ -3006,9 +3006,9 @@ HRESULT WINAPI XTL::EmuIDirectSound8_GetOutputLevels
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_SetEG
+// * patch: CDirectSoundStream_SetEG
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_SetEG
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetEG)
 (
 	LPVOID		pThis,
 	LPVOID		pEnvelopeDesc
@@ -3031,9 +3031,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetEG
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundStream_Flush
+// * patch: IDirectSoundStream_Flush
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundStream_Flush()
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_Flush)()
 {
 		
 
@@ -3047,9 +3047,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundStream_Flush()
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundStream_FlushEx
+// * patch: IDirectSoundStream_FlushEx
 // ******************************************************************
-extern "C" HRESULT WINAPI XTL::EmuIDirectSoundStream_FlushEx
+extern "C" HRESULT WINAPI XTL::EMUPATCH(IDirectSoundStream_FlushEx)
 (
 	X_CDirectSoundStream*	pThis,
 	REFERENCE_TIME			rtTimeStamp,
@@ -3074,9 +3074,9 @@ extern "C" HRESULT WINAPI XTL::EmuIDirectSoundStream_FlushEx
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_SetMode
+// * patch: CDirectSoundStream_SetMode
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMode
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMode)
 (
     X_CDirectSoundStream   *pStream,
     DWORD                   dwMode,
@@ -3103,9 +3103,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMode
 }
 
 // ******************************************************************
-// * func: EmuXAudioDownloadEffectsImage
+// * patch: XAudioDownloadEffectsImage
 // ******************************************************************
-HRESULT WINAPI XTL::EmuXAudioDownloadEffectsImage
+HRESULT WINAPI XTL::EMUPATCH(XAudioDownloadEffectsImage)
 (
     LPCSTR		pszImageName,
     LPVOID		pImageLoc,
@@ -3130,9 +3130,9 @@ HRESULT WINAPI XTL::EmuXAudioDownloadEffectsImage
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetFilter
+// * patch: IDirectSoundBuffer8_SetFilter
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetFilter
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetFilter)
 (
 	LPVOID			pThis,
 	X_DSFILTERDESC* pFilterDesc
@@ -3157,9 +3157,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetFilter
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_SetFilter
+// * patch: CDirectSoundStream_SetFilter
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_SetFilter
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFilter)
 (
 	X_CDirectSoundStream*	pThis,
 	X_DSFILTERDESC*			pFilterDesc
@@ -3185,9 +3185,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetFilter
 
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_PlayEx
+// * patch: IDirectSoundBuffer8_PlayEx
 // ******************************************************************
-extern "C" HRESULT __stdcall XTL::EmuIDirectSoundBuffer8_PlayEx
+extern "C" HRESULT __stdcall XTL::EMUPATCH(IDirectSoundBuffer8_PlayEx)
 (
     X_CDirectSoundBuffer *pBuffer,
     REFERENCE_TIME        rtTimeStamp,
@@ -3219,9 +3219,9 @@ extern "C" HRESULT __stdcall XTL::EmuIDirectSoundBuffer8_PlayEx
 }
 
 // ******************************************************************
-// * func: EmuIDirectSound8_GetCaps
+// * patch: IDirectSound8_GetCaps
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSound8_GetCaps
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_GetCaps)
 (
 	X_CDirectSound*	pThis,
     X_DSCAPS*		pDSCaps
@@ -3260,9 +3260,9 @@ HRESULT WINAPI XTL::EmuIDirectSound8_GetCaps
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundStream_SetPitch
+// * patch: IDirectSoundStream_SetPitch
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_SetPitch
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetPitch)
 (	
 	X_CDirectSoundStream*	pThis,
     LONG					lPitch
@@ -3287,9 +3287,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetPitch
 }
 
 // ******************************************************************
-// * func: EmuDirectSoundGetSampleTime
+// * patch: DirectSoundGetSampleTime
 // ******************************************************************
-DWORD WINAPI XTL::EmuDirectSoundGetSampleTime()
+DWORD WINAPI XTL::EMUPATCH(DirectSoundGetSampleTime)()
 {
 		
 	
@@ -3311,9 +3311,9 @@ DWORD WINAPI XTL::EmuDirectSoundGetSampleTime()
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_SetMixBinVolumes
+// * patch: CDirectSoundStream_SetMixBinVolumes
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMixBinVolumes
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes)
 (
 	X_CDirectSoundStream*	pThis,
     DWORD					dwMixBinMask,
@@ -3339,9 +3339,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMixBinVolumes
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_SetMixBinVolumes2
+// * patch: CDirectSoundStream_SetMixBinVolumes2
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMixBinVolumes2
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetMixBinVolumes2)
 (
 	X_CDirectSoundStream*	pThis,
     LPVOID					pMixBins
@@ -3364,9 +3364,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetMixBinVolumes2
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_SetI3DL2Source
+// * patch: CDirectSoundStream_SetI3DL2Source
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_SetI3DL2Source
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetI3DL2Source)
 (
     X_CDirectSoundStream*   pThis,
     PVOID   pds3db,
@@ -3391,9 +3391,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetI3DL2Source
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetI3DL2Source
+// * patch: IDirectSoundBuffer8_SetI3DL2Source
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetAllParameters
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetAllParameters)
 (
 	X_CDirectSoundBuffer*	pThis,
     VOID*					pcDs3dBuffer,
@@ -3418,9 +3418,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetAllParameters
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream::SetFormat
+// * patch: CDirectSoundStream::SetFormat
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_SetFormat
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetFormat)
 (
 	X_CDirectSoundStream*	pThis,
     LPCWAVEFORMATEX			pwfxFormat
@@ -3450,9 +3450,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetFormat
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetOutputBuffer
+// * patch: IDirectSoundBuffer8_SetOutputBuffer
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetOutputBuffer
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetOutputBuffer)
 (
 	X_CDirectSoundBuffer*	pThis,
     X_CDirectSoundBuffer*	pOutputBuffer
@@ -3475,9 +3475,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetOutputBuffer
 }
 
 // ******************************************************************
-// * func: EmuCDirectSoundStream_SetOutputBuffer
+// * patch: CDirectSoundStream_SetOutputBuffer
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_SetOutputBuffer
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetOutputBuffer)
 (
 	X_CDirectSoundStream*	pThis,
 	X_CDirectSoundBuffer*	pOutputBuffer
@@ -3500,9 +3500,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetOutputBuffer
 }
 
 // ******************************************************************
-// * func: EmuXFileCreaeMediaObjectEx
+// * patch: XFileCreaeMediaObjectEx
 // ******************************************************************
-HRESULT WINAPI XTL::EmuXFileCreateMediaObjectEx
+HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObjectEx)
 (
     HANDLE	hFile,
     void**	ppMediaObject
@@ -3525,9 +3525,9 @@ HRESULT WINAPI XTL::EmuXFileCreateMediaObjectEx
 }
 
 // ******************************************************************
-// * func: EmuXWaveFileCreateMediaObject
+// * patch: XWaveFileCreateMediaObject
 // ******************************************************************
-HRESULT WINAPI XTL::EmuXWaveFileCreateMediaObject
+HRESULT WINAPI XTL::EMUPATCH(XWaveFileCreateMediaObject)
 (
     LPCSTR			pszFileName,
     LPCWAVEFORMATEX *ppwfxFormat,
@@ -3552,9 +3552,9 @@ HRESULT WINAPI XTL::EmuXWaveFileCreateMediaObject
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetEG
+// * patch: IDirectSoundBuffer8_SetEG
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetEG
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetEG)
 (
 	X_CDirectSoundBuffer*	pThis,
     LPVOID					pEnvelopeDesc
@@ -3577,9 +3577,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetEG
 }
 
 // ******************************************************************
-// * func: EmuIDirectSound8_GetEffectData
+// * patch: IDirectSound8_GetEffectData
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSound8_GetEffectData
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_GetEffectData)
 (
 	X_CDirectSound*	pThis,
     DWORD			dwEffectIndex,
@@ -3610,9 +3610,9 @@ HRESULT WINAPI XTL::EmuIDirectSound8_GetEffectData
 }
 
 // ******************************************************************
-// * func: EmuIDirectSoundBuffer8_SetNotificationPositions
+// * patch: IDirectSoundBuffer8_SetNotificationPositions
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetNotificationPositions
+HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer8_SetNotificationPositions)
 (
 	X_CDirectSoundBuffer*	pThis,
     DWORD					dwNotifyCount,
@@ -3662,9 +3662,9 @@ HRESULT WINAPI XTL::EmuIDirectSoundBuffer8_SetNotificationPositions
 }
 
 // ******************************************************************
-// * func EmuCDirectSoundStream::SetRolloffCurve
+// * patch: CDirectSoundStream::SetRolloffCurve
 // ******************************************************************
-HRESULT WINAPI XTL::EmuCDirectSoundStream_SetRolloffCurve
+HRESULT WINAPI XTL::EMUPATCH(CDirectSoundStream_SetRolloffCurve)
 (
 	X_CDirectSoundBuffer	*pThis,
     const FLOAT				*pflPoints,
@@ -3691,9 +3691,9 @@ HRESULT WINAPI XTL::EmuCDirectSoundStream_SetRolloffCurve
 }
 
 // ******************************************************************
-// * func: EmuIDirectSound8_SetEffectData
+// * patch: IDirectSound8_SetEffectData
 // ******************************************************************
-HRESULT WINAPI XTL::EmuIDirectSound8_SetEffectData
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_SetEffectData)
 (
 	LPVOID pThis,
     DWORD dwEffectIndex,
@@ -3724,9 +3724,9 @@ HRESULT WINAPI XTL::EmuIDirectSound8_SetEffectData
 }
 
 // ******************************************************************
-// * func: EmuXFileCreateMediaObjectAsync
+// * patch: XFileCreateMediaObjectAsync
 // ******************************************************************
-HRESULT WINAPI XTL::EmuXFileCreateMediaObjectAsync
+HRESULT WINAPI XTL::EMUPATCH(XFileCreateMediaObjectAsync)
 (
     HANDLE	hFile,
     DWORD	dwMaxPackets,
@@ -3755,9 +3755,9 @@ HRESULT WINAPI XTL::EmuXFileCreateMediaObjectAsync
 }
 
 // ******************************************************************
-// * func: EmuXFileMediaObject_Seek
+// * patch: XFileMediaObject_Seek
 // ******************************************************************
-HRESULT WINAPI XTL::EmuXFileMediaObject_Seek
+HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Seek)
 (
 	X_XFileMediaObject* pThis,
     LONG				lOffset,
@@ -3784,9 +3784,9 @@ HRESULT WINAPI XTL::EmuXFileMediaObject_Seek
 }
 
 // ******************************************************************
-// * func: EmuXFileMediaObject_DoWork
+// * patch: XFileMediaObject_DoWork
 // ******************************************************************
-VOID WINAPI XTL::EmuXFileMediaObject_DoWork(X_XFileMediaObject* pThis)
+VOID WINAPI XTL::EMUPATCH(XFileMediaObject_DoWork)(X_XFileMediaObject* pThis)
 {
 		
 
@@ -3802,9 +3802,9 @@ VOID WINAPI XTL::EmuXFileMediaObject_DoWork(X_XFileMediaObject* pThis)
 }
 
 // ******************************************************************
-// * func: EmuXFileMediaObject_GetStatus
+// * patch: XFileMediaObject_GetStatus
 // ******************************************************************
-HRESULT WINAPI XTL::EmuXFileMediaObject_GetStatus
+HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_GetStatus)
 (
 	X_XFileMediaObject* pThis,
     LPDWORD				pdwStatus
@@ -3827,9 +3827,9 @@ HRESULT WINAPI XTL::EmuXFileMediaObject_GetStatus
 }
 
 // ******************************************************************
-// * func: EmuXFileMediaObject_GetInfo
+// * patch: XFileMediaObject_GetInfo
 // ******************************************************************
-HRESULT WINAPI XTL::EmuXFileMediaObject_GetInfo
+HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_GetInfo)
 (
 	X_XFileMediaObject     *pThis,
 	XMEDIAINFO			   *pInfo
@@ -3852,9 +3852,9 @@ HRESULT WINAPI XTL::EmuXFileMediaObject_GetInfo
 }
 
 // ******************************************************************
-// * func: EmuXFileMediaObject_Process
+// * patch: XFileMediaObject_Process
 // ******************************************************************
-HRESULT WINAPI XTL::EmuXFileMediaObject_Process
+HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Process)
 (
 	X_XFileMediaObject	   *pThis,
     LPXMEDIAPACKET			pInputBuffer, 
@@ -3879,9 +3879,9 @@ HRESULT WINAPI XTL::EmuXFileMediaObject_Process
 }
 
 // ******************************************************************
-// * func: EmuXFileMediaObject_AddRef
+// * patch: XFileMediaObject_AddRef
 // ******************************************************************
-ULONG WINAPI XTL::EmuXFileMediaObject_AddRef(X_XFileMediaObject *pThis)
+ULONG WINAPI XTL::EMUPATCH(XFileMediaObject_AddRef)(X_XFileMediaObject *pThis)
 {
 		
 
@@ -3905,9 +3905,9 @@ ULONG WINAPI XTL::EmuXFileMediaObject_AddRef(X_XFileMediaObject *pThis)
 }
 
 // ******************************************************************
-// * func: EmuXFileMediaObject_Release
+// * patch: XFileMediaObject_Release
 // ******************************************************************
-ULONG WINAPI XTL::EmuXFileMediaObject_Release(X_XFileMediaObject *pThis)
+ULONG WINAPI XTL::EMUPATCH(XFileMediaObject_Release)(X_XFileMediaObject *pThis)
 {
 		
 
@@ -3935,9 +3935,9 @@ ULONG WINAPI XTL::EmuXFileMediaObject_Release(X_XFileMediaObject *pThis)
 }
 
 // ******************************************************************
-// * func: EmuXFileMediaObject_Discontinuity
+// * patch: XFileMediaObject_Discontinuity
 // ******************************************************************
-HRESULT WINAPI XTL::EmuXFileMediaObject_Discontinuity(X_XFileMediaObject *pThis)
+HRESULT WINAPI XTL::EMUPATCH(XFileMediaObject_Discontinuity)(X_XFileMediaObject *pThis)
 {
 		
 

@@ -622,7 +622,7 @@ void XTL::EmuUnswizzleRect
 			DWORD dwX = dwStartX;
 			// We use one memcpy for the entire line when pixels are next to eachother :
 			// TODO : How can we simplify the next check; (dwMaskX & 1) perhaps?
-			if (dwX + 1 == (dwX - dwMaskX) & dwMaskX) {
+			if (dwX + 1 == ((dwX - dwMaskX) & dwMaskX)) {
 				memcpy(pDstBuff, (PBYTE)pSrcBuff + (dwX | dwY | dwZ) * dwBPP, dwBPP * dwWidth); // copy one line
 				pDstBuff = (PBYTE)pDstBuff + dwBPP * dwWidth; // Step to next line in destination
 			}

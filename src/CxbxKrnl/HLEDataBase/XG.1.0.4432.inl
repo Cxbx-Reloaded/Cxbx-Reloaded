@@ -41,11 +41,11 @@ OOVPATable XG_1_0_4432[1] = {
 
     // XGIsSwizzledFormat (* unchanged since 4361 *)
 	/* Leave unpatched
-	OOVPA_TABLE_PATCH(XGIsSwizzledFormat_1_0_4361, XTL::EmuXGIsSwizzledFormat),
+	OOVPA_TABLE_PATCH(XGIsSwizzledFormat_1_0_4361, XGIsSwizzledFormat),
 	*/
     // XGSwizzleRect (* unchanged since 4361 *)
 	/* Leave unpatched
-	OOVPA_TABLE_PATCH(XGSwizzleRect_1_0_4361, XTL::EmuXGSwizzleRect),
+	OOVPA_TABLE_PATCH(XGSwizzleRect_1_0_4361, XGSwizzleRect),
 	*/
 };
 

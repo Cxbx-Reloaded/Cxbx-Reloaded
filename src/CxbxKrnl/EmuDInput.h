@@ -38,17 +38,17 @@
 #include <dinput.h>
 
 // ******************************************************************
-// * func: EmuDInputInit
+// * patch: DInputInit
 // ******************************************************************
 extern bool EmuDInputInit();
 
 // ******************************************************************
-// * func: EmuDInputCleanup
+// * patch: DInputCleanup
 // ******************************************************************
 extern void EmuDInputCleanup();
 
 // ******************************************************************
-// * func: EmuDInputPoll
+// * patch: DInputPoll
 // ******************************************************************
 extern void EmuDInputPoll(PXINPUT_STATE Controller);
 

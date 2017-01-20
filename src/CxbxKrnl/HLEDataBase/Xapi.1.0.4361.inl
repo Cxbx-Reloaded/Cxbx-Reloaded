@@ -340,49 +340,49 @@ OOVPA_END;
 OOVPATable XAPI_1_0_4361[] = {
 
     // XInitDevices (* unchanged since 1.0.3911 *)
-	OOVPA_TABLE_PATCH(XInitDevices_1_0_3911, XTL::EmuXInitDevices),
+	OOVPA_TABLE_PATCH(XInitDevices_1_0_3911, XInitDevices),
     // XGetDevices (* unchanged since 4134 *)
-	OOVPA_TABLE_PATCH(XGetDevices_1_0_4134, XTL::EmuXGetDevices),
+	OOVPA_TABLE_PATCH(XGetDevices_1_0_4134, XGetDevices),
     // XGetDeviceChanges (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(XGetDeviceChanges_1_0_3911, XTL::EmuXGetDeviceChanges),
+	OOVPA_TABLE_PATCH(XGetDeviceChanges_1_0_3911, XGetDeviceChanges),
     // XInputOpen
-	OOVPA_TABLE_PATCH(XInputOpen_1_0_4361, XTL::EmuXInputOpen),
+	OOVPA_TABLE_PATCH(XInputOpen_1_0_4361, XInputOpen),
     // XID_fCloseDevice
 	OOVPA_TABLE_XREF(XID_fCloseDevice_1_0_4361),
     // XInputClose (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(XInputClose_1_0_3911, XTL::EmuXInputClose),
+	OOVPA_TABLE_PATCH(XInputClose_1_0_3911, XInputClose),
     // XInputGetCapabilities
-	OOVPA_TABLE_PATCH(XInputGetCapabilities_1_0_4361, XTL::EmuXInputGetCapabilities),
+	OOVPA_TABLE_PATCH(XInputGetCapabilities_1_0_4361, XInputGetCapabilities),
     // XInputGetState
-	OOVPA_TABLE_PATCH(XInputGetState_1_0_4361, XTL::EmuXInputGetState),
+	OOVPA_TABLE_PATCH(XInputGetState_1_0_4361, XInputGetState),
     // XInputSetState
-	OOVPA_TABLE_PATCH(XInputSetState_1_0_4361, XTL::EmuXInputSetState),
+	OOVPA_TABLE_PATCH(XInputSetState_1_0_4361, XInputSetState),
     //*/
     /*
     // XapiThreadStartup
-	OOVPA_TABLE_PATCH(XapiThreadStartup_1_0_4361, XTL::EmuXapiThreadStartup),
+	OOVPA_TABLE_PATCH(XapiThreadStartup_1_0_4361, XapiThreadStartup),
     //*/
 	// XMountUtilityDrive
 	// TODO: This needs to be verified on 4361, not just 4242!
-	OOVPA_TABLE_PATCH(XMountUtilityDrive_1_0_4134, XTL::EmuXMountUtilityDrive),
+	OOVPA_TABLE_PATCH(XMountUtilityDrive_1_0_4134, XMountUtilityDrive),
 	// CreateFiber (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(CreateFiber_1_0_3911, XTL::EmuCreateFiber),
+	OOVPA_TABLE_PATCH(CreateFiber_1_0_3911, CreateFiber),
 	// DeleteFiber (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(DeleteFiber_1_0_3911, XTL::EmuDeleteFiber),
+	OOVPA_TABLE_PATCH(DeleteFiber_1_0_3911, DeleteFiber),
 	// GetTimeZoneInformation (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(GetTimeZoneInformation_1_0_3911, XTL::EmuGetTimeZoneInformation),
+	OOVPA_TABLE_PATCH(GetTimeZoneInformation_1_0_3911, GetTimeZoneInformation),
 	// SetThreadPriority (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(SetThreadPriority_1_0_3911, XTL::EmuSetThreadPriority),
+	OOVPA_TABLE_PATCH(SetThreadPriority_1_0_3911, SetThreadPriority),
 	// GetExitCodeThread (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(GetExitCodeThread_1_0_3911, XTL::EmuGetExitCodeThread),
+	OOVPA_TABLE_PATCH(GetExitCodeThread_1_0_3911, GetExitCodeThread),
 	// SetThreadPriorityBoost (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(SetThreadPriorityBoost_1_0_3911, XTL::EmuSetThreadPriorityBoost),
+	OOVPA_TABLE_PATCH(SetThreadPriorityBoost_1_0_3911, SetThreadPriorityBoost),
 	// SignalObjectAndWait (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(SignalObjectAndWait_1_0_3911, XTL::EmuSignalObjectAndWait),
+	OOVPA_TABLE_PATCH(SignalObjectAndWait_1_0_3911, SignalObjectAndWait),
 	// QueueUserAPC (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, XTL::EmuQueueUserAPC),
+	OOVPA_TABLE_PATCH(QueueUserAPC_1_0_3911, QueueUserAPC),
 	// XMountMUA
-	OOVPA_TABLE_PATCH(XMountMUA_1_0_4361, XTL::EmuXMountMUA),
+	OOVPA_TABLE_PATCH(XMountMUA_1_0_4361, XMountMUA),
 };
 
 // ******************************************************************

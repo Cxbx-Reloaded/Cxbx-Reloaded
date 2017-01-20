@@ -591,61 +591,61 @@ OOVPA_END;
 OOVPATable XactEng_1_0_4627[] = {
 
 	// XACTEngineCreate
-	OOVPA_TABLE_PATCH(XACTEngineCreate_1_0_4627, XTL::EmuXACTEngineCreate),
+	OOVPA_TABLE_PATCH(XACTEngineCreate_1_0_4627, XACTEngineCreate),
 	// XACTEngineCreate
-	OOVPA_TABLE_PATCH(XACTEngineCreate_1_0_4928, XTL::EmuXACTEngineCreate),
+	OOVPA_TABLE_PATCH(XACTEngineCreate_1_0_4928, XACTEngineCreate),
 	// XACTEngineDoWork
-	OOVPA_TABLE_PATCH(XACTEngineDoWork_1_0_4627, XTL::EmuXACTEngineDoWork),
+	OOVPA_TABLE_PATCH(XACTEngineDoWork_1_0_4627, XACTEngineDoWork),
 	// XACT_CEngine_RegisterWaveBank
 	OOVPA_TABLE_XREF(XACT_CEngine_RegisterWaveBank_1_0_4627),
 	// IXACTEngine_RegisterWaveBank
-	OOVPA_TABLE_PATCH(IXACTEngine_RegisterWaveBank_1_0_4627, XTL::EmuIXACTEngine_RegisterWaveBank),
+	OOVPA_TABLE_PATCH(IXACTEngine_RegisterWaveBank_1_0_4627, IXACTEngine_RegisterWaveBank),
 	// XACT::CEngine::RegisterStreamedWaveBank (XREF)
 	OOVPA_TABLE_XREF(XACT_CEngine_RegisterStreamedWaveBank_1_0_4627),
 	// XACT::CEngine::RegisterStreamedWaveBank (XREF)
 	OOVPA_TABLE_XREF(XACT_CEngine_RegisterStreamedWaveBank_1_0_4928),
 	// IXACTEngine_RegisterStreamedWaveBank
-	OOVPA_TABLE_PATCH(IXACTEngine_RegisterStreamedWaveBank_1_0_4627, XTL::EmuIXACTEngine_RegisterStreamedWaveBank),
+	OOVPA_TABLE_PATCH(IXACTEngine_RegisterStreamedWaveBank_1_0_4627, IXACTEngine_RegisterStreamedWaveBank),
 	// IXACTEngine_RegisterStreamedWaveBank
-	OOVPA_TABLE_PATCH(IXACTEngine_RegisterStreamedWaveBank_1_0_4928, XTL::EmuIXACTEngine_RegisterStreamedWaveBank),
+	OOVPA_TABLE_PATCH(IXACTEngine_RegisterStreamedWaveBank_1_0_4928, IXACTEngine_RegisterStreamedWaveBank),
 	// XACT::CEngine::CreateSoundBank (XREF)
 	OOVPA_TABLE_XREF(XACT_CEngine_CreateSoundBank_1_0_4627),
 	// XACT::CEngine::CreateSoundBank (XREF)
 	OOVPA_TABLE_XREF(XACT_CEngine_CreateSoundBank_1_0_4928),
 	// IXACTEngine_CreateSoundBank
-	OOVPA_TABLE_PATCH(IXACTEngine_CreateSoundBank_1_0_4627, XTL::EmuIXACTEngine_CreateSoundBank),
+	OOVPA_TABLE_PATCH(IXACTEngine_CreateSoundBank_1_0_4627, IXACTEngine_CreateSoundBank),
 	// IXACTEngine_CreateSoundBank
-	OOVPA_TABLE_PATCH(IXACTEngine_CreateSoundBank_1_0_4928, XTL::EmuIXACTEngine_CreateSoundBank),
+	OOVPA_TABLE_PATCH(IXACTEngine_CreateSoundBank_1_0_4928, IXACTEngine_CreateSoundBank),
 	// XACT::CEngine::DownloadEffectsImage (XREF)
 	OOVPA_TABLE_XREF(XACT_CEngine_DownloadEffectsImage_1_0_4627),
 	// IXACTEngine_DownloadEffectsImage
-	OOVPA_TABLE_PATCH(IXACTEngine_DownloadEffectsImage_1_0_4627, XTL::EmuIXACTEngine_DownloadEffectsImage),
+	OOVPA_TABLE_PATCH(IXACTEngine_DownloadEffectsImage_1_0_4627, IXACTEngine_DownloadEffectsImage),
 	// XACT::CEngine::CreateSoundSource (XREF)
 	OOVPA_TABLE_XREF(XACT_CEngine_CreateSoundSource_1_0_4627),
 	// IXACTEngine_CreateSoundSource
-	OOVPA_TABLE_PATCH(IXACTEngine_CreateSoundSource_1_0_4627, XTL::EmuIXACTEngine_CreateSoundSource),
+	OOVPA_TABLE_PATCH(IXACTEngine_CreateSoundSource_1_0_4627, IXACTEngine_CreateSoundSource),
 	// XACT::CSoundBank::GetSoundCueIndexFromFriendlyName (XREF)
 	OOVPA_TABLE_XREF(XACT_CSoundBank_GetSoundCueIndexFromFriendlyName_1_0_4627),
 	// IXACTSoundBank_GetSoundCueIndexFromFriendlyName
-	OOVPA_TABLE_PATCH(IXACTSoundBank_GetSoundCueIndexFromFriendlyName_1_0_4627, XTL::EmuIXACTSoundBank_GetSoundCueIndexFromFriendlyName),
+	OOVPA_TABLE_PATCH(IXACTSoundBank_GetSoundCueIndexFromFriendlyName_1_0_4627, IXACTSoundBank_GetSoundCueIndexFromFriendlyName),
 	// IXACTSoundBank_Play
-	OOVPA_TABLE_PATCH(IXACTSoundBank_Play_1_0_4627, XTL::EmuIXACTSoundBank_Play),
+	OOVPA_TABLE_PATCH(IXACTSoundBank_Play_1_0_4627, IXACTSoundBank_Play),
 	// XACT::CEngine::RegisterNotification
 	OOVPA_TABLE_XREF(XACT_CEngine_RegisterNotification_1_0_4627),
 	// IXACTEngine_RegisterNotification
-	OOVPA_TABLE_PATCH(IXACTEngine_RegisterNotification_1_0_4627, XTL::EmuIXACTEngine_RegisterNotification),
+	OOVPA_TABLE_PATCH(IXACTEngine_RegisterNotification_1_0_4627, IXACTEngine_RegisterNotification),
 	// XACT::CEngine::GetNotification
 	OOVPA_TABLE_XREF(XACT_CEngine_GetNotification_1_0_4627),
 	// IXACTEngine_GetNotification
-	OOVPA_TABLE_PATCH(IXACTEngine_GetNotification_1_0_4627, XTL::EmuIXACTEngine_GetNotification),
+	OOVPA_TABLE_PATCH(IXACTEngine_GetNotification_1_0_4627, IXACTEngine_GetNotification),
 	// XACT::CEngine::UnRegisterWaveBank (XREF)
 	OOVPA_TABLE_XREF(XACT_CEngine_UnRegisterWaveBank_1_0_4627),
 	// XACT::CEngine::UnRegisterWaveBank (XREF)
 	OOVPA_TABLE_XREF(XACT_CEngine_UnRegisterWaveBank_1_0_4928),
 	// IXACTEngine_UnRegisterWaveBank
-	OOVPA_TABLE_PATCH(IXACTEngine_UnRegisterWaveBank_1_0_4627, XTL::EmuIXACTEngine_UnRegisterWaveBank),
+	OOVPA_TABLE_PATCH(IXACTEngine_UnRegisterWaveBank_1_0_4627, IXACTEngine_UnRegisterWaveBank),
 	// IXACTEngine_UnRegisterWaveBank
-	OOVPA_TABLE_PATCH(IXACTEngine_UnRegisterWaveBank_1_0_4928, XTL::EmuIXACTEngine_UnRegisterWaveBank),
+	OOVPA_TABLE_PATCH(IXACTEngine_UnRegisterWaveBank_1_0_4928, IXACTEngine_UnRegisterWaveBank),
 };
 
 // ******************************************************************
