@@ -31,12 +31,12 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef DSOUND_1_0_5788_H
-#define DSOUND_1_0_5788_H
+#ifndef DSOUND_5788_H
+#define DSOUND_5788_H
 
 #include "OOVPA.h"
 
-extern OOVPATable DSOUND_1_0_5788[];
-extern uint32     DSOUND_1_0_5788_SIZE;
+extern OOVPATable DSOUND_5788[];
+extern uint32     DSOUND_5788_SIZE;
 
 #endif

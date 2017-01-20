@@ -31,12 +31,12 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef XNET_1_0_4627_H
-#define XNET_1_0_4627_H
+#ifndef XNET_4627_H
+#define XNET_4627_H
 
 #include "OOVPA.h"
 
-extern OOVPATable XNet_1_0_3911[];
-extern uint32     XNet_1_0_3911_SIZE;
+extern OOVPATable XNet_3911[];
+extern uint32     XNet_3911_SIZE;
 
 #endif

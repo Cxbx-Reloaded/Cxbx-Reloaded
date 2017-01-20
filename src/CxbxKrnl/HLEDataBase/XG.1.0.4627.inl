@@ -35,7 +35,7 @@
 // ******************************************************************
 // * XGSwizzleBox
 // ******************************************************************
-OOVPA_NO_XREF(XGSwizzleBox_1_0_4627, 10)
+OOVPA_NO_XREF(XGSwizzleBox, 4627, 10)
 
         // XGSwizzleBox+0x60 : sub ecx, [eax]
         { 0x60, 0x2B }, // (Offset,Value)-Pair #1
@@ -59,7 +59,7 @@ OOVPA_END;
 // ******************************************************************
 // * XGWriteSurfaceOrTextureToXPR
 // ******************************************************************
-OOVPA_NO_XREF(XGWriteSurfaceOrTextureToXPR_1_0_4627, 7)
+OOVPA_NO_XREF(XGWriteSurfaceOrTextureToXPR, 4627, 7)
 
         { 0x1E, 0x3D },
         { 0x3E, 0xE0 },
@@ -74,7 +74,7 @@ OOVPA_END;
 // ******************************************************************
 // * XGUnswizzleRect
 // ******************************************************************
-OOVPA_NO_XREF(XGUnswizzleRect_1_0_4627, 8)
+OOVPA_NO_XREF(XGUnswizzleRect, 4627, 8)
 
         { 0x1E, 0x03 },
         { 0x3E, 0x00 },
@@ -88,29 +88,29 @@ OOVPA_END;
 */
 
 // ******************************************************************
-// * XG_1_0_4627
+// * XG_4627
 // ******************************************************************
-OOVPATable XG_1_0_4627[] = {
+OOVPATable XG_4627[] = {
 
     // XGIsSwizzledFormat (* unchanged since 4361 *)
 	/* Leave unpatched
-	OOVPA_TABLE_PATCH(XGIsSwizzledFormat_1_0_4361, XGIsSwizzledFormat),
+	OOVPA_TABLE_PATCH(XGIsSwizzledFormat, 4361, XGIsSwizzledFormat),
     */
 	// XGSwizzleRect (* unchanged since 4361 *)
 	/* Leave unpatched
-	OOVPA_TABLE_PATCH(XGSwizzleRect_1_0_4361, XGSwizzleRect),
+	OOVPA_TABLE_PATCH(XGSwizzleRect, 4361, XGSwizzleRect),
 	*/
 	// XGUnswizzleRect
 	/* Leave unpatched
-	OOVPA_TABLE_PATCH(XGUnswizzleRect_1_0_4627, XGUnswizzleRect),
+	OOVPA_TABLE_PATCH(XGUnswizzleRect, 4627, XGUnswizzleRect),
     */
 	// XGSwizzleBox
-	OOVPA_TABLE_PATCH(XGSwizzleBox_1_0_4627, XGSwizzleBox),
+	OOVPA_TABLE_PATCH(XGSwizzleBox, 4627, XGSwizzleBox),
 	// XGWriteSurfaceOrTextureToXPR
-	OOVPA_TABLE_PATCH(XGWriteSurfaceOrTextureToXPR_1_0_4627, XGWriteSurfaceOrTextureToXPR),
+	OOVPA_TABLE_PATCH(XGWriteSurfaceOrTextureToXPR, 4627, XGWriteSurfaceOrTextureToXPR),
 };
 
 // ******************************************************************
-// * XG_1_0_4627_SIZE
+// * XG_4627_SIZE
 // ******************************************************************
-uint32 XG_1_0_4627_SIZE = sizeof(XG_1_0_4627);
+uint32 XG_4627_SIZE = sizeof(XG_4627);

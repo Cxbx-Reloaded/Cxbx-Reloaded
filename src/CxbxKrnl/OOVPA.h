@@ -158,7 +158,7 @@ template <uint16 COUNT> struct SOOVPA
 struct OOVPATable
 {
     OOVPA *Oovpa;
-
+	int version;
     void  *lpRedirect;
 
     #ifdef _DEBUG_TRACE
@@ -166,37 +166,33 @@ struct OOVPATable
     #endif
 };
 
-#define OOVPA_XREF_LARGE(Name, Count, XRefSaveIndex, XRefCount)	\
-LOOVPA<Count> Name = { { /*OOVPAType*/Large, Count, XRefSaveIndex, XRefCount }, {
+#define OOVPA_XREF_LARGE(Name, Version, Count, XRefSaveIndex, XRefCount)	\
+LOOVPA<Count> Name##_##Version = { { /*OOVPAType*/Large, Count, XRefSaveIndex, XRefCount }, {
 
-#define OOVPA_XREF(Name, Count, XRefSaveIndex, XRefCount)	\
-SOOVPA<Count> Name = { { /*OOVPAType*/Small, Count, XRefSaveIndex, XRefCount }, {
+#define OOVPA_XREF(Name, Version, Count, XRefSaveIndex, XRefCount)	\
+SOOVPA<Count> Name##_##Version = { { /*OOVPAType*/Small, Count, XRefSaveIndex, XRefCount }, {
 
-#define OOVPA_NO_XREF_LARGE(Name, Count) \
-OOVPA_XREF_LARGE(Name, Count, XRefNoSaveIndex, XRefZero)
+#define OOVPA_NO_XREF_LARGE(Name, Version, Count) \
+OOVPA_XREF_LARGE(Name, Version, Count, XRefNoSaveIndex, XRefZero)
 
-#define OOVPA_NO_XREF(Name, Count) \
-OOVPA_XREF(Name, Count, XRefNoSaveIndex, XRefZero)
+#define OOVPA_NO_XREF(Name, Version, Count) \
+OOVPA_XREF(Name, Version, Count, XRefNoSaveIndex, XRefZero)
 
-#define OOVPA_ENTRY(Offset, Value) { Offset, Value },
 #define OOVPA_END } }
 
 
 #if _DEBUG_TRACE
-#define OOVPA_TABLE_ENTRY(Oovpa, Patch, Name) { Oovpa, Patch, #Name }
+#define OOVPA_TABLE_ENTRY(Oovpa, Version, Patch, Name) { &Oovpa ## _ ## Version.Header, Version, Patch, Name }
 #else                                              
-#define OOVPA_TABLE_ENTRY(Oovpa, Patch, Name) { Oovpa, Patch }
+#define OOVPA_TABLE_ENTRY(Oovpa, Version, Patch, Name) { &Oovpa ## _ ## Version.Header, Version, Patch }
 #endif
 
-// Note : Space after :: is mandatory when the following symbol is ##-concatenated!
-// TODO : _DEBUG_TRACE OOVPA_TABLE_* macro's :
-// Cut Version off of Oovpa, and log separatly as "("#Version")"
-#define OOVPA_TABLE_PATCH(Oovpa, Patch)	\
-	OOVPA_TABLE_ENTRY(&Oovpa.Header, XTL:: EMUPATCH(Patch), #Patch)
-#define OOVPA_TABLE_PATCH_EmuThis(Oovpa, Patch)	\
-	OOVPA_TABLE_ENTRY(&Oovpa.Header, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis:: EMUPATCH(Patch)), #Patch)
-#define OOVPA_TABLE_XREF(Oovpa)	\
-	OOVPA_TABLE_ENTRY(&Oovpa.Header, nullptr, #Oovpa" (XRef)")
+#define OOVPA_TABLE_PATCH(Oovpa, Version, Patch)	\
+	OOVPA_TABLE_ENTRY(Oovpa, Version, XTL::EMUPATCH(Patch), #Patch ## "_" ## #Version)
+#define OOVPA_TABLE_PATCH_EmuThis(Oovpa, Version, Patch)	\
+	OOVPA_TABLE_ENTRY(Oovpa, Version, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::EMUPATCH(Patch)), #Patch ## "_" ## #Version)
+#define OOVPA_TABLE_XREF(Oovpa, Version)	\
+	OOVPA_TABLE_ENTRY(Oovpa, Version, nullptr, #Oovpa ## "_" ## #Version ## " (XRef)" )
 
 #pragma pack()
 

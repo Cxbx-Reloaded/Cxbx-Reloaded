@@ -31,15 +31,15 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef D3D8LTCG_1_0_5849_H
-#define D3D8LTCG_1_0_5849_H
+#ifndef D3D8LTCG_5849_H
+#define D3D8LTCG_5849_H
 
 #include "OOVPA.h"
 
-extern SOOVPA<13> D3DDevice_SetRenderState_CullMode_1_0_5849_LTCG;
-extern SOOVPA<10> D3DDevice_SetTextureState_TexCoordIndex_1_0_5849_LTCG;
+extern SOOVPA<13> D3DDevice_SetRenderState_CullMode_LTCG_5849;
+extern SOOVPA<10> D3DDevice_SetTextureState_TexCoordIndex_LTCG_5849;
 
-extern OOVPATable D3D8LTCG_1_0_5849[];
-extern uint32     D3D8LTCG_1_0_5849_SIZE;
+extern OOVPATable D3D8LTCG_5849[];
+extern uint32     D3D8LTCG_5849_SIZE;
 
 #endif
