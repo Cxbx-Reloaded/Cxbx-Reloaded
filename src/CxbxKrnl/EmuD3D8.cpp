@@ -8310,7 +8310,7 @@ void WINAPI XTL::EMUPATCH(D3DDevice_SetSoftDisplayFilter)
 // ******************************************************************
 // * func: EmuIDirect3DPalette8_Lock
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirect3DPalette8_Lock)
+HRESULT WINAPI XTL::EMUPATCH(D3DPalette_Lock)
 (
     X_D3DPalette   *pThis,
     D3DCOLOR      **ppColors,
@@ -8320,7 +8320,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirect3DPalette8_Lock)
 	HRESULT hRet = D3D_OK;
 
 	if( pThis )
-		*ppColors = EMUPATCH(IDirect3DPalette8_Lock2)(pThis, Flags);
+		*ppColors = EMUPATCH(D3DPalette_Lock2)(pThis, Flags);
 	else
 	{
 		EmuWarning( "EmuIDirect3DPalette8_Lock: pThis == NULL!" );
@@ -8333,7 +8333,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirect3DPalette8_Lock)
 // ******************************************************************
 // * func: EmuIDirect3DPalette8_Lock2
 // ******************************************************************
-XTL::D3DCOLOR * WINAPI XTL::EMUPATCH(IDirect3DPalette8_Lock2)
+XTL::D3DCOLOR * WINAPI XTL::EMUPATCH(D3DPalette_Lock2)
 (
     X_D3DPalette   *pThis,
     DWORD           Flags

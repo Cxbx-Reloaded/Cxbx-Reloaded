@@ -1351,7 +1351,7 @@ void WINAPI EMUPATCH(D3DDevice_SetSoftDisplayFilter)
 // ******************************************************************
 // * func: EmuIDirect3DPalette8_Lock
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirect3DPalette8_Lock)
+HRESULT WINAPI EMUPATCH(D3DPalette_Lock)
 (
     X_D3DPalette   *pThis,
     D3DCOLOR      **ppColors,
@@ -1361,7 +1361,7 @@ HRESULT WINAPI EMUPATCH(IDirect3DPalette8_Lock)
 // ******************************************************************
 // * func: EmuIDirect3DPalette8_Lock2
 // ******************************************************************
-D3DCOLOR * WINAPI EMUPATCH(IDirect3DPalette8_Lock2)
+D3DCOLOR * WINAPI EMUPATCH(D3DPalette_Lock2)
 (
     X_D3DPalette   *pThis,
     DWORD           Flags
