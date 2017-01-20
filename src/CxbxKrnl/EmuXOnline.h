@@ -51,43 +51,43 @@ class EmuThis
         // ******************************************************************
         // * func: Emusocket
         // ******************************************************************
-        SOCKET EMUPATCH(Emusocket)(int af, int type, int protocol);
+        SOCKET EMUPATCH(socket)(int af, int type, int protocol);
 
 		// ******************************************************************
 		// * func: EmuThis::Emuconnect
 		// ******************************************************************
-		int EMUPATCH(Emuconnect)(SOCKET s, const struct sockaddr FAR *name, int namelen);
+		int EMUPATCH(connect)(SOCKET s, const struct sockaddr FAR *name, int namelen);
 
 		// ******************************************************************
 		// * func: EmuThis::Emusend
 		// ******************************************************************
-		int EMUPATCH(Emusend)(SOCKET s, const char FAR *buf, int len, int flags);
+		int EMUPATCH(send)(SOCKET s, const char FAR *buf, int len, int flags);
 
 		// ******************************************************************
 		// * func: EmuThis::Emurecv
 		// ******************************************************************
-		int EMUPATCH(Emurecv)(SOCKET s, char FAR *buf, int len, int flags);
+		int EMUPATCH(recv)(SOCKET s, char FAR *buf, int len, int flags);
 
         // ******************************************************************
         // * func: Emubind
         // ******************************************************************
-        int EMUPATCH(Emubind)(SOCKET s, const struct sockaddr FAR *name, int namelen);
+        int EMUPATCH(bind)(SOCKET s, const struct sockaddr FAR *name, int namelen);
 
         // ******************************************************************
         // * func: Emulisten
         // ******************************************************************
-        int EMUPATCH(Emulisten)(SOCKET s, int backlog);
+        int EMUPATCH(listen)(SOCKET s, int backlog);
 
         // ******************************************************************
         // * func: Emuioctlsocket
         // ******************************************************************
-        int EMUPATCH(Emuioctlsocket)(SOCKET s, long cmd, u_long FAR *argp);
+        int EMUPATCH(ioctlsocket)(SOCKET s, long cmd, u_long FAR *argp);
 };
 
 // ******************************************************************
 // * func: EmuWSAStartup
 // ******************************************************************
-int WINAPI EMUPATCH(EmuWSAStartup)
+int WINAPI EMUPATCH(WSAStartup)
 (
     WORD        wVersionRequested,
     WSADATA    *lpWSAData
@@ -96,7 +96,7 @@ int WINAPI EMUPATCH(EmuWSAStartup)
 // ******************************************************************
 // * func: EmuXNetStartup
 // ******************************************************************
-INT WINAPI EMUPATCH(EmuXNetStartup)
+INT WINAPI EMUPATCH(XNetStartup)
 (
     const PVOID pDummy
 );
@@ -104,7 +104,7 @@ INT WINAPI EMUPATCH(EmuXNetStartup)
 // ******************************************************************
 // * func: EmuXNetGetEthernetLinkStatus
 // ******************************************************************
-DWORD WINAPI EMUPATCH(EmuXNetGetEthernetLinkStatus)();
+DWORD WINAPI EMUPATCH(XNetGetEthernetLinkStatus)();
 
 // ******************************************************************
 // * func: EmuXOnlineLaunchNewImage
@@ -118,7 +118,7 @@ HRESULT WINAPI XOnlineLaunchNewImage
 // ******************************************************************
 // * func: EmuXOnlineLogon
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(EmuXOnlineLogon)
+HRESULT WINAPI EMUPATCH(XOnlineLogon)
 (
     VOID*	pUsers,
     DWORD*	pdwServiceIDs,

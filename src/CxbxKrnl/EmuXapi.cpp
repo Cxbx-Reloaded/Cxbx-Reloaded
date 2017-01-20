@@ -96,7 +96,7 @@ int	   g_FiberCount = 0;
 // ******************************************************************
 // * func: EmuXFormatUtilityDrive
 // ******************************************************************
-BOOL WINAPI XTL::EMUPATCH(EmuXFormatUtilityDrive)()
+BOOL WINAPI XTL::EMUPATCH(XFormatUtilityDrive)()
 {
 	LOG_FUNC();
 
@@ -108,7 +108,7 @@ BOOL WINAPI XTL::EMUPATCH(EmuXFormatUtilityDrive)()
 // ******************************************************************
 // * func: EmuGetTimeZoneInformation
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(EmuGetTimeZoneInformation)
+DWORD WINAPI XTL::EMUPATCH(GetTimeZoneInformation)
 (
     OUT LPTIME_ZONE_INFORMATION lpTimeZoneInformation
 )
@@ -123,7 +123,7 @@ DWORD WINAPI XTL::EMUPATCH(EmuGetTimeZoneInformation)
 // ******************************************************************
 // * func: EmuXMountUtilityDrive
 // ******************************************************************
-BOOL WINAPI XTL::EMUPATCH(EmuXMountUtilityDrive)
+BOOL WINAPI XTL::EMUPATCH(XMountUtilityDrive)
 (
     BOOL    fFormatClean
 )
@@ -138,7 +138,7 @@ BOOL WINAPI XTL::EMUPATCH(EmuXMountUtilityDrive)
 // ******************************************************************
 // * func: EmuXInitDevices
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(EmuXInitDevices)
+VOID WINAPI XTL::EMUPATCH(XInitDevices)
 (
     DWORD					dwPreallocTypeCount,
 	PXDEVICE_PREALLOC_TYPE	PreallocTypes
@@ -175,7 +175,7 @@ VOID WINAPI XTL::EMUPATCH(EmuXInitDevices)
 // ******************************************************************
 // * func: EmuXGetDevices
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(EmuXGetDevices)
+DWORD WINAPI XTL::EMUPATCH(XGetDevices)
 (
     PXPP_DEVICE_TYPE DeviceType
 )
@@ -195,7 +195,7 @@ DWORD WINAPI XTL::EMUPATCH(EmuXGetDevices)
 // ******************************************************************
 // * func: EmuXGetDeviceChanges
 // ******************************************************************
-BOOL WINAPI XTL::EMUPATCH(EmuXGetDeviceChanges)
+BOOL WINAPI XTL::EMUPATCH(XGetDeviceChanges)
 (
     PXPP_DEVICE_TYPE DeviceType,
     PDWORD           pdwInsertions,
@@ -239,7 +239,7 @@ BOOL WINAPI XTL::EMUPATCH(EmuXGetDeviceChanges)
 // ******************************************************************
 // * func: EmuXInputOpen
 // ******************************************************************
-HANDLE WINAPI XTL::EMUPATCH(EmuXInputOpen)
+HANDLE WINAPI XTL::EMUPATCH(XInputOpen)
 (
     IN PXPP_DEVICE_TYPE             DeviceType,
     IN DWORD                        dwPort,
@@ -310,7 +310,7 @@ HANDLE WINAPI XTL::EMUPATCH(EmuXInputOpen)
 // ******************************************************************
 // * func: EmuXInputClose
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(EmuXInputClose)
+VOID WINAPI XTL::EMUPATCH(XInputClose)
 (
     IN HANDLE hDevice
 )
@@ -348,7 +348,7 @@ VOID WINAPI XTL::EMUPATCH(EmuXInputClose)
 // ******************************************************************
 // * func: EmuXInputPoll
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(EmuXInputPoll)
+DWORD WINAPI XTL::EMUPATCH(XInputPoll)
 (
     IN HANDLE hDevice
 )
@@ -400,7 +400,7 @@ DWORD WINAPI XTL::EMUPATCH(EmuXInputPoll)
 // ******************************************************************
 // * func: EmuXInputGetCapabilities
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(EmuXInputGetCapabilities)
+DWORD WINAPI XTL::EMUPATCH(XInputGetCapabilities)
 (
     IN  HANDLE               hDevice,
     OUT PXINPUT_CAPABILITIES pCapabilities
@@ -435,7 +435,7 @@ DWORD WINAPI XTL::EMUPATCH(EmuXInputGetCapabilities)
 // ******************************************************************
 // * func: EmuInputGetState
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(EmuXInputGetState)
+DWORD WINAPI XTL::EMUPATCH(XInputGetState)
 (
     IN  HANDLE         hDevice,
     OUT PXINPUT_STATE  pState
@@ -487,7 +487,7 @@ DWORD WINAPI XTL::EMUPATCH(EmuXInputGetState)
 // ******************************************************************
 // * func: EmuInputSetState
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(EmuXInputSetState)
+DWORD WINAPI XTL::EMUPATCH(XInputSetState)
 (
     IN     HANDLE           hDevice,
     IN OUT PXINPUT_FEEDBACK pFeedback
@@ -564,7 +564,7 @@ DWORD WINAPI XTL::EMUPATCH(EmuXInputSetState)
 // ******************************************************************
 // * func: EmuSetThreadPriorityBoost
 // ******************************************************************
-BOOL WINAPI XTL::EMUPATCH(EmuSetThreadPriorityBoost)
+BOOL WINAPI XTL::EMUPATCH(SetThreadPriorityBoost)
 (
     HANDLE  hThread,
     BOOL    DisablePriorityBoost
@@ -586,7 +586,7 @@ BOOL WINAPI XTL::EMUPATCH(EmuSetThreadPriorityBoost)
 // ******************************************************************
 // * func: EmuSetThreadPriority
 // ******************************************************************
-BOOL WINAPI XTL::EMUPATCH(EmuSetThreadPriority)
+BOOL WINAPI XTL::EMUPATCH(SetThreadPriority)
 (
     HANDLE  hThread,
     int     nPriority
@@ -609,7 +609,7 @@ BOOL WINAPI XTL::EMUPATCH(EmuSetThreadPriority)
 // ******************************************************************
 // * func: EmuGetThreadPriority
 // ******************************************************************
-int WINAPI XTL::EMUPATCH(EmuGetThreadPriority)
+int WINAPI XTL::EMUPATCH(GetThreadPriority)
 (
     HANDLE  hThread
 )
@@ -627,7 +627,7 @@ int WINAPI XTL::EMUPATCH(EmuGetThreadPriority)
 // ******************************************************************
 // * func: EmuGetExitCodeThread
 // ******************************************************************
-BOOL WINAPI XTL::EMUPATCH(EmuGetExitCodeThread)
+BOOL WINAPI XTL::EMUPATCH(GetExitCodeThread)
 (
     HANDLE  hThread,
     LPDWORD lpExitCode
@@ -646,7 +646,7 @@ BOOL WINAPI XTL::EMUPATCH(EmuGetExitCodeThread)
 // ******************************************************************
 // * func: EmuXapiThreadStartup
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(EmuXapiThreadStartup)
+VOID WINAPI XTL::EMUPATCH(XapiThreadStartup)
 (
     DWORD dwDummy1,
     DWORD dwDummy2
@@ -679,7 +679,7 @@ VOID WINAPI XTL::EMUPATCH(EmuXapiThreadStartup)
 // ******************************************************************
 // * func: EmuXRegisterThreadNotifyRoutine
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(EmuXRegisterThreadNotifyRoutine)
+VOID WINAPI XTL::EMUPATCH(XRegisterThreadNotifyRoutine)
 (
     PXTHREAD_NOTIFICATION   pThreadNotification,
     BOOL                    fRegister
@@ -728,7 +728,7 @@ VOID WINAPI XTL::EMUPATCH(EmuXRegisterThreadNotifyRoutine)
 // ******************************************************************
 // * func: EmuCreateFiber
 // ******************************************************************
-LPVOID WINAPI XTL::EMUPATCH(EmuCreateFiber)
+LPVOID WINAPI XTL::EMUPATCH(CreateFiber)
 (
 	DWORD					dwStackSize,
 	LPFIBER_START_ROUTINE	lpStartRoutine,
@@ -761,7 +761,7 @@ LPVOID WINAPI XTL::EMUPATCH(EmuCreateFiber)
 // ******************************************************************
 // * func: EmuDeleteFiber
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(EmuDeleteFiber)
+VOID WINAPI XTL::EMUPATCH(DeleteFiber)
 (
 	LPVOID					lpFiber
 )
@@ -780,7 +780,7 @@ VOID WINAPI XTL::EMUPATCH(EmuDeleteFiber)
 // ******************************************************************
 // * func: EmuSwitchToFiber
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(EmuSwitchToFiber)
+VOID WINAPI XTL::EMUPATCH(SwitchToFiber)
 (
 	LPVOID lpFiber 
 )
@@ -811,7 +811,7 @@ VOID WINAPI XTL::EMUPATCH(EmuSwitchToFiber)
 // ******************************************************************
 // * func: EmuConvertThreadToFiber
 // ******************************************************************
-LPVOID WINAPI XTL::EMUPATCH(EmuConvertThreadToFiber)
+LPVOID WINAPI XTL::EMUPATCH(ConvertThreadToFiber)
 (
 	LPVOID lpParameter
 )
@@ -833,7 +833,7 @@ LPVOID WINAPI XTL::EMUPATCH(EmuConvertThreadToFiber)
 // ******************************************************************
 // * func: EmuXapiFiberStartup
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(EmuXapiFiberStartup)(DWORD dwDummy)
+VOID WINAPI XTL::EMUPATCH(XapiFiberStartup)(DWORD dwDummy)
 {
 
 	DbgPrintf("EmuXapi: EmuXapiFiberStarup()\n"
@@ -863,7 +863,7 @@ VOID WINAPI XTL::EMUPATCH(EmuXapiFiberStartup)(DWORD dwDummy)
 // ******************************************************************
 // * func: EmuQueueUserAPC
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(EmuQueueUserAPC)
+DWORD WINAPI XTL::EMUPATCH(QueueUserAPC)
 (
 	PAPCFUNC	pfnAPC,
 	HANDLE		hThread,
@@ -895,7 +895,7 @@ DWORD WINAPI XTL::EMUPATCH(EmuQueueUserAPC)
 // ******************************************************************
 // * func: EmuGetOverlappedResult
 // ******************************************************************
-BOOL WINAPI XTL::EMUPATCH(EmuGetOverlappedResult)
+BOOL WINAPI XTL::EMUPATCH(GetOverlappedResult)
 (
 	HANDLE			hFile,
 	LPOVERLAPPED	lpOverlapped,
@@ -921,7 +921,7 @@ BOOL WINAPI XTL::EMUPATCH(EmuGetOverlappedResult)
 // ******************************************************************
 // * func: EmuXLaunchNewImage
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(EmuXLaunchNewImage)
+DWORD WINAPI XTL::EMUPATCH(XLaunchNewImage)
 (
 	LPCSTR			lpTitlePath,
 	PLAUNCH_DATA	pLaunchData
@@ -945,7 +945,7 @@ DWORD WINAPI XTL::EMUPATCH(EmuXLaunchNewImage)
 		if (PathFileExists(szDashboardPath))
 		{
 			MessageBox(CxbxKrnl_hEmuParent, "The title is rebooting to dashboard", "Cxbx-Reloaded", 0);
-			EMUPATCH(EmuXLaunchNewImage)("C:\\xboxdash.xbe", pLaunchData);
+			EMUPATCH(XLaunchNewImage)("C:\\xboxdash.xbe", pLaunchData);
 		}
 			
 		CxbxKrnlCleanup("The xbe rebooted to Dashboard and xboxdash.xbe could not be found");
@@ -1001,7 +1001,7 @@ DWORD WINAPI XTL::EMUPATCH(EmuXLaunchNewImage)
 // ******************************************************************
 // * func: EmuXGetLaunchInfo
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(EmuXGetLaunchInfo)
+DWORD WINAPI XTL::EMUPATCH(XGetLaunchInfo)
 (
 	PDWORD			pdwLaunchDataType,
 	PLAUNCH_DATA	pLaunchData
@@ -1065,7 +1065,7 @@ DWORD WINAPI XTL::EMUPATCH(EmuXGetLaunchInfo)
 // ******************************************************************
 // * func: EmuXSetProcessQuantumLength
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(EmuXSetProcessQuantumLength)
+VOID WINAPI XTL::EMUPATCH(XSetProcessQuantumLength)
 (
     DWORD dwMilliseconds
 )
@@ -1079,7 +1079,7 @@ VOID WINAPI XTL::EMUPATCH(EmuXSetProcessQuantumLength)
 // ******************************************************************
 // * func: EmuSignalObjectAndWait
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(EmuSignalObjectAndWait)
+DWORD WINAPI XTL::EMUPATCH(SignalObjectAndWait)
 (
 	HANDLE	hObjectToSignal,
 	HANDLE	hObjectToWaitOn,
@@ -1102,7 +1102,7 @@ DWORD WINAPI XTL::EMUPATCH(EmuSignalObjectAndWait)
 // ******************************************************************
 // * func: timeSetEvent
 // ******************************************************************
-MMRESULT WINAPI XTL::EMUPATCH(EmutimeSetEvent)
+MMRESULT WINAPI XTL::EMUPATCH(timeSetEvent)
 (
 	UINT			uDelay,
 	UINT			uResolution,
@@ -1127,7 +1127,7 @@ MMRESULT WINAPI XTL::EMUPATCH(EmutimeSetEvent)
 // ******************************************************************
 // * func: timeKillEvent
 // ******************************************************************
-MMRESULT WINAPI XTL::EMUPATCH(EmutimeKillEvent)
+MMRESULT WINAPI XTL::EMUPATCH(timeKillEvent)
 (
 	UINT uTimerID  
 )
@@ -1142,7 +1142,7 @@ MMRESULT WINAPI XTL::EMUPATCH(EmutimeKillEvent)
 // ******************************************************************
 // * func: EmuRaiseException
 // ******************************************************************
-VOID WINAPI XTL::EMUPATCH(EmuRaiseException)
+VOID WINAPI XTL::EMUPATCH(RaiseException)
 (
 	DWORD			dwExceptionCode,       // exception code
 	DWORD			dwExceptionFlags,      // continuable exception flag
@@ -1166,7 +1166,7 @@ VOID WINAPI XTL::EMUPATCH(EmuRaiseException)
 // ******************************************************************
 // func: XMountMUA
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(EmuXMountMUA)
+DWORD WINAPI XTL::EMUPATCH(XMountMUA)
 (
 	DWORD dwPort,                  
 	DWORD dwSlot,                  
@@ -1188,7 +1188,7 @@ DWORD WINAPI XTL::EMUPATCH(EmuXMountMUA)
 // ******************************************************************
 // * func: EmuXMountAlternateTitle
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(EmuXMountAlternateTitle)
+DWORD WINAPI XTL::EMUPATCH(XMountAlternateTitle)
 (
 	LPCSTR		lpRootPath,               
 	DWORD		dwAltTitleId,               
@@ -1210,7 +1210,7 @@ DWORD WINAPI XTL::EMUPATCH(EmuXMountAlternateTitle)
 // ******************************************************************
 // * func: EmuXUnmountAlternateTitle
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(EmuXUnmountAlternateTitle)
+DWORD WINAPI XTL::EMUPATCH(XUnmountAlternateTitle)
 (
 	CHAR chDrive
 )
@@ -1225,7 +1225,7 @@ DWORD WINAPI XTL::EMUPATCH(EmuXUnmountAlternateTitle)
 // ******************************************************************
 // * func: EmuXGetDeviceEnumerationStatus
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(EmuXGetDeviceEnumerationStatus)()
+DWORD WINAPI XTL::EMUPATCH(XGetDeviceEnumerationStatus)()
 {
 	LOG_FUNC();
 
@@ -1237,7 +1237,7 @@ DWORD WINAPI XTL::EMUPATCH(EmuXGetDeviceEnumerationStatus)()
 // ******************************************************************
 // * func: EmuXInputGetDeviceDescription
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(EmuXInputGetDeviceDescription)
+DWORD WINAPI XTL::EMUPATCH(XInputGetDeviceDescription)
 (
     HANDLE	hDevice,
     PVOID	pDescription
@@ -1257,7 +1257,7 @@ DWORD WINAPI XTL::EMUPATCH(EmuXInputGetDeviceDescription)
 // ******************************************************************
 // * func: EmuXAutoPowerDownResetTimer
 // ******************************************************************
-int WINAPI XTL::EMUPATCH(EmuXAutoPowerDownResetTimer)()
+int WINAPI XTL::EMUPATCH(XAutoPowerDownResetTimer)()
 {
 	LOG_FUNC();
 
@@ -1270,7 +1270,7 @@ int WINAPI XTL::EMUPATCH(EmuXAutoPowerDownResetTimer)()
 // ******************************************************************
 // * func: EmuXMountMURootA
 // ******************************************************************
-DWORD WINAPI XTL::EMUPATCH(EmuXMountMURootA)
+DWORD WINAPI XTL::EMUPATCH(XMountMURootA)
 (
 	DWORD dwPort,                  
 	DWORD dwSlot,                  

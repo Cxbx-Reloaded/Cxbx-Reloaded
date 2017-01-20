@@ -192,9 +192,9 @@ OOVPA_XREF(Name, Count, XRefNoSaveIndex, XRefZero)
 // TODO : _DEBUG_TRACE OOVPA_TABLE_* macro's :
 // Cut Version off of Oovpa, and log separatly as "("#Version")"
 #define OOVPA_TABLE_PATCH(Oovpa, Patch)	\
-	OOVPA_TABLE_ENTRY(&Oovpa.Header, XTL:: EMUPATCH(Emu##Patch), #Patch)
+	OOVPA_TABLE_ENTRY(&Oovpa.Header, XTL:: EMUPATCH(Patch), #Patch)
 #define OOVPA_TABLE_PATCH_EmuThis(Oovpa, Patch)	\
-	OOVPA_TABLE_ENTRY(&Oovpa.Header, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis:: EMUPATCH(Emu##Patch)), #Patch)
+	OOVPA_TABLE_ENTRY(&Oovpa.Header, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis:: EMUPATCH(Patch)), #Patch)
 #define OOVPA_TABLE_XREF(Oovpa)	\
 	OOVPA_TABLE_ENTRY(&Oovpa.Header, nullptr, #Oovpa" (XRef)")
 
