@@ -1091,268 +1091,268 @@ OOVPA_END;
 OOVPATable D3D8_1_0_4034[] = {
 
     // IDirect3D8::CreateDevice (* unchanged since 1.0.3925 *)
-	OOVPA_TABLE_PATCH(IDirect3D8_CreateDevice_1_0_3925, IDirect3D8_CreateDevice),
+	OOVPA_TABLE_PATCH(IDirect3D8_CreateDevice_1_0_3925, D3D_CreateDevice),
 	// IDirect3DDevice8::Clear
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_Clear_1_0_4034, IDirect3DDevice8_Clear),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_Clear_1_0_4034, D3DDevice_Clear),
 	// IDirect3DResource8::Register
-	OOVPA_TABLE_PATCH(IDirect3DResource8_Register_1_0_3925, IDirect3DResource8_Register),
+	OOVPA_TABLE_PATCH(IDirect3DResource8_Register_1_0_3925, D3DResource_Register),
 	// ********************** BEG WARNING UNTESTED!!! *******************
 
 #if 0
     // IDirect3DDevice8::BeginVisibilityTest
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_BeginVisibilityTest_1_0_3925, IDirect3DDevice8_BeginVisibilityTest),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_BeginVisibilityTest_1_0_3925, D3DDevice_BeginVisibilityTest),
 	// IDirect3DDevice8::EndVisibilityTest
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_EndVisibilityTest_1_0_3925, IDirect3DDevice8_EndVisibilityTest),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_EndVisibilityTest_1_0_3925, D3DDevice_EndVisibilityTest),
 	// IDirect3DDevice8::LoadVertexShader
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_LoadVertexShader_1_0_3925, IDirect3DDevice8_LoadVertexShader),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_LoadVertexShader_1_0_3925, D3DDevice_LoadVertexShader),
 	// IDirect3DDevice8::SelectVertexShader
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SelectVertexShader_1_0_3925, IDirect3DDevice8_SelectVertexShader),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SelectVertexShader_1_0_3925, D3DDevice_SelectVertexShader),
 	// IDirect3DDevice8::Release
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_Release_1_0_3925, IDirect3DDevice8_Release),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_Release_1_0_3925, D3DDevice_Release),
 	// IDirect3DDevice8::BlockUntilVerticalBlank
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_BlockUntilVerticalBlank_1_0_3925, IDirect3DDevice8_BlockUntilVerticalBlank),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_BlockUntilVerticalBlank_1_0_3925, D3DDevice_BlockUntilVerticalBlank),
 	// IDirect3DDevice8::SetVerticalBlankCallback
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetVerticalBlankCallback_1_0_3925, IDirect3DDevice8_SetVerticalBlankCallback),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetVerticalBlankCallback_1_0_3925, D3DDevice_SetVerticalBlankCallback),
 	// IDirect3DDevice8::SetRenderTarget
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderTarget_1_0_3925, IDirect3DDevice8_SetRenderTarget),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderTarget_1_0_3925, D3DDevice_SetRenderTarget),
 	// IDirect3DDevice8::GetTransform
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetTransform_1_0_3925, IDirect3DDevice8_GetTransform),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetTransform_1_0_3925, D3DDevice_GetTransform),
 	// IDirect3DDevice8::SetStreamSource
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetStreamSource_1_0_3925, IDirect3DDevice8_SetStreamSource),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetStreamSource_1_0_3925, D3DDevice_SetStreamSource),
 	// IDirect3DDevice8::SetVertexShader
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetVertexShader_1_0_3925, IDirect3DDevice8_SetVertexShader),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetVertexShader_1_0_3925, D3DDevice_SetVertexShader),
 	// IDirect3DDevice8::SetPixelShader
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetPixelShader_1_0_3925, IDirect3DDevice8_SetPixelShader),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetPixelShader_1_0_3925, D3DDevice_SetPixelShader),
 	// IDirect3DDevice8::SetIndices
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetIndices_1_0_3925, IDirect3DDevice8_SetIndices),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetIndices_1_0_3925, D3DDevice_SetIndices),
 	// IDirect3DDevice8::SetViewport
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetViewport_1_0_3925, IDirect3DDevice8_SetViewport),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetViewport_1_0_3925, D3DDevice_SetViewport),
 	// IDirect3DDevice8::SetTexture
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetTexture_1_0_3925, IDirect3DDevice8_SetTexture),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetTexture_1_0_3925, D3DDevice_SetTexture),
 	// IDirect3DDevice8::DrawIndexedVertices
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_DrawIndexedVertices_1_0_3925, IDirect3DDevice8_DrawIndexedVertices),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_DrawIndexedVertices_1_0_3925, D3DDevice_DrawIndexedVertices),
 	// IDirect3DDevice8::Begin
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_Begin_1_0_3925, IDirect3DDevice8_Begin),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_Begin_1_0_3925, D3DDevice_Begin),
 	// IDirect3DDevice8::SetVertexData2f
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetVertexData2f_1_0_3925, IDirect3DDevice8_SetVertexData2f),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetVertexData2f_1_0_3925, D3DDevice_SetVertexData2f),
 	// IDirect3DDevice8::SetVertexData4f
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetVertexData4f_1_0_3925, IDirect3DDevice8_SetVertexData4f),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetVertexData4f_1_0_3925, D3DDevice_SetVertexData4f),
 	// IDirect3DDevice8::SetVertexDataColor
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetVertexDataColor_1_0_3925, IDirect3DDevice8_SetVertexDataColor),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetVertexDataColor_1_0_3925, D3DDevice_SetVertexDataColor),
 	// IDirect3DDevice8::End
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_End_1_0_3925, IDirect3DDevice8_End),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_End_1_0_3925, D3DDevice_End),
 	// IDirect3DDevice8::Clear
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_Clear_1_0_3925, IDirect3DDevice8_Clear),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_Clear_1_0_3925, D3DDevice_Clear),
 	// IDirect3DDevice8::SetPalette
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetPalette_1_0_3925, IDirect3DDevice8_SetPalette),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetPalette_1_0_3925, D3DDevice_SetPalette),
 	// IDirect3DDevice8::SetVertexShaderConstant
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetVertexShaderConstant_1_0_3925, IDirect3DDevice8_SetVertexShaderConstant),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetVertexShaderConstant_1_0_3925, D3DDevice_SetVertexShaderConstant),
 	// IDirect3DDevice8::SetFlickerFilter
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetFlickerFilter_1_0_3925, IDirect3DDevice8_SetFlickerFilter),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetFlickerFilter_1_0_3925, D3DDevice_SetFlickerFilter),
 	// IDirect3DDevice8::SetSoftDisplayFilter
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetSoftDisplayFilter_1_0_3925, IDirect3DDevice8_SetSoftDisplayFilter),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetSoftDisplayFilter_1_0_3925, D3DDevice_SetSoftDisplayFilter),
 	// IDirect3DDevice8::SetTextureState_TexCoordIndex
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_3925, IDirect3DDevice8_SetTextureState_TexCoordIndex),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_3925, D3DDevice_SetTextureState_TexCoordIndex),
 	// IDirect3DDevice8::SetTextureState_BorderColor
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetTextureState_BorderColor_1_0_3925, IDirect3DDevice8_SetTextureState_BorderColor),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetTextureState_BorderColor_1_0_3925, D3DDevice_SetTextureState_BorderColor),
 	// IDirect3DDevice8::SetRenderState_PSTextureModes
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_PSTextureModes_1_0_3925, IDirect3DDevice8_SetRenderState_PSTextureModes),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_PSTextureModes_1_0_3925, D3DDevice_SetRenderState_PSTextureModes),
 	// IDirect3DDevice8::SetRenderState_StencilFail
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_StencilFail_1_0_3925, IDirect3DDevice8_SetRenderState_StencilFail),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_StencilFail_1_0_3925, D3DDevice_SetRenderState_StencilFail),
 	// IDirect3DDevice8::SetRenderState_CullMode
     /*
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_CullMode_1_0_3925, IDirect3DDevice8_SetRenderState_CullMode),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_CullMode_1_0_3925, D3DDevice_SetRenderState_CullMode),
 	*/
 	// IDirect3DDevice8::SetRenderState_Simple
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_Simple_1_0_3925, IDirect3DDevice8_SetRenderState_Simple),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_Simple_1_0_3925, D3DDevice_SetRenderState_Simple),
 	// IDirect3DDevice8::SetRenderState_FogColor
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_FogColor_1_0_3925, IDirect3DDevice8_SetRenderState_FogColor),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_FogColor_1_0_3925, D3DDevice_SetRenderState_FogColor),
 	// IDirect3DDevice8::SetRenderState_FillMode
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_FillMode_1_0_3925, IDirect3DDevice8_SetRenderState_FillMode),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_FillMode_1_0_3925, D3DDevice_SetRenderState_FillMode),
 	// IDirect3DDevice8::SetRenderState_StencilEnable
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_StencilEnable_1_0_3925, IDirect3DDevice8_SetRenderState_StencilEnable),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_StencilEnable_1_0_3925, D3DDevice_SetRenderState_StencilEnable),
 	// IDirect3DDevice8::SetRenderState_Dxt1NoiseEnable
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_Dxt1NoiseEnable_1_0_3925, IDirect3DDevice8_SetRenderState_Dxt1NoiseEnable),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_Dxt1NoiseEnable_1_0_3925, D3DDevice_SetRenderState_Dxt1NoiseEnable),
 	// IDirect3DDevice8::SetRenderState_ZEnable
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_ZEnable_1_0_3925, IDirect3DDevice8_SetRenderState_ZEnable),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_ZEnable_1_0_3925, D3DDevice_SetRenderState_ZEnable),
 	// IDirect3DDevice8::Present
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_Present_1_0_3925, IDirect3DDevice8_Present),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_Present_1_0_3925, D3DDevice_Present),
 	// IDirect3DDevice8::SetShaderConstantMode
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetShaderConstantMode_1_0_3925, IDirect3DDevice8_SetShaderConstantMode),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetShaderConstantMode_1_0_3925, D3DDevice_SetShaderConstantMode),
 	// IDirect3DDevice8::GetBackBuffer
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetBackBuffer_1_0_3925, IDirect3DDevice8_GetBackBuffer),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetBackBuffer_1_0_3925, D3DDevice_GetBackBuffer),
 	// IDirect3DDevice8::GetDepthStencilSurface
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetDepthStencilSurface_1_0_3925, IDirect3DDevice8_GetDepthStencilSurface),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetDepthStencilSurface_1_0_3925, D3DDevice_GetDepthStencilSurface),
 	// IDirect3DVertexBuffer8::Lock
-	OOVPA_TABLE_PATCH(IDirect3DVertexBuffer8_Lock_1_0_3925, IDirect3DVertexBuffer8_Lock),
+	OOVPA_TABLE_PATCH(IDirect3DVertexBuffer8_Lock_1_0_3925, D3DVertexBuffer_Lock),
 	// IDirect3DResource8::IsBusy
-	OOVPA_TABLE_PATCH(IDirect3DResource8_IsBusy_1_0_3925, IDirect3DResource8_IsBusy),
+	OOVPA_TABLE_PATCH(IDirect3DResource8_IsBusy_1_0_3925, D3DResource_IsBusy),
 	// Get2DSurfacDesc
 	OOVPA_TABLE_PATCH(Get2DSurfaceDesc_1_0_3925, Get2DSurfaceDesc),
 	// ********************** END WARNING UNTESTED!!! *******************
 #endif
 
 	// IDirect3DDevice8::GetGammaRamp
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetGammaRamp_1_0_4034, IDirect3DDevice8_GetGammaRamp),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetGammaRamp_1_0_4034, D3DDevice_GetGammaRamp),
 	// IDirect3DDevice8::GetCreationParameters
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetCreationParameters_1_0_4034, IDirect3DDevice8_GetCreationParameters),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetCreationParameters_1_0_4034, D3DDevice_GetCreationParameters),
 	// IDirect3DDevice8::GetViewport
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetViewport_1_0_4034, IDirect3DDevice8_GetViewport),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetViewport_1_0_4034, D3DDevice_GetViewport),
 	// IDirect3DDevice8::SetViewport
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetViewport_1_0_4034, IDirect3DDevice8_SetViewport),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetViewport_1_0_4034, D3DDevice_SetViewport),
 	// IDirect3DDevice8::SetTransform
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetTransform_1_0_4034, IDirect3DDevice8_SetTransform),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetTransform_1_0_4034, D3DDevice_SetTransform),
 	// IDirect3DDevice8::CreatePixelShader (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreatePixelShader_1_0_3925, IDirect3DDevice8_CreatePixelShader),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreatePixelShader_1_0_3925, D3DDevice_CreatePixelShader),
 	// D3DDevice_GetVertexShaderSize (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(X_D3DDevice_GetVertexShaderSize_1_0_3925, IDirect3DDevice8_GetVertexShaderSize),
+	OOVPA_TABLE_PATCH(X_D3DDevice_GetVertexShaderSize_1_0_3925, D3DDevice_GetVertexShaderSize),
 	// IDirect3DDevice8::SetRenderState_CullMode
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_CullMode_1_0_4034, IDirect3DDevice8_SetRenderState_CullMode),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_CullMode_1_0_4034, D3DDevice_SetRenderState_CullMode),
 	// IDirect3DDevice8::CreateCubeTexture (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreateCubeTexture_1_0_3925, IDirect3DDevice8_CreateCubeTexture),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreateCubeTexture_1_0_3925, D3DDevice_CreateCubeTexture),
 	// IDirect3DDevice8::GetDeviceCaps (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetDeviceCaps_1_0_3925, IDirect3DDevice8_GetDeviceCaps),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetDeviceCaps_1_0_3925, D3DDevice_GetDeviceCaps),
 	// IDirect3DDevice8::CreatePalette (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreatePalette_1_0_3925, IDirect3DDevice8_CreatePalette),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreatePalette_1_0_3925, D3DDevice_CreatePalette),
 	// IDirect3DDevice8::CreateTexture (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreateTexture_1_0_3925, IDirect3DDevice8_CreateTexture),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreateTexture_1_0_3925, D3DDevice_CreateTexture),
 	// IDirect3DDevice8::CreateVolumeTexture (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreateVolumeTexture_1_0_3925, IDirect3DDevice8_CreateVolumeTexture),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreateVolumeTexture_1_0_3925, D3DDevice_CreateVolumeTexture),
 	// IDirect3DDevice8::CreateIndexBuffer (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreateIndexBuffer_1_0_3925, IDirect3DDevice8_CreateIndexBuffer),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreateIndexBuffer_1_0_3925, D3DDevice_CreateIndexBuffer),
 	// IDirect3DDevice8::CreateVertexShader (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreateVertexShader_1_0_3925, IDirect3DDevice8_CreateVertexShader),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreateVertexShader_1_0_3925, D3DDevice_CreateVertexShader),
 	// IDirect3DDevice8::SetRenderState_ZBias (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_ZBias_1_0_3925, IDirect3DDevice8_SetRenderState_ZBias),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_ZBias_1_0_3925, D3DDevice_SetRenderState_ZBias),
 	// IDirect3DDevice8::CreateVertexBuffer (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreateVertexBuffer_1_0_3925, IDirect3DDevice8_CreateVertexBuffer),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreateVertexBuffer_1_0_3925, D3DDevice_CreateVertexBuffer),
 	// IDirect3DResource8::Release (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(IDirect3DResource8_Release_1_0_3925, IDirect3DResource8_Release),
+	OOVPA_TABLE_PATCH(IDirect3DResource8_Release_1_0_3925, D3DResource_Release),
 	// IDirect3DResource8::AddRef (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(IDirect3DResource8_AddRef_1_0_3925, IDirect3DResource8_AddRef),
+	OOVPA_TABLE_PATCH(IDirect3DResource8_AddRef_1_0_3925, D3DResource_AddRef),
 	// IDirect3DPalette8::Lock (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(IDirect3DPalette8_Lock_1_0_3925, IDirect3DPalette8_Lock),
+	OOVPA_TABLE_PATCH(IDirect3DPalette8_Lock_1_0_3925, D3DPalette_Lock),
 	// IDirect3DTexture8::LockRect (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(IDirect3DTexture8_LockRect_1_0_3925, IDirect3DTexture8_LockRect),
+	OOVPA_TABLE_PATCH(IDirect3DTexture8_LockRect_1_0_3925, D3DTexture_LockRect),
 	// IDirect3DVolumeTexture8::LockBox (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(IDirect3DVolumeTexture8_LockBox_1_0_3925, IDirect3DVolumeTexture8_LockBox),
+	OOVPA_TABLE_PATCH(IDirect3DVolumeTexture8_LockBox_1_0_3925, D3DVolumeTexture_LockBox),
 	// IDirect3DCubeTexture8::LockRect (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(IDirect3DCubeTexture8_LockRect_1_0_3925, IDirect3DCubeTexture8_LockRect),
+	OOVPA_TABLE_PATCH(IDirect3DCubeTexture8_LockRect_1_0_3925, D3DCubeTexture_LockRect),
 	// IDirect3DTexture8::GetSurfaceLevel (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(IDirect3DTexture8_GetSurfaceLevel_1_0_3925, IDirect3DTexture8_GetSurfaceLevel),
+	OOVPA_TABLE_PATCH(IDirect3DTexture8_GetSurfaceLevel_1_0_3925, D3DTexture_GetSurfaceLevel),
 	// IDirect3DSurface8::LockRect (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(IDirect3DSurface8_LockRect_1_0_3925, IDirect3DSurface8_LockRect),
+	OOVPA_TABLE_PATCH(IDirect3DSurface8_LockRect_1_0_3925, D3DSurface_LockRect),
 	// Lock2DSurface (* unchanged since 3925 *)
 	OOVPA_TABLE_PATCH(Lock2DSurface_1_0_3925, Lock2DSurface),
 	// IDirect3DDevice8_SetGammaRamp (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetGammaRamp_1_0_3925, IDirect3DDevice8_SetGammaRamp),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetGammaRamp_1_0_3925, D3DDevice_SetGammaRamp),
 	// IDirect3DDevice8::DrawVertices
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_DrawVertices_1_0_4034, IDirect3DDevice8_DrawVertices),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_DrawVertices_1_0_4034, D3DDevice_DrawVertices),
 	// IDirect3DDevice8::DrawIndexedVertices
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_DrawIndexedVertices_1_0_4034, IDirect3DDevice8_DrawIndexedVertices),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_DrawIndexedVertices_1_0_4034, D3DDevice_DrawIndexedVertices),
 	// D3DDevice_BeginVisibilityTest
-	OOVPA_TABLE_PATCH(D3DDevice_BeginVisibilityTest_1_0_4034, IDirect3DDevice8_BeginVisibilityTest),
+	OOVPA_TABLE_PATCH(D3DDevice_BeginVisibilityTest_1_0_4034, D3DDevice_BeginVisibilityTest),
 	// D3DDevice_EndVisibilityTest
-	OOVPA_TABLE_PATCH(D3DDevice_EndVisibilityTest_1_0_4034, IDirect3DDevice8_EndVisibilityTest),
+	OOVPA_TABLE_PATCH(D3DDevice_EndVisibilityTest_1_0_4034, D3DDevice_EndVisibilityTest),
 	// D3DDevice_CopyRects
-	OOVPA_TABLE_PATCH(D3DDevice_CopyRects_1_0_4034, IDirect3DDevice8_CopyRects),
+	OOVPA_TABLE_PATCH(D3DDevice_CopyRects_1_0_4034, D3DDevice_CopyRects),
 	// D3DDevice_DeletePatch (TODO)
 	/*
-	OOVPA_TABLE_PATCH(D3DDevice_DeletePatch_1_0_4034, IDirect3DDevice8_DeletePatch),
+	OOVPA_TABLE_PATCH(D3DDevice_DeletePatch_1_0_4034, D3DDevice_DeletePatch),
 	*/
 	// D3DDevice_SetStreamSource
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetStreamSource_1_0_4034, IDirect3DDevice8_SetStreamSource),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetStreamSource_1_0_4034, D3DDevice_SetStreamSource),
 	// D3DDevice_SetTextureState_BorderColor
-	OOVPA_TABLE_PATCH(D3DDevice_SetTextureState_BorderColor_1_0_4034, IDirect3DDevice8_SetTextureState_BorderColor),
+	OOVPA_TABLE_PATCH(D3DDevice_SetTextureState_BorderColor_1_0_4034, D3DDevice_SetTextureState_BorderColor),
 	// D3DDevice_SetTextureState_ColorKeyColor
-	OOVPA_TABLE_PATCH(D3DDevice_SetTextureState_ColorKeyColor_1_0_4034, IDirect3DDevice8_SetTextureState_ColorKeyColor),
+	OOVPA_TABLE_PATCH(D3DDevice_SetTextureState_ColorKeyColor_1_0_4034, D3DDevice_SetTextureState_ColorKeyColor),
 	// D3DDevice_LoadVertexShader
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_LoadVertexShader_1_0_4034, IDirect3DDevice8_LoadVertexShader),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_LoadVertexShader_1_0_4034, D3DDevice_LoadVertexShader),
 	// IDirect3DDevice8::GetVisibilityTestResult (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetVisibilityTestResult_1_0_3925, IDirect3DDevice8_GetVisibilityTestResult),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetVisibilityTestResult_1_0_3925, D3DDevice_GetVisibilityTestResult),
 	// D3DDevice_DeleteVertexShader (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(X_D3DDevice_DeleteVertexShader_1_0_3925, IDirect3DDevice8_DeleteVertexShader),
+	OOVPA_TABLE_PATCH(X_D3DDevice_DeleteVertexShader_1_0_3925, D3DDevice_DeleteVertexShader),
 	// D3DDevice_DrawRectPatch
-	OOVPA_TABLE_PATCH(D3DDevice_DrawRectPatch_1_0_4034, IDirect3DDevice8_DrawRectPatch),
+	OOVPA_TABLE_PATCH(D3DDevice_DrawRectPatch_1_0_4034, D3DDevice_DrawRectPatch),
 	// D3DDevice_SetIndices
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetIndices_1_0_4034, IDirect3DDevice8_SetIndices),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetIndices_1_0_4034, D3DDevice_SetIndices),
 	// D3DDevice_SetRenderState_EdgeAntiAlias
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_EdgeAntiAlias_1_0_4034, IDirect3DDevice8_SetRenderState_EdgeAntiAlias),
+	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_EdgeAntiAlias_1_0_4034, D3DDevice_SetRenderState_EdgeAntiAlias),
 	// D3DDevice_SetRenderState_FillMode
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_FillMode_1_0_4034, IDirect3DDevice8_SetRenderState_FillMode),
+	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_FillMode_1_0_4034, D3DDevice_SetRenderState_FillMode),
 	// D3DDevice_SetRenderState_BackFillMode
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_BackFillMode_1_0_4034, IDirect3DDevice8_SetRenderState_BackFillMode),
+	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_BackFillMode_1_0_4034, D3DDevice_SetRenderState_BackFillMode),
 	// D3DDevice_SetRenderState_FogColor
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_FogColor_1_0_4034, IDirect3DDevice8_SetRenderState_FogColor),
+	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_FogColor_1_0_4034, D3DDevice_SetRenderState_FogColor),
 	// D3DDevice_SetRenderState_FrontFace
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_FrontFace_1_0_4034, IDirect3DDevice8_SetRenderState_FrontFace),
+	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_FrontFace_1_0_4034, D3DDevice_SetRenderState_FrontFace),
 	// D3DDevice_SetRenderState_LogicOp
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_LogicOp_1_0_4034, IDirect3DDevice8_SetRenderState_LogicOp),
+	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_LogicOp_1_0_4034, D3DDevice_SetRenderState_LogicOp),
 	// D3DDevice_SetRenderState_MultiSampleAntiAlias
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_MultiSampleAntiAlias_1_0_4034, IDirect3DDevice8_SetRenderState_MultiSampleAntiAlias),
+	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_MultiSampleAntiAlias_1_0_4034, D3DDevice_SetRenderState_MultiSampleAntiAlias),
 	// D3DDevice_SetRenderState_MultiSampleMask
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_MultiSampleMask_1_0_4034, IDirect3DDevice8_SetRenderState_MultiSampleMask),
+	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_MultiSampleMask_1_0_4034, D3DDevice_SetRenderState_MultiSampleMask),
 	// D3DDevice_SetRenderState_NormalizeNormals
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_NormalizeNormals_1_0_4034, IDirect3DDevice8_SetRenderState_NormalizeNormals),
+	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_NormalizeNormals_1_0_4034, D3DDevice_SetRenderState_NormalizeNormals),
 	// D3DDevice_SetRenderState_ShadowFunc
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_ShadowFunc_1_0_4034, IDirect3DDevice8_SetRenderState_ShadowFunc),
+	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_ShadowFunc_1_0_4034, D3DDevice_SetRenderState_ShadowFunc),
 	// D3DDevice_SetRenderState_Simple
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_Simple_1_0_4034, IDirect3DDevice8_SetRenderState_Simple),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_Simple_1_0_4034, D3DDevice_SetRenderState_Simple),
 	// D3DDevice_SetRenderState_StencilEnable
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_StencilEnable_1_0_4034, IDirect3DDevice8_SetRenderState_StencilEnable),
+	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_StencilEnable_1_0_4034, D3DDevice_SetRenderState_StencilEnable),
 	// D3DDevice_SetRenderState_StencilFail
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_StencilFail_1_0_4034, IDirect3DDevice8_SetRenderState_StencilFail),
+	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_StencilFail_1_0_4034, D3DDevice_SetRenderState_StencilFail),
 	// D3DDevice_SetRenderState_YuvEnable
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_YuvEnable_1_0_4034, IDirect3DDevice8_SetRenderState_YuvEnable),
+	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_YuvEnable_1_0_4034, D3DDevice_SetRenderState_YuvEnable),
 	// D3DDevice_SetRenderState_TwoSidedLighting
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_TwoSidedLighting_1_0_4034, IDirect3DDevice8_SetTextureState_TwoSidedLighting),
+	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_TwoSidedLighting_1_0_4034, D3DDevice_SetTextureState_TwoSidedLighting),
 	// D3DDevice_SetRenderState_VertexBlend
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_VertexBlend_1_0_4034, IDirect3DDevice8_SetRenderState_VertexBlend),
+	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_VertexBlend_1_0_4034, D3DDevice_SetRenderState_VertexBlend),
 	// IDirect3D8_CheckDeviceFormat
-	OOVPA_TABLE_PATCH(Direct3D_CheckDeviceFormat_1_0_4034, IDirect3D8_CheckDeviceFormat),
+	OOVPA_TABLE_PATCH(Direct3D_CheckDeviceFormat_1_0_4034, D3D_CheckDeviceFormat),
 	// IDirect3D8_SetPushBufferSize
-	OOVPA_TABLE_PATCH(Direct3D_SetPushBufferSize_1_0_4034, IDirect3D8_SetPushBufferSize),
+	OOVPA_TABLE_PATCH(Direct3D_SetPushBufferSize_1_0_4034, D3D_SetPushBufferSize),
 	// Get2DSurfacDesc
 	OOVPA_TABLE_PATCH(Get2DSurfaceDesc_1_0_4034, Get2DSurfaceDesc),
 	// D3DDevice_SetRenderState_ZEnable
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_ZEnable_1_0_4034, IDirect3DDevice8_SetRenderState_ZEnable),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_ZEnable_1_0_4034, D3DDevice_SetRenderState_ZEnable),
 	// D3DDevice_LightEnable
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_LightEnable_1_0_4034, IDirect3DDevice8_LightEnable),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_LightEnable_1_0_4034, D3DDevice_LightEnable),
 	// D3DDevice_SetRenderState_TextureFactor
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_TextureFactor_1_0_4034, IDirect3DDevice8_SetRenderState_TextureFactor),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetRenderState_TextureFactor_1_0_4034, D3DDevice_SetRenderState_TextureFactor),
 	// Direct3D_GetAdapterIdentifier (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(Direct3D_GetAdapterIdentifier_1_0_3925, IDirect3D8_GetAdapterIdentifier),
+	OOVPA_TABLE_PATCH(Direct3D_GetAdapterIdentifier_1_0_3925, D3D_GetAdapterIdentifier),
 	// IDirect3DSurface8::GetDesc (* unchanged since 3925 *)
-	OOVPA_TABLE_PATCH(D3DSurface_GetDesc_1_0_3925, IDirect3DSurface8_GetDesc),
+	OOVPA_TABLE_PATCH(D3DSurface_GetDesc_1_0_3925, D3DSurface_GetDesc),
 	// IDirect3DDevice8::SetLight
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetLight_1_0_4034, IDirect3DDevice8_SetLight),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetLight_1_0_4034, D3DDevice_SetLight),
 	// IDirect3DVertexBuffer8::Lock
-	OOVPA_TABLE_PATCH(IDirect3DVertexBuffer8_Lock_1_0_4034, IDirect3DVertexBuffer8_Lock),
+	OOVPA_TABLE_PATCH(IDirect3DVertexBuffer8_Lock_1_0_4034, D3DVertexBuffer_Lock),
 	// IDirect3DDevice8::SetTexture
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetTexture_1_0_4034, IDirect3DDevice8_SetTexture),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetTexture_1_0_4034, D3DDevice_SetTexture),
 	// IDirect3DDevice8::SetPalette
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetPalette_1_0_4034, IDirect3DDevice8_SetPalette),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetPalette_1_0_4034, D3DDevice_SetPalette),
 	// IDirect3DDevice8::SetRenderState_TexCoordIndex
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4034, IDirect3DDevice8_SetTextureState_TexCoordIndex),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4034, D3DDevice_SetTextureState_TexCoordIndex),
 	// IDirect3DDevice8::SetMaterial
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetMaterial_1_0_4034, IDirect3DDevice8_SetMaterial),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetMaterial_1_0_4034, D3DDevice_SetMaterial),
 	// IDirect3DDevice8::SetVertexShader
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetVertexShader_1_0_4034, IDirect3DDevice8_SetVertexShader),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_SetVertexShader_1_0_4034, D3DDevice_SetVertexShader),
 	// IDirect3DDevice8::Swap
-	OOVPA_TABLE_PATCH(D3DDevice_Swap_1_0_4034, IDirect3DDevice8_Swap),
+	OOVPA_TABLE_PATCH(D3DDevice_Swap_1_0_4034, D3DDevice_Swap),
 	// IDirect3D8::KickOffAndWaitForIdle
-	OOVPA_TABLE_PATCH(IDirect3D8_KickOffAndWaitForIdle_1_0_4034, IDirect3D8_KickOffAndWaitForIdle),
+	OOVPA_TABLE_PATCH(IDirect3D8_KickOffAndWaitForIdle_1_0_4034, D3D_KickOffAndWaitForIdle),
 	// IDirect3DDevice8::CreateImageSurface (* unchanged since 4034 *)
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreateImageSurface_1_0_4034, IDirect3DDevice8_CreateImageSurface),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_CreateImageSurface_1_0_4034, D3DDevice_CreateImageSurface),
 	// IDirect3DDevice8::GetBackBuffer
-	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetBackBuffer_1_0_4034, IDirect3DDevice8_GetBackBuffer),
+	OOVPA_TABLE_PATCH(IDirect3DDevice8_GetBackBuffer_1_0_4034, D3DDevice_GetBackBuffer),
 	// D3DDevice_
     /*
-	OOVPA_TABLE_PATCH(D3DDevice__1_0_4034, IDirect3DDevice8_),
+	OOVPA_TABLE_PATCH(D3DDevice__1_0_4034, D3DDevice_),
 	// D3DDevice_
-	OOVPA_TABLE_PATCH(D3DDevice__1_0_4034, IDirect3DDevice8_),
+	OOVPA_TABLE_PATCH(D3DDevice__1_0_4034, D3DDevice_),
 	// D3DDevice_
-	OOVPA_TABLE_PATCH(D3DDevice__1_0_4034, IDirect3DDevice8_),
+	OOVPA_TABLE_PATCH(D3DDevice__1_0_4034, D3DDevice_),
 	*/
 };
 
