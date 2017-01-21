@@ -31,15 +31,15 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef D3D8_1_0_3925_H
-#define D3D8_1_0_3925_H
+#ifndef D3D8_3925_H
+#define D3D8_3925_H
 
 #include "OOVPA.h"
 
-extern SOOVPA<11> IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_3925;
-extern SOOVPA<15> IDirect3DDevice8_SetRenderState_CullMode_1_0_3925;
+extern SOOVPA<11> D3DDevice_SetTextureState_TexCoordIndex_3925;
+extern SOOVPA<15> D3DDevice_SetRenderState_CullMode_3925;
 
-extern OOVPATable D3D8_1_0_3925[];
-extern uint32     D3D8_1_0_3925_SIZE;
+extern OOVPATable D3D8_3925[];
+extern uint32     D3D8_3925_SIZE;
 
 #endif

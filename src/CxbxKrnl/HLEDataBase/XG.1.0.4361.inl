@@ -35,7 +35,7 @@
 // ******************************************************************
 // * XGIsSwizzledFormat
 // ******************************************************************
-OOVPA_NO_XREF(XGIsSwizzledFormat_1_0_4361, 12)
+OOVPA_NO_XREF(XGIsSwizzledFormat, 4361, 12)
 
         // XGIsSwizzledFormat+0x04 : cmp eax, 0x2D
         { 0x04, 0x83 }, // (Offset,Value)-Pair #1
@@ -63,7 +63,7 @@ OOVPA_END;
 // ******************************************************************
 // * XGSwizzleRect
 // ******************************************************************
-OOVPA_NO_XREF(XGSwizzleRect_1_0_4361, 10)
+OOVPA_NO_XREF(XGSwizzleRect, 4361, 10)
 
         // XGSwizzleRect+0x2E : pop eax
         { 0x2E, 0x58 }, // (Offset,Value)-Pair #1
@@ -84,10 +84,11 @@ OOVPA_NO_XREF(XGSwizzleRect_1_0_4361, 10)
         { 0xED, 0x0B }, // (Offset,Value)-Pair #10
 OOVPA_END;
 
+/* Leave unpatched
 // ******************************************************************
 // * XGUnswizzleRect
 // ******************************************************************
-OOVPA_NO_XREF(XGUnswizzleRect_1_0_4361, 8)
+OOVPA_NO_XREF(XGUnswizzleRect, 4361, 8)
 
         { 0x1E, 0x03 },
         { 0x3E, 0x00 },
@@ -98,11 +99,12 @@ OOVPA_NO_XREF(XGUnswizzleRect_1_0_4361, 8)
         { 0xDE, 0x89 },
         { 0xFE, 0x60 },
 OOVPA_END;
+*/
 
 // ******************************************************************
 // * XGSetVertexBufferHeader
 // ******************************************************************
-OOVPA_NO_XREF(XGSetVertexBufferHeader_1_0_4361, 8)
+OOVPA_NO_XREF(XGSetVertexBufferHeader, 4361, 8)
 
         { 0x01, 0x44 },
         { 0x04, 0x8B },
@@ -117,7 +119,7 @@ OOVPA_END;
 // ******************************************************************
 // * XGCompressRect
 // ******************************************************************
-OOVPA_NO_XREF(XGCompressRect_1_0_4361, 8)
+OOVPA_NO_XREF(XGCompressRect, 4361, 8)
 
         { 0x1E, 0x00 },
         { 0x3E, 0xA8 },
@@ -132,7 +134,7 @@ OOVPA_END;
 // ******************************************************************
 // * XGSetIndexBufferHeader
 // ******************************************************************
-OOVPA_NO_XREF(XGSetIndexBufferHeader_1_0_4361, 8)
+OOVPA_NO_XREF(XGSetIndexBufferHeader, 4361, 8)
 
         { 0x01, 0x44 },
         { 0x04, 0x8B },
@@ -145,27 +147,33 @@ OOVPA_NO_XREF(XGSetIndexBufferHeader_1_0_4361, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * XG_1_0_4361
+// * XG_4361
 // ******************************************************************
-OOVPATable XG_1_0_4361[] = {
+OOVPATable XG_4361[] = {
 
     // XGIsSwizzledFormat
-	OOVPA_TABLE_PATCH(XGIsSwizzledFormat_1_0_4361, XTL::EmuXGIsSwizzledFormat),
-    // XGSwizzleRect
-	OOVPA_TABLE_PATCH(XGSwizzleRect_1_0_4361, XTL::EmuXGSwizzleRect),
+	/* Leave unpatched
+	OOVPA_TABLE_PATCH(XGIsSwizzledFormat, 4361, XGIsSwizzledFormat),
+    */
+	// XGSwizzleRect
+	/* Leave unpatched
+	OOVPA_TABLE_PATCH(XGSwizzleRect, 4361, XGSwizzleRect),
+	*/
 	// XGUnswizzleRect
-	OOVPA_TABLE_PATCH(XGUnswizzleRect_1_0_4361, XTL::EmuXGUnswizzleRect),
+	/* Leave unpatched
+	OOVPA_TABLE_PATCH(XGUnswizzleRect, 4361, XGUnswizzleRect),
+	*/
 	// XGSetTextureHeader (* Unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(XGSetTextureHeader_1_0_3911, XTL::EmuXGSetTextureHeader),
+	OOVPA_TABLE_PATCH(XGSetTextureHeader, 3911, XGSetTextureHeader),
 	// XGSetVertexBufferHeader
-	OOVPA_TABLE_XREF(XGSetVertexBufferHeader_1_0_4361),
+	OOVPA_TABLE_XREF(XGSetVertexBufferHeader, 4361),
 	// XGSetIndexBufferHeader
-	OOVPA_TABLE_XREF(XGSetIndexBufferHeader_1_0_4361),
+	OOVPA_TABLE_XREF(XGSetIndexBufferHeader, 4361),
 	// XGCompressRect
-	OOVPA_TABLE_XREF(XGCompressRect_1_0_4361),
+	OOVPA_TABLE_XREF(XGCompressRect, 4361),
 };
 
 // ******************************************************************
-// * XG_1_0_4361_SIZE
+// * XG_4361_SIZE
 // ******************************************************************
-uint32 XG_1_0_4361_SIZE = sizeof(XG_1_0_4361);
+uint32 XG_4361_SIZE = sizeof(XG_4361);

@@ -35,7 +35,7 @@
 // ******************************************************************
 // * XnInit
 // ******************************************************************
-OOVPA_XREF_LARGE(XnInit_1_0_4627, 18, 
+OOVPA_XREF_LARGE(XnInit, 4627, 18, 
 
     XREF_XNINIT,
 	XRefZero)
@@ -74,7 +74,7 @@ OOVPA_END;
 // ******************************************************************
 // * XNetStartup
 // ******************************************************************
-OOVPA_XREF(XNetStartup_1_0_4627, 8,
+OOVPA_XREF(XNetStartup, 4627, 8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -103,7 +103,7 @@ OOVPA_END;
 // ******************************************************************
 // * WSAStartup
 // ******************************************************************
-OOVPA_XREF(WSAStartup_1_0_4627, 9,
+OOVPA_XREF(WSAStartup, 4627, 9,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -128,7 +128,7 @@ OOVPA_END;
 // ******************************************************************
 // * socket
 // ******************************************************************
-OOVPA_NO_XREF_LARGE(socket_1_0_4627, 20)
+OOVPA_NO_XREF_LARGE(socket, 4627, 20)
 
         // socket+0x13 : push 0x276D
         { 0x0013, 0x68 }, // (Offset,Value)-Pair #1
@@ -166,7 +166,7 @@ OOVPA_END;
 // ******************************************************************
 // * socket
 // ******************************************************************
-OOVPA_NO_XREF(connect_1_0_4627, 24)
+OOVPA_NO_XREF(connect, 4627, 24)
 
         // connect+0x00 : push ebp
         { 0x00, 0x55 }, // (Offset,Value)-Pair #1
@@ -212,7 +212,7 @@ OOVPA_END;
 // ******************************************************************
 // * send
 // ******************************************************************
-OOVPA_NO_XREF(send_1_0_4627, 24)
+OOVPA_NO_XREF(send, 4627, 24)
 
         // send+0x00 : push ebp
         { 0x00, 0x55 }, // (Offset,Value)-Pair #1
@@ -258,7 +258,7 @@ OOVPA_END;
 // ******************************************************************
 // * recv
 // ******************************************************************
-OOVPA_NO_XREF(recv_1_0_4627, 24)
+OOVPA_NO_XREF(recv, 4627, 24)
 
         // recv+0x00 : push ebp
         { 0x00, 0x55 }, // (Offset,Value)-Pair #1
@@ -304,7 +304,7 @@ OOVPA_END;
 // ******************************************************************
 // * ioctlsocket
 // ******************************************************************
-OOVPA_NO_XREF(ioctlsocket_1_0_4627, 10)
+OOVPA_NO_XREF(ioctlsocket, 4627, 10)
 
         // ioctlsocket+0x13 : push 0x276D
         { 0x13, 0x68 }, // (Offset,Value)-Pair #1
@@ -326,28 +326,28 @@ OOVPA_NO_XREF(ioctlsocket_1_0_4627, 10)
 OOVPA_END;
 
 // ******************************************************************
-// * XNet_1_0_4627
+// * XNet_4627
 // ******************************************************************
-OOVPATable XNet_1_0_4627[] = {
+OOVPATable XNet_4627[] = {
 	// XNetStartup
-	OOVPA_TABLE_PATCH(XNetStartup_1_0_4627, XTL::EmuXNetStartup), // same as xonline 4361
+	OOVPA_TABLE_PATCH(XNetStartup, 4627, XNetStartup), // same as xonline 4361
 	// WSAStartup
-	OOVPA_TABLE_PATCH(WSAStartup_1_0_4627, XTL::EmuWSAStartup), // same as xonline 4361
+	OOVPA_TABLE_PATCH(WSAStartup, 4627, WSAStartup), // same as xonline 4361
 	// XnInit (XREF)
-	OOVPA_TABLE_XREF(XnInit_1_0_4627),
+	OOVPA_TABLE_XREF(XnInit, 4627),
 	// socket
-	OOVPA_TABLE_PATCH(socket_1_0_4627, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emusocket)),
+	OOVPA_TABLE_PATCH_EmuThis(socket, 4627, socket),
 	// connect
-	OOVPA_TABLE_PATCH(connect_1_0_4627, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emuconnect)),
+	OOVPA_TABLE_PATCH_EmuThis(connect, 4627, connect),
 	// send
-	OOVPA_TABLE_PATCH(send_1_0_4627, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emusend)),
+	OOVPA_TABLE_PATCH_EmuThis(send, 4627, send),
 	// recv
-	OOVPA_TABLE_PATCH(recv_1_0_4627, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emurecv)),
+	OOVPA_TABLE_PATCH_EmuThis(recv, 4627, recv),
 	// ioctlsocket
-	OOVPA_TABLE_PATCH(ioctlsocket_1_0_4627, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::Emuioctlsocket)),
+	OOVPA_TABLE_PATCH_EmuThis(ioctlsocket, 4627, ioctlsocket),
 };
 
 // ******************************************************************
-// * XNet_1_0_4627_SIZE
+// * XNet_4627_SIZE
 // ******************************************************************
-uint32 XNet_1_0_4627_SIZE = sizeof(XNet_1_0_4627);
+uint32 XNet_4627_SIZE = sizeof(XNet_4627);

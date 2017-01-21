@@ -31,12 +31,12 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef XAPI_1_0_5849_H
-#define XAPI_1_0_5849_H
+#ifndef XAPI_5849_H
+#define XAPI_5849_H
 
 #include "OOVPA.h"
 
-extern OOVPATable XAPI_1_0_5849[];
-extern uint32     XAPI_1_0_5849_SIZE;
+extern OOVPATable XAPI_5849[];
+extern uint32     XAPI_5849_SIZE;
 
 #endif

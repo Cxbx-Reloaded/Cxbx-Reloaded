@@ -38,6 +38,7 @@
 
 #include "CxbxKrnl/Emu.h"
 #include "CxbxKrnl/EmuXTL.h"
+#include "CxbxKrnl/EmuD3D8Types.h" // For X_D3DFORMAT
 #include "CxbxKrnl/ResourceTracker.h"
 
 uint32  XTL::g_dwPrimaryPBCount = 0;
@@ -77,7 +78,7 @@ static void EmuUnswizzleActiveTexture()
     if(pPixelContainer == NULL || !(pPixelContainer->Common & X_D3DCOMMON_ISLOCKED))
         return;
 
-    DWORD XBFormat = (pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT;
+	XTL::X_D3DFORMAT XBFormat = (XTL::X_D3DFORMAT)((pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
     DWORD dwBPP = 0;
 
     if(!XTL::EmuXBFormatIsSwizzled(XBFormat, &dwBPP))
@@ -132,7 +133,7 @@ static void EmuUnswizzleActiveTexture()
 
                 void *pTemp = malloc(dwHeight*dwPitch);
 
-                XTL::EmuXGUnswizzleRect
+                XTL::EmuUnswizzleRect
                 (
                     LockedRect.pBits, dwWidth, dwHeight, dwDepth,
                     pTemp, dwPitch, iRect, iPoint, dwBPP

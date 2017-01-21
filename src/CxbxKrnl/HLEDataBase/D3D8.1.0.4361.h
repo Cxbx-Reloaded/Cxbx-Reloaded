@@ -31,14 +31,14 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef D3D8_1_0_4361_H
-#define D3D8_1_0_4361_H
+#ifndef D3D8_4361_H
+#define D3D8_4361_H
 
 #include "OOVPA.h"
 
-extern SOOVPA<10> IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361;
+extern SOOVPA<10> D3DDevice_SetTextureState_TexCoordIndex_4361;
 
-extern OOVPATable D3D8_1_0_4361[];
-extern uint32     D3D8_1_0_4361_SIZE;
+extern OOVPATable D3D8_4361[];
+extern uint32     D3D8_4361_SIZE;
 
 #endif

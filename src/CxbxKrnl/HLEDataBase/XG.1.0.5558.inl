@@ -35,7 +35,7 @@
 // ******************************************************************
 // * XGSwizzleBox
 // ******************************************************************
-OOVPA_NO_XREF(XGSwizzleBox_1_0_5558, 10)
+OOVPA_NO_XREF(XGSwizzleBox, 5558, 10)
 
         // XGSwizzleBox+0x60 : sub ecx, [eax]
         { 0x60, 0x2B }, // (Offset,Value)-Pair #1
@@ -59,7 +59,7 @@ OOVPA_END;
 // ******************************************************************
 // * XGSwizzleRect
 // ******************************************************************
-OOVPA_NO_XREF(XGSwizzleRect_1_0_5558, 8)
+OOVPA_NO_XREF(XGSwizzleRect, 5558, 8)
 
         { 0x1E, 0x03 },
         { 0x3E, 0x89 },
@@ -71,10 +71,11 @@ OOVPA_NO_XREF(XGSwizzleRect_1_0_5558, 8)
         { 0xFE, 0x89 },
 OOVPA_END;
 
+/* Leave unpatched
 // ******************************************************************
 // * XGUnswizzleRect
 // ******************************************************************
-OOVPA_NO_XREF(XGUnswizzleRect_1_0_5558, 8)
+OOVPA_NO_XREF(XGUnswizzleRect, 5558, 8)
 
         { 0x1E, 0x03 },
         { 0x3E, 0x00 },
@@ -85,11 +86,12 @@ OOVPA_NO_XREF(XGUnswizzleRect_1_0_5558, 8)
         { 0xDE, 0x89 },
         { 0xFE, 0x60 },
 OOVPA_END;
+*/
 
 // ******************************************************************
 // * XGSwizzleBox
 // ******************************************************************
-//OOVPA_NO_XREF(XGSwizzleBox_1_0_5558, 8)
+//OOVPA_NO_XREF(XGSwizzleBox, 5558, 8)
 //
 //        { 0x1E, 0x75 },
 //        { 0x3E, 0x4D },
@@ -104,7 +106,7 @@ OOVPA_END;
 // ******************************************************************
 // * XGUnswizzleBox
 // ******************************************************************
-OOVPA_NO_XREF(XGUnswizzleBox_1_0_5558, 8)
+OOVPA_NO_XREF(XGUnswizzleBox, 5558, 8)
 
         { 0x1E, 0x26 },
         { 0x3E, 0x55 },
@@ -117,25 +119,31 @@ OOVPA_NO_XREF(XGUnswizzleBox_1_0_5558, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * XG_1_0_5558
+// * XG_5558
 // ******************************************************************
-OOVPATable XG_1_0_5558[] = {
+OOVPATable XG_5558[] = {
 
     // XGIsSwizzledFormat (* unchanged since 4361 *)
-	OOVPA_TABLE_PATCH(XGIsSwizzledFormat_1_0_4361, XTL::EmuXGIsSwizzledFormat),
+	/* Leave unpatched
+	OOVPA_TABLE_PATCH(XGIsSwizzledFormat, 4361, XGIsSwizzledFormat),
+	*/
     // XGSwizzleRect
-	OOVPA_TABLE_PATCH(XGSwizzleRect_1_0_5558, XTL::EmuXGSwizzleRect),
+	/* Leave unpatched
+	OOVPA_TABLE_PATCH(XGSwizzleRect, 5558, XGSwizzleRect),
+	*/
     // XGSwizzleBox (* UNTESTED *)
-	OOVPA_TABLE_PATCH(XGSwizzleBox_1_0_5558, XTL::EmuXGSwizzleBox),
+	OOVPA_TABLE_PATCH(XGSwizzleBox, 5558, XGSwizzleBox),
 	// XGUnswizzleRect
-	OOVPA_TABLE_PATCH(XGUnswizzleRect_1_0_5558, XTL::EmuXGUnswizzleRect),
-    // XGUnswizzleBox (* UNTESTED *)
+	/* Leave unpatched
+	OOVPA_TABLE_PATCH(XGUnswizzleRect, 5558, XGUnswizzleRect),
+    */
+	// XGUnswizzleBox (* UNTESTED *)
     /*
-	OOVPA_TABLE_PATCH(XGUnswizzleBox_1_0_5558, XTL::EmuXGUnswizzleBox),
+	OOVPA_TABLE_PATCH(XGUnswizzleBox, 5558, XGUnswizzleBox),
 	*/
 };
 
 // ******************************************************************
-// * XG_1_0_5558_SIZE
+// * XG_5558_SIZE
 // ******************************************************************
-uint32 XG_1_0_5558_SIZE = sizeof(XG_1_0_5558);
+uint32 XG_5558_SIZE = sizeof(XG_5558);

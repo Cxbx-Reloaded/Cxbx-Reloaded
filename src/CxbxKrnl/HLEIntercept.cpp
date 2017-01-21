@@ -202,7 +202,6 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                 if(BuildVersion == 5344) { BuildVersion = 5233; }
                 if(BuildVersion == 5455) { BuildVersion = 5558; }
                 if(BuildVersion == 5659) { BuildVersion = 5558; }
-                if(BuildVersion == 5788) { BuildVersion = 5558; }
                 if(BuildVersion == 5028) { BuildVersion = 4627; }
 				if(BuildVersion == 5120) { BuildVersion = 5233; }
                 if(BuildVersion == 5933) { BuildVersion = 5849; }   // These XDK versions are pretty much the same
@@ -322,14 +321,15 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                     if(strcmp(Lib_XAPILIB, szLibraryName) == 0 && 
                         (BuildVersion == 3911 || BuildVersion == 4034 || BuildVersion == 4134 || BuildVersion == 4361
                       || BuildVersion == 4432 || BuildVersion == 4627 || BuildVersion == 5233 || BuildVersion == 5558
-                      || BuildVersion == 5849))
+                      || BuildVersion == 5788 || BuildVersion == 5849))
                     {
                         uint32 lower = pXbeHeader->dwBaseAddr;
                         uint32 upper = pXbeHeader->dwBaseAddr + pXbeHeader->dwSizeofImage;
                     }
                     else if(strcmp(Lib_D3D8, szLibraryName) == 0 /*&& strcmp(Lib_D3D8LTCG, szOrigLibraryName)*/ && 
                         (BuildVersion == 3925 || BuildVersion == 4134 || BuildVersion == 4361 || BuildVersion == 4432
-                      || BuildVersion == 4627 || BuildVersion == 5233 || BuildVersion == 5558 || BuildVersion == 5849))
+                      || BuildVersion == 4627 || BuildVersion == 5233 || BuildVersion == 5558 || BuildVersion == 5788
+                      || BuildVersion == 5849))
                     {
 						// Save D3D8 build version
 						g_BuildVersion = BuildVersion;
@@ -341,11 +341,11 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                         void *pFunc = nullptr;
 
                         if(BuildVersion == 3925)
-                            pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_3925, lower, upper);
+                            pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_3925, lower, upper);
                         else if(BuildVersion < 5233)
-                            pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_4034, lower, upper);
+                            pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_4034, lower, upper);
                         else
-                            pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_5233, lower, upper);
+                            pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_5233, lower, upper);
 
                         // locate D3DDeferredRenderState
                         if(pFunc != nullptr)
@@ -376,7 +376,8 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                                 XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x204 + 83*4);
                                 patchOffset = 143*4 - 83*4;
                             }
-                            else if(BuildVersion == 4627 || BuildVersion == 5233 || BuildVersion == 5558 || BuildVersion == 5849)
+                            else if(BuildVersion == 4627 || BuildVersion == 5233 || BuildVersion == 5558 || BuildVersion == 5788
+                                 || BuildVersion == 5849)
                             {
                                 // WARNING: Not thoroughly tested (just seemed very correct right away)
                                 XTL::EmuD3DDeferredRenderState = (DWORD*)(*(DWORD*)((uint32)pFunc + 0x2B) - 0x24C + 92*4);
@@ -410,13 +411,14 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
                             pFunc = nullptr;
 
                             if(BuildVersion == 3925)
-                                pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_3925, lower, upper);
+                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_3925, lower, upper);
                             else if(BuildVersion == 4134)
-                                pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4134, lower, upper);
+                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_4134, lower, upper);
                             else if(BuildVersion == 4361 || BuildVersion == 4432)
-                                pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4361, lower, upper);
-                            else if(BuildVersion == 4627 || BuildVersion == 5233 || BuildVersion == 5558 || BuildVersion == 5849)
-                                pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_4627, lower, upper);
+                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_4361, lower, upper);
+                            else if(BuildVersion == 4627 || BuildVersion == 5233 || BuildVersion == 5558 || BuildVersion == 5788
+                                 || BuildVersion == 5849)
+                                pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_4627, lower, upper);
 
                             if(pFunc != nullptr)
                             {
@@ -455,7 +457,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
      //                   void *pFunc = nullptr;
 
      //                   if(BuildVersion == 5849)
-					//		pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetRenderState_CullMode_1_0_5849_LTCG, lower, upper);
+					//		pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetRenderState_CullMode_LTCG_5849, lower, upper);
 
      //                   // locate D3DDeferredRenderState
      //                   if(pFunc != nullptr)
@@ -496,7 +498,7 @@ void EmuHLEIntercept(Xbe::LibraryVersion *pLibraryVersion, Xbe::Header *pXbeHead
      //                       pFunc = nullptr;
 
      //                       if(BuildVersion == 3925)
-					//			pFunc = EmuLocateFunction((OOVPA*)&IDirect3DDevice8_SetTextureState_TexCoordIndex_1_0_5849_LTCG, lower, upper);
+					//			pFunc = EmuLocateFunction((OOVPA*)&D3DDevice_SetTextureState_TexCoordIndex_LTCG_5849, lower, upper);
 
      //                       if(pFunc != nullptr)
      //                       {
@@ -771,7 +773,7 @@ struct HLEVerifyContext {
 std::string HLEErrorString(const HLEData *data, uint32 index)
 {
 	std::string result = 
-		"OOVPATable " + (std::string)(data->Library) + "_1_0_" + std::to_string(data->BuildVersion)
+		"OOVPATable " + (std::string)(data->Library) + "_" + std::to_string(data->BuildVersion)
 		+ "[" + std::to_string(index) + "] " 
 		+ (std::string)(data->OovpaTable[index].szFuncName);
 
@@ -912,25 +914,30 @@ void VerifyHLEDataEntry(HLEVerifyContext *context, const OOVPATable *table, uint
 		// does this entry specify a redirection (patch)?
 		void * entry_redirect = table[index].lpRedirect;
 		if (entry_redirect != nullptr) {
-			// check no patch occurs twice in this table
-			for (uint32 t = index + 1; t < count; t++) {
-				if (entry_redirect == table[t].lpRedirect) {
-					if (table[index].Oovpa == table[t].Oovpa) {
-						HLEError(context, "Patch registered again (with same OOVPA) at index %d",
-							t);
-					} else {
-						HLEError(context, "Patch also used for another OOVPA at index %d",
-							t);
+			if (table[index].Oovpa == nullptr) {
+				HLEError(context, "Patch without an OOVPA at index %d",
+					index);
+			} else
+				// check no patch occurs twice in this table
+				for (uint32 t = index + 1; t < count; t++) {
+					if (entry_redirect == table[t].lpRedirect) {
+						if (table[index].Oovpa == table[t].Oovpa) {
+							HLEError(context, "Patch registered again (with same OOVPA) at index %d",
+								t);
+						} else {
+							HLEError(context, "Patch also used for another OOVPA at index %d",
+								t);
+						}
 					}
 				}
-			}
 		}
 	}
 	else
 		context->against_index = index;
 
 	// verify the OOVPA of this entry
-	VerifyHLEOOVPA(context, table[index].Oovpa);
+	if (table[index].Oovpa != nullptr)
+		VerifyHLEOOVPA(context, table[index].Oovpa);
 }
 
 void VerifyHLEData(HLEVerifyContext *context, const HLEData *data)
