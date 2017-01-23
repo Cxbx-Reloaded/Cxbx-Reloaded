@@ -4487,7 +4487,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
             X_D3DPixelContainer *pPixelContainer = (X_D3DPixelContainer*)pResource;
 
             X_D3DFORMAT X_Format = (X_D3DFORMAT)((pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
-            D3DFORMAT   Format   = EmuXB2PC_D3DFormat(X_Format);
+            D3DFORMAT   PCFormat = EmuXB2PC_D3DFormat(X_Format);
             D3DFORMAT   CacheFormat = (XTL::D3DFORMAT)0;
             // TODO: check for dimensions
 
@@ -4496,61 +4496,52 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
             {
                 /*CxbxKrnlCleanup*/EmuWarning("D3DFMT_LIN_D24S8 not yet supported!");
                 X_Format = X_D3DFMT_LIN_A8R8G8B8;
-                Format   = D3DFMT_A8R8G8B8;
+                PCFormat = D3DFMT_A8R8G8B8;
             }
 
 			if(X_Format == X_D3DFMT_LIN_D16)
             {
                 /*CxbxKrnlCleanup*/EmuWarning("D3DFMT_LIN_D16 not yet supported!");
                 X_Format = X_D3DFMT_LIN_R5G6B5;
-                Format   = D3DFMT_R5G6B5;
+                PCFormat = D3DFMT_R5G6B5;
             }
 
             DWORD dwWidth, dwHeight, dwBPP, dwDepth = 1, dwPitch = 0, dwMipMapLevels = 1;
-            BOOL  bSwizzled = FALSE, bCompressed = FALSE, dwCompressedSize = 0;
+            BOOL  bSwizzled = EmuXBFormatIsSwizzled(X_Format, &dwBPP), bCompressed = FALSE, dwCompressedSize = 0;
             BOOL  bCubemap = pPixelContainer->Format & X_D3DFORMAT_CUBEMAP;
 
             // Interpret Width/Height/BPP
             if(X_Format == X_D3DFMT_X8R8G8B8 || X_Format == X_D3DFMT_A8R8G8B8
 			|| X_Format == X_D3DFMT_A8B8G8R8)
             {
-                bSwizzled = TRUE;
-
                 // Swizzled 32 Bit
                 dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
                 dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
                 dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
                 dwDepth  = 1;// HACK? 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
-                dwPitch  = dwWidth*4;
-                dwBPP = 4;
+                dwPitch  = dwWidth * dwBPP;
             }
             else if(X_Format == X_D3DFMT_R5G6B5 || X_Format == X_D3DFMT_A4R4G4B4
                  || X_Format == X_D3DFMT_A1R5G5B5 || X_Format == X_D3DFMT_X1R5G5B5
-                 || X_Format == X_D3DFMT_G8B8 )
+                 || X_Format == X_D3DFMT_G8B8 || X_Format == X_D3DFMT_A8L8)
             {
-                bSwizzled = TRUE;
-
                 // Swizzled 16 Bit
                 dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
                 dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
                 dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
                 dwDepth  = 1;// HACK? 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
-                dwPitch  = dwWidth*2;
-                dwBPP = 2;
+                dwPitch  = dwWidth * dwBPP;
             }
             else if(X_Format == X_D3DFMT_L8 || X_Format == X_D3DFMT_P8
-                || X_Format == X_D3DFMT_AL8 || X_Format == X_D3DFMT_A8L8
+                || X_Format == X_D3DFMT_AL8
                 || X_Format == X_D3DFMT_A8)
             {
-                bSwizzled = TRUE;
-
                 // Swizzled 8 Bit
                 dwWidth  = 1 << ((pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT);
                 dwHeight = 1 << ((pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT);
                 dwMipMapLevels = (pPixelContainer->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
                 dwDepth  = 1;// HACK? 1 << ((pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT);
-                dwPitch  = dwWidth;
-                dwBPP = 1;
+                dwPitch  = dwWidth * dwBPP;
             }
             else if(X_Format == X_D3DFMT_LIN_X8R8G8B8 || X_Format == X_D3DFMT_LIN_A8R8G8B8
 				 || X_Format == X_D3DFMT_LIN_D24S8 || X_Format == X_D3DFMT_LIN_A8B8G8R8)
@@ -4559,7 +4550,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                 dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
                 dwHeight = ((pPixelContainer->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
                 dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)+1)*64;
-                dwBPP = 4;
             }
             else if(X_Format == X_D3DFMT_LIN_R5G6B5 || X_Format == X_D3DFMT_LIN_D16
 				 || X_Format == X_D3DFMT_LIN_A4R4G4B4 || X_Format == X_D3DFMT_LIN_A1R5G5B5
@@ -4569,7 +4559,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                 dwWidth  = (pPixelContainer->Size & X_D3DSIZE_WIDTH_MASK) + 1;
                 dwHeight = ((pPixelContainer->Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
                 dwPitch  = (((pPixelContainer->Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT)+1)*64;
-                dwBPP = 2;
             }
             else if(X_Format == X_D3DFMT_DXT1 || X_Format == X_D3DFMT_DXT2 || X_Format == X_D3DFMT_DXT3)
             {
@@ -4586,8 +4575,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 
                 if(X_Format == 0x0C)    // D3DFMT_DXT1 : 64bits per block/per 16 texels
                     dwCompressedSize /= 2;
-
-                dwBPP = 1;
             }
             else if(X_Format == X_D3DFMT_YUY2)
             {
@@ -4652,7 +4639,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                 // create the happy little texture
                 if(dwCommonType == X_D3DCOMMON_TYPE_SURFACE)
                 {
-                    hRet = g_pD3DDevice8->CreateImageSurface(dwWidth, dwHeight, Format, &pResource->EmuSurface8);
+                    hRet = g_pD3DDevice8->CreateImageSurface(dwWidth, dwHeight, PCFormat, &pResource->EmuSurface8);
 
                     if(FAILED(hRet))
                         CxbxKrnlCleanup("CreateImageSurface Failed!\n\nError: %s\nDesc: %s"/*,
@@ -4660,7 +4647,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 ;
 
                     DbgPrintf("EmuIDirect3DResource8_Register : Successfully Created ImageSurface (0x%.08X, 0x%.08X)\n", pResource, pResource->EmuSurface8);
-                    DbgPrintf("EmuIDirect3DResource8_Register : Width : %d, Height : %d, Format : %d\n", dwWidth, dwHeight, Format);
+                    DbgPrintf("EmuIDirect3DResource8_Register : Width : %d, Height : %d, Format : %d\n", dwWidth, dwHeight, PCFormat);
                 }
                 else
                 {
@@ -4686,22 +4673,22 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                     // Since most modern graphics cards does not support
                     // palette based textures we need to expand it to
                     // ARGB texture format
-                    if (Format == D3DFMT_P8) //Palette
+                    if (PCFormat == D3DFMT_P8) //Palette
                     {
 						EmuWarning("D3DFMT_P8 -> D3DFMT_A8R8G8B8");
 
-                        CacheFormat = Format;       // Save this for later
-                        Format = D3DFMT_A8R8G8B8;   // ARGB
+                        CacheFormat = PCFormat;       // Save this for later
+                        PCFormat = D3DFMT_A8R8G8B8;   // ARGB
                     }
 
                     if(bCubemap)
                     {
                         DbgPrintf("CreateCubeTexture(%d, %d, 0, %d, D3DPOOL_MANAGED, 0x%.08X)\n", dwWidth,
-                            dwMipMapLevels, Format, &pResource->EmuTexture8);
+                            dwMipMapLevels, PCFormat, &pResource->EmuTexture8);
 
                         hRet = g_pD3DDevice8->CreateCubeTexture
                         (
-                            dwWidth, dwMipMapLevels, 0, Format,
+                            dwWidth, dwMipMapLevels, 0, PCFormat,
                             D3DPOOL_MANAGED, &pResource->EmuCubeTexture8
                         );
 
@@ -4714,7 +4701,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                     else
                     {
                     //    printf("CreateTexture(%d, %d, %d, 0, %d (X=0x%.08X), D3DPOOL_MANAGED, 0x%.08X)\n", dwWidth, dwHeight,
-                     //       dwMipMapLevels, Format, X_Format, &pResource->EmuTexture8);
+                     //       dwMipMapLevels, PCFormat, X_Format, &pResource->EmuTexture8);
 
 						// HACK: Quantum Redshift
 						/*if( dwMipMapLevels == 8 && X_Format == 0x0C )
@@ -4725,7 +4712,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 
                         hRet = g_pD3DDevice8->CreateTexture
                         (
-                            dwWidth, dwHeight, dwMipMapLevels, 0, Format,
+                            dwWidth, dwHeight, dwMipMapLevels, 0, PCFormat,
                             D3DPOOL_MANAGED, &pResource->EmuTexture8
                         );
 
@@ -4733,7 +4720,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 						{
 							hRet = g_pD3DDevice8->CreateTexture
 							(
-								dwWidth, dwHeight, dwMipMapLevels, 0, Format,
+								dwWidth, dwHeight, dwMipMapLevels, 0, PCFormat,
 								D3DPOOL_SYSTEMMEM, &pResource->EmuTexture8
 							);
 						}*/
