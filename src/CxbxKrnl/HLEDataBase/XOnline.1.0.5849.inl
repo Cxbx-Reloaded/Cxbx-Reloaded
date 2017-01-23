@@ -89,13 +89,13 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XOnline_5849[] = {
     // XNetStartup
-	OOVPA_TABLE_PATCH(XNetStartup, 5849, XNetStartup),
+	OOVPA_TABLE_ENTRY(XNetStartup, 5849),
 	// WSAStartup
-	OOVPA_TABLE_PATCH(WSAStartup, 5849, WSAStartup),
+	OOVPA_TABLE_ENTRY(WSAStartup, 5849),
     // XnInit (XREF)
 	OOVPA_TABLE_XREF(XnInit, 5849),
 	// XNetGetEthernetLinkStatus
-	OOVPA_TABLE_PATCH(XNetGetEthernetLinkStatus, 5849, XNetGetEthernetLinkStatus),
+	OOVPA_TABLE_ENTRY(XNetGetEthernetLinkStatus, 5849),
 };
 
 // ******************************************************************

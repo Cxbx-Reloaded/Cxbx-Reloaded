@@ -976,92 +976,92 @@ OOVPA_END;
 OOVPATable XAPI_3911[] = {
 
     // GetExitCodeThread
-	OOVPA_TABLE_PATCH(GetExitCodeThread, 3911, GetExitCodeThread),
+	OOVPA_TABLE_ENTRY(GetExitCodeThread, 3911),
     //*/
     // XInitDevices
-	OOVPA_TABLE_PATCH(XInitDevices, 3911, XInitDevices), /* Too High Level
+	OOVPA_TABLE_ENTRY(XInitDevices, 3911), /* Too High Level
     // CreateMutex
-	OOVPA_TABLE_PATCH(CreateMutex, 3911, CreateMutex), //*/
+	OOVPA_TABLE_ENTRY(CreateMutex, 3911), //*/
     /* Too High Level */
     // CreateThread
     /*
-	OOVPA_TABLE_PATCH(CreateThread, 3911, CreateThread),
+	OOVPA_TABLE_ENTRY(CreateThread, 3911),
 	*/
     // SetThreadPriority
-	OOVPA_TABLE_PATCH(SetThreadPriority, 3911, SetThreadPriority), //*/
+	OOVPA_TABLE_ENTRY(SetThreadPriority, 3911), //*/
     // GetTimeZoneInformation
-	OOVPA_TABLE_PATCH(GetTimeZoneInformation, 3911, GetTimeZoneInformation),
+	OOVPA_TABLE_ENTRY(GetTimeZoneInformation, 3911),
     // XRegisterThreadNotifyRoutine
-	OOVPA_TABLE_PATCH(XRegisterThreadNotifyRoutine, 3911, XRegisterThreadNotifyRoutine),
+	OOVPA_TABLE_ENTRY(XRegisterThreadNotifyRoutine, 3911),
     /*
     // XCalculateSignatureBegin
-	OOVPA_TABLE_PATCH(XCalculateSignatureBegin, 3911, XCalculateSignatureBegin),
+	OOVPA_TABLE_ENTRY(XCalculateSignatureBegin, 3911),
     */
     // XGetDevices
-	OOVPA_TABLE_PATCH(XGetDevices, 3911, XGetDevices),
+	OOVPA_TABLE_ENTRY(XGetDevices, 3911),
     // XGetDeviceChanges
-	OOVPA_TABLE_PATCH(XGetDeviceChanges, 3911, XGetDeviceChanges),
+	OOVPA_TABLE_ENTRY(XGetDeviceChanges, 3911),
     // XInputOpen
-	OOVPA_TABLE_PATCH(XInputOpen, 3911, XInputOpen),
+	OOVPA_TABLE_ENTRY(XInputOpen, 3911),
     // XID_fCloseDevice
 	OOVPA_TABLE_XREF(XID_fCloseDevice, 3911),
     // XInputClose
-	OOVPA_TABLE_PATCH(XInputClose, 3911, XInputClose),
+	OOVPA_TABLE_ENTRY(XInputClose, 3911),
     // XInputGetCapabilities
-	OOVPA_TABLE_PATCH(XInputGetCapabilities, 3911, XInputGetCapabilities),
+	OOVPA_TABLE_ENTRY(XInputGetCapabilities, 3911),
     // XInputGetState
-	OOVPA_TABLE_PATCH(XInputGetState, 3911, XInputGetState),
+	OOVPA_TABLE_ENTRY(XInputGetState, 3911),
     // XInputSetState
-	OOVPA_TABLE_PATCH(XInputSetState, 3911, XInputSetState),
+	OOVPA_TABLE_ENTRY(XInputSetState, 3911),
 	// SetThreadPriorityBoost
-	OOVPA_TABLE_PATCH(SetThreadPriorityBoost, 3911, SetThreadPriorityBoost),
+	OOVPA_TABLE_ENTRY(SetThreadPriorityBoost, 3911),
 	// GetThreadPriority
-	OOVPA_TABLE_PATCH(GetThreadPriority, 3911, GetThreadPriority),
+	OOVPA_TABLE_ENTRY(GetThreadPriority, 3911),
 	// CreateFiber
-	OOVPA_TABLE_PATCH(CreateFiber, 3911, CreateFiber),
+	OOVPA_TABLE_ENTRY(CreateFiber, 3911),
 	// DeleteFiber
-	OOVPA_TABLE_PATCH(DeleteFiber, 3911, DeleteFiber),
+	OOVPA_TABLE_ENTRY(DeleteFiber, 3911),
 	// SwitchToFiber
-	OOVPA_TABLE_PATCH(SwitchToFiber, 3911, SwitchToFiber),
+	OOVPA_TABLE_ENTRY(SwitchToFiber, 3911),
 	// ConvertThreadToFiber
-	OOVPA_TABLE_PATCH(ConvertThreadToFiber, 3911, ConvertThreadToFiber),
+	OOVPA_TABLE_ENTRY(ConvertThreadToFiber, 3911),
 	// SignalObjectAndWait
-	OOVPA_TABLE_PATCH(SignalObjectAndWait, 3911, SignalObjectAndWait),
+	OOVPA_TABLE_ENTRY(SignalObjectAndWait, 3911),
 	// QueueUserAPC
-	OOVPA_TABLE_PATCH(QueueUserAPC, 3911, QueueUserAPC),
+	OOVPA_TABLE_ENTRY(QueueUserAPC, 3911),
 	// lstrcmpiW
 	/*
-	OOVPA_TABLE_PATCH(lstrcmpiW, 3911, lstrcmpiW),
+	OOVPA_TABLE_ENTRY(lstrcmpiW, 3911),
 	*/
 	// XMountAlternateTitleA
 	OOVPA_TABLE_PATCH(XMountAlternateTitleA, 3911, XMountAlternateTitle),
 	// XUnmountAlternateTitleA
 	OOVPA_TABLE_PATCH(XUnmountAlternateTitleA, 3911, XUnmountAlternateTitle),
 	// XMountMUA
-	OOVPA_TABLE_PATCH(XMountMUA, 3911, XMountMUA),
+	OOVPA_TABLE_ENTRY(XMountMUA, 3911),
 	// XLaunchNewImageA
 	OOVPA_TABLE_PATCH(XLaunchNewImageA, 3911, XLaunchNewImage),
 	// XGetLaunchInfo
-	OOVPA_TABLE_PATCH(XGetLaunchInfo, 3911, XGetLaunchInfo),
+	OOVPA_TABLE_ENTRY(XGetLaunchInfo, 3911),
 	// XAutoPowerDownResetTimer
-	OOVPA_TABLE_PATCH(XAutoPowerDownResetTimer, 3911, XAutoPowerDownResetTimer),
+	OOVPA_TABLE_ENTRY(XAutoPowerDownResetTimer, 3911),
 	// XMountMURootA
-	OOVPA_TABLE_PATCH(XMountMURootA, 3911, XMountMURootA),
+	OOVPA_TABLE_ENTRY(XMountMURootA, 3911),
 	// XMountUtilityDrive
-	OOVPA_TABLE_PATCH(XMountUtilityDrive, 3911, XMountUtilityDrive),
+	OOVPA_TABLE_ENTRY(XMountUtilityDrive, 3911),
 	// ReadFileEx
 	/*
-	OOVPA_TABLE_PATCH(ReadFileEx, 3911, ReadFileEx),
+	OOVPA_TABLE_ENTRY(ReadFileEx, 3911),
 	// WriteFileEx
-	OOVPA_TABLE_PATCH(WriteFileEx, 3911, WriteFileEx),
+	OOVPA_TABLE_ENTRY(WriteFileEx, 3911),
 	*/
 	// CloseHandle
     /*
-	OOVPA_TABLE_PATCH(CloseHandle, 3911, CloseHandle),
+	OOVPA_TABLE_ENTRY(CloseHandle, 3911),
 	*/
 	// ExitThread
     /*
-	OOVPA_TABLE_PATCH(ExitThread, 3911, ExitThread),
+	OOVPA_TABLE_ENTRY(ExitThread, 3911),
 	*/
 };
 

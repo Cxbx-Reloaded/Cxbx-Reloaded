@@ -148,55 +148,55 @@ OOVPA_END;
 OOVPATable XAPI_5849[] = {
 
     // SetThreadPriority (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(SetThreadPriority, 3911, SetThreadPriority),
+	OOVPA_TABLE_ENTRY(SetThreadPriority, 3911),
     // XMountUtilityDrive (* unchanged since 4432 *)
-	OOVPA_TABLE_PATCH(XMountUtilityDrive, 4432, XMountUtilityDrive),
+	OOVPA_TABLE_ENTRY(XMountUtilityDrive, 4432),
     // XInitDevices (* unchanged since 5233 *)
-	OOVPA_TABLE_PATCH(XInitDevices, 5233, XInitDevices),
+	OOVPA_TABLE_ENTRY(XInitDevices, 5233),
     // XGetDevices (* unchanged since 1.0.4134 *)
-	OOVPA_TABLE_PATCH(XGetDevices, 4134, XGetDevices),
+	OOVPA_TABLE_ENTRY(XGetDevices, 4134),
     // XInputOpen (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_PATCH(XInputOpen, 4361, XInputOpen),
+	OOVPA_TABLE_ENTRY(XInputOpen, 4361),
     // XInputGetCapabilities (* unchanged since 5558 *)
-	OOVPA_TABLE_PATCH(XInputGetCapabilities, 5558, XInputGetCapabilities),
+	OOVPA_TABLE_ENTRY(XInputGetCapabilities, 5558),
     // XInputGetState (* unchanged since 5558 *)
-	OOVPA_TABLE_PATCH(XInputGetState, 5558, XInputGetState),
+	OOVPA_TABLE_ENTRY(XInputGetState, 5558),
     // XGetDeviceChanges
-	OOVPA_TABLE_PATCH(XGetDeviceChanges, 5849, XGetDeviceChanges),
+	OOVPA_TABLE_ENTRY(XGetDeviceChanges, 5849),
     /* obsolete?
     // XapiThreadStartup (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_PATCH(XapiThreadStartup, 4361, XapiThreadStartup), //*/
+	OOVPA_TABLE_ENTRY(XapiThreadStartup, 4361), //*/
 	// QueueUserAPC (* unchanged since 3911 *)
-	OOVPA_TABLE_PATCH(QueueUserAPC, 3911, QueueUserAPC),
+	OOVPA_TABLE_ENTRY(QueueUserAPC, 3911),
 	// GetThreadPriority
-	OOVPA_TABLE_PATCH(GetThreadPriority, 5849, GetThreadPriority),
+	OOVPA_TABLE_ENTRY(GetThreadPriority, 5849),
 	// SetThreadPriorityBoost
-	OOVPA_TABLE_PATCH(SetThreadPriorityBoost, 5849, SetThreadPriorityBoost),
+	OOVPA_TABLE_ENTRY(SetThreadPriorityBoost, 5849),
 	// GetThreadPriorityBoost
     /*{
-	OOVPA_TABLE_PATCH(GetThreadPriorityBoost, 5849, GetThreadPriorityBoost),*/
+	OOVPA_TABLE_ENTRY(GetThreadPriorityBoost, 5849),*/
 	// RaiseException
-	OOVPA_TABLE_PATCH(RaiseException, 5849, RaiseException),
+	OOVPA_TABLE_ENTRY(RaiseException, 5849),
 	// XLaunchNewImageA (* unchanged since 5558 *)
 	OOVPA_TABLE_PATCH(XLaunchNewImageA, 5558, XLaunchNewImage),
 	// XInputSetState (* unchanged since 5233 *)
-	OOVPA_TABLE_PATCH(XInputSetState, 5233, XInputSetState),
+	OOVPA_TABLE_ENTRY(XInputSetState, 5233),
 	// XGetDeviceEnumerationStatus
-	OOVPA_TABLE_PATCH(XGetDeviceEnumerationStatus, 5849, XGetDeviceEnumerationStatus),
+	OOVPA_TABLE_ENTRY(XGetDeviceEnumerationStatus, 5849),
 	// SwitchToThread
 	/*
-	OOVPA_TABLE_PATCH(SwitchToThread, 5849, SwitchToThread),
+	OOVPA_TABLE_ENTRY(SwitchToThread, 5849),
 	*/
 	// XFormatUtilityDrive (* unchanged since 4627 *)
-	OOVPA_TABLE_PATCH(XFormatUtilityDrive, 4627, XFormatUtilityDrive),
+	OOVPA_TABLE_ENTRY(XFormatUtilityDrive, 4627),
 	// CreateFiber
-	OOVPA_TABLE_PATCH(CreateFiber, 5558, CreateFiber),
+	OOVPA_TABLE_ENTRY(CreateFiber, 5558),
 	// DeleteFiber
-	OOVPA_TABLE_PATCH(DeleteFiber, 5558, DeleteFiber),
+	OOVPA_TABLE_ENTRY(DeleteFiber, 5558),
 	// SwitchToFiber
-	OOVPA_TABLE_PATCH(SwitchToFiber, 5558, SwitchToFiber),
+	OOVPA_TABLE_ENTRY(SwitchToFiber, 5558),
 	// ConvertThreadToFiber
-	OOVPA_TABLE_PATCH(ConvertThreadToFiber, 5558, ConvertThreadToFiber),
+	OOVPA_TABLE_ENTRY(ConvertThreadToFiber, 5558),
 };
 
 // ******************************************************************
