@@ -241,22 +241,13 @@ VOID WINAPI XTL::EMUPATCH(XGSetTextureHeader)
 		LOG_FUNC_ARG(Width)
 		LOG_FUNC_ARG(Height)
 		LOG_FUNC_ARG(Levels)
-		LOG_FUNC_ARG(Usage)
+		LOG_FUNC_ARG(Usage) // TODO : How to embed this?
 		LOG_FUNC_ARG(Format)
-		LOG_FUNC_ARG(Pool)
+		LOG_FUNC_ARG(Pool) // TODO : How to embed this?
 		LOG_FUNC_ARG(pTexture)
 		LOG_FUNC_ARG(Data)
 		LOG_FUNC_ARG(Pitch)
 		LOG_FUNC_END;
-
-	// NOTES: This function simply creates a texture that needs to be registered
-	// via EMUPATCH(D3DDevice_Register) afterwards.  So, do I just create the texture via
-	// EMUPATCH(D3DDevice_CreateTexture), or just fill in the interface and let
-	// EMUPATCH(D3DDevice_Register) do the rest?  Trial and error.
-
-	X_D3DTexture* pTempTexture = NULL;
-	DWORD l2w; _BitScanReverse(&l2w, Width); // Untested (no test-case known)
-	DWORD l2h; _BitScanReverse(&l2h, Height); // Note : _BitScanReverse is a MSVC intrinsic. For GCC use __builtin_clz
 
 	/*if( Data != 0 )
 		CxbxKrnlCleanup( "Data != 0 (XGSetTextureHeader)" );
@@ -264,39 +255,37 @@ VOID WINAPI XTL::EMUPATCH(XGSetTextureHeader)
 	if( Pitch != 0 )
 		CxbxKrnlCleanup( "Pitch != 0 (XGSetTextureHeader)" );*/
 
-	// Generate a temporary texture and fill in the necessary fields within
-	// the X_D3DTexture interface (lazy, I know).
-	
-	pTempTexture = (X_D3DTexture*) XTL::EMUPATCH(D3DDevice_CreateTexture2)(Width, Height, 0, Levels, Usage, Format,
-		XTL::D3DRTYPE_TEXTURE);
-	
+	pTexture->Common = X_D3DCOMMON_TYPE_TEXTURE + 1; // Set refcount to 1
+	pTexture->Data = Data;
+	// Note : Do NOT touch pTexture->Lock, as callers can have set it already !
 
-	pTexture->Data		= pTempTexture->Data;
-	pTexture->Common	= X_D3DCOMMON_TYPE_TEXTURE; //pTempTexture->Common;
-//	pTexture->Format	= pTempTexture->Format;
-	pTexture->Lock		= pTempTexture->Lock; // 0;
-	pTexture->Size		= pTempTexture->Size;
+	// Width or Height both a power of two?
+	DWORD l2w; _BitScanReverse(&l2w, Width); // MSVC intrinsic; GCC has __builtin_clz
+	DWORD l2h; _BitScanReverse(&l2h, Height);
+	if (((1 << l2w) == Width) && ((1 << l2h) == Height)) {
+		Width = Height = Pitch = 1; // When setting Format, clear Size field
+	} else {
+		l2w = l2h = 0; // When setting Size, clear D3DFORMAT_USIZE and VSIZE
+	}
 
-	
-	XTL::EMUPATCH(D3DResource_Release)(pTempTexture);
-	
+	// TODO : Must these be set using Usage / Pool / something else?
+	const int Dimensions = 2;
+	const int Depth = 1;
 
 	// Manually fill in Format parameters
-	/*pTexture->Format |= ( ( ( Width >> 1 ) & 0xF ) << X_D3DFORMAT_USIZE_SHIFT ) |	// Width
-					   ( ( ( Height>> 1 ) & 0xF ) << X_D3DFORMAT_VSIZE_SHIFT ) |	// Height
-					   ( ( ( Levels     ) & 0xF ) << X_D3DFORMAT_MIPMAP_SHIFT ) |	// Mip Levels
-				//	   ( ( ( ((DWORD)Format)) & 0xFF ) << X_D3DFORMAT_FORMAT_SHIFT ) |	// Format (Already set)
-					   ( ( ( 2			) & 0xF ) << X_D3DFORMAT_DIMENSION_SHIFT );	// Dimensions
-*/
-	pTexture->Format |= ( ( l2w & 0xF ) << X_D3DFORMAT_USIZE_SHIFT );
-	pTexture->Format |= ( ( l2h & 0xF ) << X_D3DFORMAT_VSIZE_SHIFT );
-	pTexture->Format |= ( ( Levels & 0xF ) << X_D3DFORMAT_MIPMAP_SHIFT );
-	pTexture->Format |= ( ( ( ((DWORD)Format)) & 0xFF ) << X_D3DFORMAT_FORMAT_SHIFT );
-	pTexture->Format |= ( ( 2 & 0xF ) << X_D3DFORMAT_DIMENSION_SHIFT );
+	pTexture->Format = 0
+		| ((Dimensions << X_D3DFORMAT_DIMENSION_SHIFT) & X_D3DFORMAT_DIMENSION_MASK)
+		| (((DWORD)Format << X_D3DFORMAT_FORMAT_SHIFT) & X_D3DFORMAT_FORMAT_MASK)
+		| ((Levels << X_D3DFORMAT_MIPMAP_SHIFT) & X_D3DFORMAT_MIPMAP_MASK)
+		| ((l2w << X_D3DFORMAT_USIZE_SHIFT) & X_D3DFORMAT_USIZE_MASK)
+		| ((l2h << X_D3DFORMAT_VSIZE_SHIFT) & X_D3DFORMAT_VSIZE_MASK)
+		| ((Depth << X_D3DFORMAT_PSIZE_SHIFT) & X_D3DFORMAT_PSIZE_MASK)
+		;
 
-//	D3DCOLOR_XRGB(
-	DbgPrintf( "pTexture->Format:= 0x%.08X\n", pTexture->Format );
-
+	pTexture->Size = 0
+		| (((Width - 1) /*X_D3DSIZE_WIDTH_SHIFT*/) & X_D3DSIZE_WIDTH_MASK)
+		| (((Height - 1) << X_D3DSIZE_HEIGHT_SHIFT) & X_D3DSIZE_HEIGHT_MASK)
+        | (((Pitch - 1) << X_D3DSIZE_PITCH_SHIFT) & X_D3DSIZE_PITCH_MASK);
 }
 
 // ******************************************************************

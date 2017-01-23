@@ -2992,8 +2992,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
     X_D3DTexture  **ppTexture
 )
 {
-    
-
     DbgPrintf("EmuD3D8: EmuD3DDevice_CreateTexture\n"
            "(\n"
            "   Width               : 0x%.08X\n"
@@ -3005,6 +3003,12 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
            "   ppTexture           : 0x%.08X\n"
            ");\n",
            Width, Height, Levels, Usage, Format, Pool, ppTexture);
+
+	// Get Bytes Per Pixel, for correct Pitch calculation :
+	DWORD dwBPP = 2; // Default, in case nothing is set
+	/*ignore result*/EmuXBFormatIsSwizzled(Format, &dwBPP);
+
+	UINT Pitch = RoundUp(Width, 64) * dwBPP; // TODO : RoundUp only for (X_)D3DFMT_YUY2?
 
     // Convert Format (Xbox->PC)
     D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
@@ -3034,33 +3038,28 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
         // cache the overlay size
         g_dwOverlayW = Width;
         g_dwOverlayH = Height;
-        g_dwOverlayP = RoundUp(g_dwOverlayW, 64)*2;
+        g_dwOverlayP = Pitch;
     }
 
     HRESULT hRet;
+
+	X_D3DTexture *pTexture = new X_D3DTexture();
+	DWORD Texture_Data;
 
     if(PCFormat == D3DFMT_YUY2)
     {
         DWORD dwSize = g_dwOverlayP*g_dwOverlayH;
         DWORD dwPtr = (DWORD)CxbxMalloc(dwSize + sizeof(DWORD));
-
         DWORD *pRefCount = (DWORD*)(dwPtr + dwSize);
 
         // initialize ref count
         *pRefCount = 1;
 
         // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
-        *ppTexture = new X_D3DTexture();
+        Texture_Data = X_D3DRESOURCE_DATA_FLAG_SPECIAL | X_D3DRESOURCE_DATA_FLAG_YUVSURF;
+        pTexture->Lock = dwPtr;
 
-        (*ppTexture)->Data = X_D3DRESOURCE_DATA_FLAG_SPECIAL | X_D3DRESOURCE_DATA_FLAG_YUVSURF;
-        (*ppTexture)->Lock = dwPtr;
-        (*ppTexture)->Format = 0x24;
-
-        (*ppTexture)->Size  = (g_dwOverlayW & X_D3DSIZE_WIDTH_MASK);
-        (*ppTexture)->Size |= (g_dwOverlayH << X_D3DSIZE_HEIGHT_SHIFT);
-        (*ppTexture)->Size |= (g_dwOverlayP << X_D3DSIZE_PITCH_SHIFT);
-
-        g_YuvSurface = (X_D3DSurface*)*ppTexture;
+        g_YuvSurface = (X_D3DSurface*)pTexture;
 
         hRet = D3D_OK;
     }
@@ -3084,8 +3083,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
 
 //		EmuAdjustPower2(&Width, &Height);
 
-        *ppTexture = new X_D3DTexture();
-
 //        if(Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL))
         if(Usage & (D3DUSAGE_RENDERTARGET))
         {
@@ -3096,18 +3093,16 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
         (
             Width, Height, Levels,
             PCUsage,  // TODO: Xbox Allows a border to be drawn (maybe hack this in software ;[)
-            PCFormat, PCPool, &((*ppTexture)->EmuTexture8)
+            PCFormat, PCPool, &(pTexture->EmuTexture8)
         );
 
         if(FAILED(hRet))
         {
             EmuWarning("CreateTexture Failed!");
-            (*ppTexture)->Data = 0xBEADBEAD;
+			Texture_Data = 0xBEADBEAD;
         }
         else
         {
-            D3DLOCKED_RECT LockedRect;
-
             /**
              * Note: If CreateTexture() called with D3DPOOL_DEFAULT then unable to Lock. 
              * It will cause an Error with the DirectX Debug runtime.
@@ -3117,20 +3112,21 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
              *      D3DUSAGE_DEPTHSTENCIL
              * that can only be used with D3DPOOL_DEFAULT per MSDN.
              */
-            (*ppTexture)->EmuTexture8->LockRect(0, &LockedRect, NULL, NULL);
+            D3DLOCKED_RECT LockedRect;
 
-            (*ppTexture)->Data = (DWORD)LockedRect.pBits;
-            (*ppTexture)->Format = Format << X_D3DFORMAT_FORMAT_SHIFT;
-
-            g_DataToTexture.insert((*ppTexture)->Data, *ppTexture);
-
-            (*ppTexture)->EmuTexture8->UnlockRect(0);
+            pTexture->EmuTexture8->LockRect(0, &LockedRect, NULL, NULL);
+			Texture_Data = (DWORD)LockedRect.pBits;
+            g_DataToTexture.insert(Texture_Data, pTexture);
+            pTexture->EmuTexture8->UnlockRect(0);
         }
-
-        DbgPrintf("EmuD3D8: Created Texture : 0x%.08X (0x%.08X)\n", *ppTexture, (*ppTexture)->EmuTexture8);
     }
 
-    
+	// Set all X_D3DTexture members (except Lock)
+	XTL::EMUPATCH(XGSetTextureHeader)(Width, Height, Levels, Usage, Format, Pool, pTexture, Texture_Data, Pitch);
+
+	DbgPrintf("EmuD3D8: Created Texture : 0x%.08X (0x%.08X)\n", pTexture, pTexture->EmuTexture8);
+
+	*ppTexture = pTexture;
 
     return hRet;
 }
@@ -3150,8 +3146,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVolumeTexture)
     X_D3DVolumeTexture **ppVolumeTexture
 )
 {
-    
-
     DbgPrintf("EmuD3D8: EmuD3DDevice_CreateVolumeTexture\n"
            "(\n"
            "   Width               : 0x%.08X\n"
@@ -3198,7 +3192,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVolumeTexture)
     {
         DWORD dwSize = g_dwOverlayP*g_dwOverlayH;
         DWORD dwPtr = (DWORD)CxbxMalloc(dwSize + sizeof(DWORD));
-
         DWORD *pRefCount = (DWORD*)(dwPtr + dwSize);
 
         // initialize ref count
@@ -3234,8 +3227,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVolumeTexture)
         DbgPrintf("EmuD3D8: Created Volume Texture : 0x%.08X (0x%.08X)\n", *ppVolumeTexture, (*ppVolumeTexture)->EmuVolumeTexture8);
     }
 
-    
-
     return hRet;
 }
 
@@ -3252,8 +3243,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateCubeTexture)
     X_D3DCubeTexture  **ppCubeTexture
 )
 {
-    
-
     DbgPrintf("EmuD3D8: EmuD3DDevice_CreateCubeTexture\n"
            "(\n"
            "   EdgeLength          : 0x%.08X\n"
@@ -4596,7 +4585,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
 
                 g_dwOverlayW = dwWidth;
                 g_dwOverlayH = dwHeight;
-                g_dwOverlayP = RoundUp(g_dwOverlayW, 64)*2;
+                g_dwOverlayP = RoundUp(g_dwOverlayW, 64) * dwBPP;
 
                 //
                 // create texture resource
@@ -5047,8 +5036,6 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
     X_D3DResource      *pThis
 )
 {
-    
-
     DbgPrintf("EmuD3D8: EmuIDirect3DResource8_Release\n"
            "(\n"
            "   pThis               : 0x%.08X\n"
@@ -5061,8 +5048,6 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 	if(!pThis)
 	{
 		EmuWarning("NULL texture!");
-
-		 
 
 		return 0;
 	}
@@ -5087,10 +5072,8 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
             // free memory associated with this special resource handle
             CxbxFree((PVOID)dwPtr);
         }
-
         
 		EMUPATCH(D3DDevice_EnableOverlay)(FALSE);
-        
     }
     else
     {
@@ -5101,7 +5084,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
             delete[] (PVOID)pThis->Data;
             uRet = --pThis->Lock;
         }
-        else if(pResource8 != 0)
+        else if(pResource8 != nullptr)
         {
             for(int v=0;v<16;v++)
             {
@@ -5117,7 +5100,6 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
             #endif
 
             uRet = pResource8->Release();
-
             if(uRet == 0)
             {
                 DbgPrintf("EmuIDirect3DResource8_Release : Cleaned up a Resource!\n");
@@ -5136,9 +5118,6 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_Release)
 
         pThis->Common = (pThis->Common & ~X_D3DCOMMON_REFCOUNT_MASK) | ((pThis->Common & X_D3DCOMMON_REFCOUNT_MASK) - 1);
     }
-
-
-    
 
     return uRet;
 }
