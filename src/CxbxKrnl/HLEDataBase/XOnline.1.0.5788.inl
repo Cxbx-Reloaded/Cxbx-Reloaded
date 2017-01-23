@@ -99,17 +99,17 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XOnline_5788[] = {
     // XNetStartup
-	OOVPA_TABLE_PATCH(XNetStartup, 5788, XNetStartup),
+	OOVPA_TABLE_ENTRY(XNetStartup, 5788),
 	// WSAStartup
-	OOVPA_TABLE_PATCH(WSAStartup, 5788, WSAStartup),
+	OOVPA_TABLE_ENTRY(WSAStartup, 5788),
     // XnInit (XREF)
 	OOVPA_TABLE_XREF(XnInit, 5788),
 	// XNetGetEthernetLinkStatus
-	OOVPA_TABLE_PATCH(XNetGetEthernetLinkStatus, 5788, XNetGetEthernetLinkStatus),
+	OOVPA_TABLE_ENTRY(XNetGetEthernetLinkStatus, 5788),
     // bind (* unchanged since 4361 *)
-	OOVPA_TABLE_PATCH_EmuThis(bind, 4361, bind),
+	OOVPA_TABLE_PATCH_EmuThis(bind, 4361),
     // ioctlsocket (* unchanged since 4361 *)
-	OOVPA_TABLE_PATCH_EmuThis(ioctlsocket, 4361, ioctlsocket),
+	OOVPA_TABLE_PATCH_EmuThis(ioctlsocket, 4361),
 };
 
 // ******************************************************************

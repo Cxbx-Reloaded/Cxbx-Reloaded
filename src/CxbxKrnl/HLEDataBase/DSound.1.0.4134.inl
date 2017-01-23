@@ -389,15 +389,15 @@ OOVPA_END;
 OOVPATable DSound_4134[] = {
 
     // DirectSoundCreate
-	OOVPA_TABLE_PATCH(DirectSoundCreate, 4134, DirectSoundCreate),
+	OOVPA_TABLE_ENTRY(DirectSoundCreate, 4134),
 	// IDirectSound8::AddRef (* unchanged since 3936 *)
-	OOVPA_TABLE_PATCH(IDirectSound8_AddRef, 3936, IDirectSound8_AddRef),
+	OOVPA_TABLE_ENTRY(IDirectSound8_AddRef, 3936),
 	// IDirectSound8::Release (* unchanged since 3936 *)
-	OOVPA_TABLE_PATCH(IDirectSound8_Release, 3936, IDirectSound8_Release),
+	OOVPA_TABLE_ENTRY(IDirectSound8_Release, 3936),
 	// IDirectSound8::DownloadEffectsImage (* unchanged since 3936 *)
-	OOVPA_TABLE_PATCH(IDirectSound8_DownloadEffectsImage, 3936, IDirectSound8_DownloadEffectsImage),
+	OOVPA_TABLE_ENTRY(IDirectSound8_DownloadEffectsImage, 3936),
 	// IDirectSound8::CreateSoundBuffer
-	OOVPA_TABLE_PATCH(IDirectSound8_CreateSoundBuffer, 4134, IDirectSound8_CreateSoundBuffer),
+	OOVPA_TABLE_ENTRY(IDirectSound8_CreateSoundBuffer, 4134),
 	// DirectSound::CDirectSoundVoice::SetHeadroom (XREF)
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundVoice_SetHeadroom, 4134),
 	// DirectSound::CDirectSoundBuffer::SetHeadroom (XREF)
@@ -425,7 +425,7 @@ OOVPATable DSound_4134[] = {
 	// IDirectSoundBuffer8::SetBufferData
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetBufferData, 4134, IDirectSoundBuffer8_SetBufferData),
 	// IDirectSound8_CreateStream
-	OOVPA_TABLE_PATCH(IDirectSound8_CreateStream, 3936, IDirectSound8_CreateStream),
+	OOVPA_TABLE_ENTRY(IDirectSound8_CreateStream, 3936),
 	// CDirectSoundVoiceSettings::SetMixBins
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundVoiceSettings_SetMixBins, 4134),
     // CDirectSoundVoice::SetMixBins
