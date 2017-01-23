@@ -3039,7 +3039,32 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
 
     HRESULT hRet;
 
-    if(PCFormat != D3DFMT_YUY2)
+    if(PCFormat == D3DFMT_YUY2)
+    {
+        DWORD dwSize = g_dwOverlayP*g_dwOverlayH;
+        DWORD dwPtr = (DWORD)CxbxMalloc(dwSize + sizeof(DWORD));
+
+        DWORD *pRefCount = (DWORD*)(dwPtr + dwSize);
+
+        // initialize ref count
+        *pRefCount = 1;
+
+        // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
+        *ppTexture = new X_D3DTexture();
+
+        (*ppTexture)->Data = X_D3DRESOURCE_DATA_FLAG_SPECIAL | X_D3DRESOURCE_DATA_FLAG_YUVSURF;
+        (*ppTexture)->Lock = dwPtr;
+        (*ppTexture)->Format = 0x24;
+
+        (*ppTexture)->Size  = (g_dwOverlayW & X_D3DSIZE_WIDTH_MASK);
+        (*ppTexture)->Size |= (g_dwOverlayH << X_D3DSIZE_HEIGHT_SHIFT);
+        (*ppTexture)->Size |= (g_dwOverlayP << X_D3DSIZE_PITCH_SHIFT);
+
+        g_YuvSurface = (X_D3DSurface*)*ppTexture;
+
+        hRet = D3D_OK;
+    }
+    else
     {
         DWORD   PCUsage = Usage & (D3DUSAGE_RENDERTARGET);
 //        DWORD   PCUsage = Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL);
@@ -3103,31 +3128,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
         }
 
         DbgPrintf("EmuD3D8: Created Texture : 0x%.08X (0x%.08X)\n", *ppTexture, (*ppTexture)->EmuTexture8);
-    }
-    else
-    {
-        DWORD dwSize = g_dwOverlayP*g_dwOverlayH;
-        DWORD dwPtr = (DWORD)CxbxMalloc(dwSize + sizeof(DWORD));
-
-        DWORD *pRefCount = (DWORD*)(dwPtr + dwSize);
-
-        // initialize ref count
-        *pRefCount = 1;
-
-        // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
-        *ppTexture = new X_D3DTexture();
-
-        (*ppTexture)->Data = X_D3DRESOURCE_DATA_FLAG_SPECIAL | X_D3DRESOURCE_DATA_FLAG_YUVSURF;
-        (*ppTexture)->Lock = dwPtr;
-        (*ppTexture)->Format = 0x24;
-
-        (*ppTexture)->Size  = (g_dwOverlayW & X_D3DSIZE_WIDTH_MASK);
-        (*ppTexture)->Size |= (g_dwOverlayH << X_D3DSIZE_HEIGHT_SHIFT);
-        (*ppTexture)->Size |= (g_dwOverlayP << X_D3DSIZE_PITCH_SHIFT);
-
-        g_YuvSurface = (X_D3DSurface*)*ppTexture;
-
-        hRet = D3D_OK;
     }
 
     
@@ -3194,25 +3194,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVolumeTexture)
 
     HRESULT hRet;
 
-    if(PCFormat != D3DFMT_YUY2)
-    {
-        EmuAdjustPower2(&Width, &Height);
-
-        *ppVolumeTexture = new X_D3DVolumeTexture();
-
-        hRet = g_pD3DDevice8->CreateVolumeTexture
-        (
-            Width, Height, Depth, Levels,
-            0,  // TODO: Xbox Allows a border to be drawn (maybe hack this in software ;[)
-            PCFormat, D3DPOOL_MANAGED, &((*ppVolumeTexture)->EmuVolumeTexture8)
-        );
-
-        if(FAILED(hRet))
-            EmuWarning("CreateVolumeTexture Failed! (0x%.08X)", hRet);
-
-        DbgPrintf("EmuD3D8: Created Volume Texture : 0x%.08X (0x%.08X)\n", *ppVolumeTexture, (*ppVolumeTexture)->EmuVolumeTexture8);
-    }
-    else
+    if(PCFormat == D3DFMT_YUY2)
     {
         DWORD dwSize = g_dwOverlayP*g_dwOverlayH;
         DWORD dwPtr = (DWORD)CxbxMalloc(dwSize + sizeof(DWORD));
@@ -3232,6 +3214,24 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVolumeTexture)
         (*ppVolumeTexture)->Size |= (g_dwOverlayP << X_D3DSIZE_PITCH_SHIFT);
 
         hRet = D3D_OK;
+    }
+    else
+    {
+        EmuAdjustPower2(&Width, &Height);
+
+        *ppVolumeTexture = new X_D3DVolumeTexture();
+
+        hRet = g_pD3DDevice8->CreateVolumeTexture
+        (
+            Width, Height, Depth, Levels,
+            0,  // TODO: Xbox Allows a border to be drawn (maybe hack this in software ;[)
+            PCFormat, D3DPOOL_MANAGED, &((*ppVolumeTexture)->EmuVolumeTexture8)
+        );
+
+        if(FAILED(hRet))
+            EmuWarning("CreateVolumeTexture Failed! (0x%.08X)", hRet);
+
+        DbgPrintf("EmuD3D8: Created Volume Texture : 0x%.08X (0x%.08X)\n", *ppVolumeTexture, (*ppVolumeTexture)->EmuVolumeTexture8);
     }
 
     
