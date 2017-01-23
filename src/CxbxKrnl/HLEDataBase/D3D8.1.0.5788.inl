@@ -491,6 +491,11 @@ OOVPA_NO_XREF(D3DDevice_DrawVerticesUP, 5788, 8)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DTexture_LockRect
+// ******************************************************************
+#define D3DTexture_LockRect_5788 D3DTexture_LockRect_5233
+
+// ******************************************************************
 // * D3DDevice_BeginPushBuffer
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_BeginPushBuffer, 5788, 6)
@@ -1354,7 +1359,7 @@ OOVPATable D3D8_5788[] = {
 	OOVPA_TABLE_ENTRY(D3DSurface_LockRect, 3925),
 	OOVPA_TABLE_ENTRY(D3DBaseTexture_GetLevelCount, 4361),
 	OOVPA_TABLE_ENTRY(D3DTexture_GetSurfaceLevel2, 4627),
-	OOVPA_TABLE_ENTRY(D3DDevice_SetLight, 5558),
+	OOVPA_TABLE_ENTRY(D3DTexture_LockRect, 5788),
 	OOVPA_TABLE_ENTRY(D3DDevice_CreateVertexBuffer2, 5788),
 	OOVPA_TABLE_ENTRY(D3DVertexBuffer_Lock, 5788),
 	OOVPA_TABLE_ENTRY(D3DVertexBuffer_Lock2, 5788),
