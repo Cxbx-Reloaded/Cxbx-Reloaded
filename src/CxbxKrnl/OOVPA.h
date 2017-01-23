@@ -56,8 +56,8 @@ template <class BaseClass, typename MFT> inline void *MFPtoFP( MFT pMemFunc)
 #pragma pack(1)
 
 enum OOVPAType : uint16 {
-	Small,
-	Large,
+	Small, // Meaning, use SOVP, in which Offset is an uint08
+	Large, // Meaning, use LOVP, in which Offset is an uint16
 };
 
 // ******************************************************************
@@ -97,14 +97,14 @@ struct OOVPA
 	// that for each template instance, the type is redefined. Let's
 	// avoid that.)
 
-	// Small (Offset,Value)-Pair(s)
+	// Small (byte-sized) {Offset, Value}-pair(s)
 	struct SOVP
 	{
 		uint08 Offset;
 		uint08 Value;
 	};
 
-	// Large (Offset,Value)-Pair(s)
+	// Large (word-sized) {Offset, Value}-pair(s)
 	struct LOVP
 	{
 		uint16 Offset;
@@ -158,7 +158,7 @@ template <uint16 COUNT> struct SOOVPA
 struct OOVPATable
 {
     OOVPA *Oovpa;
-
+	int version;
     void  *lpRedirect;
 
     #ifdef _DEBUG_TRACE
@@ -166,35 +166,35 @@ struct OOVPATable
     #endif
 };
 
-#define OOVPA_XREF_LARGE(Name, Count, XRefSaveIndex, XRefCount)	\
-LOOVPA<Count> Name = { { /*OOVPAType*/Large, Count, XRefSaveIndex, XRefCount }, {
+#define OOVPA_XREF_LARGE(Name, Version, Count, XRefSaveIndex, XRefCount)	\
+LOOVPA<Count> Name##_##Version = { { /*OOVPAType*/Large, Count, XRefSaveIndex, XRefCount }, {
 
-#define OOVPA_XREF(Name, Count, XRefSaveIndex, XRefCount)	\
-SOOVPA<Count> Name = { { /*OOVPAType*/Small, Count, XRefSaveIndex, XRefCount }, {
+#define OOVPA_XREF(Name, Version, Count, XRefSaveIndex, XRefCount)	\
+SOOVPA<Count> Name##_##Version = { { /*OOVPAType*/Small, Count, XRefSaveIndex, XRefCount }, {
 
-#define OOVPA_NO_XREF_LARGE(Name, Count) \
-OOVPA_XREF_LARGE(Name, Count, XRefNoSaveIndex, XRefZero)
+#define OOVPA_NO_XREF_LARGE(Name, Version, Count) \
+OOVPA_XREF_LARGE(Name, Version, Count, XRefNoSaveIndex, XRefZero)
 
-#define OOVPA_NO_XREF(Name, Count) \
-OOVPA_XREF(Name, Count, XRefNoSaveIndex, XRefZero)
+#define OOVPA_NO_XREF(Name, Version, Count) \
+OOVPA_XREF(Name, Version, Count, XRefNoSaveIndex, XRefZero)
 
-#define OOVPA_ENTRY(Offset, Value) { Offset, Value },
 #define OOVPA_END } }
 
 
 #if _DEBUG_TRACE
-#define OOVPA_TABLE_PATCH(Oovpa, Patch)	\
-	{&Oovpa.Header, Patch, #Patch}
-// TODO : _DEBUG_TRACE OOVPA_TABLE_* macro's :
-// Cut Version off of Oovpa, and log separatly as "("#Version")"
-#define OOVPA_TABLE_XREF(Oovpa)	\
-	{&Oovpa.Header, 0, #Oovpa" (XRef)"}
-#else
-#define OOVPA_TABLE_PATCH(Oovpa, Patch)	\
-	{&Oovpa.Header, Patch}
-#define OOVPA_TABLE_XREF(Oovpa)	\
-	{&Oovpa.Header, 0}
+#define OOVPA_TABLE_ENTRY_LONG(Oovpa, Version, Patch, Name) { &Oovpa ## _ ## Version.Header, Version, Patch, Name }
+#else                                              
+#define OOVPA_TABLE_ENTRY_LONG(Oovpa, Version, Patch, Name) { &Oovpa ## _ ## Version.Header, Version, Patch }
 #endif
+
+#define OOVPA_TABLE_PATCH(Oovpa, Version, Patch)	\
+	OOVPA_TABLE_ENTRY_LONG(Oovpa, Version, XTL::EMUPATCH(Patch), #Patch ## "_" ## #Version)
+#define OOVPA_TABLE_ENTRY(Function, Version) \
+	OOVPA_TABLE_PATCH(Function, Version, Function)
+#define OOVPA_TABLE_PATCH_EmuThis(Function, Version)	\
+	OOVPA_TABLE_ENTRY_LONG(Function, Version, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::EMUPATCH(Function)), #Function ## "_" ## #Version)
+#define OOVPA_TABLE_XREF(Oovpa, Version)	\
+	OOVPA_TABLE_ENTRY_LONG(Oovpa, Version, nullptr, #Oovpa ## "_" ## #Version ## " (XRef)" )
 
 #pragma pack()
 

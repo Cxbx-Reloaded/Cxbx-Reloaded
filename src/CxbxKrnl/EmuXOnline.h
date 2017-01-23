@@ -49,50 +49,65 @@ class EmuThis
 {
     public:
         // ******************************************************************
-        // * func: Emusocket
+        // * patch: socket
         // ******************************************************************
-        SOCKET Emusocket(int af, int type, int protocol);
+        SOCKET EMUPATCH(socket)(int af, int type, int protocol);
+
+		// ******************************************************************
+		// * patch: This::Emuconnect
+		// ******************************************************************
+		int EMUPATCH(connect)(SOCKET s, const struct sockaddr FAR *name, int namelen);
+
+		// ******************************************************************
+		// * patch: This::Emusend
+		// ******************************************************************
+		int EMUPATCH(send)(SOCKET s, const char FAR *buf, int len, int flags);
+
+		// ******************************************************************
+		// * patch: This::Emurecv
+		// ******************************************************************
+		int EMUPATCH(recv)(SOCKET s, char FAR *buf, int len, int flags);
 
         // ******************************************************************
-        // * func: Emubind
+        // * patch: bind
         // ******************************************************************
-        int Emubind(SOCKET s, const struct sockaddr FAR *name, int namelen);
+        int EMUPATCH(bind)(SOCKET s, const struct sockaddr FAR *name, int namelen);
 
         // ******************************************************************
-        // * func: Emulisten
+        // * patch: listen
         // ******************************************************************
-        int Emulisten(SOCKET s, int backlog);
+        int EMUPATCH(listen)(SOCKET s, int backlog);
 
         // ******************************************************************
-        // * func: Emuioctlsocket
+        // * patch: ioctlsocket
         // ******************************************************************
-        int Emuioctlsocket(SOCKET s, long cmd, u_long FAR *argp);
+        int EMUPATCH(ioctlsocket)(SOCKET s, long cmd, u_long FAR *argp);
 };
 
 // ******************************************************************
-// * func: EmuWSAStartup
+// * patch: WSAStartup
 // ******************************************************************
-int WINAPI EmuWSAStartup
+int WINAPI EMUPATCH(WSAStartup)
 (
     WORD        wVersionRequested,
     WSADATA    *lpWSAData
 );
 
 // ******************************************************************
-// * func: EmuXNetStartup
+// * patch: XNetStartup
 // ******************************************************************
-INT WINAPI EmuXNetStartup
+INT WINAPI EMUPATCH(XNetStartup)
 (
     const PVOID pDummy
 );
 
 // ******************************************************************
-// * func: EmuXNetGetEthernetLinkStatus
+// * patch: XNetGetEthernetLinkStatus
 // ******************************************************************
-DWORD WINAPI EmuXNetGetEthernetLinkStatus();
+DWORD WINAPI EMUPATCH(XNetGetEthernetLinkStatus)();
 
 // ******************************************************************
-// * func: EmuXOnlineLaunchNewImage
+// * patch: XOnlineLaunchNewImage
 // ******************************************************************
 HRESULT WINAPI XOnlineLaunchNewImage
 (
@@ -101,9 +116,9 @@ HRESULT WINAPI XOnlineLaunchNewImage
 );
 
 // ******************************************************************
-// * func: EmuXOnlineLogon
+// * patch: XOnlineLogon
 // ******************************************************************
-HRESULT WINAPI EmuXOnlineLogon
+HRESULT WINAPI EMUPATCH(XOnlineLogon)
 (
     VOID*	pUsers,
     DWORD*	pdwServiceIDs,

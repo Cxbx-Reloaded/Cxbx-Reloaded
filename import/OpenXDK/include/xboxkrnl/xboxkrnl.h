@@ -76,7 +76,6 @@ extern "C"
 // ******************************************************************
 #ifndef VOID
 	typedef void                VOID;
-	//#define VOID                void
 #endif
 
 // ******************************************************************
@@ -167,6 +166,23 @@ typedef long                            NTSTATUS;
 #define STATUS_XBE_MEDIA_MISMATCH        ((DWORD   )0xC0050002L)
 #define STATUS_OBJECT_NAME_NOT_FOUND     ((DWORD   )0xC0000034L)
 #define STATUS_OBJECT_NAME_COLLISION     ((DWORD   )0xC0000035L)
+
+// ******************************************************************
+// * Registry value types
+// ******************************************************************
+// Used in ExQueryNonVolatileSetting and ExSaveNonVolatileSetting
+#define REG_NONE                    ( 0 )   // No defined value type.
+#define REG_SZ                      ( 1 )   // A null - terminated string. This will be either a Unicode or an ANSI string, depending on whether you use the Unicode or ANSI functions.
+#define REG_EXPAND_SZ               ( 2 )   // A null - terminated string that contains unexpanded references to environment variables (for example, "%PATH%"). It will be a Unicode or ANSI string depending on whether you use the Unicode or ANSI functions. To expand the environment variable references, use the ExpandEnvironmentStrings function.
+#define REG_BINARY                  ( 3 )   // Binary data in any form.
+#define REG_DWORD                   ( 4 )   // A 32 - bit number.
+#define REG_DWORD_LITTLE_ENDIAN     ( 4 )   // A 32 - bit number in little - endian format. Windows is designed to run on little - endian computer architectures. Therefore, this value is defined as REG_DWORD in the Windows header files.
+#define REG_DWORD_BIG_ENDIAN        ( 5 )   // A 32 - bit number in big - endian format. Some UNIX systems support big - endian architectures.
+#define REG_LINK                    ( 6 )   // A null - terminated Unicode string that contains the target path of a symbolic link that was created by calling the RegCreateKeyEx function with REG_OPTION_CREATE_LINK.
+#define REG_MULTI_SZ                ( 7 )   // A sequence of null - terminated strings, terminated by an empty string(\0). String1\0String2\0String3\0LastString\0\0								 // The first \0 terminates the first string, the second to the last \0 terminates the last string, and the final \0 terminates the sequence.Note that the final terminator must be factored into the length of the string.
+#define REG_RESOURCE_LIST           ( 8 )   // Resource list in the resource map
+#define REG_FULL_RESOURCE_DESCRIPTOR ( 9 )  // Resource list in the hardware description
+#define REG_RESOURCE_REQUIREMENTS_LIST ( 10 )
 
 // ******************************************************************
 // * PAGE Masks
@@ -1051,9 +1067,29 @@ typedef struct _PCI_SLOT_NUMBER
 }
 PCI_SLOT_NUMBER, *PPCI_SLOT_NUMBER;
 
+
 #define PCI_TYPE0_ADDRESSES             6
 #define PCI_TYPE1_ADDRESSES             2
 #define PCI_TYPE2_ADDRESSES             5
+
+#define PCI_TYPE1_ADDR_PORT     ((PULONG) 0xCF8)
+#define PCI_TYPE1_DATA_PORT     0xCFC
+
+typedef struct _PCI_TYPE1_CFG_BITS {
+    union {
+        struct {
+            ULONG   Reserved1:2;
+            ULONG   RegisterNumber:6;
+            ULONG   FunctionNumber:3;
+            ULONG   DeviceNumber:5;
+            ULONG   BusNumber:8;
+            ULONG   Reserved2:7;
+            ULONG   Enable:1;
+        } bits;
+
+        ULONG   AsULONG;
+    } u;
+} PCI_TYPE1_CFG_BITS, *PPCI_TYPE1_CFG_BITS;
 
 // ******************************************************************
 // * PCI_COMMON_CONFIG
@@ -1196,6 +1232,13 @@ typedef struct _SEMAPHORE_BASIC_INFORMATION {
 	LONG MaximumCount;
 } SEMAPHORE_BASIC_INFORMATION, *PSEMAPHORE_BASIC_INFORMATION;
 
+// MUTANT_BASIC_INFORMATION - same as Windows
+typedef struct _MUTANT_BASIC_INFORMATION {
+	LONG CurrentCount;
+	BOOLEAN OwnedByCaller;
+	BOOLEAN AbandonedState;
+} MUTANT_BASIC_INFORMATION, *PMUTANT_BASIC_INFORMATION;
+
 typedef struct _ERWLOCK
 {
 	LONG LockCount;
@@ -1216,6 +1259,29 @@ typedef struct _KDEVICE_QUEUE
 }
 KDEVICE_QUEUE, *PKDEVICE_QUEUE, *RESTRICTED_POINTER PRKDEVICE_QUEUE;
 
+typedef PVOID PFILE_SEGMENT_ELEMENT;
+
+typedef struct _IRP
+{
+	CSHORT                 Type;                // 0x00
+	WORD                   Size;                // 0x02
+	ULONG                  Flags;               // 0x04
+	LIST_ENTRY             ThreadListEntry;     // 0x08
+	IO_STATUS_BLOCK        IoStatus;            // 0x10
+	CHAR                   StackCount;          // 0x18
+	CHAR                   CurrentLocation;	    // 0x19
+	UCHAR                  PendingReturned;     // 0x1A
+	UCHAR                  Cancel;              // 0x1B
+	PIO_STATUS_BLOCK       UserIosb;            // 0x1C
+	PKEVENT                UserEvent;           // 0x20
+	ULONGLONG              Overlay;	            // 0x28
+	PVOID                  UserBuffer;          // 0x30
+	PFILE_SEGMENT_ELEMENT  SegmentArray;        // 0x34
+	ULONG                  LockedBufferLength;  // 0x38
+	ULONGLONG              Tail;                // 0x3C
+}
+IRP, *PIRP;
+
 typedef struct _DEVICE_OBJECT
 {
 	CSHORT Type;
@@ -1223,7 +1289,7 @@ typedef struct _DEVICE_OBJECT
 	LONG ReferenceCount;
 	struct _DRIVER_OBJECT *DriverObject;
 	struct _DEVICE_OBJECT *MountedOrSelfDevice;
-	struct _IRP *CurrentIrp;
+	PIRP CurrentIrp;
 	ULONG Flags;
 	PVOID DeviceExtension;
 	UCHAR DeviceType;
@@ -1239,6 +1305,56 @@ typedef struct _DEVICE_OBJECT
 DEVICE_OBJECT, *PDEVICE_OBJECT;
 
 typedef VOID *PDRIVER_OBJECT;
+
+// ******************************************************************
+// * IO_COMPLETION_CONTEXT
+// ******************************************************************
+typedef struct _IO_COMPLETION_CONTEXT
+{
+	PVOID Port;
+	PVOID Key;
+} IO_COMPLETION_CONTEXT, *PIO_COMPLETION_CONTEXT;
+
+// ******************************************************************
+// * FILE_OBJECT
+// ******************************************************************
+typedef struct _FILE_OBJECT {
+	CSHORT                    Type;               // 0x00
+
+	BYTE                      DeletePending : 1;  // 0x02
+	BYTE                      ReadAccess : 1;     // 0x02
+	BYTE                      WriteAccess : 1;    // 0x02
+	BYTE                      DeleteAccess : 1;   // 0x02
+	BYTE                      SharedRead : 1;     // 0x02
+	BYTE                      SharedWrite : 1;    // 0x02
+	BYTE                      SharedDelete : 1;   // 0x02
+	BYTE                      Reserved : 1;       // 0x02
+
+	BYTE                      Flags;              // 0x03
+	PDEVICE_OBJECT            DeviceObject;       // 0x04
+	PVOID                     FsContext;          // 0x08
+	PVOID                     FsContext2;         // 0x0C
+	NTSTATUS                  FinalStatus;        // 0x10
+	LARGE_INTEGER             CurrentByteOffset;  // 0x14
+	struct _FILE_OBJECT *     RelatedFileObject;  // 0x1C
+	PIO_COMPLETION_CONTEXT    CompletionContext;  // 0x20
+	LONG                      LockCount;          // 0x24
+	KEVENT                    Lock;               // 0x28
+	KEVENT                    Event;              // 0x38
+} FILE_OBJECT, *PFILE_OBJECT;
+
+// ******************************************************************
+// * SHARE_ACCESS
+// ******************************************************************
+typedef struct _SHARE_ACCESS {
+	BYTE OpenCount;
+	BYTE Readers;
+	BYTE Writers;
+	BYTE Deleters;
+	BYTE SharedRead;
+	BYTE SharedWrite;
+	BYTE SharedDelete;
+} SHARE_ACCESS, *PSHARE_ACCESS;
 
 // ******************************************************************
 // * TIMER_TYPE
@@ -1686,35 +1802,43 @@ typedef struct _KPCR
 KPCR, *PKPCR;
 
 // ******************************************************************
-// * EEPROM_INDEX
+// * XC_VALUE_INDEX
 // ******************************************************************
-typedef enum _EEPROM_INDEX
+typedef enum _XC_VALUE_INDEX
 {
-    EEPROM_LANGUAGE				= 0x7,
-    EEPROM_VIDEO				= 0x8,
-    EEPROM_AUDIO				= 0x9,
-    EEPROM_P_CONTROL_GAMES		= 0xA,
-    EEPROM_P_CONTROL_PASSWORD	= 0xB,
-    EEPROM_P_CONTROL_MOVIES		= 0xC,
-    EEPROM_ONLINE_IP_ADDRESS	= 0xD,
-    EEPROM_ONLINE_DNS_ADDRESS	= 0xE,
-    EEPROM_ONLINE_DEFAULT_GATEWAY_ADDRESS = 0xF,
-    EEPROM_ONLINE_SUBNET_ADDRESS= 0x10,
-    EEPROM_MISC					= 0x11,
-    EEPROM_DVD_REGION			= 0x12,
-    EEPROM_MAX_OS				= 0xFF,
+	XC_TIMEZONE_BIAS         = 0,
+	XC_TZ_STD_NAME           = 1,
+	XC_TZ_STD_DATE           = 2,
+	XC_TZ_STD_BIAS           = 3,
+	XC_TZ_DLT_NAME           = 4,
+	XC_TZ_DLT_DATE           = 5,
+	XC_TZ_DLT_BIAS           = 6,
+	XC_LANGUAGE				 = 7,
+    XC_VIDEO				 = 8,
+    XC_AUDIO				 = 9,
+    XC_P_CONTROL_GAMES		 = 0xA,
+    XC_P_CONTROL_PASSWORD	 = 0xB,
+    XC_P_CONTROL_MOVIES		 = 0xC,
+    XC_ONLINE_IP_ADDRESS	 = 0xD,
+    XC_ONLINE_DNS_ADDRESS	 = 0xE,
+    XC_ONLINE_DEFAULT_GATEWAY_ADDRESS = 0xF,
+    XC_ONLINE_SUBNET_ADDRESS = 0x10,
+    XC_MISC					 = 0x11,
+    XC_DVD_REGION			 = 0x12,
+    XC_MAX_OS				 = 0xFF,
     // Break
-    EEPROM_FACTORY_SERIAL_NUMBER= 0x100,
-    EEPROM_FACTORY_ETHERNET_ADDR= 0x101,
-    EEPROM_FACTORY_ONLINE_KEY	= 0x102,
-    EEPROM_FACTORY_AV_REGION	= 0x103,
-    EEPROM_FACTORY_GAME_REGION	= 0x104,
-    EEPROM_MAX_FACTORY			= 0x1FF,
+	XC_FACTORY_START_INDEX   = 0x100,
+	XC_FACTORY_SERIAL_NUMBER = XC_FACTORY_START_INDEX,
+    XC_FACTORY_ETHERNET_ADDR = 0x101,
+    XC_FACTORY_ONLINE_KEY	 = 0x102,
+    XC_FACTORY_AV_REGION	 = 0x103,
+    XC_FACTORY_GAME_REGION	 = 0x104,
+    XC_MAX_FACTORY			 = 0x1FF,
     // Break
-    EEPROM_ENCRYPTED_SECTION	= 0xFFFE,
-    EEPROM_MAX_ALL				= 0xFFFF
+    XC_ENCRYPTED_SECTION	 = 0xFFFE,
+    XC_MAX_ALL				 = 0xFFFF
 }
-EEPROM_INDEX, *PEEPROM_INDEX;
+XC_VALUE_INDEX, *PXC_VALUE_INDEX;
 
 // ******************************************************************
 // * XBOX_HARDWARE_INFO

@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -106,7 +108,7 @@ bool Wnd::ProcessMessages()
 
         if(m_hwnd == 0)
         {
-            SetError("Could not create window.", true);
+            SetFatalError("Could not create window.");
             UnregisterClass(m_classname, m_hInstance);
             goto cleanup;
         }

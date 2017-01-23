@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -51,23 +53,26 @@ namespace NtDll
 
 #include "EmuXTL.h"
 
+/* Leave unpatched
 // ******************************************************************
-// * func: EmuXGIsSwizzledFormat
+// * patch: XGIsSwizzledFormat
 // ******************************************************************
-PVOID WINAPI XTL::EmuXGIsSwizzledFormat
+PVOID WINAPI XTL::EMUPATCH(XGIsSwizzledFormat)
 (
-    XTL::D3DFORMAT Format
+    X_D3DFORMAT Format
 )
 {
 	LOG_FUNC_ONE_ARG(Format);
 
 	RETURN(FALSE);
 }
+*/
 
+/* Leave unpatched
 // ******************************************************************
-// * func: EmuXGSwizzleRect
+// * patch: XGSwizzleRect
 // ******************************************************************
-VOID WINAPI XTL::EmuXGSwizzleRect
+VOID WINAPI XTL::EMUPATCH(XGSwizzleRect)
 (
     LPCVOID       pSource,
     DWORD         Pitch,
@@ -122,11 +127,12 @@ VOID WINAPI XTL::EmuXGSwizzleRect
         }
     }
 }
+*/
 
 // ******************************************************************
-// * func: EmuXGSwizzleBox
+// * patch: XGSwizzleBox
 // ******************************************************************
-VOID WINAPI XTL::EmuXGSwizzleBox
+VOID WINAPI XTL::EMUPATCH(XGSwizzleBox)
 (
     LPCVOID          pSource,
     DWORD            RowPitch,
@@ -191,116 +197,9 @@ VOID WINAPI XTL::EmuXGSwizzleBox
 }
 
 // ******************************************************************
-// * func: EmuXGUnswizzleRect
+// * patch: XGWriteSurfaceOrTextureToXPR
 // ******************************************************************
-VOID WINAPI XTL::EmuXGUnswizzleRect
-(
-    PVOID           pSrcBuff,
-    DWORD           dwWidth,
-    DWORD           dwHeight,
-    DWORD           dwDepth,
-    PVOID           pDstBuff,
-    DWORD           dwPitch,
-    RECT            rSrc,
-    POINT           poDst,
-    DWORD           dwBPP
-)
-{
-    DWORD dwOffsetU = 0, dwMaskU = 0;
-    DWORD dwOffsetV = 0, dwMaskV = 0;
-    DWORD dwOffsetW = 0, dwMaskW = 0;
-
-    DWORD i = 1;
-    DWORD j = 1;
-
-//  while( (i >= dwWidth) || (i >= dwHeight) || (i >= dwDepth) )
-    while( (i <= dwWidth) || (i <= dwHeight) || (i <= dwDepth) )
-    {
-        if(i < dwWidth)
-        {
-            dwMaskU |= j;
-            j<<=1;
-        }
-
-        if(i < dwHeight)
-        {
-            dwMaskV |= j;
-            j<<=1;
-        }
-
-        if(i < dwDepth)
-        {
-            dwMaskW |= j;
-            j<<=1;
-        }
-
-        i<<=1;
-    }
-
-    DWORD dwSU = 0;
-    DWORD dwSV = 0;
-    DWORD dwSW = 0;
-    DWORD dwMaskMax=0;
-
-    // get the biggest mask
-    if(dwMaskU > dwMaskV)
-        dwMaskMax=dwMaskU;
-    else
-        dwMaskMax=dwMaskV;
-    if(dwMaskW > dwMaskMax)
-        dwMaskMax=dwMaskW;
-
-    for(i = 1; i <= dwMaskMax; i<<=1)
-    {
-        if(i<=dwMaskU)
-        {
-            if(dwMaskU & i) dwSU |= (dwOffsetU & i);
-            else            dwOffsetU<<=1;
-        }
-
-        if(i<=dwMaskV)
-        {
-            if(dwMaskV & i) dwSV |= (dwOffsetV & i);
-            else            dwOffsetV<<=1;
-        }
-
-        if(i<=dwMaskW)
-        {
-            if(dwMaskW & i) dwSW |= (dwOffsetW & i);
-            else            dwOffsetW<<=1;
-        }
-    }
-
-    DWORD dwW = dwSW;
-    DWORD dwV = dwSV;
-    DWORD dwU = dwSU;
-
-    for(DWORD z=0; z<dwDepth; z++)
-    {
-        dwV = dwSV;
-
-        for(DWORD y=0; y<dwHeight; y++)
-        {
-            dwU = dwSU;
-
-            for (DWORD x=0; x<dwWidth; x++)
-            {
-                memcpy(pDstBuff, &((BYTE*)pSrcBuff)[(dwU|dwV|dwW)*dwBPP], dwBPP);
-                pDstBuff=(PVOID)(((DWORD)pDstBuff)+dwBPP);
-
-                dwU = (dwU - dwMaskU) & dwMaskU;
-            }
-            pDstBuff=(PVOID)(((DWORD)pDstBuff)+(dwPitch-dwWidth*dwBPP));
-            dwV = (dwV - dwMaskV) & dwMaskV;
-        }
-        dwW = (dwW - dwMaskW) & dwMaskW;
-    }
-}
-
-// ******************************************************************
-// * func: EmuXGWriteSurfaceOrTextureToXPR
-// ******************************************************************
-HRESULT WINAPI XTL::EmuXGWriteSurfaceOrTextureToXPR
+HRESULT WINAPI XTL::EMUPATCH(XGWriteSurfaceOrTextureToXPR)
 ( 
 	LPVOID			pResource,
 	const char*		cPath,
@@ -323,15 +222,15 @@ HRESULT WINAPI XTL::EmuXGWriteSurfaceOrTextureToXPR
 }
 
 // ******************************************************************
-// * func: EmuXGSetTextureHeader
+// * patch: XGSetTextureHeader
 // ******************************************************************
-VOID WINAPI XTL::EmuXGSetTextureHeader
+VOID WINAPI XTL::EMUPATCH(XGSetTextureHeader)
 (
 	UINT			Width,
 	UINT			Height,
 	UINT			Levels,
 	DWORD			Usage,
-	D3DFORMAT		Format,
+	X_D3DFORMAT		Format,
 	D3DPOOL			Pool,
 	X_D3DTexture*	pTexture,
 	UINT			Data,
@@ -351,9 +250,9 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 		LOG_FUNC_END;
 
 	// NOTES: This function simply creates a texture that needs to be registered
-	// via D3DDevice_Register afterwards.  So, do I just create the texture via
-	// EmuIDirect3DDevice8_CreateTexture, or just fill in the interface and let
-	// EmuIDirect3DDevice8_Register do the rest?  Trial and error.
+	// via EMUPATCH(D3DDevice_Register) afterwards.  So, do I just create the texture via
+	// EMUPATCH(D3DDevice_CreateTexture), or just fill in the interface and let
+	// EMUPATCH(D3DDevice_Register) do the rest?  Trial and error.
 
 	X_D3DTexture* pTempTexture = NULL;
 	DWORD l2w; _BitScanReverse(&l2w, Width); // Untested (no test-case known)
@@ -368,7 +267,7 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 	// Generate a temporary texture and fill in the necessary fields within
 	// the X_D3DTexture interface (lazy, I know).
 	
-	pTempTexture = (X_D3DTexture*) XTL::EmuIDirect3DDevice8_CreateTexture2(Width, Height, 0, Levels, Usage, Format, 
+	pTempTexture = (X_D3DTexture*) XTL::EMUPATCH(D3DDevice_CreateTexture2)(Width, Height, 0, Levels, Usage, Format,
 		XTL::D3DRTYPE_TEXTURE);
 	
 
@@ -379,7 +278,7 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 	pTexture->Size		= pTempTexture->Size;
 
 	
-	XTL::EmuIDirect3DResource8_Release(pTempTexture);
+	XTL::EMUPATCH(D3DResource_Release)(pTempTexture);
 	
 
 	// Manually fill in Format parameters
@@ -401,9 +300,9 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 }
 
 // ******************************************************************
-// * func: EmuXFONT_OpenBitmapFontFromMemory 
+// * patch: XFONT_OpenBitmapFontFromMemory 
 // ******************************************************************
-//HRESULT WINAPI XTL::EmuXFONT_OpenBitmapFontFromMemory 
+//HRESULT WINAPI XTL::EMUPATCH(XFONT_OpenBitmapFontFromMemory) 
 //(
 //	CONST void		*pFontData,
 //	unsigned		uFontDataSize,

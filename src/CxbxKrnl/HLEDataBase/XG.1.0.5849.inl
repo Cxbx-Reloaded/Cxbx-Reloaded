@@ -35,7 +35,7 @@
 // ******************************************************************
 // * XGSwizzleBox
 // ******************************************************************
-OOVPA_NO_XREF(XGSwizzleBox_1_0_5849, 10)
+OOVPA_NO_XREF(XGSwizzleBox, 5849, 10)
 
         // XGSwizzleBox+0x60 : sub ecx, [eax]
         { 0x60, 0x2B }, // (Offset,Value)-Pair #1
@@ -59,7 +59,7 @@ OOVPA_END;
 // ******************************************************************
 // * XFONT_OpenBitmapFontFromMemory
 // ******************************************************************
-OOVPA_NO_XREF(XFONT_OpenBitmapFontFromMemory_1_0_5849, 8)
+OOVPA_NO_XREF(XFONT_OpenBitmapFontFromMemory, 5849, 8)
 
         { 0x0B, 0x75 },
         { 0x1A, 0x8B },
@@ -72,23 +72,29 @@ OOVPA_NO_XREF(XFONT_OpenBitmapFontFromMemory_1_0_5849, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * XG_1_0_5849
+// * XG_5849
 // ******************************************************************
-OOVPATable XG_1_0_5849[] = {
+OOVPATable XG_5849[1] = {
 
     // XGIsSwizzledFormat (* unchanged since 4361 *)
-	OOVPA_TABLE_PATCH(XGIsSwizzledFormat_1_0_4361, XTL::EmuXGIsSwizzledFormat),
+	/* Leave unpatched
+	OOVPA_TABLE_ENTRY(XGIsSwizzledFormat, 4361),
+	*/
     // XGSwizzleRect (* unchanged since 5558 *)
-	OOVPA_TABLE_PATCH(XGSwizzleRect_1_0_5558, XTL::EmuXGSwizzleRect),
+	/* Leave unpatched
+	OOVPA_TABLE_ENTRY(XGSwizzleRect, 5558),
+	*/
 	// XGUnswizzleRect (* unchanged since 5558 *)
-	OOVPA_TABLE_PATCH(XGUnswizzleRect_1_0_5558, XTL::EmuXGUnswizzleRect),
+	/* Leave unpatched
+	OOVPA_TABLE_ENTRY(XGUnswizzleRect, 5558),
+	*/
 	// XFONT_OpenBitmapFontFromMemory
     /*
-	OOVPA_TABLE_PATCH(XFONT_OpenBitmapFontFromMemory_1_0_5849, XTL::EmuXFONT_OpenBitmapFontFromMemory),
+	OOVPA_TABLE_ENTRY(XFONT_OpenBitmapFontFromMemory, 5849),
 	*/
 };
 
 // ******************************************************************
-// * XG_1_0_5849_SIZE
+// * XG_5849_SIZE
 // ******************************************************************
-uint32 XG_1_0_5849_SIZE = sizeof(XG_1_0_5849);
+uint32 XG_5849_SIZE = sizeof(XG_5849);

@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -45,7 +47,7 @@ extern uint32 g_BuildVersion;
 extern uint32 g_OrigBuildVersion;
 
 // ******************************************************************
-// * func: EmuUpdateDeferredStates
+// * patch: UpdateDeferredStates
 // ******************************************************************
 void XTL::EmuUpdateDeferredStates()
 {

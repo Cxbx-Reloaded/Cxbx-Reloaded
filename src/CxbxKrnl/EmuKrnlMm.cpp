@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -174,13 +176,18 @@ XBSYSAPI EXPORTNUM(168) xboxkrnl::PVOID NTAPI xboxkrnl::MmClaimGpuInstanceMemory
 		LOG_FUNC_ARG_OUT(NumberOfPaddingBytes)
 		LOG_FUNC_END;
 
-	*NumberOfPaddingBytes = MI_CONVERT_PFN_TO_PHYSICAL(MM_64M_PHYSICAL_PAGE) -
+	if (g_bIsChihiro)
+		*NumberOfPaddingBytes = 0;
+	else
+		*NumberOfPaddingBytes = MI_CONVERT_PFN_TO_PHYSICAL(MM_64M_PHYSICAL_PAGE) -
 		MI_CONVERT_PFN_TO_PHYSICAL(MM_INSTANCE_PHYSICAL_PAGE + MM_INSTANCE_PAGE_COUNT);
-	// Chihiro arcade should use *NumberOfPaddingBytes = 0;
+
+	EmuWarning("*NumberOfPaddingBytes = 0x%08X", *NumberOfPaddingBytes);
 
 	if (NumberOfBytes != MAXULONG_PTR)
 	{
-		LOG_UNIMPLEMENTED();
+		if (NumberOfBytes != 20480)
+			LOG_IGNORED();
 	}
 
 	PVOID Result = (PUCHAR)MI_CONVERT_PFN_TO_PHYSICAL(MM_HIGHEST_PHYSICAL_PAGE + 1)
@@ -233,7 +240,7 @@ XBSYSAPI EXPORTNUM(169) xboxkrnl::PVOID NTAPI xboxkrnl::MmCreateKernelStack
 		/*Protect=*/PAGE_READWRITE);
 
 	if (FAILED(ret))
-		EmuWarning("MmCreateKernelStack failed!\n");
+		EmuWarning("MmCreateKernelStack failed!");
 	else
 		BaseAddress = (PVOID)((ULONG)BaseAddress + NumberOfBytes);
 
@@ -263,7 +270,7 @@ XBSYSAPI EXPORTNUM(170) xboxkrnl::VOID NTAPI xboxkrnl::MmDeleteKernelStack
 		/*FreeType=*/MEM_RELEASE);
 
 	if (FAILED(ret))
-		EmuWarning("MmDeleteKernelStack failed!\n");
+		EmuWarning("MmDeleteKernelStack failed!");
 }
 
 // ******************************************************************
@@ -540,7 +547,7 @@ XBSYSAPI EXPORTNUM(181) xboxkrnl::NTSTATUS NTAPI xboxkrnl::MmQueryStatistics
 	}
 	else
 	{
-		EmuWarning("EmuKrnl (0x%X): MmQueryStatistics with unusual size -> 0x%.08X\n", GetCurrentThreadId(), MemoryStatistics->Length);
+		EmuWarning("EmuKrnl: MmQueryStatistics with unusual size -> 0x%.08X", MemoryStatistics->Length);
 		ret = STATUS_INVALID_PARAMETER;
 	}
 
@@ -568,7 +575,7 @@ XBSYSAPI EXPORTNUM(182) xboxkrnl::VOID NTAPI xboxkrnl::MmSetAddressProtect
 	if (!VirtualProtect(BaseAddress, NumberOfBytes, NewProtect & (~PAGE_WRITECOMBINE), &dwOldProtect))
 		EmuWarning("VirtualProtect Failed!");
 
-	DbgPrintf("EmuKrnl (0x%X): VirtualProtect was 0x%.08X -> 0x%.08X\n", GetCurrentThreadId(), dwOldProtect, NewProtect & (~PAGE_WRITECOMBINE));
+	DbgPrintf("EmuKrnl: VirtualProtect was 0x%.08X -> 0x%.08X\n", dwOldProtect, NewProtect & (~PAGE_WRITECOMBINE));
 }
 
 // ******************************************************************

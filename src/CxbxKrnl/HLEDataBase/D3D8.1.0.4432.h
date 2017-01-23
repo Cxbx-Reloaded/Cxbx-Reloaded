@@ -31,12 +31,12 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef D3D8_1_0_4432_H
-#define D3D8_1_0_4432_H
+#ifndef D3D8_4432_H
+#define D3D8_4432_H
 
 #include "OOVPA.h"
 
-extern OOVPATable D3D8_1_0_4432[];
-extern uint32     D3D8_1_0_4432_SIZE;
+extern OOVPATable D3D8_4432[];
+extern uint32     D3D8_4432_SIZE;
 
 #endif

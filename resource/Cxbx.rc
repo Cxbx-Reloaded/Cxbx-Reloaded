@@ -128,7 +128,14 @@ BEGIN
         MENUITEM "Config &Controller...",       ID_SETTINGS_CONFIG_CONTROLLER
         MENUITEM "Config &Audio...",            ID_SETTINGS_CONFIGURESOUND, GRAYED
         MENUITEM "Config &Video...",            ID_SETTINGS_CONFIG_VIDEO
-    END
+		MENUITEM SEPARATOR
+		POPUP "&LLE (Experimental)"
+		BEGIN
+			MENUITEM "LLE &JIT",				ID_EMULATION_LLE_JIT
+			MENUITEM "LLE &APU",				ID_EMULATION_LLE_APU
+			MENUITEM "LLE &GPU",				ID_EMULATION_LLE_GPU
+		END
+	END
     POPUP "E&mulation"
     BEGIN
         MENUITEM "&Start\tF5",                  ID_EMULATION_START, GRAYED

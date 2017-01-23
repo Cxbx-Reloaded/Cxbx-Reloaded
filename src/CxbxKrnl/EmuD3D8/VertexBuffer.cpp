@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -711,20 +713,20 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 bool XTL::VertexPatcher::NormalizeTexCoords(VertexPatchDesc *pPatchDesc, UINT uiStream)
 {
     // Check for active linear textures.
-    bool bHasLinearTex = false, bTexIsLinear[4];
+	bool bHasLinearTex = false, bTexIsLinear[4] = { false };
     X_D3DPixelContainer *pLinearPixelContainer[4];
 
     for(uint08 i = 0; i < 4; i++)
     {
         X_D3DPixelContainer *pPixelContainer = (X_D3DPixelContainer*)EmuD3DActiveTexture[i];
-        if(pPixelContainer && EmuXBFormatIsLinear(((X_D3DFORMAT)pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT))
-        {
-            bHasLinearTex = bTexIsLinear[i] = true;
-            pLinearPixelContainer[i] = pPixelContainer;
-        }
-        else
-        {
-            bTexIsLinear[i] = false;
+		if (pPixelContainer)
+		{ 
+			XTL::X_D3DFORMAT XBFormat = (XTL::X_D3DFORMAT)((pPixelContainer->Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
+			if (EmuXBFormatIsLinear(XBFormat))
+			{
+				bHasLinearTex = bTexIsLinear[i] = true;
+				pLinearPixelContainer[i] = pPixelContainer;
+			}
         }
     }
 
@@ -1362,7 +1364,7 @@ VOID XTL::EmuFlushIVB()
     return;
 }
 
-VOID XTL::EmuUpdateActiveTexture()
+VOID XTL::EmuUpdateActiveTexture() // Never called!
 {
     //
     // DEBUGGING
@@ -1511,7 +1513,7 @@ VOID XTL::EmuUpdateActiveTexture()
                         }
                         else
                         {
-                            XTL::EmuXGUnswizzleRect
+                            XTL::EmuUnswizzleRect
                             (
                                 pSrc + dwMipOffs, dwMipWidth, dwMipHeight, dwDepth, LockedRect.pBits,
                                 LockedRect.Pitch, iRect, iPoint, dwBPP

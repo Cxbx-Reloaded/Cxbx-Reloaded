@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -54,6 +56,10 @@ namespace NtDll
 #include "Emu.h" // For EmuWarning()
 #include "EmuAlloc.h" // For CxbxFree(), CxbxMalloc(), etc.
 
+#pragma warning(disable:4005) // Ignore redefined status values
+#include <ntstatus.h> // For STATUS_BUFFER_TOO_SMALL
+#pragma warning(default:4005)
+
 // ******************************************************************
 // * 0x000C - ExAcquireReadWriteLockExclusive()
 // ******************************************************************
@@ -98,7 +104,7 @@ XBSYSAPI EXPORTNUM(14) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePool
 {
 	LOG_FORWARD("ExAllocatePoolWithTag");
 
-	return ExAllocatePoolWithTag(NumberOfBytes, (ULONG)"enoN"); // = "None" in reverse
+	return ExAllocatePoolWithTag(NumberOfBytes, 'enoN'); // = "None" in reverse
 }
 
 // ******************************************************************
@@ -279,120 +285,105 @@ XBSYSAPI EXPORTNUM(23) xboxkrnl::ULONG NTAPI xboxkrnl::ExQueryPoolBlockSize
 	RETURN(ret);
 }
 
+// TODO: Make these configurable or autodetect of some sort :
+DWORD EEPROM_XboxLanguage = 0x01;  // = English
+DWORD EEPROM_XboxVideo = 0x10;  // = Letterbox
+DWORD EEPROM_XboxAudio = 0;  // = Stereo, no AC3, no DTS
+DWORD EEPROM_ParentalControlGames = 0; // = XC_PC_ESRB_ALL
+DWORD EEPROM_ParentalControlMovies = 0; // = XC_PC_ESRB_ALL
+DWORD EEPROM_XboxMisc = 0;  // No automatic power down
+DWORD EEPROM_XboxFactoryAvRegion = 0x01; // = NTSC_M
+DWORD EEPROM_XboxFactoryGameRegion = 1; // = North America
+
+typedef struct EEPROMInfo {
+	xboxkrnl::XC_VALUE_INDEX index;
+	PVOID value_addr;
+	DWORD value_type;
+	DWORD value_length;
+} EEPROMInfo;
+
+#define XC_END_MARKER (xboxkrnl::XC_VALUE_INDEX)-1
+
+static const EEPROMInfo EEPROMInfos[] = {
+	{ xboxkrnl::XC_LANGUAGE,            &EEPROM_XboxLanguage,          REG_DWORD, sizeof(DWORD) },
+	{ xboxkrnl::XC_VIDEO,               &EEPROM_XboxVideo,             REG_DWORD, sizeof(DWORD) },
+	{ xboxkrnl::XC_AUDIO,               &EEPROM_XboxAudio,             REG_DWORD, sizeof(DWORD) },
+	{ xboxkrnl::XC_P_CONTROL_GAMES,     &EEPROM_ParentalControlGames,  REG_DWORD, sizeof(DWORD) }, // Zapper queries this. TODO : Should this be REG_NONE?
+	{ xboxkrnl::XC_P_CONTROL_MOVIES,    &EEPROM_ParentalControlMovies, REG_DWORD, sizeof(DWORD) }, // Xbox Dashboard queries this.
+	{ xboxkrnl::XC_MISC,                &EEPROM_XboxMisc,              REG_DWORD, sizeof(DWORD) },
+	{ xboxkrnl::XC_FACTORY_AV_REGION,   &EEPROM_XboxFactoryAvRegion,   REG_DWORD, sizeof(DWORD) },
+	{ xboxkrnl::XC_FACTORY_GAME_REGION, &EEPROM_XboxFactoryGameRegion, REG_DWORD, sizeof(DWORD) },
+	{ xboxkrnl::XC_MAX_OS,              nullptr
+	// This is called to return a complete XBOX_USER_SETTINGS structure
+	//
+	// One example is from XapipQueryTimeZoneInformation(, REG_DWORD, sizeof(DWORD), where it is used to
+	// detect the local timezone information.
+	},
+	// TODO : XC_MAX_ALL, XC_ENCRYPTED_SECTION
+	{ XC_END_MARKER }
+};
+
+const EEPROMInfo* FindEEPROMInfo(xboxkrnl::XC_VALUE_INDEX index)
+{
+	for (int i = 0; EEPROMInfos[i].index != XC_END_MARKER; i++)
+		if (EEPROMInfos[i].index == index)
+			return &EEPROMInfos[i];
+
+	return nullptr;
+}
+
 // ******************************************************************
 // * 0x0018 - ExQueryNonVolatileSetting()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(24) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExQueryNonVolatileSetting
 (
-	IN  EEPROM_INDEX        ValueIndex,
+	IN  DWORD               ValueIndex,
 	OUT DWORD              *Type,
-	OUT PUCHAR              Value,
+	OUT PVOID               Value,
 	IN  SIZE_T              ValueLength,
 	OUT PSIZE_T             ResultLength OPTIONAL
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(ValueIndex)
+		LOG_FUNC_ARG_TYPE(XC_VALUE_INDEX, ValueIndex)
 		LOG_FUNC_ARG_OUT(Type)
 		LOG_FUNC_ARG_OUT(Value)
 		LOG_FUNC_ARG(ValueLength)
 		LOG_FUNC_ARG_OUT(ResultLength)
 		LOG_FUNC_END;
 
-	if (!Type || !Value)
-		CxbxKrnlCleanup("Assertion in ExQueryNonVolatileSetting()");
-
 	NTSTATUS ret = STATUS_SUCCESS;
 
 	// handle eeprom read
-	switch (ValueIndex)
+	const EEPROMInfo* info = FindEEPROMInfo((XC_VALUE_INDEX)ValueIndex);
+	if (info != nullptr)
 	{
-		// Factory Game Region
-	case EEPROM_FACTORY_GAME_REGION:
-	{
-		// TODO: configurable region or autodetect of some sort
-		if (ResultLength != 0)
-			*ResultLength = 0x04;
+		if (info->value_addr == nullptr)
+			LOG_UNIMPLEMENTED();
+		else
+		{
+			DWORD result_length = info->value_length; // sizeof(DWORD);
 
-		if (ValueLength >= 4) {
-			*Type = 0x04;
-			*Value = 0x01;  // North America
+			if (ResultLength != nullptr)
+				*ResultLength = result_length;
+
+			if (ValueLength < result_length)
+				ret = STATUS_BUFFER_TOO_SMALL;
+			else
+			{
+				// Set the output value type :
+				*Type = info->value_type; // REG_DWORD;
+				// Clear the output value buffer :
+				memset(Value, 0, ValueLength);
+				// Copy the emulated EEPROM value into the output value buffer :
+				memcpy(Value, info->value_addr, result_length);
+			}
 		}
 	}
-	break;
-
-	// Factory AV Region
-	case EEPROM_FACTORY_AV_REGION:
-	{
-		// TODO: configurable region or autodetect of some sort
-		if (ResultLength != 0)
-			*ResultLength = 0x04;
-
-		*Type = 0x04;
-		*Value = 0x01; // NTSC_M
-	}
-	break;
-
-	// Language
-	case EEPROM_LANGUAGE:
-	{
-		// TODO: configurable language or autodetect of some sort
-		if (ResultLength != 0)
-			*ResultLength = 0x04;
-
-		*Type = 0x04;
-		*Value = 0x01;  // English
-	}
-	break;
-
-	// Video Flag
-	case EEPROM_VIDEO:
-	{
-		// TODO: configurable video flags or autodetect of some sort
-		if (ResultLength != 0)
-			*ResultLength = 0x04;
-
-		*Type = 0x04;
-		*Value = 0x10;  // Letterbox
-	}
-	break;
-
-	// Audio Flags
-	case EEPROM_AUDIO:
-	{
-		if (ResultLength != 0)
-			*ResultLength = 0x04;
-
-		*Type = 0x04;
-		*Value = 0;  // Stereo, no AC3, no DTS
-	}
-	break;
-
-	case EEPROM_MISC:
-	{
-		if (ResultLength != 0)
-			*ResultLength = 0x04;
-
-		*Type = 0x04;
-		*Value = 0;  // No automatic power down
-	}
-	break;
-
-	case EEPROM_MAX_OS:
-	{
-		// This is called to return a complete XBOX_USER_SETTINGS structure
-		//
-		// One example is from XapipQueryTimeZoneInformation(), where it is used to
-		// detect the local timezone information.
-
-		// TODO
-	}
-	break;
-
-	default:
-		EmuWarning("ExQueryNonVolatileSetting unknown ValueIndex (%d)", ValueIndex);
+	else
+	{	
+		LOG_UNIMPLEMENTED();
 		ret = STATUS_OBJECT_NAME_NOT_FOUND;
-		break;
 	}
 
 	RETURN(ret);
@@ -529,19 +520,48 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 (
 	IN  DWORD               ValueIndex,
 	OUT DWORD              *Type,
-	IN  PUCHAR              Value,
+	IN  PVOID               Value,
 	IN  SIZE_T              ValueLength
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(ValueIndex)
+		LOG_FUNC_ARG_TYPE(XC_VALUE_INDEX, ValueIndex)
 		LOG_FUNC_ARG_OUT(Type)
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_ARG(ValueLength)
 		LOG_FUNC_END;
 
-	// TODO: Later.
-	LOG_UNIMPLEMENTED();
+	NTSTATUS ret = STATUS_SUCCESS;
+
+	// handle eeprom write
+	const EEPROMInfo* info = FindEEPROMInfo((XC_VALUE_INDEX)ValueIndex);
+	if (info != nullptr)
+	{
+		if (info->value_addr == nullptr)
+			LOG_UNIMPLEMENTED();
+		else
+		{
+			DWORD result_length = info->value_length; // sizeof(DWORD);
+			if (ValueLength != result_length)
+				ret = STATUS_INVALID_PARAMETER;
+			else
+			{
+				// Set the output value type :
+				if (Type != nullptr)
+					*Type = info->value_type; // REG_DWORD;
+
+				// Clear the output value buffer :
+				memset(info->value_addr, 0, result_length);
+				// Copy the input value buffer into the emulated EEPROM value :
+				memcpy(info->value_addr, Value, ValueLength);
+			}
+		}
+	}
+	else
+	{
+		LOG_UNIMPLEMENTED();
+		ret = STATUS_OBJECT_NAME_NOT_FOUND;
+	}
 
 	RETURN(STATUS_SUCCESS);
 }

@@ -143,17 +143,17 @@ struct X_XACTSoundCue
 // ******************************************************************
 // * EmuXACTEngineCreate
 // ******************************************************************
-HRESULT WINAPI EmuXACTEngineCreate( X_XACT_RUNTIME_PARAMETERS* pParams, X_XACTEngine** ppEngine );
+HRESULT WINAPI EMUPATCH(XACTEngineCreate)( X_XACT_RUNTIME_PARAMETERS* pParams, X_XACTEngine** ppEngine );
 
 // ******************************************************************
 // * EmuXACTEngineDoWork
 // ******************************************************************
-void WINAPI EmuXACTEngineDoWork();
+void WINAPI EMUPATCH(XACTEngineDoWork)();
 
 // ******************************************************************
 // * EmuIXACTEngine_RegisterWaveBank
 // ******************************************************************
-HRESULT WINAPI EmuIXACTEngine_RegisterWaveBank
+HRESULT WINAPI EMUPATCH(IXACTEngine_RegisterWaveBank)
 (
 	X_XACTEngine*		pThis,
 	LPVOID				pvData,
@@ -164,7 +164,7 @@ HRESULT WINAPI EmuIXACTEngine_RegisterWaveBank
 // ******************************************************************
 // * EmuIXACTEngine_RegisterStreamedWaveBank
 // ******************************************************************
-HRESULT WINAPI EmuIXACTEngine_RegisterStreamedWaveBank
+HRESULT WINAPI EMUPATCH(IXACTEngine_RegisterStreamedWaveBank)
 (
 	X_XACTEngine*							pThis,
 	X_XACT_WAVEBANK_STREAMING_PARAMETERS*	pParams,
@@ -174,7 +174,7 @@ HRESULT WINAPI EmuIXACTEngine_RegisterStreamedWaveBank
 // ******************************************************************
 // * EmuIXACTEngine_CreateSoundBank
 // ******************************************************************
-HRESULT WINAPI EmuIXACTEngine_CreateSoundBank
+HRESULT WINAPI EMUPATCH(IXACTEngine_CreateSoundBank)
 (
 	X_XACTEngine*		pThis,
 	LPVOID				pvData,
@@ -185,7 +185,7 @@ HRESULT WINAPI EmuIXACTEngine_CreateSoundBank
 // ******************************************************************
 // * EmuIXACTEngine_DownloadEffectsImage
 // ******************************************************************
-HRESULT WINAPI EmuIXACTEngine_DownloadEffectsImage
+HRESULT WINAPI EMUPATCH(IXACTEngine_DownloadEffectsImage)
 (
 	X_XACTEngine*		pThis,
 	PVOID				pvData,
@@ -197,7 +197,7 @@ HRESULT WINAPI EmuIXACTEngine_DownloadEffectsImage
 // ******************************************************************
 // * EmuIXACTEngine_CreateSoundSource
 // ******************************************************************
-HRESULT WINAPI EmuIXACTEngine_CreateSoundSource
+HRESULT WINAPI EMUPATCH(IXACTEngine_CreateSoundSource)
 (
 	X_XACTEngine*		pThis,
 	DWORD				dwFlags,
@@ -207,7 +207,7 @@ HRESULT WINAPI EmuIXACTEngine_CreateSoundSource
 // ******************************************************************
 // * EmuIXACTEngine_EnableHeadphones
 // ******************************************************************
-HRESULT WINAPI EmuIXACTEngine_EnableHeadphones
+HRESULT WINAPI EMUPATCH(IXACTEngine_EnableHeadphones)
 (
 	X_XACTEngine*		pThis,
 	BOOL				fEnabled
@@ -216,7 +216,7 @@ HRESULT WINAPI EmuIXACTEngine_EnableHeadphones
 // ******************************************************************
 // * EmuIXACTEngine_SetListenerOrientation
 // ******************************************************************
-HRESULT WINAPI EmuIXACTEngine_SetListenerOrientation
+HRESULT WINAPI EMUPATCH(IXACTEngine_SetListenerOrientation)
 (
 	X_XACTEngine*	pThis,
 	float			xFront,
@@ -231,7 +231,7 @@ HRESULT WINAPI EmuIXACTEngine_SetListenerOrientation
 // ******************************************************************
 // * EmuIXACTEngine_SetListenerPosition
 // ******************************************************************
-HRESULT WINAPI EmuIXACTEngine_SetListenerPosition
+HRESULT WINAPI EMUPATCH(IXACTEngine_SetListenerPosition)
 (
 	X_XACTEngine*	pThis,
 	float			x,
@@ -243,7 +243,7 @@ HRESULT WINAPI EmuIXACTEngine_SetListenerPosition
 // ******************************************************************
 // * EmuIXACTEngine_SetListenerVelocity
 // ******************************************************************
-HRESULT WINAPI EmuIXACTEngine_SetListenerVelocity
+HRESULT WINAPI EMUPATCH(IXACTEngine_SetListenerVelocity)
 (
 	X_XACTEngine*	pThis,
 	float			x,
@@ -255,7 +255,7 @@ HRESULT WINAPI EmuIXACTEngine_SetListenerVelocity
 // ******************************************************************
 // * EmuIXACTEngine_SetMasterVolume
 // ******************************************************************
-HRESULT WINAPI EmuIXACTEngine_SetMasterVolume
+HRESULT WINAPI EMUPATCH(IXACTEngine_SetMasterVolume)
 (
 	X_XACTEngine*	pThis,
     WORD			wCategory,
@@ -265,12 +265,12 @@ HRESULT WINAPI EmuIXACTEngine_SetMasterVolume
 // ******************************************************************
 // * EmuIXACTEngine_CommitDeferredSettings
 // ******************************************************************
-HRESULT WINAPI EmuIXACTEngine_CommitDeferredSettings(X_XACTEngine* pThis);
+HRESULT WINAPI EMUPATCH(IXACTEngine_CommitDeferredSettings)(X_XACTEngine* pThis);
 
 // ******************************************************************
 // * EmuIXACTSoundBank_GetSoundCueIndexFromFriendlyName
 // ******************************************************************
-HRESULT WINAPI EmuIXACTSoundBank_GetSoundCueIndexFromFriendlyName
+HRESULT WINAPI EMUPATCH(IXACTSoundBank_GetSoundCueIndexFromFriendlyName)
 (
 	X_XACTEngine*		pThis,
 	PCSTR				pFriendlyName,
@@ -280,7 +280,7 @@ HRESULT WINAPI EmuIXACTSoundBank_GetSoundCueIndexFromFriendlyName
 // ******************************************************************
 // * EmuIXACTSoundBank_Play
 // ******************************************************************
-HRESULT WINAPI EmuIXACTSoundBank_Play
+HRESULT WINAPI EMUPATCH(IXACTSoundBank_Play)
 (
 	X_XACTSoundBank*	pThis,
 	DWORD				dwSoundCueIndex,
@@ -292,7 +292,7 @@ HRESULT WINAPI EmuIXACTSoundBank_Play
 // ******************************************************************
 // * EmuIXACTSoundBank_Stop
 // ******************************************************************
-HRESULT WINAPI EmuIXACTSoundBank_Stop
+HRESULT WINAPI EMUPATCH(IXACTSoundBank_Stop)
 (
 	X_XACTSoundBank*	pThis,
 	DWORD				dwSoundCueIndex,
@@ -303,7 +303,7 @@ HRESULT WINAPI EmuIXACTSoundBank_Stop
 // ******************************************************************
 // * EmuIXACTSoundSource_SetPosition
 // ******************************************************************
-HRESULT WINAPI EmuIXACTSoundSource_SetPosition
+HRESULT WINAPI EMUPATCH(IXACTSoundSource_SetPosition)
 (
 	X_XACTSoundSource*	pThis,
     FLOAT				x,
@@ -315,7 +315,7 @@ HRESULT WINAPI EmuIXACTSoundSource_SetPosition
 // ******************************************************************
 // * EmuIXACTSoundSource_SetVelocity
 // ******************************************************************
-HRESULT WINAPI EmuIXACTSoundSource_SetVelocity
+HRESULT WINAPI EMUPATCH(IXACTSoundSource_SetVelocity)
 (
 	X_XACTSoundSource*	pThis,
     FLOAT				x,
@@ -327,7 +327,7 @@ HRESULT WINAPI EmuIXACTSoundSource_SetVelocity
 // ******************************************************************
 // * EmuIXACTEngine_RegisterNotification
 // ******************************************************************
-HRESULT WINAPI EmuIXACTEngine_RegisterNotification
+HRESULT WINAPI EMUPATCH(IXACTEngine_RegisterNotification)
 (
 	X_XACTEngine*					pThis,
     PCXACT_NOTIFICATION_DESCRIPTION pNotificationDesc
@@ -336,7 +336,7 @@ HRESULT WINAPI EmuIXACTEngine_RegisterNotification
 // ******************************************************************
 // * EmuIXACTEngine_GetNotification
 // ******************************************************************
-HRESULT WINAPI EmuIXACTEngine_GetNotification
+HRESULT WINAPI EMUPATCH(IXACTEngine_GetNotification)
 (
 	X_XACTEngine*					pThis,
     PCXACT_NOTIFICATION_DESCRIPTION pNotificationDesc,
@@ -346,7 +346,7 @@ HRESULT WINAPI EmuIXACTEngine_GetNotification
 // ******************************************************************
 // * EmuIXACTEngine_UnRegisterWaveBank
 // ******************************************************************
-HRESULT WINAPI EmuIXACTEngine_UnRegisterWaveBank
+HRESULT WINAPI EMUPATCH(IXACTEngine_UnRegisterWaveBank)
 (
 	X_XACTEngine*	pThis,
     X_XACTWaveBank*	pWaveBank

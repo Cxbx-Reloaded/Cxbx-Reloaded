@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -69,9 +71,9 @@ static BOOL				g_bXInputInitialized = FALSE;
 
 
 // ******************************************************************
-// * func: EmuXInputPCPoll
+// * patch: XInputPCPoll
 // ******************************************************************
-/*void XTL::EmuXInputPCPoll( XTL::PXINPUT_STATE Controller )
+/*void XTL::EMUPATCH(XInputPCPoll)( XTL::PXINPUT_STATE Controller )
 {
 	//
 	// Get the PC's XInput values

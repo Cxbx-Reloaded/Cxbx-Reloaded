@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -34,30 +36,38 @@
 
 #include "Common/Error.h"
 
-#include <cstring>
+const std::string& Error::GetError()
+{
+    return m_strError;
+}
 
-// clear the current error (returns false if error was fatal)
+bool Error::HasError() const
+{
+    return HasFatalError() || !m_strError.empty();
+}
+
+bool Error::HasFatalError() const
+{
+    return m_bFatal;
+}
+
 bool Error::ClearError()
 {
-    if(m_bFatal) { return false; }
+    if (m_bFatal) { return false; }
 
-    delete[] m_szError;
-
-    m_szError = 0;
-
-    m_bFatal  = false;
+    m_strError.clear();
+    m_bFatal = false;
 
     return true;
 }
 
-// protected so only derived class may set an error
-void Error::SetError(const char *x_szError, bool x_bFatal)
+void Error::SetError(const std::string& strError)
 {
-    if(m_szError == 0) { m_szError = new char[256]; }
+    m_strError = strError;
+}
 
-    strncpy(m_szError, x_szError, 255);
-
-    m_bFatal = x_bFatal;
-
-    return;
+void Error::SetFatalError(const std::string& strError)
+{
+    m_strError = strError;
+    m_bFatal = true;
 }

@@ -31,14 +31,14 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef D3D8_1_0_4034_H
-#define D3D8_1_0_4034_H
+#ifndef D3D8_4034_H
+#define D3D8_4034_H
 
 #include "OOVPA.h"
 
-extern SOOVPA<14> IDirect3DDevice8_SetRenderState_CullMode_1_0_4034;
+extern SOOVPA<14> D3DDevice_SetRenderState_CullMode_4034;
 
-extern OOVPATable D3D8_1_0_4034[];
-extern uint32     D3D8_1_0_4034_SIZE;
+extern OOVPATable D3D8_4034[];
+extern uint32     D3D8_4034_SIZE;
 
 #endif

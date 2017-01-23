@@ -80,7 +80,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..\..\import\OpenXDK;..\..\import\zydis\Zydis;..\..\src;..\..\src\Common;..\..\src\Common\Win32;..\..\import\OpenXDK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\src;..\..\src\Common;..\..\src\Common\Win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;CXBXKRNL_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -94,7 +94,7 @@
       <AdditionalIncludeDirectories>Include\Win32\CxbxKrnl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>Shlwapi.lib;Zydis.lib;legacy_stdio_definitions.lib;dxerr8.lib;xinput.lib;ws2_32.lib;dsound.lib;winmm.lib;ddraw.lib;d3dx8.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Shlwapi.lib;legacy_stdio_definitions.lib;dxerr8.lib;xinput.lib;ws2_32.lib;dsound.lib;winmm.lib;ddraw.lib;d3dx8.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;dbghelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>libci.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -103,14 +103,13 @@
       <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <LargeAddressAware>false</LargeAddressAware>
-      <AdditionalLibraryDirectories>..\..\import\zydis\Build\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\import\distorm\lib\Win32\;..\..\import\glew-2.0.0\lib\Release\Win32\</AdditionalLibraryDirectories>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Bscmake>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy $(SolutionDir)..\..\import\glew-2.0.0\bin\Release\Win32\glew32.dll $(TargetDir)</Command>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -123,10 +122,10 @@
       </TreatOutputAsContent>
     </CustomBuildStep>
     <PreBuildEvent>
-      <Command>$(SolutionDir)Version.bat $(SolutionDir)..\..\src\Version.h</Command>
+      <Command>CALL "$(SolutionDir)Version.bat" "$(SolutionDir)..\..\src\Version.h"</Command>
     </PreBuildEvent>
     <PreBuildEvent>
-      <Message>Build Version.ini</Message>
+      <Message>Generate version header</Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -141,7 +140,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\src\Common;..\..\import\zydis\Zydis;..\..\import\OpenXDK\include;..\..\src;..\..\src\Common\Win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\import\OpenXDK\include;..\..\import\distorm\include;..\..\import\glew-2.0.0\include;..\..\src;..\..\src\Common;..\..\src\Common\Win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;CXBXKRNL_EXPORTS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -156,7 +155,7 @@
       <AdditionalIncludeDirectories>Include\Win32\CxbxKrnl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>Shlwapi.lib;Zydis.lib;legacy_stdio_definitions.lib;dxerr8.lib;xinput.lib;ws2_32.lib;dsound.lib;winmm.lib;ddraw.lib;d3dx8.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;dbghelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Shlwapi.lib;legacy_stdio_definitions.lib;dxerr8.lib;xinput.lib;ws2_32.lib;dsound.lib;winmm.lib;ddraw.lib;d3dx8.lib;d3d8.lib;dinput8.lib;dxguid.lib;odbc32.lib;odbccp32.lib;dbghelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreSpecificDefaultLibraries>libci.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -168,14 +167,13 @@
       <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <LargeAddressAware>false</LargeAddressAware>
-      <AdditionalLibraryDirectories>..\..\import\zydis\Build\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\import\distorm\lib\Win32\;..\..\import\glew-2.0.0\lib\Release\Win32\</AdditionalLibraryDirectories>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </Bscmake>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy $(SolutionDir)..\..\import\glew-2.0.0\bin\Release\Win32\glew32.dll $(TargetDir)</Command>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -188,19 +186,22 @@
       </TreatOutputAsContent>
     </CustomBuildStep>
     <PreBuildEvent>
-      <Command>$(SolutionDir)Version.bat $(SolutionDir)..\..\src\Version.h</Command>
+      <Command>CALL "$(SolutionDir)Version.bat" "$(SolutionDir)..\..\src\Version.h"</Command>
     </PreBuildEvent>
     <PreBuildEvent>
-      <Message>Build Version.ini</Message>
+      <Message>Generate version header</Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\Common\Error.h" />
     <ClInclude Include="..\..\src\Common\Logging.h" />
     <ClInclude Include="..\..\src\Common\Win32\AlignPosfix1.h" />
     <ClInclude Include="..\..\src\Common\Win32\AlignPrefix1.h" />
+    <ClInclude Include="..\..\src\Common\Xbe.h" />
     <ClInclude Include="..\..\src\Cxbx.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\CxbxKrnl.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\DbgConsole.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\device.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\Emu.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuAlloc.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8.h" />
@@ -221,9 +222,11 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXInput.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXOnline.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuXTL.h" />
-    <ClInclude Include="..\..\src\Common\Error.h" />
-    <ClInclude Include="..\..\src\Common\Exe.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5558.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4721.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.4627.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5558.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEIntercept.h" />
     <ClInclude Include="..\..\src\Common\Win32\Mutex.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\LibRc4.h" />
@@ -231,7 +234,6 @@
     <ClInclude Include="..\..\src\CxbxKrnl\OOVPA.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\ResourceTracker.h" />
     <ClInclude Include="..\..\src\Common\Win32\XBController.h" />
-    <ClInclude Include="..\..\src\Common\Xbe.h" />
     <ClInclude Include="..\..\src\Common\Win32\XBVideo.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.3925.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4034.h" />
@@ -241,6 +243,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5233.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5788.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.5849.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.3936.h" />
@@ -249,6 +252,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4432.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4627.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5233.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5788.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5849.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4627.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.h" />
@@ -259,6 +263,7 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5233.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5558.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5788.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5849.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.3911.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4034.h" />
@@ -267,11 +272,13 @@
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4627.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5233.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5558.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5788.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5849.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.3911.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4361.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4627.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5233.h" />
+    <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5788.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5849.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\Convert.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\PixelShader.h" />
@@ -279,9 +286,6 @@
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\State.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\VertexBuffer.h" />
     <ClInclude Include="..\..\src\CxbxKrnl\EmuD3D8\VertexShader.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuXBAudio\XboxAdpcm.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuXBAudio\XSoundBank.h" />
-    <ClInclude Include="..\..\src\CxbxKrnl\EmuXBAudio\XWaveBank.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resource\Cxbx.ico" />
@@ -325,17 +329,33 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuildStep>
+    <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5788.inl">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuildStep>
     <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.inl">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuildStep>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.3925.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4034.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4134.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4361.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4432.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.4627.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5233.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5558.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5788.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8.1.0.5849.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\D3D8LTCG.1.0.5849.inl" />
     <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.3936.inl">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuildStep>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.3936.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4134.inl" />
     <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4361.inl">
       <FileType>Document</FileType>
@@ -362,11 +382,22 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuildStep>
+    <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5788.inl">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuildStep>
     <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5849.inl">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuildStep>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4361.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4432.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.4627.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5233.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5558.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\DSound.1.0.5849.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XactEng.1.0.4627.inl" />
     <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.inl">
       <FileType>Document</FileType>
@@ -408,11 +439,26 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuildStep>
+    <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5788.inl">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuildStep>
     <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5849.inl">
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuildStep>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.3911.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4034.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4134.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4361.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4432.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4627.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.4721.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5233.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5558.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\Xapi.1.0.5849.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.3911.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4034.inl" />
     <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4361.inl">
@@ -420,6 +466,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuildStep>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4361.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4432.inl" />
     <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4627.inl">
       <FileType>Document</FileType>
@@ -436,6 +483,14 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuildStep>
+    <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5788.inl">
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </CustomBuildStep>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.4627.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5233.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5558.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XG.1.0.5849.inl" />
     <CustomBuildStep Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.3911.inl">
       <FileType>Document</FileType>
@@ -447,8 +502,12 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </CustomBuildStep>
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.3911.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XNet.1.0.4627.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4361.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.4627.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5233.inl" />
+    <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5558.inl" />
     <None Include="..\..\src\CxbxKrnl\HLEDataBase\XOnline.1.0.5849.inl" />
   </ItemGroup>
   <ItemGroup>
@@ -460,8 +519,9 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\Common\Exe.cpp" />
+    <ClCompile Include="..\..\src\Common\Error.cpp" />
     <ClCompile Include="..\..\src\Common\Logging.cpp" />
+    <ClCompile Include="..\..\src\Common\Xbe.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\CxbxKrnl.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -474,6 +534,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src\CxbxKrnl\device.cpp" />
     <ClCompile Include="..\..\src\CxbxKrnl\Emu.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -574,12 +635,6 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\Common\Error.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
     <ClCompile Include="..\..\src\CxbxKrnl\HLEDataBase.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -623,12 +678,6 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\Common\Xbe.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
     <ClCompile Include="..\..\src\Common\Win32\XBVideo.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -666,9 +715,6 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuXBAudio\XboxAdpcm.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuXBAudio\XSoundBank.cpp" />
-    <ClCompile Include="..\..\src\CxbxKrnl\EmuXBAudio\XWaveBank.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

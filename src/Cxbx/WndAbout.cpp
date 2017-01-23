@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -33,7 +35,8 @@
 // ******************************************************************
 #include "WndAbout.h"
 #include "ResCxbx.h"
-#include "jpegdec/jpegdec.h"
+
+#include "stb_image.h"
 
 #include <cstdio>
 
@@ -83,7 +86,7 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
                 uint32 difW = (wRect.right  - wRect.left) - (cRect.right);
                 uint32 difH = (wRect.bottom - wRect.top)  - (cRect.bottom);
 
-                MoveWindow(hwnd, wRect.left, wRect.top, difW + 400, difH + 300, TRUE);
+                MoveWindow(hwnd, wRect.left, wRect.top, difW + m_w, difH + m_h, TRUE);
             }
 
             EnableWindow(m_parent, FALSE);
@@ -94,19 +97,31 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
             m_hFont = CreateFont(nHeight, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_ROMAN, "Verdana");
 
-            m_BackBmp = CreateCompatibleBitmap(hDC, 400, 300);
+            m_BackBmp = CreateCompatibleBitmap(hDC, m_w, m_h);
 
             // decompress jpeg, convert to bitmap resource
             {
                 HRSRC hSrc = FindResource(NULL, MAKEINTRESOURCE(IDR_JPEG_ABOUT), "JPEG");
                 HGLOBAL hRes = LoadResource(NULL, hSrc);
-                uint08 *jpgData = (uint08*)LockResource(hRes);
 
+                uint08 *jpgData = (uint08*)LockResource(hRes);
                 uint32 jpgFileSize = SizeofResource(NULL, hSrc);
                 uint32 bmpFileSize = 0;
-                uint32 bmpWidth, bmpHeight;
+                uint32 bmpWidth = 0;
+                uint32 bmpHeight = 0;
 
-                uint08 *bmpBuff = jpeg2bmp(jpgData, jpgFileSize, &bmpFileSize, &bmpWidth, &bmpHeight);
+                uint08 *bmpBuff = reinterpret_cast<uint08*>
+                (
+                    stbi_load_from_memory
+                    (
+                        reinterpret_cast<const stbi_uc*>(jpgData),
+                        static_cast<int>(jpgFileSize),
+                        reinterpret_cast<int*>(&bmpWidth),
+                        reinterpret_cast<int*>(&bmpHeight),
+                        nullptr,
+                        STBI_rgb
+                    )
+                );
 
                 // create bitmap
                 {
@@ -114,7 +129,7 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
                     BmpInfo.bmiHeader.biSize          = sizeof(BITMAPINFO) - sizeof(RGBQUAD);
                     BmpInfo.bmiHeader.biWidth         = bmpWidth;
-                    BmpInfo.bmiHeader.biHeight        = 0 - (int)bmpHeight;
+                    BmpInfo.bmiHeader.biHeight        = 0 - (long)bmpHeight;
                     BmpInfo.bmiHeader.biPlanes        = 1;
                     BmpInfo.bmiHeader.biBitCount      = 24;
                     BmpInfo.bmiHeader.biCompression   = BI_RGB;
@@ -127,8 +142,9 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
                     SetDIBits(hDC, m_BackBmp, 0, bmpHeight, bmpBuff, &BmpInfo, DIB_RGB_COLORS);
                 }
 
-                free(bmpBuff);
+                stbi_image_free(bmpBuff);
 
+                FreeResource(hRes);
                 UnlockResource(hRes);
             }
 
@@ -153,7 +169,7 @@ LRESULT CALLBACK WndAbout::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
             HGDIOBJ OrgObj = SelectObject(hDC, m_hFont);
 
             // draw bitmap
-            BitBlt(hDC, 0, 0, 400, 300, m_BackDC, 0, 0, SRCCOPY);
+            BitBlt(hDC, 0, 0, m_w, m_h, m_BackDC, 0, 0, SRCCOPY);
 
             SelectObject(hDC, OrgObj);
 

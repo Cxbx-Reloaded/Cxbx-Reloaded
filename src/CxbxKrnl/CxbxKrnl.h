@@ -46,11 +46,29 @@
 extern "C" {
 #endif
 
-#define XBOX_MEMORY_SIZE 128 * 1024 * 1024
+/*! xbaddr is the type of a physical address */
+typedef uint32 xbaddr;
 
+#define XBADDR_BITS 32
+#define XBADDR_MAX UINT32_MAX
+
+/*! memory size per system */
+#define XBOX_MEMORY_SIZE 64 * 1024 * 1024
+#define CHIHIRO_MEMORY_SIZE 128 * 1024 * 1024
+
+/*! maximum memory size our emulator must support */
+#define EMU_MAX_MEMORY_SIZE CHIHIRO_MEMORY_SIZE
+
+/*! base addresses of various components */
+#define XBOX_BASE_ADDR 0x00010000
 #define XBOX_KERNEL_BASE 0x80010000
 #define XBOX_NV2A_INIT_VECTOR 0xFF000008
 
+/*! base address of Cxbx host executable, see Cxbx project options, Linker, Advanced, Base Address */
+#define CXBX_BASE_ADDR XBOX_BASE_ADDR
+
+#define MAX_BUS_INTERRUPT_LEVEL 27
+#define MAX_NUM_INTERRUPTS 256
 
 /*! validate version string match */
 CXBXKRNL_API bool CxbxKrnlVerifyVersion(const char *szVersion);
@@ -81,6 +99,8 @@ CXBXKRNL_API void CxbxKrnlPanic();
 
 /*! empty function */
 CXBXKRNL_API void CxbxKrnlNoFunc();
+
+CXBXKRNL_API void CxbxInitPerformanceCounters(); // Implemented in EmuKrnlKe.cpp
 
 /*! kernel thunk table */
 extern CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379];

@@ -40,6 +40,12 @@
 
 #include <memory.h>
 
+enum {
+	LLE_APU = 1 << 0,
+	LLE_GPU = 1 << 1,
+	LLE_JIT = 1 << 2,
+};
+
 // ******************************************************************
 // * EmuShared : Shared memory
 // ******************************************************************
@@ -80,6 +86,12 @@ class EmuShared : public Mutex
         CXBXKRNL_API void GetXbePath(      char *path) { Lock(); strcpy(path, m_XbePath); Unlock(); }
         CXBXKRNL_API void SetXbePath(const char *path) { Lock(); strcpy(m_XbePath, path); Unlock(); }
 
+		// ******************************************************************
+		// * LLE Flags Accessors
+		// ******************************************************************
+		CXBXKRNL_API void GetFlagsLLE(      int *flags) { Lock(); *flags = m_FlagsLLE; Unlock(); }
+		CXBXKRNL_API void SetFlagsLLE(const int *flags) { Lock(); m_FlagsLLE = *flags; Unlock(); }
+
     private:
         // ******************************************************************
         // * Shared configuration
@@ -87,6 +99,7 @@ class EmuShared : public Mutex
         XBController m_XBController;
         XBVideo      m_XBVideo;
         char         m_XbePath[MAX_PATH];
+		int          m_FlagsLLE;
 };
 
 // ******************************************************************

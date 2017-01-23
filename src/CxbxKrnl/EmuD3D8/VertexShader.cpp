@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -532,7 +534,7 @@ static void VshParseInstruction(uint32                 *pShaderToken,
         pInstruction->A.Address = ConvertCRegister(VshGetField(pShaderToken, FLD_CONST));
         break;
     default:
-        EmuWarning("Invalid instruction, parameter A type unknown %d\n", pInstruction->A.ParameterType);
+        EmuWarning("Invalid instruction, parameter A type unknown %d", pInstruction->A.ParameterType);
         return;
     }
     pInstruction->A.Neg = VshGetField(pShaderToken, FLD_A_NEG);
@@ -1298,7 +1300,7 @@ static boolean VshConvertShader(VSH_XBOX_SHADER *pShader,
             if(pIntermediate->Output.Type != IMD_OUTPUT_R)
             {
                 // TODO: Complete dph support
-                EmuWarning("Can't simulate dph for other than output r registers (yet)\n");
+                EmuWarning("Can't simulate dph for other than output r registers (yet)");
 
 				// attempt to find unused register...
 				int outRegister = -1;
@@ -1571,7 +1573,7 @@ static void VshConvertToken_NOP(DWORD *pToken)
     // D3DVSD_NOP
     if(*pToken != DEF_VSH_NOP)
     {
-        EmuWarning("Token NOP found, but extra parameters are given!\n");
+        EmuWarning("Token NOP found, but extra parameters are given!");
     }
     DbgVshPrintf("\tD3DVSD_NOP(),\n");
 }
@@ -1880,7 +1882,7 @@ static void VshConvertToken_STREAMDATA_REG(DWORD          *pToken,
 
     if(NewDataType == 0xFF)
     {
-        EmuWarning("/* WARNING: Fatal type mismatch, no fitting type! */\n");
+        EmuWarning("/* WARNING: Fatal type mismatch, no fitting type! */");
     }
 }
 
@@ -2044,7 +2046,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
             hRet = E_FAIL;
             break;
         default:
-            EmuWarning("Unknown vertex shader version 0x%02X\n", pShaderHeader->Version);
+            EmuWarning("Unknown vertex shader version 0x%02X", pShaderHeader->Version);
             hRet = E_FAIL;
             break;
     }
@@ -2102,8 +2104,8 @@ extern HRESULT XTL::EmuRecompileVshFunction
 
         if (FAILED(hRet))
         {
-            EmuWarning("Couldn't assemble recompiled vertex shader\n");
-			EmuWarning("%s\n", pErrors->GetBufferPointer());
+            EmuWarning("Couldn't assemble recompiled vertex shader");
+			EmuWarning("%s", pErrors->GetBufferPointer());
         }
 
 		if( pErrors )
@@ -2132,7 +2134,7 @@ extern boolean XTL::IsValidCurrentShader(void)
     DWORD Handle;
 
     
-    EmuIDirect3DDevice8_GetVertexShader(&Handle);
+	EMUPATCH(D3DDevice_GetVertexShader)(&Handle);
     
 
 	//printf( "VS = 0x%.08X\n", Handle );

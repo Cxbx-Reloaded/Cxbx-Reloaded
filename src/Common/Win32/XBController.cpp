@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -85,7 +87,7 @@ void XBController::Load(const char *szRegistryKey)
 {
     if(m_CurrentState != XBCTRL_STATE_NONE)
     {
-        SetError("Invalid State", false);
+        SetError("Invalid State");
         return;
     }
 
@@ -150,7 +152,7 @@ void XBController::Save(const char *szRegistryKey)
 {
     if(m_CurrentState != XBCTRL_STATE_NONE)
     {
-        SetError("Invalid State", false);
+        SetError("Invalid State");
         return;
     }
 
@@ -213,7 +215,7 @@ void XBController::ConfigBegin(HWND hwnd, XBCtrlObject object)
 {
     if(m_CurrentState != XBCTRL_STATE_NONE)
     {
-        SetError("Invalid State", false);
+        SetError("Invalid State");
         return;
     }
 
@@ -221,7 +223,7 @@ void XBController::ConfigBegin(HWND hwnd, XBCtrlObject object)
 
     DInputInit(hwnd);
 
-    if(GetError() != 0)
+    if(HasError())
         return;
 
     lPrevMouseX = -1;
@@ -240,7 +242,7 @@ bool XBController::ConfigPoll(char *szStatus)
 {
     if(m_CurrentState != XBCTRL_STATE_CONFIG)
     {
-        SetError("Invalid State", false);
+        SetError("Invalid State");
         return false;
     }
 
@@ -363,7 +365,7 @@ bool XBController::ConfigPoll(char *szStatus)
             // ******************************************************************
             if(dwHow != -1)
             {
-                char *szDirection = (dwFlags & DEVICE_FLAG_AXIS) ? (dwFlags & DEVICE_FLAG_POSITIVE) ? "Positive " : "Negative " : "";
+                const char *szDirection = (dwFlags & DEVICE_FLAG_AXIS) ? (dwFlags & DEVICE_FLAG_POSITIVE) ? "Positive " : "Negative " : "";
 
                 m_InputDevice[v].m_Device->GetDeviceInfo(&DeviceInstance);
 
@@ -508,8 +510,8 @@ bool XBController::ConfigPoll(char *szStatus)
                 // ******************************************************************
                 if(dwHow != -1)
                 {
-                    char *szDirection = (dwFlags & DEVICE_FLAG_POSITIVE) ? "Positive" : "Negative";
-                    char *szObjName = "Unknown";
+                    const char *szDirection = (dwFlags & DEVICE_FLAG_POSITIVE) ? "Positive" : "Negative";
+                    const char *szObjName = "Unknown";
 
                     ObjectInstance.dwSize = sizeof(ObjectInstance);
 
@@ -538,7 +540,7 @@ void XBController::ConfigEnd()
 {
     if(m_CurrentState != XBCTRL_STATE_CONFIG)
     {
-        SetError("Invalid State", false);
+        SetError("Invalid State");
         return;
     }
 
@@ -558,7 +560,7 @@ void XBController::ListenBegin(HWND hwnd)
 
     if(m_CurrentState != XBCTRL_STATE_NONE)
     {
-        SetError("Invalid State", false);
+        SetError("Invalid State");
         return;
     }
 
@@ -864,7 +866,7 @@ void XBController::ListenEnd()
 {
     if(m_CurrentState != XBCTRL_STATE_LISTEN)
     {
-        SetError("Invalid State", false);
+        SetError("Invalid State");
         return;
     }
 
@@ -914,10 +916,11 @@ void XBController::DInputInit(HWND hwnd)
 
         if(FAILED(hRet))
         {
-            SetError("Could not initialized DirectInput8", true);
+            SetFatalError("Could not initialized DirectInput8");
             return;
         }
     }
+
 
     // ******************************************************************
     // * Create all the devices available (well...most of them)

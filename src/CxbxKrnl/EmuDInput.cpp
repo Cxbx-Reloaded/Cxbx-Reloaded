@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -44,7 +46,7 @@
 static XBController g_XBController;
 
 // ******************************************************************
-// * func: XTL::EmuDInputInit
+// * XTL::EmuDInputInit
 // ******************************************************************
 bool XTL::EmuDInputInit()
 {
@@ -52,14 +54,14 @@ bool XTL::EmuDInputInit()
 
     g_XBController.ListenBegin(g_hEmuWindow);
 
-    if(g_XBController.GetError())
+    if(g_XBController.HasError())
         return false;
 
     return true;
 }
 
 // ******************************************************************
-// * func: XTL::EmuDInputCleanup
+// * XTL::EmuDInputCleanup
 // ******************************************************************
 void XTL::EmuDInputCleanup()
 {
@@ -67,14 +69,14 @@ void XTL::EmuDInputCleanup()
 }
 
 // ******************************************************************
-// * func: XTL::EmuDInputPoll
+// * XTL::EmuDInputPoll
 // ******************************************************************
 void XTL::EmuDInputPoll(XTL::PXINPUT_STATE Controller)
 {
     g_XBController.ListenPoll(Controller);
 
-    if(g_XBController.GetError())
-        MessageBox(NULL, g_XBController.GetError(), "Cxbx-Reloaded [*UNHANDLED!*]", MB_OK);  // TODO: Handle this!
+    if(g_XBController.HasError())
+        MessageBox(NULL, g_XBController.GetError().c_str(), "Cxbx-Reloaded [*UNHANDLED!*]", MB_OK);  // TODO: Handle this!
 
     return;
 }

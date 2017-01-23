@@ -42,18 +42,21 @@ typedef struct _XGPOINT3D
 }
 XGPOINT3D;
 
+/* Leave unpatched
 // ******************************************************************
-// * func: EmuXGIsSwizzledFormat
+// * patch: XGIsSwizzledFormat
 // ******************************************************************
-PVOID WINAPI EmuXGIsSwizzledFormat
+PVOID WINAPI EMUPATCH(XGIsSwizzledFormat)
 (
-    D3DFORMAT       Format
+    X_D3DFORMAT     Format
 );
+*/
 
+/* Leave unpatched
 // ******************************************************************
-// * func: EmuXGSwizzleRect
+// * patch: XGSwizzleRect
 // ******************************************************************
-VOID WINAPI EmuXGSwizzleRect
+VOID WINAPI EMUPATCH(XGSwizzleRect)
 (
     LPCVOID       pSource,
     DWORD         Pitch,
@@ -64,11 +67,12 @@ VOID WINAPI EmuXGSwizzleRect
     CONST LPPOINT pPoint,
     DWORD         BytesPerPixel
 );
+*/
 
 // ******************************************************************
-// * func: EmuXGSwizzleBox
+// * patch: XGSwizzleBox
 // ******************************************************************
-VOID WINAPI EmuXGSwizzleBox
+VOID WINAPI EMUPATCH(XGSwizzleBox)
 (
     LPCVOID          pSource,
     DWORD            RowPitch,
@@ -83,25 +87,9 @@ VOID WINAPI EmuXGSwizzleBox
 );
 
 // ******************************************************************
-// * func: EmuXGUnswizzleRect
+// * patch: XGWriteSurfaceOrTextureToXPR
 // ******************************************************************
-VOID WINAPI EmuXGUnswizzleRect
-(
-    PVOID           pSrcBuffer,
-    DWORD           dwWidth,
-    DWORD           dwHeight,
-    DWORD           dwDepth,
-    PVOID           pDstBuff,
-    DWORD           dwPitch,
-    RECT            rSrc,
-    POINT           poDst,
-    DWORD           dwBPP
-);
-
-// ******************************************************************
-// * func: EmuXGWriteSurfaceOrTextureToXPR
-// ******************************************************************
-HRESULT WINAPI EmuXGWriteSurfaceOrTextureToXPR
+HRESULT WINAPI EMUPATCH(XGWriteSurfaceOrTextureToXPR)
 ( 
 	LPVOID			pResource,
 	const char*		cPath,
@@ -109,15 +97,15 @@ HRESULT WINAPI EmuXGWriteSurfaceOrTextureToXPR
 );
 
 // ******************************************************************
-// * func: EmuXGSetTextureHeader
+// * patch: XGSetTextureHeader
 // ******************************************************************
-VOID	WINAPI EmuXGSetTextureHeader
+VOID	WINAPI EMUPATCH(XGSetTextureHeader)
 (
 	UINT			Width,
 	UINT			Height,
 	UINT			Levels,
 	DWORD			Usage,
-	D3DFORMAT		Format,
+	X_D3DFORMAT		Format,
 	D3DPOOL			Pool,
 	X_D3DTexture*	pTexture,
 	UINT			Data,
@@ -125,9 +113,9 @@ VOID	WINAPI EmuXGSetTextureHeader
 );
 
 // ******************************************************************
-// * func: EmuXFONT_OpenBitmapFontFromMemory 
+// * patch: XFONT_OpenBitmapFontFromMemory 
 // ******************************************************************
-HRESULT WINAPI EmuXFONT_OpenBitmapFontFromMemory 
+HRESULT WINAPI EMUPATCH(XFONT_OpenBitmapFontFromMemory) 
 (
 	CONST void		*pFontData,
 	unsigned		uFontDataSize,

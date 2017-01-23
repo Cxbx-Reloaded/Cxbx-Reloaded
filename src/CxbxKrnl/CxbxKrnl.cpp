@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *    .,-:::::    .,::      .::::::::.    .,::      .:
@@ -43,9 +45,11 @@ namespace xboxkrnl
 
 #include "CxbxKrnl.h"
 #include "Emu.h"
+#include "EmuX86.h"
 #include "EmuFile.h"
 #include "EmuFS.h"
 #include "EmuShared.h"
+#include "EmuNV2A.h" // For InitOpenGLContext
 #include "HLEIntercept.h"
 #include "Exe.h"
 
@@ -77,94 +81,12 @@ static HANDLE g_hThreads[MAXIMUM_XBOX_THREADS] = { 0 };
 std::string CxbxBasePath;
 HANDLE CxbxBasePathHandle;
 Xbe* CxbxKrnl_Xbe = NULL;
-
+XbeType g_XbeType = xtRetail;
+bool g_bIsChihiro = false;
 DWORD_PTR g_CPUXbox = 0;
 DWORD_PTR g_CPUOthers = 0;
 
 HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlInit
-
-static uint32 funcAddr[]=
-{
-    0x001396D1, // -> 0x00139709 (Size : 56 bytes)
-    0x00139709, // -> 0x001397B3 (Size : 170 bytes)
-    0x001397B3, // -> 0x001397BB (Size : 8 bytes)
-    0x001397BB, // -> 0x00139826 (Size : 107 bytes)
-    0x00139826, // -> 0x0013989B (Size : 117 bytes)
-    0x0013989B, // -> 0x00139AA5 (Size : 522 bytes)
-    0x00139AA5, // -> 0x00139C01 (Size : 348 bytes)
-    0x00139C01, // -> 0x00139C57 (Size : 86 bytes)
-    0x00139C57, // -> 0x00139CD6 (Size : 127 bytes)
-//    0x00139CD6, // -> 0x00139CF4 (Size : 30 bytes)
-    0x00139CF4, // -> 0x00139D55 (Size : 97 bytes)
-    0x00139D55, // -> 0x00139D75 (Size : 32 bytes)
-    0x00139D75, // -> 0x00139D93 (Size : 30 bytes)
-    0x00139D93, // -> 0x00139DD7 (Size : 68 bytes)
-    0x00139DD7, // -> 0x00139E57 (Size : 128 bytes)
-    0x00139E57, // -> 0x00139EA9 (Size : 82 bytes)
-    0x00139EA9, // -> 0x00139EBB (Size : 18 bytes)
-    0x00139EBB, // -> 0x00139EC9 (Size : 14 bytes)
-    0x00139EC9, // -> 0x00139FB6 (Size : 237 bytes)
-    0x00139FB6, // -> 0x0013A08C (Size : 214 bytes)
-    0x0013A08C, // -> 0x0013A110 (Size : 132 bytes)
-    0x0013A110, // -> 0x0013A20A (Size : 250 bytes)
-    0x0013A20A, // -> 0x0013A231 (Size : 39 bytes)
-    0x0013A231, // -> 0x0013A26F (Size : 62 bytes)
-    0x0013A26F, // -> 0x0013A2C0 (Size : 81 bytes)
-    0x0013A2C0, // -> 0x0013A2FB (Size : 59 bytes)
-    0x0013A2FB, // -> 0x0013A486 (Size : 395 bytes)
-    0x0013A486, // -> 0x0013A768 (Size : 738 bytes)
-    0x0013A768, // -> 0x0013A787 (Size : 31 bytes)
-    0x0013A787, // -> 0x0013A7AF (Size : 40 bytes)
-    0x0013A7AF, // -> 0x0013A7DD (Size : 46 bytes)
-    0x0013A7DD, // -> 0x0013A7F4 (Size : 23 bytes)
-    0x0013A7F4, // -> 0x0013A859 (Size : 101 bytes)
-    0x0013A859, // -> 0x0013A8BD (Size : 100 bytes)
-    0x0013A8BD, // -> 0x0013A902 (Size : 69 bytes)
-//    0x0013A902, // -> 0x0013A940 (Size : 62 bytes)
-    0x0013A940, // -> 0x0013A9A5 (Size : 101 bytes)
-    0x0013A9A5, // -> 0x0013A9FF (Size : 90 bytes)
-    0x0013A9FF, // -> 0x0013AA3D (Size : 62 bytes)
-    0x0013AA3D, // -> 0x0013AAE3 (Size : 166 bytes)
-    0x0013AAE3, // -> 0x0013AB71 (Size : 142 bytes)
-    0x0013AB71, // -> 0x0013AB93 (Size : 34 bytes)
-    0x0013AB93, // -> 0x0013ABB8 (Size : 37 bytes)
-    0x0013ABB8, // -> 0x0013ABC0 (Size : 8 bytes)
-    0x0013ABC0, // -> 0x0013ABE9 (Size : 41 bytes)
-    0x0013ABE9, // -> 0x0013AC35 (Size : 76 bytes)
-    0x0013AC35, // -> 0x0013AC79 (Size : 68 bytes)
-    0x0013AC79, // -> 0x0013AC9E (Size : 37 bytes)
-    0x0013AC9E, // -> 0x0013ACA3 (Size : 5 bytes)
-    0x0013ACA3, // -> 0x0013ACBA (Size : 23 bytes)
-    0x0013ACBA, // -> 0x0013ACCD (Size : 19 bytes)
-    0x0013ACCD, // -> 0x0013ADA7 (Size : 218 bytes)
-    0x0013ADA7, // -> 0x0013ADEC (Size : 69 bytes)
-    0x0013ADEC, // -> 0x0013AEFF (Size : 275 bytes)
-    0x0013AEFF, // -> 0x0013AF6B (Size : 108 bytes)
-    0x0013AF6B, // -> 0x0013AFF9 (Size : 142 bytes)
-    0x0013AFF9, // -> 0x0013B065 (Size : 108 bytes)
-    0x0013B065, // -> 0x0013B172 (Size : 269 bytes)
-    0x0013B172, // -> 0x0013B1C3 (Size : 81 bytes)
-    0x0013B1C3, // -> 0x0013B1F5 (Size : 50 bytes)
-    0x0013B1F5, // -> 0x0013B257 (Size : 98 bytes)
-    0x0013B257, // -> 0x0013B2C9 (Size : 114 bytes)
-    0x0013B2C9, // -> 0x0013B304 (Size : 59 bytes)
-    0x0013B304, // -> 0x0013B37F (Size : 123 bytes)
-    0x0013B37F, // -> 0x0013B399 (Size : 26 bytes)
-    0x0013B399, // -> 0x0013B3F6 (Size : 93 bytes)
-    0x0013B3F6, // -> 0x0013B40A (Size : 20 bytes)
-    0x0013B40A, // -> 0x0013B4FE (Size : 244 bytes)
-    0x0013B4FE, // -> 0x0013B702 (Size : 516 bytes)
-    0x0013B702, // -> 0x0013B7ED (Size : 235 bytes)
-    0x0013B7ED, // -> 0x0013B84A (Size : 93 bytes)
-    0x0013B84A, // -> 0x0013B8E9 (Size : 159 bytes)
-    0x0013B8E9, // -> 0x0013B8FD (Size : 20 bytes)
-    0x0013B8FD, // -> 0x0013B98F (Size : 146 bytes)
-    0x0013B98F, // -> 0x0013B9D3 (Size : 68 bytes)
-    0x0013B9D3, // -> 0x0013BB5E (Size : 395 bytes)
-    0x0013BB5E, // -> 0x0013BBDC (Size : 126 bytes)
-    0x0013BBDC, // -> 0x0013BC38 (Size : 92 bytes)
-    0x0013BC38, // -> 0x0013BE9B (Size : 611 bytes)
-};
 
 extern "C" CXBXKRNL_API bool CxbxKrnlVerifyVersion(const char *szVersion)
 {
@@ -174,42 +96,29 @@ extern "C" CXBXKRNL_API bool CxbxKrnlVerifyVersion(const char *szVersion)
     return true;
 }
 
+// ported from Dxbx's XbeExplorer
+XbeType GetXbeType(Xbe::Header *pXbeHeader)
+{
+	// Detect if the XBE is for Chihiro (Untested!) :
+	// This is based on https://github.com/radare/radare2/blob/master/libr/bin/p/bin_xbe.c#L45
+	if ((pXbeHeader->dwEntryAddr & 0xf0000000) == 0x40000000)
+		return xtChihiro;
+
+	// Check for Debug XBE, using high bit of the kernel thunk address :
+	// (DO NOT test like https://github.com/radare/radare2/blob/master/libr/bin/p/bin_xbe.c#L49 !)
+	if ((pXbeHeader->dwKernelImageThunkAddr & 0x80000000) > 0)
+		return xtDebug;
+
+	// Otherwise, the XBE is a Retail build :
+	return xtRetail;
+}
+
 
 void CxbxLaunchXbe(void(*Entry)())
 {
-	//
-	// Xbe entry point
-	//
-
 	__try
 	{
-					   // _USE_XGMATH Disabled in mesh :[
-					   // halo : dword_0_2E2D18
-					   // halo : 1744F0 (bink)
-					   //_asm int 3;
-
-					   /*
-					   for(int v=0;v<sizeof(funcAddr)/sizeof(uint32);v++)
-					   {
-					   bool bExclude = false;
-					   for(int r=0;r<sizeof(funcExclude)/sizeof(uint32);r++)
-					   {
-					   if(funcAddr[v] == funcExclude[r])
-					   {
-					   bExclude = true;
-					   break;
-					   }
-					   }
-
-					   if(!bExclude)
-					   {
-					   *(uint08*)(funcAddr[v]) = 0xCC;
-					   }
-					   }
-					   //*/
-
 		Entry();
-
 		
 	}
 	__except (EmuException(GetExceptionInformation()))
@@ -218,6 +127,11 @@ void CxbxLaunchXbe(void(*Entry)())
 	}
 
 }
+
+// Entry point address XOR keys per Xbe type (Retail, Debug or Chihiro) :
+const DWORD XOR_EP_KEY[3] = { XOR_EP_RETAIL, XOR_EP_DEBUG, XOR_EP_CHIHIRO };
+// Kernel thunk address XOR keys per Xbe type (Retail, Debug or Chihiro) :
+const DWORD XOR_KT_KEY[3] = { XOR_KT_RETAIL, XOR_KT_DEBUG, XOR_KT_CHIHIRO };
 
 extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 {
@@ -239,8 +153,8 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 	}
 	
 
-	// Read EXE Header Data
-	Exe::DOSHeader* ExeDosHeader = (Exe::DOSHeader*)0x10000;
+	// Read host EXE Header Data
+	Exe::DOSHeader* ExeDosHeader = (Exe::DOSHeader*)CXBX_BASE_ADDR;
 	Exe::Header* ExeNtHeader = (Exe::Header*)((uint32)ExeDosHeader + ExeDosHeader->m_lfanew);
 	Exe::OptionalHeader* ExeOptionalHeader = (Exe::OptionalHeader*)((uint32)ExeNtHeader + sizeof(Exe::Header));
 	DWORD ExeHeaderSize = ExeOptionalHeader->m_sizeof_headers;
@@ -261,7 +175,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 	for (int i = 0; i < ExeNtHeader->m_sections; i++)
 	{
 		// Check if this section will be overwritten:
-		if (ExeSectionHeaders[i].m_virtual_addr + ExeSectionHeaders[i].m_virtual_size < XBOX_MEMORY_SIZE) {
+		if (ExeSectionHeaders[i].m_virtual_addr + ExeSectionHeaders[i].m_virtual_size < EMU_MAX_MEMORY_SIZE) {
 			char* NewSection = (char*)malloc(ExeSectionHeaders[i].m_virtual_size);
 			memcpy(NewSection, (void*)(ExeSectionHeaders[i].m_virtual_addr + (uint32)ExeDosHeader), ExeSectionHeaders[i].m_virtual_size);
 			NewSectionHeaders[i].m_virtual_addr = (uint32)NewSection - (uint32)ExeDosHeader;
@@ -273,21 +187,27 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 		}
 	}
 
-
-
-	DWORD OldProtection;
-	VirtualProtect((void*)0x10000, XBOX_MEMORY_SIZE, PAGE_EXECUTE_READWRITE, &OldProtection);
-
-	// TODO TLS
-
-
-	// Clear out entire memory range
-	ZeroMemory((void*)0x10000, XBOX_MEMORY_SIZE);
-
+	// Load Xbe (this will reside above WinMain's emulated_memory_placeholder) 
 	g_EmuShared->SetXbePath(xbePath.c_str());
 	CxbxKrnl_Xbe = new Xbe(xbePath.c_str());
 	
-	// Load Xbe Headers
+	// Detect XBE type :
+	g_XbeType = GetXbeType(&CxbxKrnl_Xbe->m_Header);
+
+	// Register if we're running an Chihiro executable (otherwise it's an Xbox executable)
+	g_bIsChihiro = (g_XbeType == xtChihiro);
+
+	// Determine memory size accordingly :
+	SIZE_T memorySize = (g_bIsChihiro ? CHIHIRO_MEMORY_SIZE : XBOX_MEMORY_SIZE);
+
+	// Mark the entire emulated memory range accessable
+	DWORD OldProtection;
+	VirtualProtect((void*)XBOX_BASE_ADDR, memorySize - XBOX_BASE_ADDR, PAGE_EXECUTE_READWRITE, &OldProtection);
+
+	// Clear out entire memory range
+	ZeroMemory((void*)XBOX_BASE_ADDR, memorySize - XBOX_BASE_ADDR);
+
+	// Copy over loaded Xbe Header to specified base address
 	memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));	
 	memcpy((void*)(CxbxKrnl_Xbe->m_Header.dwBaseAddr + sizeof(Xbe::Header)), CxbxKrnl_Xbe->m_HeaderEx, CxbxKrnl_Xbe->m_ExSize);
 	
@@ -299,12 +219,9 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 	ConnectWindowsTimersToThunkTable();
 
 	// Fixup Kernel Imports
-	uint32 kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
 
-	if ((kt ^ XOR_KT_DEBUG) > 0x01000000)
-		kt ^= XOR_KT_RETAIL;
-	else
-		kt ^= XOR_KT_DEBUG;
+	uint32 kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
+	kt ^= XOR_KT_KEY[g_XbeType];
 
 	uint32_t* kt_tbl = (uint32_t*)kt;
 
@@ -325,10 +242,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 
 	// Decode Entry Point
 	uint32_t EntryPoint = CxbxKrnl_Xbe->m_Header.dwEntryAddr;
-	if ((EntryPoint ^ XOR_EP_DEBUG) > 0x01000000)
-		EntryPoint ^= XOR_EP_RETAIL;
-	else
-		EntryPoint ^= XOR_EP_DEBUG;
+	EntryPoint ^= XOR_EP_KEY[g_XbeType];
 
 	// Restore the area of the EXE required for WinAPI
 	ExeDosHeader->m_magic = NewDosHeader->m_magic;
@@ -337,7 +251,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 	// Launch XBE
 	CxbxKrnlInit(
 		hWnd, XbeTlsData, XbeTls, CxbxKrnl_Xbe->m_LibraryVersion, DbgMode, 
-		DebugFileName.c_str(), (Xbe::Header*)0x10000, CxbxKrnl_Xbe->m_Header.dwSizeofHeaders, (void(*)())EntryPoint
+		DebugFileName.c_str(), (Xbe::Header*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, CxbxKrnl_Xbe->m_Header.dwSizeofHeaders, (void(*)())EntryPoint
 	);
 }
 
@@ -366,6 +280,8 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 	g_CurrentProcessHandle = GetCurrentProcess();
 
+	CxbxInitPerformanceCounters();
+
 #ifdef _DEBUG
 //	MessageBoxA(NULL, "Attach a Debugger", "DEBUG", 0);
 //  Debug child processes using https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool
@@ -376,15 +292,23 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	{
 		if (AllocConsole())
 		{
+			HANDLE StdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+
+			// Maximise the console scroll buffer height :
+			CONSOLE_SCREEN_BUFFER_INFO coninfo;
+			GetConsoleScreenBufferInfo(StdHandle, &coninfo);
+			coninfo.dwSize.Y = SHRT_MAX - 1; // = 32767-1 = 32766 = maximum value that works
+			SetConsoleScreenBufferSize(StdHandle, coninfo.dwSize);
+
 			freopen("CONOUT$", "wt", stdout);
 			freopen("CONIN$", "rt", stdin);
 
 			SetConsoleTitle("Cxbx-Reloaded : Kernel Debug Console");
 
-			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
+			SetConsoleTextAttribute(StdHandle, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
 
-			printf("EmuMain (0x%X): Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
-			printf("EmuMain (0x%X): Debug Console Allocated (DM_CONSOLE).\n", GetCurrentThreadId());
+			printf("[0x%X] EmuMain: Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
+			printf("[0x%X] EmuMain: Debug Console Allocated (DM_CONSOLE).\n", GetCurrentThreadId());
 		}
 	}
 	else if (DbgMode == DM_FILE)
@@ -393,8 +317,8 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 		freopen(szDebugFilename, "wt", stdout);
 
-		printf("EmuMain (0x%X): Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
-		printf("EmuMain (0x%X): Debug Console Allocated (DM_FILE).\n", GetCurrentThreadId());
+		printf("[0x%X] EmuMain: Cxbx-Reloaded Version %s\n", GetCurrentThreadId(), _CXBX_VERSION);
+		printf("[0x%X] EmuMain: Debug Console Allocated (DM_FILE).\n", GetCurrentThreadId());
 	}
 	else
 	{
@@ -412,9 +336,9 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 
 	{
 #ifdef _DEBUG_TRACE
-		printf("EmuMain (0x%X): Debug Trace Enabled.\n", GetCurrentThreadId());
+		printf("[0x%X] EmuMain: Debug Trace Enabled.\n", GetCurrentThreadId());
 
-		printf("EmuMain (0x%X): CxbxKrnlInit\n"
+		printf("[0x%X] EmuMain: CxbxKrnlInit\n"
 			"(\n"
 			"   hwndParent          : 0x%.08X\n"
 			"   pTLSData            : 0x%.08X\n"
@@ -429,9 +353,13 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 			GetCurrentThreadId(), hwndParent, pTLSData, pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
 
 #else
-		printf("EmuMain (0x%X): Debug Trace Disabled.\n", GetCurrentThreadId());
+		printf("[0x%X] EmuMain: Debug Trace Disabled.\n", GetCurrentThreadId());
 #endif
 	}
+
+#ifdef _DEBUG_TRACE
+	VerifyHLEDataBase();
+#endif
 
 	{
 		// Create a fake kernel header for XapiRestrictCodeSelectorLimit
@@ -460,6 +388,13 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		// as long as this doesn't start with "INIT"
 		strncpy_s((PSTR)DummyKernel->SectionHeader.Name, 8, "DONGS", 8);
 	}
+
+	// Read which components need to be LLE'ed :
+	int CxbxLLE_Flags;
+	g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
+	bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
+	bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
+	bLLE_JIT = (CxbxLLE_Flags & LLE_JIT) > 0;
 
 	// Initialize devices :
 	char szBuffer[MAX_PATH];
@@ -553,23 +488,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	//extern void InitializeSectionStructures(void); 
 	InitializeSectionStructures();
 
-	DbgPrintf("EmuMain (0x%X): Initializing Direct3D.\n", GetCurrentThreadId());
 
-	XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
-
-	EmuHLEIntercept(pLibraryVersion, pXbeHeader);
-
-	//
-	// initialize FS segment selector
-	//
-
-	{
-		EmuInitFS();
-
-		EmuGenerateFS(pTLS, pTLSData);
-	}
-
-	
 	DbgPrintf("EmuMain : Determining CPU affinity.\n");
 
 	// Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
@@ -592,11 +511,42 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		SetThreadAffinityMask(GetCurrentThread(), g_CPUXbox);
 	}
 
-    DbgPrintf("EmuMain (0x%X): Initial thread starting.\n", GetCurrentThreadId());
+	//
+	// initialize grapchics
+	//
+	DbgPrintf("EmuMain: Initializing render window.\n");
+	XTL::CxbxInitWindow(pXbeHeader, dwXbeHeaderSize);
+
+	if (bLLE_GPU)
+	{
+		DbgPrintf("EmuMain: Initializing OpenGL.\n");
+		InitOpenGLContext();
+	}
+	else
+	{
+		DbgPrintf("EmuMain: Initializing Direct3D.\n");
+		XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
+	}
+
+	EmuHLEIntercept(pLibraryVersion, pXbeHeader);
+
+	//
+	// initialize FS segment selector
+	//
+
+	{
+		EmuInitFS();
+
+		EmuGenerateFS(pTLS, pTLSData);
+	}
+
+	EmuX86_Init();
+
+    DbgPrintf("EmuMain: Initial thread starting.\n");
 
 	CxbxLaunchXbe(Entry);
 
-    DbgPrintf("EmuMain (0x%X): Initial thread ended.\n", GetCurrentThreadId());
+    DbgPrintf("EmuMain: Initial thread ended.\n");
 
     fflush(stdout);
 
@@ -619,7 +569,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlCleanup(const char *szErrorMessage, ...)
 
         va_list argp;
 
-        sprintf(szBuffer1, "EmuMain (0x%X): Recieved Fatal Message:\n\n* ", GetCurrentThreadId());
+        sprintf(szBuffer1, "[0x%X] EmuMain: Recieved Fatal Message:\n\n* ", GetCurrentThreadId());
 
         va_start(argp, szErrorMessage);
 
@@ -761,12 +711,12 @@ extern "C" CXBXKRNL_API void CxbxKrnlTerminateThread()
 
 extern "C" CXBXKRNL_API void CxbxKrnlPanic()
 {
-    DbgPrintf("EmuMain (0x%X): CxbxKrnlPanic()\n", GetCurrentThreadId());
+    DbgPrintf("EmuMain: CxbxKrnlPanic()\n");
 
     CxbxKrnlCleanup("Kernel Panic!");
 }
 
 extern "C" CXBXKRNL_API void CxbxKrnlNoFunc()
 {
-    DbgPrintf("EmuMain (0x%X): CxbxKrnlNoFunc()\n", GetCurrentThreadId());
+    DbgPrintf("EmuMain: CxbxKrnlNoFunc()\n");
 }
