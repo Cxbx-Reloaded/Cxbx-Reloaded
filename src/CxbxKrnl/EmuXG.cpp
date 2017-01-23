@@ -356,8 +356,8 @@ VOID WINAPI XTL::EmuXGSetTextureHeader
 	// EmuIDirect3DDevice8_Register do the rest?  Trial and error.
 
 	X_D3DTexture* pTempTexture = NULL;
-	DWORD l2w = (DWORD) log( (float)Width ) / log(2.0f);
-	DWORD l2h = (DWORD) log( (float)Height ) / log(2.0f);
+	DWORD l2w; _BitScanReverse(&l2w, Width); // Untested (no test-case known)
+	DWORD l2h; _BitScanReverse(&l2h, Height); // Note : _BitScanReverse is a MSVC intrinsic. For GCC use __builtin_clz
 
 	/*if( Data != 0 )
 		CxbxKrnlCleanup( "Data != 0 (XGSetTextureHeader)" );
