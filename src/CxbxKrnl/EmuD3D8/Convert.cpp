@@ -55,10 +55,10 @@ BOOL XTL::EmuXBFormatIsSwizzled(X_D3DFORMAT Format, DWORD *pBPP)
 	case X_D3DFMT_A4R4G4B4:
 	case X_D3DFMT_R5G6B5:
 	case X_D3DFMT_A8L8:
-	case X_D3DFMT_R6G5B5:
-	case X_D3DFMT_G8B8:
+	case X_D3DFMT_R6G5B5: // Alias : X_D3DFMT_L6V5U5
+	case X_D3DFMT_G8B8: // Alias : X_D3DFMT_V8U8
 	case X_D3DFMT_R8B8:
-	case X_D3DFMT_D16:
+	case X_D3DFMT_D16: // Alias : X_D3DFMT_D16_LOCKABLE
 	case X_D3DFMT_F16:
 	case X_D3DFMT_L16:
 	case X_D3DFMT_R5G5B5A1:
@@ -66,15 +66,55 @@ BOOL XTL::EmuXBFormatIsSwizzled(X_D3DFORMAT Format, DWORD *pBPP)
 		*pBPP = 2;
 		return true;
 	case X_D3DFMT_A8R8G8B8:
-	case X_D3DFMT_X8R8G8B8: 
+	case X_D3DFMT_X8R8G8B8: // Alias : X_D3DFMT_X8L8V8U8
 	case X_D3DFMT_D24S8:
 	case X_D3DFMT_F24S8:
 	case X_D3DFMT_V16U16:
-	case X_D3DFMT_A8B8G8R8:
+	case X_D3DFMT_A8B8G8R8: // Alias : X_D3DFMT_Q8W8V8U8
 	case X_D3DFMT_B8G8R8A8:
 	case X_D3DFMT_R8G8B8A8:
 		*pBPP = 4;
 		return true;
+	case X_D3DFMT_DXT1:
+	case X_D3DFMT_DXT2: // Alias : X_D3DFMT_DXT3
+	case X_D3DFMT_DXT4: // Alias : X_D3DFMT_DXT5
+	case X_D3DFMT_LIN_L8:
+	case X_D3DFMT_LIN_AL8:
+	case X_D3DFMT_LIN_A8:
+		*pBPP = 1;
+		return false;
+	case X_D3DFMT_YUY2:
+	case X_D3DFMT_UYVY:
+	case X_D3DFMT_LIN_R8B8:
+	case X_D3DFMT_LIN_G8B8: // Alias : X_D3DFMT_LIN_V8U8
+	case X_D3DFMT_LIN_R5G6B5:
+	case X_D3DFMT_LIN_X1R5G5B5:
+	case X_D3DFMT_LIN_A4R4G4B4:
+	case X_D3DFMT_LIN_A1R5G5B5:
+	case X_D3DFMT_LIN_A8L8:
+	case X_D3DFMT_LIN_D16:
+	case X_D3DFMT_LIN_F16:
+	case X_D3DFMT_LIN_L16:
+	case X_D3DFMT_LIN_R6G5B5: // Alias : X_D3DFMT_LIN_L6V5U5
+	case X_D3DFMT_LIN_R5G5B5A1:
+	case X_D3DFMT_LIN_R4G4B4A4:
+		*pBPP = 2;
+		return false;
+	case X_D3DFMT_LIN_X8R8G8B8: // Alias : X_D3DFMT_LIN_X8L8V8U8
+	case X_D3DFMT_LIN_A8R8G8B8:
+	case X_D3DFMT_LIN_D24S8:
+	case X_D3DFMT_LIN_F24S8:
+	case X_D3DFMT_LIN_V16U16:
+	case X_D3DFMT_LIN_A8B8G8R8:
+	case X_D3DFMT_LIN_B8G8R8A8:
+	case X_D3DFMT_LIN_R8G8B8A8:
+		*pBPP = 4;
+		return false;
+/*
+	case X_D3DFMT_VERTEXDATA:
+	case X_D3DFMT_INDEX16: // Dxbx addition : Not an Xbox format, used internally
+*/
+
     }
 
     return FALSE;
@@ -617,7 +657,6 @@ void XTL::EmuUnswizzleRect
 	DWORD dwZ = dwStartZ;
 	for (uint z = 0; z < dwDepth; z++) {
 		DWORD dwY = dwStartY;
-		// TODO : How could we do one memcpy when lines AND pixels are next to eachother?
 		for (uint y = 0; y < dwHeight; y++) {
 			DWORD dwX = dwStartX;
 			for (uint x = 0; x < dwWidth; x++) {
