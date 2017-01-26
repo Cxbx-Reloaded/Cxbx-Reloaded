@@ -51,6 +51,10 @@
 #include "EmuNV2A.h"
 #include "HLEIntercept.h" // for bLLE_GPU
 
+//
+// Read & write handlers handlers for I/O
+//
+
 uint32_t EmuX86_IORead32(xbaddr addr)
 {
 	EmuWarning("EmuX86_IORead32(0x%08X) Not Implemented", addr);
@@ -84,18 +88,66 @@ void EmuX86_IOWrite8(xbaddr addr, uint8_t value)
 	EmuWarning("EmuX86_IOWrite8(0x%08X, 0x%02X) [Unknown address]", addr, value);
 }
 
+//
+// Read & write handlers for pass-through access to (host committed, virtual) xbox memory
+//
+// Only allowed to be called outside our EmuException exception handler,
+// to prevent recursive exceptions when accessing unallocated memory.
+//
+
+uint32_t EmuX86_Mem_Read32(xbaddr addr)
+{
+	return *(uint32_t*)addr;
+}
+
+uint16_t EmuX86_Mem_Read16(xbaddr addr)
+{
+	return *(uint16_t*)addr;
+}
+
+uint8_t EmuX86_Mem_Read8(xbaddr addr)
+{
+	return *(uint8_t*)addr;
+}
+
+void EmuX86_Mem_Write32(xbaddr addr, uint32_t value)
+{
+	*(uint32_t*)addr = value;
+}
+
+void EmuX86_Mem_Write16(xbaddr addr, uint16_t value)
+{
+	*(uint16_t*)addr = value;
+}
+
+void EmuX86_Mem_Write8(xbaddr addr, uint8_t value)
+{
+	*(uint8_t*)addr = value;
+}
+
+
+//
+// Read & write handlers for memory-mapped hardware devices
+//
+
 uint32_t EmuX86_Read32(xbaddr addr)
 {
 	// TODO : Should we assert ((addr & 3) == 0) here?
 	uint32_t value = 0;
 	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
 		if (!bLLE_GPU) {
-			EmuWarning("EmuX86_Read32(0x%08X) Unexpected NV2A access, missing a HLE patch. Please notify https://github.com/Cxbx-Reloaded/Cxbx-Reloaded which title raised this!", addr);
+			EmuWarning("EmuX86_Read32(0x%08X) Unexpected NV2A access, missing a HLE patch. " \
+				"Please notify https://github.com/Cxbx-Reloaded/Cxbx-Reloaded which title raised this!", addr);
 		} else
 			value = EmuNV2A_Read32(addr - NV2A_ADDR);
 	} else
-		EmuWarning("EmuX86_Read32(0x%08X) = 0x%08X [Unknown address]", addr, value);
+		if (g_bEmuException)
+			EmuWarning("EmuX86_Read32(0x%08X) [Unknown address]", addr);
+		else
+			// Outside EmuException, pass the memory-access through to normal memory :
+			value = EmuX86_Mem_Read32(addr);
 
+	DbgPrintf("EmuX86_Read32(0x%08X) = 0x%04X", addr, value);
 	return value;
 }
 
@@ -127,26 +179,37 @@ uint8_t EmuX86_Read8(xbaddr addr)
 
 void EmuX86_Write32(xbaddr addr, uint32_t value)
 {
+	// TODO : Should we assert ((addr & 3) == 0) here?
 	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
 		if (!bLLE_GPU) {
-			EmuWarning("EmuX86_Write32(0x%08X, 0x%04X) Unexpected NV2A access, missing a HLE patch. Please notify Cxbx project which title raised this!", addr, value);
-		} else
-			EmuNV2A_Write32(addr - NV2A_ADDR, value);
+			EmuWarning("EmuX86_Write32(0x%08X, 0x%08X) Unexpected NV2A access, missing a HLE patch. " \
+				"Please notify https://github.com/Cxbx-Reloaded/Cxbx-Reloaded which title raised this!", addr);
+			return;
+		}
 
+		EmuNV2A_Write32(addr - NV2A_ADDR, value);
 		return;
 	}
 
-	EmuWarning("EmuX86_Write32(0x%08X, 0x%04X) [Unknown address]", addr, value);
+	if (g_bEmuException) {
+		EmuWarning("EmuX86_Write32(0x%08X, 0x%08X) [Unknown address]", addr, value);
+		return;
+	}
+
+	// Outside EmuException, pass the memory-access through to normal memory :
+	EmuX86_Mem_Write32(addr, value);
 }
 
 void EmuX86_Write16(xbaddr addr, uint16_t value)
 {
 	EmuWarning("EmuX86_Write16(0x%08X, 0x%04X) [Unknown address]", addr, value);
+	// TODO : If decided to do so, read32, mask value in, and forward to write32
 }
 
 void EmuX86_Write8(xbaddr addr, uint8_t value)
 {
 	EmuWarning("EmuX86_Write8(0x%08X, 0x%02X) [Unknown address]", addr, value);
+	// TODO : If decided to do so, read16, mask value in, and forward to write16
 }
 
 int ContextRecordOffsetByRegisterType[/*_RegisterType*/R_DR7 + 1] = { 0 };
