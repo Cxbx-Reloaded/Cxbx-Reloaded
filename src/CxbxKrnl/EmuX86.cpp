@@ -51,54 +51,107 @@
 #include "EmuNV2A.h"
 #include "HLEIntercept.h" // for bLLE_GPU
 
-uint32_t EmuX86_IORead32(uint32_t addr)
+//
+// Read & write handlers handlers for I/O
+//
+
+uint32_t EmuX86_IORead32(xbaddr addr)
 {
 	EmuWarning("EmuX86_IORead32(0x%08X) Not Implemented", addr);
 	return 0;
 }
 
-uint16_t EmuX86_IORead16(uint32_t addr)
+uint16_t EmuX86_IORead16(xbaddr addr)
 {
 	EmuWarning("EmuX86_IORead16(0x%08X) Not Implemented", addr);
 	return 0;
 }
 
-uint8_t EmuX86_IORead8(uint32_t addr)
+uint8_t EmuX86_IORead8(xbaddr addr)
 {
 	EmuWarning("EmuX86_IORead8(0x%08X) Not Implemented", addr);
 	return 0;
 }
 
-void EmuX86_IOWrite32(uint32_t addr, uint32_t value)
+void EmuX86_IOWrite32(xbaddr addr, uint32_t value)
 {
 	EmuWarning("EmuX86_IOWrite32(0x%08X, 0x%04X) [Unknown address]", addr, value);
 }
 
-void EmuX86_IOWrite16(uint32_t addr, uint16_t value)
+void EmuX86_IOWrite16(xbaddr addr, uint16_t value)
 {
 	EmuWarning("EmuX86_IOWrite16(0x%08X, 0x%04X) [Unknown address]", addr, value);
 }
 
-void EmuX86_IOWrite8(uint32_t addr, uint8_t value)
+void EmuX86_IOWrite8(xbaddr addr, uint8_t value)
 {
 	EmuWarning("EmuX86_IOWrite8(0x%08X, 0x%02X) [Unknown address]", addr, value);
 }
 
-uint32_t EmuX86_Read32(uint32_t addr)
+//
+// Read & write handlers for pass-through access to (host committed, virtual) xbox memory
+//
+// Only allowed to be called outside our EmuException exception handler,
+// to prevent recursive exceptions when accessing unallocated memory.
+//
+
+uint32_t EmuX86_Mem_Read32(xbaddr addr)
 {
+	return *(uint32_t*)addr;
+}
+
+uint16_t EmuX86_Mem_Read16(xbaddr addr)
+{
+	return *(uint16_t*)addr;
+}
+
+uint8_t EmuX86_Mem_Read8(xbaddr addr)
+{
+	return *(uint8_t*)addr;
+}
+
+void EmuX86_Mem_Write32(xbaddr addr, uint32_t value)
+{
+	*(uint32_t*)addr = value;
+}
+
+void EmuX86_Mem_Write16(xbaddr addr, uint16_t value)
+{
+	*(uint16_t*)addr = value;
+}
+
+void EmuX86_Mem_Write8(xbaddr addr, uint8_t value)
+{
+	*(uint8_t*)addr = value;
+}
+
+
+//
+// Read & write handlers for memory-mapped hardware devices
+//
+
+uint32_t EmuX86_Read32(xbaddr addr)
+{
+	// TODO : Should we assert ((addr & 3) == 0) here?
 	uint32_t value = 0;
 	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
 		if (!bLLE_GPU) {
-			EmuWarning("EmuX86_Read32(0x%08X) Unexpected NV2A access, missing a HLE patch. Please notify Cxbx project which title raised this!", addr);
+			EmuWarning("EmuX86_Read32(0x%08X) Unexpected NV2A access, missing a HLE patch. " \
+				"Please notify https://github.com/Cxbx-Reloaded/Cxbx-Reloaded which title raised this!", addr);
 		} else
 			value = EmuNV2A_Read32(addr - NV2A_ADDR);
 	} else
-		EmuWarning("EmuX86_Read32(0x%08X) = 0x%08X [Unknown address]", addr, value);
+		if (g_bEmuException)
+			EmuWarning("EmuX86_Read32(0x%08X) [Unknown address]", addr);
+		else
+			// Outside EmuException, pass the memory-access through to normal memory :
+			value = EmuX86_Mem_Read32(addr);
 
+	DbgPrintf("EmuX86_Read32(0x%08X) = 0x%04X", addr, value);
 	return value;
 }
 
-uint16_t EmuX86_Read16(uint32_t addr)
+uint16_t EmuX86_Read16(xbaddr addr)
 {
 	DbgPrintf("EmuX86_Read16(0x%08X) Forwarding to EmuX86_Read32...", addr);
 	uint16_t value;
@@ -111,7 +164,7 @@ uint16_t EmuX86_Read16(uint32_t addr)
 	return value;
 }
 
-uint8_t EmuX86_Read8(uint32_t addr)
+uint8_t EmuX86_Read8(xbaddr addr)
 {
 	DbgPrintf("EmuX86_Read8(0x%08X) Forwarding to EmuX86_Read16...", addr);
 	uint8_t value;
@@ -124,38 +177,49 @@ uint8_t EmuX86_Read8(uint32_t addr)
 	return value;
 }
 
-void EmuX86_Write32(uint32_t addr, uint32_t value)
+void EmuX86_Write32(xbaddr addr, uint32_t value)
 {
+	// TODO : Should we assert ((addr & 3) == 0) here?
 	if (addr >= NV2A_ADDR && addr < NV2A_ADDR + NV2A_SIZE) {
 		if (!bLLE_GPU) {
-			EmuWarning("EmuX86_Write32(0x%08X, 0x%04X) Unexpected NV2A access, missing a HLE patch. Please notify Cxbx project which title raised this!", addr, value);
-		} else
-			EmuNV2A_Write32(addr - NV2A_ADDR, value);
+			EmuWarning("EmuX86_Write32(0x%08X, 0x%08X) Unexpected NV2A access, missing a HLE patch. " \
+				"Please notify https://github.com/Cxbx-Reloaded/Cxbx-Reloaded which title raised this!", addr);
+			return;
+		}
 
+		EmuNV2A_Write32(addr - NV2A_ADDR, value);
 		return;
 	}
 
-	EmuWarning("EmuX86_Write32(0x%08X, 0x%04X) [Unknown address]", addr, value);
+	if (g_bEmuException) {
+		EmuWarning("EmuX86_Write32(0x%08X, 0x%08X) [Unknown address]", addr, value);
+		return;
+	}
+
+	// Outside EmuException, pass the memory-access through to normal memory :
+	EmuX86_Mem_Write32(addr, value);
 }
 
-void EmuX86_Write16(uint32_t addr, uint16_t value)
+void EmuX86_Write16(xbaddr addr, uint16_t value)
 {
 	EmuWarning("EmuX86_Write16(0x%08X, 0x%04X) [Unknown address]", addr, value);
+	// TODO : If decided to do so, read32, mask value in, and forward to write32
 }
 
-void EmuX86_Write8(uint32_t addr, uint8_t value)
+void EmuX86_Write8(xbaddr addr, uint8_t value)
 {
 	EmuWarning("EmuX86_Write8(0x%08X, 0x%02X) [Unknown address]", addr, value);
+	// TODO : If decided to do so, read16, mask value in, and forward to write16
 }
 
 int ContextRecordOffsetByRegisterType[/*_RegisterType*/R_DR7 + 1] = { 0 };
 
 // Populate ContextRecordOffsetByRegisterType for each distorm::_RegisterType
-// supported by the Xbox1's Coppermine Pentium III.
+// supported by the XBox1's Coppermine Pentium III.
 // Based on https://maximumcrack.wordpress.com/2011/08/07/fpu-mmx-xmm-and-bbq/
 void EmuX86_InitContextRecordOffsetByRegisterType()
 {
-	/* R_RAX, R_RCX, R_RDX, R_RBX, R_RSP, R_RBP, R_RSI, R_RDI, R_R8, R_R9, R_R10, R_R11, R_R12, R_R13, R_R14, R_R15,*/
+	// Unsupported by XBox CPU : R_RAX, R_RCX, R_RDX, R_RBX, R_RSP, R_RBP, R_RSI, R_RDI, R_R8, R_R9, R_R10, R_R11, R_R12, R_R13, R_R14, R_R15,
 	ContextRecordOffsetByRegisterType[R_EAX] = offsetof(CONTEXT, Eax);
 	ContextRecordOffsetByRegisterType[R_ECX] = offsetof(CONTEXT, Ecx);
 	ContextRecordOffsetByRegisterType[R_EDX] = offsetof(CONTEXT, Edx);
@@ -164,7 +228,7 @@ void EmuX86_InitContextRecordOffsetByRegisterType()
 	ContextRecordOffsetByRegisterType[R_EBP] = offsetof(CONTEXT, Ebp);
 	ContextRecordOffsetByRegisterType[R_ESI] = offsetof(CONTEXT, Esi);
 	ContextRecordOffsetByRegisterType[R_EDI] = offsetof(CONTEXT, Edi);
-	/* R_R8D, R_R9D, R_R10D, R_R11D, R_R12D, R_R13D, R_R14D, R_R15D,*/
+	// Unsupported by XBox CPU : R_R8D, R_R9D, R_R10D, R_R11D, R_R12D, R_R13D, R_R14D, R_R15D,
 	ContextRecordOffsetByRegisterType[R_AX] = offsetof(CONTEXT, Eax);
 	ContextRecordOffsetByRegisterType[R_CX] = offsetof(CONTEXT, Ecx);
 	ContextRecordOffsetByRegisterType[R_DX] = offsetof(CONTEXT, Edx);
@@ -173,7 +237,7 @@ void EmuX86_InitContextRecordOffsetByRegisterType()
 	ContextRecordOffsetByRegisterType[R_BP] = offsetof(CONTEXT, Ebp); // ??
 	ContextRecordOffsetByRegisterType[R_SI] = offsetof(CONTEXT, Esi); // ??
 	ContextRecordOffsetByRegisterType[R_DI] = offsetof(CONTEXT, Edi); // ??
-	/* R_R8W, R_R9W, R_R10W, R_R11W, R_R12W, R_R13W, R_R14W, R_R15W, */
+	// Unsupported by XBox CPU : R_R8W, R_R9W, R_R10W, R_R11W, R_R12W, R_R13W, R_R14W, R_R15W,
 	ContextRecordOffsetByRegisterType[R_AL] = offsetof(CONTEXT, Eax);
 	ContextRecordOffsetByRegisterType[R_CL] = offsetof(CONTEXT, Ecx);
 	ContextRecordOffsetByRegisterType[R_DL] = offsetof(CONTEXT, Edx);
@@ -182,7 +246,7 @@ void EmuX86_InitContextRecordOffsetByRegisterType()
 	ContextRecordOffsetByRegisterType[R_CH] = offsetof(CONTEXT, Ecx) + 1;
 	ContextRecordOffsetByRegisterType[R_DH] = offsetof(CONTEXT, Edx) + 1;
 	ContextRecordOffsetByRegisterType[R_BH] = offsetof(CONTEXT, Ebx) + 1;
-	/* R_R8B, R_R9B, R_R10B, R_R11B, R_R12B, R_R13B, R_R14B, R_R15B, */
+	// Unsupported by XBox CPU : R_R8B, R_R9B, R_R10B, R_R11B, R_R12B, R_R13B, R_R14B, R_R15B,
 	ContextRecordOffsetByRegisterType[R_SPL] = offsetof(CONTEXT, Esp); // ??
 	ContextRecordOffsetByRegisterType[R_BPL] = offsetof(CONTEXT, Ebp); // ??
 	ContextRecordOffsetByRegisterType[R_SIL] = offsetof(CONTEXT, Esi); // ??
@@ -193,7 +257,8 @@ void EmuX86_InitContextRecordOffsetByRegisterType()
 	ContextRecordOffsetByRegisterType[R_DS] = offsetof(CONTEXT, SegDs);
 	ContextRecordOffsetByRegisterType[R_FS] = offsetof(CONTEXT, SegFs);
 	ContextRecordOffsetByRegisterType[R_GS] = offsetof(CONTEXT, SegGs);
-	/* R_RIP, R_ST0, R_ST1, R_ST2, R_ST3, R_ST4, R_ST5, R_ST6, R_ST7, */
+	// R_RIP, TODO : Does this also mean EIP and is that enum missing in distorm? https://github.com/gdabah/distorm/issues/110
+	// Unsupported by XBox CPU : R_ST0, R_ST1, R_ST2, R_ST3, R_ST4, R_ST5, R_ST6, R_ST7,
 	ContextRecordOffsetByRegisterType[R_MM0] = offsetof(CONTEXT, ExtendedRegisters[(10 + 0) * 16]);
 	ContextRecordOffsetByRegisterType[R_MM1] = offsetof(CONTEXT, ExtendedRegisters[(10 + 1) * 16]);
 	ContextRecordOffsetByRegisterType[R_MM2] = offsetof(CONTEXT, ExtendedRegisters[(10 + 2) * 16]);
@@ -202,14 +267,14 @@ void EmuX86_InitContextRecordOffsetByRegisterType()
 	ContextRecordOffsetByRegisterType[R_MM5] = offsetof(CONTEXT, ExtendedRegisters[(10 + 5) * 16]);
 	ContextRecordOffsetByRegisterType[R_MM6] = offsetof(CONTEXT, ExtendedRegisters[(10 + 6) * 16]);
 	ContextRecordOffsetByRegisterType[R_MM7] = offsetof(CONTEXT, ExtendedRegisters[(10 + 7) * 16]);
-	/* R_XMM0, R_XMM1, R_XMM2, R_XMM3, R_XMM4, R_XMM5, R_XMM6, R_XMM7, R_XMM8, R_XMM9, R_XMM10, R_XMM11, R_XMM12, R_XMM13, R_XMM14, R_XMM15, */
-	/* R_YMM0, R_YMM1, R_YMM2, R_YMM3, R_YMM4, R_YMM5, R_YMM6, R_YMM7, R_YMM8, R_YMM9, R_YMM10, R_YMM11, R_YMM12, R_YMM13, R_YMM14, R_YMM15, */
-	/* R_CR0, R_UNUSED0, R_CR2, R_CR3, R_CR4, R_UNUSED1, R_UNUSED2, R_UNUSED3, R_CR8, */
+	// Unsupported by XBox CPU : R_XMM0, R_XMM1, R_XMM2, R_XMM3, R_XMM4, R_XMM5, R_XMM6, R_XMM7, R_XMM8, R_XMM9, R_XMM10, R_XMM11, R_XMM12, R_XMM13, R_XMM14, R_XMM15,
+	// Unsupported by XBox CPU : R_YMM0, R_YMM1, R_YMM2, R_YMM3, R_YMM4, R_YMM5, R_YMM6, R_YMM7, R_YMM8, R_YMM9, R_YMM10, R_YMM11, R_YMM12, R_YMM13, R_YMM14, R_YMM15,
+	// Unsupported by XBox CPU : R_CR0, R_UNUSED0, R_CR2, R_CR3, R_CR4, R_UNUSED1, R_UNUSED2, R_UNUSED3, R_CR8,
 	ContextRecordOffsetByRegisterType[R_DR0] = offsetof(CONTEXT, Dr0);
 	ContextRecordOffsetByRegisterType[R_DR1] = offsetof(CONTEXT, Dr1);
 	ContextRecordOffsetByRegisterType[R_DR2] = offsetof(CONTEXT, Dr2);
 	ContextRecordOffsetByRegisterType[R_DR3] = offsetof(CONTEXT, Dr3);
-	/* R_UNUSED4, R_UNUSED5, */
+	// Unsupported by XBox CPU : R_UNUSED4, R_UNUSED5,
 	ContextRecordOffsetByRegisterType[R_DR6] = offsetof(CONTEXT, Dr6);
 	ContextRecordOffsetByRegisterType[R_DR7] = offsetof(CONTEXT, Dr7);
 
@@ -222,16 +287,16 @@ void EmuX86_InitContextRecordOffsetByRegisterType()
     !DWORD   Dr6;
     !DWORD   Dr7;
 	struct _FLOATING_SAVE_AREA {
-	DWORD   ControlWord;
-	DWORD   StatusWord;
-	DWORD   TagWord;
-	DWORD   ErrorOffset;
-	DWORD   ErrorSelector;
-	DWORD   DataOffset;
-	DWORD   DataSelector;
-	BYTE    RegisterArea[SIZE_OF_80387_REGISTERS];
-	DWORD   Spare0;
-	} FLOATING_SAVE_AREA FloatSave;
+		DWORD   ControlWord;
+		DWORD   StatusWord;
+		DWORD   TagWord;
+		DWORD   ErrorOffset;
+		DWORD   ErrorSelector;
+		DWORD   DataOffset;
+		DWORD   DataSelector;
+		BYTE    RegisterArea[SIZE_OF_80387_REGISTERS];
+		DWORD   Spare0;
+		} FLOATING_SAVE_AREA FloatSave;
     !DWORD   SegGs;
     !DWORD   SegFs;
     !DWORD   SegEs;
@@ -296,16 +361,16 @@ inline uint8_t EmuX86_GetRegisterValue8(LPEXCEPTION_POINTERS e, uint8_t reg)
 	return 0;
 }
 
-uint32_t EmuX86_Distorm_O_SMEM_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int operand)
+xbaddr EmuX86_Distorm_O_SMEM_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int operand)
 {
-	uint32_t base = EmuX86_GetRegisterValue32(e, info.ops[operand].index);
+	xbaddr base = EmuX86_GetRegisterValue32(e, info.ops[operand].index);
 
 	return base + info.disp;
 }
 
-uint32_t EmuX86_Distorm_O_MEM_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int operand)
+xbaddr EmuX86_Distorm_O_MEM_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int operand)
 {
-	uint32_t base = EmuX86_GetRegisterValue32(e, info.base);
+	xbaddr base = EmuX86_GetRegisterValue32(e, info.base);
 
 	uint32_t index = EmuX86_GetRegisterValue32(e, info.ops[operand].index);
 
@@ -315,7 +380,7 @@ uint32_t EmuX86_Distorm_O_MEM_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int ope
 		return base + index + info.disp;
 }
 
-void EmuX86_Addr_Read(uint32_t srcAddr, uint16_t size, OUT uint32_t *value)
+void EmuX86_Addr_Read(xbaddr srcAddr, uint16_t size, OUT uint32_t *value)
 {
 	switch (size) {
 	case 8:
@@ -329,7 +394,7 @@ void EmuX86_Addr_Read(uint32_t srcAddr, uint16_t size, OUT uint32_t *value)
 	}
 }
 
-void EmuX86_Addr_Write(uint32_t destAddr, uint16_t size, uint32_t value)
+void EmuX86_Addr_Write(xbaddr destAddr, uint16_t size, uint32_t value)
 {
 	switch (size) {
 	case 8:
@@ -354,7 +419,7 @@ bool EmuX86_Operand_Read(LPEXCEPTION_POINTERS e, _DInst& info, int operand, OUT 
 	case O_REG:
 	{
 		void* regAddr = EmuX86_GetRegisterPointer(e, info.ops[operand].index);
-		if (regAddr == nullptr)
+		if (regAddr == 0)
 			return false;
 
 		switch (info.ops[operand].size) {
@@ -397,19 +462,19 @@ bool EmuX86_Operand_Read(LPEXCEPTION_POINTERS e, _DInst& info, int operand, OUT 
 	}
 	case O_DISP:
 	{
-		uint32_t srcAddr = info.disp;
+		xbaddr srcAddr = info.disp;
 		EmuX86_Addr_Read(srcAddr, info.ops[operand].size, value);
 		return true;
 	}
 	case O_SMEM:
 	{
-		uint32_t srcAddr = EmuX86_Distorm_O_SMEM_Addr(e, info, operand);
+		xbaddr srcAddr = EmuX86_Distorm_O_SMEM_Addr(e, info, operand);
 		EmuX86_Addr_Read(srcAddr, info.ops[operand].size, value);
 		return true;
 	}
 	case O_MEM:
 	{
-		uint32_t srcAddr = EmuX86_Distorm_O_MEM_Addr(e, info, operand);
+		xbaddr srcAddr = EmuX86_Distorm_O_MEM_Addr(e, info, operand);
 		EmuX86_Addr_Read(srcAddr, info.ops[operand].size, value);
 		return true;
 	}
@@ -476,19 +541,19 @@ bool EmuX86_Operand_Write(LPEXCEPTION_POINTERS e, _DInst& info, int operand, uin
 	}
 	case O_DISP:
 	{
-		uint32_t destAddr = info.disp;
+		xbaddr destAddr = info.disp;
 		EmuX86_Addr_Write(destAddr, info.ops[operand].size, value);
 		return true;
 	}
 	case O_SMEM:
 	{
-		uint32_t destAddr = EmuX86_Distorm_O_SMEM_Addr(e, info, operand);
+		xbaddr destAddr = EmuX86_Distorm_O_SMEM_Addr(e, info, operand);
 		EmuX86_Addr_Write(destAddr, info.ops[operand].size, value);
 		return true;
 	}
 	case O_MEM:
 	{
-		uint32_t destAddr = EmuX86_Distorm_O_MEM_Addr(e, info, operand);
+		xbaddr destAddr = EmuX86_Distorm_O_MEM_Addr(e, info, operand);
 		EmuX86_Addr_Write(destAddr, info.ops[operand].size, value);
 		return true;
 	}
@@ -517,7 +582,7 @@ bool EmuX86_Opcode_ADD(LPEXCEPTION_POINTERS e, _DInst& info)
 		return false;
 
 	// ADD reads and writes destination :
-	uint32_t addr;
+	xbaddr addr;
 	// TODO : Implement EmuX86_Operand_Addr, then enable the following line :
 	// if (!EmuX86_Operand_Addr(e, info, 0, &addr))
 		return false;

@@ -213,7 +213,7 @@ static void update_irq()
 
 
 #define DEBUG_START(DEV) \
-const char *DebugNV_##DEV##(uint32_t addr) \
+const char *DebugNV_##DEV##(xbaddr addr) \
 { \
 	switch (addr) {
 #define DEBUG_CASE(a) \
@@ -517,11 +517,11 @@ DEBUG_END(USER)
 #define DEBUG_WRITE32(DEV)           DbgPrintf("EmuX86_Write32 NV2A_" #DEV "(0x%08X, 0x%08X) [Handled, %s]\n", addr, value, DebugNV_##DEV##(addr));
 #define DEBUG_WRITE32_UNHANDLED(DEV) DbgPrintf("EmuX86_Write32 NV2A_" #DEV "(0x%08X, 0x%08X) [Unhandled, %s]\n", addr, value, DebugNV_##DEV##(addr));
 
-#define DEVICE_READ32(DEV) uint32_t EmuNV2A_##DEV##_Read32(uint32_t addr)
+#define DEVICE_READ32(DEV) uint32_t EmuNV2A_##DEV##_Read32(xbaddr addr)
 #define DEVICE_READ32_SWITCH(addr) uint32_t result = 0; switch (addr) 
 #define DEVICE_READ32_END(DEV) DEBUG_READ32(DEV); return result
 
-#define DEVICE_WRITE32(DEV) void EmuNV2A_##DEV##_Write32(uint32_t addr, uint32_t value)
+#define DEVICE_WRITE32(DEV) void EmuNV2A_##DEV##_Write32(xbaddr addr, uint32_t value)
 #define DEVICE_WRITE32_SWITCH(DEV, addr) DEBUG_WRITE32(DEV); switch (addr)
 
 
@@ -1041,8 +1041,8 @@ DEVICE_WRITE32(USER)
 typedef struct NV2ABlockInfo {
 		uint32_t offset;
 		uint32_t size;
-		uint32_t(*read)(uint32_t addr);
-		void(*write)(uint32_t addr, uint32_t value);
+		uint32_t(*read)(xbaddr addr);
+		void(*write)(xbaddr addr, uint32_t value);
 } NV2ABlockInfo;
 
 static const NV2ABlockInfo regions[] = {{
@@ -1173,7 +1173,7 @@ static const NV2ABlockInfo regions[] = {{
 	},
 };
 
-const NV2ABlockInfo* EmuNV2A_Block(uint32_t addr) 
+const NV2ABlockInfo* EmuNV2A_Block(xbaddr addr) 
 {
 	// Find the block in the block table
 	const NV2ABlockInfo* block = &regions[0];
@@ -1190,7 +1190,7 @@ const NV2ABlockInfo* EmuNV2A_Block(uint32_t addr)
 	return nullptr;
 }
 
-uint32_t EmuNV2A_Read32(uint32_t addr)
+uint32_t EmuNV2A_Read32(xbaddr addr)
 {
 	const NV2ABlockInfo* block = EmuNV2A_Block(addr);
 
@@ -1202,7 +1202,7 @@ uint32_t EmuNV2A_Read32(uint32_t addr)
 	return 0;
 }
 
-void EmuNV2A_Write32(uint32_t addr, uint32_t value)
+void EmuNV2A_Write32(xbaddr addr, uint32_t value)
 {
 	const NV2ABlockInfo* block = EmuNV2A_Block(addr);
 
