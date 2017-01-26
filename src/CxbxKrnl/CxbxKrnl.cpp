@@ -455,7 +455,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		// Strip out the path, leaving only the XBE file name
 		// NOTE: we assume that the XBE is always on the root of the D: drive
 		// This is a safe assumption as the Xbox kernel ALWAYS mounts D: as the Xbe Path
-		if (fileName.rfind('\\') >= 0)
+		if (fileName.rfind('\\') != std::string::npos)
 			fileName = fileName.substr(fileName.rfind('\\') + 1);
 
 		if (xboxkrnl::XeImageFileName.Buffer != NULL)
