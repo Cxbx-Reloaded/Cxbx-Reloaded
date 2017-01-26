@@ -2467,10 +2467,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
             &Handle,
             g_dwVertexShaderUsage   // TODO: HACK: Xbox has extensions!
         );
-        if(pRecompiledBuffer)
+
+        if(pRecompiledBuffer != nullptr)
         {
             pRecompiledBuffer->Release();
-            pRecompiledBuffer = NULL;
+            pRecompiledBuffer = nullptr;
         }
 
         //* Fallback to dummy shader.
@@ -2808,7 +2809,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
 		);
 	}
 
-	if (pRecompiledBuffer)
+	if (pRecompiledBuffer != nullptr)
 	{
 		pRecompiledBuffer->Release();
 	}
@@ -5621,7 +5622,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DTexture_LockRect)
     EmuVerifyResourceIsRegistered(pThis);
 
     // check if we have an unregistered YUV2 resource
-    if( (pThis != 0) && IsSpecialResource(pThis->Data) && (pThis->Data & X_D3DRESOURCE_DATA_FLAG_YUVSURF))
+    if( (pThis != nullptr) && IsSpecialResource(pThis->Data) && (pThis->Data & X_D3DRESOURCE_DATA_FLAG_YUVSURF))
     {
         pLockedRect->Pitch = g_dwOverlayP;
         pLockedRect->pBits = (PVOID)pThis->Lock;
