@@ -57,11 +57,11 @@
 
 void EmuX86_Init();
 bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e);
-uint32_t EmuX86_IORead32(uint32_t addr);
-uint16_t EmuX86_IORead16(uint32_t addr);
-uint8_t EmuX86_IORead8(uint32_t addr);
-void EmuX86_IOWrite32(uint32_t addr, uint32_t value);
-void EmuX86_IOWrite16(uint32_t addr, uint16_t value);
-void EmuX86_IOWrite8(uint32_t addr, uint8_t value);
+uint32_t EmuX86_IORead32(xbaddr addr);
+uint16_t EmuX86_IORead16(xbaddr addr);
+uint8_t EmuX86_IORead8(xbaddr addr);
+void EmuX86_IOWrite32(xbaddr addr, uint32_t value);
+void EmuX86_IOWrite16(xbaddr addr, uint16_t value);
+void EmuX86_IOWrite8(xbaddr addr, uint8_t value);
 
 #endif

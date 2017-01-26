@@ -304,39 +304,39 @@ XBSYSAPI EXPORTNUM(46) xboxkrnl::VOID NTAPI xboxkrnl::HalReadWritePCISpace
 		switch (Size) {
 		case 4:
 			CfgBits.u.bits.RegisterNumber = RegisterNumber / sizeof(ULONG);
-			EmuX86_IOWrite32((uint32_t)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
+			EmuX86_IOWrite32((xbaddr)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
 
 			if (WritePCISpace) {
-				EmuX86_IOWrite32((uint32_t)PCI_TYPE1_DATA_PORT, *((PULONG)Buffer));
+				EmuX86_IOWrite32((xbaddr)PCI_TYPE1_DATA_PORT, *((PULONG)Buffer));
 			}
 			else {
-				*((PULONG)Buffer) = EmuX86_IORead32((uint32_t)PCI_TYPE1_DATA_PORT);
+				*((PULONG)Buffer) = EmuX86_IORead32((xbaddr)PCI_TYPE1_DATA_PORT);
 			}
 			break;
 		case 2:
 			RegisterByteOffset = RegisterNumber % sizeof(ULONG);
 			CfgBits.u.bits.RegisterNumber = RegisterNumber / sizeof(ULONG);
 
-			EmuX86_IOWrite32((uint32_t)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
+			EmuX86_IOWrite32((xbaddr)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
 
 			if (WritePCISpace) {
-				EmuX86_IOWrite16((uint32_t)PCI_TYPE1_DATA_PORT + RegisterByteOffset, *((PUSHORT)Buffer));
+				EmuX86_IOWrite16((xbaddr)PCI_TYPE1_DATA_PORT + RegisterByteOffset, *((PUSHORT)Buffer));
 			}
 			else {
-				*((PUSHORT)Buffer) = EmuX86_IORead16((uint32_t)PCI_TYPE1_DATA_PORT + RegisterByteOffset);
+				*((PUSHORT)Buffer) = EmuX86_IORead16((xbaddr)PCI_TYPE1_DATA_PORT + RegisterByteOffset);
 			}
 			break;
 		case 1: {
 			RegisterByteOffset = RegisterNumber % sizeof(ULONG);
 			CfgBits.u.bits.RegisterNumber = RegisterNumber / sizeof(ULONG);
 
-			EmuX86_IOWrite32((uint32_t)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
+			EmuX86_IOWrite32((xbaddr)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG);
 
 			if (WritePCISpace) {
-				EmuX86_IOWrite8((uint32_t)PCI_TYPE1_DATA_PORT + RegisterByteOffset, *((PUCHAR)Buffer));
+				EmuX86_IOWrite8((xbaddr)PCI_TYPE1_DATA_PORT + RegisterByteOffset, *((PUCHAR)Buffer));
 			}
 			else {
-				*((PUCHAR)Buffer) = EmuX86_IORead8((uint32_t)PCI_TYPE1_DATA_PORT + RegisterByteOffset);
+				*((PUCHAR)Buffer) = EmuX86_IORead8((xbaddr)PCI_TYPE1_DATA_PORT + RegisterByteOffset);
 			}
 		}
 			break;
