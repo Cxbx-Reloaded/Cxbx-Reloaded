@@ -99,7 +99,7 @@ OOVPATable XOnline_4627[] ={
 
     // XNetStartup (* unchanged since 4361 *)
 	OOVPA_TABLE_ENTRY(XNetStartup, 4361),
-	// WSAStartup
+	// WSAStartup (* unchanged since 4361 *)
 	OOVPA_TABLE_ENTRY(WSAStartup, 4361),
     // XnInit (XREF)
 	OOVPA_TABLE_XREF(XnInit, 4627),
