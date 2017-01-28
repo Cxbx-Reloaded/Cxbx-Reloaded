@@ -969,15 +969,15 @@ OOVPATable D3D8LTCG_5849[] = {
 	// IDirect3DDevice8::SetLight
 	OOVPA_TABLE_PATCH(D3DDevice_SetLight_LTCG, 5849, D3DDevice_SetLight),
 	// IDirect3DDevice8::SetTransform (* unchanged since 5558 *)
-	OOVPA_TABLE_PATCH(D3DDevice_SetTransform, 5558, D3DDevice_SetTransform),
+	OOVPA_TABLE_ENTRY(D3DDevice_SetTransform, 5558),
 	// IDirect3DDevice8::SetMaterial (* unchanged since 5849 *)
-	OOVPA_TABLE_PATCH(D3DDevice_SetMaterial, 5849, D3DDevice_SetMaterial),
+	OOVPA_TABLE_ENTRY(D3DDevice_SetMaterial, 5849),
 	// IDirect3DDevice8::SetStreamSource
 	OOVPA_TABLE_PATCH(D3DDevice_SetStreamSource_LTCG, 5849, D3DDevice_SetStreamSource),
 	// IDirect3DDevice8::SetVertexShaderConstant1 (* unchanged since 5849 *)
-	OOVPA_TABLE_PATCH(D3DDevice_SetVertexShaderConstant1, 5849, D3DDevice_SetVertexShaderConstant1),
+	OOVPA_TABLE_ENTRY(D3DDevice_SetVertexShaderConstant1, 5849),
 	// IDirect3DDevice8::CreateVertexBuffer2 (* unchanged since 5849 *)
-	OOVPA_TABLE_PATCH(D3DDevice_CreateVertexBuffer2, 5849, D3DDevice_CreateVertexBuffer2),
+	OOVPA_TABLE_ENTRY(D3DDevice_CreateVertexBuffer2, 5849),
 	// IDirect3DDevice8::SetTextureState_TexCoordIndex
 	OOVPA_TABLE_PATCH(D3DDevice_SetTextureState_TexCoordIndex_LTCG, 5849, D3DDevice_SetTextureState_TexCoordIndex),
 	// IDirect3DDevice8::SetTextureState_BumpEnv
@@ -997,7 +997,7 @@ OOVPATable D3D8LTCG_5849[] = {
 	// IDirect3DDevice8::Swap
 	OOVPA_TABLE_PATCH(D3DDevice_Swap_LTCG, 5849, D3DDevice_Swap),
 	// IDirect3DDevice8::SetVertexData2f (* unchanged since 4627 *)
-	OOVPA_TABLE_PATCH(D3DDevice_SetVertexData2f, 4627, D3DDevice_SetVertexData2f),
+	OOVPA_TABLE_ENTRY(D3DDevice_SetVertexData2f, 4627),
 	// IDirect3DDevice8::End
 	OOVPA_TABLE_PATCH(D3DDevice_End_LTCG, 5849, D3DDevice_End),
 	// IDirect3DDevice8::SetRenderState_FillMode
@@ -1009,7 +1009,7 @@ OOVPATable D3D8LTCG_5849[] = {
 	// IDirect3DDevice8::DrawVerticesUP
 	OOVPA_TABLE_PATCH(D3DDevice_DrawVerticesUP_LTCG, 5849, D3DDevice_DrawVerticesUP),
 	// IDirect3DDevice8::SetVertexShaderConstant4 (* unchanged since 4627 *)
-	OOVPA_TABLE_PATCH(D3DDevice_SetVertexShaderConstant4, 4627, D3DDevice_SetVertexShaderConstant4),
+	OOVPA_TABLE_ENTRY(D3DDevice_SetVertexShaderConstant4, 4627),
 	// IDirect3DVertexBuffer8::Lock2
 	OOVPA_TABLE_PATCH(D3DVertexBuffer_Lock2_LTCG, 5849, D3DVertexBuffer_Lock2),
 	// IDirect3DDevice8::SetRenderState_YuvEnable
@@ -1025,7 +1025,7 @@ OOVPATable D3D8LTCG_5849[] = {
 	// IDirect3DDevice8::SetShaderConstantMode
 	OOVPA_TABLE_PATCH(D3DDevice_SetShaderConstantMode_LTCG, 5849, D3DDevice_SetShaderConstantMode),
 	// IDirect3DResource8::AddRef
-	OOVPA_TABLE_PATCH(D3DResource_AddRef, 3925, D3DResource_AddRef),
+	OOVPA_TABLE_ENTRY(D3DResource_AddRef, 3925),
 	// IDirect3DResource8::Release
 	OOVPA_TABLE_PATCH(D3DResource_Release_LTCG, 5849, D3DResource_Release),
 

@@ -220,7 +220,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 
 	// Fixup Kernel Imports
 
-	uint32 kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
+	uint32_t kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
 	kt ^= XOR_KT_KEY[g_XbeType];
 
 	uint32_t* kt_tbl = (uint32_t*)kt;
@@ -241,7 +241,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 	}
 
 	// Decode Entry Point
-	uint32_t EntryPoint = CxbxKrnl_Xbe->m_Header.dwEntryAddr;
+	xbaddr EntryPoint = CxbxKrnl_Xbe->m_Header.dwEntryAddr;
 	EntryPoint ^= XOR_EP_KEY[g_XbeType];
 
 	// Restore the area of the EXE required for WinAPI
@@ -455,7 +455,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		// Strip out the path, leaving only the XBE file name
 		// NOTE: we assume that the XBE is always on the root of the D: drive
 		// This is a safe assumption as the Xbox kernel ALWAYS mounts D: as the Xbe Path
-		if (fileName.rfind('\\') >= 0)
+		if (fileName.rfind('\\') != std::string::npos)
 			fileName = fileName.substr(fileName.rfind('\\') + 1);
 
 		if (xboxkrnl::XeImageFileName.Buffer != NULL)

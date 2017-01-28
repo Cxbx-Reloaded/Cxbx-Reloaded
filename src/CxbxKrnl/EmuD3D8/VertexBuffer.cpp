@@ -1403,7 +1403,7 @@ VOID XTL::EmuUpdateActiveTexture() // Never called!
             }
             else if(X_Format == 0x05 /* X_D3DFMT_R5G6B5 */ || X_Format == 0x04 /* X_D3DFMT_A4R4G4B4 */
                  || X_Format == 0x02 /* X_D3DFMT_A1R5G5B5 */ || X_Format == 0x03 /* X_D3DFMT_X1R5G5B5 */
-                 || X_Format == 0x28 /* X_D3DFMT_G8B8 */ )
+                 || X_Format == 0x28 /* X_D3DFMT_G8B8 */ || X_Format == 0x1A /* X_D3DFMT_A8L8 */)
             {
                 bSwizzled = TRUE;
 
@@ -1416,7 +1416,7 @@ VOID XTL::EmuUpdateActiveTexture() // Never called!
                 dwBPP = 2;
             }
             else if(X_Format == 0x00 /* X_D3DFMT_L8 */ || X_Format == 0x0B /* X_D3DFMT_P8 */ 
-				 || X_Format == 0x01 /* X_D3DFMT_AL8 */ || X_Format == 0x1A /* X_D3DFMT_A8L8 */)
+				 || X_Format == 0x01 /* X_D3DFMT_AL8 */)
             {
                 bSwizzled = TRUE;
 
