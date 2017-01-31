@@ -211,55 +211,55 @@ OOVPA_END;
 OOVPATable XAPI_4134[] = {
 
     // XInitDevices (* unchanged since 3911 *)
-	OOVPA_TABLE_ENTRY(XInitDevices, 3911), //*/
+    OOVPA_TABLE_ENTRY(XInitDevices, 3911), //*/
     // SetThreadPriority (* unchanged since 3911 *)
-	OOVPA_TABLE_ENTRY(SetThreadPriority, 3911),
-	// GetExitCodeThread (* unchanged since 3911 *)
-	OOVPA_TABLE_ENTRY(GetExitCodeThread, 3911),
+    OOVPA_TABLE_ENTRY(SetThreadPriority, 3911),
+    // GetExitCodeThread (* unchanged since 3911 *)
+    OOVPA_TABLE_ENTRY(GetExitCodeThread, 3911),
     // XGetDevices
-	OOVPA_TABLE_ENTRY(XGetDevices, 4134),
+    OOVPA_TABLE_ENTRY(XGetDevices, 4134),
     // XInputOpen
-	OOVPA_TABLE_ENTRY(XInputOpen, 4134),
+    OOVPA_TABLE_ENTRY(XInputOpen, 4134),
     // XInputGetState
-	OOVPA_TABLE_ENTRY(XInputGetState, 4134),
+    OOVPA_TABLE_ENTRY(XInputGetState, 4134),
     // XInputSetState (* unchanged since 3911 *)
-	OOVPA_TABLE_ENTRY(XInputSetState, 3911),
+    OOVPA_TABLE_ENTRY(XInputSetState, 3911),
     // XMountUtilityDrive
-	OOVPA_TABLE_ENTRY(XMountUtilityDrive, 4134),
-	// CreateFiber (* unchanged since 3911 *)
-	OOVPA_TABLE_ENTRY(CreateFiber, 3911),
-	// DeleteFiber (* unchanged since 3911 *)
-	OOVPA_TABLE_ENTRY(DeleteFiber, 3911),
-	// GetTimeZoneInformation (* unchanged since 3911 *)
-	OOVPA_TABLE_ENTRY(GetTimeZoneInformation, 3911),
+    OOVPA_TABLE_ENTRY(XMountUtilityDrive, 4134),
+    // CreateFiber (* unchanged since 3911 *)
+    OOVPA_TABLE_ENTRY(CreateFiber, 3911),
+    // DeleteFiber (* unchanged since 3911 *)
+    OOVPA_TABLE_ENTRY(DeleteFiber, 3911),
+    // GetTimeZoneInformation (* unchanged since 3911 *)
+    OOVPA_TABLE_ENTRY(GetTimeZoneInformation, 3911),
     // XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
-	OOVPA_TABLE_ENTRY(XRegisterThreadNotifyRoutine, 3911),
-	// XGetDeviceChanges (* unchanged since 3911 *)
-	OOVPA_TABLE_ENTRY(XGetDeviceChanges, 3911),
-	// XID_fCloseDevice (* unchanged since 3911 *)
-	OOVPA_TABLE_XREF(XID_fCloseDevice, 3911),
+    OOVPA_TABLE_ENTRY(XRegisterThreadNotifyRoutine, 3911),
+    // XGetDeviceChanges (* unchanged since 3911 *)
+    OOVPA_TABLE_ENTRY(XGetDeviceChanges, 3911),
+    // XID_fCloseDevice (* unchanged since 3911 *)
+    OOVPA_TABLE_XREF(XID_fCloseDevice, 3911),
     // XInputClose (* unchanged since 3911 *)
-	OOVPA_TABLE_ENTRY(XInputClose, 3911),
+    OOVPA_TABLE_ENTRY(XInputClose, 3911),
     // XInputGetCapabilities (* unchanged since 3911 *)
-	OOVPA_TABLE_ENTRY(XInputGetCapabilities, 3911),
-	// GetThreadPriority (* unchanged since 3911 *)
-	OOVPA_TABLE_ENTRY(GetThreadPriority, 3911),
-	// XInputPoll
-	OOVPA_TABLE_ENTRY(XInputPoll, 4134),
-	// SetThreadPriorityBoost (* unchanged since 3911 *)
-	OOVPA_TABLE_ENTRY(SetThreadPriorityBoost, 3911),
-	// SignalObjectAndWait (* unchanged since 3911 *)
-	OOVPA_TABLE_ENTRY(SignalObjectAndWait, 3911),
-	// QueueUserAPC (* unchanged since 3911 *)
-	OOVPA_TABLE_ENTRY(QueueUserAPC, 3911),
-	// XMountMUA
-	OOVPA_TABLE_ENTRY(XMountMUA, 4134),
-	// timeSetEvent
-	OOVPA_TABLE_ENTRY(timeSetEvent, 4134),
-	// timeKillEvent
-	OOVPA_TABLE_ENTRY(timeKillEvent, 4134),
-	// XLaunchNewImageA
-	OOVPA_TABLE_PATCH(XLaunchNewImageA, 3911, XLaunchNewImage),
+    OOVPA_TABLE_ENTRY(XInputGetCapabilities, 3911),
+    // GetThreadPriority (* unchanged since 3911 *)
+    OOVPA_TABLE_ENTRY(GetThreadPriority, 3911),
+    // XInputPoll
+    OOVPA_TABLE_ENTRY(XInputPoll, 4134),
+    // SetThreadPriorityBoost (* unchanged since 3911 *)
+    OOVPA_TABLE_ENTRY(SetThreadPriorityBoost, 3911),
+    // SignalObjectAndWait (* unchanged since 3911 *)
+    OOVPA_TABLE_ENTRY(SignalObjectAndWait, 3911),
+    // QueueUserAPC (* unchanged since 3911 *)
+    OOVPA_TABLE_ENTRY(QueueUserAPC, 3911),
+    // XMountMUA
+    OOVPA_TABLE_ENTRY(XMountMUA, 4134),
+    // timeSetEvent
+    OOVPA_TABLE_ENTRY(timeSetEvent, 4134),
+    // timeKillEvent
+    OOVPA_TABLE_ENTRY(timeKillEvent, 4134),
+    // XLaunchNewImageA
+    OOVPA_TABLE_PATCH(XLaunchNewImageA, 3911, XLaunchNewImage),
 };
 
 // ******************************************************************

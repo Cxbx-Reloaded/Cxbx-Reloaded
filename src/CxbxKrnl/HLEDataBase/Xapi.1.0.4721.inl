@@ -36,45 +36,45 @@
 // * XAPI_4721
 // ******************************************************************
 OOVPATable XAPI_4721[] = {
-	/*
+    /*
     // RtlCreateHeap (* unchanged since 1.0.4361 *) (* OR FARTHER *)
     obsolete OOVPA_TABLE_ENTRY(RtlCreateHeap, 3911),
     // RtlAllocateHeap (* unchanged since 1.0.4361 *) (* OR FARTHER *)
     obsolete OOVPA_TABLE_ENTRY(RtlAllocateHeap, 3911),
-	// RtlReAllocateHeap
+    // RtlReAllocateHeap
     obsolete OOVPA_TABLE_ENTRY(RtlReAllocateHeap, 4627),
     // RtlFreeHeap
     obsolete OOVPA_TABLE_ENTRY(RtlFreeHeap, 4627),
     // RtlSizeHeap
     obsolete OOVPA_TABLE_ENTRY(RtlSizeHeap, 4627),
-	// RtlDestroyHeap
-	obsolete OOVPA_TABLE_ENTRY(RtlDestroyHeap, 4627),
-	*/
+    // RtlDestroyHeap
+    obsolete OOVPA_TABLE_ENTRY(RtlDestroyHeap, 4627),
+    */
     // XMountUtilityDrive
-	OOVPA_TABLE_ENTRY(XMountUtilityDrive, 4432),
+    OOVPA_TABLE_ENTRY(XMountUtilityDrive, 4432),
     // XInitDevices (* unchanged since 1.0.3911 *)
-	OOVPA_TABLE_ENTRY(XInitDevices, 3911),
+    OOVPA_TABLE_ENTRY(XInitDevices, 3911),
     // XGetDevices (* unchanged since 1.0.4134 *)
-	OOVPA_TABLE_ENTRY(XGetDevices, 4134),
+    OOVPA_TABLE_ENTRY(XGetDevices, 4134),
     // XInputOpen (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_ENTRY(XInputOpen, 4361),
+    OOVPA_TABLE_ENTRY(XInputOpen, 4361),
     // XInputGetCapabilities (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_ENTRY(XInputGetCapabilities, 4361),
+    OOVPA_TABLE_ENTRY(XInputGetCapabilities, 4361),
     // XInputGetState (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_ENTRY(XInputGetState, 4361),
+    OOVPA_TABLE_ENTRY(XInputGetState, 4361),
     // XInputSetState (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_ENTRY(XInputSetState, 4361),
-	// XID_fCloseDevice (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_XREF(XID_fCloseDevice, 4361),
-	// XInputClose (* unchanged since 1.0.3911 *)
-	OOVPA_TABLE_ENTRY(XInputClose, 3911),
-	// XInputClose (* unchanged since 1.0.4361 *)
-	// OOVPA_TABLE_ENTRY(XInputClose, 4361),
+    OOVPA_TABLE_ENTRY(XInputSetState, 4361),
+    // XID_fCloseDevice (* unchanged since 1.0.4361 *)
+    OOVPA_TABLE_XREF(XID_fCloseDevice, 4361),
+    // XInputClose (* unchanged since 1.0.3911 *)
+    OOVPA_TABLE_ENTRY(XInputClose, 3911),
+    // XInputClose (* unchanged since 1.0.4361 *)
+    // OOVPA_TABLE_ENTRY(XInputClose, 4361),
     // XapiThreadStartup (* unchanged since 1.0.4361 *)
-	// obsolete OOVPA_TABLE_ENTRY(XapiThreadStartup, 4361),
+    // obsolete OOVPA_TABLE_ENTRY(XapiThreadStartup, 4361),
     //* Too High Level
     // XapiInitProcess (* unchanged since 1.0.4361 *)
-	// obsolete OOVPA_TABLE_ENTRY(XapiInitProcess, 4361),
+    // obsolete OOVPA_TABLE_ENTRY(XapiInitProcess, 4361),
     //*/
     // XapiBootToDash (* unchanged since 1.0.3911 *)
     /* obsolete OOVPA_TABLE_ENTRY(XapiBootDash, 3911),*/
