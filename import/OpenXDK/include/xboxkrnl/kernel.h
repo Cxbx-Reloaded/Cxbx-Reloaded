@@ -121,7 +121,15 @@ XBSYSAPI EXPORTNUM(107) VOID NTAPI KeInitializeDpc
     PVOID                DeferredContext
 );
 
-XBSYSAPI VOID *KeInitializeEvent;
+// ******************************************************************
+// * 0x006C - KeInitializeEvent()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(108) VOID NTAPI KeInitializeEvent
+(
+	IN PRKEVENT Event,
+	IN EVENT_TYPE Type,
+	IN BOOLEAN State
+);
 
 // ******************************************************************
 // * 0x006D - KeInitializeInterrupt()

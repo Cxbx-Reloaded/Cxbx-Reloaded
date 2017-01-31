@@ -1252,10 +1252,10 @@ ERWLOCK, *PERWLOCK;
 
 typedef struct _KDEVICE_QUEUE
 {
-	CSHORT Type;
-	UCHAR Size;
-	BOOLEAN Busy;
-	LIST_ENTRY DeviceListHead;
+	CSHORT Type;                // 0x00
+	UCHAR Size;                 // 0x02
+	BOOLEAN Busy;               // 0x04
+	LIST_ENTRY DeviceListHead;  // 0x08
 }
 KDEVICE_QUEUE, *PKDEVICE_QUEUE, *RESTRICTED_POINTER PRKDEVICE_QUEUE;
 

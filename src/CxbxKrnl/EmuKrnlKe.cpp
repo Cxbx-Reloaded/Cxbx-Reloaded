@@ -318,6 +318,28 @@ XBSYSAPI EXPORTNUM(107) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeDpc
 }
 
 // ******************************************************************
+// * 0x006C - KeInitializeEvent()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(108) VOID NTAPI xboxkrnl::KeInitializeEvent
+(
+	IN PRKEVENT Event,
+	IN EVENT_TYPE Type,
+	IN BOOLEAN State
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Event)
+		LOG_FUNC_ARG(Type)
+		LOG_FUNC_ARG(State)
+		LOG_FUNC_END;
+
+	Event->Header.Type = Type;
+	Event->Header.Size = sizeof(KEVENT) / sizeof(LONG);
+	Event->Header.SignalState = State;
+	// TODO : InitializeListHead(&(Event->Header.WaitListHead));
+}
+
+// ******************************************************************
 // * 0x006D - KeInitializeInterrupt()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(109) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeInterrupt
