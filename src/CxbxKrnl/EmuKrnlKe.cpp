@@ -59,6 +59,78 @@ namespace NtDll
 #include <chrono>
 #include <thread>
 
+// Copied over from Dxbx. 
+typedef struct _DpcData {
+	CRITICAL_SECTION Lock;
+	HANDLE DpcThread;
+	HANDLE DpcEvent;
+	xboxkrnl::LIST_ENTRY DpcQueue;
+	xboxkrnl::LIST_ENTRY TimerQueue;
+} DpcData;
+
+DpcData g_DpcData = { 0 }; // TODO : InitializeCriticalSection(Lock)
+
+// See also :
+// https://github.com/reactos/reactos/blob/40a16a9cf1cdfca399e9154b42d32c30b63480f5/reactos/drivers/filesystems/udfs/Include/env_spec_w32.h
+void InitializeListHead(xboxkrnl::PLIST_ENTRY pListHead)
+{
+	pListHead->Flink = pListHead->Blink = pListHead;
+}
+
+bool IsListEmpty(xboxkrnl::PLIST_ENTRY pListHead)
+{
+	return (pListHead->Flink == pListHead);
+}
+
+void InsertHeadList(xboxkrnl::PLIST_ENTRY pListHead, xboxkrnl::PLIST_ENTRY pEntry)
+{
+	xboxkrnl::PLIST_ENTRY _EX_ListHead = pListHead;
+	xboxkrnl::PLIST_ENTRY _EX_Flink = _EX_ListHead->Flink;
+
+	pEntry->Flink = _EX_Flink;
+	pEntry->Blink = _EX_ListHead;
+	_EX_Flink->Blink = pEntry;
+	_EX_ListHead->Flink = pEntry;
+}
+
+void InsertTailList(xboxkrnl::PLIST_ENTRY pListHead, xboxkrnl::PLIST_ENTRY pEntry)
+{
+	xboxkrnl::PLIST_ENTRY _EX_ListHead = pListHead;
+	xboxkrnl::PLIST_ENTRY _EX_Blink = _EX_ListHead->Blink;
+	
+	pEntry->Flink = _EX_ListHead;
+	pEntry->Blink = _EX_Blink;
+	_EX_Blink->Flink = pEntry;
+	_EX_ListHead->Blink = pEntry;
+}
+
+//#define RemoveEntryList(e) do { PLIST_ENTRY f = (e)->Flink, b = (e)->Blink; f->Blink = b; b->Flink = f; (e)->Flink = (e)->Blink = NULL; } while (0)
+
+void RemoveEntryList(xboxkrnl::PLIST_ENTRY pEntry)
+{
+	xboxkrnl::PLIST_ENTRY _EX_Flink = pEntry->Flink;
+	xboxkrnl::PLIST_ENTRY _EX_Blink = pEntry->Blink;
+
+	_EX_Blink->Flink = _EX_Flink;
+	_EX_Flink->Blink = _EX_Blink;
+}
+
+xboxkrnl::PLIST_ENTRY RemoveHeadList(xboxkrnl::PLIST_ENTRY pListHead)
+{
+	xboxkrnl::PLIST_ENTRY Result = pListHead->Flink;
+
+	RemoveEntryList(pListHead->Flink);
+	return Result;
+}
+
+xboxkrnl::PLIST_ENTRY RemoveTailList(xboxkrnl::PLIST_ENTRY pListHead)
+{
+	xboxkrnl::PLIST_ENTRY Result = pListHead->Blink;
+	
+	RemoveEntryList(pListHead->Blink);
+	return Result;
+}
+
 // ******************************************************************
 // * KeGetPcr()
 // * NOTE: This is a macro on the Xbox, however we implement it 
@@ -320,7 +392,7 @@ XBSYSAPI EXPORTNUM(107) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeDpc
 // ******************************************************************
 // * 0x006C - KeInitializeEvent()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(108) VOID NTAPI xboxkrnl::KeInitializeEvent
+XBSYSAPI EXPORTNUM(108) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeEvent
 (
 	IN PRKEVENT Event,
 	IN EVENT_TYPE Type,
@@ -336,7 +408,7 @@ XBSYSAPI EXPORTNUM(108) VOID NTAPI xboxkrnl::KeInitializeEvent
 	Event->Header.Type = Type;
 	Event->Header.Size = sizeof(KEVENT) / sizeof(LONG);
 	Event->Header.SignalState = State;
-	// TODO : InitializeListHead(&(Event->Header.WaitListHead));
+	InitializeListHead(&(Event->Header.WaitListHead));
 }
 
 // ******************************************************************
@@ -393,8 +465,7 @@ XBSYSAPI EXPORTNUM(113) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeTimerEx
 
 	Timer->TimerListEntry.Blink = NULL;
 	Timer->TimerListEntry.Flink = NULL;
-	Timer->Header.WaitListHead.Flink = &Timer->Header.WaitListHead;
-	Timer->Header.WaitListHead.Blink = &Timer->Header.WaitListHead;
+	InitializeListHead(&(Timer->Header.WaitListHead));
 
 	Timer->DueTime.QuadPart = 0;
 	Timer->Period = 0;
@@ -416,7 +487,21 @@ XBSYSAPI EXPORTNUM(119) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertQueueDpc
 		LOG_FUNC_ARG(SystemArgument2)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	if (Dpc->DpcListEntry.Flink == nullptr)
+	{
+		EnterCriticalSection(&(g_DpcData.Lock));
+
+		if (Dpc->DpcListEntry.Flink == nullptr)
+		{
+			Dpc->SystemArgument1 = SystemArgument1;
+			Dpc->SystemArgument2 = SystemArgument2;
+			InsertTailList(&(g_DpcData.DpcQueue), &(Dpc->DpcListEntry));
+		}
+
+		LeaveCriticalSection(&(g_DpcData.Lock));
+
+		SetEvent(g_DpcData.DpcEvent);
+	}
 
 	RETURN(TRUE);
 }
@@ -570,6 +655,48 @@ XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 }
 
 // ******************************************************************
+// * 0x0089 - KeRemoveQueueDpc()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(137) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeRemoveQueueDpc
+(
+	IN PKDPC Dpc
+)
+{
+	LOG_FUNC_ONE_ARG(Dpc);
+
+	if (Dpc->DpcListEntry.Flink != NULL)
+	{
+		EnterCriticalSection(&(g_DpcData.Lock));
+		if (Dpc->DpcListEntry.Flink != NULL)
+		{
+			RemoveEntryList(&(Dpc->DpcListEntry));
+			Dpc->DpcListEntry.Flink = NULL;
+		}
+
+		LeaveCriticalSection(&(g_DpcData.Lock));
+	}
+
+	return TRUE;
+}
+
+// ******************************************************************
+// * 0x008A - KeResetEvent()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(138) xboxkrnl::LONG NTAPI xboxkrnl::KeResetEvent
+(
+	IN PRKEVENT Event
+)
+{
+	LOG_FUNC_ONE_ARG(Event);
+
+	// TODO : Untested & incomplete
+	LONG ret = Event->Header.SignalState;
+	Event->Header.SignalState = 0;
+
+	return ret;
+}
+
+// ******************************************************************
 // * 0x008F - KeSetBasePriorityThread()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(143) xboxkrnl::LONG NTAPI xboxkrnl::KeSetBasePriorityThread
@@ -674,8 +801,6 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 	LARGE_INTEGER Interval;
 	LARGE_INTEGER SystemTime;
 
-#define RemoveEntryList(e) do { PLIST_ENTRY f = (e)->Flink, b = (e)->Blink; f->Blink = b; b->Flink = f; (e)->Flink = (e)->Blink = NULL; } while (0)
-
 	if (Timer->Header.Type != 8 && Timer->Header.Type != 9) {
 		CxbxKrnlCleanup("Assertion: '(Timer)->Header.Type == TimerNotificationObject) || ((Timer)->Header.Type == TimerSynchronizationObject)' in KeSetTimerEx()");
 	}
@@ -692,21 +817,20 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 	Timer->Period = Period;
 
 	if (/*!KiInsertTreeTimer(Timer,DueTime)*/ TRUE) {
-		if (Timer->Header.WaitListHead.Flink != &Timer->Header.WaitListHead) {
+		if (!IsListEmpty(&(Timer->Header.WaitListHead))) {
 			// KiWaitTest(Timer, 0);
 		}
 
 		if (Dpc != NULL) {
 			// Call the Dpc routine if one is specified
 			KeQuerySystemTime(&SystemTime);
-			// Need to implement KeInsertQueueDpc xboxkrnl.exe export (ordinal 119)
-			// KeInsertQueueDpc(Timer->Dpc, SystemTime.LowPart, SystemTime.HighPart);
+			KeInsertQueueDpc(Timer->Dpc, (PVOID)SystemTime.u.LowPart, (PVOID)SystemTime.u.HighPart);
 		}
 
 		if (Period != 0) {
 			// Prepare the repetition if Timer is periodic
-			Interval.QuadPart = (-10 * 1000) * Timer->Period;
-			while (/*!KiInsertTreeTimer(Timer,Interval)*/TRUE) {
+			Interval.QuadPart = (LONGLONG)(-10 * 1000) * Timer->Period;
+			while (/*!KiInsertTreeTimer(Timer,Interval)*/FALSE) {
 				;
 			}
 		}
@@ -723,9 +847,7 @@ XBSYSAPI EXPORTNUM(151) xboxkrnl::VOID NTAPI xboxkrnl::KeStallExecutionProcessor
 	IN ULONG MicroSeconds
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(MicroSeconds)
-		LOG_FUNC_END;
+	LOG_FUNC_ONE_ARG(MicroSeconds);
 
 	// WinAPI Sleep usually sleeps for a minimum of 15ms, we want us. 
 	// Thanks to C++11, we can do this in a nice way without resorting to

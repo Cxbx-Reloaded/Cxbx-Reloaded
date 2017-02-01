@@ -224,8 +224,23 @@ XBSYSAPI VOID *KeRemoveByKeyDeviceQueue;
 XBSYSAPI VOID *KeRemoveDeviceQueue;
 XBSYSAPI VOID *KeRemoveEntryDeviceQueue;
 XBSYSAPI VOID *KeRemoveQueue;
-XBSYSAPI VOID *KeRemoveQueueDpc;
-XBSYSAPI VOID *KeResetEvent;
+
+// ******************************************************************
+// * 0x0089 - KeRemoveQueueDpc()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(137) BOOLEAN NTAPI KeRemoveQueueDpc
+(
+	IN PKDPC Dpc
+);
+
+// ******************************************************************
+// * 0x008A - KeResetEvent()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(138) LONG NTAPI KeResetEvent
+(
+	IN PRKEVENT Event
+);
+
 XBSYSAPI VOID *KeRestoreFloatingPointState;
 XBSYSAPI VOID *KeResumeThread;
 XBSYSAPI VOID *KeRundownQueue;
