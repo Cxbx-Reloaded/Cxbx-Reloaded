@@ -54,10 +54,10 @@ OOVPA_XREF_LARGE(XnInit, 4627, 18,
         { 0x001A, 0xB1 }, // (Offset,Value)-Pair #7
         { 0x001B, 0x11 }, // (Offset,Value)-Pair #8
 
-        // XnInit+0x0041 : push 0x0AF8
-        { 0x0041, 0x68 }, // (Offset,Value)-Pair #9
-        { 0x0042, 0xF8 }, // (Offset,Value)-Pair #10
-        { 0x0043, 0x0A }, // (Offset,Value)-Pair #11
+        // XnInit+0x003C : push 0x4E455444
+        { 0x003C, 0x68 }, // (Offset,Value)-Pair #9
+        { 0x003D, 0x4E }, // (Offset,Value)-Pair #10
+        { 0x003E, 0x45 }, // (Offset,Value)-Pair #11
 
 		// XnInit+0x01FA : OR DWORD PTR SS:[EBP-4],FFFFFFFF
         { 0x01FA, 0x83 }, // (Offset,Value)-Pair #12
