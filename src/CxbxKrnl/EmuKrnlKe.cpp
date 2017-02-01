@@ -150,6 +150,128 @@ xboxkrnl::KPCR* KeGetPcr()
 	return Pcr;
 }
 
+DWORD BootTickCount = 0;
+
+// The Xbox GetTickCount is measured in milliseconds, just like the native GetTickCount.
+// The only difference we'll take into account here, is that the Xbox will probably reboot
+// much more often than Windows, so we correct this with a 'BootTickCount' value :
+DWORD CxbxXboxGetTickCount()
+{
+	return GetTickCount() - BootTickCount;
+}
+
+DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
+{
+	xboxkrnl::PKDPC pkdpc;
+	DWORD dwWait;
+	DWORD dwNow;
+	LONG lWait;
+	xboxkrnl::PKTIMER pktimer;
+
+	while (true)
+	{
+		EnterCriticalSection(&(g_DpcData.Lock));
+
+//    if (g_DpcData._fShutdown)
+//        break; // while 
+
+//    Assert(g_DpcData._dwThreadId == GetCurrentThreadId());
+//    Assert(g_DpcData._dwDpcThreadId == 0);
+//    g_DpcData._dwDpcThreadId = g_DpcData._dwThreadId;
+//    Assert(g_DpcData._dwDpcThreadId != 0);
+
+		while (!IsListEmpty(&(g_DpcData.DpcQueue)))
+		{
+			pkdpc = (xboxkrnl::PKDPC)RemoveHeadList(&(g_DpcData.DpcQueue));
+			pkdpc->DpcListEntry.Flink = nullptr;
+			pkdpc->DeferredRoutine(
+				pkdpc,
+				pkdpc->DeferredContext,
+				pkdpc->SystemArgument1,
+				pkdpc->SystemArgument2);
+		}
+
+		dwWait = INFINITE;
+		if (!IsListEmpty(&(g_DpcData.TimerQueue)))
+		{
+			while (true)
+			{
+				dwNow = CxbxXboxGetTickCount();
+				dwWait = INFINITE;
+				pktimer = (xboxkrnl::PKTIMER)g_DpcData.TimerQueue.Flink;
+				pkdpc = nullptr;
+				while (pktimer != (xboxkrnl::PKTIMER)&(g_DpcData.TimerQueue))
+				{
+					lWait = (LONG)pktimer->DueTime.u.LowPart - dwNow;
+					if (lWait <= 0) 
+					{
+						pktimer->DueTime.u.LowPart = pktimer->Period + dwNow;
+						pkdpc = pktimer->Dpc;
+						break; // while
+					}
+
+					if (dwWait > (DWORD)lWait)
+						dwWait = (DWORD)lWait;
+
+					pktimer = (xboxkrnl::PKTIMER)pktimer->TimerListEntry.Flink;
+				}
+
+				if (pkdpc == nullptr)
+					break; // while
+
+				pkdpc->DeferredRoutine(pkdpc,
+					pkdpc->DeferredContext,
+					pkdpc->SystemArgument1,
+					pkdpc->SystemArgument2);
+			}
+		}
+
+//    Assert(g_DpcData._dwThreadId == GetCurrentThreadId());
+//    Assert(g_DpcData._dwDpcThreadId == g_DpcData._dwThreadId);
+//    g_DpcData._dwDpcThreadId = 0;
+		LeaveCriticalSection(&(g_DpcData.Lock));
+
+		// TODO : Wait for shutdown too here
+		WaitForSingleObject(g_DpcData.DpcEvent, dwWait);
+	} // while
+
+	return S_OK;
+}
+
+void InitDpcAndTimerThread()
+{
+	DWORD dwThreadId;
+
+	InitializeCriticalSection(&(g_DpcData.Lock));
+	InitializeListHead(&(g_DpcData.DpcQueue));
+	InitializeListHead(&(g_DpcData.TimerQueue));
+	g_DpcData.DpcEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	g_DpcData.DpcThread = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)&EmuThreadDpcHandler, nullptr, 0, &dwThreadId);
+	SetThreadPriority(g_DpcData.DpcThread, THREAD_PRIORITY_HIGHEST);
+}
+
+// Xbox Performance Counter Frequency = 337F98 = ACPI timer frequency (3.375000 Mhz)
+#define XBOX_PERFORMANCE_FREQUENCY 3375000 
+
+LARGE_INTEGER NativePerformanceCounter = { 0 };
+LARGE_INTEGER NativePerformanceFrequency = { 0 };
+double NativeToXbox_FactorForPerformanceFrequency;
+
+CXBXKRNL_API void CxbxInitPerformanceCounters()
+{
+	BootTickCount = GetTickCount();
+
+	// Measure current host performance counter and frequency
+	QueryPerformanceCounter(&NativePerformanceCounter);
+	QueryPerformanceFrequency(&NativePerformanceFrequency);
+	// TODO : If anything like speed-stepping influences this, prevent or fix it here
+
+	// Calculate the host-to-xbox performance frequency factor,
+	// used the return Xbox-like results in KeQueryPerformanceCounter:
+	NativeToXbox_FactorForPerformanceFrequency = (double)XBOX_PERFORMANCE_FREQUENCY / NativePerformanceFrequency.QuadPart;
+
+	InitDpcAndTimerThread();
+}
 
 // ******************************************************************
 // * 0x005C - KeAlertResumeThread()
@@ -549,27 +671,6 @@ XBSYSAPI EXPORTNUM(125) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryInterruptTime
 	// TODO : Should we apply HostSystemTimeDelta to InterruptTime too?
 
 	RETURN(InterruptTime);
-}
-
-// Xbox Performance Counter Frequency = 337F98 = ACPI timer frequency (3.375000 Mhz)
-#define XBOX_PERFORMANCE_FREQUENCY 3375000 
-
-LARGE_INTEGER NativePerformanceCounter = { 0 };
-LARGE_INTEGER NativePerformanceFrequency = { 0 };
-double NativeToXbox_FactorForPerformanceFrequency;
-
-CXBXKRNL_API void CxbxInitPerformanceCounters()
-{
-	//BootTickCount = GetTickCount();
-
-	// Measure current host performance counter and frequency
-	QueryPerformanceCounter(&NativePerformanceCounter);
-	QueryPerformanceFrequency(&NativePerformanceFrequency);
-	// TODO : If anything like speed-stepping influences this, prevent or fix it here
-
-	// Calculate the host-to-xbox performance frequency factor,
-	// used the return Xbox-like results in KeQueryPerformanceCounter:
-	NativeToXbox_FactorForPerformanceFrequency = (double)XBOX_PERFORMANCE_FREQUENCY / NativePerformanceFrequency.QuadPart;
 }
 
 // ******************************************************************
