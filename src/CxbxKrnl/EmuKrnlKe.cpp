@@ -160,6 +160,12 @@ DWORD CxbxXboxGetTickCount()
 	return GetTickCount() - BootTickCount;
 }
 
+// CONTAINING_RECORD macro
+// Gets the value of structure member (field - num1),given the type(MYSTRUCT, in this code) and the List_Entry head(temp, in this code)
+// See http://stackoverflow.com/questions/8240273/a-portable-way-to-calculate-pointer-to-the-whole-structure-using-pointer-to-a-fi
+//#define CONTAINING_RECORD(ptr, type, field) \
+//	(((type) *)((char *)(ptr) - offsetof((type), member)))
+
 DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
 {
 	xboxkrnl::PKDPC pkdpc;
@@ -182,7 +188,7 @@ DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
 
 		while (!IsListEmpty(&(g_DpcData.DpcQueue)))
 		{
-			pkdpc = (xboxkrnl::PKDPC)RemoveHeadList(&(g_DpcData.DpcQueue));
+			pkdpc = CONTAINING_RECORD(RemoveHeadList(&(g_DpcData.DpcQueue)), xboxkrnl::KDPC, DpcListEntry);
 			pkdpc->DpcListEntry.Flink = nullptr;
 			pkdpc->DeferredRoutine(
 				pkdpc,
@@ -245,8 +251,8 @@ void InitDpcAndTimerThread()
 	InitializeCriticalSection(&(g_DpcData.Lock));
 	InitializeListHead(&(g_DpcData.DpcQueue));
 	InitializeListHead(&(g_DpcData.TimerQueue));
-	g_DpcData.DpcEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-	g_DpcData.DpcThread = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)&EmuThreadDpcHandler, nullptr, 0, &dwThreadId);
+	g_DpcData.DpcEvent = CreateEvent(/*lpEventAttributes=*/nullptr, /*bManualReset=*/FALSE, /*bInitialState=*/FALSE, /*lpName=*/nullptr);
+	g_DpcData.DpcThread = CreateThread(/*lpThreadAttributes=*/nullptr, /*dwStackSize=*/0, (LPTHREAD_START_ROUTINE)&EmuThreadDpcHandler, /*lpParameter=*/nullptr, /*dwCreationFlags=*/0, &dwThreadId);
 	SetThreadPriority(g_DpcData.DpcThread, THREAD_PRIORITY_HIGHEST);
 }
 
@@ -256,6 +262,8 @@ void InitDpcAndTimerThread()
 LARGE_INTEGER NativePerformanceCounter = { 0 };
 LARGE_INTEGER NativePerformanceFrequency = { 0 };
 double NativeToXbox_FactorForPerformanceFrequency;
+
+void ConnectKeInterruptTimeToThunkTable(); // forward
 
 CXBXKRNL_API void CxbxInitPerformanceCounters()
 {
@@ -270,6 +278,10 @@ CXBXKRNL_API void CxbxInitPerformanceCounters()
 	// used the return Xbox-like results in KeQueryPerformanceCounter:
 	NativeToXbox_FactorForPerformanceFrequency = (double)XBOX_PERFORMANCE_FREQUENCY / NativePerformanceFrequency.QuadPart;
 
+	ConnectKeInterruptTimeToThunkTable();
+
+	// Let's initialize the Dpc and timer handling thread too,
+	// here for now (should be called by our caller)
 	InitDpcAndTimerThread();
 }
 
@@ -633,7 +645,12 @@ XBSYSAPI EXPORTNUM(119) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertQueueDpc
 // ******************************************************************
 // Dxbx note : This was once a value, but instead we now point to
 // the native Windows versions (see ConnectWindowsTimersToThunkTable) :
-// XBSYSAPI EXPORTNUM(120) xboxkrnl::PKSYSTEM_TIME xboxkrnl::KeInterruptTime; // Used for KernelThunk[120]
+XBSYSAPI EXPORTNUM(120) xboxkrnl::PKSYSTEM_TIME xboxkrnl::KeInterruptTime = nullptr; // Set by ConnectKeInterruptTimeToThunkTable
+
+void ConnectKeInterruptTimeToThunkTable()
+{
+	xboxkrnl::KeInterruptTime = (xboxkrnl::PKSYSTEM_TIME)CxbxKrnl_KernelThunkTable[120];
+}
 
 // ******************************************************************
 // * 0x007A - KeLeaveCriticalRegion()
@@ -658,19 +675,29 @@ XBSYSAPI EXPORTNUM(125) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryInterruptTime
 	// TODO : Some software might call this often and fill the log quickly,
 	// in which case we should not LOG_FUNC nor RETURN (use normal return instead).
 	LOG_FUNC();
+	
+	LARGE_INTEGER InterruptTime;
 
 	// Don't use NtDll::QueryInterruptTime, it's too new (Windows 10)
-	
 	// Instead, read KeInterruptTime from our kernel thunk table,
 	// which we coupled to the host InterruptTime in ConnectWindowsTimersToThunkTable:
-	ULONGLONG InterruptTime = *((PULONGLONG)CxbxKrnl_KernelThunkTable[120]);
-	
-	// TODO : Read InterruptTime atomically (or with a spinloop) to avoid errors
-	// when High1Time and High2Time differ (during unprocessed overflow in LowPart).
-	
-	// TODO : Should we apply HostSystemTimeDelta to InterruptTime too?
+//	NtDll::PKSYSTEM_TIME KeInterruptTime = (NtDll::PKSYSTEM_TIME)CxbxKrnl_KernelThunkTable[120];
 
-	RETURN(InterruptTime);
+	while (true)
+	{
+		InterruptTime.u.HighPart = KeInterruptTime->High1Time;
+		InterruptTime.u.LowPart = KeInterruptTime->LowPart;
+		// TODO : Should we apply HostSystemTimeDelta to InterruptTime too?
+
+		// Read InterruptTime atomically with a spinloop to avoid errors
+		// when High1Time and High2Time differ (during unprocessed overflow in LowPart).
+		if (InterruptTime.u.HighPart == KeInterruptTime->High2Time)
+			break;
+	}
+
+	// Weird construction because there doesn't seem to exist an implicit
+	// conversion of LARGE_INTEGER to ULONGLONG :
+	RETURN(*((PULONGLONG)&InterruptTime));
 }
 
 // ******************************************************************
@@ -880,6 +907,10 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
 	return KeSetTimerEx(Timer, DueTime, 0, Dpc);
 }
 
+#define KiRemoveTreeTimer(Timer)               \
+    (Timer)->Header.Inserted = FALSE;          \
+    RemoveEntryList(&(Timer)->TimerListEntry)
+
 // ******************************************************************
 // * 0x0096 - KeSetTimerEx()
 // ******************************************************************
@@ -909,15 +940,14 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 	Inserted = Timer->Header.Inserted;
 	if (Inserted != FALSE) {
 		// Do some unlinking if already inserted in the linked list
-		Timer->Header.Inserted = FALSE;
-		RemoveEntryList(&Timer->TimerListEntry);
+		KiRemoveTreeTimer(Timer);
 	}
 
 	Timer->Header.SignalState = FALSE;
 	Timer->Dpc = Dpc;
 	Timer->Period = Period;
 
-	if (/*!KiInsertTreeTimer(Timer,DueTime)*/ TRUE) {
+	if (/*!KiInsertTreeTimer(Timer, DueTime)*/ TRUE) {
 		if (!IsListEmpty(&(Timer->Header.WaitListHead))) {
 			// KiWaitTest(Timer, 0);
 		}
@@ -931,11 +961,24 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 		if (Period != 0) {
 			// Prepare the repetition if Timer is periodic
 			Interval.QuadPart = (LONGLONG)(-10 * 1000) * Timer->Period;
-			while (/*!KiInsertTreeTimer(Timer,Interval)*/FALSE) {
+			while (/*!KiInsertTreeTimer(Timer, Interval)*/FALSE) {
 				;
 			}
 		}
 	}
+/* Dxbx has this :
+	EnterCriticalSection(&(g_DpcData.Lock));
+	if (Timer->TimerListEntry.Flink == nullptr) 
+	{
+		Timer->DueTime.QuadPart := (DueTime.QuadPart / -10000) + CxbxXboxGetTickCount();
+		Timer->Period = Period;
+		Timer->Dpc = Dpc;
+		InsertTailList(&(g_DpcData.TimerQueue), &(Timer->TimerListEntry));
+	}
+
+	LeaveCriticalSection(&(g_DpcData.Lock));
+	SetEvent(g_DpcData.DpcEvent);
+*/
 
 	RETURN(Inserted);
 }

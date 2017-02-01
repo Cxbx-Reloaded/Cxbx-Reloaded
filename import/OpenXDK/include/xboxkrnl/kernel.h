@@ -175,7 +175,11 @@ XBSYSAPI EXPORTNUM(119) BOOLEAN NTAPI KeInsertQueueDpc
     IN PVOID        SystemArgument2
 );
 
-XBSYSAPI VOID *KeInterruptTime;
+// ******************************************************************
+// * 0x0078 - KeInterruptTime
+// ******************************************************************
+XBSYSAPI EXPORTNUM(120) PKSYSTEM_TIME KeInterruptTime;
+
 XBSYSAPI VOID *KeIsExecutingDpc;
 
 // ******************************************************************
