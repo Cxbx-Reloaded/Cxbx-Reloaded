@@ -284,8 +284,6 @@ typedef enum _KWAIT_REASON {
 	MaximumWaitReason = 27
 } KWAIT_REASON;
 
-
-
 // ******************************************************************
 // * MODE
 // ******************************************************************
@@ -1442,6 +1440,8 @@ KDPC, *PKDPC;
 // ******************************************************************
 typedef enum _KOBJECTS
 {
+	TimerNotificationObject = 8,
+	TimerSynchronizationObject = 9,
     DpcObject = 0x13,
 }
 KOBJECTS, *PKOBJECTS;
