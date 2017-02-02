@@ -72,6 +72,26 @@ OOVPA_NO_XREF(DirectSoundDoWork, 4361, 7)
 OOVPA_END;
 
 // ******************************************************************
+// * DirectSoundGetSampleTime
+// ******************************************************************
+OOVPA_NO_XREF(DirectSoundGetSampleTime, 4361, 8)
+
+        // DirectSoundGetSampleTime+0x00 : xor eax, eax
+        { 0x00, 0x33 }, // (Offset,Value)-Pair #1
+        { 0x01, 0xC0 }, // (Offset,Value)-Pair #2
+
+        // DirectSoundGetSampleTime+0x0A : mov eax, ds:0FE80200Ch
+        { 0x0A, 0xA1 }, // (Offset,Value)-Pair #3
+        { 0x0B, 0x0C }, // (Offset,Value)-Pair #4
+        { 0x0C, 0x20 }, // (Offset,Value)-Pair #5
+        { 0x0D, 0x80 }, // (Offset,Value)-Pair #6
+        { 0x0E, 0xFE }, // (Offset,Value)-Pair #7
+
+        // DirectSoundGetSampleTime+0x0F : retn
+        { 0x0F, 0xC3 }, // (Offset,Value)-Pair #8
+OOVPA_END;
+
+// ******************************************************************
 // * IDirectSound8_CreateSoundBuffer
 // ******************************************************************
 OOVPA_NO_XREF(IDirectSound8_CreateSoundBuffer, 4361, 9)
@@ -992,6 +1012,8 @@ OOVPATable DSound_4361[] = {
 	OOVPA_TABLE_ENTRY(DirectSoundCreate, 4361),
 	// DirectSoundDoWork
 	OOVPA_TABLE_ENTRY(DirectSoundDoWork, 4361),
+	// DirectSoundGetSampleTime
+	OOVPA_TABLE_ENTRY(DirectSoundGetSampleTime, 4361),
     // CDirectSound_CreateSoundStream
 	OOVPA_TABLE_XREF(CDirectSound_CreateSoundStream, 4361),
 	// IDirectSound8_CreateStream

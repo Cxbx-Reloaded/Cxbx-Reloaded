@@ -38,6 +38,11 @@
 #define DirectSoundDoWork_4627 DirectSoundDoWork_4361
 
 // ******************************************************************
+// * DirectSoundGetSampleTime
+// ******************************************************************
+#define DirectSoundGetSampleTime_4627 DirectSoundGetSampleTime_4361
+
+// ******************************************************************
 // * CDirectSound::CreateSoundBuffer
 // ******************************************************************
 OOVPA_XREF(CDirectSound_CreateSoundBuffer, 4627, 14,
@@ -2919,6 +2924,8 @@ OOVPATable DSound_4627[] = {
 	OOVPA_TABLE_ENTRY(DirectSoundCreate, 4361),
 	// DirectSoundDoWork
 	OOVPA_TABLE_ENTRY(DirectSoundDoWork, 4627),
+	// DirectSoundGetSampleTime
+	OOVPA_TABLE_ENTRY(DirectSoundGetSampleTime, 4627),
     // CDirectSound_CreateSoundBuffer
 	OOVPA_TABLE_XREF(CDirectSound_CreateSoundBuffer, 4627),
 	// CDirectSoundBuffer::SetPlayRegion (XREF) (* unchanged since 4361 *)

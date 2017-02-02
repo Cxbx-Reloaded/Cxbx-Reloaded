@@ -38,6 +38,11 @@
 #define DirectSoundDoWork_4432 DirectSoundDoWork_4361
 
 // ******************************************************************
+// * DirectSoundGetSampleTime
+// ******************************************************************
+#define DirectSoundGetSampleTime_4432 DirectSoundGetSampleTime_4361
+
+// ******************************************************************
 // * IDirectSound8_Release
 // ******************************************************************
 OOVPA_NO_XREF(IDirectSound8_Release, 4432, 12)
@@ -581,6 +586,8 @@ OOVPATable DSound_4432[] = {
 	OOVPA_TABLE_ENTRY(DirectSoundCreate, 4361),
 	// DirectSoundDoWork
 	OOVPA_TABLE_ENTRY(DirectSoundDoWork, 4432),
+	// DirectSoundGetSampleTime
+	OOVPA_TABLE_ENTRY(DirectSoundGetSampleTime, 4432),
 	// IDirectSound8_CreateStream
 	OOVPA_TABLE_ENTRY(IDirectSound8_CreateStream, 3936),
     // CDirectSound_CreateSoundStream (* unchanged since 4361 *)
