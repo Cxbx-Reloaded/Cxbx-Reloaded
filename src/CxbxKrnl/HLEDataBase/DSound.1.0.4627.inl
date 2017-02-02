@@ -2930,6 +2930,8 @@ OOVPATable DSound_4627[] = {
 	OOVPA_TABLE_ENTRY(DirectSoundDoWork, 4627),
     // CDirectSound_CreateSoundBuffer
 	OOVPA_TABLE_XREF(CDirectSound_CreateSoundBuffer, 4627),
+	// CDirectSoundBuffer::SetPlayRegion (XREF) (* unchanged since 4361 *)
+	OOVPA_TABLE_XREF(CDirectSoundBuffer_SetPlayRegion, 4361),
 	// IDirectSoundBuffer8::SetPlayRegion (* unchanged since 4361 *)
 	OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_SetPlayRegion, 4361),
     // CDirectSoundBuffer::SetLoopRegion (XREF) (* unchanged since 4361 *)

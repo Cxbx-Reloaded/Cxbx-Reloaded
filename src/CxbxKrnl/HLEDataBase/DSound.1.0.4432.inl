@@ -648,6 +648,10 @@ OOVPATable DSound_4432[] = {
 	OOVPA_TABLE_ENTRY(IDirectSound8_DownloadEffectsImage, 3936),
 	// IDirectSoundBuffer_AddRef (* unchanged since 3936 *)
 	OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_AddRef, 3936),
+	// CDirectSoundBuffer::SetPlayRegion (XREF) (* unchanged since 4361 *)
+	OOVPA_TABLE_XREF(CDirectSoundBuffer_SetPlayRegion, 4361),
+	// IDirectSoundBuffer8::SetPlayRegion (* unchanged since 4361 *)
+	OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_SetPlayRegion, 4361),
 };
 
 // ******************************************************************
