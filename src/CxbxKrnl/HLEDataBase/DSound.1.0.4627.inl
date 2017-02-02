@@ -2962,8 +2962,8 @@ OOVPATable DSound_4627[] = {
 	OOVPA_TABLE_XREF(DirectSound_CDirectSound_SetAllParameters, 4928),
 	// IDirectSound8::SetAllParameters (* unchanged since 3936 *)
 	OOVPA_TABLE_ENTRY(IDirectSound8_SetAllParameters, 3936),
-    // CDirectSoundVoiceSettings_SetMixBins (* unchanged since 4432 *)
-	OOVPA_TABLE_XREF(CDirectSoundVoiceSettings_SetMixBins, 4432),
+    // CDirectSoundVoiceSettings_SetMixBins (* unchanged since 4361 *)
+    OOVPA_TABLE_XREF(CDirectSoundVoiceSettings_SetMixBins, 4361),
     // CDirectSoundVoice_SetMixBins (* unchanged since 4432 *)
 	OOVPA_TABLE_XREF(CDirectSoundVoice_SetMixBins, 4432),
     // CDirectSoundBuffer_SetMixBins (* unchanged since 4432 *)

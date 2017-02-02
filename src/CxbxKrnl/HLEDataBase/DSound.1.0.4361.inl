@@ -815,6 +815,139 @@ OOVPA_XREF(IDirectSoundBuffer_StopEx, 4361, 8,
 OOVPA_END;
 
 // ******************************************************************
+// * CDirectSoundVoiceSettings::SetMixBins
+// ******************************************************************
+OOVPA_XREF(CDirectSoundVoiceSettings_SetMixBins, 4361, 11,
+
+    XREF_DSSETMIXBINSC,
+    XRefZero)
+
+        // CDirectSoundVoiceSettings_SetMixBins+0x06 : jnz +0x1A
+        { 0x06, 0x75 }, // (Offset,Value)-Pair #1
+        { 0x07, 0x1A }, // (Offset,Value)-Pair #2
+
+        // CDirectSoundVoiceSettings_SetMixBins+0x08 : test byte ptr [ecx+8], 0x10
+        { 0x08, 0xF6 }, // (Offset,Value)-Pair #3
+        { 0x09, 0x41 }, // (Offset,Value)-Pair #4
+        { 0x0A, 0x08 }, // (Offset,Value)-Pair #5
+        { 0x0B, 0x10 }, // (Offset,Value)-Pair #6
+
+        // CDirectSoundVoiceSettings_SetMixBins+0x19 : shr eax, 1
+        { 0x19, 0xD1 }, // (Offset,Value)-Pair #7
+        { 0x1A, 0xE8 }, // (Offset,Value)-Pair #8
+
+        // CDirectSoundVoiceSettings_SetMixBins+0x53 : cmp [ecx+24h], edx
+        { 0x53, 0x39 }, // (Offset,Value)-Pair #9
+        { 0x54, 0x51 }, // (Offset,Value)-Pair #10
+        { 0x55, 0x24 }, // (Offset,Value)-Pair #11
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundVoice::SetMixBins
+// ******************************************************************
+OOVPA_XREF(CDirectSoundVoice_SetMixBins, 4361, 17,
+
+    XREF_DSSETMIXBINSB,
+    XRefOne)
+
+        // CDirectSoundVoice_SetMixBins+0x0D : call [CDirectSoundVoiceSettings::SetMixBins]
+        { 0x0D, XREF_DSSETMIXBINSC }, // (Offset,Value)-Pair #1
+
+        // CDirectSoundVoice_SetMixBins+0x01 : mov esi, [esp+8]
+        { 0x01, 0x8B }, // (Offset,Value)-Pair #2
+        { 0x02, 0x74 }, // (Offset,Value)-Pair #3
+        { 0x03, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x04, 0x08 }, // (Offset,Value)-Pair #5
+
+        // CDirectSoundVoice_SetMixBins+0x05 : push [esp+0x0C]
+        { 0x05, 0xFF }, // (Offset,Value)-Pair #6
+        { 0x06, 0x74 }, // (Offset,Value)-Pair #7
+        { 0x07, 0x24 }, // (Offset,Value)-Pair #8
+        { 0x08, 0x0C }, // (Offset,Value)-Pair #9
+
+        // CDirectSoundVoice_SetMixBins+0x09 : mov ecx, [esi+0x10]
+        { 0x09, 0x8B }, // (Offset,Value)-Pair #10
+        { 0x0A, 0x4E }, // (Offset,Value)-Pair #11
+        { 0x0B, 0x10 }, // (Offset,Value)-Pair #12
+
+        // CDirectSoundVoice_SetMixBins+0x11 : mov ecx, [esi+0x0C]
+        { 0x11, 0x8B }, // (Offset,Value)-Pair #13
+        { 0x12, 0x4E }, // (Offset,Value)-Pair #14
+        { 0x13, 0x0C }, // (Offset,Value)-Pair #15
+
+        // CDirectSoundVoice_SetMixBins+0x1A : retn 0x08
+        { 0x1A, 0xC2 }, // (Offset,Value)-Pair #16
+        { 0x1B, 0x08 }, // (Offset,Value)-Pair #17
+OOVPA_END;
+
+// ******************************************************************
+// * CDirectSoundBuffer::SetMixBins
+// ******************************************************************
+OOVPA_XREF(CDirectSoundBuffer_SetMixBins, 4361, 17,
+
+    XREF_DSSETMIXBINSA,
+    XRefOne)
+
+        // CDirectSoundBuffer_SetMixBins+0x32 : call [CDirectSoundVoice::SetMixBins]
+        { 0x32, XREF_DSSETMIXBINSB }, // (Offset,Value)-Pair #1
+
+        // CDirectSoundBuffer_SetMixBins+0x21 : mov eax, 0x80004005
+        { 0x21, 0xB8 }, // (Offset,Value)-Pair #2
+        { 0x22, 0x05 }, // (Offset,Value)-Pair #3
+        { 0x23, 0x40 }, // (Offset,Value)-Pair #4
+        { 0x24, 0x00 }, // (Offset,Value)-Pair #5
+        { 0x25, 0x80 }, // (Offset,Value)-Pair #6
+
+        // CDirectSoundBuffer_SetMixBins+0x29 : push [esp+0x10]; push [esp+0x10]
+        { 0x29, 0xFF }, // (Offset,Value)-Pair #7
+        { 0x2A, 0x74 }, // (Offset,Value)-Pair #8
+        { 0x2B, 0x24 }, // (Offset,Value)-Pair #9
+        { 0x2C, 0x10 }, // (Offset,Value)-Pair #10
+        { 0x2D, 0xFF }, // (Offset,Value)-Pair #11
+        { 0x2E, 0x74 }, // (Offset,Value)-Pair #12
+        { 0x2F, 0x24 }, // (Offset,Value)-Pair #13
+        { 0x30, 0x10 }, // (Offset,Value)-Pair #14
+
+        // CDirectSoundBuffer_SetMixBins+0x49 : pop edi
+        { 0x49, 0x5F }, // (Offset,Value)-Pair #15
+
+        // CDirectSoundBuffer_SetMixBins+0x4B : retn 0x08
+        { 0x4B, 0xC2 }, // (Offset,Value)-Pair #16
+        { 0x4C, 0x08 }, // (Offset,Value)-Pair #17
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSoundBuffer8_SetMixBins
+// ******************************************************************
+OOVPA_XREF(IDirectSoundBuffer8_SetMixBins, 4361, 12,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        // IDirectSoundBuffer8_SetMixBins+0x15 : call [CDirectSoundBuffer::SetMixBins]
+        { 0x15, XREF_DSSETMIXBINSA }, // (Offset,Value)-Pair #1
+
+        // IDirectSoundBuffer8_SetMixBins+0x04 : push [esp+0x08]
+        { 0x04, 0xFF }, // (Offset,Value)-Pair #2
+        { 0x05, 0x74 }, // (Offset,Value)-Pair #3
+        { 0x06, 0x24 }, // (Offset,Value)-Pair #4
+        { 0x07, 0x08 }, // (Offset,Value)-Pair #5
+
+        // IDirectSoundBuffer8_SetMixBins+0x0A : add eax, 0xFFFFFFE4
+        { 0x0A, 0x83 }, // (Offset,Value)-Pair #6
+        { 0x0B, 0xC0 }, // (Offset,Value)-Pair #7
+        { 0x0C, 0xE4 }, // (Offset,Value)-Pair #8
+
+        // IDirectSoundBuffer8_SetMixBins+0x0F : sbb ecx, ecx
+        { 0x0F, 0x1B }, // (Offset,Value)-Pair #9
+        { 0x10, 0xC9 }, // (Offset,Value)-Pair #10
+
+        // IDirectSoundBuffer8_SetMixBins+0x11 : and ecx, eax
+        { 0x11, 0x23 }, // (Offset,Value)-Pair #11
+        { 0x12, 0xC8 }, // (Offset,Value)-Pair #12
+OOVPA_END;
+
+// ******************************************************************
 // * DirectSoundCreate, 4361
 // ******************************************************************
 OOVPATable DSound_4361[] = {
@@ -893,6 +1026,14 @@ OOVPATable DSound_4361[] = {
 	OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_AddRef, 3936),
 	// IDirectSound8::Release (* unchanged since 3936 *)
 	OOVPA_TABLE_ENTRY(IDirectSound8_Release, 3936),
+    // CDirectSoundVoiceSettings_SetMixBins
+    OOVPA_TABLE_XREF(CDirectSoundVoiceSettings_SetMixBins, 4361),
+    // CDirectSoundVoice_SetMixBins
+    OOVPA_TABLE_XREF(CDirectSoundVoice_SetMixBins, 4361),
+    // CDirectSoundBuffer_SetMixBins
+    OOVPA_TABLE_XREF(CDirectSoundBuffer_SetMixBins, 4361),
+    // IDirectSoundBuffer8_SetMixBins
+    OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_SetMixBins, 4361),
 };
 
 // ******************************************************************
