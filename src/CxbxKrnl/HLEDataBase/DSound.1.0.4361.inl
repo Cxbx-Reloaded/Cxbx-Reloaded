@@ -220,29 +220,51 @@ OOVPA_NO_XREF(IDirectSoundBuffer8_SetPlayRegion, 4361, 10)
 OOVPA_END;
 
 // ******************************************************************
-// * IDirectSoundBuffer8_SetLoopRegion
+// * CDirectSoundBuffer::SetLoopRegion
 // ******************************************************************
-OOVPA_NO_XREF(IDirectSoundBuffer8_SetLoopRegion, 4361, 11)
-    // NOTE: This is actually intercepting CDirectSoundBuffer::SetLoopRegion(ULONG, ULONG)
+OOVPA_XREF(CDirectSoundBuffer_SetLoopRegion, 4361, 11,
 
-        // IDirectSoundBuffer8_SetLoopRegion+0x24 : mov eax, 0x80004005
+    XREF_DirectSound_CDirectSoundBuffer_SetLoopRegion,
+    XRefZero)
+
+        // CDirectSoundBuffer_SetLoopRegion+0x24 : mov eax, 0x80004005
         { 0x24, 0xB8 }, // (Offset,Value)-Pair #1
         { 0x25, 0x05 }, // (Offset,Value)-Pair #2
         { 0x26, 0x40 }, // (Offset,Value)-Pair #3
         { 0x27, 0x00 }, // (Offset,Value)-Pair #4
         { 0x28, 0x80 }, // (Offset,Value)-Pair #5
 
-        // IDirectSoundBuffer8_SetLoopRegion+0x29 : jmp +0x55
+        // CDirectSoundBuffer_SetLoopRegion+0x29 : jmp +0x55
         { 0x29, 0xEB }, // (Offset,Value)-Pair #6
         { 0x2A, 0x55 }, // (Offset,Value)-Pair #7
 
-        // IDirectSoundBuffer8_SetLoopRegion+0x56 : sub ecx, esi
+        // CDirectSoundBuffer_SetLoopRegion+0x56 : sub ecx, esi
         { 0x56, 0x2B }, // (Offset,Value)-Pair #8
         { 0x57, 0xCE }, // (Offset,Value)-Pair #9
 
-        // IDirectSoundBuffer8_SetLoopRegion+0x82 : retn 0x0C
+        // CDirectSoundBuffer_SetLoopRegion+0x82 : retn 0x0C
         { 0x82, 0xC2 }, // (Offset,Value)-Pair #10
         { 0x83, 0x0C }, // (Offset,Value)-Pair #11
+OOVPA_END;
+
+// ******************************************************************
+// * IDirectSoundBuffer8::SetLoopRegion
+// ******************************************************************
+OOVPA_XREF(IDirectSoundBuffer8_SetLoopRegion, 4361, 9,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        { 0x19, XREF_DirectSound_CDirectSoundBuffer_SetLoopRegion },
+
+        { 0x02, 0x24 },
+        { 0x06, 0x24 },
+        { 0x0A, 0xFF },
+        { 0x0E, 0x83 },
+        { 0x12, 0xD9 },
+        { 0x16, 0xC8 },
+        { 0x1D, 0xC2 },
+        { 0x1E, 0x0C },
 OOVPA_END;
 
 // ******************************************************************
@@ -815,6 +837,8 @@ OOVPATable DSound_4361[] = {
 	OOVPA_TABLE_ENTRY(IDirectSound8_CreateSoundBuffer, 4361),
 	// IDirectSoundBuffer8::SetPlayRegion
 	OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_SetPlayRegion, 4361),
+	// CDirectSoundBuffer::SetLoopRegion (XREF)
+	OOVPA_TABLE_XREF(CDirectSoundBuffer_SetLoopRegion, 4361),
 	// IDirectSoundBuffer8::SetLoopRegion
 	OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_SetLoopRegion, 4361),
 	// IDirectSoundBuffer8::SetVolume

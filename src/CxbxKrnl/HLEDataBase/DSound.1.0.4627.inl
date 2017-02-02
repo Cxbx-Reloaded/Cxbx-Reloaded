@@ -2932,6 +2932,8 @@ OOVPATable DSound_4627[] = {
 	OOVPA_TABLE_XREF(CDirectSound_CreateSoundBuffer, 4627),
 	// IDirectSoundBuffer8::SetPlayRegion (* unchanged since 4361 *)
 	OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_SetPlayRegion, 4361),
+    // CDirectSoundBuffer::SetLoopRegion (XREF) (* unchanged since 4361 *)
+    OOVPA_TABLE_XREF(CDirectSoundBuffer_SetLoopRegion, 4361),
 	// IDirectSoundBuffer8::SetLoopRegion (* unchanged since 4361 *)
 	OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_SetLoopRegion, 4361),
     // CDirectSound_SetI3DL2Listener (* unchanged since 4432 *)

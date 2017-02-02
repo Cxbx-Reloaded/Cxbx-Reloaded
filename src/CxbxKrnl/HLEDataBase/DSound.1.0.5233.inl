@@ -1044,6 +1044,10 @@ OOVPATable DSound_5233[] = {
 	OOVPA_TABLE_XREF(DirectSound_CDirectSound_SetRolloffFactor, 5344),
 	// IDirectSound8::SetRolloffFactor
 	OOVPA_TABLE_PATCH(IDirectSound_SetRolloffFactor, 5344, IDirectSound8_SetRolloffFactor),
+    // CDirectSoundBuffer::SetLoopRegion (XREF)
+    OOVPA_TABLE_XREF(CDirectSoundBuffer_SetLoopRegion, 4361),
+    // IDirectSoundBuffer8::SetLoopRegion (* unchanged since 4361 *)
+    OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_SetLoopRegion, 4361),
 #if 0 // Add when needed...
 	// CDirectSoundVoice::SetDistanceFactor (XREF)
 	OOVPA_TABLE_XREF(CDirectSoundVoice_SetDistanceFactor, 5558),
