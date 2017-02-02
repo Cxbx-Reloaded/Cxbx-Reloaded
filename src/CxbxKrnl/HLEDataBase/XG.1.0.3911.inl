@@ -127,23 +127,23 @@ OOVPA_END;
 OOVPATable XG_3911[] = {
 
     // XGIsSwizzledFormat
-	/* Leave unpatched
-	OOVPA_TABLE_ENTRY(XGIsSwizzledFormat, 3911),
+    /* Leave unpatched
+    OOVPA_TABLE_ENTRY(XGIsSwizzledFormat, 3911),
     */
-	// XGSwizzleRect
-	/* Leave unpatched
-	OOVPA_TABLE_ENTRY(XGSwizzleRect, 3911),
-	*/
-	// XGUnswizzleRect
-	/* Leave unpatched
-	OOVPA_TABLE_ENTRY(XGUnswizzleRect, 3911),
+    // XGSwizzleRect
+    /* Leave unpatched
+    OOVPA_TABLE_ENTRY(XGSwizzleRect, 3911),
     */
-	// XGSwizzleBox
-	OOVPA_TABLE_ENTRY(XGSwizzleBox, 3911),
-	// XGWriteSurfaceOrTextureToXPR
-	OOVPA_TABLE_ENTRY(XGWriteSurfaceOrTextureToXPR, 3911),
-	// XGSetTextureHeader
-	OOVPA_TABLE_ENTRY(XGSetTextureHeader, 3911),
+    // XGUnswizzleRect
+    /* Leave unpatched
+    OOVPA_TABLE_ENTRY(XGUnswizzleRect, 3911),
+    */
+    // XGSwizzleBox
+    OOVPA_TABLE_ENTRY(XGSwizzleBox, 3911),
+    // XGWriteSurfaceOrTextureToXPR
+    OOVPA_TABLE_ENTRY(XGWriteSurfaceOrTextureToXPR, 3911),
+    // XGSetTextureHeader
+    OOVPA_TABLE_ENTRY(XGSetTextureHeader, 3911),
 };
 
 // ******************************************************************

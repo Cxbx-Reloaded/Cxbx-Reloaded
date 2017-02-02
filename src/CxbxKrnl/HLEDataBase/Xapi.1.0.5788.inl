@@ -148,67 +148,67 @@ OOVPA_END;
 OOVPATable XAPI_5788[] = {
 
     // SetThreadPriority (* unchanged since 3911 *)
-	OOVPA_TABLE_ENTRY(SetThreadPriority, 3911),
+    OOVPA_TABLE_ENTRY(SetThreadPriority, 3911),
     // XMountUtilityDrive (* unchanged since 4432 *)
-	OOVPA_TABLE_ENTRY(XMountUtilityDrive, 4432),
+    OOVPA_TABLE_ENTRY(XMountUtilityDrive, 4432),
     // XInitDevices (* unchanged since 5233 *)
-	OOVPA_TABLE_ENTRY(XInitDevices, 5233),
+    OOVPA_TABLE_ENTRY(XInitDevices, 5233),
     // XGetDevices (* unchanged since 1.0.4134 *)
-	OOVPA_TABLE_ENTRY(XGetDevices, 4134),
+    OOVPA_TABLE_ENTRY(XGetDevices, 4134),
     // XInputOpen (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_ENTRY(XInputOpen, 4361),
+    OOVPA_TABLE_ENTRY(XInputOpen, 4361),
     // XInputGetCapabilities (* unchanged since 5558 *)
-	OOVPA_TABLE_ENTRY(XInputGetCapabilities, 5558),
+    OOVPA_TABLE_ENTRY(XInputGetCapabilities, 5558),
     // XInputGetState (* unchanged since 5558 *)
-	OOVPA_TABLE_ENTRY(XInputGetState, 5558),
+    OOVPA_TABLE_ENTRY(XInputGetState, 5558),
     // XGetDeviceChanges
-	OOVPA_TABLE_ENTRY(XGetDeviceChanges, 5788),
+    OOVPA_TABLE_ENTRY(XGetDeviceChanges, 5788),
     /* obsolete?
     // XapiThreadStartup (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_ENTRY(XapiThreadStartup, 4361), //*/
+    OOVPA_TABLE_ENTRY(XapiThreadStartup, 4361), //*/
     // XGetLaunchInfo (* unchanged since 5558 *)
-	OOVPA_TABLE_ENTRY(XGetLaunchInfo, 5558),
-	// QueueUserAPC (* unchanged since 3911 *)
-	OOVPA_TABLE_ENTRY(QueueUserAPC, 3911),
+    OOVPA_TABLE_ENTRY(XGetLaunchInfo, 5558),
+    // QueueUserAPC (* unchanged since 3911 *)
+    OOVPA_TABLE_ENTRY(QueueUserAPC, 3911),
     // XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
-	OOVPA_TABLE_ENTRY(XRegisterThreadNotifyRoutine, 3911),
-	// GetThreadPriority
-	OOVPA_TABLE_ENTRY(GetThreadPriority, 5788),
-	// SetThreadPriorityBoost
-	OOVPA_TABLE_ENTRY(SetThreadPriorityBoost, 5788),
-	// GetThreadPriorityBoost
+    OOVPA_TABLE_ENTRY(XRegisterThreadNotifyRoutine, 3911),
+    // GetThreadPriority
+    OOVPA_TABLE_ENTRY(GetThreadPriority, 5788),
+    // SetThreadPriorityBoost
+    OOVPA_TABLE_ENTRY(SetThreadPriorityBoost, 5788),
+    // GetThreadPriorityBoost
     /*{
-	OOVPA_TABLE_ENTRY(GetThreadPriorityBoost, 5788),*/
-	// XMountMUA (* unchanged since 5558 *)
-	OOVPA_TABLE_ENTRY(XMountMUA, 5558),
-	// GetTimeZoneInformation (* unchanged since 3911 *)
-	OOVPA_TABLE_ENTRY(GetTimeZoneInformation, 3911),
-	// RaiseException
-	OOVPA_TABLE_ENTRY(RaiseException, 5788),
-	// XLaunchNewImageA (* unchanged since 5558 *)
-	OOVPA_TABLE_PATCH(XLaunchNewImageA, 5558, XLaunchNewImage),
-	// XInputSetState (* unchanged since 5233 *)
-	OOVPA_TABLE_ENTRY(XInputSetState, 5233),
-	// XGetDeviceEnumerationStatus
-	OOVPA_TABLE_ENTRY(XGetDeviceEnumerationStatus, 5788),
-	// SwitchToThread
-	/*
-	OOVPA_TABLE_ENTRY(SwitchToThread, 5788),
-	*/
-	// XFormatUtilityDrive (* unchanged since 4627 *)
-	OOVPA_TABLE_ENTRY(XFormatUtilityDrive, 4627),
-	// CreateFiber
-	OOVPA_TABLE_ENTRY(CreateFiber, 5558),
-	// DeleteFiber
-	OOVPA_TABLE_ENTRY(DeleteFiber, 5558),
-	// SwitchToFiber
-	OOVPA_TABLE_ENTRY(SwitchToFiber, 5558),
-	// ConvertThreadToFiber
-	OOVPA_TABLE_ENTRY(ConvertThreadToFiber, 5558),
-	// XID_fCloseDevice (* unchanged since 5558 *)
-	OOVPA_TABLE_XREF(XID_fCloseDevice, 5558),
-	// XInputClose (* unchanged since 5558 *)
-	OOVPA_TABLE_ENTRY(XInputClose, 5558),
+    OOVPA_TABLE_ENTRY(GetThreadPriorityBoost, 5788),*/
+    // XMountMUA (* unchanged since 5558 *)
+    OOVPA_TABLE_ENTRY(XMountMUA, 5558),
+    // GetTimeZoneInformation (* unchanged since 3911 *)
+    OOVPA_TABLE_ENTRY(GetTimeZoneInformation, 3911),
+    // RaiseException
+    OOVPA_TABLE_ENTRY(RaiseException, 5788),
+    // XLaunchNewImageA (* unchanged since 5558 *)
+    OOVPA_TABLE_PATCH(XLaunchNewImageA, 5558, XLaunchNewImage),
+    // XInputSetState (* unchanged since 5233 *)
+    OOVPA_TABLE_ENTRY(XInputSetState, 5233),
+    // XGetDeviceEnumerationStatus
+    OOVPA_TABLE_ENTRY(XGetDeviceEnumerationStatus, 5788),
+    // SwitchToThread
+    /*
+    OOVPA_TABLE_ENTRY(SwitchToThread, 5788),
+    */
+    // XFormatUtilityDrive (* unchanged since 4627 *)
+    OOVPA_TABLE_ENTRY(XFormatUtilityDrive, 4627),
+    // CreateFiber
+    OOVPA_TABLE_ENTRY(CreateFiber, 5558),
+    // DeleteFiber
+    OOVPA_TABLE_ENTRY(DeleteFiber, 5558),
+    // SwitchToFiber
+    OOVPA_TABLE_ENTRY(SwitchToFiber, 5558),
+    // ConvertThreadToFiber
+    OOVPA_TABLE_ENTRY(ConvertThreadToFiber, 5558),
+    // XID_fCloseDevice (* unchanged since 5558 *)
+    OOVPA_TABLE_XREF(XID_fCloseDevice, 5558),
+    // XInputClose (* unchanged since 5558 *)
+    OOVPA_TABLE_ENTRY(XInputClose, 5558),
 };
 
 // ******************************************************************
