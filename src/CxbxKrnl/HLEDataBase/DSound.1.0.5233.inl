@@ -1048,6 +1048,12 @@ OOVPATable DSound_5233[] = {
     OOVPA_TABLE_XREF(CDirectSoundBuffer_SetLoopRegion, 4361),
     // IDirectSoundBuffer8::SetLoopRegion (* unchanged since 4361 *)
     OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_SetLoopRegion, 4361),
+    // CMcpxBuffer::SetCurrentPosition (* unchanged since 4361 *)
+    OOVPA_TABLE_XREF(CMcpxBuffer_SetCurrentPosition, 4361),
+    // CDirectSoundBuffer::SetCurrentPosition (* unchanged since 4361 *)
+    OOVPA_TABLE_XREF(CDirectSoundBuffer_SetCurrentPosition, 4361),
+    // IDirectSoundBuffer8::SetCurrentPosition (* unchanged since 4361 *)
+    OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_SetCurrentPosition, 4361),
 #if 0 // Add when needed...
 	// CDirectSoundVoice::SetDistanceFactor (XREF)
 	OOVPA_TABLE_XREF(CDirectSoundVoice_SetDistanceFactor, 5558),
