@@ -121,7 +121,15 @@ XBSYSAPI EXPORTNUM(107) VOID NTAPI KeInitializeDpc
     PVOID                DeferredContext
 );
 
-XBSYSAPI VOID *KeInitializeEvent;
+// ******************************************************************
+// * 0x006C - KeInitializeEvent()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(108) VOID NTAPI KeInitializeEvent
+(
+	IN PRKEVENT Event,
+	IN EVENT_TYPE Type,
+	IN BOOLEAN State
+);
 
 // ******************************************************************
 // * 0x006D - KeInitializeInterrupt()
@@ -167,8 +175,15 @@ XBSYSAPI EXPORTNUM(119) BOOLEAN NTAPI KeInsertQueueDpc
     IN PVOID        SystemArgument2
 );
 
-XBSYSAPI VOID *KeInterruptTime;
-XBSYSAPI VOID *KeIsExecutingDpc;
+// ******************************************************************
+// * 0x0078 - KeInterruptTime
+// ******************************************************************
+XBSYSAPI EXPORTNUM(120) PKSYSTEM_TIME KeInterruptTime;
+
+// ******************************************************************
+// * 0x0079 - KeIsExecutingDpc()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(121) BOOLEAN NTAPI KeIsExecutingDpc();
 
 // ******************************************************************
 // * 0x007A - KeLeaveCriticalRegion()
@@ -216,8 +231,23 @@ XBSYSAPI VOID *KeRemoveByKeyDeviceQueue;
 XBSYSAPI VOID *KeRemoveDeviceQueue;
 XBSYSAPI VOID *KeRemoveEntryDeviceQueue;
 XBSYSAPI VOID *KeRemoveQueue;
-XBSYSAPI VOID *KeRemoveQueueDpc;
-XBSYSAPI VOID *KeResetEvent;
+
+// ******************************************************************
+// * 0x0089 - KeRemoveQueueDpc()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(137) BOOLEAN NTAPI KeRemoveQueueDpc
+(
+	IN PKDPC Dpc
+);
+
+// ******************************************************************
+// * 0x008A - KeResetEvent()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(138) LONG NTAPI KeResetEvent
+(
+	IN PRKEVENT Event
+);
+
 XBSYSAPI VOID *KeRestoreFloatingPointState;
 XBSYSAPI VOID *KeResumeThread;
 XBSYSAPI VOID *KeRundownQueue;
