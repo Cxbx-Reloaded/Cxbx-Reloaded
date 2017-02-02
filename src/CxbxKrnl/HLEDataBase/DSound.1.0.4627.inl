@@ -35,16 +35,7 @@
 // ******************************************************************
 // * DirectSoundDoWork
 // ******************************************************************
-OOVPA_NO_XREF(DirectSoundDoWork, 4627, 7)
-
-        { 0x06, 0x0F },
-        { 0x0E, 0x85 },
-        { 0x10, 0x74 },
-        { 0x18, 0x85 },
-        { 0x1C, 0x0B },
-        { 0x22, 0xFF },
-        { 0x28, 0xC3 },
-OOVPA_END;
+#define DirectSoundDoWork_4627 DirectSoundDoWork_4361
 
 // ******************************************************************
 // * CDirectSound::CreateSoundBuffer

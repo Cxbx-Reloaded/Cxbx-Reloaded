@@ -58,6 +58,20 @@ OOVPA_NO_XREF(DirectSoundCreate, 4361, 9)
 OOVPA_END;
 
 // ******************************************************************
+// * DirectSoundDoWork
+// ******************************************************************
+OOVPA_NO_XREF(DirectSoundDoWork, 4361, 7)
+
+        { 0x06, 0x0F },
+        { 0x0E, 0x85 },
+        { 0x10, 0x74 },
+        { 0x18, 0x85 },
+        { 0x1C, 0x0B },
+        { 0x22, 0xFF },
+        { 0x28, 0xC3 },
+OOVPA_END;
+
+// ******************************************************************
 // * IDirectSound8_CreateSoundBuffer
 // ******************************************************************
 OOVPA_NO_XREF(IDirectSound8_CreateSoundBuffer, 4361, 9)
@@ -976,6 +990,8 @@ OOVPATable DSound_4361[] = {
 
     // DirectSoundCreate
 	OOVPA_TABLE_ENTRY(DirectSoundCreate, 4361),
+	// DirectSoundDoWork
+	OOVPA_TABLE_ENTRY(DirectSoundDoWork, 4361),
     // CDirectSound_CreateSoundStream
 	OOVPA_TABLE_XREF(CDirectSound_CreateSoundStream, 4361),
 	// IDirectSound8_CreateStream
