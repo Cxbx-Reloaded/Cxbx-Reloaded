@@ -180,7 +180,10 @@ XBSYSAPI EXPORTNUM(119) BOOLEAN NTAPI KeInsertQueueDpc
 // ******************************************************************
 XBSYSAPI EXPORTNUM(120) PKSYSTEM_TIME KeInterruptTime;
 
-XBSYSAPI VOID *KeIsExecutingDpc;
+// ******************************************************************
+// * 0x0079 - KeIsExecutingDpc()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(121) BOOLEAN NTAPI KeIsExecutingDpc();
 
 // ******************************************************************
 // * 0x007A - KeLeaveCriticalRegion()

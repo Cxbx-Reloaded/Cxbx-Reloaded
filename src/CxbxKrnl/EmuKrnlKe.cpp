@@ -131,6 +131,51 @@ xboxkrnl::PLIST_ENTRY RemoveTailList(xboxkrnl::PLIST_ENTRY pListHead)
 	return Result;
 }
 
+#define KiRemoveTreeTimer(Timer)               \
+    (Timer)->Header.Inserted = FALSE;          \
+    RemoveEntryList(&(Timer)->TimerListEntry)
+
+BOOLEAN KiInsertTimerTable(
+	IN xboxkrnl::LARGE_INTEGER Interval,
+	xboxkrnl::ULONGLONG,
+	IN xboxkrnl::PKTIMER Timer
+)
+{
+	// TODO
+	return TRUE;
+}
+
+BOOLEAN KiInsertTreeTimer(
+	IN xboxkrnl::PKTIMER Timer,
+	IN xboxkrnl::LARGE_INTEGER Interval
+)
+{
+	// Is the given time absolute (indicated by a positive number)?
+	if (Interval.u.HighPart >= 0) {
+		// Convert absolute time to a time relative to the system time :
+		xboxkrnl::LARGE_INTEGER SystemTime;
+		xboxkrnl::KeQuerySystemTime(&SystemTime);
+		Interval.QuadPart = SystemTime.QuadPart - Interval.QuadPart;
+		if (Interval.u.HighPart >= 0) {
+			// If the relative time is already passed, return without inserting :
+			Timer->Header.Inserted = FALSE;
+			Timer->Header.SignalState = TRUE;
+			return FALSE;
+		}
+
+		Timer->Header.Absolute = TRUE;
+	}
+	else
+		// Negative intervals are relative, not absolute :
+		Timer->Header.Absolute = FALSE;
+
+	if (Timer->Period == 0)
+		Timer->Header.SignalState = FALSE;
+
+	Timer->Header.Inserted = TRUE;
+	return KiInsertTimerTable(Interval, xboxkrnl::KeQueryInterruptTime(), Timer);
+}
+
 // ******************************************************************
 // * KeGetPcr()
 // * NOTE: This is a macro on the Xbox, however we implement it 
@@ -138,7 +183,7 @@ xboxkrnl::PLIST_ENTRY RemoveTailList(xboxkrnl::PLIST_ENTRY pListHead)
 // ******************************************************************
 xboxkrnl::KPCR* KeGetPcr()
 {
-	xboxkrnl::KPCR* Pcr = nullptr;
+	xboxkrnl::KPCR* Pcr;
 
 	__asm {
 		push eax
@@ -148,6 +193,14 @@ xboxkrnl::KPCR* KeGetPcr()
 	}
 
 	return Pcr;
+}
+
+// ******************************************************************
+// * KeGetCurrentPrcb()
+// ******************************************************************
+xboxkrnl::KPRCB *KeGetCurrentPrcb()
+{
+	return &(KeGetPcr()->PrcbData);
 }
 
 DWORD BootTickCount = 0;
@@ -176,6 +229,7 @@ DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
 
 	while (true)
 	{
+		// While we're working with the DpcQueue, we need to be thread-safe :
 		EnterCriticalSection(&(g_DpcData.Lock));
 
 //    if (g_DpcData._fShutdown)
@@ -186,15 +240,22 @@ DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
 //    g_DpcData._dwDpcThreadId = g_DpcData._dwThreadId;
 //    Assert(g_DpcData._dwDpcThreadId != 0);
 
+		// Are there entries in the DpqQueue?
 		while (!IsListEmpty(&(g_DpcData.DpcQueue)))
 		{
+			// Extract the head entry and retrieve the containing KDPC pointer for it:
 			pkdpc = CONTAINING_RECORD(RemoveHeadList(&(g_DpcData.DpcQueue)), xboxkrnl::KDPC, DpcListEntry);
-			pkdpc->DpcListEntry.Flink = nullptr;
+			// Mark it as no longer linked into the DpcQueue
+			pkdpc->DpcListEntry.Flink = NULL;
+			// Set DpcRoutineActive to support KeIsExecutingDpc:
+			KeGetCurrentPrcb()->DpcRoutineActive = TRUE; // Experimental
+			// Call the Deferred Procedure  :
 			pkdpc->DeferredRoutine(
 				pkdpc,
 				pkdpc->DeferredContext,
 				pkdpc->SystemArgument1,
 				pkdpc->SystemArgument2);
+			KeGetCurrentPrcb()->DpcRoutineActive = FALSE; // Experimental
 		}
 
 		dwWait = INFINITE;
@@ -387,9 +448,15 @@ XBSYSAPI EXPORTNUM(96) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeCancelTimer
 {
 	LOG_FUNC_ONE_ARG(Timer);
 
-	LOG_UNIMPLEMENTED();
+	BOOLEAN Inserted;
 
-	RETURN(TRUE);
+	Inserted = Timer->Header.Inserted;
+	if (Inserted != FALSE) {
+		// Do some unlinking if already inserted in the linked list
+		KiRemoveTreeTimer(Timer);
+	}
+
+	RETURN(Inserted);
 }
 
 xboxkrnl::PKINTERRUPT EmuInterruptList[MAX_BUS_INTERRUPT_LEVEL + 1][MAX_NUM_INTERRUPTS] = { 0 };
@@ -456,7 +523,32 @@ XBSYSAPI EXPORTNUM(100) xboxkrnl::VOID NTAPI xboxkrnl::KeDisconnectInterrupt
 {
 	LOG_FUNC_ONE_ARG(InterruptObject);
 
-	LOG_UNIMPLEMENTED();
+	// Do the reverse of KeConnectInterrupt
+	// Untested (no known test cases) and not thread safe :
+	if (InterruptObject->Connected)
+	{
+		// Mark InterruptObject as not connected anymore
+		InterruptObject->Connected = FALSE;
+		// Search for it in the registered list of interrupts:
+		for(int i = 0; i < EmuFreeInterrupt[InterruptObject->BusInterruptLevel]; i++)
+		{
+			// Is it here?
+			if (EmuInterruptList[InterruptObject->BusInterruptLevel][i] == InterruptObject)
+			{
+				// Return the free slot :
+				int last = --EmuFreeInterrupt[InterruptObject->BusInterruptLevel];
+				// Is this not the last slot?
+				if (i < last)
+					// Instead of shifting everything, move the last one into the slot of this InterruptObject :
+					EmuInterruptList[InterruptObject->BusInterruptLevel][i] = EmuInterruptList[InterruptObject->BusInterruptLevel][last];
+
+				// Clear the now-free (last) slot :
+				EmuInterruptList[InterruptObject->BusInterruptLevel][last] = NULL;
+				// Stop searching
+				break;
+			}
+		}
+	}
 }
 
 // ******************************************************************
@@ -592,8 +684,8 @@ XBSYSAPI EXPORTNUM(113) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeTimerEx
 		LOG_FUNC_ARG(Type)
 		LOG_FUNC_END;
 
-	Timer->Header.Type = Type + 8;  // 8 = TimerNotificationObject 
-	Timer->Header.Inserted = 0;
+	Timer->Header.Type = Type + TimerNotificationObject;
+	Timer->Header.Inserted = FALSE;
 	Timer->Header.Size = sizeof(KTIMER) / sizeof(ULONG);
 	Timer->Header.SignalState = 0;
 
@@ -621,23 +713,39 @@ XBSYSAPI EXPORTNUM(119) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertQueueDpc
 		LOG_FUNC_ARG(SystemArgument2)
 		LOG_FUNC_END;
 
-	if (Dpc->DpcListEntry.Flink == nullptr)
+	// Before going thread-save, check if the Dpc is not linked yet?
+	if (Dpc->DpcListEntry.Flink == NULL)
 	{
+		// For thread safety, enter the Dpc lock:
 		EnterCriticalSection(&(g_DpcData.Lock));
-
-		if (Dpc->DpcListEntry.Flink == nullptr)
+		// Is the Dpc still not linked yet ?
+		if (Dpc->DpcListEntry.Flink == NULL)
 		{
+			// Remember the arguments and link it into our DpcQueue :
 			Dpc->SystemArgument1 = SystemArgument1;
 			Dpc->SystemArgument2 = SystemArgument2;
 			InsertTailList(&(g_DpcData.DpcQueue), &(Dpc->DpcListEntry));
+			// Signal the Dpc handling code there's work to do
+			SetEvent(g_DpcData.DpcEvent);
 		}
-
+		// Thread-safety is no longer required anymore
 		LeaveCriticalSection(&(g_DpcData.Lock));
-
-		SetEvent(g_DpcData.DpcEvent);
 	}
 
 	RETURN(TRUE);
+}
+
+// ******************************************************************
+// * 0x0079 - KeIsExecutingDpc()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(121) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeIsExecutingDpc
+()
+{
+	LOG_FUNC();
+
+	BOOLEAN ret = KeGetCurrentPrcb()->DpcRoutineActive;
+
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -678,13 +786,11 @@ XBSYSAPI EXPORTNUM(125) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryInterruptTime
 	
 	LARGE_INTEGER InterruptTime;
 
-	// Don't use NtDll::QueryInterruptTime, it's too new (Windows 10)
-	// Instead, read KeInterruptTime from our kernel thunk table,
-	// which we coupled to the host InterruptTime in ConnectWindowsTimersToThunkTable:
-//	NtDll::PKSYSTEM_TIME KeInterruptTime = (NtDll::PKSYSTEM_TIME)CxbxKrnl_KernelThunkTable[120];
-
 	while (true)
 	{
+		// Don't use NtDll::QueryInterruptTime, it's too new (Windows 10)
+		// Instead, read KeInterruptTime from our kernel thunk table,
+		// which we coupled to the host InterruptTime in ConnectWindowsTimersToThunkTable:
 		InterruptTime.u.HighPart = KeInterruptTime->High1Time;
 		InterruptTime.u.LowPart = KeInterruptTime->LowPart;
 		// TODO : Should we apply HostSystemTimeDelta to InterruptTime too?
@@ -907,10 +1013,6 @@ XBSYSAPI EXPORTNUM(149) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimer
 	return KeSetTimerEx(Timer, DueTime, 0, Dpc);
 }
 
-#define KiRemoveTreeTimer(Timer)               \
-    (Timer)->Header.Inserted = FALSE;          \
-    RemoveEntryList(&(Timer)->TimerListEntry)
-
 // ******************************************************************
 // * 0x0096 - KeSetTimerEx()
 // ******************************************************************
@@ -933,10 +1035,11 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 	LARGE_INTEGER Interval;
 	LARGE_INTEGER SystemTime;
 
-	if (Timer->Header.Type != 8 && Timer->Header.Type != 9) {
+	if (Timer->Header.Type != TimerNotificationObject && Timer->Header.Type != TimerSynchronizationObject) {
 		CxbxKrnlCleanup("Assertion: '(Timer)->Header.Type == TimerNotificationObject) || ((Timer)->Header.Type == TimerSynchronizationObject)' in KeSetTimerEx()");
 	}
 
+	// Same as KeCancelTimer(Timer) :
 	Inserted = Timer->Header.Inserted;
 	if (Inserted != FALSE) {
 		// Do some unlinking if already inserted in the linked list
@@ -947,7 +1050,7 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 	Timer->Dpc = Dpc;
 	Timer->Period = Period;
 
-	if (/*!KiInsertTreeTimer(Timer, DueTime)*/ TRUE) {
+	if (!KiInsertTreeTimer(Timer, DueTime)) {
 		if (!IsListEmpty(&(Timer->Header.WaitListHead))) {
 			// KiWaitTest(Timer, 0);
 		}
@@ -961,9 +1064,8 @@ XBSYSAPI EXPORTNUM(150) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeSetTimerEx
 		if (Period != 0) {
 			// Prepare the repetition if Timer is periodic
 			Interval.QuadPart = (LONGLONG)(-10 * 1000) * Timer->Period;
-			while (/*!KiInsertTreeTimer(Timer, Interval)*/FALSE) {
+			while (!KiInsertTreeTimer(Timer, Interval))
 				;
-			}
 		}
 	}
 /* Dxbx has this :

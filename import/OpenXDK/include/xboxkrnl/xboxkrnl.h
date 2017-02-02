@@ -1767,9 +1767,9 @@ typedef VOID(*PCREATE_THREAD_NOTIFY_ROUTINE)
 );
 
 // ******************************************************************
-// * KPCRB
+// * KPRCB (Kernel PRocesor Control Block)
 // ******************************************************************
-// *
+// * 
 // * NOTE: INCOMPLETE!!
 // *
 // ******************************************************************
@@ -1779,10 +1779,15 @@ typedef struct _KPRCB
     struct _KTHREAD* NextThread;                                    // 0x04, KPCR : 0x2C
     struct _KTHREAD* IdleThread;                                    // 0x08, KPCR : 0x30
 
+	ULONG            Unknown1[8];                                   // 0x0C, KPCR : 0x34
+
+	ULONG            DpcRoutineActive;                              // 0x2C, KPCR : 0x54 
+
     // This is the total size of the structure (presumably)
-    UCHAR            Unknown[0x250];                                // 0x0C, KPCR : 0x34
+    UCHAR            Unknown[0x22C];                                
 }
 KPRCB, *PKPRCB;
+
 
 // ******************************************************************
 // * KPCR
