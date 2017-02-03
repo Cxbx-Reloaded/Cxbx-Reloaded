@@ -2916,6 +2916,29 @@ OOVPA_XREF(IDirectSoundBuffer8_SetLFO, 4627, 8,
 OOVPA_END;
 
 // ******************************************************************
+// * DirectSound::CDirectSoundStream::SetPitch
+// ******************************************************************
+OOVPA_XREF(DirectSound_CDirectSoundStream_SetPitch, 4627, 12,
+
+    XRefNoSaveIndex,
+    XRefOne)
+
+        { 0x36, XREF_DSBUFFERSETPITCHB },
+
+        { 0x00, 0x56 },
+        { 0x0C, 0x00 },
+        { 0x14, 0x74 },
+        { 0x21, 0xB8 },
+        { 0x2A, 0x24 },
+        { 0x35, 0xE8 },
+        { 0x40, 0x68 },
+        { 0x4B, 0x8B },
+        { 0x4F, 0xC2 },
+        { 0x50, 0x08 },
+        { 0x51, 0x00 },
+OOVPA_END;
+
+// ******************************************************************
 // * Direct, 4627
 // ******************************************************************
 OOVPATable DSound_4627[] = {
@@ -3289,6 +3312,8 @@ OOVPATable DSound_4627[] = {
     OOVPA_TABLE_XREF(CDirectSoundBuffer_SetLFO, 4627),
     // IDirectSoundBuffer8::SetLFO
     OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_SetLFO, 4627),
+	// CDirectSoundStream::SetPitch
+	OOVPA_TABLE_PATCH(DirectSound_CDirectSoundStream_SetPitch, 4627, CDirectSoundStream_SetPitch),
 };
 
 // ******************************************************************
