@@ -3336,6 +3336,7 @@ OOVPATable D3D8_4627[] = {
 	REGISTER_OOVPA(D3DDevice_GetBackMaterial, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetBackMaterial, 4627, PATCH),
 	// REGISTER_OOVPA(D3DCubeTexture_LockRect, 3925, PATCH), // TODO: This needs to be verified on 4361, not just 4242!
+	REGISTER_OOVPA(D3D_SetPushBufferSize, 4034, PATCH),
 };
 
 // ******************************************************************

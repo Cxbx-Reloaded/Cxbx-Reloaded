@@ -1935,6 +1935,7 @@ OOVPATable D3D8_4361[] = {
 	REGISTER_OOVPA(D3DCubeTexture_GetCubeMapSurface, 4361, PATCH),
 	REGISTER_OOVPA(Lock2DSurface, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetScissors, 4361, PATCH),
+	REGISTER_OOVPA(D3D_SetPushBufferSize, 4034, PATCH),
 };
 
 // ******************************************************************

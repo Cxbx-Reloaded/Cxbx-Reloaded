@@ -1941,6 +1941,7 @@ OOVPATable D3D8_4134[] = {
 	REGISTER_OOVPA(D3DDevice_SetShaderConstantMode, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetCreationParameters, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVisibilityTestResult, 3925, PATCH),
+	REGISTER_OOVPA(D3D_SetPushBufferSize, 4034, PATCH),
 };
 
 // ******************************************************************
