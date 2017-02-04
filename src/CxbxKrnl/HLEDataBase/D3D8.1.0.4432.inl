@@ -686,6 +686,11 @@ OOVPA_NO_XREF(D3DDevice_SetModelView, 4432, 7)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_SetScissors
+// ******************************************************************
+#define D3DDevice_SetScissors_4432 D3DDevice_SetScissors_4361
+
+// ******************************************************************
 // * D3D8_4432
 // ******************************************************************
 OOVPATable D3D8_4432[]  {
@@ -806,6 +811,7 @@ OOVPATable D3D8_4432[]  {
 	REGISTER_OOVPA(D3DDevice_SetModelView, 4432, PATCH),
 	REGISTER_OOVPA(D3DDevice_BeginPush, 4432, PATCH),
 	REGISTER_OOVPA(D3DDevice_EndPush, 4432, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetScissors, 4432, PATCH),
 };
 
 // ******************************************************************

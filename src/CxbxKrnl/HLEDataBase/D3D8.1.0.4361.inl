@@ -1771,6 +1771,28 @@ OOVPA_NO_XREF(D3DCubeTexture_GetCubeMapSurface, 4361, 7)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_SetScissors
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetScissors, 4361, 10)
+
+        // D3DDevice_SetScissors+0x0E : mov ebx, [esp+28h+arg_0]
+        { 0x04, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x05, 0x5C }, // (Offset,Value)-Pair #2
+        { 0x06, 0x24 }, // (Offset,Value)-Pair #3
+        { 0x07, 0x2C }, // (Offset,Value)-Pair #4
+
+        // D3DDevice_SetScissors+0x0E : test ebx, ebx
+        { 0x08, 0x85 }, // (Offset,Value)-Pair #5
+        { 0x09, 0xDB }, // (Offset,Value)-Pair #6
+
+        // D3DDevice_SetScissors+0x0E : mov edx, [ebp+9D8h]
+        { 0x1B, 0x8B }, // (Offset,Value)-Pair #7
+        { 0x1C, 0x95 }, // (Offset,Value)-Pair #8
+        { 0x1D, 0xD8 }, // (Offset,Value)-Pair #9
+        { 0x1E, 0x09 }, // (Offset,Value)-Pair #10
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_4361
 // ******************************************************************
 OOVPATable D3D8_4361[] = {
@@ -1912,6 +1934,7 @@ OOVPATable D3D8_4361[] = {
 	REGISTER_OOVPA(D3DDevice_CreateCubeTexture, 4361, PATCH),
 	REGISTER_OOVPA(D3DCubeTexture_GetCubeMapSurface, 4361, PATCH),
 	REGISTER_OOVPA(Lock2DSurface, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetScissors, 4361, PATCH),
 };
 
 // ******************************************************************
