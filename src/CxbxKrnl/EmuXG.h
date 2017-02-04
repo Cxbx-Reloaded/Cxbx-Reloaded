@@ -42,7 +42,6 @@ typedef struct _XGPOINT3D
 }
 XGPOINT3D;
 
-/* Leave unpatched
 // ******************************************************************
 // * patch: XGIsSwizzledFormat
 // ******************************************************************
@@ -50,7 +49,6 @@ PVOID WINAPI EMUPATCH(XGIsSwizzledFormat)
 (
     X_D3DFORMAT     Format
 );
-*/
 
 /* Leave unpatched
 // ******************************************************************
