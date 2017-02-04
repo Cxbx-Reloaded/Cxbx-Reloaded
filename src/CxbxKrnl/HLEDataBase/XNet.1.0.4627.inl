@@ -329,21 +329,13 @@ OOVPA_END;
 // * XNet_4627
 // ******************************************************************
 OOVPATable XNet_4627[] = {
-	// XNetStartup
 	OOVPA_TABLE_ENTRY(XNetStartup, 4627), // same as xonline 4361
-	// WSAStartup
 	OOVPA_TABLE_ENTRY(WSAStartup, 4627), // same as xonline 4361
-	// XnInit (XREF)
 	OOVPA_TABLE_XREF(XnInit, 4627),
-	// socket
 	OOVPA_TABLE_PATCH_EmuThis(socket, 4627),
-	// connect
 	OOVPA_TABLE_PATCH_EmuThis(connect, 4627),
-	// send
 	OOVPA_TABLE_PATCH_EmuThis(send, 4627),
-	// recv
 	OOVPA_TABLE_PATCH_EmuThis(recv, 4627),
-	// ioctlsocket
 	OOVPA_TABLE_PATCH_EmuThis(ioctlsocket, 4627),
 };
 

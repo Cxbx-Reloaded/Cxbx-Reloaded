@@ -76,20 +76,10 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XG_5849[1] = {
 
-    // XGIsSwizzledFormat (* unchanged since 4361 *)
 	OOVPA_TABLE_ENTRY(XGIsSwizzledFormat, 4361),
-    // XGSwizzleRect (* unchanged since 5558 *)
-	/* Leave unpatched
-	OOVPA_TABLE_ENTRY(XGSwizzleRect, 5558),
-	*/
-	// XGUnswizzleRect (* unchanged since 5558 *)
-	/* Leave unpatched
-	OOVPA_TABLE_ENTRY(XGUnswizzleRect, 5558),
-	*/
-	// XFONT_OpenBitmapFontFromMemory
-    /*
-	OOVPA_TABLE_ENTRY(XFONT_OpenBitmapFontFromMemory, 5849),
-	*/
+    // OOVPA_TABLE_ENTRY(XGSwizzleRect, 5558), // Leave unpatched
+	// OOVPA_TABLE_ENTRY(XGUnswizzleRect, 5558), // Leave unpatched
+	// OOVPA_TABLE_ENTRY(XFONT_OpenBitmapFontFromMemory, 5849),
 };
 
 // ******************************************************************
