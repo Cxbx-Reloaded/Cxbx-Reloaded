@@ -33,6 +33,16 @@
 // ******************************************************************
 
 // ******************************************************************
+// * DirectSoundDoWork
+// ******************************************************************
+#define DirectSoundDoWork_4432 DirectSoundDoWork_4361
+
+// ******************************************************************
+// * DirectSoundGetSampleTime
+// ******************************************************************
+#define DirectSoundGetSampleTime_4432 DirectSoundGetSampleTime_4361
+
+// ******************************************************************
 // * IDirectSound8_Release
 // ******************************************************************
 OOVPA_NO_XREF(IDirectSound8_Release, 4432, 12)
@@ -573,6 +583,8 @@ OOVPA_END;
 OOVPATable DSound_4432[] = {
 
 	OOVPA_TABLE_ENTRY(DirectSoundCreate, 4361),
+	OOVPA_TABLE_ENTRY(DirectSoundDoWork, 4432),
+	OOVPA_TABLE_ENTRY(DirectSoundGetSampleTime, 4432),
 	OOVPA_TABLE_ENTRY(IDirectSound8_CreateStream, 3936),
 	OOVPA_TABLE_XREF(CDirectSound_CreateSoundStream, 4361),
 	OOVPA_TABLE_ENTRY(DirectSoundCreateStream, 4361),
@@ -582,6 +594,7 @@ OOVPATable DSound_4432[] = {
 	OOVPA_TABLE_ENTRY(IDirectSound8_Release, 4432),
 	OOVPA_TABLE_ENTRY(IDirectSound8_CreateSoundBuffer, 4361),
 	OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_Release, 3936),
+  OOVPA_TABLE_XREF(CDirectSoundBuffer_SetLoopRegion, 4361),
 	OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_SetLoopRegion, 4361),
 	OOVPA_TABLE_XREF(CMcpxBuffer_SetBufferData, 4361),
 	OOVPA_TABLE_XREF(CDirectSoundBuffer_SetBufferData, 4361),
@@ -609,6 +622,8 @@ OOVPATable DSound_4432[] = {
 	OOVPA_TABLE_ENTRY(IDirectSound8_SetDistanceFactor, 4432),
 	OOVPA_TABLE_ENTRY(IDirectSound8_DownloadEffectsImage, 3936),
 	OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_AddRef, 3936),
+	OOVPA_TABLE_XREF(CDirectSoundBuffer_SetPlayRegion, 4361),
+	OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_SetPlayRegion, 4361),
 };
 
 // ******************************************************************

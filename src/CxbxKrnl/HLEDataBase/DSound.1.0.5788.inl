@@ -1562,25 +1562,7 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSound::CDirectSoundStream::SetPitch
 // ******************************************************************
-OOVPA_XREF(DirectSound_CDirectSoundStream_SetPitch, 5788, 12,
-
-    XRefNoSaveIndex,
-    XRefOne)
-
-        { 0x36, XREF_DSBUFFERSETPITCHB },
-
-        { 0x00, 0x56 },
-        { 0x0C, 0x00 },
-        { 0x14, 0x74 },
-        { 0x21, 0xB8 },
-        { 0x2A, 0x24 },
-        { 0x35, 0xE8 },
-        { 0x40, 0x68 },
-        { 0x4B, 0x8B },
-	{ 0x4F, 0xC2 },
-	{ 0x50, 0x08 },
-	{ 0x51, 0x00 },
-OOVPA_END;
+#define DirectSound_CDirectSoundStream_SetPitch_5788 DirectSound_CDirectSoundStream_SetPitch_4627
 
 // ******************************************************************
 // * DirectSound::CDirectSoundStream::SetHeadroom
