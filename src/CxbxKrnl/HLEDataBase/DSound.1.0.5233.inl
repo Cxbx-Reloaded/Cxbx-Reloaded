@@ -855,7 +855,7 @@ OOVPATable DSound_5233[] = {
 	OOVPA_TABLE_ENTRY(IDirectSound8_SetI3DL2Listener, 4432),
 	OOVPA_TABLE_XREF(CDirectSound_SetVelocity, 4627),
 	OOVPA_TABLE_ENTRY(IDirectSound8_SetVelocity, 3936),
-	OOVPA_TABLE_XREF(CDirectSoundVoiceSettings_SetMixBins, 4432),
+  OOVPA_TABLE_XREF(CDirectSoundVoiceSettings_SetMixBins, 4361),
 	OOVPA_TABLE_XREF(CDirectSoundVoice_SetMixBins, 4432),
 	OOVPA_TABLE_XREF(CDirectSoundBuffer_SetMixBins, 4432),
 	OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_SetMixBins, 4432),
@@ -943,6 +943,11 @@ OOVPATable DSound_5233[] = {
 	OOVPA_TABLE_PATCH(IDirectSound_SetI3DL2Listener, 5344, IDirectSound8_SetI3DL2Listener),
 	OOVPA_TABLE_XREF(DirectSound_CDirectSound_SetRolloffFactor, 5344),
 	OOVPA_TABLE_PATCH(IDirectSound_SetRolloffFactor, 5344, IDirectSound8_SetRolloffFactor),
+    OOVPA_TABLE_XREF(CDirectSoundBuffer_SetLoopRegion, 4361),
+    OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_SetLoopRegion, 4361),
+    OOVPA_TABLE_XREF(CMcpxBuffer_SetCurrentPosition, 4361),
+    OOVPA_TABLE_XREF(CDirectSoundBuffer_SetCurrentPosition, 4361),
+    OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_SetCurrentPosition, 4361),
 	// OOVPA_TABLE_XREF(CDirectSoundVoice_SetDistanceFactor, 5558), // Add when needed...
 	// OOVPA_TABLE_XREF(CDirectSoundBuffer_SetDistanceFactor, 5558), // Add when needed...
 	// OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_SetDistanceFactor, 5558), // Add when needed...
