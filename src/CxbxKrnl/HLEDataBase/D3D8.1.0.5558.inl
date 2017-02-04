@@ -338,7 +338,7 @@ OOVPA_NO_XREF(D3DDevice_SetMaterial, 5558, 9)
 
         { 0x04, 0x08 },
         { 0x0C, 0x81 },
-        { 0x0E, 0xF0 },
+        { 0x0D, 0xC7 },
         { 0x10, 0x00 },
         { 0x16, 0x00 },
         { 0x1F, 0x81 },
@@ -831,7 +831,7 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetRenderState_TextureFactor, 5558, 7)
 
-        { 0x09, 0x80 },
+        { 0x08, 0x86 },
         { 0x14, 0x46 },
         { 0x1F, 0x24 },
         { 0x2A, 0xBA },
