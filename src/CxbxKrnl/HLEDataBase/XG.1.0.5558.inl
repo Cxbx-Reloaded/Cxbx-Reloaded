@@ -123,22 +123,12 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XG_5558[] = {
 
-    // XGIsSwizzledFormat (* unchanged since 4361 *)
 	OOVPA_TABLE_ENTRY(XGIsSwizzledFormat, 4361),
-    // XGSwizzleRect
-	/* Leave unpatched
-	OOVPA_TABLE_ENTRY(XGSwizzleRect, 5558),
-	*/
-    // XGSwizzleBox (* UNTESTED *)
-	OOVPA_TABLE_ENTRY(XGSwizzleBox, 5558),
-	// XGUnswizzleRect
-	/* Leave unpatched
-	OOVPA_TABLE_ENTRY(XGUnswizzleRect, 5558),
-    */
-	// XGUnswizzleBox (* UNTESTED *)
-    /*
-	OOVPA_TABLE_ENTRY(XGUnswizzleBox, 5558),
-	*/
+    
+	// OOVPA_TABLE_ENTRY(XGSwizzleRect, 5558), // Leave unpatched
+	OOVPA_TABLE_ENTRY(XGSwizzleBox, 5558), // (* UNTESTED *)
+	// OOVPA_TABLE_ENTRY(XGUnswizzleRect, 5558), // Leave unpatched
+	// OOVPA_TABLE_ENTRY(XGUnswizzleBox, 5558), //  (* UNTESTED *)
 };
 
 // ******************************************************************

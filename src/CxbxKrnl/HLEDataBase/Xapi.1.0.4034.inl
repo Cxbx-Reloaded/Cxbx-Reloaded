@@ -163,54 +163,29 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XAPI_4034[] = {
 
-    // XInitDevices (* unchanged since 3911 *)
 	OOVPA_TABLE_ENTRY(XInitDevices, 3911),
-    // XGetDevices (* unchanged since 3911 *)
 	OOVPA_TABLE_ENTRY(XGetDevices, 3911),
 /* These functions havent been rev'd yet (may be same as new/old)
-    // XInputOpen
 	OOVPA_TABLE_ENTRY(XInputOpen, 4034),
-    // XInputGetCapabilities
 	OOVPA_TABLE_ENTRY(XInputGetCapabilities, 4361),
-    // XInputGetState
-	OOVPA_TABLE_ENTRY(XInputGetState, 4361), */
-    /* Too High Level
-    // CreateThread (* unchanged since 1.0.3911 *)
-	OOVPA_TABLE_ENTRY(CreateThread, 3911), */
-    /*
-    // CloseHandle (*???*)
-	OOVPA_TABLE_ENTRY(CloseHandle, (???)), */
-    //*/
-	// CreateFiber (* unchanged since 3911 *)
+	OOVPA_TABLE_ENTRY(XInputGetState, 4361),
+*/
+	// OOVPA_TABLE_ENTRY(CreateThread, 3911), // Too High Level
+	// OOVPA_TABLE_ENTRY(CloseHandle, (???)),
 	OOVPA_TABLE_ENTRY(CreateFiber, 3911),
-	// DeleteFiber (* unchanged since 3911 *)
 	OOVPA_TABLE_ENTRY(DeleteFiber, 3911),
-	// GetTimeZoneInformation (* unchanged since 3911 *)
 	OOVPA_TABLE_ENTRY(GetTimeZoneInformation, 3911),
-	// SetThreadPriority (* unchanged since 3911 *)
 	OOVPA_TABLE_ENTRY(SetThreadPriority, 3911),
-	// SignalObjectAndWait (* unchanged since 3911 *)
 	OOVPA_TABLE_ENTRY(SignalObjectAndWait, 3911),
-	// QueueUserAPC (* unchanged since 3911 *)
 	OOVPA_TABLE_ENTRY(QueueUserAPC, 3911),
-	// XInputSetState (* unchanged since 3911 *)
 	OOVPA_TABLE_ENTRY(XInputSetState, 3911),
-
-	// XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
 	OOVPA_TABLE_ENTRY(XRegisterThreadNotifyRoutine, 3911),
-	// XGetDeviceChanges (* unchanged since 3911 *)
 	OOVPA_TABLE_ENTRY(XGetDeviceChanges, 3911),
-	// XID_fCloseDevice (* unchanged since 3911 *)
 	OOVPA_TABLE_XREF(XID_fCloseDevice, 3911),
-    // XInputClose (* unchanged since 3911 *)
 	OOVPA_TABLE_ENTRY(XInputClose, 3911),
-    // XInputGetCapabilities (* unchanged since 3911 *)
 	OOVPA_TABLE_ENTRY(XInputGetCapabilities, 3911),
-	// GetThreadPriority (* unchanged since 3911 *)
 	OOVPA_TABLE_ENTRY(GetThreadPriority, 3911),
-	// XInputOpen (* unchanged since 3911 *)
 	OOVPA_TABLE_ENTRY(XInputOpen, 3911),
-	// XInputGetState (* unchanged since 3911 *)
 	OOVPA_TABLE_ENTRY(XInputGetState, 3911),
 };
 

@@ -246,57 +246,30 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XAPI_5558[] = {
 
-    // SetThreadPriority (* unchanged since 3911 *)
 	OOVPA_TABLE_ENTRY(SetThreadPriority, 3911),
-    // XRegisterThreadNotifyRoutine (* unchanged since 3911 *)
 	OOVPA_TABLE_ENTRY(XRegisterThreadNotifyRoutine, 3911),
-    // XMountUtilityDrive (* unchanged since 4432 *)
 	OOVPA_TABLE_ENTRY(XMountUtilityDrive, 4432),
-    // XInitDevices (* unchanged since 5233 *)
 	OOVPA_TABLE_ENTRY(XInitDevices, 5233),
-    // XGetDevices (* unchanged since 1.0.4134 *)
 	OOVPA_TABLE_ENTRY(XGetDevices, 4134),
-    // XGetDeviceChanges (* unchanged since 5233 *)
 	OOVPA_TABLE_ENTRY(XGetDeviceChanges, 5233),
-    // XInputOpen (* unchanged since 1.0.4361 *)
 	OOVPA_TABLE_ENTRY(XInputOpen, 4361),
-    // XInputGetCapabilities
 	OOVPA_TABLE_ENTRY(XInputGetCapabilities, 5558),
-    // XInputGetState
 	OOVPA_TABLE_ENTRY(XInputGetState, 5558),
-    // XInputSetState (* unchanged since 5233 *)
 	OOVPA_TABLE_ENTRY(XInputSetState, 5233),
-    /* obsolete?
-    // XapiThreadStartup (* unchanged since 1.0.4361 *)
-	OOVPA_TABLE_ENTRY(XapiThreadStartup, 4361),
-    //*/
-	// XLaunchNewImageA
+	// OOVPA_TABLE_ENTRY(XapiThreadStartup, 4361), // obsolete?
 	OOVPA_TABLE_PATCH(XLaunchNewImageA, 5558, XLaunchNewImage),
-    // XGetLaunchInfo
 	OOVPA_TABLE_ENTRY(XGetLaunchInfo, 5558),
-	// QueueUserAPC (* unchanged since 3911 *)
 	OOVPA_TABLE_ENTRY(QueueUserAPC, 3911),
-	// SetThreadPriorityBoost (* unchanged since 4627 *)
 	OOVPA_TABLE_ENTRY(SetThreadPriorityBoost, 4627),
-	// GetThreadPriority (* unchanged since 4627 *)
 	OOVPA_TABLE_ENTRY(GetThreadPriority, 4627),
-	// GetTimeZoneInformation (* unchanged since 3911 *)
 	OOVPA_TABLE_ENTRY(GetTimeZoneInformation, 3911),
-	// XMountMUA
 	OOVPA_TABLE_ENTRY(XMountMUA, 5558),
-	// CreateFiber
 	OOVPA_TABLE_ENTRY(CreateFiber, 5558),
-	// DeleteFiber
 	OOVPA_TABLE_ENTRY(DeleteFiber, 5558),
-	// SwitchToFiber
 	OOVPA_TABLE_ENTRY(SwitchToFiber, 5558),
-	// ConvertThreadToFiber
 	OOVPA_TABLE_ENTRY(ConvertThreadToFiber, 5558),
-	//// XapiFiberStartup
-	//OOVPA_TABLE_ENTRY(XapiFiberStartup, 5558),
-	// XID_fCloseDevice
+	// OOVPA_TABLE_ENTRY(XapiFiberStartup, 5558),
 	OOVPA_TABLE_XREF(XID_fCloseDevice, 5558),
-	// XInputClose
 	OOVPA_TABLE_ENTRY(XInputClose, 5558),
 };
 
