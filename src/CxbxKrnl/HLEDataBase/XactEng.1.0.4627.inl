@@ -590,61 +590,33 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XactEng_4627[] = {
 
-	// XACTEngineCreate
 	OOVPA_TABLE_ENTRY(XACTEngineCreate, 4627),
-	// XACTEngineCreate
 	OOVPA_TABLE_ENTRY(XACTEngineCreate, 4928),
-	// XACTEngineDoWork
 	OOVPA_TABLE_ENTRY(XACTEngineDoWork, 4627),
-	// XACT_CEngine_RegisterWaveBank
 	OOVPA_TABLE_XREF(XACT_CEngine_RegisterWaveBank, 4627),
-	// IXACTEngine_RegisterWaveBank
 	OOVPA_TABLE_ENTRY(IXACTEngine_RegisterWaveBank, 4627),
-	// XACT::CEngine::RegisterStreamedWaveBank (XREF)
 	OOVPA_TABLE_XREF(XACT_CEngine_RegisterStreamedWaveBank, 4627),
-	// XACT::CEngine::RegisterStreamedWaveBank (XREF)
 	OOVPA_TABLE_XREF(XACT_CEngine_RegisterStreamedWaveBank, 4928),
-	// IXACTEngine_RegisterStreamedWaveBank
 	OOVPA_TABLE_ENTRY(IXACTEngine_RegisterStreamedWaveBank, 4627),
-	// IXACTEngine_RegisterStreamedWaveBank
 	OOVPA_TABLE_ENTRY(IXACTEngine_RegisterStreamedWaveBank, 4928),
-	// XACT::CEngine::CreateSoundBank (XREF)
 	OOVPA_TABLE_XREF(XACT_CEngine_CreateSoundBank, 4627),
-	// XACT::CEngine::CreateSoundBank (XREF)
 	OOVPA_TABLE_XREF(XACT_CEngine_CreateSoundBank, 4928),
-	// IXACTEngine_CreateSoundBank
 	OOVPA_TABLE_ENTRY(IXACTEngine_CreateSoundBank, 4627),
-	// IXACTEngine_CreateSoundBank
 	OOVPA_TABLE_ENTRY(IXACTEngine_CreateSoundBank, 4928),
-	// XACT::CEngine::DownloadEffectsImage (XREF)
 	OOVPA_TABLE_XREF(XACT_CEngine_DownloadEffectsImage, 4627),
-	// IXACTEngine_DownloadEffectsImage
 	OOVPA_TABLE_ENTRY(IXACTEngine_DownloadEffectsImage, 4627),
-	// XACT::CEngine::CreateSoundSource (XREF)
 	OOVPA_TABLE_XREF(XACT_CEngine_CreateSoundSource, 4627),
-	// IXACTEngine_CreateSoundSource
 	OOVPA_TABLE_ENTRY(IXACTEngine_CreateSoundSource, 4627),
-	// XACT::CSoundBank::GetSoundCueIndexFromFriendlyName (XREF)
 	OOVPA_TABLE_XREF(XACT_CSoundBank_GetSoundCueIndexFromFriendlyName, 4627),
-	// IXACTSoundBank_GetSoundCueIndexFromFriendlyName
 	OOVPA_TABLE_ENTRY(IXACTSoundBank_GetSoundCueIndexFromFriendlyName, 4627),
-	// IXACTSoundBank_Play
 	OOVPA_TABLE_ENTRY(IXACTSoundBank_Play, 4627),
-	// XACT::CEngine::RegisterNotification
 	OOVPA_TABLE_XREF(XACT_CEngine_RegisterNotification, 4627),
-	// IXACTEngine_RegisterNotification
 	OOVPA_TABLE_ENTRY(IXACTEngine_RegisterNotification, 4627),
-	// XACT::CEngine::GetNotification
 	OOVPA_TABLE_XREF(XACT_CEngine_GetNotification, 4627),
-	// IXACTEngine_GetNotification
 	OOVPA_TABLE_ENTRY(IXACTEngine_GetNotification, 4627),
-	// XACT::CEngine::UnRegisterWaveBank (XREF)
 	OOVPA_TABLE_XREF(XACT_CEngine_UnRegisterWaveBank, 4627),
-	// XACT::CEngine::UnRegisterWaveBank (XREF)
 	OOVPA_TABLE_XREF(XACT_CEngine_UnRegisterWaveBank, 4928),
-	// IXACTEngine_UnRegisterWaveBank
 	OOVPA_TABLE_ENTRY(IXACTEngine_UnRegisterWaveBank, 4627),
-	// IXACTEngine_UnRegisterWaveBank
 	OOVPA_TABLE_ENTRY(IXACTEngine_UnRegisterWaveBank, 4928),
 };
 

@@ -39,18 +39,18 @@
 // ******************************************************************
 // * Take THIS C++ !!
 // ******************************************************************
-template <class BaseClass, typename MFT> inline void *MFPtoFP( MFT pMemFunc)
+template <class BaseClass, typename MFT> inline void *MFPtoFP(MFT pMemFunc)
 {
-    union
-    {
-        MFT pMemFunc;
-        void (*pFunc)();
-    }
-    ThisConv;
+	union
+	{
+		MFT pMemFunc;
+		void(*pFunc)();
+	}
+	ThisConv;
 
-    ThisConv.pMemFunc = pMemFunc;
+	ThisConv.pMemFunc = pMemFunc;
 
-    return ThisConv.pFunc;
+	return ThisConv.pFunc;
 }
 
 #pragma pack(1)
@@ -152,20 +152,6 @@ template <uint16 COUNT> struct SOOVPA
 	OOVPA::SOVP Sovp[COUNT];
 };
 
-// ******************************************************************
-// * OOVPATable
-// ******************************************************************
-struct OOVPATable
-{
-    OOVPA *Oovpa;
-	int version;
-    void  *lpRedirect;
-
-    #ifdef _DEBUG_TRACE
-    char  *szFuncName;
-    #endif
-};
-
 #define OOVPA_XREF_LARGE(Name, Version, Count, XRefSaveIndex, XRefCount)	\
 LOOVPA<Count> Name##_##Version = { { /*OOVPAType*/Large, Count, XRefSaveIndex, XRefCount }, {
 
@@ -181,20 +167,74 @@ OOVPA_XREF(Name, Version, Count, XRefNoSaveIndex, XRefZero)
 #define OOVPA_END } }
 
 
+// ******************************************************************
+// * OOVPATable
+// ******************************************************************
+struct OOVPATable
+{
+	OOVPA *Oovpa;
+	void  *lpRedirect;
+#ifdef _DEBUG_TRACE
+	char  *szFuncName;
+#endif
+	uint16_t Version : 13; // 2^13 = 8192, enough to store lowest and higest possible Library Version number in
+	uint16_t Flags : 3;
+};
+
+const uint16_t Flag_IsLTCG = 1; // Indicates an entry that registers an LTCG OOVPA
+const uint16_t Flag_DontScan = 2; // Indicates an entry that's currently disabled and thus shouldn't be searched for
+const uint16_t Flag_Reserved = 4;
+
 #if _DEBUG_TRACE
-#define OOVPA_TABLE_ENTRY_LONG(Oovpa, Version, Patch, Name) { &Oovpa ## _ ## Version.Header, Version, Patch, Name }
+#define OOVPA_TABLE_ENTRY_FULL(Oovpa, Patch, DebugName, Version, Flags) \
+	{ & Oovpa ## _ ## Version.Header, Patch, DebugName, Version, Flags }
 #else                                              
-#define OOVPA_TABLE_ENTRY_LONG(Oovpa, Version, Patch, Name) { &Oovpa ## _ ## Version.Header, Version, Patch }
+#define OOVPA_TABLE_ENTRY_FULL(Oovpa, Patch, DebugName, Version, Flags) \
+	{ & Oovpa ## _ ## Version.Header, Patch, /* skip */ Version, Flags }
 #endif
 
-#define OOVPA_TABLE_PATCH(Oovpa, Version, Patch)	\
-	OOVPA_TABLE_ENTRY_LONG(Oovpa, Version, XTL::EMUPATCH(Patch), #Patch ## "_" ## #Version)
-#define OOVPA_TABLE_ENTRY(Function, Version) \
-	OOVPA_TABLE_PATCH(Function, Version, Function)
-#define OOVPA_TABLE_PATCH_EmuThis(Function, Version)	\
-	OOVPA_TABLE_ENTRY_LONG(Function, Version, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::EMUPATCH(Function)), #Function ## "_" ## #Version)
-#define OOVPA_TABLE_XREF(Oovpa, Version)	\
-	OOVPA_TABLE_ENTRY_LONG(Oovpa, Version, nullptr, #Oovpa ## "_" ## #Version ## " (XRef)" )
+// TODO : Remove the OOVPA_TABLE_* macro's below once they are not in use anymore.
+// (This will be when version-specific OOVPATable's are combined into library-specific OOVPATable's.)
+#define OOVPA_TABLE_PATCH(Oovpa, Version, Patch) \
+	OOVPA_TABLE_ENTRY_FULL(Oovpa, XTL::EMUPATCH(Patch), #Patch ## "_" ## #Version, Version, 0)
+
+#define OOVPA_TABLE_PATCH_EmuThis(Oovpa, Version) \
+	OOVPA_TABLE_ENTRY_FULL(Oovpa, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::EMUPATCH(Oovpa)), #Oovpa ## "_" ## #Version, Version, 0)
+
+#define OOVPA_TABLE_ENTRY(Symbol, Version) \
+	OOVPA_TABLE_ENTRY_FULL(Symbol, XTL::EMUPATCH(Symbol), #Symbol ## "_" ## #Version, Version, 0)
+
+#define OOVPA_TABLE_XREF(Oovpa, Version) \
+	OOVPA_TABLE_ENTRY_FULL(Oovpa, nullptr, #Oovpa ## "_" ## #Version ## " (XRef)", Version, 0)
+
+// REGISTER_OOVPA is the ONLY allowed macro for registrations.
+// Registrations MUST stay sorted to prevent duplicates and maintain overview.
+// The TYPE argument MUST be PATCH, XREF, ALIAS, LTCG or DISABLED (see below).
+// ONLY use ALIAS when absolutely required (when OOVPA identifier cannot follow Patch)
+// ONLY use LTCG for LTCG OOVPA's (HLE support for these is flacky at best)
+// DO NOT comment out registrations, but use TYPE DISABLED instead.
+#define REGISTER_OOVPA(Symbol, Version, TYPE, ...) \
+	REGISTER_OOVPA_##TYPE(Symbol, Version, __VA_ARGS__)
+
+#define PATCH /* most common registration, Symbol indicates both an OOVPA and Patch */
+#define REGISTER_OOVPA_PATCH(Symbol, Version, ...) \
+	OOVPA_TABLE_ENTRY_FULL(Symbol, XTL::EMUPATCH(Symbol), #Symbol ## "_" ## #Version, Version, 0)
+
+#define XREF /* registration of an XRef-only OOVPA, for which no Patch is present */
+#define REGISTER_OOVPA_XREF(Symbol, Version, ...) \
+	OOVPA_TABLE_ENTRY_FULL(Symbol, nullptr, #Symbol ## "_" ## #Version ## " (XRef)", Version, 0)
+
+#define ALIAS /* registration of a Patch using an alternatively named OOVPA */
+#define REGISTER_OOVPA_ALIAS(Symbol, Version, AliasOovpa) \
+	OOVPA_TABLE_ENTRY_FULL(AliasOovpa, XTL::EMUPATCH(Symbol), #AliasOovpa ## "_" ## #Version, Version, 0)
+
+#define LTCG /* registration of a Patch using a LTCG specific OOVPA */
+#define REGISTER_OOVPA_LTCG(Symbol, Version, ...) \
+	OOVPA_TABLE_ENTRY_FULL(Symbol ## _LTCG, XTL::EMUPATCH(Symbol), #Symbol ## "_LTCG_" ## #Version ## " (LTCG)", Version, Flag_IsLTCG)
+
+#define DISABLED /* registration is (temporarily) disabled by a flag */
+#define REGISTER_OOVPA_DISABLED(Symbol, Version, ...) \
+	OOVPA_TABLE_ENTRY_FULL(Symbol, XTL::EMUPATCH(Symbol), #Symbol ## "_" ## #Version ## " (Disabled)", Version, Flag_DontScan)
 
 #pragma pack()
 
