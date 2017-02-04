@@ -124,9 +124,7 @@ OOVPA_END;
 OOVPATable XG_5558[] = {
 
     // XGIsSwizzledFormat (* unchanged since 4361 *)
-	/* Leave unpatched
 	OOVPA_TABLE_ENTRY(XGIsSwizzledFormat, 4361),
-	*/
     // XGSwizzleRect
 	/* Leave unpatched
 	OOVPA_TABLE_ENTRY(XGSwizzleRect, 5558),
