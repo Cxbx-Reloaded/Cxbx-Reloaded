@@ -1415,7 +1415,7 @@ OOVPATable D3D8_5788[] = {
 	OOVPA_TABLE_ENTRY(D3DDevice_GetVertexShaderSize, 5788),
 	OOVPA_TABLE_ENTRY(D3DDevice_LoadVertexShader, 5233),
 	OOVPA_TABLE_ENTRY(D3DDevice_SelectVertexShader, 5558),
-	OOVPA_TABLE_PATCH(X_D3DDevice_RunVertexStateShader, 4627, D3DDevice_RunVertexStateShader),
+	OOVPA_TABLE_ENTRY(D3DDevice_RunVertexStateShader, 4627),
 	OOVPA_TABLE_ENTRY(D3DDevice_AddRef, 5788),
 	OOVPA_TABLE_XREF(D3D_ClearStateBlockFlags, 5788),
 	OOVPA_TABLE_XREF(D3D_RecordStateBlock, 5788),

@@ -1980,7 +1980,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetViewportOffsetAndScale@8
 // ******************************************************************
-OOVPA_NO_XREF(X_D3DDevice_GetViewportOffsetAndScale, 4627, 8)
+OOVPA_NO_XREF(D3DDevice_GetViewportOffsetAndScale, 4627, 8)
 
         { 0x1E, 0xD8 },
         { 0x40, 0xD8 },
@@ -1995,7 +1995,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SelectVertexShaderDirect
 // ******************************************************************
-OOVPA_NO_XREF(X_D3DDevice_SelectVertexShaderDirect, 4627, 7)
+OOVPA_NO_XREF(D3DDevice_SelectVertexShaderDirect, 4627, 7)
 
         { 0x05, 0x85 },
         { 0x0C, 0x00 },
@@ -2009,7 +2009,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetShaderConstantMode
 // ******************************************************************
-OOVPA_NO_XREF(X_D3DDevice_GetShaderConstantMode, 4627, 7)
+OOVPA_NO_XREF(D3DDevice_GetShaderConstantMode, 4627, 7)
 
         { 0x05, 0x8B },
         { 0x06, 0x88 },
@@ -2023,7 +2023,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetVertexShader
 // ******************************************************************
-OOVPA_NO_XREF(X_D3DDevice_GetVertexShader, 4627, 7)
+OOVPA_NO_XREF(D3DDevice_GetVertexShader, 4627, 7)
 
         { 0x05, 0x8B },
         { 0x06, 0x88 },
@@ -2037,7 +2037,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetVertexShaderConstant
 // ******************************************************************
-OOVPA_NO_XREF(X_D3DDevice_GetVertexShaderConstant, 4627, 7)
+OOVPA_NO_XREF(D3DDevice_GetVertexShaderConstant, 4627, 7)
 
         { 0x05, 0x15 },
         { 0x0C, 0x24 },
@@ -2051,7 +2051,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetVertexShaderInputDirect
 // ******************************************************************
-OOVPA_NO_XREF(X_D3DDevice_SetVertexShaderInputDirect, 4627, 7)
+OOVPA_NO_XREF(D3DDevice_SetVertexShaderInputDirect, 4627, 7)
 
         { 0x05, 0x85 },
         { 0x0C, 0x00 },
@@ -2065,7 +2065,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetVertexShaderInput
 // ******************************************************************
-OOVPA_NO_XREF(X_D3DDevice_GetVertexShaderInput, 4627, 7)
+OOVPA_NO_XREF(D3DDevice_GetVertexShaderInput, 4627, 7)
 
         { 0x0B, 0x74 },
         { 0x18, 0x04 },
@@ -2079,7 +2079,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_RunVertexStateShader
 // ******************************************************************
-OOVPA_NO_XREF(X_D3DDevice_RunVertexStateShader, 4627, 7)
+OOVPA_NO_XREF(D3DDevice_RunVertexStateShader, 4627, 7)
 
         { 0x09, 0x3B },
         { 0x14, 0x4C },
@@ -2116,7 +2116,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_LoadVertexShader
 // ******************************************************************
-OOVPA_NO_XREF(X_D3DDevice_LoadVertexShader, 4627, 7)
+OOVPA_NO_XREF(D3DDevice_LoadVertexShader, 4627, 7)
 
         { 0x09, 0x08 },
         { 0x14, 0x75 },
@@ -2130,7 +2130,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_LoadVertexShaderProgram
 // ******************************************************************
-OOVPA_NO_XREF(X_D3DDevice_LoadVertexShaderProgram, 4627, 7)
+OOVPA_NO_XREF(D3DDevice_LoadVertexShaderProgram, 4627, 7)
 
         { 0x0B, 0x2D },
         { 0x18, 0x10 },
@@ -2144,7 +2144,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SelectVertexShader
 // ******************************************************************
-OOVPA_NO_XREF(X_D3DDevice_SelectVertexShader, 4627, 8)
+OOVPA_NO_XREF(D3DDevice_SelectVertexShader, 4627, 8)
 
         { 0x0E, 0x49 },
         { 0x1E, 0x00 },
@@ -2159,7 +2159,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetVertexShaderType@8
 // ******************************************************************
-OOVPA_NO_XREF(X_D3DDevice_GetVertexShaderType, 4627, 7)
+OOVPA_NO_XREF(D3DDevice_GetVertexShaderType, 4627, 7)
 
         { 0x04, 0x8B },
         { 0x0A, 0x07 },
@@ -2174,7 +2174,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetVertexShaderDeclaration
 // ******************************************************************
-OOVPA_NO_XREF(X_D3DDevice_GetVertexShaderDeclaration, 4627, 8)
+OOVPA_NO_XREF(D3DDevice_GetVertexShaderDeclaration, 4627, 8)
 
         { 0x1E, 0xC2 },
         { 0x3E, 0x00 },
@@ -2189,7 +2189,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetVertexShaderFunction
 // ******************************************************************
-OOVPA_NO_XREF(X_D3DDevice_GetVertexShaderFunction, 4627, 7)
+OOVPA_NO_XREF(D3DDevice_GetVertexShaderFunction, 4627, 7)
 
         { 0x16, 0xC0 },
         { 0x2E, 0x01 },
@@ -2203,7 +2203,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetVertexShaderInput
 // ******************************************************************
-OOVPA_NO_XREF(X_D3DDevice_SetVertexShaderInput, 4627, 8)
+OOVPA_NO_XREF(D3DDevice_SetVertexShaderInput, 4627, 8)
 
         { 0x1E, 0x83 },
         { 0x3E, 0x10 },
@@ -2218,7 +2218,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_GetStreamSource2 (Maybe same in older versions)
 // ******************************************************************
-OOVPA_NO_XREF(X_D3DDevice_GetStreamSource2, 4627, 7)
+OOVPA_NO_XREF(D3DDevice_GetStreamSource2, 4627, 7)
 
         { 0x06, 0x34 },
         { 0x12, 0x85 },
@@ -2260,7 +2260,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_Release
 // ******************************************************************
-OOVPA_NO_XREF(X_D3DDevice_Release, 4627, 8)
+OOVPA_NO_XREF(D3DDevice_Release, 4627, 8)
 
         { 0x07, 0x8B },
         { 0x0C, 0x00 },
@@ -3218,7 +3218,7 @@ OOVPATable D3D8_4627[] = {
 	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderState_YuvEnable, 4134),
 	OOVPA_TABLE_ENTRY(D3DDevice_SetTransform, 4134),
 	OOVPA_TABLE_ENTRY(D3DDevice_GetTransform, 4361),
-	OOVPA_TABLE_PATCH(X_D3DDevice_GetStreamSource2, 4627, D3DDevice_GetStreamSource2),
+	OOVPA_TABLE_ENTRY(D3DDevice_GetStreamSource2, 4627),
 	OOVPA_TABLE_ENTRY(D3DDevice_SetStreamSource, 4361),
 	OOVPA_TABLE_ENTRY(D3DDevice_SetVertexShader, 4361),
 	OOVPA_TABLE_PATCH(D3DDevice_SetVertexShaderB, 4627, D3DDevice_SetVertexShader),
@@ -3249,26 +3249,26 @@ OOVPATable D3D8_4627[] = {
 	OOVPA_TABLE_PATCH(D3DTexture_GetSurfaceLevel2B, 4627, D3DTexture_GetSurfaceLevel2),
 	OOVPA_TABLE_ENTRY(D3DTexture_LockRect, 3925),
 	OOVPA_TABLE_ENTRY(D3DVolumeTexture_LockBox, 4627),
-	OOVPA_TABLE_PATCH(X_D3DDevice_GetViewportOffsetAndScale, 4627, D3DDevice_GetViewportOffsetAndScale),
-	OOVPA_TABLE_PATCH(X_D3DDevice_DeleteVertexShader, 3925, D3DDevice_DeleteVertexShader),
-	OOVPA_TABLE_PATCH(X_D3DDevice_SelectVertexShaderDirect, 4627, D3DDevice_SelectVertexShaderDirect),
-	OOVPA_TABLE_PATCH(X_D3DDevice_GetShaderConstantMode, 4627, D3DDevice_GetShaderConstantMode),
-	OOVPA_TABLE_PATCH(X_D3DDevice_GetVertexShader, 4627, D3DDevice_GetVertexShader),
-	OOVPA_TABLE_PATCH(X_D3DDevice_GetVertexShaderConstant, 4627, D3DDevice_GetVertexShaderConstant),
-	OOVPA_TABLE_PATCH(X_D3DDevice_SetVertexShaderInputDirect, 4627, D3DDevice_SetVertexShaderInputDirect),
-	OOVPA_TABLE_PATCH(X_D3DDevice_GetVertexShaderInput, 4627, D3DDevice_GetVertexShaderInput),
-	OOVPA_TABLE_PATCH(X_D3DDevice_RunVertexStateShader, 4627, D3DDevice_RunVertexStateShader),
-	OOVPA_TABLE_PATCH(X_D3DDevice_LoadVertexShader, 4627, D3DDevice_LoadVertexShader),
-	OOVPA_TABLE_PATCH(X_D3DDevice_LoadVertexShaderProgram, 4627, D3DDevice_LoadVertexShaderProgram),
-	OOVPA_TABLE_PATCH(X_D3DDevice_SelectVertexShader, 4627, D3DDevice_SelectVertexShader),
-	OOVPA_TABLE_PATCH(X_D3DDevice_GetVertexShaderSize, 3925, D3DDevice_GetVertexShaderSize),
+	OOVPA_TABLE_ENTRY(D3DDevice_GetViewportOffsetAndScale, 4627),
+	OOVPA_TABLE_ENTRY(D3DDevice_DeleteVertexShader, 3925),
+	OOVPA_TABLE_ENTRY(D3DDevice_SelectVertexShaderDirect, 4627),
+	OOVPA_TABLE_ENTRY(D3DDevice_GetShaderConstantMode, 4627),
+	OOVPA_TABLE_ENTRY(D3DDevice_GetVertexShader, 4627),
+	OOVPA_TABLE_ENTRY(D3DDevice_GetVertexShaderConstant, 4627),
+	OOVPA_TABLE_ENTRY(D3DDevice_SetVertexShaderInputDirect, 4627),
+	OOVPA_TABLE_ENTRY(D3DDevice_GetVertexShaderInput, 4627),
+	OOVPA_TABLE_ENTRY(D3DDevice_RunVertexStateShader, 4627),
+	OOVPA_TABLE_ENTRY(D3DDevice_LoadVertexShader, 4627),
+	OOVPA_TABLE_ENTRY(D3DDevice_LoadVertexShaderProgram, 4627),
+	OOVPA_TABLE_ENTRY(D3DDevice_SelectVertexShader, 4627),
+	OOVPA_TABLE_ENTRY(D3DDevice_GetVertexShaderSize, 3925),
 	OOVPA_TABLE_ENTRY(D3DDevice_BeginStateBlock, 4361),
 	OOVPA_TABLE_ENTRY(D3DDevice_EndStateBlock, 4361),
-	OOVPA_TABLE_PATCH(X_D3DDevice_GetVertexShaderType, 4627, D3DDevice_GetVertexShaderType),
-	OOVPA_TABLE_PATCH(X_D3DDevice_GetVertexShaderDeclaration, 4627, D3DDevice_GetVertexShaderDeclaration),
-	OOVPA_TABLE_PATCH(X_D3DDevice_GetVertexShaderFunction, 4627, D3DDevice_GetVertexShaderFunction),
-	OOVPA_TABLE_PATCH(X_D3DDevice_SetVertexShaderInput, 4627, D3DDevice_SetVertexShaderInput),
-	OOVPA_TABLE_PATCH(X_D3DDevice_Release, 4627, D3DDevice_Release),
+	OOVPA_TABLE_ENTRY(D3DDevice_GetVertexShaderType, 4627),
+	OOVPA_TABLE_ENTRY(D3DDevice_GetVertexShaderDeclaration, 4627),
+	OOVPA_TABLE_ENTRY(D3DDevice_GetVertexShaderFunction, 4627),
+	OOVPA_TABLE_ENTRY(D3DDevice_SetVertexShaderInput, 4627),
+	OOVPA_TABLE_ENTRY(D3DDevice_Release, 4627),
 	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderState_StencilFail, 4134),
 	OOVPA_TABLE_ENTRY(D3DDevice_SetPixelShader, 4721),
 	OOVPA_TABLE_ENTRY(D3DDevice_Reset, 4134),

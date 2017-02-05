@@ -1490,7 +1490,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_DeleteVertexShader
 // ******************************************************************
-OOVPA_NO_XREF(X_D3DDevice_DeleteVertexShader, 4134, 6)
+OOVPA_NO_XREF(D3DDevice_DeleteVertexShader, 4134, 6)
 
         { 0x02, 0x24 },
         { 0x06, 0xFF },
@@ -1864,7 +1864,7 @@ OOVPATable D3D8_4134[] = {
 	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderTarget, 4134),
 	OOVPA_TABLE_ENTRY(D3DDevice_CreatePixelShader, 3925),
 	OOVPA_TABLE_ENTRY(D3DSurface_LockRect, 3925),
-	OOVPA_TABLE_PATCH(X_D3DDevice_DeleteVertexShader, 3925, D3DDevice_DeleteVertexShader),
+	OOVPA_TABLE_ENTRY(D3DDevice_DeleteVertexShader, 3925),
 	OOVPA_TABLE_ENTRY(Lock2DSurface, 3925),
 	OOVPA_TABLE_ENTRY(D3DDevice_SetGammaRamp, 3925),
 	OOVPA_TABLE_ENTRY(D3DDevice_LoadVertexShader, 4134),
@@ -1920,7 +1920,7 @@ OOVPATable D3D8_4134[] = {
 	OOVPA_TABLE_ENTRY(D3DDevice_SetPixelShaderConstant, 4134),
 	OOVPA_TABLE_ENTRY(D3DDevice_DeletePixelShader, 4134),
 	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_CullModeB, 4134, D3DDevice_SetRenderState_CullMode),
-	OOVPA_TABLE_PATCH(X_D3DDevice_DeleteVertexShader, 4134, D3DDevice_DeleteVertexShader),
+	OOVPA_TABLE_ENTRY(D3DDevice_DeleteVertexShader, 4134),
 	OOVPA_TABLE_ENTRY(D3DDevice_SetScreenSpaceOffset, 4134),
 	OOVPA_TABLE_XREF(D3D_SetFence, 4134),
 	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderState_LineWidth, 4134),
@@ -1930,7 +1930,7 @@ OOVPATable D3D8_4134[] = {
 	OOVPA_TABLE_ENTRY(D3DDevice_GetTile, 4134),
 	OOVPA_TABLE_PATCH(D3DDevice_SetTile, 4134, D3DDevice_SetTileNoWait),
 	OOVPA_TABLE_ENTRY(D3DDevice_IsBusy, 4134),
-	OOVPA_TABLE_PATCH(X_D3DDevice_GetVertexShaderSize, 3925, D3DDevice_GetVertexShaderSize),
+	OOVPA_TABLE_ENTRY(D3DDevice_GetVertexShaderSize, 3925),
 	OOVPA_TABLE_PATCH(D3DDevice_KickOff, 4134, D3DDevice_KickOff),
 	OOVPA_TABLE_ENTRY(D3DDevice_InsertFence, 3925),
 	OOVPA_TABLE_ENTRY(D3DDevice_BlockOnFence, 4134),
