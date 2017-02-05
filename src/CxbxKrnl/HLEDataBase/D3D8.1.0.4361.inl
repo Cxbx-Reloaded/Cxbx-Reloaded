@@ -211,48 +211,48 @@ OOVPA_NO_XREF(D3DDevice_AddRef, 4361, 10)
 OOVPA_END;
 
 // ******************************************************************
-// * IDirect3D_ClearStateBlockFlags
+// * D3D_ClearStateBlockFlags
 // ******************************************************************
-OOVPA_XREF(IDirect3D_ClearStateBlockFlags, 4361, 9,
+OOVPA_XREF(D3D_ClearStateBlockFlags, 4361, 9,
 
     XREF_CLEARSTATEBLOCKFLAGS,
     XRefZero)
 
-        // IDirect3D_ClearStateBlockFlags+0x0A : movzx ecx, 0x82
+        // D3D_ClearStateBlockFlags+0x0A : movzx ecx, 0x82
         { 0x0A, 0xB9 }, // (Offset,Value)-Pair #1
         { 0x0B, 0x82 }, // (Offset,Value)-Pair #2
 
-        // IDirect3D_ClearStateBlockFlags+0x16 : mov ecx, [edx+0x0390]
+        // D3D_ClearStateBlockFlags+0x16 : mov ecx, [edx+0x0390]
         { 0x16, 0x8B }, // (Offset,Value)-Pair #3
         { 0x17, 0x8A }, // (Offset,Value)-Pair #4
         { 0x18, 0x90 }, // (Offset,Value)-Pair #5
         { 0x19, 0x03 }, // (Offset,Value)-Pair #6
 
-        // IDirect3D_ClearStateBlockFlags+0x2F : add ecx, 0x90
+        // D3D_ClearStateBlockFlags+0x2F : add ecx, 0x90
         { 0x2F, 0x81 }, // (Offset,Value)-Pair #7
         { 0x30, 0xC1 }, // (Offset,Value)-Pair #8
         { 0x31, 0x90 }, // (Offset,Value)-Pair #9
 OOVPA_END;
 
 // ******************************************************************
-// * IDirect3D_RecordStateBlock
+// * D3D_RecordStateBlock
 // ******************************************************************
-OOVPA_XREF(IDirect3D_RecordStateBlock, 4361, 10,
+OOVPA_XREF(D3D_RecordStateBlock, 4361, 10,
 
     XREF_RECORDSTATEBLOCK,
     XRefZero)
 
-        // IDirect3D_RecordStateBlock+0x0F : mov eax, [edi+0x0390]
+        // D3D_RecordStateBlock+0x0F : mov eax, [edi+0x0390]
         { 0x0F, 0x8B }, // (Offset,Value)-Pair #1
         { 0x10, 0x87 }, // (Offset,Value)-Pair #2
         { 0x11, 0x90 }, // (Offset,Value)-Pair #3
         { 0x12, 0x03 }, // (Offset,Value)-Pair #4
 
-        // IDirect3D_RecordStateBlock+0x95 : add ebx, ecx
+        // D3D_RecordStateBlock+0x95 : add ebx, ecx
         { 0x95, 0x03 }, // (Offset,Value)-Pair #5
         { 0x96, 0xD9 }, // (Offset,Value)-Pair #6
 
-        // IDirect3D_RecordStateBlock+0xD5 : mov dword ptr [esi+0x0C], 1
+        // D3D_RecordStateBlock+0xD5 : mov dword ptr [esi+0x0C], 1
         { 0xD5, 0xC7 }, // (Offset,Value)-Pair #7
         { 0xD6, 0x46 }, // (Offset,Value)-Pair #8
         { 0xD7, 0x0C }, // (Offset,Value)-Pair #9
@@ -1781,9 +1781,9 @@ OOVPATable D3D8_4361[] = {
 	OOVPA_TABLE_ENTRY(D3DDevice_SelectVertexShader, 4361),
 	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderTarget, 4134),
 	OOVPA_TABLE_ENTRY(D3DDevice_AddRef, 4361),
-	OOVPA_TABLE_XREF(IDirect3D_ClearStateBlockFlags, 4361),
+	OOVPA_TABLE_XREF(D3D_ClearStateBlockFlags, 4361),
 	OOVPA_TABLE_ENTRY(D3DDevice_SetGammaRamp, 4361),
-	OOVPA_TABLE_XREF(IDirect3D_RecordStateBlock, 4361),
+	OOVPA_TABLE_XREF(D3D_RecordStateBlock, 4361),
 	OOVPA_TABLE_ENTRY(D3DDevice_BeginStateBlock, 4361),
 	OOVPA_TABLE_ENTRY(D3DDevice_CaptureStateBlock, 4361),
 	OOVPA_TABLE_ENTRY(D3DDevice_DeleteStateBlock, 4361),
