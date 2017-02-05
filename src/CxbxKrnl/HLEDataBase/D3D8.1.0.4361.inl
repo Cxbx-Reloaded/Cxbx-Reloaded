@@ -1877,7 +1877,7 @@ OOVPATable D3D8_4361[] = {
 	OOVPA_TABLE_ENTRY(D3DDevice_DrawIndexedVerticesUP, 4134),
 	OOVPA_TABLE_ENTRY(D3DDevice_SetPixelShaderConstant, 4134),
 	OOVPA_TABLE_ENTRY(D3DDevice_DeletePixelShader, 4134),
-	OOVPA_TABLE_PATCH(D3DDevice_SetRenderState_CullModeB, 4134, D3DDevice_SetRenderState_CullMode),
+	OOVPA_TABLE_ENTRY(D3DDevice_SetRenderState_CullMode, 4134),
 	OOVPA_TABLE_ENTRY(D3DDevice_DeleteVertexShader, 3925),
 	OOVPA_TABLE_ENTRY(D3DDevice_SetScreenSpaceOffset, 4134),
 	OOVPA_TABLE_XREF(D3D_SetFence, 4134),
