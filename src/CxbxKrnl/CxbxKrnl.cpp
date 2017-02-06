@@ -361,6 +361,8 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	// VerifyHLEDataBase();
 #endif
 
+	// TODO : The following seems to cause a crash when booting the game "Forza Motorsport",
+	// according to https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/101#issuecomment-277230140
 	{
 		// Create a fake kernel header for XapiRestrictCodeSelectorLimit
 		// Thanks advancingdragon / DirtBox
@@ -392,16 +394,16 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	// Read which components need to be LLE'ed :
 	int CxbxLLE_Flags;
 	g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
-	bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
-	bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
-	bLLE_JIT = (CxbxLLE_Flags & LLE_JIT) > 0;
 
+	bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
 	if (bLLE_APU)
 		DbgPrintf("EmuMain : LLE enabled for APU.\n");
 
+	bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
 	if (bLLE_GPU)
 		DbgPrintf("EmuMain : LLE enabled for GPU.\n");
 
+	bLLE_JIT = (CxbxLLE_Flags & LLE_JIT) > 0;
 	if (bLLE_JIT)
 		DbgPrintf("EmuMain : LLE enabled for JIT.\n");
 
@@ -723,9 +725,4 @@ extern "C" CXBXKRNL_API void CxbxKrnlPanic()
     DbgPrintf("EmuMain: CxbxKrnlPanic()\n");
 
     CxbxKrnlCleanup("Kernel Panic!");
-}
-
-extern "C" CXBXKRNL_API void CxbxKrnlNoFunc()
-{
-    DbgPrintf("EmuMain: CxbxKrnlNoFunc()\n");
 }
