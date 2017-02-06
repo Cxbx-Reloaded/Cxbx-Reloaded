@@ -101,8 +101,7 @@ XBSYSAPI EXPORTNUM(247) NTSTATUS NTAPI ObReferenceObjectByName
 XBSYSAPI EXPORTNUM(248) NTSTATUS NTAPI ObReferenceObjectByPointer
 (
 	IN PVOID Object,
-	IN POBJECT_TYPE ObjectType,
-	OUT PHANDLE Handle
+	IN POBJECT_TYPE ObjectType
 );
 
 // ******************************************************************

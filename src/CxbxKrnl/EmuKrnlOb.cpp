@@ -60,6 +60,9 @@ namespace NtDll
 #include <ntstatus.h>
 #pragma warning(default:4005)
 
+#define OBJECT_TO_OBJECT_HEADER(Object) \
+    CONTAINING_RECORD(Object, OBJECT_HEADER, Body)
+
 // ******************************************************************
 // * 0x00EF - ObCreateObject()
 // ******************************************************************
@@ -268,19 +271,22 @@ XBSYSAPI EXPORTNUM(247) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByNa
 XBSYSAPI EXPORTNUM(248) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByPointer
 (
 	IN PVOID Object,
-	IN POBJECT_TYPE ObjectType,
-	OUT PHANDLE Handle
+	IN POBJECT_TYPE ObjectType
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Object)
 		LOG_FUNC_ARG(ObjectType)
-		LOG_FUNC_ARG_OUT(Handle)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+	NTSTATUS result = STATUS_SUCCESS;
+	if (ObjectType == ObjectHeader->Type)
+		InterlockedIncrement(&ObjectHeader->PointerCount); // Same as ObfReferenceObject
+	else
+		result = STATUS_OBJECT_TYPE_MISMATCH;
 
-	RETURN(S_OK);
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -306,8 +312,17 @@ XBSYSAPI EXPORTNUM(250) xboxkrnl::VOID FASTCALL xboxkrnl::ObfDereferenceObject
 )
 {
 	LOG_FUNC_ONE_ARG_OUT(Object);
-
-	LOG_UNIMPLEMENTED();
+	
+	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+	
+	if (InterlockedDecrement(&ObjectHeader->PointerCount) == 0)
+	{
+		if (ObjectHeader->Type->DeleteProcedure != NULL)
+			ObjectHeader->Type->DeleteProcedure(Object);
+		
+		// TODO : How to handle named objects?
+		ObjectHeader->Type->FreeProcedure(ObjectHeader); // TODO : Is this ever something else than ExFreePool ?
+	}
 }
 
 // ******************************************************************
@@ -320,7 +335,9 @@ XBSYSAPI EXPORTNUM(251) xboxkrnl::VOID FASTCALL xboxkrnl::ObfReferenceObject
 {
 	LOG_FUNC_ONE_ARG_OUT(Object);
 
-	LOG_UNIMPLEMENTED();
+	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+
+	InterlockedIncrement(&ObjectHeader->PointerCount);
 }
 
 
