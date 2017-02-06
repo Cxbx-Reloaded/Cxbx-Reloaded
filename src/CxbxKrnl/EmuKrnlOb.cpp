@@ -61,6 +61,29 @@ namespace NtDll
 #pragma warning(default:4005)
 
 // ******************************************************************
+// * 0x00EF - ObCreateObject()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
+(
+	IN POBJECT_TYPE ObjectType,
+	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+	IN ULONG ObjectBodySize,
+	OUT PVOID *Object
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(ObjectType)
+		LOG_FUNC_ARG(ObjectAttributes)
+		LOG_FUNC_ARG(ObjectBodySize)
+		LOG_FUNC_ARG_OUT(Object)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(S_OK);
+}
+
+// ******************************************************************
 // * 0x00F0 - ObDirectoryObjectType
 // ******************************************************************
 XBSYSAPI EXPORTNUM(240) xboxkrnl::OBJECT_TYPE xboxkrnl::ObDirectoryObjectType =

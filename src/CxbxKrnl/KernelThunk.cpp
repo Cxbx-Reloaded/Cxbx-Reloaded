@@ -306,7 +306,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::NtWriteFile),                         // 0x00EC (236)
 	(uint32)PANIC(0x00ED),                                        // 0x00ED (237) NtWriteFileGather
 	(uint32)FUNC(&xboxkrnl::NtYieldExecution),                    // 0x00EE (238)
-	(uint32)PANIC(0x00EF),                                        // 0x00EF (239) ObCreateObject
+	(uint32)FUNC(&xboxkrnl::ObCreateObject),                      // 0x00EF (239)
 	(uint32)VARIABLE(&xboxkrnl::ObDirectoryObjectType),           // 0x00F0 (240)
 	(uint32)PANIC(0x00F1),                                        // 0x00F1 (241) ObInsertObject
 	(uint32)PANIC(0x00F2),                                        // 0x00F2 (242) ObMakeTemporaryObject 

@@ -12,8 +12,20 @@
 #ifndef XBOXKRNL_OB_H
 #define XBOXKRNL_OB_H
 
-XBSYSAPI VOID *ObCreateObject;
+// ******************************************************************
+// * 0x00EF - ObCreateObject()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(239) NTSTATUS NTAPI ObCreateObject
+(
+	IN POBJECT_TYPE ObjectType,
+	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+	IN ULONG ObjectBodySize,
+	OUT PVOID *Object
+);
 
+// ******************************************************************
+// * 0x00F0 - ObDirectoryObjectType
+// ******************************************************************
 XBSYSAPI EXPORTNUM(240) OBJECT_TYPE ObDirectoryObjectType;
 
 XBSYSAPI VOID *ObInsertObject;
