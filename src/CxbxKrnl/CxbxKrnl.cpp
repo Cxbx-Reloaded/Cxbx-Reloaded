@@ -209,8 +209,12 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 
 	// Copy over loaded Xbe Header to specified base address
 	memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));	
+	// Copy over the certificate
 	memcpy((void*)(CxbxKrnl_Xbe->m_Header.dwBaseAddr + sizeof(Xbe::Header)), CxbxKrnl_Xbe->m_HeaderEx, CxbxKrnl_Xbe->m_ExSize);
-	
+	// Copy over the library versions
+	memcpy((void*)CxbxKrnl_Xbe->m_Header.dwLibraryVersionsAddr, CxbxKrnl_Xbe->m_LibraryVersion, CxbxKrnl_Xbe->m_Header.dwLibraryVersions * sizeof(DWORD));
+	// TODO : Actually, instead of copying from CxbxKrnl_Xbe, we should load the entire Xbe directly into memory, like Dxbx does.
+
 	// Load Sections
 	for (uint32 i = 0; i < CxbxKrnl_Xbe->m_Header.dwSections; i++) {
 		memcpy((void*)CxbxKrnl_Xbe->m_SectionHeader[i].dwVirtualAddr, CxbxKrnl_Xbe->m_bzSection[i], CxbxKrnl_Xbe->m_SectionHeader[i].dwSizeofRaw);
