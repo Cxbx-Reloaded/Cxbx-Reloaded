@@ -28,7 +28,17 @@ XBSYSAPI EXPORTNUM(239) NTSTATUS NTAPI ObCreateObject
 // ******************************************************************
 XBSYSAPI EXPORTNUM(240) OBJECT_TYPE ObDirectoryObjectType;
 
-XBSYSAPI VOID *ObInsertObject;
+// ******************************************************************
+// * 0x00F1 - ObInsertObject()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(241) NTSTATUS NTAPI ObInsertObject
+(
+	IN PVOID Object,
+	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+	IN ULONG ObjectPointerBias,
+	OUT PHANDLE Handle
+);
+
 XBSYSAPI VOID *ObMakeTemporaryObject;
 
 XBSYSAPI EXPORTNUM(243) NTSTATUS NTAPI ObOpenObjectByName

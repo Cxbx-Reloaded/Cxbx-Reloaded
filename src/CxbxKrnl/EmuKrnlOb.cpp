@@ -98,6 +98,29 @@ XBSYSAPI EXPORTNUM(240) xboxkrnl::OBJECT_TYPE xboxkrnl::ObDirectoryObjectType =
 };
 
 // ******************************************************************
+// * 0x00F1 - ObInsertObject()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(241) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObInsertObject
+(
+	IN PVOID Object,
+	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+	IN ULONG ObjectPointerBias,
+	OUT PHANDLE Handle
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Object)
+		LOG_FUNC_ARG(ObjectAttributes)
+		LOG_FUNC_ARG(ObjectPointerBias)
+		LOG_FUNC_ARG_OUT(Handle)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(S_OK);
+}
+
+// ******************************************************************
 // * 0x00F3 - ObOpenObjectByName()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(243) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByName
