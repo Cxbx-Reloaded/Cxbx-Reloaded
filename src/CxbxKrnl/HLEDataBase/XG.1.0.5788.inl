@@ -76,10 +76,10 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XG_5788[1] = {
 
-	OOVPA_TABLE_ENTRY(XGIsSwizzledFormat, 4361),
-    // OOVPA_TABLE_ENTRY(XGSwizzleRect, 5558),
-	// OOVPA_TABLE_ENTRY(XGUnswizzleRect, 5558),
-	// OOVPA_TABLE_ENTRY(XFONT_OpenBitmapFontFromMemory, 5788),
+	REGISTER_OOVPA(XGIsSwizzledFormat, 4361, PATCH),
+    // REGISTER_OOVPA(XGSwizzleRect, 5558, PATCH),
+	// REGISTER_OOVPA(XGUnswizzleRect, 5558, PATCH),
+	// REGISTER_OOVPA(XFONT_OpenBitmapFontFromMemory, 5788, PATCH),
 };
 
 // ******************************************************************

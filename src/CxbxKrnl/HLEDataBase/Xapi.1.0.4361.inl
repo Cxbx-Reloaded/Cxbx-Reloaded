@@ -339,26 +339,26 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XAPI_4361[] = {
 
-	OOVPA_TABLE_ENTRY(XInitDevices, 3911),
-	OOVPA_TABLE_ENTRY(XGetDevices, 4134),
-	OOVPA_TABLE_ENTRY(XGetDeviceChanges, 3911),
-	OOVPA_TABLE_ENTRY(XInputOpen, 4361),
-	OOVPA_TABLE_XREF(XID_fCloseDevice, 4361),
-	OOVPA_TABLE_ENTRY(XInputClose, 3911),
-	OOVPA_TABLE_ENTRY(XInputGetCapabilities, 4361),
-	OOVPA_TABLE_ENTRY(XInputGetState, 4361),
-	OOVPA_TABLE_ENTRY(XInputSetState, 4361),
-    // OOVPA_TABLE_ENTRY(XapiThreadStartup, 4361),
-	OOVPA_TABLE_ENTRY(XMountUtilityDrive, 4134), // TODO: This needs to be verified on 4361, not just 4242!
-	OOVPA_TABLE_ENTRY(CreateFiber, 3911),
-	OOVPA_TABLE_ENTRY(DeleteFiber, 3911),
-	OOVPA_TABLE_ENTRY(GetTimeZoneInformation, 3911),
-	OOVPA_TABLE_ENTRY(SetThreadPriority, 3911),
-	OOVPA_TABLE_ENTRY(GetExitCodeThread, 3911),
-	OOVPA_TABLE_ENTRY(SetThreadPriorityBoost, 3911),
-	OOVPA_TABLE_ENTRY(SignalObjectAndWait, 3911),
-	OOVPA_TABLE_ENTRY(QueueUserAPC, 3911),
-	OOVPA_TABLE_ENTRY(XMountMUA, 4361),
+	REGISTER_OOVPA(XInitDevices, 3911, PATCH),
+	REGISTER_OOVPA(XGetDevices, 4134, PATCH),
+	REGISTER_OOVPA(XGetDeviceChanges, 3911, PATCH),
+	REGISTER_OOVPA(XInputOpen, 4361, PATCH),
+	REGISTER_OOVPA(XID_fCloseDevice, 4361, XREF),
+	REGISTER_OOVPA(XInputClose, 3911, PATCH),
+	REGISTER_OOVPA(XInputGetCapabilities, 4361, PATCH),
+	REGISTER_OOVPA(XInputGetState, 4361, PATCH),
+	REGISTER_OOVPA(XInputSetState, 4361, PATCH),
+    // REGISTER_OOVPA(XapiThreadStartup, 4361, PATCH),
+	REGISTER_OOVPA(XMountUtilityDrive, 4134, PATCH), // TODO: This needs to be verified on 4361, not just 4242!
+	REGISTER_OOVPA(CreateFiber, 3911, PATCH),
+	REGISTER_OOVPA(DeleteFiber, 3911, PATCH),
+	REGISTER_OOVPA(GetTimeZoneInformation, 3911, PATCH),
+	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH),
+	REGISTER_OOVPA(GetExitCodeThread, 3911, PATCH),
+	REGISTER_OOVPA(SetThreadPriorityBoost, 3911, PATCH),
+	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
+	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
+	REGISTER_OOVPA(XMountMUA, 4361, PATCH),
 };
 
 // ******************************************************************

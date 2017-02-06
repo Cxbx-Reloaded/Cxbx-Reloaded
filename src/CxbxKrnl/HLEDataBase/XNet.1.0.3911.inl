@@ -137,10 +137,10 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XNet_3911[] = {
 
-	OOVPA_TABLE_ENTRY(XNetStartup, 3911),
-	OOVPA_TABLE_ENTRY(WSAStartup, 3911),
-	OOVPA_TABLE_XREF(XnInit, 3911),
-	OOVPA_TABLE_ENTRY(XNetGetEthernetLinkStatus, 3911),
+	REGISTER_OOVPA(XNetStartup, 3911, PATCH),
+	REGISTER_OOVPA(WSAStartup, 3911, PATCH),
+	REGISTER_OOVPA(XnInit, 3911, XREF),
+	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 3911, PATCH),
 };
 
 // ******************************************************************
