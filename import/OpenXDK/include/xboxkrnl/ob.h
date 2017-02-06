@@ -95,7 +95,16 @@ XBSYSAPI EXPORTNUM(247) NTSTATUS NTAPI ObReferenceObjectByName
 	OUT PVOID *Object
 );
 
-XBSYSAPI VOID *ObReferenceObjectByPointer;
+// ******************************************************************
+// * 0x00F8 - ObReferenceObjectByPointer()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(248) NTSTATUS NTAPI ObReferenceObjectByPointer
+(
+	IN PVOID Object,
+	IN POBJECT_TYPE ObjectType,
+	OUT PHANDLE Handle
+);
+
 XBSYSAPI EXPORTNUM(249) OBJECT_TYPE ObSymbolicLinkObjectType;
 
 XBSYSAPI EXPORTNUM(250) VOID FASTCALL ObfDereferenceObject

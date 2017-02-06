@@ -263,6 +263,27 @@ XBSYSAPI EXPORTNUM(247) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByNa
 }
 
 // ******************************************************************
+// * 0x00F8 - ObReferenceObjectByPointer()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(248) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByPointer
+(
+	IN PVOID Object,
+	IN POBJECT_TYPE ObjectType,
+	OUT PHANDLE Handle
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Object)
+		LOG_FUNC_ARG(ObjectType)
+		LOG_FUNC_ARG_OUT(Handle)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(S_OK);
+}
+
+// ******************************************************************
 // * 0x00F9 - ObSymbolicLinkObjectType
 // ******************************************************************
 XBSYSAPI EXPORTNUM(249) xboxkrnl::OBJECT_TYPE xboxkrnl::ObSymbolicLinkObjectType =
