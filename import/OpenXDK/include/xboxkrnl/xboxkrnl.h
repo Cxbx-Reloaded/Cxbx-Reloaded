@@ -98,6 +98,7 @@ typedef long                INT_PTR;
 typedef signed __int64      LONGLONG;
 typedef unsigned __int64    ULONGLONG;
 typedef wchar_t             WCHAR;
+typedef unsigned __int64    QUAD; // 8 byte aligned 8 byte long
 
 // ******************************************************************
 // * Pointer types
@@ -123,6 +124,7 @@ typedef __int32				LONG_PTR; // TODO : Update this declaration for 64 bit
 typedef unsigned __int32	ULONG_PTR; // TODO : Update this declaration for 64 bit
 
 typedef LONGLONG            *PLONGLONG;
+typedef QUAD                *PQUAD;
 
 // ******************************************************************
 // ANSI (Multi-byte Character) types
@@ -355,7 +357,10 @@ typedef struct _STRING
 }
 STRING, ANSI_STRING, *PSTRING, *PANSI_STRING;
 
-typedef STRING OBJECT_STRING;
+// ******************************************************************
+// * OBJECT_STRING
+// ******************************************************************
+typedef STRING OBJECT_STRING, *POBJECT_STRING;
 
 // ******************************************************************
 // * UNICODE_STRING
@@ -578,6 +583,34 @@ OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 // ******************************************************************
 // * OBJECT_TYPE
 // ******************************************************************
+typedef PVOID(*OB_ALLOCATE_METHOD)(
+	IN SIZE_T NumberOfBytes,
+	IN ULONG Tag
+	);
+
+typedef VOID(*OB_FREE_METHOD)(
+	IN PVOID Pointer
+	);
+
+typedef VOID(*OB_CLOSE_METHOD)(
+	IN PVOID Object,
+	IN ULONG SystemHandleCount
+	);
+
+typedef VOID(*OB_DELETE_METHOD)(
+	IN PVOID Object
+	);
+
+typedef NTSTATUS(*OB_PARSE_METHOD)(
+	IN PVOID ParseObject,
+	IN struct _OBJECT_TYPE *ObjectType,
+	IN ULONG Attributes,
+	IN OUT POBJECT_STRING CompleteName,
+	IN OUT POBJECT_STRING RemainingName,
+	IN OUT PVOID Context OPTIONAL,
+	OUT PVOID *Object
+	);
+
 typedef struct _OBJECT_TYPE
 {
 	/* TODO : Declare missing types and enable corresponding members :
@@ -591,6 +624,17 @@ typedef struct _OBJECT_TYPE
 	ULONG PoolTag;
 }
 OBJECT_TYPE, *POBJECT_TYPE;
+
+// ******************************************************************
+// * OBJECT_TYPE
+// ******************************************************************
+typedef struct _OBJECT_HEADER {
+	LONG PointerCount;
+	LONG HandleCount;
+	POBJECT_TYPE Type;
+	ULONG Flags;
+	QUAD Body;
+} OBJECT_HEADER, *POBJECT_HEADER;
 
 // Source : DXBX
 typedef ULONG_PTR KSPIN_LOCK;
