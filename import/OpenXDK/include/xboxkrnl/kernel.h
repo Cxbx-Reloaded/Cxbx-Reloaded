@@ -128,7 +128,7 @@ XBSYSAPI EXPORTNUM(108) VOID NTAPI KeInitializeEvent
 (
 	IN PRKEVENT Event,
 	IN EVENT_TYPE Type,
-	IN BOOLEAN State
+	IN BOOLEAN SignalState
 );
 
 // ******************************************************************

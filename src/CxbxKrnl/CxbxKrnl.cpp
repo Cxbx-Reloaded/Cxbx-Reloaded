@@ -528,7 +528,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 		XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
 	}
 
-	EmuHLEIntercept(pLibraryVersion, pXbeHeader);
+	EmuHLEIntercept(pXbeHeader);
 
 	//
 	// initialize FS segment selector
