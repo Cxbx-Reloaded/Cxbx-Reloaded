@@ -39,7 +39,13 @@ XBSYSAPI EXPORTNUM(241) NTSTATUS NTAPI ObInsertObject
 	OUT PHANDLE Handle
 );
 
-XBSYSAPI VOID *ObMakeTemporaryObject;
+// ******************************************************************
+// * 0x00F2 - ObMakeTemporaryObject()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(242) VOID NTAPI ObMakeTemporaryObject
+(
+	IN PVOID Object
+);
 
 XBSYSAPI EXPORTNUM(243) NTSTATUS NTAPI ObOpenObjectByName
 (

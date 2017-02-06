@@ -121,6 +121,20 @@ XBSYSAPI EXPORTNUM(241) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObInsertObject
 }
 
 // ******************************************************************
+// * 0x00F2 - ObMakeTemporaryObject()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(242) xboxkrnl::VOID NTAPI xboxkrnl::ObMakeTemporaryObject
+(
+	IN PVOID Object
+)
+{
+	LOG_FUNC_ONE_ARG(Object);
+
+	LOG_UNIMPLEMENTED();
+}
+
+
+// ******************************************************************
 // * 0x00F3 - ObOpenObjectByName()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(243) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByName
