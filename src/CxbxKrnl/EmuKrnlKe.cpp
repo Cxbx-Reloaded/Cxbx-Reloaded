@@ -622,18 +622,18 @@ XBSYSAPI EXPORTNUM(108) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeEvent
 (
 	IN PRKEVENT Event,
 	IN EVENT_TYPE Type,
-	IN BOOLEAN State
+	IN BOOLEAN SignalState
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Event)
 		LOG_FUNC_ARG(Type)
-		LOG_FUNC_ARG(State)
+		LOG_FUNC_ARG(SignalState)
 		LOG_FUNC_END;
 
 	Event->Header.Type = Type;
 	Event->Header.Size = sizeof(KEVENT) / sizeof(LONG);
-	Event->Header.SignalState = State;
+	Event->Header.SignalState = SignalState;
 	InitializeListHead(&(Event->Header.WaitListHead));
 }
 

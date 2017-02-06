@@ -485,6 +485,6 @@ void ConnectWindowsTimersToThunkTable()
 	// KeQuerySystemTime), this value is not adjusted with HostSystemTimeDelta!
 	CxbxKrnl_KernelThunkTable[154] = (uint32)&(USER_SHARED_DATA->SystemTime);
 
-	// Note that we can't do the same for TickCount, as that timer
-	// updates slower on the xbox. See EmuThreadUpdateTickCount().
+	// We can't point Xbox KeTickCount to host TickCount, because it
+	// updates slower on the xbox. See EmuUpdateTickCount().
 }
