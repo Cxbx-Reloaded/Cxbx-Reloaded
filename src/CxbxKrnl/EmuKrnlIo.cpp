@@ -191,14 +191,12 @@ XBSYSAPI EXPORTNUM(63) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoCheckShareAccess
 // ******************************************************************
 XBSYSAPI EXPORTNUM(64) xboxkrnl::OBJECT_TYPE xboxkrnl::IoCompletionObjectType =
 {
-	/*
-	ExAllocatePoolWithTag,
-	ExFreePool,
+	xboxkrnl::ExAllocatePoolWithTag,
+	xboxkrnl::ExFreePool,
 	NULL,
-	IopDeleteIoCompletion,
+	NULL, // TODO : xboxkrnl::IopDeleteIoCompletion,
 	NULL,
-	*/
-	NULL, // &ObpDefaultObject,
+	NULL, // &xboxkrnl::ObpDefaultObject,
 	'pmoC' // = first four characters of "Completion" in reverse
 };
 
@@ -348,14 +346,12 @@ XBSYSAPI EXPORTNUM(69) xboxkrnl::NTSTATUS NTAPI xboxkrnl::IoDeleteSymbolicLink
 // ******************************************************************
 XBSYSAPI EXPORTNUM(70) xboxkrnl::OBJECT_TYPE xboxkrnl::IoDeviceObjectType =
 {
-	/*
-	ExAllocatePoolWithTag,
-	ExFreePool,
+	xboxkrnl::ExAllocatePoolWithTag,
+	xboxkrnl::ExFreePool,
 	NULL,
 	NULL,
-	IoParseDevice,
-	*/
-	NULL, // &ObpDefaultObject,
+	NULL, // TODO : xboxkrnl::IoParseDevice,
+	NULL, // TODO : &xboxkrnl::ObpDefaultObject,
 	'iveD' // = first four characters of "Device" in reverse
 };
 
@@ -364,14 +360,12 @@ XBSYSAPI EXPORTNUM(70) xboxkrnl::OBJECT_TYPE xboxkrnl::IoDeviceObjectType =
 // ******************************************************************
 XBSYSAPI EXPORTNUM(71) xboxkrnl::OBJECT_TYPE xboxkrnl::IoFileObjectType =
 {
-	/*
-	ExAllocatePoolWithTag,
-	ExFreePool,
-	IopCloseFile,
-	IopDeleteFile,
-	IopParseFile,
-	*/
-	NULL, // (PVOID)FIELD_OFFSET(FILE_OBJECT, Event.Header),
+	xboxkrnl::ExAllocatePoolWithTag,
+	xboxkrnl::ExFreePool,
+	NULL, // TODO : xboxkrnl::IopCloseFile,
+	NULL, // TODO : xboxkrnl::IopDeleteFile,
+	NULL, // TODO : xboxkrnl::IopParseFile,
+	(PVOID)offsetof(xboxkrnl::FILE_OBJECT, Event.Header),
 	'eliF' // = "File" in reverse
 };
 

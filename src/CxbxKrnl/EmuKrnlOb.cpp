@@ -60,21 +60,81 @@ namespace NtDll
 #include <ntstatus.h>
 #pragma warning(default:4005)
 
+#define OBJECT_TO_OBJECT_HEADER(Object) \
+    CONTAINING_RECORD(Object, OBJECT_HEADER, Body)
+
+// ******************************************************************
+// * 0x00EF - ObCreateObject()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
+(
+	IN POBJECT_TYPE ObjectType,
+	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+	IN ULONG ObjectBodySize,
+	OUT PVOID *Object
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(ObjectType)
+		LOG_FUNC_ARG(ObjectAttributes)
+		LOG_FUNC_ARG(ObjectBodySize)
+		LOG_FUNC_ARG_OUT(Object)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(S_OK);
+}
+
 // ******************************************************************
 // * 0x00F0 - ObDirectoryObjectType
 // ******************************************************************
 XBSYSAPI EXPORTNUM(240) xboxkrnl::OBJECT_TYPE xboxkrnl::ObDirectoryObjectType =
 {
-	/*
-	ExAllocatePoolWithTag,
-	ExFreePool,
+	xboxkrnl::ExAllocatePoolWithTag,
+	xboxkrnl::ExFreePool,
 	NULL,
 	NULL,
 	NULL,
-	*/
-	NULL, // &ObpDefaultObject,
+	NULL, // TODO : &xboxkrnl::ObpDefaultObject,
 	'eriD' // = first four characters of "Directory" in reverse
 };
+
+// ******************************************************************
+// * 0x00F1 - ObInsertObject()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(241) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObInsertObject
+(
+	IN PVOID Object,
+	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+	IN ULONG ObjectPointerBias,
+	OUT PHANDLE Handle
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Object)
+		LOG_FUNC_ARG(ObjectAttributes)
+		LOG_FUNC_ARG(ObjectPointerBias)
+		LOG_FUNC_ARG_OUT(Handle)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(S_OK);
+}
+
+// ******************************************************************
+// * 0x00F2 - ObMakeTemporaryObject()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(242) xboxkrnl::VOID NTAPI xboxkrnl::ObMakeTemporaryObject
+(
+	IN PVOID Object
+)
+{
+	LOG_FUNC_ONE_ARG(Object);
+
+	LOG_UNIMPLEMENTED();
+}
 
 // ******************************************************************
 // * 0x00F3 - ObOpenObjectByName()
@@ -125,6 +185,27 @@ XBSYSAPI EXPORTNUM(243) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByName
 }
 
 // ******************************************************************
+// * 0x00F4 - ObOpenObjectByPointer()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(244) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByPointer
+(
+	IN PVOID Object,
+	IN POBJECT_TYPE ObjectType,
+	OUT PHANDLE Handle
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Object)
+		LOG_FUNC_ARG(ObjectType)
+		LOG_FUNC_ARG_OUT(Handle)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(S_OK);
+}
+
+// ******************************************************************
 // * 0x00F5 - ObpObjectHandleTable
 // ******************************************************************
 // TODO : Determine size. What should we initialize this to?
@@ -160,18 +241,65 @@ XBSYSAPI EXPORTNUM(246) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByHa
 }
 
 // ******************************************************************
+// * 0x00F7 - ObReferenceObjectByName()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(247) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByName
+(
+	IN POBJECT_STRING ObjectName,
+	IN ULONG Attributes,
+	IN POBJECT_TYPE ObjectType,
+	IN OUT PVOID ParseContext OPTIONAL,
+	OUT PVOID *Object
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(ObjectName)
+		LOG_FUNC_ARG(Attributes)
+		LOG_FUNC_ARG(ObjectType)
+		LOG_FUNC_ARG_OUT(ParseContext)
+		LOG_FUNC_ARG_OUT(Object)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(S_OK);
+}
+
+// ******************************************************************
+// * 0x00F8 - ObReferenceObjectByPointer()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(248) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByPointer
+(
+	IN PVOID Object,
+	IN POBJECT_TYPE ObjectType
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Object)
+		LOG_FUNC_ARG(ObjectType)
+		LOG_FUNC_END;
+
+	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+	NTSTATUS result = STATUS_SUCCESS;
+	if (ObjectType == ObjectHeader->Type)
+		InterlockedIncrement(&ObjectHeader->PointerCount); // Same as ObfReferenceObject
+	else
+		result = STATUS_OBJECT_TYPE_MISMATCH;
+
+	RETURN(result);
+}
+
+// ******************************************************************
 // * 0x00F9 - ObSymbolicLinkObjectType
 // ******************************************************************
 XBSYSAPI EXPORTNUM(249) xboxkrnl::OBJECT_TYPE xboxkrnl::ObSymbolicLinkObjectType =
 {
-	/*
-	ExAllocatePoolWithTag,
-	ExFreePool,
+	xboxkrnl::ExAllocatePoolWithTag,
+	xboxkrnl::ExFreePool,
 	NULL,
-	ObpDeleteSymbolicLink,
+	NULL, // TODO : xboxkrnl::ObpDeleteSymbolicLink,
 	NULL,
-	*/
-	NULL, // &ObpDefaultObject,
+	NULL, // TODO : &xboxkrnl::ObpDefaultObject,
 	'bmyS' // = first four characters of "SymbolicLink" in reverse
 };
 
@@ -184,6 +312,32 @@ XBSYSAPI EXPORTNUM(250) xboxkrnl::VOID FASTCALL xboxkrnl::ObfDereferenceObject
 )
 {
 	LOG_FUNC_ONE_ARG_OUT(Object);
-
-	LOG_UNIMPLEMENTED();
+	
+	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+	
+	if (InterlockedDecrement(&ObjectHeader->PointerCount) == 0)
+	{
+		if (ObjectHeader->Type->DeleteProcedure != NULL)
+			ObjectHeader->Type->DeleteProcedure(Object);
+		
+		// TODO : How to handle named objects?
+		ObjectHeader->Type->FreeProcedure(ObjectHeader); // TODO : Is this ever something else than ExFreePool ?
+	}
 }
+
+// ******************************************************************
+// * 0x00FB - ObfReferenceObject()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(251) xboxkrnl::VOID FASTCALL xboxkrnl::ObfReferenceObject
+(
+	IN PVOID Object
+)
+{
+	LOG_FUNC_ONE_ARG_OUT(Object);
+
+	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+
+	InterlockedIncrement(&ObjectHeader->PointerCount);
+}
+
+

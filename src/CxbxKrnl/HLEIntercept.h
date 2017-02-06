@@ -38,7 +38,7 @@ extern bool bLLE_APU; // Set this to true for experimental APU (sound) LLE
 extern bool bLLE_GPU; // Set this to true for experimental GPU (graphics) LLE
 extern bool bLLE_JIT; // Set this to true for experimental JIT
 
-void EmuHLEIntercept(Xbe::LibraryVersion *LibraryVersion, Xbe::Header *XbeHeader);
+void EmuHLEIntercept(Xbe::Header *XbeHeader);
 
 #ifdef _DEBUG_TRACE
 void VerifyHLEDataBase();
