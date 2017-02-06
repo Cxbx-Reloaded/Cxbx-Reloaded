@@ -583,25 +583,25 @@ OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 // ******************************************************************
 // * OBJECT_TYPE
 // ******************************************************************
-typedef PVOID(*OB_ALLOCATE_METHOD)(
+typedef PVOID(NTAPI *OB_ALLOCATE_METHOD)(
 	IN SIZE_T NumberOfBytes,
 	IN ULONG Tag
 	);
 
-typedef VOID(*OB_FREE_METHOD)(
+typedef VOID(NTAPI *OB_FREE_METHOD)(
 	IN PVOID Pointer
 	);
 
-typedef VOID(*OB_CLOSE_METHOD)(
+typedef VOID(NTAPI *OB_CLOSE_METHOD)(
 	IN PVOID Object,
 	IN ULONG SystemHandleCount
 	);
 
-typedef VOID(*OB_DELETE_METHOD)(
+typedef VOID(NTAPI *OB_DELETE_METHOD)(
 	IN PVOID Object
 	);
 
-typedef NTSTATUS(*OB_PARSE_METHOD)(
+typedef NTSTATUS(NTAPI *OB_PARSE_METHOD)(
 	IN PVOID ParseObject,
 	IN struct _OBJECT_TYPE *ObjectType,
 	IN ULONG Attributes,
@@ -613,13 +613,11 @@ typedef NTSTATUS(*OB_PARSE_METHOD)(
 
 typedef struct _OBJECT_TYPE
 {
-	/* TODO : Declare missing types and enable corresponding members :
 	OB_ALLOCATE_METHOD AllocateProcedure;
     OB_FREE_METHOD FreeProcedure;
     OB_CLOSE_METHOD CloseProcedure;
     OB_DELETE_METHOD DeleteProcedure;
     OB_PARSE_METHOD ParseProcedure;
-	*/
 	PVOID DefaultObject;
 	ULONG PoolTag;
 }

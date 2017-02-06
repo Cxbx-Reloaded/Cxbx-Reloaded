@@ -65,14 +65,12 @@ namespace NtDll
 // ******************************************************************
 XBSYSAPI EXPORTNUM(240) xboxkrnl::OBJECT_TYPE xboxkrnl::ObDirectoryObjectType =
 {
-	/*
-	ExAllocatePoolWithTag,
-	ExFreePool,
+	xboxkrnl::ExAllocatePoolWithTag,
+	xboxkrnl::ExFreePool,
 	NULL,
 	NULL,
 	NULL,
-	*/
-	NULL, // &ObpDefaultObject,
+	NULL, // TODO : &xboxkrnl::ObpDefaultObject,
 	'eriD' // = first four characters of "Directory" in reverse
 };
 
@@ -164,14 +162,12 @@ XBSYSAPI EXPORTNUM(246) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByHa
 // ******************************************************************
 XBSYSAPI EXPORTNUM(249) xboxkrnl::OBJECT_TYPE xboxkrnl::ObSymbolicLinkObjectType =
 {
-	/*
-	ExAllocatePoolWithTag,
-	ExFreePool,
+	xboxkrnl::ExAllocatePoolWithTag,
+	xboxkrnl::ExFreePool,
 	NULL,
-	ObpDeleteSymbolicLink,
+	NULL, // TODO : xboxkrnl::ObpDeleteSymbolicLink,
 	NULL,
-	*/
-	NULL, // &ObpDefaultObject,
+	NULL, // TODO : &xboxkrnl::ObpDefaultObject,
 	'bmyS' // = first four characters of "SymbolicLink" in reverse
 };
 
