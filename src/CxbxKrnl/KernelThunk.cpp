@@ -318,7 +318,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::ObReferenceObjectByPointer),          // 0x00F8 (248)
 	(uint32)VARIABLE(&xboxkrnl::ObSymbolicLinkObjectType),        // 0x00F9 (249)
 	(uint32)FUNC(&xboxkrnl::ObfDereferenceObject),                // 0x00FA (250)
-	(uint32)PANIC(0x00FB),                                        // 0x00FB (251) ObfReferenceObject
+	(uint32)FUNC(&xboxkrnl::ObfReferenceObject),                  // 0x00FB (251)
 	(uint32)FUNC(&xboxkrnl::PhyGetLinkState),                     // 0x00FC (252)
 	(uint32)FUNC(&xboxkrnl::PhyInitialize),                       // 0x00FD (253)
 	(uint32)FUNC(&xboxkrnl::PsCreateSystemThread),                // 0x00FE (254)

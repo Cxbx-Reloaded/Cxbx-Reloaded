@@ -309,3 +309,18 @@ XBSYSAPI EXPORTNUM(250) xboxkrnl::VOID FASTCALL xboxkrnl::ObfDereferenceObject
 
 	LOG_UNIMPLEMENTED();
 }
+
+// ******************************************************************
+// * 0x00FB - ObfReferenceObject()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(251) xboxkrnl::VOID FASTCALL xboxkrnl::ObfReferenceObject
+(
+	IN PVOID Object
+)
+{
+	LOG_FUNC_ONE_ARG_OUT(Object);
+
+	LOG_UNIMPLEMENTED();
+}
+
+
