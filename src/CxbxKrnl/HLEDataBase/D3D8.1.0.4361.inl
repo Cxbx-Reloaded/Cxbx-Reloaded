@@ -1793,6 +1793,23 @@ OOVPA_NO_XREF(D3DDevice_SetScissors, 4361, 10)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_SetRenderState_PSTextureModes
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetRenderState_PSTextureModes, 4361, 10)
+
+        { 0x0A, 0x89 },
+        { 0x0B, 0x81 },
+        { 0x0E, 0x00 },
+        { 0x0F, 0x00 },
+        { 0x10, 0x81 },
+        { 0x11, 0x0D },
+        { 0x16, 0x00 },
+        { 0x17, 0x40 },
+        { 0x1A, 0xA3 },
+        { 0x1F, 0xC2 },
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_4361
 // ******************************************************************
 OOVPATable D3D8_4361[] = {
@@ -1936,6 +1953,7 @@ OOVPATable D3D8_4361[] = {
 	REGISTER_OOVPA(Lock2DSurface, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetScissors, 4361, PATCH),
 	REGISTER_OOVPA(D3D_SetPushBufferSize, 4034, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetRenderState_PSTextureModes, 4361, PATCH),
 };
 
 // ******************************************************************
