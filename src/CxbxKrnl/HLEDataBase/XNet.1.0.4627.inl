@@ -329,14 +329,14 @@ OOVPA_END;
 // * XNet_4627
 // ******************************************************************
 OOVPATable XNet_4627[] = {
-	OOVPA_TABLE_ENTRY(XNetStartup, 4627), // same as xonline 4361
-	OOVPA_TABLE_ENTRY(WSAStartup, 4627), // same as xonline 4361
-	OOVPA_TABLE_XREF(XnInit, 4627),
-	OOVPA_TABLE_PATCH_EmuThis(socket, 4627),
-	OOVPA_TABLE_PATCH_EmuThis(connect, 4627),
-	OOVPA_TABLE_PATCH_EmuThis(send, 4627),
-	OOVPA_TABLE_PATCH_EmuThis(recv, 4627),
-	OOVPA_TABLE_PATCH_EmuThis(ioctlsocket, 4627),
+	REGISTER_OOVPA(XNetStartup, 4627, PATCH), // same as xonline 4361
+	REGISTER_OOVPA(WSAStartup, 4627, PATCH), // same as xonline 4361
+	REGISTER_OOVPA(XnInit, 4627, XREF),
+	REGISTER_OOVPA(socket, 4627, EMUTHIS),
+	REGISTER_OOVPA(connect, 4627, EMUTHIS),
+	REGISTER_OOVPA(send, 4627, EMUTHIS),
+	REGISTER_OOVPA(recv, 4627, EMUTHIS),
+	REGISTER_OOVPA(ioctlsocket, 4627, EMUTHIS),
 };
 
 // ******************************************************************

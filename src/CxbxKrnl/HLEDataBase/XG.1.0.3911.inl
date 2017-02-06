@@ -126,12 +126,12 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XG_3911[] = {
 
-	OOVPA_TABLE_ENTRY(XGIsSwizzledFormat, 3911),
-	// OOVPA_TABLE_ENTRY(XGSwizzleRect, 3911), // Leave unpatched
-	// OOVPA_TABLE_ENTRY(XGUnswizzleRect, 3911), // Leave unpatched
-	OOVPA_TABLE_ENTRY(XGSwizzleBox, 3911),
-	OOVPA_TABLE_ENTRY(XGWriteSurfaceOrTextureToXPR, 3911),
-	OOVPA_TABLE_ENTRY(XGSetTextureHeader, 3911),
+	REGISTER_OOVPA(XGIsSwizzledFormat, 3911, PATCH),
+	// REGISTER_OOVPA(XGSwizzleRect, 3911, PATCH), // Leave unpatched
+	// REGISTER_OOVPA(XGUnswizzleRect, 3911, PATCH), // Leave unpatched
+	REGISTER_OOVPA(XGSwizzleBox, 3911, PATCH),
+	REGISTER_OOVPA(XGWriteSurfaceOrTextureToXPR, 3911, PATCH),
+	REGISTER_OOVPA(XGSetTextureHeader, 3911, PATCH),
 };
 
 // ******************************************************************
