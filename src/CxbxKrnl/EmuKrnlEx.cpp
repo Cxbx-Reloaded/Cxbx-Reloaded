@@ -135,14 +135,12 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
 // ******************************************************************
 XBSYSAPI EXPORTNUM(16) xboxkrnl::OBJECT_TYPE xboxkrnl::ExEventObjectType =
 {
-	/*
-	ExAllocatePoolWithTag,
-	ExFreePool,
+	xboxkrnl::ExAllocatePoolWithTag,
+	xboxkrnl::ExFreePool,
 	NULL,
 	NULL,
 	NULL,
-	*/
-	NULL, // (PVOID)FIELD_OFFSET(KEVENT, Header),
+	(PVOID)offsetof(xboxkrnl::KEVENT, Header),
 	'vevE' // = first four characters of "Event" in reverse
 };
 
@@ -258,14 +256,12 @@ XBSYSAPI EXPORTNUM(21) xboxkrnl::LONGLONG FASTCALL xboxkrnl::ExInterlockedCompar
 // ******************************************************************
 XBSYSAPI EXPORTNUM(22) xboxkrnl::OBJECT_TYPE xboxkrnl::ExMutantObjectType = 
 {
-	/*
-	ExAllocatePoolWithTag,
-	ExFreePool,
+	xboxkrnl::ExAllocatePoolWithTag,
+	xboxkrnl::ExFreePool,
 	NULL,
-	ExpDeleteMutant,
+	NULL, // TODO : xboxkrnl::ExpDeleteMutant,
 	NULL,
-	*/
-	NULL, // (PVOID)FIELD_OFFSET(KMUTANT, Header),
+	(PVOID)offsetof(xboxkrnl::KMUTANT, Header),
 	'atuM' // = first four characters of "Mutant" in reverse
 };
 
@@ -571,14 +567,12 @@ XBSYSAPI EXPORTNUM(29) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExSaveNonVolatileSetti
 // ******************************************************************
 XBSYSAPI EXPORTNUM(30) xboxkrnl::OBJECT_TYPE xboxkrnl::ExSemaphoreObjectType = 
 {
-	/*
-	ExAllocatePoolWithTag,
-	ExFreePool,
+	xboxkrnl::ExAllocatePoolWithTag,
+	xboxkrnl::ExFreePool,
 	NULL,
 	NULL,
 	NULL,
-	*/
-	NULL, // (PVOID)FIELD_OFFSET(KSEMAPHORE, Header),
+	(PVOID)offsetof(xboxkrnl::KSEMAPHORE, Header),
 	'ameS' // = first four characters of "Semaphore" in reverse
 };
 
@@ -587,14 +581,12 @@ XBSYSAPI EXPORTNUM(30) xboxkrnl::OBJECT_TYPE xboxkrnl::ExSemaphoreObjectType =
 // ******************************************************************
 XBSYSAPI EXPORTNUM(31) xboxkrnl::OBJECT_TYPE xboxkrnl::ExTimerObjectType = 
 {
-	/*
-	ExAllocatePoolWithTag,
-	ExFreePool,
+	xboxkrnl::ExAllocatePoolWithTag,
+	xboxkrnl::ExFreePool,
 	NULL,
-	ExpDeleteTimer,
+	NULL, // TODO : xboxkrnl::ExpDeleteTimer,
 	NULL,
-	*/
-	NULL, // (PVOID)FIELD_OFFSET(KTIMER, Header),
+	(PVOID)offsetof(xboxkrnl::KTIMER, Header),
 	'emiT' // = first four characters of "Timer" in reverse
 };
 
