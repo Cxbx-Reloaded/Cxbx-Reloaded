@@ -271,19 +271,22 @@ XBSYSAPI EXPORTNUM(247) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByNa
 XBSYSAPI EXPORTNUM(248) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByPointer
 (
 	IN PVOID Object,
-	IN POBJECT_TYPE ObjectType,
-	OUT PHANDLE Handle
+	IN POBJECT_TYPE ObjectType
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Object)
 		LOG_FUNC_ARG(ObjectType)
-		LOG_FUNC_ARG_OUT(Handle)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+	NTSTATUS result = STATUS_SUCCESS;
+	if (ObjectType == ObjectHeader->Type)
+		InterlockedIncrement(&ObjectHeader->PointerCount); // Same as ObfReferenceObject
+	else
+		result = STATUS_OBJECT_TYPE_MISMATCH;
 
-	RETURN(S_OK);
+	RETURN(result);
 }
 
 // ******************************************************************
