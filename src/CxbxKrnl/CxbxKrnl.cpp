@@ -358,7 +358,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	}
 
 #ifdef _DEBUG_TRACE
-	VerifyHLEDataBase();
+	// VerifyHLEDataBase();
 #endif
 
 	{
@@ -395,6 +395,15 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
 	bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
 	bLLE_JIT = (CxbxLLE_Flags & LLE_JIT) > 0;
+
+	if (bLLE_APU)
+		DbgPrintf("EmuMain : LLE enabled for APU.\n");
+
+	if (bLLE_GPU)
+		DbgPrintf("EmuMain : LLE enabled for GPU.\n");
+
+	if (bLLE_JIT)
+		DbgPrintf("EmuMain : LLE enabled for JIT.\n");
 
 	// Initialize devices :
 	char szBuffer[MAX_PATH];
