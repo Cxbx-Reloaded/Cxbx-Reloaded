@@ -60,6 +60,9 @@ namespace NtDll
 #include <ntstatus.h>
 #pragma warning(default:4005)
 
+#define OBJECT_TO_OBJECT_HEADER(Object) \
+    CONTAINING_RECORD(Object, OBJECT_HEADER, Body)
+
 // ******************************************************************
 // * 0x00EF - ObCreateObject()
 // ******************************************************************
@@ -306,8 +309,17 @@ XBSYSAPI EXPORTNUM(250) xboxkrnl::VOID FASTCALL xboxkrnl::ObfDereferenceObject
 )
 {
 	LOG_FUNC_ONE_ARG_OUT(Object);
-
-	LOG_UNIMPLEMENTED();
+	
+	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+	
+	if (InterlockedDecrement(&ObjectHeader->PointerCount) == 0)
+	{
+		if (ObjectHeader->Type->DeleteProcedure != NULL)
+			ObjectHeader->Type->DeleteProcedure(Object);
+		
+		// TODO : How to handle named objects?
+		ObjectHeader->Type->FreeProcedure(ObjectHeader); // TODO : Is this ever something else than ExFreePool ?
+	}
 }
 
 // ******************************************************************
@@ -320,7 +332,9 @@ XBSYSAPI EXPORTNUM(251) xboxkrnl::VOID FASTCALL xboxkrnl::ObfReferenceObject
 {
 	LOG_FUNC_ONE_ARG_OUT(Object);
 
-	LOG_UNIMPLEMENTED();
+	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+
+	InterlockedIncrement(&ObjectHeader->PointerCount);
 }
 
 
