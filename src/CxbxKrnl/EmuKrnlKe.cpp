@@ -530,13 +530,13 @@ XBSYSAPI EXPORTNUM(100) xboxkrnl::VOID NTAPI xboxkrnl::KeDisconnectInterrupt
 		// Mark InterruptObject as not connected anymore
 		InterruptObject->Connected = FALSE;
 		// Search for it in the registered list of interrupts:
-		for(int i = 0; i < EmuFreeInterrupt[InterruptObject->BusInterruptLevel]; i++)
+		for(uint i = 0; i < EmuFreeInterrupt[InterruptObject->BusInterruptLevel]; i++)
 		{
 			// Is it here?
 			if (EmuInterruptList[InterruptObject->BusInterruptLevel][i] == InterruptObject)
 			{
 				// Return the free slot :
-				int last = --EmuFreeInterrupt[InterruptObject->BusInterruptLevel];
+				uint last = --EmuFreeInterrupt[InterruptObject->BusInterruptLevel];
 				// Is this not the last slot?
 				if (i < last)
 					// Instead of shifting everything, move the last one into the slot of this InterruptObject :
@@ -743,7 +743,7 @@ XBSYSAPI EXPORTNUM(121) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeIsExecutingDpc
 {
 	LOG_FUNC();
 
-	BOOLEAN ret = KeGetCurrentPrcb()->DpcRoutineActive;
+	BOOLEAN ret = (BOOLEAN)KeGetCurrentPrcb()->DpcRoutineActive;
 
 	RETURN(ret);
 }
