@@ -1827,6 +1827,20 @@ OOVPA_NO_XREF(D3DDevice_SetPixelShaderProgram, 4361, 10)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_GetVertexShader
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_GetVertexShader, 4361, 7)
+
+        { 0x05, 0x8B },
+        { 0x06, 0x88 },
+        { 0x07, 0x84 },
+        { 0x0A, 0x00 },
+        { 0x0D, 0x24 },
+        { 0x10, 0x0A },
+        { 0x13, 0x00 },
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_4361
 // ******************************************************************
 OOVPATable D3D8_4361[] = {
@@ -1972,6 +1986,7 @@ OOVPATable D3D8_4361[] = {
 	REGISTER_OOVPA(D3D_SetPushBufferSize, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_PSTextureModes, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShaderProgram, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetVertexShader, 4361, PATCH),
 };
 
 // ******************************************************************
