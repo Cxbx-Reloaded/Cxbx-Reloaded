@@ -261,7 +261,7 @@ XBSYSAPI EXPORTNUM(22) xboxkrnl::OBJECT_TYPE xboxkrnl::ExMutantObjectType =
 	NULL,
 	NULL, // TODO : xboxkrnl::ExpDeleteMutant,
 	NULL,
-	NULL, // TODO : (PVOID)offsetof(xboxkrnl::KMUTANT, Header), // TODO : Declare KMUTANT
+	(PVOID)offsetof(xboxkrnl::KMUTANT, Header),
 	'atuM' // = first four characters of "Mutant" in reverse
 };
 
