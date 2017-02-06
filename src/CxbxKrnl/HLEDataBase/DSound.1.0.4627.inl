@@ -892,6 +892,11 @@ OOVPA_XREF(CMcpxBuffer_Play, 4928, 10,
 OOVPA_END;
 
 // ******************************************************************
+// * CMcpxBuffer_PlayA
+// ******************************************************************
+#define CMcpxBuffer_PlayA_4627 CMcpxBuffer_PlayA_4361
+
+// ******************************************************************
 // * CDirectSound::SetDistanceFactorA
 // ******************************************************************
 OOVPA_XREF(CDirectSound_SetDistanceFactorA, 4627, 11,
@@ -3010,6 +3015,7 @@ OOVPATable DSound_4627[] = {
 	OOVPA_TABLE_XREF(CMcpxBuffer_Play, 4361),
 	OOVPA_TABLE_XREF(CMcpxBuffer_Play, 4721),
 	OOVPA_TABLE_XREF(CMcpxBuffer_Play, 4928),
+	OOVPA_TABLE_XREF(CMcpxBuffer_PlayA, 4627),
 	OOVPA_TABLE_XREF(CDirectSoundBuffer_Play, 4361),
 	OOVPA_TABLE_ENTRY(IDirectSoundBuffer8_Play, 4361),
 	OOVPA_TABLE_ENTRY(IDirectSound8_Release, 3936),
