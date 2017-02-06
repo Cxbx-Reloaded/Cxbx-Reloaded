@@ -47,6 +47,9 @@ XBSYSAPI EXPORTNUM(242) VOID NTAPI ObMakeTemporaryObject
 	IN PVOID Object
 );
 
+// ******************************************************************
+// * 0x00F3 - ObOpenObjectByName()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(243) NTSTATUS NTAPI ObOpenObjectByName
 (
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
@@ -55,16 +58,30 @@ XBSYSAPI EXPORTNUM(243) NTSTATUS NTAPI ObOpenObjectByName
 	OUT PHANDLE Handle
 );
 
-XBSYSAPI VOID *ObOpenObjectByPointer;
+// ******************************************************************
+// * 0x00F4 - ObOpenObjectByPointer()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(244) NTSTATUS NTAPI ObOpenObjectByPointer
+(
+	IN PVOID Object,
+	IN POBJECT_TYPE ObjectType,
+	OUT PHANDLE Handle
+);
+
+// ******************************************************************
+// * 0x00F5 - ObpObjectHandleTable
+// ******************************************************************
 XBSYSAPI EXPORTNUM(245) DWORD ObpObjectHandleTable[1];
 
+// ******************************************************************
+// * 0x00F6 - ObReferenceObjectByHandle()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(246) NTSTATUS NTAPI ObReferenceObjectByHandle
 (
     IN HANDLE Handle,
     IN POBJECT_TYPE ObjectType OPTIONAL,
     OUT PVOID *ReturnedObject
 );
-
 
 XBSYSAPI VOID *ObReferenceObjectByName;
 XBSYSAPI VOID *ObReferenceObjectByPointer;

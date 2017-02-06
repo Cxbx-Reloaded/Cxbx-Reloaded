@@ -311,7 +311,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::ObInsertObject),                      // 0x00F1 (241)
 	(uint32)FUNC(&xboxkrnl::ObMakeTemporaryObject),               // 0x00F2 (242) 
 	(uint32)FUNC(&xboxkrnl::ObOpenObjectByName),                  // 0x00F3 (243)
-	(uint32)PANIC(0x00F4),                                        // 0x00F4 (244) ObOpenObjectByPointer
+	(uint32)FUNC(&xboxkrnl::ObOpenObjectByPointer),               // 0x00F4 (244)
 	(uint32)VARIABLE(&xboxkrnl::ObpObjectHandleTable),            // 0x00F5 (245)
 	(uint32)FUNC(&xboxkrnl::ObReferenceObjectByHandle),           // 0x00F6 (246)
 	(uint32)PANIC(0x00F7),                                        // 0x00F7 (247) ObReferenceObjectByName

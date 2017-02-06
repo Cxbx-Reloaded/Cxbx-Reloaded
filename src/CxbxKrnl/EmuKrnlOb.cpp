@@ -133,7 +133,6 @@ XBSYSAPI EXPORTNUM(242) xboxkrnl::VOID NTAPI xboxkrnl::ObMakeTemporaryObject
 	LOG_UNIMPLEMENTED();
 }
 
-
 // ******************************************************************
 // * 0x00F3 - ObOpenObjectByName()
 // ******************************************************************
@@ -180,6 +179,27 @@ XBSYSAPI EXPORTNUM(243) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByName
 		EmuWarning("ObOpenObjectByName failed! (%s)", NtStatusToString(ret));
 
 	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x00F4 - ObOpenObjectByPointer()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(244) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByPointer
+(
+	IN PVOID Object,
+	IN POBJECT_TYPE ObjectType,
+	OUT PHANDLE Handle
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Object)
+		LOG_FUNC_ARG(ObjectType)
+		LOG_FUNC_ARG_OUT(Handle)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(S_OK);
 }
 
 // ******************************************************************
