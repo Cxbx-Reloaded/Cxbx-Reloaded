@@ -420,6 +420,9 @@ typedef _SLIST_ENTRY {
 #endif // _WIN64
 
 */
+// ******************************************************************
+// * SLIST_HEADER
+// ******************************************************************
 typedef union _SLIST_HEADER {
 	ULONGLONG Alignment;
 	struct {
@@ -624,7 +627,7 @@ typedef struct _OBJECT_TYPE
 OBJECT_TYPE, *POBJECT_TYPE;
 
 // ******************************************************************
-// * OBJECT_TYPE
+// * OBJECT_HEADER
 // ******************************************************************
 typedef struct _OBJECT_HEADER {
 	LONG PointerCount;
@@ -638,6 +641,9 @@ typedef struct _OBJECT_HEADER {
 typedef ULONG_PTR KSPIN_LOCK;
 typedef KSPIN_LOCK *PKSPIN_LOCK;
 
+// ******************************************************************
+// * FILETIME
+// ******************************************************************
 // Source : DXBX
 typedef struct _FILETIME
 {
@@ -646,6 +652,9 @@ typedef struct _FILETIME
 }
 FILETIME, *PFILETIME;
 
+// ******************************************************************
+// * XBOX_REFURB_INFO
+// ******************************************************************
 // Source : DXBX (Xbox Refurb Info)
 typedef struct _XBOX_REFURB_INFO
 {
@@ -657,6 +666,9 @@ XBOX_REFURB_INFO, *PXBOX_REFURB_INFO;
 
 #define EXCEPTION_MAXIMUM_PARAMETERS 15 // maximum number of exception parameters
 
+// ******************************************************************
+// * EXCEPTION_RECORD
+// ******************************************************************
 // Source : DXBX
 typedef struct _EXCEPTION_RECORD
 {
@@ -1115,6 +1127,9 @@ PCI_SLOT_NUMBER, *PPCI_SLOT_NUMBER;
 #define PCI_TYPE1_ADDR_PORT     ((PULONG) 0xCF8)
 #define PCI_TYPE1_DATA_PORT     0xCFC
 
+// ******************************************************************
+// * PCI_TYPE1_CFG_BITS
+// ******************************************************************
 typedef struct _PCI_TYPE1_CFG_BITS {
     union {
         struct {
@@ -1245,6 +1260,9 @@ DISPATCHER_HEADER;
 
 typedef LONG KPRIORITY;
 
+// ******************************************************************
+// * KEVENT
+// ******************************************************************
 typedef struct _KEVENT
 {
 	DISPATCHER_HEADER Header;
@@ -1252,13 +1270,17 @@ typedef struct _KEVENT
 //KEVENT, *PKEVENT, *RESTRICTED_POINTER PRKEVENT;
 KEVENT, *PKEVENT, *PRKEVENT; // even with undefined RESTRICTED_POINTER, this doesn't compile
 
+// ******************************************************************
 // EVENT_BASIC_INFORMATION - same as Windows
+// ******************************************************************
 typedef struct _EVENT_BASIC_INFORMATION {
 	EVENT_TYPE EventType;
 	LONG EventState;
 } EVENT_BASIC_INFORMATION, *PEVENT_BASIC_INFORMATION;
 
+// ******************************************************************
 // KSEMAPHORE
+// ******************************************************************
 typedef struct _KSEMAPHORE
 {
 	DISPATCHER_HEADER Header;
@@ -1266,19 +1288,26 @@ typedef struct _KSEMAPHORE
 }
 KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
 
+// ******************************************************************
 // SEMAPHORE_BASIC_INFORMATION - same as Windows
+// ******************************************************************
 typedef struct _SEMAPHORE_BASIC_INFORMATION {
 	LONG CurrentCount;
 	LONG MaximumCount;
 } SEMAPHORE_BASIC_INFORMATION, *PSEMAPHORE_BASIC_INFORMATION;
 
+// ******************************************************************
 // MUTANT_BASIC_INFORMATION - same as Windows
+// ******************************************************************
 typedef struct _MUTANT_BASIC_INFORMATION {
 	LONG CurrentCount;
 	BOOLEAN OwnedByCaller;
 	BOOLEAN AbandonedState;
 } MUTANT_BASIC_INFORMATION, *PMUTANT_BASIC_INFORMATION;
 
+// ******************************************************************
+// ERWLOCK
+// ******************************************************************
 typedef struct _ERWLOCK
 {
 	LONG LockCount;
@@ -1290,6 +1319,9 @@ typedef struct _ERWLOCK
 }
 ERWLOCK, *PERWLOCK;
 
+// ******************************************************************
+// KDEVICE_QUEUE
+// ******************************************************************
 typedef struct _KDEVICE_QUEUE
 {
 	CSHORT Type;                // 0x00
@@ -1299,8 +1331,14 @@ typedef struct _KDEVICE_QUEUE
 }
 KDEVICE_QUEUE, *PKDEVICE_QUEUE, *RESTRICTED_POINTER PRKDEVICE_QUEUE;
 
+// ******************************************************************
+// FILE_SEGMENT_ELEMENT
+// ******************************************************************
 typedef PVOID PFILE_SEGMENT_ELEMENT;
 
+// ******************************************************************
+// IRP
+// ******************************************************************
 typedef struct _IRP
 {
 	CSHORT                 Type;                // 0x00
@@ -1322,6 +1360,9 @@ typedef struct _IRP
 }
 IRP, *PIRP;
 
+// ******************************************************************
+// DEVICE_OBJECT
+// ******************************************************************
 typedef struct _DEVICE_OBJECT
 {
 	CSHORT Type;
@@ -1344,6 +1385,9 @@ typedef struct _DEVICE_OBJECT
 }
 DEVICE_OBJECT, *PDEVICE_OBJECT;
 
+// ******************************************************************
+// PDRIVER_OBJECT
+// ******************************************************************
 typedef VOID *PDRIVER_OBJECT;
 
 // ******************************************************************
@@ -1598,6 +1642,9 @@ NT_TIB, *PNT_TIB;
 // 	}
 //  KEXECUTE_OPTIONS, *PKEXECUTE_OPTIONS;
 
+// ******************************************************************
+// * KPROCESS
+// ******************************************************************
 typedef struct _KPROCESS
 {
 	/* 0x0/0 */ LIST_ENTRY ReadyListHead;
@@ -1611,6 +1658,9 @@ typedef struct _KPROCESS
 }
 KPROCESS, *PKPROCESS;
 
+// ******************************************************************
+// * KAPC_STATE
+// ******************************************************************
 typedef struct _KAPC_STATE
 {
 	LIST_ENTRY ApcListHead[2];
@@ -1622,12 +1672,28 @@ typedef struct _KAPC_STATE
 }
 KAPC_STATE, *PKAPC_STATE;
 
+// ******************************************************************
+// * KGATE
+// ******************************************************************
 typedef struct _KGATE
 {
 	DISPATCHER_HEADER Header;
 }
 KGATE, *PKGATE;
 
+// ******************************************************************
+// * KMUTANT
+// ******************************************************************
+typedef struct _KMUTANT {
+	DISPATCHER_HEADER Header;
+	LIST_ENTRY MutantListEntry;
+	struct _KTHREAD *RESTRICTED_POINTER OwnerThread;
+	BOOLEAN Abandoned;
+} KMUTANT, *PKMUTANT, *RESTRICTED_POINTER PRKMUTANT;
+
+// ******************************************************************
+// * KQUEUE
+// ******************************************************************
 typedef struct _KQUEUE
 {
 	DISPATCHER_HEADER Header;
@@ -1638,6 +1704,9 @@ typedef struct _KQUEUE
 }
 KQUEUE, *PKQUEUE;
 
+// ******************************************************************
+// * EXCEPTION_DISPOSITION
+// ******************************************************************
 typedef enum _EXCEPTION_DISPOSITION
 {
 	ExceptionContinueExecution = 0,
@@ -1647,7 +1716,10 @@ typedef enum _EXCEPTION_DISPOSITION
 }
 EXCEPTION_DISPOSITION, *PEXCEPTION_DISPOSITION;
 
-typedef struct _EXCEPTION_REGISTRATION_RECORD *PEXCEPTION_REGISTRATION_RECORD;
+// ******************************************************************
+// * EXCEPTION_REGISTRATION_RECORD
+// ******************************************************************
+typedef struct _EXCEPTION_REGISTRATION_RECORD *PEXCEPTION_REGISTRATION_RECORD; // forward
 
 typedef struct _EXCEPTION_REGISTRATION_RECORD
 {
@@ -1656,6 +1728,9 @@ typedef struct _EXCEPTION_REGISTRATION_RECORD
 }
 EXCEPTION_REGISTRATION_RECORD, *PEXCEPTION_REGISTRATION_RECORD;
 
+// ******************************************************************
+// * KTRAP_FRAME
+// ******************************************************************
 typedef struct _KTRAP_FRAME
 {
 	ULONG DbgEbp;
@@ -1698,7 +1773,11 @@ typedef struct _KTRAP_FRAME
 }
 KTRAP_FRAME, *PKTRAP_FRAME;
 
-typedef struct _KTHREAD KTHREAD, *PKTHREAD;
+typedef struct _KTHREAD KTHREAD, *PKTHREAD; // forward
+
+// ******************************************************************
+// * KWAIT_BLOCK
+// ******************************************************************
 
 typedef struct _KWAIT_BLOCK
 {
@@ -1712,6 +1791,9 @@ typedef struct _KWAIT_BLOCK
 }
 KWAIT_BLOCK, *PKWAIT_BLOCK;
 
+// ******************************************************************
+// * KAPC
+// ******************************************************************
 typedef struct _KAPC
 {
 	/* 0x0/0 */ USHORT Type;
@@ -2147,6 +2229,9 @@ static VOID WRITE_REGISTER_ULONG(PVOID Address, ULONG Value)
     };
 }
 
+// ******************************************************************
+// * SCSI_PASS_THROUGH_DIRECT
+// ******************************************************************
 typedef struct _SCSI_PASS_THROUGH_DIRECT {
 	USHORT Length;
 	UCHAR ScsiStatus;
@@ -2163,6 +2248,9 @@ typedef struct _SCSI_PASS_THROUGH_DIRECT {
 	UCHAR Cdb[16];
 }SCSI_PASS_THROUGH_DIRECT, *PSCSI_PASS_THROUGH_DIRECT;
 
+// ******************************************************************
+// * MODE_PARAMETER_HEADER10
+// ******************************************************************
 typedef struct _MODE_PARAMETER_HEADER10 {
 	UCHAR ModeDataLength[2];
 	UCHAR MediumType;
@@ -2171,6 +2259,9 @@ typedef struct _MODE_PARAMETER_HEADER10 {
 	UCHAR BlockDescriptorLength[2];
 }MODE_PARAMETER_HEADER10, *PMODE_PARAMETER_HEADER10;
 
+// ******************************************************************
+// * DVDX2_AUTHENTICATION_PAGE
+// ******************************************************************
 typedef struct _DVDX2_AUTHENTICATION_PAGE {
 	UCHAR Unknown[2];
     UCHAR PartitionArea;
@@ -2180,11 +2271,17 @@ typedef struct _DVDX2_AUTHENTICATION_PAGE {
 	ULONG Unknown3[3];
 } DVDX2_AUTHENTICATION_PAGE, *PDVDX2_AUTHENTICATION_PAGE;
 
+// ******************************************************************
+// * DVDX2_AUTHENTICATION
+// ******************************************************************
 typedef struct _DVDX2_AUTHENTICATION {
     MODE_PARAMETER_HEADER10 Header;
     DVDX2_AUTHENTICATION_PAGE AuthenticationPage;
 } DVDX2_AUTHENTICATION, *PDVDX2_AUTHENTICATION;
 
+// ******************************************************************
+// * XBEIMAGE_SECTION
+// ******************************************************************
 // Section headers - Source: XBMC
 // See Xbe.h struct SectionHeader
 typedef struct _XBE_SECTION // Was _XBE_SECTIONHEADER
