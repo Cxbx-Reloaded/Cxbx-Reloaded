@@ -63,7 +63,7 @@ extern volatile bool g_bEmuException;
 extern volatile bool g_bEmuSuspended;
 
 // global exception patching address
-extern uint32 funcExclude[2048];
+extern void *funcExclude[2048];
 
 // partition emulation directory handles
 extern HANDLE g_hCurDir;
