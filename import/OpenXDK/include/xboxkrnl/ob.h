@@ -83,7 +83,18 @@ XBSYSAPI EXPORTNUM(246) NTSTATUS NTAPI ObReferenceObjectByHandle
     OUT PVOID *ReturnedObject
 );
 
-XBSYSAPI VOID *ObReferenceObjectByName;
+// ******************************************************************
+// * 0x00F7 - ObReferenceObjectByName()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(247) NTSTATUS NTAPI ObReferenceObjectByName
+(
+	IN POBJECT_STRING ObjectName,
+	IN ULONG Attributes,
+	IN POBJECT_TYPE ObjectType,
+	IN OUT PVOID ParseContext OPTIONAL,
+	OUT PVOID *Object
+);
+
 XBSYSAPI VOID *ObReferenceObjectByPointer;
 XBSYSAPI EXPORTNUM(249) OBJECT_TYPE ObSymbolicLinkObjectType;
 

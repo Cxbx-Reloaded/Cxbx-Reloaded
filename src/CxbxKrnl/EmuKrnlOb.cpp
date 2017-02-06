@@ -238,6 +238,31 @@ XBSYSAPI EXPORTNUM(246) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByHa
 }
 
 // ******************************************************************
+// * 0x00F7 - ObReferenceObjectByName()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(247) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByName
+(
+	IN POBJECT_STRING ObjectName,
+	IN ULONG Attributes,
+	IN POBJECT_TYPE ObjectType,
+	IN OUT PVOID ParseContext OPTIONAL,
+	OUT PVOID *Object
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(ObjectName)
+		LOG_FUNC_ARG(Attributes)
+		LOG_FUNC_ARG(ObjectType)
+		LOG_FUNC_ARG_OUT(ParseContext)
+		LOG_FUNC_ARG_OUT(Object)
+		LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(S_OK);
+}
+
+// ******************************************************************
 // * 0x00F9 - ObSymbolicLinkObjectType
 // ******************************************************************
 XBSYSAPI EXPORTNUM(249) xboxkrnl::OBJECT_TYPE xboxkrnl::ObSymbolicLinkObjectType =
