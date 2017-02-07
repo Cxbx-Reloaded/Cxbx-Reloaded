@@ -122,14 +122,14 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XOnline_5558[] = {
 
-	OOVPA_TABLE_ENTRY(XNetStartup, 5344),
-	OOVPA_TABLE_ENTRY(WSAStartup, 5558),
-	OOVPA_TABLE_XREF(XnInit, 4627),
-	// OOVPA_TABLE_PATCH_EmuThis(socket, 4361),
-	OOVPA_TABLE_PATCH_EmuThis(bind, 4361),
-	// OOVPA_TABLE_PATCH_EmuThis(listen, 4361),
-	OOVPA_TABLE_PATCH_EmuThis(ioctlsocket, 4361),
-	OOVPA_TABLE_ENTRY(XNetGetEthernetLinkStatus, 5344),
+	REGISTER_OOVPA(XNetStartup, 5344, PATCH),
+	REGISTER_OOVPA(WSAStartup, 5558, PATCH),
+	REGISTER_OOVPA(XnInit, 4627, XREF),
+	// REGISTER_OOVPA(socket, 4361, EMUTHIS),
+	REGISTER_OOVPA(bind, 4361, EMUTHIS),
+	// REGISTER_OOVPA(listen, 4361, EMUTHIS),
+	REGISTER_OOVPA(ioctlsocket, 4361, EMUTHIS),
+	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 5344, PATCH),
 };
 
 // ******************************************************************

@@ -163,30 +163,30 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XAPI_4034[] = {
 
-	OOVPA_TABLE_ENTRY(XInitDevices, 3911),
-	OOVPA_TABLE_ENTRY(XGetDevices, 3911),
+	REGISTER_OOVPA(XInitDevices, 3911, PATCH),
+	REGISTER_OOVPA(XGetDevices, 3911, PATCH),
 /* These functions havent been rev'd yet (may be same as new/old)
-	OOVPA_TABLE_ENTRY(XInputOpen, 4034),
-	OOVPA_TABLE_ENTRY(XInputGetCapabilities, 4361),
-	OOVPA_TABLE_ENTRY(XInputGetState, 4361),
+	REGISTER_OOVPA(XInputOpen, 4034, PATCH),
+	REGISTER_OOVPA(XInputGetCapabilities, 4361, PATCH),
+	REGISTER_OOVPA(XInputGetState, 4361, PATCH),
 */
-	// OOVPA_TABLE_ENTRY(CreateThread, 3911), // Too High Level
-	// OOVPA_TABLE_ENTRY(CloseHandle, (???)),
-	OOVPA_TABLE_ENTRY(CreateFiber, 3911),
-	OOVPA_TABLE_ENTRY(DeleteFiber, 3911),
-	OOVPA_TABLE_ENTRY(GetTimeZoneInformation, 3911),
-	OOVPA_TABLE_ENTRY(SetThreadPriority, 3911),
-	OOVPA_TABLE_ENTRY(SignalObjectAndWait, 3911),
-	OOVPA_TABLE_ENTRY(QueueUserAPC, 3911),
-	OOVPA_TABLE_ENTRY(XInputSetState, 3911),
-	OOVPA_TABLE_ENTRY(XRegisterThreadNotifyRoutine, 3911),
-	OOVPA_TABLE_ENTRY(XGetDeviceChanges, 3911),
-	OOVPA_TABLE_XREF(XID_fCloseDevice, 3911),
-	OOVPA_TABLE_ENTRY(XInputClose, 3911),
-	OOVPA_TABLE_ENTRY(XInputGetCapabilities, 3911),
-	OOVPA_TABLE_ENTRY(GetThreadPriority, 3911),
-	OOVPA_TABLE_ENTRY(XInputOpen, 3911),
-	OOVPA_TABLE_ENTRY(XInputGetState, 3911),
+	// REGISTER_OOVPA(CreateThread, 3911, PATCH), // Too High Level
+	// REGISTER_OOVPA(CloseHandle, (???, PATCH)),
+	REGISTER_OOVPA(CreateFiber, 3911, PATCH),
+	REGISTER_OOVPA(DeleteFiber, 3911, PATCH),
+	REGISTER_OOVPA(GetTimeZoneInformation, 3911, PATCH),
+	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH),
+	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
+	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
+	REGISTER_OOVPA(XInputSetState, 3911, PATCH),
+	REGISTER_OOVPA(XRegisterThreadNotifyRoutine, 3911, PATCH),
+	REGISTER_OOVPA(XGetDeviceChanges, 3911, PATCH),
+	REGISTER_OOVPA(XID_fCloseDevice, 3911, XREF),
+	REGISTER_OOVPA(XInputClose, 3911, PATCH),
+	REGISTER_OOVPA(XInputGetCapabilities, 3911, PATCH),
+	REGISTER_OOVPA(GetThreadPriority, 3911, PATCH),
+	REGISTER_OOVPA(XInputOpen, 3911, PATCH),
+	REGISTER_OOVPA(XInputGetState, 3911, PATCH),
 };
 
 // ******************************************************************

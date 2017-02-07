@@ -98,22 +98,22 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XAPI_5233[] = {
 
-	OOVPA_TABLE_ENTRY(GetTimeZoneInformation, 3911),
-	OOVPA_TABLE_ENTRY(SetThreadPriority, 3911),
-	OOVPA_TABLE_ENTRY(SetThreadPriorityBoost, 4627),
-	OOVPA_TABLE_ENTRY(GetThreadPriority, 4627),
-	OOVPA_TABLE_ENTRY(XRegisterThreadNotifyRoutine, 3911),
-	OOVPA_TABLE_ENTRY(XMountUtilityDrive, 4432),
-	OOVPA_TABLE_ENTRY(XInitDevices, 5233),
-	OOVPA_TABLE_ENTRY(XGetDevices, 4134),
-	OOVPA_TABLE_ENTRY(XGetDeviceChanges, 5233),
-	OOVPA_TABLE_ENTRY(XInputOpen, 4361),
-	OOVPA_TABLE_ENTRY(XInputGetCapabilities, 5233),
-	OOVPA_TABLE_XREF(XID_fCloseDevice, 4928),
-	OOVPA_TABLE_ENTRY(XInputClose, 4928),
-	OOVPA_TABLE_ENTRY(XInputGetState, 4928),
-	OOVPA_TABLE_ENTRY(XInputSetState, 5233),
-	OOVPA_TABLE_ENTRY(QueueUserAPC, 3911),
+	REGISTER_OOVPA(GetTimeZoneInformation, 3911, PATCH),
+	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH),
+	REGISTER_OOVPA(SetThreadPriorityBoost, 4627, PATCH),
+	REGISTER_OOVPA(GetThreadPriority, 4627, PATCH),
+	REGISTER_OOVPA(XRegisterThreadNotifyRoutine, 3911, PATCH),
+	REGISTER_OOVPA(XMountUtilityDrive, 4432, PATCH),
+	REGISTER_OOVPA(XInitDevices, 5233, PATCH),
+	REGISTER_OOVPA(XGetDevices, 4134, PATCH),
+	REGISTER_OOVPA(XGetDeviceChanges, 5233, PATCH),
+	REGISTER_OOVPA(XInputOpen, 4361, PATCH),
+	REGISTER_OOVPA(XInputGetCapabilities, 5233, PATCH),
+	REGISTER_OOVPA(XID_fCloseDevice, 4928, XREF),
+	REGISTER_OOVPA(XInputClose, 4928, PATCH),
+	REGISTER_OOVPA(XInputGetState, 4928, PATCH),
+	REGISTER_OOVPA(XInputSetState, 5233, PATCH),
+	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
 };
 
 // ******************************************************************

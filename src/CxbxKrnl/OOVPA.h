@@ -193,23 +193,9 @@ const uint16_t Flag_Reserved = 4;
 	{ & Oovpa ## _ ## Version.Header, Patch, /* skip */ Version, Flags }
 #endif
 
-// TODO : Remove the OOVPA_TABLE_* macro's below once they are not in use anymore.
-// (This will be when version-specific OOVPATable's are combined into library-specific OOVPATable's.)
-#define OOVPA_TABLE_PATCH(Oovpa, Version, Patch) \
-	OOVPA_TABLE_ENTRY_FULL(Oovpa, XTL::EMUPATCH(Patch), #Patch ## "_" ## #Version, Version, 0)
-
-#define OOVPA_TABLE_PATCH_EmuThis(Oovpa, Version) \
-	OOVPA_TABLE_ENTRY_FULL(Oovpa, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::EMUPATCH(Oovpa)), #Oovpa ## "_" ## #Version, Version, 0)
-
-#define OOVPA_TABLE_ENTRY(Symbol, Version) \
-	OOVPA_TABLE_ENTRY_FULL(Symbol, XTL::EMUPATCH(Symbol), #Symbol ## "_" ## #Version, Version, 0)
-
-#define OOVPA_TABLE_XREF(Oovpa, Version) \
-	OOVPA_TABLE_ENTRY_FULL(Oovpa, nullptr, #Oovpa ## "_" ## #Version ## " (XRef)", Version, 0)
-
 // REGISTER_OOVPA is the ONLY allowed macro for registrations.
 // Registrations MUST stay sorted to prevent duplicates and maintain overview.
-// The TYPE argument MUST be PATCH, XREF, ALIAS, LTCG or DISABLED (see below).
+// The TYPE argument MUST be PATCH, XREF, ALIAS, EMUTHIS, LTCG or DISABLED (see below).
 // ONLY use ALIAS when absolutely required (when OOVPA identifier cannot follow Patch)
 // ONLY use LTCG for LTCG OOVPA's (HLE support for these is flacky at best)
 // DO NOT comment out registrations, but use TYPE DISABLED instead.
@@ -228,6 +214,10 @@ const uint16_t Flag_Reserved = 4;
 #define REGISTER_OOVPA_ALIAS(Symbol, Version, AliasOovpa) \
 	OOVPA_TABLE_ENTRY_FULL(AliasOovpa, XTL::EMUPATCH(Symbol), #AliasOovpa ## "_" ## #Version, Version, 0)
 
+#define EMUTHIS /* registration of an EmuThis-derived function */
+#define REGISTER_OOVPA_EMUTHIS(Symbol, Version, ...) \
+	OOVPA_TABLE_ENTRY_FULL(Symbol, MFPtoFP<XTL::EmuThis>(&XTL::EmuThis::EMUPATCH(Symbol)), #Symbol ## "_" ## #Version, Version, 0)
+
 #define LTCG /* registration of a Patch using a LTCG specific OOVPA */
 #define REGISTER_OOVPA_LTCG(Symbol, Version, ...) \
 	OOVPA_TABLE_ENTRY_FULL(Symbol ## _LTCG, XTL::EMUPATCH(Symbol), #Symbol ## "_LTCG_" ## #Version ## " (LTCG)", Version, Flag_IsLTCG)
@@ -235,6 +225,7 @@ const uint16_t Flag_Reserved = 4;
 #define DISABLED /* registration is (temporarily) disabled by a flag */
 #define REGISTER_OOVPA_DISABLED(Symbol, Version, ...) \
 	OOVPA_TABLE_ENTRY_FULL(Symbol, XTL::EMUPATCH(Symbol), #Symbol ## "_" ## #Version ## " (Disabled)", Version, Flag_DontScan)
+
 
 #pragma pack()
 

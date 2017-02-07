@@ -52,7 +52,7 @@ static void  EmuXRefFailure();
 #include <vector>
 
 uint32 fcount = 0;
-void *funcExclude[2048] = { nullptr };
+void * funcExclude[2048] = { nullptr };
 
 uint32 g_BuildVersion;
 uint32 g_OrigBuildVersion;
