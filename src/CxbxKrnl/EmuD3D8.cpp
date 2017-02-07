@@ -3198,11 +3198,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVolumeTexture)
         // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
         (*ppVolumeTexture)->Data = X_D3DRESOURCE_DATA_FLAG_SPECIAL | X_D3DRESOURCE_DATA_FLAG_YUVSURF;
         (*ppVolumeTexture)->Lock = dwPtr;
-        (*ppVolumeTexture)->Format = 0x24;
+		(*ppVolumeTexture)->Format = Format; // TODO : apply << X_D3DFORMAT_FORMAT_SHIFT here?
 
-        (*ppVolumeTexture)->Size  = (g_dwOverlayW & X_D3DSIZE_WIDTH_MASK);
-        (*ppVolumeTexture)->Size |= (g_dwOverlayH << X_D3DSIZE_HEIGHT_SHIFT);
-        (*ppVolumeTexture)->Size |= (g_dwOverlayP << X_D3DSIZE_PITCH_SHIFT);
+        (*ppVolumeTexture)->Size = (g_dwOverlayW & X_D3DSIZE_WIDTH_MASK)
+                                 | (g_dwOverlayH << X_D3DSIZE_HEIGHT_SHIFT)
+                                 | (g_dwOverlayP << X_D3DSIZE_PITCH_SHIFT);
 
         hRet = D3D_OK;
     }
