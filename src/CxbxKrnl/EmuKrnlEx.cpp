@@ -125,7 +125,7 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
 		LOG_FUNC_END;
 
 	// TODO: Actually implement this
-	PVOID pRet = CxbxCalloc(NumberOfBytes); // Clear, to prevent side-effects on random contents
+	PVOID pRet = CxbxCalloc(1, NumberOfBytes); // Clear, to prevent side-effects on random contents
 
 	RETURN(pRet);
 }

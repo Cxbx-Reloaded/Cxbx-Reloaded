@@ -2402,8 +2402,8 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
            pDeclaration, pFunction, pHandle, Usage);
 
     // create emulated shader struct
-    X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader*)CxbxCalloc(sizeof(X_D3DVertexShader));
-    VERTEX_SHADER     *pVertexShader = (VERTEX_SHADER*)CxbxCalloc(sizeof(VERTEX_SHADER));
+    X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader*)CxbxCalloc(1, sizeof(X_D3DVertexShader));
+    VERTEX_SHADER     *pVertexShader = (VERTEX_SHADER*)CxbxCalloc(1, sizeof(VERTEX_SHADER));
 
     // TODO: Intelligently fill out these fields as necessary
 
@@ -2816,7 +2816,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
 	// CreatePixelShader() is expected to return a pHandle directly to a shader interface.
 
 	/*
-	PIXEL_SHADER *pPixelShader = (PIXEL_SHADER*)CxbxCalloc(sizeof(PIXEL_SHADER)); // Clear, to prevent side-effects on random contents
+	PIXEL_SHADER *pPixelShader = (PIXEL_SHADER*)CxbxCalloc(1, sizeof(PIXEL_SHADER)); // Clear, to prevent side-effects on random contents
 
 	memcpy(&pPixelShader->PSDef, pPSDef, sizeof(X_D3DPIXELSHADERDEF));
 
