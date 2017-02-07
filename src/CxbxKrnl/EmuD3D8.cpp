@@ -8821,6 +8821,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetDepthClipPlanes)
     return hRet;
 }
 
+#if 0 // DISABLED (Just calls MmAllocateContiguousMemory)
 // ******************************************************************
 // * patch: D3D_AllocContiguousMemory
 // ******************************************************************
@@ -8866,6 +8867,7 @@ PVOID WINAPI XTL::EMUPATCH(D3D_AllocContiguousMemory)
 
     return pRet;
 }
+#endif
 
 // ******************************************************************
 // * patch: IDirect3DTexture8_GetLevelDesc

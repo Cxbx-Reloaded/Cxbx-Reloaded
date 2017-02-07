@@ -1506,6 +1506,7 @@ HRESULT WINAPI EMUPATCH(D3DDevice_SetDepthClipPlanes)
     DWORD Flags
 );
 
+#if 0 // DISABLED (Just calls MmAllocateContiguousMemory)
 // ******************************************************************
 // * patch: D3D_AllocContiguousMemory
 // ******************************************************************
@@ -1514,6 +1515,7 @@ PVOID WINAPI EMUPATCH(D3D_AllocContiguousMemory)
     SIZE_T dwSize,
     DWORD dwAllocAttributes
 );
+#endif
 
 // ******************************************************************
 // * patch: D3DTexture_GetLevelDesc
