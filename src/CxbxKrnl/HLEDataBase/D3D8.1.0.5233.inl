@@ -1668,8 +1668,8 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_SetFlickerFilter, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetSoftDisplayFilter, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetSoftDisplayFilter, 5344, PATCH),
-	// REGISTER_OOVPA(D3DDevice_Unknown1,
-	REGISTER_OOVPA(D3DDevice_SetRenderState_TwoSidedLighting, 4134, PATCH, 5233, ALIAS, D3DDevice_Unknown1), // Beware of the typo...
+	// REGISTER_OOVPA(D3DDevice_Unknown1, 5233, PATCH)
+	REGISTER_OOVPA(D3DDevice_SetRenderState_TwoSidedLighting, 4134, PATCH), // Beware of the typo...
     // ******
     // Duplicate references are normally bad, but this XDK is aliased to XDK 5344
     // until such time as a separate XDK file is generated for 5344, this will have to do
