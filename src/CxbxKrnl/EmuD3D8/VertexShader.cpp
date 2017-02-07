@@ -2014,7 +2014,7 @@ extern HRESULT XTL::EmuRecompileVshFunction
     VSH_SHADER_HEADER   *pShaderHeader = (VSH_SHADER_HEADER*)pFunction;
     DWORD               *pToken;
     boolean             EOI = false;
-    VSH_XBOX_SHADER     *pShader = (VSH_XBOX_SHADER*)CxbxMalloc(sizeof(VSH_XBOX_SHADER));
+    VSH_XBOX_SHADER     *pShader = (VSH_XBOX_SHADER*)CxbxCalloc(sizeof(VSH_XBOX_SHADER));
 	LPD3DXBUFFER		pErrors = NULL;
     HRESULT             hRet = 0;
 
@@ -2031,7 +2031,6 @@ extern HRESULT XTL::EmuRecompileVshFunction
         EmuWarning("Couldn't allocate memory for vertex shader conversion buffer");
         hRet = E_OUTOFMEMORY;
     }
-    memset(pShader, 0, sizeof(VSH_XBOX_SHADER));
     pShader->ShaderHeader = *pShaderHeader;
     switch(pShaderHeader->Version)
     {

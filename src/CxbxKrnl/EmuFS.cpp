@@ -347,9 +347,8 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		uint32 dwCopySize = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr;
 		uint32 dwZeroSize = pTLS->dwSizeofZeroFill;
 
-		pNewTLS = (uint08*)CxbxMalloc(dwCopySize + dwZeroSize + 0x100 /* + HACK: extra safety padding 0x100*/);
+		pNewTLS = (uint08*)CxbxCalloc(dwCopySize + dwZeroSize + 0x100 /* + HACK: extra safety padding 0x100*/);
 
-		memset(pNewTLS, 0, dwCopySize + dwZeroSize + 0x100);
 		memcpy(pNewTLS, pTLSData, dwCopySize);
 	}
 
@@ -398,9 +397,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 	{
 		uint32 dwSize = sizeof(xboxkrnl::KPCR);
 
-		NewPcr = (xboxkrnl::KPCR*)CxbxMalloc(dwSize);
-
-		memset(NewPcr, 0, sizeof(*NewPcr));
+		NewPcr = (xboxkrnl::KPCR*)CxbxCalloc(dwSize);
 	}
 
 	// generate TIB

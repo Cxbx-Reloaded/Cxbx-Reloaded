@@ -2402,12 +2402,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
            pDeclaration, pFunction, pHandle, Usage);
 
     // create emulated shader struct
-    X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader*)CxbxMalloc(sizeof(X_D3DVertexShader));
-    VERTEX_SHADER     *pVertexShader = (VERTEX_SHADER*)CxbxMalloc(sizeof(VERTEX_SHADER));
+    X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader*)CxbxCalloc(sizeof(X_D3DVertexShader));
+    VERTEX_SHADER     *pVertexShader = (VERTEX_SHADER*)CxbxCalloc(sizeof(VERTEX_SHADER));
 
     // TODO: Intelligently fill out these fields as necessary
-    ZeroMemory(pD3DVertexShader, sizeof(X_D3DVertexShader));
-    ZeroMemory(pVertexShader, sizeof(VERTEX_SHADER));
 
     // HACK: TODO: support this situation
     if(pDeclaration == NULL)
