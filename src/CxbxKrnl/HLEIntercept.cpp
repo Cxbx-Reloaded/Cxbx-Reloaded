@@ -738,9 +738,13 @@ static void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe
 
             if(OovpaTable[a].emuPatch == nullptr)
             {
-				// Insert breakpoint
-				*(uint8_t*)pFunc = 0xCC;
-                EmuInstallPatch(pFunc + 1, EmuXRefFailure);
+				// Only place an XRef trapping patch when the OOVPA registration wasn't disabled
+				if (OovpaTable[a].Flags & Flag_DontScan == 0)
+				{
+					// Insert breakpoint
+					*(uint8_t*)pFunc = 0xCC;
+					EmuInstallPatch(pFunc + 1, EmuXRefFailure);
+				}
             }
             else
             {
