@@ -78,7 +78,7 @@ HRESULT WINAPI XTL::EMUPATCH(XACTEngineCreate)
 
 	// TODO: Any other form of initialization?
 
-	*ppEngine = (X_XACTEngine*) CxbxMalloc( sizeof( X_XACTEngine ) );
+	*ppEngine = (X_XACTEngine*) CxbxCalloc( sizeof( X_XACTEngine ) );
 
 		
 	
@@ -122,7 +122,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_RegisterWaveBank)
 
 	// TODO: Implement
 
-	*ppWaveBank = (X_XACTWaveBank*) CxbxMalloc( sizeof( X_XACTWaveBank ) );
+	*ppWaveBank = (X_XACTWaveBank*) CxbxCalloc( sizeof( X_XACTWaveBank ) );
 
 	RETURN(S_OK);
 }
@@ -145,7 +145,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_RegisterStreamedWaveBank)
 
 	// TODO: Implement
 
-	*ppWaveBank = (X_XACTWaveBank*) CxbxMalloc( sizeof( X_XACTWaveBank ) );
+	*ppWaveBank = (X_XACTWaveBank*) CxbxCalloc( sizeof( X_XACTWaveBank ) );
 
 	RETURN(S_OK);
 }
@@ -170,7 +170,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_CreateSoundBank)
 
 	// TODO: Implement
 
-	*ppSoundBank = (X_XACTSoundBank*) CxbxMalloc( sizeof( X_XACTSoundBank ) );
+	*ppSoundBank = (X_XACTSoundBank*) CxbxCalloc( sizeof( X_XACTSoundBank ) );
 
 	RETURN(S_OK);
 }
@@ -216,7 +216,7 @@ HRESULT WINAPI XTL::EMUPATCH(IXACTEngine_CreateSoundSource)
 		LOG_FUNC_ARG(ppSoundSource)
 		LOG_FUNC_END;
 
-	*ppSoundSource = (X_XACTSoundSource*) CxbxMalloc( sizeof( X_XACTSoundSource ) );
+	*ppSoundSource = (X_XACTSoundSource*) CxbxCalloc( sizeof( X_XACTSoundSource ) );
 
 	RETURN(S_OK);
 }

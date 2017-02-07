@@ -43,7 +43,7 @@ namespace xboxkrnl
 };
 
 #include "EmuFS.h"
-#include "EmuAlloc.h"
+#include "EmuAlloc.h" // For CxbxCalloc()
 #include "CxbxKrnl.h"
 #include "Exe.h"
 
@@ -404,7 +404,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 	}
 
 	// generate TIB
-	xboxkrnl::ETHREAD *EThread = (xboxkrnl::ETHREAD*)CxbxMalloc(sizeof(xboxkrnl::ETHREAD));
+	xboxkrnl::ETHREAD *EThread = (xboxkrnl::ETHREAD*)CxbxCalloc(sizeof(xboxkrnl::ETHREAD)); // Clear, to prevent side-effects on random contents
 
 	EThread->Tcb.TlsData = (void*)pNewTLS;
 	EThread->UniqueThread = GetCurrentThreadId();
