@@ -46,7 +46,7 @@
 extern VOID CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
 
 // initialize direct3d
-extern VOID EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize);
+extern VOID EmuD3DInit();
 
 // cleanup direct3d
 extern VOID EmuD3DCleanup();

@@ -239,7 +239,7 @@ VOID XTL::CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 }
 
 // Direct3D initialization (called before emulation begins)
-VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
+VOID XTL::EmuD3DInit()
 {
 	// create the create device proxy thread
 	{
