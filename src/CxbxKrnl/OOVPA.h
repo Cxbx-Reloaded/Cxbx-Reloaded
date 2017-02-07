@@ -224,7 +224,7 @@ const uint16_t Flag_Reserved = 4;
 
 #define DISABLED /* registration is (temporarily) disabled by a flag */
 #define REGISTER_OOVPA_DISABLED(Symbol, Version, ...) \
-	OOVPA_TABLE_ENTRY_FULL(Symbol, XTL::EMUPATCH(Symbol), #Symbol ## "_" ## #Version ## " (Disabled)", Version, Flag_DontScan)
+	OOVPA_TABLE_ENTRY_FULL(Symbol, nullptr, #Symbol ## "_" ## #Version ## " (Disabled)", Version, Flag_DontScan)
 
 
 #pragma pack()
