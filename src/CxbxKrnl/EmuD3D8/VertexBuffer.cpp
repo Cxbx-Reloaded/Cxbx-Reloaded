@@ -510,42 +510,42 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
         {
             switch(pStreamPatch->pTypes[uiType])
             {
-                case 0x12: // FLOAT1
+                case X_D3DVSDT_FLOAT1: // 0x12:
                     memcpy(&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew],
                            &pOrigData[uiVertex * uiStride + dwPosOrig],
                            sizeof(FLOAT));
                     dwPosOrig += sizeof(FLOAT);
                     dwPosNew  += sizeof(FLOAT);
                     break;
-                case 0x22: // FLOAT2
+                case X_D3DVSDT_FLOAT2: // 0x22:
                     memcpy(&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew],
                            &pOrigData[uiVertex * uiStride + dwPosOrig],
                            2 * sizeof(FLOAT));
                     dwPosOrig += 2 * sizeof(FLOAT);
                     dwPosNew  += 2 * sizeof(FLOAT);
                     break;
-                case 0x32: // FLOAT3
+                case X_D3DVSDT_FLOAT3: // 0x32:
                     memcpy(&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew],
                            &pOrigData[uiVertex * uiStride + dwPosOrig],
                            3 * sizeof(FLOAT));
                     dwPosOrig += 3 * sizeof(FLOAT);
                     dwPosNew  += 3 * sizeof(FLOAT);
                     break;
-                case 0x42: // FLOAT4
+                case X_D3DVSDT_FLOAT4: // 0x42:
                     memcpy(&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew],
                            &pOrigData[uiVertex * uiStride + dwPosOrig],
                            4 * sizeof(FLOAT));
                     dwPosOrig += 4 * sizeof(FLOAT);
                     dwPosNew  += 4 * sizeof(FLOAT);
                     break;
-                case 0x40: // D3DCOLOR
+                case X_D3DVSDT_D3DCOLOR: // 0x40:
                     memcpy(&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew],
                            &pOrigData[uiVertex * uiStride + dwPosOrig],
                            sizeof(XTL::D3DCOLOR));
                     dwPosOrig += sizeof(XTL::D3DCOLOR);
                     dwPosNew  += sizeof(XTL::D3DCOLOR);
                     break;
-                case 0x16: //NORMPACKED3
+                case X_D3DVSDT_NORMPACKED3: // 0x16:
                     {
                         DWORD dwPacked = ((DWORD *)&pOrigData[uiVertex * uiStride + dwPosOrig])[0];
 
@@ -557,7 +557,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
                         dwPosNew  += 3 * sizeof(FLOAT);
                     }
                     break;
-                case 0x15: // SHORT1
+                case X_D3DVSDT_SHORT1: // 0x15:
                     // Make it a SHORT2
                     (*((SHORT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew + 0 * sizeof(SHORT)])) = *(SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig];
                     (*((SHORT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew + 1 * sizeof(SHORT)])) = 0x00;
@@ -566,14 +566,14 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
                     dwPosNew  += 2 * sizeof(SHORT);
 
                     break;
-                case 0x25: // SHORT2
+                case X_D3DVSDT_SHORT2: // 0x25:
                     memcpy(&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew],
                            &pOrigData[uiVertex * uiStride+dwPosOrig],
                            2 * sizeof(SHORT));
                     dwPosOrig += 2 * sizeof(SHORT);
                     dwPosNew  += 2 * sizeof(SHORT);
                     break;
-                case 0x35: // SHORT3
+                case X_D3DVSDT_SHORT3: // 0x35:
                     memcpy(&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew],
                            &pOrigData[uiVertex * uiStride + dwPosOrig],
                            3 * sizeof(SHORT));
@@ -584,21 +584,21 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
                     dwPosNew  += 4 * sizeof(SHORT);
 
                     break;
-                case 0x45: // SHORT4
+                case X_D3DVSDT_SHORT4: // 0x45:
                     memcpy(&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew],
                            &pOrigData[uiVertex * uiStride + dwPosOrig],
                            4 * sizeof(SHORT));
                     dwPosOrig += 4 * sizeof(SHORT);
                     dwPosNew  += 4 * sizeof(SHORT);
                     break;
-                case 0x14: // PBYTE1
+                case X_D3DVSDT_PBYTE1: // 0x14:
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[0] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
 
                     dwPosOrig += 1 * sizeof(BYTE);
                     dwPosNew  += 1 * sizeof(FLOAT);
 
                     break;
-                case 0x24: // PBYTE2
+                case X_D3DVSDT_PBYTE2: // 0x24:
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[0] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[1] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 255.0f;
 
@@ -606,7 +606,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
                     dwPosNew  += 2 * sizeof(FLOAT);
 
                     break;
-                case 0x34: // PBYTE3
+                case X_D3DVSDT_PBYTE3: // 0x34:
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[0] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[1] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 255.0f;
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[2] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 255.0f;
@@ -615,7 +615,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
                     dwPosNew  += 3 * sizeof(FLOAT);
 
                     break;
-                case 0x44: // PBYTE4
+                case X_D3DVSDT_PBYTE4: // 0x44:
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[0] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[1] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 255.0f;
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[2] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 255.0f;
@@ -625,20 +625,20 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
                     dwPosNew  += 4 * sizeof(FLOAT);
 
                     break;
-                case 0x11: // NORMSHORT1
+                case X_D3DVSDT_NORMSHORT1: // 0x11:
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[0] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
 
                     dwPosOrig += 1 * sizeof(SHORT);
                     dwPosNew  += 1 * sizeof(FLOAT);
                     break;
-                case 0x21: // NORMSHORT2
+                case X_D3DVSDT_NORMSHORT2: // 0x21:
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[0] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[1] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 32767.0f;
 
                     dwPosOrig += 2 * sizeof(SHORT);
                     dwPosNew  += 2 * sizeof(FLOAT);
                     break;
-                case 0x31: // NORMSHORT3
+                case X_D3DVSDT_NORMSHORT3: // 0x31:
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[0] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[1] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 32767.0f;
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[2] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 32767.0f;
@@ -646,7 +646,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
                     dwPosOrig += 3 * sizeof(SHORT);
                     dwPosNew  += 3 * sizeof(FLOAT);
                     break;
-                case 0x41: // NORMSHORT4
+                case X_D3DVSDT_NORMSHORT4: // 0x41:
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[0] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[1] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 32767.0f;
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[2] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 32767.0f;
@@ -655,7 +655,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
                     dwPosOrig += 4 * sizeof(SHORT);
                     dwPosNew  += 4 * sizeof(FLOAT);
                     break;
-                case 0x72: // FLOAT2H
+                case X_D3DVSDT_FLOAT2H: // 0x72:
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[0] = ((FLOAT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0];
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[1] = ((FLOAT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1];
                     ((FLOAT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew])[2] = 0.0f;
@@ -663,7 +663,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 					break;
 
                 /*TODO
-                case 0x02:
+                case X_D3DVSDT_NONE: // 0x02:
                     printf("D3DVSDT_NONE / xbox ext. nsp /");
                     dwNewDataType = 0xFF;
                     break;
