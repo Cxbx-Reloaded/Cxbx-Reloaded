@@ -1275,6 +1275,11 @@ OOVPA_END;
 #define D3DDevice_SetScreenSpaceOffset_5849 D3DDevice_SetScreenSpaceOffset_5558
 
 // ******************************************************************
+// * D3DDevice_SetVertexShaderInput
+// ******************************************************************
+#define D3DDevice_SetVertexShaderInput_5849 D3DDevice_SetVertexShaderInput_4627
+
+// ******************************************************************
 // * D3D8_5849
 // ******************************************************************
 OOVPATable D3D8_5849[] = {
@@ -1428,6 +1433,7 @@ OOVPATable D3D8_5849[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderTargetFast, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetDepthClipPlanes, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetScreenSpaceOffset, 5849, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetVertexShaderInput, 5849, PATCH),
 };
 
 // ******************************************************************
