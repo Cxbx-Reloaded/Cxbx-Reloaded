@@ -1944,6 +1944,31 @@ OOVPA_XREF(DirectSound_CDirectSoundStream_SetFrequency, 5558, 9,
 OOVPA_END;
 
 // ******************************************************************
+// * DirectSound::CMcpxVoiceClient::SetEG
+// ******************************************************************
+#define DirectSound_CMcpxVoiceClient_SetEG_5558 DirectSound_CMcpxVoiceClient_SetEG_4627
+
+// ******************************************************************
+// * DirectSound::CDirectSoundVoice::SetEG
+// ******************************************************************
+#define DirectSound_CDirectSoundVoice_SetEG_5558 DirectSound_CDirectSoundVoice_SetEG_4627
+
+// ******************************************************************
+// * DirectSound::CDirectSoundStream::SetEG
+// ******************************************************************
+#define DirectSound_CDirectSoundStream_SetEG_5558 DirectSound_CDirectSoundStream_SetEG_4627
+
+// ******************************************************************
+// * DirectSound::CDirectSoundBuffer::SetEG
+// ******************************************************************
+#define DirectSound_CDirectSoundBuffer_SetEG_5558 DirectSound_CDirectSoundBuffer_SetEG_4627
+
+// ******************************************************************
+// * IDirectSoundBuffer_SetEG
+// ******************************************************************
+#define IDirectSoundBuffer_SetEG_5558 IDirectSoundBuffer_SetEG_4627
+
+// ******************************************************************
 // * Direct, 5558
 // ******************************************************************
 OOVPATable DSound_5558[] = {
@@ -2083,6 +2108,11 @@ OOVPATable DSound_5558[] = {
 	OOVPA_TABLE_PATCH(IDirectSound_SetVelocity, 5558, IDirectSound8_SetVelocity),
 	OOVPA_TABLE_XREF(DirectSound_CDirectSound_CreateSoundStream, 5558),
 	OOVPA_TABLE_PATCH(IDirectSound_CreateSoundStream, 5558, IDirectSound8_CreateStream),
+	OOVPA_TABLE_XREF(DirectSound_CMcpxVoiceClient_SetEG, 5558),
+	OOVPA_TABLE_XREF(DirectSound_CDirectSoundVoice_SetEG, 5558),
+	OOVPA_TABLE_PATCH(DirectSound_CDirectSoundStream_SetEG, 5558, CDirectSoundStream_SetEG),
+	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_SetEG, 5558),
+	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetEG, 5558, IDirectSoundBuffer8_SetEG),
 };
 
 // ******************************************************************
