@@ -2113,6 +2113,7 @@ OOVPATable DSound_5558[] = {
 	OOVPA_TABLE_PATCH(DirectSound_CDirectSoundStream_SetEG, 5558, CDirectSoundStream_SetEG),
 	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_SetEG, 5558),
 	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetEG, 5558, IDirectSoundBuffer8_SetEG),
+	OOVPA_TABLE_ENTRY(IDirectSound8_AddRef, 3936),
 };
 
 // ******************************************************************
