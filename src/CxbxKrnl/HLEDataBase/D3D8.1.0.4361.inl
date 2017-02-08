@@ -1841,6 +1841,20 @@ OOVPA_NO_XREF(D3DDevice_GetVertexShader, 4361, 7)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_SetVertexDataColor
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetVertexDataColor, 4361, 7)
+
+        { 0x08, 0x06 },
+        { 0x14, 0x8B },
+        { 0x1C, 0x19 },
+        { 0x26, 0xB6 },
+        { 0x30, 0x00 },
+        { 0x3A, 0xFF },
+        { 0x44, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_4361
 // ******************************************************************
 OOVPATable D3D8_4361[] = {
@@ -1987,6 +2001,7 @@ OOVPATable D3D8_4361[] = {
 	REGISTER_OOVPA(D3DDevice_SetRenderState_PSTextureModes, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShaderProgram, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetVertexShader, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetVertexDataColor, 4361, PATCH),
 };
 
 // ******************************************************************
