@@ -340,6 +340,7 @@ typedef struct _STREAM_DYNAMIC_PATCH_
     DWORD ConvertedStride;
     DWORD NbrTypes;        // Number of the stream data types
     UINT  *pTypes;         // The stream data types (xbox)
+	UINT  *pSizes;         // The stream data sizes (pc)
 } STREAM_DYNAMIC_PATCH;
 
 typedef struct _VERTEX_DYNAMIC_PATCH_
