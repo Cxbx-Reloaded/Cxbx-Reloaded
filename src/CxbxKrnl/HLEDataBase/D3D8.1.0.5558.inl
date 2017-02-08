@@ -1139,10 +1139,12 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetScreenSpaceOffset, 5558, 8)
 
+        // D3DDevice_SetScreenSpaceOffset+0x04 : push    esi
+        { 0x04, 0x56 }, // (Offset,Value)-Pair #1
+
         // D3DDevice_SetScreenSpaceOffset+0x13 : fstp [esi+0x0EE8]
-        { 0x13, 0xD9 }, // (Offset,Value)-Pair #1
-        { 0x14, 0x9E }, // (Offset,Value)-Pair #2
-        { 0x15, 0xE8 }, // (Offset,Value)-Pair #3
+        { 0x13, 0xD9 }, // (Offset,Value)-Pair #2
+        { 0x14, 0x9E }, // (Offset,Value)-Pair #3
         { 0x16, 0x0E }, // (Offset,Value)-Pair #4
 
         // D3DDevice_SetScreenSpaceOffset+0x33 : jb +0x05
