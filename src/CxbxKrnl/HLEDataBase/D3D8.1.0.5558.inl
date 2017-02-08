@@ -1198,6 +1198,12 @@ OOVPA_NO_XREF(D3DDevice_SetRenderState_LineWidth, 5455, 10)
         { 0x63, 0x04 }, // (Offset,Value)-Pair #10
 OOVPA_END;
 
+
+// ******************************************************************
+// * D3DDevice_SetRenderState_LineWidth
+// ******************************************************************
+#define D3DDevice_SetRenderState_LineWidth_5558 D3DDevice_SetRenderState_LineWidth_4627
+
 // ******************************************************************
 // * D3DDevice_FlushVertexCache
 // ******************************************************************
@@ -1639,6 +1645,7 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DDevice_SetScreenSpaceOffset, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_InsertCallback, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_LineWidth, 5455, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetRenderState_LineWidth, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_FlushVertexCache, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_EnableOverlay, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_LogicOp, 5558, PATCH),
