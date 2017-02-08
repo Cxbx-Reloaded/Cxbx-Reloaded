@@ -1280,6 +1280,11 @@ OOVPA_END;
 #define D3DDevice_SetVertexShaderInput_5849 D3DDevice_SetVertexShaderInput_4627
 
 // ******************************************************************
+// * D3D::SetFence
+// ******************************************************************
+#define D3D_SetFence_5849 D3D_SetFence_5558
+
+// ******************************************************************
 // * D3D8_5849
 // ******************************************************************
 OOVPATable D3D8_5849[] = {
@@ -1434,6 +1439,7 @@ OOVPATable D3D8_5849[] = {
 	REGISTER_OOVPA(D3DDevice_SetDepthClipPlanes, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetScreenSpaceOffset, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderInput, 5849, PATCH),
+	REGISTER_OOVPA(D3D_SetFence, 5849, XREF),
 };
 
 // ******************************************************************
