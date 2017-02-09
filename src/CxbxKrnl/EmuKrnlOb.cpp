@@ -63,6 +63,8 @@ namespace NtDll
 #define OBJECT_TO_OBJECT_HEADER(Object) \
     CONTAINING_RECORD(Object, OBJECT_HEADER, Body)
 
+#define OB_FLAG_NAMED_OBJECT 1
+
 // ******************************************************************
 // * 0x00EF - ObCreateObject()
 // ******************************************************************
@@ -81,9 +83,60 @@ XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
 		LOG_FUNC_ARG_OUT(Object)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	NTSTATUS result = STATUS_SUCCESS;
+	OBJECT_STRING TmpName = { 0 };
+	int NameSize = 0;
 
-	RETURN(S_OK);
+	if (ObjectAttributes != NULL && ObjectAttributes->ObjectName != NULL) {
+		if (ObjectAttributes->ObjectName->Length == 0) {
+			result = STATUS_OBJECT_NAME_INVALID;
+		}
+		else {
+			// TODO : Split name in parts?
+			TmpName.Buffer = ObjectAttributes->ObjectName->Buffer;
+			TmpName.Length = ObjectAttributes->ObjectName->Length;
+			TmpName.MaximumLength = ObjectAttributes->ObjectName->Length;
+			NameSize = sizeof(OBJECT_STRING) + TmpName.Length + sizeof('\0'); // trailing zero
+		}
+	}
+
+	if (result == STATUS_SUCCESS) {
+		// Allocate the object
+		int ObjectSize = offsetof(OBJECT_HEADER, Body) + ObjectBodySize;
+		// TODO : Is this ever something else than ExAllocatePoolWithTag ?
+		POBJECT_HEADER ObjectHeader = (POBJECT_HEADER)ObjectType->AllocateProcedure(ObjectSize + NameSize, ObjectType->PoolTag);
+		if (ObjectHeader == NULL) {
+			// Detected out of memory
+			*Object = NULL;
+			result = STATUS_INSUFFICIENT_RESOURCES;
+		}
+		else {
+			// Initialize default values of object (header) :
+			ObjectHeader->PointerCount = 1;
+			ObjectHeader->HandleCount = 0;
+			ObjectHeader->Type = ObjectType;
+			if (NameSize == 0)
+				ObjectHeader->Flags = 0;
+			else {
+				// Copy name after object (we've reserved NameSize bytes there) :
+				OBJECT_STRING *Name = (OBJECT_STRING *)((char *)ObjectHeader + ObjectSize);
+				char *NameBuffer = (char *)Name + sizeof(OBJECT_STRING);
+				// Initialize name struct :
+				Name->Buffer = NameBuffer;
+				Name->Length = Name->MaximumLength = TmpName.Length;
+				// Copy name into reserved buffer :
+				memcpy(NameBuffer, TmpName.Buffer, TmpName.Length);
+				// Mark object as named :
+				ObjectHeader->Flags = OB_FLAG_NAMED_OBJECT;
+				// TODO : Verify this all works, then use it somehow
+			}
+
+			*Object = &ObjectHeader->Body;
+			result = STATUS_SUCCESS;
+		}
+	}
+
+	RETURN(result);
 }
 
 // ******************************************************************

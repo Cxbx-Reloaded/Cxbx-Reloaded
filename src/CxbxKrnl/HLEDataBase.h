@@ -343,6 +343,6 @@ enum XRefDataBaseOffset
 // ******************************************************************
 // * XRefDataBase
 // ******************************************************************
-extern uint32 XRefDataBase[XREF_COUNT];
+extern xbaddr XRefDataBase[XREF_COUNT];
 
 #endif /*HLEDATABASE_H*/

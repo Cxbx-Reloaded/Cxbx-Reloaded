@@ -54,7 +54,7 @@ namespace NtDll
 
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
-#include "EmuAlloc.h" // For CxbxFree(), CxbxMalloc(), etc.
+#include "EmuAlloc.h" // For CxbxFree(), CxbxCalloc(), etc.
 
 #pragma warning(disable:4005) // Ignore redefined status values
 #include <ntstatus.h> // For STATUS_BUFFER_TOO_SMALL
@@ -125,7 +125,7 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
 		LOG_FUNC_END;
 
 	// TODO: Actually implement this
-	PVOID pRet = CxbxMalloc(NumberOfBytes);
+	PVOID pRet = CxbxCalloc(1, NumberOfBytes); // Clear, to prevent side-effects on random contents
 
 	RETURN(pRet);
 }
