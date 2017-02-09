@@ -35,9 +35,9 @@
 #include <malloc.h>
 
 #ifdef _DEBUG_ALLOC
-#define CxbxMalloc(x)                            CxbxMallocDebug(x, __FILE__, __LINE__)
-#define CxbxCalloc(x, y)                         CxbxCallocDebug(x, y, __FILE__, __LINE__)
-#define CxbxFree(x)                              CxbxFreeDebug(x, __FILE__, __LINE__)
+#define CxbxMalloc(Size)                         CxbxMallocDebug(Size, __FILE__, __LINE__)
+#define CxbxCalloc(Num, Size)                    CxbxCallocDebug(Num, Size, __FILE__, __LINE__)
+#define CxbxFree(Addr)                           CxbxFreeDebug(Addr, __FILE__, __LINE__)
 #define CxbxRtlAlloc(Heap, Flags, Bytes)         CxbxRtlAllocDebug(Heap, Flags, Bytes, __FILE__, __LINE__)
 #define CxbxRtlFree(Heap, Flags, pMem)           CxbxRtlFreeDebug(Heap, Flags, pMem, __FILE__, __LINE__)
 #define CxbxRtlRealloc(Heap, Flags, pMem, Bytes) CxbxRtlReallocDebug(Heap, Flags, pMem, Bytes, __FILE__, __LINE__)
@@ -115,9 +115,9 @@ DWORD CxbxVirtualQueryDebug(LPCVOID                   lpAddress,
 void CxbxAllocDump(bool DumpData);
 
 #else // _DEBUG_ALLOC
-#define CxbxMalloc(x)                            malloc(x)
-#define CxbxCalloc(x, y)                         calloc(x, y)
-#define CxbxFree(x)                              free(x)
+#define CxbxMalloc(Size)                         malloc(Size)
+#define CxbxCalloc(Num, Size)                    calloc(Num, Size)
+#define CxbxFree(Addr)                           free(Addr)
 #define CxbxRtlAlloc(Heap, Flags, Bytes)         NtDll::RtlAllocateHeap(Heap, Flags, Bytes)
 #define CxbxRtlFree(Heap, Flags, pMem)           NtDll::RtlFreeHeap(Heap, Flags, pMem)
 #define CxbxRtlRealloc(Heap, Flags, pMem, Bytes) NtDll::RtlReAllocateHeap(Heap, Flags, pMem, Bytes)

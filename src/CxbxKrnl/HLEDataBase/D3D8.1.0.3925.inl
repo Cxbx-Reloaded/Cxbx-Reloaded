@@ -3406,7 +3406,7 @@ OOVPATable D3D8_3925[] = {
 	REGISTER_OOVPA(D3DDevice_SetVertexData4s, 3925, PATCH),
 	REGISTER_OOVPA(D3D_SetPushBufferSize, 3925, PATCH),
 	REGISTER_OOVPA(D3DResource_GetType, 3925, PATCH), // Probably not even necessary...
-	REGISTER_OOVPA(D3D_AllocContiguousMemory, 3925, PATCH),
+	REGISTER_OOVPA(D3D_AllocContiguousMemory, 3925, DISABLED), // Just calls MmAllocateContiguousMemory. Was PATCH
 	// REGISTER_OOVPA(D3DDevice_SetRenderState_Deferred, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetLight, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_LightEnable, 3925, PATCH),

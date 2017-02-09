@@ -117,11 +117,11 @@ struct OOVPA
 // defined for the OOVPA.
 const uint08 XRefNoSaveIndex = (uint08)-1;
 
-// This XRefZero constant, when set in the OOVPA.XRefSaveIndex field,
+// This XRefZero constant, when set in the OOVPA.XRefCount field,
 // indicates there are no {offset, XREF_*-enum} present in the OOVPA.
 const uint08 XRefZero = (uint08)0;
 
-// This XRefOne constant, when set in the OOVPA.XRefSaveIndex field,
+// This XRefOne constant, when set in the OOVPA.XRefCount field,
 // indicates the OOVPA contains one (1) {offset, XREF_* enum} pair.
 const uint08 XRefOne = (uint08)1;
 
@@ -173,7 +173,7 @@ OOVPA_XREF(Name, Version, Count, XRefNoSaveIndex, XRefZero)
 struct OOVPATable
 {
 	OOVPA *Oovpa;
-	void  *lpRedirect;
+	void  *emuPatch;
 #ifdef _DEBUG_TRACE
 	char  *szFuncName;
 #endif
@@ -224,7 +224,7 @@ const uint16_t Flag_Reserved = 4;
 
 #define DISABLED /* registration is (temporarily) disabled by a flag */
 #define REGISTER_OOVPA_DISABLED(Symbol, Version, ...) \
-	OOVPA_TABLE_ENTRY_FULL(Symbol, XTL::EMUPATCH(Symbol), #Symbol ## "_" ## #Version ## " (Disabled)", Version, Flag_DontScan)
+	OOVPA_TABLE_ENTRY_FULL(Symbol, nullptr, #Symbol ## "_" ## #Version ## " (Disabled)", Version, Flag_DontScan)
 
 
 #pragma pack()
