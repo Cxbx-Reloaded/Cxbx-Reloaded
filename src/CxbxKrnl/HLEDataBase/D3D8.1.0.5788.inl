@@ -542,7 +542,7 @@ OOVPA_XREF(D3DDevice_SetVerticalBlankCallback, 5788, 7,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x06, XREF_D3DDEVICE },
+        XREF_ENTRY( 0x06, XREF_D3DDEVICE ),
 
         { 0x01, 0x44 },
         { 0x03, 0x04 },
@@ -831,7 +831,7 @@ OOVPA_XREF(D3D_Unknown, 5788, 6,
     XRefNoSaveIndex,
     XRefOne)
 
-	{ 0x0A, XREF_D3D_MakeRequestedSpace },
+	XREF_ENTRY( 0x0A, XREF_D3D_MakeRequestedSpace ),
 
         { 0x05, 0x50 },
         { 0x06, 0xD1 },
@@ -1234,7 +1234,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_RopZCmpAlwaysRead, 5788, 7,
     XRefNoSaveIndex,
     XRefOne)
 
-	{ 0x05, XREF_D3DRS_ROPZCMPALWAYSREAD },
+	XREF_ENTRY( 0x05, XREF_D3DRS_ROPZCMPALWAYSREAD ),
 
         { 0x01, 0x44 },
         { 0x04, 0xA3 },
@@ -1370,7 +1370,7 @@ OOVPATable D3D8_5788[] = {
 	REGISTER_OOVPA(D3D_CheckDeviceMultiSampleType, 5558, PATCH),
 	REGISTER_OOVPA(D3D_GetDeviceCaps, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_DrawVertices, 5788, PATCH),
-	REGISTER_OOVPA(D3D_AllocContiguousMemory, 5788, PATCH),
+	REGISTER_OOVPA(D3D_AllocContiguousMemory, 5788, DISABLED), // Just calls MmAllocateContiguousMemory. Was PATCH
 	REGISTER_OOVPA(Get2DSurfaceDesc, 5788, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateTexture2, 5788, PATCH),
 	REGISTER_OOVPA(Lock2DSurface, 3925, PATCH),

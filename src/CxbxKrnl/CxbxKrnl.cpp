@@ -540,7 +540,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	else
 	{
 		DbgPrintf("EmuMain: Initializing Direct3D.\n");
-		XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
+		XTL::EmuD3DInit();
 	}
 
 	EmuHLEIntercept(pXbeHeader);

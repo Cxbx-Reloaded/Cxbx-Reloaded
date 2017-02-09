@@ -78,7 +78,7 @@ OOVPA_XREF(XOnlineLogon, 5344, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x0B, XREF_CXo_XOnlineLogon },
+        XREF_ENTRY( 0x0B, XREF_CXo_XOnlineLogon ),
 
         { 0x00, 0x55 },
         { 0x01, 0x8B },

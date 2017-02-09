@@ -65,7 +65,7 @@ OOVPA_XREF(D3DDevice_BeginPush, 5558, 10,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x09, XREF_D3DCD_LAZYSETSTATEVB }, // 1
+        XREF_ENTRY( 0x09, XREF_D3DCD_LAZYSETSTATEVB ), // 1
 
         { 0x00, 0x8B }, // 2
         { 0x01, 0x0D }, // 3
@@ -629,7 +629,7 @@ OOVPA_XREF(D3DResource_BlockUntilNotBusy, 5558, 2,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x01, XREF_D3D_BlockOnResource },
+        XREF_ENTRY( 0x01, XREF_D3D_BlockOnResource ),
 
         { 0x00, 0xE9 },
 OOVPA_END;

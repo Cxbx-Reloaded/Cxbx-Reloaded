@@ -2916,7 +2916,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_RopZCmpAlwaysRead, 3925, 9,
     XRefOne)
 
         // D3DDevice_SetRenderState_RopZCmpAlwaysRead+0x05 : D3D__RenderState[D3DRS_ROPZCMPALWAYSREAD]
-        { 0x05, XREF_D3DRS_ROPZCMPALWAYSREAD }, // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x05, XREF_D3DRS_ROPZCMPALWAYSREAD ), // (Offset,Value)-Pair #1
 
         // D3DDevice_SetRenderState_RopZCmpAlwaysRead+0x00 : mov eax, [esp+0x04]
         { 0x00, 0x8B }, // (Offset,Value)-Pair #2
@@ -2942,7 +2942,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_RopZRead, 3925, 9,
     XRefOne)
 
         // D3DDevice_SetRenderState_RopZRead+0x05 : D3D__RenderState[D3DRS_ROPZCMPALWAYSREAD]
-        { 0x05, XREF_D3DRS_ROPZREAD }, // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x05, XREF_D3DRS_ROPZREAD ), // (Offset,Value)-Pair #1
 
         // D3DDevice_SetRenderState_RopZRead+0x00 : mov eax, [esp+0x04]
         { 0x00, 0x8B }, // (Offset,Value)-Pair #2
@@ -2968,7 +2968,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_DoNotCullUncompressed, 3925, 9,
     XRefOne)
 
         // D3DDevice_SetRenderState_DoNotCullUncompressed+0x05 : D3D__RenderState[D3DRS_ROPZCMPALWAYSREAD]
-        { 0x05, XREF_D3DRS_DONOTCULLUNCOMPRESSED }, // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x05, XREF_D3DRS_DONOTCULLUNCOMPRESSED ), // (Offset,Value)-Pair #1
 
         // D3DDevice_SetRenderState_DoNotCullUncompressed+0x00 : mov eax, [esp+0x04]
         { 0x00, 0x8B }, // (Offset,Value)-Pair #2
@@ -3046,7 +3046,7 @@ OOVPA_XREF(D3DDevice_InsertFence, 3925, 5,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x03, XREF_D3D_SETFENCE },
+        XREF_ENTRY( 0x03, XREF_D3D_SETFENCE ),
 
         { 0x00, 0x6A },
         { 0x01, 0x00 },
@@ -3427,7 +3427,7 @@ OOVPATable D3D8_3925[] = {
 	REGISTER_OOVPA(D3DDevice_SetVertexData4s, 3925, PATCH),
 	REGISTER_OOVPA(D3D_SetPushBufferSize, 3925, PATCH),
 	REGISTER_OOVPA(D3DResource_GetType, 3925, PATCH), // Probably not even necessary...
-	REGISTER_OOVPA(D3D_AllocContiguousMemory, 3925, PATCH),
+	REGISTER_OOVPA(D3D_AllocContiguousMemory, 3925, DISABLED), // Just calls MmAllocateContiguousMemory. Was PATCH
 	// REGISTER_OOVPA(D3DDevice_SetRenderState_Deferred, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetLight, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_LightEnable, 3925, PATCH),

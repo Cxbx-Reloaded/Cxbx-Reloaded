@@ -332,7 +332,7 @@ OOVPA_XREF(D3DDevice_SetRenderTarget, 4627, 13,
     XRefOne)
 
         // D3DDevice_SetRenderTarget+0x10 : call [D3D_CommonSetRenderTarget]
-        { 0x10, XREF_COMMONSETRENDERTARGET }, // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x10, XREF_COMMONSETRENDERTARGET ), // (Offset,Value)-Pair #1
 
         // D3DDevice_SetRenderTarget+0x00 : mov eax, [esp+0x08]
         { 0x00, 0x8B }, // (Offset,Value)-Pair #2
@@ -1116,7 +1116,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_Clear
 // ******************************************************************
-OOVPA_NO_XREF_LARGE(D3DDevice_Clear, 4627, 9)
+OOVPA_NO_XREF(D3DDevice_Clear, 4627, 9)
         // D3DDevice_Clear+0x0000 : sub esp, 38h
         { 0x0000, 0x83 }, // (Offset,Value)-Pair #1
         { 0x0001, 0xEC }, // (Offset,Value)-Pair #2
@@ -1136,7 +1136,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_ClearB
 // ******************************************************************
-OOVPA_NO_XREF_LARGE(D3DDevice_ClearB, 4627, 9)
+OOVPA_NO_XREF(D3DDevice_ClearB, 4627, 9)
         // D3DDevice_Clear+0x0000 : sub esp, 38h
         { 0x0000, 0x83 }, // (Offset,Value)-Pair #1
         { 0x0001, 0xEC }, // (Offset,Value)-Pair #2
@@ -1864,7 +1864,7 @@ OOVPA_XREF(Get2DSurfaceDescC, 4627, 10,
     XRefOne)
 
         // Get2DSurfaceDescC+0x10 : call [Get2DSurfaceDescB]
-        { 0x10, XREF_GET2DSURFACEDESCB }, // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x10, XREF_GET2DSURFACEDESCB ), // (Offset,Value)-Pair #1
 
         // Get2DSurfaceDescC+0x00 : push ebx; push esi; push edi
         { 0x00, 0x53 }, // (Offset,Value)-Pair #2
@@ -1891,7 +1891,7 @@ OOVPA_XREF(Get2DSurfaceDescD, 4627, 10,
     XRefOne)
 
         // Get2DSurfaceDescD+0x0E : call [Get2DSurfaceDescB]
-        { 0x0E, XREF_GET2DSURFACEDESCB }, // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x0E, XREF_GET2DSURFACEDESCB ), // (Offset,Value)-Pair #1
 
         // Get2DSurfaceDescD+0x00 : push ebx; push esi; push edi
         { 0x00, 0x53 }, // (Offset,Value)-Pair #2
@@ -2098,7 +2098,7 @@ OOVPA_XREF(D3DDevice_EndPush, 4627, 12,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x06, XREF_D3DDEVICE }, // 1
+        XREF_ENTRY( 0x06, XREF_D3DDEVICE ), // 1
 
         { 0x00, 0x8B }, // 2
         { 0x01, 0x44 }, // 3
@@ -2517,7 +2517,7 @@ OOVPA_XREF(D3DDevice_InsertFence, 4627, 5,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x03, XREF_D3D_SETFENCE },
+        XREF_ENTRY( 0x03, XREF_D3D_SETFENCE ),
 
         { 0x00, 0x6A },
         { 0x01, 0x00 },
@@ -2560,7 +2560,7 @@ OOVPA_XREF(D3DDevice_KickPushBuffer, 4627, 4,
     XRefNoSaveIndex,
     XRefOne)
 
-	{ 0x07, XREF_D3D_KickOff },
+	XREF_ENTRY( 0x07, XREF_D3D_KickOff ),
 
         { 0x00, 0x8B },
         { 0x01, 0x0D },
@@ -2855,7 +2855,7 @@ OOVPA_XREF(D3DDevice_BlockOnFence, 4627, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-	{ 0x08, XREF_D3D_BLOCKONTIME },
+	XREF_ENTRY( 0x08, XREF_D3D_BLOCKONTIME ),
 
         { 0x00, 0x8B },
         { 0x02, 0x24 },
