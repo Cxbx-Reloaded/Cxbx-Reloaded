@@ -608,14 +608,8 @@ static inline void EmuInstallPatch(xbaddr FunctionAddr, void *Patch)
 
 static inline void GetOovpaEntry(OOVPA *oovpa, int index, OUT uint32 &offset, OUT uint08 &value)
 {
-	if (oovpa->Type == Large) {
-		offset = (uint32) ((LOOVPA<1>*)oovpa)->Lovp[index].Offset;
-		value = ((LOOVPA<1>*)oovpa)->Lovp[index].Value;
-	}
-	else {
-		offset = (uint32) ((SOOVPA<1>*)oovpa)->Sovp[index].Offset;
-		value = ((SOOVPA<1>*)oovpa)->Sovp[index].Value;
-	}
+	offset = (uint32)((LOOVPA<1>*)oovpa)->Lovp[index].Offset;
+	value = ((LOOVPA<1>*)oovpa)->Lovp[index].Value;
 }
 
 // locate the given function, searching within lower and upper bounds
@@ -815,8 +809,8 @@ void VerifyHLEOOVPA(HLEVerifyContext *context, OOVPA *oovpa)
 			uint32 curr_offset;
 			GetOovpaEntry(oovpa, p, curr_offset, dummy_value);
 			if (!(curr_offset > prev_offset)) {
-				HLEError(context, "%s[%d] : Offset (0x%x) must be larger then previous offset (0x%x)",
-					(oovpa->Type = Large) ? "Lovp" : "Sovp", p, curr_offset, prev_offset);
+				HLEError(context, "Lovp[%d] : Offset (0x%x) must be larger then previous offset (0x%x)",
+					p, curr_offset, prev_offset);
 			}
 		}
 

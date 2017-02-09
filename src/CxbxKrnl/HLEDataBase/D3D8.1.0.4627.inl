@@ -1116,7 +1116,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_Clear
 // ******************************************************************
-OOVPA_NO_XREF_LARGE(D3DDevice_Clear, 4627, 9)
+OOVPA_NO_XREF(D3DDevice_Clear, 4627, 9)
         // D3DDevice_Clear+0x0000 : sub esp, 38h
         { 0x0000, 0x83 }, // (Offset,Value)-Pair #1
         { 0x0001, 0xEC }, // (Offset,Value)-Pair #2
@@ -1136,7 +1136,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_ClearB
 // ******************************************************************
-OOVPA_NO_XREF_LARGE(D3DDevice_ClearB, 4627, 9)
+OOVPA_NO_XREF(D3DDevice_ClearB, 4627, 9)
         // D3DDevice_Clear+0x0000 : sub esp, 38h
         { 0x0000, 0x83 }, // (Offset,Value)-Pair #1
         { 0x0001, 0xEC }, // (Offset,Value)-Pair #2
