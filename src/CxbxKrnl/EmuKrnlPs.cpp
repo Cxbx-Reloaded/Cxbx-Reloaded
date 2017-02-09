@@ -393,13 +393,11 @@ XBSYSAPI EXPORTNUM(258) xboxkrnl::VOID NTAPI xboxkrnl::PsTerminateSystemThread
 // ******************************************************************
 XBSYSAPI EXPORTNUM(259) xboxkrnl::OBJECT_TYPE VOLATILE xboxkrnl::PsThreadObjectType =
 {
-	/*
-	ExAllocatePoolWithTag,
-	ExFreePool,
+	xboxkrnl::ExAllocatePoolWithTag,
+	xboxkrnl::ExFreePool,
 	NULL,
 	NULL,
 	NULL,
-	*/
-	NULL, // (PVOID)FIELD_OFFSET(KTHREAD, Header),
+	(PVOID)offsetof(xboxkrnl::KTHREAD, Header),
 	'erhT' // = first four characters of "Thread" in reverse
 };

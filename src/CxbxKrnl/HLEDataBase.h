@@ -336,14 +336,15 @@ enum XRefDataBaseOffset
 //	XREF_XFreeSectionByHandle,
 
 	XREF_COUNT // XREF_COUNT must always be last.
-	// Also, if XREF_COUNT > sizeof(byte), enlarge struct OOVPA.XRefSaveIndex (and Value somehow)
+	// Also, if XREF_COUNT > sizeof(uint16), enlarge struct OOVPA.XRefSaveIndex (and Value somehow)
 };
 
-#define XREF_UNKNOWN -1
+#define XREF_ADDR_UNDETERMINED -1
+#define XREF_ADDR_NOT_FOUND ((xbaddr)nullptr)
 
 // ******************************************************************
 // * XRefDataBase
 // ******************************************************************
-extern uint32 XRefDataBase[XREF_COUNT];
+extern xbaddr XRefDataBase[XREF_COUNT];
 
 #endif /*HLEDATABASE_H*/

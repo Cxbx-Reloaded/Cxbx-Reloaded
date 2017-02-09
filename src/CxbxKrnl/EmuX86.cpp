@@ -365,7 +365,7 @@ xbaddr EmuX86_Distorm_O_SMEM_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int oper
 {
 	xbaddr base = EmuX86_GetRegisterValue32(e, info.ops[operand].index);
 
-	return base + info.disp;
+	return base + (uint32_t)info.disp;
 }
 
 xbaddr EmuX86_Distorm_O_MEM_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int operand)
@@ -375,9 +375,9 @@ xbaddr EmuX86_Distorm_O_MEM_Addr(LPEXCEPTION_POINTERS e, _DInst& info, int opera
 	uint32_t index = EmuX86_GetRegisterValue32(e, info.ops[operand].index);
 
 	if (info.scale >= 2)
-		return base + (index * info.scale) + info.disp;
+		return base + (index * info.scale) + (uint32_t)info.disp;
 	else
-		return base + index + info.disp;
+		return base + index + (uint32_t)info.disp;
 }
 
 void EmuX86_Addr_Read(xbaddr srcAddr, uint16_t size, OUT uint32_t *value)
@@ -462,7 +462,7 @@ bool EmuX86_Operand_Read(LPEXCEPTION_POINTERS e, _DInst& info, int operand, OUT 
 	}
 	case O_DISP:
 	{
-		xbaddr srcAddr = info.disp;
+		xbaddr srcAddr = (xbaddr)info.disp;
 		EmuX86_Addr_Read(srcAddr, info.ops[operand].size, value);
 		return true;
 	}
@@ -541,7 +541,7 @@ bool EmuX86_Operand_Write(LPEXCEPTION_POINTERS e, _DInst& info, int operand, uin
 	}
 	case O_DISP:
 	{
-		xbaddr destAddr = info.disp;
+		xbaddr destAddr = (xbaddr)info.disp;
 		EmuX86_Addr_Write(destAddr, info.ops[operand].size, value);
 		return true;
 	}

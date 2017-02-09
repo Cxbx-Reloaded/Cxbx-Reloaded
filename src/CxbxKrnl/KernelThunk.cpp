@@ -306,19 +306,19 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::NtWriteFile),                         // 0x00EC (236)
 	(uint32)PANIC(0x00ED),                                        // 0x00ED (237) NtWriteFileGather
 	(uint32)FUNC(&xboxkrnl::NtYieldExecution),                    // 0x00EE (238)
-	(uint32)PANIC(0x00EF),                                        // 0x00EF (239) ObCreateObject
+	(uint32)FUNC(&xboxkrnl::ObCreateObject),                      // 0x00EF (239)
 	(uint32)VARIABLE(&xboxkrnl::ObDirectoryObjectType),           // 0x00F0 (240)
-	(uint32)PANIC(0x00F1),                                        // 0x00F1 (241) ObInsertObject
-	(uint32)PANIC(0x00F2),                                        // 0x00F2 (242) ObMakeTemporaryObject 
+	(uint32)FUNC(&xboxkrnl::ObInsertObject),                      // 0x00F1 (241)
+	(uint32)FUNC(&xboxkrnl::ObMakeTemporaryObject),               // 0x00F2 (242) 
 	(uint32)FUNC(&xboxkrnl::ObOpenObjectByName),                  // 0x00F3 (243)
-	(uint32)PANIC(0x00F4),                                        // 0x00F4 (244) ObOpenObjectByPointer
+	(uint32)FUNC(&xboxkrnl::ObOpenObjectByPointer),               // 0x00F4 (244)
 	(uint32)VARIABLE(&xboxkrnl::ObpObjectHandleTable),            // 0x00F5 (245)
 	(uint32)FUNC(&xboxkrnl::ObReferenceObjectByHandle),           // 0x00F6 (246)
-	(uint32)PANIC(0x00F7),                                        // 0x00F7 (247) ObReferenceObjectByName
-	(uint32)PANIC(0x00F8),                                        // 0x00F8 (248) ObReferenceObjectByPointer
+	(uint32)FUNC(&xboxkrnl::ObReferenceObjectByName),             // 0x00F7 (247)
+	(uint32)FUNC(&xboxkrnl::ObReferenceObjectByPointer),          // 0x00F8 (248)
 	(uint32)VARIABLE(&xboxkrnl::ObSymbolicLinkObjectType),        // 0x00F9 (249)
 	(uint32)FUNC(&xboxkrnl::ObfDereferenceObject),                // 0x00FA (250)
-	(uint32)PANIC(0x00FB),                                        // 0x00FB (251) ObfReferenceObject
+	(uint32)FUNC(&xboxkrnl::ObfReferenceObject),                  // 0x00FB (251)
 	(uint32)FUNC(&xboxkrnl::PhyGetLinkState),                     // 0x00FC (252)
 	(uint32)FUNC(&xboxkrnl::PhyInitialize),                       // 0x00FD (253)
 	(uint32)FUNC(&xboxkrnl::PsCreateSystemThread),                // 0x00FE (254)
@@ -485,6 +485,6 @@ void ConnectWindowsTimersToThunkTable()
 	// KeQuerySystemTime), this value is not adjusted with HostSystemTimeDelta!
 	CxbxKrnl_KernelThunkTable[154] = (uint32)&(USER_SHARED_DATA->SystemTime);
 
-	// Note that we can't do the same for TickCount, as that timer
-	// updates slower on the xbox. See EmuThreadUpdateTickCount().
+	// We can't point Xbox KeTickCount to host TickCount, because it
+	// updates slower on the xbox. See EmuUpdateTickCount().
 }

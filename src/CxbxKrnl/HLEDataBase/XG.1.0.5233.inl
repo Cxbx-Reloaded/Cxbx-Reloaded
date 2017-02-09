@@ -37,8 +37,8 @@
 // ******************************************************************
 OOVPATable XG_5233[1] = {
 
-	OOVPA_TABLE_ENTRY(XGIsSwizzledFormat, 4361),
-	// OOVPA_TABLE_ENTRY(XGSwizzleRect, 4361), // Leave unpatched
+	REGISTER_OOVPA(XGIsSwizzledFormat, 4361, PATCH),
+	// REGISTER_OOVPA(XGSwizzleRect, 4361, PATCH), // Leave unpatched
 };
 
 // ******************************************************************

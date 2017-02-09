@@ -209,8 +209,12 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 
 	// Copy over loaded Xbe Header to specified base address
 	memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));	
+	// Copy over the certificate
 	memcpy((void*)(CxbxKrnl_Xbe->m_Header.dwBaseAddr + sizeof(Xbe::Header)), CxbxKrnl_Xbe->m_HeaderEx, CxbxKrnl_Xbe->m_ExSize);
-	
+	// Copy over the library versions
+	memcpy((void*)CxbxKrnl_Xbe->m_Header.dwLibraryVersionsAddr, CxbxKrnl_Xbe->m_LibraryVersion, CxbxKrnl_Xbe->m_Header.dwLibraryVersions * sizeof(DWORD));
+	// TODO : Actually, instead of copying from CxbxKrnl_Xbe, we should load the entire Xbe directly into memory, like Dxbx does.
+
 	// Load Sections
 	for (uint32 i = 0; i < CxbxKrnl_Xbe->m_Header.dwSections; i++) {
 		memcpy((void*)CxbxKrnl_Xbe->m_SectionHeader[i].dwVirtualAddr, CxbxKrnl_Xbe->m_bzSection[i], CxbxKrnl_Xbe->m_SectionHeader[i].dwSizeofRaw);
@@ -358,9 +362,11 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	}
 
 #ifdef _DEBUG_TRACE
-	VerifyHLEDataBase();
+	// VerifyHLEDataBase();
 #endif
 
+	// TODO : The following seems to cause a crash when booting the game "Forza Motorsport",
+	// according to https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/101#issuecomment-277230140
 	{
 		// Create a fake kernel header for XapiRestrictCodeSelectorLimit
 		// Thanks advancingdragon / DirtBox
@@ -392,9 +398,18 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	// Read which components need to be LLE'ed :
 	int CxbxLLE_Flags;
 	g_EmuShared->GetFlagsLLE(&CxbxLLE_Flags);
+
 	bLLE_APU = (CxbxLLE_Flags & LLE_APU) > 0;
+	if (bLLE_APU)
+		DbgPrintf("EmuMain : LLE enabled for APU.\n");
+
 	bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
+	if (bLLE_GPU)
+		DbgPrintf("EmuMain : LLE enabled for GPU.\n");
+
 	bLLE_JIT = (CxbxLLE_Flags & LLE_JIT) > 0;
+	if (bLLE_JIT)
+		DbgPrintf("EmuMain : LLE enabled for JIT.\n");
 
 	// Initialize devices :
 	char szBuffer[MAX_PATH];
@@ -525,10 +540,10 @@ extern "C" CXBXKRNL_API void CxbxKrnlInit
 	else
 	{
 		DbgPrintf("EmuMain: Initializing Direct3D.\n");
-		XTL::EmuD3DInit(pXbeHeader, dwXbeHeaderSize);
+		XTL::EmuD3DInit();
 	}
 
-	EmuHLEIntercept(pLibraryVersion, pXbeHeader);
+	EmuHLEIntercept(pXbeHeader);
 
 	//
 	// initialize FS segment selector
@@ -714,9 +729,4 @@ extern "C" CXBXKRNL_API void CxbxKrnlPanic()
     DbgPrintf("EmuMain: CxbxKrnlPanic()\n");
 
     CxbxKrnlCleanup("Kernel Panic!");
-}
-
-extern "C" CXBXKRNL_API void CxbxKrnlNoFunc()
-{
-    DbgPrintf("EmuMain: CxbxKrnlNoFunc()\n");
 }

@@ -138,7 +138,7 @@ static DWORD                        g_dwVertexShaderUsage = 0;
 static DWORD                        g_VertexShaderSlots[136];
 
 // cached palette pointer
-static PVOID pCurrentPalette;
+static PVOID pCurrentPalette = nullptr;
 // cached palette size
 static DWORD dwCurrentPaletteSize = -1;
 
@@ -239,7 +239,7 @@ VOID XTL::CxbxInitWindow(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
 }
 
 // Direct3D initialization (called before emulation begins)
-VOID XTL::EmuD3DInit(Xbe::Header *XbeHeader, uint32 XbeHeaderSize)
+VOID XTL::EmuD3DInit()
 {
 	// create the create device proxy thread
 	{
@@ -2402,12 +2402,10 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexShader)
            pDeclaration, pFunction, pHandle, Usage);
 
     // create emulated shader struct
-    X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader*)CxbxMalloc(sizeof(X_D3DVertexShader));
-    VERTEX_SHADER     *pVertexShader = (VERTEX_SHADER*)CxbxMalloc(sizeof(VERTEX_SHADER));
+    X_D3DVertexShader *pD3DVertexShader = (X_D3DVertexShader*)CxbxCalloc(1, sizeof(X_D3DVertexShader));
+    VERTEX_SHADER     *pVertexShader = (VERTEX_SHADER*)CxbxCalloc(1, sizeof(VERTEX_SHADER));
 
     // TODO: Intelligently fill out these fields as necessary
-    ZeroMemory(pD3DVertexShader, sizeof(X_D3DVertexShader));
-    ZeroMemory(pVertexShader, sizeof(VERTEX_SHADER));
 
     // HACK: TODO: support this situation
     if(pDeclaration == NULL)
@@ -2818,8 +2816,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
 	// CreatePixelShader() is expected to return a pHandle directly to a shader interface.
 
 	/*
-	PIXEL_SHADER *pPixelShader = (PIXEL_SHADER*)CxbxMalloc(sizeof(PIXEL_SHADER));
-	ZeroMemory(pPixelShader, sizeof(PIXEL_SHADER));
+	PIXEL_SHADER *pPixelShader = (PIXEL_SHADER*)CxbxCalloc(1, sizeof(PIXEL_SHADER)); // Clear, to prevent side-effects on random contents
 
 	memcpy(&pPixelShader->PSDef, pPSDef, sizeof(X_D3DPIXELSHADERDEF));
 
@@ -3201,11 +3198,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVolumeTexture)
         // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
         (*ppVolumeTexture)->Data = X_D3DRESOURCE_DATA_FLAG_SPECIAL | X_D3DRESOURCE_DATA_FLAG_YUVSURF;
         (*ppVolumeTexture)->Lock = dwPtr;
-        (*ppVolumeTexture)->Format = 0x24;
+		(*ppVolumeTexture)->Format = Format; // TODO : apply << X_D3DFORMAT_FORMAT_SHIFT here?
 
-        (*ppVolumeTexture)->Size  = (g_dwOverlayW & X_D3DSIZE_WIDTH_MASK);
-        (*ppVolumeTexture)->Size |= (g_dwOverlayH << X_D3DSIZE_HEIGHT_SHIFT);
-        (*ppVolumeTexture)->Size |= (g_dwOverlayP << X_D3DSIZE_PITCH_SHIFT);
+        (*ppVolumeTexture)->Size = (g_dwOverlayW & X_D3DSIZE_WIDTH_MASK)
+                                 | (g_dwOverlayH << X_D3DSIZE_HEIGHT_SHIFT)
+                                 | (g_dwOverlayP << X_D3DSIZE_PITCH_SHIFT);
 
         hRet = D3D_OK;
     }
@@ -4601,13 +4598,14 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                 *pRefCount = 1;
 
                 // If YUY2 is not supported in hardware, we'll actually mark this as a special fake texture (set highest bit)
+				pPixelContainer->Common = 1; // Set refcount to 1
                 pPixelContainer->Data = X_D3DRESOURCE_DATA_FLAG_SPECIAL | X_D3DRESOURCE_DATA_FLAG_YUVSURF;
                 pPixelContainer->Lock = dwPtr;
-                pPixelContainer->Format = 0x24;
+                pPixelContainer->Format = (X_D3DFMT_YUY2 << X_D3DFORMAT_FORMAT_SHIFT);
 
                 pPixelContainer->Size  = (g_dwOverlayW & X_D3DSIZE_WIDTH_MASK);
-                pPixelContainer->Size |= (g_dwOverlayH << X_D3DSIZE_HEIGHT_SHIFT);
-                pPixelContainer->Size |= (g_dwOverlayP << X_D3DSIZE_PITCH_SHIFT);
+                pPixelContainer->Size |= (g_dwOverlayH << X_D3DSIZE_HEIGHT_SHIFT) & X_D3DSIZE_HEIGHT_MASK;
+                pPixelContainer->Size |= (g_dwOverlayP << X_D3DSIZE_PITCH_SHIFT) & X_D3DSIZE_PITCH_MASK;
             }
             else
             {
@@ -4810,8 +4808,15 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                                         {
 											// Read P8 pixel :
 											unsigned char p = (unsigned char)pPixelData[w++];
+
 											// Read the corresponding ARGB from the palette and store it in the new texture :
-											pExpandedTexture[y] = pTexturePalette[p];
+											// HACK: Prevent crash if a pallete has not been loaded yet
+											if (pTexturePalette != nullptr)	{
+												pExpandedTexture[y] = pTexturePalette[p];
+											} else {
+												pExpandedTexture[y] = 0;
+											}
+											
 											// are we at the end of a line?
                                             if(++x == dwMipWidth)
                                             {
@@ -8821,6 +8826,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_SetDepthClipPlanes)
     return hRet;
 }
 
+#if 0 // DISABLED (Just calls MmAllocateContiguousMemory)
 // ******************************************************************
 // * patch: D3D_AllocContiguousMemory
 // ******************************************************************
@@ -8866,6 +8872,7 @@ PVOID WINAPI XTL::EMUPATCH(D3D_AllocContiguousMemory)
 
     return pRet;
 }
+#endif
 
 // ******************************************************************
 // * patch: IDirect3DTexture8_GetLevelDesc

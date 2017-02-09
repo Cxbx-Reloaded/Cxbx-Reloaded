@@ -102,7 +102,7 @@ OOVPA_XREF(DirectSound_CDirectSoundBuffer_SetHeadroom, 4134, 8,
     XREF_DirectSound_CDirectSoundBuffer_SetHeadroom,
     XRefOne)
 
-        { 0x32, XREF_DirectSound_CDirectSoundVoice_SetHeadroom },
+        XREF_ENTRY( 0x32, XREF_DirectSound_CDirectSoundVoice_SetHeadroom ),
 
         { 0x0C, 0x00 },
         { 0x12, 0x85 },
@@ -121,7 +121,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetHeadroom, 4134, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x15, XREF_DirectSound_CDirectSoundBuffer_SetHeadroom },
+        XREF_ENTRY( 0x15, XREF_DirectSound_CDirectSoundBuffer_SetHeadroom ),
 
         { 0x02, 0x24 },
         { 0x06, 0x24 },
@@ -171,7 +171,7 @@ OOVPA_XREF(DirectSound_CDirectSoundBuffer_SetVolume, 4134, 8,
     XREF_DirectSound_CDirectSoundBuffer_SetVolume,
     XRefOne)
 
-        { 0x32, XREF_DirectSound_CDirectSoundVoice_SetVolume },
+        XREF_ENTRY( 0x32, XREF_DirectSound_CDirectSoundVoice_SetVolume ),
 
         { 0x0C, 0x00 },
         { 0x12, 0x85 },
@@ -190,7 +190,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetVolume, 4134, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x15, XREF_DirectSound_CDirectSoundBuffer_SetVolume },
+        XREF_ENTRY( 0x15, XREF_DirectSound_CDirectSoundBuffer_SetVolume ),
 
         { 0x02, 0x24 },
         { 0x06, 0x24 },
@@ -225,7 +225,7 @@ OOVPA_XREF(IDirectSound_SetI3DL2Listener, 4134, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x19, XREF_DSSETI3DL2LISTENER },
+        XREF_ENTRY( 0x19, XREF_DSSETI3DL2LISTENER ),
 
         { 0x02, 0x24 },
         { 0x06, 0x24 },
@@ -261,7 +261,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetBufferData, 4134, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x19, XREF_DSSETBUFFERDATA2 },
+        XREF_ENTRY( 0x19, XREF_DSSETBUFFERDATA2 ),
 
         { 0x02, 0x24 },
         { 0x06, 0x24 },
@@ -298,7 +298,7 @@ OOVPA_XREF(IDirectSound_GetEffectData, 4134, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x1F, XREF_DirectSound_CDirectSound_GetEffectData },
+        XREF_ENTRY( 0x1F, XREF_DirectSound_CDirectSound_GetEffectData ),
 
         { 0x03, 0xFF },
         { 0x08, 0x08 },
@@ -334,7 +334,7 @@ OOVPA_XREF(DirectSound_CDirectSoundVoice_SetMixBins, 4134, 8,
     XREF_DSSETMIXBINSB,
     XRefOne)
 
-        { 0x0D, XREF_DSSETMIXBINSC },
+        XREF_ENTRY( 0x0D, XREF_DSSETMIXBINSC ),
 
         { 0x02, 0x74 },
         { 0x06, 0x74 },
@@ -353,7 +353,7 @@ OOVPA_XREF(DirectSound_CDirectSoundBuffer_SetMixBins, 4134, 8,
     XREF_DSSETMIXBINSA,
     XRefOne)
 
-        { 0x32, XREF_DSSETMIXBINSB },
+        XREF_ENTRY( 0x32, XREF_DSSETMIXBINSB ),
 
         { 0x0C, 0x00 },
         { 0x12, 0x85 },
@@ -372,7 +372,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetMixBins, 4134, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x15, XREF_DSSETMIXBINSA },
+        XREF_ENTRY( 0x15, XREF_DSSETMIXBINSA ),
 
         { 0x02, 0x24 },
         { 0x06, 0x24 },
@@ -388,29 +388,29 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable DSound_4134[] = {
 
-	OOVPA_TABLE_ENTRY(DirectSoundCreate, 4134),
-	OOVPA_TABLE_ENTRY(IDirectSound8_AddRef, 3936),
-	OOVPA_TABLE_ENTRY(IDirectSound8_Release, 3936),
-	OOVPA_TABLE_ENTRY(IDirectSound8_DownloadEffectsImage, 3936),
-	OOVPA_TABLE_ENTRY(IDirectSound8_CreateSoundBuffer, 4134),
-	OOVPA_TABLE_XREF(DirectSound_CDirectSoundVoice_SetHeadroom, 4134),
-	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_SetHeadroom, 4134),
-	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetHeadroom, 4134, IDirectSoundBuffer8_SetHeadroom),
-	OOVPA_TABLE_PATCH(IDirectSoundBuffer_Lock, 4134, IDirectSoundBuffer8_Lock),
-	OOVPA_TABLE_XREF(DirectSound_CDirectSoundVoice_SetVolume, 4134),
-	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_SetVolume, 4134),
-	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetVolume, 4134, IDirectSoundBuffer8_SetVolume),
-	OOVPA_TABLE_XREF(DirectSound_CDirectSound_SetI3DL2Listener, 4134),
-	OOVPA_TABLE_PATCH(IDirectSound_SetI3DL2Listener, 4134, IDirectSound8_SetI3DL2Listener),
-	OOVPA_TABLE_XREF(DirectSound_CDirectSound_GetEffectData, 4134),
-	OOVPA_TABLE_PATCH(IDirectSound_GetEffectData, 4134, IDirectSound8_GetEffectData),
-	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_SetBufferData, 4134),
-	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetBufferData, 4134, IDirectSoundBuffer8_SetBufferData),
-	OOVPA_TABLE_ENTRY(IDirectSound8_CreateStream, 3936),
-	OOVPA_TABLE_XREF(DirectSound_CDirectSoundVoiceSettings_SetMixBins, 4134),
-	OOVPA_TABLE_XREF(DirectSound_CDirectSoundVoice_SetMixBins, 4134),
-	OOVPA_TABLE_XREF(DirectSound_CDirectSoundBuffer_SetMixBins, 4134),
-	OOVPA_TABLE_PATCH(IDirectSoundBuffer_SetMixBins, 4134, IDirectSoundBuffer8_SetMixBins),
+	REGISTER_OOVPA(DirectSoundCreate, 4134, PATCH),
+	REGISTER_OOVPA(IDirectSound8_AddRef, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound8_Release, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound8_DownloadEffectsImage, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound8_CreateSoundBuffer, 4134, PATCH),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetHeadroom, 4134, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetHeadroom, 4134, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer8_SetHeadroom, 4134, ALIAS, IDirectSoundBuffer_SetHeadroom),
+	REGISTER_OOVPA(IDirectSoundBuffer8_Lock, 4134, ALIAS, IDirectSoundBuffer_Lock),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetVolume, 4134, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetVolume, 4134, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer8_SetVolume, 4134, ALIAS, IDirectSoundBuffer_SetVolume),
+	REGISTER_OOVPA(DirectSound_CDirectSound_SetI3DL2Listener, 4134, XREF),
+	REGISTER_OOVPA(IDirectSound8_SetI3DL2Listener, 4134, ALIAS, IDirectSound_SetI3DL2Listener),
+	REGISTER_OOVPA(DirectSound_CDirectSound_GetEffectData, 4134, XREF),
+	REGISTER_OOVPA(IDirectSound8_GetEffectData, 4134, ALIAS, IDirectSound_GetEffectData),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetBufferData, 4134, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer8_SetBufferData, 4134, ALIAS, IDirectSoundBuffer_SetBufferData),
+	REGISTER_OOVPA(IDirectSound8_CreateStream, 3936, PATCH),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoiceSettings_SetMixBins, 4134, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetMixBins, 4134, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetMixBins, 4134, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer8_SetMixBins, 4134, ALIAS, IDirectSoundBuffer_SetMixBins),
 };
 
 // ******************************************************************

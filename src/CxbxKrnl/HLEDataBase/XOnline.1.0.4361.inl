@@ -41,7 +41,7 @@ OOVPA_XREF(XNetStartup, 4361, 8,
     XRefOne)
 
         // XNetStartup+0x0F : call [XnInit]
-        { 0x10, XREF_XNINIT },  // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x10, XREF_XNINIT ),  // (Offset,Value)-Pair #1
 
         // XNetStartup+0x00 : xor eax, eax
         { 0x00, 0x33 }, // (Offset,Value)-Pair #2
@@ -70,7 +70,7 @@ OOVPA_XREF(WSAStartup, 4361, 9,
     XRefOne)
 
         // WSAStartup+0x0F : call [XnInit]
-        { 0x14, XREF_XNINIT },  // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x14, XREF_XNINIT ),  // (Offset,Value)-Pair #1
 
         // WSAStartup+0x00 : push [esp+0x08]
         { 0x00, 0xFF }, // (Offset,Value)-Pair #2
@@ -207,13 +207,13 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XOnline_4361[] = {
 
-	OOVPA_TABLE_ENTRY(XNetStartup, 4361),
-	OOVPA_TABLE_ENTRY(WSAStartup, 4361),
-	OOVPA_TABLE_XREF(XnInit, 4361),
-	OOVPA_TABLE_PATCH_EmuThis(socket, 4361),
-	OOVPA_TABLE_PATCH_EmuThis(bind, 4361),
-	OOVPA_TABLE_PATCH_EmuThis(listen, 4361),
-	OOVPA_TABLE_PATCH_EmuThis(ioctlsocket, 4361),
+	REGISTER_OOVPA(XNetStartup, 4361, PATCH),
+	REGISTER_OOVPA(WSAStartup, 4361, PATCH),
+	REGISTER_OOVPA(XnInit, 4361, XREF),
+	REGISTER_OOVPA(socket, 4361, EMUTHIS),
+	REGISTER_OOVPA(bind, 4361, EMUTHIS),
+	REGISTER_OOVPA(listen, 4361, EMUTHIS),
+	REGISTER_OOVPA(ioctlsocket, 4361, EMUTHIS),
 };
 
 // ******************************************************************

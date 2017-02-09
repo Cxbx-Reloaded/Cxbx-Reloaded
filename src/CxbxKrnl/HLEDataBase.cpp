@@ -39,6 +39,8 @@
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
+#include "CxbxKrnl.h" // For xbaddr
+
 extern "C" const char *szHLELastCompileTime = __TIMESTAMP__;
 
 const char *Lib_D3D8 = "D3D8";
@@ -184,4 +186,4 @@ extern const uint32 HLEDataBaseCount = sizeof(HLEDataBase) / sizeof(HLEData);
 // ******************************************************************
 // * XRefDataBase
 // ******************************************************************
-extern uint32 XRefDataBase[XREF_COUNT] = { 0 }; // Reset and populated by EmuHLEIntercept
+extern xbaddr XRefDataBase[XREF_COUNT] = { 0 }; // Reset and populated by EmuHLEIntercept

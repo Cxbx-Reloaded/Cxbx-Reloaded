@@ -36,25 +36,25 @@
 // * XAPI_4721
 // ******************************************************************
 OOVPATable XAPI_4721[] = {
-    // OOVPA_TABLE_ENTRY(RtlCreateHeap, 3911), // obsolete, (* unchanged since 1.0.4361 *) (* OR FARTHER *)
-    // OOVPA_TABLE_ENTRY(RtlAllocateHeap, 3911), // obsolete (* unchanged since 1.0.4361 *) (* OR FARTHER *)
-    // OOVPA_TABLE_ENTRY(RtlReAllocateHeap, 4627), // obsolete 
-    // OOVPA_TABLE_ENTRY(RtlFreeHeap, 4627), // obsolete 
-    // OOVPA_TABLE_ENTRY(RtlSizeHeap, 4627), // obsolete 
-	// OOVPA_TABLE_ENTRY(RtlDestroyHeap, 4627), // obsolete 
-	OOVPA_TABLE_ENTRY(XMountUtilityDrive, 4432),
-	OOVPA_TABLE_ENTRY(XInitDevices, 3911),
-	OOVPA_TABLE_ENTRY(XGetDevices, 4134),
-	OOVPA_TABLE_ENTRY(XInputOpen, 4361),
-	OOVPA_TABLE_ENTRY(XInputGetCapabilities, 4361),
-	OOVPA_TABLE_ENTRY(XInputGetState, 4361),
-	OOVPA_TABLE_ENTRY(XInputSetState, 4361),
-	OOVPA_TABLE_XREF(XID_fCloseDevice, 4361),
-	OOVPA_TABLE_ENTRY(XInputClose, 3911),
-	// OOVPA_TABLE_ENTRY(XInputClose, 4361),
-	// OOVPA_TABLE_ENTRY(XapiThreadStartup, 4361), // obsolete 
-	// OOVPA_TABLE_ENTRY(XapiInitProcess, 4361), // obsolete, Too High Level
-    // OOVPA_TABLE_ENTRY(XapiBootDash, 3911), // obsolete 
+    // REGISTER_OOVPA(RtlCreateHeap, 3911, PATCH), // obsolete, (* unchanged since 1.0.4361 *) (* OR FARTHER *)
+    // REGISTER_OOVPA(RtlAllocateHeap, 3911, PATCH), // obsolete (* unchanged since 1.0.4361 *) (* OR FARTHER *)
+    // REGISTER_OOVPA(RtlReAllocateHeap, 4627, PATCH), // obsolete 
+    // REGISTER_OOVPA(RtlFreeHeap, 4627, PATCH), // obsolete 
+    // REGISTER_OOVPA(RtlSizeHeap, 4627, PATCH), // obsolete 
+	// REGISTER_OOVPA(RtlDestroyHeap, 4627, PATCH), // obsolete 
+	REGISTER_OOVPA(XMountUtilityDrive, 4432, PATCH),
+	REGISTER_OOVPA(XInitDevices, 3911, PATCH),
+	REGISTER_OOVPA(XGetDevices, 4134, PATCH),
+	REGISTER_OOVPA(XInputOpen, 4361, PATCH),
+	REGISTER_OOVPA(XInputGetCapabilities, 4361, PATCH),
+	REGISTER_OOVPA(XInputGetState, 4361, PATCH),
+	REGISTER_OOVPA(XInputSetState, 4361, PATCH),
+	REGISTER_OOVPA(XID_fCloseDevice, 4361, XREF),
+	REGISTER_OOVPA(XInputClose, 3911, PATCH),
+	// REGISTER_OOVPA(XInputClose, 4361, PATCH),
+	// REGISTER_OOVPA(XapiThreadStartup, 4361, PATCH), // obsolete 
+	// REGISTER_OOVPA(XapiInitProcess, 4361, PATCH), // obsolete, Too High Level
+    // REGISTER_OOVPA(XapiBootDash, 3911, PATCH), // obsolete 
 };
 
 // ******************************************************************

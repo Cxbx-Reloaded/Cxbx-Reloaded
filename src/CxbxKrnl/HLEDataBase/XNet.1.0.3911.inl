@@ -41,7 +41,7 @@ OOVPA_XREF(XNetStartup, 3911, 9,
     XRefOne)
 
         // XNetStartup+0x07 : call [XnInit]
-        { 0x07, XREF_XNINIT },  // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x07, XREF_XNINIT ),  // (Offset,Value)-Pair #1
 
         // XNetStartup+0x00 : push 0
         { 0x00, 0x6A }, // (Offset,Value)-Pair #2
@@ -67,7 +67,7 @@ OOVPA_XREF(WSAStartup, 3911, 11,
     XRefOne)
 
         // WSAStartup+0x07 : call [XnInit]
-        { 0x07, XREF_XNINIT },  // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x07, XREF_XNINIT ),  // (Offset,Value)-Pair #1
 
         // WSAStartup+0x01 : push 1; xor ebx, ebx
         { 0x01, 0x6A }, // (Offset,Value)-Pair #2
@@ -137,10 +137,10 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XNet_3911[] = {
 
-	OOVPA_TABLE_ENTRY(XNetStartup, 3911),
-	OOVPA_TABLE_ENTRY(WSAStartup, 3911),
-	OOVPA_TABLE_XREF(XnInit, 3911),
-	OOVPA_TABLE_ENTRY(XNetGetEthernetLinkStatus, 3911),
+	REGISTER_OOVPA(XNetStartup, 3911, PATCH),
+	REGISTER_OOVPA(WSAStartup, 3911, PATCH),
+	REGISTER_OOVPA(XnInit, 3911, XREF),
+	REGISTER_OOVPA(XNetGetEthernetLinkStatus, 3911, PATCH),
 };
 
 // ******************************************************************

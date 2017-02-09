@@ -402,7 +402,7 @@ OOVPA_XREF(XInputClose, 3911, 8,
     XRefOne)
 
         // XInputClose+0x05 : call [fCloseDevice]
-        { 0x05, XREF_FCLOSEDEVICE },  // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x05, XREF_FCLOSEDEVICE ),  // (Offset,Value)-Pair #1
 
         // XInputClose+0x00 : mov ecx, [esp+0x04]
         { 0x00, 0x8B }, // (Offset,Value)-Pair #2
@@ -975,43 +975,43 @@ OOVPA_END;
 // ******************************************************************
 OOVPATable XAPI_3911[] = {
 
-	OOVPA_TABLE_ENTRY(GetExitCodeThread, 3911),
-	OOVPA_TABLE_ENTRY(XInitDevices, 3911), 
-    // OOVPA_TABLE_ENTRY(CreateMutex, 3911), // Too High Level
-    // OOVPA_TABLE_ENTRY(CreateThread, 3911), // Too High Level
-	OOVPA_TABLE_ENTRY(SetThreadPriority, 3911), //*/
-	OOVPA_TABLE_ENTRY(GetTimeZoneInformation, 3911),
-	OOVPA_TABLE_ENTRY(XRegisterThreadNotifyRoutine, 3911),
-    // OOVPA_TABLE_ENTRY(XCalculateSignatureBegin, 3911),
-	OOVPA_TABLE_ENTRY(XGetDevices, 3911),
-	OOVPA_TABLE_ENTRY(XGetDeviceChanges, 3911),
-	OOVPA_TABLE_ENTRY(XInputOpen, 3911),
-	OOVPA_TABLE_XREF(XID_fCloseDevice, 3911),
-	OOVPA_TABLE_ENTRY(XInputClose, 3911),
-	OOVPA_TABLE_ENTRY(XInputGetCapabilities, 3911),
-	OOVPA_TABLE_ENTRY(XInputGetState, 3911),
-	OOVPA_TABLE_ENTRY(XInputSetState, 3911),
-	OOVPA_TABLE_ENTRY(SetThreadPriorityBoost, 3911),
-	OOVPA_TABLE_ENTRY(GetThreadPriority, 3911),
-	OOVPA_TABLE_ENTRY(CreateFiber, 3911),
-	OOVPA_TABLE_ENTRY(DeleteFiber, 3911),
-	OOVPA_TABLE_ENTRY(SwitchToFiber, 3911),
-	OOVPA_TABLE_ENTRY(ConvertThreadToFiber, 3911),
-	OOVPA_TABLE_ENTRY(SignalObjectAndWait, 3911),
-	OOVPA_TABLE_ENTRY(QueueUserAPC, 3911),
-	// OOVPA_TABLE_ENTRY(lstrcmpiW, 3911),
-	OOVPA_TABLE_PATCH(XMountAlternateTitleA, 3911, XMountAlternateTitle),
-	OOVPA_TABLE_PATCH(XUnmountAlternateTitleA, 3911, XUnmountAlternateTitle),
-	OOVPA_TABLE_ENTRY(XMountMUA, 3911),
-	OOVPA_TABLE_PATCH(XLaunchNewImageA, 3911, XLaunchNewImage),
-	OOVPA_TABLE_ENTRY(XGetLaunchInfo, 3911),
-	OOVPA_TABLE_ENTRY(XAutoPowerDownResetTimer, 3911),
-	OOVPA_TABLE_ENTRY(XMountMURootA, 3911),
-	OOVPA_TABLE_ENTRY(XMountUtilityDrive, 3911),
-	// OOVPA_TABLE_ENTRY(ReadFileEx, 3911),
-	// OOVPA_TABLE_ENTRY(WriteFileEx, 3911),
-	// OOVPA_TABLE_ENTRY(CloseHandle, 3911),
-	// OOVPA_TABLE_ENTRY(ExitThread, 3911),
+	REGISTER_OOVPA(GetExitCodeThread, 3911, PATCH),
+	REGISTER_OOVPA(XInitDevices, 3911, PATCH), 
+    // REGISTER_OOVPA(CreateMutex, 3911, PATCH), // Too High Level
+    // REGISTER_OOVPA(CreateThread, 3911, PATCH), // Too High Level
+	REGISTER_OOVPA(SetThreadPriority, 3911, PATCH), //*/
+	REGISTER_OOVPA(GetTimeZoneInformation, 3911, PATCH),
+	REGISTER_OOVPA(XRegisterThreadNotifyRoutine, 3911, PATCH),
+    // REGISTER_OOVPA(XCalculateSignatureBegin, 3911, PATCH),
+	REGISTER_OOVPA(XGetDevices, 3911, PATCH),
+	REGISTER_OOVPA(XGetDeviceChanges, 3911, PATCH),
+	REGISTER_OOVPA(XInputOpen, 3911, PATCH),
+	REGISTER_OOVPA(XID_fCloseDevice, 3911, XREF),
+	REGISTER_OOVPA(XInputClose, 3911, PATCH),
+	REGISTER_OOVPA(XInputGetCapabilities, 3911, PATCH),
+	REGISTER_OOVPA(XInputGetState, 3911, PATCH),
+	REGISTER_OOVPA(XInputSetState, 3911, PATCH),
+	REGISTER_OOVPA(SetThreadPriorityBoost, 3911, PATCH),
+	REGISTER_OOVPA(GetThreadPriority, 3911, PATCH),
+	REGISTER_OOVPA(CreateFiber, 3911, PATCH),
+	REGISTER_OOVPA(DeleteFiber, 3911, PATCH),
+	REGISTER_OOVPA(SwitchToFiber, 3911, PATCH),
+	REGISTER_OOVPA(ConvertThreadToFiber, 3911, PATCH),
+	REGISTER_OOVPA(SignalObjectAndWait, 3911, PATCH),
+	REGISTER_OOVPA(QueueUserAPC, 3911, PATCH),
+	// REGISTER_OOVPA(lstrcmpiW, 3911, PATCH),
+	REGISTER_OOVPA(XMountAlternateTitle, 3911, ALIAS, XMountAlternateTitleA),
+	REGISTER_OOVPA(XUnmountAlternateTitle, 3911, ALIAS, XUnmountAlternateTitleA),
+	REGISTER_OOVPA(XMountMUA, 3911, PATCH),
+	REGISTER_OOVPA(XLaunchNewImage, 3911, ALIAS, XLaunchNewImageA),
+	REGISTER_OOVPA(XGetLaunchInfo, 3911, PATCH),
+	REGISTER_OOVPA(XAutoPowerDownResetTimer, 3911, PATCH),
+	REGISTER_OOVPA(XMountMURootA, 3911, PATCH),
+	REGISTER_OOVPA(XMountUtilityDrive, 3911, PATCH),
+	// REGISTER_OOVPA(ReadFileEx, 3911, PATCH),
+	// REGISTER_OOVPA(WriteFileEx, 3911, PATCH),
+	// REGISTER_OOVPA(CloseHandle, 3911, PATCH),
+	// REGISTER_OOVPA(ExitThread, 3911, PATCH),
 };
 
 // ******************************************************************
