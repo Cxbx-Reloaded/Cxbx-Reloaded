@@ -55,27 +55,14 @@ template <class BaseClass, typename MFT> inline void *MFPtoFP(MFT pMemFunc)
 
 #pragma pack(1)
 
-enum OOVPAType : uint16 {
-	Small, // Meaning, use SOVP, in which Offset is an uint08
-	Large, // Meaning, use LOVP, in which Offset is an uint16
-};
-
 // ******************************************************************
 // * Optimized (Offset, Value)-Pair Array
 // ******************************************************************
 struct OOVPA
 {
-	// This OOVPA field (OOVPAType Type) indicates weither
-	// this struct needs to be cast to SOOVPA or LOOVPA,
-	// for OOVPATYPE.Small vs .Large
-	// SOOVPA uses bytes for offset in the {Offset, Value}-pairs.
-	// LOOVPA uses words for offset in the {Offset, Value}-pairs.
-	// The value field in the {Offset, Value}-pairs is of type byte.
-	OOVPAType Type : 1;
-
 	// This OOVPA field (uint16 Count) indicates the number of
-	// {Offset, Value}-pairs present in the Sovp or Lovp array,
-	// available after casting this OOVPA to SOOVPA or LOOVPA.
+	// {Offset, Value}-pairs present in the Lovp array,
+	// available after casting this OOVPA to LOOVPA.
 	// (This Count INCLUDES optional leading {Offset, XREF_*-enum}-
 	// pairs - see comment at XRefCount.)
 	uint16 Count : 15;
@@ -92,19 +79,12 @@ struct OOVPA
 	// (Also, see comments at XRefZero and XRefOne.)
 	uint08 XRefCount;
 
-	// Define SOVP and LOVP here to reduce type definition complexity.
+	// Define LOVP here to reduce type definition complexity.
 	// (Otherwise, if defined in the template classes, that would mean
 	// that for each template instance, the type is redefined. Let's
 	// avoid that.)
 
-	// Small (byte-sized) {Offset, Value}-pair(s)
-	struct SOVP
-	{
-		uint08 Offset;
-		uint08 Value;
-	};
-
-	// Large (word-sized) {Offset, Value}-pair(s)
+	// {Offset, Value}-pair(s)
 	struct LOVP
 	{
 		uint16 Offset;
@@ -141,25 +121,8 @@ template <uint16 COUNT> struct LOOVPA
 	OOVPA::LOVP Lovp[COUNT];
 };
 
-// ******************************************************************
-// * Small Optimized (Offset,Value)-Pair Array
-// ******************************************************************
-template <uint16 COUNT> struct SOOVPA
-{
-	OOVPA Header;
-
-	// Small (Offset,Value)-Pair(s)
-	OOVPA::SOVP Sovp[COUNT];
-};
-
-#define OOVPA_XREF_LARGE(Name, Version, Count, XRefSaveIndex, XRefCount)	\
-LOOVPA<Count> Name##_##Version = { { /*OOVPAType*/Large, Count, XRefSaveIndex, XRefCount }, {
-
 #define OOVPA_XREF(Name, Version, Count, XRefSaveIndex, XRefCount)	\
-SOOVPA<Count> Name##_##Version = { { /*OOVPAType*/Small, Count, XRefSaveIndex, XRefCount }, {
-
-#define OOVPA_NO_XREF_LARGE(Name, Version, Count) \
-OOVPA_XREF_LARGE(Name, Version, Count, XRefNoSaveIndex, XRefZero)
+LOOVPA<Count> Name##_##Version = { { Count, XRefSaveIndex, XRefCount }, {
 
 #define OOVPA_NO_XREF(Name, Version, Count) \
 OOVPA_XREF(Name, Version, Count, XRefNoSaveIndex, XRefZero)
