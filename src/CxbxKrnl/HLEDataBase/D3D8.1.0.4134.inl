@@ -1012,7 +1012,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_FrontFace, 4134, 11,
     XRefOne)
 
         // D3DDevice_SetRenderState_FrontFace+0x36 : jmp D3DDevice_SetRenderState_CullMode
-        { 0x36, XREF_DXSRSCULLMODE}, // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x36, XREF_DXSRSCULLMODE), // (Offset,Value)-Pair #1
 
         // D3DDevice_SetRenderState_FrontFace+0x09 : cmp eax, [esi+4]
         { 0x09, 0x3B }, // (Offset,Value)-Pair #2
@@ -1113,7 +1113,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_StencilCullEnable, 4134, 13,
     XRefOne)
 
         // D3DDevice_SetRenderState_StencilCullEnable+0x0C : D3D__RenderState[D3DRS_STENCILCULLENABLE]
-        { 0x0C, XREF_D3DRS_STENCILCULLENABLE }, // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x0C, XREF_D3DRS_STENCILCULLENABLE ), // (Offset,Value)-Pair #1
 
         // D3DDevice_SetRenderState_StencilCullEnable+0x15 : jb +0x05
         { 0x15, 0x72 }, // (Offset,Value)-Pair #2
@@ -1170,7 +1170,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_RopZCmpAlwaysRead, 4134, 9,
     XRefOne)
 
         // D3DDevice_SetRenderState_RopZCmpAlwaysRead+0x05 : D3D__RenderState[D3DRS_ROPZCMPALWAYSREAD]
-        { 0x05, XREF_D3DRS_ROPZCMPALWAYSREAD }, // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x05, XREF_D3DRS_ROPZCMPALWAYSREAD ), // (Offset,Value)-Pair #1
 
         // D3DDevice_SetRenderState_RopZCmpAlwaysRead+0x00 : mov eax, [esp+0x04]
         { 0x00, 0x8B }, // (Offset,Value)-Pair #2
@@ -1196,7 +1196,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_RopZRead, 4134, 9,
     XRefOne)
 
         // D3DDevice_SetRenderState_RopZRead+0x05 : D3D__RenderState[D3DRS_ROPZCMPALWAYSREAD]
-        { 0x05, XREF_D3DRS_ROPZREAD }, // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x05, XREF_D3DRS_ROPZREAD ), // (Offset,Value)-Pair #1
 
         // D3DDevice_SetRenderState_RopZRead+0x00 : mov eax, [esp+0x04]
         { 0x00, 0x8B }, // (Offset,Value)-Pair #2
@@ -1222,7 +1222,7 @@ OOVPA_XREF(D3DDevice_SetRenderState_DoNotCullUncompressed, 4134, 9,
     XRefOne)
 
         // D3DDevice_SetRenderState_DoNotCullUncompressed+0x05 : D3D__RenderState[D3DRS_ROPZCMPALWAYSREAD]
-        { 0x05, XREF_D3DRS_DONOTCULLUNCOMPRESSED }, // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x05, XREF_D3DRS_DONOTCULLUNCOMPRESSED ), // (Offset,Value)-Pair #1
 
         // D3DDevice_SetRenderState_DoNotCullUncompressed+0x00 : mov eax, [esp+0x04]
         { 0x00, 0x8B }, // (Offset,Value)-Pair #2

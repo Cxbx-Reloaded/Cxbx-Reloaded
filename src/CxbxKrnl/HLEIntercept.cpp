@@ -612,6 +612,13 @@ static inline void GetOovpaEntry(OOVPA *oovpa, int index, OUT uint32 &offset, OU
 	value = ((LOOVPA<1>*)oovpa)->Lovp[index].Value;
 }
 
+static inline void GetXRefEntry(OOVPA *oovpa, int index, OUT uint32 &xref, OUT uint08 &offset)
+{
+	// Note : These are stored swapped by the XREF_ENTRY macro, hence this difference from GetOovpaEntry :
+	xref = (uint32)((LOOVPA<1>*)oovpa)->Lovp[index].Offset;
+	offset = ((LOOVPA<1>*)oovpa)->Lovp[index].Value;
+}
+
 // locate the given function, searching within lower and upper bounds
 static xbaddr EmuLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper)
 {
@@ -638,12 +645,12 @@ static xbaddr EmuLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper)
 		// check all cross references
 		for (v = 0; v < xref_count; v++)
 		{
-			uint32 Offset;
-			uint08 Value;
+			uint32 XRef;
+			uint08 Offset;
 
 			// get XRef offset + value pair and currently registered (un)known address
-			GetOovpaEntry(Oovpa, v, Offset, Value);
-			xbaddr XRefValue = XRefDataBase[Value];
+			GetXRefEntry(Oovpa, v, XRef, Offset);
+			xbaddr XRefValue = XRefDataBase[XRef];
 
 			// unknown XRef cannot be checked yet
 			if (XRefValue == XREF_UNKNOWN)

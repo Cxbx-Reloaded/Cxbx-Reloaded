@@ -229,7 +229,7 @@ OOVPA_XREF(XInputClose, 5558, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x05, XREF_FCLOSEDEVICE },
+        XREF_ENTRY( 0x05, XREF_FCLOSEDEVICE ),
 
         { 0x00, 0x8B },
         { 0x01, 0x4C },

@@ -109,6 +109,20 @@ const uint08 XRefOne = (uint08)1;
 // pair at the start of the OOVPA's, but there are no examples of that yet.
 // (Also, EmuLocateFunction might not cater for this well enough?)
 
+// Macro used for storing an XRef {Offset, XRef}-Pair.
+//
+// XRefs are stored with Offset and Value swapped. This is to be able
+// to store XRef values beyond 8 bits (for now limited to 16 bits).
+// The price to pay for this is that the Offset is stored using 8 bits,
+// meaning that offsets beyond 255 cannot be used, not problem for now.
+#define XREF_ENTRY(Offset, XRef)	\
+	{ XRef, Offset }
+
+// UNUSED Macro for storing a normal (non-XRef) {Offset, Value}-Pair
+// Offsets can go up to 16 bits, values are always one byte (8 bits)
+#define OV_ENTRY(Offset, Value)	\
+	{ Offset, Value }
+
 
 // ******************************************************************
 // * Large Optimized (Offset,Value)-Pair Array

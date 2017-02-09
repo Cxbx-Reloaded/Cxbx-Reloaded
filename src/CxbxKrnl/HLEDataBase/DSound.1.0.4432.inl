@@ -103,7 +103,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetMaxDistance, 4432, 10,
     XRefOne)
 
         // CDirectSoundBuffer_SetMaxDistance+0x39 : call [CDirectSoundVoice::SetMaxDistance]
-        { 0x3A, XREF_DSVOICESETMAXDISTANCE },
+        XREF_ENTRY( 0x3A, XREF_DSVOICESETMAXDISTANCE ),
 
         // CDirectSoundBuffer_SetMaxDistance+0x21 : mov eax, 80004005h
         { 0x22, 0x05 },
@@ -130,7 +130,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetMaxDistance, 4432, 10,
     XRefOne)
 
         // IDirectSoundBuffer_SetMaxDistance+0x1C : call [CDirectSoundBuffer::SetMaxDistance]
-        { 0x1D, XREF_DSBUFFERSETMAXDISTANCE },
+        XREF_ENTRY( 0x1D, XREF_DSBUFFERSETMAXDISTANCE ),
 
         // IDirectSoundBuffer_SetMaxDistance+0x04 : fld [esp+4+arg_4]
         { 0x04, 0xD9 },
@@ -181,7 +181,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetMinDistance, 4432, 10,
     XRefOne)
 
         // CDirectSoundBuffer_SetMinDistance+0x39 : call [CDirectSoundVoice::SetMinDistance]
-        { 0x3A, XREF_DSVOICESETMINDISTANCE },
+        XREF_ENTRY( 0x3A, XREF_DSVOICESETMINDISTANCE ),
 
         // CDirectSoundBuffer_SetMinDistance+0x21 : mov eax, 80004005h
         { 0x22, 0x05 },
@@ -208,7 +208,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetMinDistance, 4432, 10,
     XRefOne)
 
         // IDirectSoundBuffer_SetMinDistance+0x1C : call [CDirectSoundBuffer::SetMinDistance]
-        { 0x1D, XREF_DSBUFFERSETMINDISTANCE },
+        XREF_ENTRY( 0x1D, XREF_DSBUFFERSETMINDISTANCE ),
 
         // IDirectSoundBuffer_SetMinDistance+0x04 : fld [esp+4+arg_4]
         { 0x04, 0xD9 },
@@ -261,7 +261,7 @@ OOVPA_XREF(IDirectSound8_SetI3DL2Listener, 4432, 12,
     XRefOne)
 
         // IDirectSound8_SetI3DL2Listener+0x19 : call [CDirectSound::SetI3DL2Listener]
-        { 0x19, XREF_DSSETI3DL2LISTENER }, // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x19, XREF_DSSETI3DL2LISTENER ), // (Offset,Value)-Pair #1
 
         // IDirectSound8_SetI3DL2Listener+0x04 : push [esp+0x0C]
         { 0x04, 0xFF }, // (Offset,Value)-Pair #2
@@ -319,7 +319,7 @@ OOVPA_XREF(CDirectSoundVoice_SetMixBins, 4432, 17,
     XRefOne)
 
         // CDirectSoundVoice_SetMixBins+0x0D : call [CDirectSoundVoiceSettings::SetMixBins]
-        { 0x0D, XREF_DSSETMIXBINSC }, // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x0D, XREF_DSSETMIXBINSC ), // (Offset,Value)-Pair #1
 
         // CDirectSoundVoice_SetMixBins+0x01 : mov esi, [esp+8]
         { 0x01, 0x8B }, // (Offset,Value)-Pair #2
@@ -357,7 +357,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetMixBins, 4432, 17,
     XRefOne)
 
         // CDirectSoundBuffer_SetMixBins+0x32 : call [CDirectSoundVoice::SetMixBins]
-        { 0x32, XREF_DSSETMIXBINSB }, // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x32, XREF_DSSETMIXBINSB ), // (Offset,Value)-Pair #1
 
         // CDirectSoundBuffer_SetMixBins+0x21 : mov eax, 0x80004005
         { 0x21, 0xB8 }, // (Offset,Value)-Pair #2
@@ -393,7 +393,7 @@ OOVPA_XREF(IDirectSoundBuffer8_SetMixBins, 4432, 12,
     XRefOne)
 
         // IDirectSoundBuffer8_SetMixBins+0x15 : call [CDirectSoundBuffer::SetMixBins]
-        { 0x15, XREF_DSSETMIXBINSA }, // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x15, XREF_DSSETMIXBINSA ), // (Offset,Value)-Pair #1
 
         // IDirectSoundBuffer8_SetMixBins+0x04 : push [esp+0x08]
         { 0x04, 0xFF }, // (Offset,Value)-Pair #2
@@ -475,7 +475,7 @@ OOVPA_XREF(IDirectSound8_SetDistanceFactor, 4432, 11,
     XRefOne)
 
         // IDirectSound8_SetDistanceFactor+0x1D : call [CDirectSound::SetDistanceFactor]
-        { 0x1D, XREF_SETDISTANCEFACTORA },  // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x1D, XREF_SETDISTANCEFACTORA ),  // (Offset,Value)-Pair #1
 
         // IDirectSound8_SetDistanceFactor+0x04 : fld [esp+0x0C]
         { 0x04, 0xD9 }, // (Offset,Value)-Pair #2
