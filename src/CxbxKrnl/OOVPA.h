@@ -60,17 +60,12 @@ template <class BaseClass, typename MFT> inline void *MFPtoFP(MFT pMemFunc)
 // ******************************************************************
 struct OOVPA
 {
-	// This OOVPA field (uint16 Count) indicates the number of
+	// This OOVPA field (uint08 Count) indicates the number of
 	// {Offset, Value}-pairs present in the Lovp array,
 	// available after casting this OOVPA to LOOVPA.
 	// (This Count INCLUDES optional leading {Offset, XREF_*-enum}-
 	// pairs - see comment at XRefCount.)
-	uint16 Count : 15;
-
-	// This OOVPA field (uint08 XRefSaveIndex) contains either an
-	// XREF_* enum value, or the XRefNoSaveIndex marker when there's
-	// no XREF_* enum defined for this OOVPA.
-	uint08 XRefSaveIndex;
+	uint08 Count;
 
 	// This OOVPA field (uint08 XRefCount) contains the number of
 	// {Offset, XREF_*-enum}-pairs that come before all other
@@ -78,6 +73,11 @@ struct OOVPA
 	// (The {Offset, XREF_*-enum}-pairs are INCLUDED in OOVPA.Count)
 	// (Also, see comments at XRefZero and XRefOne.)
 	uint08 XRefCount;
+
+	// This OOVPA field (uint16 XRefSaveIndex) contains either an
+	// XREF_* enum value, or the XRefNoSaveIndex marker when there's
+	// no XREF_* enum defined for this OOVPA.
+	uint16 XRefSaveIndex;
 
 	// Define LOVP here to reduce type definition complexity.
 	// (Otherwise, if defined in the template classes, that would mean
@@ -92,11 +92,6 @@ struct OOVPA
 	};
 };
 
-// This XRefNoSaveIndex constant, when set in the OOVPA.XRefSaveIndex
-// field, functions as a marker indicating there's no XREF_* enum
-// defined for the OOVPA.
-const uint08 XRefNoSaveIndex = (uint08)-1;
-
 // This XRefZero constant, when set in the OOVPA.XRefCount field,
 // indicates there are no {offset, XREF_*-enum} present in the OOVPA.
 const uint08 XRefZero = (uint08)0;
@@ -105,9 +100,13 @@ const uint08 XRefZero = (uint08)0;
 // indicates the OOVPA contains one (1) {offset, XREF_* enum} pair.
 const uint08 XRefOne = (uint08)1;
 
-// Note : Theoretically, there can be more than one {offset, XREF_*-enum}
+// Note : Theoretically, there can be more than one {Offset, XREF_*-enum}
 // pair at the start of the OOVPA's, but there are no examples of that yet.
-// (Also, EmuLocateFunction might not cater for this well enough?)
+
+// This XRefNoSaveIndex constant, when set in the OOVPA.XRefSaveIndex
+// field, functions as a marker indicating there's no XREF_* enum
+// defined for the OOVPA.
+const uint16 XRefNoSaveIndex = (uint16)-1;
 
 // Macro used for storing an XRef {Offset, XRef}-Pair.
 //
@@ -136,7 +135,7 @@ template <uint16 COUNT> struct LOOVPA
 };
 
 #define OOVPA_XREF(Name, Version, Count, XRefSaveIndex, XRefCount)	\
-LOOVPA<Count> Name##_##Version = { { Count, XRefSaveIndex, XRefCount }, {
+LOOVPA<Count> Name##_##Version = { { Count, XRefCount, XRefSaveIndex }, {
 
 #define OOVPA_NO_XREF(Name, Version, Count) \
 OOVPA_XREF(Name, Version, Count, XRefNoSaveIndex, XRefZero)
