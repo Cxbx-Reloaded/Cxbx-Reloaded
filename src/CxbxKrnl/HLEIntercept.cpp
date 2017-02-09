@@ -602,7 +602,7 @@ static inline void EmuInstallPatch(xbaddr FunctionAddr, void *Patch)
 {
     uint08 *FuncBytes = (uint08*)FunctionAddr;
 
-    *(uint08*)&FuncBytes[0] = 0xE9; // = opcode for JMP rel32 (Jump near, relative, displacement relative to next instruction)
+	*(uint08*)&FuncBytes[0] = OPCODE_JMP_E9; // = opcode for JMP rel32 (Jump near, relative, displacement relative to next instruction)
     *(uint32*)&FuncBytes[1] = (uint32)Patch - FunctionAddr - 5;
 }
 
@@ -742,8 +742,8 @@ static void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe
 				// Only place an XRef trapping patch when the OOVPA registration wasn't disabled
 				if ((OovpaTable[a].Flags & Flag_DontScan) == 0)
 				{
-					// Insert breakpoint
-					*(uint8_t*)pFunc = 0xCC;
+					// Write breakpoint opcode
+					*(uint8_t*)pFunc = OPCODE_INT3_CC;
 					EmuInstallPatch(pFunc + 1, EmuXRefFailure);
 				}
             }

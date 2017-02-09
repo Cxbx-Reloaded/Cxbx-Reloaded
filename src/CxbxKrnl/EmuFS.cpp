@@ -311,12 +311,12 @@ void EmuInitFS()
 					DbgPrintf("Patching FS Instruction at 0x%08X\n", addr);
 
 					// Write Call opcode
-					*(uint08*)addr = 0xE8;
+					*(uint08*)addr = OPCODE_CALL_E8;
 					*(uint32*)(addr + 1) = (uint32)fsInstructions[i].functionPtr - addr - 5;
 
 					// Fill the remaining bytes with nop instructions
 					int remaining_bytes = fsInstructions[i].data.size() - 5;
-					memset((void*)(addr + 5), 0x90, remaining_bytes);
+					memset((void*)(addr + 5), OPCODE_NOP_90, remaining_bytes);
 					addr += sizeOfData - 1;
 					break;
 				}
