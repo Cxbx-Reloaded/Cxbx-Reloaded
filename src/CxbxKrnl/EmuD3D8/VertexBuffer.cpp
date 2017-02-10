@@ -504,124 +504,122 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
 
 	for (uint32 uiVertex = 0; uiVertex < pPatchDesc->dwVertexCount; uiVertex++)
 	{
-		DWORD dwPosOrig = 0;
 		uint08 *pOrigVertex = &pOrigData[uiVertex * uiStride];
 		uint08 *pNewDataPos = &pNewData[uiVertex * pStreamPatch->ConvertedStride];
 		for (UINT uiType = 0; uiType < pStreamPatch->NbrTypes; uiType++)
 		{
+			// Dxbx note : The following code handles only the D3DVSDT enums that need conversion;
+			// All other cases are catched by the memcpy in the default-block.
 			switch (pStreamPatch->pTypes[uiType])
 			{
-			case X_D3DVSDT_NORMPACKED3: // 0x16:
-			{
-				DWORD dwPacked = ((DWORD *)&pOrigData[uiVertex * uiStride + dwPosOrig])[0];
-
-				((FLOAT *)pNewDataPos)[0] = ((FLOAT)(dwPacked & 0x7ff)) / 1023.0f;
-				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((dwPacked >> 11) & 0x7ff)) / 1023.0f;
-				((FLOAT *)pNewDataPos)[2] = ((FLOAT)((dwPacked >> 22) & 0x3ff)) / 511.0f;
-
-				dwPosOrig += sizeof(DWORD);
+			case X_D3DVSDT_NORMPACKED3: { // 0x16: // Make it FLOAT3
+				// Hit by Dashboard
+				int32 iPacked = ((int32 *)pOrigVertex)[0];
+				// Cxbx note : to make each component signed, two need to be shifted towards the sign-bit first :
+				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((iPacked << 21) >> 21)) / 1023.0f;
+				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((iPacked << 10) >> 21)) / 1023.0f;
+				((FLOAT *)pNewDataPos)[2] = ((FLOAT)((iPacked      ) >> 22)) / 511.0f;
+				pOrigVertex += 1 * sizeof(int32);
 				break;
 			}
-			case X_D3DVSDT_SHORT1: // 0x15:
-				// Make it a SHORT2
-				((SHORT *)pNewDataPos)[0] = *(SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig];
+			case X_D3DVSDT_SHORT1: { // 0x15: // Make it SHORT2 and set the second short to 0
+				((SHORT *)pNewDataPos)[0] = ((SHORT*)pOrigVertex)[0];
 				((SHORT *)pNewDataPos)[1] = 0x00;
-
-				dwPosOrig += 1 * sizeof(SHORT);
+				pOrigVertex += 1 * sizeof(SHORT);
 				break;
-			case X_D3DVSDT_SHORT3: // 0x35:
-				memcpy(pNewDataPos,
-					&pOrigData[uiVertex * uiStride + dwPosOrig],
-					3 * sizeof(SHORT));
-				// Make it a SHORT4 and set the last short to 1
-				//(*((SHORT *)&pNewData[uiVertex * pStreamPatch->ConvertedStride + dwPosNew + 3 * sizeof(SHORT)])) = 0x01;
+			}
+			case X_D3DVSDT_SHORT3: { // 0x35: // Make it a SHORT4 and set the fourth short to 1
+				// Hit by Turok
+				memcpy(pNewDataPos, pOrigVertex, 3 * sizeof(SHORT));
 				((SHORT *)pNewDataPos)[3] = 0x01;
-
-				dwPosOrig += 3 * sizeof(SHORT);
+				pOrigVertex += 3 * sizeof(SHORT);
 				break;
-			case X_D3DVSDT_PBYTE1: // 0x14:
-				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
-
-				dwPosOrig += 1 * sizeof(BYTE);
-
+			}
+			case X_D3DVSDT_PBYTE1: { // 0x14:  // Make it FLOAT1
+				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((BYTE*)pOrigVertex)[0]) / 255.0f;
+				pOrigVertex += 1 * sizeof(BYTE);
 				break;
-			case X_D3DVSDT_PBYTE2: // 0x24:
-				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
-				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 255.0f;
-
-				dwPosOrig += 2 * sizeof(BYTE);
-
+			}
+			case X_D3DVSDT_PBYTE2: { // 0x24:  // Make it FLOAT2
+				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((BYTE*)pOrigVertex)[0]) / 255.0f;
+				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((BYTE*)pOrigVertex)[1]) / 255.0f;
+				pOrigVertex += 2 * sizeof(BYTE);
 				break;
-			case X_D3DVSDT_PBYTE3: // 0x34:
-				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
-				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 255.0f;
-				((FLOAT *)pNewDataPos)[2] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 255.0f;
-
-				dwPosOrig += 3 * sizeof(BYTE);
-
+			}
+			case X_D3DVSDT_PBYTE3: { // 0x34: // Make it FLOAT3
+				// Hit by Turok
+				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((BYTE*)pOrigVertex)[0]) / 255.0f;
+				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((BYTE*)pOrigVertex)[1]) / 255.0f;
+				((FLOAT *)pNewDataPos)[2] = ((FLOAT)((BYTE*)pOrigVertex)[2]) / 255.0f;
+				pOrigVertex += 3 * sizeof(BYTE);
 				break;
-			case X_D3DVSDT_PBYTE4: // 0x44:
-				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 255.0f;
-				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 255.0f;
-				((FLOAT *)pNewDataPos)[2] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 255.0f;
-				((FLOAT *)pNewDataPos)[3] = ((FLOAT)((BYTE*)&pOrigData[uiVertex * uiStride + dwPosOrig])[3]) / 255.0f;
-
-				dwPosOrig += 4 * sizeof(BYTE);
-
+			}
+			case X_D3DVSDT_PBYTE4: { // 0x44: // Make it FLOAT4
+				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((BYTE*)pOrigVertex)[0]) / 255.0f;
+				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((BYTE*)pOrigVertex)[1]) / 255.0f;
+				((FLOAT *)pNewDataPos)[2] = ((FLOAT)((BYTE*)pOrigVertex)[2]) / 255.0f;
+				((FLOAT *)pNewDataPos)[3] = ((FLOAT)((BYTE*)pOrigVertex)[3]) / 255.0f;
+				pOrigVertex += 4 * sizeof(BYTE);
 				break;
-			case X_D3DVSDT_NORMSHORT1: // 0x11:
-				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
-
-				dwPosOrig += 1 * sizeof(SHORT);
+			}
+			case X_D3DVSDT_NORMSHORT1: { // 0x11: // Make it FLOAT1
+				// UNTESTED - Need test-case!
+				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
+				pOrigVertex += 1 * sizeof(SHORT);
 				break;
-			case X_D3DVSDT_NORMSHORT2: // 0x21:
-				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
-				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 32767.0f;
-
-				dwPosOrig += 2 * sizeof(SHORT);
+			}
+			case X_D3DVSDT_NORMSHORT2: { // 0x21: // Make it FLOAT2
+				// UNTESTED - Need test-case!
+				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
+				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((SHORT*)pOrigVertex)[1]) / 32767.0f;
+				pOrigVertex += 2 * sizeof(SHORT);
 				break;
-			case X_D3DVSDT_NORMSHORT3: // 0x31:
-				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
-				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 32767.0f;
-				((FLOAT *)pNewDataPos)[2] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 32767.0f;
-
-				dwPosOrig += 3 * sizeof(SHORT);
+			}
+			case X_D3DVSDT_NORMSHORT3: { // 0x31: // Make it FLOAT3
+				// UNTESTED - Need test-case!
+				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
+				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((SHORT*)pOrigVertex)[1]) / 32767.0f;
+				((FLOAT *)pNewDataPos)[2] = ((FLOAT)((SHORT*)pOrigVertex)[2]) / 32767.0f;
+				pOrigVertex += 3 * sizeof(SHORT);
 				break;
-			case X_D3DVSDT_NORMSHORT4: // 0x41:
-				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0]) / 32767.0f;
-				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1]) / 32767.0f;
-				((FLOAT *)pNewDataPos)[2] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[2]) / 32767.0f;
-				((FLOAT *)pNewDataPos)[3] = ((FLOAT)((SHORT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[3]) / 32767.0f;
-
-				dwPosOrig += 4 * sizeof(SHORT);
+			}
+			case X_D3DVSDT_NORMSHORT4: { // 0x41: // Make it FLOAT4
+				// UNTESTED - Need test-case!
+				((FLOAT *)pNewDataPos)[0] = ((FLOAT)((SHORT*)pOrigVertex)[0]) / 32767.0f;
+				((FLOAT *)pNewDataPos)[1] = ((FLOAT)((SHORT*)pOrigVertex)[1]) / 32767.0f;
+				((FLOAT *)pNewDataPos)[2] = ((FLOAT)((SHORT*)pOrigVertex)[2]) / 32767.0f;
+				((FLOAT *)pNewDataPos)[3] = ((FLOAT)((SHORT*)pOrigVertex)[3]) / 32767.0f;
+				pOrigVertex += 4 * sizeof(SHORT);
 				break;
-			case X_D3DVSDT_FLOAT2H: // 0x72:
-				((FLOAT *)pNewDataPos)[0] = ((FLOAT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[0];
-				((FLOAT *)pNewDataPos)[1] = ((FLOAT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[1];
+			}
+			case X_D3DVSDT_FLOAT2H: { // 0x72: // Make it FLOAT4 and set the third float to 0.0
+				((FLOAT *)pNewDataPos)[0] = ((FLOAT*)pOrigVertex)[0];
+				((FLOAT *)pNewDataPos)[1] = ((FLOAT*)pOrigVertex)[1];
 				((FLOAT *)pNewDataPos)[2] = 0.0f;
-				((FLOAT *)pNewDataPos)[3] = ((FLOAT*)&pOrigData[uiVertex * uiStride + dwPosOrig])[2];
+				((FLOAT *)pNewDataPos)[3] = ((FLOAT*)pOrigVertex)[2];
+				pOrigVertex += 3 * sizeof(FLOAT);
 				break;
-
-				/*TODO
-				case X_D3DVSDT_NONE: // 0x02:
-					printf("D3DVSDT_NONE / xbox ext. nsp /");
-					dwNewDataType = 0xFF;
-					break;
-				*/
-			default:
+			}
+			/*TODO
+			case X_D3DVSDT_NONE: { // 0x02:
+				printf("D3DVSDT_NONE / xbox ext. nsp /");
+				dwNewDataType = 0xFF;
+				break;
+			}
+			*/
+			default: {
 				// Generic 'conversion' - just make a copy :
-				memcpy(pNewDataPos,
-					&pOrigData[uiVertex * uiStride + dwPosOrig],
-					pStreamPatch->pSizes[uiType]);
-				dwPosOrig += pStreamPatch->pSizes[uiType];
+				memcpy(pNewDataPos, pOrigVertex, pStreamPatch->pSizes[uiType]);
+				pOrigVertex += pStreamPatch->pSizes[uiType];
 				break;
+			}
 			} // switch
 
 			// Increment the new pointer :
 			pNewDataPos += pStreamPatch->pSizes[uiType];
-
 		}
 	}
+
     if(!pPatchDesc->pVertexStreamZeroData)
     {
         //if(pNewVertexBuffer != nullptr) // Dxbx addition
@@ -651,6 +649,7 @@ bool XTL::VertexPatcher::PatchStream(VertexPatchDesc *pPatchDesc,
             m_pNewVertexStreamZeroData = pNewData;
         }
     }
+
     pStream->uiOrigStride = uiStride;
     pStream->uiNewStride = pStreamPatch->ConvertedStride;
     m_bPatched = true;

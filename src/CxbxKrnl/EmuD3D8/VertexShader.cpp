@@ -1551,22 +1551,22 @@ DWORD Xb2PCRegisterType(DWORD VertexRegister)
 
 static inline DWORD VshGetTokenType(DWORD Token)
 {
-    return (Token & D3DVSD_TOKENTYPEMASK) >> D3DVSD_TOKENTYPESHIFT;
+    return (Token & X_D3DVSD_TOKENTYPEMASK) >> X_D3DVSD_TOKENTYPESHIFT;
 }
 
 static inline DWORD VshGetVertexRegister(DWORD Token)
 {
-    return (Token & D3DVSD_VERTEXREGMASK) >> D3DVSD_VERTEXREGSHIFT;
+    return (Token & X_D3DVSD_VERTEXREGMASK) >> X_D3DVSD_VERTEXREGSHIFT;
 }
 
 static inline DWORD VshGetVertexRegisterIn(DWORD Token)
 {
-    return (Token & D3DVSD_VERTEXREGINMASK) >> D3DVSD_VERTEXREGINSHIFT;
+    return (Token & X_D3DVSD_VERTEXREGINMASK) >> X_D3DVSD_VERTEXREGINSHIFT;
 }
 
 static inline DWORD VshGetVertexStream(DWORD Token)
 {
-    return (Token & D3DVSD_STREAMNUMBERMASK) >> D3DVSD_STREAMNUMBERSHIFT;
+    return (Token & X_D3DVSD_STREAMNUMBERMASK) >> X_D3DVSD_STREAMNUMBERSHIFT;
 }
 
 static void VshConvertToken_NOP(DWORD *pToken)
@@ -1584,8 +1584,8 @@ static DWORD VshConvertToken_CONSTMEM(DWORD *pToken)
     // D3DVSD_CONST
     DbgVshPrintf("\tD3DVSD_CONST(");
 
-    DWORD ConstantAddress = ((*pToken >> D3DVSD_CONSTADDRESSSHIFT) & 0xFF);
-    DWORD Count           = (*pToken & D3DVSD_CONSTCOUNTMASK) >> D3DVSD_CONSTCOUNTSHIFT;
+    DWORD ConstantAddress = (*pToken & X_D3DVSD_CONSTADDRESSMASK) >> X_D3DVSD_CONSTADDRESSSHIFT;
+    DWORD Count           = (*pToken & X_D3DVSD_CONSTCOUNTMASK) >> X_D3DVSD_CONSTCOUNTSHIFT;
 
     DbgVshPrintf("%d, %d),\n", ConstantAddress, Count);
 
@@ -1717,7 +1717,7 @@ static void VshConvertToken_STREAMDATA_SKIP(DWORD *pToken)
 {
     using namespace XTL;
 
-    XTL::DWORD SkipCount = (*pToken & D3DVSD_SKIPCOUNTMASK) >> D3DVSD_SKIPCOUNTSHIFT;
+    XTL::DWORD SkipCount = (*pToken & X_D3DVSD_SKIPCOUNTMASK) >> X_D3DVSD_SKIPCOUNTSHIFT;
     DbgVshPrintf("\tD3DVSD_SKIP(%d),\n", SkipCount);
 }
 
@@ -1725,7 +1725,7 @@ static void VshConvertToken_STREAMDATA_SKIPBYTES(DWORD *pToken)
 {
     using namespace XTL;
 
-    XTL::DWORD SkipBytesCount = (*pToken & D3DVSD_SKIPCOUNTMASK) >> D3DVSD_SKIPCOUNTSHIFT;
+    XTL::DWORD SkipBytesCount = (*pToken & X_D3DVSD_SKIPCOUNTMASK) >> X_D3DVSD_SKIPCOUNTSHIFT;
     DbgVshPrintf("\tD3DVSD_SKIPBYTES(%d), /* xbox ext. */\n", SkipBytesCount);
     if(SkipBytesCount % sizeof(XTL::DWORD))
     {
@@ -1757,7 +1757,7 @@ static void VshConvertToken_STREAMDATA_REG(DWORD          *pToken,
 
     DbgVshPrintf(", ");
 
-    XTL::DWORD DataType = (*pToken >> D3DVSD_DATATYPESHIFT) & 0xFF;
+    XTL::DWORD DataType = (*pToken & X_D3DVSD_DATATYPEMASK) >> X_D3DVSD_DATATYPESHIFT;
     XTL::DWORD NewDataType = 0;
 	XTL::DWORD NewSize = 0;
 
@@ -1800,31 +1800,31 @@ static void VshConvertToken_STREAMDATA_REG(DWORD          *pToken,
         break;
 	case X_D3DVSDT_NORMSHORT1: // 0x11:
         DbgVshPrintf("D3DVSDT_NORMSHORT1 /* xbox ext. */");
-        NewDataType = D3DVSDT_SHORT2; // hmm, emulation?
-		NewSize = 2*sizeof(XTL::SHORT);
+        NewDataType = D3DVSDT_FLOAT1;
+		NewSize = sizeof(FLOAT);
         pPatchData->NeedPatching = TRUE;
         break;
 	case X_D3DVSDT_NORMSHORT2: // 0x21:
         DbgVshPrintf("D3DVSDT_NORMSHORT2 /* xbox ext. */");
-        NewDataType = D3DVSDT_SHORT2;
-		NewSize = 2*sizeof(XTL::SHORT);
+        NewDataType = D3DVSDT_FLOAT2;
+		NewSize = 2*sizeof(FLOAT);
         pPatchData->NeedPatching = TRUE;
         break;
 	case X_D3DVSDT_NORMSHORT3: // 0x31:
         DbgVshPrintf("D3DVSDT_NORMSHORT3 /* xbox ext. nsp */");
-        NewDataType = D3DVSDT_SHORT4;
-		NewSize = 4*sizeof(XTL::SHORT);
+        NewDataType = D3DVSDT_FLOAT3;
+		NewSize = 3*sizeof(FLOAT);
         pPatchData->NeedPatching = TRUE;
         break;
 	case X_D3DVSDT_NORMSHORT4: // 0x41:
         DbgVshPrintf("D3DVSDT_NORMSHORT4 /* xbox ext. */");
-        NewDataType = D3DVSDT_SHORT4;
-		NewSize = 4*sizeof(XTL::SHORT);
+        NewDataType = D3DVSDT_FLOAT4;
+		NewSize = 4*sizeof(FLOAT);
         pPatchData->NeedPatching = TRUE;
         break;
 	case X_D3DVSDT_NORMPACKED3: // 0x16:
         DbgVshPrintf("D3DVSDT_NORMPACKED3 /* xbox ext. nsp */");
-        NewDataType = D3DVSDT_FLOAT3;//0xFF; //32bit
+        NewDataType = D3DVSDT_FLOAT3;
 		NewSize = 3*sizeof(FLOAT);
         pPatchData->NeedPatching = TRUE;
         break;
@@ -1837,7 +1837,7 @@ static void VshConvertToken_STREAMDATA_REG(DWORD          *pToken,
 	case X_D3DVSDT_SHORT3: // 0x35:
         DbgVshPrintf("D3DVSDT_SHORT3 /* xbox ext. nsp */");
         NewDataType = D3DVSDT_SHORT4;
-		NewSize = 4 * sizeof(XTL::SHORT);
+		NewSize = 4*sizeof(XTL::SHORT);
         pPatchData->NeedPatching = TRUE;
         break;
 	case X_D3DVSDT_PBYTE1: // 0x14:
@@ -1858,11 +1858,12 @@ static void VshConvertToken_STREAMDATA_REG(DWORD          *pToken,
 		NewSize = 3*sizeof(FLOAT);
         pPatchData->NeedPatching = TRUE;
         break;
-	case X_D3DVSDT_PBYTE4: // 0x44:
+	case X_D3DVSDT_PBYTE4: // 0x44: // Hit by Panzer
         DbgVshPrintf("D3DVSDT_PBYTE4 /* xbox ext. */");
         NewDataType = D3DVSDT_FLOAT4;
 		NewSize = 4*sizeof(FLOAT);
-        break;
+		pPatchData->NeedPatching = TRUE;
+		break;
 	case X_D3DVSDT_FLOAT2H: // 0x72:
         DbgVshPrintf("D3DVSDT_FLOAT2H /* xbox ext. */");
         NewDataType = D3DVSDT_FLOAT3;
