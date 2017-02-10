@@ -101,6 +101,36 @@ OOVPA_NO_XREF(XGetSectionSize, 5849, 5)
         { 0x08, 0x04 },
 OOVPA_END;
 
+//Xbe Explorer generated pattern, derived from address $0027927D in "EA SPORTS™ RUGBY 2005" :
+//558BEC83EC14536880153200FF15........8B0D........33DB3BCB7548538D 1F 4046 0124 _timeSetEvent@20 ^ 000ED __imp__RtlEnterCriticalSection@4 ^ 0014D _XapiMmTimerThreadState ^ 003FR _CreateThread@24 ^ 0047D _timeSetEvent@20+0112 ^ 004DR _CloseHandle@4 ^ 005CD __imp__KeWaitForSingleObject@20 ^ 0062D _XapiMmTimerThreadState ^0082D _timeSetEvent@20+010F ^0090D _XapiMmTimerSerialNumber ^0097D _XapiMmTimerSerialNumber ^ 00C0R __allmul ^ 00CCD __imp__KeQueryInterruptTime@0 ^00E7D __imp__KeSetTimerEx@20 ^ 00ECD _XapiMmTimerThreadState ^ 00FBD __imp__KeSetEvent@12 ^0119D __imp__RtlLeaveCriticalSection@4
+OOVPA_NO_XREF(timeSetEvent, 5849, 9)
+	{0x00, 0x55},
+	{0x01, 0x8B},
+	{0x02, 0xEC},
+	{0x04, 0xEC},
+	{0x08, 0x80},
+	{0x0D, 0x15},
+	{0x12, 0x8B},
+	{0x13, 0x0D},
+	{0x18, 0x33}		
+OOVPA_END;
+
+//; Xbe Explorer generated pattern, derived from address $002793A1 in "EA SPORTS™ RUGBY 2005" :
+//5657BF8015320057FF15........8B54240C8B0D........0FB7C24885C9743E 1D AD12 006F _timeKillEvent@4 ^ 000AD __imp__RtlEnterCriticalSection@4 ^ 0014D _XapiMmTimerThreadState ^ 003DD __imp__KeCancelTimer@4 ^ 0046D _XapiMmTimerThreadState ^ 0056D __imp__KeSetEvent@12 ^ 0064D __imp__RtlLeaveCriticalSection@4
+OOVPA_NO_XREF(timeKillEvent, 5849, 10)
+	{ 0x00, 0x56 },
+	{ 0x01, 0x57 },
+	{ 0x02, 0xBF },
+	{ 0x09, 0x15 },
+	{ 0x0E, 0x8B },
+	{ 0x0F, 0x54 },
+	{ 0x10, 0x24 },
+	{ 0x13, 0x0D },
+	{ 0x18, 0x0F },
+	{ 0x1F, 0x3E }
+OOVPA_END;
+
+
 // ******************************************************************
 // * RaiseException
 // ******************************************************************
@@ -160,6 +190,8 @@ OOVPATable XAPI_5849[] = {
 	REGISTER_OOVPA(GetThreadPriority, 5849, PATCH),
 	REGISTER_OOVPA(SetThreadPriorityBoost, 5849, PATCH),
 	// REGISTER_OOVPA(GetThreadPriorityBoost, 5849, PATCH),
+	REGISTER_OOVPA(timeSetEvent, 5849, PATCH),
+	REGISTER_OOVPA(timeKillEvent, 5849, PATCH),
 	REGISTER_OOVPA(RaiseException, 5849, PATCH),
 	REGISTER_OOVPA(XLaunchNewImage, 5558, ALIAS, XLaunchNewImageA),
 	REGISTER_OOVPA(XInputSetState, 5233, PATCH),

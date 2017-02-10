@@ -592,6 +592,25 @@ OOVPA_NO_XREF(D3DDevice_BlockUntilVerticalBlank, 5849, 7)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_SetScreenSpaceOffset
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetScreenSpaceOffset, 5849, 8)
+	// D3DDevice_SetScreenSpaceOffset+0x13 : fstp [esi+0x0EF8]
+	{ 0x13, 0xD9 }, // (Offset,Value)-Pair #1
+	{ 0x14, 0x9E }, // (Offset,Value)-Pair #2
+	{ 0x15, 0xF8 }, // (Offset,Value)-Pair #3
+	{ 0x16, 0x0E }, // (Offset,Value)-Pair #4
+
+	// D3DDevice_SetScreenSpaceOffset+0x33 : jb +0x05
+	{ 0x33, 0x72 }, // (Offset,Value)-Pair #5
+	{ 0x34, 0x05 }, // (Offset,Value)-Pair #6
+
+	// D3DDevice_SetScreenSpaceOffset+0x46 : retn 0x08
+	{ 0x46, 0xC2 }, // (Offset,Value)-Pair #7
+	{ 0x47, 0x08 }, // (Offset,Value)-Pair #8
+OOVPA_END;
+
+// ******************************************************************
 // * D3DDevice_SetBackMaterial
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetBackMaterial, 5849, 9)
@@ -1357,6 +1376,7 @@ OOVPATable D3D8_5849[] = {
 	REGISTER_OOVPA(D3DDevice_SetShaderConstantMode, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetViewport, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_BlockUntilVerticalBlank, 5849, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetScreenSpaceOffset, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_FrontFace, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetBackMaterial, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_TwoSidedLighting, 5849, PATCH),
