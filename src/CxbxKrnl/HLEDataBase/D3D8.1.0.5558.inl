@@ -1070,11 +1070,13 @@ OOVPA_END;
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetFlickerFilter, 5455, 12)
 
-        // D3DDevice_SetFlickerFilter+0x1C : mov eax, [eax+0x1808]
-        { 0x1C, 0x8B }, // (Offset,Value)-Pair #1
-        { 0x1D, 0x80 }, // (Offset,Value)-Pair #2
-        { 0x1E, 0x08 }, // (Offset,Value)-Pair #3
-        { 0x1F, 0x18 }, // (Offset,Value)-Pair #4
+        // D3DDevice_SetFlickerFilter+0x1A : jz, 0x22
+        { 0x1A, 0x74 }, // (Offset,Value)-Pair #1
+        { 0x1B, 0x22 }, // (Offset,Value)-Pair #2
+
+        // D3DDevice_SetFlickerFilter+0x1C : mov eax, [eax+0xXXXX]
+        { 0x1C, 0x8B }, // (Offset,Value)-Pair #3
+        { 0x1D, 0x80 }, // (Offset,Value)-Pair #4
 
         // D3DDevice_SetFlickerFilter+0x22 : push 0; push esi; push 0x0B; push eax
         { 0x22, 0x6A }, // (Offset,Value)-Pair #5
