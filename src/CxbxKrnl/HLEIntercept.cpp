@@ -177,7 +177,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 		bXRefFirstPass = true; // Set to false for search speed optimization
 
-		memset((void*)XRefDataBase, XREF_UNKNOWN, sizeof(XRefDataBase));
+		memset((void*)XRefDataBase, XREF_ADDR_UNDETERMINED, sizeof(XRefDataBase));
 
 
 		for(int p=0;UnResolvedXRefs < LastUnResolvedXRefs;p++)
@@ -602,20 +602,21 @@ static inline void EmuInstallPatch(xbaddr FunctionAddr, void *Patch)
 {
     uint08 *FuncBytes = (uint08*)FunctionAddr;
 
-    *(uint08*)&FuncBytes[0] = 0xE9; // = opcode for JMP rel32 (Jump near, relative, displacement relative to next instruction)
+	*(uint08*)&FuncBytes[0] = OPCODE_JMP_E9; // = opcode for JMP rel32 (Jump near, relative, displacement relative to next instruction)
     *(uint32*)&FuncBytes[1] = (uint32)Patch - FunctionAddr - 5;
 }
 
 static inline void GetOovpaEntry(OOVPA *oovpa, int index, OUT uint32 &offset, OUT uint08 &value)
 {
-	if (oovpa->Type == Large) {
-		offset = (uint32) ((LOOVPA<1>*)oovpa)->Lovp[index].Offset;
-		value = ((LOOVPA<1>*)oovpa)->Lovp[index].Value;
-	}
-	else {
-		offset = (uint32) ((SOOVPA<1>*)oovpa)->Sovp[index].Offset;
-		value = ((SOOVPA<1>*)oovpa)->Sovp[index].Value;
-	}
+	offset = (uint32)((LOOVPA<1>*)oovpa)->Lovp[index].Offset;
+	value = ((LOOVPA<1>*)oovpa)->Lovp[index].Value;
+}
+
+static inline void GetXRefEntry(OOVPA *oovpa, int index, OUT uint32 &xref, OUT uint08 &offset)
+{
+	// Note : These are stored swapped by the XREF_ENTRY macro, hence this difference from GetOovpaEntry :
+	xref = (uint32)((LOOVPA<1>*)oovpa)->Lovp[index].Offset;
+	offset = ((LOOVPA<1>*)oovpa)->Lovp[index].Value;
 }
 
 // locate the given function, searching within lower and upper bounds
@@ -644,15 +645,15 @@ static xbaddr EmuLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper)
 		// check all cross references
 		for (v = 0; v < xref_count; v++)
 		{
-			uint32 Offset;
-			uint08 Value;
+			uint32 XRef;
+			uint08 Offset;
 
 			// get XRef offset + value pair and currently registered (un)known address
-			GetOovpaEntry(Oovpa, v, Offset, Value);
-			xbaddr XRefValue = XRefDataBase[Value];
+			GetXRefEntry(Oovpa, v, XRef, Offset);
+			xbaddr XRefValue = XRefDataBase[XRef];
 
 			// unknown XRef cannot be checked yet
-			if (XRefValue == XREF_UNKNOWN)
+			if (XRefValue == XREF_ADDR_UNDETERMINED)
 				break;
 
 			xbaddr RealValue = *(xbaddr*)(cur + Offset);
@@ -683,7 +684,7 @@ static xbaddr EmuLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper)
 				if (Oovpa->XRefSaveIndex != XRefNoSaveIndex)
 				{
 					// is the XRef not saved yet?
-					if (XRefDataBase[Oovpa->XRefSaveIndex] == XREF_UNKNOWN)
+					if (XRefDataBase[Oovpa->XRefSaveIndex] == XREF_ADDR_UNDETERMINED)
 					{
 						// save and count the found address
 						UnResolvedXRefs--;
@@ -741,8 +742,8 @@ static void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe
 				// Only place an XRef trapping patch when the OOVPA registration wasn't disabled
 				if ((OovpaTable[a].Flags & Flag_DontScan) == 0)
 				{
-					// Insert breakpoint
-					*(uint8_t*)pFunc = 0xCC;
+					// Write breakpoint opcode
+					*(uint8_t*)pFunc = OPCODE_INT3_CC;
 					EmuInstallPatch(pFunc + 1, EmuXRefFailure);
 				}
             }
@@ -815,8 +816,8 @@ void VerifyHLEOOVPA(HLEVerifyContext *context, OOVPA *oovpa)
 			uint32 curr_offset;
 			GetOovpaEntry(oovpa, p, curr_offset, dummy_value);
 			if (!(curr_offset > prev_offset)) {
-				HLEError(context, "%s[%d] : Offset (0x%x) must be larger then previous offset (0x%x)",
-					(oovpa->Type = Large) ? "Lovp" : "Sovp", p, curr_offset, prev_offset);
+				HLEError(context, "Lovp[%d] : Offset (0x%x) must be larger then previous offset (0x%x)",
+					p, curr_offset, prev_offset);
 			}
 		}
 

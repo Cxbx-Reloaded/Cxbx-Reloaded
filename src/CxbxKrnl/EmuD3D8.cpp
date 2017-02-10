@@ -138,7 +138,7 @@ static DWORD                        g_dwVertexShaderUsage = 0;
 static DWORD                        g_VertexShaderSlots[136];
 
 // cached palette pointer
-static PVOID pCurrentPalette;
+static PVOID pCurrentPalette = nullptr;
 // cached palette size
 static DWORD dwCurrentPaletteSize = -1;
 
@@ -4808,8 +4808,15 @@ HRESULT WINAPI XTL::EMUPATCH(D3DResource_Register)
                                         {
 											// Read P8 pixel :
 											unsigned char p = (unsigned char)pPixelData[w++];
+
 											// Read the corresponding ARGB from the palette and store it in the new texture :
-											pExpandedTexture[y] = pTexturePalette[p];
+											// HACK: Prevent crash if a pallete has not been loaded yet
+											if (pTexturePalette != nullptr)	{
+												pExpandedTexture[y] = pTexturePalette[p];
+											} else {
+												pExpandedTexture[y] = 0;
+											}
+											
 											// are we at the end of a line?
                                             if(++x == dwMipWidth)
                                             {

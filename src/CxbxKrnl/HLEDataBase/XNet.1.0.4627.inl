@@ -35,7 +35,7 @@
 // ******************************************************************
 // * XnInit
 // ******************************************************************
-OOVPA_XREF_LARGE(XnInit, 4627, 18, 
+OOVPA_XREF(XnInit, 4627, 18, 
 
     XREF_XNINIT,
 	XRefZero)
@@ -80,7 +80,7 @@ OOVPA_XREF(XNetStartup, 4627, 8,
     XRefOne)
 
         // XNetStartup+0x0F : call [XnInit]
-        { 0x10, XREF_XNINIT },  // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x10, XREF_XNINIT ),  // (Offset,Value)-Pair #1
 
         // XNetStartup+0x00 : xor eax, eax
         { 0x00, 0x33 }, // (Offset,Value)-Pair #2
@@ -109,7 +109,7 @@ OOVPA_XREF(WSAStartup, 4627, 9,
     XRefOne)
 
         // WSAStartup+0x0F : call [XnInit]
-        { 0x14, XREF_XNINIT },  // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x14, XREF_XNINIT ),  // (Offset,Value)-Pair #1
 
         // WSAStartup+0x00 : push [esp+0x08]
         { 0x00, 0xFF }, // (Offset,Value)-Pair #2
@@ -128,7 +128,7 @@ OOVPA_END;
 // ******************************************************************
 // * socket
 // ******************************************************************
-OOVPA_NO_XREF_LARGE(socket, 4627, 20)
+OOVPA_NO_XREF(socket, 4627, 20)
 
         // socket+0x13 : push 0x276D
         { 0x0013, 0x68 }, // (Offset,Value)-Pair #1
