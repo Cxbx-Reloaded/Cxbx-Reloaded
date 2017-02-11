@@ -1717,6 +1717,7 @@ OOVPATable DSound_5849[] = {
 	REGISTER_OOVPA(DirectSound_CMcpxBuffer_Play2, 5849, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_Play, 5849, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer8_Play, 5849, ALIAS, IDirectSoundBuffer_Play),
+	REGISTER_OOVPA(IDirectSound8_AddRef, 3936, PATCH),
 };
 
 // ******************************************************************
