@@ -1653,6 +1653,21 @@ OOVPA_END;
 #define IDirectSoundBuffer8_SetMode_5849 IDirectSoundBuffer8_SetMode_5233
 
 // ******************************************************************
+// * DirectSound::CDirectSoundVoice::SetI3DL2Source
+// ******************************************************************
+#define DirectSound_CDirectSoundVoice_SetI3DL2Source_5849 DirectSound_CDirectSoundVoice_SetI3DL2Source_5558
+
+// ******************************************************************
+// * DirectSound::CDirectSoundBuffer::SetI3DL2Source
+// ******************************************************************
+#define DirectSound_CDirectSoundBuffer_SetI3DL2Source_5849 DirectSound_CDirectSoundBuffer_SetI3DL2Source_5558
+
+// ******************************************************************
+// * IDirectSoundBuffer_SetI3DL2Source
+// ******************************************************************
+#define IDirectSoundBuffer_SetI3DL2Source_5849 IDirectSoundBuffer_SetI3DL2Source_5558
+
+// ******************************************************************
 // * Direct, 5849
 // ******************************************************************
 OOVPATable DSound_5849[] = {
@@ -1785,6 +1800,9 @@ OOVPATable DSound_5849[] = {
 	REGISTER_OOVPA(CDirectSoundVoice_SetMode, 5849, XREF),
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMode, 5849, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer8_SetMode, 5849, PATCH),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetI3DL2Source, 5849, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetI3DL2Source, 5849, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer8_SetI3DL2Source, 5849, ALIAS, IDirectSoundBuffer_SetI3DL2Source),
 };
 
 // ******************************************************************
