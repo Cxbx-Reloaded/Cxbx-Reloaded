@@ -1613,6 +1613,31 @@ OOVPA_END;
 #define DirectSound_CMcpxVoiceClient_SetFilter_5849 DirectSound_CMcpxVoiceClient_SetFilter_5558
 
 // ******************************************************************
+// * DirectSound::CMcpxVoiceClient::SetEG
+// ******************************************************************
+#define DirectSound_CMcpxVoiceClient_SetEG_5849 DirectSound_CMcpxVoiceClient_SetEG_4627
+
+// ******************************************************************
+// * DirectSound::CDirectSoundVoice::SetEG
+// ******************************************************************
+#define DirectSound_CDirectSoundVoice_SetEG_5849 DirectSound_CDirectSoundVoice_SetEG_4627
+
+// ******************************************************************
+// * DirectSound::CDirectSoundStream::SetEG
+// ******************************************************************
+#define DirectSound_CDirectSoundStream_SetEG_5849 DirectSound_CDirectSoundStream_SetEG_4627
+
+// ******************************************************************
+// * DirectSound::CDirectSoundBuffer::SetEG
+// ******************************************************************
+#define DirectSound_CDirectSoundBuffer_SetEG_5849 DirectSound_CDirectSoundBuffer_SetEG_4627
+
+// ******************************************************************
+// * IDirectSoundBuffer_SetEG
+// ******************************************************************
+#define IDirectSoundBuffer_SetEG_5849 IDirectSoundBuffer_SetEG_4627
+
+// ******************************************************************
 // * Direct, 5849
 // ******************************************************************
 OOVPATable DSound_5849[] = {
@@ -1737,6 +1762,11 @@ OOVPATable DSound_5849[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetFilter, 4627, XREF),
 	REGISTER_OOVPA(CDirectSoundStream_SetFilter, 4627, ALIAS, DirectSound_CDirectSoundStream_SetFilter),
 	REGISTER_OOVPA(IDirectSoundBuffer8_SetFilter, 4627, ALIAS, IDirectSoundBuffer_SetFilter),
+	REGISTER_OOVPA(DirectSound_CMcpxVoiceClient_SetEG, 5849, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetEG, 5849, XREF),
+	REGISTER_OOVPA(CDirectSoundStream_SetEG, 5849, ALIAS, DirectSound_CDirectSoundStream_SetEG),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetEG, 5849, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer8_SetEG, 5849, ALIAS, IDirectSoundBuffer_SetEG),
 };
 
 // ******************************************************************
