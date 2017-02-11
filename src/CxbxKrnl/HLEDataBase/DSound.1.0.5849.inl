@@ -1608,6 +1608,11 @@ OOVPA_END;
 #define DirectSound_CDirectSound_SetAllParameters_5849 DirectSound_CDirectSound_SetAllParameters_5558
 
 // ******************************************************************
+// * DirectSound::CMcpxVoiceClient::SetFilter
+// ******************************************************************
+#define DirectSound_CMcpxVoiceClient_SetFilter_5849 DirectSound_CMcpxVoiceClient_SetFilter_5558
+
+// ******************************************************************
 // * Direct, 5849
 // ******************************************************************
 OOVPATable DSound_5849[] = {
@@ -1727,6 +1732,11 @@ OOVPATable DSound_5849[] = {
 	REGISTER_OOVPA(IDirectSound8_SetDistanceFactor, 4432, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSound_SetAllParameters, 5849, XREF),
 	REGISTER_OOVPA(IDirectSound8_SetAllParameters, 3936, PATCH),
+	REGISTER_OOVPA(DirectSound_CMcpxVoiceClient_SetFilter, 5849, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetFilter, 4627, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetFilter, 4627, XREF),
+	REGISTER_OOVPA(CDirectSoundStream_SetFilter, 4627, ALIAS, DirectSound_CDirectSoundStream_SetFilter),
+	REGISTER_OOVPA(IDirectSoundBuffer8_SetFilter, 4627, ALIAS, IDirectSoundBuffer_SetFilter),
 };
 
 // ******************************************************************
