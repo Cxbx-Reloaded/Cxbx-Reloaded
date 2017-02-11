@@ -405,6 +405,20 @@ OOVPA_XREF(D3D_SetFence, 5849, 7, XREF_D3D_SETFENCE, XRefZero)
 	{ 0xA8, 0x75 },
 OOVPA_END;
 
+// ******************************************************************
+// * D3D::BlockOnTime
+// * Source: Spiderman 2
+// ******************************************************************
+OOVPA_XREF(D3D_BlockOnTime, 5849, 6, XREF_D3D_BLOCKONTIME, XRefZero)
+	{ 0x09, 0x30 },
+	{ 0x27, 0x07 },
+	{ 0x7E, 0x2B },
+	{ 0xA5, 0x20 },
+	{ 0xD9, 0x56 },
+	{ 0xF8, 0x47 },
+OOVPA_END;
+
+// ******************************************************************
 // * D3D_AllocContiguousMemory
 // ******************************************************************
 OOVPA_NO_XREF(D3D_AllocContiguousMemory, 5849, 7)
@@ -1381,6 +1395,8 @@ OOVPATable D3D8_5849[] = {
 	REGISTER_OOVPA(D3D_SetFence, 5849, XREF),
 	REGISTER_OOVPA(D3DDevice_InsertFence, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_IsFencePending, 5233, PATCH),
+	REGISTER_OOVPA(D3D_BlockOnTime, 5849, XREF),
+	REGISTER_OOVPA(D3DDevice_BlockOnFence, 5233, PATCH),
 	REGISTER_OOVPA(D3D_AllocContiguousMemory, 5849, PATCH),
 	REGISTER_OOVPA(Get2DSurfaceDesc, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateTexture2, 5849, PATCH),
