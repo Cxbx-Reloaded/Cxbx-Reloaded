@@ -1718,6 +1718,8 @@ OOVPATable DSound_5849[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_Play, 5849, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer8_Play, 5849, ALIAS, IDirectSoundBuffer_Play),
 	REGISTER_OOVPA(IDirectSound8_AddRef, 3936, PATCH),
+	REGISTER_OOVPA(CDirectSound_SetDistanceFactorA, 5558, XREF),
+	REGISTER_OOVPA(IDirectSound8_SetDistanceFactor, 4432, PATCH),
 };
 
 // ******************************************************************
