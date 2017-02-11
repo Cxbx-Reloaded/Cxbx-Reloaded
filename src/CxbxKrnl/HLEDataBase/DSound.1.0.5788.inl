@@ -1585,6 +1585,11 @@ OOVPA_XREF(DirectSound_CDirectSoundStream_SetHeadroom, 5788, 9,
 OOVPA_END;
 
 // ******************************************************************
+// * DirectSound::CDirectSound::SetAllParameters
+// ******************************************************************
+#define DirectSound_CDirectSound_SetAllParameters_5788 DirectSound_CDirectSound_SetAllParameters_5558
+
+// ******************************************************************
 // * Direct, 5788
 // ******************************************************************
 OOVPATable DSound_5788[] = {
@@ -1745,6 +1750,8 @@ OOVPATable DSound_5788[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetEG, 4627, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer8_SetEG, 4627, ALIAS, IDirectSoundBuffer_SetEG),
 	REGISTER_OOVPA(IDirectSound8_AddRef, 3936, PATCH),
+	REGISTER_OOVPA(DirectSound_CDirectSound_SetAllParameters, 5788, XREF),
+	REGISTER_OOVPA(IDirectSound8_SetAllParameters, 3936, PATCH),
 };
 
 // ******************************************************************

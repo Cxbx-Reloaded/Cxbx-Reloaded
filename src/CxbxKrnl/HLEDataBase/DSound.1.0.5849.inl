@@ -1603,6 +1603,11 @@ OOVPA_XREF(DirectSound_CDirectSoundStream_SetHeadroom, 5849, 9,
 OOVPA_END;
 
 // ******************************************************************
+// * DirectSound::CDirectSound::SetAllParameters
+// ******************************************************************
+#define DirectSound_CDirectSound_SetAllParameters_5849 DirectSound_CDirectSound_SetAllParameters_5558
+
+// ******************************************************************
 // * Direct, 5849
 // ******************************************************************
 OOVPATable DSound_5849[] = {
@@ -1720,6 +1725,8 @@ OOVPATable DSound_5849[] = {
 	REGISTER_OOVPA(IDirectSound8_AddRef, 3936, PATCH),
 	REGISTER_OOVPA(CDirectSound_SetDistanceFactorA, 5558, XREF),
 	REGISTER_OOVPA(IDirectSound8_SetDistanceFactor, 4432, PATCH),
+	REGISTER_OOVPA(DirectSound_CDirectSound_SetAllParameters, 5849, XREF),
+	REGISTER_OOVPA(IDirectSound8_SetAllParameters, 3936, PATCH),
 };
 
 // ******************************************************************

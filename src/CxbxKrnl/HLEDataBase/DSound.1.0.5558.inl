@@ -1944,6 +1944,24 @@ OOVPA_XREF(DirectSound_CDirectSoundStream_SetFrequency, 5558, 9,
 OOVPA_END;
 
 // ******************************************************************
+// * DirectSound::CDirectSound::SetAllParameters
+// ******************************************************************
+OOVPA_XREF(DirectSound_CDirectSound_SetAllParameters, 5558, 8,
+
+    XREF_DSSETALLPARAMETERSA,
+    XRefZero)
+
+        { 0x0C, 0x00 },
+        { 0x0E, 0xB6 },
+        { 0x10, 0x74 },
+        { 0x12, 0x85 },
+        { 0x14, 0x74 },
+        { 0x16, 0x68 },
+        { 0x2A, 0x00 },
+        { 0x2B, 0x8B },
+OOVPA_END;
+
+// ******************************************************************
 // * DirectSound::CMcpxVoiceClient::SetEG
 // ******************************************************************
 #define DirectSound_CMcpxVoiceClient_SetEG_5558 DirectSound_CMcpxVoiceClient_SetEG_4627
@@ -2114,6 +2132,8 @@ OOVPATable DSound_5558[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetEG, 5558, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer8_SetEG, 5558, ALIAS, IDirectSoundBuffer_SetEG),
 	REGISTER_OOVPA(IDirectSound8_AddRef, 3936, PATCH),
+	REGISTER_OOVPA(DirectSound_CDirectSound_SetAllParameters, 5558, XREF),
+	REGISTER_OOVPA(IDirectSound8_SetAllParameters, 3936, PATCH),
 };
 
 // ******************************************************************
