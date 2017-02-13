@@ -107,7 +107,7 @@ OOVPA_XREF(IXACTEngine_RegisterWaveBank, 4627, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x1D, XREF_XACT_CEngine_RegisterWaveBank },
+        XREF_ENTRY( 0x1D, XREF_XACT_CEngine_RegisterWaveBank ),
 
         { 0x03, 0x10 },
         { 0x08, 0xFF },
@@ -185,7 +185,7 @@ OOVPA_XREF(IXACTEngine_RegisterStreamedWaveBank, 4627, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x19, XREF_XACT_CEngine_RegisterStreamedWaveBank },
+        XREF_ENTRY( 0x19, XREF_XACT_CEngine_RegisterStreamedWaveBank ),
 
         { 0x02, 0x24 },
         { 0x06, 0x24 },
@@ -206,7 +206,7 @@ OOVPA_XREF(IXACTEngine_RegisterStreamedWaveBank, 4928, 10,
     XRefOne)
 
 		// IXACTEngine_RegisterStreamedWaveBank+0x22 : call XACT::CEngine::RegisterStreamedWaveBank
-        { 0x23, XREF_XACT_CEngine_RegisterStreamedWaveBank },
+        XREF_ENTRY( 0x23, XREF_XACT_CEngine_RegisterStreamedWaveBank ),
 
 		// IXACTEngine_RegisterStreamedWaveBank+0x0B : movzx esi, al
 		{ 0x0B, 0x0F },
@@ -274,7 +274,7 @@ OOVPA_XREF(IXACTEngine_CreateSoundBank, 4627, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x1D, XREF_XACT_CEngine_CreateSoundBank },
+        XREF_ENTRY( 0x1D, XREF_XACT_CEngine_CreateSoundBank ),
 
         { 0x03, 0x10 },
         { 0x08, 0xFF },
@@ -293,7 +293,7 @@ OOVPA_XREF(IXACTEngine_CreateSoundBank, 4928, 10,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x27, XREF_XACT_CEngine_CreateSoundBank },
+        XREF_ENTRY( 0x27, XREF_XACT_CEngine_CreateSoundBank ),
 
 		// IXACTEngine_CreateSoundBank+0x07 : push [ebp+8+0x10]
 		{ 0x07, 0xFF },
@@ -333,7 +333,7 @@ OOVPA_XREF(IXACTEngine_DownloadEffectsImage, 4627, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x1F, XREF_XACT_CEngine_DownloadEffectsImage },
+        XREF_ENTRY( 0x1F, XREF_XACT_CEngine_DownloadEffectsImage ),
 
         { 0x03, 0xFF },
         { 0x08, 0x08 },
@@ -370,7 +370,7 @@ OOVPA_XREF(IXACTEngine_CreateSoundSource, 4627, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x19, XREF_XACT_CEngine_CreateSoundSource },
+        XREF_ENTRY( 0x19, XREF_XACT_CEngine_CreateSoundSource ),
 
         { 0x02, 0x24 },
         { 0x06, 0x24 },
@@ -406,7 +406,7 @@ OOVPA_XREF(IXACTSoundBank_GetSoundCueIndexFromFriendlyName, 4627, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x19, XREF_XACT_CSoundBank_GetSoundCueIndexFromFriendlyName },
+        XREF_ENTRY( 0x19, XREF_XACT_CSoundBank_GetSoundCueIndexFromFriendlyName ),
 
         { 0x02, 0x24 },
         { 0x06, 0x24 },
@@ -457,7 +457,7 @@ OOVPA_XREF(IXACTEngine_RegisterNotification, 4627, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x15, XREF_XACT_CEngine_RegisterNotification },
+        XREF_ENTRY( 0x15, XREF_XACT_CEngine_RegisterNotification ),
 
         { 0x02, 0x24 },
         { 0x06, 0x24 },
@@ -494,7 +494,7 @@ OOVPA_XREF(IXACTEngine_GetNotification, 4627, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x19, XREF_XACT_CEngine_GetNotification },
+        XREF_ENTRY( 0x19, XREF_XACT_CEngine_GetNotification ),
 
         { 0x02, 0x24 },
         { 0x06, 0x24 },
@@ -554,7 +554,7 @@ OOVPA_XREF(IXACTEngine_UnRegisterWaveBank, 4627, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x15, XREF_XACT_CEngine_UnRegisterWaveBank },
+        XREF_ENTRY( 0x15, XREF_XACT_CEngine_UnRegisterWaveBank ),
 
         { 0x02, 0x24 },
         { 0x06, 0x24 },
@@ -574,7 +574,7 @@ OOVPA_XREF(IXACTEngine_UnRegisterWaveBank, 4928, 8,
     XRefOne)
 
 	// IXACTEngine_UnRegisterWaveBank+0x1E : call XACT::CEngine::UnRegisterWaveBank
-        { 0x1F, XREF_XACT_CEngine_UnRegisterWaveBank },
+        XREF_ENTRY( 0x1F, XREF_XACT_CEngine_UnRegisterWaveBank ),
 
 	{ 0x07, 0xFF },
         { 0x0E, 0x8B },

@@ -102,7 +102,7 @@ OOVPA_XREF(DirectSound_CDirectSoundBuffer_SetHeadroom, 4134, 8,
     XREF_DirectSound_CDirectSoundBuffer_SetHeadroom,
     XRefOne)
 
-        { 0x32, XREF_DirectSound_CDirectSoundVoice_SetHeadroom },
+        XREF_ENTRY( 0x32, XREF_DirectSound_CDirectSoundVoice_SetHeadroom ),
 
         { 0x0C, 0x00 },
         { 0x12, 0x85 },
@@ -121,7 +121,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetHeadroom, 4134, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x15, XREF_DirectSound_CDirectSoundBuffer_SetHeadroom },
+        XREF_ENTRY( 0x15, XREF_DirectSound_CDirectSoundBuffer_SetHeadroom ),
 
         { 0x02, 0x24 },
         { 0x06, 0x24 },
@@ -171,7 +171,7 @@ OOVPA_XREF(DirectSound_CDirectSoundBuffer_SetVolume, 4134, 8,
     XREF_DirectSound_CDirectSoundBuffer_SetVolume,
     XRefOne)
 
-        { 0x32, XREF_DirectSound_CDirectSoundVoice_SetVolume },
+        XREF_ENTRY( 0x32, XREF_DirectSound_CDirectSoundVoice_SetVolume ),
 
         { 0x0C, 0x00 },
         { 0x12, 0x85 },
@@ -190,7 +190,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetVolume, 4134, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x15, XREF_DirectSound_CDirectSoundBuffer_SetVolume },
+        XREF_ENTRY( 0x15, XREF_DirectSound_CDirectSoundBuffer_SetVolume ),
 
         { 0x02, 0x24 },
         { 0x06, 0x24 },
@@ -225,7 +225,7 @@ OOVPA_XREF(IDirectSound_SetI3DL2Listener, 4134, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x19, XREF_DSSETI3DL2LISTENER },
+        XREF_ENTRY( 0x19, XREF_DSSETI3DL2LISTENER ),
 
         { 0x02, 0x24 },
         { 0x06, 0x24 },
@@ -261,7 +261,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetBufferData, 4134, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x19, XREF_DSSETBUFFERDATA2 },
+        XREF_ENTRY( 0x19, XREF_DSSETBUFFERDATA2 ),
 
         { 0x02, 0x24 },
         { 0x06, 0x24 },
@@ -298,7 +298,7 @@ OOVPA_XREF(IDirectSound_GetEffectData, 4134, 9,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x1F, XREF_DirectSound_CDirectSound_GetEffectData },
+        XREF_ENTRY( 0x1F, XREF_DirectSound_CDirectSound_GetEffectData ),
 
         { 0x03, 0xFF },
         { 0x08, 0x08 },
@@ -334,7 +334,7 @@ OOVPA_XREF(DirectSound_CDirectSoundVoice_SetMixBins, 4134, 8,
     XREF_DSSETMIXBINSB,
     XRefOne)
 
-        { 0x0D, XREF_DSSETMIXBINSC },
+        XREF_ENTRY( 0x0D, XREF_DSSETMIXBINSC ),
 
         { 0x02, 0x74 },
         { 0x06, 0x74 },
@@ -353,7 +353,7 @@ OOVPA_XREF(DirectSound_CDirectSoundBuffer_SetMixBins, 4134, 8,
     XREF_DSSETMIXBINSA,
     XRefOne)
 
-        { 0x32, XREF_DSSETMIXBINSB },
+        XREF_ENTRY( 0x32, XREF_DSSETMIXBINSB ),
 
         { 0x0C, 0x00 },
         { 0x12, 0x85 },
@@ -372,7 +372,7 @@ OOVPA_XREF(IDirectSoundBuffer_SetMixBins, 4134, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x15, XREF_DSSETMIXBINSA },
+        XREF_ENTRY( 0x15, XREF_DSSETMIXBINSA ),
 
         { 0x02, 0x24 },
         { 0x06, 0x24 },

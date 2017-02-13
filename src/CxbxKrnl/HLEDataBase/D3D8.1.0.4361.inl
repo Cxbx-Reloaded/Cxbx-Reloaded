@@ -289,7 +289,7 @@ OOVPA_XREF(D3DDevice_BeginStateBlock, 4361, 6,
     XRefOne)
 
         // D3DDevice_BeginStateBlock+0x0F : call [ClearStateBlockFlags]
-        { 0x0A, XREF_CLEARSTATEBLOCKFLAGS }, // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x0A, XREF_CLEARSTATEBLOCKFLAGS ), // (Offset,Value)-Pair #1
 
         // D3DDevice_BeginStateBlock+0x00 : mov eax, [addr]
         { 0x00, 0xA1 }, // (Offset,Value)-Pair #2
@@ -364,7 +364,7 @@ OOVPA_XREF(D3DDevice_EndStateBlock, 4361, 6,
     XRefOne)
 
         // D3DDevice_EndStateBlock+0x0F : call [ClearStateBlockFlags]
-        { 0x0A, XREF_RECORDSTATEBLOCK }, // (Offset,Value)-Pair #1
+        XREF_ENTRY( 0x0A, XREF_RECORDSTATEBLOCK ), // (Offset,Value)-Pair #1
 
         // D3DDevice_EndStateBlock+0x00 : mov eax, [addr]
         { 0x00, 0xA1 }, // (Offset,Value)-Pair #2

@@ -46,6 +46,11 @@
 extern "C" {
 #endif
 
+#define OPCODE_NOP_90 0x90
+#define OPCODE_INT3_CC 0xCC
+#define OPCODE_CALL_E8 0xE8
+#define OPCODE_JMP_E9 0xE9
+
 /*! xbaddr is the type of a physical address */
 typedef uint32 xbaddr;
 

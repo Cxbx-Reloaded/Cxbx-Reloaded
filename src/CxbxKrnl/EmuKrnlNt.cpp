@@ -231,7 +231,24 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 		LOG_FUNC_ARG(EventType)
 		LOG_FUNC_ARG(InitialState)
 		LOG_FUNC_END;
+/*
+	NTSTATUS Status;
 
+	if ((EventType != NotificationEvent) && (EventType != SynchronizationEvent)) {
+		Status = STATUS_INVALID_PARAMETER;
+	}
+	else {
+		PKEVENT Event;
+		Status = ObCreateObject(&ExEventObjectType, ObjectAttributes, sizeof(KEVENT), (PVOID *)&Event);
+
+		if (NT_SUCCESS(Status)) {
+			KeInitializeEvent(Event, EventType, InitialState);
+			Status = ObInsertObject(Event, ObjectAttributes, 0, EventHandle);
+		}
+	}
+
+	RETURN(Status);
+*/
 	// initialize object attributes
 	NativeObjectAttributes nativeObjectAttributes;
 	CxbxObjectAttributesToNT(ObjectAttributes, /*var*/nativeObjectAttributes);

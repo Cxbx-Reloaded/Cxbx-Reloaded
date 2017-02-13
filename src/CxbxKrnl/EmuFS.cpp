@@ -43,7 +43,7 @@ namespace xboxkrnl
 };
 
 #include "EmuFS.h"
-#include "EmuAlloc.h"
+#include "EmuAlloc.h" // For CxbxCalloc()
 #include "CxbxKrnl.h"
 #include "Exe.h"
 
@@ -311,12 +311,12 @@ void EmuInitFS()
 					DbgPrintf("Patching FS Instruction at 0x%08X\n", addr);
 
 					// Write Call opcode
-					*(uint08*)addr = 0xE8;
+					*(uint08*)addr = OPCODE_CALL_E8;
 					*(uint32*)(addr + 1) = (uint32)fsInstructions[i].functionPtr - addr - 5;
 
 					// Fill the remaining bytes with nop instructions
 					int remaining_bytes = fsInstructions[i].data.size() - 5;
-					memset((void*)(addr + 5), 0x90, remaining_bytes);
+					memset((void*)(addr + 5), OPCODE_NOP_90, remaining_bytes);
 					addr += sizeOfData - 1;
 					break;
 				}
@@ -347,9 +347,8 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		uint32 dwCopySize = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr;
 		uint32 dwZeroSize = pTLS->dwSizeofZeroFill;
 
-		pNewTLS = (uint08*)CxbxMalloc(dwCopySize + dwZeroSize + 0x100 /* + HACK: extra safety padding 0x100*/);
+		pNewTLS = (uint08*)CxbxCalloc(1, dwCopySize + dwZeroSize + 0x100 /* + HACK: extra safety padding 0x100*/);
 
-		memset(pNewTLS, 0, dwCopySize + dwZeroSize + 0x100);
 		memcpy(pNewTLS, pTLSData, dwCopySize);
 	}
 
@@ -398,13 +397,11 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 	{
 		uint32 dwSize = sizeof(xboxkrnl::KPCR);
 
-		NewPcr = (xboxkrnl::KPCR*)CxbxMalloc(dwSize);
-
-		memset(NewPcr, 0, sizeof(*NewPcr));
+		NewPcr = (xboxkrnl::KPCR*)CxbxCalloc(1, dwSize);
 	}
 
 	// generate TIB
-	xboxkrnl::ETHREAD *EThread = (xboxkrnl::ETHREAD*)CxbxMalloc(sizeof(xboxkrnl::ETHREAD));
+	xboxkrnl::ETHREAD *EThread = (xboxkrnl::ETHREAD*)CxbxCalloc(1, sizeof(xboxkrnl::ETHREAD)); // Clear, to prevent side-effects on random contents
 
 	EThread->Tcb.TlsData = (void*)pNewTLS;
 	EThread->UniqueThread = GetCurrentThreadId();
