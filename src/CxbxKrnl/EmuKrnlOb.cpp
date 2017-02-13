@@ -60,6 +60,8 @@ namespace NtDll
 #include <ntstatus.h>
 #pragma warning(default:4005)
 
+// TODO : Move this tooling to a more suitable place :
+
 #define OBJECT_TO_OBJECT_HEADER(Object) \
     CONTAINING_RECORD(Object, OBJECT_HEADER, Body)
 
@@ -118,6 +120,18 @@ XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
 			if (NameSize == 0)
 				ObjectHeader->Flags = 0;
 			else {
+				// TODO : For other Ob* API's it must become possible to get from
+				// and Object(Header) address to the Name. Right now, this requires
+				// adding ObjectSize to ObjectHeader. This won't be available outside
+				// this function, so we need a better solution for this. 
+				// It might be possible to put the OBJECT_STRING struct BEFORE the
+				// ObjectHeader (and the NameBuffer itself before that), which would
+				// make it possible to simply offset everything off an Object.
+				// It might also be possible to insert a linked list struct, so
+				// ObReferenceObjectByName can iterate over all named objects.
+				// (It's probably wise to use one list per pool, to reduce the number
+				// of objects to walk through.)
+
 				// Copy name after object (we've reserved NameSize bytes there) :
 				OBJECT_STRING *Name = (OBJECT_STRING *)((char *)ObjectHeader + ObjectSize);
 				char *NameBuffer = (char *)Name + sizeof(OBJECT_STRING);
@@ -253,9 +267,26 @@ XBSYSAPI EXPORTNUM(244) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObOpenObjectByPointer
 		LOG_FUNC_ARG_OUT(Handle)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	HANDLE new_handle;
+	NTSTATUS result = ObReferenceObjectByPointer(Object, ObjectType);
 
-	RETURN(S_OK);
+	if (!NT_SUCCESS(result))
+		new_handle = (HANDLE)0;
+	else {
+		LOG_UNIMPLEMENTED();
+
+		// TODO : Create a new_handle for this object
+		// if that fails, do something like :
+		// {
+		//   // Detected out of memory
+		//	 ObDereferenceObject(Object);
+		//	 result = STATUS_INSUFFICIENT_RESOURCES;
+		// }
+	}
+
+	// Set the new handle and return the correct status
+	*Handle = new_handle;
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -286,10 +317,12 @@ XBSYSAPI EXPORTNUM(246) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByHa
 		LOG_FUNC_ARG_OUT(ReturnedObject)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
-
-	// This is probably incorrect
+	// This is most certainly incorrect
 	*ReturnedObject = Handle;
+
+	LOG_UNIMPLEMENTED();
+	// TODO : Implement and use a handle registration data structure
+
 	RETURN(STATUS_SUCCESS);
 }
 
@@ -314,6 +347,7 @@ XBSYSAPI EXPORTNUM(247) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObReferenceObjectByNa
 		LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
+	// TODO : Implement a mechanism by which all named objects can be queried. See comments in ObCreateObject
 
 	RETURN(S_OK);
 }
@@ -373,7 +407,7 @@ XBSYSAPI EXPORTNUM(250) xboxkrnl::VOID FASTCALL xboxkrnl::ObfDereferenceObject
 		if (ObjectHeader->Type->DeleteProcedure != NULL)
 			ObjectHeader->Type->DeleteProcedure(Object);
 		
-		// TODO : How to handle named objects?
+		// TODO : How to handle named objects? See comments in ObCreateObject
 		ObjectHeader->Type->FreeProcedure(ObjectHeader); // TODO : Is this ever something else than ExFreePool ?
 	}
 }

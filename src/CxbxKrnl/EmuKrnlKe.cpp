@@ -70,6 +70,8 @@ typedef struct _DpcData {
 
 DpcData g_DpcData = { 0 }; // TODO : InitializeCriticalSection(Lock)
 
+// TODO : Move this tooling to a more suitable place :
+
 // See also :
 // https://github.com/reactos/reactos/blob/40a16a9cf1cdfca399e9154b42d32c30b63480f5/reactos/drivers/filesystems/udfs/Include/env_spec_w32.h
 void InitializeListHead(xboxkrnl::PLIST_ENTRY pListHead)
@@ -131,6 +133,8 @@ xboxkrnl::PLIST_ENTRY RemoveTailList(xboxkrnl::PLIST_ENTRY pListHead)
 	return Result;
 }
 
+// TODO : Move all Ki* functions to EmuKrnlKi.h/cpp :
+
 #define KiRemoveTreeTimer(Timer)               \
     (Timer)->Header.Inserted = FALSE;          \
     RemoveEntryList(&(Timer)->TimerListEntry)
@@ -185,11 +189,10 @@ xboxkrnl::KPCR* KeGetPcr()
 {
 	xboxkrnl::KPCR* Pcr;
 
+	// See EmuKeSetPcr()
 	__asm {
-		push eax
-		mov eax, fs:[0x14]
+		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov Pcr, eax
-		pop eax
 	}
 
 	return Pcr;
@@ -573,9 +576,7 @@ XBSYSAPI EXPORTNUM(103) xboxkrnl::KIRQL NTAPI xboxkrnl::KeGetCurrentIrql(void)
 {
 	LOG_FUNC();
 
-	KIRQL Irql;
-
-	Irql = KeGetPcr()->Irql;
+	KIRQL Irql = KeGetPcr()->Irql;
 
 	RETURN(Irql);
 }
@@ -587,9 +588,11 @@ XBSYSAPI EXPORTNUM(104) xboxkrnl::PKTHREAD NTAPI xboxkrnl::KeGetCurrentThread(vo
 {
 	LOG_FUNC();
 
-	LOG_UNIMPLEMENTED();
-
-	RETURN(NULL);
+	// Probably correct, but untested and currently faked in EmuGenerateFS
+	// (to make this correct, we need to improve our thread emulation)
+	KTHREAD *ret = KeGetCurrentPrcb()->CurrentThread;
+	
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -658,16 +661,22 @@ XBSYSAPI EXPORTNUM(109) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeInterrupt
 		LOG_FUNC_ARG(Vector)
 		LOG_FUNC_ARG(Irql)
 		LOG_FUNC_ARG(InterruptMode)
-		LOG_FUNC_ARG(ShareVector)
+		LOG_FUNC_ARG(ShareVector) 
 		LOG_FUNC_END;
 
-	// TODO : Untested :
 	Interrupt->ServiceRoutine = (PVOID)ServiceRoutine;
 	Interrupt->ServiceContext = ServiceContext;
-	Interrupt->BusInterruptLevel = Vector - 0x30;
+	Interrupt->BusInterruptLevel = Vector - 0x30; // TODO : Constantify 0x30
 	Interrupt->Irql = Irql;
+	Interrupt->Connected = FALSE;
+	// Unused : Interrupt->ShareVector = ShareVector;
 	Interrupt->Mode = InterruptMode;
-	Interrupt->ShareVector = ShareVector;
+	// Interrupt->rsvd1 = 0; // not neccesary?
+	// Interrupt->ServiceCount = 0; // not neccesary?
+
+	// Interrupt->DispatchCode = ?; //TODO : Populate this interrupt dispatch
+	// code block, patch it up so it works with the address of this Interrupt
+	// struct and calls the right dispatch routine (depending on InterruptMode). 
 }
 
 // ******************************************************************
@@ -713,26 +722,29 @@ XBSYSAPI EXPORTNUM(119) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertQueueDpc
 		LOG_FUNC_ARG(SystemArgument2)
 		LOG_FUNC_END;
 
-	// Before going thread-save, check if the Dpc is not linked yet?
-	if (Dpc->DpcListEntry.Flink == NULL)
-	{
+	BOOLEAN NeedsInsertion = (Dpc->Inserted == FALSE);
+	if (NeedsInsertion) {
+		// Remember the arguments and link it into our DpcQueue :
+		Dpc->Inserted = TRUE;
+		Dpc->SystemArgument1 = SystemArgument1;
+		Dpc->SystemArgument2 = SystemArgument2;
 		// For thread safety, enter the Dpc lock:
 		EnterCriticalSection(&(g_DpcData.Lock));
 		// Is the Dpc still not linked yet ?
 		if (Dpc->DpcListEntry.Flink == NULL)
 		{
-			// Remember the arguments and link it into our DpcQueue :
-			Dpc->SystemArgument1 = SystemArgument1;
-			Dpc->SystemArgument2 = SystemArgument2;
 			InsertTailList(&(g_DpcData.DpcQueue), &(Dpc->DpcListEntry));
+			// TODO : Instead of DpcQueue, add the DPC to KeGetCurrentPrcb()->DpcListHead
+			// TODO : Once that's done, use an apropriate signalling mechanism instead of this :
 			// Signal the Dpc handling code there's work to do
 			SetEvent(g_DpcData.DpcEvent);
 		}
+
 		// Thread-safety is no longer required anymore
 		LeaveCriticalSection(&(g_DpcData.Lock));
 	}
 
-	RETURN(TRUE);
+	RETURN(NeedsInsertion);
 }
 
 // ******************************************************************
