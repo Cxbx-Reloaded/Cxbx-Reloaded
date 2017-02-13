@@ -57,6 +57,67 @@ namespace NtDll
     #include "EmuNtDll.h"
 };
 
+// See also :
+// https://github.com/reactos/reactos/blob/40a16a9cf1cdfca399e9154b42d32c30b63480f5/reactos/drivers/filesystems/udfs/Include/env_spec_w32.h
+void InitializeListHead(xboxkrnl::PLIST_ENTRY pListHead)
+{
+	pListHead->Flink = pListHead->Blink = pListHead;
+}
+
+bool IsListEmpty(xboxkrnl::PLIST_ENTRY pListHead)
+{
+	return (pListHead->Flink == pListHead);
+}
+
+void InsertHeadList(xboxkrnl::PLIST_ENTRY pListHead, xboxkrnl::PLIST_ENTRY pEntry)
+{
+	xboxkrnl::PLIST_ENTRY _EX_ListHead = pListHead;
+	xboxkrnl::PLIST_ENTRY _EX_Flink = _EX_ListHead->Flink;
+
+	pEntry->Flink = _EX_Flink;
+	pEntry->Blink = _EX_ListHead;
+	_EX_Flink->Blink = pEntry;
+	_EX_ListHead->Flink = pEntry;
+}
+
+void InsertTailList(xboxkrnl::PLIST_ENTRY pListHead, xboxkrnl::PLIST_ENTRY pEntry)
+{
+	xboxkrnl::PLIST_ENTRY _EX_ListHead = pListHead;
+	xboxkrnl::PLIST_ENTRY _EX_Blink = _EX_ListHead->Blink;
+
+	pEntry->Flink = _EX_ListHead;
+	pEntry->Blink = _EX_Blink;
+	_EX_Blink->Flink = pEntry;
+	_EX_ListHead->Blink = pEntry;
+}
+
+//#define RemoveEntryList(e) do { PLIST_ENTRY f = (e)->Flink, b = (e)->Blink; f->Blink = b; b->Flink = f; (e)->Flink = (e)->Blink = NULL; } while (0)
+
+void RemoveEntryList(xboxkrnl::PLIST_ENTRY pEntry)
+{
+	xboxkrnl::PLIST_ENTRY _EX_Flink = pEntry->Flink;
+	xboxkrnl::PLIST_ENTRY _EX_Blink = pEntry->Blink;
+
+	_EX_Blink->Flink = _EX_Flink;
+	_EX_Flink->Blink = _EX_Blink;
+}
+
+xboxkrnl::PLIST_ENTRY RemoveHeadList(xboxkrnl::PLIST_ENTRY pListHead)
+{
+	xboxkrnl::PLIST_ENTRY Result = pListHead->Flink;
+
+	RemoveEntryList(pListHead->Flink);
+	return Result;
+}
+
+xboxkrnl::PLIST_ENTRY RemoveTailList(xboxkrnl::PLIST_ENTRY pListHead)
+{
+	xboxkrnl::PLIST_ENTRY Result = pListHead->Blink;
+
+	RemoveEntryList(pListHead->Blink);
+	return Result;
+}
+
 // ******************************************************************
 // * Declaring this in a header causes errors with xboxkrnl
 // * namespace, so we must declare it within any file that uses it

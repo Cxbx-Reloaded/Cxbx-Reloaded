@@ -53,17 +53,13 @@ namespace NtDll
 };
 
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
-#include "EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
 #include "Emu.h" // For EmuWarning()
+#include "EmuKrnl.h" // For OBJECT_TO_OBJECT_HEADER()
+#include "EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
 
 #pragma warning(disable:4005) // Ignore redefined status values
 #include <ntstatus.h>
 #pragma warning(default:4005)
-
-// TODO : Move this tooling to a more suitable place :
-
-#define OBJECT_TO_OBJECT_HEADER(Object) \
-    CONTAINING_RECORD(Object, OBJECT_HEADER, Body)
 
 #define OB_FLAG_NAMED_OBJECT 1
 

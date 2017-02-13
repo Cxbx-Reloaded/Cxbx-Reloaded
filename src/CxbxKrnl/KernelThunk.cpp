@@ -197,8 +197,8 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::KeQueryPerformanceFrequency),         // 0x007F (127)
 	(uint32)FUNC(&xboxkrnl::KeQuerySystemTime),                   // 0x0080 (128)
 	(uint32)FUNC(&xboxkrnl::KeRaiseIrqlToDpcLevel),               // 0x0081 (129)
-	(uint32)PANIC(0x0082),                                        // 0x0082 (130) KeRaiseIrqlToSynchLevel
-	(uint32)PANIC(0x0083),                                        // 0x0083 (131) KeRaiseIrqlToSynchLevel
+	(uint32)FUNC(&xboxkrnl::KeRaiseIrqlToSynchLevel),             // 0x0082 (130)
+	(uint32)PANIC(0x0083),                                        // 0x0083 (131) KeReleaseMutant
 	(uint32)PANIC(0x0084),                                        // 0x0084 (132) KeReleaseSemaphore
 	(uint32)PANIC(0x0085),                                        // 0x0085 (133) KeRemoveByKeyDeviceQueue
 	(uint32)PANIC(0x0086),                                        // 0x0086 (134) KeRemoveDeviceQueue
