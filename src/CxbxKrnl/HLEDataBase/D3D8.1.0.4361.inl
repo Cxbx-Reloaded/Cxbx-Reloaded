@@ -1798,6 +1798,7 @@ OOVPATable D3D8_4361[] = {
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstant, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreatePixelShader, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShader, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetPixelShaderProgram, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetViewport, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetViewport, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_BumpEnv, 4361, PATCH),
