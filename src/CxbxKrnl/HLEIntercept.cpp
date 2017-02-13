@@ -606,12 +606,6 @@ static inline void EmuInstallPatch(xbaddr FunctionAddr, void *Patch)
     *(uint32*)&FuncBytes[1] = (uint32)Patch - FunctionAddr - 5;
 }
 
-static inline void GetOovpaEntry(OOVPA *oovpa, int index, OUT uint32 &offset, OUT uint08 &value)
-{
-	offset = (uint32)((LOOVPA<1>*)oovpa)->Lovp[index].Offset;
-	value = ((LOOVPA<1>*)oovpa)->Lovp[index].Value;
-}
-
 static inline void GetXRefEntry(OOVPA *oovpa, int index, OUT uint32 &xref, OUT uint08 &offset)
 {
 	// Note : These are stored swapped by the XREF_ENTRY macro, hence this difference from GetOovpaEntry :
@@ -619,13 +613,75 @@ static inline void GetXRefEntry(OOVPA *oovpa, int index, OUT uint32 &xref, OUT u
 	offset = ((LOOVPA<1>*)oovpa)->Lovp[index].Value;
 }
 
+static inline void GetOovpaEntry(OOVPA *oovpa, int index, OUT uint32 &offset, OUT uint08 &value)
+{
+	offset = (uint32)((LOOVPA<1>*)oovpa)->Lovp[index].Offset;
+	value = ((LOOVPA<1>*)oovpa)->Lovp[index].Value;
+}
+
+static boolean CompareOOVPAToAddress(OOVPA *Oovpa, xbaddr cur)
+{
+	uint32 v = 0; // verification counter
+
+	// Check all XRefs, stop if any does not match
+	for (; v < Oovpa->XRefCount; v++)
+	{
+		uint32 XRef;
+		uint08 Offset;
+
+		// get currently registered (un)known address
+		GetXRefEntry(Oovpa, v, XRef, Offset);
+		xbaddr XRefAddr = XRefDataBase[XRef];
+		// Undetermined XRef cannot be checked yet
+		// (EmuLocateFunction already checked this, but this check
+		// is cheap enough to keep, and keep this function generic).
+		if (XRefAddr == XREF_ADDR_UNDETERMINED)
+			return false;
+
+		xbaddr ActualAddr = *(xbaddr*)(cur + Offset);
+		// check if PC-relative or direct reference matches XRef
+		if ((ActualAddr + cur + Offset + 4 != XRefAddr) && (ActualAddr != XRefAddr))
+			return false;
+	}
+
+	// Check all (Offset,Value)-pairs, stop if any does not match
+	for (; v < Oovpa->Count; v++)
+	{
+		uint32 Offset;
+		uint08 ExpectedValue;
+
+		// get offset + value pair
+		GetOovpaEntry(Oovpa, v, Offset, ExpectedValue);
+		uint08 ActualValue = *(uint08*)(cur + Offset);
+		if (ActualValue != ExpectedValue)
+			return false;
+	}
+
+	// all offsets matched
+	return true;
+}
+
 // locate the given function, searching within lower and upper bounds
 static xbaddr EmuLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper)
 {
-	uint32 xref_count = Oovpa->XRefCount;
-    // skip out if this is an unnecessary search
-    if(!bXRefFirstPass && xref_count == XRefZero && Oovpa->XRefSaveIndex == XRefNoSaveIndex)
-        return (xbaddr)nullptr;
+	// skip out if this is an unnecessary search
+	if (!bXRefFirstPass && Oovpa->XRefCount == XRefZero && Oovpa->XRefSaveIndex == XRefNoSaveIndex)
+		return (xbaddr)nullptr;
+
+	// Check all XRefs are known (if not, don't do a useless scan) :
+	for (uint32 v = 0; v < Oovpa->XRefCount; v++)
+	{
+		uint32 XRef;
+		uint08 Offset;
+
+		// get currently registered (un)known address
+		GetXRefEntry(Oovpa, v, XRef, Offset);
+		xbaddr XRefAddr = XRefDataBase[XRef];
+		// Undetermined XRef cannot be checked yet
+		if (XRefAddr == XREF_ADDR_UNDETERMINED)
+			// Skip this scan over the address range
+			return (xbaddr)nullptr;
+	}
 
 	// correct upper bound with highest Oovpa offset
 	uint32 count = Oovpa->Count;
@@ -639,70 +695,27 @@ static xbaddr EmuLocateFunction(OOVPA *Oovpa, xbaddr lower, xbaddr upper)
 
 	// search all of the image memory
 	for (xbaddr cur = lower; cur < upper; cur++)
-	{
-		uint32 v; // verification counter
-
-		// check all cross references
-		for (v = 0; v < xref_count; v++)
+		if (CompareOOVPAToAddress(Oovpa, cur))
 		{
-			uint32 XRef;
-			uint08 Offset;
-
-			// get XRef offset + value pair and currently registered (un)known address
-			GetXRefEntry(Oovpa, v, XRef, Offset);
-			xbaddr XRefValue = XRefDataBase[XRef];
-
-			// unknown XRef cannot be checked yet
-			if (XRefValue == XREF_ADDR_UNDETERMINED)
-				break;
-
-			xbaddr RealValue = *(xbaddr*)(cur + Offset);
-			// check if PC-relative or direct reference matches XRef
-			if ((RealValue + cur + Offset + 4 != XRefValue) && (RealValue != XRefValue))
-				break;
-		}
-
-		// did all xrefs match?
-		if (v == xref_count)
-		{
-			// check all OV pairs, moving on if any do not match
-			for (; v < count; v++)
+			// do we need to save the found address?
+			if (Oovpa->XRefSaveIndex != XRefNoSaveIndex)
 			{
-				uint32 Offset;
-				uint08 Value;
-
-				GetOovpaEntry(Oovpa, v, Offset, Value);
-				uint08 RealValue = *(uint08*)(cur + Offset);
-				if (RealValue != Value)
-					break;
-			}
-
-			// success if we found all pairs
-			if (v == count)
-			{
-				// do we need to save the found address?
-				if (Oovpa->XRefSaveIndex != XRefNoSaveIndex)
+				// is the XRef not saved yet?
+				if (XRefDataBase[Oovpa->XRefSaveIndex] == XREF_ADDR_UNDETERMINED)
 				{
-					// is the XRef not saved yet?
-					if (XRefDataBase[Oovpa->XRefSaveIndex] == XREF_ADDR_UNDETERMINED)
-					{
-						// save and count the found address
-						UnResolvedXRefs--;
-						XRefDataBase[Oovpa->XRefSaveIndex] = cur;
-					}
-					else
-					{
-						// TODO : Check identical result?
-						// already found, no bother patching again
-						return XRefDataBase[Oovpa->XRefSaveIndex];
-					}
+					// save and count the found address
+					UnResolvedXRefs--;
+					XRefDataBase[Oovpa->XRefSaveIndex] = cur;
 				}
-
-				// return found address
-				return cur;
+				else
+				{
+					if (XRefDataBase[Oovpa->XRefSaveIndex] != cur)
+						EmuWarning("Found OOVPA on other address than in XRefDataBase!");
+				}
 			}
+
+			return cur;
 		}
-	}
 
 	// found nothing
     return (xbaddr)nullptr;
