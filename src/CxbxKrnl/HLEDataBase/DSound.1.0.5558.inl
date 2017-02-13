@@ -1944,6 +1944,69 @@ OOVPA_XREF(DirectSound_CDirectSoundStream_SetFrequency, 5558, 9,
 OOVPA_END;
 
 // ******************************************************************
+// * DirectSound::CDirectSound::SetAllParameters
+// ******************************************************************
+OOVPA_XREF(DirectSound_CDirectSound_SetAllParameters, 5558, 8,
+
+    XREF_DSSETALLPARAMETERSA,
+    XRefZero)
+
+        { 0x0C, 0x00 },
+        { 0x0E, 0xB6 },
+        { 0x10, 0x74 },
+        { 0x12, 0x85 },
+        { 0x14, 0x74 },
+        { 0x16, 0x68 },
+        { 0x2A, 0x00 },
+        { 0x2B, 0x8B },
+OOVPA_END;
+
+// ******************************************************************
+// * DirectSound::CMcpxVoiceClient::SetFilter
+// ******************************************************************
+OOVPA_XREF(DirectSound_CMcpxVoiceClient_SetFilter, 5558, 10,
+
+    XREF_DirectSound_CMcpxVoiceClient_SetFilter,
+    XRefZero)
+
+        { 0x05, 0x20 },
+        { 0x07, 0x65 },
+        { 0x09, 0x00 },
+        { 0x0B, 0x56 },
+        { 0x0F, 0x8D },
+        { 0x17, 0x8B },
+        { 0x19, 0x08 },
+        { 0x1B, 0xF6 },
+        { 0x1D, 0xFF },
+        { 0x1F, 0x00 },
+OOVPA_END;
+
+// ******************************************************************
+// * DirectSound::CMcpxVoiceClient::SetEG
+// ******************************************************************
+#define DirectSound_CMcpxVoiceClient_SetEG_5558 DirectSound_CMcpxVoiceClient_SetEG_4627
+
+// ******************************************************************
+// * DirectSound::CDirectSoundVoice::SetEG
+// ******************************************************************
+#define DirectSound_CDirectSoundVoice_SetEG_5558 DirectSound_CDirectSoundVoice_SetEG_4627
+
+// ******************************************************************
+// * DirectSound::CDirectSoundStream::SetEG
+// ******************************************************************
+#define DirectSound_CDirectSoundStream_SetEG_5558 DirectSound_CDirectSoundStream_SetEG_4627
+
+// ******************************************************************
+// * DirectSound::CDirectSoundBuffer::SetEG
+// ******************************************************************
+#define DirectSound_CDirectSoundBuffer_SetEG_5558 DirectSound_CDirectSoundBuffer_SetEG_4627
+
+// ******************************************************************
+// * IDirectSoundBuffer_SetEG
+// ******************************************************************
+#define IDirectSoundBuffer_SetEG_5558 IDirectSoundBuffer_SetEG_4627
+
+// ******************************************************************
 // * Direct, 5558
 // ******************************************************************
 OOVPATable DSound_5558[] = {
@@ -2083,6 +2146,19 @@ OOVPATable DSound_5558[] = {
 	REGISTER_OOVPA(IDirectSound8_SetVelocity, 5558, ALIAS, IDirectSound_SetVelocity),
 	REGISTER_OOVPA(DirectSound_CDirectSound_CreateSoundStream, 5558, XREF),
 	REGISTER_OOVPA(IDirectSound8_CreateStream, 5558, ALIAS, IDirectSound_CreateSoundStream),
+	REGISTER_OOVPA(DirectSound_CMcpxVoiceClient_SetEG, 5558, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetEG, 5558, XREF),
+	REGISTER_OOVPA(CDirectSoundStream_SetEG, 5558, ALIAS, DirectSound_CDirectSoundStream_SetEG),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetEG, 5558, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer8_SetEG, 5558, ALIAS, IDirectSoundBuffer_SetEG),
+	REGISTER_OOVPA(IDirectSound8_AddRef, 3936, PATCH),
+	REGISTER_OOVPA(DirectSound_CDirectSound_SetAllParameters, 5558, XREF),
+	REGISTER_OOVPA(IDirectSound8_SetAllParameters, 3936, PATCH),
+	REGISTER_OOVPA(DirectSound_CMcpxVoiceClient_SetFilter, 5558, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetFilter, 4627, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetFilter, 4627, XREF),
+	REGISTER_OOVPA(CDirectSoundStream_SetFilter, 4627, ALIAS, DirectSound_CDirectSoundStream_SetFilter),
+	REGISTER_OOVPA(IDirectSoundBuffer8_SetFilter, 4627, ALIAS, IDirectSoundBuffer_SetFilter),
 };
 
 // ******************************************************************

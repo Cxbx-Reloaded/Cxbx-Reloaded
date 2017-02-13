@@ -254,6 +254,24 @@ OOVPA_XREF(CDirectSoundVoice_SetMode, 5233, 8,
 OOVPA_END;
 
 // ******************************************************************
+// CDirectSoundVoice::SetMode
+// ******************************************************************
+OOVPA_XREF(CDirectSoundVoice_SetMode, 5344, 8,
+
+    XREF_DSBUFFERSETMODEB,
+    XRefZero)
+
+        { 0x09, 0xB4 }, // (Offset,Value)-Pair #1
+        { 0x10, 0x08 }, // (Offset,Value)-Pair #2
+        { 0x13, 0x40 }, // (Offset,Value)-Pair #3
+        { 0x15, 0x41 }, // (Offset,Value)-Pair #4
+        { 0x18, 0x80 }, // (Offset,Value)-Pair #5
+        { 0x19, 0xB4 }, // (Offset,Value)-Pair #6
+        { 0x2E, 0x33 }, // (Offset,Value)-Pair #7
+        { 0x31, 0x0C }, // (Offset,Value)-Pair #8
+OOVPA_END;
+
+// ******************************************************************
 // CDirectSoundBuffer::SetMode
 // ******************************************************************
 OOVPA_XREF(CDirectSoundBuffer_SetMode, 5233, 8,
@@ -933,6 +951,7 @@ OOVPATable DSound_5233[] = {
 	REGISTER_OOVPA(X_DirectSound_CDirectSoundBuffer_SetFormat, 4627, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer8_SetFormat, 4627, ALIAS, X_IDirectSoundBuffer_SetFormat),
 	REGISTER_OOVPA(CDirectSoundVoice_SetMode, 5233, XREF),
+	//REGISTER_OOVPA(CDirectSoundVoice_SetMode, 5344, XREF), // Add when needed...
 	REGISTER_OOVPA(CDirectSoundBuffer_SetMode, 5233, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer8_SetMode, 5233, PATCH),
 	REGISTER_OOVPA(CDirectSoundVoice_SetRolloffCurve, 5233, XREF),

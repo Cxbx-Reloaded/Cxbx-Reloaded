@@ -892,6 +892,11 @@ OOVPA_XREF(CMcpxBuffer_Play, 4928, 10,
 OOVPA_END;
 
 // ******************************************************************
+// * CMcpxBuffer_PlayA
+// ******************************************************************
+#define CMcpxBuffer_PlayA_4627 CMcpxBuffer_PlayA_4361
+
+// ******************************************************************
 // * CDirectSound::SetDistanceFactorA
 // ******************************************************************
 OOVPA_XREF(CDirectSound_SetDistanceFactorA, 4627, 11,
@@ -2939,6 +2944,16 @@ OOVPA_XREF(DirectSound_CDirectSoundStream_SetPitch, 4627, 12,
 OOVPA_END;
 
 // ******************************************************************
+// * CDirectSoundBuffer::SetVolume
+// ******************************************************************
+#define CDirectSoundBuffer_SetVolume_4627 CDirectSoundBuffer_SetVolume_4361
+
+// ******************************************************************
+// * IDirectSoundBuffer8::SetVolume
+// ******************************************************************
+#define IDirectSoundBuffer8_SetVolume_4627 IDirectSoundBuffer8_SetVolume_4361
+
+// ******************************************************************
 // * Direct, 4627
 // ******************************************************************
 OOVPATable DSound_4627[] = {
@@ -3125,6 +3140,8 @@ OOVPATable DSound_4627[] = {
   REGISTER_OOVPA(CDirectSoundBuffer_SetLFO, 4627, XREF),
   REGISTER_OOVPA(IDirectSoundBuffer8_SetLFO, 4627, PATCH),
 	REGISTER_OOVPA(CDirectSoundStream_SetPitch, 4627, ALIAS, DirectSound_CDirectSoundStream_SetPitch),
+	REGISTER_OOVPA(CDirectSoundBuffer_SetVolume, 4627, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer8_SetVolume, 4627, PATCH),
 };
 
 // ******************************************************************
