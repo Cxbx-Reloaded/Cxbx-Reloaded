@@ -1283,6 +1283,11 @@ OOVPA_NO_XREF(D3DDevice_GetVertexShaderSize, 5788, 13)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_GetViewportOffsetAndScale
+// ******************************************************************
+#define D3DDevice_GetViewportOffsetAndScale_5788 D3DDevice_GetViewportOffsetAndScale_5558
+
+// ******************************************************************
 // * D3D8_5788
 // ******************************************************************
 OOVPATable D3D8_5788[] = {
@@ -1453,6 +1458,7 @@ OOVPATable D3D8_5788[] = {
 	REGISTER_OOVPA(D3DDevice_GetTexture2, 5788, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderTargetFast, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetDepthClipPlanes, 5788, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetViewportOffsetAndScale, 5788, PATCH),
 };
 
 // ******************************************************************

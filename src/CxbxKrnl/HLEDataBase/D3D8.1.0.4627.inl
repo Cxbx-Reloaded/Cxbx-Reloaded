@@ -124,26 +124,26 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_EndVisibilityTest
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_EndVisibilityTest, 4627, 13)
+OOVPA_NO_XREF(D3DDevice_EndVisibilityTest, 4627, 11)
+
+        // D3DDevice_EndVisibilityTest+0x0B : mov esi, eax
+        { 0x0B, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x0C, 0xF0 }, // (Offset,Value)-Pair #2
+
+        // D3DDevice_EndVisibilityTest+0x0D : test esi, esi
+        { 0x0D, 0x85 }, // (Offset,Value)-Pair #3
+        { 0x0E, 0xF6 }, // (Offset,Value)-Pair #4
+
+        // D3DDevice_EndVisibilityTest+0x0D : jnz +0x09
+        { 0x0F, 0x75 }, // (Offset,Value)-Pair #5
+        { 0x10, 0x09 }, // (Offset,Value)-Pair #6
 
         // D3DDevice_EndVisibilityTest+0x11 : mov eax, 0x8007000E
-        { 0x11, 0xB8 }, // (Offset,Value)-Pair #1
-        { 0x12, 0x0E }, // (Offset,Value)-Pair #2
-        { 0x13, 0x00 }, // (Offset,Value)-Pair #3
-        { 0x14, 0x07 }, // (Offset,Value)-Pair #4
-        { 0x15, 0x80 }, // (Offset,Value)-Pair #5
-
-        // D3DDevice_EndVisibilityTest+0x2D : mov dword ptr [eax], 0x000817CC
-        { 0x2D, 0xC7 }, // (Offset,Value)-Pair #6
-        { 0x2E, 0x00 }, // (Offset,Value)-Pair #7
-        { 0x2F, 0xCC }, // (Offset,Value)-Pair #8
-        { 0x30, 0x17 }, // (Offset,Value)-Pair #9
-        { 0x31, 0x08 }, // (Offset,Value)-Pair #10
-
-        // D3DDevice_EndVisibilityTest+0x49 : add eax, 0x0C
-        { 0x49, 0x83 }, // (Offset,Value)-Pair #11
-        { 0x4A, 0xC0 }, // (Offset,Value)-Pair #12
-        { 0x4B, 0x0C }, // (Offset,Value)-Pair #13
+        { 0x11, 0xB8 }, // (Offset,Value)-Pair #7
+        { 0x12, 0x0E }, // (Offset,Value)-Pair #8
+        { 0x13, 0x00 }, // (Offset,Value)-Pair #9
+        { 0x14, 0x07 }, // (Offset,Value)-Pair #10
+        { 0x15, 0x80 }, // (Offset,Value)-Pair #11
 OOVPA_END;
 
 // ******************************************************************
@@ -3336,6 +3336,7 @@ OOVPATable D3D8_4627[] = {
 	REGISTER_OOVPA(D3DDevice_GetBackMaterial, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetBackMaterial, 4627, PATCH),
 	// REGISTER_OOVPA(D3DCubeTexture_LockRect, 3925, PATCH), // TODO: This needs to be verified on 4361, not just 4242!
+	REGISTER_OOVPA(D3D_SetPushBufferSize, 4034, PATCH),
 };
 
 // ******************************************************************

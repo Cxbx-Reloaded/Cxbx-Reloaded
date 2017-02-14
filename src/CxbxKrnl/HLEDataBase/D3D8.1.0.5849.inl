@@ -794,7 +794,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice8::SetDepthClipPlanes
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetDepthClipPlanes, 5849, 13)
+OOVPA_NO_XREF(D3DDevice_SetDepthClipPlanes, 5849, 11)
 
         // _D3DDevice_SetDepthClipPlanes+0x00 : mov eax, [esp+Flags]
         { 0x00, 0x8B }, // (Offset,Value)-Pair #1
@@ -802,18 +802,18 @@ OOVPA_NO_XREF(D3DDevice_SetDepthClipPlanes, 5849, 13)
         { 0x02, 0x24 }, // (Offset,Value)-Pair #3
         { 0x03, 0x0C }, // (Offset,Value)-Pair #4
 
-        // _D3DDevice_SetDepthClipPlanes+0x00 : ja short loc_27ABD0 ; jumptable 0027AB71 default case
+        // _D3DDevice_SetDepthClipPlanes+0x0F : ja short loc_27ABD0 ; jumptable 0027AB71 default case
         { 0x0F, 0x77 }, // (Offset,Value)-Pair #5
         { 0x10, 0x5F }, // (Offset,Value)-Pair #6
 
-        // _D3DDevice_SetDepthClipPlanes+0x00 : jmp ds:off_27ABEC[eax*4] ; switch jump
+        // _D3DDevice_SetDepthClipPlanes+0x11 : jmp ds:off_27ABEC[eax*4] ; switch jump
         { 0x11, 0xFF }, // (Offset,Value)-Pair #7
         { 0x12, 0x24 }, // (Offset,Value)-Pair #8
         { 0x13, 0x85 }, // (Offset,Value)-Pair #9
-        { 0x14, 0xEC }, // (Offset,Value)-Pair #10
-        { 0x15, 0xAB }, // (Offset,Value)-Pair #11
-        { 0x16, 0x27 }, // (Offset,Value)-Pair #12
-        { 0x17, 0x00 }, // (Offset,Value)-Pair #13
+
+        // _D3DDevice_SetDepthClipPlanes+0x88 : retn 0Ch
+        { 0x88, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x89, 0x0C }, // (Offset,Value)-Pair #11
 OOVPA_END;
 
 // ******************************************************************
@@ -1316,6 +1316,31 @@ OOVPA_NO_XREF(D3DDevice_GetTexture2, 5849, 8)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_SetScreenSpaceOffset
+// ******************************************************************
+#define D3DDevice_SetScreenSpaceOffset_5849 D3DDevice_SetScreenSpaceOffset_5558
+
+// ******************************************************************
+// * D3DDevice_SetVertexShaderInput
+// ******************************************************************
+#define D3DDevice_SetVertexShaderInput_5849 D3DDevice_SetVertexShaderInput_4627
+
+// ******************************************************************
+// * D3D::SetFence
+// ******************************************************************
+#define D3D_SetFence_5849 D3D_SetFence_5558
+
+// ******************************************************************
+// * D3DDevice_GetViewportOffsetAndScale
+// ******************************************************************
+#define D3DDevice_GetViewportOffsetAndScale_5849 D3DDevice_GetViewportOffsetAndScale_5558
+
+// ******************************************************************
+// * D3DDevice_CreateStateBlock
+// ******************************************************************
+#define D3DDevice_CreateStateBlock_5849 D3DDevice_CreateStateBlock_4627
+
+// ******************************************************************
 // * D3D8_5849
 // ******************************************************************
 OOVPATable D3D8_5849[] = {
@@ -1474,6 +1499,11 @@ OOVPATable D3D8_5849[] = {
 	REGISTER_OOVPA(D3DDevice_GetTexture2, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderTargetFast, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetDepthClipPlanes, 5849, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetScreenSpaceOffset, 5849, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetVertexShaderInput, 5849, PATCH),
+	REGISTER_OOVPA(D3D_SetFence, 5849, XREF),
+	REGISTER_OOVPA(D3DDevice_GetViewportOffsetAndScale, 5849, PATCH),
+	REGISTER_OOVPA(D3DDevice_CreateStateBlock, 5849, PATCH),
 };
 
 // ******************************************************************
