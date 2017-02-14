@@ -224,7 +224,11 @@ XBSYSAPI EXPORTNUM(128) VOID NTAPI KeQuerySystemTime
 // ******************************************************************
 XBSYSAPI EXPORTNUM(129) UCHAR NTAPI KeRaiseIrqlToDpcLevel();
 
-XBSYSAPI VOID *KeRaiseIrqlToSynchLevel;
+// ******************************************************************
+// * 0x0082 - KeRaiseIrqlToSynchLevel()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(130) UCHAR NTAPI KeRaiseIrqlToSynchLevel();
+
 XBSYSAPI VOID *KeReleaseMutant;
 XBSYSAPI VOID *KeReleaseSemaphore;
 XBSYSAPI VOID *KeRemoveByKeyDeviceQueue;

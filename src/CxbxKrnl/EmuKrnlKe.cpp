@@ -54,87 +54,25 @@ namespace NtDll
 
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
+#include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuFile.h" // For IsEmuHandle(), NtStatusToString()
 
 #include <chrono>
 #include <thread>
 
 // Copied over from Dxbx. 
+// TODO : Move towards thread-simulation based Dpc emulation
 typedef struct _DpcData {
 	CRITICAL_SECTION Lock;
 	HANDLE DpcThread;
 	HANDLE DpcEvent;
-	xboxkrnl::LIST_ENTRY DpcQueue;
+	xboxkrnl::LIST_ENTRY DpcQueue; // TODO : Use KeGetCurrentPrcb()->DpcListHead instead
 	xboxkrnl::LIST_ENTRY TimerQueue;
 } DpcData;
 
-DpcData g_DpcData = { 0 }; // TODO : InitializeCriticalSection(Lock)
+DpcData g_DpcData = { 0 }; // Note : g_DpcData is initialized in InitDpcAndTimerThread()
 
-// See also :
-// https://github.com/reactos/reactos/blob/40a16a9cf1cdfca399e9154b42d32c30b63480f5/reactos/drivers/filesystems/udfs/Include/env_spec_w32.h
-void InitializeListHead(xboxkrnl::PLIST_ENTRY pListHead)
-{
-	pListHead->Flink = pListHead->Blink = pListHead;
-}
-
-bool IsListEmpty(xboxkrnl::PLIST_ENTRY pListHead)
-{
-	return (pListHead->Flink == pListHead);
-}
-
-void InsertHeadList(xboxkrnl::PLIST_ENTRY pListHead, xboxkrnl::PLIST_ENTRY pEntry)
-{
-	xboxkrnl::PLIST_ENTRY _EX_ListHead = pListHead;
-	xboxkrnl::PLIST_ENTRY _EX_Flink = _EX_ListHead->Flink;
-
-	pEntry->Flink = _EX_Flink;
-	pEntry->Blink = _EX_ListHead;
-	_EX_Flink->Blink = pEntry;
-	_EX_ListHead->Flink = pEntry;
-}
-
-void InsertTailList(xboxkrnl::PLIST_ENTRY pListHead, xboxkrnl::PLIST_ENTRY pEntry)
-{
-	xboxkrnl::PLIST_ENTRY _EX_ListHead = pListHead;
-	xboxkrnl::PLIST_ENTRY _EX_Blink = _EX_ListHead->Blink;
-	
-	pEntry->Flink = _EX_ListHead;
-	pEntry->Blink = _EX_Blink;
-	_EX_Blink->Flink = pEntry;
-	_EX_ListHead->Blink = pEntry;
-}
-
-//#define RemoveEntryList(e) do { PLIST_ENTRY f = (e)->Flink, b = (e)->Blink; f->Blink = b; b->Flink = f; (e)->Flink = (e)->Blink = NULL; } while (0)
-
-void RemoveEntryList(xboxkrnl::PLIST_ENTRY pEntry)
-{
-	xboxkrnl::PLIST_ENTRY _EX_Flink = pEntry->Flink;
-	xboxkrnl::PLIST_ENTRY _EX_Blink = pEntry->Blink;
-
-	if (_EX_Flink != nullptr) {
-		_EX_Blink->Flink = _EX_Flink;
-	}
-	
-	if (_EX_Flink != nullptr) {
-		_EX_Flink->Blink = _EX_Blink;
-	}
-}
-
-xboxkrnl::PLIST_ENTRY RemoveHeadList(xboxkrnl::PLIST_ENTRY pListHead)
-{
-	xboxkrnl::PLIST_ENTRY Result = pListHead->Flink;
-
-	RemoveEntryList(pListHead->Flink);
-	return Result;
-}
-
-xboxkrnl::PLIST_ENTRY RemoveTailList(xboxkrnl::PLIST_ENTRY pListHead)
-{
-	xboxkrnl::PLIST_ENTRY Result = pListHead->Blink;
-	
-	RemoveEntryList(pListHead->Blink);
-	return Result;
-}
+// TODO : Move all Ki* functions to EmuKrnlKi.h/cpp :
 
 #define KiRemoveTreeTimer(Timer)               \
     (Timer)->Header.Inserted = FALSE;          \
@@ -190,11 +128,10 @@ xboxkrnl::KPCR* KeGetPcr()
 {
 	xboxkrnl::KPCR* Pcr;
 
+	// See EmuKeSetPcr()
 	__asm {
-		push eax
-		mov eax, fs:[0x14]
+		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov Pcr, eax
-		pop eax
 	}
 
 	return Pcr;
@@ -208,6 +145,14 @@ xboxkrnl::KPRCB *KeGetCurrentPrcb()
 	return &(KeGetPcr()->PrcbData);
 }
 
+// Forward KeLowerIrql() to KfLowerIrql()
+#define KeLowerIrql(NewIrql) \
+	KfLowerIrql(NewIrql)
+
+// Forward KeRaiseIrql() to KfRaiseIrql()
+#define KeRaiseIrql(NewIrql, OldIrql) \
+	*OldIrql = KfRaiseIrql(NewIrql)
+
 DWORD BootTickCount = 0;
 
 // The Xbox GetTickCount is measured in milliseconds, just like the native GetTickCount.
@@ -217,12 +162,6 @@ DWORD CxbxXboxGetTickCount()
 {
 	return GetTickCount() - BootTickCount;
 }
-
-// CONTAINING_RECORD macro
-// Gets the value of structure member (field - num1),given the type(MYSTRUCT, in this code) and the List_Entry head(temp, in this code)
-// See http://stackoverflow.com/questions/8240273/a-portable-way-to-calculate-pointer-to-the-whole-structure-using-pointer-to-a-fi
-//#define CONTAINING_RECORD(ptr, type, field) \
-//	(((type) *)((char *)(ptr) - offsetof((type), member)))
 
 DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
 {
@@ -251,7 +190,7 @@ DWORD __stdcall EmuThreadDpcHandler(LPVOID lpVoid)
 			// Extract the head entry and retrieve the containing KDPC pointer for it:
 			pkdpc = CONTAINING_RECORD(RemoveHeadList(&(g_DpcData.DpcQueue)), xboxkrnl::KDPC, DpcListEntry);
 			// Mark it as no longer linked into the DpcQueue
-			pkdpc->DpcListEntry.Flink = NULL;
+			pkdpc->Inserted = FALSE;
 			// Set DpcRoutineActive to support KeIsExecutingDpc:
 			KeGetCurrentPrcb()->DpcRoutineActive = TRUE; // Experimental
 			// Call the Deferred Procedure  :
@@ -578,9 +517,7 @@ XBSYSAPI EXPORTNUM(103) xboxkrnl::KIRQL NTAPI xboxkrnl::KeGetCurrentIrql(void)
 {
 	LOG_FUNC();
 
-	KIRQL Irql;
-
-	Irql = KeGetPcr()->Irql;
+	KIRQL Irql = KeGetPcr()->Irql;
 
 	RETURN(Irql);
 }
@@ -592,9 +529,11 @@ XBSYSAPI EXPORTNUM(104) xboxkrnl::PKTHREAD NTAPI xboxkrnl::KeGetCurrentThread(vo
 {
 	LOG_FUNC();
 
-	LOG_UNIMPLEMENTED();
-
-	RETURN(NULL);
+	// Probably correct, but untested and currently faked in EmuGenerateFS
+	// (to make this correct, we need to improve our thread emulation)
+	KTHREAD *ret = KeGetCurrentPrcb()->CurrentThread;
+	
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -663,16 +602,22 @@ XBSYSAPI EXPORTNUM(109) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeInterrupt
 		LOG_FUNC_ARG(Vector)
 		LOG_FUNC_ARG(Irql)
 		LOG_FUNC_ARG(InterruptMode)
-		LOG_FUNC_ARG(ShareVector)
+		LOG_FUNC_ARG(ShareVector) 
 		LOG_FUNC_END;
 
-	// TODO : Untested :
 	Interrupt->ServiceRoutine = (PVOID)ServiceRoutine;
 	Interrupt->ServiceContext = ServiceContext;
-	Interrupt->BusInterruptLevel = Vector - 0x30;
+	Interrupt->BusInterruptLevel = Vector - 0x30; // TODO : Constantify 0x30
 	Interrupt->Irql = Irql;
+	Interrupt->Connected = FALSE;
+	// Unused : Interrupt->ShareVector = ShareVector;
 	Interrupt->Mode = InterruptMode;
-	Interrupt->ShareVector = ShareVector;
+	// Interrupt->rsvd1 = 0; // not neccesary?
+	// Interrupt->ServiceCount = 0; // not neccesary?
+
+	// Interrupt->DispatchCode = ?; //TODO : Populate this interrupt dispatch
+	// code block, patch it up so it works with the address of this Interrupt
+	// struct and calls the right dispatch routine (depending on InterruptMode). 
 }
 
 // ******************************************************************
@@ -718,26 +663,30 @@ XBSYSAPI EXPORTNUM(119) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeInsertQueueDpc
 		LOG_FUNC_ARG(SystemArgument2)
 		LOG_FUNC_END;
 
-	// Before going thread-save, check if the Dpc is not linked yet?
-	if (Dpc->DpcListEntry.Flink == NULL)
-	{
-		// For thread safety, enter the Dpc lock:
-		EnterCriticalSection(&(g_DpcData.Lock));
-		// Is the Dpc still not linked yet ?
-		if (Dpc->DpcListEntry.Flink == NULL)
-		{
-			// Remember the arguments and link it into our DpcQueue :
-			Dpc->SystemArgument1 = SystemArgument1;
-			Dpc->SystemArgument2 = SystemArgument2;
-			InsertTailList(&(g_DpcData.DpcQueue), &(Dpc->DpcListEntry));
-			// Signal the Dpc handling code there's work to do
-			SetEvent(g_DpcData.DpcEvent);
-		}
-		// Thread-safety is no longer required anymore
-		LeaveCriticalSection(&(g_DpcData.Lock));
+	// For thread safety, enter the Dpc lock:
+	EnterCriticalSection(&(g_DpcData.Lock));
+	// TODO : Instead, disable interrupts - use KeRaiseIrql(HIGH_LEVEL, &(KIRQL)OldIrql) ?
+
+
+	BOOLEAN NeedsInsertion = (Dpc->Inserted == FALSE);
+
+	if (NeedsInsertion) {
+		// Remember the arguments and link it into our DpcQueue :
+		Dpc->Inserted = TRUE;
+		Dpc->SystemArgument1 = SystemArgument1;
+		Dpc->SystemArgument2 = SystemArgument2;
+		InsertTailList(&(g_DpcData.DpcQueue), &(Dpc->DpcListEntry));
+		// TODO : Instead of DpcQueue, add the DPC to KeGetCurrentPrcb()->DpcListHead
+		// TODO : Once that's done, use an apropriate signalling mechanism instead of this :
+		// Signal the Dpc handling code there's work to do
+		SetEvent(g_DpcData.DpcEvent);
 	}
 
-	RETURN(TRUE);
+	// Thread-safety is no longer required anymore
+	LeaveCriticalSection(&(g_DpcData.Lock));
+	// TODO : Instead, enable interrupts - use KeLowerIrql(&OldIrql) ?
+
+	RETURN(NeedsInsertion);
 }
 
 // ******************************************************************
@@ -880,7 +829,9 @@ XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 		CxbxKrnlCleanup("Bugcheck: Caller of KeRaiseIrqlToDpcLevel is higher than DISPATCH_LEVEL!");
 
 	KIRQL kRet = NULL;
-	KeGetPcr()->Irql = DISPATCH_LEVEL;
+
+	KPCR* Pcr = KeGetPcr();
+	Pcr->Irql = DISPATCH_LEVEL;
 
 #ifdef _DEBUG_TRACE
 	DbgPrintf("Raised IRQL to DISPATCH_LEVEL (2).\n");
@@ -894,6 +845,19 @@ XBSYSAPI EXPORTNUM(129) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToDpcLevel()
 }
 
 // ******************************************************************
+// * 0x0082 - KeRaiseIrqlToSynchLevel()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(130) xboxkrnl::UCHAR NTAPI xboxkrnl::KeRaiseIrqlToSynchLevel()
+{
+	LOG_FUNC();
+
+	LOG_UNIMPLEMENTED();
+	// See KfRaiseIrql / KeRaiseIrqlToDpcLevel - use APC_LEVEL?
+
+	RETURN(0);
+}
+
+// ******************************************************************
 // * 0x0089 - KeRemoveQueueDpc()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(137) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeRemoveQueueDpc
@@ -903,19 +867,23 @@ XBSYSAPI EXPORTNUM(137) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeRemoveQueueDpc
 {
 	LOG_FUNC_ONE_ARG(Dpc);
 
-	if (Dpc->DpcListEntry.Flink != NULL)
-	{
-		EnterCriticalSection(&(g_DpcData.Lock));
-		if (Dpc->DpcListEntry.Flink != NULL)
-		{
-			RemoveEntryList(&(Dpc->DpcListEntry));
-			Dpc->DpcListEntry.Flink = NULL;
-		}
+	// TODO : Instead of using a lock, emulate the Clear Interrupt Flag (cli) instruction
+	// See https://msdn.microsoft.com/is-is/library/y14401ab(v=vs.80).aspx
+	EnterCriticalSection(&(g_DpcData.Lock));
 
-		LeaveCriticalSection(&(g_DpcData.Lock));
+	BOOLEAN Inserted = Dpc->Inserted;
+
+	if (Inserted)
+	{
+		RemoveEntryList(&(Dpc->DpcListEntry));
+		Dpc->Inserted = FALSE;
 	}
 
-	return TRUE;
+	// TODO : Instead of using a lock, emulate the Set Interrupt Flag (sti) instruction
+	// See https://msdn.microsoft.com/en-us/library/ad820yz3(v=vs.80).aspx
+	LeaveCriticalSection(&(g_DpcData.Lock));
+
+	RETURN(Inserted);
 }
 
 // ******************************************************************

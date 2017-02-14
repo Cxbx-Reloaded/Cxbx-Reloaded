@@ -42,6 +42,7 @@ namespace xboxkrnl
 #include <xboxkrnl/xboxkrnl.h>
 };
 
+#include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuFS.h"
 #include "EmuAlloc.h" // For CxbxCalloc()
 #include "CxbxKrnl.h"
@@ -51,193 +52,228 @@ namespace xboxkrnl
 #include <windows.h>
 #include <cstdio>
 
-__declspec(naked) void EmuCmpEsiFs00()
+NT_TIB *GetNtTib()
 {
+	NT_TIB *NtTib;
+
+	__asm
+	{
+		mov eax, fs : [TIB_LinearSelfAddress]
+		mov NtTib, eax
+	}
+
+	return NtTib;
+}
+
+void EmuKeSetPcr(xboxkrnl::KPCR *Pcr)
+{
+	// Store the Xbox KPCR pointer in FS (See KeGetPcr())
+	// 
+	// Note : Cxbx currently doesn't do preemptive thread switching,
+	// which implies that thread-state management is done by Windows.
+	//
+	// Xbox executable code expects thread-specific state data to
+	// be available via the FS segment register. To emulate this,
+	// Cxbx uses the user data-slot feature of Windows threads.
+	// 
+	// Cxbx puts a pointer to a thread-specific copy of an entire
+	// Kernel Processor Control Region (KPCR) into this data-slot.
+	//
+	// In the Xbox there's only be KPCR (as it's a per-processor-
+	// structure, and the Xbox has only one processor).
+	//
+	// Since Cxbx doesn't control thread-swiches (yet), each thread
+	// must have a thread-specific copy of the KPCR, to contain all
+	// thread-specific data that can be reached via this structure
+	// (like the NT_TIB structure and ETHREAD CurrentThread pointer).
+	// 
+	// For this to work, Cxbx patches all executable code accessing
+	// the FS segment register, so that the KPCR is accessed via
+	// the user data-slot of each Windows thread Cxbx uses for an
+	// Xbox thread.
+	//
+	__asm {
+		mov eax, Pcr
+		mov fs : [TIB_ArbitraryDataSlot], eax
+	}
+}
+
+__declspec(naked) void EmuFS_CmpEsiFs00()
+{
+	// Note : eax must be preserved here, hence the push/pop
 	__asm
 	{
 		push eax
-		mov eax, fs : [0x14]
+		mov eax, fs : [TIB_ArbitraryDataSlot]
 		cmp esi, [eax]
 		pop eax
 		ret
 	}
 }
 
-__declspec(naked) void EmuMEaxFs00()
+__declspec(naked) void EmuFS_MovEaxFs00()
 {
 	__asm
 	{
-		mov eax, fs : [0x14]
+		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov eax, [eax]
-			ret
+		ret
 	}
 }
 
-__declspec(naked) void EmuMEaxFs20()
+__declspec(naked) void EmuFS_MovEaxFs20()
 {
 	__asm
 	{
-		mov eax, fs : [0x14]
+		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov eax, [eax + 20h]
-			ret
+		ret
 	}
 }
 
-__declspec(naked) void EmuMEaxFs28()
+__declspec(naked) void EmuFS_MovEaxFs28()
 {
 	__asm
 	{
-		mov eax, fs : [0x14]
+		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov eax, [eax + 28h]
-			ret
+		ret
 	}
 }
 
-__declspec(naked) void EmuMEaxFs58()
+__declspec(naked) void EmuFS_MovEaxFs58()
 {
 	__asm
 	{
-		mov eax, fs : [0x14]
+		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov eax, [eax + 58h]
-			ret
+		ret
 	}
 }
 
-__declspec(naked) void EmuMEbxFs00()
+__declspec(naked) void EmuFS_MovEbxFs00()
 {
 	__asm
 	{
-		mov ebx, fs : [0x14]
+		mov ebx, fs : [TIB_ArbitraryDataSlot]
 		mov ebx, [ebx]
-			ret
+		ret
 	}
 }
 
-__declspec(naked) void EmuMEcxFs00()
+__declspec(naked) void EmuFS_MovEcxFs00()
 {
 	__asm
 	{
-		mov ecx, fs : [0x14]
+		mov ecx, fs : [TIB_ArbitraryDataSlot]
 		mov ecx, [ecx]
-			ret
+		ret
 	}
 }
 
-__declspec(naked) void EmuMEcxFs04()
+__declspec(naked) void EmuFS_MovEcxFs04()
 {
 	__asm
 	{
-		mov ecx, fs : [0x14]
+		mov ecx, fs : [TIB_ArbitraryDataSlot]
 		mov ecx, [ecx + 04h]
-			ret
+		ret
 	}
 }
 
-__declspec(naked) void EmuMEdiFs00()
+__declspec(naked) void EmuFS_MovEdiFs00()
 {
 	__asm
 	{
-		mov edi, fs : [0x14]
+		mov edi, fs : [TIB_ArbitraryDataSlot]
 		mov edi, [edi]
-			ret
+		ret
 	}
 }
 
-__declspec(naked) void EmuMEdiFs04()
+__declspec(naked) void EmuFS_MovEdiFs04()
 {
 	__asm
 	{
-		mov edi, fs : [0x14]
+		mov edi, fs : [TIB_ArbitraryDataSlot]
 		mov edi, [edi + 04h]
-			ret
+		ret
 	}
 }
 
-__declspec(naked) void EmuMEsiFs00()
+__declspec(naked) void EmuFS_MovEsiFs00()
 {
 	__asm
 	{
-		mov esi, fs : [0x14]
+		mov esi, fs : [TIB_ArbitraryDataSlot]
 		mov esi, [esi]
-			ret
+		ret
 	}
 }
 
-__declspec(naked) void EmuMzxEaxBytePtrFs24()
+__declspec(naked) void EmuFS_MovzxEaxBytePtrFs24()
 {
 	__asm
 	{
-		mov eax, fs : [0x14]
+		mov eax, fs : [TIB_ArbitraryDataSlot]
 		movzx eax, byte ptr[eax + 24h]
-			ret
+		ret
 	}
 }
 
-__declspec(naked) void EmuMFs00Eax()
+__declspec(naked) void EmuFS_MovFs00Eax()
 {
+	// Note : ebx must be preserved here, hence the push/pop
 	__asm
 	{
 		push ebx
-		mov ebx, fs : [0x14]
-			mov[ebx], eax
-			pop ebx
-			ret
+		mov ebx, fs : [TIB_ArbitraryDataSlot]
+		mov [ebx], eax
+		pop ebx
+		ret
 	}
 }
 
-__declspec(naked) void EmuMFs00Ebx()
+__declspec(naked) void EmuFS_MovFs00Ebx()
 {
+	// Note : eax must be preserved here, hence the push/pop
 	__asm
 	{
 		push eax
-		mov eax, fs : [0x14]
-			mov[eax], ebx
-			pop eax
-			ret
+		mov eax, fs : [TIB_ArbitraryDataSlot]
+		mov [eax], ebx
+		pop eax
+		ret
 	}
 }
 
-__declspec(naked) void EmuMFs00Ecx()
+__declspec(naked) void EmuFS_MovFs00Ecx()
 {
+	// Note : eax must be preserved here, hence the push/pop
 	__asm
 	{
 		push eax
-		mov eax, fs : [0x14]
-			mov[eax], ecx
-			pop eax
-			ret
+		mov eax, fs : [TIB_ArbitraryDataSlot]
+		mov [eax], ecx
+		pop eax
+		ret
 	}
 }
 
-__declspec(naked) void EmuMFs00Esp()
+__declspec(naked) void EmuFS_MovFs00Esp()
 {
+	// Note : eax must be preserved here, hence the push/pop
 	__asm
 	{
 		push eax
-		mov eax, fs : [0x14]
-			mov[eax], esp
-			pop eax
-			ret
+		mov eax, fs : [TIB_ArbitraryDataSlot]
+		mov [eax], esp
+		pop eax
+		ret
 	}
 }
 
-__declspec(naked) void EmuPushDwordPtrFs00()
-{
-	uint32 returnAddr;
-	uint32 temp;
-	__asm
-	{
-		pop returnAddr
-		mov temp, eax
-			mov eax, fs : [0x14]
-			push[eax]
-			mov eax, temp
-			push returnAddr
-			ret
-	}
-}
-
-__declspec(naked) void EmuPopDwordPtrFs00()
+__declspec(naked) void EmuFS_PushDwordPtrFs00()
 {
 	uint32 returnAddr;
 	uint32 temp;
@@ -246,11 +282,28 @@ __declspec(naked) void EmuPopDwordPtrFs00()
 	{
 		pop returnAddr
 		mov temp, eax
-			mov eax, fs : [0x14]
-			pop[eax]
-			mov eax, temp
-			push returnAddr
-			ret
+		mov eax, fs : [TIB_ArbitraryDataSlot]
+		push [eax]
+		mov eax, temp
+		push returnAddr
+		ret
+	}
+}
+
+__declspec(naked) void EmuFS_PopDwordPtrFs00()
+{
+	uint32 returnAddr;
+	uint32 temp;
+
+	__asm
+	{
+		pop returnAddr
+		mov temp, eax
+		mov eax, fs : [TIB_ArbitraryDataSlot]
+		pop [eax]
+		mov eax, temp
+		push returnAddr
+		ret
 	}
 }
 
@@ -262,24 +315,24 @@ void EmuInitFS()
 	* The entries must be in order of size, to keep the chance of false positives to a minimum.
 	*/
 	std::vector<fs_instruction_t> fsInstructions;
-	fsInstructions.push_back({ { 0x64, 0x0F, 0xB6, 0x05, 0x24, 0x00, 0x00, 0x00 }, &EmuMzxEaxBytePtrFs24 });// movzx eax, large byte ptr fs:24
-	fsInstructions.push_back({ { 0x64, 0x3B, 0x35, 0x00, 0x00, 0x00, 0x00 }, &EmuCmpEsiFs00 });				// cmp esi, large fs:0
-	fsInstructions.push_back({ { 0x64, 0x8B, 0x1D, 0x00, 0x00, 0x00, 0x00 }, &EmuMEbxFs00 });				// mov ebx, large fs:0
-	fsInstructions.push_back({ { 0x64, 0x8B, 0x0D, 0x00, 0x00, 0x00, 0x00 }, &EmuMEcxFs00 });				// mov ecx, large fs:0
-	fsInstructions.push_back({ { 0x64, 0x8B, 0x0D, 0x04, 0x00, 0x00, 0x00 }, &EmuMEcxFs04 });				// mov ecx, large fs:4
-	fsInstructions.push_back({ { 0x64, 0x8B, 0x3D, 0x00, 0x00, 0x00, 0x00 }, &EmuMEdiFs00 });				// mov edi, large fs:0
-	fsInstructions.push_back({ { 0x64, 0x8B, 0x3D, 0x04, 0x00, 0x00, 0x00 }, &EmuMEdiFs04 });				// mov edi, large fs:4
-	fsInstructions.push_back({ { 0x64, 0x8B, 0x35, 0x00, 0x00, 0x00, 0x00 }, &EmuMEsiFs00 });				// mov esi, large fs:0
-	fsInstructions.push_back({ { 0x64, 0x89, 0x1D, 0x00, 0x00, 0x00, 0x00 }, &EmuMFs00Ebx });				// mov large fs:0, ebx
-	fsInstructions.push_back({ { 0x64, 0x89, 0x0D, 0x00, 0x00, 0x00, 0x00 }, &EmuMFs00Ecx });				// mov large fs:0, ecx
-	fsInstructions.push_back({ { 0x64, 0x89, 0x25, 0x00, 0x00, 0x00, 0x00 }, &EmuMFs00Esp });				// mov large fs:0, esp
-	fsInstructions.push_back({ { 0x64, 0x8F, 0x05, 0x00, 0x00, 0x00, 0x00 }, &EmuPopDwordPtrFs00 });		// pop large dword ptr fs:0
-	fsInstructions.push_back({ { 0x64, 0xFF, 0x35, 0x00, 0x00, 0x00, 0x00 }, &EmuPushDwordPtrFs00 });		// push large dword ptr fs:0
-	fsInstructions.push_back({ { 0x64, 0xA1, 0x00, 0x00, 0x00, 0x00 }, &EmuMEaxFs00 });						// mov eax, large fs:0
-	fsInstructions.push_back({ { 0x64, 0xA1, 0x20, 0x00, 0x00, 0x00 }, &EmuMEaxFs20 });						// mov eax, large fs:20
-	fsInstructions.push_back({ { 0x64, 0xA1, 0x28, 0x00, 0x00, 0x00 }, &EmuMEaxFs28 });						// mov eax, large fs:28
-	fsInstructions.push_back({ { 0x64, 0xA1, 0x58, 0x00, 0x00, 0x00 }, &EmuMEaxFs58 });						// mov eax, large fs:58
-	fsInstructions.push_back({ { 0x64, 0xA3, 0x00, 0x00, 0x00, 0x00 }, &EmuMFs00Eax });						// mov large fs:0, eax
+	fsInstructions.push_back({ { 0x64, 0x0F, 0xB6, 0x05, 0x24, 0x00, 0x00, 0x00 }, &EmuFS_MovzxEaxBytePtrFs24 });// movzx eax, large byte ptr fs:24
+	fsInstructions.push_back({ { 0x64, 0x3B, 0x35, 0x00, 0x00, 0x00, 0x00 }, &EmuFS_CmpEsiFs00 });				// cmp esi, large fs:0
+	fsInstructions.push_back({ { 0x64, 0x8B, 0x1D, 0x00, 0x00, 0x00, 0x00 }, &EmuFS_MovEbxFs00 });				// mov ebx, large fs:0
+	fsInstructions.push_back({ { 0x64, 0x8B, 0x0D, 0x00, 0x00, 0x00, 0x00 }, &EmuFS_MovEcxFs00 });				// mov ecx, large fs:0
+	fsInstructions.push_back({ { 0x64, 0x8B, 0x0D, 0x04, 0x00, 0x00, 0x00 }, &EmuFS_MovEcxFs04 });				// mov ecx, large fs:4
+	fsInstructions.push_back({ { 0x64, 0x8B, 0x3D, 0x00, 0x00, 0x00, 0x00 }, &EmuFS_MovEdiFs00 });				// mov edi, large fs:0
+	fsInstructions.push_back({ { 0x64, 0x8B, 0x3D, 0x04, 0x00, 0x00, 0x00 }, &EmuFS_MovEdiFs04 });				// mov edi, large fs:4
+	fsInstructions.push_back({ { 0x64, 0x8B, 0x35, 0x00, 0x00, 0x00, 0x00 }, &EmuFS_MovEsiFs00 });				// mov esi, large fs:0
+	fsInstructions.push_back({ { 0x64, 0x89, 0x1D, 0x00, 0x00, 0x00, 0x00 }, &EmuFS_MovFs00Ebx });				// mov large fs:0, ebx
+	fsInstructions.push_back({ { 0x64, 0x89, 0x0D, 0x00, 0x00, 0x00, 0x00 }, &EmuFS_MovFs00Ecx });				// mov large fs:0, ecx
+	fsInstructions.push_back({ { 0x64, 0x89, 0x25, 0x00, 0x00, 0x00, 0x00 }, &EmuFS_MovFs00Esp });				// mov large fs:0, esp
+	fsInstructions.push_back({ { 0x64, 0x8F, 0x05, 0x00, 0x00, 0x00, 0x00 }, &EmuFS_PopDwordPtrFs00 });		    // pop large dword ptr fs:0
+	fsInstructions.push_back({ { 0x64, 0xFF, 0x35, 0x00, 0x00, 0x00, 0x00 }, &EmuFS_PushDwordPtrFs00 });		// push large dword ptr fs:0
+	fsInstructions.push_back({ { 0x64, 0xA1, 0x00, 0x00, 0x00, 0x00 }, &EmuFS_MovEaxFs00 });					// mov eax, large fs:0
+	fsInstructions.push_back({ { 0x64, 0xA1, 0x20, 0x00, 0x00, 0x00 }, &EmuFS_MovEaxFs20 });					// mov eax, large fs:20
+	fsInstructions.push_back({ { 0x64, 0xA1, 0x28, 0x00, 0x00, 0x00 }, &EmuFS_MovEaxFs28 });					// mov eax, large fs:28
+	fsInstructions.push_back({ { 0x64, 0xA1, 0x58, 0x00, 0x00, 0x00 }, &EmuFS_MovEaxFs58 });					// mov eax, large fs:58
+	fsInstructions.push_back({ { 0x64, 0xA3, 0x00, 0x00, 0x00, 0x00 }, &EmuFS_MovFs00Eax });					// mov large fs:0, eax
 
 	DbgPrintf("Patching FS Register Accesses\n");
 	DWORD sizeOfImage = CxbxKrnl_XbeHeader->dwSizeofImage;
@@ -335,103 +388,105 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		return;
 	}
 
-	NT_TIB         *OrgNtTib;
-	xboxkrnl::KPCR *NewPcr;
-
-	uint08 *pNewTLS = NULL;
-
-	uint16 NewFS = -1, OrgFS = -1;
+	void *pNewTLS = nullptr;
 
 	// copy global TLS to the current thread
 	{
 		uint32 dwCopySize = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr;
 		uint32 dwZeroSize = pTLS->dwSizeofZeroFill;
 
-		pNewTLS = (uint08*)CxbxCalloc(1, dwCopySize + dwZeroSize + 0x100 /* + HACK: extra safety padding 0x100*/);
+		pNewTLS = CxbxCalloc(1, dwCopySize + dwZeroSize + 0x100 /* + HACK: extra safety padding 0x100*/);
 
 		memcpy(pNewTLS, pTLSData, dwCopySize);
-	}
 
-	// dump raw TLS data
-	{
 #ifdef _DEBUG_TRACE
-		if (pNewTLS == 0)
-		{
+		// dump raw TLS data
+		if (pNewTLS == nullptr)
 			DbgPrintf("EmuFS: TLS Non-Existant (OK)\n");
-		}
 		else
 		{
 			DbgPrintf("EmuFS: TLS Data Dump...\n");
-			DbgPrintf("EmuFS: 0x%.08X: ", pNewTLS);
-
-			uint32 stop = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr + pTLS->dwSizeofZeroFill;
-
-			// Note : Use printf instead of DbgPrintf here, which prefixes with GetCurrentThreadId() :
-			for (uint32 v = 0;v<stop;v++)
+			if (g_bPrintfOn)
 			{
-				uint08 *bByte = (uint08*)pNewTLS + v;
+				for (uint32 v = 0; v < dwCopySize; v++) // Note : Don't dump dwZeroSize
+				{
+					uint08 *bByte = (uint08*)pNewTLS + v;
 
-				if (g_bPrintfOn) printf("%.01X", (uint32)*bByte);
+					if (v % 0x10 == 0)
+						DbgPrintf("EmuFS: 0x%.08X: ", (xbaddr)bByte);
 
-				if ((v + 1) % 0x10 == 0 && v + 1<stop)
-					if (g_bPrintfOn) printf("\nEmuFS (0x%X): 0x%.08X: ", GetCurrentThreadId(), ((uint32)pNewTLS + v));
+					// Note : Use printf instead of DbgPrintf here, which prefixes with GetCurrentThreadId() :
+					printf("%.01X", (uint32)(*bByte));
+				}
+
+				printf("\n");
 			}
-
-			if (g_bPrintfOn) printf("\n");
 		}
 #endif
 	}
 
-	__asm
-	{
-		// Obtain "OrgFS"
-		mov ax, fs
-		mov OrgFS, ax
-
-			// Obtain "OrgNtTib"
-			mov eax, fs:[0x18]
-			mov OrgNtTib, eax
-	}
-
-	// allocate KPCR structure
-	{
-		uint32 dwSize = sizeof(xboxkrnl::KPCR);
-
-		NewPcr = (xboxkrnl::KPCR*)CxbxCalloc(1, dwSize);
-	}
-
-	// generate TIB
-	xboxkrnl::ETHREAD *EThread = (xboxkrnl::ETHREAD*)CxbxCalloc(1, sizeof(xboxkrnl::ETHREAD)); // Clear, to prevent side-effects on random contents
-
-	EThread->Tcb.TlsData = (void*)pNewTLS;
-	EThread->UniqueThread = GetCurrentThreadId();
-
-	memcpy(&NewPcr->NtTib, OrgNtTib, sizeof(NT_TIB));
-
-	NewPcr->NtTib.Self = &NewPcr->NtTib;
-
-	NewPcr->PrcbData.CurrentThread = (xboxkrnl::KTHREAD*)EThread;
-
-	NewPcr->Prcb = &NewPcr->PrcbData;
-
-	//  Set the stack base
-	NewPcr->NtTib.StackBase = pNewTLS;
-
 	// prepare TLS
 	{
-		// TLS Index Address := 0
-		*(uint32*)pTLS->dwTLSIndexAddr = 0;
+		*(xbaddr*)pTLS->dwTLSIndexAddr = (xbaddr)nullptr;
 
 		// dword @ pTLSData := pTLSData
-		if (pNewTLS != 0)
+		if (pNewTLS != nullptr)
 			*(void**)pNewTLS = pNewTLS;
 	}
 
-	// Store the new KPCR pointer in FS
-	__asm {
-		mov eax, NewPcr
-			mov fs : [0x14], eax
+	// Allocate the xbox KPCR structure
+	xboxkrnl::KPCR *NewPcr = (xboxkrnl::KPCR*)CxbxCalloc(1, sizeof(xboxkrnl::KPCR));
+	xboxkrnl::NT_TIB *XbTib = &(NewPcr->NtTib);
+	xboxkrnl::PKPRCB Prcb = &(NewPcr->PrcbData);
+	// Note : As explained above (at EmuKeSetPcr), Cxbx cannot allocate one NT_TIB and KPRCB
+	// structure per thread, since Cxbx currently doesn't do thread-switching.
+	// Thus, the only way to give each thread it's own PrcbData.CurrentThread, is to put the
+	// KPCR pointer in the TIB_ArbitraryDataSlot, which is read by the above EmuFS_* patches.
+	//
+	// Once we simulate thread switching ourselves, we can update PrcbData.CurrentThread
+	// and simplify this initialization, by using only one KPCR for the single Xbox processor.
+	// 
+	// One way to do our own (preemprive) thread-switching would be to use this technique :
+	// http://www.eran.io/implementing-a-preemptive-kernel-within-a-single-windows-thread/
+	// See https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/146 for more info.
+
+	// Copy the Nt TIB over to the emulated TIB :
+	{
+		memcpy(XbTib, GetNtTib(), sizeof(NT_TIB));
+		// Fixup the TIB self pointer :
+		NewPcr->NtTib.Self = XbTib;
+		// Set the stack base - TODO : Verify this, doesn't look right?
+		NewPcr->NtTib.StackBase = pNewTLS;
 	}
 
-	DbgPrintf("EmuFS: OrgFS=%d NewFS=%d pTLS=0x%.08X\n", OrgFS, NewFS, pTLS);
+	// Set flat address of this PCR
+	NewPcr->SelfPcr = NewPcr;
+	// Set pointer to Prcb
+	NewPcr->Prcb = Prcb;
+
+	// Initialize the prcb :
+	{
+		// TODO : Once we do our own thread-switching (as mentioned above),
+		// we can also start using Prcb->DpcListHead instead of DpcQueue :
+		InitializeListHead(&(Prcb->DpcListHead));
+		Prcb->DpcRoutineActive = 0;
+
+		// TODO : Should Irql be set? And if so, to what - PASSIVE_LEVEL, or perhaps better : APC_LEVEL?
+		// NewPcr->Irql = PASSIVE_LEVEL; // See KeLowerIrql;
+	}
+
+	// Initialize a fake PrcbData.CurrentThread 
+	{
+		xboxkrnl::ETHREAD *EThread = (xboxkrnl::ETHREAD*)CxbxCalloc(1, sizeof(xboxkrnl::ETHREAD)); // Clear, to prevent side-effects on random contents
+
+		EThread->Tcb.TlsData = pNewTLS;
+		EThread->UniqueThread = GetCurrentThreadId();
+		// Set PrcbData.CurrentThread
+		Prcb->CurrentThread = (xboxkrnl::KTHREAD*)EThread;
+	}
+
+	// Make the KPCR struct available to KeGetPcr()
+	EmuKeSetPcr(NewPcr);
+
+	DbgPrintf("EmuFS: Installed KPCR in TIB_ArbitraryDataSlot (with pTLS = 0x%.08X)\n", pTLS);
 }

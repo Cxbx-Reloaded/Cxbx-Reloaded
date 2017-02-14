@@ -74,7 +74,7 @@ extern PVOID g_pfnThreadNotification[PSP_MAX_CREATE_THREAD_NOTIFY] = { NULL };
 extern int g_iThreadNotificationCount = 0;
 
 // Separate function for logging, otherwise in PCSTProxy __try wont work (Compiler Error C2712)
-void PCSTProxy_log
+void LOG_PCSTProxy
 (
 	PVOID StartRoutine,
 	PVOID StartContext,
@@ -112,15 +112,24 @@ static unsigned int WINAPI PCSTProxy
 	// Once deleted, unable to directly access iPCSTProxyParam in remainder of function.
 	delete iPCSTProxyParam;
 
-	PCSTProxy_log(StartRoutine, StartContext, SystemRoutine, StartSuspended, hStartedEvent);
+	LOG_PCSTProxy(
+		StartRoutine,
+		StartContext,
+		SystemRoutine,
+		StartSuspended,
+		hStartedEvent);
+
+	// Do minimal thread initialization
+	{
+		EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
+
+		_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
+		_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
+	}
 
 	if (StartSuspended == TRUE)
+		// Suspend right before calling the thread notification routines
 		SuspendThread(GetCurrentThread());
-
-	EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
-
-	_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
-	_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
 
 	// call thread notification routine(s)
 	if (g_iThreadNotificationCount != 0)
