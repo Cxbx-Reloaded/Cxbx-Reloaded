@@ -1771,6 +1771,105 @@ OOVPA_NO_XREF(D3DCubeTexture_GetCubeMapSurface, 4361, 7)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_SetScissors
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetScissors, 4361, 10)
+
+        // D3DDevice_SetScissors+0x0E : mov ebx, [esp+28h+arg_0]
+        { 0x04, 0x8B }, // (Offset,Value)-Pair #1
+        { 0x05, 0x5C }, // (Offset,Value)-Pair #2
+        { 0x06, 0x24 }, // (Offset,Value)-Pair #3
+        { 0x07, 0x2C }, // (Offset,Value)-Pair #4
+
+        // D3DDevice_SetScissors+0x0E : test ebx, ebx
+        { 0x08, 0x85 }, // (Offset,Value)-Pair #5
+        { 0x09, 0xDB }, // (Offset,Value)-Pair #6
+
+        // D3DDevice_SetScissors+0x0E : mov edx, [ebp+9D8h]
+        { 0x1B, 0x8B }, // (Offset,Value)-Pair #7
+        { 0x1C, 0x95 }, // (Offset,Value)-Pair #8
+        { 0x1D, 0xD8 }, // (Offset,Value)-Pair #9
+        { 0x1E, 0x09 }, // (Offset,Value)-Pair #10
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_SetRenderState_PSTextureModes
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetRenderState_PSTextureModes, 4361, 10)
+
+        { 0x0A, 0x89 },
+        { 0x0B, 0x81 },
+        { 0x0E, 0x00 },
+        { 0x0F, 0x00 },
+        { 0x10, 0x81 },
+        { 0x11, 0x0D },
+        { 0x16, 0x00 },
+        { 0x17, 0x40 },
+        { 0x1A, 0xA3 },
+        { 0x1F, 0xC2 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_SetPixelShaderProgram
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetPixelShaderProgram, 4361, 10)
+
+        { 0x00, 0x8B },
+        { 0x01, 0x54 },
+        { 0x02, 0x24 },
+        { 0x03, 0x04 },
+        { 0x04, 0x85 },
+        { 0x05, 0xD2 },
+        { 0x29, 0x89 },
+        { 0x2A, 0x4C },
+        { 0x2B, 0x24 },
+        { 0x2C, 0x04 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_GetVertexShader
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_GetVertexShader, 4361, 7)
+
+        { 0x05, 0x8B },
+        { 0x06, 0x88 },
+        { 0x07, 0x84 },
+        { 0x0A, 0x00 },
+        { 0x0D, 0x24 },
+        { 0x10, 0x0A },
+        { 0x13, 0x00 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_SetVertexDataColor
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetVertexDataColor, 4361, 7)
+
+        { 0x08, 0x06 },
+        { 0x14, 0x8B },
+        { 0x1C, 0x19 },
+        { 0x26, 0xB6 },
+        { 0x30, 0x00 },
+        { 0x3A, 0xFF },
+        { 0x44, 0x08 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_SetVertexShaderInput
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetVertexShaderInput, 4361, 8)
+
+        { 0x1E, 0x83 },
+        { 0x3E, 0x10 },
+        { 0x5E, 0x00 },
+        { 0x7E, 0x24 },
+        { 0x9E, 0x89 },
+        { 0xBE, 0x81 },
+        { 0xDE, 0xC6 },
+        { 0xFE, 0x89 },
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_4361
 // ******************************************************************
 OOVPATable D3D8_4361[] = {
@@ -1798,6 +1897,7 @@ OOVPATable D3D8_4361[] = {
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstant, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreatePixelShader, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShader, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetPixelShaderProgram, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetViewport, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetViewport, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_BumpEnv, 4361, PATCH),
@@ -1912,6 +2012,13 @@ OOVPATable D3D8_4361[] = {
 	REGISTER_OOVPA(D3DDevice_CreateCubeTexture, 4361, PATCH),
 	REGISTER_OOVPA(D3DCubeTexture_GetCubeMapSurface, 4361, PATCH),
 	REGISTER_OOVPA(Lock2DSurface, 3925, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetScissors, 4361, PATCH),
+	REGISTER_OOVPA(D3D_SetPushBufferSize, 4034, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetRenderState_PSTextureModes, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetPixelShaderProgram, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_GetVertexShader, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetVertexDataColor, 4361, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetVertexShaderInput, 4361, PATCH),
 };
 
 // ******************************************************************

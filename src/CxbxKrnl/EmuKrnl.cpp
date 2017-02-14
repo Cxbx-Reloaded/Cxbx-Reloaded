@@ -98,8 +98,13 @@ void RemoveEntryList(xboxkrnl::PLIST_ENTRY pEntry)
 	xboxkrnl::PLIST_ENTRY _EX_Flink = pEntry->Flink;
 	xboxkrnl::PLIST_ENTRY _EX_Blink = pEntry->Blink;
 
-	_EX_Blink->Flink = _EX_Flink;
-	_EX_Flink->Blink = _EX_Blink;
+	if (_EX_Flink != nullptr) {
+		_EX_Blink->Flink = _EX_Flink;
+	}
+
+	if (_EX_Flink != nullptr) {
+		_EX_Flink->Blink = _EX_Blink;
+	}
 }
 
 xboxkrnl::PLIST_ENTRY RemoveHeadList(xboxkrnl::PLIST_ENTRY pListHead)
