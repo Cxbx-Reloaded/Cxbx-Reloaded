@@ -1915,7 +1915,7 @@ KPRCB, *PKPRCB;
 
 
 // ******************************************************************
-// * KPCR
+// * KPCR (Kernel Processor Control Region)
 // ******************************************************************
 // *
 // * NOTE: KPCR is the structure which exists at the FS: segment.

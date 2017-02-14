@@ -68,7 +68,30 @@ NT_TIB *GetNtTib()
 void EmuKeSetPcr(xboxkrnl::KPCR *Pcr)
 {
 	// Store the Xbox KPCR pointer in FS (See KeGetPcr())
-	// TODO : Explain why this can't just be a global (or can it?)
+	// 
+	// Note : Cxbx currently doesn't do preemptive thread switching,
+	// which implies that thread-state management is done by Windows.
+	//
+	// Xbox executable code expects thread-specific state data to
+	// be available via the FS segment register. To emulate this,
+	// Cxbx uses the user data-slot feature of Windows threads.
+	// 
+	// Cxbx puts a pointer to a thread-specific copy of an entire
+	// Kernel Processor Control Region (KPCR) into this data-slot.
+	//
+	// In the Xbox there's only be KPCR (as it's a per-processor-
+	// structure, and the Xbox has only one processor).
+	//
+	// Since Cxbx doesn't control thread-swiches (yet), each thread
+	// must have a thread-specific copy of the KPCR, to contain all
+	// thread-specific data that can be reached via this structure
+	// (like the NT_TIB structure and ETHREAD CurrentThread pointer).
+	// 
+	// For this to work, Cxbx patches all executable code accessing
+	// the FS segment register, so that the KPCR is accessed via
+	// the user data-slot of each Windows thread Cxbx uses for an
+	// Xbox thread.
+	//
 	__asm {
 		mov eax, Pcr
 		mov fs : [TIB_ArbitraryDataSlot], eax
@@ -415,9 +438,11 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 	xboxkrnl::KPCR *NewPcr = (xboxkrnl::KPCR*)CxbxCalloc(1, sizeof(xboxkrnl::KPCR));
 	xboxkrnl::NT_TIB *XbTib = &(NewPcr->NtTib);
 	xboxkrnl::PKPRCB Prcb = &(NewPcr->PrcbData);
-	// TODO : We cannot allocate one NT_TIB and PKPRCB per thread, since we currently have
-	// no other way to give each thread it's own PrcbData.CurrentThread, then to put the
-	// KPCR pointer in the TIB_LinearSelfAddress, which is read by the above EmuFS_* patches.
+	// Note : As explained above (at EmuKeSetPcr), Cxbx cannot allocate one NT_TIB and KPRCB
+	// structure per thread, since Cxbx currently doesn't do thread-switching.
+	// Thus, the only way to give each thread it's own PrcbData.CurrentThread, is to put the
+	// KPCR pointer in the TIB_ArbitraryDataSlot, which is read by the above EmuFS_* patches.
+	//
 	// Once we simulate thread switching ourselves, we can update PrcbData.CurrentThread
 	// and simplify this initialization, by using only one KPCR for the single Xbox processor.
 	// 
