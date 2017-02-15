@@ -1106,7 +1106,7 @@ OOVPA_XREF(CDirectSoundBuffer_SetAllParameters, 5558, 8,
         { 0x40, 0x68 },
         { 0x4B, 0x8B },
 OOVPA_END;
-
+/*
 // ******************************************************************
 // * IDirectSoundBuffer8::SetAllParameters
 // ******************************************************************
@@ -1126,7 +1126,7 @@ OOVPA_XREF(IDirectSoundBuffer8_SetAllParameters, 5558, 9,
         { 0x1D, 0xC2 },
         { 0x1E, 0x0C },
 OOVPA_END;
-
+*/
 // ******************************************************************
 // * CDirectSoundVoice::SetPosition
 // ******************************************************************
