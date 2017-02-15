@@ -166,7 +166,7 @@ extern "C" CXBXKRNL_API void CxbxKrnlMain(int argc, char* argv[])
 	memcpy(NewDosHeader, ExeDosHeader, ExeHeaderSize);
 
 	// Make sure the new DOS header points to the new relative NtHeader location:
-	NewDosHeader->m_lfanew = (uint32)NewNtHeader - 0x10000;
+	NewDosHeader->m_lfanew = (uint32)NewNtHeader - CXBX_BASE_ADDR;
 
 	// Create safe copies of all EXE sections that could get overwritten:
 	Exe::SectionHeader* ExeSectionHeaders = (Exe::SectionHeader*)((uint32)ExeOptionalHeader + ExeNtHeader->m_sizeof_optional_header);

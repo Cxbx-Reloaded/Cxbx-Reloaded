@@ -485,6 +485,15 @@ struct X_D3DPixelContainer : public X_D3DResource
     DWORD       Size;
 };
 
+// Clear flags
+#define X_D3DCLEAR_ZBUFFER  0x00000001
+#define X_D3DCLEAR_STENCIL  0x00000002
+#define X_D3DCLEAR_TARGET_R 0x00000010
+#define X_D3DCLEAR_TARGET_G 0x00000020
+#define X_D3DCLEAR_TARGET_B 0x00000040
+#define X_D3DCLEAR_TARGET_A 0x00000080
+#define X_D3DCLEAR_TARGET   (X_D3DCLEAR_TARGET_R | X_D3DCLEAR_TARGET_G | X_D3DCLEAR_TARGET_B | X_D3DCLEAR_TARGET_A)
+
 // pixel container "format" masks
 #define X_D3DFORMAT_RESERVED1_MASK        0x00000003      // Must be zero
 #define X_D3DFORMAT_DMACHANNEL_MASK       0x00000003
@@ -511,6 +520,7 @@ struct X_D3DPixelContainer : public X_D3DResource
 #define X_D3DSIZE_HEIGHT_SHIFT            12
 #define X_D3DSIZE_PITCH_MASK              0xFF000000   // Pitch / 64 - 1
 #define X_D3DSIZE_PITCH_SHIFT             24
+
 
 struct X_D3DBaseTexture : public X_D3DPixelContainer
 {
