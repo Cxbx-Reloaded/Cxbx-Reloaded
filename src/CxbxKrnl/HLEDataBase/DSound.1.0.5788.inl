@@ -1585,6 +1585,32 @@ OOVPA_XREF(DirectSound_CDirectSoundStream_SetHeadroom, 5788, 9,
 OOVPA_END;
 
 // ******************************************************************
+// * DirectSound::CDirectSound::SetAllParameters
+// ******************************************************************
+#define DirectSound_CDirectSound_SetAllParameters_5788 DirectSound_CDirectSound_SetAllParameters_5558
+
+// ******************************************************************
+// * DirectSound::CMcpxVoiceClient::SetFilter
+// ******************************************************************
+#define DirectSound_CMcpxVoiceClient_SetFilter_5788 DirectSound_CMcpxVoiceClient_SetFilter_5558
+
+
+// ******************************************************************
+// CDirectSoundVoice::SetMode
+// ******************************************************************
+#define CDirectSoundVoice_SetMode_5788 CDirectSoundVoice_SetMode_5344
+
+// ******************************************************************
+// CDirectSoundBuffer::SetMode
+// ******************************************************************
+#define CDirectSoundBuffer_SetMode_5788 CDirectSoundBuffer_SetMode_5233
+
+// ******************************************************************
+// * IDirectSoundBuffer8_SetMode
+// ******************************************************************
+#define IDirectSoundBuffer8_SetMode_5788 IDirectSoundBuffer8_SetMode_5233
+
+// ******************************************************************
 // * Direct, 5788
 // ******************************************************************
 OOVPATable DSound_5788[] = {
@@ -1744,6 +1770,17 @@ OOVPATable DSound_5788[] = {
 	REGISTER_OOVPA(CDirectSoundStream_SetEG, 4627, ALIAS, DirectSound_CDirectSoundStream_SetEG),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetEG, 4627, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer8_SetEG, 4627, ALIAS, IDirectSoundBuffer_SetEG),
+	REGISTER_OOVPA(IDirectSound8_AddRef, 3936, PATCH),
+	REGISTER_OOVPA(DirectSound_CDirectSound_SetAllParameters, 5788, XREF),
+	REGISTER_OOVPA(IDirectSound8_SetAllParameters, 3936, PATCH),
+	REGISTER_OOVPA(DirectSound_CMcpxVoiceClient_SetFilter, 5788, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetFilter, 4627, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetFilter, 4627, XREF),
+	REGISTER_OOVPA(CDirectSoundStream_SetFilter, 4627, ALIAS, DirectSound_CDirectSoundStream_SetFilter),
+	REGISTER_OOVPA(IDirectSoundBuffer8_SetFilter, 4627, ALIAS, IDirectSoundBuffer_SetFilter),
+	REGISTER_OOVPA(CDirectSoundVoice_SetMode, 5788, XREF),
+	REGISTER_OOVPA(CDirectSoundBuffer_SetMode, 5788, XREF),
+	REGISTER_OOVPA(IDirectSoundBuffer8_SetMode, 5788, PATCH),
 };
 
 // ******************************************************************

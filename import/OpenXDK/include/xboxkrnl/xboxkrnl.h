@@ -1903,18 +1903,19 @@ typedef struct _KPRCB
     struct _KTHREAD* NextThread;                                    // 0x04, KPCR : 0x2C
     struct _KTHREAD* IdleThread;                                    // 0x08, KPCR : 0x30
 
-	ULONG            Unknown1[8];                                   // 0x0C, KPCR : 0x34
+	ULONG            Unknown1[7];                                   // 0x0C, KPCR : 0x34
 
-	ULONG            DpcRoutineActive;                              // 0x2C, KPCR : 0x54 
+	LIST_ENTRY       DpcListHead;                                   // 0x28, KPCR : 0x50
+	ULONG            DpcRoutineActive;                              // 0x30, KPCR : 0x58
 
-    // This is the total size of the structure (presumably)
-    UCHAR            Unknown[0x22C];                                
+    // This completes the total size of the structure (presumably)
+    UCHAR            Unknown[0x224];                            
 }
 KPRCB, *PKPRCB;
 
 
 // ******************************************************************
-// * KPCR
+// * KPCR (Kernel Processor Control Region)
 // ******************************************************************
 // *
 // * NOTE: KPCR is the structure which exists at the FS: segment.

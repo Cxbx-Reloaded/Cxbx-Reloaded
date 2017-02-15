@@ -46,10 +46,15 @@
 extern "C" {
 #endif
 
+// Opcodes
 #define OPCODE_NOP_90 0x90
 #define OPCODE_INT3_CC 0xCC
 #define OPCODE_CALL_E8 0xE8
 #define OPCODE_JMP_E9 0xE9
+
+// Thread Information Block offsets - see https://www.microsoft.com/msj/archive/S2CE.aspx
+#define TIB_ArbitraryDataSlot 0x14
+#define TIB_LinearSelfAddress 0x18
 
 /*! xbaddr is the type of a physical address */
 typedef uint32 xbaddr;

@@ -392,6 +392,33 @@ OOVPA_NO_XREF(D3DDevice_SetRenderTarget, 5849, 8)
 OOVPA_END;
 
 // ******************************************************************
+// * D3D::SetFence
+// * SOURCE: Spiderman 2
+// ******************************************************************
+OOVPA_XREF(D3D_SetFence, 5849, 7, XREF_D3D_SETFENCE, XRefZero)
+	{ 0x0E, 0x05 },
+	{ 0x17, 0xC7 },
+	{ 0x3E, 0x40 },
+	{ 0x5E, 0x00 },
+	{ 0x87, 0x4E },
+	{ 0x98, 0x83 },
+	{ 0xA8, 0x75 },
+OOVPA_END;
+
+// ******************************************************************
+// * D3D::BlockOnTime
+// * Source: Spiderman 2
+// ******************************************************************
+OOVPA_XREF(D3D_BlockOnTime, 5849, 6, XREF_D3D_BLOCKONTIME, XRefZero)
+	{ 0x09, 0x30 },
+	{ 0x27, 0x07 },
+	{ 0x7E, 0x2B },
+	{ 0xA5, 0x20 },
+	{ 0xD9, 0x56 },
+	{ 0xF8, 0x47 },
+OOVPA_END;
+
+// ******************************************************************
 // * D3D_AllocContiguousMemory
 // ******************************************************************
 OOVPA_NO_XREF(D3D_AllocContiguousMemory, 5849, 7)
@@ -592,6 +619,25 @@ OOVPA_NO_XREF(D3DDevice_BlockUntilVerticalBlank, 5849, 7)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_SetScreenSpaceOffset
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetScreenSpaceOffset, 5849, 8)
+	// D3DDevice_SetScreenSpaceOffset+0x13 : fstp [esi+0x0EF8]
+	{ 0x13, 0xD9 }, // (Offset,Value)-Pair #1
+	{ 0x14, 0x9E }, // (Offset,Value)-Pair #2
+	{ 0x15, 0xF8 }, // (Offset,Value)-Pair #3
+	{ 0x16, 0x0E }, // (Offset,Value)-Pair #4
+
+	// D3DDevice_SetScreenSpaceOffset+0x33 : jb +0x05
+	{ 0x33, 0x72 }, // (Offset,Value)-Pair #5
+	{ 0x34, 0x05 }, // (Offset,Value)-Pair #6
+
+	// D3DDevice_SetScreenSpaceOffset+0x46 : retn 0x08
+	{ 0x46, 0xC2 }, // (Offset,Value)-Pair #7
+	{ 0x47, 0x08 }, // (Offset,Value)-Pair #8
+OOVPA_END;
+
+// ******************************************************************
 // * D3DDevice_SetBackMaterial
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetBackMaterial, 5849, 9)
@@ -748,7 +794,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice8::SetDepthClipPlanes
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetDepthClipPlanes, 5849, 13)
+OOVPA_NO_XREF(D3DDevice_SetDepthClipPlanes, 5849, 11)
 
         // _D3DDevice_SetDepthClipPlanes+0x00 : mov eax, [esp+Flags]
         { 0x00, 0x8B }, // (Offset,Value)-Pair #1
@@ -756,18 +802,18 @@ OOVPA_NO_XREF(D3DDevice_SetDepthClipPlanes, 5849, 13)
         { 0x02, 0x24 }, // (Offset,Value)-Pair #3
         { 0x03, 0x0C }, // (Offset,Value)-Pair #4
 
-        // _D3DDevice_SetDepthClipPlanes+0x00 : ja short loc_27ABD0 ; jumptable 0027AB71 default case
+        // _D3DDevice_SetDepthClipPlanes+0x0F : ja short loc_27ABD0 ; jumptable 0027AB71 default case
         { 0x0F, 0x77 }, // (Offset,Value)-Pair #5
         { 0x10, 0x5F }, // (Offset,Value)-Pair #6
 
-        // _D3DDevice_SetDepthClipPlanes+0x00 : jmp ds:off_27ABEC[eax*4] ; switch jump
+        // _D3DDevice_SetDepthClipPlanes+0x11 : jmp ds:off_27ABEC[eax*4] ; switch jump
         { 0x11, 0xFF }, // (Offset,Value)-Pair #7
         { 0x12, 0x24 }, // (Offset,Value)-Pair #8
         { 0x13, 0x85 }, // (Offset,Value)-Pair #9
-        { 0x14, 0xEC }, // (Offset,Value)-Pair #10
-        { 0x15, 0xAB }, // (Offset,Value)-Pair #11
-        { 0x16, 0x27 }, // (Offset,Value)-Pair #12
-        { 0x17, 0x00 }, // (Offset,Value)-Pair #13
+
+        // _D3DDevice_SetDepthClipPlanes+0x88 : retn 0Ch
+        { 0x88, 0xC2 }, // (Offset,Value)-Pair #10
+        { 0x89, 0x0C }, // (Offset,Value)-Pair #11
 OOVPA_END;
 
 // ******************************************************************
@@ -1270,6 +1316,31 @@ OOVPA_NO_XREF(D3DDevice_GetTexture2, 5849, 8)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_SetScreenSpaceOffset
+// ******************************************************************
+#define D3DDevice_SetScreenSpaceOffset_5849 D3DDevice_SetScreenSpaceOffset_5558
+
+// ******************************************************************
+// * D3DDevice_SetVertexShaderInput
+// ******************************************************************
+#define D3DDevice_SetVertexShaderInput_5849 D3DDevice_SetVertexShaderInput_4627
+
+// ******************************************************************
+// * D3D::SetFence
+// ******************************************************************
+#define D3D_SetFence_5849 D3D_SetFence_5558
+
+// ******************************************************************
+// * D3DDevice_GetViewportOffsetAndScale
+// ******************************************************************
+#define D3DDevice_GetViewportOffsetAndScale_5849 D3DDevice_GetViewportOffsetAndScale_5558
+
+// ******************************************************************
+// * D3DDevice_CreateStateBlock
+// ******************************************************************
+#define D3DDevice_CreateStateBlock_5849 D3DDevice_CreateStateBlock_4627
+
+// ******************************************************************
 // * D3D8_5849
 // ******************************************************************
 OOVPATable D3D8_5849[] = {
@@ -1346,6 +1417,11 @@ OOVPATable D3D8_5849[] = {
 	REGISTER_OOVPA(D3DVertexBuffer_Lock2, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_LightEnable, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_DrawVertices, 5849, PATCH),
+	REGISTER_OOVPA(D3D_SetFence, 5849, XREF),
+	REGISTER_OOVPA(D3DDevice_InsertFence, 5233, PATCH),
+	REGISTER_OOVPA(D3DDevice_IsFencePending, 5233, PATCH),
+	REGISTER_OOVPA(D3D_BlockOnTime, 5849, XREF),
+	REGISTER_OOVPA(D3DDevice_BlockOnFence, 5233, PATCH),
 	REGISTER_OOVPA(D3D_AllocContiguousMemory, 5849, DISABLED), // Just calls MmAllocateContiguousMemory. Was PATCH
 	REGISTER_OOVPA(Get2DSurfaceDesc, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreateTexture2, 5849, PATCH),
@@ -1357,6 +1433,7 @@ OOVPATable D3D8_5849[] = {
 	REGISTER_OOVPA(D3DDevice_SetShaderConstantMode, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetViewport, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_BlockUntilVerticalBlank, 5849, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetScreenSpaceOffset, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_FrontFace, 4134, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetBackMaterial, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderState_TwoSidedLighting, 5849, PATCH),
@@ -1422,6 +1499,11 @@ OOVPATable D3D8_5849[] = {
 	REGISTER_OOVPA(D3DDevice_GetTexture2, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetRenderTargetFast, 5344, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetDepthClipPlanes, 5849, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetScreenSpaceOffset, 5849, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetVertexShaderInput, 5849, PATCH),
+	REGISTER_OOVPA(D3D_SetFence, 5849, XREF),
+	REGISTER_OOVPA(D3DDevice_GetViewportOffsetAndScale, 5849, PATCH),
+	REGISTER_OOVPA(D3DDevice_CreateStateBlock, 5849, PATCH),
 };
 
 // ******************************************************************

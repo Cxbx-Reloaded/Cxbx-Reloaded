@@ -290,6 +290,7 @@ enum XRefDataBaseOffset
 	XREF_DirectSound_CDirectSoundStream_SetFilter,
 	XREF_DirectSound_CDirectSoundBuffer_StopEx,
 	XREF_CMcpxBuffer_Stop2,
+	XREF_CMcpxBuffer_PlayA,
 	XREF_CMcpxAPU_Set3dDopplerFactor,
 	XREF_CSensaura3d_GetFullHRTFFilterPair,
 	XREF_CDirectSound_GetCaps,

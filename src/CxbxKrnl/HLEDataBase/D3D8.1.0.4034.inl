@@ -1086,6 +1086,30 @@ OOVPA_NO_XREF(D3DDevice_GetBackBuffer, 4034, 12)
 OOVPA_END;
 
 // ******************************************************************
+// * D3DDevice_SetVertexShaderConstant
+// ******************************************************************
+OOVPA_NO_XREF(D3DDevice_SetVertexShaderConstant, 4034, 10)
+
+        // D3DDevice_SetVertexShaderConstant+0x11 : mov cl, [ebx+0x08]
+        { 0x11, 0x8A }, // (Offset,Value)-Pair #1
+        { 0x12, 0x4B }, // (Offset,Value)-Pair #2
+        { 0x13, 0x08 }, // (Offset,Value)-Pair #3
+
+        // D3DDevice_SetVertexShaderConstant+0x1A : test cl, 0x10
+        { 0x1A, 0xF6 }, // (Offset,Value)-Pair #4
+        { 0x1B, 0xC1 }, // (Offset,Value)-Pair #5
+        { 0x1C, 0x10 }, // (Offset,Value)-Pair #6
+
+        // D3DDevice_SetVertexShaderConstant+0x60 : jle +0x19
+        { 0x60, 0x7E }, // (Offset,Value)-Pair #7
+        { 0x61, 0x19 }, // (Offset,Value)-Pair #8
+
+        // D3DDevice_SetVertexShaderConstant+0x98 : retn 0x0C
+        { 0x98, 0xC2 }, // (Offset,Value)-Pair #9
+        { 0x99, 0x0C }, // (Offset,Value)-Pair #10
+OOVPA_END;
+
+// ******************************************************************
 // * D3D8_4034
 // ******************************************************************
 OOVPATable D3D8_4034[] = {
@@ -1119,7 +1143,6 @@ OOVPATable D3D8_4034[] = {
 	REGISTER_OOVPA(D3DDevice_End, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_Clear, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPalette, 3925, PATCH),
-	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstant, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetFlickerFilter, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetSoftDisplayFilter, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetTextureState_TexCoordIndex, 3925, PATCH),
@@ -1143,6 +1166,7 @@ OOVPATable D3D8_4034[] = {
 	// ********************** END WARNING UNTESTED!!! *******************
 #endif
 
+	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstant, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetGammaRamp, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetCreationParameters, 4034, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetViewport, 4034, PATCH),

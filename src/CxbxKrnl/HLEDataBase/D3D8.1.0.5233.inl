@@ -1701,6 +1701,7 @@ OOVPATable D3D8_5233[] = {
 	REGISTER_OOVPA(D3DDevice_SetScissors, 5344, PATCH),
 	REGISTER_OOVPA(D3DCubeTexture_GetCubeMapSurface2, 4627, PATCH),
 	REGISTER_OOVPA(D3DDevice_ApplyStateBlock, 4627, PATCH),
+	REGISTER_OOVPA(D3DDevice_EndVisibilityTest, 4627, PATCH),
 };
 
 // ******************************************************************

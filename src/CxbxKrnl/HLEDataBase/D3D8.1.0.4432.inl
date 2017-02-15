@@ -659,17 +659,7 @@ OOVPA_END;
 // ******************************************************************
 // * D3DDevice_SetVertexShaderInput
 // ******************************************************************
-OOVPA_NO_XREF(D3DDevice_SetVertexShaderInput, 4432, 8)
-
-        { 0x1E, 0x83 },
-        { 0x3E, 0x10 },
-        { 0x5E, 0x00 },
-        { 0x7E, 0x24 },
-        { 0x9E, 0x89 },
-        { 0xBE, 0x81 },
-        { 0xDE, 0xC6 },
-        { 0xFE, 0x89 },
-OOVPA_END;
+#define D3DDevice_SetVertexShaderInput_4432 D3DDevice_SetVertexShaderInput_4361
 
 // ******************************************************************
 // * D3DDevice_SetModelView
@@ -684,6 +674,11 @@ OOVPA_NO_XREF(D3DDevice_SetModelView, 4432, 7)
         { 0x88, 0x00 },
         { 0x9F, 0x75 },
 OOVPA_END;
+
+// ******************************************************************
+// * D3DDevice_SetScissors
+// ******************************************************************
+#define D3DDevice_SetScissors_4432 D3DDevice_SetScissors_4361
 
 // ******************************************************************
 // * D3D8_4432
@@ -806,6 +801,8 @@ OOVPATable D3D8_4432[]  {
 	REGISTER_OOVPA(D3DDevice_SetModelView, 4432, PATCH),
 	REGISTER_OOVPA(D3DDevice_BeginPush, 4432, PATCH),
 	REGISTER_OOVPA(D3DDevice_EndPush, 4432, PATCH),
+	REGISTER_OOVPA(D3DDevice_SetScissors, 4432, PATCH),
+	REGISTER_OOVPA(D3D_SetPushBufferSize, 4034, PATCH),
 };
 
 // ******************************************************************
