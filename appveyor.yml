@@ -1,0 +1,15 @@
+init:
+  - ps: Update-AppveyorBuild -Version "$env:appveyor_repo_commit"
+branches:
+  only:
+  - master
+configuration:
+- Release
+- Debug
+build:
+  project: build/win32/Cxbx.sln
+  parallel: true
+  verbosity: minimal
+artifacts:
+- path: export\Release.zip
+- path: export\Debug.zip
