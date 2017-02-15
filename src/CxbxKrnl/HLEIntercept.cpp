@@ -741,7 +741,8 @@ static void EmuInstallPatches(OOVPATable *OovpaTable, uint32 OovpaTableSize, Xbe
         else
         {
             pFunc = EmuLocateFunction(Oovpa, lower, upper);
-            vCacheOut.push_back(pFunc);
+			if (pFunc != (xbaddr)nullptr)
+				vCacheOut.push_back(pFunc);
         }
 
         if(pFunc != (xbaddr)nullptr)
