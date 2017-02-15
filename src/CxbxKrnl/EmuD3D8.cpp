@@ -353,13 +353,16 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 
         uint32 CertAddr = g_XbeHeader->dwCertificateAddr - g_XbeHeader->dwBaseAddr;
 
-        if(CertAddr + 0x0C + 40 < g_XbeHeaderSize)
+#define CertTitleNameLength 40
+
+		// Does the title fall entirely inside the read XbeHeader?
+        if(CertAddr + offsetof(Xbe::Certificate, wszTitleName) + CertTitleNameLength < g_XbeHeaderSize)
         {
             Xbe::Certificate *XbeCert = (Xbe::Certificate*)((uint32)g_XbeHeader + CertAddr);
 
             setlocale( LC_ALL, "English" );
 
-            wcstombs(tAsciiTitle, XbeCert->wszTitleName, 40);
+            wcstombs(tAsciiTitle, XbeCert->wszTitleName, CertTitleNameLength);
         }
 
         sprintf(AsciiTitle, "Cxbx-Reloaded : Emulating %s", tAsciiTitle);
@@ -807,7 +810,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                         g_EmuCDPD.pPresentationParameters->MultiSampleType = XTL::D3DMULTISAMPLE_NONE;
 
                         // TODO: Check card for multisampling abilities
-            //            if(pPresentationParameters->MultiSampleType == 0x00001121)
+            //            if(pPresentationParameters->MultiSampleType == X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX) // = 0x00001121
             //                pPresentationParameters->MultiSampleType = D3DMULTISAMPLE_2_SAMPLES;
             //            else
             //                CxbxKrnlCleanup("Unknown MultiSampleType (0x%.08X)", pPresentationParameters->MultiSampleType);
@@ -986,11 +989,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 g_pCachedZStencilSurface = new XTL::X_D3DSurface();
                 g_pCachedZStencilSurface->Common = 0;
                 g_pCachedZStencilSurface->Data = X_D3DRESOURCE_DATA_FLAG_SPECIAL | X_D3DRESOURCE_DATA_FLAG_D3DSTEN;
-                if (FAILED(g_pD3DDevice8->GetDepthStencilSurface(&g_pCachedZStencilSurface->EmuSurface8)))
-                    g_bHasZBuffer = FALSE;
-                else
-                    g_bHasZBuffer = TRUE;
-
+				g_bHasZBuffer = SUCCEEDED(g_pD3DDevice8->GetDepthStencilSurface(&g_pCachedZStencilSurface->EmuSurface8));
                 (void)g_pD3DDevice8->CreateVertexBuffer
                 (
                     1, 0, 0, XTL::D3DPOOL_MANAGED,
@@ -1008,10 +1007,13 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
                 // Avoids following DirectX Debug Runtime error report
                 //    [424] Direct3D8: (ERROR) :Invalid flag D3DCLEAR_ZBUFFER: no zbuffer is associated with device. Clear failed. 
                 //
-                if (g_bHasZBuffer)
-                    g_pD3DDevice8->Clear(0, 0, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER|D3DCLEAR_STENCIL, 0xFF000000, 1.0f, 0);
-                else
-                    g_pD3DDevice8->Clear(0, 0, D3DCLEAR_TARGET, 0xFF000000, 0.0f, 0);
+                g_pD3DDevice8->Clear(
+					/*Count=*/0, 
+					/*pRects=*/nullptr, 
+					D3DCLEAR_TARGET | (g_bHasZBuffer ? D3DCLEAR_ZBUFFER|D3DCLEAR_STENCIL : 0),
+					/*Color=*/0xFF000000, // TODO : Use constant for this
+					/*Z=*/0.0f,
+					/*Stencil=*/0);
 				g_pD3DDevice8->BeginScene();
 				g_pD3DDevice8->EndScene();
                 g_pD3DDevice8->Present(0, 0, 0, 0);
@@ -4098,8 +4100,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Clear)
     DWORD           Stencil
 )
 {
-    
-
     DbgPrintf("EmuD3D8: EmuD3DDevice_Clear\n"
            "(\n"
            "   Count               : 0x%.08X\n"
@@ -4114,26 +4114,37 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Clear)
 
     // make adjustments to parameters to make sense with windows d3d
     {
-        // TODO: D3DCLEAR_TARGET_A, *R, *G, *B don't exist on windows
         DWORD newFlags = 0;
 
-        if(Flags & 0x000000f0)
-            newFlags |= D3DCLEAR_TARGET;
+		if (Flags & X_D3DCLEAR_TARGET) {
+			// TODO: D3DCLEAR_TARGET_A, *R, *G, *B don't exist on windows
+			if ((Flags & X_D3DCLEAR_TARGET) != X_D3DCLEAR_TARGET)
+				EmuWarning("Unsupported : Partial D3DCLEAR_TARGET flag(s) for D3DDevice_Clear : 0x%.08X", Flags & X_D3DCLEAR_TARGET);
+		
+			newFlags |= D3DCLEAR_TARGET;
+		}
 
-        if(Flags & 0x00000001)
-            newFlags |= D3DCLEAR_ZBUFFER;
+        // Do not needlessly clear Z Buffer
+		if (Flags & X_D3DCLEAR_ZBUFFER) {
+			if (g_bHasZBuffer)
+				newFlags |= D3DCLEAR_ZBUFFER;
+			else
+				EmuWarning("Unsupported : D3DCLEAR_ZBUFFER flag for D3DDevice_Clear without ZBuffer");
+		}
 
-        if(Flags & 0x00000002)
-            newFlags |= D3DCLEAR_STENCIL;
+		// Only clear depth buffer and stencil if present
+		//
+		// Avoids following DirectX Debug Runtime error report
+		//    [424] Direct3D8: (ERROR) :Invalid flag D3DCLEAR_ZBUFFER: no zbuffer is associated with device. Clear failed. 
+		if (Flags & X_D3DCLEAR_STENCIL) {
+			if (g_bHasZBuffer) // TODO : Introduce/use g_bHasStencil
+				newFlags |= D3DCLEAR_STENCIL;
+			else
+				EmuWarning("Unsupported : D3DCLEAR_STENCIL flag for D3DDevice_Clear without ZBuffer");
+		}
 
-        if(Flags & ~(0x000000f0 | 0x00000001 | 0x00000002))
-            EmuWarning("Unsupported Flag(s) for D3DDevice_Clear : 0x%.08X", Flags & ~(0x000000f0 | 0x00000001 | 0x00000002));
-
-        // Regardless of above setting, do not needlessly clear Z Buffer
-        if (!g_bHasZBuffer) {
-            newFlags &= ~D3DCLEAR_ZBUFFER;
-            newFlags &= ~D3DCLEAR_STENCIL;
-        }
+        if(Flags & ~(X_D3DCLEAR_TARGET | X_D3DCLEAR_ZBUFFER | X_D3DCLEAR_STENCIL))
+            EmuWarning("Unsupported Flag(s) for D3DDevice_Clear : 0x%.08X", Flags & ~(X_D3DCLEAR_TARGET | X_D3DCLEAR_ZBUFFER | X_D3DCLEAR_STENCIL));
 
         Flags = newFlags;
     }
@@ -4150,8 +4161,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_Clear)
     g_pD3DDevice8->SetRenderState(D3DRS_FILLMODE, dwFillMode);
 
     HRESULT ret = g_pD3DDevice8->Clear(Count, pRects, Flags, Color, Z, Stencil);
-
-    
 
     return ret;
 }
