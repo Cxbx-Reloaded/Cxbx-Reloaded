@@ -144,21 +144,6 @@ OOVPA_NO_XREF(D3DDevice_GetDepthStencilSurface2, 5849, 10)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_CreateVertexShader
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_CreateVertexShader, 5849, 8)
-
-        { 0x1E, 0x85 },
-        { 0x3E, 0xE8 },
-        { 0x5E, 0x75 },
-        { 0x7E, 0x04 },
-        { 0x9E, 0x24 },
-        { 0xBE, 0x24 },
-        { 0xDE, 0x83 },
-        { 0xFE, 0xC7 },
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_CreatePixelShader
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_CreatePixelShader, 5849, 8)
@@ -1357,7 +1342,7 @@ OOVPATable D3D8_5849[] = {
 	REGISTER_OOVPA(D3DDevice_Swap, 5849, ALIAS, D3DDevice_Swap2),
 	REGISTER_OOVPA(D3DDevice_GetBackBuffer2, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDepthStencilSurface2, 5849, PATCH),
-	REGISTER_OOVPA(D3DDevice_CreateVertexShader, 5849, PATCH),
+	REGISTER_OOVPA(D3DDevice_CreateVertexShader, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_CreatePixelShader, 5849, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetPixelShader, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_GetDisplayMode, 4627, PATCH),
