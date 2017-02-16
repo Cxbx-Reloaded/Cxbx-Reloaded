@@ -1770,7 +1770,7 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSound::CDirectSoundVoice::SetFormat
 // ******************************************************************
-OOVPA_XREF(X_DirectSound_CDirectSoundVoice_SetFormat, 4627, 8,
+OOVPA_XREF(DirectSound_CDirectSoundVoice_SetFormat, 4627, 8,
 
     XREF_DirectSound_CDirectSoundVoice_SetFormat,
     XRefZero)
@@ -1788,7 +1788,7 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSound::CDirectSoundBuffer::SetFormat
 // ******************************************************************
-OOVPA_XREF(X_DirectSound_CDirectSoundBuffer_SetFormat, 4627, 8,
+OOVPA_XREF(DirectSound_CDirectSoundBuffer_SetFormat, 4627, 8,
 
     XREF_DirectSound_CDirectSoundBuffer_SetFormat,
     XRefOne)
@@ -1877,7 +1877,7 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSound::CDirectSound::EnableHeadphones (incorrect?)
 // ******************************************************************
-OOVPA_XREF(X_DirectSound_CDirectSound_EnableHeadphones, 4627, 15,
+OOVPA_XREF(DirectSound_CDirectSound_EnableHeadphones, 4627, 15,
 
     XREF_DirectSound_CDirectSound_EnableHeadphones,
     XRefZero)
@@ -3074,11 +3074,11 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetI3DL2Source, 4627, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 4627, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3936, PATCH), // +s
-	REGISTER_OOVPA(X_DirectSound_CDirectSoundVoice_SetFormat, 4627, XREF),
-	REGISTER_OOVPA(X_DirectSound_CDirectSoundBuffer_SetFormat, 4627, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetFormat, 4627, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetFormat, 4627, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetFormat, 4627, ALIAS, X_IDirectSoundBuffer_SetFormat),
 	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetMixBinVolumes, 4627, XREF),
-	REGISTER_OOVPA(X_DirectSound_CDirectSound_EnableHeadphones, 4627, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSound_EnableHeadphones, 4627, XREF),
 	REGISTER_OOVPA(IDirectSound_EnableHeadphones, 4627, ALIAS, EmuIDirectSound_EnableHeadphones),
 	// REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetHeadroom, 4627, XREF),
 	// REGISTER_OOVPA(IDirectSoundStream_SetHeadroom, 4627, ALIAS, DirectSound_CDirectSoundStream_SetHeadroom),

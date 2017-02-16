@@ -220,7 +220,7 @@ OOVPA_END;
 // ******************************************************************
 // * DirectSound::CDirectSoundVoice::SetFormat
 // ******************************************************************
-OOVPA_XREF(X_DirectSound_CDirectSoundVoice_SetFormat, 5233, 8,
+OOVPA_XREF(DirectSound_CDirectSoundVoice_SetFormat, 5233, 8,
 
     XREF_DirectSound_CDirectSoundVoice_SetFormat,
     XRefZero)
@@ -947,8 +947,8 @@ OOVPATable DSound_5233[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_Stop, 4627, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3936, PATCH),
 	REGISTER_OOVPA(IDirectSoundStream_SetVolume, 5233, ALIAS, DirectSound_CDirectSoundStream_SetVolume), // (This is actually the XREF we are using)
-	REGISTER_OOVPA(X_DirectSound_CDirectSoundVoice_SetFormat, 5233, XREF),
-	REGISTER_OOVPA(X_DirectSound_CDirectSoundBuffer_SetFormat, 4627, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetFormat, 5233, XREF),
+	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetFormat, 4627, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetFormat, 4627, ALIAS, X_IDirectSoundBuffer_SetFormat),
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetMode, 5233, XREF),
 	//REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetMode, 5344, XREF), // Add when needed...
