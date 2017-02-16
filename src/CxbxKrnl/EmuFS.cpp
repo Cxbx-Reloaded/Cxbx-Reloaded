@@ -383,55 +383,59 @@ void EmuInitFS()
 // generate fs segment selector
 void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 {
-	// Make sure the TLS Start and End addresses are within Xbox Memory
-	if (pTLS->dwDataStartAddr >= EMU_MAX_MEMORY_SIZE || pTLS->dwDataEndAddr >= EMU_MAX_MEMORY_SIZE) {
-		return;
-	}
-
 	void *pNewTLS = nullptr;
 
-	// copy global TLS to the current thread
-	{
-		uint32 dwCopySize = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr;
-		uint32 dwZeroSize = pTLS->dwSizeofZeroFill;
+	// Be aware that TLS might be absent (for example in homebrew "Wolf3d-xbox")
+	if (pTLS != nullptr) {
+		// Make sure the TLS Start and End addresses are within Xbox Memory
+		if (pTLS->dwDataStartAddr >= EMU_MAX_MEMORY_SIZE || pTLS->dwDataEndAddr >= EMU_MAX_MEMORY_SIZE) {
+			return;
+		}
 
-		pNewTLS = CxbxCalloc(1, dwCopySize + dwZeroSize + 0x100 /* + HACK: extra safety padding 0x100*/);
 
-		memcpy(pNewTLS, pTLSData, dwCopySize);
+		// copy global TLS to the current thread
+		{
+			uint32 dwCopySize = pTLS->dwDataEndAddr - pTLS->dwDataStartAddr;
+			uint32 dwZeroSize = pTLS->dwSizeofZeroFill;
+
+			pNewTLS = CxbxCalloc(1, dwCopySize + dwZeroSize + 0x100 /* + HACK: extra safety padding 0x100*/);
+
+			memcpy(pNewTLS, pTLSData, dwCopySize);
 
 #ifdef _DEBUG_TRACE
-		// dump raw TLS data
-		if (pNewTLS == nullptr)
-			DbgPrintf("EmuFS: TLS Non-Existant (OK)\n");
-		else
-		{
-			DbgPrintf("EmuFS: TLS Data Dump...\n");
-			if (g_bPrintfOn)
+			// dump raw TLS data
+			if (pNewTLS == nullptr)
+				DbgPrintf("EmuFS: TLS Non-Existant (OK)\n");
+			else
 			{
-				for (uint32 v = 0; v < dwCopySize; v++) // Note : Don't dump dwZeroSize
+				DbgPrintf("EmuFS: TLS Data Dump...\n");
+				if (g_bPrintfOn)
 				{
-					uint08 *bByte = (uint08*)pNewTLS + v;
+					for (uint32 v = 0; v < dwCopySize; v++) // Note : Don't dump dwZeroSize
+					{
+						uint08 *bByte = (uint08*)pNewTLS + v;
 
-					if (v % 0x10 == 0)
-						DbgPrintf("EmuFS: 0x%.08X: ", (xbaddr)bByte);
+						if (v % 0x10 == 0)
+							DbgPrintf("EmuFS: 0x%.08X: ", (xbaddr)bByte);
 
-					// Note : Use printf instead of DbgPrintf here, which prefixes with GetCurrentThreadId() :
-					printf("%.01X", (uint32)(*bByte));
+						// Note : Use printf instead of DbgPrintf here, which prefixes with GetCurrentThreadId() :
+						printf("%.01X", (uint32)(*bByte));
+					}
+
+					printf("\n");
 				}
-
-				printf("\n");
 			}
-		}
 #endif
-	}
+		}
 
-	// prepare TLS
-	{
-		*(xbaddr*)pTLS->dwTLSIndexAddr = (xbaddr)nullptr;
+		// prepare TLS
+		{
+			*(xbaddr*)pTLS->dwTLSIndexAddr = (xbaddr)nullptr;
 
-		// dword @ pTLSData := pTLSData
-		if (pNewTLS != nullptr)
-			*(void**)pNewTLS = pNewTLS;
+			// dword @ pTLSData := pTLSData
+			if (pNewTLS != nullptr)
+				*(void**)pNewTLS = pNewTLS;
+		}
 	}
 
 	// Allocate the xbox KPCR structure

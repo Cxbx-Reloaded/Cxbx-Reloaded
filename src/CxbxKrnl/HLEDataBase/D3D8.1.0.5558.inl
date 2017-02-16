@@ -96,34 +96,6 @@ OOVPA_NO_XREF(D3DDevice_SelectVertexShader, 5558, 7)
 OOVPA_END;
 
 // ******************************************************************
-// * D3DDevice_CreateVertexShader
-// ******************************************************************
-OOVPA_NO_XREF(D3DDevice_CreateVertexShader, 5558, 12)
-
-        // D3DDevice_CreateVertexShader+0x00 : push ecx; push ebx; push ebp
-        { 0x00, 0x51 }, // (Offset,Value)-Pair #1
-        { 0x01, 0x53 }, // (Offset,Value)-Pair #2
-        { 0x02, 0x55 }, // (Offset,Value)-Pair #3
-
-        // D3DDevice_CreateVertexShader+0x0A : jz +0x10
-        { 0x0A, 0x74 }, // (Offset,Value)-Pair #4
-        { 0x0B, 0x10 }, // (Offset,Value)-Pair #5
-
-        // D3DDevice_CreateVertexShader+0x43 : shl eax, 0x02
-        { 0x43, 0xC1 }, // (Offset,Value)-Pair #6
-        { 0x44, 0xE0 }, // (Offset,Value)-Pair #7
-        { 0x45, 0x02 }, // (Offset,Value)-Pair #8
-
-        // D3DDevice_CreateVertexShader+0x73 : mov eax, 0x8007000E
-        { 0x65, 0x07 }, // (Offset,Value)-Pair #11
-        { 0x66, 0x80 }, // (Offset,Value)-Pair #12
-
-        // D3DDevice_CreateVertexShader+0x69 : retn 0x10
-        { 0x69, 0xC2 }, // (Offset,Value)-Pair #9
-        { 0x6A, 0x10 }, // (Offset,Value)-Pair #10
-OOVPA_END;
-
-// ******************************************************************
 // * D3DDevice_SetVertexShaderConstant1
 // ******************************************************************
 OOVPA_NO_XREF(D3DDevice_SetVertexShaderConstant1, 5558, 11)
@@ -1567,7 +1539,7 @@ OOVPATable D3D8_5558[] = {
 	REGISTER_OOVPA(D3DDevice_EndStateBlock, 4361, PATCH),
 	REGISTER_OOVPA(D3DDevice_LoadVertexShader, 5233, PATCH),
 	REGISTER_OOVPA(D3DDevice_SelectVertexShader, 5558, PATCH),
-	REGISTER_OOVPA(D3DDevice_CreateVertexShader, 5558, PATCH),
+	REGISTER_OOVPA(D3DDevice_CreateVertexShader, 3925, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstant1, 5558, PATCH),
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstant1, 5558, ALIAS, D3DDevice_SetVertexShaderConstant1Fast),
 	REGISTER_OOVPA(D3DDevice_SetVertexShaderConstantNotInline, 5233, PATCH),
