@@ -1807,7 +1807,7 @@ OOVPA_END;
 // ******************************************************************
 // * IDirectSoundBuffer_SetFormat
 // ******************************************************************
-OOVPA_XREF(X_IDirectSoundBuffer_SetFormat, 4627, 8,
+OOVPA_XREF(IDirectSoundBuffer_SetFormat, 4627, 8,
 
     XRefNoSaveIndex,
     XRefOne)
@@ -3076,7 +3076,7 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3936, PATCH), // +s
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetFormat, 4627, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetFormat, 4627, XREF),
-	REGISTER_OOVPA(IDirectSoundBuffer_SetFormat, 4627, ALIAS, X_IDirectSoundBuffer_SetFormat),
+	REGISTER_OOVPA(IDirectSoundBuffer_SetFormat, 4627, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetMixBinVolumes, 4627, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSound_EnableHeadphones, 4627, XREF),
 	REGISTER_OOVPA(IDirectSound_EnableHeadphones, 4627, ALIAS, EmuIDirectSound_EnableHeadphones),
