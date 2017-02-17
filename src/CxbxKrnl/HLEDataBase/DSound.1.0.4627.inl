@@ -2599,7 +2599,7 @@ OOVPA_XREF(DirectSound_CDirectSoundStream_SetHeadroom, 4627, 8,
     XRefNoSaveIndex,
     XRefOne)
 
-        { 0x36, /*XREF_DirectSound_CDirectSoundVoice_SetHeadroom*/ XREF_DSBUFFERSETHEADROOMA },
+        XREF_ENTRY( 0x36, /*XREF_DirectSound_CDirectSoundVoice_SetHeadroom*/ XREF_DSBUFFERSETHEADROOMA ),
 
         { 0x0C, 0x00 },
         { 0x14, 0x74 },
