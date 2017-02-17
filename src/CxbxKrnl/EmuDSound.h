@@ -440,17 +440,17 @@ HRESULT WINAPI EMUPATCH(DirectSoundCreate)
 VOID WINAPI EMUPATCH(DirectSoundDoWork)();
 
 // ******************************************************************
-// * patch: IDirectSound8_AddRef
+// * patch: IDirectSound_AddRef
 // ******************************************************************
-ULONG WINAPI EMUPATCH(IDirectSound8_AddRef)
+ULONG WINAPI EMUPATCH(IDirectSound_AddRef)
 (
     LPDIRECTSOUND8          pThis
 );
 
 // ******************************************************************
-// * patch: IDirectSound8_Release
+// * patch: IDirectSound_Release
 // ******************************************************************
-ULONG WINAPI EMUPATCH(IDirectSound8_Release)
+ULONG WINAPI EMUPATCH(IDirectSound_Release)
 (
     LPDIRECTSOUND8          pThis
 );
@@ -474,17 +474,17 @@ HRESULT WINAPI EMUPATCH(IDirectSound8_EnableHeadphones)
 );
 
 // ******************************************************************
-// * patch: IDirectSound8_SynchPlayback
+// * patch: IDirectSound_SynchPlayback
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound8_SynchPlayback)
+HRESULT WINAPI EMUPATCH(IDirectSound_SynchPlayback)
 (
     LPDIRECTSOUND8          pThis
 );
 
 // ******************************************************************
-// * patch: IDirectSound8_DownloadEffectsImage
+// * patch: IDirectSound_DownloadEffectsImage
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound8_DownloadEffectsImage)
+HRESULT WINAPI EMUPATCH(IDirectSound_DownloadEffectsImage)
 (
     LPDIRECTSOUND8          pThis,
     LPCVOID                 pvImageBuffer,
@@ -494,9 +494,9 @@ HRESULT WINAPI EMUPATCH(IDirectSound8_DownloadEffectsImage)
 );
 
 // ******************************************************************
-// * patch: IDirectSound8_SetOrientation
+// * patch: IDirectSound_SetOrientation
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound8_SetOrientation)
+HRESULT WINAPI EMUPATCH(IDirectSound_SetOrientation)
 (
     LPDIRECTSOUND8  pThis,
     FLOAT           xFront,
@@ -509,9 +509,9 @@ HRESULT WINAPI EMUPATCH(IDirectSound8_SetOrientation)
 );
 
 // ******************************************************************
-// * patch: IDirectSound8_SetDistanceFactor
+// * patch: IDirectSound_SetDistanceFactor
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound8_SetDistanceFactor)
+HRESULT WINAPI EMUPATCH(IDirectSound_SetDistanceFactor)
 (
     LPDIRECTSOUND8  pThis,
     FLOAT           fDistanceFactor,
@@ -519,9 +519,9 @@ HRESULT WINAPI EMUPATCH(IDirectSound8_SetDistanceFactor)
 );
 
 // ******************************************************************
-// * patch: IDirectSound8_SetRolloffFactor
+// * patch: IDirectSound_SetRolloffFactor
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound8_SetRolloffFactor)
+HRESULT WINAPI EMUPATCH(IDirectSound_SetRolloffFactor)
 (
     LPDIRECTSOUND8  pThis,
     FLOAT           fRolloffFactor,
@@ -529,9 +529,9 @@ HRESULT WINAPI EMUPATCH(IDirectSound8_SetRolloffFactor)
 );
 
 // ******************************************************************
-// * patch: IDirectSound8_SetDopplerFactor
+// * patch: IDirectSound_SetDopplerFactor
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound8_SetDopplerFactor)
+HRESULT WINAPI EMUPATCH(IDirectSound_SetDopplerFactor)
 (
     LPDIRECTSOUND8  pThis,
     FLOAT           fDopplerFactor,
@@ -539,9 +539,9 @@ HRESULT WINAPI EMUPATCH(IDirectSound8_SetDopplerFactor)
 );
 
 // ******************************************************************
-// * patch: IDirectSound8_SetI3DL2Listener
+// * patch: IDirectSound_SetI3DL2Listener
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound8_SetI3DL2Listener)
+HRESULT WINAPI EMUPATCH(IDirectSound_SetI3DL2Listener)
 (
     LPDIRECTSOUND8          pThis,
     PVOID                   pDummy, // TODO: fill this out
@@ -549,9 +549,9 @@ HRESULT WINAPI EMUPATCH(IDirectSound8_SetI3DL2Listener)
 );
 
 // ******************************************************************
-// * patch: IDirectSound8_SetMixBinHeadroom
+// * patch: IDirectSound_SetMixBinHeadroom
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound8_SetMixBinHeadroom)
+HRESULT WINAPI EMUPATCH(IDirectSound_SetMixBinHeadroom)
 (
     LPDIRECTSOUND8          pThis,
     DWORD                   dwMixBinMask,
@@ -577,9 +577,9 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes)
 );
 
 // ******************************************************************
-// * patch: IDirectSound8_SetPosition
+// * patch: IDirectSound_SetPosition
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound8_SetPosition)
+HRESULT WINAPI EMUPATCH(IDirectSound_SetPosition)
 (
     LPDIRECTSOUND8          pThis,
     FLOAT                   x,
@@ -589,9 +589,9 @@ HRESULT WINAPI EMUPATCH(IDirectSound8_SetPosition)
 );
 
 // ******************************************************************
-// * patch: IDirectSound8_SetVelocity
+// * patch: IDirectSound_SetVelocity
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound8_SetVelocity)
+HRESULT WINAPI EMUPATCH(IDirectSound_SetVelocity)
 (
     LPDIRECTSOUND8          pThis,
     FLOAT                   x,
@@ -601,9 +601,9 @@ HRESULT WINAPI EMUPATCH(IDirectSound8_SetVelocity)
 );
 
 // ******************************************************************
-// * patch: IDirectSound8_SetAllParameters
+// * patch: IDirectSound_SetAllParameters
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound8_SetAllParameters)
+HRESULT WINAPI EMUPATCH(IDirectSound_SetAllParameters)
 (
     LPDIRECTSOUND8          pThis,
     LPVOID                  pTodo,  // TODO: LPCDS3DLISTENER
@@ -619,9 +619,9 @@ HRESULT WINAPI EMUPATCH(DirectSound_CDirectSound_CommitDeferredSettings)
 );
 
 // ******************************************************************
-// * patch: IDirectSound8_CreateSoundBuffer
+// * patch: IDirectSound_CreateSoundBuffer
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound8_CreateSoundBuffer)
+HRESULT WINAPI EMUPATCH(IDirectSound_CreateSoundBuffer)
 (
     LPDIRECTSOUND8          pThis,
     X_DSBUFFERDESC         *pdsbd,
@@ -639,9 +639,9 @@ HRESULT WINAPI EMUPATCH(DirectSoundCreateBuffer)
 );
 
 // ******************************************************************
-// * patch: IDirectSound8_CreateBuffer
+// * patch: IDirectSound_CreateBuffer
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound8_CreateBuffer)
+HRESULT WINAPI EMUPATCH(IDirectSound_CreateBuffer)
 (
     LPDIRECTSOUND8          pThis,
     X_DSBUFFERDESC         *pdssd,
@@ -1273,9 +1273,9 @@ extern "C" HRESULT __stdcall EmuIDirectSoundBuffer_PauseEx
 );
 
 // ******************************************************************
-// * patch: IDirectSound8_GetOutputLevels
+// * patch: IDirectSound_GetOutputLevels
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound8_GetOutputLevels)
+HRESULT WINAPI EMUPATCH(IDirectSound_GetOutputLevels)
 (
 	LPDIRECTSOUND8		   *pThis,
 	X_DSOUTPUTLEVELS	   *pOutputLevels,
@@ -1346,9 +1346,9 @@ HRESULT WINAPI EMUPATCH(DirectSound_CDirectSoundStream_SetFilter)
 );
 
 // ******************************************************************
-// * patch: IDirectSound8_GetCaps
+// * patch: IDirectSound_GetCaps
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound8_GetCaps)
+HRESULT WINAPI EMUPATCH(IDirectSound_GetCaps)
 (
 	X_CDirectSound*	pThis,
     X_DSCAPS*		pDSCaps
@@ -1463,9 +1463,9 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetEG)
 );
 
 // ******************************************************************
-// * patch: IDirectSound8_GetEffectData
+// * patch: IDirectSound_GetEffectData
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound8_GetEffectData)
+HRESULT WINAPI EMUPATCH(IDirectSound_GetEffectData)
 (
 	X_CDirectSound*	pThis,
     DWORD			dwEffectIndex,
@@ -1496,9 +1496,9 @@ HRESULT WINAPI EMUPATCH(DirectSound_CDirectSoundStream_SetRolloffCurve)
 );
 
 // ******************************************************************
-// * patch: IDirectSound8_SetEffectData
+// * patch: IDirectSound_SetEffectData
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound8_SetEffectData)
+HRESULT WINAPI EMUPATCH(IDirectSound_SetEffectData)
 (
 	LPVOID pThis,
     DWORD dwEffectIndex,

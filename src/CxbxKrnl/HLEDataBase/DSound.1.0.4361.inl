@@ -92,18 +92,18 @@ OOVPA_NO_XREF(DirectSoundGetSampleTime, 4361, 8)
 OOVPA_END;
 
 // ******************************************************************
-// * IDirectSound8_CreateSoundBuffer
+// * IDirectSound_CreateSoundBuffer
 // ******************************************************************
-OOVPA_NO_XREF(IDirectSound8_CreateSoundBuffer, 4361, 9)
+OOVPA_NO_XREF(IDirectSound_CreateSoundBuffer, 4361, 9)
 
-        // IDirectSound8_CreateSoundBuffer+0x2A : push 0x24
+        // IDirectSound_CreateSoundBuffer+0x2A : push 0x24
         { 0x2A, 0x6A }, // (Offset,Value)-Pair #1
         { 0x2B, 0x24 }, // (Offset,Value)-Pair #2
 
-        // IDirectSound8_CreateSoundBuffer+0x3C : call [addr]
+        // IDirectSound_CreateSoundBuffer+0x3C : call [addr]
         { 0x3C, 0xE8 }, // (Offset,Value)-Pair #3
 
-        // IDirectSound8_CreateSoundBuffer+0x4A : and esi, 0x7FF8FFF2
+        // IDirectSound_CreateSoundBuffer+0x4A : and esi, 0x7FF8FFF2
         { 0x4A, 0x81 }, // (Offset,Value)-Pair #4
         { 0x4B, 0xE6 }, // (Offset,Value)-Pair #5
         { 0x4C, 0xF2 }, // (Offset,Value)-Pair #6
@@ -1057,8 +1057,8 @@ OOVPATable DSound_4361[] = {
 	REGISTER_OOVPA(DirectSoundCreateStream, 4361, PATCH),
 	REGISTER_OOVPA(CMcpxStream_Pause, 4361, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundStream_Pause, 4361, PATCH),
-	REGISTER_OOVPA(IDirectSound8_AddRef, 3936, PATCH),
-	REGISTER_OOVPA(IDirectSound8_CreateSoundBuffer, 4361, PATCH),
+	REGISTER_OOVPA(IDirectSound_AddRef, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound_CreateSoundBuffer, 4361, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetPlayRegion, 4361, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_SetPlayRegion, 4361, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetLoopRegion, 4361, XREF),
@@ -1088,7 +1088,7 @@ OOVPATable DSound_4361[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_StopEx, 4361, XREF),
 	REGISTER_OOVPA(IDirectSoundBuffer_StopEx, 4361, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_AddRef, 3936, PATCH),
-	REGISTER_OOVPA(IDirectSound8_Release, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound_Release, 3936, PATCH),
     REGISTER_OOVPA(DirectSound_CDirectSoundVoiceSettings_SetMixBins, 4361, XREF),
     REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetMixBins, 4361, XREF),
     REGISTER_OOVPA(DirectSound_CDirectSoundBuffer_SetMixBins, 4361, XREF),
