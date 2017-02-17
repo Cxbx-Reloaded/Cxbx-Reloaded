@@ -1908,9 +1908,9 @@ OOVPA_XREF(DirectSound_CDirectSound_EnableHeadphones, 4627, 15,
 OOVPA_END;
 
 // ******************************************************************
-// * EmuIDirectSound_EnableHeadphones
+// * IDirectSound_EnableHeadphones
 // ******************************************************************
-OOVPA_XREF(EmuIDirectSound_EnableHeadphones, 4627, 9,
+OOVPA_XREF(IDirectSound_EnableHeadphones, 4627, 9,
 
 	XRefNoSaveIndex,
 	XRefOne)
@@ -3079,7 +3079,7 @@ OOVPATable DSound_4627[] = {
 	REGISTER_OOVPA(IDirectSoundBuffer_SetFormat, 4627, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetMixBinVolumes, 4627, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSound_EnableHeadphones, 4627, XREF),
-	REGISTER_OOVPA(IDirectSound_EnableHeadphones, 4627, ALIAS, EmuIDirectSound_EnableHeadphones),
+	REGISTER_OOVPA(IDirectSound_EnableHeadphones, 4627, PATCH),
 	// REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetHeadroom, 4627, XREF),
 	// REGISTER_OOVPA(IDirectSoundStream_SetHeadroom, 4627, ALIAS, DirectSound_CDirectSoundStream_SetHeadroom),
 	REGISTER_OOVPA(IDirectSoundBuffer_AddRef, 3936, PATCH),
