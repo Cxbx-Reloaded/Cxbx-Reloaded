@@ -824,9 +824,9 @@ HRESULT WINAPI EMUPATCH(DirectSoundCreateStream)
 );
 
 // ******************************************************************
-// * patch: IDirectSound8_CreateStream
+// * patch: IDirectSound_CreateSoundStream
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(IDirectSound8_CreateStream)
+HRESULT WINAPI EMUPATCH(IDirectSound_CreateSoundStream)
 (
     LPDIRECTSOUND8          pThis,
     X_DSSTREAMDESC         *pdssd,

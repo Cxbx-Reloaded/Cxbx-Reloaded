@@ -2145,7 +2145,7 @@ OOVPATable DSound_5558[] = {
 	REGISTER_OOVPA(DirectSound_CDirectSound_SetVelocity, 5558, XREF),
 	REGISTER_OOVPA(IDirectSound8_SetVelocity, 5558, ALIAS, IDirectSound_SetVelocity),
 	REGISTER_OOVPA(DirectSound_CDirectSound_CreateSoundStream, 5558, XREF),
-	REGISTER_OOVPA(IDirectSound8_CreateStream, 5558, ALIAS, IDirectSound_CreateSoundStream),
+	REGISTER_OOVPA(IDirectSound_CreateSoundStream, 5558, PATCH),
 	REGISTER_OOVPA(DirectSound_CMcpxVoiceClient_SetEG, 5558, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundVoice_SetEG, 5558, XREF),
 	REGISTER_OOVPA(DirectSound_CDirectSoundStream_SetEG, 5558, PATCH),

@@ -168,30 +168,30 @@ OOVPA_XREF(DirectSound_CDirectSound_CreateSoundStream, 3936, 16,
 OOVPA_END;
 
 // ******************************************************************
-// * IDirectSound8_CreateStream
+// * IDirectSound_CreateSoundStream
 // ******************************************************************
-OOVPA_XREF(IDirectSound8_CreateStream, 3936, 10,
+OOVPA_XREF(IDirectSound_CreateSoundStream, 3936, 10,
 
     XRefNoSaveIndex,
     XRefOne)
 
     // TODO: tidy up the xref names (are probably not accurate)
 
-        // IDirectSound8_CreateStream+0x1D : call [CDirectSound::CreateSoundStream]
+        // IDirectSound_CreateSoundStream+0x1D : call [CDirectSound::CreateSoundStream]
         XREF_ENTRY( 0x1D, XREF_DSCREATESOUNDSTREAM ), // (Offset,Value)-Pair #1
 
-        // IDirectSound8_CreateStream+0x04 : mov eax, [esp+0x08]
+        // IDirectSound_CreateSoundStream+0x04 : mov eax, [esp+0x08]
         { 0x04, 0x8B }, // (Offset,Value)-Pair #2
         { 0x05, 0x44 }, // (Offset,Value)-Pair #3
         { 0x06, 0x24 }, // (Offset,Value)-Pair #4
         { 0x07, 0x08 }, // (Offset,Value)-Pair #5
 
-        // IDirectSound8_CreateStream+0x12 : and eax, 0xFFFFFFF8
+        // IDirectSound_CreateSoundStream+0x12 : and eax, 0xFFFFFFF8
         { 0x12, 0x83 }, // (Offset,Value)-Pair #6
         { 0x13, 0xC0 }, // (Offset,Value)-Pair #7
         { 0x14, 0xF8 }, // (Offset,Value)-Pair #8
 
-        // IDirectSound8_CreateStream+0x21 : retn 0x10
+        // IDirectSound_CreateSoundStream+0x21 : retn 0x10
         { 0x21, 0xC2 }, // (Offset,Value)-Pair #9
         { 0x22, 0x10 }, // (Offset,Value)-Pair #10
 OOVPA_END;
@@ -4049,7 +4049,7 @@ OOVPATable DSound_3936[] = {
 	REGISTER_OOVPA(DirectSoundDoWorkA, 3936, XREF),
 	REGISTER_OOVPA(DirectSoundDoWork, 3936, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSound_CreateSoundStream, 3936, XREF),
-	REGISTER_OOVPA(IDirectSound8_CreateStream, 3936, PATCH),
+	REGISTER_OOVPA(IDirectSound_CreateSoundStream, 3936, PATCH),
 	REGISTER_OOVPA(DirectSound_CDirectSound_CreateSoundBuffer, 3936, XREF),
 	REGISTER_OOVPA(IDirectSound8_CreateBuffer, 3936, PATCH),
 	REGISTER_OOVPA(IDirectSoundBuffer_Release, 3936, PATCH),

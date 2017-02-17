@@ -1681,9 +1681,9 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSoundCreateStream)
 }
 
 // ******************************************************************
-// * patch: IDirectSound8_CreateStream
+// * patch: IDirectSound_CreateSoundStream
 // ******************************************************************
-HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_CreateStream)
+HRESULT WINAPI XTL::EMUPATCH(IDirectSound_CreateSoundStream)
 (
     LPDIRECTSOUND8          pThis,
     X_DSSTREAMDESC         *pdssd,
@@ -1691,7 +1691,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSound8_CreateStream)
     PVOID                   pUnknown
 )
 {
-        DbgPrintf("EmuDSound: EmuIDirectSound8_CreateStream\n"
+        DbgPrintf("EmuDSound: EmuIDirectSound_CreateSoundStream\n"
                "(\n"
                "   pThis                     : 0x%.08X\n"
                "   pdssd                     : 0x%.08X\n"
