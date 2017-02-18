@@ -155,24 +155,30 @@ XBSYSAPI EXPORTNUM(30) OBJECT_TYPE ExSemaphoreObjectType;
 
 XBSYSAPI EXPORTNUM(31) OBJECT_TYPE ExTimerObjectType;
 
+// ******************************************************************
+// * 0x0020 - ExfInterlockedInsertHeadList()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(32) PLIST_ENTRY FASTCALL ExfInterlockedInsertHeadList
 (
 	IN PLIST_ENTRY ListHead,
-	IN PLIST_ENTRY ListEntry,
-	IN PKSPIN_LOCK Lock
+	IN PLIST_ENTRY ListEntry
 );
 
+// ******************************************************************
+// * 0x0021 - ExfInterlockedInsertTailList()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(33) PLIST_ENTRY FASTCALL ExfInterlockedInsertTailList
 (
 	IN PLIST_ENTRY ListHead,
-	IN PLIST_ENTRY ListEntry,
-	IN PKSPIN_LOCK Lock
+	IN PLIST_ENTRY ListEntry
 );
 
+// ******************************************************************
+// * 0x0022 - ExfInterlockedRemoveHeadList()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(34) PLIST_ENTRY FASTCALL ExfInterlockedRemoveHeadList
 (
-	IN PLIST_ENTRY ListHead,
-	IN PKSPIN_LOCK Lock
+	IN PLIST_ENTRY ListHead
 );
 
 XBSYSAPI EXPORTNUM(51) LONG FASTCALL KRNL(InterlockedCompareExchange)

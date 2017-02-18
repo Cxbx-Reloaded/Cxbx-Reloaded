@@ -55,6 +55,7 @@ namespace NtDll
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuAlloc.h" // For CxbxFree(), CxbxCalloc(), etc.
+#include "EmuKrnl.h" // For InsertHeadList, InsertTailList, RemoveHeadList
 
 #pragma warning(disable:4005) // Ignore redefined status values
 #include <ntstatus.h> // For STATUS_BUFFER_TOO_SMALL
@@ -600,19 +601,19 @@ XBSYSAPI EXPORTNUM(31) xboxkrnl::OBJECT_TYPE xboxkrnl::ExTimerObjectType =
 XBSYSAPI EXPORTNUM(32) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedInsertHeadList
 (
 	IN PLIST_ENTRY ListHead,
-	IN PLIST_ENTRY ListEntry,
-	IN PKSPIN_LOCK Lock
+	IN PLIST_ENTRY ListEntry
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(ListHead)
 		LOG_FUNC_ARG(ListEntry)
-		LOG_FUNC_ARG(Lock)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	LOG_INCOMPLETE(); // TODO : Lock
 
-	RETURN(ListHead);
+	PLIST_ENTRY ret = InsertHeadList(ListHead, ListEntry);
+
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -622,19 +623,19 @@ XBSYSAPI EXPORTNUM(32) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedIn
 XBSYSAPI EXPORTNUM(33) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedInsertTailList
 (
 	IN PLIST_ENTRY ListHead,	
-	IN PLIST_ENTRY ListEntry,
-	IN PKSPIN_LOCK Lock
+	IN PLIST_ENTRY ListEntry
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(ListHead)
 		LOG_FUNC_ARG(ListEntry)
-		LOG_FUNC_ARG(Lock)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	LOG_INCOMPLETE(); // TODO : Lock
 
-	RETURN(ListHead);
+	PLIST_ENTRY ret = InsertTailList(ListHead, ListEntry);
+
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -643,16 +644,14 @@ XBSYSAPI EXPORTNUM(33) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedIn
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(34) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedRemoveHeadList
 (
-	IN PLIST_ENTRY ListHead,
-	IN PKSPIN_LOCK Lock
+	IN PLIST_ENTRY ListHead
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(ListHead)
-		LOG_FUNC_ARG(Lock)
-		LOG_FUNC_END;
+	LOG_FUNC_ONE_ARG(ListHead);
 
-	LOG_UNIMPLEMENTED();
+	LOG_INCOMPLETE(); // TODO : Lock
 
-	RETURN(ListHead);
+	PLIST_ENTRY ret = RemoveHeadList(ListHead);
+
+	RETURN(ret);
 }
