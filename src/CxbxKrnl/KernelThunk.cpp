@@ -345,7 +345,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::RtlDowncaseUnicodeChar),              // 0x0113 (275)
 	(uint32)FUNC(&xboxkrnl::RtlDowncaseUnicodeString),            // 0x0114 (276)
 	(uint32)FUNC(&xboxkrnl::RtlEnterCriticalSection),             // 0x0115 (277)
-	(uint32)PANIC(0x0116),                                        // 0x0116 (278) RtlEnterCriticalSectionAndRegion
+	(uint32)FUNC(&xboxkrnl::RtlEnterCriticalSectionAndRegion),    // 0x0116 (278)
 	(uint32)FUNC(&xboxkrnl::RtlEqualString),                      // 0x0117 (279)
 	(uint32)FUNC(&xboxkrnl::RtlEqualUnicodeString),               // 0x0118 (280)
 	(uint32)FUNC(&xboxkrnl::RtlExtendedIntegerMultiply),          // 0x0119 (281)
@@ -362,7 +362,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::RtlIntegerToChar),                    // 0x0124 (292)
 	(uint32)FUNC(&xboxkrnl::RtlIntegerToUnicodeString),           // 0x0125 (293)
 	(uint32)FUNC(&xboxkrnl::RtlLeaveCriticalSection),             // 0x0126 (294)
-	(uint32)PANIC(0x0127),                                        // 0x0127 (295) RtlLeaveCriticalSectionAndRegion
+	(uint32)FUNC(&xboxkrnl::RtlLeaveCriticalSectionAndRegion),    // 0x0127 (295)
 	(uint32)FUNC(&xboxkrnl::RtlLowerChar),                        // 0x0128 (296)
 	(uint32)FUNC(&xboxkrnl::RtlMapGenericMask),                   // 0x0129 (297)
 	(uint32)FUNC(&xboxkrnl::RtlMoveMemory),                       // 0x012A (298)

@@ -168,7 +168,13 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI RtlEnterCriticalSection
   IN PRTL_CRITICAL_SECTION CriticalSection
 );
 
-XBSYSAPI VOID *RtlEnterCriticalSectionAndRegion;
+// ******************************************************************
+// * 0x0116 - RtlEnterCriticalSectionAndRegion()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(278) VOID NTAPI RtlEnterCriticalSectionAndRegion
+(
+	IN PRTL_CRITICAL_SECTION CriticalSection
+);
 
 // ******************************************************************
 // * 0x0117 - RtlEqualString()
@@ -313,7 +319,13 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI RtlLeaveCriticalSection
   IN PRTL_CRITICAL_SECTION CriticalSection
 );
 
-XBSYSAPI VOID *RtlLeaveCriticalSectionAndRegion;
+// ******************************************************************
+// * 0x0127 - RtlLeaveCriticalSectionAndRegion()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(295) VOID NTAPI RtlLeaveCriticalSectionAndRegion
+(
+	IN PRTL_CRITICAL_SECTION CriticalSection
+);
 
 // ******************************************************************
 // * RtlLowerChar

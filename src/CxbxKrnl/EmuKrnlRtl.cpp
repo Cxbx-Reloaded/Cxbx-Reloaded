@@ -437,6 +437,21 @@ XBSYSAPI EXPORTNUM(277) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSection
 }
 
 // ******************************************************************
+// * 0x0116 - RtlEnterCriticalSectionAndRegion()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(278) xboxkrnl::VOID NTAPI xboxkrnl::RtlEnterCriticalSectionAndRegion
+(
+	IN PRTL_CRITICAL_SECTION CriticalSection
+)
+{
+	/** sorta pointless
+	LOG_FUNC_ONE_ARG(CriticalSection);
+	//*/
+
+	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
 // * 0x0117 - RtlEqualString()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(279) xboxkrnl::BOOLEAN NTAPI xboxkrnl::RtlEqualString
@@ -753,6 +768,10 @@ XBSYSAPI EXPORTNUM(294) xboxkrnl::VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
 		return;
 	}
 
+	/* sorta pointless
+	LOG_FUNC_ONE_ARG(CriticalSection);
+	//*/
+
 	int iSection = FindCriticalSection(CriticalSection);
 
 	if (iSection >= 0)
@@ -764,12 +783,24 @@ XBSYSAPI EXPORTNUM(294) xboxkrnl::VOID NTAPI xboxkrnl::RtlLeaveCriticalSection
 		CriticalSection->RecursionCount = GlobalCriticalSections[iSection].NativeCriticalSection.RecursionCount;
 		CriticalSection->OwningThread = GlobalCriticalSections[iSection].NativeCriticalSection.OwningThread;
 	}
+
 	// Note: We need to execute this before debug output to avoid trouble
 	//NtDll::RtlLeaveCriticalSection((NtDll::_RTL_CRITICAL_SECTION*)CriticalSection);
+}
 
-	/* sorta pointless
+// ******************************************************************
+// * 0x0127 - RtlLeaveCriticalSectionAndRegion()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(295) xboxkrnl::VOID NTAPI xboxkrnl::RtlLeaveCriticalSectionAndRegion
+(
+	IN PRTL_CRITICAL_SECTION CriticalSection
+)
+{
+	/** sorta pointless
 	LOG_FUNC_ONE_ARG(CriticalSection);
 	//*/
+
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
