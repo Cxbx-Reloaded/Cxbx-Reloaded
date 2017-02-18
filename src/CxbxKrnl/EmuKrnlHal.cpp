@@ -432,7 +432,8 @@ XBSYSAPI EXPORTNUM(329) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_UCHAR
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	while (Count-- > 0)
+		*Buffer++ = EmuX86_IORead8((xbaddr)Port);
 }
 
 // ******************************************************************
@@ -451,7 +452,8 @@ XBSYSAPI EXPORTNUM(330) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_USHORT
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	while (Count-- > 0)
+		*Buffer++ = EmuX86_IORead16((xbaddr)Port);
 }
 
 // ******************************************************************
@@ -470,7 +472,8 @@ XBSYSAPI EXPORTNUM(331) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_ULONG
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	while (Count-- > 0)
+		*Buffer++ = EmuX86_IORead32((xbaddr)Port);
 }
 
 // ******************************************************************
@@ -489,7 +492,8 @@ XBSYSAPI EXPORTNUM(332) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_UCHAR
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	while (Count-- > 0)
+		EmuX86_IOWrite8((xbaddr)Port, *Buffer++);
 }
 
 // ******************************************************************
@@ -508,7 +512,8 @@ XBSYSAPI EXPORTNUM(333) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_USHORT
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	while (Count-- > 0)
+		EmuX86_IOWrite16((xbaddr)Port, *Buffer++);
 }
 
 // ******************************************************************
@@ -527,7 +532,8 @@ XBSYSAPI EXPORTNUM(334) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_ULONG
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	while (Count-- > 0)
+		EmuX86_IOWrite32((xbaddr)Port, *Buffer++);
 }
 
 // ******************************************************************
