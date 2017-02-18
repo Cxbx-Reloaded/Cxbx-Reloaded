@@ -247,15 +247,13 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
 		LOG_FUNC_ARG_OUT(DataValue)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
-
 	if (ReadWord) {
-		// Write UCHAR
+		LOG_INCOMPLETE(); // TODO : Read UCHAR, possibly as simple as: *((PWORD)DataValue) = value
 	}
 	else {
-		// Write BYTE
+		// Read BYTE
 		if (DataValue)
-			*DataValue = 1;
+			*DataValue = 1; // TODO : What value?
 	}
 
 	RETURN(STATUS_SUCCESS);
