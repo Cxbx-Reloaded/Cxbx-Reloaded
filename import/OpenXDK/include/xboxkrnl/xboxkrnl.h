@@ -1273,10 +1273,12 @@ KEVENT, *PKEVENT, *PRKEVENT; // even with undefined RESTRICTED_POINTER, this doe
 // ******************************************************************
 // EVENT_BASIC_INFORMATION - same as Windows
 // ******************************************************************
-typedef struct _EVENT_BASIC_INFORMATION {
+typedef struct _EVENT_BASIC_INFORMATION
+{
 	EVENT_TYPE EventType;
 	LONG EventState;
-} EVENT_BASIC_INFORMATION, *PEVENT_BASIC_INFORMATION;
+}
+EVENT_BASIC_INFORMATION, *PEVENT_BASIC_INFORMATION;
 
 // ******************************************************************
 // KSEMAPHORE
@@ -1291,19 +1293,23 @@ KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
 // ******************************************************************
 // SEMAPHORE_BASIC_INFORMATION - same as Windows
 // ******************************************************************
-typedef struct _SEMAPHORE_BASIC_INFORMATION {
+typedef struct _SEMAPHORE_BASIC_INFORMATION
+{
 	LONG CurrentCount;
 	LONG MaximumCount;
-} SEMAPHORE_BASIC_INFORMATION, *PSEMAPHORE_BASIC_INFORMATION;
+}
+SEMAPHORE_BASIC_INFORMATION, *PSEMAPHORE_BASIC_INFORMATION;
 
 // ******************************************************************
 // MUTANT_BASIC_INFORMATION - same as Windows
 // ******************************************************************
-typedef struct _MUTANT_BASIC_INFORMATION {
+typedef struct _MUTANT_BASIC_INFORMATION
+{
 	LONG CurrentCount;
 	BOOLEAN OwnedByCaller;
 	BOOLEAN AbandonedState;
-} MUTANT_BASIC_INFORMATION, *PMUTANT_BASIC_INFORMATION;
+}
+MUTANT_BASIC_INFORMATION, *PMUTANT_BASIC_INFORMATION;
 
 // ******************************************************************
 // ERWLOCK
@@ -1535,7 +1541,7 @@ typedef enum _KOBJECTS
 KOBJECTS, *PKOBJECTS;
 
 // ******************************************************************
-// * KINTERRUPR
+// * KINTERRUPT
 // ******************************************************************
 typedef struct _KINTERRUPT
 {
@@ -1582,6 +1588,17 @@ typedef enum _KINTERRUPT_MODE
 	Latched,
 }
 KINTERRUPT_MODE;
+
+// ******************************************************************
+// * PS_STATISTICS
+// ******************************************************************
+typedef struct _PS_STATISTICS
+{
+	ULONG Length;
+	ULONG ThreadCount;
+	ULONG HandleCount;
+}
+PS_STATISTICS, *PPS_STATISTICS;
 
 // ******************************************************************
 // * RTL_CRITICAL_SECTION

@@ -327,6 +327,27 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 }
 
 // ******************************************************************
+// * 0x0100 - PsQueryStatistics()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(256) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsQueryStatistics
+(
+	IN OUT PPS_STATISTICS ProcessStatistics
+)
+{
+	NTSTATUS ret = STATUS_SUCCESS;
+
+	if (ProcessStatistics->Length == sizeof(PS_STATISTICS)) {
+		LOG_INCOMPLETE(); // TODO : Return number of threads and handles that currently exist
+		ProcessStatistics->ThreadCount = 1;
+		ProcessStatistics->HandleCount = 1;
+	} else {
+		ret = STATUS_INVALID_PARAMETER;
+	}
+
+	RETURN(ret);
+}
+
+// ******************************************************************
 // * 0x0101 - PsSetCreateThreadNotifyRoutine()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(257) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsSetCreateThreadNotifyRoutine
