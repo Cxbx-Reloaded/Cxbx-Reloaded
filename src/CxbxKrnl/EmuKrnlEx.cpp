@@ -609,11 +609,23 @@ XBSYSAPI EXPORTNUM(32) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedIn
 		LOG_FUNC_ARG(ListEntry)
 		LOG_FUNC_END;
 
+	/* Disable interrupts and acquire the spinlock */
+	// BOOLEAN Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
 	LOG_INCOMPLETE(); // TODO : Lock
 
-	PLIST_ENTRY ret = InsertHeadList(ListHead, ListEntry);
+	/* Save the first entry */
+	PLIST_ENTRY FirstEntry = ListHead->Flink;
+	/* Insert the new entry */
+	InsertHeadList(ListHead, ListEntry);
 
-	RETURN(ret);
+	/* Release the spinlock and restore interrupts */
+	// _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+
+	/* Return the old first entry or NULL for empty list */
+	if (FirstEntry == ListHead)
+		FirstEntry = NULL;
+
+	RETURN(FirstEntry);
 }
 
 // ******************************************************************
@@ -631,11 +643,24 @@ XBSYSAPI EXPORTNUM(33) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedIn
 		LOG_FUNC_ARG(ListEntry)
 		LOG_FUNC_END;
 
+	/* Disable interrupts and acquire the spinlock */
+	// BOOLEAN Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
 	LOG_INCOMPLETE(); // TODO : Lock
 
-	PLIST_ENTRY ret = InsertTailList(ListHead, ListEntry);
+	/* Save the last entry */
+	PLIST_ENTRY LastEntry = ListHead->Blink;
 
-	RETURN(ret);
+	/* Insert the new entry */
+	InsertTailList(ListHead, ListEntry);
+
+	/* Release the spinlock and restore interrupts */
+	// _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+
+	/* Return the old last entry or NULL for empty list */
+	if (LastEntry == ListHead) 
+		LastEntry = NULL;
+
+	RETURN(LastEntry);
 }
 
 // ******************************************************************
@@ -649,9 +674,32 @@ XBSYSAPI EXPORTNUM(34) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedRe
 {
 	LOG_FUNC_ONE_ARG(ListHead);
 
+	/* Disable interrupts and acquire the spinlock */
+	// BOOLEAN Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
 	LOG_INCOMPLETE(); // TODO : Lock
 
-	PLIST_ENTRY ret = RemoveHeadList(ListHead);
+	PLIST_ENTRY ListEntry;
 
-	RETURN(ret);
+	/* Check if the list is empty */
+	if (IsListEmpty(ListHead))
+	{
+		/* Return NULL */
+		ListEntry = NULL;
+	}
+	else
+	{
+		/* Remove the first entry from the list head */
+		ListEntry = RemoveHeadList(ListHead);
+#if DBG
+		ListEntry->Flink = (PLIST_ENTRY)0xBADDD0FF;
+		ListEntry->Blink = (PLIST_ENTRY)0xBADDD0FF;
+#endif
+	}
+
+	/* Release the spinlock and restore interrupts */
+	// _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+
+	/* Return the entry */
+	RETURN(ListEntry);
+
 }
