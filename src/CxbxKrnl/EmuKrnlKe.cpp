@@ -72,6 +72,13 @@ typedef struct _DpcData {
 
 DpcData g_DpcData = { 0 }; // Note : g_DpcData is initialized in InitDpcAndTimerThread()
 
+xboxkrnl::ULONGLONG LARGE_INTEGER2ULONGLONG(xboxkrnl::LARGE_INTEGER value)
+{
+	// Weird construction because there doesn't seem to exist an implicit
+	// conversion of LARGE_INTEGER to ULONGLONG :
+	return *((PULONGLONG)&value);
+}
+
 // TODO : Move all Ki* functions to EmuKrnlKi.h/cpp :
 
 #define KiRemoveTreeTimer(Timer)               \
@@ -630,21 +637,21 @@ XBSYSAPI EXPORTNUM(113) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeTimerEx
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Timer)
-		LOG_FUNC_ARG(Type)
-		LOG_FUNC_END;
+LOG_FUNC_ARG(Timer)
+LOG_FUNC_ARG(Type)
+LOG_FUNC_END;
 
-	Timer->Header.Type = Type + TimerNotificationObject;
-	Timer->Header.Inserted = FALSE;
-	Timer->Header.Size = sizeof(KTIMER) / sizeof(ULONG);
-	Timer->Header.SignalState = 0;
+Timer->Header.Type = Type + TimerNotificationObject;
+Timer->Header.Inserted = FALSE;
+Timer->Header.Size = sizeof(KTIMER) / sizeof(ULONG);
+Timer->Header.SignalState = 0;
 
-	Timer->TimerListEntry.Blink = NULL;
-	Timer->TimerListEntry.Flink = NULL;
-	InitializeListHead(&(Timer->Header.WaitListHead));
+Timer->TimerListEntry.Blink = NULL;
+Timer->TimerListEntry.Flink = NULL;
+InitializeListHead(&(Timer->Header.WaitListHead));
 
-	Timer->DueTime.QuadPart = 0;
-	Timer->Period = 0;
+Timer->DueTime.QuadPart = 0;
+Timer->Period = 0;
 }
 
 // ******************************************************************
@@ -738,6 +745,8 @@ XBSYSAPI EXPORTNUM(125) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryInterruptTime
 	// in which case we should not LOG_FUNC nor RETURN (use normal return instead).
 	LOG_FUNC();
 	
+	ULONGLONG ret;
+
 	LARGE_INTEGER InterruptTime;
 
 	while (true)
@@ -755,9 +764,8 @@ XBSYSAPI EXPORTNUM(125) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryInterruptTime
 			break;
 	}
 
-	// Weird construction because there doesn't seem to exist an implicit
-	// conversion of LARGE_INTEGER to ULONGLONG :
-	RETURN(*((PULONGLONG)&InterruptTime));
+	ret = LARGE_INTEGER2ULONGLONG(InterruptTime);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -767,6 +775,7 @@ XBSYSAPI EXPORTNUM(126) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceCo
 {
 	LOG_FUNC();
 
+	ULONGLONG ret;
 	::LARGE_INTEGER PerformanceCounter;
 
 	// TODO : When Cxbx emulates the RDTSC opcode, use the same handling here.
@@ -781,7 +790,8 @@ XBSYSAPI EXPORTNUM(126) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceCo
 	// We appy a conversion factor here, to fake Xbox1-like increment-speed behaviour :
 	PerformanceCounter.QuadPart = (ULONGLONG)(NativeToXbox_FactorForPerformanceFrequency * PerformanceCounter.QuadPart);
 
-	RETURN(PerformanceCounter.QuadPart);
+	ret = PerformanceCounter.QuadPart;
+	RETURN(ret);
 }
 
 // ******************************************************************
