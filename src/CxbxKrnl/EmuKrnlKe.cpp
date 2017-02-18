@@ -628,6 +628,53 @@ XBSYSAPI EXPORTNUM(109) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeInterrupt
 }
 
 // ******************************************************************
+// * 0x006F - KeInitializeQueue()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(111) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeQueue
+(
+	IN PKQUEUE Queue,
+	IN ULONG Count OPTIONAL
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Queue)
+		LOG_FUNC_ARG(Count)
+		LOG_FUNC_END;
+
+	Queue->Header.Type = QueueObject;
+	Queue->Header.Size = sizeof(KQUEUE) / sizeof(LONG);
+	Queue->Header.SignalState = 0;
+	InitializeListHead(&Queue->Header.WaitListHead);
+	InitializeListHead(&Queue->EntryListHead);
+	InitializeListHead(&Queue->ThreadListHead);
+	Queue->CurrentCount = 0;
+	Queue->MaximumCount = (Count > 1) ? Count : 1;
+}
+
+// ******************************************************************
+// * 0x0070 - KeInitializeSemaphore()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(112) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeSemaphore
+(
+	IN PRKSEMAPHORE Semaphore,
+	IN LONG Count,
+	IN LONG Limit
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Semaphore)
+		LOG_FUNC_ARG(Count)
+		LOG_FUNC_ARG(Limit)
+		LOG_FUNC_END;
+
+	Semaphore->Header.Type = SemaphoreObject;
+	Semaphore->Header.Size = sizeof(KSEMAPHORE) / sizeof(LONG);
+	Semaphore->Header.SignalState = Count;
+	InitializeListHead(&Semaphore->Header.WaitListHead);
+	Semaphore->Limit = Limit;
+}
+
+// ******************************************************************
 // * 0x0071 - KeInitializeTimerEx()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(113) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeTimerEx
@@ -637,21 +684,21 @@ XBSYSAPI EXPORTNUM(113) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeTimerEx
 )
 {
 	LOG_FUNC_BEGIN
-LOG_FUNC_ARG(Timer)
-LOG_FUNC_ARG(Type)
-LOG_FUNC_END;
+		LOG_FUNC_ARG(Timer)
+		LOG_FUNC_ARG(Type)
+		LOG_FUNC_END;
 
-Timer->Header.Type = Type + TimerNotificationObject;
-Timer->Header.Inserted = FALSE;
-Timer->Header.Size = sizeof(KTIMER) / sizeof(ULONG);
-Timer->Header.SignalState = 0;
+	Timer->Header.Type = Type + TimerNotificationObject;
+	Timer->Header.Inserted = FALSE;
+	Timer->Header.Size = sizeof(KTIMER) / sizeof(ULONG);
+	Timer->Header.SignalState = 0;
 
-Timer->TimerListEntry.Blink = NULL;
-Timer->TimerListEntry.Flink = NULL;
-InitializeListHead(&(Timer->Header.WaitListHead));
+	Timer->TimerListEntry.Blink = NULL;
+	Timer->TimerListEntry.Flink = NULL;
+	InitializeListHead(&(Timer->Header.WaitListHead));
 
-Timer->DueTime.QuadPart = 0;
-Timer->Period = 0;
+	Timer->DueTime.QuadPart = 0;
+	Timer->Period = 0;
 }
 
 // ******************************************************************

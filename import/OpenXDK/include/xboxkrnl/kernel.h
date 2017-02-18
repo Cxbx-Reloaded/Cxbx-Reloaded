@@ -147,8 +147,25 @@ XBSYSAPI EXPORTNUM(109) VOID NTAPI KeInitializeInterrupt
 
 
 XBSYSAPI VOID *KeInitializeMutant;
-XBSYSAPI VOID *KeInitializeQueue;
-XBSYSAPI VOID *KeInitializeSemaphore;
+
+// ******************************************************************
+// * 0x006F - KeInitializeQueue()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(111) VOID NTAPI KeInitializeQueue
+(
+	IN PKQUEUE Queue,
+	IN ULONG Count OPTIONAL
+);
+
+// ******************************************************************
+// * 0x0070 - KeInitializeSemaphore()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(112) VOID NTAPI KeInitializeSemaphore
+(
+	IN PRKSEMAPHORE Semaphore,
+	IN LONG Count,
+	IN LONG Limit
+);
 
 // ******************************************************************
 // * 0x0071 - KeInitializeTimerEx()

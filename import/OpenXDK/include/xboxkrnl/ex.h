@@ -61,7 +61,10 @@ XBSYSAPI EXPORTNUM(17) VOID NTAPI ExFreePool
     IN PVOID P
 );
 
-XBSYSAPI EXPORTNUM(18) NTSTATUS NTAPI ExInitializeReadWriteLock
+// ******************************************************************
+// * 0x0012 - ExInitializeReadWriteLock()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(18) VOID NTAPI ExInitializeReadWriteLock
 (
 	IN PERWLOCK ReadWriteLock
 );

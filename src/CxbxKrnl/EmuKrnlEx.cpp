@@ -161,16 +161,19 @@ XBSYSAPI EXPORTNUM(17) xboxkrnl::VOID NTAPI xboxkrnl::ExFreePool
 // * 0x0012 - ExInitializeReadWriteLock()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(18) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExInitializeReadWriteLock
+XBSYSAPI EXPORTNUM(18) xboxkrnl::VOID NTAPI xboxkrnl::ExInitializeReadWriteLock
 (
 	IN PERWLOCK ReadWriteLock
 )
 {
 	LOG_FUNC_ONE_ARG(ReadWriteLock);
 
-	LOG_UNIMPLEMENTED();
-
-	RETURN(S_OK);
+	ReadWriteLock->LockCount = -1;
+	ReadWriteLock->WritersWaitingCount = 0;
+	ReadWriteLock->ReadersWaitingCount = 0;
+	ReadWriteLock->ReadersEntryCount = 0;
+	KeInitializeEvent(&ReadWriteLock->WriterEvent, SynchronizationEvent, FALSE);
+	KeInitializeSemaphore(&ReadWriteLock->ReaderSemaphore, 0, MAXLONG);
 }
 
 // ******************************************************************
