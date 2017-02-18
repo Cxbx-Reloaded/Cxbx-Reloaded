@@ -431,10 +431,14 @@ XBSYSAPI EXPORTNUM(369) xboxkrnl::NTSTATUS NTAPI xboxkrnl::UnknownAPI369
 // ******************************************************************
 XBSYSAPI EXPORTNUM(370) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XProfpControl // PROFILING
 (
-	// UNKNOWN ARGUMENTS
+	ULONG Action,
+	ULONG Param
 )
 {
-	LOG_FUNC();
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Action)
+		LOG_FUNC_ARG(Param)
+		LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
 
@@ -446,7 +450,7 @@ XBSYSAPI EXPORTNUM(370) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XProfpControl // PROF
 // ******************************************************************
 XBSYSAPI EXPORTNUM(371) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XProfpGetData // PROFILING 
 (
-	// UNKNOWN ARGUMENTS
+	// NO ARGUMENTS
 )
 {
 	LOG_FUNC();
