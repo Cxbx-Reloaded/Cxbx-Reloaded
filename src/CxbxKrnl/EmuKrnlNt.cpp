@@ -167,6 +167,8 @@ XBSYSAPI EXPORTNUM(187) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtClose
 		// delete 'special' handles
 		EmuHandle *iEmuHandle = HandleToEmuHandle(Handle);
 		ret = iEmuHandle->NtClose();
+
+		LOG_UNIMPLEMENTED(); // TODO : Base this on the Ob* functions
 	}
 	else
 		// close normal handles
@@ -231,6 +233,7 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 		LOG_FUNC_ARG(EventType)
 		LOG_FUNC_ARG(InitialState)
 		LOG_FUNC_END;
+
 /*
 	NTSTATUS Status;
 
@@ -239,8 +242,8 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 	}
 	else {
 		PKEVENT Event;
-		Status = ObCreateObject(&ExEventObjectType, ObjectAttributes, sizeof(KEVENT), (PVOID *)&Event);
 
+		Status = ObCreateObject(&ExEventObjectType, ObjectAttributes, sizeof(KEVENT), (PVOID *)&Event);
 		if (NT_SUCCESS(Status)) {
 			KeInitializeEvent(Event, EventType, InitialState);
 			Status = ObInsertObject(Event, ObjectAttributes, 0, EventHandle);
@@ -249,6 +252,8 @@ XBSYSAPI EXPORTNUM(189) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateEvent
 
 	RETURN(Status);
 */
+	LOG_INCOMPLETE(); // TODO : Verify arguments, use ObCreateObject, KeInitializeEvent and ObInsertObject instead of this:
+
 	// initialize object attributes
 	NativeObjectAttributes nativeObjectAttributes;
 	CxbxObjectAttributesToNT(ObjectAttributes, /*var*/nativeObjectAttributes);
@@ -293,6 +298,8 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
 {
 	LOG_FORWARD("IoCreateFile");
 
+	// TODO : How to base this on ObCreateObject, KeInitialize and ObInsertObject ?
+
 	return xboxkrnl::IoCreateFile(
 		FileHandle,
 		DesiredAccess,
@@ -321,6 +328,26 @@ XBSYSAPI EXPORTNUM(192) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateMutant
 		LOG_FUNC_ARG(ObjectAttributes)
 		LOG_FUNC_ARG(InitialOwner)
 		LOG_FUNC_END;
+
+/*
+	NTSTATUS Status;
+
+	if (!verify arguments) {
+		Status = STATUS_INVALID_PARAMETER;
+	}
+	else {
+		PKMUTANT Mutant;
+
+		Status = ObCreateObject(&ExMutantObjectType, ObjectAttributes, sizeof(KMUTANT), (PVOID *)&Mutant);
+		if (NT_SUCCESS(Status)) {
+			KeInitializeMutant(Mutant, InitialOwner);
+			Status = ObInsertObject(Mutant, ObjectAttributes, 0, /*OUT* /MutantHandle);
+		}
+	}
+
+	RETURN(Status);
+*/
+	LOG_INCOMPLETE(); // TODO : Verify arguments, use ObCreateObject, KeInitializeMutant and ObInsertObject instead of this:
 
 	// initialize object attributes
 	NativeObjectAttributes nativeObjectAttributes;
@@ -362,6 +389,26 @@ XBSYSAPI EXPORTNUM(193) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateSemaphore
 		LOG_FUNC_ARG(MaximumCount)
 		LOG_FUNC_END;
 
+/*
+	NTSTATUS Status;
+
+	if (!verify arguments) {
+		Status = STATUS_INVALID_PARAMETER;
+	}
+	else {
+		PKSEMAPHORE Semaphore;
+
+		Status = ObCreateObject(&ExSemaphoreObjectType, ObjectAttributes, sizeof(KSEMAPHORE), (PVOID *)&Semaphore);
+		if (NT_SUCCESS(Status)) {
+			KeInitializeSemaphore(Semaphore, InitialCount, /*Limit=* /MaximumCount);
+			Status = ObInsertObject(Semaphore, ObjectAttributes, 0, /*OUT* /SemaphoreHandle);
+		}
+	}
+
+	RETURN(Status);
+*/
+	LOG_INCOMPLETE(); // TODO : Verify arguments, use ObCreateObject, KeInitializeSemaphore and ObInsertObject instead of this:
+
 	// TODO : Is this the correct ACCESS_MASK? :
 	const ACCESS_MASK DesiredAccess = SEMAPHORE_ALL_ACCESS;
 
@@ -399,6 +446,26 @@ XBSYSAPI EXPORTNUM(194) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateTimer
 		LOG_FUNC_ARG(ObjectAttributes)
 		LOG_FUNC_ARG(TimerType)
 		LOG_FUNC_END;
+
+/*
+	NTSTATUS Status;
+
+	if (!verify arguments) {
+		Status = STATUS_INVALID_PARAMETER;
+	}
+	else {
+		PKTIMER Timer;
+
+		Status = ObCreateObject(&ExTimerType, ObjectAttributes, sizeof(KTIMER), (PVOID *)&Timer);
+		if (NT_SUCCESS(Status)) {
+			KeInitializeTimerEx(Timer, TimerType);
+			Status = ObInsertObject(Timer, ObjectAttributes, 0, /*OUT* /TimerHandle);
+		}
+	}
+
+	RETURN(Status);
+*/
+	LOG_INCOMPLETE(); // TODO : Verify arguments, use ObCreateObject, KeInitializeTimerEx and ObInsertObject instead of this:
 
 	// TODO : Is this the correct ACCESS_MASK? :
 	const ACCESS_MASK DesiredAccess = TIMER_ALL_ACCESS;
@@ -525,6 +592,20 @@ XBSYSAPI EXPORTNUM(197) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtDuplicateObject
 	if (IsEmuHandle(SourceHandle)) {
 		EmuHandle* iEmuHandle = HandleToEmuHandle(SourceHandle);
 		ret = iEmuHandle->NtDuplicateObject(TargetHandle, Options);
+/*
+		PVOID Object;
+
+		ret = ObReferenceObjectByHandle(SourceHandle, /*ObjectType=* /NULL, &Object);
+		if (NT_SUCCESS(ret)) {
+			if (ObpIsFlagSet(Options, DUPLICATE_CLOSE_SOURCE))
+				NtClose(SourceHandle);
+
+			status = ObOpenObjectByPointer(Object, OBJECT_TO_OBJECT_HEADER(Object)->Type, /*OUT* /TargetHandle);
+			ObDereferenceObject(Object);
+		}
+		else
+			*TargetHandle = NULL;
+*/
 	}
 	else
 	{
