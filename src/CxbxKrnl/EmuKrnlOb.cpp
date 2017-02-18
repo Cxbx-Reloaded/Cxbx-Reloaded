@@ -62,6 +62,7 @@ namespace NtDll
 #pragma warning(default:4005)
 
 #define OB_FLAG_NAMED_OBJECT 1
+#define OB_FLAG_PERMANENT_OBJECT 2
 
 // ******************************************************************
 // * 0x00EF - ObCreateObject()
@@ -196,7 +197,21 @@ XBSYSAPI EXPORTNUM(242) xboxkrnl::VOID NTAPI xboxkrnl::ObMakeTemporaryObject
 {
 	LOG_FUNC_ONE_ARG(Object);
 
-	LOG_UNIMPLEMENTED();
+	/* Get the header */
+	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+
+	/* Acquire object lock */
+	//ObpAcquireObjectLock(ObjectHeader);
+	LOG_INCOMPLETE(); // TODO : Lock, etc.
+
+	/* Remove the flag */
+	ObjectHeader->Flags &= ~OB_FLAG_PERMANENT_OBJECT;
+
+	/* Release the lock */
+	// ObpReleaseObjectLock(ObjectHeader);
+
+	/* Check if we should delete the object now */
+	//ObpDeleteNameCheck(ObjectBody);
 }
 
 // ******************************************************************
@@ -422,5 +437,3 @@ XBSYSAPI EXPORTNUM(251) xboxkrnl::VOID FASTCALL xboxkrnl::ObfReferenceObject
 
 	InterlockedIncrement(&ObjectHeader->PointerCount);
 }
-
-
