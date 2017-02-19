@@ -788,7 +788,7 @@ XBSYSAPI EXPORTNUM(122) xboxkrnl::VOID NTAPI xboxkrnl::KeLeaveCriticalRegion
 // ******************************************************************
 XBSYSAPI EXPORTNUM(125) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryInterruptTime(void)
 {
-	// TODO : Some software might call this often and fill the log quickly,
+	// TODO : Some software might call KeQueryInterruptTime often and fill the log quickly,
 	// in which case we should not LOG_FUNC nor RETURN (use normal return instead).
 	LOG_FUNC();
 	
@@ -961,6 +961,57 @@ XBSYSAPI EXPORTNUM(138) xboxkrnl::LONG NTAPI xboxkrnl::KeResetEvent
 }
 
 // ******************************************************************
+// * 0x008B - KeRestoreFloatingPointState()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(139) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeRestoreFloatingPointState
+(
+	IN PKFLOATING_SAVE     PublicFloatSave
+)
+{
+	LOG_FUNC_ONE_ARG(PublicFloatSave);
+
+	NTSTATUS ret = STATUS_SUCCESS;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x008C - KeResumeThread()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(140) xboxkrnl::ULONG NTAPI xboxkrnl::KeResumeThread
+(
+	IN PKTHREAD Thread
+)
+{
+	LOG_FUNC_ONE_ARG(Thread);
+
+	NTSTATUS ret = STATUS_SUCCESS;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * 0x008E - KeSaveFloatingPointState()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(142) xboxkrnl::NTSTATUS NTAPI xboxkrnl::KeSaveFloatingPointState
+(
+	OUT PKFLOATING_SAVE     PublicFloatSave
+)
+{
+	LOG_FUNC_ONE_ARG_OUT(PublicFloatSave);
+
+	NTSTATUS ret = STATUS_SUCCESS;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(ret);
+}
+
+// ******************************************************************
 // * 0x008F - KeSetBasePriorityThread()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(143) xboxkrnl::LONG NTAPI xboxkrnl::KeSetBasePriorityThread
@@ -1129,6 +1180,23 @@ XBSYSAPI EXPORTNUM(151) xboxkrnl::VOID NTAPI xboxkrnl::KeStallExecutionProcessor
 	// Thanks to C++11, we can do this in a nice way without resorting to
 	// QueryPerformanceCounter
 	std::this_thread::sleep_for(std::chrono::microseconds(MicroSeconds));
+}
+
+// ******************************************************************
+// * 0x0098 - KeSuspendThread()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(152) xboxkrnl::ULONG NTAPI xboxkrnl::KeSuspendThread
+(
+	IN PKTHREAD Thread
+)
+{
+	LOG_FUNC_ONE_ARG(Thread);
+
+	NTSTATUS ret = STATUS_SUCCESS;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(ret);
 }
 
 // ******************************************************************

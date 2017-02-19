@@ -298,7 +298,7 @@ XBSYSAPI EXPORTNUM(190) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtCreateFile
 {
 	LOG_FORWARD("IoCreateFile");
 
-	// TODO : How to base this on ObCreateObject, KeInitialize and ObInsertObject ?
+	// TODO : How to base IoCreateFile on ObCreateObject, KeInitialize and ObInsertObject ?
 
 	return xboxkrnl::IoCreateFile(
 		FileHandle,
@@ -1466,6 +1466,8 @@ XBSYSAPI EXPORTNUM(224) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtResumeThread
 		ThreadHandle, 
 		PreviousSuspendCount);
 
+	// TODO : Once we do our own thread-switching, implement NtResumeThread using KetResumeThread
+
 	Sleep(10);
 
 	RETURN(ret);
@@ -1630,6 +1632,8 @@ XBSYSAPI EXPORTNUM(231) xboxkrnl::NTSTATUS NTAPI xboxkrnl::NtSuspendThread
 	NTSTATUS ret = NtDll::NtSuspendThread(
 		ThreadHandle, 
 		PreviousSuspendCount);
+
+	// TODO : Once we do our own thread-switching, implement NtSuspendThread using KeSuspendThread
 
 	RETURN(ret);
 }

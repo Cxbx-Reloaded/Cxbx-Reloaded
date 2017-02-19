@@ -41,7 +41,13 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI PsCreateSystemThreadEx
 	IN  PKSYSTEM_ROUTINE SystemRoutine OPTIONAL
 );
 
-XBSYSAPI VOID *PsQueryStatistics;
+// ******************************************************************
+// * 0x0100 - PsQueryStatistics()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(256) NTSTATUS NTAPI PsQueryStatistics
+(
+	IN OUT PPS_STATISTICS ProcessStatistics
+);
 
 // ******************************************************************
 // * PsSetCreateThreadNotifyRoutine

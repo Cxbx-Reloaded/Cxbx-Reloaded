@@ -125,8 +125,9 @@ XBSYSAPI EXPORTNUM(15) xboxkrnl::PVOID NTAPI xboxkrnl::ExAllocatePoolWithTag
 		LOG_FUNC_ARG(Tag)
 		LOG_FUNC_END;
 
-	// TODO: Actually implement this
 	PVOID pRet = CxbxCalloc(1, NumberOfBytes); // Clear, to prevent side-effects on random contents
+	
+	LOG_INCOMPLETE(); // TODO : Actually implement ExAllocatePoolWithTag
 
 	RETURN(pRet);
 }

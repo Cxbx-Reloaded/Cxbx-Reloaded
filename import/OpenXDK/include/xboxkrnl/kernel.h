@@ -269,10 +269,31 @@ XBSYSAPI EXPORTNUM(138) LONG NTAPI KeResetEvent
 	IN PRKEVENT Event
 );
 
-XBSYSAPI VOID *KeRestoreFloatingPointState;
-XBSYSAPI VOID *KeResumeThread;
+// ******************************************************************
+// * 0x008B - KeRestoreFloatingPointState()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(139) NTSTATUS NTAPI KeRestoreFloatingPointState
+(
+	IN PKFLOATING_SAVE     PublicFloatSave
+);
+
+// ******************************************************************
+// * 0x008C - KeResumeThread()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(140) ULONG NTAPI KeResumeThread
+(
+	IN PKTHREAD Thread
+);
+
 XBSYSAPI VOID *KeRundownQueue;
-XBSYSAPI VOID *KeSaveFloatingPointState;
+
+// ******************************************************************
+// * 0x008E - KeSaveFloatingPointState()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(142) NTSTATUS NTAPI KeSaveFloatingPointState
+(
+	OUT PKFLOATING_SAVE     PublicFloatSave
+);
 
 // ******************************************************************
 // * 0x008F - KeSetBasePriorityThread()
@@ -336,7 +357,14 @@ XBSYSAPI EXPORTNUM(151) VOID NTAPI KeStallExecutionProcessor
 	IN ULONG MicroSeconds
 );
 
-XBSYSAPI VOID *KeSuspendThread;
+// ******************************************************************
+// * 0x0098 - KeSuspendThread()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(152) ULONG NTAPI KeSuspendThread
+(
+	IN PKTHREAD Thread
+);
+
 XBSYSAPI VOID *KeSynchronizeExecution;
 XBSYSAPI VOID *KeSystemTime;
 XBSYSAPI VOID *KeTestAlertThread;
