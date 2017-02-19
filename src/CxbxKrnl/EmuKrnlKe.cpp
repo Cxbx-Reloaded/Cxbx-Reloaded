@@ -72,6 +72,13 @@ typedef struct _DpcData {
 
 DpcData g_DpcData = { 0 }; // Note : g_DpcData is initialized in InitDpcAndTimerThread()
 
+xboxkrnl::ULONGLONG LARGE_INTEGER2ULONGLONG(xboxkrnl::LARGE_INTEGER value)
+{
+	// Weird construction because there doesn't seem to exist an implicit
+	// conversion of LARGE_INTEGER to ULONGLONG :
+	return *((PULONGLONG)&value);
+}
+
 // TODO : Move all Ki* functions to EmuKrnlKi.h/cpp :
 
 #define KiRemoveTreeTimer(Timer)               \
@@ -621,6 +628,53 @@ XBSYSAPI EXPORTNUM(109) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeInterrupt
 }
 
 // ******************************************************************
+// * 0x006F - KeInitializeQueue()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(111) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeQueue
+(
+	IN PKQUEUE Queue,
+	IN ULONG Count OPTIONAL
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Queue)
+		LOG_FUNC_ARG(Count)
+		LOG_FUNC_END;
+
+	Queue->Header.Type = QueueObject;
+	Queue->Header.Size = sizeof(KQUEUE) / sizeof(LONG);
+	Queue->Header.SignalState = 0;
+	InitializeListHead(&Queue->Header.WaitListHead);
+	InitializeListHead(&Queue->EntryListHead);
+	InitializeListHead(&Queue->ThreadListHead);
+	Queue->CurrentCount = 0;
+	Queue->MaximumCount = (Count > 1) ? Count : 1;
+}
+
+// ******************************************************************
+// * 0x0070 - KeInitializeSemaphore()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(112) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeSemaphore
+(
+	IN PRKSEMAPHORE Semaphore,
+	IN LONG Count,
+	IN LONG Limit
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Semaphore)
+		LOG_FUNC_ARG(Count)
+		LOG_FUNC_ARG(Limit)
+		LOG_FUNC_END;
+
+	Semaphore->Header.Type = SemaphoreObject;
+	Semaphore->Header.Size = sizeof(KSEMAPHORE) / sizeof(LONG);
+	Semaphore->Header.SignalState = Count;
+	InitializeListHead(&Semaphore->Header.WaitListHead);
+	Semaphore->Limit = Limit;
+}
+
+// ******************************************************************
 // * 0x0071 - KeInitializeTimerEx()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(113) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeTimerEx
@@ -738,6 +792,8 @@ XBSYSAPI EXPORTNUM(125) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryInterruptTime
 	// in which case we should not LOG_FUNC nor RETURN (use normal return instead).
 	LOG_FUNC();
 	
+	ULONGLONG ret;
+
 	LARGE_INTEGER InterruptTime;
 
 	while (true)
@@ -755,9 +811,8 @@ XBSYSAPI EXPORTNUM(125) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryInterruptTime
 			break;
 	}
 
-	// Weird construction because there doesn't seem to exist an implicit
-	// conversion of LARGE_INTEGER to ULONGLONG :
-	RETURN(*((PULONGLONG)&InterruptTime));
+	ret = LARGE_INTEGER2ULONGLONG(InterruptTime);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -767,6 +822,7 @@ XBSYSAPI EXPORTNUM(126) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceCo
 {
 	LOG_FUNC();
 
+	ULONGLONG ret;
 	::LARGE_INTEGER PerformanceCounter;
 
 	// TODO : When Cxbx emulates the RDTSC opcode, use the same handling here.
@@ -781,7 +837,8 @@ XBSYSAPI EXPORTNUM(126) xboxkrnl::ULONGLONG NTAPI xboxkrnl::KeQueryPerformanceCo
 	// We appy a conversion factor here, to fake Xbox1-like increment-speed behaviour :
 	PerformanceCounter.QuadPart = (ULONGLONG)(NativeToXbox_FactorForPerformanceFrequency * PerformanceCounter.QuadPart);
 
-	RETURN(PerformanceCounter.QuadPart);
+	ret = PerformanceCounter.QuadPart;
+	RETURN(ret);
 }
 
 // ******************************************************************

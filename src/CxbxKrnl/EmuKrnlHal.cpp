@@ -247,15 +247,13 @@ XBSYSAPI EXPORTNUM(45) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalReadSMBusValue
 		LOG_FUNC_ARG_OUT(DataValue)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
-
 	if (ReadWord) {
-		// Write UCHAR
+		LOG_INCOMPLETE(); // TODO : Read UCHAR, possibly as simple as: *((PWORD)DataValue) = value
 	}
 	else {
-		// Write BYTE
+		// Read BYTE
 		if (DataValue)
-			*DataValue = 1;
+			*DataValue = 1; // TODO : What value?
 	}
 
 	RETURN(STATUS_SUCCESS);
@@ -434,7 +432,8 @@ XBSYSAPI EXPORTNUM(329) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_UCHAR
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	while (Count-- > 0)
+		*Buffer++ = EmuX86_IORead8((xbaddr)Port);
 }
 
 // ******************************************************************
@@ -453,7 +452,8 @@ XBSYSAPI EXPORTNUM(330) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_USHORT
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	while (Count-- > 0)
+		*Buffer++ = EmuX86_IORead16((xbaddr)Port);
 }
 
 // ******************************************************************
@@ -472,7 +472,8 @@ XBSYSAPI EXPORTNUM(331) xboxkrnl::VOID NTAPI xboxkrnl::READ_PORT_BUFFER_ULONG
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	while (Count-- > 0)
+		*Buffer++ = EmuX86_IORead32((xbaddr)Port);
 }
 
 // ******************************************************************
@@ -491,7 +492,8 @@ XBSYSAPI EXPORTNUM(332) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_UCHAR
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	while (Count-- > 0)
+		EmuX86_IOWrite8((xbaddr)Port, *Buffer++);
 }
 
 // ******************************************************************
@@ -510,7 +512,8 @@ XBSYSAPI EXPORTNUM(333) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_USHORT
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	while (Count-- > 0)
+		EmuX86_IOWrite16((xbaddr)Port, *Buffer++);
 }
 
 // ******************************************************************
@@ -529,7 +532,8 @@ XBSYSAPI EXPORTNUM(334) xboxkrnl::VOID NTAPI xboxkrnl::WRITE_PORT_BUFFER_ULONG
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	while (Count-- > 0)
+		EmuX86_IOWrite32((xbaddr)Port, *Buffer++);
 }
 
 // ******************************************************************

@@ -55,6 +55,7 @@ namespace NtDll
 #include "CxbxKrnl.h" // For CxbxKrnlCleanup
 #include "Emu.h" // For EmuWarning()
 #include "EmuAlloc.h" // For CxbxFree(), CxbxCalloc(), etc.
+#include "EmuKrnl.h" // For InsertHeadList, InsertTailList, RemoveHeadList
 
 #pragma warning(disable:4005) // Ignore redefined status values
 #include <ntstatus.h> // For STATUS_BUFFER_TOO_SMALL
@@ -161,16 +162,19 @@ XBSYSAPI EXPORTNUM(17) xboxkrnl::VOID NTAPI xboxkrnl::ExFreePool
 // * 0x0012 - ExInitializeReadWriteLock()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(18) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ExInitializeReadWriteLock
+XBSYSAPI EXPORTNUM(18) xboxkrnl::VOID NTAPI xboxkrnl::ExInitializeReadWriteLock
 (
 	IN PERWLOCK ReadWriteLock
 )
 {
 	LOG_FUNC_ONE_ARG(ReadWriteLock);
 
-	LOG_UNIMPLEMENTED();
-
-	RETURN(S_OK);
+	ReadWriteLock->LockCount = -1;
+	ReadWriteLock->WritersWaitingCount = 0;
+	ReadWriteLock->ReadersWaitingCount = 0;
+	ReadWriteLock->ReadersEntryCount = 0;
+	KeInitializeEvent(&ReadWriteLock->WriterEvent, SynchronizationEvent, FALSE);
+	KeInitializeSemaphore(&ReadWriteLock->ReaderSemaphore, 0, MAXLONG);
 }
 
 // ******************************************************************
@@ -597,19 +601,31 @@ XBSYSAPI EXPORTNUM(31) xboxkrnl::OBJECT_TYPE xboxkrnl::ExTimerObjectType =
 XBSYSAPI EXPORTNUM(32) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedInsertHeadList
 (
 	IN PLIST_ENTRY ListHead,
-	IN PLIST_ENTRY ListEntry,
-	IN PKSPIN_LOCK Lock
+	IN PLIST_ENTRY ListEntry
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(ListHead)
 		LOG_FUNC_ARG(ListEntry)
-		LOG_FUNC_ARG(Lock)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	/* Disable interrupts and acquire the spinlock */
+	// BOOLEAN Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
+	LOG_INCOMPLETE(); // TODO : Lock
 
-	RETURN(ListHead);
+	/* Save the first entry */
+	PLIST_ENTRY FirstEntry = ListHead->Flink;
+	/* Insert the new entry */
+	InsertHeadList(ListHead, ListEntry);
+
+	/* Release the spinlock and restore interrupts */
+	// _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+
+	/* Return the old first entry or NULL for empty list */
+	if (FirstEntry == ListHead)
+		FirstEntry = NULL;
+
+	RETURN(FirstEntry);
 }
 
 // ******************************************************************
@@ -619,19 +635,32 @@ XBSYSAPI EXPORTNUM(32) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedIn
 XBSYSAPI EXPORTNUM(33) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedInsertTailList
 (
 	IN PLIST_ENTRY ListHead,	
-	IN PLIST_ENTRY ListEntry,
-	IN PKSPIN_LOCK Lock
+	IN PLIST_ENTRY ListEntry
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(ListHead)
 		LOG_FUNC_ARG(ListEntry)
-		LOG_FUNC_ARG(Lock)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	/* Disable interrupts and acquire the spinlock */
+	// BOOLEAN Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
+	LOG_INCOMPLETE(); // TODO : Lock
 
-	RETURN(ListHead);
+	/* Save the last entry */
+	PLIST_ENTRY LastEntry = ListHead->Blink;
+
+	/* Insert the new entry */
+	InsertTailList(ListHead, ListEntry);
+
+	/* Release the spinlock and restore interrupts */
+	// _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+
+	/* Return the old last entry or NULL for empty list */
+	if (LastEntry == ListHead) 
+		LastEntry = NULL;
+
+	RETURN(LastEntry);
 }
 
 // ******************************************************************
@@ -640,16 +669,37 @@ XBSYSAPI EXPORTNUM(33) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedIn
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(34) xboxkrnl::PLIST_ENTRY FASTCALL xboxkrnl::ExfInterlockedRemoveHeadList
 (
-	IN PLIST_ENTRY ListHead,
-	IN PKSPIN_LOCK Lock
+	IN PLIST_ENTRY ListHead
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(ListHead)
-		LOG_FUNC_ARG(Lock)
-		LOG_FUNC_END;
+	LOG_FUNC_ONE_ARG(ListHead);
 
-	LOG_UNIMPLEMENTED();
+	/* Disable interrupts and acquire the spinlock */
+	// BOOLEAN Enable = _ExiDisableInteruptsAndAcquireSpinlock(Lock);
+	LOG_INCOMPLETE(); // TODO : Lock
 
-	RETURN(ListHead);
+	PLIST_ENTRY ListEntry;
+
+	/* Check if the list is empty */
+	if (IsListEmpty(ListHead))
+	{
+		/* Return NULL */
+		ListEntry = NULL;
+	}
+	else
+	{
+		/* Remove the first entry from the list head */
+		ListEntry = RemoveHeadList(ListHead);
+#if DBG
+		ListEntry->Flink = (PLIST_ENTRY)0xBADDD0FF;
+		ListEntry->Blink = (PLIST_ENTRY)0xBADDD0FF;
+#endif
+	}
+
+	/* Release the spinlock and restore interrupts */
+	// _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
+
+	/* Return the entry */
+	RETURN(ListEntry);
+
 }

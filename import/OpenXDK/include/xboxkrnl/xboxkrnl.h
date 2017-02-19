@@ -1526,6 +1526,8 @@ KDPC, *PKDPC;
 // ******************************************************************
 typedef enum _KOBJECTS
 {
+	QueueObject = 4,
+	SemaphoreObject = 5,
 	TimerNotificationObject = 8,
 	TimerSynchronizationObject = 9,
     DpcObject = 0x13,

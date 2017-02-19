@@ -220,6 +220,12 @@ extern thread_local std::string _logPrefix;
 		std::cout << _logPrefix << __func__ << " unimplemented!\n"; \
 	} } while (0)
 
+// LOG_INCOMPLETE indicates that Cxbx is missing part of an implementation of an api
+#define LOG_INCOMPLETE() \
+	do { if(g_bPrintfOn) { \
+		std::cout << _logPrefix << __func__ << " incomplete!\n"; \
+	} } while (0)
+
 // RETURN logs the given result and then returns it (so this should appear last in functions)
 #define RETURN(r) do { LOG_FUNC_RESULT(r) return r; } while (0)
 
