@@ -1211,7 +1211,7 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetLFO)
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(DirectSound_CDirectSoundStream_SetLFO)
 (
-    LPDIRECTSOUNDBUFFER  pThis,
+	X_CDirectSoundStream *pThis,
     LPCDSLFODESC         pLFODesc
 );
 
