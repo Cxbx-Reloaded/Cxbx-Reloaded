@@ -120,7 +120,7 @@ XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
 				// TODO : For other Ob* API's it must become possible to get from
 				// and Object(Header) address to the Name. Right now, this requires
 				// adding ObjectSize to ObjectHeader. This won't be available outside
-				// this function, so we need a better solution for this. 
+				// ObCreateObject, so we need a better solution for this. 
 				// It might be possible to put the OBJECT_STRING struct BEFORE the
 				// ObjectHeader (and the NameBuffer itself before that), which would
 				// make it possible to simply offset everything off an Object.

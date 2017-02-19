@@ -576,7 +576,7 @@ XBSYSAPI EXPORTNUM(360) xboxkrnl::NTSTATUS NTAPI xboxkrnl::HalInitiateShutdown
 // * 0x016D - HalEnableSecureTrayEject()
 // ******************************************************************
 // Notifies the SMBUS that ejecting the DVD-ROM should not reset the system.
-// Note that this function can't really be called directly...
+// Note that HalEnableSecureTrayEject can't really be called directly...
 //
 // New to the XBOX.
 // Source:XBMC Undocumented.h

@@ -95,7 +95,7 @@ void LOG_PCSTProxy
 // PsCreateSystemThread proxy procedure
 #pragma warning(push)
 #pragma warning(disable: 4731)  // disable ebp modification warning
-// Dxbx Note : The signature of this function should conform to System.TThreadFunc !
+// Dxbx Note : The signature of PCSTProxy should conform to System.TThreadFunc !
 static unsigned int WINAPI PCSTProxy
 (
 	IN PVOID Parameter

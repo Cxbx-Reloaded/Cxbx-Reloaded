@@ -378,7 +378,7 @@ XBSYSAPI EXPORTNUM(253) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PhyInitialize
 // ******************************************************************
 // * 0x0165 - IdexChannelObject
 // ******************************************************************
-// TODO : Determine size, structure & filling behind this
+// TODO : Determine size, structure & filling behind IdexChannelObject
 XBSYSAPI EXPORTNUM(357) xboxkrnl::BYTE xboxkrnl::IdexChannelObject[0x100] = { };
 
 // ******************************************************************
