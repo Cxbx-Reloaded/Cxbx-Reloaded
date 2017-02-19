@@ -912,8 +912,8 @@ HRESULT WINAPI EMUPATCH(DirectSound_CDirectSound_SynchPlayback)(PVOID pUnknown);
 // ******************************************************************
 HRESULT WINAPI EMUPATCH(DirectSound_CDirectSoundStream_Pause)
 (
-    PVOID   pStream,
-    DWORD   dwPause
+	X_CDirectSoundStream *pThis,
+	DWORD   dwPause
 );
 
 // ******************************************************************

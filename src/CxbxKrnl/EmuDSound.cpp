@@ -1438,8 +1438,6 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Stop)
     X_CDirectSoundBuffer   *pThis
 )
 {
-    
-
     DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_Stop\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
@@ -1448,9 +1446,12 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_Stop)
 
 	HRESULT hRet = D3D_OK;
     
-	if (pThis != nullptr) {
-		hRet = pThis->EmuDirectSoundBuffer8->Stop();
-	}
+	if (pThis != nullptr)
+		if (pThis->EmuDirectSoundBuffer8 != nullptr) {
+			// TODO : Test Stop (emulated via Stop + SetCurrentPosition(0)) :
+			hRet = pThis->EmuDirectSoundBuffer8->Stop();
+			pThis->EmuDirectSoundBuffer8->SetCurrentPosition(0);
+		}
    
     return hRet;
 }
@@ -1523,8 +1524,6 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFrequency)
     DWORD                   dwFrequency
 )
 {
-    
-
     DbgPrintf("EmuDSound: EmuIDirectSoundBuffer_SetFrequency\n"
            "(\n"
            "   pThis                     : 0x%.08X\n"
@@ -1536,6 +1535,7 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetFrequency)
 
 	if (pThis != NULL)
 		if (pThis->EmuDirectSoundBuffer8 != NULL)
+			// TODO : Test SetFrequency :
 			hRet = pThis->EmuDirectSoundBuffer8->SetFrequency(dwFrequency);
 
 	return hRet;
@@ -1735,11 +1735,15 @@ ULONG WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetVolume)
            ");\n",
            pThis, lVolume);
 
-    // TODO: Actually SetVolume
+	ULONG ret = DS_OK;
+	
+	if (pThis != NULL)
+		// TODO : Should we/how to arrange a EmuDirectSoundStream8 ?
+		if (pThis->EmuDirectSoundBuffer8 != NULL)
+			// TODO : Test SetVolume
+			ret = pThis->EmuDirectSoundBuffer8->SetVolume(lVolume);
 
-    
-
-    return DS_OK;
+    return ret;
 }
 
 // ******************************************************************
@@ -2012,7 +2016,7 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSound_SynchPlayback)(PVOID pUnkn
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_Pause)
 (
-    PVOID   pStream, // X_CDirectSoundStream *pThis
+    X_CDirectSoundStream *pThis,
     DWORD   dwPause
 )
 {
@@ -2020,12 +2024,16 @@ HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_Pause)
 
     DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_Pause\n"
            "(\n"
-           "   pStream                   : 0x%.08X\n"
+           "   pThis                     : 0x%.08X\n"
            "   dwPause                   : 0x%.08X\n"
            ");\n",
-           pStream, dwPause);
+		pThis, dwPause);
 
-    
+	if (pThis != NULL)
+		// TODO : Should we/how to arrange a EmuDirectSoundStream8 ?
+		if (pThis->EmuDirectSoundBuffer8 != NULL)
+			// TODO: Test Pause (emulated via Stop)
+			pThis->EmuDirectSoundBuffer8->Stop();
 
     return DS_OK;
 }
