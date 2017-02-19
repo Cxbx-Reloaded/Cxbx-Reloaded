@@ -206,10 +206,10 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0088),                                        // 0x0088 (136) KeRemoveQueue
 	(uint32)FUNC(&xboxkrnl::KeRemoveQueueDpc),                    // 0x0089 (137)
 	(uint32)FUNC(&xboxkrnl::KeResetEvent),                        // 0x008A (138)
-	(uint32)PANIC(0x008B),                                        // 0x008B (139) KeRestoreFloatingPointState
+	(uint32)FUNC(&xboxkrnl::KeRestoreFloatingPointState),         // 0x008B (139)
 	(uint32)PANIC(0x008C),                                        // 0x008C (140) KeResumeThread
 	(uint32)PANIC(0x008D),                                        // 0x008D (141) KeRundownQueue
-	(uint32)PANIC(0x008E),                                        // 0x008E (142) KeSaveFloatingPointState
+	(uint32)FUNC(&xboxkrnl::KeSaveFloatingPointState),            // 0x008E (142)
 	(uint32)FUNC(&xboxkrnl::KeSetBasePriorityThread),             // 0x008F (143)
 	(uint32)PANIC(0x0090),                                        // 0x0090 (144) KeSetDisableBoostThread
 	(uint32)FUNC(&xboxkrnl::KeSetEvent),                          // 0x0091 (145)

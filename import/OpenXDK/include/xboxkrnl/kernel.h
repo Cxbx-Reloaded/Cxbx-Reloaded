@@ -269,10 +269,24 @@ XBSYSAPI EXPORTNUM(138) LONG NTAPI KeResetEvent
 	IN PRKEVENT Event
 );
 
-XBSYSAPI VOID *KeRestoreFloatingPointState;
+// ******************************************************************
+// * 0x008B - KeRestoreFloatingPointState()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(139) NTSTATUS NTAPI KeRestoreFloatingPointState
+(
+	IN PKFLOATING_SAVE     PublicFloatSave
+);
+
 XBSYSAPI VOID *KeResumeThread;
 XBSYSAPI VOID *KeRundownQueue;
-XBSYSAPI VOID *KeSaveFloatingPointState;
+
+// ******************************************************************
+// * 0x008E - KeSaveFloatingPointState()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(142) NTSTATUS NTAPI KeSaveFloatingPointState
+(
+	OUT PKFLOATING_SAVE     PublicFloatSave
+);
 
 // ******************************************************************
 // * 0x008F - KeSetBasePriorityThread()
