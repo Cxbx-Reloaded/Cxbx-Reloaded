@@ -207,7 +207,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::KeRemoveQueueDpc),                    // 0x0089 (137)
 	(uint32)FUNC(&xboxkrnl::KeResetEvent),                        // 0x008A (138)
 	(uint32)FUNC(&xboxkrnl::KeRestoreFloatingPointState),         // 0x008B (139)
-	(uint32)PANIC(0x008C),                                        // 0x008C (140) KeResumeThread
+	(uint32)FUNC(&xboxkrnl::KeResumeThread),                      // 0x008C (140)
 	(uint32)PANIC(0x008D),                                        // 0x008D (141) KeRundownQueue
 	(uint32)FUNC(&xboxkrnl::KeSaveFloatingPointState),            // 0x008E (142)
 	(uint32)FUNC(&xboxkrnl::KeSetBasePriorityThread),             // 0x008F (143)
@@ -219,7 +219,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::KeSetTimer),                          // 0x0095 (149)
 	(uint32)FUNC(&xboxkrnl::KeSetTimerEx),                        // 0x0096 (150)
 	(uint32)FUNC(&xboxkrnl::KeStallExecutionProcessor),           // 0x0097 (151)
-	(uint32)PANIC(0x0098),                                        // 0x0098 (152) KeSuspendThread
+	(uint32)FUNC(&xboxkrnl::KeSuspendThread),                     // 0x0098 (152)
 	(uint32)PANIC(0x0099),                                        // 0x0099 (153) KeSynchronizeExecution
 	(uint32)VARIABLE(0x009A),                                     // 0x009A (154) KeSystemTime (Set by ConnectWindowsTimersToThunkTable)
 	(uint32)PANIC(0x009B),                                        // 0x009B (155) KeTestAlertThread
