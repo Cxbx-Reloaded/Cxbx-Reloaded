@@ -2741,6 +2741,31 @@ HRESULT WINAPI XTL::EMUPATCH(IDirectSoundBuffer_SetLFO)
 }
 
 // ******************************************************************
+// * patch: DirectSound_CDirectSoundStream_SetLFO
+// ******************************************************************
+HRESULT WINAPI XTL::EMUPATCH(DirectSound_CDirectSoundStream_SetLFO)
+(
+    LPDIRECTSOUNDBUFFER  pThis,
+    LPCDSLFODESC         pLFODesc
+)
+{
+    
+
+    DbgPrintf("EmuDSound: EmuDirectSound_CDirectSoundStream_SetLFO\n"
+           "(\n"
+           "   pThis                     : 0x%.08X\n"
+           "   pLFODesc                  : 0x%.08X\n"
+           ");\n",
+           pThis, pLFODesc);
+
+    // TODO: Implement
+
+    EmuWarning("EmuDirectSound_CDirectSoundStream_SetLFO not yet implemented!");
+
+    return S_OK;
+}
+
+// ******************************************************************
 // * patch: XAudioCreateAdpcmFormat
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(XAudioCreateAdpcmFormat)

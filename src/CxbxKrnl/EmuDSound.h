@@ -1207,6 +1207,15 @@ HRESULT WINAPI EMUPATCH(IDirectSoundBuffer_SetLFO)
 );
 
 // ******************************************************************
+// * patch: DirectSound_CDirectSoundStream_SetLFO
+// ******************************************************************
+HRESULT WINAPI EMUPATCH(DirectSound_CDirectSoundStream_SetLFO)
+(
+    LPDIRECTSOUNDBUFFER  pThis,
+    LPCDSLFODESC         pLFODesc
+);
+
+// ******************************************************************
 // * patch: XAudioCreateAdpcmFormat
 // ******************************************************************
 VOID WINAPI EMUPATCH(XAudioCreateAdpcmFormat)
