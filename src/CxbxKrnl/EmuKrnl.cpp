@@ -146,7 +146,9 @@ XBSYSAPI EXPORTNUM(51) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedCompare
 		LOG_FUNC_ARG(Comparand)
 		LOG_FUNC_END;
 
-	RETURN(InterlockedCompareExchange((NtDll::PLONG)Destination, (NtDll::LONG)Exchange, (NtDll::LONG)Comparand));
+	LONG res = InterlockedCompareExchange((NtDll::PLONG)Destination, (NtDll::LONG)Exchange, (NtDll::LONG)Comparand);
+
+	RETURN(res);
 }
 
 // ******************************************************************
@@ -160,7 +162,9 @@ XBSYSAPI EXPORTNUM(52) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedDecreme
 {
 	LOG_FUNC_ONE_ARG(Addend);
 
-	RETURN(InterlockedDecrement((NtDll::PLONG)Addend));
+	LONG res = InterlockedDecrement((NtDll::PLONG)Addend);
+
+	RETURN(res);
 }
 
 // ******************************************************************
@@ -174,7 +178,9 @@ XBSYSAPI EXPORTNUM(53) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedIncreme
 {
 	LOG_FUNC_ONE_ARG(Addend);
 
-	RETURN(InterlockedIncrement((NtDll::PLONG)Addend));
+	LONG res = InterlockedIncrement((NtDll::PLONG)Addend);
+
+	RETURN(res);
 }
 
 // ******************************************************************
@@ -192,7 +198,9 @@ XBSYSAPI EXPORTNUM(54) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedExchang
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_END;
 
-	RETURN(InterlockedExchange((NtDll::PLONG)Destination, (NtDll::LONG)Value));
+	LONG res = InterlockedExchange((NtDll::PLONG)Destination, (NtDll::LONG)Value);
+
+	RETURN(res);
 }
 
 // ******************************************************************
@@ -210,7 +218,9 @@ XBSYSAPI EXPORTNUM(55) xboxkrnl::LONG FASTCALL xboxkrnl::KRNL(InterlockedExchang
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_END;
 
-	RETURN(InterlockedExchangeAdd((NtDll::PLONG)Addend, (NtDll::LONG)Value));
+	LONG res = InterlockedExchangeAdd((NtDll::PLONG)Addend, (NtDll::LONG)Value);
+
+	RETURN(res);
 }
 
 // ******************************************************************
@@ -225,7 +235,9 @@ XBSYSAPI EXPORTNUM(56) xboxkrnl::PSINGLE_LIST_ENTRY FASTCALL xboxkrnl::KRNL(Inte
 {
 	LOG_FUNC_ONE_ARG(ListHead);
 
-	RETURN((xboxkrnl::PSINGLE_LIST_ENTRY)InterlockedFlushSList((::PSLIST_HEADER)ListHead));
+	PSINGLE_LIST_ENTRY res = (PSINGLE_LIST_ENTRY)InterlockedFlushSList((::PSLIST_HEADER)ListHead);
+
+	RETURN(res);
 }
 
 // ******************************************************************
@@ -239,7 +251,9 @@ XBSYSAPI EXPORTNUM(57) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::KRNL(Interlocke
 {
 	LOG_FUNC_ONE_ARG(ListHead);
 
-	RETURN((PSLIST_ENTRY)InterlockedPopEntrySList((::PSLIST_HEADER)ListHead));
+	PSLIST_ENTRY res = (PSLIST_ENTRY)InterlockedPopEntrySList((::PSLIST_HEADER)ListHead);
+
+	RETURN(res);
 }
 
 // ******************************************************************
@@ -257,7 +271,9 @@ XBSYSAPI EXPORTNUM(58) xboxkrnl::PSLIST_ENTRY FASTCALL xboxkrnl::KRNL(Interlocke
 		LOG_FUNC_ARG(ListEntry)
 		LOG_FUNC_END;
 
-	RETURN((xboxkrnl::PSLIST_ENTRY)InterlockedPushEntrySList((::PSLIST_HEADER)ListHead, (::PSLIST_ENTRY)ListEntry));
+	PSLIST_ENTRY res = (PSLIST_ENTRY)InterlockedPushEntrySList((::PSLIST_HEADER)ListHead, (::PSLIST_ENTRY)ListEntry);
+
+	RETURN(res);
 }
 
 // ******************************************************************
@@ -362,7 +378,7 @@ XBSYSAPI EXPORTNUM(253) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PhyInitialize
 // ******************************************************************
 // * 0x0165 - IdexChannelObject
 // ******************************************************************
-// TODO : Determine size, structure & filling behind this
+// TODO : Determine size, structure & filling behind IdexChannelObject
 XBSYSAPI EXPORTNUM(357) xboxkrnl::BYTE xboxkrnl::IdexChannelObject[0x100] = { };
 
 // ******************************************************************
@@ -415,10 +431,14 @@ XBSYSAPI EXPORTNUM(369) xboxkrnl::NTSTATUS NTAPI xboxkrnl::UnknownAPI369
 // ******************************************************************
 XBSYSAPI EXPORTNUM(370) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XProfpControl // PROFILING
 (
-	// UNKNOWN ARGUMENTS
+	ULONG Action,
+	ULONG Param
 )
 {
-	LOG_FUNC();
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Action)
+		LOG_FUNC_ARG(Param)
+		LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
 
@@ -430,7 +450,7 @@ XBSYSAPI EXPORTNUM(370) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XProfpControl // PROF
 // ******************************************************************
 XBSYSAPI EXPORTNUM(371) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XProfpGetData // PROFILING 
 (
-	// UNKNOWN ARGUMENTS
+	// NO ARGUMENTS
 )
 {
 	LOG_FUNC();

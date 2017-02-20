@@ -178,8 +178,8 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::KeInitializeEvent),                   // 0x006C (108)
 	(uint32)FUNC(&xboxkrnl::KeInitializeInterrupt),               // 0x006D (109)
 	(uint32)PANIC(0x006E),                                        // 0x006E (110) KeInitializeMutant
-	(uint32)PANIC(0x006F),                                        // 0x006F (111) KeInitializeQueue
-	(uint32)PANIC(0x0070),                                        // 0x0070 (112) KeInitializeSemaphore
+	(uint32)FUNC(&xboxkrnl::KeInitializeQueue),                   // 0x006F (111)
+	(uint32)FUNC(&xboxkrnl::KeInitializeSemaphore),               // 0x0070 (112)
 	(uint32)FUNC(&xboxkrnl::KeInitializeTimerEx),                 // 0x0071 (113)
 	(uint32)PANIC(0x0072),                                        // 0x0072 (114) KeInsertByKeyDeviceQueue
 	(uint32)PANIC(0x0073),                                        // 0x0073 (115) KeInsertDeviceQueue
@@ -206,10 +206,10 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)PANIC(0x0088),                                        // 0x0088 (136) KeRemoveQueue
 	(uint32)FUNC(&xboxkrnl::KeRemoveQueueDpc),                    // 0x0089 (137)
 	(uint32)FUNC(&xboxkrnl::KeResetEvent),                        // 0x008A (138)
-	(uint32)PANIC(0x008B),                                        // 0x008B (139) KeRestoreFloatingPointState
-	(uint32)PANIC(0x008C),                                        // 0x008C (140) KeResumeThread
+	(uint32)FUNC(&xboxkrnl::KeRestoreFloatingPointState),         // 0x008B (139)
+	(uint32)FUNC(&xboxkrnl::KeResumeThread),                      // 0x008C (140)
 	(uint32)PANIC(0x008D),                                        // 0x008D (141) KeRundownQueue
-	(uint32)PANIC(0x008E),                                        // 0x008E (142) KeSaveFloatingPointState
+	(uint32)FUNC(&xboxkrnl::KeSaveFloatingPointState),            // 0x008E (142)
 	(uint32)FUNC(&xboxkrnl::KeSetBasePriorityThread),             // 0x008F (143)
 	(uint32)PANIC(0x0090),                                        // 0x0090 (144) KeSetDisableBoostThread
 	(uint32)FUNC(&xboxkrnl::KeSetEvent),                          // 0x0091 (145)
@@ -219,7 +219,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::KeSetTimer),                          // 0x0095 (149)
 	(uint32)FUNC(&xboxkrnl::KeSetTimerEx),                        // 0x0096 (150)
 	(uint32)FUNC(&xboxkrnl::KeStallExecutionProcessor),           // 0x0097 (151)
-	(uint32)PANIC(0x0098),                                        // 0x0098 (152) KeSuspendThread
+	(uint32)FUNC(&xboxkrnl::KeSuspendThread),                     // 0x0098 (152)
 	(uint32)PANIC(0x0099),                                        // 0x0099 (153) KeSynchronizeExecution
 	(uint32)VARIABLE(0x009A),                                     // 0x009A (154) KeSystemTime (Set by ConnectWindowsTimersToThunkTable)
 	(uint32)PANIC(0x009B),                                        // 0x009B (155) KeTestAlertThread
@@ -323,7 +323,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::PhyInitialize),                       // 0x00FD (253)
 	(uint32)FUNC(&xboxkrnl::PsCreateSystemThread),                // 0x00FE (254)
 	(uint32)FUNC(&xboxkrnl::PsCreateSystemThreadEx),              // 0x00FF (255)
-	(uint32)PANIC(0x0100),                                        // 0x0100 (256) PsQueryStatistics
+	(uint32)FUNC(&xboxkrnl::PsQueryStatistics),                   // 0x0100 (256)
 	(uint32)FUNC(&xboxkrnl::PsSetCreateThreadNotifyRoutine),      // 0x0101 (257)
 	(uint32)FUNC(&xboxkrnl::PsTerminateSystemThread),             // 0x0102 (258)
 	(uint32)VARIABLE(&xboxkrnl::PsThreadObjectType),              // 0x0103 (259)
@@ -345,7 +345,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::RtlDowncaseUnicodeChar),              // 0x0113 (275)
 	(uint32)FUNC(&xboxkrnl::RtlDowncaseUnicodeString),            // 0x0114 (276)
 	(uint32)FUNC(&xboxkrnl::RtlEnterCriticalSection),             // 0x0115 (277)
-	(uint32)PANIC(0x0116),                                        // 0x0116 (278) RtlEnterCriticalSectionAndRegion
+	(uint32)FUNC(&xboxkrnl::RtlEnterCriticalSectionAndRegion),    // 0x0116 (278)
 	(uint32)FUNC(&xboxkrnl::RtlEqualString),                      // 0x0117 (279)
 	(uint32)FUNC(&xboxkrnl::RtlEqualUnicodeString),               // 0x0118 (280)
 	(uint32)FUNC(&xboxkrnl::RtlExtendedIntegerMultiply),          // 0x0119 (281)
@@ -362,7 +362,7 @@ extern "C" CXBXKRNL_API uint32 CxbxKrnl_KernelThunkTable[379] =
 	(uint32)FUNC(&xboxkrnl::RtlIntegerToChar),                    // 0x0124 (292)
 	(uint32)FUNC(&xboxkrnl::RtlIntegerToUnicodeString),           // 0x0125 (293)
 	(uint32)FUNC(&xboxkrnl::RtlLeaveCriticalSection),             // 0x0126 (294)
-	(uint32)PANIC(0x0127),                                        // 0x0127 (295) RtlLeaveCriticalSectionAndRegion
+	(uint32)FUNC(&xboxkrnl::RtlLeaveCriticalSectionAndRegion),    // 0x0127 (295)
 	(uint32)FUNC(&xboxkrnl::RtlLowerChar),                        // 0x0128 (296)
 	(uint32)FUNC(&xboxkrnl::RtlMapGenericMask),                   // 0x0129 (297)
 	(uint32)FUNC(&xboxkrnl::RtlMoveMemory),                       // 0x012A (298)

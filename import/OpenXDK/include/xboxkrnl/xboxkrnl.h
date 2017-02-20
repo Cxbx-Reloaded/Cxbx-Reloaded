@@ -1273,10 +1273,12 @@ KEVENT, *PKEVENT, *PRKEVENT; // even with undefined RESTRICTED_POINTER, this doe
 // ******************************************************************
 // EVENT_BASIC_INFORMATION - same as Windows
 // ******************************************************************
-typedef struct _EVENT_BASIC_INFORMATION {
+typedef struct _EVENT_BASIC_INFORMATION
+{
 	EVENT_TYPE EventType;
 	LONG EventState;
-} EVENT_BASIC_INFORMATION, *PEVENT_BASIC_INFORMATION;
+}
+EVENT_BASIC_INFORMATION, *PEVENT_BASIC_INFORMATION;
 
 // ******************************************************************
 // KSEMAPHORE
@@ -1291,19 +1293,23 @@ KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
 // ******************************************************************
 // SEMAPHORE_BASIC_INFORMATION - same as Windows
 // ******************************************************************
-typedef struct _SEMAPHORE_BASIC_INFORMATION {
+typedef struct _SEMAPHORE_BASIC_INFORMATION
+{
 	LONG CurrentCount;
 	LONG MaximumCount;
-} SEMAPHORE_BASIC_INFORMATION, *PSEMAPHORE_BASIC_INFORMATION;
+}
+SEMAPHORE_BASIC_INFORMATION, *PSEMAPHORE_BASIC_INFORMATION;
 
 // ******************************************************************
 // MUTANT_BASIC_INFORMATION - same as Windows
 // ******************************************************************
-typedef struct _MUTANT_BASIC_INFORMATION {
+typedef struct _MUTANT_BASIC_INFORMATION
+{
 	LONG CurrentCount;
 	BOOLEAN OwnedByCaller;
 	BOOLEAN AbandonedState;
-} MUTANT_BASIC_INFORMATION, *PMUTANT_BASIC_INFORMATION;
+}
+MUTANT_BASIC_INFORMATION, *PMUTANT_BASIC_INFORMATION;
 
 // ******************************************************************
 // ERWLOCK
@@ -1522,10 +1528,30 @@ typedef struct _KDPC
 KDPC, *PKDPC;
 
 // ******************************************************************
+// * KFLOATING_SAVE
+// ******************************************************************
+// See NtDll::FLOATING_SAVE_AREA
+typedef struct _KFLOATING_SAVE
+{
+	ULONG   ControlWord;
+	ULONG   StatusWord;
+	// NtDll contains ULONG TagWord here
+	ULONG   ErrorOffset;
+	ULONG   ErrorSelector;
+	ULONG   DataOffset;
+	ULONG   DataSelector;
+	ULONG   Cr0NpxState; // NtDll has RegisterArea[SIZE_OF_80387_REGISTERS];
+	ULONG   Spare1; // NtDll calls this Spare0
+}
+KFLOATING_SAVE, *PKFLOATING_SAVE;
+
+// ******************************************************************
 // * KOBJECTS
 // ******************************************************************
 typedef enum _KOBJECTS
 {
+	QueueObject = 4,
+	SemaphoreObject = 5,
 	TimerNotificationObject = 8,
 	TimerSynchronizationObject = 9,
     DpcObject = 0x13,
@@ -1580,6 +1606,17 @@ KINTERRUPT, *PKINTERRUPT;
 // * IRQL (Interrupt ReQuest Level) (* same as on win *)
 // ******************************************************************
 typedef UCHAR KIRQL, *PKIRQL;
+
+// ******************************************************************
+// * PS_STATISTICS
+// ******************************************************************
+typedef struct _PS_STATISTICS
+{
+	ULONG Length;
+	ULONG ThreadCount;
+	ULONG HandleCount;
+}
+PS_STATISTICS, *PPS_STATISTICS;
 
 // ******************************************************************
 // * RTL_CRITICAL_SECTION

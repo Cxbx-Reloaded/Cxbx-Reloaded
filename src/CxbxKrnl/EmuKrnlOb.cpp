@@ -62,6 +62,7 @@ namespace NtDll
 #pragma warning(default:4005)
 
 #define OB_FLAG_NAMED_OBJECT 1
+#define OB_FLAG_PERMANENT_OBJECT 2
 
 // ******************************************************************
 // * 0x00EF - ObCreateObject()
@@ -119,7 +120,7 @@ XBSYSAPI EXPORTNUM(239) xboxkrnl::NTSTATUS NTAPI xboxkrnl::ObCreateObject
 				// TODO : For other Ob* API's it must become possible to get from
 				// and Object(Header) address to the Name. Right now, this requires
 				// adding ObjectSize to ObjectHeader. This won't be available outside
-				// this function, so we need a better solution for this. 
+				// ObCreateObject, so we need a better solution for this. 
 				// It might be possible to put the OBJECT_STRING struct BEFORE the
 				// ObjectHeader (and the NameBuffer itself before that), which would
 				// make it possible to simply offset everything off an Object.
@@ -196,7 +197,21 @@ XBSYSAPI EXPORTNUM(242) xboxkrnl::VOID NTAPI xboxkrnl::ObMakeTemporaryObject
 {
 	LOG_FUNC_ONE_ARG(Object);
 
-	LOG_UNIMPLEMENTED();
+	/* Get the header */
+	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+
+	/* Acquire object lock */
+	//ObpAcquireObjectLock(ObjectHeader);
+	LOG_INCOMPLETE(); // TODO : Lock, etc.
+
+	/* Remove the flag */
+	ObjectHeader->Flags &= ~OB_FLAG_PERMANENT_OBJECT;
+
+	/* Release the lock */
+	// ObpReleaseObjectLock(ObjectHeader);
+
+	/* Check if we should delete the object now */
+	//ObpDeleteNameCheck(ObjectBody);
 }
 
 // ******************************************************************
@@ -422,5 +437,3 @@ XBSYSAPI EXPORTNUM(251) xboxkrnl::VOID FASTCALL xboxkrnl::ObfReferenceObject
 
 	InterlockedIncrement(&ObjectHeader->PointerCount);
 }
-
-

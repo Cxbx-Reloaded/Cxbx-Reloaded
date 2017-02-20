@@ -95,7 +95,7 @@ void LOG_PCSTProxy
 // PsCreateSystemThread proxy procedure
 #pragma warning(push)
 #pragma warning(disable: 4731)  // disable ebp modification warning
-// Dxbx Note : The signature of this function should conform to System.TThreadFunc !
+// Dxbx Note : The signature of PCSTProxy should conform to System.TThreadFunc !
 static unsigned int WINAPI PCSTProxy
 (
 	IN PVOID Parameter
@@ -324,6 +324,27 @@ XBSYSAPI EXPORTNUM(255) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsCreateSystemThreadE
 	}
 
 	RETURN(STATUS_SUCCESS);
+}
+
+// ******************************************************************
+// * 0x0100 - PsQueryStatistics()
+// ******************************************************************
+XBSYSAPI EXPORTNUM(256) xboxkrnl::NTSTATUS NTAPI xboxkrnl::PsQueryStatistics
+(
+	IN OUT PPS_STATISTICS ProcessStatistics
+)
+{
+	NTSTATUS ret = STATUS_SUCCESS;
+
+	if (ProcessStatistics->Length == sizeof(PS_STATISTICS)) {
+		LOG_INCOMPLETE(); // TODO : Return number of threads and handles that currently exist
+		ProcessStatistics->ThreadCount = 1;
+		ProcessStatistics->HandleCount = 1;
+	} else {
+		ret = STATUS_INVALID_PARAMETER;
+	}
+
+	RETURN(ret);
 }
 
 // ******************************************************************

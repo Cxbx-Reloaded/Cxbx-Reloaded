@@ -78,10 +78,9 @@ XBSYSAPI EXPORTNUM(327) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeLoadSection
 
 	NTSTATUS ret = STATUS_SUCCESS;
 
-	if (Section->SectionReferenceCount > 0)
-		Section->SectionReferenceCount++;
-	else
-		LOG_UNIMPLEMENTED();
+	if (Section->SectionReferenceCount++ == 0) {
+		LOG_INCOMPLETE(); // TODO : Load section - probably lock this too
+	}
 
 	RETURN(ret);
 }
@@ -104,14 +103,13 @@ XBSYSAPI EXPORTNUM(328) xboxkrnl::NTSTATUS NTAPI xboxkrnl::XeUnloadSection
 
 	NTSTATUS ret = STATUS_SUCCESS;
 
-	if (Section->SectionReferenceCount > 0)
-		Section->SectionReferenceCount--;
-	else
-	{
-		LOG_UNIMPLEMENTED();
-		ret = STATUS_INVALID_PARAMETER;
+	if (Section->SectionReferenceCount > 0) {
+		if (--Section->SectionReferenceCount == 0) {
+			LOG_INCOMPLETE(); // TODO : Unload section - probably lock this too
+		}
 	}
-
+	else
+		ret = STATUS_INVALID_PARAMETER;
 
 	RETURN(ret);
 }

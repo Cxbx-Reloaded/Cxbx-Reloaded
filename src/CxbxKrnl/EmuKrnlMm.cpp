@@ -478,7 +478,8 @@ XBSYSAPI EXPORTNUM(179) xboxkrnl::ULONG NTAPI xboxkrnl::MmQueryAddressProtect
 	if (EmuCheckAllocationSize(VirtualAddress, false))
 		Result = PAGE_READWRITE;
 
-	// TODO : Improve this implementation
+	LOG_INCOMPLETE(); // TODO : Improve the MmQueryAddressProtect implementation
+	
 	RETURN(Result);
 }
 
@@ -492,7 +493,8 @@ XBSYSAPI EXPORTNUM(180) xboxkrnl::ULONG NTAPI xboxkrnl::MmQueryAllocationSize
 {
 	LOG_FUNC_ONE_ARG(BaseAddress);
 
-	// TODO : Free PAGE_WRITECOMBINE differently
+	LOG_INCOMPLETE(); // TODO : Free PAGE_WRITECOMBINE differently
+
 	ULONG uiSize = EmuCheckAllocationSize(BaseAddress, false);
 
 	RETURN(uiSize);
