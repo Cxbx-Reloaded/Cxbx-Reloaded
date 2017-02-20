@@ -410,8 +410,7 @@ XBSYSAPI EXPORTNUM(96) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeCancelTimer
 	RETURN(Inserted);
 }
 
-xboxkrnl::PKINTERRUPT EmuInterruptList[MAX_BUS_INTERRUPT_LEVEL + 1][MAX_NUM_INTERRUPTS] = { 0 };
-xboxkrnl::DWORD EmuFreeInterrupt[MAX_BUS_INTERRUPT_LEVEL + 1] = { 0 };
+xboxkrnl::PKINTERRUPT EmuInterruptList[MAX_BUS_INTERRUPT_LEVEL + 1] = { 0 };
 
 // ******************************************************************
 // * 0x0062 - KeConnectInterrupt()
@@ -426,17 +425,16 @@ XBSYSAPI EXPORTNUM(98) xboxkrnl::BOOLEAN NTAPI xboxkrnl::KeConnectInterrupt
 	BOOLEAN ret = FALSE;
 
 	// here we have to connect the interrupt object to the vector
-	// more than 1 interrupt object can be connected!
 	if (!InterruptObject->Connected)
 	{
-		if (EmuFreeInterrupt[InterruptObject->BusInterruptLevel] < MAX_NUM_INTERRUPTS)
+		// One interrupt per IRQ - only set when not set yet :
+		if (EmuInterruptList[InterruptObject->BusInterruptLevel] == NULL)
 		{
 			InterruptObject->Connected = TRUE;
-			EmuInterruptList[InterruptObject->BusInterruptLevel][EmuFreeInterrupt[InterruptObject->BusInterruptLevel]++] = InterruptObject;
+			EmuInterruptList[InterruptObject->BusInterruptLevel] = InterruptObject;
+			HalEnableSystemInterrupt(InterruptObject->BusInterruptLevel, InterruptObject->Mode);
 			ret = TRUE;
 		}
-		else
-			EmuWarning("Out of interrupt places!");
 	}
 	// else do nothing
 
@@ -479,26 +477,9 @@ XBSYSAPI EXPORTNUM(100) xboxkrnl::VOID NTAPI xboxkrnl::KeDisconnectInterrupt
 	if (InterruptObject->Connected)
 	{
 		// Mark InterruptObject as not connected anymore
+		HalDisableSystemInterrupt(InterruptObject->BusInterruptLevel);
+		EmuInterruptList[InterruptObject->BusInterruptLevel] = NULL;
 		InterruptObject->Connected = FALSE;
-		// Search for it in the registered list of interrupts:
-		for(uint i = 0; i < EmuFreeInterrupt[InterruptObject->BusInterruptLevel]; i++)
-		{
-			// Is it here?
-			if (EmuInterruptList[InterruptObject->BusInterruptLevel][i] == InterruptObject)
-			{
-				// Return the free slot :
-				uint last = --EmuFreeInterrupt[InterruptObject->BusInterruptLevel];
-				// Is this not the last slot?
-				if (i < last)
-					// Instead of shifting everything, move the last one into the slot of this InterruptObject :
-					EmuInterruptList[InterruptObject->BusInterruptLevel][i] = EmuInterruptList[InterruptObject->BusInterruptLevel][last];
-
-				// Clear the now-free (last) slot :
-				EmuInterruptList[InterruptObject->BusInterruptLevel][last] = NULL;
-				// Stop searching
-				break;
-			}
-		}
 	}
 }
 
@@ -560,10 +541,10 @@ XBSYSAPI EXPORTNUM(107) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeDpc
 		LOG_FUNC_END;
 
 	// inialize Dpc field values
-	Dpc->DeferredRoutine = DeferredRoutine;
 	Dpc->Type = DpcObject;
-	Dpc->DeferredContext = DeferredContext;
 	Dpc->Inserted = FALSE;
+	Dpc->DeferredRoutine = DeferredRoutine;
+	Dpc->DeferredContext = DeferredContext;
 }
 
 // ******************************************************************
@@ -612,17 +593,16 @@ XBSYSAPI EXPORTNUM(109) xboxkrnl::VOID NTAPI xboxkrnl::KeInitializeInterrupt
 		LOG_FUNC_ARG(ShareVector) 
 		LOG_FUNC_END;
 
-	Interrupt->ServiceRoutine = (PVOID)ServiceRoutine;
+	Interrupt->ServiceRoutine = ServiceRoutine;
 	Interrupt->ServiceContext = ServiceContext;
-	Interrupt->BusInterruptLevel = Vector - 0x30; // TODO : Constantify 0x30
+	Interrupt->BusInterruptLevel = VECTOR2IRQ(Vector);
 	Interrupt->Irql = Irql;
 	Interrupt->Connected = FALSE;
 	// Unused : Interrupt->ShareVector = ShareVector;
 	Interrupt->Mode = InterruptMode;
-	// Interrupt->rsvd1 = 0; // not neccesary?
 	// Interrupt->ServiceCount = 0; // not neccesary?
 
-	// Interrupt->DispatchCode = ?; //TODO : Populate this interrupt dispatch
+	// Interrupt->DispatchCode = []?; //TODO : Populate this interrupt dispatch
 	// code block, patch it up so it works with the address of this Interrupt
 	// struct and calls the right dispatch routine (depending on InterruptMode). 
 }

@@ -159,6 +159,11 @@ extern void XTL::EmuExecutePushBufferRaw
     if(g_bSkipPush)
         return;
 
+	if (!pdwPushData) {
+		EmuWarning("pdwPushData is null");
+		return;
+	}
+
     DWORD *pdwOrigPushData = pdwPushData;
 
     PVOID pIndexData = 0;

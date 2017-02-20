@@ -104,19 +104,14 @@ XBSYSAPI EXPORTNUM(38) xboxkrnl::VOID FASTCALL xboxkrnl::HalClearSoftwareInterru
 // ******************************************************************
 // * 0x0027 - HalDisableSystemInterrupt()
 // ******************************************************************
-// Source:ReactOS
 XBSYSAPI EXPORTNUM(39) xboxkrnl::VOID NTAPI xboxkrnl::HalDisableSystemInterrupt
 (
-	ULONG Vector,
-	KIRQL Irql
+	IN ULONG BusInterruptLevel
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Vector)
-		LOG_FUNC_ARG(Irql)
-		LOG_FUNC_END;
+	LOG_FUNC_ONE_ARG(BusInterruptLevel);
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(); // TODO : Once thread-switching works, make system interrupts work too
 }
 
 // ******************************************************************
@@ -140,21 +135,18 @@ XBSYSAPI EXPORTNUM(42) xboxkrnl::PANSI_STRING xboxkrnl::HalDiskSerialNumber = 0;
 // ******************************************************************
 // * 0x002B - HalEnableSystemInterrupt()
 // ******************************************************************
-// Source:ReactOS
 XBSYSAPI EXPORTNUM(43) xboxkrnl::BOOLEAN NTAPI xboxkrnl::HalEnableSystemInterrupt
 (
-	ULONG Vector,
-	KIRQL Irql,
-	KINTERRUPT_MODE InterruptMode
+	IN ULONG BusInterruptLevel,
+	IN KINTERRUPT_MODE InterruptMode
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Vector)
-		LOG_FUNC_ARG(Irql)
+		LOG_FUNC_ARG(BusInterruptLevel)
 		LOG_FUNC_ARG(InterruptMode)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	LOG_UNIMPLEMENTED(); // TODO : Once thread-switching works, make system interrupts work too
 
 	RETURN(FALSE);
 }
@@ -167,9 +159,9 @@ char *IRQNames[MAX_BUS_INTERRUPT_LEVEL + 1] =
 	"USB0", // IRQ 1 USB Controller: nVidia Corporation nForce USB Controller (rev d4) (prog-if 10 [OHCI])
 	"<unknown>",
 	"GPU", // IRQ 3 VGA compatible controller: nVidia Corporation: Unknown device 02a0 (rev a1) (prog-if 00 [VGA])
-	"NET", // IRQ 4 Ethernet controller: nVidia Corporation nForce Ethernet Controller (rev d2)
-	"<unknown>",
-	"APU", // IRQ 6 Multimedia audio controller: nVidia Corporation nForce Audio (rev d2)
+	"NIC", // Network Interface Card IRQ 4 Ethernet controller: nVidia Corporation nForce Ethernet Controller (rev d2)
+	"APU", // IRQ 5 APU
+	"ACI", // IRQ 6 Multimedia audio controller: nVidia Corporation nForce Audio (rev d2)
 	"<unknown>",
 	"<unknown>",
 	"USB1", // IRQ 9 USB Controller : nVidia Corporation nForce USB Controller(rev d4) (prog - if 10[OHCI])
@@ -177,7 +169,7 @@ char *IRQNames[MAX_BUS_INTERRUPT_LEVEL + 1] =
 	"<unknown>",
 	"<unknown>",
 	"<unknown>",
-	"<unknown>",
+	"IDE", // IRQ 14
 	"<unknown>",
 	"<unknown>",
 	"<unknown>",
@@ -196,33 +188,34 @@ char *IRQNames[MAX_BUS_INTERRUPT_LEVEL + 1] =
 // ******************************************************************
 // * 0x002C - HalGetInterruptVector()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG  NTAPI xboxkrnl::HalGetInterruptVector
+XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG NTAPI xboxkrnl::HalGetInterruptVector
 (
-	IN ULONG   InterruptLevel,
+	IN ULONG   BusInterruptLevel,
 	OUT PKIRQL  Irql
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(InterruptLevel)
+		LOG_FUNC_ARG(BusInterruptLevel)
 		LOG_FUNC_ARG_OUT(Irql)
 		LOG_FUNC_END;
 
-	// -blueshogun : I'm only adding this for Virtua Cop 3 (Chihiro). Xbox games need not emulate this.
-	// EmuWarning("HalGetInterruptVector(): If this is NOT a Chihiro game, tell blueshogun!");
+	// Note : blueshogun added this HalGetInterruptVector mock-up for
+	// Virtua Cop 3 (Chihiro) and assumed Xbox games need not emulate this.
+	// However, even something as simple as the OpenXDK XInput library uses this,
+	// PLUS Cxbx will execute it's own preemptive thread-switching, after which
+	// interrupt handling must be implememented too, including this API.
 
 	ULONG dwVector = 0;
 
-	if((InterruptLevel >=0) && (InterruptLevel <= MAX_BUS_INTERRUPT_LEVEL))
+	if((BusInterruptLevel >=0) && (BusInterruptLevel <= MAX_BUS_INTERRUPT_LEVEL))
 	{
-		// Why 0x30? On Win2k the vector is 0x30+IRQ, so it like that
-		dwVector = 0x30 + InterruptLevel;
-
+		dwVector = IRQ2VECTOR(BusInterruptLevel);
 		if(Irql)
-			*Irql = (KIRQL)(MAX_BUS_INTERRUPT_LEVEL - InterruptLevel);
+			*Irql = (KIRQL)VECTOR2IRQL(dwVector);
 
 #ifdef _DEBUG_TRACE
 		DbgPrintf("HalGetInterruptVector(): Interrupt vector requested for %d (%s)!\n", 
-			InterruptLevel, IRQNames[InterruptLevel]);
+			BusInterruptLevel, IRQNames[BusInterruptLevel]);
 #endif
 	}
 
