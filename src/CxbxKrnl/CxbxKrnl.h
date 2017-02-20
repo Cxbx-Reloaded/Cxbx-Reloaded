@@ -78,7 +78,16 @@ typedef uint32 xbaddr;
 #define CXBX_BASE_ADDR XBOX_BASE_ADDR
 
 #define MAX_BUS_INTERRUPT_LEVEL 27
+// MAX_BUS_INTERRUPT_LEVEL = PROFILE_LEVEL = 27
 #define MAX_NUM_INTERRUPTS 256
+#define IRQ_BASE 0x30 
+
+#define PRIMARY_VECTOR_BASE IRQ_BASE
+
+// Source : ReactOS halirq.h : https://doxygen.reactos.org/d1/da9/halppc_2include_2halirq_8h_source.html
+#define IRQ2VECTOR(irq)     ((irq)+IRQ_BASE)
+#define VECTOR2IRQ(vector)  ((vector)-IRQ_BASE)
+#define VECTOR2IRQL(vector) (PROFILE_LEVEL - VECTOR2IRQ(vector))
 
 /*! validate version string match */
 CXBXKRNL_API bool CxbxKrnlVerifyVersion(const char *szVersion);

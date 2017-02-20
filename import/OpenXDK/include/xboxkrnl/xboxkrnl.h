@@ -1533,43 +1533,13 @@ typedef enum _KOBJECTS
 KOBJECTS, *PKOBJECTS;
 
 // ******************************************************************
-// * KINTERRUPR
-// ******************************************************************
-typedef struct _KINTERRUPT
-{
-	/* 0x0/0 */ PVOID ServiceRoutine;
-	/* 0x4/4 */ PVOID ServiceContext;
-	/* 0x8/8 */ ULONG BusInterruptLevel;
-	/* 0xC/12 */ ULONG Irql; // Was : unsigned char     KIRQL; unsigned char     PaddingA[0x03];
-	/* 0x10/16 */ UCHAR Connected;
-	/* 0x11/17 */ UCHAR ShareVector;
-	/* 0x12/18 */ CHAR Mode;
-	/* 0x14/20 */ CHAR rsvd1;
-	/* 0x14/20 */ ULONG ServiceCount;
-	/* 0x18/24 */ ULONG DispatchCode[22]; // Was : unsigned char     ISR[0x58];
-}
-KINTERRUPT, *PKINTERRUPT;
-
-// ******************************************************************
 // * PKSERVICE_ROUTINE
 // ******************************************************************
-typedef BOOLEAN KSERVICE_ROUTINE
+typedef BOOLEAN (*PKSERVICE_ROUTINE)
 (
-	IN PKINTERRUPT Interrupt,
+	IN struct _KINTERRUPT *Interrupt,
 	IN PVOID ServiceContext
 );
-
-typedef KSERVICE_ROUTINE *PKSERVICE_ROUTINE;
-
-// ******************************************************************
-// * IRQL (* same as on win *)
-// ******************************************************************
-typedef UCHAR KIRQL, *PKIRQL;
-	
-#define DISPATCH_LEVEL 2
-
-#define PROFILE_LEVEL 27
-
 
 // ******************************************************************
 // * KINTERRUPT_MODE
@@ -1580,6 +1550,36 @@ typedef enum _KINTERRUPT_MODE
 	Latched,
 }
 KINTERRUPT_MODE;
+
+// ******************************************************************
+// * IRQ (Interrupt ReQuest) Priority Levels
+// ******************************************************************
+#define DISPATCH_LEVEL 2
+#define PROFILE_LEVEL 27
+
+#define DISPATCH_SIZE 22
+
+// ******************************************************************
+// * KINTERRUPR
+// ******************************************************************
+typedef struct _KINTERRUPT
+{
+	/* 0x00= 0 */ PKSERVICE_ROUTINE ServiceRoutine;
+	/* 0x04= 4 */ PVOID ServiceContext;
+	/* 0x08= 8 */ ULONG BusInterruptLevel;
+	/* 0x0C=12 */ ULONG Irql; // Was : unsigned char     KIRQL; unsigned char     PaddingA[0x03];
+	/* 0x10=16 */ BOOLEAN Connected;
+	/* 0x11=17 */ BOOLEAN ShareVector;
+	/* 0x12=18 */ KINTERRUPT_MODE Mode;
+	/* 0x14=20 */ ULONG ServiceCount;
+	/* 0x18=24 */ ULONG DispatchCode[DISPATCH_SIZE]; // Same as old : unsigned char ISR[0x58];
+}
+KINTERRUPT, *PKINTERRUPT;
+
+// ******************************************************************
+// * IRQL (Interrupt ReQuest Level) (* same as on win *)
+// ******************************************************************
+typedef UCHAR KIRQL, *PKIRQL;
 
 // ******************************************************************
 // * RTL_CRITICAL_SECTION

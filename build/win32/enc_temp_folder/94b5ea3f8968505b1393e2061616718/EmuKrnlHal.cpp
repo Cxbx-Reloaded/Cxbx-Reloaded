@@ -111,7 +111,7 @@ XBSYSAPI EXPORTNUM(39) xboxkrnl::VOID NTAPI xboxkrnl::HalDisableSystemInterrupt
 {
 	LOG_FUNC_ONE_ARG(BusInterruptLevel);
 
-	LOG_UNIMPLEMENTED(); // TODO : Once thread-switching works, make system interrupts work too
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -146,7 +146,7 @@ XBSYSAPI EXPORTNUM(43) xboxkrnl::BOOLEAN NTAPI xboxkrnl::HalEnableSystemInterrup
 		LOG_FUNC_ARG(InterruptMode)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED(); // TODO : Once thread-switching works, make system interrupts work too
+	LOG_UNIMPLEMENTED();
 
 	RETURN(FALSE);
 }
@@ -188,7 +188,7 @@ char *IRQNames[MAX_BUS_INTERRUPT_LEVEL + 1] =
 // ******************************************************************
 // * 0x002C - HalGetInterruptVector()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG NTAPI xboxkrnl::HalGetInterruptVector
+XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG  NTAPI xboxkrnl::HalGetInterruptVector
 (
 	IN ULONG   BusInterruptLevel,
 	OUT PKIRQL  Irql
@@ -199,11 +199,8 @@ XBSYSAPI EXPORTNUM(44) xboxkrnl::ULONG NTAPI xboxkrnl::HalGetInterruptVector
 		LOG_FUNC_ARG_OUT(Irql)
 		LOG_FUNC_END;
 
-	// Note : blueshogun added this HalGetInterruptVector mock-up for
-	// Virtua Cop 3 (Chihiro) and assumed Xbox games need not emulate this.
-	// However, even something as simple as the OpenXDK XInput library uses this,
-	// PLUS Cxbx will execute it's own preemptive thread-switching, after which
-	// interrupt handling must be implememented too, including this API.
+	// -blueshogun : I'm only adding this for Virtua Cop 3 (Chihiro). Xbox games need not emulate this.
+	// EmuWarning("HalGetInterruptVector(): If this is NOT a Chihiro game, tell blueshogun!");
 
 	ULONG dwVector = 0;
 

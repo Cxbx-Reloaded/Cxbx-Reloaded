@@ -26,20 +26,25 @@ XBSYSAPI EXPORTNUM(38) VOID FASTCALL HalClearSoftwareInterrupt
 	KIRQL Request
 );
 
+// ******************************************************************
+// * 0x0027 - HalDisableSystemInterrupt()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(39) VOID NTAPI HalDisableSystemInterrupt
 (
-	ULONG Vector,
-	KIRQL Irql
+	IN ULONG BusInterruptLevel
 );
 
 XBSYSAPI EXPORTNUM(40) ULONG HalDiskCachePartitionCount;
 XBSYSAPI EXPORTNUM(41) PANSI_STRING HalDiskModelNumber;
 XBSYSAPI EXPORTNUM(42) PANSI_STRING HalDiskSerialNumber;
+
+// ******************************************************************
+// * 0x002B - HalEnableSystemInterrupt()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(43) BOOLEAN NTAPI HalEnableSystemInterrupt
 (
-	ULONG Vector,
-	KIRQL Irql,
-	KINTERRUPT_MODE InterruptMode
+	IN ULONG BusInterruptLevel,
+	IN KINTERRUPT_MODE InterruptMode
 );
 
 // ******************************************************************
@@ -47,7 +52,7 @@ XBSYSAPI EXPORTNUM(43) BOOLEAN NTAPI HalEnableSystemInterrupt
 // ******************************************************************
 XBSYSAPI EXPORTNUM(44) ULONG  NTAPI HalGetInterruptVector
 (
-    IN ULONG   InterruptLevel,
+    IN ULONG   BusInterruptLevel,
     OUT PKIRQL Irql
 );
 
